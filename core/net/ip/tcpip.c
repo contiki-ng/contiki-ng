@@ -113,7 +113,15 @@ enum {
 #else
 #define NEXTHOP_NON_STORING(addr) 0
 #endif
-
+/*---------------------------------------------------------------------------*/
+static void
+init_appstate(uip_tcp_appstate_t *as, void *state)
+{
+  as->p = PROCESS_CURRENT();
+  as->state = state;
+}
+/*---------------------------------------------------------------------------*/
+/* Called on IP packet output. */
 static uint8_t (* outputfunc)(const uip_lladdr_t *a);
 
 uint8_t
@@ -188,8 +196,7 @@ tcp_connect(const uip_ipaddr_t *ripaddr, uint16_t port, void *appstate)
     return NULL;
   }
 
-  c->appstate.p = PROCESS_CURRENT();
-  c->appstate.state = appstate;
+  init_appstate(&c->appstate, appstate);
 
   tcpip_poll_tcp(c);
 
@@ -234,44 +241,29 @@ tcp_listen(uint16_t port)
 }
 /*---------------------------------------------------------------------------*/
 void
-tcp_attach(struct uip_conn *conn,
-	   void *appstate)
+tcp_attach(struct uip_conn *conn, void *appstate)
 {
-  uip_tcp_appstate_t *s;
-
-  s = &conn->appstate;
-  s->p = PROCESS_CURRENT();
-  s->state = appstate;
+  init_appstate(&conn->appstate, appstate);
 }
-
 #endif /* UIP_TCP */
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
 void
-udp_attach(struct uip_udp_conn *conn,
-	   void *appstate)
+udp_attach(struct uip_udp_conn *conn, void *appstate)
 {
-  uip_udp_appstate_t *s;
-
-  s = &conn->appstate;
-  s->p = PROCESS_CURRENT();
-  s->state = appstate;
+  init_appstate(&conn->appstate, appstate);
 }
 /*---------------------------------------------------------------------------*/
 struct uip_udp_conn *
 udp_new(const uip_ipaddr_t *ripaddr, uint16_t port, void *appstate)
 {
-  struct uip_udp_conn *c;
-  uip_udp_appstate_t *s;
+  struct uip_udp_conn *c = uip_udp_new(ripaddr, port);
 
-  c = uip_udp_new(ripaddr, port);
   if(c == NULL) {
     return NULL;
   }
 
-  s = &c->appstate;
-  s->p = PROCESS_CURRENT();
-  s->state = appstate;
+  init_appstate(&c->appstate, appstate);
 
   return c;
 }
@@ -296,8 +288,7 @@ udp_broadcast_new(uint16_t port, void *appstate)
 uint8_t
 icmp6_new(void *appstate) {
   if(uip_icmp6_conns.appstate.p == PROCESS_NONE) {
-    uip_icmp6_conns.appstate.p = PROCESS_CURRENT();
-    uip_icmp6_conns.appstate.state = appstate;
+    init_appstate(&uip_icmp6_conns.appstate, appstate);
     return 0;
   }
   return 1;
@@ -565,7 +556,7 @@ get_nexthop(uip_ipaddr_t *addr)
   return nexthop;
 }
 /*---------------------------------------------------------------------------*/
-#if UIP_ND6_SEND_NA
+#if UIP_ND6_SEND_NS
 static int
 queue_packet(uip_ds6_nbr_t *nbr)
 {
@@ -606,7 +597,7 @@ send_nd6_ns(uip_ipaddr_t *nexthop)
 {
   int err = 1;
 
-#if UIP_ND6_SEND_NA
+#if UIP_ND6_SEND_NS
    uip_ds6_nbr_t *nbr = NULL;
   if((nbr = uip_ds6_nbr_add(nexthop, NULL, 0, NBR_INCOMPLETE, NBR_TABLE_REASON_IPV6_ND, NULL)) != NULL) {
     err = 0;
@@ -657,6 +648,15 @@ tcpip_ipv6_output(void)
     goto exit;
   }
 
+#if UIP_CONF_IPV6_RPL
+  if(!rpl_update_header()) {
+    /* Packet can not be forwarded */
+    PRINTF("tcpip_ipv6_output: RPL header update error\n");
+    uip_clear_buf();
+    return;
+  }
+#endif /* UIP_CONF_IPV6_RPL */
+
   if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
     linkaddr = NULL;
     goto send_packet;
@@ -667,23 +667,18 @@ tcpip_ipv6_output(void)
   }
   annotate_transmission(nexthop);
 
-#if UIP_CONF_IPV6_RPL
-  if(!rpl_finalize_header(nexthop)) {
-    goto exit;
-    #endif /* UIP_CONF_IPV6_RPL */
-  }
-
   nbr = uip_ds6_nbr_lookup(nexthop);
   if(nbr == NULL) {
     if(send_nd6_ns(nexthop)) {
       PRINTF("tcpip_ipv6_output: failed to add neighbor to cache\n");
       goto exit;
     } else {
+      /* We're sending NS here instead of original packet */
       goto send_packet;
     }
   }
 
-#if UIP_ND6_SEND_NA
+#if UIP_ND6_SEND_NS
   if(nbr->state == NBR_INCOMPLETE) {
     PRINTF("tcpip_ipv6_output: nbr cache entry incomplete\n");
     queue_packet(nbr);
@@ -697,7 +692,7 @@ tcpip_ipv6_output(void)
     nbr->nscount = 0;
     PRINTF("tcpip_ipv6_output: nbr cache entry stale moving to delay\n");
   }
-#endif /* UIP_ND6_SEND_NA */
+#endif /* UIP_ND6_SEND_NS */
 
 send_packet:
   if(nbr) {
@@ -783,14 +778,8 @@ PROCESS_THREAD(tcpip_process, ev, data)
   PROCESS_BEGIN();
 
 #if UIP_TCP
-  {
-    unsigned char i;
-
-    for(i = 0; i < UIP_LISTENPORTS; ++i) {
-      s.listenports[i].port = 0;
-    }
-    s.p = PROCESS_CURRENT();
-  }
+  memset(s.listenports, 0, UIP_LISTENPORTS*sizeof(*(s.listenports)));
+  s.p = PROCESS_CURRENT();
 #endif
 
   tcpip_event = process_alloc_event();
