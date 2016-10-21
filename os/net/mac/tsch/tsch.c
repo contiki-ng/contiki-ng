@@ -55,6 +55,7 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
+#include "net/mac/tsch/sixtop/sixtop.h"
 #include "net/mac/mac-sequence.h"
 #include "lib/random.h"
 
@@ -245,7 +246,6 @@ tsch_reset(void)
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_set_eb_period(TSCH_EB_PERIOD);
 }
-
 /* TSCH keep-alive functions */
 
 /*---------------------------------------------------------------------------*/
@@ -407,7 +407,6 @@ eb_input(struct input_packet *current_input)
     }
   }
 }
-
 /*---------------------------------------------------------------------------*/
 /* Process pending input packet(s) */
 static void
@@ -423,6 +422,28 @@ tsch_rx_process_pending()
     int is_eb = ret
       && frame.fcf.frame_version == FRAME802154_IEEE802154_2015
       && frame.fcf.frame_type == FRAME802154_BEACONFRAME;
+
+#if TSCH_WITH_SIXTOP
+    int is_ie = ret
+      && frame.fcf.frame_version == FRAME802154_IEEE802154E_2012
+      && frame.fcf.frame_type == FRAME802154_DATAFRAME
+      && frame.fcf.ie_list_present == 1;
+
+    if(is_ie) {
+      /* IE received (Data may/ maynot be present) */
+
+      /* Save sequence number of Link Request */
+      sixtop_set_seqno(frame.seq);
+
+      /* Check and parse, if it is a Sixtop IE. Returns length of data */
+      uint8_t data_len = ie_input(current_input);
+
+      if(data_len <= 0) {
+        /* Only Sixtop IE present , no data */
+        is_data = 0;
+      }
+    }
+#endif /* TSCH_WITH_SIXTOP */
 
     if(is_data) {
       /* Skip EBs and other control messages */
@@ -443,7 +464,6 @@ tsch_rx_process_pending()
     ringbufindex_get(&input_ringbuf);
   }
 }
-
 /*---------------------------------------------------------------------------*/
 /* Pass sent packets to upper layer */
 static void
@@ -613,9 +633,9 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
           ies.ie_tsch_slotframe_and_link.slotframe_size);
       for(i = 0; i < num_links; i++) {
         tsch_schedule_add_link(sf,
-            ies.ie_tsch_slotframe_and_link.links[i].link_options,
-            LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
-            ies.ie_tsch_slotframe_and_link.links[i].timeslot, ies.ie_tsch_slotframe_and_link.links[i].channel_offset);
+                               ies.ie_tsch_slotframe_and_link.links[i].link_options,
+                               LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
+                               ies.ie_tsch_slotframe_and_link.links[i].timeslot, ies.ie_tsch_slotframe_and_link.links[i].channel_offset);
       }
     } else {
       LOG_ERR("! parse_eb: too many links in schedule (%u)\n", num_links);
@@ -672,7 +692,6 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
   LOG_ERR("! did not associate.\n");
   return 0;
 }
-
 /* Processes and protothreads used by TSCH */
 
 /*---------------------------------------------------------------------------*/
