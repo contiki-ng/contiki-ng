@@ -55,13 +55,16 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
-#include "net/mac/tsch/sixtop/sixtop.h"
 #include "net/mac/mac-sequence.h"
 #include "lib/random.h"
 
 #if UIP_CONF_IPV6_RPL
 #include "net/mac/tsch/tsch-rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
+
+#if TSCH_WITH_SIXTOP
+#include "net/mac/tsch/sixtop/sixtop.h"
+#endif
 
 #if FRAME802154_VERSION < FRAME802154_IEEE802154_2015
 #error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154_2015
@@ -423,28 +426,6 @@ tsch_rx_process_pending()
       && frame.fcf.frame_version == FRAME802154_IEEE802154_2015
       && frame.fcf.frame_type == FRAME802154_BEACONFRAME;
 
-#if TSCH_WITH_SIXTOP
-    int is_ie = ret
-      && frame.fcf.frame_version == FRAME802154_IEEE802154E_2012
-      && frame.fcf.frame_type == FRAME802154_DATAFRAME
-      && frame.fcf.ie_list_present == 1;
-
-    if(is_ie) {
-      /* IE received (Data may/ maynot be present) */
-
-      /* Save sequence number of Link Request */
-      sixtop_set_seqno(frame.seq);
-
-      /* Check and parse, if it is a Sixtop IE. Returns length of data */
-      uint8_t data_len = ie_input(current_input);
-
-      if(data_len <= 0) {
-        /* Only Sixtop IE present , no data */
-        is_data = 0;
-      }
-    }
-#endif /* TSCH_WITH_SIXTOP */
-
     if(is_data) {
       /* Skip EBs and other control messages */
       /* Copy to packetbuf for processing */
@@ -546,7 +527,6 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
     return 0;
   }
 #endif /* TSCH_JOIN_SECURED_ONLY */
-
 #if LLSEC802154_ENABLED
   if(!tsch_security_parse_frame(input_eb->payload, hdrlen,
       input_eb->len - hdrlen - tsch_security_mic_len(&frame),
@@ -633,9 +613,9 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
           ies.ie_tsch_slotframe_and_link.slotframe_size);
       for(i = 0; i < num_links; i++) {
         tsch_schedule_add_link(sf,
-                               ies.ie_tsch_slotframe_and_link.links[i].link_options,
-                               LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
-                               ies.ie_tsch_slotframe_and_link.links[i].timeslot, ies.ie_tsch_slotframe_and_link.links[i].channel_offset);
+            ies.ie_tsch_slotframe_and_link.links[i].link_options,
+            LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
+            ies.ie_tsch_slotframe_and_link.links[i].timeslot, ies.ie_tsch_slotframe_and_link.links[i].channel_offset);
       }
     } else {
       LOG_ERR("! parse_eb: too many links in schedule (%u)\n", num_links);
@@ -952,6 +932,10 @@ tsch_init(void)
    * If TSCH_AUTOSTART is not set, one needs to call NETSTACK_MAC.on() to start TSCH. */
   NETSTACK_MAC.on();
 #endif /* TSCH_AUTOSTART */
+
+#if TSCH_WITH_SIXTOP
+  sixtop_init();
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /* Function send for TSCH-MAC, puts the packet in packetbuf in the MAC queue */
@@ -1067,6 +1051,9 @@ packet_input(void)
       LOG_INFO("received from ");
       LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
       LOG_INFO_(" with seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+#if TSCH_WITH_SIXTOP
+      sixtop_input();
+#endif /* TSCH_WITH_SIXTOP */
       NETSTACK_NETWORK.input();
     }
   }

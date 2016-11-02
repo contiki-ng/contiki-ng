@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2016, Yasuyuki Tanaka
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,96 +10,132 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the Institute nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+/**
+ * \addtogroup net
+ * @{
+ */
+/**
+ * \defgroup sixtop 6TiSCH Operation Sublayer (6top)
+ * @{
+ */
 /**
  * \file
- *         A sixtop protocol that performs link addition/deletion
+ *         6TiSCH Operation Sublayer (6top) APIs
  * \author
- *         Shalu R <shalur@cdac.in>
- *         Lijo Thomas <lijo@cdac.in>
+ *         Yasuyuki Tanaka <yasuyuki.tanaka@inf.ethz.ch>
  */
 
-#ifndef __SIXTOP_H__
-#define __SIXTOP_H__
+#ifndef _SIXTOP_H_
+#define _SIXTOP_H_
 
-#include "contiki.h"
-#include "stdbool.h"
-#include "net/ip/uip-debug.h"
+#include "net/mac/mac.h"
 #include "net/linkaddr.h"
-#include "net/netstack.h"
-#include "net/mac/tsch/tsch-schedule.h"
-#include "net/mac/tsch/tsch-asn.h"
 
-#define SIXTOP_SUBIE_ID                                   0x00
-#define SIXTOP_VERSION                                    0x01
+#include "sixp-pkt.h"
 
-/* Link Option OFF */
-#define LINK_OPTION_OFF                                   0
+/**
+ * \brief Input Handler of Scheduling Function
+ * \param type 6P Message Type of an input packet
+ * \param code Code, 6P Command Identifier or Return Code, of an input packet
+ * \param body Body, "Other Fields", of an input packet
+ * \param body_len The length of body
+ * \param body src_addr Source address of an input packet
+ */
+typedef void (* sixtop_sf_input)(sixp_pkt_type_t type,
+                                 sixp_pkt_code_t code,
+                                 const uint8_t *body,
+                                 uint16_t body_len,
+                                 const linkaddr_t *src_addr);
 
-/* Maximum number of retransmissions permissible at MAC layer */
-#define SIXTOP_CONF_MAX_MAC_TRANSMISSIONS                 3
+/**
+ * \brief Timeout Handler of Scheduling Function
+ * \param cmd 6P Command (Identifier) in process under the transaction
+ * \param peer_addr The peer address of the transaction
+ */
+typedef void (* sixtop_sf_timeout)(sixp_pkt_cmd_t cmd,
+                                   const linkaddr_t *peer_addr);
+/**
+ * /brief Scheduling Function Driver
+ */
+typedef struct {
+  uint8_t sfid;                  /**< SFID */
+  clock_time_t timeout_interval; /**< Timeout Value */
+  void (*init)(void);            /**< Init Function */
+  sixtop_sf_input input;         /**< Input Handler */
+  sixtop_sf_timeout timeout;     /**< Transaction Timeout Handler */
+} sixtop_sf_t;
+/**
+ * \var sixtop_sf_t::sfid
+ * managed:   0x00-0xfe
+ * unmanaged: 0xf0-0xfe
+ * reserved:  0xff
+ */
 
-/* 6P Command ID */
-enum sixtop_command_id {
-  CMD_ADD       = 0x01,
-  CMD_DELETE    = 0x02,
-  CMD_COUNT     = 0x03,
-  CMD_LIST      = 0x04,
-  CMD_CLEAR     = 0x05,
-};
 
-/* 6P Return Code */
-enum sixtop_return_code {
-  RC_SUCCESS    = 0x06, /* Operation succeeded */
-  RC_VER_ERR    = 0x07, /* Unsupported 6P version */
-  RC_SFID_ERR   = 0x08, /* Unsupported SFID */
-  RC_BUSY       = 0x09, /* Handling previous request */
-  RC_RESET      = 0x0a, /* Abort 6P transaction */
-  RC_ERR        = 0x0b, /* Operation failed */
-};
+/**
+ * \brief Add a Scheduling Function (SF) to 6top Sublayer
+ * \param sf The pointer to a Scheduling Function Driver
+ * \return 0 on success, -1 on failure
+ *
+ * If there is a SF whose SF is identical to one of a SF specified to this API,
+ * the addition will fail and -1 will be returned. If there is no room to
+ * another SF, -1 will be returned as well. You can specify how many SFs can be
+ * added with SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS.
+ */
+int sixtop_add_sf(const sixtop_sf_t *sf);
 
-/* Sixtop State Machine */
-enum {
-  SIXTOP_IDLE             = 0x00,
-  SIXTOP_ADD_REQUEST_WAIT_SENDDONE  = 0x01,       /* Waiting for SendDone confirmation of Add Request */
-  SIXTOP_ADD_RESPONSE_WAIT      = 0x02,     /* Waiting for Add Response */
-  SIXTOP_ADD_RESPONSE_WAIT_SENDDONE   = 0x03,     /* Waiting for SendDone confirmation of Add Response */
-  SIXTOP_ADD_RESPONSE_RECEIVED    = 0x04,     /* Received Add Response */
-  SIXTOP_DELETE_REQUEST_WAIT_SENDDONE = 0x05,     /* Waiting for SendDone confirmation of Delete Request */
-  SIXTOP_DELETE_RESPONSE_WAIT     = 0x06,     /* waiting for Delete Response */
-  SIXTOP_DELETE_RESPONSE_WAIT_SENDDONE = 0x07,    /* Waiting for SendDone confirmation of Add Response */
-  SIXTOP_DELETE_RESPONSE_RECEIVED   = 0x08,     /* Received Delete Response */
-} sixtop_state;
+/**
+ * \brief Find a SF which has been added by SFID
+ * \param sfid Scheduling Function Identifier of a SF
+ * \return The pointer to a SF driver having the specified SFID on success, NULL
+ *         on failure (not found)
+ */
+const sixtop_sf_t *sixtop_find_sf(uint8_t sfid);
 
-/********** Functions *********/
-/* Initiates a Sixtop Link addition */
-int sixtop_add_links(linkaddr_t *dest_addr, uint8_t num_Links);
-/* Initiates a Sixtop Link deletion */
-int sixtop_remove_link(linkaddr_t *dest_addr);
-/* Is it a Sixtop IE? Returns 0 if success */
-int sixtop_is_sixtop_ie(const uint8_t *buf, int buf_size, frame802154_t *frame, struct ieee802154_ies *ies);
-/* Set the Sequence Number of Link Response as in Link Request */
-void sixtop_set_seqno(uint8_t seq_num);
-/* Parse a Sixtop IE. Returns length of IE */
-int sixtop_parse_ie(const uint8_t *buf, linkaddr_t *dest_addr);
+/**
+ * \brief Output a 6P packet which is supposestored in packetbuf
+ * \param dest_addr Destination address of the outgoing packet
+ * \param callback MAC callback function to get a TX result
+ * \param arg The pointer to an argument which is returned with the MAC callback
+ */
+void sixtop_output(const linkaddr_t *dest_addr,
+                   mac_callback_t callback, void *arg);
 
-#endif /* __SIXTOP_H__ */
+/**
+ * \brief Input a packet stored in packetbuf
+ */
+void sixtop_input(void);
+
+/**
+ * \brief Initialize 6top module
+ * This initialization function removes all the SFs which has been installed
+ * into the 6top sub-layer. In addition, it invokes sixp_init().
+ */
+void sixtop_init(void);
+
+/**
+ * \brief Initialize installed SFs which has been added in the system
+ * This function is supposed to be invoked every time the node gets associated.
+ */
+void sixtop_init_sf(void);
+
+#endif /* !_SIXTOP_H_ */
+/** @} */
+/** @} */
