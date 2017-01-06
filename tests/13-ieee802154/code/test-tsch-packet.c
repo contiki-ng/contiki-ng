@@ -165,32 +165,30 @@ update_current_asn(uint64_t asn)
 static result_t
 test_create_eb(const eb_test_vector_t *v)
 {
-  uint8_t buf[TSCH_PACKET_MAX_LEN];
   int len;
   uint8_t hdr_len;
   uint8_t tsch_sync_ie_offset;
 
-  memset(buf, 0, sizeof(buf));
+  packetbuf_clear();
 
   linkaddr_copy(&linkaddr_node_addr, &v->src);
   update_current_asn(v->asn);
 
-  len = tsch_packet_create_eb(buf, sizeof(buf),
-                              &hdr_len, &tsch_sync_ie_offset);
-  tsch_packet_update_eb(buf, len, tsch_sync_ie_offset);
+  len = tsch_packet_create_eb(&hdr_len, &tsch_sync_ie_offset);
+  tsch_packet_update_eb(packetbuf_hdrptr(), len, tsch_sync_ie_offset);
 #if WITH_SECURITY_ON
-  len += tsch_security_secure_frame(buf, buf,
+  len += tsch_security_secure_frame(packetbuf_hdrptr(), packetbuf_hdrptr(),
                                     hdr_len, len - hdr_len,
                                     &tsch_current_asn);
 #endif
 
   printf("%s: len=%u, hdr_len=%u, buf=", __func__, len, hdr_len);
-  print_hex(buf, len);
+  print_hex(packetbuf_hdrptr(), len);
   printf("\n");
 
   if(len != v->frame.len ||
      hdr_len != v->hdr_len ||
-     memcmp(buf, v->frame.buf, len) != 0) {
+     memcmp(packetbuf_hdrptr(), v->frame.buf, len) != 0) {
     return FAILURE;
   }
 
