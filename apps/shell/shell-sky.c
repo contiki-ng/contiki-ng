@@ -43,7 +43,6 @@
 
 #include "dev/watchdog.h"
 
-#include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "cc2420.h"
 #include "dev/leds.h"
@@ -51,7 +50,6 @@
 #include "dev/light-sensor.h"
 #include "dev/battery-sensor.h"
 #include "dev/sht11/sht11-sensor.h"
-#include "net/rime/timesynch.h"
 
 #include "sys/node-id.h"
 
@@ -95,7 +93,7 @@ do_rssi(void)
 {
   static int sample;
   int channel;
-  
+
   NETSTACK_MAC.off(0);
 
   cc2420_on();
@@ -103,9 +101,9 @@ do_rssi(void)
     cc2420_set_channel(channel);
     rssi_samples[sample].channel[channel - 11] = cc2420_rssi() + 53;
   }
-  
+
   NETSTACK_MAC.on();
-  
+
   sample = (sample + 1) % NUM_SAMPLES;
 
   {
@@ -218,10 +216,10 @@ PROCESS_THREAD(shell_txpower_process, ev, data)
   PROCESS_BEGIN();
 
   msg.txpower = shell_strtolong(data, &newptr);
-  
+
   /* If no transmission power was given on the command line, we print
      out the current txpower. */
-  
+
   if(newptr == data) {
     msg.txpower = cc2420_get_txpower();
   } else {
@@ -245,7 +243,7 @@ PROCESS_THREAD(shell_rfchannel_process, ev, data)
   PROCESS_BEGIN();
 
   msg.channel = shell_strtolong(data, &newptr);
-  
+
   /* If no channel was given on the command line, we print out the
      current channel. */
   if(newptr == data) {
@@ -269,7 +267,7 @@ PROCESS_THREAD(shell_nodeid_process, ev, data)
   PROCESS_BEGIN();
 
   nodeid = shell_strtolong(data, &newptr);
-  
+
   /* If no node ID was given on the command line, we print out the
      current channel. Else we burn the new node ID. */
   if(newptr == data) {

@@ -93,12 +93,11 @@ else
   ## No banking
   MEMORY_MODEL=large
   c_seg =
-endif 
+endif
 
 ### CPU-dependent cleanup files
 CLEAN += *.lnk *.lk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex
 CLEAN += *.omf *.cdb *.banks *.flags *.banked-hex
-CLEAN += symbols.c symbols.h
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS = . dev
@@ -134,4 +133,3 @@ CONTIKI_OBJECTFILES = $(addprefix $(OBJECTDIR)/, \
 
 PROJECT_OBJECTFILES = $(addprefix $(OBJECTDIR)/, \
 	$(call oname, $(PROJECT_SOURCEFILES)))
-

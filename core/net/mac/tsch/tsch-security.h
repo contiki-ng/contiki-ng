@@ -39,22 +39,18 @@
 #include "net/mac/tsch/tsch-asn.h"
 #include "net/mac/tsch/tsch-private.h"
 #include "net/mac/frame802154.h"
-#include "net/llsec/llsec802154.h"
 #include "net/mac/frame802154e-ie.h"
+#include "net/llsec802154.h"
 
 /******** Configuration *******/
 
 /* To enable TSCH security:
  * - set LLSEC802154_CONF_ENABLED
  * - set LLSEC802154_CONF_USES_EXPLICIT_KEYS
- * - unset LLSEC802154_CONF_USES_FRAME_COUNTER
  * */
 
 #if LLSEC802154_ENABLED && !LLSEC802154_USES_EXPLICIT_KEYS
 #error LLSEC802154_ENABLED set but LLSEC802154_USES_EXPLICIT_KEYS unset
-#endif /* LLSEC802154_ENABLED */
-#if LLSEC802154_ENABLED && LLSEC802154_USES_FRAME_COUNTER
-#error LLSEC802154_ENABLED set but LLSEC802154_USES_FRAME_COUNTER set
 #endif /* LLSEC802154_ENABLED */
 
 /* K1, defined in 6TiSCH minimal, is well-known (offers no security) and used for EBs only */

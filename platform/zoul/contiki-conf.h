@@ -306,11 +306,7 @@ typedef uint32_t rtimer_clock_t;
  * @{
  */
 #ifndef NETSTACK_CONF_NETWORK
-#if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
-#else
-#define NETSTACK_CONF_NETWORK rime_driver
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* NETSTACK_CONF_NETWORK */
 
 #ifndef NETSTACK_CONF_MAC
@@ -318,27 +314,15 @@ typedef uint32_t rtimer_clock_t;
 #endif
 
 #ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     contikimac_driver
+#define NETSTACK_CONF_RDC     nullrdc_driver
 #endif
 
 /* Configure NullRDC for when it's selected */
 #define NULLRDC_CONF_802154_AUTOACK             1
 #define NULLRDC_CONF_802154_AUTOACK_HW			    1
 
-/* Configure ContikiMAC for when it's selected */
-#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 0
-#define WITH_FAST_SLEEP                         1
-
-#ifndef NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE    8
-#endif
-
 #ifndef NETSTACK_CONF_FRAMER
-#if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_CONF_FRAMER  framer_802154
-#else /* NETSTACK_CONF_WITH_IPV6 */
-#define NETSTACK_CONF_FRAMER  contikimac_framer
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* NETSTACK_CONF_FRAMER */
 
 #if CC1200_CONF_SUBGHZ_50KBPS_MODE
@@ -354,11 +338,6 @@ typedef uint32_t rtimer_clock_t;
 #define NULLRDC_CONF_802154_AUTOACK_HW                      1
 #define NULLRDC_CONF_SEND_802154_ACK                        0
 
-#define CONTIKIMAC_CONF_CCA_CHECK_TIME                      (RTIMER_ARCH_SECOND / 800)
-#define CONTIKIMAC_CONF_CCA_SLEEP_TIME                      (RTIMER_ARCH_SECOND / 120)
-#define CONTIKIMAC_CONF_LISTEN_TIME_AFTER_PACKET_DETECTED   (RTIMER_ARCH_SECOND / 8)
-#define CONTIKIMAC_CONF_AFTER_ACK_DETECTED_WAIT_TIME        (RTIMER_SECOND / 300)
-#define CONTIKIMAC_CONF_INTER_PACKET_INTERVAL               (RTIMER_SECOND / 200)
 #endif
 
 /* This can be overriden to use the cc1200_driver instead */

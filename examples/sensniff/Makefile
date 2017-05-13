@@ -13,8 +13,6 @@ ifeq ($(TARGET),)
   endif
 endif
 
-CONTIKI_WITH_RIME = 1
-
 ### Optionally, the target can add its own Makefile, to do things like e.g.
 ### add more source files to the build or define make variables.
 -include $(TARGET)/Makefile.$(TARGET)

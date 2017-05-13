@@ -53,6 +53,7 @@
 
 #include "contiki.h"
 #include "net/netstack.h"
+#include "net/queuebuf.h"
 
 #include "dev/serial-line.h"
 
@@ -66,8 +67,6 @@
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-#include "net/rime/rime.h"
 
 #include "dev/micromac-radio.h"
 #include "MMAC.h"
@@ -367,7 +366,7 @@ main(void)
   queuebuf_init();
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-  PRINTF("%s %s %s\n", NETSTACK_LLSEC.name, NETSTACK_MAC.name, NETSTACK_RDC.name);
+  PRINTF("%s %s\n",NETSTACK_MAC.name, NETSTACK_RDC.name);
 
 #ifndef UIP_FALLBACK_INTERFACE
   uart0_set_input(serial_line_input_byte);
@@ -414,7 +413,7 @@ main(void)
   start_uip6();
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-  /* need this to reliably generate the first rtimer callback and callbacks in other 
+  /* need this to reliably generate the first rtimer callback and callbacks in other
      auto-start processes */
   (void)u32AHI_Init();
 

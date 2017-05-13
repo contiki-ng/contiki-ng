@@ -38,7 +38,7 @@
 
 #include "net/mac/framer-802154.h"
 #include "net/mac/frame802154.h"
-#include "net/llsec/llsec802154.h"
+#include "net/llsec802154.h"
 #include "net/packetbuf.h"
 #include "lib/random.h"
 #include <string.h>
@@ -83,7 +83,7 @@ create_frame(int type, int do_create)
 
   /* Build the FCF. */
   params.fcf.frame_type = packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE);
-  params.fcf.frame_pending = packetbuf_attr(PACKETBUF_ATTR_PENDING);
+  params.fcf.frame_pending = 0;
   if(packetbuf_holds_broadcast()) {
     params.fcf.ack_required = 0;
     /* Suppress seqno on broadcast if supported (frame v2 or more) */
@@ -99,20 +99,15 @@ create_frame(int type, int do_create)
 
   /* Insert IEEE 802.15.4 version bits. */
   params.fcf.frame_version = FRAME802154_VERSION;
-  
+
 #if LLSEC802154_USES_AUX_HEADER
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL)) {
     params.fcf.security_enabled = 1;
   }
   /* Setting security-related attributes */
   params.aux_hdr.security_control.security_level = packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL);
-#if LLSEC802154_USES_FRAME_COUNTER
-  params.aux_hdr.frame_counter.u16[0] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1);
-  params.aux_hdr.frame_counter.u16[1] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3);
-#else /* LLSEC802154_USES_FRAME_COUNTER */
   params.aux_hdr.security_control.frame_counter_suppression = 1;
   params.aux_hdr.security_control.frame_counter_size = 1;
-#endif /* LLSEC802154_USES_FRAME_COUNTER */
 #if LLSEC802154_USES_EXPLICIT_KEYS
   params.aux_hdr.security_control.key_id_mode = packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE);
   params.aux_hdr.key_index = packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX);
@@ -231,23 +226,15 @@ parse(void)
       }
     }
     packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (linkaddr_t *)&frame.src_addr);
-    packetbuf_set_attr(PACKETBUF_ATTR_PENDING, frame.fcf.frame_pending);
     if(frame.fcf.sequence_number_suppression == 0) {
       packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, frame.seq);
     } else {
       packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, 0xffff);
     }
-#if NETSTACK_CONF_WITH_RIME
-    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_ID, frame.seq);
-#endif
 
 #if LLSEC802154_USES_AUX_HEADER
     if(frame.fcf.security_enabled) {
       packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, frame.aux_hdr.security_control.security_level);
-#if LLSEC802154_USES_FRAME_COUNTER
-      packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1, frame.aux_hdr.frame_counter.u16[0]);
-      packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3, frame.aux_hdr.frame_counter.u16[1]);
-#endif /* LLSEC802154_USES_FRAME_COUNTER */
 #if LLSEC802154_USES_EXPLICIT_KEYS
       packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, frame.aux_hdr.security_control.key_id_mode);
       packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, frame.aux_hdr.key_index);

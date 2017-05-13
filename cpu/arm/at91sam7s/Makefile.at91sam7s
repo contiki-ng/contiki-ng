@@ -13,14 +13,11 @@ CONTIKI_CPU=$(CONTIKI_CPU_ARM)/at91sam7s
 
 ### Define the source files we have in the AT91SAM7S port
 
-CONTIKI_CPU_DIRS = . ../common/dbg-io ../common/usb loader
+CONTIKI_CPU_DIRS = . ../common/dbg-io ../common/usb
 
 AT91SAM7S     = clock.c debug-uart.c interrupt-utils.c newlib-syscalls.c sys-interrupt.c rtimer-arch.c rtimer-arch-interrupt.c uip-log.c
 
 SYSAPPS = codeprop-otf.c
-APPDIRS += $(CONTIKI)/cpu/at91sam7s/loader
-
-ELFLOADER = elfloader-otf.c elfloader-arm.c symtab.c cfs-ram.c
 
 
 include $(CONTIKI_CPU_ARM_COMMON)/usb/Makefile.usb
@@ -31,7 +28,7 @@ include $(CONTIKI_CPU_ARM_COMMON)/SD-card/Makefile.sdcard
 
 TARGETLIBS = random.c dbg-printf.c dbg-puts.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c
 
-CONTIKI_TARGET_SOURCEFILES += $(AT91SAM7S) $(SYSAPPS) $(ELFLOADER) \
+CONTIKI_TARGET_SOURCEFILES += $(AT91SAM7S) $(SYSAPPS) \
 			$(TARGETLIBS) $(UIPDRIVERS) $(USB)
 
 CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
@@ -58,7 +55,7 @@ STARTUP=${addprefix $(OBJECTDIR)/,startup-SAM7S-arm.o}
 
 # JTAG program upload
 OPENOCD	 = openocd
-OPENOCD_DIR = $(CONTIKI_CPU)/openocd/ 
+OPENOCD_DIR = $(CONTIKI_CPU)/openocd/
 OPENOCD_CFG = arm7_wig.cfg
 
 OPENOCD_FLASH_CFG = arm7_wig_flash.cfg
@@ -72,7 +69,7 @@ THUMB_FLAGS=-mthumb
 ARM_FLAGS=
 
 
-CFLAGSNO = -I. -I$(CONTIKI)/core -I$(CONTIKI_CPU) -I$(CONTIKI_CPU)/loader \
+CFLAGSNO = -I. -I$(CONTIKI)/core -I$(CONTIKI_CPU) \
 	   -I$(CONTIKI_CPU)/dbg-io \
            -I$(CONTIKI)/platform/$(TARGET) \
            ${addprefix -I,$(APPDIRS)} \
@@ -141,10 +138,7 @@ CUSTOM_RULE_LINK=yes
 %-stripped.o: %.o
 	$(STRIP) --strip-unneeded -g -x -o $@ $<
 
-%.o: ${CONTIKI_TARGET}/loader/%.S
-	$(AS) -o $(notdir $(<:.S=.o)) $<
-
-%-nosyms.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) $(OBJECTDIR)/empty-symbols.o
+%-nosyms.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP)
 	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
 
 
@@ -153,24 +147,15 @@ CUSTOM_RULE_LINK=yes
 
 %.bin: %.$(TARGET)
 	$(OBJCOPY) -O binary $< $@
- 
-.PHONY: symbols.c
-ifdef CORE
-%.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) $(OBJECTDIR)/symbols.o
-	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
 
-symbols.c: $(CORE)
-	$(NM) $< | awk -f $(CONTIKI_CPU)/builtins.awk -f ../../tools/mknmlist > symbols.c
+ifdef CORE
+%.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP)
+	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
 
 else
 %.$(TARGET): %-nosyms.$(TARGET)
 	ln -sf $< $@
 endif
-
-empty-symbols.c:
-	cp ${CONTIKI}/tools/empty-symbols.c symbols.c
-	cp ${CONTIKI}/tools/empty-symbols.h symbols.h
-
 
 upload_ocd_%: %.bin
 	# Clear lock bits
@@ -186,10 +171,6 @@ upload_%: %.ihex
 
 ocd_reset:
 	cd $(CONTIKI_CPU)/openocd;$(OPENOCD) -f $(OPENOCD_CFG) -c init -c reset -c exit
-
-# Don't use core/loader/elfloader.c, use elfloader-otf.c instead
-$(OBJECTDIR)/elfloader.o: | $(OBJECTDIR)
-	echo -n >$@
 
 clean: clean_cpu
 

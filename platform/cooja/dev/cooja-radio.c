@@ -37,7 +37,6 @@
 #include "lib/simEnvChange.h"
 
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "net/netstack.h"
 
 #include "dev/radio.h"

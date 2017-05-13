@@ -217,4 +217,3 @@ PROCESS_THREAD(test_remote_pm, ev, data)
  * @}
  * @}
  */
-

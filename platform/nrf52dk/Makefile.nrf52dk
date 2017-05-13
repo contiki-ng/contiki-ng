@@ -31,4 +31,4 @@ endif
 CONTIKI_CPU=$(CONTIKI)/cpu/nrf52832
 include $(CONTIKI_CPU)/Makefile.nrf52832
 
-MODULES += core/net core/net/mac core/net/llsec
+MODULES += core/net core/net/mac

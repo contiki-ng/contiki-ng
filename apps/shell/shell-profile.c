@@ -41,8 +41,6 @@
 #include "contiki-conf.h"
 #include "shell-profile.h"
 
-#include "loader/symbols.h"
-
 #include <stdio.h>
 #include <string.h>
 

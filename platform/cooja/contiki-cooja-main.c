@@ -50,8 +50,8 @@
 #include "lib/random.h"
 #include "lib/simEnvChange.h"
 
-#include "net/rime/rime.h"
 #include "net/netstack.h"
+#include "net/queuebuf.h"
 
 #include "dev/eeprom.h"
 #include "dev/serial-line.h"

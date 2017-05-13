@@ -103,4 +103,3 @@ PROCESS_THREAD(cc1200_demo_process, ev, data)
 /**
  * @}
  */
-

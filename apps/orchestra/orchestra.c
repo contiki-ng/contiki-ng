@@ -41,7 +41,6 @@
 #include "net/packetbuf.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/rpl/rpl-private.h"
-#include "net/rime/rime.h" /* Needed for so-called rime-sniffer */
 
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"

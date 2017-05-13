@@ -58,7 +58,7 @@ ifdef NODEID
 endif
 
 ### CPU-dependent cleanup files
-CLEAN += symbols.c symbols.h *.d *.elf *.hex
+CLEAN += *.d *.elf *.hex
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS = . dev rf-core rf-core/api $(TI_XXWARE_STARTUP_DIR)

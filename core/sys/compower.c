@@ -79,20 +79,4 @@ compower_clear(struct compower_activity *e)
   e->listen = e->transmit = 0;
 }
 /*---------------------------------------------------------------------------*/
-void
-compower_attrconv(struct compower_activity *e)
-{
-  packetbuf_set_attr(PACKETBUF_ATTR_LISTEN_TIME,
-                     packetbuf_attr(PACKETBUF_ATTR_LISTEN_TIME) + e->listen);
-  packetbuf_set_attr(PACKETBUF_ATTR_TRANSMIT_TIME,
-                     packetbuf_attr(PACKETBUF_ATTR_TRANSMIT_TIME) + e->transmit);
-}
-/*---------------------------------------------------------------------------*/
-void
-compower_accumulate_attrs(struct compower_activity *e)
-{
-  e->listen += packetbuf_attr(PACKETBUF_ATTR_LISTEN_TIME);
-  e->transmit += packetbuf_attr(PACKETBUF_ATTR_TRANSMIT_TIME);
-}
-/*---------------------------------------------------------------------------*/
 /** @} */

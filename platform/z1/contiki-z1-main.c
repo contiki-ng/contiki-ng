@@ -43,14 +43,13 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
+#include "net/queuebuf.h"
 #include "dev/adxl345.h"
 #include "sys/clock.h"
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-#include "net/rime/rime.h"
 
 #include "sys/node-id.h"
 #include "cfs-coffee-arch.h"
@@ -318,11 +317,10 @@ main(int argc, char **argv)
 
   NETSTACK_RDC.init();
   NETSTACK_MAC.init();
-  NETSTACK_LLSEC.init();
   NETSTACK_NETWORK.init();
 
-  printf("%s %s %s, channel check rate %lu Hz, radio channel %u\n",
-         NETSTACK_LLSEC.name, NETSTACK_MAC.name, NETSTACK_RDC.name,
+  printf("%s %s, channel check rate %lu Hz, radio channel %u\n",
+         NETSTACK_MAC.name, NETSTACK_RDC.name,
          CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0 ? 1 :
                          NETSTACK_RDC.channel_check_interval()),
          CC2420_CONF_CHANNEL);
@@ -359,12 +357,11 @@ main(int argc, char **argv)
 #else /* NETSTACK_CONF_WITH_IPV6 */
 
   NETSTACK_RDC.init();
-  NETSTACK_MAC.init();
-  NETSTACK_LLSEC.init();
+  NETSTACK_MAC.init
   NETSTACK_NETWORK.init();
 
-  printf("%s %s %s, channel check rate %lu Hz, radio channel %u\n",
-         NETSTACK_LLSEC.name, NETSTACK_MAC.name, NETSTACK_RDC.name,
+  printf("%s %s, channel check rate %lu Hz, radio channel %u\n",
+         NETSTACK_MAC.name, NETSTACK_RDC.name,
          CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0 ? 1 :
                          NETSTACK_RDC.channel_check_interval()),
          CC2420_CONF_CHANNEL);
@@ -485,4 +482,3 @@ log_message(char *m1, char *m2)
   printf("%s%s\n", m1, m2);
 }
 #endif /* LOG_CONF_ENABLED */
-

@@ -72,12 +72,6 @@ ifeq ($(CONTIKI_WITH_IPV4),1)
   MODULES += core/net/ipv4 core/net/ip
 endif
 
-ifeq ($(CONTIKI_WITH_RIME),1)
-  HAS_STACK = 1
-  CFLAGS += -DNETSTACK_CONF_WITH_RIME=1 
-  MODULES += core/net/rime
-endif
-
 # Make IPv6 the default stack
 ifeq ($(HAS_STACK),0)
 ifneq ($(CONTIKI_WITH_IPV6),0)
@@ -102,8 +96,8 @@ endif
 
 CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 
-CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/llsec net/mac net/rime \
-                 net/rpl sys cfs ctk lib/ctk loader . }
+CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac \
+                 net/rpl sys cfs . }
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 
@@ -127,8 +121,7 @@ ifdef APPS
   APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDS), $(DIR)/Makefile.$(APP)}}}
   -include $(APPINCLUDES)
   APP_SOURCES = ${foreach APP, $(APPS), $($(APP)_src)}
-  DSC_SOURCES = ${foreach APP, $(APPS), $($(APP)_dsc)}
-  CONTIKI_SOURCEFILES += $(APP_SOURCES) $(DSC_SOURCES)
+  CONTIKI_SOURCEFILES += $(APP_SOURCES)
 endif
 
 ### Include target makefile (TODO Unsafe?)

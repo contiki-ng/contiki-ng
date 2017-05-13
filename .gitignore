@@ -9,7 +9,7 @@
 *.ihex
 *.pyc
 *.redbee-econotag
-*.econotag 
+*.econotag
 *.native
 *.z1
 *.minimal-net

@@ -40,8 +40,6 @@
 #define PROFILE_CONF_ON 0
 #define ENERGEST_CONF_ON 0
 #define LOG_CONF_ENABLED 1
-#define RIMESTATS_CONF_ON 1
-#define RIMESTATS_CONF_ENABLED 1
 
 #define COOJA 1
 
@@ -87,27 +85,16 @@
 #if NETSTACK_CONF_WITH_IPV4
 
 /* Network setup for IPv4 */
-#define NETSTACK_CONF_NETWORK rime_driver /* NOTE: uip_over_mesh. else: uip_driver */
+#define NETSTACK_CONF_NETWORK uip_driver
 #define NETSTACK_CONF_MAC nullmac_driver
 #define NETSTACK_CONF_RDC nullrdc_driver
 #define NETSTACK_CONF_RADIO cooja_radio_driver
 #define UIP_CONF_IP_FORWARD           1
 
-#else /* NETSTACK_CONF_WITH_IPV4 */
-
-/* Network setup for Rime */
-#define NETSTACK_CONF_NETWORK rime_driver
-#define NETSTACK_CONF_MAC csma_driver
-#define NETSTACK_CONF_RDC nullrdc_driver
-#define NETSTACK_CONF_RADIO cooja_radio_driver
-/*#define NETSTACK_CONF_FRAMER framer_nullmac*/
-
 #endif /* NETSTACK_CONF_WITH_IPV4 */
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #endif /* NETSTACK_CONF_H */
-
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
 
 /* Default network config */
 #if NETSTACK_CONF_WITH_IPV6

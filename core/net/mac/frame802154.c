@@ -65,7 +65,7 @@
 
 #include "sys/cc.h"
 #include "net/mac/frame802154.h"
-#include "net/llsec/llsec802154.h"
+#include "net/llsec802154.h"
 #include "net/linkaddr.h"
 #include <string.h>
 

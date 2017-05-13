@@ -48,10 +48,6 @@ net_debug_lladdr_print(const uip_lladdr_t *addr)
     PRINTA("(NULL LL addr)");
     return;
   } else {
-#if NETSTACK_CONF_WITH_RIME
-    /* Rime uses traditionally a %u.%u format */
-    PRINTA("%u.%u", addr->addr[0], addr->addr[1]);
-#else /* NETSTACK_CONF_WITH_RIME */
     unsigned int i;
     for(i = 0; i < LINKADDR_SIZE; i++) {
       if(i > 0) {
@@ -59,7 +55,6 @@ net_debug_lladdr_print(const uip_lladdr_t *addr)
       }
       PRINTA("%02x", addr->addr[i]);
     }
-#endif /* NETSTACK_CONF_WITH_RIME */
   }
 }
 /*---------------------------------------------------------------------------*/

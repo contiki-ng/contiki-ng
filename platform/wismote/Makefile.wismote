@@ -38,9 +38,6 @@ LDFLAGSNO += -xm "$(IAR_PATH)/lib/dlib/dl430xsfn.r43" -f "$(IAR_PATH)/config/lnk
 LDFLAGS += $(LDFLAGSNO) -Felf -yn
 endif
 
-contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}
-#	$(AR) rcf $@ $^
-
 %.hex: %.ihex
 	mv $< $@
 
@@ -51,6 +48,4 @@ contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}
 	msp430flasher -n msp430x5437 -w $< -v -z [VCC]
 
 MODULES += core/net core/net/mac \
-           core/net/mac/contikimac \
-           core/net/llsec \
            dev/cc2520 dev/sht11

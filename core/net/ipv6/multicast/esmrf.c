@@ -31,7 +31,7 @@
 
 /**
  * \file
- *         This file shows the implementations of the Enhanced Stateless 
+ *         This file shows the implementations of the Enhanced Stateless
  *	       Multicast RPL Forwarding (ESMRF)
  *
  *         It will only work in RPL networks in MOP 3 "Storing with Multicast"
@@ -49,6 +49,7 @@
 #include "net/rpl/rpl.h"
 #include "net/ip/uip.h"
 #include "net/netstack.h"
+#include "net/packetbuf.h"
 #include <string.h>
 
 extern uint16_t uip_slen;
@@ -225,12 +226,12 @@ icmp_input()
 
   memcpy(&mcast_buf, uip_buf, uip_len);
   mcast_len = uip_len;
-  /* pass the packet to our uip_process to check if it is allowed to 
+  /* pass the packet to our uip_process to check if it is allowed to
    * accept this packet or not */
   uip_ipaddr_copy(&UIP_IP_BUF->srcipaddr, &src_ip);
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &des_ip);
   UIP_UDP_BUF->udpchksum = 0;
-  
+
   uip_process(UIP_DATA);
 
   memcpy(uip_buf, &mcast_buf, mcast_len);

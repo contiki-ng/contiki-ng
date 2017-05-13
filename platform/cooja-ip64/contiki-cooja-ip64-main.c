@@ -49,7 +49,6 @@
 #include "lib/random.h"
 #include "lib/simEnvChange.h"
 
-#include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "net/ip/uip-nameserver.h"
 

@@ -42,12 +42,11 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
+#include "net/queuebuf.h"
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-#include "net/rime/rime.h"
 
 #include "sys/node-id.h"
 #include "cfs-coffee-arch.h"
@@ -228,7 +227,7 @@ main(int argc, char **argv)
    */
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
-  
+
 #if WITH_TINYOS_AUTO_IDS
   node_id = TOS_NODE_ID;
 #else /* WITH_TINYOS_AUTO_IDS */
@@ -246,7 +245,7 @@ main(int argc, char **argv)
 #endif
 
   random_init(ds2411_id[0] + node_id);
-  
+
   leds_off(LEDS_BLUE);
   /*
    * Initialize Contiki and our processes.
@@ -263,12 +262,12 @@ main(int argc, char **argv)
   init_platform();
 
   set_rime_addr();
-  
+
   cc2420_init();
   {
     uint8_t longaddr[8];
     uint16_t shortaddr;
-    
+
     shortaddr = (linkaddr_node_addr.u8[0] << 8) +
       linkaddr_node_addr.u8[1];
     memset(longaddr, 0, sizeof(longaddr));
@@ -276,7 +275,7 @@ main(int argc, char **argv)
     PRINTF("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
            longaddr[0], longaddr[1], longaddr[2], longaddr[3],
            longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
-    
+
     cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
   }
 
@@ -301,16 +300,15 @@ main(int argc, char **argv)
   queuebuf_init();
   NETSTACK_RDC.init();
   NETSTACK_MAC.init();
-  NETSTACK_LLSEC.init();
   NETSTACK_NETWORK.init();
 
-  PRINTF("%s %s %s, channel check rate %lu Hz, radio channel %u, CCA threshold %i\n",
-         NETSTACK_LLSEC.name, NETSTACK_MAC.name, NETSTACK_RDC.name,
+  PRINTF("%s %s, channel check rate %lu Hz, radio channel %u, CCA threshold %i\n",
+         NETSTACK_MAC.name, NETSTACK_RDC.name,
          CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0 ? 1:
                          NETSTACK_RDC.channel_check_interval()),
          CC2420_CONF_CHANNEL,
          CC2420_CONF_CCA_THRESH);
-  
+
   process_start(&tcpip_process, NULL);
 
 #if DEBUG
@@ -345,11 +343,10 @@ main(int argc, char **argv)
 
   NETSTACK_RDC.init();
   NETSTACK_MAC.init();
-  NETSTACK_LLSEC.init();
   NETSTACK_NETWORK.init();
 
-  PRINTF("%s %s %s, channel check rate %lu Hz, radio channel %u\n",
-         NETSTACK_LLSEC.name, NETSTACK_MAC.name, NETSTACK_RDC.name,
+  PRINTF("%s %s, channel check rate %lu Hz, radio channel %u\n",
+         NETSTACK_MAC.name, NETSTACK_RDC.name,
          CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0? 1:
                          NETSTACK_RDC.channel_check_interval()),
          CC2420_CONF_CHANNEL);
@@ -395,7 +392,7 @@ main(int argc, char **argv)
 	   uip_ipaddr_to_quad(&hostaddr));
   }
 #endif /* NETSTACK_CONF_WITH_IPV4 */
-  
+
   watchdog_start();
 
 #if !PROCESS_CONF_NO_PROCESS_NAMES
@@ -440,7 +437,7 @@ main(int argc, char **argv)
 #endif /* CC2420_CONF_SFD_TIMESTAMPS */
       }
 #endif
-      
+
       /* Re-enable interrupts and go to sleep atomically. */
       ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
       /* We only want to measure the processing done in IRQs when we

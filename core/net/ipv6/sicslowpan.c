@@ -66,9 +66,10 @@
 #include "net/ip/tcpip.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rime/rime.h"
 #include "net/ipv6/sicslowpan.h"
 #include "net/netstack.h"
+#include "net/packetbuf.h"
+#include "net/queuebuf.h"
 
 #include <stdio.h>
 
@@ -1255,7 +1256,7 @@ send_packet(linkaddr_t *dest)
 
   /* Provide a callback function to receive the result of
      a packet transmission. */
-  NETSTACK_LLSEC.send(&packet_sent, NULL);
+  NETSTACK_MAC.send(&packet_sent, NULL);
 
   /* If we are sending multiple packets in a row, we need to let the
      watchdog know that we are still alive. */
@@ -1293,23 +1294,6 @@ output(const uip_lladdr_t *localdest)
        here ! */
     set_packet_attrs();
   }
-
-#if PACKETBUF_WITH_PACKET_TYPE
-#define TCP_FIN 0x01
-#define TCP_ACK 0x10
-#define TCP_CTL 0x3f
-  /* Set stream mode for all TCP packets, except FIN packets. */
-  if(UIP_IP_BUF->proto == UIP_PROTO_TCP &&
-     (UIP_TCP_BUF->flags & TCP_FIN) == 0 &&
-     (UIP_TCP_BUF->flags & TCP_CTL) != TCP_ACK) {
-    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,
-                       PACKETBUF_ATTR_PACKET_TYPE_STREAM);
-  } else if(UIP_IP_BUF->proto == UIP_PROTO_TCP &&
-            (UIP_TCP_BUF->flags & TCP_FIN) == TCP_FIN) {
-    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,
-                       PACKETBUF_ATTR_PACKET_TYPE_STREAM_END);
-  }
-#endif
 
   /*
    * The destination address will be tagged to each outbound
@@ -1803,4 +1787,3 @@ const struct network_driver sicslowpan_driver = {
 };
 /*--------------------------------------------------------------------*/
 /** @} */
-

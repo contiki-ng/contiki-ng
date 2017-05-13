@@ -40,7 +40,6 @@
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "net/linkaddr.h"
 #include "net/netstack.h"
 #include "sys/energest.h"

@@ -1,2 +1,0 @@
-TARGET = zoul
-BOARD ?= remote-revb

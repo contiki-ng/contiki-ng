@@ -5,20 +5,7 @@ shell_src = shell.c shell-reboot.c shell-vars.c shell-ps.c \
             shell-power.c \
             shell-base64.c \
             shell-memdebug.c \
-	    shell-powertrace.c shell-crc.c
-shell_dsc = shell-dsc.c
-	    
-ifeq ($(CONTIKI_WITH_RIME),1)
-shell_src += shell-rime.c shell-sendtest.c \
-            shell-rime-ping.c shell-rime-sniff.c shell-rime-netcmd.c \
-            shell-rime-debug.c shell-rime-debug-runicast.c \
-            shell-rime-sendcmd.c shell-download.c shell-rime-neighbors.c \
-			shell-rime-unicast.c shell-netperf.c \
-			shell-collect-view.c 
-			
-APPS += collect-view
-include $(CONTIKI)/apps/collect-view/Makefile.collect-view
-endif
+	    shell-crc.c
 
 ifeq ($(CONTIKI_WITH_IPV4),1)
 	SHELL_WITH_IP = 1
@@ -30,11 +17,6 @@ endif
 ifeq ($(SHELL_WITH_IP),1)
 shell_src += shell-wget.c shell-httpd.c shell-irc.c \
             shell-tcpsend.c shell-udpsend.c shell-ping.c shell-netstat.c
-APPS += webserver
-include $(CONTIKI)/apps/webserver/Makefile.webserver
-ifndef PLATFORM_BUILD
-  override webserver_src = http-strings.c psock.c memb.c httpd-cfs.c urlconv.c webserver-nogui.c
-endif
 
 APPS += webbrowser
 include $(CONTIKI)/apps/webbrowser/Makefile.webbrowser
@@ -55,9 +37,6 @@ ifndef PLATFORM_BUILD
 endif
 
 endif
-
-APPS += powertrace
-include $(CONTIKI)/apps/powertrace/Makefile.powertrace
 
 ifeq ($(TARGET),sky)
   shell_src += shell-sky.c shell-exec.c

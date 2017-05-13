@@ -41,8 +41,6 @@
 #include "contiki-conf.h"
 #include "shell-vars.h"
 
-#include "loader/symbols.h"
-
 #include <stdio.h>
 #include <string.h>
 
@@ -70,11 +68,11 @@ SHELL_COMMAND(var_command,
 PROCESS_THREAD(shell_vars_process, ev, data)
 {
   int i;
-  
+
   PROCESS_BEGIN();
 
   shell_output_str(&vars_command, "Variables in RAM:", "");
-  
+
   for(i = 0; i < symbols_nelts; ++i) {
     if(symbols[i].name != NULL &&
        (uintptr_t)symbols[i].value >= SHELL_VARS_RAM_BEGIN &&
@@ -82,7 +80,7 @@ PROCESS_THREAD(shell_vars_process, ev, data)
       shell_output_str(&vars_command, (char *)symbols[i].name, "");
     }
   }
-  
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
@@ -91,7 +89,7 @@ PROCESS_THREAD(shell_var_process, ev, data)
   int i;
   int j;
   char numbuf[40];
-  
+
   PROCESS_BEGIN();
 
   if(data == NULL) {
@@ -100,7 +98,7 @@ PROCESS_THREAD(shell_var_process, ev, data)
     for(i = 0; i < symbols_nelts; ++i) {
       if(symbols[i].name != NULL &&
 	 strncmp(symbols[i].name, data, strlen(symbols[i].name)) == 0) {
-	
+
 	sprintf(numbuf, " %d", *((int *)symbols[i].value));
 	shell_output_str(&var_command, (char *)symbols[i].name, numbuf);
 
@@ -121,7 +119,7 @@ PROCESS_THREAD(shell_var_process, ev, data)
     }
     shell_output_str(&var_command, data, ": variable name not found");
   }
-  
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

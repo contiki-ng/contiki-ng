@@ -42,13 +42,12 @@
 #include "dev/xmem.h"
 #include "lib/random.h"
 #include "net/netstack.h"
+#include "net/queuebuf.h"
 #include "net/mac/frame802154.h"
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-#include "net/rime/rime.h"
 
 #include "sys/node-id.h"
 #include "sys/autostart.h"

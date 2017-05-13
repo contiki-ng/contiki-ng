@@ -73,16 +73,3 @@ CONTIKI_SOURCEFILES += radio.c
 CONTIKI_CPU_DIRS += Common
 CONTIKI_SOURCEFILES += system_ADuCRF101.c
 CONTIKI_SOURCEFILES += radioeng.c
-
-ifdef CORE
-.PHONY: symbols.c symbols.h
-symbols.c symbols.h:
-	$(NM) -C $(CORE) | grep -v @ | grep -v dll_crt0 | \
-		awk -f $(CONTIKI)/tools/mknmlist > symbols.c || rm -f symbols.c
-else
-symbols.c symbols.h:
-	cp ${CONTIKI}/tools/empty-symbols.c symbols.c
-	cp ${CONTIKI}/tools/empty-symbols.h symbols.h
-endif
-
-contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}

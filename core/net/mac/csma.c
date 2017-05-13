@@ -383,6 +383,7 @@ send_packet(mac_callback_t sent, void *ptr)
     seqno++;
   }
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, seqno++);
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
   /* Look for the neighbor entry */
   n = neighbor_queue_from_addr(addr);
@@ -412,24 +413,10 @@ send_packet(mac_callback_t sent, void *ptr)
           if(q->buf != NULL) {
             struct qbuf_metadata *metadata = (struct qbuf_metadata *)q->ptr;
             /* Neighbor and packet successfully allocated */
-            if(packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS) == 0) {
-              /* Use default configuration for max transmissions */
-              metadata->max_transmissions = CSMA_MAX_MAX_FRAME_RETRIES + 1;
-            } else {
-              metadata->max_transmissions =
-                packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
-            }
+            metadata->max_transmissions = CSMA_MAX_MAX_FRAME_RETRIES + 1;
             metadata->sent = sent;
             metadata->cptr = ptr;
-#if PACKETBUF_WITH_PACKET_TYPE
-            if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) ==
-               PACKETBUF_ATTR_PACKET_TYPE_ACK) {
-              list_push(n->queued_packet_list, q);
-            } else
-#endif
-            {
-              list_add(n->queued_packet_list, q);
-            }
+            list_add(n->queued_packet_list, q);
 
             PRINTF("csma: send_packet, queue length %d, free packets %d\n",
                    list_length(n->queued_packet_list), memb_numfree(&packet_memb));
@@ -463,7 +450,7 @@ send_packet(mac_callback_t sent, void *ptr)
 static void
 input_packet(void)
 {
-  NETSTACK_LLSEC.input();
+  NETSTACK_NETWORK.input();
 }
 /*---------------------------------------------------------------------------*/
 static int

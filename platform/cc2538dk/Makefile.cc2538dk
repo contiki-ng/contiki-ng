@@ -24,9 +24,7 @@ endif
 CONTIKI_CPU=$(CONTIKI)/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += core/net core/net/mac \
-           core/net/mac/contikimac \
-           core/net/llsec core/net/llsec/noncoresec
+MODULES += core/net core/net/mac
 
 PYTHON = python
 BSL_FLAGS += -e -w -v

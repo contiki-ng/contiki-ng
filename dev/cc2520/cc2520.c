@@ -38,9 +38,8 @@
 #include "dev/cc2520/cc2520.h"
 #include "dev/cc2520/cc2520_const.h"
 
-#include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "net/netstack.h"
+#include "net/packetbuf.h"
 
 #include <string.h>
 
@@ -407,17 +406,9 @@ cc2520_init(void)
 static int
 cc2520_transmit(unsigned short payload_len)
 {
-  int i, txpower;
+  int i;
 
   GET_LOCK();
-
-  txpower = 0;
-  if(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) > 0) {
-    /* Remember the current transmission power */
-    txpower = cc2520_get_txpower();
-    /* Set the specified transmission power */
-    set_txpower(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) - 1);
-  }
 
   /* The TX FIFO can only hold one packet. Make sure to not overrun
    * FIFO by waiting for transmission to start here and synchronizing
@@ -441,18 +432,6 @@ cc2520_transmit(unsigned short payload_len)
 #endif /* WITH_SEND_CCA */
   for(i = LOOP_20_SYMBOLS; i > 0; i--) {
     if(CC2520_SFD_IS_1) {
-#if PACKETBUF_WITH_PACKET_TYPE
-      {
-        rtimer_clock_t sfd_timestamp;
-        sfd_timestamp = cc2520_sfd_start_time;
-        if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) ==
-           PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP) {
-          /* Write timestamp to last two bytes of packet in TXFIFO. */
-          CC2520_WRITE_RAM(&sfd_timestamp, CC2520RAM_TXFIFO + payload_len - 1, 2);
-        }
-      }
-#endif /* PACKETBUF_WITH_PACKET_TYPE */
-
       if(!(status() & BV(CC2520_TX_ACTIVE))) {
         /* SFD went high but we are not transmitting. This means that
            we just started receiving a packet, so we drop the
@@ -481,11 +460,6 @@ cc2520_transmit(unsigned short payload_len)
         off();
       }
 
-      if(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) > 0) {
-        /* Restore the transmission power */
-        set_txpower(txpower & 0xff);
-      }
-
       RELEASE_LOCK();
 
       return RADIO_TX_OK;
@@ -496,11 +470,6 @@ cc2520_transmit(unsigned short payload_len)
      transmitted because of other channel activity. */
   RIMESTATS_ADD(contentiondrop);
   PRINTF("cc2520: do_send() transmission never started\n");
-
-  if(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) > 0) {
-    /* Restore the transmission power */
-    set_txpower(txpower & 0xff);
-  }
 
   RELEASE_LOCK();
   return RADIO_TX_COLLISION;

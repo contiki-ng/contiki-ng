@@ -39,7 +39,6 @@
 
 #include "net/netstack.h"
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "dev/watchdog.h"
 
 #include "dev/leds.h"
@@ -1661,7 +1660,7 @@ calibrate(void)
 {
 
 #ifdef RF_FORCE_CALIBRATION
-  if (!(rf_flags & RF_FORCE_CALIBRATION) 
+  if (!(rf_flags & RF_FORCE_CALIBRATION)
       && ((clock_seconds() - cal_timer) < CC1200_CAL_TIMEOUT_SECONDS)) {
     /* Timeout not reached, defer calibration... */
     return;
@@ -2132,8 +2131,8 @@ addr_check_auto_ack(uint8_t *frame, uint16_t frame_len)
        linkaddr_cmp((linkaddr_t *)&info154.dest_addr,
                     &linkaddr_node_addr)) {
 
-      /* 
-       * Address check succeeded or address filter disabled. 
+      /*
+       * Address check succeeded or address filter disabled.
        * We send an ACK in case a corresponding data frame
        * is received even in promiscuous mode (if auto-ack is
        * enabled)!
@@ -2142,11 +2141,11 @@ addr_check_auto_ack(uint8_t *frame, uint16_t frame_len)
       if((rx_mode_value & RADIO_RX_MODE_AUTOACK) &&
          info154.fcf.frame_type == FRAME802154_DATAFRAME &&
          info154.fcf.ack_required != 0 &&
-         (!(rx_mode_value & RADIO_RX_MODE_ADDRESS_FILTER) || 
+         (!(rx_mode_value & RADIO_RX_MODE_ADDRESS_FILTER) ||
           linkaddr_cmp((linkaddr_t *)&info154.dest_addr,
                        &linkaddr_node_addr))) {
 
-        /* 
+        /*
          * Data frame destined for us & ACK request bit set -> send ACK.
          * Make sure the preamble length is configured accordingly as
          * MAC timing parameters rely on this!
@@ -2161,17 +2160,17 @@ addr_check_auto_ack(uint8_t *frame, uint16_t frame_len)
          */
         idle();
 #endif
-        
+
         idle_tx_rx((const uint8_t *)ack, ACK_LEN);
-        
+
         /* rx_rx() will follow */
-        
+
         return ADDR_CHECK_OK_ACK_SEND;
-        
+
       }
 
       return ADDR_CHECK_OK;
-      
+
     } else {
 
       return ADDR_CHECK_FAILED;
@@ -2179,7 +2178,7 @@ addr_check_auto_ack(uint8_t *frame, uint16_t frame_len)
     }
 
   }
-  
+
   return INVALID_FRAME;
 
 }

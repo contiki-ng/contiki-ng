@@ -37,7 +37,6 @@ CONTIKI_CPU_DIRS = $(CONTIKI_CPU_FAM_DIR) . dev
 MSP430     = msp430.c flash.c clock.c leds.c leds-arch.c \
              watchdog.c lpm.c rtimer-arch.c
 UIPDRIVERS = me.c me_tabs.c slip.c crc16.c
-ELFLOADER  = elfloader.c elfloader-msp430.c symtab.c
 
 ifndef CPU_HAS_MSP430X
 # include mtarch.c only in the non-large memory model case, because
@@ -46,12 +45,8 @@ ifndef CPU_HAS_MSP430X
 MSP430 += mtarch.c
 endif
 
-ifeq ($(TARGET_MEMORY_MODEL),large)
-ELFLOADER = elfloader-msp430x.c symtab.c
-endif
-
 CONTIKI_TARGET_SOURCEFILES += $(MSP430) \
-                              $(SYSAPPS) $(ELFLOADER) \
+                              $(SYSAPPS) \
                               $(UIPDRIVERS)
 
 CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
@@ -208,10 +203,6 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
 %-stripped.o: %.o
 	$(STRIP) --strip-unneeded -g -x -o $@ $<
 
-%.o: ${CONTIKI_TARGET}/loader/%.S
-	$(TRACE_AS)
-	$(Q)$(AS) -o $(notdir $(<:.S=.o)) $<
-
 %.firmware:	%.${TARGET}
 	mv $< $@
 
@@ -245,17 +236,3 @@ core-labels.o: core.${TARGET}
 core-globals.o: core.${TARGET}
 	${CONTIKI}/tools/msp430-make-globals core.${TARGET} > core-globals.S
 	$(AS) -o $@ core-globals.S
-
-loader-init.o: ${CONTIKI_TARGET}/loader/loader-init.S
-	$(AS) -o $(notdir $(<:.S=.o)) $<
-# 	cp loader-init.o build-app/
-
-ifdef CORE
-.PHONY: symbols.c symbols.h
-symbols.c:
-	$(NM) $(CORE) | awk -f $(CONTIKI)/tools/mknmlist > symbols.c
-else
-symbols.c symbols.h:
-	cp ${CONTIKI}/tools/empty-symbols.c symbols.c
-	cp ${CONTIKI}/tools/empty-symbols.h symbols.h
-endif

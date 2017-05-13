@@ -109,26 +109,6 @@ void compower_accumulate(struct compower_activity *a);
  */
 void compower_clear(struct compower_activity *a);
 
-/**
- * \brief      Convert power contumption information to packet attributes
- * \param a    A pointer to an activity structure.
- *
- *             This function converts accumulated power consumption
- *             information for a communication activity to packet
- *             attributes (see \ref packetbufattr "packet attributes").
- */
-void compower_attrconv(struct compower_activity *a);
-
-/**
- * \brief      Accumulate power contumption for a communication activity based on energy data in packet attributes
- * \param a    A pointer to an activity structure.
- *
- *             This function accumulates power consumption information
- *             for a communication activity from packet attributes
- *             (see \ref packetbufattr "packet attributes").
- */
-void compower_accumulate_attrs(struct compower_activity *a);
-
 #endif /* COMPOWER_H_ */
 
 /** @} */

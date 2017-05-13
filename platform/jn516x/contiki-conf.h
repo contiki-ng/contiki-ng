@@ -74,7 +74,7 @@
 #define PROCESS_CONF_NUMEVENTS 8
 #define PROCESS_CONF_STATS 1
 
-#if !defined NETSTACK_CONF_WITH_IPV6 && !defined NETSTACK_CONF_WITH_IPV4 && !defined NETSTACK_CONF_WITH_RIME
+#if !defined NETSTACK_CONF_WITH_IPV6 && !defined NETSTACK_CONF_WITH_IPV4
 #define NETSTACK_CONF_WITH_IPV6 1
 #endif /* NETSTACK_CONF_ not defined */
 
@@ -112,14 +112,6 @@
 /* Configure NullRDC for when it is selected */
 #define NULLRDC_CONF_802154_AUTOACK_HW  1
 
-/* Configure ContikiMAC for when it's selected */
-#define CONTIKIMAC_CONF_WITH_CONTIKIMAC_HEADER  0
-#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 0
-#define WITH_FAST_SLEEP                         1
-
-#ifndef NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE    8
-#endif
 #define RDC_CONF_HARDWARE_ACK        1
 
 #define UIP_CONF_LL_802154              1

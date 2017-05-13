@@ -35,8 +35,7 @@
 #define __COMMON_CONF_H__
 
 #define MAC_CONFIG_NULLRDC                    0
-#define MAC_CONFIG_CONTIKIMAC                 1
-#define MAC_CONFIG_TSCH                       2
+#define MAC_CONFIG_TSCH                       1
 /* Select a MAC configuration */
 #define MAC_CONFIG MAC_CONFIG_TSCH
 
@@ -49,14 +48,6 @@
 #define NETSTACK_CONF_MAC     csma_driver
 #define NETSTACK_CONF_RDC     nullrdc_driver
 #define NETSTACK_CONF_FRAMER  framer_802154
-
-#elif MAC_CONFIG == MAC_CONFIG_CONTIKIMAC
-
-#define NETSTACK_CONF_MAC     csma_driver
-#define NETSTACK_CONF_RDC     contikimac_driver
-#define NETSTACK_CONF_FRAMER  contikimac_framer
-#undef   MICROMAC_CONF_AUTOACK
-#define  MICROMAC_CONF_AUTOACK 1
 
 #elif MAC_CONFIG == MAC_CONFIG_TSCH
 
@@ -103,12 +94,6 @@
 /* Enable security */
 #undef LLSEC802154_CONF_SECURITY_LEVEL
 #define LLSEC802154_CONF_SECURITY_LEVEL 1
-/* TSCH uses explicit keys to identify k1 and k2 */
-#undef LLSEC802154_CONF_USES_EXPLICIT_KEYS
-#define LLSEC802154_CONF_USES_EXPLICIT_KEYS 1
-/* TSCH uses the ASN rather than frame counter to construct the Nonce */
-#undef LLSEC802154_CONF_USES_FRAME_COUNTER
-#define LLSEC802154_CONF_USES_FRAME_COUNTER 0
 
 #endif /* WITH_SECURITY */
 

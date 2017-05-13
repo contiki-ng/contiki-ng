@@ -42,8 +42,6 @@
 #include "dev/oscillators.h"
 #include "dev/watchdog.h"
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
-#include "net/linkaddr.h"
 #include "net/netstack.h"
 #include "sys/energest.h"
 #include "sys/clock.h"

@@ -10,8 +10,6 @@ else
 LDFLAGS += -Wl,--defsym -Wl,__P1SEL2=0x0041 -Wl,--defsym -Wl,__P5SEL2=0x0045
 endif
 
-CLEAN += symbols.c symbols.h
-
 ARCH = msp430.c leds.c watchdog.c xmem.c i2cmaster.c \
        spi.c cc2420.c cc2420-arch.c cc2420-arch-sfd.c\
        node-id.c sensors.c button-sensor.c cfs-coffee.c \
@@ -42,10 +40,6 @@ ifdef IAR
 LDFLAGSNO += -xm "$(IAR_PATH)/lib/dlib/dl430xsfn.r43" -f "$(IAR_PATH)/config/lnk430f2617.xcl"
 LDFLAGS += $(LDFLAGSNO) -Felf -yn
 endif
-
-contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}
-#	$(AR) rcf $@ $^
-
 
 NUMPAR=20
 IHEXFILE=tmpimage.ihex

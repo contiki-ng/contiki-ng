@@ -43,7 +43,6 @@
 #include "sys/cc.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "rf-core/rf-core.h"
 #include "rf-core/rf-switch.h"
 #include "ti-lib.h"

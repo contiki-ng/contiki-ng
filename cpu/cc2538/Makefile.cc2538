@@ -39,7 +39,7 @@ ifdef NODEID
 endif
 
 ### CPU-dependent cleanup files
-CLEAN += symbols.c symbols.h *.d *.elf *.hex
+CLEAN += *.d *.elf *.hex
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS = ../arm/common/CMSIS . dev usb

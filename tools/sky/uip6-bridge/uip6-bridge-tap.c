@@ -61,9 +61,6 @@ tcpip_output(const uip_lladdr_t *a)
 {
   if(outputfunc != NULL) {
     outputfunc(a);
-    /*    printf("pppp o %u tx %u rx %u\n", UIP_IP_BUF->proto,
-	   packetbuf_attr(PACKETBUF_ATTR_TRANSMIT_TIME),
-	   packetbuf_attr(PACKETBUF_ATTR_LISTEN_TIME));*/
     leds_toggle(LEDS_GREEN);
   }
   return 0;
@@ -90,9 +87,6 @@ tcpip_input(void)
   if(uip_len > 0) {
     mac_LowpanToEthernet();
     if(uip_len > 0) {
-      /*      printf("pppp i %u tx %u rx %u\n", UIP_IP_BUF->proto,
-	     packetbuf_attr(PACKETBUF_ATTR_TRANSMIT_TIME),
-	     packetbuf_attr(PACKETBUF_ATTR_LISTEN_TIME));*/
       slip_write(uip_buf, uip_len);
       leds_toggle(LEDS_RED);
       uip_clear_buf();

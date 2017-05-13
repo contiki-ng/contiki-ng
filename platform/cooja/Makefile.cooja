@@ -47,14 +47,14 @@ CONTIKI_TARGET_DIRS = . dev lib sys cfs net
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
 vpath %.c $(COOJA_SOURCEDIRS)
 
-COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c slip.c watchdog.c rimestats.c elfloader-x86.c
+COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c slip.c watchdog.c
 
 COOJA_INTFS	= beep.c button-sensor.c ip.c leds-arch.c moteid.c \
 		    pir-sensor.c rs232.c vib-sensor.c \
 		    clock.c log.c cfs-cooja.c cooja-radio.c \
 			eeprom.c slip-arch.c
 
-COOJA_CORE = random.c sensors.c leds.c symbols.c
+COOJA_CORE = random.c sensors.c leds.c
 
 COOJA_NET = uip-driver.c
 
@@ -75,7 +75,7 @@ CFLAGSNO = $(EXTRA_CC_ARGS) -Wall -g -I/usr/local/include -DCLASSNAME=$(CLASSNAM
 CFLAGS   += $(CFLAGSNO)
 
 MODULES += core/net core/net/mac \
-           core/net/llsec core/net/ip64-addr
+           core/net/ip64-addr
 
 ## Copied from Makefile.include, since Cooja overrides CFLAGS et al
 HAS_STACK = 0
@@ -86,7 +86,7 @@ endif
 
 ifeq ($(CONTIKI_WITH_RIME),1)
   HAS_STACK = 1
-  CFLAGS += -DNETSTACK_CONF_WITH_RIME=1 
+  CFLAGS += -DNETSTACK_CONF_WITH_RIME=1
 endif
 
 # Make IPv6 the default stack

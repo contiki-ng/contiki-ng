@@ -67,6 +67,7 @@
 #include "button-sensor.h"
 #include "dev/serial-line.h"
 #include "net/mac/frame802154.h"
+#include "net/queuebuf.h"
 
 #include "driverlib/driverlib_release.h"
 

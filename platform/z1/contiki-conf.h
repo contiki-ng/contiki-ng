@@ -37,9 +37,6 @@
 #include PROJECT_CONF_H
 #endif /* PROJECT_CONF_H */
 
-#define XMAC_CONF_COMPOWER          1
-#define CXMAC_CONF_COMPOWER         1
-
 #if NETSTACK_CONF_WITH_IPV6
 
 /* Network setup for IPv6 */
@@ -52,7 +49,7 @@
 #endif
 
 #ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC           contikimac_driver
+#define NETSTACK_CONF_RDC           nullrdc_driver
 #endif
 
 #ifndef NETSTACK_CONF_FRAMER
@@ -68,54 +65,9 @@
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 63
 
 #define CC2420_CONF_AUTOACK                   1
-#define NETSTACK_RDC_CHANNEL_CHECK_RATE       8
-#define RIME_CONF_NO_POLITE_ANNOUCEMENTS      0
-#define CXMAC_CONF_ANNOUNCEMENTS              0
-#define XMAC_CONF_ANNOUNCEMENTS               0
 
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM                     4
-#endif
-
-#else /* NETSTACK_CONF_WITH_IPV6 */
-
-/* Network setup for non-IPv6 (rime). */
-#ifndef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK        rime_driver
-#endif
-
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC            csma_driver
-#endif
-
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC            contikimac_driver
-#endif
-
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER         contikimac_framer
-#endif
-
-#ifndef NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
-#endif
-
-#define CC2420_CONF_AUTOACK                  1
-
-#define COLLECT_CONF_ANNOUNCEMENTS           1
-#define RIME_CONF_NO_POLITE_ANNOUCEMENTS     0
-#define CXMAC_CONF_ANNOUNCEMENTS             0
-#define XMAC_CONF_ANNOUNCEMENTS              0
-#define CONTIKIMAC_CONF_ANNOUNCEMENTS        0
-
-#define CONTIKIMAC_CONF_COMPOWER             1
-#define XMAC_CONF_COMPOWER                   1
-#define CXMAC_CONF_COMPOWER                  1
-
-#define COLLECT_NBR_TABLE_CONF_MAX_NEIGHBORS 32
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM                    8
 #endif
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
@@ -151,10 +103,6 @@
 
 #define PROFILE_CONF_ON                   0
 #define ENERGEST_CONF_ON                  1
-
-#define ELFLOADER_CONF_TEXT_IN_ROM        0
-#define ELFLOADER_CONF_DATAMEMORY_SIZE    0x400
-#define ELFLOADER_CONF_TEXTMEMORY_SIZE    0x800
 
 #define AODV_COMPLIANCE
 #define AODV_NUM_RT_ENTRIES          32

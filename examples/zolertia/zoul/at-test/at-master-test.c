@@ -50,7 +50,6 @@
 #include "dev/sys-ctrl.h"
 #include "dev/gpio.h"
 #include "dev/ioc.h"
-#include "net/rime/rime.h"
 #include "lib/list.h"
 #include "dev/sha256.h"
 #include <stdio.h>

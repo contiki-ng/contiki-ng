@@ -20,9 +20,6 @@ CONTIKI_TARGET_SOURCEFILES += $(ARCH) $(UIPDRIVERS)
 MCU=msp430f1611
 include $(CONTIKI)/cpu/msp430/Makefile.msp430
 
-contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}
-#	$(AR) rcf $@ $^
-
 
 ifdef IAR
 LDFLAGSNO += -xm "$(IAR_PATH)/lib/dlib/dl430fn.r43" -f "$(IAR_PATH)/config/lnk430f1611.xcl"
@@ -93,7 +90,7 @@ else
     ifdef MOTEIDS
   	  MOTES = $(foreach MOTEID, $(MOTEIDS), $(shell $(MOTELIST)  2>&- | grep $(MOTEID) | \
           cut -f 4 -d \  | \
-          perl -ne 'print $$1 . " " if(m-(/dev/[\w+\.\-]+)-);')) 
+          perl -ne 'print $$1 . " " if(m-(/dev/[\w+\.\-]+)-);'))
     else
       MOTES = $(shell $(MOTELIST) 2>&- | grep USB | \
          cut -f 4 -d \  | \

@@ -38,9 +38,9 @@
  */
 
 #include "lib/print-stats.h"
-
-#include "net/rime/rime.h"
+#include "net/linkaddr.h"
 #include "sys/energest.h"
+#include "sys/clock.h"
 
 #include <stdio.h>
 

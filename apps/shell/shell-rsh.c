@@ -40,9 +40,6 @@
 #include "contiki.h"
 #include "shell.h"
 
-#include "net/rime/rime.h"
-#include "net/rime/meshconn.h"
-
 #include <stdio.h>
 #include <string.h>
 
@@ -69,9 +66,9 @@ PROCESS_THREAD(shell_rsh_process, ev, data)
   struct shell_input *input;
   const char *nextptr;
   char buf[40];
-  
+
   PROCESS_BEGIN();
-  
+
   receiver.u8[0] = shell_strtolong(data, &nextptr);
   if(nextptr == data || *nextptr != '.') {
     shell_output_str(&rsh_command,
@@ -107,7 +104,7 @@ PROCESS_THREAD(shell_rsh_process, ev, data)
       }
     }
   }
-  
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
@@ -156,7 +153,7 @@ recv_meshconn(struct meshconn_conn *c)
     packetbuf_copyfrom("abcdefghijklmnopq", 18);
     meshconn_send(c);
   }
-  
+
   return;
 #if 0
   if(front_process != NULL &&
@@ -168,10 +165,10 @@ recv_meshconn(struct meshconn_conn *c)
     input.len2 = 0;
     process_post_synch(front_process, shell_event_input, &input);
   } else {
-    
+
     ret = shell_start_command(packetbuf_dataptr(), packetbuf_datalen(),
 			      &rsh_server_command, &started_process);
-    
+
     if(started_process != NULL &&
        ret == SHELL_FOREGROUND &&
        process_is_running(started_process)) {

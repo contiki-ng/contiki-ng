@@ -39,11 +39,9 @@
 
 #include <stdio.h>
 
+#include "net/rime/rime.h"
 #include "net/ipv4/uip-fw.h"
 #include "net/ipv4/uip-over-mesh.h"
-#include "net/rime/route-discovery.h"
-#include "net/rime/route.h"
-#include "net/rime/trickle.h"
 
 #define ROUTE_TRICKLE_INTERVAL CLOCK_SECOND * 32
 #define ROUTE_DISCOVERY_INTERVAL CLOCK_SECOND * 4
@@ -82,7 +80,7 @@ recv_data(struct unicast_conn *c, const linkaddr_t *from)
 {
   struct route_entry *e;
   linkaddr_t source;
-    
+
   uip_len = packetbuf_copyto(&uip_buf[UIP_LLH_LEN]);
 
   source.u8[0] = BUF->srcipaddr.u8[2];
@@ -123,10 +121,10 @@ static void
 new_route(struct route_discovery_conn *c, const linkaddr_t *to)
 {
   struct route_entry *rt;
-  
+
   if(queued_packet) {
     PRINTF("uip-over-mesh: new route, sending queued packet\n");
-    
+
     queuebuf_to_packetbuf(queued_packet);
     queuebuf_free(queued_packet);
     queued_packet = NULL;
@@ -171,7 +169,7 @@ gateway_announce_recv(struct trickle_conn *c)
   if(!is_gateway) {
     uip_over_mesh_set_gateway(&msg->gateway);
   }
-  
+
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -252,20 +250,9 @@ uip_over_mesh_send(void)
   PRINTF("uIP over mesh send to %d.%d with len %d\n",
 	 receiver.u8[0], receiver.u8[1],
 	 uip_len);
-  
-  
-  packetbuf_copyfrom(&uip_buf[UIP_LLH_LEN], uip_len);
 
-  /* Send TCP data with the PACKETBUF_ATTR_ERELIABLE set so that
-     an underlying power-saving MAC layer knows that it should be
-     waiting for an ACK. */
-  if(BUF->proto == UIP_PROTO_TCP) {
-#if NETSTACK_CONF_WITH_RIME
-    packetbuf_set_attr(PACKETBUF_ATTR_ERELIABLE, 1);
-    packetbuf_set_attr(PACKETBUF_ATTR_RELIABLE, 1);
-#endif /* NETSTACK_CONF_WITH_RIME */
-    /*    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE, PACKETBUF_ATTR_PACKET_TYPE_STREAM);*/
-  }
+
+  packetbuf_copyfrom(&uip_buf[UIP_LLH_LEN], uip_len);
 
   rt = route_lookup(&receiver);
   if(rt == NULL) {

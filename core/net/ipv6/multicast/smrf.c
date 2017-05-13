@@ -49,6 +49,7 @@
 #include "net/ipv6/multicast/smrf.h"
 #include "net/rpl/rpl.h"
 #include "net/netstack.h"
+#include "net/packetbuf.h"
 #include <string.h>
 
 #define DEBUG DEBUG_NONE

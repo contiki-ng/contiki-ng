@@ -134,23 +134,11 @@
 
 /* Link-layer security */
 
-/* Even when link-layer security is needed, we do not use a LLSEC layer, as it does not
- * allow to secure MAC-layer packets, nor can run encrypt/decrupt from interrupt.
- * Instead, we call AES-CCM* primitives directly from TSCH */
-#undef NETSTACK_CONF_LLSEC
-#define NETSTACK_CONF_LLSEC nullsec_driver
-
 #if WITH_TSCH_SECURITY
 /* Set security level to the maximum, even if unused, to all crypto code */
 #define LLSEC802154_CONF_ENABLED 1
 /* Attempt to associate from both secured and non-secured EBs */
 #define TSCH_CONF_JOIN_SECURED_ONLY 0
-/* We need explicit keys to identify k1 and k2 */
-#undef LLSEC802154_CONF_USES_EXPLICIT_KEYS
-#define LLSEC802154_CONF_USES_EXPLICIT_KEYS 1
-/* TSCH uses the ASN to construct the Nonce */
-#undef LLSEC802154_CONF_USES_FRAME_COUNTER
-#define LLSEC802154_CONF_USES_FRAME_COUNTER 0
 #endif /* WITH_TSCH_SECURITY */
 
 #if WITH_TSCH

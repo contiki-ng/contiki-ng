@@ -11,10 +11,6 @@ ifeq ($(NRF52_JLINK_PATH),)
 endif
 endif
 
-ifeq ($(CONTIKI_WITH_RIME),1)
-  $(error Rime stack is not supported!)
-endif
-
 ifneq ($(CONTIKI_WITH_IPV6),1)
   $(error Only IPv6 stack is supported!)
 endif
@@ -37,7 +33,7 @@ endif
 
 OUTPUT_FILENAME := $(CONTIKI_PROJECT)
 MAKEFILE_NAME := $(MAKEFILE_LIST)
-MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) ) 
+MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) )
 
 TEMPLATE_PATH = $(NRF52_SDK_ROOT)/components/toolchain/gcc
 
@@ -92,7 +88,7 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/drivers_nrf/common/nrf_drv_common
                   $(NRF52_SDK_ROOT)/components/drivers_nrf/uart/nrf_drv_uart.c \
                   $(NRF52_SDK_ROOT)/components/libraries/util/app_error.c \
                   $(NRF52_SDK_ROOT)/components/toolchain/system_nrf52.c
-                  
+
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
                   $(NRF52_SDK_ROOT)/components/ble/common/ble_advdata.c
@@ -220,7 +216,7 @@ CUSTOM_RULE_LINK=1
 %.elf: $(TARGET_STARTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(TARGET_LIBS)
 	$(TRACE_LD)
 	$(Q)$(CC) $(LDFLAGS) ${filter %o %.co %.a,$^} -o $@
-	
+
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
 	@echo Compiling file: $(notdir $<)
@@ -232,7 +228,7 @@ $(OBJECT_DIRECTORY)/%.o: %.s
 	$(Q)$(OBJCOPY) -O binary $^ $@
 
 # Create binary .hex file from the .out file
-%.hex: %.elf 
+%.hex: %.elf
 	@echo Preparing: $@
 	$(Q)$(OBJCOPY) -O ihex $^ $@
 
@@ -241,17 +237,17 @@ $(OBJECT_DIRECTORY)/%.o: %.s
 %.$(TARGET): %.elf %.hex %.bin
 	cp $*.elf $@
 	$(Q)$(SIZE) $@
-	
+
 %.jlink:
 	sed -e 's/#OUTPUT_FILENAME#/$*.hex/' $(CONTIKI_CPU)/flash.jlink > $@
 
-%.flash: %.hex %.jlink 
+%.flash: %.hex %.jlink
 	@echo Flashing: $^
 	$(JLINK) $(JLINK_OPTS) -CommanderScript $*.jlink
 
 softdevice.jlink:
 	sed -e 's,#OUTPUT_FILENAME#,$(NRF52_SOFTDEVICE),' $(CONTIKI_CPU)/flash.jlink > $@
-	
+
 softdevice.flash: softdevice.jlink
 	@echo Flashing: $(notdir $(NRF52_SOFTDEVICE))
 	$(JLINK) $(JLINK_OPTS) -CommanderScript $^

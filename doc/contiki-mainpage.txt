@@ -34,11 +34,7 @@ from SICS, SAP AG, Cisco, Atmel, NewAE and TU Munich.
 
 Contiki contains two communication stacks: \ref uip "uIP" and \ref
 rime "Rime". uIP is a small RFC-compliant TCP/IP stack that makes it
-possible for Contiki to communicate over the Internet. Rime is a
-lightweight communication stack designed for low-power radios. Rime
-provides a wide range of communication primitives, from \ref rimeabc
-"best-effort local area broadcast", to \ref rudolph1
-"reliable multi-hop bulk data flooding".
+possible for Contiki to communicate over the Internet.
 
 Contiki runs on a variety of platform ranging from embedded
 microcontrollers such as the MSP430 and the AVR to old
@@ -91,7 +87,7 @@ and linked list operations.
 
 Contiki is designed to run on many different \ref platform "platforms". It is also
 possible to compile and build both the Contiki system and Contiki
-applications on many different development platforms. 
+applications on many different development platforms.
 
 \section contiki-mainpage-building Building the Contiki system and its applications
 
@@ -101,7 +97,7 @@ applications on many different development platforms.
  <tt>make</tt> command, without having to edit makefiles or modify
  the application code.
 
-See \ref buildsystem 
+See \ref buildsystem
 
 
 */

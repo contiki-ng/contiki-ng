@@ -1,5 +1,5 @@
 all: er-example-server er-example-client
-# use target "er-plugtest-server" explicitly when requried 
+# use target "er-plugtest-server" explicitly when requried
 
 CONTIKI=../..
 
@@ -34,16 +34,6 @@ APPS += rest-engine
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
-# minimal-net target is currently broken in Contiki
-ifeq ($(TARGET), minimal-net)
-CFLAGS += -DHARD_CODED_ADDRESS=\"fdfd::10\"
-${info INFO: er-example compiling with large buffers}
-CFLAGS += -DUIP_CONF_BUFFER_SIZE=1300
-CFLAGS += -DREST_MAX_CHUNK_SIZE=1024
-CFLAGS += -DCOAP_MAX_HEADER_SIZE=176
-CONTIKI_WITH_RPL=0
-endif
-
 # optional rules to get assembly
 #$(OBJECTDIR)/%.o: asmdir/%.S
 #	$(CC) $(CFLAGS) -MMD -c $< -o $@
@@ -66,4 +56,4 @@ connect-router-native:	$(CONTIKI)/examples/ipv6/native-border-router/border-rout
 	sudo $(CONTIKI)/exmples/ipv6/native-border-router/border-router.native -a 127.0.0.1 -p 60001 fd00::1/64
 
 connect-minimal:
-	sudo ip address add fdfd::1/64 dev tap0 
+	sudo ip address add fdfd::1/64 dev tap0

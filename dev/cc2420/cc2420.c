@@ -47,7 +47,6 @@
 #include "cc2420_const.h"
 
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "net/netstack.h"
 
 #define WITH_SEND_CCA 1
@@ -368,7 +367,7 @@ static uint16_t
 getreg(enum cc2420_register regname)
 {
   uint16_t value;
-  
+
   CC2420_SPI_ENABLE();
   SPI_WRITE(regname | 0x40);
   value = (uint8_t)SPI_RXBUF;
@@ -379,11 +378,11 @@ getreg(enum cc2420_register regname)
   SPI_WAITFOREORx();
   value |= SPI_RXBUF;
   CC2420_SPI_DISABLE();
-  
+
   return value;
 }
 /*---------------------------------------------------------------------------*/
-/** 
+/**
  * Writes to a register.
  * Note: the SPI_WRITE(0) seems to be needed for getting the
  * write reg working on the Z1 / MSP430X platform
@@ -404,7 +403,7 @@ static void
 read_ram(uint8_t *buffer, uint16_t adr, uint16_t count)
 {
   uint8_t i;
-  
+
   CC2420_SPI_ENABLE();
   SPI_WRITE(0x80 | ((adr) & 0x7f));
   SPI_WRITE((((adr) >> 1) & 0xc0) | 0x20);
@@ -423,7 +422,7 @@ write_ram(const uint8_t *buffer,
     enum write_ram_order order)
 {
   uint8_t i;
-  
+
   CC2420_SPI_ENABLE();
   SPI_WRITE_FAST(0x80 | (adr & 0x7f));
   SPI_WRITE_FAST((adr >> 1) & 0xc0);
@@ -444,7 +443,7 @@ static void
 write_fifo_buf(const uint8_t *buffer, uint16_t count)
 {
   uint8_t i;
-  
+
   CC2420_SPI_ENABLE();
   SPI_WRITE_FAST(CC2420_TXFIFO);
   for(i = 0; i < count; i++) {
@@ -459,12 +458,12 @@ static uint8_t
 get_status(void)
 {
   uint8_t status;
-  
+
   CC2420_SPI_ENABLE();
   SPI_WRITE(CC2420_SNOP);
   status = SPI_RXBUF;
   CC2420_SPI_DISABLE();
-  
+
   return status;
 }
 /*---------------------------------------------------------------------------*/
@@ -472,7 +471,7 @@ static void
 getrxdata(uint8_t *buffer, int count)
 {
   uint8_t i;
-  
+
   CC2420_SPI_ENABLE();
   SPI_WRITE(CC2420_RXFIFO | 0x40);
   (void) SPI_RXBUF;
@@ -575,9 +574,9 @@ static void
 set_key(const uint8_t *key)
 {
   GET_LOCK();
-  
+
   write_ram(key, CC2420RAM_KEY0, 16, WRITE_RAM_REVERSE);
-  
+
   RELEASE_LOCK();
 }
 /*---------------------------------------------------------------------------*/
@@ -585,17 +584,17 @@ static void
 encrypt(uint8_t *plaintext_and_result)
 {
   GET_LOCK();
-  
+
   write_ram(plaintext_and_result,
       CC2420RAM_SABUF,
       16,
       WRITE_RAM_IN_ORDER);
-  
+
   strobe(CC2420_SAES);
   while(get_status() & BV(CC2420_ENC_BUSY));
-  
+
   read_ram(plaintext_and_result, CC2420RAM_SABUF, 16);
-  
+
   RELEASE_LOCK();
 }
 /*---------------------------------------------------------------------------*/
@@ -657,7 +656,7 @@ cc2420_init(void)
   reg &= ~(1 << 13);
   setreg(CC2420_TXCTRL, reg);*/
 
-  
+
   /* Change default values as recomended in the data sheet, */
   /* correlation threshold = 20, RX bandpass filter = 1.3uA. */
   setreg(CC2420_MDMCTRL1, CORR_THR(20));
@@ -685,17 +684,9 @@ cc2420_init(void)
 static int
 cc2420_transmit(unsigned short payload_len)
 {
-  int i, txpower;
-  
-  GET_LOCK();
+  int i;
 
-  txpower = 0;
-  if(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) > 0) {
-    /* Remember the current transmission power */
-    txpower = cc2420_get_txpower();
-    /* Set the specified transmission power */
-    set_txpower(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) - 1);
-  }
+  GET_LOCK();
 
   /* The TX FIFO can only hold one packet. Make sure to not overrun
    * FIFO by waiting for transmission to start here and synchronizing
@@ -719,18 +710,6 @@ cc2420_transmit(unsigned short payload_len)
   }
   for(i = LOOP_20_SYMBOLS; i > 0; i--) {
     if(CC2420_SFD_IS_1) {
-#if PACKETBUF_WITH_PACKET_TYPE
-      {
-        rtimer_clock_t sfd_timestamp;
-        sfd_timestamp = cc2420_sfd_start_time;
-        if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) ==
-           PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP) {
-          /* Write timestamp to last two bytes of packet in TXFIFO. */
-          write_ram((uint8_t *) &sfd_timestamp, CC2420RAM_TXFIFO + payload_len - 1, 2, WRITE_RAM_IN_ORDER);
-        }
-      }
-#endif /* PACKETBUF_WITH_PACKET_TYPE */
-
       if(!(get_status() & BV(CC2420_TX_ACTIVE))) {
         /* SFD went high but we are not transmitting. This means that
            we just started receiving a packet, so we drop the
@@ -758,11 +737,6 @@ cc2420_transmit(unsigned short payload_len)
 	off();
       }
 
-      if(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) > 0) {
-        /* Restore the transmission power */
-        set_txpower(txpower & 0xff);
-      }
-
       RELEASE_LOCK();
       return RADIO_TX_OK;
     }
@@ -773,11 +747,6 @@ cc2420_transmit(unsigned short payload_len)
   RIMESTATS_ADD(contentiondrop);
   PRINTF("cc2420: do_send() transmission never started\n");
 
-  if(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) > 0) {
-    /* Restore the transmission power */
-    set_txpower(txpower & 0xff);
-  }
-
   RELEASE_LOCK();
   return RADIO_TX_COLLISION;
 }
@@ -786,7 +755,7 @@ static int
 cc2420_prepare(const void *payload, unsigned short payload_len)
 {
   uint8_t total_len;
-  
+
   GET_LOCK();
 
   PRINTF("cc2420: sending %d bytes\n", payload_len);
@@ -802,7 +771,7 @@ cc2420_prepare(const void *payload, unsigned short payload_len)
   total_len = payload_len + CHECKSUM_LEN;
   write_fifo_buf(&total_len, 1);
   write_fifo_buf(payload, payload_len);
-  
+
   RELEASE_LOCK();
   return 0;
 }
@@ -880,7 +849,7 @@ cc2420_set_channel(int c)
   channel = c;
 
   f = 5 * (c - 11) + 357 + 0x4000;
-  
+
   /* Wait for any transmission to end. */
   wait_for_transmission();
 
@@ -902,10 +871,10 @@ cc2420_set_pan_addr(unsigned pan,
                     const uint8_t *ieee_addr)
 {
   GET_LOCK();
-  
+
   write_ram((uint8_t *) &pan, CC2420RAM_PANID, 2, WRITE_RAM_IN_ORDER);
   write_ram((uint8_t *) &addr, CC2420RAM_SHORTADDR, 2, WRITE_RAM_IN_ORDER);
-  
+
   if(ieee_addr != NULL) {
     write_ram(ieee_addr, CC2420RAM_IEEEADDR, 8, WRITE_RAM_REVERSE);
   }
@@ -940,9 +909,9 @@ PROCESS_THREAD(cc2420_process, ev, data)
     packetbuf_clear();
     packetbuf_set_attr(PACKETBUF_ATTR_TIMESTAMP, last_packet_timestamp);
     len = cc2420_read(packetbuf_dataptr(), PACKETBUF_SIZE);
-    
+
     packetbuf_set_datalen(len);
-    
+
     NETSTACK_RDC.input();
   }
 
@@ -958,7 +927,7 @@ cc2420_read(void *buf, unsigned short bufsize)
   if(!CC2420_FIFOP_IS_1) {
     return 0;
   }
-  
+
   GET_LOCK();
 
   getrxdata(&len, 1);
@@ -973,7 +942,7 @@ cc2420_read(void *buf, unsigned short bufsize)
   } else {
     getrxdata((uint8_t *) buf, len - FOOTER_LEN);
     getrxdata(footer, FOOTER_LEN);
-    
+
     if(footer[1] & FOOTER1_CRC_OK) {
       cc2420_last_rssi = footer[0] + RSSI_OFFSET;
       cc2420_last_correlation = footer[1] & FOOTER1_CORRELATION;
@@ -1004,11 +973,11 @@ cc2420_read(void *buf, unsigned short bufsize)
         }
       }
     }
-    
+
     RELEASE_LOCK();
     return len - FOOTER_LEN;
   }
-  
+
   flushrx();
   RELEASE_LOCK();
   return 0;
@@ -1041,7 +1010,7 @@ cc2420_rssi(void)
   if(locked) {
     return 0;
   }
-  
+
   GET_LOCK();
 
   if(!receive_on) {

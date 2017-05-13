@@ -257,7 +257,7 @@ PROCESS_THREAD(ble_ipsp_process, ev, data)
       packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (const linkaddr_t *)input_packet.src.identifier);
       packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &linkaddr_node_addr);
       busy_rx = 0;
-      NETSTACK_LLSEC.input();
+      NETSTACK_NETWORK.input();
     }
   }
 

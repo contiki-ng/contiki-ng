@@ -119,12 +119,6 @@
 /* Enable security */
 #undef LLSEC802154_CONF_ENABLED
 #define LLSEC802154_CONF_ENABLED 1
-/* TSCH uses explicit keys to identify k1 and k2 */
-#undef LLSEC802154_CONF_USES_EXPLICIT_KEYS
-#define LLSEC802154_CONF_USES_EXPLICIT_KEYS 1
-/* TSCH uses the ASN rather than frame counter to construct the Nonce */
-#undef LLSEC802154_CONF_USES_FRAME_COUNTER
-#define LLSEC802154_CONF_USES_FRAME_COUNTER 0
 
 #endif /* WITH_SECURITY */
 

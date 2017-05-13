@@ -45,7 +45,6 @@
 #include "dev/leds.h"
 #include "sys/rtimer.h"
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
 #include "lib/crc16.h"
@@ -689,7 +688,7 @@ get_txpower(void)
 #if (JENNIC_CHIP == JN5169)
   /* Actual tx power value rounded to nearest integer number */
   const static int8 power_table [] = {
-    -32, -30, -29, -29,   /* -32 .. -29 */ 
+    -32, -30, -29, -29,   /* -32 .. -29 */
     -28, -28, -28, -28,   /* -28 .. -25 */
     -21, -21, -21,  -2,   /* -24 .. -21 */
     -20, -19, -18, -17,   /* -20 .. -17 */

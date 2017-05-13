@@ -33,7 +33,7 @@
 #ifndef __NETSTACK_CONF_H
 #define __NETSTACK_CONF_H
 
-#define NETSTACK_CONF_NETWORK rime_driver
+#define NETSTACK_CONF_NETWORK sicslowpan_driver
 #define NETSTACK_CONF_MAC nullmac_driver
 #define NETSTACK_CONF_RDC nullrdc_driver
 #define NETSTACK_CONF_RADIO cooja_radio_driver

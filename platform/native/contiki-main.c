@@ -55,12 +55,10 @@
 #include "contiki.h"
 #include "net/netstack.h"
 
-#include "ctk/ctk.h"
-#include "ctk/ctk-curses.h"
-
 #include "dev/serial-line.h"
 
 #include "net/ip/uip.h"
+#include "net/queuebuf.h"
 
 #include "dev/button-sensor.h"
 #include "dev/pir-sensor.h"
@@ -69,8 +67,6 @@
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-#include "net/rime/rime.h"
 
 #ifdef SELECT_CONF_MAX
 #define SELECT_MAX SELECT_CONF_MAX
@@ -206,10 +202,6 @@ main(int argc, char **argv)
   ctimer_init();
   rtimer_init();
 
-#if WITH_GUI
-  process_start(&ctk_process, NULL);
-#endif
-
   set_rime_addr();
 
   netstack_init();
@@ -287,12 +279,6 @@ main(int argc, char **argv)
     }
 
     etimer_request_poll();
-
-#if WITH_GUI
-    if(console_resize()) {
-       ctk_restore();
-    }
-#endif /* WITH_GUI */
   }
 
   return 0;
@@ -311,4 +297,3 @@ uip_log(char *m)
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
-

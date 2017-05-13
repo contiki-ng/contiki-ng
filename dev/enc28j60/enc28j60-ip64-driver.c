@@ -32,10 +32,10 @@
 #include "contiki.h"
 #include "enc28j60.h"
 #include "enc28j60-ip64-driver.h"
+#include "linkaddr.h"
 
 #include "ip64.h"
 #include "ip64-eth.h"
-#include "rime.h"
 
 #include <string.h>
 #include <stdio.h>

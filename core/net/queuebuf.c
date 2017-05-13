@@ -43,6 +43,7 @@
  */
 
 #include "contiki-net.h"
+#include "net/queuebuf.h"
 
 #if WITH_SWAP
 #include "cfs/cfs.h"

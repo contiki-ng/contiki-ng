@@ -42,7 +42,6 @@
 #include "shell-time.h"
 
 #include "sys/clock.h"
-#include "net/rime/timesynch.h"
 
 #include "lib/random.h"
 
@@ -87,7 +86,7 @@ PROCESS_THREAD(shell_time_process, ev, data)
   } msg;
   unsigned long newtime;
   const char *nextptr;
-  
+
   PROCESS_BEGIN();
 
   if(data != NULL) {
@@ -96,7 +95,7 @@ PROCESS_THREAD(shell_time_process, ev, data)
       shell_set_time(newtime);
     }
   }
-  
+
   msg.clock = (uint16_t)clock_time();
   msg.rtimer = (uint16_t)RTIMER_NOW();
 #if TIMESYNCH_CONF_ENABLED
@@ -124,7 +123,7 @@ PROCESS_THREAD(shell_timestamp_process, ev, data)
     uint16_t timesynch;
     uint8_t data[MAX_COMMANDLENGTH];
   } msg;
-  
+
   PROCESS_BEGIN();
 
   while(1) {
@@ -133,7 +132,7 @@ PROCESS_THREAD(shell_timestamp_process, ev, data)
     if(input->len1 + input->len2 == 0) {
       PROCESS_EXIT();
     }
-    
+
     msg.len = 3 + *(uint16_t *)input->data1;
     msg.time[0] = (uint16_t)(shell_time() >> 16);
     msg.time[1] = (uint16_t)(shell_time());
@@ -145,7 +144,7 @@ PROCESS_THREAD(shell_timestamp_process, ev, data)
     memcpy(msg.data, input->data1 + 2,
 	   input->len1 - 2 > MAX_COMMANDLENGTH?
 	   MAX_COMMANDLENGTH: input->len1 - 2);
-    
+
     shell_output(&timestamp_command, &msg, 6 + input->len1,
 		 input->data2, input->len2);
   }
@@ -162,18 +161,18 @@ PROCESS_THREAD(shell_repeat_server_process, ev, data)
   if(ev == shell_event_input) {
     goto exit;
   }
-  
+
   PROCESS_BEGIN();
 
   command = data;
-  
+
   PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE &&
 			   data == &shell_repeat_process);
   {
     strncpy(command_copy, command, MAX_COMMANDLENGTH);
     shell_start_command(command_copy, (int)strlen(command_copy),
 			      &repeat_command, &started_process);
-    
+
     if(started_process != NULL &&
        process_is_running(started_process)) {
       PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_EXITED &&
@@ -182,7 +181,7 @@ PROCESS_THREAD(shell_repeat_server_process, ev, data)
   }
 
   /*  PROCESS_WAIT_EVENT_UNTIL(ev == shell_event_input);
-  
+
   printf("haha \n");
   if(repeat_command.child != NULL &&
      process_is_running(repeat_command.child->process)) {
@@ -276,7 +275,7 @@ PROCESS_THREAD(shell_repeat_process, ev, data)
       PROCESS_WAIT_UNTIL(etimer_expired(&etimer));
       }*/
   }
-  
+
 
   PROCESS_END();
 }
@@ -299,7 +298,7 @@ PROCESS_THREAD(shell_randwait_process, ev, data)
     }
     }*/
 
-  
+
   PROCESS_BEGIN();
 
   args = data;
@@ -308,7 +307,7 @@ PROCESS_THREAD(shell_randwait_process, ev, data)
     shell_output_str(&randwait_command, "usage 0", "");
     PROCESS_EXIT();
   }
-  
+
   maxwait = shell_strtolong(args, &next);
   if(next == args) {
     shell_output_str(&randwait_command, "usage 1", "");
@@ -319,7 +318,7 @@ PROCESS_THREAD(shell_randwait_process, ev, data)
   while(*args == ' ') {
     args++;
   }
-  
+
   strncpy(command, args, MAX_COMMANDLENGTH);
   if(strlen(command) == 0) {
     shell_output_str(&repeat_command, "usage 3", "");
@@ -334,10 +333,10 @@ PROCESS_THREAD(shell_randwait_process, ev, data)
 
 /*   printf("Starting '%s' child %p (%s)\n", command, randwait_command.child, */
 /* 	 randwait_command.child == NULL? "null": randwait_command.child->command); */
-  
+
   shell_start_command(command, (int)strlen(command),
 			    randwait_command.child, &started_process);
-  
+
   if(started_process != NULL &&
      process_is_running(started_process)) {
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_EXITED &&

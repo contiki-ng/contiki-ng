@@ -78,6 +78,7 @@
 #include "dev/sys-ctrl.h"
 #include "net/netstack.h"
 #include "net/rime/broadcast.h"
+#include "net/packetbuf.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -196,4 +197,3 @@ PROCESS_THREAD(zoul_demo_process, ev, data)
  * @}
  * @}
  */
-

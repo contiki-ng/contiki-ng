@@ -39,7 +39,6 @@
  */
 
 #include "contiki.h"
-#include "net/rime/rime.h"
 #include "net/netstack.h"
 
 #include "dev/leds.h"

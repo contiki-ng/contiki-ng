@@ -14,23 +14,15 @@
 #endif /* NETSTACK_CONF_MAC */
 
 #ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     contikimac_driver
+#define NETSTACK_CONF_RDC     nullrdc_driver
 #endif /* NETSTACK_CONF_RDC */
-
-#ifndef NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
-#endif /* NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE */
 
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO   cc2420_driver
 #endif /* NETSTACK_CONF_RADIO */
 
 #ifndef NETSTACK_CONF_FRAMER
-#if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_CONF_FRAMER  framer_802154
-#else /* NETSTACK_CONF_WITH_IPV6 */
-#define NETSTACK_CONF_FRAMER  contikimac_framer
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* NETSTACK_CONF_FRAMER */
 
 #ifndef CC2420_CONF_AUTOACK
@@ -40,12 +32,6 @@
 /* The TSCH default slot length of 10ms is a bit too short for this platform,
  * use 15ms instead. */
 #define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 15000
-
-/* Specify whether the RDC layer should enable
-   per-packet power profiling. */
-#define CONTIKIMAC_CONF_COMPOWER         1
-#define XMAC_CONF_COMPOWER               1
-#define CXMAC_CONF_COMPOWER              1
 
 #if NETSTACK_CONF_WITH_IPV6
 /* Network setup for IPv6 */
@@ -57,41 +43,9 @@
    used. */
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 63
 
-#define CXMAC_CONF_ANNOUNCEMENTS         0
-#define XMAC_CONF_ANNOUNCEMENTS          0
-
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM                8
 #endif
-
-#else /* NETSTACK_CONF_WITH_IPV6 */
-
-/* Network setup for non-IPv6 (rime). */
-
-#define NETSTACK_CONF_NETWORK rime_driver
-
-#define COLLECT_CONF_ANNOUNCEMENTS       1
-#define CXMAC_CONF_ANNOUNCEMENTS         0
-#define XMAC_CONF_ANNOUNCEMENTS          0
-#define CONTIKIMAC_CONF_ANNOUNCEMENTS    0
-
-#ifndef COLLECT_NEIGHBOR_CONF_MAX_COLLECT_NEIGHBORS
-#define COLLECT_NEIGHBOR_CONF_MAX_COLLECT_NEIGHBORS     32
-#endif /* COLLECT_NEIGHBOR_CONF_MAX_COLLECT_NEIGHBORS */
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM                16
-#endif /* QUEUEBUF_CONF_NUM */
-
-#ifndef TIMESYNCH_CONF_ENABLED
-#define TIMESYNCH_CONF_ENABLED           0
-#endif /* TIMESYNCH_CONF_ENABLED */
-
-#if TIMESYNCH_CONF_ENABLED
-/* CC2420 SDF timestamps must be on if timesynch is enabled. */
-#undef CC2420_CONF_SFD_TIMESTAMPS
-#define CC2420_CONF_SFD_TIMESTAMPS       1
-#endif /* TIMESYNCH_CONF_ENABLED */
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
@@ -109,8 +63,6 @@
 #define CC2420_CONF_CCA_THRESH              -45
 #endif /* CC2420_CONF_CCA_THRESH */
 
-#define CONTIKIMAC_CONF_BROADCAST_RATE_LIMIT 0
-
 #define IEEE802154_CONF_PANID       0xABCD
 
 #define SHELL_VARS_CONF_RAM_BEGIN 0x1100
@@ -120,15 +72,6 @@
 #ifndef ENERGEST_CONF_ON
 #define ENERGEST_CONF_ON 1
 #endif /* ENERGEST_CONF_ON */
-
-#define ELFLOADER_CONF_TEXT_IN_ROM 0
-#ifndef ELFLOADER_CONF_DATAMEMORY_SIZE
-#define ELFLOADER_CONF_DATAMEMORY_SIZE 0x400
-#endif /* ELFLOADER_CONF_DATAMEMORY_SIZE */
-#ifndef ELFLOADER_CONF_TEXTMEMORY_SIZE
-#define ELFLOADER_CONF_TEXTMEMORY_SIZE 0x800
-#endif /* ELFLOADER_CONF_TEXTMEMORY_SIZE */
-
 
 #define AODV_COMPLIANCE
 #define AODV_NUM_RT_ENTRIES 32
