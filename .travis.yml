@@ -70,7 +70,7 @@ before_script:
     fi
 
   ## Compile cooja.jar only when it's going to be needed
-  - if [ ${BUILD_CATEGORY:-sim} = sim ] ; then
+  - if [ ${BUILD_CATEGORY:-0} = sim ] ; then
       java -version &&
       ant -q -f tools/cooja/build.xml jar &&
       sudo java -Xshare:dump -version ;
@@ -82,7 +82,7 @@ script:
 
 after_script:
   ## Print cooja test logs
-  - "[ ${BUILD_CATEGORY:-sim} = sim ] && tail regression-tests/??-$BUILD_TYPE/*.testlog"
+  - "[ ${BUILD_CATEGORY:-0} = sim ] && tail regression-tests/??-$BUILD_TYPE/*.testlog"
   ## Print a basic summary
   - "echo 'Summary:'; cat regression-tests/??-$BUILD_TYPE/summary"
   - "FAILS=`grep -c  ' FAIL ' regression-tests/??-$BUILD_TYPE/summary`"
@@ -93,17 +93,17 @@ after_script:
 env:
   ## This magically kick-off parallel jobs for each of the for the sets
   ## of environment variable defined below
-  - BUILD_TYPE='doxygen'  BUILD_CATEGORY='doxygen'
+  - BUILD_TYPE='doxygen' BUILD_CATEGORY='doxygen'
   - BUILD_TYPE='compile-base' BUILD_CATEGORY='compile'
   - BUILD_TYPE='compile-arm-ports' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
   - BUILD_TYPE='compile-nxp-ports' BUILD_CATEGORY='compile' BUILD_ARCH='jn516x'
   - BUILD_TYPE='compile-nrf52-ports' BUILD_CATEGORY='compile' BUILD_ARCH='nrf52dk'
   - BUILD_TYPE='compile-tools' BUILD_CATEGORY='compile'
-  - BUILD_TYPE='hello-world'
-  - BUILD_TYPE='base'
-  - BUILD_TYPE='ipv6'
-  - BUILD_TYPE='ip64' MAKE_TARGETS='cooja'
-  - BUILD_TYPE='slip-radio' MAKE_TARGETS='cooja'
-  - BUILD_TYPE='ieee802154'
-  - BUILD_TYPE='tsch'
-  - BUILD_TYPE='rpl-non-storing'
+  - BUILD_TYPE='hello-world' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='base' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='ipv6' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='ip64' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='slip-radio' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='ieee802154' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='tsch' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='rpl-non-storing' BUILD_CATEGORY='sim'
