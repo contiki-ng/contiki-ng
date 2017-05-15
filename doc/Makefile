@@ -1,4 +1,4 @@
-basedirs	:= core cpu platform apps
+basedirs	:= core drivers/cpu drivers/platform apps
 manuals		:= $(shell find ./ -name "*.txt")
 filetypes	:= -iwholename "*/doc/*.txt"
 empty		:=

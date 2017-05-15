@@ -13,7 +13,7 @@ CONTIKI_TARGET_SOURCEFILES += adc-sensors.c weather-meter.c grove-gyro.c
 CONTIKI_TARGET_SOURCEFILES += rgb-bl-lcd.c pm10-sensor.c iaq.c zonik.c relay.c
 CONTIKI_TARGET_SOURCEFILES += dht22.c servo.c ac-dimmer.c bme280-arch.c
 
-MODULES += /dev/bme280
+MODULES += drivers//dev/bme280
 
 all: $(CONTIKI_PROJECT)
 

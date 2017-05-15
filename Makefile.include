@@ -42,7 +42,7 @@ usage:
 	@echo "make MAKETARGETS... [TARGET=(TARGET)] [savetarget] [targets]"
 
 targets:
-	@ls -1 $(CONTIKI)/platform $(TARGETDIRS) | grep -v CVS
+	@ls -1 $(CONTIKI)/drivers/platform $(TARGETDIRS) | grep -v CVS
 
 savetarget:
 	-@rm -f Makefile.target
@@ -116,7 +116,7 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 ifdef APPS
   APPDS = ${wildcard ${foreach DIR, $(APPDIRS), ${addprefix $(DIR)/, $(APPS)}}} \
              ${wildcard ${addprefix $(CONTIKI)/apps/, $(APPS)} \
-             ${addprefix $(CONTIKI)/platform/$(TARGET)/apps/, $(APPS)} \
+             ${addprefix $(CONTIKI)/drivers/platform/$(TARGET)/apps/, $(APPS)} \
              $(APPS)}
   APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDS), $(DIR)/Makefile.$(APP)}}}
   -include $(APPINCLUDES)
@@ -126,7 +126,7 @@ endif
 
 ### Include target makefile (TODO Unsafe?)
 
-target_makefile := $(wildcard $(CONTIKI)/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
+target_makefile := $(wildcard $(CONTIKI)/drivers/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
 
 # Check if the target makefile exists, and create the object directory if necessary.
 ifeq ($(strip $(target_makefile)),)
@@ -173,8 +173,9 @@ CONTIKI_TARGET_DIRS_CONCAT = ${addprefix ${dir $(target_makefile)}, \
                                $(CONTIKI_TARGET_DIRS)}
 CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
+CONTIKI_DRIVERS_DIRS    = ${addprefix $(CONTIKI)/, drivers}
 
-SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
+SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_DRIVERS_DIRS) \
              $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(APPDS) $(EXTERNALDIRS) ${dir $(target_makefile)}
 
 vpath %.c $(SOURCEDIRS)
@@ -219,7 +220,7 @@ clean:
 distclean: clean
 	-rm -f ${addsuffix .$(TARGET),$(CONTIKI_PROJECT)}
 
--include $(CONTIKI)/platform/$(TARGET)/Makefile.customrules-$(TARGET)
+-include $(CONTIKI)/drivers/platform/$(TARGET)/Makefile.customrules-$(TARGET)
 
 ifndef CUSTOM_RULE_C_TO_CE
 %.ce: %.c

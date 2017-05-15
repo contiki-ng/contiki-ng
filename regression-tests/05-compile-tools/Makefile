@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-TOOLS=sky  tools   z80=hex2bin
+TOOLS=sky  tools
 FAILTOOLS=sky=uip6-bridge
 
 

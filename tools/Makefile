@@ -19,7 +19,7 @@ cleanfiles:
 	@find ../examples -name "contiki-*.a" -delete 
 cleantargets:
 	${info Removing .TARGET builds...}
-	@rm -f -v ${addprefix ../examples/*/*., ${shell ls ../platform/}}
-	@rm -f -v ${addprefix ../examples/*/*/*., ${shell ls ../platform/}}
+	@rm -f -v ${addprefix ../examples/*/*., ${shell ls ../drivers/platform/}}
+	@rm -f -v ${addprefix ../examples/*/*/*., ${shell ls ../drivers/platform/}}
 cleandone:
 	@echo ${info All done!}

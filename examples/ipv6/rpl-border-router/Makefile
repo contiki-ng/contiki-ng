@@ -12,9 +12,9 @@ PROJECT_SOURCEFILES += slip-bridge.c
 #Simple built-in webserver is the default.
 #Override with make WITH_WEBSERVER=0 for no webserver.
 #WITH_WEBSERVER=webserver-name will use /apps/webserver-name if it can be
-#found in the /apps, /platform/$(TARGET)/apps/, or current directory (in that order).
+#found in the /apps, /drivers//platform/$(TARGET)/apps/, or current directory (in that order).
 # WITH_WEBSERVER=webserver for /apps/webserver
-# WITH_WEBSERVER=raven-webserver for /platform/avr-raven/apps/raven-webserver/
+# WITH_WEBSERVER=raven-webserver for /drivers/platform/avr-raven/apps/raven-webserver/
 #make clean before changing webservers!
 
 #Note /apps/webserver contains a 2500 byte style sheet which is a severe test
