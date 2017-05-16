@@ -55,7 +55,7 @@
 #ifdef NETSTACK_CONF_MAC
 #define NETSTACK_MAC NETSTACK_CONF_MAC
 #else /* NETSTACK_CONF_MAC */
-#define NETSTACK_MAC     nullmac_driver
+#define NETSTACK_MAC     csma_driver
 #endif /* NETSTACK_CONF_MAC */
 #endif /* NETSTACK_MAC */
 
@@ -79,7 +79,7 @@
 #ifdef NETSTACK_CONF_FRAMER
 #define NETSTACK_FRAMER NETSTACK_CONF_FRAMER
 #else /* NETSTACK_CONF_FRAMER */
-#define NETSTACK_FRAMER   framer_nullmac
+#define NETSTACK_FRAMER   framer_802154
 #endif /* NETSTACK_CONF_FRAMER */
 #endif /* NETSTACK_FRAMER */
 
