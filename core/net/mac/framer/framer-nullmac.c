@@ -36,7 +36,7 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
-#include "net/mac/framer-nullmac.h"
+#include "net/mac/framer/framer-nullmac.h"
 #include "net/packetbuf.h"
 
 #define DEBUG 0

@@ -43,7 +43,7 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/queuebuf.h"
-#include "net/mac/frame802154.h"
+#include "net/mac/framer/frame802154.h"
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"

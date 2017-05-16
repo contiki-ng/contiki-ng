@@ -103,7 +103,7 @@
 #endif /* NULLRDC_CONF_SEND_802154_ACK */
 
 #if NULLRDC_SEND_802154_ACK
-#include "net/mac/frame802154.h"
+#include "net/mac/framer/frame802154.h"
 #endif /* NULLRDC_SEND_802154_ACK */
 
 #define ACK_LEN 3

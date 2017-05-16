@@ -39,7 +39,7 @@
 #ifndef FRAMER_NULLMAC_H_
 #define FRAMER_NULLMAC_H_
 
-#include "net/mac/framer.h"
+#include "net/mac/framer/framer.h"
 
 extern const struct framer framer_nullmac;
 

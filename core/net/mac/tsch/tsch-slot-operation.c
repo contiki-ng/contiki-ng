@@ -45,7 +45,7 @@
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
-#include "net/mac/framer-802154.h"
+#include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-slot-operation.h"
 #include "net/mac/tsch/tsch-queue.h"

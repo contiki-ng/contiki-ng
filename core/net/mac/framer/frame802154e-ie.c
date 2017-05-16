@@ -38,7 +38,7 @@
  */
 
 #include <string.h>
-#include "net/mac/frame802154e-ie.h"
+#include "net/mac/framer/frame802154e-ie.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/net-debug.h"

@@ -85,7 +85,7 @@
 
 #include "net/mac/mac.h"
 #include "net/mac/rdc.h"
-#include "net/mac/framer.h"
+#include "net/mac/framer/framer.h"
 #include "dev/radio.h"
 
 /**

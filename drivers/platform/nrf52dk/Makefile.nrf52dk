@@ -28,4 +28,4 @@ SMALL ?= 0
 CONTIKI_CPU=$(CONTIKI)/drivers/cpu/nrf52832
 include $(CONTIKI_CPU)/Makefile.nrf52832
 
-MODULES += core/net core/net/mac
+MODULES += core/net core/net/mac core/net/mac/framer

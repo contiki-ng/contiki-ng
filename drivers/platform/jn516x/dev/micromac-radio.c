@@ -46,7 +46,7 @@
 #include "sys/rtimer.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
-#include "net/mac/frame802154.h"
+#include "net/mac/framer/frame802154.h"
 #include "lib/crc16.h"
 #include "lib/ringbufindex.h"
 

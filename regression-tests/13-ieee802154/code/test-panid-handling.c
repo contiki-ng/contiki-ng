@@ -31,7 +31,7 @@
 
 #include "contiki.h"
 #include "unit-test.h"
-#include "net/mac/frame802154.h"
+#include "net/mac/framer/frame802154.h"
 
 #include <stdio.h>
 

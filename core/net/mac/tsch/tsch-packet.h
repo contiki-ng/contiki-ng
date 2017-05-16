@@ -38,8 +38,8 @@
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/mac/tsch/tsch-private.h"
-#include "net/mac/frame802154.h"
-#include "net/mac/frame802154e-ie.h"
+#include "net/mac/framer/frame802154.h"
+#include "net/mac/framer/frame802154e-ie.h"
 
 /******** Configuration *******/
 

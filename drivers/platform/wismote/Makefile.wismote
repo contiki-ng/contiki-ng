@@ -46,5 +46,5 @@ endif
 %.upload-clean: %.hex
 	msp430flasher -n msp430x5437 -w $< -v -z [VCC]
 
-MODULES += core/net core/net/mac \
+MODULES += core/net core/net/mac core/net/mac/framer \
            drivers/dev/cc2520 drivers/dev/sht11

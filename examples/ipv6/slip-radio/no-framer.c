@@ -35,8 +35,8 @@
  *         Niclas Finne <nfi@sics.se>
  *         Joakim Eriksson <joakime@sics.se>
  */
-#include "net/mac/framer.h"
-#include "net/mac/frame802154.h"
+#include "net/mac/framer/framer.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/packetbuf.h"
 #include <string.h>
 

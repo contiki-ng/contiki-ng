@@ -6,6 +6,5 @@ CONTIKI_TARGET_SOURCEFILES += contiki-sky-platform.c \
 
 include $(CONTIKI)/drivers/platform/sky/Makefile.common
 
-MODULES += core/net/mac \
-           core/net \
+MODULES += core/net/mac core/net/mac/framer core/net \
            drivers/dev/cc2420 drivers/dev/sht11 drivers/dev/ds2411

@@ -10,5 +10,5 @@ include $(CONTIKI)/drivers/platform/z1/Makefile.z1sp
 endif
 
 MODULES += core/net \
-           core/net/mac \
+           core/net/mac core/net/mac/framer \
            drivers/dev/cc2420

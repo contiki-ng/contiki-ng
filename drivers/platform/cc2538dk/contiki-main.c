@@ -62,7 +62,7 @@
 #include "net/queuebuf.h"
 #include "net/ip/tcpip.h"
 #include "net/ip/uip.h"
-#include "net/mac/frame802154.h"
+#include "net/mac/framer/frame802154.h"
 #include "soc.h"
 #include "cpu.h"
 #include "reg.h"

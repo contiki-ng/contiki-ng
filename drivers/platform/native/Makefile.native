@@ -42,4 +42,4 @@ CURSES_LIBS ?= -lncurses
 
 TARGET_LIBFILES += $(CURSES_LIBS)
 
-MODULES+=core/net core/net/mac core/net/ip64-addr/
+MODULES+=core/net core/net/mac core/net/mac/framer core/net/ip64-addr/
