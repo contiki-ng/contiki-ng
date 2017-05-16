@@ -39,23 +39,6 @@
 
 #if NETSTACK_CONF_WITH_IPV6
 
-/* Network setup for IPv6 */
-#ifndef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK       sicslowpan_driver
-#endif
-
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC           csma_driver
-#endif
-
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC           nullrdc_driver
-#endif
-
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER        framer_802154
-#endif
-
 #define NETSTACK_CONF_RADIO         cc2420_driver
 
 /* Specify a minimum packet size for 6lowpan compression to be

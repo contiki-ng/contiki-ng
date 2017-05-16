@@ -43,21 +43,9 @@
 #define CCM_STAR_CONF ccm_star_driver_jn516x
 #endif /* CCM_STAR_CONF */
 
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     csma_driver
-#endif /* NETSTACK_CONF_MAC */
-
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
-#endif /* NETSTACK_CONF_RDC */
-
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO   micromac_radio_driver
 #endif /* NETSTACK_CONF_RADIO */
-
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
-#endif /* NETSTACK_CONF_FRAMER */
 
 #define PACKETBUF_CONF_ATTRS_INLINE 1
 

@@ -45,10 +45,6 @@
 
 #if MAC_CONFIG == MAC_CONFIG_NULLRDC
 
-#define NETSTACK_CONF_MAC     csma_driver
-#define NETSTACK_CONF_RDC     nullrdc_driver
-#define NETSTACK_CONF_FRAMER  framer_802154
-
 #elif MAC_CONFIG == MAC_CONFIG_TSCH
 
 /* Set to run orchestra */
@@ -63,7 +59,6 @@
 
 #define NETSTACK_CONF_MAC     tschmac_driver
 #define NETSTACK_CONF_RDC     nordc_driver
-#define NETSTACK_CONF_FRAMER  framer_802154
 
 /* IEEE802.15.4 frame version */
 #undef FRAME802154_CONF_VERSION

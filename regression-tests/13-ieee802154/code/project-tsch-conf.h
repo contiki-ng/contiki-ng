@@ -39,9 +39,6 @@
 #define NETSTACK_CONF_MAC     tschmac_driver
 #undef NETSTACK_CONF_RDC
 #define NETSTACK_CONF_RDC     nordc_driver
-#undef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
-
 
 #if WITH_SECURITY_ON
 #define TEST_CONFIG_TYPE SECURITY_ON

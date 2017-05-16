@@ -303,29 +303,14 @@ typedef uint32_t rtimer_clock_t;
 #include "board.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name Network Stack Configuration
+ * \name Radio Configuration
  *
  * @{
  */
-#ifndef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
-#endif /* NETSTACK_CONF_NETWORK */
-
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     csma_driver
-#endif
-
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
-#endif
 
 /* Configure NullRDC for when it's selected */
 #define NULLRDC_802154_AUTOACK                  1
 #define NULLRDC_802154_AUTOACK_HW               1
-
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
-#endif /* NETSTACK_CONF_FRAMER */
 
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc2538_rf_driver

@@ -65,8 +65,6 @@
 #define NETSTACK_CONF_MAC     tschmac_driver
 #undef NETSTACK_CONF_RDC
 #define NETSTACK_CONF_RDC     nordc_driver
-#undef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
 
 /* IEEE802.15.4 frame version */
 #undef FRAME802154_CONF_VERSION

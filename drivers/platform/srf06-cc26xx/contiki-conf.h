@@ -53,14 +53,6 @@
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 #endif /* NETSTACK_CONF_NETWORK */
 
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     csma_driver
-#endif
-
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
-#endif
-
 /*
  * If set, the systems keeps the HF crystal oscillator on even when the radio is off.
  * You need to set this to 1 to use TSCH with its default 2.2ms or larger guard time.
@@ -71,10 +63,6 @@
 
 /* Configure NullRDC for when it's selected */
 #define NULLRDC_CONF_802154_AUTOACK             1
-
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
-#endif
 
 #ifdef RF_CHANNEL
 #define RF_CORE_CONF_CHANNEL             RF_CHANNEL

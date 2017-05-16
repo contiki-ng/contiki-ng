@@ -73,12 +73,8 @@
 #define NULLRDC_CONF_AFTER_ACK_DETECTED_WAIT_TIME 0
 
 
-/* Network setup for IPv6 */
-#define NETSTACK_CONF_NETWORK       sicslowpan_driver
-#define NETSTACK_CONF_MAC           csma_driver
-#define NETSTACK_CONF_RDC           nullrdc_driver
+/* Radio setup */
 #define NETSTACK_CONF_RADIO         cooja_radio_driver
-#define NETSTACK_CONF_FRAMER        framer_802154
 
 #else /* NETSTACK_CONF_WITH_IPV6 */
 
@@ -101,12 +97,8 @@
 
 
 
-/* Network setup for IPv6 */
-#define NETSTACK_CONF_NETWORK       sicslowpan_driver
-#define NETSTACK_CONF_MAC           csma_driver
-#define NETSTACK_CONF_RDC           nullrdc_driver
+/* Radio setup */
 #define NETSTACK_CONF_RADIO         cooja_radio_driver
-#define NETSTACK_CONF_FRAMER        framer_802154
 #define NETSTACK_CONF_WITH_IPV6               1
 
 #define LINKADDR_CONF_SIZE          8

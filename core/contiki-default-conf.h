@@ -50,7 +50,7 @@
    by Contiki radio packets. For IEEE 802.15.4 radios, use the
    framer_802154 driver. */
 #ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER framer_nullmac
+#define NETSTACK_CONF_FRAMER framer_802154
 /* #define NETSTACK_CONF_FRAMER framer_802154 */
 #endif /* NETSTACK_CONF_FRAMER */
 
@@ -66,7 +66,7 @@
    functionality. The csma_driver is the default CSMA MAC layer, but
    is not compatible with all radios. */
 #ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC   nullmac_driver
+#define NETSTACK_CONF_MAC   csma_driver
 /* #define NETSTACK_CONF_MAC   csma_driver */
 #endif /* NETSTACK_CONF_MAC */
 
