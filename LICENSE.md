@@ -7,6 +7,8 @@ The copyright for different parts of the code is held by different
 people and organizations, but the code is licensed under the same type
 of license. The license text is:
 
+```
+/*
  * Copyright (c) (Year), (Name of copyright holder)
  * All rights reserved.
  *
@@ -35,4 +37,5 @@ of license. The license text is:
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
-
+ */
+```

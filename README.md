@@ -14,6 +14,7 @@ power meters, industrial monitoring, radiation monitoring,
 construction site monitoring, alarm systems, remote house monitoring,
 and so on.
 
-For more information, see the Contiki website:
+For more information, see the Contiki website: http://contiki-os.org
 
-[http://contiki-os.org](http://contiki-os.org)
+To get started, see the Contiki wiki: https://github.com/contiki-os/contiki/wiki
+
