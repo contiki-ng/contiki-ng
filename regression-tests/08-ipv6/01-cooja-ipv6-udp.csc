@@ -24,7 +24,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype350</identifier>
       <description>Receiver</description>
-      <source>[CONTIKI_DIR]/examples/udp-ipv6/udp-server.c</source>
+      <source>[CONTIKI_DIR]/examples/ipv6/udp-ipv6/udp-server.c</source>
       <commands>make TARGET=cooja clean
 make udp-server.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
@@ -49,7 +49,7 @@ make udp-server.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype981</identifier>
       <description>Sender</description>
-      <source>[CONTIKI_DIR]/examples/udp-ipv6/udp-client.c</source>
+      <source>[CONTIKI_DIR]/examples/ipv6/udp-ipv6/udp-client.c</source>
       <commands>make udp-client.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

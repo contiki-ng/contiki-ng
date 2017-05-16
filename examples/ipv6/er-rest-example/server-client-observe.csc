@@ -7,13 +7,14 @@
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
-    <title>My simulation</title>
-    <randomseed>generated</randomseed>
+    <title>REST with RPL router</title>
+    <speedlimit>1.0</speedlimit>
+    <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
       <transmitting_range>50.0</transmitting_range>
-      <interference_range>100.0</interference_range>
+      <interference_range>50.0</interference_range>
       <success_ratio_tx>1.0</success_ratio_tx>
       <success_ratio_rx>1.0</success_ratio_rx>
     </radiomedium>
@@ -22,12 +23,11 @@
     </events>
     <motetype>
       org.contikios.cooja.mspmote.SkyMoteType
-      <identifier>sky1</identifier>
-      <description>UDP client</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/udp-ipv6/udp-client.c</source>
-      <commands EXPORT="discard">make clean TARGET=sky
-make udp-client.sky TARGET=sky DEFINES=UDP_CONNECTION_ADDR=fe80::212:7402:2:202,SICSLOWPAN_CONF_FRAG=1,SEND_TOO_LARGE_PACKET_TO_TEST_FRAGMENTATION=1</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/udp-ipv6/udp-client.sky</firmware>
+      <identifier>rplroot</identifier>
+      <description>Sky RPL Root</description>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/rpl-border-router/border-router.c</source>
+      <commands EXPORT="discard">make border-router.sky TARGET=sky</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/rpl-border-router/border-router.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -46,11 +46,34 @@ make udp-client.sky TARGET=sky DEFINES=UDP_CONNECTION_ADDR=fe80::212:7402:2:202,
     </motetype>
     <motetype>
       org.contikios.cooja.mspmote.SkyMoteType
-      <identifier>sky2</identifier>
-      <description>UDP server</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/udp-ipv6/udp-server.c</source>
-      <commands EXPORT="discard">make udp-server.sky TARGET=sky DEFINES=SICSLOWPAN_CONF_FRAG=1</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/udp-ipv6/udp-server.sky</firmware>
+      <identifier>server</identifier>
+      <description>Erbium Server</description>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-server.c</source>
+      <commands EXPORT="discard">make er-example-server.sky TARGET=sky</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-server.sky</firmware>
+      <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspClock</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspMoteID</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyButton</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyFlash</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyCoffeeFilesystem</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspSerial</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyLED</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyTemperature</moteinterface>
+    </motetype>
+    <motetype>
+      org.contikios.cooja.mspmote.SkyMoteType
+      <identifier>client</identifier>
+      <description>Erbium Client</description>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-observe-client.c</source>
+      <commands EXPORT="discard">make er-example-observe-client.sky TARGET=sky</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-observe-client.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -71,38 +94,69 @@ make udp-client.sky TARGET=sky DEFINES=UDP_CONNECTION_ADDR=fe80::212:7402:2:202,
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>56.49442624080769</x>
-        <y>69.16564756567392</y>
+        <x>33.260163187353555</x>
+        <y>30.643217359962595</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>1</id>
       </interface_config>
-      <motetype_identifier>sky1</motetype_identifier>
+      <motetype_identifier>rplroot</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>70.13661699393737</x>
-        <y>61.114518596613784</y>
+        <x>54.537149936813485</x>
+        <y>51.51086225537906</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>2</id>
       </interface_config>
-      <motetype_identifier>sky2</motetype_identifier>
+      <motetype_identifier>server</motetype_identifier>
+    </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>77.97942851220571</x>
+        <y>67.86182390447284</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>3</id>
+      </interface_config>
+      <motetype_identifier>client</motetype_identifier>
     </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
-    <width>248</width>
-    <z>0</z>
-    <height>200</height>
-    <location_x>0</location_x>
-    <location_y>0</location_y>
+    <width>259</width>
+    <z>3</z>
+    <height>179</height>
+    <location_x>2</location_x>
+    <location_y>1</location_y>
+  </plugin>
+  <plugin>
+    org.contikios.cooja.plugins.Visualizer
+    <plugin_config>
+      <skin>org.contikios.cooja.plugins.skins.IDVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.MoteTypeVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.AttributeVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.LEDVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
+      <viewport>2.092412892721766 0.0 0.0 2.092412892721766 34.70057915472623 -45.606066372444175</viewport>
+    </plugin_config>
+    <width>300</width>
+    <z>4</z>
+    <height>178</height>
+    <location_x>261</location_x>
+    <location_y>1</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.LogListener
@@ -111,69 +165,39 @@ make udp-client.sky TARGET=sky DEFINES=UDP_CONNECTION_ADDR=fe80::212:7402:2:202,
       <formatted_time />
       <coloring />
     </plugin_config>
-    <width>683</width>
-    <z>2</z>
-    <height>550</height>
-    <location_x>12</location_x>
-    <location_y>417</location_y>
-  </plugin>
-  <plugin>
-    org.contikios.cooja.plugins.Visualizer
-    <plugin_config>
-      <skin>org.contikios.cooja.plugins.skins.IDVisualizerSkin</skin>
-      <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
-      <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
-      <skin>org.contikios.cooja.plugins.skins.GridVisualizerSkin</skin>
-      <skin>org.contikios.cooja.plugins.skins.MoteTypeVisualizerSkin</skin>
-      <viewport>6.1185311939665725 0.0 0.0 6.1185311939665725 -264.82328143448046 -341.0405575126179</viewport>
-    </plugin_config>
-    <width>250</width>
-    <z>3</z>
-    <height>183</height>
-    <location_x>6</location_x>
-    <location_y>214</location_y>
-  </plugin>
-  <plugin>
-    org.contikios.cooja.plugins.ScriptRunner
-    <plugin_config>
-      <script>TIMEOUT(150000, log.log("last msg: " + msg + "\n")); /* print last msg at timeout */
-
-count = 0;
-while (count++ &lt; 5) {
-  /* Message from sender process to receiver process */
-  YIELD_THEN_WAIT_UNTIL(msg.contains("Client sending"));
-  YIELD_THEN_WAIT_UNTIL(msg.contains("Server received"));
-  log.log(count + ": Sender -&gt; Receiver OK\n");
-
-  /* Message from receiver process to sender process */
-  YIELD_THEN_WAIT_UNTIL(msg.contains("Responding with message"));
-  YIELD_THEN_WAIT_UNTIL(msg.contains("Response from"));
-  log.log(count + ": Receiver -&gt; Sender OK\n");
-}
-
-log.testOK(); /* Report test success and quit */</script>
-      <active>true</active>
-    </plugin_config>
-    <width>572</width>
-    <z>1</z>
-    <height>552</height>
-    <location_x>704</location_x>
-    <location_y>417</location_y>
+    <width>762</width>
+    <z>0</z>
+    <height>491</height>
+    <location_x>2</location_x>
+    <location_y>182</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.RadioLogger
     <plugin_config>
-      <split>183</split>
+      <split>167</split>
       <formatted_time />
       <showdups>false</showdups>
       <hidenodests>false</hidenodests>
       <analyzers name="6lowpan" />
     </plugin_config>
-    <width>1008</width>
-    <z>4</z>
-    <height>406</height>
-    <location_x>261</location_x>
-    <location_y>7</location_y>
+    <width>560</width>
+    <z>1</z>
+    <height>492</height>
+    <location_x>764</location_x>
+    <location_y>181</location_y>
+  </plugin>
+  <plugin>
+    org.contikios.cooja.serialsocket.SerialSocketServer
+    <mote_arg>0</mote_arg>
+    <plugin_config>
+      <port>60001</port>
+      <bound>true</bound>
+    </plugin_config>
+    <width>362</width>
+    <z>2</z>
+    <height>116</height>
+    <location_x>561</location_x>
+    <location_y>1</location_y>
   </plugin>
 </simconf>
 

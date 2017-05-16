@@ -7,9 +7,9 @@ hello-world/sky \
 hello-world/wismote \
 hello-world/z1 \
 eeprom-test/native \
-er-rest-example/wismote \
+ipv6/er-rest-example/wismote \
 ipso-objects/wismote \
-zolertia/z1/z1 \
+platform-specific/zolertia/z1/z1 \
 ipv6/multicast/sky \
 sensniff/z1 \
 

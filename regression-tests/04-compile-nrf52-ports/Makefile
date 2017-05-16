@@ -8,11 +8,11 @@ TOOLSDIR=../../tools
  
 EXAMPLES = \
 hello-world/nrf52dk \
-nrf52dk/coap-demo/nrf52dk:coap-server \
-nrf52dk/coap-demo/nrf52dk:coap-client:SERVER_IPV6_ADDR=ffff \
-nrf52dk/mqtt-demo/nrf52dk \
-nrf52dk/blink-hello/nrf52dk \
-nrf52dk/timer-test/nrf52dk
+platform-specific/nrf52dk/coap-demo/nrf52dk:coap-server \
+platform-specific/nrf52dk/coap-demo/nrf52dk:coap-client:SERVER_IPV6_ADDR=ffff \
+platform-specific/nrf52dk/mqtt-demo/nrf52dk \
+platform-specific/nrf52dk/blink-hello/nrf52dk \
+platform-specific/nrf52dk/timer-test/nrf52dk
 
 TOOLS=
 
