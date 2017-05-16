@@ -72,9 +72,8 @@
 #define NULLRDC_CONF_ACK_WAIT_TIME                RTIMER_SECOND / 500
 #define NULLRDC_CONF_AFTER_ACK_DETECTED_WAIT_TIME 0
 
-
 /* Radio setup */
-#define NETSTACK_CONF_RADIO         cooja_radio_driver
+#define NETSTACK_CONF_RADIO cooja_radio_driver
 
 #else /* NETSTACK_CONF_WITH_IPV6 */
 
@@ -82,8 +81,6 @@
 
 /* Network setup for IPv4 */
 #define NETSTACK_CONF_NETWORK uip_driver
-#define NETSTACK_CONF_MAC nullmac_driver
-#define NETSTACK_CONF_RDC nullrdc_driver
 #define NETSTACK_CONF_RADIO cooja_radio_driver
 #define UIP_CONF_IP_FORWARD           1
 
@@ -98,7 +95,7 @@
 
 
 /* Radio setup */
-#define NETSTACK_CONF_RADIO         cooja_radio_driver
+#define NETSTACK_CONF_RADIO cooja_radio_driver
 #define NETSTACK_CONF_WITH_IPV6               1
 
 #define LINKADDR_CONF_SIZE          8
