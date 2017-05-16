@@ -47,9 +47,9 @@
       se.sics.cooja.mspmote.SkyMoteType
       <identifier>sky2</identifier>
       <description>wait-dag</description>
-      <source EXPORT="discard">[CONFIG_DIR]/code/wait-dag.c</source>
+      <source EXPORT="discard">[CONFIG_DIR]/code-slip-radio/wait-dag.c</source>
       <commands EXPORT="discard">make wait-dag.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONFIG_DIR]/code/wait-dag.sky</firmware>
+      <firmware EXPORT="copy">[CONFIG_DIR]/code-slip-radio/wait-dag.sky</firmware>
       <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.IPAddress</moteinterface>

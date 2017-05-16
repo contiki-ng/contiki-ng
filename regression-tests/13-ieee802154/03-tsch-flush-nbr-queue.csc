@@ -24,7 +24,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype476</identifier>
       <description>Cooja Mote Type #1</description>
-      <source>[CONFIG_DIR]/code/test-flush-nbr-queue.c</source>
+      <source>[CONFIG_DIR]/code-flush-nbr-queue/test-flush-nbr-queue.c</source>
       <commands>make test-flush-nbr-queue.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -134,7 +134,7 @@
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <scriptfile>[CONFIG_DIR]/js/unit-test.js</scriptfile>
+      <scriptfile>[CONFIG_DIR]/js/03-tsch-flush-nbr-queue.js</scriptfile>
       <active>true</active>
     </plugin_config>
     <width>495</width>
