@@ -145,6 +145,7 @@ CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -DS132
 endif
 
+SMALL ?= 1
 ifeq ($(SMALL),1)
 CFLAGS += -Os
 else

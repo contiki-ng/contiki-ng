@@ -21,11 +21,8 @@ endif
 
 CLEAN += *.nrf52dk
 
-### Unless the example dictates otherwise, build with code size optimisations switched
-### off
-ifndef SMALL
-  SMALL = 0
-endif
+### Unless the example dictates otherwise, build with code size optimisations switched off
+SMALL ?= 0
 
 ### Define the CPU directory and pull in the correct CPU makefile.
 CONTIKI_CPU=$(CONTIKI)/drivers/cpu/nrf52832

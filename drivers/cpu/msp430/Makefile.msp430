@@ -178,6 +178,7 @@ CFLAGS  += -Os -fno-strict-aliasing
 LDFLAGS += -mmcu=$(CC_MCU) -Wl,-Map=contiki-$(TARGET).map
 
 ### These flags can reduce the code size and RAM usage with up to 10%
+SMALL ?= 1
 ifeq ($(SMALL),1)
 CFLAGS += -ffunction-sections
 # CFLAGS += -fdata-sections

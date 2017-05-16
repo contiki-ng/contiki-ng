@@ -1,7 +1,5 @@
 CONTIKI=../../..
 
-SMALL=1
-
 PROJECT_SOURCEFILES += json-ws.c
 
 ifdef WITH_COSM

@@ -2,8 +2,6 @@ all: z1-websense
 
 CONTIKI = ../../../../..
 
-SMALL = 1
-
 APPS += webserver webbrowser
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"

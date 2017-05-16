@@ -22,11 +22,6 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 CLEAN += *.openmote-cc2538
 
-### Unless the example dictates otherwise, build with code size optimisations
-ifndef SMALL
-  SMALL = 1
-endif
-
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/drivers/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538

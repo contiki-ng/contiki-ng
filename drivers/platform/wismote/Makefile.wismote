@@ -19,9 +19,8 @@ CONTIKI_TARGET_MAIN = contiki-wismote-main.c
 endif
 
 ifdef IAR
+SMALL = 0
 CFLAGS += -D__MSP430F5437__=1 -e --vla -Ohz --multiplier=32 --multiplier_location=4C0 --hw_workaround=CPU40 --core=430X --double=32
-else
-SMALL=1
 endif
 
 CONTIKI_TARGET_SOURCEFILES += $(ARCH) $(UIPDRIVERS)

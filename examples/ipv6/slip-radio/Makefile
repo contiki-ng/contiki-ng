@@ -8,9 +8,6 @@ endif
 
 CONTIKI=../../..
 
-#linker optimizations
-SMALL=1
-
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 PROJECT_SOURCEFILES += slip-net.c no-framer.c
 ifeq ($(TARGET),sky)

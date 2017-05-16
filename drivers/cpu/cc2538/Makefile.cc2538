@@ -27,6 +27,7 @@ CFLAGS += -Werror
 endif
 
 ### Are we building with code size optimisations?
+SMALL ?= 1
 ifeq ($(SMALL),1)
   CFLAGS += -Os
 else
