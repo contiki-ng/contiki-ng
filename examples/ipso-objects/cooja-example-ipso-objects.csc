@@ -26,7 +26,7 @@
       <identifier>wismote1</identifier>
       <description>Wismote Border Router #border-router</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/rpl-border-router/border-router.c</source>
-      <commands EXPORT="discard">make border-router.wismote TARGET=wismote DEFINES=NETSTACK_RDC=nullrdc_driver,NETSTACK_MAC=nullmac_driver</commands>
+      <commands EXPORT="discard">make border-router.wismote TARGET=wismote</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/rpl-border-router/border-router.wismote</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
