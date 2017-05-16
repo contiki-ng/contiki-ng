@@ -53,7 +53,8 @@ extern const struct slip_radio_sensors SLIP_RADIO_CONF_SENSORS;
 #endif
 
 void slip_send_packet(const uint8_t *ptr, int len);
-
+void no_framer_parse_802154_frame(void);
+      
  /* max 16 packets at the same time??? */
 uint8_t packet_ids[16];
 int packet_pos;
@@ -124,7 +125,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
              data[2], packetbuf_datalen());
 
       /* parse frame before sending to get addresses, etc. */
-      no_framer.parse();
+      no_framer_parse_802154_frame();
       NETSTACK_MAC.send(packet_sent, &packet_ids[packet_pos]);
 
       packet_pos++;

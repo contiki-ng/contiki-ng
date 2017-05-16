@@ -92,6 +92,12 @@ create(void)
 static int
 parse(void)
 {
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+no_framer_parse_802154_frame(void)
+{
   frame802154_t frame;
   int len;
   len = packetbuf_datalen();
