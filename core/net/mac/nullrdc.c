@@ -58,12 +58,6 @@
 #define PRINTF(...)
 #endif
 
-#ifdef NULLRDC_CONF_ADDRESS_FILTER
-#define NULLRDC_ADDRESS_FILTER NULLRDC_CONF_ADDRESS_FILTER
-#else
-#define NULLRDC_ADDRESS_FILTER 1
-#endif /* NULLRDC_CONF_ADDRESS_FILTER */
-
 #ifndef NULLRDC_802154_AUTOACK
 #ifdef NULLRDC_CONF_802154_AUTOACK
 #define NULLRDC_802154_AUTOACK NULLRDC_CONF_802154_AUTOACK
@@ -274,17 +268,14 @@ nullrdc_packet_input(void)
 #endif /* NULLRDC_802154_AUTOACK */
   if(NETSTACK_FRAMER.parse() < 0) {
     PRINTF("nullrdc: failed to parse %u\n", packetbuf_datalen());
-#if NULLRDC_ADDRESS_FILTER
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
             !packetbuf_holds_broadcast()) {
     PRINTF("nullrdc: not for us\n");
-#endif /* NULLRDC_ADDRESS_FILTER */
   } else {
     int duplicate = 0;
 
 #if NULLRDC_802154_AUTOACK || NULLRDC_802154_AUTOACK_HW
-#if RDC_WITH_DUPLICATE_DETECTION
     /* Check for duplicate packet. */
     duplicate = mac_sequence_is_duplicate();
     if(duplicate) {
@@ -294,7 +285,6 @@ nullrdc_packet_input(void)
     } else {
       mac_sequence_register_seqno();
     }
-#endif /* RDC_WITH_DUPLICATE_DETECTION */
 #endif /* NULLRDC_802154_AUTOACK */
 
 #if NULLRDC_SEND_802154_ACK
