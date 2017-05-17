@@ -55,9 +55,6 @@
 #endif
 
 /* configuration for the slipradio/network driver */
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     nullmac_driver
-
 #undef NETSTACK_CONF_NETWORK
 #define NETSTACK_CONF_NETWORK slipnet_driver
 
