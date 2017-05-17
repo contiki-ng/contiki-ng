@@ -1,7 +1,7 @@
 EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
-# build jn516x examples, covering IPv6, RPL, CoAP, Rime, Nullrdc, Contikimac
+# build jn516x examples, covering IPv6, RPL, CoAP
 EXAMPLES = \
 hello-world/jn516x \
 platform-specific/jn516x/dr1175-sensors/jn516x \

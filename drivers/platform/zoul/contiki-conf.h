@@ -305,9 +305,9 @@ typedef uint32_t rtimer_clock_t;
  *
  * @{
  */
-/* Configure NullRDC for when it's selected */
-#define NULLRDC_CONF_802154_AUTOACK             1
-#define NULLRDC_CONF_802154_AUTOACK_HW			    1
+/* Configure CSMA for when it's selected */
+#define CSMA_CONF_802154_AUTOACK             1
+#define CSMA_CONF_802154_AUTOACK_HW			    1
 
 #if CC1200_CONF_SUBGHZ_50KBPS_MODE
 #define NETSTACK_CONF_RADIO                                 cc1200_driver
@@ -316,11 +316,11 @@ typedef uint32_t rtimer_clock_t;
 #define CC1200_CONF_USE_GPIO2                               0
 #define CC1200_CONF_USE_RX_WATCHDOG                         0
 
-#define NULLRDC_CONF_ACK_WAIT_TIME                          (RTIMER_SECOND / 200)
-#define NULLRDC_CONF_AFTER_ACK_DETECTED_WAIT_TIME           (RTIMER_SECOND / 1500)
-#define NULLRDC_CONF_802154_AUTOACK                         1
-#define NULLRDC_CONF_802154_AUTOACK_HW                      1
-#define NULLRDC_CONF_SEND_802154_ACK                        0
+#define CSMA_CONF_ACK_WAIT_TIME                          (RTIMER_SECOND / 200)
+#define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME           (RTIMER_SECOND / 1500)
+#define CSMA_CONF_802154_AUTOACK                         1
+#define CSMA_CONF_802154_AUTOACK_HW                      1
+#define CSMA_CONF_SEND_802154_ACK                        0
 
 #endif
 

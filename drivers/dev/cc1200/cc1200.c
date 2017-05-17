@@ -972,7 +972,7 @@ channel_clear(void)
 /*
  * Check if the radio driver is currently receiving a packet.
  *
- * nullrdc uses this function
+ * CSMA uses this function
  * - to detect a collision before transmit()
  * - to detect an incoming ACK
  */
@@ -991,11 +991,11 @@ receiving_packet(void)
        * for this event might make it necessary to review the MAC timing
        * parameters! Instead of (or in addition to) using GPIO0 we could also
        * read out MODEM_STATUS1 (e.g. PQT reached), but this would not change
-       * the situation at least for nullrdc as it uses two "blocking" timers
+       * the situation at least for CSMA as it uses two "blocking" timers
        * (does not perform polling...). Therefore the overall timing
        * of the ACK handling wouldn't change. It would just allow to detect an
        * incoming packet a little bit earlier and help us with respect to
-       * collision avoidance (why not use channel_clear() in nullrdc
+       * collision avoidance (why not use channel_clear()
        * at this point?).
        */
 

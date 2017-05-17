@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,26 +32,20 @@
 
 /**
  * \file
- *         A null RDC implementation that uses framer for headers.
+ *         The 802.15.4 standard CSMA protocol (nonbeacon-enabled).
+ *         Output functions.
  * \author
- *         Adam Dunkels <adam@sics.se>
- *         Niclas Finne <nfi@sics.se>
+
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
-#ifndef NULLRDC_H_
-#define NULLRDC_H_
+#ifndef CSMA_OUTPUT_H_
+#define CSMA_OUTPUT_H_
 
 #include "contiki-conf.h"
 #include "net/mac/mac.h"
 
-/* List of packets to be sent by RDC layer */
-struct rdc_buf_list {
-  struct rdc_buf_list *next;
-  struct queuebuf *buf;
-  void *ptr;
-};
+void csma_output_packet(mac_callback_t sent, void *ptr);
+void csma_output_init(void);
 
-void nullrdc_send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list);
-void nullrdc_packet_input(void);
-
-#endif /* NULLRDC_H_ */
+#endif /* CSMA_OUTPUT_H_ */

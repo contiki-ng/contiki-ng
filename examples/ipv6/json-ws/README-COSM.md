@@ -34,7 +34,7 @@ TSP_PREFIX=2001:05c0:1517:e400 (prefixlen is 56).
    it with the RPL-border-router (assumes Z1 node).
 
         cd contiki/examples/ipv6/rpl-border-router
-        make DEFINES=DEFINES=NETSTACK_RDC=nullrdc_driver,NULLRDC_CONF_802154_AUTOACK=1 TARGET=z1 border-router.upload
+        make DEFINES=DEFINES=NETSTACK_RDC=nullrdc_driver,CSMA_CONF_802154_AUTOACK=1 TARGET=z1 border-router.upload
 
 6. Run tunslip6 which will forward IP from the RPL network to the IPv6 tunnel
    (and to the Internet).

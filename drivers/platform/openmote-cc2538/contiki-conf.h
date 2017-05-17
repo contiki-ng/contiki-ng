@@ -308,9 +308,9 @@ typedef uint32_t rtimer_clock_t;
  * @{
  */
 
-/* Configure NullRDC for when it's selected */
-#define NULLRDC_802154_AUTOACK                  1
-#define NULLRDC_802154_AUTOACK_HW               1
+/* Configure CSMA for when it's selected */
+#define CSMA_802154_AUTOACK                  1
+#define CSMA_802154_AUTOACK_HW               1
 
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc2538_rf_driver

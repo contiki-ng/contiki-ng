@@ -97,8 +97,8 @@
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 #define UIP_CONF_BROADCAST 1
 
-/* Configure NullRDC for when it is selected */
-#define NULLRDC_CONF_802154_AUTOACK_HW  1
+/* Configure CSMA for when it is selected */
+#define CSMA_CONF_802154_AUTOACK_HW  1
 
 #define RDC_CONF_HARDWARE_ACK        1
 

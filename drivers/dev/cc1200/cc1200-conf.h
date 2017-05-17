@@ -76,7 +76,7 @@
 /*
  * The RX watchdog is used to check whether the radio is in RX mode at regular
  * intervals (once per second). Can be used to improve reliability especially
- * if NullRDC is used. Turned of by default.
+ * if CSMA is used. Turned of by default.
  */
 #ifdef CC1200_CONF_USE_RX_WATCHDOG
 #define CC1200_USE_RX_WATCHDOG          CC1200_CONF_USE_RX_WATCHDOG

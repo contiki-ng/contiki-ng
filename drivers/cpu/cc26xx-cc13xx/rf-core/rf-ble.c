@@ -295,7 +295,7 @@ PROCESS_THREAD(rf_ble_beacon_process, ev, data)
        *
        * First, determine our state:
        *
-       * If we are running NullRDC, we are likely in IEEE RX mode. We need to
+       * If we are running CSMA, we are likely in IEEE RX mode. We need to
        * abort the IEEE BG Op before entering BLE mode.
        * If we are ContikiMAC, we are likely off, in which case we need to
        * boot the CPE before entering BLE mode

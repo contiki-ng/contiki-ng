@@ -34,7 +34,7 @@
 #ifndef __COMMON_CONF_H__
 #define __COMMON_CONF_H__
 
-#define MAC_CONFIG_NULLRDC                    0
+#define MAC_CONFIG_CSMA                    0
 #define MAC_CONFIG_TSCH                       1
 /* Select a MAC configuration */
 #define MAC_CONFIG MAC_CONFIG_TSCH
@@ -42,7 +42,7 @@
 #undef NETSTACK_CONF_MAC
 #undef NETSTACK_CONF_FRAMER
 
-#if MAC_CONFIG == MAC_CONFIG_NULLRDC
+#if MAC_CONFIG == MAC_CONFIG_CSMA
 
 #elif MAC_CONFIG == MAC_CONFIG_TSCH
 

@@ -32,20 +32,55 @@
 
 /**
  * \file
- *         A MAC stack protocol that performs retransmissions when the
- *         underlying MAC layer has problems with collisions
+ *         The 802.15.4 standard CSMA protocol (nonbeacon-enabled)
  * \author
  *         Adam Dunkels <adam@sics.se>
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
 #ifndef CSMA_H_
 #define CSMA_H_
 
+#include "contiki-conf.h"
 #include "net/mac/mac.h"
 #include "dev/radio.h"
 
-extern const struct mac_driver csma_driver;
+#ifndef CSMA_802154_AUTOACK
+#ifdef CSMA_CONF_802154_AUTOACK
+#define CSMA_802154_AUTOACK CSMA_CONF_802154_AUTOACK
+#else
+#define CSMA_802154_AUTOACK 0
+#endif /* CSMA_CONF_802154_AUTOACK */
+#endif /* CSMA_802154_AUTOACK */
 
-const struct mac_driver *csma_init(const struct mac_driver *r);
+#ifndef CSMA_802154_AUTOACK_HW
+#ifdef CSMA_CONF_802154_AUTOACK_HW
+#define CSMA_802154_AUTOACK_HW CSMA_CONF_802154_AUTOACK_HW
+#else
+#define CSMA_802154_AUTOACK_HW 0
+#endif /* CSMA_CONF_802154_AUTOACK_HW */
+#endif /* CSMA_802154_AUTOACK_HW */
+
+#ifdef CSMA_CONF_ACK_WAIT_TIME
+#define CSMA_ACK_WAIT_TIME CSMA_CONF_ACK_WAIT_TIME
+#else /* CSMA_CONF_ACK_WAIT_TIME */
+#define CSMA_ACK_WAIT_TIME                      RTIMER_SECOND / 2500
+#endif /* CSMA_CONF_ACK_WAIT_TIME */
+
+#ifdef CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME
+#define CSMA_AFTER_ACK_DETECTED_WAIT_TIME CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME
+#else /* CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME */
+#define CSMA_AFTER_ACK_DETECTED_WAIT_TIME       RTIMER_SECOND / 1500
+#endif /* CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME */
+
+#ifdef CSMA_CONF_SEND_802154_ACK
+#define CSMA_SEND_802154_ACK CSMA_CONF_SEND_802154_ACK
+#else /* CSMA_CONF_SEND_802154_ACK */
+#define CSMA_SEND_802154_ACK 0
+#endif /* CSMA_CONF_SEND_802154_ACK */
+
+#define CSMA_ACK_LEN 3
+
+extern const struct mac_driver csma_driver;
 
 #endif /* CSMA_H_ */
