@@ -48,26 +48,23 @@
 static void
 send_packet(mac_callback_t sent, void *ptr)
 {
-  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
-  NETSTACK_RDC.send(sent, ptr);
 }
 /*---------------------------------------------------------------------------*/
 static void
 packet_input(void)
 {
-  NETSTACK_NETWORK.input();
 }
 /*---------------------------------------------------------------------------*/
 static int
 on(void)
 {
-  return NETSTACK_RDC.on();
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static int
 off(int keep_radio_on)
 {
-  return NETSTACK_RDC.off(keep_radio_on);
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static unsigned short
