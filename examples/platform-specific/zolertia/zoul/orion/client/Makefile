@@ -4,7 +4,7 @@ all: $(CONTIKI_PROJECT)
 
 BOARD = orion
 
-MODULES += core/net/http-socket
+APPS += http-socket
 
 WITH_IP64 = 1
 

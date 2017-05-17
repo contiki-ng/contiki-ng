@@ -1,6 +1,6 @@
 all: http-example
 CONTIKI=../..
-MODULES += core/net/http-socket
+APPS += http-socket
 
 include $(CONTIKI)/Makefile.include
 
