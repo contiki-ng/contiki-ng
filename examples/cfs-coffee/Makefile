@@ -3,8 +3,4 @@ CONTIKI = ../..
 
 all: test-cfs test-coffee example-coffee
 
-ifeq ($(TARGET),avr-raven)
-  COFFEE_FILES = 4
-endif
-
 include $(CONTIKI)/Makefile.include
