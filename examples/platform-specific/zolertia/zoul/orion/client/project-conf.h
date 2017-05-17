@@ -41,8 +41,6 @@
 /* Alternate between ANTENNA_SW_SELECT_SUBGHZ or ANTENNA_SW_SELECT_2_4GHZ */
 #define ANTENNA_SW_SELECT_DEF_CONF       ANTENNA_SW_SELECT_2_4GHZ
 
-#define NETSTACK_CONF_RDC                nullrdc_driver
-
 #define RESOLV_CONF_SUPPORTS_MDNS        0
 #define UIP_CONF_MAX_ROUTES              3
 #define NBR_TABLE_CONF_MAX_NEIGHBORS     3

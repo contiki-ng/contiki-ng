@@ -44,7 +44,6 @@
 #define PROJECT_CONF_H_
 
 #define BROADCAST_CHANNEL     129
-#define NETSTACK_CONF_RDC     nullrdc_driver
 
 #define RTC_CONF_INIT           1
 #define RTC_CONF_SET_FROM_SYS   1

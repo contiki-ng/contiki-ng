@@ -154,15 +154,7 @@
 #undef NETSTACK_CONF_RDC
 #define NETSTACK_CONF_RDC     nordc_driver
 
-#else /* No TSCH, use Csma+NullRDC with ACK */
-
-/* Contiki netstack: MAC */
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     csma_driver
-
-/* Contiki netstack: RDC */
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
+#else /* No TSCH, use Csma with ACK (default MAC) */
 
 #undef MICROMAC_CONF_CHANNEL
 #define MICROMAC_CONF_CHANNEL 26

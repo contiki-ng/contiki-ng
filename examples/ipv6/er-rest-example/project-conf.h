@@ -54,12 +54,6 @@
    #define UIP_CONF_BUFFER_SIZE           256
  */
 
-/* Disabling RDC and CSMA for demo purposes. Core updates often
-   require more memory. */
-/* For projects, optimize memory and enable RDC and CSMA again. */
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC              nullrdc_driver
-
 #undef RPL_CONF_MAX_DAG_PER_INSTANCE
 #define RPL_CONF_MAX_DAG_PER_INSTANCE     1
 

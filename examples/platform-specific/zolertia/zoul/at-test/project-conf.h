@@ -60,8 +60,6 @@
 #define IGNORE_CHAR(c) (c == 0x0d)
 #define END 0x0a
 
-#define NETSTACK_CONF_RDC     nullrdc_driver
-
 #endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**

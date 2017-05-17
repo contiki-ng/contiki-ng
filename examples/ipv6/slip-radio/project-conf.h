@@ -54,13 +54,9 @@
 #define CMD_CONF_HANDLERS slip_radio_cmd_handler
 #endif
 
-
 /* configuration for the slipradio/network driver */
 #undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     nullmac_driver
-
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
 
 #undef NETSTACK_CONF_NETWORK
 #define NETSTACK_CONF_NETWORK slipnet_driver

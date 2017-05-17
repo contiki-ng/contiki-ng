@@ -58,9 +58,6 @@
 #undef  NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc2538_rf_driver
 
-/* Disable RDC */
-#define NETSTACK_CONF_RDC           nullrdc_driver
-
 /* USe DHCP */
 #define IP64_CONF_DHCP              1
 
