@@ -1,8 +1,9 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CONTIKI_PROJECT = cc1200-demo
+
+CONTIKI_PROJECT = test-power-mgmt
 
 all: $(CONTIKI_PROJECT)
 
-CONTIKI = ../../../../../..
+CONTIKI = ../../../..
 CONTIKI_WITH_RIME = 1
 include $(CONTIKI)/Makefile.include

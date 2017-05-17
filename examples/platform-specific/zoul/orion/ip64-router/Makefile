@@ -4,7 +4,7 @@ all: ip64-router
 
 BOARD = orion
 
-CONTIKI = ../../../../../..
+CONTIKI = ../../../../..
 
 WITH_IP64 = 1
 CONTIKI_WITH_IPV6 = 1

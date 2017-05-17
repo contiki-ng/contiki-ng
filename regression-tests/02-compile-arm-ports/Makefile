@@ -26,7 +26,7 @@ platform-specific/cc2538-common/zoul \
 platform-specific/cc2538-common/mqtt-demo/zoul \
 platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
-platform-specific/zolertia/zoul/orion/ip64-router/zoul:BOARD=orion \
+platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
 ipv6/er-rest-example/zoul \
 ipso-objects/zoul \
 hello-world/zoul \

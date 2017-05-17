@@ -8,5 +8,5 @@ APPS += http-socket
 
 WITH_IP64 = 1
 
-CONTIKI = ../../../../../..
+CONTIKI = ../../../../..
 include $(CONTIKI)/Makefile.include
