@@ -22,8 +22,8 @@
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>z11</identifier>
-      <description>Cooja Mote Type #z11</description>
+      <identifier>mtype11</identifier>
+      <description>Cooja Mote Type #mtype11</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/rpl-tsch/node.c</source>
       <commands EXPORT="discard">make TARGET=cooja clean
 make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</commands>
@@ -61,7 +61,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -79,7 +79,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -97,7 +97,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -115,7 +115,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -133,7 +133,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -151,7 +151,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -169,7 +169,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -187,7 +187,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -205,7 +205,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</command
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>mtype11</motetype_identifier>
     </mote>
   </simulation>
   <plugin>

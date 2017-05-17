@@ -54,29 +54,16 @@ void net_debug_lladdr_print(const uip_lladdr_t *addr);
 #define DEBUG_FULL      DEBUG_ANNOTATE | DEBUG_PRINT
 
 /* PRINTA will always print if the debug routines are called directly */
-#ifdef __AVR__
-#include <avr/pgmspace.h>
-#define PRINTA(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
-#else
 #define PRINTA(...) printf(__VA_ARGS__)
-#endif
 
 #if (DEBUG) & DEBUG_ANNOTATE
-#ifdef __AVR__
-#define ANNOTATE(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
-#else
 #define ANNOTATE(...) printf(__VA_ARGS__)
-#endif
 #else
 #define ANNOTATE(...)
 #endif /* (DEBUG) & DEBUG_ANNOTATE */
 
 #if (DEBUG) & DEBUG_PRINT
-#ifdef __AVR__
-#define PRINTF(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
-#else
 #define PRINTF(...) printf(__VA_ARGS__)
-#endif
 #define PRINTLLADDR(lladdr) net_debug_lladdr_print(lladdr)
 #else
 #define PRINTF(...)

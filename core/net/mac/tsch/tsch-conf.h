@@ -139,7 +139,7 @@
 
 #elif TSCH_CONF_DEFAULT_TIMESLOT_LENGTH == 65000U
 /* 65ms timeslot, i.e. nearly the max length allowed by standard (16-bit unsigned in micro-seconds).
- * Useful for running link-layer security on sky or z1 in Cooja, where only S/W security is supported.
+ * Useful for running link-layer security on sky in Cooja, where only S/W security is supported.
  * Note: this slot timing would require a total of 120ms. If a slot overlaps with the next active slot,
  * the latter will be skipped.
  * This configuration is mostly a work-around to test link-layer security in Cooja, it is recommended

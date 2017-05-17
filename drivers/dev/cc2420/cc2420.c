@@ -37,10 +37,6 @@
 
 #include "contiki.h"
 
-#if defined(__AVR__)
-#include <avr/io.h>
-#endif
-
 #include "dev/leds.h"
 #include "dev/spi.h"
 #include "cc2420.h"

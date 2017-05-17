@@ -44,12 +44,7 @@
 
 #include <stdio.h>
 
-#ifdef __AVR__
-#include <avr/pgmspace.h>
-#define PRINTA(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
-#else
 #define PRINTA(...) printf(__VA_ARGS__)
-#endif
 
 /*---------------------------------------------------------------------------*/
 void

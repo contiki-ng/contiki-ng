@@ -41,7 +41,3 @@ endif
 ifeq ($(TARGET),sky)
   shell_src += shell-sky.c shell-exec.c
 endif
-
-ifeq ($(TARGET),z1)
-  shell_src += shell-sky.c shell-exec.c
-endif
