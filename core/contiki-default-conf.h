@@ -54,13 +54,6 @@
 /* #define NETSTACK_CONF_FRAMER framer_802154 */
 #endif /* NETSTACK_CONF_FRAMER */
 
-/* NETSTACK_CONF_RDC specifies the Radio Duty Cycling (RDC) layer. The
-   nullrdc_driver never turns the radio off and is compatible with all
-   radios, but consumes a lot of power. */
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC   nullrdc_driver
-#endif /* NETSTACK_CONF_RDC */
-
 /* NETSTACK_CONF_MAC specifies the Medium Access Control (MAC)
    layer. The nullmac_driver does not provide any MAC
    functionality. The csma_driver is the default CSMA MAC layer, but

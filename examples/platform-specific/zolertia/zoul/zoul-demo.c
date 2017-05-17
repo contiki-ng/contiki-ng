@@ -125,9 +125,6 @@ PROCESS_THREAD(zoul_demo_process, ev, data)
 
   counter = 0;
 
-  /* Disable the radio duty cycle and keep the radio on */
-  NETSTACK_MAC.off(1);
-
   broadcast_open(&bc, BROADCAST_CHANNEL, &bc_rx);
 
   /* Configure the user button */

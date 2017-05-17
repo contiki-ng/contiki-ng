@@ -211,9 +211,6 @@ main(void)
   printf("%s\n", NETSTACK_NETWORK.name);
   printf(" MAC: ");
   printf("%s\n", NETSTACK_MAC.name);
-  printf(" RDC: ");
-  printf("%s", NETSTACK_RDC.name);
-  printf("\n");
 
   netstack_init();
 

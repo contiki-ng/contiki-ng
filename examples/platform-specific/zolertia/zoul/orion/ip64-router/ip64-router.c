@@ -271,7 +271,7 @@ PROCESS_THREAD(router_node_process, ev, data)
   static struct etimer et;
 
   /* Turn radio off while initialazing */
-  NETSTACK_MAC.off(0);
+  NETSTACK_MAC.off();
 
   /* Initialize the IP64 module so we'll start translating packets */
   ip64_init();
@@ -306,9 +306,6 @@ PROCESS_THREAD(router_node_process, ev, data)
   }
 
   leds_off(LEDS_DHCP);
-
-  /* Turn the radio on and create the network */
-  NETSTACK_MAC.off(1);
 
   /* Set us up as a RPL root node. */
   rpl_dag_root_init_dag();

@@ -366,7 +366,7 @@ main(void)
   queuebuf_init();
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-  PRINTF("%s %s\n",NETSTACK_MAC.name, NETSTACK_RDC.name);
+  PRINTF("%s\n",NETSTACK_MAC.name);
 
 #ifndef UIP_FALLBACK_INTERFACE
   uart0_set_input(serial_line_input_byte);

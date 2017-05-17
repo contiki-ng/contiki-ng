@@ -298,12 +298,11 @@ main(int argc, char **argv)
 
   /* Setup X-MAC for 802.15.4 */
   queuebuf_init();
-  NETSTACK_RDC.init();
   NETSTACK_MAC.init();
   NETSTACK_NETWORK.init();
 
-  PRINTF("%s %s, radio channel %u, CCA threshold %i\n",
-         NETSTACK_MAC.name, NETSTACK_RDC.name,
+  PRINTF("%s, radio channel %u, CCA threshold %i\n",
+         NETSTACK_MAC.name,
          CC2420_CONF_CHANNEL,
          CC2420_CONF_CCA_THRESH);
 
@@ -339,13 +338,11 @@ main(int argc, char **argv)
   }
 #else /* NETSTACK_CONF_WITH_IPV6 */
 
-  NETSTACK_RDC.init();
   NETSTACK_MAC.init();
   NETSTACK_NETWORK.init();
 
-  PRINTF("%s %s, radio channel %u\n",
-         NETSTACK_MAC.name, NETSTACK_RDC.name,
-         CC2420_CONF_CHANNEL);
+  PRINTF("%s, radio channel %u\n",
+         NETSTACK_MAC.name CC2420_CONF_CHANNEL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #if !NETSTACK_CONF_WITH_IPV4 && !NETSTACK_CONF_WITH_IPV6

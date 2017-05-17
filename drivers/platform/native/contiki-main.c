@@ -205,7 +205,7 @@ main(int argc, char **argv)
   set_rime_addr();
 
   netstack_init();
-  printf("MAC %s RDC %s NETWORK %s\n", NETSTACK_MAC.name, NETSTACK_RDC.name, NETSTACK_NETWORK.name);
+  printf("MAC %s NETWORK %s\n", NETSTACK_MAC.name, NETSTACK_NETWORK.name);
 
 #if NETSTACK_CONF_WITH_IPV6
   queuebuf_init();

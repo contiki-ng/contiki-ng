@@ -1321,7 +1321,7 @@ output(const uip_lladdr_t *localdest)
   }
   PRINTFO("sicslowpan output: header of len %d\n", packetbuf_hdr_len);
 
-  /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_RDC.
+  /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
    * We calculate it here only to make a better decision of whether the outgoing packet
    * needs to be fragmented or not. */
 #ifndef SICSLOWPAN_USE_FIXED_HDRLEN

@@ -147,8 +147,6 @@ PROCESS_THREAD(rpl_root_process, ev, data)
 
   PRINTF("Multicast Engine: '%s'\n", UIP_MCAST6.name);
 
-  NETSTACK_MAC.off(1);
-
   set_own_addresses();
 
   prepare_mcast();

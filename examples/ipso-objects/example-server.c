@@ -289,10 +289,6 @@ PROCESS_THREAD(router_process, ev, data)
 
   setup_network();
 
-  /* The data sink runs with a 100% duty cycle in order to ensure high
-     packet reception rates. */
-  NETSTACK_MAC.off(1);
-
   while(1) {
     etimer_set(&timer, CLOCK_SECOND * 5);
     PROCESS_YIELD();

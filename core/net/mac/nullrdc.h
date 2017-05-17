@@ -41,8 +41,27 @@
 #ifndef NULLRDC_H_
 #define NULLRDC_H_
 
-#include "net/mac/rdc.h"
+#include "contiki-conf.h"
+#include "net/mac/mac.h"
 
-extern const struct rdc_driver nullrdc_driver;
+#ifdef RDC_CONF_WITH_DUPLICATE_DETECTION
+#define RDC_WITH_DUPLICATE_DETECTION RDC_CONF_WITH_DUPLICATE_DETECTION
+#else /* RDC_CONF_WITH_DUPLICATE_DETECTION */
+/* As frames can be spoofed, the RDC layer should not discard a
+   frame because it has seen its sequence number already. Replay
+   protection should be implemented at the LLSEC layer where the
+   authenticity of frames is verified. */
+#define RDC_WITH_DUPLICATE_DETECTION !LLSEC802154_ENABLED
+#endif /* RDC_CONF_WITH_DUPLICATE_DETECTION */
+
+/* List of packets to be sent by RDC layer */
+struct rdc_buf_list {
+  struct rdc_buf_list *next;
+  struct queuebuf *buf;
+  void *ptr;
+};
+
+void nullrdc_send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list);
+void nullrdc_packet_input(void);
 
 #endif /* NULLRDC_H_ */

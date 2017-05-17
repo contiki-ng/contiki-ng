@@ -363,7 +363,7 @@ PROCESS_THREAD(aducrf101_rf_process, ev, data)
     if(len > 0) {
       packetbuf_set_datalen(len);
 
-      NETSTACK_RDC.input();
+      NETSTACK_MAC.input();
     }
   }
 

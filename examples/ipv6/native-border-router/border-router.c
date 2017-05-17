@@ -346,10 +346,6 @@ PROCESS_THREAD(border_router_process, ev, data)
   print_local_addresses();
 #endif
 
-  /* The border router runs with a 100% duty cycle in order to ensure high
-     packet reception rates. */
-  NETSTACK_MAC.off(1);
-
   while(1) {
     etimer_set(&et, CLOCK_SECOND * 2);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));

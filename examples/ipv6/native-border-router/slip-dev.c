@@ -166,7 +166,7 @@ slip_packet_input(unsigned char *data, int len)
   if(slip_config_verbose > 0) {
     printf("Packet input over SLIP: %d\n", len);
   }
-  NETSTACK_RDC.input();
+  NETSTACK_MAC.input();
 }
 /*---------------------------------------------------------------------------*/
 /*

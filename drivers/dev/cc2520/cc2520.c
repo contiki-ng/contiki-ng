@@ -660,7 +660,7 @@ PROCESS_THREAD(cc2520_process, ev, data)
     len = cc2520_read(packetbuf_dataptr(), PACKETBUF_SIZE);
     packetbuf_set_datalen(len);
 
-    NETSTACK_RDC.input();
+    NETSTACK_MAC.input();
     /* flushrx(); */
   }
 

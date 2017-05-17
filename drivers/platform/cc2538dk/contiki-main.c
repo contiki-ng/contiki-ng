@@ -193,8 +193,6 @@ main(void)
   PRINTF("%s\n", NETSTACK_NETWORK.name);
   PRINTF(" MAC: ");
   PRINTF("%s\n", NETSTACK_MAC.name);
-  PRINTF(" RDC: ");
-  PRINTF("%s\n", NETSTACK_RDC.name);
 
   /* Initialise the H/W RNG engine. */
   random_init(0);

@@ -407,7 +407,7 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
 
       if(mac_keep_on == MAC_CAN_BE_TURNED_OFF && state == STATE_VERY_SLEEPY) {
         leds_off(LEDS_GREEN);
-        NETSTACK_MAC.off(0);
+        NETSTACK_MAC.off();
       } else {
         leds_on(LEDS_GREEN);
         NETSTACK_MAC.on();

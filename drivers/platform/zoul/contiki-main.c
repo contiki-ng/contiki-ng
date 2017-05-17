@@ -271,8 +271,6 @@ main(void)
   PRINTF("%s\n", NETSTACK_NETWORK.name);
   PRINTF(" MAC: ");
   PRINTF("%s\n", NETSTACK_MAC.name);
-  PRINTF(" RDC: ");
-  PRINTF("%s\n", NETSTACK_RDC.name);
 
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));

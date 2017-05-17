@@ -240,8 +240,8 @@ contiki_init()
 
   /* Initialize communication stack */
   netstack_init();
-  printf("%s/%s/%s\n",
-         NETSTACK_NETWORK.name, NETSTACK_MAC.name, NETSTACK_RDC.name);
+  printf("%s/%s\n",
+         NETSTACK_NETWORK.name, NETSTACK_MAC.name);
 
 #if NETSTACK_CONF_WITH_IPV4
   /* IPv4 CONFIGURATION */

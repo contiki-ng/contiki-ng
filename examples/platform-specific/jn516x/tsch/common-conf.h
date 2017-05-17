@@ -150,10 +150,6 @@
 #undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     tschmac_driver
 
-/* Contiki netstack: RDC */
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nordc_driver
-
 #else /* No TSCH, use Csma with ACK (default MAC) */
 
 #undef MICROMAC_CONF_CHANNEL

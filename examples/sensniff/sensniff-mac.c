@@ -36,17 +36,11 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "net/mac/mac.h"
-#include "net/mac/rdc.h"
 #include "net/netstack.h"
 #include "sensniff.h"
 /*---------------------------------------------------------------------------*/
 static void
 send(mac_callback_t sent, void *ptr)
-{
-}
-/*---------------------------------------------------------------------------*/
-static void
-send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *list)
 {
 }
 /*---------------------------------------------------------------------------*/
@@ -60,17 +54,11 @@ static int
 on(void)
 {
   NETSTACK_RADIO.on();
-  return 1;
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static int
-off(int keep_radio_on)
-{
-  return keep_radio_on;
-}
-/*---------------------------------------------------------------------------*/
-static unsigned short
-cca(void)
+off(void)
 {
   return 0;
 }
@@ -81,14 +69,12 @@ init(void)
   on();
 }
 /*---------------------------------------------------------------------------*/
-const struct rdc_driver sensniff_rdc_driver = {
+const struct mac_driver sensniff_mac_driver = {
   "sensniff-rdc",
   init,
   send,
-  send_list,
   input,
   on,
-  off,
-  cca,
+  off
 };
 /*---------------------------------------------------------------------------*/

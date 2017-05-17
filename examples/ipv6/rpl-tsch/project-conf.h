@@ -63,8 +63,6 @@
 /* Netstack layers */
 #undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     tschmac_driver
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nordc_driver
 
 /* IEEE802.15.4 frame version */
 #undef FRAME802154_CONF_VERSION

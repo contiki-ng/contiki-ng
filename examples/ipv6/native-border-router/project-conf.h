@@ -51,8 +51,8 @@
 
 #define CMD_CONF_OUTPUT border_router_cmd_output
 
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC border_router_rdc_driver
+#undef NETSTACK_CONF_MAC
+#define NETSTACK_CONF_MAC border_router_mac_driver
 
 /* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
 #define SELECT_CALLBACK 1

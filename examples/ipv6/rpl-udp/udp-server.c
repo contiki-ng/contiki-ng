@@ -151,10 +151,6 @@ PROCESS_THREAD(udp_server_process, ev, data)
   
   print_local_addresses();
 
-  /* The data sink runs with a 100% duty cycle in order to ensure high 
-     packet reception rates. */
-  NETSTACK_MAC.off(1);
-
   server_conn = udp_new(NULL, UIP_HTONS(UDP_CLIENT_PORT), NULL);
   if(server_conn == NULL) {
     PRINTF("No UDP connection available, exiting the process!\n");

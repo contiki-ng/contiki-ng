@@ -289,7 +289,7 @@ PROCESS_THREAD(cooja_radio_process, ev, data)
     len = radio_read(packetbuf_dataptr(), PACKETBUF_SIZE);
     if(len > 0) {
       packetbuf_set_datalen(len);
-      NETSTACK_RDC.input();
+      NETSTACK_MAC.input();
     }
   }
 

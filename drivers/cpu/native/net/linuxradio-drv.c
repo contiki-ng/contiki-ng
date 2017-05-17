@@ -149,7 +149,7 @@ handle_fd(fd_set *rset, fd_set *wset)
     buflen = bytes;
     memcpy(packetbuf_dataptr(), sockbuf, bytes);
     packetbuf_set_datalen(bytes);
-    NETSTACK_RDC.input();
+    NETSTACK_MAC.input();
   }
 }
 

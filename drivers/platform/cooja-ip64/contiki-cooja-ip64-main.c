@@ -189,8 +189,8 @@ contiki_init(void)
 
   /* Initialize communication stack */
   netstack_init();
-  printf("%s/%s/%s\n",
-         NETSTACK_NETWORK.name, NETSTACK_MAC.name, NETSTACK_RDC.name);
+  printf("%s/%s\n",
+         NETSTACK_NETWORK.name, NETSTACK_MAC.name);
 
   /* IPv6 CONFIGURATION */
 

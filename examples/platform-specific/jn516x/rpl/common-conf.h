@@ -40,7 +40,6 @@
 #define MAC_CONFIG MAC_CONFIG_TSCH
 
 #undef NETSTACK_CONF_MAC
-#undef NETSTACK_CONF_RDC
 #undef NETSTACK_CONF_FRAMER
 
 #if MAC_CONFIG == MAC_CONFIG_NULLRDC
@@ -58,7 +57,6 @@
 #endif /* WITH_SECURITY */
 
 #define NETSTACK_CONF_MAC     tschmac_driver
-#define NETSTACK_CONF_RDC     nordc_driver
 
 /* IEEE802.15.4 frame version */
 #undef FRAME802154_CONF_VERSION

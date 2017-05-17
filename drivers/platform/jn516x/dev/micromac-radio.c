@@ -884,7 +884,7 @@ PROCESS_THREAD(micromac_radio_process, ev, data)
       /* is packet valid? */
       if(len > 0) {
         packetbuf_set_datalen(len);
-        NETSTACK_RDC.input();
+        NETSTACK_MAC.input();
       }
       /* Remove packet from ringbuf */
       ringbufindex_get(&input_ringbuf);

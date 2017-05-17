@@ -140,21 +140,12 @@ send_packet(mac_callback_t sent, void *ptr)
 }
 /*---------------------------------------------------------------------------*/
 static void
-send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
-{
-  if(buf_list != NULL) {
-    queuebuf_to_packetbuf(buf_list->buf);
-    send_packet(sent, ptr);
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
 packet_input(void)
 {
   if(NETSTACK_FRAMER.parse() < 0) {
     PRINTF("br-rdc: failed to parse %u\n", packetbuf_datalen());
   } else {
-    NETSTACK_MAC.input();
+    NETSTACK_NETWORK.input();
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -165,7 +156,7 @@ on(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
-off(int keep_radio_on)
+off()
 {
   return 1;
 }
@@ -176,11 +167,10 @@ init(void)
   callback_pos = 0;
 }
 /*---------------------------------------------------------------------------*/
-const struct rdc_driver border_router_rdc_driver = {
-  "br-rdc",
+const struct mac_driver border_router_mac_driver = {
+  "br-mac",
   init,
   send_packet,
-  send_list,
   packet_input,
   on,
   off

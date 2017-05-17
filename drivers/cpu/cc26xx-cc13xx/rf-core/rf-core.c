@@ -552,7 +552,7 @@ PROCESS_THREAD(rf_core_process, ev, data)
       if(len > 0) {
         packetbuf_set_datalen(len);
 
-        NETSTACK_RDC.input();
+        NETSTACK_MAC.input();
       }
     } while(len > 0);
   }

@@ -38,6 +38,7 @@
  */
 
 #include "net/mac/csma.h"
+#include "net/mac/nullrdc.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
@@ -164,7 +165,7 @@ transmit_packet_list(void *ptr)
       PRINTF("csma: preparing number %d %p, queue len %d\n", n->transmissions, q,
           list_length(n->queued_packet_list));
       /* Send packets in the neighbor's list */
-      NETSTACK_RDC.send_list(packet_sent, n, q);
+      nullrdc_send_list(packet_sent, n, q);
     }
   }
 }
@@ -441,19 +442,19 @@ send_packet(mac_callback_t sent, void *ptr)
 static void
 input_packet(void)
 {
-  NETSTACK_NETWORK.input();
+  nullrdc_packet_input();
 }
 /*---------------------------------------------------------------------------*/
 static int
 on(void)
 {
-  return NETSTACK_RDC.on();
+  return NETSTACK_RADIO.on();
 }
 /*---------------------------------------------------------------------------*/
 static int
-off(int keep_radio_on)
+off(void)
 {
-  return NETSTACK_RDC.off(keep_radio_on);
+  return NETSTACK_RADIO.off();
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -462,6 +463,7 @@ init(void)
   memb_init(&packet_memb);
   memb_init(&metadata_memb);
   memb_init(&neighbor_memb);
+  on();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver csma_driver = {

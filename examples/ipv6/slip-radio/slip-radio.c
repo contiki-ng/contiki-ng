@@ -217,7 +217,6 @@ PROCESS_THREAD(slip_radio_process, ev, data)
   PROCESS_BEGIN();
 
   init();
-  NETSTACK_RDC.off(1);
 #ifdef SLIP_RADIO_CONF_SENSORS
   SLIP_RADIO_CONF_SENSORS.init();
 #endif

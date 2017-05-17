@@ -94,7 +94,7 @@ do_rssi(void)
   static int sample;
   int channel;
 
-  NETSTACK_MAC.off(0);
+  NETSTACK_MAC.off();
 
   cc2420_on();
   for(channel = 11; channel <= 26; ++channel) {

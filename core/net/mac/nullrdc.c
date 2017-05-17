@@ -233,14 +233,8 @@ send_one_packet(mac_callback_t sent, void *ptr)
   return last_sent_ok;
 }
 /*---------------------------------------------------------------------------*/
-static void
-send_packet(mac_callback_t sent, void *ptr)
-{
-  send_one_packet(sent, ptr);
-}
-/*---------------------------------------------------------------------------*/
-static void
-send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
+void
+nullrdc_send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
 {
   while(buf_list != NULL) {
     /* We backup the next pointer, as it may be nullified by
@@ -261,8 +255,8 @@ send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
-packet_input(void)
+void
+nullrdc_packet_input(void)
 {
 #if NULLRDC_SEND_802154_ACK
   int original_datalen;
@@ -321,40 +315,8 @@ packet_input(void)
     }
 #endif /* NULLRDC_SEND_ACK */
     if(!duplicate) {
-      NETSTACK_MAC.input();
+      NETSTACK_NETWORK.input();
     }
   }
 }
-/*---------------------------------------------------------------------------*/
-static int
-on(void)
-{
-  return NETSTACK_RADIO.on();
-}
-/*---------------------------------------------------------------------------*/
-static int
-off(int keep_radio_on)
-{
-  if(keep_radio_on) {
-    return NETSTACK_RADIO.on();
-  } else {
-    return NETSTACK_RADIO.off();
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-  on();
-}
-/*---------------------------------------------------------------------------*/
-const struct rdc_driver nullrdc_driver = {
-  "nullrdc",
-  init,
-  send_packet,
-  send_list,
-  packet_input,
-  on,
-  off
-};
 /*---------------------------------------------------------------------------*/
