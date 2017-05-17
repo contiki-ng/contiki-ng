@@ -32,4 +32,5 @@ SMALL ?= 0
 CONTIKI_CPU=$(CONTIKI)/drivers/cpu/cc26xx-cc13xx
 include $(CONTIKI_CPU)/Makefile.$(CPU_FAMILY)
 
-MODULES += core/net core/net/mac core/net/mac/framer
+MODULES += core/net core/net/mac core/net/mac/framer \
+  core/net/mac/csma core/net/mac/nullmac

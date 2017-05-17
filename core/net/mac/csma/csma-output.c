@@ -39,7 +39,7 @@
  *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
-#include "net/mac/csma.h"
+#include "net/mac/csma/csma.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "dev/watchdog.h"

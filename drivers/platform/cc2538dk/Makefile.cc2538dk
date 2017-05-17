@@ -19,7 +19,8 @@ CLEAN += *.cc2538dk
 CONTIKI_CPU=$(CONTIKI)/drivers/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += core/net core/net/mac core/net/mac/framer
+MODULES += core/net core/net/mac core/net/mac/framer \
+  core/net/mac/csma core/net/mac/nullmac
 
 PYTHON = python
 BSL_FLAGS += -e -w -v

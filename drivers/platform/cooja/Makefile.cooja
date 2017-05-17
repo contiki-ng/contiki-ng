@@ -74,7 +74,8 @@ CONTIKI_CPU=$(CONTIKI)/drivers/cpu/x86
 CFLAGSNO = $(EXTRA_CC_ARGS) -Wall -g -I/usr/local/include -DCLASSNAME=$(CLASSNAME)
 CFLAGS   += $(CFLAGSNO)
 
-MODULES += core/net core/net/mac core/net/mac/framer core/net/ip64-addr
+MODULES += core/net core/net/mac core/net/mac/framer core/net/ip64-addr \
+  core/net/mac/csma core/net/mac/nullmac
 
 ## Copied from Makefile.include, since Cooja overrides CFLAGS et al
 HAS_STACK = 0

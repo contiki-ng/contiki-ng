@@ -44,7 +44,7 @@
 #include "nrf_soc.h"
 #include "iot_defines.h"
 
-#include "net/mac/nullmac.h"
+#include "net/mac/nullmac/nullmac.h"
 #include "net/netstack.h"
 #include "net/ip/uip.h"
 #include "net/ip/tcpip.h"

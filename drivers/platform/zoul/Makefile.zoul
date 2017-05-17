@@ -45,7 +45,8 @@ CLEAN += *.zoul
 CONTIKI_CPU=$(CONTIKI)/drivers/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += core/net core/net/mac core/net/mac/framer core/net/ip \
+MODULES += core/net core/net/mac core/net/mac/framer \
+           core/net/mac/csma core/net/mac/nullmac \
            drivers/dev/cc1200
 
 ifeq ($(WITH_IP64),1)

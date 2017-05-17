@@ -38,8 +38,8 @@
  *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
-#include "net/mac/csma.h"
-#include "net/mac/csma-output.h"
+#include "net/mac/csma/csma.h"
+#include "net/mac/csma/csma-output.h"
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"

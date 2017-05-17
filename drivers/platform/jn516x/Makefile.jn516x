@@ -143,7 +143,8 @@ endif
 CLEAN += *.jn516x
 CLEAN += *.jn516x.bin
 
-MODULES += core/net core/net/mac core/net/mac/framer
+MODULES += core/net core/net/mac core/net/mac/framer \
+  core/net/mac/csma core/net/mac/nullmac
 
 CONTIKI_TARGET_SOURCEFILES += $(ARCH)
 CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
