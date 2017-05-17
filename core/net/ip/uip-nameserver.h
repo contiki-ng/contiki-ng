@@ -44,6 +44,8 @@
 #ifndef UIP_NAMESERVER_H_
 #define UIP_NAMESERVER_H_
 
+#include "net/ip/uip.h"
+
 /**
  * \name General
  * @{
