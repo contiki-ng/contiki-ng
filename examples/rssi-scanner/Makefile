@@ -1,8 +1,6 @@
 DEFINES=PROJECT_CONF_H=\"project-conf.h\"
 
-ifndef TARGET
-TARGET = z1
-endif
+TARGET ?= sky
 
 CONTIKI = ../..
 

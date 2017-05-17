@@ -24,7 +24,7 @@
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype660</identifier>
-      <description>Cooja Mote Type #z11</description>
+      <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/ipv6/rpl-tsch/node.c</source>
       <commands>make TARGET=cooja clean
       make TARGET=cooja node.cooja</commands>
