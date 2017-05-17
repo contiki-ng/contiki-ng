@@ -2,7 +2,7 @@ DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 
 CONTIKI_PROJECT = sensniff
 
-PROJECT_SOURCEFILES += sensniff-rdc.c netstack.c
+PROJECT_SOURCEFILES += sensniff-mac.c netstack.c
 PROJECTDIRS += pool $(TARGET)
 
 ifeq ($(TARGET),)

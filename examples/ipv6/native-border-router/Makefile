@@ -5,7 +5,7 @@ APPS = slip-cmd
 CONTIKI=../../..
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-PROJECT_SOURCEFILES += border-router-cmds.c tun-bridge.c border-router-rdc.c \
+PROJECT_SOURCEFILES += border-router-cmds.c tun-bridge.c border-router-mac.c \
 slip-config.c slip-dev.c
 
 WITH_WEBSERVER=1
