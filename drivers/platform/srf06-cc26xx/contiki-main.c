@@ -213,11 +213,6 @@ main(void)
   printf("%s\n", NETSTACK_MAC.name);
   printf(" RDC: ");
   printf("%s", NETSTACK_RDC.name);
-
-  if(NETSTACK_RDC.channel_check_interval() != 0) {
-    printf(", Channel Check Interval: %u ticks",
-           NETSTACK_RDC.channel_check_interval());
-  }
   printf("\n");
 
   netstack_init();

@@ -59,7 +59,7 @@
 /* Macros */
 /*---------------------------------------------------------------------------*/
 /* CCI */
-#define SMRF_FWD_DELAY()  NETSTACK_RDC.channel_check_interval()
+#define SMRF_FWD_DELAY()  (CLOCK_SECOND / 8)
 /* Number of slots in the next 500ms */
 #define SMRF_INTERVAL_COUNT  ((CLOCK_SECOND >> 2) / fwd_delay)
 /*---------------------------------------------------------------------------*/

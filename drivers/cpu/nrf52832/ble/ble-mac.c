@@ -347,12 +347,6 @@ off(int keep_radio_on)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
-channel_check_interval(void)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
@@ -377,8 +371,7 @@ const struct mac_driver ble_ipsp_mac_driver = {
   send_packet,
   NULL,
   on,
-  off,
-  channel_check_interval,
+  off
 };
 /*---------------------------------------------------------------------------*/
 /**

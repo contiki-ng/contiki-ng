@@ -68,9 +68,6 @@ struct mac_driver {
 
   /** Turn the MAC layer off. */
   int (* off)(int keep_radio_on);
-
-  /** Returns the channel check interval, expressed in clock_time_t ticks. */
-  unsigned short (* channel_check_interval)(void);
 };
 
 /* Generic MAC return values. */

@@ -149,18 +149,9 @@ neighbor_queue_from_addr(const linkaddr_t *addr)
 static clock_time_t
 backoff_period(void)
 {
-  clock_time_t time;
-  /* The retransmission time must be proportional to the channel
-     check interval of the underlying radio duty cycling layer. */
-  time = NETSTACK_RDC.channel_check_interval();
-
-  /* If the radio duty cycle has no channel check interval, we use
-   * the default in IEEE 802.15.4: aUnitBackoffPeriod which is
+  /* Use the default in IEEE 802.15.4: aUnitBackoffPeriod which is
    * 20 symbols i.e. 320 usec. That is, 1/3125 second. */
-  if(time == 0) {
-    time = MAX(CLOCK_SECOND / 3125, 1);
-  }
-  return time;
+  return MAX(CLOCK_SECOND / 3125, 1);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -465,15 +456,6 @@ off(int keep_radio_on)
   return NETSTACK_RDC.off(keep_radio_on);
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
-channel_check_interval(void)
-{
-  if(NETSTACK_RDC.channel_check_interval) {
-    return NETSTACK_RDC.channel_check_interval();
-  }
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
@@ -488,7 +470,6 @@ const struct mac_driver csma_driver = {
   send_packet,
   input_packet,
   on,
-  off,
-  channel_check_interval,
+  off
 };
 /*---------------------------------------------------------------------------*/

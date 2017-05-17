@@ -67,12 +67,6 @@ off(int keep_radio_on)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
-channel_check_interval(void)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
@@ -84,7 +78,6 @@ const struct mac_driver nullmac_driver = {
   send_packet,
   packet_input,
   on,
-  off,
-  channel_check_interval,
+  off
 };
 /*---------------------------------------------------------------------------*/

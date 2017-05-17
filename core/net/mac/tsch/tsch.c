@@ -1011,19 +1011,12 @@ turn_off(int keep_radio_on)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
-channel_check_interval(void)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {
   "TSCH",
   tsch_init,
   send_packet,
   packet_input,
   turn_on,
-  turn_off,
-  channel_check_interval,
+  turn_off
 };
 /*---------------------------------------------------------------------------*/
