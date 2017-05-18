@@ -191,6 +191,8 @@ endif
 
 ifneq ($(RELSTR),)
 CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-$(RELSTR)\"
+else
+CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-3.x\"
 endif
 
 ### Automatic dependency generation
