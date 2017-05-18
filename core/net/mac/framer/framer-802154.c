@@ -38,7 +38,7 @@
 
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/framer/frame802154.h"
-#include "net/llsec802154.h"
+#include "net/mac/llsec802154.h"
 #include "net/packetbuf.h"
 #include "lib/random.h"
 #include <string.h>

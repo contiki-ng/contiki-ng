@@ -40,7 +40,7 @@
 #include "net/mac/tsch/tsch-private.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/mac/framer/frame802154e-ie.h"
-#include "net/llsec802154.h"
+#include "net/mac/llsec802154.h"
 
 /******** Configuration *******/
 
