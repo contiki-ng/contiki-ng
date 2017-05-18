@@ -26,7 +26,8 @@
       <identifier>mtype503</identifier>
       <description>ip64-router/ip64-router.c TARGET=cooja-ip64</description>
       <source>[CONTIKI_DIR]/examples/ip64-router/ip64-router.c</source>
-      <commands>make ip64-router.cooja-ip64 TARGET=cooja-ip64</commands>
+      <commands>make TARGET=cooja-ip64 clean
+make ip64-router.cooja-ip64 TARGET=cooja-ip64</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -50,7 +51,8 @@
       <identifier>mtype555</identifier>
       <description>examples/http-socket/http-example.c</description>
       <source>[CONTIKI_DIR]/examples/http-socket/http-example.c</source>
-      <commands>make http-example.cooja TARGET=cooja</commands>
+      <commands>make TARGET=cooja clean
+make http-example.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

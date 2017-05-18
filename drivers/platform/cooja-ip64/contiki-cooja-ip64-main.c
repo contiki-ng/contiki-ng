@@ -50,18 +50,23 @@
 #include "lib/simEnvChange.h"
 
 #include "net/netstack.h"
+#include "net/queuebuf.h"
 #include "net/ip/uip-nameserver.h"
+#include "net/ip/ip64-addr.h"
 
 #include "dev/serial-line.h"
 #include "dev/cooja-radio.h"
 #include "dev/button-sensor.h"
 #include "dev/pir-sensor.h"
 #include "dev/vib-sensor.h"
+#include "dev/rs232.h"
 
 #include "sys/node-id.h"
 
 #include "ip64.h"
 #include "dev/slip.h"
+
+void log_set_putchar_with_slip(int with);
 
 /* JNI-defined functions, depends on the environment variable CLASSNAME */
 #ifndef CLASSNAME
@@ -111,8 +116,6 @@ long referenceVar;
  */
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
-
-#define MIN(a, b)   ( (a)<(b) ? (a) : (b) )
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -199,7 +202,7 @@ contiki_init(void)
     addr[i + 1] = node_id & 0xff;
     addr[i + 0] = node_id >> 8;
   }
-  linkaddr_copy(addr, &linkaddr_node_addr);
+  linkaddr_copy((linkaddr_t *)addr, &linkaddr_node_addr);
   memcpy(&uip_lladdr.addr, addr, sizeof(uip_lladdr.addr));
 
   process_start(&tcpip_process, NULL);

@@ -123,7 +123,7 @@ static uip_ds6_nbr_t *nbr; /**  Pointer to a nbr cache entry*/
 static uip_ds6_addr_t *addr; /**  Pointer to an interface address */
 #endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_NA || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER */
 
-#if UIP_ND6_SEND_NS || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER
+#if UIP_ND6_SEND_NS || !UIP_CONF_ROUTER
 static uip_ds6_defrt_t *defrt; /**  Pointer to a router list entry */
 #endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER */
 
