@@ -4,7 +4,6 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 hello-world/native \
 eeprom-test/native \
-example-shell/native \
 
 TOOLS=
 

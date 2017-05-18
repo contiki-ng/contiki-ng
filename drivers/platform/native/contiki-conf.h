@@ -167,11 +167,6 @@ typedef unsigned long clock_time_t;
 #define IRC_CONF_HEIGHT        17
 #define IRC_CONF_SYSTEM_STRING "*nix"
 
-#define SHELL_CONF_WITH_PROGRAM_HANDLER 1
-
-#define SHELL_GUI_CONF_XSIZE 78
-#define SHELL_GUI_CONF_YSIZE 17
-
 #ifdef PLATFORM_BUILD
 #define TELNETD_CONF_GUI 1
 #endif /* PLATFORM_BUILD */

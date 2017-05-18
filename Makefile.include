@@ -120,7 +120,7 @@ ifdef APPS
              $(APPS)}
   APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDS), $(DIR)/Makefile.$(APP)}}}
   -include $(APPINCLUDES)
-  APP_SOURCES = ${foreach APP, $(APPS), $($(APP)_src)}
+  APP_SOURCES = ${foreach d, $(APPDS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
   CONTIKI_SOURCEFILES += $(APP_SOURCES)
 endif
 
