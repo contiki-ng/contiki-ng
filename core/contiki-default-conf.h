@@ -90,6 +90,18 @@
  * project-specific configuration to save memory.
  */
 
+/* CONTIKI_NETWORK_DENSITY specifies the maximum number of neighbors
+ * a node will have to handle. Used to set NBR_TABLE_MAX_NEIGHBORS. */
+#ifndef CONTIKI_NETWORK_DENSITY
+#define CONTIKI_NETWORK_DENSITY 16
+#endif /* CONTIKI_NETWORK_DENSITY */
+
+/* CONTIKI_NETWORK_SIZE specifies the maximum number of nodes in
+ * a network. Used to set UIP_MAX_ROUTES or RPL_NS_LINK_NUM. */
+#ifndef CONTIKI_NETWORK_SIZE
+#define CONTIKI_NETWORK_SIZE 16
+#endif /* CONTIKI_NETWORK_SIZE */
+
 /* NETSTACK_CONF_WITH_IPV6 specifies whether or not IPv6 should be used. If IPv6
    is not used, IPv4 is used instead. */
 #ifndef NETSTACK_CONF_WITH_IPV6
@@ -122,18 +134,6 @@
 #endif /* NBR_TABLE_FIND_REMOVABLE */
 #endif /* UIP_CONF_IPV6_RPL */
 
-/* UIP_CONF_MAX_ROUTES specifies the maximum number of routes that each
-   node will be able to handle. */
-#ifndef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES 20
-#endif /* UIP_CONF_MAX_ROUTES */
-
-/* RPL_NS_CONF_LINK_NUM specifies the maximum number of links a RPL root
- * will maintain in non-storing mode. */
-#ifndef RPL_NS_CONF_LINK_NUM
-#define RPL_NS_CONF_LINK_NUM 20
-#endif /* RPL_NS_CONF_LINK_NUM */
-
 /* UIP_CONF_UDP specifies if UDP support should be included or
    not. Disabling UDP saves memory but breaks a lot of stuff. */
 #ifndef UIP_CONF_UDP
@@ -157,12 +157,6 @@
 #ifndef UIP_CONF_MAX_CONNECTIONS
 #define UIP_CONF_MAX_CONNECTIONS 8
 #endif /* UIP_CONF_MAX_CONNECTIONS */
-
-/* NBR_TABLE_CONF_MAX_NEIGHBORS specifies the maximum number of neighbors
-   that each node will be able to handle. */
-#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS 8
-#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 
 /* UIP_CONF_ND6_SEND_RA enables standard IPv6 Router Advertisement.
  * We enable it by default when IPv6 is used without RPL. */

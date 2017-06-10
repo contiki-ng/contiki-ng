@@ -40,7 +40,10 @@
 #include "orchestra.h"
 #include "net/packetbuf.h"
 #include "net/ipv6/uip-icmp6.h"
-#include "net/rpl/rpl-private.h"
+#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"

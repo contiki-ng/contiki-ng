@@ -46,7 +46,7 @@
 #include "net/ipv6/multicast/uip-mcast6-route.h"
 #include "net/ipv6/multicast/uip-mcast6-stats.h"
 #include "net/ipv6/multicast/esmrf.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "net/ip/uip.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
@@ -282,7 +282,7 @@ in()
   }
 
   /* Retrieve our preferred parent's LL address */
-  parent_ipaddr = rpl_get_parent_ipaddr(d->preferred_parent);
+  parent_ipaddr = rpl_parent_get_ipaddr(d->preferred_parent);
   parent_lladdr = uip_ds6_nbr_lladdr_from_ipaddr(parent_ipaddr);
 
   if(parent_lladdr == NULL) {

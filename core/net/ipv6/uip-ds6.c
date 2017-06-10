@@ -210,6 +210,10 @@ uip_ds6_list_loop(uip_ds6_element_t *list, uint8_t size,
 {
   uip_ds6_element_t *element;
 
+  if(list == NULL || ipaddr == NULL || out_element == NULL) {
+    return NOSPACE;
+  }
+
   *out_element = NULL;
 
   for(element = list;

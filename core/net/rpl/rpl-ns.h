@@ -46,13 +46,16 @@
 #ifdef RPL_NS_CONF_LINK_NUM
 #define RPL_NS_LINK_NUM RPL_NS_CONF_LINK_NUM
 #else /* RPL_NS_CONF_LINK_NUM */
-#define RPL_NS_LINK_NUM 32
+#if RPL_WITH_NON_STORING
+#define RPL_NS_LINK_NUM CONTIKI_NETWORK_SIZE
+#else
+#define RPL_NS_LINK_NUM 0
+#endif
 #endif /* RPL_NS_CONF_LINK_NUM */
 
 typedef struct rpl_ns_node {
   struct rpl_ns_node *next;
   uint32_t lifetime;
-  rpl_dag_t *dag;
   /* Store only IPv6 link identifiers as all nodes in the DAG share the same prefix */
   unsigned char link_identifier[8];
   struct rpl_ns_node *parent;

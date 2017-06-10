@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, RISE SICS.
+ * Copyright (c) 2017, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  * \file
  *         Header file for the logging system
  * \author
- *         Simon Duquennoy <simon.duquennoy@ri.se>
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
 /** \addtogroup sys

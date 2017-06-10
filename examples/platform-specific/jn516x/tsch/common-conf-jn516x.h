@@ -77,14 +77,6 @@
 #undef TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES
 #define TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES 8
 
-/* The neighbor table size */
-#undef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS 8
-
-/* The routing table size */
-#undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES  28
-
 /* Radio */
 
 #undef ENABLE_COOJA_DEBUG

@@ -89,16 +89,13 @@
 
 #define UIP_CONF_ROUTER             1
 
-/* configure number of neighbors and routes */
-#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     300
-#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
-#ifndef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   300
-#endif /* UIP_CONF_MAX_ROUTES */
-#ifndef RPL_NS_CONF_LINK_NUM
-#define RPL_NS_CONF_LINK_NUM 300
-#endif /* RPL_NS_CONF_LINK_NUM */
+/* configure network size and density */
+#ifndef CONTIKI_NETWORK_SIZE
+#define CONTIKI_NETWORK_SIZE   300
+#endif /* CONTIKI_NETWORK_SIZE */
+#ifndef CONTIKI_NETWORK_DENSITY
+#define CONTIKI_NETWORK_DENSITY 300
+#endif /* CONTIKI_NETWORK_DENSITY */
 
 #define TCPIP_CONF_ANNOTATE_TRANSMISSIONS 1
 

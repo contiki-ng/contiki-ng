@@ -36,7 +36,8 @@
 #include "contiki-conf.h"
 #include "contiki-net.h"
 #include "net/ip/uip.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
+#include "rpl-dag-root.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -113,16 +114,13 @@ print_local_addresses(void)
 void
 rpl_tools_init(uip_ipaddr_t *br_prefix)
 {
-  uip_ipaddr_t global_ipaddr;
-
   if(br_prefix) { /* We are root */
-    memcpy(&global_ipaddr, br_prefix, 16);
-    uip_ds6_set_addr_iid(&global_ipaddr, &uip_lladdr);
-    uip_ds6_addr_add(&global_ipaddr, 0, ADDR_AUTOCONF);
-    rpl_set_root(RPL_DEFAULT_INSTANCE, &global_ipaddr);
-    rpl_set_prefix(rpl_get_any_dag(), br_prefix, 64);
-    rpl_repair_root(RPL_DEFAULT_INSTANCE);
+    rpl_dag_root_init(br_prefix, NULL);
+    rpl_dag_root_init_dag_immediately();
+  } else {
+    rpl_dag_root_init(NULL, NULL);
   }
+
 
   NETSTACK_MAC.on();
 

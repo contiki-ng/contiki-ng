@@ -37,14 +37,14 @@
  * \author Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
-#include "net/rpl/rpl-conf.h"
+#include "rpl-conf.h"
 
 #include "net/ip/uip.h"
 #include "net/ip/tcpip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-icmp6.h"
-#include "net/rpl/rpl-private.h"
-#include "net/rpl/rpl-ns.h"
+#include "rpl-private.h"
+#include "rpl-ns.h"
 #include "lib/list.h"
 #include "lib/memb.h"
 
@@ -210,7 +210,7 @@ rpl_ns_periodic(void)
       l->lifetime--;
     }
   }
-  /* Second pass, for all expire nodes, deallocate them iff no child points to them */
+  /* Second pass, for all expired nodes, deallocate them iff no child points to them */
   for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
     if(l->lifetime == 0) {
       rpl_ns_node_t *l2;

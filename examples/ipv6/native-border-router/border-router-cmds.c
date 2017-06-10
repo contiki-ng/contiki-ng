@@ -40,7 +40,7 @@
 #include "border-router.h"
 #include "border-router-cmds.h"
 #include "dev/serial-line.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "net/ip/uiplib.h"
 #include <string.h>
 
@@ -68,7 +68,11 @@ border_router_cmd_handler(const uint8_t *data, int len)
     if(data[1] == 'G' && command_context == CMD_CONTEXT_STDIO) {
       /* This is supposed to be from stdin */
       printf("Performing Global Repair...\n");
+#if UIP_CONF_IPV6_RPL_LITE
+      rpl_global_repair();
+#else
       rpl_repair_root(RPL_DEFAULT_INSTANCE);
+#endif
       return 1;
     } else if(data[1] == 'M' && command_context == CMD_CONTEXT_RADIO) {
       /* We need to know that this is from the slip-radio here. */

@@ -33,11 +33,12 @@
 #include "sys/etimer.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-ds6-route.h"
 #include "net/ip/uip-debug.h"
 
 #include "simple-udp.h"
 
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "dev/leds.h"
 
 #include <stdio.h>

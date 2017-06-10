@@ -271,15 +271,18 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=0</command
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <script>TIMEOUT(300000); /* Time out after 5 minutes */&#xD;
-&#xD;
+      <script>TIMEOUT(360000); /* Time out after 6 minutes */&#xD;
 /* Wait until a node (can only be the DAGRoot) has&#xD;
  * 9 routing entries including one for the root (i.e. can reach every node) */&#xD;
-log.log("Waiting for routing tables to fill\n");&#xD;
-WAIT_UNTIL(msg.endsWith("Routing links (9 in total):"));&#xD;
-log.log("Root routing table ready\n");&#xD;
-&#xD;
-log.testOK(); /* Report test success and quit */</script>
+log.log("Waiting for routing links to fill\n");&#xD;
+while(true) {;&#xD;
+  WAIT_UNTIL(id == 1 &amp;&amp; msg.contains("Routing links"));&#xD;
+  log.log(msg + "\n");&#xD;
+  if(msg.contains("Routing links (9 in total):")) {&#xD;
+    log.testOK(); /* Report test success and quit */&#xD;
+  }&#xD;
+  YIELD();&#xD;
+}</script>
       <active>true</active>
     </plugin_config>
     <width>764</width>
@@ -289,4 +292,3 @@ log.testOK(); /* Report test success and quit */</script>
     <location_y>111</location_y>
   </plugin>
 </simconf>
-

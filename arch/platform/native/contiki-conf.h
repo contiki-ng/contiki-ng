@@ -104,14 +104,6 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_NETIF_MAX_ADDRESSES  3
 #define UIP_CONF_ICMP6           1
 
-/* configure number of neighbors and routes */
-#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     30
-#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
-#ifndef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   30
-#endif /* UIP_CONF_MAX_ROUTES */
-
 #define UIP_CONF_ND6_SEND_RA		0
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER      10000

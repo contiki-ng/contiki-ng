@@ -227,7 +227,7 @@ typedef struct uip_ds6_maddr {
 } uip_ds6_maddr_t;
 
 /* only define the callback if RPL is active */
-#if UIP_CONF_IPV6_RPL
+#if UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0)
 #ifndef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
 #define UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED rpl_ipv6_neighbor_callback
 #endif /* UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED */

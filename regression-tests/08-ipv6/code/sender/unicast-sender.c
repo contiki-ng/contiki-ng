@@ -1,7 +1,8 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
+#include "rpl-dag-root.h"
 
 #include <stdio.h>
 
@@ -40,14 +41,7 @@ PROCESS_THREAD(udp_process, ev, data)
 
   PROCESS_BEGIN();
 
-  uip_ip6addr(&addr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 3);
-  uip_ds6_addr_add(&addr, 0, ADDR_AUTOCONF);
-
-  rpl_set_root(RPL_DEFAULT_INSTANCE, &addr);
-  /*  dag = rpl_get_any_dag();
-  uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-  rpl_set_prefix(dag, &prefix, 64);*/
-
+  rpl_dag_root_init_dag_immediately();
 
   simple_udp_register(&broadcast_connection, UDP_PORT,
                       NULL, UDP_PORT,

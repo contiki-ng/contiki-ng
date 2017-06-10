@@ -37,7 +37,7 @@
 #ifndef RPL_PRIVATE_H
 #define RPL_PRIVATE_H
 
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 
 #include "lib/list.h"
 #include "net/ip/uip.h"
@@ -45,7 +45,7 @@
 #include "sys/ctimer.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "net/rpl/rpl-ns.h"
+#include "rpl-ns.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 /*---------------------------------------------------------------------------*/
@@ -187,7 +187,7 @@
 /* Rank of a root node. */
 #define ROOT_RANK(instance)             (instance)->min_hoprankinc
 
-#define INFINITE_RANK                   0xffff
+#define RPL_INFINITE_RANK                   0xffff
 
 /*---------------------------------------------------------------------------*/
 #define RPL_INSTANCE_LOCAL_FLAG         0x80
@@ -198,65 +198,6 @@
 #define RPL_ROUTE_FROM_UNICAST_DAO      1
 #define RPL_ROUTE_FROM_MULTICAST_DAO    2
 #define RPL_ROUTE_FROM_DIO              3
-
-/* DAG Mode of Operation */
-#define RPL_MOP_NO_DOWNWARD_ROUTES      0
-#define RPL_MOP_NON_STORING             1
-#define RPL_MOP_STORING_NO_MULTICAST    2
-#define RPL_MOP_STORING_MULTICAST       3
-
-/* RPL Mode of operation */
-#ifdef  RPL_CONF_MOP
-#define RPL_MOP_DEFAULT                 RPL_CONF_MOP
-#else /* RPL_CONF_MOP */
-#if RPL_WITH_MULTICAST
-#define RPL_MOP_DEFAULT                 RPL_MOP_STORING_MULTICAST
-#else
-#define RPL_MOP_DEFAULT                 RPL_MOP_STORING_NO_MULTICAST
-#endif /* RPL_WITH_MULTICAST */
-#endif /* RPL_CONF_MOP */
-
-/*
- * Embed support for storing mode
- */
-#ifdef RPL_CONF_WITH_STORING
-#define RPL_WITH_STORING RPL_CONF_WITH_STORING
-#else /* RPL_CONF_WITH_STORING */
-/* By default: embed support for non-storing if and only if the configured MOP is not non-storing */
-#define RPL_WITH_STORING (RPL_MOP_DEFAULT != RPL_MOP_NON_STORING)
-#endif /* RPL_CONF_WITH_STORING */
-
-/*
- * Embed support for non-storing mode
- */
-#ifdef RPL_CONF_WITH_NON_STORING
-#define RPL_WITH_NON_STORING RPL_CONF_WITH_NON_STORING
-#else /* RPL_CONF_WITH_NON_STORING */
-/* By default: embed support for non-storing if and only if the configured MOP is non-storing */
-#define RPL_WITH_NON_STORING (RPL_MOP_DEFAULT == RPL_MOP_NON_STORING)
-#endif /* RPL_CONF_WITH_NON_STORING */
-
-#if RPL_WITH_STORING && (UIP_DS6_ROUTE_NB == 0)
-#error "RPL with storing mode included but #routes == 0. Set UIP_CONF_MAX_ROUTES accordingly."
-#if !RPL_WITH_NON_STORING && (RPL_NS_LINK_NUM > 0)
-#error "You might also want to set RPL_NS_CONF_LINK_NUM to 0."
-#endif
-#endif
-
-#if RPL_WITH_NON_STORING && (RPL_NS_LINK_NUM == 0)
-#error "RPL with non-storing mode included but #links == 0. Set RPL_NS_CONF_LINK_NUM accordingly."
-#if !RPL_WITH_STORING && (UIP_DS6_ROUTE_NB > 0)
-#error "You might also want to set UIP_CONF_MAX_ROUTES to 0."
-#endif
-#endif
-
-#define RPL_IS_STORING(instance) (RPL_WITH_STORING && ((instance) != NULL) && ((instance)->mop > RPL_MOP_NON_STORING))
-#define RPL_IS_NON_STORING(instance) (RPL_WITH_NON_STORING && ((instance) != NULL) && ((instance)->mop == RPL_MOP_NON_STORING))
-
-/* Emit a pre-processor error if the user configured multicast with bad MOP */
-#if RPL_WITH_MULTICAST && (RPL_MOP_DEFAULT != RPL_MOP_STORING_MULTICAST)
-#error "RPL Multicast requires RPL_MOP_DEFAULT==3. Check contiki-conf.h"
-#endif
 
 /* Multicast Route Lifetime as a multiple of the lifetime unit */
 #ifdef RPL_CONF_MCAST_LIFETIME
@@ -311,7 +252,7 @@ struct rpl_dio {
 };
 typedef struct rpl_dio rpl_dio_t;
 
-#if RPL_CONF_STATS
+#if RPL_CONF_STATS		
 /* Statistics for fault management. */
 struct rpl_stats {
   uint16_t mem_overflows;
@@ -335,10 +276,11 @@ extern rpl_stats_t rpl_stats;
 /* RPL macros. */
 
 #if RPL_CONF_STATS
-#define RPL_STAT(code)	(code) 
+#define RPL_STAT(code)	(code)
 #else
 #define RPL_STAT(code)
 #endif /* RPL_CONF_STATS */
+
 /*---------------------------------------------------------------------------*/
 /* Instances */
 extern rpl_instance_t instance_table[];

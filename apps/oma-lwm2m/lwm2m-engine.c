@@ -59,7 +59,7 @@
 #include <inttypes.h>
 
 #if UIP_CONF_IPV6_RPL
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
 #define DEBUG DEBUG_NONE

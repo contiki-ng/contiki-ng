@@ -40,10 +40,13 @@
 #include "contiki-net.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rpl/rpl.h"
-#include "net/rpl/rpl-private.h"
+#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "rpl-dag-root.h"
 #if RPL_WITH_NON_STORING
-#include "net/rpl/rpl-ns.h"
+#include "rpl-ns.h"
 #endif /* RPL_WITH_NON_STORING */
 #include "net/netstack.h"
 #include "dev/button-sensor.h"
@@ -382,19 +385,10 @@ request_prefix(void)
 void
 set_prefix_64(uip_ipaddr_t *prefix_64)
 {
-  rpl_dag_t *dag;
-  uip_ipaddr_t ipaddr;
   memcpy(&prefix, prefix_64, 16);
-  memcpy(&ipaddr, prefix_64, 16);
   prefix_set = 1;
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-
-  dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
-  if(dag != NULL) {
-    rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
-  }
+  rpl_dag_root_init(prefix_64, NULL);
+  rpl_dag_root_init_dag_immediately();
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
@@ -432,7 +426,11 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_YIELD();
     if (ev == sensors_event && data == &button_sensor) {
       PRINTF("Initiating global repair\n");
+#if UIP_CONF_IPV6_RPL_LITE
+      rpl_global_repair();
+#else
       rpl_repair_root(RPL_DEFAULT_INSTANCE);
+#endif
     }
   }
 

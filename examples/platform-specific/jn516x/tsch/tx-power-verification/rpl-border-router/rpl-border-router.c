@@ -36,7 +36,7 @@
 #include "contiki-net.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "simple-udp.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-schedule.h"

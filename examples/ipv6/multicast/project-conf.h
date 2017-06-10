@@ -60,9 +60,9 @@
 #define UIP_CONF_TCP 0
 
 /* Code/RAM footprint savings so that things will fit on our device */
-#undef NBR_TABLE_CONF_MAX_NEIGHBORS
-#undef UIP_CONF_MAX_ROUTES
-#define NBR_TABLE_CONF_MAX_NEIGHBORS  10
-#define UIP_CONF_MAX_ROUTES           10
+#undef CONTIKI_NETWORK_SIZE
+#define CONTIKI_NETWORK_SIZE   10
+#undef CONTIKI_NETWORK_DENSITY
+#define CONTIKI_NETWORK_DENSITY 10
 
 #endif /* PROJECT_CONF_H_ */

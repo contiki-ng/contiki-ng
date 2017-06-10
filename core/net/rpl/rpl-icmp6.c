@@ -50,8 +50,8 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-icmp6.h"
-#include "net/rpl/rpl-private.h"
-#include "net/rpl/rpl-ns.h"
+#include "rpl-private.h"
+#include "rpl-ns.h"
 #include "net/packetbuf.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "random.h"
@@ -494,8 +494,8 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
   is_root = (dag->rank == ROOT_RANK(instance));
 
 #if RPL_LEAF_ONLY
-  PRINTF("RPL: LEAF ONLY DIO rank set to INFINITE_RANK\n");
-  set16(buffer, pos, INFINITE_RANK);
+  PRINTF("RPL: LEAF ONLY DIO rank set to RPL_INFINITE_RANK\n");
+  set16(buffer, pos, RPL_INFINITE_RANK);
 #else /* RPL_LEAF_ONLY */
   set16(buffer, pos, dag->rank);
 #endif /* RPL_LEAF_ONLY */
@@ -701,7 +701,7 @@ dao_input_storing(void)
        DAG_RANK(parent->rank, instance) < DAG_RANK(dag->rank, instance)) {
       PRINTF("RPL: Loop detected when receiving a unicast DAO from a node with a lower rank! (%u < %u)\n",
              DAG_RANK(parent->rank, instance), DAG_RANK(dag->rank, instance));
-      parent->rank = INFINITE_RANK;
+      parent->rank = RPL_INFINITE_RANK;
       parent->flags |= RPL_PARENT_FLAG_UPDATED;
       return;
     }
@@ -709,7 +709,7 @@ dao_input_storing(void)
     /* If we get the DAO from our parent, we also have a loop. */
     if(parent != NULL && parent == dag->preferred_parent) {
       PRINTF("RPL: Loop detected when receiving a unicast DAO from our parent\n");
-      parent->rank = INFINITE_RANK;
+      parent->rank = RPL_INFINITE_RANK;
       parent->flags |= RPL_PARENT_FLAG_UPDATED;
       return;
     }
@@ -782,18 +782,18 @@ dao_input_storing(void)
       /* We forward the incoming No-Path DAO to our parent, if we have
          one. */
       if(dag->preferred_parent != NULL &&
-         rpl_get_parent_ipaddr(dag->preferred_parent) != NULL) {
+         rpl_parent_get_ipaddr(dag->preferred_parent) != NULL) {
         uint8_t out_seq;
         out_seq = prepare_for_dao_fwd(sequence, rep);
 
         PRINTF("RPL: Forwarding No-path DAO to parent - out_seq:%d",
                out_seq);
-        PRINT6ADDR(rpl_get_parent_ipaddr(dag->preferred_parent));
+        PRINT6ADDR(rpl_parent_get_ipaddr(dag->preferred_parent));
         PRINTF("\n");
 
         buffer = UIP_ICMP_PAYLOAD;
         buffer[3] = out_seq; /* add an outgoing seq no before fwd */
-        uip_icmp6_send(rpl_get_parent_ipaddr(dag->preferred_parent),
+        uip_icmp6_send(rpl_parent_get_ipaddr(dag->preferred_parent),
                        ICMP6_RPL, RPL_CODE_DAO, buffer_length);
       }
     }
@@ -866,7 +866,7 @@ fwd_dao:
     }
 
     if(dag->preferred_parent != NULL &&
-       rpl_get_parent_ipaddr(dag->preferred_parent) != NULL) {
+       rpl_parent_get_ipaddr(dag->preferred_parent) != NULL) {
       uint8_t out_seq = 0;
       if(rep != NULL) {
         /* if this is pending and we get the same seq no it is a retrans */
@@ -880,12 +880,12 @@ fwd_dao:
       }
 
       PRINTF("RPL: Forwarding DAO to parent ");
-      PRINT6ADDR(rpl_get_parent_ipaddr(dag->preferred_parent));
+      PRINT6ADDR(rpl_parent_get_ipaddr(dag->preferred_parent));
       PRINTF(" in seq: %d out seq: %d\n", sequence, out_seq);
 
       buffer = UIP_ICMP_PAYLOAD;
       buffer[3] = out_seq; /* add an outgoing seq no before fwd */
-      uip_icmp6_send(rpl_get_parent_ipaddr(dag->preferred_parent),
+      uip_icmp6_send(rpl_parent_get_ipaddr(dag->preferred_parent),
                      ICMP6_RPL, RPL_CODE_DAO, buffer_length);
     }
     if(should_ack) {
@@ -1155,7 +1155,7 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
     return;
   }
 
-  parent_ipaddr = rpl_get_parent_ipaddr(parent);
+  parent_ipaddr = rpl_parent_get_ipaddr(parent);
   if(parent_ipaddr == NULL) {
     PRINTF("RPL dao_output_target error parent IP address NULL\n");
     return;

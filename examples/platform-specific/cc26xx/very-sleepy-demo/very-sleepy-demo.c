@@ -40,8 +40,10 @@
 #include "net/netstack.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "net/rpl/rpl.h"
-#include "net/rpl/rpl-private.h"
+#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #include "rest-engine.h"
 #include "er-coap.h"
 
@@ -283,7 +285,7 @@ keep_mac_on(void)
 #if RPL_WITH_PROBING
   /* Determine if we are about to send a RPL probe */
   if(CLOCK_LT(etimer_expiration_time(
-                &rpl_get_default_instance()->probing_timer.etimer),
+                &rpl_get_default_instance()->dag.probing_timer.etimer),
               (clock_time() + PERIODIC_INTERVAL))) {
     rv = MAC_MUST_STAY_ON;
   }

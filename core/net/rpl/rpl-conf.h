@@ -40,10 +40,66 @@
 
 #include "contiki-conf.h"
 
+/* DAG Mode of Operation */
+#define RPL_MOP_NO_DOWNWARD_ROUTES      0
+#define RPL_MOP_NON_STORING             1
+#define RPL_MOP_STORING_NO_MULTICAST    2
+#define RPL_MOP_STORING_MULTICAST       3
+
+/* RPL Mode of operation */
+#ifdef  RPL_CONF_MOP
+#define RPL_MOP_DEFAULT                 RPL_CONF_MOP
+#else /* RPL_CONF_MOP */
+#if RPL_WITH_MULTICAST
+#define RPL_MOP_DEFAULT                 RPL_MOP_STORING_MULTICAST
+#else
+#define RPL_MOP_DEFAULT                 RPL_MOP_STORING_NO_MULTICAST
+#endif /* RPL_WITH_MULTICAST */
+#endif /* RPL_CONF_MOP */
+
+/*
+ * Embed support for storing mode
+ */
+#ifdef RPL_CONF_WITH_STORING
+#define RPL_WITH_STORING RPL_CONF_WITH_STORING
+#else /* RPL_CONF_WITH_STORING */
+/* By default: embed support for non-storing if and only if the configured MOP is not non-storing */
+#define RPL_WITH_STORING (RPL_MOP_DEFAULT != RPL_MOP_NON_STORING)
+#endif /* RPL_CONF_WITH_STORING */
+
+/*
+ * Embed support for non-storing mode
+ */
+#ifdef RPL_CONF_WITH_NON_STORING
+#define RPL_WITH_NON_STORING RPL_CONF_WITH_NON_STORING
+#else /* RPL_CONF_WITH_NON_STORING */
+/* By default: embed support for non-storing if and only if the configured MOP is non-storing */
+#define RPL_WITH_NON_STORING (RPL_MOP_DEFAULT == RPL_MOP_NON_STORING)
+#endif /* RPL_CONF_WITH_NON_STORING */
+
+#define RPL_IS_STORING(instance) (RPL_WITH_STORING && ((instance) != NULL) && ((instance)->mop > RPL_MOP_NON_STORING))
+#define RPL_IS_NON_STORING(instance) (RPL_WITH_NON_STORING && ((instance) != NULL) && ((instance)->mop == RPL_MOP_NON_STORING))
+
+/* Emit a pre-processor error if the user configured multicast with bad MOP */
+#if RPL_WITH_MULTICAST && (RPL_MOP_DEFAULT != RPL_MOP_STORING_MULTICAST)
+#error "RPL Multicast requires RPL_MOP_DEFAULT==3. Check contiki-conf.h"
+#endif
+
 /* Set to 1 to enable RPL statistics */
 #ifndef RPL_CONF_STATS
 #define RPL_CONF_STATS 0
 #endif /* RPL_CONF_STATS */
+
+/* Set to 1 to drop packets when a forwarding loop is detected
+ * on a packet that already had an error signaled, as per RFC6550 - 11.2.2.2.
+ * Disabled by default for more reliability: even in the event of a loop,
+ * packets get a chance to eventually find their way to the destination. */
+#ifdef RPL_CONF_LOOP_ERROR_DROP
+#define RPL_LOOP_ERROR_DROP RPL_CONF_LOOP_ERROR_DROP
+#else /* RPL_CONF_LOOP_ERROR_DROP */
+#define RPL_LOOP_ERROR_DROP 0
+#endif /* RPL_CONF_LOOP_ERROR_DROP */
+
 
 /*
  * The objective function (OF) used by a RPL root is configurable through
@@ -155,7 +211,7 @@
 #endif /* RPL_CONF_DAG_LIFETIME */
 
 /*
- * 
+ *
  */
 #ifndef RPL_CONF_DAO_SPECIFY_DAG
   #if RPL_MAX_DAG_PER_INSTANCE > 1
@@ -236,7 +292,7 @@
 #endif
 
 /*
- * RPL DAO ACK support. When enabled, DAO ACK will be sent and requested.
+ * RPL DAO-ACK support. When enabled, DAO-ACK will be sent and requested.
  * This will also enable retransmission of DAO when no ack is received.
  * */
 #ifdef RPL_CONF_WITH_DAO_ACK
@@ -285,7 +341,7 @@
 #ifdef RPL_CONF_PROBING_INTERVAL
 #define RPL_PROBING_INTERVAL RPL_CONF_PROBING_INTERVAL
 #else
-#define RPL_PROBING_INTERVAL (120 * CLOCK_SECOND)
+#define RPL_PROBING_INTERVAL (60 * CLOCK_SECOND)
 #endif
 
 /*

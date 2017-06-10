@@ -32,9 +32,10 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-#include "net/rpl/rpl.h"
-#include "net/rpl/rpl-private.h"
-#include "net/rpl/rpl-dag-root.h"
+#include "rpl.h"
+#include "rpl-private.h"
+#include "rpl-dag-root.h"
+#include "net/ipv6/uip-ds6-route.h"
 
 #include <string.h>
 
@@ -43,9 +44,9 @@
 
 #define RPL_DAG_GRACE_PERIOD (CLOCK_SECOND * 20 * 1)
 
-#if (UIP_CONF_MAX_ROUTES != 0)
+#if (UIP_MAX_ROUTES != 0)
 static struct uip_ds6_notification n;
-#endif /* (UIP_CONF_MAX_ROUTES != 0) */
+#endif /* (UIP_MAX_ROUTES != 0) */
 static uint8_t to_become_root;
 static struct ctimer c;
 /*---------------------------------------------------------------------------*/
@@ -112,7 +113,7 @@ create_dag_callback(void *ptr)
        rank, we assume the network has broken, and we become the new
        root of the network. */
 
-    if(dag->rank == INFINITE_RANK) {
+    if(dag->rank == RPL_INFINITE_RANK) {
       if(to_become_root) {
         rpl_dag_root_init_dag_immediately();
         to_become_root = 0;
@@ -123,7 +124,7 @@ create_dag_callback(void *ptr)
     ctimer_set(&c, RPL_DAG_GRACE_PERIOD, create_dag_callback, NULL);
   }
 }
-#if (UIP_CONF_MAX_ROUTES != 0)
+#if (UIP_MAX_ROUTES != 0)
 /*---------------------------------------------------------------------------*/
 static void
 route_callback(int event, uip_ipaddr_t *route, uip_ipaddr_t *ipaddr,
@@ -139,20 +140,29 @@ route_callback(int event, uip_ipaddr_t *route, uip_ipaddr_t *ipaddr,
     }
   }
 }
-#endif /* (UIP_CONF_MAX_ROUTES != 0) */
+#endif /* (UIP_MAX_ROUTES != 0) */
 /*---------------------------------------------------------------------------*/
-static uip_ipaddr_t *
-set_global_address(void)
+static void
+set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 {
-  static uip_ipaddr_t ipaddr;
+  static uip_ipaddr_t root_ipaddr;
   int i;
   uint8_t state;
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+  if(prefix == NULL) {
+    uip_ip6addr(&root_ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  } else {
+    memcpy(&root_ipaddr, prefix, 8);
+  }
+  if(iid == NULL) {
+    uip_ds6_set_addr_iid(&root_ipaddr, &uip_lladdr);
+  } else {
+    memcpy(((uint8_t*)&root_ipaddr) + 8, ((uint8_t*)iid) + 8, 8);
+  }
+
+  uip_ds6_addr_add(&root_ipaddr, 0, ADDR_AUTOCONF);
 
   printf("IPv6 addresses: ");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
@@ -163,21 +173,19 @@ set_global_address(void)
       printf("\n");
     }
   }
-
-  return &ipaddr;
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_dag_root_init(void)
+rpl_dag_root_init(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 {
   static uint8_t initialized = 0;
 
   if(!initialized) {
     to_become_root = 0;
-    set_global_address();
-#if (UIP_CONF_MAX_ROUTES != 0)
+    set_global_address(prefix, iid);
+#if (UIP_MAX_ROUTES != 0)
     uip_ds6_notification_add(&n, route_callback);
-#endif /* (UIP_CONF_MAX_ROUTES != 0) */
+#endif /* (UIP_MAX_ROUTES != 0) */
     initialized = 1;
   }
 }
@@ -190,7 +198,7 @@ rpl_dag_root_init_dag_immediately(void)
   uint8_t state;
   uip_ipaddr_t *ipaddr = NULL;
 
-  rpl_dag_root_init();
+  rpl_dag_root_init(NULL, NULL);
 
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
@@ -236,9 +244,9 @@ rpl_dag_root_init_dag_immediately(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_dag_root_init_dag(void)
+rpl_dag_root_init_dag_delay(void)
 {
-  rpl_dag_root_init();
+  rpl_dag_root_init(NULL, NULL);
 
   ctimer_set(&c, RPL_DAG_GRACE_PERIOD, create_dag_callback, NULL);
   to_become_root = 1;

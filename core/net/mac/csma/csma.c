@@ -35,7 +35,7 @@
 *         The 802.15.4 standard CSMA protocol (nonbeacon-enabled)
  * \author
  *         Adam Dunkels <adam@sics.se>
- *         Simon Duquennoy <simon.duquennoy@ri.se>
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
 #include "net/mac/csma/csma.h"

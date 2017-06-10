@@ -44,15 +44,17 @@
 #include "orchestra.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/packetbuf.h"
-#include "net/rpl/rpl-conf.h"
-#include "net/rpl/rpl-private.h"
+#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 
 /*
  * The body of this rule should be compiled only when "nbr_routes" is available,
  * otherwise a link error causes build failure. "nbr_routes" is compiled if
- * UIP_CONF_MAX_ROUTES != 0. See uip-ds6-route.c.
+ * UIP_MAX_ROUTES != 0. See uip-ds6-route.c.
  */
-#if UIP_CONF_MAX_ROUTES != 0
+#if UIP_MAX_ROUTES != 0
 
 #if ORCHESTRA_UNICAST_SENDER_BASED && ORCHESTRA_COLLISION_FREE_HASH
 #define UNICAST_SLOT_SHARED_FLAG    ((ORCHESTRA_UNICAST_PERIOD < (ORCHESTRA_MAX_HASH + 1)) ? LINK_OPTION_SHARED : 0)

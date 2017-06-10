@@ -29,7 +29,7 @@
 
 #include "contiki.h"
 #include "dev/slip.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "tools/rpl-tools.h"
 
 #define DEBUG DEBUG_PRINT

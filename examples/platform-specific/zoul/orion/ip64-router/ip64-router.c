@@ -45,7 +45,7 @@
 #include "contiki-net.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "rpl-dag-root.h"
 #include "dev/leds.h"
 #include "ip64.h"
@@ -308,7 +308,7 @@ PROCESS_THREAD(router_node_process, ev, data)
   leds_off(LEDS_DHCP);
 
   /* Set us up as a RPL root node. */
-  rpl_dag_root_init_dag();
+  rpl_dag_root_init_dag_delay();
 
   /* ... and do nothing more. */
   while(1) {

@@ -42,8 +42,8 @@
  */
 
 #include "contiki-conf.h"
-#include "net/rpl/rpl-private.h"
-#include "net/rpl/rpl-ns.h"
+#include "rpl-private.h"
+#include "rpl-ns.h"
 #include "net/link-stats.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "lib/random.h"
@@ -362,7 +362,7 @@ static void
 handle_unicast_dio_timer(void *ptr)
 {
   rpl_instance_t *instance = (rpl_instance_t *)ptr;
-  uip_ipaddr_t *target_ipaddr = rpl_get_parent_ipaddr(instance->unicast_dio_target);
+  uip_ipaddr_t *target_ipaddr = rpl_parent_get_ipaddr(instance->unicast_dio_target);
 
   if(target_ipaddr != NULL) {
     dio_output(instance, target_ipaddr);
@@ -402,7 +402,7 @@ get_probing_target(rpl_dag_t *dag)
 
   rpl_parent_t *p;
   rpl_parent_t *probing_target = NULL;
-  rpl_rank_t probing_target_rank = INFINITE_RANK;
+  rpl_rank_t probing_target_rank = RPL_INFINITE_RANK;
   clock_time_t probing_target_age = 0;
   clock_time_t clock_now = clock_time();
 
@@ -462,7 +462,7 @@ handle_probing_timer(void *ptr)
 {
   rpl_instance_t *instance = (rpl_instance_t *)ptr;
   rpl_parent_t *probing_target = RPL_PROBING_SELECT_FUNC(instance->current_dag);
-  uip_ipaddr_t *target_ipaddr = rpl_get_parent_ipaddr(probing_target);
+  uip_ipaddr_t *target_ipaddr = rpl_parent_get_ipaddr(probing_target);
 
   /* Perform probing */
   if(target_ipaddr != NULL) {

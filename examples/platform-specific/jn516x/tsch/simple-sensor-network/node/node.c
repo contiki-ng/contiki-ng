@@ -37,7 +37,10 @@
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-private.h"
-#include "net/rpl/rpl-private.h"
+#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/ip/uip-debug.h"
 #include "lib/random.h"
@@ -72,11 +75,11 @@ typedef struct {
   char * str;
 } wave_t;
 
-static const wave_t waveform_table[] = {  {sin_table,           "SINE"},            /* WAVEFORM_SIN */ 
+static const wave_t waveform_table[] = {  {sin_table,           "SINE"},            /* WAVEFORM_SIN */
                                           {triangle_table,      "TRIANGLE"},        /* WAVEFORM_TRIANGLE */
                                           {pos_sawtooth_table,  "POS-SAWTOOTH"},    /* WAVEFORM_POS_SAWTOOTH */
                                           {neg_sawtooth_table,  "NEG_SAWTOOTH"}};   /* WAVEFORM_NEG_SAWTOOTH */
-                                        
+
 static int total_time = 0;
 static int selected_waveform = 0;
 
@@ -93,7 +96,7 @@ static char *post_mssg = "Trigger";
 /*******************************************************************************/
 /* Local functions */
 /*******************************************************************************/
-static void 
+static void
 udp_rx_handler(void)
 {
   if(uip_newdata()) {
@@ -116,7 +119,7 @@ my_sprintf(char * udp_buf, int8_t value)
     *udp_buf++ = '-';
   } else {
     *udp_buf++ = '+';
-  } 
+  }
   value = abs(value);
   *udp_buf++ = value/100 + '0';
   value %= 100;
@@ -139,9 +142,9 @@ PROCESS_THREAD(node_process, ev, data)
   static int sample_count = 0;
   static struct etimer et;
   extern unsigned char node_mac[8];
- 
+
   leds_init();
-  
+
   /* 3 possible roles:
    * - role_6ln: simple node, will join any network, secured or not
    * - role_6dr: DAG root, will advertise (unsecured) beacons
@@ -176,7 +179,7 @@ PROCESS_THREAD(node_process, ev, data)
   } else {
     rpl_tools_init(NULL);
   }
-  
+
   /* Selected waveform depends on LS byte of MAC  */
   selected_waveform = node_mac[7] % NUMBER_OF_WAVEFORMS;
   printf("LS-Byte=0x%x; waveform=%d\n", node_mac[7], selected_waveform);
@@ -186,8 +189,8 @@ PROCESS_THREAD(node_process, ev, data)
   /* Listen to any host on 8185 */
   udp_conn_rx = udp_new(NULL, 0, NULL);
   udp_bind(udp_conn_rx, UIP_HTONS(8185));
-    
-  /* Wait for timer event 
+
+  /* Wait for timer event
      On timer event, handle next sample */
   etimer_set(&et, INTERVAL*CLOCK_SECOND);
   while(1) {
@@ -195,7 +198,7 @@ PROCESS_THREAD(node_process, ev, data)
     if (ev == tcpip_event) {
       udp_rx_handler();
     }
-    if (etimer_expired(&et) ) { 
+    if (etimer_expired(&et) ) {
       /* Restart timer */
       total_time += INTERVAL;
       if (host_found) {
@@ -210,7 +213,7 @@ PROCESS_THREAD(node_process, ev, data)
       } else {
         printf("No host\n");
       }
-      etimer_restart(&et); 
+      etimer_restart(&et);
       if (total_time%60 == 0) {
         /* Print network status once per minute */
         print_network_status();
@@ -235,7 +238,6 @@ PROCESS_THREAD(led_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&led_et));
     etimer_stop(&led_et);
     leds_off(LEDS_RED);
-  } 
+  }
   PROCESS_END();
 }
-

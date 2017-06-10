@@ -41,13 +41,6 @@
 
 #include "../../common-conf.h"
 
-/* Configuration to reduce RAM */
-#undef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS 10
-
-#undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES 14
-
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM 16
 

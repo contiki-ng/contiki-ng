@@ -32,8 +32,8 @@
 #ifndef RPL_DAG_ROOT_H_
 #define RPL_DAG_ROOT_H_
 
-void rpl_dag_root_init(void);
-void rpl_dag_root_init_dag(void);
+void rpl_dag_root_init(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
+void rpl_dag_root_init_dag_delay(void);
 int rpl_dag_root_init_dag_immediately(void);
 
 int rpl_dag_root_is_root(void);

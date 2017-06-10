@@ -38,7 +38,8 @@
 
 #include "contiki.h"
 #include "net/ip/uip.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
+#include "rpl-dag-root.h"
 #include "net/netstack.h"
 #include "er-coap-constants.h"
 #include "er-coap-engine.h"
@@ -245,16 +246,8 @@ setup_network(void)
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
 #endif
 
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_MANUAL);
-  root_if = uip_ds6_addr_lookup(&ipaddr);
-  if(root_if != NULL) {
-    dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
-    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    rpl_set_prefix(dag, &ipaddr, 64);
-    PRINTF("created a new RPL dag\n");
-  } else {
-    PRINTF("failed to create a new RPL DAG\n");
-  }
+  rpl_dag_root_init(&ipaddr, &ipaddr);
+  rpl_dag_root_init_dag_immediately();
 #endif /* UIP_CONF_ROUTER */
 
   PRINTF("IPv6 addresses: ");

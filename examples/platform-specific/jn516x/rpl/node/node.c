@@ -37,7 +37,7 @@
 
 #include "contiki.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "tools/rpl-tools.h"
 
 #define DEBUG DEBUG_PRINT

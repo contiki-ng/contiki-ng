@@ -34,7 +34,7 @@
 
 /********** Includes **********/
 
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "net/mac/tsch/tsch-queue.h"
 
 /********** Functions *********/

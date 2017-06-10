@@ -42,9 +42,11 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki-conf.h"
-#include "rpl/rpl-private.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #include "mqtt.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/sicslowpan.h"

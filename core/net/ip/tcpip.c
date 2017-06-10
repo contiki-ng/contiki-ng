@@ -45,8 +45,10 @@
 #include "net/ipv6/uip-ds6.h"
 
 #if UIP_CONF_IPV6_RPL
-#include "net/rpl/rpl.h"
-#include "net/rpl/rpl-private.h"
+#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #endif
 
 #include <string.h>
@@ -65,7 +67,7 @@ extern struct uip_fallback_interface UIP_FALLBACK_INTERFACE;
 #endif
 
 #if UIP_CONF_IPV6_RPL
-#include "rpl/rpl.h"
+#include "rpl.h"
 #endif
 
 process_event_t tcpip_event;
@@ -103,7 +105,7 @@ enum {
 };
 
 #if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-#define NEXTHOP_NON_STORING(addr) rpl_srh_get_next_hop(addr)
+#define NEXTHOP_NON_STORING(addr) rpl_ext_header_srh_get_next_hop(addr)
 #else
 #define NEXTHOP_NON_STORING(addr) 0
 #endif
@@ -464,28 +466,24 @@ output_fallback(void)
     return;
   }
 #else
-  LOG_ERR("output: Destination off-link but no route\n");
+  LOG_ERR("output: destination off-link and no default route\n");
 #endif /* !UIP_FALLBACK_INTERFACE */
 }
 /*---------------------------------------------------------------------------*/
 static void
 drop_route(uip_ds6_route_t *route)
 {
-#if UIP_CONF_IPV6_RPL
-  rpl_dag_t *dag;
-  rpl_instance_t *instance;
+#if UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0)
 
   /* If we are running RPL, and if we are the root of the
      network, we'll trigger a global repair before we remove
      the route. */
-
+  rpl_dag_t *dag;
   dag = (rpl_dag_t *)route->state.dag;
-  if(dag != NULL) {
-    instance = dag->instance;
-
-    rpl_repair_root(instance->instance_id);
+  if(dag != NULL && dag->instance != NULL) {
+    rpl_repair_root(dag->instance->instance_id);
   }
-#endif /* UIP_CONF_IPV6_RPL */
+#endif /* UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0) */
   uip_ds6_route_rm(route);
 }
 /*---------------------------------------------------------------------------*/
@@ -511,14 +509,22 @@ get_nexthop(uip_ipaddr_t *addr)
   uip_ipaddr_t *nexthop;
   uip_ds6_route_t *route;
 
+  LOG_INFO("tcpip_ipv6_output: looking for next hop for host ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO("\n");
+
   if(NEXTHOP_NON_STORING(addr)) {
+    LOG_INFO("tcpip_ipv6_output: selected next hop from SRH: ");
+    LOG_INFO_6ADDR(nexthop);
+    LOG_INFO("\n");
     return addr;
   }
 
   /* We first check if the destination address is on our immediate
      link. If so, we simply use the destination address as our
      nexthop address. */
-  if(uip_ds6_is_addr_onlink(&UIP_IP_BUF->destipaddr)){
+  if(uip_ds6_is_addr_onlink(&UIP_IP_BUF->destipaddr)) {
+    LOG_INFO("tcpip_ipv6_output: destination is on link\n");
     return &UIP_IP_BUF->destipaddr;
   }
 
@@ -527,13 +533,18 @@ get_nexthop(uip_ipaddr_t *addr)
 
   /* No route was found - we send to the default route instead. */
   if(route == NULL) {
-    LOG_INFO("output: no route found, using default route\n");
+    LOG_INFO("tcpip_ipv6_output: no route found, using default route: ");
+    LOG_INFO_6ADDR(nexthop);
+    LOG_INFO("\n");
     nexthop = uip_ds6_defrt_choose();
     if(nexthop == NULL) {
       output_fallback();
     }
 
   } else {
+    LOG_INFO("tcpip_ipv6_output: found next hop from routing table: ");
+    LOG_INFO_6ADDR(nexthop);
+    LOG_INFO("\n");
     /* A route was found, so we look up the nexthop neighbor for
        the route. */
     nexthop = uip_ds6_route_nexthop(route);
@@ -614,7 +625,9 @@ send_nd6_ns(uip_ipaddr_t *nexthop)
     /* Send the first NS try from here (multicast destination IP address). */
   }
 #else
-  LOG_ERR("output: neighbor not in cache\n");
+  LOG_ERR("tcpip_ipv6_output: neighbor not in cache: ");
+  LOG_ERR_6ADDR(nexthop);
+  LOG_ERR("\n");
 #endif
 
   return err;
@@ -643,7 +656,7 @@ tcpip_ipv6_output(void)
   }
 
 #if UIP_CONF_IPV6_RPL
-  if(!rpl_update_header()) {
+  if(!rpl_ext_header_update()) {
     /* Packet can not be forwarded */
     LOG_ERR("output: RPL header update error\n");
     uip_clear_buf();

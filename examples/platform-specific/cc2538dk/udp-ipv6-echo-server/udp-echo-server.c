@@ -50,7 +50,7 @@
 #include "net/ip/uip-debug.h"
 #include "dev/watchdog.h"
 #include "dev/leds.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 /*---------------------------------------------------------------------------*/
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])

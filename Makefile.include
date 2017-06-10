@@ -80,15 +80,19 @@ endif
 
 ifeq ($(CONTIKI_WITH_IPV6),1)
   CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
-  ifneq ($(CONTIKI_WITH_RPL),0)
-  	CONTIKI_WITH_RPL = 1
-  endif
+  CONTIKI_WITH_RPL ?= 1
+  CONTIKI_WITH_RPL_LITE ?= 1
   MODULES += core/net/ipv6 core/net/ip
 endif
 
 ifeq ($(CONTIKI_WITH_RPL),1)
     CFLAGS += -DUIP_CONF_IPV6_RPL=1
-    MODULES += core/net/rpl
+    ifeq ($(CONTIKI_WITH_RPL_LITE),1)
+        CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
+        MODULES += core/net/rpl-lite
+    else
+        MODULES += core/net/rpl
+    endif
 else
     CFLAGS += -DUIP_CONF_IPV6_RPL=0
 endif
@@ -96,7 +100,7 @@ endif
 CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 
 CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac \
-                 net/rpl sys cfs . }
+                 sys cfs . }
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 

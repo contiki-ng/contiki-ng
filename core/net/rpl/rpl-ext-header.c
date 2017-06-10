@@ -47,8 +47,8 @@
 #include "net/ip/uip.h"
 #include "net/ip/tcpip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rpl/rpl-private.h"
-#include "net/rpl/rpl-ns.h"
+#include "rpl-private.h"
+#include "rpl-ns.h"
 #include "net/packetbuf.h"
 
 #define DEBUG DEBUG_NONE
@@ -69,7 +69,7 @@
 #define UIP_EXT_HDR_OPT_RPL_BUF   ((struct uip_ext_hdr_opt_rpl *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
 /*---------------------------------------------------------------------------*/
 int
-rpl_verify_hbh_header(int uip_ext_opt_offset)
+rpl_ext_header_hbh_update(int uip_ext_opt_offset)
 {
   rpl_instance_t *instance;
   int down;
@@ -176,7 +176,7 @@ rpl_verify_hbh_header(int uip_ext_opt_offset)
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_NON_STORING
 int
-rpl_srh_get_next_hop(uip_ipaddr_t *ipaddr)
+rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 {
   uint8_t *uip_next_hdr;
   int last_uip_ext_len = uip_ext_len;
@@ -217,7 +217,7 @@ rpl_srh_get_next_hop(uip_ipaddr_t *ipaddr)
       dest_node->parent == root_node)) {
     /* Routing header found or the packet destined for a direct child of the root.
      * The next hop should be already copied as the IPv6 destination
-     * address, via rpl_process_srh_header. We turn this address into a link-local to enable
+     * address, via rpl_ext_header_srh_update. We turn this address into a link-local to enable
      * forwarding to next hop */
     uip_ipaddr_copy(ipaddr, &UIP_IP_BUF->destipaddr);
     uip_create_linklocal_prefix(ipaddr);
@@ -230,7 +230,7 @@ rpl_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 }
 /*---------------------------------------------------------------------------*/
 int
-rpl_process_srh_header(void)
+rpl_ext_header_srh_update(void)
 {
   uint8_t *uip_next_hdr;
   int last_uip_ext_len = uip_ext_len;
@@ -588,7 +588,7 @@ insert_hbh_header(const rpl_instance_t *instance)
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_remove_header(void)
+rpl_ext_header_remove(void)
 {
   uint8_t temp_len;
   uint8_t rpl_ext_hdr_len;
@@ -633,7 +633,7 @@ rpl_remove_header(void)
 }
 /*---------------------------------------------------------------------------*/
 int
-rpl_update_header(void)
+rpl_ext_header_update(void)
 {
   if(default_instance == NULL || default_instance->current_dag == NULL
       || uip_is_addr_linklocal(&UIP_IP_BUF->destipaddr) || uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
@@ -643,7 +643,7 @@ rpl_update_header(void)
   if(default_instance->current_dag->rank == ROOT_RANK(default_instance)) {
     /* At the root, remove headers if any, and insert SRH or HBH
     * (SRH is inserted only if the destination is in the DODAG) */
-    rpl_remove_header();
+    rpl_ext_header_remove();
     if(rpl_get_dag(&UIP_IP_BUF->destipaddr) != NULL) {
       /* dest is in a DODAG; the packet is going down. */
       if(RPL_IS_NON_STORING(default_instance)) {

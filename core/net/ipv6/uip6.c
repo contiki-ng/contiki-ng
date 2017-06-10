@@ -81,8 +81,10 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 #if UIP_CONF_IPV6_RPL
-#include "rpl/rpl.h"
-#include "rpl/rpl-private.h"
+#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #endif
 
 #if UIP_ND6_SEND_NS
@@ -878,8 +880,8 @@ ext_hdr_options_process(void)
        */
 #if UIP_CONF_IPV6_RPL
       LOG_DBG("Processing RPL option\n");
-      if(!rpl_verify_hbh_header(uip_ext_opt_offset)) {
-        LOG_ERR("RPL Option Error: Dropping Packet\n");
+      if(!rpl_ext_header_hbh_update(uip_ext_opt_offset)) {
+        LOG_DBG("RPL Option Error: Dropping Packet\n");
         return 1;
       }
 #endif /* UIP_CONF_IPV6_RPL */
@@ -1357,7 +1359,7 @@ uip_process(uint8_t flag)
           LOG_DBG("Processing Routing header\n");
           if(UIP_ROUTING_BUF->seg_left > 0) {
 #if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-            if(rpl_process_srh_header()) {
+            if(rpl_ext_header_srh_update()) {
               goto send; /* Proceed to forwarding */
             }
 #endif /* UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING */
