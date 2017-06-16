@@ -62,12 +62,12 @@
 #define PROCESS_CONF_NUMEVENTS 8
 #define PROCESS_CONF_STATS 1
 
-#if !defined NETSTACK_CONF_WITH_IPV6 && !defined NETSTACK_CONF_WITH_IPV4
+#if !defined NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_CONF_WITH_IPV6 1
 #endif /* NETSTACK_CONF_ not defined */
 
 /* Network setup for IP */
-#if NETSTACK_CONF_WITH_IPV4 || NETSTACK_CONF_WITH_IPV6
+#if NETSTACK_CONF_WITH_IPV6
 
 #define LINKADDR_CONF_SIZE              8
 
@@ -88,7 +88,7 @@
 #define QUEUEBUF_CONF_NUM               16
 #endif /* QUEUEBUF_CONF_NUM */
 
-#endif /* NETSTACK_CONF_WITH_IPV4 || NETSTACK_CONF_WITH_IPV6 */
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 /* Network setup for IPv6 */
 #if NETSTACK_CONF_WITH_IPV6
@@ -130,7 +130,6 @@
 #define UIP_CONF_NETIF_MAX_ADDRESSES    3
 #define UIP_CONF_ND6_MAX_PREFIXES       3
 #define UIP_CONF_ND6_MAX_DEFROUTERS     2
-#define UIP_CONF_IP_FORWARD             0
 #ifndef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE           1280
 #endif
@@ -165,8 +164,6 @@
 #define UIP_CONF_PINGADDRCONF    0
 #define UIP_CONF_LOGGING         0
 #define LOG_CONF_ENABLED         0
-
-#define UIP_CONF_TCP_SPLIT       0
 
 #define UIP_CONF_BYTE_ORDER      UIP_BIG_ENDIAN
 #define UIP_CONF_LOGGING         0

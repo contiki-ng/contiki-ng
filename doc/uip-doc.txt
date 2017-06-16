@@ -21,7 +21,7 @@ low as a few hundred bytes.
 
 uIP can be found at the uIP web page: http://www.sics.se/~adam/uip/
 
-\sa \ref tcpip 
+\sa \ref tcpip
 \sa \ref uip6 and sicslowpan
 \sa \ref uipopt "uIP Compile-time configuration options"
 \sa \ref uipconffunc "uIP Run-time configuration functions"
@@ -30,7 +30,7 @@ uIP can be found at the uIP web page: http://www.sics.se/~adam/uip/
     \ref uipdrivervars "uIP variables used by device drivers"
 \sa \ref uipappfunc "uIP functions called from application programs"
 (see below) and the \ref psock "protosockets API" and their underlying
-\ref pt "protothreads" 
+\ref pt "protothreads"
 
 \section uIPIntroduction Introduction
 
@@ -97,7 +97,7 @@ The formal requirements for the protocols in the TCP/IP stack is
 specified in a number of RFC documents published by the Internet
 Engineering Task Force, IETF. Each of the protocols in the stack is
 defined in one more RFC documents and RFC1122 collects
-all requirements and updates the previous RFCs. 
+all requirements and updates the previous RFCs.
 
 The RFC1122 requirements can be divided into two categories; those
 that deal with the host to host communication and those that deal with
@@ -327,7 +327,7 @@ to inspect the uip_conn->lport (the local TCP port number) to decide
 which service the connection should provide. For instance, an
 application might decide to act as an HTTP server if the value of
 uip_conn->lport is equal to 80 and act as a TELNET server if the value
-is 23. 
+is 23.
 
 \subsubsection recvdata Receiving Data
 
@@ -442,7 +442,7 @@ the next time the connection is polled by uIP. The uip_connect()
 function returns
 a pointer to the uip_conn structure for the new
 connection. If there are no free connection slots, the function
-returns NULL. 
+returns NULL.
 
 The function uip_ipaddr() may be used to pack an IP address into the
 two element 16-bit array used by uIP to represent IP addresses.
@@ -451,14 +451,14 @@ Two examples of usage are shown below. The first example shows how to
 open a connection to TCP port 8080 of the remote end of the current
 connection. If there are not enough TCP connection slots to allow a
 new connection to be opened, the uip_connect() function returns NULL
-and the current connection is aborted by uip_abort(). 
+and the current connection is aborted by uip_abort().
 
 \code
 void connect_example1_app(void) {
    if(uip_connect(uip_conn->ripaddr, HTONS(8080)) == NULL) {
       uip_abort();
    }
-}   
+}
 \endcode
 
 The second example shows how to open a new connection to a specific IP
@@ -512,7 +512,7 @@ application function was called because data was lost in the network
 and has to be retransmitted, it also sends an "ok".  Note that this
 example actually shows a complete uIP application. It is not required
 for an application to deal with all types of events such as
-uip_connected() or uip_timedout(). 
+uip_connected() or uip_timedout().
 
 \subsection example2 A More Advanced Application
 
@@ -573,12 +573,12 @@ void example2_app(void) {
    struct example2_state *s;
 
    s = (struct example2_state *)uip_conn->appstate;
-   
+
    if(uip_connected()) {
       s->state = WELCOME_SENT;
       uip_send("Welcome!\n", 9);
       return;
-   } 
+   }
 
    if(uip_acked() && s->state == WELCOME_SENT) {
       s->state = WELCOME_ACKED;
@@ -618,7 +618,7 @@ how the two examples above can be combined into one application.
 \code
 void example3_init(void) {
    example1_init();
-   example2_init();   
+   example2_init();
 }
 
 void example3_app(void) {
@@ -708,7 +708,7 @@ void example5_init(void) {
 void example5_app(void) {
    struct example5_state *s;
    s = (struct example5_state)uip_conn->appstate;
-   
+
    if(uip_connected()) {
       switch(uip_conn->lport) {
       case HTONS(80):
@@ -721,7 +721,7 @@ void example5_app(void) {
          break;
       }
       uip_send(s->dataptr, s->dataleft);
-      return;      
+      return;
    }
 
    if(uip_acked()) {
@@ -731,7 +731,7 @@ void example5_app(void) {
       }
       s->dataptr += uip_conn->len;
       s->dataleft -= uip_conn->len;
-      uip_send(s->dataptr, s->dataleft);      
+      uip_send(s->dataptr, s->dataleft);
    }
 }
 \endcode
@@ -741,7 +741,7 @@ sent and the size of the data that is left to send. When a remote host
 connects to the application, the local port number is used to
 determine which file to send. The first chunk of data is sent using
 uip_send(). uIP makes sure that no more than MSS bytes of data is
-actually sent, even though s->dataleft may be larger than the MSS. 
+actually sent, even though s->dataleft may be larger than the MSS.
 
 The application is driven by incoming acknowledgments. When data has
 been acknowledged, new data can be sent. If there is no more data to
@@ -847,7 +847,7 @@ static void newdata(void) {
 
 static void acked(void) {
   struct example6_state *s = (struct example6_state *)uip_conn->appstate;
-  
+
   s->textlen -= uip_conn->len;
   s->textptr += uip_conn->len;
   if(s->textlen == 0) {
@@ -879,7 +879,7 @@ message. The "state" variable can be either "STATE_WAITING", meaning
 that the application is waiting for data to arrive from the network,
 "STATE_HELLO", in which the application is sending the "Hello" part of
 the message, or "STATE_WORLD", in which the application is sending the
-"world!" message. 
+"world!" message.
 
 The application does not handle errors or connection closing events,
 and therefore the aborted(), timedout() and closed() functions are
@@ -1171,7 +1171,7 @@ algorithm disabled at the receiver, the maximum throughput would be
 
 It should be noted, however, that since small systems running uIP are
 not very likely to have large amounts of data to send, the delayed
-acknowledgmen t throughput degradation of uIP need not be very
+acknowledgment throughput degradation of uIP need not be very
 severe. Small amounts of data sent by such a system will not span more
 than a single TCP segment, and would therefore not be affected by the
 throughput degradation anyway.
@@ -1179,13 +1179,9 @@ throughput degradation anyway.
 The maximum throughput when uIP acts as a receiver is not affected by
 the delayed acknowledgment throughput degradation.
 
-\note The \ref uipsplit module implements a hack that overcomes the
-problems with the delayed acknowledgment throughput degradation.
-
 @{
 */
 
 
 /** @} */
 /** @} */
-

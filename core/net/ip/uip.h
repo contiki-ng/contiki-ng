@@ -53,12 +53,8 @@
 #define UIP_H_
 
 /* Header sizes. */
-#if NETSTACK_CONF_WITH_IPV6
 #define UIP_IPH_LEN    40
 #define UIP_FRAGH_LEN  8
-#else /* NETSTACK_CONF_WITH_IPV6 */
-#define UIP_IPH_LEN    20    /* Size of IP header */
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #define UIP_UDPH_LEN    8    /* Size of UDP header */
 #define UIP_TCPH_LEN   20    /* Size of TCP header */
@@ -1501,7 +1497,18 @@ struct uip_stats {
  */
 /*---------------------------------------------------------------------------*/
 
+/**
+ * The Ethernet header.
+ */
+struct uip_eth_hdr {
+  struct uip_eth_addr dest;
+  struct uip_eth_addr src;
+  uint16_t type;
+};
 
+#define UIP_ETHTYPE_ARP  0x0806
+#define UIP_ETHTYPE_IP   0x0800
+#define UIP_ETHTYPE_IPV6 0x86dd
 
 /* uint8_t uip_flags:
  *
@@ -2153,6 +2160,60 @@ CCIF extern uip_lladdr_t uip_lladdr;
    (((a)->u8[15])  == ((b)->u8[15])))
 
 #endif /*NETSTACK_CONF_WITH_IPV6*/
+
+/**
+ * A non-error message that indicates that a packet should be
+ * processed locally.
+ *
+ * \hideinitializer
+ */
+#define UIP_FW_LOCAL     0
+
+/**
+ * A non-error message that indicates that something went OK.
+ *
+ * \hideinitializer
+ */
+#define UIP_FW_OK        0
+
+/**
+ * A non-error message that indicates that a packet was forwarded.
+ *
+ * \hideinitializer
+ */
+#define UIP_FW_FORWARDED 1
+
+/**
+ * A non-error message that indicates that a zero-length packet
+ * transmission was attempted, and that no packet was sent.
+ *
+ * \hideinitializer
+ */
+#define UIP_FW_ZEROLEN   2
+
+/**
+ * An error message that indicates that a packet that was too large
+ * for the outbound network interface was detected.
+ *
+ * \hideinitializer
+ */
+#define UIP_FW_TOOLARGE  3
+
+/**
+ * An error message that indicates that no suitable interface could be
+ * found for an outbound packet.
+ *
+ * \hideinitializer
+ */
+#define UIP_FW_NOROUTE   4
+
+/**
+ * An error message that indicates that a packet that should be
+ * forwarded or output was dropped.
+ *
+ * \hideinitializer
+ */
+#define UIP_FW_DROPPED   5
 
 /**
  * Calculate the Internet checksum over a buffer.

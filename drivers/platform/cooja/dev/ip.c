@@ -44,13 +44,6 @@ char simIP[16];
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-#if NETSTACK_CONF_WITH_IPV4
-
-char simIPChanged;
-char simIP[4];
-
-#endif /* NETSTACK_CONF_WITH_IPV4 */
-
 /*-----------------------------------------------------------------------------------*/
 static void
 doInterfaceActionsBeforeTick(void)
@@ -60,20 +53,6 @@ doInterfaceActionsBeforeTick(void)
   /* check if IPv6 address should change */
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-#if NETSTACK_CONF_WITH_IPV4
-
-  /* check if IPv4 address should change */
-/*
-  if (simIPChanged) {
-    uip_ipaddr_t hostaddr;
-    uip_ipaddr(&hostaddr, simIP[0], simIP[1], simIP[2], simIP[3]);
-    uip_sethostaddr(&hostaddr);
-    simIPChanged = 0;
-  }
-*/
-
-#endif /* NETSTACK_CONF_WITH_IPV4 */
 }
 /*-----------------------------------------------------------------------------------*/
 static void

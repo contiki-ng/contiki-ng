@@ -39,13 +39,10 @@
  */
 
 #include "contiki-net.h"
-#include "net/ip/uip-split.h"
 #include "net/ip/uip-packetqueue.h"
 
-#if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
-#endif
 
 #if UIP_CONF_IPV6_RPL
 #include "net/rpl/rpl.h"
@@ -85,7 +82,7 @@ process_event_t tcpip_icmp6_event;
 /* Periodic check of active connections. */
 static struct etimer periodic;
 
-#if NETSTACK_CONF_WITH_IPV6 && UIP_CONF_IPV6_REASSEMBLY
+#if UIP_CONF_IPV6_REASSEMBLY
 /* Timer for reassembly. */
 extern struct etimer uip_reass_timer;
 #endif
@@ -111,8 +108,7 @@ enum {
   PACKET_INPUT
 };
 
-/* Called on IP packet output. */
-#if NETSTACK_CONF_WITH_IPV6
+
 
 static uint8_t (* outputfunc)(const uip_lladdr_t *a);
 
@@ -133,34 +129,11 @@ tcpip_set_outputfunc(uint8_t (*f)(const uip_lladdr_t *))
 {
   outputfunc = f;
 }
-#else
-
-static uint8_t (* outputfunc)(void);
-uint8_t
-tcpip_output(void)
-{
-  if(outputfunc != NULL) {
-    return outputfunc();
-  }
-  UIP_LOG("tcpip_output: Use tcpip_set_outputfunc() to set an output function");
-  return 0;
-}
-
-void
-tcpip_set_outputfunc(uint8_t (*f)(void))
-{
-  outputfunc = f;
-}
-#endif
-
-#if UIP_CONF_IP_FORWARD
-unsigned char tcpip_is_forwarding; /* Forwarding right now? */
-#endif /* UIP_CONF_IP_FORWARD */
 
 PROCESS(tcpip_process, "TCP/IP stack");
 
 /*---------------------------------------------------------------------------*/
-#if UIP_TCP || UIP_CONF_IP_FORWARD
+#if UIP_TCP
 static void
 start_periodic_tcp_timer(void)
 {
@@ -168,12 +141,12 @@ start_periodic_tcp_timer(void)
     etimer_restart(&periodic);
   }
 }
-#endif /* UIP_TCP || UIP_CONF_IP_FORWARD */
+#endif /* UIP_TCP */
 /*---------------------------------------------------------------------------*/
 static void
 check_for_tcp_syn(void)
 {
-#if UIP_TCP || UIP_CONF_IP_FORWARD
+#if UIP_TCP
   /* This is a hack that is needed to start the periodic TCP timer if
      an incoming packet contains a SYN: since uIP does not inform the
      application if a SYN arrives, we have no other way of starting
@@ -184,36 +157,17 @@ check_for_tcp_syn(void)
      (UIP_TCP_BUF->flags & TCP_SYN) == TCP_SYN) {
     start_periodic_tcp_timer();
   }
-#endif /* UIP_TCP || UIP_CONF_IP_FORWARD */
+#endif /* UIP_TCP */
 }
 /*---------------------------------------------------------------------------*/
 static void
 packet_input(void)
 {
   if(uip_len > 0) {
-
-#if UIP_CONF_IP_FORWARD
-    tcpip_is_forwarding = 1;
-    if(uip_fw_forward() != UIP_FW_LOCAL) {
-      tcpip_is_forwarding = 0;
-      return;
-    }
-    tcpip_is_forwarding = 0;
-#endif /* UIP_CONF_IP_FORWARD */
-
     check_for_tcp_syn();
     uip_input();
     if(uip_len > 0) {
-#if UIP_CONF_TCP_SPLIT
-      uip_split_output();
-#else /* UIP_CONF_TCP_SPLIT */
-#if NETSTACK_CONF_WITH_IPV6
       tcpip_ipv6_output();
-#else /* NETSTACK_CONF_WITH_IPV6 */
-      PRINTF("tcpip packet_input output len %d\n", uip_len);
-      tcpip_output();
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-#endif /* UIP_CONF_TCP_SPLIT */
     }
   }
 }
@@ -324,11 +278,8 @@ udp_broadcast_new(uint16_t port, void *appstate)
   uip_ipaddr_t addr;
   struct uip_udp_conn *conn;
 
-#if NETSTACK_CONF_WITH_IPV6
   uip_create_linklocal_allnodes_mcast(&addr);
-#else
-  uip_ipaddr(&addr, 255,255,255,255);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+
   conn = udp_new(&addr, port, appstate);
   if(conn != NULL) {
     udp_bind(conn, port);
@@ -427,24 +378,12 @@ eventhandler(process_event_t ev, process_data_t data)
                  connections. */
           etimer_restart(&periodic);
           uip_periodic(i);
-#if NETSTACK_CONF_WITH_IPV6
           tcpip_ipv6_output();
-#else
-          if(uip_len > 0) {
-            PRINTF("tcpip_output from periodic len %d\n", uip_len);
-            tcpip_output();
-            PRINTF("tcpip_output after periodic len %d\n", uip_len);
-          }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
         }
       }
 #endif /* UIP_TCP */
-#if UIP_CONF_IP_FORWARD
-      uip_fw_periodic();
-#endif /* UIP_CONF_IP_FORWARD */
     }
 
-#if NETSTACK_CONF_WITH_IPV6
 #if UIP_CONF_IPV6_REASSEMBLY
     /*
      * check the timer for reassembly
@@ -476,7 +415,6 @@ eventhandler(process_event_t ev, process_data_t data)
       uip_ds6_periodic();
       tcpip_ipv6_output();
     }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
   }
   break;
 
@@ -484,14 +422,7 @@ eventhandler(process_event_t ev, process_data_t data)
   case TCP_POLL:
     if(data != NULL) {
       uip_poll_conn(data);
-#if NETSTACK_CONF_WITH_IPV6
       tcpip_ipv6_output();
-#else /* NETSTACK_CONF_WITH_IPV6 */
-      if(uip_len > 0) {
-        PRINTF("tcpip_output from tcp poll len %d\n", uip_len);
-        tcpip_output();
-      }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
       /* Start the periodic polling, if it isn't already active. */
       start_periodic_tcp_timer();
     }
@@ -501,13 +432,7 @@ eventhandler(process_event_t ev, process_data_t data)
   case UDP_POLL:
     if(data != NULL) {
       uip_udp_periodic_conn(data);
-#if NETSTACK_CONF_WITH_IPV6
       tcpip_ipv6_output();
-#else
-      if(uip_len > 0) {
-        tcpip_output();
-      }
-#endif /* UIP_UDP */
     }
     break;
 #endif /* UIP_UDP */
@@ -525,7 +450,6 @@ tcpip_input(void)
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
-#if NETSTACK_CONF_WITH_IPV6
 void
 tcpip_ipv6_output(void)
 {
@@ -694,7 +618,7 @@ tcpip_ipv6_output(void)
 #else /* UIP_ND6_SEND_NS */
       PRINTF("tcpip_ipv6_output: neighbor not in cache\n");
       uip_len = 0;
-      return;  
+      return;
 #endif /* UIP_ND6_SEND_NS */
     } else {
 #if UIP_ND6_SEND_NS
@@ -746,7 +670,6 @@ tcpip_ipv6_output(void)
   tcpip_output(NULL);
   uip_clear_buf();
 }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
 void
@@ -835,7 +758,7 @@ PROCESS_THREAD(tcpip_process, ev, data)
   UIP_FALLBACK_INTERFACE.init();
 #endif
   /* initialize RPL if configured for using RPL */
-#if NETSTACK_CONF_WITH_IPV6 && UIP_CONF_IPV6_RPL
+#if UIP_CONF_IPV6_RPL
   rpl_init();
 #endif /* UIP_CONF_IPV6_RPL */
 

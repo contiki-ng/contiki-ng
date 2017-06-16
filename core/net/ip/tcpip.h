@@ -275,7 +275,7 @@ struct uip_udp_conn *udp_broadcast_new(uint16_t port, void *appstate);
 CCIF void tcpip_poll_udp(struct uip_udp_conn *conn);
 
 /** @} */
- 
+
 /**
  * \name ICMPv6 functions
  * @{
@@ -340,20 +340,13 @@ CCIF void tcpip_input(void);
  * \brief Output packet to layer 2
  * The eventual parameter is the MAC address of the destination.
  */
-#if NETSTACK_CONF_WITH_IPV6
 uint8_t tcpip_output(const uip_lladdr_t *);
 void tcpip_set_outputfunc(uint8_t (* f)(const uip_lladdr_t *));
-#else
-uint8_t tcpip_output(void);
-void tcpip_set_outputfunc(uint8_t (* f)(void));
-#endif
 
 /**
  * \brief This function does address resolution and then calls tcpip_output
  */
-#if NETSTACK_CONF_WITH_IPV6
 void tcpip_ipv6_output(void);
-#endif
 
 /**
  * \brief Is forwarding generally enabled?

@@ -49,12 +49,6 @@
 
 #define w_memcpy memcpy
 
-#if NETSTACK_CONF_WITH_IPV4
-#if NETSTACK_CONF_WITH_IPV6
-#error NETSTACK_CONF_WITH_IPV4 && NETSTACK_CONF_WITH_IPV6: Bad configuration
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-#endif /* NETSTACK_CONF_WITH_IPV4 */
-
 #ifdef NETSTACK_CONF_H
 
 /* These header overrides the below default configuration */
@@ -75,16 +69,6 @@
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
 
-#else /* NETSTACK_CONF_WITH_IPV6 */
-
-#if NETSTACK_CONF_WITH_IPV4
-
-/* Network setup for IPv4 */
-#define NETSTACK_CONF_NETWORK uip_driver
-#define NETSTACK_CONF_RADIO cooja_radio_driver
-#define UIP_CONF_IP_FORWARD           1
-
-#endif /* NETSTACK_CONF_WITH_IPV4 */
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #endif /* NETSTACK_CONF_H */
@@ -138,8 +122,7 @@
 #endif /* UIP_CONF_IPV6_QUEUE_PKT */
 #define UIP_CONF_IPV6_CHECKS            1
 #define UIP_CONF_IPV6_REASSEMBLY        0
-#define UIP_CONF_NETIF_MAX_ADDRESSES    3
-#define UIP_CONF_IP_FORWARD             0
+#define UIP_CONF_NETIF_MAX_ADDRESSES    
 
 #define SICSLOWPAN_CONF_COMPRESSION             SICSLOWPAN_COMPRESSION_HC06
 #ifndef SICSLOWPAN_CONF_FRAG
@@ -202,8 +185,6 @@ typedef uint64_t rtimer_clock_t;
 #define UIP_CONF_UDP_CHECKSUMS   1
 #define UIP_CONF_PINGADDRCONF    0
 #define UIP_CONF_LOGGING         0
-
-#define UIP_CONF_TCP_SPLIT       0
 
 #if NETSTACK_CONF_WITH_IPV6
 #endif /* NETSTACK_CONF_WITH_IPV6 */

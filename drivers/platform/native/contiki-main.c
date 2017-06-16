@@ -230,9 +230,7 @@ main(int argc, char **argv)
 
     printf("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
   }
-#elif NETSTACK_CONF_WITH_IPV4
-  process_start(&tcpip_process, NULL);
-#endif
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 
   serial_line_init();
 

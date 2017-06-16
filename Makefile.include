@@ -66,11 +66,6 @@ MODULES += core/sys core/dev core/lib
 # Include IPv6, IPv4, and/or Rime
 
 HAS_STACK = 0
-ifeq ($(CONTIKI_WITH_IPV4),1)
-  HAS_STACK = 1
-  CFLAGS += -DNETSTACK_CONF_WITH_IPV4=1
-  MODULES += core/net/ipv4 core/net/ip
-endif
 
 # Make IPv6 the default stack
 ifeq ($(HAS_STACK),0)
