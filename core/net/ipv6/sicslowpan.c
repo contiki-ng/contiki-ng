@@ -163,8 +163,8 @@
 #ifdef SICSLOWPAN_CONF_COMPRESS_EXT_HDR
 #define COMPRESS_EXT_HDR SICSLOWPAN_CONF_COMPRESS_EXT_HDR
 #else
-/* avoid compressing by default - to be compatible with older versions */
-#define COMPRESS_EXT_HDR 0
+/* Compressing on by default - turn off to be compatible with older versions */
+#define COMPRESS_EXT_HDR 1
 #endif
 
 #if COMPRESS_EXT_HDR
@@ -675,6 +675,8 @@ static void
 compress_hdr_iphc(linkaddr_t *link_destaddr)
 {
   uint8_t tmp, iphc0, iphc1, *next_hdr, *next_nhc;
+  int ext_hdr_len;
+
 #if LOG_DBG_ENABLED
   { uint16_t ndx;
     LOG_DBG("before compression (%d): ", UIP_IP_BUF->len[1]);
@@ -885,8 +887,8 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   /* pick out the next-header position */
   next_hdr = &UIP_IP_BUF->proto;
   next_nhc = hc06_ptr; /* here we set the next header is compressed. */
+  ext_hdr_len = 0;
   /* reserve the write place of this next header position */
-  int ext_hdr_len = 0;
   LOG_INFO("Compressing first header: %d\n", *next_hdr);
   while(next_hdr != NULL && IS_COMPRESSABLE_PROTO(*next_hdr)) {
     LOG_INFO("Compressing next header: %d\n", *next_hdr);
@@ -902,10 +904,10 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
     case UIP_PROTO_DESTO:
       /* Handle the header here! */
       {
-        proto = proto == -1 ? SICSLOWPAN_NHC_ETX_HDR_DESTO : proto;
         struct uip_ext_hdr *ext_hdr =
           (struct uip_ext_hdr *) UIP_IPPAYLOAD_BUF(ext_hdr_len);
         int len;
+        proto = proto == -1 ? SICSLOWPAN_NHC_ETX_HDR_DESTO : proto;
         /* Len is defined to be in octets from the length byte */
         len = (ext_hdr->len << 3) + 8;
         LOG_INFO("Handling next header: %d (len:%d)\n", *next_hdr, len);
@@ -981,10 +983,8 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
         hc06_ptr += 4;
       }
       /* always inline the checksum  */
-      if(1) {
-        memcpy(hc06_ptr, &udp_buf->udpchksum, 2);
-        hc06_ptr += 2;
-      }
+      memcpy(hc06_ptr, &udp_buf->udpchksum, 2);
+      hc06_ptr += 2;
       uncomp_hdr_len += UIP_UDPH_LEN;
       /* this is the final header... */
       next_hdr = NULL;
@@ -992,7 +992,6 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
     default:
       LOG_INFO("Error - could not handle compression of header");
     }
-    uncomp_hdr_len += UIP_UDPH_LEN;
   }
   if(next_hdr != NULL) {
     /* Last header could not be compressed - we assume that this is then OK!*/
@@ -1015,7 +1014,6 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
 #endif
 
   packetbuf_hdr_len = hc06_ptr - packetbuf_ptr;
-  return;
 }
 
 /*--------------------------------------------------------------------*/
@@ -1038,7 +1036,12 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
 static void
 uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
 {
-  uint8_t tmp, iphc0, iphc1;
+  uint8_t tmp, iphc0, iphc1, nhc;
+  struct uip_ext_hdr *exthdr;
+  uint8_t* last_nextheader;
+  uint8_t* ip_payload;
+  uint8_t ext_hdr_len = 0;
+
   /* at least two byte will be used for the encoding */
   hc06_ptr = packetbuf_ptr + packetbuf_hdr_len + 2;
 
@@ -1182,12 +1185,11 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
   uncomp_hdr_len += UIP_IPH_LEN;
 
   /* Next header processing - continued */
-  uint8_t nhc = iphc0 & SICSLOWPAN_IPHC_NH_C;
+  nhc = iphc0 & SICSLOWPAN_IPHC_NH_C;
   /* The next header is compressed, NHC is following */
-  uint8_t* last_nextheader =  &SICSLOWPAN_IP_BUF(buf)->proto;
-  uint8_t* ip_payload = SICSLOWPAN_IPPAYLOAD_BUF(buf);
-  uint8_t ext_hdr_len = 0;
-
+  last_nextheader =  &SICSLOWPAN_IP_BUF(buf)->proto;
+  ip_payload = SICSLOWPAN_IPPAYLOAD_BUF(buf);
+ 
   while(nhc && (*hc06_ptr & SICSLOWPAN_NHC_MASK) == SICSLOWPAN_NHC_EXT_HDR) {
     uint8_t eid = (*hc06_ptr & 0x0e) >> 1;
     /* next header compression flag */
@@ -1227,7 +1229,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
     }
     *last_nextheader = proto;
     /* uncompress the extension header */
-    struct uip_ext_hdr *exthdr = (struct uip_ext_hdr *)ip_payload;
+    exthdr = (struct uip_ext_hdr *)ip_payload;
     exthdr->len = (2 + len) / 8 - 1;
     exthdr->next = next;
     last_nextheader = &exthdr->next;
@@ -1328,13 +1330,6 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
     SICSLOWPAN_IP_BUF(buf)->len[0] = (ip_len - UIP_IPH_LEN) >> 8;
     SICSLOWPAN_IP_BUF(buf)->len[1] = (ip_len - UIP_IPH_LEN) & 0x00FF;
   }
-
-  /* length field in UDP header */
-  if(SICSLOWPAN_IP_BUF(buf)->proto == UIP_PROTO_UDP) {
-    memcpy(&SICSLOWPAN_UDP_BUF(buf)->udplen, &SICSLOWPAN_IP_BUF(buf)->len[0], 2);
-  }
-
-  return;
 }
 /** @} */
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06 */
