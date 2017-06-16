@@ -559,6 +559,18 @@ uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, uip_lladdr_t *lladdr)
 }
 
 /*---------------------------------------------------------------------------*/
+void
+uip_ds6_set_lladdr_from_iid(uip_lladdr_t *lladdr, const uip_ipaddr_t *ipaddr)
+{
+#if (UIP_LLADDR_LEN == 8)
+  memcpy(lladdr, ipaddr->u8 + 8, UIP_LLADDR_LEN);
+  lladdr->addr[0] ^= 0x02;
+#else
+#error uip-ds6.c cannot build lladdr address when UIP_LLADDR_LEN is not 8
+#endif
+}
+
+/*---------------------------------------------------------------------------*/
 uint8_t
 get_match_length(uip_ipaddr_t *src, uip_ipaddr_t *dst)
 {
