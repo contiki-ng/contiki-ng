@@ -50,6 +50,7 @@
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #include "dev/slip.h"
+#include "net/netstack.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -341,7 +342,7 @@ PROCESS_THREAD(slip_process, ev, data)
 #ifdef SLIP_CONF_TCPIP_INPUT
       SLIP_CONF_TCPIP_INPUT();
 #else
-      tcpip_input();
+      NETSTACK_IP.input();
 #endif
     }
   }

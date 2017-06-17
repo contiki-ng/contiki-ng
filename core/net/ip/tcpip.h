@@ -331,7 +331,7 @@ CCIF extern process_event_t tcpip_event;
  */
 #if NETSTACK_CONF_WITH_IPV6
 /* only uses NETSTACK_IP now */
-extern const struct ip_driver uip_driver;
+extern const struct ip_driver uip_ip_driver;
 #else
 void tcpip_set_outputfunc(uint8_t (* f)(void));
 #endif

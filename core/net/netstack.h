@@ -47,7 +47,7 @@
 #ifdef NETSTACK_CONF_IP
 #define NETSTACK_IP NETSTACK_CONF_IP
 #else /* NETSTACK_CONF_IP */
-#define NETSTACK_IP uip_driver
+#define NETSTACK_IP uip_ip_driver
 #endif /* NETSTACK_CONF_IP */
 #endif /* NETSTACK_IP */
 

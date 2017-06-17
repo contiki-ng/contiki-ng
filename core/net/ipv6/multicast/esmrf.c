@@ -172,7 +172,7 @@ icmp_output()
   VERBOSE_PRINTF("ESMRF: ICMPv6 Out - %u bytes, uip_len %u bytes, uip_ext_len %u bytes\n",
 					payload_len, uip_len, uip_ext_len);
 
-  tcpip_ipv6_output();
+  NETSTACK_IP.output();
   ESMRF_STATS_ADD(icmp_out);
   return;
 }
@@ -244,7 +244,7 @@ icmp_input()
   if(uip_mcast6_route_lookup(&UIP_IP_BUF->destipaddr)) {
     PRINTF("ESMRF: Forward this packet\n");
     /* If we enter here, we will definitely forward */
-    tcpip_ipv6_output();
+    NETSTACK_IP.output();
   }
   uip_clear_buf();
 }
@@ -255,7 +255,7 @@ mcast_fwd(void *p)
   memcpy(uip_buf, &mcast_buf, mcast_len);
   uip_len = mcast_len;
   UIP_IP_BUF->ttl--;
-  tcpip_output(NULL);
+  NETSTACK_IP.output();
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
@@ -333,7 +333,7 @@ in()
     if(fwd_delay == 0) {
       /* No delay required, send it, do it now, why wait? */
       UIP_IP_BUF->ttl--;
-      tcpip_output(NULL);
+      NETSTACK_IP.output();
       UIP_IP_BUF->ttl++;        /* Restore before potential upstack delivery */
     } else {
       /* Randomise final delay in [D , D*Spread], step D */

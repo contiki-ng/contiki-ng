@@ -46,7 +46,7 @@
 /*--------------------------------------------------------------------*/
 uint8_t
 #if NETSTACK_CONF_WITH_IPV6
-uip_driver_send(const uip_lladdr_t *addr)
+uip_driver_send(const linkaddr_t *localdest)
 #else
 uip_driver_send(void)
 #endif
@@ -66,7 +66,9 @@ init(void)
    * Set out output function as the function to be called from uIP to
    * send a packet.
    */
+#ifndef NETSTACK_CONF_WITH_IPV6
   tcpip_set_outputfunc(uip_driver_send);
+#endif
 }
 /*--------------------------------------------------------------------*/
 static void
@@ -76,13 +78,15 @@ input(void)
      packetbuf_datalen() <= UIP_BUFSIZE - UIP_LLH_LEN) {
     memcpy(&uip_buf[UIP_LLH_LEN], packetbuf_dataptr(), packetbuf_datalen());
     uip_len = packetbuf_datalen();
-    tcpip_input();
+    NETSTACK_IP.input();
   }
 }
+
 /*--------------------------------------------------------------------*/
 const struct network_driver uip_driver = {
   "uip",
   init,
-  input
+  input,
+  uip_driver_send,
 };
 /*--------------------------------------------------------------------*/

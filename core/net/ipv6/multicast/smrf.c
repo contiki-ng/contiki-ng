@@ -81,7 +81,7 @@ mcast_fwd(void *p)
   memcpy(uip_buf, &mcast_buf, mcast_len);
   uip_len = mcast_len;
   UIP_IP_BUF->ttl--;
-  tcpip_output(NULL);
+  NETSTACK_IP.output();
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
@@ -157,7 +157,7 @@ in()
     if(fwd_delay == 0) {
       /* No delay required, send it, do it now, why wait? */
       UIP_IP_BUF->ttl--;
-      tcpip_output(NULL);
+      NETSTACK_IP.output();
       UIP_IP_BUF->ttl++;        /* Restore before potential upstack delivery */
     } else {
       /* Randomise final delay in [D , D*Spread], step D */

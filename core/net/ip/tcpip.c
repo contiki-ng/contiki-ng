@@ -823,7 +823,7 @@ init(void)
 
 /*---------------------------------------------------------------------------*/
 
-const struct ip_driver uip_driver = {
+const struct ip_driver uip_ip_driver = {
 #if NETSTACK_CONF_WITH_IPV6
     "uip6",
     init,

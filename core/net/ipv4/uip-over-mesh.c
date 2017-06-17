@@ -32,14 +32,14 @@
 
 /**
  * \file
- *         Code for tunnelling uIP packets over the Rime mesh routing module
+ *         Code for tunnelling uIP packets
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
 
 #include <stdio.h>
 
-#include "net/rime/rime.h"
+#include "net/netstack.h"
 #include "net/ipv4/uip-fw.h"
 #include "net/ipv4/uip-over-mesh.h"
 
@@ -105,7 +105,7 @@ recv_data(struct unicast_conn *c, const linkaddr_t *from)
 
   PRINTF("uip-over-mesh: %d.%d: recv_data with len %d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1], uip_len);
-  tcpip_input();
+  NETSTACK_IP.input();
 }
 /*---------------------------------------------------------------------------*/
 static void
