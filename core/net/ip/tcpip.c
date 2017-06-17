@@ -486,7 +486,7 @@ eventhandler(process_event_t ev, process_data_t data)
   };
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 tcpip_input(void)
 {
   process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
@@ -494,7 +494,7 @@ tcpip_input(void)
 }
 /*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
-void
+static void
 tcpip_ipv6_output(void)
 {
   uip_ds6_nbr_t *nbr = NULL;
