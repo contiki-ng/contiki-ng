@@ -46,6 +46,7 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "contiki-default-conf.h"
+#include "net/netstack.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -292,7 +293,7 @@ uip_icmp6_send(const uip_ipaddr_t *dest, int type, int code, int payload_len)
   UIP_STAT(++uip_stat.icmp.sent);
   UIP_STAT(++uip_stat.ip.sent);
 
-  tcpip_ipv6_output();
+  NETSTACK_IP.output();
 }
 /*---------------------------------------------------------------------------*/
 static void

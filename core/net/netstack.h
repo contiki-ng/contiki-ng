@@ -43,6 +43,14 @@
 
 #include "contiki-conf.h"
 
+#ifndef NETSTACK_IP
+#ifdef NETSTACK_CONF_IP
+#define NETSTACK_IP NETSTACK_CONF_IP
+#else /* NETSTACK_CONF_IP */
+#define NETSTACK_IP uip_driver
+#endif /* NETSTACK_CONF_IP */
+#endif /* NETSTACK_IP */
+
 #ifndef NETSTACK_NETWORK
 #ifdef NETSTACK_CONF_NETWORK
 #define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
@@ -78,6 +86,33 @@
 #include "net/mac/mac.h"
 #include "net/mac/framer/framer.h"
 #include "dev/radio.h"
+#include "net/linkaddr.h"
+
+/**
+ * The structure of a network driver in Contiki.
+ */
+struct ip_driver {
+  char *name;
+
+  /** Initialize the network driver */
+  void (* init)(void);
+
+  /**
+   * \brief      Deliver an incoming packet to the TCP/IP stack
+   *
+   *             This function is called by network device drivers to
+   *             deliver an incoming packet to the TCP/IP stack. The
+   *             incoming packet must be present in the uip_buf buffer,
+   *             and the length of the packet must be in the global
+   *             uip_len variable.
+   */
+  void (* input)(void);
+
+  /** Function for sending out an IP packet (assumed to be in uip). */
+  void (* output)(void);
+
+};
+
 
 /**
  * The structure of a network driver in Contiki.
@@ -90,8 +125,13 @@ struct network_driver {
 
   /** Callback for getting notified of incoming packet. */
   void (* input)(void);
+
+  /** Function for upper layers sending of outgoing packets. */
+  uint8_t (* output)(const linkaddr_t *localdest);
+
 };
 
+extern const struct ip_driver      NETSTACK_IP;
 extern const struct network_driver NETSTACK_NETWORK;
 extern const struct mac_driver     NETSTACK_MAC;
 extern const struct radio_driver   NETSTACK_RADIO;

@@ -40,6 +40,7 @@
 #include "net/ip/uip_arch.h"
 
 #include "net/ip/tcpip.h"
+#include "netstack.h"
 
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
@@ -95,12 +96,9 @@ uip_split_output(void)
     
     /* Transmit the first packet. */
     /*    uip_fw_output();*/
-#if NETSTACK_CONF_WITH_IPV6
-    tcpip_ipv6_output();
-#else
-    tcpip_output();
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-   
+
+    NETSTACK_IP.output();
+
     /* Now, create the second packet. To do this, it is not enough to
        just alter the length field, but we must also update the TCP
        sequence number and point the uip_appdata to a new place in
@@ -138,21 +136,13 @@ uip_split_output(void)
 
     /* Transmit the second packet. */
     /*    uip_fw_output();*/
-#if NETSTACK_CONF_WITH_IPV6
-    tcpip_ipv6_output();
-#else
-    tcpip_output();
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+
+    NETSTACK_IP.output();
     return;
   }
 #endif /* UIP_TCP */
 
-  /*    uip_fw_output();*/
-#if NETSTACK_CONF_WITH_IPV6
-     tcpip_ipv6_output();
-#else
-     tcpip_output();
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+    NETSTACK_IP.output();
 }
 
 /*-----------------------------------------------------------------------------*/
