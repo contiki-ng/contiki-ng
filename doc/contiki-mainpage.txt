@@ -32,13 +32,14 @@ academia lead by Adam Dunkels from the Swedish Institute of Computer
 Science. The Contiki team currently consists of sixteen developers
 from SICS, SAP AG, Cisco, Atmel, NewAE and TU Munich.
 
-Contiki contains two communication stacks: \ref uip "uIP" and \ref
-rime "Rime". uIP is a small RFC-compliant TCP/IP stack that makes it
-possible for Contiki to communicate over the Internet.
+Contiki's uIP-stack is a small RFC-compliant TCP/IP stack that makes
+it possible for Contiki to communicate over the Internet. It has two
+version IPv4 version and a full IPv6 / 6LoWPAN stack more appropriate
+for Internet of Things application.
 
-Contiki runs on a variety of platform ranging from embedded
-microcontrollers such as the MSP430 and the AVR to old
-homecomputers. Code footprint is on the order of kilobytes and memory
+Contiki runs on a variety of modern platform ranging from embedded
+microcontrollers such as the ARM Cortex M3 upto regular PC (native
+platform). Code footprint is on the order of kilobytes and memory
 usage can be configured to be as low as tens of bytes.
 
 Contiki is written in the C programming language and is freely
@@ -46,22 +47,15 @@ available as open source under a BSD-style license.
 
 \section contiki-mainpage-tcpip TCP/IP
 
-Contiki includes the uIP TCP/IP stack (http://www.sics.se/~adam/uip/)
-that provides Contiki with TCP/IP networking support. uIP provides the
-protocols TCP, UDP, IP, and ARP.
+Contiki includes a significantly improved version of the uIP TCP/IP
+stack (http://www.sics.se/~adam/uip/) that provides Contiki with
+TCP/IP networking support. The uIP6 version of uIP supports many of
+the recent Internet of Things protocols such as CoAP, RPL, 6LoWPAN and
+others.
 
 \sa \ref uip "The uIP TCP/IP stack documentation"
 \sa \ref tcpip "The Contiki/uIP interface"
 \sa \ref psock "Protosockets library"
-
-\section contiki-mainpage-rime Rime
-
-Rime is a lightweight communication stacks designed for low-power
-radios. Rime provides a wide range of communication primitives
-suitable for implementing communication-bound applications or network
-protocols.
-
-\sa \ref rime "The Rime Communication Stack"
 
 \section contiki-mainpage-threads Multi-threading and protothreads
 

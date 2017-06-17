@@ -112,7 +112,7 @@ the link-layer address. The dependency is reflected in the
 
 At initialization, the input function in sicslowpan.c is set as the
 function to be called by the MAC upon packet reception. The output
-function is set as the tcpip_output function.<br>
+function is the NETSTACK_NETWORK.output function if the sicslowpan driver is used.<br>
 At packet reception, the link-layer copies the 802.15.4 payload in the
 rime buffer, and sets its length. It also stores the source and
 destination link-layer addresses as two rime addresses.
@@ -147,7 +147,7 @@ compilation option.
 the same time we have a mechanism for storing each fragment per sender
 and tag until it is fully reassembled or the reassemly times out.
 At reception, once all the fragments are received, we copy the packet
-to #uip_buf, set #uip_len, and call #tcpip_input.
+to #uip_buf, set #uip_len, and call NETSTACK_IP.input().
 
 \note #MAC_MAX_PAYLOAD defines the maximum payload
 length in a 802.15.4 frame. For now it is constant and equal to 102
