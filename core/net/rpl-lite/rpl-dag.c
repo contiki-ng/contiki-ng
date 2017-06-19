@@ -489,15 +489,10 @@ rpl_process_dao_ack(uint8_t sequence, uint8_t status)
     /* stop the retransmit timer when the ACK arrived */
     curr_instance.dag.is_reachable = status < RPL_DAO_ACK_UNABLE_TO_ACCEPT;
 
-#if RPL_REPAIR_ON_DAO_NACK
     if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
-      /*
-       * Failed the DAO transmission - need to remove the default route.
-       * Trigger a local repair since we can not get our DAO in.
-       */
-      rpl_local_repair("DAO NACK");
+      /* We got a NACK, leave the DAG  */
+      leave_dag();
     }
-#endif
   }
 }
 #endif /* RPL_WITH_DAO_ACK */
