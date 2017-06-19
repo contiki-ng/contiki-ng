@@ -548,7 +548,6 @@ rpl_icmp6_dao_output(uint8_t lifetime)
   unsigned char *buffer;
   uint8_t prefixlen;
   int pos;
-  uip_ipaddr_t *dest_ipaddr = NULL;
   const uip_ipaddr_t *prefix = rpl_get_global_address();
   uip_ipaddr_t *parent_ipaddr = rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent);
 
@@ -556,9 +555,9 @@ rpl_icmp6_dao_output(uint8_t lifetime)
   rpl_dag_update_state();
 
   if(!curr_instance.used || curr_instance.dag.preferred_parent == NULL
-    || prefix == NULL || parent_ipaddr == NULL) {
-    PRINTF("RPL: rpl_icmp6_dao_output: node not ready to send a DAO (used %u, pref parent %p, prefix %p, parent_ipaddr %p)\n",
-        curr_instance.used, curr_instance.dag.preferred_parent, prefix, parent_ipaddr);
+    || prefix == NULL || parent_ipaddr == NULL || curr_instance.mop == RPL_MOP_NO_DOWNWARD_ROUTES) {
+    PRINTF("RPL: rpl_icmp6_dao_output: node not ready to send a DAO (used %u, pref parent %p, prefix %p, parent_ipaddr %p, mop %u)\n",
+        curr_instance.used, curr_instance.dag.preferred_parent, prefix, parent_ipaddr, curr_instance.mop);
     return;
   }
 
@@ -587,36 +586,30 @@ rpl_icmp6_dao_output(uint8_t lifetime)
 
   /* Create a transit information sub-option. */
   buffer[pos++] = RPL_OPTION_TRANSIT;
-  buffer[pos++] = (curr_instance.mop != RPL_MOP_NON_STORING) ? 4 : 20;
+  buffer[pos++] = 20;
   buffer[pos++] = 0; /* flags - ignored */
   buffer[pos++] = 0; /* path control - ignored */
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = lifetime;
 
-  if(curr_instance.mop != RPL_MOP_NON_STORING) {
-    /* Send DAO to parent */
-    dest_ipaddr = parent_ipaddr;
-  } else {
-    /* Include parent global IP address */
-    memcpy(buffer + pos, &curr_instance.dag.dag_id, 8); /* Prefix */
-    pos += 8;
-    memcpy(buffer + pos, ((const unsigned char *)parent_ipaddr) + 8, 8); /* Interface identifier */
-    pos += 8;
-    /* Send DAO to root */
-    dest_ipaddr = &curr_instance.dag.dag_id;
-  }
+  /* Include parent global IP address */
+  memcpy(buffer + pos, &curr_instance.dag.dag_id, 8); /* Prefix */
+  pos += 8;
+  memcpy(buffer + pos, ((const unsigned char *)parent_ipaddr) + 8, 8); /* Interface identifier */
+  pos += 8;
 
   PRINTF("RPL: sending a %sDAO seqno %u, tx count %u, lifetime %u, prefix ",
          lifetime == 0 ? "No-path " : "",
          curr_instance.dag.dao_curr_seqno, curr_instance.dag.dao_transmissions, lifetime);
   PRINT6ADDR(prefix);
   PRINTF(" to ");
-  PRINT6ADDR(dest_ipaddr);
+  PRINT6ADDR(&curr_instance.dag.dag_id);
   PRINTF(" , parent ");
   PRINT6ADDR(parent_ipaddr);
   PRINTF("\n");
 
-  uip_icmp6_send(dest_ipaddr, ICMP6_RPL, RPL_CODE_DAO, pos);
+  /* Send DAO to root (IPv6 address is DAG ID) */
+  uip_icmp6_send(&curr_instance.dag.dag_id, ICMP6_RPL, RPL_CODE_DAO, pos);
 }
 #if RPL_WITH_DAO_ACK
 /*---------------------------------------------------------------------------*/
