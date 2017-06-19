@@ -220,12 +220,12 @@ rpl_dag_update_state(void)
 static rpl_nbr_t *
 update_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
-  rpl_nbr_t *p = NULL;
+  rpl_nbr_t *nbr = NULL;
   const uip_lladdr_t *lladdr;
 
-  p = rpl_neighbor_get_from_ipaddr(from);
+  nbr = rpl_neighbor_get_from_ipaddr(from);
   /* Neighbor not in RPL neighbor table, add it */
-  if(p == NULL) {
+  if(nbr == NULL) {
     /* Is the neighbor known by ds6? Drop this request if not.
      * Typically, the neighbor is added upon receiving a DIO. */
     lladdr = uip_ds6_nbr_lladdr_from_ipaddr(from);
@@ -234,22 +234,22 @@ update_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
     }
 
     /* Add neighbor to RPL table */
-    p = nbr_table_add_lladdr(rpl_neighbors, (linkaddr_t *)lladdr,
+    nbr = nbr_table_add_lladdr(rpl_neighbors, (linkaddr_t *)lladdr,
                              NBR_TABLE_REASON_RPL_DIO, dio);
-    if(p == NULL) {
+    if(nbr == NULL) {
       PRINTF("RPL: failed to add neighbor\n");
       return NULL;
     }
   }
 
   /* Update neighbor info from DIO */
-  p->rank = dio->rank;
-  p->dtsn = dio->dtsn;
+  nbr->rank = dio->rank;
+  nbr->dtsn = dio->dtsn;
 #if RPL_WITH_MC
-  memcpy(&p->mc, &dio->mc, sizeof(p->mc));
+  memcpy(&nbr->mc, &dio->mc, sizeof(nbr->mc));
 #endif /* RPL_WITH_MC */
 
-  return p;
+  return nbr;
 }
 /*---------------------------------------------------------------------------*/
 static void
