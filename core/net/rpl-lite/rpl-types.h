@@ -130,15 +130,15 @@ struct rpl_prefix {
   };
 typedef struct rpl_prefix rpl_prefix_t;
 
-/* All information related to a RPL parent */
-struct rpl_parent {
+/* All information related to a RPL neighbor */
+struct rpl_nbr {
 #if RPL_WITH_MC
   rpl_metric_container_t mc;
 #endif /* RPL_WITH_MC */
   rpl_rank_t rank;
   uint8_t dtsn;
 };
-typedef struct rpl_parent rpl_parent_t;
+typedef struct rpl_nbr rpl_nbr_t;
 
 /*---------------------------------------------------------------------------*/
  /*
@@ -146,23 +146,22 @@ typedef struct rpl_parent rpl_parent_t;
   *
   * reset(dag) Resets the objective function state for a specific DAG. This function is
   *            called when doing a global repair on the DAG.
-  * parent_link_metric(parent)  Returns the link metric of a parent
-  * parent_has_usable_link(parent) Returns 1 iff we have a usable link to this parent
-  * parent_is_acceptable(parent) Returns 1 iff the parent has a usable rank/link as defined by the OF
-  * parent_path_cost(parent) Returns the path cost of a parent
-  * rank_via_parent(parent) Returns our rank if we select a given parent as preferred parent
-  * parent_is_acceptable Returns 1 if a parent is usable as preferred parent, 0 otherwise
-  * best_parent(parent1, parent2) Compares two DAGs and returns the best one, according to the OF.
-  * update_metric_container() dao_ack_callback(parent, status)
+  * nbr_link_metric(n)  Returns the link metric of a neighbor
+  * nbr_has_usable_link(n) Returns 1 iff the neighbor has a usable link as defined by the OF
+  * nbr_is_acceptable_parent(n) Returns 1 iff the neighbor has a usable rank/link as defined by the OF
+  * nbr_path_cost(n) Returns the path cost of a neighbor
+  * rank_via_nbr(n) Returns our rank if we select a given neighbor as preferred parent
+  * best_parent(n1, n2) Compares two neighbors and returns the best one, according to the OF.
+  * update_metric_container() Updated the DAG metric container from the current OF state
   */
  struct rpl_of {
    void (*reset)(void);
-   uint16_t (*parent_link_metric)(rpl_parent_t *);
-   int (*parent_has_usable_link)(rpl_parent_t *);
-   int (*parent_is_acceptable)(rpl_parent_t *);
-   uint16_t (*parent_path_cost)(rpl_parent_t *);
-   rpl_rank_t (*rank_via_parent)(rpl_parent_t *);
-   rpl_parent_t *(*best_parent)(rpl_parent_t *, rpl_parent_t *);
+   uint16_t (*nbr_link_metric)(rpl_nbr_t *);
+   int (*nbr_has_usable_link)(rpl_nbr_t *);
+   int (*nbr_is_acceptable_parent)(rpl_nbr_t *);
+   uint16_t (*nbr_path_cost)(rpl_nbr_t *);
+   rpl_rank_t (*rank_via_nbr)(rpl_nbr_t *);
+   rpl_nbr_t *(*best_parent)(rpl_nbr_t *, rpl_nbr_t *);
    void (*update_metric_container)(void);
    rpl_ocp_t ocp;
  };
@@ -173,7 +172,7 @@ typedef struct rpl_parent rpl_parent_t;
 struct rpl_dag {
   uip_ipaddr_t dag_id;
   rpl_prefix_t prefix_info;
-  rpl_parent_t *preferred_parent;
+  rpl_nbr_t *preferred_parent;
   rpl_rank_t lowest_rank; /* The lowest rank seen in the current version */
   rpl_rank_t rank; /* The current rank */
   uint32_t lifetime;
@@ -195,10 +194,10 @@ struct rpl_dag {
   struct ctimer dio_timer;
   struct ctimer unicast_dio_timer;
   struct ctimer dao_timer;
-  rpl_parent_t *unicast_dio_target;
+  rpl_nbr_t *unicast_dio_target;
 #if RPL_WITH_PROBING
   struct ctimer probing_timer;
-  rpl_parent_t *urgent_probing_target;
+  rpl_nbr_t *urgent_probing_target;
 #endif /* RPL_WITH_PROBING */
 #if RPL_WITH_DAO_ACK
   uip_ipaddr_t dao_ack_target;

@@ -29,15 +29,15 @@
  * This file is part of the Contiki operating system.
  *
  * \file
- *	Header file for rpl-parent module
+ *	Header file for rpl-neighbor module
  * \author
  *	Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>,
  *  Simon DUquennoy <simon.duquennoy@inria.fr>
  *
  */
 
-#ifndef RPL_PARENT_H
-#define RPL_PARENT_H
+#ifndef RPL_NEIGHBOR_H
+#define RPL_NEIGHBOR_H
 
 /********** Includes **********/
 
@@ -54,114 +54,131 @@
 
 /********** Public symbols **********/
 
-/* Per-parent RPL information */
-NBR_TABLE_DECLARE(rpl_parents);
+/* Per-neighbor RPL information. According to RFC 6550, there exist three
+ * types of neighbors:
+ * - Candidate neighbor set: any neighbor, selected in an implementation
+ * and OF-specific way. The nodes in rpl_neighbors constitute the candidate neighbor set.
+ * - Parent set: the subset of the candidate neighbor set with rank below our rank
+ * - Preferred parent: one node of the parent set
+ */
+NBR_TABLE_DECLARE(rpl_neighbors);
 
 /********** Public functions **********/
 
 /**
- * Initialize rpl-dag-parent module
+ * Initialize rpl-dag-neighbor module
 */
-void rpl_parent_init(void);
+void rpl_neighbor_init(void);
+
+/**
+ * Tells whether a neighbor is in the parent set.
+ *
+ * \param nbr The neighbor to be tested
+ * \return 1 if nbr is in the parent set, 0 otherwise
+ */
+int rpl_neighbor_is_parent(rpl_nbr_t *nbr);
 
 /**
  * Set current RPL preferred parent and update DS6 default route accordingly
  *
- * \param p The new preferred parent
+ * \param nbr The new preferred parent
 */
-void rpl_parent_set_preferred(rpl_parent_t *p);
+void rpl_neighbor_set_preferred(rpl_nbr_t *nbr);
 
 /**
- * Tells wether we have fresh link information towards a given parent
+ * Tells wether we have fresh link information towards a given neighbor
  *
- * \param p The parent
+ * \param nbr The neighbor
  * \return 1 if we have fresh link information, 0 otherwise
 */
-int rpl_parent_is_fresh(rpl_parent_t *p);
+int rpl_neighbor_is_fresh(rpl_nbr_t *nbr);
 
 /**
- * Tells wether we a given parent is reachable
+ * Tells wether we a given neighbor is reachable
  *
- * \param p The parent
+ * \param nbr The neighbor
  * \return 1 if the parent is reachable, 0 otherwise
 */
-int rpl_parent_is_reachable(rpl_parent_t *p);
+int rpl_neighbor_is_reachable(rpl_nbr_t *nbr);
 
 /**
- * Returns a parent's link metric
+ * Returns a neighbor's link metric
  *
- * \param p The parent
+ * \param nbr The neighbor
  * \return The link metric if any, 0xffff otherwise
 */
-uint16_t rpl_parent_get_link_metric(rpl_parent_t *p);
+uint16_t rpl_neighbor_get_link_metric(rpl_nbr_t *nbr);
 
 /**
  * Returns our rank if selecting a given parent as preferred parent
  *
- * \param p The parent
+ * \param nbr The neighbor
  * \return The resulting rank if any, RPL_INFINITE_RANK otherwise
 */
-rpl_rank_t rpl_parent_rank_via_parent(rpl_parent_t *p);
+rpl_rank_t rpl_neighbor_rank_via_nbr(rpl_nbr_t *nbr);
 
 /**
- * Returns a parent's link-layer address
+ * Returns a neighbors's link-layer address
  *
- * \param p The parent
+ * \param nbr The neighbor
  * \return The link-layer address if any, NULL otherwise
 */
-const linkaddr_t *rpl_parent_get_lladdr(rpl_parent_t *p);
+const linkaddr_t *rpl_neighbor_get_lladdr(rpl_nbr_t *nbr);
 
 /**
- * Returns a parent's link statistics
+ * Returns a neighbor's link statistics
  *
- * \param p The parent
+ * \param nbr The neighbor
  * \return The link_stats structure address if any, NULL otherwise
 */
-const struct link_stats *rpl_parent_get_link_stats(rpl_parent_t *p);
+const struct link_stats *rpl_neighbor_get_link_stats(rpl_nbr_t *nbr);
 
 /**
- * Returns a parent's (link-local) IPv6 address
+ * Returns a neighbor's (link-local) IPv6 address
  *
- * \param p The parent
+ * \param nbr The neighbor
  * \return The link-local IPv6 address if any, NULL otherwise
 */
-uip_ipaddr_t *rpl_parent_get_ipaddr(rpl_parent_t *p);
+uip_ipaddr_t *rpl_neighbor_get_ipaddr(rpl_nbr_t *nbr);
 
 /**
- * Returns a parent from its link-layer address
+ * Returns a neighbor from its link-layer address
  *
  * \param addr The link-layer address
- * \return The parent if found, NULL otherwise
+ * \return Theneighbor if found, NULL otherwise
 */
-rpl_parent_t *rpl_parent_get_from_lladdr(uip_lladdr_t *addr);
+rpl_nbr_t *rpl_neighbor_get_from_lladdr(uip_lladdr_t *addr);
 
 /**
- * Returns a parent from its link-local IPv6 address
+ * Returns a neighbor from its link-local IPv6 address
  *
  * \param addr The link-local IPv6 address
- * \return The parent if found, NULL otherwise
+ * \return The neighbor if found, NULL otherwise
 */
-rpl_parent_t *rpl_parent_get_from_ipaddr(uip_ipaddr_t *addr);
+rpl_nbr_t *rpl_neighbor_get_from_ipaddr(uip_ipaddr_t *addr);
 
 /**
  * Prints a summary of all RPL neighbors and their properties
  *
  * \param str A descriptive text on the caller
 */
-void rpl_parent_print_list(const char *str);
+void rpl_neighbor_print_list(const char *str);
 
 /**
- * Empty the RPL parent table
+ * Empty the RPL neighbor table
 */
-void rpl_parent_remove_all(void);
+void rpl_neighbor_remove_all(void);
 
 /**
  * Returns the best candidate for preferred parent
  *
  * \return The best candidate, NULL if no usable parent is found
 */
-rpl_parent_t *rpl_parent_select_best(void);
+rpl_nbr_t *rpl_neighbor_select_best(void);
 
+typedef rpl_nbr_t rpl_parent_t;
+#define rpl_parent_get_from_ipaddr(addr) rpl_neighbor_get_from_ipaddr(addr)
+#define rpl_parent_get_ipaddr(nbr) rpl_neighbor_get_ipaddr(nbr)
  /** @} */
 
-#endif /* RPL_PARENT_H */
+#endif /* RPL_NEIGHBOR_H */

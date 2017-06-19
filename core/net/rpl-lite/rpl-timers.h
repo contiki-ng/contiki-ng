@@ -76,7 +76,7 @@ void rpl_timers_dio_reset(const char *str);
 /**
  * Schedule unicast DIO with no delay
 */
-void rpl_timers_schedule_unicast_dio(rpl_parent_t *target);
+void rpl_timers_schedule_unicast_dio(rpl_nbr_t *target);
 
 /**
  * Schedule a DAO with random delay based on RPL_DAO_DELAY

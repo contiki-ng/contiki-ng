@@ -550,7 +550,7 @@ rpl_icmp6_dao_output(uint8_t lifetime)
   int pos;
   uip_ipaddr_t *dest_ipaddr = NULL;
   const uip_ipaddr_t *prefix = rpl_get_global_address();
-  uip_ipaddr_t *parent_ipaddr = rpl_parent_get_ipaddr(curr_instance.dag.preferred_parent);
+  uip_ipaddr_t *parent_ipaddr = rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent);
 
   /* Make sure we're up-to-date before sending data out */
   rpl_dag_update_state();

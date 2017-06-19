@@ -156,7 +156,7 @@
 
 /*
  * RPL probing. When enabled, probes will be sent periodically to keep
- * parent link estimates up to date. Further configurable
+ * neighbor link estimates up to date. Further configurable
  * via RPL_CONF_PROBING_* flags
  */
 #ifdef RPL_CONF_WITH_PROBING
@@ -166,7 +166,7 @@
 #endif
 
 /*
- * Function used to select the next parent to be probed.
+ * Function used to select the next neighbor to be probed.
  */
 #ifdef RPL_CONF_PROBING_SELECT_FUNC
 #define RPL_PROBING_SELECT_FUNC RPL_CONF_PROBING_SELECT_FUNC

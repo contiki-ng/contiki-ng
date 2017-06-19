@@ -87,8 +87,8 @@ void
 rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
 {
   if(curr_instance.used == 1 ) {
-    rpl_parent_t *parent = rpl_parent_get_from_lladdr((uip_lladdr_t *)addr);
-    if(parent != NULL) {
+    rpl_nbr_t *nbr = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)addr);
+    if(nbr != NULL) {
       /* Link stats were updated, and we need to update our internal state.
       Updating from here is unsafe; postpone */
       rpl_timers_schedule_state_update();
@@ -174,7 +174,7 @@ rpl_init(void)
   uip_ds6_maddr_add(&rpl_multicast_addr);
 
   rpl_dag_init();
-  rpl_parent_init();
+  rpl_neighbor_init();
   rpl_timers_init();
   rpl_icmp6_init();
 

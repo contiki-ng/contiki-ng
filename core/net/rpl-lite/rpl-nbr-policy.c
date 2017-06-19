@@ -66,7 +66,7 @@
 static int num_parents;   /* all nodes that are possible parents */
 static int num_children;  /* all children that we have as nexthop */
 static int num_free;
-static linkaddr_t *worst_rank_nbr; /* the parent that has the worst rank */
+static linkaddr_t *worst_rank_nbr; /* the neighbor with the worst rank */
 static rpl_rank_t worst_rank;
 /*---------------------------------------------------------------------------*/
 #if DEBUG == DEBUG_FULL
@@ -95,8 +95,8 @@ node_is_child(uip_ipaddr_t *addr) {
 static void
 update_nbr(void)
 {
-  uip_ds6_nbr_t *nbr;
-  rpl_parent_t *parent;
+  uip_ds6_nbr_t *ds6_nbr;
+  rpl_nbr_t *rpl_nbr;
   int num_used;
   int is_used;
   rpl_rank_t rank;
@@ -115,32 +115,32 @@ update_nbr(void)
   num_parents = 0;
   num_children = 0;
 
-  nbr = nbr_table_head(ds6_neighbors);
-  while(nbr != NULL) {
-    linkaddr_t *lladdr = nbr_table_get_lladdr(ds6_neighbors, nbr);
+  ds6_nbr = nbr_table_head(ds6_neighbors);
+  while(ds6_nbr != NULL) {
+    linkaddr_t *lladdr = nbr_table_get_lladdr(ds6_neighbors, ds6_nbr);
     is_used = 0;
 
     /*
      * Check if this neighbor is used as nexthop and therefore being a
      * RPL child.
     */
-    if(node_is_child(&nbr->ipaddr) != 0) {
+    if(node_is_child(&ds6_nbr->ipaddr) != 0) {
       is_used++;
       num_children++;
     }
 
-    parent = rpl_parent_get_from_lladdr((uip_lladdr_t *)lladdr);
-    if(parent != NULL) {
+    rpl_nbr = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)lladdr);
+    if(rpl_nbr != NULL && rpl_neighbor_is_parent(rpl_nbr)) {
       num_parents++;
 
-      if(curr_instance.dag.preferred_parent == parent) {
+      if(curr_instance.dag.preferred_parent == rpl_nbr) {
         /*
          * This is the preferred parent for the DAG and must not be removed
          * Note: this assumes that only RPL adds default routes.
          */
       } else if(is_used == 0 && worst_rank < RPL_INFINITE_RANK &&
-                parent->rank > 0 &&
-                (rank = curr_instance.of->rank_via_parent(parent)) > worst_rank) {
+                rpl_nbr->rank > 0 &&
+                (rank = curr_instance.of->rank_via_nbr(rpl_nbr)) > worst_rank) {
         /* This is the worst-rank neighbor - this is a good candidate for removal */
         worst_rank = rank;
         worst_rank_nbr = lladdr;
@@ -155,7 +155,7 @@ update_nbr(void)
       worst_rank = RPL_INFINITE_RANK;
     }
 
-    nbr = nbr_table_next(ds6_neighbors, nbr);
+    ds6_nbr = nbr_table_next(ds6_neighbors, ds6_nbr);
     num_used++;
   }
   /* how many more IP neighbors can be have? */
@@ -187,7 +187,7 @@ find_removable_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
     return NULL;
   }
 
-  /* Add the new neighbor only if it is better than the worst parent. */
+  /* Add the new neighbor only if it is better than the current worst. */
   if(dio->rank + curr_instance.min_hoprankinc < worst_rank - curr_instance.min_hoprankinc / 2) {
     /* Found *great* neighbor - add! */
     PRINTF("RPL nbr-policy: DIO rank %u, worse_rank %u -- add to cache\n",

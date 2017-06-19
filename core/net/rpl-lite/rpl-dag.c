@@ -86,8 +86,8 @@ leave_dag(void)
   RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
   rpl_icmp6_dao_output(0);
 
-  /* Remove all parents/neighbors */
-  rpl_parent_remove_all();
+  /* Remove all neighbors */
+  rpl_neighbor_remove_all();
 
   rpl_timers_stop_dag_timers();
 
@@ -138,7 +138,7 @@ rpl_global_repair(void)
     PRINTF("RPL: initiating global repair (version=%u, rank=%u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
 #if DEBUG
-    rpl_parent_print_list("Global repair");
+    rpl_neighbor_print_list("Global repair");
 #endif
 
     /* Initiate global repair */
@@ -155,7 +155,7 @@ global_repair_non_root(rpl_dio_t *dio)
     PRINTF("RPL: participating in global repair (version=%u, rank=%u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
 #if DEBUG
-    rpl_parent_print_list("Global repair");
+    rpl_neighbor_print_list("Global repair");
 #endif
     /* Re-initialize configuration from DIO */
     init_dag_from_dio(dio);
@@ -169,7 +169,7 @@ rpl_local_repair(const char *str)
   if(curr_instance.used) { /* Check needed because this is a public function */
     PRINTF("RPL: local repair (%s)\n", str);
     curr_instance.of->reset(); /* Reset OF */
-    rpl_parent_remove_all(); /* Remove all neighbors/parents */
+    rpl_neighbor_remove_all(); /* Remove all neighbors */
     rpl_timers_dio_reset("Local repair"); /* Reset Trickle timer */
     rpl_timers_schedule_state_update();
   }
@@ -181,16 +181,16 @@ rpl_dag_update_state(void)
 {
   if(curr_instance.used) {
     if(!rpl_dag_root_is_root()) {
-      rpl_parent_t *old_parent = curr_instance.dag.preferred_parent;
+      rpl_nbr_t *old_parent = curr_instance.dag.preferred_parent;
       rpl_rank_t old_rank = curr_instance.dag.rank;
 
       /* Any scheduled state update is no longer needed */
       rpl_timers_unschedule_state_update();
 
       /* Select and set preferred parent */
-      rpl_parent_set_preferred(rpl_parent_select_best());
+      rpl_neighbor_set_preferred(rpl_neighbor_select_best());
       /* Update rank  */
-      curr_instance.dag.rank = rpl_parent_rank_via_parent(curr_instance.dag.preferred_parent);
+      curr_instance.dag.rank = rpl_neighbor_rank_via_nbr(curr_instance.dag.preferred_parent);
 
       if(old_parent == NULL || curr_instance.dag.rank < curr_instance.dag.lowest_rank) {
         /* This is a slight departure from RFC6550: if we had no preferred parent before,
@@ -202,7 +202,7 @@ rpl_dag_update_state(void)
       if(curr_instance.dag.preferred_parent != old_parent) {
         rpl_timers_schedule_dao();
 #if DEBUG
-        rpl_parent_print_list("Parent switch");
+        rpl_neighbor_print_list("Parent switch");
 #endif
       }
 
@@ -217,32 +217,32 @@ rpl_dag_update_state(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-static rpl_parent_t *
+static rpl_nbr_t *
 update_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
-  rpl_parent_t *p = NULL;
+  rpl_nbr_t *p = NULL;
   const uip_lladdr_t *lladdr;
 
-  p = rpl_parent_get_from_ipaddr(from);
-  /* Neighbor not in RPL parent table, add it */
+  p = rpl_neighbor_get_from_ipaddr(from);
+  /* Neighbor not in RPL neighbor table, add it */
   if(p == NULL) {
-    /* Is the parent known by ds6? Drop this request if not.
-     * Typically, the parent is added upon receiving a DIO. */
+    /* Is the neighbor known by ds6? Drop this request if not.
+     * Typically, the neighbor is added upon receiving a DIO. */
     lladdr = uip_ds6_nbr_lladdr_from_ipaddr(from);
     if(lladdr == NULL) {
       return NULL;
     }
 
     /* Add neighbor to RPL table */
-    p = nbr_table_add_lladdr(rpl_parents, (linkaddr_t *)lladdr,
+    p = nbr_table_add_lladdr(rpl_neighbors, (linkaddr_t *)lladdr,
                              NBR_TABLE_REASON_RPL_DIO, dio);
     if(p == NULL) {
-      PRINTF("RPL: failed to add parent\n");
+      PRINTF("RPL: failed to add neighbor\n");
       return NULL;
     }
   }
 
-  /* Update parent info from DIO */
+  /* Update neighbor info from DIO */
   p->rank = dio->rank;
   p->dtsn = dio->dtsn;
 #if RPL_WITH_MC
@@ -255,7 +255,7 @@ update_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 static void
 process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
-  rpl_parent_t *p;
+  rpl_nbr_t *p;
   uint8_t last_dtsn;
 
   /* Does the rank make sense at all? */
@@ -277,8 +277,8 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   }
 
   /* The DIO has a newer version: global repair.
-   * Must come first, as it might remove all parents, and we then need
-   * to re-add this source of the DIO to the parent table */
+   * Must come first, as it might remove all neighbors, and we then need
+   * to re-add this source of the DIO to the neighbor table */
   if(rpl_lollipop_greater_than(dio->version, curr_instance.dag.version)) {
     if(curr_instance.dag.rank == ROOT_RANK) { /* The root should not hear newer versions */
       PRINTF("RPL: inconsistent DIO version (current: %u, received: %u), initiate global repair\n",
@@ -298,12 +298,12 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
     return;
   }
 
-  /* Add neighbor to RPL parent table */
-  p = rpl_parent_get_from_ipaddr(from);
+  /* Add neighbor to RPL neighbor table */
+  p = rpl_neighbor_get_from_ipaddr(from);
   last_dtsn = p != NULL ? p->dtsn : RPL_LOLLIPOP_INIT;
 
   if(!update_nbr_from_dio(from, dio)) {
-    PRINTF("RPL: parent table full, dropping DIO\n");
+    PRINTF("RPL: neighbor table full, dropping DIO\n");
     return;
   }
 
@@ -503,7 +503,7 @@ rpl_process_dao_ack(uint8_t sequence, uint8_t status)
 #endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
 int
-rpl_process_hbh(rpl_parent_t *sender, uint16_t sender_rank, int loop_detected, int rank_error_signaled)
+rpl_process_hbh(rpl_nbr_t *sender, uint16_t sender_rank, int loop_detected, int rank_error_signaled)
 {
   int drop = 0;
 
@@ -586,7 +586,7 @@ void
 rpl_dag_init(void)
 {
   memset(&curr_instance, 0, sizeof(curr_instance));
-  rpl_parent_init();
+  rpl_neighbor_init();
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

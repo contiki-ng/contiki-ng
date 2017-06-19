@@ -57,7 +57,7 @@ void RPL_CALLBACK_NEW_DIO_INTERVAL(uint8_t dio_interval);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 
 #ifdef RPL_PROBING_SELECT_FUNC
-rpl_parent_t *RPL_PROBING_SELECT_FUNC(void);
+rpl_nbr_t *RPL_PROBING_SELECT_FUNC(void);
 #endif /* RPL_PROBING_SELECT_FUNC */
 
 #ifdef RPL_PROBING_DELAY_FUNC
@@ -191,7 +191,7 @@ handle_dio_timer(void *ptr)
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void
-rpl_timers_schedule_unicast_dio(rpl_parent_t *target)
+rpl_timers_schedule_unicast_dio(rpl_nbr_t *target)
 {
   if(curr_instance.used) {
     curr_instance.dag.unicast_dio_target = target;
@@ -202,7 +202,7 @@ rpl_timers_schedule_unicast_dio(rpl_parent_t *target)
 static void
 handle_unicast_dio_timer(void *ptr)
 {
-  uip_ipaddr_t *target_ipaddr = rpl_parent_get_ipaddr(curr_instance.dag.unicast_dio_target);
+  uip_ipaddr_t *target_ipaddr = rpl_neighbor_get_ipaddr(curr_instance.dag.unicast_dio_target);
   if(target_ipaddr != NULL) {
     rpl_icmp6_dio_output(target_ipaddr);
   }
@@ -276,7 +276,7 @@ handle_dao_timer(void *ptr)
     }
     /* We need to re-send the last DAO */
     if(curr_instance.dag.dao_transmissions >= RPL_DAO_MAX_RETRANSMISSIONS) {
-      /* No more retransmissions. Perform local repair and hope to find another parent. */
+      /* No more retransmissions. Perform local repair and hope to find another . */
       rpl_local_repair("DAO max rtx");
       return;
     }
@@ -334,18 +334,18 @@ get_probing_delay(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-rpl_parent_t *
+rpl_nbr_t *
 get_probing_target(void)
 {
   /* Returns the next probing target. The current implementation probes the urgent
    * probing target if any, or the preferred parent if its link statistics need refresh.
    * Otherwise, it picks at random between:
-   * (1) selecting the best parent with non-fresh link statistics
-   * (2) selecting the least recently updated parent
+   * (1) selecting the best neighbor with non-fresh link statistics
+   * (2) selecting the least recently updated neighbor
    */
 
-  rpl_parent_t *p;
-  rpl_parent_t *probing_target = NULL;
+  rpl_nbr_t *nbr;
+  rpl_nbr_t *probing_target = NULL;
   rpl_rank_t probing_target_rank = RPL_INFINITE_RANK;
   clock_time_t probing_target_age = 0;
   clock_time_t clock_now = clock_time();
@@ -360,40 +360,40 @@ get_probing_target(void)
   }
 
   /* The preferred parent needs probing */
-  if(curr_instance.dag.preferred_parent != NULL && !rpl_parent_is_fresh(curr_instance.dag.preferred_parent)) {
+  if(curr_instance.dag.preferred_parent != NULL && !rpl_neighbor_is_fresh(curr_instance.dag.preferred_parent)) {
     return curr_instance.dag.preferred_parent;
   }
 
-  /* With 50% probability: probe best non-fresh parent */
+  /* With 50% probability: probe best non-fresh neighbor */
   if(random_rand() % 2 == 0) {
-    p = nbr_table_head(rpl_parents);
-    while(p != NULL) {
-      if(!rpl_parent_is_fresh(p)) {
+    nbr = nbr_table_head(rpl_neighbors);
+    while(nbr != NULL) {
+      if(!rpl_neighbor_is_fresh(nbr)) {
         /* p is in our dag and needs probing */
-        rpl_rank_t p_rank = rpl_parent_rank_via_parent(p);
+        rpl_rank_t p_rank = rpl_neighbor_rank_via_nbr(nbr);
         if(probing_target == NULL
             || p_rank < probing_target_rank) {
-          probing_target = p;
+          probing_target = nbr;
           probing_target_rank = p_rank;
         }
       }
-      p = nbr_table_next(rpl_parents, p);
+      nbr = nbr_table_next(rpl_neighbors, nbr);
     }
   }
 
-  /* If we still do not have a probing target: pick the least recently updated parent */
+  /* If we still do not have a probing target: pick the least recently updated neighbor */
   if(probing_target == NULL) {
-    p = nbr_table_head(rpl_parents);
-    while(p != NULL) {
-      const struct link_stats *stats =rpl_parent_get_link_stats(p);
+    nbr = nbr_table_head(rpl_neighbors);
+    while(nbr != NULL) {
+      const struct link_stats *stats =rpl_neighbor_get_link_stats(nbr);
       if(stats != NULL) {
         if(probing_target == NULL
             || clock_now - stats->last_tx_time > probing_target_age) {
-          probing_target = p;
+          probing_target = nbr;
           probing_target_age = clock_now - stats->last_tx_time;
         }
       }
-      p = nbr_table_next(rpl_parents, p);
+      nbr = nbr_table_next(rpl_neighbors, nbr);
     }
   }
 
@@ -403,15 +403,15 @@ get_probing_target(void)
 static void
 handle_probing_timer(void *ptr)
 {
-  rpl_parent_t *probing_target = RPL_PROBING_SELECT_FUNC();
-  uip_ipaddr_t *target_ipaddr = rpl_parent_get_ipaddr(probing_target);
+  rpl_nbr_t *probing_target = RPL_PROBING_SELECT_FUNC();
+  uip_ipaddr_t *target_ipaddr = rpl_neighbor_get_ipaddr(probing_target);
 
   /* Perform probing */
   if(target_ipaddr != NULL) {
-    const struct link_stats *stats = rpl_parent_get_link_stats(probing_target);
+    const struct link_stats *stats = rpl_neighbor_get_link_stats(probing_target);
     (void)stats;
     PRINTF("RPL: probing %u %s last tx %u min ago\n",
-        rpl_parent_get_lladdr(probing_target)->u8[7],
+        rpl_neighbor_get_lladdr(probing_target)->u8[7],
         curr_instance.dag.urgent_probing_target != NULL ? "(urgent)" : "",
         probing_target != NULL ?
         (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
@@ -461,7 +461,7 @@ handle_periodic_timer(void *ptr)
   ctimer_reset(&periodic_timer);
 
 #if DEBUG
-    rpl_parent_print_list("Periodic");
+    rpl_neighbor_print_list("Periodic");
 #endif
 }
 /*---------------------------------------------------------------------------*/

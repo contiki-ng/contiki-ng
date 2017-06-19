@@ -363,7 +363,7 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
   int loop_detected;
   uint16_t sender_rank;
   uint8_t sender_closer;
-  rpl_parent_t *sender;
+  rpl_nbr_t *sender;
 
   if(UIP_HBHO_BUF->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
       || UIP_EXT_HDR_OPT_RPL_BUF->opt_type != UIP_EXT_HDR_OPT_RPL
@@ -388,7 +388,7 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
 
   down = (UIP_EXT_HDR_OPT_RPL_BUF->flags & RPL_HDR_OPT_DOWN) ? 1 : 0;
   sender_rank = UIP_HTONS(UIP_EXT_HDR_OPT_RPL_BUF->senderrank);
-  sender = nbr_table_get_from_lladdr(rpl_parents, packetbuf_addr(PACKETBUF_ADDR_SENDER));
+  sender = nbr_table_get_from_lladdr(rpl_neighbors, packetbuf_addr(PACKETBUF_ADDR_SENDER));
   rank_error_signaled = (UIP_EXT_HDR_OPT_RPL_BUF->flags & RPL_HDR_OPT_RANK_ERR) ? 1 : 0;
   sender_closer = sender_rank < curr_instance.dag.rank;
   loop_detected = (down && !sender_closer) || (!down && sender_closer);

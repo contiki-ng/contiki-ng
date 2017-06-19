@@ -49,7 +49,7 @@
 #include "rpl-dag.h"
 #include "rpl-ns.h"
 #include "rpl-dag-root.h"
-#include "rpl-parent.h"
+#include "rpl-neighbor.h"
 #include "rpl-ext-header.h"
 #include "rpl-timers.h"
 

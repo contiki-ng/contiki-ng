@@ -114,9 +114,8 @@ void rpl_icmp6_dis_output(uip_ipaddr_t *addr);
 void rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr);
 
 /**
- * Creates an ICMPv6 DAO packet and sends it to the root via the
- * current preferred parent, advertising the current preferred parent,
- * and with our global address as prefix.
+ * Creates an ICMPv6 DAO packet and sends it to the root, advertising the
+ * current preferred parent, and with our global address as prefix.
  *
  * \param lifetime The DAO lifetime. Use 0 to send a No-path DAO
 */

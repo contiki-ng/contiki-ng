@@ -74,13 +74,13 @@
 #endif /* RPL_OF0_CONF_SR */
 
 #if RPL_OF0_FIXED_SR
-#define STEP_OF_RANK(p)       (3)
+#define STEP_OF_RANK(nbr)       (3)
 #endif /* RPL_OF0_FIXED_SR */
 
 #if RPL_OF0_ETX_BASED_SR
 /* Numbers suggested by P. Thubert for in the 6TiSCH WG. Anything that maps ETX to
  * a step between 1 and 9 works. */
-#define STEP_OF_RANK(p)       (((3 * parent_link_metric(p)) / LINK_STATS_ETX_DIVISOR) - 2)
+#define STEP_OF_RANK(nbr)       (((3 * nbr_link_metric(nbr)) / LINK_STATS_ETX_DIVISOR) - 2)
 #endif /* RPL_OF0_ETX_BASED_SR */
 
 /*---------------------------------------------------------------------------*/
@@ -91,91 +91,91 @@ reset(void)
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_link_metric(rpl_parent_t *p)
+nbr_link_metric(rpl_nbr_t *nbr)
 {
   /* OF0 operates without metric container; the only metric we have is ETX */
-  const struct link_stats *stats = rpl_parent_get_link_stats(p);
+  const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
   return stats != NULL ? stats->etx : 0xffff;
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_rank_increase(rpl_parent_t *p)
+nbr_rank_increase(rpl_nbr_t *nbr)
 {
   uint16_t min_hoprankinc;
-  if(p == NULL) {
+  if(nbr == NULL) {
     return RPL_INFINITE_RANK;
   }
   min_hoprankinc = curr_instance.min_hoprankinc;
-  return (RANK_FACTOR * STEP_OF_RANK(p) + RANK_STRETCH) * min_hoprankinc;
+  return (RANK_FACTOR * STEP_OF_RANK(nbr) + RANK_STRETCH) * min_hoprankinc;
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_path_cost(rpl_parent_t *p)
+nbr_path_cost(rpl_nbr_t *nbr)
 {
-  if(p == NULL) {
+  if(nbr == NULL) {
     return 0xffff;
   }
   /* path cost upper bound: 0xffff */
-  return MIN((uint32_t)p->rank + parent_link_metric(p), 0xffff);
+  return MIN((uint32_t)nbr->rank + nbr_link_metric(nbr), 0xffff);
 }
 /*---------------------------------------------------------------------------*/
 static rpl_rank_t
-rank_via_parent(rpl_parent_t *p)
+rank_via_nbr(rpl_nbr_t *nbr)
 {
-  if(p == NULL) {
+  if(nbr == NULL) {
     return RPL_INFINITE_RANK;
   } else {
-    return MIN((uint32_t)p->rank + parent_rank_increase(p), RPL_INFINITE_RANK);
+    return MIN((uint32_t)nbr->rank + nbr_rank_increase(nbr), RPL_INFINITE_RANK);
   }
 }
 /*---------------------------------------------------------------------------*/
 static int
-parent_is_acceptable(rpl_parent_t *p)
+nbr_has_usable_link(rpl_nbr_t *nbr)
 {
-  return STEP_OF_RANK(p) >= MIN_STEP_OF_RANK
-      && STEP_OF_RANK(p) <= MAX_STEP_OF_RANK;
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
 static int
-parent_has_usable_link(rpl_parent_t *p)
+nbr_is_acceptable_parent(rpl_nbr_t *nbr)
 {
-  return parent_is_acceptable(p);
+  return STEP_OF_RANK(nbr) >= MIN_STEP_OF_RANK
+      && STEP_OF_RANK(nbr) <= MAX_STEP_OF_RANK;
 }
 /*---------------------------------------------------------------------------*/
-static rpl_parent_t *
-best_parent(rpl_parent_t *p1, rpl_parent_t *p2)
+static rpl_nbr_t *
+best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
 {
-  uint16_t p1_cost;
-  uint16_t p2_cost;
-  int p1_is_acceptable;
-  int p2_is_acceptable;
+  uint16_t nbr1_cost;
+  uint16_t nbr2_cost;
+  int nbr1_is_acceptable;
+  int nbr2_is_acceptable;
 
-  p1_is_acceptable = p1 != NULL && parent_is_acceptable(p1);
-  p2_is_acceptable = p2 != NULL && parent_is_acceptable(p2);
+  nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
+  nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
 
-  if(!p1_is_acceptable) {
-    return p2_is_acceptable ? p2 : NULL;
+  if(!nbr1_is_acceptable) {
+    return nbr2_is_acceptable ? nbr2 : NULL;
   }
-  if(!p2_is_acceptable) {
-    return p1_is_acceptable ? p1 : NULL;
+  if(!nbr2_is_acceptable) {
+    return nbr1_is_acceptable ? nbr1 : NULL;
   }
 
-  p1_cost = parent_path_cost(p1);
-  p2_cost = parent_path_cost(p2);
+  nbr1_cost = nbr_path_cost(nbr1);
+  nbr2_cost = nbr_path_cost(nbr2);
 
   /* Paths costs coarse-grained (multiple of min_hoprankinc), we operate without hysteresis */
-  if(p1_cost != p2_cost) {
-    /* Pick parent with lowest path cost */
-    return p1_cost < p2_cost ? p1 : p2;
+  if(nbr1_cost != nbr2_cost) {
+    /* Pick nbr with lowest path cost */
+    return nbr1_cost < nbr2_cost ? nbr1 : nbr2;
   } else {
     /* We have a tie! */
     /* Stik to current preferred parent if possible */
-    if(p1 == curr_instance.dag.preferred_parent || p2 == curr_instance.dag.preferred_parent) {
+    if(nbr1 == curr_instance.dag.preferred_parent || nbr2 == curr_instance.dag.preferred_parent) {
       return curr_instance.dag.preferred_parent;
     }
     /* None of the nodes is the current preferred parent,
-     * choose parent with best link metric */
-    return parent_link_metric(p1) < parent_link_metric(p2) ? p1 : p2;
+     * choose nbr with best link metric */
+    return nbr_link_metric(nbr1) < nbr_link_metric(nbr2) ? nbr1 : nbr2;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -187,11 +187,11 @@ update_metric_container(void)
 /*---------------------------------------------------------------------------*/
 rpl_of_t rpl_of0 = {
   reset,
-  parent_link_metric,
-  parent_has_usable_link,
-  parent_is_acceptable,
-  parent_path_cost,
-  rank_via_parent,
+  nbr_link_metric,
+  nbr_has_usable_link,
+  nbr_is_acceptable_parent,
+  nbr_path_cost,
+  rank_via_nbr,
   best_parent,
   update_metric_container,
   RPL_OCP_OF0

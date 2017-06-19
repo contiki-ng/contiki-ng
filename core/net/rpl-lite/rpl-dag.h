@@ -114,7 +114,7 @@ rpl_dag_t *rpl_get_any_dag(void);
  * \param rank_error_signaled 1 if the HBH header advertises a rank error, 0 otherwise
  * \return 1 if the packet is to be forwarded, 0 if it is to be dropped
 */
-int rpl_process_hbh(rpl_parent_t *sender, uint16_t sender_rank, int loop_detected, int rank_error_signaled);
+int rpl_process_hbh(rpl_nbr_t *sender, uint16_t sender_rank, int loop_detected, int rank_error_signaled);
 
 /**
  * Processes incoming DIS
@@ -149,9 +149,8 @@ void rpl_process_dao(uip_ipaddr_t *from, rpl_dao_t *dao);
 void rpl_process_dao_ack(uint8_t sequence, uint8_t status);
 
 /**
- * Updates RPL interl state from neighbor/parent tables:
- * selects preferred parent, updated rank & metreic container,
- * triggers control traffic accordingly and updates uIP6 internal state.
+ * Updates RPL internal state: selects preferred parent, updates rank & metreic
+ * container, triggers control traffic accordingly and updates uIP6 internal state.
 */
 void rpl_dag_update_state(void);
 

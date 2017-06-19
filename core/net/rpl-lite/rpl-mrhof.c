@@ -96,9 +96,9 @@ reset(void)
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_link_metric(rpl_parent_t *p)
+nbr_link_metric(rpl_nbr_t *nbr)
 {
-  const struct link_stats *stats = rpl_parent_get_link_stats(p);
+  const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
   if(stats != NULL) {
 #if RPL_MRHOF_SQUARED_ETX
     uint32_t squared_etx = ((uint32_t)stats->etx * stats->etx) / LINK_STATS_ETX_DIVISOR;
@@ -111,11 +111,11 @@ parent_link_metric(rpl_parent_t *p)
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_path_cost(rpl_parent_t *p)
+nbr_path_cost(rpl_nbr_t *nbr)
 {
   uint16_t base;
 
-  if(p == NULL) {
+  if(nbr == NULL) {
     return 0xffff;
   }
 
@@ -123,87 +123,86 @@ parent_path_cost(rpl_parent_t *p)
   /* Handle the different MC types */
   switch(curr_instance.mc.type) {
     case RPL_DAG_MC_ETX:
-      base = p->mc.obj.etx;
+      base = nbr->mc.obj.etx;
       break;
     case RPL_DAG_MC_ENERGY:
-      base = p->mc.obj.energy.energy_est << 8;
+      base = nbr->mc.obj.energy.energy_est << 8;
       break;
     default:
-      base = p->rank;
+      base = nbr->rank;
       break;
   }
 #else /* RPL_WITH_MC */
-  base = p->rank;
+  base = nbr->rank;
 #endif /* RPL_WITH_MC */
 
   /* path cost upper bound: 0xffff */
-  return MIN((uint32_t)base + parent_link_metric(p), 0xffff);
+  return MIN((uint32_t)base + nbr_link_metric(nbr), 0xffff);
 }
 /*---------------------------------------------------------------------------*/
 static rpl_rank_t
-rank_via_parent(rpl_parent_t *p)
+rank_via_nbr(rpl_nbr_t *nbr)
 {
   uint16_t min_hoprankinc;
   uint16_t path_cost;
 
-  if(p == NULL) {
+  if(nbr == NULL) {
     return RPL_INFINITE_RANK;
   }
 
   min_hoprankinc = curr_instance.min_hoprankinc;
-  path_cost = parent_path_cost(p);
+  path_cost = nbr_path_cost(nbr);
 
-  /* Rank lower-bound: parent rank + min_hoprankinc */
-  return MAX(MIN((uint32_t)p->rank + min_hoprankinc, RPL_INFINITE_RANK), path_cost);
+  /* Rank lower-bound: nbr rank + min_hoprankinc */
+  return MAX(MIN((uint32_t)nbr->rank + min_hoprankinc, RPL_INFINITE_RANK), path_cost);
 }
 /*---------------------------------------------------------------------------*/
 static int
-parent_is_acceptable(rpl_parent_t *p)
+nbr_has_usable_link(rpl_nbr_t *nbr)
 {
-  uint16_t link_metric = parent_link_metric(p);
-  uint16_t path_cost = parent_path_cost(p);
-  /* Exclude links with too high link metrics or path cost (RFC6719, 3.2.2) */
-  return link_metric <= MAX_LINK_METRIC && path_cost <= MAX_PATH_COST;
-}
-/*---------------------------------------------------------------------------*/
-static int
-parent_has_usable_link(rpl_parent_t *p)
-{
-  uint16_t link_metric = parent_link_metric(p);
+  uint16_t link_metric = nbr_link_metric(nbr);
   /* Exclude links with too high link metrics  */
   return link_metric <= MAX_LINK_METRIC;
 }
 /*---------------------------------------------------------------------------*/
-static rpl_parent_t *
-best_parent(rpl_parent_t *p1, rpl_parent_t *p2)
+static int
+nbr_is_acceptable_parent(rpl_nbr_t *nbr)
 {
-  uint16_t p1_cost;
-  uint16_t p2_cost;
-  int p1_is_acceptable;
-  int p2_is_acceptable;
+  uint16_t path_cost = nbr_path_cost(nbr);
+  /* Exclude links with too high link metrics or path cost (RFC6719, 3.2.2) */
+  return nbr_has_usable_link(nbr) && path_cost <= MAX_PATH_COST;
+}
+/*---------------------------------------------------------------------------*/
+static rpl_nbr_t *
+best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
+{
+  uint16_t nbr1_cost;
+  uint16_t nbr2_cost;
+  int nbr1_is_acceptable;
+  int nbr2_is_acceptable;
 
-  p1_is_acceptable = p1 != NULL && parent_is_acceptable(p1);
-  p2_is_acceptable = p2 != NULL && parent_is_acceptable(p2);
+  nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
+  nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
 
-  if(!p1_is_acceptable) {
-    return p2_is_acceptable ? p2 : NULL;
+  if(!nbr1_is_acceptable) {
+    return nbr2_is_acceptable ? nbr2 : NULL;
   }
-  if(!p2_is_acceptable) {
-    return p1_is_acceptable ? p1 : NULL;
+  if(!nbr2_is_acceptable) {
+    return nbr1_is_acceptable ? nbr1 : NULL;
   }
 
-  p1_cost = parent_path_cost(p1);
-  p2_cost = parent_path_cost(p2);
+  nbr1_cost = nbr_path_cost(nbr1);
+  nbr2_cost = nbr_path_cost(nbr2);
 
   /* Maintain stability of the preferred parent in case of similar ranks. */
-  if(p1 == curr_instance.dag.preferred_parent || p2 == curr_instance.dag.preferred_parent) {
-    if(p1_cost < p2_cost + PARENT_SWITCH_THRESHOLD &&
-       p1_cost > p2_cost - PARENT_SWITCH_THRESHOLD) {
+  if(nbr1 == curr_instance.dag.preferred_parent || nbr2 == curr_instance.dag.preferred_parent) {
+    if(nbr1_cost < nbr2_cost + PARENT_SWITCH_THRESHOLD &&
+       nbr1_cost > nbr2_cost - PARENT_SWITCH_THRESHOLD) {
       return curr_instance.dag.preferred_parent;
     }
   }
 
-  return p1_cost < p2_cost ? p1 : p2;
+  return nbr1_cost < nbr2_cost ? nbr1 : nbr2;
 }
 /*---------------------------------------------------------------------------*/
 #if !RPL_WITH_MC
@@ -232,7 +231,7 @@ update_metric_container(void)
     curr_instance.mc.prec = 0;
     path_cost = curr_instance.dag.rank;
   } else {
-    path_cost = parent_path_cost(curr_instance.dag.preferred_parent);
+    path_cost = nbr_path_cost(curr_instance.dag.preferred_parent);
   }
 
   /* Handle the different MC types */
@@ -263,11 +262,11 @@ update_metric_container(void)
 /*---------------------------------------------------------------------------*/
 rpl_of_t rpl_mrhof = {
   reset,
-  parent_link_metric,
-  parent_has_usable_link,
-  parent_is_acceptable,
-  parent_path_cost,
-  rank_via_parent,
+  nbr_link_metric,
+  nbr_has_usable_link,
+  nbr_is_acceptable_parent,
+  nbr_path_cost,
+  rank_via_nbr,
   best_parent,
   update_metric_container,
   RPL_OCP_MRHOF
