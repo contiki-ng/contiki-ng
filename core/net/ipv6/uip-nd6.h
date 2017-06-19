@@ -100,7 +100,9 @@
 /* Neighbor not found in cache? Derive its link-layer address from it's
 link-local IPv6, assuming it used autoconfiguration. This is not
 standard-compliant but this is a convenient way to keep the
-neighbor cache out of the way in cases ND is not used */
+neighbor cache out of the way in cases ND is not used.
+Note that this is not standard-compliant (RFC 4861), as neighbors will
+be added regardless of their reachability and liveness.  */
 #define UIP_ND6_AUTOFILL_NBR_CACHE          0
 #else
 #define UIP_ND6_AUTOFILL_NBR_CACHE UIP_CONF_ND6_AUTOFILL_NBR_CACHE

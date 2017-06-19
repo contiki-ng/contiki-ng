@@ -170,8 +170,8 @@
 #define UIP_CONF_ND6_SEND_RA (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL)
 #endif /* UIP_CONF_ND6_SEND_RA */
 
-/* UIP_CONF_ND6_SEND_NS enables standard IPv6 Neighbor Discovery Protocol.
-   We enable it by default when IPv6 is used without RPL.
+/* UIP_CONF_ND6_SEND_NS enables standard IPv6 Neighbor Discovery Protocol
+   (RFC 4861). We enable it by default when IPv6 is used without RPL.
    With RPL, the neighbor cache (link-local IPv6 <-> MAC address mapping)
    is fed whenever receiving DIO. This is often sufficient
    for RPL routing, i.e. to send to the preferred parent or any child.
@@ -179,7 +179,7 @@
    we never receive any DIO from them. This may happen if the link from the
    neighbor to us is weak, if DIO transmissions are suppressed (Trickle
    timer) or if the neighbor chooses not to transmit DIOs because it is
-   a leaf node or for any reason.*/
+   a leaf node or for any reason. */
 #ifndef UIP_CONF_ND6_SEND_NS
 #define UIP_CONF_ND6_SEND_NS (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL)
 #endif /* UIP_CONF_ND6_SEND_NS */
@@ -187,8 +187,10 @@
    enable UIP_CONF_ND6_AUTOFILL_NBR_CACHE. When a node does not the link-layer
    address of a neighbor, it will infer it from the link-local IPv6, assuming
    the node used autoconfiguration. Note that RPL uses its own freshness
-   mechanism to select whether neighbors are sitll usable as a parent
-   or not, regardless of the neighbor cache. */
+   mechanism to select whether neighbors are still usable as a parent
+   or not, regardless of the neighbor cache. Note that this is not
+   standard-compliant (RFC 4861), as neighbors will be added regardless of
+   their reachability and liveness. */
 #ifndef UIP_CONF_ND6_AUTOFILL_NBR_CACHE
 #define UIP_CONF_ND6_AUTOFILL_NBR_CACHE (!UIP_CONF_ND6_SEND_NS)
 #endif /* UIP_CONF_ND6_AUTOFILL_NBR_CACHE */
