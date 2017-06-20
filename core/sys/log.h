@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Swedish Institute of Computer Science.
+ * Copyright (c) 2017, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #define LOG_LEVEL_ERR          1 /* Errors */
 #define LOG_LEVEL_WARN         2 /* Warnings */
 #define LOG_LEVEL_INFO         3 /* Basic info */
-#define LOG_LEVEL_DDG          4 /* Detailled debug */
+#define LOG_LEVEL_DBG          4 /* Detailled debug */
 #define LOG_LEVEL_ANNOTATE     5 /* Cooja annotations */
 
 /* Prefix all logs with file name and line-of-code */
@@ -119,23 +119,23 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #define LOG_ERR(...)           LOG(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN(...)          LOG(LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_INFO(...)          LOG(LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_DBG(...)           LOG(LOG_LEVEL_DDG, __VA_ARGS__)
+#define LOG_DBG(...)           LOG(LOG_LEVEL_DBG, __VA_ARGS__)
 
 #define LOG_ERR_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN_LLADDR(...)   LOG_LLADDR(LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_INFO_LLADDR(...)   LOG_LLADDR(LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_DBG_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_DDG, __VA_ARGS__)
+#define LOG_DBG_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
 #define LOG_ERR_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_INFO_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DDG, __VA_ARGS__)
+#define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
 /* For testing log level */
 #define LOG_ERR_ENABLED        (LOG_LEVEL >= LOG_LEVEL_ERR)
 #define LOG_WARN_ENABLED       (LOG_LEVEL >= LOG_LEVEL_WARN)
 #define LOG_INFO_ENABLED       (LOG_LEVEL >= LOG_LEVEL_INFO)
-#define LOG_DBG_ENABLED        (LOG_LEVEL >= LOG_LEVEL_DDG)
+#define LOG_DBG_ENABLED        (LOG_LEVEL >= LOG_LEVEL_DBG)
 #define LOG_ANNOTATE_ENABLED   (LOG_LEVEL >= LOG_LEVEL_ANNOTATE)
 
 #endif /* __LOG_H__ */

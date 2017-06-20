@@ -361,9 +361,9 @@ tsch_packet_parse_eb(const uint8_t *buf, int buf_size,
     LOG_ERR("! parse_eb: frame is not a valid TSCH beacon. Frame version %u, type %u, FCF %02x %02x\n",
            frame->fcf.frame_version, frame->fcf.frame_type, buf[0], buf[1]);
     LOG_ERR("! parse_eb: frame was from 0x%x/", frame->src_pid);
-    LOG_ERR_LLADDR((const uip_lladdr_t *)&frame->src_addr);
+    LOG_ERR_LLADDR((const linkaddr_t *)&frame->src_addr);
     LOG_ERR(" to 0x%x/", frame->dest_pid);
-    LOG_ERR_LLADDR((const uip_lladdr_t *)&frame->dest_addr);
+    LOG_ERR_LLADDR((const linkaddr_t *)&frame->dest_addr);
     LOG_ERR("\n");
     return 0;
   }

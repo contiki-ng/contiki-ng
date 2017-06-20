@@ -626,7 +626,7 @@ send_data(struct websocket *s, const void *data,
 
   if(datalen > sizeof(buf) - 4 - 4) {
     LOG_ERR("trying to send too large data chunk %d > %d\n",
-           datalen, sizeof(buf) - 4 - 4);
+           datalen, (int)sizeof(buf) - 4 - 4);
     return -1;
   }
 

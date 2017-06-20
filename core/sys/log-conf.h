@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Swedish Institute of Computer Science.
+* Copyright (c) 2017, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,8 +61,12 @@
 #endif /* TCPIP_LOG_LEVEL */
 
 #ifndef MAC_LOG_LEVEL
-#define MAC_LOG_LEVEL                         LOG_LEVEL_WARN
+#define MAC_LOG_LEVEL                         LOG_LEVEL_NONE
 #endif /* MAC_LOG_LEVELL */
+
+#ifndef FRAMER_LOG_LEVEL
+#define FRAMER_LOG_LEVEL                      LOG_LEVEL_NONE
+#endif /* FRAMER_LOG_LEVEL */
 
 #endif /* __LOG_CONF_H__ */
 
