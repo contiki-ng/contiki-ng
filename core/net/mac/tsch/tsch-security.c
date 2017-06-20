@@ -53,13 +53,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
-#define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
-
 /* The two keys K1 and K2 from 6TiSCH minimal configuration
  * K1: well-known, used for EBs
  * K2: secret, used for data and ACK

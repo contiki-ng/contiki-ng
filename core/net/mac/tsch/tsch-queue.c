@@ -52,15 +52,12 @@
 #include "net/mac/tsch/tsch-queue.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch-slot-operation.h"
-#include "net/mac/tsch/tsch-log.h"
 #include <string.h>
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
-#define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE_STR "TSCH Queue"
+#define LOG_LEVEL MAC_LOG_LEVEL
 
 /* Check if TSCH_QUEUE_NUM_PER_NEIGHBOR is power of two */
 #if (TSCH_QUEUE_NUM_PER_NEIGHBOR & (TSCH_QUEUE_NUM_PER_NEIGHBOR - 1)) != 0
@@ -155,7 +152,7 @@ tsch_queue_update_time_source(const linkaddr_t *new_addr)
       }
 
       if(new_time_src != old_time_src) {
-        PRINTF("TSCH: update time source: %u -> %u\n",
+        LOG_INFO("update time source: %u -> %u\n",
                TSCH_LOG_ID_FROM_LINKADDR(old_time_src ? &old_time_src->addr : NULL),
                TSCH_LOG_ID_FROM_LINKADDR(new_time_src ? &new_time_src->addr : NULL));
 
@@ -195,13 +192,13 @@ tsch_queue_flush_nbr_queue(struct tsch_neighbor *n)
     if(p != NULL) {
       /* Set return status for packet_sent callback */
       p->ret = MAC_TX_ERR;
-      PRINTF("TSCH-queue:! flushing packet\n");
+      LOG_WARN("! flushing packet\n");
       /* Call packet_sent callback */
       mac_call_sent_callback(p->sent, p->ptr, p->ret, p->transmissions);
       /* Free packet queuebuf */
       tsch_queue_free_packet(p);
     }
-    PRINTF("TSCH-queue: packet is deleted packet=%p\n", p);
+    LOG_INFO("packet deleted %p\n", p);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -253,7 +250,7 @@ tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr)
             /* Add to ringbuf (actual add committed through atomic operation) */
             n->tx_array[put_index] = p;
             ringbufindex_put(&n->tx_ringbuf);
-            PRINTF("TSCH-queue: packet is added put_index=%u, packet=%p\n",
+            LOG_INFO("packet is added put_index %u, packet %p\n",
                    put_index, p);
             return p;
           } else {
@@ -263,7 +260,7 @@ tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr)
       }
     }
   }
-  PRINTF("TSCH-queue:! add packet failed: %u %p %d %p %p\n", tsch_is_locked(), n, put_index, p, p ? p->qb : NULL);
+  LOG_ERR("! add packet failed: %u %p %d %p %p\n", tsch_is_locked(), n, put_index, p, p ? p->qb : NULL);
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -290,7 +287,7 @@ tsch_queue_remove_packet_from_queue(struct tsch_neighbor *n)
       /* Get and remove packet from ringbuf (remove committed through an atomic operation */
       int16_t get_index = ringbufindex_get(&n->tx_ringbuf);
       if(get_index != -1) {
-        PRINTF("TSCH-queue: packet is removed, get_index=%u\n", get_index);
+        LOG_INFO("packet is removed, get_index %u\n", get_index);
         return n->tx_array[get_index];
       } else {
         return NULL;

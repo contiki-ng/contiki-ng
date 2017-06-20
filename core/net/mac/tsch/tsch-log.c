@@ -51,14 +51,7 @@
 #include "net/mac/tsch/tsch-slot-operation.h"
 #include "lib/ringbufindex.h"
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
-#define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
-
-#if TSCH_LOG_LEVEL >= 2 /* Skip this file for log levels 0 or 1 */
+#if TSCH_LOG_PER_SLOT
 
 PROCESS_NAME(tsch_pending_events_process);
 
@@ -156,4 +149,4 @@ tsch_log_init(void)
   ringbufindex_init(&log_ringbuf, TSCH_LOG_QUEUE_LEN);
 }
 
-#endif /* TSCH_LOG_LEVEL */
+#endif /* TSCH_LOG_PER_SLOT */
