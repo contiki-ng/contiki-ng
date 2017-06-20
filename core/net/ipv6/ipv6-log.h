@@ -37,30 +37,17 @@
  *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
-/** \addtogroup sys
+/** \addtogroup uip6
  * @{ */
 
-/** \addtogroup log
-* @{ */
+#ifndef __IPV6_LOG_CONF_H__
+#define __IPV6_LOG_CONF_H__
 
-#ifndef __LOG_CONF_H__
-#define __LOG_CONF_H__
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE_STR "IPv6"
+#define LOG_LEVEL IPV6_LOG_LEVEL
 
-/* A list of currently supported modules */
+#endif /* __IPV6_LOG_CONF_H__ */
 
-#ifndef SICSLOWPAN_LOG_LEVEL
-#define SICSLOWPAN_LOG_LEVEL                  LOG_LEVEL_NONE
-#endif /* SICSLOWPAN_LOG_LEVEL */
-
-#ifndef TCPIP_LOG_LEVEL
-#define TCPIP_LOG_LEVEL                       LOG_LEVEL_NONE
-#endif /* TCPIP_LOG_LEVEL */
-
-#ifndef IPV6_LOG_LEVEL
-#define IPV6_LOG_LEVEL                        LOG_LEVEL_NONE
-#endif /* IPV6_LOG_LEVEL */
-
-#endif /* __LOG_CONF_H__ */
-
-/** @} */
 /** @} */

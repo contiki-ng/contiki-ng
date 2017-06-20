@@ -47,16 +47,10 @@
 #include "net/ipv6/uip-icmp6.h"
 #include "contiki-default-conf.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF(" %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x ", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF(" %02x:%02x:%02x:%02x:%02x:%02x ",lladdr->addr[0], lladdr->addr[1], lladdr->addr[2], lladdr->addr[3],lladdr->addr[4], lladdr->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE_STR "IPv6 ICMPv6"
+#define LOG_LEVEL IPV6_LOG_LEVEL
 
 #define UIP_IP_BUF                ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_ICMP_BUF            ((struct uip_icmp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
@@ -125,11 +119,11 @@ echo_request_input(void)
    * headers in the request otherwise we need to remove the extension
    * headers and change a few fields
    */
-  PRINTF("Received Echo Request from ");
-  PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF(" to ");
-  PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  LOG_INFO("Received Echo Request from ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO(" to ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO("\n");
 
   /* IP header */
   UIP_IP_BUF->ttl = uip_ds6_if.cur_hop_limit;
@@ -170,11 +164,11 @@ echo_request_input(void)
   UIP_ICMP_BUF->icmpchksum = 0;
   UIP_ICMP_BUF->icmpchksum = ~uip_icmp6chksum();
 
-  PRINTF("Sending Echo Reply to ");
-  PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF(" from ");
-  PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("\n");
+  LOG_INFO("Sending Echo Reply to ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO(" from ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO("\n");
   UIP_STAT(++uip_stat.icmp.sent);
   return;
 }
@@ -257,11 +251,11 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
 
   UIP_STAT(++uip_stat.icmp.sent);
 
-  PRINTF("Sending ICMPv6 ERROR message type %d code %d to ", type, code);
-  PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF(" from ");
-  PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("\n");
+  LOG_WARN("Sending ICMPv6 ERROR message type %d code %d to ", type, code);
+  LOG_WARN_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_WARN(" from ");
+  LOG_WARN_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_WARN("\n");
   return;
 }
 
@@ -301,11 +295,11 @@ echo_reply_input(void)
   int ttl;
   uip_ipaddr_t sender;
 
-  PRINTF("Received Echo Reply from ");
-  PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF(" to ");
-  PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  LOG_INFO("Received Echo Reply from ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO(" to ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO("\n");
 
   uip_ipaddr_copy(&sender, &UIP_IP_BUF->srcipaddr);
   ttl = UIP_IP_BUF->ttl;

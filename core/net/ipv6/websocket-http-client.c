@@ -38,8 +38,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE_STR "IPv6 Websocket"
+#define LOG_LEVEL IPV6_LOG_LEVEL
 
 enum {
   STATE_WAITING_FOR_HEADER,
@@ -78,7 +80,7 @@ send_get(struct websocket_http_client_state *s)
   tcp_socket_send_str(tcps, s->subprotocol);
   tcp_socket_send_str(tcps, "\r\n");
   tcp_socket_send_str(tcps, "\r\n");
-  PRINTF("websocket-http-client: send_get(): output buffer left %d\n", tcp_socket_max_sendlen(tcps));
+  LOG_INFO("send_get(): output buffer left %d\n", tcp_socket_max_sendlen(tcps));
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -153,7 +155,7 @@ parse_header_byte(struct websocket_http_client_state *s,
      (s->proxy_port == 0 && s->http_status != 101)) {
     /* This is a websocket request, so the server should have answered
        with a 101 Switching protocols response. */
-    PRINTF("Websocket HTTP client didn't get the 101 status code (got %d), closing connection\n",
+    LOG_WARN("didn't get the 101 status code (got %d), closing connection\n",
            s->http_status);
     websocket_http_client_close(s);
     while(1) {
@@ -261,7 +263,7 @@ websocket_http_client_get(struct websocket_http_client_state *s)
   uip_ip6addr_t *addr;
   uint16_t port;
 
-  PRINTF("websocket_http_client_get: connecting to %s with file %s subprotocol %s header %s\n",
+  LOG_INFO("Get: connecting to %s with file %s subprotocol %s header %s\n",
          s->host, s->file, s->subprotocol, s->header);
 
 

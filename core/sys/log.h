@@ -136,13 +136,7 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #define LOG_WARN_ENABLED       (LOG_LEVEL >= LOG_LEVEL_WARN)
 #define LOG_INFO_ENABLED       (LOG_LEVEL >= LOG_LEVEL_INFO)
 #define LOG_DBG_ENABLED        (LOG_LEVEL >= LOG_LEVEL_DDG)
-
-/* For support of ANNOTATE without net-debug.h */
-#if (DEBUG) & DEBUG_ANNOTATE
-#define ANNOTATE(...) printf(__VA_ARGS__)
-#else
-#define ANNOTATE(...)
-#endif /* (DEBUG) & DEBUG_ANNOTATE */
+#define LOG_ANNOTATE_ENABLED   (LOG_LEVEL >= LOG_LEVEL_ANNOTATE)
 
 #endif /* __LOG_H__ */
 
