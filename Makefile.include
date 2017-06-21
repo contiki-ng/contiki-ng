@@ -4,6 +4,10 @@ ifndef CONTIKI
   ${error CONTIKI not defined! You must specify where Contiki resides}
 endif
 
+# Enable Werror by default. To disable from command line, use make WERROR=0.
+# Setting this option is also important for tests on Cooja motes to check for warnings.
+WERROR ?= 1
+
 ifeq ($(TARGET),)
   -include Makefile.target
   ifeq ($(TARGET),)

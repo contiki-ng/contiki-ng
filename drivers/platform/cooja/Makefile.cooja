@@ -72,6 +72,9 @@ CONTIKI_CPU=$(CONTIKI)/drivers/cpu/x86
 ### Compiler arguments
 #CC = gcc
 CFLAGSNO = $(EXTRA_CC_ARGS) -Wall -g -I/usr/local/include -DCLASSNAME=$(CLASSNAME)
+ifeq ($(WERROR),1)
+CFLAGSNO += -Werror
+endif
 CFLAGS   += $(CFLAGSNO)
 
 MODULES += core/net core/net/mac core/net/mac/framer core/net/ip64-addr \

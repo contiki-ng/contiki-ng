@@ -53,8 +53,8 @@ CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Compiler definitions
 
-ifdef WERROR
-CFLAGSWERROR=-Werror
+ifeq ($(WERROR),1)
+CFLAGSWERROR= -Wall -Werror
 endif
 
 ifdef IAR

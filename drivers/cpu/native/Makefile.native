@@ -13,7 +13,7 @@ AS       ?= as
 NM       ?= nm
 OBJCOPY  ?= objcopy
 STRIP    ?= strip
-ifdef WERROR
+ifeq ($(WERROR),1)
 CFLAGSWERROR=-Werror
 endif
 CFLAGSNO = -Wall -g -I/usr/local/include $(CFLAGSWERROR)

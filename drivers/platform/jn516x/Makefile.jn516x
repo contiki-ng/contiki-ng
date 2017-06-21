@@ -60,7 +60,7 @@ CFLAGS += -Wno-strict-aliasing
 CFLAGS += -Wno-cast-align
 
 # Warings as error
-ifdef WERROR
+ifeq ($(WERROR),1)
 CFLAGS += -Werror
 endif
 
