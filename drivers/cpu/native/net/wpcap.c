@@ -55,7 +55,12 @@
 #endif
 
 #include "contiki-net.h"
-#include "sys/log.h"
+
+#if LOG_CONF_ENABLED
+void log_message(const char *part1, const char *part2);
+#else /* LOG_CONF_ENABLED */
+#define log_message(p1, p2)
+#endif /* LOG_CONF_ENABLED */
 
 #include "net/wpcap.h"
 
@@ -155,7 +160,7 @@ HMODULE wpcap;
 
 static struct pcap *pcap;
 
-/* uip_lladdr is defined in uip.c. It is not used in uip6.c. 
+/* uip_lladdr is defined in uip.c. It is not used in uip6.c.
  * If needed for some purpose it can be defined here
  */
 #if NETSTACK_CONF_WITH_IPV6
@@ -350,7 +355,7 @@ init_pcap(struct in_addr addr)
   struct pcap_if *interfaces;
   struct pcap_addr *paddr;
   char error[256];
- 
+
  if(pcap_findalldevs(&interfaces, error) == -1) {
     error_exit(error);
   }
@@ -624,7 +629,7 @@ wpcap_poll(void)
     PRINTF("SIN: Discarding echoed packet\n");
     return 0;
   }
-  
+
 /* To implement multihop, ignore packets to us from specified source macs
  */
 //  printf("ethtype=%x %x",*(packet+2*UIP_LLADDR_LEN),*(packet+2*UIP_LLADDR_LEN+1));

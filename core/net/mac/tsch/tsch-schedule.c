@@ -55,12 +55,10 @@
 #include "sys/rtimer.h"
 #include <string.h>
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
-#define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "TSCH Schedule"
+#define LOG_LEVEL MAC_LOG_LEVEL
 
 /* Pre-allocated space for links */
 MEMB(link_memb, struct tsch_link, TSCH_SCHEDULE_MAX_LINKS);
@@ -92,7 +90,7 @@ tsch_schedule_add_slotframe(uint16_t handle, uint16_t size)
       /* Add the slotframe to the global list */
       list_add(slotframe_list, sf);
     }
-    PRINTF("TSCH-schedule: add_slotframe %u %u\n",
+    LOG_INFO("add_slotframe %u %u\n",
            handle, size);
     tsch_release_lock();
     return sf;
@@ -126,7 +124,7 @@ tsch_schedule_remove_slotframe(struct tsch_slotframe *slotframe)
 
     /* Now that the slotframe has no links, remove it. */
     if(tsch_get_lock()) {
-      PRINTF("TSCH-schedule: remove slotframe %u %u\n", slotframe->handle, slotframe->size.val);
+      LOG_INFO("remove slotframe %u %u\n", slotframe->handle, slotframe->size.val);
       memb_free(&slotframe_memb, slotframe);
       list_remove(slotframe_list, slotframe);
       tsch_release_lock();
@@ -186,11 +184,11 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
      * to keep neighbor state in sync with link options etc.) */
     tsch_schedule_remove_link_by_timeslot(slotframe, timeslot);
     if(!tsch_get_lock()) {
-      PRINTF("TSCH-schedule:! add_link memb_alloc couldn't take lock\n");
+      LOG_ERR("! add_link memb_alloc couldn't take lock\n");
     } else {
       l = memb_alloc(&link_memb);
       if(l == NULL) {
-        PRINTF("TSCH-schedule:! add_link memb_alloc failed\n");
+        LOG_ERR("! add_link memb_alloc failed\n");
         tsch_release_lock();
       } else {
         static int current_link_handle = 0;
@@ -210,7 +208,7 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
         }
         linkaddr_copy(&l->addr, address);
 
-        PRINTF("TSCH-schedule: add_link %u %u %u %u %u %u\n",
+        LOG_INFO("add_link %u %u %u %u %u %u\n",
                slotframe->handle, link_options, link_type, timeslot, channel_offset, TSCH_LOG_ID_FROM_LINKADDR(address));
 
         /* Release the lock before we update the neighbor (will take the lock) */
@@ -251,7 +249,7 @@ tsch_schedule_remove_link(struct tsch_slotframe *slotframe, struct tsch_link *l)
       if(l == current_link) {
         current_link = NULL;
       }
-      PRINTF("TSCH-schedule: remove_link %u %u %u %u %u\n",
+      LOG_INFO("remove_link %u %u %u %u %u\n",
              slotframe->handle, l->link_options, l->timeslot, l->channel_offset,
              TSCH_LOG_ID_FROM_LINKADDR(&l->addr));
 
@@ -274,7 +272,7 @@ tsch_schedule_remove_link(struct tsch_slotframe *slotframe, struct tsch_link *l)
 
       return 1;
     } else {
-      PRINTF("TSCH-schedule:! remove_link memb_alloc couldn't take lock\n");
+      LOG_ERR("! remove_link memb_alloc couldn't take lock\n");
     }
   }
   return 0;

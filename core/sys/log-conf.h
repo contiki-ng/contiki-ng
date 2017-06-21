@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+* Copyright (c) 2017, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,35 +30,45 @@
  *
  */
 
-#include "net/mac/mac.h"
+/**
+ * \file
+ *         Default log levels for a number of modules
+ * \author
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
+ */
 
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "MAC"
-#define LOG_LEVEL MAC_LOG_LEVEL
+/** \addtogroup sys
+ * @{ */
 
-/*---------------------------------------------------------------------------*/
-void
-mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
-{
-  LOG_INFO("mac_callback_t %p ptr %p status %d num_tx %d\n",
-         (void *)sent, ptr, status, num_tx);
-  switch(status) {
-  case MAC_TX_COLLISION:
-    LOG_INFO("collision after %d tx\n", num_tx);
-    break;
-  case MAC_TX_NOACK:
-    LOG_INFO("noack after %d tx\n", num_tx);
-    break;
-  case MAC_TX_OK:
-    LOG_INFO("sent after %d tx\n", num_tx);
-    break;
-  default:
-    LOG_INFO("error %d after %d tx\n", status, num_tx);
-  }
+/** \addtogroup log
+* @{ */
 
-  if(sent) {
-    sent(ptr, status, num_tx);
-  }
-}
-/*---------------------------------------------------------------------------*/
+#ifndef __LOG_CONF_H__
+#define __LOG_CONF_H__
+
+/* A list of currently supported modules */
+
+#ifndef IPV6_LOG_LEVEL
+#define IPV6_LOG_LEVEL                        LOG_LEVEL_NONE
+#endif /* IPV6_LOG_LEVEL */
+
+#ifndef SICSLOWPAN_LOG_LEVEL
+#define SICSLOWPAN_LOG_LEVEL                  LOG_LEVEL_NONE
+#endif /* SICSLOWPAN_LOG_LEVEL */
+
+#ifndef TCPIP_LOG_LEVEL
+#define TCPIP_LOG_LEVEL                       LOG_LEVEL_NONE
+#endif /* TCPIP_LOG_LEVEL */
+
+#ifndef MAC_LOG_LEVEL
+#define MAC_LOG_LEVEL                         LOG_LEVEL_NONE
+#endif /* MAC_LOG_LEVELL */
+
+#ifndef FRAMER_LOG_LEVEL
+#define FRAMER_LOG_LEVEL                      LOG_LEVEL_NONE
+#endif /* FRAMER_LOG_LEVEL */
+
+#endif /* __LOG_CONF_H__ */
+
+/** @} */
+/** @} */

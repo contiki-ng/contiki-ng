@@ -40,8 +40,8 @@
  *
  */
 
-#include "contiki.h"
 #include "dev/radio.h"
+#include "contiki.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
@@ -59,12 +59,7 @@
 #include "sys/cooja_mt.h"
 #endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
-#define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+#include <stdio.h>
 
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
  * timeslot events */

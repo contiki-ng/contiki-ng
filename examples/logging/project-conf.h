@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2015, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,27 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
 
-#include "net/mac/mac.h"
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "MAC"
-#define LOG_LEVEL MAC_LOG_LEVEL
+/* Set maximum debug level on all modules. See core/sys/log-conf.h for
+ * a list of supported modules. The different log levels are defined in
+ * core/sys/log.h:
+ *     LOG_LEVEL_NONE         No log
+ *     LOG_LEVEL_ERR          Errors
+ *     LOG_LEVEL_WARN         Warnings
+ *     LOG_LEVEL_INFO         Basic info
+ *     LOG_LEVEL_DBG          Detailled debug
+  */
+#define IPV6_LOG_LEVEL                        LOG_LEVEL_DBG
+#define SICSLOWPAN_LOG_LEVEL                  LOG_LEVEL_DBG
+#define TCPIP_LOG_LEVEL                       LOG_LEVEL_DBG
+#define MAC_LOG_LEVEL                         LOG_LEVEL_DBG
+#define FRAMER_LOG_LEVEL                      LOG_LEVEL_DBG
 
-/*---------------------------------------------------------------------------*/
-void
-mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
-{
-  LOG_INFO("mac_callback_t %p ptr %p status %d num_tx %d\n",
-         (void *)sent, ptr, status, num_tx);
-  switch(status) {
-  case MAC_TX_COLLISION:
-    LOG_INFO("collision after %d tx\n", num_tx);
-    break;
-  case MAC_TX_NOACK:
-    LOG_INFO("noack after %d tx\n", num_tx);
-    break;
-  case MAC_TX_OK:
-    LOG_INFO("sent after %d tx\n", num_tx);
-    break;
-  default:
-    LOG_INFO("error %d after %d tx\n", status, num_tx);
-  }
+/* Enable cooja annotations */
+#define LOG_CONF_WITH_ANNOTATE                1
 
-  if(sent) {
-    sent(ptr, status, num_tx);
-  }
-}
-/*---------------------------------------------------------------------------*/
+#endif

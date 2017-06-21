@@ -31,7 +31,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include "sys/log.h"
 #include "lib/simEnvChange.h"
 
 #define IMPLEMENT_PRINTF 1

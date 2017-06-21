@@ -92,10 +92,9 @@
 /******************* Configure TSCH ********************/
 /*******************************************************/
 
-/* TSCH logging. 0: disabled. 1: basic log. 2: with delayed
- * log messages from interrupt */
-#undef TSCH_LOG_CONF_LEVEL
-#define TSCH_LOG_CONF_LEVEL 2
+/* TSCH per-slot logging */
+#undef TSCH_LOG_CONF_PER_SLOT
+#define TSCH_LOG_CONF_PER_SLOT 1
 
 /* IEEE802.15.4 PANID */
 #undef IEEE802154_CONF_PANID

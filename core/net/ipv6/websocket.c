@@ -37,6 +37,11 @@
 
 #include "websocket.h"
 
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "IPv6 Websocket"
+#define LOG_LEVEL IPV6_LOG_LEVEL
+
 PROCESS(websocket_process, "Websockets process");
 
 #define MAX_HOSTLEN 64
@@ -65,9 +70,6 @@ struct websocket_frame_hdr {
 struct websocket_frame_mask {
   uint8_t mask[4];
 };
-
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
 static int
@@ -148,11 +150,11 @@ static int
 start_get(struct websocket *s)
 {
   if(websocket_http_client_get(&(s->s)) == 0) {
-    PRINTF("Out of memory error\n");
+    LOG_ERR("Out of memory error\n");
     s->state = WEBSOCKET_STATE_CLOSED;
     return WEBSOCKET_ERR;
   } else {
-    PRINTF("Connecting...\n");
+    LOG_INFO("Connecting...\n");
     s->state = WEBSOCKET_STATE_HTTP_REQUEST_SENT;
     return WEBSOCKET_OK;
   }
@@ -192,13 +194,13 @@ PROCESS_THREAD(websocket_process, ev, data)
           if(ret == RESOLV_STATUS_CACHED) {
 	    /* Hostname found, restart get. */
             if(s->state == WEBSOCKET_STATE_DNS_REQUEST_SENT) {
-              PRINTF("Restarting get\n");
+              LOG_INFO("Restarting get\n");
               start_get(s);
             }
 	  } else {
             if(s->state == WEBSOCKET_STATE_DNS_REQUEST_SENT) {
               /* Hostname not found, kill connection. */
-              /*	    PRINTF("XXX killing connection\n");*/
+              LOG_ERR("killing connection\n");
               call(s, WEBSOCKET_HOSTNAME_NOT_FOUND, NULL, 0);
             }
 	  }
@@ -219,7 +221,7 @@ websocket_http_client_aborted(struct websocket_http_client_state *client_state)
   if(client_state != NULL) {
     struct websocket *s = (struct websocket *)
       ((char *)client_state - offsetof(struct websocket, s));
-    PRINTF("Websocket reset\n");
+    LOG_WARN("Websocket reset\n");
     s->state = WEBSOCKET_STATE_CLOSED;
     call(s, WEBSOCKET_RESET, NULL, 0);
   }
@@ -234,7 +236,7 @@ websocket_http_client_timedout(struct websocket_http_client_state *client_state)
   if(client_state != NULL) {
     struct websocket *s = (struct websocket *)
       ((char *)client_state - offsetof(struct websocket, s));
-    PRINTF("Websocket timed out\n");
+    LOG_WARN("Websocket timed out\n");
     s->state = WEBSOCKET_STATE_CLOSED;
     call(s, WEBSOCKET_TIMEDOUT, NULL, 0);
   }
@@ -250,7 +252,7 @@ websocket_http_client_closed(struct websocket_http_client_state *client_state)
   if(client_state != NULL) {
     struct websocket *s = (struct websocket *)
       ((char *)client_state - offsetof(struct websocket, s));
-    PRINTF("Websocket closed.\n");
+    LOG_INFO("Websocket closed.\n");
     s->state = WEBSOCKET_STATE_CLOSED;
     call(s, WEBSOCKET_CLOSED, NULL, 0);
   }
@@ -265,7 +267,7 @@ websocket_http_client_connected(struct websocket_http_client_state *client_state
   struct websocket *s = (struct websocket *)
     ((char *)client_state - offsetof(struct websocket, s));
 
-  PRINTF("Websocket connected\n");
+  LOG_INFO("Websocket connected\n");
   s->state = WEBSOCKET_STATE_WAITING_FOR_HEADER;
   call(s, WEBSOCKET_CONNECTED, NULL, 0);
 }
@@ -409,10 +411,10 @@ websocket_http_client_datahandler(struct websocket_http_client_state *client_sta
          See if the application data chunk is masked or not. If it is,
          we copy the bitmask into the s->mask field. */
       if((hdr->len & WEBSOCKET_MASK_BIT) == 0) {
-        /*        PRINTF("No mask\n");*/
+        /*        LOG_INFO("No mask\n");*/
       } else {
         memcpy(s->mask, &maskptr->mask, sizeof(s->mask));
-        /*        PRINTF("There was a mask, %02x %02x %02x %02x\n",
+        /*        LOG_INFO("There was a mask, %02x %02x %02x %02x\n",
                   s->mask[0], s->mask[1], s->mask[2], s->mask[3]);*/
       }
 
@@ -429,13 +431,13 @@ websocket_http_client_datahandler(struct websocket_http_client_state *client_sta
         if(s->left > 0) {
           websocket_http_client_send(&s->s, (const uint8_t*)data, s->left);
         }
-        PRINTF("Got ping\n");
+        LOG_INFO("Got ping\n");
         call(s, WEBSOCKET_PINGED, NULL, 0);
         s->state = WEBSOCKET_STATE_WAITING_FOR_HEADER;
       } else if(s->opcode == WEBSOCKET_OPCODE_PONG) {
           /* If the opcode is pong, we call the application to let it
            know we got a pong. */
-        PRINTF("Got pong\n");
+        LOG_INFO("Got pong\n");
         call(s, WEBSOCKET_PONG_RECEIVED, NULL, 0);
         s->state = WEBSOCKET_STATE_WAITING_FOR_HEADER;
       } else if(s->opcode == WEBSOCKET_OPCODE_CLOSE) {
@@ -446,7 +448,7 @@ websocket_http_client_datahandler(struct websocket_http_client_state *client_sta
         if(s->left > 0) {
           websocket_http_client_send(&s->s, (const uint8_t*)data, s->left);
         }
-        PRINTF("websocket: got close, sending close\n");
+        LOG_INFO("Got close, sending close\n");
         s->state = WEBSOCKET_STATE_WAITING_FOR_HEADER;
         websocket_http_client_close(&s->s);
       } else if(s->opcode == WEBSOCKET_OPCODE_BIN ||
@@ -477,15 +479,12 @@ websocket_http_client_datahandler(struct websocket_http_client_state *client_sta
         /* Need to keep parsing the incoming data to check for more
            frames, if the incoming datalen is > than s->left. */
         if(datalen > 0) {
-          PRINTF("XXX 1 again\n");
           websocket_http_client_datahandler(client_state,
                                             data, datalen);
         }
       }
     } else if(s->state == WEBSOCKET_STATE_RECEIVING_DATA) {
       /* XXX todo: mask if needed. */
-      /*      PRINTF("Calling with s->left %d datalen %d\n",
-              s->left, datalen);*/
       if(datalen > 0) {
         if(datalen < s->left) {
           call(s, WEBSOCKET_DATA, data, datalen);
@@ -505,7 +504,6 @@ websocket_http_client_datahandler(struct websocket_http_client_state *client_sta
         /* Need to keep parsing the incoming data to check for more
            frames, if the incoming datalen is > than len. */
         if(datalen > 0) {
-          PRINTF("XXX 2 again (datalen %d s->left %d)\n", datalen, (int)s->left);
           websocket_http_client_datahandler(client_state,
                                             data, datalen);
 
@@ -558,7 +556,7 @@ websocket_open(struct websocket *s, const char *url,
   }
 
   if(s->state != WEBSOCKET_STATE_CLOSED) {
-    PRINTF("websocket_open: closing websocket before opening it again.\n");
+    LOG_INFO("Open: closing websocket before opening it again.\n");
     websocket_close(s);
   }
   s->callback = c;
@@ -577,7 +575,7 @@ websocket_open(struct websocket *s, const char *url,
       if(ret != RESOLV_STATUS_CACHED) {
 	resolv_query(host);
 	s->state = WEBSOCKET_STATE_DNS_REQUEST_SENT;
-	PRINTF("Resolving host...\n");
+	LOG_INFO("Resolving host...\n");
 	return WEBSOCKET_OK;
       }
     }
@@ -608,27 +606,27 @@ send_data(struct websocket *s, const void *data,
   struct websocket_frame_hdr *hdr;
   struct websocket_frame_mask *mask;
 
-  PRINTF("websocket send data len %d %.*s\n", datalen, datalen, (char *)data);
+  LOG_INFO("send data len %d %.*s\n", datalen, datalen, (char *)data);
   if(s->state == WEBSOCKET_STATE_CLOSED ||
      s->state == WEBSOCKET_STATE_DNS_REQUEST_SENT ||
      s->state == WEBSOCKET_STATE_HTTP_REQUEST_SENT) {
     /* Trying to send data on a non-connected websocket. */
-    PRINTF("websocket send fail: not connected\n");
+    LOG_ERR("send fail: not connected\n");
     return -1;
   }
 
   /* We need to have 4 + 4 additional bytes for the websocket framing
      header. */
   if(4 + 4 + datalen > websocket_http_client_sendbuflen(&s->s)) {
-    PRINTF("websocket: too few bytes left (%d left, %d needed)\n",
+    LOG_ERR("too few bytes left (%d left, %d needed)\n",
            websocket_http_client_sendbuflen(&s->s),
            4 + 4 + datalen);
     return -1;
   }
 
   if(datalen > sizeof(buf) - 4 - 4) {
-    PRINTF("websocket: trying to send too large data chunk %d > %d\n",
-           datalen, sizeof(buf) - 4 - 4);
+    LOG_ERR("trying to send too large data chunk %d > %d\n",
+           datalen, (int)sizeof(buf) - 4 - 4);
     return -1;
   }
 

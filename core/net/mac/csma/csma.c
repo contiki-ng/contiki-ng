@@ -44,16 +44,10 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 
-#include <string.h>
-#include <stdio.h>
-
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else /* DEBUG */
-#define PRINTF(...)
-#endif /* DEBUG */
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "CSMA"
+#define LOG_LEVEL MAC_LOG_LEVEL
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -76,15 +70,15 @@ input_packet(void)
 #if CSMA_802154_AUTOACK
   if(packetbuf_datalen() == CSMA_ACK_LEN) {
     /* Ignore ack packets */
-    PRINTF("csma: ignored ack\n");
+    LOG_INFO("ignored ack\n");
   } else
 #endif /* CSMA_802154_AUTOACK */
   if(NETSTACK_FRAMER.parse() < 0) {
-    PRINTF("csma: failed to parse %u\n", packetbuf_datalen());
+    LOG_ERR("failed to parse %u\n", packetbuf_datalen());
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
             !packetbuf_holds_broadcast()) {
-    PRINTF("csma: not for us\n");
+    LOG_WARN("not for us\n");
   } else {
     int duplicate = 0;
 
@@ -93,7 +87,7 @@ input_packet(void)
     duplicate = mac_sequence_is_duplicate();
     if(duplicate) {
       /* Drop the packet. */
-      PRINTF("csma: drop duplicate link layer packet %u\n",
+      LOG_WARN("drop duplicate link layer packet %u\n",
              packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     } else {
       mac_sequence_register_seqno();

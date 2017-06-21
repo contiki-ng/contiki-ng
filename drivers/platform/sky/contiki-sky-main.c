@@ -392,11 +392,3 @@ main(int argc, char **argv)
 
   return 0;
 }
-/*---------------------------------------------------------------------------*/
-#if LOG_CONF_ENABLED
-void
-log_message(char *m1, char *m2)
-{
-  printf("%s%s\n", m1, m2);
-}
-#endif /* LOG_CONF_ENABLED */

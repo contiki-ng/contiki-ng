@@ -41,7 +41,8 @@ cfs-coffee/openmote-cc2538 \
 cfs-coffee/zoul \
 ipv6/rpl-tsch/zoul \
 ipv6/rpl-tsch/zoul:MAKE_WITH_ORCHESTRA=1 \
-ipv6/rpl-tsch/zoul:MAKE_WITH_SECURITY=1
+ipv6/rpl-tsch/zoul:MAKE_WITH_SECURITY=1 \
+logging/zoul \
 
 TOOLS=
 

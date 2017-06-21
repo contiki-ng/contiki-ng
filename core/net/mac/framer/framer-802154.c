@@ -43,16 +43,10 @@
 #include "lib/random.h"
 #include <string.h>
 
-#define DEBUG 0
-
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTADDR(addr) PRINTF(" %02x%02x:%02x%02x:%02x%02x:%02x%02x ", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7])
-#else
-#define PRINTF(...)
-#define PRINTADDR(addr)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Frame 802.15.4e"
+#define LOG_LEVEL FRAMER_LOG_LEVEL
 
 /**  \brief The sequence number (0x00 - 0xff) added to the transmitted
  *   data or MAC command frame. The default is a random value within
@@ -180,13 +174,13 @@ create_frame(int type, int do_create)
   } else if(packetbuf_hdralloc(hdr_len)) {
     frame802154_create(&params, packetbuf_hdrptr());
 
-    PRINTF("15.4-OUT: %2X", params.fcf.frame_type);
-    PRINTADDR(params.dest_addr);
-    PRINTF("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO("Out: %2X", params.fcf.frame_type);
+    LOG_INFO_LLADDR((const linkaddr_t *)params.dest_addr);
+    LOG_INFO("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   } else {
-    PRINTF("15.4-OUT: too large header: %u\n", hdr_len);
+    LOG_ERR("Out: too large header: %u\n", hdr_len);
     return FRAMER_FAILED;
   }
 }
@@ -218,7 +212,7 @@ parse(void)
       if(frame.dest_pid != frame802154_get_pan_id() &&
          frame.dest_pid != FRAME802154_BROADCASTPANDID) {
         /* Packet to another PAN */
-        PRINTF("15.4: for another pan %u\n", frame.dest_pid);
+        LOG_WARN("In: for another pan %u\n", frame.dest_pid);
         return FRAMER_FAILED;
       }
       if(!frame802154_is_broadcast_addr(frame.fcf.dest_addr_mode, frame.dest_addr)) {
@@ -243,10 +237,10 @@ parse(void)
     }
 #endif /* LLSEC802154_USES_AUX_HEADER */
 
-    PRINTF("15.4-IN: %2X", frame.fcf.frame_type);
-    PRINTADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
-    PRINTADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-    PRINTF("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO("In: %2X", frame.fcf.frame_type);
+    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+    LOG_INFO("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   }

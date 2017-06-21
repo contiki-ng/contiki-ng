@@ -46,12 +46,10 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "tsch-rpl.h"
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
-#define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "TSCH RPL"
+#define LOG_LEVEL MAC_LOG_LEVEL
 
 /*---------------------------------------------------------------------------*/
 /* To use, set #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network */

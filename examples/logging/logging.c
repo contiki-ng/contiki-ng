@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2006, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,35 +30,26 @@
  *
  */
 
-#include "net/mac/mac.h"
+/**
+ * \file
+ *         A very simple Contiki application showing how Contiki programs look
+ * \author
+ *         Adam Dunkels <adam@sics.se>
+ */
 
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "MAC"
-#define LOG_LEVEL MAC_LOG_LEVEL
+#include "contiki.h"
 
+#include <stdio.h> /* For printf() */
 /*---------------------------------------------------------------------------*/
-void
-mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
+PROCESS(logging_example_process, "Logging example process");
+AUTOSTART_PROCESSES(&logging_example_process);
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(logging_example_process, ev, data)
 {
-  LOG_INFO("mac_callback_t %p ptr %p status %d num_tx %d\n",
-         (void *)sent, ptr, status, num_tx);
-  switch(status) {
-  case MAC_TX_COLLISION:
-    LOG_INFO("collision after %d tx\n", num_tx);
-    break;
-  case MAC_TX_NOACK:
-    LOG_INFO("noack after %d tx\n", num_tx);
-    break;
-  case MAC_TX_OK:
-    LOG_INFO("sent after %d tx\n", num_tx);
-    break;
-  default:
-    LOG_INFO("error %d after %d tx\n", status, num_tx);
-  }
+  PROCESS_BEGIN();
 
-  if(sent) {
-    sent(ptr, status, num_tx);
-  }
+  printf("Hello, world, from logging example process\n");
+
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

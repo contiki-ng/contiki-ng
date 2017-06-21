@@ -41,6 +41,14 @@
 
 /******** Configuration *******/
 
+/* TSCH per-slot logging. Enabled by default if DBG is enabled */
+#ifdef TSCH_LOG_CONF_PER_SLOT
+#define TSCH_LOG_PER_SLOT TSCH_LOG_CONF_PER_SLOT
+#else /* TSCH_LOG_CONF_PER_SLOT */
+#include "sys/log.h"
+#define TSCH_LOG_PER_SLOT (MAC_LOG_LEVEL >= LOG_LEVEL_DBG)
+#endif /* TSCH_LOG_CONF_PER_SLOT */
+
 /* The length of the log queue, i.e. maximum number postponed log messages */
 #ifdef TSCH_LOG_CONF_QUEUE_LEN
 #define TSCH_LOG_QUEUE_LEN TSCH_LOG_CONF_QUEUE_LEN
@@ -55,23 +63,13 @@
 #define TSCH_LOG_ID_FROM_LINKADDR(addr) ((addr) ? (addr)->u8[LINKADDR_SIZE - 1] : 0)
 #endif /* TSCH_LOG_ID_FROM_LINKADDR */
 
-/* TSCH log levels:
- * 0: no log
- * 1: basic PRINTF enabled
- * 2: basic PRINTF enabled and tsch-log module enabled */
-#ifdef TSCH_LOG_CONF_LEVEL
-#define TSCH_LOG_LEVEL TSCH_LOG_CONF_LEVEL
-#else /* TSCH_LOG_CONF_LEVEL */
-#define TSCH_LOG_LEVEL 2
-#endif /* TSCH_LOG_CONF_LEVEL */
-
-#if TSCH_LOG_LEVEL < 2 /* For log level 0 or 1, the logging functions do nothing */
+#if (TSCH_LOG_PER_SLOT == 0)
 
 #define tsch_log_init()
 #define tsch_log_process_pending()
 #define TSCH_LOG_ADD(log_type, init_code)
 
-#else /* TSCH_LOG_LEVEL */
+#else /* (TSCH_LOG_PER_SLOT == 0) */
 
 /************ Types ***********/
 
@@ -133,6 +131,6 @@ void tsch_log_process_pending(void);
     } \
 } while(0);
 
-#endif /* TSCH_LOG_LEVEL */
+#endif /* (TSCH_LOG_PER_SLOT == 0) */
 
 #endif /* __TSCH_LOG_H__ */

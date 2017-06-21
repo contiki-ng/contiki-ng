@@ -51,8 +51,10 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "net/ip/uip-packetqueue.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "IPv6 Data Structures"
+#define LOG_LEVEL IPV6_LOG_LEVEL
 
 struct etimer uip_ds6_timer_periodic;                           /**< Timer for maintenance of data structures */
 
@@ -97,8 +99,7 @@ uip_ds6_init(void)
   uip_ds6_neighbors_init();
   uip_ds6_route_init();
 
-  PRINTF("Init of IPv6 data structures\n");
-  PRINTF("%u neighbors\n%u default routers\n%u prefixes\n%u routes\n%u unicast addresses\n%u multicast addresses\n%u anycast addresses\n",
+  LOG_INFO("Init: %u neighbors\n%u default routers\n%u prefixes\n%u routes\n%u unicast addresses\n%u multicast addresses\n%u anycast addresses\n",
      NBR_TABLE_MAX_NEIGHBORS, UIP_DS6_DEFRT_NB, UIP_DS6_PREFIX_NB, UIP_DS6_ROUTE_NB,
      UIP_DS6_ADDR_NB, UIP_DS6_MADDR_NB, UIP_DS6_AADDR_NB);
   memset(uip_ds6_prefix_list, 0, sizeof(uip_ds6_prefix_list));
@@ -247,13 +248,13 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     locprefix->l_a_reserved = flags;
     locprefix->vlifetime = vtime;
     locprefix->plifetime = ptime;
-    PRINTF("Adding prefix ");
-    PRINT6ADDR(&locprefix->ipaddr);
-    PRINTF("length %u, flags %x, Valid lifetime %lx, Preffered lifetime %lx\n",
+    LOG_INFO("Adding prefix ");
+    LOG_INFO_6ADDR(&locprefix->ipaddr);
+    LOG_INFO("length %u, flags %x, Valid lifetime %lx, Preffered lifetime %lx\n",
        ipaddrlen, flags, vtime, ptime);
     return locprefix;
   } else {
-    PRINTF("No more space in Prefix list\n");
+    LOG_INFO("No more space in Prefix list\n");
   }
   return NULL;
 }
@@ -277,9 +278,9 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     } else {
       locprefix->isinfinite = 1;
     }
-    PRINTF("Adding prefix ");
-    PRINT6ADDR(&locprefix->ipaddr);
-    PRINTF("length %u, vlifetime %lu\n", ipaddrlen, interval);
+    LOG_INFO("Adding prefix ");
+    LOG_INFO_6ADDR(&locprefix->ipaddr);
+    LOG_INFO("length %u, vlifetime %lu\n", ipaddrlen, interval);
     return locprefix;
   }
   return NULL;
@@ -613,9 +614,9 @@ uip_ds6_dad(uip_ds6_addr_t *addr)
    * If we arrive here it means DAD succeeded, otherwise the dad process
    * would have been interrupted in ds6_dad_ns/na_input
    */
-  PRINTF("DAD succeeded, ipaddr: ");
-  PRINT6ADDR(&addr->ipaddr);
-  PRINTF("\n");
+  LOG_INFO("DAD succeeded, ipaddr: ");
+  LOG_INFO_6ADDR(&addr->ipaddr);
+  LOG_INFO("\n");
 
   addr->state = ADDR_PREFERRED;
   return;
@@ -630,7 +631,7 @@ int
 uip_ds6_dad_failed(uip_ds6_addr_t *addr)
 {
   if(uip_is_addr_linklocal(&addr->ipaddr)) {
-    PRINTF("Contiki shutdown, DAD for link local address failed\n");
+    LOG_ERR("Contiki shutdown, DAD for link local address failed\n");
     return 0;
   }
   uip_ds6_addr_rm(addr);
@@ -651,7 +652,7 @@ uip_ds6_send_ra_sollicited(void)
    * the RA (setting the timer to 0 below). We keep the code logic for
    * the days contiki will support appropriate timers */
   rand_time = 0;
-  PRINTF("Solicited RA, random time %u\n", rand_time);
+  LOG_INFO("Solicited RA, random time %u\n", rand_time);
 
   if(stimer_remaining(&uip_ds6_timer_ra) > rand_time) {
     if(stimer_elapsed(&uip_ds6_timer_ra) < UIP_ND6_MIN_DELAY_BETWEEN_RAS) {
@@ -672,21 +673,21 @@ uip_ds6_send_ra_periodic(void)
   if(racount > 0) {
     /* send previously scheduled RA */
     uip_nd6_ra_output(NULL);
-    PRINTF("Sending periodic RA\n");
+    LOG_INFO("Sending periodic RA\n");
   }
 
   rand_time = UIP_ND6_MIN_RA_INTERVAL + random_rand() %
     (uint16_t) (UIP_ND6_MAX_RA_INTERVAL - UIP_ND6_MIN_RA_INTERVAL);
-  PRINTF("Random time 1 = %u\n", rand_time);
+  LOG_DBG("Random time 1 = %u\n", rand_time);
 
   if(racount < UIP_ND6_MAX_INITIAL_RAS) {
     if(rand_time > UIP_ND6_MAX_INITIAL_RA_INTERVAL) {
       rand_time = UIP_ND6_MAX_INITIAL_RA_INTERVAL;
-      PRINTF("Random time 2 = %u\n", rand_time);
+      LOG_DBG("Random time 2 = %u\n", rand_time);
     }
     racount++;
   }
-  PRINTF("Random time 3 = %u\n", rand_time);
+  LOG_DBG("Random time 3 = %u\n", rand_time);
   stimer_set(&uip_ds6_timer_ra, rand_time);
 }
 
@@ -698,13 +699,13 @@ uip_ds6_send_rs(void)
 {
   if((uip_ds6_defrt_choose() == NULL)
      && (rscount < UIP_ND6_MAX_RTR_SOLICITATIONS)) {
-    PRINTF("Sending RS %u\n", rscount);
+    LOG_INFO("Sending RS %u\n", rscount);
     uip_nd6_rs_output();
     rscount++;
     etimer_set(&uip_ds6_timer_rs,
                UIP_ND6_RTR_SOLICITATION_INTERVAL * CLOCK_SECOND);
   } else {
-    PRINTF("Router found ? (boolean): %u\n",
+    LOG_INFO("Router found ? (boolean): %u\n",
            (uip_ds6_defrt_choose() != NULL));
     etimer_stop(&uip_ds6_timer_rs);
   }

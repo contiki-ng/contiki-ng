@@ -68,10 +68,9 @@
 #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 
-/* TSCH logging. 0: disabled. 1: basic log. 2: with delayed
- * log messages from interrupt */
-#undef TSCH_LOG_CONF_LEVEL
-#define TSCH_LOG_CONF_LEVEL 2
+/* TSCH per-slot logging */
+#undef TSCH_LOG_CONF_PER_SLOT
+#define TSCH_LOG_CONF_PER_SLOT 1
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #undef TSCH_CONF_AUTOSTART
