@@ -34,7 +34,6 @@
 #include <string.h>
 
 #include "contiki-net.h"
-#include "lib/petsciiconv.h"
 
 #include "websocket.h"
 
