@@ -70,15 +70,15 @@ input_packet(void)
 #if CSMA_802154_AUTOACK
   if(packetbuf_datalen() == CSMA_ACK_LEN) {
     /* Ignore ack packets */
-    LOG_INFO("csma: ignored ack\n");
+    LOG_INFO("ignored ack\n");
   } else
 #endif /* CSMA_802154_AUTOACK */
   if(NETSTACK_FRAMER.parse() < 0) {
-    LOG_ERR("csma: failed to parse %u\n", packetbuf_datalen());
+    LOG_ERR("failed to parse %u\n", packetbuf_datalen());
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
             !packetbuf_holds_broadcast()) {
-    LOG_WARN("csma: not for us\n");
+    LOG_WARN("not for us\n");
   } else {
     int duplicate = 0;
 
@@ -87,7 +87,7 @@ input_packet(void)
     duplicate = mac_sequence_is_duplicate();
     if(duplicate) {
       /* Drop the packet. */
-      LOG_WARN("csma: drop duplicate link layer packet %u\n",
+      LOG_WARN("drop duplicate link layer packet %u\n",
              packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     } else {
       mac_sequence_register_seqno();
