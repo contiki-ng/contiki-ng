@@ -157,7 +157,7 @@ different entry fields.
 <b>Neighbor discovery processes </b><br>
 \li Address resolution\n
 Determine the link-layer address of a %neighbor given its IPv6 address.\n
--> send a NS (done in #tcpip_ipv6_output).
+-> send a NS (done in tcpip_ipv6_output).
 \li Neighbor unreachability detection\n
 Verify that a neighbor is still reachable via a cached link-layer
 address.\n
@@ -166,7 +166,7 @@ address.\n
 Map an IPv6 destination address into the IPv6 address of the %neighbor
 to which traffic for the destination should be sent.\n
 -> look at on-link prefixes, if the destination is not on-link,
-choose a default router, else send directly (done in #tcpip_ipv6_output).
+choose a default router, else send directly (done in tcpip_ipv6_output).
 \li Router, prefix, and parameter discovery\n
 Update the list of default routers, on-link prefixes, and the network
 parameters.\n
@@ -305,9 +305,9 @@ uip_lladdr_t uip_lladdr = {{0x00,0x06,0x98,0x00,0x02,0x32}};
 \li #UIP_ND6_OPT_LLAO_LEN, the length of the link-layer option in the
 different ND messages
 
-Moreover, #tcpip_output should point to the
+Moreover, tcpip_output should point to the
 link-layer function used to send a packet. Similarly, the link-layer
-should call #tcpip_input when an IP packet is received.
+should call tcpip_input when an IP packet is received.
 
 The code corresponding to the desired link layer is selected at
 compilation time (see for example the UIP_CONF_LL_802154 flag).

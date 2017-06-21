@@ -326,33 +326,14 @@ CCIF extern process_event_t tcpip_event;
  */
 
 /**
- * \brief      Deliver an incoming packet to the TCP/IP stack
- *
- *             This function is called by network device drivers to
- *             deliver an incoming packet to the TCP/IP stack. The
- *             incoming packet must be present in the uip_buf buffer,
- *             and the length of the packet must be in the global
- *             uip_len variable.
- */
-CCIF void tcpip_input(void);
-
-/**
  * \brief Output packet to layer 2
  * The eventual parameter is the MAC address of the destination.
  */
 #if NETSTACK_CONF_WITH_IPV6
-uint8_t tcpip_output(const uip_lladdr_t *);
-void tcpip_set_outputfunc(uint8_t (* f)(const uip_lladdr_t *));
+/* only uses NETSTACK_IP now */
+extern const struct ip_driver uip_ip_driver;
 #else
-uint8_t tcpip_output(void);
 void tcpip_set_outputfunc(uint8_t (* f)(void));
-#endif
-
-/**
- * \brief This function does address resolution and then calls tcpip_output
- */
-#if NETSTACK_CONF_WITH_IPV6
-void tcpip_ipv6_output(void);
 #endif
 
 /**

@@ -43,7 +43,7 @@ extern uint16_t uip_slen;
 
 #include "net/ip/uip-udp-packet.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
-
+#include "netstack.h"
 #include <string.h>
 
 /*---------------------------------------------------------------------------*/
@@ -64,13 +64,7 @@ uip_udp_packet_send(struct uip_udp_conn *c, const void *data, int len)
   }
 #endif /* UIP_IPV6_MULTICAST */
 
-#if NETSTACK_CONF_WITH_IPV6
-    tcpip_ipv6_output();
-#else
-    if(uip_len > 0) {
-      tcpip_output();
-    }
-#endif
+  NETSTACK_IP.output();
   }
   uip_slen = 0;
 #endif /* UIP_UDP */

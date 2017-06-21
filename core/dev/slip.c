@@ -42,6 +42,7 @@
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #include "dev/slip.h"
+#include "net/netstack.h"
 
 #define SLIP_END     0300
 #define SLIP_ESC     0333
@@ -362,7 +363,7 @@ PROCESS_THREAD(slip_process, ev, data)
 #ifdef SLIP_CONF_TCPIP_INPUT
       SLIP_CONF_TCPIP_INPUT();
 #else
-      tcpip_input();
+      NETSTACK_IP.input();
 #endif
     } else {
       uip_clear_buf();
@@ -376,7 +377,7 @@ PROCESS_THREAD(slip_process, ev, data)
 #ifdef SLIP_CONF_TCPIP_INPUT
       SLIP_CONF_TCPIP_INPUT();
 #else
-      tcpip_input();
+      NETSTACK_IP.input();
 #endif
     }
 #endif /* NETSTACK_CONF_WITH_IPV6 */

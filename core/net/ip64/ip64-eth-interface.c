@@ -36,6 +36,7 @@
 #include "ip64.h"
 #include "ip64-arp.h"
 #include "ip64-eth-interface.h"
+#include "net/netstack.h"
 
 #include <string.h>
 
@@ -72,7 +73,7 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
       PRINT6ADDR(&UIP_IP_BUF->destipaddr);
       PRINTF("\n");
 
-      tcpip_input();
+      NETSTACK_IP.input();
       printf("Done\n");
     }
   }

@@ -38,6 +38,7 @@
  * \author  Julien Abeille <jabeille@cisco.com> (IPv6 related code)
  */
 
+#include "tcpip.h"
 #include "contiki-net.h"
 #include "net/ip/uip-split.h"
 #include "net/ip/uip-packetqueue.h"
@@ -114,26 +115,19 @@ enum {
 /* Called on IP packet output. */
 #if NETSTACK_CONF_WITH_IPV6
 
-static uint8_t (* outputfunc)(const uip_lladdr_t *a);
-
-uint8_t
+static uint8_t
 tcpip_output(const uip_lladdr_t *a)
 {
   int ret;
-  if(outputfunc != NULL) {
-    ret = outputfunc(a);
+  if(NETSTACK_NETWORK.output != NULL) {
+    ret = NETSTACK_NETWORK.output((const linkaddr_t *) a);
     return ret;
   }
-  UIP_LOG("tcpip_output: Use tcpip_set_outputfunc() to set an output function");
+  UIP_LOG("tcpip_output: add NETSTACK_NETWORK.output to set an output function");
   return 0;
 }
 
-void
-tcpip_set_outputfunc(uint8_t (*f)(const uip_lladdr_t *))
-{
-  outputfunc = f;
-}
-#else
+#else /* NETSTACK_CONF_WITH_IPV6 */
 
 static uint8_t (* outputfunc)(void);
 uint8_t
@@ -207,12 +201,7 @@ packet_input(void)
 #if UIP_CONF_TCP_SPLIT
       uip_split_output();
 #else /* UIP_CONF_TCP_SPLIT */
-#if NETSTACK_CONF_WITH_IPV6
-      tcpip_ipv6_output();
-#else /* NETSTACK_CONF_WITH_IPV6 */
-      PRINTF("tcpip packet_input output len %d\n", uip_len);
-      tcpip_output();
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+      NETSTACK_IP.output();
 #endif /* UIP_CONF_TCP_SPLIT */
     }
   }
@@ -427,15 +416,7 @@ eventhandler(process_event_t ev, process_data_t data)
                  connections. */
           etimer_restart(&periodic);
           uip_periodic(i);
-#if NETSTACK_CONF_WITH_IPV6
-          tcpip_ipv6_output();
-#else
-          if(uip_len > 0) {
-            PRINTF("tcpip_output from periodic len %d\n", uip_len);
-            tcpip_output();
-            PRINTF("tcpip_output after periodic len %d\n", uip_len);
-          }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+          NETSTACK_IP.output();
         }
       }
 #endif /* UIP_TCP */
@@ -452,7 +433,7 @@ eventhandler(process_event_t ev, process_data_t data)
     if(data == &uip_reass_timer &&
         etimer_expired(&uip_reass_timer)) {
       uip_reass_over();
-      tcpip_ipv6_output();
+      NETSTACK_IP.output();
     }
 #endif /* UIP_CONF_IPV6_REASSEMBLY */
     /*
@@ -468,13 +449,13 @@ eventhandler(process_event_t ev, process_data_t data)
     if(data == &uip_ds6_timer_rs &&
         etimer_expired(&uip_ds6_timer_rs)) {
       uip_ds6_send_rs();
-      tcpip_ipv6_output();
+      NETSTACK_IP.output();
     }
 #endif /* !UIP_CONF_ROUTER */
     if(data == &uip_ds6_timer_periodic &&
         etimer_expired(&uip_ds6_timer_periodic)) {
       uip_ds6_periodic();
-      tcpip_ipv6_output();
+      NETSTACK_IP.output();
     }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
   }
@@ -484,14 +465,7 @@ eventhandler(process_event_t ev, process_data_t data)
   case TCP_POLL:
     if(data != NULL) {
       uip_poll_conn(data);
-#if NETSTACK_CONF_WITH_IPV6
-      tcpip_ipv6_output();
-#else /* NETSTACK_CONF_WITH_IPV6 */
-      if(uip_len > 0) {
-        PRINTF("tcpip_output from tcp poll len %d\n", uip_len);
-        tcpip_output();
-      }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+      NETSTACK_IP.output();
       /* Start the periodic polling, if it isn't already active. */
       start_periodic_tcp_timer();
     }
@@ -501,13 +475,7 @@ eventhandler(process_event_t ev, process_data_t data)
   case UDP_POLL:
     if(data != NULL) {
       uip_udp_periodic_conn(data);
-#if NETSTACK_CONF_WITH_IPV6
-      tcpip_ipv6_output();
-#else
-      if(uip_len > 0) {
-        tcpip_output();
-      }
-#endif /* UIP_UDP */
+      NETSTACK_IP.output();
     }
     break;
 #endif /* UIP_UDP */
@@ -518,7 +486,7 @@ eventhandler(process_event_t ev, process_data_t data)
   };
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 tcpip_input(void)
 {
   process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
@@ -526,7 +494,7 @@ tcpip_input(void)
 }
 /*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
-void
+static void
 tcpip_ipv6_output(void)
 {
   uip_ds6_nbr_t *nbr = NULL;
@@ -604,7 +572,7 @@ tcpip_ipv6_output(void)
             PRINTF("FALLBACK: output error. Reporting DST UNREACH\n");
             uip_icmp6_error_output(ICMP6_DST_UNREACH, ICMP6_DST_UNREACH_ADDR, 0);
             uip_flags = 0;
-            tcpip_ipv6_output();
+            NETSTACK_IP.output();
             return;
           }
 #else
@@ -847,3 +815,24 @@ PROCESS_THREAD(tcpip_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+static void
+init(void)
+{
+  process_start(&tcpip_process, NULL);
+}
+
+/*---------------------------------------------------------------------------*/
+
+const struct ip_driver uip_ip_driver = {
+#if NETSTACK_CONF_WITH_IPV6
+    "uip6",
+    init,
+    tcpip_input,
+    tcpip_ipv6_output
+#else
+    "uip",
+    init,
+    tcpip_input,
+    tcpip_output
+#endif
+};

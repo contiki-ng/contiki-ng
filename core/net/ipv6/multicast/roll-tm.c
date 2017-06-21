@@ -627,7 +627,7 @@ handle_timer(void *ptr)
           memcpy(UIP_IP_BUF, &locmpptr->buff, uip_len);
 
           UIP_MCAST6_STATS_ADD(mcast_fwd);
-          tcpip_output(NULL);
+          NETSTACK_IP.output();
           MCAST_PACKET_SEND_CLR(locmpptr);
           watchdog_periodic();
         }
@@ -877,7 +877,7 @@ icmp_output()
 
   VERBOSE_PRINTF("ROLL TM: ICMPv6 Out - %u bytes\n", payload_len);
 
-  tcpip_ipv6_output();
+  NETSTACK_IP.output();
   ROLL_TM_STATS_ADD(icmp_out);
   return;
 }
@@ -1377,7 +1377,8 @@ out()
    * from re-sending it.
    */
   if(accept(ROLL_TM_DGRAM_OUT)) {
-    tcpip_output(NULL);
+    NETSTACK_IP.output();
+
     UIP_MCAST6_STATS_ADD(mcast_out);
   }
 

@@ -42,7 +42,7 @@
 #include "net/netstack.h"
 
 #if NETSTACK_CONF_WITH_IPV6
-uint8_t uip_driver_send(const uip_lladdr_t *);
+uint8_t uip_driver_send(const linkaddr_t *localdest);
 #else
 uint8_t uip_driver_send(void);
 #endif

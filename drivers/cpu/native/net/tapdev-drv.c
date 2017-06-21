@@ -41,6 +41,7 @@
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #include "tapdev-drv.h"
+#include "net/netstack.h"
 
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
 #define IPBUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
@@ -66,12 +67,12 @@ pollhandler(void)
   if(uip_len > 0) {
 #if NETSTACK_CONF_WITH_IPV6
     if(BUF->type == uip_htons(UIP_ETHTYPE_IPV6)) {
-      tcpip_input();
+      NETSTACK_IP.input();
     } else
 #endif /* NETSTACK_CONF_WITH_IPV6 */
     if(BUF->type == uip_htons(UIP_ETHTYPE_IP)) {
       uip_len -= sizeof(struct uip_eth_hdr);
-      tcpip_input();
+      NETSTACK_IP.input();
     } else if(BUF->type == uip_htons(UIP_ETHTYPE_ARP)) {
 #if !NETSTACK_CONF_WITH_IPV6 //math
        uip_arp_arpin();
@@ -97,8 +98,6 @@ PROCESS_THREAD(tapdev_process, ev, data)
   tapdev_init();
 #if !NETSTACK_CONF_WITH_IPV6
   tcpip_set_outputfunc(tapdev_output);
-#else
-  tcpip_set_outputfunc(tapdev_send);
 #endif
   process_poll(&tapdev_process);
 
