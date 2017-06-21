@@ -678,7 +678,7 @@ tcpip_ipv6_output(void)
     uip_lladdr_t lladdr;
     uip_ds6_set_lladdr_from_iid(&lladdr, nexthop);
     if((nbr = uip_ds6_nbr_add(nexthop, &lladdr,
-        0, NBR_REACHABLE, NBR_TABLE_REASON_IPV6_ND, NULL)) == NULL) {
+        0, NBR_REACHABLE, NBR_TABLE_REASON_IPV6_ND_AUTOFILL, NULL)) == NULL) {
       PRINTF("tcpip_ipv6_output: failed to autofill neighbor cache for host ");
       PRINT6ADDR(nexthop);
       PRINTF("\n");
