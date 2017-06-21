@@ -184,7 +184,7 @@ typedef struct unit_test {
  */
 #define UNIT_TEST_RESULT(name) (unit_test_##name.result)
 
-/* The default print function. */
-void unit_test_print_report(const unit_test_t *utp);
+/* The print function. */
+void UNIT_TEST_PRINT_FUNCTION(const unit_test_t *utp);
 
 #endif /* !UNIT_TEST_H */

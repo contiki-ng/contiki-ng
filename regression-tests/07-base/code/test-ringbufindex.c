@@ -42,7 +42,7 @@ AUTOSTART_PROCESSES(&test_process);
 static struct ringbufindex ri;
 static const uint8_t ri_size = 2;
 
-static void
+void
 test_print_report(const unit_test_t *utp)
 {
   printf("=check-me= ");
