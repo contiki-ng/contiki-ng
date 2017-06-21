@@ -57,7 +57,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "
+#define LOG_MODULE "CSMA"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
 /* Constants of the IEEE 802.15.4 standard */
