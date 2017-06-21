@@ -91,8 +91,8 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 
 /* Main log function */
 #define LOG(level, ...) do {  \
-                            if (level <= LOG_LEVEL) { \
-                              if (LOG_WITH_LOC) { \
+                            if(level <= LOG_LEVEL) { \
+                              if(LOG_WITH_LOC) { \
                                 LOG_OUTPUT("%s:%d: ", __FILE__, __LINE__); \
                               } \
                               LOG_OUTPUT("%s: ", LOG_MODULE); \
@@ -102,21 +102,21 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 
 /* For Cooja annotations */
 #define LOG_ANNOTATE(...) do {  \
-                            if (LOG_WITH_ANNOTATE) { \
+                            if(LOG_WITH_ANNOTATE) { \
                               LOG_OUTPUT(__VA_ARGS__); \
                             } \
                         } while (0)
 
 /* Link-layer address */
 #define LOG_LLADDR(level, lladdr) do {  \
-                            if (level <= LOG_LEVEL) { \
+                            if(level <= LOG_LEVEL) { \
                               net_debug_lladdr_print(lladdr); \
                             } \
                         } while (0)
 
 /* IPv6 address */
 #define LOG_6ADDR(level, lladdr) do {  \
-                           if (level <= LOG_LEVEL) { \
+                           if(level <= LOG_LEVEL) { \
                              uip_debug_ipaddr_print(lladdr); \
                            } \
                        } while (0)
