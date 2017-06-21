@@ -53,7 +53,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "TCP/IP"
+#define LOG_MODULE "TCP/IP"
 #define LOG_LEVEL TCPIP_LOG_LEVEL
 
 #define UIP_ICMP_BUF ((struct uip_icmp_hdr *)&uip_buf[UIP_LLIPH_LEN + uip_ext_len])

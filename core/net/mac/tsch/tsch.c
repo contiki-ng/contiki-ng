@@ -63,7 +63,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "TSCH"
+#define LOG_MODULE "TSCH"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
 /* Use to collect link statistics even on Keep-Alive, even though they were

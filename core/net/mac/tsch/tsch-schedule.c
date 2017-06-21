@@ -57,7 +57,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "TSCH Schedule"
+#define LOG_MODULE "TSCH Schedule"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
 /* Pre-allocated space for links */

@@ -73,7 +73,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "6LoWPAN"
+#define LOG_MODULE "6LoWPAN"
 #define LOG_LEVEL SICSLOWPAN_LOG_LEVEL
 
 #ifndef SICSLOWPAN_COMPRESSION

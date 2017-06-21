@@ -48,7 +48,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "TSCH RPL"
+#define LOG_MODULE "TSCH RPL"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
 /*---------------------------------------------------------------------------*/

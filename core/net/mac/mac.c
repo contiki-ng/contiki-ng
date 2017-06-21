@@ -34,7 +34,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "MAC"
+#define LOG_MODULE "MAC"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
 /*---------------------------------------------------------------------------*/

@@ -53,7 +53,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "IPv6 Data Structures"
+#define LOG_MODULE "IPv6 Data Structures"
 #define LOG_LEVEL IPV6_LOG_LEVEL
 
 struct etimer uip_ds6_timer_periodic;                           /**< Timer for maintenance of data structures */

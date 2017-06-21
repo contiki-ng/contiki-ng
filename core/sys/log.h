@@ -95,7 +95,7 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
                               if (LOG_WITH_LOC) { \
                                 LOG_OUTPUT("%s:%d: ", __FILE__, __LINE__); \
                               } \
-                              LOG_OUTPUT("%s: ", LOG_MODULE_STR); \
+                              LOG_OUTPUT("%s: ", LOG_MODULE); \
                               LOG_OUTPUT(__VA_ARGS__); \
                             } \
                         } while (0)

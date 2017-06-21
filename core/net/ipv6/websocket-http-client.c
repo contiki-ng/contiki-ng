@@ -40,7 +40,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE_STR "IPv6 Websocket"
+#define LOG_MODULE "IPv6 Websocket"
 #define LOG_LEVEL IPV6_LOG_LEVEL
 
 enum {
