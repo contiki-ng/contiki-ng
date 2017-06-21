@@ -509,13 +509,13 @@ get_nexthop(uip_ipaddr_t *addr)
   uip_ipaddr_t *nexthop;
   uip_ds6_route_t *route;
 
-  LOG_INFO("tcpip_ipv6_output: looking for next hop for host ");
+  LOG_INFO("output: looking for next hop for host ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO("\n");
 
   if(NEXTHOP_NON_STORING(addr)) {
-    LOG_INFO("tcpip_ipv6_output: selected next hop from SRH: ");
-    LOG_INFO_6ADDR(nexthop);
+    LOG_INFO("output: selected next hop from SRH: ");
+    LOG_INFO_6ADDR(addr);
     LOG_INFO("\n");
     return addr;
   }
@@ -524,7 +524,7 @@ get_nexthop(uip_ipaddr_t *addr)
      link. If so, we simply use the destination address as our
      nexthop address. */
   if(uip_ds6_is_addr_onlink(&UIP_IP_BUF->destipaddr)) {
-    LOG_INFO("tcpip_ipv6_output: destination is on link\n");
+    LOG_INFO("output: destination is on link\n");
     return &UIP_IP_BUF->destipaddr;
   }
 
@@ -533,18 +533,16 @@ get_nexthop(uip_ipaddr_t *addr)
 
   /* No route was found - we send to the default route instead. */
   if(route == NULL) {
-    LOG_INFO("tcpip_ipv6_output: no route found, using default route: ");
-    LOG_INFO_6ADDR(nexthop);
-    LOG_INFO("\n");
     nexthop = uip_ds6_defrt_choose();
     if(nexthop == NULL) {
       output_fallback();
+    } else {
+      LOG_INFO("output: no route found, using default route: ");
+      LOG_INFO_6ADDR(nexthop);
+      LOG_INFO("\n");
     }
 
   } else {
-    LOG_INFO("tcpip_ipv6_output: found next hop from routing table: ");
-    LOG_INFO_6ADDR(nexthop);
-    LOG_INFO("\n");
     /* A route was found, so we look up the nexthop neighbor for
        the route. */
     nexthop = uip_ds6_route_nexthop(route);
@@ -552,9 +550,14 @@ get_nexthop(uip_ipaddr_t *addr)
     /* If the nexthop is dead, for example because the neighbor
        never responded to link-layer acks, we drop its route. */
     if(nexthop == NULL) {
+      LOG_ERR("output: found dead route\n");
       drop_route(route);
       /* We don't have a nexthop to send the packet to, so we drop
          it. */
+    } else {
+      LOG_INFO("output: found next hop from routing table: ");
+      LOG_INFO_6ADDR(nexthop);
+      LOG_INFO("\n");
     }
   }
 
@@ -625,7 +628,7 @@ send_nd6_ns(uip_ipaddr_t *nexthop)
     /* Send the first NS try from here (multicast destination IP address). */
   }
 #else
-  LOG_ERR("tcpip_ipv6_output: neighbor not in cache: ");
+  LOG_ERR("output: neighbor not in cache: ");
   LOG_ERR_6ADDR(nexthop);
   LOG_ERR("\n");
 #endif
