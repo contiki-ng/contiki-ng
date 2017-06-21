@@ -668,6 +668,25 @@ tcpip_ipv6_output(void)
   annotate_transmission(nexthop);
 
   nbr = uip_ds6_nbr_lookup(nexthop);
+
+#if UIP_ND6_AUTOFILL_NBR_CACHE
+  if(nbr == NULL) {
+    /* Neighbor not found in cache? Derive its link-layer address from it's
+    link-local IPv6, assuming it used autoconfiguration. This is not
+    standard-compliant but this is a convenient way to keep the
+    neighbor cache out of the way in cases ND is not used */
+    uip_lladdr_t lladdr;
+    uip_ds6_set_lladdr_from_iid(&lladdr, nexthop);
+    if((nbr = uip_ds6_nbr_add(nexthop, &lladdr,
+        0, NBR_REACHABLE, NBR_TABLE_REASON_IPV6_ND_AUTOFILL, NULL)) == NULL) {
+      PRINTF("tcpip_ipv6_output: failed to autofill neighbor cache for host ");
+      PRINT6ADDR(nexthop);
+      PRINTF("\n");
+      goto exit;
+    }
+   }
+#endif /* UIP_ND6_AUTOFILL_NBR_CACHE */
+
   if(nbr == NULL) {
     if(send_nd6_ns(nexthop)) {
       PRINTF("tcpip_ipv6_output: failed to add neighbor to cache\n");
