@@ -53,7 +53,7 @@ uint8_t
 tapdev_output(void)
 {
    uip_arp_out();
-   tapdev_send();  
+   tapdev_send();
    return 0;
 }
 #endif
@@ -81,7 +81,7 @@ pollhandler(void)
        if(uip_len > 0) {
 	  tapdev_send();
        }
-#endif              
+#endif
     } else {
       uip_clear_buf();
     }

@@ -158,14 +158,6 @@
 #define UIP_CONF_MAX_CONNECTIONS 8
 #endif /* UIP_CONF_MAX_CONNECTIONS */
 
-
-/* UIP_CONF_TCP_SPLIT enables a performance optimization hack, where
-   each maximum-sized TCP segment is split into two, to avoid the
-   performance degradation that is caused by delayed ACKs. */
-#ifndef UIP_CONF_TCP_SPLIT
-#define UIP_CONF_TCP_SPLIT 0
-#endif /* UIP_CONF_TCP_SPLIT */
-
 /* NBR_TABLE_CONF_MAX_NEIGHBORS specifies the maximum number of neighbors
    that each node will be able to handle. */
 #ifndef NBR_TABLE_CONF_MAX_NEIGHBORS

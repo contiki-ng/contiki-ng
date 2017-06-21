@@ -76,25 +76,6 @@
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
 
-#ifndef NETSTACK_CONF_WITH_IPV4
-#define NETSTACK_CONF_WITH_IPV4 0
-#endif
-#if NETSTACK_CONF_WITH_IPV4
-#include "dev/rs232.h"
-#include "dev/slip.h"
-#include "net/ip/uip.h"
-#include "net/ipv4/uip-fw.h"
-#include "net/uip-fw-drv.h"
-#include "net/ipv4/uip-over-mesh.h"
-static struct uip_fw_netif slipif =
-  {UIP_FW_NETIF(0,0,0,0, 255,255,255,255, slip_send)};
-static struct uip_fw_netif meshif =
-  {UIP_FW_NETIF(172,16,0,0, 255,255,0,0, uip_over_mesh_send)};
-
-#define UIP_OVER_MESH_CHANNEL 8
-static uint8_t is_gateway;
-#endif /* NETSTACK_CONF_WITH_IPV4 */
-
 #ifndef NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_CONF_WITH_IPV6 0
 #endif
@@ -137,22 +118,6 @@ long referenceVar;
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
 
-/*---------------------------------------------------------------------------*/
-#if NETSTACK_CONF_WITH_IPV4
-static void
-set_gateway(void)
-{
-  if(!is_gateway) {
-    printf("%d.%d: making myself the IP network gateway.\n\n",
-       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    printf("IPv4 address of the gateway: %d.%d.%d.%d\n\n",
-       uip_ipaddr_to_quad(&uip_hostaddr));
-    uip_over_mesh_set_gateway(&linkaddr_node_addr);
-    uip_over_mesh_make_announced_gateway();
-    is_gateway = 1;
-  }
-}
-#endif /* NETSTACK_CONF_WITH_IPV4 */
 /*---------------------------------------------------------------------------*/
 static void
 print_processes(struct process * const processes[])
@@ -242,35 +207,6 @@ contiki_init()
   netstack_init();
   printf("%s/%s\n",
          NETSTACK_NETWORK.name, NETSTACK_MAC.name);
-
-#if NETSTACK_CONF_WITH_IPV4
-  /* IPv4 CONFIGURATION */
-  {
-    uip_ipaddr_t hostaddr, netmask;
-
-    process_start(&tcpip_process, NULL);
-    process_start(&uip_fw_process, NULL);
-    process_start(&slip_process, NULL);
-
-    slip_set_input_callback(set_gateway);
-
-    uip_init();
-    uip_fw_init();
-    uip_ipaddr(&hostaddr, 172,16,linkaddr_node_addr.u8[0],linkaddr_node_addr.u8[1]);
-    uip_ipaddr(&netmask, 255,255,0,0);
-    uip_ipaddr_copy(&meshif.ipaddr, &hostaddr);
-
-    uip_sethostaddr(&hostaddr);
-    uip_setnetmask(&netmask);
-    uip_over_mesh_set_net(&hostaddr, &netmask);
-    uip_over_mesh_set_gateway_netif(&slipif);
-    uip_fw_default(&meshif);
-    uip_over_mesh_init(UIP_OVER_MESH_CHANNEL);
-
-    rs232_set_input(slip_input_byte);
-    printf("IPv4 address: %d.%d.%d.%d\n", uip_ipaddr_to_quad(&hostaddr));
-  }
-#endif /* NETSTACK_CONF_WITH_IPV4 */
 
 #if NETSTACK_CONF_WITH_IPV6
   /* IPv6 CONFIGURATION */

@@ -192,8 +192,6 @@
 #endif
 
 #define UIP_CONF_ND6_SEND_RA                 0
-#define UIP_CONF_IP_FORWARD                  0
-#define RPL_CONF_STATS                       0
 
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER       10000
@@ -215,12 +213,6 @@
 #define UIP_CONF_UDP                         1
 #define UIP_CONF_UDP_CHECKSUMS               1
 #define UIP_CONF_ICMP6                       1
-/*---------------------------------------------------------------------------*/
-#else /* NETSTACK_CONF_WITH_IPV6 */
-/* Network setup for non-IPv6 (rime). */
-#define UIP_CONF_IP_FORWARD                  1
-
-#define RIME_CONF_NO_POLITE_ANNOUCEMENTS     0
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 /** @} */

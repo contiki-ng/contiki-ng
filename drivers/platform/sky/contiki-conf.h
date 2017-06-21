@@ -96,7 +96,6 @@
 #define UIP_CONF_IPV6_CHECKS            1
 #define UIP_CONF_IPV6_REASSEMBLY        0
 #define UIP_CONF_NETIF_MAX_ADDRESSES    3
-#define UIP_CONF_IP_FORWARD             0
 #ifndef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE		240
 #endif
@@ -107,9 +106,7 @@
 #define SICSLOWPAN_CONF_MAXAGE                  8
 #endif /* SICSLOWPAN_CONF_FRAG */
 #define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS       2
-#else /* NETSTACK_CONF_WITH_IPV6 */
-#define UIP_CONF_IP_FORWARD      1
-#define UIP_CONF_BUFFER_SIZE     108
+
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #define UIP_CONF_ICMP_DEST_UNREACH 1
@@ -132,8 +129,6 @@
 #define UIP_CONF_UDP_CHECKSUMS   1
 #define UIP_CONF_PINGADDRCONF    0
 #define UIP_CONF_LOGGING         0
-
-#define UIP_CONF_TCP_SPLIT       0
 
 #ifndef AES_128_CONF
 #define AES_128_CONF cc2420_aes_128_driver

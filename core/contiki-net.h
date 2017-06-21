@@ -38,9 +38,6 @@
 
 #include "net/ip/tcpip.h"
 #include "net/ip/uip.h"
-#include "net/ipv4/uip-fw.h"
-#include "net/ipv4/uip-fw-drv.h"
-#include "net/ipv4/uip_arp.h"
 #include "net/ip/uiplib.h"
 #include "net/ip/uip-udp-packet.h"
 #include "net/ip/simple-udp.h"

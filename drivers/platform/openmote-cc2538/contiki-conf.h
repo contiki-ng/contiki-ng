@@ -442,7 +442,6 @@ typedef uint32_t rtimer_clock_t;
 #endif
 
 #define UIP_CONF_ND6_SEND_RA                 0
-#define UIP_CONF_IP_FORWARD                  0
 #define RPL_CONF_STATS                       0
 
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
@@ -483,20 +482,6 @@ typedef uint32_t rtimer_clock_t;
   addr_contexts[0].prefix[1] = UIP_DS6_DEFAULT_PREFIX_1; \
 }
 #endif
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM                    8
-#endif
-/*---------------------------------------------------------------------------*/
-#else /* NETSTACK_CONF_WITH_IPV6 */
-/* Network setup for non-IPv6 (rime). */
-#define UIP_CONF_IP_FORWARD                  1
-
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE               108
-#endif
-
-#define RIME_CONF_NO_POLITE_ANNOUCEMENTS     0
 
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM                    8

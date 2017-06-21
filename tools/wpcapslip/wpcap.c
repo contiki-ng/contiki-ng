@@ -114,7 +114,6 @@ static int (* pcap_sendpacket)(struct pcap *, unsigned char *, int);
 #define ARP_HWTYPE_ETH 1
 
 #include "net/ip/uip.h"
-#include "net/ipv4/uip_arp.h"
 
 struct ethip_hdr {
   struct uip_eth_hdr ethhdr;

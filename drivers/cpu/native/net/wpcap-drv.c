@@ -31,7 +31,6 @@
  */
 
 #include "contiki-net.h"
-#include "net/ipv4/uip-neighbor.h"
 #include "net/wpcap.h"
 
 #include "net/wpcap-drv.h"
@@ -69,7 +68,7 @@ uint8_t
 wpcap_output(void)
 {
    uip_arp_out();
-   wpcap_send();  
+   wpcap_send();
 
    return 0;
 }
@@ -121,7 +120,7 @@ pollhandler(void)
  //   memcpy(uip_buf, uip_buf+14, uip_len);
         memcpy(&uip_buf[UIP_LLH_LEN], uip_buf+14, uip_len);  //LLH_LEN is zero for native border router to slip radio
 //	CopyMemory(uip_buf, uip_buf+14, uip_len);
-//{int i;printf("\n0000 ");for (i=0;i<uip_len;i++) printf("%02x ",*(char*)(uip_buf+i));printf("\n");}	
+//{int i;printf("\n0000 ");for (i=0;i<uip_len;i++) printf("%02x ",*(char*)(uip_buf+i));printf("\n");}
       tcpip_input();
     } else
 	 goto bail;

@@ -38,7 +38,6 @@
 #include "contiki.h"
 
 #include "net/ip/uip.h"
-#include "net/ipv4/uip-fw.h"
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #include "dev/slip.h"
@@ -100,34 +99,6 @@ slip_set_tcpip_input_callback(void (*c)(void))
   tcpip_input_callback = c;
 }
 /*---------------------------------------------------------------------------*/
-#if NETSTACK_CONF_WITH_IPV4
-uint8_t
-slip_send(void)
-{
-  uint16_t i;
-  uint8_t *ptr;
-  uint8_t c;
-
-  slip_arch_writeb(SLIP_END);
-
-  ptr = &uip_buf[UIP_LLH_LEN];
-  for(i = 0; i < uip_len; ++i) {
-    c = *ptr++;
-    if(c == SLIP_END) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_END;
-    } else if(c == SLIP_ESC) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_ESC;
-    }
-    slip_arch_writeb(c);
-  }
-  slip_arch_writeb(SLIP_END);
-
-  return UIP_FW_OK;
-}
-#endif /* NETSTACK_CONF_WITH_IPV4 */
-/*---------------------------------------------------------------------------*/
 uint8_t
 slip_write(const void *_ptr, int len)
 {
@@ -187,9 +158,9 @@ slip_poll_handler(uint8_t *outbuf, uint16_t blen)
       state = STATE_TWOPACKETS;	/* Interrupts do nothing. */
       rxbuf[begin] = 0;
       rxbuf[begin + 1] = 0;
-      
+
       rxbuf_init();
-      
+
       /* this is just a test so far... just to see if it works */
       slip_arch_writeb('!');
       slip_arch_writeb('M');
@@ -260,41 +231,6 @@ PROCESS_THREAD(slip_process, ev, data)
     /* Move packet from rxbuf to buffer provided by uIP. */
     uip_len = slip_poll_handler(&uip_buf[UIP_LLH_LEN],
 				UIP_BUFSIZE - UIP_LLH_LEN);
-#if !NETSTACK_CONF_WITH_IPV6
-    if(uip_len == 4 && strncmp((char*)&uip_buf[UIP_LLH_LEN], "?IPA", 4) == 0) {
-      char buf[8];
-      memcpy(&buf[0], "=IPA", 4);
-      memcpy(&buf[4], &uip_hostaddr, 4);
-      if(input_callback) {
-	input_callback();
-      }
-      slip_write(buf, 8);
-    } else if(uip_len > 0
-       && uip_len == (((uint16_t)(BUF->len[0]) << 8) + BUF->len[1])
-       && uip_ipchksum() == 0xffff) {
-#define IP_DF   0x40
-      if(BUF->ipid[0] == 0 && BUF->ipid[1] == 0 && BUF->ipoffset[0] & IP_DF) {
-	static uint16_t ip_id;
-	uint16_t nid = ip_id++;
-	BUF->ipid[0] = nid >> 8;
-	BUF->ipid[1] = nid;
-	nid = uip_htons(nid);
-	nid = ~nid;		/* negate */
-	BUF->ipchksum += nid;	/* add */
-	if(BUF->ipchksum < nid) { /* 1-complement overflow? */
-	  BUF->ipchksum++;
-	}
-      }
-      if(tcpip_input_callback) {
-        tcpip_input_callback();
-      } else {
-        tcpip_input();
-      }
-    } else {
-      uip_clear_buf();
-      SLIP_STATISTICS(slip_ip_drop++);
-    }
-#else /* NETSTACK_CONF_WITH_IPV6 */
     if(uip_len > 0) {
       if(tcpip_input_callback) {
         tcpip_input_callback();
@@ -302,7 +238,6 @@ PROCESS_THREAD(slip_process, ev, data)
         tcpip_input();
       }
     }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
   }
 
   PROCESS_END();

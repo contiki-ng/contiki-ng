@@ -92,24 +92,6 @@ unsigned char node_mac[8];
  * marks the end of the stack taking into account the used heap  */
 extern uint32_t heap_location;
 
-#ifndef NETSTACK_CONF_WITH_IPV4
-#define NETSTACK_CONF_WITH_IPV4 0
-#endif
-
-#if NETSTACK_CONF_WITH_IPV4
-#include "net/ip/uip.h"
-#include "net/ipv4/uip-fw.h"
-#include "net/ipv4/uip-fw-drv.h"
-#include "net/ipv4/uip-over-mesh.h"
-static struct uip_fw_netif slipif =
-{ UIP_FW_NETIF(192, 168, 1, 2, 255, 255, 255, 255, slip_send) };
-static struct uip_fw_netif meshif =
-{ UIP_FW_NETIF(172, 16, 0, 0, 255, 255, 0, 0, uip_over_mesh_send) };
-
-#define UIP_OVER_MESH_CHANNEL 8
-static uint8_t is_gateway;
-#endif /* NETSTACK_CONF_WITH_IPV4 */
-
 #ifdef EXPERIMENT_SETUP
 #include "experiment-setup.h"
 #endif
@@ -164,23 +146,6 @@ print_processes(struct process *const processes[])
   putchar('\n');
 }
 #endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
-/*---------------------------------------------------------------------------*/
-#if NETSTACK_CONF_WITH_IPV4
-static void
-set_gateway(void)
-{
-  if(!is_gateway) {
-    leds_on(LEDS_RED);
-    printf("%d.%d: making myself the IP network gateway.\n\n",
-           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    printf("IPv4 address of the gateway: %d.%d.%d.%d\n\n",
-           uip_ipaddr_to_quad(&uip_hostaddr));
-    uip_over_mesh_set_gateway(&linkaddr_node_addr);
-    uip_over_mesh_make_announced_gateway();
-    is_gateway = 1;
-  }
-}
-#endif /* NETSTACK_CONF_WITH_IPV4 */
 /*---------------------------------------------------------------------------*/
 static void
 start_autostart_processes()
@@ -332,10 +297,6 @@ main(void)
   ctimer_init();
   uart0_init(UART_BAUD_RATE); /* Must come before first PRINTF */
 
-#if NETSTACK_CONF_WITH_IPV4
-  slip_arch_init(UART_BAUD_RATE);
-#endif /* NETSTACK_CONF_WITH_IPV4 */
-
   /* check for reset source */
   if(bAHI_WatchdogResetEvent()) {
     PRINTF("Init: Watchdog timer has reset device!\r\n");
@@ -350,9 +311,6 @@ main(void)
 #else
   PRINTF(CONTIKI_VERSION_STRING " started with IPV6\n");
 #endif
-#elif NETSTACK_CONF_WITH_IPV4
-  PRINTF(CONTIKI_VERSION_STRING " started with IPV4\n");
-#else
   PRINTF(CONTIKI_VERSION_STRING " started\n");
 #endif
 
@@ -377,35 +335,6 @@ main(void)
   timesynch_init();
   timesynch_set_authority_level((linkaddr_node_addr.u8[0] << 4) + 16);
 #endif /* TIMESYNCH_CONF_ENABLED */
-
-#if NETSTACK_CONF_WITH_IPV4
-  process_start(&tcpip_process, NULL);
-  process_start(&uip_fw_process, NULL); /* Start IP output */
-  process_start(&slip_process, NULL);
-
-  slip_set_input_callback(set_gateway);
-
-  {
-    uip_ipaddr_t hostaddr, netmask;
-
-    uip_init();
-
-    uip_ipaddr(&hostaddr, 172, 16,
-               linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    uip_ipaddr(&netmask, 255, 255, 0, 0);
-    uip_ipaddr_copy(&meshif.ipaddr, &hostaddr);
-
-    uip_sethostaddr(&hostaddr);
-    uip_setnetmask(&netmask);
-    uip_over_mesh_set_net(&hostaddr, &netmask);
-    /*    uip_fw_register(&slipif);*/
-    uip_over_mesh_set_gateway_netif(&slipif);
-    uip_fw_default(&meshif);
-    uip_over_mesh_init(UIP_OVER_MESH_CHANNEL);
-    PRINTF("uIP started with IP address %d.%d.%d.%d\n",
-           uip_ipaddr_to_quad(&hostaddr));
-  }
-#endif /* NETSTACK_CONF_WITH_IPV4 */
 
   watchdog_start();
 

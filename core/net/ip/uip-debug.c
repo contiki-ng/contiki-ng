@@ -44,16 +44,15 @@
 void
 uip_debug_ipaddr_print(const uip_ipaddr_t *addr)
 {
-#if NETSTACK_CONF_WITH_IPV6
   uint16_t a;
   unsigned int i;
   int f;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+
   if(addr == NULL) {
     PRINTA("(NULL IP addr)");
     return;
   }
-#if NETSTACK_CONF_WITH_IPV6
+
   if(ip64_addr_is_ipv4_mapped_addr(addr)) {
     /*
      * Printing IPv4-mapped addresses is done according to RFC 4291 [1]
@@ -85,10 +84,7 @@ uip_debug_ipaddr_print(const uip_ipaddr_t *addr)
         }
         PRINTA("%x", a);
       }
-	}
+	  }
   }
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  PRINTA("%u.%u.%u.%u", addr->u8[0], addr->u8[1], addr->u8[2], addr->u8[3]);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 }
 /*---------------------------------------------------------------------------*/
