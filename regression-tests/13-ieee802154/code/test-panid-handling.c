@@ -111,7 +111,7 @@ UNIT_TEST_REGISTER(panid_frame_ver_0b01, "PAN ID Cmpr Handing (frame-ver: 0b01)"
 UNIT_TEST_REGISTER(panid_frame_ver_0b10, "PAN ID Cmpr Handing (frame-ver: 0b10)");
 
 
-static void
+void
 test_print_report(const unit_test_t *utp)
 {
   printf("=check-me= ");

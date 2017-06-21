@@ -27,6 +27,10 @@ STRIP    = strip
 CFLAGS  += -Wall -fno-asynchronous-unwind-tables -fno-unwind-tables
 LDFLAGS += -Wl,-Map=contiki-$(TARGET).map,--build-id=none
 
+ifeq ($(WERROR),1)
+CFLAGS += -Werror
+endif
+
 ifeq ($(BUILD_RELEASE),1)
 	CFLAGS  += -Os -fno-strict-aliasing -ffunction-sections -fdata-sections
 # XXX: --gc-sections can be very tricky sometimes. If somehow the release
