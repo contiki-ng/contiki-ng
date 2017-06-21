@@ -493,12 +493,12 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
     if(list_head(route->neighbor_routes->route_list) == NULL) {
       /* If this was the only route using this neighbor, remove the
          neighbor from the table - this implicitly unlocks nexthop */
-#if LOG_ANNOTATE_ENABLED
+#if LOG_WITH_ANNOTATE
       uip_ipaddr_t *nexthop = uip_ds6_route_nexthop(route);
       if(nexthop != NULL) {
         LOG_ANNOTATE("#L %u 0\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
       }
-#endif /* LOG_ANNOTATE_ENABLED */
+#endif /* LOG_WITH_ANNOTATE */
       LOG_INFO("Rm: removing neighbor too\n");
       nbr_table_remove(nbr_routes, route->neighbor_routes->route_list);
 #ifdef NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK

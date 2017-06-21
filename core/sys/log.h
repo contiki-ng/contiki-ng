@@ -67,7 +67,6 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #define LOG_LEVEL_WARN         2 /* Warnings */
 #define LOG_LEVEL_INFO         3 /* Basic info */
 #define LOG_LEVEL_DBG          4 /* Detailled debug */
-#define LOG_LEVEL_ANNOTATE     5 /* Cooja annotations */
 
 /* Prefix all logs with file name and line-of-code */
 #ifdef LOG_CONF_WITH_LOC
@@ -83,6 +82,13 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #define LOG_OUTPUT(...) printf(__VA_ARGS__)
 #endif /* LOG_CONF_OUTPUT */
 
+/* Cooja annotations */
+#ifdef LOG_CONF_WITH_ANNOTATE
+#define LOG_WITH_ANNOTATE LOG_CONF_WITH_ANNOTATE
+#else /* LOG_CONF_WITH_ANNOTATE */
+#define LOG_WITH_ANNOTATE 0
+#endif /* LOG_CONF_WITH_ANNOTATE */
+
 /* Main log function */
 #define LOG(level, ...) do {  \
                             if (level <= LOG_LEVEL) { \
@@ -96,7 +102,7 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 
 /* For Cooja annotations */
 #define LOG_ANNOTATE(...) do {  \
-                            if (LOG_LEVEL_ANNOTATE <= LOG_LEVEL) { \
+                            if (LOG_WITH_ANNOTATE) { \
                               LOG_OUTPUT(__VA_ARGS__); \
                             } \
                         } while (0)

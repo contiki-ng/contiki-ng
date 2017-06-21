@@ -18,7 +18,8 @@ platform-specific/jn516x/tsch/uart1-test-node/jn516x \
 sensniff/jn516x \
 ipv6/rpl-tsch/jn516x \
 ipv6/rpl-tsch/jn516x:MAKE_WITH_ORCHESTRA=1 \
-ipv6/rpl-tsch/jn516x:MAKE_WITH_SECURITY=1
+ipv6/rpl-tsch/jn516x:MAKE_WITH_SECURITY=1 \
+logging/jn516x
 
 TOOLS=
 
