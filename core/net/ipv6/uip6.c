@@ -73,7 +73,7 @@
 
 #include "sys/cc.h"
 #include "net/ip/uip.h"
-#include "net/ip/uip_arch.h"
+#include "net/ip/uip-arch.h"
 #include "net/ip/uipopt.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/uip-nd6.h"
