@@ -1,5 +1,5 @@
 /**
-\defgroup sys Contiki system
+\defgroup sys \os system
 @{
 */
 /** @} */

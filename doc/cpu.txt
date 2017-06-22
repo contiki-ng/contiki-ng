@@ -1,5 +1,5 @@
 /**
- * \defgroup cpu Contiki CPUs
+ * \defgroup cpu \os CPUs
  *
  */
 
@@ -29,7 +29,7 @@
  */
 
 /**
- * \defgroup pic32 PIC32 Contiki Port
+ * \defgroup pic32 PIC32 \os Port
  * \ingroup cpu
  */
 

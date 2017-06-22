@@ -1,5 +1,5 @@
 /**
-\defgroup net Communication stacks
+\defgroup net IoT networking
 @{
 */
 /** @} */
