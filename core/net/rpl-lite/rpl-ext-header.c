@@ -48,8 +48,10 @@
 #include "net/rpl-lite/rpl.h"
 #include "net/packetbuf.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /*---------------------------------------------------------------------------*/
 #define UIP_IP_BUF                ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
@@ -113,7 +115,7 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
     return 1;
   }
 
-  PRINTF("RPL: packet needs multi-hop downward routing but SRH not found\n");
+  LOG_ERR("packet needs multi-hop downward routing but SRH not found\n");
   uip_ext_len = last_uip_ext_len;
   return 0;
 }
@@ -153,7 +155,7 @@ rpl_ext_header_srh_update(void)
 
   if(uip_next_hdr == NULL || *uip_next_hdr != UIP_PROTO_ROUTING
       || UIP_RH_BUF->routing_type != RPL_RH_TYPE_SRH) {
-    PRINTF("RPL: SRH not found\n");
+    LOG_INFO("SRH not found\n");
     uip_ext_len = last_uip_ext_len;
     return 0;
   }
@@ -167,7 +169,7 @@ rpl_ext_header_srh_update(void)
   path_len = ((ext_len - padding - RPL_RH_LEN - RPL_SRH_LEN - (16 - cmpre)) / (16 - cmpri)) + 1;
   (void)path_len;
 
-  PRINTF("RPL: read SRH, path len %u, segments left %u, Cmpri %u, Cmpre %u, ext len %u (padding %u)\n",
+  LOG_INFO("read SRH, path len %u, segments left %u, Cmpri %u, Cmpre %u, ext len %u (padding %u)\n",
       path_len, segments_left, cmpri, cmpre, ext_len, padding);
 
   /* Update SRH in-place */
@@ -190,9 +192,9 @@ rpl_ext_header_srh_update(void)
     /* Update segments left field */
     UIP_RH_BUF->seg_left--;
 
-    PRINTF("RPL: SRH next hop ");
-    PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-    PRINTF("\n");
+    LOG_INFO("SRH next hop ");
+    LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+    LOG_INFO("\n");
   }
 
   uip_ext_len = last_uip_ext_len;
@@ -232,16 +234,16 @@ insert_srh_header(void)
   rpl_ns_node_t *node;
   uip_ipaddr_t node_addr;
 
-  PRINTF("RPL: SRH creating source routing header with destination ");
-  PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF(" \n");
+  LOG_INFO("SRH creating source routing header with destination ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO(" \n");
 
   /* Construct source route. We do not do this recursively to keep the runtime stack usage constant. */
 
   /* Get link of the destination and root */
 
   if(!rpl_is_addr_in_our_dag(&UIP_IP_BUF->destipaddr)) {
-    PRINTF("RPL: SRH DAG not found\n");
+    LOG_ERR("SRH destination not in our DAG\n");
     return 0;
   }
 
@@ -253,12 +255,12 @@ insert_srh_header(void)
 
   root_node = rpl_ns_get_node(&curr_instance.dag.dag_id);
   if(root_node == NULL) {
-    PRINTF("RPL: SRH root node not found\n");
+    LOG_ERR("SRH root node not found\n");
     return 0;
   }
 
   if(!rpl_ns_is_addr_reachable(&UIP_IP_BUF->destipaddr)) {
-    PRINTF("RPL: SRH no path found to destination\n");
+    LOG_ERR("SRH no path found to destination\n");
     return 0;
   }
 
@@ -270,7 +272,7 @@ insert_srh_header(void)
   cmpre = 15;
 
   if(node == root_node) {
-    PRINTF("RPL: SRH no need to insert SRH\n");
+    LOG_INFO("SRH no need to insert SRH\n");
     return 1;
   }
 
@@ -282,9 +284,9 @@ insert_srh_header(void)
     cmpri = MIN(cmpri, count_matching_bytes(&node_addr, &UIP_IP_BUF->destipaddr, 16));
     cmpre = cmpri;
 
-    PRINTF("RPL: SRH Hop ");
-    PRINT6ADDR(&node_addr);
-    PRINTF("\n");
+    LOG_INFO("SRH Hop ");
+    LOG_INFO_6ADDR(&node_addr);
+    LOG_INFO("\n");
     node = node->parent;
     path_len++;
   }
@@ -297,12 +299,12 @@ insert_srh_header(void)
   padding = ext_len % 8 == 0 ? 0 : (8 - (ext_len % 8));
   ext_len += padding;
 
-  PRINTF("RPL: SRH path len: %u, ComprI %u, ComprE %u, ext len %u (padding %u)\n",
+  LOG_INFO("SRH path len: %u, ComprI %u, ComprE %u, ext len %u (padding %u)\n",
       path_len, cmpri, cmpre, ext_len, padding);
 
   /* Check if there is enough space to store the extension header */
   if(uip_len + ext_len > UIP_BUFSIZE) {
-    PRINTF("RPL: packet too long: impossible to add source routing header (%u bytes)\n", ext_len);
+    LOG_ERR("packet too long: impossible to add source routing header (%u bytes)\n", ext_len);
     return 1;
   }
 
@@ -369,20 +371,20 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
       || UIP_EXT_HDR_OPT_RPL_BUF->opt_type != UIP_EXT_HDR_OPT_RPL
       || UIP_EXT_HDR_OPT_RPL_BUF->opt_len != RPL_HDR_OPT_LEN) {
 
-    PRINTF("RPL: hop-by-hop extension header has wrong size or type (%u %u %u)\n",
+    LOG_ERR("hop-by-hop extension header has wrong size or type (%u %u %u)\n",
         UIP_HBHO_BUF->len, UIP_EXT_HDR_OPT_RPL_BUF->opt_type,
         UIP_EXT_HDR_OPT_RPL_BUF->opt_len);
     return 0; /* Drop */
   }
 
   if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF->instance) {
-    PRINTF("RPL: unknown instance: %u\n",
+    LOG_ERR("unknown instance: %u\n",
            UIP_EXT_HDR_OPT_RPL_BUF->instance);
     return 0; /* Drop */
   }
 
   if(UIP_EXT_HDR_OPT_RPL_BUF->flags & RPL_HDR_OPT_FWD_ERR) {
-    PRINTF("RPL: forward error!\n");
+    LOG_ERR("forward error!\n");
     return 0; /* Drop */
   }
 
@@ -393,7 +395,7 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
   sender_closer = sender_rank < curr_instance.dag.rank;
   loop_detected = (down && !sender_closer) || (!down && sender_closer);
 
-  PRINTF("RPL: packet going %s, sender closer %d (%d < %d), rank error %u, loop detected %u\n",
+  LOG_INFO("packet going %s, sender closer %d (%d < %d), rank error %u, loop detected %u\n",
       down == 1 ? "down" : "up", sender_closer, sender_rank,
       curr_instance.dag.rank, rank_error_signaled, loop_detected);
 
@@ -422,13 +424,13 @@ update_hbh_header(void)
     if(UIP_HBHO_BUF->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
         || UIP_EXT_HDR_OPT_RPL_BUF->opt_len != RPL_HDR_OPT_LEN) {
 
-      PRINTF("RPL: hop-by-hop extension header has wrong size (%u %u)\n",
+      LOG_ERR("hop-by-hop extension header has wrong size (%u %u)\n",
           UIP_EXT_HDR_OPT_RPL_BUF->opt_len, uip_ext_len);
       return 0; /* Drop */
     }
 
     if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF->instance) {
-      PRINTF("RPL: unable to add/update hop-by-hop extension header: incorrect instance\n");
+      LOG_ERR("unable to add/update hop-by-hop extension header: incorrect instance\n");
       uip_ext_len = last_uip_ext_len;
       return 0; /* Drop */
     }
@@ -458,9 +460,9 @@ insert_hbh_header(void)
   uip_ext_opt_offset = 2;
 
   /* Insert hop-by-hop header */
-  PRINTF("RPL: creating hop-by-hop option\n");
+  LOG_INFO("creating hop-by-hop option\n");
   if(uip_len + RPL_HOP_BY_HOP_LEN > UIP_BUFSIZE) {
-    PRINTF("RPL: packet too long: impossible to add hop-by-hop option\n");
+    LOG_ERR("packet too long: impossible to add hop-by-hop option\n");
     uip_ext_len = last_uip_ext_len;
     return 0;
   }
@@ -511,7 +513,7 @@ rpl_ext_header_update(void)
       if(curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
         return insert_srh_header();
       } else {
-        PRINTF("RPL: packet going down at root, but no support for downward routing\n");
+        LOG_ERR("packet going down at root, but no support for downward routing\n");
         return 0; /* No support for downward routes */
       }
     } else {
@@ -555,7 +557,7 @@ rpl_ext_header_remove(void)
         if(UIP_IP_BUF->len[1] > temp_len) {
           UIP_IP_BUF->len[0]--;
         }
-        PRINTF("RPL: removing RPL extension header (type %u, len %u)\n", *uip_next_hdr, rpl_ext_hdr_len);
+        LOG_INFO("removing RPL extension header (type %u, len %u)\n", *uip_next_hdr, rpl_ext_hdr_len);
         memmove(UIP_EXT_BUF, ((uint8_t *)UIP_EXT_BUF) + rpl_ext_hdr_len, uip_len - UIP_IPH_LEN);
         break;
       case UIP_PROTO_DESTO:

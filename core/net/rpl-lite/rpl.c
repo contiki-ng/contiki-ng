@@ -45,8 +45,10 @@
 
 #include "net/rpl-lite/rpl.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 uip_ipaddr_t rpl_multicast_addr;
 
@@ -118,9 +120,9 @@ rpl_reset_prefix(rpl_prefix_t *last_prefix)
   set_ip_from_prefix(&ipaddr, last_prefix);
   rep = uip_ds6_addr_lookup(&ipaddr);
   if(rep != NULL) {
-    PRINTF("RPL: removing global IP address ");
-    PRINT6ADDR(&ipaddr);
-    PRINTF("\n");
+    LOG_INFO("removing global IP address ");
+    LOG_INFO_6ADDR(&ipaddr);
+    LOG_INFO("\n");
     uip_ds6_addr_rm(rep);
   }
   curr_instance.dag.prefix_info.length = 0;
@@ -132,7 +134,7 @@ rpl_set_prefix_from_addr(uip_ipaddr_t *addr, unsigned len, uint8_t flags)
   uip_ipaddr_t ipaddr;
 
   if(addr == NULL || len == 0 || len > 128 || !(flags & UIP_ND6_RA_FLAG_AUTONOMOUS)) {
-    PRINTF("RPL: ignoring DIO with no, not-supported, or invalid prefix\n");
+    LOG_WARN("not-supported or invalid prefix\n");
     return 0;
   }
 
@@ -146,9 +148,9 @@ rpl_set_prefix_from_addr(uip_ipaddr_t *addr, unsigned len, uint8_t flags)
   /* Add global address if not already there */
   set_ip_from_prefix(&ipaddr, &curr_instance.dag.prefix_info);
   if(uip_ds6_addr_lookup(&ipaddr) == NULL) {
-    PRINTF("RPL: adding global IP address ");
-    PRINT6ADDR(&ipaddr);
-    PRINTF("\n");
+    LOG_INFO("adding global IP address ");
+    LOG_INFO_6ADDR(&ipaddr);
+    LOG_INFO("\n");
     uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
   }
   return 1;
@@ -167,7 +169,7 @@ rpl_set_prefix(rpl_prefix_t *prefix)
 void
 rpl_init(void)
 {
-  PRINTF("RPL: initializing\n");
+  LOG_INFO("initializing\n");
 
   /* Initialize multicast address and register it */
   uip_create_linklocal_rplnodes_mcast(&rpl_multicast_addr);

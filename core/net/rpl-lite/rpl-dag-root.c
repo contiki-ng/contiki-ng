@@ -35,10 +35,10 @@
 #include "net/rpl-lite/rpl.h"
 #include "net/ipv6/uip-ds6-route.h"
 
-#include <string.h>
-
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 #define RPL_DAG_GRACE_PERIOD (CLOCK_SECOND * 20 * 1)
 
@@ -62,12 +62,9 @@ create_dag_callback(void *ptr)
       to_become_root = 0;
     }
   } else {
-#if DEBUG
-    printf("Found a network we did not create\n");
-    printf("version %d grounded %d preference %d rank %d\n",
+    LOG_WARN("found a network we did not create: version %d grounded %d preference %d rank %d\n",
            curr_instance.dag.version, curr_instance.dag.grounded,
            curr_instance.dag.preference, curr_instance.dag.rank);
-#endif /* DEBUG */
 
     /* We found a RPL network that we did not create so we just join
        it without becoming root. But if the network has an infinite
@@ -108,12 +105,12 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 
   uip_ds6_addr_add(&root_ipaddr, 0, ADDR_AUTOCONF);
 
-  printf("IPv6 addresses: ");
+  LOG_INFO("IPv6 addresses: ");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
+      LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
       printf("\n");
     }
   }
@@ -157,10 +154,10 @@ rpl_dag_root_init_dag_immediately(void)
       (uip_ipaddr_t *)rpl_get_global_address(), 64, UIP_ND6_RA_FLAG_AUTONOMOUS);
     rpl_dag_update_state();
 
-    PRINTF("rpl_dag_root_init_dag: created a new RPL dag\n");
+    LOG_INFO("created a new RPL DAG\n");
     return 0;
   } else {
-    PRINTF("rpl_dag_root_init_dag: failed to create a new RPL DAG\n");
+    LOG_ERR("failed to create a new RPL DAG\n");
     return -1;
   }
 }

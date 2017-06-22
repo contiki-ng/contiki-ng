@@ -47,8 +47,10 @@
 #include "net/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /*
  * Policy for neighbor adds
@@ -161,7 +163,7 @@ update_nbr(void)
   /* how many more IP neighbors can be have? */
   num_free = NBR_TABLE_MAX_NEIGHBORS - num_used;
 
-  PRINTF("RPL nbr-policy: free: %d, children: %d, parents: %d routes: %d\n",
+  LOG_INFO("nbr-policy: free: %d, children: %d, parents: %d routes: %d\n",
 	  num_free, num_children, num_parents, uip_ds6_route_num_routes());
 }
 /*---------------------------------------------------------------------------*/
@@ -183,19 +185,19 @@ find_removable_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   update_nbr();
 
   if(!curr_instance.used || curr_instance.instance_id != dio->instance_id) {
-    PRINTF("RPL nbr-policy: did not find instance id: %d\n", dio->instance_id);
+    LOG_WARN("nbr-policy: did not find instance id: %d\n", dio->instance_id);
     return NULL;
   }
 
   /* Add the new neighbor only if it is better than the current worst. */
   if(dio->rank + curr_instance.min_hoprankinc < worst_rank - curr_instance.min_hoprankinc / 2) {
     /* Found *great* neighbor - add! */
-    PRINTF("RPL nbr-policy: DIO rank %u, worse_rank %u -- add to cache\n",
+    LOG_INFO("nbr-policy: DIO rank %u, worse_rank %u -- add to cache\n",
            dio->rank, worst_rank);
     return worst_rank_nbr;
   }
 
-  PRINTF("RPL nbr-policy: DIO rank %u, worse_rank %u -- do not add to cache\n",
+  LOG_INFO("nbr-policy: DIO rank %u, worse_rank %u -- do not add to cache\n",
          dio->rank, worst_rank);
   return NULL;
 }

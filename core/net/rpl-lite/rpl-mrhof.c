@@ -51,8 +51,10 @@
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /* RFC6551 and RFC6719 do not mandate the use of a specific formula to
  * compute the ETX value. This MRHOF implementation relies on the value
@@ -92,7 +94,7 @@ to the threshold of 96 in the non-squared case) */
 static void
 reset(void)
 {
-  PRINTF("RPL: Reset MRHOF\n");
+  LOG_INFO("Reset MRHOF\n");
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
@@ -218,8 +220,8 @@ update_metric_container(void)
   uint16_t path_cost;
   uint8_t type;
 
-  if(curr_instance.used) {
-    PRINTF("RPL: cannot update the metric container when not joined\n");
+  if(!curr_instance.used) {
+    LOG_WARN("cannot update the metric container when not joined\n");
     return;
   }
 
@@ -254,7 +256,7 @@ update_metric_container(void)
       curr_instance.mc.obj.energy.energy_est = path_cost >> 8;
       break;
     default:
-      PRINTF("RPL: MRHOF, non-supported MC %u\n", curr_instance.mc.type);
+      LOG_WARN("MRHOF, non-supported MC %u\n", curr_instance.mc.type);
       break;
   }
 }

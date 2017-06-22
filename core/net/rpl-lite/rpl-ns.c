@@ -41,8 +41,10 @@
 #include "lib/list.h"
 #include "lib/memb.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /* Total number of nodes */
 static int num_nodes;
@@ -115,7 +117,7 @@ rpl_ns_update_node(const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32
     if(parent_node == NULL) {
       parent_node = rpl_ns_update_node(parent, NULL, RPL_ROUTE_INFINITE_LIFETIME);
       if(parent_node == NULL) {
-        PRINTF("RPL NS: no space left for root node!\n");
+        LOG_ERR("NS: no space left for root node!\n");
         return NULL;
       }
     }
@@ -126,9 +128,9 @@ rpl_ns_update_node(const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32
     child_node = memb_alloc(&nodememb);
     /* No space left, abort */
     if(child_node == NULL) {
-      PRINTF("RPL NS: no space left for child ");
-      PRINT6ADDR(child);
-      PRINTF("\n");
+      LOG_ERR("NS: no space left for child ");
+      LOG_ERR_6ADDR(child);
+      LOG_ERR("\n");
       return NULL;
     }
     child_node->parent = NULL;
@@ -156,11 +158,11 @@ rpl_ns_update_node(const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32
     child_node->parent = parent_node;
   }
 
-  PRINTF("RPL NS: updating link, child ");
-  PRINT6ADDR(child);
-  PRINTF(", parent ");
-  PRINT6ADDR(parent);
-  PRINTF(", lifetime %u, num_nodes %u\n", (unsigned)lifetime, num_nodes);
+  LOG_INFO("NS: updating link, child ");
+  LOG_INFO_6ADDR(child);
+  LOG_INFO(", parent ");
+  LOG_INFO_6ADDR(parent);
+  LOG_INFO(", lifetime %u, num_nodes %u\n", (unsigned)lifetime, num_nodes);
 
   return child_node;
 }
@@ -217,13 +219,13 @@ rpl_ns_periodic(unsigned seconds)
           break;
         }
       }
-#if DEBUG
+#if LOG_INFO_ENABLED
       uip_ipaddr_t node_addr;
       rpl_ns_get_node_global_addr(&node_addr, l);
-      PRINTF("RPL NS: removing expired node ");
-      PRINT6ADDR(&node_addr);
-      PRINTF("\n");
-#endif
+      LOG_INFO("NS: removing expired node ");
+      LOG_INFO_6ADDR(&node_addr);
+      LOG_INFO("\n");
+#endif /* LOG_INFO_ENABLED */
       /* No child found, deallocate node */
       list_remove(nodelist, l);
       memb_free(&nodememb, l);

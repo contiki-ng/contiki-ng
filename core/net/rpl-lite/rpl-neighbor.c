@@ -43,14 +43,15 @@
  * \addtogroup uip6
  * @{
  */
-
 #include "contiki.h"
 #include "net/rpl-lite/rpl.h"
 #include "net/link-stats.h"
 #include "net/nbr-table.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /* A configurable function called after every RPL parent switch */
 #ifdef RPL_CALLBACK_PARENT_SWITCH
@@ -82,12 +83,12 @@ rpl_neighbor_print_list(const char *str)
     rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
     clock_time_t clock_now = clock_time();
 
-    printf("RPL nbr: MOP %u OCP %u rank %u dioint %u, DS6 nbr count %u (%s)\n",
+    printf("nbr: MOP %u OCP %u rank %u dioint %u, DS6 nbr count %u (%s)\n",
         curr_instance.mop, curr_instance.of->ocp, curr_rank,
         curr_dio_interval, uip_ds6_nbr_num(), str);
     while(nbr != NULL) {
       const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
-      printf("RPL nbr: %3u %5u, %5u => %5u -- %2u %c%c%c (last tx %u min ago)\n",
+      printf("nbr: %3u %5u, %5u => %5u -- %2u %c%c%c (last tx %u min ago)\n",
           rpl_neighbor_get_ipaddr(nbr)->u8[15],
           nbr->rank,
           rpl_neighbor_get_link_metric(nbr),
@@ -100,7 +101,7 @@ rpl_neighbor_print_list(const char *str)
       );
       nbr = nbr_table_next(rpl_neighbors, nbr);
     }
-    printf("RPL nbr: end of list\n");
+    printf("nbr: end of list\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -211,19 +212,19 @@ void
 rpl_neighbor_set_preferred(rpl_nbr_t *nbr)
 {
   if(curr_instance.dag.preferred_parent != nbr) {
-    PRINTF("RPL: parent switch ");
+    LOG_INFO("parent switch ");
     if(nbr != NULL) {
-      PRINT6ADDR(rpl_neighbor_get_ipaddr(nbr));
+      LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(nbr));
     } else {
-      PRINTF("NULL");
+      LOG_INFO("NULL");
     }
-    PRINTF(" used to be ");
+    LOG_INFO(" used to be ");
     if(curr_instance.dag.preferred_parent != NULL) {
-      PRINT6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+      LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
     } else {
-      PRINTF("NULL");
+      LOG_INFO("NULL");
     }
-    PRINTF("\n");
+    LOG_INFO("\n");
 
 #ifdef RPL_CALLBACK_PARENT_SWITCH
     RPL_CALLBACK_PARENT_SWITCH(curr_instance.dag.preferred_parent, nbr);
@@ -249,7 +250,7 @@ rpl_neighbor_remove_all(void)
 {
   rpl_nbr_t *nbr;
 
-  PRINTF("RPL: removing all neighbors\n");
+  LOG_INFO("removing all neighbors\n");
 
   nbr = nbr_table_head(rpl_neighbors);
   while(nbr != NULL) {

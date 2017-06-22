@@ -48,8 +48,10 @@
 #include "lib/random.h"
 #include "sys/ctimer.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /* A configurable function called after update of the RPL DIO interval */
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
@@ -144,7 +146,7 @@ void
 rpl_timers_dio_reset(const char *str)
 {
   if(curr_instance.used) {
-    PRINTF("RPL: reset DIO timer (%s)\n", str);
+    LOG_INFO("reset DIO timer (%s)\n", str);
 #if !RPL_LEAF_ONLY
     curr_instance.dag.dio_counter = 0;
     curr_instance.dag.dio_intcurrent = curr_instance.dio_intmin;
@@ -410,7 +412,7 @@ handle_probing_timer(void *ptr)
   if(target_ipaddr != NULL) {
     const struct link_stats *stats = rpl_neighbor_get_link_stats(probing_target);
     (void)stats;
-    PRINTF("RPL: probing %u %s last tx %u min ago\n",
+    LOG_INFO("probing %u %s last tx %u min ago\n",
         rpl_neighbor_get_lladdr(probing_target)->u8[7],
         curr_instance.dag.urgent_probing_target != NULL ? "(urgent)" : "",
         probing_target != NULL ?
@@ -460,9 +462,9 @@ handle_periodic_timer(void *ptr)
 
   ctimer_reset(&periodic_timer);
 
-#if DEBUG
+#if LOG_INFO_ENABLED
     rpl_neighbor_print_list("Periodic");
-#endif
+#endif /* LOG_INFO_ENABLED */
 }
 /*---------------------------------------------------------------------------*/
 void

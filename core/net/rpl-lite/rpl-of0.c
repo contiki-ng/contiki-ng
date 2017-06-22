@@ -47,8 +47,10 @@
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /* Constants from RFC6552. We use the default values. */
 #define RANK_STRETCH       0 /* Must be in the range [0;5] */
@@ -87,7 +89,7 @@
 static void
 reset(void)
 {
-  PRINTF("RPL: Reset OF0\n");
+  LOG_INFO("Reset OF0\n");
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t

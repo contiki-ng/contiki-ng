@@ -883,7 +883,7 @@ ext_hdr_options_process(void)
 #if UIP_CONF_IPV6_RPL
       LOG_DBG("Processing RPL option\n");
       if(!rpl_ext_header_hbh_update(uip_ext_opt_offset)) {
-        LOG_DBG("RPL Option Error: Dropping Packet\n");
+        LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
 #endif /* UIP_CONF_IPV6_RPL */

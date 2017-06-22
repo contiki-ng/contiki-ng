@@ -47,8 +47,10 @@
 #include "net/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL RPL_LOG_LEVEL
 
 /*---------------------------------------------------------------------------*/
 extern rpl_of_t rpl_of0, rpl_mrhof;
@@ -78,9 +80,9 @@ rpl_dag_periodic(unsigned seconds)
 static void
 leave_dag(void)
 {
-  PRINTF("RPL: leaving DAG \n");
-  PRINT6ADDR(&curr_instance.dag.dag_id);
-  PRINTF(", instance %u\n", curr_instance.instance_id);
+  LOG_INFO("leaving DAG \n");
+  LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
+  LOG_INFO(", instance %u\n", curr_instance.instance_id);
 
   /* Issue a no-path DAO */
   RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
@@ -135,11 +137,11 @@ void
 rpl_global_repair(void)
 {
   if(rpl_dag_root_is_root()) {
-    PRINTF("RPL: initiating global repair (version=%u, rank=%u)\n",
+    LOG_WARN("initiating global repair (version=%u, rank=%u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
-#if DEBUG
+#if LOG_INFO_ENABLED
     rpl_neighbor_print_list("Global repair");
-#endif
+#endif /* LOG_INFO_ENABLED */
 
     /* Initiate global repair */
     RPL_LOLLIPOP_INCREMENT(curr_instance.dag.version);  /* New DAG version */
@@ -152,11 +154,11 @@ static void
 global_repair_non_root(rpl_dio_t *dio)
 {
   if(!rpl_dag_root_is_root()) {
-    PRINTF("RPL: participating in global repair (version=%u, rank=%u)\n",
+    LOG_WARN("participating in global repair (version=%u, rank=%u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
-#if DEBUG
+#if LOG_INFO_ENABLED
     rpl_neighbor_print_list("Global repair");
-#endif
+#endif /* LOG_INFO_ENABLED */
     /* Re-initialize configuration from DIO */
     init_dag_from_dio(dio);
     rpl_local_repair("Global repair");
@@ -167,7 +169,7 @@ void
 rpl_local_repair(const char *str)
 {
   if(curr_instance.used) { /* Check needed because this is a public function */
-    PRINTF("RPL: local repair (%s)\n", str);
+    LOG_WARN("local repair (%s)\n", str);
     curr_instance.of->reset(); /* Reset OF */
     rpl_neighbor_remove_all(); /* Remove all neighbors */
     rpl_timers_dio_reset("Local repair"); /* Reset Trickle timer */
@@ -201,13 +203,13 @@ rpl_dag_update_state(void)
       /* if new parent, schedule DAO */
       if(curr_instance.dag.preferred_parent != old_parent) {
         rpl_timers_schedule_dao();
-#if DEBUG
+#if LOG_INFO_ENABLED
         rpl_neighbor_print_list("Parent switch");
-#endif
+#endif /* LOG_INFO_ENABLED */
       }
 
       if(curr_instance.dag.rank != old_rank && curr_instance.dag.rank == RPL_INFINITE_RANK) {
-        PRINTF("RPL: intinite rank, trigger local repair\n");
+        LOG_WARN("intinite rank, trigger local repair\n");
         rpl_local_repair("Infinite rank");
       }
     }
@@ -237,7 +239,7 @@ update_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
     nbr = nbr_table_add_lladdr(rpl_neighbors, (linkaddr_t *)lladdr,
                              NBR_TABLE_REASON_RPL_DIO, dio);
     if(nbr == NULL) {
-      PRINTF("RPL: failed to add neighbor\n");
+      LOG_ERR("failed to add neighbor\n");
       return NULL;
     }
   }
@@ -281,12 +283,12 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
    * to re-add this source of the DIO to the neighbor table */
   if(rpl_lollipop_greater_than(dio->version, curr_instance.dag.version)) {
     if(curr_instance.dag.rank == ROOT_RANK) { /* The root should not hear newer versions */
-      PRINTF("RPL: inconsistent DIO version (current: %u, received: %u), initiate global repair\n",
+      LOG_ERR("inconsistent DIO version (current: %u, received: %u), initiate global repair\n",
           curr_instance.dag.version, dio->version);
       curr_instance.dag.version = dio->version; /* Update version and trigger global repair */
       rpl_global_repair();
     } else {
-      PRINTF("RPL: new DIO version (current: %u, received: %u), apply global repair\n",
+      LOG_WARN("new DIO version (current: %u, received: %u), apply global repair\n",
           curr_instance.dag.version, dio->version);
       global_repair_non_root(dio);
     }
@@ -294,7 +296,7 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 
   /* Update IPv6 neighbor cache */
   if(!rpl_icmp6_update_nbr_table(from, NBR_TABLE_REASON_RPL_DIO, dio)) {
-    PRINTF("RPL: IPv6 cache full, dropping DIO\n");
+    LOG_ERR("IPv6 cache full, dropping DIO\n");
     return;
   }
 
@@ -303,7 +305,7 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   last_dtsn = p != NULL ? p->dtsn : RPL_LOLLIPOP_INIT;
 
   if(!update_nbr_from_dio(from, dio)) {
-    PRINTF("RPL: neighbor table full, dropping DIO\n");
+    LOG_ERR("neighbor table full, dropping DIO\n");
     return;
   }
 
@@ -334,13 +336,13 @@ init_dag(uint8_t instance_id, uip_ipaddr_t *dag_id, rpl_ocp_t ocp,
   /* OF */
   of = find_objective_function(ocp);
   if(of == NULL) {
-    PRINTF("RPL: ignoring DIO with an unsupported OF: %u\n", ocp);
+    LOG_ERR("ignoring DIO with an unsupported OF: %u\n", ocp);
     return 0;
   }
 
   /* Prefix */
   if(!rpl_set_prefix_from_addr(prefix, prefix_len, prefix_flags)) {
-    PRINTF("RPL: failed to set prefix");
+    LOG_ERR("failed to set prefix");
     return 0;
   }
 
@@ -397,13 +399,13 @@ process_dio_join_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
   /* Check MOP */
   if(dio->mop != RPL_MOP_NO_DOWNWARD_ROUTES && dio->mop != RPL_MOP_NON_STORING) {
-    PRINTF("RPL: ignoring DIO with an unsupported MOP: %d\n", dio->mop);
+    LOG_WARN("ignoring DIO with an unsupported MOP: %d\n", dio->mop);
     return 0;
   }
 
   /* Initialize instance and DAG data structures */
   if(!init_dag_from_dio(dio)) {
-    PRINTF("RPL: failed to initialize DAG\n");
+    LOG_WARN("failed to initialize DAG\n");
     return 0;
   }
 
@@ -414,12 +416,12 @@ process_dio_join_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
     rpl_schedule_probing();
   #endif /* RPL_WITH_PROBING */
 
-  PRINTF("RPL: joined DAG with instance ID %u, DAG ID ",
+  LOG_INFO("joined DAG with instance ID %u, DAG ID ",
          curr_instance.instance_id);
-  PRINT6ADDR(&curr_instance.dag.dag_id);
-  PRINTF(", rank %u\n", curr_instance.dag.rank);
+  LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
+  LOG_INFO(", rank %u\n", curr_instance.dag.rank);
 
-  ANNOTATE("#A join=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
+  LOG_ANNOTATE("#A join=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
 
   return 1;
 }
@@ -430,7 +432,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   if(!curr_instance.used && !rpl_dag_root_is_root()) {
     /* Attempt to join on this DIO */
     if(!process_dio_join_dag(from, dio)) {
-      PRINTF("RPL: failed to join DAG");
+      LOG_WARN("failed to join DAG");
       return;
     }
   }
@@ -451,7 +453,7 @@ rpl_process_dis(uip_ipaddr_t *from, int is_multicast)
   } else {
     /* Add neighbor to cache and reply to the unicast DIS with a unicast DIO*/
     if(rpl_icmp6_update_nbr_table(from, NBR_TABLE_REASON_RPL_DIS, NULL) != NULL) {
-      PRINTF("RPL: unicast DIS, reply to sender\n");
+      LOG_INFO("unicast DIS, reply to sender\n");
       rpl_icmp6_dio_output(from);
     }
   }
@@ -464,7 +466,7 @@ rpl_process_dao(uip_ipaddr_t *from, rpl_dao_t *dao)
     rpl_ns_expire_parent(from, &dao->parent_addr);
   } else {
     if(!rpl_ns_update_node(from, &dao->parent_addr, RPL_LIFETIME(dao->lifetime))) {
-      PRINTF("RPL: failed to add link on incoming DAO\n");
+      LOG_ERR("failed to add link on incoming DAO\n");
       return;
     }
   }
@@ -507,7 +509,7 @@ rpl_process_hbh(rpl_nbr_t *sender, uint16_t sender_rank, int loop_detected, int 
 #if RPL_LOOP_ERROR_DROP
       /* Drop packet and reset trickle timer, as per  RFC6550 - 11.2.2.2 */
       rpl_timers_dio_reset("HBH error");
-      PRINTF("RPL: rank error and loop detected, dropping\n");
+      LOG_WARN("rank error and loop detected, dropping\n");
       drop = 1;
 #endif /* RPL_LOOP_ERROR_DROP */
     }
@@ -569,12 +571,12 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
 
   rpl_timers_dio_reset("Init root");
 
-  PRINTF("RPL: created DAG with instance ID %u, DAG ID ",
+  LOG_INFO("created DAG with instance ID %u, DAG ID ",
          curr_instance.instance_id);
-  PRINT6ADDR(&curr_instance.dag.dag_id);
-  PRINTF(", rank %u\n", curr_instance.dag.rank);
+  LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
+  LOG_INFO(", rank %u\n", curr_instance.dag.rank);
 
-  ANNOTATE("#A root=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
+  LOG_ANNOTATE("#A root=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
 }
 /*---------------------------------------------------------------------------*/
 void
