@@ -306,8 +306,20 @@ get_free_chunk(const size_t size)
   return best;
 }
 
-/* heapmem_alloc: Allocate an object of the specified size, returning a pointer
-   to it in case of success, and NULL in case of failure. */
+/*
+ * heapmem_alloc: Allocate an object of the specified size, returning
+ * a pointer to it in case of success, and NULL in case of failure.
+ *
+ * When allocating memory, heapmem_alloc() will first try to find a
+ * free chunk of the same size and the requested one. If none can be
+ * find, we pick a larger chunk that is as close in size as possible,
+ * and possibly split it so that the remaining part becomes a chunk
+ * available for allocation.  At most CHUNK_SEARCH_MAX chunks on the
+ * free list will be examined.
+ *
+ * As a last resort, heapmem_alloc() will try to extend the heap
+ * space, and thereby create a new chunk available for use.
+ */
 void *
 #if HEAPMEM_DEBUG
 heapmem_alloc_debug(size_t size, const char *file, const unsigned line)
@@ -341,9 +353,16 @@ heapmem_alloc(size_t size)
 }
 
 /*
- * heapmem_free: Deallocate a previously allocated object. The pointer must
- * exactly match one returned from an earlier call from heapmem_alloc or
- * heapmem_realloc, without any call to heapmem_free in between.
+ * heapmem_free: Deallocate a previously allocated object.
+ *
+ * The pointer must exactly match one returned from an earlier call
+ * from heapmem_alloc or heapmem_realloc, without any call to
+ * heapmem_free in between.
+ *
+ * When performing a deallocation of a chunk, the chunk will be put on
+ * a list of free chunks internally. All free chunks that are adjacent
+ * in memory will be merged into a single chunk in order to mitigate
+ * fragmentation.
  */
 void
 #if HEAPMEM_DEBUG
@@ -365,12 +384,26 @@ heapmem_free(void *ptr)
 }
 
 #if HEAPMEM_REALLOC
-/* heapmem_realloc: Reallocate an object with a different size, possibly moving
-   it in memory. In case of success, the function returns a pointer to the
-   objects new location. In case of failure, it returns NULL. */
+/*
+ * heapmem_realloc: Reallocate an object with a different size,
+ * possibly moving it in memory. In case of success, the function
+ * returns a pointer to the objects new location. In case of failure,
+ * it returns NULL.
+ *
+ * If the size of the new chunk is larger than that of the allocated
+ * chunk, heapmem_realloc() will first attempt to extend the currently
+ * allocated chunk. If that memory is not free, heapmem_ralloc() will
+ * attempt to allocate a completely new chunk, copy the old data to
+ * the new chunk, and deallocate the old chunk.
+ *
+ * If the size of the new chunk is smaller than the allocated one, we
+ * split the allocated chunk if the remaining chunk would be large
+ * enough to justify the overhead of creating a new chunk.
+ */
 void *
 #if HEAPMEM_DEBUG
-heapmem_realloc_debug(void *ptr, size_t size, const char *file, const unsigned line)
+heapmem_realloc_debug(void *ptr, size_t size,
+		      const char *file, const unsigned line)
 #else
 heapmem_realloc(void *ptr, size_t size)
 #endif
