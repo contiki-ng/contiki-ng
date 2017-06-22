@@ -59,10 +59,12 @@
 #define UIP_FIRST_EXT_BUF        ((struct uip_ext_hdr *)&uip_buf[UIP_LLIPH_LEN])
 
 #if UIP_CONF_IPV6_RPL
-#include "rpl.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #endif /* UIP_CONF_IPV6_RPL */
 
 /** \brief temporary IP address */

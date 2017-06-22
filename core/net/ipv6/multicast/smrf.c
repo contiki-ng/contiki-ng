@@ -47,7 +47,11 @@
 #include "net/ipv6/multicast/uip-mcast6-route.h"
 #include "net/ipv6/multicast/uip-mcast6-stats.h"
 #include "net/ipv6/multicast/smrf.h"
-#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include <string.h>

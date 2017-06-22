@@ -45,7 +45,7 @@
  */
 
 #include "contiki.h"
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 #include "net/link-stats.h"
 #include "net/nbr-table.h"
 

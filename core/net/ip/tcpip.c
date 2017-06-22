@@ -45,10 +45,12 @@
 #include "net/ipv6/uip-ds6.h"
 
 #if UIP_CONF_IPV6_RPL
-#include "rpl.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #endif
 
 #include <string.h>
@@ -64,10 +66,6 @@
 
 #ifdef UIP_FALLBACK_INTERFACE
 extern struct uip_fallback_interface UIP_FALLBACK_INTERFACE;
-#endif
-
-#if UIP_CONF_IPV6_RPL
-#include "rpl.h"
 #endif
 
 process_event_t tcpip_event;

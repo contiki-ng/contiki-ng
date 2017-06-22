@@ -41,7 +41,7 @@
 
 /********** Includes **********/
 
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 
 /**
  * \addtogroup uip6

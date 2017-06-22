@@ -45,7 +45,7 @@
  * @{
  */
 
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 #include "net/packetbuf.h"
 
 #define DEBUG DEBUG_NONE

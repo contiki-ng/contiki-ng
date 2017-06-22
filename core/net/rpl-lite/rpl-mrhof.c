@@ -47,7 +47,7 @@
  * @{
  */
 
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
 

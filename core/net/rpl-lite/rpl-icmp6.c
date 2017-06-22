@@ -46,7 +46,7 @@
  * @{
  */
 
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/packetbuf.h"
 #include "lib/random.h"

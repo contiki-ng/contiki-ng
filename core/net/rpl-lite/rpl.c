@@ -43,7 +43,7 @@
  * @{
  */
 
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"

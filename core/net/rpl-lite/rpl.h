@@ -41,17 +41,17 @@
 
 /********** Includes **********/
 
-#include "uip.h"
-#include "rpl-const.h"
-#include "rpl-conf.h"
-#include "rpl-types.h"
-#include "rpl-icmp6.h"
-#include "rpl-dag.h"
-#include "rpl-ns.h"
-#include "rpl-dag-root.h"
-#include "rpl-neighbor.h"
-#include "rpl-ext-header.h"
-#include "rpl-timers.h"
+#include "net/ip/uip.h"
+#include "net/rpl-lite/rpl-const.h"
+#include "net/rpl-lite/rpl-conf.h"
+#include "net/rpl-lite/rpl-types.h"
+#include "net/rpl-lite/rpl-icmp6.h"
+#include "net/rpl-lite/rpl-dag.h"
+#include "net/rpl-lite/rpl-ns.h"
+#include "net/rpl-lite/rpl-dag-root.h"
+#include "net/rpl-lite/rpl-neighbor.h"
+#include "net/rpl-lite/rpl-ext-header.h"
+#include "net/rpl-lite/rpl-timers.h"
 
 /**
  * \addtogroup uip6

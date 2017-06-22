@@ -45,7 +45,11 @@
 #include "sys/stimer.h"
 #include "lib/list.h"
 #if UIP_CONF_IPV6_RPL
-#include "rpl-conf.h"
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl-conf.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl-conf.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #endif
 
 #ifdef UIP_CONF_MAX_ROUTES

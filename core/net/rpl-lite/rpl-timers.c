@@ -43,7 +43,7 @@
  */
 
 #include "contiki-conf.h"
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 #include "net/link-stats.h"
 #include "lib/random.h"
 #include "sys/ctimer.h"

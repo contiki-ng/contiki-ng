@@ -34,7 +34,11 @@
 
 /********** Includes **********/
 
-#include "rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #include "net/mac/tsch/tsch-queue.h"
 
 /********** Functions *********/

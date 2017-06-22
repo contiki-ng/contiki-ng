@@ -38,10 +38,12 @@
 #if UIP_CONF_IPV6_RPL
 
 #include "contiki.h"
-#include "rpl.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-private.h"
 #include "net/mac/tsch/tsch-schedule.h"

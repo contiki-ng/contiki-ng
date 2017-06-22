@@ -37,7 +37,7 @@
 #ifndef RPL_PRIVATE_H
 #define RPL_PRIVATE_H
 
-#include "rpl.h"
+#include "net/rpl/rpl.h"
 
 #include "lib/list.h"
 #include "net/ip/uip.h"
@@ -45,7 +45,7 @@
 #include "sys/ctimer.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "rpl-ns.h"
+#include "net/rpl/rpl-ns.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 /*---------------------------------------------------------------------------*/
@@ -252,7 +252,7 @@ struct rpl_dio {
 };
 typedef struct rpl_dio rpl_dio_t;
 
-#if RPL_CONF_STATS		
+#if RPL_CONF_STATS
 /* Statistics for fault management. */
 struct rpl_stats {
   uint16_t mem_overflows;

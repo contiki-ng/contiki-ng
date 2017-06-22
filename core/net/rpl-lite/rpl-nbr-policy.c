@@ -44,7 +44,7 @@
  *
  */
 
-#include "rpl.h"
+#include "net/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
 
 #define DEBUG DEBUG_NONE

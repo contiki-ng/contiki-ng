@@ -43,8 +43,8 @@
 
 /********** Includes  **********/
 
-#include "uip.h"
-#include "rpl.h"
+#include "net/ip/uip.h"
+#include "net/rpl-lite/rpl.h"
 
 /**
  * \addtogroup uip6

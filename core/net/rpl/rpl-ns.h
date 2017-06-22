@@ -41,7 +41,7 @@
 #ifndef RPL_NS_H
 #define RPL_NS_H
 
-#include "rpl-conf.h"
+#include "net/rpl/rpl-conf.h"
 
 #ifdef RPL_NS_CONF_LINK_NUM
 #define RPL_NS_LINK_NUM RPL_NS_CONF_LINK_NUM
