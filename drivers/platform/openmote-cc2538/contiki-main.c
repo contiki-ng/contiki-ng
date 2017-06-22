@@ -129,7 +129,7 @@ set_rf_params(void)
 #if STARTUP_CONF_VERBOSE
   {
     int i;
-    printf("Rime configured with address ");
+    printf("Contiki configured with address ");
     for(i = 0; i < LINKADDR_SIZE - 1; i++) {
       printf("%02x:", linkaddr_node_addr.u8[i]);
     }

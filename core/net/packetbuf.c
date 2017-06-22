@@ -32,7 +32,7 @@
 
 /**
  * \file
- *         Rime buffer (packetbuf) management
+ *         Packet buffer (packetbuf) management
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
@@ -90,20 +90,6 @@ packetbuf_copyfrom(const void *from, uint16_t len)
   memcpy(packetbuf, from, l);
   buflen = l;
   return l;
-}
-/*---------------------------------------------------------------------------*/
-void
-packetbuf_compact(void)
-{
-  int16_t i;
-
-  if(bufptr) {
-    /* shift data to the left */
-    for(i = 0; i < buflen; i++) {
-      packetbuf[hdrlen + i] = packetbuf[packetbuf_hdrlen() + i];
-    }
-    bufptr = 0;
-  }
 }
 /*---------------------------------------------------------------------------*/
 int

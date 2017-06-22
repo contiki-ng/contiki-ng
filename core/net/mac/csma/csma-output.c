@@ -192,9 +192,6 @@ send_one_packet(mac_callback_t sent, void *ptr)
          sending with auto ack. */
       ret = MAC_TX_COLLISION;
     } else {
-      if(!is_broadcast) {
-        RIMESTATS_ADD(reliabletx);
-      }
 
       switch(NETSTACK_RADIO.transmit(packetbuf_totlen())) {
       case RADIO_TX_OK:
@@ -236,7 +233,6 @@ send_one_packet(mac_callback_t sent, void *ptr)
               len = NETSTACK_RADIO.read(ackbuf, CSMA_ACK_LEN);
               if(len == CSMA_ACK_LEN && ackbuf[2] == dsn) {
                 /* Ack received */
-                RIMESTATS_ADD(ackrx);
                 ret = MAC_TX_OK;
               } else {
                 /* Not an ack or ack not for us: collision */

@@ -57,12 +57,12 @@ struct mac_driver {
   /** Initialize the MAC driver */
   void (* init)(void);
 
-  /** Send a packet from the Rime buffer  */
+  /** Send a packet from the packetbuf  */
   void (* send)(mac_callback_t sent_callback, void *ptr);
 
   /** Callback for getting notified of incoming packet. */
   void (* input)(void);
-  
+
   /** Turn the MAC layer on. */
   int (* on)(void);
 

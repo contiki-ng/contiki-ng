@@ -740,7 +740,6 @@ cc2420_transmit(unsigned short payload_len)
 
   /* If we send with cca (cca_on_send), we get here if the packet wasn't
      transmitted because of other channel activity. */
-  RIMESTATS_ADD(contentiondrop);
   PRINTF("cc2420: do_send() transmission never started\n");
 
   RELEASE_LOCK();
@@ -755,8 +754,6 @@ cc2420_prepare(const void *payload, unsigned short payload_len)
   GET_LOCK();
 
   PRINTF("cc2420: sending %d bytes\n", payload_len);
-
-  RIMESTATS_ADD(lltx);
 
   /* Wait for any previous transmission to finish. */
   /*  while(status() & BV(CC2420_TX_ACTIVE));*/
@@ -930,11 +927,10 @@ cc2420_read(void *buf, unsigned short bufsize)
 
   if(len > CC2420_MAX_PACKET_LEN) {
     /* Oops, we must be out of sync. */
-    RIMESTATS_ADD(badsynch);
   } else if(len <= FOOTER_LEN) {
-    RIMESTATS_ADD(tooshort);
+    /* Packet too short */
   } else if(len - FOOTER_LEN > bufsize) {
-    RIMESTATS_ADD(toolong);
+    /* Packet too long */
   } else {
     getrxdata((uint8_t *) buf, len - FOOTER_LEN);
     getrxdata(footer, FOOTER_LEN);
@@ -949,10 +945,7 @@ cc2420_read(void *buf, unsigned short bufsize)
         packetbuf_set_attr(PACKETBUF_ATTR_RSSI, cc2420_last_rssi);
         packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, cc2420_last_correlation);
       }
-
-      RIMESTATS_ADD(llrx);
     } else {
-      RIMESTATS_ADD(badcrc);
       len = FOOTER_LEN;
     }
 

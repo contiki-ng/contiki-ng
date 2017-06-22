@@ -32,21 +32,21 @@
 
 /**
  * \file
- *         Header file for the Rime buffer (packetbuf) management
+ *         Header file for the Packet buffer (packetbuf) management
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
 
 /**
- * \addtogroup rime
+ * \addtogroup netstack
  * @{
  */
 
 /**
- * \defgroup packetbuf Rime buffer management
+ * \defgroup packetbuf Packet buffer management
  * @{
  *
- * The packetbuf module does Rime's buffer management.
+ * The packetbuf module does Contiki's buffer management.
  */
 
 #ifndef PACKETBUF_H_
@@ -129,20 +129,6 @@ uint16_t packetbuf_remaininglen(void);
  * \param len  The length of the data
  */
 void packetbuf_set_datalen(uint16_t len);
-
-/**
- * \brief      Compact the packetbuf
- *
- *             This function compacts the packetbuf by copying the data
- *             portion of the packetbuf so that becomes consecutive to
- *             the header.
- *
- *             This function is called by the Rime code before a
- *             packet is to be sent by a device driver. This assures
- *             that the entire packet is consecutive in memory.
- *
- */
-void packetbuf_compact(void);
 
 /**
  * \brief      Copy from external data into the packetbuf

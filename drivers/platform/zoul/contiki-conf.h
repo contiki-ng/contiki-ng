@@ -375,7 +375,7 @@ typedef uint32_t rtimer_clock_t;
 /**
  * \name IEEE address configuration
  *
- * Used to generate our RIME & IPv6 address
+ * Used to generate our link-layer & IPv6 address
  * @{
  */
 /**
@@ -438,7 +438,7 @@ typedef uint32_t rtimer_clock_t;
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \name IPv6, RIME and network buffer configuration
+ * \name IPv6 and network buffer configuration
  *
  * @{
  */

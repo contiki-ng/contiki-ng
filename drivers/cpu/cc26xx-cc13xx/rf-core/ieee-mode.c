@@ -966,7 +966,6 @@ transmit(unsigned short transmit_len)
 
     if(stat == RF_CORE_RADIO_OP_STATUS_IEEE_DONE_OK) {
       /* Sent OK */
-      RIMESTATS_ADD(lltx);
       ret = RADIO_TX_OK;
     } else {
       /* Operation completed, but frame was not sent */
@@ -1081,7 +1080,6 @@ read_frame(void *buf, unsigned short buf_len)
 
   if(rx_read_entry[8] < 4) {
     PRINTF("RF: too short\n");
-    RIMESTATS_ADD(tooshort);
 
     release_data_entry();
     return 0;
@@ -1091,7 +1089,6 @@ read_frame(void *buf, unsigned short buf_len)
 
   if(len > buf_len) {
     PRINTF("RF: too long\n");
-    RIMESTATS_ADD(toolong);
 
     release_data_entry();
     return 0;
@@ -1114,7 +1111,6 @@ read_frame(void *buf, unsigned short buf_len)
     packetbuf_set_attr(PACKETBUF_ATTR_RSSI, last_rssi);
     packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, last_corr_lqi);
   }
-  RIMESTATS_ADD(llrx);
 
   release_data_entry();
 

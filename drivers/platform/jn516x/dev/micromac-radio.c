@@ -405,16 +405,12 @@ transmit(unsigned short payload_len)
   uint32_t tx_error = u32MMAC_GetTxErrors();
   if(tx_error == 0) {
     ret = RADIO_TX_OK;
-    RIMESTATS_ADD(acktx);
   } else if(tx_error & E_MMAC_TXSTAT_ABORTED) {
     ret = RADIO_TX_ERR;
-    RIMESTATS_ADD(sendingdrop);
   } else if(tx_error & E_MMAC_TXSTAT_CCA_BUSY) {
     ret = RADIO_TX_COLLISION;
-    RIMESTATS_ADD(contentiondrop);
   } else if(tx_error & E_MMAC_TXSTAT_NO_ACK) {
     ret = RADIO_TX_NOACK;
-    RIMESTATS_ADD(noacktx);
   } else {
     ret = RADIO_TX_ERR;
   }
@@ -428,8 +424,6 @@ prepare(const void *payload, unsigned short payload_len)
   uint8_t i;
   uint16_t checksum;
 #endif
-
-  RIMESTATS_ADD(lltx);
 
   if(tx_in_progress) {
     return 1;
@@ -633,7 +627,6 @@ read(void *buf, unsigned short bufsize)
       | input_frame_buffer->uPayload.au8Byte[len];
     radio_last_rx_crc_ok = (checksum == radio_last_rx_crc);
     if(!radio_last_rx_crc_ok) {
-      RIMESTATS_ADD(badcrc);
     }
 #endif /* CRC_SW */
     if(radio_last_rx_crc_ok) {
@@ -649,7 +642,6 @@ read(void *buf, unsigned short bufsize)
       if(len != 0) {
         bufsize = MIN(len, bufsize);
         memcpy(buf, input_frame_buffer->uPayload.au8Byte, bufsize);
-        RIMESTATS_ADD(llrx);
         if(!poll_mode) {
           /* Not in poll mode: packetbuf should not be accessed in interrupt context */
           packetbuf_set_attr(PACKETBUF_ATTR_RSSI, radio_last_rssi);
@@ -847,14 +839,6 @@ radio_interrupt_handler(uint32 mac_event)
           }
         }
 #endif
-      }
-    } else { /* if rx is not successful */
-      if(rx_status & E_MMAC_RXSTAT_ABORTED) {
-        RIMESTATS_ADD(badsynch);
-      } else if(rx_status & E_MMAC_RXSTAT_ERROR) {
-        RIMESTATS_ADD(badcrc);
-      } else if(rx_status & E_MMAC_RXSTAT_MALFORMED) {
-        RIMESTATS_ADD(toolong);
       }
     }
   }

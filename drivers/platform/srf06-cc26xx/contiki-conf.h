@@ -119,7 +119,7 @@
 /**
  * \name IEEE address configuration
  *
- * Used to generate our RIME & IPv6 address
+ * Used to generate our link-local & IPv6 address
  * @{
  */
 /**
@@ -165,7 +165,7 @@
 /*---------------------------------------------------------------------------*/
 /** @} */
 /**
- * \name IPv6, RIME and network buffer configuration
+ * \name IPv6 and network buffer configuration
  *
  * @{
  */

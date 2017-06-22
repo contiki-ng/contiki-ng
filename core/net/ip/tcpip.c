@@ -31,7 +31,7 @@
 
 /**
  * \file
- *         Code for tunnelling uIP packets over the Rime mesh routing module
+ *         Core of the TCP/IP stack, handles input/output/routing
  *
  * \author  Adam Dunkels <adam@sics.se>\author
  * \author  Mathilde Durvy <mdurvy@cisco.com> (IPv6 related code)

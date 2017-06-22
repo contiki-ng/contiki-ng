@@ -719,7 +719,6 @@ transmit(unsigned short transmit_len)
 
     if(cmd_tx_adv->status == RF_CORE_RADIO_OP_STATUS_PROP_DONE_OK) {
       /* Sent OK */
-      RIMESTATS_ADD(lltx);
       ret = RADIO_TX_OK;
     } else {
       /* Operation completed, but frame was not sent */

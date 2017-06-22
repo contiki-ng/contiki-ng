@@ -45,7 +45,6 @@
 #include "sys/rtimer.h"
 
 #include "net/packetbuf.h"
-#include "net/rime/rimestats.h"
 #include "net/linkaddr.h"
 #include "net/netstack.h"
 
@@ -431,7 +430,6 @@ transmit(unsigned short transmit_len)
   }
 
   if(channel_clear() == CC2530_RF_CCA_BUSY) {
-    RIMESTATS_ADD(contentiondrop);
     return RADIO_TX_COLLISION;
   }
 
@@ -440,7 +438,6 @@ transmit(unsigned short transmit_len)
    * receiving. Abort transmission and bail out with RADIO_TX_COLLISION
    */
   if(FSMSTAT1 & FSMSTAT1_SFD) {
-    RIMESTATS_ADD(contentiondrop);
     return RADIO_TX_COLLISION;
   }
 
@@ -471,8 +468,6 @@ transmit(unsigned short transmit_len)
   if(rf_flags & WAS_OFF) {
     off();
   }
-
-  RIMESTATS_ADD(lltx);
 
   RF_TX_LED_OFF();
 
@@ -505,7 +500,6 @@ read(void *buf, unsigned short bufsize)
     /* Oops, we must be out of sync. */
     PUTSTRING("RF: bad sync\n");
 
-    RIMESTATS_ADD(badsynch);
     CC2530_CSP_ISFLUSHRX();
     return 0;
   }
@@ -513,7 +507,6 @@ read(void *buf, unsigned short bufsize)
   if(len <= CC2530_RF_MIN_PACKET_LEN) {
     PUTSTRING("RF: too short\n");
 
-    RIMESTATS_ADD(tooshort);
     CC2530_CSP_ISFLUSHRX();
     return 0;
   }
@@ -521,7 +514,6 @@ read(void *buf, unsigned short bufsize)
   if(len - CHECKSUM_LEN > bufsize) {
     PUTSTRING("RF: too long\n");
 
-    RIMESTATS_ADD(toolong);
     CC2530_CSP_ISFLUSHRX();
     return 0;
   }
@@ -546,9 +538,7 @@ read(void *buf, unsigned short bufsize)
   if(crc_corr & CRC_BIT_MASK) {
     packetbuf_set_attr(PACKETBUF_ATTR_RSSI, rssi);
     packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, crc_corr & LQI_BIT_MASK);
-    RIMESTATS_ADD(llrx);
   } else {
-    RIMESTATS_ADD(badcrc);
     CC2530_CSP_ISFLUSHRX();
     RF_RX_LED_OFF();
     return 0;

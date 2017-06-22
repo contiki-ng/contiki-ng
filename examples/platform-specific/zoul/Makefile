@@ -1,6 +1,6 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 
-CONTIKI_PROJECT = zoul-demo test-tsl256x test-sht25 test-servo.c
+CONTIKI_PROJECT = test-tsl256x test-sht25 test-servo.c
 CONTIKI_PROJECT += test-bmp085-bmp180 test-motion test-rotation-sensor
 CONTIKI_PROJECT += test-grove-light-sensor test-grove-loudness-sensor
 CONTIKI_PROJECT += test-weather-meter test-grove-gyro test-lcd test-iaq
@@ -18,5 +18,4 @@ MODULES += drivers//dev/bme280
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../../..
-CONTIKI_WITH_RIME = 1
 include $(CONTIKI)/Makefile.include

@@ -53,19 +53,6 @@
 #include "cfs/cfs-coffee.h"
 #include "sys/autostart.h"
 
-#if UIP_CONF_ROUTER
-
-#ifndef UIP_ROUTER_MODULE
-#ifdef UIP_CONF_ROUTER_MODULE
-#define UIP_ROUTER_MODULE UIP_CONF_ROUTER_MODULE
-#else /* UIP_CONF_ROUTER_MODULE */
-#define UIP_ROUTER_MODULE rimeroute
-#endif /* UIP_CONF_ROUTER_MODULE */
-#endif /* UIP_ROUTER_MODULE */
-
-extern const struct uip_router UIP_ROUTER_MODULE;
-#endif /* UIP_CONF_ROUTER */
-
 #if DCOSYNCH_CONF_ENABLED
 static struct timer mgt_timer;
 #endif
@@ -112,7 +99,7 @@ force_inclusion(int d1, int d2)
 #endif
 /*---------------------------------------------------------------------------*/
 static void
-set_rime_addr(void)
+set_lladdr(void)
 {
   linkaddr_t addr;
   int i;
@@ -131,7 +118,7 @@ set_rime_addr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-  PRINTF("Rime started with address ");
+  PRINTF("Contiki started with address ");
   for(i = 0; i < sizeof(addr.u8) - 1; i++) {
     PRINTF("%d.", addr.u8[i]);
   }
@@ -221,7 +208,7 @@ main(int argc, char **argv)
 
   init_platform();
 
-  set_rime_addr();
+  set_lladdr();
 
   cc2420_init();
   {

@@ -625,7 +625,6 @@ transmit(unsigned short transmit_len)
 
   if(send_on_cca) {
     if(channel_clear() == CC2538_RF_CCA_BUSY) {
-      RIMESTATS_ADD(contentiondrop);
       return RADIO_TX_COLLISION;
     }
   }
@@ -635,7 +634,6 @@ transmit(unsigned short transmit_len)
    * receiving. Abort transmission and bail out with RADIO_TX_COLLISION
    */
   if(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_SFD) {
-    RIMESTATS_ADD(contentiondrop);
     return RADIO_TX_COLLISION;
   }
 
@@ -667,8 +665,6 @@ transmit(unsigned short transmit_len)
     off();
   }
 
-  RIMESTATS_ADD(lltx);
-
   return ret;
 }
 /*---------------------------------------------------------------------------*/
@@ -699,7 +695,6 @@ read(void *buf, unsigned short bufsize)
     /* Oops, we must be out of sync. */
     PRINTF("RF: bad sync\n");
 
-    RIMESTATS_ADD(badsynch);
     CC2538_RF_CSP_ISFLUSHRX();
     return 0;
   }
@@ -707,7 +702,6 @@ read(void *buf, unsigned short bufsize)
   if(len <= CC2538_RF_MIN_PACKET_LEN) {
     PRINTF("RF: too short\n");
 
-    RIMESTATS_ADD(tooshort);
     CC2538_RF_CSP_ISFLUSHRX();
     return 0;
   }
@@ -715,7 +709,6 @@ read(void *buf, unsigned short bufsize)
   if(len - CHECKSUM_LEN > bufsize) {
     PRINTF("RF: too long\n");
 
-    RIMESTATS_ADD(toolong);
     CC2538_RF_CSP_ISFLUSHRX();
     return 0;
   }
@@ -761,9 +754,7 @@ read(void *buf, unsigned short bufsize)
   if(crc_corr & CRC_BIT_MASK) {
     packetbuf_set_attr(PACKETBUF_ATTR_RSSI, rssi);
     packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, crc_corr & LQI_BIT_MASK);
-    RIMESTATS_ADD(llrx);
   } else {
-    RIMESTATS_ADD(badcrc);
     PRINTF("RF: Bad CRC\n");
     CC2538_RF_CSP_ISFLUSHRX();
     return 0;

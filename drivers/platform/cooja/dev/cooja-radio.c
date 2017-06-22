@@ -172,7 +172,6 @@ radio_read(void *buf, unsigned short bufsize)
   }
   if(bufsize < simInSize) {
     simInSize = 0; /* rx flush */
-    RIMESTATS_ADD(toolong);
     return 0;
   }
 

@@ -32,13 +32,13 @@
 
 /**
  * \file
- *         Implementation of the Rime queue buffers
+ *         Implementation of the Packet queue buffers
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
 
 /**
- * \addtogroup rimequeuebuf
+ * \addtogroup queuebuf
  * @{
  */
 
