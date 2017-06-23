@@ -421,18 +421,18 @@ copy_frags2uip(int context)
 /* -------------------------------------------------------------------------- */
 
 /*-------------------------------------------------------------------------*/
-/* Rime Sniffer support for one single listener to enable powertrace of IP */
+/* Basic netstack sniffer */
 /*-------------------------------------------------------------------------*/
-static struct rime_sniffer *callback = NULL;
+static struct netstack_sniffer *callback = NULL;
 
 void
-rime_sniffer_add(struct rime_sniffer *s)
+netstack_sniffer_add(struct netstack_sniffer *s)
 {
   callback = s;
 }
 
 void
-rime_sniffer_remove(struct rime_sniffer *s)
+netstack_sniffer_remove(struct netstack_sniffer *s)
 {
   callback = NULL;
 }

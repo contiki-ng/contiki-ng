@@ -51,7 +51,7 @@
  *
  *             This function is used to check for duplicate packet by comparing
  *             the sequence number of the incoming packet with the last few ones
- *             we saw, filtering with the Rime address.
+ *             we saw, filtering with the link-layer address.
  */
 int mac_sequence_is_duplicate(void);
 

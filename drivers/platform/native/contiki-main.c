@@ -137,7 +137,7 @@ const static struct select_callback stdin_fd = {
 };
 /*---------------------------------------------------------------------------*/
 static void
-set_rime_addr(void)
+set_lladdr(void)
 {
   linkaddr_t addr;
   int i;
@@ -156,7 +156,7 @@ set_rime_addr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-  printf("Rime started with address ");
+  printf("Contiki started with address ");
   for(i = 0; i < sizeof(addr.u8) - 1; i++) {
     printf("%d.", addr.u8[i]);
   }
@@ -202,7 +202,7 @@ main(int argc, char **argv)
   ctimer_init();
   rtimer_init();
 
-  set_rime_addr();
+  set_lladdr();
 
   netstack_init();
   printf("MAC %s NETWORK %s\n", NETSTACK_MAC.name, NETSTACK_NETWORK.name);

@@ -129,7 +129,7 @@ create_frame(int type, int do_create)
   /* Complete the addressing fields. */
   /**
      \todo For phase 1 the addresses are all long. We'll need a mechanism
-     in the rime attributes to tell the mac to use long or short for phase 2.
+     in the packetbuf attributes to tell the mac to use long or short for phase 2.
    */
   if(LINKADDR_SIZE == 2) {
     /* Use short address mode if linkaddr size is short. */

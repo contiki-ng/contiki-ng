@@ -32,7 +32,7 @@
 
 /**
  * \file
- *         Functions for manipulating Rime addresses
+ *         Functions for manipulating link-layer addresses
  * \author
  *         Adam Dunkels <adam@sics.se>
  */

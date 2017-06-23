@@ -99,23 +99,18 @@ extern const struct framer         NETSTACK_FRAMER;
 
 void netstack_init(void);
 
-/* "Rime" sniffer */
+/* Netstack sniffer */
 
-struct rime_sniffer {
-  struct rime_sniffer *next;
+struct netstack_sniffer {
+  struct netstack_sniffer *next;
   void (* input_callback)(void);
   void (* output_callback)(int mac_status);
 };
 
-#define RIME_SNIFFER(name, input_callback, output_callback) \
-static struct rime_sniffer name = { NULL, input_callback, output_callback }
+#define NETSTACK_SNIFFER(name, input_callback, output_callback) \
+static struct netstack_sniffer name = { NULL, input_callback, output_callback }
 
-void rime_sniffer_add(struct rime_sniffer *s);
-void rime_sniffer_remove(struct rime_sniffer *s);
-
-/* Rimestats. Does nothing (for now) */
-
-#define RIMESTATS_ADD(x)
-#define RIMESTATS_GET(x) 0
+void netstack_sniffer_add(struct netstack_sniffer *s);
+void netstack_sniffer_remove(struct netstack_sniffer *s);
 
 #endif /* NETSTACK_H */

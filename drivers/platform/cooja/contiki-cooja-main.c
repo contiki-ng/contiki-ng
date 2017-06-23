@@ -144,7 +144,7 @@ rtimer_thread_loop(void *data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_rime_addr(void)
+set_lladdr(void)
 {
   linkaddr_t addr;
   int i;
@@ -160,7 +160,7 @@ set_rime_addr(void)
   addr.u8[1] = node_id >> 8;
 #endif /* NETSTACK_CONF_WITH_IPV6 */
   linkaddr_set_node_addr(&addr);
-  printf("Rime started with address ");
+  printf("Contiki started with address ");
   for(i = 0; i < sizeof(addr.u8) - 1; i++) {
     printf("%d.", addr.u8[i]);
   }
@@ -190,7 +190,7 @@ contiki_init()
     printf("Node id is not set.\n");
   }
 
-  set_rime_addr();
+  set_lladdr();
   {
     uint8_t longaddr[8];
 

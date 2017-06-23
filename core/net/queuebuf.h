@@ -32,18 +32,18 @@
 
 /**
  * \file
- *         Header file for the Rime queue buffer management
+ *         Header file for the Packet queue buffer management
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
 
 /**
- * \addtogroup rime
+ * \addtogroup netstack
  * @{
  */
 
 /**
- * \defgroup rimequeuebuf Rime queue buffer management
+ * \defgroup queuebuf Packet queue buffer management
  * @{
  *
  * The queuebuf module handles buffers that are queued.

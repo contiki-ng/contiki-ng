@@ -82,10 +82,6 @@ MODULES += core/net core/net/mac core/net/mac/framer core/net/ip64-addr \
 
 ## Copied from Makefile.include, since Cooja overrides CFLAGS et al
 HAS_STACK = 0
-ifeq ($(CONTIKI_WITH_RIME),1)
-  HAS_STACK = 1
-  CFLAGS += -DNETSTACK_CONF_WITH_RIME=1
-endif
 
 # Make IPv6 the default stack
 ifeq ($(HAS_STACK),0)

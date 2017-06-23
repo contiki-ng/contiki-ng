@@ -75,7 +75,7 @@
 #define QUEUEBUF_CONF_NUM               16
 #endif
 
-/* Network setup for non-IP (rime). */
+/* Network setup for non-IP  */
 #else
 
 #define LINKADDR_CONF_SIZE              2

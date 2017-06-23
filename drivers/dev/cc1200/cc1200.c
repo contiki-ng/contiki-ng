@@ -756,7 +756,6 @@ transmit(unsigned short transmit_len)
     /* Perform clear channel assessment */
     if(!channel_clear()) {
       /* Channel occupied */
-      RIMESTATS_ADD(contentiondrop);
       if(was_off) {
         off();
       }
@@ -788,8 +787,6 @@ transmit(unsigned short transmit_len)
     calibrate();
   }
 #endif
-
-  RIMESTATS_ADD(lltx);
 
   /* Send data using TX FIFO */
   if(idle_tx_rx((const uint8_t *)tx_pkt, tx_pkt_len) == RADIO_TX_OK) {
@@ -886,8 +883,6 @@ read(void *buf, unsigned short buf_len)
       /* Mask out CRC bit */
       packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY,
                          crc_lqi & ~(1 << 7));
-
-      RIMESTATS_ADD(llrx);
     }
 
   }
@@ -2300,7 +2295,6 @@ cc1200_rx_interrupt(void)
     if(payload_len < ACK_LEN) {
       /* Packet to short. Discard it */
       WARNING("RF: Packet too short!\n");
-      RIMESTATS_ADD(tooshort);
       rx_rx();
       RELEASE_SPI();
       return 0;
@@ -2309,7 +2303,6 @@ cc1200_rx_interrupt(void)
     if(payload_len > CC1200_MAX_PAYLOAD_LEN) {
       /* Packet to long. Discard it */
       WARNING("RF: Packet to long!\n");
-      RIMESTATS_ADD(toolong);
       rx_rx();
       RELEASE_SPI();
       return 0;
@@ -2374,7 +2367,6 @@ cc1200_rx_interrupt(void)
       if(!(crc_lqi & (1 << 7))) {
         /* CRC error. Drop the packet */
         INFO("RF: CRC error!\n");
-        RIMESTATS_ADD(badcrc);
       } else if(rx_pkt_len != 0) {
         /* An old packet is pending. Drop the packet */
         WARNING("RF: Packet pending!\n");

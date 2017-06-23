@@ -32,22 +32,21 @@
 
 /**
  * \file
- *         Header file for the Rime address representation
+ *         Header file for the link-layer address representation
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
 
 /**
- * \addtogroup rime
+ * \addtogroup netstack
  * @{
  */
 
 /**
- * \defgroup linkaddr Rime addresses
+ * \defgroup linkaddr link-layer addresses
  * @{
  *
- * The linkaddr module is an abstract representation of addresses in
- * Rime.
+ * The linkaddr module handles link-layer addresses.
  *
  */
 
@@ -75,23 +74,23 @@ typedef union {
 } linkaddr_extended_t;
 
 /**
- * \brief      Copy a Rime address
+ * \brief      Copy a link-layer address
  * \param dest The destination
  * \param from The source
  *
- *             This function copies a Rime address from one location
+ *             This function copies a link-layer address from one location
  *             to another.
  *
  */
 void linkaddr_copy(linkaddr_t *dest, const linkaddr_t *from);
 
 /**
- * \brief      Compare two Rime addresses
+ * \brief      Compare two link-layer addresses
  * \param addr1 The first address
  * \param addr2 The second address
  * \return     Non-zero if the addresses are the same, zero if they are different
  *
- *             This function compares two Rime addresses and returns
+ *             This function compares two link-layer addresses and returns
  *             the result of the comparison. The function acts like
  *             the '==' operator and returns non-zero if the addresses
  *             are the same, and zero if the addresses are different.
@@ -104,15 +103,15 @@ int linkaddr_cmp(const linkaddr_t *addr1, const linkaddr_t *addr2);
  * \brief      Set the address of the current node
  * \param addr The address
  *
- *             This function sets the Rime address of the node.
+ *             This function sets the link-layer address of the node.
  *
  */
 void linkaddr_set_node_addr(linkaddr_t *addr);
 
 /**
- * \brief      The Rime address of the node
+ * \brief      The link-layer address of the node
  *
- *             This variable contains the Rime address of the
+ *             This variable contains the link-layer address of the
  *             node. This variable should not be changed directly;
  *             rather, the linkaddr_set_node_addr() function should be
  *             used.
@@ -121,9 +120,9 @@ void linkaddr_set_node_addr(linkaddr_t *addr);
 extern linkaddr_t linkaddr_node_addr;
 
 /**
- * \brief      The null Rime address
+ * \brief      The null link-layer address
  *
- *             This variable contains the null Rime address. The null
+ *             This variable contains the null link-layer address. The null
  *             address is used in route tables to indicate that the
  *             table entry is unused. Nodes with no configured address
  *             has the null address. Nodes with their node address set

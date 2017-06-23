@@ -562,8 +562,6 @@ PROCESS_THREAD(rf_core_process, ev, data)
 static void
 rx_nok_isr(void)
 {
-  RIMESTATS_ADD(badcrc);
-  PRINTF("RF: Bad CRC\n");
 }
 /*---------------------------------------------------------------------------*/
 void
