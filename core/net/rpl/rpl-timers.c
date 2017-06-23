@@ -54,7 +54,7 @@
 
 /* A configurable function called after update of the RPL DIO interval */
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
-void RPL_CALLBACK_NEW_DIO_INTERVAL(uint8_t dio_interval);
+void RPL_CALLBACK_NEW_DIO_INTERVAL(clock_time_t dio_interval);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 
 #ifdef RPL_PROBING_SELECT_FUNC
@@ -150,7 +150,7 @@ new_dio_interval(rpl_instance_t *instance)
   ctimer_set(&instance->dio_timer, ticks, &handle_dio_timer, instance);
 
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
-  RPL_CALLBACK_NEW_DIO_INTERVAL(instance->dio_intcurrent);
+  RPL_CALLBACK_NEW_DIO_INTERVAL((CLOCK_SECOND * 1UL << instance->dio_intcurrent) / 1000);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 }
 /*---------------------------------------------------------------------------*/

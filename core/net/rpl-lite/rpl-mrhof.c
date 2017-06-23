@@ -69,22 +69,21 @@
 #ifdef RPL_MRHOF_CONF_SQUARED_ETX
 #define RPL_MRHOF_SQUARED_ETX RPL_MRHOF_CONF_SQUARED_ETX
 #else /* RPL_MRHOF_CONF_SQUARED_ETX */
-#define RPL_MRHOF_SQUARED_ETX 0
+#define RPL_MRHOF_SQUARED_ETX 1
 #endif /* RPL_MRHOF_CONF_SQUARED_ETX */
 
 #if !RPL_MRHOF_SQUARED_ETX
 /* Configuration parameters of RFC6719. Reject parents that have a higher
- * link metric than the following. The default value is 512 but we use 1024. */
-#define MAX_LINK_METRIC     1024 /* Eq ETX of 8 */
+ * link metric than the following. The default value is 512. */
+#define MAX_LINK_METRIC     512 /* Eq ETX of 4 */
 /* Hysteresis of MRHOF: the rank must differ more than PARENT_SWITCH_THRESHOLD_DIV
  * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5.
  * We use a more aggressive setting: 96, eq ETX of 0.75.
  */
-#define PARENT_SWITCH_THRESHOLD 96 /* Eq ETX of 0.75 */
+#define PARENT_SWITCH_THRESHOLD 192 /* Eq ETX of 1.5 */
 #else /* !RPL_MRHOF_SQUARED_ETX */
 #define MAX_LINK_METRIC     2048 /* Eq ETX of 4 */
-#define PARENT_SWITCH_THRESHOLD 160 /* Eq ETX of 1.25 (results in a churn comparable
-to the threshold of 96 in the non-squared case) */
+#define PARENT_SWITCH_THRESHOLD 512 /* Eq ETX of 2 */
 #endif /* !RPL_MRHOF_SQUARED_ETX */
 
 /* Reject parents that have a higher path cost than the following. */

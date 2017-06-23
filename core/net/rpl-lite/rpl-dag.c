@@ -136,7 +136,7 @@ void
 rpl_global_repair(void)
 {
   if(rpl_dag_root_is_root()) {
-    LOG_WARN("initiating global repair (version=%u, rank=%u)\n",
+    LOG_WARN("initiating global repair, version %u, rank %u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
 #if LOG_INFO_ENABLED
     rpl_neighbor_print_list("Global repair");
@@ -153,7 +153,7 @@ static void
 global_repair_non_root(rpl_dio_t *dio)
 {
   if(!rpl_dag_root_is_root()) {
-    LOG_WARN("participating in global repair (version=%u, rank=%u)\n",
+    LOG_WARN("participating in global repair, version %u, rank %u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
 #if LOG_INFO_ENABLED
     rpl_neighbor_print_list("Global repair");
@@ -170,6 +170,7 @@ rpl_local_repair(const char *str)
   if(curr_instance.used) { /* Check needed because this is a public function */
     LOG_WARN("local repair (%s)\n", str);
     curr_instance.of->reset(); /* Reset OF */
+    curr_instance.dag.is_reachable = 0; /* Assume we are no longer reachable */
     rpl_neighbor_remove_all(); /* Remove all neighbors */
     rpl_timers_dio_reset("Local repair"); /* Reset Trickle timer */
     rpl_timers_schedule_state_update();
@@ -183,7 +184,6 @@ rpl_dag_update_state(void)
   if(curr_instance.used) {
     if(!rpl_dag_root_is_root()) {
       rpl_nbr_t *old_parent = curr_instance.dag.preferred_parent;
-      rpl_rank_t old_rank = curr_instance.dag.rank;
 
       /* Any scheduled state update is no longer needed */
       rpl_timers_unschedule_state_update();
@@ -199,17 +199,22 @@ rpl_dag_update_state(void)
         curr_instance.dag.lowest_rank = curr_instance.dag.rank;
       }
 
-      /* if new parent, schedule DAO */
+      /* Parent switch */
       if(curr_instance.dag.preferred_parent != old_parent) {
+        /* Schedule a DAO */
         rpl_timers_schedule_dao();
+        /* We just got a parent (was NULL), reset trickle timer to advertise this */
+        if(old_parent == NULL) {
+          rpl_timers_dio_reset("Got parent");
+        }
+        /* We have no more parent, schedule DIS to get a chance to hear updated state */
+        if(curr_instance.dag.preferred_parent == NULL) {
+          LOG_WARN("no parnt, scheduling periodic DIS\n");
+          rpl_timers_schedule_periodic_dis();
+        }
 #if LOG_INFO_ENABLED
         rpl_neighbor_print_list("Parent switch");
 #endif /* LOG_INFO_ENABLED */
-      }
-
-      if(curr_instance.dag.rank != old_rank && curr_instance.dag.rank == RPL_INFINITE_RANK) {
-        LOG_WARN("intinite rank, trigger local repair\n");
-        rpl_local_repair("Infinite rank");
       }
     }
 
@@ -308,8 +313,10 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
     return;
   }
 
-  /* Refresh lifetime at every DIO from preferred parent. Use same lifetime as for routes */
-  if(p != NULL && p == curr_instance.dag.preferred_parent) {
+  /* Init lifetime if not set yet. Refresh it at every DIO from preferred parent.
+  Use same lifetime as for routes. */
+  if(curr_instance.dag.lifetime == 0 ||
+    (p != NULL && p == curr_instance.dag.preferred_parent)) {
     curr_instance.dag.lifetime =
       RPL_LIFETIME(dio->default_lifetime);
   }
@@ -319,6 +326,8 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   if(curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
     if(p != NULL && p == curr_instance.dag.preferred_parent && rpl_lollipop_greater_than(dio->dtsn, last_dtsn)) {
       RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
+      LOG_INFO("DTSN increment %u->%u, schedule new DAO with DTSN %u",
+        last_dtsn, dio->dtsn, curr_instance.dtsn_out);
       rpl_timers_schedule_dao();
     }
   }
@@ -487,7 +496,6 @@ rpl_process_dao_ack(uint8_t sequence, uint8_t status)
   }
   /* Is this an ACK for our last DAO? */
   if(sequence == curr_instance.dag.dao_last_seqno) {
-    /* stop the retransmit timer when the ACK arrived */
     curr_instance.dag.is_reachable = status < RPL_DAO_ACK_UNABLE_TO_ACCEPT;
 
     if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
@@ -567,6 +575,7 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
   curr_instance.dag.rank = ROOT_RANK;
   curr_instance.dag.lifetime = RPL_LIFETIME(RPL_INFINITE_LIFETIME);
   curr_instance.dag.dio_intcurrent = RPL_DIO_INTERVAL_MIN;
+  curr_instance.dag.is_reachable = 1;
 
   rpl_timers_dio_reset("Init root");
 

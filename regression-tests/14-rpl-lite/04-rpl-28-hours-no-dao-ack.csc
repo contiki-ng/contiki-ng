@@ -26,7 +26,7 @@
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
       <commands>make TARGET=cooja clean
-make sender-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=1 TARGET=cooja</commands>
+make sender-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=0 TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -51,7 +51,7 @@ make sender-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=1 TARGET=cooja</commands>
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
       <commands>make TARGET=cooja clean
-make root-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=1 TARGET=cooja</commands>
+make root-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=0 TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -76,7 +76,7 @@ make root-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=1 TARGET=cooja</commands>
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
       <commands>make TARGET=cooja clean
-make receiver-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=1 TARGET=cooja</commands>
+make receiver-node.cooja DEFINES=RPL_CONF_WITH_DAO_ACK=0 TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

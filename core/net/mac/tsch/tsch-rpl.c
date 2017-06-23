@@ -81,19 +81,18 @@ tsch_rpl_callback_leaving_network(void)
 /* Set TSCH EB period based on current RPL DIO period.
  * To use, set #define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval */
 void
-tsch_rpl_callback_new_dio_interval(uint8_t dio_interval)
+tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval)
 {
   /* Transmit EBs only if we have a valid rank as per 6TiSCH minimal */
   rpl_dag_t *dag;
-  rpl_instance_t *instance;
   rpl_rank_t root_rank;
   rpl_rank_t dag_rank;
 #if UIP_CONF_IPV6_RPL_LITE
-  instance = &curr_instance;
   dag = &curr_instance.dag;
   root_rank = ROOT_RANK;
   dag_rank = DAG_RANK(dag->rank);
 #else
+  rpl_instance_t *instance;
   dag = rpl_get_any_dag();
   instance = dag != NULL ? dag->instance : NULL;
   root_rank = ROOT_RANK(instance);
@@ -106,11 +105,11 @@ tsch_rpl_callback_new_dio_interval(uint8_t dio_interval)
       tsch_set_coordinator(1);
     }
     /* Set EB period */
-    tsch_set_eb_period((CLOCK_SECOND * 1UL << instance->dag.dio_intcurrent) / 1000);
+    tsch_set_eb_period(dio_interval);
     /* Set join priority based on RPL rank */
     tsch_set_join_priority(dag_rank - 1);
   } else {
-    tsch_set_eb_period(0);
+    tsch_set_eb_period(TSCH_EB_PERIOD);
   }
 }
 /*---------------------------------------------------------------------------*/

@@ -113,6 +113,9 @@ input_packet(void)
     }
 #endif /* CSMA_SEND_802154_ACK */
     if(!duplicate) {
+      LOG_WARN("received packet from ");
+      LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+      LOG_WARN_(", seqno %u, len %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), packetbuf_datalen());
       NETSTACK_NETWORK.input();
     }
   }

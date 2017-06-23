@@ -49,7 +49,7 @@
 /* Special value indicating infinite lifetime. */
 #define RPL_INFINITE_LIFETIME                 0xFF
 #define RPL_ROUTE_INFINITE_LIFETIME           0xFFFFFFFF
-#define RPL_INFINITE_RANK                     0xffff
+#define RPL_INFINITE_RANK                     0xFFFF
 
 /*---------------------------------------------------------------------------*/
 /* IANA Routing Metric/Constraint Type as defined in RFC6551 */

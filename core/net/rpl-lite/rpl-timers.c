@@ -55,7 +55,7 @@
 
 /* A configurable function called after update of the RPL DIO interval */
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
-void RPL_CALLBACK_NEW_DIO_INTERVAL(uint8_t dio_interval);
+void RPL_CALLBACK_NEW_DIO_INTERVAL(clock_time_t dio_interval);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 
 #ifdef RPL_PROBING_SELECT_FUNC
@@ -67,7 +67,7 @@ clock_time_t RPL_PROBING_DELAY_FUNC(void);
 #endif /* RPL_PROBING_DELAY_FUNC */
 
 #define PERIODIC_DELAY_SECONDS     60
-#define PERIODIC_DELAY             (60 * CLOCK_SECOND)
+#define PERIODIC_DELAY             ((PERIODIC_DELAY_SECONDS) * CLOCK_SECOND)
 
 static void handle_dis_timer(void *ptr);
 static void handle_dio_timer(void *ptr);
@@ -92,15 +92,19 @@ static struct ctimer periodic_timer; /* Not part of a DAG because used for gener
 void
 rpl_timers_schedule_periodic_dis(void)
 {
-  clock_time_t expiration_time = RPL_DIS_INTERVAL / 2 + (random_rand() % (RPL_DIS_INTERVAL));
-  ctimer_set(&dis_timer, expiration_time, handle_dis_timer, NULL);
+  if(etimer_expired(&dis_timer.etimer)) {
+    clock_time_t expiration_time = RPL_DIS_INTERVAL / 2 + (random_rand() % (RPL_DIS_INTERVAL));
+    ctimer_set(&dis_timer, expiration_time, handle_dis_timer, NULL);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
 handle_dis_timer(void *ptr)
 {
   if(!rpl_dag_root_is_root() &&
-     (!curr_instance.used || curr_instance.dag.preferred_parent == NULL)) {
+     (!curr_instance.used ||
+       curr_instance.dag.preferred_parent == NULL ||
+       curr_instance.dag.rank == RPL_INFINITE_RANK)) {
     /* Send DIS and schedule next */
     rpl_icmp6_dis_output(NULL);
     rpl_timers_schedule_periodic_dis();
@@ -138,7 +142,7 @@ new_dio_interval(void)
   ctimer_set(&curr_instance.dag.dio_timer, ticks, &handle_dio_timer, NULL);
 
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
-  RPL_CALLBACK_NEW_DIO_INTERVAL(curr_instance.dag.dio_intcurrent);
+  RPL_CALLBACK_NEW_DIO_INTERVAL((CLOCK_SECOND * 1UL << curr_instance.dag.dio_intcurrent) / 1000);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 }
 /*---------------------------------------------------------------------------*/
@@ -173,6 +177,7 @@ handle_dio_timer(void *ptr)
         if((count++ % RPL_TRICKLE_REFRESH_DAO_ROUTES) == 0) {
           /* Request new DAO to refresh route. */
           RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
+          LOG_INFO("trigger DAO updates with a DTSN increment (%u)\n", curr_instance.dtsn_out);
         }
       }
 #endif /* RPL_TRICKLE_REFRESH_DAO_ROUTES */
@@ -250,7 +255,7 @@ schedule_dao_refresh(void)
 void
 rpl_timers_schedule_dao(void)
 {
-  if(curr_instance.used) {
+  if(curr_instance.used && curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
     /* No need for aggregation delay as per RFC 6550 section 9.5, as this only
     * serves storing mode. Use simply delay instead, with the only PURPOSE
     * to reduce congestion. */
@@ -287,7 +292,10 @@ handle_dao_timer(void *ptr)
   curr_instance.dag.dao_transmissions++;
   /* Schedule next retransmission */
   schedule_dao_retransmission();
-#endif /* RPL_WITH_DAO_ACK */
+#else /* RPL_WITH_DAO_ACK */
+  /* No DAO-ACK: assume we are reachable as soon as we send a DAO */
+  curr_instance.dag.is_reachable = 1;
+#endif /* !RPL_WITH_DAO_ACK */
 
   curr_instance.dag.dao_last_seqno = curr_instance.dag.dao_curr_seqno;
   /* Send a DAO with own prefix as target and default lifetime */
@@ -313,6 +321,7 @@ rpl_timers_schedule_dao_ack(uip_ipaddr_t *target, uint16_t sequence)
     ctimer_set(&curr_instance.dag.dao_ack_timer, 0, handle_dao_ack_timer, NULL);
   }
 }
+/*---------------------------------------------------------------------------*/
 static void
 handle_dao_ack_timer(void *ptr)
 {
@@ -329,7 +338,7 @@ get_probing_delay(void)
 {
   if(curr_instance.used && curr_instance.dag.urgent_probing_target != NULL) {
     /* Urgent probing needed (to find out if a neighbor may become preferred parent) */
-    return random_rand() % (CLOCK_SECOND * 10);
+    return random_rand() % (CLOCK_SECOND * 4);
   } else {
     /* Else, use normal probing interval */
     return ((RPL_PROBING_INTERVAL) / 2) + random_rand() % (RPL_PROBING_INTERVAL);
@@ -455,10 +464,10 @@ handle_periodic_timer(void *ptr)
     rpl_ns_periodic(PERIODIC_DELAY_SECONDS);
   }
 
-  if(!curr_instance.used || curr_instance.dag.preferred_parent == NULL) {
-    if(etimer_expired(&dis_timer.etimer)) {
-      rpl_timers_schedule_periodic_dis(); /* Schedule DIS if needed */
-    }
+  if(!curr_instance.used ||
+      curr_instance.dag.preferred_parent == NULL ||
+      curr_instance.dag.rank == RPL_INFINITE_RANK) {
+    rpl_timers_schedule_periodic_dis(); /* Schedule DIS if needed */
   }
 
   ctimer_reset(&periodic_timer);

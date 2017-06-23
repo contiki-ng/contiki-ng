@@ -323,8 +323,9 @@ dio_input(void)
   LOG_INFO_6ADDR(&from);
   LOG_INFO_(", instance_id %u, DAG ID ", (unsigned)dio.instance_id);
   LOG_INFO_6ADDR(&dio.dag_id);
-  LOG_INFO_(", version %u, rank %u\n",
+  LOG_INFO_(", version %u, dtsn %u, rank %u\n",
          (unsigned)dio.version,
+         (unsigned)dio.dtsn,
          (unsigned)dio.rank);
 
   rpl_process_dio(&from, &dio);
@@ -558,8 +559,8 @@ rpl_icmp6_dao_output(uint8_t lifetime)
 
   if(!curr_instance.used || curr_instance.dag.preferred_parent == NULL
     || prefix == NULL || parent_ipaddr == NULL || curr_instance.mop == RPL_MOP_NO_DOWNWARD_ROUTES) {
-    LOG_WARN("rpl_icmp6_dao_output: node not ready to send a DAO (used %u, pref parent %p, prefix %p, parent_ipaddr %p, mop %u)\n",
-        curr_instance.used, curr_instance.dag.preferred_parent, prefix, parent_ipaddr, curr_instance.mop);
+    LOG_WARN("rpl_icmp6_dao_output: node not ready to send a DAO (used %u, pref parent %u, prefix %u, mop %u)\n",
+        curr_instance.used, curr_instance.dag.preferred_parent != NULL && parent_ipaddr != NULL, prefix != NULL, curr_instance.mop);
     return;
   }
 
