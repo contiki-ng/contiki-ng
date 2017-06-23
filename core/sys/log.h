@@ -89,14 +89,46 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #define LOG_WITH_ANNOTATE 0
 #endif /* LOG_CONF_WITH_ANNOTATE */
 
+/* Log only the last 16 bytes of linklayer and IPv6 addresses */
+#ifdef LOG_CONF_WITH_COMPACT_ADDR
+#define LOG_WITH_COMPACT_ADDR LOG_CONF_WITH_COMPACT_ADDR
+#else /* LOG_CONF_WITH_COMPACT_ADDR */
+#define LOG_WITH_COMPACT_ADDR 0
+#endif /* LOG_CONF_WITH_COMPACT_ADDR */
+
+/* Compact address representation and logging */
+static inline void
+log_lladdr_compact(const linkaddr_t *lladdr)
+{
+  if(lladdr == NULL) {
+    LOG_OUTPUT("LL-NULL");
+  } else {
+    LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE/2-1]));
+  }
+}
+
+static inline void
+log_6addr_compact(const uip_ipaddr_t *ipaddr)
+{
+  if(ipaddr == NULL) {
+    LOG_OUTPUT("6A-NULL");
+  } else if(uip_is_addr_mcast(ipaddr)) {
+    LOG_OUTPUT("6M-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
+  } else if(uip_is_addr_linklocal(ipaddr)) {
+    LOG_OUTPUT("6L-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
+  } else {
+    LOG_OUTPUT("6G-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
+  }
+}
+
 /* Main log function */
-#define LOG(newline, level, ...) do {  \
+#define LOG(newline, level, levelstr, ...) do {  \
                             if(level <= LOG_LEVEL) { \
                               if(newline) { \
+                                LOG_OUTPUT("[%-4s: %-10s] ", levelstr, LOG_MODULE); \
                                 if(LOG_WITH_LOC) { \
-                                  LOG_OUTPUT("%s:%d: ", __FILE__, __LINE__); \
+                                  LOG_OUTPUT("[%s: %d] ", __FILE__, __LINE__); \
                                 } \
-                                LOG_OUTPUT("%s: ", LOG_MODULE); \
                               } \
                               LOG_OUTPUT(__VA_ARGS__); \
                             } \
@@ -112,27 +144,35 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 /* Link-layer address */
 #define LOG_LLADDR(level, lladdr) do {  \
                             if(level <= LOG_LEVEL) { \
-                              net_debug_lladdr_print(lladdr); \
+                              if(LOG_WITH_COMPACT_ADDR) { \
+                                log_lladdr_compact(lladdr); \
+                              } else { \
+                                net_debug_lladdr_print(lladdr); \
+                              } \
                             } \
                         } while (0)
 
 /* IPv6 address */
-#define LOG_6ADDR(level, lladdr) do {  \
+#define LOG_6ADDR(level, ipaddr) do {  \
                            if(level <= LOG_LEVEL) { \
-                             uip_debug_ipaddr_print(lladdr); \
+                             if(LOG_WITH_COMPACT_ADDR) { \
+                               log_6addr_compact(ipaddr); \
+                             } else { \
+                               uip_debug_ipaddr_print(ipaddr); \
+                             } \
                            } \
-                       } while (0)
+                         } while (0)
 
 /* More compact versions of LOG macros */
-#define LOG_ERR(...)           LOG(1, LOG_LEVEL_ERR, __VA_ARGS__)
-#define LOG_WARN(...)          LOG(1, LOG_LEVEL_WARN, __VA_ARGS__)
-#define LOG_INFO(...)          LOG(1, LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_DBG(...)           LOG(1, LOG_LEVEL_DBG, __VA_ARGS__)
+#define LOG_ERR(...)           LOG(1, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
+#define LOG_WARN(...)          LOG(1, LOG_LEVEL_WARN, "WARN", __VA_ARGS__)
+#define LOG_INFO(...)          LOG(1, LOG_LEVEL_INFO, "INFO", __VA_ARGS__)
+#define LOG_DBG(...)           LOG(1, LOG_LEVEL_DBG, "DBG", __VA_ARGS__)
 
-#define LOG_ERR_(...)           LOG(0, LOG_LEVEL_ERR, __VA_ARGS__)
-#define LOG_WARN_(...)          LOG(0, LOG_LEVEL_WARN, __VA_ARGS__)
-#define LOG_INFO_(...)          LOG(0, LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_DBG_(...)           LOG(0, LOG_LEVEL_DBG, __VA_ARGS__)
+#define LOG_ERR_(...)           LOG(0, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
+#define LOG_WARN_(...)          LOG(0, LOG_LEVEL_WARN, "WARN", __VA_ARGS__)
+#define LOG_INFO_(...)          LOG(0, LOG_LEVEL_INFO, "INFO", __VA_ARGS__)
+#define LOG_DBG_(...)           LOG(0, LOG_LEVEL_DBG, "DBG", __VA_ARGS__)
 
 #define LOG_ERR_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN_LLADDR(...)   LOG_LLADDR(LOG_LEVEL_WARN, __VA_ARGS__)

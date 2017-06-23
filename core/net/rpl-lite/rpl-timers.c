@@ -412,8 +412,9 @@ handle_probing_timer(void *ptr)
   if(target_ipaddr != NULL) {
     const struct link_stats *stats = rpl_neighbor_get_link_stats(probing_target);
     (void)stats;
-    LOG_INFO("probing %u %s last tx %u min ago\n",
-        rpl_neighbor_get_lladdr(probing_target)->u8[7],
+    LOG_INFO("probing ");
+    LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(probing_target));
+    LOG_INFO_(" %s last tx %u min ago\n",
         curr_instance.dag.urgent_probing_target != NULL ? "(urgent)" : "",
         probing_target != NULL ?
         (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
@@ -463,7 +464,7 @@ handle_periodic_timer(void *ptr)
   ctimer_reset(&periodic_timer);
 
 #if LOG_INFO_ENABLED
-    rpl_neighbor_print_list("Periodic");
+  rpl_neighbor_print_list("Periodic");
 #endif /* LOG_INFO_ENABLED */
 }
 /*---------------------------------------------------------------------------*/

@@ -93,6 +93,9 @@ rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
     if(nbr != NULL) {
       /* Link stats were updated, and we need to update our internal state.
       Updating from here is unsafe; postpone */
+      LOG_INFO("packet sent to ");
+      LOG_INFO_LLADDR(addr);
+      LOG_INFO_(", status %u, tx %u\n", status, numtx);
       rpl_timers_schedule_state_update();
     }
   }

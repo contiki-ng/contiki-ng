@@ -532,7 +532,7 @@ dao_input(void)
   /* Destination Advertisement Object */
   LOG_INFO("received a %sDAO from ", dao.lifetime == 0 ? "No-path " : "");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO_(", lifetime %u, prefix ", dao.lifetime);
+  LOG_INFO_(", seqno %u, lifetime %u, prefix ", dao.sequence, dao.lifetime);
   LOG_INFO_6ADDR(&dao.prefix);
   LOG_INFO_(", prefix length %u, parent ", dao.prefixlen);
   LOG_INFO_6ADDR(&dao.parent_addr);
@@ -606,7 +606,7 @@ rpl_icmp6_dao_output(uint8_t lifetime)
   LOG_INFO_6ADDR(prefix);
   LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO_(" , parent ");
+  LOG_INFO_(", parent ");
   LOG_INFO_6ADDR(parent_ipaddr);
   LOG_INFO_("\n");
 

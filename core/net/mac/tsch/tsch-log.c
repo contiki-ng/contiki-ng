@@ -50,6 +50,7 @@
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch-slot-operation.h"
 #include "lib/ringbufindex.h"
+#include "sys/log.h"
 
 #if TSCH_LOG_PER_SLOT
 
@@ -88,21 +89,26 @@ tsch_log_process_pending(void)
     }
     switch(log->type) {
       case tsch_log_tx:
-        printf("%s-%u-%u %u tx %d, st %d-%d",
-            log->tx.dest == 0 ? "bc" : "uc", log->tx.is_data, log->tx.sec_level,
-                log->tx.datalen,
-                log->tx.dest,
-                log->tx.mac_tx_status, log->tx.num_tx);
+        printf("%s-%u-%u tx ",
+                linkaddr_cmp(&log->tx.dest, &linkaddr_null) ? "bc" : "uc", log->tx.is_data, log->tx.sec_level);
+        log_lladdr_compact(&linkaddr_node_addr);
+        printf("->");
+        log_lladdr_compact(&log->tx.dest);
+        printf(", len %u, seq %u, st %d %d",
+                log->tx.datalen, log->tx.seqno, log->tx.mac_tx_status, log->tx.num_tx);
         if(log->tx.drift_used) {
           printf(", dr %d", log->tx.drift);
         }
         printf("\n");
         break;
       case tsch_log_rx:
-        printf("%s-%u-%u %u rx %d",
-            log->rx.is_unicast == 0 ? "bc" : "uc", log->rx.is_data, log->rx.sec_level,
-                log->rx.datalen,
-                log->rx.src);
+        printf("%s-%u-%u rx ",
+                log->rx.is_unicast == 0 ? "bc" : "uc", log->rx.is_data, log->rx.sec_level);
+        log_lladdr_compact(&log->rx.src);
+        printf("->");
+        log_lladdr_compact(&linkaddr_node_addr);
+        printf(", len %u, seq %u",
+                log->rx.datalen, log->rx.seqno);
         if(log->rx.drift_used) {
           printf(", dr %d", log->rx.drift);
         }

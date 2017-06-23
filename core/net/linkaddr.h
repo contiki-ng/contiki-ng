@@ -65,6 +65,8 @@ typedef union {
   unsigned char u8[LINKADDR_SIZE];
 #if LINKADDR_SIZE == 2
   uint16_t u16;
+#else
+  uint16_t u16[LINKADDR_SIZE/2];
 #endif /* LINKADDR_SIZE == 2 */
 } linkaddr_t;
 

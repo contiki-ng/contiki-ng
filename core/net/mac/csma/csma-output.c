@@ -160,7 +160,7 @@ backoff_period(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
-send_one_packet(mac_callback_t sent, void *ptr)
+send_one_packet(void *ptr)
 {
   int ret;
   int last_sent_ok = 0;
@@ -172,7 +172,7 @@ send_one_packet(mac_callback_t sent, void *ptr)
 
   if(NETSTACK_FRAMER.create() < 0) {
     /* Failed to allocate space for headers */
-    LOG_ERR("send failed, too large header\n");
+    LOG_ERR("failed to create packet\n");
     ret = MAC_TX_ERR_FATAL;
   } else {
 #if CSMA_802154_AUTOACK
@@ -239,8 +239,6 @@ send_one_packet(mac_callback_t sent, void *ptr)
                 ret = MAC_TX_COLLISION;
               }
             }
-          } else {
-            LOG_WARN("tx noack\n");
           }
         }
         break;
@@ -275,7 +273,8 @@ send_one_packet(mac_callback_t sent, void *ptr)
   if(ret == MAC_TX_OK) {
     last_sent_ok = 1;
   }
-  mac_call_sent_callback(sent, ptr, ret, 1);
+
+  packet_sent(ptr, ret, 1);
   return last_sent_ok;
 }
 /*---------------------------------------------------------------------------*/
@@ -286,11 +285,14 @@ transmit_from_queue(void *ptr)
   if(n) {
     struct packet_queue *q = list_head(n->packet_queue);
     if(q != NULL) {
-      LOG_INFO("preparing number %d %p, queue len %d\n", n->transmissions, q,
-          list_length(n->packet_queue));
+      LOG_INFO("preparing packet for ");
+      LOG_INFO_LLADDR(&n->addr);
+      LOG_INFO_(", seqno %u, tx %u, queue %d\n",
+        queuebuf_attr(q->buf, PACKETBUF_ATTR_MAC_SEQNO),
+        n->transmissions, list_length(n->packet_queue));
       /* Send first packet in the neighbor queue */
       queuebuf_to_packetbuf(q->buf);
-      send_one_packet(packet_sent, n);
+      send_one_packet(n);
     }
   }
 }
@@ -310,7 +312,7 @@ schedule_transmission(struct neighbor_queue *n)
     delay = random_rand() % delay;
   }
 
-  LOG_INFO("scheduling transmission in %u ticks, NB=%u, BE=%u\n",
+  LOG_DBG("scheduling transmission in %u ticks, NB=%u, BE=%u\n",
       (unsigned)delay, n->collisions, backoff_exponent);
   ctimer_set(&n->transmit_timer, delay, transmit_from_queue, n);
 }
@@ -325,7 +327,7 @@ free_packet(struct neighbor_queue *n, struct packet_queue *p, int status)
     queuebuf_free(p->buf);
     memb_free(&metadata_memb, p->ptr);
     memb_free(&packet_memb, p);
-    LOG_INFO("free_queued_packet, queue length %d, free packets %d\n",
+    LOG_DBG("free_queued_packet, queue length %d, free packets %d\n",
            list_length(n->packet_queue), memb_numfree(&packet_memb));
     if(list_head(n->packet_queue) != NULL) {
       /* There is a next packet. We reset current tx information */
@@ -355,19 +357,11 @@ tx_done(int status, struct packet_queue *q, struct neighbor_queue *n)
   cptr = metadata->cptr;
   ntx = n->transmissions;
 
-  switch(status) {
-  case MAC_TX_OK:
-    LOG_INFO("tx ok %d\n", n->transmissions);
-    break;
-  case MAC_TX_COLLISION:
-  case MAC_TX_NOACK:
-    LOG_WARN("drop with status %d after %d transmissions, %d collisions\n",
-                 status, n->transmissions, n->collisions);
-    break;
-  default:
-    LOG_ERR("tx failed %d: %d\n", n->transmissions, status);
-    break;
-  }
+  LOG_INFO("packet sent to ");
+  LOG_INFO_LLADDR(&n->addr);
+  LOG_INFO_(", seqno %u, status %u, tx %u, coll %u\n",
+              packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
+              status, n->transmissions, n->collisions);
 
   free_packet(n, q, status);
   mac_call_sent_callback(sent, cptr, status, ntx);
@@ -401,7 +395,6 @@ collision(struct packet_queue *q, struct neighbor_queue *n,
   if(n->transmissions >= metadata->max_transmissions) {
     tx_done(MAC_TX_COLLISION, q, n);
   } else {
-    LOG_INFO("tx collision %d\n", n->transmissions);
     rexmit(q, n);
   }
 }
@@ -419,7 +412,6 @@ noack(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
   if(n->transmissions >= metadata->max_transmissions) {
     tx_done(MAC_TX_NOACK, q, n);
   } else {
-    LOG_INFO("tx noack %d\n", n->transmissions);
     rexmit(q, n);
   }
 }
@@ -453,13 +445,19 @@ packet_sent(void *ptr, int status, int num_transmissions)
   }
 
   if(q == NULL) {
-    LOG_WARN("seqno %d not found\n",
+    LOG_WARN("packet sent: seqno %u not found\n",
            packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     return;
   } else if(q->ptr == NULL) {
-    LOG_WARN("no metadata\n");
+    LOG_WARN("packet sent: no metadata\n");
     return;
   }
+
+  LOG_INFO("tx to ");
+  LOG_INFO_LLADDR(&n->addr);
+  LOG_INFO_(", seqno %u, status %u, tx %u, coll %u\n",
+            packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
+            status, n->transmissions, n->collisions);
 
   switch(status) {
   case MAC_TX_OK:
@@ -535,8 +533,11 @@ csma_output_packet(mac_callback_t sent, void *ptr)
             metadata->cptr = ptr;
             list_add(n->packet_queue, q);
 
-            LOG_INFO("send_packet, queue length %d, free packets %d\n",
-                   list_length(n->packet_queue), memb_numfree(&packet_memb));
+            LOG_INFO("sending to ");
+            LOG_INFO_LLADDR(addr);
+            LOG_INFO_(", seqno %u, queue length %d, free packets %d\n",
+                    packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
+                    list_length(n->packet_queue), memb_numfree(&packet_memb));
             /* If q is the first packet in the neighbor's queue, send asap */
             if(list_head(n->packet_queue) == q) {
               schedule_transmission(n);

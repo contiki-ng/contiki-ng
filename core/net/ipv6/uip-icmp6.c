@@ -49,7 +49,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "IPv6 ICMPv6"
+#define LOG_MODULE "ICMPv6"
 #define LOG_LEVEL IPV6_LOG_LEVEL
 
 #define UIP_IP_BUF                ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])

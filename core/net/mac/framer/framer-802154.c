@@ -45,7 +45,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "Frame 802.15.4e"
+#define LOG_MODULE "Frame 15.4"
 #define LOG_LEVEL FRAMER_LOG_LEVEL
 
 /**  \brief The sequence number (0x00 - 0xff) added to the transmitted

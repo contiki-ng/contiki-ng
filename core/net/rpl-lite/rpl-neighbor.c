@@ -83,17 +83,21 @@ rpl_neighbor_print_list(const char *str)
     rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
     clock_time_t clock_now = clock_time();
 
-    printf("nbr: MOP %u OCP %u rank %u dioint %u, DS6 nbr count %u (%s)\n",
+    LOG_INFO("nbr: own state, addr ");
+    LOG_INFO_6ADDR(rpl_get_global_address());
+    LOG_INFO_(" MOP %u OCP %u rank %u dioint %u, DS6 nbr count %u (%s)\n",
         curr_instance.mop, curr_instance.of->ocp, curr_rank,
         curr_dio_interval, uip_ds6_nbr_num(), str);
     while(nbr != NULL) {
       const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
-      printf("nbr: %3u %5u, %5u => %5u -- %2u %c%c%c (last tx %u min ago)\n",
-          rpl_neighbor_get_ipaddr(nbr)->u8[15],
+      LOG_INFO("nbr: ");
+      LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(nbr));
+      LOG_INFO_(" %5u, %5u => %5u -- %2u %c%c%c%c (last tx %u min ago)\n",
           nbr->rank,
           rpl_neighbor_get_link_metric(nbr),
           rpl_neighbor_rank_via_nbr(nbr),
           stats != NULL ? stats->freshness : 0,
+          (nbr->rank == ROOT_RANK) ? 'r' : ' ',
           (acceptable_rank(rpl_neighbor_rank_via_nbr(nbr)) && curr_instance.of->nbr_is_acceptable_parent(nbr)) ? 'a' : ' ',
           link_stats_is_fresh(stats) ? 'f' : ' ',
           nbr == curr_instance.dag.preferred_parent ? 'p' : ' ',
@@ -101,7 +105,7 @@ rpl_neighbor_print_list(const char *str)
       );
       nbr = nbr_table_next(rpl_neighbors, nbr);
     }
-    printf("nbr: end of list\n");
+    LOG_INFO("nbr: end of list\n");
   }
 }
 /*---------------------------------------------------------------------------*/

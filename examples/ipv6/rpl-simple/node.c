@@ -44,6 +44,11 @@
 #include "dev/serial-line.h"
 #include "net/ipv6/uip-ds6-route.h"
 
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "App"
+#define LOG_LEVEL LOG_LEVEL_INFO
+
 #define UDP_PORT	8765
 
 #define START_INTERVAL		(15 * CLOCK_SECOND)
@@ -69,26 +74,37 @@ receiver(struct simple_udp_connection *c,
          const uint8_t *data,
          uint16_t datalen)
 {
-  int seq_id;
+  unsigned seq_id;
   memcpy(&seq_id, data, sizeof(int));
   if(uip_ip6addr_cmp(&destination_ipaddr, &node_ipaddr)) {
-    printf("App: received %u from %u\n", seq_id, sender_addr->u8[15]);
-    printf("App: sending reply to %u\n", sender_addr->u8[15]);
+    LOG_INFO("received request %u from ", seq_id);
+    LOG_INFO_6ADDR(sender_addr);
+    LOG_INFO_("\n");
+
+    LOG_INFO("sending reply %u to ", seq_id);
+    LOG_INFO_6ADDR(sender_addr);
+    LOG_INFO_("\n");
     simple_udp_sendto(&udp_conn, &seq_id, sizeof(seq_id), sender_addr);
   } else {
-    printf("App: received reply %u from %u\n", seq_id, sender_addr->u8[15]);
+    static unsigned reply_count = 0;
+    reply_count++;
+    LOG_INFO("received reply %u (%u/%u) from ", seq_id, reply_count, seq_id);
+    LOG_INFO_6ADDR(sender_addr);
+    LOG_INFO_("\n");
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
 send_packet(void *ptr)
 {
-  if(rpl_get_default_instance() != NULL) {
-    static int seq_id = 0;
-    printf("App: sending request %u to %u\n", ++seq_id, destination_ipaddr.u8[15]);
+  if(rpl_is_reachable()) {
+    static unsigned seq_id = 0;
+    LOG_INFO("sending request %u to ", ++seq_id);
+    LOG_INFO_6ADDR(&destination_ipaddr);
+    LOG_INFO_("\n");
     simple_udp_sendto(&udp_conn, &seq_id, sizeof(seq_id), &destination_ipaddr);
   } else {
-    printf("App: not joined\n");
+    LOG_INFO("not connected yet\n");
   }
 }
 /*---------------------------------------------------------------------------*/

@@ -226,8 +226,9 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
 #ifdef TSCH_LINK_NEIGHBOR_CALLBACK
   TSCH_LINK_NEIGHBOR_CALLBACK(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
 #endif
-  LOG_INFO("KA sent to %u, st %d-%d\n",
-         TSCH_LOG_ID_FROM_LINKADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER)), status, transmissions);
+  LOG_INFO("KA sent to ");
+  LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+  LOG_INFO_(", st %d-%d\n", status, transmissions);
   tsch_schedule_keepalive();
 }
 /*---------------------------------------------------------------------------*/
@@ -241,8 +242,9 @@ keepalive_send()
     packetbuf_clear();
     packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &n->addr);
     NETSTACK_MAC.send(keepalive_packet_sent, NULL);
-    LOG_INFO("sending KA to %u\n",
-           TSCH_LOG_ID_FROM_LINKADDR(&n->addr));
+    LOG_INFO("sending KA to ");
+    LOG_INFO_LLADDR(&n->addr);
+    LOG_INFO_("\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -381,6 +383,9 @@ tsch_tx_process_pending()
     struct tsch_packet *p = dequeued_array[dequeued_index];
     /* Put packet into packetbuf for packet_sent callback */
     queuebuf_to_packetbuf(p->qb);
+    LOG_INFO("packet sent to ");
+    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+    LOG_INFO_(", status %d, tx %d\n", p->ret, p->transmissions);
     /* Call packet_sent callback */
     mac_call_sent_callback(p->sent, p->ptr, p->ret, p->transmissions);
     /* Free packet queuebuf */
@@ -864,7 +869,6 @@ static void
 send_packet(mac_callback_t sent, void *ptr)
 {
   int ret = MAC_TX_DEFERRED;
-  int packet_count_before;
   int hdr_len = 0;
   const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
@@ -906,8 +910,6 @@ send_packet(mac_callback_t sent, void *ptr)
   }
 #endif /* LLSEC802154_ENABLED */
 
-  packet_count_before = tsch_queue_packet_count(addr);
-
 #if !NETSTACK_CONF_BRIDGE_MODE
   /*
    * In the Contiki stack, the source address of a frame is set at the RDC
@@ -925,20 +927,19 @@ send_packet(mac_callback_t sent, void *ptr)
     /* Enqueue packet */
     p = tsch_queue_add_packet(addr, sent, ptr);
     if(p == NULL) {
-      LOG_ERR("! can't send packet to %u with seqno %u, queue %u %u\n",
-          TSCH_LOG_ID_FROM_LINKADDR(addr), tsch_packet_seqno,
-          packet_count_before,
-          tsch_queue_packet_count(addr));
+      LOG_ERR("! can't send packet to ");
+      LOG_ERR_LLADDR(addr);
+      LOG_ERR_(" with seqno %u, queue %u %u\n",
+          tsch_packet_seqno, tsch_queue_packet_count(addr), tsch_queue_global_packet_count());
       ret = MAC_TX_ERR;
     } else {
       p->header_len = hdr_len;
-      LOG_INFO("send packet to %u with seqno %u, queue %u %u, len %u %u\n",
-             TSCH_LOG_ID_FROM_LINKADDR(addr), tsch_packet_seqno,
-             packet_count_before,
-             tsch_queue_packet_count(addr),
-             p->header_len,
-             queuebuf_datalen(p->qb));
-      (void)packet_count_before; /* Discard "variable set but unused" warning in case of TSCH_LOG_PER_SLOT */
+      LOG_INFO("send packet to ");
+      LOG_INFO_LLADDR(addr);
+      LOG_INFO_(" with seqno %u, queue %u %u, len %u %u\n",
+             tsch_packet_seqno,
+             tsch_queue_packet_count(addr), tsch_queue_global_packet_count(),
+             p->header_len, queuebuf_datalen(p->qb));
     }
   }
   if(ret != MAC_TX_DEFERRED) {
@@ -964,18 +965,18 @@ packet_input(void)
       duplicate = mac_sequence_is_duplicate();
       if(duplicate) {
         /* Drop the packet. */
-        LOG_WARN("! drop dup ll from %u seqno %u\n",
-               TSCH_LOG_ID_FROM_LINKADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER)),
-               packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+        LOG_WARN("! drop dup ll from ");
+        LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+        LOG_WARN_(" seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
       } else {
         mac_sequence_register_seqno();
       }
     }
 
     if(!duplicate) {
-      LOG_INFO("received from %u with seqno %u\n",
-             TSCH_LOG_ID_FROM_LINKADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER)),
-             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+      LOG_INFO("received from ");
+      LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+      LOG_INFO_(" with seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
       NETSTACK_NETWORK.input();
     }
   }

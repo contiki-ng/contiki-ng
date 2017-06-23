@@ -507,14 +507,16 @@ get_nexthop(uip_ipaddr_t *addr)
   uip_ipaddr_t *nexthop;
   uip_ds6_route_t *route;
 
-  LOG_INFO("output: looking for next hop for host ");
+  LOG_INFO("output: processing packet from ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_("\n");
 
   if(NEXTHOP_NON_STORING(addr)) {
     LOG_INFO("output: selected next hop from SRH: ");
     LOG_INFO_6ADDR(addr);
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
     return addr;
   }
 
@@ -728,6 +730,9 @@ send_packet:
     linkaddr = NULL;
   }
 
+  LOG_INFO("output: sending to ");
+  LOG_INFO_LLADDR((linkaddr_t *)linkaddr);
+  LOG_INFO_("\n");
   tcpip_output(linkaddr);
 
   if(nbr) {

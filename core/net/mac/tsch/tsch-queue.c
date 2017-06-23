@@ -153,9 +153,11 @@ tsch_queue_update_time_source(const linkaddr_t *new_addr)
       }
 
       if(new_time_src != old_time_src) {
-        LOG_INFO("update time source: %u -> %u\n",
-               TSCH_LOG_ID_FROM_LINKADDR(old_time_src ? &old_time_src->addr : NULL),
-               TSCH_LOG_ID_FROM_LINKADDR(new_time_src ? &new_time_src->addr : NULL));
+        LOG_INFO("update time source: ");
+        LOG_INFO_LLADDR(old_time_src ? &old_time_src->addr : NULL);
+        LOG_INFO_(" -> ");
+        LOG_INFO_LLADDR(new_time_src ? &new_time_src->addr : NULL);
+        LOG_INFO_("\n");
 
         /* Update time source */
         if(new_time_src != NULL) {
@@ -199,7 +201,6 @@ tsch_queue_flush_nbr_queue(struct tsch_neighbor *n)
       /* Free packet queuebuf */
       tsch_queue_free_packet(p);
     }
-    LOG_INFO("packet deleted %p\n", p);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -251,7 +252,7 @@ tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr)
             /* Add to ringbuf (actual add committed through atomic operation) */
             n->tx_array[put_index] = p;
             ringbufindex_put(&n->tx_ringbuf);
-            LOG_INFO("packet is added put_index %u, packet %p\n",
+            LOG_DBG("packet is added put_index %u, packet %p\n",
                    put_index, p);
             return p;
           } else {
@@ -263,6 +264,13 @@ tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr)
   }
   LOG_ERR("! add packet failed: %u %p %d %p %p\n", tsch_is_locked(), n, put_index, p, p ? p->qb : NULL);
   return 0;
+}
+/*---------------------------------------------------------------------------*/
+/* Returns the number of packets currently in any TSCH queue */
+int
+tsch_queue_global_packet_count(void)
+{
+  return QUEUEBUF_NUM - memb_numfree(&packet_memb);
 }
 /*---------------------------------------------------------------------------*/
 /* Returns the number of packets currently in the queue */
@@ -288,7 +296,6 @@ tsch_queue_remove_packet_from_queue(struct tsch_neighbor *n)
       /* Get and remove packet from ringbuf (remove committed through an atomic operation */
       int16_t get_index = ringbufindex_get(&n->tx_ringbuf);
       if(get_index != -1) {
-        LOG_INFO("packet is removed, get_index %u\n", get_index);
         return n->tx_array[get_index];
       } else {
         return NULL;

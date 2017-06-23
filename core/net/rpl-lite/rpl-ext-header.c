@@ -115,7 +115,7 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
     return 1;
   }
 
-  LOG_ERR("packet needs multi-hop downward routing but SRH not found\n");
+  LOG_DBG("no SRH found\n");
   uip_ext_len = last_uip_ext_len;
   return 0;
 }
@@ -249,8 +249,8 @@ insert_srh_header(void)
 
   dest_node = rpl_ns_get_node(&UIP_IP_BUF->destipaddr);
   if(dest_node == NULL) {
-    /* The destination is not found, skip SRH insertion */
-    return 1;
+    LOG_ERR("SRH node not found\n");
+    return 0;
   }
 
   root_node = rpl_ns_get_node(&curr_instance.dag.dag_id);
@@ -271,10 +271,9 @@ insert_srh_header(void)
   cmpri = 15;
   cmpre = 15;
 
-  if(node == root_node) {
-    LOG_INFO("SRH no need to insert SRH\n");
-    return 1;
-  }
+  /* Note that in case of a direct child (node == root_node), we insert
+  SRH anyway, as RFC 6553 mandates that routed datagrams must include
+  SRH or the RPL option (or both) */
 
   while(node != NULL && node != root_node) {
 
@@ -395,7 +394,11 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
   sender_closer = sender_rank < curr_instance.dag.rank;
   loop_detected = (down && !sender_closer) || (!down && sender_closer);
 
-  LOG_INFO("packet going %s, sender closer %d (%d < %d), rank error %u, loop detected %u\n",
+  LOG_INFO("ext hdr: packet from ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO_(" to ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO_(" going %s, sender closer %d (%d < %d), rank error %u, loop detected %u\n",
       down == 1 ? "down" : "up", sender_closer, sender_rank,
       curr_instance.dag.rank, rank_error_signaled, loop_detected);
 

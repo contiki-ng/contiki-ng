@@ -94,7 +94,7 @@ to the threshold of 96 in the non-squared case) */
 static void
 reset(void)
 {
-  LOG_INFO("Reset MRHOF\n");
+  LOG_INFO("reset MRHOF\n");
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t

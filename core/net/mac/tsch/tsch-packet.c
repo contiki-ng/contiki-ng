@@ -53,7 +53,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "TSCH Packet"
+#define LOG_MODULE "TSCH Pkt"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
 /*---------------------------------------------------------------------------*/

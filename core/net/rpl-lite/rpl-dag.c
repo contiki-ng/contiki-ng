@@ -56,33 +56,18 @@
 extern rpl_of_t rpl_of0, rpl_mrhof;
 static rpl_of_t * const objective_functions[] = RPL_SUPPORTED_OFS;
 static int init_dag_from_dio(rpl_dio_t *dio);
-static void leave_dag(void);
 
 /*---------------------------------------------------------------------------*/
 /* Allocate instance table. */
 rpl_instance_t curr_instance;
 
 /*---------------------------------------------------------------------------*/
-void
-rpl_dag_periodic(unsigned seconds)
-{
-  if(curr_instance.used) {
-    if(curr_instance.dag.lifetime != RPL_LIFETIME(RPL_INFINITE_LIFETIME)) {
-      curr_instance.dag.lifetime =
-        curr_instance.dag.lifetime > seconds ? curr_instance.dag.lifetime - seconds : 0;
-      if(curr_instance.dag.lifetime == 0) {
-        leave_dag();
-      }
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
 static void
-leave_dag(void)
+leave_dag(const char *str)
 {
-  LOG_INFO("leaving DAG \n");
+  LOG_INFO("leaving DAG ");
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO_(", instance %u\n", curr_instance.instance_id);
+  LOG_INFO_(", instance %u (%s)\n", curr_instance.instance_id, str);
 
   /* Issue a no-path DAO */
   RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
@@ -100,6 +85,20 @@ leave_dag(void)
 
   /* Mark instance as unused */
   curr_instance.used = 0;
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_dag_periodic(unsigned seconds)
+{
+  if(curr_instance.used) {
+    if(curr_instance.dag.lifetime != RPL_LIFETIME(RPL_INFINITE_LIFETIME)) {
+      curr_instance.dag.lifetime =
+        curr_instance.dag.lifetime > seconds ? curr_instance.dag.lifetime - seconds : 0;
+      if(curr_instance.dag.lifetime == 0) {
+        leave_dag("expired");
+      }
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -493,7 +492,7 @@ rpl_process_dao_ack(uint8_t sequence, uint8_t status)
 
     if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
       /* We got a NACK, leave the DAG  */
-      leave_dag();
+      leave_dag("DAO-NACK");
     }
   }
 }
@@ -545,7 +544,7 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
       version = curr_instance.dag.version;
       RPL_LOLLIPOP_INCREMENT(version);
     }
-    leave_dag();
+    leave_dag("init root");
   }
 
   /* Init DAG and instance */

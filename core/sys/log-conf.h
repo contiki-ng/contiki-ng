@@ -49,15 +49,15 @@
 /* A list of currently supported modules */
 
 #ifndef RPL_LOG_LEVEL
-#define RPL_LOG_LEVEL                         LOG_LEVEL_INFO /* Only for rpl-lite */
+#define RPL_LOG_LEVEL                         LOG_LEVEL_NONE /* Only for rpl-lite */
 #endif /* RPL_LOG_LEVEL */
 
 #ifndef TCPIP_LOG_LEVEL
-#define TCPIP_LOG_LEVEL                       LOG_LEVEL_WARN
+#define TCPIP_LOG_LEVEL                       LOG_LEVEL_NONE
 #endif /* TCPIP_LOG_LEVEL */
 
 #ifndef IPV6_LOG_LEVEL
-#define IPV6_LOG_LEVEL                        LOG_LEVEL_WARN
+#define IPV6_LOG_LEVEL                        LOG_LEVEL_NONE
 #endif /* IPV6_LOG_LEVEL */
 
 #ifndef SICSLOWPAN_LOG_LEVEL
