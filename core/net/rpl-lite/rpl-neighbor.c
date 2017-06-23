@@ -213,18 +213,10 @@ rpl_neighbor_set_preferred(rpl_nbr_t *nbr)
 {
   if(curr_instance.dag.preferred_parent != nbr) {
     LOG_INFO("parent switch ");
-    if(nbr != NULL) {
-      LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(nbr));
-    } else {
-      LOG_INFO("NULL");
-    }
-    LOG_INFO(" used to be ");
-    if(curr_instance.dag.preferred_parent != NULL) {
-      LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
-    } else {
-      LOG_INFO("NULL");
-    }
-    LOG_INFO("\n");
+    LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(nbr));
+    LOG_INFO_(" used to be ");
+    LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+    LOG_INFO_("\n");
 
 #ifdef RPL_CALLBACK_PARENT_SWITCH
     RPL_CALLBACK_PARENT_SWITCH(curr_instance.dag.preferred_parent, nbr);

@@ -262,7 +262,7 @@ uip_ds6_route_lookup(uip_ipaddr_t *addr)
 
   LOG_INFO("Looking up route for ");
   LOG_INFO_6ADDR(addr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   if(addr == NULL) {
     return NULL;
@@ -287,9 +287,9 @@ uip_ds6_route_lookup(uip_ipaddr_t *addr)
   if(found_route != NULL) {
     LOG_INFO("Found route: ");
     LOG_INFO_6ADDR(addr);
-    LOG_INFO(" via ");
+    LOG_INFO_(" via ");
     LOG_INFO_6ADDR(uip_ds6_route_nexthop(found_route));
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
   } else {
     LOG_WARN("No route found\n");
   }
@@ -331,7 +331,7 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
   if(nexthop_lladdr == NULL) {
     LOG_WARN("Add: neighbor link-local address unknown for ");
     LOG_WARN_6ADDR(nexthop);
-    LOG_WARN("\n");
+    LOG_WARN_("\n");
     return NULL;
   }
 
@@ -348,7 +348,7 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
     }
     LOG_INFO("Add: old route for ");
     LOG_INFO_6ADDR(ipaddr);
-    LOG_INFO(" found, deleting it\n");
+    LOG_INFO_(" found, deleting it\n");
 
     uip_ds6_route_rm(r);
   }
@@ -371,7 +371,7 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
       }
       LOG_INFO("Add: dropping route to ");
       LOG_INFO_6ADDR(&oldest->ipaddr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
       uip_ds6_route_rm(oldest);
     }
 
@@ -452,9 +452,9 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
 
   LOG_INFO("Add: adding route: ");
   LOG_INFO_6ADDR(ipaddr);
-  LOG_INFO(" via ");
+  LOG_INFO_(" via ");
   LOG_INFO_6ADDR(nexthop);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   LOG_ANNOTATE("#L %u 1;blue\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
 
 #if UIP_DS6_NOTIFICATIONS
@@ -484,7 +484,7 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
 
     LOG_INFO("Rm: removing route: ");
     LOG_INFO_6ADDR(&route->ipaddr);
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
 
     /* Remove the route from the route list */
     list_remove(routelist, route);
@@ -497,7 +497,7 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
     if(neighbor_route == NULL) {
       LOG_INFO("Rm: neighbor_route was NULL for ");
       LOG_INFO_6ADDR(&route->ipaddr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
     }
     list_remove(route->neighbor_routes->route_list, neighbor_route);
     if(list_head(route->neighbor_routes->route_list) == NULL) {
@@ -606,12 +606,12 @@ uip_ds6_defrt_add(uip_ipaddr_t *ipaddr, unsigned long interval)
     if(d == NULL) {
       LOG_ERR("Add default: could not add default route to ");
       LOG_ERR_6ADDR(ipaddr);
-      LOG_ERR(", out of memory\n");
+      LOG_ERR_(", out of memory\n");
       return NULL;
     } else {
       LOG_INFO("Add default: adding default route to ");
       LOG_INFO_6ADDR(ipaddr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
     }
 
     list_push(defaultrouterlist, d);
@@ -699,18 +699,18 @@ uip_ds6_defrt_choose(void)
       d = list_item_next(d)) {
     LOG_INFO("Default route, IP address ");
     LOG_INFO_6ADDR(&d->ipaddr);
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
     bestnbr = uip_ds6_nbr_lookup(&d->ipaddr);
     if(bestnbr != NULL && bestnbr->state != NBR_INCOMPLETE) {
       LOG_INFO("Default route found, IP address ");
       LOG_INFO_6ADDR(&d->ipaddr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
       return &d->ipaddr;
     } else {
       addr = &d->ipaddr;
       LOG_INFO("Default route Incomplete found, IP address ");
       LOG_INFO_6ADDR(&d->ipaddr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
     }
   }
   return addr;

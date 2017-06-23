@@ -582,7 +582,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
              ies.ie_tsch_slotframe_and_link.slotframe_size,
              ies.ie_tsch_slotframe_and_link.num_links);
       LOG_INFO_LLADDR((const linkaddr_t *)&frame.src_addr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
 
       return 1;
     }

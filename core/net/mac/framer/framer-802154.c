@@ -176,7 +176,7 @@ create_frame(int type, int do_create)
 
     LOG_INFO("Out: %2X", params.fcf.frame_type);
     LOG_INFO_LLADDR((const linkaddr_t *)params.dest_addr);
-    LOG_INFO("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO_("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   } else {
@@ -240,7 +240,7 @@ parse(void)
     LOG_INFO("In: %2X", frame.fcf.frame_type);
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-    LOG_INFO("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO_("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   }

@@ -125,9 +125,9 @@ rpl_icmp6_update_nbr_table(uip_ipaddr_t *from, nbr_table_reason_t reason, void *
                               0, NBR_REACHABLE, reason, data)) == NULL) {
       LOG_ERR("could not add neighbor to cache ");
       LOG_ERR_6ADDR(from);
-      LOG_ERR(", ");
+      LOG_ERR_(", ");
       LOG_ERR_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
-      LOG_ERR("\n");
+      LOG_ERR_("\n");
     }
   }
 
@@ -144,7 +144,7 @@ dis_input(void)
 
   LOG_INFO("received a DIS from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   rpl_process_dis(&UIP_IP_BUF->srcipaddr, uip_is_addr_mcast(&UIP_IP_BUF->destipaddr));
 
@@ -169,7 +169,7 @@ rpl_icmp6_dis_output(uip_ipaddr_t *addr)
 
   LOG_INFO("sending a DIS to ");
   LOG_INFO_6ADDR(addr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2);
 }
@@ -321,9 +321,9 @@ dio_input(void)
   LOG_INFO("received a %s-DIO from ",
       uip_is_addr_mcast(&UIP_IP_BUF->destipaddr) ? "multicast" : "unicast");
   LOG_INFO_6ADDR(&from);
-  LOG_INFO(", instance_id %u, DAG ID ", (unsigned)dio.instance_id);
+  LOG_INFO_(", instance_id %u, DAG ID ", (unsigned)dio.instance_id);
   LOG_INFO_6ADDR(&dio.dag_id);
-  LOG_INFO(", version %u, rank %u\n",
+  LOG_INFO_(", version %u, rank %u\n",
          (unsigned)dio.version,
          (unsigned)dio.rank);
 
@@ -451,7 +451,7 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
          uc_addr != NULL ? "unicast" : "multicast",
          (unsigned)curr_instance.dag.rank);
   LOG_INFO_6ADDR(addr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIO, pos);
 }
@@ -494,7 +494,7 @@ dao_input(void)
     if(memcmp(&curr_instance.dag.dag_id, &buffer[pos], sizeof(curr_instance.dag.dag_id))) {
       LOG_ERR("dao_input: different DAG ID ");
       LOG_ERR_6ADDR((uip_ipaddr_t *)&buffer[pos]);
-      LOG_ERR(", discard\n");
+      LOG_ERR_(", discard\n");
       goto discard;
     }
     pos += 16;
@@ -532,11 +532,11 @@ dao_input(void)
   /* Destination Advertisement Object */
   LOG_INFO("received a %sDAO from ", dao.lifetime == 0 ? "No-path " : "");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(", lifetime %u, prefix ", dao.lifetime);
+  LOG_INFO_(", lifetime %u, prefix ", dao.lifetime);
   LOG_INFO_6ADDR(&dao.prefix);
-  LOG_INFO(", prefix length %u, parent ", dao.prefixlen);
+  LOG_INFO_(", prefix length %u, parent ", dao.prefixlen);
   LOG_INFO_6ADDR(&dao.parent_addr);
-  LOG_INFO(" \n");
+  LOG_INFO_(" \n");
 
   rpl_process_dao(&from, &dao);
 
@@ -604,11 +604,11 @@ rpl_icmp6_dao_output(uint8_t lifetime)
          lifetime == 0 ? "No-path " : "",
          curr_instance.dag.dao_curr_seqno, curr_instance.dag.dao_transmissions, lifetime);
   LOG_INFO_6ADDR(prefix);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO(" , parent ");
+  LOG_INFO_(" , parent ");
   LOG_INFO_6ADDR(parent_ipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   /* Send DAO to root (IPv6 address is DAG ID) */
   uip_icmp6_send(&curr_instance.dag.dag_id, ICMP6_RPL, RPL_CODE_DAO, pos);
@@ -638,7 +638,7 @@ dao_ack_input(void)
          status < RPL_DAO_ACK_UNABLE_TO_ACCEPT ? "ACK" : "NACK", sequence,
          curr_instance.dag.dao_curr_seqno, curr_instance.dag.dao_curr_seqno, status);
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   rpl_process_dao_ack(sequence, status);
 
@@ -663,7 +663,7 @@ rpl_icmp6_dao_ack_output(uip_ipaddr_t *dest, uint8_t sequence, uint8_t status)
   LOG_INFO("sending a DAO-%s seqno %d to ",
           status < RPL_DAO_ACK_UNABLE_TO_ACCEPT ? "ACK" : "NACK", sequence);
   LOG_INFO_6ADDR(dest);
-  LOG_INFO(" with status %d\n", status);
+  LOG_INFO_(" with status %d\n", status);
 
   uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
 }

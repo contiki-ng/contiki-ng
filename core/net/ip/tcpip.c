@@ -509,7 +509,7 @@ get_nexthop(uip_ipaddr_t *addr)
 
   LOG_INFO("output: looking for next hop for host ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   if(NEXTHOP_NON_STORING(addr)) {
     LOG_INFO("output: selected next hop from SRH: ");
@@ -537,7 +537,7 @@ get_nexthop(uip_ipaddr_t *addr)
     } else {
       LOG_INFO("output: no route found, using default route: ");
       LOG_INFO_6ADDR(nexthop);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
     }
 
   } else {
@@ -555,7 +555,7 @@ get_nexthop(uip_ipaddr_t *addr)
     } else {
       LOG_INFO("output: found next hop from routing table: ");
       LOG_INFO_6ADDR(nexthop);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
     }
   }
 
@@ -628,7 +628,7 @@ send_nd6_ns(uip_ipaddr_t *nexthop)
 #else
   LOG_ERR("output: neighbor not in cache: ");
   LOG_ERR_6ADDR(nexthop);
-  LOG_ERR("\n");
+  LOG_ERR_("\n");
 #endif
 
   return err;
@@ -689,7 +689,7 @@ tcpip_ipv6_output(void)
         0, NBR_REACHABLE, NBR_TABLE_REASON_IPV6_ND_AUTOFILL, NULL)) == NULL) {
       LOG_ERR("output: failed to autofill neighbor cache for host ");
       LOG_ERR_6ADDR(nexthop);
-      LOG_ERR("\n");
+      LOG_ERR_("\n");
       goto exit;
     }
    }

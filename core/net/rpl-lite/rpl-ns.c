@@ -130,7 +130,7 @@ rpl_ns_update_node(const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32
     if(child_node == NULL) {
       LOG_ERR("NS: no space left for child ");
       LOG_ERR_6ADDR(child);
-      LOG_ERR("\n");
+      LOG_ERR_("\n");
       return NULL;
     }
     child_node->parent = NULL;
@@ -160,9 +160,9 @@ rpl_ns_update_node(const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32
 
   LOG_INFO("NS: updating link, child ");
   LOG_INFO_6ADDR(child);
-  LOG_INFO(", parent ");
+  LOG_INFO_(", parent ");
   LOG_INFO_6ADDR(parent);
-  LOG_INFO(", lifetime %u, num_nodes %u\n", (unsigned)lifetime, num_nodes);
+  LOG_INFO_(", lifetime %u, num_nodes %u\n", (unsigned)lifetime, num_nodes);
 
   return child_node;
 }
@@ -224,7 +224,7 @@ rpl_ns_periodic(unsigned seconds)
       rpl_ns_get_node_global_addr(&node_addr, l);
       LOG_INFO("NS: removing expired node ");
       LOG_INFO_6ADDR(&node_addr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
 #endif /* LOG_INFO_ENABLED */
       /* No child found, deallocate node */
       list_remove(nodelist, l);

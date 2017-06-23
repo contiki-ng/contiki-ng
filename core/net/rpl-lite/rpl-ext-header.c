@@ -194,7 +194,7 @@ rpl_ext_header_srh_update(void)
 
     LOG_INFO("SRH next hop ");
     LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
   }
 
   uip_ext_len = last_uip_ext_len;
@@ -236,7 +236,7 @@ insert_srh_header(void)
 
   LOG_INFO("SRH creating source routing header with destination ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" \n");
+  LOG_INFO_(" \n");
 
   /* Construct source route. We do not do this recursively to keep the runtime stack usage constant. */
 
@@ -286,7 +286,7 @@ insert_srh_header(void)
 
     LOG_INFO("SRH Hop ");
     LOG_INFO_6ADDR(&node_addr);
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
     node = node->parent;
     path_len++;
   }

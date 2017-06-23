@@ -698,9 +698,9 @@ uip_reass(void)
       memcpy(FBUF, UIP_IP_BUF, uip_ext_len + UIP_IPH_LEN);
       LOG_INFO("src ");
       LOG_INFO_6ADDR(&FBUF->srcipaddr);
-      LOG_INFO("dest ");
+      LOG_INFO_("dest ");
       LOG_INFO_6ADDR(&FBUF->destipaddr);
-      LOG_INFO("next %d\n", UIP_IP_BUF->proto);
+      LOG_INFO_("next %d\n", UIP_IP_BUF->proto);
 
     }
 
@@ -1132,9 +1132,9 @@ uip_process(uint8_t flag)
 
   LOG_INFO("packet received from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   if(uip_is_addr_mcast(&UIP_IP_BUF->srcipaddr)){
     UIP_STAT(++uip_stat.ip.drop);
@@ -1230,7 +1230,7 @@ uip_process(uint8_t flag)
       UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
       LOG_INFO("Forwarding packet to ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
       goto send;
     } else {
@@ -1453,7 +1453,6 @@ uip_process(uint8_t flag)
     LOG_ERR("Unknown ICMPv6 message type/code %d\n", UIP_ICMP_BUF->type);
     UIP_STAT(++uip_stat.icmp.drop);
     UIP_STAT(++uip_stat.icmp.typeerr);
-    LOG_ERR("icmp6: unknown ICMPv6 message.");
     uip_clear_buf();
   }
 
@@ -2258,9 +2257,9 @@ uip_process(uint8_t flag)
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
   LOG_INFO("Sending TCP packet to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" from ");
+  LOG_INFO_(" from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   if(uip_connr->tcpstateflags & UIP_STOPPED) {
     /* If the connection has issued uip_stop(), we advertise a zero

@@ -610,7 +610,7 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
   }
 
   LOG_INFO_6ADDR(ipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 }
 
 /*--------------------------------------------------------------------*/

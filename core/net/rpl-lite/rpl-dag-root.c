@@ -111,7 +111,7 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
       LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      printf("\n");
+      LOG_INFO_("\n");
     }
   }
 }

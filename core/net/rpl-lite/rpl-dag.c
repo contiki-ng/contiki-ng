@@ -82,7 +82,7 @@ leave_dag(void)
 {
   LOG_INFO("leaving DAG \n");
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO(", instance %u\n", curr_instance.instance_id);
+  LOG_INFO_(", instance %u\n", curr_instance.instance_id);
 
   /* Issue a no-path DAO */
   RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
@@ -419,7 +419,7 @@ process_dio_join_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   LOG_INFO("joined DAG with instance ID %u, DAG ID ",
          curr_instance.instance_id);
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO(", rank %u\n", curr_instance.dag.rank);
+  LOG_INFO_(", rank %u\n", curr_instance.dag.rank);
 
   LOG_ANNOTATE("#A join=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
 
@@ -574,7 +574,7 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
   LOG_INFO("created DAG with instance ID %u, DAG ID ",
          curr_instance.instance_id);
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO(", rank %u\n", curr_instance.dag.rank);
+  LOG_INFO_(", rank %u\n", curr_instance.dag.rank);
 
   LOG_ANNOTATE("#A root=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
 }

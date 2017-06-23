@@ -122,7 +122,7 @@ rpl_reset_prefix(rpl_prefix_t *last_prefix)
   if(rep != NULL) {
     LOG_INFO("removing global IP address ");
     LOG_INFO_6ADDR(&ipaddr);
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
     uip_ds6_addr_rm(rep);
   }
   curr_instance.dag.prefix_info.length = 0;
@@ -150,7 +150,7 @@ rpl_set_prefix_from_addr(uip_ipaddr_t *addr, unsigned len, uint8_t flags)
   if(uip_ds6_addr_lookup(&ipaddr) == NULL) {
     LOG_INFO("adding global IP address ");
     LOG_INFO_6ADDR(&ipaddr);
-    LOG_INFO("\n");
+    LOG_INFO_("\n");
     uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
   }
   return 1;

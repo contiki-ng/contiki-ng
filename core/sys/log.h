@@ -90,15 +90,17 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #endif /* LOG_CONF_WITH_ANNOTATE */
 
 /* Main log function */
-#define LOG(level, ...) do {  \
+#define LOG(newline, level, ...) do {  \
                             if(level <= LOG_LEVEL) { \
-                              if(LOG_WITH_LOC) { \
-                                LOG_OUTPUT("%s:%d: ", __FILE__, __LINE__); \
+                              if(newline) { \
+                                if(LOG_WITH_LOC) { \
+                                  LOG_OUTPUT("%s:%d: ", __FILE__, __LINE__); \
+                                } \
+                                LOG_OUTPUT("%s: ", LOG_MODULE); \
                               } \
-                              LOG_OUTPUT("%s: ", LOG_MODULE); \
                               LOG_OUTPUT(__VA_ARGS__); \
                             } \
-                        } while (0)
+                          } while (0)
 
 /* For Cooja annotations */
 #define LOG_ANNOTATE(...) do {  \
@@ -122,10 +124,15 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
                        } while (0)
 
 /* More compact versions of LOG macros */
-#define LOG_ERR(...)           LOG(LOG_LEVEL_ERR, __VA_ARGS__)
-#define LOG_WARN(...)          LOG(LOG_LEVEL_WARN, __VA_ARGS__)
-#define LOG_INFO(...)          LOG(LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_DBG(...)           LOG(LOG_LEVEL_DBG, __VA_ARGS__)
+#define LOG_ERR(...)           LOG(1, LOG_LEVEL_ERR, __VA_ARGS__)
+#define LOG_WARN(...)          LOG(1, LOG_LEVEL_WARN, __VA_ARGS__)
+#define LOG_INFO(...)          LOG(1, LOG_LEVEL_INFO, __VA_ARGS__)
+#define LOG_DBG(...)           LOG(1, LOG_LEVEL_DBG, __VA_ARGS__)
+
+#define LOG_ERR_(...)           LOG(0, LOG_LEVEL_ERR, __VA_ARGS__)
+#define LOG_WARN_(...)          LOG(0, LOG_LEVEL_WARN, __VA_ARGS__)
+#define LOG_INFO_(...)          LOG(0, LOG_LEVEL_INFO, __VA_ARGS__)
+#define LOG_DBG_(...)           LOG(0, LOG_LEVEL_DBG, __VA_ARGS__)
 
 #define LOG_ERR_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN_LLADDR(...)   LOG_LLADDR(LOG_LEVEL_WARN, __VA_ARGS__)
