@@ -331,7 +331,7 @@ eventhandler(process_event_t ev, process_data_t data)
     {
       struct uip_conn *cptr;
 
-      for(cptr = &uip_conns[0]; cptr < &uip_conns[UIP_CONNS]; ++cptr) {
+      for(cptr = &uip_conns[0]; cptr < &uip_conns[UIP_TCP_CONNS]; ++cptr) {
         if(cptr->appstate.p == p) {
           cptr->appstate.p = PROCESS_NONE;
           cptr->tcpstateflags = UIP_CLOSED;
@@ -361,7 +361,7 @@ eventhandler(process_event_t ev, process_data_t data)
     if(data == &periodic &&
         etimer_expired(&periodic)) {
 #if UIP_TCP
-      for(i = 0; i < UIP_CONNS; ++i) {
+      for(i = 0; i < UIP_TCP_CONNS; ++i) {
         if(uip_conn_active(i)) {
           /* Only restart the timer if there are active
                  connections. */

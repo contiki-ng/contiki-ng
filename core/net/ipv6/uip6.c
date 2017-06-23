@@ -234,7 +234,7 @@ static uint16_t lastport;
  */
 #if UIP_TCP
 /* The uip_conns array holds all TCP connections. */
-struct uip_conn uip_conns[UIP_CONNS];
+struct uip_conn uip_conns[UIP_TCP_CONNS];
 
 /* The uip_listenports list all currently listning ports. */
 uint16_t uip_listenports[UIP_LISTENPORTS];
@@ -428,7 +428,7 @@ uip_init(void)
   for(c = 0; c < UIP_LISTENPORTS; ++c) {
     uip_listenports[c] = 0;
   }
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     uip_conns[c].tcpstateflags = UIP_CLOSED;
   }
 #endif /* UIP_TCP */
@@ -465,7 +465,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 
   /* Check if this port is already in use, and if so try to find
      another one. */
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     conn = &uip_conns[c];
     if(conn->tcpstateflags != UIP_CLOSED &&
        conn->lport == uip_htons(lastport)) {
@@ -474,7 +474,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   }
 
   conn = 0;
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     cconn = &uip_conns[c];
     if(cconn->tcpstateflags == UIP_CLOSED) {
       conn = cconn;
@@ -1603,7 +1603,7 @@ uip_process(uint8_t flag)
 
   /* Demultiplex this segment. */
   /* First check any active connections. */
-  for(uip_connr = &uip_conns[0]; uip_connr <= &uip_conns[UIP_CONNS - 1];
+  for(uip_connr = &uip_conns[0]; uip_connr <= &uip_conns[UIP_TCP_CONNS - 1];
       ++uip_connr) {
     if(uip_connr->tcpstateflags != UIP_CLOSED &&
        UIP_TCP_BUF->destport == uip_connr->lport &&
@@ -1696,7 +1696,7 @@ uip_process(uint8_t flag)
      CLOSED connections are found. Thanks to Eddie C. Dost for a very
      nice algorithm for the TIME_WAIT search. */
   uip_connr = 0;
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     if(uip_conns[c].tcpstateflags == UIP_CLOSED) {
       uip_connr = &uip_conns[c];
       break;

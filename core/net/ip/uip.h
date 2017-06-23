@@ -355,7 +355,7 @@ void uip_setipid(uint16_t id);
  * The usual way of calling the function is through a for() loop like
  * this:
  \code
- for(i = 0; i < UIP_CONNS; ++i) {
+ for(i = 0; i < UIP_TCP_CONNS; ++i) {
  uip_periodic(i);
  if(uip_len > 0) {
  devicedriver_send();
@@ -368,7 +368,7 @@ void uip_setipid(uint16_t id);
  * Ethernet, you will need to call the uip_arp_out() function before
  * calling the device driver:
  \code
- for(i = 0; i < UIP_CONNS; ++i) {
+ for(i = 0; i < UIP_TCP_CONNS; ++i) {
  uip_periodic(i);
  if(uip_len > 0) {
  uip_arp_out();
@@ -1363,7 +1363,7 @@ struct uip_conn {
 CCIF extern struct uip_conn *uip_conn;
 #if UIP_TCP
 /* The array containing all uIP connections. */
-CCIF extern struct uip_conn uip_conns[UIP_CONNS];
+CCIF extern struct uip_conn uip_conns[UIP_TCP_CONNS];
 #endif
 
 /**

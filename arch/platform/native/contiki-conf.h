@@ -65,7 +65,7 @@ typedef  int32_t s32_t;
 typedef unsigned short uip_stats_t;
 
 #define UIP_CONF_UDP             1
-#define UIP_CONF_MAX_CONNECTIONS 40
+#define UIP_CONF_TCP_CONNS 40
 #define UIP_CONF_MAX_LISTENPORTS 40
 #define UIP_CONF_BUFFER_SIZE     420
 #define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
@@ -123,7 +123,6 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_RECEIVE_WINDOW  48
 #endif
 #define UIP_CONF_TCP_MSS         48
-#define UIP_CONF_UDP_CONNS       12
 #define UIP_CONF_FWCACHE_SIZE    30
 #define UIP_CONF_BROADCAST       1
 #define UIP_ARCH_IPCHKSUM        1

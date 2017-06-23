@@ -49,7 +49,7 @@
 #define webserver_log(...)
 
 #ifndef WEBSERVER_CONF_CFS_CONNS
-#define CONNS UIP_CONNS
+#define CONNS UIP_TCP_CONNS
 #else /* WEBSERVER_CONF_CFS_CONNS */
 #define CONNS WEBSERVER_CONF_CFS_CONNS
 #endif /* WEBSERVER_CONF_CFS_CONNS */

@@ -140,6 +140,7 @@ extract_lladdr_from_llao_aligned(uip_lladdr_t *dest) {
 }
 #endif /* UIP_ND6_SEND_NA || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER */
 /*------------------------------------------------------------------*/
+#if UIP_ND6_SEND_NA /* UIP_ND6_SEND_NA */
 /* create a llao */
 static void
 create_llao(uint8_t *llao, uint8_t type) {
@@ -150,7 +151,7 @@ create_llao(uint8_t *llao, uint8_t type) {
   memset(&llao[UIP_ND6_OPT_DATA_OFFSET + UIP_LLADDR_LEN], 0,
          UIP_ND6_OPT_LLAO_LEN - 2 - UIP_LLADDR_LEN);
 }
-
+#endif /* UIP_ND6_SEND_NA */
 /*------------------------------------------------------------------*/
  /**
  * Neighbor Solicitation Processing
