@@ -68,6 +68,15 @@ extern uip_ipaddr_t rpl_multicast_addr;
 /********** Public functions **********/
 
 /**
+ * Called by lower layers after every packet transmission
+ *
+ * \param addr The link-layer addrress of the packet destination
+ * \param status The transmission status (see core/net/mac/mac.h)
+ * \param numtx The total number of transmission attempts
+ */
+void rpl_link_callback(const linkaddr_t *addr, int status, int numtx);
+
+/**
  * Set prefix from an prefix data structure (from DIO)
  *
  * \param prefix The prefix

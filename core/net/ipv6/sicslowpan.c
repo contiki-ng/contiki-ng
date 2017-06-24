@@ -71,6 +71,13 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "6LoWPAN"
@@ -1209,12 +1216,29 @@ compress_hdr_ipv6(linkaddr_t *link_destaddr)
 static void
 packet_sent(void *ptr, int status, int transmissions)
 {
-  uip_ds6_link_neighbor_callback(status, transmissions);
+  const linkaddr_t *dest;
 
   if(callback != NULL) {
     callback->output_callback(status);
   }
   last_tx_status = status;
+
+  /* What follows only applies to unicast */
+  dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+  if(linkaddr_cmp(dest, &linkaddr_null)) {
+    return;
+  }
+
+  /* Update neighbor link statistics */
+  link_stats_packet_sent(dest, status, transmissions);
+
+#if UIP_CONF_IPV6_RPL
+  /* Call RPL link callback */
+  rpl_link_callback(dest, status, transmissions);
+#endif /* UIP_CONF_IPV6_RPL */
+
+  /* DS6 callback, used for UIP_DS6_LL_NUD */
+  uip_ds6_link_callback(status, transmissions);
 }
 /*--------------------------------------------------------------------*/
 /**

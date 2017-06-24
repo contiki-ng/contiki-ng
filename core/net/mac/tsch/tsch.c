@@ -46,6 +46,7 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "net/nbr-table.h"
+#include "net/link-stats.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-slot-operation.h"
@@ -56,6 +57,10 @@
 #include "net/mac/tsch/tsch-security.h"
 #include "net/mac/mac-sequence.h"
 #include "lib/random.h"
+
+#if UIP_CONF_IPV6_RPL
+#include "net/mac/tsch/tsch-rpl.h"
+#endif /* UIP_CONF_IPV6_RPL */
 
 #if FRAME802154_VERSION < FRAME802154_IEEE802154E_2012
 #error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154E_2012
@@ -248,37 +253,38 @@ tsch_reset(void)
 static void
 keepalive_packet_sent(void *ptr, int status, int transmissions)
 {
-  if(tsch_is_associated) {
-#ifdef TSCH_LINK_NEIGHBOR_CALLBACK
-    TSCH_LINK_NEIGHBOR_CALLBACK(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
-#endif
-    LOG_INFO("KA sent to ");
-    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-    LOG_INFO_(", st %d-%d\n", status, transmissions);
+  /* Update neighbor link statistics */
+  link_stats_packet_sent(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
+  /* Call RPL callback if RPL is enabled */
+#ifdef TSCH_CALLBACK_KA_SENT
+  TSCH_CALLBACK_KA_SENT(status, transmissions);
+#endif /* TSCH_CALLBACK_KA_SENT */
+  LOG_INFO("KA sent to ");
+  LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+  LOG_INFO_(", st %d-%d\n", status, transmissions);
 
-    /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
-    if(status != MAC_TX_OK) {
-      if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
-        LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
-        if(sync_count == 0) {
-          /* We got no synchronization at all in this session, leave the network */
-          tsch_disassociate();
-        }
-      } else {
-        LOG_WARN("re-synchronizing on ");
-        LOG_WARN_LLADDR(&last_eb_nbr_addr);
-        LOG_WARN_("\n");
-        /* We simply pick the last neighbor we receiver sync information from */
-        tsch_queue_update_time_source(&last_eb_nbr_addr);
-        tsch_join_priority = last_eb_nbr_jp + 1;
-        /* Try to get in sync ASAP */
-        tsch_schedule_keepalive_immediately();
-        return;
+  /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
+  if(status != MAC_TX_OK) {
+    if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
+      LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
+      if(sync_count == 0) {
+        /* We got no synchronization at all in this session, leave the network */
+        tsch_disassociate();
       }
+    } else {
+      LOG_WARN("re-synchronizing on ");
+      LOG_WARN_LLADDR(&last_eb_nbr_addr);
+      LOG_WARN_("\n");
+      /* We simply pick the last neighbor we receiver sync information from */
+      tsch_queue_update_time_source(&last_eb_nbr_addr);
+      tsch_join_priority = last_eb_nbr_jp + 1;
+      /* Try to get in sync ASAP */
+      tsch_schedule_keepalive_immediately();
+      return;
     }
-
-    tsch_schedule_keepalive();
   }
+
+  tsch_schedule_keepalive();
 }
 /*---------------------------------------------------------------------------*/
 /* Prepare and send a keepalive message */

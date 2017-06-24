@@ -292,7 +292,7 @@ uip_ds6_nbr_t *rpl_get_nbr(rpl_parent_t *parent);
 void rpl_print_neighbor_list(void);
 int rpl_ext_header_srh_update(void);
 int rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr);
-
+void rpl_link_callback(const linkaddr_t *addr, int status, int numtx);
 /* Per-parent RPL information */
 NBR_TABLE_DECLARE(rpl_parents);
 

@@ -43,6 +43,9 @@
 
 /********** Functions *********/
 
+/* Keep-alives packet sent callback.
+ * To use, set #define TSCH_CALLBACK_KA_SENT tsch_rpl_callback_ka_sent */
+void tsch_rpl_callback_ka_sent(int status, int transmissions);
 /* To use, set #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network */
 void tsch_rpl_callback_joining_network(void);
 /* Upon leaving a TSCH network, perform a local repair

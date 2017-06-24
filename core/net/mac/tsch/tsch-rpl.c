@@ -48,6 +48,7 @@
 #include "net/mac/tsch/tsch-private.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch-log.h"
+#include "net/mac/tsch/tsch-rpl.h"
 #include "tsch-rpl.h"
 
 /* Log configuration */
@@ -55,6 +56,13 @@
 #define LOG_MODULE "TSCH RPL"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
+/*---------------------------------------------------------------------------*/
+/* To use, set #define TSCH_CALLBACK_KA_SENT tsch_rpl_callback_ka_sent */
+void
+tsch_rpl_callback_ka_sent(int status, int transmissions)
+{
+  rpl_link_callback(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
+}
 /*---------------------------------------------------------------------------*/
 /* To use, set #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network */
 void
