@@ -445,7 +445,8 @@ tsch_tx_process_pending(void)
     queuebuf_to_packetbuf(p->qb);
     LOG_INFO("packet sent to ");
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-    LOG_INFO_(", status %d, tx %d\n", p->ret, p->transmissions);
+    LOG_INFO_(", seqno %u, status %d, tx %d\n",
+      packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), p->ret, p->transmissions);
     /* Call packet_sent callback */
     mac_call_sent_callback(p->sent, p->ptr, p->ret, p->transmissions);
     /* Free packet queuebuf */
