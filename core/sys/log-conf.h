@@ -46,7 +46,37 @@
 #ifndef __LOG_CONF_H__
 #define __LOG_CONF_H__
 
-/* A list of currently supported modules */
+/* Log only the last 16 bytes of link-layer and IPv6 addresses */
+#ifdef LOG_CONF_WITH_COMPACT_ADDR
+#define LOG_WITH_COMPACT_ADDR LOG_CONF_WITH_COMPACT_ADDR
+#else /* LOG_CONF_WITH_COMPACT_ADDR */
+#define LOG_WITH_COMPACT_ADDR 0
+#endif /* LOG_CONF_WITH_COMPACT_ADDR */
+
+/* Prefix all logs with file name and line-of-code */
+#ifdef LOG_CONF_WITH_LOC
+#define LOG_WITH_LOC LOG_CONF_WITH_LOC
+#else /* LOG_CONF_WITH_LOC */
+#define LOG_WITH_LOC 0
+#endif /* LOG_CONF_WITH_LOC */
+
+/* Cooja annotations */
+#ifdef LOG_CONF_WITH_ANNOTATE
+#define LOG_WITH_ANNOTATE LOG_CONF_WITH_ANNOTATE
+#else /* LOG_CONF_WITH_ANNOTATE */
+#define LOG_WITH_ANNOTATE 0
+#endif /* LOG_CONF_WITH_ANNOTATE */
+
+/* Custom output function -- default is printf */
+#ifdef LOG_CONF_OUTPUT
+#define LOG_OUTPUT(...) LOG_CONF_OUTPUT(__VA_ARGS__)
+#else /* LOG_CONF_OUTPUT */
+#define LOG_OUTPUT(...) printf(__VA_ARGS__)
+#endif /* LOG_CONF_OUTPUT */
+
+/******************************************************************************/
+/********************* A list of currently supported modules ******************/
+/******************************************************************************/
 
 #ifndef RPL_LOG_LEVEL
 #define RPL_LOG_LEVEL                         LOG_LEVEL_NONE /* Only for rpl-lite */
