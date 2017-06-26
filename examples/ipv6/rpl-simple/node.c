@@ -51,8 +51,8 @@
 
 #define UDP_PORT	8765
 
-#define START_INTERVAL		(15 * CLOCK_SECOND)
-#define SEND_INTERVAL		  (60 * CLOCK_SECOND)
+#define START_INTERVAL		(5 * CLOCK_SECOND)
+#define SEND_INTERVAL		  (30 * CLOCK_SECOND)
 
 static struct simple_udp_connection udp_conn;
 
@@ -147,6 +147,10 @@ PROCESS_THREAD(node_process, ev, data)
   /* Wait for START_INTERVAL */
   etimer_set(&periodic, START_INTERVAL);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic));
+
+#if WITH_TSCH
+  NETSTACK_MAC.on();
+#endif /* WITH_TSCH */
 
   if(!uip_ip6addr_cmp(&destination_ipaddr, &node_ipaddr)) {
     /* Send data periodically */

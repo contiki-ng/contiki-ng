@@ -30,7 +30,82 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
+/* Network size and PAN-ID */
+
+#undef CONTIKI_NETWORK_DENSITY
+#define CONTIKI_NETWORK_DENSITY 25
+
+#undef CONTIKI_NETWORK_SIZE
+#define CONTIKI_NETWORK_SIZE 25
+
+#undef IEEE802154_CONF_PANID
+#define IEEE802154_CONF_PANID 0xf123
+
+/* Save some space */
+
+#undef UIP_CONF_ND6_SEND_NA
+#define UIP_CONF_ND6_SEND_NA 0
+
+#undef SICSLOWPAN_CONF_FRAG
+#define SICSLOWPAN_CONF_FRAG 0
+
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP 0
+
+#if !WITH_TSCH
+
 #undef CSMA_CONF_802154_AUTOACK
 #define CSMA_CONF_802154_AUTOACK       1
+
+#else
+
+/*******************************************************/
+/********************* Enable TSCH *********************/
+/*******************************************************/
+
+/* Netstack layers */
+#undef NETSTACK_CONF_MAC
+#define NETSTACK_CONF_MAC     tschmac_driver
+
+/* IEEE802.15.4 frame version */
+#undef FRAME802154_CONF_VERSION
+#define FRAME802154_CONF_VERSION FRAME802154_IEEE802154E_2012
+
+/* TSCH and RPL callbacks */
+#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
+#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
+#define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
+#define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
+
+/* Needed for CC2538 platforms only */
+/* For TSCH we have to use the more accurate crystal oscillator
+ * by default the RC oscillator is activated */
+#undef SYS_CTRL_CONF_OSC32K_USE_XTAL
+#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
+
+#undef TSCH_CONF_HW_FRAME_FILTERING
+#define TSCH_CONF_HW_FRAME_FILTERING	0
+
+/*******************************************************/
+/******************* Configure TSCH ********************/
+/*******************************************************/
+
+/* TSCH per-slot logging */
+#undef TSCH_LOG_CONF_PER_SLOT
+#define TSCH_LOG_CONF_PER_SLOT 1
+
+/* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
+#undef TSCH_CONF_AUTOSTART
+#define TSCH_CONF_AUTOSTART 0
+
+/* 6TiSCH minimal schedule length.
+ * Larger values result in less frequent active slots: reduces capacity and saves energy. */
+#undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
+
+#undef TSCH_SCHEDULE_CONF_MAX_LINKS
+#define TSCH_SCHEDULE_CONF_MAX_LINKS 4
+
+#endif
 
 #endif
