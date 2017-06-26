@@ -420,15 +420,15 @@ tsch_rx_process_pending()
       packetbuf_set_attr(PACKETBUF_ATTR_CHANNEL, current_input->channel);
     }
 
-    /* Remove input from ringbuf */
-    ringbufindex_get(&input_ringbuf);
-
     if(is_data) {
       /* Pass to upper layers */
       packet_input();
     } else if(is_eb) {
       eb_input(current_input);
     }
+
+    /* Remove input from ringbuf */
+    ringbufindex_get(&input_ringbuf);
   }
 }
 
