@@ -142,7 +142,7 @@ struct tsch_asn_t tsch_current_asn;
  * For PAN coordinator: 0 -- lower is better */
 uint8_t tsch_join_priority;
 /* The current TSCH sequence number, used for unicast data frames only */
-static uint8_t tsch_packet_seqno = 0;
+static uint8_t tsch_packet_seqno;
 /* Current period for EB output */
 static clock_time_t tsch_current_eb_period;
 /* Current period for keepalive output */
@@ -925,6 +925,7 @@ tsch_init(void)
   nbr_table_register(sync_stats, NULL);
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
 
+  tsch_packet_seqno = random_rand();
   tsch_is_initialized = 1;
 
 #if TSCH_AUTOSTART
