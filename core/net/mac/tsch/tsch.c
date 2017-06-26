@@ -132,6 +132,8 @@ int tsch_is_initialized = 0;
 int tsch_is_coordinator = 0;
 /* Are we associated to a TSCH network? */
 int tsch_is_associated = 0;
+/* Total number of associations since boot */
+int tsch_association_count = 0;
 /* Is the PAN running link-layer security? */
 int tsch_is_pan_secured = LLSEC802154_ENABLED;
 /* The current Absolute Slot Number (ASN) */
@@ -148,6 +150,11 @@ static clock_time_t tsch_current_ka_timeout;
 
 /* timer for sending keepalive messages */
 static struct ctimer keepalive_timer;
+
+/* Statistics on the current session */
+unsigned long tx_count;
+unsigned long rx_count;
+unsigned long sync_count;
 
 /* TSCH processes and protothreads */
 PT_THREAD(tsch_scan(struct pt *pt));
@@ -247,12 +254,30 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
   LOG_INFO("KA sent to ");
   LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
   LOG_INFO_(", st %d-%d\n", status, transmissions);
+
+  /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
+  if(status != MAC_TX_OK) {
+    if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
+      LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
+    } else {
+      LOG_WARN("re-synchronizing on ");
+      LOG_WARN_LLADDR(&last_eb_nbr_addr);
+      LOG_WARN_("\n");
+      /* We simply pick the last neighbor we receiver sync information from */
+      tsch_queue_update_time_source(&last_eb_nbr_addr);
+      tsch_join_priority = last_eb_nbr_jp + 1;
+      /* Try to get in sync ASAP */
+      tsch_schedule_keepalive_immediately();
+      return;
+    }
+  }
+
   tsch_schedule_keepalive();
 }
 /*---------------------------------------------------------------------------*/
 /* Prepare and send a keepalive message */
 static void
-keepalive_send()
+keepalive_send(void *ptr)
 {
   if(tsch_is_associated) {
     struct tsch_neighbor *n = tsch_queue_get_time_source();
@@ -268,7 +293,7 @@ keepalive_send()
 /*---------------------------------------------------------------------------*/
 /* Set ctimer to send a keepalive message after expiration of TSCH_KEEPALIVE_TIMEOUT */
 void
-tsch_schedule_keepalive()
+tsch_schedule_keepalive(void)
 {
   /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
   if(!tsch_is_coordinator && tsch_is_associated && tsch_current_ka_timeout > 0) {
@@ -410,7 +435,7 @@ tsch_rx_process_pending()
 /*---------------------------------------------------------------------------*/
 /* Pass sent packets to upper layer */
 static void
-tsch_tx_process_pending()
+tsch_tx_process_pending(void)
 {
   int16_t dequeued_index;
   /* Loop on accessing (without removing) a pending input packet */
@@ -461,7 +486,8 @@ tsch_disassociate(void)
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
     process_post(&tsch_process, PROCESS_EVENT_POLL, NULL);
-    LOG_WARN("leaving the network\n");
+    LOG_WARN("leaving the network, stats: tx %lu, rx %lu, sync %lu\n",
+      tx_count, rx_count, sync_count);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -605,6 +631,9 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
       /* Update global flags */
       tsch_is_associated = 1;
       tsch_is_pan_secured = frame.fcf.security_enabled;
+      tx_count = 0;
+      rx_count = 0;
+      sync_count = 0;
 
       /* Start sending keep-alives now that tsch_is_associated is set */
       tsch_schedule_keepalive();
@@ -613,7 +642,9 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
       TSCH_CALLBACK_JOINING_NETWORK();
 #endif
 
-      LOG_INFO("association done, sec %u, PAN ID %x, asn-%x.%lx, jp %u, timeslot id %u, hopping id %u, slotframe len %u with %u links, from ",
+      tsch_association_count++;
+      LOG_INFO("association done (%u), sec %u, PAN ID %x, asn-%x.%lx, jp %u, timeslot id %u, hopping id %u, slotframe len %u with %u links, from ",
+             tsch_association_count,
              tsch_is_pan_secured,
              frame.src_pid,
              tsch_current_asn.ms1b, tsch_current_asn.ls4b, tsch_join_priority,
@@ -692,7 +723,7 @@ PT_THREAD(tsch_scan(struct pt *pt))
       NETSTACK_RADIO.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t0, sizeof(rtimer_clock_t));
 
       /* Parse EB and attempt to associate */
-      LOG_INFO("association: received packet (%u bytes) on channel %u\n", input_eb.len, current_channel);
+      LOG_INFO("scan: received packet (%u bytes) on channel %u\n", input_eb.len, current_channel);
 
       tsch_associate(&input_eb, t0);
     }

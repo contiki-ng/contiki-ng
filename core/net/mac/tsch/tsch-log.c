@@ -106,7 +106,7 @@ tsch_log_process_pending(void)
                 log->rx.is_unicast == 0 ? "bc" : "uc", log->rx.is_data, log->rx.sec_level);
         log_lladdr_compact(&log->rx.src);
         printf("->");
-        log_lladdr_compact(&linkaddr_node_addr);
+        log_lladdr_compact(log->rx.is_unicast ? &linkaddr_node_addr : NULL);
         printf(", len %u, seq %u",
                 log->rx.datalen, log->rx.seqno);
         if(log->rx.drift_used) {

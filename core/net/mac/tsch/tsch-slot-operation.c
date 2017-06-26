@@ -557,6 +557,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           TSCH_DEBUG_TX_EVENT();
           /* send packet already in radio tx buffer */
           mac_tx_status = NETSTACK_RADIO.transmit(packet_len);
+          tx_count++;
           /* Save tx timestamp */
           tx_start_time = current_slot_start + tsch_timing[tsch_ts_tx_offset];
           /* calculate TX duration based on sent packet len */
@@ -838,6 +839,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
           if(linkaddr_cmp(&destination_address, &linkaddr_node_addr)
              || linkaddr_cmp(&destination_address, &linkaddr_null)) {
             int do_nack = 0;
+            rx_count++;
             estimated_drift = RTIMER_CLOCK_DIFF(expected_rx_time, rx_start_time);
 
 #if TSCH_TIMESYNC_REMOVE_JITTER
@@ -895,6 +897,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               /* Save estimated drift */
               drift_correction = -estimated_drift;
               is_drift_correction_used = 1;
+              sync_count++;
               tsch_timesync_update(n, since_last_timesync, -estimated_drift);
               tsch_schedule_keepalive();
             }
@@ -1082,7 +1085,7 @@ tsch_slot_operation_start(void)
     /* Update current slot start */
     prev_slot_start = current_slot_start;
     current_slot_start += time_to_next_active_slot;
-  } while(!tsch_schedule_slot_operation(&slot_operation_timer, prev_slot_start, time_to_next_active_slot, "association"));
+  } while(!tsch_schedule_slot_operation(&slot_operation_timer, prev_slot_start, time_to_next_active_slot, "assoc"));
 }
 /*---------------------------------------------------------------------------*/
 /* Start actual slot operation */

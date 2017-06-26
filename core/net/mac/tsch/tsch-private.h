@@ -88,6 +88,10 @@ extern uint8_t tsch_hopping_sequence[TSCH_HOPPING_SEQUENCE_MAX_LEN];
 extern struct tsch_asn_divisor_t tsch_hopping_sequence_length;
 /* TSCH timeslot timing (in rtimer ticks) */
 extern rtimer_clock_t tsch_timing[tsch_ts_elements_count];
+/* Statistics on the current session */
+unsigned long tx_count;
+unsigned long rx_count;
+unsigned long sync_count;
 
 /* TSCH processes */
 PROCESS_NAME(tsch_process);
