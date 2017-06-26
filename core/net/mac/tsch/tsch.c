@@ -75,6 +75,12 @@ void uip_ds6_link_neighbor_callback(int status, int numtx);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* TSCH_LINK_NEIGHBOR_CALLBACK */
 
+/* The address of the last node we received an EB from (other than our time source).
+ * Used for recovery */
+static linkaddr_t last_eb_nbr_addr;
+/* The join priority advertised by last_eb_nbr_addr */
+static uint8_t last_eb_nbr_jp;
+
 /* Let TSCH select a time source with no help of an upper layer.
  * We do so using statistics from incoming EBs */
 #if TSCH_AUTOSELECT_TIME_SOURCE
@@ -178,6 +184,11 @@ void
 tsch_set_ka_timeout(uint32_t timeout)
 {
   tsch_current_ka_timeout = timeout;
+  if(timeout == 0) {
+    ctimer_stop(&keepalive_timer);
+  } else {
+    tsch_schedule_keepalive();
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -209,11 +220,18 @@ tsch_reset(void)
 #ifdef TSCH_CALLBACK_LEAVING_NETWORK
   TSCH_CALLBACK_LEAVING_NETWORK();
 #endif
+  linkaddr_copy(&last_eb_nbr_addr, &linkaddr_null);
 #if TSCH_AUTOSELECT_TIME_SOURCE
+  struct nbr_sync_stat *stat;
   best_neighbor_eb_count = 0;
-  nbr_table_register(eb_stats, NULL);
+  /* Remove all nbr stats */
+  stat = nbr_table_head(sync_stats);
+  while(stat != NULL) {
+    nbr_table_remove(sync_stats, stat);
+    stat = nbr_table_next(sync_stats, stat);
+  }
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_set_eb_period(TSCH_EB_PERIOD);
-#endif
 }
 
 /* TSCH keep-alive functions */
@@ -260,6 +278,16 @@ tsch_schedule_keepalive()
   }
 }
 /*---------------------------------------------------------------------------*/
+/* Set ctimer to send a keepalive message immediately */
+void
+tsch_schedule_keepalive_immediately(void)
+{
+  /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
+  if(!tsch_is_coordinator && tsch_is_associated) {
+    ctimer_set(&keepalive_timer, 0, keepalive_send, NULL);
+  }
+}
+/*---------------------------------------------------------------------------*/
 static void
 eb_input(struct input_packet *current_input)
 {
@@ -272,6 +300,14 @@ eb_input(struct input_packet *current_input)
   if(tsch_packet_parse_eb(current_input->payload, current_input->len,
                           &frame, &eb_ies, NULL, 1)) {
     /* PAN ID check and authentication done at rx time */
+
+    /* Got an EB from a different neighbor than our time source, keep enough data
+     * to switch to it in case we lose the link to our time source */
+    struct tsch_neighbor *ts = tsch_queue_get_time_source();
+    if(ts == NULL || !linkaddr_cmp(&last_eb_nbr_addr, &ts->addr)) {
+      linkaddr_copy(&last_eb_nbr_addr, (linkaddr_t *)&frame.src_addr);
+      last_eb_nbr_jp = eb_ies.ie_join_priority;
+    }
 
 #if TSCH_AUTOSELECT_TIME_SOURCE
     if(!tsch_is_coordinator) {
@@ -304,11 +340,10 @@ eb_input(struct input_packet *current_input)
         tsch_join_priority = best_stat->jp + 1;
       }
     }
-#endif
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
 
-    struct tsch_neighbor *n = tsch_queue_get_time_source();
     /* Did the EB come from our time source? */
-    if(n != NULL && linkaddr_cmp((linkaddr_t *)&frame.src_addr, &n->addr)) {
+    if(ts != NULL && linkaddr_cmp((linkaddr_t *)&frame.src_addr, &ts->addr)) {
       /* Check for ASN drift */
       int32_t asn_diff = TSCH_ASN_DIFF(current_input->rx_asn, eb_ies.ie_asn);
       if(asn_diff != 0) {
@@ -854,6 +889,9 @@ tsch_init(void)
   tsch_log_init();
   ringbufindex_init(&input_ringbuf, TSCH_MAX_INCOMING_PACKETS);
   ringbufindex_init(&dequeued_ringbuf, TSCH_DEQUEUED_ARRAY_SIZE);
+#if TSCH_AUTOSELECT_TIME_SOURCE
+  nbr_table_register(sync_stats, NULL);
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
 
   tsch_is_initialized = 1;
 

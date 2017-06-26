@@ -164,8 +164,6 @@ tsch_queue_update_time_source(const linkaddr_t *new_addr)
           new_time_src->is_time_source = 1;
           /* (Re)set keep-alive timeout */
           tsch_set_ka_timeout(TSCH_KEEPALIVE_TIMEOUT);
-          /* Start sending keepalives */
-          tsch_schedule_keepalive();
         } else {
           /* Stop sending keepalives */
           tsch_set_ka_timeout(0);

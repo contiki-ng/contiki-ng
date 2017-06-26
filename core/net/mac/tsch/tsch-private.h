@@ -98,6 +98,8 @@ PROCESS_NAME(tsch_pending_events_process);
 
 /* Set TSCH to send a keepalive message after TSCH_KEEPALIVE_TIMEOUT */
 void tsch_schedule_keepalive(void);
+/* Set TSCH to send a keepalive message immediately */
+void tsch_schedule_keepalive_immediately(void);
 /* Leave the TSCH network */
 void tsch_disassociate(void);
 
