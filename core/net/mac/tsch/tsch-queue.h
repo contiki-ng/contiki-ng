@@ -88,7 +88,7 @@
 #ifdef TSCH_CONF_MAC_MAX_BE
 #define TSCH_MAC_MAX_BE TSCH_CONF_MAC_MAX_BE
 #else
-#define TSCH_MAC_MAX_BE 7
+#define TSCH_MAC_MAX_BE 5
 #endif
 /* Max number of re-transmissions */
 #ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
