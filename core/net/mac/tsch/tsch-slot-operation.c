@@ -803,6 +803,16 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 
         packet_duration = TSCH_PACKET_DURATION(current_input->len);
 
+        if(frame_valid) {
+          if(frame.fcf.frame_type != FRAME802154_DATAFRAME
+            && frame.fcf.frame_type != FRAME802154_BEACONFRAME) {
+              TSCH_LOG_ADD(tsch_log_message,
+                  snprintf(log->message, sizeof(log->message),
+                  "!discarding frame with type %u, len %u", frame.fcf.frame_type, current_input->len));
+              frame_valid = 0;
+          }
+        }
+
 #if LLSEC802154_ENABLED
         /* Decrypt and verify incoming frame */
         if(frame_valid) {
