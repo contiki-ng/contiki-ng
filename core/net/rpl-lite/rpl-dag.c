@@ -238,10 +238,27 @@ rpl_dag_update_state(void)
           rpl_timers_schedule_leaving();
         }
       } else {
+        rpl_nbr_t *nbr;
+
         /* Select and set preferred parent */
         rpl_neighbor_set_preferred_parent(rpl_neighbor_select_best());
         /* Update rank  */
         curr_instance.dag.rank = rpl_neighbor_rank_via_nbr(curr_instance.dag.preferred_parent);
+
+        /* Update better_parent_since flag for each neighbor */
+        nbr = nbr_table_head(rpl_neighbors);
+        while(nbr != NULL) {
+          if(rpl_neighbor_rank_via_nbr(nbr) < curr_instance.dag.rank) {
+            /* This neighbor would be a better parent than our current.
+            Set 'better_parent_since' if not already set. */
+            if(nbr->better_parent_since == 0) {
+              nbr->better_parent_since = clock_time(); /* Initialize */
+            }
+          } else {
+            nbr->better_parent_since = 0; /* Not a better parent */
+          }
+          nbr = nbr_table_next(rpl_neighbors, nbr);
+        }
 
         if(old_parent == NULL || curr_instance.dag.rank < curr_instance.dag.lowest_rank) {
           /* This is a slight departure from RFC6550: if we had no preferred parent before,

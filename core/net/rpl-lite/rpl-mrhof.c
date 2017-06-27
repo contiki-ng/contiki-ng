@@ -82,10 +82,15 @@
 #if !RPL_MRHOF_SQUARED_ETX
 /* Hysteresis of MRHOF: the rank must differ more than PARENT_SWITCH_THRESHOLD_DIV
  * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5. */
-#define PARENT_SWITCH_THRESHOLD 192 /* Eq ETX of 1.5 */
+#define RANK_THRESHOLD 192 /* Eq ETX of 1.5 */
 #else /* !RPL_MRHOF_SQUARED_ETX */
-#define PARENT_SWITCH_THRESHOLD 384 /* Eq ETX of sqrt(3) */
+#define RANK_THRESHOLD 384 /* Eq ETX of sqrt(3) */
 #endif /* !RPL_MRHOF_SQUARED_ETX */
+
+/* Additional, custom hysteresis based on time. If a neighbor was consistently
+ * better than our preferred parent for at least TIME_THRESHOLD, switch to
+ * this neighbor regardless of RANK_THRESHOLD. */
+#define TIME_THRESHOLD (10 * 60 * CLOCK_SECOND)
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -175,11 +180,24 @@ nbr_is_acceptable_parent(rpl_nbr_t *nbr)
   return nbr_has_usable_link(nbr) && path_cost <= MAX_PATH_COST;
 }
 /*---------------------------------------------------------------------------*/
+static int
+within_hysteresis(rpl_nbr_t *nbr)
+{
+  uint16_t path_cost = nbr_path_cost(nbr);
+  uint16_t parent_path_cost = nbr_path_cost(curr_instance.dag.preferred_parent);
+
+  int within_rank_hysteresis = path_cost + RANK_THRESHOLD > parent_path_cost;
+  int within_time_hysteresis = nbr->better_parent_since == 0
+    || (clock_time() - nbr->better_parent_since) <= TIME_THRESHOLD;
+
+  /* As we want to consider neighbors that are either beyond the rank or time
+  hystereses, return 1 here iff the neighbor is within both hystereses. */
+  return within_rank_hysteresis && within_time_hysteresis;
+}
+/*---------------------------------------------------------------------------*/
 static rpl_nbr_t *
 best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
 {
-  uint16_t nbr1_cost;
-  uint16_t nbr2_cost;
   int nbr1_is_acceptable;
   int nbr2_is_acceptable;
 
@@ -193,18 +211,17 @@ best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
     return nbr1_is_acceptable ? nbr1 : NULL;
   }
 
-  nbr1_cost = nbr_path_cost(nbr1);
-  nbr2_cost = nbr_path_cost(nbr2);
-
-  /* Maintain stability of the preferred parent in case of similar ranks. */
-  if(nbr1 == curr_instance.dag.preferred_parent || nbr2 == curr_instance.dag.preferred_parent) {
-    if(nbr1_cost < nbr2_cost + PARENT_SWITCH_THRESHOLD &&
-       nbr1_cost > nbr2_cost - PARENT_SWITCH_THRESHOLD) {
-      return curr_instance.dag.preferred_parent;
-    }
+  /* Maintain stability of the preferred parent. Switch only if the gain
+  is greater than RANK_THRESHOLD, or if the neighbor has been better than the
+  current parent for at more than TIME_THRESHOLD. */
+  if(nbr1 == curr_instance.dag.preferred_parent && within_hysteresis(nbr2)) {
+    return nbr1;
+  }
+  if(nbr2 == curr_instance.dag.preferred_parent && within_hysteresis(nbr1)) {
+    return nbr2;
   }
 
-  return nbr1_cost < nbr2_cost ? nbr1 : nbr2;
+  return nbr_path_cost(nbr1) < nbr_path_cost(nbr2) ? nbr1 : nbr2;
 }
 /*---------------------------------------------------------------------------*/
 #if !RPL_WITH_MC

@@ -108,9 +108,14 @@ rpl_neighbor_print_list(const char *str)
           nbr == curr_instance.dag.preferred_parent ? 'p' : ' '
       );
       if(stats->last_tx_time > 0) {
-        LOG_INFO_(" (last tx %u min ago)\n", (unsigned)((clock_now - stats->last_tx_time) / (60 * CLOCK_SECOND)));
+        LOG_INFO_(" (last tx %u min ago", (unsigned)((clock_now - stats->last_tx_time) / (60 * CLOCK_SECOND)));
       } else {
-        LOG_INFO_(" (no tx)\n");
+        LOG_INFO_(" (no tx");
+      }
+      if(nbr->better_parent_since > 0) {
+        LOG_INFO_(", better since %u min)\n", (unsigned)((clock_now - nbr->better_parent_since) / (60 * CLOCK_SECOND)));
+      } else {
+        LOG_INFO_(")\n");
       }
       nbr = nbr_table_next(rpl_neighbors, nbr);
     }

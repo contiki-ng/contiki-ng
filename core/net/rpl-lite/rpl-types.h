@@ -132,6 +132,9 @@ typedef struct rpl_prefix rpl_prefix_t;
 
 /* All information related to a RPL neighbor */
 struct rpl_nbr {
+  clock_time_t better_parent_since;  /* The neighbor has been a possible
+  replacement for our preferred parent consistently since 'parent_since'.
+  Currently used by MRHOF only. */
 #if RPL_WITH_MC
   rpl_metric_container_t mc;
 #endif /* RPL_WITH_MC */
