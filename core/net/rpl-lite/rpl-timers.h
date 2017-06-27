@@ -57,6 +57,16 @@
 void rpl_timers_schedule_periodic_dis(void);
 
 /**
+ * Cancel scheduled leaving if any
+*/
+void rpl_timers_unschedule_leaving(void);
+
+/**
+ * Schedule leaving after RPL_DELAY_BEFORE_LEAVING
+*/
+void rpl_timers_schedule_leaving(void);
+
+/**
  * Initialize rpl-timers module
 */
 void rpl_timers_init(void);

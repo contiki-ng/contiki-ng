@@ -248,31 +248,37 @@ tsch_reset(void)
 static void
 keepalive_packet_sent(void *ptr, int status, int transmissions)
 {
+  if(tsch_is_associated) {
 #ifdef TSCH_LINK_NEIGHBOR_CALLBACK
-  TSCH_LINK_NEIGHBOR_CALLBACK(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
+    TSCH_LINK_NEIGHBOR_CALLBACK(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
 #endif
-  LOG_INFO("KA sent to ");
-  LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-  LOG_INFO_(", st %d-%d\n", status, transmissions);
+    LOG_INFO("KA sent to ");
+    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+    LOG_INFO_(", st %d-%d\n", status, transmissions);
 
-  /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
-  if(status != MAC_TX_OK) {
-    if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
-      LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
-    } else {
-      LOG_WARN("re-synchronizing on ");
-      LOG_WARN_LLADDR(&last_eb_nbr_addr);
-      LOG_WARN_("\n");
-      /* We simply pick the last neighbor we receiver sync information from */
-      tsch_queue_update_time_source(&last_eb_nbr_addr);
-      tsch_join_priority = last_eb_nbr_jp + 1;
-      /* Try to get in sync ASAP */
-      tsch_schedule_keepalive_immediately();
-      return;
+    /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
+    if(status != MAC_TX_OK) {
+      if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
+        LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
+        if(sync_count == 0) {
+          /* We got no synchronization at all in this session, leave the network */
+          tsch_disassociate();
+        }
+      } else {
+        LOG_WARN("re-synchronizing on ");
+        LOG_WARN_LLADDR(&last_eb_nbr_addr);
+        LOG_WARN_("\n");
+        /* We simply pick the last neighbor we receiver sync information from */
+        tsch_queue_update_time_source(&last_eb_nbr_addr);
+        tsch_join_priority = last_eb_nbr_jp + 1;
+        /* Try to get in sync ASAP */
+        tsch_schedule_keepalive_immediately();
+        return;
+      }
     }
-  }
 
-  tsch_schedule_keepalive();
+    tsch_schedule_keepalive();
+  }
 }
 /*---------------------------------------------------------------------------*/
 /* Prepare and send a keepalive message */
@@ -487,8 +493,6 @@ tsch_disassociate(void)
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
     process_post(&tsch_process, PROCESS_EVENT_POLL, NULL);
-    LOG_WARN("leaving the network, stats: tx %lu, rx %lu, sync %lu\n",
-      tx_count, rx_count, sync_count);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -768,6 +772,9 @@ PROCESS_THREAD(tsch_process, ev, data)
     /* Yield our main process. Slot operation will re-schedule itself
      * as long as we are associated */
     PROCESS_YIELD_UNTIL(!tsch_is_associated);
+
+    LOG_WARN("leaving the network, stats: tx %lu, rx %lu, sync %lu\n",
+      tx_count, rx_count, sync_count);
 
     /* Will need to re-synchronize */
     tsch_reset();

@@ -62,12 +62,29 @@ static int init_dag_from_dio(rpl_dio_t *dio);
 rpl_instance_t curr_instance;
 
 /*---------------------------------------------------------------------------*/
-static void
-leave_dag(const char *str)
+const char *
+rpl_dag_state_to_str(enum rpl_dag_state state)
+{
+  switch(state) {
+    case DAG_INITIALIZED:
+      return "initialized";
+    case DAG_JOINED:
+      return "joined";
+    case DAG_REACHABLE:
+      return "reachable";
+    case DAG_POISONING:
+      return "poisoning";
+    default:
+      return "unknown";
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_dag_leave(void)
 {
   LOG_INFO("leaving DAG ");
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO_(", instance %u (%s)\n", curr_instance.instance_id, str);
+  LOG_INFO_(", instance %u\n", curr_instance.instance_id);
 
   /* Issue a no-path DAO */
   RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
@@ -76,6 +93,7 @@ leave_dag(const char *str)
   /* Remove all neighbors */
   rpl_neighbor_remove_all();
 
+  /* Stop all timers */
   rpl_timers_stop_dag_timers();
 
   /* Remove autoconfigured address */
@@ -95,7 +113,13 @@ rpl_dag_periodic(unsigned seconds)
       curr_instance.dag.lifetime =
         curr_instance.dag.lifetime > seconds ? curr_instance.dag.lifetime - seconds : 0;
       if(curr_instance.dag.lifetime == 0) {
-        leave_dag("expired");
+        LOG_WARN("DAG expired, poison and leave\n");
+        curr_instance.dag.state = DAG_POISONING;
+        rpl_timers_schedule_state_update();
+      } else if(curr_instance.dag.lifetime < 300 && curr_instance.dag.preferred_parent != NULL) {
+        /* Five minutes before expiring, start sending unicast DIS to get an update */
+        LOG_WARN("DAG expiring in %u seconds, send DIS to preferred parent\n", (unsigned)curr_instance.dag.lifetime);
+        rpl_icmp6_dis_output(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
       }
     }
   }
@@ -170,10 +194,20 @@ rpl_local_repair(const char *str)
   if(curr_instance.used) { /* Check needed because this is a public function */
     LOG_WARN("local repair (%s)\n", str);
     curr_instance.of->reset(); /* Reset OF */
-    curr_instance.dag.is_reachable = 0; /* Assume we are no longer reachable */
+    curr_instance.dag.state = DAG_INITIALIZED; /* Reset DAG state */
     rpl_neighbor_remove_all(); /* Remove all neighbors */
     rpl_timers_dio_reset("Local repair"); /* Reset Trickle timer */
     rpl_timers_schedule_state_update();
+  }
+}
+/*---------------------------------------------------------------------------*/
+int
+rpl_dag_ready_to_advertise(void)
+{
+  if(curr_instance.mop == RPL_MOP_NO_DOWNWARD_ROUTES) {
+    return curr_instance.used && curr_instance.dag.state >= DAG_INITIALIZED;
+  } else {
+    return curr_instance.used && curr_instance.dag.state >= DAG_REACHABLE;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -184,37 +218,59 @@ rpl_dag_update_state(void)
   if(curr_instance.used) {
     if(!rpl_dag_root_is_root()) {
       rpl_nbr_t *old_parent = curr_instance.dag.preferred_parent;
+      rpl_rank_t old_rank = curr_instance.dag.rank;
 
       /* Any scheduled state update is no longer needed */
       rpl_timers_unschedule_state_update();
 
-      /* Select and set preferred parent */
-      rpl_neighbor_set_preferred(rpl_neighbor_select_best());
-      /* Update rank  */
-      curr_instance.dag.rank = rpl_neighbor_rank_via_nbr(curr_instance.dag.preferred_parent);
-
-      if(old_parent == NULL || curr_instance.dag.rank < curr_instance.dag.lowest_rank) {
-        /* This is a slight departure from RFC6550: if we had no preferred parent before,
-         * reset lowest_rank. This helps recovering from temporary bad link conditions. */
-        curr_instance.dag.lowest_rank = curr_instance.dag.rank;
-      }
-
-      /* Parent switch */
-      if(curr_instance.dag.preferred_parent != old_parent) {
-        /* Schedule a DAO */
-        rpl_timers_schedule_dao();
-        /* We just got a parent (was NULL), reset trickle timer to advertise this */
-        if(old_parent == NULL) {
-          rpl_timers_dio_reset("Got parent");
+      if(curr_instance.dag.state == DAG_POISONING) {
+        rpl_neighbor_set_preferred_parent(NULL);
+        curr_instance.dag.rank = RPL_INFINITE_RANK;
+        if(old_rank != RPL_INFINITE_RANK) {
+          /* Advertise that we are leaving, and leave after a delay */
+          LOG_WARN("poisoning and leaving after a delay\n");
+          rpl_timers_dio_reset("Poison");
+          rpl_timers_schedule_leaving();
         }
-        /* We have no more parent, schedule DIS to get a chance to hear updated state */
-        if(curr_instance.dag.preferred_parent == NULL) {
-          LOG_WARN("no parnt, scheduling periodic DIS\n");
-          rpl_timers_schedule_periodic_dis();
+      } else {
+        /* Select and set preferred parent */
+        rpl_neighbor_set_preferred_parent(rpl_neighbor_select_best());
+        /* Update rank  */
+        curr_instance.dag.rank = rpl_neighbor_rank_via_nbr(curr_instance.dag.preferred_parent);
+
+        if(old_parent == NULL || curr_instance.dag.rank < curr_instance.dag.lowest_rank) {
+          /* This is a slight departure from RFC6550: if we had no preferred parent before,
+           * reset lowest_rank. This helps recovering from temporary bad link conditions. */
+          curr_instance.dag.lowest_rank = curr_instance.dag.rank;
         }
-#if LOG_INFO_ENABLED
-        rpl_neighbor_print_list("Parent switch");
-#endif /* LOG_INFO_ENABLED */
+
+        /* Parent switch */
+        if(curr_instance.dag.preferred_parent != old_parent) {
+          /* We just got a parent (was NULL), reset trickle timer to advertise this */
+          if(old_parent == NULL) {
+            curr_instance.dag.state = DAG_JOINED;
+            rpl_timers_dio_reset("Got parent");
+            LOG_WARN("found parent: ");
+            LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+            LOG_WARN_(", staying in DAG\n");
+            rpl_timers_unschedule_leaving();
+          }
+
+          /* Schedule a DAO */
+          if(curr_instance.dag.preferred_parent != NULL) {
+            rpl_timers_schedule_dao();
+          } else {
+            /* We have no more parent, schedule DIS to get a chance to hear updated state */
+            curr_instance.dag.state = DAG_INITIALIZED;
+            LOG_WARN("no parent, scheduling periodic DIS, will leave if no parent is found\n");
+            rpl_timers_schedule_periodic_dis();
+            rpl_timers_schedule_leaving();
+          }
+
+  #if LOG_INFO_ENABLED
+          rpl_neighbor_print_list("Parent switch");
+  #endif /* LOG_INFO_ENABLED */
+        }
       }
     }
 
@@ -261,7 +317,7 @@ update_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 static void
 process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
-  rpl_nbr_t *p;
+  rpl_nbr_t *nbr;
   uint8_t last_dtsn;
 
   /* Does the rank make sense at all? */
@@ -305,26 +361,25 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   }
 
   /* Add neighbor to RPL neighbor table */
-  p = rpl_neighbor_get_from_ipaddr(from);
-  last_dtsn = p != NULL ? p->dtsn : RPL_LOLLIPOP_INIT;
+  nbr = rpl_neighbor_get_from_ipaddr(from);
+  last_dtsn = nbr != NULL ? nbr->dtsn : RPL_LOLLIPOP_INIT;
 
   if(!update_nbr_from_dio(from, dio)) {
     LOG_ERR("neighbor table full, dropping DIO\n");
     return;
   }
 
-  /* Init lifetime if not set yet. Refresh it at every DIO from preferred parent.
-  Use same lifetime as for routes. */
+  /* Init lifetime if not set yet. Refresh it at every DIO from preferred parent. */
   if(curr_instance.dag.lifetime == 0 ||
-    (p != NULL && p == curr_instance.dag.preferred_parent)) {
-    curr_instance.dag.lifetime =
-      RPL_LIFETIME(dio->default_lifetime);
+    (nbr != NULL && nbr == curr_instance.dag.preferred_parent)) {
+    LOG_INFO("refreshing lifetime\n");
+    curr_instance.dag.lifetime = RPL_LIFETIME(RPL_DAG_LIFETIME);
   }
 
   /* If the source is our preferred parent and it increased DTSN, we increment
    * our DTSN in turn and schedule a DAO (see RFC6550 section 9.6.) */
   if(curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
-    if(p != NULL && p == curr_instance.dag.preferred_parent && rpl_lollipop_greater_than(dio->dtsn, last_dtsn)) {
+    if(nbr != NULL && nbr == curr_instance.dag.preferred_parent && rpl_lollipop_greater_than(dio->dtsn, last_dtsn)) {
       RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
       LOG_INFO("DTSN increment %u->%u, schedule new DAO with DTSN %u",
         last_dtsn, dio->dtsn, curr_instance.dtsn_out);
@@ -394,6 +449,7 @@ init_dag_from_dio(rpl_dio_t *dio)
   curr_instance.lifetime_unit = dio->lifetime_unit;
 
   /* DAG */
+  curr_instance.dag.state = DAG_INITIALIZED;
   curr_instance.dag.preference = dio->preference;
   curr_instance.dag.grounded = dio->grounded;
   curr_instance.dag.version = dio->version;
@@ -403,7 +459,7 @@ init_dag_from_dio(rpl_dio_t *dio)
 }
 /*---------------------------------------------------------------------------*/
 static int
-process_dio_join_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
+process_dio_init_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
   /* Check MOP */
   if(dio->mop != RPL_MOP_NO_DOWNWARD_ROUTES && dio->mop != RPL_MOP_NON_STORING) {
@@ -420,16 +476,19 @@ process_dio_join_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   /* Init OF and timers */
   curr_instance.of->reset();
   rpl_timers_dio_reset("Join");
-  #if RPL_WITH_PROBING
-    rpl_schedule_probing();
-  #endif /* RPL_WITH_PROBING */
+#if RPL_WITH_PROBING
+  rpl_schedule_probing();
+#endif /* RPL_WITH_PROBING */
+  /* Leave the network after RPL_DELAY_BEFORE_LEAVING in case we do not
+  find a parent */
+  rpl_timers_schedule_leaving();
 
-  LOG_INFO("joined DAG with instance ID %u, DAG ID ",
+  LOG_INFO("initialized DAG with instance ID %u, DAG ID ",
          curr_instance.instance_id);
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
   LOG_INFO_(", rank %u\n", curr_instance.dag.rank);
 
-  LOG_ANNOTATE("#A join=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
+  LOG_ANNOTATE("#A init=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
 
   return 1;
 }
@@ -438,9 +497,9 @@ void
 rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
   if(!curr_instance.used && !rpl_dag_root_is_root()) {
-    /* Attempt to join on this DIO */
-    if(!process_dio_join_dag(from, dio)) {
-      LOG_WARN("failed to join DAG");
+    /* Attempt to init our DAG from this DIO */
+    if(!process_dio_init_dag(from, dio)) {
+      LOG_WARN("failed to init DAG");
       return;
     }
   }
@@ -496,11 +555,17 @@ rpl_process_dao_ack(uint8_t sequence, uint8_t status)
   }
   /* Is this an ACK for our last DAO? */
   if(sequence == curr_instance.dag.dao_last_seqno) {
-    curr_instance.dag.is_reachable = status < RPL_DAO_ACK_UNABLE_TO_ACCEPT;
+    int status_ok = status < RPL_DAO_ACK_UNABLE_TO_ACCEPT;
+    if(curr_instance.dag.state == DAG_JOINED && status_ok) {
+      curr_instance.dag.state = DAG_REACHABLE;
+      rpl_timers_dio_reset("Reachable");
+    }
 
-    if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
-      /* We got a NACK, leave the DAG  */
-      leave_dag("DAO-NACK");
+    if(!status_ok) {
+      /* We got a NACK, start poisoning and leave */
+      LOG_WARN("DAO-NACK received with seqno %u, status %u, poison and leave\n",
+              sequence, status);
+      curr_instance.dag.state = DAG_POISONING;
     }
   }
 }
@@ -552,7 +617,7 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
       version = curr_instance.dag.version;
       RPL_LOLLIPOP_INCREMENT(version);
     }
-    leave_dag("init root");
+    rpl_dag_leave();
   }
 
   /* Init DAG and instance */
@@ -575,7 +640,7 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
   curr_instance.dag.rank = ROOT_RANK;
   curr_instance.dag.lifetime = RPL_LIFETIME(RPL_INFINITE_LIFETIME);
   curr_instance.dag.dio_intcurrent = RPL_DIO_INTERVAL_MIN;
-  curr_instance.dag.is_reachable = 1;
+  curr_instance.dag.state = DAG_REACHABLE;
 
   rpl_timers_dio_reset("Init root");
 

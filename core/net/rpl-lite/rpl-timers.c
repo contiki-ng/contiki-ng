@@ -92,7 +92,7 @@ static struct ctimer periodic_timer; /* Not part of a DAG because used for gener
 void
 rpl_timers_schedule_periodic_dis(void)
 {
-  if(etimer_expired(&dis_timer.etimer)) {
+  if(ctimer_expired(&dis_timer)) {
     clock_time_t expiration_time = RPL_DIS_INTERVAL / 2 + (random_rand() % (RPL_DIS_INTERVAL));
     ctimer_set(&dis_timer, expiration_time, handle_dis_timer, NULL);
   }
@@ -149,7 +149,7 @@ new_dio_interval(void)
 void
 rpl_timers_dio_reset(const char *str)
 {
-  if(curr_instance.used) {
+  if(rpl_dag_ready_to_advertise()) {
     LOG_INFO("reset DIO timer (%s)\n", str);
 #if !RPL_LEAF_ONLY
     curr_instance.dag.dio_counter = 0;
@@ -162,8 +162,8 @@ rpl_timers_dio_reset(const char *str)
 static void
 handle_dio_timer(void *ptr)
 {
-  if(!curr_instance.used) {
-    return; /* We will be scheduled again at join time */
+  if(!rpl_dag_ready_to_advertise()) {
+    return; /* We will be scheduled again later */
   }
 
   if(curr_instance.dag.dio_send) {
@@ -206,6 +206,7 @@ rpl_timers_schedule_unicast_dio(rpl_nbr_t *target)
                   handle_unicast_dio_timer, NULL);
   }
 }
+/*---------------------------------------------------------------------------*/
 static void
 handle_unicast_dio_timer(void *ptr)
 {
@@ -294,7 +295,10 @@ handle_dao_timer(void *ptr)
   schedule_dao_retransmission();
 #else /* RPL_WITH_DAO_ACK */
   /* No DAO-ACK: assume we are reachable as soon as we send a DAO */
-  curr_instance.dag.is_reachable = 1;
+  if(curr_instance.dag.state == DAG_JOINED) {
+    curr_instance.dag.state = DAG_REACHABLE;
+  }
+  rpl_timers_dio_reset("Reachable");
 #endif /* !RPL_WITH_DAO_ACK */
 
   curr_instance.dag.dao_last_seqno = curr_instance.dag.dao_curr_seqno;
@@ -447,6 +451,36 @@ rpl_schedule_probing(void)
 }
 #endif /* RPL_WITH_PROBING */
 /*---------------------------------------------------------------------------*/
+/*------------------------------- Leaving-- -------------------------------- */
+/*---------------------------------------------------------------------------*/
+static void
+handle_leaving_timer(void *ptr)
+{
+  if(curr_instance.used) {
+    rpl_dag_leave();
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_timers_unschedule_leaving(void)
+{
+  if(curr_instance.used) {
+    if(!ctimer_expired(&curr_instance.dag.leave)) {
+      ctimer_stop(&curr_instance.dag.leave);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_timers_schedule_leaving(void)
+{
+  if(curr_instance.used) {
+    if(ctimer_expired(&curr_instance.dag.leave)) {
+      ctimer_set(&curr_instance.dag.leave, PERIODIC_DELAY, handle_leaving_timer, NULL);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
 /*------------------------------- Periodic---------------------------------- */
 /*---------------------------------------------------------------------------*/
 void
@@ -482,6 +516,7 @@ rpl_timers_stop_dag_timers(void)
 {
   /* Stop all timers related to the DAG */
   ctimer_stop(&curr_instance.dag.state_update);
+  ctimer_stop(&curr_instance.dag.leave);
   ctimer_stop(&curr_instance.dag.dio_timer);
   ctimer_stop(&curr_instance.dag.unicast_dio_timer);
   ctimer_stop(&curr_instance.dag.dao_timer);

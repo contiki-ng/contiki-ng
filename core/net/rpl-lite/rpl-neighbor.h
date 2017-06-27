@@ -83,7 +83,7 @@ int rpl_neighbor_is_parent(rpl_nbr_t *nbr);
  *
  * \param nbr The new preferred parent
 */
-void rpl_neighbor_set_preferred(rpl_nbr_t *nbr);
+void rpl_neighbor_set_preferred_parent(rpl_nbr_t *nbr);
 
 /**
  * Tells wether we have fresh link information towards a given neighbor

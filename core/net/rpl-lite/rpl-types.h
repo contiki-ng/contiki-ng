@@ -169,6 +169,13 @@ typedef struct rpl_nbr rpl_nbr_t;
 
 /*---------------------------------------------------------------------------*/
 /* Directed Acyclic Graph */
+enum rpl_dag_state {
+  DAG_INITIALIZED,
+  DAG_JOINED,
+  DAG_REACHABLE,
+  DAG_POISONING
+};
+
 struct rpl_dag {
   uip_ipaddr_t dag_id;
   rpl_prefix_t prefix_info;
@@ -186,11 +193,12 @@ struct rpl_dag {
   uint8_t dao_last_acked_seqno; /* the last seqno we got an ACK for */
   uint8_t dao_curr_seqno; /* the node's current DAO seqno (sent or to be sent) */
   uint8_t dao_transmissions; /* the number of transmissions for the current DAO */
-  uint8_t is_reachable; /* is the node reachable via a downward route? */
+  enum rpl_dag_state state;
 
   /* Timers */
   clock_time_t dio_next_delay; /* delay for completion of dio interval */
   struct ctimer state_update;
+  struct ctimer leave;
   struct ctimer dio_timer;
   struct ctimer unicast_dio_timer;
   struct ctimer dao_timer;

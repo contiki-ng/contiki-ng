@@ -81,13 +81,10 @@
 
 #if !RPL_MRHOF_SQUARED_ETX
 /* Hysteresis of MRHOF: the rank must differ more than PARENT_SWITCH_THRESHOLD_DIV
- * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5.
- * We use a more aggressive setting: 96, eq ETX of 0.75.
- */
+ * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5. */
 #define PARENT_SWITCH_THRESHOLD 192 /* Eq ETX of 1.5 */
 #else /* !RPL_MRHOF_SQUARED_ETX */
-#define PARENT_SWITCH_THRESHOLD 512 /* Eq ETX of 2. More than in the
-non-squared case because squatinf cases extra jitter. */
+#define PARENT_SWITCH_THRESHOLD 384 /* Eq ETX of sqrt(3) */
 #endif /* !RPL_MRHOF_SQUARED_ETX */
 
 /*---------------------------------------------------------------------------*/

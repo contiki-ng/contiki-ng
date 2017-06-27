@@ -166,9 +166,9 @@
 /*
  * Function used to send RPL probes.
  * To probe with DIO, use:
- * #define RPL_CONF_PROBING_SEND_FUNC(instance, addr) rpl_icmp6_dio_output((instance), (addr))
+ * #define RPL_CONF_PROBING_SEND_FUNC(addr) rpl_icmp6_dio_output((addr))
  * To probe with DIS, use:
- * #define RPL_CONF_PROBING_SEND_FUNC(instance, addr) rpl_icmp6_dis_output((addr))
+ * #define RPL_CONF_PROBING_SEND_FUNC(addr) rpl_icmp6_dis_output((addr))
  * Any other custom probing function is also acceptable.
  */
 #ifdef RPL_CONF_PROBING_SEND_FUNC
@@ -257,6 +257,13 @@
 #define RPL_DEFAULT_LIFETIME            RPL_CONF_DEFAULT_LIFETIME
 #endif
 
+/* Maximum lifetime of a DAG as a multiple of the lifetime unit. */
+#ifdef RPL_CONF_DAG_LIFETIME
+#define RPL_DAG_LIFETIME                RPL_CONF_DAG_LIFETIME
+#else
+#define RPL_DAG_LIFETIME                (60 * 60) /* one hour */
+#endif /* RPL_CONF_DAG_LIFETIME */
+
 /*
  * RPL probing interval.
  */
@@ -275,10 +282,15 @@
 #define RPL_PROBING_DELAY_FUNC get_probing_delay
 #endif
 
-
+/* Poisoining duration, before leaving the DAG  */
+#ifdef RPL_CONF_DELAY_BEFORE_LEAVING
+#define RPL_DELAY_BEFORE_LEAVING        RPL_CONF_DELAY_BEFORE_LEAVING
+#else
+#define RPL_DELAY_BEFORE_LEAVING        (5 * 60 * CLOCK_SECOND)
+#endif
 
 /* Interval of DIS transmission  */
-#ifdef  RPL_CONF_DIS_INTERVAL
+#ifdef RPL_CONF_DIS_INTERVAL
 #define RPL_DIS_INTERVAL                RPL_CONF_DIS_INTERVAL
 #else
 #define RPL_DIS_INTERVAL                (30 * CLOCK_SECOND)

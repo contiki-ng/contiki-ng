@@ -58,6 +58,8 @@
 void RPL_CALLBACK_PARENT_SWITCH(rpl_nbr_t *old, rpl_nbr_t *new);
 #endif /* RPL_CALLBACK_PARENT_SWITCH */
 
+static rpl_nbr_t * best_parent(int fresh_only);
+
 /*---------------------------------------------------------------------------*/
 /* Per-neighbor RPL information */
 NBR_TABLE_GLOBAL(rpl_nbr_t, rpl_neighbors);
@@ -70,8 +72,7 @@ acceptable_rank(rpl_rank_t rank)
   return rank != RPL_INFINITE_RANK
       && rank >= ROOT_RANK
       && ((curr_instance.max_rankinc == 0) ||
-          DAG_RANK(rank) <=
-          DAG_RANK(curr_instance.dag.lowest_rank + curr_instance.max_rankinc));
+          rank <= curr_instance.dag.lowest_rank + curr_instance.max_rankinc);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -81,11 +82,13 @@ rpl_neighbor_print_list(const char *str)
     int curr_dio_interval = curr_instance.dag.dio_intcurrent;
     int curr_rank = curr_instance.dag.rank;
     rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
+    rpl_nbr_t *best = best_parent(0);
     clock_time_t clock_now = clock_time();
 
     LOG_INFO("nbr: own state, addr ");
     LOG_INFO_6ADDR(rpl_get_global_address());
-    LOG_INFO_(" MOP %u OCP %u rank %u max-rank %u, dioint %u, DS6 nbr count %u (%s)\n",
+    LOG_INFO_(", DAG state: %s, MOP %u OCP %u rank %u max-rank %u, dioint %u, DS6 nbr count %u (%s)\n",
+        rpl_dag_state_to_str(curr_instance.dag.state),
         curr_instance.mop, curr_instance.of->ocp, curr_rank,
         curr_instance.max_rankinc != 0 ? curr_instance.dag.lowest_rank + curr_instance.max_rankinc : 0xffff,
         curr_dio_interval, uip_ds6_nbr_num(), str);
@@ -93,12 +96,13 @@ rpl_neighbor_print_list(const char *str)
       const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
       LOG_INFO("nbr: ");
       LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(nbr));
-      LOG_INFO_(" %5u, %5u => %5u -- %2u %c%c%c%c",
+      LOG_INFO_(" %5u, %5u => %5u -- %2u %c%c%c%c%c",
           nbr->rank,
           rpl_neighbor_get_link_metric(nbr),
           rpl_neighbor_rank_via_nbr(nbr),
           stats != NULL ? stats->freshness : 0,
           (nbr->rank == ROOT_RANK) ? 'r' : ' ',
+          nbr == best ? 'b' : ' ',
           (acceptable_rank(rpl_neighbor_rank_via_nbr(nbr)) && curr_instance.of->nbr_is_acceptable_parent(nbr)) ? 'a' : ' ',
           link_stats_is_fresh(stats) ? 'f' : ' ',
           nbr == curr_instance.dag.preferred_parent ? 'p' : ' '
@@ -218,7 +222,7 @@ rpl_neighbor_is_parent(rpl_nbr_t *nbr)
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_neighbor_set_preferred(rpl_nbr_t *nbr)
+rpl_neighbor_set_preferred_parent(rpl_nbr_t *nbr)
 {
   if(curr_instance.dag.preferred_parent != nbr) {
     LOG_INFO("parent switch: ");
@@ -331,12 +335,15 @@ rpl_neighbor_select_best(void)
     } else {
       rpl_nbr_t *best_fresh;
 
-      /* The best is not fresh. Probe it. */
-      curr_instance.dag.urgent_probing_target = best;
-      LOG_WARN("best parent is not fresh, schedule urgent probing to ");
-      LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(best));
-      LOG_WARN_("\n");
-      rpl_schedule_probing();
+      /* The best is not fresh. Probe it (unless there is already an urgent
+         probing target). We will be called back after the probing anyway. */
+      if(curr_instance.dag.urgent_probing_target == NULL) {
+        LOG_WARN("best parent is not fresh, schedule urgent probing to ");
+        LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(best));
+        LOG_WARN_("\n");
+        curr_instance.dag.urgent_probing_target = best;
+        rpl_schedule_probing();
+      }
 
       /* Look for the best fresh parent. */
       best_fresh = best_parent(1);

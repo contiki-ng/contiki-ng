@@ -50,7 +50,18 @@
 
 /********** Public functions **********/
 
-
+/**
+ * Returns a textual description of the current DAG state
+ *
+ * \param state The DAG state
+ * \return The description string
+*/
+const char *rpl_dag_state_to_str(enum rpl_dag_state state);
+/**
+ * Leaves the current DAG
+ *
+*/
+void rpl_dag_leave(void);
 /**
  * A function called periodically. Used to age the DAG (decrease lifetime
  * and expire DAG accordingly)
@@ -147,6 +158,13 @@ void rpl_process_dao(uip_ipaddr_t *from, rpl_dao_t *dao);
  * \param status The DAO-ACK status (see RPL_DAO_ACK_* defines)
 */
 void rpl_process_dao_ack(uint8_t sequence, uint8_t status);
+
+/**
+ * Tells whether RPL is ready to advertise the DAG
+ *
+ * \return 1 is ready, 0 otherwise
+*/
+int rpl_dag_ready_to_advertise(void);
 
 /**
  * Updates RPL internal state: selects preferred parent, updates rank & metreic

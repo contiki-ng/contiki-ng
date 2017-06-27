@@ -104,7 +104,7 @@ rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
 int
 rpl_is_reachable(void)
 {
-  return curr_instance.used && curr_instance.dag.is_reachable;
+  return curr_instance.used && curr_instance.dag.state == DAG_REACHABLE;
 }
 /*---------------------------------------------------------------------------*/
 static void
