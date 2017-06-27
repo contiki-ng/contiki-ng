@@ -201,6 +201,18 @@ periodic(void *ptr)
   }
 }
 /*---------------------------------------------------------------------------*/
+/* Resets link-stats module */
+void
+link_stats_reset(void)
+{
+  struct link_stats *stats;
+  stats = nbr_table_head(link_stats);
+  while(stats != NULL) {
+    nbr_table_remove(link_stats, stats);
+    stats = nbr_table_next(link_stats, stats);
+  }
+}
+/*---------------------------------------------------------------------------*/
 /* Initializes link-stats module */
 void
 link_stats_init(void)

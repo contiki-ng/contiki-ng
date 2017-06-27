@@ -54,7 +54,8 @@ struct link_stats {
 const struct link_stats *link_stats_from_lladdr(const linkaddr_t *lladdr);
 /* Are the statistics fresh? */
 int link_stats_is_fresh(const struct link_stats *stats);
-
+/* Resets link-stats module */
+void link_stats_reset(void);
 /* Initializes link-stats module */
 void link_stats_init(void);
 /* Packet sent callback. Updates statistics for transmissions on a given link */

@@ -46,6 +46,7 @@
 
 #include "net/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
+#include "net/link-stats.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -89,6 +90,9 @@ rpl_dag_leave(void)
   /* Issue a no-path DAO */
   RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
   rpl_icmp6_dao_output(0);
+
+  /* Forget past link statistics */
+  link_stats_reset();
 
   /* Remove all neighbors */
   rpl_neighbor_remove_all();
@@ -195,6 +199,7 @@ rpl_local_repair(const char *str)
     LOG_WARN("local repair (%s)\n", str);
     curr_instance.of->reset(); /* Reset OF */
     curr_instance.dag.state = DAG_INITIALIZED; /* Reset DAG state */
+    link_stats_reset(); /* Forget past link statistics */
     rpl_neighbor_remove_all(); /* Remove all neighbors */
     rpl_timers_dio_reset("Local repair"); /* Reset Trickle timer */
     rpl_timers_schedule_state_update();
