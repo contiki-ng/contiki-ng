@@ -90,17 +90,18 @@
  * project-specific configuration to save memory.
  */
 
-/* CONTIKI_NETWORK_DENSITY specifies the maximum number of neighbors
- * a node will have to handle. Used to set NBR_TABLE_MAX_NEIGHBORS. */
-#ifndef CONTIKI_NETWORK_DENSITY
-#define CONTIKI_NETWORK_DENSITY 16
-#endif /* CONTIKI_NETWORK_DENSITY */
+ /* NBR_TABLE_CONF_MAX_NEIGHBORS specifies the maximum number of neighbors
+    that each node will be able to handle. */
+#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS 16
+#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 
-/* CONTIKI_NETWORK_SIZE specifies the maximum number of nodes in
- * a network. Used to set UIP_MAX_ROUTES or RPL_NS_LINK_NUM. */
-#ifndef CONTIKI_NETWORK_SIZE
-#define CONTIKI_NETWORK_SIZE 16
-#endif /* CONTIKI_NETWORK_SIZE */
+/* NETSTCK_ROUTING_STATE_SIZE specifies the maximum number of entries
+   the routing module will handle. Applies to uIP routing tables if they are
+   used, or to RPL non-storing mode links instead */
+#ifndef NETSTCK_ROUTING_STATE_SIZE
+#define NETSTCK_ROUTING_STATE_SIZE 16
+#endif /* NETSTCK_ROUTING_STATE_SIZE */
 
 /* NETSTACK_CONF_WITH_IPV6 specifies whether or not IPv6 should be used. If IPv6
    is not used, IPv4 is used instead. */

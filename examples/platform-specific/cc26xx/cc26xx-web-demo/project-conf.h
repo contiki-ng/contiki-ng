@@ -57,8 +57,8 @@
  * Set the TCP MSS
  */
 #define UIP_CONF_BUFFER_SIZE                900
-#define CONTIKI_NETWORK_SIZE            5
-#define CONTIKI_NETWORK_DENSITY         5
+#define NETSTCK_ROUTING_STATE_SIZE            5
+#define NBR_TABLE_CONF_MAX_NEIGHBORS         5
 #define UIP_CONF_TCP_MSS                    128
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */

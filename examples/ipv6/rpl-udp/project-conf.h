@@ -36,12 +36,12 @@
 
 #ifdef TEST_MORE_ROUTES
 /* configure number of neighbors and routes */
-#define CONTIKI_NETWORK_DENSITY 10
-#define CONTIKI_NETWORK_SIZE    30
+#define NBR_TABLE_CONF_MAX_NEIGHBORS 10
+#define NETSTCK_ROUTING_STATE_SIZE    30
 #else
 /* configure number of neighbors and routes */
-#define CONTIKI_NETWORK_DENSITY 10
-#define CONTIKI_NETWORK_SIZE    10
+#define NBR_TABLE_CONF_MAX_NEIGHBORS 10
+#define NETSTCK_ROUTING_STATE_SIZE    10
 #endif /* TEST_MORE_ROUTES */
 
 #undef CSMA_CONF_802154_AUTOACK
