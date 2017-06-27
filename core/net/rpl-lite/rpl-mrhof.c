@@ -72,22 +72,23 @@
 #define RPL_MRHOF_SQUARED_ETX 1
 #endif /* RPL_MRHOF_CONF_SQUARED_ETX */
 
-#if !RPL_MRHOF_SQUARED_ETX
 /* Configuration parameters of RFC6719. Reject parents that have a higher
  * link metric than the following. The default value is 512. */
 #define MAX_LINK_METRIC     512 /* Eq ETX of 4 */
+
+/* Reject parents that have a higher path cost than the following. */
+#define MAX_PATH_COST      32768   /* Eq path ETX of 256 */
+
+#if !RPL_MRHOF_SQUARED_ETX
 /* Hysteresis of MRHOF: the rank must differ more than PARENT_SWITCH_THRESHOLD_DIV
  * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5.
  * We use a more aggressive setting: 96, eq ETX of 0.75.
  */
 #define PARENT_SWITCH_THRESHOLD 192 /* Eq ETX of 1.5 */
 #else /* !RPL_MRHOF_SQUARED_ETX */
-#define MAX_LINK_METRIC     2048 /* Eq ETX of 4 */
-#define PARENT_SWITCH_THRESHOLD 512 /* Eq ETX of 2 */
+#define PARENT_SWITCH_THRESHOLD 512 /* Eq ETX of 2. More than in the
+non-squared case because squatinf cases extra jitter. */
 #endif /* !RPL_MRHOF_SQUARED_ETX */
-
-/* Reject parents that have a higher path cost than the following. */
-#define MAX_PATH_COST      32768   /* Eq path ETX of 256 */
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -100,15 +101,18 @@ static uint16_t
 nbr_link_metric(rpl_nbr_t *nbr)
 {
   const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
-  if(stats != NULL) {
+  return stats != NULL ? stats->etx : 0xffff;
+}
+/*---------------------------------------------------------------------------*/
+static uint16_t
+link_metric_to_rank(uint16_t etx)
+{
 #if RPL_MRHOF_SQUARED_ETX
-    uint32_t squared_etx = ((uint32_t)stats->etx * stats->etx) / LINK_STATS_ETX_DIVISOR;
-    return (uint16_t)MIN(squared_etx, 0xffff);
+  uint32_t squared_etx = ((uint32_t)etx * etx) / LINK_STATS_ETX_DIVISOR;
+  return (uint16_t)MIN(squared_etx, 0xffff);
 #else /* RPL_MRHOF_SQUARED_ETX */
-  return stats->etx;
+  return etx;
 #endif /* RPL_MRHOF_SQUARED_ETX */
-  }
-  return 0xffff;
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
@@ -138,7 +142,7 @@ nbr_path_cost(rpl_nbr_t *nbr)
 #endif /* RPL_WITH_MC */
 
   /* path cost upper bound: 0xffff */
-  return MIN((uint32_t)base + nbr_link_metric(nbr), 0xffff);
+  return MIN((uint32_t)base + link_metric_to_rank(nbr_link_metric(nbr)), 0xffff);
 }
 /*---------------------------------------------------------------------------*/
 static rpl_rank_t
