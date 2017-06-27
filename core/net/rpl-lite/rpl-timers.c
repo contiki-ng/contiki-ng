@@ -505,11 +505,15 @@ handle_periodic_timer(void *ptr)
     rpl_timers_schedule_periodic_dis(); /* Schedule DIS if needed */
   }
 
-  ctimer_reset(&periodic_timer);
+  /* Useful because part of the state update is time-dependent, e.g.,
+  the meaning of last_advertised_rank changes with time */
+  rpl_dag_update_state();
 
 #if LOG_INFO_ENABLED
   rpl_neighbor_print_list("Periodic");
 #endif /* LOG_INFO_ENABLED */
+
+  ctimer_reset(&periodic_timer);
 }
 /*---------------------------------------------------------------------------*/
 void

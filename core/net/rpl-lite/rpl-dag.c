@@ -167,7 +167,7 @@ rpl_global_repair(void)
     LOG_WARN("initiating global repair, version %u, rank %u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
 #if LOG_INFO_ENABLED
-    rpl_neighbor_print_list("Global repair");
+    rpl_neighbor_print_list("Global repair (before)");
 #endif /* LOG_INFO_ENABLED */
 
     /* Initiate global repair */
@@ -184,7 +184,7 @@ global_repair_non_root(rpl_dio_t *dio)
     LOG_WARN("participating in global repair, version %u, rank %u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
 #if LOG_INFO_ENABLED
-    rpl_neighbor_print_list("Global repair");
+    rpl_neighbor_print_list("Global repair (before)");
 #endif /* LOG_INFO_ENABLED */
     /* Re-initialize configuration from DIO */
     init_dag_from_dio(dio);
