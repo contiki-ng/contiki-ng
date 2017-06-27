@@ -234,7 +234,7 @@ rpl_dag_update_state(void)
         if(old_rank != RPL_INFINITE_RANK) {
           /* Advertise that we are leaving, and leave after a delay */
           LOG_WARN("poisoning and leaving after a delay\n");
-          rpl_timers_dio_reset("Poison");
+          rpl_timers_dio_reset("Poison routes");
           rpl_timers_schedule_leaving();
         }
       } else {
@@ -266,6 +266,17 @@ rpl_dag_update_state(void)
           curr_instance.dag.lowest_rank = curr_instance.dag.rank;
         }
 
+        /* Reset DIO timer in case of significant rank update */
+        if(curr_instance.dag.last_advertised_rank != RPL_INFINITE_RANK
+            && curr_instance.dag.rank != RPL_INFINITE_RANK
+            && ABS((int32_t)curr_instance.dag.rank - curr_instance.dag.last_advertised_rank) > RPL_SIGNIFICANT_CHANGE_THRESHOLD) {
+          LOG_WARN("significant rank update %u->%u\n",
+              curr_instance.dag.last_advertised_rank, curr_instance.dag.rank);
+          /* Update already here to avoid multiple resets in a row */
+          curr_instance.dag.last_advertised_rank = curr_instance.dag.rank;
+          rpl_timers_dio_reset("Significant rank update");
+        }
+
         /* Parent switch */
         if(curr_instance.dag.preferred_parent != old_parent) {
           /* We just got a parent (was NULL), reset trickle timer to advertise this */
@@ -285,6 +296,7 @@ rpl_dag_update_state(void)
             /* We have no more parent, schedule DIS to get a chance to hear updated state */
             curr_instance.dag.state = DAG_INITIALIZED;
             LOG_WARN("no parent, scheduling periodic DIS, will leave if no parent is found\n");
+            rpl_timers_dio_reset("Poison routes");
             rpl_timers_schedule_periodic_dis();
             rpl_timers_schedule_leaving();
           }
@@ -439,6 +451,7 @@ init_dag(uint8_t instance_id, uip_ipaddr_t *dag_id, rpl_ocp_t ocp,
 
   /* DAG */
   curr_instance.dag.rank = RPL_INFINITE_RANK;
+  curr_instance.dag.last_advertised_rank = RPL_INFINITE_RANK;
   curr_instance.dag.lowest_rank = RPL_INFINITE_RANK;
   curr_instance.dag.dao_last_seqno = RPL_LOLLIPOP_INIT;
   curr_instance.dag.dao_last_acked_seqno = RPL_LOLLIPOP_INIT;

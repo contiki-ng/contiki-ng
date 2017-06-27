@@ -185,6 +185,7 @@ struct rpl_dag {
   rpl_nbr_t *preferred_parent;
   rpl_rank_t lowest_rank; /* The lowest rank seen in the current version */
   rpl_rank_t rank; /* The current rank */
+  rpl_rank_t last_advertised_rank; /* The last rank advertised in a multicast-DIO */
   uint32_t lifetime;
   uint8_t version;
   uint8_t grounded;

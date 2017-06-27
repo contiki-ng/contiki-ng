@@ -181,6 +181,7 @@ handle_dio_timer(void *ptr)
         }
       }
 #endif /* RPL_TRICKLE_REFRESH_DAO_ROUTES */
+      curr_instance.dag.last_advertised_rank = curr_instance.dag.rank;
       rpl_icmp6_dio_output(NULL);
     }
     curr_instance.dag.dio_send = 0;
