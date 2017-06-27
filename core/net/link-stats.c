@@ -45,7 +45,7 @@
 #endif
 
 /* Half time for the freshness counter, in minutes */
-#define FRESHNESS_HALF_LIFE             20
+#define FRESHNESS_HALF_LIFE             15
 /* Statistics are fresh if the freshness counter is FRESHNESS_TARGET or more */
 #define FRESHNESS_TARGET                 4
 /* Maximum value for the freshness counter */
@@ -55,15 +55,15 @@
 
 /* EWMA (exponential moving average) used to maintain statistics over time */
 #define EWMA_SCALE            100
-#define EWMA_ALPHA             15
-#define EWMA_BOOTSTRAP_ALPHA   30
+#define EWMA_ALPHA             10
+#define EWMA_BOOTSTRAP_ALPHA   25
 
 /* ETX fixed point divisor. 128 is the value used by RPL (RFC 6551 and RFC 6719) */
 #define ETX_DIVISOR     LINK_STATS_ETX_DIVISOR
 /* Number of Tx used to update the ETX EWMA in case of no-ACK */
-#define ETX_NOACK_PENALTY                   10
+#define ETX_NOACK_PENALTY                   24
 /* Initial ETX value */
-#define ETX_INIT                             2
+#define ETX_DEFAULT                          2
 
 /* Per-neighbor link statistics table */
 NBR_TABLE(struct link_stats, link_stats);
@@ -71,14 +71,14 @@ NBR_TABLE(struct link_stats, link_stats);
 /* Called every FRESHNESS_HALF_LIFE minutes */
 struct ctimer periodic_timer;
 
-/* Used to initialize ETX before any transmission occurs. In order to
- * infer the initial ETX from the RSSI of previously received packets, use: */
-/* #define LINK_STATS_CONF_INIT_ETX(stats) guess_etx_from_rssi(stats) */
-
+/* Used to initialize ETX before any transmission occurs. By default,
+ * infer the initial ETX from the RSSI of previously received packets.
+ * To use a statuc value of e.g. ETX_DEFAULT, use:
+ * #define LINK_STATS_CONF_INIT_ETX(stats) (ETX_DEFAULT * ETX_DIVISOR) */
 #ifdef LINK_STATS_CONF_INIT_ETX
 #define LINK_STATS_INIT_ETX(stats) LINK_STATS_CONF_INIT_ETX(stats)
 #else /* LINK_STATS_INIT_ETX */
-#define LINK_STATS_INIT_ETX(stats) (ETX_INIT * ETX_DIVISOR)
+#define LINK_STATS_INIT_ETX(stats) guess_etx_from_rssi(stats)
 #endif /* LINK_STATS_INIT_ETX */
 
 /*---------------------------------------------------------------------------*/
@@ -103,7 +103,7 @@ guess_etx_from_rssi(const struct link_stats *stats)
 {
   if(stats != NULL) {
     if(stats->rssi == 0) {
-      return ETX_INIT * ETX_DIVISOR;
+      return ETX_DEFAULT * ETX_DIVISOR;
     } else {
       /* A rough estimate of PRR from RSSI, as a linear function where:
        *      RSSI >= -60 results in PRR of 1
