@@ -94,7 +94,7 @@
 #ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #define TSCH_MAC_MAX_FRAME_RETRIES TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #else
-#define TSCH_MAC_MAX_FRAME_RETRIES 8
+#define TSCH_MAC_MAX_FRAME_RETRIES 7
 #endif
 
 /*********** Callbacks *********/
@@ -169,6 +169,8 @@ int tsch_queue_packet_count(const linkaddr_t *addr);
 struct tsch_packet *tsch_queue_remove_packet_from_queue(struct tsch_neighbor *n);
 /* Free a packet */
 void tsch_queue_free_packet(struct tsch_packet *p);
+/* Updates neighbor queue state after a transmission */
+int tsch_queue_packet_sent(struct tsch_neighbor *n, struct tsch_packet *p, struct tsch_link *link, uint8_t mac_tx_status);
 /* Reset neighbor queues */
 void tsch_queue_reset(void);
 /* Deallocate neighbors with empty queue */
