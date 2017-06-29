@@ -87,11 +87,11 @@ rpl_neighbor_print_list(const char *str)
 
     LOG_INFO("nbr: own state, addr ");
     LOG_INFO_6ADDR(rpl_get_global_address());
-    LOG_INFO_(", DAG state: %s, MOP %u OCP %u rank %u max-rank %u, dioint %u, DS6 nbr count %u (%s)\n",
+    LOG_INFO_(", DAG state: %s, MOP %u OCP %u rank %u max-rank %u, dioint %u, nbr count %u (%s)\n",
         rpl_dag_state_to_str(curr_instance.dag.state),
         curr_instance.mop, curr_instance.of->ocp, curr_rank,
         curr_instance.max_rankinc != 0 ? curr_instance.dag.lowest_rank + curr_instance.max_rankinc : 0xffff,
-        curr_dio_interval, uip_ds6_nbr_num(), str);
+        curr_dio_interval, rpl_neighbor_count(), str);
     while(nbr != NULL) {
       const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
       LOG_INFO("nbr: ");
@@ -103,7 +103,7 @@ rpl_neighbor_print_list(const char *str)
           stats != NULL ? stats->freshness : 0,
           (nbr->rank == ROOT_RANK) ? 'r' : ' ',
           nbr == best ? 'b' : ' ',
-          (acceptable_rank(rpl_neighbor_rank_via_nbr(nbr)) && curr_instance.of->nbr_is_acceptable_parent(nbr)) ? 'a' : ' ',
+          (acceptable_rank(rpl_neighbor_rank_via_nbr(nbr)) && rpl_neighbor_is_acceptable_parent(nbr)) ? 'a' : ' ',
           link_stats_is_fresh(stats) ? 'f' : ' ',
           nbr == curr_instance.dag.preferred_parent ? 'p' : ' '
       );
@@ -121,6 +121,19 @@ rpl_neighbor_print_list(const char *str)
     }
     LOG_INFO("nbr: end of list\n");
   }
+}
+/*---------------------------------------------------------------------------*/
+int
+rpl_neighbor_count(void)
+{
+  int count = 0;
+  rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
+  for(nbr = nbr_table_head(rpl_neighbors);
+      nbr != NULL;
+      nbr = nbr_table_next(rpl_neighbors, nbr)) {
+    count++;
+  }
+  return count;
 }
 /*---------------------------------------------------------------------------*/
 #if UIP_ND6_SEND_NS
@@ -156,6 +169,15 @@ rpl_nbr_t *
 rpl_neighbor_get_from_lladdr(uip_lladdr_t *addr)
 {
   return nbr_table_get_from_lladdr(rpl_neighbors, (linkaddr_t *)addr);
+}
+/*---------------------------------------------------------------------------*/
+int
+rpl_neighbor_is_acceptable_parent(rpl_nbr_t *nbr)
+{
+  if(nbr != NULL && curr_instance.of->nbr_is_acceptable_parent != NULL) {
+    return curr_instance.of->nbr_is_acceptable_parent(nbr);
+  }
+  return 0xffff;
 }
 /*---------------------------------------------------------------------------*/
 uint16_t

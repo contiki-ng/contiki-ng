@@ -102,6 +102,14 @@ int rpl_neighbor_is_fresh(rpl_nbr_t *nbr);
 int rpl_neighbor_is_reachable(rpl_nbr_t *nbr);
 
 /**
+ * Tells whether a nbr is acceptable as per the OF's definition
+ *
+ * \param nbr The neighbor
+ * \return 1 if acceptable, 0 otherwise
+*/
+int rpl_neighbor_is_acceptable_parent(rpl_nbr_t *nbr);
+
+/**
  * Returns a neighbor's link metric
  *
  * \param nbr The neighbor
@@ -145,7 +153,7 @@ uip_ipaddr_t *rpl_neighbor_get_ipaddr(rpl_nbr_t *nbr);
  * Returns a neighbor from its link-layer address
  *
  * \param addr The link-layer address
- * \return Theneighbor if found, NULL otherwise
+ * \return The neighbor if found, NULL otherwise
 */
 rpl_nbr_t *rpl_neighbor_get_from_lladdr(uip_lladdr_t *addr);
 
@@ -156,6 +164,13 @@ rpl_nbr_t *rpl_neighbor_get_from_lladdr(uip_lladdr_t *addr);
  * \return The neighbor if found, NULL otherwise
 */
 rpl_nbr_t *rpl_neighbor_get_from_ipaddr(uip_ipaddr_t *addr);
+
+/**
+ * Returns the number of nodes in the RPL neighbor table
+ *
+ * \return the neighbor count
+*/
+int rpl_neighbor_count(void);
 
 /**
  * Prints a summary of all RPL neighbors and their properties

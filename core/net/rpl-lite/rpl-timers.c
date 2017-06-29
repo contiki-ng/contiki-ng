@@ -427,7 +427,7 @@ handle_probing_timer(void *ptr)
     const struct link_stats *stats = rpl_neighbor_get_link_stats(probing_target);
     (void)stats;
     LOG_INFO("probing ");
-    LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(probing_target));
+    LOG_INFO_6ADDR(target_ipaddr);
     LOG_INFO_(" %s last tx %u min ago\n",
         curr_instance.dag.urgent_probing_target != NULL ? "(urgent)" : "",
         probing_target != NULL ?
