@@ -1,0 +1,11 @@
+# $Id: Makefile.sky,v 1.38 2010/05/03 13:51:11 nifi Exp $
+
+CONTIKI_TARGET_SOURCEFILES += contiki-sky-platform.c \
+	sht11.c sht11-sensor.c light-sensor.c battery-sensor.c \
+	button-sensor.c radio-sensor.c
+
+include $(CONTIKI)/arch/platform/sky/Makefile.common
+
+MODULES += core/net/mac core/net/mac/framer core/net \
+           core/net/mac/csma core/net/mac/nullmac \
+           arch/dev/cc2420 arch/dev/sht11 arch/dev/ds2411
