@@ -380,33 +380,37 @@ get_probing_target(void)
     return curr_instance.dag.preferred_parent;
   }
 
-  /* With 50% probability: probe best non-fresh neighbor */
-  if(random_rand() % 2 == 0) {
+  /* Now consider probing other non-fresh neighbors. With 2/3 proabability,
+  pick the best non-fresh. Otherwise, pick the lest recently updated non-fresh. */
+
+  if(random_rand() % 3 != 0) {
+    /* Look for best non-fresh */
     nbr = nbr_table_head(rpl_neighbors);
     while(nbr != NULL) {
       if(!rpl_neighbor_is_fresh(nbr)) {
-        /* p is in our dag and needs probing */
-        rpl_rank_t p_rank = rpl_neighbor_rank_via_nbr(nbr);
+        /* nbr needs probing */
+        rpl_rank_t nbr_rank = rpl_neighbor_rank_via_nbr(nbr);
         if(probing_target == NULL
-            || p_rank < probing_target_rank) {
+            || nbr_rank < probing_target_rank) {
           probing_target = nbr;
-          probing_target_rank = p_rank;
+          probing_target_rank = nbr_rank;
         }
       }
       nbr = nbr_table_next(rpl_neighbors, nbr);
     }
-  }
-
-  /* If we still do not have a probing target: pick the least recently updated neighbor */
-  if(probing_target == NULL) {
+  } else {
+    /* Look for least recently updated non-fresh */
     nbr = nbr_table_head(rpl_neighbors);
     while(nbr != NULL) {
-      const struct link_stats *stats =rpl_neighbor_get_link_stats(nbr);
-      if(stats != NULL) {
-        if(probing_target == NULL
-            || clock_now - stats->last_tx_time > probing_target_age) {
-          probing_target = nbr;
-          probing_target_age = clock_now - stats->last_tx_time;
+      if(!rpl_neighbor_is_fresh(nbr)) {
+        /* nbr needs probing */
+        const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
+        if(stats != NULL) {
+          if(probing_target == NULL
+              || clock_now - stats->last_tx_time > probing_target_age) {
+            probing_target = nbr;
+            probing_target_age = clock_now - stats->last_tx_time;
+          }
         }
       }
       nbr = nbr_table_next(rpl_neighbors, nbr);
@@ -436,6 +440,8 @@ handle_probing_timer(void *ptr)
     /* Send probe, e.g. unicast DIO or DIS */
     RPL_PROBING_SEND_FUNC(target_ipaddr);
     curr_instance.dag.urgent_probing_target = NULL;
+  } else {
+    LOG_INFO("no neighbor needs probing\n");
   }
 
   /* Schedule next probing */

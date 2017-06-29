@@ -204,7 +204,7 @@ GENERATE_MSG(1500000, "moving root back");&#xD;
 &#xD;
 lostMsgs = 0;&#xD;
 &#xD;
-TIMEOUT(6000000, if(lastMsg != -1 &amp;&amp; lastMsgHops == 1 &amp;&amp; lostMsgs &lt;= 2  &amp;&amp; num &gt; 20) { log.testOK(); } );&#xD;
+TIMEOUT(10000000, if(lastMsg != -1 &amp;&amp; lastMsgHops == 1 &amp;&amp; lostMsgs &lt;= 2  &amp;&amp; num &gt; 20) { log.testOK(); } );&#xD;
 &#xD;
 lastMsg = -1;&#xD;
 packets = "_________";&#xD;
