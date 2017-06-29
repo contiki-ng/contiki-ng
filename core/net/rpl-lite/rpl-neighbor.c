@@ -336,6 +336,7 @@ rpl_neighbor_select_best(void)
 #if RPL_WITH_PROBING
   if(best != NULL) {
     if(rpl_neighbor_is_fresh(best)) {
+      /* Return best if it is fresh */
       return best;
     } else {
       rpl_nbr_t *best_fresh;
@@ -348,6 +349,13 @@ rpl_neighbor_select_best(void)
         LOG_WARN_("\n");
         curr_instance.dag.urgent_probing_target = best;
         rpl_schedule_probing();
+      }
+
+      /* The best is our preferred parent. It is not fresh but used to be,
+      else we would not have selected it in the first place. Stick to it
+      for a little while and rely on urgent probing to make a call. */
+      if(best == curr_instance.dag.preferred_parent) {
+        return best;
       }
 
       /* Look for the best fresh parent. */
@@ -367,6 +375,7 @@ rpl_neighbor_select_best(void)
       }
     }
   } else {
+    /* No acceptable parent */
     return NULL;
   }
 #else /* RPL_WITH_PROBING */
