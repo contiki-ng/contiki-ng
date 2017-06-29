@@ -691,6 +691,8 @@ tcpip_ipv6_output(void)
         0, NBR_REACHABLE, NBR_TABLE_REASON_IPV6_ND_AUTOFILL, NULL)) == NULL) {
       LOG_ERR("output: failed to autofill neighbor cache for host ");
       LOG_ERR_6ADDR(nexthop);
+      LOG_ERR_(", link-layer addr ");
+      LOG_ERR_LLADDR((linkaddr_t*)&lladdr);
       LOG_ERR_("\n");
       goto exit;
     }

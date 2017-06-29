@@ -53,108 +53,71 @@
 #define LOG_LEVEL RPL_LOG_LEVEL
 
 /*
- * Policy for neighbor adds
+ * Policy for neighbor addition
  * - one node is locked (default route)
- * - max X children (nexthops)
- * - max Y "best parents"
- * => at least MAX_NBRS - (Y + X + 1) free slots for other.
+ * - max X "best parents"
+ * => at least MAX_NBRS - (X + 1) free slots for other.
  *
  * NOTE: this policy assumes that all neighbors end up being IPv6
  * neighbors and are not only MAC neighbors.
  */
-#define MAX_CHILDREN  (NBR_TABLE_MAX_NEIGHBORS - 2)
 #define UIP_IP_BUF    ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 static int num_parents;   /* all nodes that are possible parents */
-static int num_children;  /* all children that we have as nexthop */
 static int num_free;
-static linkaddr_t *worst_rank_nbr; /* the neighbor with the worst rank */
+static linkaddr_t *worst_rank_nbr_lladdr; /* lladdr of the the neighbor with the worst rank */
 static rpl_rank_t worst_rank;
 /*---------------------------------------------------------------------------*/
-#if DEBUG == DEBUG_FULL
-/*
- * This create a periodic call of the update_nbr function that will print
- * useful debugging information when in DEBUG_FULL mode
- */
-static void update_nbr(void);
+#if LOG_DBG_ENABLED
+/* Print out state periodically */
+static void update_state(void);
 static struct ctimer periodic_timer;
 static int timer_init = 0;
 static void
 handle_periodic_timer(void *ptr)
 {
-  update_nbr();
+  update_state();
   ctimer_restart(&periodic_timer);
 }
-#endif /* DEBUG == DEBUG_FULL */
-/*---------------------------------------------------------------------------*/
-static int
-node_is_child(uip_ipaddr_t *addr) {
-  /* in storing mode this was possible to figure out with uip_ds6_route_is_nexthop.
-   * Need some replacement mechanism in non-storing context */
-   return 0;
-}
+#endif /* LOG_DBG_ENABLED */
 /*---------------------------------------------------------------------------*/
 static void
-update_nbr(void)
+update_state(void)
 {
   uip_ds6_nbr_t *ds6_nbr;
   rpl_nbr_t *rpl_nbr;
-  int num_used;
-  int is_used;
-  rpl_rank_t rank;
+  rpl_rank_t nbr_rank;
+  int num_used = 0;
 
-#if DEBUG == DEBUG_FULL
+#if LOG_DBG_ENABLED
   if(!timer_init) {
     timer_init = 1;
     ctimer_set(&periodic_timer, 60 * CLOCK_SECOND,
                &handle_periodic_timer, NULL);
   }
-#endif /* DEBUG == DEBUG_FULL */
+#endif /* LOG_DBG_ENABLED */
 
   worst_rank = 0;
-  worst_rank_nbr = NULL;
-  num_used = 0;
+  worst_rank_nbr_lladdr = NULL;
   num_parents = 0;
-  num_children = 0;
 
   ds6_nbr = nbr_table_head(ds6_neighbors);
   while(ds6_nbr != NULL) {
-    linkaddr_t *lladdr = nbr_table_get_lladdr(ds6_neighbors, ds6_nbr);
-    is_used = 0;
 
-    /*
-     * Check if this neighbor is used as nexthop and therefore being a
-     * RPL child.
-    */
-    if(node_is_child(&ds6_nbr->ipaddr) != 0) {
-      is_used++;
-      num_children++;
-    }
+    linkaddr_t *nbr_lladdr = nbr_table_get_lladdr(ds6_neighbors, ds6_nbr);
+    rpl_nbr = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)nbr_lladdr);
 
-    rpl_nbr = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)lladdr);
     if(rpl_nbr != NULL && rpl_neighbor_is_parent(rpl_nbr)) {
       num_parents++;
-
-      if(curr_instance.dag.preferred_parent == rpl_nbr) {
-        /*
-         * This is the preferred parent for the DAG and must not be removed
-         * Note: this assumes that only RPL adds default routes.
-         */
-      } else if(is_used == 0 && worst_rank < RPL_INFINITE_RANK &&
-                rpl_nbr->rank > 0 &&
-                (rank = curr_instance.of->rank_via_nbr(rpl_nbr)) > worst_rank) {
-        /* This is the worst-rank neighbor - this is a good candidate for removal */
-        worst_rank = rank;
-        worst_rank_nbr = lladdr;
-      }
-      /* add to is_used after evaluation of is_used above */
-      is_used++;
     }
 
-    if(is_used == 0) {
-      /* This neighbor is neither parent or child and can be safely removed */
-      worst_rank_nbr = lladdr;
-      worst_rank = RPL_INFINITE_RANK;
+    nbr_rank = rpl_neighbor_rank_via_nbr(rpl_nbr);
+    /* Select worst-rank neighbor */
+    if(rpl_nbr != curr_instance.dag.preferred_parent
+       && nbr_rank > worst_rank) {
+      /* This is the worst-rank neighbor - this is a good candidate for removal */
+      worst_rank = nbr_rank;
+      worst_rank_nbr_lladdr = nbr_lladdr;
     }
 
     ds6_nbr = nbr_table_next(ds6_neighbors, ds6_nbr);
@@ -163,26 +126,20 @@ update_nbr(void)
   /* how many more IP neighbors can be have? */
   num_free = NBR_TABLE_MAX_NEIGHBORS - num_used;
 
-  LOG_INFO("nbr-policy: free: %d, children: %d, parents: %d routes: %d\n",
-	  num_free, num_children, num_parents, uip_ds6_route_num_routes());
+  LOG_INFO("nbr-policy: free: %d, parents: %d\n", num_free, num_parents);
 }
 /*---------------------------------------------------------------------------*/
-/* Called whenever we get a unicast DIS - e.g. someone that already
-   have this node in its table - since it is a unicast */
 static const linkaddr_t *
-find_removable_dis(uip_ipaddr_t *from)
+find_worst_rank_nbr_lladdr(void)
 {
-  update_nbr();
-  if(num_children < MAX_CHILDREN) {
-    return worst_rank_nbr;
-  }
-  return NULL;
+  update_state();
+  return worst_rank_nbr_lladdr;
 }
 /*---------------------------------------------------------------------------*/
 static const linkaddr_t *
 find_removable_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
-  update_nbr();
+  update_state();
 
   if(!curr_instance.used || curr_instance.instance_id != dio->instance_id) {
     LOG_WARN("nbr-policy: did not find instance id: %d\n", dio->instance_id);
@@ -194,7 +151,7 @@ find_removable_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
     /* Found *great* neighbor - add! */
     LOG_INFO("nbr-policy: DIO rank %u, worse_rank %u -- add to cache\n",
            dio->rank, worst_rank);
-    return worst_rank_nbr;
+    return worst_rank_nbr_lladdr;
   }
 
   LOG_INFO("nbr-policy: DIO rank %u, worse_rank %u -- do not add to cache\n",
@@ -210,11 +167,10 @@ rpl_nbr_policy_find_removable(nbr_table_reason_t reason, void *data)
   switch(reason) {
     case NBR_TABLE_REASON_RPL_DIO:
       return find_removable_dio(&UIP_IP_BUF->srcipaddr, data);
-    case NBR_TABLE_REASON_RPL_DAO:
-      return NULL; /* DAOs are end-to-end in non-storing, this
-      nbr-policy reason is unused */
     case NBR_TABLE_REASON_RPL_DIS:
-      return find_removable_dis(&UIP_IP_BUF->srcipaddr);
+      return find_worst_rank_nbr_lladdr();
+    case NBR_TABLE_REASON_IPV6_ND_AUTOFILL:
+      return find_worst_rank_nbr_lladdr();
     default:
       return NULL;
   }
