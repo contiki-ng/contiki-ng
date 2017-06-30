@@ -50,8 +50,8 @@ net_debug_lladdr_print(const uip_lladdr_t *addr)
   } else {
     unsigned int i;
     for(i = 0; i < LINKADDR_SIZE; i++) {
-      if(i > 0) {
-        PRINTA(":");
+      if(i > 0 && i % 2 == 0) {
+        PRINTA(".");
       }
       PRINTA("%02x", addr->addr[i]);
     }

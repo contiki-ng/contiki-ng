@@ -38,7 +38,7 @@
 #ifndef RPL_H
 #define RPL_H
 
-#include "rpl-conf.h"
+#include "net/rpl/rpl-conf.h"
 
 #include "lib/list.h"
 #include "net/ip/uip.h"
@@ -274,25 +274,24 @@ int rpl_set_default_route(rpl_instance_t *instance, uip_ipaddr_t *from);
 rpl_dag_t *rpl_get_dag(const uip_ipaddr_t *addr);
 rpl_dag_t *rpl_get_any_dag(void);
 rpl_instance_t *rpl_get_instance(uint8_t instance_id);
-int rpl_update_header(void);
-int rpl_finalize_header(uip_ipaddr_t *addr);
-int rpl_verify_hbh_header(int);
+int rpl_ext_header_update(void);
+int rpl_ext_header_hbh_update(int);
 void rpl_insert_header(void);
-void rpl_remove_header(void);
+void rpl_ext_header_remove(void);
 const struct link_stats *rpl_get_parent_link_stats(rpl_parent_t *p);
 int rpl_parent_is_fresh(rpl_parent_t *p);
 int rpl_parent_is_reachable(rpl_parent_t *p);
 uint16_t rpl_get_parent_link_metric(rpl_parent_t *p);
 rpl_rank_t rpl_rank_via_parent(rpl_parent_t *p);
 const linkaddr_t *rpl_get_parent_lladdr(rpl_parent_t *p);
-uip_ipaddr_t *rpl_get_parent_ipaddr(rpl_parent_t *nbr);
+uip_ipaddr_t *rpl_parent_get_ipaddr(rpl_parent_t *nbr);
 rpl_parent_t *rpl_get_parent(uip_lladdr_t *addr);
 rpl_rank_t rpl_get_parent_rank(uip_lladdr_t *addr);
 void rpl_dag_init(void);
 uip_ds6_nbr_t *rpl_get_nbr(rpl_parent_t *parent);
 void rpl_print_neighbor_list(void);
-int rpl_process_srh_header(void);
-int rpl_srh_get_next_hop(uip_ipaddr_t *ipaddr);
+int rpl_ext_header_srh_update(void);
+int rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr);
 
 /* Per-parent RPL information */
 NBR_TABLE_DECLARE(rpl_parents);

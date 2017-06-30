@@ -39,7 +39,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "IPv6 Websocket"
+#define LOG_MODULE "Websocket"
 #define LOG_LEVEL IPV6_LOG_LEVEL
 
 PROCESS(websocket_process, "Websockets process");

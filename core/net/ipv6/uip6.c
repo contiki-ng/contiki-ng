@@ -81,8 +81,12 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 #if UIP_CONF_IPV6_RPL
-#include "rpl/rpl.h"
-#include "rpl/rpl-private.h"
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #endif
 
 #if UIP_ND6_SEND_NS
@@ -230,7 +234,7 @@ static uint16_t lastport;
  */
 #if UIP_TCP
 /* The uip_conns array holds all TCP connections. */
-struct uip_conn uip_conns[UIP_CONNS];
+struct uip_conn uip_conns[UIP_TCP_CONNS];
 
 /* The uip_listenports list all currently listning ports. */
 uint16_t uip_listenports[UIP_LISTENPORTS];
@@ -424,7 +428,7 @@ uip_init(void)
   for(c = 0; c < UIP_LISTENPORTS; ++c) {
     uip_listenports[c] = 0;
   }
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     uip_conns[c].tcpstateflags = UIP_CLOSED;
   }
 #endif /* UIP_TCP */
@@ -461,7 +465,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 
   /* Check if this port is already in use, and if so try to find
      another one. */
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     conn = &uip_conns[c];
     if(conn->tcpstateflags != UIP_CLOSED &&
        conn->lport == uip_htons(lastport)) {
@@ -470,7 +474,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   }
 
   conn = 0;
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     cconn = &uip_conns[c];
     if(cconn->tcpstateflags == UIP_CLOSED) {
       conn = cconn;
@@ -694,9 +698,9 @@ uip_reass(void)
       memcpy(FBUF, UIP_IP_BUF, uip_ext_len + UIP_IPH_LEN);
       LOG_INFO("src ");
       LOG_INFO_6ADDR(&FBUF->srcipaddr);
-      LOG_INFO("dest ");
+      LOG_INFO_("dest ");
       LOG_INFO_6ADDR(&FBUF->destipaddr);
-      LOG_INFO("next %d\n", UIP_IP_BUF->proto);
+      LOG_INFO_("next %d\n", UIP_IP_BUF->proto);
 
     }
 
@@ -878,7 +882,7 @@ ext_hdr_options_process(void)
        */
 #if UIP_CONF_IPV6_RPL
       LOG_DBG("Processing RPL option\n");
-      if(!rpl_verify_hbh_header(uip_ext_opt_offset)) {
+      if(!rpl_ext_header_hbh_update(uip_ext_opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
@@ -1128,9 +1132,9 @@ uip_process(uint8_t flag)
 
   LOG_INFO("packet received from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   if(uip_is_addr_mcast(&UIP_IP_BUF->srcipaddr)){
     UIP_STAT(++uip_stat.ip.drop);
@@ -1226,7 +1230,7 @@ uip_process(uint8_t flag)
       UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
       LOG_INFO("Forwarding packet to ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
       goto send;
     } else {
@@ -1357,7 +1361,7 @@ uip_process(uint8_t flag)
           LOG_DBG("Processing Routing header\n");
           if(UIP_ROUTING_BUF->seg_left > 0) {
 #if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-            if(rpl_process_srh_header()) {
+            if(rpl_ext_header_srh_update()) {
               goto send; /* Proceed to forwarding */
             }
 #endif /* UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING */
@@ -1449,7 +1453,6 @@ uip_process(uint8_t flag)
     LOG_ERR("Unknown ICMPv6 message type/code %d\n", UIP_ICMP_BUF->type);
     UIP_STAT(++uip_stat.icmp.drop);
     UIP_STAT(++uip_stat.icmp.typeerr);
-    LOG_ERR("icmp6: unknown ICMPv6 message.");
     uip_clear_buf();
   }
 
@@ -1600,7 +1603,7 @@ uip_process(uint8_t flag)
 
   /* Demultiplex this segment. */
   /* First check any active connections. */
-  for(uip_connr = &uip_conns[0]; uip_connr <= &uip_conns[UIP_CONNS - 1];
+  for(uip_connr = &uip_conns[0]; uip_connr <= &uip_conns[UIP_TCP_CONNS - 1];
       ++uip_connr) {
     if(uip_connr->tcpstateflags != UIP_CLOSED &&
        UIP_TCP_BUF->destport == uip_connr->lport &&
@@ -1693,7 +1696,7 @@ uip_process(uint8_t flag)
      CLOSED connections are found. Thanks to Eddie C. Dost for a very
      nice algorithm for the TIME_WAIT search. */
   uip_connr = 0;
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(c = 0; c < UIP_TCP_CONNS; ++c) {
     if(uip_conns[c].tcpstateflags == UIP_CLOSED) {
       uip_connr = &uip_conns[c];
       break;
@@ -2254,9 +2257,9 @@ uip_process(uint8_t flag)
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
   LOG_INFO("Sending TCP packet to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" from ");
+  LOG_INFO_(" from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   if(uip_connr->tcpstateflags & UIP_STOPPED) {
     /* If the connection has issued uip_stop(), we advertise a zero

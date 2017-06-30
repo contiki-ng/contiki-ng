@@ -27,10 +27,3 @@
  * SUCH DAMAGE.
  */
 #define TCPIP_CONF_ANNOTATE_TRANSMISSIONS 1
-
-#undef RPL_CONF_MOP
-#define RPL_CONF_MOP RPL_MOP_NON_STORING
-
-/* Add a bit of extra probing in the non-storing case to compensate for reduced DAO traffic */
-#undef RPL_CONF_PROBING_INTERVAL
-#define RPL_CONF_PROBING_INTERVAL (60 * CLOCK_SECOND)

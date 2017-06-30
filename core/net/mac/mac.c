@@ -41,22 +41,6 @@
 void
 mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
 {
-  LOG_INFO("mac_callback_t %p ptr %p status %d num_tx %d\n",
-         (void *)sent, ptr, status, num_tx);
-  switch(status) {
-  case MAC_TX_COLLISION:
-    LOG_INFO("collision after %d tx\n", num_tx);
-    break;
-  case MAC_TX_NOACK:
-    LOG_INFO("noack after %d tx\n", num_tx);
-    break;
-  case MAC_TX_OK:
-    LOG_INFO("sent after %d tx\n", num_tx);
-    break;
-  default:
-    LOG_INFO("error %d after %d tx\n", status, num_tx);
-  }
-
   if(sent) {
     sent(ptr, status, num_tx);
   }

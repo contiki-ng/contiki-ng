@@ -290,7 +290,7 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
     if(instance->used == 1 ) {
       p = rpl_find_parent_any_dag(instance, &nbr->ipaddr);
       if(p != NULL) {
-        p->rank = INFINITE_RANK;
+        p->rank = RPL_INFINITE_RANK;
         /* Trigger DAG rank recalculation. */
         PRINTF("RPL: rpl_ipv6_neighbor_callback infinite rank\n");
         p->flags |= RPL_PARENT_FLAG_UPDATED;

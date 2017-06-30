@@ -56,13 +56,6 @@
 #define TSCH_LOG_QUEUE_LEN 8
 #endif /* TSCH_LOG_CONF_QUEUE_LEN */
 
-/* Returns an integer ID from a link-layer address */
-#ifdef TSCH_LOG_CONF_ID_FROM_LINKADDR
-#define TSCH_LOG_ID_FROM_LINKADDR(addr) TSCH_LOG_CONF_ID_FROM_LINKADDR(addr)
-#else /* TSCH_LOG_ID_FROM_LINKADDR */
-#define TSCH_LOG_ID_FROM_LINKADDR(addr) ((addr) ? (addr)->u8[LINKADDR_SIZE - 1] : 0)
-#endif /* TSCH_LOG_ID_FROM_LINKADDR */
-
 #if (TSCH_LOG_PER_SLOT == 0)
 
 #define tsch_log_init()
@@ -85,16 +78,17 @@ struct tsch_log_t {
     char message[48];
     struct {
       int mac_tx_status;
-      int dest;
+      linkaddr_t dest;
       int drift;
       uint8_t num_tx;
       uint8_t datalen;
       uint8_t is_data;
       uint8_t sec_level;
       uint8_t drift_used;
+      uint8_t seqno;
     } tx;
     struct {
-      int src;
+      linkaddr_t  src;
       int drift;
       int estimated_drift;
       uint8_t datalen;
@@ -102,6 +96,7 @@ struct tsch_log_t {
       uint8_t is_data;
       uint8_t sec_level;
       uint8_t drift_used;
+      uint8_t seqno;
     } rx;
   };
 };

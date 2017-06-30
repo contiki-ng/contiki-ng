@@ -45,7 +45,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "Frame 802.15.4e"
+#define LOG_MODULE "Frame 15.4"
 #define LOG_LEVEL FRAMER_LOG_LEVEL
 
 /**  \brief The sequence number (0x00 - 0xff) added to the transmitted
@@ -176,7 +176,7 @@ create_frame(int type, int do_create)
 
     LOG_INFO("Out: %2X", params.fcf.frame_type);
     LOG_INFO_LLADDR((const linkaddr_t *)params.dest_addr);
-    LOG_INFO("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO_("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   } else {
@@ -240,7 +240,7 @@ parse(void)
     LOG_INFO("In: %2X", frame.fcf.frame_type);
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-    LOG_INFO("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+    LOG_INFO_("%d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 
     return hdr_len;
   }

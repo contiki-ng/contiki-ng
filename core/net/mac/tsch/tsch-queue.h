@@ -88,13 +88,13 @@
 #ifdef TSCH_CONF_MAC_MAX_BE
 #define TSCH_MAC_MAX_BE TSCH_CONF_MAC_MAX_BE
 #else
-#define TSCH_MAC_MAX_BE 7
+#define TSCH_MAC_MAX_BE 5
 #endif
 /* Max number of re-transmissions */
 #ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #define TSCH_MAC_MAX_FRAME_RETRIES TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #else
-#define TSCH_MAC_MAX_FRAME_RETRIES 8
+#define TSCH_MAC_MAX_FRAME_RETRIES 7
 #endif
 
 /*********** Callbacks *********/
@@ -160,6 +160,8 @@ struct tsch_neighbor *tsch_queue_get_time_source(void);
 int tsch_queue_update_time_source(const linkaddr_t *new_addr);
 /* Add packet to neighbor queue. Use same lockfree implementation as ringbuf.c (put is atomic) */
 struct tsch_packet *tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr);
+/* Returns the number of packets currently in any TSCH queue */
+int tsch_queue_global_packet_count(void);
 /* Returns the number of packets currently a given neighbor queue */
 int tsch_queue_packet_count(const linkaddr_t *addr);
 /* Remove first packet from a neighbor queue. The packet is stored in a separate
@@ -167,6 +169,8 @@ int tsch_queue_packet_count(const linkaddr_t *addr);
 struct tsch_packet *tsch_queue_remove_packet_from_queue(struct tsch_neighbor *n);
 /* Free a packet */
 void tsch_queue_free_packet(struct tsch_packet *p);
+/* Updates neighbor queue state after a transmission */
+int tsch_queue_packet_sent(struct tsch_neighbor *n, struct tsch_packet *p, struct tsch_link *link, uint8_t mac_tx_status);
 /* Reset neighbor queues */
 void tsch_queue_reset(void);
 /* Deallocate neighbors with empty queue */

@@ -110,14 +110,6 @@
 #define UIP_CONF_IPV6_RPL               1
 #endif /* UIP_CONF_IPV6_RPL */
 
-/* configure number of neighbors and routes */
-#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     20
-#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
-#ifndef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   20
-#endif /* UIP_CONF_MAX_ROUTES */
-
 #define UIP_CONF_ND6_SEND_RA            0
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER      10000
@@ -152,9 +144,8 @@
 #ifndef UIP_CONF_TCP_MSS
 #define UIP_CONF_TCP_MSS         48
 #endif
-#define UIP_CONF_MAX_CONNECTIONS 4
+#define UIP_CONF_TCP_CONNS 4
 #define UIP_CONF_MAX_LISTENPORTS 8
-#define UIP_CONF_UDP_CONNS       12
 #define UIP_CONF_FWCACHE_SIZE    30
 #define UIP_CONF_BROADCAST       1
 #define UIP_ARCH_CHKSUM          0

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, RISE SICS.
+ * Copyright (c) 2017, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  * \file
  *         Header file for the logging system
  * \author
- *         Simon Duquennoy <simon.duquennoy@ri.se>
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
 /** \addtogroup sys
@@ -54,51 +54,30 @@
 #include <stdio.h>
 #include "net/linkaddr.h"
 #include "sys/log-conf.h"
-
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ip/uip.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-void net_debug_lladdr_print(const linkaddr_t *addr);
-void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
-
+/* The different log levels available */
 #define LOG_LEVEL_NONE         0 /* No log */
 #define LOG_LEVEL_ERR          1 /* Errors */
 #define LOG_LEVEL_WARN         2 /* Warnings */
 #define LOG_LEVEL_INFO         3 /* Basic info */
 #define LOG_LEVEL_DBG          4 /* Detailled debug */
 
-/* Prefix all logs with file name and line-of-code */
-#ifdef LOG_CONF_WITH_LOC
-#define LOG_WITH_LOC LOG_CONF_WITH_LOC
-#else /* LOG_CONF_WITH_LOC */
-#define LOG_WITH_LOC 0
-#endif /* LOG_CONF_WITH_LOC */
-
-/* Custom output function -- default is printf */
-#ifdef LOG_CONF_OUTPUT
-#define LOG_OUTPUT(...) LOG_CONF_OUTPUT(__VA_ARGS__)
-#else /* LOG_CONF_OUTPUT */
-#define LOG_OUTPUT(...) printf(__VA_ARGS__)
-#endif /* LOG_CONF_OUTPUT */
-
-/* Cooja annotations */
-#ifdef LOG_CONF_WITH_ANNOTATE
-#define LOG_WITH_ANNOTATE LOG_CONF_WITH_ANNOTATE
-#else /* LOG_CONF_WITH_ANNOTATE */
-#define LOG_WITH_ANNOTATE 0
-#endif /* LOG_CONF_WITH_ANNOTATE */
-
 /* Main log function */
-#define LOG(level, ...) do {  \
+
+#define LOG(newline, level, levelstr, ...) do {  \
                             if(level <= LOG_LEVEL) { \
-                              if(LOG_WITH_LOC) { \
-                                LOG_OUTPUT("%s:%d: ", __FILE__, __LINE__); \
+                              if(newline) { \
+                                LOG_OUTPUT("[%-4s: %-10s] ", levelstr, LOG_MODULE); \
+                                if(LOG_WITH_LOC) { \
+                                  LOG_OUTPUT("[%s: %d] ", __FILE__, __LINE__); \
+                                } \
                               } \
-                              LOG_OUTPUT("%s: ", LOG_MODULE); \
                               LOG_OUTPUT(__VA_ARGS__); \
                             } \
-                        } while (0)
+                          } while (0)
 
 /* For Cooja annotations */
 #define LOG_ANNOTATE(...) do {  \
@@ -110,22 +89,35 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 /* Link-layer address */
 #define LOG_LLADDR(level, lladdr) do {  \
                             if(level <= LOG_LEVEL) { \
-                              net_debug_lladdr_print(lladdr); \
+                              if(LOG_WITH_COMPACT_ADDR) { \
+                                log_lladdr_compact(lladdr); \
+                              } else { \
+                                log_lladdr(lladdr); \
+                              } \
                             } \
                         } while (0)
 
 /* IPv6 address */
-#define LOG_6ADDR(level, lladdr) do {  \
+#define LOG_6ADDR(level, ipaddr) do {  \
                            if(level <= LOG_LEVEL) { \
-                             uip_debug_ipaddr_print(lladdr); \
+                             if(LOG_WITH_COMPACT_ADDR) { \
+                               log_6addr_compact(ipaddr); \
+                             } else { \
+                               log_6addr(ipaddr); \
+                             } \
                            } \
-                       } while (0)
+                         } while (0)
 
 /* More compact versions of LOG macros */
-#define LOG_ERR(...)           LOG(LOG_LEVEL_ERR, __VA_ARGS__)
-#define LOG_WARN(...)          LOG(LOG_LEVEL_WARN, __VA_ARGS__)
-#define LOG_INFO(...)          LOG(LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_DBG(...)           LOG(LOG_LEVEL_DBG, __VA_ARGS__)
+#define LOG_ERR(...)           LOG(1, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
+#define LOG_WARN(...)          LOG(1, LOG_LEVEL_WARN, "WARN", __VA_ARGS__)
+#define LOG_INFO(...)          LOG(1, LOG_LEVEL_INFO, "INFO", __VA_ARGS__)
+#define LOG_DBG(...)           LOG(1, LOG_LEVEL_DBG, "DBG", __VA_ARGS__)
+
+#define LOG_ERR_(...)           LOG(0, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
+#define LOG_WARN_(...)          LOG(0, LOG_LEVEL_WARN, "WARN", __VA_ARGS__)
+#define LOG_INFO_(...)          LOG(0, LOG_LEVEL_INFO, "INFO", __VA_ARGS__)
+#define LOG_DBG_(...)           LOG(0, LOG_LEVEL_DBG, "DBG", __VA_ARGS__)
 
 #define LOG_ERR_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN_LLADDR(...)   LOG_LLADDR(LOG_LEVEL_WARN, __VA_ARGS__)
@@ -143,6 +135,34 @@ void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
 #define LOG_INFO_ENABLED       (LOG_LEVEL >= LOG_LEVEL_INFO)
 #define LOG_DBG_ENABLED        (LOG_LEVEL >= LOG_LEVEL_DBG)
 #define LOG_ANNOTATE_ENABLED   (LOG_LEVEL >= LOG_LEVEL_ANNOTATE)
+
+#if NETSTACK_CONF_WITH_IPV6
+
+/**
+ * Logs an IPv6 address
+ * \param ipaddr The IPv6 address
+*/
+void log_6addr(const uip_ipaddr_t *ipaddr);
+
+/**
+ * Logs an IPv6 address with a compact format
+ * \param ipaddr The IPv6 address
+*/
+void log_6addr_compact(const uip_ipaddr_t *ipaddr);
+
+#endif /* NETSTACK_CONF_WITH_IPV6 */
+
+/**
+ * Logs a link-layer address
+ * \param lladdr The link-layer address
+*/
+void log_lladdr(const linkaddr_t *lladdr);
+
+/**
+ * Logs a link-layer address with a compact format
+ * \param lladdr The link-layer address
+*/
+void log_lladdr_compact(const linkaddr_t *lladdr);
 
 #endif /* __LOG_H__ */
 

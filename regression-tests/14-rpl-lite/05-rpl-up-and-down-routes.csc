@@ -22,10 +22,10 @@
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>mtype958</identifier>
+      <identifier>mtype743</identifier>
       <description>Sender</description>
-      <source>[CONTIKI_DIR]/regression-tests/12-rpl/code/sender-node.c</source>
-      <commands>make TARGET=cooja clean
+      <source>[CONFIG_DIR]/code/sender-node.c</source>
+      <commands>make clean TARGET=cooja
 make sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -47,10 +47,10 @@ make sender-node.cooja TARGET=cooja</commands>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>mtype837</identifier>
+      <identifier>mtype452</identifier>
       <description>RPL root</description>
-      <source>[CONTIKI_DIR]/regression-tests/12-rpl/code/root-node.c</source>
-      <commands>make TARGET=cooja clean
+      <source>[CONFIG_DIR]/code/root-node.c</source>
+      <commands>make clean TARGET=cooja
 make root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -72,10 +72,10 @@ make root-node.cooja TARGET=cooja</commands>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>mtype358</identifier>
+      <identifier>mtype782</identifier>
       <description>Receiver</description>
-      <source>[CONTIKI_DIR]/regression-tests/12-rpl/code/receiver-node.c</source>
-      <commands>make TARGET=cooja clean
+      <source>[CONFIG_DIR]/code/receiver-node.c</source>
+      <commands>make clean TARGET=cooja
 make receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -110,7 +110,7 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype358</motetype_identifier>
+      <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
       <interface_config>
@@ -127,7 +127,7 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype958</motetype_identifier>
+      <motetype_identifier>mtype743</motetype_identifier>
     </mote>
     <mote>
       <interface_config>
@@ -144,7 +144,7 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype358</motetype_identifier>
+      <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
       <interface_config>
@@ -161,7 +161,7 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype358</motetype_identifier>
+      <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
       <interface_config>
@@ -178,7 +178,7 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype358</motetype_identifier>
+      <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
       <interface_config>
@@ -195,7 +195,7 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype358</motetype_identifier>
+      <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
       <interface_config>
@@ -212,7 +212,7 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype358</motetype_identifier>
+      <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
       <interface_config>
@@ -229,13 +229,13 @@ make receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype837</motetype_identifier>
+      <motetype_identifier>mtype452</motetype_identifier>
     </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>0</z>
+    <z>1</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -259,8 +259,6 @@ make receiver-node.cooja TARGET=cooja</commands>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
-      <formatted_time />
-      <coloring />
     </plugin_config>
     <width>1184</width>
     <z>3</z>
@@ -284,12 +282,12 @@ make receiver-node.cooja TARGET=cooja</commands>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
       <script>GENERATE_MSG(0000000, "add-sink");&#xD;
-GENERATE_MSG(1000000, "remove-sink");&#xD;
-GENERATE_MSG(1000000, "add-sink");&#xD;
+//GENERATE_MSG(1000000, "remove-sink");&#xD;
+//GENERATE_MSG(1020000, "add-sink");&#xD;
 &#xD;
 lostMsgs = 0;&#xD;
 &#xD;
-TIMEOUT(10000000, if(lastMsg != -1 &amp;&amp; lostMsgs == 0) { log.testOK(); } );&#xD;
+TIMEOUT(1000000, if(lostMsgs == 0) { log.testOK(); } );&#xD;
 &#xD;
 lastMsg = -1;&#xD;
 packets = "_________";&#xD;
@@ -335,7 +333,7 @@ while(true) {&#xD;
       <active>true</active>
     </plugin_config>
     <width>962</width>
-    <z>1</z>
+    <z>0</z>
     <height>596</height>
     <location_x>603</location_x>
     <location_y>43</location_y>

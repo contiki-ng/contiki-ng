@@ -38,10 +38,13 @@
 
 #include "contiki.h"
 #include "node-id.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
+#include "rpl-dag-root.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/rpl/rpl-private.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #if WITH_ORCHESTRA
 #include "orchestra.h"
 #endif /* WITH_ORCHESTRA */
@@ -144,16 +147,12 @@ print_network_status(void)
 static void
 net_init(uip_ipaddr_t *br_prefix)
 {
-  uip_ipaddr_t global_ipaddr;
-
   if(br_prefix) { /* We are RPL root. Will be set automatically
                      as TSCH pan coordinator via the tsch-rpl module */
-    memcpy(&global_ipaddr, br_prefix, 16);
-    uip_ds6_set_addr_iid(&global_ipaddr, &uip_lladdr);
-    uip_ds6_addr_add(&global_ipaddr, 0, ADDR_AUTOCONF);
-    rpl_set_root(RPL_DEFAULT_INSTANCE, &global_ipaddr);
-    rpl_set_prefix(rpl_get_any_dag(), br_prefix, 64);
-    rpl_repair_root(RPL_DEFAULT_INSTANCE);
+    rpl_dag_root_init(br_prefix, NULL);
+    rpl_dag_root_init_dag_immediately();
+  } else {
+    rpl_dag_root_init(NULL, NULL);
   }
 
   NETSTACK_MAC.on();

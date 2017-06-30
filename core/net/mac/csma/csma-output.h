@@ -36,7 +36,7 @@
  *         Output functions.
  * \author
 
- *         Simon Duquennoy <simon.duquennoy@ri.se>
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
 #ifndef CSMA_OUTPUT_H_

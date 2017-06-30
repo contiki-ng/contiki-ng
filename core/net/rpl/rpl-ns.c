@@ -210,7 +210,7 @@ rpl_ns_periodic(void)
       l->lifetime--;
     }
   }
-  /* Second pass, for all expire nodes, deallocate them iff no child points to them */
+  /* Second pass, for all expired nodes, deallocate them iff no child points to them */
   for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
     if(l->lifetime == 0) {
       rpl_ns_node_t *l2;

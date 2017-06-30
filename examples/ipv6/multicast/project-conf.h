@@ -60,9 +60,9 @@
 #define UIP_CONF_TCP 0
 
 /* Code/RAM footprint savings so that things will fit on our device */
+#undef NETSTCK_ROUTING_STATE_SIZE
+#define NETSTCK_ROUTING_STATE_SIZE   10
 #undef NBR_TABLE_CONF_MAX_NEIGHBORS
-#undef UIP_CONF_MAX_ROUTES
-#define NBR_TABLE_CONF_MAX_NEIGHBORS  10
-#define UIP_CONF_MAX_ROUTES           10
+#define NBR_TABLE_CONF_MAX_NEIGHBORS 10
 
 #endif /* PROJECT_CONF_H_ */

@@ -415,11 +415,11 @@ void uip_log(char *msg);
  *
  * \hideinitializer
  */
-#ifndef UIP_CONF_MAX_CONNECTIONS
-#define UIP_CONNS       10
-#else /* UIP_CONF_MAX_CONNECTIONS */
-#define UIP_CONNS (UIP_CONF_MAX_CONNECTIONS)
-#endif /* UIP_CONF_MAX_CONNECTIONS */
+#ifndef UIP_CONF_TCP_CONNS
+#define UIP_TCP_CONNS       10
+#else /* UIP_CONF_TCP_CONNS */
+#define UIP_TCP_CONNS (UIP_CONF_TCP_CONNS)
+#endif /* UIP_CONF_TCP_CONNS */
 
 
 /**

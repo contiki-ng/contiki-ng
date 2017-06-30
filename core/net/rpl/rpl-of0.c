@@ -122,7 +122,7 @@ parent_rank_increase(rpl_parent_t *p)
 {
   uint16_t min_hoprankinc;
   if(p == NULL || p->dag == NULL || p->dag->instance == NULL) {
-    return INFINITE_RANK;
+    return RPL_INFINITE_RANK;
   }
   min_hoprankinc = p->dag->instance->min_hoprankinc;
   return (RANK_FACTOR * STEP_OF_RANK(p) + RANK_STRETCH) * min_hoprankinc;
@@ -142,9 +142,9 @@ static rpl_rank_t
 rank_via_parent(rpl_parent_t *p)
 {
   if(p == NULL) {
-    return INFINITE_RANK;
+    return RPL_INFINITE_RANK;
   } else {
-    return MIN((uint32_t)p->rank + parent_rank_increase(p), INFINITE_RANK);
+    return MIN((uint32_t)p->rank + parent_rank_increase(p), RPL_INFINITE_RANK);
   }
 }
 /*---------------------------------------------------------------------------*/

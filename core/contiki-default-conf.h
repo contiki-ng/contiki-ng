@@ -90,6 +90,19 @@
  * project-specific configuration to save memory.
  */
 
+ /* NBR_TABLE_CONF_MAX_NEIGHBORS specifies the maximum number of neighbors
+    that each node will be able to handle. */
+#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS 16
+#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
+
+/* NETSTCK_ROUTING_STATE_SIZE specifies the maximum number of entries
+   the routing module will handle. Applies to uIP routing tables if they are
+   used, or to RPL non-storing mode links instead */
+#ifndef NETSTCK_ROUTING_STATE_SIZE
+#define NETSTCK_ROUTING_STATE_SIZE 16
+#endif /* NETSTCK_ROUTING_STATE_SIZE */
+
 /* NETSTACK_CONF_WITH_IPV6 specifies whether or not IPv6 should be used. If IPv6
    is not used, IPv4 is used instead. */
 #ifndef NETSTACK_CONF_WITH_IPV6
@@ -122,47 +135,29 @@
 #endif /* NBR_TABLE_FIND_REMOVABLE */
 #endif /* UIP_CONF_IPV6_RPL */
 
-/* UIP_CONF_MAX_ROUTES specifies the maximum number of routes that each
-   node will be able to handle. */
-#ifndef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES 20
-#endif /* UIP_CONF_MAX_ROUTES */
-
-/* RPL_NS_CONF_LINK_NUM specifies the maximum number of links a RPL root
- * will maintain in non-storing mode. */
-#ifndef RPL_NS_CONF_LINK_NUM
-#define RPL_NS_CONF_LINK_NUM 20
-#endif /* RPL_NS_CONF_LINK_NUM */
-
 /* UIP_CONF_UDP specifies if UDP support should be included or
    not. Disabling UDP saves memory but breaks a lot of stuff. */
 #ifndef UIP_CONF_UDP
 #define UIP_CONF_UDP 1
 #endif /* UIP_CONF_UDP */
 
-/* UIP_CONF_MAX_CONNECTIONS specifies the maximum number of
-   simultaneous TCP connections. */
-#ifndef UIP_CONF_MAX_CONNECTIONS
-#define UIP_CONF_MAX_CONNECTIONS 8
-#endif /* UIP_CONF_MAX_CONNECTIONS */
+/* UIP_CONF_UDP_CONNS specifies the maximum number of
+   simultaneous UDP connections. */
+#ifndef UIP_CONF_UDP_CONNS
+#define UIP_CONF_UDP_CONNS 8
+#endif /* UIP_CONF_UDP_CONNS */
 
 /* UIP_CONF_TCP specifies if TCP support should be included or
    not. Disabling TCP saves memory. */
 #ifndef UIP_CONF_TCP
-#define UIP_CONF_TCP 1
+#define UIP_CONF_TCP 0
 #endif /* UIP_CONF_TCP */
 
-/* UIP_CONF_MAX_CONNECTIONS specifies the maximum number of
+/* UIP_CONF_TCP_CONNS specifies the maximum number of
    simultaneous TCP connections. */
-#ifndef UIP_CONF_MAX_CONNECTIONS
-#define UIP_CONF_MAX_CONNECTIONS 8
-#endif /* UIP_CONF_MAX_CONNECTIONS */
-
-/* NBR_TABLE_CONF_MAX_NEIGHBORS specifies the maximum number of neighbors
-   that each node will be able to handle. */
-#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS 8
-#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
+#ifndef UIP_CONF_TCP_CONNS
+#define UIP_CONF_TCP_CONNS 8
+#endif /* UIP_CONF_TCP_CONNS */
 
 /* UIP_CONF_ND6_SEND_RA enables standard IPv6 Router Advertisement.
  * We enable it by default when IPv6 is used without RPL. */

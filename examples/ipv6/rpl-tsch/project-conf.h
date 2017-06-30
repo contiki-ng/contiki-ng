@@ -49,8 +49,6 @@
 /********* Enable RPL non-storing mode *****************/
 /*******************************************************/
 
-#undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES 0 /* No need for routes */
 #undef RPL_CONF_MOP
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
 #undef ORCHESTRA_CONF_RULES
@@ -142,6 +140,12 @@
 
 #if CONTIKI_TARGET_COOJA
 #define COOJA_CONF_SIMULATE_TURNAROUND 0
+/* A bug in cooja causes many EBs to be missed at scan. Increase EB
+   frequency to shorten the join process */
+#undef TSCH_CONF_EB_PERIOD
+#define TSCH_CONF_EB_PERIOD (4 * CLOCK_SECOND)
+#undef TSCH_CONF_MAX_EB_PERIOD
+#define TSCH_CONF_MAX_EB_PERIOD (4 * CLOCK_SECOND)
 #endif /* CONTIKI_TARGET_COOJA */
 
 #endif /* __PROJECT_CONF_H__ */

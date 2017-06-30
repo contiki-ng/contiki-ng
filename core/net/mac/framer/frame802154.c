@@ -211,9 +211,9 @@ frame802154_check_dest_panid(frame802154_t *frame)
     return 0;
   }
   frame802154_has_panid(&frame->fcf, NULL, &has_dest_panid);
-  if(has_dest_panid
-     && frame->dest_pid != frame802154_get_pan_id()
-     && frame->dest_pid != FRAME802154_BROADCASTPANDID) {
+  if(!has_dest_panid ||
+     (frame->dest_pid != frame802154_get_pan_id()
+     && frame->dest_pid != FRAME802154_BROADCASTPANDID)) {
     /* Packet to another PAN */
     return 0;
   }

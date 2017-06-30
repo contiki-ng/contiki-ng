@@ -54,7 +54,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "IPv6 Neighbor"
+#define LOG_MODULE "IPv6 Nbr"
 #define LOG_LEVEL IPV6_LOG_LEVEL
 
 #ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
@@ -109,17 +109,17 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
 #endif /* UIP_ND6_SEND_NS */
     LOG_INFO("Adding neighbor with ip addr ");
     LOG_INFO_6ADDR(ipaddr);
-    LOG_INFO(" link addr ");
+    LOG_INFO_(" link addr ");
     LOG_INFO_LLADDR((linkaddr_t*)lladdr);
-    LOG_INFO(" state %u\n", state);
+    LOG_INFO_(" state %u\n", state);
     NEIGHBOR_STATE_CHANGED(nbr);
     return nbr;
   } else {
     LOG_INFO("Add drop ip addr ");
     LOG_INFO_6ADDR(ipaddr);
-    LOG_INFO(" link addr (%p) ", lladdr);
+    LOG_INFO_(" link addr (%p) ", lladdr);
     LOG_INFO_LLADDR((linkaddr_t*)lladdr);
-    LOG_INFO(" state %u\n", state);
+    LOG_INFO_(" state %u\n", state);
     return NULL;
   }
 }
@@ -241,7 +241,7 @@ uip_ds6_link_neighbor_callback(int status, int numtx)
       stimer_set(&nbr->reachable, UIP_ND6_REACHABLE_TIME / 1000);
       LOG_INFO("received a link layer ACK : ");
       LOG_INFO_LLADDR((uip_lladdr_t *)dest);
-      LOG_INFO(" is reachable.\n");
+      LOG_INFO_(" is reachable.\n");
     }
   }
 #endif /* UIP_DS6_LL_NUD */
@@ -268,20 +268,20 @@ uip_ds6_neighbor_periodic(void)
         if(uip_ds6_defrt_lookup(&nbr->ipaddr) != NULL) {
           LOG_INFO("REACHABLE: defrt moving to DELAY (");
           LOG_INFO_6ADDR(&nbr->ipaddr);
-          LOG_INFO(")\n");
+          LOG_INFO_(")\n");
           nbr->state = NBR_DELAY;
           stimer_set(&nbr->reachable, UIP_ND6_DELAY_FIRST_PROBE_TIME);
           nbr->nscount = 0;
         } else {
           LOG_INFO("REACHABLE: moving to STALE (");
           LOG_INFO_6ADDR(&nbr->ipaddr);
-          LOG_INFO(")\n");
+          LOG_INFO_(")\n");
           nbr->state = NBR_STALE;
         }
 #else /* UIP_CONF_IPV6_RPL */
         LOG_INFO("REACHABLE: moving to STALE (");
         LOG_INFO_6ADDR(&nbr->ipaddr);
-        LOG_INFO(")\n");
+        LOG_INFO_(")\n");
         nbr->state = NBR_STALE;
 #endif /* UIP_CONF_IPV6_RPL */
       }

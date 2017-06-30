@@ -65,7 +65,7 @@ typedef  int32_t s32_t;
 typedef unsigned short uip_stats_t;
 
 #define UIP_CONF_UDP             1
-#define UIP_CONF_MAX_CONNECTIONS 40
+#define UIP_CONF_TCP_CONNS 40
 #define UIP_CONF_MAX_LISTENPORTS 40
 #define UIP_CONF_BUFFER_SIZE     420
 #define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
@@ -104,14 +104,6 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_NETIF_MAX_ADDRESSES  3
 #define UIP_CONF_ICMP6           1
 
-/* configure number of neighbors and routes */
-#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     30
-#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
-#ifndef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   30
-#endif /* UIP_CONF_MAX_ROUTES */
-
 #define UIP_CONF_ND6_SEND_RA		0
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER      10000
@@ -131,7 +123,6 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_RECEIVE_WINDOW  48
 #endif
 #define UIP_CONF_TCP_MSS         48
-#define UIP_CONF_UDP_CONNS       12
 #define UIP_CONF_FWCACHE_SIZE    30
 #define UIP_CONF_BROADCAST       1
 #define UIP_ARCH_IPCHKSUM        1

@@ -75,6 +75,12 @@ void uip_ds6_link_neighbor_callback(int status, int numtx);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* TSCH_LINK_NEIGHBOR_CALLBACK */
 
+/* The address of the last node we received an EB from (other than our time source).
+ * Used for recovery */
+static linkaddr_t last_eb_nbr_addr;
+/* The join priority advertised by last_eb_nbr_addr */
+static uint8_t last_eb_nbr_jp;
+
 /* Let TSCH select a time source with no help of an upper layer.
  * We do so using statistics from incoming EBs */
 #if TSCH_AUTOSELECT_TIME_SOURCE
@@ -126,6 +132,8 @@ int tsch_is_initialized = 0;
 int tsch_is_coordinator = 0;
 /* Are we associated to a TSCH network? */
 int tsch_is_associated = 0;
+/* Total number of associations since boot */
+int tsch_association_count = 0;
 /* Is the PAN running link-layer security? */
 int tsch_is_pan_secured = LLSEC802154_ENABLED;
 /* The current Absolute Slot Number (ASN) */
@@ -134,7 +142,7 @@ struct tsch_asn_t tsch_current_asn;
  * For PAN coordinator: 0 -- lower is better */
 uint8_t tsch_join_priority;
 /* The current TSCH sequence number, used for unicast data frames only */
-static uint8_t tsch_packet_seqno = 0;
+static uint8_t tsch_packet_seqno;
 /* Current period for EB output */
 static clock_time_t tsch_current_eb_period;
 /* Current period for keepalive output */
@@ -142,6 +150,11 @@ static clock_time_t tsch_current_ka_timeout;
 
 /* timer for sending keepalive messages */
 static struct ctimer keepalive_timer;
+
+/* Statistics on the current session */
+unsigned long tx_count;
+unsigned long rx_count;
+unsigned long sync_count;
 
 /* TSCH processes and protothreads */
 PT_THREAD(tsch_scan(struct pt *pt));
@@ -178,6 +191,11 @@ void
 tsch_set_ka_timeout(uint32_t timeout)
 {
   tsch_current_ka_timeout = timeout;
+  if(timeout == 0) {
+    ctimer_stop(&keepalive_timer);
+  } else {
+    tsch_schedule_keepalive();
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -209,11 +227,18 @@ tsch_reset(void)
 #ifdef TSCH_CALLBACK_LEAVING_NETWORK
   TSCH_CALLBACK_LEAVING_NETWORK();
 #endif
+  linkaddr_copy(&last_eb_nbr_addr, &linkaddr_null);
 #if TSCH_AUTOSELECT_TIME_SOURCE
+  struct nbr_sync_stat *stat;
   best_neighbor_eb_count = 0;
-  nbr_table_register(eb_stats, NULL);
+  /* Remove all nbr stats */
+  stat = nbr_table_head(sync_stats);
+  while(stat != NULL) {
+    nbr_table_remove(sync_stats, stat);
+    stat = nbr_table_next(sync_stats, stat);
+  }
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_set_eb_period(TSCH_EB_PERIOD);
-#endif
 }
 
 /* TSCH keep-alive functions */
@@ -223,17 +248,42 @@ tsch_reset(void)
 static void
 keepalive_packet_sent(void *ptr, int status, int transmissions)
 {
+  if(tsch_is_associated) {
 #ifdef TSCH_LINK_NEIGHBOR_CALLBACK
-  TSCH_LINK_NEIGHBOR_CALLBACK(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
+    TSCH_LINK_NEIGHBOR_CALLBACK(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
 #endif
-  LOG_INFO("KA sent to %u, st %d-%d\n",
-         TSCH_LOG_ID_FROM_LINKADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER)), status, transmissions);
-  tsch_schedule_keepalive();
+    LOG_INFO("KA sent to ");
+    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+    LOG_INFO_(", st %d-%d\n", status, transmissions);
+
+    /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
+    if(status != MAC_TX_OK) {
+      if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
+        LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
+        if(sync_count == 0) {
+          /* We got no synchronization at all in this session, leave the network */
+          tsch_disassociate();
+        }
+      } else {
+        LOG_WARN("re-synchronizing on ");
+        LOG_WARN_LLADDR(&last_eb_nbr_addr);
+        LOG_WARN_("\n");
+        /* We simply pick the last neighbor we receiver sync information from */
+        tsch_queue_update_time_source(&last_eb_nbr_addr);
+        tsch_join_priority = last_eb_nbr_jp + 1;
+        /* Try to get in sync ASAP */
+        tsch_schedule_keepalive_immediately();
+        return;
+      }
+    }
+
+    tsch_schedule_keepalive();
+  }
 }
 /*---------------------------------------------------------------------------*/
 /* Prepare and send a keepalive message */
 static void
-keepalive_send()
+keepalive_send(void *ptr)
 {
   if(tsch_is_associated) {
     struct tsch_neighbor *n = tsch_queue_get_time_source();
@@ -241,20 +291,31 @@ keepalive_send()
     packetbuf_clear();
     packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &n->addr);
     NETSTACK_MAC.send(keepalive_packet_sent, NULL);
-    LOG_INFO("sending KA to %u\n",
-           TSCH_LOG_ID_FROM_LINKADDR(&n->addr));
+    LOG_INFO("sending KA to ");
+    LOG_INFO_LLADDR(&n->addr);
+    LOG_INFO_("\n");
   }
 }
 /*---------------------------------------------------------------------------*/
 /* Set ctimer to send a keepalive message after expiration of TSCH_KEEPALIVE_TIMEOUT */
 void
-tsch_schedule_keepalive()
+tsch_schedule_keepalive(void)
 {
   /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
   if(!tsch_is_coordinator && tsch_is_associated && tsch_current_ka_timeout > 0) {
     unsigned long delay = (tsch_current_ka_timeout - tsch_current_ka_timeout / 10)
       + random_rand() % (tsch_current_ka_timeout / 10);
     ctimer_set(&keepalive_timer, delay, keepalive_send, NULL);
+  }
+}
+/*---------------------------------------------------------------------------*/
+/* Set ctimer to send a keepalive message immediately */
+void
+tsch_schedule_keepalive_immediately(void)
+{
+  /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
+  if(!tsch_is_coordinator && tsch_is_associated) {
+    ctimer_set(&keepalive_timer, 0, keepalive_send, NULL);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -270,6 +331,14 @@ eb_input(struct input_packet *current_input)
   if(tsch_packet_parse_eb(current_input->payload, current_input->len,
                           &frame, &eb_ies, NULL, 1)) {
     /* PAN ID check and authentication done at rx time */
+
+    /* Got an EB from a different neighbor than our time source, keep enough data
+     * to switch to it in case we lose the link to our time source */
+    struct tsch_neighbor *ts = tsch_queue_get_time_source();
+    if(ts == NULL || !linkaddr_cmp(&last_eb_nbr_addr, &ts->addr)) {
+      linkaddr_copy(&last_eb_nbr_addr, (linkaddr_t *)&frame.src_addr);
+      last_eb_nbr_jp = eb_ies.ie_join_priority;
+    }
 
 #if TSCH_AUTOSELECT_TIME_SOURCE
     if(!tsch_is_coordinator) {
@@ -302,11 +371,10 @@ eb_input(struct input_packet *current_input)
         tsch_join_priority = best_stat->jp + 1;
       }
     }
-#endif
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
 
-    struct tsch_neighbor *n = tsch_queue_get_time_source();
     /* Did the EB come from our time source? */
-    if(n != NULL && linkaddr_cmp((linkaddr_t *)&frame.src_addr, &n->addr)) {
+    if(ts != NULL && linkaddr_cmp((linkaddr_t *)&frame.src_addr, &ts->addr)) {
       /* Check for ASN drift */
       int32_t asn_diff = TSCH_ASN_DIFF(current_input->rx_asn, eb_ies.ie_asn);
       if(asn_diff != 0) {
@@ -358,22 +426,22 @@ tsch_rx_process_pending()
       packetbuf_set_attr(PACKETBUF_ATTR_CHANNEL, current_input->channel);
     }
 
-    /* Remove input from ringbuf */
-    ringbufindex_get(&input_ringbuf);
-
     if(is_data) {
       /* Pass to upper layers */
       packet_input();
     } else if(is_eb) {
       eb_input(current_input);
     }
+
+    /* Remove input from ringbuf */
+    ringbufindex_get(&input_ringbuf);
   }
 }
 
 /*---------------------------------------------------------------------------*/
 /* Pass sent packets to upper layer */
 static void
-tsch_tx_process_pending()
+tsch_tx_process_pending(void)
 {
   int16_t dequeued_index;
   /* Loop on accessing (without removing) a pending input packet */
@@ -381,6 +449,10 @@ tsch_tx_process_pending()
     struct tsch_packet *p = dequeued_array[dequeued_index];
     /* Put packet into packetbuf for packet_sent callback */
     queuebuf_to_packetbuf(p->qb);
+    LOG_INFO("packet sent to ");
+    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+    LOG_INFO_(", seqno %u, status %d, tx %d\n",
+      packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), p->ret, p->transmissions);
     /* Call packet_sent callback */
     mac_call_sent_callback(p->sent, p->ptr, p->ret, p->transmissions);
     /* Free packet queuebuf */
@@ -421,7 +493,6 @@ tsch_disassociate(void)
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
     process_post(&tsch_process, PROCESS_EVENT_POLL, NULL);
-    LOG_WARN("leaving the network\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -565,6 +636,9 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
       /* Update global flags */
       tsch_is_associated = 1;
       tsch_is_pan_secured = frame.fcf.security_enabled;
+      tx_count = 0;
+      rx_count = 0;
+      sync_count = 0;
 
       /* Start sending keep-alives now that tsch_is_associated is set */
       tsch_schedule_keepalive();
@@ -573,7 +647,9 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
       TSCH_CALLBACK_JOINING_NETWORK();
 #endif
 
-      LOG_INFO("association done, sec %u, PAN ID %x, asn-%x.%lx, jp %u, timeslot id %u, hopping id %u, slotframe len %u with %u links, from ",
+      tsch_association_count++;
+      LOG_INFO("association done (%u), sec %u, PAN ID %x, asn-%x.%lx, jp %u, timeslot id %u, hopping id %u, slotframe len %u with %u links, from ",
+             tsch_association_count,
              tsch_is_pan_secured,
              frame.src_pid,
              tsch_current_asn.ms1b, tsch_current_asn.ls4b, tsch_join_priority,
@@ -582,7 +658,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
              ies.ie_tsch_slotframe_and_link.slotframe_size,
              ies.ie_tsch_slotframe_and_link.num_links);
       LOG_INFO_LLADDR((const linkaddr_t *)&frame.src_addr);
-      LOG_INFO("\n");
+      LOG_INFO_("\n");
 
       return 1;
     }
@@ -652,7 +728,7 @@ PT_THREAD(tsch_scan(struct pt *pt))
       NETSTACK_RADIO.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t0, sizeof(rtimer_clock_t));
 
       /* Parse EB and attempt to associate */
-      LOG_INFO("association: received packet (%u bytes) on channel %u\n", input_eb.len, current_channel);
+      LOG_INFO("scan: received packet (%u bytes) on channel %u\n", input_eb.len, current_channel);
 
       tsch_associate(&input_eb, t0);
     }
@@ -696,6 +772,9 @@ PROCESS_THREAD(tsch_process, ev, data)
     /* Yield our main process. Slot operation will re-schedule itself
      * as long as we are associated */
     PROCESS_YIELD_UNTIL(!tsch_is_associated);
+
+    LOG_WARN("leaving the network, stats: tx %lu, rx %lu, sync %lu\n",
+      tx_count, rx_count, sync_count);
 
     /* Will need to re-synchronize */
     tsch_reset();
@@ -849,7 +928,11 @@ tsch_init(void)
   tsch_log_init();
   ringbufindex_init(&input_ringbuf, TSCH_MAX_INCOMING_PACKETS);
   ringbufindex_init(&dequeued_ringbuf, TSCH_DEQUEUED_ARRAY_SIZE);
+#if TSCH_AUTOSELECT_TIME_SOURCE
+  nbr_table_register(sync_stats, NULL);
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
 
+  tsch_packet_seqno = random_rand();
   tsch_is_initialized = 1;
 
 #if TSCH_AUTOSTART
@@ -864,7 +947,6 @@ static void
 send_packet(mac_callback_t sent, void *ptr)
 {
   int ret = MAC_TX_DEFERRED;
-  int packet_count_before;
   int hdr_len = 0;
   const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
@@ -906,8 +988,6 @@ send_packet(mac_callback_t sent, void *ptr)
   }
 #endif /* LLSEC802154_ENABLED */
 
-  packet_count_before = tsch_queue_packet_count(addr);
-
 #if !NETSTACK_CONF_BRIDGE_MODE
   /*
    * In the Contiki stack, the source address of a frame is set at the RDC
@@ -925,20 +1005,19 @@ send_packet(mac_callback_t sent, void *ptr)
     /* Enqueue packet */
     p = tsch_queue_add_packet(addr, sent, ptr);
     if(p == NULL) {
-      LOG_ERR("! can't send packet to %u with seqno %u, queue %u %u\n",
-          TSCH_LOG_ID_FROM_LINKADDR(addr), tsch_packet_seqno,
-          packet_count_before,
-          tsch_queue_packet_count(addr));
+      LOG_ERR("! can't send packet to ");
+      LOG_ERR_LLADDR(addr);
+      LOG_ERR_(" with seqno %u, queue %u %u\n",
+          tsch_packet_seqno, tsch_queue_packet_count(addr), tsch_queue_global_packet_count());
       ret = MAC_TX_ERR;
     } else {
       p->header_len = hdr_len;
-      LOG_INFO("send packet to %u with seqno %u, queue %u %u, len %u %u\n",
-             TSCH_LOG_ID_FROM_LINKADDR(addr), tsch_packet_seqno,
-             packet_count_before,
-             tsch_queue_packet_count(addr),
-             p->header_len,
-             queuebuf_datalen(p->qb));
-      (void)packet_count_before; /* Discard "variable set but unused" warning in case of TSCH_LOG_PER_SLOT */
+      LOG_INFO("send packet to ");
+      LOG_INFO_LLADDR(addr);
+      LOG_INFO_(" with seqno %u, queue %u %u, len %u %u\n",
+             tsch_packet_seqno,
+             tsch_queue_packet_count(addr), tsch_queue_global_packet_count(),
+             p->header_len, queuebuf_datalen(p->qb));
     }
   }
   if(ret != MAC_TX_DEFERRED) {
@@ -964,18 +1043,18 @@ packet_input(void)
       duplicate = mac_sequence_is_duplicate();
       if(duplicate) {
         /* Drop the packet. */
-        LOG_WARN("! drop dup ll from %u seqno %u\n",
-               TSCH_LOG_ID_FROM_LINKADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER)),
-               packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+        LOG_WARN("! drop dup ll from ");
+        LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+        LOG_WARN_(" seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
       } else {
         mac_sequence_register_seqno();
       }
     }
 
     if(!duplicate) {
-      LOG_INFO("received from %u with seqno %u\n",
-             TSCH_LOG_ID_FROM_LINKADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER)),
-             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+      LOG_INFO("received from ");
+      LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+      LOG_INFO_(" with seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
       NETSTACK_NETWORK.input();
     }
   }

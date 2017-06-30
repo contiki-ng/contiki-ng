@@ -53,7 +53,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "IPv6 Data Structures"
+#define LOG_MODULE "IPv6 DS"
 #define LOG_LEVEL IPV6_LOG_LEVEL
 
 struct etimer uip_ds6_timer_periodic;                           /**< Timer for maintenance of data structures */
@@ -210,6 +210,10 @@ uip_ds6_list_loop(uip_ds6_element_t *list, uint8_t size,
 {
   uip_ds6_element_t *element;
 
+  if(list == NULL || ipaddr == NULL || out_element == NULL) {
+    return NOSPACE;
+  }
+
   *out_element = NULL;
 
   for(element = list;
@@ -250,7 +254,7 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     locprefix->plifetime = ptime;
     LOG_INFO("Adding prefix ");
     LOG_INFO_6ADDR(&locprefix->ipaddr);
-    LOG_INFO("length %u, flags %x, Valid lifetime %lx, Preffered lifetime %lx\n",
+    LOG_INFO_("length %u, flags %x, Valid lifetime %lx, Preffered lifetime %lx\n",
        ipaddrlen, flags, vtime, ptime);
     return locprefix;
   } else {
@@ -280,7 +284,7 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     }
     LOG_INFO("Adding prefix ");
     LOG_INFO_6ADDR(&locprefix->ipaddr);
-    LOG_INFO("length %u, vlifetime %lu\n", ipaddrlen, interval);
+    LOG_INFO_("length %u, vlifetime %lu\n", ipaddrlen, interval);
     return locprefix;
   }
   return NULL;
@@ -616,7 +620,7 @@ uip_ds6_dad(uip_ds6_addr_t *addr)
    */
   LOG_INFO("DAD succeeded, ipaddr: ");
   LOG_INFO_6ADDR(&addr->ipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   addr->state = ADDR_PREFERRED;
   return;

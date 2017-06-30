@@ -44,13 +44,30 @@
 #include "net/nbr-table.h"
 #include "sys/stimer.h"
 #include "lib/list.h"
+#if UIP_CONF_IPV6_RPL
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl-conf.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl-conf.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#endif
+
+#ifdef UIP_CONF_MAX_ROUTES
+#define UIP_MAX_ROUTES UIP_CONF_MAX_ROUTES
+#else /* UIP_CONF_MAX_ROUTES */
+#if RPL_WITH_STORING
+#define UIP_MAX_ROUTES NETSTCK_ROUTING_STATE_SIZE
+#else
+#define UIP_MAX_ROUTES 0
+#endif
+#endif /* UIP_CONF_MAX_ROUTES */
 
 NBR_TABLE_DECLARE(nbr_routes);
 
 void uip_ds6_route_init(void);
 
 #ifndef UIP_CONF_UIP_DS6_NOTIFICATIONS
-#define UIP_DS6_NOTIFICATIONS (UIP_CONF_MAX_ROUTES != 0)
+#define UIP_DS6_NOTIFICATIONS (UIP_MAX_ROUTES != 0)
 #else
 #define UIP_DS6_NOTIFICATIONS UIP_CONF_UIP_DS6_NOTIFICATIONS
 #endif
@@ -82,11 +99,11 @@ void uip_ds6_notification_rm(struct uip_ds6_notification *n);
 #endif
 
 /* Routing table */
-#ifdef UIP_CONF_MAX_ROUTES
-#define UIP_DS6_ROUTE_NB UIP_CONF_MAX_ROUTES
-#else /* UIP_CONF_MAX_ROUTES */
+#ifdef UIP_MAX_ROUTES
+#define UIP_DS6_ROUTE_NB UIP_MAX_ROUTES
+#else /* UIP_MAX_ROUTES */
 #define UIP_DS6_ROUTE_NB 4
-#endif /* UIP_CONF_MAX_ROUTES */
+#endif /* UIP_MAX_ROUTES */
 
 /** \brief define some additional RPL related route state and
  *  neighbor callback for RPL - if not a DS6_ROUTE_STATE is already set */

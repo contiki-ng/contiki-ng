@@ -59,8 +59,7 @@
 #include "sys/cooja_mt.h"
 #endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
 
-#include <stdio.h>
-
+#include "sys/log.h"
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
  * timeslot events */
 #ifndef TSCH_DEBUG_INIT
@@ -350,49 +349,6 @@ get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **
   return p;
 }
 /*---------------------------------------------------------------------------*/
-/* Post TX: Update neighbor state after a transmission */
-static int
-update_neighbor_state(struct tsch_neighbor *n, struct tsch_packet *p,
-                      struct tsch_link *link, uint8_t mac_tx_status)
-{
-  int in_queue = 1;
-  int is_shared_link = link->link_options & LINK_OPTION_SHARED;
-  int is_unicast = !n->is_broadcast;
-
-  if(mac_tx_status == MAC_TX_OK) {
-    /* Successful transmission */
-    tsch_queue_remove_packet_from_queue(n);
-    in_queue = 0;
-
-    /* Update CSMA state in the unicast case */
-    if(is_unicast) {
-      if(is_shared_link || tsch_queue_is_empty(n)) {
-        /* If this is a shared link, reset backoff on success.
-         * Otherwise, do so only is the queue is empty */
-        tsch_queue_backoff_reset(n);
-      }
-    }
-  } else {
-    /* Failed transmission */
-    if(p->transmissions >= TSCH_MAC_MAX_FRAME_RETRIES + 1) {
-      /* Drop packet */
-      tsch_queue_remove_packet_from_queue(n);
-      in_queue = 0;
-    }
-    /* Update CSMA state in the unicast case */
-    if(is_unicast) {
-      /* Failures on dedicated (== non-shared) leave the backoff
-       * window nor exponent unchanged */
-      if(is_shared_link) {
-        /* Shared link: increment backoff exponent, pick a new window */
-        tsch_queue_backoff_inc(n);
-      }
-    }
-  }
-
-  return in_queue;
-}
-/*---------------------------------------------------------------------------*/
 /**
  * This function turns on the radio. Its semantics is dependent on
  * the value of TSCH_RADIO_ON_DURING_TIMESLOT constant:
@@ -558,6 +514,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           TSCH_DEBUG_TX_EVENT();
           /* send packet already in radio tx buffer */
           mac_tx_status = NETSTACK_RADIO.transmit(packet_len);
+          tx_count++;
           /* Save tx timestamp */
           tx_start_time = current_slot_start + tsch_timing[tsch_ts_tx_offset];
           /* calculate TX duration based on sent packet len */
@@ -678,8 +635,8 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
     current_packet->transmissions++;
     current_packet->ret = mac_tx_status;
 
-    /* Post TX: Update neighbor state */
-    in_queue = update_neighbor_state(current_neighbor, current_packet, current_link, mac_tx_status);
+    /* Post TX: Update neighbor queue state */
+    in_queue = tsch_queue_packet_sent(current_neighbor, current_packet, current_link, mac_tx_status);
 
     /* The packet was dequeued, add it to dequeued_ringbuf for later processing */
     if(in_queue == 0) {
@@ -690,17 +647,18 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
     /* Log every tx attempt */
     TSCH_LOG_ADD(tsch_log_tx,
         log->tx.mac_tx_status = mac_tx_status;
-    log->tx.num_tx = current_packet->transmissions;
-    log->tx.datalen = queuebuf_datalen(current_packet->qb);
-    log->tx.drift = drift_correction;
-    log->tx.drift_used = is_drift_correction_used;
-    log->tx.is_data = ((((uint8_t *)(queuebuf_dataptr(current_packet->qb)))[0]) & 7) == FRAME802154_DATAFRAME;
+        log->tx.num_tx = current_packet->transmissions;
+        log->tx.datalen = queuebuf_datalen(current_packet->qb);
+        log->tx.drift = drift_correction;
+        log->tx.drift_used = is_drift_correction_used;
+        log->tx.is_data = ((((uint8_t *)(queuebuf_dataptr(current_packet->qb)))[0]) & 7) == FRAME802154_DATAFRAME;
 #if LLSEC802154_ENABLED
-    log->tx.sec_level = queuebuf_attr(current_packet->qb, PACKETBUF_ATTR_SECURITY_LEVEL);
+        log->tx.sec_level = queuebuf_attr(current_packet->qb, PACKETBUF_ATTR_SECURITY_LEVEL);
 #else /* LLSEC802154_ENABLED */
-    log->tx.sec_level = 0;
+        log->tx.sec_level = 0;
 #endif /* LLSEC802154_ENABLED */
-    log->tx.dest = TSCH_LOG_ID_FROM_LINKADDR(queuebuf_addr(current_packet->qb, PACKETBUF_ADDR_RECEIVER));
+        linkaddr_copy(&log->tx.dest, queuebuf_addr(current_packet->qb, PACKETBUF_ADDR_RECEIVER));
+        log->tx.seqno = queuebuf_attr(current_packet->qb, PACKETBUF_ATTR_MAC_SEQNO);
     );
 
     /* Poll process for later processing of packet sent events and logs */
@@ -803,6 +761,16 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 
         packet_duration = TSCH_PACKET_DURATION(current_input->len);
 
+        if(frame_valid) {
+          if(frame.fcf.frame_type != FRAME802154_DATAFRAME
+            && frame.fcf.frame_type != FRAME802154_BEACONFRAME) {
+              TSCH_LOG_ADD(tsch_log_message,
+                  snprintf(log->message, sizeof(log->message),
+                  "!discarding frame with type %u, len %u", frame.fcf.frame_type, current_input->len));
+              frame_valid = 0;
+          }
+        }
+
 #if LLSEC802154_ENABLED
         /* Decrypt and verify incoming frame */
         if(frame_valid) {
@@ -828,6 +796,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
           if(linkaddr_cmp(&destination_address, &linkaddr_node_addr)
              || linkaddr_cmp(&destination_address, &linkaddr_null)) {
             int do_nack = 0;
+            rx_count++;
             estimated_drift = RTIMER_CLOCK_DIFF(expected_rx_time, rx_start_time);
 
 #if TSCH_TIMESYNC_REMOVE_JITTER
@@ -885,6 +854,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               /* Save estimated drift */
               drift_correction = -estimated_drift;
               is_drift_correction_used = 1;
+              sync_count++;
               tsch_timesync_update(n, since_last_timesync, -estimated_drift);
               tsch_schedule_keepalive();
             }
@@ -894,7 +864,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 
             /* Log every reception */
             TSCH_LOG_ADD(tsch_log_rx,
-              log->rx.src = TSCH_LOG_ID_FROM_LINKADDR((linkaddr_t*)&frame.src_addr);
+              linkaddr_copy(&log->rx.src, (linkaddr_t *)&frame.src_addr);
               log->rx.is_unicast = frame.fcf.ack_required;
               log->rx.datalen = current_input->len;
               log->rx.drift = drift_correction;
@@ -902,6 +872,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               log->rx.is_data = frame.fcf.frame_type == FRAME802154_DATAFRAME;
               log->rx.sec_level = frame.aux_hdr.security_control.security_level;
               log->rx.estimated_drift = estimated_drift;
+              log->rx.seqno = frame.seq;
             );
           }
 
@@ -1071,7 +1042,7 @@ tsch_slot_operation_start(void)
     /* Update current slot start */
     prev_slot_start = current_slot_start;
     current_slot_start += time_to_next_active_slot;
-  } while(!tsch_schedule_slot_operation(&slot_operation_timer, prev_slot_start, time_to_next_active_slot, "association"));
+  } while(!tsch_schedule_slot_operation(&slot_operation_timer, prev_slot_start, time_to_next_active_slot, "assoc"));
 }
 /*---------------------------------------------------------------------------*/
 /* Start actual slot operation */

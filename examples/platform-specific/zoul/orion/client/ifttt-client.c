@@ -54,7 +54,6 @@ AUTOSTART_PROCESSES(&http_example_process);
 static void
 reconnect(void *dummy)
 {
-  rpl_set_mode(RPL_MODE_MESH);
   leds_on(LEDS_GREEN);
   http_socket_post(&s, url_buffer, NULL, 0, NULL, callback, NULL);
 }

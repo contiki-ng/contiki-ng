@@ -49,7 +49,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "IPv6 ICMPv6"
+#define LOG_MODULE "ICMPv6"
 #define LOG_LEVEL IPV6_LOG_LEVEL
 
 #define UIP_IP_BUF                ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
@@ -59,7 +59,12 @@
 #define UIP_FIRST_EXT_BUF        ((struct uip_ext_hdr *)&uip_buf[UIP_LLIPH_LEN])
 
 #if UIP_CONF_IPV6_RPL
-#include "rpl/rpl.h"
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #endif /* UIP_CONF_IPV6_RPL */
 
 /** \brief temporary IP address */
@@ -121,9 +126,9 @@ echo_request_input(void)
    */
   LOG_INFO("Received Echo Request from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   /* IP header */
   UIP_IP_BUF->ttl = uip_ds6_if.cur_hop_limit;
@@ -166,9 +171,9 @@ echo_request_input(void)
 
   LOG_INFO("Sending Echo Reply to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" from ");
+  LOG_INFO_(" from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   UIP_STAT(++uip_stat.icmp.sent);
   return;
 }
@@ -189,7 +194,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   }
 
 #if UIP_CONF_IPV6_RPL
-  rpl_remove_header();
+  rpl_ext_header_remove();
 #else
   uip_ext_len = 0;
 #endif /* UIP_CONF_IPV6_RPL */
@@ -253,9 +258,9 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
 
   LOG_WARN("Sending ICMPv6 ERROR message type %d code %d to ", type, code);
   LOG_WARN_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_WARN(" from ");
+  LOG_WARN_(" from ");
   LOG_WARN_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_WARN("\n");
+  LOG_WARN_("\n");
   return;
 }
 
@@ -297,9 +302,9 @@ echo_reply_input(void)
 
   LOG_INFO("Received Echo Reply from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   uip_ipaddr_copy(&sender, &UIP_IP_BUF->srcipaddr);
   ttl = UIP_IP_BUF->ttl;

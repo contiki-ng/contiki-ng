@@ -153,17 +153,17 @@ tsch_queue_update_time_source(const linkaddr_t *new_addr)
       }
 
       if(new_time_src != old_time_src) {
-        LOG_INFO("update time source: %u -> %u\n",
-               TSCH_LOG_ID_FROM_LINKADDR(old_time_src ? &old_time_src->addr : NULL),
-               TSCH_LOG_ID_FROM_LINKADDR(new_time_src ? &new_time_src->addr : NULL));
+        LOG_INFO("update time source: ");
+        LOG_INFO_LLADDR(old_time_src ? &old_time_src->addr : NULL);
+        LOG_INFO_(" -> ");
+        LOG_INFO_LLADDR(new_time_src ? &new_time_src->addr : NULL);
+        LOG_INFO_("\n");
 
         /* Update time source */
         if(new_time_src != NULL) {
           new_time_src->is_time_source = 1;
           /* (Re)set keep-alive timeout */
           tsch_set_ka_timeout(TSCH_KEEPALIVE_TIMEOUT);
-          /* Start sending keepalives */
-          tsch_schedule_keepalive();
         } else {
           /* Stop sending keepalives */
           tsch_set_ka_timeout(0);
@@ -199,7 +199,6 @@ tsch_queue_flush_nbr_queue(struct tsch_neighbor *n)
       /* Free packet queuebuf */
       tsch_queue_free_packet(p);
     }
-    LOG_INFO("packet deleted %p\n", p);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -251,7 +250,7 @@ tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr)
             /* Add to ringbuf (actual add committed through atomic operation) */
             n->tx_array[put_index] = p;
             ringbufindex_put(&n->tx_ringbuf);
-            LOG_INFO("packet is added put_index %u, packet %p\n",
+            LOG_DBG("packet is added put_index %u, packet %p\n",
                    put_index, p);
             return p;
           } else {
@@ -263,6 +262,13 @@ tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr)
   }
   LOG_ERR("! add packet failed: %u %p %d %p %p\n", tsch_is_locked(), n, put_index, p, p ? p->qb : NULL);
   return 0;
+}
+/*---------------------------------------------------------------------------*/
+/* Returns the number of packets currently in any TSCH queue */
+int
+tsch_queue_global_packet_count(void)
+{
+  return QUEUEBUF_NUM - memb_numfree(&packet_memb);
 }
 /*---------------------------------------------------------------------------*/
 /* Returns the number of packets currently in the queue */
@@ -288,7 +294,6 @@ tsch_queue_remove_packet_from_queue(struct tsch_neighbor *n)
       /* Get and remove packet from ringbuf (remove committed through an atomic operation */
       int16_t get_index = ringbufindex_get(&n->tx_ringbuf);
       if(get_index != -1) {
-        LOG_INFO("packet is removed, get_index %u\n", get_index);
         return n->tx_array[get_index];
       } else {
         return NULL;
@@ -306,6 +311,49 @@ tsch_queue_free_packet(struct tsch_packet *p)
     queuebuf_free(p->qb);
     memb_free(&packet_memb, p);
   }
+}
+/*---------------------------------------------------------------------------*/
+/* Updates neighbor queue state after a transmission */
+int
+tsch_queue_packet_sent(struct tsch_neighbor *n, struct tsch_packet *p,
+                      struct tsch_link *link, uint8_t mac_tx_status)
+{
+  int in_queue = 1;
+  int is_shared_link = link->link_options & LINK_OPTION_SHARED;
+  int is_unicast = !n->is_broadcast;
+
+  if(mac_tx_status == MAC_TX_OK) {
+    /* Successful transmission */
+    tsch_queue_remove_packet_from_queue(n);
+    in_queue = 0;
+
+    /* Update CSMA state in the unicast case */
+    if(is_unicast) {
+      if(is_shared_link || tsch_queue_is_empty(n)) {
+        /* If this is a shared link, reset backoff on success.
+         * Otherwise, do so only is the queue is empty */
+        tsch_queue_backoff_reset(n);
+      }
+    }
+  } else {
+    /* Failed transmission */
+    if(p->transmissions >= TSCH_MAC_MAX_FRAME_RETRIES + 1) {
+      /* Drop packet */
+      tsch_queue_remove_packet_from_queue(n);
+      in_queue = 0;
+    }
+    /* Update CSMA state in the unicast case */
+    if(is_unicast) {
+      /* Failures on dedicated (== non-shared) leave the backoff
+       * window nor exponent unchanged */
+      if(is_shared_link) {
+        /* Shared link: increment backoff exponent, pick a new window */
+        tsch_queue_backoff_inc(n);
+      }
+    }
+  }
+
+  return in_queue;
 }
 /*---------------------------------------------------------------------------*/
 /* Flush all neighbor queues */

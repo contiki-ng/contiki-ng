@@ -166,7 +166,7 @@ rank_via_parent(rpl_parent_t *p)
   uint16_t path_cost;
 
   if(p == NULL || p->dag == NULL || p->dag->instance == NULL) {
-    return INFINITE_RANK;
+    return RPL_INFINITE_RANK;
   }
 
   min_hoprankinc = p->dag->instance->min_hoprankinc;

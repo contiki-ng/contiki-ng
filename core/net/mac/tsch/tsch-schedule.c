@@ -57,7 +57,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "TSCH Schedule"
+#define LOG_MODULE "TSCH Sched"
 #define LOG_LEVEL MAC_LOG_LEVEL
 
 /* Pre-allocated space for links */
@@ -208,9 +208,10 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
         }
         linkaddr_copy(&l->addr, address);
 
-        LOG_INFO("add_link %u %u %u %u %u %u\n",
-               slotframe->handle, link_options, link_type, timeslot, channel_offset, TSCH_LOG_ID_FROM_LINKADDR(address));
-
+        LOG_INFO("add_link %u %u %u %u %u ",
+               slotframe->handle, link_options, link_type, timeslot, channel_offset);
+        LOG_INFO_LLADDR(address);
+        LOG_INFO_("\n");
         /* Release the lock before we update the neighbor (will take the lock) */
         tsch_release_lock();
 
@@ -249,9 +250,10 @@ tsch_schedule_remove_link(struct tsch_slotframe *slotframe, struct tsch_link *l)
       if(l == current_link) {
         current_link = NULL;
       }
-      LOG_INFO("remove_link %u %u %u %u %u\n",
-             slotframe->handle, l->link_options, l->timeslot, l->channel_offset,
-             TSCH_LOG_ID_FROM_LINKADDR(&l->addr));
+      LOG_INFO("remove_link %u %u %u %u ",
+             slotframe->handle, l->link_options, l->timeslot, l->channel_offset);
+      LOG_INFO_LLADDR(&l->addr);
+      LOG_INFO_("\n");
 
       list_remove(slotframe->links_list, l);
       memb_free(&link_memb, l);

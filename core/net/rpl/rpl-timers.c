@@ -54,7 +54,7 @@
 
 /* A configurable function called after update of the RPL DIO interval */
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
-void RPL_CALLBACK_NEW_DIO_INTERVAL(uint8_t dio_interval);
+void RPL_CALLBACK_NEW_DIO_INTERVAL(clock_time_t dio_interval);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 
 #ifdef RPL_PROBING_SELECT_FUNC
@@ -150,7 +150,7 @@ new_dio_interval(rpl_instance_t *instance)
   ctimer_set(&instance->dio_timer, ticks, &handle_dio_timer, instance);
 
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
-  RPL_CALLBACK_NEW_DIO_INTERVAL(instance->dio_intcurrent);
+  RPL_CALLBACK_NEW_DIO_INTERVAL((CLOCK_SECOND * 1UL << instance->dio_intcurrent) / 1000);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 }
 /*---------------------------------------------------------------------------*/
@@ -362,7 +362,7 @@ static void
 handle_unicast_dio_timer(void *ptr)
 {
   rpl_instance_t *instance = (rpl_instance_t *)ptr;
-  uip_ipaddr_t *target_ipaddr = rpl_get_parent_ipaddr(instance->unicast_dio_target);
+  uip_ipaddr_t *target_ipaddr = rpl_parent_get_ipaddr(instance->unicast_dio_target);
 
   if(target_ipaddr != NULL) {
     dio_output(instance, target_ipaddr);
@@ -402,7 +402,7 @@ get_probing_target(rpl_dag_t *dag)
 
   rpl_parent_t *p;
   rpl_parent_t *probing_target = NULL;
-  rpl_rank_t probing_target_rank = INFINITE_RANK;
+  rpl_rank_t probing_target_rank = RPL_INFINITE_RANK;
   clock_time_t probing_target_age = 0;
   clock_time_t clock_now = clock_time();
 
@@ -462,7 +462,7 @@ handle_probing_timer(void *ptr)
 {
   rpl_instance_t *instance = (rpl_instance_t *)ptr;
   rpl_parent_t *probing_target = RPL_PROBING_SELECT_FUNC(instance->current_dag);
-  uip_ipaddr_t *target_ipaddr = rpl_get_parent_ipaddr(probing_target);
+  uip_ipaddr_t *target_ipaddr = rpl_parent_get_ipaddr(probing_target);
 
   /* Perform probing */
   if(target_ipaddr != NULL) {

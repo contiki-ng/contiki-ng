@@ -87,7 +87,7 @@
 #undef COAP_PROXY_OPTION_PROCESSING
 #define COAP_PROXY_OPTION_PROCESSING   0
 
-/* Turn off DAO ACK to make code smaller */
+/* Turn off DAO-ACK to make code smaller */
 #undef RPL_CONF_WITH_DAO_ACK
 #define RPL_CONF_WITH_DAO_ACK          0
 

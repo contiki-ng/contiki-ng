@@ -89,16 +89,13 @@
 
 #define UIP_CONF_ROUTER             1
 
-/* configure number of neighbors and routes */
+/* configure network size and density */
+#ifndef NETSTCK_ROUTING_STATE_SIZE
+#define NETSTCK_ROUTING_STATE_SIZE   300
+#endif /* NETSTCK_ROUTING_STATE_SIZE */
 #ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     300
+#define NBR_TABLE_CONF_MAX_NEIGHBORS 300
 #endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
-#ifndef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   300
-#endif /* UIP_CONF_MAX_ROUTES */
-#ifndef RPL_NS_CONF_LINK_NUM
-#define RPL_NS_CONF_LINK_NUM 300
-#endif /* RPL_NS_CONF_LINK_NUM */
 
 #define TCPIP_CONF_ANNOTATE_TRANSMISSIONS 1
 
@@ -174,9 +171,8 @@ typedef uint64_t rtimer_clock_t;
 
 #define UIP_CONF_DHCP_LIGHT
 #define UIP_CONF_LLH_LEN         0
-#define UIP_CONF_MAX_CONNECTIONS 4
+#define UIP_CONF_TCP_CONNS 4
 #define UIP_CONF_MAX_LISTENPORTS 8
-#define UIP_CONF_UDP_CONNS       12
 #define UIP_CONF_FWCACHE_SIZE    30
 #define UIP_CONF_BROADCAST       1
 #define UIP_ARCH_IPCHKSUM        1

@@ -31,7 +31,8 @@
 #include "contiki-lib.h"
 #include "contiki-net.h"
 #include "net/ip/uip.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
+#include "rpl-dag-root.h"
 
 #include "net/netstack.h"
 #include "dev/button-sensor.h"
@@ -123,7 +124,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
  * Note Wireshark's IPCMV6 checksum verification depends on the correct
  * uncompressed addresses.
  */
- 
+
 #if 0
 /* Mode 1 - 64 bits inline */
    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
@@ -135,20 +136,10 @@ PROCESS_THREAD(udp_server_process, ev, data)
   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
 #endif
-
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_MANUAL);
-  root_if = uip_ds6_addr_lookup(&ipaddr);
-  if(root_if != NULL) {
-    rpl_dag_t *dag;
-    dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)&ipaddr);
-    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    rpl_set_prefix(dag, &ipaddr, 64);
-    PRINTF("created a new RPL dag\n");
-  } else {
-    PRINTF("failed to create a new RPL DAG\n");
-  }
+  rpl_dag_root_init(&ipaddr, &ipaddr);
+  rpl_dag_root_init_dag_immediately();
 #endif /* UIP_CONF_ROUTER */
-  
+
   print_local_addresses();
 
   server_conn = udp_new(NULL, UIP_HTONS(UDP_CLIENT_PORT), NULL);
@@ -169,7 +160,11 @@ PROCESS_THREAD(udp_server_process, ev, data)
       tcpip_handler();
     } else if (ev == sensors_event && data == &button_sensor) {
       PRINTF("Initiaing global repair\n");
+#if UIP_CONF_IPV6_RPL_LITE
+      rpl_global_repair();
+#else
       rpl_repair_root(RPL_DEFAULT_INSTANCE);
+#endif
     }
   }
 

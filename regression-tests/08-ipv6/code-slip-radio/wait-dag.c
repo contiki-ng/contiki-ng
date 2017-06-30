@@ -33,7 +33,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "net/ip/uip.h"
 #include <string.h>
 

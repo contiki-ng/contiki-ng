@@ -134,7 +134,7 @@ update_nbr(void)
          * This is the preferred parent for the DAG and must not be removed
          * Note: this assumes that only RPL adds default routes.
          */
-      } else if(is_used == 0 && worst_rank < INFINITE_RANK &&
+      } else if(is_used == 0 && worst_rank < RPL_INFINITE_RANK &&
                 parent->rank > 0 &&
                 parent->dag != NULL &&
                 parent->dag->instance != NULL &&
@@ -150,7 +150,7 @@ update_nbr(void)
     if(is_used == 0) {
       /* This neighbor is neither parent or child and can be safely removed */
       worst_rank_nbr = lladdr;
-      worst_rank = INFINITE_RANK;
+      worst_rank = RPL_INFINITE_RANK;
     } else if(is_used > 1) {
       PRINTF("NBR-POLICY: *** Neighbor is both child and candidate parent: ");
       PRINTLLADDR((uip_lladdr_t *)lladdr);
@@ -225,7 +225,7 @@ find_removable_dao(uip_ipaddr_t *from, rpl_instance_t *instance)
       max = NBR_TABLE_MAX_NEIGHBORS;
     }
   }
-  
+
   /* Check if this DAO sender is not yet neighbor and there is already too
      many children. */
   if(num_children >= max) {

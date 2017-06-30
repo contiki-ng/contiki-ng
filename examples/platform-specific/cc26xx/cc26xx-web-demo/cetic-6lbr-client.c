@@ -35,7 +35,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
 #include "net/ip/uip.h"
 
 #include <string.h>
@@ -104,6 +104,7 @@ timeout_handler(void)
   uip_ip6addr_t *globaladdr = NULL;
   uint16_t dest_port = CETIC_6LBR_NODE_INFO_PORT;
   int has_dest = 0;
+  rpl_instance_t *instance;
   rpl_dag_t *dag;
 
   uip_ds6_addr_t *addr_desc = uip_ds6_get_global(ADDR_PREFERRED);
@@ -153,9 +154,9 @@ timeout_handler(void)
       PRINTF("Client sending to: ");
       PRINT6ADDR(&client_conn->ripaddr);
       i = sprintf(buf, "%d | ", ++seq_id);
-      dag = rpl_get_any_dag();
-      if(dag && dag->instance->def_route) {
-        add_ipaddr(buf + i, &dag->instance->def_route->ipaddr);
+      instance = rpl_get_default_instance();
+      if(instance && instance->dag.preferred_parent) {
+        add_ipaddr(buf + i, rpl_parent_get_ipaddr(instance->dag.preferred_parent));
       } else {
         sprintf(buf + i, "(null)");
       }

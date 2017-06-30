@@ -35,7 +35,7 @@
 *         The 802.15.4 standard CSMA protocol (nonbeacon-enabled)
  * \author
  *         Adam Dunkels <adam@sics.se>
- *         Simon Duquennoy <simon.duquennoy@ri.se>
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
 #include "net/mac/csma/csma.h"
@@ -70,7 +70,7 @@ input_packet(void)
 #if CSMA_802154_AUTOACK
   if(packetbuf_datalen() == CSMA_ACK_LEN) {
     /* Ignore ack packets */
-    LOG_INFO("ignored ack\n");
+    LOG_DBG("ignored ack\n");
   } else
 #endif /* CSMA_802154_AUTOACK */
   if(NETSTACK_FRAMER.parse() < 0) {
@@ -87,8 +87,9 @@ input_packet(void)
     duplicate = mac_sequence_is_duplicate();
     if(duplicate) {
       /* Drop the packet. */
-      LOG_WARN("drop duplicate link layer packet %u\n",
-             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+      LOG_WARN("drop duplicate link layer packet from ");
+      LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+      LOG_WARN_(", seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     } else {
       mac_sequence_register_seqno();
     }
@@ -112,6 +113,9 @@ input_packet(void)
     }
 #endif /* CSMA_SEND_802154_ACK */
     if(!duplicate) {
+      LOG_WARN("received packet from ");
+      LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+      LOG_WARN_(", seqno %u, len %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), packetbuf_datalen());
       NETSTACK_NETWORK.input();
     }
   }

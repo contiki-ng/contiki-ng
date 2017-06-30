@@ -140,6 +140,7 @@ extract_lladdr_from_llao_aligned(uip_lladdr_t *dest) {
 }
 #endif /* UIP_ND6_SEND_NA || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER */
 /*------------------------------------------------------------------*/
+#if UIP_ND6_SEND_NA /* UIP_ND6_SEND_NA */
 /* create a llao */
 static void
 create_llao(uint8_t *llao, uint8_t type) {
@@ -150,7 +151,7 @@ create_llao(uint8_t *llao, uint8_t type) {
   memset(&llao[UIP_ND6_OPT_DATA_OFFSET + UIP_LLADDR_LEN], 0,
          UIP_ND6_OPT_LLAO_LEN - 2 - UIP_LLADDR_LEN);
 }
-
+#endif /* UIP_ND6_SEND_NA */
 /*------------------------------------------------------------------*/
  /**
  * Neighbor Solicitation Processing
@@ -180,11 +181,11 @@ ns_input(void)
   uint8_t flags;
   LOG_INFO("Received NS from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" with target address ");
+  LOG_INFO_(" with target address ");
   LOG_INFO_6ADDR((uip_ipaddr_t *) (&UIP_ND6_NS_BUF->tgtipaddr));
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
 #if UIP_CONF_IPV6_CHECKS
@@ -346,11 +347,11 @@ create_na:
   UIP_STAT(++uip_stat.nd6.sent);
   LOG_INFO("Sending NA to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" from ");
+  LOG_INFO_(" from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" with target address ");
+  LOG_INFO_(" with target address ");
   LOG_INFO_6ADDR(&UIP_ND6_NA_BUF->tgtipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   return;
 
 discard:
@@ -417,11 +418,11 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
   UIP_STAT(++uip_stat.nd6.sent);
   LOG_INFO("Sending NS to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" from ");
+  LOG_INFO_(" from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" with target address ");
+  LOG_INFO_(" with target address ");
   LOG_INFO_6ADDR(tgt);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   return;
 }
 #endif /* UIP_ND6_SEND_NS */
@@ -456,11 +457,11 @@ na_input(void)
 
   LOG_INFO("Received NA from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" with target address ");
+  LOG_INFO_(" with target address ");
   LOG_INFO_6ADDR((uip_ipaddr_t *) (&UIP_ND6_NA_BUF->tgtipaddr));
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
   /*
@@ -612,9 +613,9 @@ rs_input(void)
 
   LOG_INFO("Received RS from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
 
@@ -800,9 +801,9 @@ uip_nd6_ra_output(uip_ipaddr_t * dest)
   UIP_STAT(++uip_stat.nd6.sent);
   LOG_INFO("Sending RA to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" from ");
+  LOG_INFO_(" from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   return;
 }
 #endif /* UIP_ND6_SEND_RA */
@@ -842,9 +843,9 @@ uip_nd6_rs_output(void)
   UIP_STAT(++uip_stat.nd6.sent);
   LOG_INFO("Sending RS to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO(" from ");
+  LOG_INFO_(" from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -864,9 +865,9 @@ ra_input(void)
 
   LOG_INFO("Received RA from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO(" to ");
+  LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
 #if UIP_CONF_IPV6_CHECKS
@@ -972,7 +973,7 @@ ra_input(void)
             default:
               LOG_DBG("Updating timer of prefix ");
               LOG_DBG_6ADDR(&prefix->ipaddr);
-              LOG_DBG(" new value %lu\n", uip_ntohl(nd6_opt_prefix_info->validlt));
+              LOG_DBG_(" new value %lu\n", uip_ntohl(nd6_opt_prefix_info->validlt));
               stimer_set(&prefix->vlifetime,
                          uip_ntohl(nd6_opt_prefix_info->validlt));
               prefix->isinfinite = 0;
@@ -997,7 +998,7 @@ ra_input(void)
                   stimer_remaining(&addr->vlifetime))) {
                 LOG_DBG("Updating timer of address ");
                 LOG_DBG_6ADDR(&addr->ipaddr);
-                LOG_DBG(" new value %lu\n",
+                LOG_DBG_(" new value %lu\n",
                        uip_ntohl(nd6_opt_prefix_info->validlt));
                 stimer_set(&addr->vlifetime,
                            uip_ntohl(nd6_opt_prefix_info->validlt));
@@ -1005,7 +1006,7 @@ ra_input(void)
                 stimer_set(&addr->vlifetime, 2 * 60 * 60);
                 LOG_DBG("Updating timer of address ");
                 LOG_DBG_6ADDR(&addr->ipaddr);
-                LOG_DBG(" new value %lu\n", (unsigned long)(2 * 60 * 60));
+                LOG_DBG_(" new value %lu\n", (unsigned long)(2 * 60 * 60));
               }
               addr->isinfinite = 0;
             } else {
@@ -1032,9 +1033,9 @@ ra_input(void)
         uip_ipaddr_t *ip = (uip_ipaddr_t *)(&UIP_ND6_OPT_RDNSS_BUF->ip);
         LOG_DBG("got %d nameservers\n", naddr);
         while(naddr-- > 0) {
-          LOG_DBG(" nameserver: ");
+          LOG_DBG("nameserver: ");
           LOG_DBG_6ADDR(ip);
-          LOG_DBG(" lifetime: %lx\n", uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
+          LOG_DBG_(" lifetime: %lx\n", uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
           uip_nameserver_update(ip, uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
           ip++;
         }
@@ -1042,7 +1043,7 @@ ra_input(void)
       break;
 #endif /* UIP_ND6_RA_RDNSS */
     default:
-      LOG_ERR("ND option not supported in RA");
+      LOG_ERR("ND option not supported in RA\n");
       break;
     }
     nd6_opt_offset += (UIP_ND6_OPT_HDR_BUF->len << 3);

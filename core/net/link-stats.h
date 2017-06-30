@@ -37,24 +37,43 @@
 
 /* ETX fixed point divisor. 128 is the value used by RPL (RFC 6551 and RFC 6719) */
 #ifdef LINK_STATS_CONF_ETX_DIVISOR
-#define LINK_STATS_ETX_DIVISOR              LINK_STATS_CONF_ETX_DIVISOR
+#define LINK_STATS_ETX_DIVISOR LINK_STATS_CONF_ETX_DIVISOR
 #else /* LINK_STATS_CONF_ETX_DIVISOR */
-#define LINK_STATS_ETX_DIVISOR              128
+#define LINK_STATS_ETX_DIVISOR                   128
 #endif /* LINK_STATS_CONF_ETX_DIVISOR */
+
+/* Option to infer the initial ETX from the RSSI of previously received packets. */
+#ifdef LINK_STATS_CONF_INIT_ETX_FROM_RSSI
+#define LINK_STATS_INIT_ETX_FROM_RSSI LINK_STATS_CONF_INIT_ETX_FROM_RSSI
+#else /* LINK_STATS_CONF_INIT_ETX_FROM_RSSI */
+#define LINK_STATS_INIT_ETX_FROM_RSSI              1
+#endif /* LINK_STATS_CONF_INIT_ETX_FROM_RSSI */
+
+/* Option to use packet and ACK count for ETX estimation, instead of EWMA */
+#ifdef LINK_STATS_CONF_ETX_FROM_PACKET_COUNT
+#define LINK_STATS_ETX_FROM_PACKET_COUNT LINK_STATS_CONF_ETX_FROM_PACKET_COUNT
+#else /* LINK_STATS_CONF_ETX_FROM_PACKET_COUNT */
+#define LINK_STATS_ETX_FROM_PACKET_COUNT           0
+#endif /* LINK_STATS_ETX_FROM_PACKET_COUNT */
 
 /* All statistics of a given link */
 struct link_stats {
+  clock_time_t last_tx_time;  /* Last Tx timestamp */
   uint16_t etx;               /* ETX using ETX_DIVISOR as fixed point divisor */
   int16_t rssi;               /* RSSI (received signal strength) */
   uint8_t freshness;          /* Freshness of the statistics */
-  clock_time_t last_tx_time;  /* Last Tx timestamp */
+#if LINK_STATS_ETX_FROM_PACKET_COUNT
+  uint8_t tx_count;           /* Tx count, used for ETX calculation */
+  uint8_t ack_count;          /* ACK count, used for ETX calculation */
+#endif /* LINK_STATS_ETX_FROM_PACKET_COUNT */
 };
 
 /* Returns the neighbor's link statistics */
 const struct link_stats *link_stats_from_lladdr(const linkaddr_t *lladdr);
 /* Are the statistics fresh? */
 int link_stats_is_fresh(const struct link_stats *stats);
-
+/* Resets link-stats module */
+void link_stats_reset(void);
 /* Initializes link-stats module */
 void link_stats_init(void);
 /* Packet sent callback. Updates statistics for transmissions on a given link */

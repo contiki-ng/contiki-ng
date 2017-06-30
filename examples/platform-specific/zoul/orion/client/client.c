@@ -53,7 +53,6 @@ AUTOSTART_PROCESSES(&http_example_process);
 static void
 reconnect(void *dummy)
 {
-  rpl_set_mode(RPL_MODE_MESH);
   http_socket_get(&s, url, 0, 0, callback, NULL);
 }
 /*---------------------------------------------------------------------------*/

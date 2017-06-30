@@ -38,8 +38,12 @@
 #if UIP_CONF_IPV6_RPL
 
 #include "contiki.h"
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #include "net/rpl/rpl.h"
 #include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-private.h"
 #include "net/mac/tsch/tsch-schedule.h"
@@ -66,28 +70,46 @@ tsch_rpl_callback_leaving_network(void)
 {
   rpl_dag_t *dag = rpl_get_any_dag();
   if(dag != NULL) {
+#if UIP_CONF_IPV6_RPL_LITE
+    rpl_local_repair("TSCH leaving");
+#else
     rpl_local_repair(dag->instance);
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/
 /* Set TSCH EB period based on current RPL DIO period.
  * To use, set #define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval */
 void
-tsch_rpl_callback_new_dio_interval(uint8_t dio_interval)
+tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval)
 {
   /* Transmit EBs only if we have a valid rank as per 6TiSCH minimal */
-  rpl_dag_t *dag = rpl_get_any_dag();
-  if(dag != NULL && dag->rank != INFINITE_RANK) {
+  rpl_dag_t *dag;
+  rpl_rank_t root_rank;
+  rpl_rank_t dag_rank;
+#if UIP_CONF_IPV6_RPL_LITE
+  dag = &curr_instance.dag;
+  root_rank = ROOT_RANK;
+  dag_rank = DAG_RANK(dag->rank);
+#else
+  rpl_instance_t *instance;
+  dag = rpl_get_any_dag();
+  instance = dag != NULL ? dag->instance : NULL;
+  root_rank = ROOT_RANK(instance);
+  dag_rank = DAG_RANK(dag->rank, instance);
+#endif
+
+  if(dag != NULL && dag->rank != RPL_INFINITE_RANK) {
     /* If we are root set TSCH as coordinator */
-    if(dag->rank == ROOT_RANK(dag->instance)) {
+    if(dag->rank == root_rank) {
       tsch_set_coordinator(1);
     }
     /* Set EB period */
-    tsch_set_eb_period((CLOCK_SECOND * 1UL << dag->instance->dio_intcurrent) / 1000);
+    tsch_set_eb_period(dio_interval);
     /* Set join priority based on RPL rank */
-    tsch_set_join_priority(DAG_RANK(dag->rank, dag->instance) - 1);
+    tsch_set_join_priority(dag_rank - 1);
   } else {
-    tsch_set_eb_period(0);
+    tsch_set_eb_period(TSCH_EB_PERIOD);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -96,10 +118,12 @@ tsch_rpl_callback_new_dio_interval(uint8_t dio_interval)
 void
 tsch_rpl_callback_parent_switch(rpl_parent_t *old, rpl_parent_t *new)
 {
-  if(tsch_is_associated == 1) {
+  /* Map the TSCH time source on the RPL preferred parent (but stick to the
+   * current time source if there is no preferred aarent) */
+  if(tsch_is_associated == 1 && new != NULL) {
     tsch_queue_update_time_source(
       (const linkaddr_t *)uip_ds6_nbr_lladdr_from_ipaddr(
-        rpl_get_parent_ipaddr(new)));
+        rpl_parent_get_ipaddr(new)));
   }
 }
 #endif /* UIP_CONF_IPV6_RPL */

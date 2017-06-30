@@ -43,7 +43,8 @@
 #include "contiki-net.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
+#include "rpl-dag-root.h"
 
 #include "net/netstack.h"
 #include "dev/slip.h"
@@ -290,20 +291,10 @@ border_router_set_sensors(const char *data, int len)
 static void
 set_prefix_64(const uip_ipaddr_t *prefix_64)
 {
-  rpl_dag_t *dag;
-  uip_ipaddr_t ipaddr;
   memcpy(&prefix, prefix_64, 16);
-  memcpy(&ipaddr, prefix_64, 16);
-
   prefix_set = 1;
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-
-  dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
-  if(dag != NULL) {
-    rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
-  }
+	rpl_dag_root_init(prefix_64, NULL);
+  rpl_dag_root_init_dag_immediately();
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)

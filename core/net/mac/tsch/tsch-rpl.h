@@ -34,7 +34,11 @@
 
 /********** Includes **********/
 
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #include "net/rpl/rpl.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #include "net/mac/tsch/tsch-queue.h"
 
 /********** Functions *********/
@@ -46,8 +50,8 @@ void tsch_rpl_callback_joining_network(void);
  * To use, set #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network */
 void tsch_rpl_callback_leaving_network(void);
 /* Set TSCH EB period based on current RPL DIO period.
- * To use, set #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_new_dio_interval */
-void tsch_rpl_callback_new_dio_interval(uint8_t dio_interval);
+ * To use, set #define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval */
+void tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval);
 /* Set TSCH time source based on current RPL preferred parent.
  * To use, set #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch */
 void tsch_rpl_callback_parent_switch(rpl_parent_t *old, rpl_parent_t *new);
