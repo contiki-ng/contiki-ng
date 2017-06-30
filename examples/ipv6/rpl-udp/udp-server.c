@@ -100,7 +100,6 @@ print_local_addresses(void)
 PROCESS_THREAD(udp_server_process, ev, data)
 {
   uip_ipaddr_t ipaddr;
-  struct uip_ds6_addr *root_if;
 
   PROCESS_BEGIN();
 
@@ -109,7 +108,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
   SENSORS_ACTIVATE(button_sensor);
 
   PRINTF("UDP server started. nbr:%d routes:%d\n",
-         NBR_TABLE_CONF_MAX_NEIGHBORS, UIP_CONF_MAX_ROUTES);
+         NBR_TABLE_CONF_MAX_NEIGHBORS, NETSTACK_MAX_ROUTE_ENTRIES);
 
 #if UIP_CONF_ROUTER
 /* The choice of server address determines its 6LoWPAN header compression.

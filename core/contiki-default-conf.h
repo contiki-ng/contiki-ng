@@ -96,12 +96,12 @@
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 16
 #endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 
-/* NETSTCK_ROUTING_STATE_SIZE specifies the maximum number of entries
+/* NETSTACK_MAX_ROUTE_ENTRIES specifies the maximum number of entries
    the routing module will handle. Applies to uIP routing tables if they are
    used, or to RPL non-storing mode links instead */
-#ifndef NETSTCK_ROUTING_STATE_SIZE
-#define NETSTCK_ROUTING_STATE_SIZE 16
-#endif /* NETSTCK_ROUTING_STATE_SIZE */
+#ifndef NETSTACK_MAX_ROUTE_ENTRIES
+#define NETSTACK_MAX_ROUTE_ENTRIES 16
+#endif /* NETSTACK_MAX_ROUTE_ENTRIES */
 
 /* NETSTACK_CONF_WITH_IPV6 specifies whether or not IPv6 should be used. If IPv6
    is not used, IPv4 is used instead. */
