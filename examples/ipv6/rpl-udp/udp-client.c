@@ -154,7 +154,7 @@ set_global_address(void)
  * Note the IPCMV6 checksum verification depends on the correct uncompressed
  * addresses.
  */
- 
+
 #if 0
 /* Mode 1 - 64 bits inline */
    uip_ip6addr(&server_ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
@@ -182,7 +182,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
   set_global_address();
 
   PRINTF("UDP client process started nbr:%d routes:%d\n",
-         NBR_TABLE_CONF_MAX_NEIGHBORS, UIP_CONF_MAX_ROUTES);
+         NBR_TABLE_CONF_MAX_NEIGHBORS, NETSTACK_MAX_ROUTE_ENTRIES);
 
   print_local_addresses();
 

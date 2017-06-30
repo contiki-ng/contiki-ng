@@ -37,11 +37,11 @@
 #ifdef TEST_MORE_ROUTES
 /* configure number of neighbors and routes */
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 10
-#define NETSTCK_ROUTING_STATE_SIZE    30
+#define NETSTACK_MAX_ROUTE_ENTRIES    30
 #else
 /* configure number of neighbors and routes */
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 10
-#define NETSTCK_ROUTING_STATE_SIZE    10
+#define NETSTACK_MAX_ROUTE_ENTRIES    10
 #endif /* TEST_MORE_ROUTES */
 
 #undef CSMA_CONF_802154_AUTOACK
