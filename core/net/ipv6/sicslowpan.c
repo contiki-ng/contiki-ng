@@ -676,6 +676,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
 {
   uint8_t tmp, iphc0, iphc1, *next_hdr, *next_nhc;
   int ext_hdr_len;
+  struct uip_udp_hdr *udp_buf;
 
 #if LOG_DBG_ENABLED
   { uint16_t ndx;
@@ -942,7 +943,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
     case UIP_PROTO_UDP:
       /* allocate a byte for the next header posision as UDP has no next */
       hc06_ptr++;
-      struct uip_udp_hdr *udp_buf = UIP_UDP_BUF(ext_hdr_len);
+      udp_buf = UIP_UDP_BUF(ext_hdr_len);
       LOG_INFO("IPHC: Uncompressed UDP ports on send side: %x, %x\n",
              UIP_HTONS(udp_buf->srcport), UIP_HTONS(udp_buf->destport));
       /* Mask out the last 4 bits can be used as a mask */
@@ -1246,6 +1247,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
   /* The next header is compressed, NHC is following */
   if(nhc && (*hc06_ptr & SICSLOWPAN_NHC_UDP_MASK) == SICSLOWPAN_NHC_UDP_ID) {
     struct uip_udp_hdr *udp_buf = (struct uip_udp_hdr *)ip_payload;
+    uint16_t udp_len;
     uint8_t checksum_compressed;
     *last_nextheader = UIP_PROTO_UDP;
     checksum_compressed = *hc06_ptr & SICSLOWPAN_NHC_UDP_CHECKSUMC;
@@ -1305,7 +1307,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
     }
 
     /* length field in UDP header (8 byte header + payload) */
-    uint16_t udp_len = 8 + packetbuf_datalen() - (hc06_ptr - packetbuf_ptr);
+    udp_len = 8 + packetbuf_datalen() - (hc06_ptr - packetbuf_ptr);
     udp_buf->udplen = UIP_HTONS(ip_len == 0 ? udp_len :
                                 ip_len - UIP_IPH_LEN - ext_hdr_len);
     LOG_INFO("Setting UDP length: %u (ext: %u) ip_len: %d udp_len:%d\n",
