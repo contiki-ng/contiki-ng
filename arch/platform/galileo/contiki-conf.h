@@ -56,6 +56,7 @@ typedef uint64_t rtimer_clock_t;
 
 #define UIP_CONF_LLH_LEN 14
 
+#define UIP_CONF_LL_802154 0
 #define LINKADDR_CONF_SIZE 6
 
 typedef unsigned short uip_stats_t;

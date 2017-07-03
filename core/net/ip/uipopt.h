@@ -103,25 +103,6 @@
 #define UIP_FIXEDADDR    0
 
 /**
- * Ping IP address assignment.
- *
- * uIP uses a "ping" packets for setting its own IP address if this
- * option is set. If so, uIP will start with an empty IP address and
- * the destination IP address of the first incoming "ping" (ICMP echo)
- * packet will be used for setting the hosts IP address.
- *
- * \note This works only if UIP_FIXEDADDR is 0.
- *
- * \hideinitializer
- */
-#ifdef UIP_CONF_PINGADDRCONF
-#define UIP_PINGADDRCONF (UIP_CONF_PINGADDRCONF)
-#else /* UIP_CONF_PINGADDRCONF */
-#define UIP_PINGADDRCONF 0
-#endif /* UIP_CONF_PINGADDRCONF */
-
-
-/**
  * Specifies if the uIP ARP module should be compiled with a fixed
  * Ethernet MAC address or not.
  *
@@ -190,21 +171,6 @@
 #endif /* UIP_CONF_STATISTICS */
 
 /**
- * Determines if logging of certain events should be compiled in.
- *
- * This is useful mostly for debugging. The function uip_log()
- * must be implemented to suit the architecture of the project, if
- * logging is turned on.
- *
- * \hideinitializer
- */
-#ifndef UIP_CONF_LOGGING
-#define UIP_LOGGING     0
-#else /* UIP_CONF_LOGGING */
-#define UIP_LOGGING     (UIP_CONF_LOGGING)
-#endif /* UIP_CONF_LOGGING */
-
-/**
  * Broadcast support.
  *
  * This flag configures IP broadcast support. This is useful only
@@ -214,7 +180,7 @@
  *
  */
 #ifndef UIP_CONF_BROADCAST
-#define UIP_BROADCAST 0
+#define UIP_BROADCAST 1
 #else /* UIP_CONF_BROADCAST */
 #define UIP_BROADCAST (UIP_CONF_BROADCAST)
 #endif /* UIP_CONF_BROADCAST */
@@ -351,7 +317,7 @@ void uip_log(char *msg);
 #ifdef UIP_CONF_UDP_CHECKSUMS
 #define UIP_UDP_CHECKSUMS (UIP_CONF_UDP_CHECKSUMS)
 #else
-#define UIP_UDP_CHECKSUMS (NETSTACK_CONF_WITH_IPV6)
+#define UIP_UDP_CHECKSUMS 1
 #endif
 
 /**
@@ -567,28 +533,28 @@ void uip_log(char *msg);
 #ifdef SICSLOWPAN_CONF_MAXAGE
 #define SICSLOWPAN_REASS_MAXAGE (SICSLOWPAN_CONF_MAXAGE)
 #else
-#define SICSLOWPAN_REASS_MAXAGE 20
+#define SICSLOWPAN_REASS_MAXAGE 8
 #endif
 
 /**
- * Do we compress the IP header or not (default: no)
+ * Do we compress the IP header or not
  */
 #ifndef SICSLOWPAN_CONF_COMPRESSION
-#define SICSLOWPAN_CONF_COMPRESSION 0
+#define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_HC06
 #endif
 
 /**
  * If we use IPHC compression, how many address contexts do we support
  */
-#ifndef SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS 
+#ifndef SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS
 #define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS 1
 #endif
 
 /**
  * Do we support 6lowpan fragmentation
  */
-#ifndef SICSLOWPAN_CONF_FRAG  
-#define SICSLOWPAN_CONF_FRAG  0
+#ifndef SICSLOWPAN_CONF_FRAG
+#define SICSLOWPAN_CONF_FRAG  1
 #endif
 
 /** @} */

@@ -113,18 +113,10 @@
 #define RPL_CONF_MAX_DAG_PER_INSTANCE 1 /* default 2 */
 
 /* No RA, No NS */
-#undef UIP_CONF_ND6_SEND_NS
-#define UIP_CONF_ND6_SEND_NS 0
-
-#undef UIP_CONF_ND6_SEND_RA
-#define UIP_CONF_ND6_SEND_RA 0
-
 #undef UIP_CONF_TCP
 #define UIP_CONF_TCP             0
 #undef UIP_CONF_DS6_ADDR_NBU
 #define UIP_CONF_DS6_ADDR_NBU    1
-#undef UIP_CONF_FWCACHE_SIZE
-#define UIP_CONF_FWCACHE_SIZE    1
 #undef UIP_CONF_UDP_CHECKSUMS
 #define UIP_CONF_UDP_CHECKSUMS   1
 

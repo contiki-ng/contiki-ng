@@ -42,10 +42,6 @@
 #undef CSMA_CONF_802154_AUTOACK
 #define CSMA_CONF_802154_AUTOACK 1
 
-/* Reduce code size */
-#undef ENERGEST_CONF_ON
-#define ENERGEST_CONF_ON 0
-
 /* needs to be ~4 for fragmentation to work */
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM          4

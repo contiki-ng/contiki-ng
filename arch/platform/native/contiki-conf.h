@@ -64,18 +64,9 @@ typedef  int32_t s32_t;
 
 typedef unsigned short uip_stats_t;
 
-#define UIP_CONF_UDP             1
-#define UIP_CONF_TCP_CONNS 40
-#define UIP_CONF_MAX_LISTENPORTS 40
-#define UIP_CONF_BUFFER_SIZE     420
 #define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
-#define UIP_CONF_TCP       1
-#define UIP_CONF_LOGGING         0
-#define UIP_CONF_UDP_CHECKSUMS   1
 
 #if NETSTACK_CONF_WITH_IPV6
-
-#define LINKADDR_CONF_SIZE              8
 
 #ifndef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     nullmac_driver
@@ -85,52 +76,10 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_RADIO   nullradio_driver
 #endif /* NETSTACK_CONF_RADIO */
 
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
-
 #define NETSTACK_CONF_LINUXRADIO_DEV "wpan0"
 
-#define UIP_CONF_ROUTER                 1
-
-#ifndef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG                    1
-#define SICSLOWPAN_CONF_MAXAGE                  8
-#endif /* SICSLOWPAN_CONF_FRAG */
-#define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS       2
-
-#define UIP_CONF_IPV6_CHECKS     1
 #define UIP_CONF_IPV6_QUEUE_PKT  1
-#define UIP_CONF_IPV6_REASSEMBLY 0
-#define UIP_CONF_NETIF_MAX_ADDRESSES  3
-#define UIP_CONF_ICMP6           1
-
-#define UIP_CONF_ND6_SEND_RA		0
-#define UIP_CONF_ND6_REACHABLE_TIME     600000
-#define UIP_CONF_ND6_RETRANS_TIMER      10000
-
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE		240
-#endif
-
-
-#define UIP_CONF_LLH_LEN                0
-#define UIP_CONF_LL_802154              1
-
-#define UIP_CONF_ICMP_DEST_UNREACH 1
-
-#define UIP_CONF_DHCP_LIGHT
-#ifndef UIP_CONF_RECEIVE_WINDOW
-#define UIP_CONF_RECEIVE_WINDOW  48
-#endif
-#define UIP_CONF_TCP_MSS         48
-#define UIP_CONF_FWCACHE_SIZE    30
-#define UIP_CONF_BROADCAST       1
 #define UIP_ARCH_IPCHKSUM        1
-#define UIP_CONF_UDP             1
-#define UIP_CONF_UDP_CHECKSUMS   1
-#define UIP_CONF_PINGADDRCONF    0
-#define UIP_CONF_LOGGING         0
-
-
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
@@ -144,25 +93,6 @@ typedef unsigned long clock_time_t;
 
 #define PROGRAM_HANDLER_CONF_MAX_NUMDSCS 10
 #define PROGRAM_HANDLER_CONF_QUIT_MENU   1
-
-#define EMAIL_CONF_WIDTH  78
-#define EMAIL_CONF_HEIGHT 17
-#ifndef PLATFORM_BUILD
-#define EMAIL_CONF_ERASE   0
-#endif
-
-#define IRC_CONF_WIDTH         78
-#define IRC_CONF_HEIGHT        17
-#define IRC_CONF_SYSTEM_STRING "*nix"
-
-#ifdef PLATFORM_BUILD
-#define TELNETD_CONF_GUI 1
-#endif /* PLATFORM_BUILD */
-
-#ifdef PLATFORM_BUILD
-#define WWW_CONF_WEBPAGE_WIDTH  78
-#define WWW_CONF_WEBPAGE_HEIGHT 17
-#endif /* PLATFORM_BUILD */
 
 /* Not part of C99 but actually present */
 int strcasecmp(const char*, const char*);

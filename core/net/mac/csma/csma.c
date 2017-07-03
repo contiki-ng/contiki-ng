@@ -65,7 +65,7 @@ input_packet(void)
 
   original_datalen = packetbuf_datalen();
   original_dataptr = packetbuf_dataptr();
-#endif
+#endif /* CSMA_SEND_802154_ACK */
 
 #if CSMA_802154_AUTOACK
   if(packetbuf_datalen() == CSMA_ACK_LEN) {

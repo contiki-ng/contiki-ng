@@ -40,6 +40,9 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
+/* Enable TCP */
+#define UIP_CONF_TCP 1
+
 /* User configuration */
 #define MQTT_DEMO_STATUS_LED      LEDS_GREEN
 #define MQTT_DEMO_PUBLISH_TRIGGER &button_right_sensor

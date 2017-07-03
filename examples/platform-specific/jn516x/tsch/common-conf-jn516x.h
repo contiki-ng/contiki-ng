@@ -47,20 +47,10 @@
 #define REST_MAX_CHUNK_SIZE      256
 
 /* Network config */
-#undef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG     1
 #undef UIP_CONF_BUFFER_SIZE
 //#define UIP_CONF_BUFFER_SIZE   (REST_MAX_CHUNK_SIZE + UIP_LLH_LEN + UIP_IPUDPH_LEN + COAP_MAX_HEADER_SIZE)
 //#define UIP_CONF_BUFFER_SIZE   (REST_MAX_CHUNK_SIZE + 0 + 48 + 70)
 #define UIP_CONF_BUFFER_SIZE     1280 /* ipv6 required minimum */
-
-/* No IPv6 reassembly */
-#undef UIP_CONF_IPV6_REASSEMBLY
-#define UIP_CONF_IPV6_REASSEMBLY 0
-
-/* Timeout for packet reassembly at the 6lowpan layer (should be < 60s) */
-#undef SICSLOWPAN_CONF_MAXAGE
-#define SICSLOWPAN_CONF_MAXAGE 10
 
 /* Queues */
 #undef QUEUEBUF_CONF_NUM
