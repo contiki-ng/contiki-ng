@@ -13,7 +13,8 @@ platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1350 \
 platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx \
 hello-world/cc2538dk \
 ipv6/rpl-border-router/cc2538dk \
-ipv6/rpl-border-router/cc2538dk:MAKE_WITH_NON_STORING=1 \
+ipv6/rpl-udp/cc2538dk \
+ipv6/rpl-simple/cc2538dk \
 ipv6/er-rest-example/cc2538dk \
 ipso-objects/cc2538dk \
 platform-specific/cc2538dk/udp-ipv6-echo-server/cc2538dk \
