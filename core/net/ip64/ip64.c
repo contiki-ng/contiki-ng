@@ -861,6 +861,8 @@ ip64_4to6(const uint8_t *ipv4packet, const uint16_t ipv4packet_len,
     break;
   case IP_PROTO_UDP:
     udphdr->udpchksum = 0;
+    /* As the udplen might have changed (DNS) we need to update it also */
+    udphdr->udplen = uip_htons(ipv6_packet_len);
     udphdr->udpchksum = ~(ipv6_transport_checksum(resultpacket,
 						  ipv6len,
 						  IP_PROTO_UDP));
