@@ -312,9 +312,6 @@ typedef uint32_t rtimer_clock_t;
 
 #define CSMA_CONF_ACK_WAIT_TIME                          (RTIMER_SECOND / 200)
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME           (RTIMER_SECOND / 1500)
-#define CSMA_CONF_802154_AUTOACK                         1
-#define CSMA_CONF_802154_AUTOACK_HW                      1
-#define CSMA_CONF_SEND_802154_ACK                        0
 
 #endif
 

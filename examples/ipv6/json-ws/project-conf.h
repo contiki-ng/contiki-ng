@@ -39,9 +39,6 @@
 #define JSON_WS_CONF_CALLBACK_PORT  80
 #define JSON_WS_CONF_CALLBACK_INTERVAL 120
 
-#undef CSMA_CONF_802154_AUTOACK
-#define CSMA_CONF_802154_AUTOACK 1
-
 /* needs to be ~4 for fragmentation to work */
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM          4

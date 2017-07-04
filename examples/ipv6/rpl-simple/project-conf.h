@@ -52,12 +52,7 @@
 #undef UIP_CONF_TCP
 #define UIP_CONF_TCP 0
 
-#if !WITH_TSCH
-
-#undef CSMA_CONF_802154_AUTOACK
-#define CSMA_CONF_802154_AUTOACK       1
-
-#else
+#if WITH_TSCH
 
 /*******************************************************/
 /********************* Enable TSCH *********************/
@@ -106,6 +101,6 @@
 #undef TSCH_SCHEDULE_CONF_MAX_LINKS
 #define TSCH_SCHEDULE_CONF_MAX_LINKS 4
 
-#endif
+#endif /* WITH_TSCH */
 
 #endif

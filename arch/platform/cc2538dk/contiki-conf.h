@@ -251,10 +251,6 @@ typedef uint32_t rtimer_clock_t;
 #include "board.h"
 /*---------------------------------------------------------------------------*/
 
-/* Configure CSMA for when it's selected */
-#define CSMA_CONF_802154_AUTOACK                  1
-#define CSMA_CONF_802154_AUTOACK_HW               1
-
 #define NETSTACK_CONF_RADIO   cc2538_rf_driver
 /** @} */
 /*---------------------------------------------------------------------------*/

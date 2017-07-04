@@ -40,9 +40,6 @@
 #define NETSTACK_MAX_ROUTE_ENTRIES    10
 #endif /* TEST_MORE_ROUTES */
 
-#undef CSMA_CONF_802154_AUTOACK
-#define CSMA_CONF_802154_AUTOACK       1
-
 /* Define as minutes */
 #define RPL_CONF_DEFAULT_LIFETIME_UNIT   60
 

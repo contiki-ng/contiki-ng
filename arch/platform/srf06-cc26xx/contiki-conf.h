@@ -58,9 +58,6 @@
 #define CC2650_FAST_RADIO_STARTUP               0
 #endif
 
-/* Configure CSMA for when it's selected */
-#define CSMA_CONF_802154_AUTOACK             1
-
 #ifdef RF_CHANNEL
 #define RF_CORE_CONF_CHANNEL             RF_CHANNEL
 #endif
@@ -94,15 +91,13 @@
 
 #define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 400)
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
-#define CSMA_CONF_802154_AUTOACK_HW            0
-#define CSMA_CONF_SEND_802154_ACK              1
+#define CSMA_CONF_SEND_SOFT_ACK              1
 
-#else
+#else /* CC13XX_CONF_PROP_MODE */
 #define NETSTACK_CONF_RADIO        ieee_mode_driver
 
-#define CSMA_CONF_802154_AUTOACK_HW            1
-#define CSMA_CONF_SEND_802154_ACK              0
-#endif
+#define CSMA_CONF_SEND_SOFT_ACK              0
+#endif /* CC13XX_CONF_PROP_MODE */
 
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN        125
 

@@ -44,9 +44,6 @@
 #define NETSTACK_CONF_RADIO   micromac_radio_driver
 #endif /* NETSTACK_CONF_RADIO */
 
-/* Csma: use hardware ACKs */
-#define CSMA_CONF_802154_AUTOACK_HW  1
-
 /* Platform-specific (H/W) CCM* implementation */
 #ifndef CCM_STAR_CONF
 #define CCM_STAR_CONF ccm_star_driver_jn516x
