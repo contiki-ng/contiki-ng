@@ -64,13 +64,6 @@ void NEIGHBOR_STATE_CHANGED(uip_ds6_nbr_t *n);
 #define NEIGHBOR_STATE_CHANGED(n)
 #endif /* UIP_DS6_CONF_NEIGHBOR_STATE_CHANGED */
 
-#ifdef UIP_CONF_DS6_LINK_NEIGHBOR_CALLBACK
-#define LINK_NEIGHBOR_CALLBACK(addr, status, numtx) UIP_CONF_DS6_LINK_NEIGHBOR_CALLBACK(addr, status, numtx)
-void LINK_NEIGHBOR_CALLBACK(const linkaddr_t *addr, int status, int numtx);
-#else
-#define LINK_NEIGHBOR_CALLBACK(addr, status, numtx)
-#endif /* UIP_CONF_DS6_LINK_NEIGHBOR_CALLBACK */
-
 NBR_TABLE_GLOBAL(uip_ds6_nbr_t, ds6_neighbors);
 
 /*---------------------------------------------------------------------------*/
@@ -205,19 +198,14 @@ uip_ds6_nbr_lladdr_from_ipaddr(const uip_ipaddr_t *ipaddr)
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_link_neighbor_callback(int status, int numtx)
+uip_ds6_link_callback(int status, int numtx)
 {
+#if UIP_DS6_LL_NUD
   const linkaddr_t *dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
   if(linkaddr_cmp(dest, &linkaddr_null)) {
     return;
   }
 
-  /* Update neighbor link statistics */
-  link_stats_packet_sent(dest, status, numtx);
-  /* Call upper-layer callback (e.g. RPL) */
-  LINK_NEIGHBOR_CALLBACK(dest, status, numtx);
-
-#if UIP_DS6_LL_NUD
   /* From RFC4861, page 72, last paragraph of section 7.3.3:
    *
    *         "In some cases, link-specific information may indicate that a path to
@@ -245,7 +233,6 @@ uip_ds6_link_neighbor_callback(int status, int numtx)
     }
   }
 #endif /* UIP_DS6_LL_NUD */
-
 }
 #if UIP_ND6_SEND_NS
 /*---------------------------------------------------------------------------*/

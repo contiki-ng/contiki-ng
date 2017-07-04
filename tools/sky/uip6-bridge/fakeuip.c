@@ -130,7 +130,7 @@ uip_icmp6chksum(void)
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_link_neighbor_callback(int status, int numtx)
+uip_ds6_link_callback(int status, int numtx)
 {
 
 }

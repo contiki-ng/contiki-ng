@@ -250,7 +250,7 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
+rpl_link_callback(const linkaddr_t *addr, int status, int numtx)
 {
   uip_ipaddr_t ipaddr;
   rpl_parent_t *parent;
@@ -265,7 +265,7 @@ rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
       parent = rpl_find_parent_any_dag(instance, &ipaddr);
       if(parent != NULL) {
         /* Trigger DAG rank recalculation. */
-        PRINTF("RPL: rpl_link_neighbor_callback triggering update\n");
+        PRINTF("RPL: rpl_link_callback triggering update\n");
         parent->flags |= RPL_PARENT_FLAG_UPDATED;
       }
     }
