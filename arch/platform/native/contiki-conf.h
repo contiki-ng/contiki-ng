@@ -91,9 +91,6 @@ typedef unsigned long clock_time_t;
 
 #define LOG_CONF_ENABLED 1
 
-#define PROGRAM_HANDLER_CONF_MAX_NUMDSCS 10
-#define PROGRAM_HANDLER_CONF_QUIT_MENU   1
-
 /* Not part of C99 but actually present */
 int strcasecmp(const char*, const char*);
 
