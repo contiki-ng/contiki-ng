@@ -43,14 +43,8 @@
 
 /* Save some space */
 
-#undef UIP_CONF_ND6_SEND_NA
-#define UIP_CONF_ND6_SEND_NA 0
-
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
-
-#undef UIP_CONF_TCP
-#define UIP_CONF_TCP 0
 
 #if WITH_TSCH
 

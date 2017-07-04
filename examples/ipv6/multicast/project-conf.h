@@ -52,9 +52,6 @@
 #undef UIP_MCAST6_ROUTE_CONF_ROUTES
 #define UIP_MCAST6_ROUTE_CONF_ROUTES 1
 
-#undef UIP_CONF_TCP
-#define UIP_CONF_TCP 0
-
 /* Code/RAM footprint savings so that things will fit on our device */
 #undef NETSTACK_MAX_ROUTE_ENTRIES
 #define NETSTACK_MAX_ROUTE_ENTRIES   10

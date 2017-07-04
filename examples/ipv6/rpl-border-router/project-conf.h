@@ -35,14 +35,6 @@
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
 
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM          4
-#endif
-
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE    140
-#endif
-
 #ifndef WEBSERVER_CONF_CFS_CONNS
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
