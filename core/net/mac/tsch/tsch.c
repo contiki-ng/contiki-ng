@@ -62,8 +62,8 @@
 #include "net/mac/tsch/tsch-rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
-#if FRAME802154_VERSION < FRAME802154_IEEE802154E_2012
-#error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154E_2012
+#if FRAME802154_VERSION < FRAME802154_IEEE802154_2015
+#error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154_2015
 #endif
 
 /* Log configuration */
@@ -421,7 +421,7 @@ tsch_rx_process_pending()
     uint8_t ret = frame802154_parse(current_input->payload, current_input->len, &frame);
     int is_data = ret && frame.fcf.frame_type == FRAME802154_DATAFRAME;
     int is_eb = ret
-      && frame.fcf.frame_version == FRAME802154_IEEE802154E_2012
+      && frame.fcf.frame_version == FRAME802154_IEEE802154_2015
       && frame.fcf.frame_type == FRAME802154_BEACONFRAME;
 
     if(is_data) {

@@ -69,7 +69,7 @@ tsch_packet_create_eack(uint8_t *buf, int buf_size,
 
   memset(&p, 0, sizeof(p));
   p.fcf.frame_type = FRAME802154_ACKFRAME;
-  p.fcf.frame_version = FRAME802154_IEEE802154E_2012;
+  p.fcf.frame_version = FRAME802154_IEEE802154_2015;
   p.fcf.ie_list_present = 1;
   /* Compression unset. According to IEEE802.15.4e-2012:
    * - if no address is present: elide PAN ID
@@ -201,7 +201,7 @@ tsch_packet_create_eb(uint8_t *buf, int buf_size,
   memset(&p, 0, sizeof(p));
   p.fcf.frame_type = FRAME802154_BEACONFRAME;
   p.fcf.ie_list_present = 1;
-  p.fcf.frame_version = FRAME802154_IEEE802154E_2012;
+  p.fcf.frame_version = FRAME802154_IEEE802154_2015;
   p.fcf.src_addr_mode = LINKADDR_SIZE > 2 ? FRAME802154_LONGADDRMODE : FRAME802154_SHORTADDRMODE;
   p.fcf.dest_addr_mode = FRAME802154_SHORTADDRMODE;
   p.fcf.sequence_number_suppression = 1;
@@ -356,7 +356,7 @@ tsch_packet_parse_eb(const uint8_t *buf, int buf_size,
     return 0;
   }
 
-  if(frame->fcf.frame_version < FRAME802154_IEEE802154E_2012
+  if(frame->fcf.frame_version < FRAME802154_IEEE802154_2015
      || frame->fcf.frame_type != FRAME802154_BEACONFRAME) {
     LOG_INFO("! parse_eb: frame is not a valid TSCH beacon. Frame version %u, type %u, FCF %02x %02x\n",
            frame->fcf.frame_version, frame->fcf.frame_type, buf[0], buf[1]);

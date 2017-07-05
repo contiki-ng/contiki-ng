@@ -230,7 +230,7 @@ test_parse_eb(const eb_test_vector_t *v)
 #endif
 
   if(frame.fcf.frame_type != FRAME802154_BEACONFRAME ||
-     frame.fcf.frame_version != FRAME802154_IEEE802154E_2012) {
+     frame.fcf.frame_version != FRAME802154_IEEE802154_2015) {
     return FAILURE;
   }
 
@@ -315,7 +315,7 @@ test_parse_eack(const eack_test_vector_t *v)
 #endif
 
   if(frame.fcf.frame_type != FRAME802154_ACKFRAME ||
-     frame.fcf.frame_version != FRAME802154_IEEE802154E_2012) {
+     frame.fcf.frame_version != FRAME802154_IEEE802154_2015) {
     return FAILURE;
   }
 
