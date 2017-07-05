@@ -86,7 +86,7 @@
 #ifdef SICSLOWPAN_CONF_COMPRESSION
 #define SICSLOWPAN_COMPRESSION SICSLOWPAN_CONF_COMPRESSION
 #else /* SICSLOWPAN_CONF_COMPRESSION */
-#define SICSLOWPAN_COMPRESSION SICSLOWPAN_COMPRESSION_HC06
+#define SICSLOWPAN_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
 #endif /* SICSLOWPAN_CONF_COMPRESSION */
 
 #define GET16(ptr,index) (((uint16_t)((ptr)[index] << 8)) | ((ptr)[(index) + 1]))
@@ -502,7 +502,7 @@ set_packet_attrs(void)
 
 
 
-#if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_HC06
+#if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC
 /** \name variables specific to HC06 and more recent versions
  *  @{
  */
@@ -1344,9 +1344,9 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
   }
 }
 /** @} */
-#endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_HC06 */
+#endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
 
-#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_PAGE1
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH
 /*--------------------------------------------------------------------*/
 /**
  * \brief Adds Paging dispatch byte
@@ -1367,7 +1367,7 @@ add_6lorh_hdr(void)
 {
   /* 6LoRH is not implemented yet */
 }
-#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_PAGE1 */
+#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH */
 
 /*--------------------------------------------------------------------*/
 /**
@@ -1534,17 +1534,17 @@ output(const uip_lladdr_t *localdest)
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
   compress_hdr_ipv6(&dest);
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6 */
-#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_PAGE1
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH
   /* Add 6LoRH headers before IPHC. Only needed on routed traffic
   (non link-local). */
   if(!uip_is_addr_linklocal(&UIP_IP_BUF->destipaddr)) {
     add_paging_dispatch(1);
     add_6lorh_hdr();
   }
-#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_PAGE1 */
-#if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_HC06
+#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH */
+#if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC
   compress_hdr_iphc(&dest);
-#endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_HC06 */
+#endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
   LOG_INFO("output: header of len %d\n", packetbuf_hdr_len);
 
   /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
@@ -1954,7 +1954,7 @@ sicslowpan_init(void)
 
   tcpip_set_outputfunc(output);
 
-#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC
 /* Preinitialize any address contexts for better header compression
  * (Saves up to 13 bytes per 6lowpan packet)
  * The platform contiki-conf.h file can override this using e.g.
@@ -1996,7 +1996,7 @@ sicslowpan_init(void)
   }
 #endif /* SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS > 1 */
 
-#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06 */
+#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC */
 }
 /*--------------------------------------------------------------------*/
 int

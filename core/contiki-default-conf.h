@@ -218,18 +218,10 @@
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD (127 - 2)
 #endif /* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD */
 
-/* SICSLOWPAN_CONF_COMPRESSION_THRESHOLD sets a lower threshold for
-   when packets should not be compressed. This is used by ContikiMAC,
-   which requires packets to be larger than a given minimum size. */
-#ifndef SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
-#define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 0
-/* #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 63 */
-#endif /* SICSLOWPAN_CONF_COMPRESSION_THRESHOLD */
-
 /* SICSLOWPAN_CONF_COMPRESSION specifies what 6lowpan compression
    mechanism to be used. 6lowpan hc06 is the default in Contiki. */
 #ifndef SICSLOWPAN_CONF_COMPRESSION
-#define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_HC06
+#define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
 #endif /* SICSLOWPAN_CONF_COMPRESSION */
 
 #endif /* CONTIKI_DEFAULT_CONF_H */

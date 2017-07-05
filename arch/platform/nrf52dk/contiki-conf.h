@@ -65,8 +65,6 @@
 
 /* 6LoWPAN */
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD         1280
-#define SICSLOWPAN_CONF_COMPRESSION             SICSLOWPAN_COMPRESSION_HC06
-#define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD   0     /**< Always compress IPv6 packets. */
 #define SICSLOWPAN_CONF_FRAG                    0     /**< We don't use 6LoWPAN fragmentation as IPSP takes care of that for us.*/
 #define SICSLOWPAN_FRAMER_HDRLEN                0     /**< Use fixed header len rather than framer.length() function */
 

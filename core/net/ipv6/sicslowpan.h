@@ -69,10 +69,10 @@
  * @{
  */
 #define SICSLOWPAN_COMPRESSION_IPV6        0 /* No compression */
-/* No longer supported: #define SICSLOWPAN_CONF_COMPRESSION_HC1         1*/
-#define SICSLOWPAN_COMPRESSION_HC06        2 /* RFC 6282 */
-#define SICSLOWPAN_COMPRESSION_PAGE1       3 /* RFC 8025 for paging dispatch,
-                                * draft-ietf-6lo-routin-dispatch-05 for 6LoRH */
+#define SICSLOWPAN_COMPRESSION_IPHC        1 /* RFC 6282 */
+#define SICSLOWPAN_COMPRESSION_6LORH       2 /* RFC 8025 for paging dispatch,
+              * draft-ietf-6lo-routin-dispatch-05 for 6LoRH. 6LoRH is not
+              * implemented yet -- only support for paging dispatch. */
 /** @} */
 
 /**
