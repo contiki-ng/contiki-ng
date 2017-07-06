@@ -360,7 +360,7 @@
 #ifdef RPL_CONF_DEFAULT_INSTANCE
 #define RPL_DEFAULT_INSTANCE RPL_CONF_DEFAULT_INSTANCE
 #else
-#define RPL_DEFAULT_INSTANCE	       0x1e
+#define RPL_DEFAULT_INSTANCE	          0 /* Default of 0 for compression */
 #endif /* RPL_CONF_DEFAULT_INSTANCE */
 
 /* Set to have the root advertise a grounded DAG */

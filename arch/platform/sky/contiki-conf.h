@@ -25,12 +25,6 @@
 /* Network setup for IPv6 */
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 
-/* Specify a minimum packet size for 6lowpan compression to be
-   enabled. This is needed for ContikiMAC, which needs packets to be
-   larger than a specified size, if no ContikiMAC header should be
-   used. */
-#define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 63
-
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM                8
 #endif
@@ -92,7 +86,6 @@
 #define UIP_CONF_BUFFER_SIZE		240
 #endif
 
-#define SICSLOWPAN_CONF_COMPRESSION             SICSLOWPAN_COMPRESSION_HC06
 #ifndef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG                    1
 #define SICSLOWPAN_CONF_MAXAGE                  8

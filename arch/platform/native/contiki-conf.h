@@ -91,7 +91,6 @@ typedef unsigned short uip_stats_t;
 
 #define UIP_CONF_ROUTER                 1
 
-#define SICSLOWPAN_CONF_COMPRESSION             SICSLOWPAN_COMPRESSION_HC06
 #ifndef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG                    1
 #define SICSLOWPAN_CONF_MAXAGE                  8

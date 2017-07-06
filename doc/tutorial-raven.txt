@@ -471,7 +471,7 @@ and replace the line<BR>
 \endcode
 with
 \code
-#define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_HC06
+#define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
 \endcode
 
 Recompile and load Contiki for both the RAVEN ATmega1284P and RZ USB 

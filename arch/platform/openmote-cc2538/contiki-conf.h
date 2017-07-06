@@ -458,10 +458,6 @@ typedef uint32_t rtimer_clock_t;
 #define UIP_CONF_MAX_LISTENPORTS             8
 
 /* 6lowpan */
-#define SICSLOWPAN_CONF_COMPRESSION          SICSLOWPAN_COMPRESSION_HC06
-#ifndef SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
-#define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 63
-#endif
 #ifndef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG                 1
 #endif

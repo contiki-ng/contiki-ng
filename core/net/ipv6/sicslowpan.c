@@ -83,13 +83,11 @@
 #define LOG_MODULE "6LoWPAN"
 #define LOG_LEVEL SICSLOWPAN_LOG_LEVEL
 
-#ifndef SICSLOWPAN_COMPRESSION
 #ifdef SICSLOWPAN_CONF_COMPRESSION
 #define SICSLOWPAN_COMPRESSION SICSLOWPAN_CONF_COMPRESSION
-#else
-#define SICSLOWPAN_COMPRESSION SICSLOWPAN_COMPRESSION_IPV6
+#else /* SICSLOWPAN_CONF_COMPRESSION */
+#define SICSLOWPAN_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
 #endif /* SICSLOWPAN_CONF_COMPRESSION */
-#endif /* SICSLOWPAN_COMPRESSION */
 
 #define GET16(ptr,index) (((uint16_t)((ptr)[index] << 8)) | ((ptr)[(index) + 1]))
 #define SET16(ptr,index,value) do {     \
@@ -108,18 +106,18 @@
 /* define the buffer as a byte array */
 #define PACKETBUF_IPHC_BUF              ((uint8_t *)(packetbuf_ptr + packetbuf_hdr_len))
 
-#define PACKETBUF_HC1_PTR            (packetbuf_ptr + packetbuf_hdr_len)
-#define PACKETBUF_HC1_DISPATCH       0 /* 8 bit */
-#define PACKETBUF_HC1_ENCODING       1 /* 8 bit */
-#define PACKETBUF_HC1_TTL            2 /* 8 bit */
+#define PACKETBUF_6LO_PTR            (packetbuf_ptr + packetbuf_hdr_len)
+#define PACKETBUF_6LO_DISPATCH       0 /* 8 bit */
+#define PACKETBUF_6LO_ENCODING       1 /* 8 bit */
+#define PACKETBUF_6LO_TTL            2 /* 8 bit */
 
-#define PACKETBUF_HC1_HC_UDP_PTR           (packetbuf_ptr + packetbuf_hdr_len)
-#define PACKETBUF_HC1_HC_UDP_DISPATCH      0 /* 8 bit */
-#define PACKETBUF_HC1_HC_UDP_HC1_ENCODING  1 /* 8 bit */
-#define PACKETBUF_HC1_HC_UDP_UDP_ENCODING  2 /* 8 bit */
-#define PACKETBUF_HC1_HC_UDP_TTL           3 /* 8 bit */
-#define PACKETBUF_HC1_HC_UDP_PORTS         4 /* 8 bit */
-#define PACKETBUF_HC1_HC_UDP_CHKSUM        5 /* 16 bit */
+#define PACKETBUF_6LO_HC_UDP_PTR           (packetbuf_ptr + packetbuf_hdr_len)
+#define PACKETBUF_6LO_HC_UDP_DISPATCH      0 /* 8 bit */
+#define PACKETBUF_6LO_HC_UDP_HC1_ENCODING  1 /* 8 bit */
+#define PACKETBUF_6LO_HC_UDP_UDP_ENCODING  2 /* 8 bit */
+#define PACKETBUF_6LO_HC_UDP_TTL           3 /* 8 bit */
+#define PACKETBUF_6LO_HC_UDP_PORTS         4 /* 8 bit */
+#define PACKETBUF_6LO_HC_UDP_CHKSUM        5 /* 16 bit */
 
 /** \name Pointers in the sicslowpan and uip buffer
  *  @{
@@ -215,6 +213,11 @@ static int packetbuf_payload_len;
  * is used this includes the UDP header in addition to the IP header).
  */
 static uint8_t uncomp_hdr_len;
+
+/**
+ * The current page (RFC 4944)
+ */
+static uint8_t curr_page;
 
 /**
  * the result of the last transmitted fragment
@@ -499,8 +502,8 @@ set_packet_attrs(void)
 
 
 
-#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06
-/** \name HC06 specific variables
+#if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC
+/** \name variables specific to HC06 and more recent versions
  *  @{
  */
 
@@ -696,7 +699,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   }
 #endif /* LOG_DBG_ENABLED */
 
-  hc06_ptr = packetbuf_ptr + 2;
+  hc06_ptr = PACKETBUF_IPHC_BUF + 2;
   /*
    * As we copy some bit-length fields, in the IPHC encoding bytes,
    * we sometimes use |=
@@ -998,13 +1001,13 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
       next_hdr = NULL;
       break;
     default:
-      LOG_INFO("Error - could not handle compression of header");
+      LOG_ERR("IPHC: could not handle compression of header");
     }
   }
   if(next_hdr != NULL) {
     /* Last header could not be compressed - we assume that this is then OK!*/
     /* as the last EXT_HDR should be "uncompressed" and have the next there */
-    LOG_INFO("Last header could not be compressed: %d\n", *next_hdr);
+    LOG_INFO("IPHC: last header could is not compressed: %d\n", *next_hdr);
   }
   /* before the packetbuf_hdr_len operation */
   PACKETBUF_IPHC_BUF[0] = iphc0;
@@ -1197,7 +1200,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
   /* The next header is compressed, NHC is following */
   last_nextheader =  &SICSLOWPAN_IP_BUF(buf)->proto;
   ip_payload = SICSLOWPAN_IPPAYLOAD_BUF(buf);
- 
+
   while(nhc && (*hc06_ptr & SICSLOWPAN_NHC_MASK) == SICSLOWPAN_NHC_EXT_HDR) {
     uint8_t eid = (*hc06_ptr & 0x0e) >> 1;
     /* next header compression flag */
@@ -1341,8 +1344,54 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
   }
 }
 /** @} */
-#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06 */
+#endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
 
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH
+/*--------------------------------------------------------------------*/
+/**
+ * \brief Adds Paging dispatch byte
+ */
+static void
+add_paging_dispatch(uint8_t page)
+{
+  /* Add paging dispatch to Page 1 */
+  PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] = SICSLOWPAN_DISPATCH_PAGING | (page & 0x0f);
+  packetbuf_hdr_len++;
+}
+/*--------------------------------------------------------------------*/
+/**
+ * \brief Adds 6lorh headers before IPHC
+ */
+static void
+add_6lorh_hdr(void)
+{
+  /* 6LoRH is not implemented yet */
+}
+#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH */
+
+/*--------------------------------------------------------------------*/
+/**
+ * \brief Digest 6lorh headers before IPHC
+ */
+static void
+digest_paging_dispatch(void)
+{
+  /* Is this a paging dispatch? */
+  if((PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_PAGING_MASK) == SICSLOWPAN_DISPATCH_PAGING) {
+    /* Parse page number */
+    curr_page = PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & 0x0f;
+    packetbuf_hdr_len++;
+  }
+}
+/*--------------------------------------------------------------------*/
+/**
+ * \brief Digest 6lorh headers before IPHC
+ */
+static void
+digest_6lorh_hdr(void)
+{
+  /* 6LoRH is not implemented yet */
+}
 /*--------------------------------------------------------------------*/
 /** \name IPv6 dispatch "compression" function
  * @{                                                                 */
@@ -1359,6 +1408,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * \endverbatim
  */
+ #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
 static void
 compress_hdr_ipv6(linkaddr_t *link_destaddr)
 {
@@ -1369,6 +1419,7 @@ compress_hdr_ipv6(linkaddr_t *link_destaddr)
   uncomp_hdr_len += UIP_IPH_LEN;
   return;
 }
+#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6 */
 /** @} */
 
 /*--------------------------------------------------------------------*/
@@ -1479,17 +1530,21 @@ output(const uip_lladdr_t *localdest)
 
   LOG_INFO("output: sending packet len %d\n", uip_len);
 
-  if(uip_len >= COMPRESSION_THRESHOLD) {
-    /* Try to compress the headers */
+  /* Try to compress the headers */
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
-    compress_hdr_ipv6(&dest);
+  compress_hdr_ipv6(&dest);
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6 */
-#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06
-    compress_hdr_iphc(&dest);
-#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06 */
-  } else {
-    compress_hdr_ipv6(&dest);
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH
+  /* Add 6LoRH headers before IPHC. Only needed on routed traffic
+  (non link-local). */
+  if(!uip_is_addr_linklocal(&UIP_IP_BUF->destipaddr)) {
+    add_paging_dispatch(1);
+    add_6lorh_hdr();
   }
+#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH */
+#if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC
+  compress_hdr_iphc(&dest);
+#endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
   LOG_INFO("output: header of len %d\n", packetbuf_hdr_len);
 
   /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
@@ -1545,8 +1600,6 @@ output(const uip_lladdr_t *localdest)
      * FRAG1 dispatch + header
      * Note that the length is in units of 8 bytes
      */
-/*     PACKETBUF_FRAG_BUF->dispatch_size = */
-/*       uip_htons((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len); */
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE,
           ((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len));
     frag_tag = my_tag++;
@@ -1695,18 +1748,15 @@ input(void)
    * Since we don't support the mesh and broadcast header, the first header
    * we look for is the fragmentation header
    */
-  switch((GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0xf800) >> 8) {
+  switch((GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) >> 8) & SICSLOWPAN_DISPATCH_FRAG_MASK) {
     case SICSLOWPAN_DISPATCH_FRAG1:
       LOG_INFO("input: FRAG1 ");
       frag_offset = 0;
-/*       frag_size = (uip_ntohs(PACKETBUF_FRAG_BUF->dispatch_size) & 0x07ff); */
       frag_size = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0x07ff;
-/*       frag_tag = uip_ntohs(PACKETBUF_FRAG_BUF->tag); */
       frag_tag = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG);
       LOG_INFO("size %d, tag %d, offset %d)\n",
              frag_size, frag_tag, frag_offset);
       packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
-      /*      printf("frag1 %d %d\n", reass_tag, frag_tag);*/
       first_fragment = 1;
       is_fragment = 1;
 
@@ -1765,32 +1815,36 @@ input(void)
   }
 #endif /* SICSLOWPAN_CONF_FRAG */
 
-  /* Process next dispatch and headers */
-#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06
-  if((PACKETBUF_HC1_PTR[PACKETBUF_HC1_DISPATCH] & 0xe0) == SICSLOWPAN_DISPATCH_IPHC) {
-    LOG_INFO("input: IPHC\n");
-    uncompress_hdr_iphc(buffer, frag_size);
-  } else
-#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06 */
-    switch(PACKETBUF_HC1_PTR[PACKETBUF_HC1_DISPATCH]) {
-    case SICSLOWPAN_DISPATCH_IPV6:
-      LOG_INFO("input: IPV6\n");
-      packetbuf_hdr_len += SICSLOWPAN_IPV6_HDR_LEN;
-
-      /* Put uncompressed IP header in sicslowpan_buf. */
-      memcpy(buffer, packetbuf_ptr + packetbuf_hdr_len, UIP_IPH_LEN);
-
-      /* Update uncomp_hdr_len and packetbuf_hdr_len. */
-      packetbuf_hdr_len += UIP_IPH_LEN;
-      uncomp_hdr_len += UIP_IPH_LEN;
-      break;
-    default:
-      /* unknown header */
-      LOG_ERR("input: unknown dispatch: %u\n",
-             PACKETBUF_HC1_PTR[PACKETBUF_HC1_DISPATCH]);
-      return;
+  /* First, process 6LoRH headers */
+  curr_page = 0;
+  digest_paging_dispatch();
+  if(curr_page == 1) {
+    LOG_INFO("input: page 1, 6LoRH\n");
+    digest_6lorh_hdr();
+  } else if (curr_page > 1) {
+    LOG_ERR("input: page %u not supported\n", curr_page);
+    return;
   }
 
+  /* Process next dispatch and headers */
+  if((PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
+    LOG_INFO("input: IPHC\n");
+    uncompress_hdr_iphc(buffer, frag_size);
+  } else if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
+    LOG_INFO("input: IPV6\n");
+    packetbuf_hdr_len += SICSLOWPAN_IPV6_HDR_LEN;
+
+    /* Put uncompressed IP header in sicslowpan_buf. */
+    memcpy(buffer, packetbuf_ptr + packetbuf_hdr_len, UIP_IPH_LEN);
+
+    /* Update uncomp_hdr_len and packetbuf_hdr_len. */
+    packetbuf_hdr_len += UIP_IPH_LEN;
+    uncomp_hdr_len += UIP_IPH_LEN;
+  } else {
+    LOG_ERR("input: unknown dispatch: 0x%02x\n",
+             PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH]);
+    return;
+  }
 
 #if SICSLOWPAN_CONF_FRAG
  copypayload:
@@ -1900,7 +1954,7 @@ sicslowpan_init(void)
 
   tcpip_set_outputfunc(output);
 
-#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC
 /* Preinitialize any address contexts for better header compression
  * (Saves up to 13 bytes per 6lowpan packet)
  * The platform contiki-conf.h file can override this using e.g.
@@ -1942,7 +1996,7 @@ sicslowpan_init(void)
   }
 #endif /* SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS > 1 */
 
-#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_HC06 */
+#endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC */
 }
 /*--------------------------------------------------------------------*/
 int
