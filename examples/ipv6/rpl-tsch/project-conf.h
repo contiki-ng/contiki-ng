@@ -35,6 +35,9 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
+/* Set to use the Contiki shell */
+#define WITH_SHELL 1
+
 /* Set to run orchestra */
 #ifndef WITH_ORCHESTRA
 #define WITH_ORCHESTRA 0
@@ -75,6 +78,11 @@
 #undef SYS_CTRL_CONF_OSC32K_USE_XTAL
 #define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
 
+#if WITH_SHELL
+/* Needed for CC2538 platforms, for serial */
+#define USB_SERIAL_CONF_ENABLE 1
+#endif /* WITH_SHELL */
+
 /* Needed for cc2420 platforms only */
 /* Disable DCO calibration (uses timerB) */
 #undef DCOSYNCH_CONF_ENABLED
@@ -89,7 +97,7 @@
 
 /* TSCH per-slot logging */
 #undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 1
+#define TSCH_LOG_CONF_PER_SLOT 0
 
 /* IEEE802.15.4 PANID */
 #undef IEEE802154_CONF_PANID

@@ -8,7 +8,7 @@ CONTIKI_WITH_IPV6 = 1
 MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
 MAKE_WITH_SECURITY ?= 0 # force Security from command line
 
-APPS += orchestra
+APPS += orchestra shell
 MODULES += core/net/mac/tsch
 
 ifeq ($(MAKE_WITH_ORCHESTRA),1)

@@ -48,6 +48,9 @@
 #if WITH_ORCHESTRA
 #include "orchestra.h"
 #endif /* WITH_ORCHESTRA */
+#if WITH_SHELL
+#include "serial-shell.h"
+#endif /* WITH_SHELL */
 
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
@@ -131,7 +134,7 @@ print_network_status(void)
     PRINT6ADDR(&child_ipaddr);
     if(link->parent == NULL) {
       memset(&parent_ipaddr, 0, sizeof(parent_ipaddr));
-      PRINTF(" --- DODAG root ");
+      PRINTF(" to DODAG root ");
     } else {
       PRINTF(" to ");
       PRINT6ADDR(&parent_ipaddr);
@@ -173,6 +176,10 @@ PROCESS_THREAD(node_process, ev, data)
   node_role = role_6ln;
 
   int coordinator_candidate = 0;
+
+#if WITH_SHELL
+  serial_shell_init();
+#endif /* WITH_SHELL */
 
 #if CONTIKI_TARGET_COOJA
   coordinator_candidate = (node_id == 1);
