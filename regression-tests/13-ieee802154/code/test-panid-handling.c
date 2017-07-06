@@ -181,7 +181,7 @@ setup_frame802154_2006_fcf(const panid_test_def *t, frame802154_fcf_t *fcf)
 static void
 setup_frame802154_2015_fcf(const panid_test_def *t, frame802154_fcf_t *fcf)
 {
-  fcf->frame_version = FRAME802154_IEEE802154E_2012;
+  fcf->frame_version = FRAME802154_IEEE802154_2015;
 
   setup_addr_mode(t->dest_addr_mode, &fcf->dest_addr_mode);
   setup_addr_mode(t->src_addr_mode, &fcf->src_addr_mode);
