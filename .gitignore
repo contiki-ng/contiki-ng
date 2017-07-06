@@ -1,5 +1,6 @@
 *.a
 *.bin
+*.hex
 *.map
 *.png
 *.log
@@ -8,38 +9,9 @@
 *.d
 *.ihex
 *.pyc
-*.redbee-econotag
-*.econotag
-*.native
-*.z1
-*.minimal-net
-*.sky
-*.wismote
-*.esb
-*.avr-raven
-*.exp5438
-*.mbxxx
-*.win32
-*.apple2enh
-*.atarixl
-*.c128
-*.c64
-*.cc2538dk
-*.zoul
-*.jn516x
-*.srf06-cc26xx
-*.ev-aducrf101mkxz
-*.report
-summary
-*.summary
-*.runerr
-*.runlog
-*.faillog
-*.orig
 *~
 .DS_Store
 obj_*
-symbols.*
 Makefile.target
 doc/html
 doc/latex
@@ -60,16 +32,46 @@ tools/coffee-manager/coffee.jar
 tools/cooja/apps/avrora/lib/cooja_avrora.jar
 tools/cooja/apps/collect-view/cooja-collect-view.jar
 
-# sdcc build artifacts
-contiki-cc2530dk.lib
-*.ihx
-*.hex
-*.mem
-*.lk
-*.omf
-*.cdb
-*.banks
-*.cc2530dk
+# platform build artifacts
+*.cc2538dk
+*.cooja
+*.cooja-ip64
+*.galileo
+*.jn516x
+*.native
+*.nrf52dk
+*.openmote-cc2538
+*.sky
+*.srf06-cc26xx
+*.zoul
+
+# do not ignore platform makefiles
+!Makefile.cc2538dk
+!Makefile.cooja
+!Makefile.cooja-ip64
+!Makefile.galileo
+!Makefile.jn516x
+!Makefile.native
+!Makefile.nrf52dk
+!Makefile.openmote-cc2538
+!Makefile.sky
+!Makefile.srf06-cc26xx
+!Makefile.zoul
+
+# other galileo build and debug artefacts
+*.galileo.dll
+*.galileo.efi
+LOG_OPENOCD
+
+# other nRF52 build artifacts
+*.jlink
+
+# galileo bsp files
+platform/galileo/bsp/libc/Makefile.libc
+platform/galileo/bsp/libc/i586-elf/
+platform/galileo/bsp/libc/newlib-2.2.0-1*
+platform/galileo/bsp/grub/src/
+platform/galileo/bsp/grub/bin/
 
 # VC++ build artifacts
 *.exp
@@ -79,28 +81,17 @@ contiki-cc2530dk.lib
 *.prg
 *.dsc
 
-#cc65 build artifacts
-*.s
-*.eth
-*.dsk
-*.po
-*.atr
-*.d64
-*.d71
-*.d81
-
-# Cooja Build Artifacts
-*.cooja
-
 #regression tests artifacts
 *.testlog
 *.log.prog
+*.report
+summary
+*.summary
+*.runerr
+*.runlog
+*.faillog
 regression-tests/[0-9][0-9]-*/report
 regression-tests/[0-9][0-9]-*/org/
-
-# rl78 build artifacts
-*.eval-adf7xxxmb4z
-*.eval-adf7xxxmb4z.srec
 
 # cscope files
 cscope.*
@@ -112,20 +103,3 @@ cscope.*
 # x86 UEFI files
 cpu/x86/uefi/Makefile.uefi
 cpu/x86/uefi/edk2
-
-# galileo bsp files
-platform/galileo/bsp/libc/Makefile.libc
-platform/galileo/bsp/libc/i586-elf/
-platform/galileo/bsp/libc/newlib-2.2.0-1*
-platform/galileo/bsp/grub/src/
-platform/galileo/bsp/grub/bin/
-
-# galileo build and debug artefacts
-*.galileo
-*.galileo.dll
-*.galileo.efi
-LOG_OPENOCD
-
-# nRF52 build artifacts
-*.jlink
-*.nrf52dk
