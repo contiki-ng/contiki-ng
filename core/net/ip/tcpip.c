@@ -672,6 +672,15 @@ tcpip_ipv6_output(void)
     goto send_packet;
   }
 
+  /* We first check if the destination address is one of ours. There is no
+   * loopback interface -- instead, process this directly as incoming. */
+  if(uip_ds6_is_my_addr(&UIP_IP_BUF->destipaddr)) {
+    LOG_INFO("output: sending to ourself\n");
+    packet_input();
+    return;
+  }
+
+  /* Look for a next hop */
   if((nexthop = get_nexthop(&ipaddr)) == NULL) {
     goto exit;
   }
