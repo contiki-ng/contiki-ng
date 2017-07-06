@@ -68,7 +68,7 @@
 /* Main log function */
 
 #define LOG(newline, level, levelstr, ...) do {  \
-                            if(level <= LOG_LEVEL) { \
+                            if(level <= MIN(LOG_LEVEL, curr_log_level)) { \
                               if(newline) { \
                                 LOG_OUTPUT("[%-4s: %-10s] ", levelstr, LOG_MODULE); \
                                 if(LOG_WITH_LOC) { \
@@ -88,7 +88,7 @@
 
 /* Link-layer address */
 #define LOG_LLADDR(level, lladdr) do {  \
-                            if(level <= LOG_LEVEL) { \
+                            if(level <= MIN(LOG_LEVEL, curr_log_level)) { \
                               if(LOG_WITH_COMPACT_ADDR) { \
                                 log_lladdr_compact(lladdr); \
                               } else { \
@@ -99,7 +99,7 @@
 
 /* IPv6 address */
 #define LOG_6ADDR(level, ipaddr) do {  \
-                           if(level <= LOG_LEVEL) { \
+                           if(level <= MIN(LOG_LEVEL, curr_log_level)) { \
                              if(LOG_WITH_COMPACT_ADDR) { \
                                log_6addr_compact(ipaddr); \
                              } else { \
@@ -130,11 +130,13 @@
 #define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
 /* For testing log level */
-#define LOG_ERR_ENABLED        (LOG_LEVEL >= LOG_LEVEL_ERR)
-#define LOG_WARN_ENABLED       (LOG_LEVEL >= LOG_LEVEL_WARN)
-#define LOG_INFO_ENABLED       (LOG_LEVEL >= LOG_LEVEL_INFO)
-#define LOG_DBG_ENABLED        (LOG_LEVEL >= LOG_LEVEL_DBG)
-#define LOG_ANNOTATE_ENABLED   (LOG_LEVEL >= LOG_LEVEL_ANNOTATE)
+#define LOG_ERR_ENABLED        (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_ERR)
+#define LOG_WARN_ENABLED       (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_WARN)
+#define LOG_INFO_ENABLED       (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_INFO)
+#define LOG_DBG_ENABLED        (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_DBG)
+
+/* The current log level */
+extern int curr_log_level;
 
 #if NETSTACK_CONF_WITH_IPV6
 
@@ -163,6 +165,27 @@ void log_lladdr(const linkaddr_t *lladdr);
  * \param lladdr The link-layer address
 */
 void log_lladdr_compact(const linkaddr_t *lladdr);
+
+/**
+ * Sets a log level at run-time. Logs are included in the firmware via
+ * the compile-time flags in log-conf.h, but this allows to force lower log
+ * levels, system-wide.
+ * \param level The log level
+*/
+void log_set_level(int level);
+
+/**
+ * Returns the current log level.
+ * \return The current log level
+*/
+int log_get_level(void);
+
+/**
+ * Returns a textual description of a log level
+ * \param level log level
+ * \return The textual description
+*/
+const char *log_level_to_str(int level);
 
 #endif /* __LOG_H__ */
 

@@ -63,6 +63,7 @@ PROCESS_NAME(tsch_pending_events_process);
 static struct ringbufindex log_ringbuf;
 static struct tsch_log_t log_array[TSCH_LOG_QUEUE_LEN];
 static int log_dropped = 0;
+static int log_active = 0;
 
 /*---------------------------------------------------------------------------*/
 /* Process pending log messages */
@@ -144,15 +145,30 @@ tsch_log_prepare_add(void)
 void
 tsch_log_commit(void)
 {
-  ringbufindex_put(&log_ringbuf);
-  process_poll(&tsch_pending_events_process);
+  if(log_active == 1) {
+    ringbufindex_put(&log_ringbuf);
+    process_poll(&tsch_pending_events_process);
+  }
 }
 /*---------------------------------------------------------------------------*/
 /* Initialize log module */
 void
 tsch_log_init(void)
 {
-  ringbufindex_init(&log_ringbuf, TSCH_LOG_QUEUE_LEN);
+  if(log_active == 0) {
+    ringbufindex_init(&log_ringbuf, TSCH_LOG_QUEUE_LEN);
+    log_active = 1;
+  }
+}
+/*---------------------------------------------------------------------------*/
+/* Stop log module */
+void
+tsch_log_stop(void)
+{
+  if(log_active == 1) {
+    tsch_log_process_pending();
+    log_active = 0;
+  }
 }
 
 #endif /* TSCH_LOG_PER_SLOT */

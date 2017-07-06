@@ -112,6 +112,8 @@ void tsch_log_commit(void);
 void tsch_log_init(void);
 /* Process pending log messages */
 void tsch_log_process_pending(void);
+/* Stop logging module */
+void tsch_log_stop(void);
 
 /************ Macros **********/
 

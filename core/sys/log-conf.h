@@ -67,6 +67,13 @@
 #define LOG_WITH_ANNOTATE 0
 #endif /* LOG_CONF_WITH_ANNOTATE */
 
+/* Log level at startup. Can be modified at runtime via log_set_level() */
+#ifdef LOG_CONF_START_LEVEL
+#define LOG_START_LEVEL LOG_CONF_START_LEVEL
+#else /* LOG_CONF_START_LEVEL */
+#define LOG_START_LEVEL LOG_LEVEL_DBG /* All (already compiled) logs are enabled */
+#endif /* LOG_CONF_START_LEVEL */
+
 /* Custom output function -- default is printf */
 #ifdef LOG_CONF_OUTPUT
 #define LOG_OUTPUT(...) LOG_CONF_OUTPUT(__VA_ARGS__)

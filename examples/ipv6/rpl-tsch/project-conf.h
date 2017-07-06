@@ -81,6 +81,13 @@
 #if WITH_SHELL
 /* Needed for CC2538 platforms, for serial */
 #define USB_SERIAL_CONF_ENABLE 1
+
+/* USB serial takes space, free more space elsewhere */
+#undef SICSLOWPAN_CONF_FRAG
+#define SICSLOWPAN_CONF_FRAG 0
+#undef UIP_CONF_BUFFER_SIZE
+#define UIP_CONF_BUFFER_SIZE 160
+
 #endif /* WITH_SHELL */
 
 /* Needed for cc2420 platforms only */
@@ -94,10 +101,6 @@
 /*******************************************************/
 /******************* Configure TSCH ********************/
 /*******************************************************/
-
-/* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 0
 
 /* IEEE802.15.4 PANID */
 #undef IEEE802154_CONF_PANID
@@ -152,5 +155,16 @@
 #undef TSCH_CONF_MAX_EB_PERIOD
 #define TSCH_CONF_MAX_EB_PERIOD (4 * CLOCK_SECOND)
 #endif /* CONTIKI_TARGET_COOJA */
+
+/* Logging */
+#define RPL_LOG_LEVEL                         LOG_LEVEL_INFO
+#define TCPIP_LOG_LEVEL                       LOG_LEVEL_WARN
+#define IPV6_LOG_LEVEL                        LOG_LEVEL_WARN
+#define SICSLOWPAN_LOG_LEVEL                  LOG_LEVEL_WARN
+#define MAC_LOG_LEVEL                         LOG_LEVEL_INFO
+#define FRAMER_LOG_LEVEL                      LOG_LEVEL_WARN
+#define TSCH_LOG_CONF_PER_SLOT                1
+
+#define LOG_CONF_START_LEVEL                  LOG_LEVEL_WARN
 
 #endif /* __PROJECT_CONF_H__ */

@@ -45,9 +45,13 @@
 #include "contiki.h"
 #include "shell.h"
 #include "shell-commands.h"
+#include "sys/log.h"
 #include "net/ip/uip.h"
 #include "net/ip/uiplib.h"
 #include "net/ipv6/uip-icmp6.h"
+#include "net/mac/tsch/tsch-log.h"
+
+#include <stdlib.h>
 
 #define PING_TIMEOUT (5 * CLOCK_SECOND)
 
@@ -109,6 +113,46 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, const char *args))
 }
 /*---------------------------------------------------------------------------*/
 static
+PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, const char *args))
+{
+  static char *next_args;
+  int prev_level;
+  int level;
+
+  PT_BEGIN(pt);
+
+  /* Isolate first argument */
+  next_args = strchr(args, ' ');
+  if(next_args != NULL) {
+    *next_args = '\0';
+    next_args++;
+  }
+
+  /* Parse argument */
+  level = (int)strtol(args, NULL, 10);
+
+  /* Set log level */
+  if(level >= LOG_LEVEL_NONE && level <= LOG_LEVEL_DBG) {
+    prev_level = log_get_level();
+    if(level != prev_level) {
+      log_set_level(level);
+      if(level >= LOG_LEVEL_DBG) {
+        tsch_log_init();
+        SHELL_OUTPUT(output, "TSCH logging started\n");
+      } else {
+        tsch_log_stop();
+        SHELL_OUTPUT(output, "TSCH logging stopped\n");
+      }
+    }
+    SHELL_OUTPUT(output, "Log level set to %u (%s)\n", level, log_level_to_str(level));
+  } else {
+    SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
+  }
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
 PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, const char *args))
 {
   PT_BEGIN(pt);
@@ -133,8 +177,9 @@ shell_commands_init(void)
 }
 /*---------------------------------------------------------------------------*/
 struct shell_command_t shell_commands[] = {
-  { "help", cmd_help, "'> help': Shows this help" },
-  { "ping", cmd_ping, "'> ping addr': Pings the IPv6 address 'addr'" },
+  { "help",        cmd_help,        "'> help': Shows this help" },
+  { "ping",        cmd_ping,        "'> ping addr': Pings the IPv6 address 'addr'" },
+  { "log",         cmd_log,         "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
   { NULL, NULL, NULL },
 };
 

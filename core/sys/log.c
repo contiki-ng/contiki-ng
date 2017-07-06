@@ -53,6 +53,8 @@
 #include "sys/log.h"
 #include "net/ip/ip64-addr.h"
 
+int curr_log_level = LOG_START_LEVEL;
+
 /*---------------------------------------------------------------------------*/
 void
 log_6addr(const uip_ipaddr_t *ipaddr)
@@ -131,6 +133,38 @@ log_lladdr_compact(const linkaddr_t *lladdr)
     LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE/2-1]));
   }
 }
-
+/*---------------------------------------------------------------------------*/
+void
+log_set_level(int level)
+{
+  if(level >= LOG_LEVEL_NONE && level <= LOG_LEVEL_DBG) {
+    curr_log_level = level;
+  }
+}
+/*---------------------------------------------------------------------------*/
+int
+log_get_level(void)
+{
+  return curr_log_level;
+}
+/*---------------------------------------------------------------------------*/
+const char *
+log_level_to_str(int level)
+{
+  switch(level) {
+    case LOG_LEVEL_NONE:
+      return "None";
+    case LOG_LEVEL_ERR:
+      return "Errors";
+    case LOG_LEVEL_WARN:
+      return "Warnings";
+    case LOG_LEVEL_INFO:
+      return "Info";
+    case LOG_LEVEL_DBG:
+      return "Debug";
+    default:
+      return "N/A";
+  }
+}
 /** @} */
 /** @} */
