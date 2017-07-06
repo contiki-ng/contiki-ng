@@ -268,6 +268,9 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
 void
 uip_icmp6_send(const uip_ipaddr_t *dest, int type, int code, int payload_len)
 {
+  LOG_INFO("Sending ICMPv6 packet to ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO_(", type %u, code %u, len %u\n", type, code, payload_len);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
