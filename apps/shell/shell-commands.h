@@ -44,7 +44,7 @@
 #define _SHELL_COMMANDS_H_
 
 /* Command handling function type */
-typedef char (shell_commands_func)(struct pt *pt, shell_output_func output, const char *args);
+typedef char (shell_commands_func)(struct pt *pt, shell_output_func output, char *args);
 
 /* Command structure */
 struct shell_command_t {

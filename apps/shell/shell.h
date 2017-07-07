@@ -48,6 +48,26 @@
 #include "sys/process.h"
 #include <stdio.h>
 
+/* Helper macros to parse arguments */
+#define SHELL_ARGS_INIT(args, next_args) (next_args) = (args);
+
+#define SHELL_ARGS_NEXT(args, next_args) do { \
+						(args) = (next_args); \
+						if((args) != NULL) { \
+							if(*(args) == '\0') { \
+								(args) = NULL; \
+							} else { \
+								(next_args) = strchr((args), ' '); \
+								if((next_args) != NULL) { \
+									*(next_args) = '\0'; \
+									(next_args)++; \
+								} \
+							} \
+						} else { \
+							(next_args) = NULL; \
+						}  \
+		} while(0)
+
 /* Printf-formatted output via a given output function */
 #define SHELL_OUTPUT(output_func, format, ...) do { \
 		char buffer[128]; \

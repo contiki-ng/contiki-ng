@@ -73,21 +73,18 @@ echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t da
 }
 /*---------------------------------------------------------------------------*/
 static
-PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, const char *args))
+PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
 {
   static uip_ipaddr_t remote_addr;
-  static char *next_args;
   static struct etimer timeout_timer;
+  char *next_args;
 
   PT_BEGIN(pt);
 
-  /* Isolate first argument */
-  next_args = strchr(args, ' ');
-  if(next_args != NULL) {
-    *next_args = '\0';
-    next_args++;
-  }
+  SHELL_ARGS_INIT(args, next_args);
 
+  /* Get argument (remote IPv6) */
+  SHELL_ARGS_NEXT(args, next_args);
   if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
     SHELL_OUTPUT(output, "Invalid IPv6: %s\n", args);
     PT_EXIT(pt);
@@ -153,13 +150,52 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, const char *args))
 }
 /*---------------------------------------------------------------------------*/
 static
-PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, const char *args))
+PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
 {
+  static int prev_level;
+  static int level;
+  char *next_args;
+  char *ptr;
+
   PT_BEGIN(pt);
 
-  struct shell_command_t *cmd_ptr = shell_commands;
+  SHELL_ARGS_INIT(args, next_args);
+
+  /* Get and parse argument */
+  SHELL_ARGS_NEXT(args, next_args);
+  level = (int)strtol(args, &ptr, 10);
+  if((level == 0 && args == ptr)
+    || level < LOG_LEVEL_NONE || level > LOG_LEVEL_DBG) {
+    SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
+    PT_EXIT(pt);
+  }
+
+  /* Set log level */
+  prev_level = log_get_level();
+  if(level != prev_level) {
+    log_set_level(level);
+    if(level >= LOG_LEVEL_DBG) {
+      tsch_log_init();
+      SHELL_OUTPUT(output, "TSCH logging started\n");
+    } else {
+      tsch_log_stop();
+      SHELL_OUTPUT(output, "TSCH logging stopped\n");
+    }
+  }
+  SHELL_OUTPUT(output, "Log level set to %u (%s)\n", level, log_level_to_str(level));
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
+{
+  struct shell_command_t *cmd_ptr;
+
+  PT_BEGIN(pt);
 
   SHELL_OUTPUT(output, "Available commands:\n");
+  cmd_ptr = shell_commands;
   while(cmd_ptr->name != NULL) {
     SHELL_OUTPUT(output, "%s\n", cmd_ptr->help);
     cmd_ptr++;
