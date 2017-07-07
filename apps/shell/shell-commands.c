@@ -49,7 +49,14 @@
 #include "net/ip/uip.h"
 #include "net/ip/uiplib.h"
 #include "net/ipv6/uip-icmp6.h"
+#include "net/ipv6/uip-ds6.h"
 #include "net/mac/tsch/tsch-log.h"
+#if UIP_CONF_IPV6_RPL_LITE == 1
+#include "net/rpl-lite/rpl.h"
+#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/rpl/rpl.h"
+#include "net/rpl/rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 
 #include <stdlib.h>
 
@@ -110,40 +117,56 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
 }
 /*---------------------------------------------------------------------------*/
 static
-PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, const char *args))
+PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
 {
-  static char *next_args;
-  int prev_level;
-  int level;
+  static int is_on;
+  static uip_ipaddr_t prefix;
+  char *next_args;
 
   PT_BEGIN(pt);
 
-  /* Isolate first argument */
-  next_args = strchr(args, ' ');
-  if(next_args != NULL) {
-    *next_args = '\0';
-    next_args++;
-  }
+  SHELL_ARGS_INIT(args, next_args);
 
-  /* Parse argument */
-  level = (int)strtol(args, NULL, 10);
+  /* Get first arg (0/1) */
+  SHELL_ARGS_NEXT(args, next_args);
 
-  /* Set log level */
-  if(level >= LOG_LEVEL_NONE && level <= LOG_LEVEL_DBG) {
-    prev_level = log_get_level();
-    if(level != prev_level) {
-      log_set_level(level);
-      if(level >= LOG_LEVEL_DBG) {
-        tsch_log_init();
-        SHELL_OUTPUT(output, "TSCH logging started\n");
-      } else {
-        tsch_log_stop();
-        SHELL_OUTPUT(output, "TSCH logging stopped\n");
-      }
-    }
-    SHELL_OUTPUT(output, "Log level set to %u (%s)\n", level, log_level_to_str(level));
+  if(!strcmp(args, "1")) {
+    is_on = 1;
+  } else if(!strcmp(args, "0")) {
+    is_on = 0;
   } else {
     SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
+    PT_EXIT(pt);
+  }
+
+  /* Get first second arg (prefix) */
+  SHELL_ARGS_NEXT(args, next_args);
+  if(args != NULL) {
+    if(uiplib_ipaddrconv(args, &prefix) == 0) {
+      SHELL_OUTPUT(output, "Invalid Prefix: %s\n", args);
+      PT_EXIT(pt);
+    }
+  } else {
+    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  }
+
+  if(is_on) {
+    if(!rpl_dag_root_is_root()) {
+      SHELL_OUTPUT(output, "Setting as DAG root with prefix ");
+      shell_output_6addr(output, &prefix);
+      SHELL_OUTPUT(output, "\n");
+      rpl_dag_root_init(&prefix, NULL);
+      rpl_dag_root_init_dag_immediately();
+    } else {
+      SHELL_OUTPUT(output, "Node is already a DAG root\n");
+    }
+  } else {
+    if(rpl_dag_root_is_root()) {
+      SHELL_OUTPUT(output, "Setting as non-root node: leaving DAG\n");
+      rpl_dag_leave();
+    } else {
+      SHELL_OUTPUT(output, "Node is not a DAG root\n");
+    }
   }
 
   PT_END(pt);
@@ -213,9 +236,10 @@ shell_commands_init(void)
 }
 /*---------------------------------------------------------------------------*/
 struct shell_command_t shell_commands[] = {
-  { "help",        cmd_help,        "'> help': Shows this help" },
-  { "ping",        cmd_ping,        "'> ping addr': Pings the IPv6 address 'addr'" },
-  { "log",         cmd_log,         "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
+  { "help",          cmd_help,            "'> help': Shows this help" },
+  { "ping",          cmd_ping,            "'> ping addr': Pings the IPv6 address 'addr'" },
+  { "rpl-set-root",  cmd_rpl_set_root,    "'> rpl-set-root 0/1 [prefix]': Sets node as root (on) or not (off). A /64 prefix can be optionally specified." },
+  { "log",           cmd_log,             "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
   { NULL, NULL, NULL },
 };
 

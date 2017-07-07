@@ -94,8 +94,9 @@ rpl_dag_leave(void)
   /* Forget past link statistics */
   link_stats_reset();
 
-  /* Remove all neighbors */
+  /* Remove all neighbors and lnks */
   rpl_neighbor_remove_all();
+  rpl_ns_free_all();
 
   /* Stop all timers */
   rpl_timers_stop_dag_timers();
