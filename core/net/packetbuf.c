@@ -201,7 +201,6 @@ packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
   memcpy(packetbuf_addrs, addrs, sizeof(packetbuf_addrs));
 }
 /*---------------------------------------------------------------------------*/
-#if !PACKETBUF_CONF_ATTRS_INLINE
 int
 packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val)
 {
@@ -228,7 +227,6 @@ packetbuf_addr(uint8_t type)
   return &packetbuf_addrs[type - PACKETBUF_ADDR_FIRST].addr;
 }
 /*---------------------------------------------------------------------------*/
-#endif /* PACKETBUF_CONF_ATTRS_INLINE */
 int
 packetbuf_holds_broadcast(void)
 {

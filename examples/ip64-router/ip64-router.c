@@ -3,6 +3,7 @@
 #include "ip64.h"
 #include "net/netstack.h"
 #include "rpl-dag-root.h"
+#include "sys/autostart.h"
 
 /*---------------------------------------------------------------------------*/
 PROCESS(router_node_process, "Router node");

@@ -1,13 +1,6 @@
 all: udp-client udp-server
 CONTIKI=../../..
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-
-ifdef WITH_COMPOWER
-APPS+=powertrace
-CFLAGS+= -DWITH_COMPOWER=1 -DQUEUEBUF_CONF_NUM=4
-endif
-
 ifdef SERVER_REPLY
 CFLAGS+=-DSERVER_REPLY=$(SERVER_REPLY)
 endif

@@ -59,7 +59,7 @@ send_packet(mac_callback_t sent, void *ptr)
 static void
 input_packet(void)
 {
-#if CSMA_SEND_802154_ACK
+#if CSMA_SEND_SOFT_ACK
   int original_datalen;
   uint8_t *original_dataptr;
 
@@ -67,13 +67,10 @@ input_packet(void)
   original_dataptr = packetbuf_dataptr();
 #endif
 
-#if CSMA_802154_AUTOACK
   if(packetbuf_datalen() == CSMA_ACK_LEN) {
     /* Ignore ack packets */
     LOG_DBG("ignored ack\n");
-  } else
-#endif /* CSMA_802154_AUTOACK */
-  if(NETSTACK_FRAMER.parse() < 0) {
+  } else if(NETSTACK_FRAMER.parse() < 0) {
     LOG_ERR("failed to parse %u\n", packetbuf_datalen());
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
@@ -82,7 +79,6 @@ input_packet(void)
   } else {
     int duplicate = 0;
 
-#if CSMA_802154_AUTOACK || CSMA_802154_AUTOACK_HW
     /* Check for duplicate packet. */
     duplicate = mac_sequence_is_duplicate();
     if(duplicate) {
@@ -93,9 +89,8 @@ input_packet(void)
     } else {
       mac_sequence_register_seqno();
     }
-#endif /* CSMA_802154_AUTOACK */
 
-#if CSMA_SEND_802154_ACK
+#if CSMA_SEND_SOFT_ACK
     {
       frame802154_t info154;
       frame802154_parse(original_dataptr, original_datalen, &info154);
@@ -111,7 +106,7 @@ input_packet(void)
         NETSTACK_RADIO.send(ackdata, CSMA_ACK_LEN);
       }
     }
-#endif /* CSMA_SEND_802154_ACK */
+#endif /* CSMA_SEND_SOFT_ACK */
     if(!duplicate) {
       LOG_WARN("received packet from ");
       LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));

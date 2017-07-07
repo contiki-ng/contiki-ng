@@ -159,7 +159,7 @@ be added regardless of their reachability and liveness.  */
 #ifdef UIP_CONF_ND6_REACHABLE_TIME
 #define UIP_ND6_REACHABLE_TIME         UIP_CONF_ND6_REACHABLE_TIME
 #else
-#define UIP_ND6_REACHABLE_TIME         30000
+#define UIP_ND6_REACHABLE_TIME         60000
 #endif
 
 #ifdef UIP_CONF_ND6_RETRANS_TIMER

@@ -45,32 +45,6 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 
-#define WITH_SEND_CCA 1
-
-#ifndef CC2420_CONF_CHANNEL
-#define CC2420_CONF_CHANNEL 26
-#endif /* CC2420_CONF_CHANNEL */
-
-#ifndef CC2420_CONF_CCA_THRESH
-#define CC2420_CONF_CCA_THRESH -45
-#endif /* CC2420_CONF_CCA_THRESH */
-
-#ifndef CC2420_CONF_AUTOACK
-#define CC2420_CONF_AUTOACK 0
-#endif /* CC2420_CONF_AUTOACK */
-
-#define CHECKSUM_LEN        2
-#define FOOTER_LEN          2
-#define FOOTER1_CRC_OK      0x80
-#define FOOTER1_CORRELATION 0x7f
-
-#ifdef CC2420_CONF_RSSI_OFFSET
-#define RSSI_OFFSET CC2420_CONF_RSSI_OFFSET
-#else /* CC2420_CONF_RSSI_OFFSET */
-/* The RSSI_OFFSET is approximate -45 (see CC2420 specification) */
-#define RSSI_OFFSET -45
-#endif /* CC2420_CONF_RSSI_OFFSET */
-
 enum write_ram_order {
   /* Begin with writing the first given byte */
   WRITE_RAM_IN_ORDER,

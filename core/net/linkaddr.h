@@ -58,7 +58,7 @@
 #ifdef LINKADDR_CONF_SIZE
 #define LINKADDR_SIZE LINKADDR_CONF_SIZE
 #else /* LINKADDR_SIZE */
-#define LINKADDR_SIZE 2
+#define LINKADDR_SIZE 8
 #endif /* LINKADDR_SIZE */
 
 typedef union {

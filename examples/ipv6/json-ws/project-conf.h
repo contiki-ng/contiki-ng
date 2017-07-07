@@ -33,33 +33,10 @@
 #include "jsontree.h"
 #define HTTPD_WS_CONF_USER_STATE struct jsontree_context json
 
-
 /* #define JSON_WS_CONF_CALLBACK_PROTO "http" | "udp" | "cosm" */
 #define JSON_WS_CONF_CALLBACK_PROTO "http"
 #define JSON_WS_CONF_CALLBACK_PORT  80
 #define JSON_WS_CONF_CALLBACK_INTERVAL 120
-
-#undef CSMA_CONF_802154_AUTOACK
-#define CSMA_CONF_802154_AUTOACK 1
-
-/* Reduce code size */
-#undef ENERGEST_CONF_ON
-#define ENERGEST_CONF_ON 0
-
-/* needs to be ~4 for fragmentation to work */
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM          4
-
-#undef NETSTACK_MAX_ROUTE_ENTRIES
-#define NETSTACK_MAX_ROUTE_ENTRIES   7
-#undef NBR_TABLE_CONF_MAX_NEIGHBORS
-#define NBR_TABLE_CONF_MAX_NEIGHBORS 7
-
-#undef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE    140
-
-/* #undef UIP_CONF_RECEIVE_WINDOW */
-/* #define UIP_CONF_RECEIVE_WINDOW  35 */
 
 #undef WEBSERVER_CONF_INBUF_SIZE
 #define WEBSERVER_CONF_INBUF_SIZE 200

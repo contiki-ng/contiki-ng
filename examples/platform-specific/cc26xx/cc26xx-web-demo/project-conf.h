@@ -36,6 +36,10 @@
 #define RF_CORE_CONF_CHANNEL                 25
 #define RF_BLE_CONF_ENABLED                   1
 /*---------------------------------------------------------------------------*/
+
+/* Enable TCP */
+#define UIP_CONF_TCP 1
+
 /* Enable/Disable Components of this Demo */
 #define CC26XX_WEB_DEMO_CONF_MQTT_CLIENT      1
 #define CC26XX_WEB_DEMO_CONF_6LBR_CLIENT      1

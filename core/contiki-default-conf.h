@@ -113,7 +113,7 @@
    for the uIP packet buffer. This sets an upper bound on the largest
    IP packet that can be received by the system. */
 #ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE 128
+#define UIP_CONF_BUFFER_SIZE 1280
 #endif /* UIP_CONF_BUFFER_SIZE */
 
 /* UIP_CONF_ROUTER specifies if the IPv6 node should be a router or

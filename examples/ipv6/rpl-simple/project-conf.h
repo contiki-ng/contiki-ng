@@ -43,21 +43,10 @@
 
 /* Save some space */
 
-#undef UIP_CONF_ND6_SEND_NA
-#define UIP_CONF_ND6_SEND_NA 0
-
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
 
-#undef UIP_CONF_TCP
-#define UIP_CONF_TCP 0
-
-#if !WITH_TSCH
-
-#undef CSMA_CONF_802154_AUTOACK
-#define CSMA_CONF_802154_AUTOACK       1
-
-#else
+#if WITH_TSCH
 
 /*******************************************************/
 /********************* Enable TSCH *********************/
@@ -102,6 +91,6 @@
 #undef TSCH_SCHEDULE_CONF_MAX_LINKS
 #define TSCH_SCHEDULE_CONF_MAX_LINKS 4
 
-#endif
+#endif /* WITH_TSCH */
 
 #endif

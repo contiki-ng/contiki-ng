@@ -59,9 +59,6 @@
 #undef NETSTACK_CONF_FRAMER
 #define NETSTACK_CONF_FRAMER no_framer
 
-#undef CC2420_CONF_AUTOACK
-#define CC2420_CONF_AUTOACK              1
-
 #undef UART1_CONF_RX_WITH_DMA
 #define UART1_CONF_RX_WITH_DMA           1
 

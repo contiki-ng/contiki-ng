@@ -49,9 +49,6 @@
  *
  * @{
  */
-#ifndef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
-#endif /* NETSTACK_CONF_NETWORK */
 
 /*
  * If set, the systems keeps the HF crystal oscillator on even when the radio is off.
@@ -61,11 +58,12 @@
 #define CC2650_FAST_RADIO_STARTUP               0
 #endif
 
-/* Configure CSMA for when it's selected */
-#define CSMA_CONF_802154_AUTOACK             1
-
 #ifdef RF_CHANNEL
 #define RF_CORE_CONF_CHANNEL             RF_CHANNEL
+#endif
+
+#ifndef RF_CORE_CONF_CHANNEL
+#define RF_CORE_CONF_CHANNEL                     25
 #endif
 
 /* Number of Prop Mode RX buffers */
@@ -93,25 +91,16 @@
 
 #define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 400)
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
-#define CSMA_CONF_802154_AUTOACK_HW            0
-#define CSMA_CONF_SEND_802154_ACK              1
+#define CSMA_CONF_SEND_SOFT_ACK              1
 
-#else
+#else /* CC13XX_CONF_PROP_MODE */
 #define NETSTACK_CONF_RADIO        ieee_mode_driver
 
-#ifndef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CONF_CHANNEL                     25
-#endif
-
-#define CSMA_CONF_802154_AUTOACK_HW            1
-#define CSMA_CONF_SEND_802154_ACK              0
-#endif
+#define CSMA_CONF_SEND_SOFT_ACK              0
+#endif /* CC13XX_CONF_PROP_MODE */
 
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN        125
 
-/* 6LoWPAN  */
-#define SICSLOWPAN_CONF_FRAG                    1
-#define SICSLOWPAN_CONF_MAXAGE                  8
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -144,9 +133,6 @@
  * @{
  */
 /* RF Config */
-#ifndef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID           0xABCD /**< Default PAN ID */
-#endif
 
 #ifndef IEEE_MODE_CONF_AUTOACK
 #define IEEE_MODE_CONF_AUTOACK               1 /**< RF H/W generates ACKs */
@@ -158,63 +144,6 @@
 
 #ifndef RF_BLE_CONF_ENABLED
 #define RF_BLE_CONF_ENABLED                  0 /**< 0 to disable BLE support */
-#endif
-/** @} */
-/*---------------------------------------------------------------------------*/
-/** @} */
-/**
- * \name IPv6 and network buffer configuration
- *
- * @{
- */
-/* Don't let contiki-default-conf.h decide if we are an IPv6 build */
-#ifndef NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_WITH_IPV6              0
-#endif
-
-#if NETSTACK_CONF_WITH_IPV6
-/*---------------------------------------------------------------------------*/
-/* Addresses, Sizes and Interfaces */
-#define LINKADDR_CONF_SIZE                   8
-#define UIP_CONF_LL_802154                   1
-#define UIP_CONF_LLH_LEN                     0
-
-/* The size of the uIP main buffer */
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE              1000
-#endif
-
-/* ND and Routing */
-#ifndef UIP_CONF_ROUTER
-#define UIP_CONF_ROUTER                      1
-#endif
-
-#define UIP_CONF_ND6_SEND_RA                 0
-
-#define UIP_CONF_ND6_REACHABLE_TIME     600000
-#define UIP_CONF_ND6_RETRANS_TIMER       10000
-
-#ifndef UIP_CONF_TCP
-#define UIP_CONF_TCP                         1
-#endif
-#ifndef UIP_CONF_TCP_MSS
-#define UIP_CONF_TCP_MSS                    64
-#endif
-
-#define UIP_CONF_UDP                         1
-#define UIP_CONF_UDP_CHECKSUMS               1
-#define UIP_CONF_ICMP6                       1
-
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Generic Configuration directives
- *
- * @{
- */
-#ifndef ENERGEST_CONF_ON
-#define ENERGEST_CONF_ON            0 /**< Energest Module */
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/

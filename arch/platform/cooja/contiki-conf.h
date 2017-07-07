@@ -37,8 +37,6 @@
 #include "subplatform-conf.h"
 #endif /* INCLUDE_SUBPLATFORM_CONF */
 
-#define PROFILE_CONF_ON 0
-#define ENERGEST_CONF_ON 0
 #define LOG_CONF_ENABLED 1
 
 #define COOJA 1
@@ -61,8 +59,7 @@
 /* Default network config */
 #if NETSTACK_CONF_WITH_IPV6
 
-#define CSMA_CONF_802154_AUTOACK  1
-#define CSMA_CONF_SEND_802154_ACK 1
+#define CSMA_CONF_SEND_SOFT_ACK 1
 #define CSMA_CONF_ACK_WAIT_TIME                RTIMER_SECOND / 500
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME 0
 
@@ -80,14 +77,6 @@
 
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
-#define NETSTACK_CONF_WITH_IPV6               1
-
-#define LINKADDR_CONF_SIZE          8
-
-#define UIP_CONF_LL_802154          1
-#define UIP_CONF_LLH_LEN            0
-
-#define UIP_CONF_ROUTER             1
 
 /* configure network size and density */
 #ifndef NETSTACK_MAX_ROUTE_ENTRIES
@@ -99,41 +88,11 @@
 
 #define TCPIP_CONF_ANNOTATE_TRANSMISSIONS 1
 
-#ifndef UIP_CONF_ND6_SEND_RA
-#define UIP_CONF_ND6_SEND_RA		0
-#endif
-
-#ifndef UIP_CONF_ND6_REACHABLE_TIME
-#define UIP_CONF_ND6_REACHABLE_TIME     600000
-#endif
-
-#ifndef UIP_CONF_ND6_RETRANS_TIMER
-#define UIP_CONF_ND6_RETRANS_TIMER      10000
-#endif
-
-#define LINKADDR_CONF_SIZE            8
-#define UIP_CONF_NETIF_MAX_ADDRESSES  3
-
 #ifndef UIP_CONF_IPV6_QUEUE_PKT
 #define UIP_CONF_IPV6_QUEUE_PKT         1
 #endif /* UIP_CONF_IPV6_QUEUE_PKT */
-#define UIP_CONF_IPV6_CHECKS            1
-#define UIP_CONF_IPV6_REASSEMBLY        0
-
-#ifndef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG                    1
-#define SICSLOWPAN_CONF_MAXAGE                  8
-#endif /* SICSLOWPAN_CONF_FRAG */
-#define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS       2
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-
-#define PACKETBUF_CONF_ATTRS_INLINE 1
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM 16
-#endif
 
 #define CC_CONF_REGISTER_ARGS          1
 #define CC_CONF_FUNCTION_POINTER_ARGS  1
@@ -161,24 +120,7 @@ typedef uint64_t rtimer_clock_t;
 #define RADIO_DELAY_BEFORE_RX 0
 #define RADIO_DELAY_BEFORE_DETECT 0
 
-#define AODV_COMPLIANCE
-#define AODV_NUM_RT_ENTRIES 32
-
-#define WITH_ASCII 1
-
-#define UIP_CONF_ICMP_DEST_UNREACH 1
-
-#define UIP_CONF_DHCP_LIGHT
-#define UIP_CONF_LLH_LEN         0
-#define UIP_CONF_TCP_CONNS 4
-#define UIP_CONF_MAX_LISTENPORTS 8
-#define UIP_CONF_FWCACHE_SIZE    30
-#define UIP_CONF_BROADCAST       1
 #define UIP_ARCH_IPCHKSUM        1
-#define UIP_CONF_UDP             1
-#define UIP_CONF_UDP_CHECKSUMS   1
-#define UIP_CONF_PINGADDRCONF    0
-#define UIP_CONF_LOGGING         0
 
 #if NETSTACK_CONF_WITH_IPV6
 #endif /* NETSTACK_CONF_WITH_IPV6 */
@@ -189,20 +131,7 @@ typedef uint64_t rtimer_clock_t;
 
 #define CFS_CONF_OFFSET_TYPE	long
 
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE            1600
-#endif
-
-#ifndef UIP_CONF_TCP_MSS
-#define UIP_CONF_TCP_MSS                (UIP_CONF_BUFFER_SIZE - 70)
-#endif
-
-#ifndef UIP_CONF_RECEIVE_WINDOW
-#define UIP_CONF_RECEIVE_WINDOW         (UIP_CONF_BUFFER_SIZE - 70)
-#endif
-
 #define RF_CHANNEL                     26
-#define IEEE802154_CONF_PANID          0xABCD
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN 125
 
 /* include the project config */

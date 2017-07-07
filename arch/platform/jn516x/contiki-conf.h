@@ -39,123 +39,15 @@
 #include "platform-conf.h"
 #endif /* PLATFORM_CONF_H */
 
-#ifndef CCM_STAR_CONF
-#define CCM_STAR_CONF ccm_star_driver_jn516x
-#endif /* CCM_STAR_CONF */
-
+/* Configure radio driver */
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO   micromac_radio_driver
 #endif /* NETSTACK_CONF_RADIO */
 
-#define PACKETBUF_CONF_ATTRS_INLINE 1
-
-#ifndef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID       0xABCD
-#endif /* IEEE802154_CONF_PANID */
-
-#ifndef ENERGEST_CONF_ON
-#define ENERGEST_CONF_ON 1
-#endif /* ENERGEST_CONF_ON */
-
-#define WITH_ASCII 1
-
-#define PROCESS_CONF_NUMEVENTS 8
-#define PROCESS_CONF_STATS 1
-
-#if !defined NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_WITH_IPV6 1
-#endif /* NETSTACK_CONF_ not defined */
-
-/* Network setup for IP */
-#if NETSTACK_CONF_WITH_IPV6
-
-#define LINKADDR_CONF_SIZE              8
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM               16
-#endif
-
-/* Network setup for non-IP  */
-#else
-
-#define LINKADDR_CONF_SIZE              2
-
-#ifndef COLLECT_NEIGHBOR_CONF_MAX_COLLECT_NEIGHBORS
-#define COLLECT_NEIGHBOR_CONF_MAX_COLLECT_NEIGHBORS     32
-#endif /* COLLECT_NEIGHBOR_CONF_MAX_COLLECT_NEIGHBORS */
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM               16
-#endif /* QUEUEBUF_CONF_NUM */
-
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
-/* Network setup for IPv6 */
-#if NETSTACK_CONF_WITH_IPV6
-
-/* Network setup for IPv6 */
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
-#define UIP_CONF_BROADCAST 1
-
-/* Configure CSMA for when it is selected */
-#define CSMA_CONF_802154_AUTOACK_HW  1
-
-#define RDC_CONF_HARDWARE_ACK        1
-
-#define UIP_CONF_LL_802154              1
-#define UIP_CONF_LLH_LEN                0
-
-#define UIP_CONF_ROUTER                 1
-#ifndef UIP_CONF_IPV6_RPL
-#define UIP_CONF_IPV6_RPL               1
-#endif /* UIP_CONF_IPV6_RPL */
-
-#define UIP_CONF_ND6_SEND_RA            0
-#define UIP_CONF_ND6_REACHABLE_TIME     600000
-#define UIP_CONF_ND6_RETRANS_TIMER      10000
-
-#ifndef UIP_CONF_IPV6_QUEUE_PKT
-#define UIP_CONF_IPV6_QUEUE_PKT         0
-#endif /* UIP_CONF_IPV6_QUEUE_PKT */
-#define UIP_CONF_IPV6_CHECKS            1
-#define UIP_CONF_IPV6_REASSEMBLY        0
-#define UIP_CONF_NETIF_MAX_ADDRESSES    3
-#define UIP_CONF_ND6_MAX_PREFIXES       3
-#define UIP_CONF_ND6_MAX_DEFROUTERS     2
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE           1280
-#endif
-
-#ifndef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG                    1
-#define SICSLOWPAN_CONF_MAXAGE                  8
-#endif /* SICSLOWPAN_CONF_FRAG */
-#define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS       2
-#define UIP_CONF_ICMP_DEST_UNREACH 1
-
-#define UIP_CONF_DHCP_LIGHT
-#ifndef UIP_CONF_RECEIVE_WINDOW
-#define UIP_CONF_RECEIVE_WINDOW  48
-#endif
-#ifndef UIP_CONF_TCP_MSS
-#define UIP_CONF_TCP_MSS         48
-#endif
-#define UIP_CONF_TCP_CONNS 4
-#define UIP_CONF_MAX_LISTENPORTS 8
-#define UIP_CONF_FWCACHE_SIZE    30
-#define UIP_CONF_BROADCAST       1
-#define UIP_ARCH_CHKSUM          0
-#define UIP_ARCH_ADD32           0
-#define UIP_CONF_UDP             1
-#define UIP_CONF_UDP_CHECKSUMS   1
-#define UIP_CONF_PINGADDRCONF    0
-#define UIP_CONF_LOGGING         0
-#define LOG_CONF_ENABLED         0
-
-#define UIP_CONF_BYTE_ORDER      UIP_BIG_ENDIAN
-#define UIP_CONF_LOGGING         0
-
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+/* Platform-specific (H/W) CCM* implementation */
+#ifndef CCM_STAR_CONF
+#define CCM_STAR_CONF ccm_star_driver_jn516x
+#endif /* CCM_STAR_CONF */
 
 /* include the project config */
 /* PROJECT_CONF_H might be defined in the project Makefile */

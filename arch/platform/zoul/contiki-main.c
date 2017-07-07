@@ -70,6 +70,7 @@
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
+#include "sys/autostart.h"
 
 #include <stdint.h>
 #include <string.h>

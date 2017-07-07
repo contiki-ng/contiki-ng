@@ -127,6 +127,10 @@ typedef struct uip_eth_addr {
 } uip_eth_addr;
 
 
+#ifndef UIP_CONF_LL_802154
+#define UIP_CONF_LL_802154 1
+#endif /* UIP_CONF_LL_802154 */
+
 #if UIP_CONF_LL_802154
 /** \brief 802.15.4 address */
 typedef uip_802154_longaddr uip_lladdr_t;

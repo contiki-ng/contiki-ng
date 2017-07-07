@@ -54,13 +54,6 @@
    #define UIP_CONF_BUFFER_SIZE           256
  */
 
-#undef RPL_CONF_MAX_DAG_PER_INSTANCE
-#define RPL_CONF_MAX_DAG_PER_INSTANCE     1
-
-/* Disabling TCP on CoAP nodes. */
-#undef UIP_CONF_TCP
-#define UIP_CONF_TCP                   0
-
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
 #define REST_MAX_CHUNK_SIZE            48

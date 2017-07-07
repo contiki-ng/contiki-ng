@@ -47,8 +47,4 @@
 #define UIP_CONF_ND6_SEND_RA  1
 #endif
 
-#ifndef UIP_CONF_ROUTER
-#define UIP_CONF_ROUTER       1
-#endif
-
 #endif /* __PLATFORM_CONF_H__ */

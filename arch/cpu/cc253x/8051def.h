@@ -99,10 +99,6 @@ typedef unsigned short clock_time_t;
 /* Macro for a soft reset. */
 #define SOFT_RESET() do {((void (__code *) (void)) 0x0000) ();} while(0)
 
-/* We don't provide architecture-specific checksum calculations */
-#define UIP_ARCH_ADD32    0
-#define UIP_ARCH_CHKSUM	  0
-
 #define CC_CONF_ASSIGN_AGGREGATE(dest, src)	\
     memcpy(dest, src, sizeof(*dest))
 

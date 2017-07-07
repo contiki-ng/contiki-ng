@@ -108,9 +108,6 @@ typedef uint32_t rtimer_clock_t;
  *
  * @{
  */
-#ifndef ENERGEST_CONF_ON
-#define ENERGEST_CONF_ON            0 /**< Energest Module */
-#endif
 
 #ifndef STARTUP_CONF_VERBOSE
 #define STARTUP_CONF_VERBOSE        1 /**< Set to 0 to decrease startup verbosity */
@@ -254,10 +251,6 @@ typedef uint32_t rtimer_clock_t;
 #include "board.h"
 /*---------------------------------------------------------------------------*/
 
-/* Configure CSMA for when it's selected */
-#define CSMA_802154_AUTOACK                  1
-#define CSMA_802154_AUTOACK_HW               1
-
 #define NETSTACK_CONF_RADIO   cc2538_rf_driver
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -324,10 +317,6 @@ typedef uint32_t rtimer_clock_t;
  * @{
  */
 /* RF Config */
-#ifndef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID           0xABCD
-#endif
-
 #ifdef RF_CHANNEL
 #define CC2538_RF_CONF_CHANNEL      RF_CHANNEL
 #endif
@@ -348,79 +337,7 @@ typedef uint32_t rtimer_clock_t;
 #define CC2538_RF_CONF_RX_USE_DMA            1 /**< RF RX over DMA */
 #endif
 /** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name IPv6 and network buffer configuration
- *
- * @{
- */
 
-/* Don't let contiki-default-conf.h decide if we are an IPv6 build */
-#ifndef NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_WITH_IPV6                        0
-#endif
-
-#if NETSTACK_CONF_WITH_IPV6
-/* Addresses, Sizes and Interfaces */
-/* 8-byte addresses here, 2 otherwise */
-#define LINKADDR_CONF_SIZE                   8
-#define UIP_CONF_LL_802154                   1
-#define UIP_CONF_LLH_LEN                     0
-#define UIP_CONF_NETIF_MAX_ADDRESSES         3
-
-/* TCP, UDP, ICMP */
-#ifndef UIP_CONF_TCP
-#define UIP_CONF_TCP                         1
-#endif
-#ifndef UIP_CONF_TCP_MSS
-#define UIP_CONF_TCP_MSS                    64
-#endif
-#define UIP_CONF_UDP                         1
-#define UIP_CONF_UDP_CHECKSUMS               1
-#define UIP_CONF_ICMP6                       1
-
-/* ND and Routing */
-#ifndef UIP_CONF_ROUTER
-#define UIP_CONF_ROUTER                      1
-#endif
-
-#define UIP_CONF_ND6_SEND_RA                 0
-#define RPL_CONF_STATS                       0
-
-#define UIP_CONF_ND6_REACHABLE_TIME     600000
-#define UIP_CONF_ND6_RETRANS_TIMER       10000
-
-/* uIP */
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE              1300
-#endif
-
-#define UIP_CONF_IPV6_QUEUE_PKT              0
-#define UIP_CONF_IPV6_CHECKS                 1
-#define UIP_CONF_IPV6_REASSEMBLY             0
-#define UIP_CONF_MAX_LISTENPORTS             8
-
-/* 6lowpan */
-#ifndef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG                 1
-#endif
-#define SICSLOWPAN_CONF_MAXAGE               8
-
-/* Define our IPv6 prefixes/contexts here */
-#define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS    1
-#ifndef SICSLOWPAN_CONF_ADDR_CONTEXT_0
-#define SICSLOWPAN_CONF_ADDR_CONTEXT_0 { \
-  addr_contexts[0].prefix[0] = UIP_DS6_DEFAULT_PREFIX_0; \
-  addr_contexts[0].prefix[1] = UIP_DS6_DEFAULT_PREFIX_1; \
-}
-#endif
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM                    8
-#endif
-
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-/** @} */
 /*---------------------------------------------------------------------------*/
 /**
  * \name Security

@@ -147,15 +147,6 @@
 #define MAC_MAX_PAYLOAD (127 - 2)
 #endif /* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD */
 
-
-/** \brief Some MAC layers need a minimum payload, which is configurable
-    through the SICSLOWPAN_CONF_COMPRESSION_THRESHOLD option. */
-#ifdef SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
-#define COMPRESSION_THRESHOLD SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
-#else
-#define COMPRESSION_THRESHOLD 0
-#endif
-
 /** \brief Fixed size of a frame header. This value is
  * used in case framer returns an error or if SICSLOWPAN_USE_FIXED_HDRLEN
  * is defined.
