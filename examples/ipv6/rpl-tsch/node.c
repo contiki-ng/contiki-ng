@@ -55,18 +55,9 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
-#define CONFIG_VIA_BUTTON PLATFORM_HAS_BUTTON
-#if CONFIG_VIA_BUTTON
-#include "button-sensor.h"
-#endif /* CONFIG_VIA_BUTTON */
-
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
-#if CONFIG_VIA_BUTTON
-AUTOSTART_PROCESSES(&node_process, &sensors_process);
-#else /* CONFIG_VIA_BUTTON */
 AUTOSTART_PROCESSES(&node_process);
-#endif /* CONFIG_VIA_BUTTON */
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -147,93 +138,27 @@ print_network_status(void)
   PRINTF("----------------------\n");
 }
 /*---------------------------------------------------------------------------*/
-static void
-net_init(uip_ipaddr_t *br_prefix)
-{
-  if(br_prefix) { /* We are RPL root. Will be set automatically
-                     as TSCH pan coordinator via the tsch-rpl module */
-    rpl_dag_root_init(br_prefix, NULL);
-    rpl_dag_root_init_dag_immediately();
-  } else {
-    rpl_dag_root_init(NULL, NULL);
-  }
-
-  NETSTACK_MAC.on();
-}
-/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(node_process, ev, data)
 {
   static struct etimer et;
+  int is_coordinator;
+
   PROCESS_BEGIN();
 
-  /* 3 possible roles:
-   * - role_6ln: simple node, will join any network, secured or not
-   * - role_6dr: DAG root, will advertise (unsecured) beacons
-   * - role_6dr_sec: DAG root, will advertise secured beacons
-   * */
-  static int is_coordinator = 0;
-  static enum { role_6ln, role_6dr, role_6dr_sec } node_role;
-  node_role = role_6ln;
-
-  int coordinator_candidate = 0;
+  is_coordinator = 0;
 
 #if WITH_SHELL
   serial_shell_init();
 #endif /* WITH_SHELL */
 
 #if CONTIKI_TARGET_COOJA
-  coordinator_candidate = (node_id == 1);
+  is_coordinator = (node_id == 1);
 #endif
 
-  if(coordinator_candidate) {
-    if(LLSEC802154_ENABLED) {
-      node_role = role_6dr_sec;
-    } else {
-      node_role = role_6dr;
-    }
-  } else {
-    node_role = role_6ln;
-  }
-
-#if CONFIG_VIA_BUTTON
-  {
-#define CONFIG_WAIT_TIME 5
-
-    SENSORS_ACTIVATE(button_sensor);
-    etimer_set(&et, CLOCK_SECOND * CONFIG_WAIT_TIME);
-
-    while(!etimer_expired(&et)) {
-      printf("Init: current role: %s. Will start in %u seconds. Press user button to toggle mode.\n",
-             node_role == role_6ln ? "6ln" : (node_role == role_6dr) ? "6dr" : "6dr-sec",
-             CONFIG_WAIT_TIME);
-      PROCESS_WAIT_EVENT_UNTIL(((ev == sensors_event) &&
-                                (data == &button_sensor) && button_sensor.value(0) > 0)
-                               || etimer_expired(&et));
-      if(ev == sensors_event && data == &button_sensor && button_sensor.value(0) > 0) {
-        node_role = (node_role + 1) % 3;
-        if(LLSEC802154_ENABLED == 0 && node_role == role_6dr_sec) {
-          node_role = (node_role + 1) % 3;
-        }
-        etimer_restart(&et);
-      }
-    }
-  }
-
-#endif /* CONFIG_VIA_BUTTON */
-
-  printf("Init: node starting with role %s\n",
-         node_role == role_6ln ? "6ln" : (node_role == role_6dr) ? "6dr" : "6dr-sec");
-
-  tsch_set_pan_secured(LLSEC802154_ENABLED && (node_role == role_6dr_sec));
-  is_coordinator = node_role > role_6ln;
-
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    net_init(&prefix);
-  } else {
-    net_init(NULL);
+    rpl_dag_root_init_dag_immediately();
   }
+  NETSTACK_MAC.on();
 
 #if WITH_ORCHESTRA
   orchestra_init();
