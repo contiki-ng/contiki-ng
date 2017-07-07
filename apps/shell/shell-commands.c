@@ -65,16 +65,17 @@
 static struct uip_icmp6_echo_reply_notification echo_reply_notification;
 static shell_output_func *curr_ping_output_func = NULL;
 static struct process *curr_ping_process;
+static uint8_t curr_ping_ttl;
+static uint16_t curr_ping_datalen;
 
 /*---------------------------------------------------------------------------*/
 static void
 echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
 {
   if(curr_ping_output_func != NULL) {
-    SHELL_OUTPUT(curr_ping_output_func, "Received ping reply from ");
-    shell_output_6addr(curr_ping_output_func, source);
-    SHELL_OUTPUT(curr_ping_output_func, ", ttl %u, len %u\n", ttl, datalen);
     curr_ping_output_func = NULL;
+    curr_ping_ttl = ttl;
+    curr_ping_datalen = datalen;
     process_poll(curr_ping_process);
   }
 }
@@ -111,6 +112,11 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
   if(curr_ping_output_func != NULL) {
     SHELL_OUTPUT(output, "Timeout\n");
     curr_ping_output_func = NULL;
+  } else {
+    SHELL_OUTPUT(output, "Received ping reply from ");
+    shell_output_6addr(output, &remote_addr);
+    SHELL_OUTPUT(output, ", len %u, ttl %u, delay %u ms\n",
+      curr_ping_datalen, curr_ping_ttl, (1000*(unsigned)(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
   }
 
   PT_END(pt);
