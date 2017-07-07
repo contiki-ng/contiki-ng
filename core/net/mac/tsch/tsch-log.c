@@ -74,16 +74,16 @@ tsch_log_process_pending(void)
   int16_t log_index;
   /* Loop on accessing (without removing) a pending input packet */
   if(log_dropped != last_log_dropped) {
-    printf("TSCH:! logs dropped %u\n", log_dropped);
+    printf("[WARN: TSCH-LOG  ] logs dropped %u\n", log_dropped);
     last_log_dropped = log_dropped;
   }
   while((log_index = ringbufindex_peek_get(&log_ringbuf)) != -1) {
     struct tsch_log_t *log = &log_array[log_index];
     if(log->link == NULL) {
-      printf("TSCH: {asn-%x.%lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
+      printf("[INFO: TSCH-LOG  ] {asn-%x.%lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
     } else {
       struct tsch_slotframe *sf = tsch_schedule_get_slotframe_by_handle(log->link->slotframe_handle);
-      printf("TSCH: {asn-%x.%lx link-%u-%u-%u-%u ch-%u} ",
+      printf("[INFO: TSCH-LOG  ] {asn-%x.%lx link-%u-%u-%u-%u ch-%u} ",
              log->asn.ms1b, log->asn.ls4b,
              log->link->slotframe_handle, sf ? sf->size.val : 0, log->link->timeslot, log->link->channel_offset,
              tsch_calculate_channel(&log->asn, log->link->channel_offset));

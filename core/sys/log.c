@@ -53,7 +53,7 @@
 #include "sys/log.h"
 #include "net/ip/ip64-addr.h"
 
-int curr_log_level = LOG_START_LEVEL;
+int curr_log_level = LOG_LEVEL_DBG;
 
 /*---------------------------------------------------------------------------*/
 void

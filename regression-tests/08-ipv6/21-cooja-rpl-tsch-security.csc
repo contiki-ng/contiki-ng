@@ -26,7 +26,7 @@
       <description>Cooja Mote Type #mtype11</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/rpl-tsch/node.c</source>
       <commands EXPORT="discard">make TARGET=cooja clean
-make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1</commands>
+make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -278,7 +278,7 @@ log.log("Waiting for routing links to fill\n");&#xD;
 while(true) {;&#xD;
   WAIT_UNTIL(id == 1 &amp;&amp; msg.contains("Routing links"));&#xD;
   log.log(msg + "\n");&#xD;
-  if(msg.contains("Routing links (9 in total):")) {&#xD;
+  if(msg.contains("Routing links: 9")) {&#xD;
     log.testOK(); /* Report test success and quit */&#xD;
   }&#xD;
   YIELD();&#xD;

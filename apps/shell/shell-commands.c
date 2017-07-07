@@ -115,8 +115,8 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
   } else {
     SHELL_OUTPUT(output, "Received ping reply from ");
     shell_output_6addr(output, &remote_addr);
-    SHELL_OUTPUT(output, ", len %u, ttl %u, delay %u ms\n",
-      curr_ping_datalen, curr_ping_ttl, (1000*(unsigned)(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
+    SHELL_OUTPUT(output, ", len %u, ttl %u, delay %lu ms\n",
+      curr_ping_datalen, curr_ping_ttl, (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
   }
 
   PT_END(pt);
@@ -233,6 +233,112 @@ PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+static
+PT_THREAD(ipaddr(struct pt *pt, shell_output_func output, char *args))
+{
+  int i;
+  uint8_t state;
+
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "Node IPv6 addresses:\n");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      SHELL_OUTPUT(output, "-- ");
+      shell_output_6addr(output, &uip_ds6_if.addr_list[i].ipaddr);
+      SHELL_OUTPUT(output, "\n");
+    }
+  }
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(routes(struct pt *pt, shell_output_func output, char *args))
+{
+  uip_ds6_defrt_t *default_route;
+#if RPL_WITH_NON_STORING
+  rpl_ns_node_t *link;
+#endif /* RPL_WITH_NON_STORING */
+#if RPL_WITH_STORING
+  uip_ds6_route_t *route;
+#endif /* RPL_WITH_STORING */
+
+  PT_BEGIN(pt);
+
+  /* Our default route */
+  SHELL_OUTPUT(output, "Default route:\n");
+  default_route = uip_ds6_defrt_lookup(uip_ds6_defrt_choose());
+  if(default_route != NULL) {
+    SHELL_OUTPUT(output, "-- ");
+    shell_output_6addr(output, &default_route->ipaddr);
+    if(default_route->lifetime.interval != 0) {
+      SHELL_OUTPUT(output, " (lifetime: %lu seconds)\n", (unsigned long)default_route->lifetime.interval);
+    } else {
+      SHELL_OUTPUT(output, " (lifetime: infinite)\n");
+    }
+  } else {
+    SHELL_OUTPUT(output, "-- None\n");
+  }
+
+#if RPL_WITH_NON_STORING
+  if(rpl_ns_num_nodes() > 0) {
+    /* Our routing links */
+    SHELL_OUTPUT(output, "Routing links (%u in total):\n", rpl_ns_num_nodes());
+    link = rpl_ns_node_head();
+    while(link != NULL) {
+      uip_ipaddr_t child_ipaddr;
+      uip_ipaddr_t parent_ipaddr;
+      rpl_ns_get_node_global_addr(&child_ipaddr, link);
+      rpl_ns_get_node_global_addr(&parent_ipaddr, link->parent);
+      SHELL_OUTPUT(output, "-- ");
+      shell_output_6addr(output, &child_ipaddr);
+      if(link->parent == NULL) {
+        memset(&parent_ipaddr, 0, sizeof(parent_ipaddr));
+        SHELL_OUTPUT(output, " (DODAG root)");
+      } else {
+        SHELL_OUTPUT(output, " to ");
+        shell_output_6addr(output, &parent_ipaddr);
+      }
+      if(link->lifetime != RPL_ROUTE_INFINITE_LIFETIME) {
+        SHELL_OUTPUT(output, " (lifetime: %lu seconds)\n", (unsigned long)link->lifetime);
+      } else {
+        SHELL_OUTPUT(output, " (lifetime: infinite)\n");
+      }
+      link = rpl_ns_node_next(link);
+    }
+  } else {
+    SHELL_OUTPUT(output, "No routing links\n");
+  }
+#endif /* RPL_WITH_NON_STORING */
+
+#if RPL_WITH_STORING
+  if(uip_ds6_route_num_routes() > 0) {
+    /* Our routing entries */
+    SHELL_OUTPUT(output, "Routing entries (%u in total):\n", uip_ds6_route_num_routes());
+    route = uip_ds6_route_head();
+    while(route != NULL) {
+      SHELL_OUTPUT(output, "-- ");
+      shell_output_6addr(output, &route->ipaddr);
+      SHELL_OUTPUT(output, " via ");
+      shell_output_6addr(output, uip_ds6_route_nexthop(route));
+      if((unsigned long)route->state.lifetime != RPL_ROUTE_INFINITE_LIFETIME) {
+        SHELL_OUTPUT(output, " (lifetime: %lu seconds)\n", (unsigned long)route->state.lifetime);
+      } else {
+        SHELL_OUTPUT(output, " (lifetime: infinite)\n");
+      }
+      route = uip_ds6_route_next(route);
+    }
+  } else {
+    SHELL_OUTPUT(output, "No routing entries\n");
+  }
+#endif /* RPL_WITH_STORING */
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
 void
 shell_commands_init(void)
 {
@@ -243,8 +349,10 @@ shell_commands_init(void)
 /*---------------------------------------------------------------------------*/
 struct shell_command_t shell_commands[] = {
   { "help",          cmd_help,            "'> help': Shows this help" },
+  { "ipaddr",        ipaddr,              "'> ipaddr': Shows all IPv6 addresses" },
   { "ping",          cmd_ping,            "'> ping addr': Pings the IPv6 address 'addr'" },
   { "rpl-set-root",  cmd_rpl_set_root,    "'> rpl-set-root 0/1 [prefix]': Sets node as root (on) or not (off). A /64 prefix can be optionally specified." },
+  { "routes",        routes,              "'> routes': Shows the route entries" },
   { "log",           cmd_log,             "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
   { NULL, NULL, NULL },
 };

@@ -517,14 +517,15 @@ process_dio_init_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 #endif /* RPL_WITH_PROBING */
   /* Leave the network after RPL_DELAY_BEFORE_LEAVING in case we do not
   find a parent */
-  rpl_timers_schedule_leaving();
-
   LOG_INFO("initialized DAG with instance ID %u, DAG ID ",
          curr_instance.instance_id);
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
   LOG_INFO_(", rank %u\n", curr_instance.dag.rank);
 
   LOG_ANNOTATE("#A init=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
+
+  LOG_WARN_("just joined, no parent yet, setting timer for leaving\n");
+  rpl_timers_schedule_leaving();
 
   return 1;
 }

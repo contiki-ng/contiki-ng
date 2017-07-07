@@ -40,8 +40,10 @@
 #include "node-id.h"
 #include "rpl.h"
 #include "rpl-dag-root.h"
+#include "sys/log.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/mac/tsch/tsch.h"
+#include "net/mac/tsch/tsch-log.h"
 #if UIP_CONF_IPV6_RPL_LITE == 0
 #include "rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
@@ -60,87 +62,8 @@ PROCESS(node_process, "RPL Node");
 AUTOSTART_PROCESSES(&node_process);
 
 /*---------------------------------------------------------------------------*/
-static void
-print_network_status(void)
-{
-  int i;
-  uint8_t state;
-  uip_ds6_defrt_t *default_route;
-#if RPL_WITH_STORING
-  uip_ds6_route_t *route;
-#endif /* RPL_WITH_STORING */
-#if RPL_WITH_NON_STORING
-  rpl_ns_node_t *link;
-#endif /* RPL_WITH_NON_STORING */
-
-  PRINTF("--- Network status ---\n");
-
-  /* Our IPv6 addresses */
-  PRINTF("- Server IPv6 addresses:\n");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINTF("-- ");
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-    }
-  }
-
-  /* Our default route */
-  PRINTF("- Default route:\n");
-  default_route = uip_ds6_defrt_lookup(uip_ds6_defrt_choose());
-  if(default_route != NULL) {
-    PRINTF("-- ");
-    PRINT6ADDR(&default_route->ipaddr);
-    PRINTF(" (lifetime: %lu seconds)\n", (unsigned long)default_route->lifetime.interval);
-  } else {
-    PRINTF("-- None\n");
-  }
-
-#if RPL_WITH_STORING
-  /* Our routing entries */
-  PRINTF("- Routing entries (%u in total):\n", uip_ds6_route_num_routes());
-  route = uip_ds6_route_head();
-  while(route != NULL) {
-    PRINTF("-- ");
-    PRINT6ADDR(&route->ipaddr);
-    PRINTF(" via ");
-    PRINT6ADDR(uip_ds6_route_nexthop(route));
-    PRINTF(" (lifetime: %lu seconds)\n", (unsigned long)route->state.lifetime);
-    route = uip_ds6_route_next(route);
-  }
-#endif
-
-#if RPL_WITH_NON_STORING
-  /* Our routing links */
-  PRINTF("- Routing links (%u in total):\n", rpl_ns_num_nodes());
-  link = rpl_ns_node_head();
-  while(link != NULL) {
-    uip_ipaddr_t child_ipaddr;
-    uip_ipaddr_t parent_ipaddr;
-    rpl_ns_get_node_global_addr(&child_ipaddr, link);
-    rpl_ns_get_node_global_addr(&parent_ipaddr, link->parent);
-    PRINTF("-- ");
-    PRINT6ADDR(&child_ipaddr);
-    if(link->parent == NULL) {
-      memset(&parent_ipaddr, 0, sizeof(parent_ipaddr));
-      PRINTF(" to DODAG root ");
-    } else {
-      PRINTF(" to ");
-      PRINT6ADDR(&parent_ipaddr);
-    }
-    PRINTF(" (lifetime: %lu seconds)\n", (unsigned long)link->lifetime);
-    link = rpl_ns_node_next(link);
-  }
-#endif
-
-  PRINTF("----------------------\n");
-}
-/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(node_process, ev, data)
 {
-  static struct etimer et;
   int is_coordinator;
 
   PROCESS_BEGIN();
@@ -149,6 +72,8 @@ PROCESS_THREAD(node_process, ev, data)
 
 #if WITH_SHELL
   serial_shell_init();
+  log_set_level(LOG_LEVEL_WARN);
+  tsch_log_stop();
 #endif /* WITH_SHELL */
 
 #if CONTIKI_TARGET_COOJA
@@ -164,13 +89,24 @@ PROCESS_THREAD(node_process, ev, data)
   orchestra_init();
 #endif /* WITH_ORCHESTRA */
 
-  /* Print out routing tables every minute */
-  etimer_set(&et, CLOCK_SECOND * 60);
-  while(1) {
-    print_network_status();
-    PROCESS_YIELD_UNTIL(etimer_expired(&et));
-    etimer_reset(&et);
+#if WITH_PERIODIC_ROUTES_PRINT
+  {
+    static struct etimer et;
+    /* Print out routing tables every minute */
+    etimer_set(&et, CLOCK_SECOND * 60);
+    while(1) {
+      /* Used for non-regression testing */
+      #if RPL_WITH_STORING
+        PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
+      #endif
+      #if RPL_WITH_NON_STORING
+        PRINTF("Routing links: %u\n", rpl_ns_num_nodes());
+      #endif
+      PROCESS_YIELD_UNTIL(etimer_expired(&et));
+      etimer_reset(&et);
+    }
   }
+#endif /* WITH_PERIODIC_ROUTES_PRINT */
 
   PROCESS_END();
 }

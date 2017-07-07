@@ -104,7 +104,7 @@
 
 /* IEEE802.15.4 PANID */
 #undef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID 0xabcd
+#define IEEE802154_CONF_PANID 0x81a5
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #undef TSCH_CONF_AUTOSTART
@@ -164,7 +164,5 @@
 #define MAC_LOG_LEVEL                         LOG_LEVEL_INFO
 #define FRAMER_LOG_LEVEL                      LOG_LEVEL_WARN
 #define TSCH_LOG_CONF_PER_SLOT                1
-
-#define LOG_CONF_START_LEVEL                  LOG_LEVEL_WARN
 
 #endif /* __PROJECT_CONF_H__ */
