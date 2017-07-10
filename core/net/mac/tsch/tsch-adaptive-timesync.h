@@ -86,4 +86,6 @@ void tsch_timesync_update(struct tsch_neighbor *n, uint16_t time_delta_asn, int3
 
 int32_t tsch_timesync_adaptive_compensate(rtimer_clock_t delta_ticks);
 
+long int tsch_adaptive_timesync_get_drift_ppm(void);
+
 #endif /* __TSCH_ADAPTIVE_TIMESYNC_H__ */

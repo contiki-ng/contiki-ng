@@ -60,6 +60,12 @@ static uint32_t asn_since_last_learning;
 #define TSCH_DRIFT_UNIT (1000L * 1000 * 256)
 
 /*---------------------------------------------------------------------------*/
+long int
+tsch_adaptive_timesync_get_drift_ppm(void)
+{
+  return (long int)drift_ppm / 256;
+}
+/*---------------------------------------------------------------------------*/
 /* Add a value to a moving average estimator */
 static int32_t
 timesync_entry_add(int32_t val, uint32_t time_delta)
@@ -101,7 +107,7 @@ timesync_learn_drift_ticks(uint32_t time_delta_asn, int32_t drift_ticks)
 
   TSCH_LOG_ADD(tsch_log_message,
       snprintf(log->message, sizeof(log->message),
-          "drift %ld", (long int)drift_ppm / 256));
+          "drift %ld", tsch_adaptive_timesync_get_drift_ppm()));
 }
 /*---------------------------------------------------------------------------*/
 /* Either reset or update the neighbor's drift */

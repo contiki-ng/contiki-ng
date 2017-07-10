@@ -50,7 +50,11 @@
 #include "net/ip/uiplib.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/mac/tsch/tsch.h"
+#include "net/mac/tsch/tsch-adaptive-timesync.h"
+#include "net/mac/tsch/tsch-queue.h"
 #include "net/mac/tsch/tsch-log.h"
+#include "net/mac/tsch/tsch-private.h"
 #if UIP_CONF_IPV6_RPL_LITE == 1
 #include "net/rpl-lite/rpl.h"
 #else /* UIP_CONF_IPV6_RPL_LITE == 1 */
@@ -68,6 +72,53 @@ static struct process *curr_ping_process;
 static uint8_t curr_ping_ttl;
 static uint16_t curr_ping_datalen;
 
+/*---------------------------------------------------------------------------*/
+static const char *
+rpl_state_to_str(enum rpl_dag_state state)
+{
+  switch(state) {
+    case DAG_INITIALIZED:
+      return "Initialized";
+    case DAG_JOINED:
+      return "Joined";
+    case DAG_REACHABLE:
+      return "Reachable";
+    case DAG_POISONING:
+      return "Poisoning";
+    default:
+      return "Unknown";
+  }
+}
+/*---------------------------------------------------------------------------*/
+static const char *
+rpl_mop_to_str(int mop)
+{
+  switch(mop) {
+    case RPL_MOP_NO_DOWNWARD_ROUTES:
+      return "No downward routes";
+    case RPL_MOP_NON_STORING:
+      return "Non-storing";
+    case RPL_MOP_STORING_NO_MULTICAST:
+      return "Storing";
+    case RPL_MOP_STORING_MULTICAST:
+      return "Storing+multicast";
+    default:
+      return "Unknown";
+  }
+}
+/*---------------------------------------------------------------------------*/
+static const char *
+rpl_ocp_to_str(int ocp)
+{
+  switch(ocp) {
+    case RPL_OCP_OF0:
+      return "OF0";
+    case RPL_OCP_MRHOF:
+      return "MRHOF";
+    default:
+      return "Unknown";
+  }
+}
 /*---------------------------------------------------------------------------*/
 static void
 echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
@@ -238,7 +289,29 @@ PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
 }
 /*---------------------------------------------------------------------------*/
 static
-PT_THREAD(ipaddr(struct pt *pt, shell_output_func output, char *args))
+PT_THREAD(cmd_rpl_global_repair(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "Triggering RPL global repair\n")
+  rpl_global_repair();
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "Triggering RPL local repair\n");
+  rpl_local_repair("Shell");
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
 {
   int i;
   uint8_t state;
@@ -257,10 +330,83 @@ PT_THREAD(ipaddr(struct pt *pt, shell_output_func output, char *args))
   }
 
   PT_END(pt);
+
 }
 /*---------------------------------------------------------------------------*/
 static
-PT_THREAD(routes(struct pt *pt, shell_output_func output, char *args))
+PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "TSCH status:\n");
+
+  SHELL_OUTPUT(output, "-- Is coordinator: %u\n", tsch_is_coordinator);
+  SHELL_OUTPUT(output, "-- Is associated: %u\n", tsch_is_associated);
+  if(tsch_is_associated) {
+    struct tsch_neighbor *n = tsch_queue_get_time_source();
+    SHELL_OUTPUT(output, "-- PAN ID: 0x%x\n", frame802154_get_pan_id());
+    SHELL_OUTPUT(output, "-- Is PAN secured: %u\n", tsch_is_pan_secured);
+    SHELL_OUTPUT(output, "-- Join priority: %u\n", tsch_join_priority);
+    SHELL_OUTPUT(output, "-- Time source: ");
+    if(n != NULL) {
+      shell_output_lladdr(output, &n->addr);
+      SHELL_OUTPUT(output, "\n");
+    } else {
+      SHELL_OUTPUT(output, "none\n");
+    }
+    SHELL_OUTPUT(output, "-- Last synchronized: %lu seconds ago\n", (clock_time() - last_sync_time) / CLOCK_SECOND);
+    SHELL_OUTPUT(output, "-- Drift w.r.t. coordinator: %ld ppm\n", tsch_adaptive_timesync_get_drift_ppm());
+  }
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "RPL status:\n");
+  if(!curr_instance.used) {
+    SHELL_OUTPUT(output, "-- Instance: None\n");
+  } else {
+    SHELL_OUTPUT(output, "-- Instance: %u\n", curr_instance.instance_id);
+    if(rpl_dag_root_is_root()) {
+      SHELL_OUTPUT(output, "-- DAG root\n");
+    } else {
+      SHELL_OUTPUT(output, "-- DAG node\n");
+    }
+    SHELL_OUTPUT(output, "-- DAG: ");
+    shell_output_6addr(output, &curr_instance.dag.dag_id);
+    SHELL_OUTPUT(output, ", version %u\n", curr_instance.dag.version);
+    SHELL_OUTPUT(output, "-- Prefix: ");
+    shell_output_6addr(output, &curr_instance.dag.prefix_info.prefix);
+    SHELL_OUTPUT(output, "/%u\n", curr_instance.dag.prefix_info.length);
+    SHELL_OUTPUT(output, "-- MOP: %s\n", rpl_mop_to_str(curr_instance.mop));
+    SHELL_OUTPUT(output, "-- OF: %s\n", rpl_ocp_to_str(curr_instance.of->ocp));
+    SHELL_OUTPUT(output, "-- Hop rank increment: %u\n", curr_instance.min_hoprankinc);
+    SHELL_OUTPUT(output, "-- Default lifetime: %lu seconds\n", RPL_LIFETIME(curr_instance.default_lifetime));
+
+    SHELL_OUTPUT(output, "-- State: %s\n", rpl_state_to_str(curr_instance.dag.state));
+    SHELL_OUTPUT(output, "-- Preferred parent: ");
+    shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+    SHELL_OUTPUT(output, "\n");
+    SHELL_OUTPUT(output, "-- Rank: %u\n", curr_instance.dag.rank);
+    SHELL_OUTPUT(output, "-- Lowest rank: %u (%u)\n", curr_instance.dag.lowest_rank, curr_instance.max_rankinc);
+    SHELL_OUTPUT(output, "-- DTSN out: %u\n", curr_instance.dtsn_out);
+    SHELL_OUTPUT(output, "-- DAO sequence: last sent %u, last acked %u\n",
+        curr_instance.dag.dao_last_seqno, curr_instance.dag.dao_last_acked_seqno);
+    SHELL_OUTPUT(output, "-- Trickle timer: current %u, min %u, max %u, redundancy %u\n",
+      curr_instance.dag.dio_intcurrent, curr_instance.dio_intmin,
+      curr_instance.dio_intmin + curr_instance.dio_intdoubl, curr_instance.dio_redundancy);
+
+  }
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
 {
   uip_ds6_defrt_t *default_route;
 #if RPL_WITH_NON_STORING
@@ -352,12 +498,16 @@ shell_commands_init(void)
 }
 /*---------------------------------------------------------------------------*/
 struct shell_command_t shell_commands[] = {
-  { "help",          cmd_help,            "'> help': Shows this help" },
-  { "ipaddr",        ipaddr,              "'> ipaddr': Shows all IPv6 addresses" },
-  { "ping",          cmd_ping,            "'> ping addr': Pings the IPv6 address 'addr'" },
-  { "rpl-set-root",  cmd_rpl_set_root,    "'> rpl-set-root 0/1 [prefix]': Sets node as root (on) or not (off). A /64 prefix can be optionally specified." },
-  { "routes",        routes,              "'> routes': Shows the route entries" },
-  { "log",           cmd_log,             "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
+  { "help",                 cmd_help,                 "'> help': Shows this help" },
+  { "ipaddr",               cmd_ipaddr,                   "'> ipaddr': Shows all IPv6 addresses" },
+  { "log",                  cmd_log,                  "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
+  { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
+  { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (on) or not (off). A /64 prefix can be optionally specified." },
+  { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
+  { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
+  { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
+  { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
+  { "tsch-status",          cmd_tsch_status,          "'> tsch-status': Shows a summary of the current TSCH state" },
   { NULL, NULL, NULL },
 };
 

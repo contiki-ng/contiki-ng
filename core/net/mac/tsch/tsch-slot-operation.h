@@ -103,6 +103,8 @@ extern struct tsch_packet *dequeued_array[TSCH_DEQUEUED_ARRAY_SIZE];
  * Will be processed layer by tsch_rx_process_pending */
 extern struct ringbufindex input_ringbuf;
 extern struct input_packet input_array[TSCH_MAX_INCOMING_PACKETS];
+/* Last clock_time_t where synchronization happened */
+extern clock_time_t last_sync_time;
 
 /********** Functions *********/
 

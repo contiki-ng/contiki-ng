@@ -198,8 +198,10 @@ rpl_local_repair(const char *str)
 {
   if(curr_instance.used) { /* Check needed because this is a public function */
     LOG_WARN("local repair (%s)\n", str);
+    if(!rpl_dag_root_is_root()) {
+      curr_instance.dag.state = DAG_INITIALIZED; /* Reset DAG state */
+    }
     curr_instance.of->reset(); /* Reset OF */
-    curr_instance.dag.state = DAG_INITIALIZED; /* Reset DAG state */
     link_stats_reset(); /* Forget past link statistics */
     rpl_neighbor_remove_all(); /* Remove all neighbors */
     rpl_timers_dio_reset("Local repair"); /* Reset Trickle timer */
