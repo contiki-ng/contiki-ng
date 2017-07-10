@@ -192,7 +192,11 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
 
   /* Get and parse argument */
   SHELL_ARGS_NEXT(args, next_args);
-  level = (int)strtol(args, &ptr, 10);
+  if(args == NULL) {
+    level = -1;
+  } else {
+    level = (int)strtol(args, &ptr, 10);
+  }
   if((level == 0 && args == ptr)
     || level < LOG_LEVEL_NONE || level > LOG_LEVEL_DBG) {
     SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
