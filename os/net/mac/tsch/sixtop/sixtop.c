@@ -141,7 +141,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
     return;
   }
   p = packetbuf_hdrptr();
-  p[0] = SIXP_SUBIE_ID;
+  p[0] = SIXTOP_SUBIE_ID;
 
   /*
    * prepend Payload IE header; 2 octets
@@ -234,6 +234,7 @@ sixtop_input(void)
    */
   assert(frame.fcf.frame_version == FRAME802154_IEEE802154_2015);
   assert(frame.fcf.frame_type == FRAME802154_DATAFRAME);
+  memset(&ies, 0, sizeof(ies));
   if(frame.fcf.ie_list_present &&
      frame802154e_parse_information_elements(payload_ptr,
                                              payload_len, &ies) >= 0 &&

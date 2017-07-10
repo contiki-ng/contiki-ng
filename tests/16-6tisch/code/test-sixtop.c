@@ -206,7 +206,7 @@ UNIT_TEST(test_output)
   UNIT_TEST_ASSERT(p[3] == 0xa8);
 
   /* 6top IE Sub-ID */
-  UNIT_TEST_ASSERT(p[4] == 0x00);
+  UNIT_TEST_ASSERT(p[4] == 0xc9);
   /* test data set above */
   UNIT_TEST_ASSERT(p[5] == 0xca);
   UNIT_TEST_ASSERT(p[6] == 0xfe);

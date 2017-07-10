@@ -43,7 +43,7 @@
 #ifndef _SIXTOP_6P_PACKET_H_
 #define _SIXTOP_6P_PACKET_H_
 
-#define SIXP_PKT_VERSION  0x01
+#define SIXP_PKT_VERSION  0x00
 
 /* typedefs for code readability */
 typedef uint8_t sixp_pkt_cell_options_t;
@@ -53,6 +53,7 @@ typedef uint16_t sixp_pkt_metadata_t;
 typedef uint16_t sixp_pkt_max_num_cells_t;
 typedef uint16_t sixp_pkt_offset_t;
 typedef uint32_t sixp_pkt_cell_t;
+typedef uint16_t sixp_pkt_total_num_cells_t;
 
 /**
  * \brief 6P Message Types
@@ -70,24 +71,27 @@ typedef enum  {
 typedef enum {
   SIXP_PKT_CMD_ADD          = 0x01, /**< CMD_ADD */
   SIXP_PKT_CMD_DELETE       = 0x02, /**< CMD_DELETE */
-  SIXP_PKT_CMD_STATUS       = 0x03, /**< CMD_STATUS */
-  SIXP_PKT_CMD_LIST         = 0x04, /**< CMD_LIST */
-  SIXP_PKT_CMD_CLEAR        = 0x05, /**< CMD_CLEAR */
-  SIXP_PKT_CMD_UNAVAILABLE          /**< for internal use */
+  SIXP_PKT_CMD_RELOCATE     = 0x03, /**< CMD_STATUS */
+  SIXP_PKT_CMD_COUNT        = 0x04, /**< CMD_STATUS */
+  SIXP_PKT_CMD_LIST         = 0x05, /**< CMD_LIST */
+  SIXP_PKT_CMD_CLEAR        = 0x06, /**< CMD_CLEAR */
+  SIXP_PKT_CMD_UNAVAILABLE  = 0xff, /**< for internal use */
 } sixp_pkt_cmd_t;
 
 /**
  * \brief 6P Return Codes
  */
 typedef enum {
-  SIXP_PKT_RC_SUCCESS    = 0x06, /**< RC_SUCCESS */
-  SIXP_PKT_RC_ERR_VER    = 0x07, /**< RC_ERR_VER */
-  SIXP_PKT_RC_ERR_SFID   = 0x08, /**< RC_ERR_SFID */
-  SIXP_PKT_RC_ERR_GEN    = 0x09, /**< RC_ERR_GEN */
-  SIXP_PKT_RC_ERR_BUSY   = 0x0a, /**< RC_ERR_BUSY */
-  SIXP_PKT_RC_ERR_NORES  = 0x0b, /**< RC_ERR_NORES */
-  SIXP_PKT_RC_ERR_RESET  = 0x0c, /**< RC_ERR_RESET */
-  SIXP_PKT_RC_ERR        = 0x0d, /**< RC_ERR */
+  SIXP_PKT_RC_SUCCESS  = 0x00, /**< RC_SUCCESS */
+  SIXP_PKT_RC_ERROR    = 0x01, /**< RC_ERROR */
+  SIXP_PKT_RC_EOL      = 0x02, /**< RC_EOL */
+  SIXP_PKT_RC_RESET    = 0x03, /**< RC_RESET */
+  SIXP_PKT_RC_VERSION  = 0x04, /**< RC_ERR_VER */
+  SIXP_PKT_RC_SFID     = 0x05, /**< RC_ERR_SFID */
+  SIXP_PKT_RC_GEN      = 0x06, /**< RC_ERR_GEN */
+  SIXP_PKT_RC_BUSY     = 0x07, /**< RC_ERR_BUSY */
+  SIXP_PKT_RC_NORES    = 0x08, /**< RC_ERR_NORES */
+  SIXP_PKT_RC_CELLLIST = 0x09, /**< RC_ERR_CELLLIST */
 } sixp_pkt_rc_t;
 
 /**
@@ -116,8 +120,7 @@ typedef struct {
   sixp_pkt_code_t code; /**< Code */
   uint8_t sfid;         /**< SFID */
   uint8_t seqno;        /**< SeqNum */
-  uint8_t gab;          /**< GAB */
-  uint8_t gba;          /**< GBA */
+  uint8_t gen;          /**< GEN */
   const uint8_t *body;  /**< Other Fields... */
   uint16_t body_len;    /**< The length of Other Fields */
 } sixp_pkt_t;
@@ -426,8 +429,7 @@ int sixp_pkt_parse(const uint8_t *buf, uint16_t len,
  * \param code 6P Message Code, Command Identifier or Return Code
  * \param sfid Scheduling Function Identifier
  * \param seqno Sequence Number
- * \param gab GAB
- * \param gba GBA
+ * \param gen GEN
  * \param body The pointer to "Other Fields" in a buffer
  * \param body_len The length of body, typically "Other Fields" length
  * \param pkt The pointer to a sixp_pkt_t structure to store packet info
@@ -435,7 +437,7 @@ int sixp_pkt_parse(const uint8_t *buf, uint16_t len,
  * \return 0 on success, -1 on failure
  */
 int sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
-                    uint8_t sfid, uint8_t seqno, uint8_t gab, uint8_t gba,
+                    uint8_t sfid, uint8_t seqno, uint8_t gen,
                     const uint8_t *body, uint16_t body_len,
                     sixp_pkt_t *pkt);
 

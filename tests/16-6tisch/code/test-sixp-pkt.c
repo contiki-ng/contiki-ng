@@ -125,9 +125,9 @@ UNIT_TEST(test_set_get_metadata_delete_req)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_metadata_status_req,
-                   "test sixp_pkt_{set,get}_metadata(status_req)");
-UNIT_TEST(test_set_get_metadata_status_req)
+UNIT_TEST_REGISTER(test_set_get_metadata_relocate_req,
+                   "test sixp_pkt_{set,get}_metadata(relocate_req)");
+UNIT_TEST(test_set_get_metadata_relocate_req)
 {
   sixp_pkt_metadata_t testdata, result;
   uint8_t *ptr = (uint8_t *)&testdata;
@@ -138,7 +138,7 @@ UNIT_TEST(test_set_get_metadata_status_req)
 
   UNIT_TEST_BEGIN();
 
-  /* Status Request */
+  /* Relocate Request */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -147,7 +147,7 @@ UNIT_TEST(test_set_get_metadata_status_req)
   UNIT_TEST_ASSERT(p_result[1] == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_metadata(SIXP_PKT_TYPE_REQUEST,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
                           testdata,
                           buf, sizeof(buf)) == 0);
   ref_data[0] = 0xAB;
@@ -155,7 +155,46 @@ UNIT_TEST(test_set_get_metadata_status_req)
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_metadata(SIXP_PKT_TYPE_REQUEST,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                          &result,
+                          buf, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(p_result[0] == 0xAB);
+  UNIT_TEST_ASSERT(p_result[1] == 0xCD);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_metadata_count_req,
+                   "test sixp_pkt_{set,get}_metadata(count_req)");
+UNIT_TEST(test_set_get_metadata_count_req)
+{
+  sixp_pkt_metadata_t testdata, result;
+  uint8_t *ptr = (uint8_t *)&testdata;
+  uint8_t *p_result = (uint8_t *)&result;
+
+  ptr[0] = 0xAB;
+  ptr[1] = 0xCD;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(p_result[0] == 0x00);
+  UNIT_TEST_ASSERT(p_result[1] == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_metadata(SIXP_PKT_TYPE_REQUEST,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                          testdata,
+                          buf, sizeof(buf)) == 0);
+  ref_data[0] = 0xAB;
+  ref_data[1] = 0xCD;
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_metadata(SIXP_PKT_TYPE_REQUEST,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                           &result,
                           buf, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(p_result[0] == 0xAB);
@@ -316,9 +355,9 @@ UNIT_TEST(test_set_get_metadata_success_conf)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_metadata_err_res,
+UNIT_TEST_REGISTER(test_set_get_metadata_error_res,
                    "test sixp_pkt_{set,get}_metadata(err_res)");
-UNIT_TEST(test_set_get_metadata_err_res)
+UNIT_TEST(test_set_get_metadata_error_res)
 {
   sixp_pkt_metadata_t testdata, result;
   uint8_t *ptr = (uint8_t *)&testdata;
@@ -329,7 +368,7 @@ UNIT_TEST(test_set_get_metadata_err_res)
 
   UNIT_TEST_BEGIN();
 
-  /* Err Response */
+  /* Error Response */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -338,13 +377,13 @@ UNIT_TEST(test_set_get_metadata_err_res)
   UNIT_TEST_ASSERT(p_result[1] == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_metadata(SIXP_PKT_TYPE_RESPONSE,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           testdata,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_metadata(SIXP_PKT_TYPE_RESPONSE,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           &result,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(p_result[0] == 0x00);
@@ -353,9 +392,9 @@ UNIT_TEST(test_set_get_metadata_err_res)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_metadata_err_conf,
+UNIT_TEST_REGISTER(test_set_get_metadata_error_conf,
                    "test sixp_pkt_{set,get}_metadata(err_conf)");
-UNIT_TEST(test_set_get_metadata_err_conf)
+UNIT_TEST(test_set_get_metadata_error_conf)
 {
   sixp_pkt_metadata_t testdata, result;
   uint8_t *ptr = (uint8_t *)&testdata;
@@ -366,7 +405,7 @@ UNIT_TEST(test_set_get_metadata_err_conf)
 
   UNIT_TEST_BEGIN();
 
-  /* Err Confirmation */
+  /* Error Confirmation */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -375,13 +414,13 @@ UNIT_TEST(test_set_get_metadata_err_conf)
   UNIT_TEST_ASSERT(p_result[1] == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_metadata(SIXP_PKT_TYPE_CONFIRMATION,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           testdata,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_metadata(SIXP_PKT_TYPE_CONFIRMATION,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           &result,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(p_result[0] == 0x00);
@@ -417,7 +456,7 @@ UNIT_TEST(test_set_get_cell_options_add_req)
                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
                               &result,
                               buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+  UNIT_TEST_ASSERT(result == testdata);
 
   UNIT_TEST_END();
 }
@@ -449,21 +488,21 @@ UNIT_TEST(test_set_get_cell_options_delete_req)
                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
                               &result,
                               buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+  UNIT_TEST_ASSERT(result == testdata);
 
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_cell_options_status_req,
-                   "test sixp_pkt_{set,get}_cell_options(status_req)");
-UNIT_TEST(test_set_get_cell_options_status_req)
+UNIT_TEST_REGISTER(test_set_get_cell_options_relocate_req,
+                   "test sixp_pkt_{set,get}_cell_options(relocate_req)");
+UNIT_TEST(test_set_get_cell_options_relocate_req)
 {
   sixp_pkt_cell_options_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Status Request */
+  /* Relocate Request */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -471,17 +510,49 @@ UNIT_TEST(test_set_get_cell_options_status_req)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_options(SIXP_PKT_TYPE_REQUEST,
-                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
                               testdata,
                               buf, sizeof(buf)) == 0);
   ref_data[2] = 0x07;
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_cell_options(SIXP_PKT_TYPE_REQUEST,
-                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
                               &result,
                               buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+  UNIT_TEST_ASSERT(result == testdata);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cell_options_count_req,
+                   "test sixp_pkt_{set,get}_cell_options(count_req)");
+UNIT_TEST(test_set_get_cell_options_count_req)
+{
+  sixp_pkt_cell_options_t testdata, result;
+  testdata = 0x07;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cell_options(SIXP_PKT_TYPE_REQUEST,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                              testdata,
+                              buf, sizeof(buf)) == 0);
+  ref_data[2] = 0x07;
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cell_options(SIXP_PKT_TYPE_REQUEST,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                              &result,
+                              buf, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == testdata);
 
   UNIT_TEST_END();
 }
@@ -513,7 +584,7 @@ UNIT_TEST(test_set_get_cell_options_list_req)
                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
                               &result,
                               buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+  UNIT_TEST_ASSERT(result == testdata);
 
   UNIT_TEST_END();
 }
@@ -611,16 +682,16 @@ UNIT_TEST(test_set_get_cell_options_success_conf)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_cell_options_err_res,
+UNIT_TEST_REGISTER(test_set_get_cell_options_error_res,
                    "test sixp_pkt_{set,get}_cell_options(err_res)");
-UNIT_TEST(test_set_get_cell_options_err_res)
+UNIT_TEST(test_set_get_cell_options_error_res)
 {
   sixp_pkt_cell_options_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Err Response */
+  /* Error Response */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -628,13 +699,13 @@ UNIT_TEST(test_set_get_cell_options_err_res)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_options(SIXP_PKT_TYPE_RESPONSE,
-                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                               testdata,
                               buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_cell_options(SIXP_PKT_TYPE_RESPONSE,
-                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                               &result,
                               buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -642,16 +713,16 @@ UNIT_TEST(test_set_get_cell_options_err_res)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_cell_options_err_conf,
+UNIT_TEST_REGISTER(test_set_get_cell_options_error_conf,
                    "test sixp_pkt_{set,get}_cell_options(err_conf)");
-UNIT_TEST(test_set_get_cell_options_err_conf)
+UNIT_TEST(test_set_get_cell_options_error_conf)
 {
   sixp_pkt_cell_options_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Err Confirmation */
+  /* Error Confirmation */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -659,13 +730,13 @@ UNIT_TEST(test_set_get_cell_options_err_conf)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_options(SIXP_PKT_TYPE_CONFIRMATION,
-                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                               testdata,
                               buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_cell_options(SIXP_PKT_TYPE_CONFIRMATION,
-                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                              (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                               &result,
                               buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -700,7 +771,7 @@ UNIT_TEST(test_set_get_num_cells_add_req)
                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
                            &result,
                            buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+  UNIT_TEST_ASSERT(result == testdata);
 
   UNIT_TEST_END();
 }
@@ -732,21 +803,21 @@ UNIT_TEST(test_set_get_num_cells_delete_req)
                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
                            &result,
                            buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+  UNIT_TEST_ASSERT(result == testdata);
 
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_num_cells_status_req,
-                   "test sixp_pkt_{set,get}_num_cells(status_req)");
-UNIT_TEST(test_set_get_num_cells_status_req)
+UNIT_TEST_REGISTER(test_set_get_num_cells_relocate_req,
+                   "test sixp_pkt_{set,get}_num_cells(relocate_req)");
+UNIT_TEST(test_set_get_num_cells_relocate_req)
 {
   sixp_pkt_num_cells_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Status Request */
+  /* Relocate Request */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -754,13 +825,45 @@ UNIT_TEST(test_set_get_num_cells_status_req)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                           testdata,
+                           buf, sizeof(buf)) == 0);
+  ref_data[3] = 0x07;
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                           &result,
+                           buf, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == testdata);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_num_cells_count_req,
+                   "test sixp_pkt_{set,get}_num_cells(count_req)");
+UNIT_TEST(test_set_get_num_cells_count_req)
+{
+  sixp_pkt_num_cells_t testdata, result;
+  testdata = 0x07;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                            testdata,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_num_cells(SIXP_PKT_TYPE_REQUEST,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                            &result,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -835,29 +938,28 @@ UNIT_TEST_REGISTER(test_set_get_num_cells_success_res,
 UNIT_TEST(test_set_get_num_cells_success_res)
 {
   sixp_pkt_num_cells_t testdata, result;
-  testdata = 0x07;
+  testdata = 0xfe;
 
   UNIT_TEST_BEGIN();
 
   /* Success Response */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
-  memset(&result, 0, sizeof(result));
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_num_cells(SIXP_PKT_TYPE_RESPONSE,
                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
                            testdata,
-                           buf, sizeof(buf)) == 0);
-  ref_data[0] = 0x07;
+                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
   UNIT_TEST_ASSERT(
     sixp_pkt_get_num_cells(SIXP_PKT_TYPE_RESPONSE,
                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
                            &result,
-                           buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+                           buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
 
   UNIT_TEST_END();
 }
@@ -892,16 +994,16 @@ UNIT_TEST(test_set_get_num_cells_success_conf)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_num_cells_err_res,
+UNIT_TEST_REGISTER(test_set_get_num_cells_error_res,
                    "test sixp_pkt_{set,get}_num_cells(err_res)");
-UNIT_TEST(test_set_get_num_cells_err_res)
+UNIT_TEST(test_set_get_num_cells_error_res)
 {
   sixp_pkt_num_cells_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Err Response */
+  /* Error Response */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -909,13 +1011,13 @@ UNIT_TEST(test_set_get_num_cells_err_res)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_num_cells(SIXP_PKT_TYPE_RESPONSE,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            testdata,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_num_cells(SIXP_PKT_TYPE_RESPONSE,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            &result,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -923,16 +1025,16 @@ UNIT_TEST(test_set_get_num_cells_err_res)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_num_cells_err_conf,
+UNIT_TEST_REGISTER(test_set_get_num_cells_error_conf,
                    "test sixp_pkt_{set,get}_num_cells(err_conf)");
-UNIT_TEST(test_set_get_num_cells_err_conf)
+UNIT_TEST(test_set_get_num_cells_error_conf)
 {
   sixp_pkt_num_cells_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Err Confirmation */
+  /* Error Confirmation */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -940,13 +1042,13 @@ UNIT_TEST(test_set_get_num_cells_err_conf)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            testdata,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            &result,
                            buf, sizeof(buf)) == -1);
 
@@ -1015,16 +1117,16 @@ UNIT_TEST(test_set_get_reserved_delete_req)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_reserved_status_req,
-                   "test sixp_pkt_{set,get}_reserved(status_req)");
-UNIT_TEST(test_set_get_reserved_status_req)
+UNIT_TEST_REGISTER(test_set_get_reserved_relocate_req,
+                   "test sixp_pkt_{set,get}_reserved(relocate_req)");
+UNIT_TEST(test_set_get_reserved_relocate_req)
 {
   sixp_pkt_reserved_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Status Request */
+  /* Relocate Request */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -1032,13 +1134,44 @@ UNIT_TEST(test_set_get_reserved_status_req)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_reserved(SIXP_PKT_TYPE_REQUEST,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
                           testdata,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_reserved(SIXP_PKT_TYPE_REQUEST,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                          &result,
+                          buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0x00);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_reserved_count_req,
+                   "test sixp_pkt_{set,get}_reserved(count_req)");
+UNIT_TEST(test_set_get_reserved_count_req)
+{
+  sixp_pkt_reserved_t testdata, result;
+  testdata = 0x07;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_reserved(SIXP_PKT_TYPE_REQUEST,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                          testdata,
+                          buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_reserved(SIXP_PKT_TYPE_REQUEST,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                           &result,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1073,7 +1206,7 @@ UNIT_TEST(test_set_get_reserved_list_req)
                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
                           &result,
                           buf, sizeof(buf)) == 0);
-  UNIT_TEST_ASSERT(result == 0x07);
+  UNIT_TEST_ASSERT(result == testdata);
 
   UNIT_TEST_END();
 }
@@ -1171,9 +1304,9 @@ UNIT_TEST(test_set_get_reserved_success_conf)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_reserved_err_res,
+UNIT_TEST_REGISTER(test_set_get_reserved_error_res,
                    "test sixp_pkt_{set,get}_reserved(err_res)");
-UNIT_TEST(test_set_get_reserved_err_res)
+UNIT_TEST(test_set_get_reserved_error_res)
 {
   sixp_pkt_reserved_t testdata, result;
   testdata = 0x07;
@@ -1188,13 +1321,13 @@ UNIT_TEST(test_set_get_reserved_err_res)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_reserved(SIXP_PKT_TYPE_RESPONSE,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           testdata,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_reserved(SIXP_PKT_TYPE_RESPONSE,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           &result,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1202,9 +1335,9 @@ UNIT_TEST(test_set_get_reserved_err_res)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_reserved_err_conf,
+UNIT_TEST_REGISTER(test_set_get_reserved_error_conf,
                    "test sixp_pkt_{set,get}_reserved(err_conf)");
-UNIT_TEST(test_set_get_reserved_err_conf)
+UNIT_TEST(test_set_get_reserved_error_conf)
 {
   sixp_pkt_reserved_t testdata, result;
   testdata = 0x07;
@@ -1219,13 +1352,13 @@ UNIT_TEST(test_set_get_reserved_err_conf)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_reserved(SIXP_PKT_TYPE_CONFIRMATION,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           testdata,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_reserved(SIXP_PKT_TYPE_CONFIRMATION,
-                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                           &result,
                           buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1295,16 +1428,16 @@ UNIT_TEST(test_set_get_offset_delete_req)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_offset_status_req,
-                   "test sixp_pkt_{set,get}_offset(status_req)");
-UNIT_TEST(test_set_get_offset_status_req)
+UNIT_TEST_REGISTER(test_set_get_offset_relocate_req,
+                   "test sixp_pkt_{set,get}_offset(relocate_req)");
+UNIT_TEST(test_set_get_offset_relocate_req)
 {
   sixp_pkt_offset_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Status Request */
+  /* Relocate Request */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -1312,13 +1445,44 @@ UNIT_TEST(test_set_get_offset_status_req)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_offset(SIXP_PKT_TYPE_REQUEST,
-                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
                         testdata,
                         buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_offset(SIXP_PKT_TYPE_REQUEST,
-                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                        &result,
+                        buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0x00);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_offset_count_req,
+                   "test sixp_pkt_{set,get}_offset(count_req)");
+UNIT_TEST(test_set_get_offset_count_req)
+{
+  sixp_pkt_offset_t testdata, result;
+  testdata = 0x07;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_offset(SIXP_PKT_TYPE_REQUEST,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                        testdata,
+                        buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_offset(SIXP_PKT_TYPE_REQUEST,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                         &result,
                         buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1452,9 +1616,9 @@ UNIT_TEST(test_set_get_offset_success_conf)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_offset_err_res,
+UNIT_TEST_REGISTER(test_set_get_offset_error_res,
                    "test sixp_pkt_{set,get}_offset(err_res)");
-UNIT_TEST(test_set_get_offset_err_res)
+UNIT_TEST(test_set_get_offset_error_res)
 {
   sixp_pkt_offset_t testdata, result;
   testdata = 0x07;
@@ -1469,13 +1633,13 @@ UNIT_TEST(test_set_get_offset_err_res)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_offset(SIXP_PKT_TYPE_RESPONSE,
-                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                         testdata,
                         buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_offset(SIXP_PKT_TYPE_RESPONSE,
-                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                         &result,
                         buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1483,9 +1647,9 @@ UNIT_TEST(test_set_get_offset_err_res)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_offset_err_conf,
+UNIT_TEST_REGISTER(test_set_get_offset_error_conf,
                    "test sixp_pkt_{set,get}_offset(err_conf)");
-UNIT_TEST(test_set_get_offset_err_conf)
+UNIT_TEST(test_set_get_offset_error_conf)
 {
   sixp_pkt_offset_t testdata, result;
   testdata = 0x07;
@@ -1500,13 +1664,13 @@ UNIT_TEST(test_set_get_offset_err_conf)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_offset(SIXP_PKT_TYPE_CONFIRMATION,
-                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                         testdata,
                         buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_offset(SIXP_PKT_TYPE_CONFIRMATION,
-                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                         &result,
                         buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1577,16 +1741,16 @@ UNIT_TEST(test_set_get_max_num_cells_delete_req)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_max_num_cells_status_req,
-                   "test sixp_pkt_{set,get}_max_num_cells(status_req)");
-UNIT_TEST(test_set_get_max_num_cells_status_req)
+UNIT_TEST_REGISTER(test_set_get_max_num_cells_relocate_req,
+                   "test sixp_pkt_{set,get}_max_num_cells(relocate_req)");
+UNIT_TEST(test_set_get_max_num_cells_relocate_req)
 {
   sixp_pkt_max_num_cells_t testdata, result;
   testdata = 0x07;
 
   UNIT_TEST_BEGIN();
 
-  /* Status Request */
+  /* Relocate Request */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -1594,13 +1758,44 @@ UNIT_TEST(test_set_get_max_num_cells_status_req)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_max_num_cells(SIXP_PKT_TYPE_REQUEST,
-                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
                                testdata,
                                buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_max_num_cells(SIXP_PKT_TYPE_REQUEST,
-                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                               &result,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0x00);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_max_num_cells_count_req,
+                   "test sixp_pkt_{set,get}_max_num_cells(count_req)");
+UNIT_TEST(test_set_get_max_num_cells_count_req)
+{
+  sixp_pkt_max_num_cells_t testdata, result;
+  testdata = 0x07;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_max_num_cells(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                               testdata,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_max_num_cells(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                                &result,
                                buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1734,9 +1929,9 @@ UNIT_TEST(test_set_get_max_num_cells_success_conf)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_max_num_cells_err_res,
+UNIT_TEST_REGISTER(test_set_get_max_num_cells_error_res,
                    "test sixp_pkt_{set,get}_max_num_cells(err_res)");
-UNIT_TEST(test_set_get_max_num_cells_err_res)
+UNIT_TEST(test_set_get_max_num_cells_error_res)
 {
   sixp_pkt_max_num_cells_t testdata, result;
   testdata = 0x07;
@@ -1751,13 +1946,13 @@ UNIT_TEST(test_set_get_max_num_cells_err_res)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_max_num_cells(SIXP_PKT_TYPE_RESPONSE,
-                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                                testdata,
                                buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_max_num_cells(SIXP_PKT_TYPE_RESPONSE,
-                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                                &result,
                                buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1765,9 +1960,9 @@ UNIT_TEST(test_set_get_max_num_cells_err_res)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_max_num_cells_err_conf,
-                   "test sixp_pkt_{set,get}_max_num_cells(err_conf)");
-UNIT_TEST(test_set_get_max_num_cells_err_conf)
+UNIT_TEST_REGISTER(test_set_get_max_num_cells_error_conf,
+                   "test sixp_pkt_{set,get}_max_num_cells(error_conf)");
+UNIT_TEST(test_set_get_max_num_cells_error_conf)
 {
   sixp_pkt_max_num_cells_t testdata, result;
   testdata = 0x07;
@@ -1782,13 +1977,13 @@ UNIT_TEST(test_set_get_max_num_cells_err_conf)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_max_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
-                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                                testdata,
                                buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_max_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
-                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                                &result,
                                buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result == 0x00);
@@ -1826,7 +2021,7 @@ UNIT_TEST(test_set_get_cell_list_add_req)
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_list(SIXP_PKT_TYPE_REQUEST,
                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                           testdata, sizeof(testdata), 4,
+                           testdata, sizeof(testdata), sizeof(testdata),
                            buf, sizeof(buf)) == 0);
   /* 4 of cell_offset means 16-octet offset  */
   memcpy(ref_data + 4 + 16, testdata, sizeof(testdata));
@@ -1873,7 +2068,7 @@ UNIT_TEST(test_set_get_cell_list_delete_req)
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_list(SIXP_PKT_TYPE_REQUEST,
                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                           testdata, sizeof(testdata), 4,
+                           testdata, sizeof(testdata), sizeof(testdata),
                            buf, sizeof(buf)) == 0);
   /* 4 of cell_offset means 16-octet offset  */
   memcpy(ref_data + 4 + 16, testdata, sizeof(testdata));
@@ -1890,9 +2085,9 @@ UNIT_TEST(test_set_get_cell_list_delete_req)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_cell_list_status_req,
-                   "test sixp_pkt_{set,get}_cell_list(status_req)");
-UNIT_TEST(test_set_get_cell_list_status_req)
+UNIT_TEST_REGISTER(test_set_get_cell_list_relocate_req,
+                   "test sixp_pkt_{set,get}_cell_list(relocate_req)");
+UNIT_TEST(test_set_get_cell_list_relocate_req)
 {
   /* make a cell list having four cells as test data */
   const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
@@ -1904,7 +2099,7 @@ UNIT_TEST(test_set_get_cell_list_status_req)
 
   UNIT_TEST_BEGIN();
 
-  /* Status Request */
+  /* Relocate Request */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -1912,13 +2107,50 @@ UNIT_TEST(test_set_get_cell_list_status_req)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_list(SIXP_PKT_TYPE_REQUEST,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                           testdata, sizeof(testdata), 0, // offset 0
+                           buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cell_list(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                           &result, &result_len,
+                           buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result_len == 0);
+  UNIT_TEST_ASSERT(memcmp(result, testdata, result_len) == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cell_list_count_req,
+                   "test sixp_pkt_{set,get}_cell_list(count_req)");
+UNIT_TEST(test_set_get_cell_list_count_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cell_list(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                            testdata, sizeof(testdata), 0,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_cell_list(SIXP_PKT_TYPE_REQUEST,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_STATUS,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
                            &result, &result_len,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result_len == 0);
@@ -2077,9 +2309,9 @@ UNIT_TEST(test_set_get_cell_list_success_conf)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_cell_list_err_res,
-                   "test sixp_pkt_{set,get}_cell_list(err_res)");
-UNIT_TEST(test_set_get_cell_list_err_res)
+UNIT_TEST_REGISTER(test_set_get_cell_list_error_res,
+                   "test sixp_pkt_{set,get}_cell_list(error_res)");
+UNIT_TEST(test_set_get_cell_list_error_res)
 {
   /* make a cell list having four cells as test data */
   const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
@@ -2091,7 +2323,7 @@ UNIT_TEST(test_set_get_cell_list_err_res)
 
   UNIT_TEST_BEGIN();
 
-  /* Err Response */
+  /* Error Response */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -2099,13 +2331,13 @@ UNIT_TEST(test_set_get_cell_list_err_res)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_list(SIXP_PKT_TYPE_RESPONSE,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            testdata, sizeof(testdata), 0,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_cell_list(SIXP_PKT_TYPE_RESPONSE,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            &result, &result_len,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(result_len == 0);
@@ -2114,9 +2346,9 @@ UNIT_TEST(test_set_get_cell_list_err_res)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_set_get_cell_list_err_conf,
-                   "test sixp_pkt_{set,get}_cell_list(err_conf)");
-UNIT_TEST(test_set_get_cell_list_err_conf)
+UNIT_TEST_REGISTER(test_set_get_cell_list_error_conf,
+                   "test sixp_pkt_{set,get}_cell_list(error_conf)");
+UNIT_TEST(test_set_get_cell_list_error_conf)
 {
   /* make a cell list having four cells as test data */
   const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
@@ -2128,7 +2360,7 @@ UNIT_TEST(test_set_get_cell_list_err_conf)
 
   UNIT_TEST_BEGIN();
 
-  /* Err Confirmation */
+  /* Error Confirmation */
   memset(buf, 0, sizeof(buf));
   memset(ref_data, 0, sizeof(ref_data));
   memset(&result, 0, sizeof(result));
@@ -2136,17 +2368,789 @@ UNIT_TEST(test_set_get_cell_list_err_conf)
   UNIT_TEST_ASSERT(result == 0x00);
   UNIT_TEST_ASSERT(
     sixp_pkt_set_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            testdata, sizeof(testdata), 0,
                            buf, sizeof(buf)) == -1);
   UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
   UNIT_TEST_ASSERT(
     sixp_pkt_get_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
-                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
                            &result, &result_len,
                            buf, sizeof(testdata)) == -1);
   UNIT_TEST_ASSERT(result_len == 0);
   UNIT_TEST_ASSERT(memcmp(result, testdata, result_len) == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_add_req,
+                   "test sixp_pkt_{set,get}_rel_cell_list(add_req)");
+UNIT_TEST(test_set_get_rel_cell_list_add_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Add Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                           4, buf, sizeof(buf)) == 0); // NumCells == 4
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                               testdata, sizeof(testdata), 0, // offset 0
+                               buf, sizeof(buf)) == -1);
+  ref_data[3] = 4;  // NumCells == 4
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  result_len = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                               &result, &result_len,
+                               buf, sizeof(testdata) + 4) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_delete_req,
+                   "test sixp_pkt_{set,get}_rel_cell_list(delete_req)");
+UNIT_TEST(test_set_get_rel_cell_list_delete_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Delete Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                           4, buf, sizeof(buf)) == 0); // NumCells == 4
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                               testdata, sizeof(testdata), 0, // offset 0
+                               buf, sizeof(buf)) == -1);
+  ref_data[3] = 4;  // NumCells == 4
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  result_len = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                               &result, &result_len,
+                               buf, sizeof(testdata) + 4) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_relocate_req,
+                   "test sixp_pkt_{set,get}_rel_cell_list(relocate_req)");
+UNIT_TEST(test_set_get_rel_cell_list_relocate_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Relocate Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                           4, buf, sizeof(buf)) == 0); // NumCells == 4
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                               testdata, sizeof(testdata), 0, // offset 0
+                               buf, sizeof(buf)) == 0);
+  ref_data[3] = 4;  // NumCells == 4
+  memcpy(ref_data + 4, testdata, sizeof(testdata));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  result_len = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                               &result, &result_len,
+                               buf, sizeof(testdata) + 4) == 0);
+  UNIT_TEST_ASSERT(result == &buf[4]);
+  UNIT_TEST_ASSERT(result_len == sizeof(testdata));
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_count_req,
+                   "test sixp_pkt_{set,get}_rel_cell_list(count_req)");
+UNIT_TEST(test_set_get_rel_cell_list_count_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                               testdata, sizeof(testdata), 0,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                               &result, &result_len,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_list_req,
+                   "test sixp_pkt_{set,get}_rel_cell_list(list_req)");
+UNIT_TEST(test_set_get_rel_cell_list_list_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* List Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
+                               testdata, sizeof(testdata), 0,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
+                               &result, &result_len,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_clear_req,
+                   "test sixp_pkt_{set,get}_rel_cell_list(clear_req)");
+UNIT_TEST(test_set_get_rel_cell_list_clear_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Clear Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                               testdata, sizeof(testdata), 0,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                               &result, &result_len,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_success_res,
+                   "test sixp_pkt_{set,get}_rel_cell_list(success_res)");
+UNIT_TEST(test_set_get_rel_cell_list_success_res)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Success Response */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                               testdata, sizeof(testdata), 0,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                               &result, &result_len,
+                               buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_success_conf,
+                   "test sixp_pkt_{set,get}_rel_cell_list(success_conf)");
+UNIT_TEST(test_set_get_rel_cell_list_success_conf)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Success Confirmation */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                               testdata, sizeof(testdata), 0,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                               &result, &result_len,
+                               buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_error_res,
+                   "test sixp_pkt_{set,get}_rel_cell_list(error_res)");
+UNIT_TEST(test_set_get_rel_cell_list_error_res)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Error Response */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                               testdata, sizeof(testdata), 0,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                               &result, &result_len,
+                               buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_rel_cell_list_error_conf,
+                   "test sixp_pkt_{set,get}_rel_cell_list(error_conf)");
+UNIT_TEST(test_set_get_rel_cell_list_error_conf)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Error Confirmation */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_rel_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                               testdata, sizeof(testdata), 0,
+                               buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_rel_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                               &result, &result_len,
+                               buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_add_req,
+                   "test sixp_pkt_{set,get}_cand_cell_list(add_req)");
+UNIT_TEST(test_set_get_cand_cell_list_add_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Add Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                           4, buf, sizeof(buf)) == 0); // NumCells == 4
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                testdata, sizeof(testdata), 0, // offset 0
+                                buf, sizeof(buf)) == -1);
+  ref_data[3] = 4;  // NumCells == 4
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  result_len = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                &result, &result_len,
+                                buf, sizeof(testdata) + 4) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_delete_req,
+                   "test sixp_pkt_{set,get}_cand_cell_list(delete_req)");
+UNIT_TEST(test_set_get_cand_cell_list_delete_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Delete Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                           4, buf, sizeof(buf)) == 0); // NumCells == 4
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                                testdata, sizeof(testdata), 0, // offset 0
+                                buf, sizeof(buf)) == -1);
+  ref_data[3] = 4;  // NumCells == 4
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  result_len = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                                &result, &result_len,
+                                buf, sizeof(testdata) + 4) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_relocate_req,
+                   "test sixp_pkt_{set,get}_cand_cell_list(relocate_req)");
+UNIT_TEST(test_set_get_cand_cell_list_relocate_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Relocate Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                           4, buf, sizeof(buf)) == 0); // NumCells == 4
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                                testdata, sizeof(testdata), 0, // offset 0
+                                buf, sizeof(buf)) == 0);
+  ref_data[3] = 4;  // NumCells == 4
+  memcpy(ref_data + 20, testdata, sizeof(testdata));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  result_len = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                                &result, &result_len,
+                                buf, 20 + sizeof(testdata)) == 0);
+  UNIT_TEST_ASSERT(result == &buf[20]);
+  UNIT_TEST_ASSERT(result_len == sizeof(testdata));
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_count_req,
+                   "test sixp_pkt_{set,get}_cand_cell_list(count_req)");
+UNIT_TEST(test_set_get_cand_cell_list_count_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                testdata, sizeof(testdata), 0,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                &result, &result_len,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_list_req,
+                   "test sixp_pkt_{set,get}_cand_cell_list(list_req)");
+UNIT_TEST(test_set_get_cand_cell_list_list_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* List Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
+                                testdata, sizeof(testdata), 0,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
+                                &result, &result_len,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_clear_req,
+                   "test sixp_pkt_{set,get}_cand_cell_list(clear_req)");
+UNIT_TEST(test_set_get_cand_cell_list_clear_req)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Clear Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  memset(&result, 0, sizeof(result));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == 0x00);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                                testdata, sizeof(testdata), 0,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_REQUEST,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                                &result, &result_len,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result_len == 0);
+  UNIT_TEST_ASSERT(memcmp(result, testdata, result_len) == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_success_res,
+                   "test sixp_pkt_{set,get}_cand_cell_list(success_res)");
+UNIT_TEST(test_set_get_cand_cell_list_success_res)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Success Response */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                testdata, sizeof(testdata), 0,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                &result, &result_len,
+                                buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_success_conf,
+                   "test sixp_pkt_{set,get}_cand_cell_list(success_conf)");
+UNIT_TEST(test_set_get_cand_cell_list_success_conf)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Success Confirmation */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                testdata, sizeof(testdata), 0,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                &result, &result_len,
+                                buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_error_res,
+                   "test sixp_pkt_{set,get}_cand_cell_list(error_res)");
+UNIT_TEST(test_set_get_cand_cell_list_error_res)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Error Response */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                testdata, sizeof(testdata), 0,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_RESPONSE,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                &result, &result_len,
+                                buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_cand_cell_list_error_conf,
+                   "test sixp_pkt_{set,get}_cand_cell_list(error_conf)");
+UNIT_TEST(test_set_get_cand_cell_list_error_conf)
+{
+  /* make a cell list having four cells as test data */
+  const uint8_t testdata[] = {0x01, 0x23, 0x45, 0x67,
+                              0x89, 0xab, 0xcd, 0xef,
+                              0xde, 0xad, 0xbe, 0xef,
+                              0xca, 0xfe, 0xca, 0xfe};
+  const uint8_t *result;
+  sixp_pkt_offset_t result_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Error Confirmation */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_cand_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                testdata, sizeof(testdata), 0,
+                                buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  result = NULL;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_cand_cell_list(SIXP_PKT_TYPE_CONFIRMATION,
+                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                &result, &result_len,
+                                buf, sizeof(testdata)) == -1);
+  UNIT_TEST_ASSERT(result == NULL);
+  UNIT_TEST_ASSERT(result_len == 0);
 
   UNIT_TEST_END();
 }
@@ -2156,17 +3160,16 @@ UNIT_TEST_REGISTER(test_parse_valid_version,
 UNIT_TEST(test_parse_valid_version)
 {
   /*
-   * - Version (4-bit) : 1 (valid version)
+   * - Version (4-bit) : 0 (valid version)
    * - Type (2-bit)    : 0 (request)
    * - Reserved (2-bit): 0
    * - Code (8-bit)    : 2 (delete)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
-  const uint8_t test_buf[] = {0x01, 0x02, 0xfe, 0x6a,
+  const uint8_t test_buf[] = {0x00, 0x02, 0xfe, 0x6a,
                               0xde, 0xad, 0xbe, 0xef};
   sixp_pkt_t pkt;
 
@@ -2177,8 +3180,7 @@ UNIT_TEST(test_parse_valid_version)
   UNIT_TEST_ASSERT(pkt.code.cmd == SIXP_PKT_CMD_DELETE);
   UNIT_TEST_ASSERT(pkt.sfid == 0xfe);
   UNIT_TEST_ASSERT(pkt.seqno == 10);
-  UNIT_TEST_ASSERT(pkt.gab == 2);
-  UNIT_TEST_ASSERT(pkt.gba == 1);
+  UNIT_TEST_ASSERT(pkt.gen == 6);
   UNIT_TEST_ASSERT(pkt.body == &test_buf[4]);
   UNIT_TEST_ASSERT(pkt.body_len == 4);
 
@@ -2196,8 +3198,7 @@ UNIT_TEST(test_parse_invalid_version)
    * - Code (8-bit)    : 2 (delete)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
   const uint8_t test_buf[] = {0x02, 0x08, 0xfe, 0x6a,
@@ -2243,8 +3244,7 @@ UNIT_TEST(test_parse_invalid_cmd)
    * - Code (8-bit)    : 10 (undefined)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
   const uint8_t test_buf[] = {0x01, 0x0a, 0xfe, 0x6a,
@@ -2269,8 +3269,7 @@ UNIT_TEST(test_parse_invalid_rc)
    * - Code (8-bit)    : 15 (undefined)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
   const uint8_t test_buf[] = {0x11, 0x0f, 0xfe, 0x6a};
@@ -2294,8 +3293,7 @@ UNIT_TEST(test_parse_invalid_type)
    * - Code (8-bit)    : 0 (undefined)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
   const uint8_t test_buf[] = {0x31, 0x00, 0xfe, 0x6a};
@@ -2319,8 +3317,7 @@ UNIT_TEST(test_create_valid_packet)
    * - Code (8-bit)    : 2 (delete)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
   const uint8_t test_body[] = {0xde, 0xad, 0xbe, 0xef};
@@ -2334,7 +3331,7 @@ UNIT_TEST(test_create_valid_packet)
   UNIT_TEST_ASSERT(
     sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                     (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
-                    0xfe, 10, 2, 1,
+                    0xfe, 10, 6,
                     test_body, sizeof(test_body), &pkt) == 0);
 
   hdr_ptr = packetbuf_hdrptr();
@@ -2346,7 +3343,7 @@ UNIT_TEST(test_create_valid_packet)
   UNIT_TEST_ASSERT(packetbuf_totlen() == 8);
 
   /* 6top IE Content */
-  UNIT_TEST_ASSERT(hdr_ptr[0] == 0x01);
+  UNIT_TEST_ASSERT(hdr_ptr[0] == 0x00);
   UNIT_TEST_ASSERT(hdr_ptr[1] == 0x02);
   UNIT_TEST_ASSERT(hdr_ptr[2] == 0xfe);
   UNIT_TEST_ASSERT(hdr_ptr[3] == 0x6a);
@@ -2360,8 +3357,7 @@ UNIT_TEST(test_create_valid_packet)
   UNIT_TEST_ASSERT(pkt.code.cmd == SIXP_PKT_CMD_DELETE);
   UNIT_TEST_ASSERT(pkt.sfid == 0xfe);
   UNIT_TEST_ASSERT(pkt.seqno == 10);
-  UNIT_TEST_ASSERT(pkt.gab == 2);
-  UNIT_TEST_ASSERT(pkt.gba == 1);
+  UNIT_TEST_ASSERT(pkt.gen == 6);
   UNIT_TEST_ASSERT(memcmp(pkt.body, test_body, pkt.body_len) == 0);
   UNIT_TEST_ASSERT(pkt.body_len == 4);
 
@@ -2379,8 +3375,7 @@ UNIT_TEST(test_create_valid_packet_with_null_pkt)
    * - Code (8-bit)    : 2 (delete)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
   const uint8_t test_body[] = {0xde, 0xad, 0xbe, 0xef};
@@ -2392,7 +3387,7 @@ UNIT_TEST(test_create_valid_packet_with_null_pkt)
   UNIT_TEST_ASSERT(
     sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                     (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
-                    0xfe, 10, 2, 1,
+                    0xfe, 10, 6,
                     test_body, sizeof(test_body), NULL) == 0);
 
   hdr_ptr = packetbuf_hdrptr();
@@ -2404,7 +3399,7 @@ UNIT_TEST(test_create_valid_packet_with_null_pkt)
   UNIT_TEST_ASSERT(packetbuf_totlen() == 8);
 
   /* 6top IE Content */
-  UNIT_TEST_ASSERT(hdr_ptr[0] == 0x01);
+  UNIT_TEST_ASSERT(hdr_ptr[0] == 0x00);
   UNIT_TEST_ASSERT(hdr_ptr[1] == 0x02);
   UNIT_TEST_ASSERT(hdr_ptr[2] == 0xfe);
   UNIT_TEST_ASSERT(hdr_ptr[3] == 0x6a);
@@ -2429,8 +3424,7 @@ UNIT_TEST(test_create_too_long_body)
    * - Code (8-bit)    : 2 (delete)
    * - SFID (8-bit)    : 0xfe
    * - SeqNum (4-bit)  : 10
-   * - GAB (2-bit)     : 2
-   * - GBA (1-bit)     : 1
+   * - GEN (4-bit)     : 6
    * - Other Field     : (4-octet payload)
    */
   const uint8_t test_body[PACKETBUF_SIZE + 1];
@@ -2441,11 +3435,324 @@ UNIT_TEST(test_create_too_long_body)
   UNIT_TEST_ASSERT(
     sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                     (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
-                    0xfe, 10, 2, 1,
+                    0xfe, 10, 6,
                     test_body, sizeof(test_body), NULL) == -1);
   UNIT_TEST_ASSERT(packetbuf_hdrlen() == 0);
   UNIT_TEST_ASSERT(packetbuf_datalen() == 0);
   UNIT_TEST_ASSERT(packetbuf_totlen() == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_add_req,
+                   "test sixp_pkt_{set,get}_total_num_cells(add_req)");
+UNIT_TEST(test_set_get_total_num_cells_add_req)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Add Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_delete_req,
+                   "test sixp_pkt_{set,get}_total_num_cells(delete_req)");
+UNIT_TEST(test_set_get_total_num_cells_delete_req)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Delete Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_relocate_req,
+                   "test sixp_pkt_{set,get}_total_num_cells(relocate_req)");
+UNIT_TEST(test_set_get_total_num_cells_relocate_req)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Relocate Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  result = 0;
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_RELOCATE,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_count_req,
+                   "test sixp_pkt_{set,get}_total_num_cells(count_req)");
+UNIT_TEST(test_set_get_total_num_cells_count_req)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Count Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_list_req,
+                   "test sixp_pkt_{set,get}_total_num_cells(list_req)");
+UNIT_TEST(test_set_get_total_num_cells_list_req)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* List Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_clear_req,
+                   "test sixp_pkt_{set,get}_total_num_cells(clear_req)");
+UNIT_TEST(test_set_get_total_num_cells_clear_req)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Clear Request */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_REQUEST,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_success_res,
+                   "test sixp_pkt_{set,get}_total_num_cells(success_res)");
+UNIT_TEST(test_set_get_total_num_cells_success_res)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Success Response */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_RESPONSE,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                 testdata,
+                                 buf, sizeof(buf)) == 0);
+  /* little endian */
+  ref_data[0] = 0xfe;
+  ref_data[1] = 0xca;
+  printf("%x, %x\n", buf[0], buf[1]);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_RESPONSE,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                 &result,
+                                 buf, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(result == testdata);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_success_conf,
+                   "test sixp_pkt_{set,get}_total_num_cells(success_conf)");
+UNIT_TEST(test_set_get_total_num_cells_success_conf)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Success Confirmation */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_error_res,
+                   "test sixp_pkt_{set,get}_total_num_cells(err_res)");
+UNIT_TEST(test_set_get_total_num_cells_error_res)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Error Response */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_RESPONSE,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_RESPONSE,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_set_get_total_num_cells_error_conf,
+                   "test sixp_pkt_{set,get}_total_num_cells(err_conf)");
+UNIT_TEST(test_set_get_total_num_cells_error_conf)
+{
+  sixp_pkt_total_num_cells_t testdata, result;
+  testdata = 0xcafe;
+
+  UNIT_TEST_BEGIN();
+
+  /* Error Confirmation */
+  memset(buf, 0, sizeof(buf));
+  memset(ref_data, 0, sizeof(ref_data));
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_pkt_set_total_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                 testdata,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(memcmp(buf, ref_data, sizeof(buf)) == 0);
+
+  result = 0;
+  UNIT_TEST_ASSERT(
+    sixp_pkt_get_total_num_cells(SIXP_PKT_TYPE_CONFIRMATION,
+                                 (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERROR,
+                                 &result,
+                                 buf, sizeof(buf)) == -1);
+  UNIT_TEST_ASSERT(result == 0);
 
   UNIT_TEST_END();
 }
@@ -2461,79 +3768,122 @@ PROCESS_THREAD(test_process, ev, data)
   /* metadata */
   UNIT_TEST_RUN(test_set_get_metadata_add_req);
   UNIT_TEST_RUN(test_set_get_metadata_delete_req);
-  UNIT_TEST_RUN(test_set_get_metadata_status_req);
+  UNIT_TEST_RUN(test_set_get_metadata_relocate_req);
+  UNIT_TEST_RUN(test_set_get_metadata_count_req);
   UNIT_TEST_RUN(test_set_get_metadata_list_req);
   UNIT_TEST_RUN(test_set_get_metadata_clear_req);
   UNIT_TEST_RUN(test_set_get_metadata_success_res);
   UNIT_TEST_RUN(test_set_get_metadata_success_conf);
-  UNIT_TEST_RUN(test_set_get_metadata_err_res);
-  UNIT_TEST_RUN(test_set_get_metadata_err_conf);
+  UNIT_TEST_RUN(test_set_get_metadata_error_res);
+  UNIT_TEST_RUN(test_set_get_metadata_error_conf);
 
   /* cell_options */
   UNIT_TEST_RUN(test_set_get_cell_options_add_req);
   UNIT_TEST_RUN(test_set_get_cell_options_delete_req);
-  UNIT_TEST_RUN(test_set_get_cell_options_status_req);
+  UNIT_TEST_RUN(test_set_get_cell_options_relocate_req);
+  UNIT_TEST_RUN(test_set_get_cell_options_count_req);
   UNIT_TEST_RUN(test_set_get_cell_options_list_req);
   UNIT_TEST_RUN(test_set_get_cell_options_clear_req);
   UNIT_TEST_RUN(test_set_get_cell_options_success_res);
   UNIT_TEST_RUN(test_set_get_cell_options_success_conf);
-  UNIT_TEST_RUN(test_set_get_cell_options_err_res);
-  UNIT_TEST_RUN(test_set_get_cell_options_err_conf);
+  UNIT_TEST_RUN(test_set_get_cell_options_error_res);
+  UNIT_TEST_RUN(test_set_get_cell_options_error_conf);
 
   /* num_cells */
   UNIT_TEST_RUN(test_set_get_num_cells_add_req);
   UNIT_TEST_RUN(test_set_get_num_cells_delete_req);
-  UNIT_TEST_RUN(test_set_get_num_cells_status_req);
+  UNIT_TEST_RUN(test_set_get_num_cells_relocate_req);
+  UNIT_TEST_RUN(test_set_get_num_cells_count_req);
   UNIT_TEST_RUN(test_set_get_num_cells_list_req);
   UNIT_TEST_RUN(test_set_get_num_cells_clear_req);
   UNIT_TEST_RUN(test_set_get_num_cells_success_res);
   UNIT_TEST_RUN(test_set_get_num_cells_success_conf);
-  UNIT_TEST_RUN(test_set_get_num_cells_err_res);
-  UNIT_TEST_RUN(test_set_get_num_cells_err_conf);
+  UNIT_TEST_RUN(test_set_get_num_cells_error_res);
+  UNIT_TEST_RUN(test_set_get_num_cells_error_conf);
 
   /* reserved */
   UNIT_TEST_RUN(test_set_get_reserved_add_req);
   UNIT_TEST_RUN(test_set_get_reserved_delete_req);
-  UNIT_TEST_RUN(test_set_get_reserved_status_req);
+  UNIT_TEST_RUN(test_set_get_reserved_relocate_req);
+  UNIT_TEST_RUN(test_set_get_reserved_count_req);
   UNIT_TEST_RUN(test_set_get_reserved_list_req);
   UNIT_TEST_RUN(test_set_get_reserved_clear_req);
   UNIT_TEST_RUN(test_set_get_reserved_success_res);
   UNIT_TEST_RUN(test_set_get_reserved_success_conf);
-  UNIT_TEST_RUN(test_set_get_reserved_err_res);
-  UNIT_TEST_RUN(test_set_get_reserved_err_conf);
+  UNIT_TEST_RUN(test_set_get_reserved_error_res);
+  UNIT_TEST_RUN(test_set_get_reserved_error_conf);
 
   /* offset */
   UNIT_TEST_RUN(test_set_get_offset_add_req);
   UNIT_TEST_RUN(test_set_get_offset_delete_req);
-  UNIT_TEST_RUN(test_set_get_offset_status_req);
+  UNIT_TEST_RUN(test_set_get_offset_relocate_req);
+  UNIT_TEST_RUN(test_set_get_offset_count_req);
   UNIT_TEST_RUN(test_set_get_offset_list_req);
   UNIT_TEST_RUN(test_set_get_offset_clear_req);
   UNIT_TEST_RUN(test_set_get_offset_success_res);
   UNIT_TEST_RUN(test_set_get_offset_success_conf);
-  UNIT_TEST_RUN(test_set_get_offset_err_res);
-  UNIT_TEST_RUN(test_set_get_offset_err_conf);
+  UNIT_TEST_RUN(test_set_get_offset_error_res);
+  UNIT_TEST_RUN(test_set_get_offset_error_conf);
 
   /* offset */
   UNIT_TEST_RUN(test_set_get_max_num_cells_add_req);
   UNIT_TEST_RUN(test_set_get_max_num_cells_delete_req);
-  UNIT_TEST_RUN(test_set_get_max_num_cells_status_req);
+  UNIT_TEST_RUN(test_set_get_max_num_cells_relocate_req);
+  UNIT_TEST_RUN(test_set_get_max_num_cells_count_req);
   UNIT_TEST_RUN(test_set_get_max_num_cells_list_req);
   UNIT_TEST_RUN(test_set_get_max_num_cells_clear_req);
   UNIT_TEST_RUN(test_set_get_max_num_cells_success_res);
   UNIT_TEST_RUN(test_set_get_max_num_cells_success_conf);
-  UNIT_TEST_RUN(test_set_get_max_num_cells_err_res);
-  UNIT_TEST_RUN(test_set_get_max_num_cells_err_conf);
+  UNIT_TEST_RUN(test_set_get_max_num_cells_error_res);
+  UNIT_TEST_RUN(test_set_get_max_num_cells_error_conf);
 
   /* cell_list */
   UNIT_TEST_RUN(test_set_get_cell_list_add_req);
   UNIT_TEST_RUN(test_set_get_cell_list_delete_req);
-  UNIT_TEST_RUN(test_set_get_cell_list_status_req);
+  UNIT_TEST_RUN(test_set_get_cell_list_relocate_req);
+  UNIT_TEST_RUN(test_set_get_cell_list_count_req);
   UNIT_TEST_RUN(test_set_get_cell_list_list_req);
   UNIT_TEST_RUN(test_set_get_cell_list_clear_req);
   UNIT_TEST_RUN(test_set_get_cell_list_success_res);
   UNIT_TEST_RUN(test_set_get_cell_list_success_conf);
-  UNIT_TEST_RUN(test_set_get_cell_list_err_res);
-  UNIT_TEST_RUN(test_set_get_cell_list_err_conf);
+  UNIT_TEST_RUN(test_set_get_cell_list_error_res);
+  UNIT_TEST_RUN(test_set_get_cell_list_error_conf);
+
+  /* rel_cell_list */
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_add_req);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_delete_req);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_relocate_req);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_count_req);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_list_req);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_clear_req);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_success_res);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_success_conf);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_error_res);
+  UNIT_TEST_RUN(test_set_get_rel_cell_list_error_conf);
+
+  /* cand_cell_list */
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_add_req);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_delete_req);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_relocate_req);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_count_req);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_list_req);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_clear_req);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_success_res);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_success_conf);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_error_res);
+  UNIT_TEST_RUN(test_set_get_cand_cell_list_error_conf);
+
+  /* total_num_cells */
+  UNIT_TEST_RUN(test_set_get_total_num_cells_add_req);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_delete_req);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_relocate_req);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_count_req);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_list_req);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_clear_req);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_success_res);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_success_conf);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_error_res);
+  UNIT_TEST_RUN(test_set_get_total_num_cells_error_conf);
 
   /* parse */
   UNIT_TEST_RUN(test_parse_valid_version);

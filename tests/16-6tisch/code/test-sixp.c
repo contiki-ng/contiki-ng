@@ -93,7 +93,7 @@ UNIT_TEST(test_input_no_sf)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   UNKNOWN_SF_SFID, 10, 0, 0,
+                                   UNKNOWN_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    NULL) == 0);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
@@ -113,9 +113,9 @@ UNIT_TEST(test_input_no_sf)
   UNIT_TEST_ASSERT(p[3] == 0xa8);
 
   /* 6top IE */
-  UNIT_TEST_ASSERT(p[4] == 0x00);
-  UNIT_TEST_ASSERT(p[5] == 0x11);
-  UNIT_TEST_ASSERT(p[6] == 0x08);
+  UNIT_TEST_ASSERT(p[4] == 0xc9);
+  UNIT_TEST_ASSERT(p[5] == 0x10);
+  UNIT_TEST_ASSERT(p[6] == 0x05);
   UNIT_TEST_ASSERT(p[7] == UNKNOWN_SF_SFID);
   UNIT_TEST_ASSERT(p[8] == 0x0a);
 
@@ -152,7 +152,7 @@ UNIT_TEST(test_input_busy)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    NULL) == 0);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
@@ -172,9 +172,9 @@ UNIT_TEST(test_input_busy)
   UNIT_TEST_ASSERT(p[3] == 0xa8);
 
   /* 6top IE */
-  UNIT_TEST_ASSERT(p[4] == 0x00);
-  UNIT_TEST_ASSERT(p[5] == 0x11);
-  UNIT_TEST_ASSERT(p[6] == 0x0a);
+  UNIT_TEST_ASSERT(p[4] == 0xc9);
+  UNIT_TEST_ASSERT(p[5] == 0x10);
+  UNIT_TEST_ASSERT(p[6] == 0x07);
   UNIT_TEST_ASSERT(p[7] == TEST_SF_SFID);
   UNIT_TEST_ASSERT(p[8] == 0x0a);
 
@@ -201,7 +201,7 @@ UNIT_TEST(test_input_no_memory)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                     &pkt) == 0);
   memset(&addr, 0, sizeof(addr));
@@ -230,9 +230,9 @@ UNIT_TEST(test_input_no_memory)
   UNIT_TEST_ASSERT(p[3] == 0xa8);
 
   /* 6top IE */
-  UNIT_TEST_ASSERT(p[4] == 0x00);
-  UNIT_TEST_ASSERT(p[5] == 0x11);
-  UNIT_TEST_ASSERT(p[6] == 0x0b);
+  UNIT_TEST_ASSERT(p[4] == 0xc9);
+  UNIT_TEST_ASSERT(p[5] == 0x10);
+  UNIT_TEST_ASSERT(p[6] == 0x08);
   UNIT_TEST_ASSERT(p[7] == TEST_SF_SFID);
   UNIT_TEST_ASSERT(p[8] == 0x0a);
 
@@ -257,24 +257,21 @@ UNIT_TEST(test_input_schedule_generation)
   memset(&body, 0, sizeof(body));
 
   UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
-  /* nbr has GTX 0 and GRX 0 now */
+  /* nbr has GEN 0 now */
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 1, 1,
+                                   TEST_SF_SFID, 10, 1,
                                    (const uint8_t *)&body, sizeof(body),
                                    NULL) == 0);
 
   sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
   UNIT_TEST_ASSERT(test_sf_input_is_called == 0);
 
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gtx(nbr) == 0);
-  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
-  UNIT_TEST_ASSERT(test_sf_input_is_called == 0);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_grx(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
   sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
   UNIT_TEST_ASSERT(test_sf_input_is_called == 1);
+
   UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
   UNIT_TEST_ASSERT(sixp_trans_get_state(trans) ==
                    SIXP_TRANS_STATE_REQUEST_RECEIVED);
@@ -297,7 +294,7 @@ UNIT_TEST(test_output_request_1)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -363,7 +360,7 @@ UNIT_TEST(test_output_response_2)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -391,7 +388,7 @@ UNIT_TEST(test_output_response_3)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -421,7 +418,7 @@ UNIT_TEST(test_output_response_4)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -470,7 +467,7 @@ UNIT_TEST(test_output_confirmation_2)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -498,7 +495,7 @@ UNIT_TEST(test_output_confirmation_3)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -530,7 +527,7 @@ UNIT_TEST(test_output_confirmation_4)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0, 0,
+                                   TEST_SF_SFID, 10, 0,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);

@@ -59,38 +59,11 @@ typedef struct sixp_nbr {
   struct sixp_nbr *next;
   linkaddr_t addr;
   uint8_t next_seqno;
-  uint8_t gtx;
-  uint8_t grx;
+  uint8_t gen;
 } sixp_nbr_t;
-
-static int advance_generation_counter(uint8_t *gc);
 
 NBR_TABLE(sixp_nbr_t, sixp_nbrs);
 
-/*---------------------------------------------------------------------------*/
-static int
-advance_generation_counter(uint8_t *gc)
-{
-  assert(gc != NULL);
-  if(gc == NULL) {
-    return -1;
-  }
-  switch(*gc) {
-    case 0x00:
-    case 0x02:
-      *gc = 0x01;
-      break;
-    case 0x01:
-      *gc = 0x02;
-      break;
-    default:
-      /* unexpected condition */
-      PRINTF("6P-nbr: advance_generation_counter() has unexpected gc %02x\n",
-             *gc);
-      return -1;
-  }
-  return 0;
-}
 /*---------------------------------------------------------------------------*/
 sixp_nbr_t *
 sixp_nbr_find(const linkaddr_t *addr)
@@ -130,8 +103,7 @@ sixp_nbr_alloc(const linkaddr_t *addr)
 
   linkaddr_copy(&nbr->addr, addr);
   nbr->next_seqno = SIXP_INITIAL_SEQUENCE_NUMBER;
-  nbr->gtx = 0;
-  nbr->grx = 0;
+  nbr->gen = 0;
 
   return nbr;
 }
@@ -146,47 +118,36 @@ sixp_nbr_free(sixp_nbr_t *nbr)
 }
 /*---------------------------------------------------------------------------*/
 int16_t
-sixp_nbr_get_gtx(sixp_nbr_t *nbr)
+sixp_nbr_get_gen(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
   if(nbr == NULL) {
     PRINTF("6P-nbr: sixp_nbr_get_gtx() fails because of invalid argument\n");
     return -1;
   }
-  return nbr->gtx;
-}
-/*---------------------------------------------------------------------------*/
-int8_t
-sixp_nbr_get_grx(sixp_nbr_t *nbr)
-{
-  assert(nbr != NULL);
-  if(nbr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_get_grx() fails because of invalid argument\n");
-    return -1;
-  }
-  return nbr->grx;
+  return nbr->gen;
 }
 /*---------------------------------------------------------------------------*/
 int
-sixp_nbr_advance_gtx(sixp_nbr_t *nbr)
+sixp_nbr_advance_gen(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
   if(nbr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_advance_gtx() fails because of invalid arg\n");
+    PRINTF("6P-nbr: sixp_nbr_advance_gen() fails because of invalid arg\n");
     return -1;
   }
-  return advance_generation_counter(&nbr->gtx);
-}
-/*---------------------------------------------------------------------------*/
-int
-sixp_nbr_advance_grx(sixp_nbr_t *nbr)
-{
-  assert(nbr != NULL);
-  if(nbr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_advance_grx() fails because of invalid arg\n");
+
+  if(nbr->gen == 0x00 || nbr->gen == 0x09) {
+    nbr->gen = 0x01;
+  } else if(nbr->gen < 0x09) {
+    nbr->gen++;
+  } else {
+    /* unexpected condition */
+    PRINTF("6P-nbr: nbr %p has an invalid generation number %02x\n",
+           nbr, nbr->gen);
     return -1;
   }
-  return advance_generation_counter(&nbr->grx);
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 int

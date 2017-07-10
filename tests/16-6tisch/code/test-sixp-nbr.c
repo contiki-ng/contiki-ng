@@ -103,9 +103,9 @@ UNIT_TEST(test_alloc_and_free)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_gtx_management,
-                   "test GTX Management");
-UNIT_TEST(test_gtx_management)
+UNIT_TEST_REGISTER(test_gen_management,
+                   "test GEN Management");
+UNIT_TEST(test_gen_management)
 {
   sixp_nbr_t *nbr;
 
@@ -113,43 +113,37 @@ UNIT_TEST(test_gtx_management)
   test_setup();
 
   UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr_1)) != NULL);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gtx(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x00);
 
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gtx(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gtx(nbr) == 0x01);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x01);
 
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gtx(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gtx(nbr) == 0x02);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x02);
 
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gtx(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gtx(nbr) == 0x01);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x03);
 
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gtx(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gtx(nbr) == 0x02);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x04);
 
-  UNIT_TEST_END();
-}
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x05);
 
-UNIT_TEST_REGISTER(test_grx_management,
-                   "test GRX Management");
-UNIT_TEST(test_grx_management)
-{
-  sixp_nbr_t *nbr;
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x06);
 
-  UNIT_TEST_BEGIN();
-  test_setup();
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x07);
 
-  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr_1)) != NULL);
-  UNIT_TEST_ASSERT(sixp_nbr_get_grx(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x08);
 
-  UNIT_TEST_ASSERT(sixp_nbr_advance_grx(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_grx(nbr) == 0x01);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x09);
 
-  UNIT_TEST_ASSERT(sixp_nbr_advance_grx(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_grx(nbr) == 0x02);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_grx(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_grx(nbr) == 0x01);
+  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x01);
 
   UNIT_TEST_END();
 }
@@ -211,10 +205,8 @@ PROCESS_THREAD(test_process, ev, data)
   /* alloc / free */
   UNIT_TEST_RUN(test_alloc_and_free);
 
-  /* GTX */
-  UNIT_TEST_RUN(test_gtx_management);
-  /* GRX */
-  UNIT_TEST_RUN(test_grx_management);
+  /* GEN */
+  UNIT_TEST_RUN(test_gen_management);
 
   /* next sequence number */
   UNIT_TEST_RUN(test_next_seqno);

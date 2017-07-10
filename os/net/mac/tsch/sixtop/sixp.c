@@ -120,9 +120,7 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_code_t code,
                 const linkaddr_t *dest_addr)
 {
   /* create a 6P packet within packetbuf */
-  /* XXX: set 0 as GAB and GBA for a error response */
-  /* XXX: how can we make a confirmation having an error return value? */
-  if(sixp_pkt_create(type, code, sfid, seqno, 0, 0, NULL, 0, NULL) < 0) {
+  if(sixp_pkt_create(type, code, sfid, seqno, 0, NULL, 0, NULL) < 0) {
     PRINTF("6P: failed to create a 6P packet to return an error [rc:%u]\n",
            code.value);
     return -1;
@@ -141,6 +139,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
   sixp_trans_t *trans;
   const sixtop_sf_t *sf;
   int16_t seqno;
+  int16_t gen;
   int ret;
 
   assert(buf != NULL && src_addr != NULL);
@@ -169,7 +168,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
      * sent back?
      */
     if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                       (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_SFID,
+                       (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SFID,
                        pkt.sfid, pkt.seqno, src_addr) < 0) {
       PRINTF("6P: sixp_input() fails to return an error response\n");
     };
@@ -182,22 +181,20 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
     /* Not need to validate generation counters in a case of CMD_CLEAR */
     invalid_schedule_generation = 0;
   } else if(nbr == NULL) {
-    if(pkt.gab == 0 && pkt.gba == 0) {
+    if(pkt.gen == 0) {
       invalid_schedule_generation = 0; /* valid combination */
     } else {
-      PRINTF("6P: GAB/GBA should be 0 because of no corresponding nbr\n");
+      PRINTF("6P: GEN should be 0 because of no corresponding nbr\n");
       invalid_schedule_generation = 1;
     }
   } else {
-    PRINTF("6P: GAB: %u, GBA: %u, GTX: %u, GRX: %u\n",
-           pkt.gab, pkt.gba, sixp_nbr_get_grx(nbr), sixp_nbr_get_gtx(nbr));
-    if(((pkt.type == SIXP_PKT_TYPE_REQUEST ||
-         pkt.type == SIXP_PKT_TYPE_CONFIRMATION) &&
-        pkt.gab == sixp_nbr_get_grx(nbr) &&
-        pkt.gba == sixp_nbr_get_gtx(nbr)) ||
-       (pkt.type == SIXP_PKT_TYPE_RESPONSE &&
-        pkt.gab == sixp_nbr_get_gtx(nbr) &&
-        pkt.gba == sixp_nbr_get_grx(nbr))) {
+    if((gen = sixp_nbr_get_gen(nbr)) < 0) {
+      PRINTF("6P: unexpected error; cannot get our GEN\n");
+      return;
+    }
+    PRINTF("6P: received GEN %u, our GEN: %u\n",
+           pkt.gen, sixp_nbr_get_gen(nbr));
+    if(pkt.gen == gen) {
       invalid_schedule_generation = 0; /* valid combination */
     } else {
       invalid_schedule_generation = 1;
@@ -218,7 +215,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
       PRINTLLADDR((const uip_lladdr_t *)src_addr);
       PRINTF(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_BUSY,
+                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_BUSY,
                          pkt.sfid, pkt.seqno, src_addr) < 0) {
         PRINTF("6P: sixp_input() fails to return an error response");
       }
@@ -226,7 +223,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
     } else if((trans = sixp_trans_alloc(&pkt, src_addr)) == NULL) {
       PRINTF("6P: sixp_input() fails because of lack of memory\n");
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_NORES,
+                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_NORES,
                          pkt.sfid, pkt.seqno, src_addr) < 0) {
         PRINTF("6P: sixp_input() fails to return an error response\n");
       }
@@ -291,7 +288,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
   sixp_trans_t *trans;
   sixp_nbr_t *nbr;
   sixp_pkt_cmd_t cmd;
-  int16_t seqno, gab, gba;
+  int16_t seqno, gen;
   sixp_pkt_t pkt;
 
   assert(dest_addr != NULL);
@@ -378,31 +375,17 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
     }
   }
 
-  /* set GAB and GBA */
+  /* set GEN */
   if(nbr == NULL) {
-    gab = gba = 0;
-  } else {
-    if(type == SIXP_PKT_TYPE_REQUEST ||
-       type == SIXP_PKT_TYPE_CONFIRMATION) {
-      gab = sixp_nbr_get_gtx(nbr);
-      gba = sixp_nbr_get_grx(nbr);
-    } else if(type == SIXP_PKT_TYPE_RESPONSE) {
-      gba = sixp_nbr_get_gtx(nbr);
-      gab = sixp_nbr_get_grx(nbr);
-    } else {
-      /* never come here */
-      PRINTF("6P: sixp_output() fails because of an unexpected condition\n");
-      return -1;
-    }
-  }
-  if(gab < 0 || gba < 0) {
-    PRINTF("6P: sixp_output() fails to get GAB or GBA\n");
+    gen = 0;
+  } else if((gen = sixp_nbr_get_gen(nbr)) < 0) {
+    PRINTF("6P: sixp_output() fails to get GEN\n");
     return -1;
   }
 
   /* create a 6P packet within packetbuf */
   if(sixp_pkt_create(type, code, sfid,
-                     (uint8_t)seqno, (uint8_t)gab, (uint8_t)gba,
+                     (uint8_t)seqno, (uint8_t)gen,
                      body, body_len,
                      type == SIXP_PKT_TYPE_REQUEST ? &pkt : NULL) < 0) {
     PRINTF("6P: sixp_output() fails to create a 6P packet\n");

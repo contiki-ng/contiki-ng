@@ -61,6 +61,11 @@ static int32_t get_offset_offset(sixp_pkt_type_t type, sixp_pkt_code_t code);
 static int32_t get_max_num_cells_offset(sixp_pkt_type_t type,
                                         sixp_pkt_code_t code);
 static int32_t get_cell_list_offset(sixp_pkt_type_t type, sixp_pkt_code_t code);
+static int32_t get_rel_cell_list_offset(sixp_pkt_type_t type,
+                                        sixp_pkt_code_t code);
+static int32_t get_total_num_cells_offset(sixp_pkt_type_t type,
+                                          sixp_pkt_code_t code);
+
 /*---------------------------------------------------------------------------*/
 static int32_t
 get_metadata_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
@@ -77,7 +82,8 @@ get_cell_options_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
   if(type == SIXP_PKT_TYPE_REQUEST &&
      (code.cmd == SIXP_PKT_CMD_ADD ||
       code.cmd == SIXP_PKT_CMD_DELETE ||
-      code.cmd == SIXP_PKT_CMD_STATUS ||
+      code.cmd == SIXP_PKT_CMD_RELOCATE ||
+      code.cmd == SIXP_PKT_CMD_COUNT ||
       code.cmd == SIXP_PKT_CMD_LIST)) {
     return sizeof(sixp_pkt_metadata_t);
   }
@@ -88,11 +94,10 @@ static int32_t
 get_num_cells_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
 {
   if(type == SIXP_PKT_TYPE_REQUEST &&
-     (code.value == SIXP_PKT_CMD_ADD || code.value == SIXP_PKT_CMD_DELETE)) {
+     (code.value == SIXP_PKT_CMD_ADD ||
+      code.value == SIXP_PKT_CMD_DELETE ||
+      code.value == SIXP_PKT_CMD_RELOCATE)) {
     return sizeof(sixp_pkt_metadata_t) + sizeof(sixp_pkt_cell_options_t);
-  } else if(type == SIXP_PKT_TYPE_RESPONSE &&
-            code.value == SIXP_PKT_RC_SUCCESS) {
-    return 0;
   }
 
   return -1;
@@ -143,13 +148,33 @@ get_cell_list_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
             sizeof(sixp_pkt_num_cells_t));
   } else if((type == SIXP_PKT_TYPE_RESPONSE ||
              type == SIXP_PKT_TYPE_CONFIRMATION) &&
-            code.value == SIXP_PKT_RC_SUCCESS) {
+            (code.value == SIXP_PKT_RC_SUCCESS ||
+             code.value == SIXP_PKT_RC_EOL)) {
     return 0;
   }
   return -1;
 }
 /*---------------------------------------------------------------------------*/
-int
+static int32_t
+get_rel_cell_list_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
+{
+  if(type == SIXP_PKT_TYPE_REQUEST && code.value == SIXP_PKT_CMD_RELOCATE) {
+    return (sizeof(sixp_pkt_metadata_t) +
+            sizeof(sixp_pkt_cell_options_t) +
+            sizeof(sixp_pkt_num_cells_t));
+  }
+  return -1;
+}
+/*---------------------------------------------------------------------------*/
+static int32_t
+get_total_num_cells_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
+{
+  if(type == SIXP_PKT_TYPE_RESPONSE && code.value == SIXP_PKT_RC_SUCCESS) {
+    return 0;
+  }
+  return -1;
+}
+/*---------------------------------------------------------------------------*/int
 sixp_pkt_set_metadata(sixp_pkt_type_t type, sixp_pkt_code_t code,
                       sixp_pkt_metadata_t metadata,
                       uint8_t *body, uint16_t body_len)
@@ -294,13 +319,7 @@ sixp_pkt_set_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
     return -1;
   }
 
-  if(body_len < (offset + sizeof(num_cells))) {
-    PRINTF("6P-pkt: cannot set num_cells; body is too short\n");
-    return -1;
-  }
-
-  /* NumCells is an 8-bit unsigned integer */
-  memcpy(body + offset, &num_cells, sizeof(num_cells));
+  memcpy(body + offset, &num_cells, sizeof(uint8_t));
 
   return 0;
 }
@@ -549,7 +568,7 @@ sixp_pkt_set_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
     return -1;
   }
 
-  offset += cell_offset * sizeof(sixp_pkt_cell_t);
+  offset += cell_offset;
 
   if(body_len < (offset + cell_list_len)) {
     PRINTF("6P-pkt: cannot set cell_list; body is too short\n");
@@ -560,6 +579,7 @@ sixp_pkt_set_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   }
 
   memcpy(body + offset, cell_list, cell_list_len);
+
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -572,7 +592,7 @@ sixp_pkt_get_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(cell_list_len == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get cell_list; invalid argument\n");
+    PRINTF("6P-pkt: cannot get cell_list\n");
     return -1;
   }
 
@@ -596,6 +616,242 @@ sixp_pkt_get_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   }
 
   *cell_list_len = body_len - offset;
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_pkt_set_rel_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                           const uint8_t *rel_cell_list,
+                           uint16_t rel_cell_list_len,
+                           uint16_t cell_offset,
+                           uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+  sixp_pkt_num_cells_t num_cells;
+
+  if(rel_cell_list == NULL || body == NULL) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; invalid argument\n");
+    return -1;
+  }
+
+  if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; no NumCells field\n");
+    return -1;
+  }
+
+  if((offset = get_rel_cell_list_offset(type, code)) < 0) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; ");
+    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
+           type, code.value);
+    return -1;
+  }
+
+  offset += cell_offset;
+
+  if(body_len < (offset + rel_cell_list_len)) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; body is too short\n");
+    return -1;
+  } else if((offset + rel_cell_list_len) >
+            (offset + num_cells * sizeof(sixp_pkt_cell_t))) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; RelCellList is too long\n");
+    return -1;
+  } else if((rel_cell_list_len % sizeof(sixp_pkt_cell_t)) != 0) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; invalid body_len\n");
+    return -1;
+  }
+
+  memcpy(body + offset, rel_cell_list, rel_cell_list_len);
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_pkt_get_rel_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                           const uint8_t **rel_cell_list,
+                           sixp_pkt_offset_t *rel_cell_list_len,
+                           const uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+  sixp_pkt_num_cells_t num_cells;
+
+  if(rel_cell_list_len == NULL || body == NULL) {
+    PRINTF("6P-pkt: cannot get rel_cell_list; invalid argument\n");
+    return -1;
+  }
+
+  if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
+    PRINTF("6P-pkt: cannot get rel_cell_list; no NumCells field\n");
+    return -1;
+  }
+
+  if((offset = get_rel_cell_list_offset(type, code)) < 0) {
+    PRINTF("6P-pkt: cannot get rel_cell_list; ");
+    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
+           type, code.value);
+    return -1;
+  }
+
+  if(body_len < (offset + (num_cells * sizeof(sixp_pkt_cell_t)))) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; body is too short\n");
+    return -1;
+  } else if(((body_len - offset) % sizeof(sixp_pkt_cell_t)) != 0) {
+    PRINTF("6P-pkt: cannot set rel_cell_list; invalid body_len\n");
+    return -1;
+  }
+
+  if(rel_cell_list != NULL) {
+    *rel_cell_list = body + offset;
+  }
+
+  *rel_cell_list_len = num_cells * sizeof(sixp_pkt_cell_t);
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_pkt_set_cand_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                            const uint8_t *cand_cell_list,
+                            uint16_t cand_cell_list_len,
+                            uint16_t cell_offset,
+                            uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+  sixp_pkt_num_cells_t num_cells;
+
+  if(cand_cell_list == NULL || body == NULL) {
+    PRINTF("6P-pkt: cannot set cand_cell_list; invalid argument\n");
+    return -1;
+  }
+
+  if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
+    PRINTF("6P-pkt: cannot set cand_cell_list; no NumCells field\n");
+    return -1;
+  }
+
+  if((offset = get_rel_cell_list_offset(type, code)) < 0) {
+    PRINTF("6P-pkt: cannot set cand_cell_list; ");
+    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
+           type, code.value);
+    return -1;
+  }
+
+  offset += cell_offset + num_cells * sizeof(sixp_pkt_cell_t);
+
+  if(body_len < (offset + cand_cell_list_len)) {
+    PRINTF("6P-pkt: cannot set cand_cell_list; body is too short\n");
+    return -1;
+  } else if((cand_cell_list_len % sizeof(sixp_pkt_cell_t)) != 0) {
+    PRINTF("6P-pkt: cannot set cand_cell_list; invalid body_len\n");
+    return -1;
+  }
+
+  memcpy(body + offset, cand_cell_list, cand_cell_list_len);
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_pkt_get_cand_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                           const uint8_t **cand_cell_list,
+                           sixp_pkt_offset_t *cand_cell_list_len,
+                           const uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+  sixp_pkt_num_cells_t num_cells;
+
+  if(cand_cell_list_len == NULL || body == NULL) {
+    PRINTF("6P-pkt: cannot get cand_cell_list; invalid argument\n");
+    return -1;
+  }
+
+  if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
+    PRINTF("6P-pkt: cannot get cand_cell_list; no NumCells field\n");
+    return -1;
+  }
+
+  if((offset = get_rel_cell_list_offset(type, code)) < 0) {
+    PRINTF("6P-pkt: cannot get cand_cell_list; ");
+    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
+           type, code.value);
+    return -1;
+  }
+
+  offset += num_cells * sizeof(sixp_pkt_cell_t);
+
+  if(body_len < offset) {
+    PRINTF("6P-pkt: cannot set cand_cell_list; body is too short\n");
+    return -1;
+  } else if(((body_len - offset) % sizeof(sixp_pkt_cell_t)) != 0) {
+    PRINTF("6P-pkt: cannot set cand_cell_list; invalid body_len\n");
+    return -1;
+  }
+
+  if(cand_cell_list != NULL) {
+    *cand_cell_list = body + offset;
+  }
+
+  *cand_cell_list_len = body_len - offset;
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_pkt_set_total_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                             sixp_pkt_total_num_cells_t total_num_cells,
+                             uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+
+  if(body == NULL) {
+    PRINTF("6P-pkt: cannot set num_cells; body is null\n");
+    return -1;
+  }
+
+  if((offset = get_total_num_cells_offset(type, code)) < 0) {
+    PRINTF("6P-pkt: cannot set total_num_cells; ");
+    PRINTF("packet [type=%u, code=%u] won't have TotalNumCells\n",
+           type, code.value);
+    return -1;
+  }
+
+  /*
+   * TotalNumCells for 6P Response is a 16-bit unsigned integer, little-endian.
+   */
+  body[offset] = (uint8_t)(total_num_cells & 0xff);
+  body[offset + 1] = (uint8_t)(total_num_cells >> 8);
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_pkt_get_total_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                             sixp_pkt_total_num_cells_t *total_num_cells,
+                             const uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+
+  if(total_num_cells == NULL || body == NULL) {
+    PRINTF("6P-pkt: cannot get num_cells; invalid argument\n");
+    return -1;
+  }
+
+  if((offset = get_total_num_cells_offset(type, code)) < 0) {
+    PRINTF("6P-pkt: cannot get num_cells; ");
+    PRINTF("packet [type=%u, code=%u] won't have TotalNumCells\n",
+           type, code.value);
+    return -1;
+  }
+
+  if(body_len < (offset + sizeof(sixp_pkt_total_num_cells_t))) {
+    PRINTF("6P-pkt: cannot get num_cells; body is too short\n");
+    return -1;
+  }
+
+  /* TotalNumCells is a 16-bit unsigned integer, little-endian. */
+  *total_num_cells = body[0];
+  *total_num_cells += ((uint16_t)body[1]) << 8;
+
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -626,8 +882,7 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
   pkt->code.value = buf[1];
   pkt->sfid = buf[2];
   pkt->seqno = buf[3] & 0x0f;
-  pkt->gab = (buf[3] & 0x30) >> 4;
-  pkt->gba = (buf[3] & 0xc0) >> 6;
+  pkt->gen = (buf[3] & 0xf0) >> 4;
 
   buf += 4;
   len -= 4;
@@ -649,7 +904,16 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
           return -1;
         }
         break;
-      case SIXP_PKT_CMD_STATUS:
+      case SIXP_PKT_CMD_RELOCATE:
+        if(len < (sizeof(sixp_pkt_metadata_t) +
+                  sizeof(sixp_pkt_cell_options_t) +
+                  sizeof(sixp_pkt_num_cells_t)) ||
+           (len % sizeof(uint32_t)) != 0) {
+          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          return -1;
+        }
+        break;
+      case SIXP_PKT_CMD_COUNT:
         if(len != (sizeof(sixp_pkt_metadata_t) +
                    sizeof(sixp_pkt_cell_options_t))) {
           PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
@@ -683,23 +947,30 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
         /*
          * The "Other Field" contains
          * - Res to CLEAR:             Empty (length 0)
-         * - Res to STATUS:            "Num. Cells"
+         * - Res to STATUS:            "Num. Cells" (total_num_cells)
          * - Res to ADD, DELETE, LIST: 0, 1, or multiple 6P cells
          */
         if(len != 0 &&
-           len != sizeof(sixp_pkt_num_cells_t) &&
+           len != sizeof(sixp_pkt_total_num_cells_t) &&
            (len % sizeof(uint32_t)) != 0) {
           PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
-      case SIXP_PKT_RC_ERR_VER:
-      case SIXP_PKT_RC_ERR_SFID:
-      case SIXP_PKT_RC_ERR_GEN:
-      case SIXP_PKT_RC_ERR_BUSY:
-      case SIXP_PKT_RC_ERR_NORES:
-      case SIXP_PKT_RC_ERR_RESET:
-      case SIXP_PKT_RC_ERR:
+      case SIXP_PKT_RC_EOL:
+        if((len % sizeof(uint32_t)) != 0) {
+          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          return -1;
+        }
+        break;
+      case SIXP_PKT_RC_ERROR:
+      case SIXP_PKT_RC_RESET:
+      case SIXP_PKT_RC_VERSION:
+      case SIXP_PKT_RC_SFID:
+      case SIXP_PKT_RC_GEN:
+      case SIXP_PKT_RC_BUSY:
+      case SIXP_PKT_RC_NORES:
+      case SIXP_PKT_RC_CELLLIST:
         if(len != 0) {
           PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
@@ -722,7 +993,7 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
 /*---------------------------------------------------------------------------*/
 int
 sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
-                uint8_t sfid, uint8_t seqno, uint8_t gab, uint8_t gba,
+                uint8_t sfid, uint8_t seqno, uint8_t gen,
                 const uint8_t *body, uint16_t body_len, sixp_pkt_t *pkt)
 {
   uint8_t *hdr;
@@ -753,7 +1024,7 @@ sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
   hdr[0] = (type << 4) | SIXP_PKT_VERSION;
   hdr[1] = code.value;
   hdr[2] = sfid;
-  hdr[3] = (gab << 4) | (gba << 6) | seqno;
+  hdr[3] = (gen << 4) | seqno;
 
   /* data: write body */
   if(body_len > 0 && body != NULL) {
@@ -767,8 +1038,7 @@ sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
     pkt->code = code;
     pkt->sfid = sfid;
     pkt->seqno = seqno;
-    pkt->gab = gab;
-    pkt->gba = gba;
+    pkt->gen = gen;
     pkt->body = body;
     pkt->body_len = body_len;
   }

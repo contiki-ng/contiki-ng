@@ -50,6 +50,8 @@
 
 #include "sixp-pkt.h"
 
+#define SIXTOP_SUBIE_ID 0xc9
+
 /**
  * \brief Input Handler of Scheduling Function
  * \param type 6P Message Type of an input packet
