@@ -45,8 +45,10 @@
 
 #include "sixp.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "6top"
+#define LOG_LEVEL LOG_LEVEL_6TOP
 
 /**
  * \brief 6P Neighbor Data Structure (for internal use)
@@ -82,14 +84,14 @@ sixp_nbr_alloc(const linkaddr_t *addr)
 
   assert(addr != NULL);
   if(addr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_alloc() fails because of invalid argument\n");
+    LOG_ERR("6P-nbr: sixp_nbr_alloc() fails because of invalid argument\n");
     return NULL;
   }
 
   if(sixp_nbr_find(addr) != NULL) {
-    PRINTF("6P-nbr: sixp_nbr_alloc() fails because of duplication [peer_addr:");
-    PRINTLLADDR((const uip_lladdr_t *)addr);
-    PRINTF("]\n");
+    LOG_ERR("6P-nbr: sixp_nbr_alloc() fails because of duplication [peer_addr:");
+    LOG_ERR_LLADDR((const linkaddr_t *)addr);
+    LOG_ERR_("]\n");
     return NULL;
   }
 
@@ -97,7 +99,7 @@ sixp_nbr_alloc(const linkaddr_t *addr)
                                                addr,
                                                NBR_TABLE_REASON_SIXTOP,
                                                NULL)) == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_alloc() fails to add nbr because of no memory\n");
+    LOG_ERR("6P-nbr: sixp_nbr_alloc() fails to add nbr because of no memory\n");
     return NULL;
   }
 
@@ -122,7 +124,7 @@ sixp_nbr_get_gen(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
   if(nbr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_get_gtx() fails because of invalid argument\n");
+    LOG_ERR("6P-nbr: sixp_nbr_get_gtx() fails because of invalid argument\n");
     return -1;
   }
   return nbr->gen;
@@ -133,7 +135,7 @@ sixp_nbr_advance_gen(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
   if(nbr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_advance_gen() fails because of invalid arg\n");
+    LOG_ERR("6P-nbr: sixp_nbr_advance_gen() fails because of invalid arg\n");
     return -1;
   }
 
@@ -143,8 +145,8 @@ sixp_nbr_advance_gen(sixp_nbr_t *nbr)
     nbr->gen++;
   } else {
     /* unexpected condition */
-    PRINTF("6P-nbr: nbr %p has an invalid generation number %02x\n",
-           nbr, nbr->gen);
+    LOG_ERR("6P-nbr: nbr %p has an invalid generation number %02x\n",
+            nbr, nbr->gen);
     return -1;
   }
   return 0;
@@ -155,7 +157,7 @@ sixp_nbr_get_next_seqno(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
   if(nbr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_get_next_seqno() fails because of invalid arg\n");
+    LOG_ERR("6P-nbr: sixp_nbr_get_next_seqno() fails because of invalid arg\n");
     return -1;
   }
   return nbr->next_seqno;
@@ -166,7 +168,7 @@ sixp_nbr_increment_next_seqno(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
   if(nbr == NULL) {
-    PRINTF("6P-nbr: sixp_nbr_increment_next_seqno() fails; invalid arg\n");
+    LOG_ERR("6P-nbr: sixp_nbr_increment_next_seqno() fails; invalid arg\n");
     return -1;
   }
   nbr->next_seqno++;

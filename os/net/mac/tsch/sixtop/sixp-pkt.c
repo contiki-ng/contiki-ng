@@ -49,8 +49,10 @@
 #include "sixp.h"
 #include "sixp-pkt.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "6top"
+#define LOG_LEVEL LOG_LEVEL_6TOP
 
 static int32_t get_metadata_offset(sixp_pkt_type_t type, sixp_pkt_code_t code);
 static int32_t get_cell_options_offset(sixp_pkt_type_t type,
@@ -182,19 +184,19 @@ sixp_pkt_set_metadata(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(body == NULL) {
-    PRINTF("6P-pkt: cannot set metadata; body is null\n");
+    LOG_ERR("6P-pkt: cannot set metadata; body is null\n");
     return -1;
   }
 
   if((offset = get_metadata_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set metadata [type=%u, code=%u], invalid type\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set metadata [type=%u, code=%u], invalid type\n",
+            type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(metadata))) {
-    PRINTF("6P-pkt: cannot set metadata, body is too short [body_len=%u]\n",
-           body_len);
+    LOG_ERR("6P-pkt: cannot set metadata, body is too short [body_len=%u]\n",
+            body_len);
     return -1;
   }
 
@@ -215,19 +217,20 @@ sixp_pkt_get_metadata(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(metadata == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get metadata; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get metadata; invalid argument\n");
     return -1;
   }
 
   if((offset = get_metadata_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get metadata [type=%u, code=%u], invalid type\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get metadata [type=%u, code=%u], invalid type\n",
+            type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(*metadata))) {
-    PRINTF("6P-pkt: cannot get metadata [type=%u, code=%u], body is too short\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get metadata [type=%u, code=%u], ",
+            type, code.value);
+    LOG_ERR_("body is too short\n");
     return -1;
   }
 
@@ -248,19 +251,20 @@ sixp_pkt_set_cell_options(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(body == NULL) {
-    PRINTF("6P-pkt: cannot set cell_options; body is null\n");
+    LOG_ERR("6P-pkt: cannot set cell_options; body is null\n");
     return -1;
   }
 
   if((offset = get_cell_options_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set cell_options [type=%u, code=%u], invalid type\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set cell_options [type=%u, code=%u], ",
+            type, code.value);
+    LOG_ERR_("invalid type\n");
     return -1;
   }
 
   if(body_len < (offset + sizeof(cell_options))) {
-    PRINTF("6P-pkt: cannot set cell_options, body is too short [body_len=%u]\n",
-           body_len);
+    LOG_ERR("6P-pkt: cannot set cell_options, ");
+    LOG_ERR_("body is too short [body_len=%u]\n", body_len);
     return -1;
   }
 
@@ -278,19 +282,20 @@ sixp_pkt_get_cell_options(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(cell_options == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get cell_options; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get cell_options; invalid argument\n");
     return -1;
   }
 
   if((offset = get_cell_options_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get cell_options [type=%u, code=%u], invalid type\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get cell_options [type=%u, code=%u]",
+            type, code.value);
+    LOG_ERR_("invalid type\n");
     return -1;
   }
 
   if(body_len < (offset + sizeof(*cell_options))) {
-    PRINTF("6P-pkt: cannot get cell_options, body is too short [body_len=%u]\n",
-           body_len);
+    LOG_ERR("6P-pkt: cannot get cell_options, ");
+    LOG_ERR_("body is too short [body_len=%u]\n", body_len);
     return -1;
   }
 
@@ -308,14 +313,14 @@ sixp_pkt_set_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(body == NULL) {
-    PRINTF("6P-pkt: cannot set num_cells; body is null\n");
+    LOG_ERR("6P-pkt: cannot set num_cells; body is null\n");
     return -1;
   }
 
   if((offset = get_num_cells_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set num_cells; ");
-    PRINTF("packet [type=%u, code=%u] won't have NumCells\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set num_cells; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have NumCells\n",
+             type, code.value);
     return -1;
   }
 
@@ -332,19 +337,19 @@ sixp_pkt_get_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(num_cells == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get num_cells; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get num_cells; invalid argument\n");
     return -1;
   }
 
   if((offset = get_num_cells_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get num_cells; ");
-    PRINTF("packet [type=%u, code=%u] won't have NumCells\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get num_cells; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have NumCells\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(*num_cells))) {
-    PRINTF("6P-pkt: cannot get num_cells; body is too short\n");
+    LOG_ERR("6P-pkt: cannot get num_cells; body is too short\n");
     return -1;
   }
 
@@ -362,19 +367,19 @@ sixp_pkt_set_reserved(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(body == NULL) {
-    PRINTF("6P-pkt: cannot set reserved; body is null\n");
+    LOG_ERR("6P-pkt: cannot set reserved; body is null\n");
     return -1;
   }
 
   if((offset = get_reserved_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set reserved; ");
-    PRINTF("packet [type=%u, code=%u] won't have Reserved\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set reserved; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have Reserved\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(reserved))) {
-    PRINTF("6P-pkt: cannot set reserved; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set reserved; body is too short\n");
     return -1;
   }
 
@@ -392,14 +397,14 @@ sixp_pkt_get_reserved(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(reserved == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get reserved; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get reserved; invalid argument\n");
     return -1;
   }
 
   if((offset = get_reserved_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get reserved; ");
-    PRINTF("packet [type=%u, code=%u] won't have Reserved\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get reserved; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have Reserved\n",
+             type, code.value);
     return -1;
   }
 
@@ -417,19 +422,19 @@ sixp_pkt_set_offset(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(body == NULL) {
-    PRINTF("6P-pkt: cannot set offset; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot set offset; invalid argument\n");
     return -1;
   }
 
   if((offset = get_offset_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set offset; ");
-    PRINTF("packet [type=%u, code=%u] won't have Offset\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set offset; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have Offset\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(cell_offset))) {
-    PRINTF("6P-pkt: cannot set offset; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set offset; body is too short\n");
     return -1;
   }
 
@@ -452,19 +457,19 @@ sixp_pkt_get_offset(sixp_pkt_type_t type, sixp_pkt_code_t code,
   const uint8_t *p;
 
   if(cell_offset == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get offset; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get offset; invalid argument\n");
     return -1;
   }
 
   if((offset = get_offset_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get offset; ");
-    PRINTF("packet [type=%u, code=%u] won't have Offset\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get offset; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have Offset\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(*cell_offset))) {
-    PRINTF("6P-pkt: cannot get offset; body is too short\n");
+    LOG_ERR("6P-pkt: cannot get offset; body is too short\n");
     return -1;
   }
 
@@ -486,19 +491,19 @@ sixp_pkt_set_max_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(body == NULL) {
-    PRINTF("6P-pkt: cannot set max_num_cells; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot set max_num_cells; invalid argument\n");
     return -1;
   }
 
   if((offset = get_max_num_cells_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set max_num_cells; ");
-    PRINTF("packet [type=%u, code=%u] won't have MaxNumCells\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set max_num_cells; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have MaxNumCells\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(max_num_cells))) {
-    PRINTF("6P-pkt: cannot set max_num_cells; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set max_num_cells; body is too short\n");
     return -1;
   }
 
@@ -521,19 +526,19 @@ sixp_pkt_get_max_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
   const uint8_t *p;
 
   if(max_num_cells == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get max_num_cells; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get max_num_cells; invalid argument\n");
     return -1;
   }
 
   if((offset = get_max_num_cells_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get max_num_cells; ");
-    PRINTF("packet [type=%u, code=%u] won't have MaxNumCells\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get max_num_cells; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have MaxNumCells\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(*max_num_cells))) {
-    PRINTF("6P-pkt: cannot get max_num_cells; body is too short\n");
+    LOG_ERR("6P-pkt: cannot get max_num_cells; body is too short\n");
     return -1;
   }
 
@@ -557,24 +562,24 @@ sixp_pkt_set_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(cell_list == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot set cell_list; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot set cell_list; invalid argument\n");
     return -1;
   }
 
   if((offset = get_cell_list_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set cell_list; ");
-    PRINTF("packet [type=%u, code=%u] won't have CellList\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set cell_list; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have CellList\n",
+             type, code.value);
     return -1;
   }
 
   offset += cell_offset;
 
   if(body_len < (offset + cell_list_len)) {
-    PRINTF("6P-pkt: cannot set cell_list; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set cell_list; body is too short\n");
     return -1;
   } else if((cell_list_len % sizeof(sixp_pkt_cell_t)) != 0) {
-    PRINTF("6P-pkt: cannot set cell_list; invalid {body, cell_list}_len\n");
+    LOG_ERR("6P-pkt: cannot set cell_list; invalid {body, cell_list}_len\n");
     return -1;
   }
 
@@ -592,22 +597,22 @@ sixp_pkt_get_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(cell_list_len == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get cell_list\n");
+    LOG_ERR("6P-pkt: cannot get cell_list\n");
     return -1;
   }
 
   if((offset = get_cell_list_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get cell_list; ");
-    PRINTF("packet [type=%u, code=%u] won't have CellList\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get cell_list; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have CellList\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < offset) {
-    PRINTF("6P-pkt: cannot set cell_list; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set cell_list; body is too short\n");
     return -1;
   } else if(((body_len - offset) % sizeof(sixp_pkt_cell_t)) != 0) {
-    PRINTF("6P-pkt: cannot set cell_list; invalid {body, cell_list}_len\n");
+    LOG_ERR("6P-pkt: cannot set cell_list; invalid {body, cell_list}_len\n");
     return -1;
   }
 
@@ -631,33 +636,33 @@ sixp_pkt_set_rel_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   sixp_pkt_num_cells_t num_cells;
 
   if(rel_cell_list == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; invalid argument\n");
     return -1;
   }
 
   if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; no NumCells field\n");
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; no NumCells field\n");
     return -1;
   }
 
   if((offset = get_rel_cell_list_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; ");
-    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have RelCellList\n",
+             type, code.value);
     return -1;
   }
 
   offset += cell_offset;
 
   if(body_len < (offset + rel_cell_list_len)) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; body is too short\n");
     return -1;
   } else if((offset + rel_cell_list_len) >
             (offset + num_cells * sizeof(sixp_pkt_cell_t))) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; RelCellList is too long\n");
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; RelCellList is too long\n");
     return -1;
   } else if((rel_cell_list_len % sizeof(sixp_pkt_cell_t)) != 0) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; invalid body_len\n");
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; invalid body_len\n");
     return -1;
   }
 
@@ -676,27 +681,27 @@ sixp_pkt_get_rel_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   sixp_pkt_num_cells_t num_cells;
 
   if(rel_cell_list_len == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get rel_cell_list; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get rel_cell_list; invalid argument\n");
     return -1;
   }
 
   if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
-    PRINTF("6P-pkt: cannot get rel_cell_list; no NumCells field\n");
+    LOG_ERR("6P-pkt: cannot get rel_cell_list; no NumCells field\n");
     return -1;
   }
 
   if((offset = get_rel_cell_list_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get rel_cell_list; ");
-    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get rel_cell_list; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have RelCellList\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + (num_cells * sizeof(sixp_pkt_cell_t)))) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; body is too short\n");
     return -1;
   } else if(((body_len - offset) % sizeof(sixp_pkt_cell_t)) != 0) {
-    PRINTF("6P-pkt: cannot set rel_cell_list; invalid body_len\n");
+    LOG_ERR("6P-pkt: cannot set rel_cell_list; invalid body_len\n");
     return -1;
   }
 
@@ -720,29 +725,29 @@ sixp_pkt_set_cand_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
   sixp_pkt_num_cells_t num_cells;
 
   if(cand_cell_list == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot set cand_cell_list; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot set cand_cell_list; invalid argument\n");
     return -1;
   }
 
   if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
-    PRINTF("6P-pkt: cannot set cand_cell_list; no NumCells field\n");
+    LOG_ERR("6P-pkt: cannot set cand_cell_list; no NumCells field\n");
     return -1;
   }
 
   if((offset = get_rel_cell_list_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set cand_cell_list; ");
-    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set cand_cell_list; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have RelCellList\n",
+             type, code.value);
     return -1;
   }
 
   offset += cell_offset + num_cells * sizeof(sixp_pkt_cell_t);
 
   if(body_len < (offset + cand_cell_list_len)) {
-    PRINTF("6P-pkt: cannot set cand_cell_list; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set cand_cell_list; body is too short\n");
     return -1;
   } else if((cand_cell_list_len % sizeof(sixp_pkt_cell_t)) != 0) {
-    PRINTF("6P-pkt: cannot set cand_cell_list; invalid body_len\n");
+    LOG_ERR("6P-pkt: cannot set cand_cell_list; invalid body_len\n");
     return -1;
   }
 
@@ -753,37 +758,37 @@ sixp_pkt_set_cand_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
 /*---------------------------------------------------------------------------*/
 int
 sixp_pkt_get_cand_cell_list(sixp_pkt_type_t type, sixp_pkt_code_t code,
-                           const uint8_t **cand_cell_list,
-                           sixp_pkt_offset_t *cand_cell_list_len,
-                           const uint8_t *body, uint16_t body_len)
+                            const uint8_t **cand_cell_list,
+                            sixp_pkt_offset_t *cand_cell_list_len,
+                            const uint8_t *body, uint16_t body_len)
 {
   int32_t offset;
   sixp_pkt_num_cells_t num_cells;
 
   if(cand_cell_list_len == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get cand_cell_list; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get cand_cell_list; invalid argument\n");
     return -1;
   }
 
   if(sixp_pkt_get_num_cells(type, code, &num_cells, body, body_len) < 0) {
-    PRINTF("6P-pkt: cannot get cand_cell_list; no NumCells field\n");
+    LOG_ERR("6P-pkt: cannot get cand_cell_list; no NumCells field\n");
     return -1;
   }
 
   if((offset = get_rel_cell_list_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get cand_cell_list; ");
-    PRINTF("packet [type=%u, code=%u] won't have RelCellList\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get cand_cell_list; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have RelCellList\n",
+             type, code.value);
     return -1;
   }
 
   offset += num_cells * sizeof(sixp_pkt_cell_t);
 
   if(body_len < offset) {
-    PRINTF("6P-pkt: cannot set cand_cell_list; body is too short\n");
+    LOG_ERR("6P-pkt: cannot set cand_cell_list; body is too short\n");
     return -1;
   } else if(((body_len - offset) % sizeof(sixp_pkt_cell_t)) != 0) {
-    PRINTF("6P-pkt: cannot set cand_cell_list; invalid body_len\n");
+    LOG_ERR("6P-pkt: cannot set cand_cell_list; invalid body_len\n");
     return -1;
   }
 
@@ -804,14 +809,14 @@ sixp_pkt_set_total_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(body == NULL) {
-    PRINTF("6P-pkt: cannot set num_cells; body is null\n");
+    LOG_ERR("6P-pkt: cannot set num_cells; body is null\n");
     return -1;
   }
 
   if((offset = get_total_num_cells_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot set total_num_cells; ");
-    PRINTF("packet [type=%u, code=%u] won't have TotalNumCells\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot set total_num_cells; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have TotalNumCells\n",
+             type, code.value);
     return -1;
   }
 
@@ -832,19 +837,19 @@ sixp_pkt_get_total_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
   int32_t offset;
 
   if(total_num_cells == NULL || body == NULL) {
-    PRINTF("6P-pkt: cannot get num_cells; invalid argument\n");
+    LOG_ERR("6P-pkt: cannot get num_cells; invalid argument\n");
     return -1;
   }
 
   if((offset = get_total_num_cells_offset(type, code)) < 0) {
-    PRINTF("6P-pkt: cannot get num_cells; ");
-    PRINTF("packet [type=%u, code=%u] won't have TotalNumCells\n",
-           type, code.value);
+    LOG_ERR("6P-pkt: cannot get num_cells; ");
+    LOG_ERR_("packet [type=%u, code=%u] won't have TotalNumCells\n",
+             type, code.value);
     return -1;
   }
 
   if(body_len < (offset + sizeof(sixp_pkt_total_num_cells_t))) {
-    PRINTF("6P-pkt: cannot get num_cells; body is too short\n");
+    LOG_ERR("6P-pkt: cannot get num_cells; body is too short\n");
     return -1;
   }
 
@@ -861,19 +866,19 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
 {
   assert(buf != NULL && pkt != NULL);
   if(buf == NULL || pkt == NULL) {
-    PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid argument\n");
+    LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid argument\n");
     return -1;
   }
 
   /* read the first 4 octets */
   if(len < 4) {
-    PRINTF("6P-pkt: sixp_pkt_parse() fails because it's a too short packet\n");
+    LOG_ERR("6P-pkt: sixp_pkt_parse() fails because it's a too short packet\n");
     return -1;
   }
 
   if((buf[0] & 0x0f) != SIXP_PKT_VERSION) {
-    PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid version [%u]\n",
-           buf[0] & 0x0f);
+    LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid version [%u]\n",
+            buf[0] & 0x0f);
     return -1;
   }
 
@@ -887,8 +892,8 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
   buf += 4;
   len -= 4;
 
-  PRINTF("6P-pkt: sixp_pkt_parse() is processing [type:%u, code:%u, len:%u]\n",
-         pkt->type, pkt->code.value, len);
+  LOG_INFO("6P-pkt: sixp_pkt_parse() is processing [type:%u, code:%u, len:%u]\n",
+           pkt->type, pkt->code.value, len);
 
   /* the rest is message body called "Other Fields" */
   if(pkt->type == SIXP_PKT_TYPE_REQUEST) {
@@ -900,7 +905,7 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
                   sizeof(sixp_pkt_cell_options_t) +
                   sizeof(sixp_pkt_num_cells_t)) ||
            (len % sizeof(uint32_t)) != 0) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
@@ -909,14 +914,14 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
                   sizeof(sixp_pkt_cell_options_t) +
                   sizeof(sixp_pkt_num_cells_t)) ||
            (len % sizeof(uint32_t)) != 0) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
       case SIXP_PKT_CMD_COUNT:
         if(len != (sizeof(sixp_pkt_metadata_t) +
                    sizeof(sixp_pkt_cell_options_t))) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
@@ -926,18 +931,18 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
                    sizeof(sixp_pkt_reserved_t) +
                    sizeof(sixp_pkt_offset_t) +
                    sizeof(sixp_pkt_max_num_cells_t))) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
       case SIXP_PKT_CMD_CLEAR:
         if(len != sizeof(sixp_pkt_metadata_t)) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
       default:
-        PRINTF("6P-pkt: sixp_pkt_parse() fails because of unsupported cmd\n");
+        LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of unsupported cmd\n");
         return -1;
     }
   } else if(pkt->type == SIXP_PKT_TYPE_RESPONSE ||
@@ -953,13 +958,13 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
         if(len != 0 &&
            len != sizeof(sixp_pkt_total_num_cells_t) &&
            (len % sizeof(uint32_t)) != 0) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
       case SIXP_PKT_RC_EOL:
         if((len % sizeof(uint32_t)) != 0) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
@@ -972,16 +977,16 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
       case SIXP_PKT_RC_NORES:
       case SIXP_PKT_RC_CELLLIST:
         if(len != 0) {
-          PRINTF("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
         }
         break;
       default:
-        PRINTF("6P-pkt: sixp_pkt_parse() fails because of unsupported code\n");
+        LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of unsupported code\n");
         return -1;
     }
   } else {
-    PRINTF("6P-pkt: sixp_pkt_parse() fails because of unsupported type\n");
+    LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of unsupported type\n");
     return -1;
   }
 
@@ -1000,7 +1005,7 @@ sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
 
   assert((body == NULL && body_len == 0) || (body != NULL && body_len > 0));
   if((body == NULL && body_len > 0) || (body != NULL && body_len == 0)) {
-    PRINTF("6P-pkt: sixp_pkt_create() fails because of invalid argument\n");
+    LOG_ERR("6P-pkt: sixp_pkt_create() fails because of invalid argument\n");
     return -1;
   }
 
@@ -1011,12 +1016,12 @@ sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
    * (body_len octets).
    */
   if(PACKETBUF_SIZE < (packetbuf_totlen() + body_len)) {
-    PRINTF("6P-pkt: sixp_pkt_create() fails because body is too long\n");
+    LOG_ERR("6P-pkt: sixp_pkt_create() fails because body is too long\n");
     return -1;
   }
 
   if(packetbuf_hdralloc(4) != 1) {
-    PRINTF("6P-pkt: sixp_pkt_create fails to allocate header space\n");
+    LOG_ERR("6P-pkt: sixp_pkt_create fails to allocate header space\n");
     return -1;
   }
   hdr = packetbuf_hdrptr();

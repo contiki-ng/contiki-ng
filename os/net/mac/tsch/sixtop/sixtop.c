@@ -50,8 +50,10 @@
 #include "sixtop-conf.h"
 #include "sixp.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "6top"
+#define LOG_LEVEL LOG_LEVEL_6TOP
 
 const sixtop_sf_t *scheduling_functions[SIXTOP_MAX_SCHEDULING_FUNCTIONS];
 
@@ -75,10 +77,10 @@ sixtop_add_sf(const sixtop_sf_t *sf)
 
   assert(sf != NULL);
 
-  PRINTF("6top: sixtop_add_sf() is adding a SF [SFID:%u]\n", sf->sfid);
+  LOG_INFO("6top: sixtop_add_sf() is adding a SF [SFID:%u]\n", sf->sfid);
 
   if(sixtop_find_sf(sf->sfid) != NULL) {
-    PRINTF("6top: sixtop_add_sf() fails because of duplicate SF\n");
+    LOG_ERR("6top: sixtop_add_sf() fails because of duplicate SF\n");
     return -1;
   }
 
@@ -93,14 +95,14 @@ sixtop_add_sf(const sixtop_sf_t *sf)
   }
 
   if(i == SIXTOP_MAX_SCHEDULING_FUNCTIONS) {
-    PRINTF("6top: sixtop_add_sf() fails because of no memory\n");
+    LOG_ERR("6top: sixtop_add_sf() fails because of no memory\n");
     return -1;
   }
 
   if(sf->init != NULL) {
     sf->init();
   }
-  PRINTF("6top: SF [SFID:%u] has been added and initialized\n", sf->sfid);
+  LOG_INFO("6top: SF [SFID:%u] has been added and initialized\n", sf->sfid);
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -128,7 +130,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
 
   assert(dest_addr != NULL);
   if(dest_addr == NULL) {
-    PRINTF("6top: sixtop_output() fails because dest_addr is NULL\n");
+    LOG_ERR("6top: sixtop_output() fails because dest_addr is NULL\n");
     if(callback != NULL) {
       callback(arg, MAC_TX_ERR_FATAL, 0);
     }
@@ -137,7 +139,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
 
   /* prepend 6top Sub-IE ID */
   if(packetbuf_hdralloc(1) != 1) {
-    PRINTF("6top: sixtop_output() fails because of no room for Sub-IE ID\n");
+    LOG_ERR("6top: sixtop_output() fails because of no room for Sub-IE ID\n");
     return;
   }
   p = packetbuf_hdrptr();
@@ -153,7 +155,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
      (len = frame80215e_create_ie_ietf(packetbuf_hdrptr(),
                                        2,
                                        &ies)) < 0) {
-    PRINTF("6top: sixtop_output() fails because of Payload IE Header\n");
+    LOG_ERR("6top: sixtop_output() fails because of Payload IE Header\n");
     if(callback != NULL) {
       callback(arg, MAC_TX_ERR_FATAL, 0);
     }
@@ -164,10 +166,10 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
   /* append Payload Termination IE to the data field; 2 octets */
   memset(&ies, 0, sizeof(ies));
   if((len = frame80215e_create_ie_payload_list_termination(
-       (uint8_t *)packetbuf_dataptr() + packetbuf_datalen(),
-       PACKETBUF_SIZE - packetbuf_totlen(),
-       &ies)) < 0) {
-    PRINTF("6top: sixtop_output() fails because of Payload Termination IE\n");
+        (uint8_t *)packetbuf_dataptr() + packetbuf_datalen(),
+        PACKETBUF_SIZE - packetbuf_totlen(),
+        &ies)) < 0) {
+    LOG_ERR("6top: sixtop_output() fails because of Payload Termination IE\n");
     callback(arg, MAC_TX_ERR_FATAL, 0);
     return;
   }
@@ -180,7 +182,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
      frame80215e_create_ie_header_list_termination_1(packetbuf_hdrptr(),
                                                      2,
                                                      &ies) < 0) {
-    PRINTF("6top: sixtop_output() fails because of Header Termination 1 IE\n");
+    LOG_ERR("6top: sixtop_output() fails because of Header Termination 1 IE\n");
     callback(arg, MAC_TX_ERR_FATAL, 0);
     return;
   }
@@ -223,7 +225,7 @@ sixtop_input(void)
 
   if(frame802154_parse(hdr_ptr, hdr_len, &frame) == 0) {
     /* parse error; should not occur, anyway */
-    PRINTF("6top: frame802154_parse error\n");
+    LOG_ERR("6top: frame802154_parse error\n");
     return;
   }
 

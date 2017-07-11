@@ -60,6 +60,7 @@ int curr_log_level_ipv6 = LOG_CONF_LEVEL_IPV6;
 int curr_log_level_6lowpan = LOG_CONF_LEVEL_6LOWPAN;
 int curr_log_level_mac = LOG_CONF_LEVEL_MAC;
 int curr_log_level_framer = LOG_CONF_LEVEL_FRAMER;
+int curr_log_level_6top = LOG_CONF_LEVEL_6TOP;
 
 struct log_module all_modules[] = {
   {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
@@ -68,6 +69,7 @@ struct log_module all_modules[] = {
   {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
   {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},
   {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
+  {"6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP},
   {NULL, NULL, 0},
 };
 

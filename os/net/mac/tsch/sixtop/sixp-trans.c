@@ -45,8 +45,10 @@
 #include "sixtop-conf.h"
 #include "sixp-trans.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "6top"
+#define LOG_LEVEL LOG_LEVEL_6TOP
 
 /**
  * \brief 6P Transaction Data Structure (for internal use)
@@ -111,9 +113,9 @@ process_trans(void *ptr)
   /* state-specific operation */
   if(trans->state == SIXP_TRANS_STATE_TERMINATING) {
     /* handle the terminating state first */
-    PRINTF("6P-trans: trans [peer_addr:");
-    PRINTLLADDR((const uip_lladdr_t *)&trans->peer_addr);
-    PRINTF(", seqno:%u] is going to be freed\n", trans->seqno);
+    LOG_INFO("6P-trans: trans [peer_addr:");
+    LOG_INFO_LLADDR((const linkaddr_t *)&trans->peer_addr);
+    LOG_INFO_(", seqno:%u] is going to be freed\n", trans->seqno);
     free_trans(trans);
     return;
   }
@@ -198,7 +200,7 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
 {
   assert(trans != NULL);
   if(trans == NULL) {
-    PRINTF("6top: invalid argument, trans is NULL\n");
+    LOG_ERR("6top: invalid argument, trans is NULL\n");
     return -1;
   }
 
@@ -218,16 +220,16 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
      (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENT &&
       trans->state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
       trans->mode == SIXP_TRANS_MODE_3_STEP)) {
-    PRINTF("6P-trans: trans %p state changes from %u to %u\n",
-           trans, trans->state, new_state);
+    LOG_INFO("6P-trans: trans %p state changes from %u to %u\n",
+             trans, trans->state, new_state);
     trans->state = new_state;
     schedule_trans_process(trans);
     return 0;
   }
 
   /* invalid transition */
-  PRINTF("6P-trans: invalid transaction, from %u to %u, detected on trans %p\n",
-         trans->state, new_state, trans);
+  LOG_ERR("6P-trans: invalid transaction, from %u to %u, detected on trans %p\n",
+          trans->state, new_state, trans);
   return -1;
 }
 /*---------------------------------------------------------------------------*/
@@ -256,7 +258,7 @@ sixp_trans_get_seqno(sixp_trans_t *trans)
 {
   assert(trans != NULL);
   if(trans == NULL) {
-    PRINTF("6P-trans: sixp_trans_get_seqno() fails because trans is NULL\n");
+    LOG_ERR("6P-trans: sixp_trans_get_seqno() fails because trans is NULL\n");
     return -1;
   }
   return trans->seqno;
@@ -267,7 +269,7 @@ sixp_trans_get_mode(sixp_trans_t *trans)
 {
   assert(trans != NULL);
   if(trans == NULL) {
-    PRINTF("6P-trans: sixp_trans_get_mode() fails because trans is NULL\n");
+    LOG_ERR("6P-trans: sixp_trans_get_mode() fails because trans is NULL\n");
     return SIXP_TRANS_STATE_UNAVAILABLE;
   }
   return trans->mode;
@@ -306,25 +308,25 @@ sixp_trans_alloc(const sixp_pkt_t *pkt, const linkaddr_t *peer_addr)
 
   assert(pkt != NULL && peer_addr != NULL);
   if(pkt == NULL || peer_addr == NULL) {
-    PRINTF("6P-trans: sixp_trans_alloc() fails because of invalid argument\n");
+    LOG_ERR("6P-trans: sixp_trans_alloc() fails because of invalid argument\n");
     return NULL;
   }
 
   if((sf = sixtop_find_sf(pkt->sfid)) == NULL) {
-    PRINTF("6P-trans: sixp_trans_alloc() fails; no suitable SF [sfid:%u]\n",
-           pkt->sfid);
+    LOG_ERR("6P-trans: sixp_trans_alloc() fails; no suitable SF [sfid:%u]\n",
+            pkt->sfid);
     return NULL;
   }
 
   if(sixp_trans_find(peer_addr) != NULL) {
-    PRINTF("6P-trans: sixp_trans_alloc() fails because another trans with ");
-    PRINTLLADDR((const uip_lladdr_t *)peer_addr);
-    PRINTF("is in process\n");
+    LOG_ERR("6P-trans: sixp_trans_alloc() fails because another trans with ");
+    LOG_ERR_LLADDR((const linkaddr_t *)peer_addr);
+    LOG_ERR_("is in process\n");
     return NULL;
   }
 
   if((trans = memb_alloc(&trans_memb)) == NULL) {
-    PRINTF("6P-trans: sixp_trans_alloc() fails because of lack of memory\n");
+    LOG_ERR("6P-trans: sixp_trans_alloc() fails because of lack of memory\n");
     return NULL;
   }
 

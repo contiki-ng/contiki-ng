@@ -46,8 +46,10 @@
 #include "sixp-pkt.h"
 #include "sixp-trans.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/net-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "6top"
+#define LOG_LEVEL LOG_LEVEL_6TOP
 
 static void mac_callback(void *ptr, int status, int transmissions);
 static int send_back_error(sixp_pkt_type_t type, sixp_pkt_code_t code,
@@ -62,7 +64,7 @@ mac_callback(void *ptr, int status, int transmissions)
 
   assert(trans != NULL);
   if(trans == NULL) {
-    PRINTF("6P: mac_callback() fails because trans is NULL\n");
+    LOG_ERR("6P: mac_callback() fails because trans is NULL\n");
     return;
   }
 
@@ -79,8 +81,8 @@ mac_callback(void *ptr, int status, int transmissions)
         new_state = SIXP_TRANS_STATE_CONFIRMATION_SENT;
         break;
       default:
-        PRINTF("6P: mac_callback() fails because of an unexpected state (%u)\n",
-               current_state);
+        LOG_ERR("6P: mac_callback() fails because of an unexpected state (%u)\n",
+                current_state);
         return;
     }
   } else {
@@ -101,8 +103,8 @@ mac_callback(void *ptr, int status, int transmissions)
 
   if(new_state != current_state &&
      sixp_trans_transit_state(trans, new_state) != 0) {
-    PRINTF("6P: mac_callback() fails because of state transition failure\n");
-    PRINTF("6P: something wrong; we're terminating the trans %p\n", trans);
+    LOG_ERR("6P: mac_callback() fails because of state transition failure\n");
+    LOG_ERR("6P: something wrong; we're terminating the trans %p\n", trans);
     (void)sixp_trans_transit_state(trans, SIXP_TRANS_STATE_TERMINATING);
     return;
   }
@@ -121,8 +123,8 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_code_t code,
 {
   /* create a 6P packet within packetbuf */
   if(sixp_pkt_create(type, code, sfid, seqno, 0, NULL, 0, NULL) < 0) {
-    PRINTF("6P: failed to create a 6P packet to return an error [rc:%u]\n",
-           code.value);
+    LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n",
+            code.value);
     return -1;
   }
   /* we don't care about how the transmission goes; no need to set callback */
@@ -148,21 +150,21 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
   }
 
   if(sixp_pkt_parse(buf, len, &pkt) < 0) {
-    PRINTF("6P: sixp_input() fails because off a malformed 6P packet\n");
+    LOG_ERR("6P: sixp_input() fails because off a malformed 6P packet\n");
     return;
   }
 
   if(pkt.type != SIXP_PKT_TYPE_REQUEST &&
      pkt.type != SIXP_PKT_TYPE_RESPONSE &&
      pkt.type != SIXP_PKT_TYPE_CONFIRMATION) {
-    PRINTF("6P: sixp_input() fails because of unsupported type [type:%u]\n",
-           pkt.type);
+    LOG_ERR("6P: sixp_input() fails because of unsupported type [type:%u]\n",
+            pkt.type);
     return;
   }
 
   if((sf = sixtop_find_sf(pkt.sfid)) == NULL) {
-    PRINTF("6P: sixp_input() fails because SF [sfid:%u] is unavailable\n",
-           pkt.sfid);
+    LOG_ERR("6P: sixp_input() fails because SF [sfid:%u] is unavailable\n",
+            pkt.sfid);
     /*
      * XXX: what if the incoming packet is a response? confirmation should be
      * sent back?
@@ -170,7 +172,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
     if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
                        (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SFID,
                        pkt.sfid, pkt.seqno, src_addr) < 0) {
-      PRINTF("6P: sixp_input() fails to return an error response\n");
+      LOG_ERR("6P: sixp_input() fails to return an error response\n");
     };
     return;
   }
@@ -184,16 +186,16 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
     if(pkt.gen == 0) {
       invalid_schedule_generation = 0; /* valid combination */
     } else {
-      PRINTF("6P: GEN should be 0 because of no corresponding nbr\n");
+      LOG_ERR("6P: GEN should be 0 because of no corresponding nbr\n");
       invalid_schedule_generation = 1;
     }
   } else {
     if((gen = sixp_nbr_get_gen(nbr)) < 0) {
-      PRINTF("6P: unexpected error; cannot get our GEN\n");
+      LOG_ERR("6P: unexpected error; cannot get our GEN\n");
       return;
     }
-    PRINTF("6P: received GEN %u, our GEN: %u\n",
-           pkt.gen, sixp_nbr_get_gen(nbr));
+    LOG_ERR("6P: received GEN %u, our GEN: %u\n",
+            pkt.gen, sixp_nbr_get_gen(nbr));
     if(pkt.gen == gen) {
       invalid_schedule_generation = 0; /* valid combination */
     } else {
@@ -201,7 +203,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
     }
   }
   if(invalid_schedule_generation) {
-    PRINTF("6P: sixp_input() fails because of schedule generation mismatch\n");
+    LOG_ERR("6P: sixp_input() fails because of schedule generation mismatch\n");
     return;
   }
 
@@ -211,21 +213,21 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
   if(pkt.type == SIXP_PKT_TYPE_REQUEST) {
     if(trans != NULL) {
       /* Error: not supposed to have another transaction with the peer. */
-      PRINTF("6P: sixp_input() fails because another request [peer_addr:");
-      PRINTLLADDR((const uip_lladdr_t *)src_addr);
-      PRINTF(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
+      LOG_ERR("6P: sixp_input() fails because another request [peer_addr:");
+      LOG_ERR_LLADDR((const linkaddr_t *)src_addr);
+      LOG_ERR_(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_BUSY,
                          pkt.sfid, pkt.seqno, src_addr) < 0) {
-        PRINTF("6P: sixp_input() fails to return an error response");
+        LOG_ERR("6P: sixp_input() fails to return an error response");
       }
       return;
     } else if((trans = sixp_trans_alloc(&pkt, src_addr)) == NULL) {
-      PRINTF("6P: sixp_input() fails because of lack of memory\n");
+      LOG_ERR("6P: sixp_input() fails because of lack of memory\n");
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
                          (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_NORES,
                          pkt.sfid, pkt.seqno, src_addr) < 0) {
-        PRINTF("6P: sixp_input() fails to return an error response\n");
+        LOG_ERR("6P: sixp_input() fails to return an error response\n");
       }
       return;
     }
@@ -233,14 +235,14 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
             pkt.type == SIXP_PKT_TYPE_CONFIRMATION) {
     if(trans == NULL) {
       /* Error: should have a transaction for incoming packet */
-      PRINTF("6P: sixp_input() fails because of no trans [peer_addr:");
-      PRINTLLADDR((const uip_lladdr_t *)src_addr);
-      PRINTF("]\n");
+      LOG_ERR("6P: sixp_input() fails because of no trans [peer_addr:");
+      LOG_ERR_LLADDR((const linkaddr_t *)src_addr);
+      LOG_ERR_("]\n");
       return;
     } else if((seqno = sixp_trans_get_seqno(trans)) < 0 ||
               seqno != pkt.seqno) {
-      PRINTF("6P: sixp_input() fails because of invalid seqno [seqno:%u, %u]\n",
-             seqno, pkt.seqno);
+      LOG_ERR("6P: sixp_input() fails because of invalid seqno [seqno:%u, %u]\n",
+              seqno, pkt.seqno);
       return;
     }
   }
@@ -261,13 +263,13 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
                                      SIXP_TRANS_STATE_CONFIRMATION_RECEIVED);
       break;
     default:
-      PRINTF("6P: sixp_input() fails because of unsupported type [type:%u]\n",
-             pkt.type);
+      LOG_ERR("6P: sixp_input() fails because of unsupported type [type:%u]\n",
+              pkt.type);
       return;
   }
   if(ret < 0) {
-    PRINTF("6P: sixp_input() fails because of state transition failure\n");
-    PRINTF("6P: something wrong; we're terminating the trans %p\n", trans);
+    LOG_ERR("6P: sixp_input() fails because of state transition failure\n");
+    LOG_ERR("6P: something wrong; we're terminating the trans %p\n", trans);
     (void)sixp_trans_transit_state(trans, SIXP_TRANS_STATE_TERMINATING);
     return;
   }
@@ -297,9 +299,9 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
   trans = sixp_trans_find(dest_addr);
   if(type == SIXP_PKT_TYPE_REQUEST) {
     if(trans != NULL) {
-      PRINTF("6P: sixp_output() fails because another trans for [peer_addr:");
-      PRINTLLADDR((const uip_lladdr_t *)dest_addr);
-      PRINTF("] is in process\n");
+      LOG_ERR("6P: sixp_output() fails because another trans for [peer_addr:");
+      LOG_ERR_LLADDR((const linkaddr_t *)dest_addr);
+      LOG_ERR_("] is in process\n");
       return -1;
     } else {
       /* ready to send a request */
@@ -307,33 +309,33 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
     }
   } else if(type == SIXP_PKT_TYPE_RESPONSE) {
     if(trans == NULL) {
-      PRINTF("6P: sixp_output() fails because of no transaction [peer_addr:");
-      PRINTLLADDR((const uip_lladdr_t *)dest_addr);
-      PRINTF("]\n");
+      LOG_ERR("6P: sixp_output() fails because of no transaction [peer_addr:");
+      LOG_ERR_LLADDR((const linkaddr_t *)dest_addr);
+      LOG_ERR_("]\n");
       return -1;
     } else if(sixp_trans_get_state(trans) !=
               SIXP_TRANS_STATE_REQUEST_RECEIVED) {
-      PRINTF("6P: sixp_output() fails because of invalid transaction state\n");
+      LOG_ERR("6P: sixp_output() fails because of invalid transaction state\n");
       return -1;
     } else {
       /* ready to send a response */
     }
   } else if(type == SIXP_PKT_TYPE_CONFIRMATION) {
     if(trans == NULL) {
-      PRINTF("6P: sixp_output() fails because of no transaction [peer_addr:\n");
-      PRINTLLADDR((const uip_lladdr_t *)dest_addr);
-      PRINTF("\n");
+      LOG_ERR("6P: sixp_output() fails because of no transaction [peer_addr:");
+      LOG_ERR_LLADDR((const linkaddr_t *)dest_addr);
+      LOG_ERR_("\n");
       return -1;
     } else if(sixp_trans_get_state(trans) !=
               SIXP_TRANS_STATE_RESPONSE_RECEIVED) {
-      PRINTF("6P: sixp_output() fails because of invalid transaction state\n");
+      LOG_ERR("6P: sixp_output() fails because of invalid transaction state\n");
       return -1;
     } else {
       /* ready to send a confirmation */
     }
   } else {
-    PRINTF("6P: sixp_output() fails because of unsupported type [type:%u]\n",
-           type);
+    LOG_ERR("6P: sixp_output() fails because of unsupported type [type:%u]\n",
+            type);
     return -1;
   }
 
@@ -348,7 +350,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
      ((cmd = sixp_trans_get_cmd(trans)) == SIXP_PKT_CMD_ADD ||
       cmd == SIXP_PKT_CMD_DELETE) &&
      (nbr = sixp_nbr_alloc(dest_addr)) == NULL) {
-    PRINTF("6P: sixp_output() fails because of no memory for another nbr\n");
+    LOG_ERR("6P: sixp_output() fails because of no memory for another nbr\n");
     return -1;
   }
 
@@ -356,21 +358,21 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
   if(type == SIXP_PKT_TYPE_REQUEST) {
     if(nbr == NULL &&
        (nbr = sixp_nbr_alloc(dest_addr)) == NULL) {
-      PRINTF("6P: sixp_output() fails because it fails to allocate a nbr\n");
+      LOG_ERR("6P: sixp_output() fails because it fails to allocate a nbr\n");
       return -1;
     }
     if((seqno = sixp_nbr_get_next_seqno(nbr)) < 0){
-      PRINTF("6P: sixp_output() fails to get the next sequence number\n");
+      LOG_ERR("6P: sixp_output() fails to get the next sequence number\n");
       return -1;
     }
     if(sixp_nbr_increment_next_seqno(nbr) < 0) {
-      PRINTF("6P: sixp_output() fails to increment the next sequence number\n");
+      LOG_ERR("6P: sixp_output() fails to increment the next sequence number\n");
       return -1;
     }
   } else {
     assert(trans != NULL);
     if((seqno = sixp_trans_get_seqno(trans)) < 0) {
-      PRINTF("6P: sixp_output() fails because it fails to get seqno\n");
+      LOG_ERR("6P: sixp_output() fails because it fails to get seqno\n");
       return -1;
     }
   }
@@ -379,7 +381,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
   if(nbr == NULL) {
     gen = 0;
   } else if((gen = sixp_nbr_get_gen(nbr)) < 0) {
-    PRINTF("6P: sixp_output() fails to get GEN\n");
+    LOG_ERR("6P: sixp_output() fails to get GEN\n");
     return -1;
   }
 
@@ -388,7 +390,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
                      (uint8_t)seqno, (uint8_t)gen,
                      body, body_len,
                      type == SIXP_PKT_TYPE_REQUEST ? &pkt : NULL) < 0) {
-    PRINTF("6P: sixp_output() fails to create a 6P packet\n");
+    LOG_ERR("6P: sixp_output() fails to create a 6P packet\n");
     return -1;
   }
 
@@ -396,7 +398,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
   if(type == SIXP_PKT_TYPE_REQUEST) {
     assert(trans == NULL);
     if((trans = sixp_trans_alloc(&pkt, dest_addr)) == NULL) {
-      PRINTF("6P: sixp_output() is aborted because of no memory\n");
+      LOG_ERR("6P: sixp_output() is aborted because of no memory\n");
       return -1;
     } else {
       /* ready for proceed */
