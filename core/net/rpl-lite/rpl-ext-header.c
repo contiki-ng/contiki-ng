@@ -365,14 +365,14 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
   uint16_t sender_rank;
   uint8_t sender_closer;
   rpl_nbr_t *sender;
+  uint8_t opt_type = UIP_EXT_HDR_OPT_RPL_BUF->opt_type;
+  uint8_t opt_len = UIP_EXT_HDR_OPT_RPL_BUF->opt_len;
 
   if(UIP_HBHO_BUF->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
-      || UIP_EXT_HDR_OPT_RPL_BUF->opt_type != UIP_EXT_HDR_OPT_RPL
-      || UIP_EXT_HDR_OPT_RPL_BUF->opt_len != RPL_HDR_OPT_LEN) {
-
+      || opt_type != UIP_EXT_HDR_OPT_RPL
+      || opt_len != RPL_HDR_OPT_LEN) {
     LOG_ERR("hop-by-hop extension header has wrong size or type (%u %u %u)\n",
-        UIP_HBHO_BUF->len, UIP_EXT_HDR_OPT_RPL_BUF->opt_type,
-        UIP_EXT_HDR_OPT_RPL_BUF->opt_len);
+        UIP_HBHO_BUF->len, opt_type, opt_len);
     return 0; /* Drop */
   }
 
