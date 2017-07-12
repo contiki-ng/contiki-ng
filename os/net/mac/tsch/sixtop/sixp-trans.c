@@ -98,6 +98,13 @@ handle_trans_timeout(void *ptr)
 }
 /*---------------------------------------------------------------------------*/
 static void
+start_trans_timer(sixp_trans_t *trans)
+{
+  ctimer_set(&trans->timer, trans->sf->timeout_interval,
+             handle_trans_timeout, trans);
+}
+/*---------------------------------------------------------------------------*/
+static void
 process_trans(void *ptr)
 {
   sixp_trans_t *trans = (sixp_trans_t *)ptr;
@@ -139,8 +146,7 @@ process_trans(void *ptr)
 
   if(trans->state != SIXP_TRANS_STATE_TERMINATING) {
     /* set the timer with a timeout values defined by the SF */
-    ctimer_set(&trans->timer, trans->sf->timeout_interval,
-               handle_trans_timeout, trans);
+    start_trans_timer(trans);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -338,6 +344,7 @@ sixp_trans_alloc(const sixp_pkt_t *pkt, const linkaddr_t *peer_addr)
   trans->state = SIXP_TRANS_STATE_INIT;
   trans->mode = determine_trans_mode(pkt);
   list_add(trans_list, trans);
+  start_trans_timer(trans);
 
   return trans;
 }
