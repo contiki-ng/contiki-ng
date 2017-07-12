@@ -180,6 +180,16 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
   struct tsch_link *l = NULL;
   if(slotframe != NULL) {
     /* We currently support only one link per timeslot in a given slotframe. */
+
+    /* Validation of specified timeslot and channel_offset */
+    if(timeslot > (slotframe->size.val - 1)) {
+      LOG_ERR("! add_link invalid timeslot: %u\n", timeslot);
+      return NULL;
+    } else if(channel_offset > 15) {
+      LOG_ERR("! add_link invalid channel_offset: %u\n", channel_offset);
+      return NULL;
+    }
+
     /* Start with removing the link currently installed at this timeslot (needed
      * to keep neighbor state in sync with link options etc.) */
     tsch_schedule_remove_link_by_timeslot(slotframe, timeslot);
