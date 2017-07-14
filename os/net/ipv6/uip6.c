@@ -1421,7 +1421,7 @@ uip_process(uint8_t flag)
   if(uip_icmp6chksum() != 0xffff) {
     UIP_STAT(++uip_stat.icmp.drop);
     UIP_STAT(++uip_stat.icmp.chkerr);
-    LOG_ERR("icmpv6: bad checksum.");
+    LOG_ERR("icmpv6: bad checksum\n");
     goto drop;
   }
 #endif /*UIP_CONF_IPV6_CHECKS*/
