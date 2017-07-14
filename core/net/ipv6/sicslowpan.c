@@ -1726,6 +1726,11 @@ input(void)
   /* The MAC puts the 15.4 payload inside the packetbuf data buffer */
   packetbuf_ptr = packetbuf_dataptr();
 
+  if(packetbuf_datalen() == 0) {
+    LOG_WARN("empty packet\n");
+    return;
+  }
+
   /* This is default uip_buf since we assume that this is not fragmented */
   buffer = (uint8_t *)UIP_IP_BUF;
 
