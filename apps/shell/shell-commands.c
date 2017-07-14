@@ -220,7 +220,7 @@ PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
   } else {
     if(rpl_dag_root_is_root()) {
       SHELL_OUTPUT(output, "Setting as non-root node: leaving DAG\n");
-      rpl_dag_leave();
+      rpl_dag_poison_and_leave();
     } else {
       SHELL_OUTPUT(output, "Node is not a DAG root\n");
     }
