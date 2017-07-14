@@ -483,7 +483,7 @@ rpl_timers_schedule_leaving(void)
 {
   if(curr_instance.used) {
     if(ctimer_expired(&curr_instance.dag.leave)) {
-      ctimer_set(&curr_instance.dag.leave, PERIODIC_DELAY, handle_leaving_timer, NULL);
+      ctimer_set(&curr_instance.dag.leave, RPL_DELAY_BEFORE_LEAVING, handle_leaving_timer, NULL);
     }
   }
 }
