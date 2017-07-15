@@ -477,13 +477,13 @@ frame802154e_parse_information_elements(const uint8_t *buf, uint8_t buf_size,
     switch(parsing_state) {
       case PARSING_HEADER_IE:
         if(type != 0) {
-          LOG_ERR("wrong type %04x\n", ie_desc);
+          LOG_ERR("header ie: wrong type %04x\n", ie_desc);
           return -1;
         }
         /* Header IE: 2 bytes descriptor, c.f. fig 48n in IEEE 802.15.4e */
         len = ie_desc & 0x007f; /* b0-b6 */
         id = (ie_desc & 0x7f80) >> 7; /* b7-b14 */
-        LOG_DBG("header ie len %u id %x\n", len, id);
+        LOG_DBG("header ie: len %u id %x\n", len, id);
         switch(id) {
           case HEADER_IE_LIST_TERMINATION_1:
             if(len == 0) {
@@ -516,13 +516,13 @@ frame802154e_parse_information_elements(const uint8_t *buf, uint8_t buf_size,
         break;
       case PARSING_PAYLOAD_IE:
         if(type != 1) {
-          LOG_ERR("wrong type %04x\n", ie_desc);
+          LOG_ERR("payload ie: wrong type %04x\n", ie_desc);
           return -1;
         }
         /* Payload IE: 2 bytes descriptor, c.f. fig 48o in IEEE 802.15.4e */
         len = ie_desc & 0x7ff; /* b0-b10 */
         id = (ie_desc & 0x7800) >> 11; /* b11-b14 */
-        LOG_DBG("payload ie len %u id %x\n", len, id);
+        LOG_DBG("payload ie: len %u id %x\n", len, id);
         switch(id) {
           case PAYLOAD_IE_MLME:
             /* Now expect 'len' bytes of MLME sub-IEs */
