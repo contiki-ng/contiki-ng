@@ -161,6 +161,18 @@ uip_ds6_nbr_num(void)
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
+uip_ds6_nbr_head(void)
+{
+  return nbr_table_head(ds6_neighbors);
+}
+/*---------------------------------------------------------------------------*/
+uip_ds6_nbr_t *
+uip_ds6_nbr_next(uip_ds6_nbr_t *nbr)
+{
+  return nbr_table_next(ds6_neighbors, nbr);
+}
+/*---------------------------------------------------------------------------*/
+uip_ds6_nbr_t *
 uip_ds6_nbr_lookup(const uip_ipaddr_t *ipaddr)
 {
   uip_ds6_nbr_t *nbr = nbr_table_head(ds6_neighbors);

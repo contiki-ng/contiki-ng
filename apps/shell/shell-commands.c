@@ -74,6 +74,25 @@ static uint16_t curr_ping_datalen;
 
 /*---------------------------------------------------------------------------*/
 static const char *
+ds6_nbr_state_to_str(uint8_t state)
+{
+  switch(state) {
+    case NBR_INCOMPLETE:
+      return "Incomplete";
+    case NBR_REACHABLE:
+      return "Reachable";
+    case NBR_STALE:
+      return "Stale";
+    case NBR_DELAY:
+      return "Delay";
+    case NBR_PROBE:
+      return "Probe";
+    default:
+      return "Unknown";
+  }
+}
+/*---------------------------------------------------------------------------*/
+static const char *
 rpl_state_to_str(enum rpl_dag_state state)
 {
   switch(state) {
@@ -334,6 +353,35 @@ PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
 }
 /*---------------------------------------------------------------------------*/
 static
+PT_THREAD(cmd_ip_neighbors(struct pt *pt, shell_output_func output, char *args))
+{
+  uip_ds6_nbr_t *nbr;
+
+  PT_BEGIN(pt);
+
+  nbr = uip_ds6_nbr_head();
+  if(nbr == NULL) {
+    SHELL_OUTPUT(output, "Node IPv6 neighbors: none\n");
+    PT_EXIT(pt);
+  }
+
+  SHELL_OUTPUT(output, "Node IPv6 neighbors:\n");
+  while(nbr != NULL) {
+    SHELL_OUTPUT(output, "-- ");
+    shell_output_6addr(output, uip_ds6_nbr_get_ipaddr(nbr));
+    SHELL_OUTPUT(output, " <-> ");
+    shell_output_lladdr(output, (linkaddr_t *)uip_ds6_nbr_get_ll(nbr));
+    SHELL_OUTPUT(output, ", router %u, state %s ",
+      nbr->isrouter, ds6_nbr_state_to_str(nbr->state));
+    SHELL_OUTPUT(output, "\n");
+    nbr = uip_ds6_nbr_next(nbr);
+  }
+
+  PT_END(pt);
+
+}
+/*---------------------------------------------------------------------------*/
+static
 PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
 {
   PT_BEGIN(pt);
@@ -535,7 +583,8 @@ shell_commands_init(void)
 /*---------------------------------------------------------------------------*/
 struct shell_command_t shell_commands[] = {
   { "help",                 cmd_help,                 "'> help': Shows this help" },
-  { "ipaddr",               cmd_ipaddr,                   "'> ipaddr': Shows all IPv6 addresses" },
+  { "ip-addr",               cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },
+  { "ip-nbr",         cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
   { "log",                  cmd_log,                  "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (on) or not (off). A /64 prefix can be optionally specified." },
