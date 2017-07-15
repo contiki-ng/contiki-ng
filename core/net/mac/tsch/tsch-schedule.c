@@ -418,6 +418,18 @@ tsch_schedule_create_minimal(void)
       0, 0);
 }
 /*---------------------------------------------------------------------------*/
+struct tsch_slotframe *
+tsch_schedule_slotframe_head(void)
+{
+  return list_head(slotframe_list);
+}
+/*---------------------------------------------------------------------------*/
+struct tsch_slotframe *
+tsch_schedule_slotframe_next(struct tsch_slotframe *sf)
+{
+  return list_item_next(sf);
+}
+/*---------------------------------------------------------------------------*/
 /* Prints out the current schedule (all slotframes and links) */
 void
 tsch_schedule_print(void)

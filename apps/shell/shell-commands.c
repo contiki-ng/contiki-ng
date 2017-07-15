@@ -489,6 +489,42 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_tsch_schedule(struct pt *pt, shell_output_func output, char *args))
+{
+  struct tsch_slotframe *sf;
+
+  PT_BEGIN(pt);
+
+  if(tsch_is_locked()) {
+    PT_EXIT(pt);
+  }
+
+  sf = tsch_schedule_slotframe_head();
+
+  if(sf == NULL) {
+    SHELL_OUTPUT(output, "TSCH schedule: no slotframe\n");
+  } else {
+    SHELL_OUTPUT(output, "TSCH schedule:\n");
+    while(sf != NULL) {
+      struct tsch_link *l = list_head(sf->links_list);
+
+      SHELL_OUTPUT(output, "-- Slotframe: handle %u, size %u, links:\n", sf->handle, sf->size.val);
+
+      while(l != NULL) {
+        SHELL_OUTPUT(output, "---- Options %02x, type %u, timeslot %u, channel offset %u, address ",
+               l->link_options, l->link_type, l->timeslot, l->channel_offset);
+        shell_output_lladdr(output, &l->addr);
+        SHELL_OUTPUT(output, "\n");
+        l = list_item_next(l);
+      }
+
+      sf = tsch_schedule_slotframe_next(sf);
+    }
+  }
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
 void
 shell_commands_init(void)
 {
@@ -507,6 +543,7 @@ struct shell_command_t shell_commands[] = {
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
+  { "tsch-schedule",        cmd_tsch_schedule,        "'> tsch-schedule': Shows the current TSCH schedule" },
   { "tsch-status",          cmd_tsch_status,          "'> tsch-status': Shows a summary of the current TSCH state" },
   { NULL, NULL, NULL },
 };
