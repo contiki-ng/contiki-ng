@@ -148,8 +148,6 @@ framer_802154_setup_params(packetbuf_attr_t (*get_attr)(uint8_t type),
     params->fcf.ack_required = get_attr(PACKETBUF_ATTR_MAC_ACK);
     params->fcf.sequence_number_suppression = FRAME802154_SUPPR_SEQNO;
   }
-  /* Compress PAN ID in outgoing frames by default */
-  params->fcf.panid_compression = 1;
 
   /* Set IE Present bit */
   params->fcf.ie_list_present = get_attr(PACKETBUF_ATTR_MAC_METADATA);
@@ -210,6 +208,14 @@ framer_802154_setup_params(packetbuf_attr_t (*get_attr)(uint8_t type),
     } else {
       params->fcf.dest_addr_mode = FRAME802154_LONGADDRMODE;
     }
+  }
+
+  /* Suppress Source PAN ID and put Destination PAN ID by default */
+  if(params->fcf.src_addr_mode == FRAME802154_SHORTADDRMODE ||
+     params->fcf.dest_addr_mode == FRAME802154_SHORTADDRMODE) {
+    params->fcf.panid_compression = 1;
+  } else {
+    params->fcf.panid_compression = 0;
   }
 }
 /*---------------------------------------------------------------------------*/
