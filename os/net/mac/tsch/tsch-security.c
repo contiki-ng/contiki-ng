@@ -138,6 +138,7 @@ tsch_security_secure_frame(uint8_t *hdr, uint8_t *outbuf,
   uint8_t with_encryption;
   uint8_t mic_len;
   uint8_t nonce[16];
+  struct ieee802154_ies ies;
 
   uint8_t a_len;
   uint8_t m_len;
@@ -149,6 +150,13 @@ tsch_security_secure_frame(uint8_t *hdr, uint8_t *outbuf,
   /* Parse the frame header to extract security settings */
   if(frame802154_parse(hdr, hdrlen + datalen, &frame) < 3) {
     return 0;
+  }
+
+  memset(&ies, 0, sizeof(ies));
+  if(frame802154e_parse_information_elements(hdr + hdrlen, datalen, &ies) > 0) {
+    /* put Header IEs into the header part which is not encrypted */
+    hdrlen += ies.ie_payload_ie_offset;
+    datalen -= ies.ie_payload_ie_offset;
   }
 
   if(!frame.fcf.security_enabled) {
@@ -204,6 +212,7 @@ tsch_security_parse_frame(const uint8_t *hdr, int hdrlen, int datalen,
   uint8_t nonce[16];
   uint8_t a_len;
   uint8_t m_len;
+  struct ieee802154_ies ies;
 
   if(frame == NULL || hdr == NULL || hdrlen < 0 || datalen < 0) {
     return 0;
@@ -228,6 +237,12 @@ tsch_security_parse_frame(const uint8_t *hdr, int hdrlen, int datalen,
   if(key_index == 0 || key_index > N_KEYS) {
     return 0;
   }
+
+  memset(&ies, 0, sizeof(ies));
+  (void)frame802154e_parse_information_elements(hdr + hdrlen, datalen, &ies);
+  /* put Header IEs into the header part which is not encrypted */
+  hdrlen += ies.ie_payload_ie_offset;
+  datalen -= ies.ie_payload_ie_offset;
 
   tsch_security_init_nonce(nonce, sender, asn);
 
