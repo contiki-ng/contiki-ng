@@ -48,7 +48,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "RPL"
-#define LOG_LEVEL RPL_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 uip_ipaddr_t rpl_multicast_addr;
 

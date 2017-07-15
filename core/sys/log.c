@@ -53,7 +53,23 @@
 #include "sys/log.h"
 #include "net/ip/ip64-addr.h"
 
-int curr_log_level = LOG_LEVEL_DBG;
+
+int curr_log_level_rpl = LOG_CONF_LEVEL_RPL;
+int curr_log_level_tcpip = LOG_CONF_LEVEL_TCPIP;
+int curr_log_level_ipv6 = LOG_CONF_LEVEL_IPV6;
+int curr_log_level_6lowpan = LOG_CONF_LEVEL_6LOWPAN;
+int curr_log_level_mac = LOG_CONF_LEVEL_MAC;
+int curr_log_level_framer = LOG_CONF_LEVEL_FRAMER;
+
+struct log_module all_modules[] = {
+  {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
+  {"tcpip", &curr_log_level_tcpip, LOG_CONF_LEVEL_TCPIP},
+  {"ipv6", &curr_log_level_ipv6, LOG_CONF_LEVEL_IPV6},
+  {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
+  {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},
+  {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
+  {NULL, NULL, 0},
+};
 
 /*---------------------------------------------------------------------------*/
 void
@@ -135,17 +151,31 @@ log_lladdr_compact(const linkaddr_t *lladdr)
 }
 /*---------------------------------------------------------------------------*/
 void
-log_set_level(int level)
+log_set_level(const char *module, int level)
 {
   if(level >= LOG_LEVEL_NONE && level <= LOG_LEVEL_DBG) {
-    curr_log_level = level;
+    int i = 0;
+    int module_all = !strcmp("all", module);
+    while(all_modules[i].name != NULL) {
+      if(module_all || !strcmp(module, all_modules[i].name)) {
+        *all_modules[i].curr_log_level = MIN(level, all_modules[i].max_log_level);
+      }
+      i++;
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
 int
-log_get_level(void)
+log_get_level(const char *module)
 {
-  return curr_log_level;
+  int i = 0;
+  while(all_modules[i].name != NULL) {
+    if(!strcmp(module, all_modules[i].name)) {
+      return *all_modules[i].curr_log_level;
+    }
+    i++;
+  }
+  return -1;
 }
 /*---------------------------------------------------------------------------*/
 const char *

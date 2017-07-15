@@ -248,6 +248,19 @@ PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+static void
+shell_output_log_levels(shell_output_func output)
+{
+  int i = 0;
+  SHELL_OUTPUT(output, "Log levels:\n");
+  while(all_modules[i].name != NULL) {
+    SHELL_OUTPUT(output, "-- %-10s: %s\n",
+      all_modules[i].name,
+      log_level_to_str(*all_modules[i].curr_log_level));
+    i++;
+  }
+}
+/*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
 {
@@ -255,12 +268,23 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
   static int level;
   char *next_args;
   char *ptr;
+  char *module;
 
   PT_BEGIN(pt);
 
   SHELL_ARGS_INIT(args, next_args);
 
-  /* Get and parse argument */
+  /* Get and parse argument: module name */
+  SHELL_ARGS_NEXT(args, next_args);
+  module = args;
+  prev_level = log_get_level(module);
+  if(module == NULL || (strcmp("all", module) && prev_level == -1)) {
+    SHELL_OUTPUT(output, "Invalid first argument: %s\n", module)
+    shell_output_log_levels(output);
+    PT_EXIT(pt);
+  }
+
+  /* Get and parse argument: log level */
   SHELL_ARGS_NEXT(args, next_args);
   if(args == NULL) {
     level = -1;
@@ -269,23 +293,25 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
   }
   if((level == 0 && args == ptr)
     || level < LOG_LEVEL_NONE || level > LOG_LEVEL_DBG) {
-    SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
+    SHELL_OUTPUT(output, "Invalid second argument: %s\n", args);
     PT_EXIT(pt);
   }
 
   /* Set log level */
-  prev_level = log_get_level();
   if(level != prev_level) {
-    log_set_level(level);
-    if(level >= LOG_LEVEL_DBG) {
-      tsch_log_init();
-      SHELL_OUTPUT(output, "TSCH logging started\n");
-    } else {
-      tsch_log_stop();
-      SHELL_OUTPUT(output, "TSCH logging stopped\n");
+    log_set_level(module, level);
+    if(!strcmp(module, "mac") || !strcmp(module, "all")) {
+      if(level >= LOG_LEVEL_DBG) {
+        tsch_log_init();
+        SHELL_OUTPUT(output, "TSCH logging started\n");
+      } else {
+        tsch_log_stop();
+        SHELL_OUTPUT(output, "TSCH logging stopped\n");
+      }
     }
   }
-  SHELL_OUTPUT(output, "Log level set to %u (%s)\n", level, log_level_to_str(level));
+
+  shell_output_log_levels(output);
 
   PT_END(pt);
 }
@@ -583,9 +609,9 @@ shell_commands_init(void)
 /*---------------------------------------------------------------------------*/
 struct shell_command_t shell_commands[] = {
   { "help",                 cmd_help,                 "'> help': Shows this help" },
-  { "ip-addr",               cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },
-  { "ip-nbr",         cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
-  { "log",                  cmd_log,                  "'> log level': Sets log level (0--4). Level 4 also enables TSCH per-slot logging." },
+  { "ip-addr",              cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },
+  { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
+  { "log",                  cmd_log,                  "'> log module level': Sets log level (0--4) for a given module (or \"all\"). For module \"mac\", level 4 also enables per-slot logging." },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (on) or not (off). A /64 prefix can be optionally specified." },
   { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },

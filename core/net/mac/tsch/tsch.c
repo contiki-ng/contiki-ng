@@ -69,7 +69,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TSCH"
-#define LOG_LEVEL MAC_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /* Use to collect link statistics even on Keep-Alive, even though they were
  * not sent from an upper layer and don't have a valid packet_sent callback */

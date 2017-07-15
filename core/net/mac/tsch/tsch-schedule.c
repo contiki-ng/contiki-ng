@@ -58,7 +58,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TSCH Sched"
-#define LOG_LEVEL MAC_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /* Pre-allocated space for links */
 MEMB(link_memb, struct tsch_link, TSCH_SCHEDULE_MAX_LINKS);

@@ -55,7 +55,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6 Nbr"
-#define LOG_LEVEL IPV6_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_IPV6
 
 #ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
 #define NEIGHBOR_STATE_CHANGED(n) UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED(n)

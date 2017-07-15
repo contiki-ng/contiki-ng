@@ -39,11 +39,12 @@
  *     LOG_LEVEL_INFO         Basic info
  *     LOG_LEVEL_DBG          Detailled debug
   */
-#define IPV6_LOG_LEVEL                        LOG_LEVEL_DBG
-#define SICSLOWPAN_LOG_LEVEL                  LOG_LEVEL_DBG
-#define TCPIP_LOG_LEVEL                       LOG_LEVEL_DBG
-#define MAC_LOG_LEVEL                         LOG_LEVEL_DBG
-#define FRAMER_LOG_LEVEL                      LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
 
 /* Enable cooja annotations */
 #define LOG_CONF_WITH_ANNOTATE                1

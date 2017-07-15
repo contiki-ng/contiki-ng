@@ -157,12 +157,12 @@
 #endif /* CONTIKI_TARGET_COOJA */
 
 /* Logging */
-#define RPL_LOG_LEVEL                         LOG_LEVEL_INFO
-#define TCPIP_LOG_LEVEL                       LOG_LEVEL_WARN
-#define IPV6_LOG_LEVEL                        LOG_LEVEL_WARN
-#define SICSLOWPAN_LOG_LEVEL                  LOG_LEVEL_WARN
-#define MAC_LOG_LEVEL                         LOG_LEVEL_INFO
-#define FRAMER_LOG_LEVEL                      LOG_LEVEL_WARN
-#define TSCH_LOG_CONF_PER_SLOT                1
+#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
+#define TSCH_LOG_CONF_PER_SLOT                     1
 
 #endif /* __PROJECT_CONF_H__ */

@@ -54,7 +54,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TSCH RPL"
-#define LOG_LEVEL MAC_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /*---------------------------------------------------------------------------*/
 /* To use, set #define TSCH_CALLBACK_KA_SENT tsch_rpl_callback_ka_sent */

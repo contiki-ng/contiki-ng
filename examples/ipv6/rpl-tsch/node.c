@@ -72,7 +72,7 @@ PROCESS_THREAD(node_process, ev, data)
 
 #if WITH_SHELL
   serial_shell_init();
-  log_set_level(LOG_LEVEL_WARN);
+  log_set_level("all", LOG_LEVEL_WARN);
   tsch_log_stop();
 #endif /* WITH_SHELL */
 

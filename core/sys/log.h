@@ -65,10 +65,34 @@
 #define LOG_LEVEL_INFO         3 /* Basic info */
 #define LOG_LEVEL_DBG          4 /* Detailled debug */
 
+/* Per-module log level */
+
+struct log_module {
+  const char *name;
+  int *curr_log_level;
+  int max_log_level;
+};
+
+extern int curr_log_level_rpl;
+extern int curr_log_level_tcpip;
+extern int curr_log_level_ipv6;
+extern int curr_log_level_6lowpan;
+extern int curr_log_level_mac;
+extern int curr_log_level_framer;
+
+extern struct log_module all_modules[];
+
+#define LOG_LEVEL_RPL                         MIN((LOG_CONF_LEVEL_RPL), curr_log_level_rpl)
+#define LOG_LEVEL_TCPIP                       MIN((LOG_CONF_LEVEL_TCPIP), curr_log_level_tcpip)
+#define LOG_LEVEL_IPV6                        MIN((LOG_CONF_LEVEL_IPV6), curr_log_level_ipv6)
+#define LOG_LEVEL_6LOWPAN                     MIN((LOG_CONF_LEVEL_6LOWPAN), curr_log_level_6lowpan)
+#define LOG_LEVEL_MAC                         MIN((LOG_CONF_LEVEL_MAC), curr_log_level_mac)
+#define LOG_LEVEL_FRAMER                      MIN((LOG_CONF_LEVEL_FRAMER), curr_log_level_framer)
+
 /* Main log function */
 
 #define LOG(newline, level, levelstr, ...) do {  \
-                            if(level <= MIN(LOG_LEVEL, curr_log_level)) { \
+                            if(level <= (LOG_LEVEL)) { \
                               if(newline) { \
                                 LOG_OUTPUT("[%-4s: %-10s] ", levelstr, LOG_MODULE); \
                                 if(LOG_WITH_LOC) { \
@@ -88,7 +112,7 @@
 
 /* Link-layer address */
 #define LOG_LLADDR(level, lladdr) do {  \
-                            if(level <= MIN(LOG_LEVEL, curr_log_level)) { \
+                            if(level <= (LOG_LEVEL)) { \
                               if(LOG_WITH_COMPACT_ADDR) { \
                                 log_lladdr_compact(lladdr); \
                               } else { \
@@ -99,7 +123,7 @@
 
 /* IPv6 address */
 #define LOG_6ADDR(level, ipaddr) do {  \
-                           if(level <= MIN(LOG_LEVEL, curr_log_level)) { \
+                           if(level <= (LOG_LEVEL)) { \
                              if(LOG_WITH_COMPACT_ADDR) { \
                                log_6addr_compact(ipaddr); \
                              } else { \
@@ -135,9 +159,6 @@
 #define LOG_INFO_ENABLED       (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_INFO)
 #define LOG_DBG_ENABLED        (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_DBG)
 
-/* The current log level */
-extern int curr_log_level;
-
 #if NETSTACK_CONF_WITH_IPV6
 
 /**
@@ -170,15 +191,17 @@ void log_lladdr_compact(const linkaddr_t *lladdr);
  * Sets a log level at run-time. Logs are included in the firmware via
  * the compile-time flags in log-conf.h, but this allows to force lower log
  * levels, system-wide.
+ * \param module The target module string descriptor
  * \param level The log level
 */
-void log_set_level(int level);
+void log_set_level(const char *module, int level);
 
 /**
  * Returns the current log level.
+ * \param module The target module string descriptor
  * \return The current log level
 */
-int log_get_level(void);
+int log_get_level(const char *module);
 
 /**
  * Returns a textual description of a log level

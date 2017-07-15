@@ -50,7 +50,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "ICMPv6"
-#define LOG_LEVEL IPV6_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_IPV6
 
 #define UIP_IP_BUF                ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_ICMP_BUF            ((struct uip_icmp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
