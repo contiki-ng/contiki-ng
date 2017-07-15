@@ -452,7 +452,7 @@ init_dag(uint8_t instance_id, uip_ipaddr_t *dag_id, rpl_ocp_t ocp,
 
   /* Prefix */
   if(!rpl_set_prefix_from_addr(prefix, prefix_len, prefix_flags)) {
-    LOG_ERR("failed to set prefix");
+    LOG_ERR("failed to set prefix\n");
     return 0;
   }
 
@@ -532,7 +532,9 @@ process_dio_init_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   LOG_INFO("initialized DAG with instance ID %u, DAG ID ",
          curr_instance.instance_id);
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
-  LOG_INFO_(", rank %u\n", curr_instance.dag.rank);
+  LOG_INFO_(", prexix ");
+  LOG_INFO_6ADDR(&dio->prefix_info.prefix);
+  LOG_INFO_("/%u, rank %u\n", dio->prefix_info.length, curr_instance.dag.rank);
 
   LOG_ANNOTATE("#A init=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
 
@@ -548,7 +550,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   if(!curr_instance.used && !rpl_dag_root_is_root()) {
     /* Attempt to init our DAG from this DIO */
     if(!process_dio_init_dag(from, dio)) {
-      LOG_WARN("failed to init DAG");
+      LOG_WARN("failed to init DAG\n");
       return;
     }
   }

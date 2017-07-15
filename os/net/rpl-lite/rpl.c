@@ -137,7 +137,7 @@ rpl_set_prefix_from_addr(uip_ipaddr_t *addr, unsigned len, uint8_t flags)
   uip_ipaddr_t ipaddr;
 
   if(addr == NULL || len == 0 || len > 128 || !(flags & UIP_ND6_RA_FLAG_AUTONOMOUS)) {
-    LOG_WARN("not-supported or invalid prefix\n");
+    LOG_WARN("prefix not included, not-supported or invalid\n");
     return 0;
   }
 
