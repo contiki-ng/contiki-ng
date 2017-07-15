@@ -110,9 +110,15 @@ typedef uint32_t rtimer_clock_t;
 
 /* If the timer base a binary 32kHz clock, compensate for this base drift */
 #if RTIMER_USE_32KHZ && JN516X_EXTERNAL_CRYSTAL_OSCILLATOR
-/* Drift calculated using this formula:
-*    ((US_TO_TICKS(10000) * 100) - RTIMER_SECOND) * 1e6 = 976.5625 ppm
-*/
+/* The drift compared to "true" 10ms slots.
+ * Enable adaptive sync to enable compensation for this.
+ * Slot length 10000 usec
+ *             328 ticks
+ * Tick duration 30.517578125 usec
+ * Real slot duration 10009.765625 usec
+ * Target - real duration = -9.765625 usec
+ * TSCH_CONF_BASE_DRIFT_PPM -977
+ */
 #define TSCH_CONF_BASE_DRIFT_PPM -977
 #endif
 
