@@ -46,7 +46,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Frame 15.4"
-#define LOG_LEVEL FRAMER_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_FRAMER
 
 /**  \brief The sequence number (0x00 - 0xff) added to the transmitted
  *   data or MAC command frame. The default is a random value within

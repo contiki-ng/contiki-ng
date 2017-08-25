@@ -51,7 +51,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "RPL"
-#define LOG_LEVEL RPL_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 /* A configurable function called after update of the RPL DIO interval */
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
@@ -483,7 +483,7 @@ rpl_timers_schedule_leaving(void)
 {
   if(curr_instance.used) {
     if(ctimer_expired(&curr_instance.dag.leave)) {
-      ctimer_set(&curr_instance.dag.leave, PERIODIC_DELAY, handle_leaving_timer, NULL);
+      ctimer_set(&curr_instance.dag.leave, RPL_DELAY_BEFORE_LEAVING, handle_leaving_timer, NULL);
     }
   }
 }

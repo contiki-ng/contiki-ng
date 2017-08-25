@@ -50,7 +50,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "ICMPv6"
-#define LOG_LEVEL IPV6_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_IPV6
 
 #define UIP_IP_BUF                ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_ICMP_BUF            ((struct uip_icmp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
@@ -268,6 +268,9 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
 void
 uip_icmp6_send(const uip_ipaddr_t *dest, int type, int code, int payload_len)
 {
+  LOG_INFO("Sending ICMPv6 packet to ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO_(", type %u, code %u, len %u\n", type, code, payload_len);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;

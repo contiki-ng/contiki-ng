@@ -46,7 +46,7 @@
 #define TSCH_LOG_PER_SLOT TSCH_LOG_CONF_PER_SLOT
 #else /* TSCH_LOG_CONF_PER_SLOT */
 #include "sys/log.h"
-#define TSCH_LOG_PER_SLOT (MAC_LOG_LEVEL >= LOG_LEVEL_DBG)
+#define TSCH_LOG_PER_SLOT (LOG_LEVEL_MAC >= LOG_LEVEL_DBG)
 #endif /* TSCH_LOG_CONF_PER_SLOT */
 
 /* The length of the log queue, i.e. maximum number postponed log messages */
@@ -112,6 +112,8 @@ void tsch_log_commit(void);
 void tsch_log_init(void);
 /* Process pending log messages */
 void tsch_log_process_pending(void);
+/* Stop logging module */
+void tsch_log_stop(void);
 
 /************ Macros **********/
 

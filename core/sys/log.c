@@ -53,6 +53,24 @@
 #include "sys/log.h"
 #include "net/ip/ip64-addr.h"
 
+
+int curr_log_level_rpl = LOG_CONF_LEVEL_RPL;
+int curr_log_level_tcpip = LOG_CONF_LEVEL_TCPIP;
+int curr_log_level_ipv6 = LOG_CONF_LEVEL_IPV6;
+int curr_log_level_6lowpan = LOG_CONF_LEVEL_6LOWPAN;
+int curr_log_level_mac = LOG_CONF_LEVEL_MAC;
+int curr_log_level_framer = LOG_CONF_LEVEL_FRAMER;
+
+struct log_module all_modules[] = {
+  {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
+  {"tcpip", &curr_log_level_tcpip, LOG_CONF_LEVEL_TCPIP},
+  {"ipv6", &curr_log_level_ipv6, LOG_CONF_LEVEL_IPV6},
+  {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
+  {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},
+  {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
+  {NULL, NULL, 0},
+};
+
 /*---------------------------------------------------------------------------*/
 void
 log_6addr(const uip_ipaddr_t *ipaddr)
@@ -131,6 +149,52 @@ log_lladdr_compact(const linkaddr_t *lladdr)
     LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE/2-1]));
   }
 }
-
+/*---------------------------------------------------------------------------*/
+void
+log_set_level(const char *module, int level)
+{
+  if(level >= LOG_LEVEL_NONE && level <= LOG_LEVEL_DBG) {
+    int i = 0;
+    int module_all = !strcmp("all", module);
+    while(all_modules[i].name != NULL) {
+      if(module_all || !strcmp(module, all_modules[i].name)) {
+        *all_modules[i].curr_log_level = MIN(level, all_modules[i].max_log_level);
+      }
+      i++;
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+int
+log_get_level(const char *module)
+{
+  int i = 0;
+  while(all_modules[i].name != NULL) {
+    if(!strcmp(module, all_modules[i].name)) {
+      return *all_modules[i].curr_log_level;
+    }
+    i++;
+  }
+  return -1;
+}
+/*---------------------------------------------------------------------------*/
+const char *
+log_level_to_str(int level)
+{
+  switch(level) {
+    case LOG_LEVEL_NONE:
+      return "None";
+    case LOG_LEVEL_ERR:
+      return "Errors";
+    case LOG_LEVEL_WARN:
+      return "Warnings";
+    case LOG_LEVEL_INFO:
+      return "Info";
+    case LOG_LEVEL_DBG:
+      return "Debug";
+    default:
+      return "N/A";
+  }
+}
 /** @} */
 /** @} */

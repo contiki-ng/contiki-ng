@@ -160,5 +160,8 @@ int tsch_schedule_remove_link_by_timeslot(struct tsch_slotframe *slotframe, uint
 /* Returns the next active link after a given ASN, and a backup link (for the same ASN, with Rx flag) */
 struct tsch_link * tsch_schedule_get_next_active_link(struct tsch_asn_t *asn, uint16_t *time_offset,
     struct tsch_link **backup_link);
+/* Access to slotframe list */
+struct tsch_slotframe *tsch_schedule_slotframe_head(void);
+struct tsch_slotframe *tsch_schedule_slotframe_next(struct tsch_slotframe *sf);
 
 #endif /* __TSCH_SCHEDULE_H__ */

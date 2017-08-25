@@ -144,6 +144,11 @@ void rpl_ns_periodic(unsigned seconds);
 */
 void rpl_ns_init(void);
 
+/**
+ * Deallocate all neighbors
+*/
+void rpl_ns_free_all(void);
+
  /** @} */
 
 #endif /* RPL_NS_H */

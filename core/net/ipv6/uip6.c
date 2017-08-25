@@ -96,7 +96,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6"
-#define LOG_LEVEL IPV6_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_IPV6
 
 /*---------------------------------------------------------------------------*/
 /**

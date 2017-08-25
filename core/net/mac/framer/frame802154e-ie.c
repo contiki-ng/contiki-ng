@@ -43,7 +43,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Frame 15.4"
-#define LOG_LEVEL FRAMER_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_FRAMER
 
 /* c.f. IEEE 802.15.4e Table 4b */
 enum ieee802154e_header_ie_id {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Swedish Institute of Computer Science.
+ * Copyright (c) 2008, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,28 +25,25 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ * This file is part of the Contiki operating system.
+ *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+/**
+ * \file
+ *         A shell back-end for the serial port
+ * \author
+ *         Adam Dunkels <adam@sics.se>
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
+ */
 
-/* Set maximum debug level on all modules. See core/sys/log-conf.h for
- * a list of supported modules. The different log levels are defined in
- * core/sys/log.h:
- *     LOG_LEVEL_NONE         No log
- *     LOG_LEVEL_ERR          Errors
- *     LOG_LEVEL_WARN         Warnings
- *     LOG_LEVEL_INFO         Basic info
- *     LOG_LEVEL_DBG          Detailled debug
-  */
-#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_DBG
-#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_DBG
-#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_DBG
-#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_DBG
-#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
-#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
+#ifndef SERIAL_SHELL_H_
+#define SERIAL_SHELL_H_
 
-/* Enable cooja annotations */
-#define LOG_CONF_WITH_ANNOTATE                1
+/**
+ * Initializes Serial Shell module
+ */
+void serial_shell_init(void);
 
-#endif
+#endif /* SERIAL_SHELL_H_ */

@@ -58,7 +58,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TCP/IP"
-#define LOG_LEVEL TCPIP_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_TCPIP
 
 #define UIP_ICMP_BUF ((struct uip_icmp_hdr *)&uip_buf[UIP_LLIPH_LEN + uip_ext_len])
 #define UIP_IP_BUF ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
@@ -672,6 +672,15 @@ tcpip_ipv6_output(void)
     goto send_packet;
   }
 
+  /* We first check if the destination address is one of ours. There is no
+   * loopback interface -- instead, process this directly as incoming. */
+  if(uip_ds6_is_my_addr(&UIP_IP_BUF->destipaddr)) {
+    LOG_INFO("output: sending to ourself\n");
+    packet_input();
+    return;
+  }
+
+  /* Look for a next hop */
   if((nexthop = get_nexthop(&ipaddr)) == NULL) {
     goto exit;
   }

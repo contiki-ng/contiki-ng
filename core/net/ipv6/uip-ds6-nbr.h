@@ -97,6 +97,8 @@ const uip_lladdr_t *uip_ds6_nbr_lladdr_from_ipaddr(const uip_ipaddr_t *ipaddr);
 void uip_ds6_link_callback(int status, int numtx);
 void uip_ds6_neighbor_periodic(void);
 int uip_ds6_nbr_num(void);
+uip_ds6_nbr_t *uip_ds6_nbr_head(void);
+uip_ds6_nbr_t *uip_ds6_nbr_next(uip_ds6_nbr_t *nbr);
 
 #if UIP_ND6_SEND_NS
 /**

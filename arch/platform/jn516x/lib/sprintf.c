@@ -92,10 +92,12 @@ vsnprintf(char *str, size_t n, const char *fmt, __VALIST va)
         ch = *(fmt++);
         lz = 1;
       }
-      if(ch >= '0' && ch <= '9') {
+      if(ch == '-' || (ch >= '0' && ch <= '9')) {
         w = 0;
-        while(ch >= '0' && ch <= '9') {
-          w = (((w << 2) + w) << 1) + ch - '0';
+        while(ch == '-' || (ch >= '0' && ch <= '9')) {
+          if(ch != '-') {
+            w = (((w << 2) + w) << 1) + ch - '0';
+          }
           ch = *fmt++;
         }
       }

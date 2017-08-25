@@ -45,6 +45,11 @@ typedef uint32_t rtimer_clock_t;
 /* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
 #define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
 #define RADIO_DELAY_BEFORE_DETECT 0
+#ifndef TSCH_CONF_BASE_DRIFT_PPM
+/* The drift compared to "true" 10ms slots.
+ * Enable adaptive sync to enable compensation for this. */
+#define TSCH_CONF_BASE_DRIFT_PPM -977
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \name Serial Boot Loader Backdoor configuration

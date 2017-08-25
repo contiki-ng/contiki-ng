@@ -134,6 +134,7 @@ struct input_packet input_array[TSCH_MAX_INCOMING_PACKETS];
 
 /* Last time we received Sync-IE (ACK or data packet from a time source) */
 static struct tsch_asn_t last_sync_asn;
+clock_time_t last_sync_time; /* Same info, in clock_time_t units */
 
 /* A global lock for manipulating data structures safely from outside of interrupt */
 static volatile int tsch_locked = 0;
@@ -614,6 +615,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   tsch_timesync_update(current_neighbor, since_last_timesync, drift_correction);
                   /* Keep track of sync time */
                   last_sync_asn = tsch_current_asn;
+                  last_sync_time = clock_time();
                   tsch_schedule_keepalive();
                 }
                 mac_tx_status = MAC_TX_OK;
@@ -851,6 +853,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               int32_t since_last_timesync = TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn);
               /* Keep track of last sync time */
               last_sync_asn = tsch_current_asn;
+              last_sync_time = clock_time();
               /* Save estimated drift */
               drift_correction = -estimated_drift;
               is_drift_correction_used = 1;
@@ -1053,6 +1056,7 @@ tsch_slot_operation_sync(rtimer_clock_t next_slot_start,
   current_slot_start = next_slot_start;
   tsch_current_asn = *next_slot_asn;
   last_sync_asn = tsch_current_asn;
+  last_sync_time = clock_time();
   current_link = NULL;
 }
 /*---------------------------------------------------------------------------*/

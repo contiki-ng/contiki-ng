@@ -58,6 +58,11 @@
 */
 const char *rpl_dag_state_to_str(enum rpl_dag_state state);
 /**
+ * Start poisoning and leave the DAG after a delay
+ *
+*/
+void rpl_dag_poison_and_leave(void);
+/**
  * Leaves the current DAG
  *
 */

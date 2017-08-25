@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2008, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,88 +26,56 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
  */
+
 /**
  * \file
- *         A RPL+TSCH node able to act as either a simple node (6ln),
- *         DAG Root (6dr) or DAG Root with security (6dr-sec)
- *         Press use button at startup to configure.
- *
- * \author Simon Duquennoy <simonduq@sics.se>
+ *         A shell back-end for the serial port
+ * \author
+ *         Adam Dunkels <adam@sics.se>
+ *         Simon Duquennoy <simon.duquennoy@inria.fr>
+ */
+
+/**
+ * \addtogroup shell
+ * @{
  */
 
 #include "contiki.h"
-#include "node-id.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
+#include "dev/serial-line.h"
 #include "sys/log.h"
-#include "net/ipv6/uip-ds6-route.h"
-#include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-log.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
-#if WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* WITH_ORCHESTRA */
-#if WITH_SHELL
+#include "shell.h"
 #include "serial-shell.h"
-#endif /* WITH_SHELL */
-
-#define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
-PROCESS(node_process, "RPL Node");
-AUTOSTART_PROCESSES(&node_process);
+PROCESS(serial_shell_process, "Contiki serial shell");
 
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(node_process, ev, data)
+static void
+serial_shell_output(const char *str) {
+  printf("%s", str);
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_shell_process, ev, data)
 {
-  int is_coordinator;
-
   PROCESS_BEGIN();
 
-  is_coordinator = 0;
+  shell_init();
 
-#if WITH_SHELL
-  serial_shell_init();
-  log_set_level("all", LOG_LEVEL_WARN);
-  tsch_log_stop();
-#endif /* WITH_SHELL */
-
-#if CONTIKI_TARGET_COOJA
-  is_coordinator = (node_id == 1);
-#endif
-
-  if(is_coordinator) {
-    rpl_dag_root_init_dag_immediately();
+  while(1) {
+    static struct pt shell_input_pt;
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    PROCESS_PT_SPAWN(&shell_input_pt, shell_input(&shell_input_pt, serial_shell_output, data));
   }
-  NETSTACK_MAC.on();
-
-#if WITH_ORCHESTRA
-  orchestra_init();
-#endif /* WITH_ORCHESTRA */
-
-#if WITH_PERIODIC_ROUTES_PRINT
-  {
-    static struct etimer et;
-    /* Print out routing tables every minute */
-    etimer_set(&et, CLOCK_SECOND * 60);
-    while(1) {
-      /* Used for non-regression testing */
-      #if RPL_WITH_STORING
-        PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
-      #endif
-      #if RPL_WITH_NON_STORING
-        PRINTF("Routing links: %u\n", rpl_ns_num_nodes());
-      #endif
-      PROCESS_YIELD_UNTIL(etimer_expired(&et));
-      etimer_reset(&et);
-    }
-  }
-#endif /* WITH_PERIODIC_ROUTES_PRINT */
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+void
+serial_shell_init(void)
+{
+  process_start(&serial_shell_process, NULL);
+}
+/*---------------------------------------------------------------------------*/
+/** @} */

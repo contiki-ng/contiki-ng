@@ -44,7 +44,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "RPL"
-#define LOG_LEVEL RPL_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 /* Total number of nodes */
 static int num_nodes;
@@ -203,6 +203,7 @@ void
 rpl_ns_periodic(unsigned seconds)
 {
   rpl_ns_node_t *l;
+  rpl_ns_node_t *next;
   /* First pass, decrement lifetime for all nodes with non-infinite lifetime */
   for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
     /* Don't touch infinite lifetime nodes */
@@ -211,7 +212,8 @@ rpl_ns_periodic(unsigned seconds)
     }
   }
   /* Second pass, for all expired nodes, deallocate them iff no child points to them */
-  for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
+  for(l = list_head(nodelist); l != NULL; l = next) {
+    next = list_item_next(l);
     if(l->lifetime == 0) {
       rpl_ns_node_t *l2;
       for(l2 = list_head(nodelist); l2 != NULL; l2 = list_item_next(l2)) {
@@ -231,5 +233,18 @@ rpl_ns_periodic(unsigned seconds)
       memb_free(&nodememb, l);
       num_nodes--;
     }
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_ns_free_all(void)
+{
+  rpl_ns_node_t *l;
+  rpl_ns_node_t *next;
+  for(l = list_head(nodelist); l != NULL; l = next) {
+    next = list_item_next(l);
+    list_remove(nodelist, l);
+    memb_free(&nodememb, l);
+    num_nodes--;
   }
 }

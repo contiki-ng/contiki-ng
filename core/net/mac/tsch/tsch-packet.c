@@ -54,7 +54,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TSCH Pkt"
-#define LOG_LEVEL MAC_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /*---------------------------------------------------------------------------*/
 /* Construct enhanced ACK packet and return ACK length */

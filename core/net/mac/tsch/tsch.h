@@ -107,7 +107,7 @@
 #ifdef TSCH_CONF_JOIN_MY_PANID_ONLY
 #define TSCH_JOIN_MY_PANID_ONLY TSCH_CONF_JOIN_MY_PANID_ONLY
 #else
-#define TSCH_JOIN_MY_PANID_ONLY 0
+#define TSCH_JOIN_MY_PANID_ONLY 1
 #endif
 
 /* The radio polling frequency (in Hz) during association process */

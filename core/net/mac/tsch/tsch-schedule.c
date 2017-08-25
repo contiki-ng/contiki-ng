@@ -58,7 +58,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TSCH Sched"
-#define LOG_LEVEL MAC_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /* Pre-allocated space for links */
 MEMB(link_memb, struct tsch_link, TSCH_SCHEDULE_MAX_LINKS);
@@ -416,6 +416,18 @@ tsch_schedule_create_minimal(void)
       LINK_OPTION_RX | LINK_OPTION_TX | LINK_OPTION_SHARED | LINK_OPTION_TIME_KEEPING,
       LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
       0, 0);
+}
+/*---------------------------------------------------------------------------*/
+struct tsch_slotframe *
+tsch_schedule_slotframe_head(void)
+{
+  return list_head(slotframe_list);
+}
+/*---------------------------------------------------------------------------*/
+struct tsch_slotframe *
+tsch_schedule_slotframe_next(struct tsch_slotframe *sf)
+{
+  return list_item_next(sf);
 }
 /*---------------------------------------------------------------------------*/
 /* Prints out the current schedule (all slotframes and links) */

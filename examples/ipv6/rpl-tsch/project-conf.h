@@ -35,6 +35,9 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
+/* Set to use the Contiki shell */
+#define WITH_SHELL 1
+
 /* Set to run orchestra */
 #ifndef WITH_ORCHESTRA
 #define WITH_ORCHESTRA 0
@@ -75,6 +78,18 @@
 #undef SYS_CTRL_CONF_OSC32K_USE_XTAL
 #define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
 
+#if WITH_SHELL
+/* Needed for CC2538 platforms, for serial */
+#define USB_SERIAL_CONF_ENABLE 1
+
+/* USB serial takes space, free more space elsewhere */
+#undef SICSLOWPAN_CONF_FRAG
+#define SICSLOWPAN_CONF_FRAG 0
+#undef UIP_CONF_BUFFER_SIZE
+#define UIP_CONF_BUFFER_SIZE 160
+
+#endif /* WITH_SHELL */
+
 /* Needed for cc2420 platforms only */
 /* Disable DCO calibration (uses timerB) */
 #undef DCOSYNCH_CONF_ENABLED
@@ -87,13 +102,9 @@
 /******************* Configure TSCH ********************/
 /*******************************************************/
 
-/* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 1
-
 /* IEEE802.15.4 PANID */
 #undef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID 0xabcd
+#define IEEE802154_CONF_PANID 0x81a5
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #undef TSCH_CONF_AUTOSTART
@@ -144,5 +155,14 @@
 #undef TSCH_CONF_MAX_EB_PERIOD
 #define TSCH_CONF_MAX_EB_PERIOD (4 * CLOCK_SECOND)
 #endif /* CONTIKI_TARGET_COOJA */
+
+/* Logging */
+#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
+#define TSCH_LOG_CONF_PER_SLOT                     1
 
 #endif /* __PROJECT_CONF_H__ */

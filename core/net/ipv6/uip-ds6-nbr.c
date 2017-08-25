@@ -55,7 +55,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6 Nbr"
-#define LOG_LEVEL IPV6_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_IPV6
 
 #ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
 #define NEIGHBOR_STATE_CHANGED(n) UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED(n)
@@ -158,6 +158,18 @@ uip_ds6_nbr_num(void)
     num++;
   }
   return num;
+}
+/*---------------------------------------------------------------------------*/
+uip_ds6_nbr_t *
+uip_ds6_nbr_head(void)
+{
+  return nbr_table_head(ds6_neighbors);
+}
+/*---------------------------------------------------------------------------*/
+uip_ds6_nbr_t *
+uip_ds6_nbr_next(uip_ds6_nbr_t *nbr)
+{
+  return nbr_table_next(ds6_neighbors, nbr);
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *

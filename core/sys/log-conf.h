@@ -78,29 +78,29 @@
 /********************* A list of currently supported modules ******************/
 /******************************************************************************/
 
-#ifndef RPL_LOG_LEVEL
-#define RPL_LOG_LEVEL                         LOG_LEVEL_NONE /* Only for rpl-lite */
-#endif /* RPL_LOG_LEVEL */
+#ifndef LOG_CONF_LEVEL_RPL
+#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_NONE /* Only for rpl-lite */
+#endif /* LOG_CONF_LEVEL_RPL */
 
-#ifndef TCPIP_LOG_LEVEL
-#define TCPIP_LOG_LEVEL                       LOG_LEVEL_NONE
-#endif /* TCPIP_LOG_LEVEL */
+#ifndef LOG_CONF_LEVEL_TCPIP
+#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_TCPIP */
 
-#ifndef IPV6_LOG_LEVEL
-#define IPV6_LOG_LEVEL                        LOG_LEVEL_NONE
-#endif /* IPV6_LOG_LEVEL */
+#ifndef LOG_CONF_LEVEL_IPV6
+#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_IPV6 */
 
-#ifndef SICSLOWPAN_LOG_LEVEL
-#define SICSLOWPAN_LOG_LEVEL                  LOG_LEVEL_NONE
-#endif /* SICSLOWPAN_LOG_LEVEL */
+#ifndef LOG_CONF_LEVEL_6LOWPAN
+#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_6LOWPAN */
 
-#ifndef MAC_LOG_LEVEL
-#define MAC_LOG_LEVEL                         LOG_LEVEL_NONE
-#endif /* MAC_LOG_LEVELL */
+#ifndef LOG_CONF_LEVEL_MAC
+#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_MAC */
 
-#ifndef FRAMER_LOG_LEVEL
-#define FRAMER_LOG_LEVEL                      LOG_LEVEL_NONE
-#endif /* FRAMER_LOG_LEVEL */
+#ifndef LOG_CONF_LEVEL_FRAMER
+#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_FRAMER */
 
 #endif /* __LOG_CONF_H__ */
 

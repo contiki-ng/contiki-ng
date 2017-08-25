@@ -56,7 +56,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "RPL"
-#define LOG_LEVEL RPL_LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 /*---------------------------------------------------------------------------*/
 #define RPL_DIO_GROUNDED                 0x80
@@ -557,10 +557,19 @@ rpl_icmp6_dao_output(uint8_t lifetime)
   /* Make sure we're up-to-date before sending data out */
   rpl_dag_update_state();
 
-  if(!curr_instance.used || curr_instance.dag.preferred_parent == NULL
-    || prefix == NULL || parent_ipaddr == NULL || curr_instance.mop == RPL_MOP_NO_DOWNWARD_ROUTES) {
-    LOG_WARN("rpl_icmp6_dao_output: node not ready to send a DAO (used %u, pref parent %u, prefix %u, mop %u)\n",
-        curr_instance.used, curr_instance.dag.preferred_parent != NULL && parent_ipaddr != NULL, prefix != NULL, curr_instance.mop);
+  if(!curr_instance.used) {
+    LOG_WARN("rpl_icmp6_dao_output: not in an instance, skip sending DAO\n");
+    return;
+  }
+
+  if(curr_instance.dag.preferred_parent == NULL) {
+    LOG_WARN("rpl_icmp6_dao_output: no preferred parent, skip sending DAO\n");
+    return;
+  }
+
+  if(prefix == NULL || parent_ipaddr == NULL || curr_instance.mop == RPL_MOP_NO_DOWNWARD_ROUTES) {
+    LOG_WARN("rpl_icmp6_dao_output: node not ready to send a DAO (prefix %p, parent addr %p, mop %u)\n",
+                    prefix, parent_ipaddr, curr_instance.mop);
     return;
   }
 
