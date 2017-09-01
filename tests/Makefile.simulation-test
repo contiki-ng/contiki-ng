@@ -57,7 +57,7 @@ RUNALL=false
 endif
 
 %.testlog: %.csc cooja	
-	@$(CONTIKI)/regression-tests/simexec.sh "$(RUNALL)" "$<" "$(CONTIKI)" "$(basename $@)" $(RANDOMSEED)
+	@$(CONTIKI)/tests/simexec.sh "$(RUNALL)" "$<" "$(CONTIKI)" "$(basename $@)" $(RANDOMSEED)
 
 clean:
 	@rm -f $(TESTLOGS) $(LOGS) $(FAILLOGS) COOJA.log COOJA.testlog \

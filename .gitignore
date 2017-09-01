@@ -81,7 +81,7 @@ platform/galileo/bsp/grub/bin/
 *.prg
 *.dsc
 
-#regression tests artifacts
+#test artifacts
 *.testlog
 *.log.prog
 *.report
@@ -90,8 +90,8 @@ summary
 *.runerr
 *.runlog
 *.faillog
-regression-tests/[0-9][0-9]-*/report
-regression-tests/[0-9][0-9]-*/org/
+tests/[0-9][0-9]-*/report
+tests/[0-9][0-9]-*/org/
 
 # cscope files
 cscope.*
