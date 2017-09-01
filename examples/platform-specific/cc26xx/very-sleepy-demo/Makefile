@@ -5,7 +5,7 @@ all: $(CONTIKI_PROJECT)
 
 CONTIKI_WITH_IPV6 = 1
 
-APPS += er-coap
+MODULES += os/net/app-layer/coap
 
 CONTIKI = ../../../..
 include $(CONTIKI)/Makefile.include

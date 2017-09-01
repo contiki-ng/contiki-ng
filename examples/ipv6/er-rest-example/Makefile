@@ -20,8 +20,8 @@ endif
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
-# REST Engine shall use Erbium CoAP implementation
-APPS += er-coap
+# Include the CoAP implementation
+MODULES += os/net/app-layer/coap
 
 # optional rules to get assembly
 #CUSTOM_RULE_C_TO_OBJECTDIR_O = 1

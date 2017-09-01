@@ -38,9 +38,9 @@
 
 #include <string.h>
 #include "rest-engine.h"
-#include "er-coap-block1.h"
-#include "er-coap-separate.h"
-#include "er-coap-transactions.h"
+#include "coap-block1.h"
+#include "coap-separate.h"
+#include "coap-transactions.h"
 
 static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 SEPARATE_RESOURCE(res_b1_sep_b2, "title=\"Block1 + Separate + Block2 demo\"", NULL, res_post_handler, NULL, NULL, NULL);
