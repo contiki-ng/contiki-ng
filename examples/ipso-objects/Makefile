@@ -6,7 +6,6 @@ all: $(CONTIKI_PROJECT)
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-APPS += rest-engine
 APPS += er-coap
 APPS += oma-lwm2m
 APPS += ipso-objects

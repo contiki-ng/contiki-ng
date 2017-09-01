@@ -16,7 +16,6 @@ CFLAGS += -DUIP_CONF_TCP=0
 APPS += orchestra
 APPS += json
 APPS += er-coap
-APPS += rest-engine
 
 MODULES += os/net/mac/tsch
 

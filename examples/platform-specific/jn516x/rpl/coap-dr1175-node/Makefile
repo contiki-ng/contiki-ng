@@ -17,6 +17,5 @@ CFLAGS += -DWITH_COAP
 CFLAGS += -DUIP_CONF_TCP=0
 APPS = json
 APPS += er-coap
-APPS += rest-engine
 
 include $(CONTIKI)/Makefile.include

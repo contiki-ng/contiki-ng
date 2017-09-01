@@ -17,7 +17,6 @@ CONTIKI_WITH_IPV6 = 1
 
 # REST Engine shall use Erbium CoAP implementation
 APPS += er-coap
-APPS += rest-engine
 APPS += mqtt
 
 CONTIKI=../../../..

@@ -25,7 +25,6 @@ PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 # REST Engine shall use Erbium CoAP implementation
 APPS += er-coap
-APPS += rest-engine
 
 CONTIKI_WITH_RPL = 0
 
