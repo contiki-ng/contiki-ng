@@ -1,4 +1,4 @@
-basedirs	:= os arch/cpu arch/platform apps
+basedirs	:= os arch/cpu arch/platform
 manuals		:= $(shell find ./ -name "*.txt")
 filetypes	:= -iwholename "*/doc/*.txt"
 empty		:=
