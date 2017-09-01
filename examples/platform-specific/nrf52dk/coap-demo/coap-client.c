@@ -50,7 +50,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-#include "er-coap-engine.h"
+#include "coap-engine.h"
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 

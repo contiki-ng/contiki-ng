@@ -45,7 +45,7 @@
 #include "rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #include "rest-engine.h"
-#include "er-coap.h"
+#include "coap.h"
 
 #include "ti-lib.h"
 
