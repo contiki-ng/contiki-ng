@@ -72,7 +72,7 @@ TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(U
 CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
 endif
 
-MODULES += os/sys os/dev os/lib
+MODULES += os os/sys os/dev os/lib
 
 # Include IPv6, RPL
 
@@ -104,10 +104,7 @@ else
     CFLAGS += -DUIP_CONF_IPV6_RPL=0
 endif
 
-CONTIKI_SOURCEFILES += $(CONTIKIFILES)
-
-CONTIKIDIRS += ${addprefix $(CONTIKI)/os/,dev lib net net/mac \
-                 storage storage/cfs sys . }
+MODULES += os os/net os/net/mac os/storage os/storage/cfs
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 
@@ -120,19 +117,6 @@ $(OBJECTDIR):
 	mkdir $@
 
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
-
-### Include application makefiles
-
-ifdef APPS
-  APPDS = ${wildcard ${foreach DIR, $(APPDIRS), ${addprefix $(DIR)/, $(APPS)}}} \
-             ${wildcard ${addprefix $(CONTIKI)/apps/, $(APPS)} \
-             ${addprefix $(CONTIKI)/arch/platform/$(TARGET)/apps/, $(APPS)} \
-             $(APPS)}
-  APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDS), $(DIR)/Makefile.$(APP)}}}
-  -include $(APPINCLUDES)
-  APP_SOURCES = ${foreach d, $(APPDS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
-  CONTIKI_SOURCEFILES += $(APP_SOURCES)
-endif
 
 ### Include target makefile (TODO Unsafe?)
 
@@ -155,7 +139,6 @@ ifdef MODULES
   MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
   -include $(MODULE_INCLUDES)
   CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
-  APPDS += $(MODULEDIRS)
 endif
 
 ### Verbosity control. Use  make V=1  to get verbose builds.
@@ -188,7 +171,7 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
 CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
 SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(APPDS) $(EXTERNALDIRS) ${dir $(target_makefile)}
+             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) ${dir $(target_makefile)}
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
