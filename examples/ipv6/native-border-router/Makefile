@@ -1,6 +1,6 @@
 CONTIKI_PROJECT=border-router
 all: $(CONTIKI_PROJECT)
-APPS = slip-cmd
+MODULES += os/services/slip-cmd
 
 CONTIKI=../../..
 

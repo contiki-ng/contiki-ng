@@ -1,6 +1,6 @@
 CONTIKI_PROJECT=slip-radio
 all: $(CONTIKI_PROJECT)
-APPS = slip-cmd
+MODULES += os/services/slip-cmd
 
 ifeq ($(TARGET),)
   -include Makefile.target
