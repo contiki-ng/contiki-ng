@@ -8,14 +8,13 @@ CONTIKI=../../../../..
 
 CONTIKI_WITH_IPV6 = 1
 
-MODULES += os/net/mac/tsch
+MODULES += os/net/mac/tsch os/lib/json
 PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 CFLAGS += -DWITH_COAP
 CFLAGS += -DUIP_CONF_TCP=0
-APPS = json
 APPS += er-coap
 
 include $(CONTIKI)/Makefile.include
