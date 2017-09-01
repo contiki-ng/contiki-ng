@@ -1,7 +1,7 @@
 CONTIKI=../..
 
 CC=gcc
-CFLAGS=-Wall -I$(CONTIKI)/core -I.
+CFLAGS=-Wall -I$(CONTIKI)/os -I.
 
 all: wpcapslip wpcapstdio Connect.class ConnectSocket.class
 
