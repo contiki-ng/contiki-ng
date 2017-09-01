@@ -51,9 +51,9 @@ unit_test_print_report(const unit_test_t *utp)
   printf("Result: %s\n", utp->result == unit_test_failure ?
                          "failure" : "success");
   printf("Exit point: %s:%u\n", utp->test_file, utp->exit_line);
-  printf("Start: %u\n", utp->start);
-  printf("End: %u\n", utp->end);
-  printf("Duration: %u\n", utp->end - utp->start);
-  printf("Ticks per second: %u\n", RTIMER_SECOND);
+  printf("Start: %lu\n", (unsigned long)utp->start);
+  printf("End: %lu\n", (unsigned long)utp->end);
+  printf("Duration: %lu\n", (unsigned long)(utp->end - utp->start));
+  printf("Ticks per second: %lu\n", (unsigned long)RTIMER_SECOND);
 }
 /*---------------------------------------------------------------------------*/
