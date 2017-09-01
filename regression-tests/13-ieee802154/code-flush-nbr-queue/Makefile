@@ -1,8 +1,7 @@
 all:
 
 CFLAGS  += -D PROJECT_CONF_H=\"project-conf.h\"
-APPS    += unit-test
-MODULES += os/net/mac/tsch os/net/mac/tsch/sixtop
+MODULES += os/net/mac/tsch os/net/mac/tsch/sixtop os/services/unit-test
 
 PROJECT_SOURCEFILES += common.c
 

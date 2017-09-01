@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "unit-test.h"
+#include "unit-test/unit-test.h"
 #include "common.h"
 
 #include "lib/simEnvChange.h"

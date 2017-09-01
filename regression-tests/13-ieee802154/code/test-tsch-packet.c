@@ -30,7 +30,7 @@
  */
 
 #include "contiki.h"
-#include "unit-test.h"
+#include "unit-test/unit-test.h"
 #include "net/linkaddr.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-asn.h"

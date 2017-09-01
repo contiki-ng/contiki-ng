@@ -40,7 +40,7 @@
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-queue.h"
 
-#include "unit-test.h"
+#include "unit-test/unit-test.h"
 #include "common.h"
 
 PROCESS(test_process, "tsch_queue_flush_nbr_queue() test");

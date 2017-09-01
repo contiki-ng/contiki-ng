@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 #include "contiki.h"
-#include "unit-test.h"
+#include "unit-test/unit-test.h"
 
 #include "lib/ringbufindex.h"
 
