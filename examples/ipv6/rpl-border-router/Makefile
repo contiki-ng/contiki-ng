@@ -1,5 +1,5 @@
 CONTIKI_PROJECT=border-router
-all: $(CONTIKI_PROJECT) 
+all: $(CONTIKI_PROJECT)
 
 CONTIKI=../../..
 
@@ -8,9 +8,7 @@ PROJECT_SOURCEFILES += slip-bridge.c
 
 #Simple built-in webserver is the default.
 #Override with make WITH_WEBSERVER=0 for no webserver.
-#WITH_WEBSERVER=webserver-name will use /apps/webserver-name if it can be
-#found in the /apps, /arch/platform/$(TARGET)/apps/, or current directory (in that order).
-# WITH_WEBSERVER=webserver for /apps/webserver
+#WITH_WEBSERVER=module-path will use the module if it can be found
 #make clean before changing webservers!
 
 #Note /apps/webserver contains a 2500 byte style sheet which is a severe test
@@ -23,7 +21,7 @@ CFLAGS += -DUIP_CONF_TCP=1
 CFLAGS += -DWEBSERVER=1
 PROJECT_SOURCEFILES += httpd-simple.c
 else ifneq ($(WITH_WEBSERVER), 0)
-APPS += $(WITH_WEBSERVER)
+MODULES += $(WITH_WEBSERVER)
 CFLAGS += -DUIP_CONF_TCP=1
 CFLAGS += -DWEBSERVER=2
 endif
