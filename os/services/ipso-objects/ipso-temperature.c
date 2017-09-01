@@ -45,7 +45,7 @@
 #include "ipso-objects.h"
 #include "lwm2m-object.h"
 #include "lwm2m-engine.h"
-#include "er-coap-engine.h"
+#include "coap-engine.h"
 
 #ifdef IPSO_TEMPERATURE
 extern const struct ipso_objects_sensor IPSO_TEMPERATURE;

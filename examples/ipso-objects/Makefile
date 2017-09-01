@@ -6,9 +6,9 @@ all: $(CONTIKI_PROJECT)
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-APPS += er-coap
-APPS += oma-lwm2m
-APPS += ipso-objects
+MODULES += os/net/app-layer/coap
+MODULES += os/services/lwm2m
+MODULES += os/services/ipso-objects
 
 CONTIKI=../..
 CONTIKI_WITH_IPV6 = 1

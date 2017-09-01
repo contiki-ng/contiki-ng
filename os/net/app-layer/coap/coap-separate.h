@@ -31,50 +31,39 @@
 
 /**
  * \file
- *      CoAP module for reliable transport
+ *      CoAP module for separate responses.
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef COAP_TRANSACTIONS_H_
-#define COAP_TRANSACTIONS_H_
+#ifndef COAP_SEPARATE_H_
+#define COAP_SEPARATE_H_
 
-#include "er-coap.h"
+#include "coap.h"
 
-/*
- * Modulo mask (thus +1) for a random number to get the tick number for the random
- * retransmission time between COAP_RESPONSE_TIMEOUT and COAP_RESPONSE_TIMEOUT*COAP_RESPONSE_RANDOM_FACTOR.
- */
-#define COAP_RESPONSE_TIMEOUT_TICKS         (CLOCK_SECOND * COAP_RESPONSE_TIMEOUT)
-#define COAP_RESPONSE_TIMEOUT_BACKOFF_MASK  (long)((CLOCK_SECOND * COAP_RESPONSE_TIMEOUT * ((float)COAP_RESPONSE_RANDOM_FACTOR - 1.0)) + 0.5) + 1
-
-/* container for transactions with message buffer and retransmission info */
-typedef struct coap_transaction {
-  struct coap_transaction *next;        /* for LIST */
-
-  uint16_t mid;
-  struct etimer retrans_timer;
-  uint8_t retrans_counter;
+typedef struct coap_separate {
 
   uip_ipaddr_t addr;
   uint16_t port;
 
-  restful_response_handler callback;
-  void *callback_data;
+  coap_message_type_t type;
+  uint16_t mid;
 
-  uint16_t packet_len;
-  uint8_t packet[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
-                                                 * Use snprintf(buf, len+1, "", ...) to completely fill payload */
-} coap_transaction_t;
+  uint8_t token_len;
+  uint8_t token[COAP_TOKEN_LEN];
 
-void coap_register_as_transaction_handler(void);
+  uint32_t block1_num;
+  uint16_t block1_size;
 
-coap_transaction_t *coap_new_transaction(uint16_t mid, uip_ipaddr_t *addr,
-                                         uint16_t port);
-void coap_send_transaction(coap_transaction_t *t);
-void coap_clear_transaction(coap_transaction_t *t);
-coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
+  uint32_t block2_num;
+  uint16_t block2_size;
+} coap_separate_t;
 
-void coap_check_transactions(void);
+int coap_separate_handler(resource_t *resource, void *request,
+                          void *response);
+void coap_separate_reject(void);
+void coap_separate_accept(void *request, coap_separate_t *separate_store);
+void coap_separate_resume(void *response, coap_separate_t *separate_store,
+                          uint8_t code);
 
-#endif /* COAP_TRANSACTIONS_H_ */
+#endif /* COAP_SEPARATE_H_ */

@@ -39,8 +39,8 @@
 #ifndef COAP_OBSERVE_H_
 #define COAP_OBSERVE_H_
 
-#include "er-coap.h"
-#include "er-coap-transactions.h"
+#include "coap.h"
+#include "coap-transactions.h"
 #include "stimer.h"
 
 #define COAP_OBSERVER_URL_LEN 20

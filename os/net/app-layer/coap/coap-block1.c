@@ -39,8 +39,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "er-coap.h"
-#include "er-coap-block1.h"
+#include "coap.h"
+#include "coap-block1.h"
 
 #define DEBUG 0
 #if DEBUG

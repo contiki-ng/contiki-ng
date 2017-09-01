@@ -44,7 +44,7 @@
 
 #include "lwm2m-object.h"
 #include "lwm2m-engine.h"
-#include "er-coap-engine.h"
+#include "coap-engine.h"
 #include "dev/leds.h"
 #include <stdint.h>
 

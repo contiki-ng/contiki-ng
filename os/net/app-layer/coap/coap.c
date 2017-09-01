@@ -42,8 +42,8 @@
 #include "sys/cc.h"
 #include "contiki-net.h"
 
-#include "er-coap.h"
-#include "er-coap-transactions.h"
+#include "coap.h"
+#include "coap-transactions.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -883,7 +883,7 @@ coap_set_header_proxy_uri(void *packet, const char *uri)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  /*TODO Provide alternative that sets Proxy-Scheme and Uri-* options and provide er-coap-conf define */
+  /*TODO Provide alternative that sets Proxy-Scheme and Uri-* options and provide coap-conf define */
 
   coap_pkt->proxy_uri = uri;
   coap_pkt->proxy_uri_len = strlen(uri);

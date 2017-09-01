@@ -40,8 +40,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "er-coap.h"
-#include "er-coap-observe-client.h"
+#include "coap.h"
+#include "coap-observe-client.h"
 
 /* Compile this code only if client-side support for CoAP Observe is required */
 #if COAP_OBSERVE_CLIENT

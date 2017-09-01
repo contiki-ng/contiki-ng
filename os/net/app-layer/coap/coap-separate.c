@@ -39,8 +39,8 @@
 #include "sys/cc.h"
 #include <stdio.h>
 #include <string.h>
-#include "er-coap-separate.h"
-#include "er-coap-transactions.h"
+#include "coap-separate.h"
+#include "coap-transactions.h"
 
 #define DEBUG 0
 #if DEBUG

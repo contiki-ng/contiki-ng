@@ -40,11 +40,11 @@
 #define ER_COAP_ENGINE_H_
 
 #include "pt.h"
-#include "er-coap.h"
-#include "er-coap-transactions.h"
-#include "er-coap-observe.h"
-#include "er-coap-separate.h"
-#include "er-coap-observe-client.h"
+#include "coap.h"
+#include "coap-transactions.h"
+#include "coap-observe.h"
+#include "coap-separate.h"
+#include "coap-observe-client.h"
 
 #define SERVER_LISTEN_PORT      UIP_HTONS(COAP_SERVER_PORT)
 

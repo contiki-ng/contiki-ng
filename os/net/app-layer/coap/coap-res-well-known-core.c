@@ -37,7 +37,7 @@
  */
 
 #include <string.h>
-#include "er-coap-engine.h"
+#include "coap-engine.h"
 
 #define DEBUG 0
 #if DEBUG

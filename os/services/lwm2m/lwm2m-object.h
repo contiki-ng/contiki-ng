@@ -51,8 +51,8 @@
 #ifndef LWM2M_OBJECT_H_
 #define LWM2M_OBJECT_H_
 
-#include "rest-engine.h"
-#include "er-coap-observe.h"
+#include "net/app-layer/coap/rest-engine.h"
+#include "net/app-layer/coap/coap-observe.h"
 
 #define LWM2M_OBJECT_SECURITY_ID                0
 #define LWM2M_OBJECT_SERVER_ID                  1

@@ -41,8 +41,8 @@
 
 #include <stddef.h> /* for size_t */
 #include "contiki-net.h"
-#include "er-coap-constants.h"
-#include "er-coap-conf.h"
+#include "coap-constants.h"
+#include "coap-conf.h"
 
 /* sanity check for configured values */
 #define COAP_MAX_PACKET_SIZE  (COAP_MAX_HEADER_SIZE + REST_MAX_CHUNK_SIZE)

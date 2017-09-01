@@ -40,8 +40,8 @@
 #ifndef COAP_OBSERVING_CLIENT_H_
 #define COAP_OBSERVING_CLIENT_H_
 
-#include "er-coap.h"
-#include "er-coap-transactions.h"
+#include "coap.h"
+#include "coap-transactions.h"
 
 #ifndef COAP_OBSERVE_CLIENT
 #define COAP_OBSERVE_CLIENT 0
@@ -115,7 +115,7 @@ coap_observee_t *coap_obs_request_registration(uip_ipaddr_t *addr,
                                                notification_callback_t
                                                notification_callback,
                                                void *data);
-/* TODO: this function may be moved to er-coap.c */
+/* TODO: this function may be moved to coap.c */
 uint8_t coap_generate_token(uint8_t **token_ptr);
 
 #endif /* COAP_OBSERVING_CLIENT_H_ */

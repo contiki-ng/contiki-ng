@@ -38,8 +38,8 @@
 
 #include "contiki.h"
 #include "contiki-net.h"
-#include "er-coap-transactions.h"
-#include "er-coap-observe.h"
+#include "coap-transactions.h"
+#include "coap-observe.h"
 
 #define DEBUG 0
 #if DEBUG
