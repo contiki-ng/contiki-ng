@@ -46,12 +46,15 @@ usage:
 	@echo "make MAKETARGETS... [TARGET=(TARGET)] [savetarget] [targets]"
 
 targets:
-	@ls -1 $(CONTIKI)/arch/platform $(TARGETDIRS) | grep -v CVS
+	@ls -1 $(CONTIKI)/arch/platform $(TARGETDIRS)
 
 savetarget:
 	-@rm -f Makefile.target
 	@echo "saving Makefile.target"
 	@echo >Makefile.target "TARGET = $(TARGET)"
+ifneq ($(BOARD),)
+	@echo >>Makefile.target "BOARD = $(BOARD)"
+endif
 
 savedefines:
 	-@rm -f Makefile.$(TARGET).defines
@@ -60,10 +63,14 @@ savedefines:
 
 OBJECTDIR = obj_$(TARGET)
 
-LOWERCASE = -abcdefghijklmnopqrstuvwxyz
-UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ
+LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
+UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
 TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
+ifneq ($(BOARD),)
+TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
+CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
+endif
 
 MODULES += os/sys os/dev os/lib
 
