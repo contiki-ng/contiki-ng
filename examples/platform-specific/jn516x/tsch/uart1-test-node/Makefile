@@ -8,7 +8,7 @@ CONTIKI=../../../../..
 CONTIKI_WITH_IPV6 = 1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-PROJECTDIRS += .. ../tools 
+PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 
 CFLAGS += -DWITH_COAP
@@ -19,7 +19,7 @@ APPS += json
 APPS += er-coap
 APPS += rest-engine
 
-MODULES += core/net/mac/tsch
+MODULES += os/net/mac/tsch
 
 all: $(CONTIKI_PROJECT)
 

@@ -65,7 +65,7 @@ UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ
 TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 
-MODULES += core/sys core/dev core/lib
+MODULES += os/sys os/dev os/lib
 
 # Include IPv6, RPL
 
@@ -82,16 +82,16 @@ ifeq ($(CONTIKI_WITH_IPV6),1)
   CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
   CONTIKI_WITH_RPL ?= 1
   CONTIKI_WITH_RPL_LITE ?= 1
-  MODULES += core/net/ipv6 core/net/ip
+  MODULES += os/net/ipv6 os/net/ip
 endif
 
 ifeq ($(CONTIKI_WITH_RPL),1)
     CFLAGS += -DUIP_CONF_IPV6_RPL=1
     ifeq ($(CONTIKI_WITH_RPL_LITE),1)
         CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
-        MODULES += core/net/rpl-lite
+        MODULES += os/net/rpl-lite
     else
-        MODULES += core/net/rpl
+        MODULES += os/net/rpl
     endif
 else
     CFLAGS += -DUIP_CONF_IPV6_RPL=0
@@ -99,7 +99,7 @@ endif
 
 CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 
-CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac \
+CONTIKIDIRS += ${addprefix $(CONTIKI)/os/,dev lib net net/mac \
                  sys cfs . }
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}

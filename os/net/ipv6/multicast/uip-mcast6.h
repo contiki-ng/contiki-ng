@@ -144,7 +144,7 @@ struct uip_mcast6_driver {
  */
 #define uip_mcast6_get_address_scope(a) ((a)->u8[1] & 0x0F)
 /*---------------------------------------------------------------------------*/
-/* Configure multicast and core/net to play nicely with the selected engine */
+/* Configure multicast and os/net to play nicely with the selected engine */
 #if UIP_MCAST6_ENGINE
 
 /* Enable Multicast hooks in the uip6 core */

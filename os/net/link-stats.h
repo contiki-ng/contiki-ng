@@ -33,7 +33,7 @@
 #ifndef LINK_STATS_H_
 #define LINK_STATS_H_
 
-#include "core/net/linkaddr.h"
+#include "net/linkaddr.h"
 
 /* ETX fixed point divisor. 128 is the value used by RPL (RFC 6551 and RFC 6719) */
 #ifdef LINK_STATS_CONF_ETX_DIVISOR

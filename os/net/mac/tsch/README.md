@@ -22,7 +22,7 @@ The scheduler Orchestra is detailled in [*Orchestra: Robust Mesh Networks Throug
 This implementation includes:
   * Standard IEEE 802.15.4e-2012 frame version 2
   * Standard TSCH joining procedure with Enhanced Beacons with the following Information Elements:
-    * TSCH synchronization (join priority and ASN) 
+    * TSCH synchronization (join priority and ASN)
     * TSCH slotframe and link (basic schedule)
     * TSCH timeslot (timeslot timing template)
     * TSCH channel hopping sequence (hopping sequence template)
@@ -57,17 +57,17 @@ also tested with Rime (currently only with 64-bit link-layer addresses).
 ## Code structure
 
 The IEEE 802.15.4e-2012 frame format is implemented in:
-* `core/net/mac/frame802154.[ch]`: handling of frame version 2 
-* `core/net/mac/frame802154-ie.[ch]`: handling of Information Elements
+* `os/net/mac/frame802154.[ch]`: handling of frame version 2
+* `os/net/mac/frame802154-ie.[ch]`: handling of Information Elements
 
 TSCH is implemented in:
-* `core/net/mac/tsch/tsch.[ch]`: TSCH management (association, keep-alive), processes handling pending
+* `os/net/mac/tsch/tsch.[ch]`: TSCH management (association, keep-alive), processes handling pending
 outgoing and incoming packets, and interface with Contiki's upper layers as a MAC driver. TSCH does not
 require a RDC (nordc is recommended).
 * `tsch-slot-operation.[ch]`: TSCH low-level slot operation, fully interrupt-driven. Node wake up at every active
 slot (according to the slotframes and links installed), transmit or receive frames and ACKs. Received packets are
 stored in a ringbuf for latter upper-layer processing. Outgoing packets that are dequeued (because acknowledged
-or dropped) are stored in another ringbuf for upper-layer processing. 
+or dropped) are stored in another ringbuf for upper-layer processing.
 * `tsch-asn.h`: TSCH macros for Absolute Slot Number (ASN) handling.
 * `tsch-packet.[ch]`: TSCH Enhanced ACK (EACK) and enhanced Beacon (EB) creation and parsing.
 * `tsch-queue.[ch]`: TSCH  per-neighbor queue, neighbor state, and CSMA-CA.
@@ -91,7 +91,7 @@ To add your own, we refer the reader to the next section.
 
 To add TSCH to your application, first include the TSCH module from your makefile with:
 
-`MODULES += core/net/mac/tsch`
+`MODULES += os/net/mac/tsch`
 
 Then, enable TSCH from your project conf with the following:
 
@@ -131,7 +131,7 @@ On CC2420-based platforms, enable SFD timestamps with:
 #define CC2420_CONF_SFD_TIMESTAMPS       1
 ```
 
-To configure TSCH, see the macros in `.h` files under `core/net/mac/tsch/` and redefine your own in your `project-conf.h`.
+To configure TSCH, see the macros in `.h` files under `os/net/mac/tsch/` and redefine your own in your `project-conf.h`.
 
 ## Using TSCH with Security
 
@@ -167,7 +167,7 @@ As an alternative, we provide Orchestra (under `apps/orchestra`), an autonomous 
 Orchestra can be simply enabled and should work out-of-the-box with its default settings as long as RPL is also enabled.
 See `apps/orchestra/README.md` for more information.
 
-Finally, one can also implement his own scheduler, centralized or distributed, based on the scheduling API provides in `core/net/mac/tsch/tsch-schedule.h`.
+Finally, one can also implement his own scheduler, centralized or distributed, based on the scheduling API provides in `os/net/mac/tsch/tsch-schedule.h`.
 
 ## Porting TSCH to a new platform
 
@@ -185,7 +185,7 @@ TSCH will check when initializing (in `tsch_init`) that the radio driver support
   * disable address filtering with `RADIO_RX_MODE_ADDRESS_FILTER`
   * disable auto-ack with `RADIO_RX_MODE_AUTOACK`
   * enable poll mode with `RADIO_RX_MODE_POLL_MODE`
-* get and set Tx mode (`RADIO_PARAM_TX_MODE`) as follows: 
+* get and set Tx mode (`RADIO_PARAM_TX_MODE`) as follows:
   * disable CCA-before-sending with `RADIO_TX_MODE_SEND_ON_CCA`
 * set radio channel with `RADIO_PARAM_CHANNEL`
 * get last packet timestamp with `RADIO_PARAM_LAST_PACKET_TIMESTAMP`

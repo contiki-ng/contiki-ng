@@ -7,8 +7,8 @@ all: wpcapslip wpcapstdio Connect.class ConnectSocket.class
 
 %.class: %.java
 	javac $*.java
-	
-vpath %.c $(CONTIKI)/core/net
+
+vpath %.c $(CONTIKI)/os/net
 
 wpcapslip: wpcapslip.o wpcap.o tcpdump.o
 

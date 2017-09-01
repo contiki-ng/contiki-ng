@@ -1,7 +1,7 @@
 all: test-panid-handling test-tcsh-create-packet
 
 APPS    += unit-test
-MODULES += core/net/mac/tsch
+MODULES += os/net/mac/tsch
 CFLAGS  += -D PROJECT_CONF_H=\"project-conf.h\"
 
 WITH_TSCH        ?= 0

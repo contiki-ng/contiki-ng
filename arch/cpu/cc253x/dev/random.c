@@ -34,7 +34,7 @@
  *         Random number generator routines exploiting the cc2530 hardware
  *         capabilities.
  *
- *         This file overrides core/lib/random.c.
+ *         This file overrides os/lib/random.c.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>

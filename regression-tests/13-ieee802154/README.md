@@ -3,7 +3,7 @@
 ## 01-panid-handling
 
 Test return values by `frame802154_has_panid()` in
-[frame802154.c](../../core/net/mac/frame802154.c).
+[frame802154.c](../../os/net/mac/frame802154.c).
 
 ### Test Code
 

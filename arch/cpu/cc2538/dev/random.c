@@ -41,7 +41,7 @@
  * Random number generator routines exploiting the cc2538 hardware
  * capabilities.
  *
- * This file overrides core/lib/random.c.
+ * This file overrides os/lib/random.c.
  */
 #include "contiki.h"
 #include "dev/rfcore.h"

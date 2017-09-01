@@ -33,13 +33,13 @@
 /**
  * \file
  *         ringbufindex library. Implements basic support for ring buffers
- *         of any type, as opposed to the core/lib/ringbuf module which
+ *         of any type, as opposed to the os/lib/ringbuf module which
  *         is only for byte arrays. Simply returns index in the ringbuf
  *         rather than actual elements. The ringbuf size must be power of two.
  *         Like the original ringbuf, this module implements atomic put and get.
  * \author
  *         Simon Duquennoy <simonduq@sics.se>
- *         based on Contiki's core/lib/ringbuf library by Adam Dunkels
+ *         based on Contiki's os/lib/ringbuf library by Adam Dunkels
  */
 
 #include <string.h>

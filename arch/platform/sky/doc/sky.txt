@@ -24,8 +24,8 @@ in cpu/msp430/dev/uart1.c or platform/sky/slip_uart1.c, depending on
 weather or not the Tmote Sky is running TCP/IP or not.
 
 There are currently two CC2420 drivers in the Contiki source code,
-core/dev/simple-cc2420.c (a really simple CC2420 driver) and
-core/dev/cc2420.c (a more feature-rich CC2420 driver).
+os/dev/simple-cc2420.c (a really simple CC2420 driver) and
+os/dev/cc2420.c (a more feature-rich CC2420 driver).
 
 More information about the Tmote Sky, including data sheets, can be
 found at Moteiv's web site: http://www.moteiv.com

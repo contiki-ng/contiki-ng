@@ -10,8 +10,8 @@ to contiki's uIPv6 engine.
 Currently, three modes are supported:
 
 * 'Enhanced Stateless Multicast RPL Forwarding' (ESMRF)
-    ESMRF is an enhanced version of the SMRF engine with the aim 
-    of resolving the sending limitation of SMRF to allow any node 
+    ESMRF is an enhanced version of the SMRF engine with the aim
+    of resolving the sending limitation of SMRF to allow any node
     within the DODAG to send multicast traffic up and down the RPL tree.
     ESMRF is documented here:
     http://dl.acm.org/citation.cfm?id=2753479
@@ -52,7 +52,7 @@ There is a cooja example demonstrating basic functionality
 
 How to Use
 ==========
-Look in `core/net/ipv6/multicast/uip-mcast6-engines.h` for a list of supported
+Look in `os/net/ipv6/multicast/uip-mcast6-engines.h` for a list of supported
 multicast engines.
 
 To turn on multicast support, add this line in your `project-` or `contiki-conf.h`
@@ -68,7 +68,7 @@ To disable:
 You also need to make sure the multicast code gets built. Your example's
 (or platform's) Makefile should include this:
 
-        MODULES += core/net/ipv6/multicast
+        MODULES += os/net/ipv6/multicast
 
 How to extend
 =============
