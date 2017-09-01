@@ -38,9 +38,9 @@
 
 #include <string.h>
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-coap-observe.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "coap-observe.h"
+#include "plugtest.h"
 
 static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);

@@ -37,7 +37,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "rest-engine.h"
-#include "er-coap.h"
+#include "coap.h"
 #include "rf-core/rf-ble.h"
 
 #include <string.h>

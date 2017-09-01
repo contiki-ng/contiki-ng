@@ -31,36 +31,42 @@
 
 /**
  * \file
- *      Erbium (Er) CoAP client example
+ *      ETSI Plugtest resource
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef __ER_PLUGTEST_H__
-#define __ER_PLUGTEST_H__
+#include <string.h>
+#include "rest-engine.h"
+#include "coap.h"
+#include "plugtest.h"
 
-#if !defined(CONTIKI_TARGET_NATIVE)
-#warning "Should only be compiled for native!"
-#endif
+static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#endif
+PARENT_RESOURCE(res_plugtest_path,
+                "title=\"Path test resource\";ct=\"40\"",
+                res_get_handler,
+                NULL,
+                NULL,
+                NULL);
 
-/* double expansion */
-#define TO_STRING2(x)  # x
-#define TO_STRING(x)  TO_STRING2(x)
+static void
+res_get_handler(void *request, void *response, uint8_t *buffer,
+                uint16_t preferred_size, int32_t *offset)
+{
 
-#define MAX_PLUGFEST_PAYLOAD 64 + 1       /* +1 for the terminating zero, which is not transmitted */
-#define MAX_PLUGFEST_BODY    2048
-#define CHUNKS_TOTAL         2012
+  const char *uri_path = NULL;
+  int len = REST.get_url(request, &uri_path);
+  int base_len = strlen(res_plugtest_path.url);
 
-#endif /* __ER_PLUGTEST_H__ */
+  if(len == base_len) {
+    REST.set_header_content_type(response, REST.type.APPLICATION_LINK_FORMAT);
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
+             "</path/sub1>,</path/sub2>,</path/sub3>");
+  } else {
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "/%.*s", len, uri_path);
+  }
+
+  REST.set_response_payload(response, buffer, strlen((char *)buffer));
+}

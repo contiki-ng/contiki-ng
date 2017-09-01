@@ -38,23 +38,43 @@
 
 #include <string.h>
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "plugtest.h"
 
-static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-RESOURCE(res_plugtest_create2,
-         "title=\"Creates on POST\"",
+RESOURCE(res_plugtest_create1,
+         "title=\"Creates on PUT\"",
          NULL,
-         res_post_handler,
          NULL,
-         NULL);
+         res_put_handler,
+         res_delete_handler);
+
+static uint8_t create1_exists = 0;
 
 static void
-res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  PRINTF("/create2       ");
+  PRINTF("/create1       PUT");
 
-  REST.set_response_status(response, REST.status.CREATED);
-  REST.set_header_location(response, "/location1/location2/location3");
+  if(coap_get_header_if_none_match(request)) {
+    if(!create1_exists) {
+      REST.set_response_status(response, REST.status.CREATED);
+
+      create1_exists = 1;
+    } else {
+      REST.set_response_status(response, PRECONDITION_FAILED_4_12);
+    }
+  } else {
+    REST.set_response_status(response, REST.status.CHANGED);
+  }
+}
+static void
+res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  PRINTF("/create1       DELETE ");
+  REST.set_response_status(response, REST.status.DELETED);
+
+  create1_exists = 0;
 }

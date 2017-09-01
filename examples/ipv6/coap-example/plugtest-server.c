@@ -41,11 +41,11 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-#include "er-coap.h"
-#include "er-coap-transactions.h"
-#include "er-coap-separate.h"
+#include "coap.h"
+#include "coap-transactions.h"
+#include "coap-separate.h"
 #include "rest-engine.h"
-#include "er-plugtest.h"
+#include "plugtest.h"
 
 /*
  * Resources to be activated need to be imported through the extern keyword.

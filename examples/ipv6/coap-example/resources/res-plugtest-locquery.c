@@ -38,43 +38,26 @@
 
 #include <string.h>
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "plugtest.h"
 
-static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-RESOURCE(res_plugtest_create3,
-         "title=\"Default test resource\"",
+RESOURCE(res_plugtest_locquery,
+         "title=\"Resource accepting query parameters\"",
          NULL,
+         res_post_handler,
          NULL,
-         res_put_handler,
-         res_delete_handler);
-
-static uint8_t create3_exists = 0;
+         NULL);
 
 static void
-res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  PRINTF("/create3       PUT ");
+  coap_packet_t *const coap_req = (coap_packet_t *)request;
 
-  if(coap_get_header_if_none_match(request)) {
-    if(!create3_exists) {
-      REST.set_response_status(response, REST.status.CREATED);
+  PRINTF(
+    "/location-query POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
-      create3_exists = 1;
-    } else {
-      REST.set_response_status(response, PRECONDITION_FAILED_4_12);
-    }
-  } else {
-    REST.set_response_status(response, REST.status.CHANGED);
-  }
-}
-static void
-res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  PRINTF("/create3       DELETE ");
-  REST.set_response_status(response, REST.status.DELETED);
-
-  create3_exists = 0;
+  REST.set_response_status(response, REST.status.CREATED);
+  REST.set_header_location(response, "?first=1&second=2");
 }

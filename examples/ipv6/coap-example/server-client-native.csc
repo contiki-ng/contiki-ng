@@ -23,11 +23,11 @@
     </events>
     <motetype>
       org.contikios.cooja.mspmote.SkyMoteType
-      <identifier>rplroot</identifier>
-      <description>Sky RPL Root</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/rpl-border-router/border-router.c</source>
-      <commands EXPORT="discard">make border-router.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/rpl-border-router/border-router.sky</firmware>
+      <identifier>slipradio</identifier>
+      <description>Sky SLIP radio</description>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/slip-radio/slip-radio.c</source>
+      <commands EXPORT="discard">make slip-radio.sky TARGET=sky</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/slip-radio/slip-radio.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -48,9 +48,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>server</identifier>
       <description>Erbium Server</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-server.c</source>
-      <commands EXPORT="discard">make er-example-server.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-server.sky</firmware>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/coap-example/coap-example-server.c</source>
+      <commands EXPORT="discard">make coap-example-server.sky TARGET=sky</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/coap-example/coap-example-server.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -71,9 +71,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>client</identifier>
       <description>Erbium Client</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-observe-client.c</source>
-      <commands EXPORT="discard">make er-example-observe-client.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/er-rest-example/er-example-observe-client.sky</firmware>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/coap-example/coap-example-client.c</source>
+      <commands EXPORT="discard">make coap-example-client.sky TARGET=sky</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/coap-example/coap-example-client.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -94,22 +94,22 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>33.260163187353555</x>
-        <y>30.643217359962595</y>
+        <x>30.303994886410642</x>
+        <y>17.22128424003353</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>1</id>
       </interface_config>
-      <motetype_identifier>rplroot</motetype_identifier>
+      <motetype_identifier>slipradio</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>54.537149936813485</x>
-        <y>51.51086225537906</y>
+        <x>46.57186415376375</x>
+        <y>37.25589203828498</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -122,8 +122,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>77.97942851220571</x>
-        <y>67.86182390447284</y>
+        <x>18.194682268367348</x>
+        <y>50.210548118402656</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -136,10 +136,10 @@
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>259</width>
-    <z>3</z>
+    <z>0</z>
     <height>179</height>
-    <location_x>2</location_x>
-    <location_y>1</location_y>
+    <location_x>1</location_x>
+    <location_y>2</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.Visualizer
@@ -150,12 +150,12 @@
       <skin>org.contikios.cooja.plugins.skins.AttributeVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.LEDVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
-      <viewport>2.092412892721766 0.0 0.0 2.092412892721766 34.70057915472623 -45.606066372444175</viewport>
+      <viewport>2.255467003316979 0.0 0.0 2.255467003316979 59.30641698643764 -13.478401994502008</viewport>
     </plugin_config>
     <width>300</width>
-    <z>4</z>
+    <z>2</z>
     <height>178</height>
-    <location_x>261</location_x>
+    <location_x>262</location_x>
     <location_y>1</location_y>
   </plugin>
   <plugin>
@@ -166,7 +166,7 @@
       <coloring />
     </plugin_config>
     <width>762</width>
-    <z>0</z>
+    <z>4</z>
     <height>491</height>
     <location_x>2</location_x>
     <location_y>182</location_y>
@@ -174,30 +174,58 @@
   <plugin>
     org.contikios.cooja.plugins.RadioLogger
     <plugin_config>
-      <split>167</split>
+      <split>150</split>
       <formatted_time />
       <showdups>false</showdups>
       <hidenodests>false</hidenodests>
       <analyzers name="6lowpan" />
     </plugin_config>
-    <width>560</width>
-    <z>1</z>
-    <height>492</height>
-    <location_x>764</location_x>
-    <location_y>181</location_y>
+    <width>451</width>
+    <z>-1</z>
+    <height>305</height>
+    <location_x>73</location_x>
+    <location_y>140</location_y>
+    <minimized>true</minimized>
+  </plugin>
+  <plugin>
+    org.contikios.cooja.plugins.TimeLine
+    <plugin_config>
+      <mote>0</mote>
+      <mote>1</mote>
+      <mote>2</mote>
+      <showRadioRXTX />
+      <showRadioHW />
+      <showLEDs />
+      <showWatchpoints />
+      <zoomfactor>25.49079397896416</zoomfactor>
+    </plugin_config>
+    <width>1624</width>
+    <z>5</z>
+    <height>252</height>
+    <location_x>6</location_x>
+    <location_y>712</location_y>
+  </plugin>
+  <plugin>
+    org.contikios.cooja.plugins.MoteInterfaceViewer
+    <mote_arg>1</mote_arg>
+    <plugin_config>
+      <interface>Serial port</interface>
+      <scrollpos>0,0</scrollpos>
+    </plugin_config>
+    <width>853</width>
+    <z>3</z>
+    <height>491</height>
+    <location_x>765</location_x>
+    <location_y>182</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.serialsocket.SerialSocketServer
     <mote_arg>0</mote_arg>
-    <plugin_config>
-      <port>60001</port>
-      <bound>true</bound>
-    </plugin_config>
-    <width>362</width>
-    <z>2</z>
-    <height>116</height>
-    <location_x>561</location_x>
-    <location_y>1</location_y>
+    <width>422</width>
+    <z>1</z>
+    <height>82</height>
+    <location_x>606</location_x>
+    <location_y>51</location_y>
   </plugin>
 </simconf>
 

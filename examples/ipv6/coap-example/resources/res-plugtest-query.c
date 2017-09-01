@@ -38,35 +38,38 @@
 
 #include <string.h>
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "plugtest.h"
 
 static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-PARENT_RESOURCE(res_plugtest_path,
-                "title=\"Path test resource\";ct=\"40\"",
-                res_get_handler,
-                NULL,
-                NULL,
-                NULL);
+RESOURCE(res_plugtest_query,
+         "title=\"Resource accepting query parameters\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer,
-                uint16_t preferred_size, int32_t *offset)
+res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  int len = 0;
+  const char *query = NULL;
 
-  const char *uri_path = NULL;
-  int len = REST.get_url(request, &uri_path);
-  int base_len = strlen(res_plugtest_path.url);
+  PRINTF(
+    "/query          GET (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
-  if(len == base_len) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_LINK_FORMAT);
-    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
-             "</path/sub1>,</path/sub2>,</path/sub3>");
-  } else {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "/%.*s", len, uri_path);
+  if((len = REST.get_query(request, &query))) {
+    PRINTF("Query: %.*s\n", len, query);
+    /* Code 2.05 CONTENT is default. */
   }
-
-  REST.set_response_payload(response, buffer, strlen((char *)buffer));
+  REST.set_header_content_type(response,
+                               REST.type.TEXT_PLAIN);
+  REST.set_response_payload(
+    response,
+    buffer,
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
+             "Type: %u\nCode: %u\nMID: %u\nQuery: %.*s", coap_req->type,
+             coap_req->code, coap_req->mid, len, query));
 }

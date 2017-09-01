@@ -37,31 +37,26 @@
  */
 
 #include <string.h>
-#include "sys/cc.h"
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "plugtest.h"
 
 static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-RESOURCE(
-  res_plugtest_large_update,
-  "title=\"Large resource that can be updated using PUT method\";rt=\"block\";sz=\"" TO_STRING(MAX_PLUGFEST_BODY) "\"",
-  res_get_handler,
-  NULL,
-  res_put_handler,
-  NULL);
-
-static int32_t large_update_size = 0;
-static uint8_t large_update_store[MAX_PLUGFEST_BODY] = { 0 };
-static unsigned int large_update_ct = APPLICATION_OCTET_STREAM;
+RESOURCE(res_plugtest_large,
+         "title=\"Large resource\";rt=\"block\";sz=\"" TO_STRING(CHUNKS_TOTAL) "\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
 
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+  int32_t strpos = 0;
+
   /* Check the offset for boundaries of the resource data. */
-  if(*offset >= large_update_size) {
+  if(*offset >= CHUNKS_TOTAL) {
     REST.set_response_status(response, REST.status.BAD_OPTION);
     /* A block error message should not exceed the minimum block size (16). */
 
@@ -70,59 +65,28 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     return;
   }
 
-  REST.set_response_payload(response, large_update_store + *offset,
-                            MIN(large_update_size - *offset, preferred_size));
-  REST.set_header_content_type(response, large_update_ct);
+  /* Generate data until reaching CHUNKS_TOTAL. */
+  while(strpos < preferred_size) {
+    strpos += snprintf((char *)buffer + strpos, preferred_size - strpos + 1,
+                       "|%ld|", *offset);
+  }
+
+  /* snprintf() does not adjust return value if truncated by size. */
+  if(strpos > preferred_size) {
+    strpos = preferred_size;
+    /* Truncate if above CHUNKS_TOTAL bytes. */
+  }
+  if(*offset + (int32_t)strpos > CHUNKS_TOTAL) {
+    strpos = CHUNKS_TOTAL - *offset;
+  }
+  REST.set_response_payload(response, buffer, strpos);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
 
   /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
-  *offset += preferred_size;
+  *offset += strpos;
 
   /* Signal end of resource representation. */
-  if(*offset >= large_update_size) {
+  if(*offset >= CHUNKS_TOTAL) {
     *offset = -1;
-  }
-}
-static void
-res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
-  uint8_t *incoming = NULL;
-  size_t len = 0;
-
-  unsigned int ct = -1;
-
-  if(!REST.get_header_content_type(request, &ct)) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-    const char *error_msg = "NoContentType";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
-    return;
-  }
-
-  if((len = REST.get_request_payload(request, (const uint8_t **)&incoming))) {
-    if(coap_req->block1_num * coap_req->block1_size + len <= sizeof(large_update_store)) {
-      memcpy(
-        large_update_store + coap_req->block1_num * coap_req->block1_size,
-        incoming, len);
-      large_update_size = coap_req->block1_num * coap_req->block1_size + len;
-      large_update_ct = ct;
-
-      REST.set_response_status(response, REST.status.CHANGED);
-      coap_set_header_block1(response, coap_req->block1_num, 0,
-                             coap_req->block1_size);
-    } else {
-      REST.set_response_status(response,
-                               REST.status.REQUEST_ENTITY_TOO_LARGE);
-      REST.set_response_payload(
-        response,
-        buffer,
-        snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "%uB max.",
-                 sizeof(large_update_store)));
-      return;
-    }
-  } else {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-    const char *error_msg = "NoPayload";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
-    return;
   }
 }

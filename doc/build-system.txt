@@ -44,24 +44,23 @@
  microcontroller architecture used on the platform for which Contiki
  is built): rules for the CPU architecture, located in the CPU
  architecture's subdirectory in the cpu/ directory.
- - <tt>Makefile.\$(APP)</tt> (where \$(APP) is the name of an
- application in the apps/ directory): rules for applications in the
- apps/ directories. Each application has its own makefile.
+ - <tt>Makefile.\$(MODULE)</tt> (where \$(MODULE) is the name of a
+ module in the Contiki directory): rules for modules in the
+ Contiki directories. Each module might have its own optional makefile.
 
  The Makefile in the project's directory is intentionally simple. It
  specifies where the Contiki source code resides in the system and
  includes the system-wide Makefile, <tt>Makefile.include</tt>. The
- project's makefile can also define in the <tt>APPS</tt> variable a
- list of applications from the apps/ directory that should be included
- in the Contiki system. The Makefile used in the hello-world example
- project looks like this:
+ project's makefile can also define in the <tt>MODULES</tt> variable a
+ list of modules that should be included in the Contiki system.
+ The Makefile used in the hello-world example project looks like this:
 
  \code
 CONTIKI = ../..
 all: hello-world
 include $(CONTIKI)/Makefile.include
  \endcode
- 
+
  First, the location of the Contiki source code tree is given by
  defining the <tt>CONTIKI</tt> variable. Next, the name of the
  application is defined. Finally, the system-wide
@@ -71,7 +70,7 @@ include $(CONTIKI)/Makefile.include
  the core Contiki system. <tt>Makefile.include</tt> always reside in
  the root of the Contiki source tree. When <tt>make</tt> is run,
  <tt>Makefile.include</tt> includes the <tt>Makefile.\$(TARGET)</tt>
- as well as all makefiles for the applications in the <tt>APPS</tt>
+ as well as all makefiles for the modules in the <tt>MODULES</tt>
  list (which is specified by the project's <tt>Makefile</tt>).
 
  <tt>Makefile.\$(TARGET)</tt>, which is located in the
@@ -86,11 +85,10 @@ include $(CONTIKI)/Makefile.include
  used, the <tt>Makefile.\$(CPU)</tt> can either contain a conditional
  expression that allows different C compilers to be defined, or it can
  be completely overridden by the platform specific makefile
- <tt>Makefile.\$(TARGET)</tt>. 
+ <tt>Makefile.\$(TARGET)</tt>.
 @{
  */
 
  /**
  @}
  */
- 

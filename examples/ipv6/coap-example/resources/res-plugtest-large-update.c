@@ -37,27 +37,55 @@
  */
 
 #include <string.h>
+#include "sys/cc.h"
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "plugtest.h"
 
-static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-/*
- * Large resource that can be created using POST method
- */
-RESOURCE(res_plugtest_large_create,
-         "title=\"Large resource that can be created using POST method\";rt=\"block\"",
-         NULL,
-         res_post_handler,
-         NULL,
-         NULL);
+RESOURCE(
+  res_plugtest_large_update,
+  "title=\"Large resource that can be updated using PUT method\";rt=\"block\";sz=\"" TO_STRING(MAX_PLUGFEST_BODY) "\"",
+  res_get_handler,
+  NULL,
+  res_put_handler,
+  NULL);
+
+static int32_t large_update_size = 0;
+static uint8_t large_update_store[MAX_PLUGFEST_BODY] = { 0 };
+static unsigned int large_update_ct = APPLICATION_OCTET_STREAM;
 
 static void
-res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  /* Check the offset for boundaries of the resource data. */
+  if(*offset >= large_update_size) {
+    REST.set_response_status(response, REST.status.BAD_OPTION);
+    /* A block error message should not exceed the minimum block size (16). */
+
+    const char *error_msg = "BlockOutOfScope";
+    REST.set_response_payload(response, error_msg, strlen(error_msg));
+    return;
+  }
+
+  REST.set_response_payload(response, large_update_store + *offset,
+                            MIN(large_update_size - *offset, preferred_size));
+  REST.set_header_content_type(response, large_update_ct);
+
+  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
+  *offset += preferred_size;
+
+  /* Signal end of resource representation. */
+  if(*offset >= large_update_size) {
+    *offset = -1;
+  }
+}
+static void
+res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   coap_packet_t *const coap_req = (coap_packet_t *)request;
-
   uint8_t *incoming = NULL;
   size_t len = 0;
 
@@ -71,15 +99,24 @@ res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t prefer
   }
 
   if((len = REST.get_request_payload(request, (const uint8_t **)&incoming))) {
-    if(coap_req->block1_num * coap_req->block1_size + len <= 2048) {
-      REST.set_response_status(response, REST.status.CREATED);
-      REST.set_header_location(response, "/nirvana");
+    if(coap_req->block1_num * coap_req->block1_size + len <= sizeof(large_update_store)) {
+      memcpy(
+        large_update_store + coap_req->block1_num * coap_req->block1_size,
+        incoming, len);
+      large_update_size = coap_req->block1_num * coap_req->block1_size + len;
+      large_update_ct = ct;
+
+      REST.set_response_status(response, REST.status.CHANGED);
       coap_set_header_block1(response, coap_req->block1_num, 0,
                              coap_req->block1_size);
     } else {
-      REST.set_response_status(response, REST.status.REQUEST_ENTITY_TOO_LARGE);
-      const char *error_msg = "2048B max.";
-      REST.set_response_payload(response, error_msg, strlen(error_msg));
+      REST.set_response_status(response,
+                               REST.status.REQUEST_ENTITY_TOO_LARGE);
+      REST.set_response_payload(
+        response,
+        buffer,
+        snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "%uB max.",
+                 sizeof(large_update_store)));
       return;
     }
   } else {

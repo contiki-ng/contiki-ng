@@ -38,13 +38,16 @@
 
 #include <string.h>
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "plugtest.h"
 
 static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-RESOURCE(res_plugtest_locquery,
-         "title=\"Resource accepting query parameters\"",
+/*
+ * Large resource that can be created using POST method
+ */
+RESOURCE(res_plugtest_large_create,
+         "title=\"Large resource that can be created using POST method\";rt=\"block\"",
          NULL,
          res_post_handler,
          NULL,
@@ -55,9 +58,34 @@ res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t prefer
 {
   coap_packet_t *const coap_req = (coap_packet_t *)request;
 
-  PRINTF(
-    "/location-query POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+  uint8_t *incoming = NULL;
+  size_t len = 0;
 
-  REST.set_response_status(response, REST.status.CREATED);
-  REST.set_header_location(response, "?first=1&second=2");
+  unsigned int ct = -1;
+
+  if(!REST.get_header_content_type(request, &ct)) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    const char *error_msg = "NoContentType";
+    REST.set_response_payload(response, error_msg, strlen(error_msg));
+    return;
+  }
+
+  if((len = REST.get_request_payload(request, (const uint8_t **)&incoming))) {
+    if(coap_req->block1_num * coap_req->block1_size + len <= 2048) {
+      REST.set_response_status(response, REST.status.CREATED);
+      REST.set_header_location(response, "/nirvana");
+      coap_set_header_block1(response, coap_req->block1_num, 0,
+                             coap_req->block1_size);
+    } else {
+      REST.set_response_status(response, REST.status.REQUEST_ENTITY_TOO_LARGE);
+      const char *error_msg = "2048B max.";
+      REST.set_response_payload(response, error_msg, strlen(error_msg));
+      return;
+    }
+  } else {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    const char *error_msg = "NoPayload";
+    REST.set_response_payload(response, error_msg, strlen(error_msg));
+    return;
+  }
 }

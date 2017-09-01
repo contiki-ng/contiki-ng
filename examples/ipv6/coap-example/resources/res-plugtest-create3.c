@@ -38,55 +38,43 @@
 
 #include <string.h>
 #include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#include "coap.h"
+#include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-RESOURCE(res_plugtest_large,
-         "title=\"Large resource\";rt=\"block\";sz=\"" TO_STRING(CHUNKS_TOTAL) "\"",
-         res_get_handler,
+RESOURCE(res_plugtest_create3,
+         "title=\"Default test resource\"",
          NULL,
          NULL,
-         NULL);
+         res_put_handler,
+         res_delete_handler);
+
+static uint8_t create3_exists = 0;
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  int32_t strpos = 0;
+  PRINTF("/create3       PUT ");
 
-  /* Check the offset for boundaries of the resource data. */
-  if(*offset >= CHUNKS_TOTAL) {
-    REST.set_response_status(response, REST.status.BAD_OPTION);
-    /* A block error message should not exceed the minimum block size (16). */
+  if(coap_get_header_if_none_match(request)) {
+    if(!create3_exists) {
+      REST.set_response_status(response, REST.status.CREATED);
 
-    const char *error_msg = "BlockOutOfScope";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
-    return;
+      create3_exists = 1;
+    } else {
+      REST.set_response_status(response, PRECONDITION_FAILED_4_12);
+    }
+  } else {
+    REST.set_response_status(response, REST.status.CHANGED);
   }
+}
+static void
+res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  PRINTF("/create3       DELETE ");
+  REST.set_response_status(response, REST.status.DELETED);
 
-  /* Generate data until reaching CHUNKS_TOTAL. */
-  while(strpos < preferred_size) {
-    strpos += snprintf((char *)buffer + strpos, preferred_size - strpos + 1,
-                       "|%ld|", *offset);
-  }
-
-  /* snprintf() does not adjust return value if truncated by size. */
-  if(strpos > preferred_size) {
-    strpos = preferred_size;
-    /* Truncate if above CHUNKS_TOTAL bytes. */
-  }
-  if(*offset + (int32_t)strpos > CHUNKS_TOTAL) {
-    strpos = CHUNKS_TOTAL - *offset;
-  }
-  REST.set_response_payload(response, buffer, strpos);
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-
-  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
-  *offset += strpos;
-
-  /* Signal end of resource representation. */
-  if(*offset >= CHUNKS_TOTAL) {
-    *offset = -1;
-  }
+  create3_exists = 0;
 }

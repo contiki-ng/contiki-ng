@@ -4,13 +4,13 @@ A Quick Introduction to the Erbium (Er) REST Engine
 EXAMPLE FILES
 -------------
 
-- er-example-server.c: A RESTful server example showing how to use the REST
+- coap-example-server.c: A RESTful server example showing how to use the REST
   layer to develop server-side applications (at the moment only CoAP is
   implemented for the REST Engine).
-- er-example-client.c: A CoAP client that polls the /actuators/toggle resource
+- coap-example-client.c: A CoAP client that polls the /actuators/toggle resource
   every 10 seconds and cycles through 4 resources on button press (target
   address is hard-coded).
-- er-plugtest-server.c: The server used for draft compliance testing at ETSI
+- plugtest-server.c: The server used for draft compliance testing at ETSI
   IoT CoAP Plugtests. Erbium (Er) participated in Paris, France, March 2012 and
   Sophia-Antipolis, France, November 2012 (configured for minimal-net).
 
@@ -66,7 +66,7 @@ TMOTES HOWTO
 
 1. Connect two Tmote Skys (check with $ make TARGET=sky sky-motelist)
 
-        make TARGET=sky er-example-server.upload MOTE=2
+        make TARGET=sky coap-example-server.upload MOTE=2
         make TARGET=sky login MOTE=2
 
 2. Press reset button, get address, abort with Ctrl+C:
@@ -86,21 +86,21 @@ TMOTES HOWTO
 
 ### Add a client:
 
-1. Change the hard-coded server address in er-example-client.c to fd00::____:____:____:____
+1. Change the hard-coded server address in coap-example-client.c to fd00::____:____:____:____
 2. Connect a third Tmote Sky
 
-        make TARGET=sky er-example-client.upload MOTE=3
+        make TARGET=sky coap-example-client.upload MOTE=3
 
 MINIMAL-NET HOWTO
 -----------------
 
 With the target minimal-net you can test your CoAP applications without
 constraints, i.e., with large buffers, debug output, memory protection, etc.
-The er-plugtest-server is thought for the minimal-net platform, as it requires
+The plugtest-server is thought for the minimal-net platform, as it requires
 an 1280-byte IP buffer and 1024-byte blocks.
 
-        make TARGET=minimal-net er-plugtest-server
-        sudo ./er-plugtest-server.minimal-net
+        make TARGET=minimal-net plugtest-server
+        sudo ./plugtest-server.minimal-net
 
 Open new terminal
 
@@ -127,11 +127,11 @@ DETAILS
 -------
 
 Erbium implements the Proposed Standard of CoAP. Central features are commented
-in er-example-server.c.  In general, apps/er-coap supports:
+in coap-example-server.c.  In general, coap supports:
 
 - All draft-18 header options
 - CON Retransmissions (note COAP_MAX_OPEN_TRANSACTIONS)
-- Blockwise Transfers (note REST_MAX_CHUNK_SIZE, see er-plugtest-server.c for
+- Blockwise Transfers (note REST_MAX_CHUNK_SIZE, see plugtest-server.c for
   Block1 uploads)
 - Separate Responses (no rest_set_pre_handler() required anymore, note
   coap_separate_accept(), _reject(), and _resume())

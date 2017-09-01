@@ -1,5 +1,5 @@
-all: er-example-server er-example-client
-# use target "er-plugtest-server" explicitly when requried
+all: coap-example-server coap-example-client
+# use target "plugtest-server" explicitly when required
 
 CONTIKI=../../..
 

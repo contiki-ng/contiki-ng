@@ -31,45 +31,36 @@
 
 /**
  * \file
- *      ETSI Plugtest resource
+ *      Erbium (Er) CoAP client example
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <string.h>
-#include "rest-engine.h"
-#include "er-coap.h"
-#include "er-plugtest.h"
+#ifndef PLUGTEST_H_
+#define PLUGTEST_H_
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+#if !defined(CONTIKI_TARGET_NATIVE)
+#warning "Should only be compiled for native!"
+#endif
 
-RESOURCE(res_plugtest_query,
-         "title=\"Resource accepting query parameters\"",
-         res_get_handler,
-         NULL,
-         NULL,
-         NULL);
+#define DEBUG 0
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
+#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
+#else
+#define PRINTF(...)
+#define PRINT6ADDR(addr)
+#define PRINTLLADDR(addr)
+#endif
 
-static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
-  int len = 0;
-  const char *query = NULL;
+/* double expansion */
+#define TO_STRING2(x)  # x
+#define TO_STRING(x)  TO_STRING2(x)
 
-  PRINTF(
-    "/query          GET (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+#define MAX_PLUGFEST_PAYLOAD 64 + 1       /* +1 for the terminating zero, which is not transmitted */
+#define MAX_PLUGFEST_BODY    2048
+#define CHUNKS_TOTAL         2012
 
-  if((len = REST.get_query(request, &query))) {
-    PRINTF("Query: %.*s\n", len, query);
-    /* Code 2.05 CONTENT is default. */
-  }
-  REST.set_header_content_type(response,
-                               REST.type.TEXT_PLAIN);
-  REST.set_response_payload(
-    response,
-    buffer,
-    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
-             "Type: %u\nCode: %u\nMID: %u\nQuery: %.*s", coap_req->type,
-             coap_req->code, coap_req->mid, len, query));
-}
+#endif /* PLUGTEST_H_ */
