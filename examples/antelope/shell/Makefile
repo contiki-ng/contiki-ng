@@ -1,6 +1,7 @@
-CONTIKI = ../../../
+CONTIKI = ../../..
 
-APPS += antelope unit-test
+MODULES += os/storage/antelope
+APPS += unit-test
 
 all: shell-db
 

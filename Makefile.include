@@ -100,7 +100,7 @@ endif
 CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 
 CONTIKIDIRS += ${addprefix $(CONTIKI)/os/,dev lib net net/mac \
-                 sys cfs . }
+                 storage storage/cfs sys . }
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 
