@@ -72,7 +72,7 @@ TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(U
 CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
 endif
 
-MODULES += os os/sys os/dev os/lib
+MODULES += os os/sys os/dev os/lib os/services
 
 # Include IPv6, RPL
 
