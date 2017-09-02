@@ -104,7 +104,7 @@ else
     CFLAGS += -DUIP_CONF_IPV6_RPL=0
 endif
 
-MODULES += os os/net os/net/mac os/storage os/storage/cfs
+MODULES += os os/net os/net/mac os/storage
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 

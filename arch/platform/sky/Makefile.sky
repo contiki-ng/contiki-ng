@@ -8,4 +8,5 @@ include $(CONTIKI)/arch/platform/sky/Makefile.common
 
 MODULES += os/net/mac os/net/mac/framer os/net \
            os/net/mac/csma os/net/mac/nullmac \
-           arch/dev/cc2420 arch/dev/sht11 arch/dev/ds2411
+           arch/dev/cc2420 arch/dev/sht11 arch/dev/ds2411 \
+					 os/storage/cfs
