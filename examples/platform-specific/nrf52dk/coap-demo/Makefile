@@ -24,7 +24,7 @@ PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 # REST Engine shall use Erbium CoAP implementation
-MODULE += coap
+MODULES += os/net/app-layer/coap
 
 CONTIKI_WITH_RPL = 0
 
