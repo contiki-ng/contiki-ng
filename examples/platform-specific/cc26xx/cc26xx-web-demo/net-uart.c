@@ -56,7 +56,7 @@
  *        nc -6u \<node IPv6 address\> REMOTE_PORT
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/process.h"
 #include "dev/serial-line.h"
 #include "dev/cc26xx-uart.h"

@@ -36,7 +36,7 @@
  *  Driver for the Sensortag BMP280 Altimeter / Pressure Sensor
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lib/sensors.h"
 #include "bmp-280-sensor.h"
 #include "sys/ctimer.h"

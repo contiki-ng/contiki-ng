@@ -41,7 +41,7 @@
  */
 #include <nrf_drv_wdt.h>
 #include "app_error.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 
 static nrf_drv_wdt_channel_id wdt_channel_id;
 static uint8_t wdt_initialized = 0;

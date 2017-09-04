@@ -40,7 +40,7 @@
 #ifndef ESMRF_H_
 #define ESMRF_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/

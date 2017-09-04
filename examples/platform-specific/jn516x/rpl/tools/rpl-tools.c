@@ -33,7 +33,7 @@
  * \author Simon Duquennoy <simonduq@sics.se>
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "contiki-net.h"
 #include "net/ip/uip.h"
 #include "rpl.h"

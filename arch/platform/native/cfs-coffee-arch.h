@@ -40,7 +40,7 @@
 #ifndef CFS_COFFEE_ARCH_H
 #define CFS_COFFEE_ARCH_H
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/xmem.h"
 
 #define COFFEE_SECTOR_SIZE		65536UL

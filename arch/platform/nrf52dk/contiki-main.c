@@ -36,6 +36,8 @@
 #include <stdint.h>
 
 #include "nordic_common.h"
+#include "contiki.h"
+
 #include "nrf_drv_config.h"
 #include "nrf_drv_gpiote.h"
 #ifdef SOFTDEVICE_PRESENT
@@ -44,7 +46,6 @@
 #include "ble/ble-mac.h"
 #endif
 
-#include "contiki.h"
 #include "contiki-net.h"
 #include "leds.h"
 #include "lib/sensors.h"

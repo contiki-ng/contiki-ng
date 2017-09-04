@@ -41,7 +41,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "prcm.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "ti-lib.h"
 #include "lpm.h"
 #include "sys/energest.h"

@@ -40,6 +40,7 @@
 #ifndef AUTOSTART_H_
 #define AUTOSTART_H_
 
+#include "contiki.h"
 #include "sys/process.h"
 
 #if ! CC_NO_VA_ARGS

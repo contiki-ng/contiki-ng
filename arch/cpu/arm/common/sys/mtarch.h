@@ -51,7 +51,7 @@
 #ifndef MTARCH_H_
 #define MTARCH_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/cc.h"
 
 #include <stdint.h>

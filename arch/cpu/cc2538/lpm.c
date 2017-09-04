@@ -35,7 +35,7 @@
  * \file
  * Implementation of low power modes ofr the cc2538
  */
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/energest.h"
 #include "sys/process.h"
 #include "dev/sys-ctrl.h"

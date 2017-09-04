@@ -52,7 +52,7 @@
 #ifndef IPSO_OBJECTS_H_
 #define IPSO_OBJECTS_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 void ipso_temperature_init(void);
 void ipso_button_init(void);

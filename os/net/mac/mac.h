@@ -40,7 +40,7 @@
 #ifndef MAC_H_
 #define MAC_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/radio.h"
 
 

@@ -32,7 +32,7 @@
 #ifndef IP64_ETH_H
 #define IP64_ETH_H
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 /**
  * The Ethernet address.

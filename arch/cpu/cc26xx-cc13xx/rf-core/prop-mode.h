@@ -43,7 +43,7 @@
 #ifndef PROP_MODE_H_
 #define PROP_MODE_H_
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "rf-core/dot-15-4g.h"
 
 #include <stdint.h>

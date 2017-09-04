@@ -41,7 +41,7 @@
 #include <jendefs.h>
 #include <AppHardwareApi.h>
 #include <PeripheralRegs.h>
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/uart1.h"
 #include "uart-driver.h"
 

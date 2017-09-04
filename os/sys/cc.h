@@ -45,7 +45,7 @@
 #ifndef CC_H_
 #define CC_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/cc-gcc.h"
 
 /**

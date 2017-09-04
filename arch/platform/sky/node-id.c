@@ -38,7 +38,7 @@
  */
 
 #include "sys/node-id.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/xmem.h"
 
 unsigned short node_id = 0;

@@ -39,7 +39,7 @@
 #ifndef RPL_CONF_H
 #define RPL_CONF_H
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 /******************************************************************************/
 /*********************** Enabling/disabling features **************************/

@@ -62,8 +62,7 @@
 #ifndef ETIMER_H_
 #define ETIMER_H_
 
-#include "sys/timer.h"
-#include "sys/process.h"
+#include "contiki.h"
 
 /**
  * A timer.

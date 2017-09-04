@@ -35,7 +35,7 @@
  * \file
  * Module for the cc2538 Coffee port
  */
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/cc.h"
 #include "cfs/cfs-coffee.h"
 #include "dev/cc2538-dev.h"

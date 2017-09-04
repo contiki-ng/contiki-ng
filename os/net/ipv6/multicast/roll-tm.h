@@ -62,7 +62,7 @@
 #ifndef ROLL_TM_H_
 #define ROLL_TM_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/ipv6/multicast/uip-mcast6-stats.h"
 
 #include <stdint.h>

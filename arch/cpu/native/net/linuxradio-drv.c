@@ -34,7 +34,7 @@
  */
 
 #include "contiki.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #if defined(linux) && NETSTACK_CONF_WITH_IPV6
 

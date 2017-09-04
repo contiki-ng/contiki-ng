@@ -32,7 +32,7 @@
 #ifndef CC2530_CC2531_IO_H_
 #define CC2530_CC2531_IO_H_
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/io-arch.h"
 /*---------------------------------------------------------------------------*/
 #define sensniff_io_byte_out(b)  io_arch_writeb(b)

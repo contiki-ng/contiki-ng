@@ -44,7 +44,7 @@
 #ifndef LPM_H_
 #define LPM_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "rtimer.h"
 
 #include <stdbool.h>

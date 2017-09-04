@@ -28,7 +28,7 @@
  *
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/clock.h"
 #include "lib/simEnvChange.h"
 

@@ -71,7 +71,7 @@
 #ifndef TRICKLE_TIMER_H_
 #define TRICKLE_TIMER_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/ctimer.h"
 /*---------------------------------------------------------------------------*/
 /* Trickle Timer Library Constants */

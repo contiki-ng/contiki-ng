@@ -43,7 +43,7 @@
 #ifndef MMC_H_
 #define MMC_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "../disk.h"
 
 #ifndef MMC_CONF_DEV_COUNT

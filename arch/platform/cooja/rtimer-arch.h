@@ -33,7 +33,7 @@
 #ifndef RTIMER_ARCH_H_
 #define RTIMER_ARCH_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/clock.h"
 
 #define RTIMER_ARCH_SECOND UINT64_C(1000000)

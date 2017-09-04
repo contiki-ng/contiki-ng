@@ -36,7 +36,7 @@
  *  Driver for the Sensortag Invensense MPU9250 motion processing unit
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lib/sensors.h"
 #include "mpu-9250-sensor.h"
 #include "sys/rtimer.h"

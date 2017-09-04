@@ -32,7 +32,7 @@
 #ifndef LPM_H_
 #define LPM_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #ifdef LPM_CONF_ON
 #define LPM_ON LPM_CONF_ON

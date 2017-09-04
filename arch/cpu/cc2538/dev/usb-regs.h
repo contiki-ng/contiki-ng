@@ -45,7 +45,7 @@
 #ifndef USB_REGS_H_
 #define USB_REGS_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name USB Register Offsets

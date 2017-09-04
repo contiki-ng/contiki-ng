@@ -42,7 +42,7 @@
 #ifndef LPM_H_
 #define LPM_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #define LPM_MODE_NONE 0 /* No LPM - Always on */
 #define LPM_MODE_IDLE 1 /* Set MCU Idle as part of the main loop */

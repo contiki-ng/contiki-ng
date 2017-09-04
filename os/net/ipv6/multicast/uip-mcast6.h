@@ -59,7 +59,7 @@
 #ifndef UIP_MCAST6_H_
 #define UIP_MCAST6_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/ipv6/multicast/uip-mcast6-engines.h"
 #include "net/ipv6/multicast/uip-mcast6-route.h"
 #include "net/ipv6/multicast/smrf.h"

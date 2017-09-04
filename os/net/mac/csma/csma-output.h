@@ -42,7 +42,7 @@
 #ifndef CSMA_OUTPUT_H_
 #define CSMA_OUTPUT_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/mac/mac.h"
 
 void csma_output_packet(mac_callback_t sent, void *ptr);

@@ -32,7 +32,7 @@
 #ifndef CC13XX_CC26XX_IO_H_
 #define CC13XX_CC26XX_IO_H_
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/cc26xx-uart.h"
 /*---------------------------------------------------------------------------*/
 #define sensniff_io_byte_out(b)  cc26xx_uart_write_byte(b)

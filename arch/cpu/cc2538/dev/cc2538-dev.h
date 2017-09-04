@@ -43,7 +43,7 @@
 #ifndef CC2538_DEV_H_
 #define CC2538_DEV_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/cc.h"
 /*----------------------------------------------------------------------------*/
 /** \name Bit-fields for the CC2538 devices features

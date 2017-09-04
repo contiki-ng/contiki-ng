@@ -54,6 +54,7 @@
 #ifndef CTIMER_H_
 #define CTIMER_H_
 
+#include "contiki.h"
 #include "sys/etimer.h"
 
 struct ctimer {

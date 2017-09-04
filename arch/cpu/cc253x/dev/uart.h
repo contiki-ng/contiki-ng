@@ -1,7 +1,7 @@
 #ifndef UART_H
 #define UART_H
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include "cc253x.h"
 #include "8051def.h"

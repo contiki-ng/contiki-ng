@@ -38,7 +38,7 @@
 #ifndef CLOCK_ISR_H_
 #define CLOCK_ISR_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "cc253x.h"
 
 void clock_isr(void) __interrupt(ST_VECTOR);

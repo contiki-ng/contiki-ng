@@ -40,7 +40,7 @@
 
 #include "contiki.h"
 #include "sys/node-id.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 
 /*---------------------------------------------------------------------------*/
 extern unsigned char node_mac[8];
