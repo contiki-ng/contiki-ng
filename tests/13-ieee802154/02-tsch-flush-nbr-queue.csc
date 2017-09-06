@@ -134,7 +134,7 @@
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <scriptfile>[CONFIG_DIR]/js/03-tsch-flush-nbr-queue.js</scriptfile>
+      <scriptfile>[CONFIG_DIR]/js/02-tsch-flush-nbr-queue.js</scriptfile>
       <active>true</active>
     </plugin_config>
     <width>495</width>
