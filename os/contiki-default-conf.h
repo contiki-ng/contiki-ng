@@ -33,21 +33,6 @@
 #define CONTIKI_DEFAULT_CONF_H
 
 /*---------------------------------------------------------------------------*/
-/* Netstack configuration
- *
- * The netstack configuration is typically overridden by the platform
- * configuration, as defined in contiki-conf.h
- */
-
-/* NETSTACK_CONF_FRAMER specifies the over-the-air frame format used
-   by Contiki radio packets. For IEEE 802.15.4 radios, use the
-   framer_802154 driver. */
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER framer_802154
-/* #define NETSTACK_CONF_FRAMER framer_802154 */
-#endif /* NETSTACK_CONF_FRAMER */
-
-/*---------------------------------------------------------------------------*/
 /* Packet buffer size options.
  *
  * The packet buffer size options can be tweaked on a per-project
