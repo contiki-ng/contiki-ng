@@ -99,8 +99,14 @@ typedef long off_t;
 
 /* DCO speed resynchronization for more robust UART, etc. */
 #ifndef DCOSYNCH_CONF_ENABLED
-#define DCOSYNCH_CONF_ENABLED 1
+#define DCOSYNCH_CONF_ENABLED (!(MAC_CONF_WITH_TSCH)) /* TSCH needs timerB
+for SFD timestamping */
 #endif /* DCOSYNCH_CONF_ENABLED */
+
+#ifndef CC2420_CONF_SFD_TIMESTAMPS
+#define CC2420_CONF_SFD_TIMESTAMPS (MAC_CONF_WITH_TSCH) /* TSCH needs SFD timestamping */
+#endif /* CC2420_CONF_SFD_TIMESTAMPS */
+
 #ifndef DCOSYNCH_CONF_PERIOD
 #define DCOSYNCH_CONF_PERIOD 30
 #endif /* DCOSYNCH_CONF_PERIOD */
