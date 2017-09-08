@@ -43,6 +43,7 @@
 
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/linkaddr.h"
 
 #if UIP_CONF_IPV6_RPL
 #if UIP_CONF_IPV6_RPL_LITE == 1
@@ -115,25 +116,17 @@ init_appstate(uip_tcp_appstate_t *as, void *state)
   as->state = state;
 }
 /*---------------------------------------------------------------------------*/
-/* Called on IP packet output. */
-static uint8_t (* outputfunc)(const uip_lladdr_t *a);
 
 uint8_t
 tcpip_output(const uip_lladdr_t *a)
 {
   int ret;
-  if(outputfunc != NULL) {
-    ret = outputfunc(a);
+  if(NETSTACK_NETWORK.output != NULL) {
+    ret = NETSTACK_NETWORK.output((const linkaddr_t *) a);
     return ret;
   }
-  LOG_INFO("output: Use tcpip_set_outputfunc() to set an output function");
+  LOG_INFO("output: NETSTACK_NETWORK needs to be set to an output function");
   return 0;
-}
-
-void
-tcpip_set_outputfunc(uint8_t (*f)(const uip_lladdr_t *))
-{
-  outputfunc = f;
 }
 
 PROCESS(tcpip_process, "TCP/IP stack");
