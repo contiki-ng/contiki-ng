@@ -68,12 +68,6 @@
 #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 
-/* Needed for CC2538 platforms only */
-/* For TSCH we have to use the more accurate crystal oscillator
- * by default the RC oscillator is activated */
-#undef SYS_CTRL_CONF_OSC32K_USE_XTAL
-#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
-
 #if WITH_SHELL
 /* Needed for CC2538 platforms, for serial */
 #define USB_SERIAL_CONF_ENABLE 1
@@ -85,14 +79,6 @@
 #define UIP_CONF_BUFFER_SIZE 160
 
 #endif /* WITH_SHELL */
-
-/* Needed for cc2420 platforms only */
-/* Disable DCO calibration (uses timerB) */
-#undef DCOSYNCH_CONF_ENABLED
-#define DCOSYNCH_CONF_ENABLED 0
-/* Enable SFD timestamps (uses timerB) */
-#undef CC2420_CONF_SFD_TIMESTAMPS
-#define CC2420_CONF_SFD_TIMESTAMPS 1
 
 /*******************************************************/
 /******************* Configure TSCH ********************/
@@ -135,22 +121,6 @@
 /*******************************************************/
 /************* Other system configuration **************/
 /*******************************************************/
-
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL || \
-  CONTIKI_TARGET_OPENMOTE_CC2538
-#define TSCH_CONF_HW_FRAME_FILTERING    0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL \
-       || CONTIKI_TARGET_OPENMOTE_CC2538 */
-
-#if CONTIKI_TARGET_COOJA
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
-/* A bug in cooja causes many EBs to be missed at scan. Increase EB
-   frequency to shorten the join process */
-#undef TSCH_CONF_EB_PERIOD
-#define TSCH_CONF_EB_PERIOD (4 * CLOCK_SECOND)
-#undef TSCH_CONF_MAX_EB_PERIOD
-#define TSCH_CONF_MAX_EB_PERIOD (4 * CLOCK_SECOND)
-#endif /* CONTIKI_TARGET_COOJA */
 
 /* Logging */
 #define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_INFO

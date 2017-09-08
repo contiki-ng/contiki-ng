@@ -103,18 +103,6 @@ If you are running with RPL, it is recommended to enable the `tsch-rpl` module w
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 ```
 
-On CC2420-based platforms, enable SFD timestamps with:
-
-```
-/* Disable DCO calibration (uses timerB) */
-#undef DCOSYNCH_CONF_ENABLED
-#define DCOSYNCH_CONF_ENABLED			 0
-
-/* Enable SFD timestamps (uses timerB) */
-#undef CC2420_CONF_SFD_TIMESTAMPS
-#define CC2420_CONF_SFD_TIMESTAMPS       1
-```
-
 To configure TSCH, see the macros in `.h` files under `os/net/mac/tsch/` and redefine your own in your `project-conf.h`.
 
 ## Using TSCH with Security
@@ -132,7 +120,7 @@ To include TSCH standard-compliant security, set the following:
 #define LLSEC802154_CONF_USES_FRAME_COUNTER 0
 ```
 
-The keys can be configured in `net/mac/tsch/tsch-security.h`.
+The keys can be configured in `os/net/mac/tsch/tsch-security.h`.
 Nodes handle security level and keys dynamically, i.e. as specified by the incoming frame header rather that compile-time defined.
 
 By default, when including security, the PAN coordinator will transmit secured EBs.
@@ -147,7 +135,7 @@ Likewise, set `TSCH_JOIN_MY_PANID_ONLY` to force joining networks with a specifi
 By default (see `TSCH_SCHEDULE_WITH_6TISCH_MINIMAL`), our implementation runs a 6TiSCH minimal schedule, which emulates an always-on link on top of TSCH.
 The schedule consists in a single shared slot for all transmissions and receptions, in a slotframe of length `TSCH_SCHEDULE_DEFAULT_LENGTH`.
 
-As an alternative, we provide Orchestra (under `apps/orchestra`), an autonomous scheduling solution for TSCH where nodes maintain their own schedule locally, solely based on their local RPL state.
+As an alternative, we provide Orchestra (under `os/services/orchestra`), an autonomous scheduling solution for TSCH where nodes maintain their own schedule locally, solely based on their local RPL state.
 Orchestra can be simply enabled and should work out-of-the-box with its default settings as long as RPL is also enabled.
 See `apps/orchestra/README.md` for more information.
 

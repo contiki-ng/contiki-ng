@@ -251,8 +251,8 @@ typedef uint32_t clock_time_t;
 
 /* Shall we calibrate the DCO periodically? */
 #ifndef DCOSYNCH_CONF_ENABLED
-#define DCOSYNCH_CONF_ENABLED 1
-#endif
+#define DCOSYNCH_CONF_ENABLED (!(MAC_CONF_WITH_TSCH))
+#endif /* DCOSYNCH_CONF_ENABLED */
 
 /* How often shall we attempt to calibrate DCO?
  * PS: It should be calibrated upon temperature changes,

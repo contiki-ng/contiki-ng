@@ -58,15 +58,6 @@
 #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 
-/* Needed for CC2538 platforms only */
-/* For TSCH we have to use the more accurate crystal oscillator
- * by default the RC oscillator is activated */
-#undef SYS_CTRL_CONF_OSC32K_USE_XTAL
-#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
-
-#undef TSCH_CONF_HW_FRAME_FILTERING
-#define TSCH_CONF_HW_FRAME_FILTERING	0
-
 /*******************************************************/
 /******************* Configure TSCH ********************/
 /*******************************************************/
