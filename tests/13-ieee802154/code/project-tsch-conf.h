@@ -32,9 +32,6 @@
 #ifndef _PROJECT_TSCH_CONF_H
 #define _PROJECT_TSCH_CONF_H
 
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     tschmac_driver
-
 #if WITH_SECURITY_ON
 #define TEST_CONFIG_TYPE SECURITY_ON
 

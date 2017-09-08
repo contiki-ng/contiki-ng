@@ -9,7 +9,8 @@ MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
 MAKE_WITH_SECURITY ?= 0 # force Security from command line
 MAKE_WITH_PERIODIC_ROUTES_PRINT ?= 0 # print #routes periodically, used for regression tests
 
-MODULES += os/net/mac/tsch os/services/shell os/services/orchestra
+MAKE_MAC = MAKE_MAC_TSCH
+MODULES += os/services/shell os/services/orchestra
 
 ifeq ($(MAKE_WITH_ORCHESTRA),1)
 CFLAGS += -DWITH_ORCHESTRA=1

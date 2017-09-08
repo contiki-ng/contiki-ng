@@ -68,10 +68,6 @@ typedef unsigned short uip_stats_t;
 
 #if NETSTACK_CONF_WITH_IPV6
 
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     nullmac_driver
-#endif /* NETSTACK_CONF_MAC */
-
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO   nullradio_driver
 #endif /* NETSTACK_CONF_RADIO */

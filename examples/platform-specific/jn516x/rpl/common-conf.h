@@ -39,9 +39,6 @@
 /* Select a MAC configuration */
 #define MAC_CONFIG MAC_CONFIG_TSCH
 
-#undef NETSTACK_CONF_MAC
-#undef NETSTACK_CONF_FRAMER
-
 #if MAC_CONFIG == MAC_CONFIG_CSMA
 
 #elif MAC_CONFIG == MAC_CONFIG_TSCH
@@ -55,8 +52,6 @@
 #ifndef WITH_SECURITY
 #define WITH_SECURITY 0
 #endif /* WITH_SECURITY */
-
-#define NETSTACK_CONF_MAC     tschmac_driver
 
 /* TSCH and RPL callbacks */
 #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch

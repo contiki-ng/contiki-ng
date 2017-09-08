@@ -15,8 +15,9 @@ PROJECT_SOURCEFILES += rpl-tools.c
 
 CFLAGS += -DWITH_COAP
 CFLAGS += -DUIP_CONF_TCP=0
+MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap
-MODULES += os/net/mac/tsch os/services/orchestra os/lib/json
+MODULES += os/services/orchestra os/lib/json
 
 all: $(CONTIKI_PROJECT)
 include $(CONTIKI)/Makefile.include

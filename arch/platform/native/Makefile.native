@@ -30,6 +30,9 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 .SUFFIXES:
 
+# Enable nullmac by default
+MAKE_MAC ?= MAKE_MAC_NULLMAC
+
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/native
 include $(CONTIKI)/arch/cpu/native/Makefile.native
@@ -42,5 +45,4 @@ CURSES_LIBS ?= -lncurses
 
 TARGET_LIBFILES += $(CURSES_LIBS)
 
-MODULES+=os/net os/net/mac os/net/mac/framer os/net/ip64-addr/ \
-  os/net/mac/csma os/net/mac/nullmac
+MODULES+=os/net os/net/mac os/net/mac/framer os/net/ip64-addr/

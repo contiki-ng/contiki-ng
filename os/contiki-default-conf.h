@@ -54,15 +54,6 @@
 /* #define NETSTACK_CONF_FRAMER framer_802154 */
 #endif /* NETSTACK_CONF_FRAMER */
 
-/* NETSTACK_CONF_MAC specifies the Medium Access Control (MAC)
-   layer. The nullmac_driver does not provide any MAC
-   functionality. The csma_driver is the default CSMA MAC layer, but
-   is not compatible with all radios. */
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC   csma_driver
-/* #define NETSTACK_CONF_MAC   csma_driver */
-#endif /* NETSTACK_CONF_MAC */
-
 /* NETSTACK_CONF_NETWORK specifies the network layer and can be either
    sicslowpan_driver, for IPv6 networking. */
 #ifndef NETSTACK_CONF_NETWORK
