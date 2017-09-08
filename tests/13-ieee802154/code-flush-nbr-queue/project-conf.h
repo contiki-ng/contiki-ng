@@ -45,9 +45,6 @@
 #undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 1
 
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        tschmac_driver
-
 #undef TSCH_CONF_WITH_SIXTOP
 #define TSCH_CONF_WITH_SIXTOP 1
 

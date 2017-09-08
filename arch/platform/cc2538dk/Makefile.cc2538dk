@@ -20,7 +20,6 @@ CONTIKI_CPU=$(CONTIKI)/arch/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
 MODULES += os/net os/net/mac os/net/mac/framer \
-  os/net/mac/csma os/net/mac/nullmac \
   os/storage/cfs
 
 PYTHON = python

@@ -58,12 +58,8 @@
 #define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common } /* Orchestra in non-storing */
 
 /*******************************************************/
-/********************* Enable TSCH *********************/
+/********************* Configure TSCH *********************/
 /*******************************************************/
-
-/* Netstack layers */
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     tschmac_driver
 
 /* TSCH and RPL callbacks */
 #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch

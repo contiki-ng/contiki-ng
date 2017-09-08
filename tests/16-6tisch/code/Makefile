@@ -1,4 +1,4 @@
-all: 
+all:
 
 CFLAGS  += -D PROJECT_CONF_H=\"project-conf.h\"
 APPS    += unit-test
@@ -11,5 +11,6 @@ CFLAGS  += -DSIXP_MSG_API_TEST=1
 endif
 
 CONTIKI = ../../..
-CONTIKI_WITH_IPV6 = 1
+# MAC layer is test_mac_driver
+MAKE_MAC = MAKE_MAC_OTHER
 include $(CONTIKI)/Makefile.include

@@ -74,7 +74,36 @@ endif
 
 MODULES += os os/sys os/dev os/lib os/services
 
-# Include IPv6, RPL
+# Configure MAC layer
+
+# The different options
+MAKE_MAC_NULLMAC = 0
+MAKE_MAC_CSMA = 1
+MAKE_MAC_TSCH = 2
+MAKE_MAC_OTHER = 3
+
+# Make CSMA the default MAC
+MAKE_MAC ?= MAKE_MAC_CSMA
+
+ifeq ($(MAKE_MAC),MAKE_MAC_NULLMAC)
+  CFLAGS += -DMAC_CONF_WITH_NULLMAC=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_CSMA)
+  MODULES += os/net/mac/csma
+  CFLAGS += -DMAC_CONF_WITH_CSMA=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_TSCH)
+  MODULES += os/net/mac/tsch
+  CFLAGS += -DMAC_CONF_WITH_TSCH=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_OTHER)
+  CFLAGS += -DMAC_CONF_WITH_OTHER=1
+endif
+
+# Configure IPv6, RPL
 
 HAS_STACK = 0
 

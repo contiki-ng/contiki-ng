@@ -42,8 +42,6 @@
 #error "This example is intended to be used for Cooja mote."
 #endif /* CONTIKI_TARGET_COOJA */
 
-#define NETSTACK_CONF_MAC                  tschmac_driver
-
 #define TSCH_CONF_WITH_SIXTOP              1
 #define TSCH_LOG_CONF_LEVEL                2
 #define TSCH_CONF_AUTOSTART                1

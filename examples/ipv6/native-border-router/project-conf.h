@@ -42,8 +42,8 @@
 
 #define CMD_CONF_OUTPUT border_router_cmd_output
 
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC border_router_mac_driver
+/* Selected in netstack.h because our Makefile sets MAKE_MAC = MAKE_MAC_OTHER */
+#define NETSTACK_CONF_OTHER_MAC border_router_mac_driver
 
 /* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
 #define SELECT_CALLBACK 1

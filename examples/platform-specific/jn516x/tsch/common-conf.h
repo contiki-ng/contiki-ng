@@ -129,13 +129,7 @@
 #define TSCH_CONF_JOIN_SECURED_ONLY 0
 #endif /* WITH_TSCH_SECURITY */
 
-#if WITH_TSCH
-
-/* Contiki netstack: MAC */
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     tschmac_driver
-
-#else /* No TSCH, use Csma with ACK (default MAC) */
+#if !WITH_TSCH /* No TSCH, use Csma with ACK (default MAC) */
 
 #undef MICROMAC_CONF_CHANNEL
 #define MICROMAC_CONF_CHANNEL 26

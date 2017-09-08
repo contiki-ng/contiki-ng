@@ -65,16 +65,8 @@
 #undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0xabcd
 
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        test_mac_driver
-
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC        nordc_driver
-
-#undef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER     framer_802154
-
-#undef FRAME802154_CONF_VERSION
-#define FRAME802154_CONF_VERSION FRAME802154_IEEE802154_2015
+/* Custom MAC layer, enabled via MAKE_MAC = MAKE_MAC_OTHER in the Makefile */
+#undef NETSTACK_CONF_OTHER_MAC
+#define NETSTACK_CONF_OTHER_MAC        test_mac_driver
 
 #endif /* __PROJECT_CONF_H__ */

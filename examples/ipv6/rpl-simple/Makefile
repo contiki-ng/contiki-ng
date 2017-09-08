@@ -6,7 +6,7 @@ CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 WITH_TSCH ?= 0
 
 ifeq ($(WITH_TSCH),1)
-MODULES += os/net/mac/tsch
+MAKE_MAC = MAKE_MAC_TSCH
 endif
 CFLAGS += -DWITH_TSCH=$(WITH_TSCH)
 
