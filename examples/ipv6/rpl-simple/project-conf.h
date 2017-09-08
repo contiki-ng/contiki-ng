@@ -46,7 +46,7 @@
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
 
-#if WITH_TSCH
+#if MAC_CONF_WITH_TSCH
 
 /*******************************************************/
 /********************* Configure TSCH *********************/
@@ -87,6 +87,6 @@
 #undef TSCH_SCHEDULE_CONF_MAX_LINKS
 #define TSCH_SCHEDULE_CONF_MAX_LINKS 4
 
-#endif /* WITH_TSCH */
+#endif /* MAC_CONF_WITH_TSCH */
 
 #endif

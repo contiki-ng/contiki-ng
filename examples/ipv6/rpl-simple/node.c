@@ -148,9 +148,9 @@ PROCESS_THREAD(node_process, ev, data)
   etimer_set(&periodic, START_INTERVAL);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic));
 
-#if WITH_TSCH
+#if MAC_CONF_WITH_TSCH
   NETSTACK_MAC.on();
-#endif /* WITH_TSCH */
+#endif /* MAC_CONF_WITH_TSCH */
 
   if(!uip_ip6addr_cmp(&destination_ipaddr, &node_ipaddr)) {
     /* Send data periodically */
