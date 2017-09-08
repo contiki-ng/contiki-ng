@@ -50,7 +50,7 @@
 #ifndef DBG_H_
 #define DBG_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include "usb/usb-serial.h"
 /**

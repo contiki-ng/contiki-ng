@@ -36,7 +36,7 @@
  *  Driver for the Sensortag Buzzer
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "buzzer.h"
 #include "ti-lib.h"
 #include "lpm.h"

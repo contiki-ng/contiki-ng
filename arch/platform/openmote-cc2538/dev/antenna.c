@@ -44,7 +44,7 @@
  * Driver implementation for the OpenMote-CC2538 antenna switch
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/gpio.h"
 #include "dev/antenna.h"
 /*---------------------------------------------------------------------------*/

@@ -44,7 +44,7 @@
 #ifndef UDMA_H_
 #define UDMA_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 /*
  * Enable all uDMA channels unless a conf file tells us to do otherwise.

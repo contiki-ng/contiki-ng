@@ -38,7 +38,7 @@
  */
 
 #include "sys/energest.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #if ENERGEST_CONF_ON
 

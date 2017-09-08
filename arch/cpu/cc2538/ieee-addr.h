@@ -44,7 +44,7 @@
 #ifndef IEEE_ADDR_H_
 #define IEEE_ADDR_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/

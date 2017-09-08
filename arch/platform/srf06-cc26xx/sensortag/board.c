@@ -36,7 +36,7 @@
  *  Sensortag-specific board initialisation driver
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lib/sensors.h"
 #include "buzzer.h"
 #include "lpm.h"

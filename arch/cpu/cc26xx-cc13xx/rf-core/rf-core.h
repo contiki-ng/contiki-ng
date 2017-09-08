@@ -51,7 +51,7 @@
 #ifndef RF_CORE_H_
 #define RF_CORE_H_
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "driverlib/rf_common_cmd.h"
 
 #include <stdint.h>

@@ -44,7 +44,7 @@
 #ifndef LWM2M_DEVICE_H_
 #define LWM2M_DEVICE_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #ifndef LWM2M_DEVICE_MODEL_NUMBER
 #ifdef BOARD_STRING

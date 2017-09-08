@@ -65,7 +65,7 @@
 #ifndef FRAME_802154_H
 #define FRAME_802154_H
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/linkaddr.h"
 
 #ifdef IEEE802154_CONF_PANID

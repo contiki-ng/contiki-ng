@@ -44,7 +44,7 @@
 #ifndef RTIMER_ARCH_H_
 #define RTIMER_ARCH_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "cc253x.h"
 
 /*

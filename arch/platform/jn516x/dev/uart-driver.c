@@ -41,7 +41,7 @@
 #define DBG_vPrintf(...)
 #endif
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "uart-driver.h"
 #include "sys/rtimer.h"
 #include "watchdog.h"

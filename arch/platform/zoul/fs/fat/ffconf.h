@@ -47,7 +47,7 @@
 #ifndef FFCONF_H_
 #define FFCONF_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #define _FFCONF 68020 /**< Revision ID */
 

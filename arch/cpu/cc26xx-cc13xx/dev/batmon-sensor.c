@@ -36,7 +36,7 @@
  *  Driver for the CC13xx/CC26xx AON battery monitor
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lib/sensors.h"
 #include "batmon-sensor.h"
 

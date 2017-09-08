@@ -46,7 +46,7 @@
  * Pere Tuset <peretuset@openmote.com>
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/gpio.h"
 #include "dev/tps62730.h"
 /*---------------------------------------------------------------------------*/

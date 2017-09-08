@@ -1,7 +1,7 @@
 #ifndef USB_ARCH_H_0Z52ZDP0H6__
 #define USB_ARCH_H_0Z52ZDP0H6__
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "usb-api.h"
 
 

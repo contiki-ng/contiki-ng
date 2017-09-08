@@ -36,7 +36,7 @@
  *  Board-initialisation for the Srf06EB with a CC13xx/CC26xx EM.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "ti-lib.h"
 #include "lpm.h"
 #include "prcm.h"

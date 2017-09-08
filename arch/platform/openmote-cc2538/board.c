@@ -39,7 +39,7 @@
  *  Board-initialisation for the OpenMote-CC2538 platform
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/antenna.h"
 #include <stdint.h>
 #include <string.h>

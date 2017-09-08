@@ -35,7 +35,7 @@
  * \file
  * Driver for the cc2538 IEEE addresses
  */
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/linkaddr.h"
 #include "ieee-addr.h"
 

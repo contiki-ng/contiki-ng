@@ -37,7 +37,7 @@
 #define UARTDRIVER_H
 
 #include <jendefs.h>
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #define UART_EXTRAS 1
 

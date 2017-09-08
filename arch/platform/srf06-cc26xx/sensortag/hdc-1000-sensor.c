@@ -36,7 +36,7 @@
  *  Driver for the Sensortag HDC sensor
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
 #include "hdc-1000-sensor.h"

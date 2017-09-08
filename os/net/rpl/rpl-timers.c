@@ -41,7 +41,7 @@
  * @{
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/rpl/rpl-private.h"
 #include "net/rpl/rpl-ns.h"
 #include "net/link-stats.h"

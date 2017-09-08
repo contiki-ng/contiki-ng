@@ -41,7 +41,7 @@
  * modified by Beshr Al Nahas <beshr@sics.se> and Simon Duquennoy <simonduq@sics.se>
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include <stdarg.h>
 #include <ctype.h>
 #include <stdlib.h>

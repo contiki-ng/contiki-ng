@@ -41,7 +41,7 @@
 
 #include "cc253x.h"
 #include "sfr-bits.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #define WDT_TIMEOUT_MIN    (WDCTL_INT1 | WDCTL_INT0)
 /*---------------------------------------------------------------------------*/

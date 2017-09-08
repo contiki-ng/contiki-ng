@@ -41,7 +41,7 @@
  * @{
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lib/trickle-timer.h"
 #include "sys/ctimer.h"
 #include "sys/cc.h"

@@ -36,7 +36,7 @@
  * Implementation of the CC13xx/CC26xx RF BLE driver
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "sys/process.h"
 #include "sys/clock.h"
 #include "sys/cc.h"

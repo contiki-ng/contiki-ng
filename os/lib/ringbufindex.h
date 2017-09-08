@@ -40,7 +40,7 @@
 #ifndef __RINGBUFINDEX_H__
 #define __RINGBUFINDEX_H__
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 struct ringbufindex {
   uint8_t mask;

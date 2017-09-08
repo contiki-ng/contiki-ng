@@ -37,7 +37,7 @@
  *
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "antenna-sw.h"
 #include <stdint.h>
 #include <string.h>

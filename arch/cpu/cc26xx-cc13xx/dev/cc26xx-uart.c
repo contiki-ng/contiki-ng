@@ -36,7 +36,7 @@
  * Implementation of the CC13xx/CC26xx UART driver.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "cc26xx-uart.h"
 #include "hw_types.h"
 #include "hw_memmap.h"

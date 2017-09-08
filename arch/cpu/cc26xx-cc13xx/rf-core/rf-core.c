@@ -36,7 +36,7 @@
  * Implementation of the CC13xx/CC26xx RF core driver
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/watchdog.h"
 #include "sys/process.h"
 #include "sys/energest.h"

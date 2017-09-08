@@ -42,7 +42,7 @@
 #define __UART0_H__
 
 #include <PeripheralRegs.h>
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "uart-driver.h"
 
 #define UART_DEFAULT_RX_BUFFER_SIZE 2047

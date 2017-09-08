@@ -36,7 +36,7 @@
  * CC1350 LP RF switch driver
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lpm.h"
 #include "rf-core/rf-switch.h"
 #include "ti-lib.h"

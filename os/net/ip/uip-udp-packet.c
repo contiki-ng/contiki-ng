@@ -37,7 +37,7 @@
  *         Adam Dunkels <adam@sics.se>
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 extern uint16_t uip_slen;
 

@@ -38,7 +38,7 @@
  * with the only change being the values for VID and PID
  */
 #include "descriptors.h"
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "cdc.h"
 #include "usb-arch.h"
 

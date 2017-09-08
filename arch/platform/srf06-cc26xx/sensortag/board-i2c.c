@@ -37,7 +37,7 @@
  * Board-specific I2C driver for the Sensortags
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "ti-lib.h"
 #include "board-i2c.h"
 #include "lpm.h"

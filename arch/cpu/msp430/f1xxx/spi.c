@@ -28,7 +28,7 @@
  *
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 /*
  * On the Tmote sky access to I2C/SPI/UART0 must always be

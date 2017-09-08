@@ -52,7 +52,7 @@
 #ifndef PACKETBUF_H_
 #define PACKETBUF_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/linkaddr.h"
 #include "net/mac/llsec802154.h"
 #include "net/mac/tsch/tsch-conf.h"

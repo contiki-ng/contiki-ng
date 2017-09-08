@@ -37,7 +37,7 @@
  * Driver for the CC13xx/CC26xx IEEE addresses
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/linkaddr.h"
 #include "ieee-addr.h"
 

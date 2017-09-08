@@ -48,7 +48,7 @@
 #define LEDS_H_
 
 /* Allow platform to override LED numbering */
-#include "contiki-conf.h"
+#include "contiki.h"
 
 void leds_init(void);
 

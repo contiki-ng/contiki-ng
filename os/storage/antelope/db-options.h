@@ -37,7 +37,7 @@
 #ifndef DB_OPTIONS_H
 #define DB_OPTIONS_H
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 /*----------------------------------------------------------------------------*/
 

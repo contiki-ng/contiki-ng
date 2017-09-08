@@ -32,7 +32,7 @@
 *
 */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/netstack.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch.h"

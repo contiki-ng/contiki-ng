@@ -36,7 +36,7 @@
  *  Driver for the Sensortag Opt3001 light sensor
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lib/sensors.h"
 #include "opt-3001-sensor.h"
 #include "sys/ctimer.h"

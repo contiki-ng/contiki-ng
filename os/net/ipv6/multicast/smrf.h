@@ -50,7 +50,7 @@
 #ifndef SMRF_H_
 #define SMRF_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/

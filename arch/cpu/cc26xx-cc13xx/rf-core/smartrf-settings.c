@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include "rf-core/dot-15-4g.h"
 #include "driverlib/rf_mailbox.h"

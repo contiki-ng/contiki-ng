@@ -37,7 +37,7 @@
  * Arch-specific SLIP functions for the CC13xx/CC26xx
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/slip.h"
 /*---------------------------------------------------------------------------*/

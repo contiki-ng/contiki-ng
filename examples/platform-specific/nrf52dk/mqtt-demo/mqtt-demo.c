@@ -42,7 +42,7 @@
  * An MQTT example for the nrf52dk platform
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "mqtt.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-icmp6.h"

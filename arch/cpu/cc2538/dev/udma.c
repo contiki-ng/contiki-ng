@@ -35,7 +35,7 @@
  * \file
  * Implementation of the cc2538 micro-DMA driver
  */
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/udma.h"
 #include "dev/nvic.h"
 #include "reg.h"

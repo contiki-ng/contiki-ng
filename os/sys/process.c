@@ -45,6 +45,7 @@
 
 #include <stdio.h>
 
+#include "contiki.h"
 #include "sys/process.h"
 #include "sys/arg.h"
 
@@ -53,7 +54,7 @@
  */
 struct process *process_list = NULL;
 struct process *process_current = NULL;
- 
+
 static process_event_t lastevent;
 
 /*
@@ -181,7 +182,7 @@ call_process(struct process *p, process_event_t ev, process_data_t data)
     printf("process: process '%s' called again with event %d\n", PROCESS_NAME_STRING(p), ev);
   }
 #endif /* DEBUG */
-  
+
   if((p->state & PROCESS_STATE_RUNNING) &&
      p->thread != NULL) {
     PRINTF("process: calling process '%s' with event %d\n", PROCESS_NAME_STRING(p), ev);
@@ -249,7 +250,7 @@ do_event(void)
   process_data_t data;
   struct process *receiver;
   struct process *p;
-  
+
   /*
    * If there are any events in the queue, take the first one and walk
    * through the list of processes to see if the event should be
@@ -259,10 +260,10 @@ do_event(void)
    */
 
   if(nevents > 0) {
-    
+
     /* There are events that we should deliver. */
     ev = events[fevent].ev;
-    
+
     data = events[fevent].data;
     receiver = events[fevent].p;
 
@@ -331,7 +332,7 @@ process_post(struct process *p, process_event_t ev, process_data_t data)
 	   PROCESS_NAME_STRING(PROCESS_CURRENT()), ev,
 	   p == PROCESS_BROADCAST? "<broadcast>": PROCESS_NAME_STRING(p), nevents);
   }
-  
+
   if(nevents == PROCESS_CONF_NUMEVENTS) {
 #if DEBUG
     if(p == PROCESS_BROADCAST) {
@@ -342,7 +343,7 @@ process_post(struct process *p, process_event_t ev, process_data_t data)
 #endif /* DEBUG */
     return PROCESS_ERR_FULL;
   }
-  
+
   snum = (process_num_events_t)(fevent + nevents) % PROCESS_CONF_NUMEVENTS;
   events[snum].ev = ev;
   events[snum].data = data;
@@ -354,7 +355,7 @@ process_post(struct process *p, process_event_t ev, process_data_t data)
     process_maxevents = nevents;
   }
 #endif /* PROCESS_CONF_STATS */
-  
+
   return PROCESS_ERR_OK;
 }
 /*---------------------------------------------------------------------------*/

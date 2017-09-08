@@ -40,7 +40,7 @@
 #ifndef JSONTREE_H_
 #define JSONTREE_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "json.h"
 
 #ifdef JSONTREE_CONF_MAX_DEPTH

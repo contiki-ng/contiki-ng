@@ -43,7 +43,7 @@
 #ifndef SOC_H_
 #define SOC_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include <stdint.h>
 /*----------------------------------------------------------------------------*/

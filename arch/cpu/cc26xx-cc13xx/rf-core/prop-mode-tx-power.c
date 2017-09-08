@@ -36,7 +36,7 @@
  * Default TX power settings. The board can override
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/radio.h"
 #include "rf-core/prop-mode.h"
 /*---------------------------------------------------------------------------*/

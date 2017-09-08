@@ -38,7 +38,7 @@
  * SLIP can be configured to operate over UART or over USB-Serial, depending
  * on the value of SLIP_ARCH_CONF_USB
  */
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/slip.h"
 #include "dev/uart.h"
 #include "usb/usb-serial.h"

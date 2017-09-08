@@ -41,7 +41,7 @@
 #ifndef CSMA_H_
 #define CSMA_H_
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "net/mac/mac.h"
 #include "dev/radio.h"
 

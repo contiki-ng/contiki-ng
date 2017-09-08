@@ -44,7 +44,7 @@
  * Adam Dunkels <adam@sics.se>
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 
 #include "sys/etimer.h"
 #include "sys/process.h"

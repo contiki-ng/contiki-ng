@@ -36,7 +36,7 @@
  *  Driver for the Sensortag TI TMP007 infrared thermophile sensor
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "lib/sensors.h"
 #include "tmp-007-sensor.h"
 #include "sys/ctimer.h"

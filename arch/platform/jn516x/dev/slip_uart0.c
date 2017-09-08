@@ -32,7 +32,7 @@
  * Machine dependent jn516x SLIP routines for UART0.
  */
 
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/slip.h"
 #include "dev/uart0.h"
 /*---------------------------------------------------------------------------*/

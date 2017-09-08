@@ -35,7 +35,7 @@
  * \file
  * Implementation of the cc2538 SoC driver
  */
-#include "contiki-conf.h"
+#include "contiki.h"
 #include "dev/rom-util.h"
 #include "dev/sys-ctrl.h"
 #include "reg.h"
