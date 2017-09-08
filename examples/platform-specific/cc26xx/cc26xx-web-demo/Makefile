@@ -13,8 +13,6 @@ PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 PROJECT_SOURCEFILES += cetic-6lbr-client.c coap-server.c net-uart.c mqtt-client.c
 PROJECT_SOURCEFILES += httpd-simple.c
 
-CONTIKI_WITH_IPV6 = 1
-
 # REST Engine shall use Erbium CoAP implementation
 MODULES += os/net/app-layer/mqtt
 MODULES += os/net/app-layer/coap

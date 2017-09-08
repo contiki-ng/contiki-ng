@@ -30,7 +30,6 @@ ifeq ($(PREFIX),)
  PREFIX = fd00::1/64
 endif
 
-CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
 $(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c

@@ -54,12 +54,6 @@
 /* #define NETSTACK_CONF_FRAMER framer_802154 */
 #endif /* NETSTACK_CONF_FRAMER */
 
-/* NETSTACK_CONF_NETWORK specifies the network layer and can be either
-   sicslowpan_driver, for IPv6 networking. */
-#ifndef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
-#endif /* NETSTACK_CONF_NETWORK */
-
 /*---------------------------------------------------------------------------*/
 /* Packet buffer size options.
  *

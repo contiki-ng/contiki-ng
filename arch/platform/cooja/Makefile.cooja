@@ -80,16 +80,27 @@ CFLAGS   += $(CFLAGSNO)
 MODULES += os/net os/net/mac os/net/mac/framer os/net/ip64-addr
 
 ## Copied from Makefile.include, since Cooja overrides CFLAGS et al
-HAS_STACK = 0
+MAKE_NET_NULLNET = 0
+MAKE_NET_IPV6 = 1
 
 # Make IPv6 the default stack
-ifeq ($(HAS_STACK),0)
-CONTIKI_WITH_IPV6 = 1
+MAKE_NET ?= MAKE_NET_IPV6
+
+ifeq ($(MAKE_NET),MAKE_NET_IPV6)
+  CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
+  CONTIKI_WITH_RPL ?= 1
+  CONTIKI_WITH_RPL_LITE ?= 1
+  MODULES += os/net/ipv6 os/net/ip
 endif
 
-ifeq ($(CONTIKI_WITH_IPV6),1)
-  CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
-  ifneq ($(CONTIKI_WITH_RPL),0)
+ifeq ($(CONTIKI_WITH_RPL),1)
     CFLAGS += -DUIP_CONF_IPV6_RPL=1
-  endif
+    ifeq ($(CONTIKI_WITH_RPL_LITE),1)
+        CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
+        MODULES += os/net/rpl-lite
+    else
+        MODULES += os/net/rpl
+    endif
+else
+    CFLAGS += -DUIP_CONF_IPV6_RPL=0
 endif

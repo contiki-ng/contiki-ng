@@ -289,7 +289,7 @@ main(int argc, char **argv)
   NETSTACK_NETWORK.init();
 
   PRINTF("%s, radio channel %u\n",
-         NETSTACK_MAC.name CC2420_CONF_CHANNEL);
+         NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #if !NETSTACK_CONF_WITH_IPV6

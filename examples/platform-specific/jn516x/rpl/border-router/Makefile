@@ -5,8 +5,6 @@ TARGET ?= jn516x
 
 CONTIKI=../../../../..
 
-CONTIKI_WITH_IPV6 = 1
-
 MAKE_MAC = MAKE_MAC_TSCH
 PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c

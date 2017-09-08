@@ -48,11 +48,10 @@
  *
  */
 
-#if NETSTACK_CONF_WITH_IPV6
-
 #include "sys/log.h"
 #include "net/ip/ip64-addr.h"
 
+#if NETSTACK_CONF_WITH_IPV6
 
 int curr_log_level_rpl = LOG_CONF_LEVEL_RPL;
 int curr_log_level_tcpip = LOG_CONF_LEVEL_TCPIP;

@@ -15,5 +15,4 @@ CFLAGS += -D WITH_ALL_ENABLED=1
 endif
 
 CONTIKI = ../../..
-CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include

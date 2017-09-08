@@ -11,7 +11,6 @@ MODULES += os/services/lwm2m
 MODULES += os/services/ipso-objects
 
 CONTIKI=../..
-CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
 # border router rules

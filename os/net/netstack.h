@@ -43,13 +43,17 @@
 
 #include "contiki.h"
 
-#ifndef NETSTACK_NETWORK
-#ifdef NETSTACK_CONF_NETWORK
-#define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
-#else /* NETSTACK_CONF_NETWORK */
+/* Network layer configuration. The NET layer is configured through the Makefile,
+   via the flag MAC_NET */
+#if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_NETWORK sicslowpan_driver
-#endif /* NETSTACK_CONF_NETWORK */
-#endif /* NETSTACK_NETWORK */
+#elif NETSTACK_CONF_WITH_NULLNET
+#error Nullnet layer not implemented yet
+#elif NETSTACK_CONF_WITH_OTHER
+#define NETSTACK_NETWORK NETSTACK_CONF_OTHER_NETWORK
+#else
+#error Unknown NET configuration
+#endif
 
 /* MAC layer configuration. The MAC layer is configured through the Makefile,
    via the flag MAKE_MAC */
@@ -61,6 +65,8 @@
 #define NETSTACK_MAC     tschmac_driver
 #elif MAC_CONF_WITH_OTHER
 #define NETSTACK_MAC     NETSTACK_CONF_OTHER_MAC
+#else
+#error Unknown MAC configuration
 #endif
 
 #ifndef NETSTACK_RADIO
