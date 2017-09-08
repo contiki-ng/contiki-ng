@@ -89,25 +89,9 @@ To use TSCH, first make sure your platform supports it.
 Currently, `jn516x`, `sky`, `z1`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`, and `cooja` are the supported platforms.
 To add your own, we refer the reader to the next section.
 
-To add TSCH to your application, first include the TSCH module from your makefile with:
+To add TSCH to your application, configure the TSCH module from your makefile with:
 
-`MODULES += os/net/mac/tsch`
-
-Then, enable TSCH from your project conf with the following:
-
-```
-/* Netstack layers */
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     tschmac_driver
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nordc_driver
-#undef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
-
-/* IEEE802.15.4 frame version */
-#undef FRAME802154_CONF_VERSION
-#define FRAME802154_CONF_VERSION FRAME802154_IEEE802154E_2012
-```
+`MAKE_MAC = MAKE_MAC_TSCH`
 
 If you are running with RPL, it is recommended to enable the `tsch-rpl` module with:
 
