@@ -39,13 +39,6 @@
  * configuration, as defined in contiki-conf.h
  */
 
-/* NETSTACK_CONF_RADIO specifies the radio driver. The radio driver
-   typically depends on the radio used on the target hardware. */
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO nullradio_driver
-/* #define NETSTACK_CONF_RADIO cc2420_driver */
-#endif /* NETSTACK_CONF_RADIO */
-
 /* NETSTACK_CONF_FRAMER specifies the over-the-air frame format used
    by Contiki radio packets. For IEEE 802.15.4 radios, use the
    framer_802154 driver. */
