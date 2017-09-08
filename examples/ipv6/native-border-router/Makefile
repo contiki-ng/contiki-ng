@@ -19,8 +19,6 @@ endif
 
 # Custom MAC layer (border_router_mac_driver)
 MAKE_MAC = MAKE_MAC_OTHER
-# Configure Network stack
-CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
 connect-router:	border-router.native

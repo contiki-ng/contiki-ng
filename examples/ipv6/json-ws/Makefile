@@ -23,5 +23,4 @@ ifneq ($(TARGET),)
 all: websense-$(TARGET)
 endif
 
-CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
