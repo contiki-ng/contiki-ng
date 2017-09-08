@@ -4,10 +4,7 @@ MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/services/unit-test
 CFLAGS  += -D PROJECT_CONF_H=\"project-conf.h\"
 
-WITH_TSCH        ?= 0
 TEST_CONFIG_TYPE ?= DEFAULT
-
-CFLAGS += -D WITH_TSCH=1
 
 ifeq ($(TEST_CONFIG_TYPE), SECURITY_ON)
 CFLAGS += -D WITH_SECURITY_ON=1
