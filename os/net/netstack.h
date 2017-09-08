@@ -69,13 +69,12 @@
 #error Unknown MAC configuration
 #endif
 
-#ifndef NETSTACK_RADIO
+/* Radio driver configuration. Most often set by the platform. */
 #ifdef NETSTACK_CONF_RADIO
 #define NETSTACK_RADIO NETSTACK_CONF_RADIO
 #else /* NETSTACK_CONF_RADIO */
 #define NETSTACK_RADIO   nullradio_driver
 #endif /* NETSTACK_CONF_RADIO */
-#endif /* NETSTACK_RADIO */
 
 #ifndef NETSTACK_FRAMER
 #ifdef NETSTACK_CONF_FRAMER
