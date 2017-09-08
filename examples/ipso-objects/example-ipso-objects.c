@@ -37,8 +37,8 @@
  */
 
 #include "contiki.h"
-#include "lwm2m-engine.h"
-#include "ipso-objects.h"
+#include "services/lwm2m/lwm2m-engine.h"
+#include "services/ipso-objects/ipso-objects.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"

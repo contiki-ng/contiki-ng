@@ -35,7 +35,7 @@
  *         Niclas Finne <nfi@sics.se>
  */
 
-#include "ipso-objects.h"
+#include "services/ipso-objects/ipso-objects.h"
 #include "lib/random.h"
 
 static int32_t last_value = 27000;

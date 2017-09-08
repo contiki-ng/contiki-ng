@@ -11,7 +11,7 @@ ifdef WITH_UDP
  PROJECT_SOURCEFILES += json-ws-udp.c
 endif
 
-APPS += httpd-ws json
+MODULES += os/lib/json os/net/app-layer/httpd-ws
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 

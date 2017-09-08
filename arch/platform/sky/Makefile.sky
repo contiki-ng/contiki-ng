@@ -6,6 +6,7 @@ CONTIKI_TARGET_SOURCEFILES += contiki-sky-platform.c \
 
 include $(CONTIKI)/arch/platform/sky/Makefile.common
 
-MODULES += core/net/mac core/net/mac/framer core/net \
-           core/net/mac/csma core/net/mac/nullmac \
-           arch/dev/cc2420 arch/dev/sht11 arch/dev/ds2411
+MODULES += os/net/mac os/net/mac/framer os/net \
+           os/net/mac/csma os/net/mac/nullmac \
+           arch/dev/cc2420 arch/dev/sht11 arch/dev/ds2411 \
+					 os/storage/cfs

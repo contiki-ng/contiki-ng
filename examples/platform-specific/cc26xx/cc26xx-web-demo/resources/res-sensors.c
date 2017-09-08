@@ -38,7 +38,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "rest-engine.h"
-#include "er-coap.h"
+#include "coap.h"
 #include "cc26xx-web-demo.h"
 #include "coap-server.h"
 

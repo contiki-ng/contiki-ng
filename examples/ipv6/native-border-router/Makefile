@@ -1,6 +1,6 @@
 CONTIKI_PROJECT=border-router
 all: $(CONTIKI_PROJECT)
-APPS = slip-cmd
+MODULES += os/services/slip-cmd
 
 CONTIKI=../../..
 
@@ -13,7 +13,7 @@ ifeq ($(WITH_WEBSERVER),1)
 CFLAGS += -DWEBSERVER=1
 PROJECT_SOURCEFILES += httpd-simple.c
 else ifneq ($(WITH_WEBSERVER), 0)
-APPS += $(WITH_WEBSERVER)
+MODULES += $(WITH_WEBSERVER)
 CFLAGS += -DWEBSERVER=2
 endif
 

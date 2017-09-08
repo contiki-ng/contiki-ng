@@ -1,6 +1,6 @@
 COOJAPLATFORMDIR=$(CONTIKI)/arch/platform/cooja
 
-MODULES += core/net/ip64
+MODULES += os/net/ip64
 include $(COOJAPLATFORMDIR)/Makefile.cooja
 
 vpath %.c $(COOJAPLATFORMDIR) $(COOJAPLATFORMDIR)/dev \

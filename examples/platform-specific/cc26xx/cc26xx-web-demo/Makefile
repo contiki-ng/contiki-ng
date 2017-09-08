@@ -16,9 +16,8 @@ PROJECT_SOURCEFILES += httpd-simple.c
 CONTIKI_WITH_IPV6 = 1
 
 # REST Engine shall use Erbium CoAP implementation
-APPS += er-coap
-APPS += rest-engine
-APPS += mqtt
+MODULES += os/net/app-layer/mqtt
+MODULES += os/net/app-layer/coap
 
 CONTIKI=../../../..
 include $(CONTIKI)/Makefile.include

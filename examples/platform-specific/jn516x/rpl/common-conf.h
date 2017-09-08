@@ -88,7 +88,7 @@
 
 #if WITH_ORCHESTRA
 
-/* See apps/orchestra/README.md for more Orchestra configuration options */
+/* See os/services/orchestra/README.md for more Orchestra configuration options */
 #define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0 /* No 6TiSCH minimal schedule */
 #define TSCH_CONF_WITH_LINK_SELECTOR 1 /* Orchestra requires per-packet link selection */
 /* Orchestra callbacks */

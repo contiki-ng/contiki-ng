@@ -1,2 +1,0 @@
-# Erbium will implement the REST Engine
-CFLAGS += -DREST=coap_rest_implementation

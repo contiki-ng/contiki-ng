@@ -45,12 +45,13 @@ CLEAN += *.zoul
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += core/net core/net/mac core/net/mac/framer \
-           core/net/mac/csma core/net/mac/nullmac \
-           arch/dev/cc1200
+MODULES += os/net os/net/mac os/net/mac/framer \
+           os/net/mac/csma os/net/mac/nullmac \
+           arch/dev/cc1200 \
+           os/storage/cfs
 
 ifeq ($(WITH_IP64),1)
-  MODULES += core/net/ip64
+  MODULES += os/net/ip64
 endif
 
 BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py

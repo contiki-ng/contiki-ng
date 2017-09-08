@@ -41,7 +41,7 @@
  *         Random number generator routines exploiting the nRF52 hardware
  *         capabilities.
  *
- *         This file overrides core/lib/random.c.
+ *         This file overrides os/lib/random.c.
  *
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>

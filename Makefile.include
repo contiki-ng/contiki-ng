@@ -46,12 +46,15 @@ usage:
 	@echo "make MAKETARGETS... [TARGET=(TARGET)] [savetarget] [targets]"
 
 targets:
-	@ls -1 $(CONTIKI)/arch/platform $(TARGETDIRS) | grep -v CVS
+	@ls -1 $(CONTIKI)/arch/platform $(TARGETDIRS)
 
 savetarget:
 	-@rm -f Makefile.target
 	@echo "saving Makefile.target"
 	@echo >Makefile.target "TARGET = $(TARGET)"
+ifneq ($(BOARD),)
+	@echo >>Makefile.target "BOARD = $(BOARD)"
+endif
 
 savedefines:
 	-@rm -f Makefile.$(TARGET).defines
@@ -60,12 +63,16 @@ savedefines:
 
 OBJECTDIR = obj_$(TARGET)
 
-LOWERCASE = -abcdefghijklmnopqrstuvwxyz
-UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ
+LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
+UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
 TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
+ifneq ($(BOARD),)
+TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
+CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
+endif
 
-MODULES += core/sys core/dev core/lib
+MODULES += os os/sys os/dev os/lib os/services
 
 # Include IPv6, RPL
 
@@ -82,25 +89,22 @@ ifeq ($(CONTIKI_WITH_IPV6),1)
   CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
   CONTIKI_WITH_RPL ?= 1
   CONTIKI_WITH_RPL_LITE ?= 1
-  MODULES += core/net/ipv6 core/net/ip
+  MODULES += os/net/ipv6 os/net/ip
 endif
 
 ifeq ($(CONTIKI_WITH_RPL),1)
     CFLAGS += -DUIP_CONF_IPV6_RPL=1
     ifeq ($(CONTIKI_WITH_RPL_LITE),1)
         CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
-        MODULES += core/net/rpl-lite
+        MODULES += os/net/rpl-lite
     else
-        MODULES += core/net/rpl
+        MODULES += os/net/rpl
     endif
 else
     CFLAGS += -DUIP_CONF_IPV6_RPL=0
 endif
 
-CONTIKI_SOURCEFILES += $(CONTIKIFILES)
-
-CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac \
-                 sys cfs . }
+MODULES += os os/net os/net/mac os/storage
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 
@@ -113,19 +117,6 @@ $(OBJECTDIR):
 	mkdir $@
 
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
-
-### Include application makefiles
-
-ifdef APPS
-  APPDS = ${wildcard ${foreach DIR, $(APPDIRS), ${addprefix $(DIR)/, $(APPS)}}} \
-             ${wildcard ${addprefix $(CONTIKI)/apps/, $(APPS)} \
-             ${addprefix $(CONTIKI)/arch/platform/$(TARGET)/apps/, $(APPS)} \
-             $(APPS)}
-  APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDS), $(DIR)/Makefile.$(APP)}}}
-  -include $(APPINCLUDES)
-  APP_SOURCES = ${foreach d, $(APPDS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
-  CONTIKI_SOURCEFILES += $(APP_SOURCES)
-endif
 
 ### Include target makefile (TODO Unsafe?)
 
@@ -145,8 +136,9 @@ ifdef MODULES
   UNIQUEMODULES = $(call uniq,$(MODULES))
   MODULEDIRS = ${wildcard ${addprefix $(CONTIKI)/, $(UNIQUEMODULES)}}
   MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
+  MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
+  -include $(MODULE_INCLUDES)
   CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
-  APPDS += $(MODULEDIRS)
 endif
 
 ### Verbosity control. Use  make V=1  to get verbose builds.
@@ -179,7 +171,7 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
 CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
 SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(APPDS) $(EXTERNALDIRS) ${dir $(target_makefile)}
+             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) ${dir $(target_makefile)}
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)

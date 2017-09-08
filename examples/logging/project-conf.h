@@ -30,9 +30,9 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-/* Set maximum debug level on all modules. See core/sys/log-conf.h for
+/* Set maximum debug level on all modules. See os/sys/log-conf.h for
  * a list of supported modules. The different log levels are defined in
- * core/sys/log.h:
+ * os/sys/log.h:
  *     LOG_LEVEL_NONE         No log
  *     LOG_LEVEL_ERR          Errors
  *     LOG_LEVEL_WARN         Warnings

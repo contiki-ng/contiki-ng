@@ -34,7 +34,7 @@
  *
  * \file
  *
- * This file overrides core/lib/random.c and calls SoC-specific RNG functions
+ * This file overrides os/lib/random.c and calls SoC-specific RNG functions
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

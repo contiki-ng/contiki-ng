@@ -33,7 +33,7 @@ as well as instructions to run more advanced demos.
 
 To run the demo, you will need at least
 \li one AVR RAVEN board, which embeds an ATmega1284P and an
-ATmega3290P micro controller (MCU) as well as an AT86RF230 
+ATmega3290P micro controller (MCU) as well as an AT86RF230
 802.15.4 radio chip.
 \li one RZ USB stick, which embeds an AT90USB1287 MCU and
 an AT86RF230 802.15.4 radio chip.
@@ -48,7 +48,7 @@ mkII.
 <HR>
 \section software Software requirements
 To install the demo you need:
-\li Contiki 2.3 or later source code, installed in a directory. In 
+\li Contiki 2.3 or later source code, installed in a directory. In
 the rest of this tutorial we assume the directory is c:/contiki
 \li Cygwin with "make" utility installed.
 \li AVR Studio 4.14 or later
@@ -115,13 +115,13 @@ make
 
 \subsection installation_hw Installing the hardware
 To power the RAVEN, put the EXT/BAT jumper in BAT position.
-This will enable power on batteries. If you want to power 
-the RAVEN externally, check instructions in 
+This will enable power on batteries. If you want to power
+the RAVEN externally, check instructions in
 \ref advanced_externalboard.
 
-The RZ USB Stick needs to be plugged in the PC you will run 
+The RZ USB Stick needs to be plugged in the PC you will run
 the demo on. If you plan to run the demo on a Windows PC, you
-will need to install drivers once contiki is loaded on the 
+will need to install drivers once contiki is loaded on the
 stick. Until then, you can exit any driver installation popup.
 
 \subsection installation_loading Programming the boards
@@ -131,16 +131,16 @@ stick. Until then, you can exit any driver installation popup.
 \li On the RZ USB Stick, load the binary on the AT90USB1287
 
 <b>Hardware connections</b><br>
-\li Connect the JTAG connectors to the JTAGICE as described in 
+\li Connect the JTAG connectors to the JTAGICE as described in
 the picture below.
 
 \image html tutorial-raven-jtag.jpg
 \li Connect the JTAGICE mkII to a Windows PC through USB.
-\li To program (load) each AVR, you will need to connect the 
-JTAGICE JTAG connector to the JTAG pins corresponding to the 
+\li To program (load) each AVR, you will need to connect the
+JTAGICE JTAG connector to the JTAG pins corresponding to the
 AVR you want to program, as shown in the picture below.
 
-\image html tutorial-raven-connections.jpg 
+\image html tutorial-raven-connections.jpg
 
 
 <b>To load the binary on each AVR in Windows</b><br>
@@ -177,8 +177,8 @@ Note this programmed the fuses, EEPROM, and FLASH all at once.
 Plug the RZ USB Stick in the PC. It should appear as a USB
 network interface (e.g. usb0).
 
-usb0 should automatically get an IPv6 link local address, i.e. 
-fe80::0012:13ff:fe14:1516/64. Check this is the case by typing 
+usb0 should automatically get an IPv6 link local address, i.e.
+fe80::0012:13ff:fe14:1516/64. Check this is the case by typing
 \verbatim
 ifconfig
 \endverbatim
@@ -214,8 +214,8 @@ interface usb0
     {
         AdvOnLink on;
         AdvAutonomous on;
-        AdvPreferredLifetime 4294967295; 
-        AdvValidLifetime 4294967295; 
+        AdvPreferredLifetime 4294967295;
+        AdvValidLifetime 4294967295;
     };
 };
 \endverbatim
@@ -240,14 +240,14 @@ Plug the RZ USB Stick in the PC. A "new hardware installation"
 window should pop up. If it does not, go to "Control Panel"->
 "Add Hardware". Choose "Install the driver manually", then
 select the search path C:\\contiki\\cpu\\avr\\dev\\usb\\INF. Finish
-the installation. 
+the installation.
 
-You now need to get the "interface index" of the USB Stick 
-interface (noted [interface index] in the following) and the 
-Ethernet interface (noted [ethernet interface index] in the 
+You now need to get the "interface index" of the USB Stick
+interface (noted [interface index] in the following) and the
+Ethernet interface (noted [ethernet interface index] in the
 following).
 
-In a DOS or Cygwin shell, type 
+In a DOS or Cygwin shell, type
 \verbatim
 ipv6 if
 \endverbatim
@@ -292,8 +292,8 @@ ipv6 rtu aaaa::/64 [interface index] publish
 \subsection running_raven Booting the RAVEN boards
 
 Reboot the RAVEN board.
-The PC sends router advertisements and the RAVEN Board configures 
-an IPv6 global address based on them. The PC global addresses 
+The PC sends router advertisements and the RAVEN Board configures
+an IPv6 global address based on them. The PC global addresses
 were set above. Communication is ready.
 
 \subsection running_ping1 Pinging the RAVEN board from the router
@@ -349,7 +349,7 @@ with parity 8N1, no flow control
 \li The raven board will output debug messages to the terminal
 
 \note To enable specific debugging messages, edit the source
-file you are interested in (e.g. core/net/uip-nd6-io.c for
+file you are interested in (e.g. os/net/uip-nd6-io.c for
 Neighbor Discovery messages debug) and set the macro DEBUG to 1.
 Then recompile the code, load the new binary on the board and
 restart the RAVEN.
@@ -386,9 +386,9 @@ Read the section below to change the MAC address on one device.
 
 \subsection advanced_eeprom Change a device MAC address
 
-You can change the MAC address of a RAVEN board or the RZ USB 
-Stick by setting the 8 first bytes of the EEPROM, following 
-the convention above. You can do this three ways. 
+You can change the MAC address of a RAVEN board or the RZ USB
+Stick by setting the 8 first bytes of the EEPROM, following
+the convention above. You can do this three ways.
 
 The first is to set EEPROM bytes directly in an AVR Studio project, in
 Debug mode
@@ -402,19 +402,19 @@ the target processor.
 \li select EEPROM in the menu, then just type in the first 8 bytes
 the target MAC address
 
-The second is to reprogram the whole EEPROM individually from the 
+The second is to reprogram the whole EEPROM individually from the
 Flash and Fuses.
 
 \li Connect the JTAG pins of the JTAGICE into the JTAG connector of
 the target processor.
 \li In AVR Studio, click on "Tools"->"Program AVR"->"Auto Connect"
 \li Go to the "Program" tab
-\li In the "EEPROM" section, click on "Read" and save the EEPROM 
+\li In the "EEPROM" section, click on "Read" and save the EEPROM
 content in a file (in hex format)
-\li Edit this file with a text editor, change the value of the 
+\li Edit this file with a text editor, change the value of the
 first 8 bytes, save
 \li In the "EEPROM" section, check the path to the "Input Hex file"
-is the one to the file you just modified and click on "Program". 
+is the one to the file you just modified and click on "Program".
 
 The third is to modify the default value in the code:
 
@@ -474,7 +474,7 @@ with
 #define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
 \endcode
 
-Recompile and load Contiki for both the RAVEN ATmega1284P and RZ USB 
+Recompile and load Contiki for both the RAVEN ATmega1284P and RZ USB
 Stick.
 
 If you capture packets being sent over the air (on the 802.15.4
@@ -515,7 +515,7 @@ ip -6 address add fe80::0012:13ff:fe14:1516/64 scope link dev usb0
 \endverbatim
 
 <b>make version issues</b><br>
-You need to use the "make" executable from WinAVR. There 
+You need to use the "make" executable from WinAVR. There
 are compilation issues with GNU make coming with Cygwin.
 
 <HR>
@@ -527,7 +527,7 @@ are compilation issues with GNU make coming with Cygwin.
 \li User interface on Raven:\ref lcdraven
 \li Wireless libraries for Atmel Radio: \ref wireless
 \li MAC for Atmel Radio:    \ref macdoc
-\li IPv6 Implementation: \ref uip6 
+\li IPv6 Implementation: \ref uip6
 \li 6lowpan Implementation: \ref sicslowpan
 
 \subsection annex_hardware Annex - Atmel products detailed documentation
@@ -560,22 +560,22 @@ http://www.atmel.com/dyn/products/tools_card.asp?tool_id=3353
 <b>Buying the hardware (part number ATAVRRZRAVEN and ATJTAGICE2)</b><br>
 \li For the U.S. you can use http://www.atmel.com/contacts/distributor_check.asp
 \li Digikey http://www.digikey.com/
-\li Spoerle http://www.spoerle.com/en/products 
+\li Spoerle http://www.spoerle.com/en/products
 \li Lawicel http://www.lawicel-shop.se
 
 
 \subsection annex_software Software setup details
 <b>Contiki</b><br>
 Download Contiki code from http://www.sics.se/contiki and
-extract the source code. We assume the directory you extract 
+extract the source code. We assume the directory you extract
 to is c:/contiki.
 
 <b>Cygwin</b><br>
 \li Download Cygwin from http://www.cygwin.com
 \li Launch the setup executable
-\li Follow the instructions until you reach the Window "Cygwin 
+\li Follow the instructions until you reach the Window "Cygwin
 Setup - Select Packages"
-\li In this window, expand the "Devel" item and 
+\li In this window, expand the "Devel" item and
 
 <b>AVR Studio</b><br>
 Download and install AVR Studio from
@@ -586,7 +586,7 @@ WinAVR which contains a number of AVR tools
 such as the avr-gcc compiler.
 
 Download and install WinAVR latest version from
-http://winavr.sourceforge.net/ 
+http://winavr.sourceforge.net/
 
 <b>JTAGICE mkII Drivers</b><br>
 Plug the JTAGICE mkII in a USB port of a windows PC. Follow the

@@ -13,12 +13,8 @@ PROJECT_SOURCEFILES += rpl-tools.c
 CFLAGS += -DWITH_COAP
 CFLAGS += -DREST=coap_rest_implementation
 CFLAGS += -DUIP_CONF_TCP=0
-APPS += orchestra
-APPS += json
-APPS += er-coap
-APPS += rest-engine
-
-MODULES += core/net/mac/tsch
+MODULES += os/net/app-layer/coap
+MODULES += os/net/mac/tsch os/services/orchestra os/lib/json
 
 all: $(CONTIKI_PROJECT)
 

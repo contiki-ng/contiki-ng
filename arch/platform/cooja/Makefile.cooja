@@ -77,8 +77,8 @@ CFLAGSNO += -Werror
 endif
 CFLAGS   += $(CFLAGSNO)
 
-MODULES += core/net core/net/mac core/net/mac/framer core/net/ip64-addr \
-  core/net/mac/csma core/net/mac/nullmac
+MODULES += os/net os/net/mac os/net/mac/framer os/net/ip64-addr \
+  os/net/mac/csma os/net/mac/nullmac
 
 ## Copied from Makefile.include, since Cooja overrides CFLAGS et al
 HAS_STACK = 0

@@ -4,7 +4,7 @@ all: mqtt-demo
 
 CONTIKI_WITH_IPV6 = 1
 
-APPS += mqtt
+MODULES += os/net/app-layer/mqtt
 
 CONTIKI = ../../../..
 include $(CONTIKI)/Makefile.include

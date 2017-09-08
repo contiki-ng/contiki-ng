@@ -11,17 +11,12 @@ CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 PROJECT_SOURCEFILES += slip-bridge.c slip.c
 
 PROJECTDIRS += .. ../../tools
-PROJECT_SOURCEFILES += rpl-tools.c 
+PROJECT_SOURCEFILES += rpl-tools.c
 
 CFLAGS += -DWITH_COAP
-CFLAGS += -DREST=coap_rest_implementation
 CFLAGS += -DUIP_CONF_TCP=0
-APPS += orchestra
-APPS += json
-APPS += er-coap
-APPS += rest-engine
-
-MODULES += core/net/mac/tsch
+MODULES += os/net/app-layer/coap
+MODULES += os/net/mac/tsch os/services/orchestra os/lib/json
 
 all: $(CONTIKI_PROJECT)
 include $(CONTIKI)/Makefile.include
@@ -38,11 +33,11 @@ connect-router:	$(CONTIKI)/tools/tunslip6
 connect-router-sw:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -v1 -X -B 1000000 $(PREFIX)
 
-#using hw flow control	
+#using hw flow control
 connect-router-hw:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -v1 -H -B 1000000 $(PREFIX)
 
-#using no flow control	
+#using no flow control
 connect-router-no:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -v1 -B 1000000 $(PREFIX)
 
