@@ -9,7 +9,7 @@ endif
 CONTIKI=../../..
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-PROJECT_SOURCEFILES += slip-net.c no-framer.c
+PROJECT_SOURCEFILES += slip-net.c
 ifeq ($(TARGET),sky)
   PROJECT_SOURCEFILES += slip-radio-cc2420.c slip-radio-sky-sensors.c
 endif
