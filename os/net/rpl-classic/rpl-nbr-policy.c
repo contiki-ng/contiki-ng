@@ -44,7 +44,7 @@
  *
  */
 
-#include "net/rpl/rpl-private.h"
+#include "net/rpl-classic/rpl-private.h"
 #include "net/nbr-table.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"

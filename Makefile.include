@@ -98,7 +98,7 @@ ifeq ($(CONTIKI_WITH_RPL),1)
         CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
         MODULES += os/net/rpl-lite
     else
-        MODULES += os/net/rpl
+        MODULES += os/net/rpl-classic
     endif
 else
     CFLAGS += -DUIP_CONF_IPV6_RPL=0

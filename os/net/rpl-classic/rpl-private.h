@@ -37,7 +37,7 @@
 #ifndef RPL_PRIVATE_H
 #define RPL_PRIVATE_H
 
-#include "net/rpl/rpl.h"
+#include "net/rpl-classic/rpl.h"
 
 #include "lib/list.h"
 #include "net/ip/uip.h"
@@ -45,7 +45,7 @@
 #include "sys/ctimer.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "net/rpl/rpl-ns.h"
+#include "net/rpl-classic/rpl-ns.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 /*---------------------------------------------------------------------------*/

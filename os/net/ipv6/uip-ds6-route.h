@@ -48,7 +48,7 @@
 #if UIP_CONF_IPV6_RPL_LITE == 1
 #include "net/rpl-lite/rpl-conf.h"
 #else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl/rpl-conf.h"
+#include "net/rpl-classic/rpl-conf.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
 #endif
 
