@@ -46,6 +46,7 @@
 #include "shell.h"
 #include "shell-commands.h"
 #include "sys/log.h"
+#include "dev/watchdog.h"
 #include "net/ip/uip.h"
 #include "net/ip/uiplib.h"
 #include "net/ipv6/uip-icmp6.h"
@@ -564,6 +565,14 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
 }
 /*---------------------------------------------------------------------------*/
 static
+PT_THREAD(cmd_reboot(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+  SHELL_OUTPUT(output, "rebooting\n");
+  watchdog_reboot();
+  PT_END(pt);
+}
+static
 PT_THREAD(cmd_tsch_schedule(struct pt *pt, shell_output_func output, char *args))
 {
   struct tsch_slotframe *sf;
@@ -620,6 +629,7 @@ struct shell_command_t shell_commands[] = {
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
   { "tsch-schedule",        cmd_tsch_schedule,        "'> tsch-schedule': Shows the current TSCH schedule" },
   { "tsch-status",          cmd_tsch_status,          "'> tsch-status': Shows a summary of the current TSCH state" },
+  { "reboot",               cmd_reboot,               "'> reboot': Reboot the board by watchdog_reboot()" },
   { NULL, NULL, NULL },
 };
 
