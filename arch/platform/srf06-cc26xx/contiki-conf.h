@@ -280,7 +280,14 @@ typedef uint32_t rtimer_clock_t;
 
 #ifndef TSCH_CONF_BASE_DRIFT_PPM
 /* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this. */
+ * Enable adaptive sync to enable compensation for this.
+ * Slot length 10000 usec
+ *             328 ticks
+ * Tick duration 30.517578125 usec
+ * Real slot duration 10009.765625 usec
+ * Target - real duration = -9.765625 usec
+ * TSCH_CONF_BASE_DRIFT_PPM -977
+ */
 #define TSCH_CONF_BASE_DRIFT_PPM -977
 #endif
 
