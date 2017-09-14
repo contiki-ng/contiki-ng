@@ -61,6 +61,13 @@ extern struct shell_command_t shell_commands[];
  */
 void shell_commands_init(void);
 
+#include "net/mac/tsch/tsch.h"
+#if TSCH_WITH_SIXTOP
+typedef void (*shell_command_6top_sub_cmd_t)(shell_output_func output,
+                                             char *args);
+void shell_commands_set_6top_sub_cmd(shell_command_6top_sub_cmd_t sub_cmd);
+#endif /* TSCH_WITH_SIXTOP */
+
 #endif /* _SHELL_COMMANDS_H_ */
 
 /** @} */

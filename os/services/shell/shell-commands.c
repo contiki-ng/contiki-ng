@@ -72,6 +72,9 @@ static shell_output_func *curr_ping_output_func = NULL;
 static struct process *curr_ping_process;
 static uint8_t curr_ping_ttl;
 static uint16_t curr_ping_datalen;
+#if TSCH_WITH_SIXTOP
+static shell_command_6top_sub_cmd_t sixtop_sub_cmd = NULL;
+#endif /* TSCH_WITH_SIXTOP */
 
 /*---------------------------------------------------------------------------*/
 static const char *
@@ -608,6 +611,34 @@ PT_THREAD(cmd_tsch_schedule(struct pt *pt, shell_output_func output, char *args)
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+#if TSCH_WITH_SIXTOP
+void
+shell_commands_set_6top_sub_cmd(shell_command_6top_sub_cmd_t sub_cmd)
+{
+  sixtop_sub_cmd = sub_cmd;
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_6top(struct pt *pt, shell_output_func output, char *args))
+{
+  char *next_args;
+
+  PT_BEGIN(pt);
+
+  SHELL_ARGS_INIT(args, next_args);
+
+  if(sixtop_sub_cmd == NULL) {
+    SHELL_OUTPUT(output, "6top command is unavailable:\n");
+  } else {
+    SHELL_OUTPUT(output, "6top: ");
+    sixtop_sub_cmd(output, args);
+  }
+  SHELL_ARGS_NEXT(args, next_args);
+
+  PT_END(pt);
+}
+#endif /* TSCH_WITH_SIXTOP */
+/*---------------------------------------------------------------------------*/
 void
 shell_commands_init(void)
 {
@@ -630,6 +661,9 @@ struct shell_command_t shell_commands[] = {
   { "tsch-schedule",        cmd_tsch_schedule,        "'> tsch-schedule': Shows the current TSCH schedule" },
   { "tsch-status",          cmd_tsch_status,          "'> tsch-status': Shows a summary of the current TSCH state" },
   { "reboot",               cmd_reboot,               "'> reboot': Reboot the board by watchdog_reboot()" },
+#if TSCH_WITH_SIXTOP
+  { "6top",                 cmd_6top,                 "'> 6top help': Shows 6top command usage" },
+#endif /* TSCH_WITH_SIXTOP */
   { NULL, NULL, NULL },
 };
 
