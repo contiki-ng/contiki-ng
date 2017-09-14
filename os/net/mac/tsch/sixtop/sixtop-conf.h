@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Yasuyuki Tanaka
+ * Copyright (c) 2016, Yasuyuki Tanaka
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,31 +28,38 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup sixtop
+ * @{
+ */
+/**
+ * \file
+ *         6top Configuration
+ * \author
+ *         Yasuyuki Tanaka <yasuyuki.tanaka@inf.ethz.ch>
+ */
 
-#ifndef _PROJECT_CONF_H_
-#define _PROJECT_CONF_H_
+#ifndef __SIXTOP_CONF_H__
+#define __SIXTOP_CONF_H__
 
-#define UNIT_TEST_PRINT_FUNCTION test_print_report
+/**
+ * \brief The maximum number of Scheduling Functions in the system.
+ */
+#ifdef SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS
+#define SIXTOP_MAX_SCHEDULING_FUNCTIONS SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS
+#else
+#define SIXTOP_MAX_SCHEDULING_FUNCTIONS 1
+#endif
 
-/* Set the minimum value of QUEUEBUF_CONF_NUM for the flush_nbr_queue test */
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM   1
+/**
+ * \brief The maximum number of transactions which the sixtop module can handle
+ * at the same time.
+ */
+#ifdef SIXTOP_CONF_MAX_TRANSACTIONS
+#define SIXTOP_MAX_TRANSACTIONS SIXTOP_CONF_MAX_TRANSACTIONS
+#else
+#define SIXTOP_MAX_TRANSACTIONS 1
+#endif
 
-/* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 1
-
-#undef TSCH_CONF_AUTOSTART
-#define TSCH_CONF_AUTOSTART 1
-
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        tschmac_driver
-
-#undef TSCH_CONF_WITH_SIXTOP
-#define TSCH_CONF_WITH_SIXTOP 1
-
-#if CONTIKI_TARGET_COOJA
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
-#endif /* CONTIKI_TARGET_COOJA */
-
-#endif /* __PROJECT_CONF_H__ */
+#endif /* !__SIXTOP_CONF_H__ */
+/** @} */

@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -32,27 +31,22 @@
 #ifndef _PROJECT_CONF_H_
 #define _PROJECT_CONF_H_
 
-#define UNIT_TEST_PRINT_FUNCTION test_print_report
-
-/* Set the minimum value of QUEUEBUF_CONF_NUM for the flush_nbr_queue test */
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM   1
-
-/* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 1
-
-#undef TSCH_CONF_AUTOSTART
-#define TSCH_CONF_AUTOSTART 1
-
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        tschmac_driver
-
-#undef TSCH_CONF_WITH_SIXTOP
-#define TSCH_CONF_WITH_SIXTOP 1
+#define CONTIKI_WITH_RPL     0
+#undef UIP_CONF_IPV6_RPL
+#define UIP_CONF_IPV6_RPL    0
+#define UIP_CONF_ND6_SEND_RA 0
 
 #if CONTIKI_TARGET_COOJA
 #define COOJA_CONF_SIMULATE_TURNAROUND 0
+#else
+#error "This example is intended to be used for Cooja mote."
 #endif /* CONTIKI_TARGET_COOJA */
 
-#endif /* __PROJECT_CONF_H__ */
+#define NETSTACK_CONF_MAC                  tschmac_driver
+
+#define TSCH_CONF_WITH_SIXTOP              1
+#define TSCH_LOG_CONF_LEVEL                2
+#define TSCH_CONF_AUTOSTART                1
+#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE TSCH_HOPPING_SEQUENCE_1_1
+
+#endif /* _PROJECT_CONF_H_ */

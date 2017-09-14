@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017, Yasuyuki Tanaka
+ * Copyright (c) 2016, Yasuyuki Tanaka
+ * Copyright (c) 2016, Centre for Development of Advanced Computing (C-DAC).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,31 +29,25 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \file
+ *         A 6P Simple Schedule Function
+ * \author
+ *         Shalu R <shalur@cdac.in>
+ *         Lijo Thomas <lijo@cdac.in>
+ *         Yasuyuki Tanaka <yasuyuki.tanaka@inf.ethz.ch>
+ */
 
-#ifndef _PROJECT_CONF_H_
-#define _PROJECT_CONF_H_
+#ifndef _SIXTOP_SF_SIMPLE_H_
+#define _SIXTOP_SF_SIMPLE_H_
 
-#define UNIT_TEST_PRINT_FUNCTION test_print_report
+#include "net/linkaddr.h"
 
-/* Set the minimum value of QUEUEBUF_CONF_NUM for the flush_nbr_queue test */
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM   1
+int sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links);
+int sf_simple_remove_links(linkaddr_t *peer_addr);
 
-/* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 1
+#define SF_SIMPLE_MAX_LINKS  3
+#define SF_SIMPLE_SFID       0xf0
+extern const sixtop_sf_t sf_simple_driver;
 
-#undef TSCH_CONF_AUTOSTART
-#define TSCH_CONF_AUTOSTART 1
-
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        tschmac_driver
-
-#undef TSCH_CONF_WITH_SIXTOP
-#define TSCH_CONF_WITH_SIXTOP 1
-
-#if CONTIKI_TARGET_COOJA
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
-#endif /* CONTIKI_TARGET_COOJA */
-
-#endif /* __PROJECT_CONF_H__ */
+#endif /* !_SIXTOP_SF_SIMPLE_H_ */

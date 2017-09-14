@@ -79,6 +79,7 @@ extern int curr_log_level_ipv6;
 extern int curr_log_level_6lowpan;
 extern int curr_log_level_mac;
 extern int curr_log_level_framer;
+extern int curr_log_level_6top;
 
 extern struct log_module all_modules[];
 
@@ -88,6 +89,7 @@ extern struct log_module all_modules[];
 #define LOG_LEVEL_6LOWPAN                     MIN((LOG_CONF_LEVEL_6LOWPAN), curr_log_level_6lowpan)
 #define LOG_LEVEL_MAC                         MIN((LOG_CONF_LEVEL_MAC), curr_log_level_mac)
 #define LOG_LEVEL_FRAMER                      MIN((LOG_CONF_LEVEL_FRAMER), curr_log_level_framer)
+#define LOG_LEVEL_6TOP                        MIN((LOG_CONF_LEVEL_6TOP), curr_log_level_6top)
 
 /* Main log function */
 

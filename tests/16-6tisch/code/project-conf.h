@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -32,27 +31,50 @@
 #ifndef _PROJECT_CONF_H_
 #define _PROJECT_CONF_H_
 
+#if CONTIKI_TARGET_COOJA
+#define COOJA_CONF_SIMULATE_TURNAROUND 0
+#else
+//#error "This file is intended to be used for Cooja mote."
+#endif /* CONTIKI_TARGET_COOJA */
+
+#undef SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS
+#define SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS 2
+
+#undef SIXTOP_CONF_MAX_TRANSACTIONS
+#define SIXTOP_CONF_MAX_TRANSACTIONS      2
+
+#undef SIXP_CONF_WITH_PAYLOAD_TERMINATION_IE
+#define SIXP_CONF_WITH_PAYLOAD_TERMINATION_IE 1
+
+#undef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS         2
+
 #define UNIT_TEST_PRINT_FUNCTION test_print_report
-
-/* Set the minimum value of QUEUEBUF_CONF_NUM for the flush_nbr_queue test */
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM   1
-
-/* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 1
-
-#undef TSCH_CONF_AUTOSTART
-#define TSCH_CONF_AUTOSTART 1
-
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        tschmac_driver
 
 #undef TSCH_CONF_WITH_SIXTOP
 #define TSCH_CONF_WITH_SIXTOP 1
 
-#if CONTIKI_TARGET_COOJA
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
-#endif /* CONTIKI_TARGET_COOJA */
+#undef TSCH_LOG_CONF_PER_SLOT
+#define TSCH_LOG_CONF_PER_SLOT 1
+
+#define LOG_CONF_LEVEL_6TOP LOG_LEVEL_DBG
+
+#undef TSCH_CONF_AUTOSTART
+#define TSCH_CONF_AUTOSTART 0
+
+#undef IEEE802154_CONF_PANID
+#define IEEE802154_CONF_PANID 0xabcd
+
+#undef NETSTACK_CONF_MAC
+#define NETSTACK_CONF_MAC        test_mac_driver
+
+#undef NETSTACK_CONF_RDC
+#define NETSTACK_CONF_RDC        nordc_driver
+
+#undef NETSTACK_CONF_FRAMER
+#define NETSTACK_CONF_FRAMER     framer_802154
+
+#undef FRAME802154_CONF_VERSION
+#define FRAME802154_CONF_VERSION FRAME802154_IEEE802154_2015
 
 #endif /* __PROJECT_CONF_H__ */

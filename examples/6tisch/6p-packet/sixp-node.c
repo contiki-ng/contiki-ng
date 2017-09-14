@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,30 +28,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PROJECT_CONF_H_
-#define _PROJECT_CONF_H_
+#include <contiki.h>
+#include <lib/assert.h>
+#include <sys/node-id.h>
+#include <net/mac/tsch/tsch.h>
+#include <net/mac/tsch/tsch-queue.h>
+#include <net/mac/tsch/sixtop/sixtop.h>
 
-#define UNIT_TEST_PRINT_FUNCTION test_print_report
+extern const sixtop_sf_t test_sf;
+extern int test_sf_start(const linkaddr_t *addr);
 
-/* Set the minimum value of QUEUEBUF_CONF_NUM for the flush_nbr_queue test */
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM   1
+PROCESS(sixp_node_process, "6P node");
+AUTOSTART_PROCESSES(&sixp_node_process);
 
-/* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
-#define TSCH_LOG_CONF_PER_SLOT 1
+#define COORDINATOR_NODE_ID 1
 
-#undef TSCH_CONF_AUTOSTART
-#define TSCH_CONF_AUTOSTART 1
+PROCESS_THREAD(sixp_node_process, ev, data)
+{
+  PROCESS_BEGIN();
 
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        tschmac_driver
+  sixtop_add_sf(&test_sf);
 
-#undef TSCH_CONF_WITH_SIXTOP
-#define TSCH_CONF_WITH_SIXTOP 1
+  if(node_id == COORDINATOR_NODE_ID) {
+    tsch_set_coordinator(1);
+    assert(test_sf_start(NULL) == 0);
+  } else {
+    static struct etimer et;
+    struct tsch_neighbor *peer;
+    etimer_set(&et, CLOCK_SECOND);
+    while(tsch_is_associated == 0) {
+      PROCESS_YIELD_UNTIL(etimer_expired(&et));
+      etimer_reset(&et);
+    }
+    peer = tsch_queue_get_time_source();
+    assert(test_sf_start((const linkaddr_t *)&peer->addr) == 0);
+  }
 
-#if CONTIKI_TARGET_COOJA
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
-#endif /* CONTIKI_TARGET_COOJA */
-
-#endif /* __PROJECT_CONF_H__ */
+  PROCESS_END();
+}
