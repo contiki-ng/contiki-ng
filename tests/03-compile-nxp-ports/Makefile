@@ -19,7 +19,8 @@ sensniff/jn516x \
 ipv6/rpl-tsch/jn516x \
 ipv6/rpl-tsch/jn516x:MAKE_WITH_ORCHESTRA=1 \
 ipv6/rpl-tsch/jn516x:MAKE_WITH_SECURITY=1 \
-logging/jn516x
+logging/jn516x \
+6tisch/etsi-plugtest-2017/jn516x
 
 TOOLS=
 
