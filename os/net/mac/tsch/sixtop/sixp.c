@@ -194,8 +194,8 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
       LOG_ERR("6P: unexpected error; cannot get our GEN\n");
       return;
     }
-    LOG_ERR("6P: received GEN %u, our GEN: %u\n",
-            pkt.gen, sixp_nbr_get_gen(nbr));
+    LOG_INFO("6P: received GEN %u, our GEN: %u\n",
+             pkt.gen, sixp_nbr_get_gen(nbr));
     if(pkt.gen == gen) {
       invalid_schedule_generation = 0; /* valid combination */
     } else {
