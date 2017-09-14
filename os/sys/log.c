@@ -104,7 +104,7 @@ log_6addr(const uip_ipaddr_t *ipaddr)
         }
         LOG_OUTPUT("%x", a);
       }
-	  }
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -171,6 +171,9 @@ int
 log_get_level(const char *module)
 {
   int i = 0;
+  if(module == NULL) {
+    return -1;
+  }
   while(all_modules[i].name != NULL) {
     if(!strcmp(module, all_modules[i].name)) {
       return *all_modules[i].curr_log_level;
