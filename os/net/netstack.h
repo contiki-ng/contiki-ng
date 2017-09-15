@@ -113,7 +113,36 @@ extern const struct framer         NETSTACK_FRAMER;
 
 void netstack_init(void);
 
-/* Netstack sniffer */
+
+/* Netstack ip_packet_processor - for implementing packet filters, firewalls,
+   debuggin info, etc */
+
+enum netstack_ip_action {
+  NETSTACK_IP_PROCESS = 0, /* Default behaviour - nothing else */
+  NETSTACK_IP_DROP = 1, /* Drop this packet before processing/sending anymore */
+};
+
+enum netstack_ip_callback_type {
+  NETSTACK_IP_INPUT = 0,
+  NETSTACK_IP_OUTPUT = 1,
+};
+
+struct netstack_ip_packet_processor {
+  struct netstack_ip_packet_processor *next;
+  enum netstack_ip_action (* process_input)(void);
+  enum netstack_ip_action (* process_output)(const linkaddr_t *localdest);
+};
+
+/* This function is intended for the IP stack to call whenever input/output
+   callback needs to be called */
+enum netstack_ip_action netstack_do_ip_callback(uint8_t type, const linkaddr_t *localdest);
+
+void netstack_ip_packet_processor_add(struct netstack_ip_packet_processor *p);
+void netstack_ip_packet_processor_remove(struct netstack_ip_packet_processor *p);
+
+
+
+/* Netstack sniffer - this will soon be deprecated... */
 
 struct netstack_sniffer {
   struct netstack_sniffer *next;

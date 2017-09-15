@@ -122,8 +122,15 @@ tcpip_output(const uip_lladdr_t *a)
 {
   int ret;
   if(NETSTACK_NETWORK.output != NULL) {
-    ret = NETSTACK_NETWORK.output((const linkaddr_t *) a);
-    return ret;
+    if(netstack_do_ip_callback(NETSTACK_IP_OUTPUT, (const linkaddr_t *)a) ==
+       NETSTACK_IP_PROCESS) {
+      ret = NETSTACK_NETWORK.output((const linkaddr_t *) a);
+      return ret;
+    } else {
+      /* Ok, ignore and drop... */
+      uip_clear_buf();
+      return 0;
+    }
   }
   LOG_INFO("output: NETSTACK_NETWORK needs to be set to an output function");
   return 0;
@@ -428,7 +435,11 @@ eventhandler(process_event_t ev, process_data_t data)
 void
 tcpip_input(void)
 {
-  process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
+  printf("tcpip_input\n");
+  if(netstack_do_ip_callback(NETSTACK_IP_INPUT, NULL) ==
+     NETSTACK_IP_PROCESS) {
+    process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
+  } /* else - do nothing and drop */
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/

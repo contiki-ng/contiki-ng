@@ -38,6 +38,50 @@
  */
 
 #include "net/netstack.h"
+#include "lib/list.h"
+
+/* The list of IP processors that will process IP packets before uip or after */
+LIST(ip_processor_list);
+
+/* Note: localdest is only used for the output callback */
+enum netstack_ip_action
+netstack_do_ip_callback(uint8_t type, const linkaddr_t *localdest)
+{
+  enum netstack_ip_action action = NETSTACK_IP_PROCESS;
+  struct netstack_ip_packet_processor *p;
+  for(p = list_head(ip_processor_list);
+      p != NULL;
+      p = list_item_next(p)) {
+    if(type == NETSTACK_IP_OUTPUT) {
+      if(p->process_output != NULL) {
+        action = p->process_output(localdest);
+      }
+    } else if(type == NETSTACK_IP_INPUT) {
+      if(p->process_input != NULL) {
+        action = p->process_input();
+      }
+    }
+    /* if not NETSTACK_IP_PROCESS - quit and return the desired action */
+    if(action != NETSTACK_IP_PROCESS)
+      return action;
+  }
+  return action;
+}
+/*---------------------------------------------------------------------------*/
+void
+netstack_ip_packet_processor_add(struct netstack_ip_packet_processor *p)
+{
+  if(p != NULL) {
+    list_add(ip_processor_list, p);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+uip_ds6_ip_packet_processor_rm(struct netstack_ip_packet_processor *p)
+                               {
+  list_remove(ip_processor_list, p);
+}
+
 /*---------------------------------------------------------------------------*/
 void
 netstack_init(void)
