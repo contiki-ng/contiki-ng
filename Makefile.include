@@ -121,6 +121,9 @@ ifeq ($(MAKE_NET),MAKE_NET_IPV6)
   CONTIKI_WITH_RPL ?= 1
   CONTIKI_WITH_RPL_LITE ?= 1
   MODULES += os/net/ipv6 os/net/ip
+else
+  CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
+  MODULES += os/net/nullnet
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_OTHER)

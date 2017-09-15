@@ -48,7 +48,7 @@
 #if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_NETWORK sicslowpan_driver
 #elif NETSTACK_CONF_WITH_NULLNET
-#error Nullnet layer not implemented yet
+#define NETSTACK_NETWORK nullnet_driver
 #elif NETSTACK_CONF_WITH_OTHER
 #define NETSTACK_NETWORK NETSTACK_CONF_OTHER_NETWORK
 #else
