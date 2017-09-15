@@ -57,16 +57,12 @@
 #else /* NETSTACK_CONF_H */
 
 /* Default network config */
-#if NETSTACK_CONF_WITH_IPV6
-
 #define CSMA_CONF_SEND_SOFT_ACK 1
 #define CSMA_CONF_ACK_WAIT_TIME                RTIMER_SECOND / 500
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME 0
 
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
-
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #endif /* NETSTACK_CONF_H */
 

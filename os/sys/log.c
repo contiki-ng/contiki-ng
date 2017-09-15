@@ -51,12 +51,11 @@
 #include "sys/log.h"
 #include "net/ip/ip64-addr.h"
 
-#if NETSTACK_CONF_WITH_IPV6
-
 int curr_log_level_rpl = LOG_CONF_LEVEL_RPL;
 int curr_log_level_tcpip = LOG_CONF_LEVEL_TCPIP;
 int curr_log_level_ipv6 = LOG_CONF_LEVEL_IPV6;
 int curr_log_level_6lowpan = LOG_CONF_LEVEL_6LOWPAN;
+int curr_log_level_nullnet = LOG_CONF_LEVEL_NULLNET;
 int curr_log_level_mac = LOG_CONF_LEVEL_MAC;
 int curr_log_level_framer = LOG_CONF_LEVEL_FRAMER;
 int curr_log_level_6top = LOG_CONF_LEVEL_6TOP;
@@ -66,11 +65,14 @@ struct log_module all_modules[] = {
   {"tcpip", &curr_log_level_tcpip, LOG_CONF_LEVEL_TCPIP},
   {"ipv6", &curr_log_level_ipv6, LOG_CONF_LEVEL_IPV6},
   {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
+  {"nullnet", &curr_log_level_nullnet, LOG_CONF_LEVEL_NULLNET},
   {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},
   {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
   {"6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP},
   {NULL, NULL, 0},
 };
+
+#if NETSTACK_CONF_WITH_IPV6
 
 /*---------------------------------------------------------------------------*/
 void

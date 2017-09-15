@@ -94,6 +94,10 @@
 #define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_NONE
 #endif /* LOG_CONF_LEVEL_6LOWPAN */
 
+#ifndef LOG_CONF_LEVEL_NULLNET
+#define LOG_CONF_LEVEL_NULLNET                     LOG_LEVEL_INFO
+#endif /* LOG_CONF_LEVEL_NULLNET */
+
 #ifndef LOG_CONF_LEVEL_MAC
 #define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_NONE
 #endif /* LOG_CONF_LEVEL_MAC */
