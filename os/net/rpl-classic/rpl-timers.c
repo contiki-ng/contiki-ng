@@ -42,8 +42,8 @@
  */
 
 #include "contiki.h"
-#include "net/rpl/rpl-private.h"
-#include "net/rpl/rpl-ns.h"
+#include "net/rpl-classic/rpl-private.h"
+#include "net/rpl-classic/rpl-ns.h"
 #include "net/link-stats.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "lib/random.h"
