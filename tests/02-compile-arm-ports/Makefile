@@ -44,6 +44,8 @@ ipv6/rpl-tsch/zoul \
 ipv6/rpl-tsch/zoul:MAKE_WITH_ORCHESTRA=1 \
 ipv6/rpl-tsch/zoul:MAKE_WITH_SECURITY=1 \
 logging/zoul \
+6tisch/etsi-plugtest-2017/zoul:BOARD=remote \
+6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650
 
 TOOLS=
 
