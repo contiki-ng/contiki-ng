@@ -167,9 +167,9 @@ PROCESS_THREAD(node_process, ev, data)
   printf("Init: node starting with role %s\n",
       node_role == role_6ln ? "6ln" : (node_role == role_6dr) ? "6dr" : "6dr-sec");
 
-#if WITH_TSCH
+#if MAC_CONF_WITH_TSCH
   tsch_set_pan_secured(LLSEC802154_ENABLED && (node_role == role_6dr_sec));
-#endif /* WITH_TSCH */
+#endif /* MAC_CONF_WITH_TSCH */
   is_coordinator = node_role > role_6ln;
 
   if(is_coordinator) {

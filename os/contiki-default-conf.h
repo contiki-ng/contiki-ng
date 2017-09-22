@@ -33,43 +33,6 @@
 #define CONTIKI_DEFAULT_CONF_H
 
 /*---------------------------------------------------------------------------*/
-/* Netstack configuration
- *
- * The netstack configuration is typically overridden by the platform
- * configuration, as defined in contiki-conf.h
- */
-
-/* NETSTACK_CONF_RADIO specifies the radio driver. The radio driver
-   typically depends on the radio used on the target hardware. */
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO nullradio_driver
-/* #define NETSTACK_CONF_RADIO cc2420_driver */
-#endif /* NETSTACK_CONF_RADIO */
-
-/* NETSTACK_CONF_FRAMER specifies the over-the-air frame format used
-   by Contiki radio packets. For IEEE 802.15.4 radios, use the
-   framer_802154 driver. */
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER framer_802154
-/* #define NETSTACK_CONF_FRAMER framer_802154 */
-#endif /* NETSTACK_CONF_FRAMER */
-
-/* NETSTACK_CONF_MAC specifies the Medium Access Control (MAC)
-   layer. The nullmac_driver does not provide any MAC
-   functionality. The csma_driver is the default CSMA MAC layer, but
-   is not compatible with all radios. */
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC   csma_driver
-/* #define NETSTACK_CONF_MAC   csma_driver */
-#endif /* NETSTACK_CONF_MAC */
-
-/* NETSTACK_CONF_NETWORK specifies the network layer and can be either
-   sicslowpan_driver, for IPv6 networking. */
-#ifndef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
-#endif /* NETSTACK_CONF_NETWORK */
-
-/*---------------------------------------------------------------------------*/
 /* Packet buffer size options.
  *
  * The packet buffer size options can be tweaked on a per-project

@@ -56,9 +56,8 @@
  * @{
  */
 
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     ble_ipsp_mac_driver
-#endif /* NETSTACK_CONF_MAC */
+/* Selected in netstack.h because our Makefile sets MAKE_MAC = MAKE_MAC_OTHER */
+#define NETSTACK_CONF_OTHER_MAC     ble_ipsp_mac_driver
 
 /* 6LoWPAN */
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD         1280

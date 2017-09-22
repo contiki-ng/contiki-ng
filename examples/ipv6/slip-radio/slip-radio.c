@@ -53,8 +53,7 @@ extern const struct slip_radio_sensors SLIP_RADIO_CONF_SENSORS;
 #endif
 
 void slip_send_packet(const uint8_t *ptr, int len);
-void no_framer_parse_802154_frame(void);
-      
+
  /* max 16 packets at the same time??? */
 uint8_t packet_ids[16];
 int packet_pos;
@@ -73,6 +72,45 @@ CMD_HANDLERS(CMD_CONF_HANDLERS);
 #else
 CMD_HANDLERS(slip_radio_cmd_handler);
 #endif
+
+static const uint16_t mac_src_pan_id = IEEE802154_PANID;
+/*---------------------------------------------------------------------------*/
+static int
+is_broadcast_addr(uint8_t mode, uint8_t *addr)
+{
+  int i = mode == FRAME802154_SHORTADDRMODE ? 2 : 8;
+  while(i-- > 0) {
+    if(addr[i] != 0xff) {
+      return 0;
+    }
+  }
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static int
+parse_frame(void)
+{
+  frame802154_t frame;
+  int len;
+  len = packetbuf_datalen();
+  if(frame802154_parse(packetbuf_dataptr(), len, &frame)) {
+    if(frame.fcf.dest_addr_mode) {
+      if(frame.dest_pid != mac_src_pan_id &&
+         frame.dest_pid != FRAME802154_BROADCASTPANDID) {
+        /* Packet to another PAN */
+        return 0;
+      }
+      if(!is_broadcast_addr(frame.fcf.dest_addr_mode, frame.dest_addr)) {
+        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, (linkaddr_t *)&frame.dest_addr);
+      }
+    }
+    packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (linkaddr_t *)&frame.src_addr);
+    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, frame.seq);
+
+    return 0;
+  }
+  return 0;
+}
 /*---------------------------------------------------------------------------*/
 static void
 packet_sent(void *ptr, int status, int transmissions)
@@ -123,7 +161,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
              data[2], packetbuf_datalen());
 
       /* parse frame before sending to get addresses, etc. */
-      no_framer_parse_802154_frame();
+      parse_frame();
       NETSTACK_MAC.send(packet_sent, &packet_ids[packet_pos]);
 
       packet_pos++;

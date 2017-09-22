@@ -52,9 +52,9 @@
 #define CMD_CONF_HANDLERS slip_radio_cmd_handler
 #endif
 
-/* configuration for the slipradio/network driver */
-#undef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK slipnet_driver
+/* Configuration for the slipradio/network driver. Selected through the Makefile,
+  with MAKE_NET = MAKE_NET_OTHER  */
+#define NETSTACK_CONF_OTHER_NETWORK slipnet_driver
 
 #undef NETSTACK_CONF_FRAMER
 #define NETSTACK_CONF_FRAMER no_framer

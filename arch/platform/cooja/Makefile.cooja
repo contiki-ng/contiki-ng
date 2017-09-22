@@ -40,6 +40,39 @@ ARCHIVE = $(OBJECTDIR)/$(LIBNAME).a
 JNILIB = $(OBJECTDIR)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).co
 
+# Modules
+MODULES += os/net os/net/mac os/net/mac/framer os/net/ip64-addr
+
+## Copied from Makefile.include, since Cooja overrides CFLAGS et al
+MAKE_NET_NULLNET = 0
+MAKE_NET_IPV6 = 1
+MAKE_NET_OTHER = 2
+
+# Make IPv6 the default stack
+MAKE_NET ?= MAKE_NET_IPV6
+
+ifeq ($(MAKE_NET),MAKE_NET_IPV6)
+  CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
+  CONTIKI_WITH_RPL ?= 1
+  CONTIKI_WITH_RPL_LITE ?= 1
+  MODULES += os/net/ipv6 os/net/ip
+  COOJA_NET = uip-driver.c
+else
+  COOJA_NET =
+endif
+
+ifeq ($(CONTIKI_WITH_RPL),1)
+    CFLAGS += -DUIP_CONF_IPV6_RPL=1
+    ifeq ($(CONTIKI_WITH_RPL_LITE),1)
+        CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
+        MODULES += os/net/rpl-lite
+    else
+        MODULES += os/net/rpl
+    endif
+else
+    CFLAGS += -DUIP_CONF_IPV6_RPL=0
+endif
+
 ### COOJA platform sources
 COOJA = $(CONTIKI)/arch/platform/$(TARGET)
 CONTIKI_TARGET_DIRS = . dev lib sys cfs net
@@ -55,8 +88,6 @@ COOJA_INTFS	= beep.c button-sensor.c ip.c leds-arch.c moteid.c \
 			eeprom.c slip-arch.c
 
 COOJA_CORE = random.c sensors.c leds.c
-
-COOJA_NET = uip-driver.c
 
 # (COOJA_SOURCEFILES contains additional sources set from simulator)
 CONTIKI_TARGET_SOURCEFILES = \
@@ -76,21 +107,3 @@ ifeq ($(WERROR),1)
 CFLAGSNO += -Werror
 endif
 CFLAGS   += $(CFLAGSNO)
-
-MODULES += os/net os/net/mac os/net/mac/framer os/net/ip64-addr \
-  os/net/mac/csma os/net/mac/nullmac
-
-## Copied from Makefile.include, since Cooja overrides CFLAGS et al
-HAS_STACK = 0
-
-# Make IPv6 the default stack
-ifeq ($(HAS_STACK),0)
-CONTIKI_WITH_IPV6 = 1
-endif
-
-ifeq ($(CONTIKI_WITH_IPV6),1)
-  CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
-  ifneq ($(CONTIKI_WITH_RPL),0)
-    CFLAGS += -DUIP_CONF_IPV6_RPL=1
-  endif
-endif

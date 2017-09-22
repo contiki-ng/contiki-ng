@@ -6,9 +6,8 @@ JN516x_WITH_DR1199 = 1
 
 CONTIKI=../../../../..
 
-CONTIKI_WITH_IPV6 = 1
-
-MODULES += os/net/mac/tsch os/lib/json
+MAKE_MAC = MAKE_MAC_TSCH
+MODULES += os/lib/json
 PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"

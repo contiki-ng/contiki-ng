@@ -34,8 +34,8 @@
 
 #define UNIT_TEST_PRINT_FUNCTION test_print_report
 
-#if WITH_TSCH
+#if MAC_CONF_WITH_TSCH
 #include "project-tsch-conf.h"
-#endif
+#endif /* MAC_CONF_WITH_TSCH */
 
 #endif /* !_PROJECT_CONF_H_ */

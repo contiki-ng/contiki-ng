@@ -43,37 +43,46 @@
 
 #include "contiki.h"
 
-#ifndef NETSTACK_NETWORK
-#ifdef NETSTACK_CONF_NETWORK
-#define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
-#else /* NETSTACK_CONF_NETWORK */
+/* Network layer configuration. The NET layer is configured through the Makefile,
+   via the flag MAC_NET */
+#if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_NETWORK sicslowpan_driver
-#endif /* NETSTACK_CONF_NETWORK */
-#endif /* NETSTACK_NETWORK */
+#elif NETSTACK_CONF_WITH_NULLNET
+#define NETSTACK_NETWORK nullnet_driver
+#elif NETSTACK_CONF_WITH_OTHER
+#define NETSTACK_NETWORK NETSTACK_CONF_OTHER_NETWORK
+#else
+#error Unknown NET configuration
+#endif
 
-#ifndef NETSTACK_MAC
-#ifdef NETSTACK_CONF_MAC
-#define NETSTACK_MAC NETSTACK_CONF_MAC
-#else /* NETSTACK_CONF_MAC */
+/* MAC layer configuration. The MAC layer is configured through the Makefile,
+   via the flag MAKE_MAC */
+#if MAC_CONF_WITH_NULLMAC
+#define NETSTACK_MAC     nullmac_driver
+#elif MAC_CONF_WITH_CSMA
 #define NETSTACK_MAC     csma_driver
-#endif /* NETSTACK_CONF_MAC */
-#endif /* NETSTACK_MAC */
+#elif MAC_CONF_WITH_TSCH
+#define NETSTACK_MAC     tschmac_driver
+#elif MAC_CONF_WITH_OTHER
+#define NETSTACK_MAC     NETSTACK_CONF_OTHER_MAC
+#else
+#error Unknown MAC configuration
+#endif
 
-#ifndef NETSTACK_RADIO
+/* Radio driver configuration. Most often set by the platform. */
 #ifdef NETSTACK_CONF_RADIO
 #define NETSTACK_RADIO NETSTACK_CONF_RADIO
 #else /* NETSTACK_CONF_RADIO */
 #define NETSTACK_RADIO   nullradio_driver
 #endif /* NETSTACK_CONF_RADIO */
-#endif /* NETSTACK_RADIO */
 
-#ifndef NETSTACK_FRAMER
+/* Framer selection. The framer is used by the MAC implementation
+   to build and parse frames. */
 #ifdef NETSTACK_CONF_FRAMER
 #define NETSTACK_FRAMER NETSTACK_CONF_FRAMER
 #else /* NETSTACK_CONF_FRAMER */
 #define NETSTACK_FRAMER   framer_802154
 #endif /* NETSTACK_CONF_FRAMER */
-#endif /* NETSTACK_FRAMER */
 
 #include "net/mac/mac.h"
 #include "net/mac/framer/framer.h"

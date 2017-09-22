@@ -46,30 +46,17 @@
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
 
-#if WITH_TSCH
+#if MAC_CONF_WITH_TSCH
 
 /*******************************************************/
-/********************* Enable TSCH *********************/
+/********************* Configure TSCH *********************/
 /*******************************************************/
-
-/* Netstack layers */
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     tschmac_driver
 
 /* TSCH and RPL callbacks */
 #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
 #define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
 #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
-
-/* Needed for CC2538 platforms only */
-/* For TSCH we have to use the more accurate crystal oscillator
- * by default the RC oscillator is activated */
-#undef SYS_CTRL_CONF_OSC32K_USE_XTAL
-#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
-
-#undef TSCH_CONF_HW_FRAME_FILTERING
-#define TSCH_CONF_HW_FRAME_FILTERING	0
 
 /*******************************************************/
 /******************* Configure TSCH ********************/
@@ -91,6 +78,6 @@
 #undef TSCH_SCHEDULE_CONF_MAX_LINKS
 #define TSCH_SCHEDULE_CONF_MAX_LINKS 4
 
-#endif /* WITH_TSCH */
+#endif /* MAC_CONF_WITH_TSCH */
 
 #endif

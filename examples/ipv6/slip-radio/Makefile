@@ -9,7 +9,7 @@ endif
 CONTIKI=../../..
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-PROJECT_SOURCEFILES += slip-net.c no-framer.c
+PROJECT_SOURCEFILES += slip-net.c
 ifeq ($(TARGET),sky)
   PROJECT_SOURCEFILES += slip-radio-cc2420.c slip-radio-sky-sensors.c
 endif
@@ -17,6 +17,9 @@ ifeq ($(TARGET),nooliberry)
   PROJECT_SOURCEFILES += slip-radio-rf230.c
 endif
 
+# custom net layer, but with IPv6 enabled
+MAKE_NET = MAKE_NET_OTHER
+CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
 CONTIKI_WITH_RPL = 0
-CONTIKI_WITH_IPV6 = 1
+MODULES += os/net/ipv6 os/net/ip
 include $(CONTIKI)/Makefile.include

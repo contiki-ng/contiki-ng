@@ -5,10 +5,9 @@ PROJECT_SOURCEFILES += sf-simple.c
 CONTIKI=../../..
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-CONTIKI_WITH_IPV6 = 1
 MAKE_WITH_SECURITY ?= 0 # force Security from command line
 
-MODULES += os/net/mac/tsch
+MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/mac/tsch/sixtop
 
 ifeq ($(MAKE_WITH_SECURITY),1)

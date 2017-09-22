@@ -21,7 +21,6 @@ upload: uip6-bridge-tap.ihex
 	cp $< $(IHEXFILE)
 	$(MAKE) sky-u.$(subst /,-,$(word $(MOTE), $(MOTES)))
 
-CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
 ../../tapslip6: ../../tapslip6.c

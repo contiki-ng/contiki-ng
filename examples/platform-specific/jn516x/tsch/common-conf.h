@@ -36,7 +36,6 @@
 
 /* Global config flags */
 
-#define WITH_TSCH 1
 #define WITH_TSCH_SECURITY 0
 #define TSCH_LOG_CONF_PER_SLOT 1
 #define WITH_COAP_RESOURCES 0
@@ -129,13 +128,7 @@
 #define TSCH_CONF_JOIN_SECURED_ONLY 0
 #endif /* WITH_TSCH_SECURITY */
 
-#if WITH_TSCH
-
-/* Contiki netstack: MAC */
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     tschmac_driver
-
-#else /* No TSCH, use Csma with ACK (default MAC) */
+#if MAC_CONF_WITH_CSMA /* Configure Csma with ACK (default MAC) */
 
 #undef MICROMAC_CONF_CHANNEL
 #define MICROMAC_CONF_CHANNEL 26
@@ -147,7 +140,7 @@
 #undef MIRCOMAC_CONF_BUF_NUM
 #define MIRCOMAC_CONF_BUF_NUM 4
 
-#endif
+#endif /* MAC_CONF_WITH_CSMA */
 
 #undef CONTIKI_VERSION_STRING
 #define CONTIKI_VERSION_STRING "Contiki 3.x"

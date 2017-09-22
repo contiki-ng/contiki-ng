@@ -57,16 +57,12 @@
 #else /* NETSTACK_CONF_H */
 
 /* Default network config */
-#if NETSTACK_CONF_WITH_IPV6
-
 #define CSMA_CONF_SEND_SOFT_ACK 1
 #define CSMA_CONF_ACK_WAIT_TIME                RTIMER_SECOND / 500
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME 0
 
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
-
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #endif /* NETSTACK_CONF_H */
 
@@ -122,8 +118,15 @@ typedef uint64_t rtimer_clock_t;
 
 #define UIP_ARCH_IPCHKSUM        1
 
-#if NETSTACK_CONF_WITH_IPV6
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+#if MAC_CONF_WITH_TSCH
+#define COOJA_CONF_SIMULATE_TURNAROUND 0
+/* A bug in cooja causes many EBs to be missed at scan. Increase EB
+   frequency to shorten the join process */
+#undef TSCH_CONF_EB_PERIOD
+#define TSCH_CONF_EB_PERIOD (4 * CLOCK_SECOND)
+#undef TSCH_CONF_MAX_EB_PERIOD
+#define TSCH_CONF_MAX_EB_PERIOD (4 * CLOCK_SECOND)
+#endif /* MAC_CONF_WITH_TSCH */
 
 /* Turn off example-provided putchars */
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 1

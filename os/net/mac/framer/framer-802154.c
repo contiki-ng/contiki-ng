@@ -112,7 +112,7 @@ create_frame(int do_create)
   } else if(packetbuf_hdralloc(hdr_len)) {
     frame802154_create(&params, packetbuf_hdrptr());
 
-    LOG_INFO("15.4-OUT: %2X ", params.fcf.frame_type);
+    LOG_INFO("Out: %2X ", params.fcf.frame_type);
     LOG_INFO_LLADDR((const linkaddr_t *)params.dest_addr);
     LOG_INFO_(" %d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
 

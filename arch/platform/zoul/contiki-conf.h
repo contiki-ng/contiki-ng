@@ -94,6 +94,10 @@ typedef uint32_t rtimer_clock_t;
  */
 #define TSCH_CONF_BASE_DRIFT_PPM -977
 #endif
+
+#if MAC_CONF_WITH_TSCH
+#define TSCH_CONF_HW_FRAME_FILTERING  0
+#endif /* MAC_CONF_WITH_TSCH */
 /*---------------------------------------------------------------------------*/
 /**
  * \name Serial Boot Loader Backdoor configuration
