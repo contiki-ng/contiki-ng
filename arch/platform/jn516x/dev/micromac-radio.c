@@ -60,7 +60,7 @@
  * and acknowledging in software. */
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #ifdef MICROMAC_CONF_RADIO_MAC
 #define MICROMAC_RADIO_MAC MICROMAC_CONF_RADIO_MAC

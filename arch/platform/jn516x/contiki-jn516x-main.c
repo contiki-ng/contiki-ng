@@ -57,7 +57,7 @@
 
 #include "dev/serial-line.h"
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "dev/leds.h"
 
 #include "lib/random.h"

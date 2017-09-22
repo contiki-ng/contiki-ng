@@ -35,7 +35,7 @@
  *         uIP checksum calculation for MSP430
  */
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 
 #define asmv(arg) __asm__ __volatile__(arg)
 /*---------------------------------------------------------------------------*/

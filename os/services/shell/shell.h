@@ -43,7 +43,7 @@
 #ifndef SHELL_H_
 #define SHELL_H_
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
 #include "sys/process.h"
 #include <stdio.h>

@@ -50,7 +50,7 @@
 #include <string.h>
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define TRICKLE_VERBOSE 0
 

@@ -40,7 +40,7 @@
 #include "net/rpl-classic/rpl.h"
 
 #include "lib/list.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "sys/clock.h"
 #include "sys/ctimer.h"
 #include "net/ipv6/uip-ds6.h"

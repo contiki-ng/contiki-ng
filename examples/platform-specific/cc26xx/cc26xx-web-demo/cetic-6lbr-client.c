@@ -36,13 +36,13 @@
 #include "contiki-lib.h"
 #include "contiki-net.h"
 #include "rpl.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 /*---------------------------------------------------------------------------*/
 #ifndef CETIC_6LBR_NODE_INFO_PORT
 #define CETIC_6LBR_NODE_INFO_PORT 3000

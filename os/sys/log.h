@@ -55,7 +55,7 @@
 #include "net/linkaddr.h"
 #include "sys/log-conf.h"
 #if NETSTACK_CONF_WITH_IPV6
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 /* The different log levels available */

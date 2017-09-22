@@ -21,5 +21,5 @@ endif
 MAKE_NET = MAKE_NET_OTHER
 CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
 CONTIKI_WITH_RPL = 0
-MODULES += os/net/ipv6 os/net/ip
+MODULES += os/net/ipv6
 include $(CONTIKI)/Makefile.include

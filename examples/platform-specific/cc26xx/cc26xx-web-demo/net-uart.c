@@ -60,9 +60,9 @@
 #include "sys/process.h"
 #include "dev/serial-line.h"
 #include "dev/cc26xx-uart.h"
-#include "net/ip/uip.h"
-#include "net/ip/uip-udp-packet.h"
-#include "net/ip/uiplib.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uip-udp-packet.h"
+#include "net/ipv6/uiplib.h"
 #include "net-uart.h"
 #include "httpd-simple.h"
 #include "sys/cc.h"
@@ -75,7 +75,7 @@
 #include <stdlib.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 /*---------------------------------------------------------------------------*/
 #define REMOTE_PORT  7777
 #define MAX_MSG_SIZE  100

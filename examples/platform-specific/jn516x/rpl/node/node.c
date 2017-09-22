@@ -41,7 +41,7 @@
 #include "tools/rpl-tools.h"
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define CONFIG_VIA_BUTTON PLATFORM_HAS_BUTTON
 #if CONFIG_VIA_BUTTON

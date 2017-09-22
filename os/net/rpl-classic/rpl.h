@@ -41,7 +41,7 @@
 #include "net/rpl-classic/rpl-conf.h"
 
 #include "lib/list.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "sys/ctimer.h"
 

@@ -45,8 +45,8 @@
 #include "contiki.h"
 #include "shell.h"
 #include "shell-commands.h"
-#include "net/ip/uip.h"
-#include "net/ip/ip64-addr.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/ip64-addr.h"
 
 /*---------------------------------------------------------------------------*/
 void

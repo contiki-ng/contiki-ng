@@ -30,7 +30,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "rpl.h"
 #include "rpl-dag-root.h"
 
@@ -42,7 +42,7 @@
 #include <ctype.h>
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 

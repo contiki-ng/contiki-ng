@@ -31,7 +31,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki-net.h"
 #include "http-socket.h"
-#include "ip64-addr.h"
+#include "ipv6/ip64-addr.h"
 #include "dev/leds.h"
 #include "rpl.h"
 #include <stdio.h>

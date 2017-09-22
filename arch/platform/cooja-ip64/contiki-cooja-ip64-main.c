@@ -51,8 +51,8 @@
 
 #include "net/netstack.h"
 #include "net/queuebuf.h"
-#include "net/ip/uip-nameserver.h"
-#include "net/ip/ip64-addr.h"
+#include "net/ipv6/uip-nameserver.h"
+#include "net/ipv6/ip64-addr.h"
 
 #include "dev/serial-line.h"
 #include "dev/cooja-radio.h"
@@ -63,7 +63,7 @@
 
 #include "sys/node-id.h"
 
-#include "ip64.h"
+#include "ip64/ip64.h"
 #include "dev/slip.h"
 
 void log_set_putchar_with_slip(int with);
@@ -81,7 +81,7 @@ void log_set_putchar_with_slip(int with);
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #define PRINT6ADDR(addr) printf("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
 

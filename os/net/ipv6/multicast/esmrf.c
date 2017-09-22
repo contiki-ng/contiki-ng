@@ -52,7 +52,7 @@
 #include "net/rpl-classic/rpl.h"
 #include "net/rpl-classic/rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include <string.h>
@@ -60,7 +60,7 @@
 extern uint16_t uip_slen;
 
 #define DEBUG NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define ESMRF_VERBOSE NONE
 

@@ -40,7 +40,7 @@
  */
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 
 #include "lib/list.h"
 #include "lib/memb.h"

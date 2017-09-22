@@ -36,8 +36,8 @@
  */
 
 #include "contiki.h"
-#include "net/ip/uip.h"
-#include "net/ip/uiplib.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uiplib.h"
 #include <stdio.h>
 
 void print_node_list(void);
