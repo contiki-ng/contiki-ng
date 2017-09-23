@@ -41,15 +41,12 @@
 #include "net/ipv6/tcpip.h"
 #include "net/packetbuf.h"
 #include "net/uip-driver.h"
+#include "net/linkaddr.h"
 #include <string.h>
 
 /*--------------------------------------------------------------------*/
 uint8_t
-#if NETSTACK_CONF_WITH_IPV6
-uip_driver_send(const uip_lladdr_t *addr)
-#else
-uip_driver_send(void)
-#endif
+uip_driver_send(const linkaddr_t *addr)
 {
   packetbuf_copyfrom(&uip_buf[UIP_LLH_LEN], uip_len);
 

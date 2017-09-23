@@ -108,11 +108,13 @@ static enum netstack_ip_action
 ip_output(const linkaddr_t *localdest)
 {
   uint8_t proto;
+  uint8_t is_me = 0;
   uipbuf_get_last_header(uip_buf, uip_len, &proto);
-  PRINTF("Send packet proto: %d to ", proto);
+  is_me =  uip_ds6_is_my_addr(&UIP_IP_BUF->srcipaddr);
+  PRINTF("%s packet proto: %d to ", is_me ? "Send" : "Fwd ", proto);
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF("\n");
-  if(proto == UIP_PROTO_UDP) {
+  if(is_me && proto == UIP_PROTO_UDP) {
     /* fake server-ip address here - just to emulate the UDP-example */
     PRINTF("DATA send to %d 'Hello %d'\n", 1, seq_id);
   }
