@@ -435,7 +435,6 @@ eventhandler(process_event_t ev, process_data_t data)
 void
 tcpip_input(void)
 {
-  printf("tcpip_input\n");
   if(netstack_do_ip_callback(NETSTACK_IP_INPUT, NULL) ==
      NETSTACK_IP_PROCESS) {
     process_post_synch(&tcpip_process, PACKET_INPUT, NULL);

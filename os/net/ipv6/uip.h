@@ -1899,6 +1899,8 @@ struct uip_udp_hdr {
 #define UIP_PROTO_NONE        59
 /** @} */
 
+#define uip_is_proto_ext_hdr(proto) (proto == UIP_PROTO_HBHO || proto == UIP_PROTO_DESTO || proto == UIP_PROTO_ROUTING || proto == UIP_PROTO_FRAG || proto == UIP_PROTO_NONE)
+
 /** @{ */
 /** \brief  Destination and Hop By Hop extension headers option types */
 #define UIP_EXT_HDR_OPT_PAD1  0
