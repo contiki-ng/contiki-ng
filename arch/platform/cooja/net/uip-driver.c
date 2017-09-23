@@ -62,11 +62,6 @@ uip_driver_send(void)
 static void
 init(void)
 {
-  /*
-   * Set out output function as the function to be called from uIP to
-   * send a packet.
-   */
-  tcpip_set_outputfunc(uip_driver_send);
 }
 /*--------------------------------------------------------------------*/
 static void
@@ -83,6 +78,7 @@ input(void)
 const struct network_driver uip_driver = {
   "uip",
   init,
-  input
+  input,
+  uip_driver_send
 };
 /*--------------------------------------------------------------------*/
