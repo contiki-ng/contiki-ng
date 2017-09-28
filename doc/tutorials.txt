@@ -1,7 +1,7 @@
 /**
  * \defgroup tutorials Tutorials
  * @{
-This module contains all Contiki related tutorials.
+This module contains all \os related tutorials.
 
 */
 /** @} */
