@@ -43,7 +43,7 @@
 #define UIP_MCAST6_ROUTE_H_
 
 #include "contiki.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/

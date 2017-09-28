@@ -32,7 +32,7 @@
 #ifndef ENC28J60_IP64_DRIVER_H
 #define ENC28J60_IP64_DRIVER_H
 
-#include "ip64-driver.h"
+#include "ip64/ip64-driver.h"
 extern const struct ip64_driver enc28j60_ip64_driver;
 
 #endif /* ENC28J60_IP64_DRIVER_H */

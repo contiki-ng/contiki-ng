@@ -46,7 +46,7 @@
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 /* A net-layer sniffer for packets sent and received */
 static void orchestra_packet_received(void);

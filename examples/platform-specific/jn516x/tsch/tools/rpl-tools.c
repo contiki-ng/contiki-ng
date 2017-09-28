@@ -35,7 +35,7 @@
 
 #include "contiki.h"
 #include "contiki-net.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "rpl.h"
 #include "rpl-dag-root.h"
 #include "orchestra.h"
@@ -43,7 +43,7 @@
 #include <stdio.h>
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 void
 print_network_status(void)

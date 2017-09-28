@@ -57,7 +57,7 @@
 #include "dev/leds.h"
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 /*
  * Resources to be activated need to be imported through the extern keyword.

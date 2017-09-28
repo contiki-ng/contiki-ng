@@ -41,7 +41,7 @@ JNILIB = $(OBJECTDIR)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).co
 
 # Modules
-MODULES += os/net os/net/mac os/net/mac/framer os/net/ip64-addr
+MODULES += os/net os/net/mac os/net/mac/framer
 
 ## Copied from Makefile.include, since Cooja overrides CFLAGS et al
 MAKE_NET_NULLNET = 0
@@ -55,7 +55,7 @@ ifeq ($(MAKE_NET),MAKE_NET_IPV6)
   CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
   CONTIKI_WITH_RPL ?= 1
   CONTIKI_WITH_RPL_LITE ?= 1
-  MODULES += os/net/ipv6 os/net/ip
+  MODULES += os/net/ipv6
   COOJA_NET = uip-driver.c
 else
   COOJA_NET =

@@ -33,7 +33,7 @@
 #include "tools/rpl-tools.h"
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;

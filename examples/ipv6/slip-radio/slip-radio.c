@@ -35,7 +35,7 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 #include "contiki.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "dev/slip.h"
 #include <string.h>
@@ -43,7 +43,7 @@
 #include "net/packetbuf.h"
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 #include "cmd.h"
 #include "slip-radio.h"
 #include "packetutils.h"

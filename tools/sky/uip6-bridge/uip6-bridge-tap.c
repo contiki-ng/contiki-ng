@@ -38,7 +38,7 @@
  */
 
 #include "contiki.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "dev/slip.h"
 #include "dev/leds.h"
 #include "sicslow_ethernet.h"

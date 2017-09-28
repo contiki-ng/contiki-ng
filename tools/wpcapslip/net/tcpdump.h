@@ -32,7 +32,7 @@
 #ifndef __TCPDUMP_H__
 #define __TCPDUMP_H__
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 
 int tcpdump_format(uint8_t *packet, uint16_t packetlen,
 		   char *printbuf, uint16_t printbuflen);

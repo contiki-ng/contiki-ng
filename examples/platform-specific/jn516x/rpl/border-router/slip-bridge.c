@@ -38,7 +38,7 @@
  *         Nicolas Tsiftes <nvt@sics.se>
  */
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "dev/slip.h"
 #if CONTIKI_TARGET_JN516X
@@ -51,7 +51,7 @@
 #define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #ifndef BAUD2UBR
 #define BAUD2UBR(X) (X)

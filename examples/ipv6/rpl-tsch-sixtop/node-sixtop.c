@@ -45,7 +45,7 @@
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/sixtop/sixtop.h"
 #include "net/rpl/rpl-private.h"
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #include "sf-simple.h"
 

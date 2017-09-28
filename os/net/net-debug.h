@@ -42,7 +42,7 @@
 #ifndef NET_DEBUG_H
 #define NET_DEBUG_H
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
 #include <stdio.h>
 

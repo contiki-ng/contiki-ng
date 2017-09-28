@@ -45,8 +45,8 @@
  * @{
  */
 
-#include "net/ip/tcpip.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/tcpip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-icmp6.h"
@@ -61,7 +61,7 @@
 
 #define DEBUG DEBUG_NONE
 
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
 #define RPL_DIO_GROUNDED                 0x80

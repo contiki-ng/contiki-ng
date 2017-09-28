@@ -120,7 +120,7 @@ ifeq ($(MAKE_NET),MAKE_NET_IPV6)
   CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
   CONTIKI_WITH_RPL ?= 1
   CONTIKI_WITH_RPL_LITE ?= 1
-  MODULES += os/net/ipv6 os/net/ip
+  MODULES += os/net/ipv6
 else
   CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
   MODULES += os/net/nullnet
@@ -168,6 +168,10 @@ else
     ${error More than one TARGET Makefile found: $(target_makefile)}
   endif
   include $(target_makefile)
+endif
+
+ifeq ($(WITH_IP64),1)
+  MODULES += os/services/ip64
 endif
 
 ifdef MODULES

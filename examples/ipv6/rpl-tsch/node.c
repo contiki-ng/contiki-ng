@@ -55,7 +55,7 @@
 #endif /* WITH_SHELL */
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");

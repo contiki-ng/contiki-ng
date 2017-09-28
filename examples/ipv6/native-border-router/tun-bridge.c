@@ -33,7 +33,7 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,7 +52,7 @@
 
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #ifdef linux
 #include <linux/if.h>

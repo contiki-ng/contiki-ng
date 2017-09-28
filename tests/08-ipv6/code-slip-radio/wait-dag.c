@@ -34,11 +34,11 @@
 #include "contiki-lib.h"
 #include "contiki-net.h"
 #include "rpl.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include <string.h>
 
 #define DEBUG DEBUG_FULL
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define INTERVAL    5 * CLOCK_SECOND
 

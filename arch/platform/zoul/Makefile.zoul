@@ -49,10 +49,6 @@ MODULES += os/net os/net/mac os/net/mac/framer \
            arch/dev/cc1200 \
            os/storage/cfs
 
-ifeq ($(WITH_IP64),1)
-  MODULES += os/net/ip64
-endif
-
 BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
 
 ### Use the specific Zoul subplatform to query for connected devices

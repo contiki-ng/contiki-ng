@@ -44,15 +44,15 @@
  * @{
  */
 
-#include "net/ip/uip.h"
-#include "net/ip/tcpip.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/tcpip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/rpl-classic/rpl-private.h"
 #include "net/rpl-classic/rpl-ns.h"
 #include "net/packetbuf.h"
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #include <limits.h>
 #include <string.h>

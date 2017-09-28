@@ -32,9 +32,9 @@
 #include "lib/random.h"
 #include "sys/ctimer.h"
 #include "sys/etimer.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #include "simple-udp.h"
 

@@ -4,7 +4,7 @@
  * to get a few things */
 
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include <string.h>
 

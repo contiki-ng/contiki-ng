@@ -34,7 +34,7 @@
 #include "contiki.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/netstack.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
 #include "rpl-tools.h"
 #include "rest-engine.h"

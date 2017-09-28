@@ -41,7 +41,7 @@
 
 /********** Includes **********/
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/rpl-lite/rpl-const.h"
 #include "net/rpl-lite/rpl-conf.h"
 #include "net/rpl-lite/rpl-types.h"

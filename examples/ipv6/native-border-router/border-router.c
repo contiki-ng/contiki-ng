@@ -41,7 +41,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "rpl.h"
 #include "rpl-dag-root.h"
@@ -58,7 +58,7 @@
 #include <ctype.h>
 
 #define DEBUG DEBUG_FULL
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define MAX_SENSORS 4
 

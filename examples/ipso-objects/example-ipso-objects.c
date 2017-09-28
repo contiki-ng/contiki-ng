@@ -41,7 +41,7 @@
 #include "services/ipso-objects/ipso-objects.h"
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #ifndef REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER
 #define REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER 0

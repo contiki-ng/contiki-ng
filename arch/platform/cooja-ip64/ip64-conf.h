@@ -34,8 +34,8 @@
 #undef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE ip64_uip_fallback_interface
 
-#include "ip64-slip-interface.h"
-#include "ip64-null-driver.h"
+#include "ip64/ip64-slip-interface.h"
+#include "ip64/ip64-null-driver.h"
 
 #define IP64_CONF_UIP_FALLBACK_INTERFACE_SLIP 1
 #define IP64_CONF_UIP_FALLBACK_INTERFACE ip64_slip_interface

@@ -42,20 +42,20 @@
 #include "rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #include "net/mac/tsch/tsch-schedule.h"
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 #include "lib/random.h"
 #include "rpl-tools.h"
 #include "node-id.h"
 #include "waveform.h"
 #include "leds.h"
-#include "net/ip/uiplib.h"
-#include "net/ip/uip-udp-packet.h"
+#include "net/ipv6/uiplib.h"
+#include "net/ipv6/uip-udp-packet.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 

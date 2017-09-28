@@ -34,8 +34,8 @@
 #include "enc28j60-ip64-driver.h"
 #include "linkaddr.h"
 
-#include "ip64.h"
-#include "ip64-eth.h"
+#include "ip64/ip64.h"
+#include "ip64/ip64-eth.h"
 
 #include <string.h>
 #include <stdio.h>

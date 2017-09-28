@@ -47,7 +47,7 @@
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 #include "mqtt.h"
 #include "rpl.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/sicslowpan.h"
 #include "sys/etimer.h"

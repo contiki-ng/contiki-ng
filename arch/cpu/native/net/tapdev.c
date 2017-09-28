@@ -33,8 +33,8 @@
  *
  */
 
-#include "net/ip/uip.h"
-#include "net/ip/uipopt.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uipopt.h"
 
 #if !NETSTACK_CONF_WITH_IPV6
 

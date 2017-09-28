@@ -44,7 +44,7 @@
 #include "dev/leds.h"
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 static void
 res_post_put_handler(void *request, void *response, uint8_t *buffer,

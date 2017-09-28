@@ -37,7 +37,7 @@
 #include "dev/ds2411/ds2411.h"
 #include "contiki.h"
 
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #include "dev/slip.h"

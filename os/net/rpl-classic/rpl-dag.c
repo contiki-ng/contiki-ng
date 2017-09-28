@@ -46,7 +46,7 @@
 #include "contiki.h"
 #include "net/link-stats.h"
 #include "net/rpl-classic/rpl-private.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/nbr-table.h"
@@ -59,7 +59,7 @@
 #include <string.h>
 
 #define DEBUG DEBUG_NONE
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 /* A configurable function called after every RPL parent switch */
 #ifdef RPL_CALLBACK_PARENT_SWITCH

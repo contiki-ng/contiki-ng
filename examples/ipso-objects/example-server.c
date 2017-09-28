@@ -37,7 +37,7 @@
  */
 
 #include "contiki.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "rpl.h"
 #include "rpl-dag-root.h"
 #include "net/netstack.h"
@@ -53,7 +53,7 @@
 #endif
 
 #define DEBUG DEBUG_PRINT
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
 
