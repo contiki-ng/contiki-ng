@@ -39,6 +39,11 @@
  *         Beshr Al Nahas <beshr@sics.se>
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_PRIVATE_H__
 #define __TSCH_PRIVATE_H__
 
@@ -130,3 +135,4 @@ void tsch_disassociate(void);
   while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (offset))) ;
 #endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
 #endif /* __TSCH_PRIVATE_H__ */
+/** @} */

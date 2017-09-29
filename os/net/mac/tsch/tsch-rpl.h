@@ -28,6 +28,10 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
 
 #ifndef __TSCH_RPL_H__
 #define __TSCH_RPL_H__
@@ -60,3 +64,4 @@ void tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval);
 void tsch_rpl_callback_parent_switch(rpl_parent_t *old, rpl_parent_t *new);
 
 #endif /* __TSCH_RPL_H__ */
+/** @} */

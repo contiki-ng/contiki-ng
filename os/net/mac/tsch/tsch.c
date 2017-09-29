@@ -40,6 +40,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #include "contiki.h"
 #include "dev/radio.h"
 #include "net/netstack.h"
@@ -1092,3 +1097,4 @@ const struct mac_driver tschmac_driver = {
   turn_off
 };
 /*---------------------------------------------------------------------------*/
+/** @} */

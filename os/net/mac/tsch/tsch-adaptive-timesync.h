@@ -30,6 +30,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_ADAPTIVE_TIMESYNC_H__
 #define __TSCH_ADAPTIVE_TIMESYNC_H__
 
@@ -89,3 +94,4 @@ int32_t tsch_timesync_adaptive_compensate(rtimer_clock_t delta_ticks);
 long int tsch_adaptive_timesync_get_drift_ppm(void);
 
 #endif /* __TSCH_ADAPTIVE_TIMESYNC_H__ */
+/** @} */

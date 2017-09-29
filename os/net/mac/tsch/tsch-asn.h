@@ -38,6 +38,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_ASN_H__
 #define __TSCH_ASN_H__
 
@@ -95,3 +100,4 @@ struct tsch_asn_divisor_t {
   % (div).val
 
 #endif /* __TSCH_ASN_H__ */
+/** @} */

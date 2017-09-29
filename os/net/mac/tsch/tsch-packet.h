@@ -30,6 +30,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_PACKET_H__
 #define __TSCH_PACKET_H__
 
@@ -103,3 +108,4 @@ int tsch_packet_parse_eb(const uint8_t *buf, int buf_size,
     uint8_t *hdrlen, int frame_without_mic);
 
 #endif /* __TSCH_PACKET_H__ */
+/** @} */

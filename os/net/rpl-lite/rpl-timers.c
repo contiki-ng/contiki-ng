@@ -30,16 +30,14 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         RPL timer management.
  *
  * \author Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>,
  * Simon Duquennoy <simon.duquennoy@inria.fr>
- */
-
-/**
- * \addtogroup uip6
- * @{
  */
 
 #include "contiki.h"

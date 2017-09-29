@@ -30,11 +30,11 @@
  */
 
 /**
- * \addtogroup uip6
+ * \addtogroup uip
  * @{
  */
 /**
- * \defgroup uip6-multicast IPv6 Multicast Forwarding
+ * \defgroup uip-multicast IPv6 Multicast Forwarding
  *
  *   We currently support 2 engines:
  *   - 'Stateless Multicast RPL Forwarding' (SMRF)

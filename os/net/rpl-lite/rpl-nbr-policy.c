@@ -27,13 +27,11 @@
  * SUCH DAMAGE.
  *
  */
+
 /**
- * \addtogroup uip6
+ * \addtogroup rpl-lite
  * @{
- */
-
-
-/**
+ *
  * \file
  *
  * Default RPL NBR policy

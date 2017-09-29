@@ -42,6 +42,11 @@
  *         Domenico De Guglielmo <d.deguglielmo@iet.unipi.it >
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #include "contiki.h"
 #include "lib/list.h"
 #include "lib/memb.h"
@@ -524,3 +529,4 @@ tsch_queue_init(void)
   n_broadcast = tsch_queue_add_nbr(&tsch_broadcast_address);
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

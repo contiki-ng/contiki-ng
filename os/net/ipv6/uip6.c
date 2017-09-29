@@ -32,7 +32,7 @@
  */
 
 /**
- * \addtogroup uip6
+ * \addtogroup uip
  * @{
  */
 

@@ -32,7 +32,7 @@
  * \addtogroup platform
  * @{
  *
- * \defgroup cc26xx-platforms TI CC26xx-powered Platforms
+ * \defgroup cc26xx-platforms TI CC26xx-powered platforms
  * @{
  *
  * \defgroup cc26xx The TI CC26xx and CC13xx CPUs

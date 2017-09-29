@@ -38,7 +38,10 @@
  */
 
 /**
- * \addtogroup shell
+ * \addtogroup shell Shell
+ The shell enables to inspect and manage the network layer and provides
+ other system functionalities
+ * \ingroup lib
  * @{
  */
 

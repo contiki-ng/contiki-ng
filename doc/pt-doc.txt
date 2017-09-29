@@ -1,10 +1,10 @@
 /**
-\addtogroup sys
+\addtogroup threads
 @{
 */
-	
+
 /**
-\defgroup pt Protothreads 
+\defgroup pt Protothreads
 
 Protothreads are a type of lightweight stackless threads designed for
 severly memory constrained systems such as deeply embedded systems or
@@ -46,22 +46,22 @@ Main features:
     - No machine specific code - the protothreads library is pure C
 
     - Does not use error-prone functions such as longjmp()
-        
+
     - Very small RAM overhead - only two bytes per protothread
-    
+
     - Can be used with or without an OS
-    
+
     - Provides blocking wait without full multi-threading or
       stack-switching
 
 Examples applications:
 
     - Memory constrained systems
-    
+
     - Event-driven protocol stacks
-    
+
     - Deeply embedded systems
-    
+
     - Sensor network nodes
 
 The protothreads API consists of four basic operations:
@@ -71,7 +71,7 @@ convenience functions are built: reversed condition blocking:
 PT_WAIT_WHILE() and protothread blocking: PT_WAIT_THREAD().
 
 \sa \ref pt "Protothreads API documentation"
-    
+
 The protothreads library is released under a BSD-style license that
 allows for both non-commercial and commercial usage. The only
 requirement is that credit is given.
@@ -123,7 +123,7 @@ generators provide multiple exit points from a generator function.
 
 \section pt-autovars Local variables
 
-\note 
+\note
 Because protothreads do not save the stack context across a blocking
 call, local variables are not preserved when the protothread
 blocks. This means that local variables should be used with utmost
@@ -151,7 +151,7 @@ Local continuations can be implemented in a variety of ways:
 
    -# by using machine specific assembler code,
    -# by using standard C constructs, or
-   -# by using compiler extensions. 
+   -# by using compiler extensions.
 
 The first way works by saving and restoring the processor state,
 except for stack pointers, and requires between 16 and 32 bytes of
@@ -169,7 +169,7 @@ protothreads. GCC supports label pointers that can be used for this
 purpose. With this implementation, protothreads require 4 bytes of RAM
 per protothread.
 
-@{ 
+@{
 
 
 */

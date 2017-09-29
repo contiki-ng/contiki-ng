@@ -33,7 +33,7 @@
  * \addtogroup zoul-platforms
  * @{
  *
- * \defgroup firefly-reva Firefly platform
+ * \addtogroup firefly
  *
  * The Zolertia Firefly is the most down-to-core development platform, exposing
  * the Zoul core functionalities and features, with a slick design to allow a
@@ -272,7 +272,7 @@
  */
 #ifdef PLATFORM_CONF_WITH_BUTTON
 #if (PLATFORM_CONF_WITH_BUTTON && (ADC_SENSORS_ADC6_PIN == 3))
-#error "The ADC6 (PA3) and user button cannot be enabled at the same time" 
+#error "The ADC6 (PA3) and user button cannot be enabled at the same time"
 #else
 #define PLATFORM_HAS_BUTTON  (PLATFORM_CONF_WITH_BUTTON && \
                               !(ADC_SENSORS_ADC6_PIN == 3))

@@ -28,6 +28,9 @@
  *
  * This file is part of the Contiki operating system.
  *
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *	Header file for rpl-dag module
  * \author
@@ -42,11 +45,6 @@
 /********** Includes **********/
 
 #include "uip.h"
-
-/**
- * \addtogroup uip6
- * @{
- */
 
 /********** Public functions **********/
 

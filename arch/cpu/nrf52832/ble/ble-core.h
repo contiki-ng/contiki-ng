@@ -28,7 +28,7 @@
  *
  */
 /**
- * \addtogroup cpu
+ * \addtogroup dev
  * @{
  *
  * \addtogroup nrf52832

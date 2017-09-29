@@ -31,6 +31,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         Logic for DAG neighbors in RPL.
  *
@@ -39,10 +42,6 @@
  * Contributors: George Oikonomou <oikonomou@users.sourceforge.net> (multicast)
  */
 
-/**
- * \addtogroup uip6
- * @{
- */
 #include "contiki.h"
 #include "net/rpl-lite/rpl.h"
 #include "net/link-stats.h"

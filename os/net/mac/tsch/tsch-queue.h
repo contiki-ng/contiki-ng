@@ -30,6 +30,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_QUEUE_H__
 #define __TSCH_QUEUE_H__
 
@@ -196,3 +201,4 @@ void tsch_queue_update_all_backoff_windows(const linkaddr_t *dest_addr);
 void tsch_queue_init(void);
 
 #endif /* __TSCH_QUEUE_H__ */
+/** @} */

@@ -29,7 +29,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup remote
+ * \addtogroup remote-reva
  * @{
  *
  * \defgroup remote-power-mgmt-reva RE-Mote power management driver

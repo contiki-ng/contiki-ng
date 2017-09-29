@@ -29,10 +29,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup zoul
+ * \addtogroup platform
  * @{
  *
- * \defgroup zoul-platforms Zolertia platforms based on the Zoul core module
+ * \defgroup zoul-platforms Zolertia Zoul platforms
  *
  * The Zoul allows a fast reuse and easy integration to most applications and
  * products.  Its small size and module format eases to place in different PCB

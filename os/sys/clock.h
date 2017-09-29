@@ -32,7 +32,7 @@
  *
  */
 
-/** \addtogroup sys
+/** \addtogroup timers
  * @{
  */
 

@@ -30,6 +30,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         Header file for rpl-ext-header
  *
@@ -38,11 +41,6 @@
 
  #ifndef RPL_EXT_HEADER_H_
  #define RPL_EXT_HEADER_H_
-
-/**
- * \addtogroup uip6
- * @{
- */
 
 /********** Public functions **********/
 

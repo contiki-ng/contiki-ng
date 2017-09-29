@@ -30,6 +30,15 @@
  *
  */
 
+/**
+* \ingroup link-layer
+* \defgroup tsch 802.15.4 TSCH
+The IEEE 802.15.4-2015 TimeSlotted Channel Hopping (TSCH) protocol. Provides
+scheduled communication on top of a globally-synchronized network. Performs
+frequency hopping for enhanced reliability.
+* @{
+*/
+
 #ifndef __TSCH_H__
 #define __TSCH_H__
 
@@ -189,3 +198,4 @@ void tsch_set_coordinator(int enable);
 void tsch_set_pan_secured(int enable);
 
 #endif /* __TSCH_H__ */
+/** @} */

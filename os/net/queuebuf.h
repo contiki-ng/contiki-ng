@@ -38,12 +38,12 @@
  */
 
 /**
- * \addtogroup netstack
+ * \addtogroup net
  * @{
  */
 
 /**
- * \defgroup queuebuf Packet queue buffer management
+ * \defgroup queuebuf Packet buffer queue
  * @{
  *
  * The queuebuf module handles buffers that are queued.

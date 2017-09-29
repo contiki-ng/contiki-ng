@@ -30,7 +30,7 @@
  */
 
 /**
- * \addtogroup uip6-multicast
+ * \addtogroup uip-multicast
  * @{
  */
 /**

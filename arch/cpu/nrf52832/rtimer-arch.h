@@ -28,7 +28,7 @@
  *
  */
 /**
- * \addtogroup nrf52832 nRF52832
+ * \addtogroup nrf52832
  * @{
  *
  * \file

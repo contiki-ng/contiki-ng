@@ -45,6 +45,7 @@
 
 /**
  * \addtogroup sicslowpan
+ * \ingroup uip
  * @{
  */
 

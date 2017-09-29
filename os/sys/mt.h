@@ -32,7 +32,7 @@
  *
  */
 
-/** \addtogroup sys
+/** \addtogroup threads
  * @{
  */
 
@@ -46,12 +46,6 @@
  * the same for all platforms on which Contiki runs, and a platform
  * specific part, which must be implemented specifically for the
  * platform that the multi-threading library should run.
- *
- * @{
- */
-
-/**
- * \defgroup mtarch Architecture support for multi-threading
  * @{
  *
  * The Contiki multi-threading library requires some architecture
@@ -258,6 +252,5 @@ void mt_exit(void);
  */
 void mt_stop(struct mt_thread *thread);
 
-/** @} */
 /** @} */
 #endif /* MT_H_ */

@@ -38,7 +38,7 @@
  *
  */
 
-/** \addtogroup sys
+/** \addtogroup threads
  * @{ */
 
 /**

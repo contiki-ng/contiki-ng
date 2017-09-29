@@ -33,7 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup remote
+ * \addtogroup zoul
  * @{
  *
  * \defgroup remote-fat RE-Mote FatFs

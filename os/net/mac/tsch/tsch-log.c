@@ -40,6 +40,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #include "contiki.h"
 #include <stdio.h>
 #include "net/mac/tsch/tsch.h"
@@ -172,3 +177,4 @@ tsch_log_stop(void)
 }
 
 #endif /* TSCH_LOG_PER_SLOT */
+/** @} */

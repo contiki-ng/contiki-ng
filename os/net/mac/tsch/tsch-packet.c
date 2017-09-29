@@ -38,6 +38,11 @@
  *         Beshr Al Nahas <beshr@sics.se>
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/mac/tsch/tsch.h"
@@ -459,3 +464,4 @@ tsch_packet_parse_eb(const uint8_t *buf, int buf_size,
   return curr_len;
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

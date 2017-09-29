@@ -30,6 +30,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_LOG_H__
 #define __TSCH_LOG_H__
 
@@ -131,3 +136,4 @@ void tsch_log_stop(void);
 #endif /* (TSCH_LOG_PER_SLOT == 0) */
 
 #endif /* __TSCH_LOG_H__ */
+/** @} */

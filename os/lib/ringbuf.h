@@ -37,7 +37,7 @@
  *         Adam Dunkels <adam@sics.se>
  */
 
-/** \addtogroup lib
+/** \addtogroup data
  * @{ */
 
 /**

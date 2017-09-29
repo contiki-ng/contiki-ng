@@ -33,9 +33,12 @@
 #define RPL_DAG_ROOT_H_
 
 /**
- * \addtogroup uip6
- * @{
- */
+* \addtogroup rpl-lite
+* @{
+*
+* \file
+*         DAG root utility functions for RPL.
+*/
 
 /********** Public functions **********/
 

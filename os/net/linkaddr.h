@@ -38,12 +38,12 @@
  */
 
 /**
- * \addtogroup netstack
+ * \addtogroup link-layer
  * @{
  */
 
 /**
- * \defgroup linkaddr link-layer addresses
+ * \defgroup linkaddr Link-layer addresses
  * @{
  *
  * The linkaddr module handles link-layer addresses.

@@ -31,16 +31,14 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         An implementation of RPL's objective function 0, RFC6552
  *
  * \author Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>
  * Simon Duquennoy <simon.duquennoy@inria.fr>
- */
-
-/**
- * \addtogroup uip6
- * @{
  */
 
 #include "net/rpl-lite/rpl.h"

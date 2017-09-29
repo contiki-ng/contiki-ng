@@ -28,6 +28,12 @@
  *
  * This file is part of the Contiki operating system.
  *
+ * \ingroup net-layer
+ * \addtogroup rpl-lite
+ RPL-lite is a lightweight implementation of RPL tailored for reliability.
+ Supports only non-storing mode, one instance and one DAG.
+ * @{
+ *
  * \file
  *	Public API declarations for RPL.
  * \author
@@ -52,11 +58,6 @@
 #include "net/rpl-lite/rpl-neighbor.h"
 #include "net/rpl-lite/rpl-ext-header.h"
 #include "net/rpl-lite/rpl-timers.h"
-
-/**
- * \addtogroup uip6
- * @{
- */
 
 /********** Public symbols **********/
 
