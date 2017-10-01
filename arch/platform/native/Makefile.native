@@ -17,13 +17,7 @@ ifeq ($(HOST_OS),Windows)
 CONTIKI_TARGET_SOURCEFILES += wpcap-drv.c wpcap.c
 TARGET_LIBFILES = /lib/w32api/libws2_32.a /lib/w32api/libiphlpapi.a
 else
-CONTIKI_TARGET_SOURCEFILES += tapdev-drv.c linuxradio-drv.c
-#math
-ifneq ($(MAKE_NET),MAKE_NET_IPV6)
-CONTIKI_TARGET_SOURCEFILES += tapdev.c
-else
-CONTIKI_TARGET_SOURCEFILES += tapdev6.c
-endif
+CONTIKI_TARGET_SOURCEFILES += tun6-net.c
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)

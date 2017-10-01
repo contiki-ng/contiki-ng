@@ -30,6 +30,7 @@
  * 
  * Author: Oliver Schmidt <ol.sc@web.de>
  *
+ *
  */
 
 #include "sys/mt.h"
@@ -45,12 +46,7 @@
 
 static void *main_fiber;
 
-#elif defined(__linux) || defined(__APPLE__)
-
-#ifdef __APPLE__
-/* Avoid deprecated error on Darwin */
-#define _XOPEN_SOURCE
-#endif
+#elif defined(__linux)
 
 #include <stdlib.h>
 #include <signal.h>
@@ -63,6 +59,8 @@ struct mtarch_t {
 
 static ucontext_t main_context;
 static ucontext_t *running_context;
+#elif defined(__APPLE)
+/* No support for OS-X at the moment as swapcontext, etc are deprecated */
 
 #endif /* _WIN32 || __CYGWIN__ || __linux */
 
@@ -136,7 +134,7 @@ mtarch_yield(void)
 
   SwitchToFiber(main_fiber);
 
-#elif defined(__linux)
+#elif defined(__linux) 
 
   swapcontext(running_context, &main_context);
 
@@ -151,7 +149,6 @@ mtarch_exec(struct mtarch_thread *thread)
   SwitchToFiber(thread->mt_thread);
 
 #elif defined(__linux)
-
   running_context = &((struct mtarch_t *)thread->mt_thread)->context;
   swapcontext(&main_context, running_context);
   running_context = NULL;
@@ -167,7 +164,6 @@ mtarch_stop(struct mtarch_thread *thread)
   DeleteFiber(thread->mt_thread);
 
 #elif defined(linux) || defined(__linux)
-
   free(thread->mt_thread);
 
 #endif /* _WIN32 || __CYGWIN__ || __linux */

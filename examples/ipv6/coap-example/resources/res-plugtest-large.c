@@ -68,7 +68,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   /* Generate data until reaching CHUNKS_TOTAL. */
   while(strpos < preferred_size) {
     strpos += snprintf((char *)buffer + strpos, preferred_size - strpos + 1,
-                       "|%ld|", *offset);
+                       "|%ld|", (long) *offset);
   }
 
   /* snprintf() does not adjust return value if truncated by size. */

@@ -116,7 +116,7 @@ res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
         response,
         buffer,
         snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "%uB max.",
-                 sizeof(large_update_store)));
+                 (unsigned) sizeof(large_update_store)));
       return;
     }
   } else {

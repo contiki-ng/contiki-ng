@@ -85,7 +85,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   } else {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     REST.set_response_payload(response, obs_content,
-                              snprintf(obs_content, MAX_PLUGFEST_PAYLOAD, "TICK %lu", obs_counter));
+                              snprintf(obs_content, MAX_PLUGFEST_PAYLOAD, "TICK %lu", (unsigned long) obs_counter));
   }
   /* A post_handler that handles subscriptions will be called for periodic resources by the REST framework. */
 }

@@ -77,7 +77,7 @@ static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "EVENT %lu", event_counter));
+  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "EVENT %lu", (unsigned long) event_counter));
 
   /* A post_handler that handles subscriptions/observing will be called for periodic resources by the framework. */
 }

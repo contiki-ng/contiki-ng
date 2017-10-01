@@ -45,7 +45,7 @@
 #include <string.h>
 
 /*--------------------------------------------------------------------*/
-uint8_t
+static uint8_t
 uip_driver_send(const linkaddr_t *addr)
 {
   packetbuf_copyfrom(&uip_buf[UIP_LLH_LEN], uip_len);

@@ -101,18 +101,20 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 static void
 res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
-
-  PRINTF("/test POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+#if DEBUG
+    coap_packet_t *const coap_req = (coap_packet_t *)request;
+    PRINTF("/test POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+#endif
   REST.set_response_status(response, REST.status.CREATED);
   REST.set_header_location(response, "/location1/location2/location3");
 }
 static void
 res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+#if DEBUG
   coap_packet_t *const coap_req = (coap_packet_t *)request;
-
   PRINTF("/test PUT (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+#endif
 
   if(coap_get_header_if_none_match(request)) {
     if(test_none_match_okay) {
@@ -152,8 +154,9 @@ res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 static void
 res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+#if DEBUG
   coap_packet_t *const coap_req = (coap_packet_t *)request;
-
   PRINTF("/test DELETE (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+#endif
   REST.set_response_status(response, REST.status.DELETED);
 }

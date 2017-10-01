@@ -106,7 +106,9 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 static void
 res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+#if DEBUG
   coap_packet_t *const coap_req = (coap_packet_t *)request;
+#endif
 
   PRINTF("/validate       PUT ");
   PRINTF("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
