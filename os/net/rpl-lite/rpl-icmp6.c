@@ -31,6 +31,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         ICMP6 I/O for RPL control messages.
  *
@@ -39,11 +42,6 @@
  * Contributors: Niclas Finne <nfi@sics.se>, Joel Hoglund <joel@sics.se>,
  *               Mathieu Pouillot <m.pouillot@watteco.com>,
  *               George Oikonomou <oikonomou@users.sourceforge.net> (multicast)
- */
-
-/**
- * \addtogroup uip6
- * @{
  */
 
 #include "net/rpl-lite/rpl.h"

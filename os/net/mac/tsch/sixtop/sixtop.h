@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup net
+ * \addtogroup link-layer
  * @{
  */
 /**

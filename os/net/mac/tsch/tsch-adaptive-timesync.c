@@ -38,6 +38,11 @@
  *
  */
 
+/**
+  * \addtogroup tsch
+  * @{
+*/
+
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-conf.h"
 #include "net/mac/tsch/tsch-adaptive-timesync.h"
@@ -200,3 +205,4 @@ tsch_timesync_adaptive_compensate(rtimer_clock_t delta_ticks)
 }
 /*---------------------------------------------------------------------------*/
 #endif /* TSCH_ADAPTIVE_TIMESYNC */
+/** @} */

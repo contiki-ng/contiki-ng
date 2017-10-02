@@ -30,24 +30,20 @@
  *
  */
 
+ /**
+  * \addtogroup link-layer
+  * \defgroup llsec802154 Link-Layer security common functionality
+  *
+  * Macros related to 802.15.4 link-layer security.
+  *
+  * @{
+  */
+
 /**
  * \file
  *         Common functionality of 802.15.4-compliant llsec_drivers.
  * \author
  *         Konrad Krentz <konrad.krentz@gmail.com>
- */
-
-/**
- * \addtogroup llsec
- * @{
- */
-
-/**
- * \defgroup llsec802154 Link Layer Security Common Functionality
- *
- * Macros related to 802.15.4 link-layer security.
- *
- * @{
  */
 
 #ifndef LLSEC802154_H_
@@ -86,5 +82,4 @@
 
 #endif /* LLSEC802154_H_ */
 
-/** @} */
 /** @} */

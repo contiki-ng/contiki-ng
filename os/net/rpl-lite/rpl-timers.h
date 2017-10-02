@@ -28,6 +28,9 @@
  *
  * This file is part of the Contiki operating system.
  *
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *	Header file for rpl-timers module
  * \author
@@ -42,11 +45,6 @@
 /********** Includes **********/
 
 #include "net/rpl-lite/rpl.h"
-
-/**
- * \addtogroup uip6
- * @{
- */
 
 /********** Public functions **********/
 

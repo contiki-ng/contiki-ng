@@ -31,6 +31,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         The Minimum Rank with Hysteresis Objective Function (MRHOF), RFC6719
  *
@@ -40,11 +43,6 @@
  *
  * \author Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>
  *  Simon Duquennoy <simon.duquennoy@inria.fr>
- */
-
-/**
- * \addtogroup uip6
- * @{
  */
 
 #include "net/rpl-lite/rpl.h"

@@ -30,6 +30,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         RPL non-storing mode specific functions. Includes support for
  *         source routing.
@@ -248,3 +251,4 @@ rpl_ns_free_all(void)
     num_nodes--;
   }
 }
+/** @} */

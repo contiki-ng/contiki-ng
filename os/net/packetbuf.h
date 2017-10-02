@@ -38,12 +38,12 @@
  */
 
 /**
- * \addtogroup netstack
+ * \addtogroup net
  * @{
  */
 
 /**
- * \defgroup packetbuf Packet buffer management
+ * \defgroup packetbuf Packet buffer
  * @{
  *
  * The packetbuf module does Contiki's buffer management.

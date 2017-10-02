@@ -30,6 +30,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         Management of extension headers for ContikiRPL.
  *
@@ -39,12 +42,7 @@
  *         Nicolas Tsiftes <nvt@sics.se>,
  *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
-
-/**
- * \addtogroup uip6
- * @{
- */
-
+ 
 #include "net/rpl-lite/rpl.h"
 #include "net/packetbuf.h"
 

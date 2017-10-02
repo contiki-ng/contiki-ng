@@ -30,6 +30,7 @@
  */
 /**
  * \addtogroup mmc-arch
+ * \ingroup zoul
  * @{
  *
  * \file

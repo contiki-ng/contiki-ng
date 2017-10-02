@@ -38,6 +38,11 @@
  *         Beshr Al Nahas <beshr@sics.se>
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #include "contiki.h"
 #include "dev/leds.h"
 #include "lib/memb.h"
@@ -468,3 +473,4 @@ tsch_schedule_print(void)
   }
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

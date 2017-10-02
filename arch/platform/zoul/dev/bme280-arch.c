@@ -31,6 +31,8 @@
 /*---------------------------------------------------------------------------*/
 /**
  * \addtogroup zoul-bme280-sensor
+ * \ingroup zoul
+ *
  * @{
  *
  * \file
@@ -75,4 +77,3 @@ bme280_arch_i2c_read_mem(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t bytes)
 /**
  * @}
  */
-

@@ -31,7 +31,7 @@
  */
 /* -------------------------------------------------------------------------- */
 /**
- * \addtogroup remote
+ * \addtogroup zoul
  * @{
  *
  * \defgroup remote-rtcc RE-Mote Real Time Clock Calendar

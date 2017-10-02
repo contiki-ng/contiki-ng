@@ -28,6 +28,9 @@
  *
  * This file is part of the Contiki operating system.
  *
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *	Header file for rpl-neighbor module
  * \author
@@ -46,11 +49,6 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "sys/ctimer.h"
-
-/**
- * \addtogroup uip6
- * @{
- */
 
 /********** Public symbols **********/
 

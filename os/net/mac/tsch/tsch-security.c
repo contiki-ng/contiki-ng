@@ -37,6 +37,11 @@
  *         Simon Duquennoy <simonduq@sics.se>
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #include "contiki.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-packet.h"
@@ -267,3 +272,4 @@ tsch_security_parse_frame(const uint8_t *hdr, int hdrlen, int datalen,
     return 1;
   }
 }
+/** @} */

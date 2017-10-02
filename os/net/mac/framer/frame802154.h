@@ -44,7 +44,7 @@
  */
 
 /**
- *    \addtogroup net
+ *    \addtogroup link-layer
  *    @{
  */
 

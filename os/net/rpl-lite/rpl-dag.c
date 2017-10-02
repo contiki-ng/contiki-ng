@@ -31,17 +31,15 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         Logic for Directed Acyclic Graphs in RPL.
  *
  * \author Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>,
  * Simon Duquennoy <simon.duquennoy@inria.fr>
  * Contributors: George Oikonomou <oikonomou@users.sourceforge.net> (multicast)
- */
-
-/**
- * \addtogroup uip6
- * @{
  */
 
 #include "net/rpl-lite/rpl.h"

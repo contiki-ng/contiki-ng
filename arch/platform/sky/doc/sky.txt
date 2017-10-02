@@ -3,12 +3,12 @@
  **/
 
 /**
-\defgroup sky The Tmote Sky Board
+\defgroup sky The Tmote Sky board
 
 The Tmote Sky platform is a wireless sensor board from Moteiv. It is
 an MSP430-based board with an 802.15.4-compatible CC2420 radio chip, a
 1 megabyte external serial flash memory, and two light
-sensors. Contiki was ported to the Tmote Sky by Björn Grönvall as part
+sensors. Contiki was ported to the Tmote Sky by BjÃ¶rn GrÃ¶nvall as part
 of the RUNES project. The Tmote Sky port was integrated into the
 Contiki build system in March 2007.
 

@@ -40,6 +40,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #include "dev/radio.h"
 #include "contiki.h"
 #include "net/netstack.h"
@@ -1061,3 +1066,4 @@ tsch_slot_operation_sync(rtimer_clock_t next_slot_start,
   current_link = NULL;
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

@@ -30,6 +30,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_SCHEDULE_H__
 #define __TSCH_SCHEDULE_H__
 
@@ -165,3 +170,4 @@ struct tsch_slotframe *tsch_schedule_slotframe_head(void);
 struct tsch_slotframe *tsch_schedule_slotframe_next(struct tsch_slotframe *sf);
 
 #endif /* __TSCH_SCHEDULE_H__ */
+/** @} */

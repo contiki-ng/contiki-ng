@@ -39,7 +39,7 @@
  *
  */
 
-/** \addtogroup lib
+/** \addtogroup data
     @{ */
 /**
  * \defgroup list Linked list library
@@ -79,7 +79,7 @@
  *
  * The list variable is declared as static to make it easy to use in a
  * single C module without unnecessarily exporting the name to other
- * modules. 
+ * modules.
  *
  * \param name The name of the list.
  */

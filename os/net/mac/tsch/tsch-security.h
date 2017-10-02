@@ -30,6 +30,11 @@
  *
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_SECURITY_H__
 #define __TSCH_SECURITY_H__
 
@@ -139,3 +144,4 @@ unsigned int tsch_security_parse_frame(const uint8_t *hdr, int hdrlen,
                                        struct tsch_asn_t *asn);
 
 #endif /* __TSCH_SECURITY_H__ */
+/** @} */

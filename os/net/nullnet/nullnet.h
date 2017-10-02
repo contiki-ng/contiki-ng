@@ -39,7 +39,10 @@
  */
 
 /**
+ * \ingroup net-layer
  * \addtogroup nullnet
+A network layer that does nothing. Useful for lower-layer testing and
+for non-IPv6 scenarios.
  * @{
  */
 
@@ -49,10 +52,26 @@
 #include "contiki.h"
 #include "net/linkaddr.h"
 
+/**
+ * Function prototype for NullNet input callback
+*/
 typedef void (* nullnet_input_callback)(const void *data, uint16_t len,
   const linkaddr_t *src, const linkaddr_t *dest);
 
+/**
+ * Set input callback for NullNet
+ *
+ * \param callback The input callback
+*/
 void nullnet_set_input_callback(nullnet_input_callback callback);
+
+/**
+ * Send data with NullNet
+ *
+ * \param data The payload
+ * \param len The payload len
+ * \param dest The destination link-layer address
+*/
 void nullnet_output(const void *data, uint16_t len, const linkaddr_t *dest);
 
 #endif /* NULLNET_H_ */

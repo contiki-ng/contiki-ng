@@ -28,7 +28,7 @@
  */
 /* -------------------------------------------------------------------------- */
 /**
- * \addtogroup remote
+ * \addtogroup zoul
  * @{
  *
  * \defgroup remote-antenna RE-Mote Antenna switch

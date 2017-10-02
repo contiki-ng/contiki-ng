@@ -1,5 +1,0 @@
-/**
-\defgroup net IoT networking
-@{
-*/
-/** @} */

@@ -33,7 +33,7 @@
  */
 
 /**
- * \defgroup heapmem Dynamic heap memory allocator
+ * \defgroup heapmem heapmem: Dynamic heap memory allocator
  *
  * The heapmem module is a dynamic heap memory allocator similar to
  * malloc() in standard C. The heap memory is managed in a block of

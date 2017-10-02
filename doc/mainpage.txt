@@ -83,6 +83,6 @@ functionality, including memory management and data structures.
 \sa \ref heapmem "Heap memory allocator"
 \sa \ref list "Linked list library"
 \sa \ref ringbuf "Ring buffer library"
-\sa \ref trickle-timer "Trickle timers"
+\sa \ref trickle-timer "Trickle timer"
 
 */

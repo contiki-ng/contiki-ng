@@ -30,6 +30,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         Header file for rpl-ext-header
  *
@@ -41,11 +44,6 @@
 
 #include "uip.h"
 #include "uip-ds6.h"
-
-/**
- * \addtogroup uip6
- * @{
- */
 
 /********** Data structures **********/
 

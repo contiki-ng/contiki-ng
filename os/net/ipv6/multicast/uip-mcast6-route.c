@@ -29,7 +29,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup uip6-multicast
+ * \addtogroup uip-multicast
  * @{
  */
 /**

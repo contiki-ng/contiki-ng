@@ -30,6 +30,9 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         RPL non-storing mode specific functions. Includes support for
  *         source routing.
@@ -45,11 +48,6 @@
 
 #include "net/ipv6/uip.h"
 #include "net/rpl-lite/rpl.h"
-
-/**
- * \addtogroup uip6
- * @{
- */
 
 /********** Data Structures  **********/
 

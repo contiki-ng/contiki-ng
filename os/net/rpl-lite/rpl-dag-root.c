@@ -29,6 +29,14 @@
  *
  */
 
+/**
+* \addtogroup rpl-lite
+* @{
+*
+* \file
+*         DAG root utility functions for RPL.
+*/
+
 #include "contiki.h"
 #include "contiki-net.h"
 
@@ -180,3 +188,4 @@ rpl_dag_root_is_root(void)
   return curr_instance.used && curr_instance.dag.rank == ROOT_RANK;
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

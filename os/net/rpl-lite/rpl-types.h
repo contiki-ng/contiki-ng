@@ -28,6 +28,9 @@
  *
  * This file is part of the Contiki operating system.
  *
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *	RPL types and macros
  * \author
@@ -38,11 +41,6 @@
 
 #ifndef RPL_TYPES_H
 #define RPL_TYPES_H
-
-/**
- * \addtogroup uip6
- * @{
- */
 
  /********** Macros **********/
 

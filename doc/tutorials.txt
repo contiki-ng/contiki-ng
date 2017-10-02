@@ -1,7 +1,0 @@
-/**
- * \defgroup tutorials Tutorials
- * @{
-This module contains all \os related tutorials.
-
-*/
-/** @} */

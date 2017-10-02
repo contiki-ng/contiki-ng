@@ -28,6 +28,9 @@
  *
  * This file is part of the Contiki operating system.
  *
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *	Public configuration and API declarations for ContikiRPL.
  * \author
@@ -378,5 +381,7 @@
 #else
 #define RPL_PREFERENCE              0
 #endif
+
+/** @} */
 
 #endif /* RPL_CONF_H */

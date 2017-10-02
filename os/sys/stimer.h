@@ -39,7 +39,7 @@
  * Adam Dunkels <adam@sics.se>, Nicolas Tsiftes <nvt@sics.se>
  */
 
-/** \addtogroup sys
+/** \addtogroup timers
  * @{ */
 
 /**

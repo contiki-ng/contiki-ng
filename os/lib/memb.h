@@ -39,7 +39,7 @@
 
 
 /**
- * \defgroup memb Memory block management functions
+ * \defgroup memb memb: Memory block management functions
  *
  * The memory block allocation routines provide a simple yet powerful
  * set of functions for managing a set of memory blocks of fixed

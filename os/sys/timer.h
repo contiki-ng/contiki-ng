@@ -39,15 +39,11 @@
  * Adam Dunkels <adam@sics.se>
  */
 
-/** \addtogroup sys
+/** \addtogroup timers
  * @{ */
 
 /**
  * \defgroup timer Timer library
- *
- * The Contiki kernel does not provide support for timed
- * events. Rather, an application that wants to use timers needs to
- * explicitly use the timer library.
  *
  * The timer library provides functions for setting, resetting and
  * restarting timers, and for checking if a timer has expired. An

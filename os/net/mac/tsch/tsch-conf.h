@@ -37,6 +37,11 @@
  *         Simon Duquennoy <simonduq@sics.se>
  */
 
+/**
+ * \addtogroup tsch
+ * @{
+*/
+
 #ifndef __TSCH_CONF_H__
 #define __TSCH_CONF_H__
 
@@ -199,3 +204,4 @@
 #endif
 
 #endif /* __TSCH_CONF_H__ */
+/** @} */

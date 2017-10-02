@@ -1,0 +1,123 @@
+/**
+\defgroup arch Hardware support
+CPU, device drivers and platform code
+*/
+
+/**
+ * \defgroup platform Platforms
+ * \ingroup arch
+ */
+
+/**
+ * \addtogroup cc2538dk The cc2538 Development Kit platform
+ * \ingroup platform
+ */
+
+/**
+ * \addtogroup cooja COOJA network simulator node
+ * \ingroup platform
+ */
+
+/**
+ * \addtogroup exp5438 MSP430F5438 Experimenter Board
+ * \ingroup platform
+ */
+
+/**
+ * \addtogroup jn516x The JN516x Board
+ * \ingroup platform
+ */
+
+/**
+ * \addtogroup native_platform Native platform
+ * \ingroup platform
+ */
+
+/**
+ * \addtogroup nrf52dk nRF52 Development Kit
+ * \ingroup platform
+ */
+
+/**
+\defgroup net IoT networking
+*/
+
+/**
+\defgroup net-layer Network layer
+Network-layer protocols and services
+\ingroup net
+*/
+
+/**
+\defgroup link-layer Link layer
+link-layer protocols and services
+\ingroup net
+*/
+
+/**
+\defgroup uip uIP: the IPv6 stack
+The low-power IPv6 stack
+\ingroup net-layer
+*/
+
+/**
+\defgroup rpl-lite RPL-lite
+RPL-lite is a lightweight implementation of RPL tailored for reliability.
+Supports only non-storing mode, one instance and one DAG.
+\ingroup net-layer
+*/
+
+/**
+\defgroup mem Memory functions
+\ingroup lib
+*/
+
+/**
+\defgroup data Data structures
+\ingroup lib
+*/
+
+/**
+\defgroup lib Libraries and services
+*/
+
+/**
+\defgroup dev CPUs and Device driver
+\ingroup arch
+*/
+
+/**
+* \defgroup arm ARM CPUs
+* \ingroup dev
+*/
+
+/**
+* \addtogroup nrf52832 nrf52832 SoC
+* \ingroup dev
+*/
+
+/**
+ * \defgroup apps Application-layer protocols and profiles
+ * \ingroup net
+*/
+
+/**
+ * \defgroup threads Threads and processes
+This module contains protothreads, multithreading and processes
+ * \ingroup sys
+*/
+
+/**
+ * \defgroup timers Timers
+This module contains all different timers and clocks in \os
+ * \ingroup sys
+*/
+
+/**
+ * \defgroup tutorials Tutorials
+This module contains all \os related tutorials.
+*/
+
+/**
+   \example code-style.c
+ */

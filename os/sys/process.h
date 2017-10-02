@@ -31,14 +31,14 @@
  */
 
 /**
- * \addtogroup sys
+ * \addtogroup threads
  * @{
  */
 
 /**
  * \defgroup process Contiki processes
  *
- * A process in Contiki consists of a single \ref pt "protothread".
+ * A process in Contiki consists of a single protothread.
  *
  * @{
  */

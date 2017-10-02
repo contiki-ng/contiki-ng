@@ -1,6 +1,7 @@
 /**
+ \ingroup tutorials
  \defgroup buildsystem The \os build system
- 
+
  The \os build system is designed to make it easy to compile
  \os applications for either to a hardware platform or into a
  simulation platform by simply supplying different parameters to the
@@ -17,7 +18,7 @@
  development system. After compiling the application for the
  <tt>native</tt> target it is possible to run the \os system with
  the application by running the file <tt>hello-world.native</tt>.
- 
+
  To compile the hello-world application into a stand-alone executable
  that can be loaded into a running \os system, the command
  <tt>make hello-world.ce</tt> is used. To build an executable file for
@@ -31,7 +32,7 @@
  saved in the project's directory.
 
  \section buildsystem-makefiles Makefiles used in the \os build system
- 
+
  The \os build system is composed of a number of Makefiles. These
  are:
  - <tt>Makefile</tt>: the project's makefile, located in the project directory.
@@ -64,7 +65,7 @@ include $(CONTIKI)/Makefile.include
  First, the location of the \os source code tree is given by
  defining the <tt>CONTIKI</tt> variable. Next, the name of the
  application is defined. Finally, the system-wide
- <tt>Makefile.include</tt> is included. 
+ <tt>Makefile.include</tt> is included.
 
  The <tt>Makefile.include</tt> contains definitions of the C files of
  the core \os system. <tt>Makefile.include</tt> always reside in
