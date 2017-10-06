@@ -52,6 +52,9 @@ for non-IPv6 scenarios.
 #include "contiki.h"
 #include "net/linkaddr.h"
 
+extern uint8_t *nullnet_buf;
+extern uint16_t nullnet_len;
+
 /**
  * Function prototype for NullNet input callback
 */

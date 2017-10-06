@@ -59,7 +59,8 @@ static linkaddr_t dest_addr =         {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0
 static linkaddr_t coordinator_addr =  {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
 #endif /* MAC_CONF_WITH_TSCH */
 
-uint8_t nullnet_buf[128];
+static uint32_t buffer[128];
+uint8_t *nullnet_buf = (uint8_t *)buffer; 
 uint16_t nullnet_len;
 
 /*---------------------------------------------------------------------------*/

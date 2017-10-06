@@ -17,7 +17,6 @@ ifeq ($(TARGET),nooliberry)
 endif
 
 # custom net layer, but with IPv6 enabled
-MAKE_NET = MAKE_NET_IPv6
+MAKE_NET = MAKE_NET_IPV6
 CONTIKI_WITH_RPL = 0
-MODULES += os/net/ipv6
 include $(CONTIKI)/Makefile.include

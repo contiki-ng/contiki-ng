@@ -57,7 +57,8 @@
 static linkaddr_t coordinator_addr =  {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
 #endif /* MAC_CONF_WITH_TSCH */
 
-uint8_t nullnet_buf[128];
+static uint32_t buffer[128];
+uint8_t *nullnet_buf = (uint8_t *)buffer; 
 uint16_t nullnet_len;
 
 
@@ -93,7 +94,7 @@ PROCESS_THREAD(nullnet_example_process, ev, data)
     LOG_INFO("Sending %u to ", count);
     LOG_INFO_LLADDR(NULL);
     LOG_INFO_("\n");
-
+    
     memcpy(nullnet_buf, &count, sizeof(count));
     nullnet_len = sizeof(count);
 
