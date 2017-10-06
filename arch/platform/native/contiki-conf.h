@@ -73,7 +73,7 @@ typedef unsigned short uip_stats_t;
 #endif
 
 #ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     nullmac_driver
+#define NETSTACK_CONF_MAC        nullmac_driver
 #endif /* NETSTACK_CONF_MAC */
 
 #ifndef NETSTACK_CONF_RADIO

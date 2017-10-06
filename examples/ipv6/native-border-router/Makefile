@@ -16,6 +16,7 @@ MODULES += $(WITH_WEBSERVER)
 CFLAGS += -DWEBSERVER=2
 endif
 
+MAKE_NET = MAKE_NET_IPV6
 # Custom MAC layer (border_router_mac_driver)
 MAKE_MAC = MAKE_MAC_OTHER
 include $(CONTIKI)/Makefile.include

@@ -50,8 +50,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_FULL
 #include "net/ipv6/uip-debug.h"
 
 #ifdef linux
@@ -206,7 +205,10 @@ tun_init()
 
   slip_init();
 
+  PRINTF("Opening tun interface:%s\n", slip_config_tundev);
+
   tunfd = tun_alloc(slip_config_tundev);
+
   if(tunfd == -1) err(1, "main: open");
 
   select_set_callback(tunfd, &tun_select_callback);

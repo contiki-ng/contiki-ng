@@ -45,15 +45,17 @@
 
 /* Network layer configuration. The NET layer is configured through the Makefile,
    via the flag MAC_NET */
+#ifdef NETSTACK_CONF_NETWORK
+#define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
+#else
 #if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_NETWORK sicslowpan_driver
 #elif NETSTACK_CONF_WITH_NULLNET
 #define NETSTACK_NETWORK nullnet_driver
-#elif NETSTACK_CONF_WITH_OTHER
-#define NETSTACK_NETWORK NETSTACK_CONF_OTHER_NETWORK
 #else
 #error Unknown NET configuration
 #endif
+#endif /* NETSTACK_CONF_NETWORK */
 
 /* MAC layer configuration. The MAC layer is configured through the Makefile,
    via the flag MAKE_MAC */

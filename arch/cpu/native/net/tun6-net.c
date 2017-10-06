@@ -51,7 +51,7 @@
 #include <sys/socket.h>
 
 
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_FULL
 #include "net/ipv6/uip-debug.h"
 
 #ifdef linux
@@ -79,13 +79,13 @@ static const struct select_callback tun_select_callback = {
 };
 #endif /* __CYGWIN__ */
 
-int ssystem(const char *fmt, ...)
+static int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-int
+static int
 ssystem(const char *fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
 
 int
-ssystem(const char *fmt, ...)
+static ssystem(const char *fmt, ...)
 {
   char cmd[128];
   va_list ap;
@@ -98,7 +98,7 @@ ssystem(const char *fmt, ...)
 }
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 cleanup(void)
 {
   ssystem("ifconfig %s down", config_tundev);
@@ -112,7 +112,7 @@ cleanup(void)
 }
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 sigcleanup(int signo)
 {
   fprintf(stderr, "signal %d\n", signo);
@@ -120,7 +120,7 @@ sigcleanup(int signo)
 }
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 ifconf(const char *tundev, const char *ipaddr)
 {
 #ifdef linux
@@ -138,17 +138,8 @@ ifconf(const char *tundev, const char *ipaddr)
   ssystem("ifconfig %s\n", tundev);
 }
 /*---------------------------------------------------------------------------*/
-int
-devopen(const char *dev, int flags)
-{
-  char t[32];
-  strcpy(t, "/dev/");
-  strncat(t, dev, sizeof(t) - 5);
-  return open(t, flags);
-}
-/*---------------------------------------------------------------------------*/
 #ifdef linux
-int
+static int
 tun_alloc(char *dev)
 {
   struct ifreq ifr;
@@ -180,7 +171,16 @@ tun_alloc(char *dev)
   return fd;
 }
 #else
-int
+static int
+devopen(const char *dev, int flags)
+{
+  char t[32];
+  strcpy(t, "/dev/");
+  strncat(t, dev, sizeof(t) - 5);
+  return open(t, flags);
+}
+/*---------------------------------------------------------------------------*/
+static int
 tun_alloc(char *dev)
 {
   PRINTF("Opening: %s\n", dev);
@@ -190,7 +190,7 @@ tun_alloc(char *dev)
 
 #ifdef __CYGWIN__
 /*wpcap process is used to connect to host interface */
-void
+static void
 tun_init()
 {
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
@@ -200,7 +200,7 @@ tun_init()
 
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 tun_init()
 {
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
@@ -237,7 +237,7 @@ tun_output(uint8_t *data, int len)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-int
+static int
 tun_input(unsigned char *data, int maxlen)
 {
   int size;
@@ -285,7 +285,7 @@ handle_fd(fd_set *rset, fd_set *wset)
 }
 #endif /*  __CYGWIN_ */
 
-void input(void)
+static void input(void)
 {
   /* should not happen */
   PRINTF("Tun6 - input\n");
