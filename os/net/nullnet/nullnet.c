@@ -53,6 +53,9 @@
 #define LOG_MODULE "NullNet"
 #define LOG_LEVEL LOG_LEVEL_NULLNET
 
+extern uint8_t *nullnet_buf;
+extern uint16_t nullnet_len;
+
 static nullnet_input_callback current_callback = NULL;
 /*--------------------------------------------------------------------*/
 static void
@@ -80,11 +83,11 @@ nullnet_set_input_callback(nullnet_input_callback callback)
  current_callback = callback;
 }
 /*--------------------------------------------------------------------*/
-void
-nullnet_output(const void *data, uint16_t len, const linkaddr_t *dest)
+static uint8_t
+output(const linkaddr_t *dest)
 {
   packetbuf_clear();
-  packetbuf_copyfrom(data, len);
+  packetbuf_copyfrom(nullnet_buf, nullnet_len);
   if(dest != NULL) {
     packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, dest);
   } else {
@@ -95,12 +98,14 @@ nullnet_output(const void *data, uint16_t len, const linkaddr_t *dest)
   LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
   LOG_INFO_("\n");
   NETSTACK_MAC.send(NULL, NULL);
+  return 1;
 }
 /*--------------------------------------------------------------------*/
 const struct network_driver nullnet_driver = {
   "nullnet",
   init,
-  input
+  input,
+  output
 };
 /*--------------------------------------------------------------------*/
 /** @} */

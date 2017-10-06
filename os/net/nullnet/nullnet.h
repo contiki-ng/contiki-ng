@@ -65,14 +65,5 @@ typedef void (* nullnet_input_callback)(const void *data, uint16_t len,
 */
 void nullnet_set_input_callback(nullnet_input_callback callback);
 
-/**
- * Send data with NullNet
- *
- * \param data The payload
- * \param len The payload len
- * \param dest The destination link-layer address
-*/
-void nullnet_output(const void *data, uint16_t len, const linkaddr_t *dest);
-
 #endif /* NULLNET_H_ */
 /** @} */

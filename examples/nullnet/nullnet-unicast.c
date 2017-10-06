@@ -42,6 +42,7 @@
 #include "net/netstack.h"
 #include "net/nullnet/nullnet.h"
 
+#include <string.h>
 #include <stdio.h> /* For printf() */
 
 /* Log configuration */
@@ -57,6 +58,9 @@ static linkaddr_t dest_addr =         {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0
 #include "net/mac/tsch/tsch.h"
 static linkaddr_t coordinator_addr =  {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
 #endif /* MAC_CONF_WITH_TSCH */
+
+uint8_t nullnet_buf[128];
+uint16_t nullnet_len;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(nullnet_example_process, "NullNet unicast example");
@@ -91,7 +95,11 @@ PROCESS_THREAD(nullnet_example_process, ev, data)
       LOG_INFO("Sending %u to ", count);
       LOG_INFO_LLADDR(&dest_addr);
       LOG_INFO_("\n");
-      nullnet_output(&count, sizeof(count), &dest_addr);
+
+      memcpy(nullnet_buf, &count, sizeof(count));
+      nullnet_len = sizeof(count);
+
+      NETSTACK_NETWORK.output(&dest_addr);
       count++;
       etimer_reset(&periodic_timer);
     }

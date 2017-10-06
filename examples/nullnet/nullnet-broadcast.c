@@ -41,7 +41,7 @@
 #include "contiki.h"
 #include "net/netstack.h"
 #include "net/nullnet/nullnet.h"
-
+#include <string.h>
 #include <stdio.h> /* For printf() */
 
 /* Log configuration */
@@ -56,6 +56,10 @@
 #include "net/mac/tsch/tsch.h"
 static linkaddr_t coordinator_addr =  {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
 #endif /* MAC_CONF_WITH_TSCH */
+
+uint8_t nullnet_buf[128];
+uint16_t nullnet_len;
+
 
 /*---------------------------------------------------------------------------*/
 PROCESS(nullnet_example_process, "NullNet broadcast example");
@@ -89,7 +93,11 @@ PROCESS_THREAD(nullnet_example_process, ev, data)
     LOG_INFO("Sending %u to ", count);
     LOG_INFO_LLADDR(NULL);
     LOG_INFO_("\n");
-    nullnet_output(&count, sizeof(count), NULL);
+
+    memcpy(nullnet_buf, &count, sizeof(count));
+    nullnet_len = sizeof(count);
+
+    NETSTACK_NETWORK.output(NULL);
     count++;
     etimer_reset(&periodic_timer);
   }
