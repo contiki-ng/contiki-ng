@@ -28,10 +28,6 @@ docsrc = $(docdirs) $(foreach dir,$(docdirs),${shell find $(dir) -type f $(filet
 
 html:
 	@doxygen Doxyfile
-	@echo "Done, errorlog follows:"
-	@echo ""
-	@touch doxygen.log
-	@cat "doxygen.log"
 
 clean:
 	@echo "> Cleaning Documentation"
