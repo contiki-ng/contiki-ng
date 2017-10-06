@@ -119,12 +119,3 @@ This module contains protothreads, multithreading and processes
 This module contains all different timers and clocks in \os
  * \ingroup sys
 */
-
-/**
- * \defgroup tutorials Tutorials
-This module contains all \os related tutorials.
-*/
-
-/**
-   \example code-style.c
- */
