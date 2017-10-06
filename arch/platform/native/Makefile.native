@@ -37,12 +37,4 @@ MAKE_MAC ?= MAKE_MAC_NULLMAC
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/native
 include $(CONTIKI)/arch/cpu/native/Makefile.native
 
-ifeq ($(HOST_OS),Windows)
-CFLAGS += -I/usr/include/ncurses
-endif
-
-CURSES_LIBS ?= -lncurses
-
-TARGET_LIBFILES += $(CURSES_LIBS)
-
 MODULES+=os/net os/net/mac os/net/mac/framer
