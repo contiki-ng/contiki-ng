@@ -1,5 +1,7 @@
 # $Id: Makefile.msp430,v 1.35 2011/01/19 07:30:31 adamdunkels Exp $
 
+COOJA_PATH ?= $(CONTIKI)/tools/cooja
+
 ifdef nodeid
 CFLAGS += -DNODEID=$(nodeid)
 endif
@@ -215,19 +217,24 @@ else
 	$(OBJCOPY) $^ -O ihex $@
 endif
 
-$(CONTIKI)/tools/mspsim/build.xml:
+$(COOJA_PATH)/build.xml:
 	@echo '----------------'
-	@echo 'Could not find the MSPSim build file. Did you run "git submodule update --init"?'
+	@echo 'Could not find the COOJA build file. Did you run "git submodule update --init --recursive"?'
 	@echo '----------------'
 
-$(CONTIKI)/tools/mspsim/mspsim.jar: $(CONTIKI)/tools/mspsim/build.xml
-	(cd $(CONTIKI)/tools/mspsim && ant jar)
+$(COOJA_PATH)/mspsim/build.xml: $(COOJA_PATH)/build.xml
+	@echo '----------------'
+	@echo 'Could not find the MSPSim build file. Did you run "git submodule update --init --recursive"?'
+	@echo '----------------'
 
-%.mspsim:	%.${TARGET} ${CONTIKI}/tools/mspsim/mspsim.jar
-	java -jar ${CONTIKI}/tools/mspsim/mspsim.jar -platform=${TARGET} $<
+$(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
+	(cd $(COOJA_PATH)/mspsim && ant jar)
+
+%.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
+	java -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
 
 mspsim-maptable:	contiki-${TARGET}.map
-	java -classpath ${CONTIKI}/tools/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $<
+	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $<
 
 core-labels.o: core.${TARGET}
 	${CONTIKI}/tools/msp430-make-labels core.${TARGET} > core-labels.S
