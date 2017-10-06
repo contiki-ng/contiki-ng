@@ -39,6 +39,7 @@
 #define WEBSERVER_CONF_CFS_CONNS 2
 
 #define SERIALIZE_ATTRIBUTES 1
+#define UIP_CONF_TCP 1
 
 #define CMD_CONF_OUTPUT border_router_cmd_output
 

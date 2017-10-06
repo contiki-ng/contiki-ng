@@ -289,11 +289,11 @@ border_router_set_sensors(const char *data, int len)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_prefix_64(const uip_ipaddr_t *prefix_64)
+set_prefix_64(uip_ipaddr_t *prefix_64)
 {
   memcpy(&prefix, prefix_64, 16);
   prefix_set = 1;
-	rpl_dag_root_init(prefix_64, NULL);
+  rpl_dag_root_init(prefix_64, NULL);
   rpl_dag_root_init_dag_immediately();
 }
 /*---------------------------------------------------------------------------*/
