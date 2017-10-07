@@ -32,8 +32,9 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
-/* Selected in netstack.h because our Makefile sets MAKE_MAC = MAKE_MAC_OTHER */
-#define NETSTACK_CONF_OTHER_MAC      sensniff_mac_driver
+/* Configure the sensniff_mac_driver for netstack.h */
+#undef NETSTACK_CONF_MAC
+#define NETSTACK_CONF_MAC      sensniff_mac_driver
 /*---------------------------------------------------------------------------*/
 /* Include platform-specific header */
 #include "target-conf.h"

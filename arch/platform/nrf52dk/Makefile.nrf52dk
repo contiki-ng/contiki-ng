@@ -24,9 +24,6 @@ CLEAN += *.nrf52dk
 ### Unless the example dictates otherwise, build with code size optimisations switched off
 SMALL ?= 0
 
-# Custom MAC layer for BLE (ble_ipsp_mac_driver)
-MAKE_MAC = MAKE_MAC_OTHER
-
 ### Define the CPU directory and pull in the correct CPU makefile.
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/nrf52832
 include $(CONTIKI_CPU)/Makefile.nrf52832
