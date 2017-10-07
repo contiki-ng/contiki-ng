@@ -11,6 +11,7 @@ ifeq ($(NRF52_JLINK_PATH),)
 endif
 endif
 
+MAKE_NET ?= MAKE_NET_IPV6
 ifneq ($(MAKE_NET),MAKE_NET_IPV6)
   $(error Only IPv6 stack is supported!)
 endif

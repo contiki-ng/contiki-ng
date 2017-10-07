@@ -79,6 +79,34 @@ ifneq ("$(wildcard project-conf.h)","")
 CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
 endif
 
+MODULES += os os/net os/net/mac os/storage
+
+oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
+
+CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
+
+PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
+
+# Provide way to create $(OBJECTDIR) if it has been removed by make clean
+$(OBJECTDIR):
+	mkdir $@
+
+uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
+
+### Include target makefile (TODO Unsafe?)
+
+target_makefile := $(wildcard $(CONTIKI)/arch/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
+
+# Check if the target makefile exists, and create the object directory if necessary.
+ifeq ($(strip $(target_makefile)),)
+  ${error The target platform "$(TARGET)" does not exist (maybe it was misspelled?)}
+else
+  ifneq (1, ${words $(target_makefile)})
+    ${error More than one TARGET Makefile found: $(target_makefile)}
+  endif
+  include $(target_makefile)
+endif
+
 # Configure MAC layer
 
 # The different options
@@ -91,6 +119,7 @@ MAKE_MAC_OTHER = 3
 MAKE_MAC ?= MAKE_MAC_CSMA
 
 ifeq ($(MAKE_MAC),MAKE_MAC_NULLMAC)
+  MODULES+=os/net/mac/nullmac
   CFLAGS += -DMAC_CONF_WITH_NULLMAC=1
 endif
 
@@ -145,34 +174,6 @@ ifeq ($(CONTIKI_WITH_RPL),1)
     endif
 else
     CFLAGS += -DUIP_CONF_IPV6_RPL=0
-endif
-
-MODULES += os os/net os/net/mac os/storage
-
-oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
-
-CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
-
-PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
-
-# Provide way to create $(OBJECTDIR) if it has been removed by make clean
-$(OBJECTDIR):
-	mkdir $@
-
-uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
-
-### Include target makefile (TODO Unsafe?)
-
-target_makefile := $(wildcard $(CONTIKI)/arch/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
-
-# Check if the target makefile exists, and create the object directory if necessary.
-ifeq ($(strip $(target_makefile)),)
-  ${error The target platform "$(TARGET)" does not exist (maybe it was misspelled?)}
-else
-  ifneq (1, ${words $(target_makefile)})
-    ${error More than one TARGET Makefile found: $(target_makefile)}
-  endif
-  include $(target_makefile)
 endif
 
 ifeq ($(WITH_IP64),1)
