@@ -1,4 +1,3 @@
-CFLAGS+=-DPROJECT_CONF_H=\"project-conf.h\"
 CONTIKI_PROJECT = client ifttt_client
 all: $(CONTIKI_PROJECT)
 

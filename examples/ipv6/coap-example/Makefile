@@ -3,8 +3,6 @@ all: coap-example-server coap-example-client
 
 CONTIKI=../../..
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-
 # automatically build RESTful resources
 REST_RESOURCES_DIR = ./resources
 ifndef TARGET

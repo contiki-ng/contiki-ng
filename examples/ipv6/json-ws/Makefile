@@ -13,8 +13,6 @@ endif
 
 MODULES += os/lib/json os/net/app-layer/httpd-ws
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-
 ifeq ($(TARGET),)
  -include Makefile.target
 endif

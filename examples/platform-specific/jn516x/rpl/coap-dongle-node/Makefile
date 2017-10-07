@@ -10,7 +10,6 @@ MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/lib/json
 PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 CFLAGS += -DWITH_COAP
 CFLAGS += -DUIP_CONF_TCP=0

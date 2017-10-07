@@ -1,5 +1,3 @@
-DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-
 CONTIKI_PROJECT = root intermediate sink
 all: $(CONTIKI_PROJECT)
 

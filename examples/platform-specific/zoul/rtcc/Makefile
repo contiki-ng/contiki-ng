@@ -1,4 +1,3 @@
-DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 CONTIKI_PROJECT = test-rtcc
 
 TARGET = zoul

@@ -6,7 +6,7 @@ CONTIKI=../../..
 endif
 endif
 
-DEFINES=WITH_SLIP=1,PROJECT_CONF_H=\"bridge-conf.h\"
+DEFINES=WITH_SLIP=1
 
 ifndef TARGET
 TARGET=sky

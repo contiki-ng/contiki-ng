@@ -1,5 +1,4 @@
 CONTIKI=../../../..
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 ifeq ($(MAKECMDGOALS),)
 $(error Please specify whether coap-client or coap-server should be built)

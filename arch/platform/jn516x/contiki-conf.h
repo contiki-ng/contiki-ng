@@ -50,9 +50,8 @@
 #endif /* CCM_STAR_CONF */
 
 /* include the project config */
-/* PROJECT_CONF_H might be defined in the project Makefile */
-#ifdef PROJECT_CONF_H
-#include PROJECT_CONF_H
-#endif /* PROJECT_CONF_H */
+#ifdef PROJECT_CONF_PATH
+#include PROJECT_CONF_PATH
+#endif /* PROJECT_CONF_PATH */
 
 #endif /* CONTIKI_CONF_H_ */

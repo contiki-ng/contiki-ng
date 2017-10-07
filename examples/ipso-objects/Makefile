@@ -4,8 +4,6 @@ CONTIKI_SOURCEFILES += serial-protocol.c example-ipso-temperature.c
 
 all: $(CONTIKI_PROJECT)
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-
 MODULES += os/net/app-layer/coap
 MODULES += os/services/lwm2m
 MODULES += os/services/ipso-objects

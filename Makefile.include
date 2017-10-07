@@ -74,6 +74,11 @@ endif
 
 MODULES += os os/sys os/dev os/lib os/services
 
+# Automatically include project-conf.h if found
+ifneq ("$(wildcard project-conf.h)","")
+CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
+endif
+
 # Configure MAC layer
 
 # The different options

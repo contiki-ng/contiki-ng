@@ -2,7 +2,6 @@ all: test-panid-handling test-tcsh-create-packet
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/services/unit-test
-CFLAGS  += -D PROJECT_CONF_H=\"project-conf.h\"
 
 TEST_CONFIG_TYPE ?= DEFAULT
 

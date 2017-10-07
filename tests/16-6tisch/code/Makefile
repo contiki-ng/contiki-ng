@@ -1,6 +1,5 @@
 all:
 
-CFLAGS  += -D PROJECT_CONF_H=\"project-conf.h\"
 APPS    += unit-test
 MODULES += os/net/mac/tsch os/net/mac/tsch/sixtop
 
