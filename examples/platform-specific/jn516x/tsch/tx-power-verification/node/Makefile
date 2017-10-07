@@ -5,7 +5,6 @@ JN516x_WITH_DONGLE = 1
 
 CONTIKI=../../../../../..
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 PROJECTDIRS += .. ../../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 

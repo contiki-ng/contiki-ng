@@ -1,5 +1,3 @@
-DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-
 all: cc26xx-web-demo
 
 REST_RESOURCES_DIR = ./resources

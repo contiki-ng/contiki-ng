@@ -2,7 +2,6 @@ CONTIKI_PROJECT = node
 all: $(CONTIKI_PROJECT)
 
 CONTIKI=../../..
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
 MAKE_WITH_SECURITY ?= 0 # force Security from command line

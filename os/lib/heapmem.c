@@ -50,7 +50,7 @@
 
 #ifdef PROJECT_CONF_H
 /* Load the heapmem configuration from a project configuration file. */
-#include "project-conf.h"
+#include PROJECT_CONF_H
 #endif
 
 #include <stdint.h>

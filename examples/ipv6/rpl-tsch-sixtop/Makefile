@@ -3,7 +3,6 @@ all: $(CONTIKI_PROJECT)
 
 PROJECT_SOURCEFILES += sf-simple.c
 CONTIKI=../../..
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 MAKE_WITH_SECURITY ?= 0 # force Security from command line
 

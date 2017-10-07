@@ -8,7 +8,6 @@ CONTIKI=../../../../..
 MAKE_MAC = MAKE_MAC_TSCH
 PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 PROJECT_SOURCEFILES += slip-bridge.c slip.c
 
 ifeq ($(PREFIX),)

@@ -4,7 +4,6 @@ TARGET ?= jn516x
 JN516x_WITH_DONGLE = 1
 CONTIKI=../../../../../..
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 PROJECT_SOURCEFILES += slip-bridge.c slip.c
 
 PROJECTDIRS += .. ../../tools

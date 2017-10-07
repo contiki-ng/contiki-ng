@@ -1,5 +1,3 @@
-DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-
 all: mqtt-demo
 
 

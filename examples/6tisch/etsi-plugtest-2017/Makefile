@@ -9,7 +9,7 @@ endif
 MODULES             += os/services/shell
 MODULES             += os/net/mac/tsch os/net/mac/tsch/sixtop
 PROJECT_SOURCEFILES += sf-plugtest.c
-CFLAGS              += -DPROJECT_CONF_H=\"project-conf.h\" -Wno-nonnull-compare
+CFLAGS              += -Wno-nonnull-compare
 
 ifeq ($(BOARD),launchpad/cc2650)
 # Enable DAP and TAP by default for ETSI Plugtest
