@@ -3,6 +3,11 @@
 #ifndef CONTIKI_CONF_H
 #define CONTIKI_CONF_H
 
+/* include the project config */
+#ifdef PROJECT_CONF_PATH
+#include PROJECT_CONF_PATH
+#endif /* PROJECT_CONF_PATH */
+
 #ifdef PLATFORM_CONF_H
 #include PLATFORM_CONF_H
 #else
@@ -32,10 +37,5 @@
 #ifndef AES_128_CONF
 #define AES_128_CONF cc2420_aes_128_driver
 #endif /* AES_128_CONF */
-
-/* include the project config */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
 
 #endif /* CONTIKI_CONF_H */

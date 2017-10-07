@@ -33,6 +33,11 @@
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
 
+/* include the project config */
+#ifdef PROJECT_CONF_PATH
+#include PROJECT_CONF_PATH
+#endif /* PROJECT_CONF_PATH */
+
 #include <inttypes.h>
 #ifndef WIN32_LEAN_AND_MEAN
 #include <sys/select.h>
@@ -93,10 +98,5 @@ typedef unsigned long clock_time_t;
 
 /* Not part of C99 but actually present */
 int strcasecmp(const char*, const char*);
-
-/* include the project config */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
 
 #endif /* CONTIKI_CONF_H_ */
