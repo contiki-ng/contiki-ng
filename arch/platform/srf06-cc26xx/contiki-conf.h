@@ -40,9 +40,9 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
-#ifdef PROJECT_CONF_H
-#include PROJECT_CONF_H
-#endif /* PROJECT_CONF_H */
+#ifdef PROJECT_CONF_PATH
+#include PROJECT_CONF_PATH
+#endif /* PROJECT_CONF_PATH */
 /*---------------------------------------------------------------------------*/
 /**
  * \name Network Stack Configuration
