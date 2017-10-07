@@ -40,30 +40,23 @@
 #define TSCH_LOG_CONF_PER_SLOT 1
 #define WITH_COAP_RESOURCES 0
 
-#undef ENABLE_COOJA_DEBUG
 #define ENABLE_COOJA_DEBUG 0
 
-#undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0x5254
 
-#undef TSCH_CONF_DEFAULT_HOPPING_SEQUENCE
 #define TSCH_HOPPING_SEQUENCE_MY_SEQUENCE (uint8_t[]){17, 23, 15, 25, 19, 11, 13, 21}
 #define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE TSCH_HOPPING_SEQUENCE_MY_SEQUENCE
 
-#undef TSCH_CONF_JOIN_MY_PANID_ONLY
 #define TSCH_CONF_JOIN_MY_PANID_ONLY 1
 
-#undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 0
 
 #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
 #define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
 
 /* RPL Trickle timer tuning */
-#undef RPL_CONF_DIO_INTERVAL_MIN
 #define RPL_CONF_DIO_INTERVAL_MIN 12 /* 4.096 s */
 
-#undef RPL_CONF_DIO_INTERVAL_DOUBLINGS
 #define RPL_CONF_DIO_INTERVAL_DOUBLINGS 2 /* Max factor: x4. 4.096 s * 4 = 16.384 s */
 
 #define TSCH_CONF_EB_PERIOD (4 * CLOCK_SECOND)
@@ -90,33 +83,25 @@
 
 /* CoAP */
 
-#undef COAP_SERVER_PORT
 #define COAP_SERVER_PORT 5684
 
-#undef COAP_OBSERVE_RETURNS_REPRESENTATION
 #define COAP_OBSERVE_RETURNS_REPRESENTATION 1
 
 /* RPL */
-#undef UIP_CONF_ROUTER
 #define UIP_CONF_ROUTER                 1
 
 /* RPL storing mode */
-#undef RPL_CONF_MOP
 #define RPL_CONF_MOP RPL_MOP_STORING_NO_MULTICAST
 
 /* Default link metric */
-#undef RPL_CONF_INIT_LINK_METRIC
 #define RPL_CONF_INIT_LINK_METRIC 2 /* default 5 */
 
 #define RPL_CONF_MAX_INSTANCES    1 /* default 1 */
 #define RPL_CONF_MAX_DAG_PER_INSTANCE 1 /* default 2 */
 
 /* No RA, No NS */
-#undef UIP_CONF_TCP
 #define UIP_CONF_TCP             0
-#undef UIP_CONF_DS6_ADDR_NBU
 #define UIP_CONF_DS6_ADDR_NBU    1
-#undef UIP_CONF_UDP_CHECKSUMS
 #define UIP_CONF_UDP_CHECKSUMS   1
 
 /* Link-layer security */
@@ -130,19 +115,15 @@
 
 #if MAC_CONF_WITH_CSMA /* Configure Csma with ACK (default MAC) */
 
-#undef MICROMAC_CONF_CHANNEL
 #define MICROMAC_CONF_CHANNEL 26
 
-#undef MICROMAC_CONF_AUTOACK
 #define MICROMAC_CONF_AUTOACK 1
 
 /* increase internal radio buffering */
-#undef MIRCOMAC_CONF_BUF_NUM
 #define MIRCOMAC_CONF_BUF_NUM 4
 
 #endif /* MAC_CONF_WITH_CSMA */
 
-#undef CONTIKI_VERSION_STRING
 #define CONTIKI_VERSION_STRING "Contiki 3.x"
 
 #include "common-conf-jn516x.h"

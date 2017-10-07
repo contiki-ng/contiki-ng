@@ -40,7 +40,6 @@
 #endif
 
 /* Needed for slip-bridge */
-#undef SLIP_BRIDGE_CONF_NO_PUTCHAR
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
 
 #include "../common-conf.h"
