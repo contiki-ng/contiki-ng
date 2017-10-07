@@ -59,21 +59,17 @@
 /*******************************************************/
 
 /* IEEE802.15.4 PANID */
-#undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0x81a5
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 0
 
 /* 6TiSCH minimal schedule length.
  * Larger values result in less frequent active slots: reduces capacity and saves energy. */
-#undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 11
 
 #if WITH_SECURITY
 /* Enable security */
-#undef LLSEC802154_CONF_ENABLED
 #define LLSEC802154_CONF_ENABLED 1
 #define LLSEC802154_CONF_USES_EXPLICIT_KEYS 0
 #define LLSEC802154_CONF_USES_FRAME_COUNTER 0
@@ -89,19 +85,14 @@
 
 #define TSCH_CONF_MAC_MAX_FRAME_RETRIES       3
 
-#undef TSCH_CONF_DEFAULT_HOPPING_SEQUENCE
 #define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE (uint8_t[]){ 20 }
 //#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE TSCH_HOPPING_SEQUENCE_16_16
 
-#undef TSCH_PACKET_CONF_EACK_WITH_SRC_ADDR
 #define TSCH_PACKET_CONF_EACK_WITH_SRC_ADDR 1
 
-#undef TSCH_PACKET_CONF_EB_WITH_SLOTFRAME_AND_LINK
 #define TSCH_PACKET_CONF_EB_WITH_SLOTFRAME_AND_LINK 1
 
-#undef TSCH_CONF_EB_PERIOD
 #define TSCH_CONF_EB_PERIOD (1 * CLOCK_SECOND)
-#undef TSCH_CONF_MAX_EB_PERIOD
 #define TSCH_CONF_MAX_EB_PERIOD (1 * CLOCK_SECOND)
 
 /*******************************************************/
@@ -126,14 +117,11 @@
 /* Needed for CC2538 platforms only */
 /* For TSCH we have to use the more accurate crystal oscillator
  * by default the RC oscillator is activated */
-#undef SYS_CTRL_CONF_OSC32K_USE_XTAL
 #define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
 
 #define USB_SERIAL_CONF_ENABLE 1
 /* USB serial takes space, free more space elsewhere */
-#undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
-#undef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE 160
 
 #if CONTIKI_TARGET_SRF06_CC26XX
@@ -146,27 +134,22 @@
 
 /* Needed for cc2420 platforms only */
 /* Disable DCO calibration (uses timerB) */
-#undef DCOSYNCH_CONF_ENABLED
 #define DCOSYNCH_CONF_ENABLED 0
 /* Enable SFD timestamps (uses timerB) */
-#undef CC2420_CONF_SFD_TIMESTAMPS
 #define CC2420_CONF_SFD_TIMESTAMPS 1
 
 /*******************************************************/
 /******************* Configure 6LoWPAN/IPv6 ************/
 /*******************************************************/
 
-#undef UIP_CONF_IPV6_CHECKS
 #define UIP_CONF_IPV6_CHECKS 1
 
-#undef SICSLOWPAN_CONF_COMPRESSION
 #define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_6LORH
 
 /*******************************************************/
 /********* Enable RPL non-storing mode *****************/
 /*******************************************************/
 
-#undef RPL_CONF_MOP
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
 
 /*******************************************************/
@@ -183,7 +166,6 @@
 #define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_DBG
 #define TSCH_LOG_CONF_PER_SLOT                     1
 
-#undef TCPIP_CONF_ANNOTATE_TRANSMISSIONS
 #define TCPIP_CONF_ANNOTATE_TRANSMISSIONS          0
 
 #endif /* __PROJECT_CONF_H__ */
