@@ -55,8 +55,6 @@
 
 /* Override serial-line defaults */
 #define SERIAL_LINE_CONF_BUFSIZE 128
-#undef IGNORE_CHAR
-#undef END
 #define IGNORE_CHAR(c) (c == 0x0d)
 #define END 0x0a
 

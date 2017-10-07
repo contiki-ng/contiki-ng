@@ -55,7 +55,6 @@
 /* Use either the cc1200_driver for sub-1GHz, or cc2538_rf_driver (default)
  * for 2.4GHz built-in radio interface
  */
-#undef  NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc2538_rf_driver
 
 /* USe DHCP */
