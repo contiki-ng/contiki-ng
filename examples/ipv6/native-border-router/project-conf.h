@@ -30,7 +30,6 @@
 #ifndef PROJECT_ROUTER_CONF_H_
 #define PROJECT_ROUTER_CONF_H_
 
-#undef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE rpl_interface
 
 /* use a non-default network driver */
@@ -44,7 +43,6 @@
 
 #define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
 
-#undef WEBSERVER_CONF_CFS_CONNS
 #define WEBSERVER_CONF_CFS_CONNS 2
 
 #define SERIALIZE_ATTRIBUTES 1
