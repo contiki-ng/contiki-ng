@@ -9,7 +9,6 @@ PROJECTDIRS += .. ../../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 CFLAGS += -DWITH_COAP
 CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap
 MODULES += os/services/orchestra os/lib/json

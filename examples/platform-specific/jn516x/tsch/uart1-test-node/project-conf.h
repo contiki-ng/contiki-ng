@@ -36,6 +36,8 @@
 
 #include "../common-conf.h"
 
+#define UIP_CONF_TCP 0
+
 #define UART_BAUD_RATE UART_RATE_115200
 
 #define UART1_BAUD_RATE UART_RATE_115200

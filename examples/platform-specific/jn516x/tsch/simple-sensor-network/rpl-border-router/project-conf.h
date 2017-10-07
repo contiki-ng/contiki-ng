@@ -35,6 +35,8 @@
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
 
+#define UIP_CONF_TCP 0
+
 /* Needed for slip-bridge */
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
 

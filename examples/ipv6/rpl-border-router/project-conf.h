@@ -39,4 +39,8 @@
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
 
+#if WEBSERVER
+#define UIP_CONF_TCP 1
+#endif
+
 #endif /* PROJECT_ROUTER_CONF_H_ */

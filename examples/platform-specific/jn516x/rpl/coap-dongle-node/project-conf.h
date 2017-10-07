@@ -34,6 +34,8 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
+#define UIP_CONF_TCP 0
+
 #include "../common-conf.h"
 
 #endif /* __PROJECT_CONF_H__ */

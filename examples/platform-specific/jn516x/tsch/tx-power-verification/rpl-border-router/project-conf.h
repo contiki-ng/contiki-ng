@@ -40,6 +40,7 @@
 
 #include "../../common-conf.h"
 
+#define UIP_CONF_TCP 0
 #define QUEUEBUF_CONF_NUM 16
 
 #define TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES 8
