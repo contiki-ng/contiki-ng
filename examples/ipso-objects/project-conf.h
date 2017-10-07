@@ -43,17 +43,13 @@
 #define IPSO_TEMPERATURE example_ipso_temperature
 
 /* Increase rpl-border-router IP-buffer when using more than 64. */
-#undef REST_MAX_CHUNK_SIZE
 #define REST_MAX_CHUNK_SIZE            64
 
 /* Multiplies with chunk size, be aware of memory constraints. */
-#undef COAP_MAX_OPEN_TRANSACTIONS
 #define COAP_MAX_OPEN_TRANSACTIONS     4
 
 /* Filtering .well-known/core per query can be disabled to save space. */
-#undef COAP_LINK_FORMAT_FILTERING
 #define COAP_LINK_FORMAT_FILTERING     0
-#undef COAP_PROXY_OPTION_PROCESSING
 #define COAP_PROXY_OPTION_PROCESSING   0
 
 /* Enable client-side support for COAP observe */
