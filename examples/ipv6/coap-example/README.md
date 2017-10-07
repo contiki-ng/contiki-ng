@@ -19,7 +19,6 @@ PRELIMINARIES
 
 - Make sure rpl-border-router has the same stack and fits into mote memory:
   You can disable RDC in border-router project-conf.h (not really required as BR keeps radio turned on).
-    #undef NETSTACK_CONF_RDC
     #define NETSTACK_CONF_RDC     nullrdc_driver
 - Alternatively, you can use the native-border-router together with the slip-radio.
 - For convenience, define the Cooja addresses in /etc/hosts
