@@ -52,9 +52,7 @@
 /********* Enable RPL non-storing mode *****************/
 /*******************************************************/
 
-#undef RPL_CONF_MOP
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
-#undef ORCHESTRA_CONF_RULES
 #define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common } /* Orchestra in non-storing */
 
 /*******************************************************/
@@ -73,9 +71,7 @@
 #define USB_SERIAL_CONF_ENABLE 1
 
 /* USB serial takes space, free more space elsewhere */
-#undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
-#undef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE 160
 
 #endif /* WITH_SHELL */
@@ -85,22 +81,18 @@
 /*******************************************************/
 
 /* IEEE802.15.4 PANID */
-#undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0x81a5
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 0
 
 /* 6TiSCH minimal schedule length.
  * Larger values result in less frequent active slots: reduces capacity and saves energy. */
-#undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
 
 #if WITH_SECURITY
 
 /* Enable security */
-#undef LLSEC802154_CONF_ENABLED
 #define LLSEC802154_CONF_ENABLED 1
 
 #endif /* WITH_SECURITY */
