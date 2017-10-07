@@ -31,19 +31,13 @@
 #define PROJECT_CONF_H_
 
 /* Network size and PAN-ID */
-
-#undef NBR_TABLE_CONF_MAX_NEIGHBORS
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 25
 
-#undef NETSTACK_MAX_ROUTE_ENTRIES
 #define NETSTACK_MAX_ROUTE_ENTRIES 25
 
-#undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0xf123
 
 /* Save some space */
-
-#undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
 
 #if MAC_CONF_WITH_TSCH
@@ -63,19 +57,15 @@
 #endif /* MAC_CONF_WITH_TSCH */
 
 /* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
 #define TSCH_LOG_CONF_PER_SLOT 1
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 0
 
 /* 6TiSCH minimal schedule length.
  * Larger values result in less frequent active slots: reduces capacity and saves energy. */
-#undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
 
-#undef TSCH_SCHEDULE_CONF_MAX_LINKS
 #define TSCH_SCHEDULE_CONF_MAX_LINKS 4
 
 #endif
