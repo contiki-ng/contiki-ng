@@ -47,7 +47,6 @@
 #define SICSLOWPAN_CONF_FRAG 0
 
 #if MAC_CONF_WITH_TSCH
-
 /*******************************************************/
 /********************* Configure TSCH *********************/
 /*******************************************************/
@@ -61,6 +60,7 @@
 /*******************************************************/
 /******************* Configure TSCH ********************/
 /*******************************************************/
+#endif /* MAC_CONF_WITH_TSCH */
 
 /* TSCH per-slot logging */
 #undef TSCH_LOG_CONF_PER_SLOT
@@ -77,7 +77,5 @@
 
 #undef TSCH_SCHEDULE_CONF_MAX_LINKS
 #define TSCH_SCHEDULE_CONF_MAX_LINKS 4
-
-#endif /* MAC_CONF_WITH_TSCH */
 
 #endif
