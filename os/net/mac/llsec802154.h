@@ -32,7 +32,9 @@
 
  /**
   * \addtogroup link-layer
-  * \defgroup llsec802154 Link-Layer security common functionality
+  * @{
+  *
+  * \defgroup llsec802154 Link-layer security common functionality
   *
   * Macros related to 802.15.4 link-layer security.
   *
@@ -82,4 +84,5 @@
 
 #endif /* LLSEC802154_H_ */
 
+/** @} */
 /** @} */

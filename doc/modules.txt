@@ -40,6 +40,7 @@ CPU, device drivers and platform code
 
 /**
 \defgroup net IoT networking
+The communication protocols
 */
 
 /**
@@ -79,6 +80,12 @@ Supports only non-storing mode, one instance and one DAG.
 
 /**
 \defgroup lib Libraries and services
+A set of libraries and services used by the os and applications
+*/
+
+/**
+\defgroup sys System functions
+Core system components such as processes and timers
 */
 
 /**
@@ -112,12 +119,3 @@ This module contains protothreads, multithreading and processes
 This module contains all different timers and clocks in \os
  * \ingroup sys
 */
-
-/**
- * \defgroup tutorials Tutorials
-This module contains all \os related tutorials.
-*/
-
-/**
-   \example code-style.c
- */

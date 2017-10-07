@@ -30,14 +30,14 @@ DOCDIR=../../doc
 all: summary
 
 doxygen:
-	@make -C $(DOCDIR) doxygen.log 2> doxygen.runerr > doxygen.runlog
+	@make -C $(DOCDIR) 2> doxygen.runerr > doxygen.runlog
 
 summary: doxygen
 	@( \
 		1> summary; \
 		if [ -s doxygen.runerr ] ; then \
-			echo "doxygen: FAIL ಠ_ಠ\nDoxygen caused some runtime warnings. Please fix these." >> summary; \
-			echo "Runtime warnings:" >> summary; \
+			echo "doxygen: FAIL ಠ_ಠ\nDoxygen caused some errors. Please fix these." >> summary; \
+			echo "Errors:" >> summary; \
 			cat doxygen.runerr >> summary; \
 			echo >> summary; \
 		fi ; \
