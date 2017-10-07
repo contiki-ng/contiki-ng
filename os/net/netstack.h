@@ -59,17 +59,19 @@
 
 /* MAC layer configuration. The MAC layer is configured through the Makefile,
    via the flag MAKE_MAC */
+#ifdef NETSTACK_CONF_MAC
+#define NETSTACK_MAC NETSTACK_CONF_MAC
+#else
 #if MAC_CONF_WITH_NULLMAC
 #define NETSTACK_MAC     nullmac_driver
 #elif MAC_CONF_WITH_CSMA
 #define NETSTACK_MAC     csma_driver
 #elif MAC_CONF_WITH_TSCH
 #define NETSTACK_MAC     tschmac_driver
-#elif MAC_CONF_WITH_OTHER
-#define NETSTACK_MAC     NETSTACK_CONF_OTHER_MAC
 #else
 #error Unknown MAC configuration
 #endif
+#endif /* NETSTACK_CONF_MAC */
 
 /* Radio driver configuration. Most often set by the platform. */
 #ifdef NETSTACK_CONF_RADIO
@@ -137,7 +139,7 @@ struct netstack_ip_packet_processor {
 
 /* This function is intended for the IP stack to call whenever input/output
    callback needs to be called */
-enum netstack_ip_action netstack_do_ip_callback(uint8_t type, const linkaddr_t *localdest);
+enum netstack_ip_action netstack_process_ip_callback(uint8_t type, const linkaddr_t *localdest);
 
 void netstack_ip_packet_processor_add(struct netstack_ip_packet_processor *p);
 void netstack_ip_packet_processor_remove(struct netstack_ip_packet_processor *p);

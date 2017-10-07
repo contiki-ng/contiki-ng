@@ -33,8 +33,14 @@
 #undef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE rpl_interface
 
+/* use a non-default network driver */
 #undef NETSTACK_CONF_NETWORK
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
+
+/* use a non-default MAC driver */
+#undef NETSTACK_CONF_MAC
+#define NETSTACK_CONF_MAC border_router_mac_driver
+
 
 #define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
 
@@ -46,8 +52,6 @@
 
 #define CMD_CONF_OUTPUT border_router_cmd_output
 
-/* Selected in netstack.h because our Makefile sets MAKE_MAC = MAKE_MAC_OTHER */
-#define NETSTACK_CONF_OTHER_MAC border_router_mac_driver
 
 /* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
 #define SELECT_CALLBACK 1

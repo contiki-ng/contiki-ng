@@ -208,8 +208,9 @@ tun_init()
   PRINTF("Initializing tun interface\n");
 
   tunfd = tun_alloc(config_tundev);
-
-  if(tunfd == -1) err(1, "main: open");
+  if(tunfd == -1) {
+    err(1, "failed to allocate tun device ``%s''", config_tundev);
+  }
 
   PRINTF("Tun open:%d\n", tunfd);
 

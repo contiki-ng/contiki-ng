@@ -29,12 +29,12 @@
 #include "contiki.h"
 #include "lib/random.h"
 #include "sys/ctimer.h"
-#include "net/ip/uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/ip/uip-udp-packet.h"
+#include "net/ipv6/uip-udp-packet.h"
 #include "sys/ctimer.h"
 #include "rpl.h"
-#include "uipbuf.h"
+#include "net/ipv6/uipbuf.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -47,7 +47,7 @@
 #define UIP_IP_BUF       ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #define DEBUG DEBUG_FULL
-#include "net/ip/uip-debug.h"
+#include "net/ipv6/uip-debug.h"
 
 #ifndef PERIOD
 #define PERIOD 60

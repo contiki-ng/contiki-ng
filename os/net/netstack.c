@@ -45,7 +45,7 @@ LIST(ip_processor_list);
 
 /* Note: localdest is only used for the output callback */
 enum netstack_ip_action
-netstack_do_ip_callback(uint8_t type, const linkaddr_t *localdest)
+netstack_process_ip_callback(uint8_t type, const linkaddr_t *localdest)
 {
   enum netstack_ip_action action = NETSTACK_IP_PROCESS;
   struct netstack_ip_packet_processor *p;
