@@ -45,8 +45,13 @@
 #error Change SERIAL_LINE_CONF_BUFSIZE in contiki-conf.h.
 #endif
 
+#ifndef IGNORE_CHAR
 #define IGNORE_CHAR(c) (c == 0x0d)
+#endif
+
+#ifndef END
 #define END 0x0a
+#endif
 
 static struct ringbuf rxbuf;
 static uint8_t rxbuf_data[BUFSIZE];
