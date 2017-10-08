@@ -10,7 +10,6 @@
 *.ihex
 *.pyc
 *~
-.DS_Store
 obj_*
 Makefile.target
 doc/html
@@ -70,13 +69,6 @@ summary
 *.faillog
 tests/[0-9][0-9]-*/report
 tests/[0-9][0-9]-*/org/
-
-# cscope files
-cscope.*
-
-# vim swap files
-*.swp
-*.swo
 
 # x86 UEFI files
 cpu/x86/uefi/Makefile.uefi
