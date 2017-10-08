@@ -53,6 +53,8 @@
 #define LOG_MODULE "NullNet"
 #define LOG_LEVEL LOG_LEVEL_NULLNET
 
+uint8_t *nullnet_buf;
+uint16_t nullnet_len;
 static nullnet_input_callback current_callback = NULL;
 /*--------------------------------------------------------------------*/
 static void

@@ -57,11 +57,6 @@
 static linkaddr_t coordinator_addr =  {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
 #endif /* MAC_CONF_WITH_TSCH */
 
-static uint32_t buffer[128];
-uint8_t *nullnet_buf = (uint8_t *)buffer; 
-uint16_t nullnet_len;
-
-
 /*---------------------------------------------------------------------------*/
 PROCESS(nullnet_example_process, "NullNet broadcast example");
 AUTOSTART_PROCESSES(&nullnet_example_process);
@@ -86,6 +81,9 @@ PROCESS_THREAD(nullnet_example_process, ev, data)
   tsch_set_coordinator(linkaddr_cmp(&coordinator_addr, &linkaddr_node_addr));
 #endif /* MAC_CONF_WITH_TSCH */
 
+  /* Initialize NullNet */
+  nullnet_buf = (uint8_t *)&count;
+  nullnet_len = sizeof(count);
   nullnet_set_input_callback(input_callback);
 
   etimer_set(&periodic_timer, SEND_INTERVAL);

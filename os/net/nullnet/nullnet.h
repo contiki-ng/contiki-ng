@@ -52,6 +52,9 @@ for non-IPv6 scenarios.
 #include "contiki.h"
 #include "net/linkaddr.h"
 
+/**
+ * Buffer used by the output function
+*/
 extern uint8_t *nullnet_buf;
 extern uint16_t nullnet_len;
 
