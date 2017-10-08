@@ -51,7 +51,7 @@
 #include <sys/socket.h>
 
 
-#define DEBUG DEBUG_FULL
+#define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
 #ifdef linux
@@ -209,7 +209,9 @@ tun_init()
 
   tunfd = tun_alloc(config_tundev);
   if(tunfd == -1) {
-    err(1, "failed to allocate tun device ``%s''", config_tundev);
+    printf("Warning: can't allocate tun device when not in sudo - Native platform will run but without network.\n");
+    /* err(1, "failed to allocate tun device ``%s''", config_tundev); */
+    return;
   }
 
   PRINTF("Tun open:%d\n", tunfd);
