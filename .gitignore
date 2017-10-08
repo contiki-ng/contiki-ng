@@ -59,14 +59,6 @@ tools/cooja/apps/collect-view/cooja-collect-view.jar
 # other nRF52 build artifacts
 *.jlink
 
-# VC++ build artifacts
-*.exp
-*.ilk
-*.lib
-*.pdb
-*.prg
-*.dsc
-
 #test artifacts
 *.testlog
 *.log.prog
