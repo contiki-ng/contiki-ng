@@ -105,7 +105,7 @@ struct network_driver {
   /** Callback for getting notified of incoming packet in packetbuf. */
   void (* input)(void);
 
-  /** Callback for getting notified of outgoing packet in uipbuf. */
+  /** Output funtion, sends from uipbuf. */
   uint8_t (* output)(const linkaddr_t *localdest);
 
 };
