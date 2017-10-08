@@ -124,8 +124,6 @@
 
 #endif /* MAC_CONF_WITH_CSMA */
 
-#define CONTIKI_VERSION_STRING "Contiki 3.x"
-
 #include "common-conf-jn516x.h"
 
 #endif /* __COMMON_CONF_H__ */
