@@ -1,15 +1,10 @@
 CONTIKI_PROJECT = sensniff
+CONTIKI = ../..
 
 PROJECT_SOURCEFILES += sensniff-mac.c netstack.c
 PROJECTDIRS += pool $(TARGET)
 
-ifeq ($(TARGET),)
-  -include Makefile.target
-  ifeq ($(TARGET),)
-    TARGET=srf06-cc26xx
-    $(info TARGET not defined, using target $(TARGET))
-  endif
-endif
+-include $(CONTIKI)/Makefile.identify-target 
 
 ### Optionally, the target can add its own Makefile, to do things like e.g.
 ### add more source files to the build or define make variables.
@@ -19,7 +14,6 @@ all: $(CONTIKI_PROJECT)
 
 # use a custom MAC driver: sensniff_mac_driver
 MAKE_MAC = MAKE_MAC_OTHER
-CONTIKI = ../..
 include $(CONTIKI)/Makefile.include
 
 PYTHON ?= python
