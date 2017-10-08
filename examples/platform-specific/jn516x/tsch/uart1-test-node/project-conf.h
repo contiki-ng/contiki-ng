@@ -34,8 +34,6 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
-#include "../common-conf.h"
-
 #define UIP_CONF_TCP 0
 
 #define UART_BAUD_RATE UART_RATE_115200
@@ -45,5 +43,7 @@
 #define UART1_CONF_TX_BUFFER_SIZE 32
 
 #define UART1_CONF_RX_BUFFER_SIZE 32
+
+#include "../common-conf.h"
 
 #endif /* __PROJECT_CONF_H__ */

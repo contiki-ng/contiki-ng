@@ -49,7 +49,9 @@
 #define UIP_CONF_BUFFER_SIZE     1280 /* ipv6 required minimum */
 
 /* Queues */
+#ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM 32
+#endif
 
 #define TSCH_QUEUE_CONF_NUM_PER_NEIGHBOR 32
 
@@ -67,6 +69,8 @@
 
 #define UART_XONXOFF_FLOW_CTRL 1
 
+#ifndef UART_BAUD_RATE
 #define UART_BAUD_RATE UART_RATE_1000000
+#endif
 
 #endif /* __COMMON_CONF_JN516X_H__ */

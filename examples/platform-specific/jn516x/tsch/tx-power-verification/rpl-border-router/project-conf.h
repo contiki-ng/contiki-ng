@@ -38,11 +38,11 @@
 /* Needed for slip-bridge */
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
 
-#include "../../common-conf.h"
-
 #define UIP_CONF_TCP 0
 #define QUEUEBUF_CONF_NUM 16
 
 #define TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES 8
+
+#include "../../common-conf.h"
 
 #endif /* PROJECT_ROUTER_CONF_H_ */
