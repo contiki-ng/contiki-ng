@@ -9,7 +9,6 @@ CONTIKI=../../../../..
 PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 
-CFLAGS += -DWITH_COAP
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap
 MODULES += os/services/orchestra os/lib/json
