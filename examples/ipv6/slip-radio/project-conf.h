@@ -60,5 +60,8 @@
 
 #undef UART1_CONF_RX_WITH_DMA
 #define UART1_CONF_RX_WITH_DMA           1
-
+/*---------------------------------------------------------------------------*/
+/* Include platform-specific header */
+#include "target-conf.h"
+/*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
