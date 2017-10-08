@@ -36,7 +36,6 @@ tools/cooja/apps/collect-view/cooja-collect-view.jar
 *.cc2538dk
 *.cooja
 *.cooja-ip64
-*.galileo
 *.jn516x
 *.native
 *.nrf52dk
@@ -49,7 +48,6 @@ tools/cooja/apps/collect-view/cooja-collect-view.jar
 !Makefile.cc2538dk
 !Makefile.cooja
 !Makefile.cooja-ip64
-!Makefile.galileo
 !Makefile.jn516x
 !Makefile.native
 !Makefile.nrf52dk
@@ -58,20 +56,8 @@ tools/cooja/apps/collect-view/cooja-collect-view.jar
 !Makefile.srf06-cc26xx
 !Makefile.zoul
 
-# other galileo build and debug artefacts
-*.galileo.dll
-*.galileo.efi
-LOG_OPENOCD
-
 # other nRF52 build artifacts
 *.jlink
-
-# galileo bsp files
-platform/galileo/bsp/libc/Makefile.libc
-platform/galileo/bsp/libc/i586-elf/
-platform/galileo/bsp/libc/newlib-2.2.0-1*
-platform/galileo/bsp/grub/src/
-platform/galileo/bsp/grub/bin/
 
 # VC++ build artifacts
 *.exp
