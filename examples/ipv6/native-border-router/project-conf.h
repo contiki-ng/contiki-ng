@@ -33,11 +33,9 @@
 #define UIP_FALLBACK_INTERFACE rpl_interface
 
 /* use a non-default network driver */
-#undef NETSTACK_CONF_NETWORK
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 
 /* use a non-default MAC driver */
-#undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC border_router_mac_driver
 
 
