@@ -29,7 +29,12 @@
 
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
-
+/*---------------------------------------------------------------------------*/
+/* Include target-specific header */
+#ifdef TARGET_CONF_PATH
+#include TARGET_CONF_PATH
+#endif /* TARGET_CONF_PATH */
+/*---------------------------------------------------------------------------*/
 #undef UIP_CONF_ROUTER
 #define UIP_CONF_ROUTER                 0
 
@@ -51,8 +56,5 @@
 
 #undef NETSTACK_CONF_FRAMER
 #define NETSTACK_CONF_FRAMER no_framer
-/*---------------------------------------------------------------------------*/
-/* Include platform-specific header */
-#include "target-conf.h"
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */

@@ -9,6 +9,11 @@ CONTIKI=../../..
 ### add more source files to the build or define make variables.
 -include $(TARGET)/Makefile.$(TARGET)
 
+# Automatically include target-conf.h if found
+ifneq ("$(wildcard $(TARGET)/target-conf.h)","")
+CFLAGS += -DTARGET_CONF_PATH=\"target-conf.h\"
+endif
+
 PROJECT_SOURCEFILES += slip-net.c
 
 # custom net layer, but with IPv6 enabled
