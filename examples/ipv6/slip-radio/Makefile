@@ -14,6 +14,7 @@ ifneq ("$(wildcard $(TARGET)/target-conf.h)","")
 CFLAGS += -DTARGET_CONF_PATH=\"target-conf.h\"
 endif
 
+PROJECTDIRS += $(TARGET)
 PROJECT_SOURCEFILES += slip-net.c
 
 # custom net layer, but with IPv6 enabled
