@@ -8,15 +8,7 @@ endif
 # Setting this option is also important for tests on Cooja motes to check for warnings.
 WERROR ?= 1
 
-ifeq ($(TARGET),)
-  -include Makefile.target
-  ifeq ($(TARGET),)
-    ${info TARGET not defined, using target 'native'}
-    TARGET=native
-  else
-    ${info using saved target '$(TARGET)'}
-  endif
-endif
+include $(CONTIKI)/Makefile.identify-target 
 
 ifeq ($(DEFINES),)
   -include Makefile.$(TARGET).defines
