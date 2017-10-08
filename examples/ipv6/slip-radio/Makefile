@@ -10,9 +10,6 @@ CONTIKI=../../..
 -include $(TARGET)/Makefile.$(TARGET)
 
 PROJECT_SOURCEFILES += slip-net.c
-ifeq ($(TARGET),nooliberry)
-  PROJECT_SOURCEFILES += slip-radio-rf230.c
-endif
 
 # custom net layer, but with IPv6 enabled
 MAKE_NET = MAKE_NET_IPV6
