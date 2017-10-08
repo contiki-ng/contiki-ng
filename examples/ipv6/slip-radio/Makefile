@@ -10,9 +10,6 @@ CONTIKI=../../..
 -include $(TARGET)/Makefile.$(TARGET)
 
 PROJECT_SOURCEFILES += slip-net.c
-ifeq ($(TARGET),sky)
-  PROJECT_SOURCEFILES += slip-radio-cc2420.c slip-radio-sky-sensors.c
-endif
 ifeq ($(TARGET),nooliberry)
   PROJECT_SOURCEFILES += slip-radio-rf230.c
 endif
