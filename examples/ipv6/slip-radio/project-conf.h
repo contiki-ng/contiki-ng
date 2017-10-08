@@ -30,12 +30,6 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM          4
-
-#undef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE    140
-
 #undef UIP_CONF_ROUTER
 #define UIP_CONF_ROUTER                 0
 
@@ -57,9 +51,6 @@
 
 #undef NETSTACK_CONF_FRAMER
 #define NETSTACK_CONF_FRAMER no_framer
-
-#undef UART1_CONF_RX_WITH_DMA
-#define UART1_CONF_RX_WITH_DMA           1
 /*---------------------------------------------------------------------------*/
 /* Include platform-specific header */
 #include "target-conf.h"
