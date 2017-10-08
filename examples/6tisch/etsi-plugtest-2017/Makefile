@@ -7,7 +7,7 @@ CFLAGS += -DWITH_SECURITY=1
 endif
 
 MODULES             += os/services/shell
-MODULES             += os/net/mac/tsch os/net/mac/tsch/sixtop
+MODULES             += os/net/mac/tsch/sixtop
 PROJECT_SOURCEFILES += sf-plugtest.c
 CFLAGS              += -Wno-nonnull-compare
 
@@ -16,6 +16,8 @@ ifeq ($(BOARD),launchpad/cc2650)
 CFLAGS += -DSET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE=0xC5
 CFLAGS += -DSET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE=0xC5
 endif
+
+MAKE_MAC = MAKE_MAC_TSCH
 
 CONTIKI              =../../..
 include $(CONTIKI)/Makefile.include

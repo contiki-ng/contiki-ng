@@ -47,7 +47,7 @@
    via the flag MAC_NET */
 #ifdef NETSTACK_CONF_NETWORK
 #define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
-#else
+#else /* NETSTACK_CONF_NETWORK */
 #if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_NETWORK sicslowpan_driver
 #elif NETSTACK_CONF_WITH_NULLNET
@@ -61,7 +61,7 @@
    via the flag MAKE_MAC */
 #ifdef NETSTACK_CONF_MAC
 #define NETSTACK_MAC NETSTACK_CONF_MAC
-#else
+#else /* NETSTACK_CONF_MAC */
 #if MAC_CONF_WITH_NULLMAC
 #define NETSTACK_MAC     nullmac_driver
 #elif MAC_CONF_WITH_CSMA

@@ -72,10 +72,6 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_NETWORK    tun6_net_driver
 #endif
 
-#ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC        nullmac_driver
-#endif /* NETSTACK_CONF_MAC */
-
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO   nullradio_driver
 #endif /* NETSTACK_CONF_RADIO */

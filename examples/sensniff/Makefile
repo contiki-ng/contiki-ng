@@ -17,6 +17,8 @@ endif
 
 all: $(CONTIKI_PROJECT)
 
+# use a custom MAC driver: sensniff_mac_driver
+MAKE_MAC = MAKE_MAC_OTHER
 CONTIKI = ../..
 include $(CONTIKI)/Makefile.include
 
