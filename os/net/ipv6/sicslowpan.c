@@ -1487,7 +1487,7 @@ send_packet(linkaddr_t *dest)
  *  MAC.
  */
 static uint8_t
-output(const uip_lladdr_t *localdest)
+output(const linkaddr_t *localdest)
 {
   int framer_hdrlen;
   int max_payload;
@@ -1517,7 +1517,7 @@ output(const uip_lladdr_t *localdest)
   if(localdest == NULL) {
     linkaddr_copy(&dest, &linkaddr_null);
   } else {
-    linkaddr_copy(&dest, (const linkaddr_t *)localdest);
+    linkaddr_copy(&dest, localdest);
   }
 
   LOG_INFO("output: sending packet len %d\n", uip_len);
@@ -1944,12 +1944,6 @@ input(void)
 void
 sicslowpan_init(void)
 {
-  /*
-   * Set out output function as the function to be called from uIP to
-   * send a packet.
-   */
-
-  tcpip_set_outputfunc(output);
 
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC
 /* Preinitialize any address contexts for better header compression
@@ -2005,7 +1999,8 @@ sicslowpan_get_last_rssi(void)
 const struct network_driver sicslowpan_driver = {
   "sicslowpan",
   sicslowpan_init,
-  input
+  input,
+  output
 };
 /*--------------------------------------------------------------------*/
 /** @} */

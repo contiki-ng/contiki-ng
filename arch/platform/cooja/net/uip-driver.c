@@ -41,15 +41,12 @@
 #include "net/ipv6/tcpip.h"
 #include "net/packetbuf.h"
 #include "net/uip-driver.h"
+#include "net/linkaddr.h"
 #include <string.h>
 
 /*--------------------------------------------------------------------*/
-uint8_t
-#if NETSTACK_CONF_WITH_IPV6
-uip_driver_send(const uip_lladdr_t *addr)
-#else
-uip_driver_send(void)
-#endif
+static uint8_t
+uip_driver_send(const linkaddr_t *addr)
 {
   packetbuf_copyfrom(&uip_buf[UIP_LLH_LEN], uip_len);
 
@@ -62,11 +59,6 @@ uip_driver_send(void)
 static void
 init(void)
 {
-  /*
-   * Set out output function as the function to be called from uIP to
-   * send a packet.
-   */
-  tcpip_set_outputfunc(uip_driver_send);
 }
 /*--------------------------------------------------------------------*/
 static void
@@ -83,6 +75,7 @@ input(void)
 const struct network_driver uip_driver = {
   "uip",
   init,
-  input
+  input,
+  uip_driver_send
 };
 /*--------------------------------------------------------------------*/

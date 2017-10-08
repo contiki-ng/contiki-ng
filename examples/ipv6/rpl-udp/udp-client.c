@@ -39,6 +39,7 @@
 
 #include "dev/serial-line.h"
 #include "net/ipv6/uip-ds6-route.h"
+#include "rpl-dag-root.h"
 
 #define UDP_CLIENT_PORT 8765
 #define UDP_SERVER_PORT 5678

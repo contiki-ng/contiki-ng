@@ -53,6 +53,12 @@ for non-IPv6 scenarios.
 #include "net/linkaddr.h"
 
 /**
+ * Buffer used by the output function
+*/
+extern uint8_t *nullnet_buf;
+extern uint16_t nullnet_len;
+
+/**
  * Function prototype for NullNet input callback
 */
 typedef void (* nullnet_input_callback)(const void *data, uint16_t len,
@@ -64,15 +70,6 @@ typedef void (* nullnet_input_callback)(const void *data, uint16_t len,
  * \param callback The input callback
 */
 void nullnet_set_input_callback(nullnet_input_callback callback);
-
-/**
- * Send data with NullNet
- *
- * \param data The payload
- * \param len The payload len
- * \param dest The destination link-layer address
-*/
-void nullnet_output(const void *data, uint16_t len, const linkaddr_t *dest);
 
 #endif /* NULLNET_H_ */
 /** @} */

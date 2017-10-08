@@ -320,6 +320,7 @@ void tcpip_icmp6_call(uint8_t type);
  */
 CCIF extern process_event_t tcpip_event;
 
+
 /**
  * \name TCP/IP packet processing
  * @{
@@ -341,7 +342,6 @@ CCIF void tcpip_input(void);
  * The eventual parameter is the MAC address of the destination.
  */
 uint8_t tcpip_output(const uip_lladdr_t *);
-void tcpip_set_outputfunc(uint8_t (* f)(const uip_lladdr_t *));
 
 /**
  * \brief This function does address resolution and then calls tcpip_output

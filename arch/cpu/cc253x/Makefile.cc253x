@@ -50,14 +50,9 @@ endif
 
 ### Banking Guesswork:
 ### Generic examples do not specify banking.
-### We automatically turn it on if its unspecified and if we are building with
-### MAKE_NET_IPV6
+### We automatically turn it on if its unspecified.
 ifndef HAVE_BANKING
-  ifeq ($(MAKE_NET),MAKE_NET_IPV6)
     HAVE_BANKING=1
-  else
-    HAVE_BANKING=0
-  endif
 endif
 
 ### Does the project want us to offset the firmware?

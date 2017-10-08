@@ -65,8 +65,8 @@
 #undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0xabcd
 
-/* Custom MAC layer, enabled via MAKE_MAC = MAKE_MAC_OTHER in the Makefile */
-#undef NETSTACK_CONF_OTHER_MAC
-#define NETSTACK_CONF_OTHER_MAC        test_mac_driver
+/* Custom MAC layer */
+#undef NETSTACK_CONF_MAC
+#define NETSTACK_CONF_MAC        test_mac_driver
 
 #endif /* __PROJECT_CONF_H__ */

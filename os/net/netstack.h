@@ -45,29 +45,33 @@
 
 /* Network layer configuration. The NET layer is configured through the Makefile,
    via the flag MAC_NET */
+#ifdef NETSTACK_CONF_NETWORK
+#define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
+#else /* NETSTACK_CONF_NETWORK */
 #if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_NETWORK sicslowpan_driver
 #elif NETSTACK_CONF_WITH_NULLNET
 #define NETSTACK_NETWORK nullnet_driver
-#elif NETSTACK_CONF_WITH_OTHER
-#define NETSTACK_NETWORK NETSTACK_CONF_OTHER_NETWORK
 #else
 #error Unknown NET configuration
 #endif
+#endif /* NETSTACK_CONF_NETWORK */
 
 /* MAC layer configuration. The MAC layer is configured through the Makefile,
    via the flag MAKE_MAC */
+#ifdef NETSTACK_CONF_MAC
+#define NETSTACK_MAC NETSTACK_CONF_MAC
+#else /* NETSTACK_CONF_MAC */
 #if MAC_CONF_WITH_NULLMAC
 #define NETSTACK_MAC     nullmac_driver
 #elif MAC_CONF_WITH_CSMA
 #define NETSTACK_MAC     csma_driver
 #elif MAC_CONF_WITH_TSCH
 #define NETSTACK_MAC     tschmac_driver
-#elif MAC_CONF_WITH_OTHER
-#define NETSTACK_MAC     NETSTACK_CONF_OTHER_MAC
 #else
 #error Unknown MAC configuration
 #endif
+#endif /* NETSTACK_CONF_MAC */
 
 /* Radio driver configuration. Most often set by the platform. */
 #ifdef NETSTACK_CONF_RADIO
@@ -87,6 +91,7 @@
 #include "net/mac/mac.h"
 #include "net/mac/framer/framer.h"
 #include "dev/radio.h"
+#include "net/linkaddr.h"
 
 /**
  * The structure of a network driver in Contiki.
@@ -97,8 +102,12 @@ struct network_driver {
   /** Initialize the network driver */
   void (* init)(void);
 
-  /** Callback for getting notified of incoming packet. */
+  /** Callback for getting notified of incoming packet in packetbuf. */
   void (* input)(void);
+
+  /** Output funtion, sends from uipbuf. */
+  uint8_t (* output)(const linkaddr_t *localdest);
+
 };
 
 extern const struct network_driver NETSTACK_NETWORK;
@@ -108,7 +117,36 @@ extern const struct framer         NETSTACK_FRAMER;
 
 void netstack_init(void);
 
-/* Netstack sniffer */
+
+/* Netstack ip_packet_processor - for implementing packet filters, firewalls,
+   debuggin info, etc */
+
+enum netstack_ip_action {
+  NETSTACK_IP_PROCESS = 0, /* Default behaviour - nothing else */
+  NETSTACK_IP_DROP = 1, /* Drop this packet before processing/sending anymore */
+};
+
+enum netstack_ip_callback_type {
+  NETSTACK_IP_INPUT = 0,
+  NETSTACK_IP_OUTPUT = 1,
+};
+
+struct netstack_ip_packet_processor {
+  struct netstack_ip_packet_processor *next;
+  enum netstack_ip_action (* process_input)(void);
+  enum netstack_ip_action (* process_output)(const linkaddr_t *localdest);
+};
+
+/* This function is intended for the IP stack to call whenever input/output
+   callback needs to be called */
+enum netstack_ip_action netstack_process_ip_callback(uint8_t type, const linkaddr_t *localdest);
+
+void netstack_ip_packet_processor_add(struct netstack_ip_packet_processor *p);
+void netstack_ip_packet_processor_remove(struct netstack_ip_packet_processor *p);
+
+
+
+/* Netstack sniffer - this will soon be deprecated... */
 
 struct netstack_sniffer {
   struct netstack_sniffer *next;

@@ -15,11 +15,10 @@ endif
 ### add more source files to the build or define make variables.
 -include $(TARGET)/Makefile.$(TARGET)
 
-# Custom MAC layer for sensniff (sensniff_mac_driver)
-MAKE_MAC = MAKE_MAC_OTHER
-
 all: $(CONTIKI_PROJECT)
 
+# use a custom MAC driver: sensniff_mac_driver
+MAKE_MAC = MAKE_MAC_OTHER
 CONTIKI = ../..
 include $(CONTIKI)/Makefile.include
 

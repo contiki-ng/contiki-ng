@@ -94,10 +94,21 @@ slipnet_input(void)
   /* printf("SUT: %u\n", uip_len); */
   slip_send_packet(uip_buf, uip_len);
 }
+
+static uint8_t
+slipnet_output(const linkaddr_t *localdest)
+{
+  /* do nothing... */
+  return 1;
+}
+
 /*---------------------------------------------------------------------------*/
 const struct network_driver slipnet_driver = {
   "slipnet",
   slipnet_init,
-  slipnet_input
+  slipnet_input,
+  /* output is likely never called - or at least not used as no IP packets
+     should be produced in slip-radio */
+  slipnet_output
 };
 /*---------------------------------------------------------------------------*/

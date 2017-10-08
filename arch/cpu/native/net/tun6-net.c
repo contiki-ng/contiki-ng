@@ -50,7 +50,8 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#define DEBUG DEBUG_FULL
+
+#define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
 #ifdef linux
@@ -61,12 +62,11 @@
 #include <err.h>
 #include "net/netstack.h"
 #include "net/packetbuf.h"
-#include "cmd.h"
-#include "border-router.h"
 
-extern const char *slip_config_ipaddr;
-extern char slip_config_tundev[32];
-extern uint16_t slip_config_basedelay;
+static const char *config_ipaddr = "fd00::1/64";
+/* Allocate some bytes in RAM and copy the string */
+static char config_tundev[64] = "tun0";
+
 
 #ifndef __CYGWIN__
 static int tunfd;
@@ -79,13 +79,13 @@ static const struct select_callback tun_select_callback = {
 };
 #endif /* __CYGWIN__ */
 
-int ssystem(const char *fmt, ...)
+static int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-int
+static int
 ssystem(const char *fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
 
 int
-ssystem(const char *fmt, ...)
+static ssystem(const char *fmt, ...)
 {
   char cmd[128];
   va_list ap;
@@ -98,21 +98,21 @@ ssystem(const char *fmt, ...)
 }
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 cleanup(void)
 {
-  ssystem("ifconfig %s down", slip_config_tundev);
+  ssystem("ifconfig %s down", config_tundev);
 #ifndef linux
   ssystem("sysctl -w net.ipv6.conf.all.forwarding=1");
 #endif
   ssystem("netstat -nr"
 	  " | awk '{ if ($2 == \"%s\") print \"route delete -net \"$1; }'"
 	  " | sh",
-	  slip_config_tundev);
+	  config_tundev);
 }
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 sigcleanup(int signo)
 {
   fprintf(stderr, "signal %d\n", signo);
@@ -120,7 +120,7 @@ sigcleanup(int signo)
 }
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 ifconf(const char *tundev, const char *ipaddr)
 {
 #ifdef linux
@@ -138,23 +138,15 @@ ifconf(const char *tundev, const char *ipaddr)
   ssystem("ifconfig %s\n", tundev);
 }
 /*---------------------------------------------------------------------------*/
-int
-devopen(const char *dev, int flags)
-{
-  char t[32];
-  strcpy(t, "/dev/");
-  strncat(t, dev, sizeof(t) - 5);
-  return open(t, flags);
-}
-/*---------------------------------------------------------------------------*/
 #ifdef linux
-int
+static int
 tun_alloc(char *dev)
 {
   struct ifreq ifr;
   int fd, err;
-
+  PRINTF("Opening: %s\n", dev);
   if( (fd = open("/dev/net/tun", O_RDWR)) < 0 ) {
+    PRINTF("Failed to open tun device\n");
     return -1;
   }
 
@@ -164,63 +156,76 @@ tun_alloc(char *dev)
    *        IFF_NO_PI - Do not provide packet information
    */
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  if(*dev != 0)
+  if(*dev != 0) {
     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-
+  }
   if((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
+    PRINTF("Failed to do ioctl on fd\n");
     close(fd);
     return err;
   }
-  strcpy(dev, ifr.ifr_name);
+
+  PRINTF("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
+  strncpy(dev, ifr.ifr_name, strlen(dev));
+  PRINTF("Using %s\n", dev);
   return fd;
 }
 #else
-int
+static int
+devopen(const char *dev, int flags)
+{
+  char t[32];
+  strcpy(t, "/dev/");
+  strncat(t, dev, sizeof(t) - 5);
+  return open(t, flags);
+}
+/*---------------------------------------------------------------------------*/
+static int
 tun_alloc(char *dev)
 {
+  PRINTF("Opening: %s\n", dev);
   return devopen(dev, O_RDWR);
 }
 #endif
 
 #ifdef __CYGWIN__
 /*wpcap process is used to connect to host interface */
-void
+static void
 tun_init()
 {
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
-
-  slip_init();
 }
 
 #else
 
-static uint16_t delaymsec=0;
-static uint32_t delaystartsec,delaystartmsec;
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 tun_init()
 {
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
 
-  slip_init();
+  PRINTF("Initializing tun interface\n");
 
-  PRINTF("Opening tun interface:%s\n", slip_config_tundev);
+  tunfd = tun_alloc(config_tundev);
+  if(tunfd == -1) {
+    printf("Warning: failed to open tun device (you may be lacking permission). Running without network.\n");
+    /* err(1, "failed to allocate tun device ``%s''", config_tundev); */
+    return;
+  }
 
-  tunfd = tun_alloc(slip_config_tundev);
-
-  if(tunfd == -1) err(1, "main: open");
+  PRINTF("Tun open:%d\n", tunfd);
 
   select_set_callback(tunfd, &tun_select_callback);
 
   fprintf(stderr, "opened %s device ``/dev/%s''\n",
-          "tun", slip_config_tundev);
+          "tun", config_tundev);
 
   atexit(cleanup);
   signal(SIGHUP, sigcleanup);
   signal(SIGTERM, sigcleanup);
   signal(SIGINT, sigcleanup);
-  ifconf(slip_config_tundev, slip_config_ipaddr);
+  ifconf(config_tundev, config_ipaddr);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -235,7 +240,7 @@ tun_output(uint8_t *data, int len)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-int
+static int
 tun_input(unsigned char *data, int maxlen)
 {
   int size;
@@ -245,13 +250,8 @@ tun_input(unsigned char *data, int maxlen)
 }
 
 /*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-static int
-output(void)
+static uint8_t
+output(const linkaddr_t *localdest)
 {
   PRINTF("SUT: %u\n", uip_len);
   if(uip_len > 0) {
@@ -259,11 +259,6 @@ output(void)
   }
   return 0;
 }
-
-
-const struct uip_fallback_interface rpl_interface = {
-  init, output
-};
 
 /*---------------------------------------------------------------------------*/
 /* tun and slip select callback                                              */
@@ -280,37 +275,32 @@ set_fd(fd_set *rset, fd_set *wset)
 static void
 handle_fd(fd_set *rset, fd_set *wset)
 {
-  /* Optional delay between outgoing packets */
-  /* Base delay times number of 6lowpan fragments to be sent */
-  /* delaymsec = 10; */
-  if(delaymsec) {
-    struct timeval tv;
-    int dmsec;
-    gettimeofday(&tv, NULL);
-    dmsec=(tv.tv_sec-delaystartsec)*1000+tv.tv_usec/1000-delaystartmsec;
-    if(dmsec<0) delaymsec=0;
-    if(dmsec>delaymsec) delaymsec=0;
-  }
+  int size;
 
-  if(delaymsec==0) {
-    int size;
+  PRINTF("Tun6-handle FD\n");
 
-    if(FD_ISSET(tunfd, rset)) {
-      size = tun_input(&uip_buf[UIP_LLH_LEN], sizeof(uip_buf));
-      /* printf("TUN data incoming read:%d\n", size); */
-      uip_len = size;
-      tcpip_input();
-
-      if(slip_config_basedelay) {
-        struct timeval tv;
-      	gettimeofday(&tv, NULL) ;
-      	delaymsec=slip_config_basedelay;
-      	delaystartsec =tv.tv_sec;
-      	delaystartmsec=tv.tv_usec/1000;
-      }
-    }
+  if(FD_ISSET(tunfd, rset)) {
+    size = tun_input(&uip_buf[UIP_LLH_LEN], sizeof(uip_buf));
+    PRINTF("TUN data incoming read:%d\n", size);
+    uip_len = size;
+    tcpip_input();
   }
 }
 #endif /*  __CYGWIN_ */
+
+static void input(void)
+{
+  /* should not happen */
+  PRINTF("Tun6 - input\n");
+}
+
+
+const struct network_driver tun6_net_driver ={
+  "tun6",
+  tun_init,
+  input,
+  output
+};
+
 
 /*---------------------------------------------------------------------------*/

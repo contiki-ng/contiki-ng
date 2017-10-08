@@ -43,6 +43,7 @@
 
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/linkaddr.h"
 
 #if UIP_CONF_IPV6_RPL
 #if UIP_CONF_IPV6_RPL_LITE == 1
@@ -115,25 +116,20 @@ init_appstate(uip_tcp_appstate_t *as, void *state)
   as->state = state;
 }
 /*---------------------------------------------------------------------------*/
-/* Called on IP packet output. */
-static uint8_t (* outputfunc)(const uip_lladdr_t *a);
 
 uint8_t
 tcpip_output(const uip_lladdr_t *a)
 {
   int ret;
-  if(outputfunc != NULL) {
-    ret = outputfunc(a);
+  if(netstack_process_ip_callback(NETSTACK_IP_OUTPUT, (const linkaddr_t *)a) ==
+     NETSTACK_IP_PROCESS) {
+    ret = NETSTACK_NETWORK.output((const linkaddr_t *) a);
     return ret;
+  } else {
+    /* Ok, ignore and drop... */
+    uip_clear_buf();
+    return 0;
   }
-  LOG_INFO("output: Use tcpip_set_outputfunc() to set an output function");
-  return 0;
-}
-
-void
-tcpip_set_outputfunc(uint8_t (*f)(const uip_lladdr_t *))
-{
-  outputfunc = f;
 }
 
 PROCESS(tcpip_process, "TCP/IP stack");
@@ -435,7 +431,10 @@ eventhandler(process_event_t ev, process_data_t data)
 void
 tcpip_input(void)
 {
-  process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
+  if(netstack_process_ip_callback(NETSTACK_IP_INPUT, NULL) ==
+     NETSTACK_IP_PROCESS) {
+    process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
+  } /* else - do nothing and drop */
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/

@@ -11,6 +11,11 @@ ifeq ($(NRF52_JLINK_PATH),)
 endif
 endif
 
+# custom MAC: ble_ipsp_mac_driver
+MAKE_MAC ?= MAKE_MAC_OTHER
+
+# we only support IPv6
+MAKE_NET ?= MAKE_NET_IPV6
 ifneq ($(MAKE_NET),MAKE_NET_IPV6)
   $(error Only IPv6 stack is supported!)
 endif

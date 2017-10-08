@@ -53,7 +53,9 @@ RESOURCE(res_plugtest_locquery,
 static void
 res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+#if DEBUG
   coap_packet_t *const coap_req = (coap_packet_t *)request;
+#endif
 
   PRINTF(
     "/location-query POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);

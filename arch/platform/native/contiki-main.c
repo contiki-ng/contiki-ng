@@ -58,6 +58,7 @@
 #include "dev/serial-line.h"
 
 #include "net/ipv6/uip.h"
+#include "net/ipv6/uip-debug.h"
 #include "net/queuebuf.h"
 
 #include "dev/button-sensor.h"
@@ -165,6 +166,41 @@ set_lladdr(void)
 
 
 /*---------------------------------------------------------------------------*/
+static void
+set_global_address(void)
+{
+  static uip_ipaddr_t ipaddr;
+  static uip_ipaddr_t *prefix = NULL;
+  int i;
+  uint8_t state;
+
+  /* Assign a unique local address (RFC4193,
+     http://tools.ietf.org/html/rfc4193). */
+  if(prefix == NULL) {
+    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  } else {
+    memcpy(&ipaddr, prefix, 8);
+  }
+  /* Assumes that the uip_lladdr is set */
+  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+
+  /* set the PREFIX::1 address to the IF */
+  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
+  uip_ds6_defrt_add(&ipaddr, 0);
+
+  printf("IPv6 addresses: ");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
+      printf("\n");
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
 int contiki_argc = 0;
 char **contiki_argv;
 
@@ -216,6 +252,7 @@ main(int argc, char **argv)
 #ifdef __CYGWIN__
   process_start(&wpcap_process, NULL);
 #endif
+
   printf("Tentative link-local IPv6 address ");
   {
     uip_ds6_addr_t *lladdr;
@@ -230,6 +267,9 @@ main(int argc, char **argv)
 
     printf("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
   }
+
+  set_global_address();
+
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   serial_line_init();

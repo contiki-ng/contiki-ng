@@ -44,6 +44,10 @@
 
 //#include "urlconv.h"
 
+#if UIP_CONF_TCP == 0
+#error HTTP server needs TCP enabled
+#endif
+
 #include "httpd-simple.h"
 #define webserver_log_file(...)
 #define webserver_log(...)
