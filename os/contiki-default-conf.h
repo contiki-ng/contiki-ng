@@ -66,12 +66,6 @@
 #define NETSTACK_MAX_ROUTE_ENTRIES 16
 #endif /* NETSTACK_MAX_ROUTE_ENTRIES */
 
-/* NETSTACK_CONF_WITH_IPV6 specifies whether or not IPv6 should be used. If IPv6
-   is not used, IPv4 is used instead. */
-#ifndef NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_WITH_IPV6 0
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
 /* UIP_CONF_BUFFER_SIZE specifies how much memory should be reserved
    for the uIP packet buffer. This sets an upper bound on the largest
    IP packet that can be received by the system. */
@@ -84,12 +78,6 @@
 #ifndef UIP_CONF_ROUTER
 #define UIP_CONF_ROUTER 1
 #endif /* UIP_CONF_ROUTER */
-
-/* UIP_CONF_IPV6_RPL specifies if RPL is to be used for IPv6
-   routing. */
-#ifndef UIP_CONF_IPV6_RPL
-#define UIP_CONF_IPV6_RPL 1
-#endif /* UIP_CONF_IPV6_RPL */
 
 /* If RPL is enabled also enable the RPL NBR Policy */
 #if UIP_CONF_IPV6_RPL
