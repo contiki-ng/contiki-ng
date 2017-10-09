@@ -287,12 +287,35 @@ $(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
 	$(Q)$(AS) $(ASFLAGS) -o $@ $<
 endif
 
+ifndef CUSTOM_RULE_C_TO_OBJECTDIR_S
+$(OBJECTDIR)/%.s: %.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -S $< -o $@
+endif
+
+ifndef CUSTOM_RULE_C_TO_OBJECTDIR_E
+$(OBJECTDIR)/%.e: %.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -E $< -o $@
+endif
+
 ifndef CUSTOM_RULE_C_TO_O
 %.o: %.c
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 endif
 
+ifndef CUSTOM_RULE_C_TO_S
+%.s: %.c
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -S $< -o $@
+endif
+
+ifndef CUSTOM_RULE_C_TO_E
+%.e: %.c
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -E $< -o $@
+endif
 
 ifndef CUSTOM_RULE_C_TO_CO
 %.co: %.c
