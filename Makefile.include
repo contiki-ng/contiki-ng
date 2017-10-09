@@ -43,7 +43,7 @@ ifdef CI
 endif
 
 usage:
-	@echo "make MAKETARGETS... [TARGET=(TARGET)] [savetarget] [targets]"
+	@echo "make MAKETARGETS... [TARGET=(TARGET)] [BOARD=(BOARD)] [savetarget] [targets]"
 
 targets:
 	@ls -1 $(CONTIKI)/arch/platform $(TARGETDIRS)
