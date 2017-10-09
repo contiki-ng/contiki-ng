@@ -61,6 +61,20 @@ savedefines:
 	@echo "saving Makefile.$(TARGET).defines"
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
+viewconf:
+	@echo "---------- Make variables: ----------"
+	@echo "##### \"TARGET\": $(TARGET)"
+	@echo "##### \"BOARD\": $(BOARD)"
+	@echo "##### \"MAKE_MAC\": $(MAKE_MAC)"
+	@echo "##### \"MAKE_NET\": $(MAKE_NET)"
+	@echo "##### \"CONTIKI_WITH_RPL\": $(CONTIKI_WITH_RPL)"
+	@echo "##### \"CONTIKI_WITH_RPL_LITE\": $(CONTIKI_WITH_RPL_LITE)"
+	@echo "----------- C variables: ------------"
+	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
+	@echo "-------------------------------------"
+	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
+	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
+
 OBJECTDIR = obj_$(TARGET)
 
 LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
