@@ -43,13 +43,10 @@ endif
 CLEAN += *.d *.elf *.hex
 
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS = ../arm/common/CMSIS . dev usb
+CONTIKI_CPU_DIRS = ../arm/common/CMSIS . dev usb usb/common usb/common/cdc-acm
 
 ### Use the existing debug I/O in arch/cpu/arm/common
 CONTIKI_CPU_DIRS += ../arm/common/dbg-io
-
-### Use usb core from arch/cpu/cc253x/usb/common
-CONTIKI_CPU_DIRS += ../cc253x/usb/common ../cc253x/usb/common/cdc-acm
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += soc.c clock.c rtimer-arch.c uart.c watchdog.c
@@ -67,8 +64,7 @@ CONTIKI_CPU_SOURCEFILES += cfs-coffee.c cfs-coffee-arch.c pwm.c
 
 DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
 
-USB_CORE_SOURCEFILES += usb-core.c cdc-acm.c
-USB_ARCH_SOURCEFILES += usb-arch.c usb-serial.c cdc-acm-descriptors.c
+USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descriptors.c
 
 ifneq ($(TARGET_START_SOURCEFILES),)
   CPU_START_SOURCEFILES = TARGET_START_SOURCEFILES
@@ -78,7 +74,7 @@ endif
 CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
-CONTIKI_SOURCEFILES += $(USB_CORE_SOURCEFILES) $(USB_ARCH_SOURCEFILES)
+CONTIKI_SOURCEFILES += $(USB_SOURCEFILES)
 
 MODULES += lib/newlib arch/cpu/arm/common/sys
 
