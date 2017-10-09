@@ -35,9 +35,9 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
-#include "../../common-conf.h"
-
-#undef UART_BAUD_RATE
+#define UIP_CONF_TCP 0
 #define UART_BAUD_RATE UART_RATE_115200
+
+#include "../../common-conf.h"
 
 #endif /* __PROJECT_CONF_H__ */

@@ -36,6 +36,7 @@
 #include <jendefs.h>
 #include <AppHardwareApi.h>
 #include <MicroInt.h>
+#include "contiki.h"
 #include "exceptions.h"
 
 #ifndef EXCEPTION_STALLS_SYSTEM

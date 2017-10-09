@@ -10,8 +10,6 @@ PROJECT_SOURCEFILES += slip-bridge.c slip.c
 PROJECTDIRS += .. ../../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 
-CFLAGS += -DWITH_COAP
-CFLAGS += -DUIP_CONF_TCP=0
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap
 MODULES += os/services/orchestra os/lib/json

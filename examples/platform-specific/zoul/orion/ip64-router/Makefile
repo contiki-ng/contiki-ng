@@ -6,7 +6,6 @@ CONTIKI = ../../../../..
 
 WITH_IP64 = 1
 
-DEFINES += UIP_CONF_TCP=1
 PROJECT_SOURCEFILES += httpd-simple.c
 
 include $(CONTIKI)/Makefile.include

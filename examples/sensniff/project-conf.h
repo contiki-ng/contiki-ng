@@ -33,7 +33,6 @@
 #define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
 /* Configure the sensniff_mac_driver for netstack.h */
-#undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC      sensniff_mac_driver
 /*---------------------------------------------------------------------------*/
 /* Include platform-specific header */

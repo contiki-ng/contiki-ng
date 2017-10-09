@@ -36,49 +36,41 @@
 
 /* Shall we restart after exception, or stall?
  * in production code we should restart, so set this to 0 */
-#undef EXCEPTION_STALLS_SYSTEM
 #define EXCEPTION_STALLS_SYSTEM 1
 
  /* CoAP */
-#undef COAP_MAX_OPEN_TRANSACTIONS
 #define COAP_MAX_OPEN_TRANSACTIONS 4
 
-#undef REST_MAX_CHUNK_SIZE
 #define REST_MAX_CHUNK_SIZE      256
 
 /* Network config */
-#undef UIP_CONF_BUFFER_SIZE
 //#define UIP_CONF_BUFFER_SIZE   (REST_MAX_CHUNK_SIZE + UIP_LLH_LEN + UIP_IPUDPH_LEN + COAP_MAX_HEADER_SIZE)
 //#define UIP_CONF_BUFFER_SIZE   (REST_MAX_CHUNK_SIZE + 0 + 48 + 70)
 #define UIP_CONF_BUFFER_SIZE     1280 /* ipv6 required minimum */
 
 /* Queues */
-#undef QUEUEBUF_CONF_NUM
+#ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM 32
+#endif
 
-#undef TSCH_QUEUE_CONF_NUM_PER_NEIGHBOR
 #define TSCH_QUEUE_CONF_NUM_PER_NEIGHBOR 32
 
-#undef TSCH_CONF_DEQUEUED_ARRAY_SIZE
 #define TSCH_CONF_DEQUEUED_ARRAY_SIZE 32
 
-#undef TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES
 #define TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES 8
 
 /* Radio */
 
-#undef ENABLE_COOJA_DEBUG
 #define ENABLE_COOJA_DEBUG 0
 
 /* max 3, min 0 */
 
-#undef UART_HW_FLOW_CTRL
 #define UART_HW_FLOW_CTRL 0
 
-#undef UART_XONXOFF_FLOW_CTRL
 #define UART_XONXOFF_FLOW_CTRL 1
 
-#undef UART_BAUD_RATE
+#ifndef UART_BAUD_RATE
 #define UART_BAUD_RATE UART_RATE_1000000
+#endif
 
 #endif /* __COMMON_CONF_JN516X_H__ */

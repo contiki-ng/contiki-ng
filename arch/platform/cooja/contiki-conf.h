@@ -33,6 +33,11 @@
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
 
+/* include the project config */
+#ifdef PROJECT_CONF_PATH
+#include PROJECT_CONF_PATH
+#endif /* PROJECT_CONF_PATH */
+
 #ifdef INCLUDE_SUBPLATFORM_CONF
 #include "subplatform-conf.h"
 #endif /* INCLUDE_SUBPLATFORM_CONF */
@@ -136,11 +141,5 @@ typedef uint64_t rtimer_clock_t;
 
 #define RF_CHANNEL                     26
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN 125
-
-/* include the project config */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
-
 
 #endif /* CONTIKI_CONF_H_ */

@@ -39,12 +39,8 @@
 /*******************************************************/
 /********* Enable RPL non-storing mode *****************/
 /*******************************************************/
-
-#undef UIP_CONF_MAX_ROUTES
 #define UIP_CONF_MAX_ROUTES 0 /* No need for routes */
-#undef RPL_CONF_MOP
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
-#undef ORCHESTRA_CONF_RULES
 #define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common } /* Orchestra in non-storing */
 
 /*******************************************************/
@@ -60,19 +56,15 @@
 /* Needed for CC2538 platforms only */
 /* For TSCH we have to use the more accurate crystal oscillator
  * by default the RC oscillator is activated */
-#undef SYS_CTRL_CONF_OSC32K_USE_XTAL
 #define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
 
 /* Needed for cc2420 platforms only */
 /* Disable DCO calibration (uses timerB) */
-#undef DCOSYNCH_CONF_ENABLED
 #define DCOSYNCH_CONF_ENABLED 0
 /* Enable SFD timestamps (uses timerB) */
-#undef CC2420_CONF_SFD_TIMESTAMPS
 #define CC2420_CONF_SFD_TIMESTAMPS 1
 
 /* Enable Sixtop Implementation */
-#undef TSCH_CONF_WITH_SIXTOP
 #define TSCH_CONF_WITH_SIXTOP 1
 
 /*******************************************************/
@@ -80,31 +72,24 @@
 /*******************************************************/
 
 /* TSCH logging. */
-#undef TSCH_LOG_CONF_PER_SLOT
 #define TSCH_LOG_CONF_PER_SLOT 1
 
 /* IEEE802.15.4 PANID */
-#undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0xabcd
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 0
 
 /* 6TiSCH schedule length */
-#undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 11
 
 #if WITH_SECURITY
 
 /* Enable security */
-#undef LLSEC802154_CONF_ENABLED
 #define LLSEC802154_CONF_ENABLED 1
 /* TSCH uses explicit keys to identify k1 and k2 */
-#undef LLSEC802154_CONF_USES_EXPLICIT_KEYS
 #define LLSEC802154_CONF_USES_EXPLICIT_KEYS 1
 /* TSCH uses the ASN rather than frame counter to construct the Nonce */
-#undef LLSEC802154_CONF_USES_FRAME_COUNTER
 #define LLSEC802154_CONF_USES_FRAME_COUNTER 0
 
 #endif /* WITH_SECURITY */
@@ -115,29 +100,20 @@
 
 #if CONTIKI_TARGET_Z1
 /* Save some space to fit the limited RAM of the z1 */
-#undef UIP_CONF_TCP
 #define UIP_CONF_TCP 0
-#undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM 2
-#undef RPL_NS_CONF_LINK_NUM
 #define RPL_NS_CONF_LINK_NUM  2
-#undef NBR_TABLE_CONF_MAX_NEIGHBORS
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 2
-#undef UIP_CONF_ND6_SEND_NA
 #define UIP_CONF_ND6_SEND_NA 0
-#undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
 
 #if WITH_SECURITY
 /* Note: on sky or z1 in cooja, crypto operations are done in S/W and
  * cannot be accommodated in normal slots. Use 65ms slots instead, and
  * a very short 6TiSCH minimal schedule length */
-#undef TSCH_CONF_DEFAULT_TIMESLOT_LENGTH
 #define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 65000
-#undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 2
 /* Reduce log level to make space for security on z1 */
-#undef TSCH_LOG_CONF_LEVEL
 #define TSCH_LOG_CONF_LEVEL 0
 #endif /* WITH_SECURITY */
 

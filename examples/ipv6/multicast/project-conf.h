@@ -49,13 +49,10 @@
 /* For Imin: Use 16 over CSMA, 64 over Contiki MAC */
 #define ROLL_TM_CONF_IMIN_1         64
 
-#undef UIP_MCAST6_ROUTE_CONF_ROUTES
 #define UIP_MCAST6_ROUTE_CONF_ROUTES 1
 
 /* Code/RAM footprint savings so that things will fit on our device */
-#undef NETSTACK_MAX_ROUTE_ENTRIES
 #define NETSTACK_MAX_ROUTE_ENTRIES   10
-#undef NBR_TABLE_CONF_MAX_NEIGHBORS
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 10
 
 #endif /* PROJECT_CONF_H_ */

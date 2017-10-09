@@ -30,21 +30,17 @@
 #ifndef PROJECT_ROUTER_CONF_H_
 #define PROJECT_ROUTER_CONF_H_
 
-#undef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE rpl_interface
 
 /* use a non-default network driver */
-#undef NETSTACK_CONF_NETWORK
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 
 /* use a non-default MAC driver */
-#undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC border_router_mac_driver
 
 
 #define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
 
-#undef WEBSERVER_CONF_CFS_CONNS
 #define WEBSERVER_CONF_CFS_CONNS 2
 
 #define SERIALIZE_ATTRIBUTES 1

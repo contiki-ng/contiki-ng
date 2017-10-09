@@ -55,7 +55,6 @@
 /* Use either the cc1200_driver for sub-1GHz, or cc2538_rf_driver (default)
  * for 2.4GHz built-in radio interface
  */
-#undef  NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc2538_rf_driver
 
 /* USe DHCP */
@@ -66,6 +65,7 @@
 #define UIP_CONF_RECEIVE_WINDOW     128
 #define WEBSERVER_CONF_CFS_CONNS    2
 #define UIP_CONF_BUFFER_SIZE        900
+#define UIP_CONF_TCP                  1
 #define UIP_CONF_TCP_MSS            128
 
 #endif /* PROJECT_CONF_H_ */

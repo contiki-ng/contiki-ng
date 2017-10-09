@@ -35,14 +35,13 @@
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
 
+#define UIP_CONF_TCP 0
+
 /* Needed for slip-bridge */
-#undef SLIP_BRIDGE_CONF_NO_PUTCHAR
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
 
-#include "../../common-conf.h"
-
-#undef UART_BAUD_RATE
 #define UART_BAUD_RATE UART_RATE_230400
 
+#include "../../common-conf.h"
 
 #endif /* PROJECT_ROUTER_CONF_H_ */

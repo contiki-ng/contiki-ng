@@ -36,15 +36,13 @@
 #endif
 
 /* Needed for slip-bridge */
-#undef SLIP_BRIDGE_CONF_NO_PUTCHAR
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
 
-#include "../../common-conf.h"
-
-#undef QUEUEBUF_CONF_NUM
+#define UIP_CONF_TCP 0
 #define QUEUEBUF_CONF_NUM 16
 
-#undef TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES
 #define TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES 8
+
+#include "../../common-conf.h"
 
 #endif /* PROJECT_ROUTER_CONF_H_ */

@@ -61,22 +61,18 @@
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 
 /* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
 #define TSCH_LOG_CONF_PER_SLOT 1
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 0
 
 /* 6TiSCH minimal schedule length.
  * Larger values result in less frequent active slots: reduces capacity and saves energy. */
-#undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
 
 #if WITH_SECURITY
 
 /* Enable security */
-#undef LLSEC802154_CONF_SECURITY_LEVEL
 #define LLSEC802154_CONF_SECURITY_LEVEL 1
 
 #endif /* WITH_SECURITY */
@@ -103,21 +99,16 @@
 
 /* IEEE802.15.4 PANID and channel */
 
-#undef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID 0xabcd
 
-#undef MICROMAC_CONF_CHANNEL
 #define MICROMAC_CONF_CHANNEL 26
 
 /* UART Configuration */
 
-#undef UART_HW_FLOW_CTRL
 #define UART_HW_FLOW_CTRL 0
 
-#undef UART_XONXOFF_FLOW_CTRL
 #define UART_XONXOFF_FLOW_CTRL 1
 
-#undef UART_BAUD_RATE
 #define UART_BAUD_RATE UART_RATE_1000000
 
 #endif /* __COMMON_CONF_H__ */

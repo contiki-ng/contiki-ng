@@ -35,17 +35,13 @@
 #define UNIT_TEST_PRINT_FUNCTION test_print_report
 
 /* Set the minimum value of QUEUEBUF_CONF_NUM for the flush_nbr_queue test */
-#undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM   1
 
 /* TSCH per-slot logging */
-#undef TSCH_LOG_CONF_PER_SLOT
 #define TSCH_LOG_CONF_PER_SLOT 1
 
-#undef TSCH_CONF_AUTOSTART
 #define TSCH_CONF_AUTOSTART 1
 
-#undef TSCH_CONF_WITH_SIXTOP
 #define TSCH_CONF_WITH_SIXTOP 1
 
 #if CONTIKI_TARGET_COOJA

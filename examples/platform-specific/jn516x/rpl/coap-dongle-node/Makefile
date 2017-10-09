@@ -11,8 +11,6 @@ MODULES += os/lib/json
 PROJECTDIRS += .. ../tools
 PROJECT_SOURCEFILES += rpl-tools.c
 
-CFLAGS += -DWITH_COAP
-CFLAGS += -DUIP_CONF_TCP=0
 MODULES += os/net/app-layer/coap
 
 include $(CONTIKI)/Makefile.include

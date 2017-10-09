@@ -33,6 +33,11 @@
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
 
+/* include the project config */
+#ifdef PROJECT_CONF_PATH
+#include PROJECT_CONF_PATH
+#endif /* PROJECT_CONF_PATH */
+
 #ifdef PLATFORM_CONF_H
 #include PLATFORM_CONF_H
 #else
@@ -48,10 +53,5 @@
 #ifndef CCM_STAR_CONF
 #define CCM_STAR_CONF ccm_star_driver_jn516x
 #endif /* CCM_STAR_CONF */
-
-/* include the project config */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
 
 #endif /* CONTIKI_CONF_H_ */
