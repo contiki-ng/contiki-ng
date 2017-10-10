@@ -42,39 +42,6 @@ ifdef CI
   endif
 endif
 
-usage:
-	@echo "make MAKETARGETS... [TARGET=(TARGET)] [BOARD=(BOARD)] [savetarget] [targets]"
-
-targets:
-	@ls -1 $(CONTIKI)/arch/platform $(TARGETDIRS)
-
-savetarget:
-	-@rm -f Makefile.target
-	@echo "saving Makefile.target"
-	@echo >Makefile.target "TARGET = $(TARGET)"
-ifneq ($(BOARD),)
-	@echo >>Makefile.target "BOARD = $(BOARD)"
-endif
-
-savedefines:
-	-@rm -f Makefile.$(TARGET).defines
-	@echo "saving Makefile.$(TARGET).defines"
-	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
-
-viewconf:
-	@echo "----------------- Make variables: --------------"
-	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
-	@echo "##### \"BOARD\": _________________________________ $(BOARD)"
-	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
-	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
-	@echo "##### \"CONTIKI_WITH_RPL\": ______________________ $(CONTIKI_WITH_RPL)"
-	@echo "##### \"CONTIKI_WITH_RPL_LITE\": _________________ $(CONTIKI_WITH_RPL_LITE)"
-	@echo "----------------- C variables: -----------------"
-	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
-	@echo "------------------------------------------------"
-	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
-	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
-
 OBJECTDIR = obj_$(TARGET)
 
 LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
@@ -363,6 +330,46 @@ endif
 
 %.flashprof: %.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [t] " | cut -d' ' -f2,4
+
+usage:
+	@echo "make MAKETARGETS... [TARGET=(TARGET)] [BOARD=(BOARD)] [savetarget] [targets]"
+
+targets:
+	@ls $(CONTIKI)/arch/platform $(TARGETDIRS)
+
+boards:
+ifdef BOARD
+	@echo "$(BOARDS) (current: $(BOARD))"
+else
+	@echo "Platform has no boards"
+endif
+
+savetarget:
+	-@rm -f Makefile.target
+	@echo "saving Makefile.target"
+	@echo >Makefile.target "TARGET = $(TARGET)"
+ifneq ($(BOARD),)
+	@echo >>Makefile.target "BOARD = $(BOARD)"
+endif
+
+savedefines:
+	-@rm -f Makefile.$(TARGET).defines
+	@echo "saving Makefile.$(TARGET).defines"
+	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
+
+viewconf:
+	@echo "----------------- Make variables: --------------"
+	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
+	@echo "##### \"BOARD\": _________________________________ $(BOARD)"
+	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
+	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
+	@echo "##### \"CONTIKI_WITH_RPL\": ______________________ $(CONTIKI_WITH_RPL)"
+	@echo "##### \"CONTIKI_WITH_RPL_LITE\": _________________ $(CONTIKI_WITH_RPL_LITE)"
+	@echo "----------------- C variables: -----------------"
+	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
+	@echo "------------------------------------------------"
+	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
+	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
 
 # Don't treat %.$(TARGET) as an intermediate file because it is
 # in fact the primary target.

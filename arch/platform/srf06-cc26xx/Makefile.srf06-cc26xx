@@ -5,9 +5,8 @@ ifndef CONTIKI
 endif
 
 ### Board and BSP selection
-ifeq ($(BOARD),)
-  BOARD=srf06/cc26xx
-endif
+BOARD ?= srf06/cc26xx
+BOARDS = srf06/cc26xx srf06/cc13xx launchpad/cc26xx launchpad/cc13xx sensortag/cc26xx sensortag/cc13xx
 
 CONTIKI_TARGET_DIRS += .
 
