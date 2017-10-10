@@ -62,16 +62,16 @@ savedefines:
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
 viewconf:
-	@echo "---------- Make variables: ----------"
-	@echo "##### \"TARGET\": $(TARGET)"
-	@echo "##### \"BOARD\": $(BOARD)"
-	@echo "##### \"MAKE_MAC\": $(MAKE_MAC)"
-	@echo "##### \"MAKE_NET\": $(MAKE_NET)"
-	@echo "##### \"CONTIKI_WITH_RPL\": $(CONTIKI_WITH_RPL)"
-	@echo "##### \"CONTIKI_WITH_RPL_LITE\": $(CONTIKI_WITH_RPL_LITE)"
-	@echo "----------- C variables: ------------"
+	@echo "----------------- Make variables: --------------"
+	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
+	@echo "##### \"BOARD\": _________________________________ $(BOARD)"
+	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
+	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
+	@echo "##### \"CONTIKI_WITH_RPL\": ______________________ $(CONTIKI_WITH_RPL)"
+	@echo "##### \"CONTIKI_WITH_RPL_LITE\": _________________ $(CONTIKI_WITH_RPL_LITE)"
+	@echo "----------------- C variables: -----------------"
 	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
-	@echo "-------------------------------------"
+	@echo "------------------------------------------------"
 	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
 	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
 
