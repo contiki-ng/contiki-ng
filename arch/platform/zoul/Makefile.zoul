@@ -5,9 +5,8 @@ ifndef CONTIKI
 endif
 
 ### If no board is specified the default option is the RE-Mote revision B
-ifeq ($(BOARD),)
-  BOARD = remote-revb
-endif
+BOARD ?= remote-revb
+BOARDS = remote-reva remote-revb firefly-reva firefly orion
 
 ### As previously the RE-Mote revision A was plainly defined as remote, keep for
 ### backward compatibility
