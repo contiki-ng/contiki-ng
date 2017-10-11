@@ -118,7 +118,7 @@ create_frame(int do_create)
 
     return hdr_len;
   } else {
-    LOG_ERR("15.4-OUT: too large header: %u\n", hdr_len);
+    LOG_ERR("Out: too large header: %u\n", hdr_len);
     return FRAMER_FAILED;
   }
 }
@@ -278,7 +278,7 @@ parse(void)
     }
 #endif /* LLSEC802154_USES_AUX_HEADER */
 
-    LOG_INFO("15.4-IN: %2X ", frame.fcf.frame_type);
+    LOG_INFO("In: %2X ", frame.fcf.frame_type);
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     LOG_INFO_(" ");
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
