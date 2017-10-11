@@ -109,13 +109,21 @@
 /* UIP_CONF_TCP_CONNS specifies the maximum number of
    simultaneous TCP connections. */
 #ifndef UIP_CONF_TCP_CONNS
-#define UIP_CONF_TCP_CONNS ((UIP_CONF_TCP) ? 8 : 0)
+#if UIP_CONF_TCP
+#define UIP_CONF_TCP_CONNS 8
+#else /* UIP_CONF_TCP */
+#define UIP_CONF_TCP_CONNS 0
+#endif /* UIP_CONF_TCP */
 #endif /* UIP_CONF_TCP_CONNS */
 
 /* UIP_CONF_ND6_SEND_RA enables standard IPv6 Router Advertisement.
  * We enable it by default when IPv6 is used without RPL. */
 #ifndef UIP_CONF_ND6_SEND_RA
-#define UIP_CONF_ND6_SEND_RA (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL)
+#if (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL)
+#define UIP_CONF_ND6_SEND_RA 1
+#else /* NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL */
+#define UIP_CONF_ND6_SEND_RA 0
+#endif /* NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL */
 #endif /* UIP_CONF_ND6_SEND_RA */
 
 /* UIP_CONF_ND6_SEND_NS enables standard IPv6 Neighbor Discovery Protocol
@@ -129,7 +137,11 @@
    timer) or if the neighbor chooses not to transmit DIOs because it is
    a leaf node or for any reason. */
 #ifndef UIP_CONF_ND6_SEND_NS
-#define UIP_CONF_ND6_SEND_NS (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL)
+#if (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL)
+#define UIP_CONF_ND6_SEND_NS 1
+#else /* (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL) */
+#define UIP_CONF_ND6_SEND_NS 0
+#endif /* (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL) */
 #endif /* UIP_CONF_ND6_SEND_NS */
 /* To speed up the neighbor cache construction,
    enable UIP_CONF_ND6_AUTOFILL_NBR_CACHE. When a node does not the link-layer
@@ -140,13 +152,21 @@
    standard-compliant (RFC 4861), as neighbors will be added regardless of
    their reachability and liveness. */
 #ifndef UIP_CONF_ND6_AUTOFILL_NBR_CACHE
-#define UIP_CONF_ND6_AUTOFILL_NBR_CACHE (!UIP_CONF_ND6_SEND_NS)
+#if UIP_CONF_ND6_SEND_NS
+#define UIP_CONF_ND6_AUTOFILL_NBR_CACHE 0
+#else /* UIP_CONF_ND6_SEND_NS */
+#define UIP_CONF_ND6_AUTOFILL_NBR_CACHE 1
+#endif /* UIP_CONF_ND6_SEND_NS */
 #endif /* UIP_CONF_ND6_AUTOFILL_NBR_CACHE */
 /* UIP_CONF_ND6_SEND_NA allows to still comply with NDP even if the host does
    not perform NUD or DAD processes. By default it is activated so the host
    can still communicate with a full NDP peer. */
 #ifndef UIP_CONF_ND6_SEND_NA
-#define UIP_CONF_ND6_SEND_NA (NETSTACK_CONF_WITH_IPV6)
+#if NETSTACK_CONF_WITH_IPV6
+#define UIP_CONF_ND6_SEND_NA 1
+#else /* NETSTACK_CONF_WITH_IPV6 */
+#define UIP_CONF_ND6_SEND_NA 0
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* UIP_CONF_ND6_SEND_NS */
 
 /*---------------------------------------------------------------------------*/
