@@ -540,8 +540,10 @@ void uip_log(char *msg);
  * Do we compress the IP header or not
  */
 #ifndef SICSLOWPAN_CONF_COMPRESSION
-#define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_HC06
-#endif
+#define SICSLOWPAN_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
+#else
+#define SICSLOWPAN_COMPRESSION SICSLOWPAN_CONF_COMPRESSION
+#endif /* SICSLOWPAN_CONF_COMPRESSION */
 
 /**
  * If we use IPHC compression, how many address contexts do we support

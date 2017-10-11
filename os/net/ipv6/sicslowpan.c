@@ -64,6 +64,7 @@
 #include "contiki.h"
 #include "dev/watchdog.h"
 #include "net/link-stats.h"
+#include "net/ipv6/uipopt.h"
 #include "net/ipv6/tcpip.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
@@ -83,12 +84,6 @@
 #include "sys/log.h"
 #define LOG_MODULE "6LoWPAN"
 #define LOG_LEVEL LOG_LEVEL_6LOWPAN
-
-#ifdef SICSLOWPAN_CONF_COMPRESSION
-#define SICSLOWPAN_COMPRESSION SICSLOWPAN_CONF_COMPRESSION
-#else /* SICSLOWPAN_CONF_COMPRESSION */
-#define SICSLOWPAN_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
-#endif /* SICSLOWPAN_CONF_COMPRESSION */
 
 #define GET16(ptr,index) (((uint16_t)((ptr)[index] << 8)) | ((ptr)[(index) + 1]))
 #define SET16(ptr,index,value) do {     \
