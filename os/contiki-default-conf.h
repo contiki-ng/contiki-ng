@@ -33,11 +33,13 @@
 #define CONTIKI_DEFAULT_CONF_H
 
 /*---------------------------------------------------------------------------*/
-/* Packet buffer size options.
- *
- * The packet buffer size options can be tweaked on a per-project
- * basis to reduce memory consumption.
+/* Link-layer options
  */
+
+/* IEEE802154_CONF_PANID defines the default PAN ID for IEEE 802.15.4 networks */
+#ifndef IEEE802154_CONF_PANID
+#define IEEE802154_CONF_PANID 0xabcd
+#endif /* IEEE802154_CONF_PANID */
 
 /* QUEUEBUF_CONF_NUM specifies the number of queue buffers. Queue
    buffers are used throughout the Contiki netstack but the
@@ -107,7 +109,7 @@
 /* UIP_CONF_TCP_CONNS specifies the maximum number of
    simultaneous TCP connections. */
 #ifndef UIP_CONF_TCP_CONNS
-#define UIP_CONF_TCP_CONNS 8
+#define UIP_CONF_TCP_CONNS ((UIP_CONF_TCP) ? 8 : 0)
 #endif /* UIP_CONF_TCP_CONNS */
 
 /* UIP_CONF_ND6_SEND_RA enables standard IPv6 Router Advertisement.
