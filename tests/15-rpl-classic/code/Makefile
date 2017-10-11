@@ -1,5 +1,5 @@
 all: sender-node receiver-node root-node
 CONTIKI=../../..
 
-CONTIKI_WITH_RPL_LITE = 0
+MAKE_ROUTING = MAKE_ROUTING_RPL_CLASSIC
 include $(CONTIKI)/Makefile.include

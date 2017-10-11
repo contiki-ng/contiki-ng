@@ -1,6 +1,6 @@
 all: mqtt-demo
 
-CONTIKI_WITH_RPL = 0
+MAKE_ROUTING = MAKE_ROUTING_NONE
 
 MODULES += os/net/app-layer/mqtt
 
