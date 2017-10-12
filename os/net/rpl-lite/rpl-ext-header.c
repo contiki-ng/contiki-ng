@@ -302,7 +302,7 @@ insert_srh_header(void)
   /* Check if there is enough space to store the extension header */
   if(uip_len + ext_len > UIP_BUFSIZE) {
     LOG_ERR("packet too long: impossible to add source routing header (%u bytes)\n", ext_len);
-    return 1;
+    return 0;
   }
 
   /* Move existing ext headers and payload uip_ext_len further */
