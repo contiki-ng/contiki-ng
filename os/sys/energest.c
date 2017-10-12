@@ -42,9 +42,8 @@
 
 #if ENERGEST_CONF_ON
 
-int energest_total_count;
-energest_t energest_total_time[ENERGEST_TYPE_MAX];
-rtimer_clock_t energest_current_time[ENERGEST_TYPE_MAX];
+uint64_t energest_total_time[ENERGEST_TYPE_MAX];
+uint64_t energest_current_time[ENERGEST_TYPE_MAX];
 unsigned char energest_current_mode[ENERGEST_TYPE_MAX];
 
 /*---------------------------------------------------------------------------*/
@@ -58,36 +57,30 @@ energest_init(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-unsigned long
-energest_type_time(int type)
-{
-  return energest_total_time[type].current;
-}
-/*---------------------------------------------------------------------------*/
-void
-energest_type_set(int type, unsigned long val)
-{
-  energest_total_time[type].current = val;
-}
-/*---------------------------------------------------------------------------*/
 void
 energest_flush(void)
 {
-  rtimer_clock_t now;
+  uint64_t now;
   int i;
   for(i = 0; i < ENERGEST_TYPE_MAX; i++) {
     if(energest_current_mode[i]) {
-      now = RTIMER_NOW();
-      energest_total_time[i].current += (rtimer_clock_t)
-	(now - energest_current_time[i]);
+      now = ENERGEST_CURRENT_TIME();
+      energest_total_time[i].current += now - energest_current_time[i];
       energest_current_time[i] = now;
     }
   }
 }
 /*---------------------------------------------------------------------------*/
 #else /* ENERGEST_CONF_ON */
-void energest_type_set(int type, unsigned long val) {}
-void energest_init(void) {}
-unsigned long energest_type_time(int type) { return 0; }
-void energest_flush(void) {}
+
+void
+energest_init(void)
+{
+}
+
+void
+energest_flush(void)
+{
+}
+
 #endif /* ENERGEST_CONF_ON */

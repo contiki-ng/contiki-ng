@@ -30,7 +30,6 @@
  */
 
 #include "contiki.h"
-#include "sys/energest.h"
 #include "sys/clock.h"
 #include "sys/etimer.h"
 #include "rtimer-arch.h"
@@ -87,7 +86,6 @@ ISR(TIMERA1, timera1)
 #endif
       if(count % CLOCK_CONF_SECOND == 0) {
         ++seconds;
-        energest_flush();
       }
       last_tar = read_tar();
     }
