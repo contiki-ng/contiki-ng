@@ -241,14 +241,16 @@ insert_srh_header(void)
   /* Get link of the destination and root */
 
   if(!rpl_is_addr_in_our_dag(&UIP_IP_BUF->destipaddr)) {
-    LOG_ERR("SRH destination not in our DAG\n");
-    return 0;
+    /* The destination is not in our DAG, skip SRH insertion */
+    LOG_INFO("SRH destination not in our DAG, skip SRH insertion\n");
+    return 1;
   }
 
   dest_node = rpl_ns_get_node(&UIP_IP_BUF->destipaddr);
   if(dest_node == NULL) {
-    LOG_ERR("SRH node not found\n");
-    return 0;
+    /* The destination is not found, skip SRH insertion */
+    LOG_INFO("SRH node not found, skip SRH insertion\n");
+    return 1;
   }
 
   root_node = rpl_ns_get_node(&curr_instance.dag.dag_id);
@@ -507,20 +509,10 @@ rpl_ext_header_update(void)
 
   if(rpl_dag_root_is_root()) {
     /* At the root, remove headers if any, and insert SRH or HBH
-    * (SRH is inserted only if the destination is in the DODAG) */
+    * (SRH is inserted only if the destination is down the DODAG) */
     rpl_ext_header_remove();
-    if(rpl_is_addr_in_our_dag(&UIP_IP_BUF->destipaddr)) {
-      /* dest is in a DODAG; the packet is going down. */
-      if(curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
-        return insert_srh_header();
-      } else {
-        LOG_ERR("packet going down at root, but no support for downward routing\n");
-        return 0; /* No support for downward routes */
-      }
-    } else {
-      /* dest is outside of DODAGs; no ext header is needed. */
-      return 1;
-    }
+    /* Insert SRH (if needed) */
+    return insert_srh_header();
   } else {
     if(uip_ds6_is_my_addr(&UIP_IP_BUF->srcipaddr)
         && UIP_IP_BUF->ttl == uip_ds6_if.cur_hop_limit) {
