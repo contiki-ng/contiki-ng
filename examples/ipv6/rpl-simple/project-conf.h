@@ -56,9 +56,6 @@
 /*******************************************************/
 #endif /* MAC_CONF_WITH_TSCH */
 
-/* TSCH per-slot logging */
-#define TSCH_LOG_CONF_PER_SLOT 1
-
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #define TSCH_CONF_AUTOSTART 0
 

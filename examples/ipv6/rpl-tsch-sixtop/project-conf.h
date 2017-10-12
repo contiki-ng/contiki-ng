@@ -71,9 +71,6 @@
 /******************* Configure TSCH ********************/
 /*******************************************************/
 
-/* TSCH logging. */
-#define TSCH_LOG_CONF_PER_SLOT 1
-
 /* IEEE802.15.4 PANID */
 #define IEEE802154_CONF_PANID 0xabcd
 
@@ -113,8 +110,6 @@
  * a very short 6TiSCH minimal schedule length */
 #define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 65000
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 2
-/* Reduce log level to make space for security on z1 */
-#define TSCH_LOG_CONF_LEVEL 0
 #endif /* WITH_SECURITY */
 
 #endif /* CONTIKI_TARGET_Z1 */

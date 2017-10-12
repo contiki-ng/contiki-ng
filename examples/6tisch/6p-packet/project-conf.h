@@ -40,7 +40,6 @@
 #endif /* CONTIKI_TARGET_COOJA */
 
 #define TSCH_CONF_WITH_SIXTOP              1
-#define TSCH_LOG_CONF_LEVEL                2
 #define TSCH_CONF_AUTOSTART                1
 #define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE TSCH_HOPPING_SEQUENCE_1_1
 

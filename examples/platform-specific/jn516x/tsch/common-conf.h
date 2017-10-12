@@ -37,7 +37,6 @@
 /* Global config flags */
 
 #define WITH_TSCH_SECURITY 0
-#define TSCH_LOG_CONF_PER_SLOT 1
 #define WITH_COAP_RESOURCES 0
 
 #define ENABLE_COOJA_DEBUG 0

@@ -37,9 +37,6 @@
 /* Set the minimum value of QUEUEBUF_CONF_NUM for the flush_nbr_queue test */
 #define QUEUEBUF_CONF_NUM   1
 
-/* TSCH per-slot logging */
-#define TSCH_LOG_CONF_PER_SLOT 1
-
 #define TSCH_CONF_AUTOSTART 1
 
 #define TSCH_CONF_WITH_SIXTOP 1
