@@ -170,8 +170,6 @@ xmem_pread(void *_p, int size, unsigned long offset)
 
   wait_ready();
 
-  ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
-
   s = splhigh();
   SPI_FLASH_ENABLE();
 
@@ -190,8 +188,6 @@ xmem_pread(void *_p, int size, unsigned long offset)
 
   SPI_FLASH_DISABLE();
   splx(s);
-
-  ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
 
   return size;
 }
@@ -231,8 +227,6 @@ xmem_pwrite(const void *_buf, int size, unsigned long addr)
   const unsigned long end = addr + size;
   unsigned long i, next_page;
 
-  ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
-
   for(i = addr; i < end;) {
     next_page = (i | 0xff) + 1;
     if(next_page > end) {
@@ -241,8 +235,6 @@ xmem_pwrite(const void *_buf, int size, unsigned long addr)
     p = program_page(i, p, next_page - i);
     i = next_page;
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
 
   return size;
 }
