@@ -58,12 +58,12 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-private.h"
 #endif /* MAC_CONF_WITH_TSCH */
-#if UIP_CONF_IPV6_RPL_LITE == 1
+#if UIP_CONF_IPV6_RPL_LITE
 #include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#elif UIP_CONF_IPV6_RPL_CLASSIC
 #include "net/rpl-classic/rpl.h"
 #include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#endif
 #include "net/mac/llsec802154.h"
 
 #include <stdlib.h>
@@ -98,6 +98,7 @@ ds6_nbr_state_to_str(uint8_t state)
       return "Unknown";
   }
 }
+#if UIP_CONF_IPV6_RPL_LITE
 /*---------------------------------------------------------------------------*/
 static const char *
 rpl_state_to_str(enum rpl_dag_state state)
@@ -145,6 +146,7 @@ rpl_ocp_to_str(int ocp)
       return "Unknown";
   }
 }
+#endif /* UIP_CONF_IPV6_RPL_LITE */
 /*---------------------------------------------------------------------------*/
 static void
 echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
@@ -194,62 +196,6 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
     shell_output_6addr(output, &remote_addr);
     SHELL_OUTPUT(output, ", len %u, ttl %u, delay %lu ms\n",
       curr_ping_datalen, curr_ping_ttl, (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
-  }
-
-  PT_END(pt);
-}
-/*---------------------------------------------------------------------------*/
-static
-PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
-{
-  static int is_on;
-  static uip_ipaddr_t prefix;
-  char *next_args;
-
-  PT_BEGIN(pt);
-
-  SHELL_ARGS_INIT(args, next_args);
-
-  /* Get first arg (0/1) */
-  SHELL_ARGS_NEXT(args, next_args);
-
-  if(!strcmp(args, "1")) {
-    is_on = 1;
-  } else if(!strcmp(args, "0")) {
-    is_on = 0;
-  } else {
-    SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
-    PT_EXIT(pt);
-  }
-
-  /* Get first second arg (prefix) */
-  SHELL_ARGS_NEXT(args, next_args);
-  if(args != NULL) {
-    if(uiplib_ipaddrconv(args, &prefix) == 0) {
-      SHELL_OUTPUT(output, "Invalid Prefix: %s\n", args);
-      PT_EXIT(pt);
-    }
-  } else {
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-  }
-
-  if(is_on) {
-    if(!rpl_dag_root_is_root()) {
-      SHELL_OUTPUT(output, "Setting as DAG root with prefix ");
-      shell_output_6addr(output, &prefix);
-      SHELL_OUTPUT(output, "/64\n");
-      rpl_dag_root_init(&prefix, NULL);
-      rpl_dag_root_init_dag_immediately();
-    } else {
-      SHELL_OUTPUT(output, "Node is already a DAG root\n");
-    }
-  } else {
-    if(rpl_dag_root_is_root()) {
-      SHELL_OUTPUT(output, "Setting as non-root node: leaving DAG\n");
-      rpl_dag_poison_and_leave();
-    } else {
-      SHELL_OUTPUT(output, "Node is not a DAG root\n");
-    }
   }
 
   PT_END(pt);
@@ -342,6 +288,107 @@ PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
+#if UIP_CONF_IPV6_RPL_LITE
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
+{
+  static int is_on;
+  static uip_ipaddr_t prefix;
+  char *next_args;
+
+  PT_BEGIN(pt);
+
+  SHELL_ARGS_INIT(args, next_args);
+
+  /* Get first arg (0/1) */
+  SHELL_ARGS_NEXT(args, next_args);
+
+  if(!strcmp(args, "1")) {
+    is_on = 1;
+  } else if(!strcmp(args, "0")) {
+    is_on = 0;
+  } else {
+    SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
+    PT_EXIT(pt);
+  }
+
+  /* Get first second arg (prefix) */
+  SHELL_ARGS_NEXT(args, next_args);
+  if(args != NULL) {
+    if(uiplib_ipaddrconv(args, &prefix) == 0) {
+      SHELL_OUTPUT(output, "Invalid Prefix: %s\n", args);
+      PT_EXIT(pt);
+    }
+  } else {
+    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  }
+
+  if(is_on) {
+    if(!rpl_dag_root_is_root()) {
+      SHELL_OUTPUT(output, "Setting as DAG root with prefix ");
+      shell_output_6addr(output, &prefix);
+      SHELL_OUTPUT(output, "/64\n");
+      rpl_dag_root_init(&prefix, NULL);
+      rpl_dag_root_init_dag_immediately();
+    } else {
+      SHELL_OUTPUT(output, "Node is already a DAG root\n");
+    }
+  } else {
+    if(rpl_dag_root_is_root()) {
+      SHELL_OUTPUT(output, "Setting as non-root node: leaving DAG\n");
+      rpl_dag_poison_and_leave();
+    } else {
+      SHELL_OUTPUT(output, "Node is not a DAG root\n");
+    }
+  }
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "RPL status:\n");
+  if(!curr_instance.used) {
+    SHELL_OUTPUT(output, "-- Instance: None\n");
+  } else {
+    SHELL_OUTPUT(output, "-- Instance: %u\n", curr_instance.instance_id);
+    if(rpl_dag_root_is_root()) {
+      SHELL_OUTPUT(output, "-- DAG root\n");
+    } else {
+      SHELL_OUTPUT(output, "-- DAG node\n");
+    }
+    SHELL_OUTPUT(output, "-- DAG: ");
+    shell_output_6addr(output, &curr_instance.dag.dag_id);
+    SHELL_OUTPUT(output, ", version %u\n", curr_instance.dag.version);
+    SHELL_OUTPUT(output, "-- Prefix: ");
+    shell_output_6addr(output, &curr_instance.dag.prefix_info.prefix);
+    SHELL_OUTPUT(output, "/%u\n", curr_instance.dag.prefix_info.length);
+    SHELL_OUTPUT(output, "-- MOP: %s\n", rpl_mop_to_str(curr_instance.mop));
+    SHELL_OUTPUT(output, "-- OF: %s\n", rpl_ocp_to_str(curr_instance.of->ocp));
+    SHELL_OUTPUT(output, "-- Hop rank increment: %u\n", curr_instance.min_hoprankinc);
+    SHELL_OUTPUT(output, "-- Default lifetime: %lu seconds\n", RPL_LIFETIME(curr_instance.default_lifetime));
+
+    SHELL_OUTPUT(output, "-- State: %s\n", rpl_state_to_str(curr_instance.dag.state));
+    SHELL_OUTPUT(output, "-- Preferred parent: ");
+    shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+    SHELL_OUTPUT(output, "\n");
+    SHELL_OUTPUT(output, "-- Rank: %u\n", curr_instance.dag.rank);
+    SHELL_OUTPUT(output, "-- Lowest rank: %u (%u)\n", curr_instance.dag.lowest_rank, curr_instance.max_rankinc);
+    SHELL_OUTPUT(output, "-- DTSN out: %u\n", curr_instance.dtsn_out);
+    SHELL_OUTPUT(output, "-- DAO sequence: last sent %u, last acked %u\n",
+        curr_instance.dag.dao_last_seqno, curr_instance.dag.dao_last_acked_seqno);
+    SHELL_OUTPUT(output, "-- Trickle timer: current %u, min %u, max %u, redundancy %u\n",
+      curr_instance.dag.dio_intcurrent, curr_instance.dio_intmin,
+      curr_instance.dio_intmin + curr_instance.dio_intdoubl, curr_instance.dio_redundancy);
+
+  }
+
+  PT_END(pt);
+}
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_rpl_global_repair(struct pt *pt, shell_output_func output, char *args))
@@ -364,6 +411,7 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
 
   PT_END(pt);
 }
+#endif /* UIP_CONF_IPV6_RPL_LITE */
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
@@ -498,50 +546,6 @@ PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 #endif /* MAC_CONF_WITH_TSCH */
-/*---------------------------------------------------------------------------*/
-static
-PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
-{
-  PT_BEGIN(pt);
-
-  SHELL_OUTPUT(output, "RPL status:\n");
-  if(!curr_instance.used) {
-    SHELL_OUTPUT(output, "-- Instance: None\n");
-  } else {
-    SHELL_OUTPUT(output, "-- Instance: %u\n", curr_instance.instance_id);
-    if(rpl_dag_root_is_root()) {
-      SHELL_OUTPUT(output, "-- DAG root\n");
-    } else {
-      SHELL_OUTPUT(output, "-- DAG node\n");
-    }
-    SHELL_OUTPUT(output, "-- DAG: ");
-    shell_output_6addr(output, &curr_instance.dag.dag_id);
-    SHELL_OUTPUT(output, ", version %u\n", curr_instance.dag.version);
-    SHELL_OUTPUT(output, "-- Prefix: ");
-    shell_output_6addr(output, &curr_instance.dag.prefix_info.prefix);
-    SHELL_OUTPUT(output, "/%u\n", curr_instance.dag.prefix_info.length);
-    SHELL_OUTPUT(output, "-- MOP: %s\n", rpl_mop_to_str(curr_instance.mop));
-    SHELL_OUTPUT(output, "-- OF: %s\n", rpl_ocp_to_str(curr_instance.of->ocp));
-    SHELL_OUTPUT(output, "-- Hop rank increment: %u\n", curr_instance.min_hoprankinc);
-    SHELL_OUTPUT(output, "-- Default lifetime: %lu seconds\n", RPL_LIFETIME(curr_instance.default_lifetime));
-
-    SHELL_OUTPUT(output, "-- State: %s\n", rpl_state_to_str(curr_instance.dag.state));
-    SHELL_OUTPUT(output, "-- Preferred parent: ");
-    shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
-    SHELL_OUTPUT(output, "\n");
-    SHELL_OUTPUT(output, "-- Rank: %u\n", curr_instance.dag.rank);
-    SHELL_OUTPUT(output, "-- Lowest rank: %u (%u)\n", curr_instance.dag.lowest_rank, curr_instance.max_rankinc);
-    SHELL_OUTPUT(output, "-- DTSN out: %u\n", curr_instance.dtsn_out);
-    SHELL_OUTPUT(output, "-- DAO sequence: last sent %u, last acked %u\n",
-        curr_instance.dag.dao_last_seqno, curr_instance.dag.dao_last_acked_seqno);
-    SHELL_OUTPUT(output, "-- Trickle timer: current %u, min %u, max %u, redundancy %u\n",
-      curr_instance.dag.dio_intcurrent, curr_instance.dio_intmin,
-      curr_instance.dio_intmin + curr_instance.dio_intdoubl, curr_instance.dio_redundancy);
-
-  }
-
-  PT_END(pt);
-}
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
@@ -722,10 +726,12 @@ struct shell_command_t shell_commands[] = {
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
   { "log",                  cmd_log,                  "'> log module level': Sets log level (0--4) for a given module (or \"all\"). For module \"mac\", level 4 also enables per-slot logging." },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
+#if UIP_CONF_IPV6_RPL_LITE
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },
   { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
+#endif /* UIP_CONF_IPV6_RPL_LITE */
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
 #if MAC_CONF_WITH_TSCH
   { "tsch-set-coordinator", cmd_tsch_set_coordinator, "'> tsch-set-coordinator 0/1 [0/1]': Sets node as coordinator (1) or not (0). Second, optional parameter: enable (1) or disable (0) security." },
