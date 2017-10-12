@@ -43,60 +43,6 @@ CONTIKI_APP_OBJ = $(CONTIKI_APP).co
 # Modules
 MODULES += os/net os/net/mac os/net/mac/framer
 
-## Copied from Makefile.include, since Cooja overrides CFLAGS et al
-# Configure Network layer
-
-MAKE_NET_NULLNET = 0
-MAKE_NET_IPV6 = 1
-MAKE_NET_OTHER = 2
-
-# Make IPv6 the default stack
-MAKE_NET ?= MAKE_NET_IPV6
-
-ifeq ($(MAKE_NET),MAKE_NET_NULLNET)
-  CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
-endif
-
-ifeq ($(MAKE_NET),MAKE_NET_IPV6)
-  CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
-  MODULES += os/net/ipv6
-else
-  CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
-  MODULES += os/net/nullnet
-endif
-
-ifeq ($(MAKE_NET),MAKE_NET_OTHER)
-  CFLAGS += -DNETSTACK_CONF_WITH_OTHER=1
-endif
-
-ifeq ($(WITH_IP64),1)
-  MODULES += os/services/ip64
-endif
-
-# Configure Routing protocol
-MAKE_ROUTING_NONE = 0
-MAKE_ROUTING_RPL_CLASSIC = 1
-MAKE_ROUTING_RPL_LITE = 2
-
-# Default routing protocol: RPL for IPv6, None otherwise
-ifeq ($(MAKE_NET),MAKE_NET_IPV6)
-MAKE_ROUTING ?= MAKE_ROUTING_RPL_LITE
-else
-MAKE_ROUTING ?= MAKE_ROUTING_NONE
-endif
-
-ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
-  CFLAGS += -DUIP_CONF_IPV6_RPL=1
-  CFLAGS += -DUIP_CONF_IPV6_RPL_CLASSIC=1
-  MODULES += os/net/rpl-classic
-else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_LITE)
-  CFLAGS += -DUIP_CONF_IPV6_RPL=1
-  CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
-  MODULES += os/net/rpl-lite
-else
-  CFLAGS += -DUIP_CONF_IPV6_RPL=0
-endif
-
 ### COOJA platform sources
 COOJA = $(CONTIKI)/arch/platform/$(TARGET)
 CONTIKI_TARGET_DIRS = . dev lib sys cfs net
