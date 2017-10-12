@@ -307,7 +307,7 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
   /* Set log level */
   if(level != prev_level) {
     log_set_level(module, level);
-#if MAC_CONF_WITH_TSCH
+#if MAC_CONF_WITH_TSCH && TSCH_LOG_PER_SLOT
     if(!strcmp(module, "mac") || !strcmp(module, "all")) {
       if(level >= LOG_LEVEL_DBG) {
         tsch_log_init();
@@ -317,7 +317,7 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
         SHELL_OUTPUT(output, "TSCH logging stopped\n");
       }
     }
-#endif /* MAC_CONF_WITH_TSCH */
+#endif /* MAC_CONF_WITH_TSCH && TSCH_LOG_PER_SLOT */
   }
 
   shell_output_log_levels(output);
