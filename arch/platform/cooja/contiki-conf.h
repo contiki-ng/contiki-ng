@@ -124,7 +124,6 @@ typedef uint64_t rtimer_clock_t;
 #define UIP_ARCH_IPCHKSUM        1
 
 #if MAC_CONF_WITH_TSCH
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
 /* A bug in cooja causes many EBs to be missed at scan. Increase EB
    frequency to shorten the join process */
 #undef TSCH_CONF_EB_PERIOD

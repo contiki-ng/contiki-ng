@@ -55,7 +55,7 @@
  * You need to set this to 1 to use TSCH with its default 2.2ms or larger guard time.
  */
 #ifndef CC2650_FAST_RADIO_STARTUP
-#define CC2650_FAST_RADIO_STARTUP               0
+#define CC2650_FAST_RADIO_STARTUP               (MAC_CONF_WITH_TSCH)
 #endif
 
 #ifdef RF_CHANNEL

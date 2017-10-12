@@ -56,8 +56,7 @@
 #if WITH_SECURITY
 /* Enable security */
 #define LLSEC802154_CONF_ENABLED 1
-#define LLSEC802154_CONF_USES_EXPLICIT_KEYS 0
-#define LLSEC802154_CONF_USES_FRAME_COUNTER 0
+
 #define TSCH_SECURITY_CONF_K1 { 0x11, 0x11, 0x11, 0x11,         \
                                 0x11, 0x11, 0x11, 0x11,         \
                                 0x11, 0x11, 0x11, 0x11,         \
@@ -93,34 +92,9 @@
 /************* Platform dependent configuration ********/
 /*******************************************************/
 
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL || \
-  CONTIKI_TARGET_OPENMOTE_CC2538
-#define TSCH_CONF_HW_FRAME_FILTERING    0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL \
-       || CONTIKI_TARGET_OPENMOTE_CC2538 */
-
-/* Needed for CC2538 platforms only */
-/* For TSCH we have to use the more accurate crystal oscillator
- * by default the RC oscillator is activated */
-#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
-
 /* USB serial takes space, free more space elsewhere */
 #define SICSLOWPAN_CONF_FRAG 0
 #define UIP_CONF_BUFFER_SIZE 160
-
-#if CONTIKI_TARGET_SRF06_CC26XX
-#define CC2650_FAST_RADIO_STARTUP               1
-#endif /* CONTIK_TARGET_SRF06_CC26XX */
-
-#if CONTIKI_TARGET_COOJA
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
-#endif /* CONTIKI_TARGET_COOJA */
-
-/* Needed for cc2420 platforms only */
-/* Disable DCO calibration (uses timerB) */
-#define DCOSYNCH_CONF_ENABLED 0
-/* Enable SFD timestamps (uses timerB) */
-#define CC2420_CONF_SFD_TIMESTAMPS 1
 
 /*******************************************************/
 /******************* Configure 6LoWPAN/IPv6 ************/

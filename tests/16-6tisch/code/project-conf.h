@@ -31,12 +31,6 @@
 #ifndef _PROJECT_CONF_H_
 #define _PROJECT_CONF_H_
 
-#if CONTIKI_TARGET_COOJA
-#define COOJA_CONF_SIMULATE_TURNAROUND 0
-#else
-//#error "This file is intended to be used for Cooja mote."
-#endif /* CONTIKI_TARGET_COOJA */
-
 #define SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS 2
 
 #define SIXTOP_CONF_MAX_TRANSACTIONS      2
