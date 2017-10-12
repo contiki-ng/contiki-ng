@@ -63,9 +63,6 @@ enum energest_type {
 
 void energest_init(void);
 unsigned long energest_type_time(int type);
-#ifdef ENERGEST_CONF_LEVELDEVICE_LEVELS
-unsigned long energest_leveldevice_leveltime(int powerlevel);
-#endif
 void energest_type_set(int type, unsigned long value);
 void energest_flush(void);
 
@@ -74,10 +71,6 @@ void energest_flush(void);
 extern energest_t energest_total_time[ENERGEST_TYPE_MAX];
 extern rtimer_clock_t energest_current_time[ENERGEST_TYPE_MAX];
 extern unsigned char energest_current_mode[ENERGEST_TYPE_MAX];
-
-#ifdef ENERGEST_CONF_LEVELDEVICE_LEVELS
-extern energest_t energest_leveldevice_current_leveltime[ENERGEST_CONF_LEVELDEVICE_LEVELS];
-#endif
 
 #define ENERGEST_ON(type)  do { \
                            /*++energest_total_count;*/ \
@@ -91,11 +84,6 @@ extern energest_t energest_leveldevice_current_leveltime[ENERGEST_CONF_LEVELDEVI
 			   energest_current_mode[type] = 0; \
                            } while(0)
 
-#define ENERGEST_OFF_LEVEL(type,level) do { \
-                                        energest_leveldevice_current_leveltime[level].current += (rtimer_clock_t)(RTIMER_NOW() - \
-			                energest_current_time[type]); \
-			   energest_current_mode[type] = 0; \
-                                        } while(0)
 
 #define ENERGEST_SWITCH(type_off, type_on) do { \
                                              rtimer_clock_t energest_local_variable_now = RTIMER_NOW(); \
@@ -111,7 +99,6 @@ extern energest_t energest_leveldevice_current_leveltime[ENERGEST_CONF_LEVELDEVI
 #else /* ENERGEST_CONF_ON */
 #define ENERGEST_ON(type) do { } while(0)
 #define ENERGEST_OFF(type) do { } while(0)
-#define ENERGEST_OFF_LEVEL(type,level) do { } while(0)
 #define ENERGEST_SWITCH(type_off, type_on) do { } while(0)
 #endif /* ENERGEST_CONF_ON */
 
