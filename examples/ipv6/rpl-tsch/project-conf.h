@@ -38,11 +38,6 @@
 /* Set to use the Contiki shell */
 #define WITH_SHELL 1
 
-/* Set to run orchestra */
-#ifndef WITH_ORCHESTRA
-#define WITH_ORCHESTRA 0
-#endif /* WITH_ORCHESTRA */
-
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
 #define WITH_SECURITY 0
@@ -53,7 +48,6 @@
 /*******************************************************/
 
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
-#define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common } /* Orchestra in non-storing */
 
 /*******************************************************/
 /********************* Configure TSCH *********************/
@@ -87,19 +81,6 @@
 #define LLSEC802154_CONF_ENABLED 1
 
 #endif /* WITH_SECURITY */
-
-#if WITH_ORCHESTRA
-
-/* See os/services//orchestra/README.md for more Orchestra configuration options */
-#define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0 /* No 6TiSCH minimal schedule */
-#define TSCH_CONF_WITH_LINK_SELECTOR 1 /* Orchestra requires per-packet link selection */
-/* Orchestra callbacks */
-#define TSCH_CALLBACK_NEW_TIME_SOURCE orchestra_callback_new_time_source
-#define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK orchestra_callback_child_added
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK orchestra_callback_child_removed
-
-#endif /* WITH_ORCHESTRA */
 
 /*******************************************************/
 /************* Other system configuration **************/

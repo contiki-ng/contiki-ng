@@ -41,7 +41,6 @@
 /*******************************************************/
 #define UIP_CONF_MAX_ROUTES 0 /* No need for routes */
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
-#define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common } /* Orchestra in non-storing */
 
 /*******************************************************/
 /********************* Enable TSCH *********************/

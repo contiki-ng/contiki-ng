@@ -69,6 +69,9 @@
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
+#if BUILD_WITH_ORCHESTRA
+#include "orchestra.h"
+#endif /* BUILD_WITH_ORCHESTRA */
 #if BUILD_WITH_SHELL
 #include "serial-shell.h"
 #endif /* BUILD_WITH_SHELL */
@@ -278,6 +281,9 @@ main(int argc, char **argv)
 
   serial_line_init();
 
+#if BUILD_WITH_ORCHESTRA
+  orchestra_init();
+#endif /* BUILD_WITH_ORCHESTRA */
 #if BUILD_WITH_SHELL
   serial_shell_init();
 #endif /* BUILD_WITH_SHELL */

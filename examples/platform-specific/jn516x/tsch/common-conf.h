@@ -58,13 +58,6 @@
 #define TSCH_CONF_EB_PERIOD (4 * CLOCK_SECOND)
 #define TSCH_CONF_KEEPALIVE_TIMEOUT (24 * CLOCK_SECOND)
 
-#define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0
-#define TSCH_CONF_WITH_LINK_SELECTOR 1
-#define TSCH_CALLBACK_NEW_TIME_SOURCE orchestra_callback_new_time_source
-#define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK orchestra_callback_child_added
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK orchestra_callback_child_removed
-
 /* Dimensioning */
 #define ORCHESTRA_CONF_EBSF_PERIOD                     41
 #define ORCHESTRA_CONF_COMMON_SHARED_PERIOD             7 /* Common shared slot, 7 is a very short slotframe (high energy, high capacity). Must be prime and at least equal to number of nodes (incl. BR) */

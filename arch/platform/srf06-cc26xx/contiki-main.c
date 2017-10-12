@@ -71,6 +71,9 @@
 
 #include "driverlib/driverlib_release.h"
 
+#if BUILD_WITH_ORCHESTRA
+#include "orchestra.h"
+#endif /* BUILD_WITH_ORCHESTRA */
 #if BUILD_WITH_SHELL
 #include "serial-shell.h"
 #endif /* BUILD_WITH_SHELL */
@@ -230,6 +233,9 @@ main(void)
 
   process_start(&sensors_process, NULL);
 
+#if BUILD_WITH_ORCHESTRA
+  orchestra_init();
+#endif /* BUILD_WITH_ORCHESTRA */
 #if BUILD_WITH_SHELL
   serial_shell_init();
 #endif /* BUILD_WITH_SHELL */

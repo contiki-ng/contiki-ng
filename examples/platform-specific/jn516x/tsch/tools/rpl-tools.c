@@ -38,7 +38,6 @@
 #include "net/ipv6/uip.h"
 #include "rpl.h"
 #include "rpl-dag-root.h"
-#include "orchestra.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -109,10 +108,6 @@ print_local_addresses(void)
 void
 rpl_tools_init(uip_ipaddr_t *br_prefix)
 {
-#if TSCH_CONFIG == TSCH_CONFIG_ORCHESTRA
-  orchestra_init();
-#endif
-
   if(br_prefix) { /* We are root */
     rpl_dag_root_init(br_prefix, NULL);
     rpl_dag_root_init_dag_immediately();
