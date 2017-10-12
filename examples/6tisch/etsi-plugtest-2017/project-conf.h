@@ -104,7 +104,6 @@
  * by default the RC oscillator is activated */
 #define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
 
-#define USB_SERIAL_CONF_ENABLE 1
 /* USB serial takes space, free more space elsewhere */
 #define SICSLOWPAN_CONF_FRAG 0
 #define UIP_CONF_BUFFER_SIZE 160

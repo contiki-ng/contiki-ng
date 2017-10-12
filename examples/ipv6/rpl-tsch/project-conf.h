@@ -60,8 +60,6 @@
 /*******************************************************/
 
 #if WITH_SHELL
-/* Needed for CC2538 platforms, for serial */
-#define USB_SERIAL_CONF_ENABLE 1
 
 /* USB serial takes space, free more space elsewhere */
 #define SICSLOWPAN_CONF_FRAG 0
