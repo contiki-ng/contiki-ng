@@ -567,8 +567,6 @@ rx_nok_isr(void)
 void
 cc26xx_rf_cpe1_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   PRINTF("RF Error\n");
 
   if(!rf_core_is_accessible()) {
@@ -579,15 +577,11 @@ cc26xx_rf_cpe1_isr(void)
 
   /* Clear INTERNAL_ERROR interrupt flag */
   HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x7FFFFFFF;
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void
 cc26xx_rf_cpe0_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(!rf_core_is_accessible()) {
     printf("RF ISR called but RF not ready... PANIC!!\n");
     if(rf_core_power_up() != RF_CORE_CMD_OK) {
@@ -619,8 +613,6 @@ cc26xx_rf_cpe0_isr(void)
   }
 
   ti_lib_int_master_enable();
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

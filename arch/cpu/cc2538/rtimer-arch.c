@@ -37,7 +37,6 @@
  *
  */
 #include "contiki.h"
-#include "sys/energest.h"
 #include "sys/rtimer.h"
 #include "dev/nvic.h"
 #include "dev/smwdthrosc.h"
@@ -143,16 +142,12 @@ rtimer_isr()
    */
   lpm_exit();
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   next_trigger = 0;
 
   NVIC_ClearPendingIRQ(SMT_IRQn);
   NVIC_DisableIRQ(SMT_IRQn);
 
   rtimer_run_next();
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

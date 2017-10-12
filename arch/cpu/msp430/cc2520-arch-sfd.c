@@ -41,7 +41,7 @@ extern volatile uint16_t cc2520_sfd_end_time;
 ISR(TIMERB1, cc2520_timerb1_interrupt)
 {
   int tbiv;
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
+
   /* always read TBIV to clear IFG */
   tbiv = TBIV;
   /* read and discard tbiv to avoid "variable set but not used" warning */
@@ -53,7 +53,6 @@ ISR(TIMERB1, cc2520_timerb1_interrupt)
     cc2520_sfd_counter = 0;
     cc2520_sfd_end_time = TBCCR1;
   }
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

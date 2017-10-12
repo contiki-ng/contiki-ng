@@ -241,11 +241,7 @@ clock_adjust(void)
 void
 clock_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   update_ticks();
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 

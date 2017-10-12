@@ -36,7 +36,6 @@
  * Implementation of the cc2538 GPIO controller
  */
 #include "contiki.h"
-#include "sys/energest.h"
 #include "dev/leds.h"
 #include "dev/gpio.h"
 #include "dev/nvic.h"
@@ -90,8 +89,6 @@ gpio_port_isr(uint8_t port)
 
   lpm_exit();
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   base = GPIO_PORT_TO_BASE(port);
   int_status = GPIO_GET_MASKED_INT_STATUS(base);
   power_up_int_status = GPIO_GET_POWER_UP_INT_STATUS(port);
@@ -100,8 +97,6 @@ gpio_port_isr(uint8_t port)
 
   GPIO_CLEAR_INTERRUPT(base, int_status);
   GPIO_CLEAR_POWER_UP_INTERRUPT(port, power_up_int_status);
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 #define GPIO_PORT_ISR(lowercase_port, uppercase_port) \

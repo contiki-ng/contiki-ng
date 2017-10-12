@@ -63,8 +63,6 @@ read_tar(void)
 /*---------------------------------------------------------------------------*/
 ISR(TIMERA1, timera1)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   watchdog_start();
 
   if(TAIV == 2) {
@@ -106,8 +104,6 @@ ISR(TIMERA1, timera1)
     }*/
 
   watchdog_stop();
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 clock_time_t

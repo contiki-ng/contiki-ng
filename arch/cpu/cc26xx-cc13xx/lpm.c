@@ -56,18 +56,6 @@
 #include <string.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#if ENERGEST_CONF_ON
-static unsigned long irq_energest = 0;
-
-#define ENERGEST_IRQ_SAVE(a) do { \
-    a = energest_type_time(ENERGEST_TYPE_IRQ); } while(0)
-#define ENERGEST_IRQ_RESTORE(a) do { \
-    energest_type_set(ENERGEST_TYPE_IRQ, a); } while(0)
-#else
-#define ENERGEST_IRQ_SAVE(a) do {} while(0)
-#define ENERGEST_IRQ_RESTORE(a) do {} while(0)
-#endif
-/*---------------------------------------------------------------------------*/
 LIST(modules_list);
 /*---------------------------------------------------------------------------*/
 /* PDs that may stay on in deep sleep */
@@ -197,8 +185,6 @@ wake_up(void)
 {
   lpm_registered_module_t *module;
 
-  /* Remember IRQ energest for next pass */
-  ENERGEST_IRQ_SAVE(irq_energest);
   ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
 
   /* Sync so that we get the latest values before adjusting recharge settings */
@@ -389,16 +375,10 @@ lpm_sleep(void)
 {
   ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
 
-  /* We are only interested in IRQ energest while idle or in LPM */
-  ENERGEST_IRQ_RESTORE(irq_energest);
-
   /* Just to be on the safe side, explicitly disable Deep Sleep */
   HWREG(NVIC_SYS_CTRL) &= ~(NVIC_SYS_CTRL_SLEEPDEEP);
 
   ti_lib_prcm_sleep();
-
-  /* Remember IRQ energest for next pass */
-  ENERGEST_IRQ_SAVE(irq_energest);
 
   ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
 }
@@ -505,8 +485,6 @@ deep_sleep(void)
     ti_lib_pwr_ctrl_source_set(PWRCTRL_PWRSRC_ULDO);
   }
 
-  /* We are only interested in IRQ energest while idle or in LPM */
-  ENERGEST_IRQ_RESTORE(irq_energest);
   ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
 
   /* Sync the AON interface to ensure all writes have gone through. */

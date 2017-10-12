@@ -37,7 +37,6 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "sys/energest.h"
 #include "rtimer.h"
 #include "lpm.h"
 
@@ -146,8 +145,6 @@ soc_rtc_isr(void)
 {
   uint32_t next;
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   last_isr_time = RTIMER_NOW();
 
   /* Adjust the s/w tick counter irrespective of which event trigger this */
@@ -177,8 +174,6 @@ soc_rtc_isr(void)
     ti_lib_aon_rtc_channel_disable(AON_RTC_CH2);
     HWREG(AON_RTC_BASE + AON_RTC_O_EVFLAGS) = AON_RTC_EVFLAGS_CH2;
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -284,8 +284,6 @@ PROCESS_THREAD(soc_trng_process, ev, data)
 void
 soc_trng_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   ti_lib_trng_disable();
 
   disable_number_ready_interrupt();
@@ -294,8 +292,6 @@ soc_trng_isr(void)
   ti_lib_trng_enable();
 
   process_post(&soc_trng_process, rng_ready_event, NULL);
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

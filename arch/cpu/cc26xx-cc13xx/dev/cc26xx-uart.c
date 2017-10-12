@@ -46,7 +46,6 @@
 #include "uart.h"
 #include "lpm.h"
 #include "ti-lib.h"
-#include "sys/energest.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -366,8 +365,6 @@ cc26xx_uart_isr(void)
   char the_char;
   uint32_t flags;
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   power_and_clock();
 
   /* Read out the masked interrupt status */
@@ -389,8 +386,6 @@ cc26xx_uart_isr(void)
       }
     }
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -44,7 +44,6 @@
 #include <PeripheralRegs.h>
 #include <MicroSpecific.h>
 #include "dev/watchdog.h"
-#include "sys/energest.h"
 #include "sys/process.h"
 
 #if !RTIMER_USE_32KHZ
@@ -71,7 +70,6 @@ rtimer_arch_run_next(uint32 u32DeviceId, uint32 u32ItemBitmap)
     return;
   }
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
   vAHI_TickTimerIntPendClr();
   vAHI_TickTimerIntEnable(0);
   /*
@@ -90,7 +88,6 @@ rtimer_arch_run_next(uint32 u32DeviceId, uint32 u32ItemBitmap)
     vAHI_TickTimerIntEnable(1);
     vAHI_TickTimerInterval(scheduled_time);
   }
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

@@ -36,7 +36,6 @@
  * Implementation of the cc2538 AES/SHA cryptoprocessor driver
  */
 #include "contiki.h"
-#include "sys/energest.h"
 #include "dev/sys-ctrl.h"
 #include "dev/nvic.h"
 #include "dev/crypto.h"
@@ -59,8 +58,6 @@ static volatile struct process *notification_process = NULL;
 void
 crypto_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   NVIC_ClearPendingIRQ(AES_IRQn);
   NVIC_DisableIRQ(AES_IRQn);
 
@@ -68,8 +65,6 @@ crypto_isr(void)
     process_poll((struct process *)notification_process);
     notification_process = NULL;
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 static bool

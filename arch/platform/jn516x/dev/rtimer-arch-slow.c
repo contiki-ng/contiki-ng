@@ -43,7 +43,6 @@
 #include <PeripheralRegs.h>
 #include <MicroSpecific.h>
 #include "dev/watchdog.h"
-#include "sys/energest.h"
 #include "sys/process.h"
 
 #if RTIMER_USE_32KHZ
@@ -75,8 +74,6 @@ timerISR(uint32 u32Device, uint32 u32ItemBitmap)
     return;
   }
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(u32ItemBitmap & TICK_TIMER_MASK) {
     /* 32-bit overflow happened; restart the timer */
     uint32_t ticks_late = WRAPAROUND_VALUE - u64AHI_WakeTimerReadLarge(TICK_TIMER);
@@ -104,8 +101,6 @@ timerISR(uint32 u32Device, uint32 u32ItemBitmap)
       process_nevents();
     }
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

@@ -33,7 +33,6 @@
  */
 
 #include "contiki.h"
-#include "sys/energest.h"
 #include "dev/uart1.h"
 #include "dev/watchdog.h"
 #include "sys/ctimer.h"
@@ -239,7 +238,6 @@ uart1_init(unsigned long ubr)
 ISR(UART1RX, uart1_rx_interrupt)
 {
   uint8_t c;
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
 
   if(!(URXIFG1 & IFG2)) {
     /* Edge detect if IFG not set? */
@@ -261,23 +259,17 @@ ISR(UART1RX, uart1_rx_interrupt)
       }
     }
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 #endif /* !RX_WITH_DMA */
 /*---------------------------------------------------------------------------*/
 #if TX_WITH_INTERRUPT
 ISR(UART1TX, uart1_tx_interrupt)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(ringbuf_elements(&txbuf) == 0) {
     transmitting = 0;
   } else {
     TXBUF1 = ringbuf_get(&txbuf);
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 #endif /* TX_WITH_INTERRUPT */
 /*---------------------------------------------------------------------------*/

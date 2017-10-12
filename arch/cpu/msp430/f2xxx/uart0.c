@@ -35,7 +35,6 @@
 #include <stdlib.h>
 
 #include "contiki.h"
-#include "sys/energest.h"
 #include "dev/uart0.h"
 #include "dev/watchdog.h"
 #include "lib/ringbuf.h"
@@ -186,7 +185,6 @@ ISR(USCIAB0RX, uart0_rx_interrupt)
 {
   uint8_t c;
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
   if(UCA0STAT & UCRXERR) {
     c = UCA0RXBUF;   /* Clear error flags by forcing a dummy read. */
   } else {
@@ -197,14 +195,12 @@ ISR(USCIAB0RX, uart0_rx_interrupt)
       }
     }
   }
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 #endif /* !RX_WITH_DMA */
 /*---------------------------------------------------------------------------*/
 #if TX_WITH_INTERRUPT
 ISR(USCIAB0TX, uart0_tx_interrupt)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
   if((IFG2 & UCA0TXIFG)) {
 
     if(ringbuf_elements(&txbuf) == 0) {
@@ -216,8 +212,6 @@ ISR(USCIAB0TX, uart0_tx_interrupt)
 
   /* In a stand-alone app won't work without this. Is the UG misleading? */
   IFG2 &= ~UCA0TXIFG;
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 #endif /* TX_WITH_INTERRUPT */
 /*---------------------------------------------------------------------------*/

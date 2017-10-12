@@ -68,8 +68,6 @@ __attribute__ ((__naked__))
 void
 svcall_handler(void)
 {
-  /* This is a controlled system handler, so do not use ENERGEST_TYPE_IRQ. */
-
   /*
    * Decide whether to switch to the main thread or to a process thread,
    * depending on the type of the thread preempted by SVCall.
@@ -124,8 +122,6 @@ __attribute__ ((__naked__))
 void
 pendsv_handler(void)
 {
-  /* This is a controlled system handler, so do not use ENERGEST_TYPE_IRQ. */
-
   /*
    * Return without doing anything if PendSV has not preempted a process thread.
    * This can occur either because PendSV has preempted the main thread, in

@@ -36,7 +36,6 @@
  * Implementation of the cc2538 UART driver
  */
 #include "contiki.h"
-#include "sys/energest.h"
 #include "dev/sys-ctrl.h"
 #include "dev/ioc.h"
 #include "dev/gpio.h"
@@ -363,8 +362,6 @@ uart_isr(uint8_t uart)
   uint32_t uart_base;
   uint16_t mis;
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   uart_base = uart_regs[uart].base;
 
   /* Store the current MIS and clear all flags early, except the RTM flag.
@@ -387,8 +384,6 @@ uart_isr(uint8_t uart)
     /* ISR triggered due to some error condition */
     reset(uart_base);
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 #define UART_ISR(u)  void uart##u##_isr(void) { uart_isr(u); }
