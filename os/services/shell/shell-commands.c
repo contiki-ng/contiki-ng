@@ -685,6 +685,9 @@ shell_commands_init(void)
                                     echo_reply_handler);
   /* Start with soft log level 0 so as to minimize interference with shell */
   log_set_level("all", LOG_LEVEL_NONE);
+#if MAC_CONF_WITH_TSCH && TSCH_LOG_PER_SLOT
+  tsch_log_stop();
+#endif /* MAC_CONF_WITH_TSCH && TSCH_LOG_PER_SLOT */
 }
 /*---------------------------------------------------------------------------*/
 struct shell_command_t shell_commands[] = {
