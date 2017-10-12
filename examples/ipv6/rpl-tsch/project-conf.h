@@ -35,9 +35,6 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
-/* Set to use the Contiki shell */
-#define WITH_SHELL 1
-
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
 #define WITH_SECURITY 0
@@ -49,17 +46,9 @@
 
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
 
-/*******************************************************/
-/********************* Configure TSCH *********************/
-/*******************************************************/
-
-#if WITH_SHELL
-
 /* USB serial takes space, free more space elsewhere */
 #define SICSLOWPAN_CONF_FRAG 0
 #define UIP_CONF_BUFFER_SIZE 160
-
-#endif /* WITH_SHELL */
 
 /*******************************************************/
 /******************* Configure TSCH ********************/

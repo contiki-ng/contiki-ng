@@ -35,9 +35,6 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
-/* Set to use the Contiki shell */
-#define WITH_SHELL 1
-
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
 #define WITH_SECURITY 0

@@ -47,9 +47,6 @@
 #if UIP_CONF_IPV6_RPL_LITE == 0
 #include "rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
-#if WITH_SHELL
-#include "serial-shell.h"
-#endif /* WITH_SHELL */
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
@@ -66,12 +63,6 @@ PROCESS_THREAD(node_process, ev, data)
   PROCESS_BEGIN();
 
   is_coordinator = 0;
-
-#if WITH_SHELL
-  serial_shell_init();
-  log_set_level("all", LOG_LEVEL_WARN);
-  tsch_log_stop();
-#endif /* WITH_SHELL */
 
 #if CONTIKI_TARGET_COOJA
   is_coordinator = (node_id == 1);
