@@ -176,7 +176,7 @@ ifdef MODULES
   MODULEDIRS = ${wildcard ${addprefix $(CONTIKI)/, $(UNIQUEMODULES)}}
   MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
   MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
-  -include $(MODULE_INCLUDES)
+  include $(MODULES_INCLUDES)
   CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 endif
 
