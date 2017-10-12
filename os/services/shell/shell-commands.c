@@ -64,6 +64,7 @@
 #include "net/rpl-classic/rpl.h"
 #include "net/rpl-classic/rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/mac/llsec802154.h"
 
 #include <stdlib.h>
 
@@ -421,6 +422,7 @@ static
 PT_THREAD(cmd_tsch_set_coordinator(struct pt *pt, shell_output_func output, char *args))
 {
   static int is_on;
+  static int is_secured;
   char *next_args;
 
   PT_BEGIN(pt);
@@ -435,11 +437,34 @@ PT_THREAD(cmd_tsch_set_coordinator(struct pt *pt, shell_output_func output, char
   } else if(!strcmp(args, "0")) {
     is_on = 0;
   } else {
-    SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
+    SHELL_OUTPUT(output, "Invalid first argument: %s\n", args);
     PT_EXIT(pt);
   }
 
-  SHELL_OUTPUT(output, "Setting as TSCH coordinator\n");
+  /* Get first second arg (prefix) */
+  SHELL_ARGS_NEXT(args, next_args);
+  if(args != NULL) {
+    if(!strcmp(args, "1")) {
+#if LLSEC802154_ENABLED
+      is_secured = 1;
+#else /* LLSEC802154_ENABLED */
+      SHELL_OUTPUT(output, "Security is not compiled in.\n");
+      is_secured = 0;
+#endif /* LLSEC802154_ENABLED */
+    } else if(!strcmp(args, "0")) {
+      is_secured = 0;
+    } else {
+      SHELL_OUTPUT(output, "Invalid second argument: %s\n", args);
+      PT_EXIT(pt);
+    }
+  } else {
+    is_secured = 0;
+  }
+
+  SHELL_OUTPUT(output, "Setting as TSCH %s (%s)\n",
+    is_on ? "coordinator" : "non-coordinator", is_secured ? "secured" : "non-secured");
+
+  tsch_set_pan_secured(is_secured);
   tsch_set_coordinator(is_on);
 
   PT_END(pt);
@@ -703,7 +728,7 @@ struct shell_command_t shell_commands[] = {
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
 #if MAC_CONF_WITH_TSCH
-  { "tsch-set-coordinator", cmd_tsch_set_coordinator, "'> tsch-set-coordinator 0/1': Sets node as coordinator (1) or not (0)" },
+  { "tsch-set-coordinator", cmd_tsch_set_coordinator, "'> tsch-set-coordinator 0/1 [0/1]': Sets node as coordinator (1) or not (0). Second, optional parameter: enable (1) or disable (0) security." },
   { "tsch-schedule",        cmd_tsch_schedule,        "'> tsch-schedule': Shows the current TSCH schedule" },
   { "tsch-status",          cmd_tsch_status,          "'> tsch-status': Shows a summary of the current TSCH state" },
 #endif /* MAC_CONF_WITH_TSCH */
