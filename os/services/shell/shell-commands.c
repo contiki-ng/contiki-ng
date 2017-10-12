@@ -418,6 +418,34 @@ PT_THREAD(cmd_ip_neighbors(struct pt *pt, shell_output_func output, char *args))
 #if MAC_CONF_WITH_TSCH
 /*---------------------------------------------------------------------------*/
 static
+PT_THREAD(cmd_tsch_set_coordinator(struct pt *pt, shell_output_func output, char *args))
+{
+  static int is_on;
+  char *next_args;
+
+  PT_BEGIN(pt);
+
+  SHELL_ARGS_INIT(args, next_args);
+
+  /* Get first arg (0/1) */
+  SHELL_ARGS_NEXT(args, next_args);
+
+  if(!strcmp(args, "1")) {
+    is_on = 1;
+  } else if(!strcmp(args, "0")) {
+    is_on = 0;
+  } else {
+    SHELL_OUTPUT(output, "Invalid argument: %s\n", args);
+    PT_EXIT(pt);
+  }
+
+  SHELL_OUTPUT(output, "Setting as TSCH coordinator\n");
+  tsch_set_coordinator(is_on);
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
 PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
 {
   PT_BEGIN(pt);
@@ -666,12 +694,13 @@ struct shell_command_t shell_commands[] = {
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
   { "log",                  cmd_log,                  "'> log module level': Sets log level (0--4) for a given module (or \"all\"). For module \"mac\", level 4 also enables per-slot logging." },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
-  { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (on) or not (off). A /64 prefix can be optionally specified." },
+  { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },
   { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
 #if MAC_CONF_WITH_TSCH
+  { "tsch-set-coordinator", cmd_tsch_set_coordinator, "'> tsch-set-coordinator 0/1': Sets node as coordinator (1) or not (0)" },
   { "tsch-schedule",        cmd_tsch_schedule,        "'> tsch-schedule': Shows the current TSCH schedule" },
   { "tsch-status",          cmd_tsch_status,          "'> tsch-status': Shows a summary of the current TSCH state" },
 #endif /* MAC_CONF_WITH_TSCH */
