@@ -50,9 +50,6 @@
 
 #define TSCH_CONF_AUTOSTART 0
 
-#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
-#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
-
 /* RPL Trickle timer tuning */
 #define RPL_CONF_DIO_INTERVAL_MIN 12 /* 4.096 s */
 

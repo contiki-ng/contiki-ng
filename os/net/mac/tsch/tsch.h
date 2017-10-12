@@ -163,6 +163,23 @@ frequency hopping for enhanced reliability.
 
 /*********** Callbacks *********/
 
+/* Link callbacks to RPL in case RPL is enabled */
+#if UIP_CONF_IPV6_RPL
+
+#ifndef TSCH_CALLBACK_JOINING_NETWORK
+#define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
+#endif /* TSCH_CALLBACK_JOINING_NETWORK */
+
+#ifndef TSCH_CALLBACK_LEAVING_NETWORK
+#define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
+#endif /* TSCH_CALLBACK_LEAVING_NETWORK */
+
+#ifndef TSCH_CALLBACK_KA_SENT
+#define TSCH_CALLBACK_KA_SENT tsch_rpl_callback_ka_sent
+#endif /* TSCH_CALLBACK_KA_SENT */
+
+#endif /* UIP_CONF_IPV6_RPL */
+
 /* Called by TSCH when joining a network */
 #ifdef TSCH_CALLBACK_JOINING_NETWORK
 void TSCH_CALLBACK_JOINING_NETWORK();

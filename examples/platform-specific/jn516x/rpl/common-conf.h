@@ -53,13 +53,6 @@
 #define WITH_SECURITY 0
 #endif /* WITH_SECURITY */
 
-/* TSCH and RPL callbacks */
-#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
-#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
-#define TSCH_CALLBACK_KA_SENT tsch_rpl_callback_ka_sent
-#define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
-#define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
-
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #define TSCH_CONF_AUTOSTART 0
 

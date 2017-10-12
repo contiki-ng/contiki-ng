@@ -40,22 +40,6 @@
 /* Save some space */
 #define SICSLOWPAN_CONF_FRAG 0
 
-#if MAC_CONF_WITH_TSCH
-/*******************************************************/
-/********************* Configure TSCH *********************/
-/*******************************************************/
-
-/* TSCH and RPL callbacks */
-#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
-#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
-#define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
-#define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
-
-/*******************************************************/
-/******************* Configure TSCH ********************/
-/*******************************************************/
-#endif /* MAC_CONF_WITH_TSCH */
-
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #define TSCH_CONF_AUTOSTART 0
 
