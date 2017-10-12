@@ -96,6 +96,10 @@ extern uint32_t heap_location;
 #include "experiment-setup.h"
 #endif
 
+#if BUILD_WITH_SHELL
+#include "serial-shell.h"
+#endif /* BUILD_WITH_SHELL */
+
 /* _EXTRA_LPM is the sleep mode, _LPM is the doze mode */
 #define ENERGEST_TYPE_EXTRA_LPM ENERGEST_TYPE_LPM
 
@@ -345,6 +349,10 @@ main(void)
   /* need this to reliably generate the first rtimer callback and callbacks in other
      auto-start processes */
   (void)u32AHI_Init();
+
+#if BUILD_WITH_SHELL
+  serial_shell_init();
+#endif /* BUILD_WITH_SHELL */
 
   start_autostart_processes();
 

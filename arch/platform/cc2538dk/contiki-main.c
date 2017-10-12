@@ -68,6 +68,9 @@
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
+#if BUILD_WITH_SHELL
+#include "serial-shell.h"
+#endif /* BUILD_WITH_SHELL */
 
 #include <stdint.h>
 #include <string.h>
@@ -223,6 +226,10 @@ main(void)
 
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
+
+#if BUILD_WITH_SHELL
+  serial_shell_init();
+#endif /* BUILD_WITH_SHELL */
 
   autostart_start(autostart_processes);
 

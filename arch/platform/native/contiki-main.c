@@ -69,6 +69,10 @@
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
+#if BUILD_WITH_SHELL
+#include "serial-shell.h"
+#endif /* BUILD_WITH_SHELL */
+
 #ifdef SELECT_CONF_MAX
 #define SELECT_MAX SELECT_CONF_MAX
 #else
@@ -273,6 +277,10 @@ main(int argc, char **argv)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   serial_line_init();
+
+#if BUILD_WITH_SHELL
+  serial_shell_init();
+#endif /* BUILD_WITH_SHELL */
 
   autostart_start(autostart_processes);
 

@@ -61,7 +61,9 @@
 #include "dev/vib-sensor.h"
 
 #include "sys/node-id.h"
-
+#if BUILD_WITH_SHELL
+#include "serial-shell.h"
+#endif /* BUILD_WITH_SHELL */
 
 /* JNI-defined functions, depends on the environment variable CLASSNAME */
 #ifndef CLASSNAME
@@ -257,6 +259,10 @@ contiki_init()
 
   /* Start serial process */
   serial_line_init();
+
+#if BUILD_WITH_SHELL
+  serial_shell_init();
+#endif /* BUILD_WITH_SHELL */
 
   /* Start autostart processes (defined in Contiki application) */
   print_processes(autostart_processes);

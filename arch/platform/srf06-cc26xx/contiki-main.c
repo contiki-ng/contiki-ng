@@ -71,6 +71,10 @@
 
 #include "driverlib/driverlib_release.h"
 
+#if BUILD_WITH_SHELL
+#include "serial-shell.h"
+#endif /* BUILD_WITH_SHELL */
+
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 unsigned short node_id = 0;
@@ -225,6 +229,10 @@ main(void)
   fade(LEDS_GREEN);
 
   process_start(&sensors_process, NULL);
+
+#if BUILD_WITH_SHELL
+  serial_shell_init();
+#endif /* BUILD_WITH_SHELL */
 
   autostart_start(autostart_processes);
 
