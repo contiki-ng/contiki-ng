@@ -84,7 +84,7 @@ frequency hopping for enhanced reliability.
 #ifdef TSCH_CONF_MAX_EB_PERIOD
 #define TSCH_MAX_EB_PERIOD TSCH_CONF_MAX_EB_PERIOD
 #else
-#define TSCH_MAX_EB_PERIOD (50 * CLOCK_SECOND)
+#define TSCH_MAX_EB_PERIOD (16 * CLOCK_SECOND)
 #endif
 
 /* Max acceptable join priority */
