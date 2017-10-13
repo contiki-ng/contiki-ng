@@ -47,8 +47,6 @@
 
 #include "sys/pt.h"
 
-#include "sys/procinit.h"
-
 #include "sys/clock.h"
 
 #include "sys/energest.h"
