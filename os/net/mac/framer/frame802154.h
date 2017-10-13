@@ -78,7 +78,7 @@
 #define FRAME802154_VERSION FRAME802154_CONF_VERSION
 #else /* FRAME802154_CONF_VERSION */
 /* Use frame v2 if TSCH is used, otherwise stick to v1 (more
-frame-fileting-friendly on some platforms) */
+frame-filtering-friendly on some platforms) */
 #if MAC_CONF_WITH_TSCH
 #define FRAME802154_VERSION FRAME802154_IEEE802154_2015
 #else /* MAC_CONF_WITH_TSCH */
