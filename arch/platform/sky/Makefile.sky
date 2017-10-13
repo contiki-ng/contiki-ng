@@ -2,7 +2,7 @@
 
 CONTIKI_TARGET_SOURCEFILES += contiki-sky-platform.c \
 	sht11.c sht11-sensor.c light-sensor.c battery-sensor.c \
-	button-sensor.c radio-sensor.c
+	button-sensor.c
 
 include $(CONTIKI)/arch/platform/sky/Makefile.common
 

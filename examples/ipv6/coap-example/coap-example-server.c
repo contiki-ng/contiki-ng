@@ -91,7 +91,6 @@ extern resource_t res_temperature;
 extern resource_t res_battery;
 #endif
 #if PLATFORM_HAS_RADIO
-#include "dev/radio-sensor.h"
 extern resource_t res_radio;
 #endif
 #if PLATFORM_HAS_SHT11
@@ -157,8 +156,7 @@ PROCESS_THREAD(er_example_server, ev, data)
 #endif
 /*
 #if PLATFORM_HAS_RADIO
-  rest_activate_resource(&res_radio, "sensors/radio");  
-  SENSORS_ACTIVATE(radio_sensor);  
+  rest_activate_resource(&res_radio, "sensors/radio");
 #endif
 #if PLATFORM_HAS_SHT11
   rest_activate_resource(&res_sht11, "sensors/sht11");  
