@@ -47,7 +47,6 @@
 
 #include "contiki.h"
 #include "sys/process.h"
-#include "sys/arg.h"
 
 /*
  * Pointer to the currently running process structure.
