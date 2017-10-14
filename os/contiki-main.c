@@ -66,6 +66,7 @@ main(void)
   process_init();
   process_start(&etimer_process, NULL);
   ctimer_init();
+  watchdog_init();
 
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
