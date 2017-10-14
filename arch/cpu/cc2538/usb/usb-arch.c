@@ -37,7 +37,6 @@
  *     the cc2530 driver written by Philippe Retornaz
  */
 #include "contiki.h"
-#include "energest.h"
 #include "usb-arch.h"
 #include "usb-api.h"
 #include "dev/usb-regs.h"
@@ -1257,8 +1256,6 @@ usb_isr(void)
   uint8_t common_if = REG(USB_CIF) & REG(USB_CIE);
   uint8_t i;
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(ep_in_if) {
     /* EP0 flag is in the IN Interrupt Flags register */
     if(ep_in_if & USB_IIF_EP0IF) {
@@ -1287,8 +1284,6 @@ usb_isr(void)
   if(common_if & USB_CIF_SUSPENDIF) {
     notify_process(USB_EVENT_SUSPEND);
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 

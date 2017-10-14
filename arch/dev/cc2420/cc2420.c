@@ -695,9 +695,6 @@ cc2420_transmit(unsigned short payload_len)
 	 accurate measurement of the transmission time.*/
       wait_for_transmission();
 
-#ifdef ENERGEST_CONF_LEVELDEVICE_LEVELS
-      ENERGEST_OFF_LEVEL(ENERGEST_TYPE_TRANSMIT,cc2420_get_txpower());
-#endif
       ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
       if(receive_on) {
 	ENERGEST_ON(ENERGEST_TYPE_LISTEN);

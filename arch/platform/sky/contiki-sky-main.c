@@ -335,8 +335,6 @@ main(int argc, char **argv)
     if(process_nevents() != 0 || uart1_active()) {
       splx(s);			/* Re-enable interrupts. */
     } else {
-      static unsigned long irq_energest = 0;
-
 #if DCOSYNCH_CONF_ENABLED
       /* before going down to sleep possibly do some management */
       if(timer_expired(&mgt_timer)) {
@@ -351,10 +349,6 @@ main(int argc, char **argv)
 
       /* Re-enable interrupts and go to sleep atomically. */
       ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
-      /* We only want to measure the processing done in IRQs when we
-	 are asleep, so we discard the processing time done when we
-	 were awake. */
-      energest_type_set(ENERGEST_TYPE_IRQ, irq_energest);
       watchdog_stop();
       /* check if the DCO needs to be on - if so - only LPM 1 */
       if (msp430_dco_required) {
@@ -367,11 +361,6 @@ main(int argc, char **argv)
 						interrupt that sets
 						the wake up flag. */
       }
-      /* We get the current processing time for interrupts that was
-	 done during the LPM and store it for next time around.  */
-      dint();
-      irq_energest = energest_type_time(ENERGEST_TYPE_IRQ);
-      eint();
       watchdog_start();
       ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
     }

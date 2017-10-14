@@ -63,8 +63,6 @@ static uint8_t txbuf_data[TXBUFSIZE];
 static void
 uart_event_handler(nrf_drv_uart_event_t * p_event, void * p_context)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if (p_event->type == NRF_DRV_UART_EVT_RX_DONE) {
     if (uart0_input_handler != NULL) {
       uart0_input_handler(p_event->data.rxtx.p_data[0]);
@@ -76,8 +74,6 @@ uart_event_handler(nrf_drv_uart_event_t * p_event, void * p_context)
       nrf_drv_uart_tx(&c, 1);
     }
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

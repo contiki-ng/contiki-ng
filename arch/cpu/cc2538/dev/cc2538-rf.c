@@ -638,8 +638,7 @@ transmit(unsigned short transmit_len)
   }
 
   /* Start the transmission */
-  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-  ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
+  ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
 
   CC2538_RF_CSP_ISTXON();
 
@@ -658,8 +657,7 @@ transmit(unsigned short transmit_len)
     while(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
     ret = RADIO_TX_OK;
   }
-  ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
-  ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+  ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
 
   if(was_off) {
     off();
@@ -1060,16 +1058,12 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
 void
 cc2538_rf_rx_tx_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(!poll_mode) {
     process_poll(&cc2538_rf_process);
   }
 
   /* We only acknowledge FIFOP so we can safely wipe out the entire SFR */
   REG(RFCORE_SFR_RFIRQF0) = 0;
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -1091,8 +1085,6 @@ cc2538_rf_rx_tx_isr(void)
 void
 cc2538_rf_err_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   PRINTF("RF Error: 0x%08lx\n", REG(RFCORE_SFR_RFERRF));
 
   /* If the error is not an RX FIFO overflow, set a flag */
@@ -1103,8 +1095,6 @@ cc2538_rf_err_isr(void)
   REG(RFCORE_SFR_RFERRF) = 0;
 
   process_poll(&cc2538_rf_process);
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

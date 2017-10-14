@@ -40,7 +40,6 @@
  * Implementation of the cc2538 PKA engine driver
  */
 #include "contiki.h"
-#include "sys/energest.h"
 #include "dev/pka.h"
 #include "dev/sys-ctrl.h"
 #include "dev/nvic.h"
@@ -62,8 +61,6 @@ static volatile struct process *notification_process = NULL;
 void
 pka_isr(void)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   NVIC_ClearPendingIRQ(PKA_IRQn);
   NVIC_DisableIRQ(PKA_IRQn);
 
@@ -71,8 +68,6 @@ pka_isr(void)
     process_poll((struct process *)notification_process);
     notification_process = NULL;
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 static bool

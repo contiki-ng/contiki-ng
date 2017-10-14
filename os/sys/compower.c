@@ -59,8 +59,8 @@ compower_init(void)
 void
 compower_accumulate(struct compower_activity *e)
 {
-  static uint32_t last_listen, last_transmit;
-  uint32_t listen, transmit;
+  static uint64_t last_listen, last_transmit;
+  uint64_t listen, transmit;
 
   energest_flush();
 

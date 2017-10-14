@@ -37,7 +37,6 @@
  */
 
 #include "contiki.h"
-#include "sys/energest.h"
 #include "sys/rtimer.h"
 #include "sys/process.h"
 #include "dev/watchdog.h"
@@ -54,8 +53,6 @@
 /*---------------------------------------------------------------------------*/
 ISR(TIMER1_A0, timera0)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   watchdog_start();
 
   rtimer_run_next();
@@ -65,8 +62,6 @@ ISR(TIMER1_A0, timera0)
   }
 
   watchdog_stop();
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

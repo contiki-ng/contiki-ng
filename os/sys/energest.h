@@ -40,85 +40,126 @@
 #ifndef ENERGEST_H_
 #define ENERGEST_H_
 
-#include "sys/rtimer.h"
+#include "contiki.h"
 
-typedef struct {
-  /*  unsigned long cumulative[2];*/
-  unsigned long current;
-} energest_t;
+#ifndef ENERGEST_CURRENT_TIME
+#ifdef ENERGEST_CONF_CURRENT_TIME
+#define ENERGEST_CURRENT_TIME ENERGEST_CONF_CURRENT_TIME
+#else
+#define ENERGEST_CURRENT_TIME RTIMER_NOW
+#define ENERGEST_SECOND RTIMER_SECOND
+#endif /* ENERGEST_CONF_TIME */
+#endif /* ENERGEST_TIME */
 
-enum energest_type {
+#ifndef ENERGEST_SECOND
+#ifdef ENERGEST_CONF_SECOND
+#define ENERGEST_SECOND ENERGEST_CONF_SECOND
+#else /* ENERGEST_CONF_SECOND */
+#define ENERGEST_SECOND RTIMER_SECOND
+#endif /* ENERGEST_CONF_SECOND */
+#endif /* ENERGEST_SECOND */
+
+/*
+ * Optional support for more energest types.
+ *
+ * #define ENERGEST_CONF_PLATFORM_ADDITIONS TYPE_NAME1, TYPE_NAME2
+ *
+ * #define ENERGEST_CONF_ADDITIONS TYPE_NAME3, TYPE_NAME4
+ */
+typedef enum energest_type {
   ENERGEST_TYPE_CPU,
   ENERGEST_TYPE_LPM,
-  ENERGEST_TYPE_IRQ,
-  ENERGEST_TYPE_LED_GREEN,
-  ENERGEST_TYPE_LED_YELLOW,
-  ENERGEST_TYPE_LED_RED,
   ENERGEST_TYPE_TRANSMIT,
   ENERGEST_TYPE_LISTEN,
 
-  ENERGEST_TYPE_FLASH_READ,
-  ENERGEST_TYPE_FLASH_WRITE,
+#ifdef ENERGEST_CONF_PLATFORM_ADDITIONS
+  ENERGEST_CONF_PLATFORM_ADDITIONS,
+#endif /* ENERGEST_CONF_PLATFORM_ADDITIONS */
 
-  ENERGEST_TYPE_SENSORS,
-
-  ENERGEST_TYPE_SERIAL,
+#ifdef ENERGEST_CONF_ADDITIONS
+  ENERGEST_CONF_ADDITIONS,
+#endif /* ENERGEST_CONF_ADDITIONS */
 
   ENERGEST_TYPE_MAX
-};
+} energest_type_t;
 
 void energest_init(void);
-unsigned long energest_type_time(int type);
-#ifdef ENERGEST_CONF_LEVELDEVICE_LEVELS
-unsigned long energest_leveldevice_leveltime(int powerlevel);
-#endif
-void energest_type_set(int type, unsigned long value);
 void energest_flush(void);
 
 #if ENERGEST_CONF_ON
-/*extern int energest_total_count;*/
-extern energest_t energest_total_time[ENERGEST_TYPE_MAX];
-extern rtimer_clock_t energest_current_time[ENERGEST_TYPE_MAX];
+
+extern uint64_t energest_total_time[ENERGEST_TYPE_MAX];
+extern uint64_t energest_current_time[ENERGEST_TYPE_MAX];
 extern unsigned char energest_current_mode[ENERGEST_TYPE_MAX];
 
-#ifdef ENERGEST_CONF_LEVELDEVICE_LEVELS
-extern energest_t energest_leveldevice_current_leveltime[ENERGEST_CONF_LEVELDEVICE_LEVELS];
-#endif
+static inline uint64_t
+energest_type_time(energest_type_t type)
+{
+  return energest_total_time[type];
+}
 
-#define ENERGEST_ON(type)  do { \
-                           /*++energest_total_count;*/ \
-                           energest_current_time[type] = RTIMER_NOW(); \
-			   energest_current_mode[type] = 1; \
-                           } while(0)
+static inline void
+energest_type_set(energest_type_t type, uint64_t value)
+{
+  energest_total_time[type] = value;
+}
 
-#define ENERGEST_OFF(type) if(energest_current_mode[type] != 0) do {	\
-                           energest_total_time[type].current += (rtimer_clock_t)(RTIMER_NOW() - \
-                           energest_current_time[type]); \
-			   energest_current_mode[type] = 0; \
-                           } while(0)
+static inline void
+energest_on(energest_type_t type)
+{
+  if(energest_current_mode[type] == 0) {
+    energest_current_time[type] = ENERGEST_CURRENT_TIME();
+    energest_current_mode[type] = 1;
+  }
+}
+#define ENERGEST_ON(type) energest_on(type)
 
-#define ENERGEST_OFF_LEVEL(type,level) do { \
-                                        energest_leveldevice_current_leveltime[level].current += (rtimer_clock_t)(RTIMER_NOW() - \
-			                energest_current_time[type]); \
-			   energest_current_mode[type] = 0; \
-                                        } while(0)
+static inline void
+energest_off(energest_type_t type)
+{
+ if(energest_current_mode[type] != 0) {
+   energest_total_time[type].current +=
+     ENERGEST_CURRENT_TIME() - energest_current_time[type];
+   energest_current_mode[type] = 0;
+ }
+}
+#define ENERGEST_OFF(type) energest_off(type)
 
-#define ENERGEST_SWITCH(type_off, type_on) do { \
-                                             rtimer_clock_t energest_local_variable_now = RTIMER_NOW(); \
-                                             if(energest_current_mode[type_off] != 0) { \
-                                               energest_total_time[type_off].current += (rtimer_clock_t)(energest_local_variable_now - \
-                                                 energest_current_time[type_off]); \
-                                               energest_current_mode[type_off] = 0; \
-                                             } \
-                                             energest_current_time[type_on] = energest_local_variable_now; \
-                                             energest_current_mode[type_on] = 1; \
-                                           } while(0)
+static inline void
+energest_switch(energest_type_t type_off, energest_type_t type_on)
+{
+  uint64_t energest_local_variable_now = ENERGEST_CURRENT_TIME();
+  if(energest_current_mode[type_off] != 0) {
+    energest_total_time[type_off].current +=
+      energest_local_variable_now - energest_current_time[type_off];
+    energest_current_mode[type_off] = 0;
+  }
+  if(energest_current_mode[type_on] == 0) {
+    energest_current_time[type_on] = energest_local_variable_now;
+    energest_current_mode[type_on] = 1;
+  }
+}
+#define ENERGEST_SWITCH(type_off, type_on) energest_switch(type_off, type_on)
 
 #else /* ENERGEST_CONF_ON */
+
+static inline uint64_t energest_type_time(energest_type_t type) { return 0; }
+
+static inline void energest_type_set(energest_type_t type, uint64_t time) { }
+
+static inline void energest_on(energest_type_t type) { }
+
+static inline void energest_off(energest_type_t type) { }
+
+static inline void energest_switch(energest_type_t type_off,
+                                   energest_type_t type_on)
+{
+}
+
 #define ENERGEST_ON(type) do { } while(0)
 #define ENERGEST_OFF(type) do { } while(0)
-#define ENERGEST_OFF_LEVEL(type,level) do { } while(0)
 #define ENERGEST_SWITCH(type_off, type_on) do { } while(0)
+
 #endif /* ENERGEST_CONF_ON */
 
 #endif /* ENERGEST_H_ */

@@ -50,13 +50,9 @@
 /*---------------------------------------------------------------------------*/
 ISR(CC2420_IRQ, cc2420_port1_interrupt)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(cc2420_interrupt()) {
     LPM4_EXIT;
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

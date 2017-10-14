@@ -32,40 +32,13 @@
 
 #include "dev/leds.h"
 #include "sys/clock.h"
-#include "sys/energest.h"
 
 static unsigned char leds;
 /*---------------------------------------------------------------------------*/
-static void
+static inline void
 show_leds(unsigned char new_leds)
 {
-  unsigned char changed;
-  changed = leds ^ new_leds;
-  leds = new_leds;
-
-  if(changed & LEDS_GREEN) {
-    /* Green did change */
-    if(leds & LEDS_GREEN) {
-      ENERGEST_ON(ENERGEST_TYPE_LED_GREEN);
-    } else {
-      ENERGEST_OFF(ENERGEST_TYPE_LED_GREEN);
-    }
-  }
-  if(changed & LEDS_YELLOW) {
-    if(leds & LEDS_YELLOW) {
-      ENERGEST_ON(ENERGEST_TYPE_LED_YELLOW);
-    } else {
-      ENERGEST_OFF(ENERGEST_TYPE_LED_YELLOW);
-    }
-  }
-  if(changed & LEDS_RED) {
-    if(leds & LEDS_RED) {
-      ENERGEST_ON(ENERGEST_TYPE_LED_RED);
-    } else {
-      ENERGEST_OFF(ENERGEST_TYPE_LED_RED);
-    }
-  }
-  leds_arch_set(leds);
+  leds_arch_set(new_leds);
 }
 /*---------------------------------------------------------------------------*/
 void

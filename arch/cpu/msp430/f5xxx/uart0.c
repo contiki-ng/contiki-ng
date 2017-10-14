@@ -35,7 +35,6 @@
 
 #include "contiki.h"
 #include <stdlib.h>
-#include "sys/energest.h"
 #include "dev/uart0.h"
 #include "dev/watchdog.h"
 #include "isr_compat.h"
@@ -103,7 +102,6 @@ ISR(USCI_A0, uart0_rx_interrupt)
 {
   uint8_t c;
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
   if(UCA0IV == 2) {
     if(UCA0STAT & UCRXERR) {
       c = UCA0RXBUF;   /* Clear error flags by forcing a dummy read. */
@@ -116,6 +114,5 @@ ISR(USCI_A0, uart0_rx_interrupt)
       }
     }
   }
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/

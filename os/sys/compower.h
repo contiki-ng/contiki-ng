@@ -62,7 +62,7 @@
  *             with no user-visible elements.
  */
 struct compower_activity {
-  uint32_t listen, transmit;
+  uint64_t listen, transmit;
 };
 
 /**

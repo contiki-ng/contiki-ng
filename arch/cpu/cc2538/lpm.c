@@ -51,18 +51,6 @@
 
 #if LPM_CONF_ENABLE != 0
 /*---------------------------------------------------------------------------*/
-#if ENERGEST_CONF_ON
-static unsigned long irq_energest = 0;
-
-#define ENERGEST_IRQ_SAVE(a) do { \
-    a = energest_type_time(ENERGEST_TYPE_IRQ); } while(0)
-#define ENERGEST_IRQ_RESTORE(a) do { \
-    energest_type_set(ENERGEST_TYPE_IRQ, a); } while(0)
-#else
-#define ENERGEST_IRQ_SAVE(a) do {} while(0)
-#define ENERGEST_IRQ_RESTORE(a) do {} while(0)
-#endif
-/*---------------------------------------------------------------------------*/
 /*
  * Deep Sleep thresholds in rtimer ticks (~30.5 usec)
  *
@@ -130,9 +118,6 @@ enter_pm0(void)
 {
   ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
 
-  /* We are only interested in IRQ energest while idle or in LPM */
-  ENERGEST_IRQ_RESTORE(irq_energest);
-
   /* Remember the current time so we can keep stats when we wake up */
   if(LPM_CONF_STATS) {
     sleep_enter_time = RTIMER_NOW();
@@ -142,9 +127,6 @@ enter_pm0(void)
 
   /* We reach here when the interrupt context that woke us up has returned */
   LPM_STATS_ADD(0, RTIMER_NOW() - sleep_enter_time);
-
-  /* Remember IRQ energest for next pass */
-  ENERGEST_IRQ_SAVE(irq_energest);
 
   ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
 }
@@ -233,9 +215,6 @@ lpm_exit()
   /* Restore PMCTL to PM0 for next pass */
   REG(SYS_CTRL_PMCTL) = SYS_CTRL_PMCTL_PM0;
 
-  /* Remember IRQ energest for next pass */
-  ENERGEST_IRQ_SAVE(irq_energest);
-
   ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
 }
 /*---------------------------------------------------------------------------*/
@@ -307,8 +286,6 @@ lpm_enter()
     REG(SYS_CTRL_PMCTL) = SYS_CTRL_PMCTL_PM1;
   }
 
-  /* We are only interested in IRQ energest while idle or in LPM */
-  ENERGEST_IRQ_RESTORE(irq_energest);
   ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
 
   /* Remember the current time so we can keep stats when we wake up */
@@ -333,8 +310,6 @@ lpm_enter()
 
     REG(SYS_CTRL_PMCTL) = SYS_CTRL_PMCTL_PM0;
 
-    /* Remember IRQ energest for next pass */
-    ENERGEST_IRQ_SAVE(irq_energest);
     ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
   } else {
     /* All clear. Assert WFI and drop to PM1/2. This is now un-interruptible */

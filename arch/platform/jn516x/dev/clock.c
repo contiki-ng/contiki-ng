@@ -42,7 +42,6 @@
 #include <AppHardwareApi.h>
 #include <PeripheralRegs.h>
 #include "contiki.h"
-#include "sys/energest.h"
 #include "sys/clock.h"
 #include "sys/etimer.h"
 #include "rtimer-arch.h"
@@ -130,8 +129,6 @@ clockTimerISR(uint32 u32Device, uint32 u32ItemBitmap)
     return;
   }
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(u32Device == CLOCK_TIMER_ISR_DEV) {
     check_etimers();
   }
@@ -139,8 +136,6 @@ clockTimerISR(uint32 u32Device, uint32 u32ItemBitmap)
   if(u32Device == OVERFLOW_TIMER_ISR_DEV) {
     check_rtimer_overflow(clock());
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void

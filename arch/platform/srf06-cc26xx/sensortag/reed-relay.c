@@ -63,7 +63,6 @@ static void
 reed_interrupt_handler(uint8_t ioid)
 {
   if(!timer_expired(&debouncetimer)) {
-    ENERGEST_OFF(ENERGEST_TYPE_IRQ);
     return;
   }
 

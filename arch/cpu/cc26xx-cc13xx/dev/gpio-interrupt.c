@@ -38,7 +38,6 @@
 /*---------------------------------------------------------------------------*/
 #include "ioc.h"
 #include "gpio-interrupt.h"
-#include "sys/energest.h"
 #include "lpm.h"
 #include "ti-lib.h"
 
@@ -83,8 +82,6 @@ gpio_interrupt_isr(void)
   uint32_t pin_mask;
   uint8_t i;
 
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   /* Read interrupt flags */
   pin_mask = (HWREG(GPIO_BASE + GPIO_O_EVFLAGS31_0) & GPIO_DIO_ALL_MASK);
 
@@ -98,8 +95,6 @@ gpio_interrupt_isr(void)
       handlers[i](i);
     }
   }
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -46,8 +46,6 @@ HWCONF_IRQ(BUTTON, 2, 7);
 /*---------------------------------------------------------------------------*/
 ISR(PORT2, irq_p2)
 {
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
   if(BUTTON_CHECK_IRQ()) {
     if(timer_expired(&debouncetimer)) {
       timer_set(&debouncetimer, CLOCK_SECOND / 4);
@@ -56,7 +54,6 @@ ISR(PORT2, irq_p2)
     }
   }
   P2IFG = 0x00;
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 static int
