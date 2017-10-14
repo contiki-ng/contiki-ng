@@ -50,7 +50,6 @@
 #include "leds.h"
 #include "lpm.h"
 #include "gpio-interrupt.h"
-#include "dev/watchdog.h"
 #include "dev/oscillators.h"
 #include "ieee-addr.h"
 #include "vims.h"
@@ -62,21 +61,14 @@
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "sys/node-id.h"
+#include "sys/platform.h"
 #include "lib/random.h"
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "dev/serial-line.h"
 #include "net/mac/framer/frame802154.h"
-#include "net/queuebuf.h"
 
 #include "driverlib/driverlib_release.h"
-
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
 
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
@@ -125,9 +117,13 @@ set_rf_params(void)
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
 
   NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &val);
+
+  /* also set the global node id */
+  node_id = short_addr;
+
+#if PLATFORM_STARTUP_VERBOSE
   printf(" RF: Channel %d\n", val);
 
-#if STARTUP_CONF_VERBOSE
   {
     int i;
     printf(" Link layer addr: ");
@@ -136,20 +132,13 @@ set_rf_params(void)
     }
     printf("%02x\n", linkaddr_node_addr.u8[i]);
   }
-#endif
 
-  /* also set the global node id */
-  node_id = short_addr;
   printf(" Node ID: %d\n", node_id);
+#endif
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Main function for CC26xx-based platforms
- *
- * The same main() is used for all supported boards
- */
-int
-main(void)
+void
+platform_init_stage_one()
 {
   /* Enable flash cache and prefetch. */
   ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
@@ -167,6 +156,7 @@ main(void)
   gpio_interrupt_init();
 
   leds_init();
+  fade(LEDS_RED);
 
   /*
    * Disable I/O pad sleep mode and open I/O latches in the AON IOC interface
@@ -176,17 +166,15 @@ main(void)
    */
   ti_lib_pwr_ctrl_io_freeze_disable();
 
-  fade(LEDS_RED);
-
   ti_lib_int_master_enable();
 
   soc_rtc_init();
-  clock_init();
-  rtimer_init();
-
-  watchdog_init();
-  process_init();
-
+  fade(LEDS_YELLOW);
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two()
+{
   random_init(0x1234);
 
   /* Character I/O Initialisation */
@@ -196,7 +184,15 @@ main(void)
 
   serial_line_init();
 
-  printf("Starting " CONTIKI_VERSION_STRING "\n");
+  fade(LEDS_GREEN);
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three()
+{
+  set_rf_params();
+
+#if PLATFORM_STARTUP_VERBOSE
   printf("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
          DRIVERLIB_RELEASE_BUILD);
   printf(BOARD_STRING "\n");
@@ -205,57 +201,17 @@ main(void)
          ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
          ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
          ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
-
-  process_start(&etimer_process, NULL);
-  ctimer_init();
-
-  energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
-
-  fade(LEDS_YELLOW);
-
-  printf(" Net: ");
-  printf("%s\n", NETSTACK_NETWORK.name);
-  printf(" MAC: ");
-  printf("%s\n", NETSTACK_MAC.name);
-
-  netstack_init();
-
-  set_rf_params();
-
-#if NETSTACK_CONF_WITH_IPV6
-  memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
-  queuebuf_init();
-  process_start(&tcpip_process, NULL);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
-  fade(LEDS_GREEN);
+#endif
 
   process_start(&sensors_process, NULL);
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
-  autostart_start(autostart_processes);
-
-  watchdog_start();
-
   fade(LEDS_ORANGE);
-
-  while(1) {
-    uint8_t r;
-    do {
-      r = process_run();
-      watchdog_periodic();
-    } while(r > 0);
-
-    /* Drop to some low power mode */
-    lpm_drop();
-  }
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_idle()
+{
+  /* Drop to some low power mode */
+  lpm_drop();
 }
 /*---------------------------------------------------------------------------*/
 /**
