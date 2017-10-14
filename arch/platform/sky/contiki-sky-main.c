@@ -53,6 +53,13 @@
 #include "cfs/cfs-coffee.h"
 #include "sys/autostart.h"
 
+#if BUILD_WITH_ORCHESTRA
+#include "orchestra.h"
+#endif /* BUILD_WITH_ORCHESTRA */
+#if BUILD_WITH_SHELL
+#include "serial-shell.h"
+#endif /* BUILD_WITH_SHELL */
+
 #if DCOSYNCH_CONF_ENABLED
 static struct timer mgt_timer;
 #endif
@@ -305,6 +312,13 @@ main(int argc, char **argv)
 #endif /* TIMESYNCH_CONF_ENABLED */
 
   watchdog_start();
+
+#if BUILD_WITH_ORCHESTRA
+  orchestra_init();
+#endif /* BUILD_WITH_ORCHESTRA */
+#if BUILD_WITH_SHELL
+  serial_shell_init();
+#endif /* BUILD_WITH_SHELL */
 
 #if !PROCESS_CONF_NO_PROCESS_NAMES
   print_processes(autostart_processes);

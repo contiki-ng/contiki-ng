@@ -1414,14 +1414,14 @@ uip_process(uint8_t flag)
 
   icmp6_input:
   /* This is IPv6 ICMPv6 processing code. */
-  LOG_INFO("icmp6: input length %d type: %d \n", uip_len, UIP_ICMP_BUF->type);
+  LOG_INFO("icmpv6 input length %d type: %d \n", uip_len, UIP_ICMP_BUF->type);
 
 #if UIP_CONF_IPV6_CHECKS
   /* Compute and check the ICMP header checksum */
   if(uip_icmp6chksum() != 0xffff) {
     UIP_STAT(++uip_stat.icmp.drop);
     UIP_STAT(++uip_stat.icmp.chkerr);
-    LOG_ERR("icmpv6: bad checksum\n");
+    LOG_ERR("icmpv6 bad checksum\n");
     goto drop;
   }
 #endif /*UIP_CONF_IPV6_CHECKS*/

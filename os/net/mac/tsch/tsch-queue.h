@@ -104,6 +104,18 @@
 
 /*********** Callbacks *********/
 
+#if BUILD_WITH_ORCHESTRA
+
+#ifndef TSCH_CALLBACK_NEW_TIME_SOURCE
+#define TSCH_CALLBACK_NEW_TIME_SOURCE orchestra_callback_new_time_source
+#endif /* TSCH_CALLBACK_NEW_TIME_SOURCE */
+
+#ifndef TSCH_CALLBACK_PACKET_READY
+#define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
+#endif /* TSCH_CALLBACK_PACKET_READY */
+
+#endif /* BUILD_WITH_ORCHESTRA */
+
 /* Called by TSCH when switching time source */
 #ifdef TSCH_CALLBACK_NEW_TIME_SOURCE
 struct tsch_neighbor;

@@ -172,7 +172,7 @@
 #ifdef TSCH_CONF_WITH_LINK_SELECTOR
 #define TSCH_WITH_LINK_SELECTOR TSCH_CONF_WITH_LINK_SELECTOR
 #else /* TSCH_CONF_WITH_LINK_SELECTOR */
-#define TSCH_WITH_LINK_SELECTOR 0
+#define TSCH_WITH_LINK_SELECTOR (BUILD_WITH_ORCHESTRA)
 #endif /* TSCH_CONF_WITH_LINK_SELECTOR */
 
 /* Estimate the drift of the time-source neighbor and compensate for it? */

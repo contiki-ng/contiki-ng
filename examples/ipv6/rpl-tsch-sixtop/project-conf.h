@@ -41,17 +41,10 @@
 /*******************************************************/
 #define UIP_CONF_MAX_ROUTES 0 /* No need for routes */
 #define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
-#define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common } /* Orchestra in non-storing */
 
 /*******************************************************/
 /********************* Enable TSCH *********************/
 /*******************************************************/
-
-/* TSCH and RPL callbacks */
-#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
-#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
-#define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
-#define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 
 /* Needed for CC2538 platforms only */
 /* For TSCH we have to use the more accurate crystal oscillator
@@ -71,9 +64,6 @@
 /******************* Configure TSCH ********************/
 /*******************************************************/
 
-/* TSCH logging. */
-#define TSCH_LOG_CONF_PER_SLOT 1
-
 /* IEEE802.15.4 PANID */
 #define IEEE802154_CONF_PANID 0xabcd
 
@@ -87,10 +77,6 @@
 
 /* Enable security */
 #define LLSEC802154_CONF_ENABLED 1
-/* TSCH uses explicit keys to identify k1 and k2 */
-#define LLSEC802154_CONF_USES_EXPLICIT_KEYS 1
-/* TSCH uses the ASN rather than frame counter to construct the Nonce */
-#define LLSEC802154_CONF_USES_FRAME_COUNTER 0
 
 #endif /* WITH_SECURITY */
 
@@ -113,8 +99,6 @@
  * a very short 6TiSCH minimal schedule length */
 #define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 65000
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 2
-/* Reduce log level to make space for security on z1 */
-#define TSCH_LOG_CONF_LEVEL 0
 #endif /* WITH_SECURITY */
 
 #endif /* CONTIKI_TARGET_Z1 */

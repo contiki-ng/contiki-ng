@@ -25,6 +25,6 @@ PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 # REST Engine shall use Erbium CoAP implementation
 MODULES += os/net/app-layer/coap
 
-CONTIKI_WITH_RPL = 0
+MAKE_ROUTING = MAKE_ROUTING_NONE
 
 include $(CONTIKI)/Makefile.include

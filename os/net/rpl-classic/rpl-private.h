@@ -271,6 +271,18 @@ typedef struct rpl_stats rpl_stats_t;
 extern rpl_stats_t rpl_stats;
 #endif
 
+/* RPL callbacks when TSCH is enabled */
+#if MAC_CONF_WITH_TSCH
+
+#ifndef RPL_CALLBACK_PARENT_SWITCH
+#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
+#endif /* RPL_CALLBACK_PARENT_SWITCH */
+
+#ifndef RPL_CALLBACK_NEW_DIO_INTERVAL
+#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
+#endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
+
+#endif /* MAC_CONF_WITH_TSCH */
 
 /*---------------------------------------------------------------------------*/
 /* RPL macros. */

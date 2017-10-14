@@ -5,5 +5,5 @@ CONTIKI = ../../..
 
 MODULES += os/net/ipv6/multicast
 
-CONTIKI_WITH_RPL_LITE = 1
+MAKE_ROUTING = MAKE_ROUTING_RPL_CLASSIC
 include $(CONTIKI)/Makefile.include

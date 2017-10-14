@@ -37,7 +37,6 @@
 /* Global config flags */
 
 #define WITH_TSCH_SECURITY 0
-#define TSCH_LOG_CONF_PER_SLOT 1
 #define WITH_COAP_RESOURCES 0
 
 #define ENABLE_COOJA_DEBUG 0
@@ -51,9 +50,6 @@
 
 #define TSCH_CONF_AUTOSTART 0
 
-#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
-#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
-
 /* RPL Trickle timer tuning */
 #define RPL_CONF_DIO_INTERVAL_MIN 12 /* 4.096 s */
 
@@ -61,13 +57,6 @@
 
 #define TSCH_CONF_EB_PERIOD (4 * CLOCK_SECOND)
 #define TSCH_CONF_KEEPALIVE_TIMEOUT (24 * CLOCK_SECOND)
-
-#define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0
-#define TSCH_CONF_WITH_LINK_SELECTOR 1
-#define TSCH_CALLBACK_NEW_TIME_SOURCE orchestra_callback_new_time_source
-#define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK orchestra_callback_child_added
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK orchestra_callback_child_removed
 
 /* Dimensioning */
 #define ORCHESTRA_CONF_EBSF_PERIOD                     41

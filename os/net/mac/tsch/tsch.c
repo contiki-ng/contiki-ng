@@ -185,6 +185,9 @@ static void packet_input(void);
 void
 tsch_set_coordinator(int enable)
 {
+  if(tsch_is_coordinator != enable) {
+    tsch_is_associated = 0;
+  }
   tsch_is_coordinator = enable;
   tsch_set_eb_period(TSCH_EB_PERIOD);
 }
