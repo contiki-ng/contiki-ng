@@ -99,6 +99,18 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /**
+ * Controls whether the main function accepts arguments
+ *
+ * By default our main does not accept arguments. However, when running on
+ * native targets, command line arguments to main are required.
+ */
+#ifdef PLATFORM_CONF_MAIN_ACCEPTS_ARGS
+#define PLATFORM_MAIN_ACCEPTS_ARGS PLATFORM_CONF_MAIN_ACCEPTS_ARGS
+#else
+#define PLATFORM_MAIN_ACCEPTS_ARGS 0
+#endif
+/*---------------------------------------------------------------------------*/
+/**
  * \brief Basic (Stage 1) platform driver initialisation.
  *
  * This function will get called early on in the Contiki-NG boot sequence.
