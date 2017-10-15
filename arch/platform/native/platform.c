@@ -164,7 +164,7 @@ set_lladdr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-  printf("Contiki started with address ");
+  printf("Contiki starting with address ");
   for(i = 0; i < sizeof(addr.u8) - 1; i++) {
     printf("%d.", addr.u8[i]);
   }
@@ -210,20 +210,10 @@ set_global_address(void)
 /*---------------------------------------------------------------------------*/
 int contiki_argc = 0;
 char **contiki_argv;
-
-int
-main(int argc, char **argv)
+/*---------------------------------------------------------------------------*/
+void
+platform_process_args(int argc, char**argv)
 {
-#if NETSTACK_CONF_WITH_IPV6
-#if UIP_CONF_IPV6_RPL
-  printf(CONTIKI_VERSION_STRING " started with IPV6, RPL\n");
-#else
-  printf(CONTIKI_VERSION_STRING " started with IPV6\n");
-#endif
-#else
-  printf(CONTIKI_VERSION_STRING " started\n");
-#endif
-
   /* crappy way of remembering and accessing argc/v */
   contiki_argc = argc;
   contiki_argv = argv;
@@ -239,23 +229,34 @@ main(int argc, char **argv)
   contiki_argv++;
 #endif
 #endif
-
-  process_init();
-  process_start(&etimer_process, NULL);
-  ctimer_init();
-  rtimer_init();
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_one()
+{
+#if NETSTACK_CONF_WITH_IPV6
+#if UIP_CONF_IPV6_RPL
+  printf(CONTIKI_VERSION_STRING " starting with IPV6, RPL\n");
+#else
+  printf(CONTIKI_VERSION_STRING " starting with IPV6\n");
+#endif
+#else
+  printf(CONTIKI_VERSION_STRING " starting\n");
+#endif
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two()
+{
   set_lladdr();
-
-  netstack_init();
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three()
+{
   printf("MAC %s NETWORK %s\n", NETSTACK_MAC.name, NETSTACK_NETWORK.name);
 
 #if NETSTACK_CONF_WITH_IPV6
-  queuebuf_init();
-
-  memcpy(&uip_lladdr.addr, serial_id, sizeof(uip_lladdr.addr));
-
-  process_start(&tcpip_process, NULL);
 #ifdef __CYGWIN__
   process_start(&wpcap_process, NULL);
 #endif
@@ -279,20 +280,13 @@ main(int argc, char **argv)
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-  serial_line_init();
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
-  autostart_start(autostart_processes);
-
   /* Make standard output unbuffered. */
   setvbuf(stdout, (char *)NULL, _IONBF, 0);
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_main_loop()
+{
   select_set_callback(STDIN_FILENO, &stdin_fd);
   while(1) {
     fd_set fdr;
@@ -333,7 +327,7 @@ main(int argc, char **argv)
     etimer_request_poll();
   }
 
-  return 0;
+  return;
 }
 /*---------------------------------------------------------------------------*/
 void
