@@ -87,6 +87,18 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /**
+ * Controls whether the platform provides a custom main loop
+ *
+ * By default we will use the main loop provided here. This however does not
+ * work for some platforms, so we allow them to override it.
+ */
+#ifdef PLATFORM_CONF_PROVIDES_MAIN_LOOP
+#define PLATFORM_PROVIDES_MAIN_LOOP PLATFORM_CONF_PROVIDES_MAIN_LOOP
+#else
+#define PLATFORM_PROVIDES_MAIN_LOOP 0
+#endif
+/*---------------------------------------------------------------------------*/
+/**
  * \brief Basic (Stage 1) platform driver initialisation.
  *
  * This function will get called early on in the Contiki-NG boot sequence.
@@ -166,6 +178,17 @@ void platform_init_stage_three(void);
  * It is the port developer's responsibility to implement this function.
  */
 void platform_idle(void);
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief The platform's main loop, if provided
+ *
+ * If the platform developer wishes to do so, it is possible to override the
+ * main loop provided by Contiki-NG's core. To do so, define
+ * PLATFORM_CONF_PROVIDES_MAIN_LOOP as 1.
+ *
+ * It is the port developer's responsibility to implement this function.
+ */
+void platform_main_loop(void);
 /*---------------------------------------------------------------------------*/
 #endif /* PLATFORM_H_ */
 /*---------------------------------------------------------------------------*/
