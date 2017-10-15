@@ -53,15 +53,14 @@
 
 #include "contiki.h"
 #include "net/netstack.h"
-#include "net/queuebuf.h"
 
 #include "dev/serial-line.h"
 
-#include "net/ipv6/uip.h"
 #include "dev/leds.h"
 
 #include "lib/random.h"
 #include "sys/node-id.h"
+#include "sys/platform.h"
 #include "rtimer-arch.h"
 
 #if NETSTACK_CONF_WITH_IPV6
@@ -96,17 +95,10 @@ extern uint32_t heap_location;
 #include "experiment-setup.h"
 #endif
 
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
-
 /* _EXTRA_LPM is the sleep mode, _LPM is the doze mode */
 #define ENERGEST_TYPE_EXTRA_LPM ENERGEST_TYPE_LPM
 
-static void main_loop(void);
+extern int main(void);
 
 #if DCOSYNCH_CONF_ENABLED
 static unsigned long last_dco_calibration_time;
@@ -160,24 +152,13 @@ start_autostart_processes()
 #if !PROCESS_CONF_NO_PROCESS_NAMES
   print_processes(autostart_processes);
 #endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
-  autostart_start(autostart_processes);
 }
 /*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
 static void
 start_uip6(void)
 {
-  NETSTACK_NETWORK.init();
-
-#ifndef WITH_SLIP_RADIO
-  process_start(&tcpip_process, NULL);
-#else
-#if WITH_SLIP_RADIO == 0
-  process_start(&tcpip_process, NULL);
-#endif
-#endif /* WITH_SLIP_RADIO */
-
-#if DEBUG
+#if DEBUG && PLATFORM_STARTUP_VERBOSE
   PRINTF("Tentative link-local IPv6 address ");
   {
     uip_ds6_addr_t *lladdr;
@@ -230,7 +211,7 @@ set_linkaddr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-#if DEBUG
+#if DEBUG && PLATFORM_STARTUP_VERBOSE
   PRINTF("Link-layer address: ");
   for(i = 0; i < sizeof(addr.u8) - 1; i++) {
     PRINTF("%d.", addr.u8[i]);
@@ -255,8 +236,8 @@ xosc_init(void)
 uint16_t TOS_NODE_ID = 0x1234; /* non-zero */
 uint16_t TOS_LOCAL_ADDRESS = 0x1234; /* non-zero */
 #endif /* WITH_TINYOS_AUTO_IDS */
-int
-main(void)
+void
+platform_init_stage_one(void)
 {
   /* Set stack overflow address for detecting overflow in runtime */
   vAHI_SetStackOverflow(TRUE, ((uint32_t *)&heap_location)[0]);
@@ -278,13 +259,9 @@ main(void)
   rtimer_init();
 #endif
 
-  watchdog_init();
   leds_init();
   leds_on(LEDS_ALL);
   init_node_mac();
-
-  energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
 
   node_id_restore();
 
@@ -299,19 +276,23 @@ main(void)
     node_mac[7] = node_id & 0xff;
   }
 #endif
-
-  process_init();
-  ctimer_init();
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two(void)
+{
   uart0_init(UART_BAUD_RATE); /* Must come before first PRINTF */
 
   /* check for reset source */
   if(bAHI_WatchdogResetEvent()) {
     PRINTF("Init: Watchdog timer has reset device!\r\n");
   }
-  process_start(&etimer_process, NULL);
   set_linkaddr();
-  netstack_init();
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three(void)
+{
 #if NETSTACK_CONF_WITH_IPV6
 #if UIP_CONF_IPV6_RPL
   PRINTF(CONTIKI_VERSION_STRING " started with IPV6, RPL\n");
@@ -326,10 +307,6 @@ main(void)
   } else {
     PRINTF("Node id is not set.\n");
   }
-#if NETSTACK_CONF_WITH_IPV6
-  memcpy(&uip_lladdr.addr, node_mac, sizeof(uip_lladdr.addr));
-  queuebuf_init();
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
   PRINTF("%s\n",NETSTACK_MAC.name);
 
@@ -343,8 +320,6 @@ main(void)
   timesynch_set_authority_level((linkaddr_node_addr.u8[0] << 4) + 16);
 #endif /* TIMESYNCH_CONF_ENABLED */
 
-  watchdog_start();
-
 #if NETSTACK_CONF_WITH_IPV6
   start_uip6();
 #endif /* NETSTACK_CONF_WITH_IPV6 */
@@ -353,28 +328,84 @@ main(void)
      auto-start processes */
   (void)u32AHI_Init();
 
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
   start_autostart_processes();
 
   leds_off(LEDS_ALL);
 
-  main_loop();
-
-  return -1;
+  platform_main_loop();
 }
-
-static void
-main_loop(void)
+/*---------------------------------------------------------------------------*/
+void
+platform_idle()
 {
-  int r;
   clock_time_t time_to_etimer;
   rtimer_clock_t ticks_to_rtimer;
+
+#if DCOSYNCH_CONF_ENABLED
+  /* Calibrate the DCO every DCOSYNCH_PERIOD
+   * if we have more than 500uSec until next rtimer
+   * PS: Calibration disables interrupts and blocks for 200uSec.
+   *  */
+  if(clock_seconds() - last_dco_calibration_time > DCOSYNCH_PERIOD) {
+    if(rtimer_arch_time_to_rtimer() > RTIMER_SECOND / 2000) {
+      /* PRINTF("ContikiMain: Calibrating the DCO\n"); */
+      eAHI_AttemptCalibration();
+      /* Patch to allow CpuDoze after calibration */
+      vREG_PhyWrite(REG_PHY_IS, REG_PHY_INT_VCO_CAL_MASK);
+      last_dco_calibration_time = clock_seconds();
+    }
+  }
+#endif /* DCOSYNCH_CONF_ENABLED */
+
+  /* flush standard output before sleeping */
+  uart_driver_flush(E_AHI_UART_0, TRUE, FALSE);
+
+  /* calculate the time to the next etimer and rtimer */
+  time_to_etimer = clock_arch_time_to_etimer();
+  ticks_to_rtimer = rtimer_arch_time_to_rtimer();
+
+#if JN516X_SLEEP_ENABLED
+  /* we can sleep only up to the next rtimer/etimer */
+  rtimer_clock_t max_sleep_time = ticks_to_rtimer;
+  if(max_sleep_time >= JN516X_MIN_SLEEP_TIME) {
+    /* also take into account etimers */
+    uint64_t ticks_to_etimer = ((uint64_t)time_to_etimer * RTIMER_SECOND) / CLOCK_SECOND;
+    max_sleep_time = MIN(ticks_to_etimer, ticks_to_rtimer);
+  }
+
+  if(max_sleep_time >= JN516X_MIN_SLEEP_TIME) {
+    max_sleep_time -= JN516X_SLEEP_GUARD_TIME;
+    /* bound the sleep time to 1 second */
+    max_sleep_time = MIN(max_sleep_time, JN516X_MAX_SLEEP_TIME);
+
+#if !RTIMER_USE_32KHZ
+    /* convert to 32.768 kHz oscillator ticks */
+    max_sleep_time = (uint64_t)max_sleep_time * JN516X_XOSC_SECOND / RTIMER_SECOND;
+#endif
+    vAHI_WakeTimerEnable(WAKEUP_TIMER, TRUE);
+    /* sync with the tick timer */
+    WAIT_FOR_EDGE(sleep_start);
+    sleep_start_ticks = u32AHI_TickTimerRead();
+
+    vAHI_WakeTimerStartLarge(WAKEUP_TIMER, max_sleep_time);
+    ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_EXTRA_LPM);
+    vAHI_Sleep(E_AHI_SLEEP_OSCON_RAMON);
+  } else {
+#else
+    {
+#endif /* JN516X_SLEEP_ENABLED */
+      clock_arch_schedule_interrupt(time_to_etimer, ticks_to_rtimer);
+      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
+      vAHI_CpuDoze();
+      watchdog_start();
+      ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
+    }
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_main_loop(void)
+{
+  int r;
 
   while(1) {
     do {
@@ -385,67 +416,7 @@ main_loop(void)
     /*
      * Idle processing.
      */
-    watchdog_stop();
-
-#if DCOSYNCH_CONF_ENABLED
-    /* Calibrate the DCO every DCOSYNCH_PERIOD
-     * if we have more than 500uSec until next rtimer
-     * PS: Calibration disables interrupts and blocks for 200uSec.
-     *  */
-    if(clock_seconds() - last_dco_calibration_time > DCOSYNCH_PERIOD) {
-      if(rtimer_arch_time_to_rtimer() > RTIMER_SECOND / 2000) {
-        /* PRINTF("ContikiMain: Calibrating the DCO\n"); */
-        eAHI_AttemptCalibration();
-        /* Patch to allow CpuDoze after calibration */
-        vREG_PhyWrite(REG_PHY_IS, REG_PHY_INT_VCO_CAL_MASK);
-        last_dco_calibration_time = clock_seconds();
-      }
-    }
-#endif /* DCOSYNCH_CONF_ENABLED */
-
-    /* flush standard output before sleeping */
-    uart_driver_flush(E_AHI_UART_0, TRUE, FALSE);
-
-    /* calculate the time to the next etimer and rtimer */
-    time_to_etimer = clock_arch_time_to_etimer();
-    ticks_to_rtimer = rtimer_arch_time_to_rtimer();
-
-#if JN516X_SLEEP_ENABLED
-    /* we can sleep only up to the next rtimer/etimer */
-    rtimer_clock_t max_sleep_time = ticks_to_rtimer;
-    if(max_sleep_time >= JN516X_MIN_SLEEP_TIME) {
-      /* also take into account etimers */
-      uint64_t ticks_to_etimer = ((uint64_t)time_to_etimer * RTIMER_SECOND) / CLOCK_SECOND;
-      max_sleep_time = MIN(ticks_to_etimer, ticks_to_rtimer);
-    }
-
-    if(max_sleep_time >= JN516X_MIN_SLEEP_TIME) {
-      max_sleep_time -= JN516X_SLEEP_GUARD_TIME;
-      /* bound the sleep time to 1 second */
-      max_sleep_time = MIN(max_sleep_time, JN516X_MAX_SLEEP_TIME);
-
-#if !RTIMER_USE_32KHZ
-      /* convert to 32.768 kHz oscillator ticks */
-      max_sleep_time = (uint64_t)max_sleep_time * JN516X_XOSC_SECOND / RTIMER_SECOND;
-#endif
-      vAHI_WakeTimerEnable(WAKEUP_TIMER, TRUE);
-      /* sync with the tick timer */
-      WAIT_FOR_EDGE(sleep_start);
-      sleep_start_ticks = u32AHI_TickTimerRead();
-
-      vAHI_WakeTimerStartLarge(WAKEUP_TIMER, max_sleep_time);
-      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_EXTRA_LPM);
-      vAHI_Sleep(E_AHI_SLEEP_OSCON_RAMON);
-    } else {
-#else
-    {
-#endif /* JN516X_SLEEP_ENABLED */
-      clock_arch_schedule_interrupt(time_to_etimer, ticks_to_rtimer);
-      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
-      vAHI_CpuDoze();
-      watchdog_start();
-      ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
-    }
+    platform_idle();
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -506,6 +477,6 @@ AppWarmStart(void)
   last_dco_calibration_time = clock_seconds();
 #endif
 
-  main_loop();
+  platform_main_loop();
 }
 /*---------------------------------------------------------------------------*/
