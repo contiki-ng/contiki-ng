@@ -104,6 +104,9 @@ main(void)
 
   watchdog_start();
 
+#if PLATFORM_PROVIDES_MAIN_LOOP
+  platform_main_loop();
+#else
   while(1) {
     uint8_t r;
     do {
@@ -113,6 +116,7 @@ main(void)
 
     platform_idle();
   }
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
