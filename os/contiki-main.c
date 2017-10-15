@@ -57,7 +57,11 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 int
+#if PLATFORM_MAIN_ACCEPTS_ARGS
+main(int argc, char **argv)
+#else
 main(void)
+#endif
 {
   platform_init_stage_one();
 
