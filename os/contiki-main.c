@@ -59,10 +59,12 @@
 int
 #if PLATFORM_MAIN_ACCEPTS_ARGS
 main(int argc, char **argv)
+{
+  platform_process_args(argc, argv);
 #else
 main(void)
-#endif
 {
+#endif
   platform_init_stage_one();
 
   clock_init();

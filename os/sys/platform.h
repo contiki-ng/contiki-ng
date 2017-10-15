@@ -201,6 +201,20 @@ void platform_idle(void);
  */
 void platform_main_loop(void);
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Allow the platform to process main's command line arguments
+ *
+ * If the platform wishes main() to accept arguments, then the \os main will
+ * call this function here so that the platform can process/store those
+ * arguments.
+ *
+ * This function will only get called if PLATFORM_MAIN_ACCEPTS_ARGS
+ * is non-zero.
+ *
+ * It is the port developer's responsibility to implement this function.
+ */
+void platform_process_args(int argc, char**argv);
+/*---------------------------------------------------------------------------*/
 #endif /* PLATFORM_H_ */
 /*---------------------------------------------------------------------------*/
 /**
