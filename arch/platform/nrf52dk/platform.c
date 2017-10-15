@@ -50,7 +50,6 @@
 #include "leds.h"
 #include "lib/sensors.h"
 
-#include "dev/watchdog.h"
 #include "dev/serial-line.h"
 #include "dev/uart0.h"
 #include "dev/lpm.h"
@@ -68,13 +67,6 @@
 #define PRINTF(...)
 #endif
 #endif
-
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
 
 #if defined(SOFTDEVICE_PRESENT) && PLATFORM_INDICATE_BLE_STATE
 PROCESS(ble_iface_observer, "BLE interface observer");
@@ -128,22 +120,16 @@ board_init(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Main function for nRF52dk platform.
- * \note This function doesn't return.
- */
-int
-main(void)
+void
+platform_init_stage_one(void)
 {
   board_init();
   leds_init();
-
-  clock_init();
-  rtimer_init();
-
-  watchdog_init();
-  process_init();
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two(void)
+{
   // Seed value is ignored since hardware RNG is used.
   random_init(0);
 
@@ -157,61 +143,37 @@ main(void)
 #endif
 #endif
 
-  PRINTF("Starting " CONTIKI_VERSION_STRING "\n");
-
-  process_start(&etimer_process, NULL);
-  ctimer_init();
-
-#if ENERGEST_CONF_ON
-  energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
-#endif
-
 #ifdef SOFTDEVICE_PRESENT
   ble_stack_init();
   ble_advertising_init(DEVICE_NAME);
-
-#if NETSTACK_CONF_WITH_IPV6
-  netstack_init();
+#endif
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three(void)
+{
+#if defined(SOFTDEVICE_PRESENT) && NETSTACK_CONF_WITH_IPV6
   linkaddr_t linkaddr;
   ble_get_mac(linkaddr.u8);
   /* Set link layer address */
   linkaddr_set_node_addr(&linkaddr);
-  /* Set device link layer address in uip stack */
-  memcpy(&uip_lladdr.addr, &linkaddr, sizeof(uip_lladdr.addr));
   process_start(&ble_iface_observer, NULL);
-  process_start(&tcpip_process, NULL);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-#endif /* SOFTDEVICE_PRESENT */
+#endif
 
   process_start(&sensors_process, NULL);
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
-  autostart_start(autostart_processes);
-
-  watchdog_start();
 
 #ifdef SOFTDEVICE_PRESENT
   ble_advertising_start();
   PRINTF("Advertising name [%s]\n", DEVICE_NAME);
 #endif
-
-  while(1) {
-    uint8_t r;
-    do {
-      r = process_run();
-      watchdog_periodic();
-    } while(r > 0);
-
-    lpm_drop();
-  }
 }
+/*---------------------------------------------------------------------------*/
+void
+platform_idle()
+{
+  lpm_drop();
+}
+/*---------------------------------------------------------------------------*/
 /**
  * @}
  */
