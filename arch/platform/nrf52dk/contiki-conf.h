@@ -57,7 +57,9 @@
  */
 
 /* Select the BLE mac driver */
+#if MAC_CONF_WITH_OTHER
 #define NETSTACK_CONF_MAC     ble_ipsp_mac_driver
+#endif
 
 /* 6LoWPAN */
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD         1280
