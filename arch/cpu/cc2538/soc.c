@@ -38,6 +38,10 @@
 #include "contiki.h"
 #include "dev/rom-util.h"
 #include "dev/sys-ctrl.h"
+#include "dev/ioc.h"
+#include "dev/nvic.h"
+#include "dev/sys-ctrl.h"
+#include "lpm.h"
 #include "reg.h"
 #include "soc.h"
 
@@ -104,5 +108,17 @@ soc_print_info(void)
          sys_ctrl_get_io_clock(),
          sys_ctrl_get_reset_cause_str());
 }
-
+/*----------------------------------------------------------------------------*/
+void
+soc_init()
+{
+  nvic_init();
+  ioc_init();
+  sys_ctrl_init();
+  clock_init();
+  lpm_init();
+  rtimer_init();
+  gpio_init();
+}
+/*----------------------------------------------------------------------------*/
 /** @} */
