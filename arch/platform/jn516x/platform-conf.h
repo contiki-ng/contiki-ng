@@ -208,6 +208,8 @@ typedef uint32_t rtimer_clock_t;
 #define PLATFORM_HAS_SHT11   0
 #define PLATFORM_HAS_RADIO   1
 
+#define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
+
 /* CPU target speed in Hz
  * RTIMER and peripherals clock is F_CPU/2 */
 #define F_CPU 32000000UL

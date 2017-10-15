@@ -101,7 +101,7 @@ ARCH += uart-driver.c
 endif
 
 CONTIKI_TARGET_DIRS = . dev lib
-CONTIKI_TARGET_MAIN = contiki-jn516x-main.c
+CONTIKI_TARGET_MAIN = platform.c
 
 ifeq ($(JN516x_WITH_DR1175),1)
 JN516x_WITH_DR1174 = 1
