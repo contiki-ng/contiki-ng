@@ -37,7 +37,7 @@
 /**
  * \file
  *
- * Implementation of Contiki-NG's main routine
+ * Implementation of \os's main routine
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

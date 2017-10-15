@@ -35,18 +35,17 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \defgroup main The Contiki-NG main function
+ * \defgroup main The \os main function
  *
  * A platform-independent main function.
  *
- * Contiki-NG provides a modular, platform-independent main function that
- * aims to support all hardware ports.
+ * \os provides a modular, platform-independent main function that aims to
+ * support all hardware ports.
  *
  * In a nutshell, the main routine has the following steps below:
  *
  * - Calls a platform-provided function to initialise basic hardware drivers
- * - Initialises core Contiki-NG modules, such as the process scheduler and
- *   timers
+ * - Initialises core \os modules, such as the process scheduler and timers
  * - Calls a platform-provided function to initialise more hardware drivers
  * - Initialises the network stack and TCP/IP
  * - Calls a platform-provided function to initialise any remaining drivers
@@ -66,7 +65,7 @@
 /**
  * \file
  *
- * Header file for the Contiki-NG main routine
+ * Header file for the \os main routine
  */
 /*---------------------------------------------------------------------------*/
 #ifndef PLATFORM_H_
@@ -113,14 +112,14 @@
 /**
  * \brief Basic (Stage 1) platform driver initialisation.
  *
- * This function will get called early on in the Contiki-NG boot sequence.
+ * This function will get called early on in the \os boot sequence.
  *
  * In this function, the platform should initialise all core device drivers.
  * For example, this is where you will normally want to initialise hardware
  * timers/clocks, GPIO, LEDS. Normally this function will also enable the
  * MCU's global interrupt.
  *
- * The Contiki-NG process scheduler, software clocks and timers will not be
+ * The \os process scheduler, software clocks and timers will not be
  * running yet, so any platform drivers that rely on it should not be
  * initialised here. Instead, they should be initialised in
  * \e platform_init_stage_two() or in \e platform_init_stage_three()
@@ -135,9 +134,9 @@ void platform_init_stage_one(void);
 /**
  * \brief Stage 2 of platform driver initialisation.
  *
- * This function will be called by the Contiki-NG boot sequence after parts
- * of the core have been initialised. More specifically, when this function
- * gets called, the following modules will be running:
+ * This function will be called by the \os boot sequence after parts of the
+ * core have been initialised. More specifically, when this function gets
+ * called, the following modules will be running:
  *
  * - Software clock
  * - Process scheduler
@@ -150,8 +149,8 @@ void platform_init_stage_one(void);
  * should be initialised here or in \e platform_init_stage_three(),
  * but not in \e platform_init_stage_one()
  *
- * The Contiki-NG network stack will not be running yet, so any platform
- * drivers that rely on networking should not be initialised here.
+ * The \os network stack will not be running yet, so any platform drivers
+ * that rely on networking should not be initialised here.
  *
  * When this function returns, the main routine will assume that the
  * platform has enabled character I/O and can print to console.
@@ -195,7 +194,7 @@ void platform_idle(void);
  * \brief The platform's main loop, if provided
  *
  * If the platform developer wishes to do so, it is possible to override the
- * main loop provided by Contiki-NG's core. To do so, define
+ * main loop provided by \os's core. To do so, define
  * PLATFORM_CONF_PROVIDES_MAIN_LOOP as 1.
  *
  * It is the port developer's responsibility to implement this function.
