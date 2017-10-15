@@ -48,9 +48,9 @@
  * - Initialises core Contiki-NG modules, such as the process scheduler and
  *   timers
  * - Calls a platform-provided function to initialise more hardware drivers
- * - Initialises the network stack
+ * - Initialises the network stack and TCP/IP
  * - Calls a platform-provided function to initialise any remaining drivers
- * - Initialises TCP/IP and enters the main loop
+ * - Enters the main loop
  *
  * The main loop will service all pending events and will then call a
  * platform-dependent function to put the hardware in a low-power state.

@@ -88,8 +88,6 @@ main(void)
 
   netstack_init();
 
-  platform_init_stage_three();
-
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
   queuebuf_init();
@@ -103,6 +101,8 @@ main(void)
 #if BUILD_WITH_SHELL
   serial_shell_init();
 #endif /* BUILD_WITH_SHELL */
+
+  platform_init_stage_three();
 
   autostart_start(autostart_processes);
 
