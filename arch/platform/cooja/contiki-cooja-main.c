@@ -206,8 +206,6 @@ contiki_init()
            longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
   }
 
-  queuebuf_init();
-
   /* Initialize communication stack */
   netstack_init();
   printf("%s/%s\n",

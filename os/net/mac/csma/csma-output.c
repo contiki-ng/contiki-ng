@@ -549,4 +549,5 @@ csma_output_init(void)
   memb_init(&packet_memb);
   memb_init(&metadata_memb);
   memb_init(&neighbor_memb);
+  queuebuf_init();
 }
