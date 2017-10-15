@@ -1983,6 +1983,11 @@ sicslowpan_init(void)
 #endif /* SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS > 1 */
 
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC */
+
+  /* We use the queuebuf module if fragmentation is enabled */
+#if SICSLOWPAN_CONF_FRAG
+  queuebuf_init();
+#endif
 }
 /*--------------------------------------------------------------------*/
 int

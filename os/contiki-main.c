@@ -43,7 +43,6 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "sys/platform.h"
-#include "net/queuebuf.h"
 #include "dev/watchdog.h"
 
 #if BUILD_WITH_ORCHESTRA
@@ -92,7 +91,6 @@ main(void)
 
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
-  queuebuf_init();
   process_start(&tcpip_process, NULL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
