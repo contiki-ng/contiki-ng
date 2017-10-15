@@ -171,8 +171,8 @@ typedef uint32_t rtimer_clock_t;
  *
  * @{
  */
-#ifndef STARTUP_CONF_VERBOSE
-#define STARTUP_CONF_VERBOSE        1 /**< Set to 0 to decrease startup verbosity */
+#ifndef PLATFORM_CONF_STARTUP_VERBOSE
+#define PLATFORM_CONF_STARTUP_VERBOSE 1 /**< Set to 0 to decrease startup verbosity */
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -267,8 +267,8 @@ typedef uint32_t rtimer_clock_t;
 #undef UART_CONF_ENABLE
 #define UART_CONF_ENABLE            0
 
-#undef STARTUP_CONF_VERBOSE
-#define STARTUP_CONF_VERBOSE        0
+#undef PLATFORM_CONF_STARTUP_VERBOSE
+#define PLATFORM_CONF_STARTUP_VERBOSE 0
 #endif /* CC2538_CONF_QUIET */
 
 /**
