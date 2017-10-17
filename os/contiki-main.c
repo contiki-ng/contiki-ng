@@ -55,6 +55,11 @@
 #include <stdio.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Main"
+#define LOG_LEVEL LOG_LEVEL_MAIN
+/*---------------------------------------------------------------------------*/
 int
 #if PLATFORM_MAIN_ACCEPTS_ARGS
 main(int argc, char **argv)
@@ -78,28 +83,37 @@ main(void)
 
   platform_init_stage_two();
 
-#if PLATFORM_STARTUP_VERBOSE
-  printf("Starting " CONTIKI_VERSION_STRING "\n");
+  LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
 
-  printf(" Net: ");
-  printf("%s\n", NETSTACK_NETWORK.name);
-  printf(" MAC: ");
-  printf("%s\n", NETSTACK_MAC.name);
-#endif
+  LOG_INFO(" Net: ");
+  LOG_INFO_("%s\n", NETSTACK_NETWORK.name);
+  LOG_INFO(" MAC: ");
+  LOG_INFO_("%s\n", NETSTACK_MAC.name);
 
   netstack_init();
 
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
   process_start(&tcpip_process, NULL);
+
+  LOG_INFO("Contiki configured with address ");
+  LOG_INFO_LLADDR(&linkaddr_node_addr);
+  LOG_INFO_("\n");
+
+  LOG_INFO("Tentative link-local IPv6 address ");
+  LOG_INFO_6ADDR(&uip_ds6_get_link_local(-1)->ipaddr);
+  LOG_INFO_("\n");
 #endif /* NETSTACK_CONF_WITH_IPV6 */
+
 
 #if BUILD_WITH_ORCHESTRA
   orchestra_init();
+  LOG_DBG("With Orchestra\n");
 #endif /* BUILD_WITH_ORCHESTRA */
 
 #if BUILD_WITH_SHELL
   serial_shell_init();
+  LOG_DBG("With Shell\n");
 #endif /* BUILD_WITH_SHELL */
 
   platform_init_stage_three();
