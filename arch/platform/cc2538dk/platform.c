@@ -68,17 +68,10 @@
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#if PLATFORM_STARTUP_VERBOSE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
-#if UART_CONF_ENABLE
-#define PUTS(s) puts(s)
-#else
-#define PUTS(s)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "CC2538DK"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 static void
 fade(unsigned char l)
@@ -112,17 +105,6 @@ set_rf_params(void)
 
   /* Populate linkaddr_node_addr. Maintain endianness */
   memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
-
-#if PLATFORM_STARTUP_VERBOSE
-  {
-    int i;
-    printf("Contiki configured with address ");
-    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
-      printf("%02x:", linkaddr_node_addr.u8[i]);
-    }
-    printf("%02x\n", linkaddr_node_addr.u8[i]);
-  }
-#endif
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
@@ -185,13 +167,11 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  PUTS(BOARD_STRING);
+  LOG_INFO(BOARD_STRING);
 
   set_rf_params();
 
-#if PLATFORM_STARTUP_VERBOSE
   soc_print_info();
-#endif
 
   adc_init();
 
