@@ -53,21 +53,12 @@
 #include "dev/serial-line.h"
 #include "dev/uart0.h"
 #include "dev/lpm.h"
-
-#define DEBUG 0
-
-#if NETSTACK_CONF_WITH_IPV6
-#include "uip-debug.h"
-#include "net/ipv6/uip-ds6.h"
-#else
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-#endif
-
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "NRF52DK"
+#define LOG_LEVEL LOG_LEVEL_MAIN
+/*---------------------------------------------------------------------------*/
 #if defined(SOFTDEVICE_PRESENT) && PLATFORM_INDICATE_BLE_STATE
 PROCESS(ble_iface_observer, "BLE interface observer");
 
@@ -164,7 +155,7 @@ platform_init_stage_three(void)
 
 #ifdef SOFTDEVICE_PRESENT
   ble_advertising_start();
-  PRINTF("Advertising name [%s]\n", DEVICE_NAME);
+  LOG_INFO("Advertising name [%s]\n", DEVICE_NAME);
 #endif
 }
 /*---------------------------------------------------------------------------*/
