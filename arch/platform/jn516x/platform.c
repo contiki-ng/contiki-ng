@@ -105,14 +105,11 @@ static unsigned long last_dco_calibration_time;
 #endif
 static uint64_t sleep_start;
 static uint32_t sleep_start_ticks;
-
 /*---------------------------------------------------------------------------*/
-#define DEBUG 1
-#if DEBUG
-#define PRINTF(...) do { printf(__VA_ARGS__); } while(0)
-#else
-#define PRINTF(...) do {} while(0)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "JN516x"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /* Reads MAC from SoC
  * Must be called before node_id_restore()
@@ -132,62 +129,18 @@ init_node_mac(void)
   node_mac[0] = psExtAddress.sExt.u32H >> (uint32_t)24;
 }
 /*---------------------------------------------------------------------------*/
-#if !PROCESS_CONF_NO_PROCESS_NAMES
-static void
-print_processes(struct process *const processes[])
-{
-  /*  const struct process * const * p = processes;*/
-  PRINTF("Starting");
-  while(*processes != NULL) {
-    PRINTF(" '%s'", (*processes)->name);
-    processes++;
-  }
-  putchar('\n');
-}
-#endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
-/*---------------------------------------------------------------------------*/
-static void
-print_autostart_processes()
-{
-#if !PROCESS_CONF_NO_PROCESS_NAMES
-  print_processes(autostart_processes);
-#endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
-}
-/*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
 static void
 start_uip6(void)
 {
-#if DEBUG && PLATFORM_STARTUP_VERBOSE
-  PRINTF("Tentative link-local IPv6 address ");
-  {
-    uip_ds6_addr_t *lladdr;
-    int i;
-    lladdr = uip_ds6_get_link_local(-1);
-    for(i = 0; i < 7; ++i) {
-      PRINTF("%02x%02x:", lladdr->ipaddr.u8[i * 2],
-             lladdr->ipaddr.u8[i * 2 + 1]);
-      /* make it hardcoded... */
-    }
-    lladdr->state = ADDR_AUTOCONF;
-
-    PRINTF("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
-  }
-#endif /* DEBUG */
-
   if(!UIP_CONF_IPV6_RPL) {
     uip_ipaddr_t ipaddr;
-    int i;
     uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
     uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
     uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
-    PRINTF("Tentative global IPv6 address ");
-    for(i = 0; i < 7; ++i) {
-      PRINTF("%02x%02x:",
-             ipaddr.u8[i * 2], ipaddr.u8[i * 2 + 1]);
-    }
-    PRINTF("%02x%02x\n",
-           ipaddr.u8[7 * 2], ipaddr.u8[7 * 2 + 1]);
+    LOG_INFO("Tentative global IPv6 address ");
+    LOG_INFO_6ADDR(&ipaddr);
+    LOG_INFO_("\n");
   }
 }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
@@ -195,13 +148,14 @@ start_uip6(void)
 static void
 set_linkaddr(void)
 {
-  int i;
   linkaddr_t addr;
   memset(&addr, 0, LINKADDR_SIZE);
+
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(addr.u8, node_mac, sizeof(addr.u8));
 #else
   if(node_id == 0) {
+    int i;
     for(i = 0; i < LINKADDR_SIZE; ++i) {
       addr.u8[i] = node_mac[LINKADDR_SIZE - 1 - i];
     }
@@ -211,13 +165,6 @@ set_linkaddr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-#if DEBUG && PLATFORM_STARTUP_VERBOSE
-  PRINTF("Link-layer address: ");
-  for(i = 0; i < sizeof(addr.u8) - 1; i++) {
-    PRINTF("%d.", addr.u8[i]);
-  }
-  PRINTF("%d\n", addr.u8[i]);
-#endif
 }
 /*---------------------------------------------------------------------------*/
 bool_t
@@ -285,7 +232,7 @@ platform_init_stage_two(void)
 
   /* check for reset source */
   if(bAHI_WatchdogResetEvent()) {
-    PRINTF("Init: Watchdog timer has reset device!\r\n");
+    LOG_INFO("Init: Watchdog timer has reset device!\r\n");
   }
   set_linkaddr();
 }
@@ -293,22 +240,11 @@ platform_init_stage_two(void)
 void
 platform_init_stage_three(void)
 {
-#if NETSTACK_CONF_WITH_IPV6
-#if UIP_CONF_IPV6_RPL
-  PRINTF(CONTIKI_VERSION_STRING " started with IPV6, RPL\n");
-#else
-  PRINTF(CONTIKI_VERSION_STRING " started with IPV6\n");
-#endif
-  PRINTF(CONTIKI_VERSION_STRING " started\n");
-#endif
-
   if(node_id > 0) {
-    PRINTF("Node id is set to %u.\n", node_id);
+    LOG_INFO("Node id is set to %u.\n", node_id);
   } else {
-    PRINTF("Node id is not set.\n");
+    LOG_INFO("Node id is not set.\n");
   }
-
-  PRINTF("%s\n",NETSTACK_MAC.name);
 
 #ifndef UIP_FALLBACK_INTERFACE
   uart0_set_input(serial_line_input_byte);
@@ -327,8 +263,6 @@ platform_init_stage_three(void)
   /* need this to reliably generate the first rtimer callback and callbacks in other
      auto-start processes */
   (void)u32AHI_Init();
-
-  print_autostart_processes();
 
   leds_off(LEDS_ALL);
 }
