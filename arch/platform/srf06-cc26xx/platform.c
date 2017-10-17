@@ -72,6 +72,11 @@
 
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "CC26xx/CC13xx"
+#define LOG_LEVEL LOG_LEVEL_MAIN
+/*---------------------------------------------------------------------------*/
 unsigned short node_id = 0;
 /*---------------------------------------------------------------------------*/
 /** \brief Board specific iniatialisation */
@@ -121,20 +126,8 @@ set_rf_params(void)
   /* also set the global node id */
   node_id = short_addr;
 
-#if PLATFORM_STARTUP_VERBOSE
-  printf(" RF: Channel %d\n", val);
-
-  {
-    int i;
-    printf(" Link layer addr: ");
-    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
-      printf("%02x:", linkaddr_node_addr.u8[i]);
-    }
-    printf("%02x\n", linkaddr_node_addr.u8[i]);
-  }
-
-  printf(" Node ID: %d\n", node_id);
-#endif
+  LOG_INFO(" RF: Channel %d\n", val);
+  LOG_INFO(" Node ID: %d\n", node_id);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -192,16 +185,14 @@ platform_init_stage_three()
 {
   set_rf_params();
 
-#if PLATFORM_STARTUP_VERBOSE
-  printf("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
-         DRIVERLIB_RELEASE_BUILD);
-  printf(BOARD_STRING "\n");
-  printf("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s, Prop: %s\n",
-         ti_lib_chipinfo_supports_ieee_802_15_4() == true ? "Yes" : "No",
-         ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
-         ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
-         ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
-#endif
+  LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
+          DRIVERLIB_RELEASE_BUILD);
+  LOG_INFO(BOARD_STRING "\n");
+  LOG_DBG("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s, Prop: %s\n",
+          ti_lib_chipinfo_supports_ieee_802_15_4() == true ? "Yes" : "No",
+          ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
+          ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
+          ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
 
   process_start(&sensors_process, NULL);
   fade(LEDS_ORANGE);
