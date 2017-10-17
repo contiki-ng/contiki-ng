@@ -331,8 +331,6 @@ platform_init_stage_three(void)
   print_autostart_processes();
 
   leds_off(LEDS_ALL);
-
-  platform_main_loop();
 }
 /*---------------------------------------------------------------------------*/
 void
