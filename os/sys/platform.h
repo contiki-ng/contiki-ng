@@ -72,20 +72,6 @@
 #define PLATFORM_H_
 /*---------------------------------------------------------------------------*/
 /**
- * Configuration of boot sequence verbosity.
- *
- * By default the boot sequence will print out startup messages.
- *
- * Define this to 0 in your contiki-conf.h or project-conf.h to turn off
- * startup messages
- */
-#ifdef PLATFORM_CONF_STARTUP_VERBOSE
-#define PLATFORM_STARTUP_VERBOSE PLATFORM_CONF_STARTUP_VERBOSE
-#else
-#define PLATFORM_STARTUP_VERBOSE 1
-#endif
-/*---------------------------------------------------------------------------*/
-/**
  * Controls whether the platform provides a custom main loop
  *
  * By default we will use the main loop provided here. This however does not
