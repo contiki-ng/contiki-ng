@@ -147,7 +147,7 @@ print_processes(struct process *const processes[])
 #endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
 /*---------------------------------------------------------------------------*/
 static void
-start_autostart_processes()
+print_autostart_processes()
 {
 #if !PROCESS_CONF_NO_PROCESS_NAMES
   print_processes(autostart_processes);
@@ -328,7 +328,7 @@ platform_init_stage_three(void)
      auto-start processes */
   (void)u32AHI_Init();
 
-  start_autostart_processes();
+  print_autostart_processes();
 
   leds_off(LEDS_ALL);
 
