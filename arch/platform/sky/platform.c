@@ -63,15 +63,12 @@ extern int msp430_dco_required;
 #include "experiment-setup.h"
 #endif
 
-#define DEBUG 1
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else /* DEBUG */
-#define PRINTF(...)
-#endif /* DEBUG */
-
 void init_platform(void);
-
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Sky"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 #if 0
 int
@@ -101,13 +98,13 @@ static void
 set_lladdr(void)
 {
   linkaddr_t addr;
-  int i;
 
   memset(&addr, 0, sizeof(linkaddr_t));
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(addr.u8, ds2411_id, sizeof(addr.u8));
 #else
   if(node_id == 0) {
+    int i;
     for(i = 0; i < sizeof(linkaddr_t); ++i) {
       addr.u8[i] = ds2411_id[7 - i];
     }
@@ -117,26 +114,7 @@ set_lladdr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-  PRINTF("Contiki started with address ");
-  for(i = 0; i < sizeof(addr.u8) - 1; i++) {
-    PRINTF("%d.", addr.u8[i]);
-  }
-  PRINTF("%d\n", addr.u8[i]);
 }
-/*---------------------------------------------------------------------------*/
-#if !PROCESS_CONF_NO_PROCESS_NAMES
-static void
-print_processes(struct process * const processes[])
-{
-  /*  const struct process * const * p = processes;*/
-  printf("Starting");
-  while(*processes != NULL) {
-    printf(" '%s'", (*processes)->name);
-    processes++;
-  }
-  putchar('\n');
-}
-#endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
 /*---------------------------------------------------------------------------*/
 #if WITH_TINYOS_AUTO_IDS
 uint16_t TOS_NODE_ID = 0x1234; /* non-zero */
@@ -217,55 +195,33 @@ platform_init_stage_three(void)
   shortaddr = (linkaddr_node_addr.u8[0] << 8) + linkaddr_node_addr.u8[1];
   memset(longaddr, 0, sizeof(longaddr));
   linkaddr_copy((linkaddr_t *)&longaddr, &linkaddr_node_addr);
-  PRINTF("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
-         longaddr[0], longaddr[1], longaddr[2], longaddr[3],
-         longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
 
   cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
 
   if(node_id > 0) {
-    PRINTF("Node id is set to %u.\n", node_id);
+    LOG_INFO("Node id is set to %u.\n", node_id);
   } else {
-    PRINTF("Node id is not set.\n");
+    LOG_INFO("Node id is not set.\n");
   }
 
 #if NETSTACK_CONF_WITH_IPV6
-  PRINTF("%s, radio channel %u, CCA threshold %i\n",
-         NETSTACK_MAC.name,
-         CC2420_CONF_CHANNEL,
-         CC2420_CONF_CCA_THRESH);
-
-#if DEBUG
-  PRINTF("Tentative link-local IPv6 address ");
-  {
-    uip_ds6_addr_t *lladdr;
-    int i;
-    lladdr = uip_ds6_get_link_local(-1);
-    for(i = 0; i < 7; ++i) {
-      PRINTF("%02x%02x:", lladdr->ipaddr.u8[i * 2],
-             lladdr->ipaddr.u8[i * 2 + 1]);
-    }
-    PRINTF("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
-  }
-#endif /* DEBUG */
+  LOG_INFO("%s, radio channel %u, CCA threshold %i\n",
+           NETSTACK_MAC.name,
+           CC2420_CONF_CHANNEL,
+           CC2420_CONF_CCA_THRESH);
 
   if(!UIP_CONF_IPV6_RPL) {
     uip_ipaddr_t ipaddr;
-    int i;
     uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
     uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
     uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
-    PRINTF("Tentative global IPv6 address ");
-    for(i = 0; i < 7; ++i) {
-      PRINTF("%02x%02x:",
-             ipaddr.u8[i * 2], ipaddr.u8[i * 2 + 1]);
-    }
-    PRINTF("%02x%02x\n",
-           ipaddr.u8[7 * 2], ipaddr.u8[7 * 2 + 1]);
+    LOG_INFO("Tentative global IPv6 address ");
+    LOG_INFO_6ADDR(&ipaddr);
+    LOG_INFO_("\n");
   }
 #else /* NETSTACK_CONF_WITH_IPV6 */
-  PRINTF("%s, radio channel %u\n",
-         NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
+  LOG_INFO("%s, radio channel %u\n",
+           NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #if !NETSTACK_CONF_WITH_IPV6
@@ -279,10 +235,6 @@ platform_init_stage_three(void)
   timesynch_init();
   timesynch_set_authority_level((linkaddr_node_addr.u8[0] << 4) + 16);
 #endif /* TIMESYNCH_CONF_ENABLED */
-
-#if !PROCESS_CONF_NO_PROCESS_NAMES
-  print_processes(autostart_processes);
-#endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
 
   /*
    * This is the scheduler loop.
