@@ -70,17 +70,10 @@
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#if PLATFORM_STARTUP_VERBOSE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
-#if UART_CONF_ENABLE
-#define PUTS(s) puts(s)
-#else
-#define PUTS(s)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Zoul"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Board specific iniatialisation
@@ -246,7 +239,7 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  PUTS(BOARD_STRING);
+  LOG_INFO(BOARD_STRING);
 
   board_init();
 
