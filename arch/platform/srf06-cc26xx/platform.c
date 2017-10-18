@@ -177,14 +177,14 @@ platform_init_stage_two()
 
   serial_line_init();
 
+  set_rf_params();
+
   fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_three()
 {
-  set_rf_params();
-
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
   LOG_INFO(BOARD_STRING "\n");
