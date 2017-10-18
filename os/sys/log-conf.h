@@ -60,6 +60,13 @@
 #define LOG_WITH_LOC 0
 #endif /* LOG_CONF_WITH_LOC */
 
+/* Prefix all logs with Module name and logging level */
+#ifdef LOG_CONF_WITH_MODULE_PREFIX
+#define LOG_WITH_MODULE_PREFIX LOG_CONF_WITH_MODULE_PREFIX
+#else /* LOG_CONF_WITH_MODULE_PREFIX */
+#define LOG_WITH_MODULE_PREFIX 1
+#endif /* LOG_CONF_WITH_MODULE_PREFIX */
+
 /* Cooja annotations */
 #ifdef LOG_CONF_WITH_ANNOTATE
 #define LOG_WITH_ANNOTATE LOG_CONF_WITH_ANNOTATE
