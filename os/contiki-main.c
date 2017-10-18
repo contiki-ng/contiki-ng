@@ -109,6 +109,7 @@ main(void)
   }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
+  platform_init_stage_three();
 
 #if BUILD_WITH_ORCHESTRA
   orchestra_init();
@@ -119,8 +120,6 @@ main(void)
   serial_shell_init();
   LOG_DBG("With Shell\n");
 #endif /* BUILD_WITH_SHELL */
-
-  platform_init_stage_three();
 
   autostart_start(autostart_processes);
 
