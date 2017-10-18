@@ -157,6 +157,8 @@ platform_init_stage_two()
   crypto_disable();
 #endif
 
+  set_rf_params();
+
   INTERRUPTS_ENABLE();
 
   fade(LEDS_BLUE);
@@ -165,11 +167,9 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  LOG_INFO(BOARD_STRING);
+  LOG_INFO("%s\n", BOARD_STRING);
 
   board_init();
-
-  set_rf_params();
 
   soc_print_info();
 
