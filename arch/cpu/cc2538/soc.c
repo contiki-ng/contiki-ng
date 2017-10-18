@@ -64,7 +64,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "CC2538 SoC"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#define LOG_LEVEL LOG_LEVEL_NONE
 /*----------------------------------------------------------------------------*/
 uint8_t
 soc_get_rev(void)
