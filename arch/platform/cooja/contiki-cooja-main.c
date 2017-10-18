@@ -153,13 +153,15 @@ static void
 set_lladdr(void)
 {
   linkaddr_t addr;
-  int i;
 
   memset(&addr, 0, sizeof(linkaddr_t));
 #if NETSTACK_CONF_WITH_IPV6
-  for(i = 0; i < sizeof(uip_lladdr.addr); i += 2) {
-    addr.u8[i + 1] = node_id & 0xff;
-    addr.u8[i + 0] = node_id >> 8;
+  {
+    int i;
+    for(i = 0; i < sizeof(uip_lladdr.addr); i += 2) {
+      addr.u8[i + 1] = node_id & 0xff;
+      addr.u8[i + 0] = node_id >> 8;
+    }
   }
 #else /* NETSTACK_CONF_WITH_IPV6 */
   addr.u8[0] = node_id & 0xff;
