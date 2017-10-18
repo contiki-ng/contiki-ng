@@ -98,7 +98,9 @@ extern struct log_module all_modules[];
 #define LOG(newline, level, levelstr, ...) do {  \
                             if(level <= (LOG_LEVEL)) { \
                               if(newline) { \
-                                LOG_OUTPUT("[%-4s: %-10s] ", levelstr, LOG_MODULE); \
+                                if(LOG_WITH_MODULE_PREFIX) { \
+                                  LOG_OUTPUT("[%-4s: %-10s] ", levelstr, LOG_MODULE); \
+                                } \
                                 if(LOG_WITH_LOC) { \
                                   LOG_OUTPUT("[%s: %d] ", __FILE__, __LINE__); \
                                 } \
