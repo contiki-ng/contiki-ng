@@ -209,16 +209,6 @@ platform_init_stage_three(void)
            NETSTACK_MAC.name,
            CC2420_CONF_CHANNEL,
            CC2420_CONF_CCA_THRESH);
-
-  if(!UIP_CONF_IPV6_RPL) {
-    uip_ipaddr_t ipaddr;
-    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-    uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
-    LOG_INFO("Tentative global IPv6 address ");
-    LOG_INFO_6ADDR(&ipaddr);
-    LOG_INFO_("\n");
-  }
 #else /* NETSTACK_CONF_WITH_IPV6 */
   LOG_INFO("%s, radio channel %u\n",
            NETSTACK_MAC.name, CC2420_CONF_CHANNEL);

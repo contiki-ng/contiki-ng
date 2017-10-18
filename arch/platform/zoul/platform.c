@@ -169,17 +169,6 @@ set_rf_params(void)
   /* Populate linkaddr_node_addr. Maintain endianness */
   memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
 
-#if PLATFORM_STARTUP_VERBOSE
-  {
-    int i;
-    printf("Contiki configured with address ");
-    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
-      printf("%02x:", linkaddr_node_addr.u8[i]);
-    }
-    printf("%02x\n", linkaddr_node_addr.u8[i]);
-  }
-#endif
-
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, CC2538_RF_CHANNEL);
