@@ -129,22 +129,6 @@ init_node_mac(void)
   node_mac[0] = psExtAddress.sExt.u32H >> (uint32_t)24;
 }
 /*---------------------------------------------------------------------------*/
-#if NETSTACK_CONF_WITH_IPV6
-static void
-start_uip6(void)
-{
-  if(!UIP_CONF_IPV6_RPL) {
-    uip_ipaddr_t ipaddr;
-    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-    uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
-    LOG_INFO("Tentative global IPv6 address ");
-    LOG_INFO_6ADDR(&ipaddr);
-    LOG_INFO_("\n");
-  }
-}
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-/*---------------------------------------------------------------------------*/
 static void
 set_linkaddr(void)
 {
@@ -255,10 +239,6 @@ platform_init_stage_three(void)
   timesynch_init();
   timesynch_set_authority_level((linkaddr_node_addr.u8[0] << 4) + 16);
 #endif /* TIMESYNCH_CONF_ENABLED */
-
-#if NETSTACK_CONF_WITH_IPV6
-  start_uip6();
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
   /* need this to reliably generate the first rtimer callback and callbacks in other
      auto-start processes */

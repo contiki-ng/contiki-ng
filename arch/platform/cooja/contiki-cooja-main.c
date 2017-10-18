@@ -165,11 +165,10 @@ set_lladdr(void)
   addr.u8[1] = node_id >> 8;
 #endif /* NETSTACK_CONF_WITH_IPV6 */
   linkaddr_set_node_addr(&addr);
-  printf("Contiki started with address ");
-  for(i = 0; i < sizeof(addr.u8) - 1; i++) {
-    printf("%d.", addr.u8[i]);
-  }
-  printf("%d\n", addr.u8[i]);
+
+  printf("Link-layer address ");
+  log_lladdr(&addr);
+  printf("\n");
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -215,6 +214,7 @@ contiki_init()
   /* IPv6 CONFIGURATION */
   {
     int i;
+    uip_ds6_addr_t *lladdr;
     uint8_t addr[sizeof(uip_lladdr.addr)];
     for(i = 0; i < sizeof(uip_lladdr.addr); i += 2) {
       addr[i + 1] = node_id & 0xff;
@@ -225,33 +225,10 @@ contiki_init()
 
     process_start(&tcpip_process, NULL);
 
+    lladdr = uip_ds6_get_link_local(-1);
     printf("Tentative link-local IPv6 address ");
-    {
-      uip_ds6_addr_t *lladdr;
-      int i;
-      lladdr = uip_ds6_get_link_local(-1);
-      for(i = 0; i < 7; ++i) {
-        printf("%02x%02x:", lladdr->ipaddr.u8[i * 2],
-               lladdr->ipaddr.u8[i * 2 + 1]);
-      }
-      printf("%02x%02x\n", lladdr->ipaddr.u8[14],
-             lladdr->ipaddr.u8[15]);
-    }
-
-    if(1) {
-      uip_ipaddr_t ipaddr;
-      int i;
-      uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-      uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-      uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
-      printf("Tentative global IPv6 address ");
-      for(i = 0; i < 7; ++i) {
-        printf("%02x%02x:",
-               ipaddr.u8[i * 2], ipaddr.u8[i * 2 + 1]);
-      }
-      printf("%02x%02x\n",
-             ipaddr.u8[7 * 2], ipaddr.u8[7 * 2 + 1]);
-    }
+    log_6addr(lladdr != NULL ? &lladdr->ipaddr : NULL);
+    printf("\n");
   }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 

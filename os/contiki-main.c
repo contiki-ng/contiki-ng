@@ -92,17 +92,21 @@ main(void)
 
   netstack_init();
 
-#if NETSTACK_CONF_WITH_IPV6
-  memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
-  process_start(&tcpip_process, NULL);
-
-  LOG_INFO("Contiki configured with address ");
+  LOG_INFO("Link-layer address ");
   LOG_INFO_LLADDR(&linkaddr_node_addr);
   LOG_INFO_("\n");
 
-  LOG_INFO("Tentative link-local IPv6 address ");
-  LOG_INFO_6ADDR(&uip_ds6_get_link_local(-1)->ipaddr);
-  LOG_INFO_("\n");
+#if NETSTACK_CONF_WITH_IPV6
+  {
+    uip_ds6_addr_t *lladdr;
+    memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
+    process_start(&tcpip_process, NULL);
+
+    lladdr = uip_ds6_get_link_local(-1);
+    LOG_INFO("Tentative link-local IPv6 address ");
+    LOG_INFO_6ADDR(lladdr != NULL ? &lladdr->ipaddr : NULL);
+    LOG_INFO_("\n");
+  }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 
