@@ -45,32 +45,28 @@
 
 /* Network layer configuration. The NET layer is configured through the Makefile,
    via the flag MAC_NET */
-#ifdef NETSTACK_CONF_NETWORK
-#define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
-#else /* NETSTACK_CONF_NETWORK */
 #if NETSTACK_CONF_WITH_IPV6
 #define NETSTACK_NETWORK sicslowpan_driver
 #elif NETSTACK_CONF_WITH_NULLNET
 #define NETSTACK_NETWORK nullnet_driver
+#elif NETSTACK_CONF_WITH_OTHER
+#define NETSTACK_NETWORK NETSTACK_CONF_OTHER_NETWORK
 #else
 #error Unknown NET configuration
-#endif
 #endif /* NETSTACK_CONF_NETWORK */
 
 /* MAC layer configuration. The MAC layer is configured through the Makefile,
    via the flag MAKE_MAC */
-#ifdef NETSTACK_CONF_MAC
-#define NETSTACK_MAC NETSTACK_CONF_MAC
-#else /* NETSTACK_CONF_MAC */
 #if MAC_CONF_WITH_NULLMAC
 #define NETSTACK_MAC     nullmac_driver
 #elif MAC_CONF_WITH_CSMA
 #define NETSTACK_MAC     csma_driver
 #elif MAC_CONF_WITH_TSCH
 #define NETSTACK_MAC     tschmac_driver
+#elif MAC_CONF_WITH_OTHER
+#define NETSTACK_MAC     NETSTACK_CONF_OTHER_MAC
 #else
 #error Unknown MAC configuration
-#endif
 #endif /* NETSTACK_CONF_MAC */
 
 /* Radio driver configuration. Most often set by the platform. */

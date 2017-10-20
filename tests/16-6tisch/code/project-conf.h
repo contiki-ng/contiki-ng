@@ -50,6 +50,6 @@
 #define IEEE802154_CONF_PANID 0xabcd
 
 /* Custom MAC layer */
-#define NETSTACK_CONF_MAC        test_mac_driver
+#define NETSTACK_CONF_OTHER_MAC        test_mac_driver
 
 #endif /* __PROJECT_CONF_H__ */

@@ -26,6 +26,11 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 # Enable nullmac by default
 MAKE_MAC ?= MAKE_MAC_NULLMAC
+# IPv6 and RPL enabled but with a custom NET
+MAKE_NET = MAKE_NET_OTHER
+CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
+MODULES += os/net/ipv6
+MAKE_ROUTING = MAKE_ROUTING_RPL_LITE
 
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/native

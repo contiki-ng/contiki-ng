@@ -33,10 +33,10 @@
 #define UIP_FALLBACK_INTERFACE rpl_interface
 
 /* use a non-default network driver */
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
+#define NETSTACK_CONF_OTHER_NETWORK sicslowpan_driver
 
 /* use a non-default MAC driver */
-#define NETSTACK_CONF_MAC border_router_mac_driver
+#define NETSTACK_CONF_OTHER_MAC border_router_mac_driver
 
 
 #define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
