@@ -50,7 +50,7 @@
 #endif
 
 /* Configuration for the slipradio/network driver. */
-#define NETSTACK_CONF_NETWORK slipnet_driver
+#define NETSTACK_CONF_OTHER_NETWORK slipnet_driver
 
 #define NETSTACK_CONF_FRAMER no_framer
 

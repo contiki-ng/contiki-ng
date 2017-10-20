@@ -17,7 +17,12 @@ CFLAGS += -DWEBSERVER=2
 endif
 
 MAKE_MAC = MAKE_MAC_OTHER
-MAKE_NET = MAKE_NET_IPV6
+# IPv6 and RPL enabled but with a custom NET
+MAKE_NET = MAKE_NET_OTHER
+CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
+MODULES += os/net/ipv6
+MAKE_ROUTING = MAKE_ROUTING_RPL_LITE
+
 include $(CONTIKI)/Makefile.include
 
 connect-router:	border-router.native
