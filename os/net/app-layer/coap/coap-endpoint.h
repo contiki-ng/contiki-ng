@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Lars Schmertmann <SmallLars@t-online.de>.
+ * Copyright (c) 2016, SICS, Swedish ICT AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,25 +25,47 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
  */
 
 /**
  * \file
- *      CoAP module for block 1 handling
+ *         API to address CoAP endpoints
  * \author
- *      Lars Schmertmann <SmallLars@t-online.de>
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
  */
 
-#ifndef COAP_BLOCK1_H_
-#define COAP_BLOCK1_H_
+#ifndef COAP_ENDPOINT_H_
+#define COAP_ENDPOINT_H_
 
-#include "coap.h"
-#include <stddef.h>
-#include <stdint.h>
+#include "contiki.h"
+#include <stdlib.h>
 
-int coap_block1_handler(coap_packet_t *request, coap_packet_t *response,
-                        uint8_t *target, size_t *len, size_t max_len);
+#ifndef COAP_ENDPOINT_CUSTOM
+#include "net/ipv6/uip.h"
 
-#endif /* COAP_BLOCK1_H_ */
+typedef struct {
+  uip_ipaddr_t ipaddr;
+  uint16_t port;
+  uint8_t secure;
+} coap_endpoint_t;
+#endif /* COAP_ENDPOINT_CUSTOM */
+
+void coap_endpoint_copy(coap_endpoint_t *destination,
+                        const coap_endpoint_t *from);
+
+int coap_endpoint_cmp(const coap_endpoint_t *e1, const coap_endpoint_t *e2);
+
+void coap_endpoint_print(const coap_endpoint_t *ep);
+
+int coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep);
+
+int coap_endpoint_is_secure(const coap_endpoint_t *ep);
+
+int coap_endpoint_is_connected(const coap_endpoint_t *ep);
+
+int coap_endpoint_connect(coap_endpoint_t *ep);
+
+void coap_endpoint_disconnect(coap_endpoint_t *ep);
+
+#endif /* COAP_ENDPOINT_H_ */

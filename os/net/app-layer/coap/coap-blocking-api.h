@@ -29,49 +29,39 @@
  * This file is part of the Contiki operating system.
  */
 
-/**
- * \file
- *      CoAP module for reliable transport
- * \author
- *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
- */
+#ifndef COAP_BLOCKING_API_H_
+#define COAP_BLOCKING_API_H_
 
-#ifndef COAP_TRANSACTIONS_H_
-#define COAP_TRANSACTIONS_H_
+#include "sys/pt.h"
+#include "coap-transactions.h"
 
-#include "coap.h"
-#include "coap-engine.h"
-#include "coap-timer.h"
+/*---------------------------------------------------------------------------*/
+/*- Client Part -------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+typedef struct coap_request_state {
+  struct pt pt;
+  struct process *process;
+  coap_transaction_t *transaction;
+  coap_packet_t *response;
+  uint32_t block_num;
+} coap_request_state_t;
 
-/*
- * Modulo mask (thus +1) for a random number to get the tick number for the random
- * retransmission time between COAP_RESPONSE_TIMEOUT and COAP_RESPONSE_TIMEOUT*COAP_RESPONSE_RANDOM_FACTOR.
- */
-#define COAP_RESPONSE_TIMEOUT_TICKS         (1000 * COAP_RESPONSE_TIMEOUT)
-#define COAP_RESPONSE_TIMEOUT_BACKOFF_MASK  (uint32_t)(((1000 * COAP_RESPONSE_TIMEOUT * ((float)COAP_RESPONSE_RANDOM_FACTOR - 1.0)) + 0.5) + 1)
+typedef void (* coap_blocking_response_handler_t)(coap_packet_t *response);
 
-/* container for transactions with message buffer and retransmission info */
-typedef struct coap_transaction {
-  struct coap_transaction *next;        /* for LIST */
+PT_THREAD(coap_blocking_request
+          (coap_request_state_t *state, process_event_t ev,
+           coap_endpoint_t *remote,
+           coap_packet_t *request,
+           coap_blocking_response_handler_t request_callback));
 
-  uint16_t mid;
-  coap_timer_t retrans_timer;
-  uint32_t retrans_interval;
-  uint8_t retrans_counter;
+#define COAP_BLOCKING_REQUEST(server_endpoint, request, chunk_handler)  \
+  {                                                                     \
+    static coap_request_state_t request_state;                          \
+    PT_SPAWN(process_pt, &request_state.pt,                             \
+             coap_blocking_request(&request_state, ev,                  \
+                                   server_endpoint,                     \
+                                   request, chunk_handler)              \
+             );                                                         \
+  }
 
-  coap_endpoint_t endpoint;
-
-  coap_resource_response_handler_t callback;
-  void *callback_data;
-
-  uint16_t packet_len;
-  uint8_t packet[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
-                                                 * Use snprintf(buf, len+1, "", ...) to completely fill payload */
-} coap_transaction_t;
-
-coap_transaction_t *coap_new_transaction(uint16_t mid, const coap_endpoint_t *ep);
-void coap_send_transaction(coap_transaction_t *t);
-void coap_clear_transaction(coap_transaction_t *t);
-coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
-
-#endif /* COAP_TRANSACTIONS_H_ */
+#endif /* COAP_BLOCKING_API_H_ */

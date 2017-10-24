@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Lars Schmertmann <SmallLars@t-online.de>.
+ * Copyright (c) 2016, SICS, Swedish ICT AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,25 +25,27 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
  */
 
 /**
  * \file
- *      CoAP module for block 1 handling
+ *         API for CoAP transport
  * \author
- *      Lars Schmertmann <SmallLars@t-online.de>
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
  */
 
-#ifndef COAP_BLOCK1_H_
-#define COAP_BLOCK1_H_
+#ifndef COAP_TRANSPORT_H_
+#define COAP_TRANSPORT_H_
 
-#include "coap.h"
-#include <stddef.h>
-#include <stdint.h>
+#include "coap-endpoint.h"
 
-int coap_block1_handler(coap_packet_t *request, coap_packet_t *response,
-                        uint8_t *target, size_t *len, size_t max_len);
+void coap_transport_init(void);
 
-#endif /* COAP_BLOCK1_H_ */
+void coap_send_message(const coap_endpoint_t *ep, const uint8_t *data,
+                       uint16_t length);
+
+uint8_t *coap_databuf(void);
+uint16_t coap_datalen(void);
+
+#endif /* COAP_TRANSPORT_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Lars Schmertmann <SmallLars@t-online.de>.
+ * Copyright (c) 2016, SICS Swedish ICT
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,42 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
+ *
  */
 
 /**
  * \file
- *      CoAP module for block 1 handling
+ *      Callback API for doing CoAP requests
+ *      Adapted from the blocking API
  * \author
- *      Lars Schmertmann <SmallLars@t-online.de>
+ *      Joakim Eriksson, joakime@sics.se
  */
 
-#ifndef COAP_BLOCK1_H_
-#define COAP_BLOCK1_H_
+#ifndef COAP_CALLBACK_API_H_
+#define COAP_CALLBACK_API_H_
 
-#include "coap.h"
-#include <stddef.h>
-#include <stdint.h>
+#include "coap-engine.h"
+#include "coap-transactions.h"
+#include "sys/cc.h"
 
-int coap_block1_handler(coap_packet_t *request, coap_packet_t *response,
-                        uint8_t *target, size_t *len, size_t max_len);
+/*---------------------------------------------------------------------------*/
+/*- Client Part -------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+typedef struct coap_request_state coap_request_state_t;
 
-#endif /* COAP_BLOCK1_H_ */
+struct coap_request_state {
+  coap_transaction_t *transaction;
+  coap_packet_t *response;
+  coap_packet_t *request;
+  coap_endpoint_t *remote_endpoint;
+  uint32_t block_num;
+  void *user_data;
+  coap_timer_t coap_timer;
+  void (*callback)(coap_request_state_t *state);
+};
+
+void coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
+                       coap_packet_t *request,
+                       void (*callback)(coap_request_state_t *state));
+
+#endif /* COAP_CALLBACK_API_H_ */

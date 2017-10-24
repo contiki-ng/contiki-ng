@@ -36,19 +36,16 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <string.h>
 #include "coap-engine.h"
+#include <string.h>
+#include <stdio.h>
 
 #define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
 #else
 #define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
 #endif
 
 #define ADD_CHAR_IF_POSSIBLE(char) \
@@ -76,14 +73,15 @@
 /*---------------------------------------------------------------------------*/
 /*- Resource Handlers -------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void
-well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
-                            uint16_t preferred_size, int32_t *offset)
+static void
+well_known_core_get_handler(coap_packet_t *request, coap_packet_t *response,
+                            uint8_t *buffer, uint16_t preferred_size,
+                            int32_t *offset)
 {
   size_t strpos = 0;            /* position in overall string (which is larger than the buffer) */
   size_t bufpos = 0;            /* position within buffer (bytes written) */
   size_t tmplen = 0;
-  resource_t *resource = NULL;
+  coap_resource_t *resource = NULL;
 
 #if COAP_LINK_FORMAT_FILTERING
   /* For filtering. */
@@ -113,8 +111,8 @@ well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
   }
 #endif
 
-  for(resource = (resource_t *)list_head(rest_get_resources()); resource;
-      resource = resource->next) {
+  for(resource = coap_get_first_resource(); resource;
+      resource = coap_get_next_resource(resource)) {
 #if COAP_LINK_FORMAT_FILTERING
     /* Filtering */
     if(len) {
