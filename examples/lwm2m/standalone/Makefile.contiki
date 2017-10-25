@@ -1,0 +1,53 @@
+CONTIKI = ../../..
+CP=cp
+MKDIR=mkdir
+
+DTLS_PATH := $(CONTIKI)/os/net/security
+CORE_FILES = sys/cc.h sys/cc-gcc.h lib/list.c lib/memb.c
+COAP_FILES = ${addprefix coap/,${filter-out coap-blocking-api.% coap-uip.% coap-timer-default.%,${notdir ${wildcard $(CONTIKI)/os/net/app-layer/coap/coap*}}}}
+LWM2M_FILES = ${addprefix lwm2m/,${filter-out ,${notdir ${wildcard $(CONTIKI)/os/services/lwm2m/lwm2m-*}}}}
+IPSO_FILES = ${addprefix ipso-objects/,${filter-out ipso-leds-control.c ipso-objects.% ipso-temperature.% ipso-light-control.% ipso-button.c,${notdir ${wildcard $(CONTIKI)/os/services/ipso-objects/ipso-*}}}}
+TARGET_FILES += ${addprefix $(TARGETCDIR)/,$(CORE_FILES) $(CORE_FILES:.c=.h) \
+	$(COAP_FILES) $(LWM2M_FILES) $(IPSO_FILES)}
+
+ifneq ($(MAKE_WITH_DTLS),)
+ DTLS_FILES = ${subst $(DTLS_PATH)/,,${wildcard ${addprefix $(DTLS_PATH)/tinydtls/,*.[ch] ${addsuffix /*.[ch],$(TINYDTLS_DIRS)}}}}
+ TARGET_FILES += ${addprefix $(TARGETCDIR)/,$(DTLS_FILES)}
+endif
+
+SOURCE_FILES += ${filter %.c,$(TARGET_FILES)}
+OBJECT_FILES = $(SOURCE_FILES:.c=.o)
+
+$(TARGETCDIR):
+	@$(MKDIR) $@
+
+$(TARGETCDIRS): $(TARGETCDIR)
+	@$(MKDIR) $@
+
+$(TARGETCDIR)/sys/%: $(CONTIKI)/os/sys/% | $(TARGETCDIRS)
+	@$(CP) -av $^ $@
+
+$(TARGETCDIR)/lib/%: $(CONTIKI)/os/lib/% | $(TARGETCDIRS)
+	@$(CP) -av $^ $@
+
+$(TARGETCDIR)/coap/%: $(CONTIKI)/os/net/app-layer/coap/% | $(TARGETCDIRS)
+	@$(CP) -av $^ $@
+
+$(TARGETCDIR)/lwm2m/%: $(CONTIKI)/os/services/lwm2m/% | $(TARGETCDIRS)
+	@$(CP) -av $^ $@
+
+$(TARGETCDIR)/ipso-objects/%: $(CONTIKI)/os/services/ipso-objects/% | $(TARGETCDIRS)
+	@$(CP) -av $^ $@
+
+$(TARGETCDIR)/tinydtls/%.c: $(DTLS_PATH)/tinydtls/%.c | $(TARGETCDIRS)
+	@$(CP) -av $^ $@
+
+$(TARGETCDIR)/tinydtls/%.h: $(DTLS_PATH)/tinydtls/%.h | $(TARGETCDIRS)
+	@$(CP) -av $^ $@
+
+$(OBJECT_FILES): $(TARGET_FILES)
+
+copy:	$(TARGET_FILES)
+
+clean::
+	@-rm -rf $(TARGETCDIR)
