@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Yanzi Networks AB.
+ * Copyright (c) 2016, SICS Swedish ICT AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,71 +31,69 @@
 /**
  * \addtogroup ipso-objects
  * @{
+ *
  */
 
 /**
  * \file
- *         Implementation of OMA LWM2M / IPSO Temperature
+ *         Implementation of OMA LWM2M / IPSO sensor template.
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
  */
 
-#include <stdint.h>
-#include "ipso-sensor-template.h"
-#include "ipso-objects.h"
-#include "lwm2m-object.h"
+#ifndef IPSO_CONTROL_TEMPLATE_H_
+#define IPSO_CONTROL_TEMPLATE_H_
+
 #include "lwm2m-engine.h"
 
-#ifdef IPSO_TEMPERATURE
-extern const struct ipso_objects_sensor IPSO_TEMPERATURE;
-#endif /* IPSO_TEMPERATURE */
+typedef struct ipso_control ipso_control_t;
 
-#ifndef IPSO_TEMPERATURE_MIN
-#define IPSO_TEMPERATURE_MIN -50000
-#endif
+#define IPSO_CONTROL_USE_DIMMER   0x01
 
-#ifndef IPSO_TEMPERATURE_MAX
-#define IPSO_TEMPERATURE_MAX 80000
-#endif
+typedef lwm2m_status_t (*ipso_control_set_value_t)(uint8_t v);
 
-lwm2m_status_t get_temp_value(const ipso_sensor_t *sensor, int32_t *value);
-
-static ipso_sensor_value_t temp_value;
-
-static const ipso_sensor_t temp_sensor = {
-  .object_id = 3303,
-  .sensor_value = &temp_value,
-  .max_range = IPSO_TEMPERATURE_MAX, /* milli celcius */
-  .min_range = IPSO_TEMPERATURE_MIN, /* milli celcius */
-  .get_value_in_millis = get_temp_value,
-  .unit = "Cel",
-  .update_interval = 10
+/* Values of the IPSO control object */
+struct ipso_control {
+  lwm2m_object_instance_t reg_object;
+  uint8_t flags;
+  uint8_t value;  /* used to emulate on/off and dim-value */
+  uint32_t on_time; /* on-time in seconds */
+  uint64_t last_on_time;
+  ipso_control_set_value_t set_value;
 };
 
-/*---------------------------------------------------------------------------*/
-lwm2m_status_t
-get_temp_value(const ipso_sensor_t *s, int32_t *value)
-{
-#ifdef IPSO_TEMPERATURE
-  if(IPSO_TEMPERATURE.read_value == NULL ||
-     IPSO_TEMPERATURE.read_value(value) != 0) {
-    return LWM2M_STATUS_OK;
-  }
-#endif /* IPSO_TEMPERATURE */
-  return LWM2M_STATUS_ERROR;
-}
-/*---------------------------------------------------------------------------*/
-void
-ipso_temperature_init(void)
-{
-#ifdef IPSO_TEMPERATURE
-  if(IPSO_TEMPERATURE.init) {
-    IPSO_TEMPERATURE.init();
-  }
-#endif /* IPSO_TEMPERATURE */
 
-  ipso_sensor_add(&temp_sensor);
+int ipso_control_add(ipso_control_t *control);
+int ipso_control_remove(ipso_control_t *control);
+
+static inline uint16_t
+ipso_control_get_object_id(const ipso_control_t *control)
+{
+  return control->reg_object.object_id;
 }
-/*---------------------------------------------------------------------------*/
+
+static inline uint16_t
+ipso_control_get_instance_id(const ipso_control_t *control)
+{
+  return control->reg_object.instance_id;
+}
+
+static inline uint8_t
+ipso_control_is_on(const ipso_control_t *control)
+{
+  return (control->value & 0x80) != 0;
+}
+
+static inline uint8_t
+ipso_control_get_value(const ipso_control_t *control)
+{
+  return (control->value & 0x80) != 0 ? (control->value & 0x7f) : 0;
+}
+
+lwm2m_status_t ipso_control_set_on(ipso_control_t *control, uint8_t onoroff);
+
+lwm2m_status_t ipso_control_set_value(ipso_control_t *control, uint8_t dimm_value);
+
+#endif /* IPSO_CONTROL_TEMPLATE_H_ */
 /** @} */

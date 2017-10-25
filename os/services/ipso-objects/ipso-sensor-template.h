@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Yanzi Networks AB.
+ * Copyright (c) 2016, SICS Swedish ICT AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,71 +31,53 @@
 /**
  * \addtogroup ipso-objects
  * @{
+ *
  */
 
 /**
  * \file
- *         Implementation of OMA LWM2M / IPSO Temperature
+ *         Implementation of OMA LWM2M / IPSO sensor template.
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
  */
 
-#include <stdint.h>
-#include "ipso-sensor-template.h"
-#include "ipso-objects.h"
-#include "lwm2m-object.h"
+#ifndef IPSO_SENSOR_TEMPLATE_H_
+#define IPSO_SENSOR_TEMPLATE_H_
+
 #include "lwm2m-engine.h"
 
-#ifdef IPSO_TEMPERATURE
-extern const struct ipso_objects_sensor IPSO_TEMPERATURE;
-#endif /* IPSO_TEMPERATURE */
+typedef struct ipso_sensor ipso_sensor_t;
 
-#ifndef IPSO_TEMPERATURE_MIN
-#define IPSO_TEMPERATURE_MIN -50000
-#endif
+typedef lwm2m_status_t (*ipso_sensor_get_value_millis_t)(const ipso_sensor_t *sensor, int32_t *v);
 
-#ifndef IPSO_TEMPERATURE_MAX
-#define IPSO_TEMPERATURE_MAX 80000
-#endif
+/* Values of the IPSO object */
+typedef struct ipso_sensor_value {
+  lwm2m_object_instance_t reg_object;
+  const ipso_sensor_t *sensor;
+  uint8_t flags;
+  int32_t last_value;
+  int32_t min_value;
+  int32_t max_value;
+} ipso_sensor_value_t;
 
-lwm2m_status_t get_temp_value(const ipso_sensor_t *sensor, int32_t *value);
-
-static ipso_sensor_value_t temp_value;
-
-static const ipso_sensor_t temp_sensor = {
-  .object_id = 3303,
-  .sensor_value = &temp_value,
-  .max_range = IPSO_TEMPERATURE_MAX, /* milli celcius */
-  .min_range = IPSO_TEMPERATURE_MIN, /* milli celcius */
-  .get_value_in_millis = get_temp_value,
-  .unit = "Cel",
-  .update_interval = 10
+/* Meta data about an IPSO sensor object */
+struct ipso_sensor {
+  /* LWM2M object type */
+  uint16_t object_id;
+  uint16_t instance_id;
+  /* When we read out the value we send in a context to write to */
+  ipso_sensor_get_value_millis_t get_value_in_millis;
+  int32_t min_range;
+  int32_t max_range;
+  char *unit;
+  /* update interval in seconds */
+  uint16_t update_interval;
+  ipso_sensor_value_t *sensor_value;
 };
 
-/*---------------------------------------------------------------------------*/
-lwm2m_status_t
-get_temp_value(const ipso_sensor_t *s, int32_t *value)
-{
-#ifdef IPSO_TEMPERATURE
-  if(IPSO_TEMPERATURE.read_value == NULL ||
-     IPSO_TEMPERATURE.read_value(value) != 0) {
-    return LWM2M_STATUS_OK;
-  }
-#endif /* IPSO_TEMPERATURE */
-  return LWM2M_STATUS_ERROR;
-}
-/*---------------------------------------------------------------------------*/
-void
-ipso_temperature_init(void)
-{
-#ifdef IPSO_TEMPERATURE
-  if(IPSO_TEMPERATURE.init) {
-    IPSO_TEMPERATURE.init();
-  }
-#endif /* IPSO_TEMPERATURE */
 
-  ipso_sensor_add(&temp_sensor);
-}
-/*---------------------------------------------------------------------------*/
-/** @} */
+int ipso_sensor_add(const ipso_sensor_t *sensor);
+int ipso_sensor_remove(const ipso_sensor_t *sensor);
+
+#endif /* IPSO_SENSOR_TEMPLATE_H_ */
