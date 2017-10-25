@@ -53,8 +53,13 @@
 #endif /* LWM2M_DEVICE_MODEL_NUMBER */
 
 #ifndef LWM2M_DEVICE_FIRMWARE_VERSION
+#ifdef CONTIKI_VERSION_STRING
 #define LWM2M_DEVICE_FIRMWARE_VERSION CONTIKI_VERSION_STRING
+#endif /* CONTIKI_VERSION_STRING */
 #endif /* LWM2M_DEVICE_FIRMWARE_VERSION */
+
+int32_t lwm2m_device_get_time(void);
+void    lwm2m_device_set_time(int32_t time);
 
 void lwm2m_device_init(void);
 

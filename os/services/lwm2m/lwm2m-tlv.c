@@ -44,7 +44,7 @@
 
 #include <string.h>
 #include <stdint.h>
-#include "oma-tlv.h"
+#include "lwm2m-tlv.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -56,7 +56,7 @@
 
 /*---------------------------------------------------------------------------*/
 static inline uint8_t
-get_len_type(const oma_tlv_t *tlv)
+get_len_type(const lwm2m_tlv_t *tlv)
 {
   if(tlv->length < 8) {
     return 0;
@@ -70,7 +70,7 @@ get_len_type(const oma_tlv_t *tlv)
 }
 /*---------------------------------------------------------------------------*/
 size_t
-oma_tlv_read(oma_tlv_t *tlv, const uint8_t *buffer, size_t len)
+lwm2m_tlv_read(lwm2m_tlv_t *tlv, const uint8_t *buffer, size_t len)
 {
   uint8_t len_type;
   uint8_t len_pos = 1;
@@ -104,7 +104,7 @@ oma_tlv_read(oma_tlv_t *tlv, const uint8_t *buffer, size_t len)
 }
 /*---------------------------------------------------------------------------*/
 size_t
-oma_tlv_get_size(const oma_tlv_t *tlv)
+lwm2m_tlv_get_size(const lwm2m_tlv_t *tlv)
 {
   size_t size;
   /* first hdr + len size */
@@ -117,8 +117,11 @@ oma_tlv_get_size(const oma_tlv_t *tlv)
   return size;
 }
 /*---------------------------------------------------------------------------*/
+/* If the tlv->value is NULL - only the header will be generated - useful for
+ * large strings or opaque streaming (block transfer)
+ */
 size_t
-oma_tlv_write(const oma_tlv_t *tlv, uint8_t *buffer, size_t len)
+lwm2m_tlv_write(const lwm2m_tlv_t *tlv, uint8_t *buffer, size_t buffersize)
 {
   int pos;
   uint8_t len_type;
@@ -127,8 +130,12 @@ oma_tlv_write(const oma_tlv_t *tlv, uint8_t *buffer, size_t len)
   len_type = get_len_type(tlv);
   pos = 1 + len_type;
   /* ensure that we do not write too much */
-  if(len < tlv->length + pos) {
-    PRINTF("OMA-TLV: Could not write the TLV - buffer overflow.\n");
+  if(tlv->value != NULL && buffersize < tlv->length + pos) {
+    PRINTF("LWM2M-TLV: Could not write the TLV - buffer overflow.\n");
+    return 0;
+  }
+
+  if(buffersize < pos + 2) {
     return 0;
   }
 
@@ -156,61 +163,75 @@ oma_tlv_write(const oma_tlv_t *tlv, uint8_t *buffer, size_t len)
   }
 
   /* finally add the value */
-  memcpy(&buffer[pos], tlv->value, tlv->length);
+  if(tlv->value != NULL && tlv->length > 0) {
+    memcpy(&buffer[pos], tlv->value, tlv->length);
+  }
 
   if(DEBUG) {
     int i;
     PRINTF("TLV:");
-    for(i = 0; i < pos + tlv->length; i++) {
+    for(i = 0; i < pos + ((tlv->value != NULL) ? tlv->length : 0); i++) {
       PRINTF("%02x", buffer[i]);
     }
     PRINTF("\n");
   }
 
-  return pos + tlv->length;
+  return pos + ((tlv->value != NULL) ? tlv->length : 0);
 }
 /*---------------------------------------------------------------------------*/
 int32_t
-oma_tlv_get_int32(const oma_tlv_t *tlv)
+lwm2m_tlv_get_int32(const lwm2m_tlv_t *tlv)
 {
   int i;
   int32_t value = 0;
-  /* will probably need to handle MSB as a sign bit? */
+
   for(i = 0; i < tlv->length; i++) {
     value = (value << 8) | tlv->value[i];
   }
+
+  /* Ensure that we set all the bits above what we read in */
+  if(tlv->value[0] & 0x80) {
+    while(i < 4) {
+      value = value | (0xff << (i * 8));
+      i++;
+    }
+  }
+
   return value;
 }
 /*---------------------------------------------------------------------------*/
 size_t
-oma_tlv_write_int32(int16_t id, int32_t value, uint8_t *buffer, size_t len)
+lwm2m_tlv_write_int32(uint8_t type, int16_t id, int32_t value, uint8_t *buffer, size_t len)
 {
-  oma_tlv_t tlv;
-  size_t tlvlen = 0;
+  lwm2m_tlv_t tlv;
   uint8_t buf[4];
   int i;
+  int v;
+  int last_bit;
   PRINTF("Exporting int32 %d %ld ", id, (long)value);
 
-  buf[3] = value & 0xff;
-  value = value >> 8;
-  for(i = 1; value > 0 && i < 4; i++) {
+  v = value < 0 ? -1 : 0;
+  i = 0;
+  do {
     buf[3 - i] = value & 0xff;
+    /* check if the last MSB indicates that we need another byte */
+    last_bit = (v == 0 && (value & 0x80) > 0) || (v == -1 && (value & 0x80) == 0);
     value = value >> 8;
-  }
-  tlvlen = i;
+    i++;
+  } while((value != v || last_bit) && i < 4);
 
   /* export INT as TLV */
-  PRINTF("len: %zu\n", tlvlen);
-  tlv.type = OMA_TLV_TYPE_RESOURCE;
-  tlv.length = tlvlen;
-  tlv.value = &buf[3 - (tlvlen - 1)];
+  PRINTF("len: %d\n", i);
+  tlv.type = type;
+  tlv.length = i;
+  tlv.value = &buf[3 - (i - 1)];
   tlv.id = id;
-  return oma_tlv_write(&tlv, buffer, len);
+  return lwm2m_tlv_write(&tlv, buffer, len);
 }
 /*---------------------------------------------------------------------------*/
 /* convert fixpoint 32-bit to a IEEE Float in the byte array*/
 size_t
-oma_tlv_write_float32(int16_t id, int32_t value, int bits,
+lwm2m_tlv_write_float32(uint8_t type, int16_t id, int32_t value, int bits,
                       uint8_t *buffer, size_t len)
 {
   int i;
@@ -218,7 +239,7 @@ oma_tlv_write_float32(int16_t id, int32_t value, int bits,
   int32_t val = 0;
   int32_t v;
   uint8_t b[4];
-  oma_tlv_t tlv;
+  lwm2m_tlv_t tlv;
 
   v = value;
   if(v < 0) {
@@ -243,24 +264,29 @@ oma_tlv_write_float32(int16_t id, int32_t value, int bits,
   /* convert to the thing we should have */
   e = e - bits + 127;
 
+  if(value == 0) {
+    e = 0;
+  }
+
   /* is this the right byte order? */
   b[0] = (value < 0 ? 0x80 : 0) | (e >> 1);
   b[1] = ((e & 1) << 7) | ((val >> 16) & 0x7f);
   b[2] = (val >> 8) & 0xff;
   b[3] = val & 0xff;
 
+  PRINTF("B=%02x%02x%02x%02x\n", b[0], b[1], b[2], b[3]);
   /* construct the TLV */
-  tlv.type = OMA_TLV_TYPE_RESOURCE;
+  tlv.type = type;
   tlv.length = 4;
   tlv.value = b;
   tlv.id = id;
 
-  return oma_tlv_write(&tlv, buffer, len);
+  return lwm2m_tlv_write(&tlv, buffer, len);
 }
 /*---------------------------------------------------------------------------*/
 /* convert float to fixpoint */
 size_t
-oma_tlv_float32_to_fix(const oma_tlv_t *tlv, int32_t *value, int bits)
+lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
 {
   /* TLV needs to be 4 bytes */
   int e, i;
@@ -294,3 +320,21 @@ oma_tlv_float32_to_fix(const oma_tlv_t *tlv, int32_t *value, int bits)
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
+
+#if 0
+int main(int argc, char *argv[])
+{
+  lwm2m_tlv_t tlv;
+  uint8_t data[24];
+  /* Make -1 */
+  tlv.length = 2;
+  tlv.value = data;
+  data[0] = 0x00;
+  data[1] = 0x80,
+
+  PRINTF("TLV:%d\n", lwm2m_tlv_get_int32(&tlv));
+
+  PRINTF("Len: %d\n", lwm2m_tlv_write_int32(0, 1, -0x88987f, data, 24));
+
+}
+#endif

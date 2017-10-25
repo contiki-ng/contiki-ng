@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Eistec AB.
+ * Copyright (c) 2017, SICS Swedish ICT
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,31 +31,29 @@
 /**
  * \addtogroup oma-lwm2m
  * @{
+ *
  */
+#ifndef LWM2M_SERVER_H
+#define LWM2M_SERVER_H
 
-/**
- * \file
- *         Header file for the Contiki OMA LWM2M JSON writer
- * \author
- *         Joakim Nohlgård <joakim.nohlgard@eistec.se>
- */
+#include "contiki.h"
 
-#ifndef LWM2M_JSON_H_
-#define LWM2M_JSON_H_
+#ifdef LWM2M_SERVER_CONF_MAX_COUNT
+#define LWM2M_SERVER_MAX_COUNT LWM2M_SERVER_CONF_MAX_COUNT
+#else
+#define LWM2M_SERVER_MAX_COUNT 2
+#endif
 
-#include "lwm2m-object.h"
+typedef struct {
+  lwm2m_object_instance_t instance;
+  uint16_t server_id;
+  uint32_t lifetime;
+} lwm2m_server_t;
 
-struct json_data {
-  uint8_t type; /* S,B,V */
-  uint8_t *name;
-  uint8_t *value;
-  uint8_t name_len;
-  uint8_t value_len;
-};
+lwm2m_server_t *lwm2m_server_add(uint16_t instance_id,
+                                 uint16_t server_id,
+                                 uint32_t lifetime);
 
-extern const lwm2m_writer_t lwm2m_json_writer;
+void lwm2m_server_init(void);
 
-int lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json);
-
-#endif /* LWM2M_JSON_H_ */
-/** @} */
+#endif /* LWM2M_SERVER_H */

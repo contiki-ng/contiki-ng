@@ -33,18 +33,18 @@
 
 /**
  * \file
- *         Header file for the Contiki OMA LWM2M TLV reader
+ *         Header file for the Contiki OMA LWM2M TLV writer
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
  */
 
-#ifndef OMA_TLV_READER_H_
-#define OMA_TLV_READER_H_
+#ifndef LWM2M_TLV_WRITER_H_
+#define LWM2M_TLV_WRITER_H_
 
 #include "lwm2m-object.h"
 
-extern const lwm2m_reader_t oma_tlv_reader;
+extern const lwm2m_writer_t lwm2m_tlv_writer;
 
-#endif /* OMA_TLV_READER_H_ */
+#endif /* LWM2M_TLV_WRITER_H_ */
 /** @} */

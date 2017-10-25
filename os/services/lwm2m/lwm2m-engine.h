@@ -52,31 +52,68 @@
 /* LWM2M / CoAP Content-Formats */
 typedef enum {
   LWM2M_TEXT_PLAIN = 1541,
-  LWM2M_TLV        = 1542,
-  LWM2M_JSON       = 1543,
-  LWM2M_OPAQUE     = 1544
+  LWM2M_TLV        = 11542,
+  LWM2M_JSON       = 11543,
+  LWM2M_OLD_TLV    = 1542,
+  LWM2M_OLD_JSON   = 1543,
+  LWM2M_OLD_OPAQUE  = 1544
 } lwm2m_content_format_t;
 
 void lwm2m_engine_init(void);
-void lwm2m_engine_register_default_objects(void);
-void lwm2m_engine_use_bootstrap_server(int use);
-void lwm2m_engine_use_registration_server(int use);
-void lwm2m_engine_register_with_server(const uip_ipaddr_t *server, uint16_t port);
-void lwm2m_engine_register_with_bootstrap_server(const uip_ipaddr_t *server, uint16_t port);
 
-const lwm2m_object_t *lwm2m_engine_get_object(uint16_t id);
+int lwm2m_engine_set_rd_data(lwm2m_buffer_t *outbuf, int block);
 
-int lwm2m_engine_register_object(const lwm2m_object_t *object);
+typedef lwm2m_status_t
+(* lwm2m_object_instance_callback_t)(lwm2m_object_instance_t *object,
+                                     lwm2m_context_t *ctx);
+typedef int
+(* lwm2m_resource_dim_callback_t)(lwm2m_object_instance_t *object,
+                                  uint16_t resource_id);
 
-void lwm2m_engine_handler(const lwm2m_object_t *object,
-                          void *request, void *response,
-                          uint8_t *buffer, uint16_t preferred_size,
-                          int32_t *offset);
+#define LWM2M_OBJECT_INSTANCE_NONE 0xffff
 
-void lwm2m_engine_delete_handler(const lwm2m_object_t *object,
-                                 void *request, void *response,
-                                 uint8_t *buffer, uint16_t preferred_size,
-                                 int32_t *offset);
+struct lwm2m_object_instance {
+  lwm2m_object_instance_t *next;
+  uint16_t object_id;
+  uint16_t instance_id;
+  /* an array of resource IDs for discovery, etc */
+  const lwm2m_resource_id_t *resource_ids;
+  uint16_t resource_count;
+  /* the callback for requests */
+  lwm2m_object_instance_callback_t callback;
+  lwm2m_resource_dim_callback_t resource_dim_callback;
+};
+
+typedef struct {
+  uint16_t object_id;
+  lwm2m_object_instance_t *(* create_instance)(uint16_t instance_id,
+                                               lwm2m_status_t *status);
+  int (* delete_instance)(uint16_t instance_id, lwm2m_status_t *status);
+  lwm2m_object_instance_t *(* get_first)(lwm2m_status_t *status);
+  lwm2m_object_instance_t *(* get_next)(lwm2m_object_instance_t *instance,
+                                        lwm2m_status_t *status);
+  lwm2m_object_instance_t *(* get_by_id)(uint16_t instance_id,
+                                         lwm2m_status_t *status);
+} lwm2m_object_impl_t;
+
+typedef struct lwm2m_object lwm2m_object_t;
+struct lwm2m_object {
+  lwm2m_object_t *next;
+  const lwm2m_object_impl_t *impl;
+};
+
+lwm2m_object_instance_t *lwm2m_engine_get_instance_buffer(void);
+
+int  lwm2m_engine_has_instance(uint16_t object_id, uint16_t instance_id);
+int  lwm2m_engine_add_object(lwm2m_object_instance_t *object);
+void lwm2m_engine_remove_object(lwm2m_object_instance_t *object);
+int  lwm2m_engine_add_generic_object(lwm2m_object_t *object);
+void lwm2m_engine_remove_generic_object(lwm2m_object_t *object);
+void lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
+                                   uint16_t resource);
+
+void lwm2m_engine_set_opaque_callback(lwm2m_context_t *ctx, lwm2m_write_opaque_callback cb);
+
 
 #endif /* LWM2M_ENGINE_H */
 /** @} */

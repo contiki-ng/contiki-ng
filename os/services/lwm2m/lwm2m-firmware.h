@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Eistec AB.
+ * Copyright (c) 2016, SICS Swedish ICT AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,33 +29,17 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
+ * \addtogroup
  * @{
+ *
+ * Code for firmware object of lwm2m
+ *
  */
 
-/**
- * \file
- *         Header file for the Contiki OMA LWM2M JSON writer
- * \author
- *         Joakim Nohlgård <joakim.nohlgard@eistec.se>
- */
+#ifndef LWM2M_FIRMWARE_H_
+#define LWM2M_FIRMWARE_H_
 
-#ifndef LWM2M_JSON_H_
-#define LWM2M_JSON_H_
+void lwm2m_firmware_init(void);
 
-#include "lwm2m-object.h"
-
-struct json_data {
-  uint8_t type; /* S,B,V */
-  uint8_t *name;
-  uint8_t *value;
-  uint8_t name_len;
-  uint8_t value_len;
-};
-
-extern const lwm2m_writer_t lwm2m_json_writer;
-
-int lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json);
-
-#endif /* LWM2M_JSON_H_ */
+#endif /* LWM2M_FIRMWARE_H_ */
 /** @} */

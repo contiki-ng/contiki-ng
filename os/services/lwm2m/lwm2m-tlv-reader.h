@@ -28,62 +28,23 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \addtogroup oma-lwm2m
- * @{
- *
- */
+/** \addtogroup oma-lwm2m
+ * @{ */
 
 /**
  * \file
- *         Implementation of the Contiki OMA LWM2M TLV writer
+ *         Header file for the Contiki OMA LWM2M TLV reader
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
  */
 
+#ifndef LWM2M_TLV_READER_H_
+#define LWM2M_TLV_READER_H_
+
 #include "lwm2m-object.h"
-#include "oma-tlv.h"
-/*---------------------------------------------------------------------------*/
-static size_t
-write_boolean_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
-                  int value)
-{
-  return oma_tlv_write_int32(ctx->resource_id, value != 0 ? 1 : 0,
-                             outbuf, outlen);
-}
-/*---------------------------------------------------------------------------*/
-static size_t
-write_int_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
-              int32_t value)
-{
-  return oma_tlv_write_int32(ctx->resource_id, value, outbuf, outlen);
-}
-/*---------------------------------------------------------------------------*/
-static size_t
-write_float32fix_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf,
-                     size_t outlen, int32_t value, int bits)
-{
-  return oma_tlv_write_float32(ctx->resource_id, value, bits, outbuf, outlen);
-}
-/*---------------------------------------------------------------------------*/
-static size_t
-write_string_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
-                 const char *value, size_t stringlen)
-{
-  oma_tlv_t tlv;
-  tlv.type = OMA_TLV_TYPE_RESOURCE;
-  tlv.value = (uint8_t *) value;
-  tlv.length = (uint32_t) stringlen;
-  tlv.id = ctx->resource_id;
-  return oma_tlv_write(&tlv, outbuf, outlen);
-}
-/*---------------------------------------------------------------------------*/
-const lwm2m_writer_t oma_tlv_writer = {
-  write_int_tlv,
-  write_string_tlv,
-  write_float32fix_tlv,
-  write_boolean_tlv
-};
-/*---------------------------------------------------------------------------*/
+
+extern const lwm2m_reader_t lwm2m_tlv_reader;
+
+#endif /* LWM2M_TLV_READER_H_ */
 /** @} */
