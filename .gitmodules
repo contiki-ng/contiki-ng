@@ -3,10 +3,10 @@
 	url = https://github.com/JelmerT/cc2538-bsl.git
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc26xxware"]
 	path = arch/cpu/cc26xx-cc13xx/lib/cc26xxware
-	url = https://github.com/contiki-os/cc26xxware.git
+	url = https://github.com/contiki-ng/cc26xxware.git
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc13xxware"]
 	path = arch/cpu/cc26xx-cc13xx/lib/cc13xxware
-	url = https://github.com/contiki-os/cc13xxware.git
+	url = https://github.com/contiki-ng/cc13xxware.git
 [submodule "tools/sensniff"]
 	path = tools/sensniff
 	url = https://github.com/g-oikonomou/sensniff.git
