@@ -35,30 +35,30 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "tools/rpl-tools.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "dev/leds.h"
 #include "button-sensor.h"
 #include "pot-sensor.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-static char content[REST_MAX_CHUNK_SIZE];
+static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
 
 static void event_sensors_dr1199_handler();
-static void get_sensors_dr1199_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw1_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw2_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw3_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw4_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_dio8_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_pot_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d1_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d2_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d3_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d3_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d6_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_all_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_sensors_dr1199_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw4_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_dio8_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_pot_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d3_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d6_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_all_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 #define CONTENT_PRINTF(...) { if(content_len < sizeof(content)) { content_len += snprintf(content + content_len, sizeof(content) - content_len, __VA_ARGS__); } }
 
@@ -93,25 +93,25 @@ EVENT_RESOURCE(resource_sensors_dr1199,               /* name */
                NULL,                                  /* DELETE handler */
                event_sensors_dr1199_handler);         /* event handler */
 static void
-get_sensors_dr1199_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_sensors_dr1199_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.APPLICATION_JSON) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == APPLICATION_JSON) {
     content_len = 0;
     CONTENT_PRINTF("{\"DR1199\":[");
     CONTENT_PRINTF("{\"Switch\":\"0x%X\"},", button_sensor.value(0));
     CONTENT_PRINTF("{\"Pot\":\"%d\"}", pot_sensor.value(0));
     CONTENT_PRINTF("]}");
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, APPLICATION_JSON);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 static void
 event_sensors_dr1199_handler()
 {
   /* Registered observers are notified and will trigger the GET handler to create the response. */
-  REST.notify_subscribers(&resource_sensors_dr1199);
+  coap_notify_observers(&resource_sensors_dr1199);
 }
 /***********************************************/
 /* Resource and handler to obtain switch value */
@@ -123,15 +123,15 @@ RESOURCE(resource_switch_sw1,
          NULL,
          NULL);
 static void
-get_switch_sw1_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     PARSE_SWITCH(1)
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 RESOURCE(resource_switch_sw2,
@@ -141,15 +141,15 @@ RESOURCE(resource_switch_sw2,
          NULL,
          NULL);
 static void
-get_switch_sw2_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     PARSE_SWITCH(2)
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 RESOURCE(resource_switch_sw3,
@@ -159,15 +159,15 @@ RESOURCE(resource_switch_sw3,
          NULL,
          NULL);
 static void
-get_switch_sw3_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     PARSE_SWITCH(3)
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 RESOURCE(resource_switch_sw4,
@@ -177,15 +177,15 @@ RESOURCE(resource_switch_sw4,
          NULL,
          NULL);
 static void
-get_switch_sw4_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw4_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     PARSE_SWITCH(4)
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 RESOURCE(resource_switch_dio8,
@@ -195,15 +195,15 @@ RESOURCE(resource_switch_dio8,
          NULL,
          NULL);
 static void
-get_switch_dio8_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_dio8_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     PARSE_SWITCH(0)
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /*******************************************************/
@@ -216,15 +216,15 @@ RESOURCE(resource_pot,
          NULL,
          NULL);
 static void
-get_pot_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_pot_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     CONTENT_PRINTF("%d", pot_sensor.value(0));
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /************************************/
@@ -237,13 +237,13 @@ RESOURCE(resource_led_d1,
          put_post_led_d1_handler,
          NULL);
 static void
-put_post_led_d1_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     SET_LED(LEDS_GREEN)
   }
 }
@@ -254,13 +254,13 @@ RESOURCE(resource_led_d2,
          put_post_led_d2_handler,
          NULL);
 static void
-put_post_led_d2_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     SET_LED(LEDS_BLUE)
   }
 }
@@ -271,13 +271,13 @@ RESOURCE(resource_led_d3,
          put_post_led_d3_handler,
          NULL);
 static void
-put_post_led_d3_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     SET_LED(LEDS_RED)
   }
 }
@@ -288,13 +288,13 @@ RESOURCE(resource_led_d3_1174,
          put_post_led_d3_1174_handler,
          NULL);
 static void
-put_post_led_d3_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d3_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     SET_LED(LEDS_GP0);
   }
 }
@@ -305,13 +305,13 @@ RESOURCE(resource_led_d6_1174,
          put_post_led_d6_1174_handler,
          NULL);
 static void
-put_post_led_d6_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d6_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     SET_LED(LEDS_GP1);
   }
 }
@@ -322,13 +322,13 @@ RESOURCE(resource_led_all,
          put_post_led_all_handler,
          NULL);
 static void
-put_post_led_all_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_all_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     if(atoi((const char *)request_content) != 0) {
       leds_on(LEDS_ALL);
     } else {
@@ -358,20 +358,20 @@ PROCESS_THREAD(start_app, ev, data)
     rpl_tools_init(NULL);
   } printf("Starting RPL node\n");
 
-  rest_init_engine();
-  rest_activate_resource(&resource_switch_sw1, "DR1199/Switch/SW1");
-  rest_activate_resource(&resource_switch_sw2, "DR1199/Switch/SW2");
-  rest_activate_resource(&resource_switch_sw3, "DR1199/Switch/SW3");
-  rest_activate_resource(&resource_switch_sw4, "DR1199/Switch/SW4");
-  rest_activate_resource(&resource_switch_dio8, "DR1199/Switch/DIO8");
-  rest_activate_resource(&resource_pot, "DR1199/Potentiometer");
-  rest_activate_resource(&resource_led_d1, "DR1199/LED/D1");
-  rest_activate_resource(&resource_led_d2, "DR1199/LED/D2");
-  rest_activate_resource(&resource_led_d3, "DR1199/LED/D3");
-  rest_activate_resource(&resource_led_d3_1174, "DR1199/LED/D3On1174");
-  rest_activate_resource(&resource_led_d6_1174, "DR1199/LED/D6On1174");
-  rest_activate_resource(&resource_led_all, "DR1199/LED/All");
-  rest_activate_resource(&resource_sensors_dr1199, "DR1199/AllSensors");
+  coap_engine_init();
+  coap_activate_resource(&resource_switch_sw1, "DR1199/Switch/SW1");
+  coap_activate_resource(&resource_switch_sw2, "DR1199/Switch/SW2");
+  coap_activate_resource(&resource_switch_sw3, "DR1199/Switch/SW3");
+  coap_activate_resource(&resource_switch_sw4, "DR1199/Switch/SW4");
+  coap_activate_resource(&resource_switch_dio8, "DR1199/Switch/DIO8");
+  coap_activate_resource(&resource_pot, "DR1199/Potentiometer");
+  coap_activate_resource(&resource_led_d1, "DR1199/LED/D1");
+  coap_activate_resource(&resource_led_d2, "DR1199/LED/D2");
+  coap_activate_resource(&resource_led_d3, "DR1199/LED/D3");
+  coap_activate_resource(&resource_led_d3_1174, "DR1199/LED/D3On1174");
+  coap_activate_resource(&resource_led_d6_1174, "DR1199/LED/D6On1174");
+  coap_activate_resource(&resource_led_all, "DR1199/LED/All");
+  coap_activate_resource(&resource_sensors_dr1199, "DR1199/AllSensors");
   /* If sensor process generates an event, call event_handler of resource.
      This will make this resource observable by the client */
   while(1) {
@@ -382,4 +382,3 @@ PROCESS_THREAD(start_app, ev, data)
 
   PROCESS_END();
 }
-

@@ -36,12 +36,13 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_query,
          "title=\"Resource accepting query parameters\"",
@@ -51,7 +52,7 @@ RESOURCE(res_plugtest_query,
          NULL);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   coap_packet_t *const coap_req = (coap_packet_t *)request;
   int len = 0;
@@ -60,13 +61,13 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   PRINTF(
     "/query          GET (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
-  if((len = REST.get_query(request, &query))) {
+  if((len = coap_get_header_uri_query(request, &query))) {
     PRINTF("Query: %.*s\n", len, query);
     /* Code 2.05 CONTENT is default. */
   }
-  REST.set_header_content_type(response,
-                               REST.type.TEXT_PLAIN);
-  REST.set_response_payload(
+  coap_set_header_content_format(response,
+                                 TEXT_PLAIN);
+  coap_set_payload(
     response,
     buffer,
     snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,

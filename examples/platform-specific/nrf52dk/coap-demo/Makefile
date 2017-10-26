@@ -5,10 +5,10 @@ $(error Please specify whether coap-client or coap-server should be built)
 endif
 
 ifneq ($(filter coap-client coap-client.flash, $(MAKECMDGOALS)),)
-ifeq ($(SERVER_IPV6_ADDR),)
-$(error Please define SERVER_IPV6_ADDR=<full ipv6 addr>)
+ifeq ($(SERVER_IPV6_EP),)
+$(error Please define SERVER_IPV6_EP=<full-coap-IPv6-URI>)
 else
-CFLAGS += -DSERVER_IPV6_ADDR=\"$(SERVER_IPV6_ADDR)\"
+CFLAGS += -DSERVER_IPV6_EP=\"$(SERVER_IPV6_EP)\"
 CFLAGS += -DDEVICE_NAME=\"nRF52_DK_CoAP_Client\"
 endif
 else

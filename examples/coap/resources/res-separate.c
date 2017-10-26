@@ -37,11 +37,12 @@
  */
 
 #include <string.h>
-#include "rest-engine.h"
+#include <stdio.h>
+#include "coap-engine.h"
 #include "coap-separate.h"
 #include "coap-transactions.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_resume_handler(void);
 
 SEPARATE_RESOURCE(res_separate,
@@ -68,7 +69,7 @@ static uint8_t separate_active = 0;
 static application_separate_store_t separate_store[COAP_MAX_OPEN_SEPARATE];
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /*
    * Example allows only one open separate response.
@@ -96,11 +97,11 @@ res_resume_handler()
 {
   if(separate_active) {
     coap_transaction_t *transaction = NULL;
-    if((transaction = coap_new_transaction(separate_store->request_metadata.mid, &separate_store->request_metadata.addr, separate_store->request_metadata.port))) {
+    if((transaction = coap_new_transaction(separate_store->request_metadata.mid, &separate_store->request_metadata.endpoint))) {
       coap_packet_t response[1]; /* This way the packet can be treated as pointer as usual. */
 
       /* Restore the request information for the response. */
-      coap_separate_resume(response, &separate_store->request_metadata, REST.status.OK);
+      coap_separate_resume(response, &separate_store->request_metadata, CONTENT_2_05);
 
       coap_set_payload(response, separate_store->buffer, strlen(separate_store->buffer));
 

@@ -36,13 +36,15 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
+#include "random.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_validate,
          "title=\"Validation test resource\"",
@@ -72,7 +74,7 @@ validate_update_etag()
          validate_etag_len, validate_etag[0], validate_etag[1], validate_etag[2], validate_etag[3], validate_etag[4], validate_etag[5], validate_etag[6], validate_etag[7]);
 }
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   coap_packet_t *const coap_req = (coap_packet_t *)request;
 
@@ -85,17 +87,17 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   if((len = coap_get_header_etag(request, &bytes)) > 0
      && len == validate_etag_len && memcmp(validate_etag, bytes, len) == 0) {
     PRINTF("validate ");
-    REST.set_response_status(response, REST.status.NOT_MODIFIED);
-    REST.set_header_etag(response, validate_etag, validate_etag_len);
+    coap_set_status_code(response, VALID_2_03);
+    coap_set_header_etag(response, validate_etag, validate_etag_len);
 
     validate_change = 1;
     PRINTF("### SERVER ACTION ### Resouce will change\n");
   } else {
     /* Code 2.05 CONTENT is default. */
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_header_etag(response, validate_etag, validate_etag_len);
-    REST.set_header_max_age(response, 30);
-    REST.set_response_payload(
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_header_etag(response, validate_etag, validate_etag_len);
+    coap_set_header_max_age(response, 30);
+    coap_set_payload(
       response,
       buffer,
       snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
@@ -104,7 +106,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   }
 }
 static void
-res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
   coap_packet_t *const coap_req = (coap_packet_t *)request;
@@ -118,9 +120,9 @@ res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
           && memcmp(validate_etag, bytes, len) == 0))
      || len == 0) {
     validate_update_etag();
-    REST.set_header_etag(response, validate_etag, validate_etag_len);
+    coap_set_header_etag(response, validate_etag, validate_etag_len);
 
-    REST.set_response_status(response, REST.status.CHANGED);
+    coap_set_status_code(response, CHANGED_2_04);
 
     if(len > 0) {
       validate_change = 1;
@@ -134,6 +136,6 @@ res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
       bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
       validate_etag[0], validate_etag[1], validate_etag[2], validate_etag[3], validate_etag[4], validate_etag[5], validate_etag[6], validate_etag[7]);
 
-    REST.set_response_status(response, PRECONDITION_FAILED_4_12);
+    coap_set_status_code(response, PRECONDITION_FAILED_4_12);
   }
 }

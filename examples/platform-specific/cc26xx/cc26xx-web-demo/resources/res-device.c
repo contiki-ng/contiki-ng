@@ -37,7 +37,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "sys/clock.h"
 #include "coap-server.h"
@@ -46,6 +46,7 @@
 #include "ti-lib.h"
 
 #include <string.h>
+#include <stdio.h>
 /*---------------------------------------------------------------------------*/
 static uint16_t
 detect_chip(void)
@@ -74,106 +75,110 @@ detect_chip(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_hw(void *request, void *response, uint8_t *buffer,
+res_get_handler_hw(coap_packet_t *request, coap_packet_t *response,
+                   uint8_t *buffer,
                    uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
   uint16_t chip = detect_chip();
 
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s on CC%u", BOARD_STRING,
              chip);
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"HW Ver\":\"%s on CC%u\"}",
              BOARD_STRING, chip);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_XML) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
              "<hw-ver val=\"%s on CC%u\"/>", BOARD_STRING,
              chip);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, coap_server_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, coap_server_supported_msg,
                               strlen(coap_server_supported_msg));
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_sw(void *request, void *response, uint8_t *buffer,
+res_get_handler_sw(coap_packet_t *request, coap_packet_t *response,
+                   uint8_t *buffer,
                    uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
 
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", CONTIKI_VERSION_STRING);
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"SW Ver\":\"%s\"}",
              CONTIKI_VERSION_STRING);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_XML) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
              "<sw-ver val=\"%s\"/>", CONTIKI_VERSION_STRING);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, coap_server_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, coap_server_supported_msg,
                               strlen(coap_server_supported_msg));
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_uptime(void *request, void *response, uint8_t *buffer,
+res_get_handler_uptime(coap_packet_t *request, coap_packet_t *response,
+                       uint8_t *buffer,
                        uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
 
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%lu", clock_seconds());
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"uptime\":%lu}",
              clock_seconds());
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_XML) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
              "<uptime val=\"%lu\" unit=\"sec\"/>", clock_seconds());
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, coap_server_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, coap_server_supported_msg,
                               strlen(coap_server_supported_msg));
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_cfg_reset(void *request, void *response, uint8_t *buffer,
+res_post_handler_cfg_reset(coap_packet_t *request, coap_packet_t *response,
+                           uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
   cc26xx_web_demo_restore_defaults();

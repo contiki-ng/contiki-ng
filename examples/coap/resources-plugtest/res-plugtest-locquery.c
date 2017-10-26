@@ -37,11 +37,11 @@
  */
 
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_locquery,
          "title=\"Resource accepting query parameters\"",
@@ -51,7 +51,7 @@ RESOURCE(res_plugtest_locquery,
          NULL);
 
 static void
-res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
   coap_packet_t *const coap_req = (coap_packet_t *)request;
@@ -60,6 +60,6 @@ res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t prefer
   PRINTF(
     "/location-query POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
-  REST.set_response_status(response, REST.status.CREATED);
-  REST.set_header_location(response, "?first=1&second=2");
+  coap_set_status_code(response, CREATED_2_01);
+  coap_set_header_location_query(response, "?first=1&second=2");
 }

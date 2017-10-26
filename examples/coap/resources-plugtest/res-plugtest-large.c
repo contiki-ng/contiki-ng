@@ -36,12 +36,13 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_large,
          "title=\"Large resource\";rt=\"block\";sz=\"" TO_STRING(CHUNKS_TOTAL) "\"",
@@ -51,17 +52,17 @@ RESOURCE(res_plugtest_large,
          NULL);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int32_t strpos = 0;
 
   /* Check the offset for boundaries of the resource data. */
   if(*offset >= CHUNKS_TOTAL) {
-    REST.set_response_status(response, REST.status.BAD_OPTION);
+    coap_set_status_code(response, BAD_OPTION_4_02);
     /* A block error message should not exceed the minimum block size (16). */
 
     const char *error_msg = "BlockOutOfScope";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
+    coap_set_payload(response, error_msg, strlen(error_msg));
     return;
   }
 
@@ -79,8 +80,8 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   if(*offset + (int32_t)strpos > CHUNKS_TOTAL) {
     strpos = CHUNKS_TOTAL - *offset;
   }
-  REST.set_response_payload(response, buffer, strpos);
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  coap_set_payload(response, buffer, strpos);
+  coap_set_header_content_format(response, TEXT_PLAIN);
 
   /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
   *offset += strpos;

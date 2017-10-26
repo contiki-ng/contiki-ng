@@ -36,15 +36,16 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "coap-observe.h"
 #include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_periodic_handler(void);
 
 PERIODIC_RESOURCE(res_plugtest_obs,
@@ -67,35 +68,35 @@ static void
 obs_purge_list()
 {
   PRINTF("### SERVER ACTION ### Purging obs list");
-  coap_remove_observer_by_uri(NULL, 0, res_plugtest_obs.url);
+  coap_remove_observer_by_uri(NULL, res_plugtest_obs.url);
 }
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* Keep server log clean from ticking events */
   if(request != NULL) {
     PRINTF("/obs            GET\n");
   }
-  REST.set_header_content_type(response, obs_format);
-  REST.set_header_max_age(response, 5);
+  coap_set_header_content_format(response, obs_format);
+  coap_set_header_max_age(response, 5);
 
   if(obs_content_len) {
-    REST.set_header_content_type(response, obs_format);
-    REST.set_response_payload(response, obs_content, obs_content_len);
+    coap_set_header_content_format(response, obs_format);
+    coap_set_payload(response, obs_content, obs_content_len);
   } else {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, obs_content,
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, obs_content,
                               snprintf(obs_content, MAX_PLUGFEST_PAYLOAD, "TICK %lu", (unsigned long) obs_counter));
   }
-  /* A post_handler that handles subscriptions will be called for periodic resources by the REST framework. */
+  /* A post_handler that handles subscriptions will be called for periodic resources by the CoAP framework. */
 }
 static void
-res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   uint8_t *incoming = NULL;
   unsigned int ct = -1;
 
-  REST.get_header_content_type(request, &ct);
+  coap_get_header_content_format(request, &ct);
 
   PRINTF("/obs            PUT\n");
 
@@ -103,26 +104,26 @@ res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     obs_status = 1;
     obs_format = ct;
   } else {
-    obs_content_len = REST.get_request_payload(request,
+    obs_content_len = coap_get_payload(request,
                                                (const uint8_t **)&incoming);
     memcpy(obs_content, incoming, obs_content_len);
     res_periodic_handler();
   }
 
-  REST.set_response_status(response, REST.status.CHANGED);
+  coap_set_status_code(response, CHANGED_2_04);
 }
 static void
-res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   PRINTF("/obs            DELETE\n");
 
   obs_status = 2;
 
-  REST.set_response_status(response, REST.status.DELETED);
+  coap_set_status_code(response, DELETED_2_02);
 }
 /*
  * Additionally, a handler function named [resource name]_handler must be implemented for each PERIODIC_RESOURCE.
- * It will be called by the REST manager process with the defined period.
+ * It will be called by the CoAP manager process with the defined period.
  */
 static void
 res_periodic_handler()
@@ -134,7 +135,7 @@ res_periodic_handler()
   if(obs_status == 1) {
 
     /* Notify the registered observers with the given message type, observe option, and payload. */
-    REST.notify_subscribers(&res_plugtest_obs);
+    coap_notify_observers(&res_plugtest_obs);
 
     PRINTF("######### sending 5.00\n");
 
@@ -142,7 +143,7 @@ res_periodic_handler()
   } else if(obs_status == 2) {
 
     /* Notify the registered observers with the given message type, observe option, and payload. */
-    REST.notify_subscribers(&res_plugtest_obs);
+    coap_notify_observers(&res_plugtest_obs);
 
     obs_purge_list();
 
@@ -150,6 +151,6 @@ res_periodic_handler()
     obs_content_len = 0;
   } else {
     /* Notify the registered observers with the given message type, observe option, and payload. */
-    REST.notify_subscribers(&res_plugtest_obs);
+    coap_notify_observers(&res_plugtest_obs);
   } obs_status = 0;
 }

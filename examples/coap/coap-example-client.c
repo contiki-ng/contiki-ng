@@ -42,6 +42,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "coap-engine.h"
+#include "coap-blocking-api.h"
 #include "dev/button-sensor.h"
 
 #define DEBUG 0
@@ -59,6 +60,8 @@
 /* FIXME: This server address is hard-coded for Cooja and link-local for unconnected border router. */
 #define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x7402, 0x0002, 0x0202)      /* cooja2 */
 /* #define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xbbbb, 0, 0, 0, 0, 0, 0, 0x1) */
+
+#define SERVER_EP "coap://[fe80::212:7402:0002:0202]"
 
 #define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT + 1)
 #define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
@@ -82,7 +85,7 @@ static int uri_switch = 0;
 
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
-client_chunk_handler(void *response)
+client_chunk_handler(coap_packet_t *response)
 {
   const uint8_t *chunk;
 
@@ -92,14 +95,18 @@ client_chunk_handler(void *response)
 }
 PROCESS_THREAD(er_example_client, ev, data)
 {
+  coap_endpoint_t server_ep;
   PROCESS_BEGIN();
 
   static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
 
-  SERVER_NODE(&server_ipaddr);
+  /* SERVER_NODE(&server_ipaddr); */
+
+  coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP),
+                      &server_ep);
 
   /* receives all CoAP messages */
-  coap_init_engine();
+  coap_engine_init();
 
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 
@@ -122,11 +129,10 @@ PROCESS_THREAD(er_example_client, ev, data)
 
       coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 
-      PRINT6ADDR(&server_ipaddr);
+      coap_endpoint_print(&server_ep);
       PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
-      COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-                            client_chunk_handler);
+      COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
 
       printf("\n--Done--\n");
 
@@ -145,7 +151,7 @@ PROCESS_THREAD(er_example_client, ev, data)
       PRINT6ADDR(&server_ipaddr);
       PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
-      COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+      COAP_BLOCKING_REQUEST(&server_ep, request,
                             client_chunk_handler);
 
       printf("\n--Done--\n");

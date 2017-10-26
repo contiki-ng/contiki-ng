@@ -36,12 +36,13 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_multi,
          "title=\"Resource providing text/plain and application/xml\";ct=\"0 41\"",
@@ -51,27 +52,27 @@ RESOURCE(res_plugtest_multi,
          NULL);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   coap_packet_t *const coap_req = (coap_packet_t *)request;
 
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
   PRINTF("/multi-format   GET (%s %u) ", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(
       response,
       buffer,
       snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
                "Type: %u\nCode: %u\nMID: %u%s", coap_req->type, coap_req->code,
                coap_req->mid, accept != -1 ? "\nAccept: 0" : ""));
     PRINTF("PLAIN\n");
-  } else if(accept == REST.type.APPLICATION_XML) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
-    REST.set_response_payload(
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
+    coap_set_payload(
       response,
       buffer,
       snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
@@ -79,9 +80,9 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
                coap_req->type, coap_req->code, coap_req->mid, accept));
     PRINTF("XML\n");
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
     const char *msg = "Supporting content-types text/plain and application/xml";
-    REST.set_response_payload(response, msg, strlen(msg));
+    coap_set_payload(response, msg, strlen(msg));
     PRINTF("ERROR\n");
   }
 }

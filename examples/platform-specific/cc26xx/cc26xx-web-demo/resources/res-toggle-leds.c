@@ -42,20 +42,22 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "dev/leds.h"
 
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_red(void *request, void *response, uint8_t *buffer,
+res_post_handler_red(coap_packet_t *request, coap_packet_t *response,
+                     uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset)
 {
   leds_toggle(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_green(void *request, void *response, uint8_t *buffer,
+res_post_handler_green(coap_packet_t *request, coap_packet_t *response,
+                       uint8_t *buffer,
                        uint16_t preferred_size, int32_t *offset)
 {
   leds_toggle(LEDS_GREEN);
@@ -81,14 +83,16 @@ RESOURCE(res_toggle_green,
 #if BOARD_SMARTRF06EB
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_yellow(void *request, void *response, uint8_t *buffer,
+res_post_handler_yellow(coap_packet_t *request, coap_packet_t *response,
+                        uint8_t *buffer,
                         uint16_t preferred_size, int32_t *offset)
 {
   leds_toggle(LEDS_YELLOW);
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_orange(void *request, void *response, uint8_t *buffer,
+res_post_handler_orange(coap_packet_t *request, coap_packet_t *response,
+                        uint8_t *buffer,
                         uint16_t preferred_size, int32_t *offset)
 {
   leds_toggle(LEDS_ORANGE);

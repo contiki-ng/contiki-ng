@@ -36,14 +36,15 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "coap-transactions.h"
 #include "coap-separate.h"
 #include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_resume_handler(void);
 
 PERIODIC_RESOURCE(res_plugtest_separate,
@@ -67,7 +68,7 @@ static uint8_t separate_active = 0;
 static application_separate_store_t separate_store[1];
 
 void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   coap_packet_t *const coap_req = (coap_packet_t *)request;
 
@@ -97,8 +98,7 @@ res_resume_handler()
     PRINTF("/separate       ");
     coap_transaction_t *transaction = NULL;
     if((transaction = coap_new_transaction(separate_store->request_metadata.mid,
-                                           &separate_store->request_metadata.addr,
-                                           separate_store->request_metadata.port))) {
+                                           &separate_store->request_metadata.endpoint))) {
       PRINTF(
         "RESPONSE (%s %u)\n", separate_store->request_metadata.type == COAP_TYPE_CON ? "CON" : "NON", separate_store->request_metadata.mid);
 
@@ -107,7 +107,7 @@ res_resume_handler()
       /* Restore the request information for the response. */
       coap_separate_resume(response, &separate_store->request_metadata, CONTENT_2_05);
 
-      REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+      coap_set_header_content_format(response, TEXT_PLAIN);
       coap_set_payload(response, separate_store->buffer,
                        strlen(separate_store->buffer));
 

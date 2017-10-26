@@ -36,7 +36,7 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "tools/rpl-tools.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "light-sensor.h"
 #include "ht-sensor.h"
 #include "dev/leds.h"
@@ -46,19 +46,19 @@
 #include <stdlib.h>
 
 static void event_sensors_dr1175_handler(void);
-static void get_sensors_dr1175_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_light_sensor_value_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_light_sensor_unit_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_temperature_value_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_temperature_unit_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_humidity_value_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_humidity_unit_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_white_led_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_rgb_led_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d3_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d6_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_sensors_dr1175_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_light_sensor_value_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_light_sensor_unit_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_temperature_value_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_temperature_unit_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_humidity_value_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_humidity_unit_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_white_led_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_rgb_led_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d3_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d6_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-static char content[REST_MAX_CHUNK_SIZE];
+static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
 
 #define CONTENT_PRINTF(...) { if(content_len < sizeof(content)) { content_len += snprintf(content + content_len, sizeof(content) - content_len, __VA_ARGS__); } }
@@ -90,26 +90,26 @@ EVENT_RESOURCE(resource_sensors_dr1175,               /* name */
                NULL,                                  /* DELETE handler */
                event_sensors_dr1175_handler);         /* event handler */
 static void
-get_sensors_dr1175_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_sensors_dr1175_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.APPLICATION_JSON) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == APPLICATION_JSON) {
     content_len = 0;
     CONTENT_PRINTF("{\"DR1175\":[");
     CONTENT_PRINTF("{\"Humidity\":\"%d\"},", ht_sensor.value(HT_SENSOR_HUM));
     CONTENT_PRINTF("{\"Light\":\"%d\"},", light_sensor.value(0));
     CONTENT_PRINTF("{\"Temp\":\"%d\"}", ht_sensor.value(HT_SENSOR_TEMP));
     CONTENT_PRINTF("]}");
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, APPLICATION_JSON);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 static void
 event_sensors_dr1175_handler()
 {
   /* Registered observers are notified and will trigger the GET handler to create the response. */
-  REST.notify_subscribers(&resource_sensors_dr1175);
+  coap_notify_observers(&resource_sensors_dr1175);
 }
 /*****************************************************/
 /* Resource and handler to obtain light sensor value */
@@ -121,15 +121,15 @@ RESOURCE(resource_light_sensor_value,
          NULL,
          NULL);
 static void
-get_light_sensor_value_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_light_sensor_value_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     CONTENT_PRINTF("%d", light_sensor.value(0));
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /***************************************************/
@@ -142,15 +142,15 @@ RESOURCE(resource_light_sensor_unit,
          NULL,
          NULL);
 static void
-get_light_sensor_unit_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_light_sensor_unit_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     CONTENT_PRINTF("Lux");
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /***********************************************************/
@@ -163,15 +163,15 @@ RESOURCE(resource_temperature_value,
          NULL,
          NULL);
 static void
-get_temperature_value_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_temperature_value_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     CONTENT_PRINTF("%d", ht_sensor.value(HT_SENSOR_TEMP));
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /*********************************************************/
@@ -184,15 +184,15 @@ RESOURCE(resource_temperature_unit,
          NULL,
          NULL);
 static void
-get_temperature_unit_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_temperature_unit_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     CONTENT_PRINTF("degrees C");
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /********************************************************/
@@ -205,15 +205,15 @@ RESOURCE(resource_humidity_value,
          NULL,
          NULL);
 static void
-get_humidity_value_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_humidity_value_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     CONTENT_PRINTF("%d", ht_sensor.value(HT_SENSOR_HUM));
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /******************************************************/
@@ -226,15 +226,15 @@ RESOURCE(resource_humidity_unit,
          NULL,
          NULL);
 static void
-get_humidity_unit_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_humidity_unit_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     CONTENT_PRINTF("relative %%");
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /***************************************************/
@@ -247,15 +247,15 @@ RESOURCE(resource_white_led,
          put_post_white_led_handler,
          NULL);
 static void
-put_post_white_led_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_white_led_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content = NULL;
   int level;
 
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     level = atoi((const char *)request_content);
     CLIP(level, 255)
     leds_set_level(level, LEDS_WHITE);
@@ -271,7 +271,7 @@ RESOURCE(resource_rgb_led,
          put_post_rgb_led_handler,
          NULL);
 static void
-put_post_rgb_led_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_rgb_led_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content = NULL;
   char *pch;
@@ -279,9 +279,9 @@ put_post_rgb_led_handler(void *request, void *response, uint8_t *buffer, uint16_
   int index = 0;
 
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     pch = strtok((char *)request_content, " ");
     while((pch != NULL) && (index != sizeof(RGB) / sizeof(int))) {
       /* Convert token to int */
@@ -306,13 +306,13 @@ RESOURCE(resource_led_d3_1174,
          put_post_led_d3_1174_handler,
          NULL);
 static void
-put_post_led_d3_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d3_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     SET_LED(LEDS_GP0);
   }
 }
@@ -326,13 +326,13 @@ RESOURCE(resource_led_d6_1174,
          put_post_led_d6_1174_handler,
          NULL);
 static void
-put_post_led_d6_1174_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d6_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     SET_LED(LEDS_GP1);
   }
 }
@@ -357,18 +357,18 @@ PROCESS_THREAD(start_app, ev, data)
     rpl_tools_init(NULL);
   } printf("Starting RPL node\n");
 
-  rest_init_engine();
-  rest_activate_resource(&resource_light_sensor_value, "DR1175/LightSensor/Value");
-  rest_activate_resource(&resource_light_sensor_unit, "DR1175/LightSensor/Unit");
-  rest_activate_resource(&resource_temperature_unit, "DR1175/Temperature/Unit");
-  rest_activate_resource(&resource_temperature_value, "DR1175/Temperature/Value");
-  rest_activate_resource(&resource_humidity_unit, "DR1175/Humidity/Unit");
-  rest_activate_resource(&resource_humidity_value, "DR1175/Humidity/Value");
-  rest_activate_resource(&resource_white_led, "DR1175/WhiteLED");
-  rest_activate_resource(&resource_rgb_led, "DR1175/ColorLED/RGBValue");
-  rest_activate_resource(&resource_led_d3_1174, "DR1175/LED/D3On1174");
-  rest_activate_resource(&resource_led_d6_1174, "DR1175/LED/D6On1174");
-  rest_activate_resource(&resource_sensors_dr1175, "DR1175/AllSensors");
+  coap_engine_init();
+  coap_activate_resource(&resource_light_sensor_value, "DR1175/LightSensor/Value");
+  coap_activate_resource(&resource_light_sensor_unit, "DR1175/LightSensor/Unit");
+  coap_activate_resource(&resource_temperature_unit, "DR1175/Temperature/Unit");
+  coap_activate_resource(&resource_temperature_value, "DR1175/Temperature/Value");
+  coap_activate_resource(&resource_humidity_unit, "DR1175/Humidity/Unit");
+  coap_activate_resource(&resource_humidity_value, "DR1175/Humidity/Value");
+  coap_activate_resource(&resource_white_led, "DR1175/WhiteLED");
+  coap_activate_resource(&resource_rgb_led, "DR1175/ColorLED/RGBValue");
+  coap_activate_resource(&resource_led_d3_1174, "DR1175/LED/D3On1174");
+  coap_activate_resource(&resource_led_d6_1174, "DR1175/LED/D6On1174");
+  coap_activate_resource(&resource_sensors_dr1175, "DR1175/AllSensors");
 
   /* Level of LEDS=0, so no light after start-up */
   leds_on(LEDS_WHITE | LEDS_RED | LEDS_GREEN | LEDS_BLUE);

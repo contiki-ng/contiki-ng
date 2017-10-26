@@ -40,13 +40,14 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "dev/leds.h"
 
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 static void
-res_post_put_handler(void *request, void *response, uint8_t *buffer,
+res_post_put_handler(coap_packet_t *request, coap_packet_t *response,
+                     uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset)
 {
   size_t len = 0;
@@ -55,7 +56,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer,
   uint8_t led = 0;
   int success = 1;
 
-  if((len = REST.get_query_variable(request, "color", &color))) {
+  if((len = coap_get_query_variable(request, "color", &color))) {
     if(strncmp(color, "r", len) == 0) {
       led = LEDS_RED;
     } else if(strncmp(color, "g", len) == 0) {
@@ -73,7 +74,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer,
     success = 0;
   }
 
-  if(success && (len = REST.get_post_variable(request, "mode", &mode))) {
+  if(success && (len = coap_get_post_variable(request, "mode", &mode))) {
     if(strncmp(mode, "on", len) == 0) {
       leds_on(led);
     } else if(strncmp(mode, "off", len) == 0) {
@@ -86,7 +87,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer,
   }
 
   if(!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    coap_set_status_code(response, BAD_REQUEST_4_00);
   }
 }
 /*---------------------------------------------------------------------------*/

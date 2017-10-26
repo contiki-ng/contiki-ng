@@ -37,15 +37,15 @@
 #include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
 #include "rpl-tools.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <AppHardwareApi.h>
 
-static void set_tx_power_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_tx_power_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void set_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-static char content[REST_MAX_CHUNK_SIZE];
+static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
 
 #define CONTENT_PRINTF(...) { if(content_len < sizeof(content)) content_len += snprintf(content+content_len, sizeof(content)-content_len, __VA_ARGS__); }
@@ -63,15 +63,15 @@ RESOURCE(resource_set_tx_power,
          set_tx_power_handler,
          NULL);
 static void
-set_tx_power_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+set_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content = NULL;
   int tx_level;
 
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     tx_level = atoi((const char *)request_content);
     NETSTACK_RADIO.set_value(RADIO_PARAM_TXPOWER, tx_level);
   }
@@ -84,17 +84,17 @@ RESOURCE(resource_get_tx_power,
          NULL,
          NULL);
 static void
-get_tx_power_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int tx_level;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     NETSTACK_RADIO.get_value(RADIO_PARAM_TXPOWER, &tx_level);
     CONTENT_PRINTF("%d", tx_level);
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -113,9 +113,9 @@ PROCESS_THREAD(start_app, ev, data)
   }
   printf("Starting RPL node\n");
   
-  rest_init_engine();
-  rest_activate_resource(&resource_set_tx_power, "Set-TX-Power");
-  rest_activate_resource(&resource_get_tx_power, "Get-TX-Power");
+  coap_engine_init();
+  coap_activate_resource(&resource_set_tx_power, "Set-TX-Power");
+  coap_activate_resource(&resource_get_tx_power, "Get-TX-Power");
 
   PROCESS_END();
 }
