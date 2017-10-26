@@ -23,8 +23,8 @@
 #else /* MAC_CONF_WITH_TSCH */
 ##### "RF_CHANNEL": ____________________________ RF_CHANNEL
 #endif /*MAC_CONF_WITH_TSCH */
-##### "QUEUEBUF_NUM": __________________________ QUEUEBUF_CONF_NUM
-##### "NBR_TABLE_MAX_NEIGHBORS": _______________ NBR_TABLE_CONF_MAX_NEIGHBORS
+##### "QUEUEBUF_NUM": __________________________ QUEUEBUF_NUM
+##### "NBR_TABLE_MAX_NEIGHBORS": _______________ NBR_TABLE_MAX_NEIGHBORS
 ##### "NETSTACK_MAX_ROUTE_ENTRIES": ____________ NETSTACK_MAX_ROUTE_ENTRIES
 ##### "UIP_CONF_BUFFER_SIZE": __________________ UIP_CONF_BUFFER_SIZE
 ##### "UIP_CONF_UDP": __________________________ UIP_CONF_UDP
