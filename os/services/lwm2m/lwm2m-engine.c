@@ -511,8 +511,14 @@ lwm2m_engine_init(void)
   if(len > sizeof(endpoint) - 13) {
     len = sizeof(endpoint) - 13;
   }
-  memcpy(endpoint, LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX, len);
 
+  for(i = 0; i < len; i++) {
+    if(LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX[i] == ' ') {
+      endpoint[i] = '-';
+    } else {
+      endpoint[i] = LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX[i];
+    }
+  }
   /* pick an IP address that is PREFERRED or TENTATIVE */
   ipaddr = NULL;
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
