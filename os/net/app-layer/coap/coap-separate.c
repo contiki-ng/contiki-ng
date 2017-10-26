@@ -71,7 +71,7 @@ coap_separate_reject()
 /*----------------------------------------------------------------------------*/
 /**
  * \brief Initiate a separate response with an empty ACK
- * \param request The request to accept
+ * \param coap_req The request to accept
  * \param separate_store A pointer to the data structure that will store the
  *   relevant information for the response
  *

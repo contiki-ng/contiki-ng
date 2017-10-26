@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
+ * \addtogroup lwm2m
  * @{
  *
  */
@@ -71,3 +71,4 @@ int lwm2m_security_set_server_psk(lwm2m_security_server_t *server,
 void lwm2m_security_init(void);
 
 #endif /* LWM2M_SECURITY_H */
+/** @} */

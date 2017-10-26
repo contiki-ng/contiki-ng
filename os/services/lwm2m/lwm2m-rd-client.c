@@ -62,7 +62,7 @@
 #include "rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -395,7 +395,8 @@ produce_more_rd(void)
   rd_more = lwm2m_engine_set_rd_data(&outbuf, rd_block1);
   coap_set_payload(request, rd_data, outbuf.len);
 
-  PRINTF("Setting block1 in request - block: %d more: %d\n", rd_block1, rd_more);
+  PRINTF("Setting block1 in request - block: %d more: %d\n",
+         (int) rd_block1, (int) rd_more);
   coap_set_header_block1(request, rd_block1, rd_more, sizeof(rd_data));
 
   coap_send_request(&rd_request_state, &session_info.server_ep, request, rd_callback);
@@ -727,3 +728,4 @@ check_periodic_observations(void)
 /* TODO */
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

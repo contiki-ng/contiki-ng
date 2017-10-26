@@ -89,3 +89,4 @@ int ipso_sensor_add(const ipso_sensor_t *sensor);
 int ipso_sensor_remove(const ipso_sensor_t *sensor);
 
 #endif /* IPSO_SENSOR_TEMPLATE_H_ */
+/** @} */

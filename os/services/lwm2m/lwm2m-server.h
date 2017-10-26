@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
+ * \addtogroup lwm2m
  * @{
  *
  */
@@ -57,3 +57,4 @@ lwm2m_server_t *lwm2m_server_add(uint16_t instance_id,
 void lwm2m_server_init(void);
 
 #endif /* LWM2M_SERVER_H */
+/** @} */

@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup
+ * \addtogroup lwm2m
  * @{
  *
  * Code for firmware object of lwm2m

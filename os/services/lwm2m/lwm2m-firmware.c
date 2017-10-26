@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup
+ * \addtogroup lwm2m
  * @{
  *
  * Code for firmware object of lwm2m
@@ -165,3 +165,4 @@ lwm2m_firmware_init(void)
   lwm2m_engine_add_object(&reg_object);
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

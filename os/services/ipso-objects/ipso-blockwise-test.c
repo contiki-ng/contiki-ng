@@ -149,3 +149,4 @@ ipso_blockwise_test_init(void)
 
   lwm2m_engine_add_object(&reg_object);
 }
+/** @} */
