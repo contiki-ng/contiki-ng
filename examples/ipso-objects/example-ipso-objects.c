@@ -94,7 +94,7 @@ read_bar_value(const ipso_sensor_t *s, int32_t *value)
 }
 /* LED control */
 static lwm2m_status_t
-leds_set_val(uint8_t value)
+leds_set_val(ipso_control_t *control, uint8_t value)
 {
   if(value > 0) {
     leds_on(LEDS_YELLOW);
@@ -104,56 +104,37 @@ leds_set_val(uint8_t value)
   return LWM2M_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-static ipso_sensor_value_t temp_value;
-static ipso_sensor_value_t hum_value;
-static ipso_sensor_value_t lux_value;
-static ipso_sensor_value_t bar_value;
 
-static ipso_control_t led_control = {
-   .reg_object.object_id = 3311,
-   .reg_object.instance_id = 0,
-   .set_value = leds_set_val
-};
+IPSO_CONTROL(led_control, 3311, 0, leds_set_val);
 
-static const ipso_sensor_t temp_sensor = {
-  .object_id = 3303,
-  .sensor_value = &temp_value,
-  .max_range = 100000, /* 100 cel milli celcius */
-  .min_range = -10000, /* -10 cel milli celcius */
-  .get_value_in_millis = read_temp_value,
-  .unit = "Cel",
-  .update_interval = 30
-};
+IPSO_SENSOR(temp_sensor, 3303, read_temp_value,
+            .max_range = 100000, /* 100 cel milli celcius */
+            .min_range = -10000, /* -10 cel milli celcius */
+            .unit = "Cel",
+            .update_interval = 30
+            );
 
-static const ipso_sensor_t hum_sensor = {
-  .object_id = 3304,
-  .sensor_value = &hum_value,
-  .max_range = 100000, /* 100 % RH */
-  .min_range = 0,
-  .get_value_in_millis = read_hum_value,
-  .unit = "% RH",
-  .update_interval = 30
-};
-static const ipso_sensor_t lux_sensor = {
-  .object_id = 3301,
-  .sensor_value = &lux_value,
-  .max_range = 100000,
-  .min_range = -10000,
-  .get_value_in_millis = read_lux_value,
-  .unit = "LUX",
-  .update_interval = 30
-};
-static const ipso_sensor_t bar_sensor = {
-  .object_id = 3315,
-  .sensor_value = &bar_value,
-  .max_range = 100000, /* 100 cel milli celcius */
-  .min_range = -10000, /* -10 cel milli celcius */
-  .get_value_in_millis = read_bar_value,
-  .unit = "hPa",
-  .update_interval = 30
-};
+IPSO_SENSOR(hum_sensor, 3304, read_hum_value,
+            .max_range = 100000, /* 100 % RH */
+            .min_range = 0,
+            .unit = "% RH",
+            .update_interval = 30
+            );
 
-#endif
+IPSO_SENSOR(lux_sensor, 3301, read_lux_value,
+            .max_range = 100000,
+            .min_range = -10000,
+            .unit = "LUX",
+            .update_interval = 30
+            );
+
+IPSO_SENSOR(bar_sensor, 3315, read_bar_value,
+            .max_range = 100000, /* 100 cel milli celcius */
+            .min_range = -10000, /* -10 cel milli celcius */
+            .unit = "hPa",
+            .update_interval = 30
+            );
+#endif  /* BOARD_SENSORTAG */
 
 PROCESS(example_ipso_objects, "IPSO object example");
 AUTOSTART_PROCESSES(&example_ipso_objects);

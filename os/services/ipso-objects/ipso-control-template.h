@@ -51,7 +51,8 @@ typedef struct ipso_control ipso_control_t;
 
 #define IPSO_CONTROL_USE_DIMMER   0x01
 
-typedef lwm2m_status_t (*ipso_control_set_value_t)(uint8_t v);
+typedef lwm2m_status_t (*ipso_control_set_value_t)(ipso_control_t *control,
+                                                   uint8_t v);
 
 /* Values of the IPSO control object */
 struct ipso_control {
@@ -63,6 +64,12 @@ struct ipso_control {
   ipso_control_set_value_t set_value;
 };
 
+#define IPSO_CONTROL(name, oid, iid, setv)                              \
+  static ipso_control_t name = {                                        \
+    .reg_object.object_id = oid,                                        \
+    .reg_object.instance_id = iid,                                      \
+    .set_value = setv                                                   \
+  }
 
 int ipso_control_add(ipso_control_t *control);
 int ipso_control_remove(ipso_control_t *control);

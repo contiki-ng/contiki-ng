@@ -41,73 +41,59 @@
  *         Niclas Finne <nfi@sics.se>
  */
 
-#include <stdint.h>
 #include "lwm2m-object.h"
 #include "lwm2m-engine.h"
 #include "coap-engine.h"
 #include "ipso-sensor-template.h"
+#include <stdint.h>
 #include <string.h>
 
-uint32_t temp = 19000;
-uint32_t hum = 30000;
+static uint32_t temp = 19000;
+static uint32_t hum = 30000;
 
-ipso_sensor_value_t temp_value;
-ipso_sensor_value_t temp_value2;
-ipso_sensor_value_t hum_value;
+static lwm2m_status_t get_temp_value(const ipso_sensor_t *sensor, int32_t *value);
+static lwm2m_status_t get_hum_value(const ipso_sensor_t *sensor, int32_t *value);
 
-lwm2m_status_t get_temp_value(const ipso_sensor_t *sensor, int32_t *value);
-lwm2m_status_t get_hum_value(const ipso_sensor_t *sensor, int32_t *value);
+IPSO_SENSOR(temp_sensor, 3303, get_temp_value,
+            .max_range = 120000, /* milli celcius */
+            .min_range = -30000, /* milli celcius */
+            .unit = "Cel",
+            .update_interval = 10
+            );
 
-static const ipso_sensor_t temp_sensor = {
-  .object_id = 3303,
-  .sensor_value = &temp_value,
-  .max_range = 120000, /* milli celcius */
-  .min_range = -30000, /* milli celcius */
-  .get_value_in_millis = get_temp_value,
-  .unit = "Cel",
-  .update_interval = 10
-};
-
-static const ipso_sensor_t temp_sensor2 = {
-  .object_id = 3303,
-  .sensor_value = &temp_value2,
-  .max_range = 120000, /* milli celcius */
-  .min_range = -30000, /* milli celcius */
-  .get_value_in_millis = get_temp_value,
-  .unit = "Cel",
-  .update_interval = 10
-};
+IPSO_SENSOR(temp_sensor2, 3303, get_temp_value,
+            .max_range = 120000, /* milli celcius */
+            .min_range = -30000, /* milli celcius */
+            .unit = "Cel",
+            .update_interval = 10
+            );
 
 /*---------------------------------------------------------------------------*/
 
-static const ipso_sensor_t hum_sensor = {
-  .object_id = 3304,
-  .instance_id = 12,
-  .sensor_value = &hum_value,
-  .max_range = 100000, /* milli  */
-  .min_range = 0, /* milli  */
-  .get_value_in_millis = get_hum_value,
-  .unit = "%",
-  .update_interval = 10
-};
+IPSO_SENSOR(hum_sensor, 3304, get_hum_value,
+            .instance_id = 12,
+            .max_range = 100000, /* milli  */
+            .min_range = 0,      /* milli  */
+            .unit = "%",
+            .update_interval = 10
+            );
 
 /*---------------------------------------------------------------------------*/
 
-lwm2m_status_t
+static lwm2m_status_t
 get_temp_value(const ipso_sensor_t *sensor, int32_t *value)
 {
   *value = temp++;
   return LWM2M_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-lwm2m_status_t
+static lwm2m_status_t
 get_hum_value(const ipso_sensor_t *sensor, int32_t *value)
 {
-  *value = temp++;
+  *value = hum++;
   return LWM2M_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-
 void
 ipso_sensor_temp_init(void)
 {

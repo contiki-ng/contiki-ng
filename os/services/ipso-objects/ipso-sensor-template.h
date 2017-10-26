@@ -76,6 +76,14 @@ struct ipso_sensor {
   ipso_sensor_value_t *sensor_value;
 };
 
+#define IPSO_SENSOR(name, oid, get_value, ...)  \
+  static ipso_sensor_value_t name##_value;      \
+  static const ipso_sensor_t name = {           \
+    .object_id = oid,                           \
+    .sensor_value = &name##_value,              \
+    .get_value_in_millis = get_value,           \
+    __VA_ARGS__                                 \
+  }
 
 int ipso_sensor_add(const ipso_sensor_t *sensor);
 int ipso_sensor_remove(const ipso_sensor_t *sensor);

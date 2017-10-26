@@ -44,6 +44,7 @@
 
 #include "lwm2m-object.h"
 #include "lwm2m-engine.h"
+#include "ipso-control-template.h"
 #include "dev/leds.h"
 #include <stdint.h>
 
@@ -61,139 +62,30 @@
 #define LEDS_CONTROL_NUMBER 1
 #endif
 
-#if 0
-struct led_state {
-  unsigned long last_on_time;
-  uint32_t total_on_time;
-  uint8_t is_on;
+typedef struct led_state {
+  ipso_control_t control;
   uint8_t led_value;
-};
+} led_state_t;
 
-static struct led_state states[LEDS_CONTROL_NUMBER];
-static lwm2m_instance_t leds_control_instances[LEDS_CONTROL_NUMBER];
+static led_state_t leds_controls[LEDS_CONTROL_NUMBER];
 /*---------------------------------------------------------------------------*/
-static int
-read_state(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outsize)
+static lwm2m_status_t
+set_value(ipso_control_t *control, uint8_t value)
 {
-  uint8_t idx = ctx->object_instance_index;
-  if(idx >= LEDS_CONTROL_NUMBER) {
-    return 0;
-  }
-  return lwm2m_object_write_boolean(ctx, outbuf, outsize,
-                                    states[idx].is_on ? 1 : 0);
-}
-/*---------------------------------------------------------------------------*/
-static int
-write_state(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t insize,
-            uint8_t *outbuf, size_t outsize)
-{
-  int value;
-  size_t len;
+  led_state_t *state;
 
-  uint8_t idx = ctx->object_instance_index;
-  if(idx >= LEDS_CONTROL_NUMBER) {
-    return 0;
-  }
+  state = (led_state_t *)control;
 
-  len = lwm2m_object_read_boolean(ctx, inbuf, insize, &value);
-  if(len > 0) {
-    if(value) {
-      if(!states[idx].is_on) {
-        states[idx].is_on = 1;
-        states[idx].last_on_time = clock_seconds();
 #if PLATFORM_HAS_LEDS
-        leds_on(states[idx].led_value);
-#endif /* PLATFORM_HAS_LEDS */
-      }
-    } else if(states[idx].is_on) {
-      states[idx].total_on_time += clock_seconds() - states[idx].last_on_time;
-      states[idx].is_on = 0;
-#if PLATFORM_HAS_LEDS
-      leds_off(states[idx].led_value);
-#endif /* PLATFORM_HAS_LEDS */
-    }
+  if(value) {
+    leds_on(state->led_value);
   } else {
-    PRINTF("IPSO leds control - ignored illegal write to on/off\n");
+    leds_off(state->led_value);
   }
-  return len;
-}
-/*---------------------------------------------------------------------------*/
-static char *
-get_color(int value) {
-  switch(value) {
-  case LEDS_GREEN:
-    return "Green";
-  case LEDS_RED:
-    return "Red";
-  case LEDS_BLUE:
-    return "Blue";
-  }
-  return "None";
-}
+#endif /* PLATFORM_HAS_LEDS */
 
-static int
-read_color(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outsize)
-{
-  char *value;
-  uint8_t idx = ctx->object_instance_index;
-  if(idx >= LEDS_CONTROL_NUMBER) {
-    return 0;
-  }
-  value = get_color(states[idx].led_value);
-  return lwm2m_object_write_string(ctx, outbuf, outsize,
-                                   value, strlen(value));
+  return LWM2M_STATUS_OK;
 }
-/*---------------------------------------------------------------------------*/
-static int
-read_on_time(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outsize)
-{
-  unsigned long now;
-  uint8_t idx = ctx->object_instance_index;
-  if(idx >= LEDS_CONTROL_NUMBER) {
-    return 0;
-  }
-
-  if(states[idx].is_on) {
-    /* Update the on time */
-    now = clock_seconds();
-    states[idx].total_on_time += now - states[idx].last_on_time;
-    states[idx].last_on_time = now;
-  }
-  return lwm2m_object_write_int(ctx, outbuf, outsize,
-                                (int32_t)states[idx].total_on_time);
-}
-/*---------------------------------------------------------------------------*/
-static int
-write_on_time(lwm2m_context_t *ctx,
-              const uint8_t *inbuf, size_t insize,
-              uint8_t *outbuf, size_t outsize)
-{
-  int32_t value;
-  size_t len;
-  uint8_t idx = ctx->object_instance_index;
-  if(idx >= LEDS_CONTROL_NUMBER) {
-    return 0;
-  }
-
-  len = lwm2m_object_read_int(ctx, inbuf, insize, &value);
-  if(len > 0 && value == 0) {
-    PRINTF("IPSO leds control - reset On Time\n");
-    states[idx].total_on_time = 0;
-    if(states[idx].is_on) {
-      states[idx].last_on_time = clock_seconds();
-    }
-  } else {
-    PRINTF("IPSO leds control - ignored illegal write to On Time\n");
-  }
-  return len;
-}
-/*---------------------------------------------------------------------------*/
-LWM2M_RESOURCES(leds_control_resources,
-                LWM2M_RESOURCE_CALLBACK(5850, { read_state, write_state, NULL }),
-                LWM2M_RESOURCE_CALLBACK(5706, { read_color, NULL, NULL }),
-                LWM2M_RESOURCE_CALLBACK(5852, { read_on_time, write_on_time, NULL })
-                );
-LWM2M_OBJECT(leds_control, 3311, leds_control_instances);
 /*---------------------------------------------------------------------------*/
 static int
 bit_no(int bit)
@@ -212,26 +104,25 @@ bit_no(int bit)
   }
   return 0;
 }
-
+/*---------------------------------------------------------------------------*/
 void
 ipso_leds_control_init(void)
 {
-  lwm2m_instance_t template = LWM2M_INSTANCE(0, leds_control_resources);
+  ipso_control_t *c;
   int i;
 
   /* Initialize the instances */
   for(i = 0; i < LEDS_CONTROL_NUMBER; i++) {
-    leds_control_instances[i] = template;
-    leds_control_instances[i].id = i;
-    states[i].led_value = bit_no(i);
+    c = &leds_controls[i].control;
+    c->reg_object.object_id = 3311;
+    c->reg_object.instance_id = i;
+    c->set_value = set_value;
+    leds_controls[i].led_value = bit_no(i);
+    ipso_control_add(c);
   }
 
-  /* register this device and its handlers - the handlers automatically
-     sends in the object to handle */
-  lwm2m_engine_register_object(&leds_control);
   PRINTF("IPSO leds control initialized with %u instances\n",
          LEDS_CONTROL_NUMBER);
 }
 /*---------------------------------------------------------------------------*/
-#endif /* 0 */
 /** @} */

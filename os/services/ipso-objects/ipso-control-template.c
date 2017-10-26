@@ -47,7 +47,14 @@
 #include "coap-timer.h"
 #include <inttypes.h>
 #include <string.h>
+
+#define DEBUG 0
+#if DEBUG
 #include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
 #define IPSO_ONOFF        5850
 #define IPSO_DIMMER       5851
@@ -88,7 +95,7 @@ ipso_control_set_value(ipso_control_t *control, uint8_t value)
   if(value == 0) {
     if(was_on) {
       /* Turn off */
-      status = control->set_value(0);
+      status = control->set_value(control, 0);
       if(status == LWM2M_STATUS_OK) {
         control->value &= 0x7f;
         control->on_time +=
@@ -103,7 +110,7 @@ ipso_control_set_value(ipso_control_t *control, uint8_t value)
     value |= 0x80;
 
     if(value != control->value) {
-      status = control->set_value(value & 0x7f);
+      status = control->set_value(control, value & 0x7f);
       if(status == LWM2M_STATUS_OK) {
         control->value = value;
         if(! was_on) {
@@ -137,7 +144,7 @@ lwm2m_callback(lwm2m_object_instance_t *object, lwm2m_context_t *ctx)
       if(ipso_control_is_on(control)) {
         v += (coap_timer_uptime() - control->last_on_time) / 1000;
       }
-      printf("ON-TIME: %"PRId32"   (last on: %"PRIu32"\n", v, control->on_time);
+      PRINTF("ON-TIME: %"PRId32"   (last on: %"PRIu32"\n", v, control->on_time);
       break;
     default:
       return LWM2M_STATUS_ERROR;
