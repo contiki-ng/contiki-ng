@@ -12,4 +12,4 @@
 	url = https://github.com/g-oikonomou/sensniff.git
 [submodule "tools/cooja"]
 	path = tools/cooja
-	url = https://github.com/sics-iot/cooja.git
+	url = https://github.com/contiki-ng/cooja.git
