@@ -67,12 +67,6 @@
 #define PRINTEP(ep)
 #endif
 
-#ifdef LWM2M_SECURITY_CONF_REGISTER_KEY_STORE
-#define LWM2M_SECURITY_REGISTER_KEY_STORE LWM2M_SECURITY_CONF_REGISTER_KEY_STORE
-#else /* LWM2M_SECURITY_CONF_REGISTER_KEY_STORE */
-#define LWM2M_SECURITY_REGISTER_KEY_STORE 1
-#endif /* LWM2M_SECURITY_CONF_REGISTER_KEY_STORE */
-
 #define MAX_COUNT LWM2M_SERVER_MAX_COUNT
 
 static lwm2m_status_t lwm2m_callback(lwm2m_object_instance_t *object,
@@ -357,7 +351,7 @@ static lwm2m_object_t reg_object = {
 };
 /*---------------------------------------------------------------------------*/
 #ifdef WITH_DTLS
-#if LWM2M_SECURITY_REGISTER_KEY_STORE
+#if COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M
 static int
 get_psk_info(const coap_endpoint_t *address_info,
              coap_keystore_psk_entry_t *info)
@@ -431,15 +425,10 @@ get_psk_info(const coap_endpoint_t *address_info,
   info->key_len = e->secret_key_len;
   return 1;
 }
-#endif /* LWM2M_SECURITY_REGISTER_KEY_STORE */
-#endif /* WITH_DTLS */
-/*---------------------------------------------------------------------------*/
-#ifdef WITH_DTLS
-#if LWM2M_SECURITY_REGISTER_KEY_STORE
 static const coap_keystore_t key_store = {
   .coap_get_psk_info = get_psk_info
 };
-#endif /* LWM2M_SECURITY_REGISTER_KEY_STORE */
+#endif /* COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M */
 #endif /* WITH_DTLS */
 /*---------------------------------------------------------------------------*/
 void
@@ -447,7 +436,7 @@ lwm2m_security_init(void)
 {
   int i;
 
-  PRINTF("*** Init lwm2m-security\n");
+  PRINTF("lwm2m-sec: init\n");
 
   list_init(instances_list);
 
@@ -457,11 +446,15 @@ lwm2m_security_init(void)
   if(lwm2m_engine_add_generic_object(&reg_object)) {
 
 #ifdef WITH_DTLS
-#if LWM2M_SECURITY_REGISTER_KEY_STORE
+#if COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M
     /* Security object handler added - register keystore */
     coap_set_keystore(&key_store);
-#endif /* LWM2M_SECURITY_REGISTER_KEY_STORE */
+    PRINTF("lwm2m-sec: registered keystore\n");
+#endif /* COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M */
 #endif /* WITH_DTLS */
+
+  } else {
+    PRINTF("lwm2m-sec: failed to register\n");
   }
 }
 /*---------------------------------------------------------------------------*/

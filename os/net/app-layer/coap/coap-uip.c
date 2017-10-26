@@ -46,6 +46,7 @@
 #include "coap-transactions.h"
 #include "coap-constants.h"
 #include "coap-keystore.h"
+#include "coap-keystore-simple.h"
 
 
 #if UIP_CONF_IPV6_RPL
@@ -117,9 +118,6 @@ coap_endpoint_copy(coap_endpoint_t *destination,
   uip_ipaddr_copy(&destination->ipaddr, &from->ipaddr);
   destination->port = from->port;
   destination->secure = from->secure;
-
-  PRINTF("EP copy: from sec:%d to sec:%d\n", from->secure,
-         destination->secure);
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -296,8 +294,12 @@ coap_transport_init(void)
 #ifdef WITH_DTLS
   dtls_init();
   dtls_set_log_level(8);
-#endif /* WITH_DTLS */
 
+#if COAP_DTLS_KEYSTORE_CONF_WITH_SIMPLE
+  coap_keystore_simple_init();
+#endif /* COAP_DTLS_KEYSTORE_CONF_WITH_SIMPLE */
+
+#endif /* WITH_DTLS */
 }
 /*---------------------------------------------------------------------------*/
 #ifdef WITH_DTLS

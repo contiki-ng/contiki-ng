@@ -360,6 +360,9 @@ viewconf:
 	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
 	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
 	@echo "##### \"MAKE_ROUTING\": __________________________ $(MAKE_ROUTING)"
+ifdef MAKE_COAP_DTLS_KEYSTORE
+	@echo "##### \"MAKE_COAP_DTLS_KEYSTORE\": _______________ $(MAKE_COAP_DTLS_KEYSTORE)"
+endif
 	@echo "----------------- C variables: -----------------"
 	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
 	@echo "------------------------------------------------"

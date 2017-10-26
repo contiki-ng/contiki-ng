@@ -40,8 +40,6 @@
 
 #define COAP_ENDPOINT_CUSTOM 1
 
-#define LWM2M_SECURITY_CONF_REGISTER_KEY_STORE 0
-
 typedef struct {
   int addr; /* if we want to switch on something... */
   unsigned int size;
