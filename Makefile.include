@@ -377,6 +377,9 @@ viewconf:
 	@echo "----------------- C variables: -----------------"
 	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
 	@echo "------------------------------------------------"
+	@echo "'==' Means the flag is set to a given a value"
+	@echo "'->' Means the flag is unset, but will default to a given value"
+	@echo "'><' Means the flag is unset and has no default value"
 	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
 	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
 
