@@ -220,13 +220,13 @@ CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
 ### Check for a git repo and pass version if found
 ### git.exe in Windows cmd shells may require no stderr redirection
 ifndef RELSTR
-RELSTR:=${shell git --git-dir ${CONTIKI}/.git describe --tags --always}
+RELSTR:=${shell git --git-dir ${CONTIKI}/.git describe --tags --always --dirty}
 endif
 
 ifneq ($(RELSTR),)
-CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-$(RELSTR)\"
+CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG-$(RELSTR)\"
 else
-CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-3.x\"
+CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG\"
 endif
 
 ### Automatic dependency generation
