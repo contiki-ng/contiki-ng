@@ -1,6 +1,6 @@
 # Contiki-NG: the Next Generation Contiki
 
-Travis link: https://travis-ci.com/contiki-ng/contiki-ng
+Travis link: https://travis-ci.org/contiki-ng/contiki-ng
 
 Contiki-NG is a fork of Contiki, with focus on next generation IoT protocols and platforms: http://contiki-ng.org
 
