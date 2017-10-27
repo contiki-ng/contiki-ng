@@ -1,20 +1,8 @@
-The Contiki Operating System
-============================
+# Contiki-NG: the Next Generation Contiki
 
-Travis link: https://travis-ci.com/sics-iot/contiki
+Travis link: https://travis-ci.org/contiki-ng/contiki-ng
 
-Contiki is an open source operating system that runs on tiny low-power
-microcontrollers and makes it possible to develop applications that
-make efficient use of the hardware while providing standardized
-low-power wireless communication for a range of hardware platforms.
+Contiki-NG is a fork of Contiki, with focus on next generation IoT protocols and platforms: http://contiki-ng.org
 
-Contiki is used in numerous commercial and non-commercial systems,
-such as city sound monitoring, street lights, networked electrical
-power meters, industrial monitoring, radiation monitoring,
-construction site monitoring, alarm systems, remote house monitoring,
-and so on.
-
-For more information, see the Contiki website: http://contiki-os.org
-
-To get started, see the Contiki wiki: https://github.com/contiki-os/contiki/wiki
+Documentation is available on the wiki: https://github.com/contiki-ng/contiki-ng/wiki
 
