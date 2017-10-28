@@ -12,7 +12,7 @@ platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1310 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1350 \
 platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx \
 hello-world/cc2538dk \
-ipv6/rpl-border-router/cc2538dk \
+rpl-border-router/cc2538dk \
 ipv6/rpl-udp/cc2538dk \
 coap-example/cc2538dk \
 ipso-objects/cc2538dk \

@@ -71,7 +71,7 @@ TMOTES HOWTO
 2. Press reset button, get address, abort with Ctrl+C:
    Line: "Tentative link-local IPv6 address fe80:0000:0000:0000:____:____:____:____"
 
-        cd ../ipv6/rpl-border-router/
+        cd ../rpl-border-router/
         make TARGET=sky border-router.upload MOTE=1
         make connect-router
 

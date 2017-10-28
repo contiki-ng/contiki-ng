@@ -65,14 +65,7 @@ static uint8_t prefix_set;
 
 PROCESS(border_router_process, "Border router process");
 
-#if WEBSERVER==0
-/* No webserver */
-AUTOSTART_PROCESSES(&border_router_process);
-#elif WEBSERVER>1
-/* Use an external webserver application */
-#include "webserver-nogui.h"
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
-#else
+#if BORDER_ROUTER_CONF_WEBSERVER
 /* Use simple webserver with only one page for minimum footprint.
  * Multiple connections can result in interleaved tcp segments since
  * a single static buffer is used for all segments.
@@ -346,12 +339,12 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 httpd_simple_script_t
 httpd_simple_get_script(const char *name)
 {
-
   return generate_routes;
 }
-
-#endif /* WEBSERVER */
-
+#else /* BORDER_ROUTER_CONF_WEBSERVER */
+/* No webserver */
+AUTOSTART_PROCESSES(&border_router_process);
+#endif /* BORDER_ROUTER_CONF_WEBSERVER */
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)
