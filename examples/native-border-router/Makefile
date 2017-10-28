@@ -2,7 +2,7 @@ CONTIKI_PROJECT=border-router
 all: $(CONTIKI_PROJECT)
 MODULES += os/services/slip-cmd
 
-CONTIKI=../../..
+CONTIKI=../..
 
 PROJECT_SOURCEFILES += border-router-cmds.c tun-bridge.c border-router-mac.c \
 slip-config.c slip-dev.c
