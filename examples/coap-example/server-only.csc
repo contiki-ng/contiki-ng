@@ -48,9 +48,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>server</identifier>
       <description>Erbium Server</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/coap-example/coap-example-server.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/coap-example/coap-example-server.c</source>
       <commands EXPORT="discard">make coap-example-server.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/coap-example/coap-example-server.sky</firmware>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/coap-example/coap-example-server.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

@@ -14,7 +14,7 @@ platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx \
 hello-world/cc2538dk \
 ipv6/rpl-border-router/cc2538dk \
 ipv6/rpl-udp/cc2538dk \
-ipv6/coap-example/cc2538dk \
+coap-example/cc2538dk \
 ipso-objects/cc2538dk \
 udp-echo-server/cc2538dk \
 ipv6/multicast/cc2538dk \
@@ -27,7 +27,7 @@ platform-specific/cc2538-common/mqtt-demo/zoul \
 platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
-ipv6/coap-example/zoul \
+coap-example/zoul \
 ipso-objects/zoul \
 hello-world/zoul \
 sensniff/cc2538dk \

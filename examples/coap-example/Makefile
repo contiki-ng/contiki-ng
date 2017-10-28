@@ -1,7 +1,7 @@
 all: coap-example-server coap-example-client
 # use target "plugtest-server" explicitly when required
 
-CONTIKI=../../..
+CONTIKI=../..
 
 # automatically build RESTful resources
 REST_RESOURCES_DIR = ./resources
