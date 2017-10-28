@@ -82,15 +82,7 @@ CMD_HANDLERS(border_router_cmd_handler);
 
 PROCESS(border_router_process, "Border router process");
 
-#if WEBSERVER==0
-/* No webserver */
-AUTOSTART_PROCESSES(&border_router_process,&border_router_cmd_process);
-#elif WEBSERVER>1
-/* Use an external webserver application */
-#include "webserver-nogui.h"
-AUTOSTART_PROCESSES(&border_router_process,&border_router_cmd_process,
-		    &webserver_nogui_process);
-#else
+#if BORDER_ROUTER_CONF_WEBSERVER
 /* Use simple webserver with only one page */
 #include "httpd-simple.h"
 PROCESS(webserver_nogui_process, "Web server");
@@ -212,9 +204,10 @@ httpd_simple_get_script(const char *name)
 {
   return generate_routes;
 }
-
-#endif /* WEBSERVER */
-
+#else /* BORDER_ROUTER_CONF_WEBSERVER */
+/* No webserver */
+AUTOSTART_PROCESSES(&border_router_process,&border_router_cmd_process);
+#endif /* BORDER_ROUTER_CONF_WEBSERVER */
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)

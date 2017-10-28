@@ -30,6 +30,8 @@
 #ifndef PROJECT_ROUTER_CONF_H_
 #define PROJECT_ROUTER_CONF_H_
 
+#define BORDER_ROUTER_CONF_WEBSERVER 1
+
 #define UIP_FALLBACK_INTERFACE rpl_interface
 
 /* use a non-default network driver */
