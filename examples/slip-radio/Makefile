@@ -6,7 +6,7 @@ ifeq ($(TARGET),)
   -include Makefile.target
 endif
 
-CONTIKI=../../..
+CONTIKI=../..
 
 PROJECT_SOURCEFILES += slip-net.c
 ifeq ($(TARGET),sky)
