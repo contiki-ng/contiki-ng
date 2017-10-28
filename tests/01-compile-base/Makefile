@@ -7,7 +7,7 @@ hello-world/sky \
 eeprom-test/native \
 multicast/sky \
 logging/native \
-ipv6/rpl-udp/sky \
+rpl-udp/sky \
 
 TOOLS=
 

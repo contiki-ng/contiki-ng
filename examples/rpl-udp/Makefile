@@ -1,5 +1,5 @@
 all: udp-client udp-server
-CONTIKI=../../..
+CONTIKI=../..
 
 ifdef SERVER_REPLY
 CFLAGS+=-DSERVER_REPLY=$(SERVER_REPLY)
