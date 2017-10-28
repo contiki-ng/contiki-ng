@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = root intermediate sink
 all: $(CONTIKI_PROJECT)
 
-CONTIKI = ../../..
+CONTIKI = ../..
 
 MODULES += os/net/ipv6/multicast
 

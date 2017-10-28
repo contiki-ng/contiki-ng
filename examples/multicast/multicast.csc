@@ -24,9 +24,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky1</identifier>
       <description>root</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/multicast/root.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/multicast/root.c</source>
       <commands EXPORT="discard">make root.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/multicast/root.sky</firmware>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/multicast/root.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -47,9 +47,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky2</identifier>
       <description>intermediate</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/multicast/intermediate.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/multicast/intermediate.c</source>
       <commands EXPORT="discard">make intermediate.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/multicast/intermediate.sky</firmware>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/multicast/intermediate.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -70,9 +70,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky3</identifier>
       <description>sink</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/ipv6/multicast/sink.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/multicast/sink.c</source>
       <commands EXPORT="discard">make sink.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/ipv6/multicast/sink.sky</firmware>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/multicast/sink.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

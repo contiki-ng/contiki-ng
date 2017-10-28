@@ -5,7 +5,7 @@ EXAMPLES = \
 hello-world/native \
 hello-world/sky \
 eeprom-test/native \
-ipv6/multicast/sky \
+multicast/sky \
 logging/native \
 ipv6/rpl-udp/sky \
 
