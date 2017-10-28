@@ -28,18 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** \addtogroup cc2538-examples
- * @{
- *
- * \defgroup cc2538-echo-server cc2538dk UDP Echo Server Project
- *
- *  Tests that a node can correctly join an RPL network and also tests UDP
- *  functionality
- * @{
- *
- * \file
- *  An example of a simple UDP echo server for the cc2538dk platform
- */
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
@@ -107,7 +96,3 @@ PROCESS_THREAD(udp_echo_server_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

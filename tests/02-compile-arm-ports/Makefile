@@ -16,7 +16,7 @@ ipv6/rpl-border-router/cc2538dk \
 ipv6/rpl-udp/cc2538dk \
 ipv6/coap-example/cc2538dk \
 ipso-objects/cc2538dk \
-platform-specific/cc2538dk/udp-ipv6-echo-server/cc2538dk \
+udp-echo-server/cc2538dk \
 ipv6/multicast/cc2538dk \
 platform-specific/cc2538-common/cc2538dk \
 platform-specific/cc2538-common/mqtt-demo/cc2538dk \
