@@ -32,7 +32,7 @@
 #include "dev/rs232.h"
 
 void
-slip_arch_init(unsigned long ubr)
+slip_arch_init()
 {
   rs232_set_input(slip_input_byte);
 }
