@@ -54,7 +54,7 @@ extern const struct slip_radio_sensors SLIP_RADIO_CONF_SENSORS;
 
 void slip_send_packet(const uint8_t *ptr, int len);
 
- /* max 16 packets at the same time??? */
+/* max 16 packets at the same time??? */
 uint8_t packet_ids[16];
 int packet_pos;
 
@@ -161,7 +161,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
 
       packet_pos++;
       if(packet_pos >= sizeof(packet_ids)) {
-	packet_pos = 0;
+        packet_pos = 0;
       }
 
       return 1;
