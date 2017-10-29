@@ -1,16 +1,13 @@
+contiking := ..
 basedirs	:= os arch
-manuals		:= $(shell find ./ -name "*.txt")
-filetypes	:= -iwholename "*/doc/*.txt"
 empty		:=
 space		:= $(empty) $(empty)
-pwd			:= $(shell cd ..; pwd)
+pwd			:= $(shell cd $(contiking); pwd)
 
 # Doxyfile configuration variables
 export docdir	:= .
-export docdirs
-export docsrc
 export doclatex	:= NO
-export docroot	:= ../
+export docroot	:= $(contiking)
 
 # Get appropriate root for doxygen path cutoff
 ifeq ($(HOST_OS),Windows)
@@ -21,12 +18,12 @@ ifeq ($(HOST_OS),Windows)
   endif
 endif
 
-docdirs = $(sort $(foreach dir,$(basedirs),${shell find ../${dir} -type d -not -path "*/.*" -not -path "*/obj_*"}))
-docsrc = $(docdirs) $(foreach dir,$(docdirs),${shell find $(dir) -type f $(filetypes)}) $(manuals)
+export docdirs = $(sort $(foreach dir,$(basedirs),${shell find $(contiking)/${dir} -type d}))
+export docsrc = $(docdirs) $(foreach dir,$(docdirs) .,${shell find $(dir) -type f -name "*.txt"})
 
 .PHONY: clean html
 
-html:
+html: clean
 	@doxygen Doxyfile
 
 clean:
