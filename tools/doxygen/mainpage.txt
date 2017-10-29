@@ -1,9 +1,9 @@
 /**
 
-\mainpage The \os Operating System
+\mainpage \os: The Next Generation Contiki
 
-This is the code documentation for \os. More documentation, including
-feature description, tutorials etc, can be found at
-https://github.com/sics-iot/contiki/wiki.
+This page provides API description.
+
+Full documentation can be found on the wiki: https://github.com/contiki-ng/contiki-ng/wiki
 
 */
