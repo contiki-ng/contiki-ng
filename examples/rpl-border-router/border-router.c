@@ -411,6 +411,8 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
 
+  NETSTACK_MAC.on();
+
 #if DEBUG || 1
   print_local_addresses();
 #endif
