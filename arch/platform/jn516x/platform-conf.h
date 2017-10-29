@@ -181,10 +181,6 @@ typedef uint32_t rtimer_clock_t;
 #define TSCH_DEBUG_SLOT_END()
 #endif /* TSCH_DEBUG */
 
-#ifndef BAUD2UBR
-#define BAUD2UBR(X) (X)
-#endif /* BAUD2UBR */
-
 /* UART baud rates */
 #define UART_RATE_4800          0
 #define UART_RATE_9600          1

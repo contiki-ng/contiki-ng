@@ -53,10 +53,6 @@
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
-#ifndef BAUD2UBR
-#define BAUD2UBR(X) (X)
-#endif
-
 void set_prefix_64(uip_ipaddr_t *);
 
 static uip_ipaddr_t last_sender;
