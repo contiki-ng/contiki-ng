@@ -48,10 +48,6 @@
 #include "dev/serial-line.h"
 #include "serial-protocol.h"
 
-#if CONTIKI_TARGET_WISMOTE
-#include "dev/uart1.h"
-#endif
-
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
 
@@ -218,11 +214,6 @@ setup_network(void)
   rpl_dag_t *dag;
   int i;
   uint8_t state;
-
-#if CONTIKI_TARGET_WISMOTE
-  uart1_set_input(serial_line_input_byte);
-  serial_line_init();
-#endif
 
 #if UIP_CONF_ROUTER
 /**
