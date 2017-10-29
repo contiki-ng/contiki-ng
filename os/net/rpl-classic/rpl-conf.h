@@ -39,6 +39,7 @@
 #define RPL_CONF_H
 
 #include "contiki.h"
+#include "net/ipv6/multicast/uip-mcast6.h"
 
 /* DAG Mode of Operation */
 #define RPL_MOP_NO_DOWNWARD_ROUTES      0
