@@ -29,6 +29,12 @@
 
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
+/*---------------------------------------------------------------------------*/
+/* Include target-specific header */
+#ifdef TARGET_CONF_PATH
+#include TARGET_CONF_PATH
+#endif /* TARGET_CONF_PATH */
+/*---------------------------------------------------------------------------*/
 #define UIP_CONF_ROUTER                 0
 
 #define CMD_CONF_OUTPUT slip_radio_cmd_output
