@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-DOCDIR=../../doc
+DOCDIR=../../tools/doxygen
 
 all: summary
 

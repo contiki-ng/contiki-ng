@@ -1,4 +1,4 @@
-contiking := ..
+contiking := ../..
 basedirs	:= os arch
 empty		:=
 space		:= $(empty) $(empty)
