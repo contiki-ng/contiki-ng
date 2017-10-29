@@ -55,7 +55,7 @@ static uip_ipaddr_t last_sender;
 static void
 slip_input_callback(void)
 {
- // PRINTF("SIN: %u\n", uip_len);
+  PRINTF("SIN: %u\n", uip_len);
   if(uip_buf[0] == '!') {
     PRINTF("Got configuration message of type %c\n", uip_buf[1]);
     uip_clear_buf();
@@ -69,10 +69,10 @@ slip_input_callback(void)
       PRINTF("\n");
       set_prefix_64(&prefix);
     }
-  } else if (uip_buf[0] == '?') {
+  } else if(uip_buf[0] == '?') {
     PRINTF("Got request message of type %c\n", uip_buf[1]);
     if(uip_buf[1] == 'M') {
-      char* hexchar = "0123456789abcdef";
+      char *hexchar = "0123456789abcdef";
       int j;
       /* this is just a test so far... just to see if it works */
       uip_buf[0] = '!';
@@ -82,7 +82,6 @@ slip_input_callback(void)
       }
       uip_len = 18;
       slip_send();
-      
     }
     uip_clear_buf();
   }
@@ -111,12 +110,11 @@ output(void)
     PRINT6ADDR(&UIP_IP_BUF->destipaddr);
     PRINTF("\n");
   } else {
- //   PRINTF("SUT: %u\n", uip_len);
+    PRINTF("SUT: %u\n", uip_len);
     slip_send();
   }
   return 0;
 }
-
 /*---------------------------------------------------------------------------*/
 #if !SLIP_BRIDGE_CONF_NO_PUTCHAR
 #undef putchar

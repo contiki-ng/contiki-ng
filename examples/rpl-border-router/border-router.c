@@ -51,7 +51,7 @@
 #include "net/netstack.h"
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
-
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,9 +62,9 @@
 
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
-
+/*---------------------------------------------------------------------------*/
 PROCESS(border_router_process, "Border router process");
-
+/*---------------------------------------------------------------------------*/
 #if BORDER_ROUTER_CONF_WEBSERVER
 /* Use simple webserver with only one page for minimum footprint.
  * Multiple connections can result in interleaved tcp segments since
