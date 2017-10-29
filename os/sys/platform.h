@@ -139,7 +139,10 @@ void platform_init_stage_one(void);
  * that rely on networking should not be initialised here.
  *
  * When this function returns, the main routine will assume that the
- * platform has enabled character I/O and can print to console.
+ * platform has enabled character I/O and can print to console. When
+ * this function returns, main() will attempt to initialise the network
+ * stack. For this to work properly, this function should also populate
+ * linkaddr_node_addr.
  *
  * It is the port developer's responsibility to implement this function.
  *
