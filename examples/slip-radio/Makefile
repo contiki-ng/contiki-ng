@@ -5,10 +5,12 @@ MODULES += os/services/slip-cmd
 CONTIKI=../..
 -include $(CONTIKI)/Makefile.identify-target
 
+### Optionally, the target can add its own Makefile, to do things like e.g.
+### add more source files to the build or define make variables.
+-include $(TARGET)/Makefile.$(TARGET)
+
+PROJECTDIRS += $(TARGET)
 PROJECT_SOURCEFILES += slip-net.c
-ifeq ($(TARGET),sky)
-  PROJECT_SOURCEFILES += slip-radio-cc2420.c slip-radio-sky-sensors.c
-endif
 
 # custom net layer, but with IPv6 enabled
 MAKE_NET = MAKE_NET_IPV6
