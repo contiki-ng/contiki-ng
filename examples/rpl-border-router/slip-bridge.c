@@ -94,7 +94,7 @@ slip_input_callback(void)
 static void
 init(void)
 {
-  slip_arch_init(BAUD2UBR(115200));
+  slip_arch_init();
   process_start(&slip_process, NULL);
   slip_set_input_callback(slip_input_callback);
 }

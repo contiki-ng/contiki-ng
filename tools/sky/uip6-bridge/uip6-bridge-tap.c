@@ -117,7 +117,7 @@ PROCESS_THREAD(uip6_bridge, ev, data)
 
   mac_ethernetSetup();
 
-  slip_arch_init(BAUD2UBR(115200));
+  slip_arch_init();
   slip_set_input_callback(slip_activity);
   slip_set_tcpip_input_callback(slip_tcpip_input);
   process_start(&slip_process, NULL);

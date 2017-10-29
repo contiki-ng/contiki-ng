@@ -110,7 +110,6 @@ static void
 init(void)
 {
   PRINTF("ip64-slip-interface: init\n");
-  //  slip_arch_init(BAUD2UBR(115200));
   process_start(&slip_process, NULL);
   slip_set_input_callback(input_callback);
 }
