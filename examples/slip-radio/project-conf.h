@@ -29,11 +29,6 @@
 
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
-
-#define QUEUEBUF_CONF_NUM          4
-
-#define UIP_CONF_BUFFER_SIZE    140
-
 #define UIP_CONF_ROUTER                 0
 
 #define CMD_CONF_OUTPUT slip_radio_cmd_output
@@ -53,7 +48,5 @@
 #define NETSTACK_CONF_NETWORK slipnet_driver
 
 #define NETSTACK_CONF_FRAMER no_framer
-
-#define UART1_CONF_RX_WITH_DMA           1
-
+/*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
