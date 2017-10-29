@@ -51,15 +51,18 @@
 #include "net/netstack.h"
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
+#include "net/ipv6/uip-debug.h"
 /*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
-
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "BR"
+#define LOG_LEVEL LOG_LEVEL_NONE
+/*---------------------------------------------------------------------------*/
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 /*---------------------------------------------------------------------------*/
@@ -352,14 +355,14 @@ print_local_addresses(void)
   int i;
   uint8_t state;
 
-  PRINTA("Server IPv6 addresses:\n");
+  printf("Server IPv6 addresses:\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINTA(" ");
+      printf(" ");
       uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTA("\n");
+      printf("\n");
     }
   }
 }
@@ -402,13 +405,14 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   SENSORS_ACTIVATE(button_sensor);
 
-  PRINTF("RPL-Border router started\n");
+  printf("RPL-Border router started\n");
 
   /* Request prefix until it has been received */
   while(!prefix_set) {
     etimer_set(&et, CLOCK_SECOND);
     request_prefix();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    LOG_INFO("Waiting for prefix\n");
   }
 
   NETSTACK_MAC.on();
@@ -420,7 +424,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   while(1) {
     PROCESS_YIELD();
     if (ev == sensors_event && data == &button_sensor) {
-      PRINTF("Initiating global repair\n");
+      LOG_INFO("Initiating global repair\n");
 #if UIP_CONF_IPV6_RPL_LITE
       rpl_global_repair();
 #else
