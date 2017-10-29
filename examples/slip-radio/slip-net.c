@@ -32,15 +32,17 @@
 #include "net/ipv6/uip.h"
 #include "net/packetbuf.h"
 #include "dev/slip.h"
+#include "os/sys/log.h"
+
 #include <stdio.h>
 
+#define LOG_MODULE "slip-net"
+#define LOG_LEVEL LOG_LEVEL_NONE
+/*---------------------------------------------------------------------------*/
 #define SLIP_END     0300
 #define SLIP_ESC     0333
 #define SLIP_ESC_END 0334
 #define SLIP_ESC_ESC 0335
-
-#define DEBUG 0
-
 /*---------------------------------------------------------------------------*/
 static void
 slipnet_init(void)
@@ -79,29 +81,28 @@ slipnet_input(void)
   uip_len = packetbuf_datalen();
   i = packetbuf_copyto(uip_buf);
 
-  if(DEBUG) {
-    printf("Slipnet got input of len: %d, copied: %d\n",
-	   packetbuf_datalen(), i);
+  LOG_DBG("Slipnet got input of len: %d, copied: %d\n",
+          packetbuf_datalen(), i);
 
-    for(i = 0; i < uip_len; i++) {
-      printf("%02x", (unsigned char) uip_buf[i]);
-      if((i & 15) == 15) printf("\n");
-      else if((i & 7) == 7) printf(" ");
+  for(i = 0; i < uip_len; i++) {
+    LOG_DBG("%02x", (unsigned char)uip_buf[i]);
+    if((i & 15) == 15) {
+      LOG_DBG_("\n");
+    } else if((i & 7) == 7) {
+      LOG_DBG_(" ");
     }
-    printf("\n");
   }
+  LOG_DBG_("\n");
 
-  /* printf("SUT: %u\n", uip_len); */
   slip_send_packet(uip_buf, uip_len);
 }
-
+/*---------------------------------------------------------------------------*/
 static uint8_t
 slipnet_output(const linkaddr_t *localdest)
 {
   /* do nothing... */
   return 1;
 }
-
 /*---------------------------------------------------------------------------*/
 const struct network_driver slipnet_driver = {
   "slipnet",
