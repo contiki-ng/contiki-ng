@@ -106,28 +106,19 @@ set_rf_params(void)
 {
   uint16_t short_addr;
   uint8_t ext_addr[8];
-  radio_value_t val = 0;
 
   ieee_addr_cpy_to(ext_addr, 8);
 
   short_addr = ext_addr[7];
   short_addr |= ext_addr[6] << 8;
 
-  /* Populate linkaddr_node_addr. Maintain endianness */
-  memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
-
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
 
-  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &val);
-
   /* also set the global node id */
   node_id = short_addr;
-
-  LOG_INFO(" RF: Channel %d\n", val);
-  LOG_INFO(" Node ID: %d\n", node_id);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -177,7 +168,8 @@ platform_init_stage_two()
 
   serial_line_init();
 
-  set_rf_params();
+  /* Populate linkaddr_node_addr */
+  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
   fade(LEDS_GREEN);
 }
@@ -185,6 +177,13 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
+  radio_value_t chan, pan;
+
+  set_rf_params();
+
+  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
+  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
+
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
   LOG_INFO(BOARD_STRING "\n");
@@ -193,6 +192,8 @@ platform_init_stage_three()
           ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
+  LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
+  LOG_INFO(" Node ID: %d\n", node_id);
 
   process_start(&sensors_process, NULL);
   fade(LEDS_ORANGE);
