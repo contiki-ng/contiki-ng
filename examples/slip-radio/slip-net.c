@@ -42,7 +42,7 @@
 #define DEBUG 0
 
 /*---------------------------------------------------------------------------*/
-void
+static void
 slipnet_init(void)
 {
 }
@@ -68,7 +68,7 @@ slip_send_packet(const uint8_t *ptr, int len)
   slip_arch_writeb(SLIP_END);
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 slipnet_input(void)
 {
   int i;
