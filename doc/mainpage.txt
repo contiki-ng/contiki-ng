@@ -1,9 +1,0 @@
-/**
-
-\mainpage The \os Operating System
-
-This is the code documentation for \os. More documentation, including
-feature description, tutorials etc, can be found at
-https://github.com/sics-iot/contiki/wiki.
-
-*/
