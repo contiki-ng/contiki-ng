@@ -2,11 +2,8 @@ CONTIKI_PROJECT=slip-radio
 all: $(CONTIKI_PROJECT)
 MODULES += os/services/slip-cmd
 
-ifeq ($(TARGET),)
-  -include Makefile.target
-endif
-
 CONTIKI=../..
+-include $(CONTIKI)/Makefile.identify-target
 
 PROJECT_SOURCEFILES += slip-net.c
 ifeq ($(TARGET),sky)
