@@ -45,6 +45,7 @@
 #define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_DBG
 #define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
 #define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_DBG
 
 /* Enable cooja annotations */
 #define LOG_CONF_WITH_ANNOTATE                1
