@@ -1,5 +1,5 @@
-CONTIKI_PROJECT = logging
+CONTIKI_PROJECT = all-timers
 all: $(CONTIKI_PROJECT)
 
-CONTIKI = ../..
+CONTIKI = ../../..
 include $(CONTIKI)/Makefile.include

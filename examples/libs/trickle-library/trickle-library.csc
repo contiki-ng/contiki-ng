@@ -25,9 +25,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky1</identifier>
       <description>trickle-tester</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/trickle-library/trickle-library.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/libs/trickle-library/trickle-library.c</source>
       <commands EXPORT="discard">make trickle-library.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/trickle-library/trickle-library.sky</firmware>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/libs/trickle-library/trickle-library.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
