@@ -1,4 +1,4 @@
-all: http-example
+all: http-example websocket-example
 CONTIKI=../..
 MODULES += os/net/app-layer/http-socket
 
