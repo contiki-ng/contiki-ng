@@ -44,13 +44,6 @@
 #include <stdint.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#define DEBUG 1
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-/*---------------------------------------------------------------------------*/
 PROCESS(sensniff_process, "sensniff process");
 AUTOSTART_PROCESSES(&sensniff_process);
 /*---------------------------------------------------------------------------*/
@@ -318,7 +311,7 @@ PROCESS_THREAD(sensniff_process, ev, data)
 
   /* Turn off RF frame filtering and H/W ACKs */
   if(NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, 0) != RADIO_RESULT_OK) {
-    PRINTF("sensniff: Error setting RF in promiscuous mode\n");
+    printf("sensniff: Error setting RF in promiscuous mode\n");
     PROCESS_EXIT();
   }
 
