@@ -198,7 +198,7 @@ add_response_sent_callback(void *arg, uint16_t arg_len,
      (nbr = sixp_nbr_find(dest_addr)) != NULL) {
     add_links_to_schedule(dest_addr, LINK_OPTION_RX,
                           cell_list, cell_list_len);
-    sixp_nbr_advance_grx(nbr);
+    sixp_nbr_advance_gen(nbr);
   }
 }
 
@@ -222,7 +222,7 @@ delete_response_sent_callback(void *arg, uint16_t arg_len,
                             body, body_len) == 0 &&
      (nbr = sixp_nbr_find(dest_addr)) != NULL) {
     remove_links_to_schedule(cell_list, cell_list_len);
-    sixp_nbr_advance_grx(nbr);
+    sixp_nbr_advance_gen(nbr);
   }
 }
 
@@ -429,7 +429,7 @@ response_input(sixp_pkt_rc_t rc,
         PRINTF("\n");
         add_links_to_schedule(peer_addr, LINK_OPTION_TX,
                               cell_list, cell_list_len);
-        sixp_nbr_advance_gtx(nbr);
+        sixp_nbr_advance_gen(nbr);
         break;
       case SIXP_PKT_CMD_DELETE:
         if(sixp_pkt_get_cell_list(SIXP_PKT_TYPE_RESPONSE,
@@ -443,9 +443,9 @@ response_input(sixp_pkt_rc_t rc,
         print_cell_list(cell_list, cell_list_len);
         PRINTF("\n");
         remove_links_to_schedule(cell_list, cell_list_len);
-        sixp_nbr_advance_gtx(nbr);
+        sixp_nbr_advance_gen(nbr);
         break;
-      case SIXP_PKT_CMD_STATUS:
+      case SIXP_PKT_CMD_COUNT:
       case SIXP_PKT_CMD_LIST:
       case SIXP_PKT_CMD_CLEAR:
       default:

@@ -39,85 +39,49 @@
 
 #include "contiki.h"
 #include "node-id.h"
-#include "net/rpl/rpl.h"
+#include "rpl.h"
+#include "rpl-dag-root.h"
+#include "sys/log.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/mac/tsch/tsch.h"
+#include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/sixtop/sixtop.h"
-#include "net/rpl/rpl-private.h"
-#include "net/ipv6/uip-debug.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 
 #include "sf-simple.h"
+
+#define DEBUG DEBUG_PRINT
+#include "net/ipv6/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
 AUTOSTART_PROCESSES(&node_process);
 
 /*---------------------------------------------------------------------------*/
-static void
-net_init(uip_ipaddr_t *br_prefix)
-{
-  uip_ipaddr_t global_ipaddr;
-
-  if(br_prefix) { /* We are RPL root. Will be set automatically
-                     as TSCH pan coordinator via the tsch-rpl module */
-    memcpy(&global_ipaddr, br_prefix, 16);
-    uip_ds6_set_addr_iid(&global_ipaddr, &uip_lladdr);
-    uip_ds6_addr_add(&global_ipaddr, 0, ADDR_AUTOCONF);
-    rpl_set_root(RPL_DEFAULT_INSTANCE, &global_ipaddr);
-    rpl_set_prefix(rpl_get_any_dag(), br_prefix, 64);
-    rpl_repair_root(RPL_DEFAULT_INSTANCE);
-  }
-
-  NETSTACK_MAC.on();
-}
-/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(node_process, ev, data)
 {
+  int is_coordinator;
+  static int added_num_of_links = 0;
   static struct etimer et;
   struct tsch_neighbor *n;
 
   PROCESS_BEGIN();
 
-  /* 3 possible roles:
-   * - role_6ln: simple node, will join any network, secured or not
-   * - role_6dr: DAG root, will advertise (unsecured) beacons
-   * - role_6dr_sec: DAG root, will advertise secured beacons
-   * */
-  static int is_coordinator = 0, added_num_of_links = 0;
-  static enum { role_6ln, role_6dr, role_6dr_sec } node_role;
-  node_role = role_6ln;
+  is_coordinator = 0;
 
-  /* Set node with MAC address c1:0c:00:00:00:00:01 as coordinator,
-   * convenient in cooja for regression tests using z1 nodes
-   * */
-
-#ifdef CONTIKI_TARGET_Z1
-  extern unsigned char node_mac[8];
-  unsigned char coordinator_mac[8] = { 0xc1, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
-
-  if(memcmp(node_mac, coordinator_mac, 8) == 0) {
-    if(LLSEC802154_ENABLED) {
-      node_role = role_6dr_sec;
-    } else {
-      node_role = role_6dr;
-    }
-  } else {
-    node_role = role_6ln;
-  }
+#if CONTIKI_TARGET_COOJA
+  is_coordinator = (node_id == 1);
 #endif
 
-  tsch_set_pan_secured(LLSEC802154_ENABLED && (node_role == role_6dr_sec));
-  is_coordinator = node_role > role_6ln;
-  sixtop_add_sf(&sf_simple_driver);
-
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    net_init(&prefix);
-  } else {
-    net_init(NULL);
+    rpl_dag_root_init_dag_immediately();
   }
+
+  NETSTACK_MAC.on();
+  sixtop_add_sf(&sf_simple_driver);
 
   etimer_set(&et, CLOCK_SECOND * 30);
   while(1) {
@@ -128,7 +92,6 @@ PROCESS_THREAD(node_process, ev, data)
     n = tsch_queue_get_time_source();
 
     if(node_id != 1) {
-      clock_delay(1000);
       if((added_num_of_links == 1) || (added_num_of_links == 3)) {
         printf("App : Add a link\n");
         sf_simple_add_links(&n->addr, 1);
