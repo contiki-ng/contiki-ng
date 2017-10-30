@@ -39,12 +39,21 @@ sensniff/srf06-cc26xx:BOARD=launchpad/cc1310 \
 storage/cfs-coffee/cc2538dk \
 storage/cfs-coffee/openmote-cc2538 \
 storage/cfs-coffee/zoul \
+storage/antelope-shell/zoul \
 6tisch/simple-node/zoul \
 6tisch/simple-node/zoul:MAKE_WITH_ORCHESTRA=1 \
 6tisch/simple-node/zoul:MAKE_WITH_SECURITY=1 \
 libs/logging/zoul \
 6tisch/etsi-plugtest-2017/zoul:BOARD=remote \
-6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650
+6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650 \
+6tisch/6p-packet/zoul \
+6tisch/sixtop/zoul \
+http-socket/zoul \
+libs/timers/zoul \
+libs/trickle-library/zoul \
+nullnet/zoul \
+slip-radio/zoul \
+
 
 TOOLS=
 

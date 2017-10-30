@@ -8,6 +8,7 @@ storage/eeprom-test/native \
 multicast/sky \
 libs/logging/native \
 rpl-udp/sky \
+native-border-router/native \
 
 TOOLS=
 
