@@ -1,4 +1,4 @@
-all: udp-client udp-server
+all: udp-client udp-server udp-client-packet-debug
 CONTIKI=../..
 
 ifdef SERVER_REPLY
