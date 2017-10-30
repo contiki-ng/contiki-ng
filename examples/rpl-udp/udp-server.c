@@ -28,118 +28,77 @@
  */
 
 #include "contiki.h"
-#include "contiki-lib.h"
-#include "contiki-net.h"
-#include "net/ipv6/uip.h"
 #include "rpl.h"
 #include "rpl-dag-root.h"
-
 #include "net/netstack.h"
-#include "dev/button-sensor.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include "net/ipv6/simple-udp.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/ipv6/uip-debug.h"
+#include "sys/log.h"
+#define LOG_MODULE "App"
+#define LOG_LEVEL LOG_LEVEL_INFO
 
-#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
+#define WITH_SERVER_REPLY  1
 #define UDP_CLIENT_PORT	8765
 #define UDP_SERVER_PORT	5678
 
-#define UDP_EXAMPLE_ID  190
+static struct simple_udp_connection udp_conn;
 
-static struct uip_udp_conn *server_conn;
-
-PROCESS(udp_server_process, "UDP server process");
+PROCESS(udp_server_process, "UDP server");
 AUTOSTART_PROCESSES(&udp_server_process);
 /*---------------------------------------------------------------------------*/
 static void
-tcpip_handler(void)
+udp_rx_callback(struct simple_udp_connection *c,
+         const uip_ipaddr_t *sender_addr,
+         uint16_t sender_port,
+         const uip_ipaddr_t *receiver_addr,
+         uint16_t receiver_port,
+         const uint8_t *data,
+         uint16_t datalen)
 {
-  char *appdata;
-
-  if(uip_newdata()) {
-    appdata = (char *)uip_appdata;
-    appdata[uip_datalen()] = 0;
-    PRINTF("DATA recv '%s' from ", appdata);
-    PRINTF("%d",
-           UIP_IP_BUF->srcipaddr.u8[sizeof(UIP_IP_BUF->srcipaddr.u8) - 1]);
-    PRINTF("\n");
-#if SERVER_REPLY
-    PRINTF("DATA sending reply\n");
-    uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-    uip_udp_packet_send(server_conn, "Reply", sizeof("Reply"));
-    uip_create_unspecified(&server_conn->ripaddr);
-#endif
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
-
-  PRINTF("Server IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(state == ADDR_TENTATIVE || state == ADDR_PREFERRED) {
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-      /* hack to make address "final" */
-      if (state == ADDR_TENTATIVE) {
-	uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-      }
-    }
-  }
+  unsigned count = *(unsigned *)data;
+  LOG_INFO("Received request %u from ", count);
+  LOG_INFO_6ADDR(sender_addr);
+  LOG_INFO_("\n");
+#if WITH_SERVER_REPLY
+  LOG_INFO("Sending reply %u to ", count);
+  LOG_INFO_6ADDR(sender_addr);
+  LOG_INFO_("\n");
+  simple_udp_sendto(&udp_conn, &count, sizeof(count), sender_addr);
+#endif /* WITH_SERVER_REPLY */
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_server_process, ev, data)
 {
   uip_ipaddr_t ipaddr;
+  uip_ds6_addr_t *link_local_addr;
 
   PROCESS_BEGIN();
 
-  PROCESS_PAUSE();
+  /* Initialize Global address */
+  INIT_SERVER_IPADDR(ipaddr);
+  LOG_INFO("Global IPv6 address: ");
+  LOG_INFO_6ADDR(&ipaddr);
+  LOG_INFO_("\n");
 
-  SENSORS_ACTIVATE(button_sensor);
-
-  PRINTF("UDP server started. nbr:%d routes:%d\n",
-         NBR_TABLE_CONF_MAX_NEIGHBORS, NETSTACK_MAX_ROUTE_ENTRIES);
-
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0x00ff, 0xfe00, 1);
-  rpl_dag_root_init_dag_immediately();
-
-  print_local_addresses();
-
-  server_conn = udp_new(NULL, UIP_HTONS(UDP_CLIENT_PORT), NULL);
-  if(server_conn == NULL) {
-    PRINTF("No UDP connection available, exiting the process!\n");
+  /* Get link-local address */
+  link_local_addr = uip_ds6_get_link_local(-1);
+  if(link_local_addr == NULL) {
+    LOG_ERR("No link-local address\n");
     PROCESS_EXIT();
   }
-  udp_bind(server_conn, UIP_HTONS(UDP_SERVER_PORT));
-
-  PRINTF("Created a server connection with remote address ");
-  PRINT6ADDR(&server_conn->ripaddr);
-  PRINTF(" local/remote port %u/%u\n", UIP_HTONS(server_conn->lport),
-         UIP_HTONS(server_conn->rport));
-
-  while(1) {
-    PROCESS_YIELD();
-    if(ev == tcpip_event) {
-      tcpip_handler();
-    } else if (ev == sensors_event && data == &button_sensor) {
-      PRINTF("Initiaing global repair\n");
-#if UIP_CONF_IPV6_RPL_LITE
-      rpl_global_repair();
-#else
-      rpl_repair_root(RPL_DEFAULT_INSTANCE);
-#endif
-    }
+  if(memcmp(((uint8_t*)&link_local_addr->ipaddr + 8),
+      ((uint8_t*)&ipaddr + 8), 8)) {
+    LOG_ERR("Global IPv6 address does not match link-local IPv6 address\n");
+    PROCESS_EXIT();
   }
+
+  /* Initialize DAG root */
+  rpl_dag_root_init(&ipaddr, &ipaddr);
+  rpl_dag_root_init_dag_immediately();
+
+  /* Initialize UDP connection */
+  simple_udp_register(&udp_conn, UDP_SERVER_PORT, NULL,
+                      UDP_CLIENT_PORT, udp_rx_callback);
 
   PROCESS_END();
 }
