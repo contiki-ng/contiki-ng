@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,33 +29,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc26xx
- * @{
- *
- * \defgroup cc26xx-batmon CC13xx/CC26xx BatMon sensor driver
- *
- * Driver for the on-chip battery voltage and chip temperature sensor.
- * @{
- *
- * \file
- * Header file for the CC13xx/CC26xx battery monitor
- */
+#ifndef MQTT_CLIENT_H_
+#define MQTT_CLIENT_H_
 /*---------------------------------------------------------------------------*/
-#ifndef BATMON_SENSOR_H_
-#define BATMON_SENSOR_H_
+#include <string.h>
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "lib/sensors.h"
+typedef struct mqtt_client_extension_s {
+  void (*init)(void);
+  char *(*value)(void);
+} mqtt_client_extension_t;
 /*---------------------------------------------------------------------------*/
-#define BATMON_SENSOR_TYPE_TEMP    1
-#define BATMON_SENSOR_TYPE_VOLT    2
+#define MQTT_CLIENT_EXTENSIONS(...) \
+  const mqtt_client_extension_t *mqtt_client_extensions[] = {__VA_ARGS__}; \
+  const uint8_t mqtt_client_extension_count = \
+    (sizeof(mqtt_client_extensions) / sizeof(mqtt_client_extensions[0]));
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor batmon_sensor;
+#endif /* MQTT_CLIENT_H_ */
 /*---------------------------------------------------------------------------*/
-#endif /* BATMON_SENSOR_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
