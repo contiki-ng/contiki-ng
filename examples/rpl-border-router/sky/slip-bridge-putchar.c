@@ -27,27 +27,38 @@
  * SUCH DAMAGE.
  *
  */
-
-#ifndef PROJECT_ROUTER_CONF_H_
-#define PROJECT_ROUTER_CONF_H_
 /*---------------------------------------------------------------------------*/
-/* Include target-specific header */
-#ifdef TARGET_CONF_PATH
-#include TARGET_CONF_PATH
-#endif /* TARGET_CONF_PATH */
+#include "contiki.h"
+#include "dev/slip.h"
+
+#include <string.h>
 /*---------------------------------------------------------------------------*/
-#ifndef UIP_FALLBACK_INTERFACE
-#define UIP_FALLBACK_INTERFACE rpl_interface
-#endif
+#define SLIP_END     0300
+#undef putchar
+/*---------------------------------------------------------------------------*/
+int
+putchar(int c)
+{
+  static char debug_frame = 0;
 
-#ifndef WEBSERVER_CONF_CFS_CONNS
-#define WEBSERVER_CONF_CFS_CONNS 2
-#endif
+  if(!debug_frame) {            /* Start of debug output */
+    slip_arch_writeb(SLIP_END);
+    slip_arch_writeb('\r');     /* Type debug line == '\r' */
+    debug_frame = 1;
+  }
 
-#define BORDER_ROUTER_CONF_WEBSERVER 1
+  /* Need to also print '\n' because for example COOJA will not show
+     any output before line end */
+  slip_arch_writeb((char)c);
 
-#if BORDER_ROUTER_CONF_WEBSERVER
-#define UIP_CONF_TCP 1
-#endif
-
-#endif /* PROJECT_ROUTER_CONF_H_ */
+  /*
+   * Line buffered output, a newline marks the end of debug output and
+   * implicitly flushes debug output.
+   */
+  if(c == '\n') {
+    slip_arch_writeb(SLIP_END);
+    debug_frame = 0;
+  }
+  return c;
+}
+/*---------------------------------------------------------------------------*/

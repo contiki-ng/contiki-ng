@@ -3,6 +3,15 @@ all: $(CONTIKI_PROJECT)
 
 CONTIKI=../..
 
+ifeq ($(TARGET),)
+  -include Makefile.target
+endif
+
+### Optionally, the target can add its own Makefile, to do things like e.g.
+### add more source files to the build or define make variables.
+-include $(TARGET)/Makefile.$(TARGET)
+
+PROJECTDIRS += $(TARGET)
 PROJECT_SOURCEFILES += slip-bridge.c httpd-simple.c
 
 ifeq ($(PREFIX),)
