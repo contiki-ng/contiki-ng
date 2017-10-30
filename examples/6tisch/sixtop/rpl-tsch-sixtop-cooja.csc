@@ -7,7 +7,7 @@
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
-    <title>rpl-tsch-sixtop example</title>
+    <title>sixtop example</title>
     <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
@@ -24,7 +24,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype204</identifier>
       <description>node</description>
-      <source>[CONTIKI_DIR]/examples/rpl-tsch-sixtop/node-sixtop.c</source>
+      <source>[CONTIKI_DIR]/examples/6tisch/sixtop/node-sixtop.c</source>
       <commands>make node-sixtop.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

@@ -39,9 +39,9 @@ sensniff/srf06-cc26xx:BOARD=launchpad/cc1310 \
 storage/cfs-coffee/cc2538dk \
 storage/cfs-coffee/openmote-cc2538 \
 storage/cfs-coffee/zoul \
-rpl-tsch/zoul \
-rpl-tsch/zoul:MAKE_WITH_ORCHESTRA=1 \
-rpl-tsch/zoul:MAKE_WITH_SECURITY=1 \
+6tisch/simple-node/zoul \
+6tisch/simple-node/zoul:MAKE_WITH_ORCHESTRA=1 \
+6tisch/simple-node/zoul:MAKE_WITH_SECURITY=1 \
 libs/logging/zoul \
 6tisch/etsi-plugtest-2017/zoul:BOARD=remote \
 6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650

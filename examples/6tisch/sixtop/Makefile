@@ -2,7 +2,7 @@ CONTIKI_PROJECT = node-sixtop
 all: $(CONTIKI_PROJECT)
 
 PROJECT_SOURCEFILES += sf-simple.c
-CONTIKI=../..
+CONTIKI=../../..
 
 MAKE_WITH_SECURITY ?= 0 # force Security from command line
 

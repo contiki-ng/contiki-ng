@@ -25,7 +25,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype660</identifier>
       <description>RPL/TSCH Node</description>
-      <source>[CONTIKI_DIR]/examples/rpl-tsch/node.c</source>
+      <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands>make TARGET=cooja clean
       make TARGET=cooja node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>

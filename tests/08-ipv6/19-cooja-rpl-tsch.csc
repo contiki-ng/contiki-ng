@@ -24,7 +24,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype1</identifier>
       <description>Cooja Mote Type #mtype1</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/rpl-tsch/node.c</source>
+      <source EXPORT="discard">[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands EXPORT="discard">make TARGET=cooja clean
 make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=0 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>

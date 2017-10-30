@@ -16,9 +16,9 @@ platform-specific/jn516x/tsch/simple-sensor-network/rpl-border-router/jn516x \
 platform-specific/jn516x/tsch/tx-power-verification/rpl-border-router/jn516x \
 platform-specific/jn516x/tsch/uart1-test-node/jn516x \
 sensniff/jn516x \
-rpl-tsch/jn516x \
-rpl-tsch/jn516x:MAKE_WITH_ORCHESTRA=1 \
-rpl-tsch/jn516x:MAKE_WITH_SECURITY=1 \
+6tisch/simple-node/jn516x \
+6tisch/simple-node/jn516x:MAKE_WITH_ORCHESTRA=1 \
+6tisch/simple-node/jn516x:MAKE_WITH_SECURITY=1 \
 libs/logging/jn516x \
 6tisch/etsi-plugtest-2017/jn516x
 

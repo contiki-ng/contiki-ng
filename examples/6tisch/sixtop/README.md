@@ -25,7 +25,7 @@ If the mode is 6ln (node)
 * Following this the application triggers another 6P Add Request to 6dr
 * After an interval, the application triggers a 6P Delete Request to 6dr
 
-For the Cooja simulation, you may use the rpl-tsch-sixtop-z1.csc file in this folder.
+For the Cooja simulation, you may use the rpl-tsch-sixtop-cooja.csc file in this folder.
 Once you run the simulation, "Mote output" window of Cooja simulator displays the
 following messages.
 
