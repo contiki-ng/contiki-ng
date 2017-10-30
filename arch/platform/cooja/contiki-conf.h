@@ -132,10 +132,6 @@ typedef uint64_t rtimer_clock_t;
 #define TSCH_CONF_MAX_EB_PERIOD (4 * CLOCK_SECOND)
 #endif /* MAC_CONF_WITH_TSCH */
 
-/* Turn off example-provided putchars */
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR 1
-
-
 #define CFS_CONF_OFFSET_TYPE	long
 
 #define RF_CHANNEL                     26
