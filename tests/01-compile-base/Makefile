@@ -4,7 +4,7 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 hello-world/native \
 hello-world/sky \
-eeprom-test/native \
+storage/eeprom-test/native \
 multicast/sky \
 logging/native \
 rpl-udp/sky \

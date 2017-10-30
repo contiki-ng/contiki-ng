@@ -1,6 +1,5 @@
 CONTIKI_PROJECT = eeprom-test
+CONTIKI = ../../..
 all: $(CONTIKI_PROJECT)
-TARGET=mbxxx
 
-CONTIKI = ../..
 include $(CONTIKI)/Makefile.include

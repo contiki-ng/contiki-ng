@@ -36,9 +36,9 @@ sensniff/zoul \
 sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
 sensniff/srf06-cc26xx \
 sensniff/srf06-cc26xx:BOARD=launchpad/cc1310 \
-cfs-coffee/cc2538dk \
-cfs-coffee/openmote-cc2538 \
-cfs-coffee/zoul \
+storage/cfs-coffee/cc2538dk \
+storage/cfs-coffee/openmote-cc2538 \
+storage/cfs-coffee/zoul \
 rpl-tsch/zoul \
 rpl-tsch/zoul:MAKE_WITH_ORCHESTRA=1 \
 rpl-tsch/zoul:MAKE_WITH_SECURITY=1 \

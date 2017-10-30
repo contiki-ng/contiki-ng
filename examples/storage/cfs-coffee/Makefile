@@ -1,4 +1,4 @@
-CONTIKI = ../..
+CONTIKI = ../../..
 
 MODULES += os/services/unit-test
 
