@@ -68,3 +68,10 @@ clock_delay(unsigned int d)
   /* Does not do anything. */
 }
 /*---------------------------------------------------------------------------*/
+void
+clock_init(void)
+{
+  /* Provide this function, required by main() */
+  return;
+}
+/*---------------------------------------------------------------------------*/

@@ -45,11 +45,7 @@
 #include "contiki.h"
 #include "dev/adc.h"
 #include "dev/leds.h"
-#include "dev/sys-ctrl.h"
-#include "dev/nvic.h"
 #include "dev/uart.h"
-#include "dev/watchdog.h"
-#include "dev/ioc.h"
 #include "dev/button-sensor.h"
 #include "dev/serial-line.h"
 #include "dev/slip.h"
@@ -59,37 +55,23 @@
 #include "usb/usb-serial.h"
 #include "lib/random.h"
 #include "net/netstack.h"
-#include "net/queuebuf.h"
-#include "net/ipv6/tcpip.h"
-#include "net/ipv6/uip.h"
 #include "net/mac/framer/frame802154.h"
+#include "net/linkaddr.h"
+#include "sys/platform.h"
 #include "soc.h"
 #include "cpu.h"
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
 
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#if STARTUP_CONF_VERBOSE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
-#if UART_CONF_ENABLE
-#define PUTS(s) puts(s)
-#else
-#define PUTS(s)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "CC2538DK"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 static void
 fade(unsigned char l)
@@ -124,43 +106,24 @@ set_rf_params(void)
   /* Populate linkaddr_node_addr. Maintain endianness */
   memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
 
-#if STARTUP_CONF_VERBOSE
-  {
-    int i;
-    printf("Contiki configured with address ");
-    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
-      printf("%02x:", linkaddr_node_addr.u8[i]);
-    }
-    printf("%02x\n", linkaddr_node_addr.u8[i]);
-  }
-#endif
-
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, CC2538_RF_CHANNEL);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Main routine for the cc2538dk platform
- */
-int
-main(void)
+void
+platform_init_stage_one(void)
 {
-  nvic_init();
-  ioc_init();
-  sys_ctrl_init();
-  clock_init();
-  lpm_init();
-  rtimer_init();
-  gpio_init();
+  soc_init();
 
   leds_init();
   fade(LEDS_YELLOW);
-
-  process_init();
-
-  watchdog_init();
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two()
+{
   button_sensor_init();
 
   /*
@@ -186,77 +149,44 @@ main(void)
 
   serial_line_init();
 
-  INTERRUPTS_ENABLE();
-  fade(LEDS_GREEN);
-
-  PUTS(CONTIKI_VERSION_STRING);
-  PUTS(BOARD_STRING);
-#if STARTUP_CONF_VERBOSE
-  soc_print_info();
-#endif
-
-  PRINTF(" Net: ");
-  PRINTF("%s\n", NETSTACK_NETWORK.name);
-  PRINTF(" MAC: ");
-  PRINTF("%s\n", NETSTACK_MAC.name);
-
   /* Initialise the H/W RNG engine. */
   random_init(0);
 
   udma_init();
-
-  process_start(&etimer_process, NULL);
-  ctimer_init();
-
-  set_rf_params();
 
 #if CRYPTO_CONF_INIT
   crypto_init();
   crypto_disable();
 #endif
 
-  netstack_init();
+  set_rf_params();
 
-#if NETSTACK_CONF_WITH_IPV6
-  memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
-  queuebuf_init();
-  process_start(&tcpip_process, NULL);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+  INTERRUPTS_ENABLE();
+
+  fade(LEDS_GREEN);
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three()
+{
+  LOG_INFO("%s\n", BOARD_STRING);
+
+  soc_print_info();
 
   adc_init();
 
   process_start(&sensors_process, NULL);
 
-  energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
-  autostart_start(autostart_processes);
-
-  watchdog_start();
   fade(LEDS_ORANGE);
-
-  while(1) {
-    uint8_t r;
-    do {
-      /* Reset watchdog and handle polls and events */
-      watchdog_periodic();
-
-      r = process_run();
-    } while(r > 0);
-
-    /* We have serviced all pending events. Enter a Low-Power mode. */
-    lpm_enter();
-  }
 }
 /*---------------------------------------------------------------------------*/
-
+void
+platform_idle()
+{
+  /* We have serviced all pending events. Enter a Low-Power mode. */
+  lpm_enter();
+}
+/*---------------------------------------------------------------------------*/
 /**
  * @}
  * @}

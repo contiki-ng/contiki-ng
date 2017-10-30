@@ -38,6 +38,10 @@
 #include "contiki.h"
 #include "dev/rom-util.h"
 #include "dev/sys-ctrl.h"
+#include "dev/ioc.h"
+#include "dev/nvic.h"
+#include "dev/sys-ctrl.h"
+#include "lpm.h"
 #include "reg.h"
 #include "soc.h"
 
@@ -56,6 +60,11 @@
                                  DIECFG2_DIE_REV_OFS)
 #define DIECFG2_AES_EN          0x00000002
 #define DIECFG2_PKA_EN          0x00000001
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "CC2538 SoC"
+#define LOG_LEVEL LOG_LEVEL_NONE
 /*----------------------------------------------------------------------------*/
 uint8_t
 soc_get_rev(void)
@@ -89,20 +98,32 @@ soc_print_info(void)
   uint8_t rev = soc_get_rev();
   uint32_t features = soc_get_features();
 
-  printf("CC2538: ID: 0x%04lx, rev.: PG%d.%d, Flash: %lu KiB, SRAM: %lu KiB, "
-           "AES/SHA: %u, ECC/RSA: %u\n"
-         "System clock: %lu Hz\n"
-         "I/O clock: %lu Hz\n"
-         "Reset cause: %s\n",
-         rom_util_get_chip_id(),
-         rev >> 4, rev & 0x0f,
-         rom_util_get_flash_size() >> 10,
-         soc_get_sram_size() >> 10,
-         !!(features & SOC_FEATURE_AES_SHA),
-         !!(features & SOC_FEATURE_ECC_RSA),
-         sys_ctrl_get_sys_clock(),
-         sys_ctrl_get_io_clock(),
-         sys_ctrl_get_reset_cause_str());
+  LOG_DBG("CC2538: ID: 0x%04lx, rev.: PG%d.%d, Flash: %lu KiB, "
+          "SRAM: %lu KiB, AES/SHA: %u, ECC/RSA: %u\n"
+          "System clock: %lu Hz\n"
+          "I/O clock: %lu Hz\n"
+          "Reset cause: %s\n",
+          rom_util_get_chip_id(),
+          rev >> 4, rev & 0x0f,
+          rom_util_get_flash_size() >> 10,
+          soc_get_sram_size() >> 10,
+          !!(features & SOC_FEATURE_AES_SHA),
+          !!(features & SOC_FEATURE_ECC_RSA),
+          sys_ctrl_get_sys_clock(),
+          sys_ctrl_get_io_clock(),
+          sys_ctrl_get_reset_cause_str());
 }
-
+/*----------------------------------------------------------------------------*/
+void
+soc_init()
+{
+  nvic_init();
+  ioc_init();
+  sys_ctrl_init();
+  clock_init();
+  lpm_init();
+  rtimer_init();
+  gpio_init();
+}
+/*----------------------------------------------------------------------------*/
 /** @} */

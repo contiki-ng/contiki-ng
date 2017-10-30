@@ -118,17 +118,7 @@ typedef uint32_t rtimer_clock_t;
 
 #endif
 /** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Generic Configuration directives
- *
- * @{
- */
 
-#ifndef STARTUP_CONF_VERBOSE
-#define STARTUP_CONF_VERBOSE        1 /**< Set to 0 to decrease startup verbosity */
-#endif
-/** @} */
 /*---------------------------------------------------------------------------*/
 /**
  * \name uDMA Configuration and channel allocations
@@ -220,9 +210,6 @@ typedef uint32_t rtimer_clock_t;
 
 #undef UART_CONF_ENABLE
 #define UART_CONF_ENABLE            0
-
-#undef STARTUP_CONF_VERBOSE
-#define STARTUP_CONF_VERBOSE        0
 #endif /* CC2538_CONF_QUIET */
 
 /**

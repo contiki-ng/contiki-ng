@@ -9,7 +9,7 @@ endif
 CONTIKI_TARGET_DIRS = . dev
 CONTIKI_TARGET_MAIN = ${addprefix $(OBJECTDIR)/,contiki-main.o}
 
-CONTIKI_TARGET_SOURCEFILES = contiki-main.c clock.c leds.c leds-arch.c \
+CONTIKI_TARGET_SOURCEFILES = platform.c clock.c leds.c leds-arch.c \
                 button-sensor.c pir-sensor.c vib-sensor.c xmem.c \
                 sensors.c irq.c cfs-posix.c cfs-posix-dir.c
 

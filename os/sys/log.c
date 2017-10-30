@@ -59,6 +59,7 @@ int curr_log_level_nullnet = LOG_CONF_LEVEL_NULLNET;
 int curr_log_level_mac = LOG_CONF_LEVEL_MAC;
 int curr_log_level_framer = LOG_CONF_LEVEL_FRAMER;
 int curr_log_level_6top = LOG_CONF_LEVEL_6TOP;
+int curr_log_level_main = LOG_CONF_LEVEL_MAIN;
 
 struct log_module all_modules[] = {
   {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
@@ -69,6 +70,7 @@ struct log_module all_modules[] = {
   {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},
   {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
   {"6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP},
+  {"main", &curr_log_level_main, LOG_CONF_LEVEL_MAIN},
   {NULL, NULL, 0},
 };
 

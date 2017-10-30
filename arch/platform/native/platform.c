@@ -69,12 +69,10 @@
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Native"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 
 #ifdef SELECT_CONF_MAX
 #define SELECT_MAX SELECT_CONF_MAX
@@ -148,13 +146,13 @@ static void
 set_lladdr(void)
 {
   linkaddr_t addr;
-  int i;
 
   memset(&addr, 0, sizeof(linkaddr_t));
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(addr.u8, serial_id, sizeof(addr.u8));
 #else
   if(node_id == 0) {
+    int i;
     for(i = 0; i < sizeof(linkaddr_t); ++i) {
       addr.u8[i] = serial_id[7 - i];
     }
@@ -164,22 +162,13 @@ set_lladdr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-  printf("Contiki started with address ");
-  for(i = 0; i < sizeof(addr.u8) - 1; i++) {
-    printf("%d.", addr.u8[i]);
-  }
-  printf("%d\n", addr.u8[i]);
 }
-
-
 /*---------------------------------------------------------------------------*/
 static void
 set_global_address(void)
 {
   static uip_ipaddr_t ipaddr;
   static uip_ipaddr_t *prefix = NULL;
-  int i;
-  uint8_t state;
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
@@ -195,35 +184,14 @@ set_global_address(void)
   /* set the PREFIX::1 address to the IF */
   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
   uip_ds6_defrt_add(&ipaddr, 0);
-
-  printf("IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      printf("\n");
-    }
-  }
 }
-
 /*---------------------------------------------------------------------------*/
 int contiki_argc = 0;
 char **contiki_argv;
-
-int
-main(int argc, char **argv)
+/*---------------------------------------------------------------------------*/
+void
+platform_process_args(int argc, char**argv)
 {
-#if NETSTACK_CONF_WITH_IPV6
-#if UIP_CONF_IPV6_RPL
-  printf(CONTIKI_VERSION_STRING " started with IPV6, RPL\n");
-#else
-  printf(CONTIKI_VERSION_STRING " started with IPV6\n");
-#endif
-#else
-  printf(CONTIKI_VERSION_STRING " started\n");
-#endif
-
   /* crappy way of remembering and accessing argc/v */
   contiki_argc = argc;
   contiki_argv = argv;
@@ -239,60 +207,39 @@ main(int argc, char **argv)
   contiki_argv++;
 #endif
 #endif
-
-  process_init();
-  process_start(&etimer_process, NULL);
-  ctimer_init();
-  rtimer_init();
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_one()
+{
+  return;
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two()
+{
   set_lladdr();
-
-  netstack_init();
-  printf("MAC %s NETWORK %s\n", NETSTACK_MAC.name, NETSTACK_NETWORK.name);
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three()
+{
 #if NETSTACK_CONF_WITH_IPV6
-  queuebuf_init();
-
-  memcpy(&uip_lladdr.addr, serial_id, sizeof(uip_lladdr.addr));
-
-  process_start(&tcpip_process, NULL);
 #ifdef __CYGWIN__
   process_start(&wpcap_process, NULL);
 #endif
-
-  printf("Tentative link-local IPv6 address ");
-  {
-    uip_ds6_addr_t *lladdr;
-    int i;
-    lladdr = uip_ds6_get_link_local(-1);
-    for(i = 0; i < 7; ++i) {
-      printf("%02x%02x:", lladdr->ipaddr.u8[i * 2],
-             lladdr->ipaddr.u8[i * 2 + 1]);
-    }
-    /* make it hardcoded... */
-    lladdr->state = ADDR_AUTOCONF;
-
-    printf("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
-  }
 
   set_global_address();
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-  serial_line_init();
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
-  autostart_start(autostart_processes);
-
   /* Make standard output unbuffered. */
   setvbuf(stdout, (char *)NULL, _IONBF, 0);
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_main_loop()
+{
   select_set_callback(STDIN_FILENO, &stdin_fd);
   while(1) {
     fd_set fdr;
@@ -333,7 +280,7 @@ main(int argc, char **argv)
     etimer_request_poll();
   }
 
-  return 0;
+  return;
 }
 /*---------------------------------------------------------------------------*/
 void

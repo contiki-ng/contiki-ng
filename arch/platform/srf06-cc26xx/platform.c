@@ -50,7 +50,6 @@
 #include "leds.h"
 #include "lpm.h"
 #include "gpio-interrupt.h"
-#include "dev/watchdog.h"
 #include "dev/oscillators.h"
 #include "ieee-addr.h"
 #include "vims.h"
@@ -62,23 +61,21 @@
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "sys/node-id.h"
+#include "sys/platform.h"
 #include "lib/random.h"
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "dev/serial-line.h"
 #include "net/mac/framer/frame802154.h"
-#include "net/queuebuf.h"
 
 #include "driverlib/driverlib_release.h"
 
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
-
 #include <stdio.h>
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "CC26xx/CC13xx"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 unsigned short node_id = 0;
 /*---------------------------------------------------------------------------*/
@@ -109,47 +106,23 @@ set_rf_params(void)
 {
   uint16_t short_addr;
   uint8_t ext_addr[8];
-  radio_value_t val = 0;
 
   ieee_addr_cpy_to(ext_addr, 8);
 
   short_addr = ext_addr[7];
   short_addr |= ext_addr[6] << 8;
 
-  /* Populate linkaddr_node_addr. Maintain endianness */
-  memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
-
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
 
-  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &val);
-  printf(" RF: Channel %d\n", val);
-
-#if STARTUP_CONF_VERBOSE
-  {
-    int i;
-    printf(" Link layer addr: ");
-    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
-      printf("%02x:", linkaddr_node_addr.u8[i]);
-    }
-    printf("%02x\n", linkaddr_node_addr.u8[i]);
-  }
-#endif
-
   /* also set the global node id */
   node_id = short_addr;
-  printf(" Node ID: %d\n", node_id);
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Main function for CC26xx-based platforms
- *
- * The same main() is used for all supported boards
- */
-int
-main(void)
+void
+platform_init_stage_one()
 {
   /* Enable flash cache and prefetch. */
   ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
@@ -167,6 +140,7 @@ main(void)
   gpio_interrupt_init();
 
   leds_init();
+  fade(LEDS_RED);
 
   /*
    * Disable I/O pad sleep mode and open I/O latches in the AON IOC interface
@@ -176,17 +150,15 @@ main(void)
    */
   ti_lib_pwr_ctrl_io_freeze_disable();
 
-  fade(LEDS_RED);
-
   ti_lib_int_master_enable();
 
   soc_rtc_init();
-  clock_init();
-  rtimer_init();
-
-  watchdog_init();
-  process_init();
-
+  fade(LEDS_YELLOW);
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two()
+{
   random_init(0x1234);
 
   /* Character I/O Initialisation */
@@ -196,66 +168,42 @@ main(void)
 
   serial_line_init();
 
-  printf("Starting " CONTIKI_VERSION_STRING "\n");
-  printf("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
-         DRIVERLIB_RELEASE_BUILD);
-  printf(BOARD_STRING "\n");
-  printf("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s, Prop: %s\n",
-         ti_lib_chipinfo_supports_ieee_802_15_4() == true ? "Yes" : "No",
-         ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
-         ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
-         ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
+  /* Populate linkaddr_node_addr */
+  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
-  process_start(&etimer_process, NULL);
-  ctimer_init();
-
-  energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
-
-  fade(LEDS_YELLOW);
-
-  printf(" Net: ");
-  printf("%s\n", NETSTACK_NETWORK.name);
-  printf(" MAC: ");
-  printf("%s\n", NETSTACK_MAC.name);
-
-  netstack_init();
+  fade(LEDS_GREEN);
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three()
+{
+  radio_value_t chan, pan;
 
   set_rf_params();
 
-#if NETSTACK_CONF_WITH_IPV6
-  memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
-  queuebuf_init();
-  process_start(&tcpip_process, NULL);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
+  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
 
-  fade(LEDS_GREEN);
+  LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
+          DRIVERLIB_RELEASE_BUILD);
+  LOG_INFO(BOARD_STRING "\n");
+  LOG_DBG("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s, Prop: %s\n",
+          ti_lib_chipinfo_supports_ieee_802_15_4() == true ? "Yes" : "No",
+          ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
+          ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
+          ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
+  LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
+  LOG_INFO(" Node ID: %d\n", node_id);
 
   process_start(&sensors_process, NULL);
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
-  autostart_start(autostart_processes);
-
-  watchdog_start();
-
   fade(LEDS_ORANGE);
-
-  while(1) {
-    uint8_t r;
-    do {
-      r = process_run();
-      watchdog_periodic();
-    } while(r > 0);
-
-    /* Drop to some low power mode */
-    lpm_drop();
-  }
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_idle()
+{
+  /* Drop to some low power mode */
+  lpm_drop();
 }
 /*---------------------------------------------------------------------------*/
 /**

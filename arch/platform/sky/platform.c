@@ -42,7 +42,6 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
-#include "net/queuebuf.h"
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
@@ -52,13 +51,6 @@
 #include "cfs-coffee-arch.h"
 #include "cfs/cfs-coffee.h"
 #include "sys/autostart.h"
-
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
 
 #if DCOSYNCH_CONF_ENABLED
 static struct timer mgt_timer;
@@ -71,15 +63,12 @@ extern int msp430_dco_required;
 #include "experiment-setup.h"
 #endif
 
-#define DEBUG 1
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else /* DEBUG */
-#define PRINTF(...)
-#endif /* DEBUG */
-
 void init_platform(void);
-
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Sky"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 #if 0
 int
@@ -109,13 +98,13 @@ static void
 set_lladdr(void)
 {
   linkaddr_t addr;
-  int i;
 
   memset(&addr, 0, sizeof(linkaddr_t));
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(addr.u8, ds2411_id, sizeof(addr.u8));
 #else
   if(node_id == 0) {
+    int i;
     for(i = 0; i < sizeof(linkaddr_t); ++i) {
       addr.u8[i] = ds2411_id[7 - i];
     }
@@ -125,43 +114,27 @@ set_lladdr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-  PRINTF("Contiki started with address ");
-  for(i = 0; i < sizeof(addr.u8) - 1; i++) {
-    PRINTF("%d.", addr.u8[i]);
-  }
-  PRINTF("%d\n", addr.u8[i]);
 }
-/*---------------------------------------------------------------------------*/
-#if !PROCESS_CONF_NO_PROCESS_NAMES
-static void
-print_processes(struct process * const processes[])
-{
-  /*  const struct process * const * p = processes;*/
-  printf("Starting");
-  while(*processes != NULL) {
-    printf(" '%s'", (*processes)->name);
-    processes++;
-  }
-  putchar('\n');
-}
-#endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
 /*---------------------------------------------------------------------------*/
 #if WITH_TINYOS_AUTO_IDS
 uint16_t TOS_NODE_ID = 0x1234; /* non-zero */
 uint16_t TOS_LOCAL_ADDRESS = 0x1234; /* non-zero */
 #endif /* WITH_TINYOS_AUTO_IDS */
-int
-main(int argc, char **argv)
+void
+platform_init_stage_one(void)
 {
   /*
    * Initalize hardware.
    */
   msp430_cpu_init();
-  clock_init();
+
   leds_init();
   leds_on(LEDS_RED);
-
-
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two(void)
+{
   uart1_init(BAUD2UBR(115200)); /* Must come before first printf */
 
   leds_on(LEDS_GREEN);
@@ -176,15 +149,9 @@ main(int argc, char **argv)
   xmem_init();
 
   leds_off(LEDS_RED);
-  rtimer_init();
   /*
    * Hardware initialization done!
    */
-
-  /* Initialize energest first (but after rtimer)
-   */
-  energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
 
 #if WITH_TINYOS_AUTO_IDS
   node_id = TOS_NODE_ID;
@@ -205,98 +172,46 @@ main(int argc, char **argv)
   random_init(ds2411_id[0] + node_id);
 
   leds_off(LEDS_BLUE);
-  /*
-   * Initialize Contiki and our processes.
-   */
-  process_init();
-  process_start(&etimer_process, NULL);
-
-  ctimer_init();
-
-  init_platform();
 
   set_lladdr();
 
+  /*
+   * main() will turn the radio on inside netstack_init(). The CC2420
+   * must already be initialised by that time, so we do this here early.
+   * Later on in stage three we set correct values for PANID and radio
+   * short/long address.
+   */
   cc2420_init();
-  {
-    uint8_t longaddr[8];
-    uint16_t shortaddr;
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three(void)
+{
+  uint8_t longaddr[8];
+  uint16_t shortaddr;
 
-    shortaddr = (linkaddr_node_addr.u8[0] << 8) +
-      linkaddr_node_addr.u8[1];
-    memset(longaddr, 0, sizeof(longaddr));
-    linkaddr_copy((linkaddr_t *)&longaddr, &linkaddr_node_addr);
-    PRINTF("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
-           longaddr[0], longaddr[1], longaddr[2], longaddr[3],
-           longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
+  init_platform();
 
-    cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
-  }
+  shortaddr = (linkaddr_node_addr.u8[0] << 8) + linkaddr_node_addr.u8[1];
+  memset(longaddr, 0, sizeof(longaddr));
+  linkaddr_copy((linkaddr_t *)&longaddr, &linkaddr_node_addr);
 
-  PRINTF(CONTIKI_VERSION_STRING " started. ");
+  cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
+
   if(node_id > 0) {
-    PRINTF("Node id is set to %u.\n", node_id);
+    LOG_INFO("Node id is set to %u.\n", node_id);
   } else {
-    PRINTF("Node id is not set.\n");
+    LOG_INFO("Node id is not set.\n");
   }
-
-  /*  PRINTF("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-	 ds2411_id[0], ds2411_id[1], ds2411_id[2], ds2411_id[3],
-	 ds2411_id[4], ds2411_id[5], ds2411_id[6], ds2411_id[7]);*/
 
 #if NETSTACK_CONF_WITH_IPV6
-  memcpy(&uip_lladdr.addr, ds2411_id, sizeof(uip_lladdr.addr));
-  /* Setup nullmac-like MAC for 802.15.4 */
-/*   sicslowpan_init(sicslowmac_init(&cc2420_driver)); */
-/*   PRINTF(" %s channel %u\n", sicslowmac_driver.name, CC2420_CONF_CCA_THRESH); */
-
-  /* Setup X-MAC for 802.15.4 */
-  queuebuf_init();
-  NETSTACK_MAC.init();
-  NETSTACK_NETWORK.init();
-
-  PRINTF("%s, radio channel %u, CCA threshold %i\n",
-         NETSTACK_MAC.name,
-         CC2420_CONF_CHANNEL,
-         CC2420_CONF_CCA_THRESH);
-
-  process_start(&tcpip_process, NULL);
-
-#if DEBUG
-  PRINTF("Tentative link-local IPv6 address ");
-  {
-    uip_ds6_addr_t *lladdr;
-    int i;
-    lladdr = uip_ds6_get_link_local(-1);
-    for(i = 0; i < 7; ++i) {
-      PRINTF("%02x%02x:", lladdr->ipaddr.u8[i * 2],
-             lladdr->ipaddr.u8[i * 2 + 1]);
-    }
-    PRINTF("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
-  }
-#endif /* DEBUG */
-
-  if(!UIP_CONF_IPV6_RPL) {
-    uip_ipaddr_t ipaddr;
-    int i;
-    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-    uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
-    PRINTF("Tentative global IPv6 address ");
-    for(i = 0; i < 7; ++i) {
-      PRINTF("%02x%02x:",
-             ipaddr.u8[i * 2], ipaddr.u8[i * 2 + 1]);
-    }
-    PRINTF("%02x%02x\n",
-           ipaddr.u8[7 * 2], ipaddr.u8[7 * 2 + 1]);
-  }
+  LOG_INFO("%s, radio channel %u, CCA threshold %i\n",
+           NETSTACK_MAC.name,
+           CC2420_CONF_CHANNEL,
+           CC2420_CONF_CCA_THRESH);
 #else /* NETSTACK_CONF_WITH_IPV6 */
-
-  NETSTACK_MAC.init();
-  NETSTACK_NETWORK.init();
-
-  PRINTF("%s, radio channel %u\n",
-         NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
+  LOG_INFO("%s, radio channel %u\n",
+           NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #if !NETSTACK_CONF_WITH_IPV6
@@ -311,74 +226,52 @@ main(int argc, char **argv)
   timesynch_set_authority_level((linkaddr_node_addr.u8[0] << 4) + 16);
 #endif /* TIMESYNCH_CONF_ENABLED */
 
-  watchdog_start();
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
-
-#if !PROCESS_CONF_NO_PROCESS_NAMES
-  print_processes(autostart_processes);
-#endif /* !PROCESS_CONF_NO_PROCESS_NAMES */
-  autostart_start(autostart_processes);
-
   /*
    * This is the scheduler loop.
    */
 #if DCOSYNCH_CONF_ENABLED
   timer_set(&mgt_timer, DCOSYNCH_PERIOD * CLOCK_SECOND);
 #endif
-
-  /*  watchdog_stop();*/
-  while(1) {
-    int r;
-    do {
-      /* Reset watchdog. */
-      watchdog_periodic();
-      r = process_run();
-    } while(r > 0);
-
-    /*
-     * Idle processing.
-     */
-    int s = splhigh();		/* Disable interrupts. */
-    /* uart1_active is for avoiding LPM3 when still sending or receiving */
-    if(process_nevents() != 0 || uart1_active()) {
-      splx(s);			/* Re-enable interrupts. */
-    } else {
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_idle(void)
+{
+  /*
+   * Idle processing.
+   */
+  int s = splhigh();		/* Disable interrupts. */
+  /* uart1_active is for avoiding LPM3 when still sending or receiving */
+  if(process_nevents() != 0 || uart1_active()) {
+    splx(s);			/* Re-enable interrupts. */
+  } else {
 #if DCOSYNCH_CONF_ENABLED
-      /* before going down to sleep possibly do some management */
-      if(timer_expired(&mgt_timer)) {
-        watchdog_periodic();
-	timer_reset(&mgt_timer);
-	msp430_sync_dco();
+    /* before going down to sleep possibly do some management */
+    if(timer_expired(&mgt_timer)) {
+      watchdog_periodic();
+      timer_reset(&mgt_timer);
+      msp430_sync_dco();
 #if CC2420_CONF_SFD_TIMESTAMPS
-        cc2420_arch_sfd_init();
+      cc2420_arch_sfd_init();
 #endif /* CC2420_CONF_SFD_TIMESTAMPS */
-      }
+    }
 #endif
 
-      /* Re-enable interrupts and go to sleep atomically. */
-      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
-      watchdog_stop();
-      /* check if the DCO needs to be on - if so - only LPM 1 */
-      if (msp430_dco_required) {
-	_BIS_SR(GIE | CPUOFF); /* LPM1 sleep for DMA to work!. */
-      } else {
-	_BIS_SR(GIE | SCG0 | SCG1 | CPUOFF); /* LPM3 sleep. This
+    /* Re-enable interrupts and go to sleep atomically. */
+    ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
+    watchdog_stop();
+    /* check if the DCO needs to be on - if so - only LPM 1 */
+    if (msp430_dco_required) {
+      _BIS_SR(GIE | CPUOFF); /* LPM1 sleep for DMA to work!. */
+    } else {
+      _BIS_SR(GIE | SCG0 | SCG1 | CPUOFF); /* LPM3 sleep. This
 						statement will block
 						until the CPU is
 						woken up by an
 						interrupt that sets
 						the wake up flag. */
-      }
-      watchdog_start();
-      ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
     }
+    watchdog_start();
+    ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
   }
-
-  return 0;
 }

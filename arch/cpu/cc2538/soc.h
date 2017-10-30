@@ -77,6 +77,9 @@ uint32_t soc_get_features(void);
 /** \brief Prints SoC information */
 void soc_print_info(void);
 
+/** \brief Common initialisation routine for all CC2538-based platforms */
+void soc_init(void);
+
 /** @} */
 
 #endif /* SOC_H_ */

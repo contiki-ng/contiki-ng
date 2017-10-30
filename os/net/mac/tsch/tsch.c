@@ -921,7 +921,8 @@ tsch_init(void)
     LOG_ERR("! TSCH_HOPPING_SEQUENCE_MAX_LEN < sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE). Abort init.\n");
   }
 
-  /* Init TSCH sub-modules */
+  /* Init the queuebuf and TSCH sub-modules */
+  queuebuf_init();
   tsch_reset();
   tsch_queue_init();
   tsch_schedule_init();
