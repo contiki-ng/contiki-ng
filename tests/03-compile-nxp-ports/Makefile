@@ -5,7 +5,6 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 hello-world/jn516x \
 platform-specific/jn516x/dr1175-sensors/jn516x \
-platform-specific/jn516x/rpl/border-router/jn516x \
 platform-specific/jn516x/rpl/node/jn516x \
 platform-specific/jn516x/rpl/coap-dongle-node/jn516x \
 platform-specific/jn516x/rpl/coap-dr1175-node/jn516x \
