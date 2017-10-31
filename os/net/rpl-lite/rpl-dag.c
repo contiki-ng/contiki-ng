@@ -536,7 +536,7 @@ process_dio_init_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 
   LOG_ANNOTATE("#A init=%u\n", curr_instance.dag.dag_id.u8[sizeof(curr_instance.dag.dag_id) - 1]);
 
-  LOG_WARN_("just joined, no parent yet, setting timer for leaving\n");
+  LOG_WARN("just joined, no parent yet, setting timer for leaving\n");
   rpl_timers_schedule_leaving();
 
   return 1;

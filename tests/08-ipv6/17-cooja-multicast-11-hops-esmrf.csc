@@ -24,7 +24,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype612</identifier>
       <description>Root/sender</description>
-      <source>[CONTIKI_DIR]/examples/ipv6/multicast/root.c</source>
+      <source>[CONTIKI_DIR]/examples/multicast/root.c</source>
       <commands>make root.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_ESMRF</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -48,7 +48,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype890</identifier>
       <description>Intermediate</description>
-      <source>[CONTIKI_DIR]/examples/ipv6/multicast/intermediate.c</source>
+      <source>[CONTIKI_DIR]/examples/multicast/intermediate.c</source>
       <commands>make intermediate.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_ESMRF</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -72,7 +72,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype956</identifier>
       <description>Receiver</description>
-      <source>[CONTIKI_DIR]/examples/ipv6/multicast/sink.c</source>
+      <source>[CONTIKI_DIR]/examples/multicast/sink.c</source>
       <commands>make sink.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_ESMRF</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

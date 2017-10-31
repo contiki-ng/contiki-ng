@@ -6,8 +6,9 @@
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
+  <project EXPORT="discard">[APPS_DIR]/radiologger-headless</project>
   <simulation>
-    <title>RPL+TSCH+Security</title>
+    <title>RPL+TSCH</title>
     <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
@@ -22,11 +23,11 @@
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>mtype11</identifier>
-      <description>Cooja Mote Type #mtype11</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
-      <commands EXPORT="discard">make TARGET=cooja clean
-make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
+      <identifier>mtype660</identifier>
+      <description>RPL/TSCH Node</description>
+      <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
+      <commands>make TARGET=cooja clean
+      make TARGET=cooja node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -46,7 +47,6 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
       <symbols>false</symbols>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>-1.285769821276336</x>
@@ -61,10 +61,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>-19.324109516886306</x>
@@ -79,10 +78,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>5.815501305791592</x>
@@ -97,10 +95,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>31.920697784030082</x>
@@ -115,10 +112,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>47.21747673247198</x>
@@ -133,10 +129,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>10.622284947035123</x>
@@ -151,10 +146,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>52.41150716335335</x>
@@ -169,10 +163,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>70.18727461718498</x>
@@ -187,10 +180,9 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>80.29870484201041</x>
@@ -205,7 +197,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
         org.contikios.cooja.contikimote.interfaces.ContikiRadio
         <bitrate>250.0</bitrate>
       </interface_config>
-      <motetype_identifier>mtype11</motetype_identifier>
+      <motetype_identifier>mtype660</motetype_identifier>
     </mote>
   </simulation>
   <plugin>
@@ -235,7 +227,7 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
   <plugin>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
-      <filter>ID:1</filter>
+      <filter />
       <formatted_time />
       <coloring />
     </plugin_config>
@@ -269,27 +261,19 @@ make node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WIT
     <location_y>412</location_y>
   </plugin>
   <plugin>
-    org.contikios.cooja.plugins.ScriptRunner
+    org.contikios.cooja.plugins.RadioLogger
     <plugin_config>
-      <script>TIMEOUT(360000); /* Time out after 6 minutes */&#xD;
-/* Wait until a node (can only be the DAGRoot) has&#xD;
- * 9 routing entries including one for the root (i.e. can reach every node) */&#xD;
-log.log("Waiting for routing links to fill\n");&#xD;
-while(true) {;&#xD;
-  WAIT_UNTIL(id == 1 &amp;&amp; msg.contains("Routing links"));&#xD;
-  log.log(msg + "\n");&#xD;
-  if(msg.contains("Routing links: 9")) {&#xD;
-    log.testOK(); /* Report test success and quit */&#xD;
-  }&#xD;
-  YIELD();&#xD;
-}</script>
-      <active>true</active>
+      <split>150</split>
+      <formatted_time />
+      <showdups>false</showdups>
+      <hidenodests>false</hidenodests>
+      <analyzers name="6lowpan-pcap" />
     </plugin_config>
-    <width>764</width>
+    <width>500</width>
     <z>1</z>
-    <height>995</height>
-    <location_x>963</location_x>
-    <location_y>111</location_y>
+    <height>300</height>
+    <location_x>30</location_x>
+    <location_y>442</location_y>
   </plugin>
 </simconf>
 

@@ -4,11 +4,11 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 hello-world/native \
 hello-world/sky \
-eeprom-test/native \
-ipv6/multicast/sky \
-logging/native \
-ipv6/rpl-udp/sky \
-ipv6/rpl-simple/sky \
+storage/eeprom-test/native \
+multicast/sky \
+libs/logging/native \
+rpl-udp/sky \
+native-border-router/native \
 
 TOOLS=
 

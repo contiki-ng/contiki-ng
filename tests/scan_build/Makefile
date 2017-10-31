@@ -3,7 +3,7 @@ TOOLSDIR=../../tools
 
 EXAMPLES = \
 hello-world/native \
-eeprom-test/native \
+storage/eeprom-test/native \
 
 TOOLS=
 
