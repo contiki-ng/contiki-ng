@@ -11,7 +11,6 @@ platform-specific/jn516x/rpl/coap-dr1175-node/jn516x \
 platform-specific/jn516x/rpl/coap-dr1199-node/jn516x \
 platform-specific/jn516x/tsch/simple-sensor-network/node/jn516x \
 platform-specific/jn516x/tsch/tx-power-verification/node/jn516x \
-platform-specific/jn516x/tsch/simple-sensor-network/rpl-border-router/jn516x \
 platform-specific/jn516x/tsch/tx-power-verification/rpl-border-router/jn516x \
 platform-specific/jn516x/tsch/uart1-test-node/jn516x \
 sensniff/jn516x \
