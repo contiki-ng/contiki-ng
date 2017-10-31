@@ -99,9 +99,14 @@ uip_ds6_init(void)
   uip_ds6_neighbors_init();
   uip_ds6_route_init();
 
-  LOG_INFO("Init: %u neighbors\n%u default routers\n%u prefixes\n%u routes\n%u unicast addresses\n%u multicast addresses\n%u anycast addresses\n",
-     NBR_TABLE_MAX_NEIGHBORS, UIP_DS6_DEFRT_NB, UIP_DS6_PREFIX_NB, UIP_DS6_ROUTE_NB,
-     UIP_DS6_ADDR_NB, UIP_DS6_MADDR_NB, UIP_DS6_AADDR_NB);
+  LOG_INFO("Init: %u neighbors\n", NBR_TABLE_MAX_NEIGHBORS);
+  LOG_INFO("%u default routers\n", UIP_DS6_DEFRT_NB);
+  LOG_INFO("%u prefixes\n", UIP_DS6_PREFIX_NB);
+  LOG_INFO("%u routes\n", UIP_DS6_ROUTE_NB);
+  LOG_INFO("%u unicast addresses\n", UIP_DS6_ADDR_NB);
+  LOG_INFO("%u multicast addresses\n", UIP_DS6_MADDR_NB);
+  LOG_INFO("%u anycast addresses\n", UIP_DS6_AADDR_NB);
+
   memset(uip_ds6_prefix_list, 0, sizeof(uip_ds6_prefix_list));
   memset(&uip_ds6_if, 0, sizeof(uip_ds6_if));
   uip_ds6_addr_size = sizeof(struct uip_ds6_addr);
