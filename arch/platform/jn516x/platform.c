@@ -52,6 +52,7 @@
 #include "dev/uart-driver.h"
 
 #include "contiki.h"
+#include "sys/energest.h"
 #include "net/netstack.h"
 
 #include "dev/serial-line.h"

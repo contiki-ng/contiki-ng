@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "contiki.h"
+#include "sys/energest.h"
 #include "cc2420.h"
 #include "dev/ds2411/ds2411.h"
 #include "dev/leds.h"

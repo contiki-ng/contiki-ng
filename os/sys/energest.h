@@ -48,8 +48,17 @@
 #else
 #define ENERGEST_CURRENT_TIME RTIMER_NOW
 #define ENERGEST_SECOND RTIMER_SECOND
+#define ENERGEST_TIME_T rtimer_clock_t
 #endif /* ENERGEST_CONF_TIME */
 #endif /* ENERGEST_TIME */
+
+#ifndef ENERGEST_TIME_T
+#ifdef ENERGEST_CONF_TIME_T
+#define ENERGEST_TIME_T ENERGEST_CONF_TIME_T
+#else
+#define ENERGEST_TIME_T rtimer_clock_t
+#endif /* ENERGEST_CONF_TIME_T */
+#endif /* ENERGEST_TIME_T */
 
 #ifndef ENERGEST_SECOND
 #ifdef ENERGEST_CONF_SECOND
@@ -58,6 +67,14 @@
 #define ENERGEST_SECOND RTIMER_SECOND
 #endif /* ENERGEST_CONF_SECOND */
 #endif /* ENERGEST_SECOND */
+
+#ifndef ENERGEST_GET_TOTAL_TIME
+#ifdef ENERGEST_CONF_GET_TOTAL_TIME
+#define ENERGEST_GET_TOTAL_TIME ENERGEST_CONF_GET_TOTAL_TIME
+#else /* ENERGEST_CONF_GET_TOTAL_TIME */
+#define ENERGEST_GET_TOTAL_TIME energest_get_total_time
+#endif /* ENERGEST_CONF_GET_TOTAL_TIME */
+#endif /* ENERGEST_GET_TOTAL_TIME */
 
 /*
  * Optional support for more energest types.
@@ -69,6 +86,7 @@
 typedef enum energest_type {
   ENERGEST_TYPE_CPU,
   ENERGEST_TYPE_LPM,
+  ENERGEST_TYPE_DEEP_LPM,
   ENERGEST_TYPE_TRANSMIT,
   ENERGEST_TYPE_LISTEN,
 
@@ -86,10 +104,12 @@ typedef enum energest_type {
 void energest_init(void);
 void energest_flush(void);
 
+uint64_t ENERGEST_GET_TOTAL_TIME(void);
+
 #if ENERGEST_CONF_ON
 
 extern uint64_t energest_total_time[ENERGEST_TYPE_MAX];
-extern uint64_t energest_current_time[ENERGEST_TYPE_MAX];
+extern ENERGEST_TIME_T energest_current_time[ENERGEST_TYPE_MAX];
 extern unsigned char energest_current_mode[ENERGEST_TYPE_MAX];
 
 static inline uint64_t
@@ -118,8 +138,8 @@ static inline void
 energest_off(energest_type_t type)
 {
  if(energest_current_mode[type] != 0) {
-   energest_total_time[type].current +=
-     ENERGEST_CURRENT_TIME() - energest_current_time[type];
+   energest_total_time[type] +=
+     (ENERGEST_TIME_T)(ENERGEST_CURRENT_TIME() - energest_current_time[type]);
    energest_current_mode[type] = 0;
  }
 }
@@ -128,10 +148,10 @@ energest_off(energest_type_t type)
 static inline void
 energest_switch(energest_type_t type_off, energest_type_t type_on)
 {
-  uint64_t energest_local_variable_now = ENERGEST_CURRENT_TIME();
+  ENERGEST_TIME_T energest_local_variable_now = ENERGEST_CURRENT_TIME();
   if(energest_current_mode[type_off] != 0) {
-    energest_total_time[type_off].current +=
-      energest_local_variable_now - energest_current_time[type_off];
+    energest_total_time[type_off] += (ENERGEST_TIME_T)
+      (energest_local_variable_now - energest_current_time[type_off]);
     energest_current_mode[type_off] = 0;
   }
   if(energest_current_mode[type_on] == 0) {

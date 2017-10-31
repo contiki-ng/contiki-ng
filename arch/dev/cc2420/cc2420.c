@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "contiki.h"
+#include "sys/energest.h"
 
 #include "dev/leds.h"
 #include "dev/spi.h"

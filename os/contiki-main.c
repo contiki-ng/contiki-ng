@@ -43,6 +43,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "sys/platform.h"
+#include "sys/energest.h"
 #include "dev/watchdog.h"
 
 #if BUILD_WITH_ORCHESTRA
@@ -79,7 +80,6 @@ main(void)
   watchdog_init();
 
   energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
 
   platform_init_stage_two();
 

@@ -37,13 +37,13 @@
  *         Adam Dunkels <adam@sics.se>
  */
 
-#include "sys/energest.h"
 #include "contiki.h"
+#include "sys/energest.h"
 
 #if ENERGEST_CONF_ON
 
 uint64_t energest_total_time[ENERGEST_TYPE_MAX];
-uint64_t energest_current_time[ENERGEST_TYPE_MAX];
+ENERGEST_TIME_T energest_current_time[ENERGEST_TYPE_MAX];
 unsigned char energest_current_mode[ENERGEST_TYPE_MAX];
 
 /*---------------------------------------------------------------------------*/
@@ -52,9 +52,10 @@ energest_init(void)
 {
   int i;
   for(i = 0; i < ENERGEST_TYPE_MAX; ++i) {
-    energest_total_time[i].current = energest_current_time[i] = 0;
+    energest_total_time[i] = energest_current_time[i] = 0;
     energest_current_mode[i] = 0;
   }
+  ENERGEST_ON(ENERGEST_TYPE_CPU);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -65,10 +66,19 @@ energest_flush(void)
   for(i = 0; i < ENERGEST_TYPE_MAX; i++) {
     if(energest_current_mode[i]) {
       now = ENERGEST_CURRENT_TIME();
-      energest_total_time[i].current += now - energest_current_time[i];
+      energest_total_time[i] +=
+        (ENERGEST_TIME_T)(now - energest_current_time[i]);
       energest_current_time[i] = now;
     }
   }
+}
+/*---------------------------------------------------------------------------*/
+uint64_t
+energest_get_total_time(void)
+{
+  return energest_type_time(ENERGEST_TYPE_CPU) +
+    energest_type_time(ENERGEST_TYPE_LPM) +
+    energest_type_time(ENERGEST_TYPE_DEEP_LPM);
 }
 /*---------------------------------------------------------------------------*/
 #else /* ENERGEST_CONF_ON */
@@ -81,6 +91,12 @@ energest_init(void)
 void
 energest_flush(void)
 {
+}
+
+uint64_t
+energest_get_total_time(void)
+{
+  return 0;
 }
 
 #endif /* ENERGEST_CONF_ON */

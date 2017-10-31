@@ -32,6 +32,7 @@
 #include "contiki.h"
 #include "sys/clock.h"
 #include "sys/etimer.h"
+#include "sys/energest.h"
 #include "rtimer-arch.h"
 #include "dev/watchdog.h"
 #include "isr_compat.h"
@@ -86,6 +87,7 @@ ISR(TIMERA1, timera1)
 #endif
       if(count % CLOCK_CONF_SECOND == 0) {
         ++seconds;
+        energest_flush();
       }
       last_tar = read_tar();
     }
