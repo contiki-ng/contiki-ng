@@ -74,10 +74,9 @@ slip_arch_writeb(unsigned char c)
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialise the arch-specific SLIP driver
- * \param ubr Ignored for the cc2538
  */
 void
-slip_arch_init(unsigned long ubr)
+slip_arch_init()
 {
   set_input(slip_input_byte);
 }

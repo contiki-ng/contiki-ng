@@ -127,7 +127,7 @@ platform_init_stage_two(void)
 #ifdef UART0_ENABLED
   uart0_init();
 #if SLIP_ARCH_CONF_ENABLE
-  slip_arch_init(0);
+  slip_arch_init();
 #else
   uart0_set_input(serial_line_input_byte);
   serial_line_init();

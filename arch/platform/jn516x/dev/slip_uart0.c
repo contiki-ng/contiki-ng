@@ -47,7 +47,7 @@ slip_arch_writeb(unsigned char c)
  *
  */
 void
-slip_arch_init(unsigned long ubr)
+slip_arch_init()
 {
   uart0_set_input(slip_input_byte);
 }

@@ -53,10 +53,6 @@
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
-#ifndef BAUD2UBR
-#define BAUD2UBR(X) (X)
-#endif
-
 void set_prefix_64(uip_ipaddr_t *);
 
 static uip_ipaddr_t last_sender;
@@ -102,7 +98,7 @@ slip_input_callback(void)
 static void
 init(void)
 {
-  slip_arch_init(BAUD2UBR(115200));
+  slip_arch_init();
   process_start(&slip_process, NULL);
   slip_set_input_callback(slip_input_callback);
 }

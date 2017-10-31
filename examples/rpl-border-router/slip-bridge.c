@@ -41,7 +41,6 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "dev/slip.h"
-#include "dev/uart1.h"
 #include <string.h>
 
 #define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
@@ -95,7 +94,7 @@ slip_input_callback(void)
 static void
 init(void)
 {
-  slip_arch_init(BAUD2UBR(115200));
+  slip_arch_init();
   process_start(&slip_process, NULL);
   slip_set_input_callback(slip_input_callback);
 }
