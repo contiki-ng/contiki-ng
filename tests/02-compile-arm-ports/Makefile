@@ -13,6 +13,8 @@ platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1350 \
 platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx \
 hello-world/cc2538dk \
 rpl-border-router/cc2538dk \
+rpl-border-router/srf06-cc26xx:BOARD=launchpad/cc2650 \
+rpl-border-router/zoul \
 rpl-udp/cc2538dk \
 coap-example/cc2538dk \
 slip-radio/cc2538dk \

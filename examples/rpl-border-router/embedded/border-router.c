@@ -61,7 +61,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "BR"
-#define LOG_LEVEL LOG_LEVEL_NONE
+#define LOG_LEVEL LOG_LEVEL_INFO
 /*---------------------------------------------------------------------------*/
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
@@ -355,14 +355,13 @@ print_local_addresses(void)
   int i;
   uint8_t state;
 
-  printf("Server IPv6 addresses:\n");
+  LOG_INFO("Server IPv6 addresses:\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      printf(" ");
-      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      printf("\n");
+      LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+      LOG_INFO_("\n");
     }
   }
 }
@@ -405,7 +404,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   SENSORS_ACTIVATE(button_sensor);
 
-  printf("RPL-Border router started\n");
+  LOG_INFO("RPL-Border router started\n");
 
   /* Request prefix until it has been received */
   while(!prefix_set) {

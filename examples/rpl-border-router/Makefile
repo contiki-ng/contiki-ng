@@ -1,30 +1,29 @@
-CONTIKI_PROJECT=border-router
-all: $(CONTIKI_PROJECT)
+PROJECTDIRS += common
 
 CONTIKI=../..
 
-ifeq ($(TARGET),)
-  -include Makefile.target
+-include $(CONTIKI)/Makefile.identify-target 
+
+all: border-router.$(TARGET)
+
+ifeq ($(TARGET),native)
+  SOURCES_DIR = native
+else
+  SOURCES_DIR = embedded
 endif
 
-### Optionally, the target can add its own Makefile, to do things like e.g.
-### add more source files to the build or define make variables.
--include $(TARGET)/Makefile.$(TARGET)
+include $(SOURCES_DIR)/Makefile
 
-PROJECTDIRS += $(TARGET)
-PROJECT_SOURCEFILES += slip-bridge.c httpd-simple.c
+PROJECTDIRS += $(SOURCES_DIR)
+CFLAGS += -DPROJECT_CONF_PATH=\"$(SOURCES_DIR)/project-conf.h\"
+
+border-router.$(TARGET): $(SOURCES_DIR)/border-router.$(TARGET)
+	cp $< $@
+
+CLEAN += border-router.$(TARGET) $(SOURCES_DIR)/border-router.$(TARGET)
 
 ifeq ($(PREFIX),)
- PREFIX = fd00::1/64
+  PREFIX = fd00::1/64
 endif
 
 include $(CONTIKI)/Makefile.include
-
-$(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
-	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
-
-connect-router:	$(CONTIKI)/tools/tunslip6
-	sudo $(CONTIKI)/tools/tunslip6 $(PREFIX)
-
-connect-router-cooja:	$(CONTIKI)/tools/tunslip6
-	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 $(PREFIX)
