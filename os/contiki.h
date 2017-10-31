@@ -49,6 +49,4 @@
 
 #include "sys/clock.h"
 
-#include "sys/energest.h"
-
 #endif /* CONTIKI_H_ */

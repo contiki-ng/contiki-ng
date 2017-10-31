@@ -43,6 +43,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "sys/platform.h"
+#include "sys/energest.h"
 #include "dev/watchdog.h"
 
 #if BUILD_WITH_ORCHESTRA

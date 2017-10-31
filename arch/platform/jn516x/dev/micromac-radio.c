@@ -44,6 +44,7 @@
 #include "contiki.h"
 #include "dev/leds.h"
 #include "sys/rtimer.h"
+#include "sys/energest.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"

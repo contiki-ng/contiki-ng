@@ -40,6 +40,7 @@
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "dev/watchdog.h"
+#include "sys/energest.h"
 
 #include "dev/leds.h"
 
