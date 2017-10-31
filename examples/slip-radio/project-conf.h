@@ -29,23 +29,18 @@
 
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
-
-#define QUEUEBUF_CONF_NUM          4
-
-#define UIP_CONF_BUFFER_SIZE    140
-
+/*---------------------------------------------------------------------------*/
+/* Include target-specific header */
+#ifdef TARGET_CONF_PATH
+#include TARGET_CONF_PATH
+#endif /* TARGET_CONF_PATH */
+/*---------------------------------------------------------------------------*/
 #define UIP_CONF_ROUTER                 0
 
 #define CMD_CONF_OUTPUT slip_radio_cmd_output
 
-/* add the cmd_handler_cc2420 + some sensors if TARGET_SKY */
-#ifdef CONTIKI_TARGET_SKY
-#define CMD_CONF_HANDLERS slip_radio_cmd_handler,cmd_handler_cc2420
-#define SLIP_RADIO_CONF_SENSORS slip_radio_sky_sensors
-/* add the cmd_handler_rf230 if TARGET_NOOLIBERRY. Other RF230 platforms can be added */
-#elif CONTIKI_TARGET_NOOLIBERRY
-#define CMD_CONF_HANDLERS slip_radio_cmd_handler,cmd_handler_rf230
-#else
+/* Default CMD handlers if the target did not specify them */
+#ifndef CMD_CONF_HANDLERS
 #define CMD_CONF_HANDLERS slip_radio_cmd_handler
 #endif
 
@@ -53,7 +48,5 @@
 #define NETSTACK_CONF_NETWORK slipnet_driver
 
 #define NETSTACK_CONF_FRAMER no_framer
-
-#define UART1_CONF_RX_WITH_DMA           1
-
+/*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */

@@ -1,0 +1,4 @@
+PROJECT_SOURCEFILES += slip-radio-cc2420.c slip-radio-sky-sensors.c
+PROJECT_SOURCEFILES += slip-radio-putchar.c
+
+CFLAGS += -DTARGET_CONF_PATH=\"target-conf.h\"

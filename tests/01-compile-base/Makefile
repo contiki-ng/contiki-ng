@@ -9,6 +9,7 @@ multicast/sky \
 libs/logging/native \
 rpl-udp/sky \
 native-border-router/native \
+slip-radio/sky \
 
 TOOLS=
 

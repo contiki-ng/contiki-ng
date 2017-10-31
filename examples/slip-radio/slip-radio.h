@@ -33,9 +33,9 @@
 
 struct slip_radio_sensors {
   /** Initialize the driver */
-  void (* init)(void);
+  void (*init)(void);
   /** Send the sensor data packet via the command send */
-  void (* send)(void);
+  void (*send)(void);
 };
 
 #endif /* SLIP_RADIO_H_ */

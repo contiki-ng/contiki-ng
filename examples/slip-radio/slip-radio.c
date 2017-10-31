@@ -42,30 +42,29 @@
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
 #include "cmd.h"
 #include "slip-radio.h"
 #include "packetutils.h"
+#include "os/sys/log.h"
 
+#include <stdio.h>
+
+#define LOG_MODULE "slip-radio"
+#define LOG_LEVEL LOG_LEVEL_NONE
+/*---------------------------------------------------------------------------*/
 #ifdef SLIP_RADIO_CONF_SENSORS
 extern const struct slip_radio_sensors SLIP_RADIO_CONF_SENSORS;
 #endif
 
 void slip_send_packet(const uint8_t *ptr, int len);
 
- /* max 16 packets at the same time??? */
+/* max 16 packets at the same time??? */
 uint8_t packet_ids[16];
 int packet_pos;
 
 static int slip_radio_cmd_handler(const uint8_t *data, int len);
 
-#if CONTIKI_TARGET_NOOLIBERRY
-int cmd_handler_rf230(const uint8_t *data, int len);
-#else /* Leave CC2420 as default */
 int cmd_handler_cc2420(const uint8_t *data, int len);
-#endif /* CONTIKI_TARGET */
-
 /*---------------------------------------------------------------------------*/
 #ifdef CMD_CONF_HANDLERS
 CMD_HANDLERS(CMD_CONF_HANDLERS);
@@ -119,8 +118,8 @@ packet_sent(void *ptr, int status, int transmissions)
   uint8_t sid;
   int pos;
   sid = *((uint8_t *)ptr);
-  PRINTF("Slip-radio: packet sent! sid: %d, status: %d, tx: %d\n",
-  	 sid, status, transmissions);
+  LOG_DBG("Slip-radio: packet sent! sid: %d, status: %d, tx: %d\n",
+          sid, status, transmissions);
   /* packet callback from lower layers */
   /*  neighbor_info_packet_sent(status, transmissions); */
   pos = 0;
@@ -146,7 +145,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       packetbuf_clear();
       pos = packetutils_deserialize_atts(&data[3], len - 3);
       if(pos < 0) {
-        PRINTF("slip-radio: illegal packet attributes\n");
+        LOG_ERR("slip-radio: illegal packet attributes\n");
         return 1;
       }
       pos += 3;
@@ -157,8 +156,8 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       memcpy(packetbuf_dataptr(), &data[pos], len);
       packetbuf_set_datalen(len);
 
-      PRINTF("slip-radio: sending %u (%d bytes)\n",
-             data[2], packetbuf_datalen());
+      LOG_DBG("slip-radio: sending %u (%d bytes)\n",
+              data[2], packetbuf_datalen());
 
       /* parse frame before sending to get addresses, etc. */
       parse_frame();
@@ -166,13 +165,13 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
 
       packet_pos++;
       if(packet_pos >= sizeof(packet_ids)) {
-	packet_pos = 0;
+        packet_pos = 0;
       }
 
       return 1;
     }
   } else if(uip_buf[0] == '?') {
-    PRINTF("Got request message of type %c\n", uip_buf[1]);
+    LOG_DBG("Got request message of type %c\n", uip_buf[1]);
     if(data[1] == 'M') {
       /* this is just a test so far... just to see if it works */
       uip_buf[0] = '!';
@@ -197,7 +196,7 @@ slip_radio_cmd_output(const uint8_t *data, int data_len)
 static void
 slip_input_callback(void)
 {
-  PRINTF("SR-SIN: %u '%c%c'\n", uip_len, uip_buf[0], uip_buf[1]);
+  LOG_DBG("SR-SIN: %u '%c%c'\n", uip_len, uip_buf[0], uip_buf[1]);
   cmd_input(uip_buf, uip_len);
   uip_clear_buf();
 }
@@ -210,36 +209,6 @@ init(void)
   slip_set_input_callback(slip_input_callback);
   packet_pos = 0;
 }
-/*---------------------------------------------------------------------------*/
-#if !SLIP_RADIO_CONF_NO_PUTCHAR
-#undef putchar
-int
-putchar(int c)
-{
-#define SLIP_END     0300
-  static char debug_frame = 0;
-
-  if(!debug_frame) {            /* Start of debug output */
-    slip_arch_writeb(SLIP_END);
-    slip_arch_writeb('\r');     /* Type debug line == '\r' */
-    debug_frame = 1;
-  }
-
-  /* Need to also print '\n' because for example COOJA will not show
-     any output before line end */
-  slip_arch_writeb((char)c);
-
-  /*
-   * Line buffered output, a newline marks the end of debug output and
-   * implicitly flushes debug output.
-   */
-  if(c == '\n') {
-    slip_arch_writeb(SLIP_END);
-    debug_frame = 0;
-  }
-  return c;
-}
-#endif
 /*---------------------------------------------------------------------------*/
 PROCESS(slip_radio_process, "Slip radio process");
 AUTOSTART_PROCESSES(&slip_radio_process);
