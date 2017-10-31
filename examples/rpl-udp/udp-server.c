@@ -60,7 +60,7 @@ udp_rx_callback(struct simple_udp_connection *c,
   LOG_INFO_6ADDR(sender_addr);
   LOG_INFO_("\n");
 #if WITH_SERVER_REPLY
-  LOG_INFO("Sending reply %u to ", count);
+  LOG_INFO("Sending response %u to ", count);
   LOG_INFO_6ADDR(sender_addr);
   LOG_INFO_("\n");
   simple_udp_sendto(&udp_conn, &count, sizeof(count), sender_addr);
@@ -69,31 +69,9 @@ udp_rx_callback(struct simple_udp_connection *c,
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_server_process, ev, data)
 {
-  uip_ipaddr_t ipaddr;
-  uip_ds6_addr_t *link_local_addr;
-
   PROCESS_BEGIN();
 
-  /* Initialize Global address */
-  INIT_SERVER_IPADDR(ipaddr);
-  LOG_INFO("Global IPv6 address: ");
-  LOG_INFO_6ADDR(&ipaddr);
-  LOG_INFO_("\n");
-
-  /* Get link-local address */
-  link_local_addr = uip_ds6_get_link_local(-1);
-  if(link_local_addr == NULL) {
-    LOG_ERR("No link-local address\n");
-    PROCESS_EXIT();
-  }
-  if(memcmp(((uint8_t*)&link_local_addr->ipaddr + 8),
-      ((uint8_t*)&ipaddr + 8), 8)) {
-    LOG_ERR("Global IPv6 address does not match link-local IPv6 address\n");
-    PROCESS_EXIT();
-  }
-
   /* Initialize DAG root */
-  rpl_dag_root_init(&ipaddr, &ipaddr);
   rpl_dag_root_init_dag_immediately();
 
   /* Initialize UDP connection */

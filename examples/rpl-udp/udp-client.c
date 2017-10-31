@@ -18,7 +18,6 @@ static struct simple_udp_connection udp_conn;
 #define SEND_INTERVAL		  (60 * CLOCK_SECOND)
 
 static struct simple_udp_connection udp_conn;
-static uip_ipaddr_t server_ipaddr;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(udp_client_process, "UDP client");
@@ -46,28 +45,32 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   PROCESS_BEGIN();
 
-  INIT_SERVER_IPADDR(server_ipaddr);
   /* Initialize UDP connection */
   simple_udp_register(&udp_conn, UDP_CLIENT_PORT, NULL,
                       UDP_SERVER_PORT, udp_rx_callback);
 
   etimer_set(&periodic_timer, random_rand() % SEND_INTERVAL);
-  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-  etimer_set(&periodic_timer, SEND_INTERVAL);
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
 
     if(rpl_is_reachable()) {
-      LOG_INFO("Sending request %u to ", count);
-      LOG_INFO_6ADDR(&server_ipaddr);
-      LOG_INFO_("\n");
-      simple_udp_sendto(&udp_conn, &count, sizeof(count), &server_ipaddr);
-      count++;
+      /* Send to DAG root */
+      rpl_dag_t *dag = rpl_get_any_dag();
+      if(dag != NULL) { /* Only a sanity check. Should never be NULL
+                          as rpl_is_reachable() is true */
+        LOG_INFO("Sending request %u to ", count);
+        LOG_INFO_6ADDR(&dag->dag_id);
+        LOG_INFO_("\n");
+        simple_udp_sendto(&udp_conn, &count, sizeof(count), &dag->dag_id);
+        count++;
+      }
     } else {
       LOG_INFO("Not reachable yet %p\n", rpl_get_any_dag());
     }
 
-    etimer_reset(&periodic_timer);
+    /* Add some jitter */
+    etimer_set(&periodic_timer, SEND_INTERVAL
+      - CLOCK_SECOND + (random_rand() % (2 * CLOCK_SECOND)));
   }
 
   PROCESS_END();
