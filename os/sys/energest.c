@@ -55,6 +55,7 @@ energest_init(void)
     energest_total_time[i] = energest_current_time[i] = 0;
     energest_current_mode[i] = 0;
   }
+  ENERGEST_ON(ENERGEST_TYPE_CPU);
 }
 /*---------------------------------------------------------------------------*/
 void

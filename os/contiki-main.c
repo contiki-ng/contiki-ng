@@ -79,7 +79,6 @@ main(void)
   watchdog_init();
 
   energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
 
   platform_init_stage_two();
 
