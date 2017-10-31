@@ -91,7 +91,7 @@ PROCESS_THREAD(node_process, ev, data)
     /* Get time-source neighbor */
     n = tsch_queue_get_time_source();
 
-    if(node_id != 1) {
+    if(!is_coordinator) {
       if((added_num_of_links == 1) || (added_num_of_links == 3)) {
         printf("App : Add a link\n");
         sf_simple_add_links(&n->addr, 1);
