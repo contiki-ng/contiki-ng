@@ -50,9 +50,10 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Tun6"
+#define LOG_LEVEL LOG_LEVEL_WARN
 
 #ifdef linux
 #include <linux/if.h>
@@ -92,7 +93,7 @@ static ssystem(const char *fmt, ...)
   va_start(ap, fmt);
   vsnprintf(cmd, sizeof(cmd), fmt, ap);
   va_end(ap);
-  printf("%s\n", cmd);
+  LOG_INFO("%s\n", cmd);
   fflush(stdout);
   return system(cmd);
 }
@@ -144,9 +145,9 @@ tun_alloc(char *dev)
 {
   struct ifreq ifr;
   int fd, err;
-  PRINTF("Opening: %s\n", dev);
+  LOG_INFO("Opening: %s\n", dev);
   if( (fd = open("/dev/net/tun", O_RDWR)) < 0 ) {
-    PRINTF("Failed to open tun device\n");
+    /* Error message handled by caller */
     return -1;
   }
 
@@ -160,14 +161,14 @@ tun_alloc(char *dev)
     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
   }
   if((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
-    PRINTF("Failed to do ioctl on fd\n");
+    /* Error message handled by caller */
     close(fd);
     return err;
   }
 
-  PRINTF("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
+  LOG_INFO("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
   strncpy(dev, ifr.ifr_name, strlen(dev));
-  PRINTF("Using %s\n", dev);
+  LOG_INFO("Using %s\n", dev);
   return fd;
 }
 #else
@@ -183,7 +184,7 @@ devopen(const char *dev, int flags)
 static int
 tun_alloc(char *dev)
 {
-  PRINTF("Opening: %s\n", dev);
+  LOG_INFO("Opening: %s\n", dev);
   return devopen(dev, O_RDWR);
 }
 #endif
@@ -205,16 +206,16 @@ tun_init()
 {
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
 
-  PRINTF("Initializing tun interface\n");
+  LOG_INFO("Initializing tun interface\n");
 
   tunfd = tun_alloc(config_tundev);
   if(tunfd == -1) {
-    printf("Warning: failed to open tun device (you may be lacking permission). Running without network.\n");
+    LOG_WARN("Failed to open tun device (you may be lacking permission). Running without network.\n");
     /* err(1, "failed to allocate tun device ``%s''", config_tundev); */
     return;
   }
 
-  PRINTF("Tun open:%d\n", tunfd);
+  LOG_INFO("Tun open:%d\n", tunfd);
 
   select_set_callback(tunfd, &tun_select_callback);
 
@@ -253,7 +254,7 @@ tun_input(unsigned char *data, int maxlen)
 static uint8_t
 output(const linkaddr_t *localdest)
 {
-  PRINTF("SUT: %u\n", uip_len);
+  LOG_DBG("SUT: %u\n", uip_len);
   if(uip_len > 0) {
     return tun_output(&uip_buf[UIP_LLH_LEN], uip_len);
   }
@@ -277,11 +278,11 @@ handle_fd(fd_set *rset, fd_set *wset)
 {
   int size;
 
-  PRINTF("Tun6-handle FD\n");
+  LOG_INFO("Tun6-handle FD\n");
 
   if(FD_ISSET(tunfd, rset)) {
     size = tun_input(&uip_buf[UIP_LLH_LEN], sizeof(uip_buf));
-    PRINTF("TUN data incoming read:%d\n", size);
+    LOG_DBG("TUN data incoming read:%d\n", size);
     uip_len = size;
     tcpip_input();
   }
@@ -291,7 +292,7 @@ handle_fd(fd_set *rset, fd_set *wset)
 static void input(void)
 {
   /* should not happen */
-  PRINTF("Tun6 - input\n");
+  LOG_DBG("Tun6 - input\n");
 }
 
 
