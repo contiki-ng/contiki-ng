@@ -1,45 +1,19 @@
-Hello-world
-===========
+A minimal Contiki-NG example, simple printing out "Hello, world".
+This example runs a full IPv6 stack with 6LoWPAN and RPL.
+It is possible, for example to ping such a node:
 
-This adds the hello-world process in hello-world.c to the platform build, which
-prints "Hello-world" to stdout on startup.
+```
+make TARGET=native && sudo ./hello-world.native
+```
 
-The entire platform is built, with uip stack, radio drivers, routing, etc.
-So it is not usually a simple build! The native platform is the default:
+Look for the node's global IPv6, e.g.:
+```
+[INFO: Native    ] Added global IPv6 address fd00::302:304:506:708
+```
 
-    make
-    ./hello-world.native
-    Starting Contiki
-    Hello, world
-
-When switching between ipv4 and ipv6 builds on a platform,
-
-    make TARGET=<platform> clean
-
-else the library for that platform will contain duplicate or unresolved
-modules.
-
-For example, using a loopback interface with the minimal-net platform:
-
-    cd /examples/hello-world
-    make TARGET=minimal-net
-    ./hello-world.minimal-net
-    Hello, world
-    IP Address:  10.1.1.1
-    Subnet Mask: 255.0.0.0
-    Def. Router: 10.1.1.100
-    ^C
-
-    make TARGET=minimal-net clean
-    make UIP_CONF_IPV6=1 TARGET=minimal-net
-    ./hello-world.minimal-net
-    Hello, world
-    IPV6 Address: [fd00::206:98ff:fe00:232]
-    IPV6 Address: [fe80::206:98ff:fe00:232]
-    ^C
-
-Note to AVR Raven users: Output goes to UART1, not the LCD. To see it,
-
-    make TARGET=avr-raven hello-world.elf
-
-Load the .elf in AVR Studio and connect a hapsim terminal to the 1284p simulation.
+And ping it (over the tun interface):
+```
+$ ping6 fd00::302:304:506:708
+PING fd00::302:304:506:708(fd00::302:304:506:708) 56 data bytes
+64 bytes from fd00::302:304:506:708: icmp_seq=1 ttl=64 time=0.289 ms
+```
