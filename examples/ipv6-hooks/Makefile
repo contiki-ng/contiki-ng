@@ -1,4 +1,4 @@
-all: udp-client udp-server
+all: ipv6-hooks
 
 CONTIKI=../..
 include $(CONTIKI)/Makefile.include

@@ -181,6 +181,10 @@ set_global_address(void)
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
+  LOG_INFO("Added global IPv6 address ");
+  LOG_INFO_6ADDR(&ipaddr);
+  LOG_INFO_("\n");
+
   /* set the PREFIX::1 address to the IF */
   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
   uip_ds6_defrt_add(&ipaddr, 0);
