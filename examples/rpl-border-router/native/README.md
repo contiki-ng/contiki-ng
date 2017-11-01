@@ -1,5 +1,5 @@
 This code connects a 802.15.4 radio over TTY with the full uIPv6 stack of
-Contiki including 6LoWPAN and 802.15.4 framing / parsing. The native border
+Contiki-NG including 6LoWPAN and 802.15.4 framing / parsing. The native border
 router also acts as a RPL Root and handles the routing and maintains the RPL
 network. Finally the native border router connects the full 6LoWPAN/RPL
 network to the host (linux/os-x) network stack making it possible for
@@ -11,9 +11,9 @@ mote that is either directly USB/TTY connected, or is remote via a TCP
 connect.  What's on the SLIP interface is really not Serial Line IP, but SLIP
 framed 15.4 packets.
 
-The border router supports a number of commands on it's stdin.
+The native border router supports a number of commands on its stdin.
 Each are prefixed by !:
-* !G - global RPL repair root.
+* !G - global RPL repair root
 * !M - set MAC address (if coming from RADIO, i.e. SLIP link)
 * !C - show channel (if coming from RADIO, i.e. SLIP link)
 * !D - sensor data received
@@ -25,4 +25,3 @@ Queries are prefixed by ?:
 * ?C is used for requesting the currently used channel for the slip-radio. The response is !C with a channel number (from the slip-radio).
 
 * !C is used for setting the channel of the slip-radio (useful if the motes are using another channel than the one used in the slip-radio).
-
