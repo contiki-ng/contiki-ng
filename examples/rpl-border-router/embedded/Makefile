@@ -4,7 +4,7 @@
 
 PROJECTDIRS += $(SOURCES_DIR)/$(TARGET)
 
-PROJECT_SOURCEFILES += slip-bridge.c httpd-simple.c
+PROJECT_SOURCEFILES += slip-bridge.c httpd-simple.c border-router-embedded.c
 
 $(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
