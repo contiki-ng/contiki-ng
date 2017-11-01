@@ -8,3 +8,9 @@ When receiving a request, The server sends a response with the same counter
 back to the originator.
 
 The simulation files show example networks, for sky motes and for cooja motes.
+
+For this example a "renode" make target is available, to run a two node
+emulation in the Renode framework. For further instructions on installing and
+using Renode please refer to [Contiki-NG wiki][1].
+
+[1]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Running-Contiki%E2%80%90NG-in-Renode
