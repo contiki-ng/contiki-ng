@@ -1,7 +1,7 @@
 MODULES += os/services/slip-cmd
 
 PROJECT_SOURCEFILES += border-router-native.c
-PROJECT_SOURCEFILES += border-router-cmds.c tun-bridge.c httpd-simple.c
+PROJECT_SOURCEFILES += border-router-cmds.c tun-bridge.c
 PROJECT_SOURCEFILES += slip-config.c slip-dev.c border-router-mac.c
 
 MAKE_MAC = MAKE_MAC_OTHER

@@ -52,11 +52,6 @@
 #include "border-router.h"
 #include "border-router-cmds.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
 #define DEBUG DEBUG_FULL
 #include "net/ipv6/uip-debug.h"
 
@@ -82,127 +77,6 @@ CMD_HANDLERS(border_router_cmd_handler);
 
 PROCESS(border_router_process, "Border router process");
 
-#if BORDER_ROUTER_CONF_WEBSERVER
-/* Use simple webserver with only one page */
-#include "httpd-simple.h"
-PROCESS(webserver_nogui_process, "Web server");
-PROCESS_THREAD(webserver_nogui_process, ev, data)
-{
-  PROCESS_BEGIN();
-
-  httpd_init();
-
-  while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-    httpd_appcall(data);
-  }
-
-  PROCESS_END();
-}
-
-static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\n";
-static const char *BOTTOM = "</body></html>\n";
-static char buf[128];
-static int blen;
-#define ADD(...) do {                                                   \
-    blen += snprintf(&buf[blen], sizeof(buf) - blen, __VA_ARGS__);      \
-  } while(0)
-/*---------------------------------------------------------------------------*/
-static void
-ipaddr_add(const uip_ipaddr_t *addr)
-{
-  uint16_t a;
-  int i, f;
-  for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
-    a = (addr->u8[i] << 8) + addr->u8[i + 1];
-    if(a == 0 && f >= 0) {
-      if(f++ == 0 && sizeof(buf) - blen >= 2) {
-        buf[blen++] = ':';
-        buf[blen++] = ':';
-      }
-    } else {
-      if(f > 0) {
-        f = -1;
-      } else if(i > 0 && blen < sizeof(buf)) {
-        buf[blen++] = ':';
-      }
-      ADD("%x", a);
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
-static
-PT_THREAD(generate_routes(struct httpd_state *s))
-{
-  static int i;
-  static uip_ds6_route_t *r;
-  static uip_ds6_nbr_t *nbr;
-
-  PSOCK_BEGIN(&s->sout);
-
-  SEND_STRING(&s->sout, TOP);
-
-  blen = 0;
-  ADD("Neighbors<pre>");
-  for(nbr = nbr_table_head(ds6_neighbors);
-      nbr != NULL;
-      nbr = nbr_table_next(ds6_neighbors, nbr)) {
-    ipaddr_add(&nbr->ipaddr);
-    ADD("\n");
-    if(blen > sizeof(buf) - 45) {
-      SEND_STRING(&s->sout, buf);
-      blen = 0;
-    }
-  }
-
-  ADD("</pre>Routes<pre>");
-  SEND_STRING(&s->sout, buf);
-  blen = 0;
-  for(r = uip_ds6_route_head();
-      r != NULL;
-      r = uip_ds6_route_next(r)) {
-    ipaddr_add(&r->ipaddr);
-    ADD("/%u (via ", r->length);
-    ipaddr_add(uip_ds6_route_nexthop(r));
-    if(r->state.lifetime < 600) {
-      ADD(") %lus\n", (unsigned long)r->state.lifetime);
-    } else {
-      ADD(")\n");
-    }
-    SEND_STRING(&s->sout, buf);
-    blen = 0;
-  }
-  ADD("</pre>");
-//if(blen > 0) {
-  SEND_STRING(&s->sout, buf);
-// blen = 0;
-//}
-
-  if(sensor_count > 0) {
-    ADD("</pre>Sensors<pre>");
-    SEND_STRING(&s->sout, buf);
-    blen = 0;
-    for(i = 0; i < sensor_count; i++) {
-      ADD("%s\n", sensors[i]);
-      SEND_STRING(&s->sout, buf);
-      blen = 0;
-    }
-    ADD("</pre>");
-    SEND_STRING(&s->sout, buf);
-  }
-
-
-  SEND_STRING(&s->sout, BOTTOM);
-
-  PSOCK_END(&s->sout);
-}
-/*---------------------------------------------------------------------------*/
-httpd_simple_script_t
-httpd_simple_get_script(const char *name)
-{
-  return generate_routes;
-}
-#endif /* BORDER_ROUTER_CONF_WEBSERVER */
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)

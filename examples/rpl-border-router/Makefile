@@ -15,6 +15,7 @@ endif
 include $(SOURCES_DIR)/Makefile
 
 PROJECTDIRS += $(SOURCES_DIR)
+PROJECT_SOURCEFILES += httpd-simple.c webserver.c
 CFLAGS += -DPROJECT_CONF_PATH=\"$(SOURCES_DIR)/project-conf.h\"
 
 include $(CONTIKI)/Makefile.include
