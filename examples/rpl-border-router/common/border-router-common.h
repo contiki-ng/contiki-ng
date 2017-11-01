@@ -34,7 +34,6 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 
-extern uip_ipaddr_t prefix;
 extern uint8_t prefix_set;
 
 void print_local_addresses(void);

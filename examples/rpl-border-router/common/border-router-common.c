@@ -39,7 +39,6 @@
 #define LOG_MODULE "BR"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
-uip_ipaddr_t prefix;
 uint8_t prefix_set;
 
 /*---------------------------------------------------------------------------*/
@@ -64,7 +63,6 @@ void
  void
  set_prefix_64(uip_ipaddr_t *prefix_64)
  {
-   memcpy(&prefix, prefix_64, 16);
    prefix_set = 1;
    rpl_dag_root_init(prefix_64, NULL);
    rpl_dag_root_init_dag_immediately();
