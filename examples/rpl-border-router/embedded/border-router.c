@@ -360,6 +360,7 @@ print_local_addresses(void)
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      LOG_INFO("  ");
       LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
       LOG_INFO_("\n");
     }
