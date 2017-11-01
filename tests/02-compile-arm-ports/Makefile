@@ -16,7 +16,7 @@ rpl-border-router/cc2538dk \
 rpl-border-router/srf06-cc26xx:BOARD=launchpad/cc2650 \
 rpl-border-router/zoul \
 rpl-udp/cc2538dk \
-coap-example/cc2538dk \
+coap/cc2538dk \
 slip-radio/cc2538dk \
 ipso-objects/cc2538dk \
 multicast/cc2538dk \
@@ -29,7 +29,7 @@ platform-specific/cc2538-common/mqtt-demo/zoul \
 platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
-coap-example/zoul \
+coap/zoul \
 ipso-objects/zoul \
 hello-world/zoul \
 sensniff/cc2538dk \
