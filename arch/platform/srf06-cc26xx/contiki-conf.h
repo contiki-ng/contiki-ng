@@ -165,10 +165,6 @@
 #define BOARD_CONF_DEBUGGER_DEVPACK        1
 #endif
 
-/* Turn off example-provided putchars */
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR        1
-#define SLIP_RADIO_CONF_NO_PUTCHAR         1
-
 #ifndef SLIP_ARCH_CONF_ENABLED
 /*
  * Determine whether we need SLIP
