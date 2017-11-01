@@ -42,6 +42,11 @@
 
 #include "contiki.h"
 
+#ifndef ENERGEST_CONF_ON
+/* Energest is disabled by default */
+#define ENERGEST_CONF_ON 0
+#endif /* ENERGEST_CONF_ON */
+
 #ifndef ENERGEST_CURRENT_TIME
 #ifdef ENERGEST_CONF_CURRENT_TIME
 #define ENERGEST_CURRENT_TIME ENERGEST_CONF_CURRENT_TIME

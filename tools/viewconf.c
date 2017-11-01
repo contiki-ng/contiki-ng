@@ -8,6 +8,7 @@
 #include "os/net/queuebuf.h"
 #include "os/net/nbr-table.h"
 #include "os/sys/log-conf.h"
+#include "os/sys/energest.h"
 
 #ifdef PROJECT_CONF_PATH
 ##### "PROJECT_CONF_PATH": _____________________ == PROJECT_CONF_PATH
@@ -138,6 +139,8 @@
 #else
 ##### "SICSLOWPAN_CONF_COMPRESSION": ___________ -> SICSLOWPAN_COMPRESSION
 #endif
+
+##### "ENERGEST_CONF_ON": ______________________ == ENERGEST_CONF_ON
 
 ##### "LOG_CONF_LEVEL_RPL": ____________________ == LOG_CONF_LEVEL_RPL
 ##### "LOG_CONF_LEVEL_TCPIP": __________________ == LOG_CONF_LEVEL_TCPIP
