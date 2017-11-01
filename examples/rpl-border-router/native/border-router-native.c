@@ -39,15 +39,9 @@
  */
 
 #include "contiki.h"
-#include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/ipv6/uip.h"
-#include "net/ipv6/uip-ds6.h"
 #include "rpl.h"
-#include "rpl-dag-root.h"
-
-#include "net/netstack.h"
-#include "dev/slip.h"
+#include "border-router-common.h"
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"
@@ -55,13 +49,13 @@
 #define DEBUG DEBUG_FULL
 #include "net/ipv6/uip-debug.h"
 
+#include <stdlib.h>
+
 #define MAX_SENSORS 4
 
 extern long slip_sent;
 extern long slip_received;
 
-static uip_ipaddr_t prefix;
-static uint8_t prefix_set;
 static uint8_t mac_set;
 
 static uint8_t sensor_count = 0;
@@ -77,24 +71,6 @@ CMD_HANDLERS(border_router_cmd_handler);
 
 PROCESS(border_router_process, "Border router process");
 
-/*---------------------------------------------------------------------------*/
-static void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
-
-  PRINTA("Server IPv6 addresses:\n");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINTA(" %p: =>", &uip_ds6_if.addr_list[i]);
-      uip_debug_ipaddr_print(&(uip_ds6_if.addr_list[i]).ipaddr);
-      PRINTA("\n");
-    }
-  }
-}
 /*---------------------------------------------------------------------------*/
 static void
 request_mac(void)
@@ -150,15 +126,6 @@ border_router_set_sensors(const char *data, int len)
   sensor_count = sc;
 }
 /*---------------------------------------------------------------------------*/
-static void
-set_prefix_64(uip_ipaddr_t *prefix_64)
-{
-  memcpy(&prefix, prefix_64, 16);
-  prefix_set = 1;
-  rpl_dag_root_init(prefix_64, NULL);
-  rpl_dag_root_init_dag_immediately();
-}
-/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
@@ -197,9 +164,7 @@ PROCESS_THREAD(border_router_process, ev, data)
     }
   }
 
-#if DEBUG
   print_local_addresses();
-#endif
 
   while(1) {
     etimer_set(&et, CLOCK_SECOND * 2);
