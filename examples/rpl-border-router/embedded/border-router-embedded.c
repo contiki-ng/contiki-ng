@@ -104,7 +104,6 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 
   PROCESS_END();
 }
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
 static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\n";
 static const char *BOTTOM = "</body></html>\n";
@@ -344,9 +343,6 @@ httpd_simple_get_script(const char *name)
 {
   return generate_routes;
 }
-#else /* BORDER_ROUTER_CONF_WEBSERVER */
-/* No webserver */
-AUTOSTART_PROCESSES(&border_router_process);
 #endif /* BORDER_ROUTER_CONF_WEBSERVER */
 /*---------------------------------------------------------------------------*/
 static void
