@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,26 @@
  *
  */
 
-/**
- * \author Simon Duquennoy <simonduq@sics.se>
- */
-
-#ifndef BR_PROJECT_CONF_H_
-#define BR_PROJECT_CONF_H_
-
+#ifndef PROJECT_ROUTER_CONF_H_
+#define PROJECT_ROUTER_CONF_H_
+/*---------------------------------------------------------------------------*/
+/* Include target-specific header */
+#ifdef TARGET_CONF_PATH
+#include TARGET_CONF_PATH
+#endif /* TARGET_CONF_PATH */
+/*---------------------------------------------------------------------------*/
 #ifndef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
 
-/* Needed for slip-bridge */
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
+#ifndef WEBSERVER_CONF_CFS_CONNS
+#define WEBSERVER_CONF_CFS_CONNS 2
+#endif
 
-#include "../common-conf.h"
+#define BORDER_ROUTER_CONF_WEBSERVER 1
 
-#endif /* PROJECT_CONF_H_ */
+#if BORDER_ROUTER_CONF_WEBSERVER
+#define UIP_CONF_TCP 1
+#endif
+
+#endif /* PROJECT_ROUTER_CONF_H_ */

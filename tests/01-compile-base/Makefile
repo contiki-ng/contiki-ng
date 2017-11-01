@@ -8,7 +8,8 @@ storage/eeprom-test/native \
 multicast/sky \
 libs/logging/native \
 rpl-udp/sky \
-native-border-router/native \
+rpl-border-router/native \
+rpl-border-router/sky \
 slip-radio/sky \
 
 TOOLS=
