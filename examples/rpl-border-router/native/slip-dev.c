@@ -80,7 +80,6 @@ long slip_received = 0;
 
 int slipfd = 0;
 
-//#define PROGRESS(s) fprintf(stderr, s)
 #define PROGRESS(s) do { } while(0)
 
 #define SLIP_END     0300
@@ -93,9 +92,9 @@ static void *
 get_in_addr(struct sockaddr *sa)
 {
   if(sa->sa_family == AF_INET) {
-    return &(((struct sockaddr_in*)sa)->sin_addr);
+    return &(((struct sockaddr_in *)sa)->sin_addr);
   }
-  return &(((struct sockaddr_in6*)sa)->sin6_addr);
+  return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -138,7 +137,7 @@ connect_to_server(const char *host, const char *port)
   fcntl(fd, F_SETFL, O_NONBLOCK);
 
   inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-	    s, sizeof(s));
+            s, sizeof(s));
 
   /* all done with this structure */
   freeaddrinfo(servinfo);
@@ -178,23 +177,25 @@ serial_input(FILE *inslip)
 {
   static unsigned char inbuf[2048];
   static int inbufptr = 0;
-  int ret,i;
+  int ret, i;
   unsigned char c;
 
 #ifdef linux
   ret = fread(&c, 1, 1, inslip);
-  if(ret == -1 || ret == 0) err(1, "serial_input: read");
+  if(ret == -1 || ret == 0) {
+    err(1, "serial_input: read");
+  }
   goto after_fread;
 #endif
 
- read_more:
+read_more:
   if(inbufptr >= sizeof(inbuf)) {
-     fprintf(stderr, "*** dropping large %d byte packet\n", inbufptr);
-     inbufptr = 0;
+    fprintf(stderr, "*** dropping large %d byte packet\n", inbufptr);
+    inbufptr = 0;
   }
   ret = fread(&c, 1, 1, inslip);
 #ifdef linux
- after_fread:
+after_fread:
 #endif
   if(ret == -1) {
     err(1, "serial_input: read");
@@ -208,12 +209,12 @@ serial_input(FILE *inslip)
   case SLIP_END:
     if(inbufptr > 0) {
       if(inbuf[0] == '!') {
-	command_context = CMD_CONTEXT_RADIO;
-	cmd_input(inbuf, inbufptr);
+        command_context = CMD_CONTEXT_RADIO;
+        cmd_input(inbuf, inbufptr);
       } else if(inbuf[0] == '?') {
 #define DEBUG_LINE_MARKER '\r'
       } else if(inbuf[0] == DEBUG_LINE_MARKER) {
-	fwrite(inbuf + 1, inbufptr - 1, 1, stdout);
+        fwrite(inbuf + 1, inbufptr - 1, 1, stdout);
       } else if(is_sensible_string(inbuf, inbufptr)) {
         if(slip_config_verbose == 1) {   /* strings already echoed below for verbose>1 */
           fwrite(inbuf, inbufptr, 1, stdout);
@@ -224,19 +225,25 @@ serial_input(FILE *inslip)
           if(slip_config_verbose > 4) {
 #if WIRESHARK_IMPORT_FORMAT
             printf("0000");
-	    for(i = 0; i < inbufptr; i++) printf(" %02x", inbuf[i]);
+            for(i = 0; i < inbufptr; i++) {
+              printf(" %02x", inbuf[i]);
+            }
 #else
             printf("         ");
             for(i = 0; i < inbufptr; i++) {
               printf("%02x", inbuf[i]);
-              if((i & 3) == 3) printf(" ");
-              if((i & 15) == 15) printf("\n         ");
+              if((i & 3) == 3) {
+                printf(" ");
+              }
+              if((i & 15) == 15) {
+                printf("\n         ");
+              }
             }
 #endif
             printf("\n");
           }
         }
-	slip_packet_input(inbuf, inbufptr);
+        slip_packet_input(inbuf, inbufptr);
       }
       inbufptr = 0;
     }
@@ -266,7 +273,7 @@ serial_input(FILE *inslip)
     /* Echo all printable characters for verbose==4 */
     if(slip_config_verbose == 4) {
       if(c == 0 || c == '\r' || c == '\n' || c == '\t' || (c >= ' ' && c <= '~')) {
-	fwrite(&c, 1, 1, stdout);
+        fwrite(&c, 1, 1, stdout);
       }
     } else if(slip_config_verbose >= 2) {
       if(c == '\n' && is_sensible_string(inbuf, inbufptr)) {
@@ -279,7 +286,6 @@ serial_input(FILE *inslip)
 
   goto read_more;
 }
-
 unsigned char slip_buf[2048];
 int slip_end, slip_begin, slip_packet_end, slip_packet_count;
 static struct timer send_delay_timer;
@@ -367,13 +373,19 @@ write_to_serial(int outfd, const uint8_t *inbuf, int len)
     if(slip_config_verbose > 4) {
 #if WIRESHARK_IMPORT_FORMAT
       printf("0000");
-      for(i = 0; i < len; i++) printf(" %02x", p[i]);
+      for(i = 0; i < len; i++) {
+        printf(" %02x", p[i]);
+      }
 #else
       printf("         ");
       for(i = 0; i < len; i++) {
         printf("%02x", p[i]);
-        if((i & 3) == 3) printf(" ");
-        if((i & 15) == 15) printf("\n         ");
+        if((i & 3) == 3) {
+          printf(" ");
+        }
+        if((i & 15) == 15) {
+          printf("\n         ");
+        }
       }
 #endif
       printf("\n");
@@ -420,9 +432,13 @@ stty_telos(int fd)
   speed_t speed = slip_config_b_rate;
   int i;
 
-  if(tcflush(fd, TCIOFLUSH) == -1) err(1, "tcflush");
+  if(tcflush(fd, TCIOFLUSH) == -1) {
+    err(1, "tcflush");
+  }
 
-  if(tcgetattr(fd, &tty) == -1) err(1, "tcgetattr");
+  if(tcgetattr(fd, &tty) == -1) {
+    err(1, "tcgetattr");
+  }
 
   cfmakeraw(&tty);
 
@@ -440,23 +456,31 @@ stty_telos(int fd)
   cfsetispeed(&tty, speed);
   cfsetospeed(&tty, speed);
 
-  if(tcsetattr(fd, TCSAFLUSH, &tty) == -1) err(1, "tcsetattr");
+  if(tcsetattr(fd, TCSAFLUSH, &tty) == -1) {
+    err(1, "tcsetattr");
+  }
 
 #if 1
   /* Nonblocking read and write. */
   /* if(fcntl(fd, F_SETFL, O_NONBLOCK) == -1) err(1, "fcntl"); */
 
   tty.c_cflag |= CLOCAL;
-  if(tcsetattr(fd, TCSAFLUSH, &tty) == -1) err(1, "tcsetattr");
+  if(tcsetattr(fd, TCSAFLUSH, &tty) == -1) {
+    err(1, "tcsetattr");
+  }
 
   i = TIOCM_DTR;
-  if(ioctl(fd, TIOCMBIS, &i) == -1) err(1, "ioctl");
+  if(ioctl(fd, TIOCMBIS, &i) == -1) {
+    err(1, "ioctl");
+  }
 #endif
 
-  usleep(10*1000);		/* Wait for hardware 10ms. */
+  usleep(10 * 1000);    /* Wait for hardware 10ms. */
 
   /* Flush input and output buffers. */
-  if(tcflush(fd, TCIOFLUSH) == -1) err(1, "tcflush");
+  if(tcflush(fd, TCIOFLUSH) == -1) {
+    err(1, "tcflush");
+  }
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -498,7 +522,6 @@ slip_init(void)
     if(slipfd == -1) {
       err(1, "can't connect to ``%s:%s''", slip_config_host, slip_config_port);
     }
-
   } else if(slip_config_siodev != NULL) {
     if(strcmp(slip_config_siodev, "null") == 0) {
       /* Disable slip */
@@ -508,7 +531,6 @@ slip_init(void)
     if(slipfd == -1) {
       err(1, "can't open siodev ``/dev/%s''", slip_config_siodev);
     }
-
   } else {
     static const char *siodevs[] = {
       "ttyUSB0", "cuaU0", "ucom0" /* linux, fbsd6, fbsd5 */
@@ -518,7 +540,7 @@ slip_init(void)
       slip_config_siodev = siodevs[i];
       slipfd = devopen(slip_config_siodev, O_RDWR | O_NONBLOCK);
       if(slipfd != -1) {
-	break;
+        break;
       }
     }
     if(slipfd == -1) {
@@ -530,7 +552,7 @@ slip_init(void)
 
   if(slip_config_host != NULL) {
     fprintf(stderr, "********SLIP opened to ``%s:%s''\n", slip_config_host,
-	    slip_config_port);
+            slip_config_port);
   } else {
     fprintf(stderr, "********SLIP started on ``/dev/%s''\n", slip_config_siodev);
     stty_telos(slipfd);

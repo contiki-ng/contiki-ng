@@ -47,7 +47,6 @@
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
-
 uint8_t command_context;
 
 void packet_sent(uint8_t sessionid, uint8_t status, uint8_t tx);
@@ -86,7 +85,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
     } else if(data[1] == 'R' && command_context == CMD_CONTEXT_RADIO) {
       /* We need to know that this is from the slip-radio here. */
       PRINTF("Packet data report for sid:%d st:%d tx:%d\n",
-	     data[2], data[3], data[4]);
+             data[2], data[3], data[4]);
       packet_sent(data[2], data[3], data[4]);
       return 1;
     } else if(data[1] == 'D' && command_context == CMD_CONTEXT_RADIO) {
@@ -99,7 +98,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
     PRINTF("Got request message of type %c\n", data[1]);
     if(data[1] == 'M' && command_context == CMD_CONTEXT_STDIO) {
       uint8_t buf[20];
-      char* hexchar = "0123456789abcdef";
+      char *hexchar = "0123456789abcdef";
       int j;
       /* this is just a test so far... just to see if it works */
       buf[0] = '!';
@@ -141,7 +140,7 @@ PROCESS_THREAD(border_router_cmd_process, ev, data)
     PROCESS_YIELD();
     if(ev == serial_line_event_message && data != NULL) {
       PRINTF("Got serial data!!! %s of len: %d\n",
-	     (char *)data, strlen((char *)data));
+             (char *)data, strlen((char *)data));
       command_context = CMD_CONTEXT_STDIO;
       cmd_input(data, strlen((char *)data));
     }

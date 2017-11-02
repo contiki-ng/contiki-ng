@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2017, RISE SICS
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
+ *
  */
 
-/**
- * \file
- *         A simple webserver
- * \author
- *         Adam Dunkels <adam@sics.se>
- *         Niclas Finne <nfi@sics.se>
- *         Joakim Eriksson <joakime@sics.se>
- */
+#include "contiki.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uip-ds6.h"
 
-#ifndef HTTPD_SIMPLE_H_
-#define HTTPD_SIMPLE_H_
+extern uint8_t prefix_set;
 
-#include "contiki-net.h"
-
-/* The current internal border router webserver ignores the requested file name */
-/* and needs no per-connection output buffer, so save some RAM */
-#ifndef WEBSERVER_CONF_CFS_PATHLEN
-#define HTTPD_PATHLEN 2
-#else /* WEBSERVER_CONF_CFS_CONNS */
-#define HTTPD_PATHLEN WEBSERVER_CONF_CFS_PATHLEN
-#endif /* WEBSERVER_CONF_CFS_CONNS */
-
-struct httpd_state;
-typedef char (*httpd_simple_script_t)(struct httpd_state *s);
-
-struct httpd_state {
-  struct timer timer;
-  struct psock sin, sout;
-  struct pt outputpt;
-  char inputbuf[HTTPD_PATHLEN + 24];
-/*char outputbuf[UIP_TCP_MSS]; */
-  char filename[HTTPD_PATHLEN];
-  httpd_simple_script_t script;
-  char state;
-};
-
-void httpd_init(void);
-void httpd_appcall(void *state);
-
-httpd_simple_script_t httpd_simple_get_script(const char *name);
-
-#define SEND_STRING(s, str) PSOCK_SEND(s, (uint8_t *)str, strlen(str))
-
-#endif /* HTTPD_SIMPLE_H_ */
+void print_local_addresses(void);
+void set_prefix_64(uip_ipaddr_t *prefix_64);

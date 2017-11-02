@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2017, RISE SICS
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,44 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
+ *
  */
 
-/**
- * \file
- *         A simple webserver
- * \author
- *         Adam Dunkels <adam@sics.se>
- *         Niclas Finne <nfi@sics.se>
- *         Joakim Eriksson <joakime@sics.se>
- */
+#include "contiki.h"
+#include "border-router-common.h"
+#include "rpl-dag-root.h"
 
-#ifndef HTTPD_SIMPLE_H_
-#define HTTPD_SIMPLE_H_
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "BR"
+#define LOG_LEVEL LOG_LEVEL_INFO
 
-#include "contiki-net.h"
+uint8_t prefix_set;
 
-/* The current internal border router webserver ignores the requested file name */
-/* and needs no per-connection output buffer, so save some RAM */
-#ifndef WEBSERVER_CONF_CFS_PATHLEN
-#define HTTPD_PATHLEN 2
-#else /* WEBSERVER_CONF_CFS_CONNS */
-#define HTTPD_PATHLEN WEBSERVER_CONF_CFS_PATHLEN
-#endif /* WEBSERVER_CONF_CFS_CONNS */
+/*---------------------------------------------------------------------------*/
+void
+print_local_addresses(void)
+{
+  int i;
+  uint8_t state;
 
-struct httpd_state;
-typedef char (*httpd_simple_script_t)(struct httpd_state *s);
-
-struct httpd_state {
-  struct timer timer;
-  struct psock sin, sout;
-  struct pt outputpt;
-  char inputbuf[HTTPD_PATHLEN + 24];
-/*char outputbuf[UIP_TCP_MSS]; */
-  char filename[HTTPD_PATHLEN];
-  httpd_simple_script_t script;
-  char state;
-};
-
-void httpd_init(void);
-void httpd_appcall(void *state);
-
-httpd_simple_script_t httpd_simple_get_script(const char *name);
-
-#define SEND_STRING(s, str) PSOCK_SEND(s, (uint8_t *)str, strlen(str))
-
-#endif /* HTTPD_SIMPLE_H_ */
+  LOG_INFO("Server IPv6 addresses:\n");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      LOG_INFO("  ");
+      LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+      LOG_INFO_("\n");
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+set_prefix_64(uip_ipaddr_t *prefix_64)
+{
+  prefix_set = 1;
+  rpl_dag_root_init(prefix_64, NULL);
+  rpl_dag_root_init_dag_immediately();
+}

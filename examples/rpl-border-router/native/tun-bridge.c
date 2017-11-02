@@ -96,7 +96,6 @@ ssystem(const char *fmt, ...)
   fflush(stdout);
   return system(cmd);
 }
-
 /*---------------------------------------------------------------------------*/
 void
 cleanup(void)
@@ -110,7 +109,6 @@ cleanup(void)
 	  " | sh",
 	  slip_config_tundev);
 }
-
 /*---------------------------------------------------------------------------*/
 void
 sigcleanup(int signo)
@@ -118,7 +116,6 @@ sigcleanup(int signo)
   fprintf(stderr, "signal %d\n", signo);
   exit(0);			/* exit(0) will call cleanup() */
 }
-
 /*---------------------------------------------------------------------------*/
 void
 ifconf(const char *tundev, const char *ipaddr)
@@ -154,7 +151,7 @@ tun_alloc(char *dev)
   struct ifreq ifr;
   int fd, err;
 
-  if( (fd = open("/dev/net/tun", O_RDWR)) < 0 ) {
+  if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
     return -1;
   }
 
@@ -164,10 +161,11 @@ tun_alloc(char *dev)
    *        IFF_NO_PI - Do not provide packet information
    */
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  if(*dev != 0)
+  if(*dev != 0) {
     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+  }
 
-  if((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
+  if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
     close(fd);
     return err;
   }
@@ -191,11 +189,10 @@ tun_init()
 
   slip_init();
 }
-
 #else
 
-static uint16_t delaymsec=0;
-static uint32_t delaystartsec,delaystartmsec;
+static uint16_t delaymsec = 0;
+static uint32_t delaystartsec, delaystartmsec;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -209,7 +206,9 @@ tun_init()
 
   tunfd = tun_alloc(slip_config_tundev);
 
-  if(tunfd == -1) err(1, "main: open");
+  if(tunfd == -1) {
+    err(1, "main: open");
+  }
 
   select_set_callback(tunfd, &tun_select_callback);
 
@@ -222,7 +221,6 @@ tun_init()
   signal(SIGINT, sigcleanup);
   ifconf(slip_config_tundev, slip_config_ipaddr);
 }
-
 /*---------------------------------------------------------------------------*/
 static int
 tun_output(uint8_t *data, int len)
@@ -239,11 +237,11 @@ int
 tun_input(unsigned char *data, int maxlen)
 {
   int size;
-  if((size = read(tunfd, data, maxlen)) == -1)
+  if((size = read(tunfd, data, maxlen)) == -1) {
     err(1, "tun_input: read");
+  }
   return size;
 }
-
 /*---------------------------------------------------------------------------*/
 static void
 init(void)
@@ -259,8 +257,6 @@ output(void)
   }
   return 0;
 }
-
-
 const struct uip_fallback_interface rpl_interface = {
   init, output
 };
@@ -274,7 +270,6 @@ set_fd(fd_set *rset, fd_set *wset)
   FD_SET(tunfd, rset);
   return 1;
 }
-
 /*---------------------------------------------------------------------------*/
 
 static void
@@ -287,12 +282,16 @@ handle_fd(fd_set *rset, fd_set *wset)
     struct timeval tv;
     int dmsec;
     gettimeofday(&tv, NULL);
-    dmsec=(tv.tv_sec-delaystartsec)*1000+tv.tv_usec/1000-delaystartmsec;
-    if(dmsec<0) delaymsec=0;
-    if(dmsec>delaymsec) delaymsec=0;
+    dmsec = (tv.tv_sec - delaystartsec) * 1000 + tv.tv_usec / 1000 - delaystartmsec;
+    if(dmsec < 0) {
+      delaymsec = 0;
+    }
+    if(dmsec > delaymsec) {
+      delaymsec = 0;
+    }
   }
 
-  if(delaymsec==0) {
+  if(delaymsec == 0) {
     int size;
 
     if(FD_ISSET(tunfd, rset)) {
@@ -303,10 +302,10 @@ handle_fd(fd_set *rset, fd_set *wset)
 
       if(slip_config_basedelay) {
         struct timeval tv;
-      	gettimeofday(&tv, NULL) ;
-      	delaymsec=slip_config_basedelay;
-      	delaystartsec =tv.tv_sec;
-      	delaystartmsec=tv.tv_usec/1000;
+        gettimeofday(&tv, NULL);
+        delaymsec = slip_config_basedelay;
+        delaystartsec = tv.tv_sec;
+        delaystartmsec = tv.tv_usec / 1000;
       }
     }
   }

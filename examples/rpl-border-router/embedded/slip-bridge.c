@@ -53,6 +53,18 @@
 void set_prefix_64(uip_ipaddr_t *);
 
 static uip_ipaddr_t last_sender;
+
+/*---------------------------------------------------------------------------*/
+void
+request_prefix(void)
+{
+  /* mess up uip_buf with a dirty request... */
+  uip_buf[0] = '?';
+  uip_buf[1] = 'P';
+  uip_len = 2;
+  slip_send();
+  uip_clear_buf();
+}
 /*---------------------------------------------------------------------------*/
 static void
 slip_input_callback(void)

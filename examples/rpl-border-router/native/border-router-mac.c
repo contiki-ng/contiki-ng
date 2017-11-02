@@ -66,7 +66,8 @@ struct tx_callback {
 
 static struct tx_callback callbacks[MAX_CALLBACKS];
 /*---------------------------------------------------------------------------*/
-void packet_sent(uint8_t sessionid, uint8_t status, uint8_t tx)
+void
+packet_sent(uint8_t sessionid, uint8_t status, uint8_t tx)
 {
   if(sessionid < MAX_CALLBACKS) {
     struct tx_callback *callback;
@@ -114,7 +115,6 @@ send_packet(mac_callback_t sent, void *ptr)
     /* Failed to allocate space for headers */
     PRINTF("br-rdc: send failed, too large header\n");
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
-
   } else {
     /* here we send the data over SLIP to the radio-chip */
     size = 0;
