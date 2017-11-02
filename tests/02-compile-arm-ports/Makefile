@@ -52,6 +52,7 @@ libs/logging/zoul \
 6tisch/sixtop/zoul \
 http-socket/zoul \
 libs/timers/zoul \
+libs/energest/zoul \
 libs/trickle-library/zoul \
 nullnet/zoul \
 slip-radio/zoul \
