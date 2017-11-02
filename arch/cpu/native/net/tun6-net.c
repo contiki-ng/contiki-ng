@@ -70,7 +70,7 @@ static char config_tundev[64] = "tun0";
 
 
 #ifndef __CYGWIN__
-static int tunfd;
+static int tunfd = -1;
 
 static int set_fd(fd_set *rset, fd_set *wset);
 static void handle_fd(fd_set *rset, fd_set *wset);
@@ -234,7 +234,7 @@ static int
 tun_output(uint8_t *data, int len)
 {
   /* fprintf(stderr, "*** Writing to tun...%d\n", len); */
-  if(write(tunfd, data, len) != len) {
+  if(tunfd != -1 && write(tunfd, data, len) != len) {
     err(1, "serial_to_tun: write");
     return -1;
   }
@@ -245,8 +245,15 @@ static int
 tun_input(unsigned char *data, int maxlen)
 {
   int size;
-  if((size = read(tunfd, data, maxlen)) == -1)
+
+  if(tunfd == -1) {
+    /* tun is not open */
+    return 0;
+  }
+
+  if((size = read(tunfd, data, maxlen)) == -1) {
     err(1, "tun_input: read");
+  }
   return size;
 }
 
@@ -267,6 +274,10 @@ output(const linkaddr_t *localdest)
 static int
 set_fd(fd_set *rset, fd_set *wset)
 {
+  if(tunfd == -1) {
+    return 0;
+  }
+
   FD_SET(tunfd, rset);
   return 1;
 }
@@ -277,6 +288,11 @@ static void
 handle_fd(fd_set *rset, fd_set *wset)
 {
   int size;
+
+  if(tunfd == -1) {
+    /* tun is not open */
+    return;
+  }
 
   LOG_INFO("Tun6-handle FD\n");
 
