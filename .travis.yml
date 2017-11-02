@@ -2,8 +2,20 @@
 # See https://github.com/travis-ci/travis-ci/issues/6928#issuecomment-264227708
 group: deprecated
 
+# Webhook for Gitter notifications
 notifications:
   email: false
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/94ae8fa6a154b11547d4 # https://gitter.im/contiki-ng/Lobby
+      - https://webhooks.gitter.im/e/1ec3284ae1f784630543 # https://gitter.im/contiki-ng/Developers
+      - https://webhooks.gitter.im/e/dbd9d1c99ccd3355073a # https://gitter.im/contiki-ng/Maintainers
+    on_success: always  # options: [always|never|change] default: always
+    on_failure: always  # options: [always|never|change] default: always
+    on_start: never     # options: [always|never|change] default: always
+    on_cancel: never    # options: [always|never|change] default: always
+    on_error: always    # options: [always|never|change] default: always
+
 language: c #NOTE: this will set CC=gcc which might cause trouble
 before_script:
   - WGET="travis_retry wget --continue --tries=20 --waitretry=10 --retry-connrefused --no-dns-cache --timeout 300"
