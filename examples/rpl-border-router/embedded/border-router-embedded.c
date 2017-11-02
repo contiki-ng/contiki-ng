@@ -86,7 +86,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   while(1) {
     PROCESS_YIELD();
-    if (ev == sensors_event && data == &button_sensor) {
+    if(ev == sensors_event && data == &button_sensor) {
       LOG_INFO("Initiating global repair\n");
 #if UIP_CONF_IPV6_RPL_LITE
       rpl_global_repair();

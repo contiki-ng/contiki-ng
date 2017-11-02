@@ -100,7 +100,6 @@ border_router_print_stat()
   printf("bytes received over SLIP: %ld\n", slip_received);
   printf("bytes sent over SLIP: %ld\n", slip_sent);
 }
-
 /*---------------------------------------------------------------------------*/
 /* Format: <name=value>;<name=value>;...;<name=value>*/
 /* this function just cut at ; and store in the sensor array */
@@ -110,7 +109,7 @@ border_router_set_sensors(const char *data, int len)
   int i;
   int last_pos = 0;
   int sc = 0;
-  for(i = 0;i < len; i++) {
+  for(i = 0; i < len; i++) {
     if(data[i] == ';') {
       sensors[sc][i - last_pos] = 0;
       memcpy(sensors[sc++], &data[last_pos], i - last_pos);

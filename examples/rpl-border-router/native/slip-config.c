@@ -89,17 +89,17 @@ slip_config_handle_arguments(int argc, char **argv)
 
     case 's':
       if(strncmp("/dev/", optarg, 5) == 0) {
-	slip_config_siodev = optarg + 5;
+        slip_config_siodev = optarg + 5;
       } else {
-	slip_config_siodev = optarg;
+        slip_config_siodev = optarg;
       }
       break;
 
     case 't':
       if(strncmp("/dev/", optarg, 5) == 0) {
-	strncpy(slip_config_tundev, optarg + 5, sizeof(slip_config_tundev));
+        strncpy(slip_config_tundev, optarg + 5, sizeof(slip_config_tundev));
       } else {
-	strncpy(slip_config_tundev, optarg, sizeof(slip_config_tundev));
+        strncpy(slip_config_tundev, optarg, sizeof(slip_config_tundev));
       }
       break;
 
@@ -113,43 +113,47 @@ slip_config_handle_arguments(int argc, char **argv)
 
     case 'd':
       slip_config_basedelay = 10;
-      if(optarg) slip_config_basedelay = atoi(optarg);
+      if(optarg) {
+        slip_config_basedelay = atoi(optarg);
+      }
       break;
 
     case 'v':
       slip_config_verbose = 2;
-      if(optarg) slip_config_verbose = atoi(optarg);
+      if(optarg) {
+        slip_config_verbose = atoi(optarg);
+      }
       break;
 
     case '?':
     case 'h':
     default:
-fprintf(stderr,"usage:  %s [options] ipaddress\n", prog);
-fprintf(stderr,"example: border-router.native -L -v2 -s ttyUSB1 fd00::1/64\n");
-fprintf(stderr,"Options are:\n");
+      fprintf(stderr, "usage:  %s [options] ipaddress\n", prog);
+      fprintf(stderr, "example: border-router.native -L -v2 -s ttyUSB1 fd00::1/64\n");
+      fprintf(stderr, "Options are:\n");
 #ifdef linux
-fprintf(stderr," -B baudrate    9600,19200,38400,57600,115200,921600 (default 115200)\n");
+      fprintf(stderr, " -B baudrate    9600,19200,38400,57600,115200,921600 (default 115200)\n");
 #else
-fprintf(stderr," -B baudrate    9600,19200,38400,57600,115200 (default 115200)\n");
+      fprintf(stderr, " -B baudrate    9600,19200,38400,57600,115200 (default 115200)\n");
 #endif
-fprintf(stderr," -H             Hardware CTS/RTS flow control (default disabled)\n");
-fprintf(stderr," -L             Log output format (adds time stamps)\n");
-fprintf(stderr," -s siodev      Serial device (default /dev/ttyUSB0)\n");
-fprintf(stderr," -a host        Connect via TCP to server at <host>\n");
-fprintf(stderr," -p port        Connect via TCP to server at <host>:<port>\n");
-fprintf(stderr," -t tundev      Name of interface (default tun0)\n");
-fprintf(stderr," -v[level]      Verbosity level\n");
-fprintf(stderr,"    -v0         No messages\n");
-fprintf(stderr,"    -v1         Encapsulated SLIP debug messages (default)\n");
-fprintf(stderr,"    -v2         Printable strings after they are received\n");
-fprintf(stderr,"    -v3         Printable strings and SLIP packet notifications\n");
-fprintf(stderr,"    -v4         All printable characters as they are received\n");
-fprintf(stderr,"    -v5         All SLIP packets in hex\n");
-fprintf(stderr,"    -v          Equivalent to -v3\n");
-fprintf(stderr," -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
-fprintf(stderr,"                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
-fprintf(stderr,"                -d is equivalent to -d10.\n");
-exit(1);
+      fprintf(stderr, " -H             Hardware CTS/RTS flow control (default disabled)\n");
+      fprintf(stderr, " -L             Log output format (adds time stamps)\n");
+      fprintf(stderr, " -s siodev      Serial device (default /dev/ttyUSB0)\n");
+      fprintf(stderr, " -a host        Connect via TCP to server at <host>\n");
+      fprintf(stderr, " -p port        Connect via TCP to server at <host>:<port>\n");
+      fprintf(stderr, " -t tundev      Name of interface (default tun0)\n");
+      fprintf(stderr, " -v[level]      Verbosity level\n");
+      fprintf(stderr, "    -v0         No messages\n");
+      fprintf(stderr, "    -v1         Encapsulated SLIP debug messages (default)\n");
+      fprintf(stderr, "    -v2         Printable strings after they are received\n");
+      fprintf(stderr, "    -v3         Printable strings and SLIP packet notifications\n");
+      fprintf(stderr, "    -v4         All printable characters as they are received\n");
+      fprintf(stderr, "    -v5         All SLIP packets in hex\n");
+      fprintf(stderr, "    -v          Equivalent to -v3\n");
+      fprintf(stderr, " -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
+      fprintf(stderr, "                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
+      fprintf(stderr, "                -d is equivalent to -d10.\n");
+      exit(1);
       break;
     }
   }

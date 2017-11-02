@@ -42,8 +42,6 @@
 
 #include "contiki-net.h"
 
-//#include "urlconv.h"
-
 #if UIP_CONF_TCP == 0
 #error HTTP server needs TCP enabled
 #endif
@@ -153,7 +151,7 @@ PT_THREAD(handle_output(struct httpd_state *s))
 /*---------------------------------------------------------------------------*/
 const char http_get[] = "GET ";
 const char http_index_html[] = "/index.html";
-//const char http_referer[] = "Referer:"
+
 static
 PT_THREAD(handle_input(struct httpd_state *s))
 {
@@ -207,7 +205,6 @@ handle_connection(struct httpd_state *s)
     handle_output(s);
   }
 }
-
 /*---------------------------------------------------------------------------*/
 void
 httpd_appcall(void *state)
@@ -250,7 +247,6 @@ httpd_appcall(void *state)
     uip_abort();
   }
 }
-
 /*---------------------------------------------------------------------------*/
 void
 httpd_init(void)

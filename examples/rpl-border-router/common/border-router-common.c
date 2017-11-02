@@ -43,27 +43,27 @@ uint8_t prefix_set;
 
 /*---------------------------------------------------------------------------*/
 void
- print_local_addresses(void)
- {
-   int i;
-   uint8_t state;
+print_local_addresses(void)
+{
+  int i;
+  uint8_t state;
 
-   LOG_INFO("Server IPv6 addresses:\n");
-   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-     state = uip_ds6_if.addr_list[i].state;
-     if(uip_ds6_if.addr_list[i].isused &&
-        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-       LOG_INFO("  ");
-       LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-       LOG_INFO_("\n");
-     }
-   }
- }
- /*---------------------------------------------------------------------------*/
- void
- set_prefix_64(uip_ipaddr_t *prefix_64)
- {
-   prefix_set = 1;
-   rpl_dag_root_init(prefix_64, NULL);
-   rpl_dag_root_init_dag_immediately();
- }
+  LOG_INFO("Server IPv6 addresses:\n");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      LOG_INFO("  ");
+      LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+      LOG_INFO_("\n");
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+set_prefix_64(uip_ipaddr_t *prefix_64)
+{
+  prefix_set = 1;
+  rpl_dag_root_init(prefix_64, NULL);
+  rpl_dag_root_init_dag_immediately();
+}

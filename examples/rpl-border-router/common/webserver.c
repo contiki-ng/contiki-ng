@@ -55,7 +55,6 @@ static int blen;
   } while(0)
 #endif
 
-
 /* Use simple webserver with only one page for minimum footprint.
  * Multiple connections can result in interleaved tcp segments since
  * a single static buffer is used for all segments.
@@ -86,7 +85,9 @@ ipaddr_add(const uip_ipaddr_t *addr)
   for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
     a = (addr->u8[i] << 8) + addr->u8[i + 1];
     if(a == 0 && f >= 0) {
-      if(f++ == 0) ADD("::");
+      if(f++ == 0) {
+        ADD("::");
+      }
     } else {
       if(f > 0) {
         f = -1;
@@ -118,7 +119,8 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
   SEND_STRING(&s->sout, TOP);
 #if BUF_USES_STACK
-  bufptr = buf;bufend=bufptr+sizeof(buf);
+  bufptr = buf;
+  bufend = bufptr + sizeof(buf);
 #else
   blen = 0;
 #endif
@@ -130,51 +132,63 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 #if WEBSERVER_CONF_NEIGHBOR_STATUS
 #if BUF_USES_STACK
-{char* j=bufptr+25;
+    { char *j = bufptr + 25;
       ipaddr_add(&nbr->ipaddr);
-      while (bufptr < j) ADD(" ");
-      switch (nbr->state) {
-      case NBR_INCOMPLETE: ADD(" INCOMPLETE");break;
-      case NBR_REACHABLE: ADD(" REACHABLE");break;
-      case NBR_STALE: ADD(" STALE");break;
-      case NBR_DELAY: ADD(" DELAY");break;
-      case NBR_PROBE: ADD(" NBR_PROBE");break;
+      while(bufptr < j) ADD(" ");
+      switch(nbr->state) {
+      case NBR_INCOMPLETE: ADD(" INCOMPLETE");
+        break;
+      case NBR_REACHABLE: ADD(" REACHABLE");
+        break;
+      case NBR_STALE: ADD(" STALE");
+        break;
+      case NBR_DELAY: ADD(" DELAY");
+        break;
+      case NBR_PROBE: ADD(" NBR_PROBE");
+        break;
       }
-}
+    }
 #else
-{uint8_t j=blen+25;
+    { uint8_t j = blen + 25;
       ipaddr_add(&nbr->ipaddr);
-      while (blen < j) ADD(" ");
-      switch (nbr->state) {
-      case NBR_INCOMPLETE: ADD(" INCOMPLETE");break;
-      case NBR_REACHABLE: ADD(" REACHABLE");break;
-      case NBR_STALE: ADD(" STALE");break;
-      case NBR_DELAY: ADD(" DELAY");break;
-      case NBR_PROBE: ADD(" NBR_PROBE");break;
+      while(blen < j) ADD(" ");
+      switch(nbr->state) {
+      case NBR_INCOMPLETE: ADD(" INCOMPLETE");
+        break;
+      case NBR_REACHABLE: ADD(" REACHABLE");
+        break;
+      case NBR_STALE: ADD(" STALE");
+        break;
+      case NBR_DELAY: ADD(" DELAY");
+        break;
+      case NBR_PROBE: ADD(" NBR_PROBE");
+        break;
       }
-}
+    }
 #endif
 #else
-      ipaddr_add(&nbr->ipaddr);
+    ipaddr_add(&nbr->ipaddr);
 #endif
 
-      ADD("\n");
+    ADD("\n");
 #if BUF_USES_STACK
-      if(bufptr > bufend - 45) {
-        SEND_STRING(&s->sout, buf);
-        bufptr = buf; bufend = bufptr + sizeof(buf);
-      }
+    if(bufptr > bufend - 45) {
+      SEND_STRING(&s->sout, buf);
+      bufptr = buf;
+      bufend = bufptr + sizeof(buf);
+    }
 #else
-      if(blen > sizeof(buf) - 45) {
-        SEND_STRING(&s->sout, buf);
-        blen = 0;
-      }
+    if(blen > sizeof(buf) - 45) {
+      SEND_STRING(&s->sout, buf);
+      blen = 0;
+    }
 #endif
   }
   ADD("</pre>Routes<pre>\n");
   SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
-  bufptr = buf; bufend = bufptr + sizeof(buf);
+  bufptr = buf;
+  bufend = bufptr + sizeof(buf);
 #else
   blen = 0;
 #endif
@@ -196,7 +210,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
     ADD("<a href=http://[");
     ipaddr_add(&r->ipaddr);
     ADD("]/status.shtml>");
-    SEND_STRING(&s->sout, buf); //TODO: why tunslip6 needs an output here, wpcapslip does not
+    SEND_STRING(&s->sout, buf);
     blen = 0;
     ipaddr_add(&r->ipaddr);
     ADD("</a>");
@@ -213,7 +227,8 @@ PT_THREAD(generate_routes(struct httpd_state *s))
     }
     SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
-    bufptr = buf; bufend = bufptr + sizeof(buf);
+    bufptr = buf;
+    bufend = bufptr + sizeof(buf);
 #else
     blen = 0;
 #endif
@@ -224,7 +239,8 @@ PT_THREAD(generate_routes(struct httpd_state *s))
   ADD("Links<pre>\n");
   SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
-  bufptr = buf; bufend = bufptr + sizeof(buf);
+  bufptr = buf;
+  bufend = bufptr + sizeof(buf);
 #else
   blen = 0;
 #endif
@@ -251,7 +267,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       ADD("<a href=http://[");
       ipaddr_add(&child_ipaddr);
       ADD("]/status.shtml>");
-      SEND_STRING(&s->sout, buf); //TODO: why tunslip6 needs an output here, wpcapslip does not
+      SEND_STRING(&s->sout, buf);
       blen = 0;
       ipaddr_add(&child_ipaddr);
       ADD("</a>");
@@ -263,14 +279,14 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       ADD(" (parent: ");
       ipaddr_add(&parent_ipaddr);
       if(1 || (link->lifetime < 600)) {
-        ADD(") %us\n", (unsigned int)link->lifetime); // iotlab printf does not have %lu
-        //ADD(") %lus\n", (unsigned long)r->state.lifetime);
+        ADD(") %us\n", (unsigned int)link->lifetime);
       } else {
         ADD(")\n");
       }
       SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
-      bufptr = buf; bufend = bufptr + sizeof(buf);
+      bufptr = buf;
+      bufend = bufptr + sizeof(buf);
 #else
       blen = 0;
 #endif
@@ -281,12 +297,12 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 #if WEBSERVER_CONF_FILESTATS
   static uint16_t numtimes;
-  ADD("<br><i>This page sent %u times</i>",++numtimes);
+  ADD("<br><i>This page sent %u times</i>", ++numtimes);
 #endif
 
 #if WEBSERVER_CONF_LOADTIME
   numticks = clock_time() - numticks + 1;
-  ADD(" <i>(%u.%02u sec)</i>",numticks/CLOCK_SECOND,(100*(numticks%CLOCK_SECOND))/CLOCK_SECOND));
+  ADD(" <i>(%u.%02u sec)</i>", numticks / CLOCK_SECOND, (100 * (numticks % CLOCK_SECOND)) / CLOCK_SECOND));
 #endif
 
   SEND_STRING(&s->sout, buf);
