@@ -7,4 +7,5 @@ send a UDP request periodically, that simply includes a counter as payload.
 When receiving a request, The server sends a response with the same counter
 back to the originator.
 
-The simulation files show example networks, for sky motes and for cooja motes.
+The `.csc` files show example networks in the Cooja simulator, for sky motes and
+for cooja motes.
