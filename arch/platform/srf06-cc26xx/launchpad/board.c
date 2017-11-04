@@ -37,7 +37,6 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "lib/sensors.h"
 #include "lpm.h"
 #include "ti-lib.h"
 #include "board-peripherals.h"

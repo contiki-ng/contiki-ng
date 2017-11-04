@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -29,37 +30,26 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup launchpad-peripherals
- * @{
- *
- * \defgroup launchpad-button-sensor LaunchPad Button Driver
- *
- * One of the buttons can be configured as general purpose or as an on/off key
+ * \addtogroup launchpad-cc26xx-peripherals
  * @{
  *
  * \file
- * Header file for the LaunchPad Button Driver
+ * Defines CC13xx/CC26xx Launchpad buttons for use with the button HAL
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BUTTON_SENSOR_H_
-#define BUTTON_SENSOR_H_
-/*---------------------------------------------------------------------------*/
-#include "lib/sensors.h"
-/*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR "Button"
-/*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR_VALUE_STATE    0
-#define BUTTON_SENSOR_VALUE_DURATION 1
+#include "contiki.h"
+#include "dev/button-hal.h"
 
-#define BUTTON_SENSOR_VALUE_RELEASED 0
-#define BUTTON_SENSOR_VALUE_PRESSED  1
+#include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor button_left_sensor;
-extern const struct sensors_sensor button_right_sensor;
+BUTTON_HAL_BUTTON(key_left, "Key Left", BOARD_IOID_KEY_LEFT, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BOARD_BUTTON_HAL_INDEX_KEY_LEFT, \
+                  true);
+
+BUTTON_HAL_BUTTON(key_right, "Key Right", BOARD_IOID_KEY_RIGHT, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BOARD_BUTTON_HAL_INDEX_KEY_RIGHT, \
+                  true);
 /*---------------------------------------------------------------------------*/
-#endif /* BUTTON_SENSOR_H_ */
+BUTTON_HAL_BUTTONS(&key_left, &key_right);
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
+/** @} */
