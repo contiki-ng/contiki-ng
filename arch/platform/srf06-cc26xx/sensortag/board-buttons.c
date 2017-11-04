@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -32,28 +33,30 @@
  * \addtogroup sensortag-cc26xx-peripherals
  * @{
  *
- * \defgroup sensortag-cc26xx-reed-relay SensorTag 2.0 Reed Relay
- *
- * The reed relay acts like a button without a button. To trigger the reed,
- * approach a magnet to the sensortag and a sensors_changed event will be
- * generated, in a fashion similar to as if a button had been pressed
- *
- * @{
- *
  * \file
- * Header file for the Sensortag Reed Relay
+ * Defines Sensortag buttons for use with the button HAL
  */
 /*---------------------------------------------------------------------------*/
-#ifndef REED_RELAY_H
-#define REED_RELAY_H
+#include "contiki.h"
+#include "dev/gpio-hal.h"
+#include "dev/button-hal.h"
+
+#include "ti-lib.h"
+
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#include "lib/sensors.h"
+BUTTON_HAL_BUTTON(reed_relay, "Reed Relay", BOARD_IOID_REED_RELAY, \
+                  GPIO_HAL_PIN_CFG_PULL_DOWN, \
+                  BOARD_BUTTON_HAL_INDEX_REED_RELAY, true);
+
+BUTTON_HAL_BUTTON(key_left, "Key Left", BOARD_IOID_KEY_LEFT, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BOARD_BUTTON_HAL_INDEX_KEY_LEFT, \
+                  true);
+
+BUTTON_HAL_BUTTON(key_right, "Key Right", BOARD_IOID_KEY_RIGHT, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BOARD_BUTTON_HAL_INDEX_KEY_RIGHT, \
+                  true);
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor reed_relay_sensor;
+BUTTON_HAL_BUTTONS(&reed_relay, &key_left, &key_right);
 /*---------------------------------------------------------------------------*/
-#endif /* REED_RELAY_H */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
+/** @} */
