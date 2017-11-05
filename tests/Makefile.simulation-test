@@ -30,8 +30,9 @@ TESTS=$(wildcard ??-*.csc)
 TESTLOGS=$(patsubst %.csc,%.testlog,$(TESTS))
 LOGS=$(patsubst %.csc,%.log,$(TESTS))
 FAILLOGS=$(patsubst %.csc,%.*.faillog,$(TESTS))
-#Set random seeds to create reproduceable results.
-RANDOMSEED=1
+
+# The number of runs (with different random seeds)
+RUNCOUNT ?= 1
 
 CONTIKI=../..
 
@@ -50,21 +51,13 @@ endif
 
 all: cooja clean tests
 
-ifdef RUNALL
-RUNALL=true
-else
-RUNALL=false
-endif
-
-%.testlog: %.csc cooja	
-	@$(CONTIKI)/tests/simexec.sh "$(RUNALL)" "$<" "$(CONTIKI)" "$(basename $@)" $(RANDOMSEED)
+%.testlog: %.csc cooja
+	@$(CONTIKI)/tests/simexec.sh "$<" "$(CONTIKI)" "$(basename $@)" $(RUNCOUNT)
 
 clean:
 	@rm -f $(TESTLOGS) $(LOGS) $(FAILLOGS) COOJA.log COOJA.testlog \
                report summary
 
-
 cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
 $(CONTIKI)/tools/cooja/dist/cooja.jar:
 	(cd $(CONTIKI)/tools/cooja; ant jar)
-

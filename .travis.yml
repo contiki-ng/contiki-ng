@@ -81,7 +81,7 @@ before_script:
 
 script:
   ## tests/Makefile handles most of generic logic
-  - "make -C tests/??-$BUILD_TYPE RUNALL=true summary"
+  - "make -C tests/??-$BUILD_TYPE summary"
 
 after_script:
   ## Print cooja test logs

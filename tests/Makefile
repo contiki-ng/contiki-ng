@@ -36,7 +36,7 @@ summary: $(SUMMARIES)
 	grep '' $(SUMMARIES) > summary
 
 summary-%:
-	@make -C $* RUNALL=true summary || true
+	@make -C $* summary || true
 	@echo -n $* | cat - $*/summary > $@
 	@rm $*/summary
 
