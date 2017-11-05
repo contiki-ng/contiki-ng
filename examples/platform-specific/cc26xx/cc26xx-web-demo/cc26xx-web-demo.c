@@ -45,7 +45,7 @@
 #include "lib/list.h"
 #include "sys/process.h"
 #include "net/ipv6/sicslowpan.h"
-#include "button-sensor.h"
+#include "dev/button-hal.h"
 #include "batmon-sensor.h"
 #include "httpd-simple.h"
 #include "cc26xx-web-demo.h"
@@ -882,8 +882,6 @@ init_sensors(void)
   list_add(sensor_list, &mpu_gyro_x_reading);
   list_add(sensor_list, &mpu_gyro_y_reading);
   list_add(sensor_list, &mpu_gyro_z_reading);
-
-  SENSORS_ACTIVATE(reed_relay_sensor);
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -977,16 +975,16 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
     }
 #endif
 
-    if(ev == sensors_event && data == CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
-      if((CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER)->value(
-           BUTTON_SENSOR_VALUE_DURATION) > CLOCK_SECOND * 5) {
-        printf("Restoring defaults!\n");
-        cc26xx_web_demo_restore_defaults();
-      } else {
-        init_sensor_readings();
-
-        process_post(PROCESS_BROADCAST, cc26xx_web_demo_publish_event, NULL);
-      }
+    if(ev == button_hal_release_event &&
+       ((button_hal_button_t *)data)->unique_id ==
+       CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
+      init_sensor_readings();
+      process_post(PROCESS_BROADCAST, cc26xx_web_demo_publish_event, NULL);
+    } else if(ev == button_hal_periodic_event &&
+              ((button_hal_button_t *)data)->unique_id ==
+              CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
+      printf("Restoring defaults!\n");
+      cc26xx_web_demo_restore_defaults();
     } else if(ev == httpd_simple_event_new_config) {
       save_config();
 #if BOARD_SENSORTAG
