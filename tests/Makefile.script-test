@@ -20,7 +20,7 @@ endif
 all: cooja clean tests
 
 %.testlog: %.sh cooja
-	@bash $(TESTS) "$(CONTIKI)"
+	@bash "$(basename $@).sh" "$(CONTIKI)"
 
 clean:
 	@rm -f $(TESTLOGS) $(FAILLOGS) report summary
