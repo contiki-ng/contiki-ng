@@ -69,6 +69,7 @@
 #include "button-sensor.h"
 #include "dev/serial-line.h"
 #include "net/mac/framer/frame802154.h"
+#include "board-peripherals.h"
 
 #include "driverlib/driverlib_release.h"
 
@@ -83,6 +84,12 @@ unsigned short node_id = 0;
 /*---------------------------------------------------------------------------*/
 /** \brief Board specific iniatialisation */
 void board_init(void);
+/*---------------------------------------------------------------------------*/
+#ifdef BOARD_CONF_HAS_SENSORS
+#define BOARD_HAS_SENSORS BOARD_CONF_HAS_SENSORS
+#else
+#define BOARD_HAS_SENSORS 1
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 fade(leds_mask_t l)
@@ -218,7 +225,10 @@ platform_init_stage_three()
 
   LOG_INFO(" Node ID: %d\n", node_id);
 
+#if BOARD_HAS_SENSORS
   process_start(&sensors_process, NULL);
+#endif
+
   fade(LEDS_ORANGE);
 }
 /*---------------------------------------------------------------------------*/
