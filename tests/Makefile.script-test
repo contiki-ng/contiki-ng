@@ -1,0 +1,30 @@
+TESTS=$(wildcard ??-*.sh)
+TESTLOGS=$(patsubst %.sh,%.testlog,$(TESTS))
+FAILLOGS=$(patsubst %.sh,%.faillog,$(TESTS))
+
+CONTIKI=../..
+
+tests: $(TESTLOGS)
+
+report: clean tests
+	@echo | grep -s -e '' - $(TESTLOGS) $(FAILLOGS) > $@ || true
+
+summary: report
+ifeq ($(TESTS),)
+	@echo No tests > $@
+else
+	@egrep -e ' OK| FAIL' $< > $@
+	@ls -1 ??-*.faillog > /dev/null 2>&1; [ $$? = 0 ] && tail -v ??-*.log ??-*.faillog >> $@ || true
+endif
+
+all: cooja clean tests
+
+%.testlog: %.sh cooja
+	@bash $(TESTS) "$(CONTIKI)"
+
+clean:
+	@rm -f $(TESTLOGS) $(FAILLOGS) report summary
+
+cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
+$(CONTIKI)/tools/cooja/dist/cooja.jar:
+	(cd $(CONTIKI)/tools/cooja; ant jar)
