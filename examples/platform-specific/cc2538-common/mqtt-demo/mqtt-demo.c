@@ -50,7 +50,7 @@
 #include "sys/etimer.h"
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
-#include "dev/button-sensor.h"
+#include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "dev/cc2538-sensors.h"
 
@@ -138,7 +138,7 @@ static uint8_t state;
 #define DEFAULT_RSSI_MEAS_INTERVAL  (CLOCK_SECOND * 30)
 /*---------------------------------------------------------------------------*/
 /* Take a sensor reading on button press */
-#define PUBLISH_TRIGGER &button_sensor
+#define PUBLISH_TRIGGER BUTTON_HAL_ID_USER_BUTTON
 
 /* Payload length of ICMPv6 echo requests used to measure RSSI with def rt */
 #define ECHO_REQ_PAYLOAD_LEN   20
@@ -704,7 +704,8 @@ PROCESS_THREAD(mqtt_demo_process, ev, data)
 
     PROCESS_YIELD();
 
-    if(ev == sensors_event && data == PUBLISH_TRIGGER) {
+    if(ev == button_hal_release_event &&
+       ((button_hal_button_t *)data)->unique_id == PUBLISH_TRIGGER) {
       if(state == STATE_ERROR) {
         connect_attempt = 1;
         state = STATE_REGISTERED;
@@ -713,7 +714,8 @@ PROCESS_THREAD(mqtt_demo_process, ev, data)
 
     if((ev == PROCESS_EVENT_TIMER && data == &publish_periodic_timer) ||
        ev == PROCESS_EVENT_POLL ||
-       (ev == sensors_event && data == PUBLISH_TRIGGER)) {
+       (ev == button_hal_release_event &&
+        ((button_hal_button_t *)data)->unique_id == PUBLISH_TRIGGER)) {
       state_machine();
     }
 
