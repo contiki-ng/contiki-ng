@@ -37,7 +37,11 @@
 
 #include "contiki.h"
 #include "net/routing/routing.h"
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+#include "dev/button-hal.h"
+#else
 #include "dev/button-sensor.h"
+#endif
 #include "dev/slip.h"
 #include "rpl-border-router.h"
 
@@ -68,7 +72,9 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   PROCESS_PAUSE();
 
+#if !PLATFORM_SUPPORTS_BUTTON_HAL
   SENSORS_ACTIVATE(button_sensor);
+#endif
 
   LOG_INFO("RPL-Border router started\n");
 
@@ -86,7 +92,11 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   while(1) {
     PROCESS_YIELD();
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+    if(ev == button_hal_release_event) {
+#else
     if(ev == sensors_event && data == &button_sensor) {
+#endif
       LOG_INFO("Initiating global repair\n");
       NETSTACK_ROUTING.global_repair("Button press");
     }

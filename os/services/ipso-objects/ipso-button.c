@@ -63,13 +63,12 @@
 #define IPSO_INPUT_SENSOR_TYPE 5751
 
 #if PLATFORM_HAS_BUTTON
-#include "dev/button-sensor.h"
-
-#if BOARD_SENSORTAG
-#include "sensortag/button-sensor.h"
-#define IPSO_BUTTON_SENSOR button_left_sensor
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+#include "dev/button-hal.h"
 #else
+#include "dev/button-sensor.h"
 #define IPSO_BUTTON_SENSOR button_sensor
+static struct etimer timer;
 #endif
 
 PROCESS(ipso_button_process, "ipso-button");
@@ -168,18 +167,26 @@ ipso_button_init(void)
 #if PLATFORM_HAS_BUTTON
 PROCESS_THREAD(ipso_button_process, ev, data)
 {
-  static struct etimer timer;
-  int32_t time;
-
   PROCESS_BEGIN();
 
+#if !PLATFORM_SUPPORTS_BUTTON_HAL
   SENSORS_ACTIVATE(IPSO_BUTTON_SENSOR);
+#endif
 
   while(1) {
     PROCESS_WAIT_EVENT();
 
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+    /* ToDo */
+    if(ev == button_hal_release_event) {
+      lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_STATE);
+    } else if(ev == button_hal_periodic_event) {
+      lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_COUNTER);
+    }
+#else
     if(ev == sensors_event && data == &IPSO_BUTTON_SENSOR) {
       if(!input_state) {
+        int32_t time;
         input_state = 1;
         counter++;
         if((edge_selection & 2) != 0) {
@@ -206,6 +213,7 @@ PROCESS_THREAD(ipso_button_process, ev, data)
         }
       }
     }
+#endif
   }
 
   PROCESS_END();

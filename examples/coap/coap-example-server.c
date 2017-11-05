@@ -42,7 +42,9 @@
 #include "contiki.h"
 #include "coap-engine.h"
 
-#if PLATFORM_HAS_BUTTON
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+#include "dev/button-hal.h"
+#else
 #include "dev/button-sensor.h"
 #endif
 
@@ -165,7 +167,11 @@ PROCESS_THREAD(er_example_server, ev, data)
   while(1) {
     PROCESS_WAIT_EVENT();
 #if PLATFORM_HAS_BUTTON
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+    if(ev == button_hal_release_event) {
+#else
     if(ev == sensors_event && data == &button_sensor) {
+#endif
       PRINTF("*******BUTTON*******\n");
 
       /* Call the event_handler for this application-specific event. */

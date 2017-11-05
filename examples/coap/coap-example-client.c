@@ -43,7 +43,11 @@
 #include "contiki-net.h"
 #include "coap-engine.h"
 #include "coap-blocking-api.h"
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+#include "dev/button-hal.h"
+#else
 #include "dev/button-sensor.h"
+#endif
 
 /* Log configuration */
 #include "coap-log.h"
@@ -94,9 +98,11 @@ PROCESS_THREAD(er_example_client, ev, data)
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 
 #if PLATFORM_HAS_BUTTON
+#if !PLATFORM_SUPPORTS_BUTTON_HAL
   SENSORS_ACTIVATE(button_sensor);
-  printf("Press a button to request %s\n", service_urls[uri_switch]);
 #endif
+  printf("Press a button to request %s\n", service_urls[uri_switch]);
+#endif /* PLATFORM_HAS_BUTTON */
 
   while(1) {
     PROCESS_YIELD();
@@ -122,7 +128,11 @@ PROCESS_THREAD(er_example_client, ev, data)
       etimer_reset(&et);
 
 #if PLATFORM_HAS_BUTTON
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+    } else if(ev == button_hal_release_event) {
+#else
     } else if(ev == sensors_event && data == &button_sensor) {
+#endif
 
       /* send a request to notify the end of the process */
 
@@ -140,7 +150,7 @@ PROCESS_THREAD(er_example_client, ev, data)
       printf("\n--Done--\n");
 
       uri_switch = (uri_switch + 1) % NUMBER_OF_URLS;
-#endif
+#endif /* PLATFORM_HAS_BUTTON */
     }
   }
 
