@@ -63,7 +63,7 @@ AUTOSTART_PROCESSES(&node_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(node_process, ev, data)
 {
-  int is_coordinator;
+  static int is_coordinator;
   static int added_num_of_links = 0;
   static struct etimer et;
   struct tsch_neighbor *n;
