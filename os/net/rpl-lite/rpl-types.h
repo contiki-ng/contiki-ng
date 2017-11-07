@@ -68,19 +68,18 @@
   ((addr)->u8[14] == 0) &&				    \
   ((addr)->u8[15] == 0x1a))
 
-/* Compute lifetime, accounting for the lifetime unit */
+/** \brief Compute lifetime, accounting for the lifetime unit */
 #define RPL_LIFETIME(lifetime) \
          (((lifetime) == RPL_INFINITE_LIFETIME) ? \
          RPL_ROUTE_INFINITE_LIFETIME : \
          (unsigned long)curr_instance.lifetime_unit * (lifetime))
 
-/* Rank of a root node. */
+/** \brief Rank of a root node. */
 #define ROOT_RANK             curr_instance.min_hoprankinc
 
-/* Return DAG RANK as per RFC 6550 (rank divided by min_hoprankinc) */
+/** \brief Return DAG RANK as per RFC 6550 (rank divided by min_hoprankinc) */
 #define DAG_RANK(fixpt_rank) ((fixpt_rank) / curr_instance.min_hoprankinc)
 
-/* Lollipop counters */
 #define RPL_LOLLIPOP_MAX_VALUE            255
 #define RPL_LOLLIPOP_CIRCULAR_REGION     127
 #define RPL_LOLLIPOP_SEQUENCE_WINDOWS    16
@@ -97,18 +96,20 @@
 #define RPL_LOLLIPOP_IS_INIT(counter)		\
    ((counter) > RPL_LOLLIPOP_CIRCULAR_REGION)
 
+
 /********** Data structures and types **********/
 
 typedef uint16_t rpl_rank_t;
 typedef uint16_t rpl_ocp_t;
 
 /*---------------------------------------------------------------------------*/
+/** \brief Structure for RPL energy metric. */
 struct rpl_metric_object_energy {
   uint8_t flags;
   uint8_t energy_est;
 };
 
-/* Logical representation of a DAG Metric Container. */
+/** \brief Logical representation of a DAG Metric Container. */
 struct rpl_metric_container {
   uint8_t type;
   uint8_t flags;
@@ -122,7 +123,7 @@ struct rpl_metric_container {
 };
 typedef struct rpl_metric_container rpl_metric_container_t;
 
-/* RPL prefix information */
+/** \brief RPL prefix information */
 struct rpl_prefix {
   uip_ipaddr_t prefix;
   uint32_t lifetime;
@@ -131,7 +132,7 @@ struct rpl_prefix {
   };
 typedef struct rpl_prefix rpl_prefix_t;
 
-/* All information related to a RPL neighbor */
+/** \brief All information related to a RPL neighbor */
 struct rpl_nbr {
   clock_time_t better_parent_since;  /* The neighbor has been a possible
   replacement for our preferred parent consistently since 'parent_since'.
@@ -145,18 +146,18 @@ struct rpl_nbr {
 typedef struct rpl_nbr rpl_nbr_t;
 
 /*---------------------------------------------------------------------------*/
- /*
-  * API for RPL objective functions (OF)
+ /**
+  * \brief API for RPL objective functions (OF)
   *
-  * reset(dag) Resets the objective function state for a specific DAG. This function is
+  * - reset(dag) Resets the objective function state for a specific DAG. This function is
   *            called when doing a global repair on the DAG.
-  * nbr_link_metric(n)  Returns the link metric of a neighbor
-  * nbr_has_usable_link(n) Returns 1 iff the neighbor has a usable link as defined by the OF
-  * nbr_is_acceptable_parent(n) Returns 1 iff the neighbor has a usable rank/link as defined by the OF
-  * nbr_path_cost(n) Returns the path cost of a neighbor
-  * rank_via_nbr(n) Returns our rank if we select a given neighbor as preferred parent
-  * best_parent(n1, n2) Compares two neighbors and returns the best one, according to the OF.
-  * update_metric_container() Updated the DAG metric container from the current OF state
+  * - nbr_link_metric(n)  Returns the link metric of a neighbor
+  * - nbr_has_usable_link(n) Returns 1 iff the neighbor has a usable link as defined by the OF
+  * - nbr_is_acceptable_parent(n) Returns 1 iff the neighbor has a usable rank/link as defined by the OF
+  * - nbr_path_cost(n) Returns the path cost of a neighbor
+  * - rank_via_nbr(n) Returns our rank if we select a given neighbor as preferred parent
+  * - best_parent(n1, n2) Compares two neighbors and returns the best one, according to the OF.
+  * - update_metric_container() Updated the DAG metric container from the current OF state
   */
  struct rpl_of {
    void (*reset)(void);
@@ -172,7 +173,7 @@ typedef struct rpl_nbr rpl_nbr_t;
  typedef struct rpl_of rpl_of_t;
 
 /*---------------------------------------------------------------------------*/
-/* Directed Acyclic Graph */
+/** \brief RPL DAG states*/
 enum rpl_dag_state {
   DAG_INITIALIZED,
   DAG_JOINED,
@@ -180,6 +181,7 @@ enum rpl_dag_state {
   DAG_POISONING
 };
 
+/** \brief RPL DAG structure */
 struct rpl_dag {
   uip_ipaddr_t dag_id;
   rpl_prefix_t prefix_info;
@@ -221,7 +223,7 @@ struct rpl_dag {
 typedef struct rpl_dag rpl_dag_t;
 
 /*---------------------------------------------------------------------------*/
-/* Instance */
+/** \brief RPL instance structure */
 struct rpl_instance {
   rpl_metric_container_t mc; /* Metric container. Set to MC_NONE when no mc is used */
   rpl_of_t *of; /* The objective function */
