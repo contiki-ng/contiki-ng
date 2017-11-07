@@ -1,57 +1,67 @@
-OMA LWM2M Standalone Example
+LWM2M Standalone Example
 ====================================
 
 This is an example of how to make use of the OMA LWM2M and CoAP
-implementation from Contiki in a native application.
+implementation from Contiki-NG in a native application.
 
-The Makefile will copy necessary files from Contiki to the subfolder
-```oma-lwm2m-src``` and then compile the example ```lwm2m-example```
+The Makefile will copy necessary files from Contiki-NG to the subfolder
+```lwm2m-src``` and then compile the example ```lwm2m-example```
 as a native application. By copying only the needed source files,
-the example can be used outside the Contiki source tree.
+the example can be used outside the Contiki-NG source tree.
 
-### Running the OMA LWM2M example
+### Running the LWM2M example
 
 ```bash
-cd contiki/examples/oma-lwm2m/standalone
+cd contiki/examples/lwm2m/standalone
 make
 ./lwm2m-example
 ```
 
-The example application will start a CoAP server listening on
-localhost port 5683 with an example OMA LWM2M device object.
+The example application will start a CoAP server listening on localhost port
+5683 with some example LWM2M objects. By default, the example application will
+also register itself with the Leshan server at leshan.eclipse.org. To specify
+a different LWM2M server:
+`./lwm2m-example coap://<server host address> <endpoint name>`.
 
-
-### Testing the OMA LWM2M example
-
-The Copper (Cu) Firefox addon can be used to access the LWM2M example.
-
-1. Start the OMA LWM2M example as described above.
-
-2. Get the Copper (Cu) CoAP user-agent from
-[https://addons.mozilla.org/en-US/firefox/addon/copper-270430](https://addons.mozilla.org/en-US/firefox/addon/copper-270430).
-
-3. Start Copper and discover resources at coap://127.0.0.1:5683/
-   It should find three objects named 0, 1, and 3.
-
-4. Browse to the device type resource at coap://127.0.0.1:5683/3/0/17
-   (object 3, instance 0, resource 17) and then click ```GET```.
-   As device type the LWM2M example should return the text "lwm2m-example".
-
-5. Browse to the time resource at coap://127.0.0.1:5683/3/0/13
-   Every time you click ```GET```, it should return the number of seconds
-   since the example application was started.
-
-### Moving the example outside Contiki
+For example to connect to a locally running LWM2M server:
 
 ```bash
-cd contiki/examples/oma-lwm2m/standalone
+./lwm2m-example coap://127.0.0.1/ example-endpoint-name
+```
+
+### Running the LWM2M example with DTLS
+
+The example currently only supports PSK and the default credentials can be
+changed in the file `lwm2m-example.c`.
+
+```c
+#define PSK_DEFAULT_IDENTITY "Client_identity"
+#define PSK_DEFAULT_KEY      "secretPSK"
+```
+
+To compile with DTLS support and connect to a local LWM2M server with matching
+credentials configured:
+
+```bash
+cd contiki/examples/lwm2m/standalone
+make clean
+make MAKE_WITH_DTLS=1
+./lwm2m-example coaps://127.0.0.1
+```
+
+### Moving the example outside Contiki-NG
+
+```bash
+cd contiki/examples/lwm2m/standalone
 make copy
 ```
 
-Copy the example directory contents to a directory outside Contiki.
+Copy the example directory contents to a directory outside Contiki-NG.
 Remove the Makefile ```Makefile.contiki``` and the remaining Makefile
-will compile the example independent of the Contiki source tree.
+will compile the example independent of the Contiki-NG source tree.
 
+
+### Running the LWM2M examle with HEX transport
 
 The Hex Transport can be tested together with DTLS using:
 
@@ -62,7 +72,6 @@ javac Hex2UDP.java
 java Hex2UDP leshan.eclipse.org 5684 ./lwm2m-example
 ```
 
-Note that you need to configure the Leshan server with the correct
-key and ID.
+Note that you need to configure the Leshan server with the correct key and ID.
 
-(without DTLS it should be 5683 for CoAP)
+(without DTLS it should be 5683 for CoAP).

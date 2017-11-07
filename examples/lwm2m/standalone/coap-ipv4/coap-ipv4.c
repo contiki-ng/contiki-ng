@@ -51,6 +51,7 @@
 #include <stdlib.h>
 
 #define DEBUG 1
+#define DEBUG_VERBOSE ((DEBUG) && 0)
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #define PRINTEP(ep) coap_endpoint_print(ep)
@@ -108,12 +109,12 @@ coap_endpoint_is_connected(const coap_endpoint_t *ep)
     peer = dtls_get_peer(dtls_context, ep);
     if(peer != NULL) {
       /* only if handshake is done! */
-      PRINTF("peer state for ");
+      PRINTF("DTLS peer state for ");
       PRINTEP(ep);
       PRINTF(" is %d %d\n", peer->state, dtls_peer_is_connected(peer));
       return dtls_peer_is_connected(peer);
     } else {
-      PRINTF("Did not find peer ");
+      PRINTF("DTLS did not find peer ");
       PRINTEP(ep);
       PRINTF("\n");
     }
@@ -130,8 +131,9 @@ coap_endpoint_connect(coap_endpoint_t *ep)
   if(ep->secure == 0) {
     return 1;
   }
+
 #ifdef WITH_DTLS
-  PRINTF("DTLS EP:");
+  PRINTF("DTLS connect to ");
   PRINTEP(ep);
   PRINTF(" len:%d\n", ep->size);
 
@@ -141,6 +143,7 @@ coap_endpoint_connect(coap_endpoint_t *ep)
     return 1;
   }
 #endif /* WITH_DTLS */
+
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -181,7 +184,7 @@ coap_endpoint_print(const coap_endpoint_t *ep)
   const char *address;
   address = inet_ntoa(ep->addr.sin_addr);
   if(address != NULL) {
-    printf("coap%s://%s:%u",ep->secure ? "s":"",
+    printf("coap%s://%s:%u", ep->secure ? "s" : "",
            address, ntohs(ep->addr.sin_port));
   } else {
     printf("<#N/A>");
@@ -200,15 +203,14 @@ coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep)
   int secure;
   int offset = 0;
   int i;
-  PRINTF("CoAP-IPv4: Parsing endpoint: %.*s\n", (int)size, text);
+  PRINTF("CoAP-IPv4: parsing endpoint %.*s => ", (int)size, text);
   if(strncmp("coap://", text, 7) == 0) {
     secure = 0;
     offset = 7;
-    PRINTF("COAP found\n");
   } else if(strncmp("coaps://", text, 8) == 0) {
     secure = 1;
     offset = 8;
-    PRINTF("COAPS found\n");
+    PRINTF("secure ");
   } else {
     secure = 0;
   }
@@ -225,7 +227,7 @@ coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep)
     port = atoi(&text[i + 1]);
   }
 
-  PRINTF("CoAP-IPv4: endpoint %s:%u\n", host, port);
+  PRINTF("endpoint at %s:%u\n", host, port);
 
   ep->addr.sin_family = AF_INET;
   ep->addr.sin_port = htons(port);
@@ -252,7 +254,7 @@ coap_datalen()
 }
 /*---------------------------------------------------------------------------*/
 static int
-read_packet_to_coapbuf(int fd)
+read_packet_to_coapbuf(int fd, int is_secure)
 {
   int len;
 
@@ -268,7 +270,9 @@ read_packet_to_coapbuf(int fd)
     return 0;
   }
 
-  PRINTF("RECV from ");
+  last_source.secure = is_secure;
+
+  PRINTF("CoAP-IPv4: RECV from ");
   PRINTEP(&last_source);
   PRINTF(" %u bytes\n", len);
   coap_buf_len = len;
@@ -298,8 +302,8 @@ coap_ipv4_handle_fd(fd_set *rset, fd_set *wset)
 {
 
   if(coap_ipv4_fd >= 0 && FD_ISSET(coap_ipv4_fd, rset)) {
-    if(read_packet_to_coapbuf(coap_ipv4_fd)) {
-#if DEBUG
+    if(read_packet_to_coapbuf(coap_ipv4_fd, 0)) {
+#if DEBUG_VERBOSE
       int i;
       uint8_t *data;
       data = coap_databuf();
@@ -308,7 +312,7 @@ coap_ipv4_handle_fd(fd_set *rset, fd_set *wset)
         PRINTF("%02x", data[i]);
       }
       PRINTF("\n");
-#endif /* DEBUG */
+#endif /* DEBUG_VERBOSE */
       coap_receive(coap_src_endpoint(), coap_databuf(), coap_datalen());
     }
   }
@@ -335,9 +339,8 @@ static void
 dtls_ipv4_handle_fd(fd_set *rset, fd_set *wset)
 {
   if(dtls_ipv4_fd >= 0 && FD_ISSET(dtls_ipv4_fd, rset)) {
-    if(read_packet_to_coapbuf(dtls_ipv4_fd) && dtls_context) {
+    if(read_packet_to_coapbuf(dtls_ipv4_fd, 1) && dtls_context) {
       /* DTLS receive */
-      last_source.secure = 1;
       dtls_handle_message(dtls_context, &last_source,
                           coap_databuf(), coap_datalen());
     }
@@ -370,7 +373,7 @@ coap_transport_init(void)
   server.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if(bind(coap_ipv4_fd, (struct sockaddr *)&server, sizeof(server)) == -1) {
-    PRINTF("Could not bind CoAP UDP port to %u\n", COAP_SERVER_PORT);
+    fprintf(stderr, "Could not bind CoAP UDP port to %u\n", COAP_SERVER_PORT);
     exit(1);
   }
 
@@ -394,7 +397,7 @@ coap_transport_init(void)
   server.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if(bind(dtls_ipv4_fd, (struct sockaddr *)&server, sizeof(server)) == -1) {
-    PRINTF("Could not bind CoAP DTLS UDP port to %u\n",
+    fprintf(stderr, "Could not bind CoAP DTLS UDP port to %u\n",
            COAP_DEFAULT_SECURE_PORT);
     exit(1);
   }
@@ -405,7 +408,7 @@ coap_transport_init(void)
   /* create new contet with app-data */
   dtls_context = dtls_new_context(&dtls_ipv4_fd);
   if(!dtls_context) {
-    PRINTF("DTLS: cannot create context\n");
+    fprintf(stderr, "DTLS: cannot create context\n");
     exit(-1);
   }
 
@@ -417,7 +420,9 @@ void
 coap_send_message(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
 {
   if(!coap_endpoint_is_connected(ep)) {
-    PRINTF("CoAP endpoint not connected\n");
+    PRINTF("CoAP-IPv4: endpoint ");
+    PRINTEP(ep);
+    PRINTF(" not connected - dropping packet\n");
     return;
   }
 
@@ -433,15 +438,15 @@ coap_send_message(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
   if(coap_ipv4_fd >= 0) {
     if(sendto(coap_ipv4_fd, data, len, 0,
               (struct sockaddr *)&ep->addr, ep->size) < 1) {
-      PRINTF("failed to send to ");
+      PRINTF("CoAP-IPv4: failed to send to ");
       PRINTEP(ep);
       PRINTF(" %u bytes: %s\n", len, strerror(errno));
     } else {
-      PRINTF("SENT to ");
+      PRINTF("CoAP-IPv4: SENT to ");
       PRINTEP(ep);
       PRINTF(" %u bytes\n", len);
 
-      if(DEBUG) {
+      if(DEBUG_VERBOSE) {
         int i;
         PRINTF("Sent:");
         for(i = 0; i < len; i++) {
@@ -462,28 +467,26 @@ static int
 input_from_peer(struct dtls_context_t *ctx,
                 session_t *session, uint8_t *data, size_t len)
 {
+#if DEBUG_VERBOSE
   size_t i;
-  dtls_peer_t *peer;
 
-  printf("received data:");
-  for (i = 0; i < len; i++) {
-    printf("%c", data[i]);
+  PRINTF("DTLS received data:");
+  for(i = 0; i < len; i++) {
+    PRINTF("%c", data[i]);
   }
-  printf("\nHex:");
-  for (i = 0; i < len; i++) {
-    printf("%02x", data[i]);
+  PRINTF("\nHex:");
+  for(i = 0; i < len; i++) {
+    PRINTF("%02x", data[i]);
   }
-  printf("\n");
+  PRINTF("\n");
+#endif /* DEBUG_VERBOSE */
 
   /* Send this into coap-input */
   memmove(coap_databuf(), data, len);
   coap_buf_len = len;
 
-  peer = dtls_get_peer(ctx, session);
-  /* If we have a peer then ensure that the endpoint is tagged as secure */
-  if(peer) {
-    session->secure = 1;
-  }
+  /* Ensure that the endpoint is tagged as secure */
+  session->secure = 1;
 
   coap_receive(session, coap_databuf(), coap_datalen());
 
@@ -496,8 +499,10 @@ output_to_peer(struct dtls_context_t *ctx,
                session_t *session, uint8_t *data, size_t len)
 {
   int fd = *(int *)dtls_get_app_data(ctx);
-  printf("output_to_peer len:%d %d (s-size: %d)\n", (int)len, fd,
+#if DEBUG_VERBOSE
+  PRINTF("DTLS output_to_peer len:%d %d (s-size: %d)\n", (int)len, fd,
          session->size);
+#endif /* DEBUG_VERBOSE */
   return sendto(fd, data, len, MSG_DONTWAIT,
 		(struct sockaddr *)&session->addr, session->size);
 }
@@ -543,14 +548,16 @@ get_psk_info(struct dtls_context_t *ctx,
       keystore->coap_get_psk_info((coap_endpoint_t *)session, &ks);
     }
     if(ks.identity == NULL || ks.identity_len == 0) {
+      PRINTF("no psk_identity found\n");
       return 0;
     }
 
     if(result_length < ks.identity_len) {
-      PRINTF("cannot set psk_identity -- buffer too small\n");
+      PRINTF("cannot return psk_identity -- buffer too small\n");
       return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
     }
     memcpy(result, ks.identity, ks.identity_len);
+    PRINTF("psk_identity with %u bytes found\n", ks.identity_len);
     return ks.identity_len;
 
   case DTLS_PSK_KEY:
@@ -566,10 +573,11 @@ get_psk_info(struct dtls_context_t *ctx,
     }
 
     if(result_length < ks.key_len) {
-      PRINTF("cannot set psk -- buffer too small\n");
+      PRINTF("cannot return psk -- buffer too small\n");
       return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
     }
     memcpy(result, ks.key, ks.key_len);
+    PRINTF("psk with %u bytes found\n", ks.key_len);
     return ks.key_len;
 
   default:

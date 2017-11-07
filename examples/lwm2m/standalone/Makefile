@@ -2,7 +2,7 @@ PROJECT = lwm2m-example
 
 all:	$(PROJECT)
 
-TARGETCDIR   = oma-lwm2m-src
+TARGETCDIR   = lwm2m-src
 COREDIRS     = sys lib
 SOURCEDIRS   = .
 SOURCE_FILES = posix-main.c posix-coap-timer.c ipso-sensor-temp.c \

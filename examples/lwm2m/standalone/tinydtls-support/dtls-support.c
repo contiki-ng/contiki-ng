@@ -39,6 +39,7 @@
 #include "coap-timer.h"
 #include <stdlib.h>
 
+#include <time.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
 #include <stdarg.h>

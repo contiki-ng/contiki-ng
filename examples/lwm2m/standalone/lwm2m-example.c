@@ -149,6 +149,7 @@ start_application(int argc, char *argv[])
     printf("\n");
 
 #ifdef WITH_DTLS
+#if COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M
 #if defined(PSK_DEFAULT_IDENTITY) && defined(PSK_DEFAULT_KEY)
     {
       lwm2m_security_server_t *server;
@@ -176,20 +177,20 @@ start_application(int argc, char *argv[])
       }
     }
 #endif /* defined(PSK_DEFAULT_IDENTITY) && defined(PSK_DEFAULT_KEY) */
+#endif /* COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M */
 #endif /* WITH_DTLS */
 
 #define BOOTSTRAP 0
 #if BOOTSTRAP
     lwm2m_rd_client_register_with_bootstrap_server(&server_ep);
     lwm2m_rd_client_use_bootstrap_server(1);
-#else
+#else /* BOOTSTRAP */
     lwm2m_rd_client_register_with_server(&server_ep);
-#endif
+#endif /* BOOTSTRAP */
     lwm2m_rd_client_use_registration_server(1);
 
     lwm2m_rd_client_init(name);
 
-    printf("Callback: %p\n", session_callback);
     lwm2m_rd_client_set_session_callback(session_callback);
 
   } else {

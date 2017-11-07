@@ -10,7 +10,11 @@ IPSO_FILES = ${addprefix ipso-objects/,${filter-out ipso-leds-control.c ipso-obj
 TARGET_FILES += ${addprefix $(TARGETCDIR)/,$(CORE_FILES) $(CORE_FILES:.c=.h) \
 	$(COAP_FILES) $(LWM2M_FILES) $(IPSO_FILES)}
 
-ifneq ($(MAKE_WITH_DTLS),)
+ifeq ($(MAKE_WITH_DTLS),1)
+ ifeq (${wildcard $(DTLS_PATH)/tinydtls/Makefile},)
+  ${error Could not find the tinyDTLS submodule. Please run "git submodule update --init" and try again}
+ endif
+
  DTLS_FILES = ${subst $(DTLS_PATH)/,,${wildcard ${addprefix $(DTLS_PATH)/tinydtls/,*.[ch] ${addsuffix /*.[ch],$(TINYDTLS_DIRS)}}}}
  TARGET_FILES += ${addprefix $(TARGETCDIR)/,$(DTLS_FILES)}
 endif

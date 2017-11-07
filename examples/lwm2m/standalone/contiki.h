@@ -45,16 +45,21 @@
 #define COAP_TIMER_CONF_DRIVER coap_timer_native_driver
 
 #define LWM2M_ENGINE_CLIENT_ENDPOINT_NAME "lwm2m-ex"
-#define LWM2M_DEVICE_MANUFACTURER "SICS, Swedish ICT AB"
+#define LWM2M_DEVICE_MANUFACTURER "RISE SICS"
 #define LWM2M_DEVICE_TYPE "lwm2m-example"
 #define LWM2M_DEVICE_MODEL_NUMBER "000"
 #define LWM2M_DEVICE_SERIAL_NO "1"
 #define LWM2M_DEVICE_FIRMWARE_VERSION "0.1"
 
+/* Use LWM2M as DTLS keystore */
+#define COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M 1
+
 #ifdef COAP_TRANSPORT_CONF_H
 #include COAP_TRANSPORT_CONF_H
 #endif
 
+#ifndef COAP_MAX_CHUNK_SIZE
 #define COAP_MAX_CHUNK_SIZE           256
+#endif /* COAP_MAX_CHUNK_SIZE */
 
 #endif /* CONTIKI_H_ */
