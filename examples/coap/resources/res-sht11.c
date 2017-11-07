@@ -43,6 +43,7 @@
 
 #if PLATFORM_HAS_SHT11
 
+#include <stdio.h>
 #include <string.h>
 #include "coap-engine.h"
 #include "dev/sht11/sht11-sensor.h"

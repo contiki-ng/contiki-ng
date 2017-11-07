@@ -1,26 +1,23 @@
-A Quick Introduction to the Erbium (Er) REST Engine
+A Quick Introduction to the Erbium (Er) CoAP Engine
 ===================================================
 
 EXAMPLE FILES
 -------------
 
-- coap-example-server.c: A RESTful server example showing how to use the REST
-  layer to develop server-side applications (at the moment only CoAP is
-  implemented for the REST Engine).
+- coap-example-server.c: A CoAP server example showing how to use the CoAP
+  layer to develop server-side applications.
 - coap-example-client.c: A CoAP client that polls the /actuators/toggle resource
   every 10 seconds and cycles through 4 resources on button press (target
   address is hard-coded).
 - plugtest-server.c: The server used for draft compliance testing at ETSI
   IoT CoAP Plugtests. Erbium (Er) participated in Paris, France, March 2012 and
-  Sophia-Antipolis, France, November 2012 (configured for minimal-net).
+  Sophia-Antipolis, France, November 2012 (configured for native).
 
 PRELIMINARIES
 -------------
 
-- Make sure rpl-border-router has the same stack and fits into mote memory:
-  You can disable RDC in border-router project-conf.h (not really required as BR keeps radio turned on).
-    #define NETSTACK_CONF_RDC     nullrdc_driver
-- Alternatively, you can use the native-border-router together with the slip-radio.
+- Make sure rpl-border-router has the same network stack and fits into mote memory.
+- Alternatively, you can use the native rpl-border-router together with the slip-radio.
 - For convenience, define the Cooja addresses in /etc/hosts
       fd00::0212:7401:0001:0101 cooja1
       fd00::0212:7402:0002:0202 cooja2
@@ -58,8 +55,8 @@ Open new terminal
 - Choose "Click button on Sky 3" from the context menu of mote 3 (client) and
   watch serial output
 
-TMOTES HOWTO
-------------
+TMOTE SKY HOWTO
+---------------
 
 ###Server:
 
@@ -90,20 +87,20 @@ TMOTES HOWTO
 
         make TARGET=sky coap-example-client.upload MOTE=3
 
-MINIMAL-NET HOWTO
------------------
+NATIVE HOWTO
+------------
 
-With the target minimal-net you can test your CoAP applications without
+With the target native you can test your CoAP applications without
 constraints, i.e., with large buffers, debug output, memory protection, etc.
-The plugtest-server is thought for the minimal-net platform, as it requires
+The plugtest-server is thought for the native platform, as it requires
 an 1280-byte IP buffer and 1024-byte blocks.
 
-        make TARGET=minimal-net plugtest-server
-        sudo ./plugtest-server.minimal-net
+        make TARGET=native plugtest-server
+        sudo ./plugtest-server.native
 
 Open new terminal
 
-        make connect-minimal
+        make connect-native
 
 - Start Copper and discover resources at coap://[fdfd::ff:fe00:10]:5683/
 - You can enable the ETSI Plugtest menu in Copper's preferences
@@ -130,7 +127,7 @@ in coap-example-server.c.  In general, coap supports:
 
 - All draft-18 header options
 - CON Retransmissions (note COAP_MAX_OPEN_TRANSACTIONS)
-- Blockwise Transfers (note REST_MAX_CHUNK_SIZE, see plugtest-server.c for
+- Blockwise Transfers (note COAP_MAX_CHUNK_SIZE, see plugtest-server.c for
   Block1 uploads)
 - Separate Responses (no rest_set_pre_handler() required anymore, note
   coap_separate_accept(), _reject(), and _resume())

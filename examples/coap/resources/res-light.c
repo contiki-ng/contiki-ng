@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "coap-engine.h"
-//#include "dev/light-sensor.h"
+#include "dev/light-sensor.h"
 
 static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 

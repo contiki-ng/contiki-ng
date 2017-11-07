@@ -51,12 +51,8 @@
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
 #else
 #define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
 #endif
 
 /*
@@ -143,24 +139,24 @@ PROCESS_THREAD(er_example_server, ev, data)
   coap_activate_resource(&res_toggle, "actuators/toggle");
 #endif
 #if PLATFORM_HAS_LIGHT
-  coap_activate_resource(&res_light, "sensors/light"); 
-  SENSORS_ACTIVATE(light_sensor);  
+  coap_activate_resource(&res_light, "sensors/light");
+  SENSORS_ACTIVATE(light_sensor);
 #endif
 #if PLATFORM_HAS_BATTERY
-  coap_activate_resource(&res_battery, "sensors/battery");  
-  SENSORS_ACTIVATE(battery_sensor);  
+  coap_activate_resource(&res_battery, "sensors/battery");
+  SENSORS_ACTIVATE(battery_sensor);
 #endif
 #if PLATFORM_HAS_TEMPERATURE
-  coap_activate_resource(&res_temperature, "sensors/temperature");  
-  SENSORS_ACTIVATE(temperature_sensor);  
+  coap_activate_resource(&res_temperature, "sensors/temperature");
+  SENSORS_ACTIVATE(temperature_sensor);
 #endif
 /*
 #if PLATFORM_HAS_RADIO
   coap_activate_resource(&res_radio, "sensors/radio");
 #endif
 #if PLATFORM_HAS_SHT11
-  coap_activate_resource(&res_sht11, "sensors/sht11");  
-  SENSORS_ACTIVATE(sht11_sensor);  
+  coap_activate_resource(&res_sht11, "sensors/sht11");
+  SENSORS_ACTIVATE(sht11_sensor);
 #endif
 */
 
