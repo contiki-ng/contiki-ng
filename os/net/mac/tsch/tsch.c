@@ -313,7 +313,7 @@ keepalive_send(void *ptr)
         LOG_INFO_LLADDR(&n->addr);
         LOG_INFO_("\n");
     } else {
-        LOG_INFO("no timesource - KA not sent\n");
+        LOG_ERR("no timesource - KA not sent\n");
     }
   }
 }
