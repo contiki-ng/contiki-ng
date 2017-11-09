@@ -100,8 +100,8 @@ coap_separate_accept(coap_packet_t *coap_req, coap_separate_t *separate_store)
         /* ACK with empty code (0) */
         coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
         /* serializing into IPBUF: Only overwrites header parts that are already parsed into the request struct */
-        coap_send_message(ep, coap_databuf(),
-                          coap_serialize_message(ack, coap_databuf()));
+        coap_sendto(ep, coap_databuf(),
+                    coap_serialize_message(ack, coap_databuf()));
       }
     }
 

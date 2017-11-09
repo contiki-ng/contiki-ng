@@ -42,8 +42,7 @@
 
 void coap_transport_init(void);
 
-void coap_send_message(const coap_endpoint_t *ep, const uint8_t *data,
-                       uint16_t length);
+int coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len);
 
 uint8_t *coap_databuf(void);
 uint16_t coap_datalen(void);

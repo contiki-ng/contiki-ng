@@ -98,7 +98,7 @@ coap_send_transaction(coap_transaction_t *t)
 {
   PRINTF("Sending transaction %u\n", t->mid);
 
-  coap_send_message(&t->endpoint, t->packet, t->packet_len);
+  coap_sendto(&t->endpoint, t->packet, t->packet_len);
 
   if(COAP_TYPE_CON ==
      ((COAP_HEADER_TYPE_MASK & t->packet[0]) >> COAP_HEADER_TYPE_POSITION)) {

@@ -416,35 +416,45 @@ coap_transport_init(void)
 #endif /* WITH_DTLS */
 }
 /*---------------------------------------------------------------------------*/
-void
-coap_send_message(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
+int
+coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
 {
+  int ret;
+
   if(!coap_endpoint_is_connected(ep)) {
     PRINTF("CoAP-IPv4: endpoint ");
     PRINTEP(ep);
     PRINTF(" not connected - dropping packet\n");
-    return;
+    return -1;
   }
 
 #ifdef WITH_DTLS
   if(coap_endpoint_is_secure(ep)) {
     if(dtls_context) {
-      dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, len);
+      ret = dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, len);
+      PRINTF("CoAP-IPv4: SENT DTLS to ");
+      PRINTEP(ep);
+      if(ret < 0) {
+        PRINTF(" - error %d\n", ret);
+      } else {
+        PRINTF(" %d/%u bytes\n", ret, len);
+      }
+      return ret;
     }
-    return;
+    PRINTF("CoAP-IPv4: no DTLS context\n");
+    return -1;
   }
 #endif /* WITH_DTLS */
 
   if(coap_ipv4_fd >= 0) {
-    if(sendto(coap_ipv4_fd, data, len, 0,
-              (struct sockaddr *)&ep->addr, ep->size) < 1) {
-      PRINTF("CoAP-IPv4: failed to send to ");
-      PRINTEP(ep);
-      PRINTF(" %u bytes: %s\n", len, strerror(errno));
+    ret = sendto(coap_ipv4_fd, data, len, 0, (struct sockaddr *)&ep->addr,
+                 ep->size);
+    PRINTF("CoAP-IPv4: SENT to ");
+    PRINTEP(ep);
+    if(ret < 0) {
+      PRINTF(" - error %d: %s\n", ret, strerror(errno));
     } else {
-      PRINTF("CoAP-IPv4: SENT to ");
-      PRINTEP(ep);
-      PRINTF(" %u bytes\n", len);
+      PRINTF(" %d/%u bytes\n", ret, len);
 
       if(DEBUG_VERBOSE) {
         int i;
@@ -455,7 +465,11 @@ coap_send_message(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
         PRINTF("\n");
       }
     }
+    return ret;
   }
+
+  PRINTF("CoAP-IPv4: failed to send - no socket\n");
+  return -1;
 }
 /*---------------------------------------------------------------------------*/
 /* DTLS */

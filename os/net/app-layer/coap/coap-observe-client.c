@@ -179,7 +179,7 @@ simple_reply(coap_message_type_t type, const coap_endpoint_t *endpoint,
 
   coap_init_message(response, type, NO_ERROR, notification->mid);
   len = coap_serialize_message(response, coap_databuf());
-  coap_send_message(endpoint, coap_databuf(), len);
+  coap_sendto(endpoint, coap_databuf(), len);
 }
 /*----------------------------------------------------------------------------*/
 static coap_notification_flag_t

@@ -230,18 +230,17 @@ coap_transport_init(void)
 
 }
 /*---------------------------------------------------------------------------*/
-void
-coap_send_message(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
+int
+coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
 {
   if(!coap_endpoint_is_connected(ep)) {
     PRINTF("CoAP endpoint not connected\n");
-    return;
+    return -1;
   }
 
 #ifdef WITH_DTLS
   if(coap_endpoint_is_secure(ep)) {
-    dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, len);
-    return;
+    return dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, len);
   }
 #endif /* WITH_DTLS */
 
@@ -251,6 +250,8 @@ coap_send_message(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
     printf("%02x", data[i]);
   }
   printf("\n");
+
+  return len;
 }
 /*---------------------------------------------------------------------------*/
 int

@@ -335,31 +335,38 @@ process_data(void)
   coap_receive(get_src_endpoint(0), uip_appdata, uip_datalen());
 }
 /*---------------------------------------------------------------------------*/
-void
-coap_send_message(const coap_endpoint_t *ep, const uint8_t *data,
-                  uint16_t length)
+int
+coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t length)
 {
   if(ep == NULL) {
     PRINTF("coap-uip: failed to send - no endpoint\n");
-    return;
+    return -1;
   }
 
   if(!coap_endpoint_is_connected(ep)) {
     PRINTF("coap-uip: endpoint ");
     PRINTEP(ep);
     PRINTF(" not connected - dropping packet\n");
-    return;
+    return -1;
   }
 
 #ifdef WITH_DTLS
   if(coap_endpoint_is_secure(ep)) {
     if(dtls_context) {
-      dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, length);
+      int ret;
+
+      ret = dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, length);
       PRINTF("coap-uip: sent DTLS to ");
       PRINTEP(ep);
-      PRINTF(" %u bytes\n", length);
+      if(ret < 0) {
+        PRINTF(" - error %d\n", ret);
+      } else {
+        PRINTF(" %d/%u bytes\n", ret, length);
+      }
+      return ret;
     }
-    return;
+    PRINTF("coap-uip: no DTLS context\n");
+    return -1;
   }
 #endif /* WITH_DTLS */
 
@@ -367,6 +374,7 @@ coap_send_message(const coap_endpoint_t *ep, const uint8_t *data,
   PRINTF("coap-uip: sent to ");
   PRINTEP(ep);
   PRINTF(" %u bytes\n", length);
+  return length;
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_engine, ev, data)

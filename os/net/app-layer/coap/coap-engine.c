@@ -356,7 +356,7 @@ coap_receive(const coap_endpoint_t *src,
                       message->mid);
     coap_set_payload(message, coap_error_message,
                      strlen(coap_error_message));
-    coap_send_message(src, payload, coap_serialize_message(message, payload));
+    coap_sendto(src, payload, coap_serialize_message(message, payload));
   }
 
   /* if(new data) */
