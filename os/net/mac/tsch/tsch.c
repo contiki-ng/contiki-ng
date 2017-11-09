@@ -304,13 +304,17 @@ keepalive_send(void *ptr)
 {
   if(tsch_is_associated) {
     struct tsch_neighbor *n = tsch_queue_get_time_source();
-    /* Simply send an empty packet */
-    packetbuf_clear();
-    packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &n->addr);
-    NETSTACK_MAC.send(keepalive_packet_sent, NULL);
-    LOG_INFO("sending KA to ");
-    LOG_INFO_LLADDR(&n->addr);
-    LOG_INFO_("\n");
+    if(n != NULL) {
+        /* Simply send an empty packet */
+        packetbuf_clear();
+        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &n->addr);
+        NETSTACK_MAC.send(keepalive_packet_sent, NULL);
+        LOG_INFO("sending KA to ");
+        LOG_INFO_LLADDR(&n->addr);
+        LOG_INFO_("\n");
+    } else {
+        LOG_ERR("no timesource - KA not sent\n");
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
