@@ -28,6 +28,9 @@
  *
  * This file is part of the Contiki operating system.
  *
+ */
+
+/**
  * \addtogroup rpl-lite
  * @{
  *
@@ -41,11 +44,6 @@
 
 #ifndef RPL_CONST_H
 #define RPL_CONST_H
-
-/**
- * \addtogroup rpl-lite
- * @{
- */
 
 /********** Constants **********/
 
