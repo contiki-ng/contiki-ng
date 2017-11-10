@@ -61,10 +61,6 @@
 #include "net/ipv6/uip-debug.h"
 #include "net/queuebuf.h"
 
-#include "dev/button-sensor.h"
-#include "dev/pir-sensor.h"
-#include "dev/vib-sensor.h"
-
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
@@ -82,8 +78,6 @@
 
 static const struct select_callback *select_callback[SELECT_MAX];
 static int select_max = 0;
-
-SENSORS(&pir_sensor, &vib_sensor, &button_sensor);
 
 static uint8_t serial_id[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
 #if !NETSTACK_CONF_WITH_IPV6
