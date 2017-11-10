@@ -6,6 +6,9 @@ CONTIKI=$1
 # Simulation file
 BASENAME=$2
 
+# Destination IPv6
+IPADDR=$3
+
 # Start simulation
 echo "Starting Cooja simulation $BASENAME.csc"
 java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -contiki=$CONTIKI > /dev/null &
@@ -22,7 +25,7 @@ sleep 5
 
 # Do ping
 echo "Pinging"
-ping6 fd00::204:4:4:4 -c 5 | tee $BASENAME.log
+ping6 $IPADDR -c 5 | tee $BASENAME.log
 # Fetch ping6 status code (not $? because this is piped)
 STATUS=${PIPESTATUS[0]}
 
