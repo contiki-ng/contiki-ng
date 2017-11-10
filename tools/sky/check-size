@@ -9,7 +9,6 @@
 
 @sky = ( "battery-sensor", "button-sensor", "cfs-xmem", "clock",
 	 "contiki-sky-main", "ds2411", "flash", "msp430",
-	 "mtarch",
 	 "i2c", "leds-arch", "light", "radio-sensor", "sht11",
 	 "simple-cc2420-arch", "simple-cc2420", "spi", "slip",
 	 "uart1", "watchdog", "xmem", "rtimer-arch" );
