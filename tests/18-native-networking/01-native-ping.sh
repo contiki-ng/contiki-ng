@@ -25,8 +25,8 @@ sleep 2
 sudo kill -9 $CPID
 
 if [ $STATUS -eq 0 ] ; then
-  mv $BASENAME.log $BASENAME.testlog
-  echo " OK"
+  cp $BASENAME.log $BASENAME.testlog
+  echo "$BASENAME: TEST OK" | tee -a $BASENAME.testlog;
 else
   mv $BASENAME.log $BASENAME.faillog
 
@@ -38,7 +38,8 @@ else
   echo "---- node.err"
   cat node.err
 
-  echo " FAIL ಠ_ಠ" | tee -a $BASENAME.faillog;
+  cp $BASENAME.log $BASENAME.faillog
+  echo "$BASENAME: TEST FAIL ಠ_ಠ" | tee -a $BASENAME.testlog;
 fi
 
 # We do not want Make to stop -> Return 0
