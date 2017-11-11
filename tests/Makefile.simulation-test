@@ -28,9 +28,9 @@
 
 TESTS=$(wildcard ??-*.csc)
 TESTLOGS=$(patsubst %.csc,%.testlog,$(TESTS))
-LOGS=$(patsubst %.csc,%.log,$(TESTS))
-FAILLOGS=$(patsubst %.csc,%.*.faillog,$(TESTS))
 
+# The random seed to start from
+BASESEED ?= 1
 # The number of runs (with different random seeds)
 RUNCOUNT ?= 1
 
@@ -38,25 +38,20 @@ CONTIKI=../..
 
 tests: $(TESTLOGS)
 
-report: clean tests
-	@echo | grep -s -e '' - $(LOGS) $(TESTLOGS) $(FAILLOGS) > $@ || true
-
-summary: report
+summary: clean tests
 ifeq ($(TESTS),)
 	@echo No tests > $@
 else
-	@egrep -e ' OK| FAIL' $< > $@
-	@ls -1 ??-*.faillog > /dev/null 2>&1; [ $$? = 0 ] && tail -v ??-*.log ??-*.faillog >> $@ || true
+	@cat $(TESTLOGS) > $@
 endif
 
 all: cooja clean tests
 
 %.testlog: %.csc cooja
-	@$(CONTIKI)/tests/simexec.sh "$<" "$(CONTIKI)" "$(basename $@)" $(RUNCOUNT)
+	@$(CONTIKI)/tests/simexec.sh "$<" "$(CONTIKI)" "$(basename $@)" $(BASESEED) $(RUNCOUNT)
 
 clean:
-	@rm -f $(TESTLOGS) $(LOGS) $(FAILLOGS) COOJA.log COOJA.testlog \
-               report summary
+	@rm -f *.*log report summary
 
 cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
 $(CONTIKI)/tools/cooja/dist/cooja.jar:

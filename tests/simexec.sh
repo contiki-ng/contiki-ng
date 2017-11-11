@@ -8,7 +8,10 @@ shift
 #The basename of the experiment
 BASENAME=$1
 shift
-#The basename of the experiment
+#The random seed to start from
+BASESEED=$1
+shift
+#The number of runs (with different seeds)
 RUNCOUNT=$1
 shift
 
@@ -18,62 +21,61 @@ declare -i TESTCOUNT=0
 # Counts successfull tests
 declare -i OKCOUNT=0
 
-for (( SEED=1; SEED<=$RUNCOUNT; SEED++ )); do
+# A list of seeds the resulted in failure
+FAILSEEDS=
+
+for (( SEED=$BASESEED; SEED<$(($BASESEED+$RUNCOUNT)); SEED++ )); do
 	echo -n "Running test $BASENAME with random Seed $SEED"
 
 	# run simulation
-	java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$CSC -contiki=$CONTIKI -random-seed=$SEED > $BASENAME.log &
+	java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$CSC -contiki=$CONTIKI -random-seed=$SEED > $BASENAME.$SEED.coojalog &
 	JPID=$!
 
 	# Copy the log and only print "." if it changed
-	touch $BASENAME.log.prog
+	touch progress.log
 	while kill -0 $JPID 2> /dev/null
 	do
 		sleep 1
-		diff $BASENAME.log $BASENAME.log.prog > /dev/null
+		diff $BASENAME.$SEED.coojalog progress.log > /dev/null
 		if [ $? -ne 0 ]
 		then
 		  echo -n "."
-		  cp $BASENAME.log $BASENAME.log.prog
+		  cp $BASENAME.$SEED.coojalog progress.log
 		fi
 	done
-	rm $BASENAME.log.prog
+	rm progress.log
 
   # wait for end of simulation
 	wait $JPID
 	JRV=$?
 
+	# Save testlog
+	touch COOJA.testlog;
+	mv COOJA.testlog $BASENAME.$SEED.scriptlog
+	rm COOJA.log
+
   TESTCOUNT+=1
 	if [ $JRV -eq 0 ] ; then
-		touch COOJA.testlog;
-		mv COOJA.testlog $BASENAME.testlog
 		OKCOUNT+=1
 		echo " OK"
 	else
+		FAILSEEDS+=" $BASESEED"
+		echo " FAIL ಠ_ಠ"
 		# Verbose output when using CI
 		if [ "$CI" = "true" ]; then
-			echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
-			echo "==== COOJA.testlog ====" ; cat COOJA.testlog;
-			echo "==== Files used for simulation (sha1sum) ===="
-			grep "Loading firmware from:" COOJA.log | cut -d " " -f 10 | uniq  | xargs -r sha1sum
-			grep "Creating core communicator between Java class" COOJA.log | cut -d " " -f 17 | uniq  | xargs -r sha1sum
+			echo "==== $BASENAME.$SEED.coojalog ====" ; cat $BASENAME.$SEED.coojalog;
+			echo "==== $BASENAME.$SEED.scriptlog ====" ; cat $BASENAME.$SEED.scriptlog;
 		else
-			tail -50 $BASENAME.log ;
-		fi;
-
-		mv COOJA.testlog $BASENAME.$SEED.faillog
-		echo " FAIL ಠ_ಠ" | tee -a $BASENAME.$SEED.faillog;
+			echo "==== Check $BASENAME.$SEED.coojalog and $BASENAME.$SEED.scriptlog for details ====";
+		fi
 	fi
-
-	shift
 done
-
-echo "Test $BASENAME, successfull runs: $OKCOUNT/$TESTCOUNT"
 
 if [ $TESTCOUNT -ne $OKCOUNT ] ; then
 	# At least one test failed
-	touch COOJA.testlog;
-	mv COOJA.testlog $BASENAME.testlog;
+	echo "$BASENAME: TEST FAIL ಠ_ಠ ($OKCOUNT/$TESTCOUNT, failed seeds:$FAILSEEDS)" > $BASENAME.testlog;
+else
+	echo "$BASENAME: TEST OK ($OKCOUNT/$TESTCOUNT)" > $BASENAME.testlog;
 fi
 
 # We do not want Make to stop -> Return 0
