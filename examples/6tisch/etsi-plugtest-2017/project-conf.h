@@ -102,12 +102,6 @@
 #define SICSLOWPAN_CONF_COMPRESSION SICSLOWPAN_COMPRESSION_6LORH
 
 /*******************************************************/
-/********* Enable RPL non-storing mode *****************/
-/*******************************************************/
-
-#define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
-
-/*******************************************************/
 /************* Other system configuration **************/
 /*******************************************************/
 
