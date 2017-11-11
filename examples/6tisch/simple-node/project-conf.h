@@ -40,12 +40,6 @@
 #define WITH_SECURITY 0
 #endif /* WITH_SECURITY */
 
-/*******************************************************/
-/********* Enable RPL non-storing mode *****************/
-/*******************************************************/
-
-#define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
-
 /* USB serial takes space, free more space elsewhere */
 #define SICSLOWPAN_CONF_FRAG 0
 #define UIP_CONF_BUFFER_SIZE 160
