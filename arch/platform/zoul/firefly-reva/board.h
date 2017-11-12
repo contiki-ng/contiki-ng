@@ -98,14 +98,6 @@
  * @{
  */
 /*---------------------------------------------------------------------------*/
-/* Some files include leds.h before us, so we need to get rid of defaults in
- * leds.h before we provide correct definitions */
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_BLUE
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
-
 /* In leds.h the LEDS_BLUE is defined by LED_YELLOW definition */
 #define LEDS_GREEN    (1 << 4) /**< LED1 (Green) -> PD4 */
 #define LEDS_BLUE     (1 << 3) /**< LED2 (Blue)  -> PD3 */

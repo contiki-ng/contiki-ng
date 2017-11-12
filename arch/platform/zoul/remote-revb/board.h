@@ -105,12 +105,6 @@
  * @{
  */
 /*---------------------------------------------------------------------------*/
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_BLUE
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
-
 #define LEDS_RED              1           /**< LED1 (Red)   -> PD4 */
 #define LEDS_RED_PIN_MASK     (1 << 4)
 #define LEDS_RED_PORT_BASE    GPIO_D_BASE
