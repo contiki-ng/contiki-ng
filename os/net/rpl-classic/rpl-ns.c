@@ -203,14 +203,8 @@ void
 rpl_ns_periodic(void)
 {
   rpl_ns_node_t *l;
-  /* First pass, decrement lifetime for all nodes with non-infinite lifetime */
-  for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
-    /* Don't touch infinite lifetime nodes */
-    if(l->lifetime != 0xffffffff && l->lifetime > 0) {
-      l->lifetime--;
-    }
-  }
-  /* Second pass, for all expired nodes, deallocate them iff no child points to them */
+
+  /* First pass, for all expired nodes, deallocate them iff no child points to them */
   for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
     if(l->lifetime == 0) {
       rpl_ns_node_t *l2;
@@ -223,6 +217,14 @@ rpl_ns_periodic(void)
       list_remove(nodelist, l);
       memb_free(&nodememb, l);
       num_nodes--;
+    }
+  }
+
+  /* Second pass, decrement lifetime for all nodes with non-infinite lifetime */
+  for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
+    /* Don't touch infinite lifetime nodes */
+    if(l->lifetime != 0xffffffff && l->lifetime > 0) {
+      l->lifetime--;
     }
   }
 }
