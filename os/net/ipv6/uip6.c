@@ -1224,7 +1224,7 @@ uip_process(uint8_t flag)
       }
 
       UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
-      LOG_INFO("Forwarding packet to ");
+      LOG_INFO("Forwarding packet towards ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
@@ -1378,7 +1378,7 @@ uip_process(uint8_t flag)
               }
               UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
 
-              LOG_INFO("Forwarding packet to ");
+              LOG_INFO("Forwarding packet to next hop ");
               LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
               LOG_INFO_("\n");
               UIP_STAT(++uip_stat.ip.forwarded);
