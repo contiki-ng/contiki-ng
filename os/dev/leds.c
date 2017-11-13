@@ -38,6 +38,9 @@ static unsigned char leds;
 static inline void
 show_leds(unsigned char new_leds)
 {
+
+  leds = new_leds;
+
   leds_arch_set(new_leds);
 }
 /*---------------------------------------------------------------------------*/
