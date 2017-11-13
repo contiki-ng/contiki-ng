@@ -33,22 +33,11 @@
 #include "dev/leds.h"
 #include "sys/clock.h"
 
-static unsigned char leds;
-/*---------------------------------------------------------------------------*/
-static inline void
-show_leds(unsigned char new_leds)
-{
-
-  leds = new_leds;
-
-  leds_arch_set(new_leds);
-}
 /*---------------------------------------------------------------------------*/
 void
 leds_init(void)
 {
   leds_arch_init();
-  leds = 0;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -56,7 +45,7 @@ leds_blink(void)
 {
   /* Blink all leds that were initially off. */
   unsigned char blink;
-  blink = ~leds;
+  blink = ~leds_arch_get();
   leds_toggle(blink);
 
   clock_delay(400);
@@ -72,24 +61,24 @@ leds_get(void) {
 void
 leds_set(unsigned char ledv)
 {
-  show_leds(ledv);
+  leds_arch_set(ledv);
 }
 /*---------------------------------------------------------------------------*/
 void
 leds_on(unsigned char ledv)
 {
-  show_leds(leds | ledv);
+  leds_arch_set(leds_arch_get() | ledv);
 }
 /*---------------------------------------------------------------------------*/
 void
 leds_off(unsigned char ledv)
 {
-  show_leds(leds & ~ledv);
+  leds_arch_set(leds_arch_get() & ~ledv);
 }
 /*---------------------------------------------------------------------------*/
 void
 leds_toggle(unsigned char ledv)
 {
-  show_leds(leds ^ ledv);
+  leds_arch_set(leds_arch_get() ^ ledv);
 }
 /*---------------------------------------------------------------------------*/
