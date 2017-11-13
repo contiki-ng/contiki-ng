@@ -85,7 +85,7 @@ script:
 
 after_script:
   ## Print cooja test logs
-  - "[ ${BUILD_CATEGORY:-0} = sim ] && tail tests/??-$BUILD_TYPE/*.testlog"
+  - "[ ${BUILD_CATEGORY:-0} = sim ] && tail tests/??-$BUILD_TYPE/*.scriptlog"
   ## Print a basic summary
   - "echo 'Summary:'; cat tests/??-$BUILD_TYPE/summary"
   - "FAILS=`grep -c  ' FAIL ' tests/??-$BUILD_TYPE/summary`"
