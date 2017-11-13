@@ -26,26 +26,20 @@
 # SUCH DAMAGE.
 
 TESTS=$(wildcard ??-*)
-SUMMARIES=$(foreach test,$(TESTS),summary-$(test))
+SUMMARIES=$(foreach test,$(TESTS),$(test)/summary)
 
 CONTIKI=..
 
 run: clean summary
 
 summary: $(SUMMARIES)
-	grep '' $(SUMMARIES) > summary
+	@cat $(SUMMARIES) > $@
 
-summary-%:
+%/summary:
 	@make -C $* summary || true
-	@echo -n $* | cat - $*/summary > $@
-	@rm $*/summary
 
 clean:
-	rm -f $(SUMMARIES)
-
-cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
-$(CONTIKI)/tools/cooja/dist/cooja.jar:
-	(cd $(CONTIKI)/tools/cooja; ant jar)
+	rm -f $(SUMMARIES) summary
 
 scan-build:
 	cd scan_build && scan-build $(MAKE)
