@@ -13,7 +13,11 @@ before_script:
   - sudo apt-get -qq update
 
   ## Support building a binary that is identical to the CI
-  - echo -n "Contiki will be compiled with RELSTR=" ; git --git-dir .git describe --tags --always
+  - echo -n "Contiki-NG will be compiled with RELSTR=" ; git --git-dir .git describe --tags --always
+
+  ## Install 32-bit compatibility libraries
+  - sudo apt-get -qq install libc6:i386 libgcc1:i386 gcc-4.6-base:i386
+      libstdc++5:i386 libstdc++6:i386 lib32z1
 
   ## Install doxygen
   - if [ ${BUILD_CATEGORY:-0} = doxygen ] ; then
@@ -23,16 +27,13 @@ before_script:
     fi
 
   ## Install msp430 toolchain
-  - sudo apt-get -qq install lib32z1
-  - $WGET http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &&
-    tar xjf mspgcc*.tar.bz2 -C /tmp/ &&
-    sudo cp -f -r /tmp/msp430/* /usr/local/ &&
-    rm -rf /tmp/msp430 mspgcc*.tar.bz2 &&
-    msp430-gcc --version
-
-  ## Install 32-bit compatibility libraries
-  - sudo apt-get -qq install libc6:i386 libgcc1:i386 gcc-4.6-base:i386
-      libstdc++5:i386 libstdc++6:i386
+  - if [ ${BUILD_ARCH:-0} = msp430 ] ; then
+      $WGET http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &&
+      tar xjf mspgcc*.tar.bz2 -C /tmp/ &&
+      sudo cp -f -r /tmp/msp430/* /usr/local/ &&
+      rm -rf /tmp/msp430 mspgcc*.tar.bz2 &&
+      msp430-gcc --version ;
+    fi
 
   ## Install mainline ARM toolchain and srecord.
   - if [ ${BUILD_ARCH:-0} = arm-aapcs ] ; then
@@ -97,16 +98,16 @@ env:
   ## This magically kick-off parallel jobs for each of the for the sets
   ## of environment variable defined below
   - BUILD_TYPE='doxygen' BUILD_CATEGORY='doxygen'
-  - BUILD_TYPE='compile-base' BUILD_CATEGORY='compile'
+  - BUILD_TYPE='compile-base' BUILD_CATEGORY='compile' BUILD_ARCH='msp430'
   - BUILD_TYPE='compile-arm-ports' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
   - BUILD_TYPE='compile-nxp-ports' BUILD_CATEGORY='compile' BUILD_ARCH='jn516x'
   - BUILD_TYPE='compile-nrf52-ports' BUILD_CATEGORY='compile' BUILD_ARCH='nrf52dk'
   - BUILD_TYPE='compile-tools' BUILD_CATEGORY='compile'
   - BUILD_TYPE='rpl-lite' BUILD_CATEGORY='sim'
   - BUILD_TYPE='rpl-classic' BUILD_CATEGORY='sim'
-  - BUILD_TYPE='ipv6' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='ipv6' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
   - BUILD_TYPE='nullnet' BUILD_CATEGORY='sim'
-  - BUILD_TYPE='base' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='base' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
   - BUILD_TYPE='ieee802154' BUILD_CATEGORY='sim'
   - BUILD_TYPE='6tisch' BUILD_CATEGORY='sim'
   - BUILD_TYPE='rpl-border-router' BUILD_CATEGORY='sim'
