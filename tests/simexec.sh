@@ -73,9 +73,9 @@ done
 
 if [ $TESTCOUNT -ne $OKCOUNT ] ; then
 	# At least one test failed
-	echo "$BASENAME: TEST FAIL ಠ_ಠ ($OKCOUNT/$TESTCOUNT, failed seeds:$FAILSEEDS)" > $BASENAME.testlog;
+	printf "%-32s TEST FAIL  %3d/%d -- failed seeds:%s\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" "$FAILSEEDS" > $BASENAME.testlog;
 else
-	echo "$BASENAME: TEST OK ($OKCOUNT/$TESTCOUNT)" > $BASENAME.testlog;
+	printf "%-32s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
 fi
 
 # We do not want Make to stop -> Return 0

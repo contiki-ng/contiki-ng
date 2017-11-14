@@ -82,7 +82,7 @@ tools:
 	@$(foreach tool, $(TOOLS), \
            (((cd $(TOOLSDIR)/$(tool); make) > $(tool).report 2>&1) && \
              (echo $(tool): OK | tee $(tool).summary) || \
-             (echo $(tool): FAIL ಠ_ಠ | tee $(tool).summary ; \
+             (echo $(tool): FAIL | tee $(tool).summary ; \
                 tail -10 $(tool).report > $(tool).faillog)) ; )
 
 clean:

@@ -36,13 +36,13 @@ summary: doxygen
 	@( \
 		1> summary; \
 		if [ -s doxygen.runerr ] ; then \
-			echo "doxygen: FAIL ಠ_ಠ\nDoxygen caused some errors. Please fix these." >> summary; \
+			echo "doxygen: FAIL\nDoxygen caused some errors. Please fix these." >> summary; \
 			echo "Errors:" >> summary; \
 			cat doxygen.runerr >> summary; \
 			echo >> summary; \
 		fi ; \
 		if [ -s $(DOCDIR)/doxygen.log ] ; then \
-			echo "doxygen: FAIL ಠ_ಠ\nDoxygen caused some warnings. Please fix these." >> summary; \
+			echo "doxygen: FAIL\nDoxygen caused some warnings. Please fix these." >> summary; \
 			echo "Warnings:" >> summary; \
 			cat $(DOCDIR)/doxygen.log >> summary; \
 		fi ; \

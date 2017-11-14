@@ -54,7 +54,7 @@ summary: $(LOGS)
 	@(\
 		for T in $(TOOLS) ; do \
 			if [ -f $$T.log.failed  ] ; then \
-				echo tools/$$T: FAIL ಠ_ಠ >> $@;\
+				echo tools/$$T: FAIL >> $@;\
 				cat $$T.log >> $@;\
 			else \
 				echo tools/$$T: OK >> $@;\
