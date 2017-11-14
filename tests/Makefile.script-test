@@ -1,5 +1,5 @@
 TESTS=$(wildcard ??-*.sh)
-TESTLOGS=$(patsubst %.sh,%.testlog,$(TESTS))
+TESTLOGS=$(sort $(patsubst %.sh,%.testlog,$(TESTS)))
 
 CONTIKI=../..
 
