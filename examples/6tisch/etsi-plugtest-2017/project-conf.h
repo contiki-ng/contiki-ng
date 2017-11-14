@@ -121,6 +121,4 @@
 #define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_DBG
 #define TSCH_LOG_CONF_PER_SLOT                     1
 
-#define TCPIP_CONF_ANNOTATE_TRANSMISSIONS          0
-
 #endif /* __PROJECT_CONF_H__ */
