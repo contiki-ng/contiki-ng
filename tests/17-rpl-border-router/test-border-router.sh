@@ -38,7 +38,7 @@ rm COOJA.testlog
 rm COOJA.log
 
 if [ $STATUS -eq 0 ] ; then
-  echo "$BASENAME: TEST OK" | tee $BASENAME.testlog;
+  printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
   # Verbose output when using CI
   if [ "$CI" = "true" ]; then
@@ -49,7 +49,7 @@ else
     echo "==== Check $BASENAME.coojalog, $BASENAME.tunsliplog, and $BASENAME.scriptlog for details ====";
   fi;
 
-  echo "$BASENAME: TEST FAIL ಠ_ಠ" | tee $BASENAME.testlog;
+  printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
 
 # We do not want Make to stop -> Return 0
