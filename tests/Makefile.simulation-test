@@ -27,7 +27,7 @@
 
 
 TESTS=$(wildcard ??-*.csc)
-TESTLOGS=$(patsubst %.csc,%.testlog,$(TESTS))
+TESTLOGS=$(sort $(patsubst %.csc,%.testlog,$(TESTS)))
 
 # The random seed to start from
 BASESEED ?= 1
