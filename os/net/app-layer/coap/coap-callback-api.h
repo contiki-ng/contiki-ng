@@ -51,8 +51,8 @@ typedef struct coap_request_state coap_request_state_t;
 
 struct coap_request_state {
   coap_transaction_t *transaction;
-  coap_packet_t *response;
-  coap_packet_t *request;
+  coap_message_t *response;
+  coap_message_t *request;
   coap_endpoint_t *remote_endpoint;
   uint32_t block_num;
   void *user_data;
@@ -61,7 +61,7 @@ struct coap_request_state {
 };
 
 void coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
-                       coap_packet_t *request,
+                       coap_message_t *request,
                        void (*callback)(coap_request_state_t *state));
 
 #endif /* COAP_CALLBACK_API_H_ */

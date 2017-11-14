@@ -41,7 +41,7 @@
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_create2,
          "title=\"Creates on POST\"",
@@ -51,7 +51,7 @@ RESOURCE(res_plugtest_create2,
          NULL);
 
 static void
-res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   PRINTF("/create2       ");
 

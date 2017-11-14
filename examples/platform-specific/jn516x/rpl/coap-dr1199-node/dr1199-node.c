@@ -46,19 +46,19 @@ static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
 
 static void event_sensors_dr1199_handler();
-static void get_sensors_dr1199_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_sw4_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_switch_dio8_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_pot_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d3_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_d6_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void put_post_led_all_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_sensors_dr1199_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw2_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw3_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_sw4_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_switch_dio8_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_pot_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d2_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d3_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d3_1174_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_d6_1174_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_all_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 #define CONTENT_PRINTF(...) { if(content_len < sizeof(content)) { content_len += snprintf(content + content_len, sizeof(content) - content_len, __VA_ARGS__); } }
 
@@ -93,7 +93,7 @@ EVENT_RESOURCE(resource_sensors_dr1199,               /* name */
                NULL,                                  /* DELETE handler */
                event_sensors_dr1199_handler);         /* event handler */
 static void
-get_sensors_dr1199_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_sensors_dr1199_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
   coap_get_header_accept(request, &accept);
@@ -123,7 +123,7 @@ RESOURCE(resource_switch_sw1,
          NULL,
          NULL);
 static void
-get_switch_sw1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
@@ -141,7 +141,7 @@ RESOURCE(resource_switch_sw2,
          NULL,
          NULL);
 static void
-get_switch_sw2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw2_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
@@ -159,7 +159,7 @@ RESOURCE(resource_switch_sw3,
          NULL,
          NULL);
 static void
-get_switch_sw3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw3_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
@@ -177,7 +177,7 @@ RESOURCE(resource_switch_sw4,
          NULL,
          NULL);
 static void
-get_switch_sw4_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_sw4_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
@@ -195,7 +195,7 @@ RESOURCE(resource_switch_dio8,
          NULL,
          NULL);
 static void
-get_switch_dio8_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_switch_dio8_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
@@ -216,7 +216,7 @@ RESOURCE(resource_pot,
          NULL,
          NULL);
 static void
-get_pot_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_pot_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   content_len = 0;
   unsigned int accept = -1;
@@ -237,7 +237,7 @@ RESOURCE(resource_led_d1,
          put_post_led_d1_handler,
          NULL);
 static void
-put_post_led_d1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
@@ -254,7 +254,7 @@ RESOURCE(resource_led_d2,
          put_post_led_d2_handler,
          NULL);
 static void
-put_post_led_d2_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d2_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
@@ -271,7 +271,7 @@ RESOURCE(resource_led_d3,
          put_post_led_d3_handler,
          NULL);
 static void
-put_post_led_d3_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d3_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
@@ -288,7 +288,7 @@ RESOURCE(resource_led_d3_1174,
          put_post_led_d3_1174_handler,
          NULL);
 static void
-put_post_led_d3_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d3_1174_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
@@ -305,7 +305,7 @@ RESOURCE(resource_led_d6_1174,
          put_post_led_d6_1174_handler,
          NULL);
 static void
-put_post_led_d6_1174_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_d6_1174_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;
@@ -322,7 +322,7 @@ RESOURCE(resource_led_all,
          put_post_led_all_handler,
          NULL);
 static void
-put_post_led_all_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_all_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content;
   unsigned int accept = -1;

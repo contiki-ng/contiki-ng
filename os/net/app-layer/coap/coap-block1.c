@@ -73,7 +73,7 @@
  *         -1 if initialisation failed
  */
 int
-coap_block1_handler(coap_packet_t *request, coap_packet_t *response,
+coap_block1_handler(coap_message_t *request, coap_message_t *response,
                     uint8_t *target, size_t *len, size_t max_len)
 {
   const uint8_t *payload = 0;

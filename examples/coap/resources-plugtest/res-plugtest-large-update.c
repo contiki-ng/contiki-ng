@@ -43,8 +43,8 @@
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(
   res_plugtest_large_update,
@@ -59,7 +59,7 @@ static uint8_t large_update_store[MAX_PLUGFEST_BODY] = { 0 };
 static unsigned int large_update_ct = APPLICATION_OCTET_STREAM;
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* Check the offset for boundaries of the resource data. */
   if(*offset >= large_update_size) {
@@ -84,9 +84,9 @@ res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
   }
 }
 static void
-res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
   uint8_t *incoming = NULL;
   size_t len = 0;
 

@@ -60,13 +60,13 @@ static uint32_t res_block;
 static uint8_t more;
 static uint8_t block_error;
 
-static void coap_request_callback(void *callback_data, coap_packet_t *response);
+static void coap_request_callback(void *callback_data, coap_message_t *response);
 
 /*---------------------------------------------------------------------------*/
 
 static void
 progress_request(coap_request_state_t *state) {
-  coap_packet_t *request = state->request;
+  coap_message_t *request = state->request;
   request->mid = coap_get_mid();
   if((state->transaction =
       coap_new_transaction(request->mid, state->remote_endpoint))) {
@@ -77,8 +77,8 @@ progress_request(coap_request_state_t *state) {
       coap_set_header_block2(request, state->block_num, 0,
                              COAP_MAX_CHUNK_SIZE);
     }
-    state->transaction->packet_len =
-      coap_serialize_message(request, state->transaction->packet);
+    state->transaction->message_len =
+      coap_serialize_message(request, state->transaction->message);
 
     coap_send_transaction(state->transaction);
     PRINTF("Requested #%lu (MID %u)\n", (unsigned long) state->block_num,
@@ -89,7 +89,7 @@ progress_request(coap_request_state_t *state) {
 /*---------------------------------------------------------------------------*/
 
 static void
-coap_request_callback(void *callback_data, coap_packet_t *response)
+coap_request_callback(void *callback_data, coap_message_t *response)
 {
   coap_request_state_t *state = (coap_request_state_t *)callback_data;
   uint32_t res_block1;
@@ -137,7 +137,7 @@ coap_request_callback(void *callback_data, coap_packet_t *response)
 
 void
 coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
-                  coap_packet_t *request,
+                  coap_message_t *request,
                   void (*callback)(coap_request_state_t *state))
 {
   /* can we have these variables shared between multiple requests? */

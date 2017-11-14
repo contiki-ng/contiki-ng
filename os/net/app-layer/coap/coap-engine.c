@@ -62,8 +62,8 @@ static void process_callback(coap_timer_t *t);
  * To be called by HTTP/COAP server as a callback function when a new service
  * request appears.  This function dispatches the corresponding CoAP service.
  */
-static int invoke_coap_resource_service(coap_packet_t *request,
-                                        coap_packet_t *response,
+static int invoke_coap_resource_service(coap_message_t *request,
+                                        coap_message_t *response,
                                         uint8_t *buffer, uint16_t buffer_size,
                                         int32_t *offset);
 
@@ -91,7 +91,7 @@ coap_remove_handler(coap_handler_t *handler)
 }
 /*---------------------------------------------------------------------------*/
 coap_handler_status_t
-coap_call_handlers(coap_packet_t *request, coap_packet_t *response,
+coap_call_handlers(coap_message_t *request, coap_message_t *response,
                       uint8_t *buffer, uint16_t buffer_size, int32_t *offset)
 {
   coap_handler_status_t status;
@@ -115,7 +115,7 @@ coap_call_handlers(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static CC_INLINE coap_handler_status_t
-call_service(coap_packet_t *request, coap_packet_t *response,
+call_service(coap_message_t *request, coap_message_t *response,
              uint8_t *buffer, uint16_t buffer_size, int32_t *offset)
 {
   coap_handler_status_t status;
@@ -148,8 +148,8 @@ coap_receive(const coap_endpoint_t *src,
              uint8_t *payload, uint16_t payload_length)
 {
   /* static declaration reduces stack peaks and program code size */
-  static coap_packet_t message[1]; /* this way the packet can be treated as pointer as usual */
-  static coap_packet_t response[1];
+  static coap_message_t message[1]; /* this way the message can be treated as pointer as usual */
+  static coap_message_t response[1];
   coap_transaction_t *transaction = NULL;
   coap_handler_status_t status;
 
@@ -203,7 +203,7 @@ coap_receive(const coap_endpoint_t *src,
 
         /* call CoAP framework and check if found and allowed */
         status = call_service(message, response,
-                              transaction->packet + COAP_MAX_HEADER_SIZE,
+                              transaction->message + COAP_MAX_HEADER_SIZE,
                               block_size, &new_offset);
         if(status != COAP_HANDLER_STATUS_CONTINUE) {
 
@@ -277,9 +277,9 @@ coap_receive(const coap_endpoint_t *src,
             /* serialize response */
         }
           if(coap_status_code == NO_ERROR) {
-            if((transaction->packet_len = coap_serialize_message(response,
+            if((transaction->message_len = coap_serialize_message(response,
                                                                  transaction->
-                                                                 packet)) ==
+                                                                 message)) ==
                0) {
               coap_status_code = PACKET_SERIALIZATION_ERROR;
             }
@@ -434,7 +434,7 @@ coap_get_next_resource(coap_resource_t *resource)
 }
 /*---------------------------------------------------------------------------*/
 static int
-invoke_coap_resource_service(coap_packet_t *request, coap_packet_t *response,
+invoke_coap_resource_service(coap_message_t *request, coap_message_t *response,
                              uint8_t *buffer, uint16_t buffer_size,
                              int32_t *offset)
 {

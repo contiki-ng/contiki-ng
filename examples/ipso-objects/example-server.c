@@ -257,8 +257,8 @@ setup_network(void)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(router_process, ev, data)
 {
-  /* This way the packet can be treated as pointer as usual. */
-  static coap_packet_t request[1];
+  /* This way the message can be treated as pointer as usual. */
+  static coap_message_t request[1];
   static struct etimer timer;
   uip_ds6_route_t *r;
   uip_ipaddr_t *nexthop;

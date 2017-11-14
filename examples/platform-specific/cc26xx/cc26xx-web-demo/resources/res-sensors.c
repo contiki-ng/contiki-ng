@@ -51,8 +51,8 @@
  * called by all handlers and populates the CoAP response
  */
 static void
-res_get_handler_all(int sens_type, coap_packet_t *request,
-                    coap_packet_t *response,
+res_get_handler_all(int sens_type, coap_message_t *request,
+                    coap_message_t *response,
                     uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
@@ -97,7 +97,7 @@ res_get_handler_all(int sens_type, coap_packet_t *request,
 /*---------------------------------------------------------------------------*/
 /* BatMon resources and handler: Temperature, Voltage */
 static void
-res_get_handler_batmon_temp(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_batmon_temp(coap_message_t *request, coap_message_t *response,
                             uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {
@@ -106,7 +106,7 @@ res_get_handler_batmon_temp(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_batmon_volt(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_batmon_volt(coap_message_t *request, coap_message_t *response,
                             uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {
@@ -123,7 +123,7 @@ RESOURCE(res_batmon_volt, "title=\"Battery Voltage\";rt=\"mV\"",
 #if CC26XX_WEB_DEMO_ADC_DEMO
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_adc_dio23(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_adc_dio23(coap_message_t *request, coap_message_t *response,
                           uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
@@ -140,7 +140,7 @@ RESOURCE(res_adc_dio23, "title=\"ADC DIO23\";rt=\"mV\"",
 /*---------------------------------------------------------------------------*/
 /* MPU resources and handler: Accelerometer and Gyro */
 static void
-res_get_handler_mpu_acc_x(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_mpu_acc_x(coap_message_t *request, coap_message_t *response,
                           uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
@@ -149,7 +149,7 @@ res_get_handler_mpu_acc_x(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_acc_y(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_mpu_acc_y(coap_message_t *request, coap_message_t *response,
                           uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
@@ -158,7 +158,7 @@ res_get_handler_mpu_acc_y(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_acc_z(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_mpu_acc_z(coap_message_t *request, coap_message_t *response,
                           uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
@@ -167,7 +167,7 @@ res_get_handler_mpu_acc_z(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_gyro_x(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_mpu_gyro_x(coap_message_t *request, coap_message_t *response,
                            uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
@@ -176,7 +176,7 @@ res_get_handler_mpu_gyro_x(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_gyro_y(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_mpu_gyro_y(coap_message_t *request, coap_message_t *response,
                            uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
@@ -185,7 +185,7 @@ res_get_handler_mpu_gyro_y(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_gyro_z(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_mpu_gyro_z(coap_message_t *request, coap_message_t *response,
                            uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
@@ -209,7 +209,7 @@ RESOURCE(res_mpu_gyro_z, "title=\"Gyro Z\";rt=\"deg/sec\"",
 /*---------------------------------------------------------------------------*/
 /* TMP sensor resources and handlers: Object, Ambient */
 static void
-res_get_handler_obj_temp(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_obj_temp(coap_message_t *request, coap_message_t *response,
                          uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
@@ -218,7 +218,7 @@ res_get_handler_obj_temp(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_amb_temp(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_amb_temp(coap_message_t *request, coap_message_t *response,
                          uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
@@ -234,7 +234,7 @@ RESOURCE(res_tmp007_amb, "title=\"Temperature (Ambient)\";rt=\"C\"",
 /*---------------------------------------------------------------------------*/
 /* BMP sensor resources: Temperature, Pressure */
 static void
-res_get_handler_bmp_temp(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_bmp_temp(coap_message_t *request, coap_message_t *response,
                          uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
@@ -243,7 +243,7 @@ res_get_handler_bmp_temp(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_bmp_press(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_bmp_press(coap_message_t *request, coap_message_t *response,
                           uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
@@ -260,7 +260,7 @@ RESOURCE(res_bmp280_press,
 /*---------------------------------------------------------------------------*/
 /* HDC1000 sensor resources and handler: Temperature, Pressure */
 static void
-res_get_handler_hdc_temp(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_hdc_temp(coap_message_t *request, coap_message_t *response,
                          uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
@@ -269,7 +269,7 @@ res_get_handler_hdc_temp(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_hdc_humidity(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_hdc_humidity(coap_message_t *request, coap_message_t *response,
                              uint8_t *buffer,
                              uint16_t preferred_size, int32_t *offset)
 {
@@ -285,7 +285,7 @@ RESOURCE(res_hdc1000_hum, "title=\"Humidity\";rt=\"%RH\"",
 /*---------------------------------------------------------------------------*/
 /* Illuminance resources and handler */
 static void
-res_get_handler_opt(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_opt(coap_message_t *request, coap_message_t *response,
                     uint8_t *buffer,
                     uint16_t preferred_size, int32_t *offset)
 {

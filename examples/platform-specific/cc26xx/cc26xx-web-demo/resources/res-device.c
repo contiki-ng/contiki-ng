@@ -75,7 +75,7 @@ detect_chip(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_hw(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_hw(coap_message_t *request, coap_message_t *response,
                    uint8_t *buffer,
                    uint16_t preferred_size, int32_t *offset)
 {
@@ -111,7 +111,7 @@ res_get_handler_hw(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_sw(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_sw(coap_message_t *request, coap_message_t *response,
                    uint8_t *buffer,
                    uint16_t preferred_size, int32_t *offset)
 {
@@ -144,7 +144,7 @@ res_get_handler_sw(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_uptime(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_uptime(coap_message_t *request, coap_message_t *response,
                        uint8_t *buffer,
                        uint16_t preferred_size, int32_t *offset)
 {
@@ -177,7 +177,7 @@ res_get_handler_uptime(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_cfg_reset(coap_packet_t *request, coap_packet_t *response,
+res_post_handler_cfg_reset(coap_message_t *request, coap_message_t *response,
                            uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {

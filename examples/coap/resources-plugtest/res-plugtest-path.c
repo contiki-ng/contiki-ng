@@ -42,7 +42,7 @@
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 PARENT_RESOURCE(res_plugtest_path,
                 "title=\"Path test resource\";ct=\"40\"",
@@ -52,7 +52,7 @@ PARENT_RESOURCE(res_plugtest_path,
                 NULL);
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer,
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
                 uint16_t preferred_size, int32_t *offset)
 {
 

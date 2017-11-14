@@ -64,8 +64,8 @@ typedef struct coap_transaction {
   coap_resource_response_handler_t callback;
   void *callback_data;
 
-  uint16_t packet_len;
-  uint8_t packet[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
+  uint16_t message_len;
+  uint8_t message[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
                                                  * Use snprintf(buf, len+1, "", ...) to completely fill payload */
 } coap_transaction_t;
 

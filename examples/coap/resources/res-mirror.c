@@ -53,7 +53,7 @@
 #define PRINTLLADDR(addr)
 #endif
 
-static void res_any_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* This resource mirrors the incoming request. It shows how to access the options and how to set them for the response. */
 RESOURCE(res_mirror,
@@ -64,7 +64,7 @@ RESOURCE(res_mirror,
          res_any_handler);
 
 static void
-res_any_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* The ETag and Token is copied to the header. */
   uint8_t opaque[] = { 0x0A, 0xBC, 0xDE };
@@ -122,7 +122,7 @@ res_any_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "LQ %.*s\n", len, str);
     /* CoAP-specific example: actions not required for normal RESTful Web service. */
   }
-  coap_packet_t *const coap_pkt = (coap_packet_t *)request;
+  coap_message_t *const coap_pkt = (coap_message_t *)request;
 
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_pkt->token_len > 0) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "To 0x");

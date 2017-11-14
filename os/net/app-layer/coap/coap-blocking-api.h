@@ -42,16 +42,16 @@ typedef struct coap_request_state {
   struct pt pt;
   struct process *process;
   coap_transaction_t *transaction;
-  coap_packet_t *response;
+  coap_message_t *response;
   uint32_t block_num;
 } coap_request_state_t;
 
-typedef void (* coap_blocking_response_handler_t)(coap_packet_t *response);
+typedef void (* coap_blocking_response_handler_t)(coap_message_t *response);
 
 PT_THREAD(coap_blocking_request
           (coap_request_state_t *state, process_event_t ev,
            coap_endpoint_t *remote,
-           coap_packet_t *request,
+           coap_message_t *request,
            coap_blocking_response_handler_t request_callback));
 
 #define COAP_BLOCKING_REQUEST(server_endpoint, request, chunk_handler)  \

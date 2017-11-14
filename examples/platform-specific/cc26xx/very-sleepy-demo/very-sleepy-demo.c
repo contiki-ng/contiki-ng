@@ -104,7 +104,7 @@ PROCESS(very_sleepy_demo_process, "CC13xx/CC26xx very sleepy process");
 AUTOSTART_PROCESSES(&very_sleepy_demo_process);
 /*---------------------------------------------------------------------------*/
 static void
-readings_get_handler(coap_packet_t *request, coap_packet_t *response,
+readings_get_handler(coap_message_t *request, coap_message_t *response,
                      uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
@@ -144,7 +144,7 @@ RESOURCE(readings_resource, "title=\"Sensor Readings\";obs",
          readings_get_handler, NULL, NULL, NULL);
 /*---------------------------------------------------------------------------*/
 static void
-conf_get_handler(coap_packet_t *request, coap_packet_t *response,
+conf_get_handler(coap_message_t *request, coap_message_t *response,
                  uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
@@ -175,7 +175,7 @@ conf_get_handler(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-conf_post_handler(coap_packet_t *request, coap_packet_t *response,
+conf_post_handler(coap_message_t *request, coap_message_t *response,
                   uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const char *ptr = NULL;

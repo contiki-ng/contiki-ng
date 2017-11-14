@@ -42,8 +42,8 @@
 #include <stdlib.h> 
 #include <AppHardwareApi.h>
 
-static void set_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void set_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
@@ -63,7 +63,7 @@ RESOURCE(resource_set_tx_power,
          set_tx_power_handler,
          NULL);
 static void
-set_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+set_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content = NULL;
   int tx_level;
@@ -84,7 +84,7 @@ RESOURCE(resource_get_tx_power,
          NULL,
          NULL);
 static void
-get_tx_power_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int tx_level;
   unsigned int accept = -1;

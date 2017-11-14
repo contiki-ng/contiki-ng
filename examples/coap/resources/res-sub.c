@@ -40,7 +40,7 @@
 #include <string.h>
 #include "coap-engine.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /*
  * Example for a resource that also handles all its sub-resources.
@@ -54,7 +54,7 @@ PARENT_RESOURCE(res_sub,
                 NULL);
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   coap_set_header_content_format(response, TEXT_PLAIN);
 

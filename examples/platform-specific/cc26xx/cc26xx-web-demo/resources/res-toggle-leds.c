@@ -48,7 +48,7 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_red(coap_packet_t *request, coap_packet_t *response,
+res_post_handler_red(coap_message_t *request, coap_message_t *response,
                      uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset)
 {
@@ -56,7 +56,7 @@ res_post_handler_red(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_green(coap_packet_t *request, coap_packet_t *response,
+res_post_handler_green(coap_message_t *request, coap_message_t *response,
                        uint8_t *buffer,
                        uint16_t preferred_size, int32_t *offset)
 {
@@ -83,7 +83,7 @@ RESOURCE(res_toggle_green,
 #if BOARD_SMARTRF06EB
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_yellow(coap_packet_t *request, coap_packet_t *response,
+res_post_handler_yellow(coap_message_t *request, coap_message_t *response,
                         uint8_t *buffer,
                         uint16_t preferred_size, int32_t *offset)
 {
@@ -91,7 +91,7 @@ res_post_handler_yellow(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_post_handler_orange(coap_packet_t *request, coap_packet_t *response,
+res_post_handler_orange(coap_message_t *request, coap_message_t *response,
                         uint8_t *buffer,
                         uint16_t preferred_size, int32_t *offset)
 {

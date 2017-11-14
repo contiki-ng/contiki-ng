@@ -41,7 +41,7 @@
 #include "coap-engine.h"
 #include "coap.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_periodic_handler(void);
 
 PERIODIC_RESOURCE(res_push,
@@ -59,7 +59,7 @@ PERIODIC_RESOURCE(res_push,
 static int32_t event_counter = 0;
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /*
    * For minimal complexity, request query and options should be ignored for GET on observable resources.

@@ -36,6 +36,14 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \defgroup coap CoAP
+ * @{
+ *
+ * The Constrained Application Protocol - RFC 7252
+ */
+
+
 #ifndef COAP_H_
 #define COAP_H_
 
@@ -44,6 +52,9 @@
 #include "coap-conf.h"
 #include "coap-transport.h"
 
+/**
+ * \brief      The max size of the CoAP messages
+ */
 #define COAP_MAX_PACKET_SIZE  (COAP_MAX_HEADER_SIZE + COAP_MAX_CHUNK_SIZE)
 
 /* COAP_MAX_CHUNK_SIZE can be different from 2^x so we need to get next lower 2^x for COAP_MAX_BLOCK_SIZE */
@@ -62,7 +73,7 @@
 
 /* parsed message struct */
 typedef struct {
-  uint8_t *buffer; /* pointer to CoAP header / incoming packet buffer / memory to serialize packet */
+  uint8_t *buffer; /* pointer to CoAP header / incoming message buffer / memory to serialize message */
 
   uint8_t version;
   coap_message_type_t type;
@@ -113,23 +124,23 @@ typedef struct {
 
   uint16_t payload_len;
   uint8_t *payload;
-} coap_packet_t;
+} coap_message_t;
 
 static inline int
-coap_set_option(coap_packet_t *packet, unsigned int opt)
+coap_set_option(coap_message_t *message, unsigned int opt)
 {
   if(opt > COAP_OPTION_SIZE1) {
     return 0;
   }
-  packet->options[opt / OPTION_MAP_SIZE] |= 1 << (opt % OPTION_MAP_SIZE);
+  message->options[opt / OPTION_MAP_SIZE] |= 1 << (opt % OPTION_MAP_SIZE);
   return 1;
 }
 
 static inline int
-coap_is_option(const coap_packet_t *packet, unsigned int opt)
+coap_is_option(const coap_message_t *message, unsigned int opt)
 {
   return (opt <= COAP_OPTION_SIZE1) &&
-    (packet->options[opt / OPTION_MAP_SIZE] & (1 << (opt % OPTION_MAP_SIZE))) != 0;
+    (message->options[opt / OPTION_MAP_SIZE] & (1 << (opt % OPTION_MAP_SIZE))) != 0;
 }
 
 /* option format serialization */
@@ -180,110 +191,112 @@ extern const char *coap_error_message;
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);
 
-void coap_init_message(coap_packet_t *packet, coap_message_type_t type,
+void coap_init_message(coap_message_t *message, coap_message_type_t type,
                        uint8_t code, uint16_t mid);
-size_t coap_serialize_message(coap_packet_t *packet, uint8_t *buffer);
-coap_status_t coap_parse_message(coap_packet_t *request, uint8_t *data,
+size_t coap_serialize_message(coap_message_t *message, uint8_t *buffer);
+coap_status_t coap_parse_message(coap_message_t *request, uint8_t *data,
                                  uint16_t data_len);
 
-int coap_get_query_variable(coap_packet_t *packet, const char *name,
+int coap_get_query_variable(coap_message_t *message, const char *name,
                             const char **output);
-int coap_get_post_variable(coap_packet_t *packet, const char *name,
+int coap_get_post_variable(coap_message_t *message, const char *name,
                            const char **output);
 
 static inline coap_resource_flags_t
-coap_get_method_type(coap_packet_t *packet)
+coap_get_method_type(coap_message_t *message)
 {
-  return (coap_resource_flags_t)(1 << (packet->code - 1));
+  return (coap_resource_flags_t)(1 << (message->code - 1));
 }
 
 static inline const coap_endpoint_t *
-coap_get_src_endpoint(coap_packet_t *request)
+coap_get_src_endpoint(coap_message_t *request)
 {
   return request->src_ep;
 }
 
 static inline void
-coap_set_src_endpoint(coap_packet_t *request, const coap_endpoint_t *ep)
+coap_set_src_endpoint(coap_message_t *request, const coap_endpoint_t *ep)
 {
   request->src_ep = ep;
 }
 /*---------------------------------------------------------------------------*/
 
-int coap_set_status_code(coap_packet_t *packet, unsigned int code);
+int coap_set_status_code(coap_message_t *message, unsigned int code);
 
-int coap_set_token(coap_packet_t *packet, const uint8_t *token,
+int coap_set_token(coap_message_t *message, const uint8_t *token,
                    size_t token_len);
 
-int coap_get_header_content_format(coap_packet_t *packet, unsigned int *format);
-int coap_set_header_content_format(coap_packet_t *packet, unsigned int format);
+int coap_get_header_content_format(coap_message_t *message, unsigned int *format);
+int coap_set_header_content_format(coap_message_t *message, unsigned int format);
 
-int coap_get_header_accept(coap_packet_t *packet, unsigned int *accept);
-int coap_set_header_accept(coap_packet_t *packet, unsigned int accept);
+int coap_get_header_accept(coap_message_t *message, unsigned int *accept);
+int coap_set_header_accept(coap_message_t *message, unsigned int accept);
 
-int coap_get_header_max_age(coap_packet_t *packet, uint32_t *age);
-int coap_set_header_max_age(coap_packet_t *packet, uint32_t age);
+int coap_get_header_max_age(coap_message_t *message, uint32_t *age);
+int coap_set_header_max_age(coap_message_t *message, uint32_t age);
 
-int coap_get_header_etag(coap_packet_t *packet, const uint8_t **etag);
-int coap_set_header_etag(coap_packet_t *packet, const uint8_t *etag,
+int coap_get_header_etag(coap_message_t *message, const uint8_t **etag);
+int coap_set_header_etag(coap_message_t *message, const uint8_t *etag,
                          size_t etag_len);
 
-int coap_get_header_if_match(coap_packet_t *packet, const uint8_t **etag);
-int coap_set_header_if_match(coap_packet_t *packet, const uint8_t *etag,
+int coap_get_header_if_match(coap_message_t *message, const uint8_t **etag);
+int coap_set_header_if_match(coap_message_t *message, const uint8_t *etag,
                              size_t etag_len);
 
-int coap_get_header_if_none_match(coap_packet_t *packet);
-int coap_set_header_if_none_match(coap_packet_t *packet);
+int coap_get_header_if_none_match(coap_message_t *message);
+int coap_set_header_if_none_match(coap_message_t *message);
 
 /* in-place string might not be 0-terminated. */
-int coap_get_header_proxy_uri(coap_packet_t *packet, const char **uri);
-int coap_set_header_proxy_uri(coap_packet_t *packet, const char *uri);
+int coap_get_header_proxy_uri(coap_message_t *message, const char **uri);
+int coap_set_header_proxy_uri(coap_message_t *message, const char *uri);
 
 /* in-place string might not be 0-terminated. */
-int coap_get_header_proxy_scheme(coap_packet_t *packet, const char **scheme);
-int coap_set_header_proxy_scheme(coap_packet_t *packet, const char *scheme);
+int coap_get_header_proxy_scheme(coap_message_t *message, const char **scheme);
+int coap_set_header_proxy_scheme(coap_message_t *message, const char *scheme);
 
 /* in-place string might not be 0-terminated. */
-int coap_get_header_uri_host(coap_packet_t *packet, const char **host);
-int coap_set_header_uri_host(coap_packet_t *packet, const char *host);
+int coap_get_header_uri_host(coap_message_t *message, const char **host);
+int coap_set_header_uri_host(coap_message_t *message, const char *host);
 
 /* in-place string might not be 0-terminated. */
-int coap_get_header_uri_path(coap_packet_t *packet, const char **path);
-int coap_set_header_uri_path(coap_packet_t *packet, const char *path);
+int coap_get_header_uri_path(coap_message_t *message, const char **path);
+int coap_set_header_uri_path(coap_message_t *message, const char *path);
 
 /* in-place string might not be 0-terminated. */
-int coap_get_header_uri_query(coap_packet_t *packet, const char **query);
-int coap_set_header_uri_query(coap_packet_t *packet, const char *query);
+int coap_get_header_uri_query(coap_message_t *message, const char **query);
+int coap_set_header_uri_query(coap_message_t *message, const char *query);
 
 /* in-place string might not be 0-terminated. */
-int coap_get_header_location_path(coap_packet_t *packet, const char **path);
+int coap_get_header_location_path(coap_message_t *message, const char **path);
 /* also splits optional query into Location-Query option. */
-int coap_set_header_location_path(coap_packet_t *packet, const char *path);
+int coap_set_header_location_path(coap_message_t *message, const char *path);
 
 /* in-place string might not be 0-terminated. */
-int coap_get_header_location_query(coap_packet_t *packet, const char **query);
-int coap_set_header_location_query(coap_packet_t *packet, const char *query);
+int coap_get_header_location_query(coap_message_t *message, const char **query);
+int coap_set_header_location_query(coap_message_t *message, const char *query);
 
-int coap_get_header_observe(coap_packet_t *packet, uint32_t *observe);
-int coap_set_header_observe(coap_packet_t *packet, uint32_t observe);
+int coap_get_header_observe(coap_message_t *message, uint32_t *observe);
+int coap_set_header_observe(coap_message_t *message, uint32_t observe);
 
-int coap_get_header_block2(coap_packet_t *packet, uint32_t *num, uint8_t *more,
+int coap_get_header_block2(coap_message_t *message, uint32_t *num, uint8_t *more,
                            uint16_t *size, uint32_t *offset);
-int coap_set_header_block2(coap_packet_t *packet, uint32_t num, uint8_t more,
+int coap_set_header_block2(coap_message_t *message, uint32_t num, uint8_t more,
                            uint16_t size);
 
-int coap_get_header_block1(coap_packet_t *packet, uint32_t *num, uint8_t *more,
+int coap_get_header_block1(coap_message_t *message, uint32_t *num, uint8_t *more,
                            uint16_t *size, uint32_t *offset);
-int coap_set_header_block1(coap_packet_t *packet, uint32_t num, uint8_t more,
+int coap_set_header_block1(coap_message_t *message, uint32_t num, uint8_t more,
                            uint16_t size);
 
-int coap_get_header_size2(coap_packet_t *packet, uint32_t *size);
-int coap_set_header_size2(coap_packet_t *packet, uint32_t size);
+int coap_get_header_size2(coap_message_t *message, uint32_t *size);
+int coap_set_header_size2(coap_message_t *message, uint32_t size);
 
-int coap_get_header_size1(coap_packet_t *packet, uint32_t *size);
-int coap_set_header_size1(coap_packet_t *packet, uint32_t size);
+int coap_get_header_size1(coap_message_t *message, uint32_t *size);
+int coap_set_header_size1(coap_message_t *message, uint32_t size);
 
-int coap_get_payload(coap_packet_t *packet, const uint8_t **payload);
-int coap_set_payload(coap_packet_t *packet, const void *payload, size_t length);
+int coap_get_payload(coap_message_t *message, const uint8_t **payload);
+int coap_set_payload(coap_message_t *message, const void *payload, size_t length);
 
 #endif /* COAP_H_ */
+
+/** @} */

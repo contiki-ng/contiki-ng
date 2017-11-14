@@ -51,7 +51,7 @@
 extern int def_rt_rssi;
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_parent_rssi(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_parent_rssi(coap_message_t *request, coap_message_t *response,
                             uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {
@@ -84,7 +84,7 @@ res_get_handler_parent_rssi(coap_packet_t *request, coap_packet_t *response,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_pref_parent(coap_packet_t *request, coap_packet_t *response,
+res_get_handler_pref_parent(coap_message_t *request, coap_message_t *response,
                             uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {

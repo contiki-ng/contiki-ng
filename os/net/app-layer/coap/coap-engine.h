@@ -51,8 +51,8 @@ typedef enum {
 } coap_handler_status_t;
 
 typedef coap_handler_status_t
-(* coap_handler_callback_t)(coap_packet_t *request,
-                            coap_packet_t *response,
+(* coap_handler_callback_t)(coap_message_t *request,
+                            coap_message_t *response,
                             uint8_t *buffer, uint16_t buffer_size,
                             int32_t *offset);
 
@@ -74,21 +74,21 @@ void coap_engine_init(void);
 int coap_receive(const coap_endpoint_t *src,
                  uint8_t *payload, uint16_t payload_length);
 
-coap_handler_status_t coap_call_handlers(coap_packet_t *request,
-                                         coap_packet_t *response,
+coap_handler_status_t coap_call_handlers(coap_message_t *request,
+                                         coap_message_t *response,
                                          uint8_t *buffer,
                                          uint16_t buffer_size,
                                          int32_t *offset);
 /*---------------------------------------------------------------------------*/
 /* signatures of handler functions */
-typedef void (* coap_resource_handler_t)(coap_packet_t *request,
-                                         coap_packet_t *response,
+typedef void (* coap_resource_handler_t)(coap_message_t *request,
+                                         coap_message_t *response,
                                          uint8_t *buffer,
                                          uint16_t preferred_size,
                                          int32_t *offset);
 typedef void (* coap_resource_periodic_handler_t)(void);
 typedef void (* coap_resource_response_handler_t)(void *data,
-                                                  coap_packet_t *response);
+                                                  coap_message_t *response);
 typedef void (* coap_resource_trigger_handler_t)(void);
 
 /* data structure representing a resource in CoAP */

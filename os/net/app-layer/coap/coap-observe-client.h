@@ -107,7 +107,7 @@ int coap_obs_remove_observee_by_url(const coap_endpoint_t *endpoint,
                                     const char *url);
 
 void coap_handle_notification(const coap_endpoint_t *endpoint,
-                              coap_packet_t *notification);
+                              coap_message_t *notification);
 
 coap_observee_t *coap_obs_request_registration(const coap_endpoint_t *endpoint,
                                                char *uri,

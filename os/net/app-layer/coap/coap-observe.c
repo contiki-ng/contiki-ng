@@ -191,8 +191,8 @@ void
 coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
 {
   /* build notification */
-  coap_packet_t notification[1]; /* this way the packet can be treated as pointer as usual */
-  coap_packet_t request[1]; /* this way the packet can be treated as pointer as usual */
+  coap_message_t notification[1]; /* this way the message can be treated as pointer as usual */
+  coap_message_t request[1]; /* this way the message can be treated as pointer as usual */
   coap_observer_t *obs = NULL;
   int url_len, obs_url_len;
   char url[COAP_OBSERVER_URL_LEN];
@@ -260,14 +260,14 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
         notification->mid = transaction->mid;
 
         /* Either old style get_handler or the full handler */
-        if(coap_call_handlers(request, notification, transaction->packet +
+        if(coap_call_handlers(request, notification, transaction->message +
                               COAP_MAX_HEADER_SIZE, COAP_MAX_CHUNK_SIZE,
                               NULL) > 0) {
           PRINTF("Notification on new handlers\n");
         } else {
           if(resource != NULL) {
             resource->get_handler(request, notification,
-                                  transaction->packet + COAP_MAX_HEADER_SIZE,
+                                  transaction->message + COAP_MAX_HEADER_SIZE,
                                   COAP_MAX_CHUNK_SIZE, NULL);
           } else {
             /* What to do here? */
@@ -282,8 +282,8 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
         }
         coap_set_token(notification, obs->token, obs->token_len);
 
-        transaction->packet_len =
-          coap_serialize_message(notification, transaction->packet);
+        transaction->message_len =
+          coap_serialize_message(notification, transaction->message);
 
         coap_send_transaction(transaction);
       }
@@ -292,8 +292,8 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
 }
 /*---------------------------------------------------------------------------*/
 void
-coap_observe_handler(coap_resource_t *resource, coap_packet_t *coap_req,
-                     coap_packet_t *coap_res)
+coap_observe_handler(coap_resource_t *resource, coap_message_t *coap_req,
+                     coap_message_t *coap_res)
 {
   const coap_endpoint_t *src_ep;
   coap_observer_t *obs;

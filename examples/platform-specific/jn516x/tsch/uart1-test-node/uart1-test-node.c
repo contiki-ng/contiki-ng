@@ -42,9 +42,9 @@
 #include "uart1.h"
 #include <AppHardwareApi.h>
 
-static void get_coap_rx_uart1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_coap_rx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void event_coap_rx_uart1_handler(void);
-static void put_post_tx_uart1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_tx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void string2uart1(uint8_t *c);
 static int handleRxChar(uint8_t c);
 static int get_ringbuf(uint8_t *c);
@@ -85,7 +85,7 @@ EVENT_RESOURCE(resource_coap_rx_uart1,                /* name */
                NULL,                                  /* DELETE handler */
                event_coap_rx_uart1_handler);          /* event handler */
 static void
-get_coap_rx_uart1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_coap_rx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
   coap_get_header_accept(request, &accept);
@@ -115,7 +115,7 @@ RESOURCE(resource_coap_tx_uart1,                /* name */
          NULL);                                 /* DELETE handler */
 
 static void
-put_post_tx_uart1_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_tx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content = NULL;
   unsigned int accept = -1;

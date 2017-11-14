@@ -76,7 +76,7 @@ static int uri_switch = 0;
 
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
-client_chunk_handler(coap_packet_t *response)
+client_chunk_handler(coap_message_t *response)
 {
   const uint8_t *chunk;
 
@@ -89,7 +89,7 @@ PROCESS_THREAD(er_example_client, ev, data)
   coap_endpoint_t server_ep;
   PROCESS_BEGIN();
 
-  static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
+  static coap_message_t request[1];      /* This way the packet can be treated as pointer as usual. */
 
   /* SERVER_NODE(&server_ipaddr); */
 

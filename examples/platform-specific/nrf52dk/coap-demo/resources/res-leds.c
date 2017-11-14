@@ -48,12 +48,12 @@
 #include "net/ipv6/uip-debug.h"
 
 static void
-res_post_put_handler(coap_packet_t *request, coap_packet_t *response,
+res_post_put_handler(coap_message_t *request, coap_message_t *response,
                      uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset);
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response,
+res_get_handler(coap_message_t *request, coap_message_t *response,
                 uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset);
 
@@ -71,7 +71,7 @@ EVENT_RESOURCE(res_led3,
                );
 
 static void
-res_post_put_handler(coap_packet_t *request, coap_packet_t *response,
+res_post_put_handler(coap_message_t *request, coap_message_t *response,
                      uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *payload;
@@ -91,7 +91,7 @@ res_post_put_handler(coap_packet_t *request, coap_packet_t *response,
 }
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   coap_set_header_content_format(response, TEXT_PLAIN);
   coap_set_payload(response, buffer, snprintf((char *)buffer, preferred_size, "%d", (leds_get() & LEDS_3) ? 1 : 0));

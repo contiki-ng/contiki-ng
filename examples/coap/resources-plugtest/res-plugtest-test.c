@@ -43,10 +43,10 @@
 #include "plugtest.h"
 #include "random.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_test, "title=\"Default test resource\"", res_get_handler, res_post_handler, res_put_handler, res_delete_handler);
 
@@ -71,9 +71,9 @@ test_update_etag()
   PRINTF("### SERVER ACTION ### Changed ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n", test_etag_len, test_etag[0], test_etag[1], test_etag[2], test_etag[3], test_etag[4], test_etag[5], test_etag[6], test_etag[7]);
 }
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
 
   if(test_change) {
     test_update_etag();
@@ -101,20 +101,20 @@ res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
   }
 }
 static void
-res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
-    coap_packet_t *const coap_req = (coap_packet_t *)request;
+    coap_message_t *const coap_req = (coap_message_t *)request;
     PRINTF("/test POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 #endif
   coap_set_status_code(response, CREATED_2_01);
   coap_set_header_location_path(response, "/location1/location2/location3");
 }
 static void
-res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
   PRINTF("/test PUT (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 #endif
 
@@ -154,10 +154,10 @@ res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
   }
 }
 static void
-res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
   PRINTF("/test DELETE (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 #endif
   coap_set_status_code(response, DELETED_2_02);

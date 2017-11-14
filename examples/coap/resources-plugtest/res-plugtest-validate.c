@@ -43,8 +43,8 @@
 #include "plugtest.h"
 #include "random.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_validate,
          "title=\"Validation test resource\"",
@@ -74,9 +74,9 @@ validate_update_etag()
          validate_etag_len, validate_etag[0], validate_etag[1], validate_etag[2], validate_etag[3], validate_etag[4], validate_etag[5], validate_etag[6], validate_etag[7]);
 }
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
 
   if(validate_change) {
     validate_update_etag();
@@ -106,10 +106,10 @@ res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
   }
 }
 static void
-res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
 #endif
 
   PRINTF("/validate       PUT ");

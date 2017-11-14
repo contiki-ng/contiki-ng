@@ -43,7 +43,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-int coap_block1_handler(coap_packet_t *request, coap_packet_t *response,
+int coap_block1_handler(coap_message_t *request, coap_message_t *response,
                         uint8_t *target, size_t *len, size_t max_len);
 
 #endif /* COAP_BLOCK1_H_ */

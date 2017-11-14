@@ -43,9 +43,9 @@
 #include "coap-observe.h"
 #include "plugtest.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_periodic_handler(void);
 
 PERIODIC_RESOURCE(res_plugtest_obs,
@@ -71,7 +71,7 @@ obs_purge_list()
   coap_remove_observer_by_uri(NULL, res_plugtest_obs.url);
 }
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* Keep server log clean from ticking events */
   if(request != NULL) {
@@ -91,7 +91,7 @@ res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
   /* A post_handler that handles subscriptions will be called for periodic resources by the CoAP framework. */
 }
 static void
-res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   uint8_t *incoming = NULL;
   unsigned int ct = -1;
@@ -113,7 +113,7 @@ res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
   coap_set_status_code(response, CHANGED_2_04);
 }
 static void
-res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   PRINTF("/obs            DELETE\n");
 

@@ -74,7 +74,7 @@
 /*- Resource Handlers -------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 static void
-well_known_core_get_handler(coap_packet_t *request, coap_packet_t *response,
+well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
                             uint8_t *buffer, uint16_t preferred_size,
                             int32_t *offset)
 {

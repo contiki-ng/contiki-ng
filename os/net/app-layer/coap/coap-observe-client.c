@@ -62,7 +62,7 @@ LIST(obs_subjects_list);
 
 /*----------------------------------------------------------------------------*/
 static size_t
-get_token(coap_packet_t *coap_pkt, const uint8_t **token)
+get_token(coap_message_t *coap_pkt, const uint8_t **token)
 {
   *token = coap_pkt->token;
 
@@ -70,7 +70,7 @@ get_token(coap_packet_t *coap_pkt, const uint8_t **token)
 }
 /*----------------------------------------------------------------------------*/
 static int
-set_token(coap_packet_t *coap_pkt, const uint8_t *token, size_t token_len)
+set_token(coap_message_t *coap_pkt, const uint8_t *token, size_t token_len)
 {
   coap_pkt->token_len = MIN(COAP_TOKEN_LEN, token_len);
   memcpy(coap_pkt->token, token, coap_pkt->token_len);
@@ -172,9 +172,9 @@ coap_obs_remove_observee_by_url(const coap_endpoint_t *endpoint,
 /*----------------------------------------------------------------------------*/
 static void
 simple_reply(coap_message_type_t type, const coap_endpoint_t *endpoint,
-             coap_packet_t *notification)
+             coap_message_t *notification)
 {
-  static coap_packet_t response[1];
+  static coap_message_t response[1];
   size_t len;
 
   coap_init_message(response, type, NO_ERROR, notification->mid);
@@ -183,7 +183,7 @@ simple_reply(coap_message_type_t type, const coap_endpoint_t *endpoint,
 }
 /*----------------------------------------------------------------------------*/
 static coap_notification_flag_t
-classify_notification(coap_packet_t *response, int first)
+classify_notification(coap_message_t *response, int first)
 {
   if(!response) {
     PRINTF("no response\n");
@@ -206,7 +206,7 @@ classify_notification(coap_packet_t *response, int first)
 /*----------------------------------------------------------------------------*/
 void
 coap_handle_notification(const coap_endpoint_t *endpoint,
-                         coap_packet_t *notification)
+                         coap_message_t *notification)
 {
   const uint8_t *token;
   int token_len;
@@ -250,7 +250,7 @@ coap_handle_notification(const coap_endpoint_t *endpoint,
 }
 /*----------------------------------------------------------------------------*/
 static void
-handle_obs_registration_response(void *data, coap_packet_t *response)
+handle_obs_registration_response(void *data, coap_message_t *response)
 {
   coap_observee_t *obs;
   notification_callback_t notification_callback;
@@ -284,7 +284,7 @@ coap_obs_request_registration(const coap_endpoint_t *endpoint, char *uri,
                               notification_callback_t notification_callback,
                               void *data)
 {
-  coap_packet_t request[1];
+  coap_message_t request[1];
   coap_transaction_t *t;
   uint8_t *token;
   uint8_t token_len;
@@ -303,7 +303,7 @@ coap_obs_request_registration(const coap_endpoint_t *endpoint, char *uri,
     if(obs) {
       t->callback = handle_obs_registration_response;
       t->callback_data = obs;
-      t->packet_len = coap_serialize_message(request, t->packet);
+      t->message_len = coap_serialize_message(request, t->message);
       coap_send_transaction(t);
     } else {
       PRINTF("Could not allocate obs_subject resource buffer");

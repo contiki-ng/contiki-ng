@@ -48,7 +48,7 @@
 #include "coap-engine.h"
 #include "dev/sht11/sht11-sensor.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* Get Method Example. Returns the reading from temperature and humidity sensors. */
 RESOURCE(res_sht11,
@@ -59,7 +59,7 @@ RESOURCE(res_sht11,
          NULL);
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* Temperature in Celsius (t in 14 bits resolution at 3 Volts)
    * T = -39.60 + 0.01*t

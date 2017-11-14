@@ -92,7 +92,7 @@
 static struct lwm2m_session_info session_info;
 static coap_request_state_t rd_request_state;
 
-static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
+static coap_message_t request[1];      /* This way the message can be treated as pointer as usual. */
 
 /* The states for the RD client state machine */
 /* When node is unregistered it ends up in UNREGISTERED
@@ -135,7 +135,7 @@ static void check_periodic_observations();
 static void update_callback(coap_request_state_t *state);
 
 static int
-set_rd_data(coap_packet_t *request)
+set_rd_data(coap_message_t *request)
 {
   lwm2m_buffer_t outbuf;
 
@@ -157,7 +157,7 @@ set_rd_data(coap_packet_t *request)
 }
 /*---------------------------------------------------------------------------*/
 static void
-prepare_update(coap_packet_t *request, int triggered) {
+prepare_update(coap_message_t *request, int triggered) {
   coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
   coap_set_header_uri_path(request, session_info.assigned_ep);
 

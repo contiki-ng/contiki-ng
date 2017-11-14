@@ -45,7 +45,7 @@
 #include "coap-engine.h"
 #include "dev/leds.h"
 
-static void res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* A simple actuator example. Toggles the red led */
 RESOURCE(res_toggle,
@@ -56,7 +56,7 @@ RESOURCE(res_toggle,
          NULL);
 
 static void
-res_post_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   leds_toggle(LEDS_RED);
 }

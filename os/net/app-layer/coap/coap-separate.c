@@ -81,7 +81,7 @@ coap_separate_reject()
  * then retry later.
  */
 void
-coap_separate_accept(coap_packet_t *coap_req, coap_separate_t *separate_store)
+coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
 {
   coap_transaction_t *const t = coap_get_transaction_by_mid(coap_req->mid);
 
@@ -90,7 +90,7 @@ coap_separate_accept(coap_packet_t *coap_req, coap_separate_t *separate_store)
   if(t) {
     /* send separate ACK for CON */
     if(coap_req->type == COAP_TYPE_CON) {
-      coap_packet_t ack[1];
+      coap_message_t ack[1];
       const coap_endpoint_t *ep;
 
       ep = coap_get_src_endpoint(coap_req);
@@ -131,7 +131,7 @@ coap_separate_accept(coap_packet_t *coap_req, coap_separate_t *separate_store)
 }
 /*----------------------------------------------------------------------------*/
 void
-coap_separate_resume(coap_packet_t *response, coap_separate_t *separate_store,
+coap_separate_resume(coap_message_t *response, coap_separate_t *separate_store,
                      uint8_t code)
 {
   coap_init_message(response, separate_store->type, code,

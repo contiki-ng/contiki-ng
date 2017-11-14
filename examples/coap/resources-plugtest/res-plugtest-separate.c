@@ -44,7 +44,7 @@
 #include "coap-separate.h"
 #include "plugtest.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_resume_handler(void);
 
 PERIODIC_RESOURCE(res_plugtest_separate,
@@ -68,9 +68,9 @@ static uint8_t separate_active = 0;
 static application_separate_store_t separate_store[1];
 
 void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
 
   PRINTF("/separate       ");
   if(separate_active) {
@@ -102,7 +102,7 @@ res_resume_handler()
       PRINTF(
         "RESPONSE (%s %u)\n", separate_store->request_metadata.type == COAP_TYPE_CON ? "CON" : "NON", separate_store->request_metadata.mid);
 
-      coap_packet_t response[1]; /* This way the packet can be treated as pointer as usual. */
+      coap_message_t response[1]; /* This way the message can be treated as pointer as usual. */
 
       /* Restore the request information for the response. */
       coap_separate_resume(response, &separate_store->request_metadata, CONTENT_2_05);
@@ -120,8 +120,8 @@ res_resume_handler()
                              separate_store->request_metadata.block2_size);
 
       /* Warning: No check for serialization error. */
-      transaction->packet_len = coap_serialize_message(response,
-                                                       transaction->packet);
+      transaction->message_len = coap_serialize_message(response,
+                                                       transaction->message);
       coap_send_transaction(transaction);
       /* The engine will clear the transaction (right after send for NON, after acked for CON). */
 

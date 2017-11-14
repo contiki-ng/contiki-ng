@@ -40,7 +40,7 @@
 #include <string.h>
 #include "coap-engine.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /*
  * For data larger than COAP_MAX_CHUNK_SIZE (e.g., when stored in flash) resources must be aware of the buffer limitation
@@ -59,7 +59,7 @@ RESOURCE(res_chunks,
 #define CHUNKS_TOTAL    2050
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int32_t strpos = 0;
 

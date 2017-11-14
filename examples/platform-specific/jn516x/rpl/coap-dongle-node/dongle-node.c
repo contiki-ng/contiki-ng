@@ -41,7 +41,7 @@
 #include "dev/leds.h"
 
 static void ct_callback(void *ptr);
-static void put_post_led_toggle_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_toggle_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
@@ -77,7 +77,7 @@ RESOURCE(resource_led_toggle,
          put_post_led_toggle_handler,
          NULL);
 static void
-put_post_led_toggle_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_toggle_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   static int led_state = 0;
   unsigned int accept = -1;

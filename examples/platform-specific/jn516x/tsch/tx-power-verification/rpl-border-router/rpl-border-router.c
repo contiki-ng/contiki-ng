@@ -56,8 +56,8 @@
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
-static void get_rssi_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_last_rssi_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_last_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
@@ -74,7 +74,7 @@ RESOURCE(resource_get_rssi,
          NULL,
          NULL);
 static void
-get_rssi_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int rssi_level;
   unsigned int accept = -1;
@@ -95,7 +95,7 @@ RESOURCE(resource_get_last_rssi,
          NULL,
          NULL);
 static void
-get_last_rssi_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_last_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int last_rssi_level;
   unsigned int accept = -1;

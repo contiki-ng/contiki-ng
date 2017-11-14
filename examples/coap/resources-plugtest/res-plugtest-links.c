@@ -41,7 +41,7 @@
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_link1,
          "rt=\"Type1 Type2\";if=\"If1\"",
@@ -63,7 +63,7 @@ RESOURCE(res_plugtest_link3,
          NULL);
 
 static void
-res_get_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const char *msg = "Dummy link";
   coap_set_header_content_format(response, TEXT_PLAIN);

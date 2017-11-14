@@ -180,8 +180,8 @@ typedef struct lwm2m_context {
   uint8_t level;  /* 0/1/2/3 = 3 = resource */
   lwm2m_operation_t operation;
 
-  coap_packet_t *request;
-  coap_packet_t *response;
+  coap_message_t *request;
+  coap_message_t *response;
 
   unsigned int content_type;
   lwm2m_buffer_t *outbuf;

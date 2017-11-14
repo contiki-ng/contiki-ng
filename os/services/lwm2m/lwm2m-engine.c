@@ -120,8 +120,8 @@ static uint64_t lwm2m_buf_lock_timeout = 0;
 static lwm2m_write_opaque_callback current_opaque_callback;
 static int current_opaque_offset = 0;
 
-static coap_handler_status_t lwm2m_handler_callback(coap_packet_t *request,
-                                                    coap_packet_t *response,
+static coap_handler_status_t lwm2m_handler_callback(coap_message_t *request,
+                                                    coap_message_t *response,
                                                     uint8_t *buffer,
                                                     uint16_t buffer_size,
                                                     int32_t *offset);
@@ -350,7 +350,7 @@ parse_path(const char *path, int path_len,
 /*--------------------------------------------------------------------------*/
 static int
 lwm2m_engine_parse_context(const char *path, int path_len,
-                           coap_packet_t *request, coap_packet_t *response,
+                           coap_message_t *request, coap_message_t *response,
                            uint8_t *outbuf, size_t outsize,
                            lwm2m_context_t *context)
 {
@@ -470,7 +470,7 @@ lwm2m_engine_set_rd_data(lwm2m_buffer_t *outbuf, int block)
       }
 
       if(instance == NULL && object == NULL && lwm2m_buf.len <= maxsize) {
-        /* Data generation is done. No more packets are needed after this. */
+        /* Data generation is done. No more messages are needed after this. */
         break;
       }
     }
@@ -1296,7 +1296,7 @@ next_object_instance(const lwm2m_context_t *context, lwm2m_object_t *object,
 }
 /*---------------------------------------------------------------------------*/
 static coap_handler_status_t
-lwm2m_handler_callback(coap_packet_t *request, coap_packet_t *response,
+lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
                        uint8_t *buffer, uint16_t buffer_size, int32_t *offset)
 {
   const char *url;
@@ -1568,7 +1568,7 @@ lwm2m_handler_callback(coap_packet_t *request, coap_packet_t *response,
         if(context.writer_flags & WRITER_HAS_MORE) {
           *offset = context.offset;
         } else {
-          /* this signals to CoAP that there is no more CoAP packets to expect */
+          /* this signals to CoAP that there is no more CoAP messages to expect */
           *offset = -1;
         }
       }

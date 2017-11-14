@@ -49,7 +49,7 @@ const char *forbidden_payload = "Name to advertise unspecified.\n"
                                 "Use name=<name> in the request";
 /*---------------------------------------------------------------------------*/
 static void
-res_ble_post_put_handler(coap_packet_t *request, coap_packet_t *response,
+res_ble_post_put_handler(coap_message_t *request, coap_message_t *response,
                          uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {

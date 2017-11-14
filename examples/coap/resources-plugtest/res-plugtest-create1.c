@@ -41,8 +41,8 @@
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_create1,
          "title=\"Creates on PUT\"",
@@ -54,7 +54,7 @@ RESOURCE(res_plugtest_create1,
 static uint8_t create1_exists = 0;
 
 static void
-res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   PRINTF("/create1       PUT");
 
@@ -71,7 +71,7 @@ res_put_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer
   }
 }
 static void
-res_delete_handler(coap_packet_t *request, coap_packet_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   PRINTF("/create1       DELETE ");
   coap_set_status_code(response, DELETED_2_02);

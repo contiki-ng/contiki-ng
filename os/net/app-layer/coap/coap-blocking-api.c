@@ -55,7 +55,7 @@
 /*- Client Part -------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void
-coap_blocking_request_callback(void *callback_data, coap_packet_t *response)
+coap_blocking_request_callback(void *callback_data, coap_message_t *response)
 {
   coap_request_state_t *state = (coap_request_state_t *)callback_data;
 
@@ -66,7 +66,7 @@ coap_blocking_request_callback(void *callback_data, coap_packet_t *response)
 PT_THREAD(coap_blocking_request
           (coap_request_state_t *state, process_event_t ev,
            coap_endpoint_t *remote_ep,
-           coap_packet_t *request,
+           coap_message_t *request,
            coap_blocking_response_handler_t request_callback))
 {
   PT_BEGIN(&state->pt);
@@ -93,10 +93,10 @@ PT_THREAD(coap_blocking_request
         coap_set_header_block2(request, state->block_num, 0,
                                COAP_MAX_CHUNK_SIZE);
       }
-      state->transaction->packet_len = coap_serialize_message(request,
+      state->transaction->message_len = coap_serialize_message(request,
                                                               state->
                                                               transaction->
-                                                              packet);
+                                                              message);
 
       coap_send_transaction(state->transaction);
       PRINTF("Requested #%lu (MID %u)\n", state->block_num, request->mid);
