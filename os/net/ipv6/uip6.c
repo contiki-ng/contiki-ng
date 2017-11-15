@@ -508,6 +508,9 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   conn->rto = UIP_RTO;
   conn->sa = 0;
   conn->sv = 16;   /* Initial value of the RTT variance. */
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  conn->max_mac_transmissions = UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED;
+#endif
   conn->lport = uip_htons(lastport);
   conn->rport = rport;
   uip_ipaddr_copy(&conn->ripaddr, ripaddr);
@@ -581,6 +584,9 @@ uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport)
     uip_ipaddr_copy(&conn->ripaddr, ripaddr);
   }
   conn->ttl = uip_ds6_if.cur_hop_limit;
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  conn->max_mac_transmissions = UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED;
+#endif
 
   return conn;
 }
@@ -1545,6 +1551,16 @@ uip_process(uint8_t flag)
   UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
   UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
 
+  UIP_IP_BUF->vtc = 0x60;
+  UIP_IP_BUF->tcflow = 0x00;
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  if(uip_udp_conn->max_mac_transmissions != UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED) {
+    /* Encapsulate the MAC transmission limit in the Traffic Class field */
+    UIP_IP_BUF->vtc = 0x60 | (UIP_TC_MAC_TRANSMISSION_COUNTER_BIT >> 4);
+    UIP_IP_BUF->tcflow = uip_udp_conn->max_mac_transmissions << 4;
+  }
+#endif /* UIP_WITH_VARIABLE_RETRANSMISSIONS */
+
   UIP_IP_BUF->ttl = uip_udp_conn->ttl;
   UIP_IP_BUF->proto = UIP_PROTO_UDP;
 
@@ -2249,6 +2265,16 @@ uip_process(uint8_t flag)
   UIP_TCP_BUF->srcport  = uip_connr->lport;
   UIP_TCP_BUF->destport = uip_connr->rport;
 
+  UIP_IP_BUF->vtc = 0x60;
+  UIP_IP_BUF->tcflow = 0x00;
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  if(uip_connr->max_mac_transmissions != UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED) {
+    /* Encapsulate the MAC transmission limit in the Traffic Class field */
+    UIP_IP_BUF->vtc = 0x60 | (UIP_TC_MAC_TRANSMISSION_COUNTER_BIT >> 4);
+    UIP_IP_BUF->tcflow = uip_connr->max_mac_transmissions << 4;
+  }
+#endif /* UIP_WITH_VARIABLE_RETRANSMISSIONS */
+
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &uip_connr->ripaddr);
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
   LOG_INFO("Sending TCP packet to ");
@@ -2284,8 +2310,6 @@ uip_process(uint8_t flag)
 #if UIP_UDP
   ip_send_nolen:
 #endif
-  UIP_IP_BUF->vtc = 0x60;
-  UIP_IP_BUF->tcflow = 0x00;
   UIP_IP_BUF->flow = 0x00;
   send:
   LOG_INFO("Sending packet with length %d (%d)\n", uip_len,
