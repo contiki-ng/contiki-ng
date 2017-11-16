@@ -25,11 +25,11 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-TOOLS= tools sky
+TOOLS=tools sky
 TOOLSDIR=../../tools
 TESTLOGS=$(patsubst %,%.testlog, $(TOOLS))
 
-all: summary
+all: clean summary
 
 tools.testlog:
 	@echo -n Building tool: $(basename $@)
