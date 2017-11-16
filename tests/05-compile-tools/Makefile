@@ -25,47 +25,30 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-TOOLS=sky  tools
-FAILTOOLS=sky=uip6-bridge
-
-
+TOOLS= tools sky
 TOOLSDIR=../../tools
-LOGS=$(patsubst %,%.log, $(TOOLS))
+TESTLOGS=$(patsubst %,%.testlog, $(TOOLS))
 
 all: summary
 
-FRC:
+tools.testlog:
+	@echo -n Building tool: $(basename $@)
+	@printf "%-32s" "$@" > $@
+	@$(MAKE) -C $(TOOLSDIR)  > /dev/null && \
+		(echo " -> OK" && echo "TEST OK" >> $@) || \
+		(echo " -> FAIL" && echo "TEST FAIL" >> $@)
 
+%.testlog:
+	@echo -n Building tool: $(basename $@)
+	@printf "%-32s" "$@" > $@
+	@$(MAKE) -C $(TOOLSDIR)/$(basename $@) > /dev/null && \
+		(echo " -> OK" && echo "TEST OK" >> $@) || \
+		(echo " -> FAIL" && echo "TEST FAIL" >> $@)
 
-sky.log: RMFILES=serialdump-linux
-
-
-tools.log:
-		@$(MAKE) -C $(TOOLSDIR) > $@ 2>&1 && $(RM) $@.failed || touch $@.failed
-
-
-%.log:  FRC
-	@( cd $(TOOLSDIR)/$(subst =,/,$*) &&  $(RM) $(RMFILES) )
-	@touch $@
-	@$(MAKE) -C $(TOOLSDIR)/$(subst =,/,$*) > $@ 2>&1 && $(RM) $@.failed || touch $@.failed
-
-
-summary: $(LOGS)
-	@(\
-		for T in $(TOOLS) ; do \
-			if [ -f $$T.log.failed  ] ; then \
-				echo tools/$$T: FAIL >> $@;\
-				cat $$T.log >> $@;\
-			else \
-				echo tools/$$T: OK >> $@;\
-			fi\
-		done \
-	)
-	@echo "Info: The following tools need fixing and are not tested:" $(subst =,/,$(FAILTOOLS)) >> $@
-	@echo $@
+summary: $(TESTLOGS)
+	@cat *.testlog > summary
+	@echo "========== Summary =========="
+	@cat summary
 
 clean:
-	@make -C $(DOCDIR) clean
-
-
-.PHONY: %.log
+	@rm -f *.testlog summary
