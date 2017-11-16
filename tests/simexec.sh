@@ -60,7 +60,7 @@ for (( SEED=$BASESEED; SEED<$(($BASESEED+$RUNCOUNT)); SEED++ )); do
 		echo " OK"
 	else
 		FAILSEEDS+=" $BASESEED"
-		echo " FAIL ಠ_ಠ"
+		echo " FAIL"
 		# Verbose output when using CI
 		if [ "$CI" = "true" ]; then
 			echo "==== $BASENAME.$SEED.coojalog ====" ; cat $BASENAME.$SEED.coojalog;
@@ -73,9 +73,9 @@ done
 
 if [ $TESTCOUNT -ne $OKCOUNT ] ; then
 	# At least one test failed
-	printf "%-32s TEST FAIL  %3d/%d -- failed seeds:%s\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" "$FAILSEEDS" > $BASENAME.testlog;
+	printf "%-40s TEST FAIL  %3d/%d -- failed seeds:%s\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" "$FAILSEEDS" > $BASENAME.testlog;
 else
-	printf "%-32s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
+	printf "%-40s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
 fi
 
 # We do not want Make to stop -> Return 0
