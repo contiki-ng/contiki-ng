@@ -61,13 +61,8 @@ for (( SEED=$BASESEED; SEED<$(($BASESEED+$RUNCOUNT)); SEED++ )); do
 	else
 		FAILSEEDS+=" $BASESEED"
 		echo " FAIL"
-		# Verbose output when using CI
-		if [ "$CI" = "true" ]; then
-			echo "==== $BASENAME.$SEED.coojalog ====" ; cat $BASENAME.$SEED.coojalog;
-			echo "==== $BASENAME.$SEED.scriptlog ====" ; cat $BASENAME.$SEED.scriptlog;
-		else
-			echo "==== Check $BASENAME.$SEED.coojalog and $BASENAME.$SEED.scriptlog for details ====";
-		fi
+		echo "==== $BASENAME.$SEED.coojalog ====" ; cat $BASENAME.$SEED.coojalog;
+		echo "==== $BASENAME.$SEED.scriptlog ====" ; cat $BASENAME.$SEED.scriptlog;
 	fi
 done
 

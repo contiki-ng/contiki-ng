@@ -25,6 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
+all: cooja summary
 
 TESTS=$(wildcard ??-*.csc)
 TESTLOGS=$(sort $(patsubst %.csc,%.testlog,$(TESTS)))
@@ -40,12 +41,12 @@ tests: $(TESTLOGS)
 
 summary: clean tests
 ifeq ($(TESTS),)
-	@echo No tests > $@
+	@echo No tests > summary
 else
-	@cat $(TESTLOGS) > $@
+	@cat $(TESTLOGS) > summary
 endif
-
-all: cooja clean tests
+	@echo "========== Summary =========="
+	@cat summary
 
 %.testlog: %.csc cooja
 	@$(CONTIKI)/tests/simexec.sh "$<" "$(CONTIKI)" "$(basename $@)" $(BASESEED) $(RUNCOUNT)
