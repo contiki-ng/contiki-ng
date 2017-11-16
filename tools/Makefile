@@ -1,4 +1,4 @@
-all: tunslip
+all: tunslip6
 
 tunslip6: tools-utils.c tunslip6.c
 
