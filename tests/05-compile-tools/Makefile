@@ -34,14 +34,16 @@ all: clean summary
 tools.testlog:
 	@echo -n Building tool: $(basename $@)
 	@printf "%-32s" "$@" > $@
-	@$(MAKE) -C $(TOOLSDIR)  > /dev/null && \
+	@$(MAKE) -C $(TOOLSDIR) clean > /dev/null && \
+		$(MAKE) -C $(TOOLSDIR) > /dev/null && \
 		(echo " -> OK" && echo "TEST OK" >> $@) || \
 		(echo " -> FAIL" && echo "TEST FAIL" >> $@)
 
 %.testlog:
 	@echo -n Building tool: $(basename $@)
 	@printf "%-32s" "$@" > $@
-	@$(MAKE) -C $(TOOLSDIR)/$(basename $@) > /dev/null && \
+	@$(MAKE) -C $(TOOLSDIR)/$(basename $@) clean > /dev/null && \
+	  $(MAKE) -C $(TOOLSDIR)/$(basename $@) > /dev/null && \
 		(echo " -> OK" && echo "TEST OK" >> $@) || \
 		(echo " -> FAIL" && echo "TEST FAIL" >> $@)
 
