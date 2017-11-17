@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-TOOLS=tools sky
+TOOLS=tools sky jn516x
 TOOLSDIR=../../tools
 TESTLOGS=$(patsubst %,%.testlog, $(TOOLS))
 
