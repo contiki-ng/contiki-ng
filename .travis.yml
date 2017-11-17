@@ -2,6 +2,9 @@
 # See https://github.com/travis-ci/travis-ci/issues/6928#issuecomment-264227708
 group: deprecated
 
+before_install:
+  - sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+
 notifications:
   email: false
 language: c #NOTE: this will set CC=gcc which might cause trouble
@@ -106,3 +109,5 @@ env:
   - BUILD_TYPE='base' BUILD_CATEGORY='sim'
   - BUILD_TYPE='ieee802154' BUILD_CATEGORY='sim'
   - BUILD_TYPE='6tisch' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='rpl-border-router' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='native-networking' BUILD_CATEGORY='sim'
