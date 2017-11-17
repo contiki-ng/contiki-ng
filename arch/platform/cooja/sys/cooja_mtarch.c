@@ -72,11 +72,7 @@ struct frame {
   unsigned long retaddr2;
   unsigned long data;
 };
-/*--------------------------------------------------------------------------*/
-void
-cooja_mtarch_init(void)
-{
-}
+
 /*--------------------------------------------------------------------------*/
 void
 cooja_mtarch_start(struct cooja_mtarch_thread *t,
@@ -187,35 +183,8 @@ cooja_mtarch_exec(struct cooja_mtarch_thread *t)
 }
 /*--------------------------------------------------------------------------*/
 void
-cooja_mtarch_remove(void)
-{
-}
-/*--------------------------------------------------------------------------*/
-void
 cooja_mtarch_yield(void)
 {
   cooja_sw();
-}
-/*--------------------------------------------------------------------------*/
-void
-cooja_mtarch_pstop(void)
-{
-}
-/*--------------------------------------------------------------------------*/
-void
-cooja_mtarch_pstart(void)
-{
-}
-/*--------------------------------------------------------------------------*/
-int
-cooja_mtarch_stack_usage(struct cooja_mt_thread *t)
-{
-  int i;
-  for(i = 0; i < COOJA_MTARCH_STACKSIZE; ++i) {
-    if(t->thread.stack[i] != i) {
-      return COOJA_MTARCH_STACKSIZE - i;
-    }
-  }
-  return -1;
 }
 /*--------------------------------------------------------------------------*/
