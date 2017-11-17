@@ -25,25 +25,17 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-TOOLS=tools sky jn516x
-TOOLSDIR=../../tools
-TESTLOGS=$(patsubst %,%.testlog, $(TOOLS))
+TOOLS=tools tools/sky tools/jn516x
+BASEDIR=../../
+TESTLOGS=$(subst /,__,$(patsubst %,%.testlog, $(TOOLS)))
 
 all: clean summary
-
-tools.testlog:
-	@echo -n Building tool: $(basename $@)
-	@printf "%-32s" "$@" > $@
-	@$(MAKE) -C $(TOOLSDIR) clean > /dev/null && \
-		$(MAKE) -C $(TOOLSDIR) > /dev/null && \
-		(echo " -> OK" && echo "TEST OK" >> $@) || \
-		(echo " -> FAIL" && echo "TEST FAIL" >> $@)
 
 %.testlog:
 	@echo -n Building tool: $(basename $@)
 	@printf "%-32s" "$@" > $@
-	@$(MAKE) -C $(TOOLSDIR)/$(basename $@) clean > /dev/null && \
-	  $(MAKE) -C $(TOOLSDIR)/$(basename $@) > /dev/null && \
+	@$(MAKE) -C $(BASEDIR)/$(basename $(subst __,/,$@)) clean > /dev/null && \
+	  $(MAKE) -C $(BASEDIR)/$(basename $(subst __,/,$@)) > /dev/null && \
 		(echo " -> OK" && echo "TEST OK" >> $@) || \
 		(echo " -> FAIL" && echo "TEST FAIL" >> $@)
 
