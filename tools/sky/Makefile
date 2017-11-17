@@ -21,5 +21,7 @@ endif
 
 all:	$(SERIALDUMP)
 
+CFLAGS += -Wall -Werror
+
 $(SERIALDUMP):	serialdump.c
 	$(CC) -O2 -o $@ $<
