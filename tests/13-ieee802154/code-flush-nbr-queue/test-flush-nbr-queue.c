@@ -58,7 +58,7 @@ UNIT_TEST(test)
 
   UNIT_TEST_BEGIN();
 
-  packet = tsch_queue_add_packet(TEST_PEER_ADDR, NULL, NULL);
+  packet = tsch_queue_add_packet(TEST_PEER_ADDR, 1, NULL, NULL);
   UNIT_TEST_ASSERT(packet != NULL);
 
   nbr = tsch_queue_get_nbr(TEST_PEER_ADDR);
@@ -68,14 +68,14 @@ UNIT_TEST(test)
    * QUEUEBUF_CONF_NUM is set with 1; so another addition should fail due to
    * lack of memory.
    */
-  packet = tsch_queue_add_packet(TEST_PEER_ADDR, NULL, NULL);
+  packet = tsch_queue_add_packet(TEST_PEER_ADDR, 1, NULL, NULL);
   UNIT_TEST_ASSERT(packet == NULL);
 
   /* tsch_queue_flush_nbr_queue() is called inside of tsch_queue_reset(). */
   tsch_queue_reset();
 
   /* After flushing the nbr queue, we should be able to add a new packet */
-  packet = tsch_queue_add_packet(TEST_PEER_ADDR, NULL, NULL);
+  packet = tsch_queue_add_packet(TEST_PEER_ADDR, 1, NULL, NULL);
   UNIT_TEST_ASSERT(packet != NULL);
 
   UNIT_TEST_END();
