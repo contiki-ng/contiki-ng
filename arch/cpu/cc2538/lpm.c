@@ -212,10 +212,14 @@ lpm_exit()
   /* Restore system clock to the 32 MHz XOSC */
   select_32_mhz_xosc();
 
+  if((REG(SYS_CTRL_PMCTL) & SYS_CTRL_PMCTL_PM3) == SYS_CTRL_PMCTL_PM1) {
+    ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
+  } else {
+    ENERGEST_SWITCH(ENERGEST_TYPE_DEEP_LPM, ENERGEST_TYPE_CPU);
+  }
+
   /* Restore PMCTL to PM0 for next pass */
   REG(SYS_CTRL_PMCTL) = SYS_CTRL_PMCTL_PM0;
-
-  ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -286,8 +290,6 @@ lpm_enter()
     REG(SYS_CTRL_PMCTL) = SYS_CTRL_PMCTL_PM1;
   }
 
-  ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
-
   /* Remember the current time so we can keep stats when we wake up */
   if(LPM_CONF_STATS) {
     sleep_enter_time = RTIMER_NOW();
@@ -310,9 +312,13 @@ lpm_enter()
 
     REG(SYS_CTRL_PMCTL) = SYS_CTRL_PMCTL_PM0;
 
-    ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
   } else {
     /* All clear. Assert WFI and drop to PM1/2. This is now un-interruptible */
+    if((REG(SYS_CTRL_PMCTL) & SYS_CTRL_PMCTL_PM3) == SYS_CTRL_PMCTL_PM1) {
+      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
+    } else {
+      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_DEEP_LPM);
+    }
     assert_wfi();
   }
 
