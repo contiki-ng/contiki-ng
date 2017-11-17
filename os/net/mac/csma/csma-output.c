@@ -85,9 +85,9 @@
 
 /* macMaxFrameRetries: Maximum number of re-transmissions attampts. Range 0--7 */
 #ifdef CSMA_CONF_MAX_FRAME_RETRIES
-#define CSMA_MAX_MAX_FRAME_RETRIES CSMA_CONF_MAX_FRAME_RETRIES
+#define CSMA_MAX_FRAME_RETRIES CSMA_MAX_FRAME_RETRIES
 #else
-#define CSMA_MAX_MAX_FRAME_RETRIES 7
+#define CSMA_MAX_FRAME_RETRIES 7
 #endif
 
 /* Packet metadata */
@@ -506,7 +506,15 @@ csma_output_packet(mac_callback_t sent, void *ptr)
           if(q->buf != NULL) {
             struct qbuf_metadata *metadata = (struct qbuf_metadata *)q->ptr;
             /* Neighbor and packet successfully allocated */
-            metadata->max_transmissions = CSMA_MAX_MAX_FRAME_RETRIES + 1;
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+            metadata->max_transmissions = packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
+            if(metadata->max_transmissions == 0) {
+              /* If not set by the application, use the default CSMA value */
+              metadata->max_transmissions = CSMA_MAX_FRAME_RETRIES + 1;
+            }
+#else
+            metadata->max_transmissions = CSMA_MAX_FRAME_RETRIES + 1;
+#endif
             metadata->sent = sent;
             metadata->cptr = ptr;
             list_add(n->packet_queue, q);

@@ -1504,6 +1504,17 @@ output(const linkaddr_t *localdest)
     set_packet_attrs();
   }
 
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  {
+    uint8_t traffic_class = (UIP_IP_BUF->vtc << 4) | (UIP_IP_BUF->tcflow >> 4);
+    if(traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_BIT) {
+      uint8_t max_mac_transmissions = traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_MASK;
+      /* propagate the MAC transmission limit to lower layers */
+      packetbuf_set_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS, max_mac_transmissions);
+    }
+  }
+#endif /* UIP_WITH_VARIABLE_RETRANSMISSIONS */
+
   /*
    * The destination address will be tagged to each outbound
    * packet. If the argument localdest is NULL, we are sending a

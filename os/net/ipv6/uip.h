@@ -821,6 +821,18 @@ CCIF void uip_send(const void *data, int len);
 #define uip_mss()             (uip_conn->mss)
 
 /**
+ * Set the maximal number of MAC transmissions.
+ *
+ * \hideinitializer
+ */
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+#define uip_set_max_mac_transmissions(conn, value)   ((conn)->max_mac_transmissions = (value))
+#else
+#define uip_set_max_mac_transmissions(conn, value)
+#endif
+
+
+/**
  * Set up a new UDP connection.
  *
  * This function sets up a new UDP connection. The function will
@@ -882,6 +894,7 @@ struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport);
  * \hideinitializer
  */
 #define uip_udp_send(len) uip_send((char *)uip_appdata, len)
+
 
 /** @} */
 
@@ -1352,6 +1365,9 @@ struct uip_conn {
   uint8_t timer;         /**< The retransmission timer. */
   uint8_t nrtx;          /**< The number of retransmissions for the last
                               segment sent. */
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  uint8_t max_mac_transmissions; /**< Number of max MAC-layer transmissions. */
+#endif
 
   uip_tcp_appstate_t appstate; /** The application state. */
 };
@@ -1389,6 +1405,9 @@ struct uip_udp_conn {
   uint16_t lport;        /**< The local port number in network byte order. */
   uint16_t rport;        /**< The remote port number in network byte order. */
   uint8_t  ttl;          /**< Default time-to-live. */
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  uint8_t  max_mac_transmissions; /**< Number of max MAC-layer transmissions. */
+#endif
 
   /** The application state. */
   uip_udp_appstate_t appstate;

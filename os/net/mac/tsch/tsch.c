@@ -832,8 +832,8 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
         /* Prepare the EB packet and schedule it to be sent */
         if(tsch_packet_create_eb(&hdr_len, &tsch_sync_ie_offset) > 0) {
           struct tsch_packet *p;
-          /* Enqueue EB packet */
-          if(!(p = tsch_queue_add_packet(&tsch_eb_address, NULL, NULL))) {
+          /* Enqueue EB packet, for a single transmission only */
+          if(!(p = tsch_queue_add_packet(&tsch_eb_address, 1, NULL, NULL))) {
             LOG_ERR("! could not enqueue EB packet\n");
           } else {
               LOG_INFO("TSCH: enqueue EB packet %u %u\n",
@@ -958,6 +958,7 @@ send_packet(mac_callback_t sent, void *ptr)
   int ret = MAC_TX_DEFERRED;
   int hdr_len = 0;
   const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+  uint8_t max_transmissions = 0;
 
   if(!tsch_is_associated) {
     if(!tsch_is_initialized) {
@@ -1006,13 +1007,21 @@ send_packet(mac_callback_t sent, void *ptr)
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
 #endif
 
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  max_transmissions = packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
+#endif
+  if(max_transmissions == 0) {
+    /* If not set by the application, use the default TSCH value */
+    max_transmissions = TSCH_MAC_MAX_FRAME_RETRIES + 1;
+  }
+
   if((hdr_len = NETSTACK_FRAMER.create()) < 0) {
     LOG_ERR("! can't send packet due to framer error\n");
     ret = MAC_TX_ERR;
   } else {
     struct tsch_packet *p;
     /* Enqueue packet */
-    p = tsch_queue_add_packet(addr, sent, ptr);
+    p = tsch_queue_add_packet(addr, max_transmissions, sent, ptr);
     if(p == NULL) {
       LOG_ERR("! can't send packet to ");
       LOG_ERR_LLADDR(addr);

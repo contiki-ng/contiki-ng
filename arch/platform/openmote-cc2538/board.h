@@ -63,13 +63,6 @@
  * @{
  */
 /*---------------------------------------------------------------------------*/
-/* Some files include leds.h before us, so we need to get rid of defaults in
- * leds.h before we provide correct definitions */
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
-
 #define LEDS_RED       16  /**< LED1 (Red)    -> PC4 */
 #define LEDS_YELLOW    64  /**< LED2 (Yellow) -> PC6 */
 #define LEDS_GREEN     128 /**< LED3 (Green)  -> PC7 */

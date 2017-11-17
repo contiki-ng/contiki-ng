@@ -185,7 +185,7 @@ wake_up(void)
 {
   lpm_registered_module_t *module;
 
-  ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
+  ENERGEST_SWITCH(ENERGEST_TYPE_DEEP_LPM, ENERGEST_TYPE_CPU);
 
   /* Sync so that we get the latest values before adjusting recharge settings */
   ti_lib_sys_ctrl_aon_sync();
@@ -485,7 +485,7 @@ deep_sleep(void)
     ti_lib_pwr_ctrl_source_set(PWRCTRL_PWRSRC_ULDO);
   }
 
-  ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
+  ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_DEEP_LPM);
 
   /* Sync the AON interface to ensure all writes have gone through. */
   ti_lib_sys_ctrl_aon_sync();
