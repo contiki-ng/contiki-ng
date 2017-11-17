@@ -23,7 +23,7 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
 # Connect to the simlation
 echo "Starting tunslip6"
 make -C $CONTIKI/tools tunslip6
-make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunsliplog 2>&1 &
+make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip.log 2>&1 &
 MPID=$!
 echo "Waiting for network formation"
 sleep 5
@@ -49,10 +49,10 @@ else
   # Verbose output when using CI
   if [ "$CI" = "true" ]; then
     echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;
-    echo "==== $BASENAME.tunsliplog ====" ; cat $BASENAME.tunsliplog;
+    echo "==== $BASENAME.tunslip.log ====" ; cat $BASENAME.tunslip.log;
     echo "==== $BASENAME.scriptlog ====" ; cat $BASENAME.scriptlog;
   else
-    echo "==== Check $BASENAME.coojalog, $BASENAME.tunsliplog, and $BASENAME.scriptlog for details ====";
+    echo "==== Check $BASENAME.coojalog, $BASENAME.tunslip.log, and $BASENAME.scriptlog for details ====";
   fi;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
