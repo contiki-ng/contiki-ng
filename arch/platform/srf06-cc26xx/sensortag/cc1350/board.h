@@ -63,13 +63,6 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-/* Some files include leds.h before us, so we need to get rid of defaults in
- * leds.h before we provide correct definitions */
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
-
 #define LEDS_RED       1
 #define LEDS_GREEN     LEDS_RED
 #define LEDS_YELLOW    LEDS_RED
