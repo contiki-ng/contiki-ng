@@ -508,6 +508,9 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   conn->rto = UIP_RTO;
   conn->sa = 0;
   conn->sv = 16;   /* Initial value of the RTT variance. */
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  conn->max_mac_transmissions = UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED;
+#endif
   conn->lport = uip_htons(lastport);
   conn->rport = rport;
   uip_ipaddr_copy(&conn->ripaddr, ripaddr);
@@ -581,6 +584,9 @@ uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport)
     uip_ipaddr_copy(&conn->ripaddr, ripaddr);
   }
   conn->ttl = uip_ds6_if.cur_hop_limit;
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  conn->max_mac_transmissions = UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED;
+#endif
 
   return conn;
 }
@@ -1224,7 +1230,7 @@ uip_process(uint8_t flag)
       }
 
       UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
-      LOG_INFO("Forwarding packet to ");
+      LOG_INFO("Forwarding packet towards ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
@@ -1358,6 +1364,31 @@ uip_process(uint8_t flag)
           if(UIP_ROUTING_BUF->seg_left > 0) {
 #if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
             if(rpl_ext_header_srh_update()) {
+
+              /* With routing header, the detination address is us and will
+               * be swapped later to the next hop. Because of this, the MTU
+               * and TTL were not checked and updated yet. Do this now. */
+
+              /* Check MTU */
+              if(uip_len > UIP_LINK_MTU) {
+                uip_icmp6_error_output(ICMP6_PACKET_TOO_BIG, 0, UIP_LINK_MTU);
+                UIP_STAT(++uip_stat.ip.drop);
+                goto send;
+              }
+              /* Check Hop Limit */
+              if(UIP_IP_BUF->ttl <= 1) {
+                uip_icmp6_error_output(ICMP6_TIME_EXCEEDED,
+                                       ICMP6_TIME_EXCEED_TRANSIT, 0);
+                UIP_STAT(++uip_stat.ip.drop);
+                goto send;
+              }
+              UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
+
+              LOG_INFO("Forwarding packet to next hop ");
+              LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+              LOG_INFO_("\n");
+              UIP_STAT(++uip_stat.ip.forwarded);
+
               goto send; /* Proceed to forwarding */
             }
 #endif /* UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING */
@@ -1544,6 +1575,16 @@ uip_process(uint8_t flag)
      length. */
   UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
   UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+
+  UIP_IP_BUF->vtc = 0x60;
+  UIP_IP_BUF->tcflow = 0x00;
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  if(uip_udp_conn->max_mac_transmissions != UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED) {
+    /* Encapsulate the MAC transmission limit in the Traffic Class field */
+    UIP_IP_BUF->vtc = 0x60 | (UIP_TC_MAC_TRANSMISSION_COUNTER_BIT >> 4);
+    UIP_IP_BUF->tcflow = uip_udp_conn->max_mac_transmissions << 4;
+  }
+#endif /* UIP_WITH_VARIABLE_RETRANSMISSIONS */
 
   UIP_IP_BUF->ttl = uip_udp_conn->ttl;
   UIP_IP_BUF->proto = UIP_PROTO_UDP;
@@ -2249,6 +2290,16 @@ uip_process(uint8_t flag)
   UIP_TCP_BUF->srcport  = uip_connr->lport;
   UIP_TCP_BUF->destport = uip_connr->rport;
 
+  UIP_IP_BUF->vtc = 0x60;
+  UIP_IP_BUF->tcflow = 0x00;
+#if UIP_WITH_VARIABLE_RETRANSMISSIONS
+  if(uip_connr->max_mac_transmissions != UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED) {
+    /* Encapsulate the MAC transmission limit in the Traffic Class field */
+    UIP_IP_BUF->vtc = 0x60 | (UIP_TC_MAC_TRANSMISSION_COUNTER_BIT >> 4);
+    UIP_IP_BUF->tcflow = uip_connr->max_mac_transmissions << 4;
+  }
+#endif /* UIP_WITH_VARIABLE_RETRANSMISSIONS */
+
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &uip_connr->ripaddr);
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
   LOG_INFO("Sending TCP packet to ");
@@ -2284,8 +2335,6 @@ uip_process(uint8_t flag)
 #if UIP_UDP
   ip_send_nolen:
 #endif
-  UIP_IP_BUF->vtc = 0x60;
-  UIP_IP_BUF->tcflow = 0x00;
   UIP_IP_BUF->flow = 0x00;
   send:
   LOG_INFO("Sending packet with length %d (%d)\n", uip_len,
