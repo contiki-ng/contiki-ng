@@ -1230,7 +1230,7 @@ uip_process(uint8_t flag)
       }
 
       UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
-      LOG_INFO("Forwarding packet to ");
+      LOG_INFO("Forwarding packet towards ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
@@ -1364,6 +1364,31 @@ uip_process(uint8_t flag)
           if(UIP_ROUTING_BUF->seg_left > 0) {
 #if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
             if(rpl_ext_header_srh_update()) {
+
+              /* With routing header, the detination address is us and will
+               * be swapped later to the next hop. Because of this, the MTU
+               * and TTL were not checked and updated yet. Do this now. */
+
+              /* Check MTU */
+              if(uip_len > UIP_LINK_MTU) {
+                uip_icmp6_error_output(ICMP6_PACKET_TOO_BIG, 0, UIP_LINK_MTU);
+                UIP_STAT(++uip_stat.ip.drop);
+                goto send;
+              }
+              /* Check Hop Limit */
+              if(UIP_IP_BUF->ttl <= 1) {
+                uip_icmp6_error_output(ICMP6_TIME_EXCEEDED,
+                                       ICMP6_TIME_EXCEED_TRANSIT, 0);
+                UIP_STAT(++uip_stat.ip.drop);
+                goto send;
+              }
+              UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
+
+              LOG_INFO("Forwarding packet to next hop ");
+              LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+              LOG_INFO_("\n");
+              UIP_STAT(++uip_stat.ip.forwarded);
+
               goto send; /* Proceed to forwarding */
             }
 #endif /* UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING */
