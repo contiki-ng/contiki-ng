@@ -135,6 +135,7 @@ struct tsch_packet {
   mac_callback_t sent; /* callback for this packet */
   void *ptr; /* MAC callback parameter */
   uint8_t transmissions; /* #transmissions performed for this packet */
+  uint8_t max_transmissions; /* maximal number of Tx before dropping the packet */
   uint8_t ret; /* status -- MAC return code */
   uint8_t header_len; /* length of header and header IEs (needed for link-layer security) */
   uint8_t tsch_sync_ie_offset; /* Offset within the frame used for quick update of EB ASN and join priority */
@@ -176,7 +177,8 @@ struct tsch_neighbor *tsch_queue_get_time_source(void);
 /* Update TSCH time source */
 int tsch_queue_update_time_source(const linkaddr_t *new_addr);
 /* Add packet to neighbor queue. Use same lockfree implementation as ringbuf.c (put is atomic) */
-struct tsch_packet *tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr);
+struct tsch_packet *tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
+                                          mac_callback_t sent, void *ptr);
 /* Returns the number of packets currently in any TSCH queue */
 int tsch_queue_global_packet_count(void);
 /* Returns the number of packets currently a given neighbor queue */
