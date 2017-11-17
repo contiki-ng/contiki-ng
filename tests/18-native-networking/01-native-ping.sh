@@ -22,7 +22,7 @@ STATUS=${PIPESTATUS[0]}
 
 echo "Closing native node"
 sleep 2
-sudo kill -9 $CPID
+pgrep hello-world | sudo xargs kill -9
 
 if [ $STATUS -eq 0 ] ; then
   cp $BASENAME.log $BASENAME.testlog
@@ -42,7 +42,9 @@ else
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee -a $BASENAME.testlog;
 fi
 
+rm node.log
+rm node.err
+
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end
-
 exit 0
