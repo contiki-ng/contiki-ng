@@ -2001,7 +2001,7 @@ UNIT_TEST(test_set_get_cell_list_add_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2048,7 +2048,7 @@ UNIT_TEST(test_set_get_cell_list_delete_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2095,7 +2095,7 @@ UNIT_TEST(test_set_get_cell_list_relocate_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2132,7 +2132,7 @@ UNIT_TEST(test_set_get_cell_list_count_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2169,7 +2169,7 @@ UNIT_TEST(test_set_get_cell_list_list_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2206,7 +2206,7 @@ UNIT_TEST(test_set_get_cell_list_clear_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2243,7 +2243,7 @@ UNIT_TEST(test_set_get_cell_list_success_res)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2281,7 +2281,7 @@ UNIT_TEST(test_set_get_cell_list_success_conf)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2319,7 +2319,7 @@ UNIT_TEST(test_set_get_cell_list_error_res)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2356,7 +2356,7 @@ UNIT_TEST(test_set_get_cell_list_error_conf)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2393,7 +2393,7 @@ UNIT_TEST(test_set_get_rel_cell_list_add_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2436,7 +2436,7 @@ UNIT_TEST(test_set_get_rel_cell_list_delete_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2479,7 +2479,7 @@ UNIT_TEST(test_set_get_rel_cell_list_relocate_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2523,7 +2523,7 @@ UNIT_TEST(test_set_get_rel_cell_list_count_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2559,7 +2559,7 @@ UNIT_TEST(test_set_get_rel_cell_list_list_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2595,7 +2595,7 @@ UNIT_TEST(test_set_get_rel_cell_list_clear_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2632,7 +2632,7 @@ UNIT_TEST(test_set_get_rel_cell_list_success_res)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2669,7 +2669,7 @@ UNIT_TEST(test_set_get_rel_cell_list_success_conf)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2706,7 +2706,7 @@ UNIT_TEST(test_set_get_rel_cell_list_error_res)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2743,7 +2743,7 @@ UNIT_TEST(test_set_get_rel_cell_list_error_conf)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2779,7 +2779,7 @@ UNIT_TEST(test_set_get_cand_cell_list_add_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2822,7 +2822,7 @@ UNIT_TEST(test_set_get_cand_cell_list_delete_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2865,7 +2865,7 @@ UNIT_TEST(test_set_get_cand_cell_list_relocate_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2909,7 +2909,7 @@ UNIT_TEST(test_set_get_cand_cell_list_count_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2945,7 +2945,7 @@ UNIT_TEST(test_set_get_cand_cell_list_list_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -2981,7 +2981,7 @@ UNIT_TEST(test_set_get_cand_cell_list_clear_req)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -3018,7 +3018,7 @@ UNIT_TEST(test_set_get_cand_cell_list_success_res)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -3055,7 +3055,7 @@ UNIT_TEST(test_set_get_cand_cell_list_success_conf)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -3092,7 +3092,7 @@ UNIT_TEST(test_set_get_cand_cell_list_error_res)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
@@ -3129,7 +3129,7 @@ UNIT_TEST(test_set_get_cand_cell_list_error_conf)
                               0xde, 0xad, 0xbe, 0xef,
                               0xca, 0xfe, 0xca, 0xfe};
   const uint8_t *result;
-  sixp_pkt_offset_t result_len;
+  sixp_pkt_offset_t result_len = 0;
 
   UNIT_TEST_BEGIN();
 
