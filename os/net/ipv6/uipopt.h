@@ -518,6 +518,35 @@ void uip_log(char *msg);
 
 #define UIP_DEFAULT_PREFIX_LEN 64
 
+/**
+ * Enables selection of maximal MAC-layer transmission count at application layer
+ */
+#ifdef UIP_CONF_WITH_VARIABLE_RETRANSMISSIONS
+#define UIP_WITH_VARIABLE_RETRANSMISSIONS UIP_CONF_WITH_VARIABLE_RETRANSMISSIONS
+#else
+#define UIP_WITH_VARIABLE_RETRANSMISSIONS 0
+#endif
+
+/**
+ * This is the default value of MAC-layer transmissons for uIPv6
+ *
+ * It means that the limit is selected by the MAC protocol instead of uIPv6.
+ */
+#define UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED 0
+
+/**
+ * The MAC-layer transmissons limit is encapslated in "Traffic Class" field
+ *
+ * In Contiki, if the Traffic Class field in the IPv6 header has this bit set,
+ * the low-order bits are used as the MAC-layer transmissons limit.
+ */
+#define UIP_TC_MAC_TRANSMISSION_COUNTER_BIT  0x40
+
+/**
+ * The bits in the "Traffic Class" field that describe the MAC transmission limit
+ */
+#define UIP_TC_MAC_TRANSMISSION_COUNTER_MASK 0x3F
+
 /** @} */
 
 /*------------------------------------------------------------------------------*/
