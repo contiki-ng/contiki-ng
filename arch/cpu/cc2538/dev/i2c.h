@@ -72,6 +72,8 @@
  * @{
  */
 #define I2C_MASTER_ERR_NONE          0
+#define I2C_MASTER_ERR_TIMEOUT    0xFF
+
 #define I2CM_STAT_BUSY      0x00000001
 #define I2CM_STAT_ERROR     0x00000002
 #define I2CM_STAT_ADRACK    0x00000004
@@ -122,6 +124,16 @@
  */
 void i2c_init(uint8_t port_sda, uint8_t pin_sda, uint8_t port_scl,
               uint8_t pin_scl, uint32_t bus_speed);
+
+/** \brief Set I2C timeout (from now) in milliseconds.
+ *
+ * Set timeout is intended to be used per I2C transaction - if used it needs
+ * to be called for each I2C transaction. Zero value disables timeout.
+ */
+void i2c_start_timeout(uint32_t timeout);
+
+/** \brief Stop I2C timeout */
+void i2c_stop_timeout(void);
 
 /** \brief Enable master I2C module */
 void i2c_master_enable(void);

@@ -44,6 +44,10 @@
 #include <stdint.h>
 #include "clock.h"
 #include "sys-ctrl.h"
+#include "sys/rtimer.h"
+/*---------------------------------------------------------------------------*/
+static rtimer_clock_t next_timeout;
+static uint32_t timeout_value;
 /*---------------------------------------------------------------------------*/
 void
 i2c_init(uint8_t port_sda, uint8_t pin_sda, uint8_t port_scl, uint8_t pin_scl,
@@ -85,6 +89,24 @@ i2c_init(uint8_t port_sda, uint8_t pin_sda, uint8_t port_scl, uint8_t pin_scl,
 
   /* t the master clock frequency */
   i2c_set_frequency(bus_speed);
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Set timeout is intended to be used per i2c transaction - if used it needs
+ * to be called for each I2C transaction. Zero value disables timeout.
+ */
+void
+i2c_start_timeout(uint32_t timeout)
+{
+  /* set the timeouts */
+  timeout_value = (timeout * RTIMER_SECOND) / 1000;
+  next_timeout = RTIMER_NOW() + timeout_value;
+}
+/*---------------------------------------------------------------------------*/
+void
+i2c_stop_timeout(void)
+{
+  timeout_value = 0;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -140,13 +162,19 @@ i2c_master_command(uint8_t cmd)
 uint8_t
 i2c_master_busy(void)
 {
-  return REG(I2CM_STAT) & I2CM_STAT_BUSY;
+  if(timeout_value > 0 && ((next_timeout - RTIMER_NOW()) <= timeout_value)) {
+    return REG(I2CM_STAT) & I2CM_STAT_BUSY;
+  }
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
 i2c_master_error(void)
 {
   uint8_t temp = REG(I2CM_STAT);  /* Get all status */
+  if(timeout_value > 0 && ((next_timeout - RTIMER_NOW()) > timeout_value)) {
+    return I2C_MASTER_ERR_TIMEOUT;
+  }
   if(temp & I2CM_STAT_BUSY) {   /* No valid if BUSY bit is set */
     return I2C_MASTER_ERR_NONE;
   } else if(temp & (I2CM_STAT_ERROR | I2CM_STAT_ARBLST)) {
