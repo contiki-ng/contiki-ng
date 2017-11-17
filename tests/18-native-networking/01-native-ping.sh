@@ -9,7 +9,7 @@ IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -C $CONTIKI/examples/hello-world
+make -C $CONTIKI/examples/hello-world > make.log 2> make.err
 sudo $CONTIKI/examples/hello-world/hello-world.native > node.log 2> node.err &
 CPID=$!
 sleep 2
@@ -31,6 +31,14 @@ else
   mv $BASENAME.log $BASENAME.faillog
 
   echo ""
+  echo "---- make.log"
+  cat make.log
+
+  echo ""
+  echo "---- make.err"
+  cat make.err
+
+  echo ""
   echo "---- node.log"
   cat node.log
 
@@ -42,6 +50,8 @@ else
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee -a $BASENAME.testlog;
 fi
 
+rm make.log
+rm make.err
 rm node.log
 rm node.err
 
