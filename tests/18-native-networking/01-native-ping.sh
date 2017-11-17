@@ -29,28 +29,15 @@ pgrep hello-world | sudo xargs kill -9
 
 if [ $STATUS -eq 0 ] ; then
   cp $BASENAME.log $BASENAME.testlog
-  printf "%-32s TEST OK\n" "$BASENAME" | tee -a $BASENAME.testlog;
+  printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
-  mv $BASENAME.log $BASENAME.faillog
+  echo "==== make.log ====" ; cat make.log;
+  echo "==== make.err ====" ; cat make.err;
+  echo "==== node.log ====" ; cat node.log;
+  echo "==== node.err ====" ; cat node.err;
+  echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
-  echo ""
-  echo "---- make.log"
-  cat make.log
-
-  echo ""
-  echo "---- make.err"
-  cat make.err
-
-  echo ""
-  echo "---- node.log"
-  cat node.log
-
-  echo ""
-  echo "---- node.err"
-  cat node.err
-
-  cp $BASENAME.log $BASENAME.faillog
-  printf "%-32s TEST FAIL\n" "$BASENAME" | tee -a $BASENAME.testlog;
+  printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
 
 rm make.log

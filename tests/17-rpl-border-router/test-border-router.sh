@@ -43,14 +43,9 @@ rm COOJA.log
 if [ $STATUS -eq 0 ] ; then
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
-  # Verbose output when using CI
-  if [ "$CI" = "true" ]; then
-    echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;
-    echo "==== $BASENAME.tunslip.log ====" ; cat $BASENAME.tunslip.log;
-    echo "==== $BASENAME.scriptlog ====" ; cat $BASENAME.scriptlog;
-  else
-    echo "==== Check $BASENAME.coojalog, $BASENAME.tunslip.log, and $BASENAME.scriptlog for details ====";
-  fi;
+  echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;
+  echo "==== $BASENAME.tunslip.log ====" ; cat $BASENAME.tunslip.log;
+  echo "==== $BASENAME.scriptlog ====" ; cat $BASENAME.scriptlog;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
