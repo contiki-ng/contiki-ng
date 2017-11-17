@@ -17,6 +17,9 @@ java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -c
 JPID=$!
 sleep 20
 
+echo "Enabling IPv6"
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+
 # Connect to the simlation
 echo "Starting tunslip6"
 make -C $CONTIKI/tools tunslip6

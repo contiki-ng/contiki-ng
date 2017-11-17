@@ -7,6 +7,9 @@ BASENAME=01-native-ping
 
 IPADDR=fd00::302:304:506:708
 
+echo "Enabling IPv6"
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+
 # Starting Contiki-NG native node
 echo "Starting native node"
 make -C $CONTIKI/examples/hello-world > make.log 2> make.err
