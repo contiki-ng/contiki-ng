@@ -53,6 +53,7 @@ COOJA.testlog
 *.scriptlog
 *.coojalog
 *.summary
+*.err
 summary
 tests/[0-9][0-9]-*/org/
 
