@@ -40,7 +40,7 @@ get_target_vars = $(wordlist 2,15,$(subst :, ,$1))
 define dooneexample
 @echo -n Building example $(3): $(1) $(4) for target $(2)
 @((cd $(EXAMPLESDIR)/$(1); \
- make $(4) TARGET=$(2) clean && make $(4) TARGET=$(2) WERROR=1) > \
+ make $(4) TARGET=$(2) clean && make -j $(4) TARGET=$(2) WERROR=1) > \
       /dev/null 2>make.runerr && \
  (echo " -> OK" && printf "%-75s %-35s %-20s TEST OK\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog) || \
  (echo " -> FAIL" && printf "%-75s %-35s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog ; cat make.runerr))
