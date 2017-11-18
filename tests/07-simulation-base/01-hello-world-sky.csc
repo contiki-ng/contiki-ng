@@ -50,7 +50,7 @@
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <scriptfile>[CONFIG_DIR]/hello-world.js</scriptfile>
+      <scriptfile>[CONFIG_DIR]/js/hello-world.js</scriptfile>
       <active>true</active>
     </plugin_config>
     <width>541</width>
