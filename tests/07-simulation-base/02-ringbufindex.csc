@@ -25,7 +25,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype297</identifier>
       <description>ringbufindex testee</description>
-      <source>[CONFIG_DIR]/code/test-ringbufindex.c</source>
+      <source>[CONFIG_DIR]/code-ringbufindex/test-ringbufindex.c</source>
       <commands>make test-ringbufindex.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
