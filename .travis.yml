@@ -80,14 +80,14 @@ script:
 env:
   ## This magically kick-off parallel jobs for each of the for the sets
   ## of environment variable defined below
-  - BUILD_TYPE='doxygen' BUILD_CATEGORY='doxygen'
   - BUILD_TYPE='compile-base' BUILD_CATEGORY='compile' BUILD_ARCH='msp430'
-  - BUILD_TYPE='compile-arm-ports' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
+  - BUILD_TYPE='compile-arm-ports-01' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
+  - BUILD_TYPE='compile-arm-ports-02' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
   - BUILD_TYPE='compile-nxp-ports' BUILD_CATEGORY='compile' BUILD_ARCH='jn516x'
-  - BUILD_TYPE='compile-nrf52-ports' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
   - BUILD_TYPE='compile-tools' BUILD_CATEGORY='compile'
   - BUILD_TYPE='rpl-lite' BUILD_CATEGORY='sim'
   - BUILD_TYPE='rpl-classic' BUILD_CATEGORY='sim'
+  - BUILD_TYPE='tun-rpl-br' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
   - BUILD_TYPE='simulation-base' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
   - BUILD_TYPE='ieee802154' BUILD_CATEGORY='sim'
-  - BUILD_TYPE='tun-rpl-br' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
+  - BUILD_TYPE='doxygen' BUILD_CATEGORY='doxygen'
