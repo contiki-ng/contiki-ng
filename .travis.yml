@@ -74,17 +74,8 @@ before_script:
 
 script:
   ## tests/Makefile handles most of generic logic
-  - "make -C tests/??-$BUILD_TYPE summary"
-
-after_script:
-  ## Print cooja test logs
-  - "[ ${BUILD_CATEGORY:-0} = sim ] && tail tests/??-$BUILD_TYPE/*.scriptlog"
-  ## Print a basic summary
-  - "echo 'Summary:'; cat tests/??-$BUILD_TYPE/summary"
-  - "FAILS=`grep -c  ' FAIL ' tests/??-$BUILD_TYPE/summary`"
-  ## This will detect whether the build should pass or fail
-  - "test $FAILS -eq 0; exit $?"
-
+  - "make -C tests/??-$BUILD_TYPE"
+  - "tests/check-test.sh tests/??-$BUILD_TYPE; exit $?"
 
 env:
   ## This magically kick-off parallel jobs for each of the for the sets
