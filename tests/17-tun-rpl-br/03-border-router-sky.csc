@@ -27,7 +27,7 @@
       <description>Sky Mote Type #sky1</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/rpl-border-router/border-router.c</source>
       <commands EXPORT="discard">make clean TARGET=sky
-make border-router.sky TARGET=sky</commands>
+make -j border-router.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/rpl-border-router/border-router.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
@@ -51,7 +51,7 @@ make border-router.sky TARGET=sky</commands>
       <description>Sky Mote Type #sky2</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands EXPORT="discard">make clean TARGET=sky
-make hello-world.sky TARGET=sky</commands>
+make -j hello-world.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
@@ -233,4 +233,3 @@ make hello-world.sky TARGET=sky</commands>
     <location_y>13</location_y>
   </plugin>
 </simconf>
-
