@@ -24,7 +24,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype382</identifier>
       <description>Cooja Mote Type #1</description>
-      <source>[CONTIKI_DIR]/tests/16-6tisch/code/test-sixp.c</source>
+      <source>[CONFIG_DIR]/code-6tisch/test-sixp.c</source>
       <commands>make clean TARGET=cooja
       make test-sixp.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
@@ -150,7 +150,7 @@
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <scriptfile>[CONTIKI_DIR]/tests/16-6tisch/js/unit-test.js</scriptfile>
+      <scriptfile>[CONFIG_DIR]/js/sixtop-test.js</scriptfile>
       <active>true</active>
     </plugin_config>
     <width>495</width>

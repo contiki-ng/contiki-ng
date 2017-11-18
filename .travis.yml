@@ -91,5 +91,4 @@ env:
   - BUILD_TYPE='ipv6' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
   - BUILD_TYPE='simulation-base' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
   - BUILD_TYPE='ieee802154' BUILD_CATEGORY='sim'
-  - BUILD_TYPE='6tisch' BUILD_CATEGORY='sim'
   - BUILD_TYPE='tun-rpl-br' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
