@@ -46,12 +46,8 @@
 #include "sys/energest.h"
 #include "dev/watchdog.h"
 
-#if BUILD_WITH_ORCHESTRA
-#include "os/services/orchestra/orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "os/services/shell/serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
+#include "services/orchestra/orchestra.h"
+#include "services/shell/serial-shell.h"
 
 #include <stdio.h>
 #include <stdint.h>
