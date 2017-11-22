@@ -99,7 +99,13 @@ typedef unsigned int FormatFlags;
 #define FLOAT_HEX       (0x0003 << FLOAT_SHIFT)
 #define FLOAT_MASK      MAKE_MASK(FLOAT_SHIFT, FLOAT_SIZE)
 /*---------------------------------------------------------------------------*/
+#define CHECKCB(res) { if((res) != STRFORMAT_OK) { va_end(ap); return -1; } }
+/*---------------------------------------------------------------------------*/
+#define MAXCHARS_HEX ((sizeof(LARGEST_UNSIGNED) * 8) / 4)
 
+/* Largest number of characters needed for converting an unsigned integer. */
+#define MAXCHARS ((sizeof(LARGEST_UNSIGNED) * 8 + 2) / 3)
+/*---------------------------------------------------------------------------*/
 static FormatFlags
 parse_flags(const char **posp)
 {
@@ -148,13 +154,6 @@ parse_uint(const char **posp)
 
   return v;
 }
-
-#define MAXCHARS_HEX ((sizeof(LARGEST_UNSIGNED) * 8) / 4 )
-
-/* Largest number of characters needed for converting an unsigned integer.
- */
-#define MAXCHARS ((sizeof(LARGEST_UNSIGNED) * 8  + 2) / 3 )
-
 /*---------------------------------------------------------------------------*/
 static unsigned int
 output_uint_decimal(char **posp, LARGEST_UNSIGNED v)
@@ -248,8 +247,6 @@ fill_zero(const StrFormatContext *ctxt, unsigned int len)
   }
   return ctxt->write_str(ctxt->user_data, buffer, len);
 }
-/*---------------------------------------------------------------------------*/
-#define CHECKCB(res) {if ((res) != STRFORMAT_OK) {va_end(ap); return -1;}}
 /*---------------------------------------------------------------------------*/
 int
 format_str(const StrFormatContext *ctxt, const char *format, ...)
