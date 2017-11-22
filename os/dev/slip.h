@@ -62,6 +62,9 @@ void slip_send(void);
  */
 int slip_input_byte(unsigned char c);
 
+/**
+ * Send using SLIP len bytes starting from the location pointed to by ptr
+ */
 void slip_write(const void *ptr, int len);
 
 /**
