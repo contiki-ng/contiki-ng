@@ -62,7 +62,7 @@ uint8_t slip_send(void);
  */
 int slip_input_byte(unsigned char c);
 
-uint8_t slip_write(const void *ptr, int len);
+void slip_write(const void *ptr, int len);
 
 /**
  * Set a function to be called when there is activity on the SLIP

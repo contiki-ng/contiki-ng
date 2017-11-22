@@ -110,7 +110,7 @@ slip_send(void)
   return UIP_FW_OK;
 }
 /*---------------------------------------------------------------------------*/
-uint8_t
+void
 slip_write(const void *_ptr, int len)
 {
   const uint8_t *ptr = _ptr;
@@ -130,9 +130,8 @@ slip_write(const void *_ptr, int len)
     }
     slip_arch_writeb(c);
   }
-  slip_arch_writeb(SLIP_END);
 
-  return len;
+  slip_arch_writeb(SLIP_END);
 }
 /*---------------------------------------------------------------------------*/
 static void
