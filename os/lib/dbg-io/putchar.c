@@ -32,7 +32,6 @@
 #include "contiki.h"
 
 #include <stdio.h>
-#include <debug-uart.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 #undef putchar
