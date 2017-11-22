@@ -38,8 +38,6 @@
 #include "contiki.h"
 
 #include "net/ipv6/uip.h"
-#define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 #include "dev/slip.h"
 
 #define SLIP_END     0300
@@ -92,9 +90,6 @@ slip_set_input_callback(void (*c)(void))
   input_callback = c;
 }
 /*---------------------------------------------------------------------------*/
-/* slip_send: forward (IPv4) packets with {UIP_FW_NETIF(..., slip_send)}
- * was used in slip-bridge.c
- */
 uint8_t
 slip_send(void)
 {
@@ -153,56 +148,9 @@ rxbuf_init(void)
   state = STATE_OK;
 }
 /*---------------------------------------------------------------------------*/
-/* Upper half does the polling. */
 static uint16_t
 slip_poll_handler(uint8_t *outbuf, uint16_t blen)
 {
-#ifdef SLIP_CONF_MICROSOFT_CHAT
-  /* This is a hack and won't work across buffer edge! */
-  if(rxbuf[begin] == 'C') {
-    int i;
-    if(begin < next_free && (next_free - begin) >= 6
-       && memcmp(&rxbuf[begin], "CLIENT", 6) == 0) {
-      state = STATE_TWOPACKETS;	/* Interrupts do nothing. */
-      memset(&rxbuf[begin], 0x0, 6);
-
-      rxbuf_init();
-
-      for(i = 0; i < 13; i++) {
-	slip_arch_writeb("CLIENTSERVER\300"[i]);
-      }
-      return 0;
-    }
-  }
-#endif /* SLIP_CONF_MICROSOFT_CHAT */
-
-#ifdef SLIP_CONF_ANSWER_MAC_REQUEST
-  else if(rxbuf[begin] == '?') {
-    /* Used by tapslip6 to request mac for auto configure */
-    int i, j;
-    char* hexchar = "0123456789abcdef";
-    if(begin < next_free && (next_free - begin) >= 2
-       && rxbuf[begin + 1] == 'M') {
-      state = STATE_TWOPACKETS; /* Interrupts do nothing. */
-      rxbuf[begin] = 0;
-      rxbuf[begin + 1] = 0;
-
-      rxbuf_init();
-
-      linkaddr_t addr = get_mac_addr();
-      /* this is just a test so far... just to see if it works */
-      slip_arch_writeb('!');
-      slip_arch_writeb('M');
-      for(j = 0; j < 8; j++) {
-        slip_arch_writeb(hexchar[addr.u8[j] >> 4]);
-        slip_arch_writeb(hexchar[addr.u8[j] & 15]);
-      }
-      slip_arch_writeb(SLIP_END);
-      return 0;
-    }
-  }
-#endif /* SLIP_CONF_ANSWER_MAC_REQUEST */
-
   /*
    * Interrupt can not change begin but may change pkt_end.
    * If pkt_end != begin it will not change again.
@@ -338,11 +286,7 @@ PROCESS_THREAD(slip_process, ev, data)
       if(input_callback) {
         input_callback();
       }
-#ifdef SLIP_CONF_TCPIP_INPUT
-      SLIP_CONF_TCPIP_INPUT();
-#else
       tcpip_input();
-#endif
     }
   }
 
@@ -389,22 +333,14 @@ slip_input_byte(unsigned char c)
   }
   rxbuf[cur_end] = c;
 
-#ifdef SLIP_CONF_MICROSOFT_CHAT
-  /* There could be a separate poll routine for this. */
-  if(c == 'T' && rxbuf[begin] == 'C') {
-    process_poll(&slip_process);
-    return 1;
-  }
-#endif /* SLIP_CONF_MICROSOFT_CHAT */
-
   if(c == SLIP_END) {
     /*
      * We have a new packet, possibly of zero length.
      *
      * There may already be one packet buffered.
      */
-    if(cur_end != pkt_end) {	/* Non zero length. */
-      if(begin == pkt_end) {	/* None buffered. */
+    if(cur_end != pkt_end) {  /* Non zero length. */
+      if(begin == pkt_end) {  /* None buffered. */
         pkt_end = cur_end;
       } else {
         SLIP_STATISTICS(slip_twopackets++);
