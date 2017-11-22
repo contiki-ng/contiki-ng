@@ -44,11 +44,11 @@ PROCESS(slip_process, "SLIP driver");
 /*---------------------------------------------------------------------------*/
 static uint8_t slip_active;
 /*---------------------------------------------------------------------------*/
-#if 1
-#define SLIP_STATISTICS(statement)
-#else
+#if SLIP_CONF_WITH_STATS
 static uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
 #define SLIP_STATISTICS(statement) statement
+#else
+#define SLIP_STATISTICS(statement)
 #endif
 /*---------------------------------------------------------------------------*/
 /* Must be at least one byte larger than UIP_BUFSIZE! */
