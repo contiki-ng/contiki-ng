@@ -26,46 +26,42 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
-
-
-#include <stdio.h>
-#include <string.h>
-
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
 #include "net/ipv6/uip.h"
 #include "dev/slip.h"
 
+#include <stdio.h>
+#include <string.h>
+/*---------------------------------------------------------------------------*/
 #define SLIP_END     0300
 #define SLIP_ESC     0333
 #define SLIP_ESC_END 0334
 #define SLIP_ESC_ESC 0335
-
+/*---------------------------------------------------------------------------*/
 PROCESS(slip_process, "SLIP driver");
 
 uint8_t slip_active;
 
+/*---------------------------------------------------------------------------*/
 #if 1
 #define SLIP_STATISTICS(statement)
 #else
 uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
 #define SLIP_STATISTICS(statement) statement
 #endif
-
+/*---------------------------------------------------------------------------*/
 /* Must be at least one byte larger than UIP_BUFSIZE! */
 #define RX_BUFSIZE (UIP_BUFSIZE - UIP_LLH_LEN + 16)
-
+/*---------------------------------------------------------------------------*/
 enum {
-  STATE_TWOPACKETS = 0,	/* We have 2 packets and drop incoming data. */
+  STATE_TWOPACKETS = 0, /* We have 2 packets and drop incoming data. */
   STATE_OK = 1,
   STATE_ESC = 2,
   STATE_RUBBISH = 3,
 };
-
+/*---------------------------------------------------------------------------*/
 /*
  * Variables begin and end manage the buffer space in a cyclic
  * fashion. The first used byte is at begin and end is one byte past
@@ -76,13 +72,12 @@ enum {
  * [pkt_end, end). If more bytes arrive in state STATE_TWOPACKETS
  * they are discarded.
  */
-
 static uint8_t state = STATE_TWOPACKETS;
 static uint16_t begin, next_free;
 static uint8_t rxbuf[RX_BUFSIZE];
-static uint16_t pkt_end;		/* SLIP_END tracker. */
+static uint16_t pkt_end;    /* SLIP_END tracker. */
 
-static void (* input_callback)(void) = NULL;
+static void (*input_callback)(void) = NULL;
 /*---------------------------------------------------------------------------*/
 void
 slip_set_input_callback(void (*c)(void))
@@ -169,7 +164,7 @@ slip_poll_handler(uint8_t *outbuf, uint16_t blen)
           len = 0;
           break;
         }
-        if (esc) {
+        if(esc) {
           if(rxbuf[i] == SLIP_ESC_ESC) {
             outbuf[len] = SLIP_ESC;
             len++;
@@ -193,7 +188,7 @@ slip_poll_handler(uint8_t *outbuf, uint16_t blen)
           len = 0;
           break;
         }
-        if (esc) {
+        if(esc) {
           if(rxbuf[i] == SLIP_ESC_ESC) {
             outbuf[len] = SLIP_ESC;
             len++;
@@ -214,7 +209,7 @@ slip_poll_handler(uint8_t *outbuf, uint16_t blen)
           len = 0;
           break;
         }
-        if (esc) {
+        if(esc) {
           if(rxbuf[i] == SLIP_ESC_ESC) {
             outbuf[len] = SLIP_ESC;
             len++;
@@ -280,7 +275,7 @@ PROCESS_THREAD(slip_process, ev, data)
 
     /* Move packet from rxbuf to buffer provided by uIP. */
     uip_len = slip_poll_handler(&uip_buf[UIP_LLH_LEN],
-				UIP_BUFSIZE - UIP_LLH_LEN);
+                                UIP_BUFSIZE - UIP_LLH_LEN);
 
     if(uip_len > 0) {
       if(input_callback) {
@@ -308,7 +303,7 @@ slip_input_byte(unsigned char c)
     if(c != SLIP_ESC_END && c != SLIP_ESC_ESC) {
       state = STATE_RUBBISH;
       SLIP_STATISTICS(slip_rubbish++);
-      next_free = pkt_end;		/* remove rubbish */
+      next_free = pkt_end;    /* remove rubbish */
       return 0;
     }
     state = STATE_OK;
