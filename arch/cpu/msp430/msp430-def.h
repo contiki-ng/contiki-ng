@@ -56,6 +56,9 @@
 
 #endif /* __IAR_SYSTEMS_ICC__ */
 
+/* Master interrupt state representation data type */
+#define INT_MASTER_CONF_STATUS_DATATYPE __istate_t
+
 #ifndef BV
 #define BV(x) (1 << x)
 #endif
