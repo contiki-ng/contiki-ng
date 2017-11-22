@@ -1,4 +1,6 @@
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
+
 #include <stdio.h>
 #include <strformat.h>
 #include <string.h>
