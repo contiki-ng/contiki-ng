@@ -87,27 +87,7 @@ slip_set_input_callback(void (*c)(void))
 void
 slip_send(void)
 {
-  uint16_t i;
-  uint8_t *ptr;
-  uint8_t c;
-
-  slip_arch_writeb(SLIP_END);
-
-  ptr = &uip_buf[UIP_LLH_LEN];
-  for(i = 0; i < uip_len; ++i) {
-    c = *ptr++;
-    if(c == SLIP_END) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_END;
-    } else if(c == SLIP_ESC) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_ESC;
-    }
-    slip_arch_writeb(c);
-  }
-  slip_arch_writeb(SLIP_END);
-
-  return UIP_FW_OK;
+  slip_write(&uip_buf[UIP_LLH_LEN], uip_len);
 }
 /*---------------------------------------------------------------------------*/
 void
