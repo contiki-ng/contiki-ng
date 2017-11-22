@@ -1,5 +1,6 @@
+/*---------------------------------------------------------------------------*/
 #include <strformat.h>
-
+/*---------------------------------------------------------------------------*/
 #define HAVE_DOUBLE
 
 #define HAVE_LONGLONG
@@ -22,9 +23,9 @@
 #ifndef POINTER_INT
 #define POINTER_INT unsigned long
 #endif
-
+/*---------------------------------------------------------------------------*/
 typedef unsigned int FormatFlags;
-
+/*---------------------------------------------------------------------------*/
 #define MAKE_MASK(shift,size) (((1 << size) - 1) << (shift))
 
 #define JUSTIFY_SHIFT	0
@@ -32,7 +33,6 @@ typedef unsigned int FormatFlags;
 #define JUSTIFY_RIGHT	0x0000
 #define JUSTIFY_LEFT	0x0001
 #define JUSTIFY_MASK	MAKE_MASK(JUSTIFY_SHIFT,JUSTIFY_SIZE)
-
 
 /* How a positive number is prefixed */
 #define POSITIVE_SHIFT	(JUSTIFY_SHIFT + JUSTIFY_SIZE)
@@ -99,6 +99,7 @@ typedef unsigned int FormatFlags;
 #define FLOAT_DEPENDANT	(0x0002 << FLOAT_SHIFT)
 #define FLOAT_HEX	(0x0003 << FLOAT_SHIFT)
 #define FLOAT_MASK	MAKE_MASK(FLOAT_SHIFT, FLOAT_SIZE)
+/*---------------------------------------------------------------------------*/
 
 static FormatFlags
 parse_flags(const char **posp)
@@ -130,7 +131,7 @@ parse_flags(const char **posp)
   }
       
 }
-
+/*---------------------------------------------------------------------------*/
 static unsigned int
 parse_uint(const char **posp)
 {
@@ -151,6 +152,7 @@ parse_uint(const char **posp)
  */
 #define MAXCHARS ((sizeof(LARGEST_UNSIGNED) * 8  + 2) / 3 )
 
+/*---------------------------------------------------------------------------*/
 static unsigned int
 output_uint_decimal(char **posp, LARGEST_UNSIGNED v)
 {
@@ -164,7 +166,7 @@ output_uint_decimal(char **posp, LARGEST_UNSIGNED v)
   *posp = pos;
   return len;
 }
-
+/*---------------------------------------------------------------------------*/
 static unsigned int
 output_uint_hex(char **posp, LARGEST_UNSIGNED v, unsigned int flags)
 {
@@ -179,7 +181,7 @@ output_uint_hex(char **posp, LARGEST_UNSIGNED v, unsigned int flags)
   *posp = pos;
   return len;
 }
-
+/*---------------------------------------------------------------------------*/
 static unsigned int
 output_uint_octal(char **posp, LARGEST_UNSIGNED v)
 {
@@ -193,7 +195,7 @@ output_uint_octal(char **posp, LARGEST_UNSIGNED v)
   *posp = pos;
   return len;
 }
-
+/*---------------------------------------------------------------------------*/
 static StrFormatResult
 fill_space(const StrFormatContext *ctxt, unsigned int len)
 {
@@ -207,7 +209,7 @@ fill_space(const StrFormatContext *ctxt, unsigned int len)
   if (len == 0) return STRFORMAT_OK;
   return ctxt->write_str(ctxt->user_data, buffer, len);
 }
-
+/*---------------------------------------------------------------------------*/
 static StrFormatResult
 fill_zero(const StrFormatContext *ctxt, unsigned int len)
 {
@@ -221,9 +223,9 @@ fill_zero(const StrFormatContext *ctxt, unsigned int len)
   if (len == 0) return STRFORMAT_OK;
   return ctxt->write_str(ctxt->user_data, buffer, len);
 }
-
+/*---------------------------------------------------------------------------*/
 #define CHECKCB(res) {if ((res) != STRFORMAT_OK) {va_end(ap); return -1;}}
-
+/*---------------------------------------------------------------------------*/
 int
 format_str(const StrFormatContext *ctxt, const char *format, ...)
 {
@@ -234,7 +236,7 @@ format_str(const StrFormatContext *ctxt, const char *format, ...)
   va_end(ap);
   return ret;
 }
-
+/*---------------------------------------------------------------------------*/
 int
 format_str_v(const StrFormatContext *ctxt, const char *format, va_list ap)
 {
@@ -615,3 +617,4 @@ format_str_v(const StrFormatContext *ctxt, const char *format, va_list ap)
   
   return written;
 }
+/*---------------------------------------------------------------------------*/

@@ -1,7 +1,8 @@
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <strformat.h>
 #include <string.h>
-
+/*---------------------------------------------------------------------------*/
 static StrFormatResult
 buffer_str(void *user_data, const char *data, unsigned int len)
 {
@@ -9,7 +10,7 @@ buffer_str(void *user_data, const char *data, unsigned int len)
   (*(char**)user_data) += len;
   return STRFORMAT_OK;
 }
-
+/*---------------------------------------------------------------------------*/
 int
 sprintf(char *str, const char *format, ...)
 {
@@ -24,3 +25,4 @@ sprintf(char *str, const char *format, ...)
   va_end(ap);
   return res;
 }
+/*---------------------------------------------------------------------------*/

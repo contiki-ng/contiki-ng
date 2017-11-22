@@ -1,13 +1,14 @@
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <strformat.h>
 #include <string.h>
-
+/*---------------------------------------------------------------------------*/
 struct FmtBuffer
 {
   char *pos;
   size_t left;
 };
-
+/*---------------------------------------------------------------------------*/
 static StrFormatResult
 buffer_str(void *user_data, const char *data, unsigned int len)
 {
@@ -22,7 +23,7 @@ buffer_str(void *user_data, const char *data, unsigned int len)
   buffer->left -= len;
   return STRFORMAT_OK;
 }
-
+/*---------------------------------------------------------------------------*/
 int snprintf(char *str, size_t size, const char *format, ...)
 {
   int res;
@@ -32,7 +33,7 @@ int snprintf(char *str, size_t size, const char *format, ...)
   va_end(ap);
   return res;
 }
-
+/*---------------------------------------------------------------------------*/
 int vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
   struct FmtBuffer buffer;
@@ -46,3 +47,4 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
   *buffer.pos = '\0';
   return res;
 }
+/*---------------------------------------------------------------------------*/
