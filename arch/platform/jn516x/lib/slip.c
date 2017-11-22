@@ -167,7 +167,7 @@ slip_write_char(uint8_t c)
   slip_arch_writeb(c);
 }
 /*---------------------------------------------------------------------------*/
-uint8_t
+void
 slip_write(const void *_ptr, int len)
 {
   const uint8_t *ptr = _ptr;
@@ -181,14 +181,12 @@ slip_write(const void *_ptr, int len)
     slip_write_char(c);
   }
   slip_arch_writeb(SLIP_END);
-
-  return len;
 }
 /*---------------------------------------------------------------------------*/
 /* slip_send: forward (IPv4) packets with {UIP_FW_NETIF(..., slip_send)}
  * was used in slip-bridge.c
  */
-uint8_t
+void
 slip_send(void)
 {
   uint16_t i;
@@ -203,8 +201,6 @@ slip_send(void)
     slip_write_char(c);
   }
   slip_arch_writeb(SLIP_END);
-
-  return UIP_FW_OK;
 }
 /*---------------------------------------------------------------------------*/
 static void
