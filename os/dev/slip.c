@@ -84,7 +84,7 @@ slip_set_input_callback(void (*c)(void))
   input_callback = c;
 }
 /*---------------------------------------------------------------------------*/
-uint8_t
+void
 slip_send(void)
 {
   uint16_t i;

@@ -41,7 +41,7 @@ PROCESS_NAME(slip_process);
 /**
  * Send an IP packet from the uIP buffer with SLIP.
  */
-uint8_t slip_send(void);
+void slip_send(void);
 
 /**
  * Input a SLIP byte.
