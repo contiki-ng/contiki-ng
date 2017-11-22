@@ -64,12 +64,6 @@ int slip_input_byte(unsigned char c);
 
 uint8_t slip_write(const void *ptr, int len);
 
-/* Did we receive any bytes lately? */
-extern uint8_t slip_active;
-
-/* Statistics. */
-extern uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
-
 /**
  * Set a function to be called when there is activity on the SLIP
  * interface; used for detecting if a node is a gateway node.

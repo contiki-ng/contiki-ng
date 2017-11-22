@@ -41,14 +41,13 @@
 #define SLIP_ESC_ESC 0335
 /*---------------------------------------------------------------------------*/
 PROCESS(slip_process, "SLIP driver");
-
-uint8_t slip_active;
-
+/*---------------------------------------------------------------------------*/
+static uint8_t slip_active;
 /*---------------------------------------------------------------------------*/
 #if 1
 #define SLIP_STATISTICS(statement)
 #else
-uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
+static uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
 #define SLIP_STATISTICS(statement) statement
 #endif
 /*---------------------------------------------------------------------------*/
