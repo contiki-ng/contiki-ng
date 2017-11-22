@@ -36,7 +36,7 @@
 #include <string.h>
 #include <strformat.h>
 /*---------------------------------------------------------------------------*/
-static StrFormatResult
+static strformat_result
 write_str(void *user_data, const char *data, unsigned int len)
 {
   if(len > 0) {
@@ -45,7 +45,7 @@ write_str(void *user_data, const char *data, unsigned int len)
   return STRFORMAT_OK;
 }
 /*---------------------------------------------------------------------------*/
-static StrFormatContext ctxt =
+static strformat_context_t ctxt =
 {
   write_str,
   NULL

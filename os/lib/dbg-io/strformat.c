@@ -239,10 +239,10 @@ output_uint_octal(char **posp, LARGEST_UNSIGNED v)
   return len;
 }
 /*---------------------------------------------------------------------------*/
-static StrFormatResult
-fill_space(const StrFormatContext *ctxt, unsigned int len)
+static strformat_result
+fill_space(const strformat_context_t *ctxt, unsigned int len)
 {
-  StrFormatResult res;
+  strformat_result res;
   static const char buffer[16] = "                ";
 
   while(len > 16) {
@@ -260,10 +260,10 @@ fill_space(const StrFormatContext *ctxt, unsigned int len)
   return ctxt->write_str(ctxt->user_data, buffer, len);
 }
 /*---------------------------------------------------------------------------*/
-static StrFormatResult
-fill_zero(const StrFormatContext *ctxt, unsigned int len)
+static strformat_result
+fill_zero(const strformat_context_t *ctxt, unsigned int len)
 {
-  StrFormatResult res;
+  strformat_result res;
   static const char buffer[16] = "0000000000000000";
 
   while(len > 16) {
@@ -281,7 +281,7 @@ fill_zero(const StrFormatContext *ctxt, unsigned int len)
 }
 /*---------------------------------------------------------------------------*/
 int
-format_str(const StrFormatContext *ctxt, const char *format, ...)
+format_str(const strformat_context_t *ctxt, const char *format, ...)
 {
   int ret;
   va_list ap;
@@ -292,7 +292,7 @@ format_str(const StrFormatContext *ctxt, const char *format, ...)
 }
 /*---------------------------------------------------------------------------*/
 int
-format_str_v(const StrFormatContext *ctxt, const char *format, va_list ap)
+format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 {
   unsigned int written = 0;
   const char *pos = format;

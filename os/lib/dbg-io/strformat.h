@@ -39,21 +39,23 @@
 #define STRFORMAT_OK 0
 #define STRFORMAT_FAILED 1
 /*---------------------------------------------------------------------------*/
-typedef unsigned int StrFormatResult;
+typedef unsigned int strformat_result;
 /*---------------------------------------------------------------------------*/
 /* The data argument may only be considered valid during the function call */
-typedef StrFormatResult (*StrFormatWrite)(void *user_data, const char *data, unsigned int len);
+typedef strformat_result (*strformat_write)(void *user_data,
+                                            const char *data,
+                                            unsigned int len);
 
-typedef struct _StrFormatContext {
-  StrFormatWrite write_str;
+typedef struct strformat_context_s {
+  strformat_write write_str;
   void *user_data;
-} StrFormatContext;
+} strformat_context_t;
 /*---------------------------------------------------------------------------*/
-int format_str(const StrFormatContext *ctxt, const char *format, ...)
+int format_str(const strformat_context_t *ctxt, const char *format, ...)
      __attribute__ ((__format__ (__printf__, 2,3)));
      
 int
-format_str_v(const StrFormatContext *ctxt, const char *format, va_list ap);
+format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap);
 /*---------------------------------------------------------------------------*/
 #endif /* STRFORMAT_H_ */
 /*---------------------------------------------------------------------------*/

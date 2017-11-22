@@ -35,7 +35,7 @@
 #include <strformat.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-static StrFormatResult
+static strformat_result
 buffer_str(void *user_data, const char *data, unsigned int len)
 {
   memcpy(*(char **)user_data, data, len);
@@ -46,7 +46,7 @@ buffer_str(void *user_data, const char *data, unsigned int len)
 int
 sprintf(char *str, const char *format, ...)
 {
-  StrFormatContext ctxt;
+  strformat_context_t ctxt;
   int res;
   va_list ap;
   va_start(ap, format);

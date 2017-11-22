@@ -35,15 +35,15 @@
 #include <strformat.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-struct FmtBuffer {
+struct fmt_buffer {
   char *pos;
   size_t left;
 };
 /*---------------------------------------------------------------------------*/
-static StrFormatResult
+static strformat_result
 buffer_str(void *user_data, const char *data, unsigned int len)
 {
-  struct FmtBuffer *buffer = (struct FmtBuffer *)user_data;
+  struct fmt_buffer *buffer = (struct fmt_buffer *)user_data;
   if(len >= buffer->left) {
     len = buffer->left;
     len--;
@@ -69,8 +69,8 @@ snprintf(char *str, size_t size, const char *format, ...)
 int
 vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
-  struct FmtBuffer buffer;
-  StrFormatContext ctxt;
+  struct fmt_buffer buffer;
+  strformat_context_t ctxt;
   int res;
   ctxt.write_str = buffer_str;
   ctxt.user_data = &buffer;
