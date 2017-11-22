@@ -230,4 +230,12 @@ for SFD timestamping */
 #define CC2420_SPI_DISABLE()    (CC2420_CSN_PORT(OUT) |=  BV(CC2420_CSN_PIN))
 #define CC2420_SPI_IS_ENABLED() ((CC2420_CSN_PORT(OUT) & BV(CC2420_CSN_PIN)) != BV(CC2420_CSN_PIN))
 
+/* Platform-specific define for the end of the stack region */
+#define STACK_CONF_ORIGIN     ((void *)0x3900)
+
+/* Disable the stack check library by default: .rom overflow otherwise */
+#ifndef STACK_CHECK_CONF_ENABLED
+#define STACK_CHECK_CONF_ENABLED 0
+#endif
+
 #endif /* PLATFORM_CONF_H_ */

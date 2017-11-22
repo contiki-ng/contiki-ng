@@ -164,6 +164,10 @@ CFLAGS := $(patsubst -I/cygdrive/c/%,-Ic:/%,$(CFLAGS))
 LDFLAGS := $(patsubst -L/cygdrive/c/%,-Lc:/%,$(LDFLAGS))
 endif
 
+# These symbols are used by the stack check library
+LDFLAGS += -Wl,--defsym=_stack=_stack_low_water_mark
+LDFLAGS += -Wl,--defsym=_stack_origin=_ram_top
+
 ########################################################################
 
 MOTELIST = python $(CONTIKI)/tools/jn516x/mote-list.py
