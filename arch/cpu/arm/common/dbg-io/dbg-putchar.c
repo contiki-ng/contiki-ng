@@ -21,7 +21,8 @@ putc(int c, FILE *f)
 }
 /*---------------------------------------------------------------------------*/
 int
-__sp(struct _reent *_ptr, int c, FILE *_p) {
+__sp(struct _reent *_ptr, int c, FILE *_p)
+{
   dbg_putchar(c);
   return c;
 }

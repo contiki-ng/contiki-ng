@@ -3,8 +3,7 @@
 #include <strformat.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-struct FmtBuffer
-{
+struct FmtBuffer {
   char *pos;
   size_t left;
 };
@@ -12,19 +11,20 @@ struct FmtBuffer
 static StrFormatResult
 buffer_str(void *user_data, const char *data, unsigned int len)
 {
-  struct FmtBuffer *buffer = (struct FmtBuffer*)user_data;
-  if (len >= buffer->left) {
+  struct FmtBuffer *buffer = (struct FmtBuffer *)user_data;
+  if(len >= buffer->left) {
     len = buffer->left;
     len--;
   }
-    
+
   memcpy(buffer->pos, data, len);
   buffer->pos += len;
   buffer->left -= len;
   return STRFORMAT_OK;
 }
 /*---------------------------------------------------------------------------*/
-int snprintf(char *str, size_t size, const char *format, ...)
+int
+snprintf(char *str, size_t size, const char *format, ...)
 {
   int res;
   va_list ap;
@@ -34,7 +34,8 @@ int snprintf(char *str, size_t size, const char *format, ...)
   return res;
 }
 /*---------------------------------------------------------------------------*/
-int vsnprintf(char *str, size_t size, const char *format, va_list ap)
+int
+vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
   struct FmtBuffer buffer;
   StrFormatContext ctxt;

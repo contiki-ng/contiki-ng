@@ -12,8 +12,7 @@ typedef unsigned int StrFormatResult;
 /* The data argument may only be considered valid during the function call */
 typedef StrFormatResult (*StrFormatWrite)(void *user_data, const char *data, unsigned int len);
 
-typedef struct _StrFormatContext
-{
+typedef struct _StrFormatContext {
   StrFormatWrite write_str;
   void *user_data;
 } StrFormatContext;

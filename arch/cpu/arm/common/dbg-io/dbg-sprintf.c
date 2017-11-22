@@ -6,8 +6,8 @@
 static StrFormatResult
 buffer_str(void *user_data, const char *data, unsigned int len)
 {
-  memcpy(*(char**)user_data, data, len);
-  (*(char**)user_data) += len;
+  memcpy(*(char **)user_data, data, len);
+  (*(char **)user_data) += len;
   return STRFORMAT_OK;
 }
 /*---------------------------------------------------------------------------*/
