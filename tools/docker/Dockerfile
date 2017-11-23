@@ -3,7 +3,7 @@ FROM 32bit/ubuntu:16.04
 # Tools
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
-  build-essential doxygen git wget unzip \
+  build-essential doxygen git wget unzip python-serial \
   default-jdk ant srecord iputils-tracepath && \
   apt-get clean
 
@@ -41,7 +41,7 @@ RUN wget https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_
 
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 
-# Create user and enable X forwarding. Docker run option:
+# Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
 RUN export uid=1000 gid=1000 && \
     mkdir -p /home/user && \
@@ -49,7 +49,8 @@ RUN export uid=1000 gid=1000 && \
     echo "user:x:${uid}:" >> /etc/group && \
     echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers && \
     chmod 0440 /etc/sudoers && \
-    chown ${uid}:${gid} -R /home/user
+    chown ${uid}:${gid} -R /home/user && \
+    usermod -aG dialout user
 
 # Set user for what comes next
 USER user
