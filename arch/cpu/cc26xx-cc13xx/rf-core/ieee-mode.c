@@ -167,6 +167,9 @@ static uint8_t rf_stats[16] = { 0 };
 /* How long to wait for the RF to react on CMD_ABORT: around 1 msec */
 #define RF_TURN_OFF_WAIT_TIMEOUT (RTIMER_SECOND >> 10)
 
+/* How long to wait for the RF to finish TX of a packet or an ACK */
+#define TX_FINISH_WAIT_TIMEOUT (RTIMER_SECOND >> 7)
+
 #define LIMITED_BUSYWAIT(cond, timeout) do {                         \
     rtimer_clock_t end_time = RTIMER_NOW() + timeout;                \
     while(cond) {                                                    \
@@ -697,7 +700,7 @@ rx_off(void)
   }
 
   /* Wait for ongoing ACK TX to finish */
-  while(transmitting());
+  LIMITED_BUSYWAIT(transmitting(), TX_FINISH_WAIT_TIMEOUT);
 
   /* Send a CMD_ABORT command to RF Core */
   if(rf_core_send_cmd(CMDR_DIR_CMD(CMD_ABORT), &cmd_status) != RF_CORE_CMD_OK) {
@@ -1140,7 +1143,7 @@ channel_clear(void)
      *
      * We could probably even simply return that the channel is clear
      */
-    while(transmitting());
+    LIMITED_BUSYWAIT(transmitting(), TX_FINISH_WAIT_TIMEOUT);
   } else {
     was_off = 1;
     if(on() != RF_CORE_CMD_OK) {
@@ -1297,7 +1300,7 @@ off(void)
     return RF_CORE_CMD_OK;
   }
 
-  while(transmitting());
+  LIMITED_BUSYWAIT(transmitting(), TX_FINISH_WAIT_TIMEOUT);
 
   /* stopping the rx explicitly results in lower sleep-mode power usage */
   rx_off();
