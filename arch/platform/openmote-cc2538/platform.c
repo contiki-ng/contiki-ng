@@ -111,9 +111,6 @@ set_rf_params(void)
   short_addr = ext_addr[7];
   short_addr |= ext_addr[6] << 8;
 
-  /* Populate linkaddr_node_addr. Maintain endianness */
-  memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
-
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, CC2538_RF_CHANNEL);
@@ -157,7 +154,8 @@ platform_init_stage_two()
   crypto_disable();
 #endif
 
-  set_rf_params();
+  /* Populate linkaddr_node_addr */
+  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
   INTERRUPTS_ENABLE();
 
@@ -168,6 +166,8 @@ void
 platform_init_stage_three()
 {
   LOG_INFO("%s\n", BOARD_STRING);
+
+  set_rf_params();
 
   board_init();
 
