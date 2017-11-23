@@ -3,16 +3,12 @@ TESTLOGS=$(sort $(patsubst %.sh,%.testlog,$(TESTS)))
 
 CONTIKI=../..
 
-tests: $(TESTLOGS)
+all: clean summary
 
-summary: clean tests
-ifeq ($(TESTS),)
-	@echo No tests > $@
-else
-	@cat $(TESTLOGS) > $@
-endif
-
-all: cooja clean tests
+summary: cooja $(TESTLOGS)
+	@cat *.testlog > summary
+	@echo "========== Summary =========="
+	@cat summary
 
 %.testlog: %.sh cooja
 	@bash "$(basename $@).sh" "$(CONTIKI)"

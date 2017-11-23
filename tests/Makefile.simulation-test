@@ -25,46 +25,35 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
+all: cooja summary
 
 TESTS=$(wildcard ??-*.csc)
-TESTLOGS=$(patsubst %.csc,%.testlog,$(TESTS))
-LOGS=$(patsubst %.csc,%.log,$(TESTS))
-FAILLOGS=$(patsubst %.csc,%.*.faillog,$(TESTS))
-#Set random seeds to create reproduceable results.
-RANDOMSEED=1
+TESTLOGS=$(sort $(patsubst %.csc,%.testlog,$(TESTS)))
+
+# The random seed to start from
+BASESEED ?= 1
+# The number of runs (with different random seeds)
+RUNCOUNT ?= 1
 
 CONTIKI=../..
 
 tests: $(TESTLOGS)
 
-report: clean tests
-	@echo | grep -s -e '' - $(LOGS) $(TESTLOGS) $(FAILLOGS) > $@ || true
-
-summary: report
+summary: clean tests
 ifeq ($(TESTS),)
-	@echo No tests > $@
+	@echo No tests > summary
 else
-	@egrep -e ' OK| FAIL' $< > $@
-	@ls -1 ??-*.faillog > /dev/null 2>&1; [ $$? = 0 ] && tail -v ??-*.log ??-*.faillog >> $@ || true
+	@cat $(TESTLOGS) > summary
 endif
+	@echo "========== Summary =========="
+	@cat summary
 
-all: cooja clean tests
-
-ifdef RUNALL
-RUNALL=true
-else
-RUNALL=false
-endif
-
-%.testlog: %.csc cooja	
-	@$(CONTIKI)/tests/simexec.sh "$(RUNALL)" "$<" "$(CONTIKI)" "$(basename $@)" $(RANDOMSEED)
+%.testlog: %.csc cooja
+	@$(CONTIKI)/tests/simexec.sh "$<" "$(CONTIKI)" "$(basename $@)" $(BASESEED) $(RUNCOUNT)
 
 clean:
-	@rm -f $(TESTLOGS) $(LOGS) $(FAILLOGS) COOJA.log COOJA.testlog \
-               report summary
-
+	@rm -f *.*log report summary
 
 cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
 $(CONTIKI)/tools/cooja/dist/cooja.jar:
 	(cd $(CONTIKI)/tools/cooja; ant jar)
-

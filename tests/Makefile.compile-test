@@ -25,9 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-all: summary
-
-build: examples tools
+all: clean summary
 
 # The stuff below is some GNU make magic to automatically make make
 # give each compile test a number, prefixed with a 0 if the number is
@@ -40,13 +38,13 @@ get_target = $(firstword $(subst :, ,$1))
 get_target_vars = $(wordlist 2,15,$(subst :, ,$1))
 
 define dooneexample
-@echo Building example $(3): $(1) $(4) for target $(2)
+@echo -n Building example $(3): $(1) $(4) for target $(2)
 @((cd $(EXAMPLESDIR)/$(1); \
- make $(4) TARGET=$(2) clean && make $(4) TARGET=$(2) WERROR=1) > \
-      $(3)-$(subst /,-,$(1))$(2).report 2>&1 && \
- (echo $(1) $(2): OK | tee $(3)-$(subst /,-,$(1))$(2).summary) || \
- (echo $(1) $(2): FAIL ಠ.ಠ | tee $(3)-$(subst /,-,$(1))$(2).summary ; \
-  tail -10 $(3)-$(subst /,-,$(1))$(2).report | tee $(3)-$(subst /,-,$(1))$(2).faillog))
+ make $(4) TARGET=$(2) clean && make -j $(4) TARGET=$(2) WERROR=1) > \
+      /dev/null 2>make.runerr && \
+ (echo " -> OK" && printf "%-75s %-35s %-20s TEST OK\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog) || \
+ (echo " -> FAIL" && printf "%-75s %-35s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog ; cat make.runerr))
+@rm -f make.runerr
 endef
 
 define doexample
@@ -55,40 +53,16 @@ $(call dooneexample,$(dir $(call get_target,${1})),$(notdir $(call get_target,${
 endef
 #end of GNU make magic
 
-
 examples:
 	$(foreach ex, $(EXAMPLES), $(call doexample, ${ex}))
 
-report: build
-	@echo Examples | cat - ??-*.report > report
-	@echo Tools | cat - $(foreach tool, $(TOOLS), $(tool).report) >> report
-
-examples-summary: build
-	@echo Example summary | cat - $(foreach example, $(EXAMPLES), \
-             $(foreach target, $(EXAMPLESTARGETS), $(example)-$(target).summary)) > \
-               $@
-	@echo Tools summary | cat - $(foreach tool, $(TOOLS), $(tool).summary) >> $@
-
-faillog-summary: build
-	@rm -f $@; touch $@
-	@$(foreach log, $(wildcard *.faillog), grep -H '' $(log) >> $@;)
-
-summary: examples-summary faillog-summary
-	@cat *.summary > $@
-	@ls -1 ??-*.faillog > /dev/null 2>&1; [ $$? = 0 ] && tail -v ??-*.faillog >> $@ || true
-	@rm -f $^
-
-tools:
-	@$(foreach tool, $(TOOLS), \
-           (((cd $(TOOLSDIR)/$(tool); make) > $(tool).report 2>&1) && \
-             (echo $(tool): OK | tee $(tool).summary) || \
-             (echo $(tool): FAIL ಠ_ಠ | tee $(tool).summary ; \
-                tail -10 $(tool).report > $(tool).faillog)) ; )
+summary: examples
+	@cat *.testlog > summary
+	@echo "========== Summary =========="
+	@cat summary
 
 clean:
-	@rm -f *.summary *.report *.faillog summary report
+	@rm -f *.testlog summary
 	@$(foreach example, $(EXAMPLES), \
            $(foreach target, $(EXAMPLESTARGETS), \
              (cd $(EXAMPLESDIR)/$(example); make TARGET=$(target) clean);))
-	@$(foreach tool, $(TOOLS), \
-           (cd $(TOOLSDIR)/$(tool); make clean);)

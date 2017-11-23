@@ -50,14 +50,11 @@ COOJA.testlog
 
 #test artifacts
 *.testlog
-*.log.prog
-*.report
-summary
+*.scriptlog
+*.coojalog
 *.summary
-*.runerr
-*.runlog
-*.faillog
-tests/[0-9][0-9]-*/report
+*.err
+summary
 tests/[0-9][0-9]-*/org/
 
 # x86 UEFI files
