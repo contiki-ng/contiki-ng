@@ -41,7 +41,7 @@ PROCESS_NAME(slip_process);
 /**
  * Send an IP packet from the uIP buffer with SLIP.
  */
-uint8_t slip_send(void);
+void slip_send(void);
 
 /**
  * Input a SLIP byte.
@@ -62,13 +62,10 @@ uint8_t slip_send(void);
  */
 int slip_input_byte(unsigned char c);
 
-uint8_t slip_write(const void *ptr, int len);
-
-/* Did we receive any bytes lately? */
-extern uint8_t slip_active;
-
-/* Statistics. */
-extern uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
+/**
+ * Send using SLIP len bytes starting from the location pointed to by ptr
+ */
+void slip_write(const void *ptr, int len);
 
 /**
  * Set a function to be called when there is activity on the SLIP
