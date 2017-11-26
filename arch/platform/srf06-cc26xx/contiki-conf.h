@@ -178,6 +178,19 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
+ * \name JTAG interface configuration
+ *
+ * Enable/Disable the JTAG DAP and TAP interfaces on the chip.
+ * Setting this to 0 will disable access to the debug interface
+ * to secure deployed images.
+ * @{
+ */
+#ifndef CCXXWARE_CONF_JTAG_INTERFACE_ENABLE
+#define CCXXWARE_CONF_JTAG_INTERFACE_ENABLE              1
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name ROM Bootloader configuration
  *
  * Enable/Disable the ROM bootloader in your image, if the board supports it.
