@@ -61,6 +61,7 @@ CONTIKI_CPU_DIRS += . dev ble #compat
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c putchar.c watchdog.c
+CONTIKI_CPU_SOURCEFILES += int-master.c
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
