@@ -73,7 +73,7 @@
 /* Enable periodic RSSI sampling for TSCH statistics */
 #define TSCH_STATS_CONF_SAMPLE_NOISE_RSSI 1
 
-/* Reduce the TSCH stat "decay to normal" period */
+/* Reduce the TSCH stat "decay to normal" period to get printouts more often */
 #define TSCH_STATS_CONF_DECAY_INTERVAL (60 * CLOCK_SECOND)
 
 /*******************************************************/

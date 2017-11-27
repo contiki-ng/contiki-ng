@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, SICS Swedish ICT.
- * Copyright (c) 2017, University of Bristol - http://www.bristol.ac.uk
+ * Copyright (c) 2018, University of Bristol - http://www.bristol.ac.uk
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,16 +37,12 @@
  */
 
 #include "contiki.h"
-#include "node-id.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
+#include "sys/node-id.h"
 #include "sys/log.h"
 #include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-log.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "net/routing/routing.h"
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
@@ -62,10 +58,14 @@ PROCESS_THREAD(node_process, ev, data)
 
   PROCESS_BEGIN();
 
+  is_coordinator = 0;
+
+#if CONTIKI_TARGET_COOJA
   is_coordinator = (node_id == 1);
+#endif
 
   if(is_coordinator) {
-    rpl_dag_root_init_dag_immediately();
+    NETSTACK_ROUTING.root_start();
   }
   NETSTACK_MAC.on();
 
@@ -76,11 +76,11 @@ PROCESS_THREAD(node_process, ev, data)
     etimer_set(&et, CLOCK_SECOND * 60);
     while(1) {
       /* Used for non-regression testing */
-      #if RPL_WITH_STORING
+      #if (UIP_MAX_ROUTES != 0)
         PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
       #endif
-      #if RPL_WITH_NON_STORING
-        PRINTF("Routing links: %u\n", rpl_ns_num_nodes());
+      #if (UIP_SR_LINK_NUM != 0)
+        PRINTF("Routing links: %u\n", uip_sr_num_nodes());
       #endif
       PROCESS_YIELD_UNTIL(etimer_expired(&et));
       etimer_reset(&et);
