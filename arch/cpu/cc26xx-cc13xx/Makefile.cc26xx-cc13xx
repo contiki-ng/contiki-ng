@@ -32,7 +32,7 @@ LDSCRIPT = $(CONTIKI_CPU)/cc26xx.ld
 CFLAGS += -mcpu=cortex-m3 -mthumb -mlittle-endian
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing
-CFLAGS += -Wall -std=c99
+CFLAGS += -Wall -std=c99 -DCMSIS_DEV_HDR=\"cc13x0-cc26x0-cm3.h\"
 
 LDFLAGS += -mcpu=cortex-m3 -mthumb -mlittle-endian -nostartfiles
 LDFLAGS += -T $(LDSCRIPT)
@@ -62,10 +62,10 @@ endif
 CLEAN += *.d *.elf *.hex
 
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS = . dev rf-core rf-core/api $(TI_XXWARE_STARTUP_DIR)
+CONTIKI_CPU_DIRS += . dev rf-core rf-core/api $(TI_XXWARE_STARTUP_DIR)
 
-### Use the existing debug I/O in arch/cpu/arm/common
-CONTIKI_CPU_DIRS += ../arm/common/dbg-io
+### Use CMSIS and the existing debug I/O in arch/cpu/arm/common
+CONTIKI_CPU_DIRS += ../arm/common/dbg-io ../arm/common/CMSIS
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c soc-rtc.c uart.c
