@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2016-2017, Yanzi Networks.
+ * Copyright (c) 2017, University of Bristol - http://www.bristol.ac.uk/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,122 +29,149 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "dev/spi-dev.h"
+#include "spi-hal.h"
 
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_acquire(spi_device_t *dev)
+spi_status_t
+spi_acquire(spi_device_t *dev)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  spi_status_t r;
+
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
+
   /* lock the bus */
-  return spi_dev_arch_lock(dev);
+  r = spi_arch_lock(dev);
+  if(r != SPI_DEV_STATUS_OK) {
+    return r;
+  }
+
+  /* open the bus */
+  return spi_arch_open(dev);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_release(spi_device_t *dev)
+spi_status_t
+spi_release(spi_device_t *dev)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  spi_status_t r;
+
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
+
   /* unlock the bus */
-  return spi_dev_arch_unlock(dev);
-}
-/*---------------------------------------------------------------------------*/
-int
-spi_dev_has_bus(spi_device_t *dev)
-{
-  if(dev == NULL || dev->bus == NULL) {
-    return 0;
+  r = spi_arch_close(dev);
+  if(r != SPI_DEV_STATUS_OK) {
+    return r;
   }
-  return spi_dev_arch_has_lock(dev);
+
+  /* unlock the bus */
+  return spi_arch_unlock(dev);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_restart_timeout(spi_device_t *dev)
+spi_status_t
+spi_select(spi_device_t *dev)
 {
-  if(!spi_dev_has_bus(dev)) {
-    return SPI_DEV_STATUS_EINVAL;
+  return spi_arch_select(dev);
+}
+/*---------------------------------------------------------------------------*/
+spi_status_t
+spi_deselect(spi_device_t *dev)
+{
+  return spi_arch_deselect(dev);
+}
+/*---------------------------------------------------------------------------*/
+bool
+spi_has_bus(spi_device_t *dev)
+{
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+    return false;
   }
-  return spi_dev_arch_restart_timeout(dev);
+
+  return spi_arch_has_lock(dev);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_write_byte(spi_device_t *dev, uint8_t data)
+spi_status_t
+spi_write_byte(spi_device_t *dev, uint8_t data)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  if(!spi_dev_arch_has_lock(dev)) {
+  if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_LOCKED;
   }
-  return spi_dev_arch_transfer(dev, &data, 1, 0, 0, 0);
+
+  return spi_arch_transfer(dev, &data, 1, 0, 0, 0);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_write(spi_device_t *dev, const uint8_t *data, int size)
+spi_status_t
+spi_write(spi_device_t *dev, const uint8_t *data, int size)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  if(!spi_dev_arch_has_lock(dev)) {
+  if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_LOCKED;
   }
-  return spi_dev_arch_transfer(dev, data, size, 0, 0, 0);
+
+  return spi_arch_transfer(dev, data, size, 0, 0, 0);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_read_byte(spi_device_t *dev, uint8_t *buf)
+spi_status_t
+spi_read_byte(spi_device_t *dev, uint8_t *buf)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  if(!spi_dev_arch_has_lock(dev)) {
+  if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_LOCKED;
   }
-  return spi_dev_arch_transfer(dev, NULL, 0, buf, 1, 0);
+
+  return spi_arch_transfer(dev, NULL, 0, buf, 1, 0);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_read(spi_device_t *dev, uint8_t *buf, int size)
+spi_status_t
+spi_read(spi_device_t *dev, uint8_t *buf, int size)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  if(!spi_dev_arch_has_lock(dev)) {
+  if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_LOCKED;
   }
-  return spi_dev_arch_transfer(dev, NULL, 0, buf, size, 0);
+
+  return spi_arch_transfer(dev, NULL, 0, buf, size, 0);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_read_skip(spi_device_t *dev, int size)
+spi_status_t
+spi_read_skip(spi_device_t *dev, int size)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  if(!spi_dev_arch_has_lock(dev)) {
+  if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_LOCKED;
   }
-  return spi_dev_arch_transfer(dev, NULL, 0, NULL, 0, size);
+
+  return spi_arch_transfer(dev, NULL, 0, NULL, 0, size);
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_transfer(spi_device_t *dev,
-                 const uint8_t *wdata, int wsize,
-                 uint8_t *rbuf, int rsize, int ignore)
+spi_status_t
+spi_transfer(spi_device_t *dev,
+             const uint8_t *wdata, int wsize,
+             uint8_t *rbuf, int rsize, int ignore)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  if(!spi_dev_arch_has_lock(dev)) {
+  if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_LOCKED;
   }
 
@@ -155,53 +183,43 @@ spi_dev_transfer(spi_device_t *dev,
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  return spi_dev_arch_transfer(dev, wdata, wsize, rbuf, rsize, ignore);
+  return spi_arch_transfer(dev, wdata, wsize, rbuf, rsize, ignore);
 }
 /*---------------------------------------------------------------------------*/
-/* Chip select can only be done when the bus is locked to this device */
-spi_dev_status_t
-spi_dev_chip_select(spi_device_t *dev, uint8_t on)
+spi_status_t
+spi_read_register(spi_device_t *dev, uint8_t reg, uint8_t *data, int size)
 {
-  if(dev == NULL || dev->bus == NULL) {
-    return SPI_DEV_STATUS_EINVAL;
-  }
-  if(spi_dev_has_bus(dev)) {
-    return dev->chip_select(on);
-  }
-  return SPI_DEV_STATUS_BUS_NOT_OWNED;
-}
-/*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_read_register(spi_device_t *dev, uint8_t reg, uint8_t *data, int size)
-{
-  spi_dev_status_t status;
-  if(dev == NULL || dev->bus == NULL) {
+  spi_status_t status;
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
   /* write the register first (will read a status) */
-  status = spi_dev_write_byte(dev, reg);
+  status = spi_write_byte(dev, reg);
   if(status != SPI_DEV_STATUS_OK) {
     return status;
   }
+
   /* then read the value  (will read the value) */
-  status = spi_dev_read(dev, data, size);
+  status = spi_read(dev, data, size);
   if(status != SPI_DEV_STATUS_OK) {
     return status;
   }
+
   return status;
 }
 /*---------------------------------------------------------------------------*/
-spi_dev_status_t
-spi_dev_strobe(spi_device_t *dev, uint8_t strobe, uint8_t *result)
+spi_status_t
+spi_strobe(spi_device_t *dev, uint8_t strobe, uint8_t *result)
 {
-  if(dev == NULL || dev->bus == NULL) {
+  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  if(!spi_dev_arch_has_lock(dev)) {
+  if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_LOCKED;
   }
-  return spi_dev_arch_transfer(dev, &strobe, 1, result, 1, 0);
+
+  return spi_arch_transfer(dev, &strobe, 1, result, 1, 0);
 }
 /*---------------------------------------------------------------------------*/
