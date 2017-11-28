@@ -77,4 +77,28 @@ CCIF int uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *addr);
 CCIF int uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *addr);
 /** @} */
 
+/**
+ * \addtogroup uiplib
+ * @{
+ */
+
+/**
+ * Print an IP address using printf().
+ *
+ * \param addr A pointer to a uip_ipaddr_t that will be printed with printf().
+ */
+void uiplib_ipaddr_print(const uip_ipaddr_t *addr);
+
+/**
+ * Write at most size - 1 characters of the IP address to the output string.
+ * The output is always null-terminated, unless size is 0.
+ *
+ * \param buffer A pointer to an output string with  at least size bytes.
+ * \param size The max number of characters to write to the output string.
+ * \param addr A pointer to a uip_ipaddr_t that will be printed with printf().
+ */
+int uiplib_ipaddr_snprint(char *buffer, size_t size, const uip_ipaddr_t *addr);
+
+/** @} */
+
 #endif /* UIPLIB_H_ */
