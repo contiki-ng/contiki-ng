@@ -12,7 +12,7 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
 
 # Starting Contiki-NG native node
 echo "Starting native node - lwm2m/ipso objects"
-make -C $CONTIKI/examples/ipso-objects/example-ipso-objects > make.log 2> make.err
+make -C $CONTIKI/examples/ipso-objects > make.log 2> make.err
 sudo $CONTIKI/examples/ipso-objects/example-ipso-objects.native > node.log 2> node.err &
 CPID=$!
 sleep 10
