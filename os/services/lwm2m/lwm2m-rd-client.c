@@ -176,9 +176,12 @@ static int
 has_network_access(void)
 {
 #if UIP_CONF_IPV6_RPL
+/* NATIVE PLATFORM is not really running RPL */
+#ifndef CONTIKI_TARGET_NATIVE
   if(rpl_get_any_dag() == NULL) {
     return 0;
   }
+#endif
 #endif /* UIP_CONF_IPV6_RPL */
   return 1;
 }

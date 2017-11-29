@@ -216,9 +216,11 @@ int
 coap_endpoint_is_connected(const coap_endpoint_t *ep)
 {
 #if UIP_CONF_IPV6_RPL
+#ifndef CONTIKI_TARGET_NATIVE
   if(rpl_get_any_dag() == NULL) {
     return 0;
   }
+#endif
 #endif /* UIP_CONF_IPV6_RPL */
 
 #ifdef WITH_DTLS

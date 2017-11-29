@@ -72,11 +72,11 @@ static led_state_t leds_controls[LEDS_CONTROL_NUMBER];
 static lwm2m_status_t
 set_value(ipso_control_t *control, uint8_t value)
 {
+#if PLATFORM_HAS_LEDS
   led_state_t *state;
 
   state = (led_state_t *)control;
 
-#if PLATFORM_HAS_LEDS
   if(value) {
     leds_on(state->led_value);
   } else {
