@@ -81,6 +81,13 @@
 #define LOG_OUTPUT(...) printf(__VA_ARGS__)
 #endif /* LOG_CONF_OUTPUT */
 
+/* Custom log prefix output function -- default is LOG_OUTPUT */
+#ifdef LOG_CONF_OUTPUT_PREFIX
+#define LOG_OUTPUT_PREFIX(level, levelstr, module) LOG_CONF_OUTPUT_PREFIX(level, levelstr, module)
+#else /* LOG_CONF_OUTPUT_PREFIX */
+#define LOG_OUTPUT_PREFIX(level, levelstr, module) LOG_OUTPUT("[%-4s: %-10s] ", levelstr, module)
+#endif /* LOG_CONF_OUTPUT_PREFIX */
+
 /******************************************************************************/
 /********************* A list of currently supported modules ******************/
 /******************************************************************************/
