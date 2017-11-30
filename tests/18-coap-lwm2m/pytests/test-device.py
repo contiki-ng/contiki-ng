@@ -64,8 +64,6 @@ print "Code:", r.getCode(), r.getCode().getName() == "CONTENT"
 print "Objects: ", client.links
 print "Read  Manufacturer => ", client.read("3/0/0")
 print "Read  Device => ", client.readTLV("3/0/")
-print "Write Manufacturer => ", client.write(3, 0, 0, "abc")
-print "Exe   Manufacturer => ", client.execute("3/0/0")
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestDevice)
 unittest.TextTestRunner(verbosity=2).run(suite)
