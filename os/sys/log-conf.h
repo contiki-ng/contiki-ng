@@ -133,6 +133,10 @@
 #define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_NONE
 #endif /* LOG_CONF_LEVEL_6TOP */
 
+#ifndef LOG_CONF_LEVEL_COAP
+#define LOG_CONF_LEVEL_COAP                        LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_COAP */
+
 #ifndef LOG_CONF_LEVEL_MAIN
 #define LOG_CONF_LEVEL_MAIN                        LOG_LEVEL_INFO
 #endif /* LOG_CONF_LEVEL_MAIN */
