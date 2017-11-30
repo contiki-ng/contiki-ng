@@ -77,6 +77,12 @@ RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOM
 # Enable IPv6 -- must be done at runtime, not in Dockerfile
 #RUN sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
 
+# Install coap-cli
+RUN sudo apt-get install -y npm \
+  && sudo apt-get clean \
+  && sudo npm install coap-cli -g \
+  && sudo ln -s /usr/bin/nodejs /usr/bin/node
+
 # Working directory
 WORKDIR ${CONTIKI_NG}
 
