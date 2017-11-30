@@ -40,13 +40,10 @@
 #include "sys/etimer.h"
 #include "sys/process.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-timer-default"
+#define LOG_LEVEL  LOG_LEVEL_NONE
 
 PROCESS(coap_timer_process, "coap timer process");
 
@@ -58,7 +55,7 @@ update_timer(void)
 {
   uint64_t remaining;
   remaining = coap_timer_time_to_next_expiration();
-  PRINTF("coap-timer-default: remaining %lu msec\n", (unsigned long)remaining);
+  LOG_DBG("remaining %lu msec\n", (unsigned long)remaining);
   if(remaining == 0) {
     /* Run as soon as possible */
     process_poll(&coap_timer_process);

@@ -36,7 +36,6 @@
  */
 
 #include "contiki.h"
-#include "sys/cc.h"
 #include "net/ipv6/uip-udp-packet.h"
 #include "net/ipv6/uiplib.h"
 #include "coap.h"
@@ -48,28 +47,20 @@
 #include "coap-keystore.h"
 #include "coap-keystore-simple.h"
 
-
 #if UIP_CONF_IPV6_RPL
 #include "rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
-#define DEBUG DEBUG_FULL
-#include "net/ipv6/uip-debug.h"
-
-#define DEBUG_VERBOSE ((DEBUG) && 0)
-
-#if DEBUG
-#define PRINTEP(X) coap_endpoint_print(X)
-#else
-#define PRINTEP(X)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-uip"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 #ifdef WITH_DTLS
 #include "tinydtls.h"
 #include "dtls.h"
 #include "dtls_debug.h"
 #endif /* WITH_DTLS */
-
 
 /* sanity check for configured values */
 #if COAP_MAX_PACKET_SIZE > (UIP_BUFSIZE - UIP_IPH_LEN - UIP_UDPH_LEN)
@@ -101,16 +92,63 @@ static struct uip_udp_conn *udp_conn = NULL;
 
 /*---------------------------------------------------------------------------*/
 void
+coap_endpoint_log(const coap_endpoint_t *ep)
+{
+  if(ep == NULL) {
+    LOG_OUTPUT("(NULL EP)");
+    return;
+  }
+  if(ep->secure) {
+    LOG_OUTPUT("coaps://[");
+  } else {
+    LOG_OUTPUT("coap://[");
+  }
+  log_6addr(&ep->ipaddr);
+  LOG_OUTPUT("]:%u", uip_ntohs(ep->port));
+}
+/*---------------------------------------------------------------------------*/
+void
 coap_endpoint_print(const coap_endpoint_t *ep)
 {
-  if(ep->secure) {
-    printf("coaps:");
-  } else {
-    printf("coap:");
+  if(ep == NULL) {
+    printf("(NULL EP)");
+    return;
   }
-  printf("//[");
-  uip_debug_ipaddr_print(&ep->ipaddr);
+  if(ep->secure) {
+    printf("coaps://[");
+  } else {
+    printf("coap://[");
+  }
+  uiplib_ipaddr_print(&ep->ipaddr);
   printf("]:%u", uip_ntohs(ep->port));
+}
+/*---------------------------------------------------------------------------*/
+int
+coap_endpoint_snprint(char *buf, size_t size, const coap_endpoint_t *ep)
+{
+  int n;
+  if(buf == NULL || size == 0) {
+    return 0;
+  }
+  if(ep == NULL) {
+    n = snprintf(buf, size - 1, "(NULL EP)");
+  } else {
+    if(ep->secure) {
+      n = snprintf(buf, size - 1, "coaps://[");
+    } else {
+      n = snprintf(buf, size - 1, "coap://[");
+    }
+    if(n < size - 1) {
+      n += uiplib_ipaddr_snprint(&buf[n], size - n - 1, &ep->ipaddr);
+    }
+    if(n < size - 1) {
+      n += snprintf(&buf[n], size -n - 1, "]:%u", uip_ntohs(ep->port));
+    }
+  }
+  if(n >= size - 1) {
+    buf[size - 1] = '\0';
+  }
+  return n;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -178,7 +216,7 @@ coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep)
        * Secure CoAP should use a different port but for now
        * the same port is used.
        */
-      PRINTF("Using secure port (coaps)\n");
+      LOG_DBG("Using secure port (coaps)\n");
       ep->port = SERVER_LISTEN_SECURE_PORT;
       ep->secure = 1;
     } else {
@@ -232,14 +270,15 @@ coap_endpoint_is_connected(const coap_endpoint_t *ep)
     peer = dtls_get_peer(dtls_context, ep);
     if(peer != NULL) {
       /* only if handshake is done! */
-      PRINTF("DTLS peer state for ");
-      PRINTEP(ep);
-      PRINTF(" is %d %d\n", peer->state, dtls_peer_is_connected(peer));
+      LOG_DBG("DTLS peer state for ");
+      LOG_DBG_COAP_EP(ep);
+      LOG_DBG_(" is %d %d\n", peer->state, dtls_peer_is_connected(peer));
       return dtls_peer_is_connected(peer);
     } else {
-      PRINTF("DTLS did not find peer ");
-      PRINTEP(ep);
-      PRINTF("\n");
+      LOG_DBG("DTLS did not find peer ");
+      LOG_DBG_COAP_EP(ep);
+      LOG_DBG_("\n");
+      return 0;
     }
   }
 #endif /* WITH_DTLS */
@@ -252,16 +291,16 @@ int
 coap_endpoint_connect(coap_endpoint_t *ep)
 {
   if(ep->secure == 0) {
-    PRINTF("CoAP connect to ");
-    PRINTEP(ep);
-    PRINTF("\n");
+    LOG_DBG("connect to ");
+    LOG_DBG_COAP_EP(ep);
+    LOG_DBG_("\n");
     return 1;
   }
 
 #ifdef WITH_DTLS
-  PRINTF("DTLS connect to ");
-  PRINTEP(ep);
-  PRINTF("\n");
+  LOG_DBG("DTLS connect to ");
+  LOG_DBG_COAP_EP(ep);
+  LOG_DBG_("\n");
 
   /* setup all address info here... should be done to connect */
   if(dtls_context) {
@@ -314,10 +353,10 @@ coap_transport_init(void)
 static void
 process_secure_data(void)
 {
-  PRINTF("receiving secure UDP datagram from [");
-  PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("]:%u\n  Length: %u\n", uip_ntohs(UIP_UDP_BUF->srcport),
-         uip_datalen());
+  LOG_INFO("receiving secure UDP datagram from [");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO_("]:%u\n  Length: %u\n", uip_ntohs(UIP_UDP_BUF->srcport),
+            uip_datalen());
 
   if(dtls_context) {
     dtls_handle_message(dtls_context, (coap_endpoint_t *)get_src_endpoint(1),
@@ -329,10 +368,10 @@ process_secure_data(void)
 static void
 process_data(void)
 {
-  PRINTF("receiving UDP datagram from [");
-  PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("]:%u\n  Length: %u\n", uip_ntohs(UIP_UDP_BUF->srcport),
-         uip_datalen());
+  LOG_INFO("receiving UDP datagram from [");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO_("]:%u\n  Length: %u\n", uip_ntohs(UIP_UDP_BUF->srcport),
+            uip_datalen());
 
   coap_receive(get_src_endpoint(0), uip_appdata, uip_datalen());
 }
@@ -341,14 +380,14 @@ int
 coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t length)
 {
   if(ep == NULL) {
-    PRINTF("coap-uip: failed to send - no endpoint\n");
+    LOG_WARN("failed to send - no endpoint\n");
     return -1;
   }
 
   if(!coap_endpoint_is_connected(ep)) {
-    PRINTF("coap-uip: endpoint ");
-    PRINTEP(ep);
-    PRINTF(" not connected - dropping packet\n");
+    LOG_WARN("endpoint ");
+    LOG_WARN_COAP_EP(ep);
+    LOG_WARN_(" not connected - dropping packet\n");
     return -1;
   }
 
@@ -358,24 +397,25 @@ coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t length)
       int ret;
 
       ret = dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, length);
-      PRINTF("coap-uip: sent DTLS to ");
-      PRINTEP(ep);
+      LOG_INFO("sent DTLS to ");
+      LOG_INFO_COAP_EP(ep);
       if(ret < 0) {
-        PRINTF(" - error %d\n", ret);
+        LOG_INFO_(" - error %d\n", ret);
       } else {
-        PRINTF(" %d/%u bytes\n", ret, length);
+        LOG_INFO_(" %d/%u bytes\n", ret, length);
       }
       return ret;
+    } else {
+      LOG_WARN("no DTLS context\n");
+      return -1;
     }
-    PRINTF("coap-uip: no DTLS context\n");
-    return -1;
   }
 #endif /* WITH_DTLS */
 
   uip_udp_packet_sendto(udp_conn, data, length, &ep->ipaddr, ep->port);
-  PRINTF("coap-uip: sent to ");
-  PRINTEP(ep);
-  PRINTF(" %u bytes\n", length);
+  LOG_INFO("sent to ");
+  LOG_INFO_COAP_EP(ep);
+  LOG_INFO_(" %u bytes\n", length);
   return length;
 }
 /*---------------------------------------------------------------------------*/
@@ -386,18 +426,18 @@ PROCESS_THREAD(coap_engine, ev, data)
   /* new connection with remote host */
   udp_conn = udp_new(NULL, 0, NULL);
   udp_bind(udp_conn, SERVER_LISTEN_PORT);
-  PRINTF("Listening on port %u\n", uip_ntohs(udp_conn->lport));
+  LOG_INFO("Listening on port %u\n", uip_ntohs(udp_conn->lport));
 
 #ifdef WITH_DTLS
   /* create new context with app-data */
   dtls_conn = udp_new(NULL, 0, NULL);
   if(dtls_conn != NULL) {
     udp_bind(dtls_conn, SERVER_LISTEN_SECURE_PORT);
-    PRINTF("DTLS listening on port %u\n", uip_ntohs(dtls_conn->lport));
+    LOG_INFO("DTLS listening on port %u\n", uip_ntohs(dtls_conn->lport));
     dtls_context = dtls_new_context(dtls_conn);
   }
   if(!dtls_context) {
-    PRINTF("DTLS: cannot create context\n");
+    LOG_WARN("DTLS: cannot create context\n");
   } else {
     dtls_set_handler(dtls_context, &cb);
   }
@@ -432,19 +472,20 @@ static int
 input_from_peer(struct dtls_context_t *ctx,
                 session_t *session, uint8_t *data, size_t len)
 {
-#if DEBUG_VERBOSE
   size_t i;
 
-  PRINTF("received DTLS data:");
-  for(i = 0; i < len; i++) {
-    PRINTF("%c", data[i]);
+  if(LOG_DBG_ENABLED) {
+    LOG_DBG("received DTLS data:");
+    for(i = 0; i < len; i++) {
+      LOG_DBG_("%c", data[i]);
+    }
+    LOG_DBG_("\n");
+    LOG_DBG("Hex:");
+    for(i = 0; i < len; i++) {
+      LOG_DBG_("%02x", data[i]);
+    }
+    LOG_DBG_("\n");
   }
-  PRINTF("\nHex:");
-  for(i = 0; i < len; i++) {
-    PRINTF("%02x", data[i]);
-  }
-  PRINTF("\n");
-#endif /* DEBUG_VERBOSE */
 
   /* Ensure that the endpoint is tagged as secure */
   session->secure = 1;
@@ -460,9 +501,9 @@ output_to_peer(struct dtls_context_t *ctx,
                session_t *session, uint8_t *data, size_t len)
 {
   struct uip_udp_conn *udp_connection = dtls_get_app_data(ctx);
-  PRINTF("coap-uip: output_to DTLS peer [");
-  PRINT6ADDR(&session->ipaddr);
-  PRINTF("]:%u %d bytes\n", session->port, (int)len);
+  LOG_DBG("output_to DTLS peer [");
+  LOG_DBG_6ADDR(&session->ipaddr);
+  LOG_DBG_("]:%u %d bytes\n", session->port, (int)len);
   uip_udp_packet_sendto(udp_connection, data, len,
                         &session->ipaddr, session->port);
   return len;
@@ -488,18 +529,20 @@ get_psk_info(struct dtls_context_t *ctx,
   coap_keystore_psk_entry_t ks;
 
   if(dtls_keystore == NULL) {
-    PRINTF("coap-uip: --- No key store available ---\n");
+    LOG_DBG("--- No key store available ---\n");
     return 0;
   }
 
   memset(&ks, 0, sizeof(ks));
-  PRINTF("coap-uip: ---===>>> Getting the Key or ID <<<===---\n");
+  LOG_DBG("---===>>> Getting the Key or ID <<<===---\n");
   switch(type) {
   case DTLS_PSK_IDENTITY:
     if(id && id_len) {
       ks.identity_hint = id;
       ks.identity_hint_len = id_len;
-      PRINTF("coap-uip: got psk_identity_hint: '%.*s'\n", id_len, id);
+      LOG_DBG("got psk_identity_hint: '");
+      LOG_DBG_COAP_STRING(id, id_len);
+      LOG_DBG_("'\n");
     }
 
     if(dtls_keystore->coap_get_psk_info) {
@@ -507,16 +550,16 @@ get_psk_info(struct dtls_context_t *ctx,
       dtls_keystore->coap_get_psk_info((coap_endpoint_t *)session, &ks);
     }
     if(ks.identity == NULL || ks.identity_len == 0) {
-      PRINTF("coap-uip: no psk_identity found\n");
+      LOG_DBG("no psk_identity found\n");
       return 0;
     }
 
     if(result_length < ks.identity_len) {
-      PRINTF("coap-uip: cannot return psk_identity -- buffer too small\n");
+      LOG_DBG("cannot return psk_identity -- buffer too small\n");
       return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
     }
     memcpy(result, ks.identity, ks.identity_len);
-    PRINTF("coap-uip: psk_identity with %u bytes found\n", ks.identity_len);
+    LOG_DBG("psk_identity with %u bytes found\n", ks.identity_len);
     return ks.identity_len;
 
   case DTLS_PSK_KEY:
@@ -527,20 +570,20 @@ get_psk_info(struct dtls_context_t *ctx,
       dtls_keystore->coap_get_psk_info((coap_endpoint_t *)session, &ks);
     }
     if(ks.key == NULL || ks.key_len == 0) {
-      PRINTF("coap-uip: PSK for unknown id requested, exiting\n");
+      LOG_DBG("PSK for unknown id requested, exiting\n");
       return dtls_alert_fatal_create(DTLS_ALERT_ILLEGAL_PARAMETER);
     }
 
     if(result_length < ks.key_len) {
-      PRINTF("coap-uip: cannot return psk -- buffer too small\n");
+      LOG_DBG("cannot return psk -- buffer too small\n");
       return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
     }
     memcpy(result, ks.key, ks.key_len);
-    PRINTF("coap-uip: psk with %u bytes found\n", ks.key_len);
+    LOG_DBG("psk with %u bytes found\n", ks.key_len);
     return ks.key_len;
 
   default:
-    PRINTF("coap-uip: unsupported key store request type: %d\n", type);
+    LOG_WARN("unsupported key store request type: %d\n", type);
   }
 
   return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);

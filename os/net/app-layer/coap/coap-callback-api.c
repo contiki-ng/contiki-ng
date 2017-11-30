@@ -45,13 +45,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-callback-api"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 /* These should go into the state struct so that we can have multiple
    requests */
@@ -81,8 +78,8 @@ progress_request(coap_request_state_t *state) {
       coap_serialize_message(request, state->transaction->message);
 
     coap_send_transaction(state->transaction);
-    PRINTF("Requested #%lu (MID %u)\n", (unsigned long) state->block_num,
-           request->mid);
+    LOG_DBG("Requested #%lu (MID %u)\n", (unsigned long)state->block_num,
+            request->mid);
   }
 }
 
@@ -96,10 +93,10 @@ coap_request_callback(void *callback_data, coap_message_t *response)
 
   state->response = response;
 
-  PRINTF("COAP: request callback\n");
+  LOG_DBG("request callback\n");
 
   if(!state->response) {
-    PRINTF("Server not responding giving up...\n");
+    LOG_WARN("Server not responding giving up...\n");
     state->callback(state);
     return;
   }
@@ -108,10 +105,10 @@ coap_request_callback(void *callback_data, coap_message_t *response)
   coap_get_header_block2(state->response, &res_block, &more, NULL, NULL);
   coap_get_header_block1(state->response, &res_block1, NULL, NULL, NULL);
 
-  PRINTF("Received #%lu%s B1:%lu (%u bytes)\n",
-         (unsigned long) res_block, (unsigned) more ? "+" : "",
-         (unsigned long) res_block1,
-         state->response->payload_len);
+  LOG_DBG("Received #%lu%s B1:%lu (%u bytes)\n",
+          (unsigned long)res_block, (unsigned)more ? "+" : "",
+          (unsigned long)res_block1,
+          state->response->payload_len);
 
   if(res_block == state->block_num) {
     /* Call the callback function as we have more data */
@@ -119,8 +116,8 @@ coap_request_callback(void *callback_data, coap_message_t *response)
     /* this is only for counting BLOCK2 blocks.*/
     ++(state->block_num);
   } else {
-    PRINTF("WRONG BLOCK %lu/%lu\n", (unsigned long) res_block,
-           (unsigned long) state->block_num);
+    LOG_WARN("WRONG BLOCK %lu/%lu\n", (unsigned long)res_block,
+             (unsigned long)state->block_num);
     ++block_error;
   }
 

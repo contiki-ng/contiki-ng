@@ -42,14 +42,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTEP(ep) coap_endpoint_print(ep)
-#else
-#define PRINTF(...)
-#define PRINTEP(ep)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-hex"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 #ifdef WITH_DTLS
 #include "tinydtls.h"
@@ -104,9 +100,29 @@ coap_endpoint_cmp(const coap_endpoint_t *e1, const coap_endpoint_t *e2)
 }
 /*---------------------------------------------------------------------------*/
 void
+coap_endpoint_log(const coap_endpoint_t *ep)
+{
+  LOG_OUTPUT("%u", ep->addr);
+}
+/*---------------------------------------------------------------------------*/
+void
 coap_endpoint_print(const coap_endpoint_t *ep)
 {
   printf("%u", ep->addr);
+}
+/*---------------------------------------------------------------------------*/
+int
+coap_endpoint_snprint(char *buf, size_t size, const coap_endpoint_t *ep)
+{
+  int n;
+  if(size == 0) {
+    return 0;
+  }
+  n = snprintf(buf, size - 1, "%u", ep->addr);
+  if(n >= size - 1) {
+    buf[size - 1] = '\0';
+  }
+  return n;
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -178,20 +194,20 @@ stdin_callback(const char *line)
     buf[len] = (uint8_t)(((v1 << 4) | v2) & 0xff);
   }
 
-  PRINTF("RECV from ");
-  PRINTEP(&last_source);
-  PRINTF(" %u bytes\n", len);
+  LOG_INFO("RECV from ");
+  LOG_INFO_COAP_EP(&last_source);
+  LOG_INFO_(" %u bytes\n", len);
   coap_buf_len = len;
 
-  if(DEBUG) {
+  if(LOG_DBG_ENABLED) {
     int i;
     uint8_t *data;
     data = coap_databuf();
-    printf("Received:");
+    LOG_DBG("Received: ");
     for(i = 0; i < len; i++) {
-      printf("%02x", data[i]);
+      LOG_DBG_("%02x", data[i]);
     }
-    printf("\n");
+    LOG_DBG_("\n");
   }
 
 #ifdef WITH_DTLS
@@ -208,13 +224,13 @@ coap_transport_init(void)
 {
   select_set_stdin_callback(stdin_callback);
 
-  printf("CoAP listening on standard in\n");
+  LOG_INFO("CoAP listening on standard in\n");
 
 #ifdef WITH_DTLS
   /* create new contet with app-data - no real app-data... */
   dtls_context = dtls_new_context(&last_source);
-  if (!dtls_context) {
-    PRINTF("DTLS: cannot create context\n");
+  if(!dtls_context) {
+    LOG_ERR("DTLS: cannot create context\n");
     exit(-1);
   }
 
@@ -224,7 +240,7 @@ coap_transport_init(void)
   memcpy(psk_id, PSK_DEFAULT_IDENTITY, psk_id_length);
   memcpy(psk_key, PSK_DEFAULT_KEY, psk_key_length);
 #endif /* DTLS_PSK */
-  PRINTF("Setting DTLS handler\n");
+  LOG_DBG("Setting DTLS handler\n");
   dtls_set_handler(dtls_context, &cb);
 #endif /* WITH_DTLS */
 
@@ -234,7 +250,7 @@ int
 coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len)
 {
   if(!coap_endpoint_is_connected(ep)) {
-    PRINTF("CoAP endpoint not connected\n");
+    LOG_WARN("CoAP endpoint not connected\n");
     return -1;
   }
 
@@ -261,9 +277,9 @@ coap_endpoint_connect(coap_endpoint_t *ep)
     return 1;
   }
 #ifdef WITH_DTLS
-  PRINTF("DTLS EP:");
-  PRINTEP(ep);
-  PRINTF(" len:%d\n", ep->size);
+  LOG_DBG("DTLS EP:");
+  LOG_DBG_COAP_EP(ep);
+  LOG_DBG_(" len:%d\n", ep->size);
 
   /* setup all address info here... should be done to connect */
 
@@ -295,14 +311,14 @@ coap_endpoint_is_connected(const coap_endpoint_t *ep)
     peer = dtls_get_peer(dtls_context, ep);
     if(peer != NULL) {
       /* only if handshake is done! */
-      PRINTF("peer state for ");
-      PRINTEP(ep);
-      PRINTF(" is %d %d\n", peer->state, dtls_peer_is_connected(peer));
+      LOG_DBG("peer state for ");
+      LOG_DBG_COAP_EP(ep);
+      LOG_DBG_(" is %d %d\n", peer->state, dtls_peer_is_connected(peer));
       return dtls_peer_is_connected(peer);
     } else {
-      PRINTF("Did not find peer ");
-      PRINTEP(ep);
-      PRINTF("\n");
+      LOG_DBG("Did not find peer ");
+      LOG_DBG_COAP_EP(ep);
+      LOG_DBG_("\n");
     }
 #endif /* WITH_DTLS */
     return 0;
@@ -324,11 +340,13 @@ input_from_peer(struct dtls_context_t *ctx,
   dtls_peer_t *peer;
 
   printf("received data:");
-  for (i = 0; i < len; i++)
+  for(i = 0; i < len; i++) {
     printf("%c", data[i]);
+  }
   printf("\nHex:");
-  for (i = 0; i < len; i++)
+  for(i = 0; i < len; i++) {
     printf("%02x", data[i]);
+  }
   printf("\n");
 
   /* Send this into coap-input */
@@ -377,14 +395,14 @@ get_psk_info(struct dtls_context_t *ctx,
              const unsigned char *id, size_t id_len,
              unsigned char *result, size_t result_length)
 {
-  PRINTF("---===>>> Getting the Key or ID <<<===---\n");
-  switch (type) {
+  LOG_DBG("---===>>> Getting the Key or ID <<<===---\n");
+  switch(type) {
   case DTLS_PSK_IDENTITY:
-    if (id_len) {
+    if(id_len) {
       dtls_debug("got psk_identity_hint: '%.*s'\n", id_len, id);
     }
 
-    if (result_length < psk_id_length) {
+    if(result_length < psk_id_length) {
       dtls_warn("cannot set psk_identity -- buffer too small\n");
       return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
     }
@@ -392,10 +410,10 @@ get_psk_info(struct dtls_context_t *ctx,
     memcpy(result, psk_id, psk_id_length);
     return psk_id_length;
   case DTLS_PSK_KEY:
-    if (id_len != psk_id_length || memcmp(psk_id, id, id_len) != 0) {
+    if(id_len != psk_id_length || memcmp(psk_id, id, id_len) != 0) {
       dtls_warn("PSK for unknown id requested, exiting\n");
       return dtls_alert_fatal_create(DTLS_ALERT_ILLEGAL_PARAMETER);
-    } else if (result_length < psk_key_length) {
+    } else if(result_length < psk_key_length) {
       dtls_warn("cannot set psk -- buffer too small\n");
       return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
     }

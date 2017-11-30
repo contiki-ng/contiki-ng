@@ -36,18 +36,16 @@
  *      Lars Schmertmann <SmallLars@t-online.de>
  */
 
-#include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "coap.h"
 #include "coap-block1.h"
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-block1"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 /*----------------------------------------------------------------------------*/
 
@@ -97,11 +95,12 @@ coap_block1_handler(coap_message_t *request, coap_message_t *response,
   }
 
   if(coap_is_option(request, COAP_OPTION_BLOCK1)) {
-    PRINTF("Blockwise: block 1 request: Num: %u, More: %u, Size: %u, Offset: %u\n",
-           request->block1_num,
-           request->block1_more,
-           request->block1_size,
-           request->block1_offset);
+    LOG_DBG("Blockwise: block 1 request: Num: %"PRIu32
+            ", More: %u, Size: %u, Offset: %"PRIu32"\n",
+            request->block1_num,
+            request->block1_more,
+            request->block1_size,
+            request->block1_offset);
 
     coap_set_header_block1(response, request->block1_num, request->block1_more, request->block1_size);
     if(request->block1_more) {

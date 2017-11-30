@@ -42,13 +42,10 @@
 #include "sys/cc.h"
 #include <string.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-separate"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 /*---------------------------------------------------------------------------*/
 /*- Separate Response API ---------------------------------------------------*/
@@ -85,8 +82,9 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
 {
   coap_transaction_t *const t = coap_get_transaction_by_mid(coap_req->mid);
 
-  PRINTF("Separate ACCEPT: /%.*s MID %u\n", (int)coap_req->uri_path_len,
-         coap_req->uri_path, coap_req->mid);
+  LOG_DBG("Separate ACCEPT: /");
+  LOG_DBG_COAP_STRING(coap_req->uri_path, coap_req->uri_path_len);
+  LOG_DBG_(" MID %u\n", coap_req->mid);
   if(t) {
     /* send separate ACK for CON */
     if(coap_req->type == COAP_TYPE_CON) {
@@ -95,7 +93,7 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
 
       ep = coap_get_src_endpoint(coap_req);
       if(ep == NULL) {
-        PRINTF("ERROR: no endpoint in request\n");
+        LOG_ERR("ERROR: no endpoint in request\n");
       } else {
         /* ACK with empty code (0) */
         coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
@@ -125,7 +123,7 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
     /* signal the engine to skip automatic response and clear transaction by engine */
     coap_status_code = MANUAL_RESPONSE;
   } else {
-    PRINTF("ERROR: Response transaction for separate request not found!\n");
+    LOG_ERR("ERROR: Response transaction for separate request not found!\n");
     coap_status_code = INTERNAL_SERVER_ERROR_5_00;
   }
 }

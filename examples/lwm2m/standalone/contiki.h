@@ -42,6 +42,8 @@
 
 #include "posix-main.h"
 
+#define COAP_LOG_CONF_PATH "coap-log-conf.h"
+
 #define COAP_TIMER_CONF_DRIVER coap_timer_native_driver
 
 #define LWM2M_ENGINE_CLIENT_ENDPOINT_NAME "lwm2m-ex"

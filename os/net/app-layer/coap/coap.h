@@ -146,13 +146,13 @@ coap_is_option(const coap_message_t *message, unsigned int opt)
 /* option format serialization */
 #define COAP_SERIALIZE_INT_OPTION(number, field, text) \
   if(coap_is_option(coap_pkt, number)) { \
-    PRINTF(text " [%u]\n", (unsigned int)coap_pkt->field);		\
+    LOG_DBG(text " [%u]\n", (unsigned int)coap_pkt->field);		\
     option += coap_serialize_int_option(number, current_number, option, coap_pkt->field); \
     current_number = number; \
   }
 #define COAP_SERIALIZE_BYTE_OPTION(number, field, text) \
   if(coap_is_option(coap_pkt, number)) { \
-    PRINTF(text " %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n", (unsigned int)coap_pkt->field##_len, \
+    LOG_DBG(text " %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n", (unsigned int)coap_pkt->field##_len, \
            coap_pkt->field[0], \
            coap_pkt->field[1], \
            coap_pkt->field[2], \
@@ -165,21 +165,21 @@ coap_is_option(const coap_message_t *message, unsigned int opt)
     option += coap_serialize_array_option(number, current_number, option, coap_pkt->field, coap_pkt->field##_len, '\0'); \
     current_number = number; \
   }
-#define COAP_SERIALIZE_STRING_OPTION(number, field, splitter, text) \
-  if(coap_is_option(coap_pkt, number)) { \
-    PRINTPRE(text " [", (int)coap_pkt->field##_len, coap_pkt->field);       \
-    PRINTF("]\n");                                                          \
+#define COAP_SERIALIZE_STRING_OPTION(number, field, splitter, text)     \
+  if(coap_is_option(coap_pkt, number)) {                                \
+    LOG_DBG(text " [");                                                 \
+    LOG_DBG_COAP_STRING(coap_pkt->field, coap_pkt->field##_len);        \
+    LOG_DBG_("]\n");                                                    \
     option += coap_serialize_array_option(number, current_number, option, (uint8_t *)coap_pkt->field, coap_pkt->field##_len, splitter); \
     current_number = number; \
   }
 #define COAP_SERIALIZE_BLOCK_OPTION(number, field, text) \
-  if(coap_is_option(coap_pkt, number)) \
-  { \
-    PRINTF(text " [%lu%s (%u B/blk)]\n", (unsigned long)coap_pkt->field##_num, coap_pkt->field##_more ? "+" : "", coap_pkt->field##_size); \
+  if(coap_is_option(coap_pkt, number)) { \
+    LOG_DBG(text " [%lu%s (%u B/blk)]\n", (unsigned long)coap_pkt->field##_num, coap_pkt->field##_more ? "+" : "", coap_pkt->field##_size); \
     uint32_t block = coap_pkt->field##_num << 4; \
     if(coap_pkt->field##_more) { block |= 0x8; } \
     block |= 0xF & coap_log_2(coap_pkt->field##_size / 16); \
-    PRINTF(text " encoded: 0x%lX\n", (unsigned long)block);		\
+    LOG_DBG(text " encoded: 0x%lX\n", (unsigned long)block);		\
     option += coap_serialize_int_option(number, current_number, option, block); \
     current_number = number; \
   }

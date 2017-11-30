@@ -44,17 +44,10 @@
 #include <inttypes.h>
 #include <string.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTS(l,s,f) do { int i;					\
-    for(i = 0; i < l; i++) printf(f, s[i]); \
-    } while(0)
-#else
-#define PRINTF(...)
-#define PRINTS(l,s,f)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-engine"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 static void process_callback(coap_timer_t *t);
 
@@ -160,13 +153,14 @@ coap_receive(const coap_endpoint_t *src,
 
     /*TODO duplicates suppression, if required by application */
 
-    PRINTF("  Parsed: v %u, t %u, tkl %u, c %u, mid %u\n", message->version,
-           message->type, message->token_len, message->code, message->mid);
-    PRINTF("  URL:");
-    PRINTS(message->uri_path_len, message->uri_path, "%c");
-    PRINTF("\n  Payload: ");
-    PRINTS(message->payload_len, message->payload, "%c");
-    PRINTF("\n");
+    LOG_DBG("  Parsed: v %u, t %u, tkl %u, c %u, mid %u\n", message->version,
+            message->type, message->token_len, message->code, message->mid);
+    LOG_DBG("  URL:");
+    LOG_DBG_COAP_STRING(message->uri_path, message->uri_path_len);
+    LOG_DBG_("\n");
+    LOG_DBG("  Payload: ");
+    LOG_DBG_COAP_STRING((const char *)message->payload, message->payload_len);
+    LOG_DBG_("\n");
 
     /* handle requests */
     if(message->code >= COAP_GET && message->code <= COAP_DELETE) {
@@ -195,8 +189,8 @@ coap_receive(const coap_endpoint_t *src,
         }
         if(coap_get_header_block2
            (message, &block_num, NULL, &block_size, &block_offset)) {
-          PRINTF("Blockwise: block request %"PRIu32" (%u/%u) @ %"PRIu32" bytes\n",
-                 block_num, block_size, COAP_MAX_BLOCK_SIZE, block_offset);
+          LOG_DBG("Blockwise: block request %"PRIu32" (%u/%u) @ %"PRIu32" bytes\n",
+                  block_num, block_size, COAP_MAX_BLOCK_SIZE, block_offset);
           block_size = MIN(block_size, COAP_MAX_BLOCK_SIZE);
           new_offset = block_offset;
         }
@@ -215,7 +209,7 @@ coap_receive(const coap_endpoint_t *src,
               if(coap_is_option(message, COAP_OPTION_BLOCK1)
                  && response->code < BAD_REQUEST_4_00
                  && !coap_is_option(response, COAP_OPTION_BLOCK1)) {
-                PRINTF("Block1 NOT IMPLEMENTED\n");
+                LOG_DBG("Block1 NOT IMPLEMENTED\n");
 
                 coap_status_code = NOT_IMPLEMENTED_5_01;
                 coap_error_message = "NoBlock1Support";
@@ -225,12 +219,10 @@ coap_receive(const coap_endpoint_t *src,
 
                 /* unchanged new_offset indicates that resource is unaware of blockwise transfer */
                 if(new_offset == block_offset) {
-                  PRINTF
-                    ("Blockwise: unaware resource with payload length %u/%u\n",
-                     response->payload_len, block_size);
+                  LOG_DBG("Blockwise: unaware resource with payload length %u/%u\n",
+                          response->payload_len, block_size);
                   if(block_offset >= response->payload_len) {
-                    PRINTF
-                      ("handle_incoming_data(): block_offset >= response->payload_len\n");
+                    LOG_DBG("handle_incoming_data(): block_offset >= response->payload_len\n");
 
                     response->code = BAD_OPTION_4_02;
                     coap_set_payload(response, "BlockOutOfScope", 15); /* a const char str[] and sizeof(str) produces larger code size */
@@ -247,8 +239,8 @@ coap_receive(const coap_endpoint_t *src,
 
                   /* resource provides chunk-wise data */
                 } else {
-                  PRINTF("Blockwise: blockwise resource, new offset %"PRId32"\n",
-                         new_offset);
+                  LOG_DBG("Blockwise: blockwise resource, new offset %"PRId32"\n",
+                          new_offset);
                   coap_set_header_block2(response, block_num,
                                          new_offset != -1
                                          || response->payload_len >
@@ -262,9 +254,8 @@ coap_receive(const coap_endpoint_t *src,
 
                 /* Resource requested Block2 transfer */
               } else if(new_offset != 0) {
-                PRINTF
-                  ("Blockwise: no block option for blockwise resource, using block size %u\n",
-                   COAP_MAX_BLOCK_SIZE);
+                LOG_DBG("Blockwise: no block option for blockwise resource, using block size %u\n",
+                        COAP_MAX_BLOCK_SIZE);
 
                 coap_set_header_block2(response, 0, new_offset != -1,
                                        COAP_MAX_BLOCK_SIZE);
@@ -293,13 +284,13 @@ coap_receive(const coap_endpoint_t *src,
     } else {
 
       if(message->type == COAP_TYPE_CON && message->code == 0) {
-        PRINTF("Received Ping\n");
+        LOG_INFO("Received Ping\n");
         coap_status_code = PING_RESPONSE;
       } else if(message->type == COAP_TYPE_ACK) {
         /* transactions are closed through lookup below */
-        PRINTF("Received ACK\n");
+        LOG_DBG("Received ACK\n");
       } else if(message->type == COAP_TYPE_RST) {
-        PRINTF("Received RST\n");
+        LOG_INFO("Received RST\n");
         /* cancel possible subscriptions */
         coap_remove_observer_by_mid(src, message->mid);
       }
@@ -323,7 +314,7 @@ coap_receive(const coap_endpoint_t *src,
       /* if observe notification */
       if((message->type == COAP_TYPE_CON || message->type == COAP_TYPE_NON)
          && coap_is_option(message, COAP_OPTION_OBSERVE)) {
-        PRINTF("Observe [%u]\n", message->observe);
+        LOG_DBG("Observe [%"PRId32"]\n", message->observe);
         coap_handle_notification(src, message);
       }
 #endif /* COAP_OBSERVE_CLIENT */
@@ -336,12 +327,12 @@ coap_receive(const coap_endpoint_t *src,
       coap_send_transaction(transaction);
     }
   } else if(coap_status_code == MANUAL_RESPONSE) {
-    PRINTF("Clearing transaction for manual response");
+    LOG_DBG("Clearing transaction for manual response");
     coap_clear_transaction(transaction);
   } else {
     coap_message_type_t reply_type = COAP_TYPE_ACK;
 
-    PRINTF("ERROR %u: %s\n", coap_status_code, coap_error_message);
+    LOG_WARN("ERROR %u: %s\n", coap_status_code, coap_error_message);
     coap_clear_transaction(transaction);
 
     if(coap_status_code == PING_RESPONSE) {
@@ -368,12 +359,12 @@ coap_engine_init(void)
 {
   /* avoid initializing twice */
   if(is_initialized) {
-    PRINTF("CoAP engine process already running - double initialization?\n");
+    LOG_DBG("already running - double initialization?\n");
     return;
   }
   is_initialized = 1;
 
-  PRINTF("Starting CoAP engine...\n");
+  LOG_INFO("Starting CoAP engine...\n");
 
   list_init(coap_handlers);
   list_init(coap_resource_services);
@@ -401,14 +392,13 @@ coap_activate_resource(coap_resource_t *resource, const char *path)
   resource->url = path;
   list_add(coap_resource_services, resource);
 
-  PRINTF("Activating: %s\n", resource->url);
+  LOG_INFO("Activating: %s\n", resource->url);
 
   /* Only add periodic resources with a periodic_handler and a period > 0. */
   if(resource->flags & IS_PERIODIC && resource->periodic
      && resource->periodic->periodic_handler
      && resource->periodic->period) {
-    PRINTF("Periodic resource: %p (%s)\n", resource->periodic,
-           resource->periodic->resource->url);
+    LOG_DBG("Periodic resource: %p (%s)\n", resource->periodic, path);
     list_add(coap_resource_periodic_services, resource->periodic);
     periodic = resource->periodic;
     coap_timer_set_callback(&periodic->periodic_timer, process_callback);
@@ -459,8 +449,8 @@ invoke_coap_resource_service(coap_message_t *request, coap_message_t *response,
       coap_resource_flags_t method = coap_get_method_type(request);
       found = 1;
 
-      PRINTF("/%s, method %u, resource->flags %u\n", resource->url,
-             (uint16_t)method, resource->flags);
+      LOG_INFO("/%s, method %u, resource->flags %u\n", resource->url,
+               (uint16_t)method, resource->flags);
 
       if((method & METHOD_GET) && resource->get_handler != NULL) {
         /* call handler function */
@@ -502,8 +492,8 @@ process_callback(coap_timer_t *t)
   resource = coap_timer_get_user_data(t);
   if(resource != NULL && (resource->flags & IS_PERIODIC)
      && resource->periodic != NULL && resource->periodic->period) {
-    PRINTF("Periodic: timer expired for /%s (period: %lu)\n",
-           resource->url, resource->periodic->period);
+    LOG_DBG("Periodic: timer expired for /%s (period: %"PRIu32")\n",
+            resource->url, resource->periodic->period);
 
     if(!is_initialized) {
       /* CoAP has not yet been initialized. */

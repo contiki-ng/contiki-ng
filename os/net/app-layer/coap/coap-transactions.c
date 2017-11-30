@@ -43,15 +43,10 @@
 #include "lib/list.h"
 #include <stdlib.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTEP(ep) coap_endpoint_print(ep)
-#else
-#define PRINTF(...)
-#define PRINTEP(ep)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-transactions"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 /*---------------------------------------------------------------------------*/
 MEMB(transactions_memb, coap_transaction_t, COAP_MAX_OPEN_TRANSACTIONS);
@@ -63,11 +58,11 @@ coap_retransmit_transaction(coap_timer_t *nt)
 {
   coap_transaction_t *t = coap_timer_get_user_data(nt);
   if(t == NULL) {
-    PRINTF("No retransmission data in coap_timer!\n");
+    LOG_DBG("No retransmission data in coap_timer!\n");
     return;
   }
   ++(t->retrans_counter);
-  PRINTF("Retransmitting %u (%u)\n", t->mid, t->retrans_counter);
+  LOG_DBG("Retransmitting %u (%u)\n", t->mid, t->retrans_counter);
   coap_send_transaction(t);
 }
 /*---------------------------------------------------------------------------*/
@@ -96,7 +91,7 @@ coap_new_transaction(uint16_t mid, const coap_endpoint_t *endpoint)
 void
 coap_send_transaction(coap_transaction_t *t)
 {
-  PRINTF("Sending transaction %u\n", t->mid);
+  LOG_DBG("Sending transaction %u\n", t->mid);
 
   coap_sendto(&t->endpoint, t->message, t->message_len);
 
@@ -104,7 +99,7 @@ coap_send_transaction(coap_transaction_t *t)
      ((COAP_HEADER_TYPE_MASK & t->message[0]) >> COAP_HEADER_TYPE_POSITION)) {
     if(t->retrans_counter < COAP_MAX_RETRANSMIT) {
       /* not timed out yet */
-      PRINTF("Keeping transaction %u\n", t->mid);
+      LOG_DBG("Keeping transaction %u\n", t->mid);
 
       if(t->retrans_counter == 0) {
         coap_timer_set_callback(&t->retrans_timer, coap_retransmit_transaction);
@@ -112,19 +107,19 @@ coap_send_transaction(coap_transaction_t *t)
         t->retrans_interval =
           COAP_RESPONSE_TIMEOUT_TICKS + (rand() %
                                          COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
-        PRINTF("Initial interval %lu msec\n",
-               (unsigned long)t->retrans_interval);
+        LOG_DBG("Initial interval %lu msec\n",
+                (unsigned long)t->retrans_interval);
       } else {
         t->retrans_interval <<= 1;  /* double */
-        PRINTF("Doubled (%u) interval %d s\n", t->retrans_counter,
-               t->retrans_interval / 1000);
+        LOG_DBG("Doubled (%u) interval %lu s\n", t->retrans_counter,
+                (unsigned long)(t->retrans_interval / 1000));
       }
 
       /* interval updated above */
       coap_timer_set(&t->retrans_timer, t->retrans_interval);
     } else {
       /* timed out */
-      PRINTF("Timeout\n");
+      LOG_DBG("Timeout\n");
       coap_resource_response_handler_t callback = t->callback;
       void *callback_data = t->callback_data;
 
@@ -146,7 +141,7 @@ void
 coap_clear_transaction(coap_transaction_t *t)
 {
   if(t) {
-    PRINTF("Freeing transaction %u: %p\n", t->mid, t);
+    LOG_DBG("Freeing transaction %u: %p\n", t->mid, t);
 
     coap_timer_stop(&t->retrans_timer);
     list_remove(transactions_list, t);
@@ -161,7 +156,7 @@ coap_get_transaction_by_mid(uint16_t mid)
 
   for(t = (coap_transaction_t *)list_head(transactions_list); t; t = t->next) {
     if(t->mid == mid) {
-      PRINTF("Found transaction for MID %u: %p\n", t->mid, t);
+      LOG_DBG("Found transaction for MID %u: %p\n", t->mid, t);
       return t;
     }
   }

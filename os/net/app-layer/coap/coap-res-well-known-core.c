@@ -40,13 +40,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-res-well-known-core"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 #define ADD_CHAR_IF_POSSIBLE(char) \
   if(strpos >= *offset && bufpos < preferred_size) { \
@@ -64,7 +61,7 @@
                        + (*offset - (int32_t)strpos > 0 ? \
                           *offset - (int32_t)strpos : 0)); \
     if(bufpos op preferred_size) { \
-      PRINTF("res: BREAK at %s (%p)\n", string, resource); \
+      LOG_DBG("BREAK at %s (%p)\n", string, resource);      \
       break; \
     } \
   } \
@@ -99,7 +96,9 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
     ++value;
     len -= strlen(filter) + 1;
 
-    PRINTF("Filter %s = %.*s\n", filter, len, value);
+    LOG_DBG("Filter %s = ", filter);
+    LOG_DBG_COAP_STRING(value, len);
+    LOG_DBG_("\n");
 
     if(strcmp(filter, "href") == 0 && value[0] == '/') {
       ++value;
@@ -109,7 +108,7 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
     lastchar = value[len - 1];
     value[len - 1] = '\0';
   }
-#endif
+#endif /* COAP_LINK_FORMAT_FILTERING */
 
   for(resource = coap_get_first_resource(); resource;
       resource = coap_get_next_resource(resource)) {
@@ -133,7 +132,7 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
         end = strchr(attrib, '"');
       }
 
-      PRINTF("Filter: res has attrib %s (%s)\n", attrib, value);
+      LOG_DBG("Filter: res has attrib %s (%s)\n", attrib, value);
       found = attrib;
       while((found = strstr(found, value)) != NULL) {
         if(found > end) {
@@ -148,17 +147,17 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
       if(found == NULL) {
         continue;
       }
-      PRINTF("Filter: res has prefix %s\n", found);
+      LOG_DBG("Filter: res has prefix %s\n", found);
       if(lastchar != '*'
          && (found[len] != '"' && found[len] != ' ' && found[len] != '\0')) {
         continue;
       }
-      PRINTF("Filter: res has match\n");
+      LOG_DBG("Filter: res has match\n");
     }
 #endif
 
-    PRINTF("res: /%s (%p)\npos: s%zu, o%ld, b%zu\n", resource->url, resource,
-           strpos, (long)*offset, bufpos);
+    LOG_DBG("/%s (%p)\npos: s%zu, o%ld, b%zu\n", resource->url, resource,
+            strpos, (long)*offset, bufpos);
 
     if(strpos > 0) {
       ADD_CHAR_IF_POSSIBLE(',');
@@ -175,28 +174,30 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
 
     /* buffer full, but resource not completed yet; or: do not break if resource exactly fills buffer. */
     if(bufpos > preferred_size && strpos - bufpos > *offset) {
-      PRINTF("res: BREAK at %s (%p)\n", resource->url, resource);
+      LOG_DBG("BREAK at %s (%p)\n", resource->url, resource);
       break;
     }
   }
 
   if(bufpos > 0) {
-    PRINTF("BUF %zu: %.*s\n", bufpos, (int)bufpos, (char *)buffer);
+    LOG_DBG("BUF %zu: ", bufpos);
+    LOG_DBG_COAP_STRING((char *)buffer, bufpos);
+    LOG_DBG_("\n");
 
     coap_set_payload(response, buffer, bufpos);
     coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
   } else if(strpos > 0) {
-    PRINTF("well_known_core_handler(): bufpos<=0\n");
+    LOG_DBG("well_known_core_handler(): bufpos<=0\n");
 
     coap_set_status_code(response, BAD_OPTION_4_02);
     coap_set_payload(response, "BlockOutOfScope", 15);
   }
 
   if(resource == NULL) {
-    PRINTF("res: DONE\n");
+    LOG_DBG("DONE\n");
     *offset = -1;
   } else {
-    PRINTF("res: MORE at %s (%p)\n", resource->url, resource);
+    LOG_DBG("MORE at %s (%p)\n", resource->url, resource);
     *offset += preferred_size;
   }
 }

@@ -38,13 +38,10 @@
 #include "coap-timer.h"
 #include "lib/list.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-timer"
+#define LOG_LEVEL  LOG_LEVEL_NONE
 
 #ifndef NULL
 #define NULL 0
@@ -63,8 +60,8 @@ add_timer(coap_timer_t *timer)
     coap_timer_init();
   }
 
-  PRINTF("coap-timer: adding timer %p at %lu\n", timer,
-         (unsigned long)timer->expiration_time);
+  LOG_DBG("adding timer %p at %lu\n", timer,
+          (unsigned long)timer->expiration_time);
 
   p = list_head(timer_list);
 
@@ -92,7 +89,7 @@ add_timer(coap_timer_t *timer)
 void
 coap_timer_stop(coap_timer_t *timer)
 {
-  PRINTF("coap-timer: stopping timer %p\n", timer);
+  LOG_DBG("stopping timer %p\n", timer);
 
   /* Mark timer as expired right now */
   timer->expiration_time = coap_timer_uptime();
@@ -150,8 +147,7 @@ coap_timer_run(void)
   }
 
   if(next->expiration_time <= now) {
-    PRINTF("coap-timer: timer %p expired at %lu\n", next,
-           (unsigned long)now);
+    LOG_DBG("timer %p expired at %lu\n", next, (unsigned long)now);
 
     /* This timer should expire now */
     list_remove(timer_list, next);

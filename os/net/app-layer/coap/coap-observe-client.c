@@ -48,14 +48,10 @@
 /* Compile this code only if client-side support for CoAP Observe is required */
 #if COAP_OBSERVE_CLIENT
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTEP(ep) coap_endpoint_print(ep)
-#else
-#define PRINTF(...)
-#define PRINTEP(ep)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-observe-client"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 MEMB(obs_subjects_memb, coap_observee_t, COAP_MAX_OBSERVEES);
 LIST(obs_subjects_list);
@@ -97,8 +93,8 @@ coap_obs_add_observee(const coap_endpoint_t *endpoint,
     /* o->last_mid = 0; */
     o->notification_callback = notification_callback;
     o->data = data;
-    PRINTF("Adding obs_subject for /%s [0x%02X%02X]\n", o->url, o->token[0],
-           o->token[1]);
+    LOG_DBG("Adding obs_subject for /%s [0x%02X%02X]\n", o->url, o->token[0],
+            o->token[1]);
     list_add(obs_subjects_list, o);
   }
 
@@ -108,8 +104,8 @@ coap_obs_add_observee(const coap_endpoint_t *endpoint,
 void
 coap_obs_remove_observee(coap_observee_t *o)
 {
-  PRINTF("Removing obs_subject for /%s [0x%02X%02X]\n", o->url, o->token[0],
-         o->token[1]);
+  LOG_DBG("Removing obs_subject for /%s [0x%02X%02X]\n", o->url, o->token[0],
+          o->token[1]);
   memb_free(&obs_subjects_memb, o);
   list_remove(obs_subjects_list, o);
 }
@@ -121,7 +117,7 @@ coap_get_obs_subject_by_token(const uint8_t *token, size_t token_len)
 
   for(obs = (coap_observee_t *)list_head(obs_subjects_list); obs;
       obs = obs->next) {
-    PRINTF("Looking for token 0x%02X%02X\n", token[0], token[1]);
+    LOG_DBG("Looking for token 0x%02X%02X\n", token[0], token[1]);
     if(obs->token_len == token_len
        && memcmp(obs->token, token, token_len) == 0) {
       return obs;
@@ -140,7 +136,7 @@ coap_obs_remove_observee_by_token(const coap_endpoint_t *endpoint,
 
   for(obs = (coap_observee_t *)list_head(obs_subjects_list); obs;
       obs = obs->next) {
-    PRINTF("Remove check Token 0x%02X%02X\n", token[0], token[1]);
+    LOG_DBG("Remove check Token 0x%02X%02X\n", token[0], token[1]);
     if(coap_endpoint_cmp(&obs->endpoint, endpoint)
        && obs->token_len == token_len
        && memcmp(obs->token, token, token_len) == 0) {
@@ -160,7 +156,7 @@ coap_obs_remove_observee_by_url(const coap_endpoint_t *endpoint,
 
   for(obs = (coap_observee_t *)list_head(obs_subjects_list); obs;
       obs = obs->next) {
-    PRINTF("Remove check URL %s\n", url);
+    LOG_DBG("Remove check URL %s\n", url);
     if(coap_endpoint_cmp(&obs->endpoint, endpoint)
        && (obs->url == url || memcmp(obs->url, url, strlen(obs->url)) == 0)) {
       coap_obs_remove_observee(obs);
@@ -186,16 +182,16 @@ static coap_notification_flag_t
 classify_notification(coap_message_t *response, int first)
 {
   if(!response) {
-    PRINTF("no response\n");
+    LOG_DBG("no response\n");
     return NO_REPLY_FROM_SERVER;
   }
-  PRINTF("server replied\n");
+  LOG_DBG("server replied\n");
   if(!IS_RESPONSE_CODE_2_XX(response)) {
-    PRINTF("error response code\n");
+    LOG_DBG("error response code\n");
     return ERROR_RESPONSE_CODE;
   }
   if(!coap_is_option(response, COAP_OPTION_OBSERVE)) {
-    PRINTF("server does not support observe\n");
+    LOG_DBG("server does not support observe\n");
     return OBSERVE_NOT_SUPPORTED;
   }
   if(first) {
@@ -214,19 +210,19 @@ coap_handle_notification(const coap_endpoint_t *endpoint,
   coap_notification_flag_t flag;
   uint32_t observe;
 
-  PRINTF("coap_handle_notification()\n");
+  LOG_DBG("coap_handle_notification()\n");
   token_len = get_token(notification, &token);
-  PRINTF("Getting token\n");
+  LOG_DBG("Getting token\n");
   if(0 == token_len) {
-    PRINTF("Error while handling coap observe notification: "
-           "no token in message\n");
+    LOG_DBG("Error while handling coap observe notification: "
+            "no token in message\n");
     return;
   }
-  PRINTF("Getting observee info\n");
+  LOG_DBG("Getting observee info\n");
   obs = coap_get_obs_subject_by_token(token, token_len);
   if(NULL == obs) {
-    PRINTF("Error while handling coap observe notification: "
-           "no matching token found\n");
+    LOG_DBG("Error while handling coap observe notification: "
+            "no matching token found\n");
     simple_reply(COAP_TYPE_RST, endpoint, notification);
     return;
   }
@@ -240,7 +236,7 @@ coap_handle_notification(const coap_endpoint_t *endpoint,
     if(flag == NOTIFICATION_OK) {
       coap_get_header_observe(notification, &observe);
       if(observe == obs->last_observe) {
-        PRINTF("Discarding duplicate\n");
+        LOG_DBG("Discarding duplicate\n");
         return;
       }
       obs->last_observe = observe;
@@ -256,7 +252,7 @@ handle_obs_registration_response(void *data, coap_message_t *response)
   notification_callback_t notification_callback;
   coap_notification_flag_t flag;
 
-  PRINTF("handle_obs_registration_response(): ");
+  LOG_DBG("handle_obs_registration_response()\n");
   obs = (coap_observee_t *)data;
   notification_callback = obs->notification_callback;
   flag = classify_notification(response, 1);
@@ -306,11 +302,11 @@ coap_obs_request_registration(const coap_endpoint_t *endpoint, char *uri,
       t->message_len = coap_serialize_message(request, t->message);
       coap_send_transaction(t);
     } else {
-      PRINTF("Could not allocate obs_subject resource buffer");
+      LOG_DBG("Could not allocate obs_subject resource buffer\n");
       coap_clear_transaction(t);
     }
   } else {
-    PRINTF("Could not allocate transaction buffer");
+    LOG_DBG("Could not allocate transaction buffer\n");
   }
   return obs;
 }

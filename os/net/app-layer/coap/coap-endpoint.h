@@ -56,7 +56,10 @@ void coap_endpoint_copy(coap_endpoint_t *destination,
 
 int coap_endpoint_cmp(const coap_endpoint_t *e1, const coap_endpoint_t *e2);
 
+void coap_endpoint_log(const coap_endpoint_t *ep);
 void coap_endpoint_print(const coap_endpoint_t *ep);
+int  coap_endpoint_snprint(char *str, size_t size,
+                           const coap_endpoint_t *ep);
 
 int coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep);
 

@@ -42,14 +42,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-blocking-api"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 /*---------------------------------------------------------------------------*/
 /*- Client Part -------------------------------------------------------------*/
@@ -99,29 +97,30 @@ PT_THREAD(coap_blocking_request
                                                               message);
 
       coap_send_transaction(state->transaction);
-      PRINTF("Requested #%lu (MID %u)\n", state->block_num, request->mid);
+      LOG_DBG("Requested #%"PRIu32" (MID %u)\n", state->block_num, request->mid);
 
       PT_YIELD_UNTIL(&state->pt, ev == PROCESS_EVENT_POLL);
 
       if(!state->response) {
-        PRINTF("Server not responding\n");
+        LOG_WARN("Server not responding\n");
         PT_EXIT(&state->pt);
       }
 
       coap_get_header_block2(state->response, &res_block, &more, NULL, NULL);
 
-      PRINTF("Received #%lu%s (%u bytes)\n", res_block, more ? "+" : "",
-             state->response->payload_len);
+      LOG_DBG("Received #%"PRIu32"%s (%u bytes)\n", res_block, more ? "+" : "",
+              state->response->payload_len);
 
       if(res_block == state->block_num) {
         request_callback(state->response);
         ++(state->block_num);
       } else {
-        PRINTF("WRONG BLOCK %lu/%lu\n", res_block, state->block_num);
+        LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\n",
+                 res_block, state->block_num);
         ++block_error;
       }
     } else {
-      PRINTF("Could not allocate transaction buffer");
+      LOG_WARN("Could not allocate transaction buffer");
       PT_EXIT(&state->pt);
     }
   } while(more && block_error < COAP_MAX_ATTEMPTS);
