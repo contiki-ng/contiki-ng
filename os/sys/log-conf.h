@@ -81,7 +81,16 @@
 #define LOG_OUTPUT(...) printf(__VA_ARGS__)
 #endif /* LOG_CONF_OUTPUT */
 
-/* Custom log prefix output function -- default is LOG_OUTPUT */
+/*
+ * Custom output function to prefix logs with level and module.
+ *
+ * This will only be called when LOG_CONF_WITH_MODULE_PREFIX is enabled and
+ * all implementations should be based on LOG_OUTPUT.
+ *
+ * \param level     The log level
+ * \param levelstr  The log level as string
+ * \param module    The module string descriptor
+ */
 #ifdef LOG_CONF_OUTPUT_PREFIX
 #define LOG_OUTPUT_PREFIX(level, levelstr, module) LOG_CONF_OUTPUT_PREFIX(level, levelstr, module)
 #else /* LOG_CONF_OUTPUT_PREFIX */
