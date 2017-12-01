@@ -541,7 +541,7 @@ get_psk_info(struct dtls_context_t *ctx,
       ks.identity_hint = id;
       ks.identity_hint_len = id_len;
       LOG_DBG("got psk_identity_hint: '");
-      LOG_DBG_COAP_STRING(id, id_len);
+      LOG_DBG_COAP_STRING((const char *)id, id_len);
       LOG_DBG_("'\n");
     }
 
