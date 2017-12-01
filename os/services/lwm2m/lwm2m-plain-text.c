@@ -47,12 +47,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-plain-text"
+#define LOG_LEVEL  LOG_LEVEL_NONE
 
 /*---------------------------------------------------------------------------*/
 static size_t
@@ -121,16 +119,16 @@ lwm2m_plain_text_read_float32fix(const uint8_t *inbuf, size_t len,
   if(frac > 1) {
     *value += ((counter << bits) / frac);
   }
-  PRINTF("READ FLOATFIX: \"%.*s\" => int(%ld) frac(%ld) f=%ld Value=%ld\n",
-         (int)len, (char *)inbuf,
-         (long)integerpart,
-         (long)counter,
-         (long)frac,
-         (long)*value);
+  LOG_DBG("READ FLOATFIX: \"%.*s\" => int(%ld) frac(%ld) f=%ld Value=%ld\n",
+          (int)len, (char *)inbuf,
+          (long)integerpart,
+          (long)counter,
+          (long)frac,
+          (long)*value);
   if(neg) {
     *value = -*value;
   }
- 
+
   return i;
 }
 /*---------------------------------------------------------------------------*/

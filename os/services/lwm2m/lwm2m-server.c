@@ -49,13 +49,10 @@
 #include "lwm2m-server.h"
 #include "lwm2m-rd-client.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-server"
+#define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #define MAX_COUNT LWM2M_SERVER_MAX_COUNT
 
@@ -205,7 +202,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
   server = (lwm2m_server_t *) object;
 
   if(ctx->operation == LWM2M_OP_WRITE) {
-    PRINTF("Write to: %d\n", ctx->resource_id);
+    LOG_DBG("Write to: %d\n", ctx->resource_id);
     switch(ctx->resource_id) {
     case LWM2M_SERVER_LIFETIME_ID:
       lwm2m_object_read_int(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &value);
@@ -247,16 +244,14 @@ lwm2m_server_add(uint16_t instance_id, uint16_t server_id, uint32_t lifetime)
       /* Found a matching server */
       if(server->instance.instance_id != instance_id) {
         /* Non-matching instance id */
-        PRINTF("lwm2m-server: non-matching instance id for server %u\n",
-               server_id);
+        LOG_DBG("non-matching instance id for server %u\n", server_id);
         return NULL;
       }
       server->lifetime = lifetime;
       return server;
     } else if(server->instance.instance_id == instance_id) {
       /* Right instance but wrong server id */
-      PRINTF("lwm2m-server: non-matching server id for instance %u\n",
-             instance_id);
+      LOG_DBG("non-matching server id for instance %u\n", instance_id);
       return NULL;
     }
   }
@@ -277,7 +272,7 @@ lwm2m_server_add(uint16_t instance_id, uint16_t server_id, uint32_t lifetime)
     }
   }
 
-  PRINTF("lwm2m-server: no space for more servers\n");
+  LOG_WARN("no space for more servers\n");
 
   return NULL;
 }
@@ -287,7 +282,7 @@ lwm2m_server_init(void)
 {
   int i;
 
-  PRINTF("*** Init lwm2m-server\n");
+  LOG_INFO("init\n");
 
   list_init(server_list);
 

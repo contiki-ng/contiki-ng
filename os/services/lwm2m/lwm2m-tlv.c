@@ -46,13 +46,10 @@
 #include <stdint.h>
 #include "lwm2m-tlv.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-tlv"
+#define LOG_LEVEL  LOG_LEVEL_NONE
 
 /*---------------------------------------------------------------------------*/
 static inline uint8_t
@@ -131,7 +128,7 @@ lwm2m_tlv_write(const lwm2m_tlv_t *tlv, uint8_t *buffer, size_t buffersize)
   pos = 1 + len_type;
   /* ensure that we do not write too much */
   if(tlv->value != NULL && buffersize < tlv->length + pos) {
-    PRINTF("LWM2M-TLV: Could not write the TLV - buffer overflow.\n");
+    LOG_WARN("Could not write the TLV - buffer overflow.\n");
     return 0;
   }
 
@@ -167,13 +164,13 @@ lwm2m_tlv_write(const lwm2m_tlv_t *tlv, uint8_t *buffer, size_t buffersize)
     memcpy(&buffer[pos], tlv->value, tlv->length);
   }
 
-  if(DEBUG) {
+  if(LOG_DBG_ENABLED) {
     int i;
-    PRINTF("TLV:");
+    LOG_DBG("TLV: ");
     for(i = 0; i < pos + ((tlv->value != NULL) ? tlv->length : 0); i++) {
-      PRINTF("%02x", buffer[i]);
+      LOG_DBG_("%02x", buffer[i]);
     }
-    PRINTF("\n");
+    LOG_DBG_("\n");
   }
 
   return pos + ((tlv->value != NULL) ? tlv->length : 0);
@@ -208,7 +205,7 @@ lwm2m_tlv_write_int32(uint8_t type, int16_t id, int32_t value, uint8_t *buffer, 
   int i;
   int v;
   int last_bit;
-  PRINTF("Exporting int32 %d %ld ", id, (long)value);
+  LOG_DBG("Exporting int32 %d %ld ", id, (long)value);
 
   v = value < 0 ? -1 : 0;
   i = 0;
@@ -221,7 +218,7 @@ lwm2m_tlv_write_int32(uint8_t type, int16_t id, int32_t value, uint8_t *buffer, 
   } while((value != v || last_bit) && i < 4);
 
   /* export INT as TLV */
-  PRINTF("len: %d\n", i);
+  LOG_DBG("len: %d\n", i);
   tlv.type = type;
   tlv.length = i;
   tlv.value = &buf[3 - (i - 1)];
@@ -255,11 +252,11 @@ lwm2m_tlv_write_float32(uint8_t type, int16_t id, int32_t value, int bits,
     e++;
   }
 
-  PRINTF("Sign: %d, Fraction: %06lx  0b", value < 0, (long)val);
+  LOG_DBG("Sign: %d, Fraction: %06lx  0b", value < 0, (long)val);
   for(i = 0; i < 23; i++) {
-    PRINTF("%d", (int)((val >> (22 - i)) & 1));
+    LOG_DBG_("%d", (int)((val >> (22 - i)) & 1));
   }
-  PRINTF("\nExp:%d\n", e);
+  LOG_DBG_("\nExp:%d\n", e);
 
   /* convert to the thing we should have */
   e = e - bits + 127;
@@ -274,7 +271,7 @@ lwm2m_tlv_write_float32(uint8_t type, int16_t id, int32_t value, int bits,
   b[2] = (val >> 8) & 0xff;
   b[3] = val & 0xff;
 
-  PRINTF("B=%02x%02x%02x%02x\n", b[0], b[1], b[2], b[3]);
+  LOG_DBG("B=%02x%02x%02x%02x\n", b[0], b[1], b[2], b[3]);
   /* construct the TLV */
   tlv.type = type;
   tlv.length = 4;
@@ -295,19 +292,19 @@ lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
   e = ((tlv->value[0] << 1) & 0xff) | (tlv->value[1] >> 7);
   val = (((long)tlv->value[1] & 0x7f) << 16) | (tlv->value[2] << 8) | tlv->value[3];
 
-  PRINTF("Sign: %d, Fraction: %06lx  0b", val < 0, (long)val);
+  LOG_DBG("Sign: %d, Fraction: %06lx  0b", val < 0, (long)val);
   for(i = 0; i < 23; i++) {
-    PRINTF("%d", (int)((val >> (22 - i)) & 1));
+    LOG_DBG_("%d", (int)((val >> (22 - i)) & 1));
   }
-  PRINTF("\nExp:%d => %d\n", e, e - 127);
+  LOG_DBG("\nExp:%d => %d\n", e, e - 127);
 
   e = e - 127 + bits;
 
   /* e corresponds to the number of times we need to roll the number */
 
-  PRINTF("Actual e=%d\n", e);
+  LOG_DBG("Actual e=%d\n", e);
   e = e - 23;
-  PRINTF("E after sub %d\n", e);
+  LOG_DBG("E after sub %d\n", e);
   val = val | 1L << 23;
   if(e > 0) {
     val = val << e;
@@ -332,9 +329,8 @@ int main(int argc, char *argv[])
   data[0] = 0x00;
   data[1] = 0x80,
 
-  PRINTF("TLV:%d\n", lwm2m_tlv_get_int32(&tlv));
+  printf("TLV:%d\n", lwm2m_tlv_get_int32(&tlv));
 
-  PRINTF("Len: %d\n", lwm2m_tlv_write_int32(0, 1, -0x88987f, data, 24));
-
+  printf("Len: %d\n", lwm2m_tlv_write_int32(0, 1, -0x88987f, data, 24));
 }
 #endif

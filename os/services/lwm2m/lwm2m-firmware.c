@@ -41,13 +41,10 @@
 #include "coap.h"
 #include <string.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-firmware"
+#define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #define UPDATE_PACKAGE     0
 #define UPDATE_PACKAGE_URI 1
@@ -87,14 +84,13 @@ static lwm2m_status_t
 lwm2m_callback(lwm2m_object_instance_t *object,
                lwm2m_context_t *ctx)
 {
-#if DEBUG
   uint32_t num;
   uint8_t more;
   uint16_t size;
   uint32_t offset;
-#endif
 
-  PRINTF("Got request at: %d/%d/%d lv:%d\n", ctx->object_id, ctx->object_instance_id, ctx->resource_id, ctx->level);
+  LOG_DBG("Got request at: %d/%d/%d lv:%d\n", ctx->object_id,
+          ctx->object_instance_id, ctx->resource_id, ctx->level);
 
   if(ctx->level == 1 || ctx->level == 2) {
     /* Should not happen - as it will be taken care of by the lwm2m engine itself. */
@@ -111,17 +107,19 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       return LWM2M_STATUS_OK;
     }
   } else if(ctx->operation == LWM2M_OP_WRITE) {
-#if DEBUG
-    if(coap_get_header_block1(ctx->request, &num, &more, &size, &offset)) {
-      PRINTF("CoAP BLOCK1: %d/%d/%d offset:%d\n", num, more, size, offset);
-      PRINTF("LWM2M CTX->offset= %d\n", ctx->offset);
+
+    if(LOG_DBG_ENABLED) {
+      if(coap_get_header_block1(ctx->request, &num, &more, &size, &offset)) {
+        LOG_DBG("CoAP BLOCK1: %d/%d/%d offset:%d\n", num, more, size, offset);
+        LOG_DBG("LWM2M CTX->offset= %d\n", ctx->offset);
+      }
     }
-#endif
+
     switch(ctx->resource_id) {
     case UPDATE_PACKAGE:
       /* The firmware is written */
-      PRINTF("Firmware received: %d %d fin:%d\n", ctx->offset, (int) ctx->inbuf->size,
-             lwm2m_object_is_final_incoming(ctx));
+      LOG_DBG("Firmware received: %d %d fin:%d\n", ctx->offset,
+              (int)ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
       if(lwm2m_object_is_final_incoming(ctx)) {
         state = STATE_DOWNLOADED;
       } else {
@@ -130,15 +128,15 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       return LWM2M_STATUS_OK;
     case UPDATE_PACKAGE_URI:
       /* The firmware URI is written */
-      PRINTF("Firmware URI received: %d %d fin:%d\n", ctx->offset, (int) ctx->inbuf->size,
-             lwm2m_object_is_final_incoming(ctx));
-      if(DEBUG) {
+      LOG_DBG("Firmware URI received: %d %d fin:%d\n", ctx->offset,
+              (int)ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
+      if(LOG_DBG_ENABLED) {
         int i;
-        PRINTF("Data: '");
+        LOG_DBG("Data: '");
         for(i = 0; i < ctx->inbuf->size; i++) {
-          PRINTF("%c", ctx->inbuf->buffer[i]);
+          LOG_DBG_("%c", ctx->inbuf->buffer[i]);
         }
-        PRINTF("'\n");
+        LOG_DBG_("'\n");
       }
       return LWM2M_STATUS_OK;
     }

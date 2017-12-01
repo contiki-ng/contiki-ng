@@ -51,21 +51,10 @@
 #include "coap-keystore.h"
 #include "lib/list.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTS(l,s,f) do { int i;					\
-    for(i = 0; i < l; i++) printf(f, s[i]); \
-    } while(0)
-#define PRINTPRE(p,l,s) do { PRINTF(p);PRINTS(l,s,"%c"); } while(0);
-#define PRINTEP(ep) coap_endpoint_print(ep)
-#else
-#define PRINTF(...)
-#define PRINTS(l,s,f)
-#define PRINTPRE(p,l,s);
-#define PRINTEP(ep)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-security"
+#define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #define MAX_COUNT LWM2M_SERVER_MAX_COUNT
 
@@ -111,7 +100,7 @@ create_instance(uint16_t instance_id, lwm2m_status_t *status)
         sizeof(resources) / sizeof(lwm2m_resource_id_t);
       list_add(instances_list, &instances[i].instance);
 
-      PRINTF("SEC: Create new security instance\n");
+      LOG_DBG("Create new security instance\n");
       return &instances[i].instance;
     }
   }
@@ -187,7 +176,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
     /* Handle the writes */
     switch(ctx->resource_id) {
     case LWM2M_SECURITY_SERVER_URI_ID:
-      PRINTF("Writing security URI value: len: %d\n", (int)ctx->inbuf->size);
+      LOG_DBG("Writing security URI value: len: %d\n", (int)ctx->inbuf->size);
       value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->server_uri, URI_SIZE);
       /* This is string... */
       security->server_uri_len = ctx->last_value_len;
@@ -195,18 +184,18 @@ lwm2m_callback(lwm2m_object_instance_t *object,
     case LWM2M_SECURITY_BOOTSTRAP_SERVER_ID:
       value = lwm2m_object_read_boolean(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &iv);
       if(value > 0) {
-        PRINTF("Set Bootstrap: %d\n", iv);
+        LOG_DBG("Set Bootstrap: %d\n", iv);
         security->bootstrap = (uint8_t) iv;
       } else {
-        PRINTF("Failed to set bootstrap\n");
+        LOG_WARN("Failed to set bootstrap\n");
       }
       break;
     case LWM2M_SECURITY_MODE_ID:
       {
         int32_t v2;
         value = lwm2m_object_read_int(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &v2);
-        PRINTF("Writing security MODE value: %d len: %d\n", v2,
-               (int)ctx->inbuf->size);
+        LOG_DBG("Writing security MODE value: %d len: %d\n", v2,
+                (int)ctx->inbuf->size);
         security->security_mode = v2;
       }
       break;
@@ -214,17 +203,19 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->public_key, KEY_SIZE);
       security->public_key_len = ctx->last_value_len;
 
-      PRINTF("Writing client PKI: len: %d '", (int)ctx->last_value_len);
-      PRINTS(ctx->last_value_len, security->public_key, "%c");
-      PRINTF("'\n");
+      LOG_DBG("Writing client PKI: len: %d '", (int)ctx->last_value_len);
+      LOG_DBG_COAP_STRING((const char *)security->public_key,
+                          ctx->last_value_len);
+      LOG_DBG_("'\n");
       break;
     case LWM2M_SECURITY_KEY_ID:
       value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->secret_key, URI_SIZE);
       security->secret_key_len = ctx->last_value_len;
 
-      PRINTF("Writing secret key: len: %d '", (int)ctx->last_value_len);
-      PRINTS(ctx->last_value_len, security->secret_key, "%c");
-      PRINTF("'\n");
+      LOG_DBG("Writing secret key: len: %d '", (int)ctx->last_value_len);
+      LOG_DBG_COAP_STRING((const char *)security->secret_key,
+                          ctx->last_value_len);
+      LOG_DBG_("'\n");
 
       break;
     }
@@ -264,7 +255,7 @@ lwm2m_security_add_server(uint16_t instance_id,
   int i;
 
   if(server_uri_len > URI_SIZE) {
-    PRINTF("lwm2m-sec: too long server URI\n");
+    LOG_WARN("too long server URI: %u\n", server_uri_len);
     return NULL;
   }
 
@@ -273,13 +264,13 @@ lwm2m_security_add_server(uint16_t instance_id,
       server = lwm2m_security_get_next(server)) {
     if(server->server_id == server_id) {
       if(server->instance.instance_id != instance_id) {
-        PRINTF("lwm2m-sec: wrong instance id\n");
+        LOG_WARN("wrong instance id\n");
         return NULL;
       }
       /* Correct server id and instance id */
       break;
     } else if(server->instance.instance_id == instance_id) {
-      PRINTF("lwm2m-sec: wrong server id\n");
+      LOG_WARN("wrong server id\n");
       return NULL;
     }
   }
@@ -299,7 +290,7 @@ lwm2m_security_add_server(uint16_t instance_id,
       }
     }
     if(server == NULL) {
-      PRINTF("lwm2m-sec: no space for more servers\n");
+      LOG_WARN("no space for more servers\n");
       return NULL;
     }
   }
@@ -321,11 +312,11 @@ lwm2m_security_set_server_psk(lwm2m_security_server_t *server,
     return 0;
   }
   if(identity_len > KEY_SIZE) {
-    PRINTF("lwm2m-sec: too large identity\n");
+    LOG_WARN("too large identity: %u\n", identity_len);
     return 0;
   }
   if(key_len > KEY_SIZE) {
-    PRINTF("lwm2m-sec: too large identity\n");
+    LOG_WARN("too large identity: %u\n", key_len);
     return 0;
   }
   memcpy(server->public_key, identity, identity_len);
@@ -376,18 +367,18 @@ get_psk_info(const coap_endpoint_t *address_info,
     }
     if(!coap_endpoint_parse((char *)e->server_uri, e->server_uri_len, &ep)) {
       /* Failed to parse URI to endpoint */
-      PRINTF("lwm2m-sec: failed to parse server URI ");
-      PRINTS(e->server_uri_len, e->server_uri, "%c");
-      PRINTF("\n");
+      LOG_DBG("failed to parse server URI ");
+      LOG_DBG_COAP_STRING((char *)e->server_uri, e->server_uri_len);
+      LOG_DBG_("\n");
       continue;
     }
     if(!coap_endpoint_cmp(address_info, &ep)) {
       /* Wrong server */
-      PRINTF("lwm2m-sec: wrong server ");
-      PRINTEP(address_info);
-      PRINTF(" != ");
-      PRINTEP(&ep);
-      PRINTF("\n");
+      LOG_DBG("wrong server ");
+      LOG_DBG_COAP_EP(address_info);
+      LOG_DBG_(" != ");
+      LOG_DBG_COAP_EP(&ep);
+      LOG_DBG_("\n");
       continue;
     }
     if(info->identity_len > 0 && info->identity != NULL) {
@@ -395,12 +386,12 @@ get_psk_info(const coap_endpoint_t *address_info,
       if(info->identity_len != e->public_key_len ||
          memcmp(info->identity, e->public_key, info->identity_len)) {
         /* Identity not matching */
-        PRINTF("lwm2m-sec: identity not matching\n");
+        LOG_DBG("identity not matching\n");
         continue;
       }
     }
     /* Found security information for this server */
-    PRINTF("lwm2m-sec: found security match!\n");
+    LOG_DBG("found security match!\n");
     break;
   }
 
@@ -436,7 +427,7 @@ lwm2m_security_init(void)
 {
   int i;
 
-  PRINTF("lwm2m-sec: init\n");
+  LOG_INFO("init\n");
 
   list_init(instances_list);
 
@@ -449,12 +440,12 @@ lwm2m_security_init(void)
 #if COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M
     /* Security object handler added - register keystore */
     coap_set_keystore(&key_store);
-    PRINTF("lwm2m-sec: registered keystore\n");
+    LOG_DBG("registered keystore\n");
 #endif /* COAP_DTLS_KEYSTORE_CONF_WITH_LWM2M */
 #endif /* WITH_DTLS */
 
   } else {
-    PRINTF("lwm2m-sec: failed to register\n");
+    LOG_WARN("failed to register\n");
   }
 }
 /*---------------------------------------------------------------------------*/

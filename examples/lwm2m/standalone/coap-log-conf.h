@@ -53,6 +53,10 @@
 #define LOG_LEVEL_COAP         LOG_LEVEL_DBG
 #endif /* LOG_LEVEL_COAP */
 
+#ifndef LOG_LEVEL_LWM2M
+#define LOG_LEVEL_LWM2M        LOG_LEVEL_DBG
+#endif /* LOG_LEVEL_LWM2M */
+
 #ifndef LOG_WITH_LOC
 #define LOG_WITH_LOC           0
 #endif /* LOG_WITH_LOC */

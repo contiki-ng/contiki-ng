@@ -49,12 +49,10 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-json"
+#define LOG_LEVEL  LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 
 /* {"e":[{"n":"111/1","v":123},{"n":"111/2","v":42}]} */
@@ -70,7 +68,9 @@
 
 /* Simlified JSON style reader for reading in values from a LWM2M JSON
    string */
-int lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json) {
+int
+lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json)
+{
   int pos = ctx->inbuf->pos;
   uint8_t type = T_NONE;
   uint8_t vpos_start = 0;
@@ -123,7 +123,7 @@ int lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json) {
       } else {
         /* Could be in string or at illegal pos */
         if(type != T_STRING_B) {
-          PRINTF("ERROR - illegal ':'\n");
+          LOG_DBG("ERROR - illegal ':'\n");
         }
       }
       break;
@@ -178,7 +178,7 @@ static size_t
 enter_sub(lwm2m_context_t *ctx)
 {
   /* set some flags in state */
-  PRINTF("Enter sub-resource rsc=%d\n", ctx->resource_id);
+  LOG_DBG("Enter sub-resource rsc=%d\n", ctx->resource_id);
   ctx->writer_flags |= WRITER_RESOURCE_INSTANCE;
   return 0;
 }
@@ -187,7 +187,7 @@ static size_t
 exit_sub(lwm2m_context_t *ctx)
 {
   /* clear out state info */
-  PRINTF("Exit sub-resource rsc=%d\n", ctx->resource_id);
+  LOG_DBG("Exit sub-resource rsc=%d\n", ctx->resource_id);
   ctx->writer_flags &= ~WRITER_RESOURCE_INSTANCE;
   return 0;
 }
@@ -206,7 +206,7 @@ write_boolean(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
   if((len < 0) || (len >= outlen)) {
     return 0;
   }
-  PRINTF("JSON: Write bool:%s\n", outbuf);
+  LOG_DBG("JSON: Write bool:%s\n", outbuf);
 
   ctx->writer_flags |= WRITER_OUTPUT_VALUE;
   return len;
@@ -226,7 +226,7 @@ write_int(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
   if((len < 0) || (len >= outlen)) {
     return 0;
   }
-  PRINTF("JSON: Write int:%s\n", outbuf);
+  LOG_DBG("Write int:%s\n", outbuf);
 
   ctx->writer_flags |= WRITER_OUTPUT_VALUE;
   return len;
@@ -272,7 +272,7 @@ write_string(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
   size_t i;
   size_t len = 0;
   int res;
-  PRINTF("{\"n\":\"%u\",\"sv\":\"", ctx->resource_id);
+  LOG_DBG("{\"n\":\"%u\",\"sv\":\"", ctx->resource_id);
   if(ctx->writer_flags & WRITER_RESOURCE_INSTANCE) {
     res = snprintf((char *)outbuf, outlen, "%s{\"n\":\"%u/%u\",\"sv\":\"", sep,
                    ctx->resource_id, ctx->resource_instance_id);
@@ -288,7 +288,7 @@ write_string(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
     /* Escape special characters */
     /* TODO: Handle UTF-8 strings */
     if(value[i] < '\x20') {
-      PRINTF("\\x%x", value[i]);
+      LOG_DBG_("\\x%x", value[i]);
       res = snprintf((char *)&outbuf[len], outlen - len, "\\x%x", value[i]);
       if((res < 0) || (res >= (outlen - len))) {
         return 0;
@@ -296,27 +296,27 @@ write_string(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
       len += res;
       continue;
     } else if(value[i] == '"' || value[i] == '\\') {
-      PRINTF("\\");
+      LOG_DBG_("\\");
       outbuf[len] = '\\';
       ++len;
       if(len >= outlen) {
         return 0;
       }
     }
-    PRINTF("%c", value[i]);
+    LOG_DBG_("%c", value[i]);
     outbuf[len] = value[i];
     ++len;
     if(len >= outlen) {
       return 0;
     }
   }
-  PRINTF("\"}\n");
+  LOG_DBG_("\"}\n");
   res = snprintf((char *)&outbuf[len], outlen - len, "\"}");
   if((res < 0) || (res >= (outlen - len))) {
     return 0;
   }
 
-  PRINTF("JSON: Write string:%s\n", outbuf);
+  LOG_DBG("JSON: Write string:%s\n", outbuf);
 
   len += res;
   ctx->writer_flags |= WRITER_OUTPUT_VALUE;

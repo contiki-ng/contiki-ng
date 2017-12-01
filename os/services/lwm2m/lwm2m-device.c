@@ -46,13 +46,10 @@
 #include "lwm2m-engine.h"
 #include <string.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-device"
+#define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 static const lwm2m_resource_id_t resources[] =
   { RO(LWM2M_DEVICE_MANUFACTURER_ID),
@@ -161,7 +158,7 @@ lwm2m_callback(lwm2m_object_instance_t *object, lwm2m_context_t *ctx)
     case LWM2M_DEVICE_TYPE_ID:
       return write_string(ctx, LWM2M_DEVICE_TYPE);
     case LWM2M_DEVICE_TIME_ID:
-      PRINTF("Reading time: %u\n", (unsigned int)lwm2m_device_get_time());
+      LOG_DBG("Reading time: %u\n", (unsigned int)lwm2m_device_get_time());
       lwm2m_object_write_int(ctx, lwm2m_device_get_time());
       return LWM2M_STATUS_OK;
     case LWM2M_DEVICE_AVAILABLE_POWER_SOURCES:
@@ -178,14 +175,14 @@ lwm2m_callback(lwm2m_object_instance_t *object, lwm2m_context_t *ctx)
                        sizeof(power_current)/sizeof(uint16_t));
       return LWM2M_STATUS_OK;
     default:
-      PRINTF("lwm2m-device: Not found: %u\n", ctx->resource_id);
+      LOG_WARN("Not found: %u\n", ctx->resource_id);
       return LWM2M_STATUS_NOT_FOUND;
     }
 
   } else if(ctx->operation == LWM2M_OP_EXECUTE) {
     if(ctx->resource_id == LWM2M_DEVICE_REBOOT_ID) {
       /* Do THE REBOOT */
-      PRINTF("REBOOT\n");
+      LOG_INFO("REBOOT\n");
       return LWM2M_STATUS_OK;
     }
 
@@ -196,12 +193,12 @@ lwm2m_callback(lwm2m_object_instance_t *object, lwm2m_context_t *ctx)
       len = lwm2m_object_read_int(ctx, ctx->inbuf->buffer, ctx->inbuf->size,
                                   &lw_time);
       if(len == 0) {
-        PRINTF("FAIL: could not write time\n");
+        LOG_WARN("FAIL: could not write time\n");
         return LWM2M_STATUS_WRITE_ERROR;
       } else {
         lwm2m_device_set_time(lw_time);
-        PRINTF("Write time %lu sec => offset = %ld\n",
-               (unsigned long)lw_time, (long)time_offset);
+        LOG_DBG("Write time %lu sec => offset = %ld\n",
+                (unsigned long)lw_time, (long)time_offset);
         return LWM2M_STATUS_OK;
       }
     }

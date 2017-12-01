@@ -45,12 +45,10 @@
 #include "lwm2m-object.h"
 #include "lwm2m-tlv.h"
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-tlv-writer"
+#define LOG_LEVEL  LOG_LEVEL_NONE
 
 /*---------------------------------------------------------------------------*/
 static size_t
@@ -125,7 +123,7 @@ enter_sub(lwm2m_context_t *ctx)
   /* set some flags in state */
   lwm2m_tlv_t tlv;
   int len = 0;
-  PRINTF("Enter sub-resource rsc=%d mark:%d\n", ctx->resource_id, ctx->outbuf->len);
+  LOG_DBG("Enter sub-resource rsc=%d mark:%d\n", ctx->resource_id, ctx->outbuf->len);
   ctx->writer_flags |= WRITER_RESOURCE_INSTANCE;
   tlv.type = LWM2M_TLV_TYPE_MULTI_RESOURCE;
   tlv.length = 8; /* create an 8-bit TLV */
@@ -152,8 +150,8 @@ exit_sub(lwm2m_context_t *ctx)
   }
   len = ctx->outbuf->len - ctx->out_mark_pos_ri;
 
-  PRINTF("Exit sub-resource rsc=%d mark:%d len=%d\n", ctx->resource_id,
-         ctx->out_mark_pos_ri, len);
+  LOG_DBG("Exit sub-resource rsc=%d mark:%d len=%d\n", ctx->resource_id,
+          ctx->out_mark_pos_ri, len);
 
   /* update the lenght byte... Assume TLV header is pos + 1 bytes. */
   ctx->outbuf->buffer[pos + ctx->out_mark_pos_ri] = len - (pos + 1);

@@ -62,23 +62,10 @@
 #include "rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
-#define DEBUG 1
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTS(l,s,f) do { int i;					\
-    for(i = 0; i < l; i++) printf(f, s[i]); \
-    } while(0)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
-#define PRINTEP(ep) coap_endpoint_print(ep)
-#else
-#define PRINTF(...)
-#define PRINTS(l,s,f)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#define PRINTEP(ep)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-rd-client"
+#define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #ifndef LWM2M_DEFAULT_CLIENT_LIFETIME
 #define LWM2M_DEFAULT_CLIENT_LIFETIME 600 /* sec */
@@ -150,7 +137,7 @@ set_rd_data(coap_message_t *request)
 
   if(rd_more) {
     /* set the first block here */
-    PRINTF("Setting block1 in request\n");
+    LOG_DBG("Setting block1 in request\n");
     coap_set_header_block1(request, 0, 1, sizeof(rd_data));
   }
   return outbuf.len;
@@ -162,7 +149,7 @@ prepare_update(coap_message_t *request, int triggered) {
   coap_set_header_uri_path(request, session_info.assigned_ep);
 
   snprintf(query_data, sizeof(query_data) - 1, "?lt=%d&b=%s", session_info.lifetime, session_info.binding);
-  PRINTF("UPDATE:%s %s\n", session_info.assigned_ep, query_data);
+  LOG_DBG("UPDATE:%s %s\n", session_info.assigned_ep, query_data);
   coap_set_header_uri_query(request, query_data);
 
   if((triggered || rd_flags & FLAG_RD_DATA_UPDATE_ON_DIRTY) && (rd_flags & FLAG_RD_DATA_DIRTY)) {
@@ -212,8 +199,8 @@ static void
 perform_session_callback(int state)
 {
   if(session_info.callback != NULL) {
-    PRINTF("Performing session callback: %d cb:%p\n",
-           state, session_info.callback);
+    LOG_DBG("Performing session callback: %d cb:%p\n",
+            state, session_info.callback);
     session_info.callback(&session_info, state);
   }
 }
@@ -360,23 +347,23 @@ update_bootstrap_server(void)
 static void
 bootstrap_callback(coap_request_state_t *state)
 {
-  PRINTF("Bootstrap callback Response: %d, ", state->response != NULL);
+  LOG_DBG("Bootstrap callback Response: %d, ", state->response != NULL);
   if(state->response) {
     if(CHANGED_2_04 == state->response->code) {
-      PRINTF("Considered done!\n");
+      LOG_DBG_("Considered done!\n");
       rd_state = BOOTSTRAP_DONE;
       return;
     }
     /* Possible error response codes are 4.00 Bad request & 4.15 Unsupported content format */
-    PRINTF("Failed with code %d. Retrying\n", state->response->code);
+    LOG_DBG_("Failed with code %d. Retrying\n", state->response->code);
     /* TODO Application callback? */
     rd_state = INIT;
   } else if(BOOTSTRAP_SENT == rd_state) { /* this can handle double invocations */
     /* Failure! */
-    PRINTF("Bootstrap failed! Retry?");
+    LOG_DBG("Bootstrap failed! Retry?");
     rd_state = DO_BOOTSTRAP;
   } else {
-    PRINTF("Ignore\n");
+    LOG_DBG("Ignore\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -385,7 +372,7 @@ produce_more_rd(void)
 {
   lwm2m_buffer_t outbuf;
 
-  PRINTF("GOT Continue!\n");
+  LOG_DBG("GOT Continue!\n");
 
   /* setup the output buffer */
   outbuf.buffer = rd_data;
@@ -398,8 +385,8 @@ produce_more_rd(void)
   rd_more = lwm2m_engine_set_rd_data(&outbuf, rd_block1);
   coap_set_payload(request, rd_data, outbuf.len);
 
-  PRINTF("Setting block1 in request - block: %d more: %d\n",
-         (int) rd_block1, (int) rd_more);
+  LOG_DBG("Setting block1 in request - block: %d more: %d\n",
+          (int)rd_block1, (int)rd_more);
   coap_set_header_block1(request, rd_block1, rd_more, sizeof(rd_data));
 
   coap_send_request(&rd_request_state, &session_info.server_ep, request, rd_callback);
@@ -417,7 +404,7 @@ block1_rd_callback(coap_timer_t *timer)
 static void
 registration_callback(coap_request_state_t *state)
 {
-  PRINTF("Registration callback. Response: %d, ", state->response != NULL);
+  LOG_DBG("Registration callback. Response: %d, ", state->response != NULL);
   if(state->response) {
     /* check state and possibly set registration to done */
     /* If we get a continue - we need to call the rd generator one more time */
@@ -426,6 +413,7 @@ registration_callback(coap_request_state_t *state)
       coap_get_header_block1(state->response, &rd_block1, NULL, NULL, NULL);
       coap_timer_set_callback(&block1_timer, block1_rd_callback);
       coap_timer_set(&block1_timer, 1); /* delay 1 ms */
+      LOG_DBG_("Continue\n");
     } else if(CREATED_2_01 == state->response->code) {
       if(state->response->location_path_len < LWM2M_RD_CLIENT_ASSIGNED_ENDPOINT_MAX_LEN) {
         memcpy(session_info.assigned_ep, state->response->location_path,
@@ -435,27 +423,27 @@ registration_callback(coap_request_state_t *state)
         rd_state = REGISTRATION_DONE;
         /* remember the last reg time */
         last_update = coap_timer_uptime();
-        PRINTF("Done (assigned EP='%s')!\n", session_info.assigned_ep);
+        LOG_DBG_("Done (assigned EP='%s')!\n", session_info.assigned_ep);
         perform_session_callback(LWM2M_RD_CLIENT_REGISTERED);
         return;
       }
 
-      PRINTF("failed to handle assigned EP: '");
-      PRINTS(state->response->location_path_len,
-             state->response->location_path, "%c");
-      PRINTF("'. Re-init network.\n");
+      LOG_DBG_("failed to handle assigned EP: '");
+      LOG_DBG_COAP_STRING(state->response->location_path,
+                          state->response->location_path_len);
+      LOG_DBG_("'. Re-init network.\n");
     } else {
       /* Possible error response codes are 4.00 Bad request & 4.03 Forbidden */
-      PRINTF("failed with code %d. Re-init network\n", state->response->code);
+      LOG_DBG_("failed with code %d. Re-init network\n", state->response->code);
     }
     /* TODO Application callback? */
     rd_state = INIT;
   } else if(REGISTRATION_SENT == rd_state) { /* this can handle double invocations */
     /* Failure! */
-    PRINTF("Registration failed! Retry?\n");
+    LOG_DBG_("Registration failed! Retry?\n");
     rd_state = DO_REGISTRATION;
   } else {
-    PRINTF("Ignore\n");
+    LOG_DBG_("Ignore\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -465,7 +453,7 @@ registration_callback(coap_request_state_t *state)
 static void
 update_callback(coap_request_state_t *state)
 {
-  PRINTF("Update callback. Response: %d, ", state->response != NULL);
+  LOG_DBG("Update callback. Response: %d, ", state->response != NULL);
 
   if(state->response) {
     /* If we get a continue - we need to call the rd generator one more time */
@@ -475,7 +463,7 @@ update_callback(coap_request_state_t *state)
       coap_timer_set_callback(&block1_timer, block1_rd_callback);
       coap_timer_set(&block1_timer, 1); /* delay 1 ms */
     } else if(CHANGED_2_04 == state->response->code) {
-      PRINTF("Done!\n");
+      LOG_DBG_("Done!\n");
       /* remember the last reg time */
       last_update = coap_timer_uptime();
       rd_state = REGISTRATION_DONE;
@@ -483,33 +471,33 @@ update_callback(coap_request_state_t *state)
       return;
     }
     /* Possible error response codes are 4.00 Bad request & 4.04 Not Found */
-    PRINTF("Failed with code %d. Retrying registration\n", state->response->code);
+    LOG_DBG_("Failed with code %d. Retrying registration\n", state->response->code);
     rd_state = DO_REGISTRATION;
   } else if(REGISTRATION_SENT == rd_state) { /* this can handle the current double invocation */
-    /*Failure! */
-    PRINTF("Registration failed! Retry?");
+    /* Failure! */
+    LOG_DBG("Registration failed! Retry?");
     rd_state = DO_REGISTRATION;
   } else if(UPDATE_SENT == rd_state) {
     /* Update failed */
-    PRINTF("Update failed! Retry?");
+    LOG_DBG("Update failed! Retry?");
     rd_state = DO_REGISTRATION;
   } else {
-    PRINTF("Ignore\n");
+    LOG_DBG("Ignore\n");
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
 deregister_callback(coap_request_state_t *state)
 {
-  PRINTF("Deregister callback. Response Code: %d\n",
-         state->response != NULL ? state->response->code : 0);
+  LOG_DBG("Deregister callback. Response Code: %d\n",
+          state->response != NULL ? state->response->code : 0);
 
   if(state->response && (DELETED_2_02 == state->response->code)) {
-    PRINTF("Deregistration success\n");
+    LOG_DBG("Deregistration success\n");
     rd_state = DEREGISTERED;
     perform_session_callback(LWM2M_RD_CLIENT_DEREGISTERED);
   } else {
-    PRINTF("Deregistration failed\n");
+    LOG_DBG("Deregistration failed\n");
     if(rd_state == DEREGISTER_SENT) {
       rd_state = DEREGISTER_FAILED;
       perform_session_callback(LWM2M_RD_CLIENT_DEREGISTER_FAILED);
@@ -527,19 +515,19 @@ periodic_process(coap_timer_t *timer)
   coap_timer_reset(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
   now = coap_timer_uptime();
 
-  PRINTF("RD Client - state: %d, ms: %lu\n", rd_state,
-         (unsigned long)coap_timer_uptime());
+  LOG_DBG("RD Client - state: %d, ms: %lu\n", rd_state,
+          (unsigned long)coap_timer_uptime());
 
   switch(rd_state) {
   case INIT:
-    PRINTF("RD Client started with endpoint '%s' and client lifetime %d\n", session_info.ep, session_info.lifetime);
+    LOG_DBG("RD Client started with endpoint '%s' and client lifetime %d\n", session_info.ep, session_info.lifetime);
     rd_state = WAIT_NETWORK;
     break;
   case WAIT_NETWORK:
     if(now > wait_until_network_check) {
       /* check each 10 seconds before next check */
-      PRINTF("Checking for network... %lu\n",
-             (unsigned long)wait_until_network_check);
+      LOG_DBG("Checking for network... %lu\n",
+              (unsigned long)wait_until_network_check);
       wait_until_network_check = now + 10000;
       if(has_network_access()) {
         /* Either do bootstrap then registration */
@@ -561,9 +549,9 @@ periodic_process(coap_timer_t *timer)
 
         snprintf(query_data, sizeof(query_data) - 1, "?ep=%s", session_info.ep);
         coap_set_header_uri_query(request, query_data);
-        PRINTF("Registering ID with bootstrap server [");
-        PRINTEP(&session_info.bs_server_ep);
-        PRINTF("] as '%s'\n", query_data);
+        LOG_INFO("Registering ID with bootstrap server [");
+        LOG_INFO_COAP_EP(&session_info.bs_server_ep);
+        LOG_INFO_("] as '%s'\n", query_data);
 
         coap_send_request(&rd_request_state, &session_info.bs_server_ep,
                           request, bootstrap_callback);
@@ -579,7 +567,7 @@ periodic_process(coap_timer_t *timer)
     /* check that we should still use bootstrap */
     if(session_info.use_bootstrap) {
       lwm2m_security_server_t *security;
-      PRINTF("*** Bootstrap - checking for server info...\n");
+      LOG_DBG("*** Bootstrap - checking for server info...\n");
       /* get the security object - ignore bootstrap servers */
       for(security = lwm2m_security_get_first();
           security != NULL;
@@ -594,9 +582,10 @@ periodic_process(coap_timer_t *timer)
         if(security->server_uri_len > 0) {
           uint8_t secure = 0;
 
-          PRINTF("**** Found security instance using: ");
-          PRINTS(security->server_uri_len, security->server_uri, "%c");
-          PRINTF(" (len %d) \n", security->server_uri_len);
+          LOG_DBG("**** Found security instance using: ");
+          LOG_DBG_COAP_STRING((const char *)security->server_uri,
+                              security->server_uri_len);
+          LOG_DBG_(" (len %d) \n", security->server_uri_len);
           /* TODO Should verify it is a URI */
           /* Check if secure */
           secure = strncmp((const char *)security->server_uri,
@@ -605,22 +594,23 @@ periodic_process(coap_timer_t *timer)
           if(!coap_endpoint_parse((const char *)security->server_uri,
                                   security->server_uri_len,
                                   &session_info.server_ep)) {
-            PRINTF("Failed to parse server URI!\n");
+            LOG_DBG("Failed to parse server URI!\n");
           } else {
-            PRINTF("Server address:");
-            PRINTEP(&session_info.server_ep);
-            PRINTF("\n");
+            LOG_DBG("Server address:");
+            LOG_DBG_COAP_EP(&session_info.server_ep);
+            LOG_DBG_("\n");
             if(secure) {
-              PRINTF("Secure CoAP requested but not supported - can not bootstrap\n");
+              LOG_DBG("Secure CoAP requested but not supported - can not bootstrap\n");
             } else {
               lwm2m_rd_client_register_with_server(&session_info.server_ep);
               session_info.bootstrapped++;
             }
           }
         } else {
-          PRINTF("** failed to parse URI ");
-          PRINTS(security->server_uri_len, security->server_uri, "%c");
-          PRINTF("\n");
+          LOG_DBG("** failed to parse URI ");
+          LOG_DBG_COAP_STRING((const char *)security->server_uri,
+                              security->server_uri_len);
+          LOG_DBG_("\n");
         }
       }
 
@@ -637,7 +627,7 @@ periodic_process(coap_timer_t *timer)
     if(!coap_endpoint_is_connected(&session_info.server_ep)) {
       /* Not connected... wait a bit... and retry connection */
       coap_endpoint_connect(&session_info.server_ep);
-      PRINTF("Wait until connected... \n");
+      LOG_DBG("Wait until connected... \n");
       return;
     }
     if(session_info.use_registration && !session_info.registered &&
@@ -654,13 +644,13 @@ periodic_process(coap_timer_t *timer)
       len = set_rd_data(request);
       rd_callback = registration_callback;
 
-      PRINTF("Registering with [");
-      PRINTEP(&session_info.server_ep);
-      PRINTF("] lwm2m endpoint '%s': '", query_data);
+      LOG_INFO("Registering with [");
+      LOG_INFO_COAP_EP(&session_info.server_ep);
+      LOG_INFO_("] lwm2m endpoint '%s': '", query_data);
       if(len) {
-        PRINTS(len, rd_data, "%c");
+        LOG_INFO_COAP_STRING((const char *)rd_data, len);
       }
-      PRINTF("' More:%d\n", rd_more);
+      LOG_INFO_("' More:%d\n", rd_more);
 
       coap_send_request(&rd_request_state, &session_info.server_ep,
                         request, registration_callback);
@@ -690,7 +680,7 @@ periodic_process(coap_timer_t *timer)
     /* just wait until the callback kicks us to the next state... */
     break;
   case DEREGISTER:
-    PRINTF("DEREGISTER %s\n", session_info.assigned_ep);
+    LOG_INFO("DEREGISTER %s\n", session_info.assigned_ep);
     coap_init_message(request, COAP_TYPE_CON, COAP_DELETE, 0);
     coap_set_header_uri_path(request, session_info.assigned_ep);
     coap_send_request(&rd_request_state, &session_info.server_ep, request,
@@ -705,7 +695,7 @@ periodic_process(coap_timer_t *timer)
     break;
 
   default:
-    PRINTF("Unhandled state: %d\n", rd_state);
+    LOG_WARN("Unhandled state: %d\n", rd_state);
   }
 }
 /*---------------------------------------------------------------------------*/

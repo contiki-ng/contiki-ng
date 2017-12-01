@@ -61,18 +61,10 @@
 #include "net/ipv6/uip-ds6.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTS(l,s,f) do { int i;					\
-    for(i = 0; i < l; i++) printf(f, s[i]); \
-    } while(0)
-#define PRINTPRE(p,l,s) do { PRINTF(p);PRINTS(l,s,"%c"); } while(0);
-#else
-#define PRINTF(...)
-#define PRINTS(l,s,f)
-#define PRINTPRE(p,l,s);
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "lwm2m-engine"
+#define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #ifndef LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX
 #ifdef LWM2M_DEVICE_MODEL_NUMBER
@@ -240,8 +232,8 @@ double_buffer_flush(lwm2m_buffer_t *ctxbuf, lwm2m_buffer_t *outbuf, int size)
     size = ctxbuf->len;
   }
   if(ctxbuf->len >= size && outbuf->size >= size) {
-    PRINTF("Double buffer - copying out %d bytes remaining: %d\n",
-           size, ctxbuf->len - size);
+    LOG_DBG("Double buffer - copying out %d bytes remaining: %d\n",
+            size, ctxbuf->len - size);
     memcpy(outbuf->buffer, ctxbuf->buffer, size);
     memcpy(ctxbuf->buffer, &ctxbuf->buffer[size],
            ctxbuf->len - size);
@@ -252,7 +244,6 @@ double_buffer_flush(lwm2m_buffer_t *ctxbuf, lwm2m_buffer_t *outbuf, int size)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-#if DEBUG
 static inline const char *
 get_method_as_string(coap_resource_flags_t method)
 {
@@ -268,9 +259,7 @@ get_method_as_string(coap_resource_flags_t method)
     return "UNKNOWN";
   }
 }
-#endif /* DEBUG */
 /*--------------------------------------------------------------------------*/
-#if DEBUG
 static const char *
 get_status_as_string(lwm2m_status_t status)
 {
@@ -307,7 +296,6 @@ get_status_as_string(lwm2m_status_t status)
     return buffer;
   }
 }
-#endif /* DEBUG */
 /*--------------------------------------------------------------------------*/
 static int
 parse_path(const char *path, int path_len,
@@ -319,9 +307,9 @@ parse_path(const char *path, int path_len,
   char c = 0;
 
   /* get object id */
-  PRINTF("lwm2m: parse PATH: \"");
-  PRINTS(path_len, path, "%c");
-  PRINTF("\"\n");
+  LOG_DBG("parse PATH: \"");
+  LOG_DBG_COAP_STRING(path, path_len);
+  LOG_DBG_("\"\n");
 
   ret = 0;
   pos = 0;
@@ -374,7 +362,8 @@ void lwm2m_engine_set_opaque_callback(lwm2m_context_t *ctx, lwm2m_write_opaque_c
 {
   /* Here we should set the callback for the opaque that we are currently generating... */
   /* And we should in the future associate the callback with the CoAP message info - MID */
-  PRINTF("Setting opaque handler - offset: %d,%d\n", ctx->offset, ctx->outbuf->len);
+  LOG_DBG("Setting opaque handler - offset: %d,%d\n",
+          ctx->offset, ctx->outbuf->len);
 
   current_opaque_offset = 0;
   current_opaque_callback = cb;
@@ -393,14 +382,14 @@ lwm2m_engine_set_rd_data(lwm2m_buffer_t *outbuf, int block)
   if(lwm2m_buf_lock[0] != 0 && (lwm2m_buf_lock_timeout > coap_timer_uptime()) &&
      ((lwm2m_buf_lock[1] != 0xffff) ||
       (lwm2m_buf_lock[2] != 0xffff))) {
-    PRINTF("Set-RD: already exporting resource: %d/%d/%d\n",
-           lwm2m_buf_lock[1], lwm2m_buf_lock[2], lwm2m_buf_lock[3]);
+    LOG_DBG("Set-RD: already exporting resource: %d/%d/%d\n",
+            lwm2m_buf_lock[1], lwm2m_buf_lock[2], lwm2m_buf_lock[3]);
     /* fail - what should we return here? */
     return 0;
   }
 
   if(block == 0) {
-    PRINTF("Starting RD genereation\n");
+    LOG_DBG("Starting RD generation\n");
     /* start with simple object instances */
     instance = list_head(object_list);
     object = NULL;
@@ -427,22 +416,22 @@ lwm2m_engine_set_rd_data(lwm2m_buffer_t *outbuf, int block)
 
   lwm2m_buf_lock_timeout = coap_timer_uptime() + 1000;
 
-  PRINTF("Generating RD list:");
+  LOG_DBG("Generating RD list:");
   while(instance != NULL || object != NULL) {
     int pos = lwm2m_buf.len;
     if(instance != NULL) {
       len = snprintf((char *) &lwm2m_buf.buffer[pos],
                      lwm2m_buf.size - pos, (pos > 0 || block > 0) ? ",</%d/%d>" : "</%d/%d>",
                      instance->object_id, instance->instance_id);
-      PRINTF((pos > 0 || block > 0) ? ",</%d/%d>" : "</%d/%d>",
-             instance->object_id, instance->instance_id);
+      LOG_DBG_((pos > 0 || block > 0) ? ",</%d/%d>" : "</%d/%d>",
+               instance->object_id, instance->instance_id);
     } else if(object->impl != NULL) {
       len = snprintf((char *) &lwm2m_buf.buffer[pos],
                      lwm2m_buf.size - pos,
                      (pos > 0 || block > 0) ? ",</%d>" : "</%d>",
                      object->impl->object_id);
-      PRINTF((pos > 0 || block > 0) ? ",</%d>" : "</%d>",
-             object->impl->object_id);
+      LOG_DBG_((pos > 0 || block > 0) ? ",</%d>" : "</%d>",
+               object->impl->object_id);
     } else {
       len = 0;
     }
@@ -476,7 +465,8 @@ lwm2m_engine_set_rd_data(lwm2m_buffer_t *outbuf, int block)
     }
 
     if(lwm2m_buf.len >= maxsize) {
-      PRINTF("**** CoAP MAX BLOCK Reached!!! **** SEND\n");
+      LOG_DBG_("\n");
+      LOG_DBG("**** CoAP MAX BLOCK Reached!!! **** SEND\n");
       /* If the produced data is larger than a CoAP block we need to send
          this now */
       double_buffer_flush(&lwm2m_buf, outbuf, maxsize);
@@ -484,7 +474,7 @@ lwm2m_engine_set_rd_data(lwm2m_buffer_t *outbuf, int block)
       return 1;
     }
   }
-  PRINTF("\n");
+  LOG_DBG_("\n");
   double_buffer_flush(&lwm2m_buf, outbuf, maxsize);
   /* unlock the buffer */
   lwm2m_buf_lock[0] = 0;
@@ -580,7 +570,7 @@ lwm2m_engine_select_writer(lwm2m_context_t *context, unsigned int accept)
       context->writer = &lwm2m_json_writer;
       break;
     default:
-      PRINTF("Unknown Accept type %u, using LWM2M plain text\n", accept);
+      LOG_WARN("Unknown Accept type %u, using LWM2M plain text\n", accept);
       context->writer = &lwm2m_plain_text_writer;
       /* Set the response type to plain text */
       accept = LWM2M_TEXT_PLAIN;
@@ -613,8 +603,8 @@ lwm2m_engine_select_reader(lwm2m_context_t *context, unsigned int content_format
       context->reader = &lwm2m_plain_text_reader;
       break;
     default:
-      PRINTF("Unknown content type %u, using LWM2M plain text\n",
-             content_format);
+      LOG_WARN("Unknown content type %u, using LWM2M plain text\n",
+               content_format);
       context->reader = &lwm2m_plain_text_reader;
       break;
   }
@@ -660,13 +650,14 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
      ((lwm2m_buf_lock[1] != ctx->object_id) ||
       (lwm2m_buf_lock[2] != ctx->object_instance_id) ||
       (lwm2m_buf_lock[3] != ctx->resource_id))) {
-    PRINTF("Multi-read: already exporting resource: %d/%d/%d\n",
-           lwm2m_buf_lock[1], lwm2m_buf_lock[2], lwm2m_buf_lock[3]);
+    LOG_DBG("Multi-read: already exporting resource: %d/%d/%d\n",
+            lwm2m_buf_lock[1], lwm2m_buf_lock[2], lwm2m_buf_lock[3]);
     return LWM2M_STATUS_SERVICE_UNAVAILABLE;
   }
 
-  PRINTF("MultiRead: %d/%d/%d lv:%d offset:%d\n",
-         ctx->object_id, ctx->object_instance_id, ctx->resource_id, ctx->level, ctx->offset);
+  LOG_DBG("MultiRead: %d/%d/%d lv:%d offset:%d\n",
+          ctx->object_id, ctx->object_instance_id, ctx->resource_id,
+          ctx->level, ctx->offset);
 
   /* Make use of the double buffer */
   ctx->outbuf = &lwm2m_buf;
@@ -705,7 +696,10 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
     if(instance->resource_ids != NULL && instance->resource_count > 0) {
       /* show all the available resources (or read all) */
       while(last_rsc_pos < instance->resource_count) {
-        PRINTF("READ: %x %x %x lv:%d\n", instance->resource_ids[last_rsc_pos], RSC_ID(instance->resource_ids[last_rsc_pos]), ctx->resource_id, ctx->level);
+        LOG_DBG("READ: %x %x %x lv:%d\n",
+                instance->resource_ids[last_rsc_pos],
+                RSC_ID(instance->resource_ids[last_rsc_pos]),
+                ctx->resource_id, ctx->level);
 
         /* Check if this is a object read or if it is the correct resource */
         if(ctx->level < 3 || ctx->resource_id == RSC_ID(instance->resource_ids[last_rsc_pos])) {
@@ -731,7 +725,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
             if(len < 0 || ctx->outbuf->len >= size) {
               double_buffer_flush(ctx->outbuf, outbuf, size);
 
-              PRINTF("Copied lwm2m buf - remaining: %d\n", lwm2m_buf.len);
+              LOG_DBG("Copied lwm2m buf - remaining: %d\n", lwm2m_buf.len);
               /* switch buffer */
               ctx->outbuf = outbuf;
               ctx->writer_flags |= WRITER_HAS_MORE;
@@ -764,20 +758,20 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
                 /* Now we need to initialize the object writing for this new object */
                 len = ctx->writer->init_write(ctx);
                 ctx->outbuf->len += len;
-                PRINTF("INIT WRITE len:%d size:%d\n", len, (int) ctx->outbuf->size);
+                LOG_DBG("INIT WRITE len:%d size:%d\n", len, (int) ctx->outbuf->size);
                 initialized = 1;
               }
 
               if(current_opaque_callback == NULL) {
-                PRINTF("Doing the callback to the resource %d\n", ctx->outbuf->len);
+                LOG_DBG("Doing the callback to the resource %d\n", ctx->outbuf->len);
                 /* No special opaque callback to handle - use regular callback */
                 success = instance->callback(instance, ctx);
-                PRINTF("After the callback to the resource %d: %s\n",
-                       ctx->outbuf->len, get_status_as_string(success));
+                LOG_DBG("After the callback to the resource %d: %s\n",
+                        ctx->outbuf->len, get_status_as_string(success));
 
                 if(success != LWM2M_STATUS_OK) {
                   /* What to do here? */
-                  PRINTF("Callback failed: %s\n", get_status_as_string(success));
+                  LOG_DBG("Callback failed: %s\n", get_status_as_string(success));
                   if(lv < 3) {
                     if(success == LWM2M_STATUS_NOT_FOUND) {
                       /* ok with a not found during a multi read - what more
@@ -799,11 +793,11 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
                    we should produce data via that callback until the opaque has fully
                    been handled */
                 ctx->offset = current_opaque_offset;
-                /* PRINTF("Calling the opaque handler %x\n", ctx->writer_flags); */
+                /* LOG_DBG("Calling the opaque handler %x\n", ctx->writer_flags); */
                 success = current_opaque_callback(instance, ctx, num_write);
                 if((ctx->writer_flags & WRITER_HAS_MORE) == 0) {
                   /* This opaque stream is now done! */
-                  /* PRINTF("Setting opaque callback to null - it is done!\n"); */
+                  /* LOG_DBG("Setting opaque callback to null - it is done!\n"); */
                   current_opaque_callback = NULL;
                 } else if(ctx->outbuf->len < COAP_MAX_BLOCK_SIZE) {
                   lwm2m_buf_lock[0] = 0;
@@ -811,21 +805,21 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
                 }
                 current_opaque_offset += num_write;
                 ctx->offset = old_offset;
-                /* PRINTF("Setting back offset to: %d\n", ctx->offset); */
+                /* LOG_DBG("Setting back offset to: %d\n", ctx->offset); */
               }
 
               /* here we have "read" out something */
               num_read++;
               /* We will need to handle no-success and other things */
-              PRINTF("Called %u/%u/%u outlen:%u %s\n",
-                     ctx->object_id, ctx->object_instance_id, ctx->resource_id,
-                     ctx->outbuf->len, get_status_as_string(success));
+              LOG_DBG("Called %u/%u/%u outlen:%u %s\n",
+                      ctx->object_id, ctx->object_instance_id, ctx->resource_id,
+                      ctx->outbuf->len, get_status_as_string(success));
 
               /* we need to handle full buffer, etc here also! */
               ctx->level = lv;
             } else {
-              PRINTF("Resource %u not readable\n",
-                     RSC_ID(instance->resource_ids[last_rsc_pos]));
+              LOG_DBG("Resource %u not readable\n",
+                      RSC_ID(instance->resource_ids[last_rsc_pos]));
             }
           }
         }
@@ -833,18 +827,18 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
           /* This resource is now done - (only when the opaque is also done) */
           last_rsc_pos++;
         } else {
-          PRINTF("Opaque is set - continue with that.\n");
+          LOG_DBG("Opaque is set - continue with that.\n");
         }
 
         if(ctx->outbuf->len >= COAP_MAX_BLOCK_SIZE) {
-          PRINTF("**** CoAP MAX BLOCK Reached!!! **** SEND\n");
+          LOG_DBG("**** CoAP MAX BLOCK Reached!!! **** SEND\n");
           /* If the produced data is larger than a CoAP block we need to send
              this now */
           if(ctx->outbuf->len < 2 * COAP_MAX_BLOCK_SIZE) {
             /* We assume that size is equal to COAP_MAX_BLOCK_SIZE here */
             double_buffer_flush(ctx->outbuf, outbuf, size);
 
-            PRINTF("Copied lwm2m buf - remaining: %d\n", lwm2m_buf.len);
+            LOG_DBG("Copied lwm2m buf - remaining: %d\n", lwm2m_buf.len);
             /* switch buffer */
             ctx->outbuf = outbuf;
             ctx->writer_flags |= WRITER_HAS_MORE;
@@ -852,7 +846,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
             /* OK - everything went well... but we have more. - keep the lock here! */
             return LWM2M_STATUS_OK;
           } else {
-            PRINTF("*** ERROR Overflow?\n");
+            LOG_WARN("*** ERROR Overflow?\n");
             return LWM2M_STATUS_ERROR;
           }
         }
@@ -866,10 +860,10 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
       last_instance_id = NO_INSTANCE;
     }
     if(ctx->operation == LWM2M_OP_READ) {
-      PRINTF("END Writer %d ->", ctx->outbuf->len);
+      LOG_DBG("END Writer %d ->", ctx->outbuf->len);
       len = ctx->writer->end_write(ctx);
       ctx->outbuf->len += len;
-      PRINTF("%d\n", ctx->outbuf->len);
+      LOG_DBG("%d\n", ctx->outbuf->len);
     }
 
     initialized = 0;
@@ -896,7 +890,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
     lwm2m_buf_lock[0] = 0;
   }
 
-  PRINTF("At END: Copied lwm2m buf %d\n", len);
+  LOG_DBG("At END: Copied lwm2m buf %d\n", len);
 
   return LWM2M_STATUS_OK;
 }
@@ -913,7 +907,7 @@ create_instance(lwm2m_context_t *context, lwm2m_object_t *object)
   /* NOTE: context->object_instance_id needs to be set before calling */
   instance = object->impl->create_instance(context->object_instance_id, NULL);
   if(instance != NULL) {
-    PRINTF("Created instance: %u/%u\n", context->object_id, context->object_instance_id);
+    LOG_DBG("Created instance: %u/%u\n", context->object_id, context->object_instance_id);
     coap_set_status_code(context->response, CREATED_2_01);
 #if USE_RD_CLIENT
     lwm2m_rd_client_set_update_rd();
@@ -934,8 +928,8 @@ get_or_create_instance(lwm2m_context_t *ctx, lwm2m_object_t *object,
   lwm2m_object_instance_t *instance;
 
   instance = get_instance_by_context(ctx, NULL);
-  PRINTF("Instance: %u/%u/%u = %p\n", ctx->object_id,
-         ctx->object_instance_id, ctx->resource_id, instance);
+  LOG_DBG("Instance: %u/%u/%u = %p\n", ctx->object_id,
+          ctx->object_instance_id, ctx->resource_id, instance);
   /* by default we assume that the instance is not created... so we set flag to zero */
   if(created != NULL) {
     *created = 0;
@@ -980,8 +974,8 @@ process_tlv_write(lwm2m_context_t *ctx, lwm2m_object_t *object,
   ctx->inbuf->size = len;
   ctx->level = 3;
   ctx->resource_id = rid;
-  PRINTF("  Doing callback to %u/%u/%u\n", ctx->object_id,
-         ctx->object_instance_id, ctx->resource_id);
+  LOG_DBG("  Doing callback to %u/%u/%u\n", ctx->object_id,
+          ctx->object_instance_id, ctx->resource_id);
   instance = get_or_create_instance(ctx, object, &created);
   if(instance != NULL && instance->callback != NULL) {
     if(created || check_write(instance, rid)) {
@@ -1019,11 +1013,15 @@ perform_multi_resource_write_op(lwm2m_object_t *object,
     while(lwm2m_json_next_token(ctx, &json)) {
       int i;
       uint8_t created = 0;
-      PRINTF("JSON: '");
-      for(i = 0; i < json.name_len; i++) PRINTF("%c", json.name[i]);
-      PRINTF("':'");
-      for(i = 0; i < json.value_len; i++) PRINTF("%c", json.value[i]);
-      PRINTF("'\n");
+      LOG_DBG("JSON: '");
+      for(i = 0; i < json.name_len; i++) {
+        LOG_DBG_("%c", json.name[i]);
+      }
+      LOG_DBG_("':'");
+      for(i = 0; i < json.value_len; i++) {
+        LOG_DBG_("%c", json.value[i]);
+      }
+      LOG_DBG_("'\n");
       if(json.name[0] == 'n') {
         i = parse_path((const char *) json.value, json.value_len, &oid, &iid, &rid);
         if(i > 0) {
@@ -1085,10 +1083,10 @@ perform_multi_resource_write_op(lwm2m_object_t *object,
        future */
 
     if(coap_get_header_block1(ctx->request, &num, &more, &size, &offset)) {
-      PRINTF("CoAP BLOCK1: %d/%d/%d offset:%d\n", num, more, size, offset);
-      PRINTF("LWM2M CTX->offset= %d\n", ctx->offset);
-      PRINTF("Last TLV ID:%d final:%d\n", last_tlv_id,
-             lwm2m_object_is_final_incoming(ctx));
+      LOG_DBG("CoAP BLOCK1: %d/%d/%d offset:%d\n", num, more, size, offset);
+      LOG_DBG("LWM2M CTX->offset= %d\n", ctx->offset);
+      LOG_DBG("Last TLV ID:%d final:%d\n", last_tlv_id,
+              lwm2m_object_is_final_incoming(ctx));
       if(offset > 0) {
         status = process_tlv_write(ctx, object, last_tlv_id,
                                    inbuf, size);
@@ -1098,7 +1096,7 @@ perform_multi_resource_write_op(lwm2m_object_t *object,
 
     while(tlvpos < insize) {
       len = lwm2m_tlv_read(&tlv, &inbuf[tlvpos], insize - tlvpos);
-      PRINTF("Got TLV format First is: type:%d id:%d len:%d (p:%d len:%d/%d)\n",
+      LOG_DBG("Got TLV format First is: type:%d id:%d len:%d (p:%d len:%d/%d)\n",
              tlv.type, tlv.id, (int) tlv.length,
              (int) tlvpos, (int) len, (int) insize);
       if(tlv.type == LWM2M_TLV_TYPE_OBJECT_INSTANCE) {
@@ -1114,9 +1112,9 @@ perform_multi_resource_write_op(lwm2m_object_t *object,
         }
         while(pos < tlv.length && (len2 = lwm2m_tlv_read(&tlv2, &tlv.value[pos],
                                                        tlv.length - pos))) {
-          PRINTF("   TLV type:%d id:%d len:%d (len:%d/%d)\n",
-                 tlv2.type, tlv2.id, (int) tlv2.length,
-                 (int) len2, (int) insize);
+          LOG_DBG("   TLV type:%d id:%d len:%d (len:%d/%d)\n",
+                  tlv2.type, tlv2.id, (int)tlv2.length,
+                  (int)len2, (int)insize);
           if(tlv2.type == LWM2M_TLV_TYPE_RESOURCE) {
             last_tlv_id = tlv2.id;
             status = process_tlv_write(ctx, object, tlv2.id,
@@ -1172,13 +1170,12 @@ lwm2m_engine_add_object(lwm2m_object_instance_t *object)
 
   if(object == NULL || object->callback == NULL) {
     /* Insufficient object configuration */
-    PRINTF("lwm2m-engine: failed to register NULL object\n");
+    LOG_DBG("failed to register NULL object\n");
     return 0;
   }
   if(get_object(object->object_id) != NULL) {
     /* A generic object with this id has already been registered */
-    PRINTF("lwm2m-engine: object with id %u already registered\n",
-           object->object_id);
+    LOG_DBG("object with id %u already registered\n", object->object_id);
     return 0;
   }
 
@@ -1187,7 +1184,7 @@ lwm2m_engine_add_object(lwm2m_object_instance_t *object)
       instance = instance->next) {
     if(object->object_id == instance->object_id) {
       if(object->instance_id == instance->instance_id) {
-        PRINTF("lwm2m-engine: object with id %u/%u already registered\n",
+        LOG_DBG("object with id %u/%u already registered\n",
                instance->object_id, instance->instance_id);
         return 0;
       }
@@ -1236,19 +1233,19 @@ lwm2m_engine_add_generic_object(lwm2m_object_t *object)
      || object->impl->get_first == NULL
      || object->impl->get_next == NULL
      || object->impl->get_by_id == NULL) {
-    PRINTF("lwm2m-engine: failed to register NULL object\n");
+    LOG_WARN("failed to register NULL object\n");
     return 0;
   }
   if(get_object(object->impl->object_id) != NULL) {
     /* A generic object with this id has already been registered */
-    PRINTF("lwm2m-engine: object with id %u already registered\n",
-           object->impl->object_id);
+    LOG_WARN("object with id %u already registered\n",
+             object->impl->object_id);
     return 0;
   }
   if(has_non_generic_object(object->impl->object_id)) {
     /* An object with this id has already been registered */
-    PRINTF("lwm2m-engine: object with id %u already registered\n",
-           object->impl->object_id);
+    LOG_WARN("object with id %u already registered\n",
+             object->impl->object_id);
     return 0;
   }
   list_add(generic_object_list, object);
@@ -1346,9 +1343,9 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     uint16_t bsize;
     coap_get_header_block1(request, NULL, NULL, &bsize, NULL);
 
-    PRINTF("Block1 size:%d\n", bsize);
+    LOG_DBG("Block1 size:%d\n", bsize);
     if(bsize > COAP_MAX_BLOCK_SIZE) {
-      PRINTF("Entity too large...\n");
+      LOG_WARN("Entity too large: %u...\n", bsize);
       coap_set_status_code(response, REQUEST_ENTITY_TOO_LARGE_4_13);
       coap_set_header_size1(response, COAP_MAX_BLOCK_SIZE);
       return COAP_HANDLER_STATUS_PROCESSED;
@@ -1364,7 +1361,7 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   url_len = coap_get_header_uri_path(request, &url);
 
   if(url_len == 2 && strncmp("bs", url, 2) == 0) {
-    PRINTF("BOOTSTRAPPED!!!\n");
+    LOG_INFO("BOOTSTRAPPED!!!\n");
     coap_set_status_code(response, CHANGED_2_04);
     return COAP_HANDLER_STATUS_PROCESSED;
   }
@@ -1376,13 +1373,13 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     return COAP_HANDLER_STATUS_CONTINUE;
   }
 
-  PRINTF("%s URL:'", get_method_as_string(coap_get_method_type(request)));
-  PRINTS(url_len, url, "%c");
-  PRINTF("' CTX:%u/%u/%u dp:%u bs:%d\n", context.object_id, context.object_instance_id,
+  LOG_DBG("%s URL:'", get_method_as_string(coap_get_method_type(request)));
+  LOG_DBG_COAP_STRING(url, url_len);
+  LOG_DBG_("' CTX:%u/%u/%u dp:%u bs:%d\n", context.object_id, context.object_instance_id,
 	 context.resource_id, depth, buffer_size);
   /* Get format and accept */
   if(!coap_get_header_content_format(request, &format)) {
-    PRINTF("lwm2m: No format given. Assume text plain...\n");
+    LOG_DBG("No format given. Assume text plain...\n");
     format = TEXT_PLAIN;
   } else if(format == LWM2M_TEXT_PLAIN) {
     /* CoAP content format text plain - assume LWM2M text plain */
@@ -1390,11 +1387,10 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   }
   if(!coap_get_header_accept(request, &accept)) {
     if(format == TEXT_PLAIN && depth < 3) {
-      PRINTF("lwm2m: No Accept header, assume JSON\n");
+      LOG_DBG("No Accept header, assume JSON\n");
       accept = LWM2M_JSON;
     } else {
-      PRINTF("lwm2m: No Accept header, using same as content-format: %d\n",
-             format);
+      LOG_DBG("No Accept header, using same as content-format: %d\n", format);
       accept = format;
     }
   }
@@ -1407,7 +1403,7 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   if(depth < 1) {
     /* No possible object id found in URL - ignore request unless delete all */
     if(coap_get_method_type(request) == METHOD_DELETE) {
-      PRINTF("This is a delete all - for bootstrap...\n");
+      LOG_DBG("This is a delete all - for bootstrap...\n");
       context.operation = LWM2M_OP_DELETE;
       coap_set_status_code(response, DELETED_2_02);
 
@@ -1435,8 +1431,8 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     /* ALLOW generic instance if CREATE / WRITE*/
     instance = create_instance(&context, object);
     if(instance == NULL) {
-      PRINTF("lwm2m-engine: failed to create instance %u/%u\n",
-             context.object_id, context.object_instance_id);
+      LOG_WARN("failed to create instance %u/%u\n",
+               context.object_id, context.object_instance_id);
     }
   }
 
@@ -1449,9 +1445,9 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     return COAP_HANDLER_STATUS_CONTINUE;
   }
 
-  PRINTF("lwm2m: Context: %u/%u/%u  found: %d\n",
-         context.object_id,
-         context.object_instance_id, context.resource_id, depth);
+  LOG_INFO("Context: %u/%u/%u  found: %d\n",
+           context.object_id, context.object_instance_id,
+           context.resource_id, depth);
 
   /*
    * Select reader and writer based on provided Content type and
@@ -1492,24 +1488,25 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     break;
   }
 
-#if DEBUG
-  /* for debugging */
-  PRINTPRE("lwm2m: [", url_len, url);
-  PRINTF("] %s Format:%d ID:%d bsize:%u offset:%d\n",
-         get_method_as_string(coap_get_method_type(request)),
-         format, context.object_id, buffer_size,
-         offset != NULL ? ((int)*offset) : 0);
-  if(format == TEXT_PLAIN) {
-    /* a string */
-    const uint8_t *data;
-    int plen = coap_get_payload(request, &data);
-    if(plen > 0) {
-      PRINTF("Data: '");
-      PRINTS(plen, data, "%c");
-      PRINTF("'\n");
+  if(LOG_DBG_ENABLED) {
+    /* for debugging */
+    LOG_DBG("[");
+    LOG_DBG_COAP_STRING(url, url_len);
+    LOG_DBG_("] %s Format:%d ID:%d bsize:%u offset:%d\n",
+             get_method_as_string(coap_get_method_type(request)),
+             format, context.object_id, buffer_size,
+             offset != NULL ? ((int)*offset) : 0);
+    if(format == TEXT_PLAIN) {
+      /* a string */
+      const uint8_t *data;
+      int plen = coap_get_payload(request, &data);
+      if(plen > 0) {
+        LOG_DBG("Data: '");
+        LOG_DBG_COAP_STRING((const char *)data, plen);
+        LOG_DBG_("'\n");
+      }
     }
   }
-#endif /* DEBUG */
 
   /* PUT/POST - e.g. write will not send in offset here - Maybe in the future? */
   if((offset != NULL && *offset == 0) &&
@@ -1552,19 +1549,20 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   if(success == LWM2M_STATUS_OK) {
     /* Handle blockwise 1 */
     if(coap_is_option(request, COAP_OPTION_BLOCK1)) {
-      PRINTF("Setting BLOCK 1 num:%d o2:%d o:%d\n", (int) bnum, (int) boffset,
-             (int) (offset != NULL ? *offset : 0));
+      LOG_DBG("Setting BLOCK 1 num:%d o2:%d o:%d\n", (int) bnum, (int) boffset,
+              (int) (offset != NULL ? *offset : 0));
       coap_set_header_block1(response, bnum, 0, bsize);
     }
 
     if(context.outbuf->len > 0) {
-      PRINTPRE("lwm2m: [", url_len, url);
-      PRINTF("] replying with %u bytes\n", context.outbuf->len);
+      LOG_DBG("[");
+      LOG_DBG_COAP_STRING(url, url_len);
+      LOG_DBG_("] replying with %u bytes\n", context.outbuf->len);
       coap_set_payload(response, context.outbuf->buffer, context.outbuf->len);
       coap_set_header_content_format(response, context.content_type);
 
       if(offset != NULL) {
-        PRINTF("Setting new offset: oo %d, no: %d\n", *offset, context.offset);
+        LOG_DBG("Setting new offset: oo %d, no: %d\n", *offset, context.offset);
         if(context.writer_flags & WRITER_HAS_MORE) {
           *offset = context.offset;
         } else {
@@ -1573,8 +1571,9 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
         }
       }
     } else {
-      PRINTPRE("lwm2m: [", url_len, url);
-      PRINTF("] no data in reply\n");
+      LOG_DBG("[");
+      LOG_DBG_COAP_STRING(url, url_len);
+      LOG_DBG_("] no data in reply\n");
     }
   } else {
     switch(success) {
@@ -1598,8 +1597,9 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
       coap_set_status_code(response, INTERNAL_SERVER_ERROR_5_00);
       break;
     }
-    PRINTPRE("lwm2m: [", url_len, url);
-    PRINTF("] resource failed: %s\n", get_status_as_string(success));
+    LOG_WARN("[");
+    LOG_WARN_COAP_STRING(url, url_len);
+    LOG_WARN("] resource failed: %s\n", get_status_as_string(success));
   }
   return COAP_HANDLER_STATUS_PROCESSED;
 }
