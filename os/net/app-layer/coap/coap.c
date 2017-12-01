@@ -544,8 +544,6 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       return BAD_REQUEST_4_00;
     }
 
-    option_number += option_delta;
-
     PRINTF("OPTION %u (delta %u, len %zu): ", option_number, option_delta,
            option_length);
 
