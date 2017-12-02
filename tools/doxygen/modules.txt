@@ -89,7 +89,12 @@ Core system components such as processes and timers
 */
 
 /**
-\defgroup dev CPUs and Device driver
+\defgroup cpu CPUs
+\ingroup arch
+*/
+
+/**
+\defgroup dev Device Drivers
 \ingroup arch
 */
 
