@@ -1,0 +1,4 @@
+/**
+ * \defgroup native_platform Native platform
+ * \ingroup platform
+ */
