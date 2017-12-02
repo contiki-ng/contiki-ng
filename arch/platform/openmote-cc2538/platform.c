@@ -32,7 +32,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup platform
+ * \addtogroup cc2538-platforms
  * @{
  *
  * \defgroup openmote-cc2538 OpenMote-CC2538 platform
