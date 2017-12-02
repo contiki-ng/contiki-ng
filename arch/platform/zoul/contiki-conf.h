@@ -29,7 +29,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup platform
+ * \addtogroup zoul-core
  * @{
  *
  * \defgroup zoul-platforms Zolertia Zoul platforms
