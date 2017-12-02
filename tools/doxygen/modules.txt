@@ -19,11 +19,6 @@ CPU, device drivers and platform code
  */
 
 /**
- * \addtogroup exp5438 MSP430F5438 Experimenter Board
- * \ingroup platform
- */
-
-/**
  * \addtogroup jn516x The JN516x Board
  * \ingroup platform
  */
