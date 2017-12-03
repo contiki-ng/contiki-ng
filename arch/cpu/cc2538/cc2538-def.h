@@ -60,6 +60,9 @@
 /*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
 #define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
+
+/* Path to headers with implementation of mutexes and memory barriers */
+#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
 /*---------------------------------------------------------------------------*/
 #endif /* CC2538_DEF_H_ */
