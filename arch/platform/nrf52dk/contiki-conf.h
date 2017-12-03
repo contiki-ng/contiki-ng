@@ -49,6 +49,7 @@
 /*---------------------------------------------------------------------------*/
 /* Include platform peripherals configuration */
 #include "platform-conf.h"
+#include "nrf52832-def.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name Network Stack Configuration
