@@ -28,13 +28,7 @@
  *
  */
 /**
- * \addtogroup dev
- * @{
- *
- * \addtogroup nrf52832
- * @{
- *
- * \addtogroup nrf52832-ble Bluetooth Low Energy drivers
+ * \addtogroup nrf52832-ble
  * @{
  *
  * \file
@@ -231,8 +225,4 @@ ble_evt_dispatch(ble_evt_t *p_ble_evt)
   on_ble_evt(p_ble_evt);
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- * @}
- */
+/** @} */
