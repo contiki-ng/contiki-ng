@@ -1,0 +1,4 @@
+/**
+ * \defgroup arm Support for Arm CPUs
+ * \ingroup cpu
+ */

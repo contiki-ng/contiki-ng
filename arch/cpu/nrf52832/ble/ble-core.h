@@ -28,13 +28,10 @@
  *
  */
 /**
- * \addtogroup dev
- * @{
- *
  * \addtogroup nrf52832
  * @{
  *
- * \addtogroup nrf52832-ble Bluetooth Low Energy drivers
+ * \defgroup nrf52832-ble Bluetooth Low Energy drivers
  * @{
  *
  * \file
@@ -55,7 +52,6 @@ void ble_get_mac(uint8_t addr[8]);
 #endif /* DEV_BLE_H_ */
 
 /**
- * @}
  * @}
  * @}
  */

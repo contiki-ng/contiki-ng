@@ -40,6 +40,7 @@
  * is comercialized by OpenMote Technologies since 2014. It is the first
  * commercial platform based on the powerful TI CC2538 SoC. It uses a
  * XBee form-factor to ease prototyping.
+ * @{
  *
  * \file
  *  Configuration for the OpenMote-CC2538 platform
@@ -412,7 +413,7 @@ typedef uint32_t rtimer_clock_t;
 #ifndef CCM_STAR_CONF
 #define CCM_STAR_CONF           cc2538_ccm_star_driver /**< AES-CCM* driver */
 #endif
-
+/** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
 /*---------------------------------------------------------------------------*/
