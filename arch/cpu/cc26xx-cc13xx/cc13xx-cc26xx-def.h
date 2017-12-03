@@ -95,6 +95,9 @@
 /*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
 #define CMSIS_CONF_HEADER_PATH               "cc13x0-cc26x0-cm3.h"
+
+/* Path to headers with implementation of mutexes and memory barriers */
+#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
 /*---------------------------------------------------------------------------*/
 #endif /* CC13XX_CC26XX_DEF_H_ */
