@@ -53,51 +53,7 @@
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
 /*---------------------------------------------------------------------------*/
-/**
- * \name Compiler configuration and platform-specific type definitions
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define CLOCK_CONF_SECOND 128
-
-/* Compiler configurations */
-#define CCIF
-#define CLIF
-
-/* Platform typedefs */
-typedef uint32_t clock_time_t;
-typedef uint32_t uip_stats_t;
-
-/*
- * rtimer.h typedefs rtimer_clock_t as unsigned short. We need to define
- * RTIMER_CLOCK_DIFF to override this
- */
-typedef uint32_t rtimer_clock_t;
-#define RTIMER_CLOCK_DIFF(a, b)     ((int32_t)((a) - (b)))
-/** @} */
-/*---------------------------------------------------------------------------*/
-/* 352us from calling transmit() until the SFD byte has been sent */
-#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
-/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT 0
-#ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this.
- * Slot length 10000 usec
- *             328 ticks
- * Tick duration 30.517578125 usec
- * Real slot duration 10009.765625 usec
- * Target - real duration = -9.765625 usec
- * TSCH_CONF_BASE_DRIFT_PPM -977
- */
-#define TSCH_CONF_BASE_DRIFT_PPM -977
-#endif
-
-#if MAC_CONF_WITH_TSCH
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* MAC_CONF_WITH_TSCH */
+#include "cc2538-def.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name Serial Boot Loader Backdoor configuration
