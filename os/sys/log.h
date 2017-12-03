@@ -166,10 +166,10 @@ extern struct log_module all_modules[];
 #define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
 /* For testing log level */
-#define LOG_ERR_ENABLED        (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_ERR)
-#define LOG_WARN_ENABLED       (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_WARN)
-#define LOG_INFO_ENABLED       (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_INFO)
-#define LOG_DBG_ENABLED        (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_DBG)
+#define LOG_ERR_ENABLED        ((LOG_LEVEL) >= LOG_LEVEL_ERR)
+#define LOG_WARN_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_WARN)
+#define LOG_INFO_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_INFO)
+#define LOG_DBG_ENABLED        ((LOG_LEVEL) >= LOG_LEVEL_DBG)
 
 #if NETSTACK_CONF_WITH_IPV6
 
