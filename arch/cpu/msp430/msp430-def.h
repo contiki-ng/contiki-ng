@@ -106,6 +106,8 @@ void *w_memset(void *out, int value, size_t n);
 #endif /* memcpy */
 #endif /* __GNUC__ &&  __MSP430__ && MSP430_MEMCPY_WORKAROUND */
 
+#define memory_barrier()   asm volatile("" : : : "memory")
+
 #define MSP430_REQUIRE_CPUON 0
 #define MSP430_REQUIRE_LPM1 1
 #define MSP430_REQUIRE_LPM2 2
