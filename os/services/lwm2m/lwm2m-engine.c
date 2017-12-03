@@ -362,7 +362,7 @@ void lwm2m_engine_set_opaque_callback(lwm2m_context_t *ctx, lwm2m_write_opaque_c
 {
   /* Here we should set the callback for the opaque that we are currently generating... */
   /* And we should in the future associate the callback with the CoAP message info - MID */
-  LOG_DBG("Setting opaque handler - offset: %d,%d\n",
+  LOG_DBG("Setting opaque handler - offset: %"PRIu32",%d\n",
           ctx->offset, ctx->outbuf->len);
 
   current_opaque_offset = 0;
@@ -655,7 +655,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
     return LWM2M_STATUS_SERVICE_UNAVAILABLE;
   }
 
-  LOG_DBG("MultiRead: %d/%d/%d lv:%d offset:%d\n",
+  LOG_DBG("MultiRead: %d/%d/%d lv:%d offset:%"PRIu32"\n",
           ctx->object_id, ctx->object_instance_id, ctx->resource_id,
           ctx->level, ctx->offset);
 
@@ -696,7 +696,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
     if(instance->resource_ids != NULL && instance->resource_count > 0) {
       /* show all the available resources (or read all) */
       while(last_rsc_pos < instance->resource_count) {
-        LOG_DBG("READ: %x %x %x lv:%d\n",
+        LOG_DBG("READ: 0x%"PRIx32" 0x%x 0x%x lv:%d\n",
                 instance->resource_ids[last_rsc_pos],
                 RSC_ID(instance->resource_ids[last_rsc_pos]),
                 ctx->resource_id, ctx->level);
@@ -1083,8 +1083,9 @@ perform_multi_resource_write_op(lwm2m_object_t *object,
        future */
 
     if(coap_get_header_block1(ctx->request, &num, &more, &size, &offset)) {
-      LOG_DBG("CoAP BLOCK1: %d/%d/%d offset:%d\n", num, more, size, offset);
-      LOG_DBG("LWM2M CTX->offset= %d\n", ctx->offset);
+      LOG_DBG("CoAP BLOCK1: %"PRIu32"/%d/%d offset:%"PRIu32
+              "  LWM2M CTX->offset=%"PRIu32"\n",
+              num, more, size, offset, ctx->offset);
       LOG_DBG("Last TLV ID:%d final:%d\n", last_tlv_id,
               lwm2m_object_is_final_incoming(ctx));
       if(offset > 0) {
@@ -1562,7 +1563,8 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
       coap_set_header_content_format(response, context.content_type);
 
       if(offset != NULL) {
-        LOG_DBG("Setting new offset: oo %d, no: %d\n", *offset, context.offset);
+        LOG_DBG("Setting new offset: oo %"PRIu32
+                ", no: %"PRIu32"\n", *offset, context.offset);
         if(context.writer_flags & WRITER_HAS_MORE) {
           *offset = context.offset;
         } else {

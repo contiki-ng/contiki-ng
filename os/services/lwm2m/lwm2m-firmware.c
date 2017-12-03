@@ -39,6 +39,7 @@
 #include "lwm2m-engine.h"
 #include "lwm2m-firmware.h"
 #include "coap.h"
+#include <inttypes.h>
 #include <string.h>
 
 /* Log configuration */
@@ -110,15 +111,16 @@ lwm2m_callback(lwm2m_object_instance_t *object,
 
     if(LOG_DBG_ENABLED) {
       if(coap_get_header_block1(ctx->request, &num, &more, &size, &offset)) {
-        LOG_DBG("CoAP BLOCK1: %d/%d/%d offset:%d\n", num, more, size, offset);
-        LOG_DBG("LWM2M CTX->offset= %d\n", ctx->offset);
+        LOG_DBG("CoAP BLOCK1: %"PRIu32"/%u/%u offset:%"PRIu32
+                " LWM2M CTX->offset=%"PRIu32"\n",
+                num, more, size, offset, ctx->offset);
       }
     }
 
     switch(ctx->resource_id) {
     case UPDATE_PACKAGE:
       /* The firmware is written */
-      LOG_DBG("Firmware received: %d %d fin:%d\n", ctx->offset,
+      LOG_DBG("Firmware received: %"PRIu32" %d fin:%d\n", ctx->offset,
               (int)ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
       if(lwm2m_object_is_final_incoming(ctx)) {
         state = STATE_DOWNLOADED;
@@ -128,7 +130,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       return LWM2M_STATUS_OK;
     case UPDATE_PACKAGE_URI:
       /* The firmware URI is written */
-      LOG_DBG("Firmware URI received: %d %d fin:%d\n", ctx->offset,
+      LOG_DBG("Firmware URI received: %"PRIu32" %d fin:%d\n", ctx->offset,
               (int)ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
       if(LOG_DBG_ENABLED) {
         int i;

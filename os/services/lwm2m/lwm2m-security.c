@@ -44,6 +44,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <inttypes.h>
 #include "lwm2m-object.h"
 #include "lwm2m-engine.h"
 #include "lwm2m-server.h"
@@ -100,7 +101,7 @@ create_instance(uint16_t instance_id, lwm2m_status_t *status)
         sizeof(resources) / sizeof(lwm2m_resource_id_t);
       list_add(instances_list, &instances[i].instance);
 
-      LOG_DBG("Create new security instance\n");
+      LOG_DBG("Create new security instance %u\n", instance_id);
       return &instances[i].instance;
     }
   }
@@ -194,7 +195,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       {
         int32_t v2;
         value = lwm2m_object_read_int(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &v2);
-        LOG_DBG("Writing security MODE value: %d len: %d\n", v2,
+        LOG_DBG("Writing security MODE value: %"PRId32" len: %d\n", v2,
                 (int)ctx->inbuf->size);
         security->security_mode = v2;
       }
