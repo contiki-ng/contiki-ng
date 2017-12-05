@@ -61,7 +61,7 @@
 #define DEEP_SLEEP_PM1_THRESHOLD    10
 #define DEEP_SLEEP_PM2_THRESHOLD    100
 /*---------------------------------------------------------------------------*/
-#define assert_wfi() do { asm("wfi"::); } while(0)
+#define assert_wfi() do { __asm("wfi"::); } while(0)
 /*---------------------------------------------------------------------------*/
 #if LPM_CONF_STATS
 rtimer_clock_t lpm_stats[3];

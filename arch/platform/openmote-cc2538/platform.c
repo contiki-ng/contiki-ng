@@ -32,7 +32,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup platform
+ * \addtogroup cc2538-platforms
  * @{
  *
  * \defgroup openmote-cc2538 OpenMote-CC2538 platform
@@ -91,11 +91,11 @@ fade(unsigned char l)
 
     leds_on(l);
     for(i = 0; i < j; ++i) {
-      asm("nop");
+      __asm("nop");
     }
     leds_off(l);
     for(i = 0; i < 400 - j; ++i) {
-      asm("nop");
+      __asm("nop");
     }
   }
 }

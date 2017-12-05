@@ -1,4 +1,9 @@
 /**
+ * \defgroup cmsis CMSIS (Cortex Microcontroller Software Interface Standard)
+ * \ingroup arm
+ */
+
+/**
  * \addtogroup  CMSIS_Core_FunctionInterface
  * \ingroup     cmsis
  */
@@ -39,7 +44,7 @@
  */
 
 /**
- * \defgroup Cortex-M0+ Cortex-M0+
+ * \defgroup Cortex_M0_plus Cortex-M0+
  * \ingroup cmsis
  */
 

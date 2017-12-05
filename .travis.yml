@@ -1,93 +1,33 @@
-# Workaround for the issue found in the stable image promoted on Dec 1, 2016.
-# See https://github.com/travis-ci/travis-ci/issues/6928#issuecomment-264227708
-group: deprecated
-
-before_install:
-  - sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+# Setup environment for Docker
+language: generic
+services: docker
 
 notifications:
-  email: false
-language: c #NOTE: this will set CC=gcc which might cause trouble
-before_script:
-  - WGET="travis_retry wget --continue --tries=20 --waitretry=10 --retry-connrefused --no-dns-cache --timeout 300"
-  - sudo apt-get -qq update
+  - email: false
 
-  ## Support building a binary that is identical to the CI
-  - echo -n "Contiki-NG will be compiled with RELSTR=" ; git --git-dir .git describe --tags --always
+before_install:
+  # Environment setup before test script
+  - export CNG_HOST_PATH=`pwd`
+  - export DOCKER_IMG='simonduq/contiki-ng:latest'
+  - sudo chgrp -hR 1000 $CNG_HOST_PATH
+  - docker pull $DOCKER_IMG
+  - ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar
 
-  ## Install 32-bit compatibility libraries
-  - sudo apt-get -qq install libc6:i386 libgcc1:i386 gcc-4.6-base:i386
-      libstdc++5:i386 libstdc++6:i386 lib32z1
-
-  ## Install doxygen
-  - if [ ${BUILD_CATEGORY:-0} = doxygen ] ; then
-      sudo add-apt-repository ppa:libreoffice/ppa -y && sudo apt-get -qq update &&
-      sudo apt-get --no-install-suggests --no-install-recommends -qq install doxygen  &&
-      doxygen --version ;
-    fi
-
-  ## Install msp430 toolchain
-  - if [ ${BUILD_ARCH:-0} = msp430 ] ; then
-      $WGET http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &&
-      tar xjf mspgcc*.tar.bz2 -C /tmp/ &&
-      sudo cp -f -r /tmp/msp430/* /usr/local/ &&
-      rm -rf /tmp/msp430 mspgcc*.tar.bz2 &&
-      msp430-gcc --version ;
-    fi
-
-  ## Install mainline ARM toolchain, srecord and nRF52 SDK
-  - if [ ${BUILD_ARCH:-0} = arm-aapcs ] ; then
-      sudo apt-get -qq install srecord &&
-      $WGET https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 &&
-      tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/ &&
-      sudo cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/ &&
-      rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2 &&
-      arm-none-eabi-gcc --version &&
-      $WGET https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip &&
-      mkdir /tmp/nrf52-sdk &&
-      unzip nrf5_iot_sdk_3288530.zip -d /tmp/nrf52-sdk &&
-      export NRF52_SDK_ROOT=/tmp/nrf52-sdk ;
-    fi
-
-  ## Install NXP toolchain
-  - if [ ${BUILD_ARCH:-0} = jn516x ] ; then
-      $WGET http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 &&
-      $WGET http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part2.tar.bz2 &&
-      $WGET http://simonduq.github.io/resources/jn516x-sdk-4163-1416.tar.bz2 &&
-      mkdir /tmp/jn516x-sdk /tmp/ba-elf-gcc &&
-      tar xjf jn516x-sdk-*.tar.bz2 -C /tmp/jn516x-sdk &&
-      tar xjf ba-elf-gcc-*part1.tar.bz2 -C /tmp/ba-elf-gcc &&
-      tar xjf ba-elf-gcc-*part2.tar.bz2 -C /tmp/ba-elf-gcc &&
-      sudo cp -f -r /tmp/jn516x-sdk /usr/ &&
-      sudo cp -f -r /tmp/ba-elf-gcc /usr/ &&
-      export PATH=/usr/ba-elf-gcc/bin:$PATH &&
-      rm -rf /tmp/ba-elf-gcc* /tmp/jn516x-sdk* &&
-      ba-elf-gcc --version ;
-    fi
-
-  ## Compile cooja.jar only when it's going to be needed
-  - if [ ${BUILD_CATEGORY:-0} = sim ] ; then
-      java -version &&
-      ant -q -f tools/cooja/build.xml jar &&
-      sudo java -Xshare:dump -version ;
-    fi
-
-script:
-  ## tests/Makefile handles most of generic logic
-  - "make -C tests/??-$BUILD_TYPE"
-  - "tests/check-test.sh tests/??-$BUILD_TYPE; exit $?"
+script: # The test script for each build.
+  - docker run --privileged -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash -c "make -C tests/??-$TEST_NAME";
+  # Check outcome of the test
+  - $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST_NAME; exit $?;
 
 env:
-  ## This magically kick-off parallel jobs for each of the for the sets
-  ## of environment variable defined below
-  - BUILD_TYPE='compile-base' BUILD_CATEGORY='compile' BUILD_ARCH='msp430'
-  - BUILD_TYPE='compile-arm-ports-01' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
-  - BUILD_TYPE='compile-arm-ports-02' BUILD_CATEGORY='compile' BUILD_ARCH='arm-aapcs'
-  - BUILD_TYPE='compile-nxp-ports' BUILD_CATEGORY='compile' BUILD_ARCH='jn516x'
-  - BUILD_TYPE='compile-tools' BUILD_CATEGORY='compile'
-  - BUILD_TYPE='rpl-lite' BUILD_CATEGORY='sim'
-  - BUILD_TYPE='rpl-classic' BUILD_CATEGORY='sim'
-  - BUILD_TYPE='tun-rpl-br' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
-  - BUILD_TYPE='simulation-base' BUILD_CATEGORY='sim' BUILD_ARCH='msp430'
-  - BUILD_TYPE='ieee802154' BUILD_CATEGORY='sim'
-  - BUILD_TYPE='doxygen' BUILD_CATEGORY='doxygen'
+  # Parallel builds
+  - TEST_NAME='compile-base'
+  - TEST_NAME='compile-arm-ports-01'
+  - TEST_NAME='compile-arm-ports-02'
+  - TEST_NAME='rpl-lite'
+  - TEST_NAME='rpl-classic'
+  - TEST_NAME='tun-rpl-br'
+  - TEST_NAME='simulation-base'
+  - TEST_NAME='ieee802154'
+  - TEST_NAME='compile-nxp-ports'
+  - TEST_NAME='doxygen'
+  - TEST_NAME='compile-tools'

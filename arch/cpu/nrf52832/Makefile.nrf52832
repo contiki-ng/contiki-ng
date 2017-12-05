@@ -46,19 +46,6 @@ OBJECT_DIRECTORY = $(OBJECTDIR)
 LISTING_DIRECTORY := $(OBJECTDIR)
 OUTPUT_BINARY_DIRECTORY := bin_$(TARGET)
 
-MK := mkdir
-RM := rm -rf
-
-# Toolchain commands
-CC := arm-none-eabi-gcc
-AS := arm-none-eabi-as
-AR := arm-none-eabi-ar
-LD := arm-none-eabi-ld
-NM := arm-none-eabi-nm
-OBJDUMP := arm-none-eabi-objdump
-OBJCOPY := arm-none-eabi-objcopy
-SIZE := arm-none-eabi-size
-
 # JLink
 JLINK := $(NRF52_JLINK_PATH)/JLinkExe
 JLINK_OPTS = -Device NRF52 -if swd -speed 1000
@@ -141,20 +128,10 @@ EXTERNALDIRS += $(addprefix $(NRF52_SDK_ROOT)/, $(INC_PATHS))
 # Sorting removes duplicates
 BUILD_DIRECTORIES := $(sort $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY))
 
-# Clean files and directories
-CLEAN += bin_$(TARGET) lst_$(TARGET) nrf52832.a *.elf *.hex
-
 #flags common to all targets
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -DS132
-endif
-
-SMALL ?= 1
-ifeq ($(SMALL),1)
-CFLAGS += -Os
-else
-CFLAGS += -O2
 endif
 
 CFLAGS += -DNRF52
@@ -163,22 +140,12 @@ CFLAGS += -D__HEAP_SIZE=512
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DBLE_STACK_SUPPORT_REQD
-CFLAGS += -mcpu=cortex-m4
-CFLAGS += -mthumb -mabi=aapcs --std=gnu99
-CFLAGS += -Wall
-ifeq ($(WERROR),1)
-CFLAGS += -Werror
-endif
 CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-# keep every function in separate section. This will allow linker to dump unused functions
-CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
-CFLAGS += -fno-builtin --short-enums
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
-LDFLAGS += -mthumb -mabi=aapcs -L $(TEMPLATE_PATH) -T$(LINKER_SCRIPT)
-LDFLAGS += -mcpu=cortex-m4
+LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH) -T$(LINKER_SCRIPT)
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker to dump unused sections
 LDFLAGS += -Wl,--gc-sections
@@ -212,40 +179,14 @@ OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
 TARGET_LIBS= nrf52832.a $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
-### Don't treat the .elf as intermediate
-.PRECIOUS: %.hex %.bin
-
 nrf52832.a: $(OBJECTS)
 	$(TRACE_AR)
 	$(Q)$(AR) $(AROPTS) $@ $^
-
-### Compilation rules
-CUSTOM_RULE_LINK=1
-
-%.elf: $(TARGET_STARTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(TARGET_LIBS)
-	$(TRACE_LD)
-	$(Q)$(CC) $(LDFLAGS) ${filter %o %.co %.a,$^} -o $@
 
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
 	@echo Compiling file: $(notdir $<)
 	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
-
-# Create binary file from the .out file
-%.bin: %.elf
-	@echo Preparing: $@
-	$(Q)$(OBJCOPY) -O binary $^ $@
-
-# Create binary .hex file from the .out file
-%.hex: %.elf
-	@echo Preparing: $@
-	$(Q)$(OBJCOPY) -O ihex $^ $@
-
-### We don't really need the .hex and .bin for the .$(TARGET) but let's make
-### sure they get built
-%.$(TARGET): %.elf %.hex %.bin
-	cp $*.elf $@
-	$(Q)$(SIZE) $@
 
 %.jlink:
 	sed -e 's/#OUTPUT_FILENAME#/$*.hex/' $(CONTIKI_CPU)/flash.jlink > $@
@@ -265,3 +206,5 @@ erase:
 	$(JLINK) $(JLINK_OPTS) -CommanderScript $(CONTIKI_CPU)/erase.jlink
 
 .PHONY: softdevice.jlink
+
+include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4

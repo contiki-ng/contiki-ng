@@ -29,22 +29,6 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup platform
- * @{
- *
- * \defgroup cc26xx-platforms TI CC26xx-powered platforms
- * @{
- *
- * \defgroup cc26xx The TI CC26xx and CC13xx CPUs
- *
- * This group documents the TI CC26xx and CC13xx CPUs. The two CPU families are
- * very similar, with the main difference being related to radio capability.
- *
- * Documentation in this group should be considered to be applicable to both
- * families, unless explicitly stated otherwise.
- *
- * @{
- *
  * \addtogroup cc26xx-clocks
  * @{
  *
@@ -228,9 +212,6 @@ clock_delay(unsigned int i)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @}
- * @}
- * @}
  * @}
  * @}
  */

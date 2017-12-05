@@ -1,52 +1,17 @@
-CC      = arm-none-eabi-gcc
-CPP     = arm-none-eabi-cpp
-LD      = arm-none-eabi-gcc
-AR      = arm-none-eabi-ar
-OBJCOPY = arm-none-eabi-objcopy
-OBJDUMP = arm-none-eabi-objdump
-NM      = arm-none-eabi-nm
-
 ifndef SOURCE_LDSCRIPT
 SOURCE_LDSCRIPT = $(CONTIKI_CPU)/cc2538.lds
 endif
 LDSCRIPT = $(OBJECTDIR)/cc2538.ld
 
-CFLAGS += -mcpu=cortex-m3 -mthumb -mlittle-endian
-CFLAGS += -ffunction-sections -fdata-sections
-CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing
-CFLAGS += -Wall -DCMSIS_DEV_HDR=\"cc2538_cm3.h\"
-LDFLAGS += -mcpu=cortex-m3 -mthumb -nostartfiles
-LDFLAGS += -T $(LDSCRIPT)
-LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
-LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map),--cref,--no-warn-mismatch
-OBJCOPY_FLAGS += -O binary --gap-fill 0xff
-OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
-
-ifeq ($(WERROR),1)
-CFLAGS += -Werror
-endif
-
-### Are we building with code size optimisations?
-SMALL ?= 1
-ifeq ($(SMALL),1)
-  CFLAGS += -Os
-else
-  CFLAGS += -O2
-endif
+CFLAGS += -DCMSIS_DEV_HDR=\"cc2538_cm3.h\"
 
 ### If the user-specified a Node ID, pass a define
 ifdef NODEID
   CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
 endif
 
-### CPU-dependent cleanup files
-CLEAN += *.d *.elf *.hex
-
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS = ../arm/common/CMSIS . dev usb usb/common usb/common/cdc-acm
-
-### Use the existing debug I/O in arch/cpu/arm/common
-CONTIKI_CPU_DIRS += ../arm/common/dbg-io
+CONTIKI_CPU_DIRS = . dev usb usb/common usb/common/cdc-acm
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += soc.c clock.c rtimer-arch.c uart.c watchdog.c
@@ -66,22 +31,12 @@ DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
 
 USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descriptors.c
 
-ifneq ($(TARGET_START_SOURCEFILES),)
-  CPU_START_SOURCEFILES = TARGET_START_SOURCEFILES
-else
-  CPU_START_SOURCEFILES = startup-gcc.c
-endif
-CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
+CPU_START_SOURCEFILES = startup-gcc.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 CONTIKI_SOURCEFILES += $(USB_SOURCEFILES)
 
-MODULES += os/lib/newlib
-
 .SECONDEXPANSION:
-
-### Don't treat the .elf as intermediate
-.PRECIOUS: %.elf %.hex %.bin
 
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
 FORCE:
@@ -89,27 +44,6 @@ FORCE:
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
-
-### Compilation rules
-CUSTOM_RULE_LINK=1
-
-%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT)
-	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
-
-%.hex: %.elf
-	$(OBJCOPY) -O ihex $< $@
-
-%.bin: %.elf
-	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
-
-%.lst: %.elf
-	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
-
-### We don't really need the .hex and .bin for the .$(TARGET) but let's make
-### sure they get built
-%.$(TARGET): %.elf %.hex %.bin
-	cp $< $@
 
 ### This rule is used to generate the correct linker script
 LDGENFLAGS += $(CFLAGS)
@@ -121,3 +55,5 @@ LDGENFLAGS += -x c -P -E
 $(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
+
+include $(CONTIKI)/arch/cpu/arm/cortex-m/cm3/Makefile.cm3
