@@ -101,5 +101,6 @@ int strcasecmp(const char*, const char*);
 
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
 #define PLATFORM_CONF_MAIN_ACCEPTS_ARGS  1
+#define PLATFORM_CONF_SUPPORTS_STACK_CHECK 0
 
 #endif /* CONTIKI_CONF_H_ */

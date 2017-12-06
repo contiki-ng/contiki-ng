@@ -182,6 +182,9 @@ endif # SMALL
 
 endif # IAR
 
+# Define the `_stack` symbol used by the stack check library to be equal to `_end`
+LDFLAGS += -Wl,--defsym=_stack=_end
+
 CFLAGS  += $(CFLAGSNO)
 
 PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}

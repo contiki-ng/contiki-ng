@@ -44,6 +44,7 @@
 #include "contiki-net.h"
 #include "sys/platform.h"
 #include "sys/energest.h"
+#include "sys/stack-check.h"
 #include "dev/watchdog.h"
 
 #include "services/orchestra/orchestra.h"
@@ -76,6 +77,10 @@ main(void)
   watchdog_init();
 
   energest_init();
+
+#if STACK_CHECK_ENABLED
+  stack_check_init();
+#endif
 
   platform_init_stage_two();
 
