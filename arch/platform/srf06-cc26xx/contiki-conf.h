@@ -94,7 +94,9 @@
 #define CSMA_CONF_SEND_SOFT_ACK              1
 
 #else /* CC13XX_CONF_PROP_MODE */
+#ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO        ieee_mode_driver
+#endif
 
 #define CSMA_CONF_SEND_SOFT_ACK              0
 #endif /* CC13XX_CONF_PROP_MODE */
@@ -269,7 +271,7 @@ typedef uint32_t rtimer_clock_t;
 #if (RTIMER_SECOND % 256) || (RADIO_TIMER_SECOND % 256)
 #error RADIO_TO_RTIMER macro must be fixed!
 #endif
-#define RADIO_TO_RTIMER(X)   ((uint32_t)(((uint64_t)(X) * (RTIMER_SECOND / 256)) / (RADIO_TIMER_SECOND / 256)))
+#define RADIO_TO_RTIMER(X)   ((uint32_t)(((uint64_t)(X)*(RTIMER_SECOND / 256)) / (RADIO_TIMER_SECOND / 256)))
 #define USEC_TO_RADIO(X)     ((X) * 4)
 
 /* The PHY header (preamble + SFD, 4+1 bytes) duration is equivalent to 10 symbols */
@@ -279,7 +281,7 @@ typedef uint32_t rtimer_clock_t;
 #define TSCH_CONF_RADIO_ON_DURING_TIMESLOT 1
 
 /* Disable TSCH frame filtering */
-#define TSCH_CONF_HW_FRAME_FILTERING	0
+#define TSCH_CONF_HW_FRAME_FILTERING  0
 
 /* Use hardware timestamps */
 #ifndef TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
