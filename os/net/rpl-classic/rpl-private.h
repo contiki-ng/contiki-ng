@@ -199,13 +199,6 @@
 #define RPL_ROUTE_FROM_MULTICAST_DAO    2
 #define RPL_ROUTE_FROM_DIO              3
 
-/* Multicast Route Lifetime as a multiple of the lifetime unit */
-#ifdef RPL_CONF_MCAST_LIFETIME
-#define RPL_MCAST_LIFETIME RPL_CONF_MCAST_LIFETIME
-#else
-#define RPL_MCAST_LIFETIME 3
-#endif
-
 /* DIS related */
 #define RPL_DIS_SEND                    1
 
