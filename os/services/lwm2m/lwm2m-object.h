@@ -58,6 +58,7 @@
 #define LWM2M_RESOURCE_READ    0x10000
 #define LWM2M_RESOURCE_WRITE   0x20000
 #define LWM2M_RESOURCE_EXECUTE 0x40000
+#define LWM2M_RESOURCE_OP_MASK 0x70000
 
 /* The resource id type of lwm2m objects - 16 bits for the ID - the rest
    is flags */
