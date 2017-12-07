@@ -52,6 +52,7 @@
 #include "lwm2m-tlv-reader.h"
 #include "lwm2m-tlv-writer.h"
 #include "lib/list.h"
+#include "sys/cc.h"
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
@@ -121,12 +122,11 @@ static coap_handler_status_t lwm2m_handler_callback(coap_message_t *request,
 static lwm2m_object_instance_t *
 next_object_instance(const lwm2m_context_t *context, lwm2m_object_t *object, lwm2m_object_instance_t *last);
 
-
-struct {
+static struct {
   uint16_t object_id;
   uint16_t instance_id;
   uint16_t token_len;
-  uint8_t token[8]; /* max 8 bytes in COAP? */
+  uint8_t token[COAP_TOKEN_LEN];
   /* in the future also a timeout */
 } created;
 
@@ -952,7 +952,7 @@ get_or_create_instance(lwm2m_context_t *ctx, lwm2m_object_t *object,
       }
       created.instance_id = instance->instance_id;
       created.object_id = instance->object_id;
-      created.token_len = created.token_len;
+      created.token_len = MIN(COAP_TOKEN_LEN, ctx->request->token_len);
       memcpy(&created.token, ctx->request->token, created.token_len);
     }
   }
@@ -974,6 +974,7 @@ check_write(lwm2m_context_t *ctx, lwm2m_object_instance_t *instance, int rid)
         if(RSC_UNSPECIFIED(instance->resource_ids[i]) &&
            created.instance_id == instance->instance_id &&
            created.object_id == instance->object_id &&
+           created.token_len == ctx->request->token_len &&
            memcmp(&created.token, ctx->request->token,
                   created.token_len) == 0) {
           /* yes - writeable at create - never otherwise - sec / srv */
@@ -986,6 +987,7 @@ check_write(lwm2m_context_t *ctx, lwm2m_object_instance_t *instance, int rid)
   /* Resource did not exist... - Ignore to avoid problems. */
   if(created.instance_id == instance->instance_id &&
      created.object_id == instance->object_id &&
+     created.token_len == ctx->request->token_len &&
      memcmp(&created.token, ctx->request->token,
             created.token_len) == 0) {
     LOG_DBG("Ignoring resource %u/%u/%d in newly created instance\n",
