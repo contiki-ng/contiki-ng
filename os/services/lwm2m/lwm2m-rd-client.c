@@ -71,6 +71,8 @@
 #define LWM2M_DEFAULT_CLIENT_LIFETIME 600 /* sec */
 #endif
 
+#define MAX_RD_UPDATE_WAIT 5000
+
 #define REMOTE_PORT        UIP_HTONS(COAP_DEFAULT_PORT)
 #define BS_REMOTE_PORT     UIP_HTONS(5685)
 
@@ -107,6 +109,7 @@ static uint8_t rd_state = 0;
 static uint8_t rd_flags = FLAG_RD_DATA_UPDATE_ON_DIRTY;
 static uint64_t wait_until_network_check = 0;
 static uint64_t last_update;
+static uint64_t last_rd_progress = 0;
 
 static char query_data[64]; /* allocate some data for queries and updates */
 static uint8_t rd_data[128]; /* allocate some data for the RD */
@@ -438,10 +441,8 @@ registration_callback(coap_request_state_t *state)
     }
     /* TODO Application callback? */
     rd_state = INIT;
-  } else if(REGISTRATION_SENT == rd_state) { /* this can handle double invocations */
-    /* Failure! */
-    LOG_DBG_("Registration failed! Retry?\n");
-    rd_state = DO_REGISTRATION;
+    /* remember last progress time */
+    last_rd_progress = coap_timer_uptime();
   } else {
     LOG_DBG_("Ignore\n");
   }
@@ -459,6 +460,7 @@ update_callback(coap_request_state_t *state)
     /* If we get a continue - we need to call the rd generator one more time */
     if(CONTINUE_2_31 == state->response->code) {
       /* We assume that size never change?! */
+      LOG_DBG_("Continue\n");
       coap_get_header_block1(state->response, &rd_block1, NULL, NULL, NULL);
       coap_timer_set_callback(&block1_timer, block1_rd_callback);
       coap_timer_set(&block1_timer, 1); /* delay 1 ms */
@@ -468,19 +470,14 @@ update_callback(coap_request_state_t *state)
       last_update = coap_timer_uptime();
       rd_state = REGISTRATION_DONE;
       rd_flags &= ~FLAG_RD_DATA_UPDATE_TRIGGERED;
-      return;
+    } else {
+      /* Possible error response codes are 4.00 Bad request & 4.04 Not Found */
+      LOG_DBG_("Failed with code %d. Retrying registration\n",
+               state->response->code);
+      rd_state = DO_REGISTRATION;
     }
-    /* Possible error response codes are 4.00 Bad request & 4.04 Not Found */
-    LOG_DBG_("Failed with code %d. Retrying registration\n", state->response->code);
-    rd_state = DO_REGISTRATION;
-  } else if(REGISTRATION_SENT == rd_state) { /* this can handle the current double invocation */
-    /* Failure! */
-    LOG_DBG("Registration failed! Retry?");
-    rd_state = DO_REGISTRATION;
-  } else if(UPDATE_SENT == rd_state) {
-    /* Update failed */
-    LOG_DBG("Update failed! Retry?");
-    rd_state = DO_REGISTRATION;
+    /* remember last progress */
+    last_rd_progress = coap_timer_uptime();
   } else {
     LOG_DBG("Ignore\n");
   }
@@ -503,6 +500,13 @@ deregister_callback(coap_request_state_t *state)
       perform_session_callback(LWM2M_RD_CLIENT_DEREGISTER_FAILED);
     }
   }
+}
+/*---------------------------------------------------------------------------*/
+static void
+recover_from_rd_delay(void)
+{
+  /* This can be improved in the future... */
+  rd_state = INIT;
 }
 /*---------------------------------------------------------------------------*/
 /* CoAP timer callback */
@@ -654,11 +658,16 @@ periodic_process(coap_timer_t *timer)
 
       coap_send_request(&rd_request_state, &session_info.server_ep,
                         request, registration_callback);
+      last_rd_progress = coap_timer_uptime();
       rd_state = REGISTRATION_SENT;
     }
     break;
   case REGISTRATION_SENT:
     /* just wait until the callback kicks us to the next state... */
+    if(last_rd_progress + MAX_RD_UPDATE_WAIT < coap_timer_uptime()) {
+      /* Timeout on the update - something is wrong? */
+      recover_from_rd_delay();
+    }
     break;
   case REGISTRATION_DONE:
     /* All is done! */
@@ -672,12 +681,17 @@ periodic_process(coap_timer_t *timer)
       prepare_update(request, rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
       coap_send_request(&rd_request_state, &session_info.server_ep, request,
                         update_callback);
+      last_rd_progress = coap_timer_uptime();
       rd_state = UPDATE_SENT;
     }
     break;
 
   case UPDATE_SENT:
     /* just wait until the callback kicks us to the next state... */
+    if(last_rd_progress + MAX_RD_UPDATE_WAIT < coap_timer_uptime()) {
+      /* Timeout on the update - something is wrong? */
+      recover_from_rd_delay();
+    }
     break;
   case DEREGISTER:
     LOG_INFO("DEREGISTER %s\n", session_info.assigned_ep);
