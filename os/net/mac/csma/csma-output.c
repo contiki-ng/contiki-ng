@@ -506,15 +506,11 @@ csma_output_packet(mac_callback_t sent, void *ptr)
           if(q->buf != NULL) {
             struct qbuf_metadata *metadata = (struct qbuf_metadata *)q->ptr;
             /* Neighbor and packet successfully allocated */
-#if UIP_WITH_VARIABLE_RETRANSMISSIONS
             metadata->max_transmissions = packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
             if(metadata->max_transmissions == 0) {
               /* If not set by the application, use the default CSMA value */
               metadata->max_transmissions = CSMA_MAX_FRAME_RETRIES + 1;
             }
-#else
-            metadata->max_transmissions = CSMA_MAX_FRAME_RETRIES + 1;
-#endif
             metadata->sent = sent;
             metadata->cptr = ptr;
             list_add(n->packet_queue, q);
