@@ -27,8 +27,8 @@
  * SUCH DAMAGE. 
  */
 
-#ifndef MSP430DEF_H
-#define MSP430DEF_H
+#ifndef MSP430_DEF_H_
+#define MSP430_DEF_H_
 
 #ifdef __IAR_SYSTEMS_ICC__
 #include <intrinsics.h>
@@ -60,18 +60,7 @@
 #define BV(x) (1 << x)
 #endif
 
-#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#else
-#ifndef uint8_t
-typedef unsigned char   uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned long  uint32_t;
-typedef   signed char    int8_t;
-typedef          short  int16_t;
-typedef          long   int32_t;
-#endif
-#endif /* !HAVE_STDINT_H */
 
 /* These names are deprecated, use C99 names. */
 typedef  uint8_t    u8_t;
@@ -79,31 +68,18 @@ typedef uint16_t   u16_t;
 typedef uint32_t   u32_t;
 typedef  int32_t   s32_t;
 
-/* default DCOSYNCH Period is 30 seconds */
-#ifdef DCOSYNCH_CONF_PERIOD
-#define DCOSYNCH_PERIOD DCOSYNCH_CONF_PERIOD
-#else
-#define DCOSYNCH_PERIOD 30
-#endif
 /* Types for clocks and uip_stats */
 typedef unsigned short uip_stats_t;
 typedef unsigned long clock_time_t;
 typedef long off_t;
 
-void msp430_cpu_init(void);	/* Rename to cpu_init() later! */
-void msp430_sync_dco(void);
 /* Our clock resolution, this is the same as Unix HZ. */
 #define CLOCK_CONF_SECOND 128UL
 
-
-#define cpu_init() msp430_cpu_init()
-
-void   *sbrk(int);
 #define CCIF
 #define CLIF
 
 typedef int spl_t;
-/* void    splx_(spl_t); */
 spl_t   splhigh_(void);
 
 #define splhigh() splhigh_()
@@ -127,15 +103,6 @@ void *w_memset(void *out, int value, size_t n);
 #endif /* memcpy */
 #endif /* __GNUC__ &&  __MSP430__ && MSP430_MEMCPY_WORKAROUND */
 
-
-/* Moved from the msp430.h file with other msp430 related defines */
-
-#ifdef F_CPU
-#define MSP430_CPU_SPEED F_CPU
-#else
-#define MSP430_CPU_SPEED 2457600UL
-#endif
-
 #define MSP430_REQUIRE_CPUON 0
 #define MSP430_REQUIRE_LPM1 1
 #define MSP430_REQUIRE_LPM2 2
@@ -148,5 +115,9 @@ void *w_memset(void *out, int value, size_t n);
 
 void msp430_add_lpm_req(int req);
 void msp430_remove_lpm_req(int req);
+void msp430_cpu_init(void); /* Rename to cpu_init() later! */
+void msp430_sync_dco(void);
+#define cpu_init() msp430_cpu_init()
+void   *sbrk(int);
 
-#endif /* MSP430DEF_H */
+#endif /* MSP430_DEF_H_ */
