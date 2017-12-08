@@ -86,10 +86,8 @@ main(void)
 
   LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
 
-  LOG_INFO(" Net: ");
-  LOG_INFO_("%s\n", NETSTACK_NETWORK.name);
-  LOG_INFO(" MAC: ");
-  LOG_INFO_("%s\n", NETSTACK_MAC.name);
+  LOG_INFO(" Net: %s\n", NETSTACK_NETWORK.name);
+  LOG_INFO(" MAC: %s\n", NETSTACK_MAC.name);
 
   netstack_init();
 
