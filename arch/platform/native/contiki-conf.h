@@ -69,7 +69,9 @@ typedef  int32_t s32_t;
 
 typedef unsigned short uip_stats_t;
 
+#ifndef UIP_CONF_BYTE_ORDER
 #define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
+#endif
 
 #if NETSTACK_CONF_WITH_IPV6
 
