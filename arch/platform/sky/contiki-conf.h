@@ -30,9 +30,6 @@
 #define UIP_CONF_BUFFER_SIZE		240
 #endif
 
-/* Platform-specific checksum implementation */
-#define UIP_ARCH_IPCHKSUM        1
-
 /* Platform-specific (H/W) AES implementation */
 #ifndef AES_128_CONF
 #define AES_128_CONF cc2420_aes_128_driver

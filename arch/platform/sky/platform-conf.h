@@ -67,23 +67,6 @@
 /* CPU target speed in Hz */
 #define F_CPU 3900000uL /*2457600uL*/
 
-/* Our clock resolution, this is the same as Unix HZ. */
-#define CLOCK_CONF_SECOND 128UL
-
-#define BAUD2UBR(baud) ((F_CPU/baud))
-
-#define CCIF
-#define CLIF
-
-#define HAVE_STDINT_H
-#include "msp430def.h"
-
-
-/* Types for clocks and uip_stats */
-typedef unsigned short uip_stats_t;
-typedef unsigned long clock_time_t;
-typedef long off_t;
-
 /* the low-level radio driver */
 #define NETSTACK_CONF_RADIO   cc2420_driver
 

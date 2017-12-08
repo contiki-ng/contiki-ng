@@ -85,14 +85,22 @@ typedef  int32_t   s32_t;
 #else
 #define DCOSYNCH_PERIOD 30
 #endif
+/* Types for clocks and uip_stats */
+typedef unsigned short uip_stats_t;
+typedef unsigned long clock_time_t;
+typedef long off_t;
 
 void msp430_cpu_init(void);	/* Rename to cpu_init() later! */
 void msp430_sync_dco(void);
+/* Our clock resolution, this is the same as Unix HZ. */
+#define CLOCK_CONF_SECOND 128UL
 
 
 #define cpu_init() msp430_cpu_init()
 
 void   *sbrk(int);
+#define CCIF
+#define CLIF
 
 typedef int spl_t;
 /* void    splx_(spl_t); */
@@ -132,6 +140,11 @@ void *w_memset(void *out, int value, size_t n);
 #define MSP430_REQUIRE_LPM1 1
 #define MSP430_REQUIRE_LPM2 2
 #define MSP430_REQUIRE_LPM3 3
+
+/* Platform-specific checksum implementation */
+#define UIP_ARCH_IPCHKSUM        1
+
+#define BAUD2UBR(baud) ((F_CPU/baud))
 
 void msp430_add_lpm_req(int req);
 void msp430_remove_lpm_req(int req);
