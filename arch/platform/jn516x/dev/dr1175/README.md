@@ -14,4 +14,4 @@ DR1174+DR1175:
     LEDS_WHITE      White power led with level control on DR1175
     LEDS_GP0        LEDS D3 on DR1174
     LEDS_GP1        LEDS D6 on DR1174
-Note: LEDS_GPx and LEDS_WHITE definitions included in leds.h via platform-conf.h
+Note: LEDS_GPx and LEDS_WHITE definitions included in leds.h via jn516x-def.h

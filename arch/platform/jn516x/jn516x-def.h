@@ -30,8 +30,8 @@
  *
  */
 
-#ifndef PLATFORM_CONF_H
-#define PLATFORM_CONF_H
+#ifndef JN516X_DEF_H_
+#define JN516X_DEF_H_
 
 #include <inttypes.h>
 #include <jendefs.h>
@@ -54,14 +54,6 @@
 
 #ifndef MIRCOMAC_CONF_BUF_NUM
 #define MIRCOMAC_CONF_BUF_NUM 2
-#endif
-
-#ifdef RF_CHANNEL
-#define MICROMAC_CONF_CHANNEL RF_CHANNEL
-#endif
-
-#ifndef MICROMAC_CONF_CHANNEL
-#define MICROMAC_CONF_CHANNEL 26
 #endif
 
 /* 32kHz or 16MHz rtimers? */
@@ -314,4 +306,5 @@ DR1174+DR1175:
 #define LEDS_GP2      64
 #define LEDS_GP3      128
 #define LEDS_CONF_ALL 255
-#endif /* PLATFORM_CONF_H */
+
+#endif /* JN516X_DEF_H_ */
