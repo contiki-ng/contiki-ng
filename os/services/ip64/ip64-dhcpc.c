@@ -63,7 +63,7 @@ struct dhcp_msg {
 
 #if (UIP_BUFSIZE - UIP_UDPIP_HLEN) < 548
 #error UIP_CONF_BUFFER_SIZE may be too small to accomodate DHCPv4 packets
-#error Increase UIP_CONF_BUFFER_SIZE in your project-conf.h, platform-conf.h, or contiki-conf.h
+#error Increase UIP_CONF_BUFFER_SIZE in your project-conf.h, or contiki-conf.h
 #error A good size is 600 bytes
 #endif
 
