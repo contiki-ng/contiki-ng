@@ -43,9 +43,6 @@
  * Definitions below are dictated by the hardware and not really
  * changeable!
  */
-/* Platform TMOTE_SKY */
-#define TMOTE_SKY 1
-
 /* Delay between GO signal and SFD: radio fixed delay + 4Bytes preample + 1B SFD -- 1Byte time is 32us
  * ~327us + 129preample = 456 us */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(456))
