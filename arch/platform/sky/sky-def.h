@@ -36,8 +36,8 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
-#ifndef PLATFORM_CONF_H_
-#define PLATFORM_CONF_H_
+#ifndef SKY_DEF_H_
+#define SKY_DEF_H_
 
 /*
  * Definitions below are dictated by the hardware and not really
@@ -208,4 +208,4 @@ for SFD timestamping */
 /* Platform-specific define for the end of the stack region */
 #define STACK_CONF_ORIGIN     ((void *)0x3900)
 
-#endif /* PLATFORM_CONF_H_ */
+#endif /* SKY_DEF_H_ */
