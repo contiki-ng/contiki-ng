@@ -38,13 +38,10 @@
 #include "coap-timer.h"
 #include <sys/time.h>
 
-#define DEBUG 1
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "posix-timer"
+#define LOG_LEVEL  LOG_LEVEL_WARN
 
 /* The maximal time allowed to move forward between updates */
 #define MAX_TIME_CHANGE_MSEC 360000UL
@@ -59,7 +56,7 @@ uptime(void)
   uint64_t t;
 
   if(gettimeofday(&tv, NULL)) {
-    PRINTF("*** failed to retrieve system time\n");
+    LOG_WARN("*** failed to retrieve system time\n");
     return last_msec;
   }
 
@@ -70,13 +67,13 @@ uptime(void)
     /* No update first time */
   } else if(t < last_msec) {
     /* System time has moved backwards */
-    PRINTF("*** system time has moved backwards %lu msec\n",
-           (unsigned long)(last_msec - t));
+    LOG_WARN("*** system time has moved backwards %lu msec\n",
+             (unsigned long)(last_msec - t));
 
   } else if(t - last_msec > MAX_TIME_CHANGE_MSEC) {
     /* Too large jump forward in system time */
-    PRINTF("*** system time has moved forward %lu msec\n",
-           (unsigned long)(t - last_msec));
+    LOG_WARN("*** system time has moved forward %lu msec\n",
+             (unsigned long)(t - last_msec));
     uptime_msec += 1000UL;
   } else {
     uptime_msec += t - last_msec;

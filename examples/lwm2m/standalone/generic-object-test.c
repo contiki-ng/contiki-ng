@@ -48,25 +48,20 @@
 #include <string.h>
 #include <stdio.h>
 
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "gen-obj-test"
+#define LOG_LEVEL  LOG_LEVEL_COAP
+
 static lwm2m_object_t generic_object;
 
 #define MAX_SIZE 512
 #define NUMBER_OF_INSTANCES 50
 
-#define DEBUG 0
-
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-
-#endif
-
-static const lwm2m_resource_id_t resources[] =
-  {
-    RO(10000),
-    RO(11000),
-  };
+static const lwm2m_resource_id_t resources[] = {
+  RO(10000),
+  RO(11000),
+};
 
 /*---------------------------------------------------------------------------*/
 static int read_data(uint8_t *buffer, int instance_id, int start, int len)
@@ -87,8 +82,8 @@ opaque_callback(lwm2m_object_instance_t *object,
                 lwm2m_context_t *ctx, int num_to_write)
 {
   int len;
-  PRINTF("opaque-stream callback num_to_write: %d off: %d outlen: %d\n",
-         num_to_write, ctx->offset, ctx->outbuf->len);
+  LOG_DBG("opaque-stream callback num_to_write: %d off: %d outlen: %d\n",
+          num_to_write, ctx->offset, ctx->outbuf->len);
 
   len = read_data(&ctx->outbuf->buffer[ctx->outbuf->len],
                   ctx->object_instance_id,
@@ -124,7 +119,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       }
       break;
     case 11000:
-      PRINTF("Preparing object write\n");
+      LOG_DBG("Preparing object write\n");
       lwm2m_object_write_opaque_stream(ctx, MAX_SIZE, opaque_callback);
       break;
     default:
