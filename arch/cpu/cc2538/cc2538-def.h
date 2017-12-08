@@ -1,9 +1,11 @@
 /*
- * Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -26,84 +28,35 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*---------------------------------------------------------------------------*/
+#ifndef CC2538_DEF_H_
+#define CC2538_DEF_H_
+/*---------------------------------------------------------------------------*/
+#include "cm3/cm3-def.h"
+/*---------------------------------------------------------------------------*/
+#define RTIMER_ARCH_SECOND 32768
+/*---------------------------------------------------------------------------*/
+/* 352us from calling transmit() until the SFD byte has been sent */
+#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
+/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
+#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
+#define RADIO_DELAY_BEFORE_DETECT 0
+#ifndef TSCH_CONF_BASE_DRIFT_PPM
+/* The drift compared to "true" 10ms slots.
+ * Enable adaptive sync to enable compensation for this.
+ * Slot length 10000 usec
+ *             328 ticks
+ * Tick duration 30.517578125 usec
+ * Real slot duration 10009.765625 usec
+ * Target - real duration = -9.765625 usec
+ * TSCH_CONF_BASE_DRIFT_PPM -977
+ */
+#define TSCH_CONF_BASE_DRIFT_PPM -977
+#endif
 
-/**
- * \addtogroup nrf52832
- * @{
- *
- * \file
- *      Implementation of the architecture dependent rtimer functions for the nRF52
- *
- * \author
- *      Wojciech Bober <wojciech.bober@nordicsemi.no>
- */
+#if MAC_CONF_WITH_TSCH
+#define TSCH_CONF_HW_FRAME_FILTERING  0
+#endif /* MAC_CONF_WITH_TSCH */
 /*---------------------------------------------------------------------------*/
-#include <stdint.h>
-#include <stddef.h>
-#include "nrf.h"
-#include "nrf_drv_timer.h"
-#include "app_error.h"
-#include "contiki.h"
-
-static const nrf_drv_timer_t timer = NRF_DRV_TIMER_INSTANCE(PLATFORM_TIMER_INSTANCE_ID); /**< Timer instance used for rtimer */
-
-/**
- * \brief Handler for timer events.
- *
- * \param event_type type of an event that should be handled
- * \param p_context opaque data pointer passed from nrf_drv_timer_init()
- */
-static void
-timer_event_handler(nrf_timer_event_t event_type, void* p_context)
-{
-  switch (event_type) {
-    case NRF_TIMER_EVENT_COMPARE1:
-      rtimer_run_next();
-      break;
-
-    default:
-      //Do nothing.
-      break;
-  }
-}
+#endif /* CC2538_DEF_H_ */
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Initialize platform rtimer
- */
-void
-rtimer_arch_init(void)
-{
-  ret_code_t err_code = nrf_drv_timer_init(&timer, NULL, timer_event_handler);
-  APP_ERROR_CHECK(err_code);
-  nrf_drv_timer_enable(&timer);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Schedules an rtimer task to be triggered at time t
- * \param t The time when the task will need executed.
- *
- * \e t is an absolute time, in other words the task will be executed AT
- * time \e t, not IN \e t rtimer ticks.
- *
- * This function schedules a one-shot event with the nRF RTC.
- */
-void
-rtimer_arch_schedule(rtimer_clock_t t)
-{
-  nrf_drv_timer_compare(&timer, NRF_TIMER_CC_CHANNEL1, t, true);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Returns the current real-time clock time
- * \return The current rtimer time in ticks
- *
- */
-rtimer_clock_t
-rtimer_arch_now()
-{
-  return nrf_drv_timer_capture(&timer, NRF_TIMER_CC_CHANNEL0);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- */

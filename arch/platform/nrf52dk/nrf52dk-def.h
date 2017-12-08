@@ -43,8 +43,8 @@
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  *
  */
-#ifndef PLATFORM_CONF_H_
-#define PLATFORM_CONF_H_
+#ifndef NRF52DK_DEF_H_
+#define NRF52DK_DEF_H_
 
 #include "boards.h"
 
@@ -109,37 +109,8 @@
 
 /** @} */
 /*---------------------------------------------------------------------------*/
-/**
- * \name Compiler configuration and platform-specific type definitions
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define CLOCK_CONF_SECOND 128
-
-/* Compiler configurations */
-#define CCIF
-#define CLIF
-
-/* Platform typedefs */
-typedef uint32_t clock_time_t;
-typedef uint32_t uip_stats_t;
-
-/* Clock (time) comparison macro */
-#define CLOCK_LT(a, b)  ((signed long)((a) - (b)) < 0)
-
-#define RTIMER_ARCH_SECOND 62500
-/*
- * rtimer.h typedefs rtimer_clock_t as unsigned short. We need to define
- * RTIMER_CLOCK_DIFF to override this
- */
-typedef uint32_t rtimer_clock_t;
-#define RTIMER_CLOCK_DIFF(a,b)     ((int32_t)((a)-(b)))
-
-/** @} */
-/*---------------------------------------------------------------------------*/
 /** @}
  *  @}
  *  @}
  */
-#endif /* PLATFORM_CONF_H_ */
+#endif /* NRF52DK_DEF_H_ */

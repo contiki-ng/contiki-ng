@@ -1,9 +1,11 @@
 /*
- * Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -26,84 +28,49 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup nrf52832
+ * \addtogroup arm
  * @{
  *
  * \file
- *      Implementation of the architecture dependent rtimer functions for the nRF52
- *
- * \author
- *      Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *  Compiler and data type definitions for all ARM-based CPUs
  */
+/*---------------------------------------------------------------------------*/
+#ifndef ARM_DEF_
+#define ARM_DEF_
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
-#include <stddef.h>
-#include "nrf.h"
-#include "nrf_drv_timer.h"
-#include "app_error.h"
-#include "contiki.h"
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Compiler configuration
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define CCIF
+#define CLIF
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Macros and typedefs
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define CLOCK_CONF_SECOND 128
 
-static const nrf_drv_timer_t timer = NRF_DRV_TIMER_INSTANCE(PLATFORM_TIMER_INSTANCE_ID); /**< Timer instance used for rtimer */
+/* Clock (time) comparison macro */
+#define CLOCK_LT(a, b)  ((signed long)((a) - (b)) < 0)
 
-/**
- * \brief Handler for timer events.
- *
- * \param event_type type of an event that should be handled
- * \param p_context opaque data pointer passed from nrf_drv_timer_init()
- */
-static void
-timer_event_handler(nrf_timer_event_t event_type, void* p_context)
-{
-  switch (event_type) {
-    case NRF_TIMER_EVENT_COMPARE1:
-      rtimer_run_next();
-      break;
+/* Platform typedefs */
+typedef uint32_t clock_time_t;
+typedef uint32_t uip_stats_t;
 
-    default:
-      //Do nothing.
-      break;
-  }
-}
+typedef uint32_t rtimer_clock_t;
+#define RTIMER_CLOCK_DIFF(a, b)     ((int32_t)((a) - (b)))
+/** @} */
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Initialize platform rtimer
- */
-void
-rtimer_arch_init(void)
-{
-  ret_code_t err_code = nrf_drv_timer_init(&timer, NULL, timer_event_handler);
-  APP_ERROR_CHECK(err_code);
-  nrf_drv_timer_enable(&timer);
-}
+#endif /* ARM_DEF_ */
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Schedules an rtimer task to be triggered at time t
- * \param t The time when the task will need executed.
- *
- * \e t is an absolute time, in other words the task will be executed AT
- * time \e t, not IN \e t rtimer ticks.
- *
- * This function schedules a one-shot event with the nRF RTC.
- */
-void
-rtimer_arch_schedule(rtimer_clock_t t)
-{
-  nrf_drv_timer_compare(&timer, NRF_TIMER_CC_CHANNEL1, t, true);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Returns the current real-time clock time
- * \return The current rtimer time in ticks
- *
- */
-rtimer_clock_t
-rtimer_arch_now()
-{
-  return nrf_drv_timer_capture(&timer, NRF_TIMER_CC_CHANNEL0);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- */
+/** @} */

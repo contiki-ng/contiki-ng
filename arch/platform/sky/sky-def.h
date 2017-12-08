@@ -36,16 +36,13 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
-#ifndef PLATFORM_CONF_H_
-#define PLATFORM_CONF_H_
+#ifndef SKY_DEF_H_
+#define SKY_DEF_H_
 
 /*
  * Definitions below are dictated by the hardware and not really
  * changeable!
  */
-/* Platform TMOTE_SKY */
-#define TMOTE_SKY 1
-
 /* Delay between GO signal and SFD: radio fixed delay + 4Bytes preample + 1B SFD -- 1Byte time is 32us
  * ~327us + 129preample = 456 us */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(456))
@@ -62,30 +59,8 @@
 #define PLATFORM_HAS_SHT11   1
 #define PLATFORM_HAS_RADIO   1
 
-/* Map RF_CHANNEL to cc2420 default channel */
-#ifdef RF_CHANNEL
-#define CC2420_CONF_CHANNEL RF_CHANNEL
-#endif /* RF_CHANNEL */
-
 /* CPU target speed in Hz */
 #define F_CPU 3900000uL /*2457600uL*/
-
-/* Our clock resolution, this is the same as Unix HZ. */
-#define CLOCK_CONF_SECOND 128UL
-
-#define BAUD2UBR(baud) ((F_CPU/baud))
-
-#define CCIF
-#define CLIF
-
-#define HAVE_STDINT_H
-#include "msp430def.h"
-
-
-/* Types for clocks and uip_stats */
-typedef unsigned short uip_stats_t;
-typedef unsigned long clock_time_t;
-typedef long off_t;
 
 /* the low-level radio driver */
 #define NETSTACK_CONF_RADIO   cc2420_driver
@@ -233,9 +208,4 @@ for SFD timestamping */
 /* Platform-specific define for the end of the stack region */
 #define STACK_CONF_ORIGIN     ((void *)0x3900)
 
-/* Disable the stack check library by default: .rom overflow otherwise */
-#ifndef STACK_CHECK_CONF_ENABLED
-#define STACK_CHECK_CONF_ENABLED 0
-#endif
-
-#endif /* PLATFORM_CONF_H_ */
+#endif /* SKY_DEF_H_ */

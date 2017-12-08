@@ -16,4 +16,4 @@ DR1174+DR1199:
     LEDS_RED        LED D3 on DR1199
     LEDS_GP0        LED D3 on DR1174
     LEDS_GP1        LED D6 on DR1174
-Note: LEDS_GPx definitions included in leds.h via platform-conf.h
+Note: LEDS_GPx definitions included in leds.h via jn516x-def.h
