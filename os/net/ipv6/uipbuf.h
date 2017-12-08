@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, RISE SICS
+ * Copyright (c) 2017, RISE SICS, Yanzi Networks
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,9 @@
  *
  */
 
+#ifndef UIPBUF_H_
+#define UIPBUF_H_
+
 #include "contiki.h"
 
 /* Get the next header given the buffer - start indicates that this is
@@ -39,3 +42,27 @@ uint8_t* uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protoco
 /* Get the final header given the buffer - that is assumed to be at start
    of an IPv6 header */
 uint8_t* uipbuf_get_last_header(uint8_t *buffer, uint16_t size, uint8_t *protocol);
+
+/* Attributes relating to the current packet in uipbuf */
+uint16_t uipbuf_get_attr(uint8_t type);
+void uipbuf_set_attr_flag(uint16_t flag);
+void uipbuf_clr_attr_flag(uint16_t flag);
+uint16_t uipbuf_is_attr_flag(uint16_t flag);
+int uipbuf_set_attr(uint8_t type, uint16_t value);
+void uipbuf_clear_attr(void);
+
+/* These flags will be used for being */
+#define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_NHC_COMPRESSION      0x01
+#define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_PREFIX_COMPRESSION   0x02
+
+enum {
+  UIPBUF_ATTR_LLSEC_LEVEL,
+  UIPBUF_ATTR_LLSEC_KEY_ID,
+  UIPBUF_ATTR_INTERFACE_ID,
+  UIPBUF_ATTR_PHYSICAL_NETWORK_ID,
+  UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS,
+  UIPBUF_ATTR_FLAGS,
+  UIPBUF_ATTR_MAX
+};
+
+#endif /* UIPBUF_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, RISE SICS
+ * Copyright (c) 2017, RISE SICS, Yanzi Networks
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,14 @@
  */
 #include "contiki.h"
 #include "uip.h"
+#include "net/ipv6/uipbuf.h"
+#include <string.h>
 
+/*---------------------------------------------------------------------------*/
+
+static uint16_t uipbuf_attrs[UIPBUF_ATTR_MAX];
+
+/*---------------------------------------------------------------------------*/
 /* Get the next header given the buffer - start indicates that this is
    start of the IPv6 header - needs to be set to 0 when in an ext hdr */
 uint8_t*
@@ -54,7 +61,7 @@ uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protocol, uint8_
     return buffer + ext_len;
   }
 }
-
+/*---------------------------------------------------------------------------*/
 /* Get the final header given the buffer - that is assumed to be at start
    of an IPv6 header */
 uint8_t*
@@ -69,3 +76,53 @@ uipbuf_get_last_header(uint8_t *buffer, uint16_t size, uint8_t *protocol)
   }
   return nbuf;
 }
+/*---------------------------------------------------------------------------*/
+/**
+ * Common functions for uipbuf (attributes, etc).
+ *
+ */
+/*---------------------------------------------------------------------------*/
+uint16_t
+uipbuf_get_attr(uint8_t type)
+{
+  if(type < UIPBUF_ATTR_MAX) {
+    return uipbuf_attrs[type];
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+uipbuf_set_attr(uint8_t type, uint16_t value)
+{
+  if(type < UIPBUF_ATTR_MAX) {
+    uipbuf_attrs[type] = value;
+    return 1;
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+void
+uipbuf_clear_attr(void)
+{
+  memset(uipbuf_attrs, 0, sizeof(uipbuf_attrs));
+}
+/*---------------------------------------------------------------------------*/
+void
+uipbuf_set_attr_flag(uint16_t flag)
+{
+  /* Assume only 16-bits for flags now */
+  uipbuf_attrs[UIPBUF_ATTR_FLAGS] |= flag;
+}
+/*---------------------------------------------------------------------------*/
+void
+uipbuf_clr_attr_flag(uint16_t flag)
+{
+  uipbuf_attrs[UIPBUF_ATTR_FLAGS] &= ~flag;
+}
+/*---------------------------------------------------------------------------*/
+uint16_t
+uipbuf_is_attr_flag(uint16_t flag)
+{
+  return (uipbuf_attrs[UIPBUF_ATTR_FLAGS] & flag) > 0;
+}
+/*---------------------------------------------------------------------------*/
