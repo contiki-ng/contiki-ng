@@ -59,11 +59,6 @@
 #define PLATFORM_HAS_SHT11   1
 #define PLATFORM_HAS_RADIO   1
 
-/* Map RF_CHANNEL to cc2420 default channel */
-#ifdef RF_CHANNEL
-#define CC2420_CONF_CHANNEL RF_CHANNEL
-#endif /* RF_CHANNEL */
-
 /* CPU target speed in Hz */
 #define F_CPU 3900000uL /*2457600uL*/
 
@@ -212,10 +207,5 @@ for SFD timestamping */
 
 /* Platform-specific define for the end of the stack region */
 #define STACK_CONF_ORIGIN     ((void *)0x3900)
-
-/* Disable the stack check library by default: .rom overflow otherwise */
-#ifndef STACK_CHECK_CONF_ENABLED
-#define STACK_CHECK_CONF_ENABLED 0
-#endif
 
 #endif /* PLATFORM_CONF_H_ */
