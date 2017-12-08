@@ -13,6 +13,8 @@
 #else
 #include "platform-conf.h"
 #endif /* PLATFORM_CONF_H */
+#include "msp430-def.h"
+/*---------------------------------------------------------------------------*/
 /* Map RF_CHANNEL to cc2420 default channel */
 #ifdef RF_CHANNEL
 #define CC2420_CONF_CHANNEL RF_CHANNEL
