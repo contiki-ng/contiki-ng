@@ -48,7 +48,7 @@
 #endif /* PROJECT_CONF_PATH */
 /*---------------------------------------------------------------------------*/
 /* Include platform peripherals configuration */
-#include "platform-conf.h"
+#include "nrf52dk-def.h"
 #include "nrf52832-def.h"
 /*---------------------------------------------------------------------------*/
 /**

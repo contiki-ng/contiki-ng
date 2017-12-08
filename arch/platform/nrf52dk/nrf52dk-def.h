@@ -43,8 +43,8 @@
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  *
  */
-#ifndef PLATFORM_CONF_H_
-#define PLATFORM_CONF_H_
+#ifndef NRF52DK_DEF_H_
+#define NRF52DK_DEF_H_
 
 #include "boards.h"
 
@@ -113,4 +113,4 @@
  *  @}
  *  @}
  */
-#endif /* PLATFORM_CONF_H_ */
+#endif /* NRF52DK_DEF_H_ */
