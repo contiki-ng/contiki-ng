@@ -236,8 +236,8 @@ setup_network(void)
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
 #endif
 
-  rpl_dag_root_init(&ipaddr, &ipaddr);
-  rpl_dag_root_init_dag_immediately();
+  rpl_dag_root_set_prefix(&ipaddr, &ipaddr);
+  rpl_dag_root_start();
 #endif /* UIP_CONF_ROUTER */
 
   PRINTF("IPv6 addresses: ");

@@ -111,7 +111,7 @@ PROCESS_THREAD(rpl_root_process, ev, data)
 
   PRINTF("Multicast Engine: '%s'\n", UIP_MCAST6.name);
 
-  rpl_dag_root_init_dag_immediately();
+  rpl_dag_root_start();
 
   prepare_mcast();
 

@@ -49,20 +49,14 @@
  * \param prefix The prefix. If NULL, UIP_DS6_DEFAULT_PREFIX is used instead
  * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
 */
-void rpl_dag_root_init(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
+void rpl_dag_root_set_prefix(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
 
 /**
- * Initializes the node as DAG root after a delay. Until the delay, the node
- * gets a chance to hear another DAG and join it instead.
-*/
-void rpl_dag_root_init_dag_delay(void);
-
-/**
- * Initializes the node as DAG root immediatly.
+ * Set the node as root and start a DAG
  *
  * \return 0 in case of success, -1 otherwise
 */
-int rpl_dag_root_init_dag_immediately(void);
+int rpl_dag_root_start(void);
 
 /**
  * Tells whether we are DAG root or not

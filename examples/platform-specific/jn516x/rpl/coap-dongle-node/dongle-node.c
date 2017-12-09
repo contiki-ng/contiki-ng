@@ -129,7 +129,7 @@ PROCESS_THREAD(start_app, ev, data)
 
   /* Start net stack */
   if(is_coordinator) {
-    rpl_dag_root_init_dag_immediately();
+    rpl_dag_root_start();
   }
   NETSTACK_MAC.on();
   printf("Starting RPL node\n");

@@ -48,48 +48,6 @@
 #define LOG_MODULE "RPL"
 #define LOG_LEVEL LOG_LEVEL_RPL
 
-#define RPL_DAG_GRACE_PERIOD (CLOCK_SECOND * 20 * 1)
-
-static uint8_t to_become_root;
-static struct ctimer c;
-
-/*---------------------------------------------------------------------------*/
-static void
-create_dag_callback(void *ptr)
-{
-  const uip_ipaddr_t *root, *ipaddr;
-
-  root = curr_instance.used ? &curr_instance.dag.dag_id : NULL;
-  ipaddr = rpl_get_global_address();
-
-  if(root == NULL || uip_ipaddr_cmp(root, ipaddr)) {
-    /* The RPL network we are joining is one that we created, so we
-       become root. */
-    if(to_become_root) {
-      rpl_dag_root_init_dag_immediately();
-      to_become_root = 0;
-    }
-  } else {
-    LOG_WARN("found a network we did not create: version %d grounded %d preference %d rank %d\n",
-           curr_instance.dag.version, curr_instance.dag.grounded,
-           curr_instance.dag.preference, curr_instance.dag.rank);
-
-    /* We found a RPL network that we did not create so we just join
-       it without becoming root. But if the network has an infinite
-       rank, we assume the network has broken, and we become the new
-       root of the network. */
-
-    if(curr_instance.dag.rank == RPL_INFINITE_RANK) {
-      if(to_become_root) {
-        rpl_dag_root_init_dag_immediately();
-        to_become_root = 0;
-      }
-    }
-
-    /* Try again after the grace period */
-    ctimer_set(&c, RPL_DAG_GRACE_PERIOD, create_dag_callback, NULL);
-  }
-}
 /*---------------------------------------------------------------------------*/
 static void
 set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
@@ -125,26 +83,25 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_dag_root_init(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
+rpl_dag_root_set_prefix(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 {
   static uint8_t initialized = 0;
 
   if(!initialized) {
-    to_become_root = 0;
     set_global_address(prefix, iid);
     initialized = 1;
   }
 }
 /*---------------------------------------------------------------------------*/
 int
-rpl_dag_root_init_dag_immediately(void)
+rpl_dag_root_start(void)
 {
   struct uip_ds6_addr *root_if;
   int i;
   uint8_t state;
   uip_ipaddr_t *ipaddr = NULL;
 
-  rpl_dag_root_init(NULL, NULL);
+  rpl_dag_root_set_prefix(NULL, NULL);
 
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
@@ -168,18 +125,6 @@ rpl_dag_root_init_dag_immediately(void)
     LOG_ERR("failed to create a new RPL DAG\n");
     return -1;
   }
-}
-/*---------------------------------------------------------------------------*/
-void
-rpl_dag_root_init_dag_delay(void)
-{
-  rpl_dag_root_init(NULL, NULL);
-
-  ctimer_set(&c, RPL_DAG_GRACE_PERIOD, create_dag_callback, NULL);
-  to_become_root = 1;
-
-  /* Send a DIS packet to request RPL info from neighbors. */
-  rpl_icmp6_dis_output(NULL);
 }
 /*---------------------------------------------------------------------------*/
 int

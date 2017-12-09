@@ -14,7 +14,7 @@ PROCESS_THREAD(router_node_process, ev, data)
   PROCESS_BEGIN();
 
   /* Set us up as a RPL root node. */
-  rpl_dag_root_init_dag_delay();
+  rpl_dag_root_start();
 
   /* Initialize the IP64 module so we'll start translating packets */
   ip64_init();

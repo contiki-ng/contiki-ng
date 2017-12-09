@@ -64,8 +64,8 @@ void
 set_prefix_64(uip_ipaddr_t *prefix_64)
 {
   prefix_set = 1;
-  rpl_dag_root_init(prefix_64, NULL);
-  rpl_dag_root_init_dag_immediately();
+  rpl_dag_root_set_prefix(prefix_64, NULL);
+  rpl_dag_root_start();
 }
 /*---------------------------------------------------------------------------*/
 void

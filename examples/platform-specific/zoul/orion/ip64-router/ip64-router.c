@@ -247,7 +247,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 #if WEBSERVER_CONF_LOADTIME
   numticks = clock_time() - numticks + 1;
-  ADD(" <i>(%u.%02u sec)</i>", numticks / CLOCK_SECOND, 
+  ADD(" <i>(%u.%02u sec)</i>", numticks / CLOCK_SECOND,
       (100 * (numticks % CLOCK_SECOND)) / CLOCK_SECOND));
 #endif
 
@@ -307,7 +307,7 @@ PROCESS_THREAD(router_node_process, ev, data)
   leds_off(LEDS_DHCP);
 
   /* Set us up as a RPL root node. */
-  rpl_dag_root_init_dag_delay();
+  rpl_dag_root_start();
 
   /* ... and do nothing more. */
   while(1) {

@@ -156,8 +156,8 @@ PROCESS_THREAD(border_router_process, ev, data)
   uip_debug_ipaddr_print(&prefix);
   PRINTF("\n");
 
-  rpl_dag_root_init(&prefix, NULL);
-  rpl_dag_root_init_dag_immediately();
+  rpl_dag_root_set_prefix(&prefix, NULL);
+  rpl_dag_root_start();
 
   coap_engine_init();
   coap_activate_resource(&resource_get_rssi, "Get-RSSI");

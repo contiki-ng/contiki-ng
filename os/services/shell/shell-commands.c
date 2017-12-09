@@ -324,8 +324,8 @@ PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
       SHELL_OUTPUT(output, "Setting as DAG root with prefix ");
       shell_output_6addr(output, &prefix);
       SHELL_OUTPUT(output, "/64\n");
-      rpl_dag_root_init(&prefix, NULL);
-      rpl_dag_root_init_dag_immediately();
+      rpl_dag_root_set_prefix(&prefix, NULL);
+      rpl_dag_root_start();
     } else {
       SHELL_OUTPUT(output, "Node is already a DAG root\n");
     }

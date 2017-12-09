@@ -96,7 +96,7 @@ PROCESS_THREAD(node_process, ev, data)
 
   is_coordinator = node_role > role_6ln;
   if(is_coordinator) {
-    rpl_dag_root_init_dag_immediately();
+    rpl_dag_root_start();
   }
   NETSTACK_MAC.on();
 
