@@ -75,14 +75,7 @@ tsch_rpl_callback_joining_network(void)
 void
 tsch_rpl_callback_leaving_network(void)
 {
-  rpl_dag_t *dag = rpl_get_any_dag();
-  if(dag != NULL) {
-#if UIP_CONF_IPV6_RPL_LITE
-    rpl_local_repair("TSCH leaving");
-#else
-    rpl_local_repair(dag->instance);
-#endif
-  }
+  NETSTACK_ROUTING.local_repair("TSCH leaving");
 }
 /*---------------------------------------------------------------------------*/
 /* Set TSCH EB period based on current RPL DIO period.

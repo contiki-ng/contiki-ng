@@ -169,11 +169,11 @@ find_objective_function(rpl_ocp_t ocp)
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_global_repair(void)
+rpl_global_repair(const char *str)
 {
   if(rpl_dag_root_is_root()) {
-    LOG_WARN("initiating global repair, version %u, rank %u)\n",
-         curr_instance.dag.version, curr_instance.dag.rank);
+    LOG_WARN("initiating global repair (%s), version %u, rank %u)\n",
+         str, curr_instance.dag.version, curr_instance.dag.rank);
 #if LOG_INFO_ENABLED
     rpl_neighbor_print_list("Global repair (before)");
 #endif /* LOG_INFO_ENABLED */
@@ -391,7 +391,7 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
       LOG_ERR("inconsistent DIO version (current: %u, received: %u), initiate global repair\n",
           curr_instance.dag.version, dio->version);
       curr_instance.dag.version = dio->version; /* Update version and trigger global repair */
-      rpl_global_repair();
+      rpl_global_repair("Inconsistent DIO version");
     } else {
       LOG_WARN("new DIO version (current: %u, received: %u), apply global repair\n",
           curr_instance.dag.version, dio->version);

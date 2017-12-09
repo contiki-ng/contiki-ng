@@ -65,6 +65,19 @@ struct routing_driver {
    * \return 0 in case of success, -1 otherwise
   */
   int (* root_start)(void);
+  /**
+   * Triggers a global topology repair
+   *
+   * \param str A textual description of the cause for triggering a repair
+  */
+  void (* global_repair)(const char *str);
+
+  /**
+   * Triggers a RPL local topology repair
+   *
+   * \param str A textual description of the cause for triggering a repair
+  */
+  void (* local_repair)(const char *str);
 };
 
 #endif /* ROUTING_H_ */

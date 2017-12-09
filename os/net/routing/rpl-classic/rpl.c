@@ -353,11 +353,31 @@ init(void)
 #endif /* RPL_WITH_NON_STORING */
 }
 /*---------------------------------------------------------------------------*/
+static void
+global_repair(const char *str)
+{
+  rpl_dag_t *dag = rpl_get_any_dag();
+  if(dag != NULL && dag->instance != NULL) {
+    rpl_repair_root(dag->instance->instance_id);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+local_repair(const char *str)
+{
+  rpl_dag_t *dag = rpl_get_any_dag();
+  if(dag != NULL) {
+    rpl_local_repair(dag->instance);
+  }
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_classic_driver = {
   "RPL Classic",
   init,
   rpl_dag_root_set_prefix,
   rpl_dag_root_start,
+  global_repair,
+  local_repair,
 };
 /*---------------------------------------------------------------------------*/
 

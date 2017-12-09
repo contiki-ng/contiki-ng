@@ -395,8 +395,8 @@ PT_THREAD(cmd_rpl_global_repair(struct pt *pt, shell_output_func output, char *a
 {
   PT_BEGIN(pt);
 
-  SHELL_OUTPUT(output, "Triggering RPL global repair\n")
-  rpl_global_repair();
+  SHELL_OUTPUT(output, "Triggering routing global repair\n")
+  NETSTACK_ROUTING.global_repair("Shell");
 
   PT_END(pt);
 }
@@ -406,8 +406,8 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
 {
   PT_BEGIN(pt);
 
-  SHELL_OUTPUT(output, "Triggering RPL local repair\n");
-  rpl_local_repair("Shell");
+  SHELL_OUTPUT(output, "Triggering routing local repair\n");
+  NETSTACK_ROUTING.local_repair("Shell");
 
   PT_END(pt);
 }

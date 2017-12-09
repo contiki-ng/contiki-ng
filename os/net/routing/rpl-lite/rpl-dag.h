@@ -78,8 +78,10 @@ void rpl_dag_periodic(unsigned seconds);
 
 /**
  * Triggers a RPL global repair
+ *
+ * \param str A textual description of the cause for triggering a repair
 */
-void rpl_global_repair(void);
+void rpl_global_repair(const char *str);
 
 /**
  * Triggers a RPL local repair

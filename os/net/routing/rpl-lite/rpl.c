@@ -198,6 +198,8 @@ const struct routing_driver rpl_lite_driver = {
   init,
   rpl_dag_root_set_prefix,
   rpl_dag_root_start,
+  rpl_global_repair,
+  rpl_local_repair,
 };
 /*---------------------------------------------------------------------------*/
 

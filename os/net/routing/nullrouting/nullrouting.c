@@ -58,11 +58,23 @@ root_start(void)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+static void
+global_repair(const char *str)
+{
+}
+/*---------------------------------------------------------------------------*/
+static void
+local_repair(const char *str)
+{
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
   "Null Routing",
   init,
   root_set_prefix,
   root_start,
+  global_repair,
+  local_repair
 };
 /*---------------------------------------------------------------------------*/
 

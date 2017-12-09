@@ -121,11 +121,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
       case 'G':
         /* This is supposed to be from stdin */
         printf("Performing Global Repair...\n");
-#if UIP_CONF_IPV6_RPL_LITE
-        rpl_global_repair();
-#else
-        rpl_repair_root(RPL_DEFAULT_INSTANCE);
-#endif
+        NETSTACK_ROUTING.global_repair("Command");
         return 1;
       case 'C': {
         /* send on a set-param thing! */
