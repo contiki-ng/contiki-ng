@@ -104,7 +104,12 @@ uipbuf_set_attr(uint8_t type, uint16_t value)
 void
 uipbuf_clear_attr(void)
 {
+  /* set everything to "zero" */
   memset(uipbuf_attrs, 0, sizeof(uipbuf_attrs));
+
+  /* And initialize anything that should be initialized */
+  uipbuf_set_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS,
+                  UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED);
 }
 /*---------------------------------------------------------------------------*/
 void
