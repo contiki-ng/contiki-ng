@@ -44,13 +44,7 @@
 #include "net/nbr-table.h"
 #include "sys/stimer.h"
 #include "lib/list.h"
-#if UIP_CONF_IPV6_RPL
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl-conf.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl-conf.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#endif
+#include "net/routing/routing.h"
 
 #ifdef UIP_CONF_MAX_ROUTES
 #define UIP_MAX_ROUTES UIP_CONF_MAX_ROUTES

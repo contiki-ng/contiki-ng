@@ -46,12 +46,7 @@
 #include "net/ipv6/multicast/uip-mcast6-route.h"
 #include "net/ipv6/multicast/uip-mcast6-stats.h"
 #include "net/ipv6/multicast/esmrf.h"
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/routing/routing.h"
 #include "net/ipv6/uip.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"

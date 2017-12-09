@@ -32,9 +32,8 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#include "net/rpl-classic/rpl-dag-root.h"
+#include "rpl.h"
+#include "rpl-private.h"
 #include "net/ipv6/uip-ds6-route.h"
 
 #include <string.h>

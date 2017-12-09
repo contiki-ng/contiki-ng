@@ -38,8 +38,7 @@
 
 #include "simple-udp.h"
 
-#include "rpl.h"
-#include "rpl-dag-root.h"
+#include "net/routing/routing.h"
 
 #include <stdio.h>
 #include <string.h>

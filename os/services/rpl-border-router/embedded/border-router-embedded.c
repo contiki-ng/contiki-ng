@@ -36,7 +36,7 @@
  */
 
 #include "contiki.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
 #include "rpl-border-router.h"

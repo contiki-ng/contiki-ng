@@ -35,7 +35,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "net/ipv6/uip.h"
 
 #include <string.h>

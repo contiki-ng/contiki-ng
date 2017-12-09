@@ -38,9 +38,8 @@
 
 #include "contiki.h"
 #include "net/ipv6/uip.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
 #include "net/netstack.h"
+#include "net/routing/routing.h"
 #include "coap-constants.h"
 #include "coap-engine.h"
 #include "lwm2m-engine.h"

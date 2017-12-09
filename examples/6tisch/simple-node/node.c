@@ -38,15 +38,11 @@
 
 #include "contiki.h"
 #include "node-id.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
 #include "sys/log.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-log.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "net/routing/routing.h"
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"

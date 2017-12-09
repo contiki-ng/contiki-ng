@@ -38,7 +38,7 @@
 
 #include "simple-udp.h"
 
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "dev/leds.h"
 
 #include <stdio.h>

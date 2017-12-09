@@ -44,6 +44,7 @@
 
 #include "uip.h"
 #include "uip-ds6.h"
+#include "uip-ds6-nbr.h"
 
 /********** Data structures **********/
 

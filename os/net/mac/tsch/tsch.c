@@ -60,12 +60,12 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
-#include "net/mac/mac-sequence.h"
-#include "lib/random.h"
-
 #if UIP_CONF_IPV6_RPL
 #include "net/mac/tsch/tsch-rpl.h"
-#endif /* UIP_CONF_IPV6_RPL */
+#endif /* #if UIP_CONF_IPV6_RPL */
+#include "net/mac/mac-sequence.h"
+#include "lib/random.h"
+#include "net/routing/routing.h"
 
 #if TSCH_WITH_SIXTOP
 #include "net/mac/tsch/sixtop/sixtop.h"

@@ -37,10 +37,7 @@
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-private.h"
-#include "rpl.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "net/routing/routing.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/ipv6/uip-debug.h"
 #include "lib/random.h"

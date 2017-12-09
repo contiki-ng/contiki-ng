@@ -52,7 +52,7 @@ ifneq ("$(wildcard project-conf.h)","")
 CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
 endif
 
-MODULES += os os/net os/net/mac os/storage
+MODULES += os os/net os/net/mac os/net/routing os/storage
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 

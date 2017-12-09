@@ -40,7 +40,8 @@
 
 #include "contiki.h"
 #include "contiki-net.h"
-#include "rpl.h"
+
+#include "net/routing/routing.h"
 #include "rpl-border-router.h"
 #include "cmd.h"
 #include "border-router.h"

@@ -40,7 +40,7 @@
 #include "border-router.h"
 #include "border-router-cmds.h"
 #include "dev/serial-line.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "net/ipv6/uiplib.h"
 #include <string.h>
 #include "shell.h"

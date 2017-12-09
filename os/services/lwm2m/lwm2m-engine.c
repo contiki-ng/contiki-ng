@@ -53,6 +53,8 @@
 #include "lwm2m-tlv-writer.h"
 #include "lib/list.h"
 #include "sys/cc.h"
+#include "net/ipv6/uip-ds6.h"
+#include "net/routing/routing.h"
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, RISE SICS
+ * Copyright (c) 2017, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,48 +30,44 @@
  *
  */
 
+/**
+ * \file
+ *         Routing driver header file
+ * \author
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
+ */
+
+#ifndef ROUTING_H_
+#define ROUTING_H_
+
 #include "contiki.h"
-#include "net/routing/routing.h"
-#include "rpl-border-router.h"
 
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "BR"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#include "rpl.h"
+#include "rpl-dag-root.h"
+#if UIP_CONF_IPV6_RPL_LITE == 0
+#include "rpl-private.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
 
-uint8_t prefix_set;
+/**
+ * The structure of a routing protocol driver.
+ */
+struct routing_driver {
+  char *name;
+  /** Initialize the routing protocol */
+  void (* init)(void);
+  /**
+   * Set the prefix, for nodes that will operate as root
+   *
+   * \param prefix The prefix. If NULL, UIP_DS6_DEFAULT_PREFIX is used instead
+   * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
+  */
+  void (* root_set_prefix)(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
+  /**
+   * Set the node as root and start a network
+   *
+   * \return 0 in case of success, -1 otherwise
+  */
+  int (* root_start)(void);
+};
 
-/*---------------------------------------------------------------------------*/
-void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
-
-  LOG_INFO("Server IPv6 addresses:\n");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      LOG_INFO("  ");
-      LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      LOG_INFO_("\n");
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-set_prefix_64(uip_ipaddr_t *prefix_64)
-{
-  prefix_set = 1;
-  rpl_dag_root_init(prefix_64, NULL);
-  rpl_dag_root_init_dag_immediately();
-}
-/*---------------------------------------------------------------------------*/
-void
-rpl_border_router_init(void)
-{
-  PROCESS_NAME(border_router_process);
-  process_start(&border_router_process, NULL);
-}
-/*---------------------------------------------------------------------------*/
+#endif /* ROUTING_H_ */

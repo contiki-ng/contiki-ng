@@ -35,11 +35,8 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-debug.h"
-
+#include "net/routing/routing.h"
 #include "simple-udp.h"
-
-#include "rpl.h"
-#include "rpl-dag-root.h"
 
 #include <stdio.h>
 #include <string.h>

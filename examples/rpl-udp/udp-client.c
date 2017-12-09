@@ -1,5 +1,5 @@
 #include "contiki.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "random.h"
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"

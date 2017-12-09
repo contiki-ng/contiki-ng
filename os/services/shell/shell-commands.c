@@ -58,12 +58,7 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-private.h"
 #endif /* MAC_CONF_WITH_TSCH */
-#if UIP_CONF_IPV6_RPL_LITE
-#include "net/rpl-lite/rpl.h"
-#elif UIP_CONF_IPV6_RPL_CLASSIC
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif
+#include "net/routing/routing.h"
 #include "net/mac/llsec802154.h"
 
 #include <stdlib.h>

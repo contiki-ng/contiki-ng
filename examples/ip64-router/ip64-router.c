@@ -2,7 +2,7 @@
 #include "contiki-net.h"
 #include "ip64/ip64.h"
 #include "net/netstack.h"
-#include "rpl-dag-root.h"
+#include "net/routing/routing.h"
 #include "sys/autostart.h"
 
 /*---------------------------------------------------------------------------*/

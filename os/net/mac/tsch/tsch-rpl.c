@@ -43,18 +43,12 @@
 #if UIP_CONF_IPV6_RPL
 
 #include "contiki.h"
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/routing/routing.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-private.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-rpl.h"
-#include "tsch-rpl.h"
 
 /* Log configuration */
 #include "sys/log.h"
