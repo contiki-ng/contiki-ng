@@ -156,7 +156,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   uip_debug_ipaddr_print(&prefix);
   PRINTF("\n");
 
-  rpl_dag_root_set_prefix(&prefix, NULL);
+  NETSTACK_ROUTING.root_set_prefix(&prefix, NULL);
   rpl_dag_root_start();
 
   coap_engine_init();

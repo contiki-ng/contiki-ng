@@ -43,8 +43,7 @@
 /********** Public functions **********/
 
 /**
- * Initialize dag-root module and sets a prefix in case the node is later
- * set as dag root.
+ * Set a prefix in case the node is later set as dag root.
  *
  * \param prefix The prefix. If NULL, UIP_DS6_DEFAULT_PREFIX is used instead
  * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
