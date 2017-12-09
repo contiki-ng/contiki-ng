@@ -32,8 +32,10 @@
 #ifndef TARGET_CONF_H_
 #define TARGET_CONF_H_
 /*---------------------------------------------------------------------------*/
-#define QUEUEBUF_CONF_NUM         4
-#define UIP_CONF_BUFFER_SIZE    140
+/* Save some RAM and ROM */
+#define QUEUEBUF_CONF_NUM              4
+#define UIP_CONF_BUFFER_SIZE         140
+#define BORDER_ROUTER_CONF_WEBSERVER   0
 /*---------------------------------------------------------------------------*/
 #endif /* TARGET_CONF_H_ */
 /*---------------------------------------------------------------------------*/
