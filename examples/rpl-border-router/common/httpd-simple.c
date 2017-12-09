@@ -37,14 +37,11 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
-#include <stdio.h>
-#include <string.h>
-
+#include "contiki.h"
 #include "contiki-net.h"
 
-#if UIP_CONF_TCP == 0
-#error HTTP server needs TCP enabled
-#endif
+#include <stdio.h>
+#include <string.h>
 
 #include "httpd-simple.h"
 #define webserver_log_file(...)
