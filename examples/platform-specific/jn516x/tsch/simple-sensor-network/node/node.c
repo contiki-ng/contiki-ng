@@ -41,7 +41,6 @@
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/ipv6/uip-debug.h"
 #include "lib/random.h"
-#include "rpl-tools.h"
 #include "node-id.h"
 #include "waveform.h"
 #include "leds.h"
@@ -170,12 +169,9 @@ PROCESS_THREAD(node_process, ev, data)
   is_coordinator = node_role > role_6ln;
 
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, 0xbbbb, 0, 0, 0, 0, 0, 0, 0);
-    rpl_tools_init(&prefix);
-  } else {
-    rpl_tools_init(NULL);
+    rpl_dag_root_init_dag_immediately();
   }
+  NETSTACK_MAC.on();
 
   /* Selected waveform depends on LS byte of MAC  */
   selected_waveform = node_mac[7] % NUMBER_OF_WAVEFORMS;
@@ -211,10 +207,6 @@ PROCESS_THREAD(node_process, ev, data)
         printf("No host\n");
       }
       etimer_restart(&et);
-      if (total_time%60 == 0) {
-        /* Print network status once per minute */
-        print_network_status();
-      }
     }
   }
   PROCESS_END();

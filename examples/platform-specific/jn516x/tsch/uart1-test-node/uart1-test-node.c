@@ -35,7 +35,6 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
-#include "rpl-tools.h"
 #include "coap-engine.h"
 #include "sys/ctimer.h"
 #include "dev/uart-driver.h"
@@ -64,7 +63,7 @@ static int tail_index = 0;  /* index where last read took place */
 
 /* String aligned buffer */
 #define RX_BUFFER_SIZE  RINGBUF_SIZE
-static uint8_t rx_buf[RX_BUFFER_SIZE+1]; 
+static uint8_t rx_buf[RX_BUFFER_SIZE+1];
 static uint8_t rx_buf_index = 0; /* index for rx_buf */
 
 /*---------------------------------------------------------------------------*/
@@ -75,7 +74,7 @@ AUTOSTART_PROCESSES(&start_app, &rx_data_process);
 
 /*********** COAP resources *************************************************/
 /*****************************************************************************/
-/* Observable resource and event handler to obtain terminal input from UART1 */ 
+/* Observable resource and event handler to obtain terminal input from UART1 */
 /*****************************************************************************/
 EVENT_RESOURCE(resource_coap_rx_uart1,                /* name */
                "obs;title=\"rx_uart1\"",              /* attributes */
@@ -95,7 +94,7 @@ get_coap_rx_uart1_handler(coap_message_t *request, coap_message_t *response, uin
     coap_set_header_content_format(response, TEXT_PLAIN);
     coap_set_payload(response, (uint8_t *)content, content_len);
   }
-} 
+}
 
 static void
 event_coap_rx_uart1_handler(void)
@@ -105,7 +104,7 @@ event_coap_rx_uart1_handler(void)
 }
 
 /*****************************************************************************/
-/* GET/PUT resource to send data to terminal on UART1                        */ 
+/* GET/PUT resource to send data to terminal on UART1                        */
 /*****************************************************************************/
 RESOURCE(resource_coap_tx_uart1,                /* name */
          "obs;title=\"tx_uart1\"",              /* attributes */
@@ -140,20 +139,17 @@ PROCESS_THREAD(start_app, ev, data)
   /* Define process that handles data */
   process_start(&rx_data_process ,NULL);
   /* Initialise UART1 */
-  uart1_init(UART1_BAUD_RATE); 
+  uart1_init(UART1_BAUD_RATE);
   /* Callback received byte */
   uart1_set_input(handleRxChar);
 
   /* Start network stack */
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    rpl_tools_init(&prefix);
-  } else {
-    rpl_tools_init(NULL);
+    rpl_dag_root_init_dag_immediately();
   }
+  NETSTACK_MAC.on();
   printf("Starting RPL node\n");
-  
+
   coap_engine_init();
   coap_activate_resource(&resource_coap_rx_uart1, "UART1-RX");
   coap_activate_resource(&resource_coap_tx_uart1, "UART1-TX");
@@ -166,29 +162,29 @@ PROCESS_THREAD(start_app, ev, data)
 PROCESS_THREAD(rx_data_process, ev, data)
 {
   PROCESS_BEGIN();
-  
+
   /* Process is polled whenever data is available from uart isr */
   uint8_t c;
 
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
-    /* Read RX ringbuffer. ASCII chars Output when LF is seen. 
-       If overflowed, strings are skipped */ 
+    /* Read RX ringbuffer. ASCII chars Output when LF is seen.
+       If overflowed, strings are skipped */
     do {
       if (get_ringbuf(&c) == -1) {
         break;    /* No more rx char's in ringbuffer */
       } else {
         if (rx_buf_index == RX_BUFFER_SIZE) {   /* Skip current content if buffer full */
           rx_buf_index = 0;
-        } 
+        }
         rx_buf[rx_buf_index++] = c;
         if ((c == '\n')||(c == '\r')) {
           rx_buf[rx_buf_index] = '\0';
-          printf("RX on UART1: %s", rx_buf);   
+          printf("RX on UART1: %s", rx_buf);
           /* Signal event to coap clients.
              Demo assumes data is consumed before new data comes in */
-          event_coap_rx_uart1_handler();     
-          rx_buf_index = 0;      
+          event_coap_rx_uart1_handler();
+          rx_buf_index = 0;
         }
       }
     } while (1);
@@ -200,7 +196,7 @@ PROCESS_THREAD(rx_data_process, ev, data)
 /* Local test functions                                                  */
 /*************************************************************************/
 /* TX function for UART1 */
-static void 
+static void
 string2uart1(uint8_t *c)
 {
   while (*c!= '\0') {
@@ -210,7 +206,7 @@ string2uart1(uint8_t *c)
 }
 
 /* handleRxChar runs on uart isr */
-static int 
+static int
 handleRxChar(uint8_t c)
 {
   if (put_ringbuf(c) == -1) {
@@ -225,7 +221,7 @@ handleRxChar(uint8_t c)
 /* Simple ringbuffer
    if tail==head, no data has been written yet on that position. So, empty buffer
    is also initial state */
-static int 
+static int
 get_ringbuf(uint8_t *c)
 {
   int return_val = 0;
@@ -241,7 +237,7 @@ get_ringbuf(uint8_t *c)
   return return_val;
 }
 
-static int 
+static int
 put_ringbuf(uint8_t c)
 {
   int return_val = 0;
@@ -249,10 +245,10 @@ put_ringbuf(uint8_t c)
   uart1_disable_interrupts();
   if (head_index != tail_index) {
     ringbuf[head_index] = c;
-    head_index = ((head_index+1)&RINGBUF_MAX_INDEX); 
+    head_index = ((head_index+1)&RINGBUF_MAX_INDEX);
   } else {
     return_val = -1;
   }
   uart1_enable_interrupts();
-  return return_val;                
+  return return_val;
 }

@@ -36,10 +36,9 @@
 #include "net/netstack.h"
 #include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
-#include "rpl-tools.h"
 #include "coap-engine.h"
-#include <stdio.h> 
-#include <stdlib.h> 
+#include <stdio.h>
+#include <stdlib.h>
 #include <AppHardwareApi.h>
 
 static void set_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
@@ -56,7 +55,7 @@ AUTOSTART_PROCESSES(&start_app);
 /*---------------------------------------------------------------------------*/
 
 /*********** sensor/ resource ************************************************/
-RESOURCE(resource_set_tx_power, 
+RESOURCE(resource_set_tx_power,
          "title=\"Set TX Power\"",
          NULL,
          set_tx_power_handler,
@@ -77,7 +76,7 @@ set_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t 
   }
 }
 
-RESOURCE(resource_get_tx_power, 
+RESOURCE(resource_get_tx_power,
          "title=\"Get TX Power\"",
          get_tx_power_handler,
          NULL,
@@ -102,17 +101,14 @@ PROCESS_THREAD(start_app, ev, data)
 {
   PROCESS_BEGIN();
   static int is_coordinator = 0;
- 
+
   /* Start network stack */
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    rpl_tools_init(&prefix);
-  } else {
-    rpl_tools_init(NULL);
+    rpl_dag_root_init_dag_immediately();
   }
+  NETSTACK_MAC.on();
   printf("Starting RPL node\n");
-  
+
   coap_engine_init();
   coap_activate_resource(&resource_set_tx_power, "Set-TX-Power");
   coap_activate_resource(&resource_get_tx_power, "Get-TX-Power");

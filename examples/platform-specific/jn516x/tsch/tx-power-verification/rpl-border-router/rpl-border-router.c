@@ -43,7 +43,6 @@
 #include "net/netstack.h"
 #include "dev/slip.h"
 #include "coap-engine.h"
-#include "rpl-tools.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,7 +66,7 @@ static int content_len = 0;
 PROCESS(border_router_process, "Border router process");
 AUTOSTART_PROCESSES(&border_router_process);
 
-RESOURCE(resource_get_rssi, 
+RESOURCE(resource_get_rssi,
          "title=\"Get RSSI\"",
          get_rssi_handler,
          NULL,
@@ -88,7 +87,7 @@ get_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buf
   }
 }
 
-RESOURCE(resource_get_last_rssi, 
+RESOURCE(resource_get_last_rssi,
          "title=\"Get last RSSI\"",
          get_last_rssi_handler,
          NULL,
@@ -157,7 +156,8 @@ PROCESS_THREAD(border_router_process, ev, data)
   uip_debug_ipaddr_print(&prefix);
   PRINTF("\n");
 
-  rpl_tools_init(&prefix);
+  rpl_dag_root_init(&prefix, NULL);
+  rpl_dag_root_init_dag_immediately();
 
   coap_engine_init();
   coap_activate_resource(&resource_get_rssi, "Get-RSSI");

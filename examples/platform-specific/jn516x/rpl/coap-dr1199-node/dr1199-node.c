@@ -34,7 +34,6 @@
 #include "contiki.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "tools/rpl-tools.h"
 #include "coap-engine.h"
 #include "dev/leds.h"
 #include "button-sensor.h"
@@ -351,12 +350,10 @@ PROCESS_THREAD(start_app, ev, data)
 
   /* Start net stack */
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    rpl_tools_init(&prefix);
-  } else {
-    rpl_tools_init(NULL);
-  } printf("Starting RPL node\n");
+    rpl_dag_root_init_dag_immediately();
+  }
+  NETSTACK_MAC.on();
+  printf("Starting RPL node\n");
 
   coap_engine_init();
   coap_activate_resource(&resource_switch_sw1, "DR1199/Switch/SW1");

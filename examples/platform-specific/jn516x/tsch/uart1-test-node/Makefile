@@ -6,7 +6,7 @@ TARGET_WITH_UART1 = 1
 
 CONTIKI=../../../../..
 
-MODULES_REL += .. ../tools
+MODULES_REL += ..
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap
