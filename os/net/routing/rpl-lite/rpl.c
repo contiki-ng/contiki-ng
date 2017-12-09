@@ -177,7 +177,7 @@ rpl_set_prefix(rpl_prefix_t *prefix)
 }
 /*---------------------------------------------------------------------------*/
 static void
-rpl_init(void)
+init(void)
 {
   LOG_INFO("initializing\n");
 
@@ -195,7 +195,7 @@ rpl_init(void)
 /*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_lite_driver = {
   "RPL Lite",
-  rpl_init,
+  init,
   rpl_dag_root_set_prefix,
   rpl_dag_root_start,
 };

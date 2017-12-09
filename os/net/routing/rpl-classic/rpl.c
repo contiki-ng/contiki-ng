@@ -330,7 +330,7 @@ rpl_purge_dags(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-rpl_init(void)
+init(void)
 {
   uip_ipaddr_t rplmaddr;
   PRINTF("RPL started\n");
@@ -355,7 +355,7 @@ rpl_init(void)
 /*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_classic_driver = {
   "RPL Classic",
-  rpl_init,
+  init,
   rpl_dag_root_set_prefix,
   rpl_dag_root_start,
 };
