@@ -47,9 +47,22 @@ init(void)
 {
 }
 /*---------------------------------------------------------------------------*/
+static void
+root_set_prefix(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
+{
+}
+/*---------------------------------------------------------------------------*/
+static int
+root_start(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
   "Null Routing",
   init,
+  root_set_prefix,
+  root_start,
 };
 /*---------------------------------------------------------------------------*/
 
