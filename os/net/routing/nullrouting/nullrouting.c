@@ -27,44 +27,30 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
+ */
+
+/**
+ * \addtogroup null-routing
+ * @{
  *
- */
-
-/**
  * \file
- *         Routing driver header file
- * \author
- *         Simon Duquennoy <simon.duquennoy@ri.se>
+ *         A routing protocol that does nothing
+ *
+ * \author Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
-#ifndef ROUTING_H_
-#define ROUTING_H_
+#include "net/routing/routing.h"
 
-#include "contiki.h"
-#include "net/ipv6/uip.h"
-#include "net/ipv6/uip-ds6-route.h"
-#include "net/linkaddr.h"
-
-/**
- * The structure of a routing protocol driver.
- */
-struct routing_driver {
-  char *name;
-  /** Initialize the routing protocol */
-  void (* init)(void);
-  /**
-   * Set the prefix, for nodes that will operate as root
-   *
-   * \param prefix The prefix. If NULL, UIP_DS6_DEFAULT_PREFIX is used instead
-   * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
-  */
-  void (* root_set_prefix)(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
-  /**
-   * Set the node as root and start a network
-   *
-   * \return 0 in case of success, -1 otherwise
-  */
-  int (* root_start)(void);
+/*---------------------------------------------------------------------------*/
+static void
+init(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+const struct routing_driver nullrouting_driver = {
+  "Null Routing",
+  init,
 };
+/*---------------------------------------------------------------------------*/
 
-#endif /* ROUTING_H_ */
+/** @}*/

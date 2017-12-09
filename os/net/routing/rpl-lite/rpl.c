@@ -42,6 +42,7 @@
  */
 
 #include "net/routing/rpl-lite/rpl.h"
+#include "net/routing/routing.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -175,7 +176,7 @@ rpl_set_prefix(rpl_prefix_t *prefix)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 rpl_init(void)
 {
   LOG_INFO("initializing\n");
@@ -191,6 +192,11 @@ rpl_init(void)
 
   rpl_ns_init();
 }
+/*---------------------------------------------------------------------------*/
+const struct routing_driver rpl_lite_driver = {
+  "RPL Lite",
+  rpl_init,
+};
 /*---------------------------------------------------------------------------*/
 
 /** @}*/

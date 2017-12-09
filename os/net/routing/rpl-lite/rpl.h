@@ -127,11 +127,6 @@ int rpl_is_reachable(void);
  */
 int rpl_lollipop_greater_than(int a, int b);
 
-/**
- * Initialize RPL main module
- */
-void rpl_init(void);
-
  /** @} */
 
 #endif /* RPL_H */

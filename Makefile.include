@@ -153,13 +153,17 @@ endif
 ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
   CFLAGS += -DUIP_CONF_IPV6_RPL=1
   CFLAGS += -DUIP_CONF_IPV6_RPL_CLASSIC=1
+  CFLAGS += -DNETSTACK_ROUTING=rpl_classic_driver
   MODULES += os/net/routing/rpl-classic
 else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_LITE)
   CFLAGS += -DUIP_CONF_IPV6_RPL=1
   CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
+  CFLAGS += -DNETSTACK_ROUTING=rpl_lite_driver
   MODULES += os/net/routing/rpl-lite
 else
   CFLAGS += -DUIP_CONF_IPV6_RPL=0
+  CFLAGS += -DNETSTACK_ROUTING=nullrouting_driver
+  MODULES += os/net/routing/nullrouting
 endif
 
 MODULEDIRS = $(MODULES_REL) ${wildcard ${addprefix $(CONTIKI)/, $(MODULES)}}

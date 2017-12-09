@@ -847,10 +847,8 @@ PROCESS_THREAD(tcpip_process, ev, data)
 #ifdef UIP_FALLBACK_INTERFACE
   UIP_FALLBACK_INTERFACE.init();
 #endif
-  /* initialize RPL if configured for using RPL */
-#if UIP_CONF_IPV6_RPL
-  rpl_init();
-#endif /* UIP_CONF_IPV6_RPL */
+  /* Initialize routing protocol */
+  NETSTACK_ROUTING.init();
 
   while(1) {
     PROCESS_YIELD();
