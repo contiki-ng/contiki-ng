@@ -40,7 +40,7 @@
  * \author Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
-#include "net/rpl-lite/rpl.h"
+#include "net/routing/rpl-lite/rpl.h"
 #include "lib/list.h"
 #include "lib/memb.h"
 

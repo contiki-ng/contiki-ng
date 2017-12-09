@@ -43,7 +43,7 @@
  *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
  
-#include "net/rpl-lite/rpl.h"
+#include "net/routing/rpl-lite/rpl.h"
 #include "net/packetbuf.h"
 
 /* Log configuration */

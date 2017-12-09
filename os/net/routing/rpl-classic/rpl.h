@@ -38,7 +38,7 @@
 #ifndef RPL_H
 #define RPL_H
 
-#include "net/rpl-classic/rpl-conf.h"
+#include "net/routing/rpl-classic/rpl-conf.h"
 
 #include "lib/list.h"
 #include "net/ipv6/uip.h"

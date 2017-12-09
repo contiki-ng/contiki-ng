@@ -41,7 +41,7 @@
  */
 
 #include "contiki.h"
-#include "net/rpl-lite/rpl.h"
+#include "net/routing/rpl-lite/rpl.h"
 #include "net/link-stats.h"
 #include "lib/random.h"
 #include "sys/ctimer.h"

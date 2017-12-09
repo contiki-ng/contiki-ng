@@ -47,8 +47,8 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/tcpip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/rpl-classic/rpl-private.h"
-#include "net/rpl-classic/rpl-ns.h"
+#include "net/routing/rpl-classic/rpl-private.h"
+#include "net/routing/rpl-classic/rpl-ns.h"
 #include "net/packetbuf.h"
 
 #define DEBUG DEBUG_NONE

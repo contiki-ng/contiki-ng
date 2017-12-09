@@ -153,11 +153,11 @@ endif
 ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
   CFLAGS += -DUIP_CONF_IPV6_RPL=1
   CFLAGS += -DUIP_CONF_IPV6_RPL_CLASSIC=1
-  MODULES += os/net/rpl-classic
+  MODULES += os/net/routing/rpl-classic
 else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_LITE)
   CFLAGS += -DUIP_CONF_IPV6_RPL=1
   CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
-  MODULES += os/net/rpl-lite
+  MODULES += os/net/routing/rpl-lite
 else
   CFLAGS += -DUIP_CONF_IPV6_RPL=0
 endif

@@ -42,7 +42,7 @@
  *
  */
 
-#include "net/rpl-lite/rpl.h"
+#include "net/routing/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
 
 /* Log configuration */

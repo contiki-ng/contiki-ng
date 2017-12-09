@@ -31,24 +31,24 @@
  */
 
 /**
+ * \addtogroup rpl-lite
+ * @{
+ *
  * \file
  *         An implementation of RPL's objective function 0, RFC6552
  *
  * \author Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>
+ * Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
-/**
- * \addtogroup uip
- * @{
- */
-
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
+#include "net/routing/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 /* Constants from RFC6552. We use the default values. */
 #define RANK_STRETCH       0 /* Must be in the range [0;5] */
@@ -74,163 +74,125 @@
 #endif /* RPL_OF0_CONF_SR */
 
 #if RPL_OF0_FIXED_SR
-#define STEP_OF_RANK(p)       (3)
+#define STEP_OF_RANK(nbr)       (3)
 #endif /* RPL_OF0_FIXED_SR */
 
 #if RPL_OF0_ETX_BASED_SR
 /* Numbers suggested by P. Thubert for in the 6TiSCH WG. Anything that maps ETX to
  * a step between 1 and 9 works. */
-#define STEP_OF_RANK(p)       (((3 * parent_link_metric(p)) / LINK_STATS_ETX_DIVISOR) - 2)
+#define STEP_OF_RANK(nbr)       (((3 * nbr_link_metric(nbr)) / LINK_STATS_ETX_DIVISOR) - 2)
 #endif /* RPL_OF0_ETX_BASED_SR */
 
 /*---------------------------------------------------------------------------*/
 static void
-reset(rpl_dag_t *dag)
+reset(void)
 {
-  PRINTF("RPL: Reset OF0\n");
+  LOG_INFO("reset OF0\n");
 }
-/*---------------------------------------------------------------------------*/
-#if RPL_WITH_DAO_ACK
-static void
-dao_ack_callback(rpl_parent_t *p, int status)
-{
-  if(status == RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT) {
-    return;
-  }
-  /* here we need to handle failed DAO's and other stuff */
-  PRINTF("RPL: OF0 - DAO ACK received with status: %d\n", status);
-  if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
-    /* punish the ETX as if this was 10 packets lost */
-    link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
-  } else if(status == RPL_DAO_ACK_TIMEOUT) { /* timeout = no ack */
-    /* punish the total lack of ACK with a similar punishment */
-    link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
-  }
-}
-#endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_link_metric(rpl_parent_t *p)
+nbr_link_metric(rpl_nbr_t *nbr)
 {
   /* OF0 operates without metric container; the only metric we have is ETX */
-  const struct link_stats *stats = rpl_get_parent_link_stats(p);
+  const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
   return stats != NULL ? stats->etx : 0xffff;
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_rank_increase(rpl_parent_t *p)
+nbr_rank_increase(rpl_nbr_t *nbr)
 {
   uint16_t min_hoprankinc;
-  if(p == NULL || p->dag == NULL || p->dag->instance == NULL) {
+  if(nbr == NULL) {
     return RPL_INFINITE_RANK;
   }
-  min_hoprankinc = p->dag->instance->min_hoprankinc;
-  return (RANK_FACTOR * STEP_OF_RANK(p) + RANK_STRETCH) * min_hoprankinc;
+  min_hoprankinc = curr_instance.min_hoprankinc;
+  return (RANK_FACTOR * STEP_OF_RANK(nbr) + RANK_STRETCH) * min_hoprankinc;
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
-parent_path_cost(rpl_parent_t *p)
+nbr_path_cost(rpl_nbr_t *nbr)
 {
-  if(p == NULL) {
+  if(nbr == NULL) {
     return 0xffff;
   }
   /* path cost upper bound: 0xffff */
-  return MIN((uint32_t)p->rank + parent_link_metric(p), 0xffff);
+  return MIN((uint32_t)nbr->rank + nbr_link_metric(nbr), 0xffff);
 }
 /*---------------------------------------------------------------------------*/
 static rpl_rank_t
-rank_via_parent(rpl_parent_t *p)
+rank_via_nbr(rpl_nbr_t *nbr)
 {
-  if(p == NULL) {
+  if(nbr == NULL) {
     return RPL_INFINITE_RANK;
   } else {
-    return MIN((uint32_t)p->rank + parent_rank_increase(p), RPL_INFINITE_RANK);
+    return MIN((uint32_t)nbr->rank + nbr_rank_increase(nbr), RPL_INFINITE_RANK);
   }
 }
 /*---------------------------------------------------------------------------*/
 static int
-parent_is_acceptable(rpl_parent_t *p)
+nbr_has_usable_link(rpl_nbr_t *nbr)
 {
-  return STEP_OF_RANK(p) >= MIN_STEP_OF_RANK
-      && STEP_OF_RANK(p) <= MAX_STEP_OF_RANK;
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
 static int
-parent_has_usable_link(rpl_parent_t *p)
+nbr_is_acceptable_parent(rpl_nbr_t *nbr)
 {
-  return parent_is_acceptable(p);
+  return STEP_OF_RANK(nbr) >= MIN_STEP_OF_RANK
+      && STEP_OF_RANK(nbr) <= MAX_STEP_OF_RANK;
 }
 /*---------------------------------------------------------------------------*/
-static rpl_parent_t *
-best_parent(rpl_parent_t *p1, rpl_parent_t *p2)
+static rpl_nbr_t *
+best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
 {
-  rpl_dag_t *dag;
-  uint16_t p1_cost;
-  uint16_t p2_cost;
-  int p1_is_acceptable;
-  int p2_is_acceptable;
+  uint16_t nbr1_cost;
+  uint16_t nbr2_cost;
+  int nbr1_is_acceptable;
+  int nbr2_is_acceptable;
 
-  p1_is_acceptable = p1 != NULL && parent_is_acceptable(p1);
-  p2_is_acceptable = p2 != NULL && parent_is_acceptable(p2);
+  nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
+  nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
 
-  if(!p1_is_acceptable) {
-    return p2_is_acceptable ? p2 : NULL;
+  if(!nbr1_is_acceptable) {
+    return nbr2_is_acceptable ? nbr2 : NULL;
   }
-  if(!p2_is_acceptable) {
-    return p1_is_acceptable ? p1 : NULL;
+  if(!nbr2_is_acceptable) {
+    return nbr1_is_acceptable ? nbr1 : NULL;
   }
 
-  dag = p1->dag; /* Both parents are in the same DAG. */
-  p1_cost = parent_path_cost(p1);
-  p2_cost = parent_path_cost(p2);
+  nbr1_cost = nbr_path_cost(nbr1);
+  nbr2_cost = nbr_path_cost(nbr2);
 
   /* Paths costs coarse-grained (multiple of min_hoprankinc), we operate without hysteresis */
-  if(p1_cost != p2_cost) {
-    /* Pick parent with lowest path cost */
-    return p1_cost < p2_cost ? p1 : p2;
+  if(nbr1_cost != nbr2_cost) {
+    /* Pick nbr with lowest path cost */
+    return nbr1_cost < nbr2_cost ? nbr1 : nbr2;
   } else {
     /* We have a tie! */
     /* Stik to current preferred parent if possible */
-    if(p1 == dag->preferred_parent || p2 == dag->preferred_parent) {
-      return dag->preferred_parent;
+    if(nbr1 == curr_instance.dag.preferred_parent || nbr2 == curr_instance.dag.preferred_parent) {
+      return curr_instance.dag.preferred_parent;
     }
     /* None of the nodes is the current preferred parent,
-     * choose parent with best link metric */
-    return parent_link_metric(p1) < parent_link_metric(p2) ? p1 : p2;
+     * choose nbr with best link metric */
+    return nbr_link_metric(nbr1) < nbr_link_metric(nbr2) ? nbr1 : nbr2;
   }
-}
-/*---------------------------------------------------------------------------*/
-static rpl_dag_t *
-best_dag(rpl_dag_t *d1, rpl_dag_t *d2)
-{
-  if(d1->grounded != d2->grounded) {
-    return d1->grounded ? d1 : d2;
-  }
-
-  if(d1->preference != d2->preference) {
-    return d1->preference > d2->preference ? d1 : d2;
-  }
-
-  return d1->rank < d2->rank ? d1 : d2;
 }
 /*---------------------------------------------------------------------------*/
 static void
-update_metric_container(rpl_instance_t *instance)
+update_metric_container(void)
 {
-  instance->mc.type = RPL_DAG_MC_NONE;
+  curr_instance.mc.type = RPL_DAG_MC_NONE;
 }
 /*---------------------------------------------------------------------------*/
 rpl_of_t rpl_of0 = {
   reset,
-#if RPL_WITH_DAO_ACK
-  dao_ack_callback,
-#endif
-  parent_link_metric,
-  parent_has_usable_link,
-  parent_path_cost,
-  rank_via_parent,
+  nbr_link_metric,
+  nbr_has_usable_link,
+  nbr_is_acceptable_parent,
+  nbr_path_cost,
+  rank_via_nbr,
   best_parent,
-  best_dag,
   update_metric_container,
   RPL_OCP_OF0
 };

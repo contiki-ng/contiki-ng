@@ -47,7 +47,7 @@
 /********** Includes  **********/
 
 #include "net/ipv6/uip.h"
-#include "net/rpl-lite/rpl.h"
+#include "net/routing/rpl-lite/rpl.h"
 
 /********** Data Structures  **********/
 

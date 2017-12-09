@@ -37,14 +37,14 @@
  * \author Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
-#include "net/rpl-classic/rpl-conf.h"
+#include "net/routing/rpl-classic/rpl-conf.h"
 
 #include "net/ipv6/uip.h"
 #include "net/ipv6/tcpip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-icmp6.h"
-#include "net/rpl-classic/rpl-private.h"
-#include "net/rpl-classic/rpl-ns.h"
+#include "net/routing/rpl-classic/rpl-private.h"
+#include "net/routing/rpl-classic/rpl-ns.h"
 #include "lib/list.h"
 #include "lib/memb.h"
 
