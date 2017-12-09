@@ -68,6 +68,7 @@
 #include "net/ipv6/tcpip.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uipbuf.h"
 #include "net/ipv6/sicslowpan.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
@@ -1504,17 +1505,6 @@ output(const linkaddr_t *localdest)
     set_packet_attrs();
   }
 
-#if UIP_WITH_VARIABLE_RETRANSMISSIONS
-  {
-    uint8_t traffic_class = (UIP_IP_BUF->vtc << 4) | (UIP_IP_BUF->tcflow >> 4);
-    if(traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_BIT) {
-      uint8_t max_mac_transmissions = traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_MASK;
-      /* propagate the MAC transmission limit to lower layers */
-      packetbuf_set_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS, max_mac_transmissions);
-    }
-  }
-#endif /* UIP_WITH_VARIABLE_RETRANSMISSIONS */
-
   /*
    * The destination address will be tagged to each outbound
    * packet. If the argument localdest is NULL, we are sending a
@@ -1527,6 +1517,10 @@ output(const linkaddr_t *localdest)
   }
 
   LOG_INFO("output: sending packet len %d\n", uip_len);
+
+  /* copy over the retransmission count from uipbuf attributes */
+  packetbuf_set_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS,
+                     uipbuf_get_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS));
 
   /* Try to compress the headers */
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6

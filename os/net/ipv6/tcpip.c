@@ -121,6 +121,19 @@ uint8_t
 tcpip_output(const uip_lladdr_t *a)
 {
   int ret;
+
+  /* Tag Traffic Class if we are using TC for variable retrans */
+#if UIP_TAG_TC_WITH_VARIABLE_RETRANSMISSIONS
+  if(uipbuf_get_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS) !=
+     UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED) {
+    LOG_INFO("Tagging TC with retrans: %d\n", uipbuf_get_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS));
+    /* Encapsulate the MAC transmission limit in the Traffic Class field */
+    UIP_IP_BUF->vtc = 0x60 | (UIP_TC_MAC_TRANSMISSION_COUNTER_BIT >> 4);
+    UIP_IP_BUF->tcflow =
+      uipbuf_get_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS) << 4;
+  }
+#endif
+
   if(netstack_process_ip_callback(NETSTACK_IP_OUTPUT, (const linkaddr_t *)a) ==
      NETSTACK_IP_PROCESS) {
     ret = NETSTACK_NETWORK.output((const linkaddr_t *) a);
@@ -167,6 +180,19 @@ packet_input(void)
 {
   if(uip_len > 0) {
     check_for_tcp_syn();
+
+#if UIP_TAG_TC_WITH_VARIABLE_RETRANSMISSIONS
+    {
+      uint8_t traffic_class = (UIP_IP_BUF->vtc << 4) | (UIP_IP_BUF->tcflow >> 4);
+      if(traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_BIT) {
+        uint8_t max_mac_transmissions = traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_MASK;
+        uipbuf_set_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS, max_mac_transmissions);
+        LOG_INFO("Received packet tagged with TC retrans: %d (%x)",
+                 max_mac_transmissions, traffic_class);
+      }
+    }
+#endif /* UIP_TAG_TC_WITH_VARIABLE_RETRANSMISSIONS */
+
     uip_input();
     if(uip_len > 0) {
       tcpip_ipv6_output();
