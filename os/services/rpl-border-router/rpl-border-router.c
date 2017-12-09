@@ -65,7 +65,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 {
   prefix_set = 1;
   NETSTACK_ROUTING.root_set_prefix(prefix_64, NULL);
-  rpl_dag_root_start();
+  NETSTACK_ROUTING.root_start();
 }
 /*---------------------------------------------------------------------------*/
 void

@@ -307,7 +307,7 @@ PROCESS_THREAD(router_node_process, ev, data)
   leds_off(LEDS_DHCP);
 
   /* Set us up as a RPL root node. */
-  rpl_dag_root_start();
+  NETSTACK_ROUTING.root_start();
 
   /* ... and do nothing more. */
   while(1) {

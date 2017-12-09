@@ -65,7 +65,7 @@ PROCESS_THREAD(node_process, ev, data)
 #endif
 
   if(is_coordinator) {
-    rpl_dag_root_start();
+    NETSTACK_ROUTING.root_start();
   }
   NETSTACK_MAC.on();
 

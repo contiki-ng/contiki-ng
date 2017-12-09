@@ -237,7 +237,7 @@ setup_network(void)
 #endif
 
   NETSTACK_ROUTING.root_set_prefix(&ipaddr, &ipaddr);
-  rpl_dag_root_start();
+  NETSTACK_ROUTING.root_start();
 #endif /* UIP_CONF_ROUTER */
 
   PRINTF("IPv6 addresses: ");

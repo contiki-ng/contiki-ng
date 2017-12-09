@@ -157,7 +157,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   PRINTF("\n");
 
   NETSTACK_ROUTING.root_set_prefix(&prefix, NULL);
-  rpl_dag_root_start();
+  NETSTACK_ROUTING.root_start();
 
   coap_engine_init();
   coap_activate_resource(&resource_get_rssi, "Get-RSSI");

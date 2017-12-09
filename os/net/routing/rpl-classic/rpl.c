@@ -357,6 +357,7 @@ const struct routing_driver rpl_classic_driver = {
   "RPL Classic",
   rpl_init,
   rpl_dag_root_set_prefix,
+  rpl_dag_root_start,
 };
 /*---------------------------------------------------------------------------*/
 

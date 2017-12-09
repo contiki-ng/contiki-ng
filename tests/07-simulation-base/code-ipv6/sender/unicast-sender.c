@@ -40,7 +40,7 @@ PROCESS_THREAD(udp_process, ev, data)
 
   PROCESS_BEGIN();
 
-  rpl_dag_root_start();
+  NETSTACK_ROUTING.root_start();
 
   simple_udp_register(&broadcast_connection, UDP_PORT,
                       NULL, UDP_PORT,
