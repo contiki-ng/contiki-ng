@@ -60,11 +60,14 @@
 #endif /* MAC_CONF_WITH_TSCH */
 #include "net/routing/routing.h"
 #include "net/mac/llsec802154.h"
-#if RPL_WITH_NON_STORING
-/* For RPL non-storing specific link printout */
-#include "rpl-ns.h"
-#endif
 
+/* For RPL-specific commands */
+#if UIP_CONF_IPV6_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#elif UIP_CONF_IPV6_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-private.h"
+#endif
 
 #include <stdlib.h>
 
