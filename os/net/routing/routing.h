@@ -88,6 +88,16 @@ struct routing_driver {
   */
   int (* ext_header_update)(void);
   /**
+  * Process and update the routing protocol hob-by-hop
+  * extention headers of the current uIP packet.
+  *
+  * \param uip_ext_opt_offset The offset within the uIP packet where
+  * extension headers start
+  * \return 1 in case the packet is valid and to be processed further,
+  * 0 in case the packet must be dropped.
+  */
+  int (* ext_header_hbh_update)(int uip_ext_opt_offset);
+  /**
    * Look for next hop from SRH of current uIP packet.
    *
    * \param ipaddr A pointer to the address where to store the next hop.

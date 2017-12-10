@@ -875,13 +875,10 @@ ext_hdr_options_process(void)
        * Using this fix, the header is ignored, and the next header (if
        * present) is processed.
        */
-#if UIP_CONF_IPV6_RPL
-      LOG_DBG("Processing RPL option\n");
-      if(!rpl_ext_header_hbh_update(uip_ext_opt_offset)) {
+      if(!NETSTACK_ROUTING.ext_header_hbh_update(uip_ext_opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
-#endif /* UIP_CONF_IPV6_RPL */
       uip_ext_opt_offset += (UIP_EXT_HDR_OPT_BUF->len) + 2;
       return 0;
     default:

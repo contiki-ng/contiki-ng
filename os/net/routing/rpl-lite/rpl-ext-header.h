@@ -60,7 +60,8 @@ int rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr);
 int rpl_ext_header_srh_update(void);
 
 /**
-* Process and update the RPL extension headers of the current uIP packet.
+* Process and update the RPL hop-by-hop extension headers of
+* the current uIP packet.
 *
 * \param uip_ext_opt_offset The offset within the uIP packet where
 * extension headers start
@@ -70,7 +71,7 @@ int rpl_ext_header_srh_update(void);
 int rpl_ext_header_hbh_update(int uip_ext_opt_offset);
 
 /**
- * Adds/updates RPL extension headers to current uIP packet.
+ * Adds/updates all RPL extension headers to current uIP packet.
  *
  * \return 1 in case of success, 0 otherwise
 */
