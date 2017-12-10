@@ -124,8 +124,8 @@ PT_THREAD(generate_routes(struct httpd_state *s))
   }
 #endif /* UIP_MAX_ROUTES != 0 */
 
-#if RPL_WITH_NON_STORING
-  {
+#if UIP_CONF_IPV6_RPL
+  if(rpl_ns_num_nodes() > 0) {
     static rpl_ns_node_t *link;
     ADD("  Routing links\n  <ul>\n");
     SEND(&s->sout);
@@ -151,7 +151,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
     ADD("  </ul>");
     SEND(&s->sout);
   }
-#endif /* RPL_WITH_NON_STORING */
+#endif /* UIP_CONF_IPV6_RPL */
 
   SEND_STRING(&s->sout, BOTTOM);
 

@@ -551,12 +551,6 @@ static
 PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
 {
   uip_ds6_defrt_t *default_route;
-#if RPL_WITH_NON_STORING
-  rpl_ns_node_t *link;
-#endif /* RPL_WITH_NON_STORING */
-#if (UIP_MAX_ROUTES != 0)
-  uip_ds6_route_t *route;
-#endif /* (UIP_MAX_ROUTES != 0) */
 
   PT_BEGIN(pt);
 
@@ -575,8 +569,9 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
     SHELL_OUTPUT(output, "-- None\n");
   }
 
-#if RPL_WITH_NON_STORING
+#if UIP_CONF_IPV6_RPL
   if(rpl_ns_num_nodes() > 0) {
+    rpl_ns_node_t *link;
     /* Our routing links */
     SHELL_OUTPUT(output, "Routing links (%u in total):\n", rpl_ns_num_nodes());
     link = rpl_ns_node_head();
@@ -604,10 +599,11 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
   } else {
     SHELL_OUTPUT(output, "No routing links\n");
   }
-#endif /* RPL_WITH_NON_STORING */
+#endif /* UIP_CONF_IPV6_RPL */
 
 #if (UIP_MAX_ROUTES != 0)
   if(uip_ds6_route_num_routes() > 0) {
+    uip_ds6_route_t *route;
     /* Our routing entries */
     SHELL_OUTPUT(output, "Routing entries (%u in total):\n", uip_ds6_route_num_routes());
     route = uip_ds6_route_head();
