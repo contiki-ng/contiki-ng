@@ -383,6 +383,7 @@ const struct routing_driver rpl_classic_driver = {
   rpl_ext_header_hbh_update,
   rpl_ext_header_srh_update,
   rpl_ext_header_srh_get_next_hop,
+  rpl_link_callback,
 };
 /*---------------------------------------------------------------------------*/
 

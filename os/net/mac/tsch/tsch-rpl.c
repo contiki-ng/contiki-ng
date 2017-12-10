@@ -60,7 +60,7 @@
 void
 tsch_rpl_callback_ka_sent(int status, int transmissions)
 {
-  rpl_link_callback(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
+  NETSTACK_ROUTING.link_callback(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
 }
 /*---------------------------------------------------------------------------*/
 /* To use, set #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network */

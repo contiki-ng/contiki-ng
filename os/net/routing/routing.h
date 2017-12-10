@@ -110,6 +110,14 @@ struct routing_driver {
    * \return 1 if a next hop was found, 0 otherwise
   */
   int (* ext_header_srh_get_next_hop)(uip_ipaddr_t *ipaddr);
+  /**
+   * Called by lower layers after every packet transmission
+   *
+   * \param addr The link-layer addrress of the packet destination
+   * \param status The transmission status (see os/net/mac/mac.h)
+   * \param numtx The total number of transmission attempts
+   */
+  void (* link_callback)(const linkaddr_t *addr, int status, int numtx);
 };
 
 #endif /* ROUTING_H_ */
