@@ -45,8 +45,8 @@
 
 #include "contiki.h"
 #include "net/link-stats.h"
-#include "rpl.h"
-#include "rpl-private.h"
+#include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-private.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6-nbr.h"
