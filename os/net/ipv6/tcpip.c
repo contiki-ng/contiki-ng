@@ -38,11 +38,13 @@
  * \author  Julien Abeille <jabeille@cisco.com> (IPv6 related code)
  */
 
+#include "contiki.h"
 #include "contiki-net.h"
 #include "net/ipv6/uip-packetqueue.h"
 
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 #include "net/linkaddr.h"
 #include "net/routing/routing.h"
 
