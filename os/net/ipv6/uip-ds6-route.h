@@ -44,7 +44,6 @@
 #include "net/nbr-table.h"
 #include "sys/stimer.h"
 #include "lib/list.h"
-#include "net/routing/routing.h"
 
 #ifdef UIP_CONF_MAX_ROUTES
 #define UIP_MAX_ROUTES UIP_CONF_MAX_ROUTES

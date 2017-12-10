@@ -118,6 +118,12 @@ struct routing_driver {
    * \param numtx The total number of transmission attempts
    */
   void (* link_callback)(const linkaddr_t *addr, int status, int numtx);
+  /**
+   * Called by uIP if it has decided to drop a route because
+   *
+   * \param route The route that will be dropped after this function returns
+   */
+  void (* drop_route)(uip_ds6_route_t *route);
 };
 
 #endif /* ROUTING_H_ */

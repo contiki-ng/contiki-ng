@@ -103,6 +103,11 @@ link_callback(const linkaddr_t *addr, int status, int numtx)
 {
 }
 /*---------------------------------------------------------------------------*/
+static void
+drop_route(uip_ds6_route_t *route)
+{
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
   "Null Routing",
   init,
@@ -116,6 +121,7 @@ const struct routing_driver nullrouting_driver = {
   ext_header_srh_update,
   ext_header_srh_get_next_hop,
   link_callback,
+  drop_route,
 };
 /*---------------------------------------------------------------------------*/
 

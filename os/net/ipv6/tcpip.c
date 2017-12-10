@@ -476,23 +476,6 @@ output_fallback(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-drop_route(uip_ds6_route_t *route)
-{
-#if UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0)
-
-  /* If we are running RPL, and if we are the root of the
-     network, we'll trigger a global repair before we remove
-     the route. */
-  rpl_dag_t *dag;
-  dag = (rpl_dag_t *)route->state.dag;
-  if(dag != NULL && dag->instance != NULL) {
-    rpl_repair_root(dag->instance->instance_id);
-  }
-#endif /* UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0) */
-  uip_ds6_route_rm(route);
-}
-/*---------------------------------------------------------------------------*/
-static void
 annotate_transmission(uip_ipaddr_t *nexthop)
 {
 #if TCPIP_CONF_ANNOTATE_TRANSMISSIONS
@@ -558,9 +541,11 @@ get_nexthop(uip_ipaddr_t *addr)
        never responded to link-layer acks, we drop its route. */
     if(nexthop == NULL) {
       LOG_ERR("output: found dead route\n");
-      drop_route(route);
-      /* We don't have a nexthop to send the packet to, so we drop
-         it. */
+      /* Notifiy the routing protocol that we are about to remove the route */
+      NETSTACK_ROUTING.drop_route(route);
+      /* Remove the route */
+      uip_ds6_route_rm(route);
+      /* We don't have a nexthop to send the packet to, so we drop it. */
     } else {
       LOG_INFO("output: found next hop from routing table: ");
       LOG_INFO_6ADDR(nexthop);

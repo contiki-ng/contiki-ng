@@ -371,6 +371,18 @@ local_repair(const char *str)
   }
 }
 /*---------------------------------------------------------------------------*/
+static void
+drop_route(uip_ds6_route_t *route)
+{
+  /* If we are the root of the network, trigger a global repair before
+  the route gets removed */
+  rpl_dag_t *dag;
+  dag = (rpl_dag_t *)route->state.dag;
+  if(dag != NULL && dag->instance != NULL) {
+    rpl_repair_root(dag->instance->instance_id);
+  }
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_classic_driver = {
   "RPL Classic",
   init,
@@ -384,6 +396,7 @@ const struct routing_driver rpl_classic_driver = {
   rpl_ext_header_srh_update,
   rpl_ext_header_srh_get_next_hop,
   rpl_link_callback,
+  drop_route,
 };
 /*---------------------------------------------------------------------------*/
 
