@@ -225,5 +225,45 @@ rpl_ns_periodic(void)
     }
   }
 }
+/*---------------------------------------------------------------------------*/
+
+#else /* RPL_WITH_NON_STORING */
+
+/*---------------------------------------------------------------------------*/
+int
+rpl_ns_num_nodes(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+rpl_ns_node_t *
+rpl_ns_node_head(void)
+{
+  return NULL;
+}
+/*---------------------------------------------------------------------------*/
+rpl_ns_node_t *
+rpl_ns_node_next(rpl_ns_node_t *item)
+{
+  return NULL;
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_ns_get_node_global_addr(uip_ipaddr_t *addr, rpl_ns_node_t *node)
+{
+}
+/*---------------------------------------------------------------------------*/
+rpl_ns_node_t *
+rpl_ns_get_node(const rpl_dag_t *dag, const uip_ipaddr_t *addr)
+{
+  return NULL;
+}
+/*---------------------------------------------------------------------------*/
+int
+rpl_ns_is_node_reachable(const rpl_dag_t *dag, const uip_ipaddr_t *addr)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 
 #endif /* RPL_WITH_NON_STORING */
