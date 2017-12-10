@@ -87,6 +87,12 @@ ext_header_hbh_update(int uip_ext_opt_offset)
 }
 /*---------------------------------------------------------------------------*/
 static int
+ext_header_srh_update(void)
+{
+  return 0; /* Means SRH not found */
+}
+/*---------------------------------------------------------------------------*/
+static int
 ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 {
   return 0;
@@ -102,6 +108,7 @@ const struct routing_driver nullrouting_driver = {
   ext_header_remove,
   ext_header_update,
   ext_header_hbh_update,
+  ext_header_srh_update,
   ext_header_srh_get_next_hop,
 };
 /*---------------------------------------------------------------------------*/

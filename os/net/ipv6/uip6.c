@@ -1352,8 +1352,7 @@ uip_process(uint8_t flag)
 
           LOG_DBG("Processing Routing header\n");
           if(UIP_ROUTING_BUF->seg_left > 0) {
-#if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-            if(rpl_ext_header_srh_update()) {
+            if(NETSTACK_ROUTING.ext_header_srh_update()) {
 
               /* With routing header, the detination address is us and will
                * be swapped later to the next hop. Because of this, the MTU
@@ -1381,7 +1380,6 @@ uip_process(uint8_t flag)
 
               goto send; /* Proceed to forwarding */
             }
-#endif /* UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING */
             uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER, UIP_IPH_LEN + uip_ext_len + 2);
             UIP_STAT(++uip_stat.ip.drop);
             LOG_ERR("unrecognized routing type");

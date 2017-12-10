@@ -98,6 +98,12 @@ struct routing_driver {
   */
   int (* ext_header_hbh_update)(int uip_ext_opt_offset);
   /**
+  * Process and update SRH in-place,
+  * i.e. internal address swapping as per RFC6554
+  * \return 1 if SRH found, 0 otherwise
+  */
+  int (* ext_header_srh_update)(void);
+  /**
    * Look for next hop from SRH of current uIP packet.
    *
    * \param ipaddr A pointer to the address where to store the next hop.
