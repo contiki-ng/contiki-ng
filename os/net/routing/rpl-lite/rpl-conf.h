@@ -62,7 +62,16 @@
  * We only support non-storing mode
  */
 #define RPL_WITH_STORING 0
+
+/*
+ * Embed support for non-storing mode
+ */
+#ifdef RPL_CONF_WITH_NON_STORING
+#define RPL_WITH_NON_STORING RPL_CONF_WITH_NON_STORING
+#else /* RPL_CONF_WITH_NON_STORING */
+/* By default: embed support for non-storing if and only if the configured MOP is non-storing */
 #define RPL_WITH_NON_STORING (RPL_MOP_DEFAULT == RPL_MOP_NON_STORING)
+#endif /* RPL_CONF_WITH_NON_STORING */
 
 /* The number of non-storing nodes, i.e. the maximum netwrok size at the root */
 #ifdef RPL_NS_CONF_LINK_NUM
