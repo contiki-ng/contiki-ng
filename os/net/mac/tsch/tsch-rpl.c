@@ -40,9 +40,10 @@
  * @{
 */
 
+#include "contiki.h"
+
 #if UIP_CONF_IPV6_RPL
 
-#include "contiki.h"
 #include "net/routing/routing.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-private.h"
