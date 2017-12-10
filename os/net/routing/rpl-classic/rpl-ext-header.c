@@ -174,10 +174,10 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-#if RPL_WITH_NON_STORING
 int
 rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 {
+#if RPL_WITH_NON_STORING
   uint8_t *uip_next_hdr;
   int last_uip_ext_len = uip_ext_len;
   rpl_dag_t *dag;
@@ -227,11 +227,15 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 
   uip_ext_len = last_uip_ext_len;
   return 0;
+#else /* RPL_WITH_NON_STORING */
+  return 0; /* SRH not found */
+#endif /* RPL_WITH_NON_STORING */
 }
 /*---------------------------------------------------------------------------*/
 int
 rpl_ext_header_srh_update(void)
 {
+#if RPL_WITH_NON_STORING
   uint8_t *uip_next_hdr;
   int last_uip_ext_len = uip_ext_len;
 
@@ -308,6 +312,9 @@ rpl_ext_header_srh_update(void)
 
   uip_ext_len = last_uip_ext_len;
   return 0;
+#else /* RPL_WITH_NON_STORING */
+  return 0; /* SRH not found */
+#endif /* RPL_WITH_NON_STORING */
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -461,9 +468,6 @@ insert_srh_header(void)
 
   return 1;
 }
-#else /* RPL_WITH_NON_STORING */
-int insert_srh_header(void);
-#endif /* RPL_WITH_NON_STORING */
 /*---------------------------------------------------------------------------*/
 static int
 update_hbh_header(void)
