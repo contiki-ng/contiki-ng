@@ -76,10 +76,10 @@ PROCESS_THREAD(node_process, ev, data)
     etimer_set(&et, CLOCK_SECOND * 60);
     while(1) {
       /* Used for non-regression testing */
-      #if RPL_WITH_STORING
+      #if (UIP_MAX_ROUTES != 0)
         PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
       #endif
-      #if RPL_WITH_NON_STORING
+      #if UIP_CONF_IPV6_RPL
         PRINTF("Routing links: %u\n", rpl_ns_num_nodes());
       #endif
       PROCESS_YIELD_UNTIL(etimer_expired(&et));

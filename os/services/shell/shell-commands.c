@@ -66,7 +66,6 @@
 #include "net/routing/rpl-lite/rpl.h"
 #elif UIP_CONF_IPV6_RPL_CLASSIC
 #include "net/routing/rpl-classic/rpl.h"
-#include "net/routing/rpl-classic/rpl-private.h"
 #endif
 
 #include <stdlib.h>
@@ -148,6 +147,50 @@ rpl_ocp_to_str(int ocp)
     default:
       return "Unknown";
   }
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "RPL status:\n");
+  if(!curr_instance.used) {
+    SHELL_OUTPUT(output, "-- Instance: None\n");
+  } else {
+    SHELL_OUTPUT(output, "-- Instance: %u\n", curr_instance.instance_id);
+    if(NETSTACK_ROUTING.node_is_root()) {
+      SHELL_OUTPUT(output, "-- DAG root\n");
+    } else {
+      SHELL_OUTPUT(output, "-- DAG node\n");
+    }
+    SHELL_OUTPUT(output, "-- DAG: ");
+    shell_output_6addr(output, &curr_instance.dag.dag_id);
+    SHELL_OUTPUT(output, ", version %u\n", curr_instance.dag.version);
+    SHELL_OUTPUT(output, "-- Prefix: ");
+    shell_output_6addr(output, &curr_instance.dag.prefix_info.prefix);
+    SHELL_OUTPUT(output, "/%u\n", curr_instance.dag.prefix_info.length);
+    SHELL_OUTPUT(output, "-- MOP: %s\n", rpl_mop_to_str(curr_instance.mop));
+    SHELL_OUTPUT(output, "-- OF: %s\n", rpl_ocp_to_str(curr_instance.of->ocp));
+    SHELL_OUTPUT(output, "-- Hop rank increment: %u\n", curr_instance.min_hoprankinc);
+    SHELL_OUTPUT(output, "-- Default lifetime: %lu seconds\n", RPL_LIFETIME(curr_instance.default_lifetime));
+
+    SHELL_OUTPUT(output, "-- State: %s\n", rpl_state_to_str(curr_instance.dag.state));
+    SHELL_OUTPUT(output, "-- Preferred parent: ");
+    shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+    SHELL_OUTPUT(output, "\n");
+    SHELL_OUTPUT(output, "-- Rank: %u\n", curr_instance.dag.rank);
+    SHELL_OUTPUT(output, "-- Lowest rank: %u (%u)\n", curr_instance.dag.lowest_rank, curr_instance.max_rankinc);
+    SHELL_OUTPUT(output, "-- DTSN out: %u\n", curr_instance.dtsn_out);
+    SHELL_OUTPUT(output, "-- DAO sequence: last sent %u, last acked %u\n",
+        curr_instance.dag.dao_last_seqno, curr_instance.dag.dao_last_acked_seqno);
+    SHELL_OUTPUT(output, "-- Trickle timer: current %u, min %u, max %u, redundancy %u\n",
+      curr_instance.dag.dio_intcurrent, curr_instance.dio_intmin,
+      curr_instance.dio_intmin + curr_instance.dio_intdoubl, curr_instance.dio_redundancy);
+
+  }
+
+  PT_END(pt);
 }
 #endif /* UIP_CONF_IPV6_RPL_LITE */
 /*---------------------------------------------------------------------------*/
@@ -291,7 +334,6 @@ PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
-#if UIP_CONF_IPV6_RPL_LITE
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
@@ -328,7 +370,7 @@ PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
   }
 
   if(is_on) {
-    if(!rpl_dag_root_is_root()) {
+    if(!NETSTACK_ROUTING.node_is_root()) {
       SHELL_OUTPUT(output, "Setting as DAG root with prefix ");
       shell_output_6addr(output, &prefix);
       SHELL_OUTPUT(output, "/64\n");
@@ -338,56 +380,12 @@ PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
       SHELL_OUTPUT(output, "Node is already a DAG root\n");
     }
   } else {
-    if(rpl_dag_root_is_root()) {
+    if(NETSTACK_ROUTING.node_is_root()) {
       SHELL_OUTPUT(output, "Setting as non-root node: leaving DAG\n");
-      rpl_dag_poison_and_leave();
+      NETSTACK_ROUTING.leave_network();
     } else {
       SHELL_OUTPUT(output, "Node is not a DAG root\n");
     }
-  }
-
-  PT_END(pt);
-}
-/*---------------------------------------------------------------------------*/
-static
-PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
-{
-  PT_BEGIN(pt);
-
-  SHELL_OUTPUT(output, "RPL status:\n");
-  if(!curr_instance.used) {
-    SHELL_OUTPUT(output, "-- Instance: None\n");
-  } else {
-    SHELL_OUTPUT(output, "-- Instance: %u\n", curr_instance.instance_id);
-    if(rpl_dag_root_is_root()) {
-      SHELL_OUTPUT(output, "-- DAG root\n");
-    } else {
-      SHELL_OUTPUT(output, "-- DAG node\n");
-    }
-    SHELL_OUTPUT(output, "-- DAG: ");
-    shell_output_6addr(output, &curr_instance.dag.dag_id);
-    SHELL_OUTPUT(output, ", version %u\n", curr_instance.dag.version);
-    SHELL_OUTPUT(output, "-- Prefix: ");
-    shell_output_6addr(output, &curr_instance.dag.prefix_info.prefix);
-    SHELL_OUTPUT(output, "/%u\n", curr_instance.dag.prefix_info.length);
-    SHELL_OUTPUT(output, "-- MOP: %s\n", rpl_mop_to_str(curr_instance.mop));
-    SHELL_OUTPUT(output, "-- OF: %s\n", rpl_ocp_to_str(curr_instance.of->ocp));
-    SHELL_OUTPUT(output, "-- Hop rank increment: %u\n", curr_instance.min_hoprankinc);
-    SHELL_OUTPUT(output, "-- Default lifetime: %lu seconds\n", RPL_LIFETIME(curr_instance.default_lifetime));
-
-    SHELL_OUTPUT(output, "-- State: %s\n", rpl_state_to_str(curr_instance.dag.state));
-    SHELL_OUTPUT(output, "-- Preferred parent: ");
-    shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
-    SHELL_OUTPUT(output, "\n");
-    SHELL_OUTPUT(output, "-- Rank: %u\n", curr_instance.dag.rank);
-    SHELL_OUTPUT(output, "-- Lowest rank: %u (%u)\n", curr_instance.dag.lowest_rank, curr_instance.max_rankinc);
-    SHELL_OUTPUT(output, "-- DTSN out: %u\n", curr_instance.dtsn_out);
-    SHELL_OUTPUT(output, "-- DAO sequence: last sent %u, last acked %u\n",
-        curr_instance.dag.dao_last_seqno, curr_instance.dag.dao_last_acked_seqno);
-    SHELL_OUTPUT(output, "-- Trickle timer: current %u, min %u, max %u, redundancy %u\n",
-      curr_instance.dag.dio_intcurrent, curr_instance.dio_intmin,
-      curr_instance.dio_intmin + curr_instance.dio_intdoubl, curr_instance.dio_redundancy);
-
   }
 
   PT_END(pt);
@@ -414,7 +412,6 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
 
   PT_END(pt);
 }
-#endif /* UIP_CONF_IPV6_RPL_LITE */
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
@@ -557,9 +554,9 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
 #if RPL_WITH_NON_STORING
   rpl_ns_node_t *link;
 #endif /* RPL_WITH_NON_STORING */
-#if RPL_WITH_STORING
+#if (UIP_MAX_ROUTES != 0)
   uip_ds6_route_t *route;
-#endif /* RPL_WITH_STORING */
+#endif /* (UIP_MAX_ROUTES != 0) */
 
   PT_BEGIN(pt);
 
@@ -597,7 +594,7 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
         SHELL_OUTPUT(output, " to ");
         shell_output_6addr(output, &parent_ipaddr);
       }
-      if(link->lifetime != RPL_ROUTE_INFINITE_LIFETIME) {
+      if(link->lifetime != 0xFFFFFFFF) {
         SHELL_OUTPUT(output, " (lifetime: %lu seconds)\n", (unsigned long)link->lifetime);
       } else {
         SHELL_OUTPUT(output, " (lifetime: infinite)\n");
@@ -609,7 +606,7 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
   }
 #endif /* RPL_WITH_NON_STORING */
 
-#if RPL_WITH_STORING
+#if (UIP_MAX_ROUTES != 0)
   if(uip_ds6_route_num_routes() > 0) {
     /* Our routing entries */
     SHELL_OUTPUT(output, "Routing entries (%u in total):\n", uip_ds6_route_num_routes());
@@ -619,7 +616,7 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
       shell_output_6addr(output, &route->ipaddr);
       SHELL_OUTPUT(output, " via ");
       shell_output_6addr(output, uip_ds6_route_nexthop(route));
-      if((unsigned long)route->state.lifetime != RPL_ROUTE_INFINITE_LIFETIME) {
+      if((unsigned long)route->state.lifetime != 0xFFFFFFFF) {
         SHELL_OUTPUT(output, " (lifetime: %lu seconds)\n", (unsigned long)route->state.lifetime);
       } else {
         SHELL_OUTPUT(output, " (lifetime: infinite)\n");
@@ -629,7 +626,7 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
   } else {
     SHELL_OUTPUT(output, "No routing entries\n");
   }
-#endif /* RPL_WITH_STORING */
+#endif /* (UIP_MAX_ROUTES != 0) */
 
   PT_END(pt);
 }
@@ -724,11 +721,13 @@ struct shell_command_t shell_commands[] = {
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
   { "log",                  cmd_log,                  "'> log module level': Sets log level (0--4) for a given module (or \"all\"). For module \"mac\", level 4 also enables per-slot logging." },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
-#if UIP_CONF_IPV6_RPL_LITE
+#if UIP_CONF_IPV6_RPL
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },
-  { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
+#endif /* UIP_CONF_IPV6_RPL */
+#if UIP_CONF_IPV6_RPL_LITE
+  { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
 #endif /* UIP_CONF_IPV6_RPL_LITE */
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
 #if MAC_CONF_WITH_TSCH

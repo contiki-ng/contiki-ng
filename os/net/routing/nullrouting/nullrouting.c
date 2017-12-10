@@ -58,6 +58,29 @@ root_start(void)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+node_is_root(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+static int
+get_root_ipaddr(uip_ipaddr_t *ipaddr)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+static void
+leave_network(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+static int
+node_is_reachable(void)
+{
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
 static void
 global_repair(const char *str)
 {
@@ -118,6 +141,10 @@ const struct routing_driver nullrouting_driver = {
   init,
   root_set_prefix,
   root_start,
+  node_is_root,
+  get_root_ipaddr,
+  leave_network,
+  node_is_reachable,
   global_repair,
   local_repair,
   ext_header_remove,

@@ -59,6 +59,13 @@
 */
 const char *rpl_dag_state_to_str(enum rpl_dag_state state);
 /**
+ * Returns the IPv6 address of the RPL DAG root, if any
+ *
+ * \param ipaddr A pointer where to copy the IP address of the DAG root
+ * \return 1 if the root address was copied, 0 otherwise
+*/
+int rpl_dag_get_root_ipaddr(uip_ipaddr_t *ipaddr);
+/**
  * Start poisoning and leave the DAG after a delay
  *
 */

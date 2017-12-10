@@ -32,11 +32,11 @@
 
 #include "contiki.h"
 #include "net/routing/routing.h"
-#if RPL_WITH_NON_STORING
-/* For RPL non-storing specific link printout.
- * Note that traditional DS6 routes are printed in addition,
- * whenever UIP_MAX_ROUTES != 0 */
-#include "rpl-ns.h"
+/* For RPL-specific data inclusion, in particular non-storing routing link */
+#if UIP_CONF_IPV6_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#elif UIP_CONF_IPV6_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
 #endif
 
 #include <stdio.h>

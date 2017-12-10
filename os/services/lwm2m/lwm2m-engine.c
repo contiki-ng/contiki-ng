@@ -59,11 +59,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#if UIP_CONF_IPV6_RPL
-#include "rpl.h"
-#include "net/ipv6/uip-ds6.h"
-#endif /* UIP_CONF_IPV6_RPL */
-
 /* Log configuration */
 #include "coap-log.h"
 #define LOG_MODULE "lwm2m-engine"

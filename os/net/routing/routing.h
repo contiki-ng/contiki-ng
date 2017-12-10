@@ -67,6 +67,30 @@ struct routing_driver {
   */
   int (* root_start)(void);
   /**
+   * Tells whether the node is a network root or not
+   *
+   * \return 1 if we are root, 0 otherwise
+  */
+  int (* node_is_root)(void);
+  /**
+   * Returns the IPv6 address of the network root, if any
+   *
+   * \param ipaddr A pointer where to copy the IP address of the root
+   * \return 1 if the root address was copied, 0 otherwise
+  */
+  int (* get_root_ipaddr)(uip_ipaddr_t *ipaddr);
+  /**
+   * Leave the network the node is part of
+   *
+  */
+  void (* leave_network)(void);
+  /**
+   * Tells whether the node is currently reachable as part of the network
+   *
+   * \return 1 if we are reachable, 0 otherwise.
+   */
+  int (* node_is_reachable)(void);
+  /**
    * Triggers a global topology repair
    *
    * \param str A textual description of the cause for triggering a repair

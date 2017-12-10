@@ -62,7 +62,7 @@
 #include "net/mac/tsch/tsch-security.h"
 #if UIP_CONF_IPV6_RPL
 #include "net/mac/tsch/tsch-rpl.h"
-#endif /* #if UIP_CONF_IPV6_RPL */
+#endif /* UIP_CONF_IPV6_RPL */
 #include "net/mac/mac-sequence.h"
 #include "lib/random.h"
 #include "net/routing/routing.h"

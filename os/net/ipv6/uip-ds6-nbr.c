@@ -253,7 +253,7 @@ uip_ds6_neighbor_periodic(void)
     switch(nbr->state) {
     case NBR_REACHABLE:
       if(stimer_expired(&nbr->reachable)) {
-#if UIP_CONF_IPV6_RPL
+#if UIP_CONF_ROUTER
         /* when a neighbor leave its REACHABLE state and is a default router,
            instead of going to STALE state it enters DELAY state in order to
            force a NUD on it. Otherwise, if there is no upward traffic, the
@@ -273,12 +273,12 @@ uip_ds6_neighbor_periodic(void)
           LOG_INFO_(")\n");
           nbr->state = NBR_STALE;
         }
-#else /* UIP_CONF_IPV6_RPL */
+#else /* UIP_CONF_ROUTER */
         LOG_INFO("REACHABLE: moving to STALE (");
         LOG_INFO_6ADDR(&nbr->ipaddr);
         LOG_INFO_(")\n");
         nbr->state = NBR_STALE;
-#endif /* UIP_CONF_IPV6_RPL */
+#endif /* UIP_CONF_ROUTER */
       }
       break;
     case NBR_INCOMPLETE:

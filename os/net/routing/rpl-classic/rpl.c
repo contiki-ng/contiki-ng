@@ -383,11 +383,34 @@ drop_route(uip_ds6_route_t *route)
   }
 }
 /*---------------------------------------------------------------------------*/
+static void
+leave_network(void)
+{
+  PRINTF("RPL: leave_network not supported in RPL Classic\n");
+}
+/*---------------------------------------------------------------------------*/
+static int
+get_root_ipaddr(uip_ipaddr_t *ipaddr)
+{
+  rpl_dag_t *dag;
+  /* Use the DAG id as server address if no other has been specified */
+  dag = rpl_get_any_dag();
+  if(dag != NULL && ipaddr != NULL) {
+    uip_ipaddr_copy(ipaddr, &dag->dag_id);
+    return 1;
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_classic_driver = {
   "RPL Classic",
   init,
   rpl_dag_root_set_prefix,
   rpl_dag_root_start,
+  rpl_dag_root_is_root,
+  get_root_ipaddr,
+  leave_network,
+  rpl_has_downward_route,
   global_repair,
   local_repair,
   rpl_ext_header_remove,

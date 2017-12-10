@@ -78,6 +78,16 @@ rpl_dag_state_to_str(enum rpl_dag_state state)
   }
 }
 /*---------------------------------------------------------------------------*/
+int
+rpl_dag_get_root_ipaddr(uip_ipaddr_t *ipaddr)
+{
+  if(curr_instance.used && ipaddr != NULL) {
+    uip_ipaddr_copy(ipaddr, &curr_instance.dag.dag_id);
+    return 1;
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 void
 rpl_dag_leave(void)
 {

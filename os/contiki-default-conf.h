@@ -81,6 +81,10 @@
 #define UIP_CONF_ROUTER 1
 #endif /* UIP_CONF_ROUTER */
 
+/* UIP_CONF_IPV6_RPL tells whether the RPL routing protocol is running,
+    whether implemented as RPL Lite or RPL Classic */
+#define UIP_CONF_IPV6_RPL (UIP_CONF_IPV6_RPL_LITE || UIP_CONF_IPV6_RPL_CLASSIC)
+
 /* If RPL is enabled also enable the RPL NBR Policy */
 #if UIP_CONF_IPV6_RPL
 #ifndef NBR_TABLE_FIND_REMOVABLE
