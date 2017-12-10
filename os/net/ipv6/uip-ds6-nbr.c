@@ -50,7 +50,9 @@
 #include "net/link-stats.h"
 #include "net/linkaddr.h"
 #include "net/packetbuf.h"
+#include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-nbr.h"
+#include "net/ipv6/uip-nd6.h"
 
 /* Log configuration */
 #include "sys/log.h"
