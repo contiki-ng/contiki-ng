@@ -42,6 +42,7 @@
 
 #include "contiki.h"
 #include "net/ipv6/uip.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/linkaddr.h"
 
@@ -118,6 +119,14 @@ struct routing_driver {
    * \param numtx The total number of transmission attempts
    */
   void (* link_callback)(const linkaddr_t *addr, int status, int numtx);
+  /**
+   * Called by uIP to notify addition/removal of IPv6 neighbor entries
+   *
+   * \param addr The link-layer addrress of the packet destination
+   * \param status The transmission status (see os/net/mac/mac.h)
+   * \param numtx The total number of transmission attempts
+   */
+  void (* neighbor_state_changed)(uip_ds6_nbr_t *nbr);
   /**
    * Called by uIP if it has decided to drop a route because
    *

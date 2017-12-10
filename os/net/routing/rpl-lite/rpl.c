@@ -194,6 +194,12 @@ init(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
+neighbor_state_changed(uip_ds6_nbr_t *nbr)
+{
+  /* Nothing needs be done in non-storing mode */
+}
+/*---------------------------------------------------------------------------*/
+static void
 drop_route(uip_ds6_route_t *route)
 {
   /* Do nothing. RPL-lite only supports non-storing mode, i.e. no routes */
@@ -212,6 +218,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_ext_header_srh_update,
   rpl_ext_header_srh_get_next_hop,
   rpl_link_callback,
+  neighbor_state_changed,
   drop_route,
 };
 /*---------------------------------------------------------------------------*/

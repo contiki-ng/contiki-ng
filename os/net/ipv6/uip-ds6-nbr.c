@@ -53,18 +53,12 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-nd6.h"
+#include "net/routing/routing.h"
 
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6 Nbr"
 #define LOG_LEVEL LOG_LEVEL_IPV6
-
-#ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
-#define NEIGHBOR_STATE_CHANGED(n) UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED(n)
-void NEIGHBOR_STATE_CHANGED(uip_ds6_nbr_t *n);
-#else
-#define NEIGHBOR_STATE_CHANGED(n)
-#endif /* UIP_DS6_CONF_NEIGHBOR_STATE_CHANGED */
 
 NBR_TABLE_GLOBAL(uip_ds6_nbr_t, ds6_neighbors);
 
@@ -107,7 +101,7 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     LOG_INFO_(" link addr ");
     LOG_INFO_LLADDR((linkaddr_t*)lladdr);
     LOG_INFO_(" state %u\n", state);
-    NEIGHBOR_STATE_CHANGED(nbr);
+    NETSTACK_ROUTING.neighbor_state_changed(nbr);
     return nbr;
   } else {
     LOG_INFO("Add drop ip addr ");
@@ -127,7 +121,7 @@ uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
 #if UIP_CONF_IPV6_QUEUE_PKT
     uip_packetqueue_free(&nbr->packethandle);
 #endif /* UIP_CONF_IPV6_QUEUE_PKT */
-    NEIGHBOR_STATE_CHANGED(nbr);
+    NETSTACK_ROUTING.neighbor_state_changed(nbr);
     return nbr_table_remove(ds6_neighbors, nbr);
   }
   return 0;

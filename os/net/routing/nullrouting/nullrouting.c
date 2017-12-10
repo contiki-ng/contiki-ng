@@ -104,6 +104,11 @@ link_callback(const linkaddr_t *addr, int status, int numtx)
 }
 /*---------------------------------------------------------------------------*/
 static void
+neighbor_state_changed(uip_ds6_nbr_t *nbr)
+{
+}
+/*---------------------------------------------------------------------------*/
+static void
 drop_route(uip_ds6_route_t *route)
 {
 }
@@ -121,6 +126,7 @@ const struct routing_driver nullrouting_driver = {
   ext_header_srh_update,
   ext_header_srh_get_next_hop,
   link_callback,
+  neighbor_state_changed,
   drop_route,
 };
 /*---------------------------------------------------------------------------*/
