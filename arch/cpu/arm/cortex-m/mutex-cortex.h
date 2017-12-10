@@ -29,41 +29,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC2538_DEF_H_
-#define CC2538_DEF_H_
-/*---------------------------------------------------------------------------*/
-#include "cm3/cm3-def.h"
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 32768
-/*---------------------------------------------------------------------------*/
-/* 352us from calling transmit() until the SFD byte has been sent */
-#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
-/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT 0
-#ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this.
- * Slot length 10000 usec
- *             328 ticks
- * Tick duration 30.517578125 usec
- * Real slot duration 10009.765625 usec
- * Target - real duration = -9.765625 usec
- * TSCH_CONF_BASE_DRIFT_PPM -977
+/**
+ * \addtogroup arm
+ *
+ * Arm Cortex-M implementation of mutexes using the LDREX, STREX and DMB
+ * instructions.
+ *
+ * @{
  */
-#define TSCH_CONF_BASE_DRIFT_PPM -977
+/*---------------------------------------------------------------------------*/
+#ifndef MUTEX_CORTEX_H_
+#define MUTEX_CORTEX_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+
+#ifdef CMSIS_CONF_HEADER_PATH
+#include CMSIS_CONF_HEADER_PATH
 #endif
 
-#if MAC_CONF_WITH_TSCH
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* MAC_CONF_WITH_TSCH */
+#include <stdint.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-/* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
+#define mutex_try_lock(m) mutex_cortex_try_lock(m)
+#define mutex_unlock(m)   mutex_cortex_unlock(m)
+/*---------------------------------------------------------------------------*/
+#define MUTEX_CONF_HAS_MUTEX_T 1
+typedef uint8_t mutex_t;
+/*---------------------------------------------------------------------------*/
+static inline bool
+mutex_cortex_try_lock(volatile mutex_t *mutex)
+{
+  int status = 1;
 
-/* Path to headers with implementation of mutexes and memory barriers */
-#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
-#define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
+  if(__LDREXB(mutex) == 0) {
+    status = __STREXB(1, mutex);
+  }
+
+  __DMB();
+
+  return status == 0 ? true : false;
+}
 /*---------------------------------------------------------------------------*/
-#endif /* CC2538_DEF_H_ */
+static inline void
+mutex_cortex_unlock(volatile mutex_t *mutex)
+{
+  __DMB();
+  *mutex = 0;
+}
 /*---------------------------------------------------------------------------*/
+#endif /* MUTEX_CORTEX_H_ */
+/*---------------------------------------------------------------------------*/
+/** @} */

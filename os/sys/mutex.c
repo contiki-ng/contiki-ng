@@ -29,41 +29,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC2538_DEF_H_
-#define CC2538_DEF_H_
-/*---------------------------------------------------------------------------*/
-#include "cm3/cm3-def.h"
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 32768
-/*---------------------------------------------------------------------------*/
-/* 352us from calling transmit() until the SFD byte has been sent */
-#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
-/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT 0
-#ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this.
- * Slot length 10000 usec
- *             328 ticks
- * Tick duration 30.517578125 usec
- * Real slot duration 10009.765625 usec
- * Target - real duration = -9.765625 usec
- * TSCH_CONF_BASE_DRIFT_PPM -977
+/**
+ * \addtogroup mutex
+ * @{
  */
-#define TSCH_CONF_BASE_DRIFT_PPM -977
-#endif
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+#include "sys/mutex.h"
+#include "sys/critical.h"
 
-#if MAC_CONF_WITH_TSCH
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* MAC_CONF_WITH_TSCH */
+#include <stdint.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-/* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
+bool
+mutex_generic_try_lock(volatile mutex_t *mutex)
+{
+  bool success = false;
+  int_master_status_t status = critical_enter();
 
-/* Path to headers with implementation of mutexes and memory barriers */
-#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
-#define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
+  if(*mutex == MUTEX_STATUS_UNLOCKED) {
+    *mutex = MUTEX_STATUS_LOCKED;
+    success = true;
+  }
+
+  critical_exit(status);
+
+  return success;
+}
 /*---------------------------------------------------------------------------*/
-#endif /* CC2538_DEF_H_ */
+void
+mutex_generic_unlock(volatile mutex_t *mutex)
+{
+  int_master_status_t status = critical_enter();
+
+  *mutex = MUTEX_STATUS_UNLOCKED;
+
+  critical_exit(status);
+}
 /*---------------------------------------------------------------------------*/
+/** @} */

@@ -29,41 +29,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC2538_DEF_H_
-#define CC2538_DEF_H_
-/*---------------------------------------------------------------------------*/
-#include "cm3/cm3-def.h"
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 32768
-/*---------------------------------------------------------------------------*/
-/* 352us from calling transmit() until the SFD byte has been sent */
-#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
-/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT 0
-#ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this.
- * Slot length 10000 usec
- *             328 ticks
- * Tick duration 30.517578125 usec
- * Real slot duration 10009.765625 usec
- * Target - real duration = -9.765625 usec
- * TSCH_CONF_BASE_DRIFT_PPM -977
+/**
+ * \addtogroup sys
+ * @{
+ *
+ * \defgroup memory-barrier CPU/Compiler memory barriers
+ * @{
+ *
+ * API for CPU/Compiler memory barriers
  */
-#define TSCH_CONF_BASE_DRIFT_PPM -977
+/*---------------------------------------------------------------------------*/
+#ifndef MEMORY_BARRIER_H_
+#define MEMORY_BARRIER_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+/*---------------------------------------------------------------------------*/
+#ifdef MEMORY_BARRIER_CONF_ARCH_HEADER_PATH
+#include MEMORY_BARRIER_CONF_ARCH_HEADER_PATH
+#endif /* MEMORY_BARRIER_CONF_ARCH_HEADER_PATH */
+/*---------------------------------------------------------------------------*/
+#ifndef memory_barrier
+/**
+ * \brief Insert a memory barrier
+ *
+ * It is the platform/CPU developer's responsibility to expand this macro to
+ * a function that creates a memory barrier. Calling this macro will otherwise
+ * not generate any code.
+ */
+#define memory_barrier()
 #endif
-
-#if MAC_CONF_WITH_TSCH
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* MAC_CONF_WITH_TSCH */
 /*---------------------------------------------------------------------------*/
-/* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
-
-/* Path to headers with implementation of mutexes and memory barriers */
-#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
-#define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
+#endif /* MEMORY_BARRIER_H_ */
 /*---------------------------------------------------------------------------*/
-#endif /* CC2538_DEF_H_ */
-/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */
