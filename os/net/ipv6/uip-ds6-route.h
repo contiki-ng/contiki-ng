@@ -51,9 +51,9 @@
 
 #else /* UIP_CONF_MAX_ROUTES */
 
-#if UIP_CONF_IPV6_RPL_LITE
+#if ROUTING_CONF_RPL_LITE
 #define UIP_MAX_ROUTES 0 /* RPL Lite only supports non-storing, no routes */
-#elif UIP_CONF_IPV6_RPL_CLASSIC
+#elif ROUTING_CONF_RPL_CLASSIC
 
 #include "net/routing/rpl-classic/rpl-conf.h"
 #if RPL_WITH_STORING

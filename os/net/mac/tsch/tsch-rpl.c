@@ -87,7 +87,7 @@ tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval)
   rpl_dag_t *dag;
   rpl_rank_t root_rank;
   rpl_rank_t dag_rank;
-#if UIP_CONF_IPV6_RPL_LITE
+#if ROUTING_CONF_RPL_LITE
   dag = &curr_instance.dag;
   root_rank = ROOT_RANK;
   dag_rank = DAG_RANK(dag->rank);

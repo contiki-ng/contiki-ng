@@ -33,9 +33,9 @@
 #include "contiki.h"
 #include "net/routing/routing.h"
 /* For RPL-specific data inclusion, in particular non-storing routing link */
-#if UIP_CONF_IPV6_RPL_LITE
+#if ROUTING_CONF_RPL_LITE
 #include "net/routing/rpl-lite/rpl.h"
-#elif UIP_CONF_IPV6_RPL_CLASSIC
+#elif ROUTING_CONF_RPL_CLASSIC
 #include "net/routing/rpl-classic/rpl.h"
 #endif
 

@@ -62,9 +62,9 @@
 #include "net/mac/llsec802154.h"
 
 /* For RPL-specific commands */
-#if UIP_CONF_IPV6_RPL_LITE
+#if ROUTING_CONF_RPL_LITE
 #include "net/routing/rpl-lite/rpl.h"
-#elif UIP_CONF_IPV6_RPL_CLASSIC
+#elif ROUTING_CONF_RPL_CLASSIC
 #include "net/routing/rpl-classic/rpl.h"
 #endif
 
@@ -100,7 +100,7 @@ ds6_nbr_state_to_str(uint8_t state)
       return "Unknown";
   }
 }
-#if UIP_CONF_IPV6_RPL_LITE
+#if ROUTING_CONF_RPL_LITE
 /*---------------------------------------------------------------------------*/
 static const char *
 rpl_state_to_str(enum rpl_dag_state state)
@@ -192,7 +192,7 @@ PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
-#endif /* UIP_CONF_IPV6_RPL_LITE */
+#endif /* ROUTING_CONF_RPL_LITE */
 /*---------------------------------------------------------------------------*/
 static void
 echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
@@ -726,9 +726,9 @@ struct shell_command_t shell_commands[] = {
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
 #endif /* UIP_CONF_IPV6_RPL */
-#if UIP_CONF_IPV6_RPL_LITE
+#if ROUTING_CONF_RPL_LITE
   { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
-#endif /* UIP_CONF_IPV6_RPL_LITE */
+#endif /* ROUTING_CONF_RPL_LITE */
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
 #if MAC_CONF_WITH_TSCH
   { "tsch-set-coordinator", cmd_tsch_set_coordinator, "'> tsch-set-coordinator 0/1 [0/1]': Sets node as coordinator (1) or not (0). Second, optional parameter: enable (1) or disable (0) security." },
