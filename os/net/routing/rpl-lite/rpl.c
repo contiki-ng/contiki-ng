@@ -200,6 +200,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_dag_root_start,
   rpl_global_repair,
   rpl_local_repair,
+  rpl_ext_header_remove,
 };
 /*---------------------------------------------------------------------------*/
 

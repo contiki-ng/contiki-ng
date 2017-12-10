@@ -71,13 +71,16 @@ struct routing_driver {
    * \param str A textual description of the cause for triggering a repair
   */
   void (* global_repair)(const char *str);
-
   /**
    * Triggers a RPL local topology repair
    *
    * \param str A textual description of the cause for triggering a repair
   */
   void (* local_repair)(const char *str);
+  /**
+   * Removes all extension headers that pertain to the routing protocol.
+  */
+  void (* ext_header_remove)(void);
 };
 
 #endif /* ROUTING_H_ */

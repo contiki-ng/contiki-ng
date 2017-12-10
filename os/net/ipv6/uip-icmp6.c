@@ -185,11 +185,8 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
     }
   }
 
-#if UIP_CONF_IPV6_RPL
-  rpl_ext_header_remove();
-#else
-  uip_ext_len = 0;
-#endif /* UIP_CONF_IPV6_RPL */
+  /* Remove all extension headers related to the routing protocol in place */
+  NETSTACK_ROUTING.ext_header_remove();
 
   /* remember data of original packet before shifting */
   uip_ipaddr_copy(&tmp_ipaddr, &UIP_IP_BUF->destipaddr);

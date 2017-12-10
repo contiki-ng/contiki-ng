@@ -378,6 +378,7 @@ const struct routing_driver rpl_classic_driver = {
   rpl_dag_root_start,
   global_repair,
   local_repair,
+  rpl_ext_header_remove,
 };
 /*---------------------------------------------------------------------------*/
 

@@ -68,13 +68,20 @@ local_repair(const char *str)
 {
 }
 /*---------------------------------------------------------------------------*/
+static void
+ext_header_remove(void)
+{
+  uip_ext_len = 0;
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
   "Null Routing",
   init,
   root_set_prefix,
   root_start,
   global_repair,
-  local_repair
+  local_repair,
+  ext_header_remove
 };
 /*---------------------------------------------------------------------------*/
 
