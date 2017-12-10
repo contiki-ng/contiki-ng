@@ -50,6 +50,12 @@
 #include "net/routing/routing.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
+#if UIP_CONF_IPV6_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#endif /* UIP_CONF_IPV6_RPL_LITE */
+#if UIP_CONF_IPV6_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#endif /* UIP_CONF_IPV6_RPL_CLASSIC */
 #include <string.h>
 
 #define DEBUG DEBUG_NONE
