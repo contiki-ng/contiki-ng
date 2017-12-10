@@ -44,6 +44,13 @@
 #include "net/mac/tsch/tsch-log.h"
 #include "net/routing/routing.h"
 
+#if ROUTING_CONF_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#elif ROUTING_CONF_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-ns.h"
+#endif
+
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
 

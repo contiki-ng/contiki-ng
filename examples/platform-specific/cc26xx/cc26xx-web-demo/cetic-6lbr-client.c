@@ -37,6 +37,11 @@
 #include "contiki-net.h"
 #include "net/routing/routing.h"
 #include "net/ipv6/uip.h"
+#if ROUTING_CONF_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#elif ROUTING_CONF_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#endif
 
 #include <string.h>
 #include <stdio.h>

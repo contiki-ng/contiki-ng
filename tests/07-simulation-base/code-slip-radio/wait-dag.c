@@ -37,6 +37,12 @@
 #include "net/ipv6/uip.h"
 #include <string.h>
 
+#if ROUTING_CONF_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#elif ROUTING_CONF_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#endif
+
 #define DEBUG DEBUG_FULL
 #include "net/ipv6/uip-debug.h"
 

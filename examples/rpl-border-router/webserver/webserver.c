@@ -37,6 +37,7 @@
 #include "net/routing/rpl-lite/rpl.h"
 #elif ROUTING_CONF_RPL_CLASSIC
 #include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-ns.h"
 #endif
 
 #include <stdio.h>

@@ -41,6 +41,11 @@
 #include "net/packetbuf.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/routing/routing.h"
+#if ROUTING_CONF_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#elif ROUTING_CONF_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#endif
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
