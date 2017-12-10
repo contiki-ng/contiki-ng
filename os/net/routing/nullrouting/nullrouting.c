@@ -75,6 +75,12 @@ ext_header_remove(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
+ext_header_update(void)
+{
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static int
 ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 {
   return 0;
@@ -88,6 +94,7 @@ const struct routing_driver nullrouting_driver = {
   global_repair,
   local_repair,
   ext_header_remove,
+  ext_header_update,
   ext_header_srh_get_next_hop,
 };
 /*---------------------------------------------------------------------------*/

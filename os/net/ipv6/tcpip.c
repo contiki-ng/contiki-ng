@@ -665,14 +665,13 @@ tcpip_ipv6_output(void)
     goto exit;
   }
 
-#if UIP_CONF_IPV6_RPL
-  if(!rpl_ext_header_update()) {
+
+  if(!NETSTACK_ROUTING.ext_header_update()) {
     /* Packet can not be forwarded */
-    LOG_ERR("output: RPL header update error\n");
+    LOG_ERR("output: routing protocol extension header update error\n");
     uip_clear_buf();
     return;
   }
-#endif /* UIP_CONF_IPV6_RPL */
 
   if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
     linkaddr = NULL;

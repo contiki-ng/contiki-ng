@@ -82,6 +82,12 @@ struct routing_driver {
   */
   void (* ext_header_remove)(void);
   /**
+   * Adds/updates routing protocol extension headers to current uIP packet.
+   *
+   * \return 1 in case of success, 0 otherwise
+  */
+  int (* ext_header_update)(void);
+  /**
    * Look for next hop from SRH of current uIP packet.
    *
    * \param ipaddr A pointer to the address where to store the next hop.

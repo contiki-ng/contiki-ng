@@ -44,30 +44,30 @@
 
 /********** Public functions **********/
 
- /**
-  * Look for next hop from SRH of current uIP packet.
-  *
-  * \param ipaddr A pointer to the address where to store the next hop.
-  * \return 1 if a next hop was found, 0 otherwise
- */
- int rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr);
+/**
+* Look for next hop from SRH of current uIP packet.
+*
+* \param ipaddr A pointer to the address where to store the next hop.
+* \return 1 if a next hop was found, 0 otherwise
+*/
+int rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr);
 
- /**
-  * Process and update SRH in-place,
-  * i.e. internal address swapping as per RFC6554
-  * \return 1 if SRH found, 0 otherwise
- */
- int rpl_ext_header_srh_update(void);
+/**
+* Process and update SRH in-place,
+* i.e. internal address swapping as per RFC6554
+* \return 1 if SRH found, 0 otherwise
+*/
+int rpl_ext_header_srh_update(void);
 
- /**
-  * Process and update the RPL extension headers of the current uIP packet.
-  *
-  * \param uip_ext_opt_offset The offset within the uIP packet where
-  * extension headers start
-  * \return 1 in case the packet is valid and to be processed further,
-  * 0 in case the packet must be dropped.
- */
- int rpl_ext_header_hbh_update(int uip_ext_opt_offset);
+/**
+* Process and update the RPL extension headers of the current uIP packet.
+*
+* \param uip_ext_opt_offset The offset within the uIP packet where
+* extension headers start
+* \return 1 in case the packet is valid and to be processed further,
+* 0 in case the packet must be dropped.
+*/
+int rpl_ext_header_hbh_update(int uip_ext_opt_offset);
 
 /**
  * Adds/updates RPL extension headers to current uIP packet.
