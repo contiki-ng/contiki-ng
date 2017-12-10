@@ -74,6 +74,12 @@ ext_header_remove(void)
   uip_ext_len = 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
   "Null Routing",
   init,
@@ -81,7 +87,8 @@ const struct routing_driver nullrouting_driver = {
   root_start,
   global_repair,
   local_repair,
-  ext_header_remove
+  ext_header_remove,
+  ext_header_srh_get_next_hop,
 };
 /*---------------------------------------------------------------------------*/
 

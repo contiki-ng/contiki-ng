@@ -81,6 +81,13 @@ struct routing_driver {
    * Removes all extension headers that pertain to the routing protocol.
   */
   void (* ext_header_remove)(void);
+  /**
+   * Look for next hop from SRH of current uIP packet.
+   *
+   * \param ipaddr A pointer to the address where to store the next hop.
+   * \return 1 if a next hop was found, 0 otherwise
+  */
+  int (* ext_header_srh_get_next_hop)(uip_ipaddr_t *ipaddr);
 };
 
 #endif /* ROUTING_H_ */

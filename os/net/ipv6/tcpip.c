@@ -95,11 +95,6 @@ enum {
   PACKET_INPUT
 };
 
-#if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-#define NEXTHOP_NON_STORING(addr) rpl_ext_header_srh_get_next_hop(addr)
-#else
-#define NEXTHOP_NON_STORING(addr) 0
-#endif
 /*---------------------------------------------------------------------------*/
 static void
 init_appstate(uip_tcp_appstate_t *as, void *state)
@@ -525,7 +520,7 @@ get_nexthop(uip_ipaddr_t *addr)
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_("\n");
 
-  if(NEXTHOP_NON_STORING(addr)) {
+  if(NETSTACK_ROUTING.ext_header_srh_get_next_hop(addr)) {
     LOG_INFO("output: selected next hop from SRH: ");
     LOG_INFO_6ADDR(addr);
     LOG_INFO_("\n");

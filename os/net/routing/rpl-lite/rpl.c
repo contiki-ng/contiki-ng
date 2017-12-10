@@ -201,6 +201,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_global_repair,
   rpl_local_repair,
   rpl_ext_header_remove,
+  rpl_ext_header_srh_get_next_hop,
 };
 /*---------------------------------------------------------------------------*/
 
