@@ -10,5 +10,5 @@ PROJECT_SOURCEFILES += slip-net.c
 
 # custom net layer, but with IPv6 enabled
 MAKE_NET = MAKE_NET_IPV6
-MAKE_ROUTING = MAKE_ROUTING_NONE
+MAKE_ROUTING = MAKE_ROUTING_NULLROUTING
 include $(CONTIKI)/Makefile.include

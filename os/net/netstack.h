@@ -43,6 +43,22 @@
 
 #include "contiki.h"
 
+/* Routing protocol configuration. The Routing protocol is configured through the Makefile,
+   via the flag MAC_ROUTING */
+#ifdef NETSTACK_CONF_ROUTING
+#define NETSTACK_ROUTING NETSTACK_CONF_ROUTING
+#else /* NETSTACK_CONF_ROUTING */
+#if UIP_CONF_IPV6_RPL_LITE
+#define NETSTACK_ROUTING rpl_lite_driver
+#elif UIP_CONF_IPV6_RPL_CLASSIC
+#define NETSTACK_ROUTING rpl_classic_driver
+#elif UIP_CONF_IPV6_NULLROUTING
+#define NETSTACK_ROUTING nullrouting_driver
+#else
+#error Unknown ROUTING configuration
+#endif
+#endif /* NETSTACK_CONF_ROUTING */
+
 /* Network layer configuration. The NET layer is configured through the Makefile,
    via the flag MAC_NET */
 #ifdef NETSTACK_CONF_NETWORK
