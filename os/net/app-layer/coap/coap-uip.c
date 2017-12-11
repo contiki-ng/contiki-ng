@@ -63,7 +63,7 @@
 #endif /* WITH_DTLS */
 
 /* sanity check for configured values */
-#if COAP_MAX_PACKET_SIZE > (UIP_BUFSIZE - UIP_IPH_LEN - UIP_UDPH_LEN)
+#if COAP_MAX_PACKET_SIZE > (UIP_BUFSIZE - UIP_LLH_LEN - UIP_IPH_LEN - UIP_UDPH_LEN)
 #error "UIP_CONF_BUFFER_SIZE too small for COAP_MAX_CHUNK_SIZE"
 #endif
 
