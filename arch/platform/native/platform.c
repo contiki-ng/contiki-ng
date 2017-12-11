@@ -82,6 +82,12 @@
 #define SELECT_TIMEOUT 1000
 #endif
 
+#ifdef SELECT_CONF_STDIN
+#define SELECT_STDIN SELECT_CONF_STDIN
+#else
+#define SELECT_STDIN 1
+#endif
+
 static const struct select_callback *select_callback[SELECT_MAX];
 static int select_max = 0;
 
@@ -122,6 +128,7 @@ select_set_callback(int fd, const struct select_callback *callback)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+#if SELECT_STDIN
 static int
 stdin_set_fd(fd_set *rset, fd_set *wset)
 {
@@ -141,6 +148,7 @@ stdin_handle_fd(fd_set *rset, fd_set *wset)
 const static struct select_callback stdin_fd = {
   stdin_set_fd, stdin_handle_fd
 };
+#endif /* SELECT_STDIN */
 /*---------------------------------------------------------------------------*/
 static void
 set_lladdr(void)
@@ -246,7 +254,9 @@ platform_init_stage_three()
 void
 platform_main_loop()
 {
+#if SELECT_STDIN
   select_set_callback(STDIN_FILENO, &stdin_fd);
+#endif /* SELECT_STDIN */
   while(1) {
     fd_set fdr;
     fd_set fdw;
