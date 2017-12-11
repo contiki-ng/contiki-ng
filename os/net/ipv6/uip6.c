@@ -98,6 +98,10 @@
 #define LOG_MODULE "IPv6"
 #define LOG_LEVEL LOG_LEVEL_IPV6
 
+#if UIP_STATISTICS == 1
+struct uip_stats uip_stat;
+#endif /* UIP_STATISTICS == 1 */
+
 /*---------------------------------------------------------------------------*/
 /**
  * \name Layer 2 variables
