@@ -1282,6 +1282,12 @@ dao_ack_input(void)
     parent = NULL;
   }
 
+  if(instance->current_dag->rank == ROOT_RANK(instance)) {
+    PRINTF("RPL: DODAG root received a DAO ACK, ignoring it\n");
+    uip_clear_buf();
+    return;
+  }
+
   PRINTF("RPL: Received a DAO %s with sequence number %d (%d) and status %d from ",
          status < 128 ? "ACK" : "NACK",
          sequence, instance->my_dao_seqno, status);

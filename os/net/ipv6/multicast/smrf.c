@@ -82,7 +82,7 @@ static uint8_t fwd_spread;
 static void
 mcast_fwd(void *p)
 {
-  memcpy(uip_buf, &mcast_buf, mcast_len);
+  memcpy(&uip_buf[UIP_LLH_LEN], &mcast_buf, mcast_len);
   uip_len = mcast_len;
   UIP_IP_BUF->ttl--;
   tcpip_output(NULL);
@@ -106,6 +106,7 @@ in()
    */
   d = rpl_get_any_dag();
   if(!d) {
+    PRINTF("SMRF: No DODAG\n");
     UIP_MCAST6_STATS_ADD(mcast_dropped);
     return UIP_MCAST6_DROP;
   }
@@ -115,6 +116,7 @@ in()
   parent_lladdr = uip_ds6_nbr_lladdr_from_ipaddr(parent_ipaddr);
 
   if(parent_lladdr == NULL) {
+    PRINTF("SMRF: No Parent found\n");
     UIP_MCAST6_STATS_ADD(mcast_dropped);
     return UIP_MCAST6_DROP;
   }
@@ -132,6 +134,7 @@ in()
 
   if(UIP_IP_BUF->ttl <= 1) {
     UIP_MCAST6_STATS_ADD(mcast_dropped);
+    PRINTF("SMRF: TTL too low\n");
     return UIP_MCAST6_DROP;
   }
 
@@ -173,12 +176,14 @@ in()
         fwd_delay = fwd_delay * (1 + ((random_rand() >> 11) % fwd_spread));
       }
 
-      memcpy(&mcast_buf, uip_buf, uip_len);
+      memcpy(&mcast_buf, &uip_buf[UIP_LLH_LEN], uip_len);
       mcast_len = uip_len;
       ctimer_set(&mcast_periodic, fwd_delay, mcast_fwd, NULL);
     }
     PRINTF("SMRF: %u bytes: fwd in %u [%u]\n",
            uip_len, fwd_delay, fwd_spread);
+  } else {
+    PRINTF("SMRF: Group unknown, dropping\n");
   }
 
   /* Done with this packet unless we are a member of the mcast group */

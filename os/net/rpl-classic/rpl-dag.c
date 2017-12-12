@@ -370,6 +370,7 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
         }
         if(dag == dag->instance->current_dag) {
           PRINTF("RPL: Dropping a joined DAG when setting this node as root");
+          rpl_set_default_route(instance, NULL);
           dag->instance->current_dag = NULL;
         } else {
           PRINTF("RPL: Dropping a DAG when setting this node as root");
@@ -665,6 +666,10 @@ rpl_free_dag(rpl_dag_t *dag)
     if(RPL_IS_STORING(dag->instance)) {
       rpl_remove_routes(dag);
     }
+    /* Stop the DAO retransmit timer */
+#if RPL_WITH_DAO_ACK
+    ctimer_stop(&dag->instance->dao_retransmit_timer);
+#endif /* RPL_WITH_DAO_ACK */
 
    /* Remove autoconfigured address */
     if((dag->prefix_info.flags & UIP_ND6_RA_FLAG_AUTONOMOUS)) {
@@ -757,22 +762,17 @@ rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
   old_rank = instance->current_dag->rank;
   last_parent = instance->current_dag->preferred_parent;
 
-  best_dag = instance->current_dag;
-  if(best_dag->rank != ROOT_RANK(instance)) {
-    if(rpl_select_parent(p->dag) != NULL) {
-      if(p->dag != best_dag) {
-        best_dag = instance->of->best_dag(best_dag, p->dag);
-      }
-    } else if(p->dag == best_dag) {
-      best_dag = NULL;
-      for(dag = &instance->dag_table[0], end = dag + RPL_MAX_DAG_PER_INSTANCE; dag < end; ++dag) {
-        if(dag->used && dag->preferred_parent != NULL && dag->preferred_parent->rank != RPL_INFINITE_RANK) {
-          if(best_dag == NULL) {
-            best_dag = dag;
-          } else {
-            best_dag = instance->of->best_dag(best_dag, dag);
-          }
-        }
+  if(instance->current_dag->rank != ROOT_RANK(instance)) {
+    rpl_select_parent(p->dag);
+  }
+
+  best_dag = NULL;
+  for(dag = &instance->dag_table[0], end = dag + RPL_MAX_DAG_PER_INSTANCE; dag < end; ++dag) {
+    if(dag->used && dag->preferred_parent != NULL && dag->preferred_parent->rank != RPL_INFINITE_RANK) {
+      if(best_dag == NULL) {
+        best_dag = dag;
+      } else {
+        best_dag = instance->of->best_dag(best_dag, dag);
       }
     }
   }
@@ -1323,6 +1323,9 @@ rpl_local_repair(rpl_instance_t *instance)
 
   /* no downward route anymore */
   instance->has_downward_route = 0;
+#if RPL_WITH_DAO_ACK
+  ctimer_stop(&instance->dao_retransmit_timer);
+#endif /* RPL_WITH_DAO_ACK */
 
   rpl_reset_dio_timer(instance);
   if(RPL_IS_STORING(instance)) {

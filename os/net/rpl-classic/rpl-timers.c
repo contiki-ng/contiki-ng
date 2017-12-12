@@ -283,7 +283,7 @@ handle_dao_timer(void *ptr)
         if(uip_ds6_if.maddr_list[i].isused
             && uip_is_addr_mcast_global(&uip_ds6_if.maddr_list[i].ipaddr)) {
           dao_output_target(instance->current_dag->preferred_parent,
-              &uip_ds6_if.maddr_list[i].ipaddr, RPL_MCAST_LIFETIME);
+              &uip_ds6_if.maddr_list[i].ipaddr, instance->default_lifetime);
         }
       }
 
@@ -293,7 +293,7 @@ handle_dao_timer(void *ptr)
         /* Don't send if it's also our own address, done that already */
         if(uip_ds6_maddr_lookup(&mcast_route->group) == NULL) {
           dao_output_target(instance->current_dag->preferred_parent,
-                     &mcast_route->group, RPL_MCAST_LIFETIME);
+                     &mcast_route->group, instance->default_lifetime);
         }
         mcast_route = list_item_next(mcast_route);
       }
