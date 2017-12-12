@@ -572,6 +572,7 @@ rpl_ext_header_remove(void)
         /* Move to next header */
         uip_next_hdr = &UIP_EXT_BUF->next;
         uip_ext_len += (UIP_EXT_BUF->len << 3) + 8;
+        break;
     default:
       return;
     }
