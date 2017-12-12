@@ -123,7 +123,7 @@
 /* NOTE: In the multiple-reassembly context there is only room for the header / first fragment */
 #define SICSLOWPAN_IP_BUF(buf)   ((struct uip_ip_hdr *)buf)
 #define SICSLOWPAN_UDP_BUF(buf)  ((struct uip_udp_hdr *)&buf[UIP_IPH_LEN])
-#define SICSLOWPAN_IPPAYLOAD_BUF(buf) (&buf[UIP_LLIPH_LEN])
+#define SICSLOWPAN_IPPAYLOAD_BUF(buf) (&buf[UIP_IPH_LEN])
 
 
 #define UIP_IP_BUF          ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
