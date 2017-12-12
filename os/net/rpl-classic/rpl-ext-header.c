@@ -592,9 +592,11 @@ rpl_ext_header_remove(void)
 {
   uint8_t temp_len;
   uint8_t rpl_ext_hdr_len;
+  int uip_ext_opt_offset;
   uint8_t *uip_next_hdr;
 
   uip_ext_len = 0;
+  uip_ext_opt_offset = 2;
   uip_next_hdr = &UIP_IP_BUF->proto;
 
   /* Look for hop-by-hop and routing headers */
@@ -602,17 +604,22 @@ rpl_ext_header_remove(void)
     switch(*uip_next_hdr) {
       case UIP_PROTO_HBHO:
       case UIP_PROTO_ROUTING:
-        /* Remove hop-by-hop and routing headers */
-        *uip_next_hdr = UIP_EXT_BUF->next;
-        rpl_ext_hdr_len = (UIP_EXT_BUF->len * 8) + 8;
-        temp_len = UIP_IP_BUF->len[1];
-        uip_len -= rpl_ext_hdr_len;
-        UIP_IP_BUF->len[1] -= rpl_ext_hdr_len;
-        if(UIP_IP_BUF->len[1] > temp_len) {
-          UIP_IP_BUF->len[0]--;
+        if((*uip_next_hdr != UIP_PROTO_HBHO || UIP_EXT_HDR_OPT_RPL_BUF->opt_type == UIP_EXT_HDR_OPT_RPL)) {
+          /* Remove hop-by-hop and routing headers */
+          *uip_next_hdr = UIP_EXT_BUF->next;
+          rpl_ext_hdr_len = (UIP_EXT_BUF->len * 8) + 8;
+          temp_len = UIP_IP_BUF->len[1];
+          uip_len -= rpl_ext_hdr_len;
+          UIP_IP_BUF->len[1] -= rpl_ext_hdr_len;
+          if(UIP_IP_BUF->len[1] > temp_len) {
+            UIP_IP_BUF->len[0]--;
+          }
+          PRINTF("RPL: Removing RPL extension header (type %u, len %u)\n", *uip_next_hdr, rpl_ext_hdr_len);
+          memmove(UIP_EXT_BUF, ((uint8_t *)UIP_EXT_BUF) + rpl_ext_hdr_len, uip_len - UIP_IPH_LEN);
+        } else {
+          uip_next_hdr = &UIP_EXT_BUF->next;
+          uip_ext_len += (UIP_EXT_BUF->len << 3) + 8;
         }
-        PRINTF("RPL: Removing RPL extension header (type %u, len %u)\n", *uip_next_hdr, rpl_ext_hdr_len);
-        memmove(UIP_EXT_BUF, ((uint8_t *)UIP_EXT_BUF) + rpl_ext_hdr_len, uip_len - UIP_IPH_LEN);
         break;
       case UIP_PROTO_DESTO:
         /*
@@ -626,6 +633,7 @@ rpl_ext_header_remove(void)
         /* Move to next header */
         uip_next_hdr = &UIP_EXT_BUF->next;
         uip_ext_len += (UIP_EXT_BUF->len << 3) + 8;
+        break;
     default:
       return;
     }
