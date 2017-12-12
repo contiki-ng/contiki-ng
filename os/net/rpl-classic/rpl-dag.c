@@ -370,6 +370,7 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
         }
         if(dag == dag->instance->current_dag) {
           PRINTF("RPL: Dropping a joined DAG when setting this node as root");
+          rpl_set_default_route(instance, NULL);
           dag->instance->current_dag = NULL;
         } else {
           PRINTF("RPL: Dropping a DAG when setting this node as root");
@@ -667,6 +668,10 @@ rpl_free_dag(rpl_dag_t *dag)
     if(RPL_IS_STORING(dag->instance)) {
       rpl_remove_routes(dag);
     }
+    /* Stop the DAO retransmit timer */
+#if RPL_WITH_DAO_ACK
+    ctimer_stop(&dag->instance->dao_retransmit_timer);
+#endif /* RPL_WITH_DAO_ACK */
 
    /* Remove autoconfigured address */
     if((dag->prefix_info.flags & UIP_ND6_RA_FLAG_AUTONOMOUS)) {
@@ -1325,6 +1330,9 @@ rpl_local_repair(rpl_instance_t *instance)
 
   /* no downward route anymore */
   instance->has_downward_route = 0;
+#if RPL_WITH_DAO_ACK
+  ctimer_stop(&instance->dao_retransmit_timer);
+#endif /* RPL_WITH_DAO_ACK */
 
   rpl_reset_dio_timer(instance);
   if(RPL_IS_STORING(instance)) {
