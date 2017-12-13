@@ -94,6 +94,12 @@ struct routing_driver {
   */
   void (* leave_network)(void);
   /**
+   * Tells whether the node is currently part of a network
+   *
+   * \return 1 if we have joined a network, 0 otherwise.
+   */
+  int (* node_has_joined)(void);
+  /**
    * Tells whether the node is currently reachable as part of the network
    *
    * \return 1 if we are reachable, 0 otherwise.

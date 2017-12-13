@@ -49,7 +49,7 @@ AUTOSTART_PROCESSES(&wait_for_dag);
 static void
 timeout_handler(void)
 {
-  if(NETSTACK_ROUTING.node_is_reachable()) {
+  if(NETSTACK_ROUTING.node_has_joined()) {
     PRINTF("DAG Found\n");
   }
 }

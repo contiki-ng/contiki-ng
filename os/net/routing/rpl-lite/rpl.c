@@ -109,6 +109,12 @@ rpl_link_callback(const linkaddr_t *addr, int status, int numtx)
 }
 /*---------------------------------------------------------------------------*/
 int
+rpl_has_joined(void)
+{
+  return curr_instance.used && curr_instance.dag.state >= DAG_JOINED;
+}
+/*---------------------------------------------------------------------------*/
+int
 rpl_is_reachable(void)
 {
   return curr_instance.used && curr_instance.dag.state == DAG_REACHABLE;
@@ -226,6 +232,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_dag_get_root_ipaddr,
   get_sr_node_ipaddr,
   rpl_dag_poison_and_leave,
+  rpl_has_joined,
   rpl_is_reachable,
   rpl_global_repair,
   rpl_local_repair,

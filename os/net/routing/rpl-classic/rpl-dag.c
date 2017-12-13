@@ -1006,6 +1006,12 @@ rpl_move_parent(rpl_dag_t *dag_src, rpl_dag_t *dag_dst, rpl_parent_t *parent)
 }
 /*---------------------------------------------------------------------------*/
 int
+rpl_has_joined(void)
+{
+  return rpl_get_any_dag() != NULL;
+}
+/*---------------------------------------------------------------------------*/
+int
 rpl_has_downward_route(void)
 {
   int i;

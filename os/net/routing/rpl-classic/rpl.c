@@ -423,6 +423,7 @@ const struct routing_driver rpl_classic_driver = {
   get_root_ipaddr,
   get_sr_node_ipaddr,
   leave_network,
+  rpl_has_joined,
   rpl_has_downward_route,
   global_repair,
   local_repair,

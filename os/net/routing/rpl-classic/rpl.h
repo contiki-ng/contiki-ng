@@ -327,6 +327,12 @@ enum rpl_mode rpl_set_mode(enum rpl_mode mode);
  */
 enum rpl_mode rpl_get_mode(void);
 
+/**
+ * Tells whether the node has joined a network or not
+ *
+ * \retval 1 if we have joined a network, 0 if not.
+ */
+int rpl_has_joined(void);
 
 /**
  * Get the RPL's best guess on if we have downward route or not.

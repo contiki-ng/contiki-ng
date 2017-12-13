@@ -82,6 +82,12 @@ leave_network(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
+node_has_joined(void)
+{
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static int
 node_is_reachable(void)
 {
   return 1;
@@ -151,6 +157,7 @@ const struct routing_driver nullrouting_driver = {
   get_root_ipaddr,
   get_sr_node_ipaddr,
   leave_network,
+  node_has_joined,
   node_is_reachable,
   global_repair,
   local_repair,
