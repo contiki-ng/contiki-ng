@@ -14,6 +14,7 @@ rpl-udp/sky \
 rpl-border-router/native \
 rpl-border-router/sky \
 slip-radio/sky \
+nullnet/native \
 
 TOOLS=
 
