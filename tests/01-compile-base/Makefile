@@ -10,6 +10,8 @@ multicast/sky \
 libs/logging/native \
 libs/energest/native \
 libs/energest/sky \
+libs/data-structures/native \
+libs/data-structures/sky \
 rpl-udp/sky \
 rpl-border-router/native \
 rpl-border-router/sky \
