@@ -70,6 +70,12 @@ get_root_ipaddr(uip_ipaddr_t *ipaddr)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+get_sr_node_ipaddr(uip_ipaddr_t *addr, const uip_sr_node_t *node)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 static void
 leave_network(void)
 {
@@ -143,6 +149,7 @@ const struct routing_driver nullrouting_driver = {
   root_start,
   node_is_root,
   get_root_ipaddr,
+  get_sr_node_ipaddr,
   leave_network,
   node_is_reachable,
   global_repair,

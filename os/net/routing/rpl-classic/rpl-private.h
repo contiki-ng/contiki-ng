@@ -45,7 +45,6 @@
 #include "sys/ctimer.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "net/routing/rpl-classic/rpl-ns.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 /*---------------------------------------------------------------------------*/

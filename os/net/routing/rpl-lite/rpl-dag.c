@@ -43,6 +43,7 @@
  */
 
 #include "net/routing/rpl-lite/rpl.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
 
@@ -106,7 +107,7 @@ rpl_dag_leave(void)
 
   /* Remove all neighbors and lnks */
   rpl_neighbor_remove_all();
-  rpl_ns_free_all();
+  uip_sr_free_all();
 
   /* Stop all timers */
   rpl_timers_stop_dag_timers();
@@ -589,9 +590,9 @@ void
 rpl_process_dao(uip_ipaddr_t *from, rpl_dao_t *dao)
 {
   if(dao->lifetime == 0) {
-    rpl_ns_expire_parent(from, &dao->parent_addr);
+    uip_sr_expire_parent(NULL, from, &dao->parent_addr);
   } else {
-    if(!rpl_ns_update_node(from, &dao->parent_addr, RPL_LIFETIME(dao->lifetime))) {
+    if(!uip_sr_update_node(NULL, from, &dao->parent_addr, RPL_LIFETIME(dao->lifetime))) {
       LOG_ERR("failed to add link on incoming DAO\n");
       return;
     }

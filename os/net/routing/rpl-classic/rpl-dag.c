@@ -47,6 +47,7 @@
 #include "net/link-stats.h"
 #include "net/routing/rpl-classic/rpl.h"
 #include "net/routing/rpl-classic/rpl-private.h"
+#include "net/routing/rpl-classic/rpl-dag-root.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6-nbr.h"
@@ -1008,6 +1009,9 @@ int
 rpl_has_downward_route(void)
 {
   int i;
+  if(rpl_dag_root_is_root()) {
+    return 1; /* We are the root, and know the route to ourself */
+  }
   for(i = 0; i < RPL_MAX_INSTANCES; ++i) {
     if(instance_table[i].used && instance_table[i].has_downward_route) {
       return 1;

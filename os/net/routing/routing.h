@@ -44,6 +44,7 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/linkaddr.h"
 
 /**
@@ -79,6 +80,14 @@ struct routing_driver {
    * \return 1 if the root address was copied, 0 otherwise
   */
   int (* get_root_ipaddr)(uip_ipaddr_t *ipaddr);
+  /**
+   * Returns the global IPv6 address of a source routing node
+   *
+   * \param ipaddr A pointer where to copy the IP address of the node
+   * \param node The source routing node
+   * \return 1 if the global node address was copied, 0 otherwise
+  */
+  int (* get_sr_node_ipaddr)(uip_ipaddr_t *addr, const uip_sr_node_t *node);
   /**
    * Leave the network the node is part of
    *

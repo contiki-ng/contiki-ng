@@ -32,13 +32,8 @@
 
 #include "contiki.h"
 #include "net/routing/routing.h"
-/* For RPL-specific data inclusion, in particular non-storing routing link */
-#if ROUTING_CONF_RPL_LITE
-#include "net/routing/rpl-lite/rpl.h"
-#elif ROUTING_CONF_RPL_CLASSIC
-#include "net/routing/rpl-classic/rpl.h"
-#include "net/routing/rpl-classic/rpl-ns.h"
-#endif
+#include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-sr.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -125,18 +120,18 @@ PT_THREAD(generate_routes(struct httpd_state *s))
   }
 #endif /* UIP_MAX_ROUTES != 0 */
 
-#if UIP_CONF_IPV6_RPL
-  if(rpl_ns_num_nodes() > 0) {
-    static rpl_ns_node_t *link;
+#if (UIP_SR_LINK_NUM != 0)
+  if(uip_sr_num_nodes() > 0) {
+    static uip_sr_node_t *link;
     ADD("  Routing links\n  <ul>\n");
     SEND(&s->sout);
-    for(link = rpl_ns_node_head(); link != NULL; link = rpl_ns_node_next(link)) {
+    for(link = uip_sr_node_head(); link != NULL; link = uip_sr_node_next(link)) {
       if(link->parent != NULL) {
         uip_ipaddr_t child_ipaddr;
         uip_ipaddr_t parent_ipaddr;
 
-        rpl_ns_get_node_global_addr(&child_ipaddr, link);
-        rpl_ns_get_node_global_addr(&parent_ipaddr, link->parent);
+        NETSTACK_ROUTING.get_sr_node_ipaddr(&child_ipaddr, link);
+        NETSTACK_ROUTING.get_sr_node_ipaddr(&parent_ipaddr, link->parent);
 
         ADD("    <li>");
         ipaddr_add(&child_ipaddr);
@@ -152,7 +147,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
     ADD("  </ul>");
     SEND(&s->sout);
   }
-#endif /* UIP_CONF_IPV6_RPL */
+#endif /* UIP_SR_LINK_NUM != 0 */
 
   SEND_STRING(&s->sout, BOTTOM);
 

@@ -43,9 +43,9 @@
 
 #include "contiki.h"
 #include "net/routing/rpl-classic/rpl-private.h"
-#include "net/routing/rpl-classic/rpl-ns.h"
 #include "net/link-stats.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
+#include "net/ipv6/uip-sr.h"
 #include "lib/random.h"
 #include "sys/ctimer.h"
 
@@ -89,7 +89,7 @@ handle_periodic_timer(void *ptr)
       rpl_purge_routes();
     }
     if(RPL_IS_NON_STORING(dag->instance)) {
-      rpl_ns_periodic();
+      uip_sr_periodic(1);
     }
   }
   rpl_recalculate_ranks();

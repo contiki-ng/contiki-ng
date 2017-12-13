@@ -570,16 +570,16 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
   }
 
 #if UIP_CONF_IPV6_RPL
-  if(rpl_ns_num_nodes() > 0) {
-    rpl_ns_node_t *link;
+  if(uip_sr_num_nodes() > 0) {
+    uip_sr_node_t *link;
     /* Our routing links */
-    SHELL_OUTPUT(output, "Routing links (%u in total):\n", rpl_ns_num_nodes());
-    link = rpl_ns_node_head();
+    SHELL_OUTPUT(output, "Routing links (%u in total):\n", uip_sr_num_nodes());
+    link = uip_sr_node_head();
     while(link != NULL) {
       uip_ipaddr_t child_ipaddr;
       uip_ipaddr_t parent_ipaddr;
-      rpl_ns_get_node_global_addr(&child_ipaddr, link);
-      rpl_ns_get_node_global_addr(&parent_ipaddr, link->parent);
+      NETSTACK_ROUTING.get_sr_node_ipaddr(&child_ipaddr, link);
+      NETSTACK_ROUTING.get_sr_node_ipaddr(&parent_ipaddr, link->parent);
       SHELL_OUTPUT(output, "-- ");
       shell_output_6addr(output, &child_ipaddr);
       if(link->parent == NULL) {
@@ -589,12 +589,12 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
         SHELL_OUTPUT(output, " to ");
         shell_output_6addr(output, &parent_ipaddr);
       }
-      if(link->lifetime != 0xFFFFFFFF) {
+      if(link->lifetime != UIP_SR_INFINITE_LIFETIME) {
         SHELL_OUTPUT(output, " (lifetime: %lu seconds)\n", (unsigned long)link->lifetime);
       } else {
         SHELL_OUTPUT(output, " (lifetime: infinite)\n");
       }
-      link = rpl_ns_node_next(link);
+      link = uip_sr_node_next(link);
     }
   } else {
     SHELL_OUTPUT(output, "No routing links\n");

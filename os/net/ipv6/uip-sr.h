@@ -30,37 +30,75 @@
  */
 
 /**
- * \addtogroup rpl-lite
+ * \addtogroup uip
  * @{
  *
  * \file
- *         RPL non-storing mode specific functions. Includes support for
- *         source routing.
+ *         Source routing support
  *
  * \author Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
 
-#ifndef RPL_NS_H
-#define RPL_NS_H
+#ifndef UIP_SR_H
+#define UIP_SR_H
 
 /********** Includes  **********/
 
+#include "contiki.h"
 #include "net/ipv6/uip.h"
-#include "net/routing/rpl-lite/rpl.h"
+
+/********** Configuration  **********/
+
+/* The number of source routing nodes, i.e. the maximum netwrok size at the root */
+#ifdef UIP_SR_CONF_LINK_NUM
+
+#define UIP_SR_LINK_NUM UIP_SR_CONF_LINK_NUM
+
+#else /* UIP_SR_CONF_LINK_NUM */
+
+#if ROUTING_CONF_RPL_LITE
+#define UIP_SR_LINK_NUM NETSTACK_MAX_ROUTE_ENTRIES
+#elif ROUTING_CONF_RPL_CLASSIC
+
+#include "net/routing/rpl-classic/rpl-conf.h"
+#if RPL_WITH_NON_STORING
+#define UIP_SR_LINK_NUM NETSTACK_MAX_ROUTE_ENTRIES
+#else /* RPL_WITH_NON_STORING */
+#define UIP_SR_LINK_NUM 0
+#endif /* RPL_WITH_NON_STORING */
+
+#else
+
+#define UIP_SR_LINK_NUM 0
+
+#endif
+
+#endif /* UIP_SR_CONF_LINK_NUM */
+
+/* Delay between between expiration order and actual node removal */
+#ifdef UIP_SR_CONF_REMOVAL_DELAY
+#define UIP_SR_REMOVAL_DELAY          UIP_SR_CONF_REMOVAL_DELAY
+#else /* UIP_SR_CONF_REMOVAL_DELAY */
+#define UIP_SR_REMOVAL_DELAY          60
+#endif /* UIP_SR_CONF_REMOVAL_DELAY */
+
+#define UIP_SR_INFINITE_LIFETIME           0xFFFFFFFF
 
 /********** Data Structures  **********/
 
-/* A node in a RPL Non-storing graph, stored at the root and representing
+/** \brief A node in a source routing graph, stored at the root and representing
  * all child-parent relationship. Used to build source routes */
-typedef struct rpl_ns_node {
-  struct rpl_ns_node *next;
+typedef struct uip_sr_node {
+  struct uip_sr_node *next;
   uint32_t lifetime;
-  rpl_dag_t *dag;
-  /* Store only IPv6 link identifiers as all nodes in the DAG share the same prefix */
+  /* Protocol-specific graph structure */
+  void *graph;
+  /* Store only IPv6 link identifiers, the routing protocol will provide
+  us with the prefix */
   unsigned char link_identifier[8];
-  struct rpl_ns_node *parent;
-} rpl_ns_node_t;
+  struct uip_sr_node *parent;
+} uip_sr_node_t;
 
 /********** Public functions **********/
 
@@ -69,31 +107,33 @@ typedef struct rpl_ns_node {
  *
  * \return The number of nodes
 */
-int rpl_ns_num_nodes(void);
+int uip_sr_num_nodes(void);
 
 /**
  * Expires a given child-parent link
  *
+ * \param graph The graph the link belongs to
  * \param child The IPv6 address of the child
  * \param parent The IPv6 address of the parent
 */
-void rpl_ns_expire_parent(const uip_ipaddr_t *child, const uip_ipaddr_t *parent);
+void uip_sr_expire_parent(void *graph, const uip_ipaddr_t *child, const uip_ipaddr_t *parent);
 
 /**
  * Updates a child-parent link
  *
+ * \param graph The graph the link belongs to
  * \param child The IPv6 address of the child
  * \param parent The IPv6 address of the parent
  * \param lifetime The link lifetime in seconds
 */
-rpl_ns_node_t *rpl_ns_update_node(const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32_t lifetime);
+uip_sr_node_t *uip_sr_update_node(void *graph, const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32_t lifetime);
 
 /**
  * Returns the head of the non-storing node list
  *
  * \return The head of the list
 */
-rpl_ns_node_t *rpl_ns_node_head(void);
+uip_sr_node_t *uip_sr_node_head(void);
 
 /**
  * Returns the next element of the non-storing node list
@@ -101,33 +141,26 @@ rpl_ns_node_t *rpl_ns_node_head(void);
  * \param item The current element in the list
  * \return The next element of the list
 */
-rpl_ns_node_t *rpl_ns_node_next(rpl_ns_node_t *item);
+uip_sr_node_t *uip_sr_node_next(uip_sr_node_t *item);
 
 /**
- * Looks up for a RPL NS node from its IPv6 global address
+ * Looks up for a source routing node from its IPv6 global address
  *
+ * \param graph The graph where to look up for the node
  * \param addr The target address
  * \return A pointer to the node
 */
-rpl_ns_node_t *rpl_ns_get_node(const uip_ipaddr_t *addr);
+uip_sr_node_t *uip_sr_get_node(void *graph, const uip_ipaddr_t *addr);
 
 /**
  * Telle whether an address is reachable, i.e. if there exists a path from
- * the root to the node in the current RPL NS graph
+ * the root to the node in the current source routing graph
  *
+ * \param graph The graph where to look up for the node
  * \param addr The target IPv6 global address
  * \return 1 if the node is reachable, 0 otherwise
 */
-int rpl_ns_is_addr_reachable(const uip_ipaddr_t *addr);
-
-/**
- * Finds the global address of a given node
- *
- * \param addr A pointer to the address to be written
- * \param node The target node
- * \return 1 if success, 0 otherwise
-*/
-int rpl_ns_get_node_global_addr(uip_ipaddr_t *addr, rpl_ns_node_t *node);
+int uip_sr_is_addr_reachable(void *graph, const uip_ipaddr_t *addr);
 
 /**
  * A function called periodically. Used to age the links (decrease lifetime
@@ -135,18 +168,18 @@ int rpl_ns_get_node_global_addr(uip_ipaddr_t *addr, rpl_ns_node_t *node);
  *
  * \param seconds The number of seconds elapsted since last call
 */
-void rpl_ns_periodic(unsigned seconds);
+void uip_sr_periodic(unsigned seconds);
 
 /**
- * Initialize rpl-ns module
+ * Initialize this module
 */
-void rpl_ns_init(void);
+void uip_sr_init(void);
 
 /**
  * Deallocate all neighbors
 */
-void rpl_ns_free_all(void);
+void uip_sr_free_all(void);
 
  /** @} */
 
-#endif /* RPL_NS_H */
+#endif /* UIP_SR_H */

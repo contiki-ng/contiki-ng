@@ -37,12 +37,6 @@
 #include "net/ipv6/uip.h"
 #include <string.h>
 
-#if ROUTING_CONF_RPL_LITE
-#include "net/routing/rpl-lite/rpl.h"
-#elif ROUTING_CONF_RPL_CLASSIC
-#include "net/routing/rpl-classic/rpl.h"
-#endif
-
 #define DEBUG DEBUG_FULL
 #include "net/ipv6/uip-debug.h"
 
@@ -55,8 +49,7 @@ AUTOSTART_PROCESSES(&wait_for_dag);
 static void
 timeout_handler(void)
 {
-  rpl_dag_t *dag = rpl_get_any_dag();
-  if (dag != NULL) {
+  if(NETSTACK_ROUTING.node_is_reachable()) {
     PRINTF("DAG Found\n");
   }
 }
@@ -73,7 +66,7 @@ PROCESS_THREAD(wait_for_dag, ev, data)
     if(etimer_expired(&et)) {
       timeout_handler();
       etimer_restart(&et);
-    } 
+    }
   }
   PROCESS_END();
 }

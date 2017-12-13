@@ -42,8 +42,10 @@
  *         Nicolas Tsiftes <nvt@sics.se>,
  *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
- 
+
+#include "net/routing/routing.h"
 #include "net/routing/rpl-lite/rpl.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/packetbuf.h"
 
 /* Log configuration */
@@ -68,8 +70,8 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 {
   uint8_t *uip_next_hdr;
   int last_uip_ext_len = uip_ext_len;
-  rpl_ns_node_t *dest_node;
-  rpl_ns_node_t *root_node;
+  uip_sr_node_t *dest_node;
+  uip_sr_node_t *root_node;
 
   uip_ext_len = 0;
   uip_next_hdr = &UIP_IP_BUF->proto;
@@ -96,8 +98,8 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
     return 0;
   }
 
-  root_node = rpl_ns_get_node(&curr_instance.dag.dag_id);
-  dest_node = rpl_ns_get_node(&UIP_IP_BUF->destipaddr);
+  root_node = uip_sr_get_node(NULL, &curr_instance.dag.dag_id);
+  dest_node = uip_sr_get_node(NULL, &UIP_IP_BUF->destipaddr);
 
   if((uip_next_hdr != NULL && *uip_next_hdr == UIP_PROTO_ROUTING
       && UIP_RH_BUF->routing_type == RPL_RH_TYPE_SRH) ||
@@ -227,9 +229,9 @@ insert_srh_header(void)
   uint8_t cmpri, cmpre; /* ComprI and ComprE fields of the RPL Source Routing Header */
   uint8_t *hop_ptr;
   uint8_t padding;
-  rpl_ns_node_t *dest_node;
-  rpl_ns_node_t *root_node;
-  rpl_ns_node_t *node;
+  uip_sr_node_t *dest_node;
+  uip_sr_node_t *root_node;
+  uip_sr_node_t *node;
   uip_ipaddr_t node_addr;
 
   LOG_INFO("SRH creating source routing header with destination ");
@@ -246,20 +248,20 @@ insert_srh_header(void)
     return 1;
   }
 
-  dest_node = rpl_ns_get_node(&UIP_IP_BUF->destipaddr);
+  dest_node = uip_sr_get_node(NULL, &UIP_IP_BUF->destipaddr);
   if(dest_node == NULL) {
     /* The destination is not found, skip SRH insertion */
     LOG_INFO("SRH node not found, skip SRH insertion\n");
     return 1;
   }
 
-  root_node = rpl_ns_get_node(&curr_instance.dag.dag_id);
+  root_node = uip_sr_get_node(NULL, &curr_instance.dag.dag_id);
   if(root_node == NULL) {
     LOG_ERR("SRH root node not found\n");
     return 0;
   }
 
-  if(!rpl_ns_is_addr_reachable(&UIP_IP_BUF->destipaddr)) {
+  if(!uip_sr_is_addr_reachable(NULL, &UIP_IP_BUF->destipaddr)) {
     LOG_ERR("SRH no path found to destination\n");
     return 0;
   }
@@ -277,7 +279,7 @@ insert_srh_header(void)
 
   while(node != NULL && node != root_node) {
 
-    rpl_ns_get_node_global_addr(&node_addr, node);
+    NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
 
     /* How many bytes in common between all nodes in the path? */
     cmpri = MIN(cmpri, count_matching_bytes(&node_addr, &UIP_IP_BUF->destipaddr, 16));
@@ -331,7 +333,7 @@ insert_srh_header(void)
   hop_ptr = ((uint8_t *)UIP_RH_BUF) + ext_len - padding; /* Pointer where to write the next hop compressed address */
 
   while(node != NULL && node->parent != root_node) {
-    rpl_ns_get_node_global_addr(&node_addr, node);
+    NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
 
     hop_ptr -= (16 - cmpri);
     memcpy(hop_ptr, ((uint8_t*)&node_addr) + cmpri, 16 - cmpri);
@@ -340,7 +342,7 @@ insert_srh_header(void)
   }
 
   /* The next hop (i.e. node whose parent is the root) is placed as the current IPv6 destination */
-  rpl_ns_get_node_global_addr(&node_addr, node);
+  NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &node_addr);
 
   /* In-place update of IPv6 length field */

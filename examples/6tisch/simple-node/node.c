@@ -40,16 +40,10 @@
 #include "node-id.h"
 #include "sys/log.h"
 #include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-log.h"
 #include "net/routing/routing.h"
-
-#if ROUTING_CONF_RPL_LITE
-#include "net/routing/rpl-lite/rpl.h"
-#elif ROUTING_CONF_RPL_CLASSIC
-#include "net/routing/rpl-classic/rpl.h"
-#include "net/routing/rpl-classic/rpl-ns.h"
-#endif
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
@@ -86,8 +80,8 @@ PROCESS_THREAD(node_process, ev, data)
       #if (UIP_MAX_ROUTES != 0)
         PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
       #endif
-      #if UIP_CONF_IPV6_RPL
-        PRINTF("Routing links: %u\n", rpl_ns_num_nodes());
+      #if (UIP_SR_LINK_NUM != 0)
+        PRINTF("Routing links: %u\n", uip_sr_num_nodes());
       #endif
       PROCESS_YIELD_UNTIL(etimer_expired(&et));
       etimer_reset(&et);

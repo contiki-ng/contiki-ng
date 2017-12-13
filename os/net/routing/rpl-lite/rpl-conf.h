@@ -318,13 +318,6 @@
 #define RPL_DAO_DELAY                 (CLOCK_SECOND * 4)
 #endif /* RPL_CONF_DAO_DELAY */
 
-/* Delay between reception of a no-path DAO and actual route removal */
-#ifdef RPL_CONF_NOPATH_REMOVAL_DELAY
-#define RPL_NOPATH_REMOVAL_DELAY          RPL_CONF_NOPATH_REMOVAL_DELAY
-#else /* RPL_CONF_NOPATH_REMOVAL_DELAY */
-#define RPL_NOPATH_REMOVAL_DELAY          60
-#endif /* RPL_CONF_NOPATH_REMOVAL_DELAY */
-
 #ifdef RPL_CONF_DAO_MAX_RETRANSMISSIONS
 #define RPL_DAO_MAX_RETRANSMISSIONS RPL_CONF_DAO_MAX_RETRANSMISSIONS
 #else

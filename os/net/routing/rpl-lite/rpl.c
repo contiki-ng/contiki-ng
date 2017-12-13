@@ -190,7 +190,19 @@ init(void)
   rpl_timers_init();
   rpl_icmp6_init();
 
-  rpl_ns_init();
+  uip_sr_init();
+}
+/*---------------------------------------------------------------------------*/
+static int
+get_sr_node_ipaddr(uip_ipaddr_t *addr, const uip_sr_node_t *node)
+{
+  if(addr != NULL && node != NULL) {
+    memcpy(addr, &curr_instance.dag.dag_id, 8);
+    memcpy(((unsigned char *)addr) + 8, &node->link_identifier, 8);
+    return 1;
+  } else {
+    return 0;
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -212,6 +224,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_dag_root_start,
   rpl_dag_root_is_root,
   rpl_dag_get_root_ipaddr,
+  get_sr_node_ipaddr,
   rpl_dag_poison_and_leave,
   rpl_is_reachable,
   rpl_global_repair,

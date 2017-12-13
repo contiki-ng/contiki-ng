@@ -42,6 +42,7 @@
 
 #include "contiki.h"
 #include "net/routing/rpl-lite/rpl.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/link-stats.h"
 #include "lib/random.h"
 #include "sys/ctimer.h"
@@ -500,7 +501,7 @@ handle_periodic_timer(void *ptr)
 {
   if(curr_instance.used) {
     rpl_dag_periodic(PERIODIC_DELAY_SECONDS);
-    rpl_ns_periodic(PERIODIC_DELAY_SECONDS);
+    uip_sr_periodic(PERIODIC_DELAY_SECONDS);
   }
 
   if(!curr_instance.used ||

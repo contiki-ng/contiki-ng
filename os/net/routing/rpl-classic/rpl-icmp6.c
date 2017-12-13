@@ -49,9 +49,9 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-nd6.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/routing/rpl-classic/rpl-private.h"
-#include "net/routing/rpl-classic/rpl-ns.h"
 #include "net/packetbuf.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "random.h"
@@ -993,9 +993,9 @@ dao_input_nonstoring(void)
 
   if(lifetime == RPL_ZERO_LIFETIME) {
     PRINTF("RPL: No-Path DAO received\n");
-    rpl_ns_expire_parent(dag, &prefix, &dao_parent_addr);
+    uip_sr_expire_parent(dag, &prefix, &dao_parent_addr);
   } else {
-    if(rpl_ns_update_node(dag, &prefix, &dao_parent_addr, RPL_LIFETIME(instance, lifetime)) == NULL) {
+    if(uip_sr_update_node(dag, &prefix, &dao_parent_addr, RPL_LIFETIME(instance, lifetime)) == NULL) {
       PRINTF("RPL: failed to add link\n");
       return;
     }

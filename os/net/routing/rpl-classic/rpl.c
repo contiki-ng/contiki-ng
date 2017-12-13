@@ -45,10 +45,10 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/tcpip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-sr.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/routing/routing.h"
 #include "net/routing/rpl-classic/rpl-private.h"
-#include "net/routing/rpl-classic/rpl-ns.h"
 #include "net/routing/rpl-classic/rpl-dag-root.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 
@@ -349,8 +349,20 @@ init(void)
 #endif
 
 #if RPL_WITH_NON_STORING
-  rpl_ns_init();
+  uip_sr_init();
 #endif /* RPL_WITH_NON_STORING */
+}
+/*---------------------------------------------------------------------------*/
+static int
+get_sr_node_ipaddr(uip_ipaddr_t *addr, const uip_sr_node_t *node)
+{
+  if(addr != NULL && node != NULL) {
+    memcpy(addr, &((rpl_dag_t *)node->graph)->dag_id, 8);
+    memcpy(((unsigned char *)addr) + 8, &node->link_identifier, 8);
+    return 1;
+  } else {
+    return 0;
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -409,6 +421,7 @@ const struct routing_driver rpl_classic_driver = {
   rpl_dag_root_start,
   rpl_dag_root_is_root,
   get_root_ipaddr,
+  get_sr_node_ipaddr,
   leave_network,
   rpl_has_downward_route,
   global_repair,
