@@ -4,6 +4,7 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 hello-world/native \
 hello-world/native:MAKE_NET=MAKE_NET_NULLNET \
+hello-world/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 hello-world/sky \
 storage/eeprom-test/native \
 multicast/sky \
