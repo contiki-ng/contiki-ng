@@ -81,7 +81,7 @@ OBJCOPY:=$(CROSS_COMPILE)-objcopy
 OBJDUMP:=$(CROSS_COMPILE)-objdump
 
 ARCH = jn516x-ccm-star.c exceptions.c rtimer-arch.c rtimer-arch-slow.c \
-       slip_uart0.c clock.c micromac-radio.c \
+       slip_uart0.c clock.c micromac-radio.c int-master.c \
        node-id.c watchdog.c slip.c sprintf.c
 # Default uart0 for printf and slip
 TARGET_WITH_UART0 ?= 1
@@ -163,6 +163,10 @@ ifeq ($(HOST_OS),Windows)
 CFLAGS := $(patsubst -I/cygdrive/c/%,-Ic:/%,$(CFLAGS))
 LDFLAGS := $(patsubst -L/cygdrive/c/%,-Lc:/%,$(LDFLAGS))
 endif
+
+# These symbols are used by the stack check library
+LDFLAGS += -Wl,--defsym=_stack=_stack_low_water_mark
+LDFLAGS += -Wl,--defsym=_stack_origin=_ram_top
 
 ########################################################################
 

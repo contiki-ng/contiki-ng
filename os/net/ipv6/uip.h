@@ -80,6 +80,7 @@
 
 
 #include "net/ipv6/uipopt.h"
+#include "net/ipv6/uipbuf.h"
 
 /* For memcmp */
 #include <string.h>
@@ -821,18 +822,6 @@ CCIF void uip_send(const void *data, int len);
 #define uip_mss()             (uip_conn->mss)
 
 /**
- * Set the maximal number of MAC transmissions.
- *
- * \hideinitializer
- */
-#if UIP_WITH_VARIABLE_RETRANSMISSIONS
-#define uip_set_max_mac_transmissions(conn, value)   ((conn)->max_mac_transmissions = (value))
-#else
-#define uip_set_max_mac_transmissions(conn, value)
-#endif
-
-
-/**
  * Set up a new UDP connection.
  *
  * This function sets up a new UDP connection. The function will
@@ -1328,10 +1317,12 @@ extern uint16_t uip_urglen, uip_surglen;
 #define uip_clear_buf() { \
   uip_len = 0; \
   uip_ext_len = 0; \
+  uipbuf_clear_attr();\
 }
 #else /*NETSTACK_CONF_WITH_IPV6*/
 #define uip_clear_buf() { \
   uip_len = 0; \
+  uipbuf_clear_attr();\
 }
 #endif /*NETSTACK_CONF_WITH_IPV6*/
 
@@ -1365,10 +1356,6 @@ struct uip_conn {
   uint8_t timer;         /**< The retransmission timer. */
   uint8_t nrtx;          /**< The number of retransmissions for the last
                               segment sent. */
-#if UIP_WITH_VARIABLE_RETRANSMISSIONS
-  uint8_t max_mac_transmissions; /**< Number of max MAC-layer transmissions. */
-#endif
-
   uip_tcp_appstate_t appstate; /** The application state. */
 };
 
@@ -1405,10 +1392,6 @@ struct uip_udp_conn {
   uint16_t lport;        /**< The local port number in network byte order. */
   uint16_t rport;        /**< The remote port number in network byte order. */
   uint8_t  ttl;          /**< Default time-to-live. */
-#if UIP_WITH_VARIABLE_RETRANSMISSIONS
-  uint8_t  max_mac_transmissions; /**< Number of max MAC-layer transmissions. */
-#endif
-
   /** The application state. */
   uip_udp_appstate_t appstate;
 };

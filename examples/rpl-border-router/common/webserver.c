@@ -310,7 +310,6 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
   PSOCK_END(&s->sout);
 }
-#if BORDER_ROUTER_CONF_WEBSERVER
 /*---------------------------------------------------------------------------*/
 PROCESS(webserver_nogui_process, "Web server");
 PROCESS_THREAD(webserver_nogui_process, ev, data)
@@ -332,4 +331,4 @@ httpd_simple_get_script(const char *name)
 {
   return generate_routes;
 }
-#endif /* BORDER_ROUTER_CONF_WEBSERVER */
+/*---------------------------------------------------------------------------*/

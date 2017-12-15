@@ -44,6 +44,7 @@
 #include "contiki-net.h"
 #include "sys/platform.h"
 #include "sys/energest.h"
+#include "sys/stack-check.h"
 #include "dev/watchdog.h"
 
 #include "services/orchestra/orchestra.h"
@@ -77,14 +78,16 @@ main(void)
 
   energest_init();
 
+#if STACK_CHECK_ENABLED
+  stack_check_init();
+#endif
+
   platform_init_stage_two();
 
   LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
 
-  LOG_INFO(" Net: ");
-  LOG_INFO_("%s\n", NETSTACK_NETWORK.name);
-  LOG_INFO(" MAC: ");
-  LOG_INFO_("%s\n", NETSTACK_MAC.name);
+  LOG_INFO(" Net: %s\n", NETSTACK_NETWORK.name);
+  LOG_INFO(" MAC: %s\n", NETSTACK_MAC.name);
 
   netstack_init();
 

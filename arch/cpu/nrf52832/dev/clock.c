@@ -53,7 +53,6 @@
 #include "nrf_delay.h"
 #include "app_error.h"
 #include "contiki.h"
-#include "platform-conf.h"
 
 /*---------------------------------------------------------------------------*/
 const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(PLATFORM_RTC_INSTANCE_ID); /**< RTC instance used for platform clock */

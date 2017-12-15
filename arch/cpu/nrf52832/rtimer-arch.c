@@ -44,7 +44,6 @@
 #include "nrf_drv_timer.h"
 #include "app_error.h"
 #include "contiki.h"
-#include "platform-conf.h"
 
 static const nrf_drv_timer_t timer = NRF_DRV_TIMER_INSTANCE(PLATFORM_TIMER_INSTANCE_ID); /**< Timer instance used for rtimer */
 

@@ -79,11 +79,11 @@ rtimer_arch_schedule(rtimer_clock_t t)
 
   c = t - (unsigned short)clock_time();
   
-  val.it_value.tv_sec = c / 1000;
-  val.it_value.tv_usec = (c % 1000) * 1000;
+  val.it_value.tv_sec = c / CLOCK_SECOND;
+  val.it_value.tv_usec = (c % CLOCK_SECOND) * CLOCK_SECOND;
 
-  PRINTF("rtimer_arch_schedule time %u %u in %d.%d seconds\n", t, c, c / 1000,
-	 (c % 1000) * 1000);
+  PRINTF("rtimer_arch_schedule time %u %u in %d.%d seconds\n", t, c, val.it_value.tv_sec,
+      val.it_value.tv_usec);
 
   val.it_interval.tv_sec = val.it_interval.tv_usec = 0;
   setitimer(ITIMER_REAL, &val, NULL);

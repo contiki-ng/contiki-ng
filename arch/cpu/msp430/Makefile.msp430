@@ -37,7 +37,7 @@ endif
 CONTIKI_CPU_DIRS = $(CONTIKI_CPU_FAM_DIR) . dev
 
 MSP430     = msp430.c flash.c clock.c leds.c leds-arch.c \
-             watchdog.c lpm.c rtimer-arch.c
+             watchdog.c lpm.c rtimer-arch.c int-master.c
 UIPDRIVERS = slip.c crc16.c
 
 CONTIKI_TARGET_SOURCEFILES += $(MSP430) \
@@ -181,6 +181,9 @@ LDFLAGS += -Wl,--gc-sections,--undefined=_reset_vector__,--undefined=InterruptVe
 endif # SMALL
 
 endif # IAR
+
+# Define the `_stack` symbol used by the stack check library to be equal to `_end`
+LDFLAGS += -Wl,--defsym=_stack=_end
 
 CFLAGS  += $(CFLAGSNO)
 

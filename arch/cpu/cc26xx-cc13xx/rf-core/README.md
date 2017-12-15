@@ -7,7 +7,7 @@ This Contiki extenstion implements [BLEach][bleachWeb], a fully open-source IPv6
 BLEach in Contiki-NG can be used for node (BLE slave) devices.
 
 It was developed by 
-* [Michael Spoerk](www.michaelspoerk.com), Graz University of Technology, michael.spoerk@tugraz.at, github user: [spoerk](https://github.com/spoerk)
+* [Michael Spoerk](http://www.michaelspoerk.com), Graz University of Technology, michael.spoerk@tugraz.at, github user: [spoerk](https://github.com/spoerk)
 
 This IPv6-over-BLE stack is presented and evaluated in the paper:
 [BLEach: Exploiting the Full Potential of IPv6 over BLE in Constrained Embedded IoT Devices](http://sensys.acm.org/2017/), ACM SenSys'17.

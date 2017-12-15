@@ -1007,9 +1007,7 @@ send_packet(mac_callback_t sent, void *ptr)
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
 #endif
 
-#if UIP_WITH_VARIABLE_RETRANSMISSIONS
   max_transmissions = packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
-#endif
   if(max_transmissions == 0) {
     /* If not set by the application, use the default TSCH value */
     max_transmissions = TSCH_MAC_MAX_FRAME_RETRIES + 1;
