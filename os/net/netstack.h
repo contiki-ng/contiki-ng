@@ -73,12 +73,19 @@
 #endif
 #endif /* NETSTACK_CONF_MAC */
 
-/* Radio driver configuration. Most often set by the platform. */
-#ifdef NETSTACK_CONF_RADIO
-#define NETSTACK_RADIO NETSTACK_CONF_RADIO
-#else /* NETSTACK_CONF_RADIO */
-#define NETSTACK_RADIO   nullradio_driver
-#endif /* NETSTACK_CONF_RADIO */
+/* IEEE Radio driver configuration. Most often set by the platform. */
+#ifdef NETSTACK_CONF_RADIO_802154
+#define NETSTACK_RADIO_802154 NETSTACK_CONF_RADIO_802154
+#else /* NETSTACK_CONF_RADIO_802154 */
+#define NETSTACK_RADIO_802154   nullradio_802154_driver
+#endif /* NETSTACK_CONF_RADIO_802154 */
+
+/* BLE Radio driver configuration. Most often set by the platform. */
+#ifdef NETSTACK_CONF_RADIO_BLE
+#define NETSTACK_RADIO_BLE NETSTACK_CONF_RADIO_BLE
+#else /* NETSTACK_CONF_RADIO_BLE */
+#define NETSTACK_RADIO_BLE   nullradio_ble_driver
+#endif /* NETSTACK_CONF_RADIO_BLE */
 
 /* Framer selection. The framer is used by the MAC implementation
    to build and parse frames. */
@@ -90,7 +97,8 @@
 
 #include "net/mac/mac.h"
 #include "net/mac/framer/framer.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
+#include "dev/radio/radio-ble.h"
 #include "net/linkaddr.h"
 
 /**
@@ -112,8 +120,15 @@ struct network_driver {
 
 extern const struct network_driver NETSTACK_NETWORK;
 extern const struct mac_driver     NETSTACK_MAC;
-extern const struct radio_driver   NETSTACK_RADIO;
+extern const radio_802154_driver_t NETSTACK_RADIO_802154;
+extern const radio_ble_driver_t    NETSTACK_RADIO_BLE;
 extern const struct framer         NETSTACK_FRAMER;
+
+#if NETSTACK_CONF_WITH_BLE_RADIO
+#define NETSTACK_RADIO NETSTACK_RADIO_BLE
+#else
+#define NETSTACK_RADIO NETSTACK_RADIO_802154
+#endif
 
 void netstack_init(void);
 
