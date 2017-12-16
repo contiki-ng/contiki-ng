@@ -90,7 +90,7 @@ extern uint8_t cc2420_last_correlation;
 
 int cc2420_rssi(void);
 
-extern const struct radio_driver cc2420_driver;
+extern const radio_802154_driver_t cc2420_driver;
 
 /**
  * \param power Between 1 and 31.

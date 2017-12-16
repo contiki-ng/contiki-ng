@@ -305,7 +305,7 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 
-const struct radio_driver cc2420_driver =
+const radio_802154_driver_t cc2420_driver =
   {
     cc2420_init,
     cc2420_prepare,

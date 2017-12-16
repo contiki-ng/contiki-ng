@@ -131,7 +131,7 @@
 } while(0)
 /*---------------------------------------------------------------------------*/
 /** The NETSTACK data structure for the cc2538 RF driver */
-extern const struct radio_driver cc2538_rf_driver;
+extern const radio_802154_driver_t cc2538_rf_driver;
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Sets addresses and PAN identifier to the relevant RF hardware

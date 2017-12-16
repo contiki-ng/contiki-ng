@@ -48,7 +48,7 @@
 #define COOJA_TRANSMIT_ON_CCA 1
 #endif
 
-extern const struct radio_driver cooja_radio_driver;
+extern const radio_802154_driver_t cooja_radio_driver;
 
 /**
  * Set radio channel.

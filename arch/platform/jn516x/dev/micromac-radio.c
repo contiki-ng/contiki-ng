@@ -1063,7 +1063,7 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
-const struct radio_driver micromac_radio_driver = {
+const radio_802154_driver_t micromac_radio_driver = {
   init,
   prepare,
   transmit,
