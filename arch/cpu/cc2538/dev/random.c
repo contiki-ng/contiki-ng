@@ -126,7 +126,7 @@ random_init(unsigned short seed)
   REG(SOC_ADC_RNDL) = (s >> 8) & 0x00FF;
   REG(SOC_ADC_RNDL) = s & 0xFF;
 
-  /* RF Off. NETSTACK_RADIO.init() will sort out normal RF operation */
+  /* RF Off. NETSTACK_RADIO_802154.init() will sort out normal RF operation */
   CC2538_RF_CSP_ISRFOFF();
 }
 

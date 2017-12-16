@@ -115,19 +115,20 @@
  * mode interrupts this so called "primary" mode in order to send BLE adv
  * messages. Once BLE is done advertising, we need to be able to restore the
  * previous .15.4 mode. Unfortunately, the only way this can be done with
- * NETSTACK_RADIO API is by fully power-cycling the radio, which is something
- * we do not want to do.
+ * NETSTACK_RADIO_802154 API is by fully power-cycling the radio, which is
+ * something we do not want to do.
  *
  * Thus, we declare a secondary data structure for primary mode drivers (IEEE
  * or Prop). We use this data structure to issue "soft off" and "back on"
  * commands. Soft off in this context means stopping RX (e.g. the respective
  * IEEE RX operation), but without shutting down the RF core (which is what
- * NETSTACK_RADIO.off() would have done). We then remember what mode we were
- * using in order to be able to re-enter RX mode for this mode.
+ * NETSTACK_RADIO_802154.off() would have done). We then remember what mode we
+ * were using in order to be able to re-enter RX mode for this mode.
  *
- * A NETSTACK_RADIO driver will declare those two functions somewhere within
- * its module of implementation. During its init() routine, it will notify
- * the RF core module so that the latter can abort and restore operations.
+ * A NETSTACK_RADIO_802154 driver will declare those two functions somewhere
+ * within its module of implementation. During its init() routine, it will
+ * notify the RF core module so that the latter can abort and restore
+ * operations.
  */
 typedef struct rf_core_primary_mode_s {
   /**

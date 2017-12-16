@@ -33,7 +33,7 @@
  * @{
  *
  * \file
- * Implementation of the CC13xx prop mode NETSTACK_RADIO driver
+ * Implementation of the CC13xx prop mode NETSTACK_RADIO_802154 driver
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

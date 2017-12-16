@@ -37,7 +37,7 @@
  * @{
  *
  * \file
- * Header file for the CC13xx prop mode NETSTACK_RADIO driver
+ * Header file for the CC13xx prop mode NETSTACK_RADIO_802154 driver
  */
 /*---------------------------------------------------------------------------*/
 #ifndef PROP_MODE_H_
