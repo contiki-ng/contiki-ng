@@ -44,6 +44,7 @@
 #define PROP_MODE_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "dev/radio/radio-802154.h"
 #include "rf-core/dot-15-4g.h"
 
 #include <stdint.h>

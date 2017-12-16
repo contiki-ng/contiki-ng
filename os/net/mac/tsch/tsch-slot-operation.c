@@ -45,7 +45,7 @@
  * @{
 */
 
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "contiki.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"

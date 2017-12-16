@@ -41,7 +41,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/oscillators.h"
 #include "net/packetbuf.h"

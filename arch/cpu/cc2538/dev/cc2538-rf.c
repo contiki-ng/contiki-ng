@@ -36,7 +36,7 @@
  * Implementation of the cc2538 RF driver
  */
 #include "contiki.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "net/packetbuf.h"

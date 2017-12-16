@@ -31,7 +31,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "sensniff.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "sys/process.h"

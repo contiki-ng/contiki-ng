@@ -43,7 +43,7 @@
 
 #include "contiki.h"
 #include "net/mac/mac.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 
 #ifdef CSMA_CONF_SEND_SOFT_ACK
 #define CSMA_SEND_SOFT_ACK CSMA_CONF_SEND_SOFT_ACK

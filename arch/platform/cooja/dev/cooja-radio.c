@@ -39,7 +39,7 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "dev/cooja-radio.h"
 
 #define COOJA_RADIO_BUFSIZE PACKETBUF_SIZE

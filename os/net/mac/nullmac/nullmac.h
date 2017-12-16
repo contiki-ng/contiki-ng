@@ -41,7 +41,6 @@
 #define NULLMAC_H_
 
 #include "net/mac/mac.h"
-#include "dev/radio.h"
 
 extern const struct mac_driver nullmac_driver;
 

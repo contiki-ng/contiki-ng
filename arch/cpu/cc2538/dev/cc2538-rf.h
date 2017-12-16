@@ -44,7 +44,7 @@
 #define CC2538_RF_H__
 
 #include "contiki.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "dev/rfcore.h"
 #include "reg.h"
 /*---------------------------------------------------------------------------

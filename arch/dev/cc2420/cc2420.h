@@ -44,7 +44,7 @@
 
 #include "contiki.h"
 #include "dev/spi.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "cc2420_const.h"
 #include "lib/aes-128.h"
 
