@@ -47,8 +47,8 @@
 #include "contiki.h"
 #include "lib/list.h"
 
-#define NULL 0
-
+#include <string.h>
+/*---------------------------------------------------------------------------*/
 struct list {
   struct list *next;
 };
