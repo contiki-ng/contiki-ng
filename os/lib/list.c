@@ -44,7 +44,7 @@
  * \addtogroup list
  * @{
  */
-
+#include "contiki.h"
 #include "lib/list.h"
 
 #define NULL 0
