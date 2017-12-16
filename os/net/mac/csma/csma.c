@@ -103,7 +103,7 @@ input_packet(void)
         ackdata[0] = FRAME802154_ACKFRAME;
         ackdata[1] = 0;
         ackdata[2] = info154.seq;
-        NETSTACK_RADIO.send(ackdata, CSMA_ACK_LEN);
+        NETSTACK_RADIO_802154.send(ackdata, CSMA_ACK_LEN);
       }
     }
 #endif /* CSMA_SEND_SOFT_ACK */
@@ -119,13 +119,13 @@ input_packet(void)
 static int
 on(void)
 {
-  return NETSTACK_RADIO.on();
+  return NETSTACK_RADIO_802154.on();
 }
 /*---------------------------------------------------------------------------*/
 static int
 off(void)
 {
-  return NETSTACK_RADIO.off();
+  return NETSTACK_RADIO_802154.off();
 }
 /*---------------------------------------------------------------------------*/
 static void

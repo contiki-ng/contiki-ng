@@ -68,7 +68,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 
   if((len = REST.get_query_variable(request, "p", &p))) {
     if(strncmp(p, "rssi", len) == 0) {
-      if(NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &value) ==
+      if(NETSTACK_RADIO_802154.get_value(RADIO_PARAM_RSSI, &value) ==
          RADIO_RESULT_OK) {
         success = 1;
         rssi = (int8_t)value;

@@ -131,7 +131,7 @@ send_channel(void)
 {
   radio_value_t chan;
 
-  if(NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan) ==
+  if(NETSTACK_RADIO_802154.get_value(RADIO_PARAM_CHANNEL, &chan) ==
      RADIO_RESULT_OK) {
     send_header(CMD_CHANNEL, 1);
     sensniff_io_byte_out(chan & 0xFF);
@@ -145,7 +145,7 @@ send_channel(void)
 static void
 set_channel(uint8_t channel)
 {
-  if(NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, channel) ==
+  if(NETSTACK_RADIO_802154.set_value(RADIO_PARAM_CHANNEL, channel) ==
      RADIO_RESULT_OK) {
     send_channel();
     return;
@@ -159,7 +159,7 @@ send_channel_min(void)
 {
   radio_value_t chan;
 
-  if(NETSTACK_RADIO.get_value(RADIO_CONST_CHANNEL_MIN, &chan) ==
+  if(NETSTACK_RADIO_802154.get_value(RADIO_CONST_CHANNEL_MIN, &chan) ==
      RADIO_RESULT_OK) {
     send_header(CMD_CHANNEL_MIN, 1);
     sensniff_io_byte_out(chan & 0xFF);
@@ -175,7 +175,7 @@ send_channel_max(void)
 {
   radio_value_t chan;
 
-  if(NETSTACK_RADIO.get_value(RADIO_CONST_CHANNEL_MAX, &chan) ==
+  if(NETSTACK_RADIO_802154.get_value(RADIO_CONST_CHANNEL_MAX, &chan) ==
      RADIO_RESULT_OK) {
     send_header(CMD_CHANNEL_MAX, 1);
     sensniff_io_byte_out(chan & 0xFF);
@@ -310,7 +310,7 @@ PROCESS_THREAD(sensniff_process, ev, data)
   PROCESS_BEGIN();
 
   /* Turn off RF frame filtering and H/W ACKs */
-  if(NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, 0) != RADIO_RESULT_OK) {
+  if(NETSTACK_RADIO_802154.set_value(RADIO_PARAM_RX_MODE, 0) != RADIO_RESULT_OK) {
     printf("sensniff: Error setting RF in promiscuous mode\n");
     PROCESS_EXIT();
   }

@@ -73,7 +73,7 @@ set_tx_power_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.get_request_payload(request, &request_content);
     tx_level = atoi((const char *)request_content);
-    NETSTACK_RADIO.set_value(RADIO_PARAM_TXPOWER, tx_level);
+    NETSTACK_RADIO_802154.set_value(RADIO_PARAM_TXPOWER, tx_level);
   }
 }
 
@@ -91,7 +91,7 @@ get_tx_power_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
   REST.get_header_accept(request, &accept);
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     content_len = 0;
-    NETSTACK_RADIO.get_value(RADIO_PARAM_TXPOWER, &tx_level);
+    NETSTACK_RADIO_802154.get_value(RADIO_PARAM_TXPOWER, &tx_level);
     CONTENT_PRINTF("%d", tx_level);
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     REST.set_response_payload(response, (uint8_t *)content, content_len);

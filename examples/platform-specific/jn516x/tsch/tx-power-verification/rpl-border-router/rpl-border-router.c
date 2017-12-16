@@ -81,7 +81,7 @@ get_rssi_handler(void *request, void *response, uint8_t *buffer, uint16_t prefer
   REST.get_header_accept(request, &accept);
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     content_len = 0;
-    NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &rssi_level);
+    NETSTACK_RADIO_802154.get_value(RADIO_PARAM_RSSI, &rssi_level);
     CONTENT_PRINTF("%d", rssi_level);
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     REST.set_response_payload(response, (uint8_t *)content, content_len);
@@ -102,7 +102,7 @@ get_last_rssi_handler(void *request, void *response, uint8_t *buffer, uint16_t p
   REST.get_header_accept(request, &accept);
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     content_len = 0;
-    NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_RSSI, &last_rssi_level);
+    NETSTACK_RADIO_802154.get_value(RADIO_PARAM_LAST_RSSI, &last_rssi_level);
     CONTENT_PRINTF("%d", last_rssi_level);
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     REST.set_response_payload(response, (uint8_t *)content, content_len);

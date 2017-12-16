@@ -112,10 +112,10 @@ set_rf_params(void)
   short_addr = ext_addr[7];
   short_addr |= ext_addr[6] << 8;
 
-  NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
-  NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
-  NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
-  NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
+  NETSTACK_RADIO_802154.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
+  NETSTACK_RADIO_802154.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
+  NETSTACK_RADIO_802154.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
+  NETSTACK_RADIO_802154.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
 
   /* also set the global node id */
   node_id = short_addr;
@@ -181,8 +181,8 @@ platform_init_stage_three()
 
   set_rf_params();
 
-  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
-  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
+  NETSTACK_RADIO_802154.get_value(RADIO_PARAM_CHANNEL, &chan);
+  NETSTACK_RADIO_802154.get_value(RADIO_PARAM_PAN_ID, &pan);
 
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
