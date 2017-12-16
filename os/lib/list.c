@@ -52,7 +52,6 @@
 struct list {
   struct list *next;
 };
-
 /*---------------------------------------------------------------------------*/
 /**
  * Initialize a list.
@@ -118,13 +117,13 @@ void *
 list_tail(list_t list)
 {
   struct list *l;
-  
+
   if(*list == NULL) {
     return NULL;
   }
-  
+
   for(l = *list; l->next != NULL; l = l->next);
-  
+
   return l;
 }
 /*---------------------------------------------------------------------------*/
@@ -148,7 +147,7 @@ list_add(list_t list, void *item)
   list_remove(list, item);
 
   ((struct list *)item)->next = NULL;
-  
+
   l = list_tail(list);
 
   if(l == NULL) {
@@ -164,8 +163,6 @@ list_add(list_t list, void *item)
 void
 list_push(list_t list, void *item)
 {
-  /*  struct list *l;*/
-
   /* Make sure not to add the same element twice */
   list_remove(list, item);
 
@@ -186,7 +183,7 @@ void *
 list_chop(list_t list)
 {
   struct list *l, *r;
-  
+
   if(*list == NULL) {
     return NULL;
   }
@@ -195,12 +192,12 @@ list_chop(list_t list)
     *list = NULL;
     return l;
   }
-  
+
   for(l = *list; l->next->next != NULL; l = l->next);
 
   r = l->next;
   l->next = NULL;
-  
+
   return r;
 }
 /*---------------------------------------------------------------------------*/
@@ -240,20 +237,20 @@ void
 list_remove(list_t list, void *item)
 {
   struct list *l, *r;
-  
+
   if(*list == NULL) {
     return;
   }
-  
+
   r = NULL;
   for(l = *list; l != NULL; l = l->next) {
     if(l == item) {
       if(r == NULL) {
-	/* First on list */
-	*list = l->next;
+        /* First on list */
+        *list = l->next;
       } else {
-	/* Not first on list */
-	r->next = l->next;
+        /* Not first on list */
+        r->next = l->next;
       }
       l->next = NULL;
       return;
@@ -324,7 +321,7 @@ list_insert(list_t list, void *previtem, void *newitem)
 void *
 list_item_next(void *item)
 {
-  return item == NULL? NULL: ((struct list *)item)->next;
+  return item == NULL ? NULL : ((struct list *)item)->next;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
