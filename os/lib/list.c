@@ -302,7 +302,7 @@ list_insert(list_t list, void *previtem, void *newitem)
   if(previtem == NULL) {
     list_push(list, newitem);
   } else {
-  
+    list_remove(list, newitem);
     ((struct list *)newitem)->next = ((struct list *)previtem)->next;
     ((struct list *)previtem)->next = newitem;
   }
