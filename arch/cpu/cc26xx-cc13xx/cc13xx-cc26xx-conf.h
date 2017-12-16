@@ -79,7 +79,7 @@
 #endif /* CPU_FAMILY_CC13XX */
 
 #if CC13XX_CONF_PROP_MODE
-#define NETSTACK_CONF_RADIO        prop_mode_driver
+#define NETSTACK_CONF_RADIO_802154        prop_mode_driver
 
 #ifndef RF_CORE_CONF_CHANNEL
 #define RF_CORE_CONF_CHANNEL                      0
@@ -90,7 +90,7 @@
 #define CSMA_CONF_SEND_SOFT_ACK              1
 
 #else /* CC13XX_CONF_PROP_MODE */
-#define NETSTACK_CONF_RADIO        ieee_mode_driver
+#define NETSTACK_CONF_RADIO_802154        ieee_mode_driver
 
 #define CSMA_CONF_SEND_SOFT_ACK              0
 #endif /* CC13XX_CONF_PROP_MODE */

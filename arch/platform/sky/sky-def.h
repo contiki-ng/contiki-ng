@@ -63,7 +63,7 @@
 #define F_CPU 3900000uL /*2457600uL*/
 
 /* the low-level radio driver */
-#define NETSTACK_CONF_RADIO   cc2420_driver
+#define NETSTACK_CONF_RADIO_802154   cc2420_driver
 
 /* LED ports */
 #define LEDS_PxDIR P5DIR

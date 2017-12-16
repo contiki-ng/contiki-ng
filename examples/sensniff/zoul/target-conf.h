@@ -38,7 +38,7 @@
 #endif
 /*---------------------------------------------------------------------------*/
 #if ZOUL_CONF_SUB_GHZ_SNIFFER
-#define NETSTACK_CONF_RADIO           cc1200_driver
+#define NETSTACK_CONF_RADIO_802154    cc1200_driver
 
 /*
  * You will need to configure the defines below to match the configuration of

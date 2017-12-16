@@ -35,7 +35,7 @@
 /* Use either the cc1200_driver for sub-1GHz, or cc2538_rf_driver (default)
  * for 2.4GHz built-in radio interface
  */
-#define NETSTACK_CONF_RADIO              cc2538_rf_driver
+#define NETSTACK_CONF_RADIO_802154       cc2538_rf_driver
 
 /* Alternate between ANTENNA_SW_SELECT_SUBGHZ or ANTENNA_SW_SELECT_2_4GHZ */
 #define ANTENNA_SW_SELECT_DEF_CONF       ANTENNA_SW_SELECT_2_4GHZ

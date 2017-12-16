@@ -10,14 +10,14 @@ The router packs a built-in webserver and optionally can run on 2.4GHz or with t
 * RF 2.4GHz (cc2538 built-in)
 
 ````
-#define NETSTACK_CONF_RADIO         cc2538_rf_driver
+#define NETSTACK_CONF_RADIO_802154  cc2538_rf_driver
 #define ANTENNA_SW_SELECT_DEF_CONF  ANTENNA_SW_SELECT_2_4GHZ
 ````
 
 * RF Sub-1GHz (CC1200)
 
 ````
-#define NETSTACK_CONF_RADIO         cc1200_driver
+#define NETSTACK_CONF_RADIO_802154  cc1200_driver
 #define ANTENNA_SW_SELECT_DEF_CONF  ANTENNA_SW_SELECT_SUBGHZ
 ````
 

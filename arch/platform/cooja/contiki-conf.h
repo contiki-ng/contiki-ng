@@ -67,7 +67,7 @@
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME 0
 
 /* Radio setup */
-#define NETSTACK_CONF_RADIO cooja_radio_driver
+#define NETSTACK_CONF_RADIO_802154 cooja_radio_driver
 
 #endif /* NETSTACK_CONF_H */
 
@@ -77,7 +77,7 @@
 
 
 /* Radio setup */
-#define NETSTACK_CONF_RADIO cooja_radio_driver
+#define NETSTACK_CONF_RADIO_802154 cooja_radio_driver
 
 /* configure network size and density */
 #ifndef NETSTACK_MAX_ROUTE_ENTRIES

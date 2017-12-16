@@ -49,9 +49,9 @@
 #endif
 
 /* Configure radio driver */
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO   micromac_radio_driver
-#endif /* NETSTACK_CONF_RADIO */
+#ifndef NETSTACK_CONF_RADIO_802154
+#define NETSTACK_CONF_RADIO_802154   micromac_radio_driver
+#endif /* NETSTACK_CONF_RADIO_802154 */
 
 /* Platform-specific (H/W) CCM* implementation */
 #ifndef CCM_STAR_CONF
