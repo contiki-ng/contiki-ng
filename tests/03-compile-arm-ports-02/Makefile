@@ -30,10 +30,16 @@ libs/trickle-library/zoul \
 libs/data-structures/zoul \
 nullnet/zoul \
 slip-radio/zoul \
+dev/gpio-hal/zoul:BOARD=remote-reva \
+dev/gpio-hal/zoul:BOARD=remote-revb \
+dev/gpio-hal/zoul:BOARD=firefly-reva \
+dev/gpio-hal/zoul:BOARD=firefly \
+dev/gpio-hal/zoul:BOARD=orion \
 storage/cfs-coffee/openmote-cc2538 \
 sensniff/openmote-cc2538 \
 hello-world/openmote-cc2538 \
 rpl-udp/openmote-cc2538 \
+dev/gpio-hal/openmote-cc2538 \
 rpl-border-router/openmote-cc2538
 
 TOOLS=
