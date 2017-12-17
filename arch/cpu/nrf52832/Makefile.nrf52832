@@ -178,6 +178,8 @@ vpath %.s $(ASM_PATHS)
 
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
+CLEAN += nrf52832.a
+
 TARGET_LIBS= nrf52832.a $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
 nrf52832.a: $(OBJECTS)
