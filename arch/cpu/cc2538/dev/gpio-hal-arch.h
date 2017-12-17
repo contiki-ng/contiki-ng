@@ -29,43 +29,60 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC2538_DEF_H_
-#define CC2538_DEF_H_
-/*---------------------------------------------------------------------------*/
-#include "cm3/cm3-def.h"
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 32768
-/*---------------------------------------------------------------------------*/
-/* 352us from calling transmit() until the SFD byte has been sent */
-#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
-/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT 0
-#ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this.
- * Slot length 10000 usec
- *             328 ticks
- * Tick duration 30.517578125 usec
- * Real slot duration 10009.765625 usec
- * Target - real duration = -9.765625 usec
- * TSCH_CONF_BASE_DRIFT_PPM -977
+/**
+ * \addtogroup cc2538
+ * @{
+ *
+ * \defgroup cc2538-gpio-hal CC2538 GPIO HAL implementation
+ *
+ * @{
+ *
+ * \file
+ *     Header file for the CC2538 GPIO HAL functions
+ *
+ * \note
+ *     Do not include this header directly
  */
-#define TSCH_CONF_BASE_DRIFT_PPM -977
-#endif
-
-#if MAC_CONF_WITH_TSCH
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* MAC_CONF_WITH_TSCH */
 /*---------------------------------------------------------------------------*/
-/* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
-
-/* Path to headers with implementation of mutexes and memory barriers */
-#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
-#define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
-
-#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
+#ifndef GPIO_HAL_ARCH_H_
+#define GPIO_HAL_ARCH_H_
 /*---------------------------------------------------------------------------*/
-#endif /* CC2538_DEF_H_ */
+#include "contiki.h"
+#include "dev/gpio.h"
+
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
+#define PIN_TO_PORT(pin) (pin >> 3)
+#define PIN_TO_PORT_BASE(pin) GPIO_PORT_TO_BASE(PIN_TO_PORT(pin))
+/*---------------------------------------------------------------------------*/
+#define gpio_hal_arch_interrupt_enable(p) \
+  GPIO_ENABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
+
+#define gpio_hal_arch_interrupt_disable(p) \
+  GPIO_DISABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
+
+#define gpio_hal_arch_pin_set_input(p) do { \
+  GPIO_SOFTWARE_CONTROL(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
+  GPIO_SET_INPUT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
+} while(0);
+
+#define gpio_hal_arch_pin_set_output(p) do { \
+  GPIO_SOFTWARE_CONTROL(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
+  GPIO_SET_OUTPUT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
+} while(0);
+
+#define gpio_hal_arch_set_pin(p) \
+  GPIO_SET_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
+
+#define gpio_hal_arch_clear_pin(p) \
+  GPIO_CLR_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
+
+#define gpio_hal_arch_read_pin(p) \
+  (GPIO_READ_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)) == 0 ? 0 : 1)
+/*---------------------------------------------------------------------------*/
+#endif /* GPIO_HAL_ARCH_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */
