@@ -12,6 +12,7 @@
 *~
 obj_*
 Makefile.target
+Makefile.*.defines
 tools/doxygen/html
 patches-*
 tools/tunslip
