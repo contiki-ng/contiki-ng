@@ -8,7 +8,7 @@ endif
 # Setting this option is also important for tests on Cooja motes to check for warnings.
 WERROR ?= 1
 
-include $(CONTIKI)/Makefile.identify-target 
+include $(CONTIKI)/Makefile.identify-target
 
 ifeq ($(DEFINES),)
   -include Makefile.$(TARGET).defines
@@ -241,7 +241,6 @@ clean:
 	-rm -f *~ *core core *.srec \
 	*.lst *.map \
 	*.cprg *.bin *.data contiki*.a *.firmware core-labels.S *.ihex *.ini \
-	*.ce *.co
 	rm -rf $(CLEAN)
 	-rm -rf $(OBJECTDIR)
 
@@ -249,13 +248,6 @@ distclean: clean
 	-rm -f ${addsuffix .$(TARGET),$(CONTIKI_PROJECT)}
 
 -include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
-
-ifndef CUSTOM_RULE_C_TO_CE
-%.ce: %.c
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -DAUTOSTART_ENABLE -c $< -o $@
-	$(STRIP) --strip-unneeded -g -x $@
-endif
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
@@ -300,12 +292,6 @@ ifndef CUSTOM_RULE_C_TO_E
 	$(Q)$(CC) $(CFLAGS) -E $< -o $@
 endif
 
-ifndef CUSTOM_RULE_C_TO_CO
-%.co: %.c
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -DAUTOSTART_ENABLE -c $< -o $@
-endif
-
 ifndef AROPTS
   AROPTS = rcf
 endif
@@ -321,7 +307,7 @@ ifndef LD
 endif
 
 ifndef CUSTOM_RULE_LINK
-%.$(TARGET): %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
 	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@

@@ -45,7 +45,6 @@
 #include "sys/clock.h"
 #include "sys/etimer.h"
 #include "sys/cooja_mt.h"
-#include "sys/autostart.h"
 #include "sys/log.h"
 
 #include "lib/random.h"

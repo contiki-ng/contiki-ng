@@ -6,8 +6,8 @@ LDFLAGS += -mcpu=cortex-m4
 ### Compilation rules
 CUSTOM_RULE_LINK=1
 
-%.elf: $(TARGET_STARTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(TARGET_LIBS)
+%.elf: $(TARGET_STARTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(TARGET_LIBS)
 	$(TRACE_LD)
-	$(Q)$(CC) $(LDFLAGS) ${filter %o %.co %.a,$^} -o $@
+	$(Q)$(CC) $(LDFLAGS) ${filter %.o %.a,$^} -o $@
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m
