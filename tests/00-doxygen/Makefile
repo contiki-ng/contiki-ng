@@ -30,15 +30,15 @@ DOCDIR=../../tools/doxygen
 all: clean summary
 
 doxygen:
-	@make -C $(DOCDIR) 2> doxygen.runerr > doxygen.runlog
+	@make -C $(DOCDIR) 2> doxygen.err > /dev/null
 
 summary: doxygen
 	@( \
 		1> summary; \
-		if [ -s doxygen.runerr ] ; then \
+		if [ -s doxygen.err ] ; then \
 			echo "Doxygen: TEST FAIL" | tee summary; \
 			echo "Errors:"; \
-			cat doxygen.runerr; \
+			cat doxygen.err; \
 		fi ; \
 		if [ -s $(DOCDIR)/doxygen.log ] ; then \
 			echo "Doxygen: TEST FAIL" | tee summary; \
@@ -49,10 +49,10 @@ summary: doxygen
 			echo "Doxygen: TEST OK (no warning nor error)" | tee summary; \
 		fi ; \
 	)
-	@rm doxygen.runlog doxygen.runerr
+	@rm doxygen.err
 	@echo "========== Summary =========="
 	@cat summary
 
 clean:
-	@rm -f summary doxygen.runlog doxygen.runerr
+	@rm -f summary doxygen.err
 	@make -C $(DOCDIR) clean
