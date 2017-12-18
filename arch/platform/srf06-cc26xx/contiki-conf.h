@@ -70,11 +70,11 @@
 /* Platform-specific define to signify sensor reading failure */
 #define CC26XX_SENSOR_READING_ERROR        0x80000000
 /*---------------------------------------------------------------------------*/
-/* board.h assumes that basic configuration is done */
-#include "board.h"
-/*---------------------------------------------------------------------------*/
 /* Include CPU-related configuration */
 #include "cc13xx-cc26xx-conf.h"
+/*---------------------------------------------------------------------------*/
+/* board.h assumes that basic configuration is done */
+#include "board.h"
 /*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H */
 
