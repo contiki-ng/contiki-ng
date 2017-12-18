@@ -68,6 +68,7 @@
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "dev/serial-line.h"
+#include "dev/button-hal.h"
 #include "net/mac/framer/frame802154.h"
 #include "board-peripherals.h"
 
@@ -195,6 +196,9 @@ platform_init_stage_two()
 #else
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 #endif
+
+  button_hal_init();
+
   fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
