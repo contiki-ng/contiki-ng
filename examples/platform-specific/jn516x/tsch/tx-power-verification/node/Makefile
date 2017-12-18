@@ -6,7 +6,6 @@ JN516x_WITH_DONGLE = 1
 CONTIKI=../../../../../..
 
 PROJECTDIRS += .. ../../tools
-PROJECT_SOURCEFILES += rpl-tools.c
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap

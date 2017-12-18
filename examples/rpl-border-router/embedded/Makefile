@@ -2,10 +2,6 @@
 ### add more source files to the build or define make variables.
 -include $(SOURCES_DIR)/$(TARGET)/Makefile.$(TARGET)
 
-PROJECTDIRS += $(SOURCES_DIR)/$(TARGET)
-
-PROJECT_SOURCEFILES += slip-bridge.c border-router-embedded.c
-
 $(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
 

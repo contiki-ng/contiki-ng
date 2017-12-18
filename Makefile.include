@@ -58,6 +58,7 @@ oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 
 CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
 
+PROJECT_SOURCEFILES += ${foreach d, $(PROJECTDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
 PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
 
 # Provide way to create $(OBJECTDIR) if it has been removed by make clean
