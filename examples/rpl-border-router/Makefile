@@ -5,14 +5,14 @@ CONTIKI = ../..
 include $(CONTIKI)/Makefile.identify-target
 
 ifeq ($(TARGET),native)
-  SOURCES_DIR = native
+  PROJECTDIRS += native
+	CFLAGS += -DPROJECT_CONF_PATH=\"native/project-conf.h\"
 else
-  SOURCES_DIR = embedded
+	PROJECTDIRS += embedded
+	# For embedded platforms, include platform-specific directory
+	PROJECTDIRS += embedded/$(TARGET)
+	CFLAGS += -DPROJECT_CONF_PATH=\"embedded/project-conf.h\"
 endif
-include $(SOURCES_DIR)/Makefile
-
 PROJECTDIRS += common
-PROJECTDIRS += $(SOURCES_DIR)
-CFLAGS += -DPROJECT_CONF_PATH=\"$(SOURCES_DIR)/project-conf.h\"
 
 include $(CONTIKI)/Makefile.include

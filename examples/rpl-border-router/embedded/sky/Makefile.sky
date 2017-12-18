@@ -1,3 +1,1 @@
-PROJECT_SOURCEFILES += slip-bridge-putchar.c
-
 CFLAGS += -DTARGET_CONF_PATH=\"target-conf.h\"

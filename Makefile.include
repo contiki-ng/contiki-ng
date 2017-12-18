@@ -60,6 +60,8 @@ CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFI
 
 PROJECT_SOURCEFILES += ${foreach d, $(PROJECTDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
 PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
+PROJECT_INCLUDES = ${strip ${wildcard ${foreach d, $(PROJECTDIRS), $(d)/Makefile.${notdir $(d)}}}}
+-include $(PROJECT_INCLUDES)
 
 # Provide way to create $(OBJECTDIR) if it has been removed by make clean
 $(OBJECTDIR):

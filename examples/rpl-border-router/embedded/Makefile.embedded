@@ -1,7 +1,3 @@
-### Optionally, the target can add its own Makefile, to do things like e.g.
-### add more source files to the build or define make variables.
--include $(SOURCES_DIR)/$(TARGET)/Makefile.$(TARGET)
-
 $(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
 
