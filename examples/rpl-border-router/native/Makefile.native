@@ -1,3 +1,4 @@
+CFLAGS += -DTARGET_CONF_PATH=\"native/module-conf.h\"
 MODULES += os/services/slip-cmd
 
 MAKE_MAC = MAKE_MAC_OTHER

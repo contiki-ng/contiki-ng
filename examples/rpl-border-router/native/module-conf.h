@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2011, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,31 +25,19 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
-#ifndef PROJECT_ROUTER_CONF_H_
-#define PROJECT_ROUTER_CONF_H_
-/*---------------------------------------------------------------------------*/
-/* Include target-specific header */
-#ifdef TARGET_CONF_PATH
-#include TARGET_CONF_PATH
-#endif /* TARGET_CONF_PATH */
-/*---------------------------------------------------------------------------*/
-#ifndef UIP_FALLBACK_INTERFACE
-#define UIP_FALLBACK_INTERFACE rpl_interface
-#endif
+/* use a non-default network driver */
+#define NETSTACK_CONF_NETWORK sicslowpan_driver
 
-#ifndef WEBSERVER_CONF_CFS_CONNS
-#define WEBSERVER_CONF_CFS_CONNS 2
-#endif
+/* use a non-default MAC driver */
+#define NETSTACK_CONF_MAC border_router_mac_driver
 
-#ifndef BORDER_ROUTER_CONF_WEBSERVER
-#define BORDER_ROUTER_CONF_WEBSERVER 1
-#endif
+#define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
 
-#if BORDER_ROUTER_CONF_WEBSERVER
-#define UIP_CONF_TCP 1
-#endif
+#define SERIALIZE_ATTRIBUTES 1
 
-#endif /* PROJECT_ROUTER_CONF_H_ */
+#define CMD_CONF_OUTPUT border_router_cmd_output
+
+/* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
+#define SELECT_CALLBACK 1

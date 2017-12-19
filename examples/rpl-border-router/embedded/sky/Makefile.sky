@@ -1,1 +1,0 @@
-CFLAGS += -DTARGET_CONF_PATH=\"target-conf.h\"
