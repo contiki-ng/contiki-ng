@@ -36,21 +36,30 @@
 #ifndef LWM2M_SECURITY_H
 #define LWM2M_SECURITY_H
 
-#define URI_SIZE 64
-#define KEY_SIZE 32
+#ifdef LWM2M_SECURITY_CONF_URI_SIZE
+#define LWM2M_SECURITY_URI_SIZE LWM2M_SECURITY_CONF_URI_SIZE
+#else /* LWM2M_SECURITY_CONF_URI_SIZE */
+#define LWM2M_SECURITY_URI_SIZE 64
+#endif /* LWM2M_SECURITY_CONF_URI_SIZE */
+
+#ifdef LWM2M_SECURITY_CONF_KEY_SIZE
+#define LWM2M_SECURITY_KEY_SIZE LWM2M_SECURITY_CONF_KEY_SIZE
+#else /* LWM2M_SECURITY_CONF_KEY_SIZE */
+#define LWM2M_SECURITY_KEY_SIZE 32
+#endif /* LWM2M_SECURITY_CONF_KEY_SIZE */
 
 typedef struct {
   lwm2m_object_instance_t instance;
   uint16_t server_id;
   uint8_t bootstrap;
   uint8_t security_mode;
-  uint8_t server_uri[URI_SIZE];
+  uint8_t server_uri[LWM2M_SECURITY_URI_SIZE];
   uint8_t server_uri_len;
-  uint8_t public_key[KEY_SIZE];
+  uint8_t public_key[LWM2M_SECURITY_KEY_SIZE];
   uint8_t public_key_len;
-  uint8_t secret_key[KEY_SIZE];
+  uint8_t secret_key[LWM2M_SECURITY_KEY_SIZE];
   uint8_t secret_key_len;
-  uint8_t server_public_key[KEY_SIZE];
+  uint8_t server_public_key[LWM2M_SECURITY_KEY_SIZE];
   uint8_t server_public_key_len;
 } lwm2m_security_server_t;
 

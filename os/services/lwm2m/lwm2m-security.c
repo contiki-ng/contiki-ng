@@ -178,7 +178,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
     switch(ctx->resource_id) {
     case LWM2M_SECURITY_SERVER_URI_ID:
       LOG_DBG("Writing security URI value: len: %d\n", (int)ctx->inbuf->size);
-      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->server_uri, URI_SIZE);
+      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->server_uri, LWM2M_SECURITY_URI_SIZE);
       /* This is string... */
       security->server_uri_len = ctx->last_value_len;
       break;
@@ -201,7 +201,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       }
       break;
     case LWM2M_SECURITY_CLIENT_PKI_ID:
-      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->public_key, KEY_SIZE);
+      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->public_key, LWM2M_SECURITY_KEY_SIZE);
       security->public_key_len = ctx->last_value_len;
 
       LOG_DBG("Writing client PKI: len: %d '", (int)ctx->last_value_len);
@@ -210,7 +210,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       LOG_DBG_("'\n");
       break;
     case LWM2M_SECURITY_KEY_ID:
-      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->secret_key, URI_SIZE);
+      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->secret_key, LWM2M_SECURITY_KEY_SIZE);
       security->secret_key_len = ctx->last_value_len;
 
       LOG_DBG("Writing secret key: len: %d '", (int)ctx->last_value_len);
@@ -255,7 +255,7 @@ lwm2m_security_add_server(uint16_t instance_id,
   lwm2m_security_server_t *server;
   int i;
 
-  if(server_uri_len > URI_SIZE) {
+  if(server_uri_len > LWM2M_SECURITY_URI_SIZE) {
     LOG_WARN("too long server URI: %u\n", server_uri_len);
     return NULL;
   }
@@ -312,11 +312,11 @@ lwm2m_security_set_server_psk(lwm2m_security_server_t *server,
   if(server == NULL || identity == NULL || key == NULL) {
     return 0;
   }
-  if(identity_len > KEY_SIZE) {
+  if(identity_len > LWM2M_SECURITY_KEY_SIZE) {
     LOG_WARN("too large identity: %u\n", identity_len);
     return 0;
   }
-  if(key_len > KEY_SIZE) {
+  if(key_len > LWM2M_SECURITY_KEY_SIZE) {
     LOG_WARN("too large identity: %u\n", key_len);
     return 0;
   }
