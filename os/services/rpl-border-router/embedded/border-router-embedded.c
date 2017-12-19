@@ -39,7 +39,7 @@
 #include "rpl.h"
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
-#include "border-router-common.h"
+#include "rpl-border-router.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */

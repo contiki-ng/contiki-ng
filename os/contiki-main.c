@@ -47,6 +47,7 @@
 #include "sys/stack-check.h"
 #include "dev/watchdog.h"
 
+#include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
 
@@ -109,6 +110,11 @@ main(void)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   platform_init_stage_three();
+
+#if BUILD_WITH_RPL_BORDER_ROUTER
+  rpl_border_router_init();
+  LOG_DBG("With RPL Border Router\n");
+#endif /* BUILD_WITH_RPL_BORDER_ROUTER */
 
 #if BUILD_WITH_ORCHESTRA
   orchestra_init();

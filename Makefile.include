@@ -170,6 +170,9 @@ CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 # Include module-specific makefiles
 MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
 include $(MODULES_INCLUDES)
+# Iterate once more: include the modules added from the previous include.
+# Only works with one level of nested module inclusion.
+include $(MODULES_INCLUDES)
 
 # C-include module-specific macros using -imacros
 MODULES_IMACROS = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/module-macros.h}}

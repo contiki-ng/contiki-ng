@@ -31,7 +31,7 @@
  */
 
 #include "contiki.h"
-#include "border-router-common.h"
+#include "rpl-border-router.h"
 #include "rpl-dag-root.h"
 
 /* Log configuration */
@@ -67,3 +67,11 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
   rpl_dag_root_init(prefix_64, NULL);
   rpl_dag_root_init_dag_immediately();
 }
+/*---------------------------------------------------------------------------*/
+void
+rpl_border_router_init(void)
+{
+  PROCESS_NAME(border_router_process);
+  process_start(&border_router_process, NULL);
+}
+/*---------------------------------------------------------------------------*/

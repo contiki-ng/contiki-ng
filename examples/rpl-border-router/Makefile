@@ -2,12 +2,12 @@ CONTIKI_PROJECT = border-router
 all: $(CONTIKI_PROJECT)
 CONTIKI = ../..
 
+# Include RPL BR module
+MODULES += os/services/rpl-border-router
+# Include webserver module
+MODULES_REL += webserver
+# Include optional target-specific module
 include $(CONTIKI)/Makefile.identify-target
-
-ifneq ($(TARGET),native)
-	MODULES_REL += embedded
-endif
 MODULES_REL += $(TARGET)
-MODULES_REL += common
 
 include $(CONTIKI)/Makefile.include

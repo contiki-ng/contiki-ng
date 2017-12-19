@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 201, RISE SICS
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
- *
  */
 
-#include "contiki.h"
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "RPL BR"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#ifndef WEBSERVER_CONF_CFS_CONNS
+#define WEBSERVER_CONF_CFS_CONNS 2
+#endif
 
-/* Declare and auto-start this file's process */
-PROCESS(contiki_ng_br, "Contiki-NG Border Router");
-AUTOSTART_PROCESSES(&contiki_ng_br);
-
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(contiki_ng_br, ev, data)
-{
-  PROCESS_BEGIN();
+#ifndef BORDER_ROUTER_CONF_WEBSERVER
+#define BORDER_ROUTER_CONF_WEBSERVER 1
+#endif
 
 #if BORDER_ROUTER_CONF_WEBSERVER
-  PROCESS_NAME(webserver_nogui_process);
-  process_start(&webserver_nogui_process, NULL);
-#endif /* BORDER_ROUTER_CONF_WEBSERVER */
+#define UIP_CONF_TCP 1
+#endif
 
-  LOG_INFO("Contiki-NG Border Router started\n");
-
-  PROCESS_END();
-}
+#endif /* PROJECT_CONF_H_ */

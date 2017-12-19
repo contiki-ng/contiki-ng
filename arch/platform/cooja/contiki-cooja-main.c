@@ -61,6 +61,7 @@
 #include "dev/vib-sensor.h"
 
 #include "sys/node-id.h"
+#include "services/rpl-border-router/rpl-border-router.h"
 #if BUILD_WITH_ORCHESTRA
 #include "orchestra.h"
 #endif /* BUILD_WITH_ORCHESTRA */
@@ -240,6 +241,9 @@ contiki_init()
   /* Start serial process */
   serial_line_init();
 
+#if BUILD_WITH_RPL_BORDER_ROUTER
+  rpl_border_router_init();
+#endif /* BUILD_WITH_RPL_BORDER_ROUTER */
 #if BUILD_WITH_ORCHESTRA
   orchestra_init();
 #endif /* BUILD_WITH_ORCHESTRA */
