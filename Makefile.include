@@ -165,9 +165,17 @@ endif
 MODULEDIRS = $(MODULES_REL) ${wildcard ${addprefix $(CONTIKI)/, $(MODULES)}}
 UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
 MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
+CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
+
+# Include module-specific makefiles
 MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
 include $(MODULES_INCLUDES)
-CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
+
+# C-include module-specific macros using -imacros
+MODULES_IMACROS = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/module-macros.h}}
+ifneq ($(MODULES_IMACROS),)
+  CFLAGS += ${foreach d, $(MODULES_IMACROS), -imacros $(d)}
+endif
 
 ### Verbosity control. Use  make V=1  to get verbose builds.
 
