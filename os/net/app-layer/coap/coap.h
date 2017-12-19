@@ -69,7 +69,7 @@
 #endif /* COAP_MAX_BLOCK_SIZE */
 
 /* bitmap for set options */
-#define OPTION_MAP_SIZE  (sizeof(uint8_t) * 8)
+#define COAP_OPTION_MAP_SIZE  (sizeof(uint8_t) * 8)
 
 /* parsed message struct */
 typedef struct {
@@ -83,7 +83,7 @@ typedef struct {
   uint8_t token_len;
   uint8_t token[COAP_TOKEN_LEN];
 
-  uint8_t options[COAP_OPTION_SIZE1 / OPTION_MAP_SIZE + 1]; /* bitmap to check if option is set */
+  uint8_t options[COAP_OPTION_SIZE1 / COAP_OPTION_MAP_SIZE + 1]; /* bitmap to check if option is set */
 
   uint16_t content_format; /* parse options once and store; allows setting options in random order  */
   uint32_t max_age;
@@ -132,7 +132,7 @@ coap_set_option(coap_message_t *message, unsigned int opt)
   if(opt > COAP_OPTION_SIZE1) {
     return 0;
   }
-  message->options[opt / OPTION_MAP_SIZE] |= 1 << (opt % OPTION_MAP_SIZE);
+  message->options[opt / COAP_OPTION_MAP_SIZE] |= 1 << (opt % COAP_OPTION_MAP_SIZE);
   return 1;
 }
 
@@ -140,7 +140,7 @@ static inline int
 coap_is_option(const coap_message_t *message, unsigned int opt)
 {
   return (opt <= COAP_OPTION_SIZE1) &&
-    (message->options[opt / OPTION_MAP_SIZE] & (1 << (opt % OPTION_MAP_SIZE))) != 0;
+    (message->options[opt / COAP_OPTION_MAP_SIZE] & (1 << (opt % COAP_OPTION_MAP_SIZE))) != 0;
 }
 
 /* option format serialization */
