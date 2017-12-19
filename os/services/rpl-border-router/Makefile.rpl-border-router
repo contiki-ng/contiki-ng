@@ -1,0 +1,10 @@
+CFLAGS += -DBUILD_WITH_RPL_BORDER_ROUTER=1
+
+include $(CONTIKI)/Makefile.identify-target
+
+# Include 'embedded' module for non-native platforms
+ifneq ($(TARGET),native)
+	MODULES += os/services/rpl-border-router/embedded
+endif
+# Include optional target-specific module
+MODULES += os/services/rpl-border-router/$(TARGET)
