@@ -1,1 +1,1 @@
-CFLAGS += -DTARGET_CONF_PATH=\"target-conf.h\"
+CFLAGS += -imacros sky/module-macros.h
