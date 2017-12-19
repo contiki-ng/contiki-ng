@@ -5,7 +5,7 @@ MODULES += os/services/slip-cmd
 CONTIKI=../..
 include $(CONTIKI)/Makefile.identify-target
 
-PROJECTDIRS += $(TARGET)
+MODULES_REL += $(TARGET)
 PROJECT_SOURCEFILES += slip-net.c
 
 # custom net layer, but with IPv6 enabled

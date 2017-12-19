@@ -1,6 +1,6 @@
 all: cc26xx-web-demo
 
-PROJECTDIRS += ./resources
+MODULES_REL += ./resources
 
 PROJECT_SOURCEFILES += cetic-6lbr-client.c coap-server.c net-uart.c mqtt-client.c
 PROJECT_SOURCEFILES += httpd-simple.c

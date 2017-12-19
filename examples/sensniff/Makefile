@@ -2,7 +2,7 @@ CONTIKI_PROJECT = sensniff
 CONTIKI = ../..
 
 PROJECT_SOURCEFILES += sensniff-mac.c netstack.c
-PROJECTDIRS += pool $(TARGET)
+MODULES_REL += pool $(TARGET)
 
 include $(CONTIKI)/Makefile.identify-target
 

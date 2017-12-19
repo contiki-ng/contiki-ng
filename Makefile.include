@@ -57,11 +57,7 @@ MODULES += os os/net os/net/mac os/storage
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 
 CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
-
-PROJECT_SOURCEFILES += ${foreach d, $(PROJECTDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
 PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
-PROJECT_INCLUDES = ${strip ${wildcard ${foreach d, $(PROJECTDIRS), $(d)/Makefile.${notdir $(d)}}}}
--include $(PROJECT_INCLUDES)
 
 # Provide way to create $(OBJECTDIR) if it has been removed by make clean
 $(OBJECTDIR):
@@ -166,14 +162,12 @@ else
   CFLAGS += -DUIP_CONF_IPV6_RPL=0
 endif
 
-ifdef MODULES
-  UNIQUEMODULES = $(call uniq,$(MODULES))
-  MODULEDIRS = ${wildcard ${addprefix $(CONTIKI)/, $(UNIQUEMODULES)}}
-  MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
-  MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
-  include $(MODULES_INCLUDES)
-  CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
-endif
+MODULEDIRS = $(MODULES_REL) ${wildcard ${addprefix $(CONTIKI)/, $(MODULES)}}
+UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
+MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
+MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
+include $(MODULES_INCLUDES)
+CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 
 ### Verbosity control. Use  make V=1  to get verbose builds.
 

@@ -7,7 +7,7 @@ CONTIKI=../../../../../..
 
 PROJECT_SOURCEFILES += slip-bridge.c slip.c
 
-PROJECTDIRS += .. ../../tools
+MODULES_REL += .. ../../tools
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap

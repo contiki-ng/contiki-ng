@@ -6,9 +6,9 @@ CONTIKI=../..
 # build RESTful resources
 include $(CONTIKI)/Makefile.identify-target
 ifeq ($(TARGET),native)
-	PROJECTDIRS += ./resources-plugtest
+	MODULES_REL += ./resources-plugtest
 endif
-PROJECTDIRS += ./resources
+MODULES_REL += ./resources
 
 # Include the CoAP implementation
 MODULES += os/net/app-layer/coap

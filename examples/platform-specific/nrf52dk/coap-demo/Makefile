@@ -16,7 +16,7 @@ CFLAGS += -DDEVICE_NAME=\"nRF52-DK-CoAP-Server\"
 endif
 
 # automatically build RESTful resources
-PROJECTDIRS += ./resources
+MODULES_REL += ./resources
 
 # REST Engine shall use Erbium CoAP implementation
 MODULES += os/net/app-layer/coap
