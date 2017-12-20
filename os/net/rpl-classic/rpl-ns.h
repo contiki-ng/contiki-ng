@@ -56,6 +56,7 @@
 typedef struct rpl_ns_node {
   struct rpl_ns_node *next;
   uint32_t lifetime;
+  rpl_dag_t *dag;
   /* Store only IPv6 link identifiers as all nodes in the DAG share the same prefix */
   unsigned char link_identifier[8];
   struct rpl_ns_node *parent;
