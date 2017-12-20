@@ -209,7 +209,7 @@ static const output_config_t output_power[] = {
 #define OUTPUT_POWER_UNKNOWN 0xFFFF
 
 /* Default TX Power - position in output_power[] */
-const output_config_t *tx_power_current = &output_power[0];
+static const output_config_t *tx_power_current = &output_power[0];
 /*---------------------------------------------------------------------------*/
 static volatile int8_t last_rssi = 0;
 static volatile uint8_t last_corr_lqi = 0;

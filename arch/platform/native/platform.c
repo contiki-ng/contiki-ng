@@ -158,6 +158,7 @@ set_lladdr(void)
   linkaddr_set_node_addr(&addr);
 }
 /*---------------------------------------------------------------------------*/
+#if NETSTACK_CONF_WITH_IPV6
 static void
 set_global_address(void)
 {
@@ -183,6 +184,7 @@ set_global_address(void)
   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
   uip_ds6_defrt_add(&ipaddr, 0);
 }
+#endif
 /*---------------------------------------------------------------------------*/
 int contiki_argc = 0;
 char **contiki_argv;

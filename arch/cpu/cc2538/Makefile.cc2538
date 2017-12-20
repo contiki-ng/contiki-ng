@@ -36,8 +36,6 @@ CPU_START_SOURCEFILES = startup-gcc.c
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 CONTIKI_SOURCEFILES += $(USB_SOURCEFILES)
 
-.SECONDEXPANSION:
-
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
 FORCE:
 

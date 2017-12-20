@@ -26,6 +26,7 @@ http-socket/zoul \
 libs/timers/zoul \
 libs/energest/zoul \
 libs/trickle-library/zoul \
+libs/data-structures/zoul \
 nullnet/zoul \
 slip-radio/zoul \
 storage/cfs-coffee/openmote-cc2538 \
