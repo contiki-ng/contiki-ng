@@ -115,7 +115,7 @@ static uip_ds6_nbr_t *nbr; /**  Pointer to a nbr cache entry*/
 static uip_ds6_addr_t *addr; /**  Pointer to an interface address */
 #endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_NA || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER */
 
-#if UIP_ND6_SEND_NS || !UIP_CONF_ROUTER
+#if UIP_ND6_SEND_NS || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER
 static uip_ds6_defrt_t *defrt; /**  Pointer to a router list entry */
 #endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER */
 
@@ -973,7 +973,7 @@ ra_input(void)
             default:
               LOG_DBG("Updating timer of prefix ");
               LOG_DBG_6ADDR(&prefix->ipaddr);
-              LOG_DBG_(" new value %lu\n", uip_ntohl(nd6_opt_prefix_info->validlt));
+              LOG_DBG_(" new value %lu\n", (unsigned long)uip_ntohl(nd6_opt_prefix_info->validlt));
               stimer_set(&prefix->vlifetime,
                          uip_ntohl(nd6_opt_prefix_info->validlt));
               prefix->isinfinite = 0;
@@ -999,7 +999,7 @@ ra_input(void)
                 LOG_DBG("Updating timer of address ");
                 LOG_DBG_6ADDR(&addr->ipaddr);
                 LOG_DBG_(" new value %lu\n",
-                       uip_ntohl(nd6_opt_prefix_info->validlt));
+                       (unsigned long)uip_ntohl(nd6_opt_prefix_info->validlt));
                 stimer_set(&addr->vlifetime,
                            uip_ntohl(nd6_opt_prefix_info->validlt));
               } else {
