@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include "coap-observe.h"
@@ -335,3 +340,4 @@ coap_observe_handler(coap_resource_t *resource, coap_message_t *coap_req,
   }
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

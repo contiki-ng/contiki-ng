@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_CONF_H_
 #define COAP_CONF_H_
 
@@ -99,3 +104,4 @@
 #endif /* COAP_OBSERVE_REFRESH_INTERVAL */
 
 #endif /* COAP_CONF_H_ */
+/** @} */

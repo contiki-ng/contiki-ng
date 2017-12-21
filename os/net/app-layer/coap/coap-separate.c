@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include "coap.h"
 #include "coap-separate.h"
 #include "coap-transactions.h"
@@ -144,3 +149,4 @@ coap_separate_resume(coap_message_t *response, coap_separate_t *separate_store,
   }
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

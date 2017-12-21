@@ -37,6 +37,11 @@
  *        Daniele Alessandrelli <daniele.alessandrelli@gmail.com>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_OBSERVING_CLIENT_H_
 #define COAP_OBSERVING_CLIENT_H_
 
@@ -118,3 +123,4 @@ coap_observee_t *coap_obs_request_registration(const coap_endpoint_t *endpoint,
 uint8_t coap_generate_token(uint8_t **token_ptr);
 
 #endif /* COAP_OBSERVING_CLIENT_H_ */
+/** @} */

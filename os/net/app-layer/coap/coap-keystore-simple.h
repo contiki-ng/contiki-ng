@@ -36,17 +36,27 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+/**
+ * \addtogroup coap-keystore
+ * @{
+ */
+
 #ifndef COAP_KEYSTORE_SIMPLE_H_
 #define COAP_KEYSTORE_SIMPLE_H_
 
-/*
- * Registers a simple CoAP DTLS keystore with fixed PSK credentials.
+/**
+ * \brief Registers a simple CoAP DTLS keystore with fixed pre-shared key
+ * credentials.
  *
- * The credentials can be configured in project-conf.h
+ * The credentials can be configured in project-conf.h as shown in the
+ * following example:
  *
+ * ~~~~~~~~~~~~~~~{.c}
  * #define COAP_DTLS_PSK_DEFAULT_IDENTITY "user"
  * #define COAP_DTLS_PSK_DEFAULT_KEY      "password"
+ * ~~~~~~~~~~~~~~~
  */
 void coap_keystore_simple_init(void);
 
 #endif /* COAP_KEYSTORE_SIMPLE_H_ */
+/** @} */

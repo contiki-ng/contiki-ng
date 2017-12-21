@@ -35,17 +35,19 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+/**
+ * \addtogroup coap-timer
+ * @{
+ */
+
 #include "coap-timer.h"
 #include "lib/list.h"
+#include "sys/cc.h"
 
 /* Log configuration */
 #include "coap-log.h"
 #define LOG_MODULE "coap-timer"
 #define LOG_LEVEL  LOG_LEVEL_NONE
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 LIST(timer_list);
 static uint8_t is_initialized;
@@ -183,3 +185,4 @@ coap_timer_init(void)
   }
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

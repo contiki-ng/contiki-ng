@@ -37,6 +37,11 @@
  *      Joakim Eriksson, joakime@sics.se
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_CALLBACK_API_H_
 #define COAP_CALLBACK_API_H_
 
@@ -65,3 +70,4 @@ void coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
                        void (*callback)(coap_request_state_t *state));
 
 #endif /* COAP_CALLBACK_API_H_ */
+/** @} */

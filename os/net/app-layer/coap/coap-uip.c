@@ -35,6 +35,17 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+/**
+ * \addtogroup coap-transport
+ * @{
+ *
+ * \defgroup coap-uip CoAP transport implementation for uIP
+ * @{
+ *
+ * This is an implementation of CoAP transport and CoAP endpoint over uIP
+ * with DTLS support.
+ */
+
 #include "contiki.h"
 #include "net/ipv6/uip-udp-packet.h"
 #include "net/ipv6/uiplib.h"
@@ -272,7 +283,8 @@ coap_endpoint_is_connected(const coap_endpoint_t *ep)
       /* only if handshake is done! */
       LOG_DBG("DTLS peer state for ");
       LOG_DBG_COAP_EP(ep);
-      LOG_DBG_(" is %d %d\n", peer->state, dtls_peer_is_connected(peer));
+      LOG_DBG_(" is %d (%sconnected)\n", peer->state,
+               dtls_peer_is_connected(peer) ? "" : "not ");
       return dtls_peer_is_connected(peer);
     } else {
       LOG_DBG("DTLS did not find peer ");
@@ -326,12 +338,6 @@ uint8_t *
 coap_databuf(void)
 {
   return uip_appdata;
-}
-/*---------------------------------------------------------------------------*/
-uint16_t
-coap_datalen()
-{
-  return uip_datalen();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -503,7 +509,7 @@ output_to_peer(struct dtls_context_t *ctx,
   struct uip_udp_conn *udp_connection = dtls_get_app_data(ctx);
   LOG_DBG("output_to DTLS peer [");
   LOG_DBG_6ADDR(&session->ipaddr);
-  LOG_DBG_("]:%u %d bytes\n", session->port, (int)len);
+  LOG_DBG_("]:%u %d bytes\n", uip_ntohs(session->port), (int)len);
   uip_udp_packet_sendto(udp_connection, data, len,
                         &session->ipaddr, session->port);
   return len;
@@ -605,3 +611,5 @@ static dtls_handler_t cb = {
 
 #endif /* WITH_DTLS */
 /*---------------------------------------------------------------------------*/
+/** @} */
+/** @} */

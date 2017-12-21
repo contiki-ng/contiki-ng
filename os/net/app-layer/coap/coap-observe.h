@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_OBSERVE_H_
 #define COAP_OBSERVE_H_
 
@@ -76,3 +81,4 @@ void coap_observe_handler(coap_resource_t *resource, coap_message_t *request,
                           coap_message_t *response);
 
 #endif /* COAP_OBSERVE_H_ */
+/** @} */

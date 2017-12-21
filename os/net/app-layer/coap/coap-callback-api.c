@@ -37,6 +37,10 @@
  *      Joakim Eriksson, joakime@sics.se
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
 
 #include "coap-engine.h"
 #include "coap-callback-api.h"
@@ -151,3 +155,5 @@ coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
 
   progress_request(state);
 }
+/*---------------------------------------------------------------------------*/
+/** @} */

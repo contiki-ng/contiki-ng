@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include "coap-engine.h"
 #include "coap-blocking-api.h"
 #include "sys/cc.h"
@@ -128,3 +133,4 @@ PT_THREAD(coap_blocking_request
   PT_END(&state->pt);
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

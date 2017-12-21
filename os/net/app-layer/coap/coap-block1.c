@@ -36,6 +36,11 @@
  *      Lars Schmertmann <SmallLars@t-online.de>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include <string.h>
 #include <inttypes.h>
 
@@ -47,7 +52,7 @@
 #define LOG_MODULE "coap-block1"
 #define LOG_LEVEL  LOG_LEVEL_COAP
 
-/*----------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
 /**
  * \brief Block 1 support within a coap-ressource
@@ -111,3 +116,5 @@ coap_block1_handler(coap_message_t *request, coap_message_t *response,
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/** @} */

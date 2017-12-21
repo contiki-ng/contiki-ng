@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include "coap-engine.h"
 #include <string.h>
 #include <stdio.h>
@@ -205,3 +210,4 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
 RESOURCE(res_well_known_core, "ct=40", well_known_core_get_handler, NULL,
          NULL, NULL);
 /*---------------------------------------------------------------------------*/
+/** @} */

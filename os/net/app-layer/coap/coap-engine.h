@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_ENGINE_H_
 #define COAP_ENGINE_H_
 
@@ -170,3 +175,4 @@ coap_resource_t *coap_get_next_resource(coap_resource_t *resource);
 #include "coap-transport.h"
 
 #endif /* COAP_ENGINE_H_ */
+/** @} */

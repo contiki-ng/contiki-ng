@@ -36,6 +36,23 @@
 #ifndef LWM2M_SECURITY_H
 #define LWM2M_SECURITY_H
 
+#define LWM2M_SECURITY_SERVER_URI_ID            0
+#define LWM2M_SECURITY_BOOTSTRAP_SERVER_ID      1
+#define LWM2M_SECURITY_MODE_ID                  2
+#define LWM2M_SECURITY_CLIENT_PKI_ID            3
+#define LWM2M_SECURITY_SERVER_PKI_ID            4
+#define LWM2M_SECURITY_KEY_ID                   5
+#define LWM2M_SECURITY_SHORT_SERVER_ID         10
+
+/* Pre-shared key mode */
+#define LWM2M_SECURITY_MODE_PSK                 0
+/* Raw Public Key mode */
+#define LWM2M_SECURITY_MODE_RPK                 1
+/* Certificate mode */
+#define LWM2M_SECURITY_MODE_CERTIFICATE         2
+/* NoSec mode */
+#define LWM2M_SECURITY_MODE_NOSEC               3
+
 #ifdef LWM2M_SECURITY_CONF_URI_SIZE
 #define LWM2M_SECURITY_URI_SIZE LWM2M_SECURITY_CONF_URI_SIZE
 #else /* LWM2M_SECURITY_CONF_URI_SIZE */

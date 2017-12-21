@@ -38,6 +38,11 @@
 
 #include "contiki.h"
 
+#define LWM2M_SERVER_SHORT_SERVER_ID            0
+#define LWM2M_SERVER_LIFETIME_ID                1
+#define LWM2M_SERVER_BINDING_ID                 7
+#define LWM2M_SERVER_REG_UPDATE_TRIGGER_ID      8
+
 #ifdef LWM2M_SERVER_CONF_MAX_COUNT
 #define LWM2M_SERVER_MAX_COUNT LWM2M_SERVER_CONF_MAX_COUNT
 #else

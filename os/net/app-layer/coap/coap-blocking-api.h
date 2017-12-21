@@ -29,6 +29,11 @@
  * This file is part of the Contiki operating system.
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_BLOCKING_API_H_
 #define COAP_BLOCKING_API_H_
 
@@ -65,3 +70,4 @@ PT_THREAD(coap_blocking_request
   }
 
 #endif /* COAP_BLOCKING_API_H_ */
+/** @} */

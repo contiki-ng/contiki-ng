@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, SICS, Swedish ICT AB.
+ * Copyright (c) 2016-2018, SICS, Swedish ICT AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,16 +35,50 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ *
+ * \defgroup coap-transport CoAP transport API
+ * @{
+ *
+ * The CoAP transport API defines a common interface for sending/receiving
+ * CoAP messages.
+ */
+
 #ifndef COAP_TRANSPORT_H_
 #define COAP_TRANSPORT_H_
 
 #include "coap-endpoint.h"
 
-void coap_transport_init(void);
+/**
+ * \brief      Returns a common data buffer that can be used when
+ *             generating CoAP messages for transmission. The buffer
+ *             size is at least COAP_MAX_PACKET_SIZE bytes.
+ *
+ *             In Contiki-NG, this corresponds to the uIP buffer.
+ *
+ * \return     A pointer to a data buffer where a CoAP message can be stored.
+ */
+uint8_t *coap_databuf(void);
 
+/**
+ * \brief      Send a message to the specified CoAP endpoint
+ * \param ep   A pointer to a CoAP endpoint
+ * \param data A pointer to data to send
+ * \param len  The size of the data to send
+ * \return     The number of bytes sent or negative if an error occurred.
+ */
 int coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t len);
 
-uint8_t *coap_databuf(void);
-uint16_t coap_datalen(void);
+/**
+ * \brief      Initialize the CoAP transport.
+ *
+ *             This function initializes the CoAP transport implementation and
+ *             should only be called by the CoAP engine.
+ */
+void coap_transport_init(void);
 
 #endif /* COAP_TRANSPORT_H_ */
+/** @} */
+/** @} */

@@ -37,6 +37,11 @@
  *        Daniele Alessandrelli <daniele.alessandrelli@gmail.com>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include "coap.h"
 #include "coap-observe-client.h"
 #include "sys/cc.h"
@@ -311,3 +316,4 @@ coap_obs_request_registration(const coap_endpoint_t *endpoint, char *uri,
   return obs;
 }
 #endif /* COAP_OBSERVE_CLIENT */
+/** @} */

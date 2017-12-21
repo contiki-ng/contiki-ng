@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, SICS Swedish ICT AB.
+ * Copyright (c) 2016-2018, SICS Swedish ICT AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,20 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * \addtogroup lwm2m
+ * @{
+ */
+
+/**
+ * \file
+ *         Header file for the Contiki OMA LWM2M Registration and Bootstrap
+ *         Client.
+ * \author
+ *         Joakim Eriksson <joakime@sics.se>
+ *         Niclas Finne <nfi@sics.se>
  */
 
 #ifndef LWM2M_RD_CLIENT_H_
@@ -61,7 +75,9 @@ void lwm2m_rd_client_init(const char *ep);
 
 void lwm2m_rd_client_set_session_callback(session_callback_t cb);
 
+#ifndef LWM2M_RD_CLIENT_ASSIGNED_ENDPOINT_MAX_LEN
 #define LWM2M_RD_CLIENT_ASSIGNED_ENDPOINT_MAX_LEN    15
+#endif /* LWM2M_RD_CLIENT_ASSIGNED_ENDPOINT_MAX_LEN */
 
 /*---------------------------------------------------------------------------*/
 /*- Server session-*Currently single session only*---------------------------*/
@@ -83,3 +99,4 @@ struct lwm2m_session_info {
 };
 
 #endif /* LWM2M_RD_CLIENT_H_ */
+/** @} */

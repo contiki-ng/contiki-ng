@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_CONSTANTS_H_
 #define COAP_CONSTANTS_H_
 
@@ -184,3 +189,4 @@ typedef enum {
 } coap_resource_flags_t;
 
 #endif /* COAP_CONSTANTS_H_ */
+/** @} */

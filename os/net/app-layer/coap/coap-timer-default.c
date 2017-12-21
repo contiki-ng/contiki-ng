@@ -35,6 +35,16 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+/**
+ * \addtogroup coap-timer
+ * @{
+ *
+ * \defgroup coap-timer-default CoAP timer for Contiki-NG
+ * @{
+ *
+ * This is an implementation of CoAP timer for Contiki-NG.
+ */
+
 #include "coap-timer.h"
 #include "sys/clock.h"
 #include "sys/etimer.h"
@@ -126,3 +136,5 @@ const coap_timer_driver_t coap_timer_default_driver = {
   .update = update,
 };
 /*---------------------------------------------------------------------------*/
+/** @} */
+/** @} */

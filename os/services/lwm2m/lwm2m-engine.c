@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Yanzi Networks AB.
+ * Copyright (c) 2015-2018, Yanzi Networks AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
+ * \addtogroup lwm2m
  * @{
  */
 
@@ -554,13 +554,13 @@ lwm2m_engine_init(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @brief  Set the writer pointer to the proper writer based on the Accept: header
+/*
+ * Set the writer pointer to the proper writer based on the Accept: header
  *
- * @param[in] context  LWM2M context to operate on
- * @param[in] accept   Accept type number from CoAP headers
+ * param[in] context  LWM2M context to operate on
+ * param[in] accept   Accept type number from CoAP headers
  *
- * @return The content type of the response if the selected writer is used
+ * return The content type of the response if the selected writer is used
  */
 static unsigned int
 lwm2m_engine_select_writer(lwm2m_context_t *context, unsigned int accept)
@@ -590,11 +590,11 @@ lwm2m_engine_select_writer(lwm2m_context_t *context, unsigned int accept)
   return accept;
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @brief  Set the reader pointer to the proper reader based on the Content-format: header
+/*
+ * Set the reader pointer to the proper reader based on the Content-format: header
  *
- * @param[in] context        LWM2M context to operate on
- * @param[in] content_format Content-type type number from CoAP headers
+ * param[in] context        LWM2M context to operate on
+ * param[in] content_format Content-type type number from CoAP headers
  */
 static void
 lwm2m_engine_select_reader(lwm2m_context_t *context, unsigned int content_format)
@@ -1368,7 +1368,7 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   if(offset != NULL) {
     context.offset = *offset;
   }
-  context.inbuf->size = coap_get_payload(request, (const uint8_t **) &context.inbuf->buffer);
+  context.inbuf->size = coap_get_payload(request, (const uint8_t **)&context.inbuf->buffer);
   context.inbuf->pos = 0;
 
   /* Maybe this should be part of CoAP itself - this seems not to be working
@@ -1431,7 +1431,7 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     }
   }
 
-  /**
+  /*
    * 1 => Object only
    * 2 => Object and Instance
    * 3 => Object and Instance and Resource

@@ -36,6 +36,11 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+/**
+ * \addtogroup coap-keystore
+ * @{
+ */
+
 #include "coap-endpoint.h"
 #include "coap-keystore.h"
 #include <string.h>
@@ -89,3 +94,4 @@ coap_keystore_simple_init(void)
 #endif /* WITH_DTLS */
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

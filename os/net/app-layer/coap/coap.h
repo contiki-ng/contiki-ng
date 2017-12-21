@@ -31,18 +31,20 @@
 
 /**
  * \file
- *      An implementation of the Constrained Application Protocol (RFC).
+ *      An implementation of the Constrained Application Protocol (RFC 7252).
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
 /**
- * \defgroup coap CoAP
+ * \addtogroup apps
  * @{
  *
- * The Constrained Application Protocol - RFC 7252
+ * \defgroup coap An implementation of CoAP
+ * @{
+ *
+ * This is an implementation of the Constrained Application Protocol
  */
-
 
 #ifndef COAP_H_
 #define COAP_H_
@@ -298,5 +300,5 @@ int coap_get_payload(coap_message_t *message, const uint8_t **payload);
 int coap_set_payload(coap_message_t *message, const void *payload, size_t length);
 
 #endif /* COAP_H_ */
-
+/** @} */
 /** @} */

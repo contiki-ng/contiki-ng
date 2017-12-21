@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Yanzi Networks AB.
+ * Copyright (c) 2015-2018, Yanzi Networks AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,15 +34,15 @@
  */
 
 /**
- * \defgroup oma-lwm2m An implementation of OMA LWM2M
+ * \defgroup lwm2m An implementation of LWM2M
  * @{
  *
- * This application is an implementation of OMA Lightweight M2M.
+ * This is an implementation of OMA Lightweight M2M (LWM2M).
  */
 
 /**
  * \file
- *         Header file for the Contiki OMA LWM2M object API
+ *         Header file for the LWM2M object API
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
@@ -70,7 +70,6 @@ typedef uint32_t lwm2m_resource_id_t;
 #define RW(x) (x | LWM2M_RESOURCE_READ | LWM2M_RESOURCE_WRITE)
 #define EX(x) (x | LWM2M_RESOURCE_EXECUTE)
 
-
 #define LWM2M_OBJECT_SECURITY_ID                0
 #define LWM2M_OBJECT_SERVER_ID                  1
 #define LWM2M_OBJECT_ACCESS_CONTROL_ID          2
@@ -79,45 +78,6 @@ typedef uint32_t lwm2m_resource_id_t;
 #define LWM2M_OBJECT_FIRMWARE_ID                5
 #define LWM2M_OBJECT_LOCATION_ID                6
 #define LWM2M_OBJECT_CONNECTIVITY_STATISTICS_ID 7
-
-#define LWM2M_SECURITY_SERVER_URI_ID            0
-#define LWM2M_SECURITY_BOOTSTRAP_SERVER_ID      1
-#define LWM2M_SECURITY_MODE_ID                  2
-#define LWM2M_SECURITY_CLIENT_PKI_ID            3
-#define LWM2M_SECURITY_SERVER_PKI_ID            4
-#define LWM2M_SECURITY_KEY_ID                   5
-#define LWM2M_SECURITY_SHORT_SERVER_ID         10
-
-#define LWM2M_SERVER_SHORT_SERVER_ID            0
-#define LWM2M_SERVER_LIFETIME_ID                1
-#define LWM2M_SERVER_BINDING_ID                 7
-#define LWM2M_SERVER_REG_UPDATE_TRIGGER_ID      8
-
-#define LWM2M_DEVICE_MANUFACTURER_ID            0
-#define LWM2M_DEVICE_MODEL_NUMBER_ID            1
-#define LWM2M_DEVICE_SERIAL_NUMBER_ID           2
-#define LWM2M_DEVICE_FIRMWARE_VERSION_ID        3
-#define LWM2M_DEVICE_REBOOT_ID                  4
-#define LWM2M_DEVICE_FACTORY_DEFAULT_ID         5
-#define LWM2M_DEVICE_AVAILABLE_POWER_SOURCES    6
-/* These do have multiple instances */
-#define LWM2M_DEVICE_POWER_SOURCE_VOLTAGE       7
-#define LWM2M_DEVICE_POWER_SOURCE_CURRENT       8
-#define LWM2M_DEVICE_BATTERY_LEVEL              9
-
-#define LWM2M_DEVICE_ERROR_CODE                11
-#define LWM2M_DEVICE_TIME_ID                   13
-#define LWM2M_DEVICE_TYPE_ID                   17
-
-
-/* Pre-shared key mode */
-#define LWM2M_SECURITY_MODE_PSK                 0
-/* Raw Public Key mode */
-#define LWM2M_SECURITY_MODE_RPK                 1
-/* Certificate mode */
-#define LWM2M_SECURITY_MODE_CERTIFICATE         2
-/* NoSec mode */
-#define LWM2M_SECURITY_MODE_NOSEC               3
 
 typedef enum {
   LWM2M_OP_NONE,

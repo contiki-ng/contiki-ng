@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_TRANSACTIONS_H_
 #define COAP_TRANSACTIONS_H_
 
@@ -75,3 +80,4 @@ void coap_clear_transaction(coap_transaction_t *t);
 coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
 
 #endif /* COAP_TRANSACTIONS_H_ */
+/** @} */

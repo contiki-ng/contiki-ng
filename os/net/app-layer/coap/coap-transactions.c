@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include "coap-transactions.h"
 #include "coap-observe.h"
 #include "coap-timer.h"
@@ -163,3 +168,4 @@ coap_get_transaction_by_mid(uint16_t mid)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

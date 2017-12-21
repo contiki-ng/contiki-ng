@@ -29,12 +29,33 @@
  *
  */
 
+/**
+ * \file
+ *         API for CoAP keystore
+ * \author
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
+ */
+
+/**
+ * \addtogroup coap
+ * @{
+ *
+ * \defgroup coap-keystore CoAP keystore API
+ * @{
+ *
+ * The CoAP keystore API defines a common interface for retrieving
+ * authorization information for CoAP/DTLS.
+ */
+
 #ifndef COAP_KEYSTORE_H_
 #define COAP_KEYSTORE_H_
 
 #include "coap-endpoint.h"
 
-/* Pre-shared key info */
+/**
+ * The structure of a CoAP pre-shared key info.
+ */
 typedef struct {
   const uint8_t *identity_hint;
   uint16_t identity_hint_len;
@@ -44,12 +65,24 @@ typedef struct {
   uint16_t key_len;
 } coap_keystore_psk_entry_t;
 
-/* the function for getting the data from a keystore */
-typedef struct coap_keystore {
+/**
+ * The structure of a CoAP keystore.
+ *
+ * The keystore implementation provides a function callback for each type of
+ * authorization supported. The API currently only specifies a function
+ * callback for pre-shared keys.
+ */
+typedef struct {
   int (* coap_get_psk_info)(const coap_endpoint_t *address_info,
                             coap_keystore_psk_entry_t *info);
 } coap_keystore_t;
 
+/**
+ * \brief           Set the CoAP keystore to use by CoAP.
+ * \param keystore  A pointer to a CoAP keystore.
+ */
 void coap_set_keystore(const coap_keystore_t *keystore);
 
 #endif /* COAP_KEYSTORE_H_ */
+/** @} */
+/** @} */

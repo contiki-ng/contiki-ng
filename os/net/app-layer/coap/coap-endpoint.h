@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, SICS, Swedish ICT AB.
+ * Copyright (c) 2016-2018, SICS, Swedish ICT AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,11 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+/**
+ * \addtogroup coap-transport
+ * @{
+ */
+
 #ifndef COAP_ENDPOINT_H_
 #define COAP_ENDPOINT_H_
 
@@ -51,24 +56,92 @@ typedef struct {
 } coap_endpoint_t;
 #endif /* COAP_ENDPOINT_CUSTOM */
 
-void coap_endpoint_copy(coap_endpoint_t *destination,
-                        const coap_endpoint_t *from);
+/**
+ * \brief      Copy a CoAP endpoint from one memory area to another.
+ *
+ * \param dest A pointer to a CoAP endpoint to copy to.
+ * \param src  A pointer to a CoAP endpoint to copy from.
+ */
+void coap_endpoint_copy(coap_endpoint_t *dest, const coap_endpoint_t *src);
 
+/**
+ * \brief      Compare two CoAP endpoints.
+ *
+ * \param dest A pointer to the first CoAP endpoint.
+ * \param src  A pointer to the second CoAP endpoint.
+ * \return     Non-zero if the endpoints are identical and zero otherwise.
+ */
 int coap_endpoint_cmp(const coap_endpoint_t *e1, const coap_endpoint_t *e2);
 
+/**
+ * \brief      Print a CoAP endpoint via the logging module.
+ *
+ * \param ep   A pointer to the CoAP endpoint to log.
+ */
 void coap_endpoint_log(const coap_endpoint_t *ep);
+
+/**
+ * \brief      Print a CoAP endpoint.
+ *
+ * \param ep   A pointer to the CoAP endpoint to print.
+ */
 void coap_endpoint_print(const coap_endpoint_t *ep);
+
+/**
+ * \brief      Print a CoAP endpoint to a string. The output is always
+ *             null-terminated unless size is zero.
+ *
+ * \param str  The string to write to.
+ * \param size The max number of characters to write.
+ * \param ep   A pointer to the CoAP endpoint to print.
+ * \return     Returns the number of characters needed for the output
+ *             excluding the ending null-terminator or negative if an
+ *             error occurred.
+ */
 int  coap_endpoint_snprint(char *str, size_t size,
                            const coap_endpoint_t *ep);
 
+/**
+ * \brief      Parse a CoAP endpoint.
+ *
+ * \param text The string to parse.
+ * \param size The max number of characters in the string.
+ * \param ep   A pointer to the CoAP endpoint to write to.
+ * \return     Returns non-zero if the endpoint was successfully parsed and
+ *             zero otherwise.
+ */
 int coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep);
 
+/**
+ * \brief      Check if a CoAP endpoint is secure (encrypted).
+ *
+ * \param ep   A pointer to a CoAP endpoint.
+ * \return     Returns non-zero if the endpoint is secure and zero otherwise.
+ */
 int coap_endpoint_is_secure(const coap_endpoint_t *ep);
 
+/**
+ * \brief      Check if a CoAP endpoint is connected.
+ *
+ * \param ep   A pointer to a CoAP endpoint.
+ * \return     Returns non-zero if the endpoint is connected and zero otherwise.
+ */
 int coap_endpoint_is_connected(const coap_endpoint_t *ep);
 
+/**
+ * \brief      Request a connection to a CoAP endpoint.
+ *
+ * \param ep   A pointer to a CoAP endpoint.
+ * \return     Returns zero if an error occured and non-zero otherwise.
+ */
 int coap_endpoint_connect(coap_endpoint_t *ep);
 
+/**
+ * \brief      Request that any connection to a CoAP endpoint is discontinued.
+ *
+ * \param ep   A pointer to a CoAP endpoint.
+ */
 void coap_endpoint_disconnect(coap_endpoint_t *ep);
 
 #endif /* COAP_ENDPOINT_H_ */
+/** @} */

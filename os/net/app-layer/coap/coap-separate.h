@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_SEPARATE_H_
 #define COAP_SEPARATE_H_
 
@@ -69,3 +74,4 @@ void coap_separate_resume(coap_message_t *response,
                           uint8_t code);
 
 #endif /* COAP_SEPARATE_H_ */
+/** @} */

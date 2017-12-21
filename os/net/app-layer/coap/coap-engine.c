@@ -36,6 +36,11 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include "coap-engine.h"
 #include "sys/cc.h"
 #include "lib/list.h"
@@ -506,3 +511,4 @@ process_callback(coap_timer_t *t)
   }
 }
 /*---------------------------------------------------------------------------*/
+/** @} */
