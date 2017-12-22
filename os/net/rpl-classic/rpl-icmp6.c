@@ -141,15 +141,23 @@ get_global_addr(uip_ipaddr_t *addr)
 {
   int i;
   int state;
+  uip_ipaddr_t *prefix = NULL;
+  uint8_t prefix_length = 0;
+  rpl_dag_t *dag = rpl_get_any_dag();
+
+  if(dag != NULL && dag->prefix_info.length != 0) {
+    prefix = &dag->prefix_info.prefix;
+    prefix_length = dag->prefix_info.length;
+  }
 
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      if(!uip_is_addr_linklocal(&uip_ds6_if.addr_list[i].ipaddr)) {
-        memcpy(addr, &uip_ds6_if.addr_list[i].ipaddr, sizeof(uip_ipaddr_t));
-        return 1;
-      }
+       state == ADDR_PREFERRED &&
+       !uip_is_addr_linklocal(&uip_ds6_if.addr_list[i].ipaddr) &&
+       (prefix == NULL || uip_ipaddr_prefixcmp(prefix, &uip_ds6_if.addr_list[i].ipaddr, prefix_length))) {
+      memcpy(addr, &uip_ds6_if.addr_list[i].ipaddr, sizeof(uip_ipaddr_t));
+      return 1;
     }
   }
   return 0;
