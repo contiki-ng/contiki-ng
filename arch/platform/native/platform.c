@@ -70,23 +70,43 @@
 #define LOG_MODULE "Native"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Native Platform Configuration
+ *
+ * @{
+ */
+
+/*
+ * Defines the maximum number of file descriptors monitored by the platform
+ * main loop.
+ */
 #ifdef SELECT_CONF_MAX
 #define SELECT_MAX SELECT_CONF_MAX
 #else
 #define SELECT_MAX 8
 #endif
 
+/*
+ * Defines the timeout (in msec) of the select operation if no monitored file
+ * descriptors becomes ready.
+ */
 #ifdef SELECT_CONF_TIMEOUT
 #define SELECT_TIMEOUT SELECT_CONF_TIMEOUT
 #else
 #define SELECT_TIMEOUT 1000
 #endif
 
+/*
+ * Adds the STDIN file descriptor to the list of monitored file descriptors.
+ */
 #ifdef SELECT_CONF_STDIN
 #define SELECT_STDIN SELECT_CONF_STDIN
 #else
 #define SELECT_STDIN 1
 #endif
+/** @} */
+/*---------------------------------------------------------------------------*/
 
 static const struct select_callback *select_callback[SELECT_MAX];
 static int select_max = 0;
