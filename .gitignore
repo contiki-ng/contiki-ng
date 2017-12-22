@@ -20,8 +20,6 @@ tools/tunslip6
 build
 tools/coffee-manager/build/
 tools/coffee-manager/coffee.jar
-tools/collect-view/build/
-tools/collect-view/dist/
 COOJA.testlog
 
 # platform build artifacts
