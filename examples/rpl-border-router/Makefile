@@ -1,21 +1,13 @@
-PROJECTDIRS += common
-PREFIX ?= fd00::1/64
+CONTIKI_PROJECT = border-router
+all: $(CONTIKI_PROJECT)
 CONTIKI = ../..
 
--include $(CONTIKI)/Makefile.identify-target
-
-all: border-router.$(TARGET)
-
-ifeq ($(TARGET),native)
-  SOURCES_DIR = native
-else
-  SOURCES_DIR = embedded
-endif
-
-include $(SOURCES_DIR)/Makefile
-
-PROJECTDIRS += $(SOURCES_DIR)
-PROJECT_SOURCEFILES += httpd-simple.c webserver.c border-router-common.c
-CFLAGS += -DPROJECT_CONF_PATH=\"$(SOURCES_DIR)/project-conf.h\"
+# Include RPL BR module
+MODULES += os/services/rpl-border-router
+# Include webserver module
+MODULES_REL += webserver
+# Include optional target-specific module
+include $(CONTIKI)/Makefile.identify-target
+MODULES_REL += $(TARGET)
 
 include $(CONTIKI)/Makefile.include

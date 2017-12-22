@@ -44,7 +44,7 @@ sleep 2
 pgrep hello-world | sudo xargs kill -9
 
 if [ $TESTCOUNT -eq $OKCOUNT ] ; then
-  printf "%-40s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
+  printf "%-32s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
 else
   echo "==== make.log ====" ; cat make.log;
   echo "==== make.err ====" ; cat make.err;

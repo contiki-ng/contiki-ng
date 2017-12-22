@@ -27,13 +27,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef PROJECT_ROUTER_CONF_H_
-#define PROJECT_ROUTER_CONF_H_
-
-#define BORDER_ROUTER_CONF_WEBSERVER 1
-
-#define UIP_FALLBACK_INTERFACE rpl_interface
-
 /* use a non-default network driver */
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 
@@ -42,14 +35,9 @@
 
 #define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
 
-#define WEBSERVER_CONF_CFS_CONNS 2
-
 #define SERIALIZE_ATTRIBUTES 1
-#define UIP_CONF_TCP 1
 
 #define CMD_CONF_OUTPUT border_router_cmd_output
 
 /* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
 #define SELECT_CALLBACK 1
-
-#endif /* PROJECT_ROUTER_CONF_H_ */

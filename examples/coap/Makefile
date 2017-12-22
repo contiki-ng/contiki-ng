@@ -3,20 +3,12 @@ all: coap-example-server coap-example-client
 
 CONTIKI=../..
 
-# automatically build RESTful resources
-REST_RESOURCES_DIR = ./resources
-ifndef TARGET
-REST_RESOURCES_FILES = $(notdir $(shell find $(REST_RESOURCES_DIR) -name '*.c'))
-else
-ifeq ($(TARGET), native)
-REST_RESOURCES_FILES = $(notdir $(shell find $(REST_RESOURCES_DIR) -name '*.c'))
-else
-REST_RESOURCES_FILES = $(notdir $(shell find $(REST_RESOURCES_DIR) -name '*.c' ! -name 'res-plugtest*'))
+# build RESTful resources
+include $(CONTIKI)/Makefile.identify-target
+ifeq ($(TARGET),native)
+	MODULES_REL += ./resources-plugtest
 endif
-endif
-
-PROJECTDIRS += $(REST_RESOURCES_DIR)
-PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
+MODULES_REL += ./resources
 
 # Include the CoAP implementation
 MODULES += os/net/app-layer/coap
