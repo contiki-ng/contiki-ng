@@ -30,6 +30,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "lib/list.h"
 #include "lib/stack.h"
 #include "lib/queue.h"
 #include "lib/circular-list.h"
@@ -63,6 +64,141 @@ print_test_report(const unit_test_t *utp)
   } else {
     printf("SUCCEEDED - %s\n", utp->descr);
   }
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_list, "Singly-linked list");
+UNIT_TEST(test_list)
+{
+  demo_struct_t *head, *tail;
+
+  LIST(lst);
+
+  UNIT_TEST_BEGIN();
+
+  memset(elements, 0, sizeof(elements));
+  list_init(lst);
+
+  /* Starts from empty */
+  UNIT_TEST_ASSERT(list_head(lst) == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 0);
+
+  /*
+   * Add an item. Should be head and tail
+   * 0 --> NULL
+   */
+  list_add(lst, &elements[0]);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(elements[0].next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 1);
+
+  /*
+   * Add an item. Should become the new tail
+   * 0 --> 1 --> NULL
+   */
+  list_add(lst, &elements[1]);
+  head = list_head(lst);
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[1]);
+  UNIT_TEST_ASSERT(head->next == tail);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 2);
+
+  /*
+   * Add after existing head
+   * 0 --> 2 --> 1 --> NULL
+   */
+  head = list_head(lst);
+  list_insert(lst, head, &elements[2]);
+  head = list_head(lst);
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[1]);
+  UNIT_TEST_ASSERT(head->next == &elements[2]);
+  UNIT_TEST_ASSERT(elements[2].next == tail);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 3);
+
+  /*
+   * Add after existing head
+   * 0 --> 2 --> 1 --> 3 --> NULL
+   */
+  tail = list_tail(lst);
+  list_insert(lst, tail, &elements[3]);
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[3]);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 4);
+
+  /*
+   * Re-add item 2 using list_add
+   * 0 --> 1 --> 3 --> 2 --> NULL
+   */
+  list_add(lst, &elements[2]);
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[2]);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 4);
+
+  /*
+   * Re-add item 3 using list_insert
+   * 0 --> 1 --> 2 --> 3 --> NULL
+   */
+  tail = list_tail(lst);
+  list_insert(lst, tail, &elements[3]);
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[3]);
+  UNIT_TEST_ASSERT(elements[2].next == tail);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 4);
+
+  /*
+   * Remove the tail
+   * 0 --> 1 --> 2 --> NULL
+   */
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(list_chop(lst) == tail);
+  head = list_head(lst);
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(tail == &elements[2]);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 3);
+
+  /*
+   * Remove an item in the middle
+   * 0 --> 2 --> NULL
+   */
+  head = list_head(lst);
+  list_remove(lst, head->next);
+  head = list_head(lst);
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(head->next == tail);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[0]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[2]);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 2);
+
+  /*
+   * Remove the head
+   * 2 --> NULL
+   */
+  list_remove(lst, list_head(lst));
+  tail = list_tail(lst);
+  UNIT_TEST_ASSERT(list_head(lst) == &elements[2]);
+  UNIT_TEST_ASSERT(list_tail(lst) == &elements[2]);
+  UNIT_TEST_ASSERT(tail->next == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 1);
+
+  /* Ends empty */
+  list_remove(lst, list_tail(lst));
+  UNIT_TEST_ASSERT(list_head(lst) == NULL);
+  UNIT_TEST_ASSERT(list_length(lst) == 0);
+
+  UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
 UNIT_TEST_REGISTER(test_stack, "Stack Push/Pop");
@@ -884,6 +1020,7 @@ PROCESS_THREAD(data_structure_test_process, ev, data)
 
   memset(elements, 0, sizeof(elements));
 
+  UNIT_TEST_RUN(test_list);
   UNIT_TEST_RUN(test_stack);
   UNIT_TEST_RUN(test_queue);
   UNIT_TEST_RUN(test_csll);
