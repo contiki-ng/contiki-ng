@@ -117,7 +117,7 @@ void rf_ble_cmd_create_adv_params(uint8_t *param, dataQueue_t *rx_queue,
  * \param start_time
  *          The time in rf_core_ticks when the connection event will start
  */
-void rf_ble_cmd_create_slave_cmd(uint8_t *cmd, uint8_t channel, uint8_t *params,
+void rf_ble_cmd_create_slave_cmd(uint8_t *cmd, uint8_t channel, uint8_t *param,
                                  uint8_t *output, uint32_t start_time);
 
 /*---------------------------------------------------------------------------*/
