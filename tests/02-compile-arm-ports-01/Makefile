@@ -15,6 +15,7 @@ rpl-border-router/srf06-cc26xx:BOARD=launchpad/cc2650 \
 sensniff/srf06-cc26xx \
 sensniff/srf06-cc26xx:BOARD=launchpad/cc1310 \
 6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650 \
+ble/ipv6-client/srf06-cc26xx:BOARD=launchpad/cc2650 \
 storage/cfs-coffee/cc2538dk \
 sensniff/cc2538dk \
 rpl-udp/cc2538dk \

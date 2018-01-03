@@ -50,9 +50,6 @@
 #define NETSTACK_CONF_RADIO                 ble_cc2650_driver
 
 #define LOG_CONF_LEVEL_MAC        LOG_LEVEL_INFO
-//#define LOG_CONF_LEVEL_6LOWPAN      LOG_LEVEL_WARN
-//#define LOG_CONF_LEVEL_IPV6       LOG_LEVEL_WARN
-//#define LOG_CONF_LEVEL_TCPIP      LOG_LEVEL_WARN
 
 /* BLE L2CAP settings */
 #define BLE_CONF_DEVICE_NAME          "TI CC26xx device"
