@@ -95,8 +95,6 @@ main(void)
   LOG_INFO_LLADDR(&linkaddr_node_addr);
   LOG_INFO_("\n");
 
-  platform_init_stage_three();
-
 #if NETSTACK_CONF_WITH_IPV6
   {
     uip_ds6_addr_t *lladdr;
@@ -109,6 +107,8 @@ main(void)
     LOG_INFO_("\n");
   }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
+
+  platform_init_stage_three();
 
 #if BUILD_WITH_ORCHESTRA
   orchestra_init();
