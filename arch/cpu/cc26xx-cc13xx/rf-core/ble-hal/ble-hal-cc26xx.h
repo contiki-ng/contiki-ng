@@ -30,7 +30,7 @@
 
 /**
  * \file
- *    hardware abstraction for the TI CC2650 controller
+ *    BLE radio hardware abstraction for the TI CC26XX controller
  *
  * \author
  *    Michael Spoerk <michael.spoerk@tugraz.at>

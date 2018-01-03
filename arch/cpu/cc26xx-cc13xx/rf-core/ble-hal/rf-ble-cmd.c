@@ -30,7 +30,9 @@
 
 /**
  * \file
- *    BLE commands for the TI CC26xx BLE radio
+ *    BLE commands for the TI CC26xx BLE radio.
+ *    These functions are specific to the TI CC26xx and cannot be
+ *    reused by other BLE radios.
  *
  * \author
  *    Michael Spoerk <michael.spoerk@tugraz.at>
