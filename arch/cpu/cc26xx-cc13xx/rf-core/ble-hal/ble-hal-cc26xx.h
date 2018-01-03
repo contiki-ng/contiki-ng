@@ -40,7 +40,7 @@
 #ifndef BLE_HAL_CC26XX_H_
 #define BLE_HAL_CC26XX_H_
 
-#include "ble-hal.h"
+#include "os/dev/ble-hal.h"
 
 extern const struct ble_hal_driver ble_hal;
 

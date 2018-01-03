@@ -41,8 +41,10 @@
 #define BLE_HAL_H_
 
 #include <stddef.h>
-#include "ble-addr.h"
 
+/*---------------------------------------------------------------------------*/
+/* BLE device address size */
+#define BLE_ADDR_SIZE 6
 /*---------------------------------------------------------------------------*/
 /* Advertisement channel definitions                                         */
 #define BLE_ADV_DATA_LEN         31
@@ -100,6 +102,13 @@ typedef enum {
   BLE_RESULT_INVALID_PARAM,
   BLE_RESULT_ERROR
 } ble_result_t;
+
+/*---------------------------------------------------------------------------*/
+/* Type of BLE device address */
+typedef enum {
+  BLE_ADDR_TYPE_PUBLIC,
+  BLE_ADDR_TYPE_RANDOM
+} ble_addr_type_t;
 
 /*---------------------------------------------------------------------------*/
 /* Advertising modes of BLE */

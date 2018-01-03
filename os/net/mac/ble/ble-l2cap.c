@@ -38,102 +38,26 @@
  */
 /*---------------------------------------------------------------------------*/
 
-#include "ble-hal.h"
+#include "net/mac/ble/ble-l2cap.h"
+
 #include "net/packetbuf.h"
 #include "net/netstack.h"
-
 #include "lib/memb.h"
 #include "lib/list.h"
 
 #include <string.h>
+
+#include "../../../dev/ble-hal.h"
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "L2CAP"
 #define LOG_LEVEL LOG_LEVEL_MAC
 /*---------------------------------------------------------------------------*/
-/* device name used for BLE advertisement */
-#ifdef BLE_CONF_DEVICE_NAME
-#define BLE_DEVICE_NAME   BLE_CONF_DEVICE_NAME
-#else
-#define BLE_DEVICE_NAME "BLE device name"
-#endif
-
-/* BLE advertisement in milliseconds */
-#ifdef BLE_CONF_ADV_INTERVAL
-#define BLE_ADV_INTERVAL  BLE_CONF_ADV_INTERVAL
-#else
-#define BLE_ADV_INTERVAL              50
-#endif
-
-#define BLE_SLAVE_CONN_INTERVAL_MIN  0x0150
-#define BLE_SLAVE_CONN_INTERVAL_MAX  0x01F0
-#define L2CAP_SIGNAL_CHANNEL 0x0005
-#define L2CAP_FLOW_CHANNEL   0x0041
-#define L2CAP_CODE_CONN_UPDATE_REQ    0x12
-#define L2CAP_CODE_CONN_UPDATE_RSP    0x13
-#define L2CAP_CODE_CONN_REQ         0x14
-#define L2CAP_CODE_CONN_RSP         0x15
-#define L2CAP_CODE_CREDIT           0x16
-#define L2CAP_IPSP_PSM        0x0023
-
-/* the maximum MTU size of the L2CAP channel */
-#ifdef BLE_L2CAP_CONF_NODE_MTU
-#define BLE_L2CAP_NODE_MTU      BLE_L2CAP_CONF_NODE_MTU
-#else
-#define BLE_L2CAP_NODE_MTU              1280
-#endif
-
-/* the max. supported L2CAP fragment length */
-#ifdef BLE_L2CAP_CONF_NODE_FRAG_LEN
-#define BLE_L2CAP_NODE_FRAG_LEN   BLE_L2CAP_CONF_NODE_FRAG_LEN
-#else
-#ifdef BLE_MODE_CONF_CONN_MAX_PACKET_SIZE
-#define BLE_L2CAP_NODE_FRAG_LEN   BLE_MODE_CONF_CONN_MAX_PACKET_SIZE
-#else
-#define BLE_L2CAP_NODE_FRAG_LEN         256
-#endif
-#endif
-
-#define L2CAP_CREDIT_NEW       (BLE_L2CAP_NODE_MTU / BLE_L2CAP_NODE_FRAG_LEN)
-#define L2CAP_CREDIT_THRESHOLD    2
-
-#define L2CAP_INIT_INTERVAL     (2 * CLOCK_SECOND)
-
-/* BLE connection interval in milliseconds */
-#ifdef BLE_CONF_CONNECTION_INTERVAL
-#define CONNECTION_INTERVAL_MS    BLE_CONF_CONNECTION_INTERVAL
-#else
-#define CONNECTION_INTERVAL_MS    125
-#endif
-
-/* BLE slave latency */
-#ifdef BLE_CONF_CONNECTION_SLAVE_LATENCY
-#define CONNECTION_SLAVE_LATENCY  BLE_CONF_CONNECTION_SLAVE_LATENCY
-#else
-#define CONNECTION_SLAVE_LATENCY    0
-#endif
-
-/* BLE supervision timeout */
-#define CONNECTION_TIMEOUT         42
-
 #define MS_TO_CLOCK_SECONDS(X)    ((int)(((double)((X)*CLOCK_SECOND)) / 1000.0))
-
-#define L2CAP_FIRST_HEADER_SIZE         6
-#define L2CAP_SUBSEQ_HEADER_SIZE        4
 /*---------------------------------------------------------------------------*/
 /* BLE controller */
 /* public device address of BLE controller */
 static uint8_t ble_addr[BLE_ADDR_SIZE];
-/*---------------------------------------------------------------------------*/
-#if UIP_CONF_ROUTER
-#ifdef BLE_MODE_CONF_MAX_CONNECTIONS
-#define L2CAP_CHANNELS          BLE_MODE_CONF_MAX_CONNECTIONS
-#else
-#define L2CAP_CHANNELS          1
-#endif
-#else
-#define L2CAP_CHANNELS          1
-#endif
 /*---------------------------------------------------------------------------*/
 /* L2CAP fragmentation buffers and utilities                                 */
 typedef struct {

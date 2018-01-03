@@ -42,10 +42,10 @@
 
 #include "net/ipv6/uip-icmp6.h"
 
-#include "ble-hal.h"
-
 #include <string.h>
 #include <stdio.h>
+
+#include "os/dev/ble-hal.h"
 /*---------------------------------------------------------------------------*/
 //#define SERVER_IP               "::"
 #define SERVER_IP               "fe80::ba27:ebff:fe40:9b06"

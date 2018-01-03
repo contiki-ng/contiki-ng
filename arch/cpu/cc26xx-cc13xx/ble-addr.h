@@ -27,8 +27,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Michael Spoerk <mi.spoerk@gmail.com>
+ */
+/**
+ * \file
+ *    Driver for the retrieval of an BLE address from flash
  *
+ * \author
+ *    Michael Spoerk <mi.spoerk@gmail.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef BLE_ADDR_H_
@@ -40,21 +45,35 @@
 /* primary BLE address location */
 #define BLE_ADDR_LOCATION   0x500012E8
 
-/* BLE device address size */
-#define BLE_ADDR_SIZE 6
-
 /*---------------------------------------------------------------------------*/
-/* Type of BLE device address */
-typedef enum {
-  BLE_ADDR_TYPE_PUBLIC,
-  BLE_ADDR_TYPE_RANDOM
-} ble_addr_type_t;
-
-/*---------------------------------------------------------------------------*/
+/**
+ * \brief Copy the node's factory BLE address to a destination memory area
+ * \param dst A pointer to the destination area where the BLE address is to be
+ *            written
+ *
+ * This function will copy 6 bytes and it will invert byte order in
+ * the process. The factory address on devices is normally little-endian,
+ * therefore you should expect dst to store the address in a big-endian order.
+ */
 void ble_addr_cpy_to(uint8_t *dst);
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Copy the node's BLE address to a destination memory area and converts
+ * 		  it into a EUI64 address in the process
+ * \param dst A pointer to the destination area where the EUI64 address is to be
+ *            written
+ * \param src A pointer to the BLE address that is to be copied
+ */
 void ble_addr_to_eui64(uint8_t *dst, uint8_t *src);
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Copy the node's EUI64 address that is based on its factory BLE address
+ * 		  to a destination memory area
+ * \param dst A pointer to the destination area where the EUI64 address is to be
+ *            written
+ */
 void ble_eui64_addr_cpy_to(uint8_t *dst);
 /*---------------------------------------------------------------------------*/
 

@@ -40,8 +40,8 @@
 #ifndef RF_BLE_CMD_H_
 #define RF_BLE_CMD_H_
 
+#include "os/dev/ble-hal.h"
 #include "../../ble-addr.h"
-#include "ble-hal.h"
 #include "rf_common_cmd.h"
 
 #define RF_BLE_CMD_OK    1

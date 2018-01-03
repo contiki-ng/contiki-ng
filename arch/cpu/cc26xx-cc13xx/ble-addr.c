@@ -27,16 +27,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Michael Spoerk <mi.spoerk@gmail.com>
+ */
+/**
+ * \file
+ *    Driver for the retrieval of an BLE address from flash
  *
+ * \author
+ *    Michael Spoerk <mi.spoerk@gmail.com>
  */
 /*---------------------------------------------------------------------------*/
-#include "../ble-addr.h"
-
 #include "contiki-conf.h"
 #include "net/linkaddr.h"
 #include <string.h>
 
+#include "ble-addr.h"
+#include "os/dev/ble-hal.h"
 /*---------------------------------------------------------------------------*/
 void
 ble_addr_cpy_to(uint8_t *dst)

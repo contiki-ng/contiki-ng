@@ -47,10 +47,7 @@
 #define QUEUEBUF_CONF_NUM                       1
 #define UIP_CONF_BUFFER_SIZE                  1280
 
-#define CC26XX_CONF_RADIO_MODE            RADIO_MODE_BLE
 #define NETSTACK_CONF_RADIO                 ble_cc2650_driver
-#define MAKE_MAC              MAKE_MAC_OTHER
-#define NETSTACK_CONF_MAC                   ble_l2cap_driver
 
 #define LOG_CONF_LEVEL_MAC        LOG_LEVEL_INFO
 #define LOG_CONF_LEVEL_6LOWPAN      LOG_LEVEL_WARN
@@ -60,9 +57,6 @@
 /* BLE L2CAP settings */
 #define BLE_CONF_DEVICE_NAME          "TI CC26xx device"
 #define BLE_CONF_ADV_INTERVAL         25
-
-#define MAKE_NET              MAKE_NET_IPV6
-#define MAKE_ROUTING            MAKE_ROUTING_NONE
 
 /*/ * 6LoWPAN settings * / */
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD       1280

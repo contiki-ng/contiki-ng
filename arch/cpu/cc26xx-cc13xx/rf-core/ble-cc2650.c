@@ -36,11 +36,10 @@
  *    Michael Spoerk <michael.spoerk@tugraz.at>
  */
 /*---------------------------------------------------------------------------*/
-
-#include <ble-hal.h>
-#include <rf-core/ble-hal/ble-hal-cc26xx.h>
 #include "contiki.h"
 #include "dev/radio.h"
+#include "os/dev/ble-hal.h"
+#include "rf-core/ble-hal/ble-hal-cc26xx.h"
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "RADIO"

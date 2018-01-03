@@ -36,13 +36,13 @@
  *    Michael Spoerk <michael.spoerk@tugraz.at>
  */
 /*---------------------------------------------------------------------------*/
-#include "ble-hal.h"
-#include "rf-core/ble-hal/rf-ble-cmd.h"
+
 #include "lpm.h"
 
 #include "sys/rtimer.h"
 #include "sys/process.h"
 
+#include "os/dev/ble-hal.h"
 #include "dev/oscillators.h"
 
 #include "ble-addr.h"
@@ -62,6 +62,7 @@
 
 #include <string.h>
 
+#include "rf-core/ble-hal/rf-ble-cmd.h"
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "BLE-RADIO"
