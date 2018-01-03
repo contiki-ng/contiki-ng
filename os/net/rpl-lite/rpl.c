@@ -71,12 +71,20 @@ rpl_get_global_address(void)
   int i;
   uint8_t state;
   uip_ipaddr_t *ipaddr = NULL;
+  uip_ipaddr_t *prefix = NULL;
+  uint8_t prefix_length = 0;
+
+  if(curr_instance.used && curr_instance.dag.prefix_info.length != 0) {
+    prefix = &curr_instance.dag.prefix_info.prefix;
+    prefix_length = curr_instance.dag.prefix_info.length;
+  }
 
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        state == ADDR_PREFERRED &&
-       !uip_is_addr_linklocal(&uip_ds6_if.addr_list[i].ipaddr)) {
+       !uip_is_addr_linklocal(&uip_ds6_if.addr_list[i].ipaddr) &&
+       (prefix == NULL || uip_ipaddr_prefixcmp(prefix, &uip_ds6_if.addr_list[i].ipaddr, prefix_length))) {
       ipaddr = &uip_ds6_if.addr_list[i].ipaddr;
     }
   }

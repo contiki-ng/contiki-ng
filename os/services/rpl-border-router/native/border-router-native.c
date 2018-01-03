@@ -41,7 +41,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "rpl.h"
-#include "border-router-common.h"
+#include "rpl-border-router.h"
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"

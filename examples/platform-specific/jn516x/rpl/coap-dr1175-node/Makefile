@@ -8,8 +8,7 @@ CONTIKI=../../../../..
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/lib/json
-PROJECTDIRS += .. ../tools
-PROJECT_SOURCEFILES += rpl-tools.c
+MODULES_REL += .. ../tools
 
 MODULES += os/net/app-layer/coap
 

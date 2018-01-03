@@ -272,8 +272,13 @@ typedef uint32_t clock_time_t;
 
 /* Set this to zero only if we are using SLIP */
 #ifndef SLIP_BRIDGE_CONF_NO_PUTCHAR
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR 1
+#if defined(UIP_FALLBACK_INTERFACE) || defined(CMD_CONF_OUTPUT)
+#define SLIP_BRIDGE_CONF_NO_PUTCHAR      0
+#else
+#define SLIP_BRIDGE_CONF_NO_PUTCHAR      1
+#endif
 #endif /* SLIP_BRIDGE_CONF_NO_PUTCHAR */
+
 
 /* Extension of LED definitions from leds.h for various JN516x dev boards
 JN516x Dongle:

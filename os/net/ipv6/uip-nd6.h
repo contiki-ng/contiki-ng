@@ -118,7 +118,7 @@ be added regardless of their reachability and liveness.  */
 #define UIP_ND6_MIN_RA_INTERVAL             UIP_CONF_ND6_MIN_RA_INTERVAL
 #endif
 #define UIP_ND6_M_FLAG                      0
-#define UIP_ND6_O_FLAG                      (UIP_ND6_RA_RDNSS || UIP_ND6_RA_DNSSL)
+#define UIP_ND6_O_FLAG                      0
 #ifndef UIP_CONF_ROUTER_LIFETIME
 #define UIP_ND6_ROUTER_LIFETIME             3 * UIP_ND6_MAX_RA_INTERVAL
 #else

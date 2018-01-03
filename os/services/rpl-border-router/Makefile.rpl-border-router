@@ -1,0 +1,8 @@
+include $(CONTIKI)/Makefile.identify-target
+
+# Include either native or embedded BR
+ifeq ($(TARGET),native)
+	MODULES += os/services/rpl-border-router/native
+else
+	MODULES += os/services/rpl-border-router/embedded
+endif

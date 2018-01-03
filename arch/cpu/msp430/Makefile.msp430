@@ -108,11 +108,6 @@ ifeq ($(HOST_OS),Windows)
 	@$(FINALIZE_CYGWIN_DEPENDENCY)
 endif
 
-CUSTOM_RULE_C_TO_CO = 1
-%.co: %.c
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -DAUTOSTART_ENABLE $< -o $@
-
 AROPTS = -o
 
 else
@@ -195,10 +190,6 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
 	$(CC) $(CFLAGS) -c $< -o $@
 	$(STRIP) --strip-unneeded -g -x $@
 
-%.cm: %.co
-	$(LD) -i -r --unresolved-symbols=ignore-in-object-files -mmsp430x149 -o $@ $^
-	$(STRIP) --strip-unneeded -g -x $@
-
 %-stripped.o: %.o
 	$(STRIP) --strip-unneeded -g -x -o $@ $<
 
@@ -206,7 +197,7 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
 	mv $< $@
 
 ifdef IAR
-%.ihex: %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+%.ihex: %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
 	$(LD) $(LDFLAGSNO) -Fintel-extended $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
 else
 %.ihex: %.$(TARGET)
