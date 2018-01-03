@@ -60,7 +60,7 @@ void ble_addr_cpy_to(uint8_t *dst);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Copy the node's BLE address to a destination memory area and converts
- * 		  it into a EUI64 address in the process
+ *      it into a EUI64 address in the process
  * \param dst A pointer to the destination area where the EUI64 address is to be
  *            written
  * \param src A pointer to the BLE address that is to be copied
@@ -70,7 +70,7 @@ void ble_addr_to_eui64(uint8_t *dst, uint8_t *src);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Copy the node's EUI64 address that is based on its factory BLE address
- * 		  to a destination memory area
+ *      to a destination memory area
  * \param dst A pointer to the destination area where the EUI64 address is to be
  *            written
  */

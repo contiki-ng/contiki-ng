@@ -75,7 +75,7 @@ unsigned short rf_ble_cmd_setup_ble_mode(void);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Creates a BLE radio command structure that enables
- * 		  BLE advertisement when sent to the radio core
+ *      BLE advertisement when sent to the radio core
  * \param command A pointer to command that is created
  * \param channel The BLE advertisement channel used for advertisement
  * \param param   A pointer to the radio command parameters
@@ -87,18 +87,18 @@ void rf_ble_cmd_create_adv_cmd(uint8_t *command, uint8_t channel,
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Creates BLE radio command parameters that are used to enable
- * 		  BLE advertisement on the radio core
- * \param param	  	A pointer to parameter structure that is created
+ *      BLE advertisement on the radio core
+ * \param param	    A pointer to parameter structure that is created
  * \param rx_queue  A pointer to the RX queue that is used
  * \param adv_data_len
- * 					The length of the advertisement data
+ *          The length of the advertisement data
  * \param adv_data  A pointer to the advertisement data that is advertised
  * \param scan_resp_data_len
- * 					The length of the scan response data
+ *          The length of the scan response data
  * \param scan_resp_data
- * 					A pointer to the scan response data
+ *          A pointer to the scan response data
  * \param own_addr_type
- * 					Either BLE_ADDR_TYPE_PUBLIC or BLE_ADDR_TYPE_RANDOM
+ *          Either BLE_ADDR_TYPE_PUBLIC or BLE_ADDR_TYPE_RANDOM
  * \param own_addr A pointer to the device address that is used as own address
  */
 void rf_ble_cmd_create_adv_params(uint8_t *param, dataQueue_t *rx_queue,
@@ -109,13 +109,13 @@ void rf_ble_cmd_create_adv_params(uint8_t *param, dataQueue_t *rx_queue,
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Creates a BLE radio command structure that sets up a single
- * 		  BLE connection event when sent to the radio core
- * \param cmd 	  A pointer to command that is created
+ *      BLE connection event when sent to the radio core
+ * \param cmd     A pointer to command that is created
  * \param channel The BLE data channel used for the connection event
  * \param param   A pointer to the radio command parameters
  * \param output  A pointer to the radio command output
  * \param start_time
- * 				  The time in rf_core_ticks when the connection event will start
+ *          The time in rf_core_ticks when the connection event will start
  */
 void rf_ble_cmd_create_slave_cmd(uint8_t *cmd, uint8_t channel, uint8_t *params,
                                  uint8_t *output, uint32_t start_time);
@@ -123,26 +123,26 @@ void rf_ble_cmd_create_slave_cmd(uint8_t *cmd, uint8_t channel, uint8_t *params,
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Creates BLE radio command parameters that are used to setup a single
- * 		  BLE connection event on the radio core
- * \param param	  	A pointer to parameter structure that is created
+ *      BLE connection event on the radio core
+ * \param param	    A pointer to parameter structure that is created
  * \param rx_queue  A pointer to the RX queue that is used
  * \param tx_queue  A pointer to the TX queue that is used
  * \param access_address
- * 					The access address of the used BLE connection
+ *          The access address of the used BLE connection
  * \param crc_init_0
- * 					Part of the initialization of the CRC checksum
+ *          Part of the initialization of the CRC checksum
  * \param crc_init_1
- * 					Part of the initialization of the CRC checksum
+ *          Part of the initialization of the CRC checksum
  * \param crc_init_2
- * 					Part of the initialization of the CRC checksum
+ *          Part of the initialization of the CRC checksum
  * \param win_size  The window size parameter of the BLE connection event
  * \param window_widening
- * 					The window widening parameter used for this connection event
+ *          The window widening parameter used for this connection event
  * \param first_packet
- * 					1 for the first packet of the BLE connection so that the
- * 					connection is properly initialized
+ *          1 for the first packet of the BLE connection so that the
+ *          connection is properly initialized
  */
-void rf_ble_cmd_create_slave_params(uint8_t *params, dataQueue_t *rx_queue,
+void rf_ble_cmd_create_slave_params(uint8_t *param, dataQueue_t *rx_queue,
                                     dataQueue_t *tx_queue, uint32_t access_address,
                                     uint8_t crc_init_0, uint8_t crc_init_1,
                                     uint8_t crc_init_2, uint32_t win_size,
@@ -151,8 +151,8 @@ void rf_ble_cmd_create_slave_params(uint8_t *params, dataQueue_t *rx_queue,
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Adds a data buffer to a BLE transmission queue
- * \param q	  	A pointer to BLE transmission queue where the buffer
- * 				should be added
+ * \param q	    A pointer to BLE transmission queue where the buffer
+ *        should be added
  * \param e	    A pointer to the data buffer that is added
  */
 unsigned short rf_ble_cmd_add_data_queue_entry(dataQueue_t *q, uint8_t *e);
