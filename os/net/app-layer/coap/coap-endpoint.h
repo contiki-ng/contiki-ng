@@ -67,8 +67,8 @@ void coap_endpoint_copy(coap_endpoint_t *dest, const coap_endpoint_t *src);
 /**
  * \brief      Compare two CoAP endpoints.
  *
- * \param dest A pointer to the first CoAP endpoint.
- * \param src  A pointer to the second CoAP endpoint.
+ * \param e1   A pointer to the first CoAP endpoint.
+ * \param e2   A pointer to the second CoAP endpoint.
  * \return     Non-zero if the endpoints are identical and zero otherwise.
  */
 int coap_endpoint_cmp(const coap_endpoint_t *e1, const coap_endpoint_t *e2);
