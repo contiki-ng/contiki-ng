@@ -16,76 +16,14 @@ EXAMPLE FILES
 PRELIMINARIES
 -------------
 
-- Make sure rpl-border-router has the same network stack and fits into mote memory.
-- Alternatively, you can use the native rpl-border-router together with the slip-radio.
-- For convenience, define the Cooja addresses in /etc/hosts
-      fd00::0212:7401:0001:0101 cooja1
-      fd00::0212:7402:0002:0202 cooja2
-      ...
 - Get the Copper (Cu) CoAP user-agent from
   [https://addons.mozilla.org/en-US/firefox/addon/copper-270430](https://addons.mozilla.org/en-US/firefox/addon/copper-270430)
-- Optional: Save your target as default target
-      make TARGET=sky savetarget
-
-COOJA HOWTO
------------
-
-###Server only:
-
-    make TARGET=cooja server-only.csc
-
-Open new terminal
-
-    make connect-router-cooja
-
-- Start Copper and discover resources at coap://cooja2:5683/
-- Choose "Click button on Sky 2" from the context menu of mote 2 (server) after
-  requesting /test/separate
-- Do the same when observing /test/event
-
-###With client:
-
-    make TARGET=cooja server-client.csc
-
-Open new terminal
-
-    make connect-router-cooja
-
-- Wait until red LED toggles on mote 2 (server)
-- Choose "Click button on Sky 3" from the context menu of mote 3 (client) and
-  watch serial output
 
 TMOTE SKY HOWTO
 ---------------
 
-###Server:
-
-1. Connect two Tmote Skys (check with $ make TARGET=sky sky-motelist)
-
-        make TARGET=sky coap-example-server.upload MOTE=2
-        make TARGET=sky login MOTE=2
-
-2. Press reset button, get address, abort with Ctrl+C:
-   Line: "Tentative link-local IPv6 address fe80:0000:0000:0000:____:____:____:____"
-
-        cd ../rpl-border-router/
-        make TARGET=sky border-router.upload MOTE=1
-        make connect-router
-
-    For a BR tty other than USB0:
-
-        make connect-router-port PORT=X
-
-3. Start Copper and discover resources at:
-
-        coap://[fd00::____:____:____:____]:5683/
-
-### Add a client:
-
-1. Change the hard-coded server address in coap-example-client.c to fd00::____:____:____:____
-2. Connect a third Tmote Sky
-
-        make TARGET=sky coap-example-client.upload MOTE=3
+The CoAP example no longer fits in the limited ROM of the Tmote Sky.
+Please use a platform with larger ROM instead.
 
 NATIVE HOWTO
 ------------
@@ -132,7 +70,7 @@ in coap-example-server.c.  In general, coap supports:
 - Separate Responses (no rest_set_pre_handler() required anymore, note
   coap_separate_accept(), _reject(), and _resume())
 - Resource Discovery
-- Observing Resources (see EVENT_ and PRERIODIC_RESOURCE, note
+- Observing Resources (see EVENT_ and PERIODIC_RESOURCE, note
   COAP_MAX_OBSERVERS)
 
 TODOs

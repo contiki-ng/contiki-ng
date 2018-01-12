@@ -9,6 +9,7 @@ ifeq ($(TARGET),native)
 	MODULES_REL += ./resources-plugtest
 endif
 MODULES_REL += ./resources
+MODULES_REL += $(TARGET)
 
 # Include the CoAP implementation
 MODULES += os/net/app-layer/coap

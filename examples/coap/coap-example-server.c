@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "contiki.h"
-#include "contiki-net.h"
 #include "coap-engine.h"
 
 #if PLATFORM_HAS_BUTTON
@@ -127,13 +126,15 @@ PROCESS_THREAD(er_example_server, ev, data)
    * All static variables are the same for each URI path.
    */
   coap_activate_resource(&res_hello, "test/hello");
-/*  coap_activate_resource(&res_mirror, "debug/mirror"); */
-/*  coap_activate_resource(&res_chunks, "test/chunks"); */
-/*  coap_activate_resource(&res_separate, "test/separate"); */
-  coap_activate_resource(&res_push, "test/push");
-/*  coap_activate_resource(&res_event, "sensors/button"); */
-/*  coap_activate_resource(&res_sub, "test/sub"); */
-/*  coap_activate_resource(&res_b1_sep_b2, "test/b1sepb2"); */
+ coap_activate_resource(&res_mirror, "debug/mirror");
+ coap_activate_resource(&res_chunks, "test/chunks");
+ coap_activate_resource(&res_separate, "test/separate");
+ coap_activate_resource(&res_push, "test/push");
+#if PLATFORM_HAS_BUTTON
+ coap_activate_resource(&res_event, "sensors/button");
+#endif /* PLATFORM_HAS_BUTTON */
+ coap_activate_resource(&res_sub, "test/sub");
+ coap_activate_resource(&res_b1_sep_b2, "test/b1sepb2");
 #if PLATFORM_HAS_LEDS
 /*  coap_activate_resource(&res_leds, "actuators/leds"); */
   coap_activate_resource(&res_toggle, "actuators/toggle");

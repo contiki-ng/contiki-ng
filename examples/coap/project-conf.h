@@ -53,7 +53,9 @@
 /* #define COAP_MAX_HEADER_SIZE          70 */
 
 /* Multiplies with chunk size, be aware of memory constraints. */
+#ifndef COAP_MAX_OPEN_TRANSACTIONS
 #define COAP_MAX_OPEN_TRANSACTIONS     4
+#endif /* COAP_MAX_OPEN_TRANSACTIONS */
 
 /* Must be <= open transactions, default is COAP_MAX_OPEN_TRANSACTIONS-1. */
 /* #define COAP_MAX_OBSERVERS             2 */
@@ -62,10 +64,9 @@
 #define COAP_LINK_FORMAT_FILTERING     0
 #define COAP_PROXY_OPTION_PROCESSING   0
 
-/* Turn off DAO-ACK to make code smaller */
-#define RPL_CONF_WITH_DAO_ACK          0
-
 /* Enable client-side support for COAP observe */
+#ifndef COAP_OBSERVE_CLIENT
 #define COAP_OBSERVE_CLIENT            1
+#endif /* COAP_OBSERVE_CLIENT */
 
 #endif /* PROJECT_ERBIUM_CONF_H_ */

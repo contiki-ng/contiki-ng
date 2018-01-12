@@ -45,24 +45,19 @@
 #include "coap-blocking-api.h"
 #include "dev/button-sensor.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "client"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 /* FIXME: This server address is hard-coded for Cooja and link-local for unconnected border router. */
-#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x7402, 0x0002, 0x0202)      /* cooja2 */
-/* #define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xbbbb, 0, 0, 0, 0, 0, 0, 0x1) */
-
 #define SERVER_EP "coap://[fe80::212:7402:0002:0202]"
-
-#define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT + 1)
-#define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
 
 #define TOGGLE_INTERVAL 10
 
 PROCESS(er_example_client, "Erbium Example Client");
 AUTOSTART_PROCESSES(&er_example_client);
 
-uip_ipaddr_t server_ipaddr;
 static struct etimer et;
 
 /* Example URIs that can be queried. */
@@ -91,10 +86,7 @@ PROCESS_THREAD(er_example_client, ev, data)
 
   static coap_message_t request[1];      /* This way the packet can be treated as pointer as usual. */
 
-  /* SERVER_NODE(&server_ipaddr); */
-
-  coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP),
-                      &server_ep);
+  coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);
 
   /* receives all CoAP messages */
   coap_engine_init();
@@ -120,8 +112,8 @@ PROCESS_THREAD(er_example_client, ev, data)
 
       coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 
-      coap_endpoint_print(&server_ep);
-      PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+      LOG_INFO_COAP_EP(&server_ep);
+      LOG_INFO_("\n");
 
       COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
 
@@ -139,8 +131,8 @@ PROCESS_THREAD(er_example_client, ev, data)
 
       printf("--Requesting %s--\n", service_urls[uri_switch]);
 
-      PRINT6ADDR(&server_ipaddr);
-      PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+      LOG_INFO_COAP_EP(&server_ep);
+      LOG_INFO_("\n");
 
       COAP_BLOCKING_REQUEST(&server_ep, request,
                             client_chunk_handler);
