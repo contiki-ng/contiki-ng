@@ -1,0 +1,750 @@
+               .deffile adi_defs.asm
+               .deffile ddi_defs.asm
+               .deffile reg_defs.asm
+               .deffile sce_defs.asm
+               
+               ; Number of supported tasks
+               .define TASK_COUNT      1
+               
+               ; Resource-specified definitions, if any
+               ; (None)
+               
+               
+               .segment begin "Framework"
+               
+               
+               VectorTable:
+0000 ---- 1408                         jsr         PowerUp
+0001 ---- 040c                         jmp         TaskCtrlReqVector
+0002 ---- 1408                         jsr         PowerUp
+0003 ---- 042c                         jmp         AonRtcCh2Vector
+0004 ---- 1408                         jsr         PowerUp
+0005 ---- 0447                         jmp         Event0Vector
+0006 ---- 1408                         jsr         PowerUp
+0007 ---- 044d                         jmp         TaskAlertAckVector
+               
+               
+               
+               
+               PowerUp:
+                                       ; Deassert the power-down request
+0008 ---- 4436                         iobclr      #0, [#IOP_WUC_PWRDWNREQ]
+               
+                                       ; Wait for it to take effect
+0009 ---- 2437 /waitForPdAck:          iobtst      #0, [#IOP_WUC_PWRDWNACK]
+000a ---- aefe                         biob1       /waitForPdAck
+               
+               FwEmptyFunc:            ; Done
+000b ---- adb7                         rts
+               
+               
+               
+               
+               TaskCtrlReqVector:
+                                       ; Clear the vector flag
+000c ---- 6442                         iobset      #0, [#IOP_EVCTL_VECFLAGSCLR]
+               
+                                       ; For each task ...
+000d ---- 7000                         ld          R7, #0
+               /loop:
+                                           ; Save the task ID
+000e ---- 7c6b                             st          R7, [#fwCtrlInt/taskId]
+               
+                                           ; Handle initialize request, if any
+000f ---- 6872                             ld          R6, [#fwCtrlExt/bvTaskInitializeReq]
+0010 ---- 0068                             ld          R0, #pFwTaskInitializeFuncTable
+0011 ---- 1425                             jsr         /handleReq
+               
+                                           ; Handle execute request, if any
+0012 ---- 6873                             ld          R6, [#fwCtrlExt/bvTaskExecuteReq]
+0013 ---- 0069                             ld          R0, #pFwTaskExecuteFuncTable
+0014 ---- 1425                             jsr         /handleReq
+               
+                                           ; Handle terminate request, if any
+0015 ---- 6874                             ld          R6, [#fwCtrlExt/bvTaskTerminateReq]
+0016 ---- 006a                             ld          R0, #pFwTaskTerminateFuncTable
+0017 ---- 1425                             jsr         /handleReq
+               
+                                           ; Move on to the next task
+0018 ---- 786b                             ld          R7, [#fwCtrlInt/taskId]
+0019 ---- f801                             add         R7, #1
+               
+001a ---- fa01                         cmp         R7, #TASK_COUNT
+001b ---- bef2                         bneq        /loop
+               
+                                       ; Update which tasks are ...
+001c ---- 7870                         ld          R7, [#fwCtrlExt/bvActiveTasks]
+                                       ; ... currently active ...
+001d ---- 6872                         ld          R6, [#fwCtrlExt/bvTaskInitializeReq]
+001e ---- fd0e                         or          R7, R6
+                                       ; ... and inactive ...
+001f ---- 6874                         ld          R6, [#fwCtrlExt/bvTaskTerminateReq]
+0020 ---- ed92                         inv         R6
+0021 ---- fd06                         and         R7, R6
+0022 ---- 7c70                         st          R7, [#fwCtrlExt/bvActiveTasks]
+               
+                                       ; We're READY for another request
+0023 ---- 642d                         iobset      #IOB_EVCTL_SWEV_READY, [#IOP_EVCTL_SWEVSET]
+               
+                                       ; Generate an ALERT interrupt if needed before powering back down
+0024 ---- 0450                         jmp         GenAlertInterrupt;
+               
+               /handleReq:
+                                       ; Restore the task ID, and load the function pointer (here to avoid pipeline hazard)
+0025 ---- 786b                         ld          R7, [#fwCtrlInt/taskId]
+0026 ---- 8f1f                         ld          R0, [R7+R0]
+               
+                                       ; Skip this request?
+0027 ---- ed8f                         lsr         R6, R7
+0028 ---- ec01                         tst         R6, #0x0001
+0029 ---- be01                         bnz         /noSkip
+002a ---- adb7                             rts
+               /noSkip:
+                                       ; Make the call by jump, with return (rts) in the "called" function
+002b ---- 8db7                         jmp         R0
+               
+               
+               
+               
+               AonRtcCh2Vector:
+                                       ; Start clearing the RTC event
+002c ---- 6630                         iobset      #IOB_WUC_WUEV_RTC, [#IOP_WUC_WUEVCLR]
+               
+                                       ; Clear the vector flag
+002d ---- 6542                         iobset      #1, [#IOP_EVCTL_VECFLAGSCLR]
+               
+                                       ; For each task (R0 is the current task ID) ...
+002e ---- 0000                         ld          R0, #0
+               /loop:
+                                           ; ... that is active ...
+002f ---- 1870                             ld          R1, [#fwCtrlExt/bvActiveTasks]
+0030 ---- 9d88                             lsr         R1, R0
+0031 ---- 9c01                             tst         R1, #0x0001
+0032 ---- b60d                             bz          /skip
+               
+                                               ; Fetch number of RTC intervals until next execution
+0033 ---- 1067                                 ld          R1, #pFwTaskExecuteScheduleTable
+0034 ---- af19                                 ld          R2, [R1+R0]
+               
+                                               ; If not already 0, decrement and store. If then 0 ...
+0035 ---- aa00                                 cmp         R2, #0
+0036 ---- b609                                 beq         /skip
+0037 ---- a8ff                                 add         R2, #-1
+0038 ---- af39                                 st          R2, [R1+R0]
+0039 ---- be06                                 bnz         /skip
+               
+                                                   ; ... execute the task
+003a ---- 0c6b                                     st          R0, [#fwCtrlInt/taskId]
+003b ---- 8869                                     add         R0, #pFwTaskExecuteFuncTable
+003c ---- 8f08                                     ld          R0, [R0]
+                                                   ; Insert NOP to avoid pipeline hazard
+003d ---- fd47                                     nop
+003e ---- 9db7                                     jsr         R0
+003f ---- 086b                                     ld          R0, [#fwCtrlInt/taskId]
+               /skip:
+                                           ; Move on to the next task
+0040 ---- 8801                             add         R0, #1
+               
+0041 ---- 8a01                         cmp         R0, #TASK_COUNT
+0042 ---- beec                         bneq        /loop
+               
+                                       ; Wait for the ACK event to be cleared
+0043 ---- 262f /waitOnRtcClearing:     iobtst      #IOB_WUC_WUEV_RTC, [#IOP_WUC_WUEVFLAGS]
+0044 ---- aefe                         biob1       /waitOnRtcClearing
+0045 ---- 4630                         iobclr      #IOB_WUC_WUEV_RTC, [#IOP_WUC_WUEVCLR]
+               
+                                       ; Generate an ALERT interrupt if needed
+0046 ---- 0450                         jmp         GenAlertInterrupt;
+               
+               
+               
+               
+               Event0Vector:
+                                       ; Disable and clear the vector flag
+0047 ---- 5527                         iobclr      #IOB_EVCTL_VECCFG1_VEC2_EN, [#IOP_EVCTL_VECCFG1]
+0048 ---- 6642                         iobset      #2, [#IOP_EVCTL_VECFLAGSCLR]
+               
+                                       ; Set the task ID
+0049 ---- 0000                         ld          R0, #0
+004a ---- 0c6b                         st          R0, [#fwCtrlInt/taskId]
+               
+                                       ; Jump to the event task code
+004b ---- 140b                         jsr         FwEmptyFunc
+               
+                                       ; Generate an ALERT interrupt if needed
+004c ---- 0450                         jmp         GenAlertInterrupt;
+               
+               
+               
+               
+               TaskAlertAckVector:
+                                       ; Clear the vector flag
+004d ---- 6742                         iobset      #3, [#IOP_EVCTL_VECFLAGSCLR]
+               
+                                       ; Re-enable generation of ALERT interrupts
+004e ---- 03ff                         ld          R0, #-1
+004f ---- 0c6d                         st          R0, [#fwCtrlInt/alertGenMask]
+               
+                                       ; Fall through to GenAlertInterrupt to generate another ALERT interrupt if needed
+               
+               
+               
+               
+               GenAlertInterrupt:
+                                       ; Do we have any ALERT-generating flags pending?
+0050 ---- 786c                         ld          R7, [#fwCtrlInt/bvTaskIoAlert]
+               
+                                       ; Skip if the last I/O ALERT interrupt has not been acknowledged
+0051 ---- 686d                         ld          R6, [#fwCtrlInt/alertGenMask]
+0052 ---- ed37                         tst         R6, R7
+0053 ---- b605                         bz          /skipAlertGen
+               
+                                           ; Transfer I/O flags from internal to external
+0054 ---- 0000                             ld          R0, #0
+0055 ---- 0c6c                             st          R0, [#fwCtrlInt/bvTaskIoAlert]
+0056 ---- 7c71                             st          R7, [#fwCtrlExt/bvTaskIoAlert]
+               
+                                           ; Generate the ALERT interrupt, and clear the generation mask
+0057 ---- 652d                             iobset      #IOB_EVCTL_SWEV_ALERT, [#IOP_EVCTL_SWEVSET]
+0058 ---- 0c6d                             st          R0, [#fwCtrlInt/alertGenMask]
+               /skipAlertGen:
+                                       ; Fall through to PowerDown ...
+               
+               
+               
+               
+               PowerDown:
+                                       ; If there are no unacknowledged ALERTs and no vectors pending ...
+0059 ---- 786d                         ld          R7, [#fwCtrlInt/alertGenMask]
+005a ---- 686e                         ld          R6, [#fwCtrlInt/alertCanPdAuxMask]
+005b ---- fd0e                         or          R7, R6
+005c ---- f801                         add         R7, #1 ; 0xFFFF -> 0x0000
+005d ---- e92b                         in          R6, [#IOP_EVCTL_VECFLAGS]
+005e ---- fd0e                         or          R7, R6
+005f ---- be01                         bnz         /noPowerDown
+               
+                                           ; Assert the power-down request. We'll make sure that it has taken effect
+                                           ; or been completely ignored when waking up again
+0060 ---- 6436                             iobset      #0, [#IOP_WUC_PWRDWNREQ]
+               /noPowerDown:
+                                       ; Sleep until the next event
+0061 ---- bdb7 sleepInstr:             sleep
+               
+               
+               
+               
+0062 ---- 241a AdiDdiAcquire:          iobtst      #0, [#IOP_SMPH_SMPH0]
+0063 ---- a6fe                         biob0       AdiDdiAcquire
+0064 ---- adb7                         rts
+               
+0065 ---- 641a AdiDdiRelease:          iobset      #0, [#IOP_SMPH_SMPH0]
+0066 ---- adb7                         rts
+               
+               
+               
+               
+               ; RTC ticks until next execution, one word for each task
+               pFwTaskExecuteScheduleTable:
+0067 ---- 0000                         dw          #0
+               
+               ; Task code function pointers for each task code block, one word for each task
+               pFwTaskInitializeFuncTable:
+0068 ---- 007e                         dw          #capacitiveTouchDataLogger/initialize
+               pFwTaskExecuteFuncTable:
+0069 ---- 0086                         dw          #capacitiveTouchDataLogger/execute
+               pFwTaskTerminateFuncTable:
+006a ---- 00f8                         dw          #capacitiveTouchDataLogger/terminate
+               
+               ; Run-time logging log requests and masks, one bit for each struct, one word for each task
+               pRtlTaskLogReqTable:
+               ; (Run-time logging is not used in this project)
+               pRtlTaskLogMaskTable:
+               ; (Run-time logging is not used in this project)
+               
+               
+               ; Internal control data
+               fwCtrlInt:
+006b ---- 0000 /taskId:                dw          #0      ; ID of the currently running task
+006c ---- 0000 /bvTaskIoAlert:         dw          #0x0000 ; LSB = Normal data exchange, MSB = Overflow or underflow
+006d ---- ffff /alertGenMask:          dw          #0xFFFF ; Can generate an ALERT interrupt now? (0xFFFF = yes, 0x0000 = no)
+006e ---- 0000 /alertCanPdAuxMask:     dw          #0x0000 ; Can power down AUX domain after ALERT interrupt generation? (0xFFFF = yes, 0x0000 = no)
+006f ---- 0000 /rtlStructLockReq:      dw          #0x0000 ; Run-time logging struct lock request (0=idle -> 1=requested -> 2=ready -> access -> 0=idle)
+               
+               ; External control data, shared with the driver
+               fwCtrlExt:
+0070 ---- 0000 /bvActiveTasks:         dw          #0x0000 ; Indicates which tasks are currently active
+0071 ---- 0000 /bvTaskIoAlert:         dw          #0x0000 ; LSB = Normal data exchange, MSB = Overflow or underflow
+0072 ---- 0000 /bvTaskInitializeReq:   dw          #0x0000 ; Requests tasks to start
+0073 ---- 0000 /bvTaskExecuteReq:      dw          #0x0000 ; Requests tasks to execute once immediately
+0074 ---- 0000 /bvTaskTerminateReq:    dw          #0x0000 ; Requests tasks to stop
+               
+               
+               .segment end "Framework"
+               
+               
+               fwTaskDataStructures:
+               .segment begin "Task: Capacitive Touch Data Logger"
+               capacitiveTouchDataLogger/cfg:
+               capacitiveTouchDataLogger/cfg/pAuxioAxdCapTouch:
+0075 ---- 0005                         dw          #5
+               capacitiveTouchDataLogger/input:
+               capacitiveTouchDataLogger/outputSceBufferCtrl:
+0076 ---- 00f2                         dw          #(capacitiveTouchDataLogger/output << 1)
+               capacitiveTouchDataLogger/outputDrvBufferCtrl:
+0077 ---- 00f3                         dw          #((capacitiveTouchDataLogger/output << 1) | 0x0001)
+               capacitiveTouchDataLogger/outputScePtr:
+0078 ---- 0079                         dw          #capacitiveTouchDataLogger/output
+               capacitiveTouchDataLogger/output:
+               capacitiveTouchDataLogger/output/pTdcValueFilt:
+0079 ---- 0000                         dw          #0
+               capacitiveTouchDataLogger/output/pTdcValueRaw:
+007a ---- 0000                         dw          #0
+               capacitiveTouchDataLogger/output/pTdcValueFilt1:
+007b ---- 0000                         dw          #0
+               capacitiveTouchDataLogger/output/pTdcValueRaw1:
+007c ---- 0000                         dw          #0
+               capacitiveTouchDataLogger/state:
+               capacitiveTouchDataLogger/state/filtInitDone:
+007d ---- 0000                         dw          #0
+               .segment end "Task: Capacitive Touch Data Logger"
+               
+               
+               .segment begin "Task: Capacitive Touch Data Logger"
+               capacitiveTouchDataLogger/initialize:
+               ;? // Clamp all capactive touch pins to ground
+               ;? for (U16 n = 0; n < PIN_COUNT; n++) {
+007e ---- 0000                         ld          R0, #0
+               ;?     isrcClamp(cfg.pAuxioAxdCapTouch[n]);
+007f ---- 1075                             ld          R1, #(capacitiveTouchDataLogger/cfg/pAuxioAxdCapTouch + 0)
+0080 ---- ff19                             ld          R7, [R1+R0]
+0081 ---- 4428                             iobclr      #0, [#IOP_ANAIF_ISRCCTL]
+0082 ---- 14f9                             jsr         gpioClearOutput
+               ;? }
+               ;? 
+               ;? // Schedule the first execution
+               ;? fwScheduleTask(1);
+0083 ---- 0001                         ld          R0, #1
+0084 ---- 0c67                         st          R0, [#(pFwTaskExecuteScheduleTable + 0)]
+               capacitiveTouchDataLogger/initializeDone:
+0085 ---- adb7                         rts         
+               
+               
+               
+               
+               capacitiveTouchDataLogger/execute:
+               ;? // Make sure that the currently used output buffer is available. If unavailable, indicate
+               ;? // error and skip the task iteration. Overflow indication/prevention behavior for
+               ;? // fwCheckOutputBuffer() and fwSwitchOutputBuffer() is configured in the "Multi-Buffered
+               ;? // Output Data Exchange" task resource, along with the number of buffers.
+               ;? U16 isOutputBufferAvailable;
+               ;? fwCheckOutputBuffer(isOutputBufferAvailable);
+0086 ---- 0876                         ld          R0, [#(capacitiveTouchDataLogger/outputSceBufferCtrl + 0)]
+0087 ---- 1877                         ld          R1, [#(capacitiveTouchDataLogger/outputSceBufferCtrl + 1)]
+0088 ---- 8d29                         cmp         R0, R1
+0089 ---- 0001                         ld          R0, #1
+008a ---- be05                         bneq        /id0115
+008b ---- 0000                         ld          R0, #0
+008c ---- 186c                         ld          R1, [#fwCtrlInt/bvTaskIoAlert]
+008d 8601 9200                         or          R1, #((1 << 0) << 8)
+008f ---- 1c6c                         st          R1, [#fwCtrlInt/bvTaskIoAlert]
+               /id0115:
+               ;? if (isOutputBufferAvailable == 1) {
+0090 ---- 8a01                         cmp         R0, #1
+0091 ---- be63                         bneq        /id0120
+               ;? 
+               ;?     // Acquire shared peripherals
+               ;?     fwAcquirePeripheral(PERIPHERAL_COMPA_ISRC);
+               /id0122:
+0092 ---- 241d                             iobtst      #0, [#(IOP_SMPH_SMPH0 + 3)]
+0093 ---- a6fe                             biob0       /id0122
+               ;?     fwAcquirePeripheral(PERIPHERAL_TDC);
+               /id0123:
+0094 ---- 241b                             iobtst      #0, [#(IOP_SMPH_SMPH0 + 1)]
+0095 ---- a6fe                             biob0       /id0123
+               ;? 
+               ;?     // Enable COMPA, including 2 uA through 400 kOhm = 0.8 V reference voltage for COMPA
+               ;?     compaEnableWithCapTouchRef();
+0096 ---- 1501                             jsr         CompaEnableWithCapTouchRef
+               ;? 
+               ;?     // Enable ISRC (6.5 uA)
+               ;?     U16 current = BV_ISRC_CURR_2P0U | BV_ISRC_CURR_4P5U;
+0097 ---- 0061                             ld          R0, #97
+               ;?     isrcEnable(current);
+0098 ---- 1462                             jsr         AdiDdiAcquire
+0099 ---- 8b4a                             out         R0, [#IOP_ADISET_ISRC_COMPCHP]
+009a ---- fd47                             nop         
+009b ---- 8b4a                             out         R0, [#IOP_ADISET_ISRC_COMPCHP]
+009c ---- 1465                             jsr         AdiDdiRelease
+               ;? 
+               ;?     // Select 2 x 48 MHz from RCOSC_HF as TDC counter clock source
+               ;?     tdcSetCntSource(TDC_CNTSRC_96M_RCOSC);
+009d ---- 1462                             jsr         AdiDdiAcquire
+009e ---- 0180                             ld          R0, #BV_DDI16_OSCCTL0L_ACLK_TDC_SRC
+009f 86a0 8b80                             out         R0, [#IOP_DDICLR_OSCCTL0L]
+00a1 ---- 0000                             ld          R0, #0
+00a2 86a0 8b40                             out         R0, [#IOP_DDISET_OSCCTL0L]
+00a4 ---- fd47                             nop         
+00a5 86a0 8900                             in          R0, [#IOP_DDI_OSCCTL0L]
+00a7 ---- 1465                             jsr         AdiDdiRelease
+               ;? 
+               ;?     // Enable the TDC with start trigger on ISRC reset release and stop trigger on COMPA
+               ;?     tdcSetTriggers(TDC_STARTTRIG_ISRC_RELEASE, TDC_STOPTRIG_COMPA_HIGH, 0);
+00a8 ---- 0103                             ld          R0, #(3 | (1 << 8))
+00a9 ---- 8b08                             out         R0, [#IOP_TDC_TRIGSRC]
+00aa ---- 0000                             ld          R0, #0
+00ab 8640 8b18                             out         R0, [#IOP_TDC_TRIGCNTLOAD]
+00ad 8640 641c                             iobset      #0, [#IOP_TDC_TRIGCNTCFG]
+               ;?     tdcEnable();
+00af ---- 1511                             jsr         TdcEnable
+               ;? 
+               ;?     // For each pin ...
+               ;?     for (U16 n = 0; n < PIN_COUNT; n++) {
+00b0 ---- 0000                             ld          R0, #0
+               ;? 
+               ;?         // Select COMPA input/ISRC output
+               ;?         compaSelectGpioInput(cfg.pAuxioAxdCapTouch[n]);
+00b1 ---- 5075                                 ld          R5, #(capacitiveTouchDataLogger/cfg/pAuxioAxdCapTouch + 0)
+00b2 ---- ff1d                                 ld          R7, [R5+R0]
+00b3 ---- 1515                                 jsr         CompaSelectGpioInput
+               ;? 
+               ;?         // Prepare the TDC and trigger start of measurement
+               ;?         tdcArm(TDC_START_ASYNC);
+00b4 ---- 7002                                 ld          R7, #2
+00b5 ---- 1522                                 jsr         TdcArm
+               ;?         isrcRelease(cfg.pAuxioAxdCapTouch[n]);
+00b6 ---- 5075                                 ld          R5, #(capacitiveTouchDataLogger/cfg/pAuxioAxdCapTouch + 0)
+00b7 ---- ff1d                                 ld          R7, [R5+R0]
+00b8 ---- 152e                                 jsr         gpioSetOutput
+00b9 ---- 6428                                 iobset      #0, [#IOP_ANAIF_ISRCCTL]
+               ;? 
+               ;?         // Wait for the TDC stop trigger for 80 us
+               ;?         tdcWaitUs(80);
+00ba ---- 700f                                 ld          R7, #(((80 * 24) + ((1 << 7) - 1)) >> 7)
+00bb ---- 1536                                 jsr         TdcWait
+               ;? 
+               ;?         // Re-clamp the pin to ground
+               ;?         isrcClamp(cfg.pAuxioAxdCapTouch[n]);
+00bc ---- 5075                                 ld          R5, #(capacitiveTouchDataLogger/cfg/pAuxioAxdCapTouch + 0)
+00bd ---- ff1d                                 ld          R7, [R5+R0]
+00be ---- 4428                                 iobclr      #0, [#IOP_ANAIF_ISRCCTL]
+00bf ---- 14f9                                 jsr         gpioClearOutput
+               ;? 
+               ;?         // Get the TDC counter value
+               ;?         U16 tdcValueL;
+               ;?         U16 tdcValueH;
+               ;?         tdcGetValue(tdcValueH, tdcValueL);
+00c0 ---- d906                                 in          R5, [#IOP_TDC_RESULT_L]
+               ;? 
+               ;?         // Store raw value
+               ;?         output.pTdcValueRaw[n] = tdcValueL;
+00c1 ---- 6878                                 ld          R6, [#capacitiveTouchDataLogger/outputScePtr]
+00c2 ---- e801                                 add         R6, #(1 + 0)
+00c3 ---- df3e                                 st          R5, [R6+R0]
+               ;? 
+               ;?         // Update the filtered value
+               ;?         if (state.filtInitDone == 0) {
+00c4 ---- 687d                                 ld          R6, [#capacitiveTouchDataLogger/state/filtInitDone]
+00c5 ---- ea00                                 cmp         R6, #0
+00c6 ---- be03                                 bneq        /id0151
+               ;?             output.pTdcValueFilt[n] = tdcValueL;
+00c7 ---- 6878                                     ld          R6, [#capacitiveTouchDataLogger/outputScePtr]
+00c8 ---- df3e                                     st          R5, [R6+R0]
+               ;?         } else {
+00c9 ---- 04db                                 jmp         /id0153
+               /id0151:
+               ;?             output.pTdcValueFilt[n] -= output.pTdcValueFilt[n] >> 2;
+00ca ---- 5878                                     ld          R5, [#capacitiveTouchDataLogger/outputScePtr]
+00cb ---- ef1d                                     ld          R6, [R5+R0]
+00cc ---- edaa                                     lsr         R6, #2
+00cd ---- 5878                                     ld          R5, [#capacitiveTouchDataLogger/outputScePtr]
+00ce ---- df1d                                     ld          R5, [R5+R0]
+00cf ---- dd1e                                     sub         R5, R6
+00d0 ---- 6878                                     ld          R6, [#capacitiveTouchDataLogger/outputScePtr]
+00d1 ---- df3e                                     st          R5, [R6+R0]
+               ;?             output.pTdcValueFilt[n] += output.pTdcValueRaw[n] >> 2;
+00d2 ---- 5878                                     ld          R5, [#capacitiveTouchDataLogger/outputScePtr]
+00d3 ---- d801                                     add         R5, #(1 + 0)
+00d4 ---- ef1d                                     ld          R6, [R5+R0]
+00d5 ---- edaa                                     lsr         R6, #2
+00d6 ---- 5878                                     ld          R5, [#capacitiveTouchDataLogger/outputScePtr]
+00d7 ---- df1d                                     ld          R5, [R5+R0]
+00d8 ---- dd26                                     add         R5, R6
+00d9 ---- 6878                                     ld          R6, [#capacitiveTouchDataLogger/outputScePtr]
+00da ---- df3e                                     st          R5, [R6+R0]
+               ;?         }
+               /id0153:
+               ;?     }
+               ;?     state.filtInitDone = 1;
+00db ---- 0001                             ld          R0, #1
+00dc ---- 0c7d                             st          R0, [#capacitiveTouchDataLogger/state/filtInitDone]
+               ;? 
+               ;?     // Disable COMPA, ISRC and TDC
+               ;?     tdcDisable();
+00dd ---- 1542                             jsr         TdcDisable
+               ;?     isrcDisable();
+00de ---- 1462                             jsr         AdiDdiAcquire
+00df ---- 70ff                             ld          R7, #0x00FF
+00e0 ---- fb52                             out         R7, [#IOP_ADICLR_ISRC_COMPCHP]
+00e1 ---- fd47                             nop         
+00e2 ---- fb52                             out         R7, [#IOP_ADICLR_ISRC_COMPCHP]
+00e3 ---- 1465                             jsr         AdiDdiRelease
+               ;?     compaDisable();
+00e4 ---- 1548                             jsr         CompaDisable
+               ;? 
+               ;?     // Release shared peripherals
+               ;?     fwReleasePeripheral(PERIPHERAL_COMPA_ISRC);
+00e5 ---- 641d                             iobset      #0, [#(IOP_SMPH_SMPH0 + 3)]
+               ;?     fwReleasePeripheral(PERIPHERAL_TDC);
+00e6 ---- 641b                             iobset      #0, [#(IOP_SMPH_SMPH0 + 1)]
+               ;? 
+               ;?     // Hand over the TDC values to the System CPU
+               ;?     fwSwitchOutputBuffer();
+00e7 ---- 0876                             ld          R0, [#(capacitiveTouchDataLogger/outputSceBufferCtrl + 0)]
+00e8 ---- 8804                             add         R0, #4
+00e9 8600 8afa                             cmp         R0, #(((capacitiveTouchDataLogger/outputSceBufferCtrl + 3) << 1) + 8)
+00eb ---- ae02                             bltu        /id0174
+00ec ---- 88f8                             add         R0, #-8
+00ed ---- 8401                             xor         R0, #0x0001
+               /id0174:
+00ee ---- 1001                             ld          R1, #(1 << 0)
+00ef ---- 286c                             ld          R2, [#fwCtrlInt/bvTaskIoAlert]
+00f0 ---- ad09                             or          R2, R1
+00f1 ---- 2c6c                             st          R2, [#fwCtrlInt/bvTaskIoAlert]
+00f2 ---- 0c76                             st          R0, [#capacitiveTouchDataLogger/outputSceBufferCtrl + 0]
+00f3 ---- 8da9                             lsr         R0, #1
+00f4 ---- 0c78                             st          R0, [#capacitiveTouchDataLogger/outputSceBufferCtrl + 2]
+               ;? }
+               /id0120:
+               ;? 
+               ;? // Schedule the next execution
+               ;? fwScheduleTask(1);
+00f5 ---- 0001                         ld          R0, #1
+00f6 ---- 0c67                         st          R0, [#(pFwTaskExecuteScheduleTable + 0)]
+               capacitiveTouchDataLogger/executeDone:
+00f7 ---- adb7                         rts         
+               
+               
+               
+               
+               capacitiveTouchDataLogger/terminate:
+               capacitiveTouchDataLogger/terminateDone:
+00f8 ---- adb7                         rts         
+               .segment end "Task: Capacitive Touch Data Logger"
+               
+               
+               .segment begin "Procedure Libary"
+               ; PARAMETERS:
+               ;     R7 = AUX I/O index
+               ;
+               ; CLOBBERS:
+               ;     R5, R6, R7
+               gpioClearOutput:
+                                       ; Calculate the I/O register address
+00f9 ---- ed47                         ld          R6, R7
+00fa ---- edab                         lsr         R6, #3
+00fb ---- e816                         add         R6, #IOP_AIODIO0_GPIODOUTCLR
+               
+                                       ; Create the bit-vector to be used for manipulation
+00fc ---- f007                         and         R7, #0x0007
+00fd ---- 5001                         ld          R5, #1
+00fe ---- dd87                         lsl         R5, R7
+               
+                                       ; Set the GPIO
+00ff ---- df26                         out         R5, [R6]
+0100 ---- adb7                         rts
+               
+               
+               
+               
+               ; CLOBBERS:
+               ;     R7
+               CompaEnableWithCapTouchRef:
+                                       ; Enable BGAP request
+0101 ---- 643c                         iobset      #0, [#IOP_WUC_BGAPREQ]
+0102 ---- 243d /waitOnBgap:            iobtst      #0, [#IOP_WUC_BGAPACK]
+0103 ---- a6fe                         biob0       /waitOnBgap
+               
+                                       ; Disconnect all internal/external references
+0104 ---- 1462                         jsr         AdiDdiAcquire
+0105 ---- 700f                         ld          R7, #BV_ADI16_MUX0_COMPA_REF
+0106 ---- fb50                         out         R7, [#IOP_ADICLR_MUX0_MUX1]
+0107 86ff 7300                         ld          R7, #BV_ADI16_MUX4_COMPA_REF
+0109 ---- fb53                         out         R7, [#IOP_ADICLR_TEST_MUX4]
+               
+                                       ; Enable COMPA with 0.8V reference generated by ISRC
+010a 86c1 7100                         ld          R7, #(ADI16_COMPCHP_COMPA_EN | (ADI16_COMPCHP_ISRC_COMPA_REF_CURR_EN | ADI16_COMPCHP_ISRC_COMPA_REF_RES_EN))
+010c ---- fb4a                         out         R7, [#IOP_ADISET_ISRC_COMPCHP]
+               
+                                       ; Ensure that it has taken effect
+010d ---- fd47                         nop         ; Workaround for back-to-back ADI/DDI accesses
+010e ---- fb4a                         out         R7, [#IOP_ADISET_ISRC_COMPCHP]
+010f ---- 1465                         jsr         AdiDdiRelease
+0110 ---- adb7                         rts
+               
+               
+               
+               
+               ; CLOBBERS:
+               ;     R7
+               TdcEnable:
+                                       ; Enable the TDC clock
+0111 ---- 6432                         iobset      #IOB_WUC_TDCCLKCTL_REQ, [#IOP_WUC_TDCCLKCTL]
+0112 ---- 2532 /waitOnTdcclk:          iobtst      #IOB_WUC_TDCCLKCTL_ACK, [#IOP_WUC_TDCCLKCTL]
+0113 ---- a6fe                         biob0       /waitOnTdcclk
+               
+0114 ---- adb7                         rts
+               
+               
+               
+               
+               ; PARAMETERS:
+               ;     R7 = AUX I/O index (0-7)
+               ;
+               ; CLOBBERS:
+               ;     R6, R7
+               CompaSelectGpioInput:
+                                       ; Make sure that the AUX I/O index is valid
+0115 ---- f007                         and         R7, #0x0007
+               
+                                       ; Disconnect all signals
+0116 ---- 1462                         jsr         AdiDdiAcquire
+0117 86ff 63f0                         ld          R6, #(BV_ADI16_MUX0_COMPA_IN | BV_ADI16_MUX1_COMPA_IN_NONE)
+0119 ---- eb50                         out         R6, [#IOP_ADICLR_MUX0_MUX1]
+               
+                                       ; Connect the specified GPIO
+011a 8680 6000                         ld          R6, #ADI16_MUX1_COMPA_IN_AUXIO0
+011c ---- ed8f                         lsr         R6, R7
+011d ---- eb48                         out         R6, [#IOP_ADISET_MUX0_MUX1]
+               
+                                       ; Ensure that it has taken effect
+011e ---- fd47                         nop         ; Workaround for back-to-back ADI/DDI accesses
+011f ---- eb48                         out         R6, [#IOP_ADISET_MUX0_MUX1]
+0120 ---- 1465                         jsr         AdiDdiRelease
+0121 ---- adb7                         rts
+               
+               
+               
+               
+               ; PARAMETERS:
+               ;     R7 = Mode of operation
+               ;
+               ; CLOBBERS:
+               ;     R6
+               TdcArm:
+                                       ; Abort the TDC
+0122 ---- 6003                         ld          R6, #0x0003
+0123 ---- eb04                         out         R6, [#IOP_TDC_CTL]
+               
+                                       ; Set the saturation limit to maximum, and use an AUX timer for timeout
+0124 ---- 600f                         ld          R6, #15
+0125 8640 eb0c                         out         R6, [#IOP_TDC_SATCFG]
+               
+                                       ; Reset the TDC result
+0127 ---- 6000                         ld          R6, #0x0000
+0128 ---- eb04                         out         R6, [#IOP_TDC_CTL]
+               
+                                       ; Arm the TDC
+0129 ---- fb04                         out         R7, [#IOP_TDC_CTL]
+               
+                                       ; Clear the TDC_DONE event (moved after arming to allow for signal propagation)
+012a ---- 7641                         iobset      #IOB_EVCTL_EVTOAON_TDC_DONE, [#IOP_EVCTL_EVTOAONFLAGSCLR]
+               
+                                       ; Wait for 8 clock cycles for the TDC to get ready before generating the start trigger
+012b ---- a500                         loop        #4, /loopEnd
+012c ---- fd47                             nop
+               /loopEnd:
+012d ---- adb7                         rts
+               
+               
+               
+               
+               ; PARAMETERS:
+               ;     R7 = AUX I/O index
+               ;
+               ; CLOBBERS:
+               ;     R5, R6, R7
+               gpioSetOutput:
+                                       ; Calculate the I/O register address
+012e ---- ed47                         ld          R6, R7
+012f ---- edab                         lsr         R6, #3
+0130 ---- e814                         add         R6, #IOP_AIODIO0_GPIODOUTSET
+               
+                                       ; Create the bit-vector to be used for manipulation
+0131 ---- f007                         and         R7, #0x0007
+0132 ---- 5001                         ld          R5, #1
+0133 ---- dd87                         lsl         R5, R7
+               
+                                       ; Set the GPIO
+0134 ---- df26                         out         R5, [R6]
+0135 ---- adb7                         rts
+               
+               
+               
+               
+               ; PARAMETERS:
+               ;     R7 = Timer target value
+               ;
+               ; CLOBBERS:
+               ;     R7
+               TdcWait:
+                                       ; Start the timeout with ~5 us resolution
+0136 ---- fb0c                         out         R7, [#IOP_TIMER_T0TARGET]
+0137 ---- 7070                         ld          R7, #(7 << 4);
+0138 ---- fb09                         out         R7, [#IOP_TIMER_T0CFG]
+0139 ---- 7741                         iobset      #IOB_EVCTL_EVTOAON_TIMER0, [#IOP_EVCTL_EVTOAONFLAGSCLR]
+013a ---- 640b                         iobset      #0, [#IOP_TIMER_T0CTL]
+               
+                                       ; Wait until TDC done or timeout, whichever comes first
+013b 8650 f90c /waitLoop:              in          R7, [#IOP_EVCTL_EVTOAONFLAGS]
+013d ---- fcc0                         tst         R7, #((1 << IOB_EVCTL_EVTOAON_TDC_DONE) | (1 << IOB_EVCTL_EVTOAON_TIMER0))
+013e ---- b6fc                         bz          /waitLoop
+               
+                                       ; Stop the timeout and clear the flag
+013f ---- 440b                         iobclr      #0, [#IOP_TIMER_T0CTL]
+0140 ---- 7741                         iobset      #IOB_EVCTL_EVTOAON_TIMER0, [#IOP_EVCTL_EVTOAONFLAGSCLR]
+               
+0141 ---- adb7                         rts
+               
+               
+               
+               
+               ; CLOBBERS:
+               ;     -
+               TdcDisable:
+                                       ; Abort the TDC
+0142 ---- 6003                         ld          R6, #0x0003
+0143 ---- eb04                         out         R6, [#IOP_TDC_CTL]
+               
+                                       ; Disable the TDC clock
+0144 ---- 4432                         iobclr      #IOB_WUC_TDCCLKCTL_REQ, [#IOP_WUC_TDCCLKCTL]
+0145 ---- 2532 /waitOnTdcclk:          iobtst      #IOB_WUC_TDCCLKCTL_ACK, [#IOP_WUC_TDCCLKCTL]
+0146 ---- aefe                         biob1       /waitOnTdcclk
+               
+0147 ---- adb7                         rts
+               
+               
+               
+               
+               ; CLOBBERS:
+               ;     R7
+               CompaDisable:
+                                       ; Disable COMPA
+0148 ---- 1462                         jsr         AdiDdiAcquire
+0149 86ff 7300                         ld          R7, #0xFF00
+014b ---- fb52                         out         R7, [#IOP_ADICLR_ISRC_COMPCHP]
+               
+                                       ; Ensure that it has taken effect
+014c ---- fd47                         nop         ; Workaround for back-to-back ADI/DDI accesses
+014d ---- fb52                         out         R7, [#IOP_ADICLR_ISRC_COMPCHP]
+014e ---- 1465                         jsr         AdiDdiRelease
+               
+                                       ; Disable BGAP request
+014f ---- 443c                         iobclr      #0, [#IOP_WUC_BGAPREQ]
+0150 ---- 243d /waitOnBgap:            iobtst      #0, [#IOP_WUC_BGAPACK]
+0151 ---- aefe                         biob1       /waitOnBgap
+               
+0152 ---- adb7                         rts
+               .segment end "Procedure Libary"
+               
+
+; Generated by WIN-4BBEDC4NT59 at 2017-12-14 23:46:16.793

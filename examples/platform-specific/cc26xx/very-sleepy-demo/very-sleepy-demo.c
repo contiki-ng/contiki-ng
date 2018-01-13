@@ -90,6 +90,7 @@ sleepy_config_t config;
 #define STATE_NORMAL           0
 #define STATE_NOTIFY_OBSERVERS 1
 #define STATE_VERY_SLEEPY      2
+#define STATE_GET_SENSORDATA   3
 /*---------------------------------------------------------------------------*/
 static struct stimer st_duration;
 static struct stimer st_interval;
@@ -110,6 +111,7 @@ readings_get_handler(void *request, void *response, uint8_t *buffer,
   unsigned int accept = -1;
   int temp;
   int voltage;
+  int cap;
 
   if(request != NULL) {
     REST.get_header_accept(request, &accept);
@@ -119,18 +121,21 @@ readings_get_handler(void *request, void *response, uint8_t *buffer,
 
   voltage = batmon_sensor.value(BATMON_SENSOR_TYPE_VOLT);
 
-  if(accept == -1 || accept == REST.type.APPLICATION_JSON) {
+  cap = sensorcontroller_sensor.value(SENSORCONTROLLER_SENSOR_TYPE_CAP_DP0);
+
+  if(/*accept == -1 || */accept == REST.type.APPLICATION_JSON) {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
-             "{\"temp\":{\"v\":%d,\"u\":\"C\"},"
-             "\"voltage\":{\"v\":%d,\"u\":\"mV\"}}",
-             temp, (voltage * 125) >> 5);
+            // "{\"temp\":{\"v\":%d,\"u\":\"C\"},"
+             "{\"voltage\":{\"v\":%d,\"u\":\"mV\"},"
+             "\"cap\":{\"v\":%d,\"u\":\"c\"}}",
+              (voltage * 125) >> 5, cap);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.TEXT_PLAIN) {
+  } else if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "Temp=%dC, Voltage=%dmV",
-             temp, (voltage * 125) >> 5);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "Temp=%dC&Voltage=%dmV&Cap=%dcounts",
+             temp, (voltage * 125) >> 5, cap);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else {
@@ -285,7 +290,7 @@ keep_mac_on(void)
 #if RPL_WITH_PROBING
   /* Determine if we are about to send a RPL probe */
   if(CLOCK_LT(etimer_expiration_time(
-                &rpl_get_default_instance()->dag.probing_timer.etimer),
+                &rpl_get_default_instance()->probing_timer.etimer),
               (clock_time() + PERIODIC_INTERVAL))) {
     rv = MAC_MUST_STAY_ON;
   }
@@ -313,7 +318,7 @@ keep_mac_on(void)
 static void
 switch_to_normal(void)
 {
-  state = STATE_NOTIFY_OBSERVERS;
+  state = STATE_GET_SENSORDATA;
 
   /*
    * Stay in normal mode for 'duration' secs.
@@ -326,6 +331,7 @@ switch_to_normal(void)
 static void
 switch_to_very_sleepy(void)
 {
+  SENSORS_DEACTIVATE(sensorcontroller_sensor);
   state = STATE_VERY_SLEEPY;
 }
 /*---------------------------------------------------------------------------*/
@@ -389,7 +395,11 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
        * Next, switch between normal and very sleepy mode depending on config,
        * send notifications to observers as required.
        */
-      if(state == STATE_NOTIFY_OBSERVERS) {
+      if(state == STATE_GET_SENSORDATA) {
+    	    sensorcontroller_sensor.configure(SENSORS_HW_INIT, 1);
+    	    SENSORS_ACTIVATE(sensorcontroller_sensor);
+    	    state = STATE_NOTIFY_OBSERVERS;
+      } else if(state == STATE_NOTIFY_OBSERVERS) {
         REST.notify_subscribers(&readings_resource);
         state = STATE_NORMAL;
       }
