@@ -67,9 +67,11 @@ AUTOSTART_PROCESSES(&nullnet_example_process);
 void input_callback(const void *data, uint16_t len,
   const linkaddr_t *src, const linkaddr_t *dest)
 {
-  LOG_INFO("Received %u from ", *(unsigned *)data);
-  LOG_INFO_LLADDR(src);
-  LOG_INFO_("\n");
+  if(len == sizeof(unsigned)) {
+    LOG_INFO("Received %u from ", *(unsigned *)data);
+    LOG_INFO_LLADDR(src);
+    LOG_INFO_("\n");
+  }
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(nullnet_example_process, ev, data)
