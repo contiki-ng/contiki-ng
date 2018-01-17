@@ -29,4 +29,5 @@ ifeq ($(MAKE_WITH_DTLS),1)
   ${error Unsupported CoAP DTLS keystore: $(MAKE_COAP_DTLS_KEYSTORE)}
  endif
 
+ ${info Building with tinyDTLS - see $(CONTIKI)/$(TINYDTLS_PATH)/LICENSE}
 endif
