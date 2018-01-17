@@ -70,7 +70,6 @@
 #ifdef WITH_DTLS
 #include "tinydtls.h"
 #include "dtls.h"
-#include "dtls_debug.h"
 #endif /* WITH_DTLS */
 
 /* sanity check for configured values */
@@ -346,7 +345,6 @@ coap_transport_init(void)
   process_start(&coap_engine, NULL);
 #ifdef WITH_DTLS
   dtls_init();
-  dtls_set_log_level(8);
 
 #if COAP_DTLS_KEYSTORE_CONF_WITH_SIMPLE
   coap_keystore_simple_init();
