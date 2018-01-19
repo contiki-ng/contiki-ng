@@ -52,6 +52,9 @@
 /* Delay between the SFD finishes arriving and it is detected in software */
 #define RADIO_DELAY_BEFORE_DETECT 0
 
+/* Disable TSCH frame filtering */
+#define TSCH_CONF_HW_FRAME_FILTERING  0
+
 #define PLATFORM_HAS_LEDS    1
 #define PLATFORM_HAS_BUTTON  1
 #define PLATFORM_HAS_LIGHT   1
