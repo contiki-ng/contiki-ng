@@ -12,6 +12,8 @@ libs/energest/native \
 libs/energest/sky \
 libs/data-structures/native \
 libs/data-structures/sky \
+ipso-objects/native \
+ipso-objects/native:MAKE_WITH_DTLS=1 \
 rpl-udp/sky \
 rpl-border-router/native \
 rpl-border-router/sky \
