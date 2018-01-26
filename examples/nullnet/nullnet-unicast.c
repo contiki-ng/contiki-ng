@@ -68,7 +68,9 @@ void input_callback(const void *data, uint16_t len,
   const linkaddr_t *src, const linkaddr_t *dest)
 {
   if(len == sizeof(unsigned)) {
-    LOG_INFO("Received %u from ", *(unsigned *)data);
+    unsigned count;
+    memcpy(&count, data, sizeof(count));
+    LOG_INFO("Received %u from ", count);
     LOG_INFO_LLADDR(src);
     LOG_INFO_("\n");
   }
