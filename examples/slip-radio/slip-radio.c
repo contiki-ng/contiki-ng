@@ -167,6 +167,25 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       }
 
       return 1;
+    } else if(data[1] == 'V') {
+      int type = ((uint16_t)data[2] << 8) | data[3];
+      int value = ((uint16_t)data[4] << 8) | data[5];
+      int param = type; /* packetutils_to_radio_param(type); */
+      if(param < 0) {
+        printf("radio: unknown parameter %d (can not set to %d)\n", type, value);
+      } else {
+        if(param == RADIO_PARAM_RX_MODE) {
+          printf("radio: setting rxmode to 0x%x\n", value);
+        } else if(param == RADIO_PARAM_PAN_ID) {
+          printf("radio: setting pan id to 0x%04x\n", value);
+        } else if(param == RADIO_PARAM_CHANNEL) {
+          printf("radio: setting channel: %u\n", value);
+        } else {
+          printf("radio: setting param %d to %d (0x%02x)\n", param, value, value);
+        }
+        NETSTACK_RADIO.set_value(param, value);
+      }
+      return 1;
     }
   } else if(uip_buf[0] == '?') {
     LOG_DBG("Got request message of type %c\n", uip_buf[1]);
@@ -180,6 +199,25 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       uip_len = 10;
       cmd_send(uip_buf, uip_len);
       return 1;
+    } else if(data[1] == 'V') {
+      /* ask the radio about the specific parameter and send it back... */
+      int type = ((uint16_t)data[2] << 8) | data[3];
+      int value;
+      int param = type; /* packetutils_to_radio_param(type); */
+      if(param < 0) {
+        printf("radio: unknown parameter %d\n", type);
+      }
+
+      NETSTACK_RADIO.get_value(param, &value);
+
+      uip_buf[0] = '!';
+      uip_buf[1] = 'V';
+      uip_buf[2] = type >> 8;
+      uip_buf[3] = type & 0xff;
+      uip_buf[4] = value >> 8;
+      uip_buf[5] = value & 0xff;
+      uip_len = 6;
+      cmd_send(uip_buf, uip_len);
     }
   }
   return 0;

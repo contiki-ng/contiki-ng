@@ -43,6 +43,7 @@
 #include "rpl.h"
 #include "net/ipv6/uiplib.h"
 #include <string.h>
+#include "shell.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
@@ -55,6 +56,56 @@ void nbr_print_stat(void);
 /*---------------------------------------------------------------------------*/
 PROCESS(border_router_cmd_process, "Border router cmd process");
 /*---------------------------------------------------------------------------*/
+static const uint8_t *
+hextoi(const uint8_t *buf, int len, int *v)
+{
+  *v = 0;
+  for(; len > 0; len--, buf++) {
+    if(*buf >= '0' && *buf <= '9') {
+      *v = (*v << 4) + ((*buf - '0') & 0xf);
+    } else if(*buf >= 'a' && *buf <= 'f') {
+      *v = (*v << 4) + ((*buf - 'a' + 10) & 0xf);
+    } else if(*buf >= 'A' && *buf <= 'F') {
+      *v = (*v << 4) + ((*buf - 'A' + 10) & 0xf);
+    } else {
+      break;
+    }
+  }
+  return buf;
+}
+/*---------------------------------------------------------------------------*/
+static const uint8_t *
+dectoi(const uint8_t *buf, int len, int *v)
+{
+  int negative = 0;
+  *v = 0;
+  if(len <= 0) {
+    return buf;
+  }
+  if(*buf == '$') {
+    return hextoi(buf + 1, len - 1, v);
+  }
+  if(*buf == '0' && *(buf + 1) == 'x' && len > 2) {
+    return hextoi(buf + 2, len - 2, v);
+  }
+  if(*buf == '-') {
+    negative = 1;
+    buf++;
+  }
+  for(; len > 0; len--, buf++) {
+    if(*buf < '0' || *buf > '9') {
+      break;
+    }
+    *v = (*v * 10) + ((*buf - '0') & 0xf);
+  }
+  if(negative) {
+    *v = - *v;
+  }
+  return buf;
+}
+/*---------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------*/
 /* TODO: the below code needs some way of identifying from where the command */
 /* comes. In this case it can be from stdin or from SLIP.                    */
 /*---------------------------------------------------------------------------*/
@@ -64,35 +115,64 @@ border_router_cmd_handler(const uint8_t *data, int len)
   /* handle global repair, etc here */
   if(data[0] == '!') {
     PRINTF("Got configuration message of type %c\n", data[1]);
-    if(data[1] == 'G' && command_context == CMD_CONTEXT_STDIO) {
-      /* This is supposed to be from stdin */
-      printf("Performing Global Repair...\n");
+    if(command_context == CMD_CONTEXT_STDIO) {
+      switch(data[1]) {
+      case 'G':
+        /* This is supposed to be from stdin */
+        printf("Performing Global Repair...\n");
 #if UIP_CONF_IPV6_RPL_LITE
-      rpl_global_repair();
+        rpl_global_repair();
 #else
-      rpl_repair_root(RPL_DEFAULT_INSTANCE);
+        rpl_repair_root(RPL_DEFAULT_INSTANCE);
 #endif
-      return 1;
-    } else if(data[1] == 'M' && command_context == CMD_CONTEXT_RADIO) {
+        return 1;
+      case 'C': {
+        /* send on a set-param thing! */
+        uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_CHANNEL, 0, 0 };
+        int channel = -1;
+        dectoi(&data[2], len - 2, &channel);
+        if(channel >= 0) {
+          set_param[5] = channel & 0xff;
+          write_to_slip(set_param, sizeof(set_param));
+        }
+        return 1;
+      }
+      case 'P': {
+        /* send on a set-param thing! */
+        uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_PAN_ID, 0, 0 };
+        int pan_id;
+        dectoi(&data[2], len - 2, &pan_id);
+        set_param[4] = (pan_id >> 8) & 0xff;
+        set_param[5] = pan_id & 0xff;
+        write_to_slip(set_param, sizeof(set_param));
+        return 1;
+      }
+      default:
+        return 0;
+      }
+    } else if(command_context == CMD_CONTEXT_RADIO) {
       /* We need to know that this is from the slip-radio here. */
-      PRINTF("Setting MAC address\n");
-      border_router_set_mac(&data[2]);
-      return 1;
-    } else if(data[1] == 'C' && command_context == CMD_CONTEXT_RADIO) {
-      /* We need to know that this is from the slip-radio here. */
-      printf("Channel is:%d\n", data[2]);
-      return 1;
-    } else if(data[1] == 'R' && command_context == CMD_CONTEXT_RADIO) {
-      /* We need to know that this is from the slip-radio here. */
-      PRINTF("Packet data report for sid:%d st:%d tx:%d\n",
-             data[2], data[3], data[4]);
-      packet_sent(data[2], data[3], data[4]);
-      return 1;
-    } else if(data[1] == 'D' && command_context == CMD_CONTEXT_RADIO) {
-      /* We need to know that this is from the slip-radio here... */
-      PRINTF("Sensor data received\n");
-      border_router_set_sensors((const char *)&data[2], len - 2);
-      return 1;
+      switch(data[1]) {
+      case 'M':
+        PRINTF("Setting MAC address\n");
+        border_router_set_mac(&data[2]);
+        return 1;
+      case 'V':
+        if(data[3] == RADIO_PARAM_CHANNEL) {
+          printf("Channel is %d\n", data[5]);
+        }
+        if(data[3] == RADIO_PARAM_PAN_ID) {
+          printf("PAN_ID is 0x%04x\n", (data[4] << 8) + data[5]);
+        }
+        return 1;
+      case 'R':
+        PRINTF("Packet data report for sid:%d st:%d tx:%d\n",
+               data[2], data[3], data[4]);
+        packet_sent(data[2], data[3], data[4]);
+        return 1;
+      default:
+      return 0;
+      }
     }
   } else if(data[0] == '?') {
     PRINTF("Got request message of type %c\n", data[1]);
@@ -110,8 +190,14 @@ border_router_cmd_handler(const uint8_t *data, int len)
       cmd_send(buf, 18);
       return 1;
     } else if(data[1] == 'C' && command_context == CMD_CONTEXT_STDIO) {
-      /* send on! */
-      write_to_slip(data, len);
+      /* send on a set-param thing! */
+      uint8_t set_param[] = {'?', 'V', 0, RADIO_PARAM_CHANNEL};
+      write_to_slip(set_param, sizeof(set_param));
+      return 1;
+    } else if(data[1] == 'P' && command_context == CMD_CONTEXT_STDIO) {
+      /* send on a set-param thing! */
+      uint8_t set_param[] = {'?', 'V', 0, RADIO_PARAM_PAN_ID};
+      write_to_slip(set_param, sizeof(set_param));
       return 1;
     } else if(data[1] == 'S') {
       border_router_print_stat();
@@ -132,17 +218,34 @@ border_router_cmd_output(const uint8_t *data, int data_len)
   printf("\n");
 }
 /*---------------------------------------------------------------------------*/
+static void
+serial_shell_output(const char *str)
+{
+  printf("%s", str);
+}
+/*---------------------------------------------------------------------------*/
+
 PROCESS_THREAD(border_router_cmd_process, ev, data)
 {
+  static struct pt shell_input_pt;
   PROCESS_BEGIN();
   PRINTF("Started br-cmd process\n");
+
+  shell_init();
+
   while(1) {
     PROCESS_YIELD();
     if(ev == serial_line_event_message && data != NULL) {
-      PRINTF("Got serial data!!! %s of len: %d\n",
+      PRINTF("Got serial data!!! %s of len: %lu\n",
              (char *)data, strlen((char *)data));
       command_context = CMD_CONTEXT_STDIO;
-      cmd_input(data, strlen((char *)data));
+      if(cmd_input(data, strlen((char *)data))) {
+        /* Commnand executed - all is fine */
+      } else {
+        /* did not find command - run shell and see if ... */
+        // FOR SERIAL RADIO        cmd_send((uint8_t *)"EUnknown command", 16);
+        PROCESS_PT_SPAWN(&shell_input_pt, shell_input(&shell_input_pt, serial_shell_output, data));
+      }
     }
   }
   PROCESS_END();

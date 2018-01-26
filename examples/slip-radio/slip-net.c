@@ -64,7 +64,7 @@ slipnet_input(void)
           packetbuf_datalen(), i);
 
   for(i = 0; i < uip_len; i++) {
-    LOG_DBG("%02x", (unsigned char)uip_buf[i]);
+    LOG_DBG_("%02x", (unsigned char)uip_buf[i]);
     if((i & 15) == 15) {
       LOG_DBG_("\n");
     } else if((i & 7) == 7) {

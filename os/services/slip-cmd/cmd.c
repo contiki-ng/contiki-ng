@@ -48,19 +48,18 @@ void CMD_OUTPUT(const uint8_t *data, int data_len);
 extern const cmd_handler_t cmd_handlers[];
 
 /*---------------------------------------------------------------------------*/
-void
+int
 cmd_input(const uint8_t *data, int data_len)
 {
   int i;
   for(i = 0; cmd_handlers[i] != NULL; i++) {
     if(cmd_handlers[i](data, data_len)) {
       /* Command has been handled */
-      return;
+      return 1;
     }
   }
 
-  /* Unknown command */
-  cmd_send((uint8_t *)"EUnknown command", 16);
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 void

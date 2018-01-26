@@ -63,7 +63,7 @@ struct tx_callback {
   struct packetbuf_attr attrs[PACKETBUF_NUM_ATTRS];
   struct packetbuf_addr addrs[PACKETBUF_NUM_ADDRS];
 };
-
+/*---------------------------------------------------------------------------*/
 static struct tx_callback callbacks[MAX_CALLBACKS];
 /*---------------------------------------------------------------------------*/
 void
@@ -110,6 +110,10 @@ send_packet(mac_callback_t sent, void *ptr)
 
   /* ack or not ? */
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
+
+  /* Will make it send only DATA packets... for now */
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
+  /* printf("Sending packet of type: %s \n", get_frame_type(packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE))); */
 
   if(NETSTACK_FRAMER.create() < 0) {
     /* Failed to allocate space for headers */
