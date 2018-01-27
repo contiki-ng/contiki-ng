@@ -32,7 +32,5 @@
 #define QUEUEBUF_CONF_NUM         4
 #define UIP_CONF_BUFFER_SIZE    140
 
-#define CMD_CONF_HANDLERS slip_radio_cmd_handler,cmd_handler_cc2420
-#define SLIP_RADIO_CONF_SENSORS slip_radio_sky_sensors
 #define UART1_CONF_RX_WITH_DMA           1
 /*---------------------------------------------------------------------------*/

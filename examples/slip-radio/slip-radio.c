@@ -227,7 +227,9 @@ static void
 slip_input_callback(void)
 {
   LOG_DBG("SR-SIN: %u '%c%c'\n", uip_len, uip_buf[0], uip_buf[1]);
-  cmd_input(uip_buf, uip_len);
+  if(!cmd_input(uip_buf, uip_len)) {
+    cmd_send((uint8_t *)"EUnknown command", 16);
+  }
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/

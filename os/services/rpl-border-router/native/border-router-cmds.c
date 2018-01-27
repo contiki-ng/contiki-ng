@@ -44,6 +44,7 @@
 #include "net/ipv6/uiplib.h"
 #include <string.h>
 #include "shell.h"
+#include <stdio.h>
 
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
@@ -243,7 +244,6 @@ PROCESS_THREAD(border_router_cmd_process, ev, data)
         /* Commnand executed - all is fine */
       } else {
         /* did not find command - run shell and see if ... */
-        // FOR SERIAL RADIO        cmd_send((uint8_t *)"EUnknown command", 16);
         PROCESS_PT_SPAWN(&shell_input_pt, shell_input(&shell_input_pt, serial_shell_output, data));
       }
     }
