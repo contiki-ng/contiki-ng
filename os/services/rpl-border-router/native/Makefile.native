@@ -8,3 +8,6 @@ MAKE_NET = MAKE_NET_IPV6
 PREFIX ?= fd00::1/64
 connect-router:	border-router.native
 	sudo ./border-router.native $(PREFIX)
+
+connect-router-cooja:	border-router.native
+	sudo ./border-router.native -a localhost $(PREFIX)
