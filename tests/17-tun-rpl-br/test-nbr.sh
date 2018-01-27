@@ -9,6 +9,9 @@ BASENAME=$2
 # Destination IPv6
 IPADDR=$3
 
+# ICMP request-reply count
+COUNT=5
+
 # Start simulation
 echo "Starting Cooja simulation $BASENAME.csc"
 java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -contiki=$CONTIKI > $BASENAME.coojalog &
@@ -20,17 +23,17 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
 
 # Connect to the simlation
 echo "Starting native border-router"
-make -C $CONTIKI/examples/rpl-border-router/
-sudo $CONTIKI/examples/rpl-border-router/border-router.native -B 115200 -a localhost fd02::1/64 >> $BASENAME.nbr.log 2>&1 &
+nohup make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=native >> $BASENAME.nbr.log 2>&1 &
 MPID=$!
 echo "Waiting for network formation"
-sleep 50
+sleep 60 # runs in real time so we need to wait a bit
 
 # Do ping
 echo "Pinging"
-ping6 $IPADDR -s 10 -c 5 | tee $BASENAME.scriptlog
+ping6 $IPADDR -c $COUNT | tee $BASENAME.scriptlog
 # Fetch ping6 status code (not $? because this is piped)
 STATUS=${PIPESTATUS[0]}
+REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
 
 echo "Closing simulation and nbr"
 sleep 1
@@ -40,7 +43,7 @@ sleep 1
 rm COOJA.testlog
 rm COOJA.log
 
-if [ $STATUS -eq 0 ] ; then
+if [ $STATUS -eq 0 ] && [ $REPLIES -eq $COUNT ] ; then
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
   echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;
