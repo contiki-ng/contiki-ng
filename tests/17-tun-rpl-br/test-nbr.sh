@@ -22,12 +22,11 @@ echo "Enabling IPv6"
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
 
 # Connect to the simlation
-echo "Starting tunslip6"
-make -C $CONTIKI/tools tunslip6
-make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip.log 2>&1 &
+echo "Starting native border-router"
+nohup make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=native >> $BASENAME.nbr.log 2>&1 &
 MPID=$!
 echo "Waiting for network formation"
-sleep 5
+sleep 60 # runs in real time so we need to wait a bit
 
 # Do ping
 echo "Pinging"
@@ -36,7 +35,7 @@ ping6 $IPADDR -c $COUNT | tee $BASENAME.scriptlog
 STATUS=${PIPESTATUS[0]}
 REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
 
-echo "Closing simulation and tunslip6"
+echo "Closing simulation and nbr"
 sleep 1
 kill -9 $JPID
 kill -9 $MPID
@@ -48,7 +47,7 @@ if [ $STATUS -eq 0 ] && [ $REPLIES -eq $COUNT ] ; then
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
   echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;
-  echo "==== $BASENAME.tunslip.log ====" ; cat $BASENAME.tunslip.log;
+  echo "==== $BASENAME.nbr.log ====" ; cat $BASENAME.nbr.log;
   echo "==== $BASENAME.scriptlog ====" ; cat $BASENAME.scriptlog;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
