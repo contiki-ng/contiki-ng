@@ -36,13 +36,14 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /*
- * For data larger than REST_MAX_CHUNK_SIZE (e.g., when stored in flash) resources must be aware of the buffer limitation
+ * For data larger than COAP_MAX_CHUNK_SIZE (e.g., when stored in flash) resources must be aware of the buffer limitation
  * and split their responses by themselves. To transfer the complete resource through a TCP stream or CoAP's blockwise transfer,
  * the byte offset where to continue is provided to the handler as int32_t pointer.
  * These chunk-wise resources must set the offset value to its new position or -1 of the end is reached.
@@ -58,17 +59,17 @@ RESOURCE(res_chunks,
 #define CHUNKS_TOTAL    2050
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int32_t strpos = 0;
 
   /* Check the offset for boundaries of the resource data. */
   if(*offset >= CHUNKS_TOTAL) {
-    REST.set_response_status(response, REST.status.BAD_OPTION);
+    coap_set_status_code(response, BAD_OPTION_4_02);
     /* A block error message should not exceed the minimum block size (16). */
 
     const char *error_msg = "BlockOutOfScope";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
+    coap_set_payload(response, error_msg, strlen(error_msg));
     return;
   }
 
@@ -85,7 +86,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   if(*offset + (int32_t)strpos > CHUNKS_TOTAL) {
     strpos = CHUNKS_TOTAL - *offset;
   }
-  REST.set_response_payload(response, buffer, strpos);
+  coap_set_payload(response, buffer, strpos);
 
   /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
   *offset += strpos;

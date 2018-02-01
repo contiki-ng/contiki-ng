@@ -36,20 +36,19 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <string.h>
-#include "coap-engine.h"
+/**
+ * \addtogroup coap
+ * @{
+ */
 
-#define DEBUG 0
-#if DEBUG
+#include "coap-engine.h"
+#include <string.h>
 #include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#endif
+
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap-res-well-known-core"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
 #define ADD_CHAR_IF_POSSIBLE(char) \
   if(strpos >= *offset && bufpos < preferred_size) { \
@@ -67,7 +66,7 @@
                        + (*offset - (int32_t)strpos > 0 ? \
                           *offset - (int32_t)strpos : 0)); \
     if(bufpos op preferred_size) { \
-      PRINTF("res: BREAK at %s (%p)\n", string, resource); \
+      LOG_DBG("BREAK at %s (%p)\n", string, resource);      \
       break; \
     } \
   } \
@@ -76,14 +75,15 @@
 /*---------------------------------------------------------------------------*/
 /*- Resource Handlers -------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void
-well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
-                            uint16_t preferred_size, int32_t *offset)
+static void
+well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
+                            uint8_t *buffer, uint16_t preferred_size,
+                            int32_t *offset)
 {
   size_t strpos = 0;            /* position in overall string (which is larger than the buffer) */
   size_t bufpos = 0;            /* position within buffer (bytes written) */
   size_t tmplen = 0;
-  resource_t *resource = NULL;
+  coap_resource_t *resource = NULL;
 
 #if COAP_LINK_FORMAT_FILTERING
   /* For filtering. */
@@ -101,7 +101,9 @@ well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
     ++value;
     len -= strlen(filter) + 1;
 
-    PRINTF("Filter %s = %.*s\n", filter, len, value);
+    LOG_DBG("Filter %s = ", filter);
+    LOG_DBG_COAP_STRING(value, len);
+    LOG_DBG_("\n");
 
     if(strcmp(filter, "href") == 0 && value[0] == '/') {
       ++value;
@@ -111,10 +113,10 @@ well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
     lastchar = value[len - 1];
     value[len - 1] = '\0';
   }
-#endif
+#endif /* COAP_LINK_FORMAT_FILTERING */
 
-  for(resource = (resource_t *)list_head(rest_get_resources()); resource;
-      resource = resource->next) {
+  for(resource = coap_get_first_resource(); resource;
+      resource = coap_get_next_resource(resource)) {
 #if COAP_LINK_FORMAT_FILTERING
     /* Filtering */
     if(len) {
@@ -135,7 +137,7 @@ well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
         end = strchr(attrib, '"');
       }
 
-      PRINTF("Filter: res has attrib %s (%s)\n", attrib, value);
+      LOG_DBG("Filter: res has attrib %s (%s)\n", attrib, value);
       found = attrib;
       while((found = strstr(found, value)) != NULL) {
         if(found > end) {
@@ -150,17 +152,17 @@ well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
       if(found == NULL) {
         continue;
       }
-      PRINTF("Filter: res has prefix %s\n", found);
+      LOG_DBG("Filter: res has prefix %s\n", found);
       if(lastchar != '*'
          && (found[len] != '"' && found[len] != ' ' && found[len] != '\0')) {
         continue;
       }
-      PRINTF("Filter: res has match\n");
+      LOG_DBG("Filter: res has match\n");
     }
 #endif
 
-    PRINTF("res: /%s (%p)\npos: s%zu, o%ld, b%zu\n", resource->url, resource,
-           strpos, (long)*offset, bufpos);
+    LOG_DBG("/%s (%p)\npos: s%zu, o%ld, b%zu\n", resource->url, resource,
+            strpos, (long)*offset, bufpos);
 
     if(strpos > 0) {
       ADD_CHAR_IF_POSSIBLE(',');
@@ -177,28 +179,30 @@ well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
 
     /* buffer full, but resource not completed yet; or: do not break if resource exactly fills buffer. */
     if(bufpos > preferred_size && strpos - bufpos > *offset) {
-      PRINTF("res: BREAK at %s (%p)\n", resource->url, resource);
+      LOG_DBG("BREAK at %s (%p)\n", resource->url, resource);
       break;
     }
   }
 
   if(bufpos > 0) {
-    PRINTF("BUF %zu: %.*s\n", bufpos, (int)bufpos, (char *)buffer);
+    LOG_DBG("BUF %zu: ", bufpos);
+    LOG_DBG_COAP_STRING((char *)buffer, bufpos);
+    LOG_DBG_("\n");
 
     coap_set_payload(response, buffer, bufpos);
     coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
   } else if(strpos > 0) {
-    PRINTF("well_known_core_handler(): bufpos<=0\n");
+    LOG_DBG("well_known_core_handler(): bufpos<=0\n");
 
     coap_set_status_code(response, BAD_OPTION_4_02);
     coap_set_payload(response, "BlockOutOfScope", 15);
   }
 
   if(resource == NULL) {
-    PRINTF("res: DONE\n");
+    LOG_DBG("DONE\n");
     *offset = -1;
   } else {
-    PRINTF("res: MORE at %s (%p)\n", resource->url, resource);
+    LOG_DBG("MORE at %s (%p)\n", resource->url, resource);
     *offset += preferred_size;
   }
 }
@@ -206,3 +210,4 @@ well_known_core_get_handler(void *request, void *response, uint8_t *buffer,
 RESOURCE(res_well_known_core, "ct=40", well_known_core_get_handler, NULL,
          NULL, NULL);
 /*---------------------------------------------------------------------------*/
+/** @} */

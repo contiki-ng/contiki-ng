@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Yanzi Networks AB.
+ * Copyright (c) 2015-2018, Yanzi Networks AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,23 +28,63 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \addtogroup oma-lwm2m
+/** \addtogroup lwm2m
  * @{ */
 
 /**
  * \file
- *         Header file for the Contiki OMA LWM2M TLV reader
+ *         Header file for the Contiki OMA LWM2M TLV
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
  */
 
-#ifndef OMA_TLV_READER_H_
-#define OMA_TLV_READER_H_
+#ifndef LWM2M_TLV_H_
+#define LWM2M_TLV_H_
 
-#include "lwm2m-object.h"
+#include <stdint.h>
+#include <stddef.h>
 
-extern const lwm2m_reader_t oma_tlv_reader;
+enum {
+  LWM2M_TLV_TYPE_OBJECT_INSTANCE   = 0,
+  LWM2M_TLV_TYPE_RESOURCE_INSTANCE = 1,
+  LWM2M_TLV_TYPE_MULTI_RESOURCE    = 2,
+  LWM2M_TLV_TYPE_RESOURCE          = 3
+};
+typedef uint8_t lwm2m_tlv_type_t;
 
-#endif /* OMA_TLV_READER_H_ */
+typedef enum {
+  LWM2M_TLV_LEN_TYPE_NO_LEN    = 0,
+  LWM2M_TLV_LEN_TYPE_8BIT_LEN  = 1,
+  LWM2M_TLV_LEN_TYPE_16BIT_LEN = 2,
+  LWM2M_TLV_LEN_TYPE_24BIT_LEN = 3
+} lwm2m_tlv_len_type_t;
+
+typedef struct {
+  lwm2m_tlv_type_t type;
+  uint16_t id; /* can be 8-bit or 16-bit when serialized */
+  uint32_t length;
+  const uint8_t *value;
+} lwm2m_tlv_t;
+
+size_t lwm2m_tlv_get_size(const lwm2m_tlv_t *tlv);
+
+/* read a TLV from the buffer */
+size_t lwm2m_tlv_read(lwm2m_tlv_t *tlv, const uint8_t *buffer, size_t len);
+
+/* write a TLV to the buffer */
+size_t lwm2m_tlv_write(const lwm2m_tlv_t *tlv, uint8_t *buffer, size_t len);
+
+int32_t lwm2m_tlv_get_int32(const lwm2m_tlv_t *tlv);
+
+/* write a int as a TLV to the buffer */
+size_t lwm2m_tlv_write_int32(uint8_t type, int16_t id, int32_t value, uint8_t *buffer, size_t len);
+
+/* write a float converted from fixpoint as a TLV to the buffer */
+size_t lwm2m_tlv_write_float32(uint8_t type, int16_t id, int32_t value, int bits, uint8_t *buffer, size_t len);
+
+/* convert TLV with float32 to fixpoint */
+size_t lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits);
+
+#endif /* LWM2M_TLV_H_ */
 /** @} */

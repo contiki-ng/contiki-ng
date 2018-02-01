@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Yanzi Networks AB.
+ * Copyright (c) 2017, RISE SICS AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,61 +29,69 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
- * @{
- *
+ * \file
+ *         A simple keystore with fixed credentials.
+ * \author
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
  */
 
 /**
- * \file
- *         Implementation of the Contiki OMA LWM2M TLV writer
- * \author
- *         Joakim Eriksson <joakime@sics.se>
- *         Niclas Finne <nfi@sics.se>
+ * \addtogroup coap-keystore
+ * @{
  */
 
-#include "lwm2m-object.h"
-#include "oma-tlv.h"
+#include "coap-endpoint.h"
+#include "coap-keystore.h"
+#include <string.h>
+
+#ifdef WITH_DTLS
+#ifdef COAP_DTLS_PSK_DEFAULT_IDENTITY
+#ifdef COAP_DTLS_PSK_DEFAULT_KEY
 /*---------------------------------------------------------------------------*/
-static size_t
-write_boolean_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
-                  int value)
+static int
+get_default_psk_info(const coap_endpoint_t *address_info,
+                     coap_keystore_psk_entry_t *info)
 {
-  return oma_tlv_write_int32(ctx->resource_id, value != 0 ? 1 : 0,
-                             outbuf, outlen);
+  if(info != NULL) {
+    if(info->identity == NULL || info->identity_len == 0) {
+      /* Identity requested */
+      info->identity = (uint8_t *)COAP_DTLS_PSK_DEFAULT_IDENTITY;
+      info->identity_len = strlen(COAP_DTLS_PSK_DEFAULT_IDENTITY);
+      return 1;
+    }
+    if(info->identity_len != strlen(COAP_DTLS_PSK_DEFAULT_IDENTITY) ||
+       memcmp(info->identity, COAP_DTLS_PSK_DEFAULT_IDENTITY,
+              info->identity_len) != 0) {
+      /* Identity not matching */
+      return 0;
+    }
+    info->key = (uint8_t *)COAP_DTLS_PSK_DEFAULT_KEY;
+    info->key_len = strlen(COAP_DTLS_PSK_DEFAULT_KEY);
+    return 1;
+  }
+  return 0;
 }
-/*---------------------------------------------------------------------------*/
-static size_t
-write_int_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
-              int32_t value)
-{
-  return oma_tlv_write_int32(ctx->resource_id, value, outbuf, outlen);
-}
-/*---------------------------------------------------------------------------*/
-static size_t
-write_float32fix_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf,
-                     size_t outlen, int32_t value, int bits)
-{
-  return oma_tlv_write_float32(ctx->resource_id, value, bits, outbuf, outlen);
-}
-/*---------------------------------------------------------------------------*/
-static size_t
-write_string_tlv(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
-                 const char *value, size_t stringlen)
-{
-  oma_tlv_t tlv;
-  tlv.type = OMA_TLV_TYPE_RESOURCE;
-  tlv.value = (uint8_t *) value;
-  tlv.length = (uint32_t) stringlen;
-  tlv.id = ctx->resource_id;
-  return oma_tlv_write(&tlv, outbuf, outlen);
-}
-/*---------------------------------------------------------------------------*/
-const lwm2m_writer_t oma_tlv_writer = {
-  write_int_tlv,
-  write_string_tlv,
-  write_float32fix_tlv,
-  write_boolean_tlv
+static const coap_keystore_t simple_key_store = {
+  .coap_get_psk_info = get_default_psk_info
 };
+/*---------------------------------------------------------------------------*/
+#endif /* COAP_DTLS_PSK_DEFAULT_KEY */
+#endif /* COAP_DTLS_PSK_DEFAULT_IDENTITY */
+#endif /* WITH_DTLS */
+/*---------------------------------------------------------------------------*/
+void
+coap_keystore_simple_init(void)
+{
+#ifdef WITH_DTLS
+#ifdef COAP_DTLS_PSK_DEFAULT_IDENTITY
+#ifdef COAP_DTLS_PSK_DEFAULT_KEY
+
+  coap_set_keystore(&simple_key_store);
+
+#endif /* COAP_DTLS_PSK_DEFAULT_KEY */
+#endif /* COAP_DTLS_PSK_DEFAULT_IDENTITY */
+#endif /* WITH_DTLS */
+}
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -37,8 +37,7 @@
  * \defgroup ipso-objects An implementation of IPSO Objects
  * @{
  *
- * This application is an implementation of IPSO Objects for
- * OMA Lightweight M2M.
+ * This is an implementation of IPSO Objects for OMA LWM2M.
  */
 
 /**

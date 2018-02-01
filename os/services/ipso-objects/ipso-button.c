@@ -36,6 +36,7 @@
 /**
  * \file
  *         Implementation of OMA LWM2M / IPSO button as a digital input
+ *         NOTE: only works with a Contiki Button Sensor (not for Standalone)
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
@@ -44,7 +45,6 @@
 #include "contiki.h"
 #include "lwm2m-object.h"
 #include "lwm2m-engine.h"
-#include "coap-engine.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -54,20 +54,55 @@
 #define PRINTF(...)
 #endif
 
+#define IPSO_INPUT_STATE     5500
+#define IPSO_INPUT_COUNTER   5501
+#define IPSO_INPUT_POLARITY  5502
+#define IPSO_INPUT_DEBOUNCE  5503
+#define IPSO_INPUT_EDGE_SEL  5504
+#define IPSO_INPUT_CTR_RESET 5505
+#define IPSO_INPUT_SENSOR_TYPE 5751
+
 #if PLATFORM_HAS_BUTTON
 #include "dev/button-sensor.h"
+
+#if BOARD_SENSORTAG
+#include "sensortag/button-sensor.h"
+#define IPSO_BUTTON_SENSOR button_left_sensor
+#else
+#define IPSO_BUTTON_SENSOR button_sensor
+#endif
 
 PROCESS(ipso_button_process, "ipso-button");
 #endif /* PLATFORM_HAS_BUTTON */
 
+
+static lwm2m_status_t lwm2m_callback(lwm2m_object_instance_t *object,
+                                     lwm2m_context_t *ctx);
+
 static int input_state = 0;
 static int polarity = 0;
 static int32_t counter = 0;
-static int32_t edge_selection = 3;
+static int32_t edge_selection = 3; /* both */
 static int32_t debounce_time = 10;
+
+static const lwm2m_resource_id_t resources[] = {
+  RO(IPSO_INPUT_STATE), RO(IPSO_INPUT_COUNTER), RW(IPSO_INPUT_POLARITY),
+  RW(IPSO_INPUT_DEBOUNCE), RW(IPSO_INPUT_EDGE_SEL), EX(IPSO_INPUT_CTR_RESET),
+  RO(IPSO_INPUT_SENSOR_TYPE)
+};
+
+/* Only support for one button for now */
+static lwm2m_object_instance_t reg_object = {
+  .object_id = 3200,
+  .instance_id = 0,
+  .resource_ids = resources,
+  .resource_count = sizeof(resources) / sizeof(lwm2m_resource_id_t),
+  .callback = lwm2m_callback,
+};
+
 /*---------------------------------------------------------------------------*/
 static int
-read_state(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outsize)
+read_state(void)
 {
   int value;
   if(polarity == 0) {
@@ -77,36 +112,53 @@ read_state(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outsize)
   }
   PRINTF("Read button state (polarity=%d, state=%d): %d\n",
          polarity, input_state, value);
-  return ctx->writer->write_boolean(ctx, outbuf, outsize, value);
+  return value;
 }
 /*---------------------------------------------------------------------------*/
-static int
-reset_counter(lwm2m_context_t *ctx, const uint8_t *arg, size_t len,
-              uint8_t *outbuf, size_t outlen)
+/*---------------------------------------------------------------------------*/
+static lwm2m_status_t
+lwm2m_callback(lwm2m_object_instance_t *object,
+               lwm2m_context_t *ctx)
 {
-  counter = 0;
-  return 0;
+  if(ctx->operation == LWM2M_OP_READ) {
+    switch(ctx->resource_id) {
+    case IPSO_INPUT_STATE:
+      lwm2m_object_write_int(ctx, read_state());
+      break;
+    case IPSO_INPUT_COUNTER:
+      lwm2m_object_write_int(ctx, counter);
+      break;
+    case IPSO_INPUT_POLARITY:
+      lwm2m_object_write_int(ctx, polarity);
+      break;
+    case IPSO_INPUT_DEBOUNCE:
+      lwm2m_object_write_int(ctx, debounce_time);
+      break;
+    case IPSO_INPUT_EDGE_SEL:
+      lwm2m_object_write_int(ctx, edge_selection);
+      break;
+    case IPSO_INPUT_SENSOR_TYPE:
+      lwm2m_object_write_string(ctx, "button", strlen("button"));
+      break;
+    default:
+      return LWM2M_STATUS_ERROR;
+    }
+  } else if(ctx->operation == LWM2M_OP_EXECUTE) {
+    if(ctx->resource_id == IPSO_INPUT_CTR_RESET) {
+      counter = 0;
+    } else {
+      return LWM2M_STATUS_ERROR;
+    }
+  }
+  return LWM2M_STATUS_OK;
 }
-/*---------------------------------------------------------------------------*/
-LWM2M_RESOURCES(button_resources,
-                LWM2M_RESOURCE_CALLBACK(5500, { read_state, NULL, NULL }),
-                LWM2M_RESOURCE_INTEGER_VAR(5501, &counter),
-                LWM2M_RESOURCE_BOOLEAN_VAR(5502, &polarity),
-                LWM2M_RESOURCE_INTEGER_VAR(5503, &debounce_time),
-                LWM2M_RESOURCE_INTEGER_VAR(5504, &edge_selection),
-                LWM2M_RESOURCE_CALLBACK(5505, { NULL, NULL, reset_counter }),
-                LWM2M_RESOURCE_STRING(5751, "Button")
-                );
-LWM2M_INSTANCES(button_instances,
-                LWM2M_INSTANCE(0, button_resources));
-LWM2M_OBJECT(button, 3200, button_instances);
 /*---------------------------------------------------------------------------*/
 void
 ipso_button_init(void)
 {
   /* register this device and its handlers - the handlers automatically
      sends in the object to handle */
-  lwm2m_engine_register_object(&button);
+  lwm2m_engine_add_object(&reg_object);
 
 #if PLATFORM_HAS_BUTTON
   process_start(&ipso_button_process, NULL);
@@ -121,19 +173,19 @@ PROCESS_THREAD(ipso_button_process, ev, data)
 
   PROCESS_BEGIN();
 
-  SENSORS_ACTIVATE(button_sensor);
+  SENSORS_ACTIVATE(IPSO_BUTTON_SENSOR);
 
   while(1) {
     PROCESS_WAIT_EVENT();
 
-    if(ev == sensors_event && data == &button_sensor) {
+    if(ev == sensors_event && data == &IPSO_BUTTON_SENSOR) {
       if(!input_state) {
         input_state = 1;
         counter++;
         if((edge_selection & 2) != 0) {
-          lwm2m_object_notify_observers(&button, "/0/5500");
+          lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_STATE);
         }
-        lwm2m_object_notify_observers(&button, "/0/5501");
+        lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_COUNTER);
 
         time = (debounce_time * CLOCK_SECOND / 1000);
         if(time < 1) {
@@ -144,13 +196,13 @@ PROCESS_THREAD(ipso_button_process, ev, data)
     } else if(ev == PROCESS_EVENT_TIMER && data == &timer) {
       if(!input_state) {
         /* Button is not in pressed state */
-      } else if(button_sensor.value(0) != 0) {
+      } else if(IPSO_BUTTON_SENSOR.value(0) != 0) {
         /* Button is still pressed */
         etimer_reset(&timer);
       } else {
         input_state = 0;
         if((edge_selection & 1) != 0) {
-          lwm2m_object_notify_observers(&button, "/0/5500");
+          lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_STATE);
         }
       }
     }

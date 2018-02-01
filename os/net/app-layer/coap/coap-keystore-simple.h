@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Yanzi Networks AB.
+ * Copyright (c) 2017, RISE SICS AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,23 +28,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \addtogroup oma-lwm2m
- * @{ */
-
 /**
  * \file
- *         Header file for the Contiki OMA LWM2M TLV writer
+ *         A simple keystore with fixed credentials.
  * \author
- *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
  */
 
-#ifndef OMA_TLV_WRITER_H_
-#define OMA_TLV_WRITER_H_
+/**
+ * \addtogroup coap-keystore
+ * @{
+ */
 
-#include "lwm2m-object.h"
+#ifndef COAP_KEYSTORE_SIMPLE_H_
+#define COAP_KEYSTORE_SIMPLE_H_
 
-extern const lwm2m_writer_t oma_tlv_writer;
+/**
+ * \brief Registers a simple CoAP DTLS keystore with fixed pre-shared key
+ * credentials.
+ *
+ * The credentials can be configured in project-conf.h as shown in the
+ * following example:
+ *
+ * ~~~~~~~~~~~~~~~{.c}
+ * #define COAP_DTLS_PSK_DEFAULT_IDENTITY "user"
+ * #define COAP_DTLS_PSK_DEFAULT_KEY      "password"
+ * ~~~~~~~~~~~~~~~
+ */
+void coap_keystore_simple_init(void);
 
-#endif /* OMA_TLV_WRITER_H_ */
+#endif /* COAP_KEYSTORE_SIMPLE_H_ */
 /** @} */

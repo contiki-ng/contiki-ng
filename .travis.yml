@@ -26,6 +26,7 @@ env:
   - TEST_NAME='rpl-lite'
   - TEST_NAME='rpl-classic'
   - TEST_NAME='tun-rpl-br'
+  - TEST_NAME='coap-lwm2m'
   - TEST_NAME='simulation-base'
   - TEST_NAME='ieee802154'
   - TEST_NAME='compile-nxp-ports'

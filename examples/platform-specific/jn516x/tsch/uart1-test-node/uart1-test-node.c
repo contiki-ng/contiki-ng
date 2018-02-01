@@ -36,22 +36,22 @@
 #include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
 #include "rpl-tools.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "sys/ctimer.h"
 #include "dev/uart-driver.h"
 #include "uart1.h"
 #include <AppHardwareApi.h>
 
-static void get_coap_rx_uart1_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_coap_rx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void event_coap_rx_uart1_handler(void);
-static void put_post_tx_uart1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_tx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void string2uart1(uint8_t *c);
 static int handleRxChar(uint8_t c);
 static int get_ringbuf(uint8_t *c);
 static int put_ringbuf(uint8_t c);
 
 /* COAP helpers */
-static char content[REST_MAX_CHUNK_SIZE];
+static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
 #define CONTENT_PRINTF(...) { if(content_len < sizeof(content)) content_len += snprintf(content+content_len, sizeof(content)-content_len, __VA_ARGS__); }
 
@@ -85,15 +85,15 @@ EVENT_RESOURCE(resource_coap_rx_uart1,                /* name */
                NULL,                                  /* DELETE handler */
                event_coap_rx_uart1_handler);          /* event handler */
 static void
-get_coap_rx_uart1_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_coap_rx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     CONTENT_PRINTF("%s", rx_buf);
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 } 
 
@@ -101,7 +101,7 @@ static void
 event_coap_rx_uart1_handler(void)
 {
   /* Registered observers are notified and will trigger the GET handler to create the response. */
-  REST.notify_subscribers(&resource_coap_rx_uart1);
+  coap_notify_observers(&resource_coap_rx_uart1);
 }
 
 /*****************************************************************************/
@@ -115,14 +115,14 @@ RESOURCE(resource_coap_tx_uart1,                /* name */
          NULL);                                 /* DELETE handler */
 
 static void
-put_post_tx_uart1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_tx_uart1_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *request_content = NULL;
   unsigned int accept = -1;
 
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.get_request_payload(request, &request_content);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_get_payload(request, &request_content);
     string2uart1((uint8_t *)request_content);
   }
 }
@@ -154,9 +154,9 @@ PROCESS_THREAD(start_app, ev, data)
   }
   printf("Starting RPL node\n");
   
-  rest_init_engine();
-  rest_activate_resource(&resource_coap_rx_uart1, "UART1-RX");
-  rest_activate_resource(&resource_coap_tx_uart1, "UART1-TX");
+  coap_engine_init();
+  coap_activate_resource(&resource_coap_rx_uart1, "UART1-RX");
+  coap_activate_resource(&resource_coap_tx_uart1, "UART1-TX");
 
   PROCESS_END();
 }
@@ -256,4 +256,3 @@ put_ringbuf(uint8_t c)
   uart1_enable_interrupts();
   return return_val;                
 }
-

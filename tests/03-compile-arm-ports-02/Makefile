@@ -10,6 +10,7 @@ platform-specific/cc2538-common/pka/zoul \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
 coap/zoul \
 ipso-objects/zoul \
+ipso-objects/zoul:MAKE_WITH_DTLS=1 \
 hello-world/zoul \
 sensniff/zoul \
 sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \

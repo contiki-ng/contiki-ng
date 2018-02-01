@@ -36,8 +36,9 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 
 #define DEBUG 0
@@ -52,7 +53,7 @@
 #define PRINTLLADDR(addr)
 #endif
 
-static void res_any_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* This resource mirrors the incoming request. It shows how to access the options and how to set them for the response. */
 RESOURCE(res_mirror,
@@ -63,7 +64,7 @@ RESOURCE(res_mirror,
          res_any_handler);
 
 static void
-res_any_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* The ETag and Token is copied to the header. */
   uint8_t opaque[] = { 0x0A, 0xBC, 0xDE };
@@ -89,28 +90,28 @@ res_any_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   /* snprintf() counts the terminating '\0' to the size parameter.
    * The additional byte is taken care of by allocating REST_MAX_CHUNK_SIZE+1 bytes in the REST framework.
    * Add +1 to fill the complete buffer, as the payload does not need a terminating '\0'. */
-  if(REST.get_header_content_type(request, &content_format)) {
+  if(coap_get_header_content_format(request, &content_format)) {
     strpos += snprintf((char *)buffer, REST_MAX_CHUNK_SIZE + 1, "CF %u\n", content_format);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && (len = REST.get_header_accept(request, &content_format))) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && (len = coap_get_header_accept(request, &content_format))) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "Ac %u\n", content_format);
     /* Some getters such as for ETag or Location are omitted, as these options should not appear in a request.
      * Max-Age might appear in HTTP requests or used for special purposes in CoAP. */
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && REST.get_header_max_age(request, &longint)) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && coap_get_header_max_age(request, &longint)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "MA %lu\n", (unsigned long) longint);
     /* For HTTP this is the Length option, for CoAP it is the Size option. */
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && REST.get_header_length(request, &longint)) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && coap_get_header_size1(request, &longint)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "SZ %lu\n", (unsigned long) longint);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && (len = REST.get_header_host(request, &str))) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && (len = coap_get_header_uri_host(request, &str))) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "UH %.*s\n", len, str);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && (len = REST.get_url(request, &str))) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && (len = coap_get_header_uri_path(request, &str))) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "UP %.*s\n", len, str);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && (len = REST.get_query(request, &str))) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && (len = coap_get_header_uri_query(request, &str))) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "UQ %.*s\n", len, str);
     /* Undefined request options for debugging: actions not required for normal RESTful Web service. */
   }
@@ -121,7 +122,7 @@ res_any_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "LQ %.*s\n", len, str);
     /* CoAP-specific example: actions not required for normal RESTful Web service. */
   }
-  coap_packet_t *const coap_pkt = (coap_packet_t *)request;
+  coap_message_t *const coap_pkt = (coap_message_t *)request;
 
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_pkt->token_len > 0) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "To 0x");
@@ -132,10 +133,10 @@ res_any_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
   }
 
-  if(strpos <= REST_MAX_CHUNK_SIZE && IS_OPTION(coap_pkt, COAP_OPTION_OBSERVE)) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && coap_is_option(coap_pkt, COAP_OPTION_OBSERVE)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "Ob %lu\n", (unsigned long) coap_pkt->observe);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && IS_OPTION(coap_pkt, COAP_OPTION_ETAG)) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && coap_is_option(coap_pkt, COAP_OPTION_ETAG)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "ET 0x");
     int index = 0;
     for(index = 0; index < coap_pkt->etag_len; ++index) {
@@ -149,22 +150,22 @@ res_any_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_get_header_block1(request, &block_num, &block_more, &block_size, NULL)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "B1 %lu%s (%u)\n", (unsigned long) block_num, block_more ? "+" : "", block_size);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && (len = REST.get_request_payload(request, &bytes))) {
+  if(strpos <= REST_MAX_CHUNK_SIZE && (len = coap_get_payload(request, &bytes))) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "%.*s", len, bytes);
   }
   if(strpos >= REST_MAX_CHUNK_SIZE) {
     buffer[REST_MAX_CHUNK_SIZE - 1] = 0xBB; /* '»' to indicate truncation */
   }
-  REST.set_response_payload(response, buffer, strpos);
+  coap_set_payload(response, buffer, strpos);
 
   PRINTF("/mirror options received: %s\n", buffer);
 
   /* Set dummy header options for response. Like getters, some setters are not implemented for HTTP and have no effect. */
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  REST.set_header_max_age(response, 17); /* For HTTP, browsers will not re-request the page for 17 seconds. */
-  REST.set_header_etag(response, opaque, 2);
-  REST.set_header_location(response, location); /* Initial slash is omitted by framework */
-  REST.set_header_length(response, strpos); /* For HTTP, browsers will not re-request the page for 10 seconds. CoAP action depends on the client. */
+  coap_set_header_content_format(response, TEXT_PLAIN);
+  coap_set_header_max_age(response, 17); /* For HTTP, browsers will not re-request the page for 17 seconds. */
+  coap_set_header_etag(response, opaque, 2);
+  coap_set_header_location_path(response, location); /* Initial slash is omitted by framework */
+  coap_set_header_size1(response, strpos); /* For HTTP, browsers will not re-request the page for 10 s. CoAP action depends on the client. */
 
 /* CoAP-specific example: actions not required for normal RESTful Web service. */
   coap_set_header_uri_host(response, "tiki");

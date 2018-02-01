@@ -36,15 +36,17 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
+#include "random.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_test, "title=\"Default test resource\"", res_get_handler, res_post_handler, res_put_handler, res_delete_handler);
 
@@ -69,9 +71,9 @@ test_update_etag()
   PRINTF("### SERVER ACTION ### Changed ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n", test_etag_len, test_etag[0], test_etag[1], test_etag[2], test_etag[3], test_etag[4], test_etag[5], test_etag[6], test_etag[7]);
 }
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
 
   if(test_change) {
     test_update_etag();
@@ -82,48 +84,48 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
      && len == test_etag_len
      && memcmp(test_etag, bytes, len) == 0) {
     PRINTF("validate ");
-    REST.set_response_status(response, REST.status.NOT_MODIFIED);
-    REST.set_header_etag(response, test_etag, test_etag_len);
+    coap_set_status_code(response, VALID_2_03);
+    coap_set_header_etag(response, test_etag, test_etag_len);
 
     test_change = 1;
     PRINTF("### SERVER ACTION ### Resource will change\n");
   } else {
     /* Code 2.05 CONTENT is default. */
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_header_etag(response, test_etag, test_etag_len);
-    REST.set_header_max_age(response, 30);
-    REST.set_response_payload(
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_header_etag(response, test_etag, test_etag_len);
+    coap_set_header_max_age(response, 30);
+    coap_set_payload(
       response,
       buffer,
       snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "Type: %u\nCode: %u\nMID: %u", coap_req->type, coap_req->code, coap_req->mid));
   }
 }
 static void
-res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
-    coap_packet_t *const coap_req = (coap_packet_t *)request;
+    coap_message_t *const coap_req = (coap_message_t *)request;
     PRINTF("/test POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 #endif
-  REST.set_response_status(response, REST.status.CREATED);
-  REST.set_header_location(response, "/location1/location2/location3");
+  coap_set_status_code(response, CREATED_2_01);
+  coap_set_header_location_path(response, "/location1/location2/location3");
 }
 static void
-res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
   PRINTF("/test PUT (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 #endif
 
   if(coap_get_header_if_none_match(request)) {
     if(test_none_match_okay) {
-      REST.set_response_status(response, REST.status.CREATED);
+      coap_set_status_code(response, CREATED_2_01);
 
       test_none_match_okay = 0;
       PRINTF("### SERVER ACTION ### If-None-Match will FAIL\n");
     } else {
-      REST.set_response_status(response, PRECONDITION_FAILED_4_12);
+      coap_set_status_code(response, PRECONDITION_FAILED_4_12);
 
       test_none_match_okay = 1;
       PRINTF("### SERVER ACTION ### If-None-Match will SUCCEED\n");
@@ -133,9 +135,9 @@ res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
                  && memcmp(test_etag, bytes, len) == 0))
             || len == 0) {
     test_update_etag();
-    REST.set_header_etag(response, test_etag, test_etag_len);
+    coap_set_header_etag(response, test_etag, test_etag_len);
 
-    REST.set_response_status(response, REST.status.CHANGED);
+    coap_set_status_code(response, CHANGED_2_04);
 
     if(len > 0) {
       test_change = 1;
@@ -148,15 +150,15 @@ res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
            test_etag[0], test_etag[1], test_etag[2], test_etag[3], test_etag[4], test_etag[5], test_etag[6], test_etag[7]);
 
-    REST.set_response_status(response, PRECONDITION_FAILED_4_12);
+    coap_set_status_code(response, PRECONDITION_FAILED_4_12);
   }
 }
 static void
-res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 #if DEBUG
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
   PRINTF("/test DELETE (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 #endif
-  REST.set_response_status(response, REST.status.DELETED);
+  coap_set_status_code(response, DELETED_2_02);
 }
