@@ -121,8 +121,6 @@ readings_get_handler(coap_message_t *request, coap_message_t *response,
 
   voltage = batmon_sensor.value(BATMON_SENSOR_TYPE_VOLT);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   cap = sensorcontroller_sensor.value(SENSORCONTROLLER_SENSOR_TYPE_CAP_DP0);
 
   if(/*accept == -1 || */accept == REST.type.APPLICATION_JSON) {
@@ -132,33 +130,12 @@ readings_get_handler(coap_message_t *request, coap_message_t *response,
              "{\"voltage\":{\"v\":%d,\"u\":\"mV\"},"
              "\"cap\":{\"v\":%d,\"u\":\"c\"}}",
               (voltage * 125) >> 5, cap);
-=======
-=======
->>>>>>> branch 'develop' of https://github.com/contiki-ng/contiki-ng
-  if(accept == -1 || accept == APPLICATION_JSON) {
-    coap_set_header_content_format(response, APPLICATION_JSON);
-    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE,
-             "{\"temp\":{\"v\":%d,\"u\":\"C\"},"
-             "\"voltage\":{\"v\":%d,\"u\":\"mV\"}}",
-             temp, (voltage * 125) >> 5);
->>>>>>> refs/remotes/upstream/develop
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "Temp=%dC&Voltage=%dmV&Cap=%dcounts",
              temp, (voltage * 125) >> 5, cap);
-=======
-=======
->>>>>>> branch 'develop' of https://github.com/contiki-ng/contiki-ng
-    coap_set_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == TEXT_PLAIN) {
-    coap_set_header_content_format(response, TEXT_PLAIN);
-    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "Temp=%dC, Voltage=%dmV",
-             temp, (voltage * 125) >> 5);
->>>>>>> refs/remotes/upstream/develop
 
     coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
@@ -418,22 +395,15 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
        * Next, switch between normal and very sleepy mode depending on config,
        * send notifications to observers as required.
        */
-<<<<<<< HEAD
-<<<<<<< HEAD
       if(state == STATE_GET_SENSORDATA) {
     	    sensorcontroller_sensor.configure(SENSORS_HW_INIT, 1);
     	    SENSORS_ACTIVATE(sensorcontroller_sensor);
     	    state = STATE_NOTIFY_OBSERVERS;
       } else if(state == STATE_NOTIFY_OBSERVERS) {
         REST.notify_subscribers(&readings_resource);
-=======
+
       if(state == STATE_NOTIFY_OBSERVERS) {
         coap_notify_observers(&readings_resource);
->>>>>>> refs/remotes/upstream/develop
-=======
-      if(state == STATE_NOTIFY_OBSERVERS) {
-        coap_notify_observers(&readings_resource);
->>>>>>> branch 'develop' of https://github.com/contiki-ng/contiki-ng
         state = STATE_NORMAL;
       }
 
