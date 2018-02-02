@@ -37,11 +37,11 @@
  */
 
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /*
  * Large resource that can be created using POST method
@@ -54,38 +54,38 @@ RESOURCE(res_plugtest_large_create,
          NULL);
 
 static void
-res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_message_t *const coap_req = (coap_message_t *)request;
 
   uint8_t *incoming = NULL;
   size_t len = 0;
 
   unsigned int ct = -1;
 
-  if(!REST.get_header_content_type(request, &ct)) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  if(!coap_get_header_content_format(request, &ct)) {
+    coap_set_status_code(response, BAD_REQUEST_4_00);
     const char *error_msg = "NoContentType";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
+    coap_set_payload(response, error_msg, strlen(error_msg));
     return;
   }
 
-  if((len = REST.get_request_payload(request, (const uint8_t **)&incoming))) {
+  if((len = coap_get_payload(request, (const uint8_t **)&incoming))) {
     if(coap_req->block1_num * coap_req->block1_size + len <= 2048) {
-      REST.set_response_status(response, REST.status.CREATED);
-      REST.set_header_location(response, "/nirvana");
+      coap_set_status_code(response, CREATED_2_01);
+      coap_set_header_location_path(response, "/nirvana");
       coap_set_header_block1(response, coap_req->block1_num, 0,
                              coap_req->block1_size);
     } else {
-      REST.set_response_status(response, REST.status.REQUEST_ENTITY_TOO_LARGE);
+      coap_set_status_code(response, REQUEST_ENTITY_TOO_LARGE_4_13);
       const char *error_msg = "2048B max.";
-      REST.set_response_payload(response, error_msg, strlen(error_msg));
+      coap_set_payload(response, error_msg, strlen(error_msg));
       return;
     }
   } else {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    coap_set_status_code(response, BAD_REQUEST_4_00);
     const char *error_msg = "NoPayload";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
+    coap_set_payload(response, error_msg, strlen(error_msg));
     return;
   }
 }

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2017, RISE SICS AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -15,10 +14,10 @@
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
  * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -28,9 +27,36 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-#define QUEUEBUF_CONF_NUM         4
-#define UIP_CONF_BUFFER_SIZE    140
 
-#define UART1_CONF_RX_WITH_DMA           1
-/*---------------------------------------------------------------------------*/
+/**
+ * \file
+ *         A simple keystore with fixed credentials.
+ * \author
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
+ */
+
+/**
+ * \addtogroup coap-keystore
+ * @{
+ */
+
+#ifndef COAP_KEYSTORE_SIMPLE_H_
+#define COAP_KEYSTORE_SIMPLE_H_
+
+/**
+ * \brief Registers a simple CoAP DTLS keystore with fixed pre-shared key
+ * credentials.
+ *
+ * The credentials can be configured in project-conf.h as shown in the
+ * following example:
+ *
+ * ~~~~~~~~~~~~~~~{.c}
+ * #define COAP_DTLS_PSK_DEFAULT_IDENTITY "user"
+ * #define COAP_DTLS_PSK_DEFAULT_KEY      "password"
+ * ~~~~~~~~~~~~~~~
+ */
+void coap_keystore_simple_init(void);
+
+#endif /* COAP_KEYSTORE_SIMPLE_H_ */
+/** @} */

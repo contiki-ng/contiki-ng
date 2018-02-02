@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/com.ti.ccstudio.buildDefinitions.C2000_16.9.exe.DebugToolchain.1263080991/PATH/delimiter=\:
+environment/project/com.ti.ccstudio.buildDefinitions.C2000_16.9.exe.DebugToolchain.1263080991/PATH/operation=append
+environment/project/com.ti.ccstudio.buildDefinitions.C2000_16.9.exe.DebugToolchain.1263080991/PATH/value=/sbin\:/Applications/ti/ccsv7/tools/compiler/gcc-arm-none-eabi-5_2-2015q4/bin\:/usr/local/Cellar/srecord/1.64/bin\:/usr/bin\:/bin\:/usr/sbin
+environment/project/com.ti.ccstudio.buildDefinitions.C2000_16.9.exe.DebugToolchain.1263080991/append=true
+environment/project/com.ti.ccstudio.buildDefinitions.C2000_16.9.exe.DebugToolchain.1263080991/appendContributed=true

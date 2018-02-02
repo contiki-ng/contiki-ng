@@ -44,7 +44,7 @@
 #if UIP_CONF_IPV6_RPL_LITE == 0
 #include "rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 
 #include "ti-lib.h"
@@ -105,8 +105,8 @@ PROCESS(very_sleepy_demo_process, "CC13xx/CC26xx very sleepy process");
 AUTOSTART_PROCESSES(&very_sleepy_demo_process);
 /*---------------------------------------------------------------------------*/
 static void
-readings_get_handler(void *request, void *response, uint8_t *buffer,
-                     uint16_t preferred_size, int32_t *offset)
+readings_get_handler(coap_message_t *request, coap_message_t *response,
+                     uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
   int temp;
@@ -114,13 +114,14 @@ readings_get_handler(void *request, void *response, uint8_t *buffer,
   int cap;
 
   if(request != NULL) {
-    REST.get_header_accept(request, &accept);
+    coap_get_header_accept(request, &accept);
   }
 
   temp = batmon_sensor.value(BATMON_SENSOR_TYPE_TEMP);
 
   voltage = batmon_sensor.value(BATMON_SENSOR_TYPE_VOLT);
 
+<<<<<<< HEAD
   cap = sensorcontroller_sensor.value(SENSORCONTROLLER_SENSOR_TYPE_CAP_DP0);
 
   if(/*accept == -1 || */accept == REST.type.APPLICATION_JSON) {
@@ -130,17 +131,33 @@ readings_get_handler(void *request, void *response, uint8_t *buffer,
              "{\"voltage\":{\"v\":%d,\"u\":\"mV\"},"
              "\"cap\":{\"v\":%d,\"u\":\"c\"}}",
               (voltage * 125) >> 5, cap);
+=======
+  if(accept == -1 || accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE,
+             "{\"temp\":{\"v\":%d,\"u\":\"C\"},"
+             "\"voltage\":{\"v\":%d,\"u\":\"mV\"}}",
+             temp, (voltage * 125) >> 5);
+>>>>>>> refs/remotes/upstream/develop
 
+<<<<<<< HEAD
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "Temp=%dC&Voltage=%dmV&Cap=%dcounts",
              temp, (voltage * 125) >> 5, cap);
+=======
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "Temp=%dC, Voltage=%dmV",
+             temp, (voltage * 125) >> 5);
+>>>>>>> refs/remotes/upstream/develop
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, not_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, not_supported_msg,
                               strlen(not_supported_msg));
   }
 }
@@ -149,39 +166,39 @@ RESOURCE(readings_resource, "title=\"Sensor Readings\";obs",
          readings_get_handler, NULL, NULL, NULL);
 /*---------------------------------------------------------------------------*/
 static void
-conf_get_handler(void *request, void *response, uint8_t *buffer,
-                 uint16_t preferred_size, int32_t *offset)
+conf_get_handler(coap_message_t *request, coap_message_t *response,
+                 uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
 
   if(request != NULL) {
-    REST.get_header_accept(request, &accept);
+    coap_get_header_accept(request, &accept);
   }
 
-  if(accept == -1 || accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
+  if(accept == -1 || accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE,
              "{\"config\":{\"mode\":%u,\"duration\":%lu,\"interval\":%lu}}",
              config.mode, config.duration, config.interval);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE,
              "Mode=%u, Duration=%lusecs, Interval=%lusecs",
              config.mode, config.duration, config.interval);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, not_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, not_supported_msg,
                               strlen(not_supported_msg));
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-conf_post_handler(void *request, void *response, uint8_t *buffer,
-                  uint16_t preferred_size, int32_t *offset)
+conf_post_handler(coap_message_t *request, coap_message_t *response,
+                  uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const char *ptr = NULL;
   char tmp_buf[16];
@@ -191,7 +208,7 @@ conf_post_handler(void *request, void *response, uint8_t *buffer,
   uint8_t post_status = POST_STATUS_NONE;
   int rv;
 
-  rv = REST.get_post_variable(request, "mode", &ptr);
+  rv = coap_get_post_variable(request, "mode", &ptr);
   if(rv && rv < 16) {
     memset(tmp_buf, 0, sizeof(tmp_buf));
     memcpy(tmp_buf, ptr, rv);
@@ -208,7 +225,7 @@ conf_post_handler(void *request, void *response, uint8_t *buffer,
     }
   }
 
-  rv = REST.get_post_variable(request, "duration", &ptr);
+  rv = coap_get_post_variable(request, "duration", &ptr);
   if(rv && rv < 16) {
     memset(tmp_buf, 0, sizeof(tmp_buf));
     memcpy(tmp_buf, ptr, rv);
@@ -222,7 +239,7 @@ conf_post_handler(void *request, void *response, uint8_t *buffer,
     }
   }
 
-  rv = REST.get_post_variable(request, "interval", &ptr);
+  rv = coap_get_post_variable(request, "interval", &ptr);
   if(rv && rv < 16) {
     memset(tmp_buf, 0, sizeof(tmp_buf));
     memcpy(tmp_buf, ptr, rv);
@@ -237,13 +254,13 @@ conf_post_handler(void *request, void *response, uint8_t *buffer,
 
   if((post_status & POST_STATUS_BAD) == POST_STATUS_BAD ||
      post_status == POST_STATUS_NONE) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
+    coap_set_status_code(response, BAD_REQUEST_4_00);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE,
              "mode=0|1&duration=[%u,%u]&interval=[%u,%u]",
              NORMAL_OP_DURATION_MIN, NORMAL_OP_DURATION_MAX,
              PERIODIC_INTERVAL_MIN, PERIODIC_INTERVAL_MAX);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
     return;
   }
 
@@ -351,11 +368,11 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
 
   event_new_config = process_alloc_event();
 
-  rest_init_engine();
+  coap_engine_init();
 
   readings_resource.flags += IS_OBSERVABLE;
-  rest_activate_resource(&readings_resource, "sen/readings");
-  rest_activate_resource(&very_sleepy_conf, "very_sleepy_config");
+  coap_activate_resource(&readings_resource, "sen/readings");
+  coap_activate_resource(&very_sleepy_conf, "very_sleepy_config");
 
   printf("Very Sleepy Demo Process\n");
 
@@ -395,12 +412,17 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
        * Next, switch between normal and very sleepy mode depending on config,
        * send notifications to observers as required.
        */
+<<<<<<< HEAD
       if(state == STATE_GET_SENSORDATA) {
     	    sensorcontroller_sensor.configure(SENSORS_HW_INIT, 1);
     	    SENSORS_ACTIVATE(sensorcontroller_sensor);
     	    state = STATE_NOTIFY_OBSERVERS;
       } else if(state == STATE_NOTIFY_OBSERVERS) {
         REST.notify_subscribers(&readings_resource);
+=======
+      if(state == STATE_NOTIFY_OBSERVERS) {
+        coap_notify_observers(&readings_resource);
+>>>>>>> refs/remotes/upstream/develop
         state = STATE_NORMAL;
       }
 

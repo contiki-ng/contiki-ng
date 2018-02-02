@@ -39,9 +39,8 @@
 #include "contiki.h"
 
 #if PLATFORM_HAS_LEDS
-
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "dev/leds.h"
 
 #define DEBUG 0
@@ -56,9 +55,9 @@
 #define PRINTLLADDR(addr)
 #endif
 
-static void res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
+/* A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated */
 RESOURCE(res_leds,
          "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"",
          NULL,
@@ -67,7 +66,7 @@ RESOURCE(res_leds,
          NULL);
 
 static void
-res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   size_t len = 0;
   const char *color = NULL;
@@ -75,7 +74,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
   uint8_t led = 0;
   int success = 1;
 
-  if((len = REST.get_query_variable(request, "color", &color))) {
+  if((len = coap_get_query_variable(request, "color", &color))) {
     PRINTF("color %.*s\n", len, color);
 
     if(strncmp(color, "r", len) == 0) {
@@ -89,7 +88,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
     }
   } else {
     success = 0;
-  } if(success && (len = REST.get_post_variable(request, "mode", &mode))) {
+  } if(success && (len = coap_get_post_variable(request, "mode", &mode))) {
     PRINTF("mode %s\n", mode);
 
     if(strncmp(mode, "on", len) == 0) {
@@ -102,7 +101,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
   } else {
     success = 0;
   } if(!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    coap_set_status_code(response, BAD_REQUEST_4_00);
   }
 }
 #endif /* PLATFORM_HAS_LEDS */
