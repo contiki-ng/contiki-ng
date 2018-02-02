@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Eistec AB.
+ * Copyright (c) 2018, RISE SICS AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,34 +28,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \addtogroup lwm2m
- * @{
- */
+#error The CoAP example no longer fits the limited ROM in the Tmote Sky. \
+  Please select another platform with more ROM to compile the CoAP example.
 
-/**
- * \file
- *         Header file for the Contiki OMA LWM2M JSON writer
- * \author
- *         Joakim Nohlgård <joakim.nohlgard@eistec.se>
- */
+/*---------------------------------------------------------------------------*/
+#define COAP_OBSERVE_CLIENT            0
 
-#ifndef LWM2M_JSON_H_
-#define LWM2M_JSON_H_
+#define COAP_MAX_CHUNK_SIZE           48
 
-#include "lwm2m-object.h"
+/* Turn off DAO-ACK and probing to make code smaller */
+#define RPL_CONF_WITH_DAO_ACK          0
 
-struct json_data {
-  uint8_t type; /* S,B,V */
-  uint8_t *name;
-  uint8_t *value;
-  uint8_t name_len;
-  uint8_t value_len;
-};
+#define LOG_CONF_LEVEL_MAIN            0
 
-extern const lwm2m_writer_t lwm2m_json_writer;
+#define DCOSYNCH_CONF_ENABLED          0
 
-int lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json);
-
-#endif /* LWM2M_JSON_H_ */
-/** @} */
+#define PROCESS_CONF_NUMEVENTS         8
+/*---------------------------------------------------------------------------*/

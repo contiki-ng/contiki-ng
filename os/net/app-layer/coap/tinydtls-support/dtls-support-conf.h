@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Eistec AB.
+ * Copyright (c) 2017, RISE SICS AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,33 +29,38 @@
  */
 
 /**
- * \addtogroup lwm2m
- * @{
- */
-
-/**
  * \file
- *         Header file for the Contiki OMA LWM2M JSON writer
+ *         DTLS support for CoAP
  * \author
- *         Joakim Nohlgård <joakim.nohlgard@eistec.se>
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
  */
 
-#ifndef LWM2M_JSON_H_
-#define LWM2M_JSON_H_
+#ifndef DTLS_SUPPORT_CONF_H_
+#define DTLS_SUPPORT_CONF_H_
 
-#include "lwm2m-object.h"
+/* Use same log level as CoAP as default */
+#define LOG_LEVEL_DTLS LOG_LEVEL_COAP
 
-struct json_data {
-  uint8_t type; /* S,B,V */
-  uint8_t *name;
-  uint8_t *value;
-  uint8_t name_len;
-  uint8_t value_len;
-};
+#define DTLS_LOG_CONF_PATH "coap-log.h"
 
-extern const lwm2m_writer_t lwm2m_json_writer;
+#include "coap-endpoint.h"
 
-int lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json);
+typedef coap_endpoint_t session_t;
 
-#endif /* LWM2M_JSON_H_ */
-/** @} */
+#include "sys/ctimer.h"
+#include <stdint.h>
+
+typedef struct {
+  struct ctimer retransmit_timer;
+} dtls_support_context_state_t;
+
+#define DTLS_SUPPORT_CONF_CONTEXT_STATE dtls_support_context_state_t
+
+#define DTLS_TICKS_PER_SECOND CLOCK_SECOND
+
+typedef clock_time_t dtls_tick_t;
+
+#define HAVE_ASSERT_H 1
+
+#endif /* DTLS_SUPPORT_CONF_H_ */

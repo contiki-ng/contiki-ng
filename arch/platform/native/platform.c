@@ -253,6 +253,7 @@ void
 platform_init_stage_two()
 {
   set_lladdr();
+  serial_line_init();
 }
 /*---------------------------------------------------------------------------*/
 void

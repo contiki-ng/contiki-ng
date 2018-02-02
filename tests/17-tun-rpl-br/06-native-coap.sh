@@ -41,7 +41,7 @@ done
 
 echo "Closing native node"
 sleep 2
-pgrep hello-world | sudo xargs kill -9
+pgrep coap-example | sudo xargs kill -9
 
 if [ $TESTCOUNT -eq $OKCOUNT ] ; then
   printf "%-32s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;

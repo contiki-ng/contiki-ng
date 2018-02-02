@@ -44,7 +44,7 @@
 #include "coap-constants.h"
 #include "coap-engine.h"
 #include "lwm2m-engine.h"
-#include "oma-tlv.h"
+#include "lwm2m-tlv.h"
 #include "dev/serial-line.h"
 #include "serial-protocol.h"
 
@@ -187,13 +187,13 @@ client_chunk_handler(void *response)
   } else {
     /* otherwise update the current value */
     if(format == LWM2M_TLV) {
-      oma_tlv_t tlv;
+      lwm2m_tlv_t tlv;
       /* we can only read int32 for now ? */
-      if(oma_tlv_read(&tlv, chunk, len) > 0) {
+      if(lwm2m_tlv_read(&tlv, chunk, len) > 0) {
         /* printf("TLV.type=%d len=%d id=%d value[0]=%d\n", */
         /*        tlv.type, tlv.length, tlv.id, tlv.value[0]); */
 
-        int value = oma_tlv_get_int32(&tlv);
+        int value = lwm2m_tlv_get_int32(&tlv);
         snprintf(current_value, sizeof(current_value), "%d", value);
       }
     } else {
@@ -257,8 +257,8 @@ setup_network(void)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(router_process, ev, data)
 {
-  /* This way the packet can be treated as pointer as usual. */
-  static coap_packet_t request[1];
+  /* This way the message can be treated as pointer as usual. */
+  static coap_message_t request[1];
   static struct etimer timer;
   uip_ds6_route_t *r;
   uip_ipaddr_t *nexthop;
@@ -269,7 +269,7 @@ PROCESS_THREAD(router_process, ev, data)
   PROCESS_PAUSE();
 
   /* receives all CoAP messages */
-  coap_init_engine();
+  coap_engine_init();
 
   setup_network();
 
