@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<project name="Capacitive Soil Humidity Sensor" version="1.5.0.188">
+    <desc><![CDATA[Demonstrates capacitive touch data sampling on the CC2650 SensorTag with Capacitive Touch skin.
+
+The TDC values (time used to charge up each capacitive area from 0 to 0.8 V) for button and slider are output to the System CPU application.
+The System CPU application transfers the TDC data over UART, so that the data can be logged and processed on the PC.
+
+See the header in the application source file ("main.c" or similar) for further details and instructions. This file is located in the source code output directory.]]></desc>
+    <pattr name="Board">CC2650 SensorTag</pattr>
+    <pattr name="Chip name">CC2650</pattr>
+    <pattr name="Chip package">QFN48 7x7 RGZ</pattr>
+    <pattr name="Chip revision">-</pattr>
+    <pattr name="Code prefix"></pattr>
+    <pattr name="Operating system">None</pattr>
+    <pattr name="Output directory">C:/Users/Mihi/Documents/Capacitive Soil Humidity</pattr>
+    <pattr name="RTC tick interval (16.16 format)">2000</pattr>
+    <pattr name="Run-time logging UART RX pin"></pattr>
+    <pattr name="Run-time logging UART TX pin"></pattr>
+    <task name="Capacitive Soil Humidity Sensor">
+        <desc><![CDATA[Samples all capacitive touch areas on the CC2650 SensorTag with Capacitive Touch skin.
+
+The TDC values (time used to charge up each capacitive area from 0 to 0.8 V) are output to the System CPU. This includes raw data and IIR-filtered data.]]></desc>
+        <tattr name="PIN_COUNT" desc="Capactive touch pin count" type="expr" content="const" scope="task" min="0" max="8">'Analog Open-Drain Pins/Capacitive touch area/Pin count'</tattr>
+        <tattr name="SAMPLE_COUNT" type="dec" content="const" scope="task" min="0" max="65535">8</tattr>
+        <tattr name="output.pTdcValueFilt" desc="TDC value, filtered" size="PIN_COUNT" type="dec" content="struct_array" scope="task" min="0" max="65535">0</tattr>
+        <tattr name="output.pTdcValueRaw" desc="TDC value, raw" size="PIN_COUNT" type="dec" content="struct_array" scope="task" min="0" max="65535">0</tattr>
+        <tattr name="state.filtInitDone" desc="Has the value filtering been initialized?" type="dec" content="struct" scope="task" min="0" max="65535">0</tattr>
+        <resource_ref name="ADC" enabled="0"/>
+        <resource_ref name="Analog Open-Drain Pins" enabled="1">
+            <io_usage name="CAP_TOUCH" label="Capacitive touch area">
+                <uattr name="Pin count">1</uattr>
+                <uattr name="Pin/0000">DIO25</uattr>
+                <uattr name="Pin/0001">DIO24</uattr>
+                <uattr name="Pin/0002">DIO27</uattr>
+                <uattr name="Pin/0003">DIO23</uattr>
+                <uattr name="Pin/0004">DIO24</uattr>
+                <uattr name="Pin/0005"></uattr>
+                <uattr name="Pin/0006"></uattr>
+                <uattr name="Pin/0007"></uattr>
+            </io_usage>
+        </resource_ref>
+        <resource_ref name="Analog Open-Source Pins" enabled="0"/>
+        <resource_ref name="Analog Pins" enabled="0"/>
+        <resource_ref name="COMPA" enabled="1"/>
+        <resource_ref name="COMPB" enabled="0"/>
+        <resource_ref name="COMPB Event Trigger" enabled="0"/>
+        <resource_ref name="Delay Insertion" enabled="0"/>
+        <resource_ref name="Differential Output Pins" enabled="0"/>
+        <resource_ref name="Digital Input Pins" enabled="0"/>
+        <resource_ref name="Digital Open-Drain Pins" enabled="0"/>
+        <resource_ref name="Digital Open-Source Pins" enabled="0"/>
+        <resource_ref name="Digital Output Pins" enabled="0"/>
+        <resource_ref name="GPIO Event Trigger" enabled="0"/>
+        <resource_ref name="I2C Master" enabled="0">
+            <rattr name="SCL frequency">400</rattr>
+            <rattr name="SCL stretch timeout">1</rattr>
+            <io_usage>
+                <uattr name="SCL pin/0000"></uattr>
+                <uattr name="SDA pin/0000"></uattr>
+            </io_usage>
+        </resource_ref>
+        <resource_ref name="ISRC" enabled="1"/>
+        <resource_ref name="Math and Logic" enabled="0"/>
+        <resource_ref name="Multi-Buffered Output Data Exchange" enabled="1">
+            <rattr name="Buffer count">2</rattr>
+            <rattr name="Indicate overflow at buffer check">0</rattr>
+            <rattr name="Indicate overflow at buffer switch">1</rattr>
+            <rattr name="Prevent overflow at buffer switch">1</rattr>
+        </resource_ref>
+        <resource_ref name="Peripheral Sharing" enabled="1"/>
+        <resource_ref name="Pulse Counter" enabled="0"/>
+        <resource_ref name="RTC Multi-Event Capture" enabled="0"/>
+        <resource_ref name="RTC-Based Execution Scheduling" enabled="1"/>
+        <resource_ref name="Run-Time Logging" enabled="0"/>
+        <resource_ref name="SPI Chip Select" enabled="0"/>
+        <resource_ref name="SPI Data Transfer" enabled="0">
+            <rattr name="Bit rate">0</rattr>
+            <rattr name="MISO configuration when inactive">-1</rattr>
+            <rattr name="MOSI configuration on initialization">0</rattr>
+            <rattr name="MOSI configuration on uninitialization">0</rattr>
+            <rattr name="SCLK configuration on initialization">0</rattr>
+            <rattr name="SCLK configuration on uninitialization">0</rattr>
+            <io_usage>
+                <uattr name="MISO pin/0000"></uattr>
+                <uattr name="MOSI pin/0000"></uattr>
+                <uattr name="SCLK pin/0000"></uattr>
+            </io_usage>
+        </resource_ref>
+        <resource_ref name="System CPU Alert" enabled="0"/>
+        <resource_ref name="TDC" enabled="1"/>
+        <resource_ref name="Timer 0" enabled="0"/>
+        <resource_ref name="Timer Event Trigger" enabled="0"/>
+        <resource_ref name="UART Emulator" enabled="0">
+            <rattr name="RX buffer size">64</rattr>
+            <rattr name="Required idle period before enabling RX">11</rattr>
+            <rattr name="TX buffer size">64</rattr>
+            <io_usage>
+                <uattr name="RX pin/0000"></uattr>
+                <uattr name="TX pin/0000"></uattr>
+            </io_usage>
+        </resource_ref>
+        <sccode name="event0"><![CDATA[]]></sccode>
+        <sccode name="execute"><![CDATA[// Make sure that the currently used output buffer is available. If unavailable, indicate
+// error and skip the task iteration. Overflow indication/prevention behavior for
+// fwCheckOutputBuffer() and fwSwitchOutputBuffer() is configured in the "Multi-Buffered
+// Output Data Exchange" task resource, along with the number of buffers.
+U16 isOutputBufferAvailable;
+fwCheckOutputBuffer(isOutputBufferAvailable);
+if (isOutputBufferAvailable == 1) {
+
+    // Acquire shared peripherals
+    fwAcquirePeripheral(PERIPHERAL_COMPA_ISRC);
+    fwAcquirePeripheral(PERIPHERAL_TDC);
+
+    // Enable COMPA, including 2 uA through 400 kOhm = 0.8 V reference voltage for COMPA
+    compaEnableWithCapTouchRef();
+
+    // Enable ISRC (6.5 uA)
+    U16 current = BV_ISRC_CURR_2P0U | BV_ISRC_CURR_4P5U;
+    isrcEnable(current);
+
+    // Select 2 x 48 MHz from RCOSC_HF as TDC counter clock source
+    tdcSetCntSource(TDC_CNTSRC_96M_RCOSC);
+
+    // Enable the TDC with start trigger on ISRC reset release and stop trigger on COMPA
+    tdcSetTriggers(TDC_STARTTRIG_ISRC_RELEASE, TDC_STOPTRIG_COMPA_HIGH, 0);
+    tdcEnable();
+
+    // For each pin ...
+    for (U16 n = 0; n < PIN_COUNT; n++) {
+
+        // Select COMPA input/ISRC output
+        compaSelectGpioInput(cfg.pAuxioAxdCapTouch[n]);
+        output.pTdcValueRaw[n] = 0;
+        S16 s = SAMPLE_COUNT;
+        while (s >= 0) {
+            s -= 1;
+            // Prepare the TDC and trigger start of measurement
+            tdcArm(TDC_START_ASYNC);
+            isrcRelease(cfg.pAuxioAxdCapTouch[n]);
+
+            // Wait for the TDC stop trigger for 80 us
+            tdcWaitUs(80);
+
+            // Re-clamp the pin to ground
+            isrcClamp(cfg.pAuxioAxdCapTouch[n]);
+
+            // Get the TDC counter value
+            U16 tdcValueL;
+            U16 tdcValueH;
+            tdcGetValue(tdcValueH, tdcValueL);
+
+            // Store raw value
+            output.pTdcValueRaw[n] += tdcValueL;
+        }
+        output.pTdcValueFilt[n] = output.pTdcValueRaw[n] >> 3;
+    }
+    state.filtInitDone = 1;
+
+    // Disable COMPA, ISRC and TDC
+    tdcDisable();
+    isrcDisable();
+    compaDisable();
+
+    // Release shared peripherals
+    fwReleasePeripheral(PERIPHERAL_COMPA_ISRC);
+    fwReleasePeripheral(PERIPHERAL_TDC);
+
+    // Hand over the TDC values to the System CPU
+    fwSwitchOutputBuffer();
+}
+
+// Schedule the next execution
+fwScheduleTask(1);]]></sccode>
+        <sccode name="initialize"><![CDATA[// Clamp all capactive touch pins to ground
+for (U16 n = 0; n < PIN_COUNT; n++) {
+    isrcClamp(cfg.pAuxioAxdCapTouch[n]);
+}
+
+// Schedule the first execution
+fwScheduleTask(1);]]></sccode>
+        <sccode name="terminate"><![CDATA[]]></sccode>
+        <tt_iter>run_execute</tt_iter>
+        <tt_struct>output.pTdcValueFilt.[0],output.pTdcValueRaw.[0]</tt_struct>
+        <rtl_struct></rtl_struct>
+        <rtl_task_sel en="1" struct_log_list="output"/>
+    </task>
+</project>

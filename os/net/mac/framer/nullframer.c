@@ -36,27 +36,7 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 #include "net/mac/framer/framer.h"
-#include "net/packetbuf.h"
 
-#ifdef NULLFRAMER_CONF_PARSE_802154
-#define  NULLFRAMER_PARSE_802154  NULLFRAMER_CONF_PARSE_802154
-#else
-/* defaults to parsing of the 802154 header as that is used for Slip-Radio */
-#define  NULLFRAMER_PARSE_802154 1
-#endif
-
-/*---------------------------------------------------------------------------*/
-static int
-is_broadcast_addr(uint8_t mode, uint8_t *addr)
-{
-  int i = mode == FRAME802154_SHORTADDRMODE ? 2 : 8;
-  while(i-- > 0) {
-    if(addr[i] != 0xff) {
-      return 0;
-    }
-  }
-  return 1;
-}
 /*---------------------------------------------------------------------------*/
 static int
 hdr_length(void)
@@ -75,21 +55,6 @@ create(void)
 static int
 parse(void)
 {
-#if NULLFRAMER_PARSE_802154
-  frame802154_t frame;
-  int len;
-  len = packetbuf_datalen();
-  if(frame802154_parse(packetbuf_dataptr(), len, &frame)) {
-    if(frame.fcf.dest_addr_mode) {
-      if(!is_broadcast_addr(frame.fcf.dest_addr_mode, frame.dest_addr)) {
-        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, (linkaddr_t *)&frame.dest_addr);
-      }
-    }
-    packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (linkaddr_t *)&frame.src_addr);
-    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, frame.seq);
-    return 0;
-  }
-#endif
   return 0;
 }
 /*---------------------------------------------------------------------------*/

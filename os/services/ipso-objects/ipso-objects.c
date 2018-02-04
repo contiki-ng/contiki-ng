@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup ipso-objects
+ * \addtogroup oma-lwm2m
  * @{
  */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Yanzi Networks AB.
+ * Copyright (c) 2015, Yanzi Networks AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup lwm2m
+ * \addtogroup oma-lwm2m
  * @{
  */
 
@@ -47,23 +47,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Log configuration */
-#include "coap-log.h"
-#define LOG_MODULE "lwm2m-plain-text"
-#define LOG_LEVEL  LOG_LEVEL_NONE
+#define DEBUG 0
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
-/*---------------------------------------------------------------------------*/
-static size_t
-init_write(lwm2m_context_t *ctx)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static size_t
-end_write(lwm2m_context_t *ctx)
-{
-  return 0;
-}
 /*---------------------------------------------------------------------------*/
 size_t
 lwm2m_plain_text_read_int(const uint8_t *inbuf, size_t len, int32_t *value)
@@ -119,16 +109,15 @@ lwm2m_plain_text_read_float32fix(const uint8_t *inbuf, size_t len,
   if(frac > 1) {
     *value += ((counter << bits) / frac);
   }
-  LOG_DBG("READ FLOATFIX: \"%.*s\" => int(%ld) frac(%ld) f=%ld Value=%ld\n",
-          (int)len, (char *)inbuf,
-          (long)integerpart,
-          (long)counter,
-          (long)frac,
-          (long)*value);
+  PRINTF("READ FLOATFIX: \"%.*s\" => int(%ld) frac(%ld) f=%ld Value=%ld\n",
+         (int)len, (char *)inbuf,
+         (long)integerpart,
+         (long)counter,
+         (long)frac,
+         (long)*value);
   if(neg) {
     *value = -*value;
   }
-
   return i;
 }
 /*---------------------------------------------------------------------------*/
@@ -164,7 +153,7 @@ lwm2m_plain_text_write_float32fix(uint8_t *outbuf, size_t outlen,
 }
 /*---------------------------------------------------------------------------*/
 static size_t
-write_boolean(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
+write_boolean(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
               int value)
 {
   if(outlen > 0) {
@@ -179,7 +168,7 @@ write_boolean(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
 }
 /*---------------------------------------------------------------------------*/
 static size_t
-write_int(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
+write_int(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
           int32_t value)
 {
   int n = snprintf((char *)outbuf, outlen, "%ld", (long)value);
@@ -190,30 +179,24 @@ write_int(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
 }
 /*---------------------------------------------------------------------------*/
 static size_t
-write_float32fix(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
+write_float32fix(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
                  int32_t value, int bits)
 {
   return lwm2m_plain_text_write_float32fix(outbuf, outlen, value, bits);
 }
 /*---------------------------------------------------------------------------*/
 static size_t
-write_string(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
+write_string(const lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
              const char *value, size_t stringlen)
 {
-  int totlen = stringlen;
-  if(stringlen >= outlen) {
+  int n = snprintf((char *)outbuf, outlen, "%.*s", (int) stringlen, value);
+  if(n < 0 || n >= outlen) {
     return 0;
   }
-  memmove(outbuf, value, totlen);
-  outbuf[totlen] = 0;
-  return totlen;
+  return n;
 }
 /*---------------------------------------------------------------------------*/
 const lwm2m_writer_t lwm2m_plain_text_writer = {
-  init_write,
-  end_write,
-  NULL, /* No support for sub resources here! */
-  NULL,
   write_int,
   write_string,
   write_float32fix,
@@ -221,16 +204,14 @@ const lwm2m_writer_t lwm2m_plain_text_writer = {
 };
 /*---------------------------------------------------------------------------*/
 static size_t
-read_int(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
+read_int(const lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
          int32_t *value)
 {
-  int size = lwm2m_plain_text_read_int(inbuf, len, value);
-  ctx->last_value_len = size;
-  return size;
+  return lwm2m_plain_text_read_int(inbuf, len, value);
 }
 /*---------------------------------------------------------------------------*/
 static size_t
-read_string(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
+read_string(const lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
             uint8_t *value, size_t stringlen)
 {
   if(stringlen <= len) {
@@ -239,28 +220,23 @@ read_string(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
   }
   memcpy(value, inbuf, len);
   value[len] = '\0';
-  ctx->last_value_len = len;
   return len;
 }
 /*---------------------------------------------------------------------------*/
 static size_t
-read_float32fix(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
+read_float32fix(const lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
                 int32_t *value, int bits)
 {
-  int size;
-  size = lwm2m_plain_text_read_float32fix(inbuf, len, value, bits);
-  ctx->last_value_len = size;
-  return size;
+  return lwm2m_plain_text_read_float32fix(inbuf, len, value, bits);
 }
 /*---------------------------------------------------------------------------*/
 static size_t
-read_boolean(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
+read_boolean(const lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
              int *value)
 {
   if(len > 0) {
     if(*inbuf == '1' || *inbuf == '0') {
       *value = *inbuf == '1' ? 1 : 0;
-      ctx->last_value_len = 1;
       return 1;
     }
   }

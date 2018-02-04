@@ -51,7 +51,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-#include "coap-engine.h"
+#include "rest-engine.h"
 #include "uip.h"
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
@@ -63,7 +63,7 @@
  * Resources to be activated need to be imported through the extern keyword.
  * The build system automatically compiles the resources in the corresponding sub-directory.
  */
-extern coap_resource_t res_led3;
+extern resource_t res_led3;
 
 static void
 print_local_addresses(void)
@@ -99,13 +99,13 @@ PROCESS_THREAD(er_example_server, ev, data)
   PRINTF("uIP buffer: %u\n", UIP_BUFSIZE);
   PRINTF("LL header: %u\n", UIP_LLH_LEN);
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
-  PRINTF("REST max chunk: %u\n", COAP_MAX_CHUNK_SIZE);
+  PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
 
   print_local_addresses();
 
   /* Initialize the REST engine. */
-  coap_engine_init();
-  coap_activate_resource(&res_led3, "lights/led3");
+  rest_init_engine();
+  rest_activate_resource(&res_led3, "lights/led3");
 
   SENSORS_ACTIVATE(button_1);
 

@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup lwm2m
+ * \addtogroup oma-lwm2m
  * @{
  */
 

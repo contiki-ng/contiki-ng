@@ -36,15 +36,14 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <stdio.h>
 #include <string.h>
 #include "sys/cc.h"
-#include "coap-engine.h"
+#include "rest-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(
   res_plugtest_large_update,
@@ -59,21 +58,21 @@ static uint8_t large_update_store[MAX_PLUGFEST_BODY] = { 0 };
 static unsigned int large_update_ct = APPLICATION_OCTET_STREAM;
 
 static void
-res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* Check the offset for boundaries of the resource data. */
   if(*offset >= large_update_size) {
-    coap_set_status_code(response, BAD_OPTION_4_02);
+    REST.set_response_status(response, REST.status.BAD_OPTION);
     /* A block error message should not exceed the minimum block size (16). */
 
     const char *error_msg = "BlockOutOfScope";
-    coap_set_payload(response, error_msg, strlen(error_msg));
+    REST.set_response_payload(response, error_msg, strlen(error_msg));
     return;
   }
 
-  coap_set_payload(response, large_update_store + *offset,
+  REST.set_response_payload(response, large_update_store + *offset,
                             MIN(large_update_size - *offset, preferred_size));
-  coap_set_header_content_format(response, large_update_ct);
+  REST.set_header_content_type(response, large_update_ct);
 
   /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
   *offset += preferred_size;
@@ -84,22 +83,22 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   }
 }
 static void
-res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_message_t *const coap_req = (coap_message_t *)request;
+  coap_packet_t *const coap_req = (coap_packet_t *)request;
   uint8_t *incoming = NULL;
   size_t len = 0;
 
   unsigned int ct = -1;
 
-  if(!coap_get_header_content_format(request, &ct)) {
-    coap_set_status_code(response, BAD_REQUEST_4_00);
+  if(!REST.get_header_content_type(request, &ct)) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
     const char *error_msg = "NoContentType";
-    coap_set_payload(response, error_msg, strlen(error_msg));
+    REST.set_response_payload(response, error_msg, strlen(error_msg));
     return;
   }
 
-  if((len = coap_get_payload(request, (const uint8_t **)&incoming))) {
+  if((len = REST.get_request_payload(request, (const uint8_t **)&incoming))) {
     if(coap_req->block1_num * coap_req->block1_size + len <= sizeof(large_update_store)) {
       memcpy(
         large_update_store + coap_req->block1_num * coap_req->block1_size,
@@ -107,13 +106,13 @@ res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
       large_update_size = coap_req->block1_num * coap_req->block1_size + len;
       large_update_ct = ct;
 
-      coap_set_status_code(response, CHANGED_2_04);
+      REST.set_response_status(response, REST.status.CHANGED);
       coap_set_header_block1(response, coap_req->block1_num, 0,
                              coap_req->block1_size);
     } else {
-      coap_set_status_code(response,
-                               REQUEST_ENTITY_TOO_LARGE_4_13);
-      coap_set_payload(
+      REST.set_response_status(response,
+                               REST.status.REQUEST_ENTITY_TOO_LARGE);
+      REST.set_response_payload(
         response,
         buffer,
         snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "%uB max.",
@@ -121,9 +120,9 @@ res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
       return;
     }
   } else {
-    coap_set_status_code(response, BAD_REQUEST_4_00);
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
     const char *error_msg = "NoPayload";
-    coap_set_payload(response, error_msg, strlen(error_msg));
+    REST.set_response_payload(response, error_msg, strlen(error_msg));
     return;
   }
 }

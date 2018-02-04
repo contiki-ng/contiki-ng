@@ -36,33 +36,8 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-/**
- * \addtogroup coap
- * @{
- */
-
-#ifndef COAP_CONF_H_
-#define COAP_CONF_H_
-
-#include "contiki.h"
-
-/*
- * The maximum buffer size that is provided for resource responses and must be
- * respected due to the limited IP buffer.  Larger data must be handled by the
- * resource and will be sent chunk-wise through a TCP stream or CoAP blocks.
- */
-#ifndef COAP_MAX_CHUNK_SIZE
-#ifdef REST_MAX_CHUNK_SIZE
-#define COAP_MAX_CHUNK_SIZE REST_MAX_CHUNK_SIZE
-#else /* REST_MAX_CHUNK_SIZE */
-#define COAP_MAX_CHUNK_SIZE     64
-#endif /* REST_MAX_CHUNK_SIZE */
-#endif /* COAP_MAX_CHUNK_SIZE */
-
-/* Define REST_MAX_CHUNK_SIZE for backward compatibility */
-#ifndef REST_MAX_CHUNK_SIZE
-#define REST_MAX_CHUNK_SIZE COAP_MAX_CHUNK_SIZE
-#endif /* REST_MAX_CHUNK_SIZE */
+#ifndef ER_COAP_CONF_H_
+#define ER_COAP_CONF_H_
 
 /* Features that can be disabled to achieve smaller memory footprint */
 #ifndef COAP_LINK_FORMAT_FILTERING
@@ -103,5 +78,4 @@
 #define COAP_OBSERVE_REFRESH_INTERVAL  20
 #endif /* COAP_OBSERVE_REFRESH_INTERVAL */
 
-#endif /* COAP_CONF_H_ */
-/** @} */
+#endif /* ER_COAP_CONF_H_ */

@@ -42,56 +42,118 @@
  */
 
 #include <stdint.h>
-#include "ipso-sensor-template.h"
 #include "ipso-objects.h"
 #include "lwm2m-object.h"
 #include "lwm2m-engine.h"
+#include "coap-engine.h"
 
 #ifdef IPSO_TEMPERATURE
 extern const struct ipso_objects_sensor IPSO_TEMPERATURE;
 #endif /* IPSO_TEMPERATURE */
 
 #ifndef IPSO_TEMPERATURE_MIN
-#define IPSO_TEMPERATURE_MIN -50000
+#define IPSO_TEMPERATURE_MIN (-50 * LWM2M_FLOAT32_FRAC)
 #endif
 
 #ifndef IPSO_TEMPERATURE_MAX
-#define IPSO_TEMPERATURE_MAX 80000
+#define IPSO_TEMPERATURE_MAX (80 * LWM2M_FLOAT32_FRAC)
 #endif
 
-static lwm2m_status_t get_temp_value(const ipso_sensor_t *sensor,
-                                     int32_t *value);
-
-IPSO_SENSOR(temp_sensor, 3303, get_temp_value,
-            .max_range = IPSO_TEMPERATURE_MAX, /* milli celcius */
-            .min_range = IPSO_TEMPERATURE_MIN, /* milli celcius */
-            .unit = "Cel",
-            .update_interval = 10
-            );
-
+static struct ctimer periodic_timer;
+static int32_t min_temp;
+static int32_t max_temp;
+static int read_temp(int32_t *value);
 /*---------------------------------------------------------------------------*/
-static lwm2m_status_t
-get_temp_value(const ipso_sensor_t *s, int32_t *value)
+static int
+temp(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outsize)
+{
+  int32_t value;
+  if(read_temp(&value)) {
+    return ctx->writer->write_float32fix(ctx, outbuf, outsize,
+                                         value, LWM2M_FLOAT32_BITS);
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+LWM2M_RESOURCES(temperature_resources,
+                /* Temperature (Current) */
+                LWM2M_RESOURCE_CALLBACK(5700, { temp, NULL, NULL }),
+                /* Units */
+                LWM2M_RESOURCE_STRING(5701, "Cel"),
+                /* Min Range Value */
+                LWM2M_RESOURCE_FLOATFIX(5603, IPSO_TEMPERATURE_MIN),
+                /* Max Range Value */
+                LWM2M_RESOURCE_FLOATFIX(5604, IPSO_TEMPERATURE_MAX),
+                /* Min Measured Value */
+                LWM2M_RESOURCE_FLOATFIX_VAR(5601, &min_temp),
+                /* Max Measured Value */
+                LWM2M_RESOURCE_FLOATFIX_VAR(5602, &max_temp),
+                );
+LWM2M_INSTANCES(temperature_instances,
+                LWM2M_INSTANCE(0, temperature_resources));
+LWM2M_OBJECT(temperature, 3303, temperature_instances);
+/*---------------------------------------------------------------------------*/
+static int
+read_temp(int32_t *value)
 {
 #ifdef IPSO_TEMPERATURE
+  int32_t temp;
   if(IPSO_TEMPERATURE.read_value == NULL ||
-     IPSO_TEMPERATURE.read_value(value) != 0) {
-    return LWM2M_STATUS_OK;
+     IPSO_TEMPERATURE.read_value(&temp) != 0) {
+    return 0;
   }
+
+  /* Convert milliCelsius to fix float */
+  *value = (temp * LWM2M_FLOAT32_FRAC) / 1000;
+
+  if(*value < min_temp) {
+    min_temp = *value;
+    lwm2m_object_notify_observers(&temperature, "/0/5601");
+  }
+  if(*value > max_temp) {
+    max_temp = *value;
+    lwm2m_object_notify_observers(&temperature, "/0/5602");
+  }
+  return 1;
+#else /* IPSO_TEMPERATURE */
+  return 0;
 #endif /* IPSO_TEMPERATURE */
-  return LWM2M_STATUS_ERROR;
+}
+/*---------------------------------------------------------------------------*/
+static void
+handle_periodic_timer(void *ptr)
+{
+  static int32_t last_value = IPSO_TEMPERATURE_MIN;
+  int32_t v;
+
+  /* Only notify when the value has changed since last */
+  if(read_temp(&v) && v != last_value) {
+    last_value = v;
+    lwm2m_object_notify_observers(&temperature, "/0/5700");
+  }
+  ctimer_reset(&periodic_timer);
 }
 /*---------------------------------------------------------------------------*/
 void
 ipso_temperature_init(void)
 {
+  int32_t v;
+  min_temp = IPSO_TEMPERATURE_MAX;
+  max_temp = IPSO_TEMPERATURE_MIN;
+
 #ifdef IPSO_TEMPERATURE
   if(IPSO_TEMPERATURE.init) {
     IPSO_TEMPERATURE.init();
   }
 #endif /* IPSO_TEMPERATURE */
 
-  ipso_sensor_add(&temp_sensor);
+  /* register this device and its handlers - the handlers automatically
+     sends in the object to handle */
+  lwm2m_engine_register_object(&temperature);
+
+  /* update temp and min/max + notify any listeners */
+  read_temp(&v);
+  ctimer_set(&periodic_timer, CLOCK_SECOND * 10, handle_periodic_timer, NULL);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -36,14 +36,13 @@
  *      Lars Schmertmann <SmallLars@t-online.de>
  */
 
-#include <stdio.h>
 #include <string.h>
-#include "coap-engine.h"
+#include "rest-engine.h"
 #include "coap-block1.h"
 #include "coap-separate.h"
 #include "coap-transactions.h"
 
-static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 SEPARATE_RESOURCE(res_b1_sep_b2, "title=\"Block1 + Separate + Block2 demo\"", NULL, res_post_handler, NULL, NULL, NULL);
 
 #define MAX_DATA_LEN 256
@@ -53,7 +52,7 @@ static size_t big_msg_len = 0;
 static coap_separate_t request_metadata;
 
 static void
-res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /* Example allows only one request on time. There are no checks for multiply access !!! */
   if(*offset == 0) {
@@ -76,8 +75,8 @@ res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buf
 
     /* Send first block */
     coap_transaction_t *transaction = NULL;
-    if((transaction = coap_new_transaction(request_metadata.mid, &request_metadata.endpoint))) {
-      coap_message_t resp[1]; /* This way the message can be treated as pointer as usual. */
+    if((transaction = coap_new_transaction(request_metadata.mid, &request_metadata.addr, request_metadata.port))) {
+      coap_packet_t resp[1]; /* This way the packet can be treated as pointer as usual. */
 
       /* Restore the request information for the response. */
       coap_separate_resume(resp, &request_metadata, CONTENT_2_05);
@@ -89,7 +88,7 @@ res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buf
       }
 
       /* Warning: No check for serialization error. */
-      transaction->message_len = coap_serialize_message(resp, transaction->message);
+      transaction->packet_len = coap_serialize_message(resp, transaction->packet);
       coap_send_transaction(transaction);
     }
   } else {

@@ -36,21 +36,23 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-/**
- * \addtogroup coap
- * @{
- */
-
-#include "coap.h"
+#include "sys/cc.h"
+#include <stdio.h>
+#include <string.h>
 #include "coap-separate.h"
 #include "coap-transactions.h"
-#include "sys/cc.h"
-#include <string.h>
 
-/* Log configuration */
-#include "coap-log.h"
-#define LOG_MODULE "coap-separate"
-#define LOG_LEVEL  LOG_LEVEL_COAP
+#define DEBUG 0
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
+#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
+#else
+#define PRINTF(...)
+#define PRINT6ADDR(addr)
+#define PRINTLLADDR(addr)
+#endif
 
 /*---------------------------------------------------------------------------*/
 /*- Separate Response API ---------------------------------------------------*/
@@ -67,13 +69,13 @@ void
 coap_separate_reject()
 {
   /* TODO: Accept string pointer for custom error message */
-  coap_status_code = SERVICE_UNAVAILABLE_5_03;
+  erbium_status_code = SERVICE_UNAVAILABLE_5_03;
   coap_error_message = "AlreadyInUse";
 }
 /*----------------------------------------------------------------------------*/
 /**
  * \brief Initiate a separate response with an empty ACK
- * \param coap_req The request to accept
+ * \param request The request to accept
  * \param separate_store A pointer to the data structure that will store the
  *   relevant information for the response
  *
@@ -83,33 +85,29 @@ coap_separate_reject()
  * then retry later.
  */
 void
-coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
+coap_separate_accept(void *request, coap_separate_t *separate_store)
 {
+  coap_packet_t *const coap_req = (coap_packet_t *)request;
   coap_transaction_t *const t = coap_get_transaction_by_mid(coap_req->mid);
 
-  LOG_DBG("Separate ACCEPT: /");
-  LOG_DBG_COAP_STRING(coap_req->uri_path, coap_req->uri_path_len);
-  LOG_DBG_(" MID %u\n", coap_req->mid);
+  PRINTF("Separate ACCEPT: /%.*s MID %u\n", coap_req->uri_path_len,
+         coap_req->uri_path, coap_req->mid);
   if(t) {
     /* send separate ACK for CON */
     if(coap_req->type == COAP_TYPE_CON) {
-      coap_message_t ack[1];
-      const coap_endpoint_t *ep;
+      coap_packet_t ack[1];
 
-      ep = coap_get_src_endpoint(coap_req);
-      if(ep == NULL) {
-        LOG_ERR("ERROR: no endpoint in request\n");
-      } else {
-        /* ACK with empty code (0) */
-        coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
-        /* serializing into IPBUF: Only overwrites header parts that are already parsed into the request struct */
-        coap_sendto(ep, coap_databuf(),
-                    coap_serialize_message(ack, coap_databuf()));
-      }
+      /* ACK with empty code (0) */
+      coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
+      /* serializing into IPBUF: Only overwrites header parts that are already parsed into the request struct */
+      coap_send_message(&UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport,
+                        (uip_appdata), coap_serialize_message(ack,
+                                                              uip_appdata));
     }
 
-    /* store remote endpoint address */
-    coap_endpoint_copy(&separate_store->endpoint, &t->endpoint);
+    /* store remote address */
+    uip_ipaddr_copy(&separate_store->addr, &t->addr);
+    separate_store->port = t->port;
 
     /* store correct response type */
     separate_store->type =
@@ -126,15 +124,15 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
     separate_store->block2_size = coap_req->block2_size > 0 ? MIN(COAP_MAX_BLOCK_SIZE, coap_req->block2_size) : COAP_MAX_BLOCK_SIZE;
 
     /* signal the engine to skip automatic response and clear transaction by engine */
-    coap_status_code = MANUAL_RESPONSE;
+    erbium_status_code = MANUAL_RESPONSE;
   } else {
-    LOG_ERR("ERROR: Response transaction for separate request not found!\n");
-    coap_status_code = INTERNAL_SERVER_ERROR_5_00;
+    PRINTF("ERROR: Response transaction for separate request not found!\n");
+    erbium_status_code = INTERNAL_SERVER_ERROR_5_00;
   }
 }
 /*----------------------------------------------------------------------------*/
 void
-coap_separate_resume(coap_message_t *response, coap_separate_t *separate_store,
+coap_separate_resume(void *response, coap_separate_t *separate_store,
                      uint8_t code)
 {
   coap_init_message(response, separate_store->type, code,
@@ -149,4 +147,3 @@ coap_separate_resume(coap_message_t *response, coap_separate_t *separate_store,
   }
 }
 /*---------------------------------------------------------------------------*/
-/** @} */
