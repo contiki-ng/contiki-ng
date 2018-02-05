@@ -27,51 +27,46 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-srf-tag
+ * \addtogroup cc26xx-clocks
  * @{
  *
+ * \defgroup cc26xx-rtimer CC13xx/CC26xx rtimer
+ *
+ * Implementation of the rtimer module for the CC13xx/CC26xx
+ * @{
+ */
+/**
  * \file
- *  Configuration for the srf06-cc26xx platform
+ * Header file for the CC13xx/CC26xx rtimer driver
  */
-#ifndef CONTIKI_CONF_H
-#define CONTIKI_CONF_H
+/*---------------------------------------------------------------------------*/
+#ifndef RTIMER_ARCH_H_
+#define RTIMER_ARCH_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+/*---------------------------------------------------------------------------*/
+inline rtimer_clock_t rtimer_arch_now(void) { rtimer_clock_t rtc = { 0 }; return rtc; }
 
-#include <stdint.h>
+/* HW oscillator frequency is 32 kHz, not 64 kHz and RTIMER_NOW() never returns
+ * an odd value; so US_TO_RTIMERTICKS always rounds to the nearest even number.
+ */
+#define US_TO_RTIMERTICKS(US)  (2 * ((US) >= 0 ?                        \
+                               (((int32_t)(US) * (RTIMER_ARCH_SECOND / 2) + 500000) / 1000000L) :      \
+                                ((int32_t)(US) * (RTIMER_ARCH_SECOND / 2) - 500000) / 1000000L))
+
+#define RTIMERTICKS_TO_US(T)   ((T) >= 0 ?                     \
+                               (((int32_t)(T) * 1000000L + ((RTIMER_ARCH_SECOND) / 2)) / (RTIMER_ARCH_SECOND)) : \
+                               ((int32_t)(T) * 1000000L - ((RTIMER_ARCH_SECOND) / 2)) / (RTIMER_ARCH_SECOND))
+
+/* A 64-bit version because the 32-bit one cannot handle T >= 4295 ticks.
+   Intended only for positive values of T. */
+#define RTIMERTICKS_TO_US_64(T)  ((uint32_t)(((uint64_t)(T) * 1000000 + ((RTIMER_ARCH_SECOND) / 2)) / (RTIMER_ARCH_SECOND)))
 /*---------------------------------------------------------------------------*/
-/* Include Project Specific conf */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
-/*---------------------------------------------------------------------------*/
-#include "simplelink-def.h"
+#endif /* RTIMER_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
 /**
- * \name Button configurations
- *
- * Configure a button as power on/off: We use the right button for both boards.
- * @{
+ * @}
+ * @}
  */
-#ifndef BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN
-#define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN 1
-#endif
-
-/* Notify various examples that we have Buttons */
-#define PLATFORM_HAS_BUTTON      1
-
-/*
- * Override button symbols from dev/button-sensor.h, for the examples that
- * include it
- */
-#define button_sensor button_left_sensor
-#define button_sensor2 button_right_sensor
-/** @} */
-/*---------------------------------------------------------------------------*/
-/* Platform-specific define to signify sensor reading failure */
-#define CC26XX_SENSOR_READING_ERROR        0x80000000
-/*---------------------------------------------------------------------------*/
-/* Include CPU-related configuration */
-#include "simplelink-conf.h"
-#endif /* CONTIKI_CONF_H */
-
-/** @} */

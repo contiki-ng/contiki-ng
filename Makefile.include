@@ -39,13 +39,15 @@ ifdef CI
   endif
 endif
 
-OBJECTDIR = obj_$(TARGET)
+OBJECTDIR := obj_$(TARGET)
 
-LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
-UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
+LOWERCASE := -abcdefghijklmnopqrstuvwxyz/
+UPPERCASE := _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
 TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
-CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
+CFLAGS += -DCONTIKI=1
+CFLAGS += -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 CFLAGS += -DCONTIKI_TARGET_STRING=\"$(TARGET)\"
+
 ifneq ($(BOARD),)
 TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
 CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
@@ -479,6 +481,7 @@ endif
 # Cancel the predefined implict rule for compiling and linking
 # a single C source into a binary to force GNU make to consider
 # the match-anything rule below instead.
+<<<<<<< HEAD
 %: %.c
 
 ifeq ($(PLATFORM_ACTION),skip)
@@ -493,3 +496,12 @@ else
 %: %.$(TARGET)
 	@
 endif
+=======
+#%: %.c
+#
+## Match-anything pattern rule to allow the project makefiles to
+## abstract from the actual binary name. It needs to contain some
+## command in order to be a rule, not just a prerequisite.
+#%: %.$(TARGET)
+#	@echo "match anything rule"
+>>>>>>> Compiling example of dummy simplelink platform

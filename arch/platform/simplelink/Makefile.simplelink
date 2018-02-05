@@ -9,39 +9,20 @@ ifndef SIMPLELINK_SDK
 endif
 
 ### Board and BSP selection
-#BOARD ?= srf06/cc26xx
-#BOARDS = srf06/cc26xx srf06/cc13xx launchpad/cc26xx launchpad/cc13xx sensortag/cc26xx sensortag/cc13xx
 
-CONTIKI_TARGET_DIRS += ./
+CONTIKI_TARGET_DIRS += .
 
-### Include the board-specific makefile
-PLATFORM_ROOT_DIR = $(CONTIKI)/arch/platform/$(TARGET)
-#-include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(notdir $(BOARD))
+CONTIKI_TARGET_SOURCEFILES += platform.c
 
-#CONTIKI_TARGET_SOURCEFILES += platform.c
-#CONTIKI_TARGET_SOURCEFILES += sensors.c leds.c
-#CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
-
-#CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
-CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
-
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 CLEAN += *.simplelink
 
 ### Unless the example dictates otherwise, build without code size optimisations
 SMALL ?= 0
 
-### Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
-### to make clean first
-$(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -include "ccxxware-conf.h" -c $< -o $@
-
-### Define the CPU directory and pull in the correct CPU makefile. This will
-### be defined by one of the makefiles included above and it can be either
-### Makefile.cc26xx or Makefile.cc13xx
-CFLAGS += -I$(CONTIKI)/arch/cpu/arm/cortex-m/
-include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4
+CONTIKI_CPU = $(CONTIKI)/arch/cpu/simplelink
+include $(CONTIKI_CPU)/Makefile.simplelink
 
 #MODULES += os/net os/net/mac os/net/mac/framer
 

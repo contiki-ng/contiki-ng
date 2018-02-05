@@ -1,13 +1,26 @@
 CONTIKI_ARM_DIRS += cortex-m/cm4
 
 CFLAGS += -mcpu=cortex-m4
-LDFLAGS += -mcpu=cortex-m4
+
+LDFLAGS += -mcpu=cortex-m4 -nostartfiles
+LDFLAGS += -T $(LDSCRIPT)
+LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
+LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map),--cref,--no-warn-mismatch
+
+OBJCOPY_FLAGS += --gap-fill 0xff
+
+### Build syscalls for newlib
+MODULES += os/lib/newlib
+
+CPU_STARTFILES := ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
 
 ### Compilation rules
-CUSTOM_RULE_LINK=1
+CUSTOM_RULE_LINK = 1
 
-%.elf: $(TARGET_STARTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(TARGET_LIBS)
+.SECONDEXPANSION:
+
+%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(TARGET_LIBS) $(CONTIKI_NG_TARGET_LIB)
 	$(TRACE_LD)
-	$(Q)$(CC) $(LDFLAGS) ${filter %.o %.a,$^} -o $@
+	$(Q)$(LD) $(LDFLAGS) ${filter %.o %.a,$^} $(TARGET_LIBS) -o $@
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m

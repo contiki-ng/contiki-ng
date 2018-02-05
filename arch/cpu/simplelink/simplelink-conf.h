@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, Alex Stanoev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,50 +28,49 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-srf-tag
+ * \addtogroup cc26xx
+ * @{
+ *
+ * \defgroup cc26xx-ccxxware-conf CCxxware-specific configuration
+ *
  * @{
  *
  * \file
- *  Configuration for the srf06-cc26xx platform
+ *  CCxxware-specific configuration for the cc26xx-cc13xx CPU family
  */
-#ifndef CONTIKI_CONF_H
-#define CONTIKI_CONF_H
+#ifndef CCXXWARE_CONF_H_
+#define CCXXWARE_CONF_H_
 
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-/* Include Project Specific conf */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
-/*---------------------------------------------------------------------------*/
-#include "simplelink-def.h"
+#include "contiki-conf.h"
+
 /*---------------------------------------------------------------------------*/
 /**
- * \name Button configurations
+ * \brief JTAG interface configuration
  *
- * Configure a button as power on/off: We use the right button for both boards.
+ * Those values are not meant to be modified by the user
  * @{
  */
-#ifndef BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN
-#define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN 1
+#if CCXXWARE_CONF_JTAG_INTERFACE_ENABLE
+#define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0xC5
+#define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE          0xC5
+#define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE         0xC5
+#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE         0xC5
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0xC5
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0xC5
+#define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0xC5
+#else
+#define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0x00
+#define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE          0x00
+#define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE         0x00
+#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE         0x00
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0x00
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0x00
+#define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0x00
 #endif
-
-/* Notify various examples that we have Buttons */
-#define PLATFORM_HAS_BUTTON      1
-
-/*
- * Override button symbols from dev/button-sensor.h, for the examples that
- * include it
+/** @} */
+#endif /* CCXXWARE_CONF_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
  */
-#define button_sensor button_left_sensor
-#define button_sensor2 button_right_sensor
-/** @} */
-/*---------------------------------------------------------------------------*/
-/* Platform-specific define to signify sensor reading failure */
-#define CC26XX_SENSOR_READING_ERROR        0x80000000
-/*---------------------------------------------------------------------------*/
-/* Include CPU-related configuration */
-#include "simplelink-conf.h"
-#endif /* CONTIKI_CONF_H */
-
-/** @} */
