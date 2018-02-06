@@ -12,6 +12,7 @@ SDK_KERNEL := $(SIMPLELINK_SDK)/kernel/nortos
 SDK_BOARDS := $(SDK_SOURCE)/ti/boards
 SDK_STARTUP := $(SDK_DEVICE_SOURCE)/startup_files
 SDK_STARTUP_SRCS = ccfg.c
+
 EXTERNALDIRS += $(SDK_STARTUP)
 
 

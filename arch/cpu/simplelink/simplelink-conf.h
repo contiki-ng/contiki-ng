@@ -37,8 +37,8 @@
  * Header with configuration defines common to all CC13xx/CC26xx platforms
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC13XX_CC26XX_CONF_H_
-#define CC13XX_CC26XX_CONF_H_
+#ifndef SIMPLELINK_CONF_H_
+#define SIMPLELINK_CONF_H_
 /*---------------------------------------------------------------------------*/
 /**
  * \name Network Stack Configuration
@@ -199,6 +199,6 @@
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
-#endif /* CC13XX_CC26XX_CONF_H_ */
+#endif /* SIMPLELINK_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */

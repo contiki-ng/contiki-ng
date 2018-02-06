@@ -97,7 +97,7 @@ rtimer_arch_init(void)
   hClk = ClockP_construct(&gClk, rtimer_clock_stub, 0, &clkParams);
 
   // Try to access the RAM vector table
-  volatile IsrFxn * const pfnRAMVectors = (IsrFxn *)(HWREG(NVIC_VTABLE));
+  volatile IsrFxn * const pfnRAMVectors = (volatile IsrFxn *)(HWREG(NVIC_VTABLE));
   if (!pfnRAMVectors)
   {
     while (0) { /* hang */ }

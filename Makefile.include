@@ -39,6 +39,12 @@ ifdef CI
   endif
 endif
 
+# Prevent Make from remaking any makefiles. This was particularly an
+# issue when you had a Makefile with a suffix equal to that of $(TARGET),
+# as it managed to match with the %.$(TARGET) rule, which in turn fucked up
+# everything. Now this isn't the case.
+Makefile.%: ;
+
 OBJECTDIR := obj_$(TARGET)
 
 LOWERCASE := -abcdefghijklmnopqrstuvwxyz/
@@ -321,7 +327,10 @@ distclean:
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 
--include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
+custom_rules := $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
+ifneq ("$(wildcard $(custom_rules))","")
+-include $(custom_rules)
+endif
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
@@ -382,6 +391,10 @@ endif
 ifndef LD
   LD = $(CC)
 endif
+
+### Make sure Makefiles with the $(TARGET) suffix doesn't match
+Makefile.$(TARGET):
+	@
 
 ifndef CUSTOM_RULE_LINK
 %.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
@@ -477,6 +490,8 @@ endif
 # Don't treat %.$(TARGET) as an intermediate file because it is
 # in fact the primary target.
 .PRECIOUS: %.$(TARGET)
+
+
 
 # Cancel the predefined implict rule for compiling and linking
 # a single C source into a binary to force GNU make to consider
