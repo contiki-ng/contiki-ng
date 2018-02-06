@@ -50,6 +50,7 @@
 #include <Board.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/Power.h>
+#include <NoRTOS.h>
 
 
 //#include "leds.h"
@@ -131,6 +132,8 @@ platform_init_stage_one()
 {
     Board_initGeneral();
     GPIO_init();
+    NoRTOS_start();
+
     GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_ON);
     GPIO_write(Board_GPIO_LED1, Board_GPIO_LED_OFF);
 //  /* Enable flash cache and prefetch. */

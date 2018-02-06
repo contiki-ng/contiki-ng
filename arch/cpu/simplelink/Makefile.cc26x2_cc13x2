@@ -8,10 +8,11 @@ endif
 CFLAGS += -I$(CPU_ABS_PATH)/cc26x2_cc13x2
 CFLAGS += -I$(SDK_KERNEL)
 
-TARGET_LIBFILES += $(SDK_DRIVERLIB)/bin/gcc/driverlib.lib
+TARGET_LIBFILES += $(SDK_DRIVERS)/rf/lib/rf_multiMode_cc13x2.am4fg
 TARGET_LIBFILES += $(SDK_DRIVERS)/lib/drivers_cc13x2.am4fg
-TARGET_LIBFILES += $(SDK_DRIVERS)/lib/rf_multiMode_cc13x2.am4fg
 TARGET_LIBFILES += $(SDK_KERNEL)/lib/nortos_cc13x2.am4fg
+TARGET_LIBFILES += $(SDK_DRIVERLIB)/bin/gcc/driverlib.lib
+
 
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4

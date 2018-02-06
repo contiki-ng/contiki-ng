@@ -7,6 +7,9 @@ LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map),--cref,--no-warn-mismatch
 
+TARGET_LIBFLAGS := ${addprefix -l:,$(TARGET_LIBFILES)}
+TARGET_LIBFLAGS += -gcc -lm -lnosys -lc
+
 OBJCOPY_FLAGS += --gap-fill 0xff
 
 ### Build syscalls for newlib
@@ -19,8 +22,8 @@ CUSTOM_RULE_LINK = 1
 
 .SECONDEXPANSION:
 
-%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(TARGET_LIBS) $(CONTIKI_NG_TARGET_LIB)
+%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES)
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) ${filter %.o %.a,$^} $(TARGET_LIBS) -o $@
+	$(Q)$(LD) $(LDFLAGS) ${filter %.o %.a,$^} -Wl,--start-group $(TARGET_LIBFLAGS) -Wl,--end-group -o $@
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m
