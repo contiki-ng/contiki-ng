@@ -8,7 +8,8 @@ SDK_DEVICE := $(shell ls $(SDK_DEVICES) | grep $(SIMPLELINK_DEVICE))
 SDK_DEVICE_SOURCE := $(SDK_SOURCE)/ti/devices/$(SDK_DEVICE)
 SDK_DRIVERLIB := $(SDK_DEVICE_SOURCE)/driverlib
 SDK_DRIVERS := $(SDK_SOURCE)/ti/drivers
-SDK_KERNEL := $(SIMPLELINK_SDK)/kernel/nortos/
+SDK_KERNEL := $(SIMPLELINK_SDK)/kernel/nortos
+SDK_BOARDS := $(SDK_SOURCE)/ti/boards
 SDK_STARTUP := $(SDK_DEVICE_SOURCE)/startup_files
 SDK_STARTUP_SRCS = ccfg.c startup_gcc.c
 EXTERNALDIRS += $(SDK_STARTUP)
@@ -67,7 +68,7 @@ $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 ### to make clean first
 $(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -include "simplelink-conf.h" -c $< -o $@
+	$(Q)$(CC) $(CFLAGS) -include "ccfg-conf.h" -c $< -o $@
 
 RAM_SIZE = 0x00003E00
 FLASH_SIZE = 0x0001E000

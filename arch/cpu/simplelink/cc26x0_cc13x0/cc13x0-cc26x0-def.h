@@ -94,7 +94,7 @@
 #define RTIMER_ARCH_SECOND 65536
 /*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
-//#define CMSIS_CONF_HEADER_PATH               "cc13x0-cc26x0-cm3.h"
+#define CMSIS_CONF_HEADER_PATH               "cc13x2-cc26x2-cm4.h"
 
 /* Path to headers with implementation of mutexes and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"

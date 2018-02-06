@@ -37,7 +37,8 @@
  */
 /*---------------------------------------------------------------------------*/
 #include <ti/drivers/dpl/ClockP.h>
-#include <ti/drivers/dpl/TimerP.h>
+
+#include <driverlib/aon_event.h>
 #include <driverlib/aon_rtc.h>
 #include <driverlib/interrupt.h>
 
@@ -53,10 +54,17 @@ static ClockP_Handle hClk;
 typedef void (*IsrFxn)(void);
 typedef void (*HwiDispatchFxn)(void);
 
-static HwiDispatchFxn hwiDispatch = NULL;
+static volatile HwiDispatchFxn hwiDispatch = NULL;
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief TODO
+ */
 static void rtimer_clock_stub(uintptr_t arg) { /* do nothing */ }
-
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief TODO
+ */
 static void
 rtimer_isr_hook(void)
 {
@@ -76,7 +84,6 @@ rtimer_isr_hook(void)
     IntPendClear(INT_AON_RTC_COMB);
   }
 }
-
 /*---------------------------------------------------------------------------*/
 /**
  * \brief TODO
@@ -90,10 +97,10 @@ rtimer_arch_init(void)
   hClk = ClockP_construct(&gClk, rtimer_clock_stub, 0, &clkParams);
 
   // Try to access the RAM vector table
-  IsrFxn *pfnRAMVectors = (IsrFxn *)(HWREG(NVIC_VTABLE));
+  volatile IsrFxn * const pfnRAMVectors = (IsrFxn *)(HWREG(NVIC_VTABLE));
   if (!pfnRAMVectors)
   {
-    while (0) {}
+    while (0) { /* hang */ }
   }
 
   // The HWI Dispatch ISR should be located at int num INT_AON_RTC_COMB.
@@ -101,7 +108,7 @@ rtimer_arch_init(void)
   hwiDispatch = (HwiDispatchFxn)pfnRAMVectors[INT_AON_RTC_COMB];
   if (!hwiDispatch)
   {
-    while (0) {}
+    while (0) { /* hang */ }
   }
   
   // Override the INT_AON_RTC_COMB int num with own ISR hook
@@ -109,7 +116,6 @@ rtimer_arch_init(void)
 
   AONEventMcuWakeUpSet(AON_EVENT_MCU_WU1, AON_EVENT_RTC_CH1);
   AONRTCCombinedEventConfig(AON_RTC_CH0 | RTIMER_RTC_CH);
-  return;
 }
 /*---------------------------------------------------------------------------*/
 /**
