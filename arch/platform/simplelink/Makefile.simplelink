@@ -8,6 +8,17 @@ ifndef SIMPLELINK_SDK
   $(error SIMPLELINK_SDK not defined! You must specify where the SimpleLink SDK resides!)
 endif
 
+AVAILABLE_BOARDS := $(shell ls $(SIMPLELINK_SDK)/source/ti/boards/)
+AVAILABLE_BOARDS += CUSTOM # Allows an own board file in the application project
+
+ifndef SIMPLELINK_BOARD
+  $(error SIMPLELINK_BOARD not defined! You must specify a board! Available boards: $(AVAILABLE_BOARDS))
+endif
+
+ifneq ($(findstring $(SIMPLELINK_BOARD),$(AVAILABLE_BOARDS)),$(SIMPLELINK_BOARD))
+  $(error '$(SIMPLELINK_BOARD)' is not a valid board. Available boards: $(AVAILABLE_BOARDS))
+endif
+
 ### Board and BSP selection
 
 CONTIKI_TARGET_DIRS += .

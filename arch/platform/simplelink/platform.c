@@ -46,6 +46,12 @@
  */
 #include "contiki.h"
 #include "contiki-net.h"
+
+#include <Board.h>
+#include <ti/drivers/GPIO.h>
+#include <ti/drivers/Power.h>
+
+
 //#include "leds.h"
 //#include "lpm.h"
 //#include "gpio-interrupt.h"
@@ -123,6 +129,10 @@ void board_init(void);
 void
 platform_init_stage_one()
 {
+    Board_initGeneral();
+    GPIO_init();
+    GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_ON);
+    GPIO_write(Board_GPIO_LED1, Board_GPIO_LED_OFF);
 //  /* Enable flash cache and prefetch. */
 //  ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
 //  ti_lib_vims_configure(VIMS_BASE, true, true);
@@ -158,6 +168,9 @@ platform_init_stage_one()
 void
 platform_init_stage_two()
 {
+    GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_OFF);
+    GPIO_write(Board_GPIO_LED1, Board_GPIO_LED_ON);
+
 //  random_init(0x1234);
 //
 //  /* Character I/O Initialisation */
@@ -176,6 +189,9 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
+    GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_ON);
+    GPIO_write(Board_GPIO_LED1, Board_GPIO_LED_ON);
+
 //  radio_value_t chan, pan;
 //
 //  set_rf_params();
