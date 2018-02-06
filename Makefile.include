@@ -270,8 +270,10 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
 CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
-SOURCEDIRS = $(CONTIKI) $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) ${dir $(target_makefile)}
+SOURCEDIRS = $(CONTIKI) $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
+			 $(CONTIKI_ARCH_DIRS) $(CONTIKI_CPU_DIRS_CONCAT) \
+			 $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) \
+			 $(dir $(target_makefile))
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
@@ -496,7 +498,6 @@ endif
 # Cancel the predefined implict rule for compiling and linking
 # a single C source into a binary to force GNU make to consider
 # the match-anything rule below instead.
-<<<<<<< HEAD
 %: %.c
 
 ifeq ($(PLATFORM_ACTION),skip)
@@ -511,12 +512,3 @@ else
 %: %.$(TARGET)
 	@
 endif
-=======
-#%: %.c
-#
-## Match-anything pattern rule to allow the project makefiles to
-## abstract from the actual binary name. It needs to contain some
-## command in order to be a rule, not just a prerequisite.
-#%: %.$(TARGET)
-#	@echo "match anything rule"
->>>>>>> Compiling example of dummy simplelink platform

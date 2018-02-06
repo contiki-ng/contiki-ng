@@ -46,6 +46,12 @@
 
 #include <stdint.h>
 
+
+// FIXME NB TEMPORARY HACK START
+#include "radio.h"
+const struct radio_driver ieee_mode_driver = { 0 };
+// FIXME NB TEMPORARY HACK END
+
 #define RTIMER_RTC_CH AON_RTC_CH1
 
 static ClockP_Struct gClk;

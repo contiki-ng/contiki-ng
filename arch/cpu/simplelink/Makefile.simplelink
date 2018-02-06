@@ -11,7 +11,7 @@ SDK_DRIVERS := $(SDK_SOURCE)/ti/drivers
 SDK_KERNEL := $(SIMPLELINK_SDK)/kernel/nortos
 SDK_BOARDS := $(SDK_SOURCE)/ti/boards
 SDK_STARTUP := $(SDK_DEVICE_SOURCE)/startup_files
-SDK_STARTUP_SRCS = ccfg.c
+SDK_STARTUP_SRCS := ccfg.c
 
 EXTERNALDIRS += $(SDK_STARTUP)
 
@@ -19,6 +19,7 @@ EXTERNALDIRS += $(SDK_STARTUP)
 ### MODULES will add some of these to the include path, but we need to add
 ### them earlier to prevent filename clashes with Contiki core files
 CFLAGS += -I$(CPU_ABS_PATH)
+CFLAGS += -I$(CPU_ABS_PATH)/source
 CFLAGS += -I$(SDK_SOURCE)
 CFLAGS += -I$(SDK_DEVICE_SOURCE)
 CFLAGS += -I$(SDK_DEVICE_SOURCE)/inc
@@ -28,6 +29,9 @@ CFLAGS += -I$(SDK_KERNEL)/posix
 LDFLAGS += --entry resetISR
 LDFLAGS += -static
 LDFLAGS += --specs=nano.specs
+LDFLAGS += -Wl,--defsym=_stack_origin=_stack
+LDFLAGS += -Wl,--defsym=_heap=__heap_start__
+LDFLAGS += -Wl,--defsym=_eheap=__heap_end__
 
 SDK_BOARDS :=
 
@@ -51,9 +55,11 @@ endif
 ### CPU-dependent directories
 CONTIKI_ARM_DIRS += . common/dbg-io
 CONTIKI_CPU_DIRS += . $(addprefix ../arm/, $(CPU_DIRS))
+CONTIKI_CPU_DIRS += source
 
 ### CPU-dependent source files
-CONTIKI_CPU_SOURCEFILES += rtimer-arch.c
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
+CONTIKI_CPU_SOURCEFILES += watchdog-arch.c
 # CONTIKI_CPU_SOURCEFILES += contiki-watchdog.c aux-ctrl.c
 # CONTIKI_CPU_SOURCEFILES += putchar.c ieee-addr.c batmon-sensor.c adc-sensor.c
 # CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c cc26xx-uart.c lpm.c

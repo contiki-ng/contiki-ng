@@ -88,24 +88,24 @@ unsigned short node_id = 0;
 /** \brief Board specific iniatialisation */
 void board_init(void);
 /*---------------------------------------------------------------------------*/
-//static void
-//fade(unsigned char l)
-//{
-//  volatile int i;
-//  int k, j;
-//  for(k = 0; k < 800; ++k) {
-//    j = k > 400 ? 800 - k : k;
-//
-//    leds_on(l);
-//    for(i = 0; i < j; ++i) {
-//      __asm("nop");
-//    }
-//    leds_off(l);
-//    for(i = 0; i < 400 - j; ++i) {
-//      __asm("nop");
-//    }
-//  }
-//}
+static void
+fade(unsigned char l)
+{
+  volatile int i;
+  int k, j;
+  for(k = 0; k < 800; ++k) {
+    j = k > 400 ? 800 - k : k;
+
+    GPIO_write(l, Board_GPIO_LED_ON);
+    for(i = 0; i < j; ++i) {
+      __asm("nop");
+    }
+    GPIO_write(l, Board_GPIO_LED_OFF);
+    for(i = 0; i < 400 - j; ++i) {
+      __asm("nop");
+    }
+  }
+}
 /*---------------------------------------------------------------------------*/
 //static void
 //set_rf_params(void)
@@ -134,8 +134,6 @@ platform_init_stage_one()
     GPIO_init();
     NoRTOS_start();
 
-    GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_ON);
-    GPIO_write(Board_GPIO_LED1, Board_GPIO_LED_OFF);
 //  /* Enable flash cache and prefetch. */
 //  ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
 //  ti_lib_vims_configure(VIMS_BASE, true, true);
@@ -152,7 +150,7 @@ platform_init_stage_one()
 //  gpio_interrupt_init();
 //
 //  leds_init();
-//  fade(LEDS_RED);
+  fade(Board_GPIO_LED0);
 //
 //  /*
 //   * Disable I/O pad sleep mode and open I/O latches in the AON IOC interface
@@ -165,7 +163,7 @@ platform_init_stage_one()
 //  ti_lib_int_master_enable();
 //
 //  soc_rtc_init();
-//  fade(LEDS_YELLOW);
+  fade(Board_GPIO_LED1);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -186,7 +184,7 @@ platform_init_stage_two()
 //  /* Populate linkaddr_node_addr */
 //  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 //
-//  fade(LEDS_GREEN);
+  fade(Board_GPIO_LED0);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -214,7 +212,7 @@ platform_init_stage_three()
 //  LOG_INFO(" Node ID: %d\n", node_id);
 //
 //  process_start(&sensors_process, NULL);
-//  fade(LEDS_ORANGE);
+  fade(Board_GPIO_LED1);
 }
 /*---------------------------------------------------------------------------*/
 void
