@@ -47,7 +47,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
-inline rtimer_clock_t rtimer_arch_now(void) { rtimer_clock_t rtc = { 0 }; return rtc; }
+extern rtimer_clock_t rtimer_arch_now(void);
 
 /* HW oscillator frequency is 32 kHz, not 64 kHz and RTIMER_NOW() never returns
  * an odd value; so US_TO_RTIMERTICKS always rounds to the nearest even number.
