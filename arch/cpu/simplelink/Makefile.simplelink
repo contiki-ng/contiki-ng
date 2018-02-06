@@ -7,6 +7,8 @@ SDK_DEVICES := $(SDK_SOURCE)/ti/devices
 SDK_DEVICE := $(shell ls $(SDK_DEVICES) | grep $(SIMPLELINK_DEVICE))
 SDK_DEVICE_SOURCE := $(SDK_SOURCE)/ti/devices/$(SDK_DEVICE)
 SDK_DRIVERLIB := $(SDK_DEVICE_SOURCE)/driverlib
+SDK_DRIVERS := $(SDK_SOURCE)/ti/drivers
+SDK_KERNEL := $(SIMPLELINK_SDK)/kernel/nortos/
 SDK_BOARDS := $(SDK_SOURCE)/ti/boards
 SDK_STARTUP := $(SDK_DEVICE_SOURCE)/startup_files
 SDK_STARTUP_SRCS = ccfg.c startup_gcc.c
@@ -15,10 +17,12 @@ EXTERNALDIRS += $(SDK_STARTUP)
 
 ### MODULES will add some of these to the include path, but we need to add
 ### them earlier to prevent filename clashes with Contiki core files
-CFLAGS += -I$(CPU_ABS_PATH) 
+CFLAGS += -I$(CPU_ABS_PATH)
 CFLAGS += -I$(SDK_SOURCE)
 CFLAGS += -I$(SDK_DEVICE_SOURCE)
 CFLAGS += -I$(SDK_DEVICE_SOURCE)/inc
+CFLAGS += -I$(SDK_KERNEL)
+CFLAGS += -I$(SDK_KERNEL)/posix
 
 LDSCRIPT = $(SDK_BOARDS)/$(SIMPLELINK_BOARD)/$(SIMPLELINK_BOARD)_NoRTOS.lds
 
