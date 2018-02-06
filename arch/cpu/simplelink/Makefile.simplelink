@@ -35,6 +35,10 @@ ifneq ($(SIMPLELINK_BOARD),CUSTOM)
   LDSCRIPT = $(SDK_BOARDS)/$(SIMPLELINK_BOARD)/$(SIMPLELINK_BOARD)_NoRTOS.lds
   CFLAGS += -I$(SDK_BOARDS)/$(SIMPLELINK_BOARD)
   CONTIKI_SOURCEFILES += $(SIMPLELINK_BOARD).c
+else
+  ifndef $(LDSCRIPT)
+    $(error You must speficy a custom linker script in LDSCRIPT.)
+  endif
 endif
 
 
@@ -75,7 +79,7 @@ $(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -include "ccfg-conf.h" -c $< -o $@
 
-$(OBJECTDIR)/$(SIMPLELINK_BOARD).o: $(SDK_SOURCE)/ti/boards/$(SIMPLELINK_BOARD)/$(SIMPLELINK_BOARD).c
+$(OBJECTDIR)/$(SIMPLELINK_BOARD).o: $(SDK_BOARDS)/$(SIMPLELINK_BOARD)/$(SIMPLELINK_BOARD).c
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
