@@ -8,7 +8,7 @@ ifndef SIMPLELINK_SDK
   $(error SIMPLELINK_SDK not defined! You must specify where the SimpleLink SDK resides!)
 endif
 
-AVAILABLE_BOARDS := $(shell ls $(SIMPLELINK_SDK)/source/ti/boards)
+AVAILABLE_BOARDS := $(shell ls -d $(SIMPLELINK_SDK)/source/ti/boards)
 AVAILABLE_BOARDS += CUSTOM # Allows an own board file in the application project
 
 ifndef SIMPLELINK_BOARD
