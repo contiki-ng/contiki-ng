@@ -106,7 +106,7 @@ rtimer_arch_init(void)
   volatile IsrFxn * const pfnRAMVectors = (volatile IsrFxn *)(HWREG(NVIC_VTABLE));
   if (!pfnRAMVectors)
   {
-    while (0) { /* hang */ }
+    for (;;) { /* hang */ }
   }
 
   // The HWI Dispatch ISR should be located at int num INT_AON_RTC_COMB.
@@ -114,7 +114,7 @@ rtimer_arch_init(void)
   hwiDispatch = (HwiDispatchFxn)pfnRAMVectors[INT_AON_RTC_COMB];
   if (!hwiDispatch)
   {
-    while (0) { /* hang */ }
+    for (;;) { /* hang */ }
   }
   
   // Override the INT_AON_RTC_COMB int num with own ISR hook

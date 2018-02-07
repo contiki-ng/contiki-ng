@@ -29,29 +29,31 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-platforms
+ * \addtogroup cc13xx-cc26xx-platforms
  * @{
  *
- * \defgroup cc26xx-srf-tag SmartRF+CC13xx/CC26xx EM, SensorTags and LaunchPads
+ * \defgroup LaunchPads
  *
  * This platform supports a number of different boards:
- * - A standard TI SmartRF06EB with a CC26xx EM mounted on it
- * - A standard TI SmartRF06EB with a CC1310 EM mounted on it
- * - The TI CC2650 SensorTag
- * - The TI CC1350 SensorTag
- * - The TI CC2650 LaunchPad
  * - The TI CC1310 LaunchPad
  * - The TI CC1350 LaunchPad
+ * - The TI CC2640 LaunchPad
+ * - The TI CC2650 LaunchPad
+ * - The TI CC1312R1 LaunchPad
+ * - The TI CC1352R1 LaunchPad
+ * - The TI CC1352P1 LaunchPad
+ * - The TI CC26X2R1 LaunchPad
  * @{
  */
-#include "contiki.h"
-#include "contiki-net.h"
-
 #include <Board.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/Power.h>
 #include <NoRTOS.h>
 
+#include "contiki.h"
+#include "contiki-net.h"
+
+#include "simplelink-uart.h"
 
 //#include "leds.h"
 //#include "lpm.h"
@@ -85,7 +87,7 @@
 /*---------------------------------------------------------------------------*/
 unsigned short node_id = 0;
 /*---------------------------------------------------------------------------*/
-/** \brief Board specific iniatialisation */
+/** \brief Board specific initialization */
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
@@ -169,15 +171,9 @@ platform_init_stage_one()
 void
 platform_init_stage_two()
 {
-    GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_OFF);
-    GPIO_write(Board_GPIO_LED1, Board_GPIO_LED_ON);
+    simplelink_uart_init();
 
 //  random_init(0x1234);
-//
-//  /* Character I/O Initialisation */
-//#if CC26XX_UART_CONF_ENABLE
-//  cc26xx_uart_init();
-//#endif
 //
 //  serial_line_init();
 //
@@ -190,9 +186,6 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-    GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_ON);
-    GPIO_write(Board_GPIO_LED1, Board_GPIO_LED_ON);
-
 //  radio_value_t chan, pan;
 //
 //  set_rf_params();
