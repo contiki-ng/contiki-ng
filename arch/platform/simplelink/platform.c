@@ -134,7 +134,6 @@ platform_init_stage_one()
 {
     Board_initGeneral();
     GPIO_init();
-    NoRTOS_start();
 
 //  /* Enable flash cache and prefetch. */
 //  ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
@@ -206,6 +205,9 @@ platform_init_stage_three()
 //
 //  process_start(&sensors_process, NULL);
   fade(Board_GPIO_LED1);
+
+  // Finally enable hardware interrupts
+  NoRTOS_start();
 }
 /*---------------------------------------------------------------------------*/
 void

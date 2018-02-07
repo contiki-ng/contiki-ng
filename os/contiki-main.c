@@ -122,20 +122,20 @@ main(void)
 
   platform_init_stage_three();
 
-#if BUILD_WITH_RPL_BORDER_ROUTER
-  rpl_border_router_init();
-  LOG_DBG("With RPL Border Router\n");
-#endif /* BUILD_WITH_RPL_BORDER_ROUTER */
-
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-  LOG_DBG("With Orchestra\n");
-#endif /* BUILD_WITH_ORCHESTRA */
-
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-  LOG_DBG("With Shell\n");
-#endif /* BUILD_WITH_SHELL */
+//#if BUILD_WITH_RPL_BORDER_ROUTER
+//  rpl_border_router_init();
+//  LOG_DBG("With RPL Border Router\n");
+//#endif /* BUILD_WITH_RPL_BORDER_ROUTER */
+//
+//#if BUILD_WITH_ORCHESTRA
+//  orchestra_init();
+//  LOG_DBG("With Orchestra\n");
+//#endif /* BUILD_WITH_ORCHESTRA */
+//
+//#if BUILD_WITH_SHELL
+//  serial_shell_init();
+//  LOG_DBG("With Shell\n");
+//#endif /* BUILD_WITH_SHELL */
 
 #if BUILD_WITH_COAP
   coap_engine_init();

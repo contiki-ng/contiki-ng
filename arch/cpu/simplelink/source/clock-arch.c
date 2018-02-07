@@ -47,96 +47,47 @@
 #include <driverlib/interrupt.h>
 #include <driverlib/prcm.h>
 #include <driverlib/timer.h>
+#include <ti/drivers/dpl/ClockP.h>
+#include <ti/drivers/power/PowerCC26XX.h>
+#include <unistd.h>
 
 #include "contiki.h"
 
+#define DPL_CLOCK_TICK_PERIOD_US ClockP_getSystemTickPeriod()
+#define CLOCK_TICKS_SECOND ((uint32_t)1000000 / (CLOCK_SECOND) / (DPL_CLOCK_TICK_PERIOD_US))
+
 /*---------------------------------------------------------------------------*/
 static volatile uint64_t count;
-/*---------------------------------------------------------------------------*/
-static void
-power_domain_on(void)
-{
-  PRCMPowerDomainOn(PRCM_DOMAIN_PERIPH);
-  while(PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON);
-}
+static ClockP_Struct etimerClock;
+static void clock_update(void);
 /*---------------------------------------------------------------------------*/
 void
 clock_init(void)
 {
   count = 0;
-
-  /*
-   * Here, we configure GPT0 Timer A, which we subsequently use in
-   * clock_delay_usec
-   *
-   * We need to access registers, so firstly power up the PD and then enable
-   * the clock to GPT0.
-   */
-  if(PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON) {
-    power_domain_on();
-  }
-
-  PRCMPeripheralRunEnable(PRCM_PERIPH_TIMER0);
-  PRCMLoadSet();
-  while(!PRCMLoadGet());
-
-  /* Disable both GPT0 timers */
-  HWREG(GPT0_BASE + GPT_O_CTL) &= ~(GPT_CTL_TAEN | GPT_CTL_TBEN);
-
-  /*
-   * We assume that the clock is running at 48MHz, we use GPT0 Timer A,
-   * one-shot, countdown, prescaled by 48 gives us 1 tick per usec
-   */
-  TimerConfigure(GPT0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
-
-  /* Global config: split pair (2 x 16-bit wide) */
-  HWREG(GPT0_BASE + GPT_O_CFG) = TIMER_CFG_SPLIT_PAIR >> 24;
-
-  /*
-   * Pre-scale value 47 pre-scales by 48
-   *
-   * ToDo: The theoretical value here should be 47 (to provide x48 prescale)
-   * However, 49 seems to give results much closer to the desired delay
-   */
-  TimerPrescaleSet(GPT0_BASE, TIMER_B, 49);
-
-  /* GPT0 / Timer B: One shot, PWM interrupt enable */
-  HWREG(GPT0_BASE + GPT_O_TBMR) =
-        ((TIMER_CFG_B_ONE_SHOT >> 8) & 0xFF) | GPT_TBMR_TBPWMIE;
-
-  /* enable sync with radio timer */
-  HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
-}
-/*---------------------------------------------------------------------------*/
-static void
-update_clock_variable(void)
-{
-  uint32_t aon_rtc_secs_now;
-  uint32_t aon_rtc_secs_now2;
-  uint16_t aon_rtc_ticks_now;
-
-  do {
-    aon_rtc_secs_now = HWREG(AON_RTC_BASE + AON_RTC_O_SEC);
-    aon_rtc_ticks_now = HWREG(AON_RTC_BASE + AON_RTC_O_SUBSEC) >> 16;
-    aon_rtc_secs_now2 = HWREG(AON_RTC_BASE + AON_RTC_O_SEC);
-  } while(aon_rtc_secs_now != aon_rtc_secs_now2);
-
-  /* Convert AON RTC ticks to clock tick counter */
-  count = (aon_rtc_secs_now * CLOCK_SECOND) + (aon_rtc_ticks_now >> 9);
+  ClockP_Params params;
+  ClockP_Params_init(&params);
+  params.period = CLOCK_TICKS_SECOND;
+  params.startFlag = true;
+  ClockP_construct(&etimerClock, (ClockP_Fxn)&clock_update, CLOCK_TICKS_SECOND, &params);
 }
 /*---------------------------------------------------------------------------*/
 CCIF clock_time_t
 clock_time(void)
 {
-  update_clock_variable();
+    uintptr_t hwiState = HwiP_disable();
+    clock_time_t result = count;
+    HwiP_restore(hwiState);
 
-  return (clock_time_t)(count & 0xFFFFFFFF);
+  return (clock_time_t)(result & 0xFFFFFFFF);
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 clock_update(void)
 {
-  update_clock_variable();
+  uintptr_t hwiState = HwiP_disable();
+  count++;
+  HwiP_restore(hwiState);
 
   if(etimer_pending()) {
     etimer_request_poll();
@@ -146,19 +97,11 @@ clock_update(void)
 CCIF unsigned long
 clock_seconds(void)
 {
-  bool interrupts_disabled;
-  uint32_t secs_now;
+    uintptr_t hwiState = HwiP_disable();
+    unsigned long result = count / CLOCK_SECOND;
+    HwiP_restore(hwiState);
 
-  interrupts_disabled = IntMasterDisable();
-
-  secs_now = AONRTCSecGet();
-
-  /* Re-enable interrupts */
-  if(!interrupts_disabled) {
-    IntMasterEnable();
-  }
-
-  return (unsigned long)secs_now;
+    return result;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -173,33 +116,7 @@ clock_wait(clock_time_t i)
 void
 clock_delay_usec(uint16_t len)
 {
-  uint32_t clock_status;
-
-  if(PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) !=
-     PRCM_DOMAIN_POWER_ON) {
-    power_domain_on();
-  }
-
-  clock_status = HWREG(PRCM_BASE + PRCM_O_GPTCLKGR) & PRCM_GPIOCLKGR_CLK_EN;
-
-  PRCMPeripheralRunEnable(PRCM_PERIPH_TIMER0);
-  PRCMLoadSet();
-  while(!PRCMLoadGet());
-
-  TimerLoadSet(GPT0_BASE, TIMER_B, len);
-  TimerEnable(GPT0_BASE, TIMER_B);
-
-  /*
-   * Wait for TBEN to clear. CC26xxware does not provide us with a convenient
-   * function, hence the direct register access here
-   */
-  while(HWREG(GPT0_BASE + GPT_O_CTL) & GPT_CTL_TBEN);
-
-  if(clock_status == 0) {
-    PRCMPeripheralRunDisable(PRCM_PERIPH_TIMER0);
-    PRCMLoadSet();
-    while(!PRCMLoadGet());
-  }
+    usleep(len);
 }
 /*---------------------------------------------------------------------------*/
 /**
