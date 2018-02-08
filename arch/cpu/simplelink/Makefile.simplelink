@@ -1,5 +1,5 @@
 
-MODULES += os/net os/net/mac os/net/mac/framer
+MODULES += os/net/mac/framer
 
 CPU_ABS_PATH = $(CONTIKI)/arch/cpu/simplelink
 

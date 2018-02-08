@@ -36,6 +36,55 @@
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_genfsk.h)
 #include "proprietary-rf-settings.h"
 
+#include "contiki.h"
+#include "dev/radio.h"
+#include <proprietary-rf.h>
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \addtogroup rf-core-prop
+ * @{
+ *
+ * \file
+ * Default TX power settings. The board can override
+ */
+/*---------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------*/
+/* Default TX power settings for the 779-930MHz band */
+const prop_mode_tx_power_config_t prop_mode_tx_power_779_930[] = {
+  {  14, 0xa73f },
+  {  13, 0xa63f }, /* 12.5 */
+  {  12, 0xb818 },
+  {  11, 0x50da },
+  {  10, 0x38d3 },
+  {   9, 0x2ccd },
+  {   8, 0x24cb },
+  {   7, 0x20c9 },
+  {   6, 0x1cc7 },
+  {   5, 0x18c6 },
+  {   4, 0x18c5 },
+  {   3, 0x14c4 },
+  {   2, 0x1042 },
+  {   1, 0x10c3 },
+  {   0, 0x0041 },
+  { -10, 0x08c0 },
+  {-128, 0xFFFF },
+};
+/*---------------------------------------------------------------------------*/
+/* Default TX power settings for the 431-527MHz band */
+const prop_mode_tx_power_config_t prop_mode_tx_power_431_527[] = {
+  {  15, 0x003f },
+  {  14, 0xbe3f }, /* 13.7 */
+  {  13, 0x6a0f },
+  {  10, 0x3dcb },
+  {   6, 0x22c4 },
+  {-128, 0xFFFF },
+};
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */
 
 // TI-RTOS RF Mode Object
 RF_Mode RF_prop =

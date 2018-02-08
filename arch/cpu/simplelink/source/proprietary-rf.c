@@ -43,6 +43,7 @@
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "sys/cc.h"
+#include "proprietary-rf.h"
 /*---------------------------------------------------------------------------*/
 /* RF core and RF HAL API */
 #include <inc/hw_rfc_dbell.h>
@@ -1037,26 +1038,20 @@ on(void)
 static int
 off(void)
 {
-  /*
-   * If we are in the middle of a BLE operation, we got called by ContikiMAC
-   * from within an interrupt context. Abort, but pretend everything is OK.
-   */
-  if(rf_ble_is_active() == RF_BLE_ACTIVE) {
+//  /*
+//   * If we are in the middle of a BLE operation, we got called by ContikiMAC
+//   * from within an interrupt context. Abort, but pretend everything is OK.
+//   */
+//  if(rf_ble_is_active() == RF_BLE_ACTIVE) {
+//    return RF_CORE_CMD_OK;
+//  }
+
+    RF_yield(handle);
+
+    /* We pulled the plug, so we need to restore the status manually */
+    smartrf_settings_cmd_prop_rx_adv.status = IDLE;
+
     return RF_CORE_CMD_OK;
-  }
-
-  rx_off_prop();
-  rf_core_power_down();
-
-  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-
-  /* Switch HF clock source to the RCOSC to preserve power */
-  oscillators_switch_to_hf_rc();
-
-  /* We pulled the plug, so we need to restore the status manually */
-  smartrf_settings_cmd_prop_rx_adv.status = RF_CORE_RADIO_OP_STATUS_IDLE;
-
-  return RF_CORE_CMD_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
