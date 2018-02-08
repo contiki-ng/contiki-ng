@@ -44,6 +44,8 @@
 
 #include <stdint.h>
 
+typedef void (*InputCb)(unsigned char);
+
 /*---------------------------------------------------------------------------*/
 /** \name UART functions
  * @{
@@ -70,7 +72,7 @@ int_fast32_t simplelink_uart_write(const void *buffer, size_t size);
  * \return      Number of bytes that has been written to the buffer. If an
  *              error occurs, a negative value is returned.
  */
-int_fast32_t simplelink_uart_read(void *buffer, size_t size);
+void simplelink_uart_set_callback(InputCb input_cb);
 
 /** @} */
 /*---------------------------------------------------------------------------*/

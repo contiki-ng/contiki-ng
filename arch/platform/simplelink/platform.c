@@ -48,6 +48,8 @@
 #include <Board.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/Power.h>
+#include <driverlib/driverlib_release.h>
+#include <driverlib/chipinfo.h>
 #include <NoRTOS.h>
 
 #include "contiki.h"
@@ -192,16 +194,16 @@ platform_init_stage_three()
 //  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
 //  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
 //
-//  LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
-//          DRIVERLIB_RELEASE_BUILD);
-//  LOG_INFO(BOARD_STRING "\n");
-//  LOG_DBG("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s, Prop: %s\n",
-//          ti_lib_chipinfo_supports_ieee_802_15_4() == true ? "Yes" : "No",
-//          ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
-//          ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
-//          ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
-//  LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
-//  LOG_INFO(" Node ID: %d\n", node_id);
+  LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
+          DRIVERLIB_RELEASE_BUILD);
+  //LOG_INFO(BOARD_STRING "\n");
+  LOG_DBG("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s, Prop: %s\n",
+          ChipInfo_SupportsIEEE_802_15_4() ? "Yes" : "No",
+          ChipInfo_ChipFamilyIs_CC13x0() ? "Yes" : "No",
+          ChipInfo_SupportsBLE() ? "Yes" : "No",
+          ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No");
+  //LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
+  //LOG_INFO(" Node ID: %d\n", node_id);
 //
 //  process_start(&sensors_process, NULL);
   fade(Board_GPIO_LED1);

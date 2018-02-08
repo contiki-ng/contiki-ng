@@ -41,7 +41,26 @@
 
 #include <stdint.h>
 
-static UART_Handle hUart;
+#include "simplelink-uart.h"
+
+static UART_Handle gh_uart;
+
+static volatile InputCb g_input_cb;
+static unsigned char g_charbuf;
+
+/*---------------------------------------------------------------------------*/
+static void
+uart_cb(UART_Handle handle, void *buf, size_t count)
+{
+  if (!g_input_cb) { return; }
+
+  const InputCb currCb = g_input_cb;
+  currCb(g_charbuf);
+  if (currCb == g_input_cb)
+  {
+    UART_read(gh_uart, &g_charbuf, 1);
+  }
+}
 /*---------------------------------------------------------------------------*/
 void
 simplelink_uart_init(void)
@@ -50,10 +69,13 @@ simplelink_uart_init(void)
 
   UART_Params params;
   UART_Params_init(&params);
+  params.readMode = UART_MODE_CALLBACK;
+  params.writeMode = UART_MODE_BLOCKING ;
+  params.readCallback = uart_cb;
   // TODO configure
 
-  hUart = UART_open(Board_UART0, &params);
-  if (!hUart)
+  gh_uart = UART_open(Board_UART0, &params);
+  if (!gh_uart)
   {
     for (;;) { /* hang */ }
   }
@@ -62,21 +84,27 @@ simplelink_uart_init(void)
 int_fast32_t
 simplelink_uart_write(const void *buffer, size_t size)
 {
-  if (!hUart)
+  if (!gh_uart)
   {
     return UART_STATUS_ERROR;
   }
-  return UART_write(hUart, buffer, size);
+  return UART_write(gh_uart, buffer, size);
 }
 /*---------------------------------------------------------------------------*/
-int_fast32_t
-simplelink_uart_read(void *buffer, size_t size)
+void
+simplelink_uart_set_callback(InputCb input_cb)
 {
-  if (!hUart)
+  if (g_input_cb == input_cb) { return; }
+
+  g_input_cb = input_cb;
+  if (input_cb)
   {
-    return UART_STATUS_ERROR;
+    UART_read(gh_uart, &g_charbuf, 1);
   }
-  return UART_read(hUart, buffer, size);
+  else
+  {
+    UART_readCancel(gh_uart); 
+  }
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

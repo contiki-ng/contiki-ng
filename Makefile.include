@@ -394,10 +394,6 @@ ifndef LD
   LD = $(CC)
 endif
 
-### Make sure Makefiles with the $(TARGET) suffix doesn't match
-Makefile.$(TARGET):
-	@
-
 ifndef CUSTOM_RULE_LINK
 %.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	$(TRACE_LD)
@@ -492,8 +488,6 @@ endif
 # Don't treat %.$(TARGET) as an intermediate file because it is
 # in fact the primary target.
 .PRECIOUS: %.$(TARGET)
-
-
 
 # Cancel the predefined implict rule for compiling and linking
 # a single C source into a binary to force GNU make to consider
