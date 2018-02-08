@@ -91,6 +91,7 @@
 
 #else /* CC13XX_CONF_PROP_MODE */
 #define NETSTACK_CONF_RADIO        ieee_mode_driver
+#error BLABLA
 
 #define CSMA_CONF_SEND_SOFT_ACK              0
 #endif /* CC13XX_CONF_PROP_MODE */

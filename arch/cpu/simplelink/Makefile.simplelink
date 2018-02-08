@@ -1,4 +1,6 @@
 
+MODULES += os/net os/net/mac os/net/mac/framer
+
 CPU_ABS_PATH = $(CONTIKI)/arch/cpu/simplelink
 
 SDK_SOURCE := $(SIMPLELINK_SDK)/source
@@ -55,12 +57,13 @@ endif
 ### CPU-dependent directories
 CONTIKI_ARM_DIRS += . common/dbg-io
 CONTIKI_CPU_DIRS += . $(addprefix ../arm/, $(CPU_DIRS))
-CONTIKI_CPU_DIRS += dev
+CONTIKI_CPU_DIRS += dev rf-settings
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
 CONTIKI_CPU_SOURCEFILES += watchdog-arch.c putchar-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c
+CONTIKI_CPU_SOURCEFILES += proprietary-rf.c proprietary-rf-settings.c
 
 ### CPU-dependent debug source files
 DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c

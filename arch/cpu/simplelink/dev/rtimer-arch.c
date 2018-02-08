@@ -46,12 +46,6 @@
 
 #include <stdint.h>
 
-
-// FIXME NB TEMPORARY HACK START
-#include "radio.h"
-const struct radio_driver ieee_mode_driver = { 0 };
-// FIXME NB TEMPORARY HACK END
-
 #define RTIMER_RTC_CH AON_RTC_CH1
 
 static ClockP_Struct gClk;
@@ -83,7 +77,7 @@ rtimer_isr_hook(void)
   }
   if (hwiDispatch && AONRTCEventGet(AON_RTC_CH0))
   {
-    hwiDispatch(); 
+    hwiDispatch();
   }
   else
   {
@@ -116,7 +110,7 @@ rtimer_arch_init(void)
   {
     for (;;) { /* hang */ }
   }
-  
+
   // Override the INT_AON_RTC_COMB int num with own ISR hook
   IntRegister(INT_AON_RTC_COMB, rtimer_isr_hook);
 
