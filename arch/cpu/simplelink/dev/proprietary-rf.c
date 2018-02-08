@@ -44,6 +44,7 @@
 #include "sys/rtimer.h"
 #include "sys/cc.h"
 #include "proprietary-rf.h"
+#include "rf-core.h"
 /*---------------------------------------------------------------------------*/
 /* RF core and RF HAL API */
 #include <inc/hw_rfc_dbell.h>
@@ -228,8 +229,8 @@ volatile static uint8_t *rx_read_entry;
 static uint8_t tx_buf[TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN] CC_ALIGN(4);
 /*---------------------------------------------------------------------------*/
 /* RF driver */
-RF_Object rfObject;
-RF_Handle handle;
+static RF_Object rfObject;
+static RF_Handle rfHandle;
 /*---------------------------------------------------------------------------*/
 /* CMD_PROP_TX_ADV */
 rfc_CMD_PROP_TX_ADV_t smartrf_settings_cmd_prop_tx_adv =
@@ -322,60 +323,60 @@ transmitting(void)
 static radio_value_t
 get_rssi(void)
 {
-  uint32_t cmd_status;
-  int8_t rssi;
-  uint8_t attempts = 0;
-  uint8_t was_off = 0;
-  rfc_CMD_GET_RSSI_t cmd;
-
-  /* If we are off, turn on first */
-  if(!rf_is_on()) {
-    was_off = 1;
-    if(on() != RF_CORE_CMD_OK) {
-      PRINTF("get_rssi: on() failed\n");
-      return RF_CMD_CCA_REQ_RSSI_UNKNOWN;
-    }
-  }
-
-  rssi = RF_CMD_CCA_REQ_RSSI_UNKNOWN;
-
-  while((rssi == RF_CMD_CCA_REQ_RSSI_UNKNOWN || rssi == 0) && ++attempts < 10) {
-    memset(&cmd, 0x00, sizeof(cmd));
-    cmd.commandNo = CMD_GET_RSSI;
-
-    if(rf_core_send_cmd((uint32_t)&cmd, &cmd_status) == RF_CORE_CMD_ERROR) {
-      PRINTF("get_rssi: CMDSTA=0x%08lx\n", cmd_status);
-      break;
-    } else {
-      /* Current RSSI in bits 23:16 of cmd_status */
-      rssi = (cmd_status >> 16) & 0xFF;
-    }
-  }
-
-  /* If we were off, turn back off */
-  if(was_off) {
-    off();
-  }
-
-  return rssi;
+//  uint32_t cmd_status;
+//  int8_t rssi;
+//  uint8_t attempts = 0;
+//  uint8_t was_off = 0;
+//  rfc_CMD_GET_RSSI_t cmd;
+//
+//  /* If we are off, turn on first */
+//  if(!rf_is_on()) {
+//    was_off = 1;
+//    if(on() != RF_CORE_CMD_OK) {
+//      PRINTF("get_rssi: on() failed\n");
+//      return RF_CMD_CCA_REQ_RSSI_UNKNOWN;
+//    }
+//  }
+//
+//  rssi = RF_CMD_CCA_REQ_RSSI_UNKNOWN;
+//
+//  while((rssi == RF_CMD_CCA_REQ_RSSI_UNKNOWN || rssi == 0) && ++attempts < 10) {
+//    memset(&cmd, 0x00, sizeof(cmd));
+//    cmd.commandNo = CMD_GET_RSSI;
+//
+//    if(rf_core_send_cmd((uint32_t)&cmd, &cmd_status) == RF_CORE_CMD_ERROR) {
+//      PRINTF("get_rssi: CMDSTA=0x%08lx\n", cmd_status);
+//      break;
+//    } else {
+//      /* Current RSSI in bits 23:16 of cmd_status */
+//      rssi = (cmd_status >> 16) & 0xFF;
+//    }
+//  }
+//
+//  /* If we were off, turn back off */
+//  if(was_off) {
+//    off();
+//  }
+//
+//  return rssi;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
 get_channel(void)
 {
-  uint32_t freq_khz;
-
-  freq_khz = smartrf_settings_cmd_fs.frequency * 1000;
-
-  /*
-   * For some channels, fractFreq * 1000 / 65536 will return 324.99xx.
-   * Casting the result to uint32_t will truncate decimals resulting in the
-   * function returning channel - 1 instead of channel. Thus, we do a quick
-   * positive integer round up.
-   */
-  freq_khz += (((smartrf_settings_cmd_fs.fractFreq * 1000) + 65535) / 65536);
-
-  return (freq_khz - DOT_15_4G_CHAN0_FREQUENCY) / DOT_15_4G_CHANNEL_SPACING;
+//  uint32_t freq_khz;
+//
+//  freq_khz = smartrf_settings_cmd_fs.frequency * 1000;
+//
+//  /*
+//   * For some channels, fractFreq * 1000 / 65536 will return 324.99xx.
+//   * Casting the result to uint32_t will truncate decimals resulting in the
+//   * function returning channel - 1 instead of channel. Thus, we do a quick
+//   * positive integer round up.
+//   */
+//  freq_khz += (((smartrf_settings_cmd_fs.fractFreq * 1000) + 65535) / 65536);
+//
+//  return (freq_khz - DOT_15_4G_CHAN0_FREQUENCY) / DOT_15_4G_CHANNEL_SPACING;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -392,9 +393,9 @@ set_channel(uint8_t channel)
   PRINTF("set_channel: %u = 0x%04x.0x%04x (%lu)\n", channel, freq, frac,
          new_freq);
 
-  smartrf_settings_cmd_prop_radio_div_setup.centerFreq = freq;
-  smartrf_settings_cmd_fs.frequency = freq;
-  smartrf_settings_cmd_fs.fractFreq = frac;
+  RF_cmdPropRadioDivSetup.centerFreq = freq;
+  RF_cmdFs.frequency = freq;
+  RF_cmdFs.fractFreq = frac;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -443,38 +444,38 @@ set_tx_power(radio_value_t power)
 static int
 prop_div_radio_setup(void)
 {
-  uint32_t cmd_status;
-  rfc_radioOp_t *cmd = (rfc_radioOp_t *)&smartrf_settings_cmd_prop_radio_div_setup;
-
-  rf_switch_select_path(RF_SWITCH_PATH_SUBGHZ);
-
-  /* Adjust loDivider depending on the selected band */
-  smartrf_settings_cmd_prop_radio_div_setup.loDivider = PROP_MODE_LO_DIVIDER;
-
-  /* Update to the correct TX power setting */
-  smartrf_settings_cmd_prop_radio_div_setup.txPower = tx_power_current->tx_power;
-
-  /* Adjust RF Front End and Bias based on the board */
-  smartrf_settings_cmd_prop_radio_div_setup.config.frontEndMode =
-    RF_CORE_PROP_FRONT_END_MODE;
-  smartrf_settings_cmd_prop_radio_div_setup.config.biasMode =
-    RF_CORE_PROP_BIAS_MODE;
-
-  /* Send Radio setup to RF Core */
-  if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
-    PRINTF("prop_div_radio_setup: DIV_SETUP, CMDSTA=0x%08lx, status=0x%04x\n",
-           cmd_status, cmd->status);
-    return RF_CORE_CMD_ERROR;
-  }
-
-  /* Wait until radio setup is done */
-  if(rf_core_wait_cmd_done(cmd) != RF_CORE_CMD_OK) {
-    PRINTF("prop_div_radio_setup: DIV_SETUP wait, CMDSTA=0x%08lx,"
-           "status=0x%04x\n", cmd_status, cmd->status);
-    return RF_CORE_CMD_ERROR;
-  }
-
-  return RF_CORE_CMD_OK;
+//  uint32_t cmd_status;
+//  rfc_radioOp_t *cmd = (rfc_radioOp_t *)&smartrf_settings_cmd_prop_radio_div_setup;
+//
+//  rf_switch_select_path(RF_SWITCH_PATH_SUBGHZ);
+//
+//  /* Adjust loDivider depending on the selected band */
+//  smartrf_settings_cmd_prop_radio_div_setup.loDivider = PROP_MODE_LO_DIVIDER;
+//
+//  /* Update to the correct TX power setting */
+//  smartrf_settings_cmd_prop_radio_div_setup.txPower = tx_power_current->tx_power;
+//
+//  /* Adjust RF Front End and Bias based on the board */
+//  smartrf_settings_cmd_prop_radio_div_setup.config.frontEndMode =
+//    RF_CORE_PROP_FRONT_END_MODE;
+//  smartrf_settings_cmd_prop_radio_div_setup.config.biasMode =
+//    RF_CORE_PROP_BIAS_MODE;
+//
+//  /* Send Radio setup to RF Core */
+//  if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
+//    PRINTF("prop_div_radio_setup: DIV_SETUP, CMDSTA=0x%08lx, status=0x%04x\n",
+//           cmd_status, cmd->status);
+//    return RF_CORE_CMD_ERROR;
+//  }
+//
+//  /* Wait until radio setup is done */
+//  if(rf_core_wait_cmd_done(cmd) != RF_CORE_CMD_OK) {
+//    PRINTF("prop_div_radio_setup: DIV_SETUP wait, CMDSTA=0x%08lx,"
+//           "status=0x%04x\n", cmd_status, cmd->status);
+//    return RF_CORE_CMD_ERROR;
+//  }
+//
+//  return RF_CORE_CMD_OK;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -486,7 +487,7 @@ rf_cmd_prop_rx()
   int ret;
 
   cmd_rx_adv = (rfc_CMD_PROP_RX_ADV_t *)&smartrf_settings_cmd_prop_rx_adv;
-  cmd_rx_adv->status = RF_CORE_RADIO_OP_STATUS_IDLE;
+  cmd_rx_adv->status = IDLE;
 
   /*
    * Set the max Packet length. This is for the payload only, therefore
@@ -494,17 +495,15 @@ rf_cmd_prop_rx()
    */
   cmd_rx_adv->maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx_adv->lenOffset;
 
-  ret = rf_core_send_cmd((uint32_t)cmd_rx_adv, &cmd_status);
-
-  if(ret != RF_CORE_CMD_OK) {
-    PRINTF("rf_cmd_prop_rx: send_cmd ret=%d, CMDSTA=0x%08lx, status=0x%04x\n",
-           ret, cmd_status, cmd_rx_adv->status);
-    return RF_CORE_CMD_ERROR;
+  // Todo: subscribe events
+  RF_CmdHandle cmd = RF_postCmd(rfHandle, (RF_Op*)&smartrf_settings_cmd_prop_rx_adv, RF_PriorityNormal, NULL, 0);
+  if (cmd == RF_ALLOC_ERROR) {
+      return RF_CORE_CMD_ERROR;
   }
 
   t0 = RTIMER_NOW();
 
-  while(cmd_rx_adv->status != RF_CORE_RADIO_OP_STATUS_ACTIVE &&
+  while(cmd_rx_adv->status != ACTIVE &&
         (RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + ENTER_RX_WAIT_TIMEOUT)));
 
   /* Wait to enter RX */
@@ -514,7 +513,7 @@ rf_cmd_prop_rx()
     return RF_CORE_CMD_ERROR;
   }
 
-  return ret;
+  return RF_CORE_CMD_OK;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -538,22 +537,22 @@ init_rx_buffers(void)
 static int
 rx_on_prop(void)
 {
-  int ret;
-
-  if(rf_is_on()) {
-    PRINTF("rx_on_prop: We were on. PD=%u, RX=0x%04x\n",
-           rf_core_is_accessible(), smartrf_settings_cmd_prop_rx_adv.status);
-    return RF_CORE_CMD_OK;
-  }
-
-  /* Put CPE in RX using the currently configured parameters */
+//  int ret;
+//
+//  if(rf_is_on()) {
+//    PRINTF("rx_on_prop: We were on. PD=%u, RX=0x%04x\n",
+//           rf_core_is_accessible(), smartrf_settings_cmd_prop_rx_adv.status);
+//    return RF_CORE_CMD_OK;
+//  }
+//
+//  /* Put CPE in RX using the currently configured parameters */
   ret = rf_cmd_prop_rx();
-
-  if(ret) {
-    ENERGEST_ON(ENERGEST_TYPE_LISTEN);
-  }
-
-  return ret;
+//
+//  if(ret) {
+//    ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+//  }
+//
+//  return ret;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -567,11 +566,10 @@ rx_off_prop(void)
     return RF_CORE_CMD_OK;
   }
 
-  /* Send a CMD_ABORT command to RF Core */
-  if(rf_core_send_cmd(CMDR_DIR_CMD(CMD_ABORT), &cmd_status) != RF_CORE_CMD_OK) {
-    PRINTF("rx_off_prop: CMD_ABORT status=0x%08lx\n", cmd_status);
-    /* Continue nonetheless */
-  }
+
+  /* Abort any ongoing operation. Don't care about the result. */
+  RF_cancelCmd(rfHandle, RF_CMDHANDLE_FLUSH_ALL, 1);
+  RF_yield(rfHandle);
 
   while(rf_is_on());
 
@@ -592,15 +590,15 @@ rx_off_prop(void)
 static uint8_t
 request(void)
 {
-  /*
-   * We rely on the RDC layer to turn us on and off. Thus, if we are on we
-   * will only allow sleep, standby otherwise
-   */
-  if(rf_is_on()) {
-    return LPM_MODE_SLEEP;
-  }
-
-  return LPM_MODE_MAX_SUPPORTED;
+//  /*
+//   * We rely on the RDC layer to turn us on and off. Thus, if we are on we
+//   * will only allow sleep, standby otherwise
+//   */
+//  if(rf_is_on()) {
+//    return LPM_MODE_SLEEP;
+//  }
+//
+//  return LPM_MODE_MAX_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
 LPM_MODULE(prop_lpm_module, request, NULL, NULL, LPM_DOMAIN_NONE);
@@ -608,59 +606,24 @@ LPM_MODULE(prop_lpm_module, request, NULL, NULL, LPM_DOMAIN_NONE);
 static int
 prop_fs(void)
 {
-  uint32_t cmd_status;
-  rfc_radioOp_t *cmd = (rfc_radioOp_t *)&smartrf_settings_cmd_fs;
+    RF_EventMask terminationCause = RF_runCmd(rfHandle, (RF_Op*)&RF_cmdFs, RF_PriorityNormal, NULL, 0);
+    if ((terminationCause == RF_EventLastCmdDone) && (RF_cmdFs.status == DONE_OK))
+    {
+        return RF_CORE_CMD_OK;
+    }
 
-  /* Send the command to the RF Core */
-  if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
-    PRINTF("prop_fs: CMD_FS, CMDSTA=0x%08lx, status=0x%04x\n",
-           cmd_status, cmd->status);
     return RF_CORE_CMD_ERROR;
-  }
-
-  /* Wait until the command is done */
-  if(rf_core_wait_cmd_done(cmd) != RF_CORE_CMD_OK) {
-    PRINTF("prop_fs: CMD_FS wait, CMDSTA=0x%08lx, status=0x%04x\n",
-           cmd_status, cmd->status);
-    return RF_CORE_CMD_ERROR;
-  }
-
-  return RF_CORE_CMD_OK;
 }
 /*---------------------------------------------------------------------------*/
 static void
 soft_off_prop(void)
 {
-  uint32_t cmd_status;
-  volatile rfc_radioOp_t *cmd = rf_core_get_last_radio_op();
-
-  if(!rf_core_is_accessible()) {
-    return;
-  }
-
-  /* Send a CMD_ABORT command to RF Core */
-  if(rf_core_send_cmd(CMDR_DIR_CMD(CMD_ABORT), &cmd_status) != RF_CORE_CMD_OK) {
-    PRINTF("soft_off_prop: CMD_ABORT status=0x%08lx\n", cmd_status);
-    return;
-  }
-
-  while((cmd->status & RF_CORE_RADIO_OP_MASKED_STATUS) ==
-        RF_CORE_RADIO_OP_MASKED_STATUS_RUNNING);
+    RF_yield(rfHandle);
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
 soft_on_prop(void)
 {
-  if(prop_div_radio_setup() != RF_CORE_CMD_OK) {
-    PRINTF("soft_on_prop: prop_div_radio_setup() failed\n");
-    return RF_CORE_CMD_ERROR;
-  }
-
-  if(prop_fs() != RF_CORE_CMD_OK) {
-    PRINTF("soft_on_prop: prop_fs() failed\n");
-    return RF_CORE_CMD_ERROR;
-  }
-
   return rx_on_prop();
 }
 /*---------------------------------------------------------------------------*/
@@ -676,8 +639,8 @@ init(void)
     RF_Params_init(&params);
     params.nInactivityTimeout = 0; // disable automatic power-down
 
-    handle = RF_open(&rfObject, &RF_prop, (RF_RadioSetup*)&RF_cmdPropRadioDivSetup, &params);
-    assert(handle != NULL);
+    rfHandle = RF_open(&rfObject, &RF_prop, (RF_RadioSetup*)&RF_cmdPropRadioDivSetup, &params);
+    assert(rfHandle != NULL);
 
     /* Initialise RX buffers */
     memset(rx_buf, 0, sizeof(rx_buf));
@@ -720,66 +683,60 @@ prepare(const void *payload, unsigned short payload_len)
 static int
 transmit(unsigned short transmit_len)
 {
-  int ret;
-  uint8_t was_off = 0;
-  uint32_t cmd_status;
-  volatile rfc_CMD_PROP_TX_ADV_t *cmd_tx_adv;
+    int ret;
+    uint8_t was_off = 0;
+    uint32_t cmd_status;
+    volatile rfc_CMD_PROP_TX_ADV_t *cmd_tx_adv;
 
-  /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
-  uint16_t total_length;
+    /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
+    uint16_t total_length;
 
-  if(!rf_is_on()) {
-    was_off = 1;
-    if(on() != RF_CORE_CMD_OK) {
-      PRINTF("transmit: on() failed\n");
-      return RADIO_TX_ERR;
+    /*
+    * Prepare the .15.4g PHY header
+    * MS=0, Length MSBits=0, DW and CRC configurable
+    * Total length = transmit_len (payload) + CRC length
+    *
+    * The Radio will flip the bits around, so tx_buf[0] must have the length
+    * LSBs (PHR[15:8] and tx_buf[1] will have PHR[7:0]
+    */
+    total_length = transmit_len + CRC_LEN;
+
+    tx_buf[0] = total_length & 0xFF;
+    tx_buf[1] = (total_length >> 8) + DOT_4G_PHR_DW_BIT + DOT_4G_PHR_CRC_BIT;
+
+    /* Prepare the CMD_PROP_TX_ADV command */
+    cmd_tx_adv = (rfc_CMD_PROP_TX_ADV_t *)&smartrf_settings_cmd_prop_tx_adv;
+
+    /*
+    * pktLen: Total number of bytes in the TX buffer, including the header if
+    * one exists, but not including the CRC (which is not present in the buffer)
+    */
+    cmd_tx_adv->pktLen = transmit_len + DOT_4G_PHR_LEN;
+    cmd_tx_adv->pPkt = tx_buf;
+
+    was_off = rx_
+    /* Abort RX */
+    rx_off_prop();
+
+    // TODO: Register callback
+    RF_CmdHandle txHandle = RF_postCmd(rfHandle, (RF_Op*)&cmd_tx_adv, RF_PriorityNormal, NULL, 0);
+    if (txHandle == RF_ALLOC_ERROR)
+    {
+        /* Failure sending the CMD_PROP_TX command */
+        PRINTF("transmit: PROP_TX_ERR ret=%d, CMDSTA=0x%08lx, status=0x%04x\n",
+            ret, cmd_status, cmd_tx_adv->status);
+        return RADIO_TX_ERR;
     }
-  }
 
-  /*
-   * Prepare the .15.4g PHY header
-   * MS=0, Length MSBits=0, DW and CRC configurable
-   * Total length = transmit_len (payload) + CRC length
-   *
-   * The Radio will flip the bits around, so tx_buf[0] must have the length
-   * LSBs (PHR[15:8] and tx_buf[1] will have PHR[7:0]
-   */
-  total_length = transmit_len + CRC_LEN;
-
-  tx_buf[0] = total_length & 0xFF;
-  tx_buf[1] = (total_length >> 8) + DOT_4G_PHR_DW_BIT + DOT_4G_PHR_CRC_BIT;
-
-  /* Prepare the CMD_PROP_TX_ADV command */
-  cmd_tx_adv = (rfc_CMD_PROP_TX_ADV_t *)&smartrf_settings_cmd_prop_tx_adv;
-
-  /*
-   * pktLen: Total number of bytes in the TX buffer, including the header if
-   * one exists, but not including the CRC (which is not present in the buffer)
-   */
-  cmd_tx_adv->pktLen = transmit_len + DOT_4G_PHR_LEN;
-  cmd_tx_adv->pPkt = tx_buf;
-
-  /* Abort RX */
-  rx_off_prop();
-
-  /* Enable the LAST_COMMAND_DONE interrupt to wake us up */
-  rf_core_cmd_done_en(false, false);
-
-  ret = rf_core_send_cmd((uint32_t)cmd_tx_adv, &cmd_status);
-
-  if(ret) {
     /* If we enter here, TX actually started */
     ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
 
-    watchdog_periodic();
+    // watchdog_periodic();
 
     /* Idle away while the command is running */
-    while((cmd_tx_adv->status & RF_CORE_RADIO_OP_MASKED_STATUS)
-          == RF_CORE_RADIO_OP_MASKED_STATUS_RUNNING) {
-      lpm_sleep();
-    }
+    RF_pendCmd(rfHandle, txHandle, 0);
 
-    if(cmd_tx_adv->status == RF_CORE_RADIO_OP_STATUS_PROP_DONE_OK) {
+    if(cmd_tx_adv->status == PROP_DONE_OK) {
       /* Sent OK */
       ret = RADIO_TX_OK;
     } else {
@@ -788,35 +745,19 @@ transmit(unsigned short transmit_len)
              cmd_tx_adv->status);
       ret = RADIO_TX_ERR;
     }
-  } else {
-    /* Failure sending the CMD_PROP_TX command */
-    PRINTF("transmit: PROP_TX_ERR ret=%d, CMDSTA=0x%08lx, status=0x%04x\n",
-           ret, cmd_status, cmd_tx_adv->status);
-    ret = RADIO_TX_ERR;
-  }
 
-  /*
-   * Update ENERGEST state here, before a potential call to off(), which
-   * will correctly update it if required.
-   */
-  ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
+    /*
+    * Update ENERGEST state here, before a potential call to off(), which
+    * will correctly update it if required.
+    */
+    ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
 
-  /*
-   * Disable LAST_FG_COMMAND_DONE interrupt. We don't really care about it
-   * except when we are transmitting
-   */
-  rf_core_cmd_done_dis(false);
+    /* Workaround. Set status to IDLE */
+    cmd_tx_adv->status = RF_CORE_RADIO_OP_STATUS_IDLE;
 
-  /* Workaround. Set status to IDLE */
-  cmd_tx_adv->status = RF_CORE_RADIO_OP_STATUS_IDLE;
+    rx_on_prop();
 
-  rx_on_prop();
-
-  if(was_off) {
-    off();
-  }
-
-  return ret;
+    return ret;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -886,19 +827,18 @@ channel_clear(void)
       return RF_CCA_CLEAR;
     }
   } else {
-    if(transmitting()) {
-      PRINTF("channel_clear: called while in TX\n");
-      return RF_CCA_CLEAR;
-    }
+
+  }
+
+  rf_core
+
+  if(transmitting()) {
+    PRINTF("channel_clear: called while in TX\n");
+    return RF_CCA_CLEAR;
   }
 
   while(rssi == RF_CMD_CCA_REQ_RSSI_UNKNOWN || rssi == 0) {
-    if(rf_core_send_cmd(CMDR_DIR_CMD(CMD_GET_RSSI), &cmd_status)
-       != RF_CORE_CMD_OK) {
-      break;
-    }
-    /* Current RSSI in bits 23:16 of cmd_status */
-    rssi = (cmd_status >> 16) & 0xFF;
+    rssi = RF_getRssi(rfHandle);
   }
 
   if(was_off) {
@@ -949,90 +889,19 @@ pending_packet(void)
 static int
 on(void)
 {
-  /*
-   * If we are in the middle of a BLE operation, we got called by ContikiMAC
-   * from within an interrupt context. Abort, but pretend everything is OK.
-   */
-  if(rf_ble_is_active() == RF_BLE_ACTIVE) {
-    return RF_CORE_CMD_OK;
-  }
 
-  /*
-   * Request the HF XOSC as the source for the HF clock. Needed before we can
-   * use the FS. This will only request, it will _not_ perform the switch.
-   */
-  oscillators_request_hf_xosc();
+    init_rx_buffers();
 
-  if(rf_is_on()) {
-    PRINTF("on: We were on. PD=%u, RX=0x%04x \n", rf_core_is_accessible(),
-           smartrf_settings_cmd_prop_rx_adv.status);
-    return RF_CORE_CMD_OK;
-  }
-
-  if(!rf_core_is_accessible()) {
-    if(rf_core_power_up() != RF_CORE_CMD_OK) {
-      PRINTF("on: rf_core_power_up() failed\n");
-
-      rf_core_power_down();
-
-      return RF_CORE_CMD_ERROR;
+    rfc_CMD_NOP_t nop = { 0 };
+    nop.commandNo = CMD_NOP;
+    RF_EventMask terminationCause = RF_runCmd(rfHandle, (RF_Op*)&nop, RF_PriorityNormal, NULL, 0);
+    if ((terminationCause == RF_EventLastCmdDone) && (RF_cmdFs.status == DONE_OK))
+    {
+        return RF_CORE_CMD_OK;
     }
 
-    /* Keep track of RF Core mode */
-    rf_core_set_modesel();
-
-    /* Apply patches to radio core */
-    rf_patch_cpe_genfsk();
-    while(!HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG));
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
-    rf_patch_rfe_genfsk();
-
-    /* Initialize bus request */
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_CMDR) =
-      CMDR_DIR_CMD_1BYTE(CMD_BUS_REQUEST, 1);
-
-    /* set VCOLDO reference */
-    ti_lib_rfc_adi3vco_ldo_voltage_mode(true);
-
-    /* Let CC13xxware automatically set a correct value for RTRIM for us */
-    ti_lib_rfc_rtrim((rfc_radioOp_t *)&smartrf_settings_cmd_prop_radio_div_setup);
-
-    /* Make sure BUS_REQUEST is done */
-    while(!HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG));
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
-
-    if(rf_core_start_rat() != RF_CORE_CMD_OK) {
-      PRINTF("on: rf_core_start_rat() failed\n");
-
-      rf_core_power_down();
-
-      return RF_CORE_CMD_ERROR;
-    }
-  }
-
-  rf_core_setup_interrupts(false);
-
-  init_rx_buffers();
-
-  /*
-   * Trigger a switch to the XOSC, so that we can subsequently use the RF FS
-   * This will block until the XOSC is actually ready, but give how we
-   * requested it early on, this won't be too long a wait/
-   */
-  oscillators_switch_to_hf_xosc();
-
-  if(prop_div_radio_setup() != RF_CORE_CMD_OK) {
-    PRINTF("on: prop_div_radio_setup() failed\n");
     return RF_CORE_CMD_ERROR;
-  }
 
-  if(prop_fs() != RF_CORE_CMD_OK) {
-    PRINTF("on: prop_fs() failed\n");
-    return RF_CORE_CMD_ERROR;
-  }
-
-  return rx_on_prop();
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -1046,7 +915,7 @@ off(void)
 //    return RF_CORE_CMD_OK;
 //  }
 
-    RF_yield(handle);
+    RF_yield(rfHandle);
 
     /* We pulled the plug, so we need to restore the status manually */
     smartrf_settings_cmd_prop_rx_adv.status = IDLE;
