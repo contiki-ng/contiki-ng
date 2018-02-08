@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "simplelink-uart.h"
+#include "uart0-arch.h"
 
 
 #undef putchar
@@ -41,7 +41,7 @@ int
 putchar(int c)
 {
   const unsigned char ch = (unsigned char)c;
-  return (simplelink_uart_write(&ch, 1) == 1)
+  return (uart0_write(&ch, 1) == 1)
     ? (int)ch
     : EOF;
 }
@@ -49,7 +49,7 @@ putchar(int c)
 int
 puts(const char *str)
 {
-  if(!str) 
+  if(!str)
   {
     return EOF;
   }
@@ -57,8 +57,8 @@ puts(const char *str)
   const size_t len = strlen(str);
   const unsigned char newline = '\n';
 
-  if ((simplelink_uart_write(str, len) != len) &&
-      (simplelink_uart_write(&newline, 1) != 1))
+  if ((uart0_write(str, len) != len) &&
+      (uart0_write(&newline, 1) != 1))
   {
     return EOF;
   }
@@ -69,15 +69,15 @@ puts(const char *str)
 unsigned int
 dbg_send_bytes(const unsigned char *s, unsigned int len)
 {
-  if(!s || strlen((const char *)s) < len) 
+  if(!s || strlen((const char *)s) < len)
   {
     return EOF;
   }
 
   const unsigned char newline = '\n';
 
-  if ((simplelink_uart_write(s, len) != len) &&
-      (simplelink_uart_write(&newline, 1) != 1))
+  if ((uart0_write(s, len) != len) &&
+      (uart0_write(&newline, 1) != 1))
   {
     return EOF;
   }

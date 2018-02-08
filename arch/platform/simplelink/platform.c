@@ -55,7 +55,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-#include "simplelink-uart.h"
+#include "uart0-arch.h"
 
 //#include "leds.h"
 //#include "lpm.h"
@@ -172,7 +172,7 @@ platform_init_stage_one()
 void
 platform_init_stage_two()
 {
-    simplelink_uart_init();
+    uart0_init();
 
 //  random_init(0x1234);
 //

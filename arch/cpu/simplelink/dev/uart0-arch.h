@@ -39,12 +39,12 @@
  * \file
  * Header file for the CC13xx/CC26xx UART driver
  */
-#ifndef SIMPLELINK_UART_H_
-#define SIMPLELINK_UART_H_
+#ifndef UART0_ARCH_H_
+#define UART0_ARCH_H_
 
 #include <stdint.h>
 
-typedef void (*InputCb)(unsigned char);
+typedef int (*uart0_input_cb)(unsigned char);
 
 /*---------------------------------------------------------------------------*/
 /** \name UART functions
@@ -54,7 +54,7 @@ typedef void (*InputCb)(unsigned char);
 /**
  * \brief Initializes the UART driver
  */
-void simplelink_uart_init(void);
+void uart0_init(void);
 
 /**
  * \brief       Writes data from a memory buffer to the UART interface.
@@ -63,7 +63,7 @@ void simplelink_uart_init(void);
  * \return      Number of bytes that has been written to the UART. If an
  *              error occurs, a negative value is returned.
  */
-int_fast32_t simplelink_uart_write(const void *buffer, size_t size);
+int_fast32_t uart0_write(const void *buffer, size_t size);
 
 /**
  * \brief Reads data from the UART interface to a memory buffer.
@@ -72,11 +72,11 @@ int_fast32_t simplelink_uart_write(const void *buffer, size_t size);
  * \return      Number of bytes that has been written to the buffer. If an
  *              error occurs, a negative value is returned.
  */
-void simplelink_uart_set_callback(InputCb input_cb);
+void uart0_set_callback(uart0_input_cb input_cb);
 
 /** @} */
 /*---------------------------------------------------------------------------*/
-#endif /* SIMPLELINK_UART_H_ */
+#endif /* UART0_ARCH_H_ */
 
 /**
  * @}
