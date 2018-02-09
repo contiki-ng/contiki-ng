@@ -210,6 +210,8 @@ platform_idle()
 {
   /* Drop to some low power mode */
 //  lpm_drop();
+
+    Power_idleFunc();
 }
 /*---------------------------------------------------------------------------*/
 /**
