@@ -522,21 +522,21 @@ transmit(unsigned short transmit_len)
     cmd_tx_adv->pPkt = tx_buf;
 
     // TODO: Register callback
-    RF_CmdHandle txHandle = RF_postCmd(rfHandle, (RF_Op*)&cmd_tx_adv, RF_PriorityNormal, NULL, 0);
-    if (txHandle == RF_ALLOC_ERROR)
-    {
-        /* Failure sending the CMD_PROP_TX command */
-        PRINTF("transmit: PROP_TX_ERR ret=%d, CMDSTA=0x%08lx, status=0x%04x\n",
-            ret, cmd_status, cmd_tx_adv->status);
-        return RADIO_TX_ERR;
-    }
-
-    ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
-
-    // watchdog_periodic();
-
-    /* Idle away while the command is running */
-    RF_pendCmd(rfHandle, txHandle, 0);
+    RF_runCmd(rfHandle, (RF_Op*)cmd_tx_adv, RF_PriorityNormal, NULL, 0);
+//    if (txHandle == RF_ALLOC_ERROR)
+//    {
+//        /* Failure sending the CMD_PROP_TX command */
+//        PRINTF("transmit: PROP_TX_ERR ret=%d, CMDSTA=0x%08lx, status=0x%04x\n",
+//            ret, cmd_status, cmd_tx_adv->status);
+//        return RADIO_TX_ERR;
+//    }
+//
+//    ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
+//
+//    // watchdog_periodic();
+//
+//    /* Idle away while the command is running */
+//    RF_pendCmd(rfHandle, txHandle, RF_EventLastCmdDone);
 
     if(cmd_tx_adv->status == PROP_DONE_OK) {
       /* Sent OK */
