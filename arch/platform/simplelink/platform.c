@@ -57,27 +57,20 @@
 
 #include "uart0-arch.h"
 
-//#include "leds.h"
-//#include "lpm.h"
+#include "leds.h"
 //#include "gpio-interrupt.h"
-//#include "dev/oscillators.h"
-//#include "ieee-addr.h"
-//#include "vims.h"
-//#include "dev/cc26xx-uart.h"
-//#include "dev/soc-rtc.h"
-//#include "rf-core/rf-core.h"
-//#include "sys_ctrl.h"
+#include "ieee-addr.h"
 //#include "uart.h"
-//#include "sys/clock.h"
-//#include "sys/rtimer.h"
-//#include "sys/node-id.h"
-//#include "sys/platform.h"
-//#include "lib/random.h"
-//#include "lib/sensors.h"
-//#include "button-sensor.h"
-//#include "dev/serial-line.h"
-//#include "net/mac/framer/frame802154.h"
-//
+#include "sys/clock.h"
+#include "sys/rtimer.h"
+#include "sys/node-id.h"
+#include "sys/platform.h"
+#include "lib/random.h"
+#include "lib/sensors.h"
+#include "button-sensor.h"
+#include "dev/serial-line.h"
+#include "net/mac/framer/frame802154.h"
+
 //#include "driverlib/driverlib_release.h"
 
 #include <stdio.h>
@@ -111,25 +104,25 @@ fade(unsigned char l)
   }
 }
 /*---------------------------------------------------------------------------*/
-//static void
-//set_rf_params(void)
-//{
-//  uint16_t short_addr;
-//  uint8_t ext_addr[8];
-//
-//  ieee_addr_cpy_to(ext_addr, 8);
-//
-//  short_addr = ext_addr[7];
-//  short_addr |= ext_addr[6] << 8;
-//
-//  NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
-//  NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
-//  NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
-//  NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
-//
-//  /* also set the global node id */
-//  node_id = short_addr;
-//}
+static void
+set_rf_params(void)
+{
+  uint16_t short_addr;
+  uint8_t ext_addr[8];
+
+  ieee_addr_cpy_to(ext_addr, 8);
+
+  short_addr = ext_addr[7];
+  short_addr |= ext_addr[6] << 8;
+
+  NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
+  NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
+  NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
+  NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
+
+  /* also set the global node id */
+  node_id = short_addr;
+}
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_one()
@@ -178,8 +171,8 @@ platform_init_stage_two()
 //
 //  serial_line_init();
 //
-//  /* Populate linkaddr_node_addr */
-//  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
+  /* Populate linkaddr_node_addr */
+  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 //
   fade(Board_GPIO_LED0);
 }
@@ -187,13 +180,13 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-//  radio_value_t chan, pan;
-//
-//  set_rf_params();
-//
-//  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
-//  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
-//
+  radio_value_t chan, pan;
+
+  set_rf_params();
+
+  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
+  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
+
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
   //LOG_INFO(BOARD_STRING "\n");
@@ -202,8 +195,8 @@ platform_init_stage_three()
           ChipInfo_ChipFamilyIs_CC13x0() ? "Yes" : "No",
           ChipInfo_SupportsBLE() ? "Yes" : "No",
           ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No");
-  //LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
-  //LOG_INFO(" Node ID: %d\n", node_id);
+  LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
+  LOG_INFO(" Node ID: %d\n", node_id);
 //
 //  process_start(&sensors_process, NULL);
   fade(Board_GPIO_LED1);

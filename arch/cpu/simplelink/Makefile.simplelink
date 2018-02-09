@@ -64,6 +64,7 @@ CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
 CONTIKI_CPU_SOURCEFILES += watchdog-arch.c putchar-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c
 CONTIKI_CPU_SOURCEFILES += proprietary-rf.c proprietary-rf-settings.c
+CONTIKI_CPU_SOURCEFILES += ieee-addr.c
 
 ### CPU-dependent debug source files
 DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c

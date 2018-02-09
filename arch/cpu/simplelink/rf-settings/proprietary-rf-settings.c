@@ -136,46 +136,46 @@ static uint32_t pOverrides[] =
 
 // CMD_PROP_RADIO_DIV_SETUP
 // Proprietary Mode Radio Setup Command for All Frequency Bands
-rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup =
+rfc_CMD_PROP_RADIO_DIV_SETUP_t smartrf_settings_cmd_prop_radio_div_setup =
 {
-    .commandNo = 0x3807,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x0,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
-    .condition.nSkip = 0x0,
-    .modulation.modType = 0x1,
-    .modulation.deviation = 0x64,
-    .modulation.deviationStepSz = 0x0,
-    .symbolRate.preScale = 0xF,
-    .symbolRate.rateWord = 0x8000,
-    .symbolRate.decimMode = 0x0,
-    .rxBw = 0x52,
-    .preamConf.nPreamBytes = 0x4,
-    .preamConf.preamMode = 0x0,
-    .formatConf.nSwBits = 0x20,
-    .formatConf.bBitReversal = 0x0,
-    .formatConf.bMsbFirst = 0x1,
-    .formatConf.fecMode = 0x0,
-    .formatConf.whitenMode = 0x0,
-    .config.frontEndMode = 0x0,
-    .config.biasMode = 0x1,
-    .config.analogCfgMode = 0x0,
-    .config.bNoFsPowerUp = 0x0,
-    .txPower = 0x9F3F,
-    .pRegOverride = pOverrides,
-    .centerFreq = 0x0364,
-    .intFreq = 0x8000,
-    .loDivider = 0x05,
+  .commandNo = 0x3807,
+  .status = 0x0000,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = 0x0,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = 0x1,
+  .condition.nSkip = 0x0,
+  .modulation.modType = 0x1,
+  .modulation.deviation = 0x64,
+  .symbolRate.preScale = 0xf,
+  .symbolRate.rateWord = 0x8000,
+  .rxBw = 0x24,
+  .preamConf.nPreamBytes = 0x3,
+  .preamConf.preamMode = 0x0,
+  .formatConf.nSwBits = 0x18,
+  .formatConf.bBitReversal = 0x0,
+  .formatConf.bMsbFirst = 0x1,
+  .formatConf.fecMode = 0x0,
+
+  /* 7: .4g mode with dynamic whitening and CRC choice */
+  .formatConf.whitenMode = 0x7,
+  .config.frontEndMode = 0x00, /* Set by the driver */
+  .config.biasMode = 0x00,     /* Set by the driver */
+  .config.analogCfgMode = 0x0,
+  .config.bNoFsPowerUp = 0x0,
+  .txPower = 0x00, /* Driver sets correct value */
+  .pRegOverride = pOverrides,
+  .intFreq = 0x8000,
+  .centerFreq = 868,
+  .loDivider = 0x05,
 };
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdFs =
+rfc_CMD_FS_t smartrf_settings_cmd_prop_fs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,
@@ -196,3 +196,84 @@ rfc_CMD_FS_t RF_cmdFs =
     .__dummy2 = 0x00,
     .__dummy3 = 0x0000,
 };
+
+/* CMD_PROP_TX_ADV */
+rfc_CMD_PROP_TX_ADV_t smartrf_settings_cmd_prop_tx_adv =
+{
+  .commandNo = 0x3803,
+  .status = 0x0000,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = 0x0,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = 0x1,
+  .condition.nSkip = 0x0,
+  .pktConf.bFsOff = 0x0,
+  .pktConf.bUseCrc = 0x1,
+  .pktConf.bCrcIncSw = 0x0, /* .4g mode */
+  .pktConf.bCrcIncHdr = 0x0, /* .4g mode */
+  .numHdrBits = 0x10 /* 16: .4g mode */,
+  .pktLen = 0x0000,
+  .startConf.bExtTxTrig = 0x0,
+  .startConf.inputMode = 0x0,
+  .startConf.source = 0x0,
+  .preTrigger.triggerType = TRIG_REL_START,
+  .preTrigger.bEnaCmd = 0x0,
+  .preTrigger.triggerNo = 0x0,
+  .preTrigger.pastTrig = 0x1,
+  .preTime = 0x00000000,
+  .syncWord = 0x0055904e,
+  .pPkt = 0,
+};
+/*---------------------------------------------------------------------------*/
+/* CMD_PROP_RX_ADV */
+rfc_CMD_PROP_RX_ADV_t smartrf_settings_cmd_prop_rx_adv =
+{
+  .commandNo = 0x3804,
+  .status = 0x0000,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = 0x0,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = 0x1,
+  .condition.nSkip = 0x0,
+  .pktConf.bFsOff = 0x0,
+  .pktConf.bRepeatOk = 0x1,
+  .pktConf.bRepeatNok = 0x1,
+  .pktConf.bUseCrc = 0x1,
+  .pktConf.bCrcIncSw = 0x0, /* .4g mode */
+  .pktConf.bCrcIncHdr = 0x0, /* .4g mode */
+  .pktConf.endType = 0x0,
+  .pktConf.filterOp = 0x1,
+  .rxConf.bAutoFlushIgnored = 0x1,
+  .rxConf.bAutoFlushCrcErr = 0x1,
+  .rxConf.bIncludeHdr = 0x0,
+  .rxConf.bIncludeCrc = 0x0,
+  .rxConf.bAppendRssi = 0x1,
+  .rxConf.bAppendTimestamp = 0x0,
+  .rxConf.bAppendStatus = 0x1,
+  .syncWord0 = 0x0055904e,
+  .syncWord1 = 0x00000000,
+  .maxPktLen = 0x0000, /* To be populated by the driver. */
+  .hdrConf.numHdrBits = 0x10, /* 16: .4g mode */
+  .hdrConf.lenPos = 0x0, /* .4g mode */
+  .hdrConf.numLenBits = 0x0B, /* 11 = 0x0B .4g mode */
+  .addrConf.addrType = 0x0,
+  .addrConf.addrSize = 0x0,
+  .addrConf.addrPos = 0x0,
+  .addrConf.numAddr = 0x0,
+  .lenOffset = -4, /* .4g mode */
+  .endTrigger.triggerType = TRIG_NEVER,
+  .endTrigger.bEnaCmd = 0x0,
+  .endTrigger.triggerNo = 0x0,
+  .endTrigger.pastTrig = 0x0,
+  .endTime = 0x00000000,
+  .pAddr = 0,
+  .pQueue = 0,
+  .pOutput = 0,
+};
+/*---------------------------------------------------------------------------*/

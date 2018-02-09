@@ -13,16 +13,14 @@
 #include DeviceFamily_constructPath(driverlib/rf_prop_cmd.h)
 #include <ti/drivers/rf/RF.h>
 
-
 // TI-RTOS RF Mode Object
 extern RF_Mode RF_prop;
 
-
 // RF Core API commands
-extern rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup;
-extern rfc_CMD_FS_t RF_cmdFs;
-extern rfc_CMD_PROP_TX_t RF_cmdPropTx;
-extern rfc_CMD_PROP_RX_t RF_cmdPropRx;
+extern rfc_CMD_PROP_RADIO_DIV_SETUP_t smartrf_settings_cmd_prop_radio_div_setup;
+extern rfc_CMD_FS_t smartrf_settings_cmd_prop_fs;
+extern rfc_CMD_PROP_TX_ADV_t smartrf_settings_cmd_prop_tx_adv;
+extern rfc_CMD_PROP_RX_ADV_t smartrf_settings_cmd_prop_rx_adv;
 
 
 #endif // _PROPRIETARY_RF_SETTINGS_H_
