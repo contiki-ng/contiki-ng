@@ -8,4 +8,4 @@ BOARD_SOURCEFILES += bmp-280-sensor.c tmp-007-sensor.c opt-3001-sensor.c
 BOARD_SOURCEFILES += hdc-1000-sensor.c mpu-9250-sensor.c button-sensor.c xmem.c
 BOARD_SOURCEFILES += reed-relay.c ext-flash.c buzzer.c
 BOARD_SOURCEFILES += board.c board-spi.c board-i2c.c
-BOARD_SOURCEFILES += sensorcontroller/scif_framework.c sensorcontroller/scif_osal_none.c sensorcontroller/scif.c sensorcontroller/sensorcontroller-sensor.c
+BOARD_SOURCEFILES += sensorcontroller/scif_framework.c sensorcontroller/scif_osal_none.c sensorcontroller/scif.c sensorcontroller-sensor.c
