@@ -53,6 +53,7 @@
 #include "opt-3001-sensor.h"
 #include "hdc-1000-sensor.h"
 #include "mpu-9250-sensor.h"
+#include "sensorcontroller-sensor.h"
 #include "reed-relay.h"
 #include "buzzer.h"
 #include "ext-flash.h"
