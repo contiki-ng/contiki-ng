@@ -132,6 +132,12 @@ typedef enum {
   PM_USBSUSPEND      /* USB in suspend mode */
 } pm_charge_current_states;
 
+/*
+ *  VBAT Curve compensation
+ */
+#define PM_VBAT_MULT    (float)-181.9
+#define PM_VBAT_OFF     (float)1294.72
+
 /** @} */
 /* -------------------------------------------------------------------------- */
 /** \name Power Management functions

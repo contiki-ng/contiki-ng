@@ -249,6 +249,8 @@ pm_shutdown_now(uint8_t type)
 int8_t
 pm_get_voltage(uint16_t *state)
 {
+  float result = 0x00;
+
   if(!initialized) {
     return PM_ERROR;
   }
@@ -260,10 +262,15 @@ pm_get_voltage(uint16_t *state)
       *state = (uint16_t)lbuf[0] << 8;
       *state += lbuf[1];
 
-      /* Delay required for the command to finish */
-      clock_delay_usec(3000);
+      /* Compensation */
+      result =  *state - PM_VBAT_OFF;
+      result /= PM_VBAT_MULT;
 
-      PRINTF("PM: Voltage %u [%u][%u]\n", *state, lbuf[0], lbuf[1]);
+      *state = (uint16_t)(result*100);
+
+      /* Delay required for the command to finish */
+      //clock_delay_usec(3000);
+
       PM_ENABLE_LINE_CLR;
       return PM_SUCCESS;
     }
