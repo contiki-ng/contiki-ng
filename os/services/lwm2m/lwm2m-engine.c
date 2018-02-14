@@ -57,10 +57,9 @@
 #include <string.h>
 #include <inttypes.h>
 
-#if UIP_CONF_IPV6_RPL
-#include "rpl.h"
+#ifndef LWM2M_ENGINE_CLIENT_ENDPOINT_NAME
 #include "net/ipv6/uip-ds6.h"
-#endif /* UIP_CONF_IPV6_RPL */
+#endif /* LWM2M_ENGINE_CLIENT_ENDPOINT_NAME */
 
 /* Log configuration */
 #include "coap-log.h"

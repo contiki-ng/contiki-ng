@@ -35,7 +35,7 @@
 #include "contiki.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "tools/rpl-tools.h"
+#include "net/routing/routing.h"
 #include "coap-engine.h"
 #include "light-sensor.h"
 #include "ht-sensor.h"
@@ -350,12 +350,10 @@ PROCESS_THREAD(start_app, ev, data)
 
   /* Start net stack */
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    rpl_tools_init(&prefix);
-  } else {
-    rpl_tools_init(NULL);
-  } printf("Starting RPL node\n");
+    NETSTACK_ROUTING.root_start();
+  }
+  NETSTACK_MAC.on();
+  printf("Starting RPL node\n");
 
   coap_engine_init();
   coap_activate_resource(&resource_light_sensor_value, "DR1175/LightSensor/Value");

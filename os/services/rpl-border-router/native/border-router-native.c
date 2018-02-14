@@ -40,7 +40,8 @@
 
 #include "contiki.h"
 #include "contiki-net.h"
-#include "rpl.h"
+
+#include "net/routing/routing.h"
 #include "rpl-border-router.h"
 #include "cmd.h"
 #include "border-router.h"
@@ -81,7 +82,7 @@ border_router_set_mac(const uint8_t *data)
      add them back again - a bit messy... ?*/
   PROCESS_CONTEXT_BEGIN(&tcpip_process);
   uip_ds6_init();
-  rpl_init();
+  NETSTACK_ROUTING.init();
   PROCESS_CONTEXT_END(&tcpip_process);
 
   mac_set = 1;

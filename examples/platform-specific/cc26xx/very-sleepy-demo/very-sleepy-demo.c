@@ -40,10 +40,7 @@
 #include "net/netstack.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "rpl.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "net/routing/routing.h"
 #include "coap-engine.h"
 #include "coap.h"
 

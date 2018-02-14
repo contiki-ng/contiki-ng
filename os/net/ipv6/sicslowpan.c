@@ -74,12 +74,7 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/routing/routing.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -1436,10 +1431,8 @@ packet_sent(void *ptr, int status, int transmissions)
   /* Update neighbor link statistics */
   link_stats_packet_sent(dest, status, transmissions);
 
-#if UIP_CONF_IPV6_RPL
-  /* Call RPL link callback */
-  rpl_link_callback(dest, status, transmissions);
-#endif /* UIP_CONF_IPV6_RPL */
+  /* Call routing protocol link callback */
+  NETSTACK_ROUTING.link_callback(dest, status, transmissions);
 
   /* DS6 callback, used for UIP_DS6_LL_NUD */
   uip_ds6_link_callback(status, transmissions);

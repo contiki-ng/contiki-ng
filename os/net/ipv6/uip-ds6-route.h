@@ -44,22 +44,28 @@
 #include "net/nbr-table.h"
 #include "sys/stimer.h"
 #include "lib/list.h"
-#if UIP_CONF_IPV6_RPL
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl-conf.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl-conf.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#endif
 
 #ifdef UIP_CONF_MAX_ROUTES
+
 #define UIP_MAX_ROUTES UIP_CONF_MAX_ROUTES
+
 #else /* UIP_CONF_MAX_ROUTES */
+
+#if ROUTING_CONF_RPL_LITE
+#define UIP_MAX_ROUTES 0 /* RPL Lite only supports non-storing, no routes */
+#elif ROUTING_CONF_RPL_CLASSIC
+
+#include "net/routing/rpl-classic/rpl-conf.h"
 #if RPL_WITH_STORING
 #define UIP_MAX_ROUTES NETSTACK_MAX_ROUTE_ENTRIES
-#else
-#define UIP_MAX_ROUTES 0
+#else /* RPL_WITH_STORING */
+#define UIP_MAX_ROUTES 0 /* No storing mode, no need for routes */
+#endif /* RPL_WITH_STORING */
+
+#else /* Not RPL Lite nor RPL Classic */
+#define UIP_MAX_ROUTES NETSTACK_MAX_ROUTE_ENTRIES
 #endif
+
 #endif /* UIP_CONF_MAX_ROUTES */
 
 NBR_TABLE_DECLARE(nbr_routes);

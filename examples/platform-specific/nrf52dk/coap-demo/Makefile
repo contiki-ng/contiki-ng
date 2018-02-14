@@ -21,6 +21,6 @@ MODULES_REL += ./resources
 # REST Engine shall use Erbium CoAP implementation
 MODULES += os/net/app-layer/coap
 
-MAKE_ROUTING = MAKE_ROUTING_NONE
+MAKE_ROUTING = MAKE_ROUTING_NULLROUTING
 
 include $(CONTIKI)/Makefile.include

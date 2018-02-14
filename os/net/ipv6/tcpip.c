@@ -38,21 +38,15 @@
  * \author  Julien Abeille <jabeille@cisco.com> (IPv6 related code)
  */
 
+#include "contiki.h"
 #include "contiki-net.h"
 #include "net/ipv6/uip-packetqueue.h"
 
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 #include "net/linkaddr.h"
-
-#if UIP_CONF_IPV6_RPL
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#endif
+#include "net/routing/routing.h"
 
 #include <string.h>
 
@@ -103,11 +97,6 @@ enum {
   PACKET_INPUT
 };
 
-#if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-#define NEXTHOP_NON_STORING(addr) rpl_ext_header_srh_get_next_hop(addr)
-#else
-#define NEXTHOP_NON_STORING(addr) 0
-#endif
 /*---------------------------------------------------------------------------*/
 static void
 init_appstate(uip_tcp_appstate_t *as, void *state)
@@ -489,23 +478,6 @@ output_fallback(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-drop_route(uip_ds6_route_t *route)
-{
-#if UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0)
-
-  /* If we are running RPL, and if we are the root of the
-     network, we'll trigger a global repair before we remove
-     the route. */
-  rpl_dag_t *dag;
-  dag = (rpl_dag_t *)route->state.dag;
-  if(dag != NULL && dag->instance != NULL) {
-    rpl_repair_root(dag->instance->instance_id);
-  }
-#endif /* UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0) */
-  uip_ds6_route_rm(route);
-}
-/*---------------------------------------------------------------------------*/
-static void
 annotate_transmission(uip_ipaddr_t *nexthop)
 {
 #if TCPIP_CONF_ANNOTATE_TRANSMISSIONS
@@ -533,7 +505,7 @@ get_nexthop(uip_ipaddr_t *addr)
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_("\n");
 
-  if(NEXTHOP_NON_STORING(addr)) {
+  if(NETSTACK_ROUTING.ext_header_srh_get_next_hop(addr)) {
     LOG_INFO("output: selected next hop from SRH: ");
     LOG_INFO_6ADDR(addr);
     LOG_INFO_("\n");
@@ -571,9 +543,11 @@ get_nexthop(uip_ipaddr_t *addr)
        never responded to link-layer acks, we drop its route. */
     if(nexthop == NULL) {
       LOG_ERR("output: found dead route\n");
-      drop_route(route);
-      /* We don't have a nexthop to send the packet to, so we drop
-         it. */
+      /* Notifiy the routing protocol that we are about to remove the route */
+      NETSTACK_ROUTING.drop_route(route);
+      /* Remove the route */
+      uip_ds6_route_rm(route);
+      /* We don't have a nexthop to send the packet to, so we drop it. */
     } else {
       LOG_INFO("output: found next hop from routing table: ");
       LOG_INFO_6ADDR(nexthop);
@@ -678,14 +652,13 @@ tcpip_ipv6_output(void)
     goto exit;
   }
 
-#if UIP_CONF_IPV6_RPL
-  if(!rpl_ext_header_update()) {
+
+  if(!NETSTACK_ROUTING.ext_header_update()) {
     /* Packet can not be forwarded */
-    LOG_ERR("output: RPL header update error\n");
+    LOG_ERR("output: routing protocol extension header update error\n");
     uip_clear_buf();
     return;
   }
-#endif /* UIP_CONF_IPV6_RPL */
 
   if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
     linkaddr = NULL;
@@ -855,10 +828,8 @@ PROCESS_THREAD(tcpip_process, ev, data)
 #ifdef UIP_FALLBACK_INTERFACE
   UIP_FALLBACK_INTERFACE.init();
 #endif
-  /* initialize RPL if configured for using RPL */
-#if UIP_CONF_IPV6_RPL
-  rpl_init();
-#endif /* UIP_CONF_IPV6_RPL */
+  /* Initialize routing protocol */
+  NETSTACK_ROUTING.init();
 
   while(1) {
     PROCESS_YIELD();

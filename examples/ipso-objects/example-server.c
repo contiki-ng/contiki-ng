@@ -38,9 +38,8 @@
 
 #include "contiki.h"
 #include "net/ipv6/uip.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
 #include "net/netstack.h"
+#include "net/routing/routing.h"
 #include "coap-constants.h"
 #include "coap-engine.h"
 #include "lwm2m-engine.h"
@@ -237,8 +236,8 @@ setup_network(void)
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
 #endif
 
-  rpl_dag_root_init(&ipaddr, &ipaddr);
-  rpl_dag_root_init_dag_immediately();
+  NETSTACK_ROUTING.root_set_prefix(&ipaddr, &ipaddr);
+  NETSTACK_ROUTING.root_start();
 #endif /* UIP_CONF_ROUTER */
 
   PRINTF("IPv6 addresses: ");

@@ -2,7 +2,7 @@
 #include "contiki-net.h"
 #include "ip64/ip64.h"
 #include "net/netstack.h"
-#include "rpl-dag-root.h"
+#include "net/routing/routing.h"
 #include "sys/autostart.h"
 
 /*---------------------------------------------------------------------------*/
@@ -14,7 +14,7 @@ PROCESS_THREAD(router_node_process, ev, data)
   PROCESS_BEGIN();
 
   /* Set us up as a RPL root node. */
-  rpl_dag_root_init_dag_delay();
+  NETSTACK_ROUTING.root_start();
 
   /* Initialize the IP64 module so we'll start translating packets */
   ip64_init();

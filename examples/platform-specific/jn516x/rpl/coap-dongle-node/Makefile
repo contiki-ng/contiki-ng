@@ -8,7 +8,7 @@ CONTIKI=../../../../..
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/lib/json
-MODULES_REL += .. ../tools
+MODULES_REL += ..
 
 MODULES += os/net/app-layer/coap
 

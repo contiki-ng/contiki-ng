@@ -1,8 +1,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
+#include "net/routing/routing.h"
 
 #include <stdio.h>
 
@@ -41,7 +40,7 @@ PROCESS_THREAD(udp_process, ev, data)
 
   PROCESS_BEGIN();
 
-  rpl_dag_root_init_dag_immediately();
+  NETSTACK_ROUTING.root_start();
 
   simple_udp_register(&broadcast_connection, UDP_PORT,
                       NULL, UDP_PORT,

@@ -48,8 +48,7 @@
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
+#include "net/routing/routing.h"
 
 #define MAX_PAYLOAD_LEN 120
 #define MCAST_SINK_UDP_PORT 3001 /* Host byte order */
@@ -112,7 +111,7 @@ PROCESS_THREAD(rpl_root_process, ev, data)
 
   PRINTF("Multicast Engine: '%s'\n", UIP_MCAST6.name);
 
-  rpl_dag_root_init_dag_immediately();
+  NETSTACK_ROUTING.root_start();
 
   prepare_mcast();
 

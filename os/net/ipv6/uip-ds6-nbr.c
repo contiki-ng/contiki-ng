@@ -50,19 +50,15 @@
 #include "net/link-stats.h"
 #include "net/linkaddr.h"
 #include "net/packetbuf.h"
+#include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-ds6-nbr.h"
+#include "net/ipv6/uip-nd6.h"
+#include "net/routing/routing.h"
 
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6 Nbr"
 #define LOG_LEVEL LOG_LEVEL_IPV6
-
-#ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
-#define NEIGHBOR_STATE_CHANGED(n) UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED(n)
-void NEIGHBOR_STATE_CHANGED(uip_ds6_nbr_t *n);
-#else
-#define NEIGHBOR_STATE_CHANGED(n)
-#endif /* UIP_DS6_CONF_NEIGHBOR_STATE_CHANGED */
 
 NBR_TABLE_GLOBAL(uip_ds6_nbr_t, ds6_neighbors);
 
@@ -105,7 +101,7 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     LOG_INFO_(" link addr ");
     LOG_INFO_LLADDR((linkaddr_t*)lladdr);
     LOG_INFO_(" state %u\n", state);
-    NEIGHBOR_STATE_CHANGED(nbr);
+    NETSTACK_ROUTING.neighbor_state_changed(nbr);
     return nbr;
   } else {
     LOG_INFO("Add drop ip addr ");
@@ -125,7 +121,7 @@ uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
 #if UIP_CONF_IPV6_QUEUE_PKT
     uip_packetqueue_free(&nbr->packethandle);
 #endif /* UIP_CONF_IPV6_QUEUE_PKT */
-    NEIGHBOR_STATE_CHANGED(nbr);
+    NETSTACK_ROUTING.neighbor_state_changed(nbr);
     return nbr_table_remove(ds6_neighbors, nbr);
   }
   return 0;
@@ -257,7 +253,7 @@ uip_ds6_neighbor_periodic(void)
     switch(nbr->state) {
     case NBR_REACHABLE:
       if(stimer_expired(&nbr->reachable)) {
-#if UIP_CONF_IPV6_RPL
+#if UIP_CONF_ROUTER
         /* when a neighbor leave its REACHABLE state and is a default router,
            instead of going to STALE state it enters DELAY state in order to
            force a NUD on it. Otherwise, if there is no upward traffic, the
@@ -277,12 +273,12 @@ uip_ds6_neighbor_periodic(void)
           LOG_INFO_(")\n");
           nbr->state = NBR_STALE;
         }
-#else /* UIP_CONF_IPV6_RPL */
+#else /* UIP_CONF_ROUTER */
         LOG_INFO("REACHABLE: moving to STALE (");
         LOG_INFO_6ADDR(&nbr->ipaddr);
         LOG_INFO_(")\n");
         nbr->state = NBR_STALE;
-#endif /* UIP_CONF_IPV6_RPL */
+#endif /* UIP_CONF_ROUTER */
       }
       break;
     case NBR_INCOMPLETE:

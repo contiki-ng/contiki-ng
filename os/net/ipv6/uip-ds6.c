@@ -47,6 +47,7 @@
 #include <stddef.h>
 #include "lib/random.h"
 #include "net/ipv6/uip-nd6.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "net/ipv6/uip-packetqueue.h"

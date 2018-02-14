@@ -28,6 +28,7 @@ platform-specific/cc2538-common/crypto/cc2538dk \
 platform-specific/cc2538-common/pka/cc2538dk \
 hello-world/cc2538dk \
 rpl-border-router/cc2538dk \
+rpl-border-router/cc2538dk:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 hello-world/nrf52dk \
 platform-specific/nrf52dk/coap-demo/nrf52dk:coap-server \
 platform-specific/nrf52dk/coap-demo/nrf52dk:coap-client:SERVER_IPV6_EP=ffff \
