@@ -34,11 +34,11 @@
 #include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_prop.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_rfe_genfsk.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_genfsk.h)
-#include "proprietary-rf-settings.h"
 
-#include "contiki.h"
-#include "dev/radio.h"
-#include <proprietary-rf.h>
+#include <contiki.h>
+#include <dev/radio.h>
+
+#include "rf-core.h"
 
 /*---------------------------------------------------------------------------*/
 /**
@@ -52,7 +52,7 @@
 
 /*---------------------------------------------------------------------------*/
 /* Default TX power settings for the 779-930MHz band */
-const prop_mode_tx_power_config_t prop_mode_tx_power_779_930[] = {
+RF_TxPower RF_propTxPower779_930[] = {
   {  14, 0xa73f },
   {  13, 0xa63f }, /* 12.5 */
   {  12, 0xb818 },
@@ -73,7 +73,7 @@ const prop_mode_tx_power_config_t prop_mode_tx_power_779_930[] = {
 };
 /*---------------------------------------------------------------------------*/
 /* Default TX power settings for the 431-527MHz band */
-const prop_mode_tx_power_config_t prop_mode_tx_power_431_527[] = {
+RF_TxPower RF_propTxPower431_527[] = {
   {  15, 0x003f },
   {  14, 0xbe3f }, /* 13.7 */
   {  13, 0x6a0f },
@@ -87,7 +87,7 @@ const prop_mode_tx_power_config_t prop_mode_tx_power_431_527[] = {
  */
 
 // TI-RTOS RF Mode Object
-RF_Mode RF_prop =
+RF_Mode RF_propMode =
 {
     .rfMode = RF_MODE_AUTO,
     .cpePatchFxn = &rf_patch_cpe_prop,
@@ -136,7 +136,7 @@ static uint32_t pOverrides[] =
 
 // CMD_PROP_RADIO_DIV_SETUP
 // Proprietary Mode Radio Setup Command for All Frequency Bands
-rfc_CMD_PROP_RADIO_DIV_SETUP_t smartrf_settings_cmd_prop_radio_div_setup =
+rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
 {
   .commandNo = 0x3807,
   .status = 0x0000,
@@ -175,7 +175,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t smartrf_settings_cmd_prop_radio_div_setup =
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t smartrf_settings_cmd_prop_fs =
+rfc_CMD_FS_t rf_cmd_prop_fs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,
@@ -198,7 +198,7 @@ rfc_CMD_FS_t smartrf_settings_cmd_prop_fs =
 };
 
 /* CMD_PROP_TX_ADV */
-rfc_CMD_PROP_TX_ADV_t smartrf_settings_cmd_prop_tx_adv =
+rfc_CMD_PROP_TX_ADV_t rf_cmd_prop_tx_adv =
 {
   .commandNo = 0x3803,
   .status = 0x0000,
@@ -229,7 +229,7 @@ rfc_CMD_PROP_TX_ADV_t smartrf_settings_cmd_prop_tx_adv =
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_PROP_RX_ADV */
-rfc_CMD_PROP_RX_ADV_t smartrf_settings_cmd_prop_rx_adv =
+rfc_CMD_PROP_RX_ADV_t rf_cmd_prop_rx_adv =
 {
   .commandNo = 0x3804,
   .status = 0x0000,

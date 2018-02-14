@@ -31,7 +31,9 @@ CFLAGS += -I$(SDK_KERNEL)/posix
 LDFLAGS += --entry resetISR
 LDFLAGS += -static
 LDFLAGS += --specs=nano.specs
-LDFLAGS += -Wl,--defsym=_stack_origin=__stack
+# NB! The symbol _stack, pointing to the stack start, is expected,
+# but should already be defined in the linker script.
+LDFLAGS += -Wl,--defsym=_stack_origin=__stack_end
 LDFLAGS += -Wl,--defsym=_heap=__heap_start__
 LDFLAGS += -Wl,--defsym=_eheap=__heap_end__
 
@@ -63,7 +65,9 @@ CONTIKI_CPU_DIRS += dev rf-settings
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
 CONTIKI_CPU_SOURCEFILES += watchdog-arch.c putchar-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c
-CONTIKI_CPU_SOURCEFILES += proprietary-rf.c proprietary-rf-settings.c
+CONTIKI_CPU_SOURCEFILES += rf-core.c
+CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c rf-prop-settings.c
+CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c rf-ieee-settings.c
 CONTIKI_CPU_SOURCEFILES += ieee-addr.c
 
 ### CPU-dependent debug source files

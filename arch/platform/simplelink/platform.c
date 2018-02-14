@@ -60,6 +60,7 @@
 #include "leds.h"
 //#include "gpio-interrupt.h"
 #include "ieee-addr.h"
+#include "dev/rf-core.h"
 #include "uart0-arch.h"
 #include "sys/clock.h"
 #include "sys/rtimer.h"

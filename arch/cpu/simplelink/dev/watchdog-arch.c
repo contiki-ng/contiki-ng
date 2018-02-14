@@ -109,6 +109,7 @@ lock_config(uint32_t status)
 void
 watchdog_init(void)
 {
+  return;
   WatchdogReloadSet(CONTIKI_WATCHDOG_TIMER_TOP);
   lock_config(LOCK_REGISTERS_UNLOCKED);
 }
@@ -119,6 +120,7 @@ watchdog_init(void)
 void
 watchdog_start(void)
 {
+  return;
   uint32_t lock_status = unlock_config();
 
   watchdog_periodic();
@@ -133,6 +135,7 @@ watchdog_start(void)
 void
 watchdog_periodic(void)
 {
+  return;
   WatchdogReloadSet(CONTIKI_WATCHDOG_TIMER_TOP);
   WatchdogIntClear();
 }
@@ -143,6 +146,7 @@ watchdog_periodic(void)
 void
 watchdog_stop(void)
 {
+  return;
   uint32_t lock_status = unlock_config();
 
   WatchdogResetDisable();
@@ -156,6 +160,7 @@ watchdog_stop(void)
 void
 watchdog_reboot(void)
 {
+  return;
   watchdog_start();
   while(1);
 }

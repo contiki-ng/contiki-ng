@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,29 +32,58 @@
  * \addtogroup rf-core
  * @{
  *
- * \defgroup rf-core-prop CC13xx Prop mode driver
- *
- * @{
- *
  * \file
- * Header file for the CC13xx prop mode NETSTACK_RADIO driver
+ * Implementation of the CC13xx/CC26xx RF core driver
  */
-/*---------------------------------------------------------------------------*/
-#ifndef PROP_MODE_H_
-#define PROP_MODE_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
+#include "dev/watchdog.h"
+#include "sys/process.h"
+#include "sys/clock.h"
+#include "sys/ctimer.h"
+#include "sys/energest.h"
+#include "sys/cc.h"
+#include "net/netstack.h"
+#include "net/packetbuf.h"
+/*---------------------------------------------------------------------------*/
+#include <ti/drivers/rf/RF.h>
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
 /*---------------------------------------------------------------------------*/
-typedef struct prop_mode_tx_power_config {
-  radio_value_t dbm;
-  uint16_t tx_power; /* Value for the PROP_DIV_RADIO_SETUP.txPower field */
-} prop_mode_tx_power_config_t;
+#define DEBUG 0
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 /*---------------------------------------------------------------------------*/
-#endif /* PROP_MODE_H_ */
+PROCESS(RF_coreProcess, "SimpleLink RF driver");
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
+PROCESS_THREAD(RF_coreProcess, ev, data)
+{
+  int len;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+    do {
+      watchdog_periodic();
+      packetbuf_clear();
+      len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
+
+      if(len > 0) {
+        packetbuf_set_datalen(len);
+
+        NETSTACK_MAC.input();
+      }
+    } while(len > 0);
+  }
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+/** @} */
