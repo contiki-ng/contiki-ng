@@ -52,6 +52,8 @@
 #include <ti/drivers/Power.h>
 #include <driverlib/driverlib_release.h>
 #include <driverlib/chipinfo.h>
+#include <driverlib/vims.h>
+#include <driverlib/interrupt.h>
 #include <NoRTOS.h>
 /*---------------------------------------------------------------------------*/
 /* Contiki API */
@@ -62,12 +64,12 @@
 #include "sys/node-id.h"
 #include "sys/platform.h"
 #include "dev/serial-line.h"
+#include "dev/leds.h"
 #include "net/mac/framer/frame802154.h"
 /*---------------------------------------------------------------------------*/
 /* Arch driver implementations */
 #include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
-#include "leds.h"
 //#include "gpio-interrupt.h"
 #include "ieee-addr.h"
 #include "dev/rf-common.h"
@@ -94,11 +96,11 @@ fade(unsigned char l)
   for(int k = 0; k < 800; ++k) {
     int j = k > 400 ? 800 - k : k;
 
-    GPIO_write(l, Board_GPIO_LED_ON);
+    leds_on(l);
     for(i = 0; i < j; ++i) {
       __asm("nop");
     }
-    GPIO_write(l, Board_GPIO_LED_OFF);
+    leds_off(l);
     for(i = 0; i < 400 - j; ++i) {
       __asm("nop");
     }
@@ -128,16 +130,19 @@ set_rf_params(void)
 void
 platform_init_stage_one()
 {
+  // Enable flash cache
+  VIMSModeSet(VIMS_BASE, VIMS_MODE_ENABLED);
+  // Configure round robin arbitration and prefetching
+  VIMSConfigure(VIMS_BASE, true, true);
+
   Board_initGeneral();
   GPIO_init();
 
-    // Only enables interrupts
+  // NoRTOS_start only enables HWI
   NoRTOS_start();
 
-//  /* Enable flash cache and prefetch. */
-//  ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
-//  ti_lib_vims_configure(VIMS_BASE, true, true);
-//
+  leds_init();
+
 //  ti_lib_int_master_disable();
 //
 //  /* Set the LF XOSC as the LF system clock source */
@@ -145,12 +150,7 @@ platform_init_stage_one()
 //
 //  lpm_init();
 //
-//  board_init();
-//
-//  gpio_interrupt_init();
-//
-//  leds_init();
-  fade(Board_GPIO_LED0);
+  fade(LEDS_RED);
 //
 //  /*
 //   * Disable I/O pad sleep mode and open I/O latches in the AON IOC interface
@@ -163,7 +163,7 @@ platform_init_stage_one()
 //  ti_lib_int_master_enable();
 //
 //  soc_rtc_init();
-  fade(Board_GPIO_LED1);
+  fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -177,7 +177,7 @@ platform_init_stage_two()
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
-  fade(Board_GPIO_LED0);
+  fade(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -202,7 +202,7 @@ platform_init_stage_three()
   LOG_INFO(" Node ID: %d\n", g_nodeId);
 //
 //  process_start(&sensors_process, NULL);
-  fade(Board_GPIO_LED1);
+  fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
 void
