@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,10 +52,20 @@
 #include <driverlib/rf_prop_cmd.h>
 #include <driverlib/rf_prop_mailbox.h>
 #include <ti/drivers/rf/RF.h>
-#include <rf-settings/rf-prop-settings.h>
+/*---------------------------------------------------------------------------*/
+/* RF settings */
+/* RF settings */
+#ifdef PROP_MODE_CONF_RF_SETTINGS
+#   define PROP_MODE_RF_SETTINGS  PROP_MODE_CONF_RF_SETTINGS
+#   undef PROP_MODE_CONF_RF_SETTINGS
+#else
+#   define PROP_MODE_RF_SETTINGS "rf-settings/rf-prop-settings.h"
+#endif
+
+#include PROP_MODE_RF_SETTINGS
 /*---------------------------------------------------------------------------*/
 /* Platform RF dev */
-#include "rf-core.h"
+#include "rf-common.h"
 #include "dot-15-4g.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
@@ -246,7 +256,7 @@ rf_start_rx()
     RF_CmdHandle rxCmdHandle = RF_postCmd(rfHandle, (RF_Op*)gvp_cmd_rx_adv, RF_PriorityNormal,
                                           &rf_rx_callback, RF_EventRxEntryDone);
     if (rxCmdHandle == RF_ALLOC_ERROR) {
-        return CMD_ERROR;
+        return CMD_RESULT_ERROR;
     }
 
     /* Wait to enter RX */
@@ -258,10 +268,10 @@ rf_start_rx()
         PRINTF("RF_cmdPropRxAdv: handle=0x%08lx, status=0x%04x\n",
                (unsigned long)rxCmdHandle, gvp_cmd_rx_adv->status);
         rf_switch_off();
-        return CMD_ERROR;
+        return CMD_RESULT_ERROR;
     }
 
-    return CMD_OK;
+    return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static CmdResult
@@ -269,7 +279,7 @@ rf_stop_rx(void)
 {
     /* If we are off, do nothing */
     if (!rf_is_receiving()) {
-        return CMD_OK;
+        return CMD_RESULT_OK;
     }
 
     /* Abort any ongoing operation. Don't care about the result. */
@@ -281,12 +291,12 @@ rf_stop_rx(void)
        gvp_cmd_rx_adv->status != PROP_DONE_ABORT) {
         PRINTF("RF_cmdPropRxAdv cancel: status=0x%04x\n",
                gvp_cmd_rx_adv->status);
-        return CMD_ERROR;
+        return CMD_RESULT_ERROR;
     }
 
     /* Stopped gracefully */
     ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-    return CMD_OK;
+    return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static CmdResult
@@ -294,10 +304,10 @@ rf_run_setup()
 {
     RF_runCmd(rfHandle, (RF_Op*)gvp_cmd_radio_div_setup, RF_PriorityNormal, NULL, 0);
     if (gvp_cmd_radio_div_setup->status != PROP_DONE_OK) {
-        return CMD_ERROR;
+        return CMD_RESULT_ERROR;
     }
 
-    return CMD_OK;
+    return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_value_t
@@ -309,7 +319,7 @@ get_rssi(void)
     }
 
     const bool was_off = !rf_is_receiving();
-    if (was_off && rf_start_rx() == CMD_ERROR) {
+    if (was_off && rf_start_rx() == CMD_RESULT_ERROR) {
         PRINTF("get_rssi: unable to start RX\n");
         return RF_GET_RSSI_ERROR_VAL;
     }
@@ -658,7 +668,7 @@ rf_switch_off(void)
 //   * from within an interrupt context. Abort, but pretend everything is OK.
 //   */
 //  if(rf_ble_is_active() == RF_BLE_ACTIVE) {
-//    return CMD_OK;
+//    return CMD_RESULT_OK;
 //  }
 
     // Force abort of any ongoing RF operation.
@@ -670,7 +680,7 @@ rf_switch_off(void)
     /* We pulled the plug, so we need to restore the status manually */
     gvp_cmd_rx_adv->status = IDLE;
 
-    return CMD_OK;
+    return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
@@ -767,7 +777,7 @@ set_value(radio_param_t param, radio_value_t value)
   /* If we reach here we had no errors. Apply new settings */
   if (rf_is_receiving()) {
       rf_stop_rx();
-      if (rf_run_setup() != CMD_OK) {
+      if (rf_run_setup() != CMD_RESULT_OK) {
           return RADIO_RESULT_ERROR;
       }
       rf_start_rx();
@@ -826,7 +836,7 @@ rf_init(void)
 
     process_start(&RF_coreProcess, NULL);
 
-    return CMD_OK;
+    return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 const struct radio_driver prop_mode_driver = {

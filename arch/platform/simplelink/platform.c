@@ -45,35 +45,36 @@
  * - The TI CC26X2R1 LaunchPad
  * @{
  */
+/*---------------------------------------------------------------------------*/
+/* Simplelink SDK includes */
 #include <Board.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/Power.h>
 #include <driverlib/driverlib_release.h>
 #include <driverlib/chipinfo.h>
 #include <NoRTOS.h>
-
+/*---------------------------------------------------------------------------*/
+/* Contiki API */
 #include "contiki.h"
 #include "contiki-net.h"
-
-#include "uart0-arch.h"
-
-#include "leds.h"
-//#include "gpio-interrupt.h"
-#include "ieee-addr.h"
-#include "dev/rf-core.h"
-#include "uart0-arch.h"
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "sys/node-id.h"
 #include "sys/platform.h"
+#include "dev/serial-line.h"
+#include "net/mac/framer/frame802154.h"
+/*---------------------------------------------------------------------------*/
+/* Arch driver implementations */
+#include "uart0-arch.h"
+/*---------------------------------------------------------------------------*/
+#include "leds.h"
+//#include "gpio-interrupt.h"
+#include "ieee-addr.h"
+#include "dev/rf-common.h"
 #include "lib/random.h"
 #include "lib/sensors.h"
 #include "button-sensor.h"
-#include "dev/serial-line.h"
-#include "net/mac/framer/frame802154.h"
-
-//#include "driverlib/driverlib_release.h"
-
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -81,7 +82,7 @@
 #define LOG_MODULE "CC26xx/CC13xx"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
-unsigned short node_id = 0;
+unsigned short g_nodeId = 0;
 /*---------------------------------------------------------------------------*/
 /** \brief Board specific initialization */
 void board_init(void);
@@ -90,9 +91,8 @@ static void
 fade(unsigned char l)
 {
   volatile int i;
-  int k, j;
-  for(k = 0; k < 800; ++k) {
-    j = k > 400 ? 800 - k : k;
+  for(int k = 0; k < 800; ++k) {
+    int j = k > 400 ? 800 - k : k;
 
     GPIO_write(l, Board_GPIO_LED_ON);
     for(i = 0; i < j; ++i) {
@@ -111,7 +111,7 @@ set_rf_params(void)
   uint16_t short_addr;
   uint8_t ext_addr[8];
 
-  ieee_addr_cpy_to(ext_addr, 8);
+  ieee_addr_cpy_to(ext_addr, sizeof(ext_addr));
 
   short_addr = ext_addr[7];
   short_addr |= ext_addr[6] << 8;
@@ -119,20 +119,20 @@ set_rf_params(void)
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
-  NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
+  NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, sizeof(ext_addr));
 
   /* also set the global node id */
-  node_id = short_addr;
+  g_nodeId = short_addr;
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_one()
 {
-    Board_initGeneral();
-    GPIO_init();
+  Board_initGeneral();
+  GPIO_init();
 
     // Only enables interrupts
-    NoRTOS_start();
+  NoRTOS_start();
 
 //  /* Enable flash cache and prefetch. */
 //  ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
@@ -169,15 +169,14 @@ platform_init_stage_one()
 void
 platform_init_stage_two()
 {
-    uart0_init();
+  uart0_init();
+  serial_line_init();
 
 //  random_init(0x1234);
-//
-//  serial_line_init();
-//
+
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
-//
+
   fade(Board_GPIO_LED0);
 }
 /*---------------------------------------------------------------------------*/
@@ -200,7 +199,7 @@ platform_init_stage_three()
           ChipInfo_SupportsBLE() ? "Yes" : "No",
           ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No");
   LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
-  LOG_INFO(" Node ID: %d\n", node_id);
+  LOG_INFO(" Node ID: %d\n", g_nodeId);
 //
 //  process_start(&sensors_process, NULL);
   fade(Board_GPIO_LED1);
@@ -209,10 +208,8 @@ platform_init_stage_three()
 void
 platform_idle()
 {
-  /* Drop to some low power mode */
-//  lpm_drop();
-
-    Power_idleFunc();
+  // Drop to some low power mode
+  Power_idleFunc();
 }
 /*---------------------------------------------------------------------------*/
 /**

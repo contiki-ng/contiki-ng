@@ -22,10 +22,7 @@
 #include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_ieee_802_15_4.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_ieee_802_15_4.h)
 
-#include <contiki.h>
-#include <dev/radio.h>
-
-#include "rf-core.h"
+#include "rf-common.h"
 
 /*---------------------------------------------------------------------------*/
 /* Default TX power settings for the 2.4 GHz band */

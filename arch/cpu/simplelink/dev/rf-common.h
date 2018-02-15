@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,61 +29,52 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup rf-core
+ * \addtogroup simplelink
+ * @{
+ *
+ * \defgroup rf-common Common functionality fpr the CC13xx/CC26xx RF
+ *
  * @{
  *
  * \file
- * Implementation of the CC13xx/CC26xx RF core driver
+ * Header file of common CC13xx/CC26xx RF functionality
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "dev/watchdog.h"
-#include "sys/process.h"
-#include "sys/clock.h"
-#include "sys/ctimer.h"
-#include "sys/energest.h"
-#include "sys/cc.h"
-#include "net/netstack.h"
-#include "net/packetbuf.h"
+#ifndef RF_COMMON_H_
+#define RF_COMMON_H_
 /*---------------------------------------------------------------------------*/
-#include <ti/drivers/rf/RF.h>
+/* Contiki API */
+#include <sys/rtimer.h>
+#include <dev/radio.h>
 /*---------------------------------------------------------------------------*/
+/* Standard library */
 #include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 /*---------------------------------------------------------------------------*/
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
+#ifdef RF_CORE_CONF_CHANNEL
+#   define RF_CORE_CHANNEL  RF_CORE_CONF_CHANNEL
 #else
-#define PRINTF(...)
+#   define RF_CORE_CHANNEL  25
 #endif
 /*---------------------------------------------------------------------------*/
-PROCESS(RF_coreProcess, "SimpleLink RF driver");
+typedef enum {
+    CMD_RESULT_ERROR = 0,
+    CMD_RESULT_OK = 1,
+} CmdResult;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(RF_coreProcess, ev, data)
-{
-  int len;
+typedef struct {
+  radio_value_t dbm;
+  uint16_t      power; ///< Value for the .txPower field
+} RF_TxPower;
 
-  PROCESS_BEGIN();
-
-  while(1) {
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
-    do {
-      watchdog_periodic();
-      packetbuf_clear();
-      len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
-
-      if(len > 0) {
-        packetbuf_set_datalen(len);
-
-        NETSTACK_MAC.input();
-      }
-    } while(len > 0);
-  }
-  PROCESS_END();
-}
+#define TX_POWER_UNKNOWN  0xFFFF
 /*---------------------------------------------------------------------------*/
-/** @} */
+#define RSSI_UNKNOWN      -128
+/*---------------------------------------------------------------------------*/
+PROCESS_NAME(RF_coreProcess);
+/*---------------------------------------------------------------------------*/
+#endif /* RF_COMMON_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

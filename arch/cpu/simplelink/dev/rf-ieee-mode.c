@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,10 +57,19 @@
 #include <driverlib/rf_ieee_cmd.h>
 #include <driverlib/rf_ieee_mailbox.h>
 #include <ti/drivers/rf/RF.h>
-#include <rf-settings/rf-ieee-settings.h>
+/*---------------------------------------------------------------------------*/
+/* RF settings */
+#ifdef IEEE_MODE_CONF_RF_SETTINGS
+#   define IEEE_MODE_RF_SETTINGS  IEEE_MODE_CONF_RF_SETTINGS
+#   undef IEEE_MODE_CONF_RF_SETTINGS
+#else
+#   define IEEE_MODE_RF_SETTINGS "rf-settings/rf-ieee-settings.h"
+#endif
+
+#include IEEE_MODE_RF_SETTINGS
 /*---------------------------------------------------------------------------*/
 /* Simplelink Platform RF dev */
-#include "rf-core.h"
+#include "rf-common.h"
 #include "dot-15-4g.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
@@ -389,7 +398,7 @@ set_tx_power(const radio_value_t dbm)
   }
 
   if (!g_pCurrTxPower) {
-    return CMD_ERROR;
+    return CMD_RESULT_ERROR;
   }
 
   rfc_CMD_SET_TX_POWER_t cmdSetTxPower = {
@@ -400,9 +409,9 @@ set_tx_power(const radio_value_t dbm)
   const RF_Stat stat = RF_runImmediateCmd(g_rfHandle, (uint32_t*)&cmdSetTxPower);
   if (stat != RF_StatCmdDoneSuccess) {
     PRINTF("set_tx_power: stat=0x%02X\n", stat);
-    return CMD_ERROR;
+    return CMD_RESULT_ERROR;
   }
-  return CMD_OK;
+  return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_value_t
@@ -497,7 +506,7 @@ init(void)
 
   process_start(&RF_coreProcess, NULL);
 
-  return CMD_OK;
+  return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -530,14 +539,14 @@ set_rx(const PowerState state)
     if (stat != RF_StatSuccess)
     {
       PRINTF("set_rx(off): unable to cancel RX\n");
-      return CMD_ERROR;
+      return CMD_RESULT_ERROR;
     }
 
   }
   if (state == POWER_STATE_ON || state == POWER_STATE_RESTART) {
     if (g_vpCmdRx->status == ACTIVE) {
       PRINTF("set_rx(on): already in RX\n");
-      return CMD_OK;
+      return CMD_RESULT_OK;
     }
 
     RF_ScheduleCmdParams schedParams = {
@@ -550,11 +559,11 @@ set_rx(const PowerState state)
     g_cmdRxHandle = RF_scheduleCmd(g_rfHandle, (RF_Op*)g_vpCmdRx, &schedParams, NULL, 0);
     if ((g_cmdTxHandle == RF_ALLOC_ERROR) || (g_cmdTxHandle == RF_SCHEDULE_CMD_ERROR)) {
       PRINTF("transmit: unable to allocate RX command\n");
-      return CMD_ERROR;
+      return CMD_RESULT_ERROR;
     }
   }
 
-  return CMD_OK;
+  return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -698,7 +707,7 @@ channel_clear_aux(void)
   const RF_Stat stat = RF_runImmediateCmd(g_rfHandle, (uint32_t*)&RF_cmdIeeeCaaReq);
   if (stat != RF_StatCmdDoneSuccess) {
     PRINTF("channel_clear: CCA request failed stat=0x%02X\n", stat);
-    return CMD_ERROR;
+    return CMD_RESULT_ERROR;
   }
 
   // Channel is clear if CCA state is idle (0) or invalid (2), i.e. not busy (1)
@@ -709,7 +718,7 @@ static int
 channel_clear(void)
 {
   const bool was_rx = (g_vpCmdRx->status == ACTIVE);
-  if (!was_rx && set_rx(POWER_STATE_ON) != CMD_OK) {
+  if (!was_rx && set_rx(POWER_STATE_ON) != CMD_RESULT_OK) {
     PRINTF("channel_clear: unable to start RX\n");
     return CHANNEL_CLEAR_ERROR;
   }
@@ -809,7 +818,7 @@ off(void)
     }
   }
 
-  return CMD_OK;
+  return CMD_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
@@ -905,7 +914,7 @@ set_value(radio_param_t param, radio_value_t value)
   case RADIO_PARAM_POWER_MODE:
     switch (value) {
     case RADIO_POWER_MODE_ON:
-      if (on() != CMD_OK) {
+      if (on() != CMD_RESULT_OK) {
         PRINTF("set_value: on() failed (1)\n");
         return RADIO_RESULT_ERROR;
       }
@@ -928,7 +937,7 @@ set_value(radio_param_t param, radio_value_t value)
 
   case RADIO_PARAM_PAN_ID:
     g_vpCmdRx->localPanID = (uint16_t)value;
-    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_OK) {
+    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
       PRINTF("failed to restart RX");
       return RADIO_RESULT_ERROR;
     }
@@ -936,7 +945,7 @@ set_value(radio_param_t param, radio_value_t value)
 
   case RADIO_PARAM_16BIT_ADDR:
     g_vpCmdRx->localShortAddr = (uint16_t)value;
-    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_OK) {
+    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
       PRINTF("failed to restart RX");
       return RADIO_RESULT_ERROR;
     }
@@ -970,7 +979,7 @@ set_value(radio_param_t param, radio_value_t value)
       }
       return RADIO_RESULT_OK;
     }
-    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_OK) {
+    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
       PRINTF("failed to restart RX");
       return RADIO_RESULT_ERROR;
     }
@@ -988,13 +997,13 @@ set_value(radio_param_t param, radio_value_t value)
     if(value < TX_POWER_MIN.dbm || value > TX_POWER_MAX.dbm) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-    return (set_tx_power(value) != CMD_OK)
+    return (set_tx_power(value) != CMD_RESULT_OK)
       ? RADIO_RESULT_ERROR
       : RADIO_RESULT_OK;
 
   case RADIO_PARAM_CCA_THRESHOLD:
     g_vpCmdRx->ccaRssiThr = (int8_t)value;
-    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_OK) {
+    if (rf_is_on() && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
       PRINTF("failed to restart RX");
       return RADIO_RESULT_ERROR;
     }
@@ -1062,7 +1071,7 @@ set_object(radio_param_t param, const void *src, size_t size)
     }
 
     const bool is_rx = (g_vpCmdRx->status == ACTIVE);
-    if (is_rx && set_rx(POWER_STATE_RESTART) != CMD_OK) {
+    if (is_rx && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
       return RADIO_RESULT_ERROR;
     }
     return RADIO_RESULT_OK;

@@ -8,7 +8,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_prop_cmd.h)
 #include <ti/drivers/rf/RF.h>
 
-#include <rf-core.h>
+#include <rf-common.h>
 
 // RF TX power table
 extern RF_TxPower RF_ieeeTxPower[];

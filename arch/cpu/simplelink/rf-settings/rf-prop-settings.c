@@ -35,10 +35,7 @@
 #include DeviceFamily_constructPath(rf_patches/rf_patch_rfe_genfsk.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_genfsk.h)
 
-#include <contiki.h>
-#include <dev/radio.h>
-
-#include "rf-core.h"
+#include "rf-common.h"
 
 /*---------------------------------------------------------------------------*/
 /**
