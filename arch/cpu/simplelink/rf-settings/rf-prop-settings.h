@@ -17,7 +17,10 @@
 
 // RF TX power table
 extern RF_TxPower RF_propTxPower779_930[];
+extern const size_t RF_propTxPower779_930Size;
+
 extern RF_TxPower RF_propTxPower431_527[];
+extern const size_t RF_propTxPower431_527Size;
 
 // TI-RTOS RF Mode Object
 extern RF_Mode RF_propMode;

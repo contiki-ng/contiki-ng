@@ -68,6 +68,7 @@ RF_TxPower RF_propTxPower779_930[] = {
   { -10, 0x08c0 },
   {-128, 0xFFFF },
 };
+const size_t RF_propTxPower779_930Size = sizeof(RF_propTxPower779_930) / sizeof(RF_propTxPower779_930[0]);
 /*---------------------------------------------------------------------------*/
 /* Default TX power settings for the 431-527MHz band */
 RF_TxPower RF_propTxPower431_527[] = {
@@ -78,6 +79,7 @@ RF_TxPower RF_propTxPower431_527[] = {
   {   6, 0x22c4 },
   {-128, 0xFFFF },
 };
+const size_t RF_propTxPower431_527Size = sizeof(RF_propTxPower431_527) / sizeof(RF_propTxPower431_527[0]);
 /*---------------------------------------------------------------------------*/
 /**
  * @}
