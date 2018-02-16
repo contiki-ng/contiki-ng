@@ -1,0 +1,27 @@
+# SimpleLink MCU platform makefile
+
+### Board and BSP selection
+
+CONTIKI_TARGET_SOURCEFILES += leds-arch.c
+
+# Launchpad boards
+ifneq (,$(findstring LAUNCHXL, $(SIMPLELINK_BOARD)))
+  CONTIKI_TARGET_SOURCEFILES += launchpad-sensors.c
+
+# Sensortag boards
+else ifneq (,$(findstring STK, $(SIMPLELINK_BOARD)))
+  CONTIKI_TARGET_SOURCEFILES += sensortag-sensors.c
+
+# Custom boards
+else ifneq (,$(findstring CUSTOM, $(SIMPLELINK_BOARD)))
+# TODO
+  CONTIKI_TARGET_SOURCEFILES += custom-sensors.c
+
+# Everything else is assumed to be EVMs for the SmartRF06 EB (srf06)
+else
+  CONTIKI_TARGET_SOURCEFILES += srf06-sensors.c
+
+endif
+
+CONTIKI_TARGET_SOURCEFILES += button-sensor-arch.c
+

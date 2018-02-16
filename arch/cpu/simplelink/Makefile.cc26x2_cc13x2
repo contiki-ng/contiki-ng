@@ -1,10 +1,4 @@
 
-ifeq "$(SIMPLELINK_DEVICE)" "cc13x2"
-CFLAGS += -DDeviceFamily_CC13X2
-else
-CFLAGS += -DDeviceFamily_CC26X2
-endif
-
 CFLAGS += -I$(CPU_ABS_PATH)/cc26x2_cc13x2
 CFLAGS += -I$(SDK_KERNEL)
 

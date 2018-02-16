@@ -1,0 +1,33 @@
+# Simplelink Device family switch
+
+# Device name in upper case
+DEVICE_UC := $(shell echo $(SIMPLELINK_DEVICE) | tr a-z A-Z)
+
+# CC13x0/CC26x0 Family
+ifeq ($(DEVICE_UC),CC13X0)
+    FAMILY := cc13x0_cc26x0
+    CFLAGS += -DDeviceFamily_CC13X0
+else ifeq ($(DEVICE_UC),CC26X0)
+    FAMILY := cc13x0_cc26x0
+    CFLAGS += -DDeviceFamily_CC26X0
+else ifeq ($(DEVICE_UC),CC26X0R2)
+    FAMILY := cc13x0_cc26x0
+    CFLAGS += -DDeviceFamily_CC26X0R2
+
+# CC13x2/CC26x2 Family
+else ifeq ($(DEVICE_UC),CC13X2)
+    FAMILY := cc13x2_cc26x2
+    CFLAGS += -DDeviceFamily_CC13X2
+else ifeq ($(DEVICE_UC),CC26X2)
+    FAMILY := cc13x2_cc26x2
+    CFLAGS += -DDeviceFamily_CC26X2
+
+# Not supported
+else
+    $(error Simplelink Device '$(SIMPLELINK_DEVICE)' is not currently supported)
+endif
+
+CONTIKI_TARGET_DIRS += $(FAMILY)/dev
+
+# Include the Family-specific makefile
+include $(PLATFORM_ABS_PATH)/$(FAMILY)/Makefile.$(FAMILY)

@@ -128,7 +128,7 @@ set_rf_params(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-platform_init_stage_one()
+platform_init_stage_one(void)
 {
   // Enable flash cache
   VIMSModeSet(VIMS_BASE, VIMS_MODE_ENABLED);
@@ -141,6 +141,7 @@ platform_init_stage_one()
   // NoRTOS_start only enables HWI
   NoRTOS_start();
 
+  // Contiki drivers init
   leds_init();
 
 //  ti_lib_int_master_disable();
@@ -162,12 +163,11 @@ platform_init_stage_one()
 //
 //  ti_lib_int_master_enable();
 //
-//  soc_rtc_init();
   fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
 void
-platform_init_stage_two()
+platform_init_stage_two(void)
 {
   uart0_init();
   serial_line_init();
@@ -181,7 +181,7 @@ platform_init_stage_two()
 }
 /*---------------------------------------------------------------------------*/
 void
-platform_init_stage_three()
+platform_init_stage_three(void)
 {
   radio_value_t chan, pan;
 
@@ -206,7 +206,7 @@ platform_init_stage_three()
 }
 /*---------------------------------------------------------------------------*/
 void
-platform_idle()
+platform_idle(void)
 {
   // Drop to some low power mode
   Power_idleFunc();

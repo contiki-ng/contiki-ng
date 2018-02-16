@@ -4,8 +4,19 @@ ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
+PLATFORM_ABS_PATH = $(CONTIKI)/arch/platform/simplelink
+
 ifndef SIMPLELINK_SDK
   $(error SIMPLELINK_SDK not defined! You must specify where the SimpleLink SDK resides!)
+endif
+
+# Find all available boards from the '<sdk>/source/ti/boards directory'
+AVAILABLE_BOARDS := $(shell ls -d $(SIMPLELINK_SDK)/source/ti/boards/*)
+# Also allow a custom board file in the application project
+AVAILABLE_BOARDS += CUSTOM
+
+ifndef SIMPLELINK_BOARD
+  $(error SIMPLELINK_BOARD not defined. You must specify a board!$nAvailable boards:$n $(foreach board, $(AVAILABLE_BOARDS), $(board)$n))
 endif
 
 # Hacky way to emulate line breaks in warnings/errors
@@ -18,7 +29,7 @@ endef
 # List of all Simplelink SDKs the Contiki Simplelink platform supports
 # with the format "simplelink_<device>_sdk". Don't add the version.
 # Simply adding a new entry with the name of a new SDK should be enough when
-# the necessary implementaitons have been made.
+# the necessary implementations have been made.
 SUPPORTED_SDKS = \
     simplelink_cc13x0_sdk \
     simplelink_cc13x2_sdk \
@@ -48,25 +59,18 @@ ifeq (,$(findstring $(SDK_NAME_STRIPPED), $(SUPPORTED_SDKS)))
     $(error Simplelink SDK '$(SDK_NAME)' is not supported.$nSupported SDKs:$n $(foreach sdk, $(SUPPORTED_SDKS), $(sdk)_<version>$n))
 endif
 
-# Find all available boards from the '<sdk>/source/ti/boards directory'
-AVAILABLE_BOARDS := $(shell ls -d $(SIMPLELINK_SDK)/source/ti/boards/*)
-# Also allow a custom board file in the application project
-AVAILABLE_BOARDS += CUSTOM
-
-ifndef SIMPLELINK_BOARD
-  $(error SIMPLELINK_BOARD not defined. You must specify a board!$nAvailable boards:$n $(foreach board, $(AVAILABLE_BOARDS), $(board)$n))
-endif
-
 ifneq ($(findstring $(SIMPLELINK_BOARD),$(AVAILABLE_BOARDS)),$(SIMPLELINK_BOARD))
   $(error Board '$(SIMPLELINK_BOARD)' is not valid for the given Simplelink SDK '$(SDK_NAME)'.$nAvailable boards:$n $(foreach board, $(AVAILABLE_BOARDS), $(board)$n))
 endif
 
 ### Board and BSP selection
 
-CONTIKI_TARGET_DIRS += . common
+CONTIKI_TARGET_DIRS += . dev
 
 CONTIKI_TARGET_SOURCEFILES += platform.c
-CONTIKI_TARGET_SOURCEFILES += leds-arch.c
+
+# Determine which device family and include the corresponding source files
+include $(PLATFORM_ABS_PATH)/Makefile.device-family
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 

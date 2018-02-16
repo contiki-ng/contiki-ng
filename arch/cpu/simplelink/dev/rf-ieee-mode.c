@@ -533,15 +533,17 @@ static int
 set_rx(const PowerState state)
 {
   if (state == POWER_STATE_OFF || state == POWER_STATE_RESTART) {
-    const uint8_t stopGracefully = 1;
-    const RF_Stat stat = RF_cancelCmd(g_rfHandle, g_cmdRxHandle,
-                                      stopGracefully);
-    if (stat != RF_StatSuccess)
-    {
-      PRINTF("set_rx(off): unable to cancel RX\n");
-      return CMD_RESULT_ERROR;
+    const uint16_t status = g_vpCmdRx->status;
+    if (status != IDLE && status != IEEE_DONE_OK && status != IEEE_DONE_STOPPED) {
+      const uint8_t stopGracefully = 1;
+      const RF_Stat stat = RF_cancelCmd(g_rfHandle, g_cmdRxHandle,
+                                        stopGracefully);
+      if (stat != RF_StatSuccess)
+      {
+        PRINTF("set_rx(off): unable to cancel RX state=0x%02X\n", stat);
+        return CMD_RESULT_ERROR;
+      }
     }
-
   }
   if (state == POWER_STATE_ON || state == POWER_STATE_RESTART) {
     if (g_vpCmdRx->status == ACTIVE) {
@@ -557,7 +559,7 @@ set_rx(const PowerState state)
 
     g_vpCmdRx->status = IDLE;
     g_cmdRxHandle = RF_scheduleCmd(g_rfHandle, (RF_Op*)g_vpCmdRx, &schedParams, NULL, 0);
-    if ((g_cmdTxHandle == RF_ALLOC_ERROR) || (g_cmdTxHandle == RF_SCHEDULE_CMD_ERROR)) {
+    if ((g_cmdRxHandle == RF_ALLOC_ERROR) || (g_cmdRxHandle == RF_SCHEDULE_CMD_ERROR)) {
       PRINTF("transmit: unable to allocate RX command\n");
       return CMD_RESULT_ERROR;
     }
