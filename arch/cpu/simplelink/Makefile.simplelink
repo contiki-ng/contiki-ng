@@ -64,7 +64,7 @@ CONTIKI_CPU_DIRS += dev rf-settings
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
 CONTIKI_CPU_SOURCEFILES += watchdog-arch.c putchar-arch.c
-CONTIKI_CPU_SOURCEFILES += uart0-arch.c
+CONTIKI_CPU_SOURCEFILES += uart0-arch.c slip-arch.c
 CONTIKI_CPU_SOURCEFILES += rf-common.c
 CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c rf-prop-settings.c
 CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c rf-ieee-settings.c
