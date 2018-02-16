@@ -533,18 +533,11 @@ static int
 set_rx(const PowerState state)
 {
   if (state == POWER_STATE_OFF || state == POWER_STATE_RESTART) {
-    const uint16_t status = g_vpCmdRx->status;
-    if (status != IDLE && status != IEEE_DONE_OK && status != IEEE_DONE_STOPPED) {
-      const uint8_t stopGracefully = 1;
-      const RF_Stat stat = RF_cancelCmd(g_rfHandle, g_cmdRxHandle,
-                                        stopGracefully);
-      if (stat != RF_StatSuccess)
-      {
-        PRINTF("set_rx(off): unable to cancel RX state=0x%02X\n", stat);
-        return CMD_RESULT_ERROR;
-      }
-    }
+    // Stop RX gracefully, don't care about the result
+    const uint8_t stopGracefully = 1;
+    RF_cancelCmd(g_rfHandle, g_cmdRxHandle, stopGracefully);
   }
+
   if (state == POWER_STATE_ON || state == POWER_STATE_RESTART) {
     if (g_vpCmdRx->status == ACTIVE) {
       PRINTF("set_rx(on): already in RX\n");
