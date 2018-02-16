@@ -1079,17 +1079,17 @@ read_frame(void *buf, unsigned short buf_len)
     return 0;
   }
 
-  if(rx_read_entry[8] < 4) {
-    PRINTF("RF: too short\n");
+  len = rx_read_entry[8] - 8;
+
+  if(len > buf_len) {
+    PRINTF("RF: too long\n");
 
     release_data_entry();
     return 0;
   }
 
-  len = rx_read_entry[8] - 8;
-
-  if(len > buf_len) {
-    PRINTF("RF: too long\n");
+  if(len < 5) {
+    PRINTF("RF: too short\n");
 
     release_data_entry();
     return 0;
