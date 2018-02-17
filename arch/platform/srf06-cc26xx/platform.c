@@ -55,6 +55,7 @@
 #include "vims.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/soc-rtc.h"
+#include "dev/serial-line.h"
 #include "rf-core/rf-core.h"
 #include "sys_ctrl.h"
 #include "uart.h"
@@ -167,6 +168,10 @@ platform_init_stage_two()
 #endif
 
   serial_line_init();
+
+#if BUILD_WITH_SHELL
+  cc26xx_uart_set_input(serial_line_input_byte);
+#endif
 
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
