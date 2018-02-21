@@ -114,6 +114,7 @@ struct coap_resource_s {
 };
 
 struct coap_periodic_resource_s {
+  coap_periodic_resource_t *next;
   uint32_t period;
   coap_timer_t periodic_timer;
   const coap_resource_periodic_handler_t periodic_handler;
@@ -141,7 +142,7 @@ struct coap_periodic_resource_s {
  * For instance polling a sensor and publishing a changed value to subscribed clients would be done there.
  */
 #define PERIODIC_RESOURCE(name, attributes, get_handler, post_handler, put_handler, delete_handler, period, periodic_handler) \
-  static coap_periodic_resource_t periodic_##name = { period, { 0 }, periodic_handler }; \
+  static coap_periodic_resource_t periodic_##name = { NULL, period, { 0 }, periodic_handler }; \
   coap_resource_t name = { NULL, NULL, IS_OBSERVABLE | IS_PERIODIC, attributes, get_handler, post_handler, put_handler, delete_handler, { .periodic = &periodic_##name } }
 
 /*---------------------------------------------------------------------------*/
