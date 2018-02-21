@@ -217,9 +217,6 @@ typedef uint32_t rtimer_clock_t;
 #define CC_CONF_VA_ARGS                1
 #define CC_CONF_INLINE                 inline
 
-#define CCIF
-#define CLIF
-
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #else

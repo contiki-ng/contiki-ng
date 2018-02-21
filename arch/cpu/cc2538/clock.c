@@ -114,7 +114,7 @@ clock_init(void)
   REG(GPT_0_BASE + GPTIMER_TAPR) = PRESCALER_VALUE;
 }
 /*---------------------------------------------------------------------------*/
-CCIF clock_time_t
+clock_time_t
 clock_time(void)
 {
   return rt_ticks_startup / RTIMER_CLOCK_TICK_RATIO;
@@ -126,7 +126,7 @@ clock_set_seconds(unsigned long sec)
   rt_ticks_epoch = (uint64_t)sec * RTIMER_SECOND;
 }
 /*---------------------------------------------------------------------------*/
-CCIF unsigned long
+unsigned long
 clock_seconds(void)
 {
   return rt_ticks_epoch / RTIMER_SECOND;

@@ -98,7 +98,7 @@ void clock_init(void);
  *
  * \return The current clock time, measured in system ticks.
  */
-CCIF clock_time_t clock_time(void);
+clock_time_t clock_time(void);
 
 /**
  * Get the current value of the platform seconds.
@@ -108,7 +108,7 @@ CCIF clock_time_t clock_time(void);
  *
  * \return The value.
  */
-CCIF unsigned long clock_seconds(void);
+unsigned long clock_seconds(void);
 
 /**
  * Set the value of the platform seconds.

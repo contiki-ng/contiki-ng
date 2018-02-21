@@ -94,7 +94,7 @@ struct etimer {
  *             process that called the etimer_set() function.
  *
  */
-CCIF void etimer_set(struct etimer *et, clock_time_t interval);
+void etimer_set(struct etimer *et, clock_time_t interval);
 
 /**
  * \brief      Reset an event timer with the same interval as was
@@ -111,7 +111,7 @@ CCIF void etimer_set(struct etimer *et, clock_time_t interval);
  *
  * \sa etimer_restart()
  */
-CCIF void etimer_reset(struct etimer *et);
+void etimer_reset(struct etimer *et);
 
 /**
  * \brief      Reset an event timer with a new interval.
@@ -192,7 +192,7 @@ clock_time_t etimer_start_time(struct etimer *et);
  *             This function tests if an event timer has expired and
  *             returns true or false depending on its status.
  */
-CCIF int etimer_expired(struct etimer *et);
+int etimer_expired(struct etimer *et);
 
 /**
  * \brief      Stop a pending event timer.

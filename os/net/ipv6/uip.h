@@ -500,7 +500,7 @@ typedef union {
   uint8_t u8[UIP_BUFSIZE];
 } uip_buf_t;
 
-CCIF extern uip_buf_t uip_aligned_buf;
+extern uip_buf_t uip_aligned_buf;
 
 /** Macro to access uip_aligned_buf as an array of bytes */
 #define uip_buf (uip_aligned_buf.u8)
@@ -620,7 +620,7 @@ struct uip_conn *uip_connect(const uip_ipaddr_t *ripaddr, uint16_t port);
  *
  * \hideinitializer
  */
-CCIF void uip_send(const void *data, int len);
+void uip_send(const void *data, int len);
 
 /**
  * The length of any incoming data that is currently available (if available)
@@ -1238,14 +1238,14 @@ struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport);
  * network byte order, use the UIP_HTONS() macro instead.
  */
 #ifndef uip_htons
-CCIF uint16_t uip_htons(uint16_t val);
+uint16_t uip_htons(uint16_t val);
 #endif /* uip_htons */
 #ifndef uip_ntohs
 #define uip_ntohs uip_htons
 #endif
 
 #ifndef uip_htonl
-CCIF uint32_t uip_htonl(uint32_t val);
+uint32_t uip_htonl(uint32_t val);
 #endif /* uip_htonl */
 #ifndef uip_ntohl
 #define uip_ntohl uip_htonl
@@ -1260,7 +1260,7 @@ CCIF uint32_t uip_htonl(uint32_t val);
  * called. If the application wishes to send data, the application may
  * use this space to write the data into before calling uip_send().
  */
-CCIF extern void *uip_appdata;
+extern void *uip_appdata;
 
 #if UIP_URGDATA > 0
 /* uint8_t *uip_urgdata:
@@ -1295,7 +1295,7 @@ extern void *uip_urgdata;
  * packet.
  *
  */
-CCIF extern uint16_t uip_len;
+extern uint16_t uip_len;
 
 /**
  * The length of the extension headers
@@ -1367,10 +1367,10 @@ struct uip_conn {
  * connection.
  */
 
-CCIF extern struct uip_conn *uip_conn;
+extern struct uip_conn *uip_conn;
 #if UIP_TCP
 /* The array containing all uIP connections. */
-CCIF extern struct uip_conn uip_conns[UIP_TCP_CONNS];
+extern struct uip_conn uip_conns[UIP_TCP_CONNS];
 #endif
 
 /**
@@ -1522,7 +1522,7 @@ struct uip_eth_hdr {
  * that are defined in this file. Please read below for more
  * information.
  */
-CCIF extern uint8_t uip_flags;
+extern uint8_t uip_flags;
 
 /* The following flags may be set in the global variable uip_flags
    before calling the application callback. The UIP_ACKDATA,
@@ -1934,17 +1934,17 @@ struct uip_udp_hdr {
 
 
 #if UIP_FIXEDADDR
-CCIF extern const uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
+extern const uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
 #else /* UIP_FIXEDADDR */
-CCIF extern uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
+extern uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
 #endif /* UIP_FIXEDADDR */
-CCIF extern const uip_ipaddr_t uip_broadcast_addr;
-CCIF extern const uip_ipaddr_t uip_all_zeroes_addr;
+extern const uip_ipaddr_t uip_broadcast_addr;
+extern const uip_ipaddr_t uip_all_zeroes_addr;
 
 #if UIP_FIXEDETHADDR
-CCIF extern const uip_lladdr_t uip_lladdr;
+extern const uip_lladdr_t uip_lladdr;
 #else
-CCIF extern uip_lladdr_t uip_lladdr;
+extern uip_lladdr_t uip_lladdr;
 #endif
 
 

@@ -50,7 +50,7 @@ struct process * const autostart_processes[] = {__VA_ARGS__, NULL}
 #error "C compiler must support __VA_ARGS__ macro"
 #endif
 
-CLIF extern struct process * const autostart_processes[];
+extern struct process * const autostart_processes[];
 
 void autostart_start(struct process * const processes[]);
 void autostart_exit(struct process * const processes[]);
