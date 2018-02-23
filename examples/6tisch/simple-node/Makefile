@@ -1,6 +1,8 @@
 CONTIKI_PROJECT = node
 all: $(CONTIKI_PROJECT)
 
+PLATFORMS_EXCLUDE = sky nrf52dk native
+
 CONTIKI=../../..
 
  # force Orchestra from command line

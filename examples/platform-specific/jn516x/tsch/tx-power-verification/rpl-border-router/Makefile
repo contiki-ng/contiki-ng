@@ -1,5 +1,7 @@
 CONTIKI_PROJECT=rpl-border-router
 
+PLATFORMS_ONLY = jn516x
+
 TARGET ?= jn516x
 JN516x_WITH_DONGLE = 1
 

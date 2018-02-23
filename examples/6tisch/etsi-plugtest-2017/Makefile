@@ -1,6 +1,8 @@
 CONTIKI_PROJECT = node
 all: $(CONTIKI_PROJECT)
 
+PLATFORMS_EXCLUDE = sky nrf52dk native
+
 MAKE_WITH_SECURITY   ?= 0 # force Security from command line
 ifeq ($(MAKE_WITH_SECURITY),1)
 CFLAGS += -DWITH_SECURITY=1

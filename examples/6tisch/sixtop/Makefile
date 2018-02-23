@@ -1,6 +1,8 @@
 CONTIKI_PROJECT = node-sixtop
 all: $(CONTIKI_PROJECT)
 
+PLATFORMS_EXCLUDE = sky nrf52dk native
+
 PROJECT_SOURCEFILES += sf-simple.c
 CONTIKI=../../..
 

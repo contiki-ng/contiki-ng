@@ -1,7 +1,10 @@
 CONTIKI = ../../..
 
+PLATFORMS_ONLY= cc2538 sky
+
 MODULES += os/services/unit-test
 
-all: test-cfs test-coffee example-coffee
+CONTIKI_PROJECT = test-cfs test-coffee example-coffee
+all: $(CONTIKI_PROJECT)
 
 include $(CONTIKI)/Makefile.include
