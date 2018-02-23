@@ -85,6 +85,35 @@ else
   include $(target_makefile)
 endif
 
+# Decide whether to build or to skip this target for this platform
+ifneq ("", "$(PLATFORMS_ONLY)")
+  ifeq ("","$(filter $(TARGET), $(PLATFORMS_ONLY))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+
+ifneq ("", "$(PLATFORMS_EXCLUDE)")
+  ifneq ("","$(filter $(TARGET), $(PLATFORMS_EXCLUDE))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+
+ifneq ($(BOARD),)
+ifneq ("", "$(BOARDS_ONLY)")
+  ifeq ("","$(filter $(BOARD), $(BOARDS_ONLY))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+
+ifneq ("", "$(BOARDS_EXCLUDE)")
+  ifneq ("","$(filter $(BOARD), $(BOARDS_EXCLUDE))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+endif # $(BOARD) not empty
+
+PLATFORM_ACTION ?= build
+
 # Configure MAC layer
 
 # The different options
@@ -390,8 +419,15 @@ endif
 # the match-anything rule below instead.
 %: %.c
 
+ifeq ($(PLATFORM_ACTION),skip)
+# Skip this target.
+$(CONTIKI_PROJECT):
+	@echo "Skipping $@: not for the '$(TARGET)' platform!"
+else
+# Build this target.
 # Match-anything pattern rule to allow the project makefiles to
 # abstract from the actual binary name. It needs to contain some
 # command in order to be a rule, not just a prerequisite.
 %: %.$(TARGET)
 	@
+endif
