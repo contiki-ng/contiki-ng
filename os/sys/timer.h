@@ -84,10 +84,10 @@ struct timer {
   clock_time_t interval;
 };
 
-CCIF void timer_set(struct timer *t, clock_time_t interval);
+void timer_set(struct timer *t, clock_time_t interval);
 void timer_reset(struct timer *t);
 void timer_restart(struct timer *t);
-CCIF int timer_expired(struct timer *t);
+int timer_expired(struct timer *t);
 clock_time_t timer_remaining(struct timer *t);
 
 
