@@ -29,7 +29,7 @@
  * This file is part of the Contiki operating system.
  *
  */
- 
+
 /**
  * \addtogroup rpl-lite
  * @{
@@ -72,17 +72,6 @@
 /* By default: embed support for non-storing if and only if the configured MOP is non-storing */
 #define RPL_WITH_NON_STORING (RPL_MOP_DEFAULT == RPL_MOP_NON_STORING)
 #endif /* RPL_CONF_WITH_NON_STORING */
-
-/* The number of non-storing nodes, i.e. the maximum netwrok size at the root */
-#ifdef RPL_NS_CONF_LINK_NUM
-#define RPL_NS_LINK_NUM RPL_NS_CONF_LINK_NUM
-#else /* RPL_NS_CONF_LINK_NUM */
-#if RPL_WITH_NON_STORING
-#define RPL_NS_LINK_NUM NETSTACK_MAX_ROUTE_ENTRIES
-#else
-#define RPL_NS_LINK_NUM 0
-#endif
-#endif /* RPL_NS_CONF_LINK_NUM */
 
 /*
  * The objective function (OF) used by a RPL root is configurable through
