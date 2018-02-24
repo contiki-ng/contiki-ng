@@ -154,9 +154,15 @@ neighbor_queue_from_addr(const linkaddr_t *addr)
 static clock_time_t
 backoff_period(void)
 {
+#if CONTIKI_TARGET_COOJA
+  /* Increase normal value by 20 to compensate for the coarse-grained
+  radio medium with Cooja motes */
+  return MAX(20 * CLOCK_SECOND / 3125, 1);
+#else /* CONTIKI_TARGET_COOJA */
   /* Use the default in IEEE 802.15.4: aUnitBackoffPeriod which is
    * 20 symbols i.e. 320 usec. That is, 1/3125 second. */
   return MAX(CLOCK_SECOND / 3125, 1);
+#endif /* CONTIKI_TARGET_COOJA */
 }
 /*---------------------------------------------------------------------------*/
 static int
