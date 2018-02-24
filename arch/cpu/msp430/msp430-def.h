@@ -79,9 +79,6 @@ typedef long off_t;
 /* Our clock resolution, this is the same as Unix HZ. */
 #define CLOCK_CONF_SECOND 128UL
 
-#define CCIF
-#define CLIF
-
 typedef int spl_t;
 spl_t   splhigh_(void);
 
