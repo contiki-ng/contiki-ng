@@ -73,8 +73,8 @@
 #define uiplib_ipaddrconv uiplib_ip4addrconv
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-CCIF int uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *addr);
-CCIF int uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *addr);
+int uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *addr);
+int uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *addr);
 /** @} */
 
 /**

@@ -124,7 +124,7 @@ update_clock_variable(void)
   count = (aon_rtc_secs_now * CLOCK_SECOND) + (aon_rtc_ticks_now >> 9);
 }
 /*---------------------------------------------------------------------------*/
-CCIF clock_time_t
+clock_time_t
 clock_time(void)
 {
   update_clock_variable();
@@ -142,7 +142,7 @@ clock_update(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-CCIF unsigned long
+unsigned long
 clock_seconds(void)
 {
   bool interrupts_disabled;
