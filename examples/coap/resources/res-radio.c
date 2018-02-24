@@ -68,7 +68,7 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
 
   if((len = coap_get_query_variable(request, "p", &p))) {
     if(strncmp(p, "rssi", len) == 0) {
-      if(NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &value) ==
+      if(NETSTACK_RADIO_802154.get_value(RADIO_PARAM_RSSI, &value) ==
          RADIO_RESULT_OK) {
         success = 1;
         rssi = (int8_t)value;

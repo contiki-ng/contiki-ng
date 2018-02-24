@@ -37,11 +37,11 @@
  * @{
  *
  * \file
- * Implementation of the CC13xx/CC26xx IEEE mode NETSTACK_RADIO driver
+ * Implementation of the CC13xx/CC26xx IEEE mode NETSTACK_RADIO_802154 driver
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/oscillators.h"
 #include "net/packetbuf.h"
@@ -1623,7 +1623,7 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
-const struct radio_driver ieee_mode_driver = {
+const radio_802154_driver_t ieee_mode_driver = {
   init,
   prepare,
   transmit,

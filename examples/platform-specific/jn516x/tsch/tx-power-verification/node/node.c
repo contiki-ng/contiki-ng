@@ -73,7 +73,7 @@ set_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t 
   if(accept == -1 || accept == TEXT_PLAIN) {
     coap_get_payload(request, &request_content);
     tx_level = atoi((const char *)request_content);
-    NETSTACK_RADIO.set_value(RADIO_PARAM_TXPOWER, tx_level);
+    NETSTACK_RADIO_802154.set_value(RADIO_PARAM_TXPOWER, tx_level);
   }
 }
 
@@ -91,7 +91,7 @@ get_tx_power_handler(coap_message_t *request, coap_message_t *response, uint8_t 
   coap_get_header_accept(request, &accept);
   if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
-    NETSTACK_RADIO.get_value(RADIO_PARAM_TXPOWER, &tx_level);
+    NETSTACK_RADIO_802154.get_value(RADIO_PARAM_TXPOWER, &tx_level);
     CONTENT_PRINTF("%d", tx_level);
     coap_set_header_content_format(response, TEXT_PLAIN);
     coap_set_payload(response, (uint8_t *)content, content_len);

@@ -53,7 +53,7 @@ input(void)
 static int
 on(void)
 {
-  NETSTACK_RADIO.on();
+  NETSTACK_RADIO_802154.on();
   return 0;
 }
 /*---------------------------------------------------------------------------*/

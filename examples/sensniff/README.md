@@ -31,18 +31,18 @@ More details in sensniff's README.
 Adding support for more platforms
 =================================
 Firstly, this example will try to turn off frame filtering and automatic h/w
-ACKs by calling `NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, 0)`. If your
-radio does not support this, then implementing this is your first step towards
-running this example on your board.
+ACKs by calling `NETSTACK_RADIO_802154.set_value(RADIO_PARAM_RX_MODE, 0)`. If
+your radio does not support this, then implementing this is your first step
+towards running this example on your board.
 
 Secondly, in order to be able to switch channels and retrieve current/min/max
 RF channel supported from sensniff's text interface, your device's radio driver
 must also support:
 
-    NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, ...)
-    NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, ...)
-    NETSTACK_RADIO.get_value(RADIO_CONST_CHANNEL_MIN, ...)
-    NETSTACK_RADIO.get_value(RADIO_CONST_CHANNEL_MAX, ...)
+    NETSTACK_RADIO_802154.get_value(RADIO_PARAM_CHANNEL, ...)
+    NETSTACK_RADIO_802154.set_value(RADIO_PARAM_CHANNEL, ...)
+    NETSTACK_RADIO_802154.get_value(RADIO_CONST_CHANNEL_MIN, ...)
+    NETSTACK_RADIO_802154.get_value(RADIO_CONST_CHANNEL_MAX, ...)
 
 The following radios have been tested:
 

@@ -45,7 +45,7 @@
  * @{
 */
 
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "contiki.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
@@ -382,7 +382,7 @@ tsch_radio_on(enum tsch_radio_state_on_cmd command)
     break;
   }
   if(do_it) {
-    NETSTACK_RADIO.on();
+    NETSTACK_RADIO_802154.on();
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -413,7 +413,7 @@ tsch_radio_off(enum tsch_radio_state_off_cmd command)
     break;
   }
   if(do_it) {
-    NETSTACK_RADIO.off();
+    NETSTACK_RADIO_802154.off();
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -495,7 +495,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
 #endif /* LLSEC802154_ENABLED */
 
       /* prepare packet to send: copy to radio buffer */
-      if(packet_ready && NETSTACK_RADIO.prepare(packet, packet_len) == 0) { /* 0 means success */
+      if(packet_ready && NETSTACK_RADIO_802154.prepare(packet, packet_len) == 0) { /* 0 means success */
         static rtimer_clock_t tx_duration;
 
 #if CCA_ENABLED
@@ -505,11 +505,11 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
         TSCH_DEBUG_TX_EVENT();
         tsch_radio_on(TSCH_RADIO_CMD_ON_WITHIN_TIMESLOT);
         /* CCA */
-        BUSYWAIT_UNTIL_ABS(!(cca_status |= NETSTACK_RADIO.channel_clear()),
+        BUSYWAIT_UNTIL_ABS(!(cca_status |= NETSTACK_RADIO_802154.channel_clear()),
                            current_slot_start, TS_CCA_OFFSET + TS_CCA);
         TSCH_DEBUG_TX_EVENT();
         /* there is not enough time to turn radio off */
-        /*  NETSTACK_RADIO.off(); */
+        /*  NETSTACK_RADIO_802154.off(); */
         if(cca_status == 0) {
           mac_tx_status = MAC_TX_COLLISION;
         } else
@@ -519,7 +519,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           TSCH_SCHEDULE_AND_YIELD(pt, t, current_slot_start, tsch_timing[tsch_ts_tx_offset] - RADIO_DELAY_BEFORE_TX, "TxBeforeTx");
           TSCH_DEBUG_TX_EVENT();
           /* send packet already in radio tx buffer */
-          mac_tx_status = NETSTACK_RADIO.transmit(packet_len);
+          mac_tx_status = NETSTACK_RADIO_802154.transmit(packet_len);
           tx_count++;
           /* Save tx timestamp */
           tx_start_time = current_slot_start + tsch_timing[tsch_ts_tx_offset];
@@ -543,8 +543,8 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
 #if TSCH_HW_FRAME_FILTERING
               radio_value_t radio_rx_mode;
               /* Entering promiscuous mode so that the radio accepts the enhanced ACK */
-              NETSTACK_RADIO.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode);
-              NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode & (~RADIO_RX_MODE_ADDRESS_FILTER));
+              NETSTACK_RADIO_802154.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode);
+              NETSTACK_RADIO_802154.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode & (~RADIO_RX_MODE_ADDRESS_FILTER));
 #endif /* TSCH_HW_FRAME_FILTERING */
               /* Unicast: wait for ack after tx: sleep until ack time */
               TSCH_SCHEDULE_AND_YIELD(pt, t, current_slot_start,
@@ -552,26 +552,26 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
               TSCH_DEBUG_TX_EVENT();
               tsch_radio_on(TSCH_RADIO_CMD_ON_WITHIN_TIMESLOT);
               /* Wait for ACK to come */
-              BUSYWAIT_UNTIL_ABS(NETSTACK_RADIO.receiving_packet(),
+              BUSYWAIT_UNTIL_ABS(NETSTACK_RADIO_802154.receiving_packet(),
                   tx_start_time, tx_duration + tsch_timing[tsch_ts_rx_ack_delay] + tsch_timing[tsch_ts_ack_wait] + RADIO_DELAY_BEFORE_DETECT);
               TSCH_DEBUG_TX_EVENT();
 
               ack_start_time = RTIMER_NOW() - RADIO_DELAY_BEFORE_DETECT;
 
               /* Wait for ACK to finish */
-              BUSYWAIT_UNTIL_ABS(!NETSTACK_RADIO.receiving_packet(),
+              BUSYWAIT_UNTIL_ABS(!NETSTACK_RADIO_802154.receiving_packet(),
                                  ack_start_time, tsch_timing[tsch_ts_max_ack]);
               TSCH_DEBUG_TX_EVENT();
               tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
 
 #if TSCH_HW_FRAME_FILTERING
               /* Leaving promiscuous mode */
-              NETSTACK_RADIO.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode);
-              NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode | RADIO_RX_MODE_ADDRESS_FILTER);
+              NETSTACK_RADIO_802154.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode);
+              NETSTACK_RADIO_802154.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode | RADIO_RX_MODE_ADDRESS_FILTER);
 #endif /* TSCH_HW_FRAME_FILTERING */
 
               /* Read ack frame */
-              ack_len = NETSTACK_RADIO.read((void *)ackbuf, sizeof(ackbuf));
+              ack_len = NETSTACK_RADIO_802154.read((void *)ackbuf, sizeof(ackbuf));
 
               is_time_source = 0;
               /* The radio driver should return 0 if no valid packets are in the rx buffer */
@@ -724,10 +724,10 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 
     /* Start radio for at least guard time */
     tsch_radio_on(TSCH_RADIO_CMD_ON_WITHIN_TIMESLOT);
-    packet_seen = NETSTACK_RADIO.receiving_packet() || NETSTACK_RADIO.pending_packet();
+    packet_seen = NETSTACK_RADIO_802154.receiving_packet() || NETSTACK_RADIO_802154.pending_packet();
     if(!packet_seen) {
       /* Check if receiving within guard time */
-      BUSYWAIT_UNTIL_ABS((packet_seen = NETSTACK_RADIO.receiving_packet()),
+      BUSYWAIT_UNTIL_ABS((packet_seen = NETSTACK_RADIO_802154.receiving_packet()),
           current_slot_start, tsch_timing[tsch_ts_rx_offset] + tsch_timing[tsch_ts_rx_wait] + RADIO_DELAY_BEFORE_DETECT);
     }
     if(!packet_seen) {
@@ -739,20 +739,20 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
       rx_start_time = RTIMER_NOW() - RADIO_DELAY_BEFORE_DETECT;
 
       /* Wait until packet is received, turn radio off */
-      BUSYWAIT_UNTIL_ABS(!NETSTACK_RADIO.receiving_packet(),
+      BUSYWAIT_UNTIL_ABS(!NETSTACK_RADIO_802154.receiving_packet(),
           current_slot_start, tsch_timing[tsch_ts_rx_offset] + tsch_timing[tsch_ts_rx_wait] + tsch_timing[tsch_ts_max_tx]);
       TSCH_DEBUG_RX_EVENT();
       tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
 
-      if(NETSTACK_RADIO.pending_packet()) {
+      if(NETSTACK_RADIO_802154.pending_packet()) {
         static int frame_valid;
         static int header_len;
         static frame802154_t frame;
         radio_value_t radio_last_rssi;
 
         /* Read packet */
-        current_input->len = NETSTACK_RADIO.read((void *)current_input->payload, TSCH_PACKET_MAX_LEN);
-        NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_RSSI, &radio_last_rssi);
+        current_input->len = NETSTACK_RADIO_802154.read((void *)current_input->payload, TSCH_PACKET_MAX_LEN);
+        NETSTACK_RADIO_802154.get_value(RADIO_PARAM_LAST_RSSI, &radio_last_rssi);
         current_input->rx_asn = tsch_current_asn;
         current_input->rssi = (signed)radio_last_rssi;
         current_input->channel = current_channel;
@@ -763,7 +763,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 
 #if TSCH_RESYNC_WITH_SFD_TIMESTAMPS
         /* At the end of the reception, get an more accurate estimate of SFD arrival time */
-        NETSTACK_RADIO.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &rx_start_time, sizeof(rtimer_clock_t));
+        NETSTACK_RADIO_802154.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &rx_start_time, sizeof(rtimer_clock_t));
 #endif
 
         packet_duration = TSCH_PACKET_DURATION(current_input->len);
@@ -842,13 +842,13 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 #endif /* LLSEC802154_ENABLED */
 
                 /* Copy to radio buffer */
-                NETSTACK_RADIO.prepare((const void *)ack_buf, ack_len);
+                NETSTACK_RADIO_802154.prepare((const void *)ack_buf, ack_len);
 
                 /* Wait for time to ACK and transmit ACK */
                 TSCH_SCHEDULE_AND_YIELD(pt, t, rx_start_time,
                                         packet_duration + tsch_timing[tsch_ts_tx_ack_delay] - RADIO_DELAY_BEFORE_TX, "RxBeforeAck");
                 TSCH_DEBUG_RX_EVENT();
-                NETSTACK_RADIO.transmit(ack_len);
+                NETSTACK_RADIO_802154.transmit(ack_len);
                 tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
               }
             }
@@ -948,7 +948,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       if(is_active_slot) {
         /* Hop channel */
         current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
-        NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
+        NETSTACK_RADIO_802154.set_value(RADIO_PARAM_CHANNEL, current_channel);
         /* Turn the radio on already here if configured so; necessary for radios with slow startup */
         tsch_radio_on(TSCH_RADIO_CMD_ON_START_OF_TIMESLOT);
         /* Decide whether it is a TX/RX/IDLE or OFF slot */

@@ -80,7 +80,7 @@ get_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buf
   coap_get_header_accept(request, &accept);
   if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
-    NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &rssi_level);
+    NETSTACK_RADIO_802154.get_value(RADIO_PARAM_RSSI, &rssi_level);
     CONTENT_PRINTF("%d", rssi_level);
     coap_set_header_content_format(response, TEXT_PLAIN);
     coap_set_payload(response, (uint8_t *)content, content_len);
@@ -101,7 +101,7 @@ get_last_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t
   coap_get_header_accept(request, &accept);
   if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
-    NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_RSSI, &last_rssi_level);
+    NETSTACK_RADIO_802154.get_value(RADIO_PARAM_LAST_RSSI, &last_rssi_level);
     CONTENT_PRINTF("%d", last_rssi_level);
     coap_set_header_content_format(response, TEXT_PLAIN);
     coap_set_payload(response, (uint8_t *)content, content_len);

@@ -41,7 +41,6 @@
 #define MAC_H_
 
 #include "contiki.h"
-#include "dev/radio.h"
 
 
 typedef void (* mac_callback_t)(void *ptr, int status, int transmissions);

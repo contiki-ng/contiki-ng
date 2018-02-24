@@ -177,12 +177,12 @@ send_one_packet(void *ptr)
     uint8_t dsn;
     dsn = ((uint8_t *)packetbuf_hdrptr())[2] & 0xff;
 
-    NETSTACK_RADIO.prepare(packetbuf_hdrptr(), packetbuf_totlen());
+    NETSTACK_RADIO_802154.prepare(packetbuf_hdrptr(), packetbuf_totlen());
 
     is_broadcast = packetbuf_holds_broadcast();
 
-    if(NETSTACK_RADIO.receiving_packet() ||
-       (!is_broadcast && NETSTACK_RADIO.pending_packet())) {
+    if(NETSTACK_RADIO_802154.receiving_packet() ||
+       (!is_broadcast && NETSTACK_RADIO_802154.pending_packet())) {
 
       /* Currently receiving a packet over air or the radio has
          already received a packet that needs to be read before
@@ -190,7 +190,7 @@ send_one_packet(void *ptr)
       ret = MAC_TX_COLLISION;
     } else {
 
-      switch(NETSTACK_RADIO.transmit(packetbuf_totlen())) {
+      switch(NETSTACK_RADIO_802154.transmit(packetbuf_totlen())) {
       case RADIO_TX_OK:
         if(is_broadcast) {
           ret = MAC_TX_OK;
@@ -208,9 +208,9 @@ send_one_packet(void *ptr)
           }
 
           ret = MAC_TX_NOACK;
-          if(NETSTACK_RADIO.receiving_packet() ||
-             NETSTACK_RADIO.pending_packet() ||
-             NETSTACK_RADIO.channel_clear() == 0) {
+          if(NETSTACK_RADIO_802154.receiving_packet() ||
+              NETSTACK_RADIO_802154.pending_packet() ||
+              NETSTACK_RADIO_802154.channel_clear() == 0) {
             int len;
             uint8_t ackbuf[CSMA_ACK_LEN];
 
@@ -226,8 +226,8 @@ send_one_packet(void *ptr)
               }
             }
 
-            if(NETSTACK_RADIO.pending_packet()) {
-              len = NETSTACK_RADIO.read(ackbuf, CSMA_ACK_LEN);
+            if(NETSTACK_RADIO_802154.pending_packet()) {
+              len = NETSTACK_RADIO_802154.read(ackbuf, CSMA_ACK_LEN);
               if(len == CSMA_ACK_LEN && ackbuf[2] == dsn) {
                 /* Ack received */
                 ret = MAC_TX_OK;

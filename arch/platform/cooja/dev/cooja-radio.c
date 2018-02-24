@@ -39,7 +39,7 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "dev/cooja-radio.h"
 
 #define COOJA_RADIO_BUFSIZE PACKETBUF_SIZE
@@ -395,7 +395,7 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
-const struct radio_driver cooja_radio_driver =
+const radio_802154_driver_t cooja_radio_driver =
 {
     init,
     prepare_packet,

@@ -44,7 +44,7 @@
 
 #include "contiki.h"
 #include "dev/spi.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "cc2420_const.h"
 #include "lib/aes-128.h"
 
@@ -90,7 +90,7 @@ extern uint8_t cc2420_last_correlation;
 
 int cc2420_rssi(void);
 
-extern const struct radio_driver cc2420_driver;
+extern const radio_802154_driver_t cc2420_driver;
 
 /**
  * \param power Between 1 and 31.

@@ -467,7 +467,7 @@ set_object(radio_param_t param, const void *src, size_t size);
 /*---------------------------------------------------------------------------*/
 /* The radio driver exported to contiki */
 /*---------------------------------------------------------------------------*/
-const struct radio_driver cc1200_driver = {
+const radio_802154_driver_t cc1200_driver = {
   init,
   prepare,
   transmit,

@@ -547,7 +547,7 @@ PROCESS_THREAD(rf_core_process, ev, data)
     do {
       watchdog_periodic();
       packetbuf_clear();
-      len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
+      len = NETSTACK_RADIO_802154.read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
       if(len > 0) {
         packetbuf_set_datalen(len);

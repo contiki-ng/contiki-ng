@@ -343,7 +343,7 @@ rf_ble_beacon_single(uint8_t channel, uint8_t *data, uint8_t len)
      * BLE beacon burst. Otherwise, terminate the primary radio Op so we
      * can switch to BLE mode
      */
-    if(NETSTACK_RADIO.receiving_packet()) {
+    if(NETSTACK_RADIO_802154.receiving_packet()) {
       PRINTF("rf_ble_beacon_single: We were receiving\n");
 
       /* Abort this pass */

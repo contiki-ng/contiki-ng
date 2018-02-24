@@ -46,7 +46,7 @@
 */
 
 #include "contiki.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
@@ -720,7 +720,7 @@ PT_THREAD(tsch_scan(struct pt *pt))
       uint8_t scan_channel = TSCH_JOIN_HOPPING_SEQUENCE[
           random_rand() % sizeof(TSCH_JOIN_HOPPING_SEQUENCE)];
       if(current_channel != scan_channel) {
-        NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, scan_channel);
+        NETSTACK_RADIO_802154.set_value(RADIO_PARAM_CHANNEL, scan_channel);
         current_channel = scan_channel;
         LOG_INFO("scanning on channel %u\n", scan_channel);
       }
@@ -728,21 +728,21 @@ PT_THREAD(tsch_scan(struct pt *pt))
     }
 
     /* Turn radio on and wait for EB */
-    NETSTACK_RADIO.on();
+    NETSTACK_RADIO_802154.on();
 
-    is_packet_pending = NETSTACK_RADIO.pending_packet();
-    if(!is_packet_pending && NETSTACK_RADIO.receiving_packet()) {
+    is_packet_pending = NETSTACK_RADIO_802154.pending_packet();
+    if(!is_packet_pending && NETSTACK_RADIO_802154.receiving_packet()) {
       /* If we are currently receiving a packet, wait until end of reception */
       t0 = RTIMER_NOW();
-      BUSYWAIT_UNTIL_ABS((is_packet_pending = NETSTACK_RADIO.pending_packet()), t0, RTIMER_SECOND / 100);
+      BUSYWAIT_UNTIL_ABS((is_packet_pending = NETSTACK_RADIO_802154.pending_packet()), t0, RTIMER_SECOND / 100);
     }
 
     if(is_packet_pending) {
       /* Read packet */
-      input_eb.len = NETSTACK_RADIO.read(input_eb.payload, TSCH_PACKET_MAX_LEN);
+      input_eb.len = NETSTACK_RADIO_802154.read(input_eb.payload, TSCH_PACKET_MAX_LEN);
 
       /* Save packet timestamp */
-      NETSTACK_RADIO.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t0, sizeof(rtimer_clock_t));
+      NETSTACK_RADIO_802154.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t0, sizeof(rtimer_clock_t));
 
       /* Parse EB and attempt to associate */
       LOG_INFO("scan: received packet (%u bytes) on channel %u\n", input_eb.len, current_channel);
@@ -752,7 +752,7 @@ PT_THREAD(tsch_scan(struct pt *pt))
 
     if(tsch_is_associated) {
       /* End of association, turn the radio off */
-      NETSTACK_RADIO.off();
+      NETSTACK_RADIO_802154.off();
     } else if(!tsch_is_coordinator) {
       /* Go back to scanning */
       etimer_reset(&scan_timer);
@@ -884,7 +884,7 @@ tsch_init(void)
   rtimer_clock_t t;
 
   /* Radio Rx mode */
-  if(NETSTACK_RADIO.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode) != RADIO_RESULT_OK) {
+  if(NETSTACK_RADIO_802154.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode) != RADIO_RESULT_OK) {
     LOG_ERR("! radio does not support getting RADIO_PARAM_RX_MODE. Abort init.\n");
     return;
   }
@@ -894,29 +894,29 @@ tsch_init(void)
   radio_rx_mode &= ~RADIO_RX_MODE_AUTOACK;
   /* Set radio in poll mode */
   radio_rx_mode |= RADIO_RX_MODE_POLL_MODE;
-  if(NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode) != RADIO_RESULT_OK) {
+  if(NETSTACK_RADIO_802154.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode) != RADIO_RESULT_OK) {
     LOG_ERR("! radio does not support setting required RADIO_PARAM_RX_MODE. Abort init.\n");
     return;
   }
 
   /* Radio Tx mode */
-  if(NETSTACK_RADIO.get_value(RADIO_PARAM_TX_MODE, &radio_tx_mode) != RADIO_RESULT_OK) {
+  if(NETSTACK_RADIO_802154.get_value(RADIO_PARAM_TX_MODE, &radio_tx_mode) != RADIO_RESULT_OK) {
     LOG_ERR("! radio does not support getting RADIO_PARAM_TX_MODE. Abort init.\n");
     return;
   }
   /* Unset CCA */
   radio_tx_mode &= ~RADIO_TX_MODE_SEND_ON_CCA;
-  if(NETSTACK_RADIO.set_value(RADIO_PARAM_TX_MODE, radio_tx_mode) != RADIO_RESULT_OK) {
+  if(NETSTACK_RADIO_802154.set_value(RADIO_PARAM_TX_MODE, radio_tx_mode) != RADIO_RESULT_OK) {
     LOG_ERR("! radio does not support setting required RADIO_PARAM_TX_MODE. Abort init.\n");
     return;
   }
   /* Test setting channel */
-  if(NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, TSCH_DEFAULT_HOPPING_SEQUENCE[0]) != RADIO_RESULT_OK) {
+  if(NETSTACK_RADIO_802154.set_value(RADIO_PARAM_CHANNEL, TSCH_DEFAULT_HOPPING_SEQUENCE[0]) != RADIO_RESULT_OK) {
     LOG_ERR("! radio does not support setting channel. Abort init.\n");
     return;
   }
   /* Test getting timestamp */
-  if(NETSTACK_RADIO.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t, sizeof(rtimer_clock_t)) != RADIO_RESULT_OK) {
+  if(NETSTACK_RADIO_802154.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t, sizeof(rtimer_clock_t)) != RADIO_RESULT_OK) {
     LOG_ERR("! radio does not support getting last packet timestamp. Abort init.\n");
     return;
   }
@@ -1099,7 +1099,7 @@ turn_on(void)
 static int
 turn_off(void)
 {
-  NETSTACK_RADIO.off();
+  NETSTACK_RADIO_802154.off();
   return 1;
 }
 /*---------------------------------------------------------------------------*/

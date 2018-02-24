@@ -17,9 +17,9 @@
 #endif /* RF_CHANNEL */
 
 /* Configure radio driver */
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO   cc2420_driver
-#endif /* NETSTACK_CONF_RADIO */
+#ifndef NETSTACK_CONF_RADIO_802154
+#define NETSTACK_CONF_RADIO_802154   cc2420_driver
+#endif /* NETSTACK_CONF_RADIO_802154 */
 
 /* The TSCH default slot length of 10ms is a bit too short for this platform,
  * use 15ms instead. */

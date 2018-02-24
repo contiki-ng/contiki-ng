@@ -36,7 +36,7 @@
  * Implementation of the cc2538 RF driver
  */
 #include "contiki.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "net/packetbuf.h"
@@ -978,7 +978,7 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
-const struct radio_driver cc2538_rf_driver = {
+const radio_802154_driver_t cc2538_rf_driver = {
   init,
   prepare,
   transmit,

@@ -94,7 +94,7 @@
 /* Configure CSMA for when it's selected */
 
 #if CC1200_CONF_SUBGHZ_50KBPS_MODE
-#define NETSTACK_CONF_RADIO                                 cc1200_driver
+#define NETSTACK_CONF_RADIO_802154                          cc1200_driver
 #define CC1200_CONF_RF_CFG                                  cc1200_802154g_863_870_fsk_50kbps
 #define ANTENNA_SW_SELECT_DEF_CONF                          ANTENNA_SW_SELECT_SUBGHZ
 #define CC1200_CONF_USE_GPIO2                               0
@@ -106,15 +106,15 @@
 #endif
 
 /* This can be overriden to use the cc1200_driver instead */
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO         cc2538_rf_driver
+#ifndef NETSTACK_CONF_RADIO_802154
+#define NETSTACK_CONF_RADIO_802154         cc2538_rf_driver
 #endif
 
 /*
  * RE-Mote specific:
  * If dual RF enabled, we set the RF switch to enable the CC1200 and use 2.4GHz
  * on the available uFl/chip antenna (not mounted as default).  In contiki main
- * platform routine we set the right antenna depending on NETSTACK_CONF_RADIO,
+ * platform routine we set the right antenna depending on NETSTACK_CONF_RADIO_802154,
  * but as changing the RF antenna also implies enabling/disabling the CC1200,
  * is better to start off with the right configuration
  */

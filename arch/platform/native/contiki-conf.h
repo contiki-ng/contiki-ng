@@ -76,9 +76,9 @@ typedef unsigned int uip_stats_t;
 #define NETSTACK_CONF_NETWORK    tun6_net_driver
 #endif
 
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO   nullradio_driver
-#endif /* NETSTACK_CONF_RADIO */
+#ifndef NETSTACK_CONF_RADIO_802154
+#define NETSTACK_CONF_RADIO_802154   nullradio_802154_driver
+#endif /* NETSTACK_CONF_RADIO_802154 */
 
 #define NETSTACK_CONF_LINUXRADIO_DEV "wpan0"
 

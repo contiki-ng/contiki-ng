@@ -34,7 +34,7 @@
 #define COOJA_RADIO_H_
 
 #include "contiki.h"
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 
 #ifdef COOJA_CONF_SIMULATE_TURNAROUND
 #define COOJA_SIMULATE_TURNAROUND COOJA_CONF_SIMULATE_TURNAROUND
@@ -48,7 +48,7 @@
 #define COOJA_TRANSMIT_ON_CCA 1
 #endif
 
-extern const struct radio_driver cooja_radio_driver;
+extern const radio_802154_driver_t cooja_radio_driver;
 
 /**
  * Set radio channel.

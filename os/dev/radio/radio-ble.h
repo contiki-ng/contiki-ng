@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2017, <copyright holders>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,43 +29,76 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef TARGET_CONF_H_
-#define TARGET_CONF_H_
+/**
+ * \addtogroup radio
+ * @{
+ *
+ * \defgroup radio-ble API for BLE Radios
+ *
+ * The radio API module defines a set of functions that a BLE radio device
+ * driver must implement.
+ *
+ * @{
+ *
+ * \file
+ *         Header file for the API for BLE Radios
+ */
 /*---------------------------------------------------------------------------*/
-/* Set to 1 for a sub-ghz sniffer with the CC1200 */
-#ifndef ZOUL_CONF_SUB_GHZ_SNIFFER
-#define ZOUL_CONF_SUB_GHZ_SNIFFER     0
-#endif
+#ifndef RADIO_BLE_H_
+#define RADIO_BLE_H_
 /*---------------------------------------------------------------------------*/
-#if ZOUL_CONF_SUB_GHZ_SNIFFER
-#define NETSTACK_CONF_RADIO_802154    cc1200_driver
+#include "contiki.h"
+#include "dev/radio/radio.h"
 
-/*
- * You will need to configure the defines below to match the configuration of
- * your sub-ghz network.
+#include <stddef.h>
+/*---------------------------------------------------------------------------*/
+/**
+ * The structure of a device driver for BLE radio.
  */
-#define CC1200_CONF_RF_CFG            cc1200_802154g_863_870_fsk_50kbps
-#define CC1200_CONF_USE_GPIO2         0
-#define CC1200_CONF_USE_RX_WATCHDOG   0
-#define CC1200_CONF_802154G           0
-#define CC1200_CONF_802154G_CRC16     0
-#define CC1200_CONF_802154G_WHITENING 0
-#define ANTENNA_SW_SELECT_DEF_CONF    ANTENNA_SW_SELECT_SUBGHZ
-#endif
+typedef struct radio_ble_driver {
+  /**
+   * Docs needed
+   */
+  int (* init)(void);
+
+  /**
+   * Docs needed
+   */
+  int (* send)(const void *payload, unsigned short payload_len);
+
+  /**
+   * Docs needed
+   */
+  int (* on)(void);
+
+  /**
+   * Docs needed
+   */
+  int (* off)(void);
+
+  /**
+   * Docs needed
+   */
+  radio_result_t (* get_value)(radio_param_t param, radio_value_t *value);
+
+  /**
+   * Docs needed
+   */
+  radio_result_t (* set_value)(radio_param_t param, radio_value_t value);
+
+  /**
+   * Docs needed
+   */
+  radio_result_t (* get_object)(radio_param_t param, void *dest, size_t size);
+
+  /**
+   * Docs needed
+   */
+  radio_result_t (* set_object)(radio_param_t param, const void *src,
+                                size_t size);
+} radio_ble_driver_t;
 /*---------------------------------------------------------------------------*/
-/*
- * Selection of Sensniff I/O Interface.
- * Define CC2538_IO_CONF_USB as 0 to use UART0 as sensniff's interface.
- */
-#define CC2538_IO_CONF_USB            0
+#endif /* RADIO_BLE_H_ */
 /*---------------------------------------------------------------------------*/
-#if CC2538_IO_CONF_USB
-#define USB_SERIAL_CONF_ENABLE        1
-#else
-#define UART0_CONF_BAUD_RATE     460800
-#endif
-/*---------------------------------------------------------------------------*/
-#define SENSNIFF_IO_DRIVER_H "pool/cc2538-io.h"
-/*---------------------------------------------------------------------------*/
-#endif /* TARGET_CONF_H_ */
-/*---------------------------------------------------------------------------*/
+/** @} */
+/** @} */

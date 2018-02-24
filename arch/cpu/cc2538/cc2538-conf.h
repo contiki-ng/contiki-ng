@@ -268,8 +268,8 @@
  *
  * @{
  */
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO         cc2538_rf_driver
+#ifndef NETSTACK_CONF_RADIO_802154
+#define NETSTACK_CONF_RADIO_802154         cc2538_rf_driver
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/

@@ -41,8 +41,8 @@
 #ifndef MICROMAC_RADIO_H_
 #define MICROMAC_RADIO_H_
 
-#include "dev/radio.h"
+#include "dev/radio/radio-802154.h"
 
-extern const struct radio_driver micromac_radio_driver;
+extern const radio_802154_driver_t micromac_radio_driver;
 
 #endif /* MICROMAC_RADIO_H_ */

@@ -37,13 +37,14 @@
  * @{
  *
  * \file
- * Header file for the CC13xx prop mode NETSTACK_RADIO driver
+ * Header file for the CC13xx prop mode NETSTACK_RADIO_802154 driver
  */
 /*---------------------------------------------------------------------------*/
 #ifndef PROP_MODE_H_
 #define PROP_MODE_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "dev/radio/radio-802154.h"
 #include "rf-core/dot-15-4g.h"
 
 #include <stdint.h>
