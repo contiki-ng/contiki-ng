@@ -66,14 +66,14 @@
 #ifdef CSMA_CONF_MIN_BE
 #define CSMA_MIN_BE CSMA_CONF_MIN_BE
 #else
-#define CSMA_MIN_BE 0
+#define CSMA_MIN_BE 3
 #endif
 
 /* macMaxBE: Maximum backoff exponent. Range 3--8 */
 #ifdef CSMA_CONF_MAX_BE
 #define CSMA_MAX_BE CSMA_CONF_MAX_BE
 #else
-#define CSMA_MAX_BE 4
+#define CSMA_MAX_BE 5
 #endif
 
 /* macMaxCSMABackoffs: Maximum number of backoffs in case of channel busy/collision. Range 0--5 */
@@ -281,7 +281,7 @@ schedule_transmission(struct neighbor_queue *n)
   clock_time_t delay;
   int backoff_exponent; /* BE in IEEE 802.15.4 */
 
-  backoff_exponent = MIN(n->collisions, CSMA_MAX_BE);
+  backoff_exponent = MIN(n->collisions + CSMA_MIN_BE, CSMA_MAX_BE);
 
   /* Compute max delay as per IEEE 802.15.4: 2^BE-1 backoff periods  */
   delay = ((1 << backoff_exponent) - 1) * backoff_period();
@@ -310,7 +310,7 @@ free_packet(struct neighbor_queue *n, struct packet_queue *p, int status)
     if(list_head(n->packet_queue) != NULL) {
       /* There is a next packet. We reset current tx information */
       n->transmissions = 0;
-      n->collisions = CSMA_MIN_BE;
+      n->collisions = 0;
       /* Schedule next transmissions */
       schedule_transmission(n);
     } else {
@@ -365,7 +365,7 @@ collision(struct packet_queue *q, struct neighbor_queue *n,
   n->collisions += num_transmissions;
 
   if(n->collisions > CSMA_MAX_BACKOFF) {
-    n->collisions = CSMA_MIN_BE;
+    n->collisions = 0;
     /* Increment to indicate a next retry */
     n->transmissions++;
   }
@@ -384,7 +384,7 @@ noack(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 
   metadata = (struct qbuf_metadata *)q->ptr;
 
-  n->collisions = CSMA_MIN_BE;
+  n->collisions = 0;
   n->transmissions += num_transmissions;
 
   if(n->transmissions >= metadata->max_transmissions) {
