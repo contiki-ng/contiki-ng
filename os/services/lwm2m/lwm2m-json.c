@@ -219,9 +219,9 @@ write_int(lwm2m_context_t *ctx, uint8_t *outbuf, size_t outlen,
   char *sep = (ctx->writer_flags & WRITER_OUTPUT_VALUE) ? "," : "";
   int len;
   if(ctx->writer_flags & WRITER_RESOURCE_INSTANCE) {
-    len = snprintf((char *)outbuf, outlen, "%s{\"n\":\"%u/%u\",\"v\":%" PRId32 "}", sep, ctx->resource_id, ctx->resource_instance_id, value);
+    len = snprintf((char *)outbuf, outlen, "%s{\"n\":\"%u/%u\",\"v\":%"PRId32"}", sep, ctx->resource_id, ctx->resource_instance_id, value);
   } else {
-    len = snprintf((char *)outbuf, outlen, "%s{\"n\":\"%u\",\"v\":%" PRId32 "}", sep, ctx->resource_id, value);
+    len = snprintf((char *)outbuf, outlen, "%s{\"n\":\"%u\",\"v\":%"PRId32"}", sep, ctx->resource_id, value);
   }
   if((len < 0) || (len >= outlen)) {
     return 0;

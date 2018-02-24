@@ -41,6 +41,7 @@
 #define CONTIKI_CONF_H
 
 #include <stdint.h>
+#include <inttypes.h>
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_PATH
