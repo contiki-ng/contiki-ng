@@ -37,11 +37,12 @@
  */
 
 #include "contiki.h"
-
-#if PLATFORM_HAS_LEDS
-#include <string.h>
 #include "coap-engine.h"
 #include "dev/leds.h"
+
+#include <string.h>
+
+#if PLATFORM_HAS_LEDS || LEDS_COUNT
 
 #define DEBUG 0
 #if DEBUG
