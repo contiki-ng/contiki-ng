@@ -185,9 +185,9 @@ rpl_global_repair(const char *str)
   if(rpl_dag_root_is_root()) {
     LOG_WARN("initiating global repair (%s), version %u, rank %u)\n",
          str, curr_instance.dag.version, curr_instance.dag.rank);
-#if LOG_INFO_ENABLED
-    rpl_neighbor_print_list("Global repair (before)");
-#endif /* LOG_INFO_ENABLED */
+    if(LOG_INFO_ENABLED) {
+      rpl_neighbor_print_list("Global repair (before)");
+    }
 
     /* Initiate global repair */
     RPL_LOLLIPOP_INCREMENT(curr_instance.dag.version);  /* New DAG version */
@@ -202,9 +202,9 @@ global_repair_non_root(rpl_dio_t *dio)
   if(!rpl_dag_root_is_root()) {
     LOG_WARN("participating in global repair, version %u, rank %u)\n",
          curr_instance.dag.version, curr_instance.dag.rank);
-#if LOG_INFO_ENABLED
-    rpl_neighbor_print_list("Global repair (before)");
-#endif /* LOG_INFO_ENABLED */
+    if(LOG_INFO_ENABLED) {
+      rpl_neighbor_print_list("Global repair (before)");
+    }
     /* Re-initialize configuration from DIO */
     init_dag_from_dio(dio);
     rpl_local_repair("Global repair");
@@ -325,9 +325,9 @@ rpl_dag_update_state(void)
         rpl_timers_schedule_leaving();
       }
 
-#if LOG_INFO_ENABLED
-      rpl_neighbor_print_list("Parent switch");
-#endif /* LOG_INFO_ENABLED */
+      if(LOG_INFO_ENABLED) {
+        rpl_neighbor_print_list("Parent switch");
+      }
     }
   }
 
