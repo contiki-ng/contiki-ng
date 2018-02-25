@@ -47,6 +47,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <inttypes.h>
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_PATH

@@ -65,19 +65,7 @@ static int num_parents;   /* all nodes that are possible parents */
 static int num_free;
 static linkaddr_t *worst_rank_nbr_lladdr; /* lladdr of the the neighbor with the worst rank */
 static rpl_rank_t worst_rank;
-/*---------------------------------------------------------------------------*/
-#if LOG_DBG_ENABLED
-/* Print out state periodically */
-static void update_state(void);
-static struct ctimer periodic_timer;
-static int timer_init = 0;
-static void
-handle_periodic_timer(void *ptr)
-{
-  update_state();
-  ctimer_restart(&periodic_timer);
-}
-#endif /* LOG_DBG_ENABLED */
+
 /*---------------------------------------------------------------------------*/
 static void
 update_state(void)
@@ -86,14 +74,6 @@ update_state(void)
   rpl_nbr_t *rpl_nbr;
   rpl_rank_t nbr_rank;
   int num_used = 0;
-
-#if LOG_DBG_ENABLED
-  if(!timer_init) {
-    timer_init = 1;
-    ctimer_set(&periodic_timer, 60 * CLOCK_SECOND,
-               &handle_periodic_timer, NULL);
-  }
-#endif /* LOG_DBG_ENABLED */
 
   worst_rank = 0;
   worst_rank_nbr_lladdr = NULL;

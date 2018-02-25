@@ -82,8 +82,7 @@ progress_request(coap_request_state_t *state) {
       coap_serialize_message(request, state->transaction->message);
 
     coap_send_transaction(state->transaction);
-    LOG_DBG("Requested #%lu (MID %u)\n", (unsigned long)state->block_num,
-            request->mid);
+    LOG_DBG("Requested #%"PRIu32" (MID %u)\n", state->block_num, request->mid);
   }
 }
 
@@ -120,8 +119,7 @@ coap_request_callback(void *callback_data, coap_message_t *response)
     /* this is only for counting BLOCK2 blocks.*/
     ++(state->block_num);
   } else {
-    LOG_WARN("WRONG BLOCK %lu/%lu\n", (unsigned long)res_block,
-             (unsigned long)state->block_num);
+    LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\n", res_block, state->block_num);
     ++block_error;
   }
 

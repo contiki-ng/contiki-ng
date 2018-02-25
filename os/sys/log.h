@@ -169,7 +169,12 @@ extern struct log_module all_modules[];
 #define LOG_INFO_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
-/* For testing log level */
+/* For checking log level.
+   As this builds on curr_log_level variables, this should not be used
+   in pre-processor macros. Use in a C 'if' statement instead, e.g.:
+   if(LOG_INFO_ENABLED) { ... }
+   Note that most compilers will still be able to strip the code out
+   for low enough log levels configurations. */
 #define LOG_ERR_ENABLED        ((LOG_LEVEL) >= LOG_LEVEL_ERR)
 #define LOG_WARN_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_WARN)
 #define LOG_INFO_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_INFO)

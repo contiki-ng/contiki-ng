@@ -99,9 +99,18 @@
  */
 /*---------------------------------------------------------------------------*/
 /* In leds.h the LEDS_BLUE is defined by LED_YELLOW definition */
-#define LEDS_GREEN    (1 << 4) /**< LED1 (Green) -> PD4 */
-#define LEDS_BLUE     (1 << 3) /**< LED2 (Blue)  -> PD3 */
-#define LEDS_RED      (1 << 5) /**< LED3 (Red)   -> PD5 */
+#define LEDS_GREEN_PIN      4
+#define LEDS_GREEN    (1 << LEDS_GREEN_PIN) /**< LED1 (Green) -> PD4 */
+
+#define LEDS_BLUE_PIN       3
+#define LEDS_BLUE     (1 << LEDS_BLUE_PIN)  /**< LED2 (Blue)  -> PD3 */
+
+#define LEDS_RED_PIN        5
+#define LEDS_RED      (1 << LEDS_RED_PIN)   /**< LED3 (Red)   -> PD5 */
+
+#define LEDS_GREEN_PORT_BASE    GPIO_D_BASE
+#define LEDS_BLUE_PORT_BASE     GPIO_D_BASE
+#define LEDS_RED_PORT_BASE      GPIO_D_BASE
 
 #define LEDS_CONF_ALL (LEDS_GREEN | LEDS_BLUE | LEDS_RED)
 

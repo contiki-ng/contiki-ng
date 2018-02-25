@@ -43,16 +43,6 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 /**
- * \name Compiler configuration
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define CCIF
-#define CLIF
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name Macros and typedefs
  *
  * Those values are not meant to be modified by the user

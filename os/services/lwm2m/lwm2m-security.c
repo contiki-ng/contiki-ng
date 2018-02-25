@@ -177,7 +177,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
     /* Handle the writes */
     switch(ctx->resource_id) {
     case LWM2M_SECURITY_SERVER_URI_ID:
-      LOG_DBG("Writing security URI value: len: %d\n", (int)ctx->inbuf->size);
+      LOG_DBG("Writing security URI value: len: %"PRId16"\n", ctx->inbuf->size);
       value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->server_uri, LWM2M_SECURITY_URI_SIZE);
       /* This is string... */
       security->server_uri_len = ctx->last_value_len;
@@ -204,7 +204,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->public_key, LWM2M_SECURITY_KEY_SIZE);
       security->public_key_len = ctx->last_value_len;
 
-      LOG_DBG("Writing client PKI: len: %d '", (int)ctx->last_value_len);
+      LOG_DBG("Writing client PKI: len: %"PRIu16" '", ctx->last_value_len);
       LOG_DBG_COAP_STRING((const char *)security->public_key,
                           ctx->last_value_len);
       LOG_DBG_("'\n");
@@ -213,7 +213,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->secret_key, LWM2M_SECURITY_KEY_SIZE);
       security->secret_key_len = ctx->last_value_len;
 
-      LOG_DBG("Writing secret key: len: %d '", (int)ctx->last_value_len);
+      LOG_DBG("Writing secret key: len: %"PRIu16" '", ctx->last_value_len);
       LOG_DBG_COAP_STRING((const char *)security->secret_key,
                           ctx->last_value_len);
       LOG_DBG_("'\n");
