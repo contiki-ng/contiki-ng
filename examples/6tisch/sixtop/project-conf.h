@@ -82,7 +82,7 @@
 /* Save some space to fit the limited RAM of the z1 */
 #define UIP_CONF_TCP 0
 #define QUEUEBUF_CONF_NUM 2
-#define RPL_NS_CONF_LINK_NUM  2
+#define NETSTACK_MAX_ROUTE_ENTRIES  2
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 2
 #define UIP_CONF_ND6_SEND_NA 0
 #define SICSLOWPAN_CONF_FRAG 0

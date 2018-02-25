@@ -973,7 +973,7 @@ ra_input(void)
             default:
               LOG_DBG("Updating timer of prefix ");
               LOG_DBG_6ADDR(&prefix->ipaddr);
-              LOG_DBG_(" new value %lu\n", (unsigned long)uip_ntohl(nd6_opt_prefix_info->validlt));
+              LOG_DBG_(" new value %"PRIu32"\n", uip_ntohl(nd6_opt_prefix_info->validlt));
               stimer_set(&prefix->vlifetime,
                          uip_ntohl(nd6_opt_prefix_info->validlt));
               prefix->isinfinite = 0;
@@ -1034,7 +1034,7 @@ ra_input(void)
       while(naddr-- > 0) {
         LOG_DBG("nameserver: ");
         LOG_DBG_6ADDR(ip);
-        LOG_DBG_(" lifetime: %lx\n", (unsigned long)uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
+        LOG_DBG_(" lifetime: %"PRIx32"\n", uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
         uip_nameserver_update(ip, uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
         ip++;
       }
