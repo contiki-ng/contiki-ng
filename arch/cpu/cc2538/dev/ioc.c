@@ -56,6 +56,12 @@ ioc_set_over(uint8_t port, uint8_t pin, uint8_t over)
   ioc_over[(port << 3) + pin] = over;
 }
 /*---------------------------------------------------------------------------*/
+uint32_t
+ioc_get_over(uint8_t port, uint8_t pin)
+{
+  return ioc_over[(port << 3) + pin] & 0x0F;
+}
+/*---------------------------------------------------------------------------*/
 void
 ioc_set_sel(uint8_t port, uint8_t pin, uint8_t sel)
 {

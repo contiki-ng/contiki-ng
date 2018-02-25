@@ -41,6 +41,7 @@
 #include "dev/ioc.h"
 #include "dev/nvic.h"
 #include "dev/sys-ctrl.h"
+#include "dev/gpio-hal.h"
 #include "lpm.h"
 #include "reg.h"
 #include "soc.h"
@@ -123,7 +124,7 @@ soc_init()
   clock_init();
   lpm_init();
   rtimer_init();
-  gpio_init();
+  gpio_hal_init();
 }
 /*----------------------------------------------------------------------------*/
 /** @} */

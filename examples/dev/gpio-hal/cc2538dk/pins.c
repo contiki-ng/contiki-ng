@@ -29,43 +29,23 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC2538_DEF_H_
-#define CC2538_DEF_H_
+#include "contiki.h"
+#include "dev/gpio-hal.h"
 /*---------------------------------------------------------------------------*/
-#include "cm3/cm3-def.h"
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 32768
-/*---------------------------------------------------------------------------*/
-/* 352us from calling transmit() until the SFD byte has been sent */
-#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
-/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT 0
-#ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this.
- * Slot length 10000 usec
- *             328 ticks
- * Tick duration 30.517578125 usec
- * Real slot duration 10009.765625 usec
- * Target - real duration = -9.765625 usec
- * TSCH_CONF_BASE_DRIFT_PPM -977
+/*
+ * LEDs on the SmartRF06 (EB and BB) are connected as follows:
+ * - LED1 (Red)    -> PC0
+ * - LED2 (Yellow) -> PC1 (gpio_hal_pin_t 17)
+ * - LED3 (Green)  -> PC2 (gpio_hal_pin_t 18)
+ * - LED4 (Orange) -> PC3 (gpio_hal_pin_t 19)
+ *
+ * LED1 shares the same pin with the USB pullup, so  here we'll use PC1, PC2
+ * and PC3.
  */
-#define TSCH_CONF_BASE_DRIFT_PPM -977
-#endif
-
-#if MAC_CONF_WITH_TSCH
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* MAC_CONF_WITH_TSCH */
+gpio_hal_pin_t out_pin1 = 17;
+gpio_hal_pin_t out_pin2 = 18;
+gpio_hal_pin_t out_pin3 = 19;
 /*---------------------------------------------------------------------------*/
-/* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
-
-/* Path to headers with implementation of mutexes and memory barriers */
-#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
-#define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
-
-#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
-/*---------------------------------------------------------------------------*/
-#endif /* CC2538_DEF_H_ */
+/* Button pin: Button select, PA3 */
+gpio_hal_pin_t btn_pin = 3;
 /*---------------------------------------------------------------------------*/

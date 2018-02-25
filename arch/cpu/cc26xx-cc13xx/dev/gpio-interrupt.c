@@ -29,72 +29,33 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-gpio-interrupts
+ * \addtogroup cc26xx
  * @{
  *
  * \file
- * Implementation of CC13xx/CC26xx GPIO interrupt handling.
+ *     CC13xx/CC26xx GPIO interrupt ISR.
  */
 /*---------------------------------------------------------------------------*/
-#include "ioc.h"
-#include "gpio-interrupt.h"
-#include "lpm.h"
+#include "contiki.h"
+#include "dev/gpio-hal.h"
 #include "ti-lib.h"
 
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 #define gpio_interrupt_isr GPIOIntHandler
 /*---------------------------------------------------------------------------*/
-/* Handler array */
-static gpio_interrupt_handler_t handlers[NUM_IO_MAX];
-/*---------------------------------------------------------------------------*/
-void
-gpio_interrupt_register_handler(uint8_t ioid, gpio_interrupt_handler_t f)
-{
-  uint8_t interrupts_disabled = ti_lib_int_master_disable();
-
-  /* Clear interrupts on specified pins */
-  ti_lib_gpio_clear_event_dio(ioid);
-
-  handlers[ioid] = f;
-
-  /* Re-enable interrupts */
-  if(!interrupts_disabled) {
-    ti_lib_int_master_enable();
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-gpio_interrupt_init()
-{
-  int i;
-
-  for(i = 0; i < NUM_IO_MAX; i++) {
-    handlers[i] = NULL;
-  }
-
-  ti_lib_int_enable(INT_AON_GPIO_EDGE);
-}
-/*---------------------------------------------------------------------------*/
 void
 gpio_interrupt_isr(void)
 {
-  uint32_t pin_mask;
-  uint8_t i;
+  gpio_hal_pin_mask_t pin_mask;
 
   /* Read interrupt flags */
   pin_mask = (HWREG(GPIO_BASE + GPIO_O_EVFLAGS31_0) & GPIO_DIO_ALL_MASK);
 
+  gpio_hal_event_handler(pin_mask);
+
   /* Clear the interrupt flags */
   HWREG(GPIO_BASE + GPIO_O_EVFLAGS31_0) = pin_mask;
-
-  /* Run custom ISRs */
-  for(i = 0; i < NUM_IO_MAX; i++) {
-    /* Call the handler if there is one registered for this event */
-    if((pin_mask & (1 << i)) && handlers[i] != NULL) {
-      handlers[i](i);
-    }
-  }
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
