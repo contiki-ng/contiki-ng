@@ -39,7 +39,7 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sensortag/button-sensor.h"
-#include "gpio-interrupt.h"
+#include "gpio-hal.h"
 #include "sys/timer.h"
 #include "lpm.h"
 
@@ -73,9 +73,9 @@ static struct btn_timer left_timer, right_timer;
  * \brief Handler for Sensortag-CC26XX button presses
  */
 static void
-button_press_handler(uint8_t ioid)
+button_press_handler(gpio_hal_pin_mask_t pin_mask)
 {
-  if(ioid == BOARD_IOID_KEY_LEFT) {
+  if(pin_mask & gpio_hal_pin_to_mask(BOARD_IOID_KEY_LEFT)) {
     if(!timer_expired(&left_timer.debounce)) {
       return;
     }
@@ -95,7 +95,7 @@ button_press_handler(uint8_t ioid)
     }
   }
 
-  if(ioid == BOARD_IOID_KEY_RIGHT) {
+  if(pin_mask & gpio_hal_pin_to_mask(BOARD_IOID_KEY_RIGHT)) {
     if(BUTTON_SENSOR_ENABLE_SHUTDOWN == 0) {
       if(!timer_expired(&right_timer.debounce)) {
         return;
@@ -120,6 +120,12 @@ button_press_handler(uint8_t ioid)
   }
 }
 /*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t press_handler = {
+  .next = NULL,
+  .handler = button_press_handler,
+  .pin_mask = 0,
+};
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Configuration function for the button sensor for all buttons.
  *
@@ -135,7 +141,8 @@ config_buttons(int type, int c, uint32_t key)
     ti_lib_gpio_clear_event_dio(key);
     ti_lib_rom_ioc_pin_type_gpio_input(key);
     ti_lib_rom_ioc_port_configure_set(key, IOC_PORT_GPIO, BUTTON_GPIO_CFG);
-    gpio_interrupt_register_handler(key, button_press_handler);
+    press_handler.pin_mask |= gpio_hal_pin_to_mask(key);
+    gpio_hal_register_handler(&press_handler);
     break;
   case SENSORS_ACTIVE:
     if(c) {

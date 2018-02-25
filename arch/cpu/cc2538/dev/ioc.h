@@ -250,6 +250,22 @@ void ioc_init();
 void ioc_set_over(uint8_t port, uint8_t pin, uint8_t over);
 
 /**
+ * \brief Get Port:Pin override function
+ * \param port The port as a number (PA: 0, PB: 1 etc)
+ * \param pin The pin as a number
+ * \return The override function
+ *
+ * The return value can be one of
+ *
+ * - IOC_OVERRIDE_OE: Output
+ * - IOC_OVERRIDE_PUE: Pull-Up
+ * - IOC_OVERRIDE_PDE: Pull-Down
+ * - IOC_OVERRIDE_ANA: Analog
+ * - IOC_OVERRIDE_DIS: Disabled
+ */
+uint32_t ioc_get_over(uint8_t port, uint8_t pin);
+
+/**
  * \brief Function select for Port:Pin
  * \param port The port as a number (PA: 0, PB: 1 etc)
  * \param pin The pin as a number

@@ -735,7 +735,7 @@ rtcc_print(uint8_t value)
 }
 /*---------------------------------------------------------------------------*/
 static void
-rtcc_interrupt_handler(uint8_t port, uint8_t pin)
+rtcc_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 {
   process_poll(&rtcc_int_process);
 }
@@ -912,6 +912,12 @@ rtcc_set_calibration(uint8_t mode, int32_t adjust)
   return AB08_SUCCESS;
 }
 /*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t rtcc_handler = {
+  .next = NULL,
+  .handler = rtcc_interrupt_handler,
+  .pin_mask = gpio_hal_pin_to_mask(RTC_INT1_PIN) << (RTC_INT1_PORT << 3),
+};
+/*---------------------------------------------------------------------------*/
 int8_t
 rtcc_init(void)
 {
@@ -937,7 +943,7 @@ rtcc_init(void)
   GPIO_DETECT_EDGE(RTC_INT1_PORT_BASE, RTC_INT1_PIN_MASK);
   GPIO_TRIGGER_SINGLE_EDGE(RTC_INT1_PORT_BASE, RTC_INT1_PIN_MASK);
   GPIO_DETECT_FALLING(RTC_INT1_PORT_BASE, RTC_INT1_PIN_MASK);
-  gpio_register_callback(rtcc_interrupt_handler, RTC_INT1_PORT, RTC_INT1_PIN);
+  gpio_hal_register_handler(&rtcc_handler);
 
   /* Spin process until an interrupt is received */
   process_start(&rtcc_int_process, NULL);

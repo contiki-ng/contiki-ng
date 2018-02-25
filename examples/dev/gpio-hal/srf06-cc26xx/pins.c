@@ -29,43 +29,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC2538_DEF_H_
-#define CC2538_DEF_H_
+#include "contiki.h"
+#include "dev/gpio-hal.h"
 /*---------------------------------------------------------------------------*/
-#include "cm3/cm3-def.h"
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 32768
-/*---------------------------------------------------------------------------*/
-/* 352us from calling transmit() until the SFD byte has been sent */
-#define RADIO_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
-/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define RADIO_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT 0
-#ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
- * Enable adaptive sync to enable compensation for this.
- * Slot length 10000 usec
- *             328 ticks
- * Tick duration 30.517578125 usec
- * Real slot duration 10009.765625 usec
- * Target - real duration = -9.765625 usec
- * TSCH_CONF_BASE_DRIFT_PPM -977
- */
-#define TSCH_CONF_BASE_DRIFT_PPM -977
+#if CONTIKI_BOARD_SENSORTAG_CC1350
+#define PINS2_AND_3  BOARD_IOID_LED_1
+#else
+#define PINS2_AND_3  BOARD_IOID_LED_2
 #endif
-
-#if MAC_CONF_WITH_TSCH
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* MAC_CONF_WITH_TSCH */
+gpio_hal_pin_t out_pin1 = BOARD_IOID_LED_1;
+gpio_hal_pin_t out_pin2 = PINS2_AND_3;
+gpio_hal_pin_t out_pin3 = PINS2_AND_3;
 /*---------------------------------------------------------------------------*/
-/* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
-
-/* Path to headers with implementation of mutexes and memory barriers */
-#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
-#define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
-
-#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
-/*---------------------------------------------------------------------------*/
-#endif /* CC2538_DEF_H_ */
+gpio_hal_pin_t btn_pin = BOARD_IOID_KEY_LEFT;
 /*---------------------------------------------------------------------------*/

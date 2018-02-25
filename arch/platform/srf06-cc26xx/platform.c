@@ -49,7 +49,7 @@
 #include "contiki-net.h"
 #include "leds.h"
 #include "lpm.h"
-#include "gpio-interrupt.h"
+#include "dev/gpio-hal.h"
 #include "dev/oscillators.h"
 #include "ieee-addr.h"
 #include "vims.h"
@@ -138,7 +138,7 @@ platform_init_stage_one()
 
   board_init();
 
-  gpio_interrupt_init();
+  gpio_hal_init();
 
   leds_init();
   fade(LEDS_RED);
@@ -151,6 +151,7 @@ platform_init_stage_one()
    */
   ti_lib_pwr_ctrl_io_freeze_disable();
 
+  ti_lib_rom_int_enable(INT_AON_GPIO_EDGE);
   ti_lib_int_master_enable();
 
   soc_rtc_init();
