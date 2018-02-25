@@ -51,6 +51,7 @@
 #include "lib/sensors.h"
 #include "dev/sys-ctrl.h"
 #include "dev/gpio.h"
+#include "dev/gpio-hal.h"
 #include "dev/ioc.h"
 #include "sys/timer.h"
 #include "sys/ctimer.h"
@@ -292,8 +293,22 @@ PROCESS_THREAD(weather_meter_int_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+static void weather_meter_interrupt_handler(gpio_hal_pin_mask_t pin_mask);
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t rain_handler = {
+  .next = NULL,
+  .handler = weather_meter_interrupt_handler,
+  .pin_mask = gpio_hal_pin_to_mask(RAIN_GAUGE_SENSOR_PIN) << (RAIN_GAUGE_SENSOR_PORT << 3),
+};
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t anemometer_handler = {
+  .next = NULL,
+  .handler = weather_meter_interrupt_handler,
+  .pin_mask = gpio_hal_pin_to_mask(ANEMOMETER_SENSOR_PIN) << (ANEMOMETER_SENSOR_PORT << 3),
+};
+/*---------------------------------------------------------------------------*/
 static void
-weather_meter_interrupt_handler(uint8_t port, uint8_t pin)
+weather_meter_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 {
   uint32_t aux;
 
@@ -308,10 +323,10 @@ weather_meter_interrupt_handler(uint8_t port, uint8_t pin)
    * value
    */
 
-  if((port == ANEMOMETER_SENSOR_PORT) && (pin == ANEMOMETER_SENSOR_PIN)) {
+  if(pin_mask == rain_handler.pin_mask) {
     weather_sensors.anemometer.ticks++;
     process_post(&weather_meter_int_process, anemometer_int_event, NULL);
-  } else if((port == RAIN_GAUGE_SENSOR_PORT) && (pin == RAIN_GAUGE_SENSOR_PIN)) {
+  } else if(pin_mask == anemometer_handler.pin_mask) {
     weather_sensors.rain_gauge.ticks++;
     aux = weather_sensors.rain_gauge.ticks * WEATHER_METER_AUX_RAIN_MM;
     aux /= 1000;
@@ -427,8 +442,7 @@ configure(int type, int value)
     GPIO_TRIGGER_SINGLE_EDGE(ANEMOMETER_SENSOR_PORT_BASE,
                              ANEMOMETER_SENSOR_PIN_MASK);
     ioc_set_over(ANEMOMETER_SENSOR_PORT, ANEMOMETER_SENSOR_PIN, IOC_OVERRIDE_DIS);
-    gpio_register_callback(weather_meter_interrupt_handler, ANEMOMETER_SENSOR_PORT,
-                           ANEMOMETER_SENSOR_PIN);
+    gpio_hal_register_handler(&anemometer_handler);
 
     /* Configure rain gauge interruption */
     GPIO_SOFTWARE_CONTROL(RAIN_GAUGE_SENSOR_PORT_BASE, RAIN_GAUGE_SENSOR_PIN_MASK);
@@ -437,8 +451,7 @@ configure(int type, int value)
     GPIO_TRIGGER_SINGLE_EDGE(RAIN_GAUGE_SENSOR_PORT_BASE,
                              RAIN_GAUGE_SENSOR_PIN_MASK);
     ioc_set_over(RAIN_GAUGE_SENSOR_PORT, RAIN_GAUGE_SENSOR_PIN, IOC_OVERRIDE_DIS);
-    gpio_register_callback(weather_meter_interrupt_handler, RAIN_GAUGE_SENSOR_PORT,
-                           RAIN_GAUGE_SENSOR_PIN);
+    gpio_hal_register_handler(&rain_handler);
 
     process_start(&weather_meter_int_process, NULL);
 
