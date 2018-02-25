@@ -60,6 +60,7 @@
  * @{
  */
 #define PLATFORM_HAS_LEDS                       1
+#define LEDS_CONF_LEGACY_API                    1
 
 #define LEDS_1         (1 << (LED_1 - LED_START)) // 1
 #define LEDS_2         (1 << (LED_2 - LED_START)) // 2
