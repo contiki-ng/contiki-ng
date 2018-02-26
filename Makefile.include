@@ -54,7 +54,13 @@ endif
 
 MODULES += os os/net os/net/mac os/net/mac/framer os/net/routing os/storage
 
-oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
+define oname =
+${patsubst %.c,%.o, \
+${patsubst %.S,%.o, \
+${patsubst %.s,%.o, \
+$(1) \
+}}}
+endef
 
 CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
 PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
@@ -213,6 +219,7 @@ SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS)
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
+vpath %.s $(SOURCEDIRS)
 
 CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
 
@@ -265,6 +272,9 @@ endif
 
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
+	$(TRACE_AS)
+	$(Q)$(AS) $(ASFLAGS) -o $@ $<
+$(OBJECTDIR)/%.o: %.s | $(OBJECTDIR)
 	$(TRACE_AS)
 	$(Q)$(AS) $(ASFLAGS) -o $@ $<
 endif
