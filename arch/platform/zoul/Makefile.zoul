@@ -44,9 +44,7 @@ CLEAN += *.zoul
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += os/net os/net/mac os/net/mac/framer \
-           arch/dev/cc1200 \
-           os/storage/cfs
+MODULES += arch/dev/cc1200 os/storage/cfs
 
 BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
 
