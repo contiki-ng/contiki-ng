@@ -32,11 +32,9 @@
 #include "contiki.h"
 #include "dev/gpio-hal.h"
 /*---------------------------------------------------------------------------*/
-#define BASE_TO_PORT_NUM(base) (((base) - GPIO_A_BASE) >> 12)
-
-gpio_hal_pin_t out_pin1 = (BASE_TO_PORT_NUM(LEDS_GREEN_PORT_BASE) << 3) + LEDS_GREEN_PIN;
-gpio_hal_pin_t out_pin2 = (BASE_TO_PORT_NUM(LEDS_BLUE_PORT_BASE) << 3) + LEDS_BLUE_PIN;
-gpio_hal_pin_t out_pin3 = (BASE_TO_PORT_NUM(LEDS_RED_PORT_BASE) << 3) + LEDS_RED_PIN;
+gpio_hal_pin_t out_pin1 = (LEDS_ARCH_L1_PORT << 3) + LEDS_ARCH_L1_PIN;
+gpio_hal_pin_t out_pin2 = (LEDS_ARCH_L2_PORT << 3) + LEDS_ARCH_L2_PIN;
+gpio_hal_pin_t out_pin3 = (LEDS_ARCH_L3_PORT << 3) + LEDS_ARCH_L3_PIN;
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_t btn_pin = (BUTTON_USER_PORT << 3) + BUTTON_USER_PIN;
 /*---------------------------------------------------------------------------*/
