@@ -3,9 +3,12 @@ all: $(CONTIKI_PROJECT)
 
 CONTIKI=../../..
 
-MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
-MAKE_WITH_SECURITY ?= 0 # force Security from command line
-MAKE_WITH_PERIODIC_ROUTES_PRINT ?= 0 # print #routes periodically, used for regression tests
+ # force Orchestra from command line
+MAKE_WITH_ORCHESTRA ?= 0
+# force Security from command line
+MAKE_WITH_SECURITY ?= 0
+ # print #routes periodically, used for regression tests
+MAKE_WITH_PERIODIC_ROUTES_PRINT ?= 0
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/services/shell

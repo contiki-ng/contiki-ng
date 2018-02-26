@@ -452,16 +452,15 @@ tsch_schedule_print(void)
   if(!tsch_is_locked()) {
     struct tsch_slotframe *sf = list_head(slotframe_list);
 
-    printf("Schedule: slotframe list\n");
+    LOG_PRINT("----- start slotframe list -----\n");
 
     while(sf != NULL) {
       struct tsch_link *l = list_head(sf->links_list);
 
-      printf("[Slotframe] Handle %u, size %u\n", sf->handle, sf->size.val);
-      printf("List of links:\n");
+      LOG_PRINT("Slotframe Handle %u, size %u\n", sf->handle, sf->size.val);
 
       while(l != NULL) {
-        printf("[Link] Options %02x, type %u, timeslot %u, channel offset %u, address %u\n",
+        LOG_PRINT("* Link Options %02x, type %u, timeslot %u, channel offset %u, address %u\n",
                l->link_options, l->link_type, l->timeslot, l->channel_offset, l->addr.u8[7]);
         l = list_item_next(l);
       }
@@ -469,7 +468,7 @@ tsch_schedule_print(void)
       sf = list_item_next(sf);
     }
 
-    printf("Schedule: end of slotframe list\n");
+    LOG_PRINT("----- end slotframe list -----\n");
   }
 }
 /*---------------------------------------------------------------------------*/
