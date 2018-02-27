@@ -8,6 +8,10 @@ platform-specific/cc2538-common/mqtt-demo/zoul \
 platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
+platform-specific/zoul/rev-b/zoul:BOARD=remote-revb  \
+platform-specific/zoul/at-test/zoul \
+platform-specific/zoul/rtcc/zoul \
+platform-specific/zoul/zoul \
 coap/zoul \
 ipso-objects/zoul \
 ipso-objects/zoul:MAKE_WITH_DTLS=1 \
