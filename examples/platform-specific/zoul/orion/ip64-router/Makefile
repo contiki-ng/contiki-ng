@@ -10,5 +10,6 @@ WITH_IP64 = 1
 PROJECT_SOURCEFILES += httpd-simple.c
 
 PLATFORMS_ONLY = zoul
+BOARDS_ONLY = orion
 
 include $(CONTIKI)/Makefile.include

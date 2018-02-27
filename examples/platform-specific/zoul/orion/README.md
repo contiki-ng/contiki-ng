@@ -25,7 +25,7 @@ To compile and flash run:
 
 ````
 cd ip64-router
-make TARGET=zoul BOARD=router ip64-router.upload
+make TARGET=zoul BOARD=orion ip64-router.upload
 ````
 
 As default we enable the `DHCP` support for autoconfiguration.  Just connect to a DHCP-enabled device to obtain an IPv4 IP address and that's it!.
