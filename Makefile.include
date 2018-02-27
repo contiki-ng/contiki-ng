@@ -282,7 +282,7 @@ endef
 
 clean:
 	-rm -f *~ *core core *.srec \
-	*.lst *.map \
+	*.lst *.map *.o \
 	*.cprg *.bin *.data contiki*.a *.firmware core-labels.S *.ihex *.ini \
 	rm -rf $(CLEAN)
 	-rm -rf $(OBJECTDIR)
