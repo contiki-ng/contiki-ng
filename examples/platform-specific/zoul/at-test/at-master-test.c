@@ -52,6 +52,7 @@
 #include "dev/ioc.h"
 #include "lib/list.h"
 #include "dev/sha256.h"
+#include "net/linkaddr.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
