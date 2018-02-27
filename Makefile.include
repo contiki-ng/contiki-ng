@@ -422,7 +422,7 @@ endif
 ifeq ($(PLATFORM_ACTION),skip)
 # Skip this target.
 $(CONTIKI_PROJECT):
-	@echo "Skipping $@: not for the '$(TARGET)' platform!"
+	@echo "Skipping $@: not for the '$(TARGET)/$(BOARD)' platform!"
 else
 # Build this target.
 # Match-anything pattern rule to allow the project makefiles to
