@@ -150,7 +150,7 @@ rtc_init(void)
 
   /* Set the time and date */
   if(rtcc_set_time_date(&td) == AB08_ERROR) {
-    LOG_INFO("Failed to set time and date\n");
+    LOG_ERR("Failed to set time and date\n");
   }
 #endif
 #endif
