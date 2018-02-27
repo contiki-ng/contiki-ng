@@ -9,6 +9,8 @@ $(warning Using default SERVER_IPV6_EP=fd00::1)
 SERVER_IPV6_EP=fd00::1
 endif
 
+CFLAGS += -DSERVER_IPV6_EP=\"$(SERVER_IPV6_EP)\"
+
 CFLAGS += -DDEVICE_NAME=\"nRF52_DK_CoAP_Client\"
 
 CFLAGS += -DCOAP_OBSERVE_CLIENT=1
