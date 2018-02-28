@@ -54,7 +54,7 @@ endif
 
 MODULES += os os/net os/net/mac os/net/mac/framer os/net/routing os/storage
 
-define oname =
+define oname
 ${patsubst %.c,%.o, \
 ${patsubst %.S,%.o, \
 ${patsubst %.s,%.o, \
