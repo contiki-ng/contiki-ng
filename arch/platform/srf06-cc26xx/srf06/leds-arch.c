@@ -30,12 +30,12 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/led.h"
+#include "dev/leds.h"
 #include "dev/gpio-hal.h"
 
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-const led_t led_arch_leds[] = {
+const leds_t leds_arch_leds[] = {
   { .pin = BOARD_IOID_LED_1, .negative_logic = false },
   { .pin = BOARD_IOID_LED_2, .negative_logic = false },
   { .pin = BOARD_IOID_LED_3, .negative_logic = false },
