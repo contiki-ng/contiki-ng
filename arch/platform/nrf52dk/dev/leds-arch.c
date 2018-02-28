@@ -55,14 +55,14 @@ leds_arch_init(void)
   LEDS_OFF(LEDS_MASK);
 }
 /*---------------------------------------------------------------------------*/
-unsigned char
+leds_mask_t
 leds_arch_get(void)
 {
-  return (unsigned char)(LED_IS_ON(LEDS_MASK) >> LED_START);
+  return (leds_mask_t)(LED_IS_ON(LEDS_MASK) >> LED_START);
 }
 /*---------------------------------------------------------------------------*/
 void
-leds_arch_set(unsigned char leds)
+leds_arch_set(leds_mask_t leds)
 {
   unsigned int mask = (unsigned int)leds << LED_START;
   LEDS_OFF(LEDS_MASK);

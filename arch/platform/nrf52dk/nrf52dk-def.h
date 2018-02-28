@@ -67,10 +67,10 @@
 #define LEDS_3         (1 << (LED_3 - LED_START)) // 4
 #define LEDS_4         (1 << (LED_4 - LED_START)) // 8
 
-#define LEDS_GREEN     LEDS_1
-#define LEDS_YELLOW    LEDS_2
-#define LEDS_RED       LEDS_3
-#define LEDS_BLUE      LEDS_4
+#define LEDS_CONF_GREEN     LEDS_1
+#define LEDS_CONF_YELLOW    LEDS_2
+#define LEDS_CONF_RED       LEDS_3
+#define LEDS_CONF_BLUE      LEDS_4
 
 #define LEDS_CONF_ALL  (LEDS_1 | LEDS_2 | LEDS_3 | LEDS_4)
 
