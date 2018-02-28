@@ -131,6 +131,13 @@ typedef struct gpio_hal_event_handler_s {
 } gpio_hal_event_handler_t;
 /*---------------------------------------------------------------------------*/
 /**
+ * \brief Unknown GPIO
+ *
+ * A default GPIO value for unknown GPIO
+ */
+#define GPIO_HAL_PIN_UNKNOWN              0xFF
+/*---------------------------------------------------------------------------*/
+/**
  * \name Core GPIO functions
  *
  * Functions implemented by the HAL itself
