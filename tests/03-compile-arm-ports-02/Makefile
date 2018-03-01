@@ -44,6 +44,11 @@ dev/leds/zoul:BOARD=remote-revb \
 dev/leds/zoul:BOARD=firefly-reva \
 dev/leds/zoul:BOARD=firefly \
 dev/leds/zoul:BOARD=orion \
+dev/rgb-led/zoul:BOARD=remote-reva \
+dev/rgb-led/zoul:BOARD=remote-revb \
+dev/rgb-led/zoul:BOARD=firefly-reva \
+dev/rgb-led/zoul:BOARD=firefly \
+dev/rgb-led/zoul:BOARD=orion \
 storage/cfs-coffee/openmote-cc2538 \
 sensniff/openmote-cc2538 \
 hello-world/openmote-cc2538 \
