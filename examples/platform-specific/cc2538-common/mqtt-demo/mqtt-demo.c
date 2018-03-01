@@ -55,6 +55,7 @@
 #include "dev/cc2538-sensors.h"
 
 #include <string.h>
+#include <strings.h>
 /*---------------------------------------------------------------------------*/
 /*
  * IBM server: messaging.quickstart.internetofthings.ibmcloud.com

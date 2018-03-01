@@ -4,6 +4,7 @@
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"
 #include "net/ipv6/uipbuf.h"
+#include "net/ipv6/uip-ds6.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "App"
