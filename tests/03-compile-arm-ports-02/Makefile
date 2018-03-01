@@ -39,11 +39,17 @@ dev/gpio-hal/zoul:BOARD=remote-revb \
 dev/gpio-hal/zoul:BOARD=firefly-reva \
 dev/gpio-hal/zoul:BOARD=firefly \
 dev/gpio-hal/zoul:BOARD=orion \
+dev/leds/zoul:BOARD=remote-reva \
+dev/leds/zoul:BOARD=remote-revb \
+dev/leds/zoul:BOARD=firefly-reva \
+dev/leds/zoul:BOARD=firefly \
+dev/leds/zoul:BOARD=orion \
 storage/cfs-coffee/openmote-cc2538 \
 sensniff/openmote-cc2538 \
 hello-world/openmote-cc2538 \
 rpl-udp/openmote-cc2538 \
 dev/gpio-hal/openmote-cc2538 \
+dev/leds/openmote-cc2538 \
 rpl-border-router/openmote-cc2538
 
 TOOLS=
