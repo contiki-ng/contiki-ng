@@ -53,10 +53,10 @@
 #include "net/linkaddr.h"
 #include "net/mac/tsch/tsch-asn.h"
 #include "net/mac/tsch/tsch-conf.h"
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
 
 /************ Types ***********/
 
@@ -124,7 +124,7 @@ void tsch_disassociate(void);
 #define TSCH_CLOCK_TO_SLOTS(c, timeslot_length) (TSCH_CLOCK_TO_TICKS(c) / timeslot_length)
 
 /* Wait for a condition with timeout t0+offset. */
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
 #define BUSYWAIT_UNTIL_ABS(cond, t0, offset) \
   while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (offset))) { \
     simProcessRunValue = 1; \
@@ -133,6 +133,6 @@ void tsch_disassociate(void);
 #else
 #define BUSYWAIT_UNTIL_ABS(cond, t0, offset) \
   while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (offset))) ;
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
 #endif /* __TSCH_PRIVATE_H__ */
 /** @} */
