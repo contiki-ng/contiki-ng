@@ -173,24 +173,24 @@ spi_arch_unlock(spi_device_t *dev)
   return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-
 spi_status_t
 spi_arch_open(spi_device_t *dev)
 {
+  const spi_regs_t *regs;
   uint32_t scr;
   uint64_t div;
 
   uint32_t cs_port = PIN_TO_PORT(dev->pin_spi_cs);
-  uint32_t cs_pin =  PIN_TO_NUM(dev->pin_spi_cs);
+  uint32_t cs_pin = PIN_TO_NUM(dev->pin_spi_cs);
 
   uint32_t clk_port = PIN_TO_PORT(dev->pin_spi_sck);
-  uint32_t clk_pin =  PIN_TO_NUM(dev->pin_spi_sck);
+  uint32_t clk_pin = PIN_TO_NUM(dev->pin_spi_sck);
 
   uint32_t miso_port = PIN_TO_PORT(dev->pin_spi_miso);
-  uint32_t miso_pin =  PIN_TO_NUM(dev->pin_spi_miso);
+  uint32_t miso_pin = PIN_TO_NUM(dev->pin_spi_miso);
 
   uint32_t mosi_port = PIN_TO_PORT(dev->pin_spi_mosi);
-  uint32_t mosi_pin =  PIN_TO_NUM(dev->pin_spi_mosi);
+  uint32_t mosi_pin = PIN_TO_NUM(dev->pin_spi_mosi);
 
   uint32_t mode = 0;
 
@@ -199,12 +199,12 @@ spi_arch_open(spi_device_t *dev)
   }
 
   /* Set SPI phase */
-  if(dev->spi_pha != 0){
+  if(dev->spi_pha != 0) {
     mode = mode | SSI_CR0_SPH;
   }
 
   /* Set SPI polarity */
-  if(dev->spi_pol !=0){
+  if(dev->spi_pol != 0) {
     mode = mode | SSI_CR0_SPO;
   }
 
@@ -214,8 +214,6 @@ spi_arch_open(spi_device_t *dev)
   ioc_set_over(cs_port, cs_pin, IOC_OVERRIDE_DIS);
   GPIO_SET_OUTPUT(GPIO_PORT_TO_BASE(cs_port), GPIO_PIN_MASK(cs_pin));
   GPIO_SET_PIN(GPIO_PORT_TO_BASE(cs_port), GPIO_PIN_MASK(cs_pin));
-
-  const spi_regs_t *regs;
 
   regs = &spi_regs[dev->spi_controller];
 
@@ -261,14 +259,13 @@ spi_arch_open(spi_device_t *dev)
     scr = MIN(MAX(scr, 1), 256) - 1;
   }
   REG(regs->base + SSI_CR0) = (REG(regs->base + SSI_CR0) & ~SSI_CR0_SCR_M) |
-                              scr << SSI_CR0_SCR_S;
+    scr << SSI_CR0_SCR_S;
 
   /* Enable the SSI */
   REG(regs->base + SSI_CR1) |= SSI_CR1_SSE;
 
   return SPI_DEV_STATUS_OK;
 }
-
 /*---------------------------------------------------------------------------*/
 spi_status_t
 spi_arch_close(spi_device_t *dev)
@@ -304,13 +301,11 @@ spi_arch_deselect(spi_device_t *dev)
   return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------*/
 /* Assumes that checking dev and bus is not NULL before calling this */
 spi_status_t
 spi_arch_transfer(spi_device_t *dev,
-                      const uint8_t *write_buf, int wlen,
-                      uint8_t *inbuf, int rlen, int ignore_len)
+                  const uint8_t *write_buf, int wlen,
+                  uint8_t *inbuf, int rlen, int ignore_len)
 {
   int i;
   int totlen;
@@ -337,7 +332,7 @@ spi_arch_transfer(spi_device_t *dev,
   }
 
   LOG_DBG("%c%c%c: %u ", rlen > 0 ? 'R' : '-', wlen > 0 ? 'W' : '-',
-         ignore_len > 0 ? 'S' : '-', totlen);
+          ignore_len > 0 ? 'S' : '-', totlen);
 
   for(i = 0; i < totlen; i++) {
     spix_wait_tx_ready(dev);
