@@ -109,7 +109,7 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#define EXT_FLASH_SPI_CONTROLLER    BOARD_SPI_CONTROLLER_SPI0
+#define EXT_FLASH_SPI_CONTROLLER    SPI_CONTROLLER_SPI0
 
 #define BOARD_IOID_FLASH_SCK        IOID_10
 #define BOARD_IOID_FLASH_MOSI       IOID_9

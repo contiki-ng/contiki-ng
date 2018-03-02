@@ -57,9 +57,20 @@
 /* Include Arch-Specific conf */
 #ifdef SPI_HAL_CONF_ARCH_HDR_PATH
 #include SPI_HAL_CONF_ARCH_HDR_PATH
-#else /* PLATFORM_IMPLEMENTS_SPI_HAL */
-#define BOARD_SPI_CONTROLLERS 0
 #endif /* SPI_HAL_CONF_ARCH_HDR_PATH */
+/*---------------------------------------------------------------------------*/
+#ifdef SPI_CONF_CONTROLLER_COUNT
+/**
+ * \brief Number of SPI module instances on a chip
+ */
+#define SPI_CONTROLLER_COUNT SPI_CONF_CONTROLLER_COUNT
+#else
+#define SPI_CONTROLLER_COUNT 0
+#endif
+/*---------------------------------------------------------------------------*/
+/* Convenience macros to enumerate SPI module instances on a chip */
+#define SPI_CONTROLLER_SPI0 0
+#define SPI_CONTROLLER_SPI1 1
 /*---------------------------------------------------------------------------*/
 /**
  * \brief SPI return codes
