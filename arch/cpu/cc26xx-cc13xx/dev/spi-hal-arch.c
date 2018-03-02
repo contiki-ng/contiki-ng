@@ -42,10 +42,10 @@ typedef struct spi_locks_s {
 } spi_locks_t;
 
 /* One lock per SPI controller */
-spi_locks_t board_spi_locks_spi[BOARD_SPI_CONTROLLERS] = { { MUTEX_STATUS_UNLOCKED, NULL } };
+spi_locks_t board_spi_locks_spi[SPI_CONTROLLER_COUNT] = { { MUTEX_STATUS_UNLOCKED, NULL } };
 
 /* Arch-specific properties of each SPI controller */
-static const board_spi_controller_t spi_controller[BOARD_SPI_CONTROLLERS] = {
+static const board_spi_controller_t spi_controller[SPI_CONTROLLER_COUNT] = {
   {
     .ssi_base = SSI0_BASE,
     .power_domain = PRCM_DOMAIN_SERIAL,

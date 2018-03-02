@@ -92,7 +92,7 @@ typedef struct spi_locks_s {
 } spi_locks_t;
 
 /* One lock per SPI controller */
-spi_locks_t board_spi_locks_spi[BOARD_SPI_CONTROLLERS] = { { MUTEX_STATUS_UNLOCKED, NULL } };
+spi_locks_t board_spi_locks_spi[SPI_CONTROLLER_COUNT] = { { MUTEX_STATUS_UNLOCKED, NULL } };
 
 /*---------------------------------------------------------------------------*/
 static void

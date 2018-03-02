@@ -48,7 +48,7 @@ spi_acquire(spi_device_t *dev)
 {
   spi_status_t r;
 
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -67,7 +67,7 @@ spi_release(spi_device_t *dev)
 {
   spi_status_t r;
 
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -96,7 +96,7 @@ spi_deselect(spi_device_t *dev)
 bool
 spi_has_bus(spi_device_t *dev)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return false;
   }
 
@@ -106,7 +106,7 @@ spi_has_bus(spi_device_t *dev)
 spi_status_t
 spi_write_byte(spi_device_t *dev, uint8_t data)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -120,7 +120,7 @@ spi_write_byte(spi_device_t *dev, uint8_t data)
 spi_status_t
 spi_write(spi_device_t *dev, const uint8_t *data, int size)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -134,7 +134,7 @@ spi_write(spi_device_t *dev, const uint8_t *data, int size)
 spi_status_t
 spi_read_byte(spi_device_t *dev, uint8_t *buf)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -148,7 +148,7 @@ spi_read_byte(spi_device_t *dev, uint8_t *buf)
 spi_status_t
 spi_read(spi_device_t *dev, uint8_t *buf, int size)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -162,7 +162,7 @@ spi_read(spi_device_t *dev, uint8_t *buf, int size)
 spi_status_t
 spi_read_skip(spi_device_t *dev, int size)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -178,7 +178,7 @@ spi_transfer(spi_device_t *dev,
              const uint8_t *wdata, int wsize,
              uint8_t *rbuf, int rsize, int ignore)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -201,7 +201,7 @@ spi_status_t
 spi_read_register(spi_device_t *dev, uint8_t reg, uint8_t *data, int size)
 {
   spi_status_t status;
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
@@ -223,7 +223,7 @@ spi_read_register(spi_device_t *dev, uint8_t reg, uint8_t *data, int size)
 spi_status_t
 spi_strobe(spi_device_t *dev, uint8_t strobe, uint8_t *result)
 {
-  if(dev == NULL || dev->spi_controller >= BOARD_SPI_CONTROLLERS) {
+  if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
