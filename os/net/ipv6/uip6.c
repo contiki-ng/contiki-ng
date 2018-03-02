@@ -1256,9 +1256,9 @@ uip_process(uint8_t flag)
   uip_ext_bitmap = 0;
 #endif /* UIP_CONF_ROUTER */
 
-#if UIP_IPV6_MULTICAST
+#if UIP_IPV6_MULTICAST && UIP_CONF_ROUTER
   process:
-#endif
+#endif /* UIP_IPV6_MULTICAST && UIP_CONF_ROUTER */
 
   while(1) {
     switch(*uip_next_hdr){
