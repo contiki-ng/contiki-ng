@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = client ifttt_client
+CONTIKI_PROJECT = client ifttt-client
 all: $(CONTIKI_PROJECT)
 
 BOARD = orion
