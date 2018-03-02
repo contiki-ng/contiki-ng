@@ -28,7 +28,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+/*---------------------------------------------------------------------------*/
+/**
+ * \addtogroup spi-hal
+ * @{
+ *
+ * \file
+ *     Implementation of the platform-independent aspects of the SPI HAL
+ */
+/*---------------------------------------------------------------------------*/
 #include "spi-hal.h"
 
 /*---------------------------------------------------------------------------*/
@@ -223,3 +231,6 @@ spi_strobe(spi_device_t *dev, uint8_t strobe, uint8_t *result)
   return spi_arch_transfer(dev, &strobe, 1, result, 1, 0);
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

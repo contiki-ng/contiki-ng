@@ -73,6 +73,7 @@ typedef enum {
   SPI_DEV_STATUS_BUS_NOT_OWNED,   /* SPI bus is locked by someone else */
   SPI_DEV_STATUS_CLOSED           /* SPI bus has not opened properly */
 } spi_status_t;
+/** @} */
 /*---------------------------------------------------------------------------*/
 /**
  * \brief SPI Device Configuration
@@ -92,7 +93,7 @@ typedef struct spi_device {
   uint8_t spi_pol;                  /* SPI mode polarity */
   uint8_t spi_controller;           /* ID of SPI controller to use */
 } spi_device_t;
-
+/** @} */
 /*---------------------------------------------------------------------------*/
 /* These are architecture-independent functions to be used by SPI devices.   */
 /*---------------------------------------------------------------------------*/
@@ -201,11 +202,11 @@ spi_status_t spi_read_skip(spi_device_t *dev, int size);
  * \param dev An SPI device configuration.
  * \param data A pointer to the data to be written. Set it to NULL to
  * skip writing.
- * \param wlen Size of data to write.
+ * \param wsize Size of data to write.
  * \param buf A pointer to buffer to copy the data read. Set to NULL
  * to skip reading.
- * \param rlen Size of data to read.
- * \param ignore_len Size of data to read and ignore.
+ * \param rsize Size of data to read.
+ * \param ignore Size of data to read and ignore.
  * \return SPI return code
  *
  * It should work only if the device has already locked the SPI controller.
@@ -347,3 +348,8 @@ spi_status_t spi_arch_select(spi_device_t *dev);
 spi_status_t spi_arch_deselect(spi_device_t *dev);
 
 #endif /* SPI_HAL_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */
