@@ -10,9 +10,6 @@ IPADDR=fd00::302:304:506:708
 declare -i OKCOUNT=0
 declare -i TESTCOUNT=0
 
-echo "Enabling IPv6"
-sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
-
 # Starting Contiki-NG native node
 echo "Starting native CoAP server"
 make -C $CONTIKI/examples/coap > make.log 2> make.err

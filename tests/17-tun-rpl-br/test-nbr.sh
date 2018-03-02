@@ -18,9 +18,6 @@ java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -c
 JPID=$!
 sleep 20
 
-echo "Enabling IPv6"
-sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
-
 # Connect to the simlation
 echo "Starting native border-router"
 nohup make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=native >> $BASENAME.nbr.log 2>&1 &
