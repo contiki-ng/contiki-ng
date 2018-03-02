@@ -32,9 +32,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
+/*---------------------------------------------------------------------------*/
 #ifndef SPI_ARCH_H_
 #define SPI_ARCH_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
 #define BOARD_SPI_CONTROLLERS               2
 /*---------------------------------------------------------------------------*/
@@ -42,14 +44,14 @@
 #define BOARD_SPI_CONTROLLER_SPI1           1
 /*---------------------------------------------------------------------------*/
 /* Default values for the clock rate divider */
-#ifdef SPI0_CONF_CPRS_CPSDVSR 
-#define SPI0_CPRS_CPSDVSR               SPI0_CONF_CPRS_CPSDVSR 
+#ifdef SPI0_CONF_CPRS_CPSDVSR
+#define SPI0_CPRS_CPSDVSR               SPI0_CONF_CPRS_CPSDVSR
 #else
 #define SPI0_CPRS_CPSDVSR               2
 #endif
 
-#ifdef SPI1_CONF_CPRS_CPSDVSR 
-#define SPI1_CPRS_CPSDVSR               SPI1_CONF_CPRS_CPSDVSR 
+#ifdef SPI1_CONF_CPRS_CPSDVSR
+#define SPI1_CPRS_CPSDVSR               SPI1_CONF_CPRS_CPSDVSR
 #else
 #define SPI1_CPRS_CPSDVSR               2
 #endif

@@ -37,8 +37,11 @@
  *     Implementation of the platform-independent aspects of the SPI HAL
  */
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
 #include "spi-hal.h"
 
+#include <stdint.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 spi_status_t
 spi_acquire(spi_device_t *dev)
