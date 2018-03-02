@@ -33,7 +33,6 @@
 #include "contiki.h"
 #include "reg.h"
 #include "spi-hal.h"
-#include "spi-hal-arch.h"
 #include "gpio-hal-arch.h"
 #include "sys/cc.h"
 #include "ioc.h"
@@ -48,13 +47,34 @@
 #define LOG_MODULE "spi-hal-arch"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
-#if (SPI0_CPRS_CPSDVSR & 1) == 1 || SPI0_CPRS_CPSDVSR < 2 || SPI0_CPRS_CPSDVSR > 254
-#error SPI0_CPRS_CPSDVSR must be an even number between 2 and 254
+/* Default values for the clock rate divider */
+#ifdef SPI_ARCH_CONF_SPI0_CPRS_CPSDVSR
+#define SPI_ARCH_SPI0_CPRS_CPSDVSR      SPI_ARCH_CONF_SPI0_CPRS_CPSDVSR
+#else
+#define SPI_ARCH_SPI0_CPRS_CPSDVSR      2
 #endif
 
-#if (SPI1_CPRS_CPSDVSR & 1) == 1 || SPI1_CPRS_CPSDVSR < 2 || SPI1_CPRS_CPSDVSR > 254
-#error SPI1_CPRS_CPSDVSR must be an even number between 2 and 254
+#ifdef SPI_ARCH_CONF_SPI1_CPRS_CPSDVSR
+#define SPI_ARCH_SPI1_CPRS_CPSDVSR      SPI_ARCH_CONF_SPI1_CPRS_CPSDVSR
+#else
+#define SPI_ARCH_SPI1_CPRS_CPSDVSR      2
 #endif
+
+#if (SPI_ARCH_SPI0_CPRS_CPSDVSR & 1) == 1 || \
+     SPI_ARCH_SPI0_CPRS_CPSDVSR < 2 || \
+     SPI_ARCH_SPI0_CPRS_CPSDVSR > 254
+#error SPI_ARCH_SPI0_CPRS_CPSDVSR must be an even number between 2 and 254
+#endif
+
+#if (SPI_ARCH_SPI1_CPRS_CPSDVSR & 1) == 1 || \
+     SPI_ARCH_SPI1_CPRS_CPSDVSR < 2 || \
+     SPI_ARCH_SPI1_CPRS_CPSDVSR > 254
+#error SPI_ARCH_SPI1_CPRS_CPSDVSR must be an even number between 2 and 254
+#endif
+/*---------------------------------------------------------------------------*/
+/* CS set and clear macros */
+#define SPIX_CS_CLR(port, pin) GPIO_CLR_PIN(GPIO_PORT_TO_BASE(port), GPIO_PIN_MASK(pin))
+#define SPIX_CS_SET(port, pin) GPIO_SET_PIN(GPIO_PORT_TO_BASE(port), GPIO_PIN_MASK(pin))
 /*---------------------------------------------------------------------------*/
 /*
  * Clock source from which the baud clock is determined for the SSI, according
@@ -76,13 +96,13 @@ static const spi_regs_t spi_regs[SSI_INSTANCE_COUNT] = {
     .ioc_ssirxd_ssi = IOC_SSIRXD_SSI0,
     .ioc_pxx_sel_ssi_clkout = IOC_PXX_SEL_SSI0_CLKOUT,
     .ioc_pxx_sel_ssi_txd = IOC_PXX_SEL_SSI0_TXD,
-    .ssi_cprs_cpsdvsr = SPI0_CPRS_CPSDVSR,
+    .ssi_cprs_cpsdvsr = SPI_ARCH_SPI0_CPRS_CPSDVSR,
   }, {
     .base = SSI1_BASE,
     .ioc_ssirxd_ssi = IOC_SSIRXD_SSI1,
     .ioc_pxx_sel_ssi_clkout = IOC_PXX_SEL_SSI1_CLKOUT,
     .ioc_pxx_sel_ssi_txd = IOC_PXX_SEL_SSI1_TXD,
-    .ssi_cprs_cpsdvsr = SPI1_CPRS_CPSDVSR,
+    .ssi_cprs_cpsdvsr = SPI_ARCH_SPI1_CPRS_CPSDVSR,
   }
 };
 
