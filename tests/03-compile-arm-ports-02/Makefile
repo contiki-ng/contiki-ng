@@ -14,6 +14,7 @@ platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/rtcc/zoul \
 platform-specific/zoul/zoul \
 coap/zoul \
+multicast/zoul \
 ipso-objects/zoul \
 ipso-objects/zoul:MAKE_WITH_DTLS=1 \
 hello-world/zoul \
