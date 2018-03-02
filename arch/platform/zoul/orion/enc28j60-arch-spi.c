@@ -44,7 +44,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "dev/spi-arch-legacy.h"
-#include "spi.h"
+#include "dev/spi-legacy.h"
 #include "dev/gpio.h"
 /*---------------------------------------------------------------------------*/
 #define RESET_PORT  GPIO_PORT_TO_BASE(ETH_RESET_PORT)

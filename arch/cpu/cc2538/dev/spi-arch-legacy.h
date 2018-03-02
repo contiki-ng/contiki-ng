@@ -138,7 +138,7 @@
 #define SPI_WAITFOREOTx()               SPIX_WAITFOREOTx(SPI_DEFAULT_INSTANCE)
 #define SPI_WAITFOREORx()               SPIX_WAITFOREORx(SPI_DEFAULT_INSTANCE)
 #ifdef SPI_FLUSH
-#error You must include spi-arch-legacy.h before spi.h for the CC2538
+#error You must include spi-arch-legacy.h before spi-legacy.h for the CC2538
 #else
 #define SPI_FLUSH()                     SPIX_FLUSH(SPI_DEFAULT_INSTANCE)
 #endif

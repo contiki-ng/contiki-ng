@@ -43,7 +43,7 @@
 #include "sys/cc.h"
 #include "dev/ioc.h"
 #include "dev/sys-ctrl.h"
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "dev/ssi.h"
 #include "dev/gpio.h"
 /*---------------------------------------------------------------------------*/

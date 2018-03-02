@@ -37,7 +37,6 @@
 #include "sys/cc.h"
 #include "ioc.h"
 #include "sys-ctrl.h"
-#include "spi.h"
 #include "ssi.h"
 #include "gpio.h"
 #include "sys/log.h"

@@ -36,8 +36,8 @@
  *         Niclas Finne <nfi@sics.se>
  */
 
-#ifndef SPI_H_
-#define SPI_H_
+#ifndef SPI_LEGACY_H_
+#define SPI_LEGACY_H_
 
 /* Define macros to use for checking SPI transmission status depending
    on if it is possible to wait for TX buffer ready. This is possible
@@ -89,4 +89,4 @@ void spi_init(void);
   } while(0)
 #endif
 
-#endif /* SPI_H_ */
+#endif /* SPI_LEGACY_H_ */

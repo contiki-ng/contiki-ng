@@ -49,7 +49,7 @@
 #include "dev/spi-arch-legacy.h"
 #include "dev/ioc.h"
 #include "dev/sys-ctrl.h"
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "dev/ssi.h"
 #include "dev/gpio.h"
 #include "dev/gpio-hal.h"
