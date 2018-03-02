@@ -30,10 +30,12 @@
 
 #include <contiki.h>
 #include <lib/assert.h>
-#include <sys/node-id.h>
 #include <net/mac/tsch/tsch.h>
 #include <net/mac/tsch/tsch-queue.h>
 #include <net/mac/tsch/sixtop/sixtop.h>
+
+/* Hard-coded MAC address of the TSCH coordinator */
+static linkaddr_t coordinator_addr =  {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
 
 extern const sixtop_sf_t test_sf;
 extern int test_sf_start(const linkaddr_t *addr);
@@ -49,7 +51,7 @@ PROCESS_THREAD(sixp_node_process, ev, data)
 
   sixtop_add_sf(&test_sf);
 
-  if(node_id == COORDINATOR_NODE_ID) {
+  if(linkaddr_cmp(&coordinator_addr, &linkaddr_node_addr)) {
     tsch_set_coordinator(1);
     assert(test_sf_start(NULL) == 0);
   } else {

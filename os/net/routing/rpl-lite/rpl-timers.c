@@ -514,9 +514,9 @@ handle_periodic_timer(void *ptr)
   the meaning of last_advertised_rank changes with time */
   rpl_dag_update_state();
 
-#if LOG_INFO_ENABLED
-  rpl_neighbor_print_list("Periodic");
-#endif /* LOG_INFO_ENABLED */
+  if(LOG_INFO_ENABLED) {
+    rpl_neighbor_print_list("Periodic");
+  }
 
   ctimer_reset(&periodic_timer);
 }

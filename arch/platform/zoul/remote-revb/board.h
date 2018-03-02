@@ -106,15 +106,18 @@
  */
 /*---------------------------------------------------------------------------*/
 #define LEDS_RED              1           /**< LED1 (Red)   -> PD4 */
-#define LEDS_RED_PIN_MASK     (1 << 4)
+#define LEDS_RED_PIN          4
+#define LEDS_RED_PIN_MASK     (1 << LEDS_RED_PIN)
 #define LEDS_RED_PORT_BASE    GPIO_D_BASE
 
 #define LEDS_GREEN            2           /**< LED2 (Green) -> PB7 */
-#define LEDS_GREEN_PIN_MASK   (1 << 7)
+#define LEDS_GREEN_PIN        7
+#define LEDS_GREEN_PIN_MASK   (1 << LEDS_GREEN_PIN)
 #define LEDS_GREEN_PORT_BASE  GPIO_B_BASE
 
 #define LEDS_BLUE             4           /**< LED3 (Blue)  -> PB6 */
-#define LEDS_BLUE_PIN_MASK    (1 << 6)
+#define LEDS_BLUE_PIN         6
+#define LEDS_BLUE_PIN_MASK    (1 << LEDS_BLUE_PIN)
 #define LEDS_BLUE_PORT_BASE   GPIO_B_BASE
 
 #define LEDS_CONF_ALL         (LEDS_GREEN | LEDS_BLUE | LEDS_RED) /* 7 */

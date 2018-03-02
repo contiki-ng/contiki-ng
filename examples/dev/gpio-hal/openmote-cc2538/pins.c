@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,44 +29,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc26xx
- * @{
- *
- * \defgroup cc26xx-gpio-interrupts CC13xx/CC26xx GPIO interrupt handling
- *
- * The CC13xx/CC26xx GPIO interrupt handler and an API which can be used by
- * other parts of the code when they wish to be notified of a GPIO interrupt
- *
- * @{
- *
- * \file
- * Header file for the CC13xx/CC26xx GPIO interrupt management
+#include "contiki.h"
+#include "dev/gpio-hal.h"
+/*---------------------------------------------------------------------------*/
+/*
+ * LEDs on the OpenMote-CC2538 are connected as follows:
+ * - LED1 (Red)    -> PC4 (gpio_hal_pin_t 20)
+ * - LED2 (Yellow) -> PC6 (gpio_hal_pin_t 22)
+ * - LED3 (Green)  -> PC7 (gpio_hal_pin_t 23)
+ * - LED4 (Orange) -> PC5
  */
+gpio_hal_pin_t out_pin1 = 20;
+gpio_hal_pin_t out_pin2 = 22;
+gpio_hal_pin_t out_pin3 = 23;
 /*---------------------------------------------------------------------------*/
-#ifndef GPIO_INTERRUPT_H_
-#define GPIO_INTERRUPT_H_
+/* Button pin: PC3 */
+gpio_hal_pin_t btn_pin = 19;
 /*---------------------------------------------------------------------------*/
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-typedef void (*gpio_interrupt_handler_t)(uint8_t ioid);
-/*---------------------------------------------------------------------------*/
-/** \brief Initialise the GPIO interrupt handling module */
-void gpio_interrupt_init(void);
-
-/**
- * \brief Register a GPIO interrupt handler
- * \param f Pointer to a handler to be called when an interrupt is raised on
- * ioid
- * \param ioid Associate \a f with this ioid. \e ioid must be specified with
- *        its numeric representation (0, 1, .. 31). Defines for these
- *        numeric representations are IOID_x
- */
-void gpio_interrupt_register_handler(uint8_t ioid, gpio_interrupt_handler_t f);
-
-#endif /* GPIO_INTERRUPT_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

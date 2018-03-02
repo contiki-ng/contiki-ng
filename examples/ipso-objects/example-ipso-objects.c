@@ -37,6 +37,7 @@
  */
 
 #include "contiki.h"
+#include "dev/leds.h"
 #include "services/lwm2m/lwm2m-engine.h"
 #include "services/lwm2m/lwm2m-rd-client.h"
 #include "services/lwm2m/lwm2m-device.h"

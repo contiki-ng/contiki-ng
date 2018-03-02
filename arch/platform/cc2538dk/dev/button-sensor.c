@@ -88,15 +88,8 @@ config(uint32_t port_base, uint32_t pin_mask)
   GPIO_ENABLE_INTERRUPT(port_base, pin_mask);
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Callback registered with the GPIO module. Gets fired with a button
- * port/pin generates an interrupt
- * \param port The port number that generated the interrupt
- * \param pin The pin number that generated the interrupt. This is the pin
- * absolute number (i.e. 0, 1, ..., 7), not a mask
- */
 static void
-btn_callback(uint8_t port, uint8_t pin)
+button_press_handler(gpio_hal_pin_mask_t pin_mask)
 {
   if(!timer_expired(&debouncetimer)) {
     return;
@@ -104,17 +97,37 @@ btn_callback(uint8_t port, uint8_t pin)
 
   timer_set(&debouncetimer, CLOCK_SECOND / 8);
 
-  if((port == BUTTON_SELECT_PORT) && (pin == BUTTON_SELECT_PIN)) {
+  if(pin_mask &
+     (gpio_hal_pin_to_mask(BUTTON_SELECT_PIN) << (BUTTON_SELECT_PORT << 3))) {
     sensors_changed(&button_select_sensor);
-  } else if((port == BUTTON_LEFT_PORT) && (pin == BUTTON_LEFT_PIN)) {
+  } else if(pin_mask &
+      (gpio_hal_pin_to_mask(BUTTON_LEFT_PIN) << (BUTTON_LEFT_PORT << 3))) {
     sensors_changed(&button_left_sensor);
-  } else if((port == BUTTON_RIGHT_PORT) && (pin == BUTTON_RIGHT_PIN)) {
+  } else if(pin_mask &
+      (gpio_hal_pin_to_mask(BUTTON_RIGHT_PIN) << (BUTTON_RIGHT_PORT << 3))) {
     sensors_changed(&button_right_sensor);
-  } else if((port == BUTTON_UP_PORT) && (pin == BUTTON_UP_PIN)) {
+  } else if(pin_mask &
+      (gpio_hal_pin_to_mask(BUTTON_UP_PIN) << (BUTTON_UP_PORT << 3))) {
     sensors_changed(&button_up_sensor);
-  } else if((port == BUTTON_DOWN_PORT) && (pin == BUTTON_DOWN_PIN)) {
+  } else if(pin_mask &
+      (gpio_hal_pin_to_mask(BUTTON_DOWN_PIN) << (BUTTON_DOWN_PORT << 3))) {
     sensors_changed(&button_down_sensor);
   }
+}
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t press_handler = {
+  .next = NULL,
+  .handler = button_press_handler,
+  .pin_mask = 0,
+};
+/*---------------------------------------------------------------------------*/
+static void
+register_btn_callback(uint8_t port_num, uint8_t pin)
+{
+  press_handler.pin_mask |=
+    gpio_hal_pin_to_mask(pin) << (port_num << 3);
+
+  gpio_hal_register_handler(&press_handler);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -137,7 +150,7 @@ config_select(int type, int value)
 
   NVIC_EnableIRQ(BUTTON_SELECT_VECTOR);
 
-  gpio_register_callback(btn_callback, BUTTON_SELECT_PORT, BUTTON_SELECT_PIN);
+  register_btn_callback(BUTTON_SELECT_PORT, BUTTON_SELECT_PIN);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -161,7 +174,7 @@ config_left(int type, int value)
 
   NVIC_EnableIRQ(BUTTON_LEFT_VECTOR);
 
-  gpio_register_callback(btn_callback, BUTTON_LEFT_PORT, BUTTON_LEFT_PIN);
+  register_btn_callback(BUTTON_LEFT_PORT, BUTTON_LEFT_PIN);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -185,7 +198,7 @@ config_right(int type, int value)
 
   NVIC_EnableIRQ(BUTTON_RIGHT_VECTOR);
 
-  gpio_register_callback(btn_callback, BUTTON_RIGHT_PORT, BUTTON_RIGHT_PIN);
+  register_btn_callback(BUTTON_RIGHT_PORT, BUTTON_RIGHT_PIN);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -209,7 +222,7 @@ config_up(int type, int value)
 
   NVIC_EnableIRQ(BUTTON_UP_VECTOR);
 
-  gpio_register_callback(btn_callback, BUTTON_UP_PORT, BUTTON_UP_PIN);
+  register_btn_callback(BUTTON_UP_PORT, BUTTON_UP_PIN);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -233,7 +246,7 @@ config_down(int type, int value)
 
   NVIC_EnableIRQ(BUTTON_DOWN_VECTOR);
 
-  gpio_register_callback(btn_callback, BUTTON_DOWN_PORT, BUTTON_DOWN_PIN);
+  register_btn_callback(BUTTON_DOWN_PORT, BUTTON_DOWN_PIN);
   return 1;
 }
 /*---------------------------------------------------------------------------*/

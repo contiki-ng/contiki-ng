@@ -43,6 +43,7 @@
 #include "dev/nvic.h"
 #include "dev/ioc.h"
 #include "dev/gpio.h"
+#include "dev/gpio-hal.h"
 #include "dev/button-sensor.h"
 #include "sys/timer.h"
 #include "sys/ctimer.h"
@@ -94,15 +95,8 @@ value(int type)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Callback registered with the GPIO module. Gets fired with a button
- * port/pin generates an interrupt
- * \param port The port number that generated the interrupt
- * \param pin The pin number that generated the interrupt. This is the pin
- * absolute number (i.e. 0, 1, ..., 7), not a mask
- */
 static void
-btn_callback(uint8_t port, uint8_t pin)
+button_press_handler(gpio_hal_pin_mask_t pin_mask)
 {
   if(!timer_expired(&debouncetimer)) {
     return;
@@ -122,6 +116,12 @@ btn_callback(uint8_t port, uint8_t pin)
 
   sensors_changed(&button_sensor);
 }
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t press_handler = {
+  .next = NULL,
+  .handler = button_press_handler,
+  .pin_mask = gpio_hal_pin_to_mask(BUTTON_USER_PIN) << (BUTTON_USER_PORT << 3),
+};
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Init function for the User button.
@@ -152,7 +152,7 @@ config_user(int type, int value)
 
     ioc_set_over(BUTTON_USER_PORT, BUTTON_USER_PIN, IOC_OVERRIDE_PUE);
 
-    gpio_register_callback(btn_callback, BUTTON_USER_PORT, BUTTON_USER_PIN);
+    gpio_hal_register_handler(&press_handler);
     break;
   case SENSORS_ACTIVE:
     if(value) {

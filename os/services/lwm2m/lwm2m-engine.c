@@ -767,7 +767,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
                 /* Now we need to initialize the object writing for this new object */
                 len = ctx->writer->init_write(ctx);
                 ctx->outbuf->len += len;
-                LOG_DBG("INIT WRITE len:%d size:%d\n", len, (int) ctx->outbuf->size);
+                LOG_DBG("INIT WRITE len:%d size:%"PRIu16"\n", len, ctx->outbuf->size);
                 initialized = 1;
               }
 
@@ -1516,10 +1516,10 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     /* for debugging */
     LOG_DBG("[");
     LOG_DBG_COAP_STRING(url, url_len);
-    LOG_DBG_("] %s Format:%d ID:%d bsize:%u offset:%d\n",
+    LOG_DBG_("] %s Format:%d ID:%d bsize:%u offset:%"PRId32"\n",
              get_method_as_string(coap_get_method_type(request)),
              format, context.object_id, buffer_size,
-             offset != NULL ? ((int)*offset) : 0);
+             offset != NULL ? *offset : 0);
     if(format == TEXT_PLAIN) {
       /* a string */
       const uint8_t *data;
@@ -1573,8 +1573,8 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   if(success == LWM2M_STATUS_OK) {
     /* Handle blockwise 1 */
     if(coap_is_option(request, COAP_OPTION_BLOCK1)) {
-      LOG_DBG("Setting BLOCK 1 num:%d o2:%d o:%d\n", (int) bnum, (int) boffset,
-              (int) (offset != NULL ? *offset : 0));
+      LOG_DBG("Setting BLOCK 1 num:%"PRIu32" o2:%"PRIu32" o:%"PRId32"\n", bnum, boffset,
+              (offset != NULL ? *offset : 0));
       coap_set_header_block1(response, bnum, 0, bsize);
     }
 

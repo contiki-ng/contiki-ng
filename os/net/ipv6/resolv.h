@@ -55,7 +55,7 @@
 /**
  * Event that is broadcasted when a DNS name has been resolved.
  */
-CCIF extern process_event_t resolv_event_found;
+extern process_event_t resolv_event_found;
 
 enum {
   /** Hostname is fresh and usable. This response is cached and will eventually
@@ -91,14 +91,14 @@ enum {
 typedef uint8_t resolv_status_t;
 
 /* Functions. */
-CCIF resolv_status_t resolv_lookup(const char *name, uip_ipaddr_t ** ipaddr);
+resolv_status_t resolv_lookup(const char *name, uip_ipaddr_t ** ipaddr);
 
-CCIF void resolv_query(const char *name);
+void resolv_query(const char *name);
 
 #if RESOLV_CONF_SUPPORTS_MDNS
-CCIF void resolv_set_hostname(const char *hostname);
+void resolv_set_hostname(const char *hostname);
 
-CCIF const char *resolv_get_hostname(void);
+const char *resolv_get_hostname(void);
 #endif
 
 PROCESS_NAME(resolv_process);
