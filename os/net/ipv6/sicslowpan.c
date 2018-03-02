@@ -671,8 +671,8 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   int ext_hdr_len;
   struct uip_udp_hdr *udp_buf;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("before compression (%d): ", UIP_IP_BUF->len[1]);
     for(ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
       uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
@@ -680,7 +680,6 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
     }
     LOG_DBG("\n");
   }
-#endif /* LOG_DBG_ENABLED */
 
   hc06_ptr = PACKETBUF_IPHC_BUF + 2;
   /*
@@ -996,16 +995,15 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   PACKETBUF_IPHC_BUF[0] = iphc0;
   PACKETBUF_IPHC_BUF[1] = iphc1;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("after compression %d: ", (int)(hc06_ptr - packetbuf_ptr));
     for(ndx = 0; ndx < hc06_ptr - packetbuf_ptr; ndx++) {
       uint8_t data = ((uint8_t *) packetbuf_ptr)[ndx];
       LOG_DBG("%02x", data);
     }
     LOG_DBG("\n");
-    }
-#endif
+  }
 
   packetbuf_hdr_len = hc06_ptr - packetbuf_ptr;
 }
@@ -1906,8 +1904,7 @@ input(void)
     LOG_INFO("input: IP packet ready (length %d)\n",
 	    uip_len);
 
-#if LOG_DBG_ENABLED
-    {
+    if(LOG_DBG_ENABLED) {
       uint16_t ndx;
       LOG_DBG("after decompression %u:", UIP_IP_BUF->len[1]);
       for (ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
@@ -1916,7 +1913,6 @@ input(void)
       }
       LOG_DBG("\n");
     }
-#endif /* LOG_DBG_ENABLED */
 
     /* if callback is set then set attributes and call */
     if(callback) {
