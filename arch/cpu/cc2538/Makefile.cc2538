@@ -16,7 +16,7 @@ CONTIKI_CPU_DIRS = . dev usb usb/common usb/common/cdc-acm
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += soc.c clock.c rtimer-arch.c uart.c watchdog.c
 CONTIKI_CPU_SOURCEFILES += nvic.c sys-ctrl.c gpio.c ioc.c spi-legacy.c adc.c
-CONTIKI_CPU_SOURCEFILES += spi-hal-arch.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
 CONTIKI_CPU_SOURCEFILES += crypto.c aes.c ecb.c cbc.c ctr.c cbc-mac.c gcm.c
 CONTIKI_CPU_SOURCEFILES += ccm.c sha256.c gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += cc2538-aes-128.c cc2538-ccm-star.c
