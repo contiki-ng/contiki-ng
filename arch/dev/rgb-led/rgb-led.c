@@ -29,15 +29,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
+/**
+ * \addtogroup rgb-led
+ * @{
+ *
+ * \file
+ * Implementation of the RGB LED driver.
+ */
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/leds.h"
-#include "dev/gpio-hal.h"
-
-#include <stdbool.h>
+#include "dev/rgb-led/rgb-led.h"
 /*---------------------------------------------------------------------------*/
-const leds_t leds_arch_leds[] = {
-  { .pin = BOARD_IOID_LED_1, .negative_logic = false },
-};
-/*---------------------------------------------------------------------------*/
+void
+rgb_led_off(void)
+{
+  leds_off(LEDS_ALL);
+}
+/*----------------------------------------------------------------------------*/
+void
+rgb_led_set(uint8_t colour)
+{
+  leds_mask_t leds =
+    ((colour & RGB_LED_RED) ? LEDS_RED : LEDS_COLOUR_NONE) |
+    ((colour & RGB_LED_GREEN) ? LEDS_GREEN : LEDS_COLOUR_NONE) |
+    ((colour & RGB_LED_BLUE) ? LEDS_BLUE : LEDS_COLOUR_NONE);
 
-
+  leds_off(LEDS_ALL);
+  leds_on(leds);
+}
+/*----------------------------------------------------------------------------*/
+/** @} */

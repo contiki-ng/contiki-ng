@@ -46,6 +46,7 @@
 #include "services/ipso-objects/ipso-objects.h"
 #include "services/ipso-objects/ipso-sensor-template.h"
 #include "services/ipso-objects/ipso-control-template.h"
+#include "dev/leds.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
@@ -98,9 +99,9 @@ static lwm2m_status_t
 leds_set_val(ipso_control_t *control, uint8_t value)
 {
   if(value > 0) {
-    leds_on(LEDS_YELLOW);
+    leds_single_on(LEDS_LED1);
   } else {
-    leds_off(LEDS_YELLOW);
+    leds_single_off(LEDS_LED1);
   }
   return LWM2M_STATUS_OK;
 }

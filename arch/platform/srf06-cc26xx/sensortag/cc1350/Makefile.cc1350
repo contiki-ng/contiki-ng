@@ -1,6 +1,3 @@
-### Add to the source list
-BOARD_SOURCEFILES += leds-arch.c
-
 ### Will allow the inclusion of the correct CPU makefile
 CPU_FAMILY = cc13xx
 

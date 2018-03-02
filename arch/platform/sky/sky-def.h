@@ -75,6 +75,8 @@
 #define LEDS_CONF_GREEN  0x20
 #define LEDS_CONF_YELLOW 0x40
 
+#define LEDS_CONF_LEGACY_API 1
+
 /* DCO speed resynchronization for more robust UART, etc. */
 #ifndef DCOSYNCH_CONF_ENABLED
 #define DCOSYNCH_CONF_ENABLED (!(MAC_CONF_WITH_TSCH)) /* TSCH needs timerB

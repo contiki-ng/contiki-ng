@@ -326,6 +326,14 @@
  * number.
  */
 #define GPIO_PORT_TO_BASE(PORT) (GPIO_A_BASE + ((PORT) << 12))
+
+/**
+ * \brief Converts a port/pin pair to GPIO HAL pin number
+ * \param PORT The port number in the range 0 - 3 (GPIO_n_NUM).
+ * \param PIN The pin number in the range 0 - 7.
+ * \return The pin representation using GPIO HAL semantics
+ */
+#define GPIO_PORT_PIN_TO_GPIO_HAL_PIN(PORT, PIN) (((PORT) << 3) + (PIN))
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name GPIO Register offset declarations
