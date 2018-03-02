@@ -31,6 +31,10 @@
 /*---------------------------------------------------------------------------*/
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
+
+/* Prevent the router from dropping below LPM2 to avoid RAM overflow */
+#define LPM_CONF_MAX_PM             0
+
 /*---------------------------------------------------------------------------*/
 /* Use either the cc1200_driver for sub-1GHz, or cc2538_rf_driver (default)
  * for 2.4GHz built-in radio interface
@@ -43,7 +47,7 @@
 #define UIP_CONF_TCP                     1
 #define RESOLV_CONF_SUPPORTS_MDNS        0
 #define NETSTCK_ROUTING_STATE_SIZE       3
-#define NBR_TABLE_CONF_MAX_NEIGHBORS    3
+#define NBR_TABLE_CONF_MAX_NEIGHBORS     3
 
 #define HTTP_CLIENT_BUFFER_LEN           256
 
