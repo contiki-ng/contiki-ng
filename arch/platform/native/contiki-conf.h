@@ -66,6 +66,8 @@ typedef  int32_t s32_t;
 
 typedef unsigned int uip_stats_t;
 
+#define LEDS_CONF_LEGACY_API 1
+
 #ifndef UIP_CONF_BYTE_ORDER
 #define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
 #endif

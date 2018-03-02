@@ -47,8 +47,8 @@
 #include "ti-lib.h"
 #include "contiki.h"
 #include "contiki-net.h"
-#include "leds.h"
 #include "lpm.h"
+#include "dev/leds.h"
 #include "dev/gpio-hal.h"
 #include "dev/oscillators.h"
 #include "ieee-addr.h"
@@ -84,7 +84,7 @@ unsigned short node_id = 0;
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;

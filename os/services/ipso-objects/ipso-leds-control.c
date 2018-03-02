@@ -56,11 +56,15 @@
 #define PRINTF(...)
 #endif
 
+#if LEDS_LEGACY_API
 #if LEDS_ALL & LEDS_BLUE || LEDS_ALL & LEDS_RED || LEDS_ALL & LEDS_BLUE
 #define LEDS_CONTROL_NUMBER (((LEDS_ALL & LEDS_BLUE) ? 1 : 0) + ((LEDS_ALL & LEDS_RED) ? 1 : 0) + ((LEDS_ALL & LEDS_GREEN) ? 1 : 0))
 #else
 #define LEDS_CONTROL_NUMBER 1
 #endif
+#else /* LEDS_LEGACY_API */
+#define LEDS_CONTROL_NUMBER LEDS_COUNT
+#endif /* LEDS_LEGACY_API */
 
 typedef struct led_state {
   ipso_control_t control;
@@ -72,7 +76,7 @@ static led_state_t leds_controls[LEDS_CONTROL_NUMBER];
 static lwm2m_status_t
 set_value(ipso_control_t *control, uint8_t value)
 {
-#if PLATFORM_HAS_LEDS
+#if PLATFORM_HAS_LEDS || LEDS_COUNT
   led_state_t *state;
 
   state = (led_state_t *)control;

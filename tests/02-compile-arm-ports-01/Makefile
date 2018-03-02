@@ -21,6 +21,13 @@ dev/gpio-hal/srf06-cc26xx:BOARD=sensortag/cc2650 \
 dev/gpio-hal/srf06-cc26xx:BOARD=launchpad/cc1310 \
 dev/gpio-hal/srf06-cc26xx:BOARD=launchpad/cc1350 \
 dev/gpio-hal/srf06-cc26xx:BOARD=launchpad/cc2650 \
+dev/leds/srf06-cc26xx:BOARD=srf06/cc13xx \
+dev/leds/srf06-cc26xx:BOARD=srf06/cc26xx \
+dev/leds/srf06-cc26xx:BOARD=sensortag/cc1350 \
+dev/leds/srf06-cc26xx:BOARD=sensortag/cc2650 \
+dev/leds/srf06-cc26xx:BOARD=launchpad/cc1310 \
+dev/leds/srf06-cc26xx:BOARD=launchpad/cc1350 \
+dev/leds/srf06-cc26xx:BOARD=launchpad/cc2650 \
 6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650 \
 storage/cfs-coffee/cc2538dk \
 sensniff/cc2538dk \
@@ -30,6 +37,7 @@ slip-radio/cc2538dk \
 ipso-objects/cc2538dk \
 multicast/cc2538dk \
 dev/gpio-hal/cc2538dk \
+dev/leds/cc2538dk \
 platform-specific/cc2538-common/cc2538dk \
 platform-specific/cc2538-common/mqtt-demo/cc2538dk \
 platform-specific/cc2538-common/crypto/cc2538dk \

@@ -36,7 +36,6 @@
 #include "contiki-net.h"
 
 #include "lib/trickle-timer.h"
-#include "dev/leds.h"
 #include "lib/random.h"
 
 #include <string.h>
@@ -80,7 +79,6 @@ AUTOSTART_PROCESSES(&trickle_protocol_process);
 static void
 tcpip_handler(void)
 {
-  leds_on(LEDS_GREEN);
   if(uip_newdata()) {
     PRINTF("At %lu (I=%lu, c=%u): ",
            (unsigned long)clock_time(), (unsigned long)tt.i_cur, tt.c);
@@ -109,7 +107,6 @@ tcpip_handler(void)
                              tt.ct.etimer.timer.interval));
     }
   }
-  leds_off(LEDS_GREEN);
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -125,8 +122,6 @@ trickle_tx(void *ptr, uint8_t suppress)
   if(suppress == TRICKLE_TIMER_TX_SUPPRESS) {
     return;
   }
-
-  leds_on(LEDS_RED);
 
   PRINTF("At %lu (I=%lu, c=%u): ",
          (unsigned long)clock_time(), (unsigned long)loc_tt->i_cur,
@@ -144,8 +139,6 @@ trickle_tx(void *ptr, uint8_t suppress)
 
   /* Restore to 'accept incoming from any IP' */
   uip_create_unspecified(&trickle_conn->ripaddr);
-
-  leds_off(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(trickle_protocol_process, ev, data)
