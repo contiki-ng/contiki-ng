@@ -7,9 +7,6 @@ BASENAME=06-lwm2m-test
 
 IPADDR=fd00::302:304:506:708
 
-echo "Enabling IPv6"
-sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
-
 # Starting Contiki-NG native node
 echo "Starting native node - lwm2m/ipso objects"
 make -C $CONTIKI/examples/ipso-objects > make.log 2> make.err
