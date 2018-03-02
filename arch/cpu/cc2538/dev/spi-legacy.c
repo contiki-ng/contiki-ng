@@ -39,7 +39,7 @@
  */
 #include "contiki.h"
 #include "reg.h"
-#include "spi-arch.h"
+#include "dev/spi-arch-legacy.h"
 #include "sys/cc.h"
 #include "dev/ioc.h"
 #include "dev/sys-ctrl.h"

@@ -43,7 +43,7 @@
  * eth-gw SPI arch specifics
  */
 /*---------------------------------------------------------------------------*/
-#include "spi-arch.h"
+#include "dev/spi-arch-legacy.h"
 #include "spi.h"
 #include "dev/gpio.h"
 /*---------------------------------------------------------------------------*/
