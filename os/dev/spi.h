@@ -45,8 +45,8 @@
  *     Header file for the SPI HAL
  */
 /*---------------------------------------------------------------------------*/
-#ifndef SPI_HAL_H_
-#define SPI_HAL_H_
+#ifndef SPI_H_
+#define SPI_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "gpio-hal.h"
@@ -358,7 +358,7 @@ spi_status_t spi_arch_select(spi_device_t *dev);
  */
 spi_status_t spi_arch_deselect(spi_device_t *dev);
 
-#endif /* SPI_HAL_H_ */
+#endif /* SPI_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

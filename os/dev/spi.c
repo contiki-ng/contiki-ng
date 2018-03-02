@@ -37,9 +37,8 @@
  *     Implementation of the platform-independent aspects of the SPI HAL
  */
 /*---------------------------------------------------------------------------*/
+#include <dev/spi.h>
 #include "contiki.h"
-#include "spi-hal.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/

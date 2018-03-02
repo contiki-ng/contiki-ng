@@ -29,7 +29,7 @@
  */
 #include "contiki.h"
 #include "ti-lib.h"
-#include "spi-hal.h"
+#include "dev/spi.h"
 #include "sys/mutex.h"
 
 #include <stdint.h>

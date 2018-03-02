@@ -32,7 +32,7 @@
 #include <stdint.h>
 #include "contiki.h"
 #include "reg.h"
-#include "spi-hal.h"
+#include "dev/spi.h"
 #include "gpio-hal-arch.h"
 #include "sys/cc.h"
 #include "ioc.h"

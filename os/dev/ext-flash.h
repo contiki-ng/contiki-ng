@@ -42,8 +42,7 @@
 #ifndef EXT_FLASH_H_
 #define EXT_FLASH_H_
 /*---------------------------------------------------------------------------*/
-#include "spi-hal.h"
-
+#include "dev/spi.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
