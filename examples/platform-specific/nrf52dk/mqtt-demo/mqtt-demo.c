@@ -55,6 +55,7 @@
 #include "dev/leds.h"
 
 #include <string.h>
+#include <strings.h>
 /*---------------------------------------------------------------------------*/
 /*
  * IBM server: quickstart.messaging.internetofthings.ibmcloud.com

@@ -71,20 +71,25 @@
  * @{
  */
 /*---------------------------------------------------------------------------*/
-#define LEDS_YELLOW             2 /**< LED2 (Yellow) -> PC1 */
-#define LEDS_GREEN              4 /**< LED3 (Green)  -> PC2 */
-#define LEDS_ORANGE             8 /**< LED4 (Orange) -> PC3 */
+#define LEDS_CONF_YELLOW           1
+#define LEDS_CONF_GREEN            2
+#define LEDS_CONF_ORANGE           4
+
+#define LEDS_ARCH_L1_PORT GPIO_C_NUM
+#define LEDS_ARCH_L1_PIN           1
+#define LEDS_ARCH_L2_PORT GPIO_C_NUM
+#define LEDS_ARCH_L2_PIN           2
+#define LEDS_ARCH_L3_PORT GPIO_C_NUM
+#define LEDS_ARCH_L3_PIN           3
 
 #if USB_SERIAL_CONF_ENABLE
-#define LEDS_CONF_ALL           14
-#define LEDS_RED                LEDS_ORANGE
+#define LEDS_CONF_COUNT            3
 #else
-#define LEDS_CONF_ALL           15
-#define LEDS_RED                1 /**< LED1 (Red)    -> PC0 */
+#define LEDS_ARCH_L4_PORT GPIO_C_NUM
+#define LEDS_ARCH_L4_PIN           0
+#define LEDS_CONF_RED              8
+#define LEDS_CONF_COUNT            4
 #endif
-
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS       1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration

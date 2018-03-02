@@ -60,16 +60,17 @@
  * @{
  */
 #define PLATFORM_HAS_LEDS                       1
+#define LEDS_CONF_LEGACY_API                    1
 
 #define LEDS_1         (1 << (LED_1 - LED_START)) // 1
 #define LEDS_2         (1 << (LED_2 - LED_START)) // 2
 #define LEDS_3         (1 << (LED_3 - LED_START)) // 4
 #define LEDS_4         (1 << (LED_4 - LED_START)) // 8
 
-#define LEDS_GREEN     LEDS_1
-#define LEDS_YELLOW    LEDS_2
-#define LEDS_RED       LEDS_3
-#define LEDS_BLUE      LEDS_4
+#define LEDS_CONF_GREEN     LEDS_1
+#define LEDS_CONF_YELLOW    LEDS_2
+#define LEDS_CONF_RED       LEDS_3
+#define LEDS_CONF_BLUE      LEDS_4
 
 #define LEDS_CONF_ALL  (LEDS_1 | LEDS_2 | LEDS_3 | LEDS_4)
 

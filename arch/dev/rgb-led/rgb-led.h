@@ -29,15 +29,61 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
+#ifndef RGB_LED_H_
+#define RGB_LED_H_
+/*---------------------------------------------------------------------------*/
+/**
+ * \addtogroup dev
+ * @{
+ */
+/*---------------------------------------------------------------------------*/
+/**
+ * \defgroup rgb-led Generic RGB LED driver
+ *
+ * This is a driver for a tri-color RGB LED part, such as for example the
+ * Broadcom (ex Avago Technologies) PLCC-4 Tricolor Black Surface LED present
+ * on all Zolertia Zoul-based boards.
+ *
+ *
+ * This driver sits on top of the LED HAL. Therefore, any port that wishes to
+ * use this driver should first implement the GPIO HAL and the new LED API.
+ * This driver will set the colour of the RGB LED by using combinations of
+ * LED_RED, LED_GREEN and LED_BLUE. Therefore, those must be correctly defined
+ * by the platform configuration.
+ * @{
+ *
+ * \file
+ * Header file for the RGB LED driver.
+ */
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/leds.h"
-#include "dev/gpio-hal.h"
 
-#include <stdbool.h>
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
-const leds_t leds_arch_leds[] = {
-  { .pin = BOARD_IOID_LED_1, .negative_logic = false },
-};
+#define RGB_LED_RED     1
+#define RGB_LED_GREEN   2
+#define RGB_LED_BLUE    4
+#define RGB_LED_MAGENTA (RGB_LED_RED | RGB_LED_BLUE)
+#define RGB_LED_YELLOW  (RGB_LED_RED | RGB_LED_GREEN)
+#define RGB_LED_CYAN    (RGB_LED_GREEN | RGB_LED_BLUE )
+#define RGB_LED_WHITE   (RGB_LED_RED | RGB_LED_GREEN | RGB_LED_BLUE)
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Turn off the RGB LED
+ */
+void rgb_led_off(void);
 
-
+/**
+ * \brief Set the colour of the RGB LED
+ * \param colour The colour to set
+ *
+ * \e colour can take the value of one of the RGB_LED_xyz defines.
+ */
+void rgb_led_set(uint8_t colour);
+/*---------------------------------------------------------------------------*/
+#endif /* RGB_LED_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

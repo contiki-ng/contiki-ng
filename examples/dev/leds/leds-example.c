@@ -1,17 +1,16 @@
 /*
- * Copyright (c) 2015, Zolertia - http://www.zolertia.com
- * Copyright (c) 2015, University of Bristol - http://www.bristol.ac.uk
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,75 +28,55 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * \addtogroup zoul
- * @{
- *
- * \defgroup remote-revb-leds RE-Mote revision B arch LED
- *
- * LED driver implementation for the RE-Mote revision B
- * @{
- *
- * \file
- * LED driver implementation for the RE-Mote revision B
- */
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "reg.h"
 #include "dev/leds.h"
-#include "dev/gpio.h"
-#include "dev/ioc.h"
-/*---------------------------------------------------------------------------*/
-#define LEDS_PORTB_PIN_MASK  (LEDS_GREEN_PIN_MASK | LEDS_BLUE_PIN_MASK)
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
-{
-  /* Initialize LED2 (Green) and LED3 (Blue) */
-  GPIO_SOFTWARE_CONTROL(GPIO_B_BASE, LEDS_PORTB_PIN_MASK);
-  GPIO_SET_OUTPUT(GPIO_B_BASE, LEDS_PORTB_PIN_MASK);
-  GPIO_CLR_PIN(GPIO_B_BASE, LEDS_PORTB_PIN_MASK);
+#include "sys/etimer.h"
 
-  /* Initialize LED1 (Red) */
-  GPIO_SOFTWARE_CONTROL(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  GPIO_SET_OUTPUT(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  GPIO_CLR_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-}
+#include <stdio.h>
 /*---------------------------------------------------------------------------*/
-unsigned char
-leds_arch_get(void)
-{
-  uint8_t mask_leds;
-
-  mask_leds = GPIO_READ_PIN(LEDS_GREEN_PORT_BASE, LEDS_GREEN_PIN_MASK) == 0 ? 0: LEDS_GREEN;
-  mask_leds |= GPIO_READ_PIN(LEDS_BLUE_PORT_BASE, LEDS_BLUE_PIN_MASK) == 0 ? 0 : LEDS_BLUE;
-  mask_leds |= GPIO_READ_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK) == 0 ? 0 : LEDS_RED;
-
-  return mask_leds;
-}
+static struct etimer et;
+static uint8_t counter;
 /*---------------------------------------------------------------------------*/
-void
-leds_arch_set(unsigned char leds)
+PROCESS(leds_example, "LED HAL Example");
+AUTOSTART_PROCESSES(&leds_example);
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(leds_example, ev, data)
 {
-  if(leds & LEDS_GREEN) {
-    GPIO_SET_PIN(LEDS_GREEN_PORT_BASE, LEDS_GREEN_PIN_MASK);
-  } else {
-    GPIO_CLR_PIN(LEDS_GREEN_PORT_BASE, LEDS_GREEN_PIN_MASK);
+  PROCESS_BEGIN();
+
+  counter = 0;
+
+  etimer_set(&et, CLOCK_SECOND);
+
+  while(1) {
+
+    PROCESS_YIELD();
+
+    if(ev == PROCESS_EVENT_TIMER && data == &et) {
+      if((counter & 7) == 0) {
+        leds_set(LEDS_ALL);
+      } else if((counter & 7) == 1) {
+        leds_off(LEDS_ALL);
+      } else if((counter & 7) == 2) {
+        leds_on(LEDS_ALL);
+      } else if((counter & 7) == 3) {
+        leds_toggle(LEDS_ALL);
+      } else if((counter & 7) == 4) {
+        leds_single_on(LEDS_LED1);
+      } else if((counter & 7) == 5) {
+        leds_single_off(LEDS_LED1);
+      } else if((counter & 7) == 6) {
+        leds_single_toggle(LEDS_LED1);
+      } else if((counter & 7) == 7) {
+        leds_toggle(LEDS_ALL);
+      }
+
+      counter++;
+      etimer_set(&et, CLOCK_SECOND);
+    }
   }
 
-  if(leds & LEDS_BLUE) {
-    GPIO_SET_PIN(LEDS_BLUE_PORT_BASE, LEDS_BLUE_PIN_MASK);
-  } else {
-    GPIO_CLR_PIN(LEDS_BLUE_PORT_BASE, LEDS_BLUE_PIN_MASK);
-  }
-
-  if(leds & LEDS_RED) {
-    GPIO_SET_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  } else {
-    GPIO_CLR_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  }
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

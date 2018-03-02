@@ -58,20 +58,13 @@
 #include "ioc.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations
+ * \name LED HAL configuration
  *
  * Those values are not meant to be modified by the user
  * @{
  */
-#define LEDS_RED       1
-#define LEDS_GREEN     LEDS_RED
-#define LEDS_YELLOW    LEDS_RED
-#define LEDS_ORANGE    LEDS_RED
-
-#define LEDS_CONF_ALL  1
-
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS        1
+#define LEDS_CONF_COUNT                 1
+#define LEDS_CONF_RED                   1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -81,8 +74,6 @@
  * @{
  */
 #define BOARD_IOID_LED_1          IOID_10
-#define BOARD_LED_1               (1 << BOARD_IOID_LED_1)
-#define BOARD_LED_ALL             BOARD_LED_1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

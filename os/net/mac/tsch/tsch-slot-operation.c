@@ -59,10 +59,10 @@
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
 #include "net/mac/tsch/tsch-adaptive-timesync.h"
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
 
 #include "sys/log.h"
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
@@ -107,7 +107,7 @@
 #if RTIMER_SECOND < (32 * 1024)
 #error "TSCH: RTIMER_SECOND < (32 * 1024)"
 #endif
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
 /* Use 0 usec guard time for Cooja Mote with a 1 MHz Rtimer*/
 #define RTIMER_GUARD 0u
 #elif RTIMER_SECOND >= 200000
@@ -208,10 +208,10 @@ tsch_get_lock(void)
       busy_wait = 1;
       busy_wait_time = RTIMER_NOW();
       while(tsch_in_slot_operation) {
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
         simProcessRunValue = 1;
         cooja_mt_yield();
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
       }
       busy_wait_time = RTIMER_NOW() - busy_wait_time;
     }
@@ -297,15 +297,16 @@ tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_
                     "!dl-miss %s %d %d",
                         str, (int)(now-ref_time), (int)offset);
     );
+  } else {
+    r = rtimer_set(tm, ref_time + offset, 1, (void (*)(struct rtimer *, void *))tsch_slot_operation, NULL);
+    if(r == RTIMER_OK) {
+      return 1;
+    }
+  }
 
-    return 0;
-  }
-  ref_time += offset;
-  r = rtimer_set(tm, ref_time, 1, (void (*)(struct rtimer *, void *))tsch_slot_operation, NULL);
-  if(r != RTIMER_OK) {
-    return 0;
-  }
-  return 1;
+  /* block until the time to schedule comes */
+  BUSYWAIT_UNTIL_ABS(0, ref_time, offset);
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 /* Schedule slot operation conditionally, and YIELD if success only.
@@ -315,8 +316,8 @@ tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_
   do { \
     if(tsch_schedule_slot_operation(tm, ref_time, offset - RTIMER_GUARD, str)) { \
       PT_YIELD(pt); \
+      BUSYWAIT_UNTIL_ABS(0, ref_time, offset); \
     } \
-    BUSYWAIT_UNTIL_ABS(0, ref_time, offset); \
   } while(0);
 /*---------------------------------------------------------------------------*/
 /* Get EB, broadcast or unicast packet to be sent, and target neighbor. */
@@ -1010,12 +1011,12 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
         TSCH_ASN_INC(tsch_current_asn, timeslot_diff);
         /* Time to next wake up */
         time_to_next_active_slot = timeslot_diff * tsch_timing[tsch_ts_timeslot_length] + drift_correction;
+        time_to_next_active_slot += tsch_timesync_adaptive_compensate(time_to_next_active_slot);
         drift_correction = 0;
         is_drift_correction_used = 0;
         /* Update current slot start */
         prev_slot_start = current_slot_start;
         current_slot_start += time_to_next_active_slot;
-        current_slot_start += tsch_timesync_adaptive_compensate(time_to_next_active_slot);
       } while(!tsch_schedule_slot_operation(t, prev_slot_start, time_to_next_active_slot, "main"));
     }
 

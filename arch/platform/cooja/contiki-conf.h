@@ -46,6 +46,8 @@
 
 #define COOJA 1
 
+#define LEDS_CONF_LEGACY_API 1
+
 #ifndef EEPROM_CONF_SIZE
 #define EEPROM_CONF_SIZE				1024
 #endif

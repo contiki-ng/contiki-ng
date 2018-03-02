@@ -65,7 +65,7 @@ gyro_interrupt_callback(uint8_t status)
    * returns the outcome of the read operation, check to validate if the
    * data is valid to read
    */
-  leds_toggle(LEDS_PURPLE);
+  leds_toggle(LEDS_RED);
 
   printf("Gyro: X_axis %u, Y_axis %u, Z_axis %u\n", gyro_values.x,
                                                     gyro_values.y,

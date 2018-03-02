@@ -38,7 +38,7 @@
 #define LED_G  (1 << 16)
 #define LED_R  (1 << 17)
 
-static volatile uint8_t leds;
+static volatile leds_mask_t leds;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -49,14 +49,14 @@ leds_arch_init(void)
   leds = 0;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char
+leds_mask_t
 leds_arch_get(void)
 {
   return leds;
 }
 /*---------------------------------------------------------------------------*/
 void
-leds_arch_set(unsigned char c)
+leds_arch_set(leds_mask_t c)
 {
   uint32 on_mask = 0;
   uint32 off_mask = 0;

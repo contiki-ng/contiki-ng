@@ -82,7 +82,7 @@
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
