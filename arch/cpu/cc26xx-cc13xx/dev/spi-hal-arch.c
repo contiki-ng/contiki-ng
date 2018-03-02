@@ -27,10 +27,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include "contiki.h"
 #include "ti-lib.h"
 #include "spi-hal.h"
-#include "spi-hal-arch.h"
 #include "sys/mutex.h"
 
 #include <stdint.h>
@@ -44,7 +43,15 @@ typedef struct spi_locks_s {
 /* One lock per SPI controller */
 spi_locks_t board_spi_locks_spi[SPI_CONTROLLER_COUNT] = { { MUTEX_STATUS_UNLOCKED, NULL } };
 
+/*---------------------------------------------------------------------------*/
 /* Arch-specific properties of each SPI controller */
+typedef struct board_spi_controller_s {
+  uint32_t ssi_base;
+  uint32_t power_domain;
+  uint32_t prcm_periph;
+  uint32_t ssi_clkgr_clk_en;
+} board_spi_controller_t;
+
 static const board_spi_controller_t spi_controller[SPI_CONTROLLER_COUNT] = {
   {
     .ssi_base = SSI0_BASE,

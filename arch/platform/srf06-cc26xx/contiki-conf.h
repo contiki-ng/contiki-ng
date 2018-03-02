@@ -72,9 +72,6 @@
 /* Platform-specific define to signify sensor reading failure */
 #define CC26XX_SENSOR_READING_ERROR        0x80000000
 /*---------------------------------------------------------------------------*/
-/* SPI HAL: Path to arch-specific implementation  */
-#define SPI_HAL_CONF_ARCH_HDR_PATH         "dev/spi-hal-arch.h"
-/*---------------------------------------------------------------------------*/
 /* Include CPU-related configuration */
 #include "cc13xx-cc26xx-conf.h"
 /*---------------------------------------------------------------------------*/
