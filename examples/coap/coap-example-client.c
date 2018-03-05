@@ -81,7 +81,7 @@ client_chunk_handler(coap_message_t *response)
 }
 PROCESS_THREAD(er_example_client, ev, data)
 {
-  coap_endpoint_t server_ep;
+  static coap_endpoint_t server_ep;
   PROCESS_BEGIN();
 
   static coap_message_t request[1];      /* This way the packet can be treated as pointer as usual. */
