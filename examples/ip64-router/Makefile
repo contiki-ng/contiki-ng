@@ -6,5 +6,6 @@ CONTIKI=../..
 PLATFORMS_ONLY = zoul
 BOARDS_ONLY = orion
 BOARD = orion
+WITH_IP64 = 1
 
 include $(CONTIKI)/Makefile.include
