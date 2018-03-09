@@ -55,7 +55,8 @@ hello-world/openmote-cc2538 \
 rpl-udp/openmote-cc2538 \
 dev/gpio-hal/openmote-cc2538 \
 dev/leds/openmote-cc2538 \
-rpl-border-router/openmote-cc2538
+rpl-border-router/openmote-cc2538 \
+ipv6-hooks/openmote-cc2538 \
 
 TOOLS=
 
