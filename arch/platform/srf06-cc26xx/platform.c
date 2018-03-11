@@ -194,7 +194,8 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  radio_value_t chan, pan;
+  radio_value_t chan = 0;
+  radio_value_t pan = 0;
 
   set_rf_params();
 
