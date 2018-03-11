@@ -33,7 +33,7 @@
 #include "dev/gpio-hal.h"
 #include "sys/etimer.h"
 #include "lib/sensors.h"
-#include "dev/button-sensor.h"
+#include "dev/button-hal.h"
 
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
@@ -129,8 +129,9 @@ PROCESS_THREAD(gpio_hal_example, ev, data)
 
       counter++;
       etimer_set(&et, CLOCK_SECOND);
-    } else if(ev == sensors_event && data == &button_sensor) {
-      printf("Button event\n");
+    } else if(ev == button_hal_release_event) {
+      printf("Button release event %s\n",
+             BUTTON_HAL_GET_DESCRIPTION((button_hal_button_t *)data));
     }
   }
 
