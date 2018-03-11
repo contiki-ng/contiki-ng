@@ -55,8 +55,10 @@
 #define PIN_TO_PORT(pin) (pin >> 3)
 #define PIN_TO_PORT_BASE(pin) GPIO_PORT_TO_BASE(PIN_TO_PORT(pin))
 /*---------------------------------------------------------------------------*/
-#define gpio_hal_arch_interrupt_enable(p) \
-  GPIO_ENABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
+#define gpio_hal_arch_interrupt_enable(p) do { \
+  GPIO_ENABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
+  NVIC_EnableIRQ(PIN_TO_PORT(p)); \
+} while(0);
 
 #define gpio_hal_arch_interrupt_disable(p) \
   GPIO_DISABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
