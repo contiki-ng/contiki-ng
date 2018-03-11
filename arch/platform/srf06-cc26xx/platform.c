@@ -200,7 +200,6 @@ platform_init_stage_three()
   set_rf_params();
 
   NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
-  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
 
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
@@ -210,7 +209,13 @@ platform_init_stage_three()
           ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
-  LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
+  LOG_INFO(" RF: Channel %d", chan);
+
+  if(NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan) == RADIO_RESULT_OK) {
+    LOG_INFO_(", PANID 0x%04X", pan);
+  }
+  LOG_INFO_("\n");
+
   LOG_INFO(" Node ID: %d\n", node_id);
 
   process_start(&sensors_process, NULL);
