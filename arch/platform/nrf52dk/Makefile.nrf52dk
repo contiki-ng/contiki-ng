@@ -27,5 +27,3 @@ SMALL ?= 0
 ### Define the CPU directory and pull in the correct CPU makefile.
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/nrf52832
 include $(CONTIKI_CPU)/Makefile.nrf52832
-
-MODULES += os/net os/net/mac os/net/mac/framer

@@ -42,11 +42,8 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "net/routing/routing.h"
 #include "mqtt.h"
-#include "rpl.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/sicslowpan.h"
@@ -58,6 +55,7 @@
 #include "dev/cc2538-sensors.h"
 
 #include <string.h>
+#include <strings.h>
 /*---------------------------------------------------------------------------*/
 /*
  * IBM server: messaging.quickstart.internetofthings.ibmcloud.com

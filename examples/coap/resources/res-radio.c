@@ -39,12 +39,12 @@
 #include "contiki.h"
 
 #if PLATFORM_HAS_RADIO
-
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "net/netstack.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* A simple getter example. Returns the reading of the rssi/lqi from radio sensor */
 RESOURCE(res_radio,
@@ -55,7 +55,7 @@ RESOURCE(res_radio,
          NULL);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   size_t len = 0;
   const char *p = NULL;
@@ -64,9 +64,9 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   int success = 0;
   unsigned int accept = -1;
 
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
-  if((len = REST.get_query_variable(request, "p", &p))) {
+  if((len = coap_get_query_variable(request, "p", &p))) {
     if(strncmp(p, "rssi", len) == 0) {
       if(NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &value) ==
          RADIO_RESULT_OK) {
@@ -77,23 +77,23 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   }
 
   if(success) {
-    if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-      REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-      snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", rssi);
+    if(accept == -1 || accept == TEXT_PLAIN) {
+      coap_set_header_content_format(response, TEXT_PLAIN);
+      snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "%d", rssi);
 
-      REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-    } else if(accept == REST.type.APPLICATION_JSON) {
-      REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+      coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+    } else if(accept == APPLICATION_JSON) {
+      coap_set_header_content_format(response, APPLICATION_JSON);
 
-      snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'rssi':%d}", rssi);
-      REST.set_response_payload(response, buffer, strlen((char *)buffer));
+      snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{'rssi':%d}", rssi);
+      coap_set_payload(response, buffer, strlen((char *)buffer));
     } else {
-      REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+      coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
       const char *msg = "Supporting content-types text/plain and application/json";
-      REST.set_response_payload(response, msg, strlen(msg));
+      coap_set_payload(response, msg, strlen(msg));
     }
   } else {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    coap_set_status_code(response, BAD_REQUEST_4_00);
   }
 }
 #endif /* PLATFORM_HAS_RADIO */

@@ -36,12 +36,13 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 PARENT_RESOURCE(res_plugtest_path,
                 "title=\"Path test resource\";ct=\"40\"",
@@ -51,22 +52,22 @@ PARENT_RESOURCE(res_plugtest_path,
                 NULL);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer,
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
                 uint16_t preferred_size, int32_t *offset)
 {
 
   const char *uri_path = NULL;
-  int len = REST.get_url(request, &uri_path);
+  int len = coap_get_header_uri_path(request, &uri_path);
   int base_len = strlen(res_plugtest_path.url);
 
   if(len == base_len) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_LINK_FORMAT);
+    coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
     snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
              "</path/sub1>,</path/sub2>,</path/sub3>");
   } else {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+    coap_set_header_content_format(response, TEXT_PLAIN);
     snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "/%.*s", len, uri_path);
   }
 
-  REST.set_response_payload(response, buffer, strlen((char *)buffer));
+  coap_set_payload(response, buffer, strlen((char *)buffer));
 }

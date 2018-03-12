@@ -37,12 +37,12 @@
  */
 
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_create3,
          "title=\"Default test resource\"",
@@ -54,27 +54,27 @@ RESOURCE(res_plugtest_create3,
 static uint8_t create3_exists = 0;
 
 static void
-res_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   PRINTF("/create3       PUT ");
 
   if(coap_get_header_if_none_match(request)) {
     if(!create3_exists) {
-      REST.set_response_status(response, REST.status.CREATED);
+      coap_set_status_code(response, CREATED_2_01);
 
       create3_exists = 1;
     } else {
-      REST.set_response_status(response, PRECONDITION_FAILED_4_12);
+      coap_set_status_code(response, PRECONDITION_FAILED_4_12);
     }
   } else {
-    REST.set_response_status(response, REST.status.CHANGED);
+    coap_set_status_code(response, CHANGED_2_04);
   }
 }
 static void
-res_delete_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   PRINTF("/create3       DELETE ");
-  REST.set_response_status(response, REST.status.DELETED);
+  coap_set_status_code(response, DELETED_2_02);
 
   create3_exists = 0;
 }

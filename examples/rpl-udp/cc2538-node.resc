@@ -24,7 +24,7 @@ macro reset
     sysbus LoadBinary @http://antmicro.com/projects/renode/cc2538_rom_dump.bin-s_524288-0c196cdc21b5397f82e0ff42b206d1cc4b6d7522 0x0
     sysbus LoadELF $bin
 
-    cpu VectorTableOffset 0x200000
+    cpu VectorTableOffset `sysbus GetSymbolAddress "vectors"`
 """
 
 runMacro $reset

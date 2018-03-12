@@ -36,7 +36,7 @@
  */
 
 #include "contiki.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
 #include "rpl-border-router.h"
@@ -88,11 +88,7 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_YIELD();
     if(ev == sensors_event && data == &button_sensor) {
       LOG_INFO("Initiating global repair\n");
-#if UIP_CONF_IPV6_RPL_LITE
-      rpl_global_repair();
-#else
-      rpl_repair_root(RPL_DEFAULT_INSTANCE);
-#endif
+      NETSTACK_ROUTING.global_repair("Button press");
     }
   }
 

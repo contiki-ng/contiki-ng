@@ -36,14 +36,13 @@
 #include "contiki-net.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "simple-udp.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/netstack.h"
 #include "dev/slip.h"
-#include "rest-engine.h"
-#include "rpl-tools.h"
+#include "coap-engine.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,10 +55,10 @@
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
-static void get_rssi_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void get_last_rssi_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void get_last_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-static char content[REST_MAX_CHUNK_SIZE];
+static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
 
 #define CONTENT_PRINTF(...) { if(content_len < sizeof(content)) content_len += snprintf(content+content_len, sizeof(content)-content_len, __VA_ARGS__); }
@@ -67,45 +66,45 @@ static int content_len = 0;
 PROCESS(border_router_process, "Border router process");
 AUTOSTART_PROCESSES(&border_router_process);
 
-RESOURCE(resource_get_rssi, 
+RESOURCE(resource_get_rssi,
          "title=\"Get RSSI\"",
          get_rssi_handler,
          NULL,
          NULL,
          NULL);
 static void
-get_rssi_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int rssi_level;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &rssi_level);
     CONTENT_PRINTF("%d", rssi_level);
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 
-RESOURCE(resource_get_last_rssi, 
+RESOURCE(resource_get_last_rssi,
          "title=\"Get last RSSI\"",
          get_last_rssi_handler,
          NULL,
          NULL,
          NULL);
 static void
-get_last_rssi_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+get_last_rssi_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   int last_rssi_level;
   unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
     content_len = 0;
     NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_RSSI, &last_rssi_level);
     CONTENT_PRINTF("%d", last_rssi_level);
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 
@@ -157,11 +156,12 @@ PROCESS_THREAD(border_router_process, ev, data)
   uip_debug_ipaddr_print(&prefix);
   PRINTF("\n");
 
-  rpl_tools_init(&prefix);
+  NETSTACK_ROUTING.root_set_prefix(&prefix, NULL);
+  NETSTACK_ROUTING.root_start();
 
-  rest_init_engine();
-  rest_activate_resource(&resource_get_rssi, "Get-RSSI");
-  rest_activate_resource(&resource_get_last_rssi, "Get-Last-RSSI");
+  coap_engine_init();
+  coap_activate_resource(&resource_get_rssi, "Get-RSSI");
+  coap_activate_resource(&resource_get_last_rssi, "Get-Last-RSSI");
 
 
   PROCESS_END();

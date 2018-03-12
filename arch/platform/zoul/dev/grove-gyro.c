@@ -44,6 +44,7 @@
 #include "contiki.h"
 #include "dev/i2c.h"
 #include "dev/grove-gyro.h"
+#include "dev/gpio-hal.h"
 #include "lib/sensors.h"
 #include "dev/watchdog.h"
 /*---------------------------------------------------------------------------*/
@@ -458,10 +459,16 @@ PROCESS_THREAD(grove_gyro_int_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-grove_gyro_interrupt_handler(uint8_t port, uint8_t pin)
+grove_gyro_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 {
   process_poll(&grove_gyro_int_process);
 }
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t gyro_handler = {
+  .next = NULL,
+  .handler = grove_gyro_interrupt_handler,
+  .pin_mask = gpio_hal_pin_to_mask(I2C_INT_PIN) << (I2C_INT_PORT << 3),
+};
 /*---------------------------------------------------------------------------*/
 static int
 value(int type)
@@ -593,8 +600,7 @@ configure(int type, int value)
     GPIO_DETECT_EDGE(GROVE_GYRO_INT_PORT_BASE, GROVE_GYRO_INT_PIN_MASK);
     GPIO_TRIGGER_SINGLE_EDGE(GROVE_GYRO_INT_PORT_BASE, GROVE_GYRO_INT_PIN_MASK);
     GPIO_DETECT_FALLING(GROVE_GYRO_INT_PORT_BASE, GROVE_GYRO_INT_PIN_MASK);
-    gpio_register_callback(grove_gyro_interrupt_handler, I2C_INT_PORT,
-                           I2C_INT_PIN);
+    gpio_hal_register_handler(&gyro_handler);
 
     /* Spin process until an interrupt is received */
     process_start(&grove_gyro_int_process, NULL);

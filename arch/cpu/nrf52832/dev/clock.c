@@ -116,7 +116,7 @@ clock_init(void)
   rtc_config();
 }
 /*---------------------------------------------------------------------------*/
-CCIF clock_time_t
+clock_time_t
 clock_time(void)
 {
   return (clock_time_t)(ticks & 0xFFFFFFFF);
@@ -131,7 +131,7 @@ clock_update(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-CCIF unsigned long
+unsigned long
 clock_seconds(void)
 {
   return (unsigned long)ticks/CLOCK_CONF_SECOND;

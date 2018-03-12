@@ -52,6 +52,9 @@
 /* Delay between the SFD finishes arriving and it is detected in software */
 #define RADIO_DELAY_BEFORE_DETECT 0
 
+/* Disable TSCH frame filtering */
+#define TSCH_CONF_HW_FRAME_FILTERING  0
+
 #define PLATFORM_HAS_LEDS    1
 #define PLATFORM_HAS_BUTTON  1
 #define PLATFORM_HAS_LIGHT   1
@@ -71,6 +74,8 @@
 #define LEDS_CONF_RED    0x10
 #define LEDS_CONF_GREEN  0x20
 #define LEDS_CONF_YELLOW 0x40
+
+#define LEDS_CONF_LEGACY_API 1
 
 /* DCO speed resynchronization for more robust UART, etc. */
 #ifndef DCOSYNCH_CONF_ENABLED

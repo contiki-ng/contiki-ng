@@ -40,21 +40,23 @@
  * @{
 */
 
+#include "contiki.h"
+
 #if UIP_CONF_IPV6_RPL
 
-#include "contiki.h"
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/routing/routing.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/tsch-private.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch-log.h"
 #include "net/mac/tsch/tsch-rpl.h"
-#include "tsch-rpl.h"
+
+#if ROUTING_CONF_RPL_LITE
+#include "net/routing/rpl-lite/rpl.h"
+#elif ROUTING_CONF_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-private.h"
+#endif
 
 /* Log configuration */
 #include "sys/log.h"
@@ -66,7 +68,7 @@
 void
 tsch_rpl_callback_ka_sent(int status, int transmissions)
 {
-  rpl_link_callback(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
+  NETSTACK_ROUTING.link_callback(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
 }
 /*---------------------------------------------------------------------------*/
 /* To use, set #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network */
@@ -81,14 +83,7 @@ tsch_rpl_callback_joining_network(void)
 void
 tsch_rpl_callback_leaving_network(void)
 {
-  rpl_dag_t *dag = rpl_get_any_dag();
-  if(dag != NULL) {
-#if UIP_CONF_IPV6_RPL_LITE
-    rpl_local_repair("TSCH leaving");
-#else
-    rpl_local_repair(dag->instance);
-#endif
-  }
+  NETSTACK_ROUTING.local_repair("TSCH leaving");
 }
 /*---------------------------------------------------------------------------*/
 /* Set TSCH EB period based on current RPL DIO period.
@@ -100,7 +95,7 @@ tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval)
   rpl_dag_t *dag;
   rpl_rank_t root_rank;
   rpl_rank_t dag_rank;
-#if UIP_CONF_IPV6_RPL_LITE
+#if ROUTING_CONF_RPL_LITE
   dag = &curr_instance.dag;
   root_rank = ROOT_RANK;
   dag_rank = DAG_RANK(dag->rank);

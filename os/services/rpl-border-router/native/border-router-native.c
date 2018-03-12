@@ -40,7 +40,8 @@
 
 #include "contiki.h"
 #include "contiki-net.h"
-#include "rpl.h"
+
+#include "net/routing/routing.h"
 #include "rpl-border-router.h"
 #include "cmd.h"
 #include "border-router.h"
@@ -51,17 +52,10 @@
 
 #include <stdlib.h>
 
-#define MAX_SENSORS 4
-
 extern long slip_sent;
 extern long slip_received;
 
 static uint8_t mac_set;
-
-static uint8_t sensor_count = 0;
-
-/* allocate MAX_SENSORS char[32]'s */
-static char sensors[MAX_SENSORS][32];
 
 extern int contiki_argc;
 extern char **contiki_argv;
@@ -88,7 +82,7 @@ border_router_set_mac(const uint8_t *data)
      add them back again - a bit messy... ?*/
   PROCESS_CONTEXT_BEGIN(&tcpip_process);
   uip_ds6_init();
-  rpl_init();
+  NETSTACK_ROUTING.init();
   PROCESS_CONTEXT_END(&tcpip_process);
 
   mac_set = 1;
@@ -99,30 +93,6 @@ border_router_print_stat()
 {
   printf("bytes received over SLIP: %ld\n", slip_received);
   printf("bytes sent over SLIP: %ld\n", slip_sent);
-}
-/*---------------------------------------------------------------------------*/
-/* Format: <name=value>;<name=value>;...;<name=value>*/
-/* this function just cut at ; and store in the sensor array */
-void
-border_router_set_sensors(const char *data, int len)
-{
-  int i;
-  int last_pos = 0;
-  int sc = 0;
-  for(i = 0; i < len; i++) {
-    if(data[i] == ';') {
-      sensors[sc][i - last_pos] = 0;
-      memcpy(sensors[sc++], &data[last_pos], i - last_pos);
-      last_pos = i + 1; /* skip the ';' */
-    }
-    if(sc == MAX_SENSORS) {
-      sensor_count = sc;
-      return;
-    }
-  }
-  sensors[sc][len - last_pos] = 0;
-  memcpy(sensors[sc++], &data[last_pos], len - last_pos);
-  sensor_count = sc;
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)

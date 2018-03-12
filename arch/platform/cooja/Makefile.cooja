@@ -40,9 +40,6 @@ ARCHIVE = $(OBJECTDIR)/$(LIBNAME).a
 JNILIB = $(OBJECTDIR)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).o
 
-# Modules
-MODULES += os/net os/net/mac os/net/mac/framer
-
 ### COOJA platform sources
 COOJA = $(CONTIKI)/arch/platform/$(TARGET)
 CONTIKI_TARGET_DIRS = . dev lib sys cfs net

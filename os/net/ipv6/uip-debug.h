@@ -43,13 +43,16 @@
 #define UIP_DEBUG_H
 
 #include "net/net-debug.h"
-#include "net/ipv6/uip.h"
-#include <stdio.h>
+#include "net/ipv6/uiplib.h"
 
-void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
+static inline void
+uip_debug_ipaddr_print(const uip_ipaddr_t *addr)
+{
+  uiplib_ipaddr_print(addr);
+}
 
 #if (DEBUG) & DEBUG_PRINT
-#define PRINT6ADDR(addr) uip_debug_ipaddr_print(addr)
+#define PRINT6ADDR(addr) uiplib_ipaddr_print(addr)
 #else
 #define PRINT6ADDR(addr)
 #endif /* (DEBUG) & DEBUG_PRINT */

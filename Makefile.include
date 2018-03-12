@@ -52,9 +52,15 @@ ifneq ("$(wildcard project-conf.h)","")
 CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
 endif
 
-MODULES += os os/net os/net/mac os/storage
+MODULES += os os/net os/net/mac os/net/mac/framer os/net/routing os/storage
 
-oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
+define oname
+${patsubst %.c,%.o, \
+${patsubst %.S,%.o, \
+${patsubst %.s,%.o, \
+$(1) \
+}}}
+endef
 
 CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
 PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
@@ -145,7 +151,7 @@ ifeq ($(WITH_IP64),1)
 endif
 
 # Configure Routing protocol
-MAKE_ROUTING_NONE = 0
+MAKE_ROUTING_NULLROUTING = 0
 MAKE_ROUTING_RPL_CLASSIC = 1
 MAKE_ROUTING_RPL_LITE = 2
 
@@ -153,19 +159,18 @@ MAKE_ROUTING_RPL_LITE = 2
 ifeq ($(MAKE_NET),MAKE_NET_IPV6)
 MAKE_ROUTING ?= MAKE_ROUTING_RPL_LITE
 else
-MAKE_ROUTING ?= MAKE_ROUTING_NONE
+MAKE_ROUTING ?= MAKE_ROUTING_NULLROUTING
 endif
 
 ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
-  CFLAGS += -DUIP_CONF_IPV6_RPL=1
-  CFLAGS += -DUIP_CONF_IPV6_RPL_CLASSIC=1
-  MODULES += os/net/rpl-classic
+  CFLAGS += -DROUTING_CONF_RPL_CLASSIC=1
+  MODULES += os/net/routing/rpl-classic
 else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_LITE)
-  CFLAGS += -DUIP_CONF_IPV6_RPL=1
-  CFLAGS += -DUIP_CONF_IPV6_RPL_LITE=1
-  MODULES += os/net/rpl-lite
-else
-  CFLAGS += -DUIP_CONF_IPV6_RPL=0
+  CFLAGS += -DROUTING_CONF_RPL_LITE=1
+  MODULES += os/net/routing/rpl-lite
+else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
+  CFLAGS += -DROUTING_CONF_NULLROUTING=1
+  MODULES += os/net/routing/nullrouting
 endif
 
 MODULEDIRS = $(MODULES_REL) ${wildcard ${addprefix $(CONTIKI)/, $(MODULES)}}
@@ -220,6 +225,7 @@ SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS)
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
+vpath %.s $(SOURCEDIRS)
 
 CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
 
@@ -272,6 +278,9 @@ endif
 
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
+	$(TRACE_AS)
+	$(Q)$(AS) $(ASFLAGS) -o $@ $<
+$(OBJECTDIR)/%.o: %.s | $(OBJECTDIR)
 	$(TRACE_AS)
 	$(Q)$(AS) $(ASFLAGS) -o $@ $<
 endif
@@ -366,6 +375,9 @@ viewconf:
 	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
 	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
 	@echo "##### \"MAKE_ROUTING\": __________________________ $(MAKE_ROUTING)"
+ifdef MAKE_COAP_DTLS_KEYSTORE
+	@echo "##### \"MAKE_COAP_DTLS_KEYSTORE\": _______________ $(MAKE_COAP_DTLS_KEYSTORE)"
+endif
 	@echo "----------------- C variables: -----------------"
 	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
 	@echo "------------------------------------------------"

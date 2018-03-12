@@ -47,6 +47,7 @@
 #include "lib/sensors.h"
 #include "dev/sys-ctrl.h"
 #include "dev/gpio.h"
+#include "dev/gpio-hal.h"
 #include "dev/ioc.h"
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
@@ -76,10 +77,16 @@ PROCESS_THREAD(motion_int_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-motion_interrupt_handler(uint8_t port, uint8_t pin)
+motion_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 {
   process_poll(&motion_int_process);
 }
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t motion_handler = {
+  .next = NULL,
+  .handler = motion_interrupt_handler,
+  .pin_mask = gpio_hal_pin_to_mask(MOTION_SENSOR_PIN) << (MOTION_SENSOR_PORT << 3),
+};
 /*---------------------------------------------------------------------------*/
 static int
 status(int type)
@@ -113,8 +120,7 @@ configure(int type, int value)
   GPIO_DETECT_RISING(MOTION_SENSOR_PORT_BASE, MOTION_SENSOR_PIN_MASK);
   GPIO_TRIGGER_SINGLE_EDGE(MOTION_SENSOR_PORT_BASE, MOTION_SENSOR_PIN_MASK);
   ioc_set_over(MOTION_SENSOR_PORT, MOTION_SENSOR_PIN, IOC_OVERRIDE_DIS);
-  gpio_register_callback(motion_interrupt_handler, MOTION_SENSOR_PORT,
-                         MOTION_SENSOR_PIN);
+  gpio_hal_register_handler(&motion_handler);
 
   process_start(&motion_int_process, NULL);
 

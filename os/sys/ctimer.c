@@ -106,7 +106,7 @@ void
 ctimer_set_with_process(struct ctimer *c, clock_time_t t,
 	   void (*f)(void *), void *ptr, struct process *p)
 {
-  PRINTF("ctimer_set %p %u\n", c, (unsigned)t);
+  PRINTF("ctimer_set %p %lu\n", c, (unsigned long)t);
   c->p = p;
   c->f = f;
   c->ptr = ptr;

@@ -44,10 +44,7 @@
 #include "orchestra.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/packetbuf.h"
-#include "rpl.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "net/routing/routing.h"
 
 /*
  * The body of this rule should be compiled only when "nbr_routes" is available,

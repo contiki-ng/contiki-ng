@@ -51,6 +51,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "coap-engine.h"
+#include "coap-endpoint.h"
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 
@@ -63,13 +64,11 @@
 #endif
 
 /*----------------------------------------------------------------------------*/
-#define REMOTE_PORT       UIP_HTONS(COAP_DEFAULT_PORT)
 #define OBS_RESOURCE_URI  "lights/led3"
 #define SUBS_LED          LEDS_4
 #define OBS_LED           LEDS_3
 
 /*----------------------------------------------------------------------------*/
-static uip_ipaddr_t server_ipaddr[1]; /* holds the server ip address */
 static coap_observee_t *obs;
 static struct ctimer ct;
 /*----------------------------------------------------------------------------*/
@@ -146,11 +145,11 @@ notification_callback(coap_observee_t *obs, void *notification,
 PROCESS_THREAD(er_example_observe_client, ev, data)
 {
   PROCESS_BEGIN();
-
-  uiplib_ipaddrconv(SERVER_IPV6_ADDR, server_ipaddr);
+  static coap_endpoint_t server_endpoint;
+  coap_endpoint_parse(SERVER_IPV6_EP, strlen(SERVER_IPV6_EP), &server_endpoint);
 
   /* receives all CoAP messages */
-  coap_init_engine();
+  coap_engine_init();
 
 #if PLATFORM_HAS_BUTTON
   SENSORS_ACTIVATE(button_1);
@@ -164,7 +163,7 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
     if (ev == sensors_event) {
       if (data == &button_1 && button_1.value(BUTTON_SENSOR_VALUE_STATE) == 0) {
         PRINTF("Starting observation\n");
-        obs = coap_obs_request_registration(server_ipaddr, REMOTE_PORT,
+        obs = coap_obs_request_registration(&server_endpoint,
                                             OBS_RESOURCE_URI, notification_callback,
                                             NULL);
       }

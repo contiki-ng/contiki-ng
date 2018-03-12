@@ -63,7 +63,7 @@ void
 light_interrupt_callback(uint8_t value)
 {
   printf("* Light sensor interrupt!\n");
-  leds_toggle(LEDS_PURPLE);
+  leds_toggle(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(remote_tsl256x_process, ev, data)

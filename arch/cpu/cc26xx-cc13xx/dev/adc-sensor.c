@@ -39,7 +39,6 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "dev/adc-sensor.h"
-#include "gpio-interrupt.h"
 #include "sys/timer.h"
 #include "lpm.h"
 

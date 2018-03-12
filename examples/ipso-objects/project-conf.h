@@ -30,6 +30,9 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
+/* No sleep on CC2538 to enable full 32 KiB RAM */
+#define LPM_CONF_ENABLE 0
+
 #ifdef BOARD_STRING
 #define LWM2M_DEVICE_MODEL_NUMBER BOARD_STRING
 #elif defined(CONTIKI_TARGET_WISMOTE)
@@ -40,10 +43,14 @@
 #define PLATFORM_REBOOT watchdog_reboot
 #endif
 
+#if BOARD_SENSORTAG
+/* Real sensor is present... */
+#else
 #define IPSO_TEMPERATURE example_ipso_temperature
+#endif /* BOARD_SENSORTAG */
 
 /* Increase rpl-border-router IP-buffer when using more than 64. */
-#define REST_MAX_CHUNK_SIZE            64
+#define COAP_MAX_CHUNK_SIZE            64
 
 /* Multiplies with chunk size, be aware of memory constraints. */
 #define COAP_MAX_OPEN_TRANSACTIONS     4

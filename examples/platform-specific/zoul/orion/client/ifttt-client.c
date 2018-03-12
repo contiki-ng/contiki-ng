@@ -33,7 +33,7 @@
 #include "http-socket.h"
 #include "ipv6/ip64-addr.h"
 #include "dev/leds.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "dev/button-sensor.h"
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/

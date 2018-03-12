@@ -5,7 +5,7 @@ JN516x_WITH_DONGLE = 1
 
 CONTIKI=../../../../../..
 
-MODULES_REL += .. ../../tools
+MODULES_REL += ..
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap
 MODULES += os/services/orchestra os/lib/json

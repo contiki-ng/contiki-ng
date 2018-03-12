@@ -105,7 +105,7 @@ db_result_t index_load(relation_t *, attribute_t *);
 db_result_t index_release(index_t *);
 db_result_t index_insert(index_t *, attribute_value_t *, tuple_id_t);
 db_result_t index_delete(index_t *, attribute_value_t *);
-db_result_t index_get_iterator(index_iterator_t *, index_t *, 
+db_result_t index_get_iterator(index_iterator_t *, index_t *,
                                attribute_value_t *, attribute_value_t *);
 tuple_id_t index_get_next(index_iterator_t *);
 int index_exists(attribute_t *);

@@ -32,15 +32,27 @@
  *
  */
 
+/**
+ * \file
+ *         Various uIP library functions.
+ * \author
+ *         Nicolas Tsiftes <nvt@sics.se>
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
+ */
 
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uiplib.h"
+#include "net/ipv6/ip64-addr.h"
 #include <string.h>
+#include <stdio.h>
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "uiplib"
+#define LOG_LEVEL  LOG_LEVEL_NONE
 
-/*-----------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
 int
 uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *ipaddr)
@@ -81,19 +93,19 @@ uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *ipaddr)
       } else if(c >= 'A' && c <= 'F') {
         tmp = c - 'A' + 10;
       } else {
-        PRINTF("uiplib: illegal char: '%c'\n", c);
+        LOG_ERR("illegal char: '%c'\n", c);
         return 0;
       }
       value = (value << 4) + (tmp & 0xf);
     }
   }
   if(c != '\0' && c != ']' && c != '/') {
-    PRINTF("uiplib: too large address\n");
+    LOG_ERR("too large address\n");
     return 0;
   }
   if(len < sizeof(uip_ip6addr_t)) {
     if(zero < 0) {
-      PRINTF("uiplib: too short address\n");
+      LOG_ERR("too short address\n");
       return 0;
     }
     memmove(&ipaddr->u8[zero + sizeof(uip_ip6addr_t) - len],
@@ -104,7 +116,7 @@ uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *ipaddr)
   return 1;
 }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-/*-----------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 /* Parse a IPv4-address from a string. Returns the number of characters read 
  * for the address. */
 int
@@ -138,6 +150,109 @@ uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *ipaddr)
     } while(c != '.' && c != 0 && c != ' ');
 
   }
-  return charsread-1;
+  return charsread - 1;
 }
-/*-----------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+void
+uiplib_ipaddr_print(const uip_ipaddr_t *addr)
+{
+  uint16_t a;
+  unsigned int i;
+  int f;
+
+  if(addr == NULL) {
+    printf("(NULL IP addr)");
+    return;
+  }
+
+  if(ip64_addr_is_ipv4_mapped_addr(addr)) {
+    /*
+     * Printing IPv4-mapped addresses is done according to RFC 4291 [1]
+     *
+     *     "An alternative form that is sometimes more
+     *     convenient when dealing with a mixed environment
+     *     of IPv4 and IPv6 nodes is x:x:x:x:x:x:d.d.d.d,
+     *     where the 'x's are the hexadecimal values of the
+     *     six high-order 16-bit pieces of the address, and
+     *     the 'd's are the decimal values of the four
+     *     low-order 8-bit pieces of the address (standard
+     *     IPv4 representation)."
+     *
+     * [1] https://tools.ietf.org/html/rfc4291#page-4
+     */
+    printf("::FFFF:%u.%u.%u.%u", addr->u8[12], addr->u8[13], addr->u8[14], addr->u8[15]);
+  } else {
+    for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+      a = (addr->u8[i] << 8) + addr->u8[i + 1];
+      if(a == 0 && f >= 0) {
+        if(f++ == 0) {
+          printf("::");
+        }
+      } else {
+        if(f > 0) {
+          f = -1;
+        } else if(i > 0) {
+          printf(":");
+        }
+        printf("%x", a);
+      }
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+int
+uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
+{
+  uint16_t a;
+  unsigned int i;
+  int f, n;
+
+  if(size == 0) {
+    return 0;
+  }
+
+  if(addr == NULL) {
+    n = snprintf(buf, size - 1, "(NULL IP addr)");
+
+  } else if(ip64_addr_is_ipv4_mapped_addr(addr)) {
+    /*
+     * Printing IPv4-mapped addresses is done according to RFC 4291 [1]
+     *
+     *     "An alternative form that is sometimes more
+     *     convenient when dealing with a mixed environment
+     *     of IPv4 and IPv6 nodes is x:x:x:x:x:x:d.d.d.d,
+     *     where the 'x's are the hexadecimal values of the
+     *     six high-order 16-bit pieces of the address, and
+     *     the 'd's are the decimal values of the four
+     *     low-order 8-bit pieces of the address (standard
+     *     IPv4 representation)."
+     *
+     * [1] https://tools.ietf.org/html/rfc4291#page-4
+     */
+    n = snprintf(buf, size - 1, "::FFFF:%u.%u.%u.%u", addr->u8[12],
+                 addr->u8[13], addr->u8[14], addr->u8[15]);
+  } else {
+    for(n = 0, i = 0, f = 0; i < sizeof(uip_ipaddr_t) && n < size - 1; i += 2) {
+      a = (addr->u8[i] << 8) + addr->u8[i + 1];
+      if(a == 0 && f >= 0) {
+        if(f++ == 0) {
+          buf[n++] = ':';
+          buf[n++] = ':';
+        }
+      } else {
+        if(f > 0) {
+          f = -1;
+        } else if(i > 0) {
+          buf[n++] = ':';
+        }
+        n += snprintf(&buf[n], size - n - 1, "%x", a);
+      }
+    }
+  }
+
+  if(n >= size - 1) {
+    buf[size - 1] = '\0';
+  }
+  return n;
+}
+/*---------------------------------------------------------------------------*/

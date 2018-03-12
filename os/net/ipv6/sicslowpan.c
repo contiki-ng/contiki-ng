@@ -74,12 +74,7 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/routing/routing.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -676,8 +671,8 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   int ext_hdr_len;
   struct uip_udp_hdr *udp_buf;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("before compression (%d): ", UIP_IP_BUF->len[1]);
     for(ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
       uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
@@ -685,7 +680,6 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
     }
     LOG_DBG("\n");
   }
-#endif /* LOG_DBG_ENABLED */
 
   hc06_ptr = PACKETBUF_IPHC_BUF + 2;
   /*
@@ -1001,16 +995,15 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   PACKETBUF_IPHC_BUF[0] = iphc0;
   PACKETBUF_IPHC_BUF[1] = iphc1;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("after compression %d: ", (int)(hc06_ptr - packetbuf_ptr));
     for(ndx = 0; ndx < hc06_ptr - packetbuf_ptr; ndx++) {
       uint8_t data = ((uint8_t *) packetbuf_ptr)[ndx];
       LOG_DBG("%02x", data);
     }
     LOG_DBG("\n");
-    }
-#endif
+  }
 
   packetbuf_hdr_len = hc06_ptr - packetbuf_ptr;
 }
@@ -1436,10 +1429,8 @@ packet_sent(void *ptr, int status, int transmissions)
   /* Update neighbor link statistics */
   link_stats_packet_sent(dest, status, transmissions);
 
-#if UIP_CONF_IPV6_RPL
-  /* Call RPL link callback */
-  rpl_link_callback(dest, status, transmissions);
-#endif /* UIP_CONF_IPV6_RPL */
+  /* Call routing protocol link callback */
+  NETSTACK_ROUTING.link_callback(dest, status, transmissions);
 
   /* DS6 callback, used for UIP_DS6_LL_NUD */
   uip_ds6_link_callback(status, transmissions);
@@ -1913,8 +1904,7 @@ input(void)
     LOG_INFO("input: IP packet ready (length %d)\n",
 	    uip_len);
 
-#if LOG_DBG_ENABLED
-    {
+    if(LOG_DBG_ENABLED) {
       uint16_t ndx;
       LOG_DBG("after decompression %u:", UIP_IP_BUF->len[1]);
       for (ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
@@ -1923,7 +1913,6 @@ input(void)
       }
       LOG_DBG("\n");
     }
-#endif /* LOG_DBG_ENABLED */
 
     /* if callback is set then set attributes and call */
     if(callback) {

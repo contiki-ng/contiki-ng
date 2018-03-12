@@ -37,11 +37,11 @@
  */
 
 #include <string.h>
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "plugtest.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 RESOURCE(res_plugtest_link1,
          "rt=\"Type1 Type2\";if=\"If1\"",
@@ -63,9 +63,9 @@ RESOURCE(res_plugtest_link3,
          NULL);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const char *msg = "Dummy link";
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  REST.set_response_payload(response, msg, strlen(msg));
+  coap_set_header_content_format(response, TEXT_PLAIN);
+  coap_set_payload(response, msg, strlen(msg));
 }

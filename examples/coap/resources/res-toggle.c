@@ -37,15 +37,14 @@
  */
 
 #include "contiki.h"
-
-#if PLATFORM_HAS_LEDS
-
-#include <string.h>
-#include "contiki.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "dev/leds.h"
 
-static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+#include <string.h>
+
+#if PLATFORM_HAS_LEDS || LEDS_COUNT
+
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* A simple actuator example. Toggles the red led */
 RESOURCE(res_toggle,
@@ -56,7 +55,7 @@ RESOURCE(res_toggle,
          NULL);
 
 static void
-res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   leds_toggle(LEDS_RED);
 }

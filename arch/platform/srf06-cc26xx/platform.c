@@ -47,15 +47,16 @@
 #include "ti-lib.h"
 #include "contiki.h"
 #include "contiki-net.h"
-#include "leds.h"
 #include "lpm.h"
-#include "gpio-interrupt.h"
+#include "dev/leds.h"
+#include "dev/gpio-hal.h"
 #include "dev/oscillators.h"
 #include "ieee-addr.h"
 #include "ble-addr.h"
 #include "vims.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/soc-rtc.h"
+#include "dev/serial-line.h"
 #include "rf-core/rf-core.h"
 #include "sys_ctrl.h"
 #include "uart.h"
@@ -84,7 +85,7 @@ unsigned short node_id = 0;
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
@@ -143,7 +144,7 @@ platform_init_stage_one()
 
   board_init();
 
-  gpio_interrupt_init();
+  gpio_hal_init();
 
   leds_init();
   fade(LEDS_RED);
@@ -156,6 +157,7 @@ platform_init_stage_one()
    */
   ti_lib_pwr_ctrl_io_freeze_disable();
 
+  ti_lib_rom_int_enable(INT_AON_GPIO_EDGE);
   ti_lib_int_master_enable();
 
   soc_rtc_init();
@@ -173,6 +175,10 @@ platform_init_stage_two()
 #endif
 
   serial_line_init();
+
+#if BUILD_WITH_SHELL
+  cc26xx_uart_set_input(serial_line_input_byte);
+#endif
 
   /* Populate linkaddr_node_addr */
 #if MAKE_MAC == MAKE_MAC_BLE
