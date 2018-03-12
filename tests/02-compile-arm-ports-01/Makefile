@@ -47,8 +47,8 @@ hello-world/cc2538dk \
 rpl-border-router/cc2538dk \
 rpl-border-router/cc2538dk:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 hello-world/nrf52dk \
-platform-specific/nrf52dk/coap-demo/nrf52dk:coap-server \
-platform-specific/nrf52dk/coap-demo/nrf52dk:coap-client:SERVER_IPV6_EP=ffff \
+platform-specific/nrf52dk/coap-demo/coap-server/nrf52dk \
+platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
 platform-specific/nrf52dk/mqtt-demo/nrf52dk \
 platform-specific/nrf52dk/blink-hello/nrf52dk \
 platform-specific/nrf52dk/timer-test/nrf52dk \

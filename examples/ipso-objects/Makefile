@@ -2,6 +2,8 @@ CONTIKI_PROJECT = example-ipso-objects
 
 CONTIKI_SOURCEFILES += serial-protocol.c example-ipso-temperature.c
 
+PLATFORMS_EXCLUDE = sky
+
 all: $(CONTIKI_PROJECT)
 
 MODULES += os/net/app-layer/coap

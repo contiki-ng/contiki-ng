@@ -1,4 +1,7 @@
-all: cc26xx-web-demo
+CONTIKI_PROJECT = cc26xx-web-demo
+all: $(CONTIKI_PROJECT)
+
+PLATFORMS_ONLY = srf06-cc26xx
 
 MODULES_REL += ./resources
 

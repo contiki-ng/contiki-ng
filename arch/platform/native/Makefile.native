@@ -30,6 +30,8 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 # Enable nullmac by default
 MAKE_MAC ?= MAKE_MAC_NULLMAC
 
+CLEAN += *.native
+
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/native
 include $(CONTIKI)/arch/cpu/native/Makefile.native
