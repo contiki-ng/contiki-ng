@@ -52,6 +52,7 @@
 #include "dev/gpio-hal.h"
 #include "dev/oscillators.h"
 #include "ieee-addr.h"
+#include "ble-addr.h"
 #include "vims.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/soc-rtc.h"
@@ -105,9 +106,13 @@ fade(leds_mask_t l)
 static void
 set_rf_params(void)
 {
-  uint16_t short_addr;
   uint8_t ext_addr[8];
 
+#if MAKE_MAC == MAKE_MAC_BLE
+  ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
+  NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
+#else
+  uint16_t short_addr;
   ieee_addr_cpy_to(ext_addr, 8);
 
   short_addr = ext_addr[7];
@@ -120,6 +125,7 @@ set_rf_params(void)
 
   /* also set the global node id */
   node_id = short_addr;
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -175,8 +181,13 @@ platform_init_stage_two()
 #endif
 
   /* Populate linkaddr_node_addr */
+#if MAKE_MAC == MAKE_MAC_BLE
+  uint8_t ext_addr[8];
+  ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
+  memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
+#else
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
-
+#endif
   fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
