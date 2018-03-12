@@ -29,6 +29,7 @@ dev/leds/srf06-cc26xx:BOARD=launchpad/cc1310 \
 dev/leds/srf06-cc26xx:BOARD=launchpad/cc1350 \
 dev/leds/srf06-cc26xx:BOARD=launchpad/cc2650 \
 6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650 \
+ble/ipv6-client/srf06-cc26xx:BOARD=launchpad/cc2650 \
 storage/cfs-coffee/cc2538dk \
 sensniff/cc2538dk \
 rpl-udp/cc2538dk \
