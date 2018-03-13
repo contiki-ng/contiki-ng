@@ -68,7 +68,9 @@
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "dev/serial-line.h"
+#include "dev/button-hal.h"
 #include "net/mac/framer/frame802154.h"
+#include "board-peripherals.h"
 
 #include "driverlib/driverlib_release.h"
 
@@ -83,6 +85,12 @@ unsigned short node_id = 0;
 /*---------------------------------------------------------------------------*/
 /** \brief Board specific iniatialisation */
 void board_init(void);
+/*---------------------------------------------------------------------------*/
+#ifdef BOARD_CONF_HAS_SENSORS
+#define BOARD_HAS_SENSORS BOARD_CONF_HAS_SENSORS
+#else
+#define BOARD_HAS_SENSORS 1
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 fade(leds_mask_t l)
@@ -108,7 +116,7 @@ set_rf_params(void)
 {
   uint8_t ext_addr[8];
 
-#if MAKE_MAC == MAKE_MAC_BLE
+#if MAC_CONF_WITH_BLE
   ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
 #else
@@ -181,25 +189,28 @@ platform_init_stage_two()
 #endif
 
   /* Populate linkaddr_node_addr */
-#if MAKE_MAC == MAKE_MAC_BLE
+#if MAC_CONF_WITH_BLE
   uint8_t ext_addr[8];
   ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
   memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
 #else
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 #endif
+
+  button_hal_init();
+
   fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_three()
 {
-  radio_value_t chan, pan;
+  radio_value_t chan = 0;
+  radio_value_t pan = 0;
 
   set_rf_params();
 
   NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
-  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
 
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
@@ -209,10 +220,19 @@ platform_init_stage_three()
           ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
-  LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
+  LOG_INFO(" RF: Channel %d", chan);
+
+  if(NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan) == RADIO_RESULT_OK) {
+    LOG_INFO_(", PANID 0x%04X", pan);
+  }
+  LOG_INFO_("\n");
+
   LOG_INFO(" Node ID: %d\n", node_id);
 
+#if BOARD_HAS_SENSORS
   process_start(&sensors_process, NULL);
+#endif
+
   fade(LEDS_ORANGE);
 }
 /*---------------------------------------------------------------------------*/

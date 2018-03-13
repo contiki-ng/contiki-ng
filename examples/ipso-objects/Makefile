@@ -11,6 +11,9 @@ MODULES += os/services/lwm2m
 MODULES += os/services/ipso-objects
 
 CONTIKI=../..
+include $(CONTIKI)/Makefile.identify-target
+MODULES_REL += $(TARGET)
+
 include $(CONTIKI)/Makefile.include
 
 # border router rules

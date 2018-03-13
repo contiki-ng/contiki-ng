@@ -42,8 +42,11 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "coap-engine.h"
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+#include "dev/button-hal.h"
+#else
 #include "dev/button-sensor.h"
-
+#endif
 /*----------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -147,9 +150,12 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
   /* init timer and button (if available) */
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 #if PLATFORM_HAS_BUTTON
+#if !PLATFORM_SUPPORTS_BUTTON_HAL
   SENSORS_ACTIVATE(button_sensor);
-  printf("Press a button to start/stop observation of remote resource\n");
 #endif
+  printf("Press a button to start/stop observation of remote resource\n");
+#endif /* PLATFORM_HAS_BUTTON */
+
   /* toggle observation every time the timer elapses or the button is pressed */
   while(1) {
     PROCESS_YIELD();
@@ -159,11 +165,15 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
       printf("\n--Done--\n");
       etimer_reset(&et);
 #if PLATFORM_HAS_BUTTON
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+    } else if(ev == button_hal_release_event) {
+#else
     } else if(ev == sensors_event && data == &button_sensor) {
+#endif
       printf("--Toggle tutton--\n");
       toggle_observation();
       printf("\n--Done--\n");
-#endif
+#endif /* PLATFORM_HAS_BUTTON */
     }
   }
   PROCESS_END();

@@ -39,7 +39,6 @@
 /********** Includes **********/
 
 #include "net/routing/routing.h"
-#include "net/mac/tsch/tsch-queue.h"
 #if ROUTING_CONF_RPL_LITE
 #include "net/routing/rpl-lite/rpl.h"
 #elif ROUTING_CONF_RPL_CLASSIC

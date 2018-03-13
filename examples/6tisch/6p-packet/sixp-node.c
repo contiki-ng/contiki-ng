@@ -35,15 +35,14 @@
 #include <net/mac/tsch/sixtop/sixtop.h>
 
 /* Hard-coded MAC address of the TSCH coordinator */
-static linkaddr_t coordinator_addr =  {{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
+static linkaddr_t coordinator_addr =  {{ 0x00, 0x01, 0x00, 0x01,
+                                         0x00, 0x01, 0x00, 0x01 }};
 
 extern const sixtop_sf_t test_sf;
 extern int test_sf_start(const linkaddr_t *addr);
 
 PROCESS(sixp_node_process, "6P node");
 AUTOSTART_PROCESSES(&sixp_node_process);
-
-#define COORDINATOR_NODE_ID 1
 
 PROCESS_THREAD(sixp_node_process, ev, data)
 {

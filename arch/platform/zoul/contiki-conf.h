@@ -86,6 +86,8 @@
 /*---------------------------------------------------------------------------*/
 /* board.h assumes that basic configuration is done */
 #include "board.h"
+
+#define PLATFORM_SUPPORTS_BUTTON_HAL PLATFORM_HAS_BUTTON
 /*---------------------------------------------------------------------------*/
 /**
  * \name Radio Configuration

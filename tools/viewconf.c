@@ -1,8 +1,6 @@
 #include "contiki.h"
 #include "os/net/mac/framer/frame802154.h"
 #include "os/net/mac/tsch/tsch.h"
-#include "os/net/mac/tsch/tsch-conf.h"
-#include "os/net/mac/tsch/tsch-schedule.h"
 #include "os/net/ipv6/uip-nd6.h"
 #include "os/net/ipv6/uipopt.h"
 #include "os/net/queuebuf.h"

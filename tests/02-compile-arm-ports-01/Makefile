@@ -11,6 +11,8 @@ platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc2650 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1310 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1350 \
 platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx \
+platform-specific/cc26xx/ble-ipv6/srf06-cc26xx:BOARD=sensortag/cc2650 \
+nullnet/srf06-cc26xx:BOARD=sensortag/cc2650 \
 rpl-border-router/srf06-cc26xx:BOARD=launchpad/cc2650 \
 sensniff/srf06-cc26xx \
 sensniff/srf06-cc26xx:BOARD=launchpad/cc1310 \
@@ -29,18 +31,22 @@ dev/leds/srf06-cc26xx:BOARD=launchpad/cc1310 \
 dev/leds/srf06-cc26xx:BOARD=launchpad/cc1350 \
 dev/leds/srf06-cc26xx:BOARD=launchpad/cc2650 \
 6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650 \
-ble/ipv6-client/srf06-cc26xx:BOARD=launchpad/cc2650 \
+mqtt-client/srf06-cc26xx:BOARD=srf06/cc26xx \
+mqtt-client/srf06-cc26xx:BOARD=launchpad/cc2650 \
+mqtt-client/srf06-cc26xx:BOARD=sensortag/cc2650 \
+mqtt-client/cc2538dk \
 storage/cfs-coffee/cc2538dk \
 sensniff/cc2538dk \
 rpl-udp/cc2538dk \
 coap/cc2538dk \
 slip-radio/cc2538dk \
 ipso-objects/cc2538dk \
+ipso-objects/cc2538dk:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1 \
+ipso-objects/native:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 multicast/cc2538dk \
 dev/gpio-hal/cc2538dk \
 dev/leds/cc2538dk \
 platform-specific/cc2538-common/cc2538dk \
-platform-specific/cc2538-common/mqtt-demo/cc2538dk \
 platform-specific/cc2538-common/crypto/cc2538dk \
 platform-specific/cc2538-common/pka/cc2538dk \
 hello-world/cc2538dk \

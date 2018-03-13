@@ -47,12 +47,7 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 /** \brief Exports global symbols for the sensor API */
-SENSORS(&vdd3_sensor,
-#if PLATFORM_HAS_BUTTON
-  &button_sensor,
-#endif
-  &cc2538_temp_sensor
-);
+SENSORS(&vdd3_sensor, &cc2538_temp_sensor);
 /*---------------------------------------------------------------------------*/
 /**
  * @}

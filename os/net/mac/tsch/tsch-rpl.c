@@ -46,10 +46,7 @@
 
 #include "net/routing/routing.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-private.h"
-#include "net/mac/tsch/tsch-schedule.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-rpl.h"
+#include "net/link-stats.h"
 
 #if ROUTING_CONF_RPL_LITE
 #include "net/routing/rpl-lite/rpl.h"
@@ -83,6 +80,11 @@ tsch_rpl_callback_joining_network(void)
 void
 tsch_rpl_callback_leaving_network(void)
 {
+  /* Forget past link statistics. If we are leaving a TSCH
+  network, there are changes we've been out of sync in the recent past, and
+  as a result have irrelevant link statistices. */
+  link_stats_reset();
+  /* RPL local repair */
   NETSTACK_ROUTING.local_repair("TSCH leaving");
 }
 /*---------------------------------------------------------------------------*/

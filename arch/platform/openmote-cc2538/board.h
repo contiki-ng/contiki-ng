@@ -128,6 +128,7 @@
 #define BUTTON_USER_VECTOR     GPIO_C_IRQn
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON    1
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

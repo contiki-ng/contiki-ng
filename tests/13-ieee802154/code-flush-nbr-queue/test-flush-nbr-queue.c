@@ -38,7 +38,6 @@
 
 #include "net/linkaddr.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-queue.h"
 
 #include "unit-test/unit-test.h"
 #include "common.h"

@@ -56,20 +56,18 @@
 
 #define IPSO_INPUT_STATE     5500
 #define IPSO_INPUT_COUNTER   5501
-#define IPSO_INPUT_POLARITY  5502
 #define IPSO_INPUT_DEBOUNCE  5503
 #define IPSO_INPUT_EDGE_SEL  5504
 #define IPSO_INPUT_CTR_RESET 5505
 #define IPSO_INPUT_SENSOR_TYPE 5751
 
 #if PLATFORM_HAS_BUTTON
-#include "dev/button-sensor.h"
-
-#if BOARD_SENSORTAG
-#include "sensortag/button-sensor.h"
-#define IPSO_BUTTON_SENSOR button_left_sensor
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+#include "dev/button-hal.h"
 #else
+#include "dev/button-sensor.h"
 #define IPSO_BUTTON_SENSOR button_sensor
+static struct etimer timer;
 #endif
 
 PROCESS(ipso_button_process, "ipso-button");
@@ -80,13 +78,12 @@ static lwm2m_status_t lwm2m_callback(lwm2m_object_instance_t *object,
                                      lwm2m_context_t *ctx);
 
 static int input_state = 0;
-static int polarity = 0;
 static int32_t counter = 0;
 static int32_t edge_selection = 3; /* both */
 static int32_t debounce_time = 10;
 
 static const lwm2m_resource_id_t resources[] = {
-  RO(IPSO_INPUT_STATE), RO(IPSO_INPUT_COUNTER), RW(IPSO_INPUT_POLARITY),
+  RO(IPSO_INPUT_STATE), RO(IPSO_INPUT_COUNTER),
   RW(IPSO_INPUT_DEBOUNCE), RW(IPSO_INPUT_EDGE_SEL), EX(IPSO_INPUT_CTR_RESET),
   RO(IPSO_INPUT_SENSOR_TYPE)
 };
@@ -104,15 +101,8 @@ static lwm2m_object_instance_t reg_object = {
 static int
 read_state(void)
 {
-  int value;
-  if(polarity == 0) {
-    value = input_state ? 1 : 0;
-  } else {
-    value = input_state ? 0 : 1;
-  }
-  PRINTF("Read button state (polarity=%d, state=%d): %d\n",
-         polarity, input_state, value);
-  return value;
+  PRINTF("Read button state: %d\n", input_state);
+  return input_state;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -127,9 +117,6 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       break;
     case IPSO_INPUT_COUNTER:
       lwm2m_object_write_int(ctx, counter);
-      break;
-    case IPSO_INPUT_POLARITY:
-      lwm2m_object_write_int(ctx, polarity);
       break;
     case IPSO_INPUT_DEBOUNCE:
       lwm2m_object_write_int(ctx, debounce_time);
@@ -168,18 +155,33 @@ ipso_button_init(void)
 #if PLATFORM_HAS_BUTTON
 PROCESS_THREAD(ipso_button_process, ev, data)
 {
-  static struct etimer timer;
-  int32_t time;
-
   PROCESS_BEGIN();
 
+#if !PLATFORM_SUPPORTS_BUTTON_HAL
   SENSORS_ACTIVATE(IPSO_BUTTON_SENSOR);
+#endif
 
   while(1) {
     PROCESS_WAIT_EVENT();
 
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+    if(ev == button_hal_press_event) {
+      input_state = 1;
+      counter++;
+      if((edge_selection & 2) != 0) {
+        lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_STATE);
+      }
+      lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_COUNTER);
+    } else if(ev == button_hal_release_event) {
+      input_state = 0;
+      if((edge_selection & 1) != 0) {
+        lwm2m_notify_object_observers(&reg_object, IPSO_INPUT_STATE);
+      }
+    }
+#else /* PLATFORM_SUPPORTS_BUTTON_HAL */
     if(ev == sensors_event && data == &IPSO_BUTTON_SENSOR) {
       if(!input_state) {
+        int32_t time;
         input_state = 1;
         counter++;
         if((edge_selection & 2) != 0) {
@@ -206,6 +208,7 @@ PROCESS_THREAD(ipso_button_process, ev, data)
         }
       }
     }
+#endif /* PLATFORM_SUPPORTS_BUTTON_HAL */
   }
 
   PROCESS_END();

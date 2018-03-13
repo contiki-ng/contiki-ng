@@ -41,44 +41,6 @@
 /********** Includes **********/
 
 #include "contiki.h"
-#include "net/mac/tsch/tsch-private.h"
-
-/******** Configuration *******/
-
-/* Use SFD timestamp for synchronization? By default we merely rely on rtimer and busy wait
- * until SFD is high, which we found to provide greater accuracy on JN516x and CC2420.
- * Note: for association, however, we always use SFD timestamp to know the time of arrival
- * of the EB (because we do not busy-wait for the whole scanning process)
- * */
-#ifdef TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
-#define TSCH_RESYNC_WITH_SFD_TIMESTAMPS TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
-#else
-#define TSCH_RESYNC_WITH_SFD_TIMESTAMPS 0
-#endif
-
-/* If enabled, remove jitter due to measurement errors */
-#ifdef TSCH_CONF_TIMESYNC_REMOVE_JITTER
-#define TSCH_TIMESYNC_REMOVE_JITTER TSCH_CONF_TIMESYNC_REMOVE_JITTER
-#else
-#define TSCH_TIMESYNC_REMOVE_JITTER TSCH_RESYNC_WITH_SFD_TIMESTAMPS
-#endif
-
-/* The jitter to remove in ticks.
- * This should be the sum of measurement errors on Tx and Rx nodes.
- * */
-#define TSCH_TIMESYNC_MEASUREMENT_ERROR US_TO_RTIMERTICKS(32)
-
-/* Base drift value.
- * Used to compensate locally know inaccuracies, such as
- * the effect of having a binary 32.768 kHz timer as the TSCH time base. */
-#ifdef TSCH_CONF_BASE_DRIFT_PPM
-#define TSCH_BASE_DRIFT_PPM TSCH_CONF_BASE_DRIFT_PPM
-#else
-#define TSCH_BASE_DRIFT_PPM 0
-#endif
-
-/* The approximate number of slots per second */
-#define TSCH_SLOTS_PER_SECOND (1000000 / TSCH_DEFAULT_TS_TIMESLOT_LENGTH)
 
 /***** External Variables *****/
 

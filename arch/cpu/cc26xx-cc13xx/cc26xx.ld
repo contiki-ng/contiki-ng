@@ -56,7 +56,7 @@ _estack = ORIGIN(SRAM) + LENGTH(SRAM); /* End of SRAM */
 
 /*. Generate a link error if heap and stack don’t fit into RAM .*/
 _Min_Heap_Size = 0;
-_Min_Stack_Size = 0x100;
+_Min_Stack_Size = 0x400;
 
 SECTIONS
 {

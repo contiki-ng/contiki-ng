@@ -42,61 +42,6 @@
 
 #include "contiki.h"
 #include "lib/ringbufindex.h"
-#include "net/mac/tsch/tsch-packet.h"
-#include "net/mac/tsch/tsch-private.h"
-
-/******** Configuration *******/
-
-/* Size of the ring buffer storing dequeued outgoing packets (only an array of pointers).
- * Must be power of two, and greater or equal to QUEUEBUF_NUM */
-#ifdef TSCH_CONF_DEQUEUED_ARRAY_SIZE
-#define TSCH_DEQUEUED_ARRAY_SIZE TSCH_CONF_DEQUEUED_ARRAY_SIZE
-#else
-/* By default, round QUEUEBUF_CONF_NUM to next power of two
- * (in the range [4;256]) */
-#if QUEUEBUF_CONF_NUM <= 4
-#define TSCH_DEQUEUED_ARRAY_SIZE 4
-#elif QUEUEBUF_CONF_NUM <= 8
-#define TSCH_DEQUEUED_ARRAY_SIZE 8
-#elif QUEUEBUF_CONF_NUM <= 16
-#define TSCH_DEQUEUED_ARRAY_SIZE 16
-#elif QUEUEBUF_CONF_NUM <= 32
-#define TSCH_DEQUEUED_ARRAY_SIZE 32
-#elif QUEUEBUF_CONF_NUM <= 64
-#define TSCH_DEQUEUED_ARRAY_SIZE 64
-#elif QUEUEBUF_CONF_NUM <= 128
-#define TSCH_DEQUEUED_ARRAY_SIZE 128
-#else
-#define TSCH_DEQUEUED_ARRAY_SIZE 256
-#endif
-#endif
-
-/* Size of the ring buffer storing incoming packets.
- * Must be power of two */
-#ifdef TSCH_CONF_MAX_INCOMING_PACKETS
-#define TSCH_MAX_INCOMING_PACKETS TSCH_CONF_MAX_INCOMING_PACKETS
-#else
-#define TSCH_MAX_INCOMING_PACKETS 4
-#endif
-
-/*********** Callbacks *********/
-
-/* Called by TSCH form interrupt after receiving a frame, enabled upper-layer to decide
- * whether to ACK or NACK */
-#ifdef TSCH_CALLBACK_DO_NACK
-int TSCH_CALLBACK_DO_NACK(struct tsch_link *link, linkaddr_t *src, linkaddr_t *dst);
-#endif
-
-/************ Types ***********/
-
-/* Stores data about an incoming packet */
-struct input_packet {
-  uint8_t payload[TSCH_PACKET_MAX_LEN]; /* Packet payload */
-  struct tsch_asn_t rx_asn; /* ASN when the packet was received */
-  int len; /* Packet len */
-  int16_t rssi; /* RSSI for this packet */
-  uint8_t channel; /* Channel we received the packet on */
-};
 
 /***** External Variables *****/
 

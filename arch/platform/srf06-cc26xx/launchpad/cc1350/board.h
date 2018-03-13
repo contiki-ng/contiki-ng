@@ -62,7 +62,7 @@
  */
 #define LEDS_CONF_COUNT                 2
 #define LEDS_CONF_RED                   1
-#define LEDS_CONF_YELLOW                2
+#define LEDS_CONF_GREEN                 2
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -203,6 +203,16 @@
     BOARD_IOID_DIO28, BOARD_IOID_DIO29, \
     IOID_UNUSED \
   }
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Board indices for the button HAL
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
+#define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

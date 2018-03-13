@@ -41,16 +41,13 @@
  * Implementation of a generic module controlling SmartRF06EB sensors
  */
 #include "contiki.h"
-#include "dev/button-sensor.h"
 #include "dev/als-sensor.h"
 #include "dev/cc2538-sensors.h"
 
 #include <string.h>
 
 /** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&button_select_sensor, &button_left_sensor, &button_right_sensor,
-        &button_up_sensor, &button_down_sensor, &als_sensor,
-        &cc2538_temp_sensor, &vdd3_sensor);
+SENSORS(&als_sensor, &cc2538_temp_sensor, &vdd3_sensor);
 
 /**
  * @}

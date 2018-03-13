@@ -4,7 +4,6 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 rpl-border-router/zoul \
 platform-specific/cc2538-common/zoul \
-platform-specific/cc2538-common/mqtt-demo/zoul \
 platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
@@ -17,6 +16,8 @@ coap/zoul \
 multicast/zoul \
 ipso-objects/zoul \
 ipso-objects/zoul:MAKE_WITH_DTLS=1 \
+ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1 \
+ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 hello-world/zoul \
 sensniff/zoul \
 sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
@@ -51,6 +52,8 @@ dev/rgb-led/zoul:BOARD=remote-revb \
 dev/rgb-led/zoul:BOARD=firefly-reva \
 dev/rgb-led/zoul:BOARD=firefly \
 dev/rgb-led/zoul:BOARD=orion \
+mqtt-client/zoul:BOARD=firefly \
+mqtt-client/openmote-cc2538 \
 storage/cfs-coffee/openmote-cc2538 \
 sensniff/openmote-cc2538 \
 hello-world/openmote-cc2538 \

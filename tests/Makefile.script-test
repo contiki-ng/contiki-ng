@@ -11,6 +11,7 @@ summary: cooja $(TESTLOGS)
 	@cat summary
 
 %.testlog: %.sh cooja
+	@echo "========== Running script test $(basename $@).sh =========="
 	@bash "$(basename $@).sh" "$(CONTIKI)"
 
 clean:

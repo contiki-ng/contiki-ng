@@ -41,7 +41,6 @@
 #include "sys/log.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-log.h"
 #include "net/routing/routing.h"
 #include "serial-shell.h"
 #include "sf-plugtest.h"

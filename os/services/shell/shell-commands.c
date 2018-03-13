@@ -53,10 +53,6 @@
 #include "net/ipv6/uip-ds6.h"
 #if MAC_CONF_WITH_TSCH
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-adaptive-timesync.h"
-#include "net/mac/tsch/tsch-queue.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-private.h"
 #endif /* MAC_CONF_WITH_TSCH */
 #include "net/routing/routing.h"
 #include "net/mac/llsec802154.h"
@@ -218,8 +214,11 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
 
   /* Get argument (remote IPv6) */
   SHELL_ARGS_NEXT(args, next_args);
-  if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
-    SHELL_OUTPUT(output, "Invalid IPv6: %s\n", args);
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "Destination IPv6 address is not specified\n");
+    PT_EXIT(pt);
+  } else if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
+    SHELL_OUTPUT(output, "Invalid IPv6 address: %s\n", args);
     PT_EXIT(pt);
   }
 
@@ -334,6 +333,7 @@ PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
+#if UIP_CONF_IPV6_RPL
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
@@ -412,6 +412,7 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
 
   PT_END(pt);
 }
+#endif /* UIP_CONF_IPV6_RPL */
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
