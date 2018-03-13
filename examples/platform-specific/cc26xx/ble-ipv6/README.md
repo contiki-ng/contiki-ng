@@ -37,8 +37,6 @@ The L2CAP LE credit-based flow control support is implemented in `arch/cpu/cc26x
 Besides implementing rudimentary L2CAP support, this module handles fragmentation of large IPv6 packets.
 
 ## Using BLEach
-A simple IPv6-over-BLE UDP-client is included under `examples/platform-specific/cc26xx/cc26xx-ble-client-demo`.
-
 Currently, BLEach is only available for the Texas Instruments CC2650 hardware platform.
 
 The following sections describe how to configure BLEach for IPv6-over-BLE nodes and border routers.
