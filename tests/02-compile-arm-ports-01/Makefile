@@ -12,6 +12,7 @@ platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1310 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=launchpad/cc1350 \
 platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx \
 platform-specific/cc26xx/ble-ipv6/srf06-cc26xx:BOARD=sensortag/cc2650 \
+nullnet/srf06-cc26xx:BOARD=sensortag/cc2650 \
 rpl-border-router/srf06-cc26xx:BOARD=launchpad/cc2650 \
 sensniff/srf06-cc26xx \
 sensniff/srf06-cc26xx:BOARD=launchpad/cc1310 \
