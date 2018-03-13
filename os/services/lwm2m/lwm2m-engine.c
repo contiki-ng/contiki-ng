@@ -39,6 +39,7 @@
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
+ *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
 
 #include "lwm2m-engine.h"
@@ -56,7 +57,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
-
 #ifndef LWM2M_ENGINE_CLIENT_ENDPOINT_NAME
 #include "net/ipv6/uip-ds6.h"
 #endif /* LWM2M_ENGINE_CLIENT_ENDPOINT_NAME */
@@ -80,8 +80,22 @@
 #define USE_RD_CLIENT 1
 #endif /* LWM2M_ENGINE_CONF_USE_RD_CLIENT */
 
+
+#if LWM2M_Q_MODE_ENABLED
+ /* Queue Mode is handled using the RD Client and the Q-Mode object */
+#define USE_RD_CLIENT 1
+/* Queue Mode dynamic adaptation masks */
+#define FIRST_REQUEST_MASK 0x01
+#define HANDLER_FROM_NOTIFICATION_MASK 0x02
+#endif
+
 #if USE_RD_CLIENT
 #include "lwm2m-rd-client.h"
+#endif
+
+#if LWM2M_Q_MODE_ENABLED
+#include "lwm2m-qmode-object.h"
+#include "lwm2m-notification-queue.h"
 #endif
 
 /* MACRO for getting out resource ID from resource array ID + flags */
@@ -129,6 +143,18 @@ static struct {
   /* in the future also a timeout */
 } created;
 
+#if LWM2M_Q_MODE_ENABLED
+static uint8_t waked_up_by_notification;
+/* For the dynamic adaptation of the awake time */ 
+#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
+static uint8_t dynamic_adaptation_params = 0x00; /* bit0: first_request, bit1: handler from notification */
+static uint64_t previous_request_time;
+static inline void clear_first_request();
+static inline uint8_t is_first_request();
+static inline void clear_handler_from_notification();
+static inline uint8_t get_handler_from_notification();
+#endif /* LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+#endif /* LWM2M_Q_MODE_ENABLED */
 
 COAP_HANDLER(lwm2m_handler, lwm2m_handler_callback);
 LIST(object_list);
@@ -553,6 +579,10 @@ lwm2m_engine_init(void)
 
 #if USE_RD_CLIENT
   lwm2m_rd_client_init(endpoint);
+#endif
+
+#if LWM2M_Q_MODE_ENABLED
+  lwm2m_q_object_init();
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -1373,6 +1403,31 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   context.inbuf->size = coap_get_payload(request, (const uint8_t **)&context.inbuf->buffer);
   context.inbuf->pos = 0;
 
+  /*If Queue Mode, restart the client awake timer */
+#if LWM2M_Q_MODE_ENABLED 
+  if(lwm2m_rd_client_is_client_awake()) {
+    lwm2m_rd_client_restart_client_awake_timer();
+  }
+
+#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
+  if(lwm2m_q_object_get_dynamic_adaptation_flag() && !get_handler_from_notification()) {
+    if(is_first_request()) {
+      previous_request_time = coap_timer_uptime();
+      clear_first_request();
+    }else{
+      if(coap_timer_uptime()-previous_request_time >= 0) {
+        lwm2m_q_object_add_time_object(coap_timer_uptime()-previous_request_time);
+
+      }
+      previous_request_time = coap_timer_uptime();
+    }
+  }
+  if(get_handler_from_notification()) {
+    clear_handler_from_notification();
+  }
+#endif /* LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+#endif /* LWM2M_Q_MODE_ENABLED */
+
   /* Maybe this should be part of CoAP itself - this seems not to be working
      with the leshan server */
 #define LWM2M_CONF_ENTITY_TOO_LARGE_BLOCK1 0
@@ -1632,14 +1687,99 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   return COAP_HANDLER_STATUS_PROCESSED;
 }
 /*---------------------------------------------------------------------------*/
-void lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
+static void
+lwm2m_send_notification(char* path)
+{
+#if LWM2M_Q_MODE_ENABLED && LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
+    if(lwm2m_q_object_get_dynamic_adaptation_flag()){
+      lwm2m_engine_set_handler_from_notification();
+    } 
+#endif
+  coap_notify_observers_sub(NULL, path);
+}
+/*---------------------------------------------------------------------------*/
+void 
+lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
                                    uint16_t resource)
 {
   char path[20]; /* 60000/60000/60000 */
   if(obj != NULL) {
     snprintf(path, 20, "%d/%d/%d", obj->object_id, obj->instance_id, resource);
-    coap_notify_observers_sub(NULL, path);
   }
+
+#if LWM2M_Q_MODE_ENABLED
+  
+  if(coap_has_observers(path)) {
+    /* Client is sleeping -> add the notification to the list */
+    if(!lwm2m_rd_client_is_client_awake()) {
+      lwm2m_notification_queue_add_notification_path(path);
+
+      /* if it is the first notification -> wake up and send update */
+      if(!waked_up_by_notification) {
+        waked_up_by_notification = 1;
+        lwm2m_rd_client_fsm_execute_q_mode_update();
+      }
+    /* Client is awake -> send the notification */  
+    } else {
+      lwm2m_send_notification(path);
+    }
+  }
+#else 
+  lwm2m_send_notification(path);
+#endif
 }
+/*---------------------------------------------------------------------------*/
+/* Queue Mode Support and dynamic adaptation of the client awake time */
+#if LWM2M_Q_MODE_ENABLED
+uint8_t 
+lwm2m_engine_is_waked_up_by_notification()
+{
+ return waked_up_by_notification;
+}
+/*---------------------------------------------------------------------------*/
+void 
+lwm2m_engine_clear_waked_up_by_notification()
+{
+ waked_up_by_notification = 0;
+}
+/*---------------------------------------------------------------------------*/
+#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
+void
+lwm2m_engine_set_first_request()
+{
+  dynamic_adaptation_params |= FIRST_REQUEST_MASK;
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_engine_set_handler_from_notification()
+{
+  dynamic_adaptation_params |= HANDLER_FROM_NOTIFICATION_MASK;
+}
+/*---------------------------------------------------------------------------*/
+static inline uint8_t
+is_first_request()
+{
+  return dynamic_adaptation_params & FIRST_REQUEST_MASK;
+}
+/*---------------------------------------------------------------------------*/
+static inline uint8_t
+get_handler_from_notification()
+{
+  return (dynamic_adaptation_params & HANDLER_FROM_NOTIFICATION_MASK) != 0;
+}
+/*---------------------------------------------------------------------------*/
+static inline void
+clear_first_request()
+{
+  dynamic_adaptation_params &= ~FIRST_REQUEST_MASK;
+}
+/*---------------------------------------------------------------------------*/
+static inline void
+clear_handler_from_notification()
+{
+  dynamic_adaptation_params &= ~HANDLER_FROM_NOTIFICATION_MASK;
+}
+#endif /* LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+#endif /* LWM2M_Q_MODE_ENABLED */
 /*---------------------------------------------------------------------------*/
 /** @} */
