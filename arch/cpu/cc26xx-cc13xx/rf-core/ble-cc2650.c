@@ -40,6 +40,9 @@
 #include "dev/radio.h"
 #include "os/dev/ble-hal.h"
 #include "rf-core/ble-hal/ble-hal-cc26xx.h"
+
+#include <stdint.h>
+#include <string.h>
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "RADIO"
