@@ -150,7 +150,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
   }
 
   if(sixp_pkt_parse(buf, len, &pkt) < 0) {
-    LOG_ERR("6P: sixp_input() fails because off a malformed 6P packet\n");
+    LOG_ERR("6P: sixp_input() fails because of a malformed 6P packet\n");
     return;
   }
 
@@ -324,7 +324,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
     if(trans == NULL) {
       LOG_ERR("6P: sixp_output() fails because of no transaction [peer_addr:");
       LOG_ERR_LLADDR((const linkaddr_t *)dest_addr);
-      LOG_ERR_("\n");
+      LOG_ERR_("]\n");
       return -1;
     } else if(sixp_trans_get_state(trans) !=
               SIXP_TRANS_STATE_RESPONSE_RECEIVED) {
