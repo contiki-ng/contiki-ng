@@ -56,19 +56,6 @@ extern button_hal_button_t *button_hal_buttons[];
 /* Common handler for all handler events, and register it with the GPIO HAL */
 static gpio_hal_event_handler_t button_event_handler;
 /*---------------------------------------------------------------------------*/
-static uint8_t
-get_state(button_hal_button_t *button)
-{
-  uint8_t pin_state = gpio_hal_arch_read_pin(button->pin);
-
-  if((pin_state == 0 && button->negative_logic == true) ||
-     (pin_state == 1 && button->negative_logic == false)) {
-    return BUTTON_HAL_STATE_PRESSED;
-  }
-
-  return BUTTON_HAL_STATE_RELEASED;
-}
-/*---------------------------------------------------------------------------*/
 static void
 duration_exceeded_callback(void *btn)
 {
@@ -99,7 +86,7 @@ debounce_handler(void *btn)
 
   expired = ctimer_expired(&button->duration_ctimer);
 
-  button_state = get_state(button);
+  button_state = button_hal_get_state(button);
 
   /*
    * A debounce timer expired. Inspect the button's state. If the button's
@@ -162,6 +149,19 @@ button_hal_get_by_id(uint8_t unique_id)
   }
 
   return NULL;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+button_hal_get_state(button_hal_button_t *button)
+{
+  uint8_t pin_state = gpio_hal_arch_read_pin(button->pin);
+
+  if((pin_state == 0 && button->negative_logic == true) ||
+     (pin_state == 1 && button->negative_logic == false)) {
+    return BUTTON_HAL_STATE_PRESSED;
+  }
+
+  return BUTTON_HAL_STATE_RELEASED;
 }
 /*---------------------------------------------------------------------------*/
 void
