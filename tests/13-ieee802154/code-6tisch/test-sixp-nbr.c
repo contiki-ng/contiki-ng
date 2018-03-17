@@ -103,51 +103,6 @@ UNIT_TEST(test_alloc_and_free)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_gen_management,
-                   "test GEN Management");
-UNIT_TEST(test_gen_management)
-{
-  sixp_nbr_t *nbr;
-
-  UNIT_TEST_BEGIN();
-  test_setup();
-
-  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr_1)) != NULL);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x00);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x01);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x02);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x03);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x04);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x05);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x06);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x07);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x08);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x09);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_gen(nbr) == 0x01);
-
-  UNIT_TEST_END();
-}
-
 UNIT_TEST_REGISTER(test_next_seqno,
                    "test next_seqno operation");
 UNIT_TEST(test_next_seqno)
@@ -189,7 +144,16 @@ UNIT_TEST(test_next_seqno)
   UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 14);
   UNIT_TEST_ASSERT(sixp_nbr_increment_next_seqno(nbr) == 0);
   UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 15);
+
+  UNIT_TEST_ASSERT(sixp_nbr_set_next_seqno(nbr, 255) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 255);
+
+  /* next_seqno must be 1 after 255. */
   UNIT_TEST_ASSERT(sixp_nbr_increment_next_seqno(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 1);
+
+  /* next_seqno is reset to 0 by sixp_nbr_reset_next_seqno() */
+  UNIT_TEST_ASSERT(sixp_nbr_reset_next_seqno(nbr) == 0);
   UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 0);
 
   UNIT_TEST_END();
@@ -204,9 +168,6 @@ PROCESS_THREAD(test_process, ev, data)
 
   /* alloc / free */
   UNIT_TEST_RUN(test_alloc_and_free);
-
-  /* GEN */
-  UNIT_TEST_RUN(test_gen_management);
 
   /* next sequence number */
   UNIT_TEST_RUN(test_next_seqno);

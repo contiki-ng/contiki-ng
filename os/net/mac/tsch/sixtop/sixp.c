@@ -122,7 +122,7 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_code_t code,
                 const linkaddr_t *dest_addr)
 {
   /* create a 6P packet within packetbuf */
-  if(sixp_pkt_create(type, code, sfid, seqno, 0, NULL, 0, NULL) < 0) {
+  if(sixp_pkt_create(type, code, sfid, seqno, NULL, 0, NULL) < 0) {
     LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n",
             code.value);
     return -1;
@@ -136,12 +136,10 @@ void
 sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
 {
   sixp_pkt_t pkt;
-  sixp_nbr_t *nbr;
-  uint8_t invalid_schedule_generation;
   sixp_trans_t *trans;
+  sixp_nbr_t *nbr;
   const sixtop_sf_t *sf;
   int16_t seqno;
-  int16_t gen;
   int ret;
 
   assert(buf != NULL && src_addr != NULL);
@@ -150,6 +148,16 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
   }
 
   if(sixp_pkt_parse(buf, len, &pkt) < 0) {
+    if(pkt.version != SIXP_PKT_VERSION) {
+      LOG_ERR("6P: sixp_input() unsupported version %u\n", pkt.version);
+      if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
+                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_VERSION,
+                         pkt.sfid, pkt.seqno,
+                         src_addr) < 0) {
+        LOG_ERR("6P: sixp_input() fails to send RC_ERR_VERSION\n");
+        return;
+      }
+    }
     LOG_ERR("6P: sixp_input() fails because of a malformed 6P packet\n");
     return;
   }
@@ -170,40 +178,10 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
      * sent back?
      */
     if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                       (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SFID,
+                       (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_SFID,
                        pkt.sfid, pkt.seqno, src_addr) < 0) {
       LOG_ERR("6P: sixp_input() fails to return an error response\n");
     };
-    return;
-  }
-
-  nbr = sixp_nbr_find(src_addr);
-  /* Generation Management */
-  if(pkt.code.value == SIXP_PKT_CMD_CLEAR) {
-    /* Not need to validate generation counters in a case of CMD_CLEAR */
-    invalid_schedule_generation = 0;
-  } else if(nbr == NULL) {
-    if(pkt.gen == 0) {
-      invalid_schedule_generation = 0; /* valid combination */
-    } else {
-      LOG_ERR("6P: GEN should be 0 because of no corresponding nbr\n");
-      invalid_schedule_generation = 1;
-    }
-  } else {
-    if((gen = sixp_nbr_get_gen(nbr)) < 0) {
-      LOG_ERR("6P: unexpected error; cannot get our GEN\n");
-      return;
-    }
-    LOG_INFO("6P: received GEN %u, our GEN: %u\n",
-             pkt.gen, sixp_nbr_get_gen(nbr));
-    if(pkt.gen == gen) {
-      invalid_schedule_generation = 0; /* valid combination */
-    } else {
-      invalid_schedule_generation = 1;
-    }
-  }
-  if(invalid_schedule_generation) {
-    LOG_ERR("6P: sixp_input() fails because of schedule generation mismatch\n");
     return;
   }
 
@@ -217,20 +195,51 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
       LOG_ERR_LLADDR((const linkaddr_t *)src_addr);
       LOG_ERR_(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_BUSY,
+                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_BUSY,
                          pkt.sfid, pkt.seqno, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to return an error response");
       }
       return;
-    } else if((trans = sixp_trans_alloc(&pkt, src_addr)) == NULL) {
+    }
+
+    if((pkt.code.cmd == SIXP_PKT_CMD_CLEAR) &&
+       (nbr = sixp_nbr_find(src_addr)) != NULL) {
+      LOG_INFO("6P: sixp_input() reset nbr's next_seqno by CLEAR Request\n");
+      sixp_nbr_reset_next_seqno(nbr);
+    }
+
+    if((trans = sixp_trans_alloc(&pkt, src_addr)) == NULL) {
       LOG_ERR("6P: sixp_input() fails because of lack of memory\n");
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_NORES,
+                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_BUSY,
                          pkt.sfid, pkt.seqno, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to return an error response\n");
       }
       return;
     }
+
+    /* Inconsistency Management */
+    if(pkt.code.cmd != SIXP_PKT_CMD_CLEAR &&
+       (((nbr = sixp_nbr_find(src_addr)) == NULL &&
+         (pkt.seqno != 0)) ||
+        ((nbr != NULL) &&
+         (sixp_nbr_get_next_seqno(nbr) != 0) &&
+         pkt.seqno == 0))) {
+      if(trans != NULL) {
+        sixp_trans_transit_state(trans,
+                                 SIXP_TRANS_STATE_REQUEST_RECEIVED);
+
+      }
+      if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
+                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_SEQNUM,
+                         pkt.sfid,
+                         nbr == NULL ? 0 : sixp_nbr_get_next_seqno(nbr),
+                         src_addr) < 0) {
+        LOG_ERR("6P: sixp_input() fails to return an error response\n");
+      }
+      return;
+    }
+
   } else if(pkt.type == SIXP_PKT_TYPE_RESPONSE ||
             pkt.type == SIXP_PKT_TYPE_CONFIRMATION) {
     if(trans == NULL) {
@@ -290,7 +299,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
   sixp_trans_t *trans;
   sixp_nbr_t *nbr;
   sixp_pkt_cmd_t cmd;
-  int16_t seqno, gen;
+  int16_t seqno;
   sixp_pkt_t pkt;
 
   assert(dest_addr != NULL);
@@ -365,9 +374,9 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
       LOG_ERR("6P: sixp_output() fails to get the next sequence number\n");
       return -1;
     }
-    if(sixp_nbr_increment_next_seqno(nbr) < 0) {
-      LOG_ERR("6P: sixp_output() fails to increment the next sequence number\n");
-      return -1;
+    if(code.cmd == SIXP_PKT_CMD_CLEAR) {
+      LOG_INFO("6P: sixp_output() reset nbr's next_seqno by CLEAR Request\n");
+      sixp_nbr_reset_next_seqno(nbr);
     }
   } else {
     assert(trans != NULL);
@@ -377,17 +386,9 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
     }
   }
 
-  /* set GEN */
-  if(nbr == NULL) {
-    gen = 0;
-  } else if((gen = sixp_nbr_get_gen(nbr)) < 0) {
-    LOG_ERR("6P: sixp_output() fails to get GEN\n");
-    return -1;
-  }
-
   /* create a 6P packet within packetbuf */
   if(sixp_pkt_create(type, code, sfid,
-                     (uint8_t)seqno, (uint8_t)gen,
+                     (uint8_t)seqno,
                      body, body_len,
                      type == SIXP_PKT_TYPE_REQUEST ? &pkt : NULL) < 0) {
     LOG_ERR("6P: sixp_output() fails to create a 6P packet\n");
