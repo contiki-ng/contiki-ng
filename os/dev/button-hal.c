@@ -40,6 +40,7 @@
 #include "contiki.h"
 #include "sys/process.h"
 #include "sys/ctimer.h"
+#include "sys/critical.h"
 #include "dev/gpio-hal.h"
 #include "dev/button-hal.h"
 
@@ -47,9 +48,14 @@
 #include <stdbool.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
+PROCESS(button_hal_process, "Button HAL process");
+/*---------------------------------------------------------------------------*/
 process_event_t button_hal_press_event;
 process_event_t button_hal_release_event;
 process_event_t button_hal_periodic_event;
+/*---------------------------------------------------------------------------*/
+/* A mask of all pins that have changed state since the last process poll */
+static gpio_hal_pin_mask_t pmask;
 /*---------------------------------------------------------------------------*/
 extern button_hal_button_t *button_hal_buttons[];
 /*---------------------------------------------------------------------------*/
@@ -117,24 +123,8 @@ debounce_handler(void *btn)
 static void
 press_release_handler(gpio_hal_pin_mask_t pin_mask)
 {
-  button_hal_button_t **button;
-
-  for(button = button_hal_buttons; *button != NULL; button++) {
-    if(gpio_hal_pin_to_mask((*button)->pin) & pin_mask) {
-      /* Ignore all button presses/releases during its debounce */
-      if(ctimer_expired(&(*button)->debounce_ctimer)) {
-        /*
-         * Here we merely set a debounce timer. At the end of the debounce we
-         * will inspect the button's state and we will take action only if it
-         * has changed.
-         *
-         * This is to prevent erroneous edge detections due to interference.
-         */
-        ctimer_set(&(*button)->debounce_ctimer, BUTTON_HAL_DEBOUNCE_DURATION,
-                   debounce_handler, *button);
-      }
-    }
-  }
+  pmask |= pin_mask;
+  process_poll(&button_hal_process);
 }
 /*---------------------------------------------------------------------------*/
 button_hal_button_t *
@@ -186,7 +176,46 @@ button_hal_init()
     button_event_handler.pin_mask |= gpio_hal_pin_to_mask((*button)->pin);
   }
 
+  process_start(&button_hal_process, NULL);
+
   gpio_hal_register_handler(&button_event_handler);
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(button_hal_process, ev, data)
+{
+  int_master_status_t status;
+  gpio_hal_pin_mask_t pins;
+  button_hal_button_t **button;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+
+    status = critical_enter();
+    pins = pmask;
+    pmask = 0;
+    critical_exit(status);
+
+    for(button = button_hal_buttons; *button != NULL; button++) {
+      if(gpio_hal_pin_to_mask((*button)->pin) & pins) {
+        /* Ignore all button presses/releases during its debounce */
+        if(ctimer_expired(&(*button)->debounce_ctimer)) {
+          /*
+           * Here we merely set a debounce timer. At the end of the debounce we
+           * will inspect the button's state and we will take action only if it
+           * has changed.
+           *
+           * This is to prevent erroneous edge detections due to interference.
+           */
+          ctimer_set(&(*button)->debounce_ctimer, BUTTON_HAL_DEBOUNCE_DURATION,
+                     debounce_handler, *button);
+        }
+      }
+    }
+  }
+
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
