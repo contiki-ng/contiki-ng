@@ -144,7 +144,7 @@ button_hal_get_by_id(uint8_t unique_id)
 
   for(button = button_hal_buttons; *button != NULL; button++) {
     if((*button)->unique_id == unique_id) {
-      return (*button);
+      return *button;
     }
   }
 
