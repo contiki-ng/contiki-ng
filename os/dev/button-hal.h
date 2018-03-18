@@ -248,6 +248,13 @@ void button_hal_init(void);
 button_hal_button_t *button_hal_get_by_id(uint8_t unique_id);
 
 /**
+ * \brief Retrieve a button by its index
+ * \param index The button's index (0, 1, ... button_hal_button_count - 1)
+ * \return A pointer to the button or NULL if not found
+ */
+button_hal_button_t *button_hal_get_by_index(uint8_t index);
+
+/**
  * \brief Get the state of a button (pressed / released)
  * \param button A pointer to the button
  * \retval BUTTON_HAL_STATE_RELEASED The button is currently released

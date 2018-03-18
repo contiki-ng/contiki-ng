@@ -43,7 +43,7 @@ PROCESS_THREAD(button_hal_example, ev, data)
 
   PROCESS_BEGIN();
 
-  btn = button_hal_get_by_id(BUTTON_HAL_ID_BUTTON_ZERO);
+  btn = button_hal_get_by_index(0);
 
   printf("Button HAL example.\n");
   printf("Device button count: %u.\n", button_hal_button_count);

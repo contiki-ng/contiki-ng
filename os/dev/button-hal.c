@@ -141,6 +141,16 @@ button_hal_get_by_id(uint8_t unique_id)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+button_hal_button_t *
+button_hal_get_by_index(uint8_t index)
+{
+  if(index >= button_hal_button_count) {
+    return NULL;
+  }
+
+  return button_hal_buttons[index];
+}
+/*---------------------------------------------------------------------------*/
 uint8_t
 button_hal_get_state(button_hal_button_t *button)
 {
