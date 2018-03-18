@@ -55,7 +55,7 @@ process_event_t button_hal_release_event;
 process_event_t button_hal_periodic_event;
 /*---------------------------------------------------------------------------*/
 /* A mask of all pins that have changed state since the last process poll */
-static gpio_hal_pin_mask_t pmask;
+static volatile gpio_hal_pin_mask_t pmask;
 /*---------------------------------------------------------------------------*/
 extern button_hal_button_t *button_hal_buttons[];
 /*---------------------------------------------------------------------------*/
