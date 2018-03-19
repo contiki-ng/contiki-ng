@@ -716,7 +716,6 @@ void
 rpl_dag_init(void)
 {
   memset(&curr_instance, 0, sizeof(curr_instance));
-  rpl_neighbor_init();
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
