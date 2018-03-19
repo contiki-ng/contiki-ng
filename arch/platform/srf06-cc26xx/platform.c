@@ -108,7 +108,7 @@ set_rf_params(void)
 {
   uint8_t ext_addr[8];
 
-#if MAKE_MAC == MAKE_MAC_BLE
+#if MAC_CONF_WITH_BLE
   ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
 #else
@@ -181,7 +181,7 @@ platform_init_stage_two()
 #endif
 
   /* Populate linkaddr_node_addr */
-#if MAKE_MAC == MAKE_MAC_BLE
+#if MAC_CONF_WITH_BLE
   uint8_t ext_addr[8];
   ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
   memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
