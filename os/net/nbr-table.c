@@ -305,7 +305,8 @@ nbr_table_register(nbr_table_t *table, nbr_table_callback *callback)
 int
 nbr_table_is_registered(nbr_table_t *table)
 {
-  if(table != NULL && all_tables[table->index] == table) {
+  if(table != NULL && table->index >= 0 && table->index < MAX_NUM_TABLES
+                   && all_tables[table->index] == table) {
     return 1;
   }
   return 0;
