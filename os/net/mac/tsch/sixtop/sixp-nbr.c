@@ -186,7 +186,7 @@ int
 sixp_nbr_init(void)
 {
   sixp_nbr_t *nbr, *next_nbr;
-  if(nbr_table_is_register(sixp_nbrs) == 0) {
+  if(nbr_table_is_registered(sixp_nbrs) == 0) {
     nbr_table_register(sixp_nbrs, NULL);
   } else {
     /* remove all the existing nbrs */
