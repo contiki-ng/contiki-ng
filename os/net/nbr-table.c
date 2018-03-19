@@ -290,6 +290,13 @@ nbr_table_register(nbr_table_t *table, nbr_table_callback *callback)
     ctimer_set(&periodic_timer, CLOCK_SECOND * 60, handle_periodic_timer, NULL);
   }
 #endif
+
+  if(nbr_table_is_registered(table)) {
+    /* Table already registered, just update callback */
+    table->callback = callback;
+    return 1;
+  }
+
   if(num_tables < MAX_NUM_TABLES) {
     table->index = num_tables++;
     table->callback = callback;
