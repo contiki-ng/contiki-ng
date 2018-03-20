@@ -196,6 +196,8 @@ typedef uint32_t rtimer_clock_t;
 #define PLATFORM_HAS_SHT11   0
 #define PLATFORM_HAS_RADIO   1
 
+#define LEDS_CONF_LEGACY_API       1
+
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
 
 /* CPU target speed in Hz
@@ -216,9 +218,6 @@ typedef uint32_t rtimer_clock_t;
 #define CC_CONF_FUNCTION_POINTER_ARGS  1
 #define CC_CONF_VA_ARGS                1
 #define CC_CONF_INLINE                 inline
-
-#define CCIF
-#define CLIF
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>

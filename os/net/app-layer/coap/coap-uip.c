@@ -507,7 +507,7 @@ output_to_peer(struct dtls_context_t *ctx,
   struct uip_udp_conn *udp_connection = dtls_get_app_data(ctx);
   LOG_DBG("output_to DTLS peer [");
   LOG_DBG_6ADDR(&session->ipaddr);
-  LOG_DBG_("]:%u %d bytes\n", uip_ntohs(session->port), (int)len);
+  LOG_DBG_("]:%u %ld bytes\n", uip_ntohs(session->port), (long)len);
   uip_udp_packet_sendto(udp_connection, data, len,
                         &session->ipaddr, session->port);
   return len;

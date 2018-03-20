@@ -52,6 +52,7 @@
 #include "dev/spi.h"
 #include "dev/ssi.h"
 #include "dev/gpio.h"
+#include "dev/gpio-hal.h"
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 #define CC1200_SPI_CLK_PORT_BASE   GPIO_PORT_TO_BASE(SPI0_CLK_PORT)
@@ -92,7 +93,7 @@
 extern int cc1200_rx_interrupt(void);
 /*---------------------------------------------------------------------------*/
 void
-cc1200_int_handler(uint8_t port, uint8_t pin)
+cc1200_int_handler(gpio_hal_pin_mask_t pin_mask)
 {
   /* To keep the gpio_register_callback happy */
   cc1200_rx_interrupt();
@@ -166,6 +167,14 @@ cc1200_arch_spi_rw(uint8_t *inbuf, const uint8_t *write_buf, uint16_t len)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t interrupt_handler = {
+  .next = NULL,
+  .handler = cc1200_int_handler,
+  .pin_mask =
+    (gpio_hal_pin_to_mask(CC1200_GDO0_PIN) << (CC1200_GDO0_PORT << 3)) |
+    (gpio_hal_pin_to_mask(CC1200_GDO2_PIN) << (CC1200_GDO2_PORT << 3))
+};
+/*---------------------------------------------------------------------------*/
 void
 cc1200_arch_gpio0_setup_irq(int rising)
 {
@@ -184,8 +193,7 @@ cc1200_arch_gpio0_setup_irq(int rising)
   GPIO_ENABLE_INTERRUPT(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
   ioc_set_over(CC1200_GDO0_PORT, CC1200_GDO0_PIN, IOC_OVERRIDE_PUE);
   NVIC_EnableIRQ(CC1200_GPIOx_VECTOR);
-  gpio_register_callback(cc1200_int_handler, CC1200_GDO0_PORT,
-                         CC1200_GDO0_PIN);
+  gpio_hal_register_handler(&interrupt_handler);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -206,8 +214,7 @@ cc1200_arch_gpio2_setup_irq(int rising)
   GPIO_ENABLE_INTERRUPT(CC1200_GDO2_PORT_BASE, CC1200_GDO2_PIN_MASK);
   ioc_set_over(CC1200_GDO2_PORT, CC1200_GDO2_PIN, IOC_OVERRIDE_PUE);
   NVIC_EnableIRQ(CC1200_GPIOx_VECTOR);
-  gpio_register_callback(cc1200_int_handler, CC1200_GDO2_PORT,
-                         CC1200_GDO2_PIN);
+  gpio_hal_register_handler(&interrupt_handler);
 }
 /*---------------------------------------------------------------------------*/
 void

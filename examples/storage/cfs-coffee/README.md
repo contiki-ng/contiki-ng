@@ -23,6 +23,9 @@ Supported Hardware (tested or known to work)
 * cc2538dk
 * openmote-cc2538
 * zoul
+* TI srf06-cc26xx
+    - sensortag
+    - launchpad
 
 The examples are known to build for the 'avr-raven' platform. However,
 some of them currently fail at runtime due to file system overflow.

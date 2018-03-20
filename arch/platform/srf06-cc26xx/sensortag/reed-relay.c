@@ -39,9 +39,9 @@
 #include "contiki.h"
 #include "sys/clock.h"
 #include "sys/timer.h"
+#include "dev/gpio-hal.h"
 #include "lib/sensors.h"
 #include "sensortag/reed-relay.h"
-#include "gpio-interrupt.h"
 #include "sys/timer.h"
 
 #include "ti-lib.h"
@@ -60,7 +60,7 @@ static struct timer debouncetimer;
  * \brief Handler for Sensortag-CC26XX reed interrupts
  */
 static void
-reed_interrupt_handler(uint8_t ioid)
+reed_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 {
   if(!timer_expired(&debouncetimer)) {
     return;
@@ -75,6 +75,12 @@ value(int type)
 {
   return (int)ti_lib_gpio_read_dio(BOARD_IOID_REED_RELAY);
 }
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t event_handler = {
+  .next = NULL,
+  .handler = reed_interrupt_handler,
+  .pin_mask = gpio_hal_pin_to_mask(BOARD_IOID_REED_RELAY),
+};
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Configuration function for the button sensor for all buttons.
@@ -99,8 +105,7 @@ configure(int type, int value)
     ti_lib_ioc_port_configure_set(BOARD_IOID_REED_RELAY, IOC_PORT_GPIO,
                                   REED_IO_CFG);
 
-    gpio_interrupt_register_handler(BOARD_IOID_REED_RELAY,
-                                    reed_interrupt_handler);
+    gpio_hal_register_handler(&event_handler);
     break;
   case SENSORS_ACTIVE:
     if(value) {

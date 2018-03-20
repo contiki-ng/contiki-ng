@@ -1,6 +1,8 @@
 CONTIKI_PROJECT = sensniff
 CONTIKI = ../..
 
+PLATFORMS_ONLY = cc2538dk openmote-cc2538 zoul srf06-cc26xx jn516x
+
 PROJECT_SOURCEFILES += sensniff-mac.c netstack.c
 MODULES_REL += pool $(TARGET)
 

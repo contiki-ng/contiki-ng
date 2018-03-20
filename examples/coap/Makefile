@@ -1,7 +1,12 @@
-all: coap-example-server coap-example-client
+CONTIKI_PROJECT = coap-example-server coap-example-client
 # use target "plugtest-server" explicitly when required
 
+all: $(CONTIKI_PROJECT)
+
 CONTIKI=../..
+
+# Do not try to build on Sky because of code size limitation
+PLATFORMS_EXCLUDE = sky
 
 # build RESTful resources
 include $(CONTIKI)/Makefile.identify-target

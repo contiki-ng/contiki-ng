@@ -32,6 +32,7 @@
 #define HTTP_SOCKET_H
 
 #include "tcp-socket.h"
+#include "sys/cc.h"
 
 struct http_socket;
 
@@ -61,8 +62,6 @@ typedef void (* http_socket_callback_t)(struct http_socket *s,
                                         http_socket_event_t ev,
                                         const uint8_t *data,
                                         uint16_t datalen);
-
-#define MAX(n, m)   (((n) < (m)) ? (m) : (n))
 
 #define HTTP_SOCKET_INPUTBUFSIZE  UIP_TCP_MSS
 #define HTTP_SOCKET_OUTPUTBUFSIZE MAX(UIP_TCP_MSS, 128)

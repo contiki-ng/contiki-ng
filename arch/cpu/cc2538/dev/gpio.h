@@ -42,27 +42,12 @@
  */
 #ifndef GPIO_H_
 #define GPIO_H_
-
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+#include "dev/gpio-hal.h"
 #include "reg.h"
 
 #include <stdint.h>
-
-/**
- * \brief Type definition for callbacks invoked by the GPIO ISRs
- * \param port The port that triggered the GPIO interrupt. \e port is passed
- *        by its numeric representation (Port A:0, B:1 etc). Defines for
- *        these numeric representations are GPIO_x_NUM
- * \param pin The pin that triggered the interrupt, specified by number
- *        (0, 1, ..., 7)
- *
- * This is the prototype of a function pointer passed to
- * gpio_register_callback(). These callbacks are registered on a port/pin
- * basis. When a GPIO port generates an interrupt, if a callback has been
- * registered for the port/pin combination, the ISR will invoke it. The ISR
- * will pass the port/pin as arguments in that call, so that a developer can
- * re-use the same callback for multiple port/pin combinations
- */
-typedef void (* gpio_callback_t)(uint8_t port, uint8_t pin);
 /*---------------------------------------------------------------------------*/
 /** \name Base addresses for the GPIO register instances
  * @{
@@ -341,6 +326,14 @@ typedef void (* gpio_callback_t)(uint8_t port, uint8_t pin);
  * number.
  */
 #define GPIO_PORT_TO_BASE(PORT) (GPIO_A_BASE + ((PORT) << 12))
+
+/**
+ * \brief Converts a port/pin pair to GPIO HAL pin number
+ * \param PORT The port number in the range 0 - 3 (GPIO_n_NUM).
+ * \param PIN The pin number in the range 0 - 7.
+ * \return The pin representation using GPIO HAL semantics
+ */
+#define GPIO_PORT_PIN_TO_GPIO_HAL_PIN(PORT, PIN) (((PORT) << 3) + (PIN))
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name GPIO Register offset declarations
@@ -612,21 +605,6 @@ typedef void (* gpio_callback_t)(uint8_t port, uint8_t pin);
 #define GPIO_IRQ_DETECT_UNMASK_PAIACK0 0x00000001  /**< Port A bit 0 */
 /** @} */
 /*---------------------------------------------------------------------------*/
-/** \brief Initialise the GPIO module */
-void gpio_init();
-
-/**
- * \brief Register GPIO callback
- * \param f Pointer to a function to be called when \a pin of \a port
- *          generates an interrupt
- * \param port Associate \a f with this port. \e port must be specified with
- *        its numeric representation (Port A:0, B:1 etc). Defines for these
- *        numeric representations are GPIO_x_NUM
- * \param pin Associate \a f with this pin, which is specified by number
- *        (0, 1, ..., 7)
- */
-void gpio_register_callback(gpio_callback_t f, uint8_t port, uint8_t pin);
-
 #endif /* GPIO_H_ */
 
 /**

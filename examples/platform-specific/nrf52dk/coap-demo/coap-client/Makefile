@@ -1,19 +1,19 @@
-CONTIKI=../../../..
+CONTIKI_PROJECT = coap-client
+CONTIKI=../../../../..
 
-ifeq ($(MAKECMDGOALS),)
-$(error Please specify whether coap-client or coap-server should be built)
-endif
+PLATFORMS_ONLY = nrf52dk
 
-ifneq ($(filter coap-client coap-client.flash, $(MAKECMDGOALS)),)
 ifeq ($(SERVER_IPV6_EP),)
-$(error Please define SERVER_IPV6_EP=<full-coap-IPv6-URI>)
-else
+$(warning Please define SERVER_IPV6_EP=<full-coap-IPv6-URI>)
+$(warning Using default SERVER_IPV6_EP=fd00::1)
+SERVER_IPV6_EP=fd00::1
+endif
+
 CFLAGS += -DSERVER_IPV6_EP=\"$(SERVER_IPV6_EP)\"
+
 CFLAGS += -DDEVICE_NAME=\"nRF52_DK_CoAP_Client\"
-endif
-else
-CFLAGS += -DDEVICE_NAME=\"nRF52-DK-CoAP-Server\"
-endif
+
+CFLAGS += -DCOAP_OBSERVE_CLIENT=1
 
 # automatically build RESTful resources
 MODULES_REL += ./resources
@@ -22,5 +22,7 @@ MODULES_REL += ./resources
 MODULES += os/net/app-layer/coap
 
 MAKE_ROUTING = MAKE_ROUTING_NULLROUTING
+
+all: $(CONTIKI_PROJECT)
 
 include $(CONTIKI)/Makefile.include

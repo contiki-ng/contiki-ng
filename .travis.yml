@@ -14,7 +14,7 @@ before_install:
   - ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar
 
 script: # The test script for each build.
-  - docker run --privileged -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash -c "make -C tests/??-$TEST_NAME";
+  - docker run --privileged -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST_NAME";
   # Check outcome of the test
   - $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST_NAME; exit $?;
 

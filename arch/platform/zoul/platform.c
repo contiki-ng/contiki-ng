@@ -69,6 +69,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -81,7 +82,7 @@
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
@@ -124,7 +125,7 @@ rtc_init(void)
    */
 
   /* Get the system date in the following format: wd dd mm yy hh mm ss */
-  PRINTF("Setting RTC from system date: %s\n", DATE);
+  LOG_INFO("Setting RTC from system date: %s\n", DATE);
 
   /* Configure the RTC with the current values */
   td.weekdays = (uint8_t)strtol(DATE, &next, 10);
@@ -149,7 +150,7 @@ rtc_init(void)
 
   /* Set the time and date */
   if(rtcc_set_time_date(&td) == AB08_ERROR) {
-    PRINTF("Failed to set time and date\n");
+    LOG_ERR("Failed to set time and date\n");
   }
 #endif
 #endif

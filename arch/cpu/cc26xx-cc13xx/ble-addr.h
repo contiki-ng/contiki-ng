@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2015, Zolertia - http://www.zolertia.com
- * Copyright (c) 2015, University of Bristol - http://www.bristol.ac.uk
+ * Copyright (c) 2016, Michael Spoerk
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,76 +26,55 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 /**
- * \addtogroup zoul
- * @{
- *
- * \defgroup remote-revb-leds RE-Mote revision B arch LED
- *
- * LED driver implementation for the RE-Mote revision B
- * @{
- *
  * \file
- * LED driver implementation for the RE-Mote revision B
+ *    Driver for the retrieval of an BLE address from flash
+ *
+ * \author
+ *    Michael Spoerk <mi.spoerk@gmail.com>
  */
-#include "contiki.h"
-#include "reg.h"
-#include "dev/leds.h"
-#include "dev/gpio.h"
-#include "dev/ioc.h"
 /*---------------------------------------------------------------------------*/
-#define LEDS_PORTB_PIN_MASK  (LEDS_GREEN_PIN_MASK | LEDS_BLUE_PIN_MASK)
+#ifndef BLE_ADDR_H_
+#define BLE_ADDR_H_
 /*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
-{
-  /* Initialize LED2 (Green) and LED3 (Blue) */
-  GPIO_SOFTWARE_CONTROL(GPIO_B_BASE, LEDS_PORTB_PIN_MASK);
-  GPIO_SET_OUTPUT(GPIO_B_BASE, LEDS_PORTB_PIN_MASK);
-  GPIO_CLR_PIN(GPIO_B_BASE, LEDS_PORTB_PIN_MASK);
-
-  /* Initialize LED1 (Red) */
-  GPIO_SOFTWARE_CONTROL(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  GPIO_SET_OUTPUT(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  GPIO_CLR_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-}
+#include "contiki-conf.h"
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
-unsigned char
-leds_arch_get(void)
-{
-  uint8_t mask_leds;
+/* primary BLE address location */
+#define BLE_ADDR_LOCATION   0x500012E8
 
-  mask_leds = GPIO_READ_PIN(LEDS_GREEN_PORT_BASE, LEDS_GREEN_PIN_MASK) == 0 ? 0: LEDS_GREEN;
-  mask_leds |= GPIO_READ_PIN(LEDS_BLUE_PORT_BASE, LEDS_BLUE_PIN_MASK) == 0 ? 0 : LEDS_BLUE;
-  mask_leds |= GPIO_READ_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK) == 0 ? 0 : LEDS_RED;
-
-  return mask_leds;
-}
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_set(unsigned char leds)
-{
-  if(leds & LEDS_GREEN) {
-    GPIO_SET_PIN(LEDS_GREEN_PORT_BASE, LEDS_GREEN_PIN_MASK);
-  } else {
-    GPIO_CLR_PIN(LEDS_GREEN_PORT_BASE, LEDS_GREEN_PIN_MASK);
-  }
-
-  if(leds & LEDS_BLUE) {
-    GPIO_SET_PIN(LEDS_BLUE_PORT_BASE, LEDS_BLUE_PIN_MASK);
-  } else {
-    GPIO_CLR_PIN(LEDS_BLUE_PORT_BASE, LEDS_BLUE_PIN_MASK);
-  }
-
-  if(leds & LEDS_RED) {
-    GPIO_SET_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  } else {
-    GPIO_CLR_PIN(LEDS_RED_PORT_BASE, LEDS_RED_PIN_MASK);
-  }
-}
 /*---------------------------------------------------------------------------*/
 /**
- * @}
- * @}
+ * \brief Copy the node's factory BLE address to a destination memory area
+ * \param dst A pointer to the destination area where the BLE address is to be
+ *            written
+ *
+ * This function will copy 6 bytes and it will invert byte order in
+ * the process. The factory address on devices is normally little-endian,
+ * therefore you should expect dst to store the address in a big-endian order.
  */
+void ble_addr_cpy_to(uint8_t *dst);
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Copy the node's BLE address to a destination memory area and converts
+ *      it into a EUI64 address in the process
+ * \param dst A pointer to the destination area where the EUI64 address is to be
+ *            written
+ * \param src A pointer to the BLE address that is to be copied
+ */
+void ble_addr_to_eui64(uint8_t *dst, uint8_t *src);
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Copy the node's EUI64 address that is based on its factory BLE address
+ *      to a destination memory area
+ * \param dst A pointer to the destination area where the EUI64 address is to be
+ *            written
+ */
+void ble_eui64_addr_cpy_to(uint8_t *dst);
+/*---------------------------------------------------------------------------*/
+
+#endif /* BLE_ADDR_H_ */

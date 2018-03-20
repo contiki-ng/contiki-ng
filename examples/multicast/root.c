@@ -83,7 +83,7 @@ multicast_send(void)
   PRINTF("Send to: ");
   PRINT6ADDR(&mcast_conn->ripaddr);
   PRINTF(" Remote Port %u,", uip_ntohs(mcast_conn->rport));
-  PRINTF(" (msg=0x%08lx)", (unsigned long)uip_ntohl(*((uint32_t *)buf)));
+  PRINTF(" (msg=0x%08"PRIx32")", uip_ntohl(*((uint32_t *)buf)));
   PRINTF(" %lu bytes\n", (unsigned long)sizeof(id));
 
   seq_id++;

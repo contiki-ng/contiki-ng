@@ -314,7 +314,7 @@ add_req_handler(const linkaddr_t *peer_addr,
                   sizeof(sixp_pkt_cell_options_t) +
                   sizeof(sixp_pkt_num_cells_t) +
                   sizeof(sf_plugtest_cell_t))) {
-    LOG_ERR("invalid Add Request length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Add Request length: %lu\n", (unsigned long)body_len);
   }
   assert(
     sixp_pkt_get_cell_options(SIXP_PKT_TYPE_REQUEST,
@@ -359,7 +359,7 @@ add_res_handler(const linkaddr_t *peer_addr, sixp_pkt_rc_t rc,
   struct tsch_slotframe *slotframe;
 
   if(body_len != 4) {
-    LOG_ERR("invalid Add Response length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Add Response length: %lu\n", (unsigned long)body_len);
     return;
   }
 
@@ -399,7 +399,7 @@ delete_req_handler(const linkaddr_t *peer_addr,
                   sizeof(sixp_pkt_cell_options_t) +
                   sizeof(sixp_pkt_num_cells_t) +
                   sizeof(sf_plugtest_cell_t))) {
-    LOG_ERR("invalid Delete Request length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Delete Request length: %lu\n", (unsigned long)body_len);
   }
   assert(
     sixp_pkt_get_cell_options(SIXP_PKT_TYPE_REQUEST,
@@ -446,7 +446,7 @@ delete_res_handler(const linkaddr_t *peer_addr, sixp_pkt_rc_t rc,
   uint16_t timeslot;
 
   if(body_len != 4) {
-    LOG_ERR("invalid Delete Response length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Delete Response length: %lu\n", (unsigned long)body_len);
     return;
   }
 
@@ -489,7 +489,7 @@ count_req_handler(const linkaddr_t *peer_addr,
   assert(peer_addr != NULL && body != NULL);
   if(body_len != (sizeof(sixp_pkt_metadata_t) +
                   sizeof(sixp_pkt_cell_options_t))) {
-    LOG_ERR("invalid Count Request length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Count Request length: %lu\n", (unsigned long)body_len);
   }
   assert(
     sixp_pkt_get_cell_options(SIXP_PKT_TYPE_REQUEST,
@@ -534,7 +534,7 @@ count_res_handler(const linkaddr_t *peer_addr, sixp_pkt_rc_t rc,
   sixp_pkt_total_num_cells_t total_num_cells;
 
   if(body_len != 2) {
-    LOG_ERR("invalid Count Response length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Count Response length: %lu\n", (unsigned long)body_len);
     return;
   }
 
@@ -570,7 +570,7 @@ list_req_handler(const linkaddr_t *peer_addr,
                   sizeof(sixp_pkt_reserved_t) +
                   sizeof(sixp_pkt_offset_t) +
                   sizeof(sixp_pkt_max_num_cells_t))) {
-    LOG_ERR("invalid List Request length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid List Request length: %lu\n", (unsigned long)body_len);
   }
 
   assert(
@@ -679,7 +679,7 @@ clear_req_handler(const linkaddr_t *peer_addr,
 
   assert(peer_addr != NULL && body != NULL);
   if(body_len != sizeof(sixp_pkt_metadata_t)) {
-    LOG_ERR("invalid Clear Request length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Clear Request length: %lu\n", (unsigned long)body_len);
   }
 
   if((slotframe = tsch_schedule_get_slotframe_by_handle(0)) == NULL) {
@@ -717,7 +717,7 @@ clear_res_handler(const linkaddr_t *peer_addr, sixp_pkt_rc_t rc,
   }
 
   if(body_len != 0) {
-    LOG_ERR("invalid Clear Response length: %u\n", (unsigned int)body_len);
+    LOG_ERR("invalid Clear Response length: %lu\n", (unsigned long)body_len);
     return;
   }
 

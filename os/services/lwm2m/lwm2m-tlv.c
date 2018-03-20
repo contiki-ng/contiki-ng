@@ -205,7 +205,7 @@ lwm2m_tlv_write_int32(uint8_t type, int16_t id, int32_t value, uint8_t *buffer, 
   int i;
   int v;
   int last_bit;
-  LOG_DBG("Exporting int32 %d %ld ", id, (long)value);
+  LOG_DBG("Exporting int32 %d %"PRId32" ", id, value);
 
   v = value < 0 ? -1 : 0;
   i = 0;
@@ -252,9 +252,9 @@ lwm2m_tlv_write_float32(uint8_t type, int16_t id, int32_t value, int bits,
     e++;
   }
 
-  LOG_DBG("Sign: %d, Fraction: %06lx  0b", value < 0, (long)val);
+  LOG_DBG("Sign: %d, Fraction: %06"PRIx32"  0b", value < 0, val);
   for(i = 0; i < 23; i++) {
-    LOG_DBG_("%d", (int)((val >> (22 - i)) & 1));
+    LOG_DBG_("%"PRId32"", ((val >> (22 - i)) & 1));
   }
   LOG_DBG_("\nExp:%d\n", e);
 
@@ -292,9 +292,9 @@ lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
   e = ((tlv->value[0] << 1) & 0xff) | (tlv->value[1] >> 7);
   val = (((long)tlv->value[1] & 0x7f) << 16) | (tlv->value[2] << 8) | tlv->value[3];
 
-  LOG_DBG("Sign: %d, Fraction: %06lx  0b", val < 0, (long)val);
+  LOG_DBG("Sign: %d, Fraction: %06"PRIx32"  0b", val < 0, val);
   for(i = 0; i < 23; i++) {
-    LOG_DBG_("%d", (int)((val >> (22 - i)) & 1));
+    LOG_DBG_("%"PRId32"", ((val >> (22 - i)) & 1));
   }
   LOG_DBG("\nExp:%d => %d\n", e, e - 127);
 

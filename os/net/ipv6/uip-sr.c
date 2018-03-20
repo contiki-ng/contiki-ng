@@ -217,13 +217,13 @@ uip_sr_periodic(unsigned seconds)
           break;
         }
       }
-#if LOG_INFO_ENABLED
-      uip_ipaddr_t node_addr;
-      NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, l);
-      LOG_INFO("NS: removing expired node ");
-      LOG_INFO_6ADDR(&node_addr);
-      LOG_INFO_("\n");
-#endif /* LOG_INFO_ENABLED */
+      if(LOG_INFO_ENABLED) {
+        uip_ipaddr_t node_addr;
+        NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, l);
+        LOG_INFO("NS: removing expired node ");
+        LOG_INFO_6ADDR(&node_addr);
+        LOG_INFO_("\n");
+      }
       /* No child found, deallocate node */
       list_remove(nodelist, l);
       memb_free(&nodememb, l);

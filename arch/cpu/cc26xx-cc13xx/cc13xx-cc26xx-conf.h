@@ -90,7 +90,9 @@
 #define CSMA_CONF_SEND_SOFT_ACK              1
 
 #else /* CC13XX_CONF_PROP_MODE */
+#ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO        ieee_mode_driver
+#endif
 
 #define CSMA_CONF_SEND_SOFT_ACK              0
 #endif /* CC13XX_CONF_PROP_MODE */
