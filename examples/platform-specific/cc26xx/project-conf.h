@@ -31,9 +31,6 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
-/* Disable button shutdown functionality */
-#define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN    0
-/*---------------------------------------------------------------------------*/
 /* Enable the ROM bootloader */
 #define ROM_BOOTLOADER_ENABLE                 1
 /*---------------------------------------------------------------------------*/

@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -27,48 +27,57 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup openmote-cc2538
- * @{
- *
- * \defgroup openmote-button-sensor OpenMote-CC2538 user button driver
- *
- * The user button will generate a sensors_changed event on press as
- * well as on release.
- *
- * @{
- *
- * \file
- * Header for the OpenMote-CC2538 button driver
- */
-/*---------------------------------------------------------------------------*/
-#ifndef BUTTON_SENSOR_H_
-#define BUTTON_SENSOR_H_
-/*---------------------------------------------------------------------------*/
-#include "lib/sensors.h"
-/*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR "Button"
+#include "contiki.h"
+#include "dev/button-hal.h"
 
-extern const struct sensors_sensor button_sensor;
+#include <stdio.h>
 /*---------------------------------------------------------------------------*/
-extern process_event_t button_press_duration_exceeded;
+PROCESS(button_hal_example, "Button HAL Example");
+AUTOSTART_PROCESSES(&button_hal_example);
 /*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR_CONFIG_TYPE_INTERVAL      0x0100
+PROCESS_THREAD(button_hal_example, ev, data)
+{
+  button_hal_button_t *btn;
 
-#define BUTTON_SENSOR_VALUE_TYPE_LEVEL          0
-#define BUTTON_SENSOR_VALUE_TYPE_PRESS_DURATION 1
+  PROCESS_BEGIN();
 
-#define BUTTON_SENSOR_PRESSED_LEVEL             0
-#define BUTTON_SENSOR_RELEASED_LEVEL            8
+  btn = button_hal_get_by_index(0);
+
+  printf("Button HAL example.\n");
+  printf("Device button count: %u.\n", button_hal_button_count);
+  printf("%s on pin %u with ID=0, Logic=%s, Pull=%s\n",
+         BUTTON_HAL_GET_DESCRIPTION(btn), btn->pin,
+         btn->negative_logic ? "Negative" : "Positive",
+         btn->pull == GPIO_HAL_PIN_CFG_PULL_UP ? "Pull Up" : "Pull Down");
+
+  while(1) {
+
+    PROCESS_YIELD();
+
+    if(ev == button_hal_press_event) {
+      btn = (button_hal_button_t *)data;
+      printf("Press event (%s)\n", BUTTON_HAL_GET_DESCRIPTION(btn));
+
+      if(btn == button_hal_get_by_id(BUTTON_HAL_ID_BUTTON_ZERO)) {
+        printf("This was button 0, on pin %u\n", btn->pin);
+      }
+    } else if(ev == button_hal_release_event) {
+      btn = (button_hal_button_t *)data;
+      printf("Release event (%s)\n", BUTTON_HAL_GET_DESCRIPTION(btn));
+    } else if(ev == button_hal_periodic_event) {
+      btn = (button_hal_button_t *)data;
+      printf("Periodic event, %u seconds (%s)\n", btn->press_duration_seconds,
+             BUTTON_HAL_GET_DESCRIPTION(btn));
+
+      if(btn->press_duration_seconds > 5) {
+        printf("%s pressed for more than 5 secs. Do custom action\n",
+               BUTTON_HAL_GET_DESCRIPTION(btn));
+      }
+    }
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
-#endif /* BUTTON_SENSOR_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

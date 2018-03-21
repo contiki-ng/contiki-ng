@@ -45,7 +45,6 @@
 
 /* User configuration */
 #define MQTT_DEMO_STATUS_LED      LEDS_GREEN
-#define MQTT_DEMO_PUBLISH_TRIGGER &button_right_sensor
 
 /* If undefined, the demo will attempt to connect to IBM's quickstart */
 #define MQTT_DEMO_BROKER_IP_ADDR "fd00::1"

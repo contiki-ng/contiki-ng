@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -29,32 +30,32 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup srf06-common-peripherals
+ * \addtogroup zoul
+ * @{
+ *
+ * \defgroup zoul-buttons Zoul user button
+ *
+ * Generic module controlling the user button on the Zoul
  * @{
  *
  * \file
- * Header file for the SmartRF06EB + CC13xx/CC26xxEM Button Driver
+ * Defines the Zoul user button for use with the button HAL
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BUTTON_SENSOR_H_
-#define BUTTON_SENSOR_H_
+#include "contiki.h"
+#include "dev/button-hal.h"
 /*---------------------------------------------------------------------------*/
-#include "lib/sensors.h"
+#if PLATFORM_HAS_BUTTON
 /*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR "Button"
+BUTTON_HAL_BUTTON(button_user, "User button", \
+                  GPIO_PORT_PIN_TO_GPIO_HAL_PIN(BUTTON_USER_PORT, BUTTON_USER_PIN), \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_USER_BUTTON, true);
 /*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR_VALUE_STATE    0
-#define BUTTON_SENSOR_VALUE_DURATION 1
-
-#define BUTTON_SENSOR_VALUE_RELEASED 0
-#define BUTTON_SENSOR_VALUE_PRESSED  1
+BUTTON_HAL_BUTTONS(&button_user);
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor button_select_sensor;
-extern const struct sensors_sensor button_left_sensor;
-extern const struct sensors_sensor button_right_sensor;
-extern const struct sensors_sensor button_up_sensor;
-extern const struct sensors_sensor button_down_sensor;
+#endif
 /*---------------------------------------------------------------------------*/
-#endif /* BUTTON_SENSOR_H_ */
-/*---------------------------------------------------------------------------*/
-/** @} */
+/**
+ * @}
+ * @}
+ */

@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,38 +29,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup launchpad-peripherals
- * @{
- *
- * \defgroup launchpad-button-sensor LaunchPad Button Driver
- *
- * One of the buttons can be configured as general purpose or as an on/off key
- * @{
- *
- * \file
- * Header file for the LaunchPad Button Driver
- */
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
-#ifndef BUTTON_SENSOR_H_
-#define BUTTON_SENSOR_H_
+/* Force button descriptions */
+#define BUTTON_HAL_CONF_WITH_DESCRIPTION 1
 /*---------------------------------------------------------------------------*/
-#include "lib/sensors.h"
+#endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR "Button"
-/*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR_VALUE_STATE    0
-#define BUTTON_SENSOR_VALUE_DURATION 1
-
-#define BUTTON_SENSOR_VALUE_RELEASED 0
-#define BUTTON_SENSOR_VALUE_PRESSED  1
-/*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor button_left_sensor;
-extern const struct sensors_sensor button_right_sensor;
-/*---------------------------------------------------------------------------*/
-#endif /* BUTTON_SENSOR_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

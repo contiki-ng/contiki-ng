@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -29,19 +30,26 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup launchpad-peripherals
+ * \addtogroup launchpad-cc26xx-peripherals
  * @{
  *
  * \file
- * Generic module controlling LaunchPad sensors
+ * Defines CC13xx/CC26xx Launchpad buttons for use with the button HAL
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "launchpad/button-sensor.h"
+#include "dev/button-hal.h"
 
-#include <string.h>
+#include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
-/** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&button_left_sensor, &button_right_sensor);
+BUTTON_HAL_BUTTON(key_left, "Key Left", BOARD_IOID_KEY_LEFT, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BOARD_BUTTON_HAL_INDEX_KEY_LEFT, \
+                  true);
+
+BUTTON_HAL_BUTTON(key_right, "Key Right", BOARD_IOID_KEY_RIGHT, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BOARD_BUTTON_HAL_INDEX_KEY_RIGHT, \
+                  true);
+/*---------------------------------------------------------------------------*/
+BUTTON_HAL_BUTTONS(&key_left, &key_right);
 /*---------------------------------------------------------------------------*/
 /** @} */
