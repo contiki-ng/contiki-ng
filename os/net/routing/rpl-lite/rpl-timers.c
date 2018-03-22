@@ -257,8 +257,8 @@ void
 rpl_timers_schedule_dao(void)
 {
   if(curr_instance.used && curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
-    /* No need for aggregation delay as per RFC 6550 section 9.5, as this only
-    * serves storing mode. Use simply delay instead, with the only PURPOSE
+    /* No need for DAO aggregation delay as per RFC 6550 section 9.5, as this
+    * only serves storing mode. Use simple delay instead, with the only purpose
     * to reduce congestion. */
     clock_time_t expiration_time = RPL_DAO_DELAY / 2 + (random_rand() % (RPL_DAO_DELAY));
     /* Increment next seqno */
@@ -306,8 +306,10 @@ handle_dao_timer(void *ptr)
   rpl_icmp6_dao_output(curr_instance.default_lifetime);
 
 #if !RPL_WITH_DAO_ACK
-  /* There is DAO-ACK, schedule a refresh. Must be done after rpl_icmp6_dao_output,
-  because we increment curr_instance.dag.dao_curr_seqno for the next DAO (refresh) */
+  /* There is no DAO-ACK, schedule a refresh. Must be done after rpl_icmp6_dao_output,
+  because we increment curr_instance.dag.dao_curr_seqno for the next DAO (refresh).
+  Where there is DAO-ACK, the refresh is scheduled after reception of the ACK.
+  Happens when handle_dao_timer is called again next. */
   schedule_dao_refresh();
 #endif /* !RPL_WITH_DAO_ACK */
 }
