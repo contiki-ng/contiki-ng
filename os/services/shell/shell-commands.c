@@ -218,8 +218,11 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
 
   /* Get argument (remote IPv6) */
   SHELL_ARGS_NEXT(args, next_args);
-  if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
-    SHELL_OUTPUT(output, "Invalid IPv6: %s\n", args);
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "Destination IPv6 address is not specified\n");
+    PT_EXIT(pt);
+  } else if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
+    SHELL_OUTPUT(output, "Invalid IPv6 address: %s\n", args);
     PT_EXIT(pt);
   }
 
