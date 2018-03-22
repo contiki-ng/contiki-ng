@@ -70,7 +70,7 @@
 
 /* Printf-formatted output via a given output function */
 #define SHELL_OUTPUT(output_func, format, ...) do { \
-		char buffer[128]; \
+		char buffer[192]; \
 	  snprintf(buffer, sizeof(buffer), format, ##__VA_ARGS__); \
 		(output_func)(buffer); \
   } while(0);
