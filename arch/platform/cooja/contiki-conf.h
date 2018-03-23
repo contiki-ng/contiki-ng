@@ -42,6 +42,8 @@
 #include "subplatform-conf.h"
 #endif /* INCLUDE_SUBPLATFORM_CONF */
 
+#define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
+
 #define LOG_CONF_ENABLED 1
 
 #define COOJA 1

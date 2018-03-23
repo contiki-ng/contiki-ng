@@ -32,5 +32,5 @@ $(CONTIKI_APP).cooja: $(JNILIB)
 
 # Trickiness: GNU make matches this against the file base name.
 # Assume that the directory part is the standard location.
-mtype%.o: contiki-cooja-main.o | $(OBJECTDIR)
-	mv contiki-cooja-main.o $@
+mtype%.o: platform.o | $(OBJECTDIR)
+	mv platform.o $@

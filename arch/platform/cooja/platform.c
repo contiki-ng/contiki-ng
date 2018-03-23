@@ -45,7 +45,12 @@
 #include "sys/clock.h"
 #include "sys/etimer.h"
 #include "sys/cooja_mt.h"
+
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
 #include "sys/log.h"
+#define LOG_MODULE "Cooja"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 
 #include "lib/random.h"
 #include "lib/simEnvChange.h"
@@ -71,7 +76,7 @@
 
 /* JNI-defined functions, depends on the environment variable CLASSNAME */
 #ifndef CLASSNAME
-#error CLASSNAME is undefined, required by contiki-cooja-main.c
+#error CLASSNAME is undefined, required by platform.c
 #endif /* CLASSNAME */
 #define COOJA__QUOTEME(a,b,c) COOJA_QUOTEME(a,b,c)
 #define COOJA_QUOTEME(a,b,c) a##b##c
@@ -82,14 +87,13 @@
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
 
-#ifndef NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_WITH_IPV6 0
-#endif
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#define PRINT6ADDR(addr) printf("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
 #endif /* NETSTACK_CONF_WITH_IPV6 */
+
+/* The main function, implemented in contiki-main.c */
+int main(void);
 
 /* Simulation mote interfaces */
 SIM_INTERFACE_NAME(moteid_interface);
@@ -126,18 +130,6 @@ static struct cooja_mt_thread process_run_thread;
 
 /*---------------------------------------------------------------------------*/
 static void
-print_processes(struct process * const processes[])
-{
-  /*  const struct process * const * p = processes;*/
-  printf("Starting");
-  while(*processes != NULL) {
-    printf(" '%s'", (*processes)->name);
-    processes++;
-  }
-  putchar('\n');
-}
-/*---------------------------------------------------------------------------*/
-static void
 rtimer_thread_loop(void *data)
 {
   while(1)
@@ -168,120 +160,65 @@ set_lladdr(void)
   addr.u8[1] = node_id >> 8;
 #endif /* NETSTACK_CONF_WITH_IPV6 */
   linkaddr_set_node_addr(&addr);
-
-  printf("Link-layer address ");
-  log_lladdr(&addr);
-  printf("\n");
 }
 /*---------------------------------------------------------------------------*/
 void
-contiki_init()
+platform_init_stage_one()
 {
-  /* Initialize random generator (moved to moteid.c) */
-
-  /* Start process handler */
-  process_init();
-
-
-  /* Start Contiki processes */
-
-  process_start(&etimer_process, NULL);
-  process_start(&sensors_process, NULL);
-  ctimer_init();
-
-  /* Print startup information */
-  printf(CONTIKI_VERSION_STRING " started. ");
-  if(node_id > 0) {
-    printf("Node id is set to %u.\n", node_id);
-  } else {
-    printf("Node id is not set.\n");
-  }
-
+  return;
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_two()
+{
   set_lladdr();
-  {
-    uint8_t longaddr[8];
-
-    memset(longaddr, 0, sizeof(longaddr));
-    linkaddr_copy((linkaddr_t *)&longaddr, &linkaddr_node_addr);
-    printf("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
-           longaddr[0], longaddr[1], longaddr[2], longaddr[3],
-           longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_init_stage_three()
+{
+  if(node_id > 0) {
+    LOG_INFO("Node id is set to %u.\n", node_id);
+  } else {
+    LOG_INFO("Node id is not set.\n");
   }
-
-  /* Initialize communication stack */
-  netstack_init();
-  printf("%s/%s\n",
-         NETSTACK_NETWORK.name, NETSTACK_MAC.name);
-
-#if NETSTACK_CONF_WITH_IPV6
-  /* IPv6 CONFIGURATION */
-  {
-    int i;
-    uip_ds6_addr_t *lladdr;
-    uint8_t addr[sizeof(uip_lladdr.addr)];
-    for(i = 0; i < sizeof(uip_lladdr.addr); i += 2) {
-      addr[i + 1] = node_id & 0xff;
-      addr[i + 0] = node_id >> 8;
-    }
-    linkaddr_copy((linkaddr_t *)addr, &linkaddr_node_addr);
-    memcpy(&uip_lladdr.addr, addr, sizeof(uip_lladdr.addr));
-
-    process_start(&tcpip_process, NULL);
-
-    lladdr = uip_ds6_get_link_local(-1);
-    printf("Tentative link-local IPv6 address ");
-    log_6addr(lladdr != NULL ? &lladdr->ipaddr : NULL);
-    printf("\n");
-  }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
   /* Initialize eeprom */
   eeprom_init();
-
   /* Start serial process */
   serial_line_init();
+}
+/*---------------------------------------------------------------------------*/
+void
+platform_main_loop()
+{
+  while(1)
+  {
+    simProcessRunValue = process_run();
+    while(simProcessRunValue-- > 0) {
+      process_run();
+    }
+    simProcessRunValue = process_nevents();
 
-#if BUILD_WITH_RPL_BORDER_ROUTER
-  rpl_border_router_init();
-#endif /* BUILD_WITH_RPL_BORDER_ROUTER */
-#if BUILD_WITH_ORCHESTRA
-  orchestra_init();
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-  serial_shell_init();
-#endif /* BUILD_WITH_SHELL */
+    /* Check if we must stay awake */
+    if(simDontFallAsleep) {
+      simDontFallAsleep = 0;
+      simProcessRunValue = 1;
+    }
 
-  /* Start autostart processes (defined in Contiki application) */
-  print_processes(autostart_processes);
-  autostart_start(autostart_processes);
+    /* Return to COOJA */
+    cooja_mt_yield();
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
 process_run_thread_loop(void *data)
 {
-    /* Yield once during bootup */
-    simProcessRunValue = 1;
-    cooja_mt_yield();
+  /* Yield once during bootup */
+  simProcessRunValue = 1;
+  cooja_mt_yield();
 
-    contiki_init();
-
-    while(1)
-    {
-        simProcessRunValue = process_run();
-        while(simProcessRunValue-- > 0) {
-          process_run();
-        }
-        simProcessRunValue = process_nevents();
-
-        /* Check if we must stay awake */
-        if(simDontFallAsleep) {
-            simDontFallAsleep=0;
-            simProcessRunValue = 1;
-        }
-
-        /* Return to COOJA */
-        cooja_mt_yield();
-    }
+  /* Then call common Contiki-NG main function */
+  main();
 }
 /*---------------------------------------------------------------------------*/
 /**
