@@ -98,6 +98,13 @@ void rpl_global_repair(const char *str);
 void rpl_local_repair(const char *str);
 
 /**
+ * Notifies RPL that no path was found towards a given IPv6 address
+ *
+ * \param node_addr The IPv6 address of the node with incomplete path
+ */
+void rpl_dag_path_not_found(const uip_ipaddr_t *node_addr);
+
+/**
  * Tells whether a given global IPv6 address is in our current DAG
  *
  * \param addr The global IPv6 address to be tested

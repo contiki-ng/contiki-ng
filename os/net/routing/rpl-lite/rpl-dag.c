@@ -212,6 +212,19 @@ global_repair_non_root(rpl_dio_t *dio)
 }
 /*---------------------------------------------------------------------------*/
 void
+rpl_dag_path_not_found(const uip_ipaddr_t *node_addr)
+{
+  /* At root, increment DTSN as reaction to incomplete path.
+  Will force nodes to re-send DAOs. Useful for instance upon root reboot. */
+  if(rpl_dag_root_is_root() && rpl_is_addr_in_our_dag(node_addr)) {
+    RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
+    LOG_WARN("incomple path towards ");
+    LOG_WARN_6ADDR(node_addr);
+    LOG_WARN_(". Incrementing DTSN (now is: %u)\n", curr_instance.dtsn_out);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
 rpl_local_repair(const char *str)
 {
   if(curr_instance.used) { /* Check needed because this is a public function */
