@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,33 +29,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc26xx
- * @{
- *
- * \defgroup cc26xx-batmon CC13xx/CC26xx BatMon sensor driver
- *
- * Driver for the on-chip battery voltage and chip temperature sensor.
- * @{
- *
- * \file
- * Header file for the CC13xx/CC26xx battery monitor
- */
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
-#ifndef BATMON_SENSOR_H_
-#define BATMON_SENSOR_H_
+/* Enable TCP */
+#define UIP_CONF_TCP 1
+
+/* If undefined, the demo will attempt to connect to IBM's quickstart */
+#define MQTT_CLIENT_CONF_BROKER_IP_ADDR "fd00::1"
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "lib/sensors.h"
+#endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/
-#define BATMON_SENSOR_TYPE_TEMP    1
-#define BATMON_SENSOR_TYPE_VOLT    2
-/*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor batmon_sensor;
-/*---------------------------------------------------------------------------*/
-#endif /* BATMON_SENSOR_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
+/** @} */

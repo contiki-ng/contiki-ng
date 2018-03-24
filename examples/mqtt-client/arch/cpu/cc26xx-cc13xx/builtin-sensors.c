@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,33 +29,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc26xx
- * @{
- *
- * \defgroup cc26xx-batmon CC13xx/CC26xx BatMon sensor driver
- *
- * Driver for the on-chip battery voltage and chip temperature sensor.
- * @{
- *
- * \file
- * Header file for the CC13xx/CC26xx battery monitor
- */
-/*---------------------------------------------------------------------------*/
-#ifndef BATMON_SENSOR_H_
-#define BATMON_SENSOR_H_
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "lib/sensors.h"
+#include "batmon-sensor.h"
+#include "mqtt-client.h"
+
+#include <string.h>
+#include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#define BATMON_SENSOR_TYPE_TEMP    1
-#define BATMON_SENSOR_TYPE_VOLT    2
+#define TMP_BUF_SZ 32
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor batmon_sensor;
+char tmp_buf[TMP_BUF_SZ];
 /*---------------------------------------------------------------------------*/
-#endif /* BATMON_SENSOR_H_ */
+static char *
+temp_reading(void)
+{
+  memset(tmp_buf, 0, TMP_BUF_SZ);
+  snprintf(tmp_buf, TMP_BUF_SZ, "\"On-Chip Temp (mC)\":%d",
+           batmon_sensor.value(BATMON_SENSOR_TYPE_TEMP));
+  return tmp_buf;
+}
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
+static void
+temp_init(void)
+{
+  SENSORS_ACTIVATE(batmon_sensor);
+}
+/*---------------------------------------------------------------------------*/
+const mqtt_client_extension_t builtin_sensors_batmon_temp = {
+  temp_init,
+  temp_reading,
+};
+/*---------------------------------------------------------------------------*/
+static char *
+volt_reading(void)
+{
+  memset(tmp_buf, 0, TMP_BUF_SZ);
+  snprintf(tmp_buf, TMP_BUF_SZ, "\"Volt (mV)\":%d",
+           (batmon_sensor.value(BATMON_SENSOR_TYPE_VOLT) * 125) >> 5);
+  return tmp_buf;
+}
+/*---------------------------------------------------------------------------*/
+static void
+volt_init(void)
+{
+  SENSORS_ACTIVATE(batmon_sensor);
+}
+/*---------------------------------------------------------------------------*/
+const mqtt_client_extension_t builtin_sensors_batmon_volt = {
+  volt_init,
+  volt_reading,
+};
+/*---------------------------------------------------------------------------*/
