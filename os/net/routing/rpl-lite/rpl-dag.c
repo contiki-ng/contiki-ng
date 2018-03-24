@@ -395,9 +395,15 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
     return;
   }
 
-  /* If the DIO sender is on an older version of the DAG, ignore it. The node
-  will eventually hear the global repair and catch up. */
+  /* If the DIO sender is on an older version of the DAG, do not process it
+   * further. The sender will eventually hear the global repair and catch up. */
   if(rpl_lollipop_greater_than(curr_instance.dag.version, dio->version)) {
+    if(dio->rank == ROOT_RANK) {
+      /* Before returning, if the DIO was from the root, an old DAG versions
+       * likely incidates a root reboot. Reset our DIO timer to make sure the
+       * root hears our version ASAP, and in trun triggers a global repair. */
+      rpl_timers_dio_reset("Heard old version from root");
+    }
     return;
   }
 
@@ -412,10 +418,12 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
    * Must come first, as it might remove all neighbors, and we then need
    * to re-add this source of the DIO to the neighbor table */
   if(rpl_lollipop_greater_than(dio->version, curr_instance.dag.version)) {
-    if(curr_instance.dag.rank == ROOT_RANK) { /* The root should not hear newer versions */
+    if(curr_instance.dag.rank == ROOT_RANK) {
+      /* The root should not hear newer versions unless it just rebooted */
       LOG_ERR("inconsistent DIO version (current: %u, received: %u), initiate global repair\n",
           curr_instance.dag.version, dio->version);
-      curr_instance.dag.version = dio->version; /* Update version and trigger global repair */
+      /* Update version and trigger global repair */
+      curr_instance.dag.version = dio->version;
       rpl_global_repair("Inconsistent DIO version");
     } else {
       LOG_WARN("new DIO version (current: %u, received: %u), apply global repair\n",
