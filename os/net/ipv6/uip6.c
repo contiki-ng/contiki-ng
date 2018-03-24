@@ -1430,7 +1430,8 @@ uip_process(uint8_t flag)
 
   icmp6_input:
   /* This is IPv6 ICMPv6 processing code. */
-  LOG_INFO("icmpv6 input length %d type: %d \n", uip_len, UIP_ICMP_BUF->type);
+  LOG_INFO("icmpv6 input length %d type %d code %d \n",
+      uip_len, UIP_ICMP_BUF->type, UIP_ICMP_BUF->icode);
 
 #if UIP_CONF_IPV6_CHECKS
   /* Compute and check the ICMP header checksum */
@@ -1462,7 +1463,7 @@ uip_process(uint8_t flag)
    */
   if(uip_icmp6_input(UIP_ICMP_BUF->type,
                      UIP_ICMP_BUF->icode) == UIP_ICMP6_INPUT_ERROR) {
-    LOG_ERR("Unknown ICMPv6 message type/code %d\n", UIP_ICMP_BUF->type);
+    LOG_WARN("no handler for ICMPv6 message type %d code %d\n", UIP_ICMP_BUF->type, UIP_ICMP_BUF->icode);
     UIP_STAT(++uip_stat.icmp.drop);
     UIP_STAT(++uip_stat.icmp.typeerr);
     uip_clear_buf();
