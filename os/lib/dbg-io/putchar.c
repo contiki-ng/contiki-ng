@@ -30,6 +30,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "lib/dbg-io/dbg.h"
 
 #include <stdio.h>
 #include <string.h>

@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2015, Nordic Semiconductor
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -27,18 +28,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx
+ * \addtogroup nrf52dk
  * @{
  *
- * \defgroup cc26xx-char-io CC13xx/CC26xx Character I/O
- *
- * CC13xx/CC26xx CPU-specific functions for debugging and SLIP I/O
+ * \addtogroup nrf52dk-dbg-io Debug IO over UART
  * @{
  *
  * \file
- * Header file for the CC13xx/CC26xx Debug I/O module
+ *         Header file for the debug module.
+ * \author
+ *         Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *
  */
 #ifndef DBG_H_
 #define DBG_H_
@@ -50,12 +51,14 @@
  * \param seq A pointer to the stream
  * \param len The number of bytes to print
  * \return The number of printed bytes
- *
- * This function is an arch-specific implementation required by the dbg-io
- * API in cpu/arm/common/dbg-io. It prints a stream of bytes over the
- * peripheral used by the platform.
  */
 unsigned int dbg_send_bytes(const unsigned char *seq, unsigned int len);
+/**
+ * \brief Print a character to debug output
+ * \param c Character to print
+ * \return Printed character
+ */
+int dbg_putchar(int c);
 /*---------------------------------------------------------------------------*/
 #endif /* DBG_H_ */
 /*---------------------------------------------------------------------------*/
