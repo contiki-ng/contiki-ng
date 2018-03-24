@@ -241,6 +241,13 @@ rpl_get_leaf_only(void)
   return rpl_leaf_only;
 }
 /*---------------------------------------------------------------------------*/
+static int
+should_use_fallback_interface(uip_ipaddr_t *dest)
+{
+  /* For destinations not in our DAG, use fallback interface */
+  return !rpl_is_addr_in_our_dag(dest);
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_lite_driver = {
   "RPL Lite",
   init,
@@ -262,6 +269,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_link_callback,
   neighbor_state_changed,
   drop_route,
+  should_use_fallback_interface,
 };
 /*---------------------------------------------------------------------------*/
 
