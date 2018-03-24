@@ -60,7 +60,7 @@
 #define SLIP_END     0300
 /*---------------------------------------------------------------------------*/
 int
-putchar(int c)
+dbg_putchar(int c)
 {
 #if DBG_CONF_SLIP_MUX
   static char debug_frame = 0;
@@ -79,7 +79,7 @@ putchar(int c)
     write_byte(SLIP_END);
     debug_frame = 0;
 #endif
-    dbg_flush();
+    flush();
   }
   return c;
 }
@@ -96,19 +96,6 @@ dbg_send_bytes(const unsigned char *s, unsigned int len)
     putchar(*s++);
     i++;
   }
-  return i;
-}
-/*---------------------------------------------------------------------------*/
-int
-puts(const char *s)
-{
-  unsigned int i = 0;
-
-  while(s && *s != 0) {
-    putchar(*s++);
-    i++;
-  }
-  putchar('\n');
   return i;
 }
 /*---------------------------------------------------------------------------*/

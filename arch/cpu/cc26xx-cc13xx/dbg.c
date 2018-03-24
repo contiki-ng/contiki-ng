@@ -34,31 +34,10 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 int
-putchar(int c)
+dbg_putchar(int c)
 {
   cc26xx_uart_write_byte(c);
   return c;
-}
-/*---------------------------------------------------------------------------*/
-int
-puts(const char *str)
-{
-  int i;
-  if(str == NULL) {
-    return 0;
-  }
-  for(i = 0; i < strlen(str); i++) {
-    cc26xx_uart_write_byte(str[i]);
-  }
-  cc26xx_uart_write_byte('\n');
-
-  /*
-   * Wait for the line to go out. This is to prevent garbage when used between
-   * UART on/off cycles
-   */
-  while(cc26xx_uart_busy() == UART_BUSY);
-
-  return i;
 }
 /*---------------------------------------------------------------------------*/
 unsigned int
