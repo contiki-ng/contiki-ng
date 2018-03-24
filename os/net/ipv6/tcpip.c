@@ -460,23 +460,30 @@ extern void remove_ext_hdr(void);
 static void
 output_fallback(void)
 {
+  int forwarded = 0;
+
 #ifdef UIP_FALLBACK_INTERFACE
-  LOG_INFO("fallback: removing ext hdrs & setting proto %d %d\n",
-         uip_ext_len, *((uint8_t *)UIP_IP_BUF + 40));
-  remove_ext_hdr();
-  /* Inform the other end that the destination is not reachable. If it's
-   * not informed routes might get lost unexpectedly until there's a need
-   * to send a new packet to the peer */
-  if(UIP_FALLBACK_INTERFACE.output() < 0) {
-    LOG_ERR("fallback: output error. Reporting DST UNREACH\n");
+  if(NETSTACK_ROUTING.should_use_fallback_interface(&UIP_IP_BUF->destipaddr)) {
+    LOG_INFO("fallback: removing ext hdrs & setting proto %d %d\n",
+           uip_ext_len, *((uint8_t *)UIP_IP_BUF + 40));
+    remove_ext_hdr();
+    if(UIP_FALLBACK_INTERFACE.output() >= 0) {
+      forwarded = 1;
+    }
+  }
+#else /* UIP_FALLBACK_INTERFACE */
+  LOG_ERR("output: destination off-link and no default route\n");
+#endif /* !UIP_FALLBACK_INTERFACE */
+
+  if(forwarded == 0) {
+    /* Inform the other end that the destination is not reachable. If it's
+     * not informed routes might get lost unexpectedly until there's a need
+     * to send a new packet to the peer */
+    LOG_ERR("output: destination unreachable (sending IVMPc6 message)\n");
     uip_icmp6_error_output(ICMP6_DST_UNREACH, ICMP6_DST_UNREACH_ADDR, 0);
     uip_flags = 0;
     tcpip_ipv6_output();
-    return;
   }
-#else
-  LOG_ERR("output: destination off-link and no default route\n");
-#endif /* !UIP_FALLBACK_INTERFACE */
 }
 /*---------------------------------------------------------------------------*/
 static void
