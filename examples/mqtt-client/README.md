@@ -1,14 +1,17 @@
-MQTT Demo
-=========
+MQTT Client Example
+===================
 The MQTT client can be used to:
 
 * Publish sensor readings to an MQTT broker.
 * Subscribe to a topic and receive commands from an MQTT broker
 
-The demo will give some visual feedback with the green LED:
+The demo will give some visual feedback with a LED (configurable):
 * Very fast blinking: Searching for a network
 * Fast blinking: Connecting to broker
 * Slow, long blinking: Sending a publish message
+
+This example is known to work with all platforms that support the new button
+API.
 
 Publishing
 ----------
@@ -20,7 +23,7 @@ running on the IPv6 address specified as `MQTT_DEMO_BROKER_IP_ADDR` in
 The publish messages include sensor readings but also some other information,
 such as device uptime in seconds and a message sequence number. The demo will
 publish to topic `iot-2/evt/status/fmt/json`. The device will connect using
-client-id `d:quickstart:cc2538:<device-id>`, where `<device-id>` gets
+client-id `d:contiki-ng:mqtt-client:<device-id>`, where `<device-id>` gets
 constructed from the device's IEEE address.
 
 Subscribing

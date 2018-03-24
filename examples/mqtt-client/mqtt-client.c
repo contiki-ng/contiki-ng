@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,19 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/** \addtogroup cc2538-examples
- * @{
- *
- * \defgroup cc2538-mqtt-demo CC2538 MQTT Demo Project
- *
- * Demonstrates MQTT functionality. Works with IBM Quickstart as well as
- * mosquitto.
- * @{
- *
- * \file
- * An MQTT example for the cc2538-based platforms
- */
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "net/routing/routing.h"
 #include "mqtt.h"
@@ -52,10 +40,14 @@
 #include "lib/sensors.h"
 #include "dev/button-hal.h"
 #include "dev/leds.h"
-#include "dev/cc2538-sensors.h"
+#include "os/sys/log.h"
+#include "mqtt-client.h"
 
 #include <string.h>
 #include <strings.h>
+/*---------------------------------------------------------------------------*/
+#define LOG_MODULE "mqtt-client"
+#define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 /*
  * IBM server: messaging.quickstart.internetofthings.ibmcloud.com
@@ -65,12 +57,18 @@
  * Alternatively, publish to a local MQTT broker (e.g. mosquitto) running on
  * the node that hosts your border router
  */
-#ifdef MQTT_DEMO_BROKER_IP_ADDR
-static const char *broker_ip = MQTT_DEMO_BROKER_IP_ADDR;
-#define DEFAULT_ORG_ID              "mqtt-demo"
+#ifdef MQTT_CLIENT_CONF_BROKER_IP_ADDR
+static const char *broker_ip = MQTT_CLIENT_CONF_BROKER_IP_ADDR;
+#define DEFAULT_ORG_ID              "contiki-ng"
 #else
 static const char *broker_ip = "0064:ff9b:0000:0000:0000:0000:b8ac:7cbd";
 #define DEFAULT_ORG_ID              "quickstart"
+#endif
+/*---------------------------------------------------------------------------*/
+#ifdef MQTT_CLIENT_CONF_STATUS_LED
+#define MQTT_CLIENT_STATUS_LED MQTT_CLIENT_CONF_STATUS_LED
+#else
+#define MQTT_CLIENT_STATUS_LED LEDS_GREEN
 #endif
 /*---------------------------------------------------------------------------*/
 /*
@@ -128,7 +126,7 @@ static uint8_t state;
 #define NO_NET_LED_DURATION         (NET_CONNECT_PERIODIC >> 1)
 /*---------------------------------------------------------------------------*/
 /* Default configuration values */
-#define DEFAULT_TYPE_ID             "cc2538"
+#define DEFAULT_TYPE_ID             "mqtt-client"
 #define DEFAULT_AUTH_TOKEN          "AUTHZ"
 #define DEFAULT_EVENT_TYPE_ID       "status"
 #define DEFAULT_SUBSCRIBE_CMD_TYPE  "+"
@@ -137,14 +135,13 @@ static uint8_t state;
 #define DEFAULT_KEEP_ALIVE_TIMER    60
 #define DEFAULT_RSSI_MEAS_INTERVAL  (CLOCK_SECOND * 30)
 /*---------------------------------------------------------------------------*/
-/* Take a sensor reading on button press */
-#define PUBLISH_TRIGGER BUTTON_HAL_ID_USER_BUTTON
-
+#define MQTT_CLIENT_SENSOR_NONE     (void *)0xFFFFFFFF
+/*---------------------------------------------------------------------------*/
 /* Payload length of ICMPv6 echo requests used to measure RSSI with def rt */
 #define ECHO_REQ_PAYLOAD_LEN   20
 /*---------------------------------------------------------------------------*/
-PROCESS_NAME(mqtt_demo_process);
-AUTOSTART_PROCESSES(&mqtt_demo_process);
+PROCESS_NAME(mqtt_client_process);
+AUTOSTART_PROCESSES(&mqtt_client_process);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Data structure declaration for the MQTT client configuration
@@ -163,8 +160,6 @@ typedef struct mqtt_client_config {
 /*---------------------------------------------------------------------------*/
 /* Maximum TCP segment size for outgoing segments of our socket */
 #define MAX_TCP_SEGMENT_SIZE    32
-/*---------------------------------------------------------------------------*/
-#define STATUS_LED LEDS_GREEN
 /*---------------------------------------------------------------------------*/
 /*
  * Buffers for Client ID and Topic.
@@ -202,9 +197,12 @@ static int def_rt_rssi = 0;
 /*---------------------------------------------------------------------------*/
 static mqtt_client_config_t conf;
 /*---------------------------------------------------------------------------*/
-PROCESS(mqtt_demo_process, "MQTT Demo");
+extern const mqtt_client_extension_t *mqtt_client_extensions[];
+extern const uint8_t mqtt_client_extension_count;
 /*---------------------------------------------------------------------------*/
-int
+PROCESS(mqtt_client_process, "MQTT Client");
+/*---------------------------------------------------------------------------*/
+static int
 ipaddr_sprintf(char *buf, uint8_t buf_len, const uip_ipaddr_t *addr)
 {
   uint16_t a;
@@ -241,25 +239,25 @@ echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data,
 static void
 publish_led_off(void *d)
 {
-  leds_off(STATUS_LED);
+  leds_off(MQTT_CLIENT_STATUS_LED);
 }
 /*---------------------------------------------------------------------------*/
 static void
 pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
             uint16_t chunk_len)
 {
-  DBG("Pub Handler: topic='%s' (len=%u), chunk_len=%u\n", topic, topic_len,
-      chunk_len);
+  LOG_DBG("Pub Handler: topic='%s' (len=%u), chunk_len=%u\n", topic,
+          topic_len, chunk_len);
 
   /* If we don't like the length, ignore */
   if(topic_len != 23 || chunk_len != 1) {
-    printf("Incorrect topic or chunk len. Ignored\n");
+    LOG_ERR("Incorrect topic or chunk len. Ignored\n");
     return;
   }
 
   /* If the format != json, ignore */
   if(strncmp(&topic[topic_len - 4], "json", 4) != 0) {
-    printf("Incorrect format\n");
+    LOG_ERR("Incorrect format\n");
   }
 
   if(strncmp(&topic[10], "leds", 4) == 0) {
@@ -277,16 +275,16 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
 {
   switch(event) {
   case MQTT_EVENT_CONNECTED: {
-    DBG("APP - Application has a MQTT connection\n");
+    LOG_DBG("Application has a MQTT connection\n");
     timer_set(&connection_life, CONNECTION_STABLE_TIME);
     state = STATE_CONNECTED;
     break;
   }
   case MQTT_EVENT_DISCONNECTED: {
-    DBG("APP - MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
+    LOG_DBG("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
 
     state = STATE_DISCONNECTED;
-    process_poll(&mqtt_demo_process);
+    process_poll(&mqtt_client_process);
     break;
   }
   case MQTT_EVENT_PUBLISH: {
@@ -295,29 +293,28 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     /* Implement first_flag in publish message? */
     if(msg_ptr->first_chunk) {
       msg_ptr->first_chunk = 0;
-      DBG("APP - Application received a publish on topic '%s'. Payload "
-          "size is %i bytes. Content:\n\n",
-          msg_ptr->topic, msg_ptr->payload_length);
+      LOG_DBG("Application received publish for topic '%s'. Payload "
+              "size is %i bytes.\n", msg_ptr->topic, msg_ptr->payload_length);
     }
 
-    pub_handler(msg_ptr->topic, strlen(msg_ptr->topic), msg_ptr->payload_chunk,
-                msg_ptr->payload_length);
+    pub_handler(msg_ptr->topic, strlen(msg_ptr->topic),
+                msg_ptr->payload_chunk, msg_ptr->payload_length);
     break;
   }
   case MQTT_EVENT_SUBACK: {
-    DBG("APP - Application is subscribed to topic successfully\n");
+    LOG_DBG("Application is subscribed to topic successfully\n");
     break;
   }
   case MQTT_EVENT_UNSUBACK: {
-    DBG("APP - Application is unsubscribed to topic successfully\n");
+    LOG_DBG("Application is unsubscribed to topic successfully\n");
     break;
   }
   case MQTT_EVENT_PUBACK: {
-    DBG("APP - Publishing complete.\n");
+    LOG_DBG("Publishing complete.\n");
     break;
   }
   default:
-    DBG("APP - Application got a unhandled MQTT event: %i\n", event);
+    LOG_DBG("Application got a unhandled MQTT event: %i\n", event);
     break;
   }
 }
@@ -330,7 +327,7 @@ construct_pub_topic(void)
 
   /* len < 0: Error. Len >= BUFFER_SIZE: Buffer too small */
   if(len < 0 || len >= BUFFER_SIZE) {
-    printf("Pub Topic: %d, Buffer %d\n", len, BUFFER_SIZE);
+    LOG_INFO("Pub Topic: %d, Buffer %d\n", len, BUFFER_SIZE);
     return 0;
   }
 
@@ -345,7 +342,7 @@ construct_sub_topic(void)
 
   /* len < 0: Error. Len >= BUFFER_SIZE: Buffer too small */
   if(len < 0 || len >= BUFFER_SIZE) {
-    printf("Sub Topic: %d, Buffer %d\n", len, BUFFER_SIZE);
+    LOG_INFO("Sub Topic: %d, Buffer %d\n", len, BUFFER_SIZE);
     return 0;
   }
 
@@ -363,7 +360,7 @@ construct_client_id(void)
 
   /* len < 0: Error. Len >= BUFFER_SIZE: Buffer too small */
   if(len < 0 || len >= BUFFER_SIZE) {
-    printf("Client ID: %d, Buffer %d\n", len, BUFFER_SIZE);
+    LOG_ERR("Client ID: %d, Buffer %d\n", len, BUFFER_SIZE);
     return 0;
   }
 
@@ -438,9 +435,9 @@ subscribe(void)
 
   status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
 
-  DBG("APP - Subscribing!\n");
+  LOG_DBG("Subscribing!\n");
   if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
-    DBG("APP - Tried to subscribe but command queue was full!\n");
+    LOG_ERR("Tried to subscribe but command queue was full!\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -450,6 +447,7 @@ publish(void)
   /* Publish MQTT topic in IBM quickstart format */
   int len;
   int remaining = APP_BUFFER_SIZE;
+  int i;
 
   seq_nr_value++;
 
@@ -458,13 +456,17 @@ publish(void)
   len = snprintf(buf_ptr, remaining,
                  "{"
                  "\"d\":{"
-                 "\"myName\":\"%s\","
+                 "\"Platform\":\""CONTIKI_TARGET_STRING"\","
+#ifdef CONTIKI_BOARD_STRING
+                 "\"Board\":\""CONTIKI_BOARD_STRING"\","
+#endif
                  "\"Seq #\":%d,"
                  "\"Uptime (sec)\":%lu",
-                 BOARD_STRING, seq_nr_value, clock_seconds());
+                 seq_nr_value, clock_seconds());
 
   if(len < 0 || len >= remaining) {
-    printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
+    LOG_ERR("Buffer too short. Have %d, need %d + \\0\n", remaining,
+            len);
     return;
   }
 
@@ -476,47 +478,43 @@ publish(void)
   memset(def_rt_str, 0, sizeof(def_rt_str));
   ipaddr_sprintf(def_rt_str, sizeof(def_rt_str), uip_ds6_defrt_choose());
 
-  len = snprintf(buf_ptr, remaining, ",\"Def Route\":\"%s\",\"RSSI (dBm)\":%d",
+  len = snprintf(buf_ptr, remaining,
+                 ",\"Def Route\":\"%s\",\"RSSI (dBm)\":%d",
                  def_rt_str, def_rt_rssi);
 
   if(len < 0 || len >= remaining) {
-    printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
+    LOG_ERR("Buffer too short. Have %d, need %d + \\0\n", remaining,
+            len);
     return;
   }
   remaining -= len;
   buf_ptr += len;
 
-  len = snprintf(buf_ptr, remaining, ",\"On-Chip Temp (mC)\":%d",
-                 cc2538_temp_sensor.value(CC2538_SENSORS_VALUE_TYPE_CONVERTED));
+  for(i = 0; i < mqtt_client_extension_count; i++) {
+    len = snprintf(buf_ptr, remaining, ",%s",
+                   mqtt_client_extensions[i]->value());
 
-  if(len < 0 || len >= remaining) {
-    printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
-    return;
+    if(len < 0 || len >= remaining) {
+      LOG_ERR("Buffer too short. Have %d, need %d + \\0\n", remaining,
+              len);
+      return;
+    }
+    remaining -= len;
+    buf_ptr += len;
   }
-  remaining -= len;
-  buf_ptr += len;
-
-  len = snprintf(buf_ptr, remaining, ",\"VDD3 (mV)\":%d",
-                 vdd3_sensor.value(CC2538_SENSORS_VALUE_TYPE_CONVERTED));
-
-  if(len < 0 || len >= remaining) {
-    printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
-    return;
-  }
-  remaining -= len;
-  buf_ptr += len;
 
   len = snprintf(buf_ptr, remaining, "}}");
 
   if(len < 0 || len >= remaining) {
-    printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
+    LOG_ERR("Buffer too short. Have %d, need %d + \\0\n", remaining,
+            len);
     return;
   }
 
   mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 
-  DBG("APP - Publish!\n");
+  LOG_DBG("Publish!\n");
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -546,7 +544,7 @@ state_machine(void)
   switch(state) {
   case STATE_INIT:
     /* If we have just been configured register MQTT connection */
-    mqtt_register(&conn, &mqtt_demo_process, client_id, mqtt_event,
+    mqtt_register(&conn, &mqtt_client_process, client_id, mqtt_event,
                   MAX_TCP_SEGMENT_SIZE);
 
     /*
@@ -555,7 +553,7 @@ state_machine(void)
      */
     if(strncasecmp(conf.org_id, QUICKSTART, strlen(conf.org_id)) != 0) {
       if(strlen(conf.auth_token) == 0) {
-        printf("User name set, but empty auth token\n");
+        LOG_ERR("User name set, but empty auth token\n");
         state = STATE_ERROR;
         break;
       } else {
@@ -569,31 +567,31 @@ state_machine(void)
     connect_attempt = 1;
 
     state = STATE_REGISTERED;
-    DBG("Init\n");
+    LOG_DBG("Init\n");
     /* Continue */
   case STATE_REGISTERED:
     if(uip_ds6_get_global(ADDR_PREFERRED) != NULL) {
       /* Registered and with a public IP. Connect */
-      DBG("Registered. Connect attempt %u\n", connect_attempt);
+      LOG_DBG("Registered. Connect attempt %u\n", connect_attempt);
       ping_parent();
       connect_to_broker();
     } else {
-      leds_on(STATUS_LED);
+      leds_on(MQTT_CLIENT_STATUS_LED);
       ctimer_set(&ct, NO_NET_LED_DURATION, publish_led_off, NULL);
     }
     etimer_set(&publish_periodic_timer, NET_CONNECT_PERIODIC);
     return;
     break;
   case STATE_CONNECTING:
-    leds_on(STATUS_LED);
+    leds_on(MQTT_CLIENT_STATUS_LED);
     ctimer_set(&ct, CONNECTING_LED_DURATION, publish_led_off, NULL);
     /* Not connected yet. Wait */
-    DBG("Connecting (%u)\n", connect_attempt);
+    LOG_DBG("Connecting (%u)\n", connect_attempt);
     break;
   case STATE_CONNECTED:
     /* Don't subscribe unless we are a registered device */
     if(strncasecmp(conf.org_id, QUICKSTART, strlen(conf.org_id)) == 0) {
-      DBG("Using 'quickstart': Skipping subscribe\n");
+      LOG_DBG("Using 'quickstart': Skipping subscribe\n");
       state = STATE_PUBLISHING;
     }
     /* Continue */
@@ -613,13 +611,12 @@ state_machine(void)
         subscribe();
         state = STATE_PUBLISHING;
       } else {
-        leds_on(STATUS_LED);
+        leds_on(MQTT_CLIENT_STATUS_LED);
         ctimer_set(&ct, PUBLISH_LED_ON_DURATION, publish_led_off, NULL);
+        LOG_DBG("Publishing\n");
         publish();
       }
       etimer_set(&publish_periodic_timer, conf.pub_interval);
-
-      DBG("Publishing\n");
       /* Return here so we don't end up rescheduling the timer */
       return;
     } else {
@@ -632,12 +629,12 @@ state_machine(void)
        * trigger a new message and we wait for TCP to either ACK the entire
        * packet after retries, or to timeout and notify us.
        */
-      DBG("Publishing... (MQTT state=%d, q=%u)\n", conn.state,
-          conn.out_queue_full);
+      LOG_DBG("Publishing... (MQTT state=%d, q=%u)\n", conn.state,
+              conn.out_queue_full);
     }
     break;
   case STATE_DISCONNECTED:
-    DBG("Disconnected\n");
+    LOG_DBG("Disconnected\n");
     if(connect_attempt < RECONNECT_ATTEMPTS ||
        RECONNECT_ATTEMPTS == RETRY_FOREVER) {
       /* Disconnect and backoff */
@@ -648,7 +645,7 @@ state_machine(void)
       interval = connect_attempt < 3 ? RECONNECT_INTERVAL << connect_attempt :
         RECONNECT_INTERVAL << 3;
 
-      DBG("Disconnected. Attempt %u in %lu ticks\n", connect_attempt, interval);
+      LOG_DBG("Disconnected. Attempt %u in %lu ticks\n", connect_attempt, interval);
 
       etimer_set(&publish_periodic_timer, interval);
 
@@ -657,23 +654,23 @@ state_machine(void)
     } else {
       /* Max reconnect attempts reached. Enter error state */
       state = STATE_ERROR;
-      DBG("Aborting connection after %u attempts\n", connect_attempt - 1);
+      LOG_DBG("Aborting connection after %u attempts\n", connect_attempt - 1);
     }
     break;
   case STATE_CONFIG_ERROR:
     /* Idle away. The only way out is a new config */
-    printf("Bad configuration.\n");
+    LOG_ERR("Bad configuration.\n");
     return;
   case STATE_ERROR:
   default:
-    leds_on(STATUS_LED);
+    leds_on(MQTT_CLIENT_STATUS_LED);
     /*
      * 'default' should never happen.
      *
      * If we enter here it's because of some error. Stop timers. The only thing
      * that can bring us out is a new config event
      */
-    printf("Default case: State=0x%02x\n", state);
+    LOG_ERR("Default case: State=0x%02x\n", state);
     return;
   }
 
@@ -681,16 +678,30 @@ state_machine(void)
   etimer_set(&publish_periodic_timer, STATE_MACHINE_PERIODIC);
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(mqtt_demo_process, ev, data)
+static void
+init_extensions(void)
+{
+  int i;
+
+  for(i = 0; i < mqtt_client_extension_count; i++) {
+    if(mqtt_client_extensions[i]->init) {
+      mqtt_client_extensions[i]->init();
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(mqtt_client_process, ev, data)
 {
 
   PROCESS_BEGIN();
 
-  printf("MQTT Demo Process\n");
+  printf("MQTT Client Process\n");
 
   if(init_config() != 1) {
     PROCESS_EXIT();
   }
+
+  init_extensions();
 
   update_config();
 
@@ -705,7 +716,7 @@ PROCESS_THREAD(mqtt_demo_process, ev, data)
     PROCESS_YIELD();
 
     if(ev == button_hal_release_event &&
-       ((button_hal_button_t *)data)->unique_id == PUBLISH_TRIGGER) {
+       ((button_hal_button_t *)data)->unique_id == BUTTON_HAL_ID_BUTTON_ZERO) {
       if(state == STATE_ERROR) {
         connect_attempt = 1;
         state = STATE_REGISTERED;
@@ -715,7 +726,7 @@ PROCESS_THREAD(mqtt_demo_process, ev, data)
     if((ev == PROCESS_EVENT_TIMER && data == &publish_periodic_timer) ||
        ev == PROCESS_EVENT_POLL ||
        (ev == button_hal_release_event &&
-        ((button_hal_button_t *)data)->unique_id == PUBLISH_TRIGGER)) {
+        ((button_hal_button_t *)data)->unique_id == BUTTON_HAL_ID_BUTTON_ZERO)) {
       state_machine();
     }
 
@@ -728,7 +739,3 @@ PROCESS_THREAD(mqtt_demo_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
