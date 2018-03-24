@@ -31,6 +31,10 @@ dev/leds/srf06-cc26xx:BOARD=launchpad/cc1310 \
 dev/leds/srf06-cc26xx:BOARD=launchpad/cc1350 \
 dev/leds/srf06-cc26xx:BOARD=launchpad/cc2650 \
 6tisch/etsi-plugtest-2017/srf06-cc26xx:BOARD=launchpad/cc2650 \
+mqtt-client/srf06-cc26xx:BOARD=srf06/cc26xx \
+mqtt-client/srf06-cc26xx:BOARD=launchpad/cc2650 \
+mqtt-client/srf06-cc26xx:BOARD=sensortag/cc2650 \
+mqtt-client/cc2538dk \
 storage/cfs-coffee/cc2538dk \
 sensniff/cc2538dk \
 rpl-udp/cc2538dk \
@@ -41,7 +45,6 @@ multicast/cc2538dk \
 dev/gpio-hal/cc2538dk \
 dev/leds/cc2538dk \
 platform-specific/cc2538-common/cc2538dk \
-platform-specific/cc2538-common/mqtt-demo/cc2538dk \
 platform-specific/cc2538-common/crypto/cc2538dk \
 platform-specific/cc2538-common/pka/cc2538dk \
 hello-world/cc2538dk \

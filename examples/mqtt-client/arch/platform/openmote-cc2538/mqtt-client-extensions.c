@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,26 +29,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc2538-mqtt-demo
- * @{
- *
- * \file
- * Project specific configuration defines for the MQTT demo
- */
-/*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-/*---------------------------------------------------------------------------*/
-/* Enable TCP */
-#define UIP_CONF_TCP 1
+#include "contiki.h"
+#include "builtin-sensors.h"
+#include "mqtt-client.h"
 
-/* User configuration */
-#define MQTT_DEMO_STATUS_LED      LEDS_GREEN
-
-/* If undefined, the demo will attempt to connect to IBM's quickstart */
-#define MQTT_DEMO_BROKER_IP_ADDR "fd00::1"
+#include <string.h>
 /*---------------------------------------------------------------------------*/
-#endif /* PROJECT_CONF_H_ */
+MQTT_CLIENT_EXTENSIONS(&builtin_sensors_vdd3, &builtin_sensors_cc2538_temp);
 /*---------------------------------------------------------------------------*/
-/** @} */
