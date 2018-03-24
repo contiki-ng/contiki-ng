@@ -28,13 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** \addtogroup cc2538-char-io
- * @{ */
-/**
- * \file
- *     Implementation of arch-specific functions required by the dbg_io API in
- *     cpu/arm/common/dbg-io
- */
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 
 #include "dev/uart.h"
@@ -99,5 +93,3 @@ dbg_send_bytes(const unsigned char *s, unsigned int len)
   return i;
 }
 /*---------------------------------------------------------------------------*/
-
-/** @} */

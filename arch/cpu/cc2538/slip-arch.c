@@ -28,21 +28,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * \addtogroup cc2538-char-io
- * @{
- *
- * \file
- * Arch-specific SLIP functions for the cc2538
- *
- * SLIP can be configured to operate over UART or over USB-Serial, depending
- * on the value of SLIP_ARCH_CONF_USB
- */
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/slip.h"
 #include "dev/uart.h"
 #include "usb/usb-serial.h"
-
+/*---------------------------------------------------------------------------*/
 #ifndef SLIP_ARCH_CONF_USB
 #define SLIP_ARCH_CONF_USB 0
 #endif
@@ -59,10 +50,6 @@
 
 #define SLIP_END     0300
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Write a byte over SLIP
- * \param c the byte
- */
 void
 slip_arch_writeb(unsigned char c)
 {
@@ -72,14 +59,9 @@ slip_arch_writeb(unsigned char c)
   }
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Initialise the arch-specific SLIP driver
- */
 void
 slip_arch_init()
 {
   set_input(slip_input_byte);
 }
 /*---------------------------------------------------------------------------*/
-
-/** @} */

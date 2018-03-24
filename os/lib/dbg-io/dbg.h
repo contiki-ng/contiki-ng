@@ -28,15 +28,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup nrf52dk
+ * \addtogroup lib
  * @{
  *
- * \addtogroup nrf52dk-dbg-io Debug IO over UART
+ * \addtogroup dbg-io Portable debugging output functons
  * @{
  *
  * \file
- *         Header file for the debug module.
+ *         Header file for the dbg-io module.
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  *
