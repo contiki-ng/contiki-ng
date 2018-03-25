@@ -220,7 +220,6 @@ rpl_local_repair(const char *str)
       curr_instance.dag.state = DAG_INITIALIZED; /* Reset DAG state */
     }
     curr_instance.of->reset(); /* Reset OF */
-    link_stats_reset(); /* Forget past link statistics */
     rpl_neighbor_remove_all(); /* Remove all neighbors */
     rpl_timers_dio_reset("Local repair"); /* Reset Trickle timer */
     rpl_timers_schedule_state_update();
