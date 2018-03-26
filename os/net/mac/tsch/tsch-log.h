@@ -80,6 +80,7 @@ struct tsch_log_t {
   } type;
   struct tsch_asn_t asn;
   struct tsch_link *link;
+  uint8_t burst_count;
   union {
     char message[48];
     struct {
