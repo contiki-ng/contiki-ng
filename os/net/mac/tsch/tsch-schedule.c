@@ -424,7 +424,7 @@ tsch_schedule_create_minimal(void)
    * Timeslot: 0, channel offset: 0. */
   tsch_schedule_add_link(sf_min,
       LINK_OPTION_RX | LINK_OPTION_TX | LINK_OPTION_SHARED | LINK_OPTION_TIME_KEEPING
-        | (TSCH_SCHEDULE_WITH_6TISCH_MINIMAL_WITH_BURST ? LINK_OPTION_BURST : 0),
+        | (TSCH_WITH_6TISCH_MINIMAL_WITH_BURST ? LINK_OPTION_BURST : 0),
       LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
       0, 0);
 }
