@@ -6,7 +6,7 @@
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
-    <title>NullNet Broadcast Example</title>
+    <title>NullNet Unicast Example</title>
     <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
@@ -23,8 +23,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype634</identifier>
       <description>Cooja Mote Type #1</description>
-      <source>[CONTIKI_DIR]/examples/nullnet/nullnet-broadcast.c</source>
-      <commands>make nullnet-broadcast.cooja TARGET=cooja</commands>
+      <source>[CONTIKI_DIR]/examples/nullnet/nullnet-unicast.c</source>
+      <commands>make nullnet-unicast.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -175,4 +175,3 @@
     <location_y>408</location_y>
   </plugin>
 </simconf>
-
