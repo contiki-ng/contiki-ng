@@ -18,6 +18,18 @@ script: # The test script for each build.
   # Check outcome of the test
   - $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST_NAME; exit $?;
 
+deploy:
+  provider: pages
+  repo: nvt/veloxvm
+  skip-cleanup: true
+  github-token: $SECRET_TOKEN
+  keep-history: true
+  local-dir: tools/doxygen/html
+  on:
+    branches:
+      only:
+        - develop
+
 env:
   # Parallel builds
   - TEST_NAME='compile-base'
@@ -33,3 +45,9 @@ env:
   - TEST_NAME='doxygen'
   - TEST_NAME='compile-tools'
   - TEST_NAME='native-runs'
+
+jobs:
+  include:
+    - stage: deploy
+      script: echo Deploy
+      env: TEST_NAME=doxygen
