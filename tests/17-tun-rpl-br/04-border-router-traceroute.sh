@@ -23,7 +23,7 @@ make -C $CONTIKI/tools tunslip6
 make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip.log 2>&1 &
 MPID=$!
 echo "Waiting for network formation"
-sleep 5
+sleep 20 # not in real-time, simulates at full speed
 
 # Do ping
 echo "Running Traceroute"
