@@ -459,4 +459,18 @@ tsch_packet_parse_eb(const uint8_t *buf, int buf_size,
   return curr_len;
 }
 /*---------------------------------------------------------------------------*/
+/* Set frame pending bit in a packet (whose header was already build) */
+void
+tsch_packet_set_frame_pending(uint8_t *buf, int buf_size)
+{
+  buf[0] |= (1 << 4);
+}
+/*---------------------------------------------------------------------------*/
+/* Get frame pending bit from a packet */
+int
+tsch_packet_get_frame_pending(uint8_t *buf, int buf_size)
+{
+  return (buf[0] >> 4) & 1;
+}
+/*---------------------------------------------------------------------------*/
 /** @} */

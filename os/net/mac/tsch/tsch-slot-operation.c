@@ -167,6 +167,11 @@ static struct tsch_link *backup_link = NULL;
 static struct tsch_packet *current_packet = NULL;
 static struct tsch_neighbor *current_neighbor = NULL;
 
+/* Indicates whether an extra link is needed to handle the current burst */
+static int burst_link_scheduled = 0;
+/* Counts the length of the current burst */
+int tsch_current_burst_count = 0;
+
 /* Protothread for association */
 PT_THREAD(tsch_scan(struct pt *pt));
 /* Protothread for slot operation, called from rtimer interrupt
@@ -456,6 +461,8 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       /* is this a broadcast packet? (wait for ack?) */
       static uint8_t is_broadcast;
       static rtimer_clock_t tx_start_time;
+      /* Did we set the frame pending bit to request an extra burst link? */
+      static int burst_link_requested;
 
 #if CCA_ENABLED
       static uint8_t cca_status;
@@ -466,6 +473,13 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       packet_len = queuebuf_datalen(current_packet->qb);
       /* is this a broadcast packet? (wait for ack?) */
       is_broadcast = current_neighbor->is_broadcast;
+      /* Unicast. More packets in queue for the neighbor? */
+      burst_link_requested = 0;
+      if(!is_broadcast && (current_link->link_options & LINK_OPTION_BURST)
+             && tsch_queue_packet_count(&current_neighbor->addr) > 1) {
+        burst_link_requested = 1;
+        tsch_packet_set_frame_pending(packet, packet_len);
+      }
       /* read seqno from payload */
       seqno = ((uint8_t *)(packet))[2];
       /* if this is an EB, then update its Sync-IE */
@@ -618,6 +632,12 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   tsch_schedule_keepalive();
                 }
                 mac_tx_status = MAC_TX_OK;
+
+                /* We requested an extra slot and got an ack. This means
+                the extra slot will be scheduled at the received */
+                if(burst_link_requested) {
+                  burst_link_scheduled = 1;
+                }
               } else {
                 mac_tx_status = MAC_TX_NOACK;
               }
@@ -844,6 +864,9 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
                 TSCH_DEBUG_RX_EVENT();
                 NETSTACK_RADIO.transmit(ack_len);
                 tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
+
+                /* Schedule a burst link iff the frame pending bit was set */
+                burst_link_scheduled = tsch_packet_get_frame_pending(current_input->payload, current_input->len);
               }
             }
 
@@ -930,6 +953,8 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       /* Reset drift correction */
       drift_correction = 0;
       is_drift_correction_used = 0;
+      /* For the packet burst mechanism */
+      burst_link_scheduled = 0;
       /* Get a packet ready to be sent */
       current_packet = get_packet_and_neighbor_for_link(current_link, &current_neighbor);
       /* There is no packet to send, and this link does not have Rx flag. Instead of doing
@@ -993,13 +1018,27 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           tsch_queue_update_all_backoff_windows(&current_link->addr);
         }
 
-        /* Get next active link */
-        current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
-        if(current_link == NULL) {
-          /* There is no next link. Fall back to default
-           * behavior: wake up at the next slot. */
+        /* A burst link was scheduled. Replay the current link at the
+        next time offset */
+        if(burst_link_scheduled) {
           timeslot_diff = 1;
+          backup_link = NULL;
+          /* Keep track of the number of repetitions */
+          tsch_current_burst_count++;
+        } else {
+          /* Get next active link */
+          current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
+          if(current_link == NULL) {
+            /* There is no next link. Fall back to default
+             * behavior: wake up at the next slot. */
+            timeslot_diff = 1;
+          } else {
+            /* Reset burst index now that the link was scheduled from
+              normal schedule (as opposed to from ongoing burst) */
+            tsch_current_burst_count = 0;
+          }
         }
+
         /* Update ASN */
         TSCH_ASN_INC(tsch_current_asn, timeslot_diff);
         /* Time to next wake up */
