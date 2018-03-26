@@ -33,3 +33,4 @@ env:
   - TEST_NAME='doxygen'
   - TEST_NAME='compile-tools'
   - TEST_NAME='native-runs'
+  - TEST_NAME='ipv6'
