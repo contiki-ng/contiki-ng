@@ -42,7 +42,6 @@
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/ipv6/uip-sr.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-log.h"
 #include "net/routing/routing.h"
 
 #define DEBUG DEBUG_PRINT

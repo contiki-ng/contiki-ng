@@ -53,10 +53,6 @@
 #include "net/ipv6/uip-ds6.h"
 #if MAC_CONF_WITH_TSCH
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-adaptive-timesync.h"
-#include "net/mac/tsch/tsch-queue.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-private.h"
 #endif /* MAC_CONF_WITH_TSCH */
 #include "net/routing/routing.h"
 #include "net/mac/llsec802154.h"

@@ -30,7 +30,7 @@
 
 #include <contiki.h>
 #include <lib/assert.h>
-#include <net/mac/tsch/tsch-queue.h>
+#include <net/mac/tsch/tsch.h>
 #include <net/mac/tsch/sixtop/sixtop.h>
 #include <net/mac/tsch/sixtop/sixp.h>
 #include <net/mac/tsch/sixtop/sixp-nbr.h>

@@ -34,11 +34,8 @@
 
 #include "contiki.h"
 #include "net/netstack.h"
-#include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-private.h"
 #include "net/routing/routing.h"
-#include "net/mac/tsch/tsch-schedule.h"
 #include "net/ipv6/uip-debug.h"
 #include "lib/random.h"
 #include "node-id.h"
