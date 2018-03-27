@@ -42,8 +42,8 @@ define dooneexample
 @((cd $(EXAMPLESDIR)/$(1); \
  make $(4) TARGET=$(2) clean && make -j $(4) TARGET=$(2) WERROR=1) > \
       /dev/null 2>make.err && \
- (echo " -> OK" && printf "%-75s %-35s %-20s TEST OK\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog) || \
- (echo " -> FAIL" && printf "%-75s %-35s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog ; cat make.err))
+ (echo " -> OK" && printf "%-75s %-40s %-20s TEST OK\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog) || \
+ (echo " -> FAIL" && printf "%-75s %-40s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog ; cat make.err))
 @rm -f make.err
 endef
 
