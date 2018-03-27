@@ -42,9 +42,13 @@
 #include "subplatform-conf.h"
 #endif /* INCLUDE_SUBPLATFORM_CONF */
 
+#define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
+
 #define LOG_CONF_ENABLED 1
 
 #define COOJA 1
+
+#define LEDS_CONF_LEGACY_API 1
 
 #ifndef EEPROM_CONF_SIZE
 #define EEPROM_CONF_SIZE				1024
@@ -97,9 +101,6 @@
 #define CC_CONF_FUNCTION_POINTER_ARGS  1
 #define CC_CONF_VA_ARGS                1
 #define CC_CONF_INLINE inline
-
-#define CCIF
-#define CLIF
 
 /* These names are deprecated, use C99 names. */
 #include <inttypes.h>

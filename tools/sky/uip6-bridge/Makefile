@@ -12,7 +12,7 @@ ifndef TARGET
 TARGET=sky
 endif
 
-PROJECTDIRS = dev
+MODULES_REL += dev
 PROJECT_SOURCEFILES = fakeuip.c sicslow_ethernet.c
 
 all:	uip6-bridge-tap.sky

@@ -347,7 +347,7 @@ heapmem_alloc(size_t size)
   chunk->line = line;
 #endif
 
-  PRINTF("%s ptr %p size %u\n", __func__, GET_PTR(chunk), (unsigned)size);
+  PRINTF("%s ptr %p size %lu\n", __func__, GET_PTR(chunk), (unsigned long)size);
 
   return GET_PTR(chunk);
 }

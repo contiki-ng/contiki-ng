@@ -263,6 +263,20 @@ static uint8_t rx_buf_1[RX_BUF_SIZE] CC_ALIGN(4);
 static uint8_t rx_buf_2[RX_BUF_SIZE] CC_ALIGN(4);
 static uint8_t rx_buf_3[RX_BUF_SIZE] CC_ALIGN(4);
 
+#define RX_BUF_INCLUDE_CRC 1
+#define RX_BUF_INCLUDE_RSSI 1
+#define RX_BUF_INCLUDE_CORR 1
+#define RX_BUF_INCLUDE_TIMESTAMP 1
+
+/* The size of the metadata (excluding the packet length field) */
+#define RX_BUF_METADATA_SIZE \
+  (2 * RX_BUF_INCLUDE_CRC + RX_BUF_INCLUDE_RSSI + RX_BUF_INCLUDE_CORR + 4 * RX_BUF_INCLUDE_TIMESTAMP)
+
+/* The offset of the packet length in a rx buffer */
+#define RX_BUF_LENGTH_OFFSET sizeof(rfc_dataEntry_t)
+/* The offset of the packet data in a rx buffer */
+#define RX_BUF_DATA_OFFSET (RX_BUF_LENGTH_OFFSET + 1)
+
 /* The RX Data Queue */
 static dataQueue_t rx_data_queue = { 0 };
 
@@ -565,22 +579,22 @@ init_rx_buffers(void)
   entry = (rfc_dataEntry_t *)rx_buf_0;
   entry->pNextEntry = rx_buf_1;
   entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-  entry->length = sizeof(rx_buf_0) - 8;
+  entry->length = sizeof(rx_buf_0) - sizeof(*entry);
 
   entry = (rfc_dataEntry_t *)rx_buf_1;
   entry->pNextEntry = rx_buf_2;
   entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-  entry->length = sizeof(rx_buf_0) - 8;
+  entry->length = sizeof(rx_buf_0) - sizeof(*entry);
 
   entry = (rfc_dataEntry_t *)rx_buf_2;
   entry->pNextEntry = rx_buf_3;
   entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-  entry->length = sizeof(rx_buf_0) - 8;
+  entry->length = sizeof(rx_buf_0) - sizeof(*entry);
 
   entry = (rfc_dataEntry_t *)rx_buf_3;
   entry->pNextEntry = rx_buf_0;
   entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-  entry->length = sizeof(rx_buf_0) - 8;
+  entry->length = sizeof(rx_buf_0) - sizeof(*entry);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -601,11 +615,11 @@ init_rf_params(void)
   cmd->rxConfig.bAutoFlushCrc = 1;
   cmd->rxConfig.bAutoFlushIgn = 0;
   cmd->rxConfig.bIncludePhyHdr = 0;
-  cmd->rxConfig.bIncludeCrc = 1;
-  cmd->rxConfig.bAppendRssi = 1;
-  cmd->rxConfig.bAppendCorrCrc = 1;
+  cmd->rxConfig.bIncludeCrc = RX_BUF_INCLUDE_CRC;
+  cmd->rxConfig.bAppendRssi = RX_BUF_INCLUDE_RSSI;
+  cmd->rxConfig.bAppendCorrCrc = RX_BUF_INCLUDE_CORR;
   cmd->rxConfig.bAppendSrcInd = 0;
-  cmd->rxConfig.bAppendTimestamp = 1;
+  cmd->rxConfig.bAppendTimestamp = RX_BUF_INCLUDE_TIMESTAMP;
 
   cmd->pRxQ = &rx_data_queue;
   cmd->pOutput = (rfc_ieeeRxOutput_t *)rf_stats;
@@ -1079,15 +1093,15 @@ read_frame(void *buf, unsigned short buf_len)
     return 0;
   }
 
-  if(rx_read_entry[8] < 4) {
-    PRINTF("RF: too short\n");
+  len = rx_read_entry[RX_BUF_LENGTH_OFFSET];
+  if(len <= RX_BUF_METADATA_SIZE) {
+    PRINTF("RF: too short!");
 
     release_data_entry();
     return 0;
   }
 
-  len = rx_read_entry[8] - 8;
-
+  len -= RX_BUF_METADATA_SIZE;
   if(len > buf_len) {
     PRINTF("RF: too long\n");
 
@@ -1095,13 +1109,13 @@ read_frame(void *buf, unsigned short buf_len)
     return 0;
   }
 
-  memcpy(buf, (char *)&rx_read_entry[9], len);
+  memcpy(buf, (uint8_t *)rx_read_entry + RX_BUF_DATA_OFFSET, len);
 
-  last_rssi = (int8_t)rx_read_entry[9 + len + 2];
-  last_corr_lqi = (uint8_t)rx_read_entry[9 + len + 3] & STATUS_CORRELATION;
+  last_rssi = (int8_t)rx_read_entry[RX_BUF_DATA_OFFSET + len + 2];
+  last_corr_lqi = (uint8_t)rx_read_entry[RX_BUF_DATA_OFFSET + len + 3] & STATUS_CORRELATION;
 
   /* get the timestamp */
-  memcpy(&rat_timestamp, (char *)rx_read_entry + 9 + len + 4, 4);
+  memcpy(&rat_timestamp, (uint8_t *)rx_read_entry + RX_BUF_DATA_OFFSET + len + 4, 4);
 
   last_packet_timestamp = calc_last_packet_timestamp(rat_timestamp);
 

@@ -1094,7 +1094,7 @@ cfs_read(int fd, void *buf, unsigned size)
 
   fdp = &coffee_fd_set[fd];
   file = fdp->file;
-  
+
   if(fdp->io_flags & CFS_COFFEE_IO_ENSURE_READ_LENGTH) {
     while(fdp->offset + size > file->end) {
       ((char *)buf)[--size] = '\0';

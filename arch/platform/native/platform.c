@@ -70,16 +70,53 @@
 #define LOG_MODULE "Native"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Native Platform Configuration
+ *
+ * @{
+ */
+
+/*
+ * Defines the maximum number of file descriptors monitored by the platform
+ * main loop.
+ */
 #ifdef SELECT_CONF_MAX
 #define SELECT_MAX SELECT_CONF_MAX
 #else
 #define SELECT_MAX 8
 #endif
 
+/*
+ * Defines the timeout (in msec) of the select operation if no monitored file
+ * descriptors becomes ready.
+ */
+#ifdef SELECT_CONF_TIMEOUT
+#define SELECT_TIMEOUT SELECT_CONF_TIMEOUT
+#else
+#define SELECT_TIMEOUT 1000
+#endif
+
+/*
+ * Adds the STDIN file descriptor to the list of monitored file descriptors.
+ */
+#ifdef SELECT_CONF_STDIN
+#define SELECT_STDIN SELECT_CONF_STDIN
+#else
+#define SELECT_STDIN 1
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
+
 static const struct select_callback *select_callback[SELECT_MAX];
 static int select_max = 0;
 
-static uint8_t serial_id[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
+#ifdef PLATFORM_CONF_MAC_ADDR
+static uint8_t mac_addr[] = PLATFORM_CONF_MAC_ADDR;
+#else /* PLATFORM_CONF_MAC_ADDR */
+static uint8_t mac_addr[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+#endif /* PLATFORM_CONF_MAC_ADDR */
+
 #if !NETSTACK_CONF_WITH_IPV6
 static uint16_t node_id = 0x0102;
 #endif /* !NETSTACK_CONF_WITH_IPV6 */
@@ -116,6 +153,7 @@ select_set_callback(int fd, const struct select_callback *callback)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+#if SELECT_STDIN
 static int
 stdin_set_fd(fd_set *rset, fd_set *wset)
 {
@@ -135,6 +173,7 @@ stdin_handle_fd(fd_set *rset, fd_set *wset)
 const static struct select_callback stdin_fd = {
   stdin_set_fd, stdin_handle_fd
 };
+#endif /* SELECT_STDIN */
 /*---------------------------------------------------------------------------*/
 static void
 set_lladdr(void)
@@ -143,12 +182,12 @@ set_lladdr(void)
 
   memset(&addr, 0, sizeof(linkaddr_t));
 #if NETSTACK_CONF_WITH_IPV6
-  memcpy(addr.u8, serial_id, sizeof(addr.u8));
+  memcpy(addr.u8, mac_addr, sizeof(addr.u8));
 #else
   if(node_id == 0) {
     int i;
     for(i = 0; i < sizeof(linkaddr_t); ++i) {
-      addr.u8[i] = serial_id[7 - i];
+      addr.u8[i] = mac_addr[7 - i];
     }
   } else {
     addr.u8[0] = node_id & 0xff;
@@ -219,6 +258,7 @@ void
 platform_init_stage_two()
 {
   set_lladdr();
+  serial_line_init();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -240,7 +280,9 @@ platform_init_stage_three()
 void
 platform_main_loop()
 {
+#if SELECT_STDIN
   select_set_callback(STDIN_FILENO, &stdin_fd);
+#endif /* SELECT_STDIN */
   while(1) {
     fd_set fdr;
     fd_set fdw;
@@ -252,7 +294,7 @@ platform_main_loop()
     retval = process_run();
 
     tv.tv_sec = 0;
-    tv.tv_usec = retval ? 1 : 1000;
+    tv.tv_usec = retval ? 1 : SELECT_TIMEOUT;
 
     FD_ZERO(&fdr);
     FD_ZERO(&fdw);

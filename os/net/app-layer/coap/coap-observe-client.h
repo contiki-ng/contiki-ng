@@ -37,6 +37,11 @@
  *        Daniele Alessandrelli <daniele.alessandrelli@gmail.com>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_OBSERVING_CLIENT_H_
 #define COAP_OBSERVING_CLIENT_H_
 
@@ -79,8 +84,7 @@ typedef void (*notification_callback_t)(coap_observee_t *subject,
 
 struct coap_observee_s {
   coap_observee_t *next;        /* for LIST */
-  uip_ipaddr_t addr;
-  uint16_t port;
+  coap_endpoint_t endpoint;
   const char *url;
   uint8_t token_len;
   uint8_t token[COAP_TOKEN_LEN];
@@ -90,7 +94,7 @@ struct coap_observee_s {
 };
 
 /*----------------------------------------------------------------------------*/
-coap_observee_t *coap_obs_add_observee(uip_ipaddr_t *addr, uint16_t port,
+coap_observee_t *coap_obs_add_observee(const coap_endpoint_t *endpoint,
                                        const uint8_t *token, size_t token_len,
                                        const char *url,
                                        notification_callback_t
@@ -101,17 +105,17 @@ void coap_obs_remove_observee(coap_observee_t *o);
 coap_observee_t *coap_obs_get_observee_by_token(const uint8_t *token,
                                                 size_t token_len);
 
-int coap_obs_remove_observee_by_token(uip_ipaddr_t *addr, uint16_t port,
+int coap_obs_remove_observee_by_token(const coap_endpoint_t *endpoint,
                                       uint8_t *token, size_t token_len);
 
-int coap_obs_remove_observee_by_url(uip_ipaddr_t *addr, uint16_t port,
+int coap_obs_remove_observee_by_url(const coap_endpoint_t *endpoint,
                                     const char *url);
 
-void coap_handle_notification(uip_ipaddr_t *addr, uint16_t port,
-                              coap_packet_t *notification);
+void coap_handle_notification(const coap_endpoint_t *endpoint,
+                              coap_message_t *notification);
 
-coap_observee_t *coap_obs_request_registration(uip_ipaddr_t *addr,
-                                               uint16_t port, char *uri,
+coap_observee_t *coap_obs_request_registration(const coap_endpoint_t *endpoint,
+                                               char *uri,
                                                notification_callback_t
                                                notification_callback,
                                                void *data);
@@ -119,3 +123,4 @@ coap_observee_t *coap_obs_request_registration(uip_ipaddr_t *addr,
 uint8_t coap_generate_token(uint8_t **token_ptr);
 
 #endif /* COAP_OBSERVING_CLIENT_H_ */
+/** @} */

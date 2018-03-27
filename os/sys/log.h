@@ -81,6 +81,8 @@ extern int curr_log_level_nullnet;
 extern int curr_log_level_mac;
 extern int curr_log_level_framer;
 extern int curr_log_level_6top;
+extern int curr_log_level_coap;
+extern int curr_log_level_lwm2m;
 extern int curr_log_level_main;
 
 extern struct log_module all_modules[];
@@ -93,6 +95,8 @@ extern struct log_module all_modules[];
 #define LOG_LEVEL_MAC                         MIN((LOG_CONF_LEVEL_MAC), curr_log_level_mac)
 #define LOG_LEVEL_FRAMER                      MIN((LOG_CONF_LEVEL_FRAMER), curr_log_level_framer)
 #define LOG_LEVEL_6TOP                        MIN((LOG_CONF_LEVEL_6TOP), curr_log_level_6top)
+#define LOG_LEVEL_COAP                        MIN((LOG_CONF_LEVEL_COAP), curr_log_level_coap)
+#define LOG_LEVEL_LWM2M                       MIN((LOG_CONF_LEVEL_LWM2M), curr_log_level_lwm2m)
 #define LOG_LEVEL_MAIN                        MIN((LOG_CONF_LEVEL_MAIN), curr_log_level_main)
 
 /* Main log function */
@@ -141,31 +145,40 @@ extern struct log_module all_modules[];
                          } while (0)
 
 /* More compact versions of LOG macros */
+#define LOG_PRINT(...)         LOG(1, 0, "PRI", __VA_ARGS__)
 #define LOG_ERR(...)           LOG(1, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
 #define LOG_WARN(...)          LOG(1, LOG_LEVEL_WARN, "WARN", __VA_ARGS__)
 #define LOG_INFO(...)          LOG(1, LOG_LEVEL_INFO, "INFO", __VA_ARGS__)
 #define LOG_DBG(...)           LOG(1, LOG_LEVEL_DBG, "DBG", __VA_ARGS__)
 
+#define LOG_PRINT_(...)         LOG(0, 0, "PRI", __VA_ARGS__)
 #define LOG_ERR_(...)           LOG(0, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
 #define LOG_WARN_(...)          LOG(0, LOG_LEVEL_WARN, "WARN", __VA_ARGS__)
 #define LOG_INFO_(...)          LOG(0, LOG_LEVEL_INFO, "INFO", __VA_ARGS__)
 #define LOG_DBG_(...)           LOG(0, LOG_LEVEL_DBG, "DBG", __VA_ARGS__)
 
+#define LOG_PRINT_LLADDR(...)  LOG_LLADDR(0, __VA_ARGS__)
 #define LOG_ERR_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN_LLADDR(...)   LOG_LLADDR(LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_INFO_LLADDR(...)   LOG_LLADDR(LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOG_DBG_LLADDR(...)    LOG_LLADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
+#define LOG_PRINT_6ADDR(...)   LOG_6ADDR(0, __VA_ARGS__)
 #define LOG_ERR_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_ERR, __VA_ARGS__)
 #define LOG_WARN_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_INFO_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
 
-/* For testing log level */
-#define LOG_ERR_ENABLED        (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_ERR)
-#define LOG_WARN_ENABLED       (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_WARN)
-#define LOG_INFO_ENABLED       (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_INFO)
-#define LOG_DBG_ENABLED        (MIN(LOG_LEVEL, curr_log_level) >= LOG_LEVEL_DBG)
+/* For checking log level.
+   As this builds on curr_log_level variables, this should not be used
+   in pre-processor macros. Use in a C 'if' statement instead, e.g.:
+   if(LOG_INFO_ENABLED) { ... }
+   Note that most compilers will still be able to strip the code out
+   for low enough log levels configurations. */
+#define LOG_ERR_ENABLED        ((LOG_LEVEL) >= LOG_LEVEL_ERR)
+#define LOG_WARN_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_WARN)
+#define LOG_INFO_ENABLED       ((LOG_LEVEL) >= LOG_LEVEL_INFO)
+#define LOG_DBG_ENABLED        ((LOG_LEVEL) >= LOG_LEVEL_DBG)
 
 #if NETSTACK_CONF_WITH_IPV6
 

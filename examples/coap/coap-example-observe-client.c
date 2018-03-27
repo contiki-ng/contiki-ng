@@ -42,26 +42,18 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "coap-engine.h"
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+#include "dev/button-hal.h"
+#else
 #include "dev/button-sensor.h"
-
+#endif
 /*----------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #define PRINTFLN(format, ...) printf(format "\n", ##__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:" \
-                                "%02x%02x:%02x%02x:%02x%02x:%02x%02x]", \
-                                ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], \
-                                ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], \
-                                ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], \
-                                ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], \
-                                ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], \
-                                ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], \
-                                ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], \
-                                ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
 #else
 #define PRINTF(...)
-#define PRINT6ADDR(addr)
 #define PRINTFLN(...)
 #endif
 
@@ -158,9 +150,12 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
   /* init timer and button (if available) */
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 #if PLATFORM_HAS_BUTTON
+#if !PLATFORM_SUPPORTS_BUTTON_HAL
   SENSORS_ACTIVATE(button_sensor);
-  printf("Press a button to start/stop observation of remote resource\n");
 #endif
+  printf("Press a button to start/stop observation of remote resource\n");
+#endif /* PLATFORM_HAS_BUTTON */
+
   /* toggle observation every time the timer elapses or the button is pressed */
   while(1) {
     PROCESS_YIELD();
@@ -170,11 +165,15 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
       printf("\n--Done--\n");
       etimer_reset(&et);
 #if PLATFORM_HAS_BUTTON
+#if PLATFORM_SUPPORTS_BUTTON_HAL
+    } else if(ev == button_hal_release_event) {
+#else
     } else if(ev == sensors_event && data == &button_sensor) {
+#endif
       printf("--Toggle tutton--\n");
       toggle_observation();
       printf("\n--Done--\n");
-#endif
+#endif /* PLATFORM_HAS_BUTTON */
     }
   }
   PROCESS_END();

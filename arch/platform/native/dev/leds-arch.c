@@ -38,7 +38,7 @@
  */
 
 #include "dev/leds.h"
-static unsigned char leds;
+static leds_mask_t leds;
 /*---------------------------------------------------------------------------*/
 void
 leds_arch_init(void)
@@ -46,14 +46,14 @@ leds_arch_init(void)
   leds = 0;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char
+leds_mask_t
 leds_arch_get(void)
 {
   return leds;
 }
 /*---------------------------------------------------------------------------*/
 void
-leds_arch_set(unsigned char l)
+leds_arch_set(leds_mask_t l)
 {
   leds = l;
 }

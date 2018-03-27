@@ -47,7 +47,7 @@
 #include <stdio.h>
 #include "contiki.h"
 #include "dev/rgb-bl-lcd.h"
-#include "dev/button-sensor.h"
+#include "dev/button-hal.h"
 /*---------------------------------------------------------------------------*/
 #define SCROLL_PERIOD    (CLOCK_SECOND / 6)
 /*---------------------------------------------------------------------------*/
@@ -104,18 +104,13 @@ PROCESS_THREAD(remote_lcd_process, ev, data)
       printf("Counter: %05u\n", counter);
       counter++;
       etimer_restart(&et);
-    } else if(ev == sensors_event) {
-      if(data == &button_sensor) {
-        if(button_sensor.value(BUTTON_SENSOR_VALUE_TYPE_LEVEL) ==
-           BUTTON_SENSOR_PRESSED_LEVEL) {
-          printf("Button pressed!!\n");
-          lcd_set_cursor(0, LCD_RGB_1ST_ROW);
-          lcd_write("Button pressed!!");
-        } else {
-          lcd_set_cursor(0, LCD_RGB_1ST_ROW);
-          lcd_write("Press the button!");
-        }
-      }
+    } else if(ev == button_hal_press_event) {
+      printf("Button pressed!!\n");
+      lcd_set_cursor(0, LCD_RGB_1ST_ROW);
+      lcd_write("Button pressed!!");
+    } else if(ev == button_hal_release_event) {
+      lcd_set_cursor(0, LCD_RGB_1ST_ROW);
+      lcd_write("Press the button!");
     }
   }
 

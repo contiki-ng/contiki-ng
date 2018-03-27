@@ -33,7 +33,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "net/ipv6/uip.h"
 #include <string.h>
 
@@ -49,8 +49,7 @@ AUTOSTART_PROCESSES(&wait_for_dag);
 static void
 timeout_handler(void)
 {
-  rpl_dag_t *dag = rpl_get_any_dag();
-  if (dag != NULL) {
+  if(NETSTACK_ROUTING.node_has_joined()) {
     PRINTF("DAG Found\n");
   }
 }
@@ -67,7 +66,7 @@ PROCESS_THREAD(wait_for_dag, ev, data)
     if(etimer_expired(&et)) {
       timeout_handler();
       etimer_restart(&et);
-    } 
+    }
   }
   PROCESS_END();
 }

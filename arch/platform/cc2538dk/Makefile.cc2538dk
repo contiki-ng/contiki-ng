@@ -6,10 +6,10 @@ endif
 
 CONTIKI_TARGET_DIRS = . dev
 
-CONTIKI_TARGET_SOURCEFILES += leds.c leds-arch.c
+CONTIKI_TARGET_SOURCEFILES += leds-arch.c
 CONTIKI_TARGET_SOURCEFILES += platform.c
 CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c
-CONTIKI_TARGET_SOURCEFILES += button-sensor.c als-sensor.c
+CONTIKI_TARGET_SOURCEFILES += board-buttons.c als-sensor.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
@@ -19,8 +19,7 @@ CLEAN += *.cc2538dk
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += os/net os/net/mac os/net/mac/framer \
-  os/storage/cfs
+MODULES += os/storage/cfs
 
 PYTHON = python
 BSL_FLAGS += -e -w -v

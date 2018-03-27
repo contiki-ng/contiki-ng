@@ -79,15 +79,7 @@
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
-
-#if UIP_CONF_IPV6_RPL
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#endif
+#include "net/routing/routing.h"
 
 #if UIP_ND6_SEND_NS
 #include "net/ipv6/uip-ds6-nbr.h"
@@ -161,9 +153,6 @@ uint8_t uip_ext_opt_offset = 0;
 #define UIP_DESTO_BUF                    ((struct uip_desto_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 #define UIP_EXT_HDR_OPT_BUF            ((struct uip_ext_hdr_opt *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
 #define UIP_EXT_HDR_OPT_PADN_BUF  ((struct uip_ext_hdr_opt_padn *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
-#if UIP_CONF_IPV6_RPL
-#define UIP_EXT_HDR_OPT_RPL_BUF    ((struct uip_ext_hdr_opt_rpl *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
-#endif /* UIP_CONF_IPV6_RPL */
 #define UIP_ICMP6_ERROR_BUF            ((struct uip_icmp6_error *)&uip_buf[uip_l2_l3_icmp_hdr_len])
 /** @} */
 /**
@@ -883,13 +872,10 @@ ext_hdr_options_process(void)
        * Using this fix, the header is ignored, and the next header (if
        * present) is processed.
        */
-#if UIP_CONF_IPV6_RPL
-      LOG_DBG("Processing RPL option\n");
-      if(!rpl_ext_header_hbh_update(uip_ext_opt_offset)) {
+      if(!NETSTACK_ROUTING.ext_header_hbh_update(uip_ext_opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
-#endif /* UIP_CONF_IPV6_RPL */
       uip_ext_opt_offset += (UIP_EXT_HDR_OPT_BUF->len) + 2;
       return 0;
     default:
@@ -1270,9 +1256,9 @@ uip_process(uint8_t flag)
   uip_ext_bitmap = 0;
 #endif /* UIP_CONF_ROUTER */
 
-#if UIP_IPV6_MULTICAST
+#if UIP_IPV6_MULTICAST && UIP_CONF_ROUTER
   process:
-#endif
+#endif /* UIP_IPV6_MULTICAST && UIP_CONF_ROUTER */
 
   while(1) {
     switch(*uip_next_hdr){
@@ -1363,8 +1349,7 @@ uip_process(uint8_t flag)
 
           LOG_DBG("Processing Routing header\n");
           if(UIP_ROUTING_BUF->seg_left > 0) {
-#if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-            if(rpl_ext_header_srh_update()) {
+            if(NETSTACK_ROUTING.ext_header_srh_update()) {
 
               /* With routing header, the detination address is us and will
                * be swapped later to the next hop. Because of this, the MTU
@@ -1392,7 +1377,6 @@ uip_process(uint8_t flag)
 
               goto send; /* Proceed to forwarding */
             }
-#endif /* UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING */
             uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER, UIP_IPH_LEN + uip_ext_len + 2);
             UIP_STAT(++uip_stat.ip.drop);
             LOG_ERR("unrecognized routing type");

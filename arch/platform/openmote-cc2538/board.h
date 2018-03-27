@@ -63,14 +63,21 @@
  * @{
  */
 /*---------------------------------------------------------------------------*/
-#define LEDS_RED       16  /**< LED1 (Red)    -> PC4 */
-#define LEDS_YELLOW    64  /**< LED2 (Yellow) -> PC6 */
-#define LEDS_GREEN     128 /**< LED3 (Green)  -> PC7 */
-#define LEDS_ORANGE    32  /**< LED4 (Orange) -> PC5 */
-#define LEDS_CONF_ALL  240
+#define LEDS_ARCH_L1_PORT GPIO_C_NUM
+#define LEDS_ARCH_L1_PIN  4
+#define LEDS_ARCH_L2_PORT GPIO_C_NUM
+#define LEDS_ARCH_L2_PIN  6
+#define LEDS_ARCH_L3_PORT GPIO_C_NUM
+#define LEDS_ARCH_L3_PIN  7
+#define LEDS_ARCH_L4_PORT GPIO_C_NUM
+#define LEDS_ARCH_L4_PIN  5
 
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS        1
+#define LEDS_CONF_RED     1
+#define LEDS_CONF_YELLOW  2
+#define LEDS_CONF_GREEN   4
+#define LEDS_CONF_ORANGE  8
+
+#define LEDS_CONF_COUNT   4
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
@@ -121,6 +128,7 @@
 #define BUTTON_USER_VECTOR     GPIO_C_IRQn
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON    1
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

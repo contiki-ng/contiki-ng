@@ -37,46 +37,13 @@
  */
 #include "contiki.h"
 #include "dev/leds.h"
+#include "dev/gpio-hal.h"
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 #include "reg.h"
 #include "lpm.h"
 
 #include <string.h>
-
-/**
- * \brief Pointer to a function to be called when a GPIO interrupt is detected.
- * Callbacks for Port A, Pins[0:7] are stored in positions [0:7] of this
- * buffer, Port B callbacks in [8:15] and so on
- */
-static gpio_callback_t gpio_callbacks[32];
-/*---------------------------------------------------------------------------*/
-void
-gpio_register_callback(gpio_callback_t f, uint8_t port, uint8_t pin)
-{
-  gpio_callbacks[(port << 3) + pin] = f;
-}
-/*---------------------------------------------------------------------------*/
-/** \brief Run through all registered GPIO callbacks and invoke those
- * associated with the \a port and the pins specified by \a mask
- * \param mask Search callbacks associated with pins specified by this mask
- * \param port Search callbacks associated with this port. Here, port is
- * specified as a number between 0 and 3. Port A: 0, Port B: 1 etc */
-void
-notify(uint8_t mask, uint8_t port)
-{
-  uint8_t i;
-  gpio_callback_t *f = &gpio_callbacks[port << 3];
-
-  for(i = 0; i < 8; i++) {
-    if(mask & (1 << i)) {
-      if((*f) != NULL) {
-        (*f)(port, i);
-      }
-    }
-    f++;
-  }
-}
 /*---------------------------------------------------------------------------*/
 /** \brief Interrupt service routine for Port \a port
  * \param port Number between 0 and 3. Port A: 0, Port B: 1, etc.
@@ -93,7 +60,7 @@ gpio_port_isr(uint8_t port)
   int_status = GPIO_GET_MASKED_INT_STATUS(base);
   power_up_int_status = GPIO_GET_POWER_UP_INT_STATUS(port);
 
-  notify(int_status | power_up_int_status, port);
+  gpio_hal_event_handler((int_status | power_up_int_status) << (port << 3));
 
   GPIO_CLEAR_INTERRUPT(base, int_status);
   GPIO_CLEAR_POWER_UP_INTERRUPT(port, power_up_int_status);
@@ -110,9 +77,4 @@ GPIO_PORT_ISR(b, B)
 GPIO_PORT_ISR(c, C)
 GPIO_PORT_ISR(d, D)
 /*---------------------------------------------------------------------------*/
-void
-gpio_init()
-{
-  memset(gpio_callbacks, 0, sizeof(gpio_callbacks));
-}
 /** @} */

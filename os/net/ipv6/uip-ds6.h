@@ -46,8 +46,8 @@
 #include "sys/stimer.h"
 /* The size of uip_ds6_addr_t depends on UIP_ND6_DEF_MAXDADNS. Include uip-nd6.h to define it. */
 #include "net/ipv6/uip-nd6.h"
-#include "net/ipv6/uip-ds6-route.h"
 #include "net/ipv6/uip-ds6-nbr.h"
+#include "net/ipv6/uip-ds6-route.h"
 
 /*--------------------------------------------------*/
 /** Configuration. For all tables (Neighbor cache, Prefix List, Routing Table,
@@ -225,13 +225,6 @@ typedef struct uip_ds6_maddr {
   uint8_t isused;
   uip_ipaddr_t ipaddr;
 } uip_ds6_maddr_t;
-
-/* only define the callback if RPL is active */
-#if UIP_CONF_IPV6_RPL && (UIP_CONF_IPV6_RPL_LITE == 0)
-#ifndef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
-#define UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED rpl_ipv6_neighbor_callback
-#endif /* UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED */
-#endif /* UIP_CONF_IPV6_RPL */
 
 /** \brief  Interface structure (contains all the interface variables) */
 typedef struct uip_ds6_netif {

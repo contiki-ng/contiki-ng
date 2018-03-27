@@ -10,9 +10,6 @@ IPADDR=fd00::302:304:506:708
 declare -i OKCOUNT=0
 declare -i TESTCOUNT=0
 
-echo "Enabling IPv6"
-sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
-
 # Starting Contiki-NG native node
 echo "Starting native CoAP server"
 make -C $CONTIKI/examples/coap > make.log 2> make.err
@@ -41,10 +38,10 @@ done
 
 echo "Closing native node"
 sleep 2
-pgrep hello-world | sudo xargs kill -9
+pgrep coap-example | sudo xargs kill -9
 
 if [ $TESTCOUNT -eq $OKCOUNT ] ; then
-  printf "%-40s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
+  printf "%-32s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
 else
   echo "==== make.log ====" ; cat make.log;
   echo "==== make.err ====" ; cat make.err;

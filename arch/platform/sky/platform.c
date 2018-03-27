@@ -51,7 +51,6 @@
 #include "sys/node-id.h"
 #include "cfs-coffee-arch.h"
 #include "cfs/cfs-coffee.h"
-#include "sys/autostart.h"
 
 #if DCOSYNCH_CONF_ENABLED
 static struct timer mgt_timer;

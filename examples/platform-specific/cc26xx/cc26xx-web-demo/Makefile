@@ -1,12 +1,9 @@
-all: cc26xx-web-demo
+CONTIKI_PROJECT = cc26xx-web-demo
+all: $(CONTIKI_PROJECT)
 
-REST_RESOURCES_DIR = ./resources
+PLATFORMS_ONLY = srf06-cc26xx
 
-REST_RESOURCES_FILES += res-leds.c res-toggle-leds.c res-device.c
-REST_RESOURCES_FILES += res-sensors.c res-ble-advd.c res-net.c
-
-PROJECTDIRS += $(REST_RESOURCES_DIR)
-PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
+MODULES_REL += ./resources
 
 PROJECT_SOURCEFILES += cetic-6lbr-client.c coap-server.c net-uart.c mqtt-client.c
 PROJECT_SOURCEFILES += httpd-simple.c

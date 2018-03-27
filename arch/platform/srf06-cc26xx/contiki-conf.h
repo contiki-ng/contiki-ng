@@ -38,6 +38,7 @@
 #define CONTIKI_CONF_H
 
 #include <stdint.h>
+#include <inttypes.h>
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_PATH
@@ -58,6 +59,7 @@
 
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON      1
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 
 /*
  * Override button symbols from dev/button-sensor.h, for the examples that

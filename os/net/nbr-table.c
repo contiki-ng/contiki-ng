@@ -290,6 +290,13 @@ nbr_table_register(nbr_table_t *table, nbr_table_callback *callback)
     ctimer_set(&periodic_timer, CLOCK_SECOND * 60, handle_periodic_timer, NULL);
   }
 #endif
+
+  if(nbr_table_is_registered(table)) {
+    /* Table already registered, just update callback */
+    table->callback = callback;
+    return 1;
+  }
+
   if(num_tables < MAX_NUM_TABLES) {
     table->index = num_tables++;
     table->callback = callback;
@@ -303,9 +310,10 @@ nbr_table_register(nbr_table_t *table, nbr_table_callback *callback)
 /*---------------------------------------------------------------------------*/
 /* Test whether a specified table has been registered or not */
 int
-nbr_table_is_register(nbr_table_t *table)
+nbr_table_is_registered(nbr_table_t *table)
 {
-  if(table != NULL && all_tables[table->index] == table) {
+  if(table != NULL && table->index >= 0 && table->index < MAX_NUM_TABLES
+                   && all_tables[table->index] == table) {
     return 1;
   }
   return 0;
@@ -490,4 +498,3 @@ handle_periodic_timer(void *ptr)
   ctimer_reset(&periodic_timer);
 }
 #endif
-

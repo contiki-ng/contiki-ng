@@ -37,7 +37,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "cc26xx-web-demo.h"
 #include "coap-server.h"
@@ -51,7 +51,8 @@
  * called by all handlers and populates the CoAP response
  */
 static void
-res_get_handler_all(int sens_type, void *request, void *response,
+res_get_handler_all(int sens_type, coap_message_t *request,
+                    coap_message_t *response,
                     uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
@@ -60,43 +61,44 @@ res_get_handler_all(int sens_type, void *request, void *response,
   reading = cc26xx_web_demo_sensor_lookup(sens_type);
 
   if(reading == NULL) {
-    REST.set_response_status(response, REST.status.NOT_FOUND);
-    REST.set_response_payload(response, coap_server_not_found_msg,
+    coap_set_status_code(response, NOT_FOUND_4_04);
+    coap_set_payload(response, coap_server_not_found_msg,
                               strlen(coap_server_not_found_msg));
     return;
   }
 
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", reading->converted);
 
-    REST.set_response_payload(response, (uint8_t *)buffer,
+    coap_set_payload(response, (uint8_t *)buffer,
                               strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+  } else if(accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"%s\":%s}",
              reading->descr, reading->converted);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_XML) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
              "<%s val=\"%s\" unit=\"%s\"/>", reading->xml_element,
              reading->converted, reading->units);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, coap_server_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, coap_server_supported_msg,
                               strlen(coap_server_supported_msg));
   }
 }
 /*---------------------------------------------------------------------------*/
 /* BatMon resources and handler: Temperature, Voltage */
 static void
-res_get_handler_batmon_temp(void *request, void *response, uint8_t *buffer,
+res_get_handler_batmon_temp(coap_message_t *request, coap_message_t *response,
+                            uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_BATMON_TEMP, request, response,
@@ -104,7 +106,8 @@ res_get_handler_batmon_temp(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_batmon_volt(void *request, void *response, uint8_t *buffer,
+res_get_handler_batmon_volt(coap_message_t *request, coap_message_t *response,
+                            uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_BATMON_VOLT, request, response,
@@ -120,7 +123,8 @@ RESOURCE(res_batmon_volt, "title=\"Battery Voltage\";rt=\"mV\"",
 #if CC26XX_WEB_DEMO_ADC_DEMO
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_adc_dio23(void *request, void *response, uint8_t *buffer,
+res_get_handler_adc_dio23(coap_message_t *request, coap_message_t *response,
+                          uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_ADC_DIO23, request, response,
@@ -136,7 +140,8 @@ RESOURCE(res_adc_dio23, "title=\"ADC DIO23\";rt=\"mV\"",
 /*---------------------------------------------------------------------------*/
 /* MPU resources and handler: Accelerometer and Gyro */
 static void
-res_get_handler_mpu_acc_x(void *request, void *response, uint8_t *buffer,
+res_get_handler_mpu_acc_x(coap_message_t *request, coap_message_t *response,
+                          uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_MPU_ACC_X, request, response,
@@ -144,7 +149,8 @@ res_get_handler_mpu_acc_x(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_acc_y(void *request, void *response, uint8_t *buffer,
+res_get_handler_mpu_acc_y(coap_message_t *request, coap_message_t *response,
+                          uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_MPU_ACC_Y, request, response,
@@ -152,7 +158,8 @@ res_get_handler_mpu_acc_y(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_acc_z(void *request, void *response, uint8_t *buffer,
+res_get_handler_mpu_acc_z(coap_message_t *request, coap_message_t *response,
+                          uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_MPU_ACC_Z, request, response,
@@ -160,7 +167,8 @@ res_get_handler_mpu_acc_z(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_gyro_x(void *request, void *response, uint8_t *buffer,
+res_get_handler_mpu_gyro_x(coap_message_t *request, coap_message_t *response,
+                           uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_MPU_GYRO_X, request, response,
@@ -168,7 +176,8 @@ res_get_handler_mpu_gyro_x(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_gyro_y(void *request, void *response, uint8_t *buffer,
+res_get_handler_mpu_gyro_y(coap_message_t *request, coap_message_t *response,
+                           uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_MPU_GYRO_Y, request, response,
@@ -176,7 +185,8 @@ res_get_handler_mpu_gyro_y(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_mpu_gyro_z(void *request, void *response, uint8_t *buffer,
+res_get_handler_mpu_gyro_z(coap_message_t *request, coap_message_t *response,
+                           uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_MPU_GYRO_Z, request, response,
@@ -199,7 +209,8 @@ RESOURCE(res_mpu_gyro_z, "title=\"Gyro Z\";rt=\"deg/sec\"",
 /*---------------------------------------------------------------------------*/
 /* TMP sensor resources and handlers: Object, Ambient */
 static void
-res_get_handler_obj_temp(void *request, void *response, uint8_t *buffer,
+res_get_handler_obj_temp(coap_message_t *request, coap_message_t *response,
+                         uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_TMP_OBJECT, request, response,
@@ -207,7 +218,8 @@ res_get_handler_obj_temp(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_amb_temp(void *request, void *response, uint8_t *buffer,
+res_get_handler_amb_temp(coap_message_t *request, coap_message_t *response,
+                         uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_TMP_AMBIENT, request, response,
@@ -222,7 +234,8 @@ RESOURCE(res_tmp007_amb, "title=\"Temperature (Ambient)\";rt=\"C\"",
 /*---------------------------------------------------------------------------*/
 /* BMP sensor resources: Temperature, Pressure */
 static void
-res_get_handler_bmp_temp(void *request, void *response, uint8_t *buffer,
+res_get_handler_bmp_temp(coap_message_t *request, coap_message_t *response,
+                         uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_BMP_TEMP, request, response,
@@ -230,7 +243,8 @@ res_get_handler_bmp_temp(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_bmp_press(void *request, void *response, uint8_t *buffer,
+res_get_handler_bmp_press(coap_message_t *request, coap_message_t *response,
+                          uint8_t *buffer,
                           uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_BMP_PRES, request, response,
@@ -246,7 +260,8 @@ RESOURCE(res_bmp280_press,
 /*---------------------------------------------------------------------------*/
 /* HDC1000 sensor resources and handler: Temperature, Pressure */
 static void
-res_get_handler_hdc_temp(void *request, void *response, uint8_t *buffer,
+res_get_handler_hdc_temp(coap_message_t *request, coap_message_t *response,
+                         uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_HDC_TEMP, request, response,
@@ -254,7 +269,8 @@ res_get_handler_hdc_temp(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_hdc_humidity(void *request, void *response, uint8_t *buffer,
+res_get_handler_hdc_humidity(coap_message_t *request, coap_message_t *response,
+                             uint8_t *buffer,
                              uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_HDC_HUMIDITY, request, response,
@@ -269,7 +285,8 @@ RESOURCE(res_hdc1000_hum, "title=\"Humidity\";rt=\"%RH\"",
 /*---------------------------------------------------------------------------*/
 /* Illuminance resources and handler */
 static void
-res_get_handler_opt(void *request, void *response, uint8_t *buffer,
+res_get_handler_opt(coap_message_t *request, coap_message_t *response,
+                    uint8_t *buffer,
                     uint16_t preferred_size, int32_t *offset)
 {
   res_get_handler_all(CC26XX_WEB_DEMO_SENSOR_OPT_LIGHT, request, response,

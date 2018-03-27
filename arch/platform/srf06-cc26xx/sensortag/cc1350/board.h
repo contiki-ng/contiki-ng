@@ -58,20 +58,13 @@
 #include "ioc.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations
+ * \name LED HAL configuration
  *
  * Those values are not meant to be modified by the user
  * @{
  */
-#define LEDS_RED       1
-#define LEDS_GREEN     LEDS_RED
-#define LEDS_YELLOW    LEDS_RED
-#define LEDS_ORANGE    LEDS_RED
-
-#define LEDS_CONF_ALL  1
-
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS        1
+#define LEDS_CONF_COUNT                 1
+#define LEDS_CONF_RED                   1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -81,8 +74,6 @@
  * @{
  */
 #define BOARD_IOID_LED_1          IOID_10
-#define BOARD_LED_1               (1 << BOARD_IOID_LED_1)
-#define BOARD_LED_ALL             BOARD_LED_1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -245,6 +236,17 @@
 
 #define SMARTRF_SETTINGS_CONF_RSSI_OFFSET_779_930  0x00F688A3
 #define SMARTRF_SETTINGS_CONF_OVERRIDE_TRIM_OFFSET 0x00018883
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Board indices for the button HAL
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
+#define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
+#define BOARD_BUTTON_HAL_INDEX_REED_RELAY 0xFF
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

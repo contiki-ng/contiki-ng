@@ -36,15 +36,20 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_SEPARATE_H_
 #define COAP_SEPARATE_H_
 
 #include "coap.h"
+#include "coap-engine.h"
 
 typedef struct coap_separate {
 
-  uip_ipaddr_t addr;
-  uint16_t port;
+  coap_endpoint_t endpoint;
 
   coap_message_type_t type;
   uint16_t mid;
@@ -59,11 +64,14 @@ typedef struct coap_separate {
   uint16_t block2_size;
 } coap_separate_t;
 
-int coap_separate_handler(resource_t *resource, void *request,
-                          void *response);
+int coap_separate_handler(coap_resource_t *resource, coap_message_t *request,
+                          coap_message_t *response);
 void coap_separate_reject(void);
-void coap_separate_accept(void *request, coap_separate_t *separate_store);
-void coap_separate_resume(void *response, coap_separate_t *separate_store,
+void coap_separate_accept(coap_message_t *request,
+                          coap_separate_t *separate_store);
+void coap_separate_resume(coap_message_t *response,
+                          coap_separate_t *separate_store,
                           uint8_t code);
 
 #endif /* COAP_SEPARATE_H_ */
+/** @} */

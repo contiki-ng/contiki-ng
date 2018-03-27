@@ -74,12 +74,7 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/routing/routing.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -358,7 +353,7 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     for(i = 0; i < SICSLOWPAN_REASS_CONTEXTS; i++) {
       /* clear all fragment info with expired timer to free all fragment buffers */
       if(frag_info[i].len > 0 && timer_expired(&frag_info[i].reass_timer)) {
-	clear_fragments(i);
+        clear_fragments(i);
       }
 
       /* We use len as indication on used or not used */
@@ -426,12 +421,12 @@ copy_frags2uip(int context)
 
   /* Copy from the fragment context info buffer first */
   memcpy((uint8_t *)UIP_IP_BUF, (uint8_t *)frag_info[context].first_frag,
-	 frag_info[context].first_frag_len);
+         frag_info[context].first_frag_len);
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     /* And also copy all matching fragments */
     if(frag_buf[i].len > 0 && frag_buf[i].index == context) {
       memcpy((uint8_t *)UIP_IP_BUF + (uint16_t)(frag_buf[i].offset << 3),
-	     (uint8_t *)frag_buf[i].data, frag_buf[i].len);
+             (uint8_t *)frag_buf[i].data, frag_buf[i].len);
     }
   }
   /* deallocate all the fragments for this context */
@@ -676,16 +671,15 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   int ext_hdr_len;
   struct uip_udp_hdr *udp_buf;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("before compression (%d): ", UIP_IP_BUF->len[1]);
     for(ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
       uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
-      LOG_DBG("%02x", data);
+      LOG_DBG_("%02x", data);
     }
-    LOG_DBG("\n");
+    LOG_DBG_("\n");
   }
-#endif /* LOG_DBG_ENABLED */
 
   hc06_ptr = PACKETBUF_IPHC_BUF + 2;
   /*
@@ -1001,16 +995,15 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   PACKETBUF_IPHC_BUF[0] = iphc0;
   PACKETBUF_IPHC_BUF[1] = iphc1;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("after compression %d: ", (int)(hc06_ptr - packetbuf_ptr));
     for(ndx = 0; ndx < hc06_ptr - packetbuf_ptr; ndx++) {
       uint8_t data = ((uint8_t *) packetbuf_ptr)[ndx];
-      LOG_DBG("%02x", data);
+      LOG_DBG_("%02x", data);
     }
-    LOG_DBG("\n");
-    }
-#endif
+    LOG_DBG_("\n");
+  }
 
   packetbuf_hdr_len = hc06_ptr - packetbuf_ptr;
 }
@@ -1066,7 +1059,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
         SICSLOWPAN_IP_BUF(buf)->vtc = 0x60 | ((tmp >> 2) & 0x0f);
         /* ECN rolled down two steps + lowest DSCP bits at top two bits */
         SICSLOWPAN_IP_BUF(buf)->tcflow = ((tmp >> 2) & 0x30) | (tmp << 6) |
-	  (SICSLOWPAN_IP_BUF(buf)->tcflow & 0x0f);
+          (SICSLOWPAN_IP_BUF(buf)->tcflow & 0x0f);
       } else {
         /* Traffic class is compressed (set version and no TC)*/
         SICSLOWPAN_IP_BUF(buf)->vtc = 0x60;
@@ -1081,7 +1074,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
       /* Version and flow label are compressed */
       if((iphc0 & SICSLOWPAN_IPHC_TC_C) == 0) {
         /* Traffic class is inline */
-	SICSLOWPAN_IP_BUF(buf)->vtc = 0x60 | ((*hc06_ptr >> 2) & 0x0f);
+        SICSLOWPAN_IP_BUF(buf)->vtc = 0x60 | ((*hc06_ptr >> 2) & 0x0f);
           SICSLOWPAN_IP_BUF(buf)->tcflow = ((*hc06_ptr << 6) & 0xC0) | ((*hc06_ptr >> 2) & 0x30);
           SICSLOWPAN_IP_BUF(buf)->flow = 0;
           hc06_ptr += 1;
@@ -1436,10 +1429,8 @@ packet_sent(void *ptr, int status, int transmissions)
   /* Update neighbor link statistics */
   link_stats_packet_sent(dest, status, transmissions);
 
-#if UIP_CONF_IPV6_RPL
-  /* Call RPL link callback */
-  rpl_link_callback(dest, status, transmissions);
-#endif /* UIP_CONF_IPV6_RPL */
+  /* Call routing protocol link callback */
+  NETSTACK_ROUTING.link_callback(dest, status, transmissions);
 
   /* DS6 callback, used for UIP_DS6_LL_NUD */
   uip_ds6_link_callback(status, transmissions);
@@ -1911,19 +1902,17 @@ input(void)
     uip_len = packetbuf_payload_len + uncomp_hdr_len;
 #endif /* SICSLOWPAN_CONF_FRAG */
     LOG_INFO("input: IP packet ready (length %d)\n",
-	    uip_len);
+             uip_len);
 
-#if LOG_DBG_ENABLED
-    {
+    if(LOG_DBG_ENABLED) {
       uint16_t ndx;
       LOG_DBG("after decompression %u:", UIP_IP_BUF->len[1]);
       for (ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
         uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
-        LOG_DBG("%02x", data);
+        LOG_DBG_("%02x", data);
       }
-      LOG_DBG("\n");
+      LOG_DBG_("\n");
     }
-#endif /* LOG_DBG_ENABLED */
 
     /* if callback is set then set attributes and call */
     if(callback) {

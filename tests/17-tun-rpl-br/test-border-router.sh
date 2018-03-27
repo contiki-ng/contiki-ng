@@ -9,14 +9,14 @@ BASENAME=$2
 # Destination IPv6
 IPADDR=$3
 
+# ICMP request-reply count
+COUNT=5
+
 # Start simulation
 echo "Starting Cooja simulation $BASENAME.csc"
 java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -contiki=$CONTIKI > $BASENAME.coojalog &
 JPID=$!
 sleep 20
-
-echo "Enabling IPv6"
-sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
 
 # Connect to the simlation
 echo "Starting tunslip6"
@@ -24,13 +24,14 @@ make -C $CONTIKI/tools tunslip6
 make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip.log 2>&1 &
 MPID=$!
 echo "Waiting for network formation"
-sleep 5
+sleep 20 # not in real-time, simulates at full speed
 
 # Do ping
 echo "Pinging"
-ping6 $IPADDR -c 5 | tee $BASENAME.scriptlog
+ping6 $IPADDR -c $COUNT | tee $BASENAME.scriptlog
 # Fetch ping6 status code (not $? because this is piped)
 STATUS=${PIPESTATUS[0]}
+REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
 
 echo "Closing simulation and tunslip6"
 sleep 1
@@ -40,7 +41,7 @@ sleep 1
 rm COOJA.testlog
 rm COOJA.log
 
-if [ $STATUS -eq 0 ] ; then
+if [ $STATUS -eq 0 ] && [ $REPLIES -eq $COUNT ] ; then
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
   echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;

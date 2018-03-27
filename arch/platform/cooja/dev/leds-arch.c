@@ -34,18 +34,18 @@
 const struct simInterface leds_interface;
 
 // COOJA variables
-unsigned char simLedsValue;
+leds_mask_t simLedsValue;
 
 /*-----------------------------------------------------------------------------------*/
 void leds_arch_init() {
   simLedsValue = 0;
 }
 /*-----------------------------------------------------------------------------------*/
-unsigned char leds_arch_get() {
+leds_mask_t leds_arch_get() {
   return simLedsValue;
 }
 /*-----------------------------------------------------------------------------------*/
-void leds_arch_set(unsigned char leds) {
+void leds_arch_set(leds_mask_t leds) {
   if(leds != simLedsValue) {
     simLedsValue = leds;
   }

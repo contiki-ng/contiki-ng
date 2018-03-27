@@ -55,8 +55,10 @@
 #include "dev/cc2538-rf.h"
 #include "dev/udma.h"
 #include "dev/crypto.h"
+#include "dev/button-hal.h"
 #include "usb/usb-serial.h"
 #include "lib/random.h"
+#include "lib/sensors.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/linkaddr.h"
@@ -82,7 +84,7 @@
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
@@ -157,6 +159,8 @@ platform_init_stage_two()
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
+  button_hal_init();
+
   INTERRUPTS_ENABLE();
 
   fade(LEDS_BLUE);
@@ -174,8 +178,6 @@ platform_init_stage_three()
   soc_print_info();
 
   process_start(&sensors_process, NULL);
-
-  SENSORS_ACTIVATE(button_sensor);
 
   fade(LEDS_GREEN);
 }

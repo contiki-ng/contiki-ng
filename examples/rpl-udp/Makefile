@@ -1,4 +1,5 @@
-all: udp-client udp-server
+CONTIKI_PROJECT = udp-client udp-server
+all: $(CONTIKI_PROJECT)
 
 .PHONY: renode
 renode: all

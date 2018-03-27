@@ -54,8 +54,10 @@
 #include "dev/udma.h"
 #include "dev/crypto.h"
 #include "dev/rtcc.h"
+#include "dev/button-hal.h"
 #include "usb/usb-serial.h"
 #include "lib/random.h"
+#include "lib/sensors.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/linkaddr.h"
@@ -69,6 +71,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -81,7 +84,7 @@
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
@@ -124,7 +127,7 @@ rtc_init(void)
    */
 
   /* Get the system date in the following format: wd dd mm yy hh mm ss */
-  PRINTF("Setting RTC from system date: %s\n", DATE);
+  LOG_INFO("Setting RTC from system date: %s\n", DATE);
 
   /* Configure the RTC with the current values */
   td.weekdays = (uint8_t)strtol(DATE, &next, 10);
@@ -149,7 +152,7 @@ rtc_init(void)
 
   /* Set the time and date */
   if(rtcc_set_time_date(&td) == AB08_ERROR) {
-    PRINTF("Failed to set time and date\n");
+    LOG_ERR("Failed to set time and date\n");
   }
 #endif
 #endif
@@ -220,6 +223,10 @@ platform_init_stage_two()
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
+#if PLATFORM_HAS_BUTTON
+  button_hal_init();
+#endif
+
   INTERRUPTS_ENABLE();
 
   fade(LEDS_BLUE);
@@ -239,10 +246,6 @@ platform_init_stage_three()
   soc_print_info();
 
   process_start(&sensors_process, NULL);
-
-#if PLATFORM_HAS_BUTTON
-  SENSORS_ACTIVATE(button_sensor);
-#endif
 
   fade(LEDS_GREEN);
 }

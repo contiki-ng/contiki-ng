@@ -1,5 +1,7 @@
 CONTIKI_PROJECT=rpl-border-router
 
+PLATFORMS_ONLY = jn516x
+
 TARGET ?= jn516x
 JN516x_WITH_DONGLE = 1
 
@@ -7,8 +9,7 @@ CONTIKI=../../../../../..
 
 PROJECT_SOURCEFILES += slip-bridge.c slip.c
 
-PROJECTDIRS += .. ../../tools
-PROJECT_SOURCEFILES += rpl-tools.c
+MODULES_REL += ..
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap

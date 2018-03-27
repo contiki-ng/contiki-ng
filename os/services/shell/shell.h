@@ -51,28 +51,28 @@
 /* Helper macros to parse arguments */
 #define SHELL_ARGS_INIT(args, next_args) (next_args) = (args);
 
-#define SHELL_ARGS_NEXT(args, next_args) do { \
-						(args) = (next_args); \
-						if((args) != NULL) { \
-							if(*(args) == '\0') { \
-								(args) = NULL; \
-							} else { \
-								(next_args) = strchr((args), ' '); \
-								if((next_args) != NULL) { \
-									*(next_args) = '\0'; \
-									(next_args)++; \
-								} \
-							} \
-						} else { \
-							(next_args) = NULL; \
-						}  \
-		} while(0)
+#define SHELL_ARGS_NEXT(args, next_args) do {   \
+    (args) = (next_args);                       \
+    if((args) != NULL) {                        \
+      if(*(args) == '\0') {                     \
+        (args) = NULL;                          \
+      } else {                                  \
+        (next_args) = strchr((args), ' ');      \
+        if((next_args) != NULL) {               \
+          *(next_args) = '\0';                  \
+          (next_args)++;                        \
+        }                                       \
+      }                                         \
+    } else {                                    \
+      (next_args) = NULL;                       \
+    }                                           \
+  } while(0)
 
 /* Printf-formatted output via a given output function */
-#define SHELL_OUTPUT(output_func, format, ...) do { \
-		char buffer[128]; \
-	  snprintf(buffer, sizeof(buffer), format, ##__VA_ARGS__); \
-		(output_func)(buffer); \
+#define SHELL_OUTPUT(output_func, format, ...) do {             \
+    char buffer[192];                                           \
+    snprintf(buffer, sizeof(buffer), format, ##__VA_ARGS__);    \
+    (output_func)(buffer);                                      \
   } while(0);
 
 typedef void (shell_output_func)(const char *str);
@@ -85,7 +85,7 @@ void shell_init(void);
 /**
  * \brief A protothread that is spawned by a Shell driver when receiving a new line.
  */
- PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd));
+PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd));
 
 /**
  * Prints an IPv6 address
