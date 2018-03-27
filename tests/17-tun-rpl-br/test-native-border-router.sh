@@ -9,6 +9,9 @@ BASENAME=$2
 # Destination IPv6
 IPADDR=$3
 
+# Time allocated for convergence
+WAIT_TIME=$4
+
 # ICMP request-reply count
 COUNT=5
 
@@ -22,8 +25,8 @@ sleep 20
 echo "Starting native border-router"
 nohup make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=native >> $BASENAME.nbr.log 2>&1 &
 MPID=$!
-echo "Waiting for network formation"
-sleep 60 # runs in real time so we need to wait a bit
+printf "Waiting for network formation (%d seconds)\n" "$WAIT_TIME"
+sleep $WAIT_TIME
 
 # Do ping
 echo "Pinging"

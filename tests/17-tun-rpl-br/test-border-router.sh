@@ -9,6 +9,9 @@ BASENAME=$2
 # Destination IPv6
 IPADDR=$3
 
+# Time allocated for convergence
+WAIT_TIME=$4
+
 # ICMP request-reply count
 COUNT=5
 
@@ -23,8 +26,8 @@ echo "Starting tunslip6"
 make -C $CONTIKI/tools tunslip6
 make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip.log 2>&1 &
 MPID=$!
-echo "Waiting for network formation"
-sleep 20 # not in real-time, simulates at full speed
+printf "Waiting for network formation (%d seconds)\n" "$WAIT_TIME"
+sleep $WAIT_TIME
 
 # Do ping
 echo "Pinging"
