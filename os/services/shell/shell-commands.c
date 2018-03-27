@@ -337,6 +337,7 @@ PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
+#if UIP_CONF_IPV6_RPL
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
@@ -415,6 +416,7 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
 
   PT_END(pt);
 }
+#endif /* UIP_CONF_IPV6_RPL */
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
