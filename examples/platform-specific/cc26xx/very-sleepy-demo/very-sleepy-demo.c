@@ -34,7 +34,7 @@
 #include "sys/process.h"
 #include "dev/leds.h"
 #include "dev/watchdog.h"
-#include "button-sensor.h"
+#include "dev/button-hal.h"
 #include "batmon-sensor.h"
 #include "board-peripherals.h"
 #include "net/netstack.h"
@@ -62,6 +62,8 @@
 /*---------------------------------------------------------------------------*/
 #define VERY_SLEEPY_MODE_OFF 0
 #define VERY_SLEEPY_MODE_ON  1
+/*---------------------------------------------------------------------------*/
+#define BUTTON_TRIGGER BOARD_BUTTON_HAL_INDEX_KEY_LEFT
 /*---------------------------------------------------------------------------*/
 #define MAC_CAN_BE_TURNED_OFF  0
 #define MAC_MUST_STAY_ON       1
@@ -358,7 +360,8 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
 
     PROCESS_YIELD();
 
-    if(ev == sensors_event && data == &button_left_sensor) {
+    if(ev == button_hal_release_event &&
+       ((button_hal_button_t *)data)->unique_id == BUTTON_TRIGGER) {
       switch_to_normal();
     }
 
@@ -368,7 +371,8 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
     }
 
     if((ev == PROCESS_EVENT_TIMER && data == &et_periodic) ||
-       (ev == sensors_event && data == &button_left_sensor) ||
+       (ev == button_hal_release_event &&
+        ((button_hal_button_t *)data)->unique_id == BUTTON_TRIGGER) ||
        (ev == event_new_config)) {
 
       /*

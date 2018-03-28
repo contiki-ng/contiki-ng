@@ -87,6 +87,7 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
     GPIO_DISABLE_INTERRUPT(port_base, pin_mask);
   } else if(tmp == GPIO_HAL_PIN_CFG_INT_ENABLE) {
     GPIO_ENABLE_INTERRUPT(port_base, pin_mask);
+    NVIC_EnableIRQ(port);
   }
 
   GPIO_SOFTWARE_CONTROL(port_base, pin_mask);

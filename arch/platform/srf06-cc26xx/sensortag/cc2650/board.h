@@ -219,6 +219,17 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
+ * \brief Board indices for the button HAL
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
+#define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
+#define BOARD_BUTTON_HAL_INDEX_REED_RELAY 0xFF
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name Device string used on startup
  * @{
  */

@@ -43,7 +43,7 @@
 #include "sys/etimer.h"
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
-#include "button-sensor.h"
+#include "dev/button-hal.h"
 #include "board-peripherals.h"
 #include "cc26xx-web-demo.h"
 #include "dev/leds.h"
@@ -882,10 +882,14 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
     PROCESS_YIELD();
 
-    if(ev == sensors_event && data == CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER) {
-      if(state == MQTT_CLIENT_STATE_ERROR) {
-        connect_attempt = 1;
-        state = MQTT_CLIENT_STATE_REGISTERED;
+    if(ev == button_hal_release_event) {
+      button_hal_button_t *btn = (button_hal_button_t *)data;
+
+      if(btn->unique_id == CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER) {
+        if(state == MQTT_CLIENT_STATE_ERROR) {
+          connect_attempt = 1;
+          state = MQTT_CLIENT_STATE_REGISTERED;
+        }
       }
     }
 
@@ -901,7 +905,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
     if((ev == PROCESS_EVENT_TIMER && data == &publish_periodic_timer) ||
        ev == PROCESS_EVENT_POLL ||
        ev == cc26xx_web_demo_publish_event ||
-       (ev == sensors_event && data == CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER)) {
+       (ev == button_hal_release_event &&
+        ((button_hal_button_t *)data)->unique_id ==
+        CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER)) {
       state_machine();
     }
 

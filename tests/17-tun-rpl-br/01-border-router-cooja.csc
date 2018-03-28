@@ -239,7 +239,8 @@ make -j hello-world.cooja TARGET=cooja</commands>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
       <script>TIMEOUT(10000000000); /* milliseconds. no action at timeout */
-      </script>
+/* Set simulaion speed to real time */
+sim.setSpeedLimit(1.0);</script>
       <active>true</active>
     </plugin_config>
     <width>600</width>
