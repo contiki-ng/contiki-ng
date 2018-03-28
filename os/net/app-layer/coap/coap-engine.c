@@ -70,7 +70,6 @@ static int invoke_coap_resource_service(coap_message_t *request,
 /*---------------------------------------------------------------------------*/
 LIST(coap_handlers);
 LIST(coap_resource_services);
-LIST(coap_resource_periodic_services);
 static uint8_t is_initialized = 0;
 
 /*---------------------------------------------------------------------------*/
@@ -373,7 +372,6 @@ coap_engine_init(void)
 
   list_init(coap_handlers);
   list_init(coap_resource_services);
-  list_init(coap_resource_periodic_services);
 
   coap_activate_resource(&res_well_known_core, ".well-known/core");
 
@@ -404,7 +402,6 @@ coap_activate_resource(coap_resource_t *resource, const char *path)
      && resource->periodic->periodic_handler
      && resource->periodic->period) {
     LOG_DBG("Periodic resource: %p (%s)\n", resource->periodic, path);
-    list_add(coap_resource_periodic_services, resource->periodic);
     periodic = resource->periodic;
     coap_timer_set_callback(&periodic->periodic_timer, process_callback);
     coap_timer_set_user_data(&periodic->periodic_timer, resource);
