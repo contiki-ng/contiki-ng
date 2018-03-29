@@ -93,7 +93,7 @@ UNIT_TEST(test_input_no_sf)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   UNKNOWN_SF_SFID, 10, 0,
+                                   UNKNOWN_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    NULL) == 0);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
@@ -152,7 +152,7 @@ UNIT_TEST(test_input_busy)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    NULL) == 0);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
@@ -174,7 +174,7 @@ UNIT_TEST(test_input_busy)
   /* 6top IE */
   UNIT_TEST_ASSERT(p[4] == 0xc9);
   UNIT_TEST_ASSERT(p[5] == 0x10);
-  UNIT_TEST_ASSERT(p[6] == 0x07);
+  UNIT_TEST_ASSERT(p[6] == 0x08);
   UNIT_TEST_ASSERT(p[7] == TEST_SF_SFID);
   UNIT_TEST_ASSERT(p[8] == 0x0a);
 
@@ -201,9 +201,9 @@ UNIT_TEST(test_input_no_memory)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
-                                    &pkt) == 0);
+                                   &pkt) == 0);
   memset(&addr, 0, sizeof(addr));
   addr.u8[0] = 1;
   UNIT_TEST_ASSERT(sixp_trans_alloc(&pkt, &addr) != NULL);
@@ -244,41 +244,6 @@ UNIT_TEST(test_input_no_memory)
   UNIT_TEST_END();
 }
 
-UNIT_TEST_REGISTER(test_input_schedule_generation,
-                   "sixp_input(schedule_generation)");
-UNIT_TEST(test_input_schedule_generation)
-{
-  sixp_nbr_t *nbr;
-  sixp_trans_t *trans;
-  uint32_t body;
-
-  UNIT_TEST_BEGIN();
-  test_setup();
-  memset(&body, 0, sizeof(body));
-
-  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
-  /* nbr has GEN 0 now */
-
-  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
-                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 1,
-                                   (const uint8_t *)&body, sizeof(body),
-                                   NULL) == 0);
-
-  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
-  UNIT_TEST_ASSERT(test_sf_input_is_called == 0);
-
-  UNIT_TEST_ASSERT(sixp_nbr_advance_gen(nbr) == 0);
-  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
-  UNIT_TEST_ASSERT(test_sf_input_is_called == 1);
-
-  UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
-  UNIT_TEST_ASSERT(sixp_trans_get_state(trans) ==
-                   SIXP_TRANS_STATE_REQUEST_RECEIVED);
-
-  UNIT_TEST_END();
-}
-
 UNIT_TEST_REGISTER(test_output_request_1,
                    "sixp_output(request_1)");
 UNIT_TEST(test_output_request_1)
@@ -294,7 +259,7 @@ UNIT_TEST(test_output_request_1)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -360,7 +325,7 @@ UNIT_TEST(test_output_response_2)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -388,12 +353,12 @@ UNIT_TEST(test_output_response_3)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
   UNIT_TEST_ASSERT(
-    sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_RECEIVED) == 0);
+                   sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_RECEIVED) == 0);
 
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
   UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_RESPONSE,
@@ -418,7 +383,7 @@ UNIT_TEST(test_output_response_4)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -467,7 +432,7 @@ UNIT_TEST(test_output_confirmation_2)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -495,7 +460,7 @@ UNIT_TEST(test_output_confirmation_3)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -527,7 +492,7 @@ UNIT_TEST(test_output_confirmation_4)
 
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10, 0,
+                                   TEST_SF_SFID, 10,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
@@ -545,6 +510,206 @@ UNIT_TEST(test_output_confirmation_4)
                                TEST_SF_SFID, NULL, 0,
                                &peer_addr, NULL, NULL, 0) == -1);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_reset_by_clear_request_1,
+                   "test if next_seqno is reset by sending CLEAR");
+UNIT_TEST(test_next_seqno_reset_by_clear_request_1)
+{
+  linkaddr_t peer_addr;
+  sixp_nbr_t *nbr;
+  sixp_trans_t *trans;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /*
+   * When the node is the initiator of CLEAR, nbr->next_seqno must be
+   * reset to 0 regardless of the presence or absent of L2 ACK to the
+   * CLEAR Request.
+   */
+  /* set next_seqno to 3 as the initial state for this sub-test  */
+  memset(&peer_addr, 0, sizeof(peer_addr));
+  peer_addr.u8[0] = 1;
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_set_next_seqno(nbr, 3) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 3);
+  UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                               TEST_SF_SFID, NULL, 0, &peer_addr,
+                               NULL, NULL, 0) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 0);
+  UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
+                                            SIXP_TRANS_STATE_REQUEST_SENT)
+                   == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
+                                            SIXP_TRANS_STATE_TERMINATING)
+                   == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 0);
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_reset_by_clear_request_2,
+                   "test if next_seqno is reset by receiving CLEAR");
+UNIT_TEST(test_next_seqno_reset_by_clear_request_2)
+{
+  linkaddr_t peer_addr;
+  sixp_nbr_t *nbr;
+  sixp_pkt_metadata_t metadata;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /*
+   * When the node is the responder of CLEAR, nbr->next_seqno must be
+   * reset to 0 regardless of the presence or absent of L2 ACK to the
+   * CLEAR Response.
+   */
+  /* set next_seqno to 3 as the initial state for this sub-test  */
+  memset(&peer_addr, 0, sizeof(peer_addr));
+  peer_addr.u8[0] = 1;
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_set_next_seqno(nbr, 3) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 3);
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                                   TEST_SF_SFID, 10,
+                                   (const uint8_t *)&metadata,
+                                   sizeof(metadata), NULL) == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 0);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_detect_seqno_error_1,
+                   "test if seqno error is handled correctly (1)");
+UNIT_TEST(test_detect_seqno_error_1)
+{
+  linkaddr_t peer_addr;
+  uint32_t body;
+  uint8_t *p;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  memset(&peer_addr, 0, sizeof(peer_addr));
+  peer_addr.u8[0] = 1;
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                   TEST_SF_SFID, 10,
+                                   (const uint8_t *)&body,
+                                   sizeof(body), NULL) == 0);
+
+  /* return RC_ERR_RSEQNUM on receiving non-zero seqno when nbr doesn't exist */
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+  /*
+   * 2 octets for Termination 1 IE, one octet for 6top Sub-IE ID, and
+   * 2 octets for Payload IE Header.
+   */
+  p = packetbuf_hdrptr() + 5;
+  /* now, p pointes to the 6P header */
+  UNIT_TEST_ASSERT(packetbuf_totlen() == 11);
+  UNIT_TEST_ASSERT(p[0] == ((SIXP_PKT_TYPE_RESPONSE << 4) | SIXP_PKT_VERSION));
+  UNIT_TEST_ASSERT(p[1] == SIXP_PKT_RC_ERR_SEQNUM);
+  UNIT_TEST_ASSERT(p[2] == TEST_SF_SFID);
+  UNIT_TEST_ASSERT(p[3] == 0); /* we don't have a relevant nbr; 0 is returned */
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_detect_seqno_error_2,
+                   "test if seqno error is handled correctly (2)");
+UNIT_TEST(test_detect_seqno_error_2)
+{
+  sixp_nbr_t *nbr;
+  sixp_trans_t *trans;
+  linkaddr_t peer_addr;
+  uint32_t body;
+  uint8_t *p;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  memset(&peer_addr, 0, sizeof(peer_addr));
+  peer_addr.u8[0] = 1;
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_set_next_seqno(nbr, 3) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 3);
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                   TEST_SF_SFID, 0,
+                                   (const uint8_t *)&body,
+                                   sizeof(body), NULL) == 0);
+
+  /* return RC_ERR_RSEQNUM on receiving zero when nbr->seqno is non-zero */
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+  /*
+   * 2 octets for Termination 1 IE, one octet for 6top Sub-IE ID, and
+   * 2 octets for Payload IE Header.
+   */
+  p = packetbuf_hdrptr() + 5;
+  /* now, p pointes to the 6P header */
+  UNIT_TEST_ASSERT(packetbuf_totlen() == 11);
+  UNIT_TEST_ASSERT(p[0] == ((SIXP_PKT_TYPE_RESPONSE << 4) | SIXP_PKT_VERSION));
+  UNIT_TEST_ASSERT(p[1] == SIXP_PKT_RC_ERR_SEQNUM);
+  UNIT_TEST_ASSERT(p[2] == TEST_SF_SFID);
+  UNIT_TEST_ASSERT(p[3] == 3);
+
+  UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
+                                            SIXP_TRANS_STATE_RESPONSE_SENT)
+                   == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 4);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_invalid_version,
+                   "test invalid version");
+UNIT_TEST(test_invalid_version)
+{
+  linkaddr_t peer_addr;
+  uint8_t *p;
+  sixp_pkt_t pkt;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  memset(&peer_addr, 0, sizeof(peer_addr));
+  peer_addr.u8[0] = 1;
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
+                                   TEST_SF_SFID, 0,
+                                   NULL, 0, NULL) == 0);
+  p = packetbuf_hdrptr();
+  p[0] |= 10; /* set version 10 which we doesn't support */
+  /* this 6P packet shouldn't be parsed */
+  UNIT_TEST_ASSERT(sixp_pkt_parse(packetbuf_hdrptr(), packetbuf_totlen(),
+                                  &pkt) == -1);
+
+  /* return RC_ERR_VERSION on receiving zero when nbr->seqno is non-zero */
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+  /*
+   * 2 octets for Termination 1 IE, one octet for 6top Sub-IE ID, and
+   * 2 octets for Payload IE Header.
+   */
+  p = packetbuf_hdrptr() + 5;
+  /* now, p pointes to the 6P header */
+  UNIT_TEST_ASSERT(packetbuf_totlen() == 11);
+  UNIT_TEST_ASSERT(p[0] == ((SIXP_PKT_TYPE_RESPONSE << 4) | SIXP_PKT_VERSION));
+  UNIT_TEST_ASSERT(p[1] == SIXP_PKT_RC_ERR_VERSION);
+  UNIT_TEST_ASSERT(p[2] == TEST_SF_SFID);
+  UNIT_TEST_ASSERT(p[3] == 0);
 
   UNIT_TEST_END();
 }
@@ -571,7 +736,6 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(test_input_no_sf);
   UNIT_TEST_RUN(test_input_busy);
   UNIT_TEST_RUN(test_input_no_memory);
-  UNIT_TEST_RUN(test_input_schedule_generation);
 
   UNIT_TEST_RUN(test_output_request_1);
   UNIT_TEST_RUN(test_output_request_2);
@@ -583,6 +747,14 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(test_output_confirmation_2);
   UNIT_TEST_RUN(test_output_confirmation_3);
   UNIT_TEST_RUN(test_output_confirmation_4);
+
+  /* testing for SeqNum Management */
+  UNIT_TEST_RUN(test_next_seqno_reset_by_clear_request_1);
+  UNIT_TEST_RUN(test_next_seqno_reset_by_clear_request_2);
+  UNIT_TEST_RUN(test_detect_seqno_error_1);
+  UNIT_TEST_RUN(test_detect_seqno_error_2);
+
+  UNIT_TEST_RUN(test_invalid_version);
 
   printf("=check-me= DONE\n");
   PROCESS_END();

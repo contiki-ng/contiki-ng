@@ -43,6 +43,7 @@
 
 #include "sixtop.h"
 #include "sixtop-conf.h"
+#include "sixp-nbr.h"
 #include "sixp-trans.h"
 
 /* Log configuration */
@@ -204,6 +205,8 @@ determine_trans_mode(const sixp_pkt_t *req)
 int
 sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
 {
+  sixp_nbr_t *nbr;
+
   assert(trans != NULL);
   if(trans == NULL) {
     LOG_ERR("6top: invalid argument, trans is NULL\n");
@@ -228,6 +231,34 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
       trans->mode == SIXP_TRANS_MODE_3_STEP)) {
     LOG_INFO("6P-trans: trans %p state changes from %u to %u\n",
              trans, trans->state, new_state);
+
+    if(new_state == SIXP_TRANS_STATE_REQUEST_SENT) {
+      /*
+       * that is, the request is acknowledged by the peer; increment
+       * next_seqno
+       */
+      if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
+        LOG_ERR("6top: cannot increment next_seqno\n");
+      } else {
+        if(trans->cmd == SIXP_PKT_CMD_CLEAR) {
+          /* next_seqno must have been reset to 0 already. */
+          assert(sixp_nbr_get_next_seqno(nbr) == 0);
+        } else {
+          sixp_nbr_increment_next_seqno(nbr);
+        }
+      }
+    } else if(new_state == SIXP_TRANS_STATE_RESPONSE_SENT) {
+      if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
+        LOG_ERR("6top: cannot update next_seqno\n");
+      } else {
+        /* override next_seqno with the received one unless it's zero */
+        if(trans->seqno != 0) {
+          sixp_nbr_set_next_seqno(nbr, trans->seqno);
+        }
+        sixp_nbr_increment_next_seqno(nbr);
+      }
+    }
+
     trans->state = new_state;
     schedule_trans_process(trans);
     return 0;

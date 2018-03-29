@@ -35,8 +35,10 @@
 #include "contiki-lib.h"
 #include "lib/assert.h"
 
+#include "net/packetbuf.h"
 #include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/sixtop/sixtop.h"
+#include "net/mac/tsch/sixtop/sixp-nbr.h"
 #include "net/mac/tsch/sixtop/sixp-trans.h"
 
 #include "unit-test/unit-test.h"
@@ -1075,6 +1077,84 @@ UNIT_TEST(test_state_transition_invalid_transition_responder)
   UNIT_TEST_END();
 }
 
+UNIT_TEST_REGISTER(test_next_seqno_increment_on_request_sent,
+                   "test next_seqno is incremented on request_sent");
+UNIT_TEST(test_next_seqno_increment_on_request_sent)
+{
+  linkaddr_t peer_addr;
+  sixp_nbr_t *nbr;
+  sixp_trans_t *trans;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  peer_addr.u8[0] = 1;
+
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_set_next_seqno(nbr, 10) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 10);
+
+  UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                               TEST_SF_SFID, NULL, 0, &peer_addr,
+                               NULL, NULL, 0) == 0);
+  /* next_seqno must not be changed by sixp_output() */
+  UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 10);
+  UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
+                                            SIXP_TRANS_STATE_REQUEST_SENT)
+                   == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 11);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_increment_on_response_sent,
+                   "test next_seqno is incremented on response_sent");
+UNIT_TEST(test_next_seqno_increment_on_response_sent)
+{
+  linkaddr_t peer_addr;
+  sixp_nbr_t *nbr;
+  sixp_trans_t *trans;
+  uint32_t body;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  peer_addr.u8[0] = 1;
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_set_next_seqno(nbr, 100) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 100);
+
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                   TEST_SF_SFID, 10,
+                                   (const uint8_t *)&body, sizeof(body), NULL)
+                   == 0);
+
+  UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) == NULL);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+  UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
+  /* next_seqno must not be changed yet */
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 100);
+  UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_RESPONSE,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                               TEST_SF_SFID, NULL, 0, &peer_addr,
+                               NULL, NULL, 0) == 0);
+  UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
+                                            SIXP_TRANS_STATE_RESPONSE_SENT)
+                   == 0);
+  /*
+   * next_seqno is overridden by the seqno of the request and
+   * incremented by 1
+   */
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 11);
+
+  UNIT_TEST_END();
+}
+
 PROCESS_THREAD(test_process, ev, data)
 {
   static struct etimer et;
@@ -1115,6 +1195,10 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(test_state_transition_3_step_responder);
   UNIT_TEST_RUN(test_state_transition_invalid_transition_initiator);
   UNIT_TEST_RUN(test_state_transition_invalid_transition_responder);
+
+  /* seqno management*/
+  UNIT_TEST_RUN(test_next_seqno_increment_on_request_sent);
+  UNIT_TEST_RUN(test_next_seqno_increment_on_response_sent);
 
   printf("=check-me= DONE\n");
   PROCESS_END();

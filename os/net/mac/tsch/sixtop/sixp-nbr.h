@@ -63,25 +63,26 @@ sixp_nbr_t *sixp_nbr_alloc(const linkaddr_t *addr);
 void sixp_nbr_free(sixp_nbr_t *nbr);
 
 /**
- * \brief Return GEN (Generation Number) of a neighbor
- * \param nbr The pointer to a neighbor
- * \return A value of GEN, -1 on failure
- */
-int16_t sixp_nbr_get_gen(sixp_nbr_t *nbr);
-
-/**
- * \brief Advance GTX of a neighbor
- * \param nbr The pointer to a neighbor
- * \return 0 on success, -1 on failure
- */
-int sixp_nbr_advance_gen(sixp_nbr_t *nbr);
-
-/**
  * \brief Get the next sequence number of a neighbor
  * \param nbr The pointer to a neighbor
  * \return A sequence number to use for a next request, -1 on failure
  */
 int16_t sixp_nbr_get_next_seqno(sixp_nbr_t *nbr);
+
+/**
+ * \brief Set the specified value to the next sequence number of a neighbor
+ * \param nbr The pointer to a neighbor
+ * \param seqno Value to be set
+ * \return 0 on success, -1 on failure
+ */
+int sixp_nbr_set_next_seqno(sixp_nbr_t *nbr, uint16_t seqno);
+
+/**
+ * \brief Reset the next sequence number of a neighbor to zero
+ * \param nbr The pointer to a neighbor
+ * \return 0 on success, -1 on failure
+ */
+int sixp_nbr_reset_next_seqno(sixp_nbr_t *nbr);
 
 /**
  * \brief Increment the next sequence number of a neighbor
