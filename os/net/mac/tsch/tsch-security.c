@@ -44,11 +44,6 @@
 
 #include "contiki.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-packet.h"
-#include "net/mac/tsch/tsch-private.h"
-#include "net/mac/tsch/tsch-schedule.h"
-#include "net/mac/tsch/tsch-security.h"
-#include "net/mac/tsch/tsch-log.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/netstack.h"

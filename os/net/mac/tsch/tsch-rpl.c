@@ -46,10 +46,6 @@
 
 #include "net/routing/routing.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-private.h"
-#include "net/mac/tsch/tsch-schedule.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-rpl.h"
 #include "net/link-stats.h"
 
 #if ROUTING_CONF_RPL_LITE

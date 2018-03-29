@@ -35,7 +35,7 @@
 #include "contiki-lib.h"
 #include "lib/assert.h"
 
-#include "net/mac/tsch/tsch-packet.h"
+#include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/sixtop/sixp-pkt.h"
 
 #include "unit-test/unit-test.h"

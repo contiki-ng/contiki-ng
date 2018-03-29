@@ -39,7 +39,6 @@
 #include "net/routing/routing.h"
 #include "simple-udp.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-schedule.h"
 #include "net/netstack.h"
 #include "dev/slip.h"
 #include "coap-engine.h"

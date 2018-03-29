@@ -39,8 +39,6 @@
 #define __ORCHESTRA_H__
 
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-conf.h"
-#include "net/mac/tsch/tsch-schedule.h"
 #include "orchestra-conf.h"
 
 /* The structure of an Orchestra rule */

@@ -54,15 +54,6 @@
 #include "net/link-stats.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-slot-operation.h"
-#include "net/mac/tsch/tsch-queue.h"
-#include "net/mac/tsch/tsch-private.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-packet.h"
-#include "net/mac/tsch/tsch-security.h"
-#if UIP_CONF_IPV6_RPL
-#include "net/mac/tsch/tsch-rpl.h"
-#endif /* UIP_CONF_IPV6_RPL */
 #include "net/mac/mac-sequence.h"
 #include "lib/random.h"
 #include "net/routing/routing.h"
