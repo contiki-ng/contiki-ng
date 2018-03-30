@@ -429,9 +429,3 @@ slip_input_byte(unsigned char c)
   return error_return_code;
 }
 /*---------------------------------------------------------------------------*/
-int
-putchar(int c)
-{
-  uart0_writeb(c);
-  return 1;
-}
