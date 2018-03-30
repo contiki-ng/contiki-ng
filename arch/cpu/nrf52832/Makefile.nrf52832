@@ -182,7 +182,7 @@ nrf52832.a: $(OBJECTS)
 
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
-	@echo Compiling file: $(notdir $<)
+	$(TRACE_CC)
 	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
 
 %.jlink:
