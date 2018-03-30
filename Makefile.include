@@ -10,6 +10,8 @@ WERROR ?= 1
 
 include $(CONTIKI)/Makefile.identify-target
 
+CONTIKI_NG_TARGET_LIB = contiki-ng-$(TARGET).a
+
 ifeq ($(DEFINES),)
   -include Makefile.$(TARGET).defines
   ifneq ($(DEFINES),)
@@ -355,7 +357,7 @@ ifndef AROPTS
 endif
 
 ifndef CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
-contiki-$(TARGET).a: $(CONTIKI_OBJECTFILES)
+$(CONTIKI_NG_TARGET_LIB): $(CONTIKI_OBJECTFILES)
 	$(TRACE_AR)
 	$(Q)$(AR) $(AROPTS) $@ $^
 endif
@@ -365,7 +367,7 @@ ifndef LD
 endif
 
 ifndef CUSTOM_RULE_LINK
-%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
 	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
