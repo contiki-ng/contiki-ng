@@ -300,8 +300,11 @@ clean:
 	-rm -f $(addsuffix -$(TARGET).map, $(CONTIKI_PROJECT))
 	-rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
 
-distclean: clean
-	-rm -f ${addsuffix .$(TARGET),$(CONTIKI_PROJECT)}
+distclean:
+	@for TARG in `ls $(CONTIKI)/arch/platform $(TARGETDIRS)`; do \
+		echo make $$TARG clean; \
+		make TARGET=$$TARG clean; \
+	done
 
 -include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
 
