@@ -269,16 +269,6 @@ typedef uint32_t clock_time_t;
 #endif
 #define ENABLE_ADVANCED_BAUD_SELECTION (UART_BAUD_RATE > UART_RATE_115200)
 
-/* Set this to zero only if we are using SLIP */
-#ifndef SLIP_BRIDGE_CONF_NO_PUTCHAR
-#if defined(UIP_FALLBACK_INTERFACE) || defined(CMD_CONF_OUTPUT)
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR      0
-#else
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR      1
-#endif
-#endif /* SLIP_BRIDGE_CONF_NO_PUTCHAR */
-
-
 /* Extension of LED definitions from leds.h for various JN516x dev boards
 JN516x Dongle:
     LEDS_RED        Red LED on dongle
