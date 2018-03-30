@@ -384,7 +384,25 @@ endif
 	$(NM) -S -td --size-sort $< | grep -i " [t] " | cut -d' ' -f2,4
 
 usage:
-	@echo "make MAKETARGETS... [TARGET=(TARGET)] [BOARD=(BOARD)] [savetarget] [targets]"
+	@echo "Usage:"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [DEFINES=(DEFINES)] [target]"
+	@echo ""
+	@echo "Typical usage:"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [all]"
+	@echo ""
+	@echo "    Will build Contiki-NG firmware(s) from the current example dir"
+	@echo "    for platform TARGET, board BOARD."
+	@echo ""
+	@echo "Miscellaneous targets:"
+	@echo "    targets         Prints list of supported platforms"
+	@echo "    boards          Prints a list of supported boards for TARGET"
+	@echo "    savegtarget     Saves TARGET and BOARD for future invocations of make"
+	@echo "    savedefines     Saves DEFINES for future invocations of make"
+	@echo "    clean           Removes all compiled files for TARGET"
+	@echo "    distclean       Removes all compiled files for all TARGETs"
+	@echo "    viewconf        Prints Contiki-NG build configuration for TARGET"
+
+help: usage
 
 targets:
 	@ls $(CONTIKI)/arch/platform $(TARGETDIRS)
