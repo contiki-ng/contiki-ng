@@ -220,7 +220,7 @@ $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
 %.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
 	java -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
 
-mspsim-maptable:	contiki-${TARGET}.map
+%.mspsim-maptable: %.$(TARGET)
 	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
 
 core-labels.o: core.${TARGET}
