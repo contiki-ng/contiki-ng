@@ -16,6 +16,8 @@ coap/zoul \
 multicast/zoul \
 ipso-objects/zoul \
 ipso-objects/zoul:MAKE_WITH_DTLS=1 \
+ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1 \
+ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 hello-world/zoul \
 sensniff/zoul \
 sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \

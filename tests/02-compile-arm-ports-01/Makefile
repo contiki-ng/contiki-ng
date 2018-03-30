@@ -41,6 +41,8 @@ rpl-udp/cc2538dk \
 coap/cc2538dk \
 slip-radio/cc2538dk \
 ipso-objects/cc2538dk \
+ipso-objects/cc2538dk:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1 \
+ipso-objects/native:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 multicast/cc2538dk \
 dev/gpio-hal/cc2538dk \
 dev/leds/cc2538dk \
