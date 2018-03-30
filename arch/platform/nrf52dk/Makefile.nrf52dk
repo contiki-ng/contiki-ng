@@ -19,8 +19,6 @@ CONTIKI_CPU_DIRS += ../arm/common/dbg-io
 CONTIKI_CPU_SOURCEFILES += dbg-printf.c dbg-putchar.c dbg-snprintf.c dbg-sprintf.c strformat.c
 endif
 
-CLEAN += *.nrf52dk
-
 ### Unless the example dictates otherwise, build with code size optimisations switched off
 SMALL ?= 0
 

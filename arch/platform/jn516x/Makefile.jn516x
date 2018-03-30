@@ -140,7 +140,6 @@ ifdef nodemac
 CFLAGS += -DMACID=$(nodemac)
 endif
 
-CLEAN += *.jn516x
 CLEAN += *.jn516x.bin
 
 CONTIKI_TARGET_SOURCEFILES += $(ARCH)

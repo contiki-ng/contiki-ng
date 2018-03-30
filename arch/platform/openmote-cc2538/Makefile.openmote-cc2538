@@ -20,8 +20,6 @@ CONTIKI_TARGET_SOURCEFILES += antenna.c adxl346.c max44009.c sht21.c tps62730.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
-CLEAN += *.openmote-cc2538
-
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538

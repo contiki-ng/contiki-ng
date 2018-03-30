@@ -184,6 +184,9 @@ CFLAGS  += $(CFLAGSNO)
 
 PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
 
+### CPU-dependent cleanup files
+CLEAN += *.firmware *.ihex
+
 ### Compilation rules
 
 %-stripped.o: %.c

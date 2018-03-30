@@ -295,11 +295,10 @@ endef
 CONTIKI_NG_PROJECT_MAP = $(addsuffix -$(TARGET).map, $(basename $@))
 
 clean:
-	-rm -f *~ *core core *.srec \
-	*.lst *.map *.o \
-	*.cprg *.bin *.data contiki*.a *.firmware core-labels.S *.ihex *.ini \
-	rm -rf $(CLEAN)
+	-rm -f *.d *.e *.o $(CONTIKI_NG_TARGET_LIB) $(CLEAN)
 	-rm -rf $(OBJECTDIR)
+	-rm -f $(addsuffix -$(TARGET).map, $(CONTIKI_PROJECT))
+	-rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
 
 distclean: clean
 	-rm -f ${addsuffix .$(TARGET),$(CONTIKI_PROJECT)}
