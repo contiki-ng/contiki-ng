@@ -37,34 +37,32 @@
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  *
  */
-/*---------------------------------------------------------------------------*/
-#include <string.h>
 #include "dev/uart0.h"
 /*---------------------------------------------------------------------------*/
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
+{
+  unsigned int i = 0;
+
+  while (s && *s != 0) {
+    if (i >= len) {
+      break;
+    }
+    uart0_writeb(*s++);
+    i++;
+  }
+
+  return i;
+}
+/*---------------------------------------------------------------------------*/
 int
-putchar(int c)
+dbg_putchar(int c)
 {
   uart0_writeb(c);
   return c;
 }
 /*---------------------------------------------------------------------------*/
-int
-puts(const char *str)
-{
-  int i;
-
-  if (str == NULL) {
-    return 0;
-  }
-
-  for (i = 0; i < strlen(str); i++) {
-    uart0_writeb(str[i]);
-  }
-
-  uart0_writeb('\n');
-  return i;
-}
-/*---------------------------------------------------------------------------*/
 /**
+ * @}
  * @}
  */

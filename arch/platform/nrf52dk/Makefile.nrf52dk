@@ -13,7 +13,6 @@ ifeq ($(NRF52_USE_RTT),1)
 CONTIKI_TARGET_DIRS += rtt
 CONTIKI_SOURCEFILES += rtt-printf.c segger-rtt.c segger-rtt-printf.c
 else
-CONTIKI_TARGET_DIRS += dbg-io
 CONTIKI_SOURCEFILES += dbg.c
 MODULES += os/lib/dbg-io
 endif
