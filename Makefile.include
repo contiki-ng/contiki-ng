@@ -294,6 +294,8 @@ endef
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(addsuffix -$(TARGET).map, $(basename $@))
 
+.PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
+
 clean:
 	-rm -f *.d *.e *.o $(CONTIKI_NG_TARGET_LIB) $(CLEAN)
 	-rm -rf $(OBJECTDIR)
