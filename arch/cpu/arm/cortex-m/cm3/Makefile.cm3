@@ -5,7 +5,7 @@ CFLAGS += -mcpu=cortex-m3
 LDFLAGS += -mcpu=cortex-m3 -nostartfiles
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
-LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map),--cref,--no-warn-mismatch
+LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),--cref,--no-warn-mismatch
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 

@@ -288,6 +288,10 @@ sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 rm -f $(@:.o=.$$$$)
 endef
 
+### Harmonize filename of a .map file, if the platform's build system wants
+### to create one
+CONTIKI_NG_PROJECT_MAP = $(addsuffix -$(TARGET).map, $(basename $@))
+
 clean:
 	-rm -f *~ *core core *.srec \
 	*.lst *.map *.o \
