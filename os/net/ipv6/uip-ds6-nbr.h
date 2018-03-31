@@ -63,8 +63,6 @@
 #define  NBR_DELAY 3
 #define  NBR_PROBE 4
 
-NBR_TABLE_DECLARE(ds6_neighbors);
-
 /** \brief An entry in the nbr cache */
 typedef struct uip_ds6_nbr {
   uip_ipaddr_t ipaddr;

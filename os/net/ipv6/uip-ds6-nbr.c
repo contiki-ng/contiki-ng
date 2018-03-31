@@ -60,7 +60,7 @@
 #define LOG_MODULE "IPv6 Nbr"
 #define LOG_LEVEL LOG_LEVEL_IPV6
 
-NBR_TABLE_GLOBAL(uip_ds6_nbr_t, ds6_neighbors);
+NBR_TABLE(uip_ds6_nbr_t, ds6_neighbors);
 
 /*---------------------------------------------------------------------------*/
 void
