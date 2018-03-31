@@ -37,7 +37,9 @@
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
-
+/*---------------------------------------------------------------------------*/
+#include "native-def.h"
+/*---------------------------------------------------------------------------*/
 #include <inttypes.h>
 #ifndef WIN32_LEAN_AND_MEAN
 #include <sys/select.h>
