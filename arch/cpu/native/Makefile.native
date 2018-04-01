@@ -20,7 +20,7 @@ CFLAGSNO = -Wall -g -I/usr/local/include $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
 
 ifeq ($(HOST_OS),Darwin)
-AROPTS = -r
+AROPTS = -rc
 LDFLAGS += -Wl,-flat_namespace,-map,$(CONTIKI_NG_PROJECT_MAP)
 CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
 else
