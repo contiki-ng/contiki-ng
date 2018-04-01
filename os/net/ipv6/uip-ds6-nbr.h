@@ -54,6 +54,10 @@
 #if UIP_CONF_IPV6_QUEUE_PKT
 #include "net/ipv6/uip-packetqueue.h"
 #endif                          /*UIP_CONF_QUEUE_PKT */
+#if UIP_DS6_NBR_CONF_MULTI_IPV6_ADDRS
+#include "lib/assert.h"
+#include "lib/list.h"
+#endif
 
 /*--------------------------------------------------*/
 /** \brief Possible states for the nbr cache entries */
@@ -63,8 +67,32 @@
 #define  NBR_DELAY 3
 #define  NBR_PROBE 4
 
+#ifdef UIP_DS6_NBR_CONF_MULTI_IPV6_ADDRS
+#define UIP_DS6_NBR_MULTI_IPV6_ADDRS UIP_DS6_NBR_CONF_MULTI_IPV6_ADDRS
+#else
+#define UIP_DS6_NBR_MULTI_IPV6_ADDRS 0
+#endif /* UIP_DS6_NBR_CONF_MULTI_IPV6_ADDRS */
+
+#ifdef UIP_DS6_NBR_CONF_MAX_NEIGHBOR_CACHES
+#define UIP_DS6_NBR_MAX_NEIGHBOR_CACHES UIP_DS6_NBR_CONF_MAX_NEIGHBOR_CACHES
+#else
+#define UIP_DS6_NBR_MAX_NEIGHBOR_CACHES NBR_TABLE_MAX_NEIGHBORS
+#endif /* UIP_DS6_NBR_CONF_MAX_NEIGHBOR_CACHES */
+
+
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+/** \brief An nbr_table entry for neighbor caches */
+typedef struct {
+  LIST_STRUCT(uip_ds6_nbrs);
+} uip_ds6_nbr_entry_t;
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
+
 /** \brief An entry in the nbr cache */
 typedef struct uip_ds6_nbr {
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  struct uip_ds6_nbr *next;
+  uip_ds6_nbr_entry_t *nbr_entry;
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
   uip_ipaddr_t ipaddr;
   uint8_t isrouter;
   uint8_t state;
