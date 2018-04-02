@@ -97,7 +97,11 @@ leds_toggle(leds_mask_t ledv)
 /*---------------------------------------------------------------------------*/
 #else /* LEDS_LEGACY_API */
 /*---------------------------------------------------------------------------*/
+#if LEDS_COUNT
 extern const leds_t leds_arch_leds[];
+#else
+static const leds_t *leds_arch_leds = NULL;
+#endif
 /*---------------------------------------------------------------------------*/
 void
 leds_init()

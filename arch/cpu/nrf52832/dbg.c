@@ -28,25 +28,39 @@
  *
  */
 /**
- * \addtogroup nrf52dk
- * @{
- *
- * \addtogroup nrf52dk-dbg-io Debug IO over UART
+ * \addtogroup nrf52832
  * @{
  *
  * \file
- *      A header file to maintain compatibility with DBG I/O.
+ *         Hardware specific implementation of putchar() and puts() functions.
  * \author
- *      Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  *
  */
+#include "dev/uart0.h"
 /*---------------------------------------------------------------------------*/
-#ifndef DEBUG_UART_H_
-#define DEBUG_UART_H_
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
+{
+  unsigned int i = 0;
+
+  while (s && *s != 0) {
+    if (i >= len) {
+      break;
+    }
+    uart0_writeb(*s++);
+    i++;
+  }
+
+  return i;
+}
 /*---------------------------------------------------------------------------*/
-#include "dbg.h"
-/*---------------------------------------------------------------------------*/
-#endif /* DEBUG_UART_H_ */
+int
+dbg_putchar(int c)
+{
+  uart0_writeb(c);
+  return c;
+}
 /*---------------------------------------------------------------------------*/
 /**
  * @}
