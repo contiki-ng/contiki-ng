@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,20 +28,34 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * \addtogroup cc2538-char-io
- * @{
- *
- * \file
- * This file is here because DBG I/O expects it to be. It just includes
- * our own dbg.h which has a non-misleading name and which also adheres
- * to Contiki's naming convention
- */
-#ifndef DEBUG_UART_H_
-#define DEBUG_UART_H_
+/*---------------------------------------------------------------------------*/
+#ifndef STRFORMAT_H_
+#define STRFORMAT_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
 
-#include "dbg.h"
+#include <stdarg.h>
+/*---------------------------------------------------------------------------*/
+#define STRFORMAT_OK 0
+#define STRFORMAT_FAILED 1
+/*---------------------------------------------------------------------------*/
+typedef unsigned int strformat_result;
+/*---------------------------------------------------------------------------*/
+/* The data argument may only be considered valid during the function call */
+typedef strformat_result (*strformat_write)(void *user_data,
+                                            const char *data,
+                                            unsigned int len);
 
-#endif /* DEBUG_UART_H_ */
-
-/** @} */
+typedef struct strformat_context_s {
+  strformat_write write_str;
+  void *user_data;
+} strformat_context_t;
+/*---------------------------------------------------------------------------*/
+int format_str(const strformat_context_t *ctxt, const char *format, ...)
+     __attribute__ ((__format__ (__printf__, 2,3)));
+     
+int
+format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap);
+/*---------------------------------------------------------------------------*/
+#endif /* STRFORMAT_H_ */
+/*---------------------------------------------------------------------------*/

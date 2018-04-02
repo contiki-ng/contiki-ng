@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,58 +29,32 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "cc26xx-uart.h"
-#include "ti-lib.h"
+#include "contiki.h"
 
+#include <stdio.h>
+#include <strformat.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-int
-putchar(int c)
+static strformat_result
+buffer_str(void *user_data, const char *data, unsigned int len)
 {
-  cc26xx_uart_write_byte(c);
-  return c;
+  memcpy(*(char **)user_data, data, len);
+  (*(char **)user_data) += len;
+  return STRFORMAT_OK;
 }
 /*---------------------------------------------------------------------------*/
 int
-puts(const char *str)
+sprintf(char *str, const char *format, ...)
 {
-  int i;
-  if(str == NULL) {
-    return 0;
-  }
-  for(i = 0; i < strlen(str); i++) {
-    cc26xx_uart_write_byte(str[i]);
-  }
-  cc26xx_uart_write_byte('\n');
-
-  /*
-   * Wait for the line to go out. This is to prevent garbage when used between
-   * UART on/off cycles
-   */
-  while(cc26xx_uart_busy() == UART_BUSY);
-
-  return i;
-}
-/*---------------------------------------------------------------------------*/
-unsigned int
-dbg_send_bytes(const unsigned char *s, unsigned int len)
-{
-  unsigned int i = 0;
-
-  while(s && *s != 0) {
-    if(i >= len) {
-      break;
-    }
-    cc26xx_uart_write_byte(*s++);
-    i++;
-  }
-
-  /*
-   * Wait for the buffer to go out. This is to prevent garbage when used
-   * between UART on/off cycles
-   */
-  while(cc26xx_uart_busy() == UART_BUSY);
-
-  return i;
+  strformat_context_t ctxt;
+  int res;
+  va_list ap;
+  va_start(ap, format);
+  ctxt.write_str = buffer_str;
+  ctxt.user_data = &str;
+  res = format_str_v(&ctxt, format, ap);
+  *str = '\0';
+  va_end(ap);
+  return res;
 }
 /*---------------------------------------------------------------------------*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,49 +28,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
+#include "cc26xx-uart.h"
+#include "ti-lib.h"
 
-#include "dev/uart.h"
-#include "usb/usb-serial.h"
-
-#include <stdio.h>
-/*---------------------------------------------------------------------------*/
-#ifndef DBG_CONF_USB
-#define DBG_CONF_USB 0
-#endif
-
-#if DBG_CONF_USB
-#define write_byte(b) usb_serial_writeb(b)
-#define flush()       usb_serial_flush()
-#else
-#define write_byte(b) uart_write_byte(DBG_CONF_UART, b)
-#define flush()
-#endif
-/*---------------------------------------------------------------------------*/
-#define SLIP_END     0300
+#include <string.h>
 /*---------------------------------------------------------------------------*/
 int
 dbg_putchar(int c)
 {
-#if DBG_CONF_SLIP_MUX
-  static char debug_frame = 0;
-
-  if(!debug_frame) {
-    write_byte(SLIP_END);
-    write_byte('\r');
-    debug_frame = 1;
-  }
-#endif
-
-  write_byte(c);
-
-  if(c == '\n') {
-#if DBG_CONF_SLIP_MUX
-    write_byte(SLIP_END);
-    debug_frame = 0;
-#endif
-    flush();
-  }
+  cc26xx_uart_write_byte(c);
   return c;
 }
 /*---------------------------------------------------------------------------*/
@@ -84,9 +49,16 @@ dbg_send_bytes(const unsigned char *s, unsigned int len)
     if(i >= len) {
       break;
     }
-    putchar(*s++);
+    cc26xx_uart_write_byte(*s++);
     i++;
   }
+
+  /*
+   * Wait for the buffer to go out. This is to prevent garbage when used
+   * between UART on/off cycles
+   */
+  while(cc26xx_uart_busy() == UART_BUSY);
+
   return i;
 }
 /*---------------------------------------------------------------------------*/
