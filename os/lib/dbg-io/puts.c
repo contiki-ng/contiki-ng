@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,21 +29,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc26xx-char-io
- * @{
- *
- * \file
- * This file is here because DBG I/O expects it to be. It just includes
- * our own dbg.h which has a non-misleading name and which also adheres
- * to Contiki's naming convention
- */
+#include "contiki.h"
+#include "lib/dbg-io/dbg.h"
+
+#include <stdio.h>
+#include <string.h>
 /*---------------------------------------------------------------------------*/
-#ifndef DEBUG_UART_H_
-#define DEBUG_UART_H_
+int
+puts(const char *str)
+{
+  dbg_send_bytes((unsigned char *)str, strlen(str));
+  dbg_putchar('\n');
+  return 0;
+}
 /*---------------------------------------------------------------------------*/
-#include "dbg.h"
-/*---------------------------------------------------------------------------*/
-#endif /* DEBUG_UART_H_ */
-/*---------------------------------------------------------------------------*/
-/** @} */

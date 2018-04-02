@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -30,63 +30,35 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
-#include "dev/uart.h"
-#include "usb/usb-serial.h"
+#include "lib/dbg-io/dbg.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <strformat.h>
 /*---------------------------------------------------------------------------*/
-#ifndef DBG_CONF_USB
-#define DBG_CONF_USB 0
-#endif
-
-#if DBG_CONF_USB
-#define write_byte(b) usb_serial_writeb(b)
-#define flush()       usb_serial_flush()
-#else
-#define write_byte(b) uart_write_byte(DBG_CONF_UART, b)
-#define flush()
-#endif
-/*---------------------------------------------------------------------------*/
-#define SLIP_END     0300
-/*---------------------------------------------------------------------------*/
-int
-dbg_putchar(int c)
+static strformat_result
+write_str(void *user_data, const char *data, unsigned int len)
 {
-#if DBG_CONF_SLIP_MUX
-  static char debug_frame = 0;
-
-  if(!debug_frame) {
-    write_byte(SLIP_END);
-    write_byte('\r');
-    debug_frame = 1;
+  if(len > 0) {
+    dbg_send_bytes((unsigned char *)data, len);
   }
-#endif
-
-  write_byte(c);
-
-  if(c == '\n') {
-#if DBG_CONF_SLIP_MUX
-    write_byte(SLIP_END);
-    debug_frame = 0;
-#endif
-    flush();
-  }
-  return c;
+  return STRFORMAT_OK;
 }
 /*---------------------------------------------------------------------------*/
-unsigned int
-dbg_send_bytes(const unsigned char *s, unsigned int len)
+static strformat_context_t ctxt =
 {
-  unsigned int i = 0;
-
-  while(s && *s != 0) {
-    if(i >= len) {
-      break;
-    }
-    putchar(*s++);
-    i++;
-  }
-  return i;
+  write_str,
+  NULL
+};
+/*---------------------------------------------------------------------------*/
+int
+printf(const char *fmt, ...)
+{
+  int res;
+  va_list ap;
+  va_start(ap, fmt);
+  res = format_str_v(&ctxt, fmt, ap);
+  va_end(ap);
+  return res;
 }
 /*---------------------------------------------------------------------------*/
