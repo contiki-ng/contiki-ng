@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,62 +28,56 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * \addtogroup cc2538
- * @{
- *
- * \defgroup cc2538-char-io cc2538 Character I/O
- *
- * CPU-specific functions for debugging and SLIP I/O
- *
- * On the cc2538, character I/O can be directed over USB or UART. This is
- * controlled by a series of configuration directives:
- * - SLIP_ARCH_CONF_USB: Controls the operation of slip-arch.
- * - DBG_CONF_USB: Controls all debugging output
- *
- * Defaults for those defines are set in contiki-conf.h
- * @{
- *
- * \file
- * Header file for the cc2538 Debug I/O module
- */
-#ifndef DBG_H_
-#define DBG_H_
-
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 
-#include "usb/usb-serial.h"
-/**
- * \brief Print a stream of bytes
- * \param seq A pointer to the stream
- * \param len The number of bytes to print
- * \return The number of printed bytes
- *
- * This function is an arch-specific implementation required by the dbg-io
- * API in cpu/arm/common/dbg-io. It prints a stream of bytes over the
- * peripheral used by the platform.
- */
-unsigned int dbg_send_bytes(const unsigned char *seq, unsigned int len);
+#include <stdio.h>
+#include <strformat.h>
+#include <string.h>
+/*---------------------------------------------------------------------------*/
+struct fmt_buffer {
+  char *pos;
+  size_t left;
+};
+/*---------------------------------------------------------------------------*/
+static strformat_result
+buffer_str(void *user_data, const char *data, unsigned int len)
+{
+  struct fmt_buffer *buffer = (struct fmt_buffer *)user_data;
+  if(len >= buffer->left) {
+    len = buffer->left;
+    len--;
+  }
 
-/**
- * \brief Flushes character output
- *
- *        When debugging is sent over USB, this functions causes the USB
- *        driver to immediately TX the content of output buffers. When
- *        debugging is over UART, this function does nothing.
- *
- *        There is nothing stopping you from using this macro in your code but
- *        normally, you won't have to.
- */
-#if DBG_CONF_USB
-#define dbg_flush() usb_serial_flush()
-#else
-#define dbg_flush()
-#endif
-
-#endif /* DBG_H_ */
-
-/**
- * @}
- * @}
- */
+  memcpy(buffer->pos, data, len);
+  buffer->pos += len;
+  buffer->left -= len;
+  return STRFORMAT_OK;
+}
+/*---------------------------------------------------------------------------*/
+int
+snprintf(char *str, size_t size, const char *format, ...)
+{
+  int res;
+  va_list ap;
+  va_start(ap, format);
+  res = vsnprintf(str, size, format, ap);
+  va_end(ap);
+  return res;
+}
+/*---------------------------------------------------------------------------*/
+int
+vsnprintf(char *str, size_t size, const char *format, va_list ap)
+{
+  struct fmt_buffer buffer;
+  strformat_context_t ctxt;
+  int res;
+  ctxt.write_str = buffer_str;
+  ctxt.user_data = &buffer;
+  buffer.pos = str;
+  buffer.left = size;
+  res = format_str_v(&ctxt, format, ap);
+  *buffer.pos = '\0';
+  return res;
+}
+/*---------------------------------------------------------------------------*/

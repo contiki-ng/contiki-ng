@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -29,75 +28,37 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup gpio-hal
- * @{
- *
- * \file
- *     Implementation of the platform-independent aspects of the GPIO HAL
- */
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "dev/gpio-hal.h"
-#include "lib/list.h"
-#include "sys/log.h"
+#include "cc26xx-uart.h"
+#include "ti-lib.h"
 
-#include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#define LOG_MODULE "GPIO HAL"
-#define LOG_LEVEL LOG_LEVEL_NONE
-/*---------------------------------------------------------------------------*/
-LIST(handlers);
-/*---------------------------------------------------------------------------*/
-void
-gpio_hal_register_handler(gpio_hal_event_handler_t *handler)
+int
+dbg_putchar(int c)
 {
-  list_add(handlers, handler);
+  cc26xx_uart_write_byte(c);
+  return c;
 }
 /*---------------------------------------------------------------------------*/
-void
-gpio_hal_event_handler(gpio_hal_pin_mask_t pins)
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
 {
-  gpio_hal_event_handler_t *this;
+  unsigned int i = 0;
 
-  for(this = list_head(handlers); this != NULL; this = this->next) {
-    if(pins & this->pin_mask) {
-      if(this->handler != NULL) {
-        this->handler(pins & this->pin_mask);
-      }
+  while(s && *s != 0) {
+    if(i >= len) {
+      break;
     }
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-gpio_hal_init()
-{
-  list_init(handlers);
-}
-/*---------------------------------------------------------------------------*/
-#if GPIO_HAL_ARCH_SW_TOGGLE
-/*---------------------------------------------------------------------------*/
-void
-gpio_hal_arch_toggle_pin(gpio_hal_pin_t pin)
-{
-  if(pin >= GPIO_HAL_PIN_COUNT) {
-    LOG_ERR("Pin %u out of bounds\n", pin);
-    return;
+    cc26xx_uart_write_byte(*s++);
+    i++;
   }
 
-  gpio_hal_arch_write_pin(pin, gpio_hal_arch_read_pin(pin) ^ 1);
+  /*
+   * Wait for the buffer to go out. This is to prevent garbage when used
+   * between UART on/off cycles
+   */
+  while(cc26xx_uart_busy() == UART_BUSY);
+
+  return i;
 }
 /*---------------------------------------------------------------------------*/
-void
-gpio_hal_arch_toggle_pins(gpio_hal_pin_mask_t pins)
-{
-  gpio_hal_arch_write_pins(pins, ~gpio_hal_arch_read_pins(pins));
-}
-/*---------------------------------------------------------------------------*/
-#endif /* GPIO_HAL_ARCH_SW_TOGGLE */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- */
