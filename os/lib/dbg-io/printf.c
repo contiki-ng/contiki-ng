@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,75 +29,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup gpio-hal
- * @{
- *
- * \file
- *     Implementation of the platform-independent aspects of the GPIO HAL
- */
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio-hal.h"
-#include "lib/list.h"
-#include "sys/log.h"
+#include "lib/dbg-io/dbg.h"
 
-#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+#include <strformat.h>
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#define LOG_MODULE "GPIO HAL"
-#define LOG_LEVEL LOG_LEVEL_NONE
-/*---------------------------------------------------------------------------*/
-LIST(handlers);
-/*---------------------------------------------------------------------------*/
-void
-gpio_hal_register_handler(gpio_hal_event_handler_t *handler)
+static strformat_result
+write_str(void *user_data, const char *data, unsigned int len)
 {
-  list_add(handlers, handler);
-}
-/*---------------------------------------------------------------------------*/
-void
-gpio_hal_event_handler(gpio_hal_pin_mask_t pins)
-{
-  gpio_hal_event_handler_t *this;
-
-  for(this = list_head(handlers); this != NULL; this = this->next) {
-    if(pins & this->pin_mask) {
-      if(this->handler != NULL) {
-        this->handler(pins & this->pin_mask);
-      }
-    }
+  if(len > 0) {
+    dbg_send_bytes((unsigned char *)data, len);
   }
+  return STRFORMAT_OK;
 }
 /*---------------------------------------------------------------------------*/
-void
-gpio_hal_init()
+static strformat_context_t ctxt =
 {
-  list_init(handlers);
-}
+  write_str,
+  NULL
+};
 /*---------------------------------------------------------------------------*/
-#if GPIO_HAL_ARCH_SW_TOGGLE
-/*---------------------------------------------------------------------------*/
-void
-gpio_hal_arch_toggle_pin(gpio_hal_pin_t pin)
+int
+printf(const char *fmt, ...)
 {
-  if(pin >= GPIO_HAL_PIN_COUNT) {
-    LOG_ERR("Pin %u out of bounds\n", pin);
-    return;
-  }
-
-  gpio_hal_arch_write_pin(pin, gpio_hal_arch_read_pin(pin) ^ 1);
+  int res;
+  va_list ap;
+  va_start(ap, fmt);
+  res = format_str_v(&ctxt, fmt, ap);
+  va_end(ap);
+  return res;
 }
 /*---------------------------------------------------------------------------*/
-void
-gpio_hal_arch_toggle_pins(gpio_hal_pin_mask_t pins)
-{
-  gpio_hal_arch_write_pins(pins, ~gpio_hal_arch_read_pins(pins));
-}
-/*---------------------------------------------------------------------------*/
-#endif /* GPIO_HAL_ARCH_SW_TOGGLE */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- */

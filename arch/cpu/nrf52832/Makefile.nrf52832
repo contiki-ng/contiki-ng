@@ -54,7 +54,7 @@ remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-ou
 CONTIKI_CPU_DIRS += . dev ble #compat
 
 ### CPU-dependent source files
-CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c putchar.c watchdog.c
+CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c
 CONTIKI_CPU_SOURCEFILES += int-master.c
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
