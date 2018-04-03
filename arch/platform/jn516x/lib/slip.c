@@ -429,11 +429,9 @@ slip_input_byte(unsigned char c)
   return error_return_code;
 }
 /*---------------------------------------------------------------------------*/
-#if SLIP_BRIDGE_CONF_NO_PUTCHAR
 int
 putchar(int c)
 {
   uart0_writeb(c);
   return 1;
 }
-#endif
