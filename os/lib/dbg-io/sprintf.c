@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,20 +28,33 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * \addtogroup cc2538-char-io
- * @{
- *
- * \file
- * This file is here because DBG I/O expects it to be. It just includes
- * our own dbg.h which has a non-misleading name and which also adheres
- * to Contiki's naming convention
- */
-#ifndef DEBUG_UART_H_
-#define DEBUG_UART_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
 
-#include "dbg.h"
-
-#endif /* DEBUG_UART_H_ */
-
-/** @} */
+#include <stdio.h>
+#include <strformat.h>
+#include <string.h>
+/*---------------------------------------------------------------------------*/
+static strformat_result
+buffer_str(void *user_data, const char *data, unsigned int len)
+{
+  memcpy(*(char **)user_data, data, len);
+  (*(char **)user_data) += len;
+  return STRFORMAT_OK;
+}
+/*---------------------------------------------------------------------------*/
+int
+sprintf(char *str, const char *format, ...)
+{
+  strformat_context_t ctxt;
+  int res;
+  va_list ap;
+  va_start(ap, format);
+  ctxt.write_str = buffer_str;
+  ctxt.user_data = &str;
+  res = format_str_v(&ctxt, format, ap);
+  *str = '\0';
+  va_end(ap);
+  return res;
+}
+/*---------------------------------------------------------------------------*/

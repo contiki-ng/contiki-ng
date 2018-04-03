@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,58 +29,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "cc26xx-uart.h"
-#include "ti-lib.h"
+#include "contiki.h"
+#include "lib/dbg-io/dbg.h"
 
+#include <stdio.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 int
 putchar(int c)
 {
-  cc26xx_uart_write_byte(c);
+  dbg_putchar(c);
   return c;
-}
-/*---------------------------------------------------------------------------*/
-int
-puts(const char *str)
-{
-  int i;
-  if(str == NULL) {
-    return 0;
-  }
-  for(i = 0; i < strlen(str); i++) {
-    cc26xx_uart_write_byte(str[i]);
-  }
-  cc26xx_uart_write_byte('\n');
-
-  /*
-   * Wait for the line to go out. This is to prevent garbage when used between
-   * UART on/off cycles
-   */
-  while(cc26xx_uart_busy() == UART_BUSY);
-
-  return i;
-}
-/*---------------------------------------------------------------------------*/
-unsigned int
-dbg_send_bytes(const unsigned char *s, unsigned int len)
-{
-  unsigned int i = 0;
-
-  while(s && *s != 0) {
-    if(i >= len) {
-      break;
-    }
-    cc26xx_uart_write_byte(*s++);
-    i++;
-  }
-
-  /*
-   * Wait for the buffer to go out. This is to prevent garbage when used
-   * between UART on/off cycles
-   */
-  while(cc26xx_uart_busy() == UART_BUSY);
-
-  return i;
 }
 /*---------------------------------------------------------------------------*/
