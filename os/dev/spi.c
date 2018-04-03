@@ -45,39 +45,23 @@
 spi_status_t
 spi_acquire(spi_device_t *dev)
 {
-  spi_status_t r;
-
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  /* lock the bus */
-  r = spi_arch_lock(dev);
-  if(r != SPI_DEV_STATUS_OK) {
-    return r;
-  }
-
-  /* open the bus */
-  return spi_arch_open(dev);
+  /* lock and open the bus */
+  return spi_arch_lock_and_open(dev);
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
 spi_release(spi_device_t *dev)
 {
-  spi_status_t r;
-
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
   }
 
-  /* unlock the bus */
-  r = spi_arch_close(dev);
-  if(r != SPI_DEV_STATUS_OK) {
-    return r;
-  }
-
-  /* unlock the bus */
-  return spi_arch_unlock(dev);
+  /* close and unlock the bus */
+  return spi_arch_close_and_unlock(dev);
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t

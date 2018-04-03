@@ -67,18 +67,6 @@ static const board_spi_controller_t spi_controller[SPI_CONTROLLER_COUNT] = {
   }
 };
 /*---------------------------------------------------------------------------*/
-spi_status_t
-spi_arch_lock(spi_device_t *dev)
-{
-  if(mutex_try_lock(&board_spi_locks_spi[dev->spi_controller].lock) == false) {
-    return SPI_DEV_STATUS_BUS_LOCKED;
-  }
-
-  board_spi_locks_spi[dev->spi_controller].owner = dev;
-
-  return SPI_DEV_STATUS_OK;
-}
-/*---------------------------------------------------------------------------*/
 bool
 spi_arch_has_lock(spi_device_t *dev)
 {
@@ -99,19 +87,6 @@ spi_arch_is_bus_locked(spi_device_t *dev)
   return false;
 }
 /*---------------------------------------------------------------------------*/
-spi_status_t
-spi_arch_unlock(spi_device_t *dev)
-{
-  if(!spi_arch_has_lock(dev)) {
-    return SPI_DEV_STATUS_BUS_NOT_OWNED;
-  }
-
-  board_spi_locks_spi[dev->spi_controller].owner = NULL;
-  mutex_unlock(&board_spi_locks_spi[dev->spi_controller].lock);
-
-  return SPI_DEV_STATUS_OK;
-}
-/*---------------------------------------------------------------------------*/
 static uint32_t
 get_mode(spi_device_t *dev)
 {
@@ -128,13 +103,16 @@ get_mode(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_open(spi_device_t *dev)
+spi_arch_lock_and_open(spi_device_t *dev)
 {
   uint32_t c;
 
-  if(!spi_arch_has_lock(dev)) {
-    return SPI_DEV_STATUS_BUS_NOT_OWNED;
+  /* Lock the SPI bus */
+  if(mutex_try_lock(&board_spi_locks_spi[dev->spi_controller].lock) == false) {
+    return SPI_DEV_STATUS_BUS_LOCKED;
   }
+
+  board_spi_locks_spi[dev->spi_controller].owner = dev;
 
   /* CS pin configuration */
   ti_lib_ioc_pin_type_gpio_output(dev->pin_spi_cs);
@@ -166,7 +144,7 @@ spi_arch_open(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_close(spi_device_t *dev)
+spi_arch_close_and_unlock(spi_device_t *dev)
 {
   if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_NOT_OWNED;
@@ -186,6 +164,10 @@ spi_arch_close(spi_device_t *dev)
 
   ti_lib_ioc_pin_type_gpio_input(dev->pin_spi_sck);
   ti_lib_ioc_io_port_pull_set(dev->pin_spi_sck, IOC_IOPULL_DOWN);
+
+  /* Unlock the SPI bus */
+  board_spi_locks_spi[dev->spi_controller].owner = NULL;
+  mutex_unlock(&board_spi_locks_spi[dev->spi_controller].lock);
 
   return SPI_DEV_STATUS_OK;
 }

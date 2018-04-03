@@ -259,24 +259,6 @@ spi_status_t spi_read_register(spi_device_t *dev, uint8_t reg,
 /*---------------------------------------------------------------------------*/
 
 /**
- * \brief Locks an SPI controller to device dev.
- * \param dev An SPI device configuration which defines the controller
- * to be locked and the device that locks it.
- * \return SPI return code
- *
- */
-spi_status_t spi_arch_lock(spi_device_t *dev);
-
-/**
- * \brief Unlocks an SPI controller.
- * \param dev An SPI device configuration which defines the controller
- * to be unlocked and the device that unlocks it.
- * \return SPI return code
- *
- */
-spi_status_t spi_arch_unlock(spi_device_t *dev);
-
-/**
  * \brief Checks if a device has locked an SPI controller
  * \param dev An SPI device configuration which defines the controller
  * to be checked if it is locked and the respective device.
@@ -295,7 +277,7 @@ bool spi_arch_has_lock(spi_device_t *dev);
 bool spi_arch_is_bus_locked(spi_device_t *dev);
 
 /**
- * \brief Opens an SPI controller to the configuration specified.
+ * \brief Locks and opens an SPI controller to the configuration specified.
  * \param dev An SPI device configuration.
  * \return SPI return code
  *
@@ -303,19 +285,20 @@ bool spi_arch_is_bus_locked(spi_device_t *dev);
  * controller.
  *
  */
-spi_status_t spi_arch_open(spi_device_t *dev);
+spi_status_t spi_arch_lock_and_open(spi_device_t *dev);
 
 /**
- * \brief Closes an SPI controller
+ * \brief Closes and unlocks an SPI controller
  * \param dev An SPI device configuration that specifies the controller.
  * \return SPI return code
  *
- * This should turn off the SPI controller to put it in low power mode.
+ * This should turn off the SPI controller to put it in low power mode
+ * and unlock it.
  * It should work only if the device has already locked the SPI
  * controller.
  *
  */
-spi_status_t spi_arch_close(spi_device_t *dev);
+spi_status_t spi_arch_close_and_unlock(spi_device_t *dev);
 
 /**
  * \brief Performs an SPI transfer
