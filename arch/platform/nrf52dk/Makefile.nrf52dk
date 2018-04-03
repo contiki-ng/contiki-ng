@@ -13,10 +13,8 @@ ifeq ($(NRF52_USE_RTT),1)
 CONTIKI_TARGET_DIRS += rtt
 CONTIKI_SOURCEFILES += rtt-printf.c segger-rtt.c segger-rtt-printf.c
 else
-CONTIKI_TARGET_DIRS += dbg-io
 CONTIKI_SOURCEFILES += dbg.c
-CONTIKI_CPU_DIRS += ../arm/common/dbg-io
-CONTIKI_CPU_SOURCEFILES += dbg-printf.c dbg-putchar.c dbg-snprintf.c dbg-sprintf.c strformat.c
+MODULES += os/lib/dbg-io
 endif
 
 ### Unless the example dictates otherwise, build with code size optimisations switched off

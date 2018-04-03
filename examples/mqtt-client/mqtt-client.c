@@ -71,6 +71,12 @@ static const char *broker_ip = "0064:ff9b:0000:0000:0000:0000:b8ac:7cbd";
 #define MQTT_CLIENT_STATUS_LED LEDS_GREEN
 #endif
 /*---------------------------------------------------------------------------*/
+#ifdef MQTT_CLIENT_CONF_WITH_EXTENSIONS
+#define MQTT_CLIENT_WITH_EXTENSIONS MQTT_CLIENT_CONF_WITH_EXTENSIONS
+#else
+#define MQTT_CLIENT_WITH_EXTENSIONS 0
+#endif
+/*---------------------------------------------------------------------------*/
 /*
  * A timeout used when waiting for something to happen (e.g. to connect or to
  * disconnect)
@@ -197,8 +203,13 @@ static int def_rt_rssi = 0;
 /*---------------------------------------------------------------------------*/
 static mqtt_client_config_t conf;
 /*---------------------------------------------------------------------------*/
+#if MQTT_CLIENT_WITH_EXTENSIONS
 extern const mqtt_client_extension_t *mqtt_client_extensions[];
 extern const uint8_t mqtt_client_extension_count;
+#else
+static const mqtt_client_extension_t *mqtt_client_extensions[] = { NULL };
+static const uint8_t mqtt_client_extension_count = 0;
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
 /*---------------------------------------------------------------------------*/

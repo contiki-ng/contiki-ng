@@ -1,7 +1,6 @@
 #include <efs-sdcard.h>
 #include <sys/process.h>
 #include <cfs/cfs.h>
-#include <debug-uart.h>
 
 #include <stdio.h>
 
