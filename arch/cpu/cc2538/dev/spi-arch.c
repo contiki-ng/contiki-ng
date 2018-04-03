@@ -332,23 +332,23 @@ spi_arch_transfer(spi_device_t *dev,
     return SPI_DEV_STATUS_OK;
   }
 
-  LOG_DBG("%c%c%c: %u ", rlen > 0 ? 'R' : '-', wlen > 0 ? 'W' : '-',
+  LOG_DBG_("%c%c%c: %u ", rlen > 0 ? 'R' : '-', wlen > 0 ? 'W' : '-',
           ignore_len > 0 ? 'S' : '-', totlen);
 
   for(i = 0; i < totlen; i++) {
     spix_wait_tx_ready(dev);
     c = i < wlen ? write_buf[i] : 0;
     spix_write_buf(dev, c);
-    LOG_DBG("%c%02x->", i < rlen ? ' ' : '#', c);
+    LOG_DBG_("%c%02x->", i < rlen ? ' ' : '#', c);
     spix_wait_eotx(dev);
     spix_wait_eorx(dev);
     c = spix_read_buf(dev);
     if(i < rlen) {
       inbuf[i] = c;
     }
-    LOG_DBG("%02x", c);
+    LOG_DBG_("%02x", c);
   }
-  LOG_DBG("\n");
+  LOG_DBG_("\n");
 
   return SPI_DEV_STATUS_OK;
 }
