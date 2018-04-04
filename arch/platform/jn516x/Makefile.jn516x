@@ -82,7 +82,7 @@ OBJDUMP:=$(CROSS_COMPILE)-objdump
 
 ARCH = jn516x-ccm-star.c exceptions.c rtimer-arch.c rtimer-arch-slow.c \
        slip_uart0.c clock.c micromac-radio.c int-master.c \
-       node-id.c watchdog.c slip.c sprintf.c
+       node-id.c watchdog.c slip.c dbg.c
 # Default uart0 for printf and slip
 TARGET_WITH_UART0 ?= 1
 TARGET_WITH_UART1 ?= 0
@@ -100,8 +100,10 @@ ifeq ($(WITH_UART),1)
 ARCH += uart-driver.c
 endif
 
-CONTIKI_TARGET_DIRS = . dev lib
+CONTIKI_TARGET_DIRS = . dev
 CONTIKI_TARGET_MAIN = platform.c
+
+MODULES += os/lib/dbg-io
 
 ifeq ($(JN516x_WITH_DR1175),1)
 JN516x_WITH_DR1174 = 1
