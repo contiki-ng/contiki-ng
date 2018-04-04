@@ -49,19 +49,22 @@
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialize storage driver.
+ * \param SPI bus configuration struct. NULL for default.
  * \return True when successful.
  */
-bool ext_flash_open(void);
+bool ext_flash_open(spi_device_t *conf);
 
 /**
  * \brief Close the storage driver
+ * \param SPI bus configuration struct. NULL for default.
  *
  * This call will put the device in its lower power mode (power down).
  */
-bool ext_flash_close(void);
+bool ext_flash_close(spi_device_t *conf);
 
 /**
  * \brief Read storage content
+ * \param SPI bus configuration struct. NULL for default.
  * \param offset Address to read from
  * \param length Number of bytes to read
  * \param buf Buffer where to store the read bytes
@@ -69,10 +72,11 @@ bool ext_flash_close(void);
  *
  * buf must be allocated by the caller
  */
-bool ext_flash_read(uint32_t offset, uint32_t length, uint8_t *buf);
+bool ext_flash_read(spi_device_t *conf, uint32_t offset, uint32_t length, uint8_t *buf);
 
 /**
  * \brief Erase storage sectors corresponding to the range.
+ * \param SPI bus configuration struct. NULL for default.
  * \param offset Address to start erasing
  * \param length Number of bytes to erase
  * \return True when successful.
@@ -80,26 +84,22 @@ bool ext_flash_read(uint32_t offset, uint32_t length, uint8_t *buf);
  * The erase operation will be sector-wise, therefore a call to this function
  * will generally start the erase procedure at an address lower than offset
  */
-bool ext_flash_erase(uint32_t offset, uint32_t length);
+bool ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length);
 
 /**
  * \brief Write to storage sectors.
+ * \param SPI bus configuration struct. NULL for default.
  * \param offset Address to write to
  * \param length Number of bytes to write
  * \param buf Buffer holding the bytes to be written
  *
  * \return True when successful.
  */
-bool ext_flash_write(uint32_t offset, uint32_t length, const uint8_t *buf);
-
-/**
- * \brief Test the flash (power on self-test)
- * \return True when successful.
- */
-bool ext_flash_test(void);
+bool ext_flash_write(spi_device_t *conf, uint32_t offset, uint32_t length, const uint8_t *buf);
 
 /**
  * \brief Initialise the external flash
+ * \param SPI bus configuration struct. NULL for default.
  *
  * This function will explicitly put the part in its lowest power mode
  * (power-down).
