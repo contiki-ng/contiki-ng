@@ -321,7 +321,7 @@ ext_flash_open(spi_device_t *conf)
   flash_spi_configuration = get_spi_conf(conf);
 
   /* Check if platform has ext-flash */
-  if(flash_spi_configuration->pin_spi_sck == 255) {
+  if(flash_spi_configuration->pin_spi_sck == GPIO_HAL_PIN_UNKNOWN) {
     return false;
   }
 
