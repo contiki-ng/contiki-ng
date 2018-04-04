@@ -8,3 +8,5 @@ BOARD_SOURCEFILES += bmp-280-sensor.c tmp-007-sensor.c opt-3001-sensor.c
 BOARD_SOURCEFILES += hdc-1000-sensor.c mpu-9250-sensor.c xmem.c
 BOARD_SOURCEFILES += buzzer.c
 BOARD_SOURCEFILES += board.c board-i2c.c
+
+MODULES += arch/dev/ext-flash
