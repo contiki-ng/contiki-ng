@@ -49,14 +49,15 @@
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialize storage driver.
- * \param SPI bus configuration struct. NULL for default.
+ * \param conf SPI bus configuration struct. NULL for default.
  * \return True when successful.
  */
 bool ext_flash_open(spi_device_t *conf);
 
 /**
  * \brief Close the storage driver
- * \param SPI bus configuration struct. NULL for default.
+ * \param conf SPI bus configuration struct. NULL for default.
+ * \return True when successful.
  *
  * This call will put the device in its lower power mode (power down).
  */
@@ -64,7 +65,7 @@ bool ext_flash_close(spi_device_t *conf);
 
 /**
  * \brief Read storage content
- * \param SPI bus configuration struct. NULL for default.
+ * \param conf SPI bus configuration struct. NULL for default.
  * \param offset Address to read from
  * \param length Number of bytes to read
  * \param buf Buffer where to store the read bytes
@@ -76,7 +77,7 @@ bool ext_flash_read(spi_device_t *conf, uint32_t offset, uint32_t length, uint8_
 
 /**
  * \brief Erase storage sectors corresponding to the range.
- * \param SPI bus configuration struct. NULL for default.
+ * \param conf SPI bus configuration struct. NULL for default.
  * \param offset Address to start erasing
  * \param length Number of bytes to erase
  * \return True when successful.
@@ -88,7 +89,7 @@ bool ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length);
 
 /**
  * \brief Write to storage sectors.
- * \param SPI bus configuration struct. NULL for default.
+ * \param conf SPI bus configuration struct. NULL for default.
  * \param offset Address to write to
  * \param length Number of bytes to write
  * \param buf Buffer holding the bytes to be written
@@ -99,7 +100,7 @@ bool ext_flash_write(spi_device_t *conf, uint32_t offset, uint32_t length, const
 
 /**
  * \brief Initialise the external flash
- * \param SPI bus configuration struct. NULL for default.
+ * \param conf SPI bus configuration struct. NULL for default.
  *
  * This function will explicitly put the part in its lowest power mode
  * (power-down).
