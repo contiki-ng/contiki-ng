@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,47 +28,65 @@
  *
  */
 
-#include "contiki.h"
-#include "contiki-net.h"
+/**
+ * \file
+ *         Basic SPI macros
+ * \author
+ *         Joakim Eriksson <joakime@sics.se>
+ *         Niclas Finne <nfi@sics.se>
+ */
 
-#include "dev/spi-legacy.h"
-#include "cc2420.h"
-#include "isr_compat.h"
+#ifndef SPI_LEGACY_H_
+#define SPI_LEGACY_H_
 
-#ifdef CC2420_CONF_SFD_TIMESTAMPS
-#define CONF_SFD_TIMESTAMPS CC2420_CONF_SFD_TIMESTAMPS
-#endif /* CC2420_CONF_SFD_TIMESTAMPS */
+/* Define macros to use for checking SPI transmission status depending
+   on if it is possible to wait for TX buffer ready. This is possible
+   on for example MSP430 but not on AVR. */
+#ifdef SPI_WAITFORTxREADY
+#define SPI_WAITFORTx_BEFORE() SPI_WAITFORTxREADY()
+#define SPI_WAITFORTx_AFTER()
+#define SPI_WAITFORTx_ENDED() SPI_WAITFOREOTx()
+#else /* SPI_WAITFORTxREADY */
+#define SPI_WAITFORTx_BEFORE()
+#define SPI_WAITFORTx_AFTER() SPI_WAITFOREOTx()
+#define SPI_WAITFORTx_ENDED()
+#endif /* SPI_WAITFORTxREADY */
 
-#ifndef CONF_SFD_TIMESTAMPS
-#define CONF_SFD_TIMESTAMPS 0
-#endif /* CONF_SFD_TIMESTAMPS */
+extern unsigned char spi_busy;
 
-#ifdef CONF_SFD_TIMESTAMPS
-#include "cc2420-arch-sfd.h"
+void spi_init(void);
+
+/* Write one character to SPI */
+#define SPI_WRITE(data) \
+  do { \
+    SPI_WAITFORTx_BEFORE(); \
+    SPI_TXBUF = data; \
+    SPI_WAITFOREOTx(); \
+  } while(0)
+
+/* Write one character to SPI - will not wait for end
+   useful for multiple writes with wait after final */
+#define SPI_WRITE_FAST(data) \
+  do { \
+    SPI_WAITFORTx_BEFORE(); \
+    SPI_TXBUF = data; \
+    SPI_WAITFORTx_AFTER(); \
+  } while(0)
+
+/* Read one character from SPI */
+#define SPI_READ(data) \
+  do { \
+    SPI_TXBUF = 0; \
+    SPI_WAITFOREORx(); \
+    data = SPI_RXBUF; \
+  } while(0)
+
+/* Flush the SPI read register */
+#ifndef SPI_FLUSH
+#define SPI_FLUSH() \
+  do { \
+    SPI_RXBUF; \
+  } while(0)
 #endif
 
-/*---------------------------------------------------------------------------*/
-ISR(CC2420_IRQ, cc2420_port1_interrupt)
-{
-  if(cc2420_interrupt()) {
-    LPM4_EXIT;
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-cc2420_arch_init(void)
-{
-  spi_init();
-
-  /* all input by default, set these as output */
-  CC2420_CSN_PORT(DIR) |= BV(CC2420_CSN_PIN);
-  CC2420_VREG_PORT(DIR) |= BV(CC2420_VREG_PIN);
-  CC2420_RESET_PORT(DIR) |= BV(CC2420_RESET_PIN);
-
-#if CONF_SFD_TIMESTAMPS
-  cc2420_arch_sfd_init();
-#endif
-
-  CC2420_SPI_DISABLE();                /* Unselect radio. */
-}
-/*---------------------------------------------------------------------------*/
+#endif /* SPI_LEGACY_H_ */
