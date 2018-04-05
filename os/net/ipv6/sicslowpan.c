@@ -140,9 +140,7 @@
 #endif /* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD */
 
 /** \brief Fixed size of a frame header. This value is
- * used in case framer returns an error or if SICSLOWPAN_USE_FIXED_HDRLEN
- * is defined.
- */
+ * used in case framer returns an error */
 #ifndef SICSLOWPAN_FIXED_HDRLEN
 #define SICSLOWPAN_FIXED_HDRLEN 21
 #endif
@@ -1528,21 +1526,18 @@ output(const linkaddr_t *localdest)
 #if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC
   compress_hdr_iphc(&dest);
 #endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
-  LOG_INFO("output: header of len %d\n", packetbuf_hdr_len);
+
+  LOG_INFO("output: header len %d -> %d\n", uncomp_hdr_len, packetbuf_hdr_len);
 
   /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
    * We calculate it here only to make a better decision of whether the outgoing packet
    * needs to be fragmented or not. */
-#ifndef SICSLOWPAN_USE_FIXED_HDRLEN
   packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
   framer_hdrlen = NETSTACK_FRAMER.length();
   if(framer_hdrlen < 0) {
     /* Framing failed, we assume the maximum header length */
     framer_hdrlen = SICSLOWPAN_FIXED_HDRLEN;
   }
-#else /* USE_FRAMER_HDRLEN */
-  framer_hdrlen = SICSLOWPAN_FIXED_HDRLEN;
-#endif /* USE_FRAMER_HDRLEN */
 
   max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
   if((int)uip_len - (int)uncomp_hdr_len > max_payload - (int)packetbuf_hdr_len) {
