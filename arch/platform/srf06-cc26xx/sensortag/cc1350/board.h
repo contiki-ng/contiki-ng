@@ -114,16 +114,6 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \brief SPI IOID mappings
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define BOARD_IOID_SPI_MOSI       IOID_19
-#define BOARD_IOID_SPI_MISO       IOID_18
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name Buzzer configuration
  * @{
  */
@@ -145,9 +135,23 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#define BOARD_IOID_FLASH_CS       IOID_14
-#define BOARD_FLASH_CS            (1 << BOARD_IOID_FLASH_CS)
-#define BOARD_IOID_SPI_CLK_FLASH  IOID_17
+#define EXT_FLASH_SPI_CONTROLLER    SPI_CONTROLLER_SPI0
+
+#define BOARD_IOID_FLASH_SCK        IOID_17
+#define BOARD_IOID_FLASH_MOSI       IOID_19
+#define BOARD_IOID_FLASH_MISO       IOID_18
+#define BOARD_IOID_FLASH_CS         IOID_14
+
+#define EXT_FLASH_SPI_PIN_SCK       17
+#define EXT_FLASH_SPI_PIN_MOSI      19
+#define EXT_FLASH_SPI_PIN_MISO      18
+#define EXT_FLASH_SPI_PIN_CS        14
+
+#define EXT_FLASH_DEVICE_ID         0x14
+#define EXT_FLASH_MID               0xC2
+
+#define EXT_FLASH_PROGRAM_PAGE_SIZE 256
+#define EXT_FLASH_ERASE_SECTOR_SIZE 4096
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

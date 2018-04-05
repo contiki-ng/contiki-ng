@@ -29,7 +29,7 @@
  */
 
 #include "contiki.h"
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "cc2420.h"
 #include "isr_compat.h"
 

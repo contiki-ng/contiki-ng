@@ -29,86 +29,90 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-srf-tag
+ * \addtogroup common-cc26xx-peripherals
  * @{
  *
- * \defgroup common-cc26xx-peripherals CC13xx/CC26xx peripheral driver pool
- *
- * Drivers for peripherals present on more than one CC13xx/CC26xx board. For
- * example, the same external flash driver is used for both the part found on
- * the Sensortag as well as the part on the LaunchPad.
- *
- * @{
- *
- * \defgroup sensortag-cc26xx-spi SensorTag/LaunchPad SPI functions
+ * \defgroup sensortag-cc26xx-ext-flash SensorTag/LaunchPad External Flash
  * @{
  *
  * \file
- * Header file for the Sensortag/LaunchPad SPI Driver
+ * Header file for the Sensortag/LaunchPad External Flash Driver
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BOARD_SPI_H_
-#define BOARD_SPI_H_
+#ifndef EXT_FLASH_H_
+#define EXT_FLASH_H_
 /*---------------------------------------------------------------------------*/
-#include <stdlib.h>
+#include "dev/spi.h"
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Initialize the SPI interface
- * \param bit_rate The bit rate to use
- * \param clk_pin The IOID for the clock pin. This can be IOID_0 etc
- * \return none
- *
- * This function will make sure the peripheral is powered, clocked and
- * initialised. A chain of calls to board_spi_read(), board_spi_write() and
- * board_spi_flush() must be preceded by a call to this function. It is
- * recommended to call board_spi_close() after such chain of calls.
+ * \brief Initialize storage driver.
+ * \param conf SPI bus configuration struct. NULL for default.
+ * \return True when successful.
  */
-void board_spi_open(uint32_t bit_rate, uint32_t clk_pin);
+bool ext_flash_open(spi_device_t *conf);
 
 /**
- * \brief Close the SPI interface
+ * \brief Close the storage driver
+ * \param conf SPI bus configuration struct. NULL for default.
  * \return True when successful.
  *
- * This function will stop clocks to the SSI module and will set MISO, MOSI
- * and CLK to a low leakage state. It is recommended to call this function
- * after a chain of calls to board_spi_read() and board_spi_write()
+ * This call will put the device in its lower power mode (power down).
  */
-void board_spi_close(void);
+bool ext_flash_close(spi_device_t *conf);
 
 /**
- * \brief Clear data from the SPI interface
- * \return none
- */
-void board_spi_flush(void);
-
-/**
- * \brief Read from an SPI device
- * \param buf The buffer to store data
- * \param length The number of bytes to read
+ * \brief Read storage content
+ * \param conf SPI bus configuration struct. NULL for default.
+ * \param offset Address to read from
+ * \param length Number of bytes to read
+ * \param buf Buffer where to store the read bytes
  * \return True when successful.
  *
- * Calls to this function must be preceded by a call to board_spi_open(). It is
- * recommended to call board_spi_close() at the end of an operation.
+ * buf must be allocated by the caller
  */
-bool board_spi_read(uint8_t *buf, size_t length);
+bool ext_flash_read(spi_device_t *conf, uint32_t offset, uint32_t length, uint8_t *buf);
 
 /**
- * \brief Write to an SPI device
- * \param buf The buffer with the data to write
- * \param length The number of bytes to write
+ * \brief Erase storage sectors corresponding to the range.
+ * \param conf SPI bus configuration struct. NULL for default.
+ * \param offset Address to start erasing
+ * \param length Number of bytes to erase
  * \return True when successful.
  *
- * Calls to this function must be preceded by a call to board_spi_open(). It is
- * recommended to call board_spi_close() at the end of an operation.
+ * The erase operation will be sector-wise, therefore a call to this function
+ * will generally start the erase procedure at an address lower than offset
  */
-bool board_spi_write(const uint8_t *buf, size_t length);
+bool ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length);
+
+/**
+ * \brief Write to storage sectors.
+ * \param conf SPI bus configuration struct. NULL for default.
+ * \param offset Address to write to
+ * \param length Number of bytes to write
+ * \param buf Buffer holding the bytes to be written
+ *
+ * \return True when successful.
+ */
+bool ext_flash_write(spi_device_t *conf, uint32_t offset, uint32_t length, const uint8_t *buf);
+
+/**
+ * \brief Initialise the external flash
+ * \param conf SPI bus configuration struct. NULL for default.
+ *
+ * This function will explicitly put the part in its lowest power mode
+ * (power-down).
+ *
+ * In order to perform any operation, the caller must first wake the device
+ * up by calling ext_flash_open()
+ */
+bool ext_flash_init(spi_device_t *conf);
 /*---------------------------------------------------------------------------*/
-#endif /* BOARD_SPI_H_ */
+#endif /* EXT_FLASH_H_ */
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  * @}
  */

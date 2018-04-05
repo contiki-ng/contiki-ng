@@ -78,8 +78,8 @@
  * - SPI1_RX_PORT
  * - SPI1_RX_PIN
  */
-#ifndef SPI_ARCH_H_
-#define SPI_ARCH_H_
+#ifndef SPI_ARCH_LEGACY_H_
+#define SPI_ARCH_LEGACY_H_
 
 #include "contiki.h"
 
@@ -138,7 +138,7 @@
 #define SPI_WAITFOREOTx()               SPIX_WAITFOREOTx(SPI_DEFAULT_INSTANCE)
 #define SPI_WAITFOREORx()               SPIX_WAITFOREORx(SPI_DEFAULT_INSTANCE)
 #ifdef SPI_FLUSH
-#error You must include spi-arch.h before spi.h for the CC2538
+#error You must include spi-arch-legacy.h before spi-legacy.h for the CC2538
 #else
 #define SPI_FLUSH()                     SPIX_FLUSH(SPI_DEFAULT_INSTANCE)
 #endif
@@ -215,7 +215,7 @@ void spix_cs_init(uint8_t port, uint8_t pin);
 
 /** @} */
 
-#endif /* SPI_ARCH_H_ */
+#endif /* SPI_ARCH_LEGACY_H_ */
 
 /**
  * @}

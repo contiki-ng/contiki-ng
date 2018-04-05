@@ -195,15 +195,15 @@ save_config()
   int rv;
   cc26xx_web_demo_sensor_reading_t *reading = NULL;
 
-  rv = ext_flash_open();
+  rv = ext_flash_open(NULL);
 
   if(!rv) {
     printf("Could not open flash to save config\n");
-    ext_flash_close();
+    ext_flash_close(NULL);
     return;
   }
 
-  rv = ext_flash_erase(CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t));
+  rv = ext_flash_erase(NULL, CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t));
 
   if(!rv) {
     printf("Error erasing flash\n");
@@ -220,14 +220,14 @@ save_config()
       }
     }
 
-    rv = ext_flash_write(CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t),
+    rv = ext_flash_write(NULL, CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t),
                          (uint8_t *)&cc26xx_web_demo_config);
     if(!rv) {
       printf("Error saving config\n");
     }
   }
 
-  ext_flash_close();
+  ext_flash_close(NULL);
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -239,18 +239,18 @@ load_config()
   cc26xx_web_demo_config_t tmp_cfg;
   cc26xx_web_demo_sensor_reading_t *reading = NULL;
 
-  int rv = ext_flash_open();
+  int rv = ext_flash_open(NULL);
 
   if(!rv) {
     printf("Could not open flash to load config\n");
-    ext_flash_close();
+    ext_flash_close(NULL);
     return;
   }
 
-  rv = ext_flash_read(CONFIG_FLASH_OFFSET, sizeof(tmp_cfg),
+  rv = ext_flash_read(NULL, CONFIG_FLASH_OFFSET, sizeof(tmp_cfg),
                       (uint8_t *)&tmp_cfg);
 
-  ext_flash_close();
+  ext_flash_close(NULL);
 
   if(!rv) {
     printf("Error loading config\n");
