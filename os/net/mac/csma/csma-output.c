@@ -523,7 +523,8 @@ csma_output_packet(mac_callback_t sent, void *ptr)
 
             LOG_INFO("sending to ");
             LOG_INFO_LLADDR(addr);
-            LOG_INFO_(", seqno %u, queue length %d, free packets %d\n",
+            LOG_INFO_(", len %u, seqno %u, queue length %d, free packets %d\n",
+                    packetbuf_datalen(),
                     packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
                     list_length(n->packet_queue), memb_numfree(&packet_memb));
             /* If q is the first packet in the neighbor's queue, send asap */
