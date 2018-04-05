@@ -126,6 +126,13 @@ int rpl_is_reachable(void);
  */
 int rpl_lollipop_greater_than(int a, int b);
 
+/**
+ * Triggers a route fresh via DTSN increment
+ *
+ * \param str a textual description of the cause for refresh
+ */
+void rpl_refresh_routes(const char *str);
+
  /** @} */
 
 #endif /* RPL_H */
