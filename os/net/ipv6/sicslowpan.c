@@ -1571,7 +1571,7 @@ output(const linkaddr_t *localdest)
     LOG_INFO("Fragmentation sending packet len %d\n", uip_len);
 
     /* Create 1st Fragment */
-    LOG_INFO("output: 1rst fragment ");
+    LOG_INFO("output: 1st fragment ");
 
     /* Reset last tx status to ok in case the fragment transmissions are deferred */
     last_tx_status = MAC_TX_OK;
@@ -1591,7 +1591,7 @@ output(const linkaddr_t *localdest)
     /* Copy payload and send */
     packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
     packetbuf_payload_len = (max_payload - packetbuf_hdr_len) & 0xfffffff8;
-    LOG_INFO("(len %d, tag %d)\n", packetbuf_payload_len, frag_tag);
+    LOG_INFO_("(len %d, tag %d)\n", packetbuf_payload_len, frag_tag);
     memcpy(packetbuf_ptr + packetbuf_hdr_len,
            (uint8_t *)UIP_IP_BUF + uncomp_hdr_len, packetbuf_payload_len);
     packetbuf_set_datalen(packetbuf_payload_len + packetbuf_hdr_len);
@@ -1636,7 +1636,7 @@ output(const linkaddr_t *localdest)
         /* last fragment */
         packetbuf_payload_len = uip_len - processed_ip_out_len;
       }
-      LOG_INFO("(offset %d, len %d, tag %d)\n",
+      LOG_INFO_("(offset %d, len %d, tag %d)\n",
              processed_ip_out_len >> 3, packetbuf_payload_len, frag_tag);
       memcpy(packetbuf_ptr + packetbuf_hdr_len,
              (uint8_t *)UIP_IP_BUF + processed_ip_out_len, packetbuf_payload_len);
@@ -1742,7 +1742,7 @@ input(void)
       frag_offset = 0;
       frag_size = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0x07ff;
       frag_tag = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG);
-      LOG_INFO("size %d, tag %d, offset %d)\n",
+      LOG_INFO_ ("size %d, tag %d, offset %d)\n",
              frag_size, frag_tag, frag_offset);
       packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
       first_fragment = 1;
@@ -1767,13 +1767,13 @@ input(void)
       frag_offset = PACKETBUF_FRAG_PTR[PACKETBUF_FRAG_OFFSET];
       frag_tag = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG);
       frag_size = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0x07ff;
-      LOG_INFO("size %d, tag %d, offset %d)\n",
+      LOG_INFO_("size %d, tag %d, offset %d)\n",
              frag_size, frag_tag, frag_offset);
       packetbuf_hdr_len += SICSLOWPAN_FRAGN_HDR_LEN;
 
       /* If this is the last fragment, we may shave off any extrenous
          bytes at the end. We must be liberal in what we accept. */
-      LOG_INFO("last_fragment?: packetbuf_payload_len %d frag_size %d\n",
+      LOG_INFO_("last_fragment?: packetbuf_payload_len %d frag_size %d\n",
               packetbuf_datalen() - packetbuf_hdr_len, frag_size);
 
       /* Add the fragment to the fragmentation context (this will also
