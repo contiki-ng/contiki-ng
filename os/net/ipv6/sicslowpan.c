@@ -139,11 +139,13 @@
 #define MAC_MAX_PAYLOAD (127 - 2)
 #endif /* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD */
 
-/** \brief Fixed size of a frame header. This value is
+/** \brief Maximum size of a frame header. This value is
  * used in case framer returns an error */
-#ifndef SICSLOWPAN_FIXED_HDRLEN
-#define SICSLOWPAN_FIXED_HDRLEN 21
-#endif
+#ifdef SICSLOWPAN_CONF_MAC_MAX_HEADER
+#define MAC_MAX_HEADER SICSLOWPAN_CONF_MAC_MAX_HEADER
+#else /* SICSLOWPAN_CONF_MAC_MAX_HEADER */
+#define MAC_MAX_HEADER 21
+#endif /* SICSLOWPAN_CONF_MAC_MAX_HEADER */
 
 /* set this to zero if not compressing EXT_HDR - for backwards compatibility */
 #ifdef SICSLOWPAN_CONF_COMPRESS_EXT_HDR
@@ -1536,7 +1538,7 @@ output(const linkaddr_t *localdest)
   framer_hdrlen = NETSTACK_FRAMER.length();
   if(framer_hdrlen < 0) {
     /* Framing failed, we assume the maximum header length */
-    framer_hdrlen = SICSLOWPAN_FIXED_HDRLEN;
+    framer_hdrlen = MAC_MAX_HEADER;
   }
 
   max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
