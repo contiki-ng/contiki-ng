@@ -85,7 +85,7 @@
 
 /* macMaxFrameRetries: Maximum number of re-transmissions attampts. Range 0--7 */
 #ifdef CSMA_CONF_MAX_FRAME_RETRIES
-#define CSMA_MAX_FRAME_RETRIES CSMA_MAX_FRAME_RETRIES
+#define CSMA_MAX_FRAME_RETRIES CSMA_CONF_MAX_FRAME_RETRIES
 #else
 #define CSMA_MAX_FRAME_RETRIES 7
 #endif
