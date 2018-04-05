@@ -168,6 +168,8 @@ static void
 packet_input(void)
 {
   if(uip_len > 0) {
+    LOG_INFO("input: received %u bytes\n", uip_len);
+
     check_for_tcp_syn();
 
 #if UIP_TAG_TC_WITH_VARIABLE_RETRANSMISSIONS
@@ -499,7 +501,7 @@ get_nexthop(uip_ipaddr_t *addr)
   uip_ipaddr_t *nexthop;
   uip_ds6_route_t *route;
 
-  LOG_INFO("output: processing packet from ");
+  LOG_INFO("output: processing %u bytes packet from ", uip_len);
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
