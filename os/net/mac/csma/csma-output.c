@@ -85,7 +85,7 @@
 
 /* macMaxFrameRetries: Maximum number of re-transmissions attampts. Range 0--7 */
 #ifdef CSMA_CONF_MAX_FRAME_RETRIES
-#define CSMA_MAX_FRAME_RETRIES CSMA_MAX_FRAME_RETRIES
+#define CSMA_MAX_FRAME_RETRIES CSMA_CONF_MAX_FRAME_RETRIES
 #else
 #define CSMA_MAX_FRAME_RETRIES 7
 #endif
@@ -403,7 +403,7 @@ noack(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 static void
 tx_ok(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 {
-  n->collisions = CSMA_MIN_BE;
+  n->collisions = 0;
   n->transmissions += num_transmissions;
   tx_done(MAC_TX_OK, q, n);
 }
@@ -493,7 +493,7 @@ csma_output_packet(mac_callback_t sent, void *ptr)
       /* Init neighbor entry */
       linkaddr_copy(&n->addr, addr);
       n->transmissions = 0;
-      n->collisions = CSMA_MIN_BE;
+      n->collisions = 0;
       /* Init packet queue for this neighbor */
       LIST_STRUCT_INIT(n, packet_queue);
       /* Add neighbor to the neighbor list */
