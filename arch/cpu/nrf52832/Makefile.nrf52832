@@ -139,7 +139,7 @@ CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 # keep every function in separate section. This will allow linker to dump unused functions
-LDFLAGS += -Xlinker -Map=$(@:.elf=-$(TARGET).map)
+LDFLAGS += -Xlinker -Map=$(CONTIKI_NG_PROJECT_MAP)
 LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH) -T$(LINKER_SCRIPT)
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker to dump unused sections
@@ -182,7 +182,7 @@ nrf52832.a: $(OBJECTS)
 
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
-	@echo Compiling file: $(notdir $<)
+	$(TRACE_CC)
 	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
 
 %.jlink:

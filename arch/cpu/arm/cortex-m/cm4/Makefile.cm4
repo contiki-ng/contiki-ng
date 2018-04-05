@@ -6,7 +6,7 @@ LDFLAGS += -mcpu=cortex-m4
 ### Compilation rules
 CUSTOM_RULE_LINK=1
 
-%.elf: $(TARGET_STARTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(TARGET_LIBS)
+%.elf: $(TARGET_STARTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(TARGET_LIBS)
 	$(TRACE_LD)
 	$(Q)$(CC) $(LDFLAGS) ${filter %.o %.a,$^} -o $@
 

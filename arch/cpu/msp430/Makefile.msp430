@@ -75,7 +75,7 @@ CFLAGSNO = --dlib_config "$(IAR_PATH)/LIB/DLIB/dl430xlfn.h" $(CFLAGSWERROR)
 # CFLAGSNO = --dlib_config $(IAR_PATH)/LIB/DLIB/dl430xlfn.h -Ohz --multiplier=32 --multiplier_location=4C0 --hw_workaround=CPU40 --core=430X $(CFLAGSWERROR) --data_model large --double=32
 endif
 
-LDFLAGSNO += -B -l contiki-$(TARGET).map -s __program_start
+LDFLAGSNO += -B -l $(CONTIKI_NG_PROJECT_MAP) -s __program_start
 # Stack and heap size in hex
 ifndef IAR_STACK_SIZE
  IAR_STACK_SIZE=300
@@ -165,7 +165,7 @@ ifndef CFLAGSNO
 CFLAGSNO = -Wall -mmcu=$(CC_MCU) $(CFLAGSWERROR)
 endif
 CFLAGS  += -Os -fno-strict-aliasing
-LDFLAGS += -mmcu=$(CC_MCU) -Wl,-Map=contiki-$(TARGET).map
+LDFLAGS += -mmcu=$(CC_MCU) -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP)
 
 ### These flags can reduce the code size and RAM usage with up to 10%
 SMALL ?= 1
@@ -184,6 +184,9 @@ CFLAGS  += $(CFLAGSNO)
 
 PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
 
+### CPU-dependent cleanup files
+CLEAN += *.firmware *.ihex
+
 ### Compilation rules
 
 %-stripped.o: %.c
@@ -197,7 +200,7 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
 	mv $< $@
 
 ifdef IAR
-%.ihex: %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+%.ihex: %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	$(LD) $(LDFLAGSNO) -Fintel-extended $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
 else
 %.ihex: %.$(TARGET)
@@ -220,8 +223,8 @@ $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
 %.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
 	java -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
 
-mspsim-maptable:	contiki-${TARGET}.map
-	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $<
+%.mspsim-maptable: %.$(TARGET)
+	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
 
 core-labels.o: core.${TARGET}
 	${CONTIKI}/tools/msp430-make-labels core.${TARGET} > core-labels.S

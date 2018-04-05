@@ -10,6 +10,8 @@ WERROR ?= 1
 
 include $(CONTIKI)/Makefile.identify-target
 
+CONTIKI_NG_TARGET_LIB = contiki-ng-$(TARGET).a
+
 ifeq ($(DEFINES),)
   -include Makefile.$(TARGET).defines
   ifneq ($(DEFINES),)
@@ -289,15 +291,23 @@ sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 rm -f $(@:.o=.$$$$)
 endef
 
-clean:
-	-rm -f *~ *core core *.srec \
-	*.lst *.map *.o \
-	*.cprg *.bin *.data contiki*.a *.firmware core-labels.S *.ihex *.ini \
-	rm -rf $(CLEAN)
-	-rm -rf $(OBJECTDIR)
+### Harmonize filename of a .map file, if the platform's build system wants
+### to create one
+CONTIKI_NG_PROJECT_MAP = $(addsuffix -$(TARGET).map, $(basename $@))
 
-distclean: clean
-	-rm -f ${addsuffix .$(TARGET),$(CONTIKI_PROJECT)}
+.PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
+
+clean:
+	-rm -f *.d *.e *.o $(CONTIKI_NG_TARGET_LIB) $(CLEAN)
+	-rm -rf $(OBJECTDIR)
+	-rm -f $(addsuffix -$(TARGET).map, $(CONTIKI_PROJECT))
+	-rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+
+distclean:
+	@for TARG in `ls $(CONTIKI)/arch/platform $(TARGETDIRS)`; do \
+		echo make $$TARG clean; \
+		make TARGET=$$TARG clean; \
+	done
 
 -include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
 
@@ -352,7 +362,7 @@ ifndef AROPTS
 endif
 
 ifndef CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
-contiki-$(TARGET).a: $(CONTIKI_OBJECTFILES)
+$(CONTIKI_NG_TARGET_LIB): $(CONTIKI_OBJECTFILES)
 	$(TRACE_AR)
 	$(Q)$(AR) $(AROPTS) $@ $^
 endif
@@ -362,7 +372,7 @@ ifndef LD
 endif
 
 ifndef CUSTOM_RULE_LINK
-%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
 	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
@@ -375,7 +385,25 @@ endif
 	$(NM) -S -td --size-sort $< | grep -i " [t] " | cut -d' ' -f2,4
 
 usage:
-	@echo "make MAKETARGETS... [TARGET=(TARGET)] [BOARD=(BOARD)] [savetarget] [targets]"
+	@echo "Usage:"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [DEFINES=(DEFINES)] [target]"
+	@echo ""
+	@echo "Typical usage:"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [all]"
+	@echo ""
+	@echo "    Will build Contiki-NG firmware(s) from the current example dir"
+	@echo "    for platform TARGET, board BOARD."
+	@echo ""
+	@echo "Miscellaneous targets:"
+	@echo "    targets         Prints list of supported platforms"
+	@echo "    boards          Prints a list of supported boards for TARGET"
+	@echo "    savegtarget     Saves TARGET and BOARD for future invocations of make"
+	@echo "    savedefines     Saves DEFINES for future invocations of make"
+	@echo "    clean           Removes all compiled files for TARGET"
+	@echo "    distclean       Removes all compiled files for all TARGETs"
+	@echo "    viewconf        Prints Contiki-NG build configuration for TARGET"
+
+help: usage
 
 targets:
 	@ls $(CONTIKI)/arch/platform $(TARGETDIRS)
