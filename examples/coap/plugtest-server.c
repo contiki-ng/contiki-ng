@@ -94,9 +94,6 @@ PROCESS_THREAD(plugtest_server, ev, data)
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
   PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
 
-  /* Initialize the REST engine. */
-  coap_engine_init();
-
   /* Activate the application-specific resources. */
   coap_activate_resource(&res_plugtest_test, "test");
   coap_activate_resource(&res_plugtest_validate, "validate");
