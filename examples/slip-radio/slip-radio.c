@@ -254,7 +254,7 @@ PROCESS_THREAD(slip_radio_process, ev, data)
 #ifdef SLIP_RADIO_CONF_SENSORS
   SLIP_RADIO_CONF_SENSORS.init();
 #endif
-  printf("Slip Radio started...\n");
+  LOG_INFO("Slip Radio started\n");
 
   etimer_set(&et, CLOCK_SECOND * 3);
 
