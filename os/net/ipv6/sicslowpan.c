@@ -1464,6 +1464,46 @@ send_packet(linkaddr_t *dest)
   watchdog_periodic();
 }
 /*--------------------------------------------------------------------*/
+/**
+ * \brief This function is called by the 6lowpan code to copy a fragment's
+ * payload from uIP and send it down the stack..
+ * \param uip_offset the offset in the uIP buffer where to copy the payload from
+ * \param dest the link layer destination address of the packet
+ * \return 1 if success, 0 otherwise
+ */
+static int
+fragment_copy_payload_and_send(uint16_t uip_offset, linkaddr_t *dest) {
+  struct queuebuf *q;
+
+  /* Now copy fragment payload from uip_buf */
+  memcpy(packetbuf_ptr + packetbuf_hdr_len,
+         (uint8_t *)UIP_IP_BUF + uip_offset, packetbuf_payload_len);
+  packetbuf_set_datalen(packetbuf_payload_len + packetbuf_hdr_len);
+
+  /* Backup packetbuf to queuebuf. Enables preserving attributes for all framgnets */
+  q = queuebuf_new_from_packetbuf();
+  if(q == NULL) {
+    LOG_WARN("output: could not allocate queuebuf, dropping fragment\n");
+    return 0;
+  }
+
+  /* Send fragment */
+  send_packet(dest);
+
+  /* Restore packetbuf from queuebuf */
+  queuebuf_to_packetbuf(q);
+  queuebuf_free(q);
+
+  /* Check tx result. */
+  if((last_tx_status == MAC_TX_COLLISION) ||
+     (last_tx_status == MAC_TX_ERR) ||
+     (last_tx_status == MAC_TX_ERR_FATAL)) {
+    LOG_ERR("output: error in fragment tx, dropping subsequent fragments.\n");
+    return 0;
+  }
+  return 1;
+}
+/*--------------------------------------------------------------------*/
 /** \brief Take an IP packet and format it to be sent on an 802.15.4
  *  network using 6lowpan.
  *  \param localdest The MAC address of the destination
@@ -1507,7 +1547,7 @@ output(const linkaddr_t *localdest)
     linkaddr_copy(&dest, localdest);
   }
 
-  LOG_INFO("output: sending packet len %d\n", uip_len);
+  LOG_INFO("output: sending packet with len %d\n", uip_len);
 
   /* copy over the retransmission count from uipbuf attributes */
   packetbuf_set_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS,
@@ -1546,116 +1586,100 @@ output(const linkaddr_t *localdest)
 #if SICSLOWPAN_CONF_FRAG
     /* Number of bytes processed. */
     uint16_t processed_ip_out_len;
-
-    struct queuebuf *q;
     uint16_t frag_tag;
+    int curr_frag = 0;
 
     /*
      * The outbound IPv6 packet is too large to fit into a single 15.4
      * packet, so we fragment it into multiple packets and send them.
-     * The first fragment contains frag1 dispatch, then
-     * IPv6/IPHC/HC_UDP dispatchs/headers.
-     * The following fragments contain only the fragn dispatch.
+     * The first fragment contains frag1 dispatch, then IPv6/IPHC/HC_UDP
+     * dispatchs/headers and IPv6 payload (with len multiple of 8 bytes).
+     * The subsequent fragments contain the FRAGN dispatch and more of the
+     * IPv6 payload (still multiple of 8 bytes, except for the last fragment)
      */
-    int estimated_fragments = ((int)uip_len) / (max_payload - SICSLOWPAN_FRAGN_HDR_LEN) + 1;
+     /* Total IPv6 payload */
+    int total_payload = (uip_len - uncomp_hdr_len);
+    /* IPv6 payload that goes to first fragment */
+    int frag1_payload = (max_payload - packetbuf_hdr_len - SICSLOWPAN_FRAG1_HDR_LEN) & 0xfffffff8;
+    /* max IPv6 payload in each FRAGN. Must be multiple of 8 bytes */
+    int fragn_max_payload = (max_payload - SICSLOWPAN_FRAGN_HDR_LEN) & 0xfffffff8;
+    /* max IPv6 payload in the last fragment. Needs not be multiple of 8 bytes */
+    int last_fragn_max_payload = max_payload - SICSLOWPAN_FRAGN_HDR_LEN;
+    /* IPv6 payload that goes to non-first and non-last fragments */
+    int middle_fragn_total_payload = MAX(total_payload - frag1_payload - last_fragn_max_payload, 0);
+    /* Ceiling of: 2 + middle_fragn_total_payload / fragn_max_payload */
+    int fragment_count = 2 +
+                         1 + (middle_fragn_total_payload - 1) / fragn_max_payload;
+
     int freebuf = queuebuf_numfree() - 1;
-    LOG_INFO("uip_len: %d, fragments: %d, free bufs: %d\n", uip_len, estimated_fragments, freebuf);
-    if(freebuf < estimated_fragments) {
-      LOG_WARN("Dropping packet, not enough free bufs\n");
+    LOG_INFO("output: fragmentation required. uip_len: %d (%d + %d), MAC max payload %d, fragments: %d, free bufs: %d\n",
+                uip_len, uncomp_hdr_len, uip_len-uncomp_hdr_len, max_payload, fragment_count, freebuf);
+
+    if(freebuf < fragment_count) {
+      LOG_WARN("output: dropping packet, not enough free bufs\n");
       return 0;
     }
 
-    LOG_INFO("Fragmentation sending packet len %d\n", uip_len);
-
-    /* Create 1st Fragment */
-    LOG_INFO("output: 1st fragment ");
-
-    /* Reset last tx status to ok in case the fragment transmissions are deferred */
+    /* Reset last tx status -- MAC layers most often call packet_sent asynchrously */
     last_tx_status = MAC_TX_OK;
+    /* Update fragment tag */
+    frag_tag = my_tag++;
 
-    /* move IPHC/IPv6 header */
+    /* Move IPHC/IPv6 header to make room for FRAG1 header */
     memmove(packetbuf_ptr + SICSLOWPAN_FRAG1_HDR_LEN, packetbuf_ptr, packetbuf_hdr_len);
+    packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
 
-    /*
-     * FRAG1 dispatch + header
-     * Note that the length is in units of 8 bytes
-     */
+    /* Set FRAG1 header */
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE,
           ((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len));
-    frag_tag = my_tag++;
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG, frag_tag);
 
-    /* Copy payload and send */
-    packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
-    packetbuf_payload_len = (max_payload - packetbuf_hdr_len) & 0xfffffff8;
-    LOG_INFO_("(len %d, tag %d)\n", packetbuf_payload_len, frag_tag);
-    memcpy(packetbuf_ptr + packetbuf_hdr_len,
-           (uint8_t *)UIP_IP_BUF + uncomp_hdr_len, packetbuf_payload_len);
-    packetbuf_set_datalen(packetbuf_payload_len + packetbuf_hdr_len);
-    q = queuebuf_new_from_packetbuf();
-    if(q == NULL) {
-      LOG_WARN("could not allocate queuebuf for first fragment, dropping packet\n");
-      return 0;
-    }
-    send_packet(&dest);
-    queuebuf_to_packetbuf(q);
-    queuebuf_free(q);
-    q = NULL;
-
-    /* Check tx result. */
-    if((last_tx_status == MAC_TX_COLLISION) ||
-       (last_tx_status == MAC_TX_ERR) ||
-       (last_tx_status == MAC_TX_ERR_FATAL)) {
-      LOG_ERR("error in fragment tx, dropping subsequent fragments.\n");
+    /* Set frag1 payload len. Was already caulcated earlier as frag1_payload */
+    packetbuf_payload_len = frag1_payload;
+    /* Copy payload from uIP and send fragment */
+    /* Send fragment */
+    LOG_INFO("output: fragment %d/%d (tag %d, IPv6 payload len %d)\n",
+             curr_frag + 1, fragment_count,
+             frag_tag, packetbuf_payload_len);
+    if(fragment_copy_payload_and_send(uncomp_hdr_len, &dest) == 0) {
       return 0;
     }
 
-    /* set processed_ip_out_len to what we already sent from the IP payload*/
-    processed_ip_out_len = packetbuf_payload_len + uncomp_hdr_len;
+    /* Now prepare for subsequent fragments. */
 
-    /*
-     * Create following fragments
-     * Datagram tag is already in the buffer, we need to set the
-     * FRAGN dispatch and for each fragment, the offset
-     */
+    /* FRAGN header: tag was already set at FRAG1. Now set dispatch for all FRAGN */
     packetbuf_hdr_len = SICSLOWPAN_FRAGN_HDR_LEN;
-/*     PACKETBUF_FRAG_BUF->dispatch_size = */
-/*       uip_htons((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len); */
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE,
           ((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len));
-    packetbuf_payload_len = (max_payload - packetbuf_hdr_len) & 0xfffffff8;
+
+    /* Keep track of the total length of data sent */
+    processed_ip_out_len = uncomp_hdr_len + packetbuf_payload_len;
+
+    /* Create and send subsequent fragments. */
     while(processed_ip_out_len < uip_len) {
-      LOG_INFO("output: fragment ");
+      curr_frag++;
+      /* FRAGN header: set offset for this fragment */
       PACKETBUF_FRAG_PTR[PACKETBUF_FRAG_OFFSET] = processed_ip_out_len >> 3;
 
-      /* Copy payload and send */
-      if(uip_len - processed_ip_out_len < packetbuf_payload_len) {
+      /* Calculate fragment len */
+      if(uip_len - processed_ip_out_len > last_fragn_max_payload) {
+        /* Not last fragment, send max FRAGN payload */
+        packetbuf_payload_len = fragn_max_payload;
+      } else {
         /* last fragment */
         packetbuf_payload_len = uip_len - processed_ip_out_len;
       }
-      LOG_INFO_("(offset %d, len %d, tag %d)\n",
-             processed_ip_out_len >> 3, packetbuf_payload_len, frag_tag);
-      memcpy(packetbuf_ptr + packetbuf_hdr_len,
-             (uint8_t *)UIP_IP_BUF + processed_ip_out_len, packetbuf_payload_len);
-      packetbuf_set_datalen(packetbuf_payload_len + packetbuf_hdr_len);
-      q = queuebuf_new_from_packetbuf();
-      if(q == NULL) {
-        LOG_WARN("could not allocate queuebuf, dropping fragment\n");
-        return 0;
-      }
-      send_packet(&dest);
-      queuebuf_to_packetbuf(q);
-      queuebuf_free(q);
-      q = NULL;
-      processed_ip_out_len += packetbuf_payload_len;
 
-      /* Check tx result. */
-      if((last_tx_status == MAC_TX_COLLISION) ||
-         (last_tx_status == MAC_TX_ERR) ||
-         (last_tx_status == MAC_TX_ERR_FATAL)) {
-        LOG_ERR("error in fragment tx, dropping subsequent fragments.\n");
+      /* Copy payload from uIP and send fragment */
+      /* Send fragment */
+      LOG_INFO("output: fragment %d/%d (tag %d, IPv6 payload len %d, offset %d)\n",
+               curr_frag + 1, fragment_count,
+               frag_tag, packetbuf_payload_len, processed_ip_out_len);
+      if(fragment_copy_payload_and_send(processed_ip_out_len, &dest) == 0) {
         return 0;
       }
+
+      processed_ip_out_len += packetbuf_payload_len;
     }
 #else /* SICSLOWPAN_CONF_FRAG */
     LOG_ERR("output: Packet too large to be sent without fragmentation support; dropping packet\n");
