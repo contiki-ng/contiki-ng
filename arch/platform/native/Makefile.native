@@ -2,9 +2,6 @@ ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
-ifeq ($(HOST_OS),Darwin)
-  AROPTS = rc
-endif
 
 CONTIKI_TARGET_DIRS = . dev
 CONTIKI_TARGET_MAIN = ${addprefix $(OBJECTDIR)/,contiki-main.o}
