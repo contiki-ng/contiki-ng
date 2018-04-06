@@ -27,8 +27,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 /*---------------------------------------------------------------------------*/
 /* Only sleep mode 1 on Zoul to enable full 32 KiB RAM */
 #define LPM_CONF_MAX_PM 1
 /*---------------------------------------------------------------------------*/
+/* Macros to enter sleep mode and wake up in the Zoul module. Sleep consists
+ * on turn off the radio and start a RTIMER to wake up, and wake up consists on
+ * turn on the radio again
+ */
+#define LWM2M_Q_MODE_WAKE_UP()  do { \
+	NETSTACK_MAC.on();	\
+} while(0)
+
+#define LWM2M_Q_MODE_SLEEP_MS(TIME_MS)  do { \
+	uint64_t aux = TIME_MS * RTIMER_SECOND;	\
+	NETSTACK_MAC.off();	\
+	rtimer_arch_schedule(RTIMER_NOW() + (rtimer_clock_t)(aux / 1000));	\
+} while(0)
+
+

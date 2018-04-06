@@ -43,7 +43,6 @@
  *         Joel Hoglund <joel@sics.se>
  *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
-
 #include "lwm2m-engine.h"
 #include "lwm2m-object.h"
 #include "lwm2m-device.h"
@@ -58,14 +57,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
-#if LWM2M_Q_MODE_ENABLED
-#include "lwm2m-qmode-object.h"
-#include "lwm2m-notification-queue.h"
-#endif
 
 #if UIP_CONF_IPV6_RPL
 #include "rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
+
+#if LWM2M_Q_MODE_ENABLED
+#include "lwm2m-qmode-object.h"
+#include "lwm2m-notification-queue.h"
+#endif /* LWM2M_Q_MODE_ENABLED */
 
 /* Log configuration */
 #include "coap-log.h"
@@ -131,10 +131,15 @@ static void (*rd_callback)(coap_request_state_t *state);
 static coap_timer_t block1_timer;
 
 #if LWM2M_Q_MODE_ENABLED
-static coap_timer_t q_mode_client_awake_timer; /* Timer to control the client awake time */
-static uint8_t q_mode_client_awake; /* 1 - client is awake, 0 - client is sleeping */
+static coap_timer_t q_mode_client_awake_timer; /* Timer to control the client's 
+                                                * awake time 
+                                                */
+static uint8_t q_mode_client_awake; /* 1 - client is awake, 
+                                     * 0 - client is sleeping 
+                                     */
 static uint16_t q_mode_client_awake_time; /* The time to be awake */
-static void q_mode_awake_timer_callback(coap_timer_t *timer); /* Callback for the client awake timer */
+/* Callback for the client awake timer */
+static void q_mode_awake_timer_callback(coap_timer_t *timer); 
 #endif
 
 static void check_periodic_observations();
@@ -742,16 +747,19 @@ periodic_process(coap_timer_t *timer)
     coap_timer_set(&q_mode_client_awake_timer, q_mode_client_awake_time);
     break;
   case Q_MODE_SEND_UPDATE:
-#if !STANDALONE
-    NETSTACK_MAC.on();
-#endif
+/* Define this macro to make the necessary actions for waking up, 
+ * depending on the platform 
+ */
+#ifdef LWM2M_Q_MODE_WAKE_UP
+    LWM2M_Q_MODE_WAKE_UP();
+#endif /* LWM2M_Q_MODE_WAKE_UP */
     prepare_update(request, rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
     coap_send_request(&rd_request_state, &session_info.server_ep, request,
                       update_callback);
     last_rd_progress = coap_timer_uptime();
     rd_state = UPDATE_SENT;
     break;
-#endif
+#endif /* LWM2M_Q_MODE_ENABLED */
 
   case UPDATE_SENT:
     /* just wait until the callback kicks us to the next state... */
@@ -787,9 +795,10 @@ lwm2m_rd_client_init(const char *ep)
   /* default binding U = UDP, UQ = UDP Q-mode*/
 #if LWM2M_Q_MODE_ENABLED
   session_info.binding = "UQ";
-  session_info.lifetime = (LWM2M_Q_MODE_DEFAULT_CLIENT_SLEEP_TIME / 1000) * 2; /* Enough margin to ensure that the client is not unregistered (we
-                                                                                * do not know the time it can stay awake)
-                                                                                */
+  /* Enough margin to ensure that the client is not unregistered (we
+   * do not know the time it can stay awake)
+   */
+  session_info.lifetime = (LWM2M_Q_MODE_DEFAULT_CLIENT_SLEEP_TIME / 1000) * 2; 
 #else
   session_info.binding = "U";
   if(session_info.lifetime == 0) {
@@ -836,12 +845,11 @@ q_mode_awake_timer_callback(coap_timer_t *timer)
   /* Timer has expired, no requests has been received, client can go to sleep */
   LOG_DBG("Queue Mode: Client is SLEEPING at %lu\n", (unsigned long)coap_timer_uptime());
   q_mode_client_awake = 0;
-#if !STANDALONE
-  /* Turn off the radio and start sleeping timer. LPM will be entered since the radio 
-     and the peripherals are off, and there is a sleep timer started for waking up */
-  NETSTACK_MAC.off();
-  rtimer_arch_schedule(RTIMER_NOW() + ((lwm2m_q_object_get_sleep_time() / 1000) * RTIMER_SECOND));
-#endif
+
+/* Define this macro to enter sleep mode depending on the platform */
+#ifdef LWM2M_Q_MODE_SLEEP_MS
+  LWM2M_Q_MODE_SLEEP_MS(lwm2m_q_object_get_sleep_time());
+#endif /* LWM2M_Q_MODE_SLEEP_MS */
   rd_state = Q_MODE_SEND_UPDATE;
   coap_timer_set(&rd_timer, lwm2m_q_object_get_sleep_time());
 }
@@ -862,6 +870,6 @@ lwm2m_rd_client_fsm_execute_q_mode_update()
   periodic_process(&rd_timer);
 }
 /*---------------------------------------------------------------------------*/
-#endif
+#endif /* LWM2M_Q_MODE_ENABLED */
 /*---------------------------------------------------------------------------*/
 /** @} */
