@@ -183,14 +183,14 @@ void
 rpl_refresh_routes(const char *str)
 {
   if(rpl_dag_root_is_root()) {
-    LOG_WARN("incrementing DTSN (%s), current %u)\n",
+    /* Increment DTSN */
+    RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
+
+    LOG_WARN("incremented DTSN (%s), current %u\n",
          str, curr_instance.dtsn_out);
     if(LOG_INFO_ENABLED) {
       rpl_neighbor_print_list("Refresh routes (before)");
     }
-
-    /* Increment DTSN */
-    RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
   }
 }
 /*---------------------------------------------------------------------------*/
