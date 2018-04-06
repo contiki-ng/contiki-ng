@@ -1461,6 +1461,7 @@ send_packet(linkaddr_t *dest)
      watchdog know that we are still alive. */
   watchdog_periodic();
 }
+#if SICSLOWPAN_CONF_FRAG
 /*--------------------------------------------------------------------*/
 /**
  * \brief This function is called by the 6lowpan code to copy a fragment's
@@ -1501,6 +1502,7 @@ fragment_copy_payload_and_send(uint16_t uip_offset, linkaddr_t *dest) {
   }
   return 1;
 }
+#endif /* SICSLOWPAN_CONF_FRAG */
 /*--------------------------------------------------------------------*/
 /** \brief Take an IP packet and format it to be sent on an 802.15.4
  *  network using 6lowpan.
@@ -1868,11 +1870,12 @@ input(void)
   }
   packetbuf_payload_len = packetbuf_datalen() - packetbuf_hdr_len;
 
+#if SICSLOWPAN_CONF_FRAG
   if(is_fragment) {
     LOG_INFO("input: fragment (tag %d, payload %d, offset %d)\n",
          frag_tag, packetbuf_payload_len, frag_offset << 3);
   }
-
+#endif /*SICSLOWPAN_CONF_FRAG*/
 
   /* Sanity-check size of incoming packet to avoid buffer overflow */
   {
