@@ -222,6 +222,7 @@ global_repair_non_root(rpl_dio_t *dio)
       rpl_neighbor_print_list("Global repair (before)");
     }
     /* Re-initialize configuration from DIO */
+    rpl_timers_stop_dag_timers();
     init_dag_from_dio(dio);
     rpl_local_repair("Global repair");
   }
