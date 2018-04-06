@@ -453,7 +453,7 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   if(curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
     if(nbr != NULL && nbr == curr_instance.dag.preferred_parent && rpl_lollipop_greater_than(dio->dtsn, last_dtsn)) {
       RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
-      LOG_INFO("DTSN increment %u->%u, schedule new DAO with DTSN %u",
+      LOG_WARN("DTSN increment %u->%u, schedule new DAO with DTSN %u\n",
         last_dtsn, dio->dtsn, curr_instance.dtsn_out);
       rpl_timers_schedule_dao();
     }
