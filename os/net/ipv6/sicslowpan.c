@@ -977,7 +977,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
       memcpy(hc06_ptr, &udp_buf->udpchksum, 2);
       hc06_ptr += 2;
       uncomp_hdr_len += UIP_UDPH_LEN;
-      /* this is the final header... */
+      /* this is the final header. */
       next_hdr = NULL;
       break;
     default:
@@ -1464,7 +1464,7 @@ send_packet(linkaddr_t *dest)
 /*--------------------------------------------------------------------*/
 /**
  * \brief This function is called by the 6lowpan code to copy a fragment's
- * payload from uIP and send it down the stack..
+ * payload from uIP and send it down the stack.
  * \param uip_offset the offset in the uIP buffer where to copy the payload from
  * \param dest the link layer destination address of the packet
  * \return 1 if success, 0 otherwise
