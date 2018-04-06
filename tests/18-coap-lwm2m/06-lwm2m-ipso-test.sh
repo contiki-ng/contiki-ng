@@ -3,12 +3,13 @@
 # Contiki directory
 CONTIKI=$1
 # Test basename
-BASENAME=06-lwm2m-test
+BASENAME=06-lwm2m-ipso-test
 
 IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node - lwm2m/ipso objects"
+make -C $CONTIKI/examples/ipso-objects clean >/dev/null
 make -C $CONTIKI/examples/ipso-objects > make.log 2> make.err
 sudo $CONTIKI/examples/ipso-objects/example-ipso-objects.native > node.log 2> node.err &
 CPID=$!
@@ -19,7 +20,15 @@ wget -nc https://joakimeriksson.github.io/resources/leshan-server-demo-1.0.0-SNA
 echo "Starting leshan server"
 java -jar leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar >leshan.log 2>leshan.err &
 LESHID=$!
-sleep 50
+
+COUNTER=10
+while [ $COUNTER -gt 0 ]; do
+    sleep 5
+    if grep -q 'OK' leshan.err ; then
+        break
+    fi
+    let COUNTER-=1
+done
 
 echo "Closing native node"
 sleep 1
