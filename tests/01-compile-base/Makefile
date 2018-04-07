@@ -20,7 +20,7 @@ rpl-udp/sky \
 rpl-border-router/native \
 rpl-border-router/sky \
 slip-radio/sky \
-ipv6-hooks/sky \
+libs/ipv6-hooks/sky \
 nullnet/native \
 
 TOOLS=
