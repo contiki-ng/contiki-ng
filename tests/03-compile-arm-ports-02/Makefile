@@ -14,8 +14,8 @@ platform-specific/zoul/rtcc/zoul \
 platform-specific/zoul/zoul \
 coap/zoul \
 multicast/zoul \
-ipso-objects/zoul \
-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
+lwm2m-ipso-objects/zoul \
+lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
 hello-world/zoul \
 sensniff/zoul \
 sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \

@@ -40,7 +40,7 @@ sensniff/cc2538dk \
 rpl-udp/cc2538dk \
 coap/cc2538dk \
 slip-radio/cc2538dk \
-ipso-objects/cc2538dk \
+lwm2m-ipso-objects/cc2538dk \
 multicast/cc2538dk \
 dev/gpio-hal/cc2538dk \
 dev/leds/cc2538dk \
