@@ -64,6 +64,8 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 .SUFFIXES:
 
+CLEAN += COOJA.log
+
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/x86
 

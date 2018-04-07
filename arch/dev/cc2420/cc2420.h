@@ -43,7 +43,7 @@
 #define CC2420_H_
 
 #include "contiki.h"
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "dev/radio.h"
 #include "cc2420_const.h"
 #include "lib/aes-128.h"

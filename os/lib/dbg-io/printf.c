@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2009, Simon Berg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,63 +29,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc2538
- * @{
- *
- * \defgroup cc2538-gpio-hal CC2538 GPIO HAL implementation
- *
- * @{
- *
- * \file
- *     Header file for the CC2538 GPIO HAL functions
- *
- * \note
- *     Do not include this header directly
- */
-/*---------------------------------------------------------------------------*/
-#ifndef GPIO_HAL_ARCH_H_
-#define GPIO_HAL_ARCH_H_
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio.h"
+#include "lib/dbg-io/dbg.h"
 
-#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <strformat.h>
 /*---------------------------------------------------------------------------*/
-#define PIN_TO_PORT(pin) (pin >> 3)
-#define PIN_TO_NUM(pin) (pin % 8)
-#define PIN_TO_PORT_BASE(pin) GPIO_PORT_TO_BASE(PIN_TO_PORT(pin))
+static strformat_result
+write_str(void *user_data, const char *data, unsigned int len)
+{
+  if(len > 0) {
+    dbg_send_bytes((unsigned char *)data, len);
+  }
+  return STRFORMAT_OK;
+}
 /*---------------------------------------------------------------------------*/
-#define gpio_hal_arch_interrupt_enable(p) do { \
-  GPIO_ENABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
-  NVIC_EnableIRQ(PIN_TO_PORT(p)); \
-} while(0);
-
-#define gpio_hal_arch_interrupt_disable(p) \
-  GPIO_DISABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
-
-#define gpio_hal_arch_pin_set_input(p) do { \
-  GPIO_SOFTWARE_CONTROL(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
-  GPIO_SET_INPUT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
-} while(0);
-
-#define gpio_hal_arch_pin_set_output(p) do { \
-  GPIO_SOFTWARE_CONTROL(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
-  GPIO_SET_OUTPUT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
-} while(0);
-
-#define gpio_hal_arch_set_pin(p) \
-  GPIO_SET_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
-
-#define gpio_hal_arch_clear_pin(p) \
-  GPIO_CLR_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
-
-#define gpio_hal_arch_read_pin(p) \
-  (GPIO_READ_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)) == 0 ? 0 : 1)
+static strformat_context_t ctxt =
+{
+  write_str,
+  NULL
+};
 /*---------------------------------------------------------------------------*/
-#endif /* GPIO_HAL_ARCH_H_ */
+int
+printf(const char *fmt, ...)
+{
+  int res;
+  va_list ap;
+  va_start(ap, fmt);
+  res = format_str_v(&ctxt, fmt, ap);
+  va_end(ap);
+  return res;
+}
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

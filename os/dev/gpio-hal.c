@@ -40,9 +40,14 @@
 #include "contiki.h"
 #include "dev/gpio-hal.h"
 #include "lib/list.h"
+#include "sys/log.h"
 
 #include <stdint.h>
 #include <string.h>
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#define LOG_MODULE "GPIO HAL"
+#define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 LIST(handlers);
 /*---------------------------------------------------------------------------*/
@@ -78,6 +83,7 @@ void
 gpio_hal_arch_toggle_pin(gpio_hal_pin_t pin)
 {
   if(pin >= GPIO_HAL_PIN_COUNT) {
+    LOG_ERR("Pin %u out of bounds\n", pin);
     return;
   }
 

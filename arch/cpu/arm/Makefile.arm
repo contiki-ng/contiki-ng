@@ -31,7 +31,7 @@ CONTIKI_ARM_DIRS += . common/dbg-io
 CONTIKI_CPU_DIRS += $(addprefix ../arm/, $(CONTIKI_ARM_DIRS))
 
 ### CPU-dependent cleanup files
-CLEAN += *.d *.elf *.hex
+CLEAN += *.elf *.bin *.lst *.hex *.i16hex
 
 ### Don't treat the following files as intermediate
 .PRECIOUS: %.elf %.hex %.bin

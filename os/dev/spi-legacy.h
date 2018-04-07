@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Nordic Semiconductor
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,44 +27,66 @@
  * SUCH DAMAGE.
  *
  */
+
 /**
- * \addtogroup nrf52832
- * @{
- *
  * \file
- *         Hardware specific implementation of putchar() and puts() functions.
+ *         Basic SPI macros
  * \author
- *         Wojciech Bober <wojciech.bober@nordicsemi.no>
- *
+ *         Joakim Eriksson <joakime@sics.se>
+ *         Niclas Finne <nfi@sics.se>
  */
-/*---------------------------------------------------------------------------*/
-#include <string.h>
-#include "dev/uart0.h"
-/*---------------------------------------------------------------------------*/
-int
-putchar(int c)
-{
-  uart0_writeb(c);
-  return c;
-}
-/*---------------------------------------------------------------------------*/
-int
-puts(const char *str)
-{
-  int i;
 
-  if (str == NULL) {
-    return 0;
-  }
+#ifndef SPI_LEGACY_H_
+#define SPI_LEGACY_H_
 
-  for (i = 0; i < strlen(str); i++) {
-    uart0_writeb(str[i]);
-  }
+/* Define macros to use for checking SPI transmission status depending
+   on if it is possible to wait for TX buffer ready. This is possible
+   on for example MSP430 but not on AVR. */
+#ifdef SPI_WAITFORTxREADY
+#define SPI_WAITFORTx_BEFORE() SPI_WAITFORTxREADY()
+#define SPI_WAITFORTx_AFTER()
+#define SPI_WAITFORTx_ENDED() SPI_WAITFOREOTx()
+#else /* SPI_WAITFORTxREADY */
+#define SPI_WAITFORTx_BEFORE()
+#define SPI_WAITFORTx_AFTER() SPI_WAITFOREOTx()
+#define SPI_WAITFORTx_ENDED()
+#endif /* SPI_WAITFORTxREADY */
 
-  uart0_writeb('\n');
-  return i;
-}
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- */
+extern unsigned char spi_busy;
+
+void spi_init(void);
+
+/* Write one character to SPI */
+#define SPI_WRITE(data) \
+  do { \
+    SPI_WAITFORTx_BEFORE(); \
+    SPI_TXBUF = data; \
+    SPI_WAITFOREOTx(); \
+  } while(0)
+
+/* Write one character to SPI - will not wait for end
+   useful for multiple writes with wait after final */
+#define SPI_WRITE_FAST(data) \
+  do { \
+    SPI_WAITFORTx_BEFORE(); \
+    SPI_TXBUF = data; \
+    SPI_WAITFORTx_AFTER(); \
+  } while(0)
+
+/* Read one character from SPI */
+#define SPI_READ(data) \
+  do { \
+    SPI_TXBUF = 0; \
+    SPI_WAITFOREORx(); \
+    data = SPI_RXBUF; \
+  } while(0)
+
+/* Flush the SPI read register */
+#ifndef SPI_FLUSH
+#define SPI_FLUSH() \
+  do { \
+    SPI_RXBUF; \
+  } while(0)
+#endif
+
+#endif /* SPI_LEGACY_H_ */

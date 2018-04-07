@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2014, SICS Swedish ICT.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,24 +25,32 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
 
-#ifndef BR_PROJECT_ROUTER_CONF_H_
-#define BR_PROJECT_ROUTER_CONF_H_
+#include <MicroInt.h>
+#include "dev/uart0.h"
+/*---------------------------------------------------------------------------*/
+int
+dbg_putchar(int c)
+{
+  uart0_writeb(c);
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
+{
+  unsigned int i = 0;
 
-#ifndef UIP_FALLBACK_INTERFACE
-#define UIP_FALLBACK_INTERFACE rpl_interface
-#endif
-
-/* Needed for slip-bridge */
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
-
-#define UIP_CONF_TCP 0
-#define QUEUEBUF_CONF_NUM 16
-
-#define TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES 8
-
-#include "../../common-conf.h"
-
-#endif /* PROJECT_ROUTER_CONF_H_ */
+  while(s && *s != 0) {
+    if(i >= len) {
+      break;
+    }
+    uart0_writeb(*s++);
+    i++;
+  }
+  return i;
+}
+/*---------------------------------------------------------------------------*/

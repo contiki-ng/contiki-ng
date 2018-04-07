@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,38 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc26xx
- * @{
- *
- * \defgroup cc26xx-char-io CC13xx/CC26xx Character I/O
- *
- * CC13xx/CC26xx CPU-specific functions for debugging and SLIP I/O
- * @{
- *
- * \file
- * Header file for the CC13xx/CC26xx Debug I/O module
- */
-#ifndef DBG_H_
-#define DBG_H_
+/* Enable MQTT client extensions */
+#define MQTT_CLIENT_CONF_WITH_EXTENSIONS 1
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Print a stream of bytes
- * \param seq A pointer to the stream
- * \param len The number of bytes to print
- * \return The number of printed bytes
- *
- * This function is an arch-specific implementation required by the dbg-io
- * API in cpu/arm/common/dbg-io. It prints a stream of bytes over the
- * peripheral used by the platform.
- */
-unsigned int dbg_send_bytes(const unsigned char *seq, unsigned int len);
-/*---------------------------------------------------------------------------*/
-#endif /* DBG_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

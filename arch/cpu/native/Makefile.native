@@ -20,12 +20,12 @@ CFLAGSNO = -Wall -g -I/usr/local/include $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
 
 ifeq ($(HOST_OS),Darwin)
-AROPTS = -r
-LDFLAGS += -Wl,-flat_namespace
+AROPTS = -rc
+LDFLAGS += -Wl,-flat_namespace,-map,$(CONTIKI_NG_PROJECT_MAP)
 CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
 else
 ifeq ($(HOST_OS),Linux)
-LDFLAGS += -Wl,-Map=contiki-$(TARGET).map,-export-dynamic
+LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),-export-dynamic
 endif
 endif
 

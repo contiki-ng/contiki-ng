@@ -15,7 +15,8 @@ CONTIKI_CPU_DIRS = . dev usb usb/common usb/common/cdc-acm
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += soc.c clock.c rtimer-arch.c uart.c watchdog.c
-CONTIKI_CPU_SOURCEFILES += nvic.c sys-ctrl.c gpio.c ioc.c spi.c adc.c
+CONTIKI_CPU_SOURCEFILES += nvic.c sys-ctrl.c gpio.c ioc.c spi-legacy.c adc.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
 CONTIKI_CPU_SOURCEFILES += crypto.c aes.c ecb.c cbc.c ctr.c cbc-mac.c gcm.c
 CONTIKI_CPU_SOURCEFILES += ccm.c sha256.c gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += cc2538-aes-128.c cc2538-ccm-star.c
@@ -27,14 +28,13 @@ CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c
 CONTIKI_CPU_SOURCEFILES += i2c.c cc2538-temp-sensor.c vdd3-sensor.c
 CONTIKI_CPU_SOURCEFILES += cfs-coffee.c cfs-coffee-arch.c pwm.c
 
-DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
+MODULES += os/lib/dbg-io
 
 USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descriptors.c
 
 CPU_START_SOURCEFILES = startup-gcc.c
 
-CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
-CONTIKI_SOURCEFILES += $(USB_SOURCEFILES)
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(USB_SOURCEFILES)
 
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
 FORCE:

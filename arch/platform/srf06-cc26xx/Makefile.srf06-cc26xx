@@ -19,8 +19,6 @@ CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
-CLEAN += *.srf06-cc26xx
-
 ### Unless the example dictates otherwise, build without code size optimisations
 SMALL ?= 0
 

@@ -359,8 +359,8 @@ process_secure_data(void)
 {
   LOG_INFO("receiving secure UDP datagram from [");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO_("]:%u\n  Length: %u\n", uip_ntohs(UIP_UDP_BUF->srcport),
-            uip_datalen());
+  LOG_INFO_("]:%u\n", uip_ntohs(UIP_UDP_BUF->srcport));
+  LOG_INFO("  Length: %u\n", uip_datalen());
 
   if(dtls_context) {
     dtls_handle_message(dtls_context, (coap_endpoint_t *)get_src_endpoint(1),
@@ -374,8 +374,8 @@ process_data(void)
 {
   LOG_INFO("receiving UDP datagram from [");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO_("]:%u\n  Length: %u\n", uip_ntohs(UIP_UDP_BUF->srcport),
-            uip_datalen());
+  LOG_INFO_("]:%u\n", uip_ntohs(UIP_UDP_BUF->srcport));
+  LOG_INFO("  Length: %u\n", uip_datalen());
 
   coap_receive(get_src_endpoint(0), uip_appdata, uip_datalen());
 }
