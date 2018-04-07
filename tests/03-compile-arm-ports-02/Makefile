@@ -28,7 +28,7 @@ libs/logging/zoul \
 6tisch/etsi-plugtest-2017/zoul:BOARD=remote \
 6tisch/6p-packet/zoul \
 6tisch/sixtop/zoul \
-http-socket/zoul \
+websocket/zoul \
 libs/timers/zoul \
 libs/energest/zoul \
 libs/trickle-library/zoul \
