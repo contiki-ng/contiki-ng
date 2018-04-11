@@ -55,7 +55,7 @@
  * - SPIX_FLUSH(x)
  *
  * Some of the old functions and macros are still supported.
- * When using these deprecated functions, the SSI module to use 
+ * When using these deprecated functions, the SSI module to use
  * has to be be selected by means of the macro SPI_CONF_DEFAULT_INSTANCE.
  *
  * This SPI driver depends on the following defines:
@@ -78,8 +78,8 @@
  * - SPI1_RX_PORT
  * - SPI1_RX_PIN
  */
-#ifndef SPI_ARCH_H_
-#define SPI_ARCH_H_
+#ifndef SPI_ARCH_LEGACY_H_
+#define SPI_ARCH_LEGACY_H_
 
 #include "contiki.h"
 
@@ -95,14 +95,14 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /* Default values for the clock rate divider */
-#ifdef SPI0_CONF_CPRS_CPSDVSR 
-#define SPI0_CPRS_CPSDVSR               SPI0_CONF_CPRS_CPSDVSR 
+#ifdef SPI0_CONF_CPRS_CPSDVSR
+#define SPI0_CPRS_CPSDVSR               SPI0_CONF_CPRS_CPSDVSR
 #else
 #define SPI0_CPRS_CPSDVSR               2
 #endif
 
-#ifdef SPI1_CONF_CPRS_CPSDVSR 
-#define SPI1_CPRS_CPSDVSR               SPI1_CONF_CPRS_CPSDVSR 
+#ifdef SPI1_CONF_CPRS_CPSDVSR
+#define SPI1_CPRS_CPSDVSR               SPI1_CONF_CPRS_CPSDVSR
 #else
 #define SPI1_CPRS_CPSDVSR               2
 #endif
@@ -120,7 +120,7 @@
 } while(0)
 #define SPIX_FLUSH(spi) do { \
     while(REG(SSI_BASE(spi) + SSI_SR) & SSI_SR_RNE) { \
-        SPIX_BUF(spi);                                           \
+      SPIX_BUF(spi); \
     } \
 } while(0)
 #define SPIX_CS_CLR(port, pin) do { \
@@ -138,13 +138,13 @@
 #define SPI_WAITFOREOTx()               SPIX_WAITFOREOTx(SPI_DEFAULT_INSTANCE)
 #define SPI_WAITFOREORx()               SPIX_WAITFOREORx(SPI_DEFAULT_INSTANCE)
 #ifdef SPI_FLUSH
-#error You must include spi-arch.h before spi.h for the CC2538
+#error You must include spi-arch-legacy.h before spi-legacy.h for the CC2538
 #else
 #define SPI_FLUSH()                     SPIX_FLUSH(SPI_DEFAULT_INSTANCE)
 #endif
 #define SPI_CS_CLR(port, pin)           SPIX_CS_CLR(port, pin)
 #define SPI_CS_SET(port, pin)           SPIX_CS_SET(port, pin)
-#endif  /* #ifdef SPI_DEFAULT_INSTANCE */
+#endif /* #ifdef SPI_DEFAULT_INSTANCE */
 /*---------------------------------------------------------------------------*/
 /** \name Arch-specific SPI functions
  * @{
@@ -183,7 +183,7 @@ void spix_disable(uint8_t spi);
  *
  * See section 19.4.4 in the CC2538 user guide for more information.
  *
- * \param spi            The SSI instance to use.       
+ * \param spi            The SSI instance to use.
  * \param frame_format   Set the SSI frame format. Use SSI_CR0_FRF_MOTOROLA,
  *                       SSI_CR0_FRF_TI, or SSI_CR0_FRF_MICROWIRE.
  * \param clock_polarity In Motorola mode, set whether the clock is high or low
@@ -215,7 +215,7 @@ void spix_cs_init(uint8_t port, uint8_t pin);
 
 /** @} */
 
-#endif /* SPI_ARCH_H_ */
+#endif /* SPI_ARCH_LEGACY_H_ */
 
 /**
  * @}

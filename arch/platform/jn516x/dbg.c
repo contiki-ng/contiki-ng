@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science
+ * Copyright (c) 2014, SICS Swedish ICT.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,50 +25,32 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
-
-#include "contiki.h"
-#include "contiki-net.h"
-
-#include "dev/spi-legacy.h"
-#include "cc2420.h"
-#include "isr_compat.h"
-
-#ifdef CC2420_CONF_SFD_TIMESTAMPS
-#define CONF_SFD_TIMESTAMPS CC2420_CONF_SFD_TIMESTAMPS
-#endif /* CC2420_CONF_SFD_TIMESTAMPS */
-
-#ifndef CONF_SFD_TIMESTAMPS
-#define CONF_SFD_TIMESTAMPS 0
-#endif /* CONF_SFD_TIMESTAMPS */
-
-#ifdef CONF_SFD_TIMESTAMPS
-#include "cc2420-arch-sfd.h"
-#endif
-
 /*---------------------------------------------------------------------------*/
-ISR(CC2420_IRQ, cc2420_port1_interrupt)
+#include "contiki.h"
+
+#include <MicroInt.h>
+#include "dev/uart0.h"
+/*---------------------------------------------------------------------------*/
+int
+dbg_putchar(int c)
 {
-  if(cc2420_interrupt()) {
-    LPM4_EXIT;
-  }
+  uart0_writeb(c);
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
-void
-cc2420_arch_init(void)
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
 {
-  spi_init();
+  unsigned int i = 0;
 
-  /* all input by default, set these as output */
-  CC2420_CSN_PORT(DIR) |= BV(CC2420_CSN_PIN);
-  CC2420_VREG_PORT(DIR) |= BV(CC2420_VREG_PIN);
-  CC2420_RESET_PORT(DIR) |= BV(CC2420_RESET_PIN);
-
-#if CONF_SFD_TIMESTAMPS
-  cc2420_arch_sfd_init();
-#endif
-
-  CC2420_SPI_DISABLE();                /* Unselect radio. */
+  while(s && *s != 0) {
+    if(i >= len) {
+      break;
+    }
+    uart0_writeb(*s++);
+    i++;
+  }
+  return i;
 }
 /*---------------------------------------------------------------------------*/

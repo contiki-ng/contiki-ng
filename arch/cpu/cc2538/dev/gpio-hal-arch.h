@@ -53,6 +53,7 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 #define PIN_TO_PORT(pin) (pin >> 3)
+#define PIN_TO_NUM(pin) (pin % 8)
 #define PIN_TO_PORT_BASE(pin) GPIO_PORT_TO_BASE(PIN_TO_PORT(pin))
 /*---------------------------------------------------------------------------*/
 #define gpio_hal_arch_interrupt_enable(p) do { \

@@ -17,8 +17,6 @@ CONTIKI_SOURCEFILES += dbg.c
 MODULES += os/lib/dbg-io
 endif
 
-CLEAN += *.nrf52dk
-
 ### Unless the example dictates otherwise, build with code size optimisations switched off
 SMALL ?= 0
 

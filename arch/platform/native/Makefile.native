@@ -2,9 +2,6 @@ ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
-ifeq ($(HOST_OS),Darwin)
-  AROPTS = rc
-endif
 
 CONTIKI_TARGET_DIRS = . dev
 CONTIKI_TARGET_MAIN = ${addprefix $(OBJECTDIR)/,contiki-main.o}
@@ -29,8 +26,6 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 # Enable nullmac by default
 MAKE_MAC ?= MAKE_MAC_NULLMAC
-
-CLEAN += *.native
 
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/native

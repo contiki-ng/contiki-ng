@@ -180,6 +180,21 @@ find_objective_function(rpl_ocp_t ocp)
 }
 /*---------------------------------------------------------------------------*/
 void
+rpl_refresh_routes(const char *str)
+{
+  if(rpl_dag_root_is_root()) {
+    LOG_WARN("incrementing DTSN (%s), current %u)\n",
+         str, curr_instance.dtsn_out);
+    if(LOG_INFO_ENABLED) {
+      rpl_neighbor_print_list("Refresh routes (before)");
+    }
+
+    /* Increment DTSN */
+    RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
 rpl_global_repair(const char *str)
 {
   if(rpl_dag_root_is_root()) {

@@ -35,10 +35,9 @@
 
 #define IMPLEMENT_PRINTF 1
 
-#if MAX_LOG_LENGTH < 1024
-#undef MAX_LOG_LENGTH
-#define MAX_LOG_LENGTH 1024
-#endif /* MAX_LOG_LENGTH < 1024 */
+#ifndef MAX_LOG_LENGTH
+#define MAX_LOG_LENGTH 8192
+#endif /* MAX_LOG_LENGTH */
 
 
 const struct simInterface simlog_interface;

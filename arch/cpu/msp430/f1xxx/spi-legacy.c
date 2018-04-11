@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2006, Swedish Institute of Computer Science
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,21 +28,41 @@
  *
  */
 
-#ifndef BR_PROJECT_ROUTER_CONF_H_
-#define BR_PROJECT_ROUTER_CONF_H_
+#include "contiki.h"
 
-#ifndef UIP_FALLBACK_INTERFACE
-#define UIP_FALLBACK_INTERFACE rpl_interface
-#endif
+/*
+ * On the Tmote sky access to I2C/SPI/UART0 must always be
+ * exclusive. Set spi_busy so that interrupt handlers can check if
+ * they are allowed to use the bus or not. Only the CC2420 radio needs
+ * this in practice.
+ *
+ */
+unsigned char spi_busy = 0;
 
-/* Needed for slip-bridge */
-#define SLIP_BRIDGE_CONF_NO_PUTCHAR 0
+/*
+ * Initialize SPI bus.
+ */
+void
+spi_init(void)
+{
+/*
+  static unsigned char spi_inited = 0;
 
-#define UIP_CONF_TCP 0
-#define QUEUEBUF_CONF_NUM 16
+  if (spi_inited)
+    return;
+*/
+  /* Initalize ports for communication with SPI units. */
 
-#define TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES 8
+  U0CTL  = CHAR + SYNC + MM + SWRST; /* SW  reset,8-bit transfer, SPI master */
+  U0TCTL = CKPH + SSEL1 + STC;	/* Data on Rising Edge, SMCLK, 3-wire. */
 
-#include "../../common-conf.h"
+  U0BR0  = 0x02;		/* SPICLK set baud. */
+  U0BR1  = 0;  /* Dont need baud rate control register 2 - clear it */
+  U0MCTL = 0;			/* Dont need modulation control. */
 
-#endif /* PROJECT_ROUTER_CONF_H_ */
+  P3SEL |= BV(SCK) | BV(MOSI) | BV(MISO); /* Select Peripheral functionality */
+  P3DIR |= BV(SCK) | BV(MISO);	/* Configure as outputs(SIMO,CLK). */
+
+  ME1   |= USPIE0;	   /* Module enable ME1 --> U0ME? xxx/bg */
+  U0CTL &= ~SWRST;		/* Remove RESET */
+}

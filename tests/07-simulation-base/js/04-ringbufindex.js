@@ -6,7 +6,7 @@ while(true) {
     YIELD();
 
     log.log(time + " " + "node-" + id + " "+ msg + "\n");
-    
+
     if(msg.contains("=check-me=") == false) {
         continue;
     }
@@ -23,4 +23,3 @@ if(failed) {
     log.testFailed();
 }
 log.testOK();
-

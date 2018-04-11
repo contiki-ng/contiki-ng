@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "dev/xmem.h"
 #include "dev/watchdog.h"
 

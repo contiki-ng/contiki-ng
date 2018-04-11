@@ -58,6 +58,8 @@
 #define TSCH_CONF_HW_FRAME_FILTERING  0
 #endif /* MAC_CONF_WITH_TSCH */
 /*---------------------------------------------------------------------------*/
+#define SPI_CONF_CONTROLLER_COUNT 2
+/*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
 #define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
 
