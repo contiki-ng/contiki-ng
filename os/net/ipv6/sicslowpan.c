@@ -1625,6 +1625,15 @@ output(const linkaddr_t *localdest)
     packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
     packetbuf_payload_len = (mac_max_payload - packetbuf_hdr_len) & 0xfffffff8;
     LOG_INFO_("(len %d, tag %d)\n", packetbuf_payload_len, frag_tag);
+
+    if(packetbuf_payload_len < 0) {
+      /* The current implementation requires that all headers fit in the first
+       * fragment. Here is a corner case where the header did fit packetbuf
+       * but do no longer fit after truncating for a length multiple of 8. */
+      LOG_WARN("compressed header does not fit first fragment\n");
+      return 0;
+    }
+
     memcpy(packetbuf_ptr + packetbuf_hdr_len,
            (uint8_t *)UIP_IP_BUF + uncomp_hdr_len, packetbuf_payload_len);
     packetbuf_set_datalen(packetbuf_payload_len + packetbuf_hdr_len);
