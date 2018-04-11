@@ -22,6 +22,7 @@ rpl-border-router/sky \
 slip-radio/sky \
 ipv6-hooks/sky \
 nullnet/native \
+mqtt-client/native \
 
 TOOLS=
 

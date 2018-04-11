@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = gpio-hal-example
 CONTIKI = ../../..
 
-PLATFORMS_ONLY = srf06-cc26xx cc2538dk openmote-cc2538 zoul
+PLATFORMS_ONLY = srf06-cc26xx cc2538dk openmote-cc2538 zoul native
 
 include $(CONTIKI)/Makefile.identify-target
 
