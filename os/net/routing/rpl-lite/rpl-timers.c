@@ -150,11 +150,11 @@ rpl_timers_dio_reset(const char *str)
 {
   if(rpl_dag_ready_to_advertise()) {
     LOG_INFO("reset DIO timer (%s)\n", str);
-#if !RPL_LEAF_ONLY
-    curr_instance.dag.dio_counter = 0;
-    curr_instance.dag.dio_intcurrent = curr_instance.dio_intmin;
-    new_dio_interval();
-#endif /* RPL_LEAF_ONLY */
+    if(!rpl_get_leaf_only()) {
+        curr_instance.dag.dio_counter = 0;
+        curr_instance.dag.dio_intcurrent = curr_instance.dio_intmin;
+        new_dio_interval();
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
