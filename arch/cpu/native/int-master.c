@@ -30,27 +30,38 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/leds.h"
-#include "dev/gpio-hal.h"
+#include "sys/int-master.h"
 
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-const leds_t leds_arch_leds[] = {
-  {
-    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L1_PORT, LEDS_ARCH_L1_PIN),
-    .negative_logic = false
-  },
-  {
-    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L2_PORT, LEDS_ARCH_L2_PIN),
-    .negative_logic = false
-  },
-  {
-    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L3_PORT, LEDS_ARCH_L3_PIN),
-    .negative_logic = false
-  },
-  {
-    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L4_PORT, LEDS_ARCH_L4_PIN),
-    .negative_logic = false
-  },
-};
+#define DISABLED 0
+#define ENABLED  1
+/*---------------------------------------------------------------------------*/
+static int_master_status_t stat = DISABLED;
+/*---------------------------------------------------------------------------*/
+void
+int_master_enable(void)
+{
+  stat = ENABLED;
+}
+/*---------------------------------------------------------------------------*/
+int_master_status_t
+int_master_read_and_disable(void)
+{
+  int_master_status_t rv = stat;
+  stat = DISABLED;
+  return rv;
+}
+/*---------------------------------------------------------------------------*/
+void
+int_master_status_set(int_master_status_t status)
+{
+  stat = status;
+}
+/*---------------------------------------------------------------------------*/
+bool
+int_master_is_enabled(void)
+{
+  return stat == DISABLED ? false : true;
+}
 /*---------------------------------------------------------------------------*/

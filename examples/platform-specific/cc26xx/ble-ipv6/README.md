@@ -6,7 +6,7 @@ can be exchanged using BLE connections (IPv6 over BLE).
 This Contiki extenstion implements [BLEach][bleachWeb], a fully open-source IPv6-over-BLE stack for Contiki.
 BLEach in Contiki-NG can be used for node (BLE slave) devices.
 
-It was developed by 
+It was developed by
 * [Michael Spoerk](http://www.michaelspoerk.com), Graz University of Technology, michael.spoerk@tugraz.at, github user: [spoerk](https://github.com/spoerk)
 
 This IPv6-over-BLE stack is presented and evaluated in the paper:
@@ -21,7 +21,7 @@ This implementation includes:
   * BLE link layer support for version [4.1][bleSpec]:
     * BLE advertisement
     * BLE connection slave
-    
+
 It has been tested on the TI CC2650 SensorTag and the TI CC2650 LaunchPad hardware.
 
 ## Modules
@@ -78,4 +78,3 @@ specifies the used advertisement interval in milliseconds.
 [rfc7668]: https://tools.ietf.org/html/rfc7668
 [bleSpec]: https://www.bluetooth.com/specifications/bluetooth-core-specification/legacy-specifications
 [bleachWeb]: http://www.iti.tugraz.at/BLEach
-

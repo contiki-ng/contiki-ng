@@ -113,13 +113,15 @@ static spi_device_t flash_spi_configuration_default = {
 /**
  * Get spi configuration, return default configuration if NULL
  */
-static spi_device_t*
-get_spi_conf(spi_device_t *conf) {
+static spi_device_t *
+get_spi_conf(spi_device_t *conf)
+{
   if(conf == NULL) {
     return &flash_spi_configuration_default;
   }
   return conf;
-}/*---------------------------------------------------------------------------*/
+}
+/*---------------------------------------------------------------------------*/
 /**
  * Clear external flash CSN line
  */
@@ -334,7 +336,7 @@ ext_flash_open(spi_device_t *conf)
   /* Put the part is standby mode */
   power_standby(flash_spi_configuration);
 
-  if (verify_part(flash_spi_configuration) == VERIFY_PART_OK) {
+  if(verify_part(flash_spi_configuration) == VERIFY_PART_OK) {
     return true;
   }
 
@@ -353,7 +355,7 @@ ext_flash_close(spi_device_t *conf)
 
   /* Put the part in low power mode */
   ret = power_down(flash_spi_configuration);
-  
+
   /* SPI is released no matter if power_down() succeeds or fails */
   if(spi_release(flash_spi_configuration) != SPI_DEV_STATUS_OK) {
     return false;
@@ -474,7 +476,7 @@ ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length)
   uint8_t wbuf[4];
   uint32_t i, numsectors;
   uint32_t endoffset = offset + length - 1;
-  
+
   spi_device_t *flash_spi_configuration;
 
   flash_spi_configuration = get_spi_conf(conf);
