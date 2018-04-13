@@ -401,7 +401,7 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
     if(dio->rank == ROOT_RANK) {
       /* Before returning, if the DIO was from the root, an old DAG versions
        * likely incidates a root reboot. Reset our DIO timer to make sure the
-       * root hears our version ASAP, and in trun triggers a global repair. */
+       * root hears our version ASAP, and in turn triggers a global repair. */
       rpl_timers_dio_reset("Heard old version from root");
     }
     return;
