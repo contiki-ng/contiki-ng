@@ -23,6 +23,9 @@ slip-radio/sky \
 libs/ipv6-hooks/sky \
 nullnet/native \
 mqtt-client/native \
+coap/coap-example-client/native \
+coap/coap-example-server/native \
+coap/coap-plugtest-server/native \
 
 TOOLS=
 
