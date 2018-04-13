@@ -47,6 +47,7 @@
 #include "sys/stack-check.h"
 #include "dev/watchdog.h"
 
+#include "net/app-layer/coap/coap-engine.h"
 #include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
@@ -130,6 +131,11 @@ main(void)
 #if BUILD_WITH_SHELL
   serial_shell_init();
   LOG_DBG("With Shell\n");
+#endif /* BUILD_WITH_SHELL */
+
+#if BUILD_WITH_COAP
+  coap_engine_init();
+  LOG_DBG("With CoAP\n");
 #endif /* BUILD_WITH_SHELL */
 
   autostart_start(autostart_processes);

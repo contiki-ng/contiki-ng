@@ -112,15 +112,12 @@ PROCESS_THREAD(er_example_server, ev, data)
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
   PRINTF("CoAP max chunk: %u\n", COAP_MAX_CHUNK_SIZE);
 
-  /* Initialize the REST engine. */
-  coap_engine_init();
-
   /*
    * Bind the resources to their Uri-Path.
    * WARNING: Activating twice only means alternate path, not two instances!
    * All static variables are the same for each URI path.
    */
-  coap_activate_resource(&res_hello, "test/hello");
+ coap_activate_resource(&res_hello, "test/hello");
  coap_activate_resource(&res_mirror, "debug/mirror");
  coap_activate_resource(&res_chunks, "test/chunks");
  coap_activate_resource(&res_separate, "test/separate");
