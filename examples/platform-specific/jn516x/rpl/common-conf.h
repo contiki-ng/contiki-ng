@@ -72,8 +72,6 @@
 
 #define IEEE802154_CONF_PANID 0xabcd
 
-#define MICROMAC_CONF_CHANNEL 26
-
 /* UART Configuration */
 
 #define UART_HW_FLOW_CTRL 0
