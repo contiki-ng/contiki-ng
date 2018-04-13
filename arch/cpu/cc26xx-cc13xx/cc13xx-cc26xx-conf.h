@@ -54,14 +54,6 @@
 #define CC2650_FAST_RADIO_STARTUP               (MAC_CONF_WITH_TSCH)
 #endif
 
-#ifdef RF_CHANNEL
-#define RF_CORE_CONF_CHANNEL             RF_CHANNEL
-#endif
-
-#ifndef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CONF_CHANNEL                     25
-#endif
-
 /* Number of Prop Mode RX buffers */
 #ifndef PROP_MODE_CONF_RX_BUF_CNT
 #define PROP_MODE_CONF_RX_BUF_CNT        4
@@ -81,9 +73,10 @@
 #if CC13XX_CONF_PROP_MODE
 #define NETSTACK_CONF_RADIO        prop_mode_driver
 
-#ifndef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CONF_CHANNEL                      0
-#endif
+/* Channels count from 0 upwards in IEEE 802.15.4g */
+#ifndef IEEE802154_CONF_DEFAULT_CHANNEL
+#define IEEE802154_CONF_DEFAULT_CHANNEL                      0
+#endif /* IEEE802154_CONF_DEFAULT_CHANNEL */
 
 #define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 400)
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
