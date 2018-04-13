@@ -57,13 +57,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-/* The channel to use in IEEE or prop mode. */
-#ifdef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CHANNEL RF_CORE_CONF_CHANNEL
-#else
-#define RF_CORE_CHANNEL 25
-#endif /* RF_CORE_CONF_IEEE_MODE_CHANNEL */
-/*---------------------------------------------------------------------------*/
 #define RF_CORE_FRONT_END_MODE_DIFFERENTIAL   0
 #define RF_CORE_FRONT_END_MODE_SINGLE_RFP     1
 #define RF_CORE_FRONT_END_MODE_SINGLE_RFN     2

@@ -107,13 +107,6 @@ PROCESS_THREAD(er_example_server, ev, data)
 
   PRINTF("Starting Erbium Example Server\n");
 
-#ifdef RF_CHANNEL
-  PRINTF("RF channel: %u\n", RF_CHANNEL);
-#endif
-#ifdef IEEE802154_PANID
-  PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
-#endif
-
   PRINTF("uIP buffer: %u\n", UIP_BUFSIZE);
   PRINTF("LL header: %u\n", UIP_LLH_LEN);
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);

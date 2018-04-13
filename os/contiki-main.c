@@ -87,9 +87,15 @@ main(void)
   platform_init_stage_two();
 
   LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
-
-  LOG_INFO(" Net: %s\n", NETSTACK_NETWORK.name);
-  LOG_INFO(" MAC: %s\n", NETSTACK_MAC.name);
+  LOG_INFO("- Routing: %s\n", NETSTACK_ROUTING.name);
+  LOG_INFO("- Net: %s\n", NETSTACK_NETWORK.name);
+  LOG_INFO("- MAC: %s\n", NETSTACK_MAC.name);
+  LOG_INFO("- 802.15.4 PANID: 0x%04x\n", IEEE802154_PANID);
+#if MAC_CONF_WITH_CSMA
+  LOG_INFO("- 802.15.4 Channel: %u\n", IEEE802154_DEFAULT_CHANNEL);
+#elif MAC_CONF_WITH_TSCH
+  LOG_INFO("- 802.15.4 TSCH default hopping sequence length: %u\n", (unsigned)sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE));
+#endif
 
   netstack_init();
 

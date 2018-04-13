@@ -133,7 +133,6 @@ typedef uint64_t rtimer_clock_t;
 
 #define CFS_CONF_OFFSET_TYPE	long
 
-#define RF_CHANNEL                     26
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN 125
 
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0

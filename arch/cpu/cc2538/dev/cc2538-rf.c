@@ -113,7 +113,7 @@ static int8_t rssi;
 static uint8_t crc_corr;
 /*---------------------------------------------------------------------------*/
 static uint8_t rf_flags;
-static uint8_t rf_channel = CC2538_RF_CHANNEL;
+static uint8_t rf_channel = IEEE802154_DEFAULT_CHANNEL;
 
 static int on(void);
 static int off(void);

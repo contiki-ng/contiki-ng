@@ -104,8 +104,6 @@
 
 #if MAC_CONF_WITH_CSMA /* Configure Csma with ACK (default MAC) */
 
-#define MICROMAC_CONF_CHANNEL 26
-
 #define MICROMAC_CONF_AUTOACK 1
 
 /* increase internal radio buffering */
