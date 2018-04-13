@@ -207,11 +207,11 @@ platform_init_stage_three(void)
 #if NETSTACK_CONF_WITH_IPV6
   LOG_INFO("%s, rf channel %u, CCA threshold %i\n",
            NETSTACK_MAC.name,
-           CC2420_CONF_CHANNEL,
+           IEEE802154_DEFAULT_CHANNEL,
            CC2420_CONF_CCA_THRESH);
 #else /* NETSTACK_CONF_WITH_IPV6 */
   LOG_INFO("%s, rf channel %u\n",
-           NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
+           NETSTACK_MAC.name, IEEE802154_DEFAULT_CHANNEL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #if !NETSTACK_CONF_WITH_IPV6
