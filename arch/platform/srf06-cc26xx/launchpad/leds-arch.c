@@ -41,5 +41,3 @@ const leds_t leds_arch_leds[] = {
   { .pin = BOARD_IOID_LED_2, .negative_logic = false },
 };
 /*---------------------------------------------------------------------------*/
-
-

@@ -56,6 +56,9 @@
 #include "net/netstack.h"
 
 #include "dev/serial-line.h"
+#include "dev/button-hal.h"
+#include "dev/gpio-hal.h"
+#include "dev/leds.h"
 
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-debug.h"
@@ -251,6 +254,9 @@ platform_process_args(int argc, char**argv)
 void
 platform_init_stage_one()
 {
+  gpio_hal_init();
+  button_hal_init();
+  leds_init();
   return;
 }
 /*---------------------------------------------------------------------------*/

@@ -8,6 +8,6 @@ CONTIKI = ../..
 
 MODULES_REL += arch/platform/$(TARGET)
 
-PLATFORMS_ONLY = srf06-cc26xx cc2538dk openmote-cc2538 zoul
+PLATFORMS_ONLY = srf06-cc26xx cc2538dk openmote-cc2538 zoul native
 
 include $(CONTIKI)/Makefile.include
