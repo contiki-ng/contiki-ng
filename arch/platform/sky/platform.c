@@ -204,15 +204,7 @@ platform_init_stage_three(void)
     LOG_INFO("Node id: N/A\n");
   }
 
-#if NETSTACK_CONF_WITH_IPV6
-  LOG_INFO("%s, rf channel %u, CCA threshold %i\n",
-           NETSTACK_MAC.name,
-           IEEE802154_DEFAULT_CHANNEL,
-           CC2420_CONF_CCA_THRESH);
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  LOG_INFO("%s, rf channel %u\n",
-           NETSTACK_MAC.name, IEEE802154_DEFAULT_CHANNEL);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+  LOG_INFO("CC2420 CCA threshold %i\n", CC2420_CONF_CCA_THRESH);
 
 #if !NETSTACK_CONF_WITH_IPV6
   uart1_set_input(serial_line_input_byte);
