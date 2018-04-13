@@ -75,7 +75,9 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
     memcpy(buffer, message, length);
   } else {
     memcpy(buffer, message, length);
-  } coap_set_header_content_format(response, TEXT_PLAIN); /* text/plain is the default, hence this option could be omitted. */
+  }
+
+  coap_set_header_content_format(response, TEXT_PLAIN); /* text/plain is the default, hence this option could be omitted. */
   coap_set_header_etag(response, (uint8_t *)&length, 1);
   coap_set_payload(response, buffer, length);
 }
