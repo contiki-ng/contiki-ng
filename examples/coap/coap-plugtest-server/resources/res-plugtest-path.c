@@ -36,45 +36,42 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "coap-engine.h"
 #include "coap.h"
-#include "plugtest.h"
 
-static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-RESOURCE(res_plugtest_create1,
-         "title=\"Creates on PUT\"",
-         NULL,
-         NULL,
-         res_put_handler,
-         res_delete_handler);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-static uint8_t create1_exists = 0;
+PARENT_RESOURCE(res_plugtest_path,
+                "title=\"Path test resource\";ct=\"40\"",
+                res_get_handler,
+                NULL,
+                NULL,
+                NULL);
 
 static void
-res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
+                uint16_t preferred_size, int32_t *offset)
 {
-  PRINTF("/create1       PUT");
 
-  if(coap_get_header_if_none_match(request)) {
-    if(!create1_exists) {
-      coap_set_status_code(response, CREATED_2_01);
+  const char *uri_path = NULL;
+  int len = coap_get_header_uri_path(request, &uri_path);
+  int base_len = strlen(res_plugtest_path.url);
 
-      create1_exists = 1;
-    } else {
-      coap_set_status_code(response, PRECONDITION_FAILED_4_12);
-    }
+  if(len == base_len) {
+    coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
+             "</path/sub1>,</path/sub2>,</path/sub3>");
   } else {
-    coap_set_status_code(response, CHANGED_2_04);
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "/%.*s", len, uri_path);
   }
-}
-static void
-res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  PRINTF("/create1       DELETE ");
-  coap_set_status_code(response, DELETED_2_02);
 
-  create1_exists = 0;
+  coap_set_payload(response, buffer, strlen((char *)buffer));
 }

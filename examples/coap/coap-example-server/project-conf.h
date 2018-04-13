@@ -31,30 +31,14 @@
 
 /**
  * \file
- *      ETSI Plugtest resource
+ *      Erbium (Er) example project configuration.
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <string.h>
-#include "coap-engine.h"
-#include "coap.h"
-#include "plugtest.h"
+#ifndef __PROJECT_CONF_H__
+#define __PROJECT_CONF_H__
 
-static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+#define LOG_LEVEL_APP LOG_LEVEL_DBG
 
-RESOURCE(res_plugtest_create2,
-         "title=\"Creates on POST\"",
-         NULL,
-         res_post_handler,
-         NULL,
-         NULL);
-
-static void
-res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  PRINTF("/create2       ");
-
-  coap_set_status_code(response, CREATED_2_01);
-  coap_set_header_location_path(response, "/location1/location2/location3");
-}
+#endif /* __PROJECT_CONF_H__ */

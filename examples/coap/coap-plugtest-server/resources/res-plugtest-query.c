@@ -40,7 +40,11 @@
 #include <string.h>
 #include "coap-engine.h"
 #include "coap.h"
-#include "plugtest.h"
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
 static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
@@ -58,11 +62,11 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   int len = 0;
   const char *query = NULL;
 
-  PRINTF(
+  LOG_DBG(
     "/query          GET (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
   if((len = coap_get_header_uri_query(request, &query))) {
-    PRINTF("Query: %.*s\n", len, query);
+    LOG_DBG("Query: %.*s\n", len, query);
     /* Code 2.05 CONTENT is default. */
   }
   coap_set_header_content_format(response,

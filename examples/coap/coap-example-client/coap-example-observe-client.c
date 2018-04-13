@@ -47,15 +47,11 @@
 #else
 #include "dev/button-sensor.h"
 #endif
-/*----------------------------------------------------------------------------*/
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTFLN(format, ...) printf(format "\n", ##__VA_ARGS__)
-#else
-#define PRINTF(...)
-#define PRINTFLN(...)
-#endif
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "App"
+#define LOG_LEVEL LOG_LEVEL_APP
 
 /*----------------------------------------------------------------------------*/
 /* FIXME: This server address is hard-coded for Cooja */

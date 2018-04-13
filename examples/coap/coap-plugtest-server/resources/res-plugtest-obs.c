@@ -41,7 +41,11 @@
 #include "coap-engine.h"
 #include "coap.h"
 #include "coap-observe.h"
-#include "plugtest.h"
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
 static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
@@ -67,7 +71,7 @@ static char obs_status = 0;
 static void
 obs_purge_list()
 {
-  PRINTF("### SERVER ACTION ### Purging obs list");
+  LOG_DBG("### SERVER ACTION ### Purging obs list\n");
   coap_remove_observer_by_uri(NULL, res_plugtest_obs.url);
 }
 static void
@@ -75,7 +79,7 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
 {
   /* Keep server log clean from ticking events */
   if(request != NULL) {
-    PRINTF("/obs            GET\n");
+    LOG_DBG("/obs            GET\n");
   }
   coap_set_header_content_format(response, obs_format);
   coap_set_header_max_age(response, 5);
@@ -98,7 +102,7 @@ res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
 
   coap_get_header_content_format(request, &ct);
 
-  PRINTF("/obs            PUT\n");
+  LOG_DBG("/obs            PUT\n");
 
   if(ct != obs_format) {
     obs_status = 1;
@@ -115,7 +119,7 @@ res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
 static void
 res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  PRINTF("/obs            DELETE\n");
+  LOG_DBG("/obs            DELETE\n");
 
   obs_status = 2;
 
@@ -130,14 +134,12 @@ res_periodic_handler()
 {
   ++obs_counter;
 
-  /* PRINTF("TICK %u for /%s\n", obs_counter, r->url); */
-
   if(obs_status == 1) {
 
     /* Notify the registered observers with the given message type, observe option, and payload. */
     coap_notify_observers(&res_plugtest_obs);
 
-    PRINTF("######### sending 5.00\n");
+    LOG_DBG("######### sending 5.00\n");
 
     obs_purge_list();
   } else if(obs_status == 2) {

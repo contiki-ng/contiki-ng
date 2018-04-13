@@ -36,56 +36,62 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "coap-engine.h"
 #include "coap.h"
-#include "plugtest.h"
 
-static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-/*
- * Large resource that can be created using POST method
- */
-RESOURCE(res_plugtest_large_create,
-         "title=\"Large resource that can be created using POST method\";rt=\"block\"",
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+RESOURCE(res_plugtest_large,
+         "title=\"Large resource\";rt=\"block\";sz=\"" TO_STRING(CHUNKS_TOTAL) "\"",
+         res_get_handler,
          NULL,
-         res_post_handler,
          NULL,
          NULL);
 
 static void
-res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  coap_message_t *const coap_req = (coap_message_t *)request;
+  int32_t strpos = 0;
 
-  uint8_t *incoming = NULL;
-  size_t len = 0;
+  /* Check the offset for boundaries of the resource data. */
+  if(*offset >= CHUNKS_TOTAL) {
+    coap_set_status_code(response, BAD_OPTION_4_02);
+    /* A block error message should not exceed the minimum block size (16). */
 
-  unsigned int ct = -1;
-
-  if(!coap_get_header_content_format(request, &ct)) {
-    coap_set_status_code(response, BAD_REQUEST_4_00);
-    const char *error_msg = "NoContentType";
+    const char *error_msg = "BlockOutOfScope";
     coap_set_payload(response, error_msg, strlen(error_msg));
     return;
   }
 
-  if((len = coap_get_payload(request, (const uint8_t **)&incoming))) {
-    if(coap_req->block1_num * coap_req->block1_size + len <= 2048) {
-      coap_set_status_code(response, CREATED_2_01);
-      coap_set_header_location_path(response, "/nirvana");
-      coap_set_header_block1(response, coap_req->block1_num, 0,
-                             coap_req->block1_size);
-    } else {
-      coap_set_status_code(response, REQUEST_ENTITY_TOO_LARGE_4_13);
-      const char *error_msg = "2048B max.";
-      coap_set_payload(response, error_msg, strlen(error_msg));
-      return;
-    }
-  } else {
-    coap_set_status_code(response, BAD_REQUEST_4_00);
-    const char *error_msg = "NoPayload";
-    coap_set_payload(response, error_msg, strlen(error_msg));
-    return;
+  /* Generate data until reaching CHUNKS_TOTAL. */
+  while(strpos < preferred_size) {
+    strpos += snprintf((char *)buffer + strpos, preferred_size - strpos + 1,
+                       "|%ld|", (long) *offset);
+  }
+
+  /* snprintf() does not adjust return value if truncated by size. */
+  if(strpos > preferred_size) {
+    strpos = preferred_size;
+    /* Truncate if above CHUNKS_TOTAL bytes. */
+  }
+  if(*offset + (int32_t)strpos > CHUNKS_TOTAL) {
+    strpos = CHUNKS_TOTAL - *offset;
+  }
+  coap_set_payload(response, buffer, strpos);
+  coap_set_header_content_format(response, TEXT_PLAIN);
+
+  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
+  *offset += strpos;
+
+  /* Signal end of resource representation. */
+  if(*offset >= CHUNKS_TOTAL) {
+    *offset = -1;
   }
 }

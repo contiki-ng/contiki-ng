@@ -42,7 +42,11 @@
 #include "coap.h"
 #include "coap-transactions.h"
 #include "coap-separate.h"
-#include "plugtest.h"
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
 static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_resume_handler(void);
@@ -72,12 +76,12 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
 {
   coap_message_t *const coap_req = (coap_message_t *)request;
 
-  PRINTF("/separate       ");
+  LOG_DBG("/separate       ");
   if(separate_active) {
-    PRINTF("REJECTED ");
+    LOG_DBG_("REJECTED ");
     coap_separate_reject();
   } else {
-    PRINTF("STORED ");
+    LOG_DBG_("STORED ");
     separate_active = 1;
 
     /* Take over and skip response by engine. */
@@ -89,17 +93,17 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
              coap_req->mid);
   }
 
-  PRINTF("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+  LOG_DBG_("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 }
 static void
 res_resume_handler()
 {
   if(separate_active) {
-    PRINTF("/separate       ");
+    LOG_DBG("/separate       ");
     coap_transaction_t *transaction = NULL;
     if((transaction = coap_new_transaction(separate_store->request_metadata.mid,
                                            &separate_store->request_metadata.endpoint))) {
-      PRINTF(
+      LOG_DBG_(
         "RESPONSE (%s %u)\n", separate_store->request_metadata.type == COAP_TYPE_CON ? "CON" : "NON", separate_store->request_metadata.mid);
 
       coap_message_t response[1]; /* This way the message can be treated as pointer as usual. */
@@ -127,7 +131,7 @@ res_resume_handler()
 
       separate_active = 0;
     } else {
-      PRINTF("ERROR (transaction)\n");
+      LOG_DBG_("ERROR (transaction)\n");
     }
   } /* if (separate_active) */
 }

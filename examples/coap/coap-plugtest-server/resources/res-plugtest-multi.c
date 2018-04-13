@@ -36,30 +36,57 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "coap-engine.h"
 #include "coap.h"
-#include "plugtest.h"
 
-static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-RESOURCE(res_plugtest_locquery,
-         "title=\"Resource accepting query parameters\"",
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+RESOURCE(res_plugtest_multi,
+         "title=\"Resource providing text/plain and application/xml\";ct=\"0 41\"",
+         res_get_handler,
          NULL,
-         res_post_handler,
          NULL,
          NULL);
 
 static void
-res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-#if DEBUG
   coap_message_t *const coap_req = (coap_message_t *)request;
-#endif
 
-  PRINTF(
-    "/location-query POST (%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+  unsigned int accept = -1;
+  coap_get_header_accept(request, &accept);
 
-  coap_set_status_code(response, CREATED_2_01);
-  coap_set_header_location_query(response, "?first=1&second=2");
+  LOG_DBG("/multi-format   GET (%s %u) ", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(
+      response,
+      buffer,
+      snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
+               "Type: %u\nCode: %u\nMID: %u%s", coap_req->type, coap_req->code,
+               coap_req->mid, accept != -1 ? "\nAccept: 0" : ""));
+    LOG_DBG_("PLAIN\n");
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
+    coap_set_payload(
+      response,
+      buffer,
+      snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
+               "<status type=\"%u\" code=\"%u\" mid=\"%u\" accept=\"%u\"/>",
+               coap_req->type, coap_req->code, coap_req->mid, accept));
+    LOG_DBG_("XML\n");
+  } else {
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    const char *msg = "Supporting content-types text/plain and application/xml";
+    coap_set_payload(response, msg, strlen(msg));
+    LOG_DBG_("ERROR\n");
+  }
 }

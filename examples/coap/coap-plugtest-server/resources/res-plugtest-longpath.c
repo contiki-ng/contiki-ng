@@ -31,32 +31,44 @@
 
 /**
  * \file
- *      Erbium (Er) CoAP client example
+ *      ETSI Plugtest resource
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef PLUGTEST_H_
-#define PLUGTEST_H_
 
-#if !defined(CONTIKI_TARGET_NATIVE)
-#warning "Should only be compiled for native!"
-#endif
-
-#define DEBUG 0
-#if DEBUG
 #include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+#include <string.h>
+#include "coap-engine.h"
+#include "coap.h"
 
-/* double expansion */
-#define TO_STRING2(x)  # x
-#define TO_STRING(x)  TO_STRING2(x)
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-#define MAX_PLUGFEST_PAYLOAD 64 + 1       /* +1 for the terminating zero, which is not transmitted */
-#define MAX_PLUGFEST_BODY    2048
-#define CHUNKS_TOTAL         2012
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-#endif /* PLUGTEST_H_ */
+RESOURCE(res_plugtest_longpath,
+         "title=\"Long path resource\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
+
+static void
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  coap_message_t *const coap_req = (coap_message_t *)request;
+
+  LOG_DBG("/seg1/seg2/seg3 GET ");
+  /* Code 2.05 CONTENT is default. */
+  coap_set_header_content_format(response, TEXT_PLAIN);
+  coap_set_payload(
+    response,
+    buffer,
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
+             "Type: %u\nCode: %u\nMID: %u", coap_req->type, coap_req->code, coap_req->mid));
+
+  LOG_DBG_("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+}

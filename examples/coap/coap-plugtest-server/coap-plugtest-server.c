@@ -45,7 +45,11 @@
 #include "coap-transactions.h"
 #include "coap-separate.h"
 #include "coap-engine.h"
-#include "plugtest.h"
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
 /*
  * Resources to be activated need to be imported through the extern keyword.
@@ -80,19 +84,7 @@ PROCESS_THREAD(plugtest_server, ev, data)
 {
   PROCESS_BEGIN();
 
-  PRINTF("ETSI IoT CoAP Plugtests Server\n");
-
-#ifdef RF_CHANNEL
-  PRINTF("RF channel: %u\n", RF_CHANNEL);
-#endif
-#ifdef IEEE802154_PANID
-  PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
-#endif
-
-  PRINTF("uIP buffer: %u\n", UIP_BUFSIZE);
-  PRINTF("LL header: %u\n", UIP_LLH_LEN);
-  PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
-  PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
+  LOG_INFO("ETSI IoT CoAP Plugtests Server\n");
 
   /* Initialize the REST engine. */
   coap_engine_init();

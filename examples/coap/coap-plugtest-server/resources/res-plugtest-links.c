@@ -31,42 +31,45 @@
 
 /**
  * \file
- *      Erbium (Er) example project configuration.
+ *      ETSI Plugtest resource
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef PROJECT_ERBIUM_CONF_H_
-#define PROJECT_ERBIUM_CONF_H_
+#include <string.h>
+#include "coap-engine.h"
+#include "coap.h"
 
-/* Custom channel and PAN ID configuration for your project. */
-/* #define RF_CHANNEL                    26 */
-/* #define IEEE802154_CONF_PANID     0xABCD */
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-/* IP buffer size must match all other hops, in particular the border router. */
-/* #define UIP_CONF_BUFFER_SIZE         256 */
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-/* Increase rpl-border-router IP-buffer when using more than 64. */
-#define COAP_MAX_CHUNK_SIZE           48
+RESOURCE(res_plugtest_link1,
+         "rt=\"Type1 Type2\";if=\"If1\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
+RESOURCE(res_plugtest_link2,
+         "rt=\"Type2 Type3\";if=\"If2\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
+RESOURCE(res_plugtest_link3,
+         "rt=\"Type1 Type3\";if=\"foo\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
 
-/* Estimate your header size, especially when using Proxy-Uri. */
-/* #define COAP_MAX_HEADER_SIZE          70 */
-
-/* Multiplies with chunk size, be aware of memory constraints. */
-#ifndef COAP_MAX_OPEN_TRANSACTIONS
-#define COAP_MAX_OPEN_TRANSACTIONS     4
-#endif /* COAP_MAX_OPEN_TRANSACTIONS */
-
-/* Must be <= open transactions, default is COAP_MAX_OPEN_TRANSACTIONS-1. */
-/* #define COAP_MAX_OBSERVERS             2 */
-
-/* Filtering .well-known/core per query can be disabled to save space. */
-#define COAP_LINK_FORMAT_FILTERING     0
-#define COAP_PROXY_OPTION_PROCESSING   0
-
-/* Enable client-side support for COAP observe */
-#ifndef COAP_OBSERVE_CLIENT
-#define COAP_OBSERVE_CLIENT            1
-#endif /* COAP_OBSERVE_CLIENT */
-
-#endif /* PROJECT_ERBIUM_CONF_H_ */
+static void
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  const char *msg = "Dummy link";
+  coap_set_header_content_format(response, TEXT_PLAIN);
+  coap_set_payload(response, msg, strlen(msg));
+}

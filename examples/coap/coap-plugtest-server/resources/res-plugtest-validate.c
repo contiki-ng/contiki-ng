@@ -40,8 +40,12 @@
 #include <string.h>
 #include "coap-engine.h"
 #include "coap.h"
-#include "plugtest.h"
 #include "random.h"
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
 static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
@@ -70,7 +74,7 @@ validate_update_etag()
   }
   validate_change = 0;
 
-  PRINTF("### SERVER ACTION ### Changed ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
+  LOG_DBG("### SERVER ACTION ### Changed ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
          validate_etag_len, validate_etag[0], validate_etag[1], validate_etag[2], validate_etag[3], validate_etag[4], validate_etag[5], validate_etag[6], validate_etag[7]);
 }
 static void
@@ -81,17 +85,17 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   if(validate_change) {
     validate_update_etag();
   }
-  PRINTF("/validate       GET");
-  PRINTF("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+  LOG_DBG("/validate       GET");
+  LOG_DBG_("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
   if((len = coap_get_header_etag(request, &bytes)) > 0
      && len == validate_etag_len && memcmp(validate_etag, bytes, len) == 0) {
-    PRINTF("validate ");
+    LOG_DBG("validate\n");
     coap_set_status_code(response, VALID_2_03);
     coap_set_header_etag(response, validate_etag, validate_etag_len);
 
     validate_change = 1;
-    PRINTF("### SERVER ACTION ### Resouce will change\n");
+    LOG_DBG("### SERVER ACTION ### Resouce will change\n");
   } else {
     /* Code 2.05 CONTENT is default. */
     coap_set_header_content_format(response, TEXT_PLAIN);
@@ -108,12 +112,10 @@ res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
 static void
 res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-#if DEBUG
   coap_message_t *const coap_req = (coap_message_t *)request;
-#endif
 
-  PRINTF("/validate       PUT ");
-  PRINTF("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+  LOG_DBG("/validate       PUT ");
+  LOG_DBG_("(%s %u)\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
   if(((len = coap_get_header_if_match(request, &bytes)) > 0
       && (len == validate_etag_len
@@ -126,13 +128,13 @@ res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
 
     if(len > 0) {
       validate_change = 1;
-      PRINTF("### SERVER ACTION ### Resouce will change\n");
+      LOG_DBG("### SERVER ACTION ### Resouce will change\n");
     }
   } else {
-    PRINTF(
-      "Check %u/%u\n  [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n  [0x%02X%02X%02X%02X%02X%02X%02X%02X] ",
-      len,
-      validate_etag_len,
+    LOG_DBG(
+      "Check %u/%u\n  [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n  [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
+      (unsigned)len,
+      (unsigned)validate_etag_len,
       bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
       validate_etag[0], validate_etag[1], validate_etag[2], validate_etag[3], validate_etag[4], validate_etag[5], validate_etag[6], validate_etag[7]);
 

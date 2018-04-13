@@ -31,43 +31,22 @@
 
 /**
  * \file
- *      ETSI Plugtest resource
+ *      Erbium (Er) CoAP client example
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <stdio.h>
-#include <string.h>
-#include "coap-engine.h"
-#include "coap.h"
-#include "plugtest.h"
+#ifndef __PROJECT_CONF_H__
+#define __PROJECT_CONF_H__
 
-static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+#define LOG_LEVEL_PLUGTEST LOG_LEVEL_DBG
 
-PARENT_RESOURCE(res_plugtest_path,
-                "title=\"Path test resource\";ct=\"40\"",
-                res_get_handler,
-                NULL,
-                NULL,
-                NULL);
+/* double expansion */
+#define TO_STRING2(x)  # x
+#define TO_STRING(x)  TO_STRING2(x)
 
-static void
-res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
-                uint16_t preferred_size, int32_t *offset)
-{
+#define MAX_PLUGFEST_PAYLOAD 64 + 1       /* +1 for the terminating zero, which is not transmitted */
+#define MAX_PLUGFEST_BODY    2048
+#define CHUNKS_TOTAL         2012
 
-  const char *uri_path = NULL;
-  int len = coap_get_header_uri_path(request, &uri_path);
-  int base_len = strlen(res_plugtest_path.url);
-
-  if(len == base_len) {
-    coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
-    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
-             "</path/sub1>,</path/sub2>,</path/sub3>");
-  } else {
-    coap_set_header_content_format(response, TEXT_PLAIN);
-    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "/%.*s", len, uri_path);
-  }
-
-  coap_set_payload(response, buffer, strlen((char *)buffer));
-}
+#endif /* __PROJECT_CONF_H__ */

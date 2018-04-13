@@ -31,50 +31,71 @@
 
 /**
  * \file
- *      ETSI Plugtest resource
+ *      Example resource
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <string.h>
+#include "contiki.h"
 #include "coap-engine.h"
-#include "coap.h"
-#include "plugtest.h"
+#include "dev/leds.h"
 
-static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+#include <string.h>
 
-RESOURCE(res_plugtest_create3,
-         "title=\"Default test resource\"",
+#if PLATFORM_HAS_LEDS || LEDS_COUNT
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "App"
+#define LOG_LEVEL LOG_LEVEL_APP
+
+static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+/* A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated */
+RESOURCE(res_leds,
+         "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"",
          NULL,
-         NULL,
-         res_put_handler,
-         res_delete_handler);
-
-static uint8_t create3_exists = 0;
+         res_post_put_handler,
+         res_post_put_handler,
+         NULL);
 
 static void
-res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  PRINTF("/create3       PUT ");
+  size_t len = 0;
+  const char *color = NULL;
+  const char *mode = NULL;
+  uint8_t led = 0;
+  int success = 1;
 
-  if(coap_get_header_if_none_match(request)) {
-    if(!create3_exists) {
-      coap_set_status_code(response, CREATED_2_01);
+  if((len = coap_get_query_variable(request, "color", &color))) {
+    LOG_DBG("color %.*s\n", (int)len, color);
 
-      create3_exists = 1;
+    if(strncmp(color, "r", len) == 0) {
+      led = LEDS_RED;
+    } else if(strncmp(color, "g", len) == 0) {
+      led = LEDS_GREEN;
+    } else if(strncmp(color, "b", len) == 0) {
+      led = LEDS_BLUE;
     } else {
-      coap_set_status_code(response, PRECONDITION_FAILED_4_12);
+      success = 0;
     }
   } else {
-    coap_set_status_code(response, CHANGED_2_04);
+    success = 0;
+  } if(success && (len = coap_get_post_variable(request, "mode", &mode))) {
+    LOG_DBG("mode %s\n", mode);
+
+    if(strncmp(mode, "on", len) == 0) {
+      leds_on(led);
+    } else if(strncmp(mode, "off", len) == 0) {
+      leds_off(led);
+    } else {
+      success = 0;
+    }
+  } else {
+    success = 0;
+  } if(!success) {
+    coap_set_status_code(response, BAD_REQUEST_4_00);
   }
 }
-static void
-res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  PRINTF("/create3       DELETE ");
-  coap_set_status_code(response, DELETED_2_02);
-
-  create3_exists = 0;
-}
+#endif /* PLATFORM_HAS_LEDS */

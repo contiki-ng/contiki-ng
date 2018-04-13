@@ -36,58 +36,49 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <stdio.h>
 #include <string.h>
 #include "coap-engine.h"
 #include "coap.h"
-#include "plugtest.h"
 
-static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-RESOURCE(res_plugtest_large,
-         "title=\"Large resource\";rt=\"block\";sz=\"" TO_STRING(CHUNKS_TOTAL) "\"",
-         res_get_handler,
+static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+RESOURCE(res_plugtest_create3,
+         "title=\"Default test resource\"",
          NULL,
          NULL,
-         NULL);
+         res_put_handler,
+         res_delete_handler);
+
+static uint8_t create3_exists = 0;
 
 static void
-res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  int32_t strpos = 0;
+  LOG_DBG("/create3       PUT ");
 
-  /* Check the offset for boundaries of the resource data. */
-  if(*offset >= CHUNKS_TOTAL) {
-    coap_set_status_code(response, BAD_OPTION_4_02);
-    /* A block error message should not exceed the minimum block size (16). */
+  if(coap_get_header_if_none_match(request)) {
+    if(!create3_exists) {
+      coap_set_status_code(response, CREATED_2_01);
 
-    const char *error_msg = "BlockOutOfScope";
-    coap_set_payload(response, error_msg, strlen(error_msg));
-    return;
+      create3_exists = 1;
+    } else {
+      coap_set_status_code(response, PRECONDITION_FAILED_4_12);
+    }
+  } else {
+    coap_set_status_code(response, CHANGED_2_04);
   }
+}
+static void
+res_delete_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  LOG_DBG("/create3       DELETE ");
+  coap_set_status_code(response, DELETED_2_02);
 
-  /* Generate data until reaching CHUNKS_TOTAL. */
-  while(strpos < preferred_size) {
-    strpos += snprintf((char *)buffer + strpos, preferred_size - strpos + 1,
-                       "|%ld|", (long) *offset);
-  }
-
-  /* snprintf() does not adjust return value if truncated by size. */
-  if(strpos > preferred_size) {
-    strpos = preferred_size;
-    /* Truncate if above CHUNKS_TOTAL bytes. */
-  }
-  if(*offset + (int32_t)strpos > CHUNKS_TOTAL) {
-    strpos = CHUNKS_TOTAL - *offset;
-  }
-  coap_set_payload(response, buffer, strpos);
-  coap_set_header_content_format(response, TEXT_PLAIN);
-
-  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
-  *offset += strpos;
-
-  /* Signal end of resource representation. */
-  if(*offset >= CHUNKS_TOTAL) {
-    *offset = -1;
-  }
+  create3_exists = 0;
 }
