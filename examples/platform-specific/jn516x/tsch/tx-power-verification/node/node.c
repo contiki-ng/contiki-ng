@@ -110,7 +110,6 @@ PROCESS_THREAD(start_app, ev, data)
   NETSTACK_MAC.on();
   printf("Starting RPL node\n");
 
-  coap_engine_init();
   coap_activate_resource(&resource_set_tx_power, "Set-TX-Power");
   coap_activate_resource(&resource_get_tx_power, "Get-TX-Power");
 

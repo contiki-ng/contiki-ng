@@ -267,9 +267,6 @@ PROCESS_THREAD(router_process, ev, data)
 
   PROCESS_PAUSE();
 
-  /* receives all CoAP messages */
-  coap_engine_init();
-
   setup_network();
 
   while(1) {

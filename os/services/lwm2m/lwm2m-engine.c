@@ -543,6 +543,9 @@ lwm2m_engine_init(void)
 
 #endif /* LWM2M_ENGINE_CLIENT_ENDPOINT_NAME */
 
+  /* Initialize CoAP engine. Contiki-NG already does that from the main,
+   * but for standalone use of lwm2m, this is required here. coap_engine_init()
+   * checks for double-initialization and can be called twice safely. */
   coap_engine_init();
 
   /* Register the CoAP handler for lightweight object handling */

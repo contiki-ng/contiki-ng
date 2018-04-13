@@ -148,9 +148,6 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
   static coap_endpoint_t server_endpoint;
   coap_endpoint_parse(SERVER_IPV6_EP, strlen(SERVER_IPV6_EP), &server_endpoint);
 
-  /* receives all CoAP messages */
-  coap_engine_init();
-
 #if PLATFORM_HAS_BUTTON
   SENSORS_ACTIVATE(button_1);
   SENSORS_ACTIVATE(button_2);
