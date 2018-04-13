@@ -68,10 +68,10 @@
 
 #else /* MAC_CONF_WITH_TSCH */
 
-#ifdef RF_CHANNEL
-##### "RF_CHANNEL": ____________________________ == RF_CHANNEL
+#ifdef IEEE802154_CONF_DEFAULT_CHANNEL
+##### "IEEE802154_CONF_DEFAULT_CHANNEL": _______ == IEEE802154_CONF_DEFAULT_CHANNEL
 #else
-##### "RF_CHANNEL": ____________________________ ><
+##### "IEEE802154_CONF_DEFAULT_CHANNEL": _______ -> IEEE802154_DEFAULT_CHANNEL
 #endif
 
 #endif /*MAC_CONF_WITH_TSCH */
