@@ -82,8 +82,8 @@ PROCESS_THREAD(plugtest_server, ev, data)
 
   PRINTF("ETSI IoT CoAP Plugtests Server\n");
 
-#ifdef RF_CHANNEL
-  PRINTF("RF channel: %u\n", RF_CHANNEL);
+#ifdef IEEE802154_DEFAULT_CHANNEL
+  PRINTF("RF channel: %u\n", IEEE802154_DEFAULT_CHANNEL);
 #endif
 #ifdef IEEE802154_PANID
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
