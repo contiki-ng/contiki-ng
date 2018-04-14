@@ -435,7 +435,7 @@ handle_probing_timer(void *ptr)
     LOG_INFO_6ADDR(target_ipaddr);
     LOG_INFO_(" %s last tx %u min ago\n",
         curr_instance.dag.urgent_probing_target != NULL ? "(urgent)" : "",
-        probing_target != NULL ?
+        stats != NULL ?
         (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
         );
     /* Send probe, e.g. unicast DIO or DIS */
