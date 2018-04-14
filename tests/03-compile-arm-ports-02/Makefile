@@ -14,8 +14,8 @@ platform-specific/zoul/rtcc/zoul \
 platform-specific/zoul/zoul \
 coap/zoul \
 multicast/zoul \
-ipso-objects/zoul \
-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
+lwm2m-ipso-objects/zoul \
+lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
 hello-world/zoul \
 sensniff/zoul \
 sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
@@ -28,7 +28,7 @@ libs/logging/zoul \
 6tisch/etsi-plugtest-2017/zoul:BOARD=remote \
 6tisch/6p-packet/zoul \
 6tisch/sixtop/zoul \
-http-socket/zoul \
+websocket/zoul \
 libs/timers/zoul \
 libs/energest/zoul \
 libs/trickle-library/zoul \
@@ -59,7 +59,7 @@ rpl-udp/openmote-cc2538 \
 dev/gpio-hal/openmote-cc2538 \
 dev/leds/openmote-cc2538 \
 rpl-border-router/openmote-cc2538 \
-ipv6-hooks/openmote-cc2538 \
+libs/ipv6-hooks/openmote-cc2538 \
 
 TOOLS=
 
