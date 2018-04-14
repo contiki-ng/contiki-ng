@@ -70,7 +70,7 @@
 
 /************ Types ***********/
 
-/* Structure for a log. Union of different types of logs */
+/** \brief Structure for a log. Union of different types of logs */
 struct tsch_log_t {
   enum { tsch_log_tx,
          tsch_log_rx,
@@ -107,21 +107,31 @@ struct tsch_log_t {
 
 /********** Functions *********/
 
-/* Prepare addition of a new log.
- * Returns pointer to log structure if success, NULL otherwise */
+/**
+ * \brief Prepare addition of a new log.
+ * \return A pointer to log structure if success, NULL otherwise
+ */
 struct tsch_log_t *tsch_log_prepare_add(void);
-/* Actually add the previously prepared log */
+/**
+ * \brief Actually add the previously prepared log
+ */
 void tsch_log_commit(void);
-/* Initialize log module */
+/**
+ * \brief Initialize log module
+ */
 void tsch_log_init(void);
-/* Process pending log messages */
+/**
+ * \brief Process pending log messages
+ */
 void tsch_log_process_pending(void);
-/* Stop logging module */
+/**
+ * \brief Stop logging module
+ */
 void tsch_log_stop(void);
 
 /************ Macros **********/
 
-/* Use this macro to add a log to the queue (will be printed out
+/** \brief Use this macro to add a log to the queue (will be printed out
  * later, after leaving interrupt context) */
 #define TSCH_LOG_ADD(log_type, init_code) do { \
     struct tsch_log_t *log = tsch_log_prepare_add(); \
