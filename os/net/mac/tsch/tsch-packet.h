@@ -101,9 +101,18 @@ int tsch_packet_update_eb(uint8_t *buf, int buf_size, uint8_t tsch_sync_ie_offse
 int tsch_packet_parse_eb(const uint8_t *buf, int buf_size,
     frame802154_t *frame, struct ieee802154_ies *ies,
     uint8_t *hdrlen, int frame_without_mic);
-/* Set frame pending bit in a packet (whose header was already build) */
+/**
+ * \brief Set frame pending bit in a packet (whose header was already build)
+ * \param buf The buffer where the packet resides
+ * \param buf_size The buffer size
+ */
 void tsch_packet_set_frame_pending(uint8_t *buf, int buf_size);
-/* Get frame pending bit from a packet */
+/**
+ * \brief Get frame pending bit from a packet
+ * \param buf The buffer where the packet resides
+ * \param buf_size The buffer size
+ * \return The value of the frame pending bit, 1 or 0
+ */
 int tsch_packet_get_frame_pending(uint8_t *buf, int buf_size);
 
 #endif /* __TSCH_PACKET_H__ */
