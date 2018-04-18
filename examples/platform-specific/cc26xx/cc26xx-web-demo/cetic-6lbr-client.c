@@ -37,10 +37,11 @@
 #include "contiki-net.h"
 #include "net/routing/routing.h"
 #include "net/ipv6/uip.h"
-#if ROUTING_CONF_RPL_LITE
-#include "net/routing/rpl-lite/rpl.h"
-#elif ROUTING_CONF_RPL_CLASSIC
+#if ROUTING_CONF_RPL_CLASSIC
 #include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-private.h"
+#else
+#error The 6LBR client is only meant for RPL Classic. Set MAKE_ROUTING accordingly.
 #endif
 
 #include <string.h>
