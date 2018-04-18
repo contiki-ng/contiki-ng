@@ -161,8 +161,8 @@ timeout_handler(void)
       PRINT6ADDR(&client_conn->ripaddr);
       i = sprintf(buf, "%d | ", ++seq_id);
       instance = rpl_get_default_instance();
-      if(instance && instance->dag.preferred_parent) {
-        add_ipaddr(buf + i, rpl_parent_get_ipaddr(instance->dag.preferred_parent));
+      if(instance && instance->current_dag->preferred_parent) {
+        add_ipaddr(buf + i, rpl_parent_get_ipaddr(instance->current_dag->preferred_parent));
       } else {
         sprintf(buf + i, "(null)");
       }
