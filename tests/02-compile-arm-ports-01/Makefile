@@ -3,6 +3,7 @@ TOOLSDIR=../../tools
 
 EXAMPLES = \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx \
+platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx:BOARD=sensortag/cc2650 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=sensortag/cc2650 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=sensortag/cc1350 \
