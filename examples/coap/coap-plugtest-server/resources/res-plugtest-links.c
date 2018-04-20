@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,50 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
  */
 
 /**
- * \author Simon Duquennoy <simonduq@sics.se>
+ * \file
+ *      ETSI Plugtest resource
+ * \author
+ *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include <string.h>
+#include "coap-engine.h"
+#include "coap.h"
 
-#include "../common-conf.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-#endif /* PROJECT_CONF_H_ */
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+RESOURCE(res_plugtest_link1,
+         "rt=\"Type1 Type2\";if=\"If1\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
+RESOURCE(res_plugtest_link2,
+         "rt=\"Type2 Type3\";if=\"If2\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
+RESOURCE(res_plugtest_link3,
+         "rt=\"Type1 Type3\";if=\"foo\"",
+         res_get_handler,
+         NULL,
+         NULL,
+         NULL);
+
+static void
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  const char *msg = "Dummy link";
+  coap_set_header_content_format(response, TEXT_PLAIN);
+  coap_set_payload(response, msg, strlen(msg));
+}

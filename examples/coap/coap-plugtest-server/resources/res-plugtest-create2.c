@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,39 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
  */
 
 /**
- * \author Simon Duquennoy <simonduq@sics.se>
+ * \file
+ *      ETSI Plugtest resource
+ * \author
+ *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include <string.h>
+#include "coap-engine.h"
+#include "coap.h"
 
-#include "../common-conf.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-#endif /* PROJECT_CONF_H_ */
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+RESOURCE(res_plugtest_create2,
+         "title=\"Creates on POST\"",
+         NULL,
+         res_post_handler,
+         NULL,
+         NULL);
+
+static void
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  LOG_DBG("/create2       ");
+
+  coap_set_status_code(response, CREATED_2_01);
+  coap_set_header_location_path(response, "/location1/location2/location3");
+}

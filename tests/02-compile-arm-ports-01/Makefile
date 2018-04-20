@@ -39,7 +39,8 @@ mqtt-client/cc2538dk \
 storage/cfs-coffee/cc2538dk \
 sensniff/cc2538dk \
 rpl-udp/cc2538dk \
-coap/cc2538dk \
+coap/coap-example-client/cc2538dk \
+coap/coap-example-server/cc2538dk \
 slip-radio/cc2538dk \
 lwm2m-ipso-objects/cc2538dk \
 multicast/cc2538dk \
