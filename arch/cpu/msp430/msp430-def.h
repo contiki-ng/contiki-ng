@@ -80,8 +80,7 @@ typedef long off_t;
 #define CLOCK_CONF_SECOND 128UL
 
 /* Use 16-bit rtimer (default in Contiki-NG is 32) */
-typedef unsigned short rtimer_clock_t;
-#define RTIMER_CLOCK_DIFF(a,b)     ((signed short)((a)-(b)))
+#define RTIMER_CONF_CLOCK_SIZE 2
 
 typedef int spl_t;
 spl_t   splhigh_(void);
