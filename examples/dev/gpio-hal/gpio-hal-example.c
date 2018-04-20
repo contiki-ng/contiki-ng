@@ -36,12 +36,20 @@
 #include "dev/button-hal.h"
 
 #include <stdio.h>
+#include <inttypes.h>
 /*---------------------------------------------------------------------------*/
 extern gpio_hal_pin_t out_pin1, out_pin2, out_pin3;
 extern gpio_hal_pin_t btn_pin;
 /*---------------------------------------------------------------------------*/
 static struct etimer et;
 static uint8_t counter;
+/*---------------------------------------------------------------------------*/
+/* Print gpio_hal_pin_mask_t using the correct format */
+#if GPIO_HAL_PIN_COUNT > 32
+#define PIN_MASK_FMT PRIx64
+#else
+#define PIN_MASK_FMT PRIx32
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS(gpio_hal_example, "GPIO HAL Example");
 AUTOSTART_PROCESSES(&gpio_hal_example);
@@ -119,7 +127,8 @@ PROCESS_THREAD(gpio_hal_example, ev, data)
       }
 
       /* Test read */
-      printf("%u: Pins are 1-%u, 2=%u, 3=%u, mask=0x%08lx\n", counter & 7,
+      printf("%u: Pins are 1-%u, 2=%u, 3=%u, mask=0x%08" PIN_MASK_FMT "\n",
+             counter & 7,
              gpio_hal_arch_read_pin(out_pin1),
              gpio_hal_arch_read_pin(out_pin2),
              gpio_hal_arch_read_pin(out_pin3),

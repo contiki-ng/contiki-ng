@@ -64,14 +64,25 @@ static rpl_nbr_t * best_parent(int fresh_only);
 NBR_TABLE_GLOBAL(rpl_nbr_t, rpl_neighbors);
 
 /*---------------------------------------------------------------------------*/
+static int
+max_acceptable_rank(void)
+{
+  if(curr_instance.max_rankinc == 0) {
+    /* There is no max rank increment */
+    return RPL_INFINITE_RANK;
+  } else {
+    /* Make sure not to exceed RPL_INFINITE_RANK */
+    return MIN((uint32_t)curr_instance.dag.lowest_rank + curr_instance.max_rankinc, RPL_INFINITE_RANK);
+  }
+}
+/*---------------------------------------------------------------------------*/
 /* As per RFC 6550, section 8.2.2.4 */
 static int
 acceptable_rank(rpl_rank_t rank)
 {
   return rank != RPL_INFINITE_RANK
       && rank >= ROOT_RANK
-      && ((curr_instance.max_rankinc == 0) ||
-          rank <= curr_instance.dag.lowest_rank + curr_instance.max_rankinc);
+      && rank <= max_acceptable_rank();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -89,7 +100,7 @@ rpl_neighbor_print_list(const char *str)
     LOG_INFO_(", DAG state: %s, MOP %u OCP %u rank %u max-rank %u, dioint %u, nbr count %u (%s)\n",
         rpl_dag_state_to_str(curr_instance.dag.state),
         curr_instance.mop, curr_instance.of->ocp, curr_rank,
-        curr_instance.max_rankinc != 0 ? curr_instance.dag.lowest_rank + curr_instance.max_rankinc : 0xffff,
+        max_acceptable_rank(),
         curr_dio_interval, rpl_neighbor_count(), str);
     while(nbr != NULL) {
       const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);

@@ -24,4 +24,3 @@ if(failed) {
     log.testFailed();
 }
 log.testOK();
-

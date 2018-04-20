@@ -199,10 +199,18 @@ coap_receive(const coap_endpoint_t *src,
           new_offset = block_offset;
         }
 
-        /* call CoAP framework and check if found and allowed */
-        status = call_service(message, response,
-                              transaction->message + COAP_MAX_HEADER_SIZE,
-                              block_size, &new_offset);
+        if(new_offset < 0) {
+          LOG_DBG("Blockwise: block request offset overflow\n");
+          coap_status_code = BAD_OPTION_4_02;
+          coap_error_message = "BlockOutOfScope";
+          status = COAP_HANDLER_STATUS_CONTINUE;
+        } else {
+          /* call CoAP framework and check if found and allowed */
+          status = call_service(message, response,
+                                transaction->message + COAP_MAX_HEADER_SIZE,
+                                block_size, &new_offset);
+        }
+
         if(status != COAP_HANDLER_STATUS_CONTINUE) {
 
             if(coap_status_code == NO_ERROR) {
