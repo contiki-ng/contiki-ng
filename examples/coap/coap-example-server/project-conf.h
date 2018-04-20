@@ -36,9 +36,9 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 #define LOG_LEVEL_APP LOG_LEVEL_DBG
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */

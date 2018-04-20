@@ -36,8 +36,8 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 #define LOG_LEVEL_PLUGTEST LOG_LEVEL_DBG
 
@@ -49,4 +49,4 @@
 #define MAX_PLUGFEST_BODY    2048
 #define CHUNKS_TOTAL         2012
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */
