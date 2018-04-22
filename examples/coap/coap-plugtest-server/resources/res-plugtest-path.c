@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,52 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
  */
 
 /**
- * \author Simon Duquennoy <simonduq@sics.se>
+ * \file
+ *      ETSI Plugtest resource
+ * \author
+ *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include <stdio.h>
+#include <string.h>
+#include "coap-engine.h"
+#include "coap.h"
 
-#include "../common-conf.h"
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Plugtest"
+#define LOG_LEVEL LOG_LEVEL_PLUGTEST
 
-#endif /* PROJECT_CONF_H_ */
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+PARENT_RESOURCE(res_plugtest_path,
+                "title=\"Path test resource\";ct=\"40\"",
+                res_get_handler,
+                NULL,
+                NULL,
+                NULL);
+
+static void
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer,
+                uint16_t preferred_size, int32_t *offset)
+{
+
+  const char *uri_path = NULL;
+  int len = coap_get_header_uri_path(request, &uri_path);
+  int base_len = strlen(res_plugtest_path.url);
+
+  if(len == base_len) {
+    coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD,
+             "</path/sub1>,</path/sub2>,</path/sub3>");
+  } else {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    snprintf((char *)buffer, MAX_PLUGFEST_PAYLOAD, "/%.*s", len, uri_path);
+  }
+
+  coap_set_payload(response, buffer, strlen((char *)buffer));
+}

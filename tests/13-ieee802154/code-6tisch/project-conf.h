@@ -28,8 +28,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PROJECT_CONF_H_
-#define _PROJECT_CONF_H_
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 #define SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS 2
 
@@ -52,4 +52,4 @@
 /* Custom MAC layer */
 #define NETSTACK_CONF_MAC        test_mac_driver
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */

@@ -3,6 +3,7 @@ TOOLSDIR=../../tools
 
 EXAMPLES = \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx \
+platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 platform-specific/cc26xx/very-sleepy-demo/srf06-cc26xx:BOARD=sensortag/cc2650 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=sensortag/cc2650 \
 platform-specific/cc26xx/cc26xx-web-demo/srf06-cc26xx:BOARD=sensortag/cc1350 \
@@ -38,7 +39,8 @@ mqtt-client/cc2538dk \
 storage/cfs-coffee/cc2538dk \
 sensniff/cc2538dk \
 rpl-udp/cc2538dk \
-coap/cc2538dk \
+coap/coap-example-client/cc2538dk \
+coap/coap-example-server/cc2538dk \
 slip-radio/cc2538dk \
 lwm2m-ipso-objects/cc2538dk \
 multicast/cc2538dk \
