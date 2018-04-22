@@ -47,20 +47,35 @@
 
 /********** Functions *********/
 
-/* Keep-alives packet sent callback.
- * To use, set #define TSCH_CALLBACK_KA_SENT tsch_rpl_callback_ka_sent */
+/**
+* \brief Report statiscs from KA packet sent in RPL.
+* To use, set TSCH_CALLBACK_KA_SENT to tsch_rpl_callback_ka_sent
+* \param status The packet sent status
+* \param transmissions The total number of transmissions
+*/
 void tsch_rpl_callback_ka_sent(int status, int transmissions);
-/* To use, set #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network */
+/**
+ * \brief Let RPL know that TSCH joined a new network.
+ * To use, set TSCH_CALLBACK_JOINING_NETWORK to tsch_rpl_callback_joining_network
+ */
 void tsch_rpl_callback_joining_network(void);
-/* Upon leaving a TSCH network, perform a local repair
- * (cleanup neighbor state, reset Trickle timer etc)
- * To use, set #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network */
+/**
+ * \brief Let RPL know that TSCH joined a new network. Triggers a local repair.
+ * To use, set TSCH_CALLBACK_LEAVING_NETWORK to tsch_rpl_callback_leaving_network
+ */
 void tsch_rpl_callback_leaving_network(void);
-/* Set TSCH EB period based on current RPL DIO period.
- * To use, set #define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval */
+/**
+ * \brief Set TSCH EB period based on current RPL DIO period.
+ * To use, set RPL_CALLBACK_NEW_DIO_INTERVAL to tsch_rpl_callback_new_dio_interval
+ * \param dio_interval The new DIO interval in clock ticks
+ */
 void tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval);
-/* Set TSCH time source based on current RPL preferred parent.
- * To use, set #define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch */
+/**
+ * \brief Set TSCH time source based on current RPL preferred parent.
+ * To use, set RPL_CALLBACK_PARENT_SWITCH to tsch_rpl_callback_parent_switch
+ * \param old The old RPL parent
+ * \param new The new RPL parent
+ */
 void tsch_rpl_callback_parent_switch(rpl_parent_t *old, rpl_parent_t *new);
 
 #endif /* __TSCH_RPL_H__ */
