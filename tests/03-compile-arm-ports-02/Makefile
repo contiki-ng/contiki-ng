@@ -12,7 +12,8 @@ platform-specific/zoul/rev-b/zoul:BOARD=remote-revb  \
 platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/rtcc/zoul \
 platform-specific/zoul/zoul \
-coap/zoul \
+coap/coap-example-client/zoul \
+coap/coap-example-server/zoul \
 multicast/zoul \
 lwm2m-ipso-objects/zoul \
 lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \

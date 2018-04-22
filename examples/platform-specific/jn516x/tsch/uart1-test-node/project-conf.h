@@ -31,8 +31,8 @@
  * \author Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 #define UIP_CONF_TCP 0
 
@@ -46,4 +46,4 @@
 
 #include "../common-conf.h"
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */
