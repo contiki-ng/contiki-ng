@@ -166,3 +166,9 @@ the state of the LED.
 Bear in mind that, even though the topic suggests that messages are of json
 format, they are in fact not. This was done in order to avoid linking a json
 parser into the firmware.
+
+IBM Watson IoT Platform
+----------------------------
+To use IBM Watson IoT Platform, you have to go to SECURITY tab of Device page to select "TLS Optional". This step is critical. If you don't do this, you need to use TLS for connection and default cc26xx-web-demo won't work.
+
+![IBM Watson IoT Platform TLS Optional Configuration](img/ibm-watson-iot-platform-tls-optional.png)
