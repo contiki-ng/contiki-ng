@@ -63,6 +63,8 @@
 #define RFCORE_FFSM_PAN_ID1         0x400885CC /**< Local address information */
 #define RFCORE_FFSM_SHORT_ADDR0     0x400885D0 /**< Local address information */
 #define RFCORE_FFSM_SHORT_ADDR1     0x400885D4 /**< Local address information */
+#define RFCORE_FFSM_RX_FIFO         0x40088000 /**< RX FIFO */
+#define RFCORE_FFSM_TX_FIFO         0x40088200 /**< TX FIFO */
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name RFCORE_FFSM_SRCRESMASK[0:2] register bit masks
