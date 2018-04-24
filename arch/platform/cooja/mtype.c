@@ -38,10 +38,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "contiki.h"
 #include "sys/cc.h"
 #include "sys/cooja_mt.h"
+#include "dev/cooja-radio.h"
 
 /* The main function, implemented in contiki-main.c */
 int main(void);
@@ -57,12 +59,18 @@ intptr_t referenceVar;
  */
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
+static struct cooja_mt_thread radio_thread;
+static bool in_rtimer_thread;
+static bool in_radio_thread;
+extern int simRtimerPending;
 /*---------------------------------------------------------------------------*/
 static void
 rtimer_thread_loop(void *data)
 {
   while(1) {
+    in_rtimer_thread = true;
     rtimer_arch_check();
+    in_rtimer_thread = false;
 
     /* Return to COOJA */
     cooja_mt_yield();
@@ -80,12 +88,35 @@ process_run_thread_loop(void *data)
   main();
 }
 /*---------------------------------------------------------------------------*/
+static void
+radio_thread_loop(void *data)
+{
+  while(1) {
+    in_radio_thread = true;
+    if(simRtimerPending) {
+      /*
+       * While we are in the radio thread, we prevent the rtimer thread
+       * from making progress. This may lead to a deadlock since Cooja
+       * continues to schedule wake ups. simRtimerPending = 0 avoids this.
+       */
+      simRtimerPending = 0;
+      cooja_radio_check();
+      simRtimerPending = 1;
+    } else {
+      cooja_radio_check();
+    }
+    in_radio_thread = false;
+    cooja_mt_yield();
+  }
+}
+/*---------------------------------------------------------------------------*/
 void
 cooja_init(void)
 {
   /* Create rtimers and Contiki threads */
   cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
   cooja_mt_start(&process_run_thread, &process_run_thread_loop, NULL);
+  cooja_mt_start(&radio_thread, &radio_thread_loop, NULL);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -101,9 +132,19 @@ cooja_tick(void)
     etimer_request_poll();
   }
 
-  /* Let rtimers run.
-   * Sets simProcessRunValue */
-  cooja_mt_exec(&rtimer_thread);
+  /* Serve ISRs (in a way they do not preempt each other) */
+  if(in_radio_thread) {
+    cooja_mt_exec(&radio_thread);
+  }
+  if(in_rtimer_thread) {
+    cooja_mt_exec(&rtimer_thread);
+  }
+  if(!in_rtimer_thread) {
+    cooja_mt_exec(&radio_thread);
+  }
+  if(!in_radio_thread) {
+    cooja_mt_exec(&rtimer_thread);
+  }
 
   if(simProcessRunValue == 0) {
     /* Rtimers done: Let Contiki handle a few events.

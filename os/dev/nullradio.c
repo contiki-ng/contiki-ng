@@ -101,6 +101,89 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
+void
+nullradio_async_enter(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_prepare(uint8_t *length_then_payload)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_reprepare(uint8_t offset, uint8_t *patch, uint8_t patch_len)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_transmit(bool shall_enter_rx_after_tx)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_on(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_off(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_set_shr_callback(radio_shr_callback_t cb)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_set_fifop_callback(radio_fifop_callback_t cb, uint8_t threshold)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_set_txdone_callback(radio_txdone_callback_t cb)
+{
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+nullradio_async_read_phy_header(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+bool
+nullradio_async_read_payload(uint8_t *buf, uint8_t bytes)
+{
+  return false;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+nullradio_async_read_payload_bytes(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_prepare_sequence(uint8_t *sequence, uint8_t sequence_len)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_append_to_sequence(uint8_t *appendix, uint8_t appendix_len)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_transmit_sequence(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+nullradio_async_finish_sequence(void)
+{
+}
+/*---------------------------------------------------------------------------*/
 const struct radio_driver nullradio_driver =
   {
     init,
@@ -116,6 +199,22 @@ const struct radio_driver nullradio_driver =
     get_value,
     set_value,
     get_object,
-    set_object
+    set_object,
+    nullradio_async_enter,
+    nullradio_async_prepare,
+    nullradio_async_reprepare,
+    nullradio_async_transmit,
+    nullradio_async_on,
+    nullradio_async_off,
+    nullradio_async_set_shr_callback,
+    nullradio_async_set_fifop_callback,
+    nullradio_async_set_txdone_callback,
+    nullradio_async_read_phy_header,
+    nullradio_async_read_payload,
+    nullradio_async_read_payload_bytes,
+    nullradio_async_prepare_sequence,
+    nullradio_async_append_to_sequence,
+    nullradio_async_transmit_sequence,
+    nullradio_async_finish_sequence
   };
 /*---------------------------------------------------------------------------*/

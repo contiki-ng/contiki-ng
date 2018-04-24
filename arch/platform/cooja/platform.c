@@ -84,14 +84,13 @@ SIM_INTERFACE_NAME(vib_interface);
 SIM_INTERFACE_NAME(rs232_interface);
 SIM_INTERFACE_NAME(simlog_interface);
 SIM_INTERFACE_NAME(beep_interface);
-SIM_INTERFACE_NAME(radio_interface);
 SIM_INTERFACE_NAME(button_interface);
 SIM_INTERFACE_NAME(pir_interface);
 SIM_INTERFACE_NAME(clock_interface);
 SIM_INTERFACE_NAME(leds_interface);
 SIM_INTERFACE_NAME(cfs_interface);
 SIM_INTERFACE_NAME(eeprom_interface);
-SIM_INTERFACES(&vib_interface, &moteid_interface, &rs232_interface, &simlog_interface, &beep_interface, &radio_interface, &button_interface, &pir_interface, &clock_interface, &leds_interface, &cfs_interface, &eeprom_interface);
+SIM_INTERFACES(&vib_interface, &moteid_interface, &rs232_interface, &simlog_interface, &beep_interface, &button_interface, &pir_interface, &clock_interface, &leds_interface, &cfs_interface, &eeprom_interface);
 
 /* Sensors */
 SENSORS(&button_sensor, &pir_sensor, &vib_sensor);

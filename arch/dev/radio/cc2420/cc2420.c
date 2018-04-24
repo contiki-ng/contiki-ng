@@ -37,7 +37,7 @@
 
 #include "contiki.h"
 #include "sys/energest.h"
-
+#include "dev/nullradio.h"
 #include "dev/leds.h"
 #include "dev/spi-legacy.h"
 #include "dev/radio/cc2420/cc2420.h"
@@ -339,7 +339,23 @@ const struct radio_driver cc2420_driver =
     get_value,
     set_value,
     get_object,
-    set_object
+    set_object,
+    nullradio_async_enter,
+    nullradio_async_prepare,
+    nullradio_async_reprepare,
+    nullradio_async_transmit,
+    nullradio_async_on,
+    nullradio_async_off,
+    nullradio_async_set_shr_callback,
+    nullradio_async_set_fifop_callback,
+    nullradio_async_set_txdone_callback,
+    nullradio_async_read_phy_header,
+    nullradio_async_read_payload,
+    nullradio_async_read_payload_bytes,
+    nullradio_async_prepare_sequence,
+    nullradio_async_append_to_sequence,
+    nullradio_async_transmit_sequence,
+    nullradio_async_finish_sequence
   };
 
 /*---------------------------------------------------------------------------*/

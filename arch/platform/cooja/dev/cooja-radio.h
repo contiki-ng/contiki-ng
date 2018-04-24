@@ -82,5 +82,9 @@ radio_signal_strength_current(void);
 int
 radio_LQI(void);
 
+/**
+ * \brief Handles radio interrupts
+ */
+void cooja_radio_check(void);
 
 #endif /* COOJA_RADIO_H_ */
