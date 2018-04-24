@@ -63,6 +63,8 @@
 #include "contiki.h"
 #include "dev/gptimer.h"
 
+#define RTIMERTICKS_TO_S(T)    (T >> 15)
+
 /* Do the math in 32bits to save precision.
  * Round to nearest integer rather than truncate. */
 #define US_TO_RTIMERTICKS(US)  ((US) >= 0 ?                        \
