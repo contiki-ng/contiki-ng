@@ -42,6 +42,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/radio.h"
+#include "dev/nullradio.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/oscillators.h"
 #include "net/packetbuf.h"
@@ -1494,6 +1495,23 @@ const struct radio_driver ieee_mode_driver = {
   set_value,
   get_object,
   set_object,
+  nullradio_enter_async_mode,
+  nullradio_async_prepare,
+  nullradio_async_transmit,
+  nullradio_async_on,
+  nullradio_async_off,
+  nullradio_async_set_shr_callback,
+  nullradio_async_set_fifop_callback,
+  nullradio_async_set_txdone_callback,
+  nullradio_async_read_phy_header,
+  nullradio_async_read_phy_header_to_packetbuf,
+  nullradio_async_read_payload,
+  nullradio_async_read_payload_to_packetbuf,
+  nullradio_async_remaining_payload_bytes,
+  nullradio_async_prepare_sequence,
+  nullradio_async_append_to_sequence,
+  nullradio_async_transmit_sequence,
+  nullradio_async_finish_sequence
 };
 /*---------------------------------------------------------------------------*/
 /**

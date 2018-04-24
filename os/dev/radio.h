@@ -57,7 +57,39 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#include "contiki.h"
 #include <stddef.h>
+
+#ifdef RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS
+#define RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS
+#else /* RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS */
+#define RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS (12)
+#endif /* RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS */
+
+#ifdef RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS
+#define RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS
+#else /* RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS */
+#define RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS (12)
+#endif /* RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS */
+
+#define RADIO_SFD (0xA7)
+#define RADIO_SHR_LEN (5)
+#define RADIO_MAX_FRAME_LEN (127)
+#define RADIO_PHY_HEADER_LEN (RADIO_SHR_LEN + 1)
+#define RADIO_MAX_SEQUENCE_LEN (128)
+#define RADIO_SYMBOLS_PER_BYTE (2)
+#define RADIO_SYMBOL_PERIOD (16 /* us */)
+#define RADIO_BYTE_PERIOD (RADIO_SYMBOL_PERIOD * RADIO_SYMBOLS_PER_BYTE)
+#define RADIO_TIME_TO_TRANSMIT(symbols) \
+    ((rtimer_clock_t)(((((uint64_t)symbols) * RADIO_SYMBOL_PERIOD * RTIMER_ARCH_SECOND) / 1000000) + 1))
+#define RADIO_SHR_TIME \
+    RADIO_TIME_TO_TRANSMIT(RADIO_SHR_LEN * RADIO_SYMBOLS_PER_BYTE)
+#define RADIO_CCA_TIME \
+    RADIO_TIME_TO_TRANSMIT(8)
+#define RADIO_RECEIVE_CALIBRATION_TIME \
+    RADIO_TIME_TO_TRANSMIT(RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS)
+#define RADIO_TRANSMIT_CALIBRATION_TIME \
+    RADIO_TIME_TO_TRANSMIT(RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS)
 
 /**
  * Each radio has a set of parameters that designate the current
@@ -87,6 +119,10 @@
 
 typedef int radio_value_t;
 typedef unsigned radio_param_t;
+
+typedef void (* radio_shr_callback_t)(void);
+typedef void (* radio_fifop_callback_t)(void);
+typedef void (* radio_txdone_callback_t)(void);
 
 enum {
 
@@ -316,7 +352,111 @@ struct radio_driver {
   radio_result_t (* set_object)(radio_param_t param, const void *src,
                                 size_t size);
 
+  /**
+   * \brief Enables the asynchronous mode.
+   *
+   * Once the asynchronous mode is enabled, only functions that are prepended
+   * with "async_" may be called, except for get_value, set_value, get_object,
+   * and set_object.
+   */
+  void (* enter_async_mode)(void);
+
+  /**
+   * \brief                     Sets the next frame that shall be transmitted
+   * \param length_then_payload Pointer to the frame's length field
+   */
+  void (* async_prepare)(uint8_t *length_then_payload);
+
+  /**
+   * \brief                         Transmits the prepared frame
+   * \param shall_enter_rx_after_tx Non-zero if the receive mode shall be enabled
+   *                                after the transmission has ended
+   */
+  void (* async_transmit)(int shall_enter_rx_after_tx);
+
+  /**
+   * \brief Enables the receive mode
+   */
+  void (* async_on)(void);
+
+  /**
+   * \brief Disables the receive or transmit mode, whichever is active
+   */
+  void (* async_off)(void);
+
+  /**
+   * \brief              Registers a callback for incoming and outgoing SHRs
+   * \param shr_callback The callback function or NULL
+   */
+  void (* async_set_shr_callback)(radio_shr_callback_t shr_callback);
+
+  /**
+   * \brief              Registers a callback for a certain number of unread bytes
+   * \param shr_callback The callback function or NULL
+   * \param threshold    The number of unread bytes
+   */
+  void (* async_set_fifop_callback)(radio_fifop_callback_t fifop_callback, uint8_t threshold);
+
+  /**
+   * \brief              Registers a callback for complete frame transmissions
+   * \param shr_callback The callback function or NULL
+   */
+  void (* async_set_txdone_callback)(radio_txdone_callback_t txdone_callback);
+
+  /**
+   * \brief  Reads the physical layer (PHY) header
+   * \return The frame's length in bytes
+   */
+  uint8_t (* async_read_phy_header)(void);
+
+  /**
+   * \brief  Reads the PHY header and initializes the packetbuf's datalen
+   * \return The frame's length in bytes
+   */
+  uint8_t (* async_read_phy_header_to_packetbuf)(void);
+
+  /**
+   * \brief Reads payload bytes to the specified memory location
+   * \return Zero if an error occurred
+   */
+  int (* async_read_payload)(uint8_t *buf, uint8_t bytes);
+
+  /**
+   * \brief Reads payload bytes and appends them to the packetbuf
+   * \return Zero if an error occurred
+   */
+  int (* async_read_payload_to_packetbuf)(uint8_t bytes);
+
+  /**
+   * \brief Provides the number of payload bytes that were not read, yet
+   */
+  uint8_t (* async_remaining_payload_bytes)(void);
+
+  /**
+   * \brief Prepares the radio for transmitting an uninterrupted sequence of frames
+   */
+  void (* async_prepare_sequence)(uint8_t *sequence, uint8_t sequence_len);
+
+  /**
+   * \brief Appends one or more frames that shall be transmitted
+   * \note  All frames except for the first one must contain an SHR.
+   */
+  void (* async_append_to_sequence)(uint8_t *appendix, uint8_t appendix_len);
+
+  /**
+   * \brief Starts the transmission of the uninterrupted sequence
+   */
+  void (* async_transmit_sequence)(void);
+
+  /**
+   * \brief Busy-waits until all appended frames have been transmitted
+   */
+  void (* async_finish_sequence)(void);
+
 };
+
+extern const uint8_t radio_shr[RADIO_SHR_LEN];
+int16_t radio_get_rssi(void);
 
 #endif /* RADIO_H_ */
 
