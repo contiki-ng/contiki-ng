@@ -267,6 +267,12 @@ enum {
 
 #define PACKETBUF_IS_ADDR(type) ((type) >= PACKETBUF_ADDR_FIRST)
 
+struct packetbuf {
+  struct packetbuf_attr attrs[PACKETBUF_NUM_ATTRS];
+  struct packetbuf_addr addrs[PACKETBUF_NUM_ADDRS];
+};
+extern struct packetbuf *packetbuf;
+
 int               packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val);
 packetbuf_attr_t packetbuf_attr(uint8_t type);
 int               packetbuf_set_addr(uint8_t type, const linkaddr_t *addr);
