@@ -47,8 +47,11 @@
 #include "border-router.h"
 #include "border-router-cmds.h"
 
-#define DEBUG DEBUG_FULL
-#include "net/ipv6/uip-debug.h"
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "BR"
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 #include <stdlib.h>
 
@@ -106,7 +109,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   process_start(&border_router_cmd_process, NULL);
 
-  PRINTF("RPL-Border router started\n");
+  LOG_INFO("RPL-Border router started\n");
 
   slip_config_handle_arguments(contiki_argc, contiki_argv);
 
@@ -123,12 +126,12 @@ PROCESS_THREAD(border_router_process, ev, data)
     uip_ipaddr_t prefix;
 
     if(uiplib_ipaddrconv((const char *)slip_config_ipaddr, &prefix)) {
-      PRINTF("Setting prefix ");
-      PRINT6ADDR(&prefix);
-      PRINTF("\n");
+      LOG_INFO("Setting prefix ");
+      LOG_INFO_6ADDR(&prefix);
+      LOG_INFO_("\n");
       set_prefix_64(&prefix);
     } else {
-      PRINTF("Parse error: %s\n", slip_config_ipaddr);
+      LOG_ERR("Parse error: %s\n", slip_config_ipaddr);
       exit(0);
     }
   }
