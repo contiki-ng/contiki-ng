@@ -45,6 +45,7 @@
 #include "lpm.h"
 #include "reg.h"
 #include "soc.h"
+#include "dev/cc2538-sram-seeder.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -125,6 +126,9 @@ soc_init()
   lpm_init();
   rtimer_init();
   gpio_hal_init();
+#if CSPRNG_ENABLED && LPM_CONF_ENABLE && (LPM_CONF_MAX_PM >= LPM_PM2)
+  cc2538_sram_seeder_seed();
+#endif /* CSPRNG_ENABLED && LPM_CONF_ENABLE && (LPM_CONF_MAX_PM >= LPM_PM2) */
 }
 /*----------------------------------------------------------------------------*/
 /** @} */
