@@ -40,6 +40,16 @@
 #include "lib/list.h"
 #include "net/nbr-table.h"
 
+#ifdef NBR_TABLE_CONF_WITH_FIND_REMOVABLE
+#define WITH_FIND_REMOVABLE NBR_TABLE_CONF_WITH_FIND_REMOVABLE
+#else /* NBR_TABLE_CONF_WITH_FIND_REMOVABLE */
+#ifdef NBR_TABLE_FIND_REMOVABLE
+#define WITH_FIND_REMOVABLE 1
+#else /* NBR_TABLE_FIND_REMOVABLE */
+#define WITH_FIND_REMOVABLE 0
+#endif /* NBR_TABLE_FIND_REMOVABLE */
+#endif /* NBR_TABLE_CONF_WITH_FIND_REMOVABLE */
+
 #define DEBUG 0
 #if DEBUG
 #include <stdio.h>
@@ -208,7 +218,7 @@ nbr_table_allocate(nbr_table_reason_t reason, void *data)
   if(key != NULL) {
     return key;
   } else {
-#ifdef NBR_TABLE_FIND_REMOVABLE
+#if WITH_FIND_REMOVABLE
     const linkaddr_t *lladdr;
     lladdr = NBR_TABLE_FIND_REMOVABLE(reason, data);
     if(lladdr == NULL) {
@@ -229,7 +239,7 @@ nbr_table_allocate(nbr_table_reason_t reason, void *data)
         locked_map[index] = 0;
       }
     }
-#endif /* NBR_TABLE_FIND_REMOVABLE */
+#endif /* WITH_FIND_REMOVABLE */
 
     if(least_used_key == NULL) {
       /* No more space, try to free a neighbor.
