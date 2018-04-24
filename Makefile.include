@@ -145,6 +145,7 @@ MAKE_MAC_CSMA = 1
 MAKE_MAC_TSCH = 2
 MAKE_MAC_BLE = 3
 MAKE_MAC_OTHER = 4
+MAKE_MAC_CSL = 5
 
 # Make CSMA the default MAC
 MAKE_MAC ?= MAKE_MAC_CSMA
@@ -171,6 +172,11 @@ endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_OTHER)
   CFLAGS += -DMAC_CONF_WITH_OTHER=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_CSL)
+  MODULES += os/net/mac/csl
+  CFLAGS += -DMAC_CONF_WITH_CSL=1
 endif
 
 # Configure Network layer
