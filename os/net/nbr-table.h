@@ -46,6 +46,18 @@
 #define NBR_TABLE_MAX_NEIGHBORS 8
 #endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 
+#ifndef NBR_TABLE_CONF_WITH_LOCKING
+#define NBR_TABLE_CONF_WITH_LOCKING 0
+#endif /* NBR_TABLE_CONF_WITH_LOCKING */
+#if NBR_TABLE_CONF_WITH_LOCKING
+volatile int nbr_table_locked;
+#define NBR_TABLE_GET_LOCK()        nbr_table_locked++
+#define NBR_TABLE_RELEASE_LOCK()    nbr_table_locked--
+#else /* NBR_TABLE_CONF_WITH_LOCKING */
+#define NBR_TABLE_GET_LOCK()
+#define NBR_TABLE_RELEASE_LOCK()
+#endif /* NBR_TABLE_CONF_WITH_LOCKING */
+
 /* An item in a neighbor table */
 typedef void nbr_table_item_t;
 
