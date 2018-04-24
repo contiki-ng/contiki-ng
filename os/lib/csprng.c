@@ -87,11 +87,13 @@ csprng_rand(uint8_t *result, uint8_t len)
 {
   uint16_t pos;
 
+  AES_128_GET_LOCK();
   AES_128.set_key(seed.key);
   for(pos = 0; pos < len; pos += 16) {
     AES_128.encrypt(seed.state);
     memcpy(result + pos, seed.state, MIN(len - pos, 16));
   }
+  AES_128_RELEASE_LOCK();
 }
 /*---------------------------------------------------------------------------*/
 

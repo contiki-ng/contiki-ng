@@ -51,6 +51,18 @@
 #define AES_128            aes_128_driver
 #endif /* AES_128_CONF */
 
+#ifndef AES_128_CONF_WITH_LOCKING
+#define AES_128_CONF_WITH_LOCKING 0
+#endif /* AES_128_CONF_WITH_LOCKING */
+#if AES_128_CONF_WITH_LOCKING
+volatile int aes_128_locked;
+#define AES_128_GET_LOCK()        aes_128_locked++
+#define AES_128_RELEASE_LOCK()    aes_128_locked--
+#else /* AES_128_CONF_WITH_LOCKING */
+#define AES_128_GET_LOCK()
+#define AES_128_RELEASE_LOCK()
+#endif /* AES_128_CONF_WITH_LOCKING */
+
 /**
  * Structure of AES drivers.
  */
