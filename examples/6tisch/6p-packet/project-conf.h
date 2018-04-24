@@ -28,8 +28,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PROJECT_CONF_H_
-#define _PROJECT_CONF_H_
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 #define UIP_CONF_ND6_SEND_RA 0
 
@@ -39,4 +39,4 @@
 
 #define LOG_CONF_LEVEL_6TOP LOG_LEVEL_DBG
 
-#endif /* _PROJECT_CONF_H_ */
+#endif /* PROJECT_CONF_H_ */

@@ -37,7 +37,9 @@
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
-
+/*---------------------------------------------------------------------------*/
+#include "native-def.h"
+/*---------------------------------------------------------------------------*/
 #include <inttypes.h>
 #ifndef WIN32_LEAN_AND_MEAN
 #include <sys/select.h>
@@ -59,8 +61,6 @@ int select_set_callback(int fd, const struct select_callback *callback);
 #endif
 
 typedef unsigned int uip_stats_t;
-
-#define LEDS_CONF_LEGACY_API 1
 
 #ifndef UIP_CONF_BYTE_ORDER
 #define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
@@ -90,6 +90,8 @@ typedef unsigned long clock_time_t;
 #define CLOCK_CONF_SECOND 1000
 
 #define LOG_CONF_ENABLED 1
+
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 
 /* Not part of C99 but actually present */
 int strcasecmp(const char*, const char*);

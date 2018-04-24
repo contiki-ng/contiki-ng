@@ -47,10 +47,13 @@ PROCESS_THREAD(button_hal_example, ev, data)
 
   printf("Button HAL example.\n");
   printf("Device button count: %u.\n", button_hal_button_count);
-  printf("%s on pin %u with ID=0, Logic=%s, Pull=%s\n",
-         BUTTON_HAL_GET_DESCRIPTION(btn), btn->pin,
-         btn->negative_logic ? "Negative" : "Positive",
-         btn->pull == GPIO_HAL_PIN_CFG_PULL_UP ? "Pull Up" : "Pull Down");
+
+  if(btn) {
+    printf("%s on pin %u with ID=0, Logic=%s, Pull=%s\n",
+           BUTTON_HAL_GET_DESCRIPTION(btn), btn->pin,
+           btn->negative_logic ? "Negative" : "Positive",
+           btn->pull == GPIO_HAL_PIN_CFG_PULL_UP ? "Pull Up" : "Pull Down");
+  }
 
   while(1) {
 
