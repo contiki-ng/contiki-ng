@@ -72,10 +72,18 @@
 
 /* Configuration parameters of RFC6719. Reject parents that have a higher
  * link metric than the following. The default value is 512. */
+#ifdef RPL_MRHOF_CONF_MAX_LINK_METRIC
+#define MAX_LINK_METRIC     RPL_MRHOF_CONF_MAX_LINK_METRIC
+#else /* RPL_MRHOF_CONF_MAX_LINK_METRIC */
 #define MAX_LINK_METRIC     512 /* Eq ETX of 4 */
+#endif /* RPL_MRHOF_CONF_MAX_LINK_METRIC */
 
 /* Reject parents that have a higher path cost than the following. */
+#ifdef RPL_MRHOF_CONF_MAX_PATH_COST
+#define MAX_PATH_COST      RPL_MRHOF_CONF_MAX_PATH_COST
+#else /*  RPL_MRHOF_CONF_MAX_PATH_COST */
 #define MAX_PATH_COST      32768   /* Eq path ETX of 256 */
+#endif /* RPL_MRHOF_CONF_MAX_PATH_COST */
 
 #if !RPL_MRHOF_SQUARED_ETX
 /* Hysteresis of MRHOF: the rank must differ more than PARENT_SWITCH_THRESHOLD_DIV
