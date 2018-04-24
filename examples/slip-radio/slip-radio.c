@@ -193,7 +193,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       /* this is just a test so far... just to see if it works */
       uip_buf[0] = '!';
       uip_buf[1] = 'M';
-      for(i = 0; i < 8; i++) {
+      for(i = 0; i < UIP_LLADDR_LEN; i++) {
         uip_buf[2 + i] = uip_lladdr.addr[i];
       }
       uip_len = 10;

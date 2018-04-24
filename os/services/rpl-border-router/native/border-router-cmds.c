@@ -183,7 +183,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
       /* this is just a test so far... just to see if it works */
       buf[0] = '!';
       buf[1] = 'M';
-      for(j = 0; j < 8; j++) {
+      for(j = 0; j < UIP_LLADDR_LEN; j++) {
         buf[2 + j * 2] = hexchar[uip_lladdr.addr[j] >> 4];
         buf[3 + j * 2] = hexchar[uip_lladdr.addr[j] & 15];
       }
