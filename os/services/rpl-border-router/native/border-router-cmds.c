@@ -46,8 +46,11 @@
 #include "shell.h"
 #include <stdio.h>
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "BR"
+#define LOG_LEVEL LOG_LEVEL_NONE
 
 uint8_t command_context;
 
@@ -115,7 +118,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
 {
   /* handle global repair, etc here */
   if(data[0] == '!') {
-    PRINTF("Got configuration message of type %c\n", data[1]);
+    LOG_DBG("Got configuration message of type %c\n", data[1]);
     if(command_context == CMD_CONTEXT_STDIO) {
       switch(data[1]) {
       case 'G':
@@ -151,7 +154,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
       /* We need to know that this is from the slip-radio here. */
       switch(data[1]) {
       case 'M':
-        PRINTF("Setting MAC address\n");
+        LOG_DBG("Setting MAC address\n");
         border_router_set_mac(&data[2]);
         return 1;
       case 'V':
@@ -163,7 +166,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
         }
         return 1;
       case 'R':
-        PRINTF("Packet data report for sid:%d st:%d tx:%d\n",
+        LOG_DBG("Packet data report for sid:%d st:%d tx:%d\n",
                data[2], data[3], data[4]);
         packet_sent(data[2], data[3], data[4]);
         return 1;
@@ -172,7 +175,7 @@ border_router_cmd_handler(const uint8_t *data, int len)
       }
     }
   } else if(data[0] == '?') {
-    PRINTF("Got request message of type %c\n", data[1]);
+    LOG_DBG("Got request message of type %c\n", data[1]);
     if(data[1] == 'M' && command_context == CMD_CONTEXT_STDIO) {
       uint8_t buf[20];
       char *hexchar = "0123456789abcdef";
@@ -226,15 +229,14 @@ PROCESS_THREAD(border_router_cmd_process, ev, data)
 {
   static struct pt shell_input_pt;
   PROCESS_BEGIN();
-  PRINTF("Started br-cmd process\n");
 
   shell_init();
 
   while(1) {
     PROCESS_YIELD();
     if(ev == serial_line_event_message && data != NULL) {
-      PRINTF("Got serial data!!! %s of len: %lu\n",
-             (char *)data, strlen((char *)data));
+      LOG_DBG("Got serial data!!! %s of len: %u\n",
+             (char *)data, (unsigned)strlen((char *)data));
       command_context = CMD_CONTEXT_STDIO;
       if(cmd_input(data, strlen((char *)data))) {
         /* Commnand executed - all is fine */
