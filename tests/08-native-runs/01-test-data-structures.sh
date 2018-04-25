@@ -16,7 +16,7 @@ sleep 2
 
 echo "Closing native node"
 sleep 2
-pgrep $CODE | xargs kill -9
+pgrep ${CODE:0:15} | xargs kill -9
 
 if grep -q "=check-me= FAILED" $CODE.log ; then
   echo "==== make.log ====" ; cat make.log;
