@@ -180,12 +180,12 @@ else
 ifeq ($(HOST_OS),Darwin)
   USBDEVPREFIX=
   USBDEVBASENAME=/dev/tty.usbserial-
-  SERIALDUMP ?= $(CONTIKI)/tools/jn516x/serialdump-macos
+  SERIALDUMP ?= rlwrap $(CONTIKI)/tools/jn516x/serialdump-macos
 else
   # Else we assume Linux
   USBDEVPREFIX=
   USBDEVBASENAME=/dev/ttyUSB
-  SERIALDUMP ?= $(CONTIKI)/tools/jn516x/serialdump-linux
+  SERIALDUMP ?= rlwrap $(CONTIKI)/tools/jn516x/serialdump-linux
 endif
 endif
 
