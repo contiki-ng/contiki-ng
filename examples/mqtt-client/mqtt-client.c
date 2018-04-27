@@ -161,11 +161,6 @@ static uint8_t state;
 #define CONFIG_CMD_TYPE_LEN       8
 #define CONFIG_IP_ADDR_STR_LEN   64
 /*---------------------------------------------------------------------------*/
-#define RSSI_MEASURE_INTERVAL_MAX 86400 /* secs: 1 day */
-#define RSSI_MEASURE_INTERVAL_MIN     5 /* secs */
-#define PUBLISH_INTERVAL_MAX      86400 /* secs: 1 day */
-#define PUBLISH_INTERVAL_MIN          5 /* secs */
-/*---------------------------------------------------------------------------*/
 /* A timeout used when waiting to connect to a network */
 #define NET_CONNECT_PERIODIC        (CLOCK_SECOND >> 2)
 #define NO_NET_LED_DURATION         (NET_CONNECT_PERIODIC >> 1)
