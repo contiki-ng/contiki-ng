@@ -4,8 +4,9 @@ FROM 32bit/ubuntu:16.04
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   build-essential doxygen git wget unzip python-serial \
-  default-jdk ant srecord iputils-tracepath rlwrap && \
-  apt-get clean
+  default-jdk ant srecord iputils-tracepath rlwrap \
+  mosquitto mosquitto-clients \
+  && apt-get clean
 
 # Install ARM toolchain
 RUN wget https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
