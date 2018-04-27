@@ -1414,10 +1414,12 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
     if(is_first_request()) {
       previous_request_time = coap_timer_uptime();
       clear_first_request();
-    }else{
+    } else {
       if(coap_timer_uptime()-previous_request_time >= 0) {
-        lwm2m_q_object_add_time_object(coap_timer_uptime()-previous_request_time);
-
+        if(coap_timer_uptime()-previous_request_time > 0xffff) {
+          lwm2m_q_object_add_time_to_window(0xffff);
+        }
+        lwm2m_q_object_add_time_to_window(coap_timer_uptime()-previous_request_time);
       }
       previous_request_time = coap_timer_uptime();
     }
@@ -1691,7 +1693,7 @@ static void
 lwm2m_send_notification(char* path)
 {
 #if LWM2M_Q_MODE_ENABLED && LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
-    if(lwm2m_q_object_get_dynamic_adaptation_flag()){
+    if(lwm2m_q_object_get_dynamic_adaptation_flag()) {
       lwm2m_engine_set_handler_from_notification();
     } 
 #endif

@@ -78,14 +78,9 @@ static uint32_t q_mode_sleep_time = LWM2M_Q_MODE_DEFAULT_CLIENT_SLEEP_TIME;
 #if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
 static uint8_t q_mode_dynamic_adaptation_flag = LWM2M_Q_MODE_DEFAULT_DYNAMIC_ADAPTATION_FLAG;
 
-typedef struct time_object {
-  struct times_object *next;
-  uint64_t time;
-} time_object_t;
-
 /* Window to save the times and do the dynamic adaptation of the awake time*/
-MEMB(times_memb, time_object_t, LWM2M_Q_MODE_DYNAMIC_ADAPTATION_WINDOW_LENGTH);
-LIST(time_object_list);
+uint16_t times_window[LWM2M_Q_MODE_DYNAMIC_ADAPTATION_WINDOW_LENGTH] = { 0 };
+uint8_t times_window_index = 0;
 
 #endif
 /*---------------------------------------------------------------------------*/
@@ -130,16 +125,14 @@ lwm2m_q_object_set_dynamic_adaptation_flag(uint8_t flag)
 }
 /*---------------------------------------------------------------------------*/
 #if !UPDATE_WITH_MEAN
-static uint64_t
+static uint16_t
 get_maximum_time()
 {
-  uint64_t max_time = 0;
-  time_object_t *iteration_time = NULL;
-  for(iteration_time = (time_object_t *)list_head(time_object_list); iteration_time;
-      iteration_time = (time_object_t *)iteration_time->next) {
-
-    if(iteration_time->time > max_time) {
-      max_time = iteration_time->time;
+  uint16_t max_time = 0;
+  uint8_t i;
+  for(i = 0; i < LWM2M_Q_MODE_DYNAMIC_ADAPTATION_WINDOW_LENGTH; i++) {
+    if(times_window[i] > max_time) {
+      max_time = times_window[i];
     }
   }
   return max_time;
@@ -147,18 +140,18 @@ get_maximum_time()
 #endif
 /*---------------------------------------------------------------------------*/
 #if UPDATE_WITH_MEAN
-static uint64_t
+static uint16_t
 get_mean_time()
 {
-  uint64_t mean_time = 0;
-  time_object_t *iteration_time = NULL;
-  for(iteration_time = (time_object_t *)list_head(time_object_list); iteration_time;
-      (time_object_t *)iteration_time = iteration_time->next) {
-
+  uint16_t mean_time = 0;
+  uint8_t i;
+  for(i = 0; i < LWM2M_Q_MODE_DYNAMIC_ADAPTATION_WINDOW_LENGTH; i++) {
     if(mean_time == 0) {
-      mean_time = iteration_time->time;
+      mean_time = times_window[i];
     } else {
-      mean_time = (mean_time + iteration_time->time) / 2;
+      if(times_window[i] != 0) {
+        mean_time = (mean_time + times_window[i]) / 2;
+      }
     }
   }
   return mean_time;
@@ -169,39 +162,26 @@ static void
 update_awake_time()
 {
 #if UPDATE_WITH_MEAN
-  uint64_t mean_time = get_mean_time();
+  uint16_t mean_time = get_mean_time();
   LOG_DBG("Dynamic Adaptation: updated awake time: %d ms\n", (int)mean_time);
   lwm2m_q_object_set_awake_time(mean_time + (mean_time >> 1)); /* 50% margin */
   return;
 #else
-  uint64_t max_time = get_maximum_time();
+  uint16_t max_time = get_maximum_time();
   LOG_DBG("Dynamic Adaptation: updated awake time: %d ms\n", (int)max_time);
   lwm2m_q_object_set_awake_time(max_time + (max_time >> 1)); /* 50% margin */
   return;
 #endif
 }
 /*---------------------------------------------------------------------------*/
-static void
-remove_time_object(time_object_t *time_object)
-{
-  memb_free(&times_memb, time_object);
-  list_remove(time_object_list, time_object);
-}
-/*---------------------------------------------------------------------------*/
 void
-lwm2m_q_object_add_time_object(uint64_t time)
+lwm2m_q_object_add_time_to_window(uint16_t time)
 {
-  time_object_t *time_object;
-  time_object = memb_alloc(&times_memb);
-  if(time_object != NULL) {
-    time_object->time = time;
-    list_add(time_object_list, time_object);
-  } else {
-    remove_time_object((time_object_t *)list_head(time_object_list));
-    time_object = memb_alloc(&times_memb);
-    time_object->time = time;
-    list_add(time_object_list, time_object);
+  if(times_window_index == LWM2M_Q_MODE_DYNAMIC_ADAPTATION_WINDOW_LENGTH) {
+    times_window_index = 0;
   }
+  times_window[times_window_index] = time;
+  times_window_index++;
   update_awake_time();
 }
 #endif /* LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION */

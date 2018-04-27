@@ -93,17 +93,17 @@ reduce_path(notification_path_t *path_object, char *path)
 }
 /*---------------------------------------------------------------------------*/
 static void
-extend_path(notification_path_t *path_object, char *path)
+extend_path(notification_path_t *path_object, char *path, int path_size)
 {
   switch(path_object->level) {
   case 1:
-    snprintf(path, sizeof(path) - 1, "%u", path_object->reduced_path[0]);
+    snprintf(path, path_size, "%u", path_object->reduced_path[0]);
     break;
   case 2:
-    snprintf(path, sizeof(path) - 1, "%u/%u", path_object->reduced_path[0], path_object->reduced_path[1]);
+    snprintf(path, path_size, "%u/%u", path_object->reduced_path[0], path_object->reduced_path[1]);
     break;
   case 3:
-    snprintf(path, sizeof(path) - 1, "%u/%u/%u", path_object->reduced_path[0], path_object->reduced_path[1], path_object->reduced_path[2]);
+    snprintf(path, path_size, "%u/%u/%u", path_object->reduced_path[0], path_object->reduced_path[1], path_object->reduced_path[2]);
     break;
   }
 }
@@ -222,7 +222,7 @@ lwm2m_notification_queue_send_notifications()
   notification_path_t *aux = iteration_path;
 
   while(iteration_path != NULL) {
-    extend_path(iteration_path, path);
+    extend_path(iteration_path, path, sizeof(path));
 #if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
     if(lwm2m_q_object_get_dynamic_adaptation_flag()) {
       lwm2m_engine_set_handler_from_notification();

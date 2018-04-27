@@ -53,7 +53,7 @@ uint16_t lwm2m_q_object_get_awake_time();
 uint32_t lwm2m_q_object_get_sleep_time();
 #if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
 uint8_t lwm2m_q_object_get_dynamic_adaptation_flag();
-void lwm2m_q_object_add_time_object(uint64_t time);
+void lwm2m_q_object_add_time_to_window(uint16_t time);
 #endif
 
 void lwm2m_q_object_send_notifications();
