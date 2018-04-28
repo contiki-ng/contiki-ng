@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH packet parsing and creation. EBs and EACKs.
 */
 
 #ifndef __TSCH_PACKET_H__

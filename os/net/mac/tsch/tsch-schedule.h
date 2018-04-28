@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH scheduling engine
 */
 
 #ifndef __TSCH_SCHEDULE_H__

@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH adaptive time synchronization
 */
 
 #ifndef __TSCH_ADAPTIVE_TIMESYNC_H__
