@@ -31,6 +31,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH-RPL interaction
 */
 
 #ifndef __TSCH_RPL_H__

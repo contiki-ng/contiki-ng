@@ -31,16 +31,13 @@
  */
 
 /**
+* \addtogroup tsch
+* @{
  * \file
  *         TSCH types
  * \author
  *         Simon Duquennoy <simonduq@sics.se>
  */
-
-/**
- * \addtogroup tsch
- * @{
-*/
 
 #ifndef __TSCH_TYPES_H__
 #define __TSCH_TYPES_H__

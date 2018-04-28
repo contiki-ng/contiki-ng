@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH runtime operation within timeslots
 */
 
 #ifndef __TSCH_SLOT_OPERATION_H__
