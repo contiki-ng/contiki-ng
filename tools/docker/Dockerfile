@@ -98,8 +98,8 @@ RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
 # Working directory
 WORKDIR ${CONTIKI_NG}
 
-# Enable IPv6 -- must be done at runtime, not in Dockerfile
-RUN echo "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null" >> /home/user/.profile
+# Enable IPv6 -- must be done at runtime, hence added to .profile
+RUN echo "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null" >> ${HOME}/.profile
 
 # Start a bash
 CMD bash --login
