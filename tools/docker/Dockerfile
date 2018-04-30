@@ -74,6 +74,20 @@ RUN sudo apt-get install -y npm \
   && sudo npm install coap-cli -g \
   && sudo ln -s /usr/bin/nodejs /usr/bin/node
 
+# Install Mono and libcanberra-gtk:i386 (for Renode)
+RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+  && echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list \
+  && sudo apt-get update \
+  && sudo apt-get install -y mono-complete gksu libgtk2.0-0 screen uml-utilities gtk-sharp2 libcanberra-gtk-module:i386 \
+  && sudo apt-get clean
+
+# Download, build and install Renode
+RUN git clone https://github.com/renode/renode.git \
+  && cd ${HOME}/renode \
+  && git checkout v1.3 \
+  && ./build.sh
+ENV PATH="${HOME}/renode:${PATH}"
+
 # Optional: download Contiki-NG and pre-compile Cooja.
 # Else, use a Docker bind mount to share the repo with the host.
 # Docker run option:
