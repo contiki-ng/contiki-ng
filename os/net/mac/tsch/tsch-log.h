@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH per-slot logging
 */
 
 #ifndef __TSCH_LOG_H__

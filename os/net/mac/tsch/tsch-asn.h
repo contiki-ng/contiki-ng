@@ -31,16 +31,12 @@
  */
 
 /**
+ * \addtogroup tsch
+ * @{
  * \file
  *         TSCH 5-Byte Absolute Slot Number (ASN) management
  * \author
  *         Simon Duquennoy <simonduq@sics.se>
- *
- */
-
-/**
- * \addtogroup tsch
- * @{
 */
 
 #ifndef __TSCH_ASN_H__

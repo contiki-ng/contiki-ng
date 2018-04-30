@@ -37,6 +37,8 @@ The IEEE 802.15.4-2015 TimeSlotted Channel Hopping (TSCH) protocol. Provides
 scheduled communication on top of a globally-synchronized network. Performs
 frequency hopping for enhanced reliability.
 * @{
+* \file
+*	Main API declarations for TSCH.
 */
 
 #ifndef __TSCH_H__

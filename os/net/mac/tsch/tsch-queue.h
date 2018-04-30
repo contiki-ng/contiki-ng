@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH queues
 */
 
 #ifndef __TSCH_QUEUE_H__
