@@ -34,6 +34,7 @@
  * \author
  *      Joakim Eriksson, joakime@sics.se
  *      Niclas Finne, nfi@sics.se
+ *      Carlos Gonzalo Peces, carlosgp143@gmail.com
  */
 
 #include "contiki.h"
@@ -61,6 +62,20 @@
 
 #ifndef LWM2M_SERVER_ADDRESS
 #define LWM2M_SERVER_ADDRESS "coap://[fd00::1]"
+#endif
+
+#ifndef LWM2M_SERVER_ADDRESS_SECOND
+#define LWM2M_SERVER_ADDRESS_SECOND "coap://[fd00::1]:5686"
+#endif
+
+#ifndef LWM2M_SESSIONS
+#define LWM2M_SESSIONS 2
+#endif
+
+ static lwm2m_session_info_t session_info;
+
+#if LWM2M_SESSIONS == 2
+static lwm2m_session_info_t session_info_second;
 #endif
 
 #if BOARD_SENSORTAG
@@ -148,13 +163,27 @@ setup_lwm2m_servers(void)
   coap_endpoint_t server_ep;
   if(coap_endpoint_parse(LWM2M_SERVER_ADDRESS, strlen(LWM2M_SERVER_ADDRESS),
                          &server_ep) != 0) {
-    lwm2m_rd_client_register_with_bootstrap_server(&server_ep);
-    lwm2m_rd_client_register_with_server(&server_ep);
+#if REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER
+    lwm2m_rd_client_register_with_bootstrap_server(&session_info, &server_ep);
+#else
+    lwm2m_rd_client_register_with_server(&session_info, &server_ep);
+#endif
   }
 #endif /* LWM2M_SERVER_ADDRESS */
 
-  lwm2m_rd_client_use_bootstrap_server(REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER);
-  lwm2m_rd_client_use_registration_server(REGISTER_WITH_LWM2M_SERVER);
+#if LWM2M_SESSIONS == 2
+#ifdef LWM2M_SERVER_ADDRESS_SECOND
+  coap_endpoint_t server_ep_second;
+  if(coap_endpoint_parse(LWM2M_SERVER_ADDRESS_SECOND, strlen(LWM2M_SERVER_ADDRESS_SECOND),
+                         &server_ep_second) != 0) {
+#if REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER
+    lwm2m_rd_client_register_with_bootstrap_server(&session_info_second, &server_ep_second);
+#else
+    lwm2m_rd_client_register_with_server(&session_info_second, &server_ep_second);
+#endif
+  }
+#endif /* LWM2M_SERVER_ADDRESS_SECOND */
+#endif /* LWM2M_SESSIONS == 2 */
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_ipso_objects, ev, data)
