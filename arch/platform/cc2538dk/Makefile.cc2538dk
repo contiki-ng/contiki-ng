@@ -37,3 +37,17 @@ else
 	                               sort -g | head -1))
 	$(PYTHON) $(BSL) $(BSL_FLAGS) $(BSL_ADDRESS_ARG) $<
 endif
+
+ifeq ($(HOST_OS),Darwin)
+  RENODE = mono /Applications/Renode.app/Contents/MacOS/bin/Renode.exe
+else
+  RENODE = renode
+endif
+
+SCRIPT ?= $(notdir $(CURDIR)).resc
+
+.PHONY: renode
+
+renode: all
+	$(RENODE) $(SCRIPT)
+
