@@ -168,11 +168,15 @@ backoff_period(void)
 static int
 send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
 {
+  int expect_ack;
   int ret;
   int last_sent_ok = 0;
 
+  expect_ack = !packetbuf_holds_broadcast() && CSMA_REQUEST_ACK;
+
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
-  packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
+
+  packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, expect_ack);
 
 #if LLSEC802154_ENABLED
 #if LLSEC802154_USES_EXPLICIT_KEYS
@@ -186,16 +190,13 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
     LOG_ERR("failed to create packet, seqno: %d\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     ret = MAC_TX_ERR_FATAL;
   } else {
-    int is_broadcast;
     uint8_t dsn;
     dsn = ((uint8_t *)packetbuf_hdrptr())[2] & 0xff;
 
     NETSTACK_RADIO.prepare(packetbuf_hdrptr(), packetbuf_totlen());
 
-    is_broadcast = packetbuf_holds_broadcast();
-
     if(NETSTACK_RADIO.receiving_packet() ||
-       (!is_broadcast && NETSTACK_RADIO.pending_packet())) {
+       (expect_ack && NETSTACK_RADIO.pending_packet())) {
 
       /* Currently receiving a packet over air or the radio has
          already received a packet that needs to be read before
@@ -205,7 +206,9 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
 
       switch(NETSTACK_RADIO.transmit(packetbuf_totlen())) {
       case RADIO_TX_OK:
-        if(is_broadcast) {
+        if(!expect_ack) {
+          ret = MAC_TX_OK;
+        } else if (!expect_ack) {
           ret = MAC_TX_OK;
         } else {
           /* Check for ack */
@@ -214,6 +217,7 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
           RTIMER_BUSYWAIT_UNTIL(NETSTACK_RADIO.pending_packet(), CSMA_ACK_WAIT_TIME);
 
           ret = MAC_TX_NOACK;
+
           if(NETSTACK_RADIO.receiving_packet() ||
              NETSTACK_RADIO.pending_packet() ||
              NETSTACK_RADIO.channel_clear() == 0) {
