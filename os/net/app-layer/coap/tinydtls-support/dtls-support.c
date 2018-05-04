@@ -42,7 +42,7 @@
 #include <stdarg.h>
 
 /* Log configuration */
-#define LOG_MODULE "dtls-support"
+#define LOG_MODULE "dtls"
 #define LOG_LEVEL  LOG_LEVEL_DTLS
 #include "dtls-log.h"
 #include "coap-log.h"

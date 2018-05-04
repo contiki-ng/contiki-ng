@@ -49,7 +49,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "coap-separate"
+#define LOG_MODULE "coap"
 #define LOG_LEVEL  LOG_LEVEL_COAP
 
 /*---------------------------------------------------------------------------*/
