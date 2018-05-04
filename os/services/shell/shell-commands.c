@@ -173,8 +173,12 @@ PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
 
     SHELL_OUTPUT(output, "-- State: %s\n", rpl_state_to_str(curr_instance.dag.state));
     SHELL_OUTPUT(output, "-- Preferred parent: ");
-    shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
-    SHELL_OUTPUT(output, " (last DTSN: %u)\n", curr_instance.dag.preferred_parent->dtsn);
+    if(curr_instance.dag.preferred_parent) {
+      shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+      SHELL_OUTPUT(output, " (last DTSN: %u)\n", curr_instance.dag.preferred_parent->dtsn);
+    } else {
+      SHELL_OUTPUT(output, "None\n");
+    }
     SHELL_OUTPUT(output, "-- Rank: %u\n", curr_instance.dag.rank);
     SHELL_OUTPUT(output, "-- Lowest rank: %u (%u)\n", curr_instance.dag.lowest_rank, curr_instance.max_rankinc);
     SHELL_OUTPUT(output, "-- DTSN out: %u\n", curr_instance.dtsn_out);

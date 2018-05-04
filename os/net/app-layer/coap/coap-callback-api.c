@@ -51,7 +51,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "coap-callback-api"
+#define LOG_MODULE "coap"
 #define LOG_LEVEL  LOG_LEVEL_COAP
 
 /* These should go into the state struct so that we can have multiple

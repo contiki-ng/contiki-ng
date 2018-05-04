@@ -64,7 +64,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "lwm2m-rd-client"
+#define LOG_MODULE "lwm2m-rd"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #ifndef LWM2M_DEFAULT_CLIENT_LIFETIME

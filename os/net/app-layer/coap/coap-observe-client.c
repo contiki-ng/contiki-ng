@@ -55,7 +55,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "coap-observe-client"
+#define LOG_MODULE "coap"
 #define LOG_LEVEL  LOG_LEVEL_COAP
 
 MEMB(obs_subjects_memb, coap_observee_t, COAP_MAX_OBSERVEES);

@@ -49,7 +49,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "lwm2m-plain-text"
+#define LOG_MODULE "lwm2m-text"
 #define LOG_LEVEL  LOG_LEVEL_NONE
 
 /*---------------------------------------------------------------------------*/
