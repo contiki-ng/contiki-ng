@@ -54,7 +54,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "lwm2m-security"
+#define LOG_MODULE "lwm2m-sec"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #define MAX_COUNT LWM2M_SERVER_MAX_COUNT

@@ -63,7 +63,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "lwm2m-engine"
+#define LOG_MODULE "lwm2m-eng"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #ifndef LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX
