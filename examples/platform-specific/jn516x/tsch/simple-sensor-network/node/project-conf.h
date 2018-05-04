@@ -32,12 +32,12 @@
 *
 */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 #define UIP_CONF_TCP 0
 #define UART_BAUD_RATE UART_RATE_115200
 
 #include "../../common-conf.h"
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */

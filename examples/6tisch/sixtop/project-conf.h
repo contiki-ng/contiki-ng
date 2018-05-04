@@ -28,8 +28,8 @@
  *
  */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
@@ -103,4 +103,4 @@
 #endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL \
        || CONTIKI_TARGET_OPENMOTE_CC2538 */
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */

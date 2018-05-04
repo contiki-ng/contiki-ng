@@ -49,20 +49,21 @@
 #include "driverlib/rf_mailbox.h"
 /*---------------------------------------------------------------------------*/
 /* IEEE 802.15.4g frequency band identifiers (Table 68f) */
-#define DOT_15_4G_FREQUENCY_BAND_169  0 /* 169.400–169.475 (Europe) - 169 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_450  1 /* 450–470 (US FCC Part 22/90) - 450 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_470  2 /* 470–510 (China) - 470 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_780  3 /* 779–787 (China) - 780 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_863  4 /* 863–870 (Europe) - 863 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_896  5 /* 896–901 (US FCC Part 90) - 896 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_901  6 /* 901–902 (US FCC Part 24) - 901 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_915  7 /* 902–928 (US) - 915 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_917  8 /* 917–923.5 (Korea) - 917 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_920  9 /* 920–928 (Japan) - 920 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_928  10 /* 928–960 (US, non-contiguous) - 928 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_950  11 /* 950–958 (Japan) - 950 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_1427 12 /* 1427–1518 (US and Canada, non-contiguous) - 1427 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_2450 13 /* 2400–2483.5 2450 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_169     0 /* 169.400–169.475 (Europe) - 169 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_450     1 /* 450–470 (US FCC Part 22/90) - 450 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_470     2 /* 470–510 (China) - 470 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_780     3 /* 779–787 (China) - 780 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_863     4 /* 863–870 (Europe) - 863 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_896     5 /* 896–901 (US FCC Part 90) - 896 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_901     6 /* 901–902 (US FCC Part 24) - 901 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_915     7 /* 902–928 (US) - 915 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_917     8 /* 917–923.5 (Korea) - 917 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_920     9 /* 920–928 (Japan) - 920 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_928     10 /* 928–960 (US, non-contiguous) - 928 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_950     11 /* 950–958 (Japan) - 950 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_1427    12 /* 1427–1518 (US and Canada, non-contiguous) - 1427 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_2450    13 /* 2400–2483.5 2450 MHz band */
+#define DOT_15_4G_FREQUENCY_BAND_CUSTOM  14 /* For use with custom frequency band settings */
 /*---------------------------------------------------------------------------*/
 /* Default band selection to band 4 - 863MHz */
 #ifdef DOT_15_4G_CONF_FREQUENCY_BAND_ID
@@ -77,6 +78,18 @@
  * bands we only support operating mode #1 (Table 134).
  *
  * DOT_15_4G_CHAN0_FREQUENCY is specified here in KHz
+ *
+ * Custom bands and configuration can be used with DOT_15_4G_FREQUENCY_BAND_CUSTOM.
+ *
+ * Example of custom setup for the 868Mhz sub-band in Europe with 11 channels,
+ * center frequency at 868.050MHz and channel spacing at 100KHz.
+ * These should be put in project-config.h or similar.
+ *
+ * #define DOT_15_4G_FREQUENCY_BAND_ID DOT_15_4G_FREQUENCY_BAND_CUSTOM
+ * #define DOT_15_4G_CHAN0_FREQUENCY        868050
+ * #define DOT_15_4G_CHANNEL_SPACING        100
+ * #define DOT_15_4G_CHANNEL_MAX            11
+ * #define PROP_MODE_CONF_LO_DIVIDER        0x05
  */
 #if DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_470
 #define DOT_15_4G_CHANNEL_MAX        198
@@ -116,6 +129,22 @@
 #define DOT_15_4G_CHAN0_FREQUENCY 951000
 #define PROP_MODE_CONF_LO_DIVIDER   0x05
 
+#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_CUSTOM
+#ifndef DOT_15_4G_CHANNEL_MAX
+#error DOT_15_4G_CHANNEL_MAX must be manually set when using custom frequency band
+#endif
+
+#ifndef DOT_15_4G_CHANNEL_SPACING
+#error DOT_15_4G_CHANNEL_SPACING must be manually set when using custom frequency band
+#endif
+
+#ifndef DOT_15_4G_CHAN0_FREQUENCY
+#error DOT_15_4G_CHAN0_FREQUENCY must be manually set when using custom frequency band
+#endif
+
+#ifndef PROP_MODE_CONF_LO_DIVIDER
+#error PROP_MODE_CONF_LO_DIVIDER must be manually set when using custom frequency band
+#endif
 #else
 #error The selected frequency band is not supported
 #endif

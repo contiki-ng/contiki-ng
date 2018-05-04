@@ -629,7 +629,7 @@ init(void)
   smartrf_settings_cmd_prop_rx_adv.pQueue = &rx_data_queue;
   smartrf_settings_cmd_prop_rx_adv.pOutput = (uint8_t *)&rx_stats;
 
-  set_channel(RF_CORE_CHANNEL);
+  set_channel(IEEE802154_DEFAULT_CHANNEL);
 
   if(on() != RF_CORE_CMD_OK) {
     PRINTF("init: on() failed\n");

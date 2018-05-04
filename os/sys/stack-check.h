@@ -45,7 +45,6 @@
  * On startup, fills the area between the stack and the heap with a known pattern.
  * During execution, the fill can be checked in order to find out
  * the extent to which the stack has been used.
- * 
  *
  * @{
  */

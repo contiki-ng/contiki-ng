@@ -47,6 +47,7 @@
 #include "sys/stack-check.h"
 #include "dev/watchdog.h"
 
+#include "net/app-layer/coap/coap-engine.h"
 #include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
@@ -86,9 +87,15 @@ main(void)
   platform_init_stage_two();
 
   LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
-
-  LOG_INFO(" Net: %s\n", NETSTACK_NETWORK.name);
-  LOG_INFO(" MAC: %s\n", NETSTACK_MAC.name);
+  LOG_INFO("- Routing: %s\n", NETSTACK_ROUTING.name);
+  LOG_INFO("- Net: %s\n", NETSTACK_NETWORK.name);
+  LOG_INFO("- MAC: %s\n", NETSTACK_MAC.name);
+  LOG_INFO("- 802.15.4 PANID: 0x%04x\n", IEEE802154_PANID);
+#if MAC_CONF_WITH_TSCH
+  LOG_INFO("- 802.15.4 TSCH default hopping sequence length: %u\n", (unsigned)sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE));
+#else /* MAC_CONF_WITH_TSCH */
+  LOG_INFO("- 802.15.4 Default channel: %u\n", IEEE802154_DEFAULT_CHANNEL);
+#endif /* MAC_CONF_WITH_TSCH */
 
   netstack_init();
 
@@ -124,6 +131,11 @@ main(void)
 #if BUILD_WITH_SHELL
   serial_shell_init();
   LOG_DBG("With Shell\n");
+#endif /* BUILD_WITH_SHELL */
+
+#if BUILD_WITH_COAP
+  coap_engine_init();
+  LOG_DBG("With CoAP\n");
 #endif /* BUILD_WITH_SHELL */
 
   autostart_start(autostart_processes);

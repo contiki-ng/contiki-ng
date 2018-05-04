@@ -4,8 +4,9 @@ FROM 32bit/ubuntu:16.04
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   build-essential doxygen git wget unzip python-serial \
-  default-jdk ant srecord iputils-tracepath && \
-  apt-get clean
+  default-jdk ant srecord iputils-tracepath rlwrap \
+  mosquitto mosquitto-clients \
+  && apt-get clean
 
 # Install ARM toolchain
 RUN wget https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
@@ -73,6 +74,20 @@ RUN sudo apt-get install -y npm \
   && sudo npm install coap-cli -g \
   && sudo ln -s /usr/bin/nodejs /usr/bin/node
 
+# Install Mono and libcanberra-gtk:i386 (for Renode)
+RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+  && echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list \
+  && sudo apt-get update \
+  && sudo apt-get install -y mono-complete gksu libgtk2.0-0 screen uml-utilities gtk-sharp2 libcanberra-gtk-module:i386 \
+  && sudo apt-get clean
+
+# Download, build and install Renode
+RUN git clone https://github.com/renode/renode.git \
+  && cd ${HOME}/renode \
+  && git checkout v1.3 \
+  && ./build.sh
+ENV PATH="${HOME}/renode:${PATH}"
+
 # Optional: download Contiki-NG and pre-compile Cooja.
 # Else, use a Docker bind mount to share the repo with the host.
 # Docker run option:
@@ -83,8 +98,8 @@ RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
 # Working directory
 WORKDIR ${CONTIKI_NG}
 
-# Enable IPv6 -- must be done at runtime, not in Dockerfile
-RUN echo "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null" >> /home/user/.profile
+# Enable IPv6 -- must be done at runtime, hence added to .profile
+RUN echo "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null" >> ${HOME}/.profile
 
 # Start a bash
 CMD bash --login

@@ -8,7 +8,7 @@ sudo apt install -y --no-install-recommends \
 
 # Tools
 sudo apt-get install -y --no-install-recommends \
-  build-essential doxygen git wget unzip python-serial \
+  build-essential doxygen git wget unzip python-serial rlwrap \
   default-jdk ant srecord python-pip iputils-tracepath uncrustify python-magic
 sudo apt-get clean
 sudo python2 -m pip install intelhex

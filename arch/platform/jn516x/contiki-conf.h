@@ -40,14 +40,6 @@
 
 #include "jn516x-def.h"
 
-#ifdef RF_CHANNEL
-#define MICROMAC_CONF_CHANNEL RF_CHANNEL
-#endif
-
-#ifndef MICROMAC_CONF_CHANNEL
-#define MICROMAC_CONF_CHANNEL 26
-#endif
-
 /* Configure radio driver */
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO   micromac_radio_driver
