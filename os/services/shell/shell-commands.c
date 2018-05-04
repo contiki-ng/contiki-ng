@@ -417,6 +417,7 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+#if ROUTING_CONF_RPL_LITE
 static
 PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *args))
 {
@@ -427,6 +428,7 @@ PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *
 
   PT_END(pt);
 }
+#endif /* ROUTING_CONF_RPL_LITE */
 #endif /* UIP_CONF_IPV6_RPL */
 /*---------------------------------------------------------------------------*/
 static
@@ -736,7 +738,9 @@ struct shell_command_t shell_commands[] = {
 #if UIP_CONF_IPV6_RPL
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
+#if ROUTING_CONF_RPL_LITE
   { "rpl-refresh-routes",   cmd_rpl_refresh_routes,   "'> rpl-refresh-routes': Refreshes all routes through a DTSN increment" },
+#endif /* ROUTING_CONF_RPL_LITE */
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
 #endif /* UIP_CONF_IPV6_RPL */
 #if ROUTING_CONF_RPL_LITE
