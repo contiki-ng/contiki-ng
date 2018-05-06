@@ -400,7 +400,7 @@ usage:
 	@echo "Miscellaneous targets:"
 	@echo "    targets         Prints list of supported platforms"
 	@echo "    boards          Prints a list of supported boards for TARGET"
-	@echo "    savegtarget     Saves TARGET and BOARD for future invocations of make"
+	@echo "    savetarget      Saves TARGET and BOARD for future invocations of make"
 	@echo "    savedefines     Saves DEFINES for future invocations of make"
 	@echo "    clean           Removes all compiled files for TARGET"
 	@echo "    distclean       Removes all compiled files for all TARGETs"
