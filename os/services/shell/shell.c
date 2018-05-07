@@ -130,20 +130,22 @@ PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
     args++;
   }
 
-  /* Lookup for command */
-  cmd_ptr = shell_commands;
-  while(cmd_ptr->name != NULL) {
-    if(strcmp(cmd, cmd_ptr->name) == 0) {
-      static struct pt cmd_pt;
-      PT_SPAWN(pt, &cmd_pt, cmd_ptr->func(&cmd_pt, output, args));
-      goto done;
+  /* only process lines with something on them (having removed leading space) */
+  if(strlen(cmd) > 0) { 
+    /* Lookup for command */
+    cmd_ptr = shell_commands;
+    while(cmd_ptr->name != NULL && strcmp(cmd, cmd_ptr->name) != 0) {
+      cmd_ptr++;
     }
-    cmd_ptr++;
+
+    if(cmd_ptr->name != NULL) {
+	static struct pt cmd_pt;
+	PT_SPAWN(pt, &cmd_pt, cmd_ptr->func(&cmd_pt, output, args));
+    } else {
+      SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
+    }
   }
 
-  SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
-
-done:
   output_prompt(output);
   PT_END(pt);
 }
