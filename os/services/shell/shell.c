@@ -106,7 +106,7 @@ shell_output_lladdr(shell_output_func output, const linkaddr_t *lladdr)
 static void
 output_prompt(shell_output_func output)
 {
-  SHELL_OUTPUT(output, "#");
+  SHELL_OUTPUT(output, "\n#");
   shell_output_lladdr(output, &linkaddr_node_addr);
   SHELL_OUTPUT(output, "> ");
 }
