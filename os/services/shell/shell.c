@@ -131,7 +131,7 @@ PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
   }
 
   /* only process lines with something on them (having removed leading space) */
-  if(strlen(cmd) > 0) { 
+  if(strlen(cmd) > 0) {
     /* Lookup for command */
     cmd_ptr = shell_commands;
     while(cmd_ptr->name != NULL && strcmp(cmd, cmd_ptr->name) != 0) {
@@ -139,8 +139,8 @@ PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
     }
 
     if(cmd_ptr->name != NULL) {
-	static struct pt cmd_pt;
-	PT_SPAWN(pt, &cmd_pt, cmd_ptr->func(&cmd_pt, output, args));
+      static struct pt cmd_pt;
+      PT_SPAWN(pt, &cmd_pt, cmd_ptr->func(&cmd_pt, output, args));
     } else {
       SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
     }
