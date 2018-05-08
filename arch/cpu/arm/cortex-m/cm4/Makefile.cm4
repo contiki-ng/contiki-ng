@@ -7,7 +7,7 @@ LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map),--cref,--no-warn-mismatch
 
-TARGET_LIBFLAGS := $(TARGET_LIBFILES) -gcc -lm -lnosys -lc
+TARGET_LIBFLAGS := $(TARGET_LIBFILES) -lc -lgcc -lm -lnosys
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 

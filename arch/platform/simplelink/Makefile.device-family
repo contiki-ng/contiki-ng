@@ -1,33 +1,79 @@
+################################################################################
 # Simplelink Device family switch
 
-# Device name in upper case
-DEVICE_UC := $(shell echo $(SIMPLELINK_DEVICE) | tr a-z A-Z)
+# A couple of comments:
+#   - CC26X0R2 is not supported even though it has its own Device SDK, because
+#     it is a BLE-only chip.
+#   - CC26X0 overrides the Device Makefile because it doesn't have its own
+#     Device SDK. Instead, it uses the TI-RTOS SDK, and therefore cannot
+#     use the same build structure as all other SimpleLink SDK Devices.
 
-# CC13x0/CC26x0 Family
-ifeq ($(DEVICE_UC),CC13X0)
-    FAMILY := cc13x0_cc26x0
-    CFLAGS += -DDeviceFamily_CC13X0
-else ifeq ($(DEVICE_UC),CC26X0)
-    FAMILY := cc13x0_cc26x0
-    CFLAGS += -DDeviceFamily_CC26X0
-else ifeq ($(DEVICE_UC),CC26X0R2)
-    FAMILY := cc13x0_cc26x0
-    CFLAGS += -DDeviceFamily_CC26X0R2
+# Device name in lower case (LC)
+SIMPLELINK_DEVICE_LC := $(shell echo $(SIMPLELINK_DEVICE) | tr A-Z a-z)
+# Device name in upper case (UC)
+SIMPLELINK_DEVICE_UC := $(shell echo $(SIMPLELINK_DEVICE) | tr a-z A-Z)
 
-# CC13x2/CC26x2 Family
-else ifeq ($(DEVICE_UC),CC13X2)
-    FAMILY := cc13x2_cc26x2
-    CFLAGS += -DDeviceFamily_CC13X2
-else ifeq ($(DEVICE_UC),CC26X2)
-    FAMILY := cc13x2_cc26x2
-    CFLAGS += -DDeviceFamily_CC26X2
+################################################################################
+# All supported SimpleLink Devices
+SIMPLELINK_DEVICES = cc13x0 cc13x2 cc26x0 cc26x2
 
-# Not supported
+################################################################################
+# CC13X0/CC26X0 Family
+
+# CC13X0
+ifeq ($(SIMPLELINK_DEVICE_LC),cc13x0)
+PLATFORM_FAMILY_DIR := cc13x0-cc26x0
+DEVICE_FAMILY := DeviceFamily_CC13X0
+CFLAGS += -D$(DEVICE_FAMILY)
+
+# CC26X0
+else ifeq ($(SIMPLELINK_DEVICE_LC),cc26x0)
+PLATFORM_FAMILY_DIR := cc13x0-cc26x0
+DEVICE_MAKEFILE := cc26x0
+DEVICE_FAMILY := DeviceFamily_CC26X0
+CFLAGS += -D$(DEVICE_FAMILY)
+
+################################################################################
+# CC13X2/CC26X2 Family
+
+# CC13X2
+else ifeq ($(SIMPLELINK_DEVICE_LC),cc13x2)
+PLATFORM_FAMILY_DIR := cc13x2-cc26x2
+DEVICE_FAMILY := DeviceFamily_CC13X2
+CFLAGS += -D$(DEVICE_FAMILY)
+
+# CC26X2
+else ifeq ($(SIMPLELINK_DEVICE_LC),cc26x2)
+PLATFORM_FAMILY_DIR := cc13x2-cc26x2
+DEVICE_FAMILY := DeviceFamily_CC26X2
+CFLAGS += -D$(DEVICE_FAMILY)
+
+################################################################################
+# Specified Device not supported
 else
-    $(error Simplelink Device '$(SIMPLELINK_DEVICE)' is not currently supported)
+  $(error Simplelink Device '$(SIMPLELINK_DEVICE)' is not supported)
 endif
 
-CONTIKI_TARGET_DIRS += $(FAMILY)/dev
+################################################################################
+# By default, the Device Makefile is common for all Devices in the Device Family
+# unless overriden
+ifndef DEVICE_MAKEFILE
+DEVICE_MAKEFILE := $(PLATFORM_FAMILY_DIR)
+endif
 
-# Include the Family-specific makefile
-include $(PLATFORM_ABS_PATH)/$(FAMILY)/Makefile.$(FAMILY)
+PLATFORM_ROOT_DIR := $(SIMPLELINK_PATH)/$(PLATFORM_FAMILY_DIR)
+
+# Include the Family-specific Makefile
+include $(PLATFORM_ROOT_DIR)/Makefile.$(DEVICE_MAKEFILE)
+
+# The dirs in CONTIKI_TARGET_DIRS will be appended the target makefile directory
+# in Makefile.include as part of the CONTIKI_TARGET_DIRS_CONCAT variable,
+# however, this does not take into account that the Simplelink platform has one
+# more indirection of directories based on device families. This fixes the added
+# indirection.
+CONTIKI_TARGET_DIRS := $(addprefix $(PLATFORM_FAMILY_DIR)/, $(CONTIKI_TARGET_DIRS))
+
+################################################################################
+# Rule for printing supported devices
+simplelink_devices:
+	@echo "$(SIMPLELINK_DEVICES) (current: $(SIMPLELINK_DEVICE_LC))"

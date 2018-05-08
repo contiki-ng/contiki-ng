@@ -1,88 +1,33 @@
+################################################################################
 # SimpleLink MCU platform makefile
+
+################################################################################
+# Sanity check of expected symbols
 
 ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
-PLATFORM_ABS_PATH = $(CONTIKI)/arch/platform/simplelink
-
 ifndef SIMPLELINK_SDK
   $(error SIMPLELINK_SDK not defined! You must specify where the SimpleLink SDK resides!)
 endif
 
-# Find all available boards from the '<sdk>/source/ti/boards directory'
-AVAILABLE_BOARDS := $(shell ls -d $(SIMPLELINK_SDK)/source/ti/boards/*)
-# Also allow a custom board file in the application project
-AVAILABLE_BOARDS += CUSTOM
+ifndef SIMPLELINK_DEVICE
+  $(error SIMPLELINK_DEVICE not defined! You must specify which device you are using!)
+endif
 
 ifndef SIMPLELINK_BOARD
-  $(error SIMPLELINK_BOARD not defined. You must specify a board!$nAvailable boards:$n $(foreach board, $(AVAILABLE_BOARDS), $(board)$n))
+  $(error SIMPLELINK_BOARD not defined! You must specify which board you are using!)
 endif
 
-# Hacky way to emulate line breaks in warnings/errors
-# https://stackoverflow.com/questions/17055773/how-to-synthesize-line-breaks-in-gnu-make-warnings-or-errors
-define n
+################################################################################
+# Defines
 
+SIMPLELINK_PATH := $(CONTIKI)/arch/platform/simplelink
 
-endef
-
-# List of all Simplelink SDKs the Contiki Simplelink platform supports
-# with the format "simplelink_<device>_sdk". Don't add the version.
-# Simply adding a new entry with the name of a new SDK should be enough when
-# the necessary implementations have been made.
-SUPPORTED_SDKS = \
-    simplelink_cc13x0_sdk \
-    simplelink_cc13x2_sdk \
-    simplelink_cc26x0_sdk \
-    simplelink_cc26x2_sdk \
-    simplelink_cc2640r2_sdk \
-
-# The Simplelink SDK name extracted from the file path.
-# e.g. C:/ti/simplelink_cc13x0_sdk_1_60_00_21 => simplelink_cc13x0_sdk_1_60_00_21
-SDK_NAME := $(notdir $(SIMPLELINK_SDK))
-# The stripped name from the Simplelink SDK, i.e. without version number.
-# e.g. simplelink_cc13x0_sdk_1_60_00_21 => simplelink_cc13x0_sdk
-# Note that the first grep verifies the SDK name is on a valid format,
-# and the second grep extracts the stripped name
-SDK_NAME_STRIPPED := $(shell echo "$(SDK_NAME)" \
-	| grep -Po "simplelink_.*?_sdk_[0-9_]+" \
-    | grep -Po "simplelink_.*?_sdk")
-
-# Verify a valid Simplelink SDK has been supplied.
-# Format is "simplelink_<device>_sdk_<version>"
-ifeq (,$(SDK_NAME_STRIPPED))
-    $(error Supplied Simplelink SDK '$(SDK_NAME)' is not valid.$nFormat is "simplelink_<device>_sdk_<version>")
-endif
-
-# Verify a supported Simplelink SDK has been supplied, else print all supported SDKs
-ifeq (,$(findstring $(SDK_NAME_STRIPPED), $(SUPPORTED_SDKS)))
-    $(error Simplelink SDK '$(SDK_NAME)' is not supported.$nSupported SDKs:$n $(foreach sdk, $(SUPPORTED_SDKS), $(sdk)_<version>$n))
-endif
-
-ifneq ($(findstring $(SIMPLELINK_BOARD),$(AVAILABLE_BOARDS)),$(SIMPLELINK_BOARD))
-  $(error Board '$(SIMPLELINK_BOARD)' is not valid for the given Simplelink SDK '$(SDK_NAME)'.$nAvailable boards:$n $(foreach board, $(AVAILABLE_BOARDS), $(board)$n))
-endif
-
-### Board and BSP selection
-
-CONTIKI_TARGET_DIRS += . dev
-
-CONTIKI_TARGET_SOURCEFILES += platform.c
-
-# Determine which device family and include the corresponding source files
-include $(PLATFORM_ABS_PATH)/Makefile.device-family
-
-CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+include $(SIMPLELINK_PATH)/Makefile.device-family
 
 CLEAN += *.simplelink
 
-### Unless the example dictates otherwise, build without code size optimisations
+# Build without code size optimisations, unless the project dictates otherwise
 SMALL ?= 0
-
-CONTIKI_CPU = $(CONTIKI)/arch/cpu/simplelink
-include $(CONTIKI_CPU)/Makefile.simplelink
-
-MODULES += os/net os/net/mac os/net/mac/framer
-
-
-

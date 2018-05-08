@@ -1,0 +1,12 @@
+################################################################################
+# SimpleLink LaunchPad makefile
+
+DEFINES += BOARD_SENSORTAG=1
+
+# leds-arch.c/h etc.
+BOARD_SOURCEFILES += sensortag-sensors.c button-sensor-arch.c leds-arch.c
+
+CONTIKI_TARGET_DIRS += sensortag
+
+### Signal that we can be programmed with cc2538-bsl
+BOARD_SUPPORTS_BSL=1
