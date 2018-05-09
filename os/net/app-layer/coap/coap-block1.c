@@ -36,24 +36,23 @@
  *      Lars Schmertmann <SmallLars@t-online.de>
  */
 
-#include <stdio.h>
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #include <string.h>
+#include <inttypes.h>
 
 #include "coap.h"
 #include "coap-block1.h"
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#endif
+/* Log configuration */
+#include "coap-log.h"
+#define LOG_MODULE "coap"
+#define LOG_LEVEL  LOG_LEVEL_COAP
 
-/*----------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
 /**
  * \brief Block 1 support within a coap-ressource
@@ -77,39 +76,39 @@
  *         -1 if initialisation failed
  */
 int
-coap_block1_handler(void *request, void *response, uint8_t *target, size_t *len, size_t max_len)
+coap_block1_handler(coap_message_t *request, coap_message_t *response,
+                    uint8_t *target, size_t *len, size_t max_len)
 {
   const uint8_t *payload = 0;
-  int pay_len = REST.get_request_payload(request, &payload);
+  int pay_len = coap_get_payload(request, &payload);
 
   if(!pay_len || !payload) {
-    erbium_status_code = REST.status.BAD_REQUEST;
+    coap_status_code = BAD_REQUEST_4_00;
     coap_error_message = "NoPayload";
     return -1;
   }
 
-  coap_packet_t *packet = (coap_packet_t *)request;
-
-  if(packet->block1_offset + pay_len > max_len) {
-    erbium_status_code = REST.status.REQUEST_ENTITY_TOO_LARGE;
+  if(request->block1_offset + pay_len > max_len) {
+    coap_status_code = REQUEST_ENTITY_TOO_LARGE_4_13;
     coap_error_message = "Message to big";
     return -1;
   }
 
   if(target && len) {
-    memcpy(target + packet->block1_offset, payload, pay_len);
-    *len = packet->block1_offset + pay_len;
+    memcpy(target + request->block1_offset, payload, pay_len);
+    *len = request->block1_offset + pay_len;
   }
 
-  if(IS_OPTION(packet, COAP_OPTION_BLOCK1)) {
-    PRINTF("Blockwise: block 1 request: Num: %u, More: %u, Size: %u, Offset: %u\n",
-           packet->block1_num,
-           packet->block1_more,
-           packet->block1_size,
-           packet->block1_offset);
+  if(coap_is_option(request, COAP_OPTION_BLOCK1)) {
+    LOG_DBG("Blockwise: block 1 request: Num: %"PRIu32
+            ", More: %u, Size: %u, Offset: %"PRIu32"\n",
+            request->block1_num,
+            request->block1_more,
+            request->block1_size,
+            request->block1_offset);
 
-    coap_set_header_block1(response, packet->block1_num, packet->block1_more, packet->block1_size);
-    if(packet->block1_more) {
+    coap_set_header_block1(response, request->block1_num, request->block1_more, request->block1_size);
+    if(request->block1_more) {
       coap_set_status_code(response, CONTINUE_2_31);
       return 1;
     }
@@ -117,3 +116,5 @@ coap_block1_handler(void *request, void *response, uint8_t *target, size_t *len,
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/** @} */

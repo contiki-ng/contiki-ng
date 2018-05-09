@@ -136,7 +136,7 @@ PROCESS_THREAD(test_remote_pm, ev, data)
     printf("PM: Soft shutdown, timeout set to %lu\n", pm_get_timeout());
 
     leds_off(LEDS_ALL);
-    leds_on(LEDS_PURPLE);
+    leds_on(LEDS_RED);
 
     /* Wait just enough to be able to check the LED result */
     etimer_set(&et, CLOCK_SECOND * 3);

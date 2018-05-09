@@ -48,12 +48,6 @@
 #include "contiki.h"
 #include <stdio.h>
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-queue.h"
-#include "net/mac/tsch/tsch-private.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-packet.h"
-#include "net/mac/tsch/tsch-schedule.h"
-#include "net/mac/tsch/tsch-slot-operation.h"
 #include "lib/ringbufindex.h"
 #include "sys/log.h"
 
@@ -85,10 +79,10 @@ tsch_log_process_pending(void)
   while((log_index = ringbufindex_peek_get(&log_ringbuf)) != -1) {
     struct tsch_log_t *log = &log_array[log_index];
     if(log->link == NULL) {
-      printf("[INFO: TSCH-LOG  ] {asn-%x.%lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
+      printf("[INFO: TSCH-LOG  ] {asn %02x.%08lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
     } else {
       struct tsch_slotframe *sf = tsch_schedule_get_slotframe_by_handle(log->link->slotframe_handle);
-      printf("[INFO: TSCH-LOG  ] {asn-%x.%lx link-%u-%u-%u-%u ch-%u} ",
+      printf("[INFO: TSCH-LOG  ] {asn %02x.%08lx link %2u %3u %3u %2u ch %2u} ",
              log->asn.ms1b, log->asn.ls4b,
              log->link->slotframe_handle, sf ? sf->size.val : 0, log->link->timeslot, log->link->channel_offset,
              tsch_calculate_channel(&log->asn, log->link->channel_offset));
@@ -100,10 +94,10 @@ tsch_log_process_pending(void)
         log_lladdr_compact(&linkaddr_node_addr);
         printf("->");
         log_lladdr_compact(&log->tx.dest);
-        printf(", len %u, seq %u, st %d %d",
+        printf(", len %3u, seq %3u, st %d %2d",
                 log->tx.datalen, log->tx.seqno, log->tx.mac_tx_status, log->tx.num_tx);
         if(log->tx.drift_used) {
-          printf(", dr %d", log->tx.drift);
+          printf(", dr %3d", log->tx.drift);
         }
         printf("\n");
         break;
@@ -113,12 +107,14 @@ tsch_log_process_pending(void)
         log_lladdr_compact(&log->rx.src);
         printf("->");
         log_lladdr_compact(log->rx.is_unicast ? &linkaddr_node_addr : NULL);
-        printf(", len %u, seq %u",
+        printf(", len %3u, seq %3u",
                 log->rx.datalen, log->rx.seqno);
+        printf(", edr %3d", (int)log->rx.estimated_drift);
         if(log->rx.drift_used) {
-          printf(", dr %d", log->rx.drift);
+          printf(", dr %3d\n", log->rx.drift);
+        } else {
+          printf("\n");
         }
-        printf(", edr %d\n", (int)log->rx.estimated_drift);
         break;
       case tsch_log_message:
         printf("%s\n", log->message);

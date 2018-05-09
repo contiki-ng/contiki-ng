@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
+ * \addtogroup ipso-objects
  * @{
  */
 
@@ -42,6 +42,7 @@
  */
 
 #include "contiki.h"
+#include "dev/leds.h"
 #include "ipso-objects.h"
 /*---------------------------------------------------------------------------*/
 void
@@ -58,7 +59,7 @@ ipso_objects_init(void)
 
 #ifdef IPSO_LIGHT_CONTROL
   ipso_light_control_init();
-#elif PLATFORM_HAS_LEDS
+#elif PLATFORM_HAS_LEDS || LEDS_COUNT
   ipso_leds_control_init();
 #endif
 }

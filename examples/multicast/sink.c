@@ -71,7 +71,7 @@ tcpip_handler(void)
   if(uip_newdata()) {
     count++;
     PRINTF("In: [0x%08lx], TTL %u, total %u\n",
-        uip_ntohl((unsigned long) *((uint32_t *)(uip_appdata))),
+        (unsigned long)uip_ntohl((unsigned long) *((uint32_t *)(uip_appdata))),
         UIP_IP_BUF->ttl, count);
   }
   return;

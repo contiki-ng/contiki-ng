@@ -105,32 +105,18 @@
  * @{
  */
 /*---------------------------------------------------------------------------*/
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_BLUE
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
+#define LEDS_ARCH_L1_PORT GPIO_D_NUM
+#define LEDS_ARCH_L1_PIN  4
+#define LEDS_ARCH_L2_PORT GPIO_B_NUM
+#define LEDS_ARCH_L2_PIN  7
+#define LEDS_ARCH_L3_PORT GPIO_B_NUM
+#define LEDS_ARCH_L3_PIN  6
 
-#define LEDS_RED              1           /**< LED1 (Red)   -> PD4 */
-#define LEDS_RED_PIN_MASK     (1 << 4)
-#define LEDS_RED_PORT_BASE    GPIO_D_BASE
+#define LEDS_CONF_RED     1
+#define LEDS_CONF_GREEN   2
+#define LEDS_CONF_BLUE    4
 
-#define LEDS_GREEN            2           /**< LED2 (Green) -> PB7 */
-#define LEDS_GREEN_PIN_MASK   (1 << 7)
-#define LEDS_GREEN_PORT_BASE  GPIO_B_BASE
-
-#define LEDS_BLUE             4           /**< LED3 (Blue)  -> PB6 */
-#define LEDS_BLUE_PIN_MASK    (1 << 6)
-#define LEDS_BLUE_PORT_BASE   GPIO_B_BASE
-
-#define LEDS_CONF_ALL         (LEDS_GREEN | LEDS_BLUE | LEDS_RED) /* 7 */
-#define LEDS_LIGHT_BLUE       (LEDS_GREEN | LEDS_BLUE)            /* 6 */
-#define LEDS_YELLOW           (LEDS_GREEN | LEDS_RED)             /* 3 */
-#define LEDS_PURPLE           (LEDS_BLUE  | LEDS_RED)             /* 5 */
-#define LEDS_WHITE            LEDS_ALL                            /* 7 */
-
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS        1
+#define LEDS_CONF_COUNT   3
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration

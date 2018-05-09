@@ -37,7 +37,9 @@
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
-
+/*---------------------------------------------------------------------------*/
+#include "native-def.h"
+/*---------------------------------------------------------------------------*/
 #include <inttypes.h>
 #ifndef WIN32_LEAN_AND_MEAN
 #include <sys/select.h>
@@ -58,18 +60,11 @@ int select_set_callback(int fd, const struct select_callback *callback);
 #define EEPROM_CONF_SIZE				1024
 #endif
 
-#define CCIF
-#define CLIF
+typedef unsigned int uip_stats_t;
 
-/* These names are deprecated, use C99 names. */
-typedef uint8_t   u8_t;
-typedef uint16_t u16_t;
-typedef uint32_t u32_t;
-typedef  int32_t s32_t;
-
-typedef unsigned short uip_stats_t;
-
+#ifndef UIP_CONF_BYTE_ORDER
 #define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
+#endif
 
 #if NETSTACK_CONF_WITH_IPV6
 
@@ -96,10 +91,13 @@ typedef unsigned long clock_time_t;
 
 #define LOG_CONF_ENABLED 1
 
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
+
 /* Not part of C99 but actually present */
 int strcasecmp(const char*, const char*);
 
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
 #define PLATFORM_CONF_MAIN_ACCEPTS_ARGS  1
+#define PLATFORM_CONF_SUPPORTS_STACK_CHECK 0
 
 #endif /* CONTIKI_CONF_H_ */

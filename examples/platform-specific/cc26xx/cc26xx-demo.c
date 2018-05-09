@@ -62,8 +62,8 @@
  * - sensors      : Some sensortag sensors are read asynchronously (see sensor
  *                  documentation). For those, this example will print out
  *                  readings in a staggered fashion at a random interval
- * - Buttons      : CC26XX_DEMO_SENSOR_1 button will toggle CC26XX_DEMO_LEDS_BUTTON
- *                - CC26XX_DEMO_SENSOR_2 turns on LEDS_REBOOT and causes a
+ * - Buttons      : CC26XX_DEMO_TRIGGER_1 button will toggle CC26XX_DEMO_LEDS_BUTTON
+ *                - CC26XX_DEMO_TRIGGER_2 turns on LEDS_REBOOT and causes a
  *                  watchdog reboot
  *                - The remaining buttons will just print something
  *                - The example also shows how to retrieve the duration of a
@@ -81,6 +81,7 @@
 #include "sys/ctimer.h"
 #include "dev/leds.h"
 #include "dev/watchdog.h"
+#include "dev/button-hal.h"
 #include "random.h"
 #include "button-sensor.h"
 #include "batmon-sensor.h"
@@ -97,23 +98,11 @@
 #define CC26XX_DEMO_LEDS_BUTTON         LEDS_RED
 #define CC26XX_DEMO_LEDS_REBOOT         LEDS_ALL
 /*---------------------------------------------------------------------------*/
-#define CC26XX_DEMO_SENSOR_NONE         (void *)0xFFFFFFFF
-
-#define CC26XX_DEMO_SENSOR_1     &button_left_sensor
-#define CC26XX_DEMO_SENSOR_2     &button_right_sensor
+#define CC26XX_DEMO_TRIGGER_1     BOARD_BUTTON_HAL_INDEX_KEY_LEFT
+#define CC26XX_DEMO_TRIGGER_2     BOARD_BUTTON_HAL_INDEX_KEY_RIGHT
 
 #if BOARD_SENSORTAG
-#define CC26XX_DEMO_SENSOR_3     CC26XX_DEMO_SENSOR_NONE
-#define CC26XX_DEMO_SENSOR_4     CC26XX_DEMO_SENSOR_NONE
-#define CC26XX_DEMO_SENSOR_5     &reed_relay_sensor
-#elif BOARD_LAUNCHPAD
-#define CC26XX_DEMO_SENSOR_3     CC26XX_DEMO_SENSOR_NONE
-#define CC26XX_DEMO_SENSOR_4     CC26XX_DEMO_SENSOR_NONE
-#define CC26XX_DEMO_SENSOR_5     CC26XX_DEMO_SENSOR_NONE
-#else
-#define CC26XX_DEMO_SENSOR_3     &button_up_sensor
-#define CC26XX_DEMO_SENSOR_4     &button_down_sensor
-#define CC26XX_DEMO_SENSOR_5     &button_select_sensor
+#define CC26XX_DEMO_TRIGGER_3     BOARD_BUTTON_HAL_INDEX_REED_RELAY
 #endif
 /*---------------------------------------------------------------------------*/
 static struct etimer et;
@@ -343,10 +332,6 @@ get_sync_sensor_readings(void)
 static void
 init_sensors(void)
 {
-#if BOARD_SENSORTAG
-  SENSORS_ACTIVATE(reed_relay_sensor);
-#endif
-
   SENSORS_ACTIVATE(batmon_sensor);
 }
 /*---------------------------------------------------------------------------*/
@@ -392,46 +377,41 @@ PROCESS_THREAD(cc26xx_demo_process, ev, data)
 
         etimer_set(&et, CC26XX_DEMO_LOOP_INTERVAL);
       }
-    } else if(ev == sensors_event) {
-      if(data == CC26XX_DEMO_SENSOR_1) {
-        printf("Left: Pin %d, press duration %d clock ticks\n",
-               (CC26XX_DEMO_SENSOR_1)->value(BUTTON_SENSOR_VALUE_STATE),
-               (CC26XX_DEMO_SENSOR_1)->value(BUTTON_SENSOR_VALUE_DURATION));
+    } else if(ev == button_hal_periodic_event) {
+      button_hal_button_t *button = data;
 
-        if((CC26XX_DEMO_SENSOR_1)->value(BUTTON_SENSOR_VALUE_DURATION) >
-           CLOCK_SECOND) {
-          printf("Long button press!\n");
-        }
+      printf("%s periodic event, duration %d seconds\n",
+             BUTTON_HAL_GET_DESCRIPTION(button),
+             button->press_duration_seconds);
+    } else if(ev == button_hal_release_event) {
+      button_hal_button_t *btn = (button_hal_button_t *)data;
 
+      printf("%s release event\n", BUTTON_HAL_GET_DESCRIPTION(btn));
+
+      if(btn->unique_id== CC26XX_DEMO_TRIGGER_1) {
         leds_toggle(CC26XX_DEMO_LEDS_BUTTON);
-      } else if(data == CC26XX_DEMO_SENSOR_2) {
+      } else if(btn->unique_id == CC26XX_DEMO_TRIGGER_2) {
         leds_on(CC26XX_DEMO_LEDS_REBOOT);
         watchdog_reboot();
-      } else if(data == CC26XX_DEMO_SENSOR_3) {
-        printf("Up\n");
-      } else if(data == CC26XX_DEMO_SENSOR_4) {
-        printf("Down\n");
-      } else if(data == CC26XX_DEMO_SENSOR_5) {
 #if BOARD_SENSORTAG
+      } else if(btn->unique_id == CC26XX_DEMO_TRIGGER_3) {
         if(buzzer_state()) {
           buzzer_stop();
         } else {
           buzzer_start(1000);
         }
-      } else if(ev == sensors_event && data == &bmp_280_sensor) {
+      }
+    } else if(ev == sensors_event) {
+      if(data == &bmp_280_sensor) {
         get_bmp_reading();
-      } else if(ev == sensors_event && data == &opt_3001_sensor) {
+      } else if(data == &opt_3001_sensor) {
         get_light_reading();
-      } else if(ev == sensors_event && data == &hdc_1000_sensor) {
+      } else if(data == &hdc_1000_sensor) {
         get_hdc_reading();
-      } else if(ev == sensors_event && data == &tmp_007_sensor) {
+      } else if(data == &tmp_007_sensor) {
         get_tmp_reading();
-      } else if(ev == sensors_event && data == &mpu_9250_sensor) {
+      } else if(data == &mpu_9250_sensor) {
         get_mpu_reading();
-#elif BOARD_SMARTRF06EB
-        printf("Sel: Pin %d, press duration %d clock ticks\n",
-               button_select_sensor.value(BUTTON_SENSOR_VALUE_STATE),
-               button_select_sensor.value(BUTTON_SENSOR_VALUE_DURATION));
 #endif
       }
     }

@@ -47,14 +47,16 @@
 #include "ti-lib.h"
 #include "contiki.h"
 #include "contiki-net.h"
-#include "leds.h"
 #include "lpm.h"
-#include "gpio-interrupt.h"
+#include "dev/leds.h"
+#include "dev/gpio-hal.h"
 #include "dev/oscillators.h"
 #include "ieee-addr.h"
+#include "ble-addr.h"
 #include "vims.h"
 #include "dev/cc26xx-uart.h"
 #include "dev/soc-rtc.h"
+#include "dev/serial-line.h"
 #include "rf-core/rf-core.h"
 #include "sys_ctrl.h"
 #include "uart.h"
@@ -66,7 +68,9 @@
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "dev/serial-line.h"
+#include "dev/button-hal.h"
 #include "net/mac/framer/frame802154.h"
+#include "board-peripherals.h"
 
 #include "driverlib/driverlib_release.h"
 
@@ -82,8 +86,14 @@ unsigned short node_id = 0;
 /** \brief Board specific iniatialisation */
 void board_init(void);
 /*---------------------------------------------------------------------------*/
+#ifdef BOARD_CONF_HAS_SENSORS
+#define BOARD_HAS_SENSORS BOARD_CONF_HAS_SENSORS
+#else
+#define BOARD_HAS_SENSORS 1
+#endif
+/*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
@@ -104,9 +114,13 @@ fade(unsigned char l)
 static void
 set_rf_params(void)
 {
-  uint16_t short_addr;
   uint8_t ext_addr[8];
 
+#if MAC_CONF_WITH_BLE
+  ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
+  NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
+#else
+  uint16_t short_addr;
   ieee_addr_cpy_to(ext_addr, 8);
 
   short_addr = ext_addr[7];
@@ -119,6 +133,7 @@ set_rf_params(void)
 
   /* also set the global node id */
   node_id = short_addr;
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -137,7 +152,7 @@ platform_init_stage_one()
 
   board_init();
 
-  gpio_interrupt_init();
+  gpio_hal_init();
 
   leds_init();
   fade(LEDS_RED);
@@ -150,6 +165,7 @@ platform_init_stage_one()
    */
   ti_lib_pwr_ctrl_io_freeze_disable();
 
+  ti_lib_rom_int_enable(INT_AON_GPIO_EDGE);
   ti_lib_int_master_enable();
 
   soc_rtc_init();
@@ -168,8 +184,20 @@ platform_init_stage_two()
 
   serial_line_init();
 
+#if BUILD_WITH_SHELL
+  cc26xx_uart_set_input(serial_line_input_byte);
+#endif
+
   /* Populate linkaddr_node_addr */
+#if MAC_CONF_WITH_BLE
+  uint8_t ext_addr[8];
+  ble_eui64_addr_cpy_to((uint8_t *)&ext_addr);
+  memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
+#else
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
+#endif
+
+  button_hal_init();
 
   fade(LEDS_GREEN);
 }
@@ -177,12 +205,12 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  radio_value_t chan, pan;
+  radio_value_t chan = 0;
+  radio_value_t pan = 0;
 
   set_rf_params();
 
   NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
-  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
 
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
@@ -192,10 +220,19 @@ platform_init_stage_three()
           ti_lib_chipinfo_chip_family_is_cc13xx() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_ble() == true ? "Yes" : "No",
           ti_lib_chipinfo_supports_proprietary() == true ? "Yes" : "No");
-  LOG_INFO(" RF: Channel %d, PANID 0x%04X\n", chan, pan);
+  LOG_INFO(" RF: Channel %d", chan);
+
+  if(NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan) == RADIO_RESULT_OK) {
+    LOG_INFO_(", PANID 0x%04X", pan);
+  }
+  LOG_INFO_("\n");
+
   LOG_INFO(" Node ID: %d\n", node_id);
 
+#if BOARD_HAS_SENSORS
   process_start(&sensors_process, NULL);
+#endif
+
   fade(LEDS_ORANGE);
 }
 /*---------------------------------------------------------------------------*/

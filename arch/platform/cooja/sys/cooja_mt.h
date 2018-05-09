@@ -50,25 +50,6 @@
 struct cooja_mtarch_thread;
 
 /**
- * Initialize the architecture specific support functions for the
- * multi-thread library.
- *
- * This function is implemented by the architecture specific functions
- * for the multi-thread library and is called by the mt_init()
- * function as part of the initialization of the library. The
- * mtarch_init() function can be used for, e.g., starting preemtion
- * timers or other architecture specific mechanisms required for the
- * operation of the library.
- */
-void cooja_mtarch_init(void);
-
-/**
- * Uninstall library and clean up.
- *
- */
-void cooja_mtarch_remove(void);
-
-/**
  * Setup the stack frame for a thread that is being started.
  *
  * This function is called by the mt_start() function in order to set
@@ -129,19 +110,6 @@ struct cooja_mt_thread {
 #define MT_OK 1
 
 /**
- * Initializes the multithreading library.
- *
- */
-void cooja_mt_init(void);
-
-/**
- * Uninstalls library and cleans up.
- *
- */
-void cooja_mt_remove(void);
-
-
-/**
  * Starts a multithreading thread.
  *
  * \param thread Pointer to an mt_thread struct that must have been
@@ -200,51 +168,6 @@ void cooja_mt_exec(struct cooja_mt_thread *thread);
  *
  */
 void cooja_mt_yield(void);
-
-/**
- * Post an event to another process.
- *
- * This function is called by a running thread and will emit a signal
- * to another Contiki process. This will cause the currently executing
- * thread to yield.
- *
- * \param p The process receiving the signal, or PROCESS_BROADCAST
- * for a broadcast event.
- *
- * \param ev The event to be posted.
- *
- * \param data A pointer to a message that is to be delivered together
- * with the signal.
- *
- */
-/*void mt_post(struct process *p, process_event_t ev, process_data_t data);*/
-
-/**
- * Block and wait for an event to occur.
- *
- * This function can be called by a running thread in order to block
- * and wait for an event. The function returns when an event has
- * occured. The event number and the associated data are placed in the
- * variables pointed to by the function arguments.
- *
- * \param ev A pointer to a process_event_t variable. The variable
- * will be filled with the number event that woke the thread.
- *
- * \param data A pointer to a process_data_t variable. The variable
- * will be filled with the data associated with the event that woke
- * the thread.
- *
- */
-/*void mt_wait(process_event_t *ev, process_data_t *data);*/
-
-/**
- * Exit a thread.
- *
- * This function is called from within an executing thread in order to
- * exit the thread. The function never returns.
- *
- */
-void cooja_mt_exit(void);
 
 /** @} */
 /** @} */

@@ -122,5 +122,5 @@ const struct configuration_st {
           
   };
 
-const struct usb_st_configuration_descriptor const *configuration_head =
-(struct usb_st_configuration_descriptor const*)&configuration_block;
+const struct usb_st_configuration_descriptor* const configuration_head =
+(const struct usb_st_configuration_descriptor*)&configuration_block;

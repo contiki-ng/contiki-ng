@@ -40,22 +40,25 @@
 
 #include <string.h>
 #include "contiki.h"
-#include "rest-engine.h"
+#include "coap.h"
+#include "coap-engine.h"
 #include "dev/leds.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
 static void
-res_post_put_handler(void *request, void *response, uint8_t *buffer,
+res_post_put_handler(coap_message_t *request, coap_message_t *response,
+                     uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset);
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer,
+res_get_handler(coap_message_t *request, coap_message_t *response,
+                uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset);
 
 static void
-res_event_handler();
+res_event_handler(void);
 
 /*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
 EVENT_RESOURCE(res_led3,
@@ -68,30 +71,30 @@ EVENT_RESOURCE(res_led3,
                );
 
 static void
-res_post_put_handler(void *request, void *response, uint8_t *buffer,
-                     uint16_t preferred_size, int32_t *offset)
+res_post_put_handler(coap_message_t *request, coap_message_t *response,
+                     uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const uint8_t *payload;
-  REST.get_request_payload(request, &payload);
+  coap_get_payload(request, &payload);
 
-  if (*payload == '0' || *payload == '1') {
-    if (*payload == '1') {
+  if(*payload == '0' || *payload == '1') {
+    if(*payload == '1') {
       leds_on(LEDS_3);
     } else {
       leds_off(LEDS_3);
     }
-    REST.notify_subscribers(&res_led3);
-    REST.set_response_status(response, REST.status.CHANGED);
+    coap_notify_observers(&res_led3);
+    coap_set_status_code(response, CHANGED_2_04);
   } else {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    coap_set_status_code(response, BAD_REQUEST_4_00);
   }
 }
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "%d", (leds_get() & LEDS_3) ? 1 : 0));
+  coap_set_header_content_format(response, TEXT_PLAIN);
+  coap_set_payload(response, buffer, snprintf((char *)buffer, preferred_size, "%d", (leds_get() & LEDS_3) ? 1 : 0));
 }
 
 /*
@@ -102,5 +105,5 @@ static void
 res_event_handler()
 {
   /* Notify the registered observers which will trigger the res_get_handler to create the response. */
-  REST.notify_subscribers(&res_led3);
+  coap_notify_observers(&res_led3);
 }

@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH queues
 */
 
 #ifndef __TSCH_QUEUE_H__
@@ -43,121 +45,7 @@
 #include "contiki.h"
 #include "lib/ringbufindex.h"
 #include "net/linkaddr.h"
-#include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/mac.h"
-
-/******** Configuration *******/
-
-/* The maximum number of outgoing packets towards each neighbor
- * Must be power of two to enable atomic ringbuf operations.
- * Note: the total number of outgoing packets in the system (for
- * all neighbors) is defined via QUEUEBUF_CONF_NUM */
-#ifdef TSCH_QUEUE_CONF_NUM_PER_NEIGHBOR
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR TSCH_QUEUE_CONF_NUM_PER_NEIGHBOR
-#else
-/* By default, round QUEUEBUF_CONF_NUM to next power of two
- * (in the range [4;256]) */
-#if QUEUEBUF_CONF_NUM <= 4
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR 4
-#elif QUEUEBUF_CONF_NUM <= 8
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR 8
-#elif QUEUEBUF_CONF_NUM <= 16
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR 16
-#elif QUEUEBUF_CONF_NUM <= 32
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR 32
-#elif QUEUEBUF_CONF_NUM <= 64
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR 64
-#elif QUEUEBUF_CONF_NUM <= 128
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR 128
-#else
-#define TSCH_QUEUE_NUM_PER_NEIGHBOR 256
-#endif
-#endif
-
-/* The number of neighbor queues. There are two queues allocated at all times:
- * one for EBs, one for broadcasts. Other queues are for unicast to neighbors */
-#ifdef TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES
-#define TSCH_QUEUE_MAX_NEIGHBOR_QUEUES TSCH_QUEUE_CONF_MAX_NEIGHBOR_QUEUES
-#else
-#define TSCH_QUEUE_MAX_NEIGHBOR_QUEUES ((NBR_TABLE_CONF_MAX_NEIGHBORS) + 2)
-#endif
-
-/* TSCH CSMA-CA parameters, see IEEE 802.15.4e-2012 */
-/* Min backoff exponent */
-#ifdef TSCH_CONF_MAC_MIN_BE
-#define TSCH_MAC_MIN_BE TSCH_CONF_MAC_MIN_BE
-#else
-#define TSCH_MAC_MIN_BE 1
-#endif
-/* Max backoff exponent */
-#ifdef TSCH_CONF_MAC_MAX_BE
-#define TSCH_MAC_MAX_BE TSCH_CONF_MAC_MAX_BE
-#else
-#define TSCH_MAC_MAX_BE 5
-#endif
-/* Max number of re-transmissions */
-#ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
-#define TSCH_MAC_MAX_FRAME_RETRIES TSCH_CONF_MAC_MAX_FRAME_RETRIES
-#else
-#define TSCH_MAC_MAX_FRAME_RETRIES 7
-#endif
-
-/*********** Callbacks *********/
-
-#if BUILD_WITH_ORCHESTRA
-
-#ifndef TSCH_CALLBACK_NEW_TIME_SOURCE
-#define TSCH_CALLBACK_NEW_TIME_SOURCE orchestra_callback_new_time_source
-#endif /* TSCH_CALLBACK_NEW_TIME_SOURCE */
-
-#ifndef TSCH_CALLBACK_PACKET_READY
-#define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
-#endif /* TSCH_CALLBACK_PACKET_READY */
-
-#endif /* BUILD_WITH_ORCHESTRA */
-
-/* Called by TSCH when switching time source */
-#ifdef TSCH_CALLBACK_NEW_TIME_SOURCE
-struct tsch_neighbor;
-void TSCH_CALLBACK_NEW_TIME_SOURCE(const struct tsch_neighbor *old, const struct tsch_neighbor *new);
-#endif
-
-/* Called by TSCH every time a packet is ready to be added to the send queue */
-#ifdef TSCH_CALLBACK_PACKET_READY
-void TSCH_CALLBACK_PACKET_READY(void);
-#endif
-
-/************ Types ***********/
-
-/* TSCH packet information */
-struct tsch_packet {
-  struct queuebuf *qb;  /* pointer to the queuebuf to be sent */
-  mac_callback_t sent; /* callback for this packet */
-  void *ptr; /* MAC callback parameter */
-  uint8_t transmissions; /* #transmissions performed for this packet */
-  uint8_t ret; /* status -- MAC return code */
-  uint8_t header_len; /* length of header and header IEs (needed for link-layer security) */
-  uint8_t tsch_sync_ie_offset; /* Offset within the frame used for quick update of EB ASN and join priority */
-};
-
-/* TSCH neighbor information */
-struct tsch_neighbor {
-  /* Neighbors are stored as a list: "next" must be the first field */
-  struct tsch_neighbor *next;
-  linkaddr_t addr; /* MAC address of the neighbor */
-  uint8_t is_broadcast; /* is this neighbor a virtual neighbor used for broadcast (of data packets or EBs) */
-  uint8_t is_time_source; /* is this neighbor a time source? */
-  uint8_t backoff_exponent; /* CSMA backoff exponent */
-  uint8_t backoff_window; /* CSMA backoff window (number of slots to skip) */
-  uint8_t last_backoff_window; /* Last CSMA backoff window */
-  uint8_t tx_links_count; /* How many links do we have to this neighbor? */
-  uint8_t dedicated_tx_links_count; /* How many dedicated links do we have to this neighbor? */
-  /* Array for the ringbuf. Contains pointers to packets.
-   * Its size must be a power of two to allow for atomic put */
-  struct tsch_packet *tx_array[TSCH_QUEUE_NUM_PER_NEIGHBOR];
-  /* Circular buffer of pointers to packet. */
-  struct ringbufindex tx_ringbuf;
-};
 
 /***** External Variables *****/
 
@@ -167,49 +55,128 @@ extern struct tsch_neighbor *n_eb;
 
 /********** Functions *********/
 
-/* Add a TSCH neighbor */
+/**
+ * \brief Add a TSCH neighbor queue
+ * \param addr The link-layer address of the neighbor to be added
+ */
 struct tsch_neighbor *tsch_queue_add_nbr(const linkaddr_t *addr);
-/* Get a TSCH neighbor */
+/**
+ * \brief Get a TSCH neighbor
+ * \param addr The link-layer address of the neighbor we are looking for
+ * \return A pointer to the neighbor queue, NULL if not found
+ */
 struct tsch_neighbor *tsch_queue_get_nbr(const linkaddr_t *addr);
-/* Get a TSCH time source (we currently assume there is only one) */
+/**
+ * \brief Get the TSCH time source (we currently assume there is only one)
+ * \return The neighbor queue associated to the time source
+ */
 struct tsch_neighbor *tsch_queue_get_time_source(void);
-/* Update TSCH time source */
+/**
+ * \brief Update TSCH time source
+ * \param new_addr The address of the new TSCH time source
+ */
 int tsch_queue_update_time_source(const linkaddr_t *new_addr);
-/* Add packet to neighbor queue. Use same lockfree implementation as ringbuf.c (put is atomic) */
-struct tsch_packet *tsch_queue_add_packet(const linkaddr_t *addr, mac_callback_t sent, void *ptr);
-/* Returns the number of packets currently in any TSCH queue */
+/**
+ * \brief Add packet to neighbor queue. Use same lockfree implementation as ringbuf.c (put is atomic)
+ * \param addr The address of the targetted neighbor, &tsch_broadcast_address for broadcast
+ * \param max_transmissions The number of MAC retries
+ * \param sent The MAC packet sent callback
+ * \param ptr The MAC packet send callback parameter
+ * \return The newly created packet if any, NULL otherwise
+ */
+struct tsch_packet *tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
+                                          mac_callback_t sent, void *ptr);
+/**
+ * \brief Returns the number of packets currently in all TSCH queues
+ * \return The number of packets currently in all TSCH queues
+ */
 int tsch_queue_global_packet_count(void);
-/* Returns the number of packets currently a given neighbor queue */
+/**
+ * \brief Returns the number of packets currently a given neighbor queue
+ * \param addr The link-layer address of the neighbor we are interested in
+ * \return The number of packets in the neighbor's queue
+ */
 int tsch_queue_packet_count(const linkaddr_t *addr);
-/* Remove first packet from a neighbor queue. The packet is stored in a separate
- * dequeued packet list, for later processing. Return the packet. */
+/**
+ * \brief Remove first packet from a neighbor queue. The packet is stored in a separate
+ * dequeued packet list, for later processing.
+ * \param n The neighbor queue
+ * \return The packet that was removed if any, NULL otherwise
+ */
 struct tsch_packet *tsch_queue_remove_packet_from_queue(struct tsch_neighbor *n);
-/* Free a packet */
+/**
+ * \brief Free a packet
+ * \param p The packet to be freed
+ */
 void tsch_queue_free_packet(struct tsch_packet *p);
-/* Updates neighbor queue state after a transmission */
+/**
+ * \brief Updates neighbor queue state after a transmission
+ * \param n The neighbor queue we just sent from
+ * \param p The packet that was just sent
+ * \param link The TSCH link used for Tx
+ * \param mac_tx_status The MAC status (see mac.h)
+ * \return 1 if the packet remains in queue after the call, 0 if it was removed
+ */
 int tsch_queue_packet_sent(struct tsch_neighbor *n, struct tsch_packet *p, struct tsch_link *link, uint8_t mac_tx_status);
-/* Reset neighbor queues */
+/**
+ * \brief Reset neighbor queues module
+ */
 void tsch_queue_reset(void);
-/* Deallocate neighbors with empty queue */
+/**
+ * \brief Deallocate all neighbors with empty queue
+ */
 void tsch_queue_free_unused_neighbors(void);
-/* Is the neighbor queue empty? */
+/**
+ * \brief Is the neighbor queue empty?
+ * \param n The neighbor queue
+ * \return 1 if empty, 0 otherwise
+ */
 int tsch_queue_is_empty(const struct tsch_neighbor *n);
-/* Returns the first packet from a neighbor queue */
+/**
+ * \brief Returns the first packet that can be sent from a queue on a given link
+ * \param n The neighbor queue
+ * \param link The link
+ * \return The next packet to be sent for the neighbor on the given link, if any, else NULL
+ */
 struct tsch_packet *tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *link);
-/* Returns the head packet from a neighbor queue (from neighbor address) */
+/**
+ * \brief Returns the first packet that can be sent to a given address on a given link
+ * \param addr The target link-layer address
+ * \param link The link
+ * \return The next packet to be sent for to the given address on the given link, if any, else NULL
+ */
 struct tsch_packet *tsch_queue_get_packet_for_dest_addr(const linkaddr_t *addr, struct tsch_link *link);
-/* Returns the head packet of any neighbor queue with zero backoff counter.
- * Writes pointer to the neighbor in *n */
+/**
+ * \brief Gets the head packet of any neighbor queue with zero backoff counter.
+ * \param n A pointer where to store the neighbor queue to be used for Tx
+ * \param link The link to be used for Tx
+ * \return The packet if any, else NULL
+ */
 struct tsch_packet *tsch_queue_get_unicast_packet_for_any(struct tsch_neighbor **n, struct tsch_link *link);
-/* May the neighbor transmit over a share link? */
+/**
+ * \brief Is the neighbor backoff timer expired?
+ * \param n The neighbor queue
+ * \return 1 if the backoff has expired (neighbor ready to transmit on a shared link), 0 otherwise
+ */
 int tsch_queue_backoff_expired(const struct tsch_neighbor *n);
-/* Reset neighbor backoff */
+/**
+ * \brief Reset neighbor backoff
+ * \param n The neighbor queue
+ */
 void tsch_queue_backoff_reset(struct tsch_neighbor *n);
-/* Increment backoff exponent, pick a new window */
+/**
+ * \brief Increment backoff exponent of a given neighbor queue, pick a new window
+ * \param n The neighbor queue
+ */
 void tsch_queue_backoff_inc(struct tsch_neighbor *n);
-/* Decrement backoff window for all queues directed at dest_addr */
+/**
+ * \brief Decrement backoff window for the queue(s) able to Tx to a given address
+ * \param dest_addr The target address, &tsch_broadcast_address for broadcast
+ */
 void tsch_queue_update_all_backoff_windows(const linkaddr_t *dest_addr);
-/* Initialize TSCH queue module */
+/**
+ * \brief Initialize TSCH queue module
+ */
 void tsch_queue_init(void);
 
 #endif /* __TSCH_QUEUE_H__ */

@@ -1,0 +1,22 @@
+TESTS=$(wildcard ??-*.sh)
+TESTLOGS=$(sort $(patsubst %.sh,%.testlog,$(TESTS)))
+
+CONTIKI=../..
+
+all: clean summary
+
+summary: cooja $(TESTLOGS)
+	@cat *.testlog > summary
+	@echo "========== Summary =========="
+	@cat summary
+
+%.testlog: %.sh cooja
+	@echo "========== Running script test $(basename $@).sh =========="
+	@bash "$(basename $@).sh" "$(CONTIKI)"
+
+clean:
+	@rm -f *.*log report summary
+
+cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
+$(CONTIKI)/tools/cooja/dist/cooja.jar:
+	(cd $(CONTIKI)/tools/cooja; ant jar)

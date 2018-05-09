@@ -46,10 +46,10 @@ leds_arch_init(void)
   LEDS_PxOUT |= (LEDS_CONF_RED | LEDS_CONF_GREEN | LEDS_CONF_YELLOW);
 }
 /*---------------------------------------------------------------------------*/
-unsigned char
+leds_mask_t
 leds_arch_get(void)
 {
-  unsigned char leds;
+  leds_mask_t leds;
   leds = LEDS_PxOUT;
   return ((leds & LEDS_CONF_RED) ? 0 : LEDS_RED)
     | ((leds & LEDS_CONF_GREEN) ? 0 : LEDS_GREEN)
@@ -57,7 +57,7 @@ leds_arch_get(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-leds_arch_set(unsigned char leds)
+leds_arch_set(leds_mask_t leds)
 {
   LEDS_PxOUT = (LEDS_PxOUT & ~(LEDS_CONF_RED|LEDS_CONF_GREEN|LEDS_CONF_YELLOW))
     | ((leds & LEDS_RED) ? 0 : LEDS_CONF_RED)

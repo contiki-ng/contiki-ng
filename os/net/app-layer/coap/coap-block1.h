@@ -36,12 +36,20 @@
  *      Lars Schmertmann <SmallLars@t-online.de>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_BLOCK1_H_
 #define COAP_BLOCK1_H_
 
+#include "coap.h"
 #include <stddef.h>
 #include <stdint.h>
 
-int coap_block1_handler(void *request, void *response, uint8_t *target, size_t *len, size_t max_len);
+int coap_block1_handler(coap_message_t *request, coap_message_t *response,
+                        uint8_t *target, size_t *len, size_t max_len);
 
 #endif /* COAP_BLOCK1_H_ */
+/** @} */

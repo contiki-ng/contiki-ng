@@ -37,19 +37,16 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "sensortag/button-sensor.h"
 #include "sensortag/bmp-280-sensor.h"
 #include "sensortag/tmp-007-sensor.h"
 #include "sensortag/opt-3001-sensor.h"
 #include "sensortag/hdc-1000-sensor.h"
 #include "sensortag/mpu-9250-sensor.h"
-#include "sensortag/reed-relay.h"
 
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 /** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&button_left_sensor, &button_right_sensor,
-        &bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor,
-        &mpu_9250_sensor, &reed_relay_sensor);
+SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor,
+        &mpu_9250_sensor);
 /*---------------------------------------------------------------------------*/
 /** @} */

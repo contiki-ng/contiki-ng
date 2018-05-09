@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,54 +29,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup launchpad-peripherals
- * @{
- *
- * \file
- *  Driver for LaunchPad LEDs
- */
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/leds.h"
-
+#include "dev/gpio-hal.h"
 #include "ti-lib.h"
-/*---------------------------------------------------------------------------*/
-static unsigned char c;
-static int inited = 0;
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
-{
-  if(inited) {
-    return;
-  }
-  inited = 1;
 
-  ti_lib_rom_ioc_pin_type_gpio_output(BOARD_IOID_LED_1);
-  ti_lib_rom_ioc_pin_type_gpio_output(BOARD_IOID_LED_2);
-
-  ti_lib_gpio_clear_multi_dio(BOARD_LED_ALL);
-}
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-unsigned char
-leds_arch_get(void)
-{
-  return c;
-}
+const leds_t leds_arch_leds[] = {
+  { .pin = BOARD_IOID_LED_1, .negative_logic = false },
+  { .pin = BOARD_IOID_LED_2, .negative_logic = false },
+};
 /*---------------------------------------------------------------------------*/
-void
-leds_arch_set(unsigned char leds)
-{
-  c = leds;
-  ti_lib_gpio_clear_multi_dio(BOARD_LED_ALL);
-
-  if((leds & LEDS_RED) == LEDS_RED) {
-    ti_lib_gpio_set_dio(BOARD_IOID_LED_1);
-  }
-  if((leds & LEDS_YELLOW) == LEDS_YELLOW) {
-    ti_lib_gpio_set_dio(BOARD_IOID_LED_2);
-  }
-}
-/*---------------------------------------------------------------------------*/
-/** @} */

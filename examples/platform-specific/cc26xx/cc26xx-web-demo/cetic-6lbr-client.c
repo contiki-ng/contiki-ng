@@ -35,8 +35,14 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "rpl.h"
+#include "net/routing/routing.h"
 #include "net/ipv6/uip.h"
+#if ROUTING_CONF_RPL_CLASSIC
+#include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-private.h"
+#else
+#error The 6LBR client is only meant for RPL Classic. Set MAKE_ROUTING accordingly.
+#endif
 
 #include <string.h>
 #include <stdio.h>
@@ -155,8 +161,8 @@ timeout_handler(void)
       PRINT6ADDR(&client_conn->ripaddr);
       i = sprintf(buf, "%d | ", ++seq_id);
       instance = rpl_get_default_instance();
-      if(instance && instance->dag.preferred_parent) {
-        add_ipaddr(buf + i, rpl_parent_get_ipaddr(instance->dag.preferred_parent));
+      if(instance && instance->current_dag->preferred_parent) {
+        add_ipaddr(buf + i, rpl_parent_get_ipaddr(instance->current_dag->preferred_parent));
       } else {
         sprintf(buf + i, "(null)");
       }

@@ -30,7 +30,7 @@
 
 #include <contiki.h>
 #include <lib/assert.h>
-#include <net/mac/tsch/tsch-queue.h>
+#include <net/mac/tsch/tsch.h>
 #include <net/mac/tsch/sixtop/sixtop.h>
 #include <net/mac/tsch/sixtop/sixp.h>
 #include <net/mac/tsch/sixtop/sixp-nbr.h>
@@ -67,16 +67,17 @@ static void test_relocate_2_step(const linkaddr_t *peer_addr);
 static void test_count_2_step(const linkaddr_t *peer_addr);
 static void test_list_2_step(const linkaddr_t *peer_addr);
 static void test_list_2_step_eol(const linkaddr_t *peer_addr);
+static void test_signal_2_step(const linkaddr_t *peer_addr);
 static void test_clear_2_step_success(const linkaddr_t *peer_addr);
-static void test_clear_2_step_error(const linkaddr_t *peer_addr);
 static void test_clear_2_step_eol(const linkaddr_t *peer_addr);
+static void test_clear_2_step_err(const linkaddr_t *peer_addr);
 static void test_clear_2_step_reset(const linkaddr_t *peer_addr);
 static void test_clear_2_step_version(const linkaddr_t *peer_addr);
 static void test_clear_2_step_sfid(const linkaddr_t *peer_addr);
-static void test_clear_2_step_gen(const linkaddr_t *peer_addr);
-static void test_clear_2_step_busy(const linkaddr_t *peer_addr);
-static void test_clear_2_step_nores(const linkaddr_t *peer_addr);
+static void test_clear_2_step_seqnum(const linkaddr_t *peer_addr);
 static void test_clear_2_step_celllist(const linkaddr_t *peer_addr);
+static void test_clear_2_step_busy(const linkaddr_t *peer_addr);
+static void test_clear_2_step_locked(const linkaddr_t *peer_addr);
 
 typedef void (*test_func)(const linkaddr_t *peer_addr);
 static const test_func test_case[] = {
@@ -88,26 +89,18 @@ static const test_func test_case[] = {
   test_count_2_step,
   test_list_2_step,
   test_list_2_step_eol,
+  test_signal_2_step,
   test_clear_2_step_success,
-  test_clear_2_step_error,
   test_clear_2_step_eol,
+  test_clear_2_step_err,
   test_clear_2_step_reset,
   test_clear_2_step_version,
   test_clear_2_step_sfid,
-  test_clear_2_step_gen,
-  test_clear_2_step_busy,
-  test_clear_2_step_nores,
+  test_clear_2_step_seqnum,
   test_clear_2_step_celllist,
+  test_clear_2_step_busy,
+  test_clear_2_step_locked,
 };
-
-static void
-advance_gen(const linkaddr_t *peer_addr)
-{
-  sixp_nbr_t *nbr;
-  nbr = sixp_nbr_find(peer_addr);
-  assert(nbr != NULL);
-  assert(sixp_nbr_advance_gen(nbr) == 0);
-}
 
 static void
 set_peer_addr(const linkaddr_t *addr)
@@ -202,10 +195,8 @@ test_add_2_step(const linkaddr_t *peer_addr)
                   peer_addr,
                   NULL, NULL, 0);
       test_index++;
-      advance_gen(peer_addr);
     } else if(state == SIXP_TRANS_STATE_RESPONSE_RECEIVED) {
       process_post(&test_sf_process, test_sf_trans_done, NULL);
-      advance_gen(peer_addr);
     }
   }
 }
@@ -266,10 +257,8 @@ test_add_3_step(const linkaddr_t *peer_addr)
                   peer_addr,
                   NULL, NULL, 0);
       process_post(&test_sf_process, test_sf_trans_done, NULL);
-      advance_gen(peer_addr);
     } else if (state == SIXP_TRANS_STATE_CONFIRMATION_RECEIVED){
       test_index++;
-      advance_gen(peer_addr);
     }
   }
 }
@@ -325,10 +314,8 @@ test_delete_2_step(const linkaddr_t *peer_addr)
                   peer_addr,
                   NULL, NULL, 0);
       test_index++;
-      advance_gen(peer_addr);
     } else if(state == SIXP_TRANS_STATE_RESPONSE_RECEIVED) {
       process_post(&test_sf_process, test_sf_trans_done, NULL);
-      advance_gen(peer_addr);
     }
   }
 }
@@ -390,10 +377,8 @@ test_delete_3_step(const linkaddr_t *peer_addr)
                   peer_addr,
                   NULL, NULL, 0);
       process_post(&test_sf_process, test_sf_trans_done, NULL);
-      advance_gen(peer_addr);
     } else if (state == SIXP_TRANS_STATE_CONFIRMATION_RECEIVED) {
       test_index++;
-      advance_gen(peer_addr);
     }
   }
 }
@@ -459,10 +444,8 @@ test_relocate_2_step(const linkaddr_t *peer_addr)
                   peer_addr,
                   NULL, NULL, 0);
       test_index++;
-      advance_gen(peer_addr);
     } else if(state == SIXP_TRANS_STATE_RESPONSE_RECEIVED) {
       process_post(&test_sf_process, test_sf_trans_done, NULL);
-      advance_gen(peer_addr);
     }
   }
 }
@@ -659,6 +642,70 @@ test_list_2_step_eol(const linkaddr_t *peer_addr)
 }
 
 static void
+test_signal_2_step(const linkaddr_t *peer_addr)
+{
+  sixp_trans_t *trans = sixp_trans_find(peer_addr);
+  uint8_t payload[10];
+  size_t payload_len;
+
+  if(trans == NULL) {
+    memset(sixp_pkt_buf, 0, sizeof(sixp_pkt_buf));
+    assert(
+      sixp_pkt_set_metadata(SIXP_PKT_TYPE_REQUEST,
+                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_LIST,
+                            sample_metadata,
+                            sixp_pkt_buf, sizeof(sixp_pkt_buf)) == 0);
+
+    payload[0] =  0xbe;
+    payload[1] =  0xef;
+    payload[2] =  0xca;
+    payload[3] =  0xfe;
+    payload_len = 4;
+
+    assert(
+      sixp_pkt_set_payload(SIXP_PKT_TYPE_REQUEST,
+                           (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_SIGNAL,
+                           (const uint8_t *)payload, payload_len,
+                           sixp_pkt_buf, sizeof(sixp_pkt_buf)) == 0);
+
+    assert(sixp_output(SIXP_PKT_TYPE_REQUEST,
+                       (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_SIGNAL,
+                       TEST_SF_SFID, sixp_pkt_buf,
+                       sizeof(sixp_pkt_metadata_t) + payload_len,
+                       peer_addr,
+                       NULL, NULL, 0) == 0);
+  } else {
+    sixp_trans_state_t state;
+    printf("hoge\n");
+    state = sixp_trans_get_state(trans);
+    if(state == SIXP_TRANS_STATE_REQUEST_RECEIVED) {
+      payload[0] =  0x01;
+      payload[1] =  0x02;
+      payload[2] =  0x03;
+      payload[3] =  0x04;
+      payload[4] =  0x05;
+      payload_len = 5;
+
+      assert(
+        sixp_pkt_set_payload(SIXP_PKT_TYPE_RESPONSE,
+                             (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                             (const uint8_t *)payload, payload_len,
+                             sixp_pkt_buf, sizeof(sixp_pkt_buf)) == 0);
+
+      sixp_output(SIXP_PKT_TYPE_RESPONSE,
+                  (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
+                  TEST_SF_SFID, sixp_pkt_buf,
+                  payload_len,
+                  peer_addr,
+                  NULL, NULL, 0);
+      test_index++;
+    } else if(state == SIXP_TRANS_STATE_RESPONSE_RECEIVED) {
+      process_post(&test_sf_process, test_sf_trans_done, NULL);
+    }
+  }
+}
+
+static void
 test_clear_2_step(const linkaddr_t *peer_addr, sixp_pkt_rc_t rc)
 {
   sixp_trans_t *trans = sixp_trans_find(peer_addr);
@@ -699,9 +746,9 @@ test_clear_2_step_success(const linkaddr_t *peer_addr)
 }
 
 static void
-test_clear_2_step_error(const linkaddr_t *peer_addr)
+test_clear_2_step_err(const linkaddr_t *peer_addr)
 {
-  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERROR);
+  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERR);
 }
 
 static void
@@ -719,37 +766,37 @@ test_clear_2_step_reset(const linkaddr_t *peer_addr)
 static void
 test_clear_2_step_version(const linkaddr_t *peer_addr)
 {
-  test_clear_2_step(peer_addr, SIXP_PKT_RC_VERSION);
+  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERR_VERSION);
 }
 
 static void
 test_clear_2_step_sfid(const linkaddr_t *peer_addr)
 {
-  test_clear_2_step(peer_addr, SIXP_PKT_RC_SFID);
+  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERR_SFID);
 }
 
 static void
-test_clear_2_step_gen(const linkaddr_t *peer_addr)
+test_clear_2_step_seqnum(const linkaddr_t *peer_addr)
 {
-  test_clear_2_step(peer_addr, SIXP_PKT_RC_GEN);
+  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERR_SEQNUM);
 }
 
 static void
 test_clear_2_step_busy(const linkaddr_t *peer_addr)
 {
-  test_clear_2_step(peer_addr, SIXP_PKT_RC_BUSY);
+  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERR_BUSY);
 }
 
 static void
-test_clear_2_step_nores(const linkaddr_t *peer_addr)
+test_clear_2_step_locked(const linkaddr_t *peer_addr)
 {
-  test_clear_2_step(peer_addr, SIXP_PKT_RC_NORES);
+  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERR_LOCKED);
 }
 
 static void
 test_clear_2_step_celllist(const linkaddr_t *peer_addr)
 {
-  test_clear_2_step(peer_addr, SIXP_PKT_RC_CELLLIST);
+  test_clear_2_step(peer_addr, SIXP_PKT_RC_ERR_CELLLIST);
 }
 
 PROCESS_THREAD(test_sf_process, ev, data)

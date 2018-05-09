@@ -29,22 +29,6 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup platform
- * @{
- *
- * \defgroup cc26xx-platforms TI CC26xx-powered platforms
- * @{
- *
- * \defgroup cc26xx The TI CC26xx and CC13xx CPUs
- *
- * This group documents the TI CC26xx and CC13xx CPUs. The two CPU families are
- * very similar, with the main difference being related to radio capability.
- *
- * Documentation in this group should be considered to be applicable to both
- * families, unless explicitly stated otherwise.
- *
- * @{
- *
  * \addtogroup cc26xx-clocks
  * @{
  *
@@ -140,7 +124,7 @@ update_clock_variable(void)
   count = (aon_rtc_secs_now * CLOCK_SECOND) + (aon_rtc_ticks_now >> 9);
 }
 /*---------------------------------------------------------------------------*/
-CCIF clock_time_t
+clock_time_t
 clock_time(void)
 {
   update_clock_variable();
@@ -158,7 +142,7 @@ clock_update(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-CCIF unsigned long
+unsigned long
 clock_seconds(void)
 {
   bool interrupts_disabled;
@@ -228,9 +212,6 @@ clock_delay(unsigned int i)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @}
- * @}
- * @}
  * @}
  * @}
  */

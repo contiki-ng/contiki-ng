@@ -103,7 +103,6 @@ LIST(notificationlist);
 #endif
 
 /*---------------------------------------------------------------------------*/
-#if LOG_DBG_ENABLED
 static void
 assert_nbr_routes_list_sane(void)
 {
@@ -131,7 +130,6 @@ assert_nbr_routes_list_sane(void)
   }
 #endif /* (UIP_MAX_ROUTES != 0) */
 }
-#endif /* LOG_DBG_ENABLED */
 /*---------------------------------------------------------------------------*/
 #if UIP_DS6_NOTIFICATIONS
 static void
@@ -330,9 +328,9 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
   uip_ds6_route_t *r;
   struct uip_ds6_route_neighbor_route *nbrr;
 
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
 
   if(ipaddr == NULL || nexthop == NULL) {
     return NULL;
@@ -473,9 +471,9 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
   call_route_callback(UIP_DS6_NOTIFICATION_ROUTE_ADD, ipaddr, nexthop);
 #endif
 
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
   return r;
 
 #else /* (UIP_MAX_ROUTES != 0) */
@@ -489,9 +487,11 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
 {
 #if (UIP_MAX_ROUTES != 0)
   struct uip_ds6_route_neighbor_route *neighbor_route;
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
+
   if(route != NULL && route->neighbor_routes != NULL) {
 
     LOG_INFO("Rm: removing route: ");
@@ -541,9 +541,9 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
 #endif
   }
 
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
 
 #endif /* (UIP_MAX_ROUTES != 0) */
   return;
@@ -553,9 +553,10 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
 static void
 rm_routelist(struct uip_ds6_route_neighbor_routes *routes)
 {
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
+
   if(routes != NULL && routes->route_list != NULL) {
     struct uip_ds6_route_neighbor_route *r;
     r = list_head(routes->route_list);
@@ -565,9 +566,10 @@ rm_routelist(struct uip_ds6_route_neighbor_routes *routes)
     }
     nbr_table_remove(nbr_routes, routes);
   }
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -603,9 +605,9 @@ uip_ds6_defrt_add(uip_ipaddr_t *ipaddr, unsigned long interval)
 {
   uip_ds6_defrt_t *d;
 
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
 
   if(ipaddr == NULL) {
     return NULL;
@@ -643,9 +645,9 @@ uip_ds6_defrt_add(uip_ipaddr_t *ipaddr, unsigned long interval)
   call_route_callback(UIP_DS6_NOTIFICATION_DEFRT_ADD, ipaddr, ipaddr);
 #endif
 
-#if LOG_DBG_ENABLED
+if(LOG_DBG_ENABLED) {
   assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+}
 
   return d;
 }
@@ -655,9 +657,9 @@ uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt)
 {
   uip_ds6_defrt_t *d;
 
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
 
   /* Make sure that the defrt is in the list before we remove it. */
   for(d = list_head(defaultrouterlist);
@@ -675,10 +677,10 @@ uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt)
       return;
     }
   }
-#if LOG_DBG_ENABLED
-  assert_nbr_routes_list_sane();
-#endif /* LOG_DBG_ENABLED */
 
+  if(LOG_DBG_ENABLED) {
+    assert_nbr_routes_list_sane();
+  }
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_defrt_t *

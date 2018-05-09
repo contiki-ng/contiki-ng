@@ -67,6 +67,8 @@ static int32_t get_rel_cell_list_offset(sixp_pkt_type_t type,
                                         sixp_pkt_code_t code);
 static int32_t get_total_num_cells_offset(sixp_pkt_type_t type,
                                           sixp_pkt_code_t code);
+static int32_t get_payload_offset(sixp_pkt_type_t type,
+                                  sixp_pkt_code_t code);
 
 /*---------------------------------------------------------------------------*/
 static int32_t
@@ -176,7 +178,21 @@ get_total_num_cells_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
   }
   return -1;
 }
-/*---------------------------------------------------------------------------*/int
+/*---------------------------------------------------------------------------*/
+static int32_t
+get_payload_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
+{
+  if(type == SIXP_PKT_TYPE_REQUEST && code.value == SIXP_PKT_CMD_SIGNAL) {
+    return sizeof(sixp_pkt_metadata_t);
+  } else if((type == SIXP_PKT_TYPE_RESPONSE ||
+             type == SIXP_PKT_TYPE_CONFIRMATION) &&
+            code.value == SIXP_PKT_RC_SUCCESS) {
+    return 0;
+  }
+  return -1;
+}
+/*---------------------------------------------------------------------------*/
+int
 sixp_pkt_set_metadata(sixp_pkt_type_t type, sixp_pkt_code_t code,
                       sixp_pkt_metadata_t metadata,
                       uint8_t *body, uint16_t body_len)
@@ -227,7 +243,7 @@ sixp_pkt_get_metadata(sixp_pkt_type_t type, sixp_pkt_code_t code,
     return -1;
   }
 
-  if(body_len < (offset + sizeof(*metadata))) {
+  if(body_len < offset + sizeof(*metadata)) {
     LOG_ERR("6P-pkt: cannot get metadata [type=%u, code=%u], ",
             type, code.value);
     LOG_ERR_("body is too short\n");
@@ -238,7 +254,7 @@ sixp_pkt_get_metadata(sixp_pkt_type_t type, sixp_pkt_code_t code,
    * Copy the content in the Metadata field as it is since 6P has no idea about
    * the internal structure of the field.
    */
-  memcpy(metadata + offset, body, sizeof(*metadata));
+  memcpy(metadata, body + offset, sizeof(*metadata));
 
   return 0;
 }
@@ -861,6 +877,73 @@ sixp_pkt_get_total_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
 }
 /*---------------------------------------------------------------------------*/
 int
+sixp_pkt_set_payload(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                     const uint8_t *payload, uint16_t payload_len,
+                     uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+
+  if(body == NULL) {
+    LOG_ERR("6P-pkt: cannot set metadata; body is null\n");
+    return -1;
+  }
+
+  if((offset = get_payload_offset(type, code)) < 0) {
+    LOG_ERR("6P-pkt: cannot set payload [type=%u, code=%u], invalid type\n",
+            type, code.value);
+    return -1;
+  }
+
+  if(body_len < (offset + payload_len)) {
+    LOG_ERR("6P-pkt: cannot set payload, body is too short [body_len=%u]\n",
+            body_len);
+    return -1;
+  }
+
+  /*
+   * Copy the content into the Payload field as it is since 6P has no idea
+   * about the internal structure of the field.
+   */
+  memcpy(body + offset, payload, payload_len);
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_pkt_get_payload(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                     uint8_t *buf, uint16_t buf_len,
+                     const uint8_t *body, uint16_t body_len)
+{
+  int32_t offset;
+
+  if(buf == NULL || body == NULL) {
+    LOG_ERR("6P-pkt: cannot get payload; invalid argument\n");
+    return -1;
+  }
+
+  if((offset = get_payload_offset(type, code)) < 0) {
+    LOG_ERR("6P-pkt: cannot get payload [type=%u, code=%u], invalid type\n",
+            type, code.value);
+    return -1;
+  }
+
+  if((body_len - offset) > buf_len) {
+    LOG_ERR("6P-pkt: cannot get payload [type=%u, code=%u], ",
+            type, code.value);
+    LOG_ERR_("buf_len is too short\n");
+    return -1;
+  }
+
+  /*
+   * Copy the content in the Payload field as it is since 6P has no idea about
+   * the internal structure of the field.
+   */
+  memcpy(buf, body + offset, buf_len);
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
 sixp_pkt_parse(const uint8_t *buf, uint16_t len,
                sixp_pkt_t *pkt)
 {
@@ -870,24 +953,20 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
     return -1;
   }
 
+  memset(pkt, 0, sizeof(sixp_pkt_t));
+
   /* read the first 4 octets */
   if(len < 4) {
     LOG_ERR("6P-pkt: sixp_pkt_parse() fails because it's a too short packet\n");
     return -1;
   }
 
-  if((buf[0] & 0x0f) != SIXP_PKT_VERSION) {
-    LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid version [%u]\n",
-            buf[0] & 0x0f);
-    return -1;
-  }
-
-  memset(pkt, 0, sizeof(sixp_pkt_t));
+  /* parse the header as it's version 0 6P packet */
+  pkt->version = buf[0] & 0x0f;
   pkt->type = (buf[0] & 0x30) >> 4;
   pkt->code.value = buf[1];
   pkt->sfid = buf[2];
-  pkt->seqno = buf[3] & 0x0f;
-  pkt->gen = (buf[3] & 0xf0) >> 4;
+  pkt->seqno = buf[3];
 
   buf += 4;
   len -= 4;
@@ -935,6 +1014,12 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
           return -1;
         }
         break;
+      case SIXP_PKT_CMD_SIGNAL:
+        if(len < sizeof(sixp_pkt_metadata_t)) {
+          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
+          return -1;
+        }
+        break;
       case SIXP_PKT_CMD_CLEAR:
         if(len != sizeof(sixp_pkt_metadata_t)) {
           LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
@@ -954,13 +1039,9 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
          * - Res to CLEAR:             Empty (length 0)
          * - Res to STATUS:            "Num. Cells" (total_num_cells)
          * - Res to ADD, DELETE, LIST: 0, 1, or multiple 6P cells
+         * - Res to SIGNAL:            Payload (arbitrary length)
          */
-        if(len != 0 &&
-           len != sizeof(sixp_pkt_total_num_cells_t) &&
-           (len % sizeof(uint32_t)) != 0) {
-          LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
-          return -1;
-        }
+        /* we accept any length because of SIGNAL */
         break;
       case SIXP_PKT_RC_EOL:
         if((len % sizeof(uint32_t)) != 0) {
@@ -968,14 +1049,14 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
           return -1;
         }
         break;
-      case SIXP_PKT_RC_ERROR:
+      case SIXP_PKT_RC_ERR:
       case SIXP_PKT_RC_RESET:
-      case SIXP_PKT_RC_VERSION:
-      case SIXP_PKT_RC_SFID:
-      case SIXP_PKT_RC_GEN:
-      case SIXP_PKT_RC_BUSY:
-      case SIXP_PKT_RC_NORES:
-      case SIXP_PKT_RC_CELLLIST:
+      case SIXP_PKT_RC_ERR_VERSION:
+      case SIXP_PKT_RC_ERR_SFID:
+      case SIXP_PKT_RC_ERR_SEQNUM:
+      case SIXP_PKT_RC_ERR_CELLLIST:
+      case SIXP_PKT_RC_ERR_BUSY:
+      case SIXP_PKT_RC_ERR_LOCKED:
         if(len != 0) {
           LOG_ERR("6P-pkt: sixp_pkt_parse() fails because of invalid length\n");
           return -1;
@@ -998,7 +1079,7 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
 /*---------------------------------------------------------------------------*/
 int
 sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
-                uint8_t sfid, uint8_t seqno, uint8_t gen,
+                uint8_t sfid, uint8_t seqno,
                 const uint8_t *body, uint16_t body_len, sixp_pkt_t *pkt)
 {
   uint8_t *hdr;
@@ -1029,7 +1110,7 @@ sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
   hdr[0] = (type << 4) | SIXP_PKT_VERSION;
   hdr[1] = code.value;
   hdr[2] = sfid;
-  hdr[3] = (gen << 4) | seqno;
+  hdr[3] = seqno;
 
   /* data: write body */
   if(body_len > 0 && body != NULL) {
@@ -1043,7 +1124,6 @@ sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
     pkt->code = code;
     pkt->sfid = sfid;
     pkt->seqno = seqno;
-    pkt->gen = gen;
     pkt->body = body;
     pkt->body_len = body_len;
   }

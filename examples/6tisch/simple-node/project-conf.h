@@ -32,19 +32,13 @@
  * \author Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
 #define WITH_SECURITY 0
 #endif /* WITH_SECURITY */
-
-/*******************************************************/
-/********* Enable RPL non-storing mode *****************/
-/*******************************************************/
-
-#define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
 
 /* USB serial takes space, free more space elsewhere */
 #define SICSLOWPAN_CONF_FRAG 0
@@ -84,4 +78,4 @@
 #define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
 #define TSCH_LOG_CONF_PER_SLOT                     1
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */

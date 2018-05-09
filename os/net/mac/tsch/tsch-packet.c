@@ -46,10 +46,6 @@
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-packet.h"
-#include "net/mac/tsch/tsch-private.h"
-#include "net/mac/tsch/tsch-schedule.h"
-#include "net/mac/tsch/tsch-security.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/netstack.h"
@@ -394,8 +390,7 @@ tsch_packet_update_eb(uint8_t *buf, int buf_size, uint8_t tsch_sync_ie_offset)
   struct ieee802154_ies ies;
   ies.ie_asn = tsch_current_asn;
   ies.ie_join_priority = tsch_join_priority;
-  frame80215e_create_ie_tsch_synchronization(buf+tsch_sync_ie_offset, buf_size-tsch_sync_ie_offset, &ies);
-  return 1;
+  return frame80215e_create_ie_tsch_synchronization(buf+tsch_sync_ie_offset, buf_size-tsch_sync_ie_offset, &ies) != -1;
 }
 /*---------------------------------------------------------------------------*/
 /* Parse a IEEE 802.15.4e TSCH Enhanced Beacon (EB) */

@@ -4,7 +4,6 @@
   <project EXPORT="discard">[APPS_DIR]/mspsim</project>
   <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
-  <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
     <title>My simulation</title>
@@ -26,7 +25,7 @@
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
       <commands>make clean TARGET=cooja
-make sender-node.cooja TARGET=cooja</commands>
+make -j sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -51,7 +50,7 @@ make sender-node.cooja TARGET=cooja</commands>
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
       <commands>make clean TARGET=cooja
-make root-node.cooja TARGET=cooja</commands>
+make -j root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -76,7 +75,7 @@ make root-node.cooja TARGET=cooja</commands>
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
       <commands>make clean TARGET=cooja
-make receiver-node.cooja TARGET=cooja</commands>
+make -j receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -544,7 +543,7 @@ make receiver-node.cooja TARGET=cooja</commands>
 }&#xD;
 &#xD;
 function getRandom(min, max) {&#xD;
-  return Math.random() * (max - min) + min;&#xD;
+  return r.nextFloat() * (max - min) + min;&#xD;
 }&#xD;
 &#xD;
 // From: http://bost.ocks.org/mike/shuffle/&#xD;
@@ -555,7 +554,7 @@ function shuffle(array) {&#xD;
   while (m) {&#xD;
 &#xD;
     // Pick a remaining element…&#xD;
-    i = Math.floor(Math.random() * m--);&#xD;
+    i = Math.floor(r.nextFloat() * m--);&#xD;
 &#xD;
     // And swap it with the current element.&#xD;
     t = array[m];&#xD;
@@ -571,6 +570,7 @@ GENERATE_MSG(1200000, 'randomize-nodes');&#xD;
 GENERATE_MSG(2400000, 'randomize-nodes');&#xD;
 GENERATE_MSG(3600000, 'randomize-nodes');&#xD;
 &#xD;
+var r = new java.util.Random(sim.getRandomSeed());&#xD;
 var numForwarders = 20;&#xD;
 var forwardIDStart = 4;&#xD;
 packetsReceived = [];&#xD;
@@ -644,4 +644,3 @@ while(true) {&#xD;
     <location_y>43</location_y>
   </plugin>
 </simconf>
-

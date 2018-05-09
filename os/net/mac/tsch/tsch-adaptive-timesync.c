@@ -44,9 +44,6 @@
 */
 
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-conf.h"
-#include "net/mac/tsch/tsch-adaptive-timesync.h"
-#include "net/mac/tsch/tsch-log.h"
 #include <stdio.h>
 
 #if TSCH_ADAPTIVE_TIMESYNC

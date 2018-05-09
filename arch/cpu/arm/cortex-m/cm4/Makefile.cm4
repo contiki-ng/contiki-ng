@@ -1,0 +1,13 @@
+CONTIKI_ARM_DIRS += cortex-m/cm4
+
+CFLAGS += -mcpu=cortex-m4
+LDFLAGS += -mcpu=cortex-m4
+
+### Compilation rules
+CUSTOM_RULE_LINK=1
+
+%.elf: $(TARGET_STARTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(TARGET_LIBS)
+	$(TRACE_LD)
+	$(Q)$(CC) $(LDFLAGS) ${filter %.o %.a,$^} -o $@
+
+include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m

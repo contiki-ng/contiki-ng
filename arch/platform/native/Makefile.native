@@ -2,22 +2,22 @@ ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
-ifeq ($(HOST_OS),Darwin)
-  AROPTS = rc
-endif
 
 CONTIKI_TARGET_DIRS = . dev
 CONTIKI_TARGET_MAIN = ${addprefix $(OBJECTDIR)/,contiki-main.o}
 
-CONTIKI_TARGET_SOURCEFILES = platform.c clock.c leds.c leds-arch.c \
-                button-sensor.c pir-sensor.c vib-sensor.c xmem.c \
-                sensors.c irq.c cfs-posix.c cfs-posix-dir.c
+CONTIKI_TARGET_SOURCEFILES += platform.c clock.c xmem.c
+CONTIKI_TARGET_SOURCEFILES += cfs-posix.c cfs-posix-dir.c buttons.c
 
 ifeq ($(HOST_OS),Windows)
 CONTIKI_TARGET_SOURCEFILES += wpcap-drv.c wpcap.c
 TARGET_LIBFILES = /lib/w32api/libws2_32.a /lib/w32api/libiphlpapi.a
 else
 CONTIKI_TARGET_SOURCEFILES += tun6-net.c
+endif
+
+ifeq ($(HOST_OS),Linux)
+TARGET_LIBFILES += -lrt
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
@@ -30,5 +30,3 @@ MAKE_MAC ?= MAKE_MAC_NULLMAC
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/native
 include $(CONTIKI)/arch/cpu/native/Makefile.native
-
-MODULES+=os/net os/net/mac os/net/mac/framer

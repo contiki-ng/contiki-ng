@@ -36,45 +36,48 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
+/**
+ * \addtogroup coap
+ * @{
+ */
+
 #ifndef COAP_TRANSACTIONS_H_
 #define COAP_TRANSACTIONS_H_
 
 #include "coap.h"
+#include "coap-engine.h"
+#include "coap-timer.h"
 
 /*
  * Modulo mask (thus +1) for a random number to get the tick number for the random
  * retransmission time between COAP_RESPONSE_TIMEOUT and COAP_RESPONSE_TIMEOUT*COAP_RESPONSE_RANDOM_FACTOR.
  */
-#define COAP_RESPONSE_TIMEOUT_TICKS         (CLOCK_SECOND * COAP_RESPONSE_TIMEOUT)
-#define COAP_RESPONSE_TIMEOUT_BACKOFF_MASK  (long)((CLOCK_SECOND * COAP_RESPONSE_TIMEOUT * ((float)COAP_RESPONSE_RANDOM_FACTOR - 1.0)) + 0.5) + 1
+#define COAP_RESPONSE_TIMEOUT_TICKS         (1000 * COAP_RESPONSE_TIMEOUT)
+#define COAP_RESPONSE_TIMEOUT_BACKOFF_MASK  (uint32_t)(((1000 * COAP_RESPONSE_TIMEOUT * ((float)COAP_RESPONSE_RANDOM_FACTOR - 1.0)) + 0.5) + 1)
 
 /* container for transactions with message buffer and retransmission info */
 typedef struct coap_transaction {
   struct coap_transaction *next;        /* for LIST */
 
   uint16_t mid;
-  struct etimer retrans_timer;
+  coap_timer_t retrans_timer;
+  uint32_t retrans_interval;
   uint8_t retrans_counter;
 
-  uip_ipaddr_t addr;
-  uint16_t port;
+  coap_endpoint_t endpoint;
 
-  restful_response_handler callback;
+  coap_resource_response_handler_t callback;
   void *callback_data;
 
-  uint16_t packet_len;
-  uint8_t packet[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
+  uint16_t message_len;
+  uint8_t message[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
                                                  * Use snprintf(buf, len+1, "", ...) to completely fill payload */
 } coap_transaction_t;
 
-void coap_register_as_transaction_handler(void);
-
-coap_transaction_t *coap_new_transaction(uint16_t mid, uip_ipaddr_t *addr,
-                                         uint16_t port);
+coap_transaction_t *coap_new_transaction(uint16_t mid, const coap_endpoint_t *ep);
 void coap_send_transaction(coap_transaction_t *t);
 void coap_clear_transaction(coap_transaction_t *t);
 coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
 
-void coap_check_transactions(void);
-
 #endif /* COAP_TRANSACTIONS_H_ */
+/** @} */

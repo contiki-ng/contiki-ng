@@ -55,27 +55,14 @@
 #include "ioc.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations
+ * \name LED HAL configuration
  *
  * Those values are not meant to be modified by the user
  * @{
  */
-/* Some files include leds.h before us, so we need to get rid of defaults in
- * leds.h before we provide correct definitions */
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
-
-#define LEDS_RED       1
-#define LEDS_GREEN     2
-#define LEDS_YELLOW    LEDS_GREEN
-#define LEDS_ORANGE    LEDS_RED
-
-#define LEDS_CONF_ALL  3
-
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS        1
+#define LEDS_CONF_COUNT                 2
+#define LEDS_CONF_RED                   1
+#define LEDS_CONF_GREEN                 2
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -86,9 +73,6 @@
  */
 #define BOARD_IOID_LED_1          IOID_6
 #define BOARD_IOID_LED_2          IOID_7
-#define BOARD_LED_1               (1 << BOARD_IOID_LED_1)
-#define BOARD_LED_2               (1 << BOARD_IOID_LED_2)
-#define BOARD_LED_ALL             (BOARD_LED_1 | BOARD_LED_2)
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -120,24 +104,28 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \brief SPI IOID mappings
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define BOARD_IOID_SPI_MOSI       IOID_9
-#define BOARD_IOID_SPI_MISO       IOID_8
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name External flash IOID mapping
  *
  * Those values are not meant to be modified by the user
  * @{
  */
-#define BOARD_IOID_FLASH_CS       IOID_20
-#define BOARD_FLASH_CS            (1 << BOARD_IOID_FLASH_CS)
-#define BOARD_IOID_SPI_CLK_FLASH  IOID_10
+#define EXT_FLASH_SPI_CONTROLLER    SPI_CONTROLLER_SPI0
+
+#define BOARD_IOID_FLASH_SCK        IOID_10
+#define BOARD_IOID_FLASH_MOSI       IOID_9
+#define BOARD_IOID_FLASH_MISO       IOID_8
+#define BOARD_IOID_FLASH_CS         IOID_20
+
+#define EXT_FLASH_SPI_PIN_SCK       10
+#define EXT_FLASH_SPI_PIN_MOSI      9
+#define EXT_FLASH_SPI_PIN_MISO      8
+#define EXT_FLASH_SPI_PIN_CS        20
+
+#define EXT_FLASH_DEVICE_ID         0x14
+#define EXT_FLASH_MID               0xC2
+
+#define EXT_FLASH_PROGRAM_PAGE_SIZE 256
+#define EXT_FLASH_ERASE_SECTOR_SIZE 4096
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -203,6 +191,16 @@
     BOARD_IOID_DIO26, BOARD_IOID_DIO27, BOARD_IOID_DIO28, BOARD_IOID_DIO29, \
     BOARD_IOID_DIO30, IOID_UNUSED \
   }
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Board indices for the button HAL
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
+#define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

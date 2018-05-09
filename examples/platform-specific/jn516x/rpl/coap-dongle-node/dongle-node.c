@@ -34,16 +34,16 @@
 #include "contiki.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
-#include "tools/rpl-tools.h"
-#include "rest-engine.h"
+#include "net/routing/routing.h"
+#include "coap-engine.h"
 #include "sys/ctimer.h"
 #include <stdio.h>
 #include "dev/leds.h"
 
 static void ct_callback(void *ptr);
-static void put_post_led_toggle_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void put_post_led_toggle_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-static char content[REST_MAX_CHUNK_SIZE];
+static char content[COAP_MAX_CHUNK_SIZE];
 static int content_len = 0;
 static struct ctimer ct;
 
@@ -77,7 +77,7 @@ RESOURCE(resource_led_toggle,
          put_post_led_toggle_handler,
          NULL);
 static void
-put_post_led_toggle_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+put_post_led_toggle_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   static int led_state = 0;
   unsigned int accept = -1;
@@ -110,10 +110,10 @@ put_post_led_toggle_handler(void *request, void *response, uint8_t *buffer, uint
     break;
   }
   /* Return message */
-  REST.get_header_accept(request, &accept);
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, (uint8_t *)content, content_len);
+  coap_get_header_accept(request, &accept);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    coap_set_payload(response, (uint8_t *)content, content_len);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -130,15 +130,13 @@ PROCESS_THREAD(start_app, ev, data)
 
   /* Start net stack */
   if(is_coordinator) {
-    uip_ipaddr_t prefix;
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-    rpl_tools_init(&prefix);
-  } else {
-    rpl_tools_init(NULL);
-  } printf("Starting RPL node\n");
+    NETSTACK_ROUTING.root_start();
+  }
+  NETSTACK_MAC.on();
+  printf("Starting RPL node\n");
 
-  rest_init_engine();
-  rest_activate_resource(&resource_led_toggle, "Dongle/LED-toggle");
+  coap_engine_init();
+  coap_activate_resource(&resource_led_toggle, "Dongle/LED-toggle");
 
   PROCESS_END();
 }

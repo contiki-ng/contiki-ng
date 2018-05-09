@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
+ * \addtogroup lwm2m
  * @{
  */
 
@@ -45,7 +45,17 @@
 
 #include "lwm2m-object.h"
 
+struct json_data {
+  uint8_t type; /* S,B,V */
+  uint8_t *name;
+  uint8_t *value;
+  uint8_t name_len;
+  uint8_t value_len;
+};
+
 extern const lwm2m_writer_t lwm2m_json_writer;
+
+int lwm2m_json_next_token(lwm2m_context_t *ctx, struct json_data *json);
 
 #endif /* LWM2M_JSON_H_ */
 /** @} */
