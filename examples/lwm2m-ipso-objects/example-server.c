@@ -38,19 +38,23 @@
 
 #include "contiki.h"
 #include "net/ipv6/uip.h"
+#include "net/ipv6/uip-ds6.h"
 #include "net/netstack.h"
 #include "net/routing/routing.h"
-#include "coap-constants.h"
-#include "coap-engine.h"
+#include "coap-transport.h"
+#include "coap-blocking-api.h"
 #include "lwm2m-engine.h"
 #include "lwm2m-tlv.h"
 #include "dev/serial-line.h"
 #include "serial-protocol.h"
+#include <stdbool.h>
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
 
-#define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
+#define REMOTE_PORT                  UIP_HTONS(COAP_DEFAULT_PORT)
+
+#define EVENT_RUN_NOW                0
 
 #define URL_WELL_KNOWN               ".well-known/core"
 #define URL_DEVICE_MODEL             "/3/0/1"
@@ -63,8 +67,8 @@
 #define NODE_HAS_TYPE  (1 << 0)
 
 struct node {
-  uip_ipaddr_t ipaddr;
-  char type[32];
+  coap_endpoint_t endpoint;
+  char type[64];
   uint8_t flags;
   uint8_t retries;
 };
@@ -86,13 +90,15 @@ add_node(const uip_ipaddr_t *addr)
 {
   int i;
   for(i = 0; i < node_count; i++) {
-    if(uip_ipaddr_cmp(&nodes[i].ipaddr, addr)) {
+    if(uip_ipaddr_cmp(&nodes[i].endpoint.ipaddr, addr)) {
       /* Node already added */
       return &nodes[i];
     }
   }
   if(node_count < MAX_NODES) {
-    uip_ipaddr_copy(&nodes[node_count].ipaddr, addr);
+    memset(&nodes[node_count].endpoint, 0, sizeof(coap_endpoint_t));
+    uip_ipaddr_copy(&nodes[node_count].endpoint.ipaddr, addr);
+    nodes[node_count].endpoint.port = REMOTE_PORT;
     return &nodes[node_count++];
   }
   return NULL;
@@ -107,13 +113,13 @@ set_value(const uip_ipaddr_t *addr, char *uri, char *value)
   printf(" URI: %s Value: %s\n", uri, value);
 
   for(i = 0; i < node_count; i++) {
-    if(uip_ipaddr_cmp(&nodes[i].ipaddr, addr)) {
+    if(uip_ipaddr_cmp(&nodes[i].endpoint.ipaddr, addr)) {
       /* setup command */
       current_target = &nodes[i];
       current_request = COAP_PUT;
       strncpy(current_uri, uri, sizeof(current_uri) - 1);
       strncpy(current_value, value, sizeof(current_value) - 1);
-      process_poll(&router_process);
+      process_post(&router_process, EVENT_RUN_NOW, NULL);
       break;
     }
   }
@@ -128,13 +134,13 @@ get_value(const uip_ipaddr_t *addr, char *uri)
   printf(" URI: %s\n", uri);
 
   for(i = 0; i < node_count; i++) {
-    if(uip_ipaddr_cmp(&nodes[i].ipaddr, addr)) {
+    if(uip_ipaddr_cmp(&nodes[i].endpoint.ipaddr, addr)) {
       /* setup command */
       current_target = &nodes[i];
       current_request = COAP_GET;
       strncpy(current_uri, uri, sizeof(current_uri) - 1);
       current_value[0] = 0;
-      process_poll(&router_process);
+      process_post(&router_process, EVENT_RUN_NOW, NULL);
       break;
     }
   }
@@ -151,7 +157,7 @@ print_node_list(void)
         printf(";");
       }
       printf("%s,", nodes[i].type);
-      uip_debug_ipaddr_print(&nodes[i].ipaddr);
+      uip_debug_ipaddr_print(&nodes[i].endpoint.ipaddr);
     }
   }
   printf("\n");
@@ -162,7 +168,7 @@ print_node_list(void)
  * handle responses.
  */
 static void
-client_chunk_handler(void *response)
+client_chunk_handler(coap_message_t *response)
 {
   const uint8_t *chunk;
   unsigned int format;
@@ -172,7 +178,9 @@ client_chunk_handler(void *response)
   /* if(len > 0) { */
   /*   printf("|%.*s (%d,%d)", len, (char *)chunk, len, format); */
   /* } */
-  if(current_target != NULL && fetching_type) {
+  if(response->code >= BAD_REQUEST_4_00) {
+    PRINTF("\nReceived error %u: %.*s\n", response->code, len, (char *)chunk);
+  } else if(current_target != NULL && fetching_type) {
     if(len > sizeof(current_target->type) - 1) {
       len = sizeof(current_target->type) - 1;
     }
@@ -181,7 +189,7 @@ client_chunk_handler(void *response)
     current_target->flags |= NODE_HAS_TYPE;
 
     PRINTF("\nNODE ");
-    PRINT6ADDR(&current_target->ipaddr);
+    PRINT6ADDR(&current_target->endpoint.ipaddr);
     PRINTF(" HAS TYPE %s\n", current_target->type);
   } else {
     /* otherwise update the current value */
@@ -193,7 +201,9 @@ client_chunk_handler(void *response)
         /*        tlv.type, tlv.length, tlv.id, tlv.value[0]); */
 
         int value = lwm2m_tlv_get_int32(&tlv);
-        snprintf(current_value, sizeof(current_value), "%d", value);
+        snprintf(current_value, sizeof(current_value) - 1, "%d", value);
+      } else {
+        PRINTF("Failed to parse LWM2M TLV\n");
       }
     } else {
       if(len > sizeof(current_value) - 1) {
@@ -205,72 +215,84 @@ client_chunk_handler(void *response)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
-setup_network(void)
+#if UIP_CONF_IPV6_RPL
+static bool
+check_rpl_routes(void)
 {
-  uip_ipaddr_t ipaddr;
-  struct uip_ds6_addr *root_if;
-  rpl_dag_t *dag;
-  int i;
-  uint8_t state;
+  uip_sr_node_t *link;
+  uip_ipaddr_t child_ipaddr;
+  uip_ipaddr_t parent_ipaddr;
 
-#if UIP_CONF_ROUTER
-/**
- * The choice of server address determines its 6LoWPAN header compression.
- * Obviously the choice made here must also be selected in udp-client.c.
- *
- * For correct Wireshark decoding using a sniffer, add the /64 prefix to the 6LowPAN protocol preferences,
- * e.g. set Context 0 to fd00::.  At present Wireshark copies Context/128 and then overwrites it.
- * (Setting Context 0 to fd00::1111:2222:3333:4444 will report a 16 bit compressed address of fd00::1111:22ff:fe33:xxxx)
- * Note Wireshark's IPCMV6 checksum verification depends on the correct uncompressed addresses.
- */
-#if 0
-/* Mode 1 - 64 bits inline */
-   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
-#elif 1
-/* Mode 2 - 16 bits inline */
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0x00ff, 0xfe00, 1);
-#else
-/* Mode 3 - derived from link local (MAC) address */
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-#endif
+  /* Our routing links */
+  for(link = uip_sr_node_head(); link != NULL; link = uip_sr_node_next(link)) {
+    NETSTACK_ROUTING.get_sr_node_ipaddr(&child_ipaddr, link);
 
-  NETSTACK_ROUTING.root_set_prefix(&ipaddr, &ipaddr);
-  NETSTACK_ROUTING.root_start();
-#endif /* UIP_CONF_ROUTER */
-
-  PRINTF("IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(state == ADDR_TENTATIVE || state == ADDR_PREFERRED) {
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-      /* hack to make address "final" */
-      if (state == ADDR_TENTATIVE) {
-	uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-      }
+    if(link->parent == NULL) {
+      /* Igore the DAG root */
+      continue;
     }
+
+    current_target = add_node(&child_ipaddr);
+    if(current_target == NULL ||
+       (current_target->flags & NODE_HAS_TYPE) != 0 ||
+       current_target->retries > 5) {
+      continue;
+    }
+
+    NETSTACK_ROUTING.get_sr_node_ipaddr(&parent_ipaddr, link->parent);
+    PRINTF("  ");
+    PRINT6ADDR(&child_ipaddr);
+    PRINTF("  ->  ");
+    PRINT6ADDR(&parent_ipaddr);
+    PRINTF("\n");
+    return true;
   }
+  return false;
 }
+#endif /* UIP_CONF_IPV6_RPL */
+/*---------------------------------------------------------------------------*/
+#if (UIP_MAX_ROUTES != 0)
+static bool
+check_routes(void)
+{
+  uip_ds6_route_t *r;
+
+  for(r = uip_ds6_route_head(); r != NULL; r = uip_ds6_route_next(r)) {
+    current_target = add_node(&r->ipaddr);
+    if(current_target == NULL ||
+       (current_target->flags & NODE_HAS_TYPE) != 0 ||
+       current_target->retries > 5) {
+      continue;
+    }
+    PRINTF("  ");
+    PRINT6ADDR(&r->ipaddr);
+    PRINTF("  ->  ");
+    nexthop = uip_ds6_route_nexthop(r);
+    if(nexthop != NULL) {
+      PRINT6ADDR(nexthop);
+    } else {
+      PRINTF("-");
+    }
+    PRINTF("\n");
+    return true;
+  }
+  return false;
+}
+#endif /* (UIP_MAX_ROUTES != 0) */
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(router_process, ev, data)
 {
   /* This way the message can be treated as pointer as usual. */
   static coap_message_t request[1];
   static struct etimer timer;
-  uip_ds6_route_t *r;
-  uip_ipaddr_t *nexthop;
-  int n;
 
   PROCESS_BEGIN();
-
-  PROCESS_PAUSE();
 
   /* receives all CoAP messages */
   coap_engine_init();
 
-  setup_network();
+  /* Initialize DAG root */
+  NETSTACK_ROUTING.root_start();
 
   while(1) {
     etimer_set(&timer, CLOCK_SECOND * 5);
@@ -283,28 +305,15 @@ PROCESS_THREAD(router_process, ev, data)
 
     if(etimer_expired(&timer)) {
       current_target = NULL;
-      n = 0;
-      for(r = uip_ds6_route_head(); r != NULL; r = uip_ds6_route_next(r)) {
-        current_target = add_node(&r->ipaddr);
-        if(current_target == NULL ||
-           (current_target->flags & NODE_HAS_TYPE) != 0 ||
-           current_target->retries > 5) {
-          continue;
-        }
-        PRINTF("  ");
-        PRINT6ADDR(&r->ipaddr);
-        PRINTF("  ->  ");
-        nexthop = uip_ds6_route_nexthop(r);
-        if(nexthop != NULL) {
-          PRINT6ADDR(nexthop);
-          PRINTF("\n");
-        } else {
-          PRINTF("-");
-        }
-        PRINTF("\n");
-        n++;
-        break;
+#if UIP_CONF_IPV6_RPL
+      check_rpl_routes();
+#endif /* UIP_CONF_IPV6_RPL */
+
+#if (UIP_MAX_ROUTES != 0)
+      if(current_target == NULL) {
+        check_routes();
       }
+#endif /* (UIP_MAX_ROUTES != 0) */
     }
 
     /* This is a node type discovery */
@@ -319,15 +328,15 @@ PROCESS_THREAD(router_process, ev, data)
       current_target->retries++;
 
       PRINTF("CoAP request to [");
-      PRINT6ADDR(&current_target->ipaddr);
-      PRINTF("]:%u (%u tx)\n", UIP_HTONS(REMOTE_PORT),
+      PRINT6ADDR(&current_target->endpoint.ipaddr);
+      PRINTF("]:%u (%u tx)\n", UIP_HTONS(current_target->endpoint.port),
              current_target->retries);
 
       fetching_type = 1;
-      COAP_BLOCKING_REQUEST(&current_target->ipaddr, REMOTE_PORT, request,
+      COAP_BLOCKING_REQUEST(&current_target->endpoint, request,
                             client_chunk_handler);
       fetching_type = 0;
-      strncpy(current_uri, URL_LIGHT_CONTROL, sizeof(current_uri));
+      strncpy(current_uri, URL_LIGHT_CONTROL, sizeof(current_uri) - 1);
       printf("\n--Done--\n");
     }
 
@@ -344,10 +353,11 @@ PROCESS_THREAD(router_process, ev, data)
       }
 
       PRINTF("CoAP request to [");
-      PRINT6ADDR(&current_target->ipaddr);
-      PRINTF("]:%u %s\n", UIP_HTONS(REMOTE_PORT), current_uri);
+      PRINT6ADDR(&current_target->endpoint.ipaddr);
+      PRINTF("]:%u %s\n", UIP_HTONS(current_target->endpoint.port),
+             current_uri);
 
-      COAP_BLOCKING_REQUEST(&current_target->ipaddr, REMOTE_PORT, request,
+      COAP_BLOCKING_REQUEST(&current_target->endpoint, request,
                             client_chunk_handler);
 
       /* print out result of command */
@@ -356,13 +366,12 @@ PROCESS_THREAD(router_process, ev, data)
       } else {
         printf("g ");
       }
-      uip_debug_ipaddr_print(&current_target->ipaddr);
+      uip_debug_ipaddr_print(&current_target->endpoint.ipaddr);
       printf(" %s %s\n", current_uri, current_value);
 
       current_target = NULL;
       current_uri[0] = 0;
       current_value[0] = 0;
-
     }
   }
 
