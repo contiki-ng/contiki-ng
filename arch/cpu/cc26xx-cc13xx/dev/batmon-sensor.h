@@ -44,6 +44,9 @@
 #ifndef BATMON_SENSOR_H_
 #define BATMON_SENSOR_H_
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
+#include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
 #define BATMON_SENSOR_TYPE_TEMP    1
 #define BATMON_SENSOR_TYPE_VOLT    2
 /*---------------------------------------------------------------------------*/

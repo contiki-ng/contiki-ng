@@ -1,0 +1,14 @@
+/**
+ * \defgroup cc2538 The TI CC2538 System-on-Chip
+ *
+ * CPU-Specific functionality - available to all cc2538-based platforms
+ *
+ * \ingroup cpu
+ */
+
+/**
+ * \defgroup cc2538-platforms TI CC2538-powered platforms
+ *
+ * Documentation for all platforms powered by the TI cc2538 System-on-Chip
+ * \ingroup platform
+ */

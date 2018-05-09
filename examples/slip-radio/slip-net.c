@@ -49,27 +49,6 @@ slipnet_init(void)
 {
 }
 /*---------------------------------------------------------------------------*/
-void
-slip_send_packet(const uint8_t *ptr, int len)
-{
-  uint16_t i;
-  uint8_t c;
-
-  slip_arch_writeb(SLIP_END);
-  for(i = 0; i < len; ++i) {
-    c = *ptr++;
-    if(c == SLIP_END) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_END;
-    } else if(c == SLIP_ESC) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_ESC;
-    }
-    slip_arch_writeb(c);
-  }
-  slip_arch_writeb(SLIP_END);
-}
-/*---------------------------------------------------------------------------*/
 static void
 slipnet_input(void)
 {
@@ -85,7 +64,7 @@ slipnet_input(void)
           packetbuf_datalen(), i);
 
   for(i = 0; i < uip_len; i++) {
-    LOG_DBG("%02x", (unsigned char)uip_buf[i]);
+    LOG_DBG_("%02x", (unsigned char)uip_buf[i]);
     if((i & 15) == 15) {
       LOG_DBG_("\n");
     } else if((i & 7) == 7) {
@@ -94,7 +73,7 @@ slipnet_input(void)
   }
   LOG_DBG_("\n");
 
-  slip_send_packet(uip_buf, uip_len);
+  slip_write(uip_buf, uip_len);
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t

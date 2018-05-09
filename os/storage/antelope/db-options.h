@@ -38,6 +38,7 @@
 #define DB_OPTIONS_H
 
 #include "contiki.h"
+#include "cfs-coffee-arch.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -143,8 +144,16 @@
 
 /* The default relation file size to reserve when using Coffee. */
 #ifndef DB_COFFEE_RESERVE_SIZE
-#define DB_COFFEE_RESERVE_SIZE          (128 * 1024UL)
+#define DB_COFFEE_RESERVE_SIZE          (COFFEE_SIZE / 8)
 #endif /* DB_COFFEE_RESERVE_SIZE */
+
+/*
+ * Ensure that the default size of Coffee file reservations is suitable
+ * for the file system size.
+ */
+#if DB_COFFEE_RESERVE_SIZE > (COFFEE_SIZE / 2)
+#error DB_COFFEE_RESERVE_SIZE is too large for the file system.
+#endif
 
 /* The maximum size of the physical storage of a tuple (labelled a "row" 
    in Antelope's terminology. */

@@ -36,7 +36,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
 #include "rf-core/rf-ble.h"
 
@@ -49,7 +49,8 @@ const char *forbidden_payload = "Name to advertise unspecified.\n"
                                 "Use name=<name> in the request";
 /*---------------------------------------------------------------------------*/
 static void
-res_ble_post_put_handler(void *request, void *response, uint8_t *buffer,
+res_ble_post_put_handler(coap_message_t *request, coap_message_t *response,
+                         uint8_t *buffer,
                          uint16_t preferred_size, int32_t *offset)
 {
   size_t len = 0;
@@ -60,7 +61,7 @@ res_ble_post_put_handler(void *request, void *response, uint8_t *buffer,
 
   memset(name, 0, BLE_NAME_BUF_LEN);
 
-  len = REST.get_post_variable(request, "name", &text);
+  len = coap_get_post_variable(request, "name", &text);
 
   if(len > 0 && len < BLE_NAME_BUF_LEN) {
     memcpy(name, text, len);
@@ -68,7 +69,7 @@ res_ble_post_put_handler(void *request, void *response, uint8_t *buffer,
     success = 1;
   }
 
-  len = REST.get_post_variable(request, "interval", &text);
+  len = coap_get_post_variable(request, "interval", &text);
 
   rv = atoi(text);
 
@@ -77,15 +78,15 @@ res_ble_post_put_handler(void *request, void *response, uint8_t *buffer,
     success = 1;
   }
 
-  len = REST.get_post_variable(request, "mode", &text);
+  len = coap_get_post_variable(request, "mode", &text);
 
   if(len) {
     if(strncmp(text, "on", len) == 0) {
       if(rf_ble_beacond_start()) {
         success = 1;
       } else {
-        REST.set_response_status(response, REST.status.FORBIDDEN);
-        REST.set_response_payload(response, forbidden_payload,
+        coap_set_status_code(response, FORBIDDEN_4_03);
+        coap_set_payload(response, forbidden_payload,
                                   strlen(forbidden_payload));
         return;
       }
@@ -98,7 +99,7 @@ res_ble_post_put_handler(void *request, void *response, uint8_t *buffer,
   }
 
   if(!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    coap_set_status_code(response, BAD_REQUEST_4_00);
   }
 }
 /*---------------------------------------------------------------------------*/

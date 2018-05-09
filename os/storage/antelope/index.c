@@ -29,7 +29,7 @@
 
 /**
  * \file
- *	This component forwards index calls using the generic index 
+ *	This component forwards index calls using the generic index
  *      API to specific implementations.
  * \author
  * 	Nicolas Tsiftes <nvt@sics.se>
@@ -241,7 +241,7 @@ index_delete(index_t *index, attribute_value_t *value)
 }
 
 db_result_t
-index_get_iterator(index_iterator_t *iterator, index_t *index, 
+index_get_iterator(index_iterator_t *iterator, index_t *index,
                    attribute_value_t *min_value,
                    attribute_value_t *max_value)
 {
@@ -266,15 +266,15 @@ index_get_iterator(index_iterator_t *iterator, index_t *index,
   range = (unsigned long)max - min;
   if(range > 0) {
     /*
-     * Index structures that do not have a natural ability to handle 
+     * Index structures that do not have a natural ability to handle
      * range queries (e.g., a hash index) can nevertheless emulate them.
      *
-     * The range query emulation attempts to look up the key for each 
-     * value in the search range. If the search range is sparse, this 
+     * The range query emulation attempts to look up the key for each
+     * value in the search range. If the search range is sparse, this
      * iteration will incur a considerable overhead per found key.
      *
-     * Hence, the emulation is preferable when an external module wants 
-     * to iterate over a narrow range of keys, for which the total 
+     * Hence, the emulation is preferable when an external module wants
+     * to iterate over a narrow range of keys, for which the total
      * search cost is smaller than that of an iteration over all tuples
      * in the relation.
      */
@@ -294,7 +294,7 @@ index_get_iterator(index_iterator_t *iterator, index_t *index,
   iterator->max_value = *max_value;
   iterator->next_item_no = 0;
 
-  PRINTF("DB: Acquired an index iterator for %s.%s over the range (%ld,%ld)\n", 
+  PRINTF("DB: Acquired an index iterator for %s.%s over the range (%ld,%ld)\n",
          index->rel->name, index->attr->name,
          min_value->u.long_value, max_value->u.long_value);
 
@@ -380,7 +380,7 @@ PROCESS_THREAD(db_indexer, ev, data)
     PRINTF("DB: Loading the index for %s.%s...\n",
 	index->rel->name, index->attr->name);
 
-    /* Project the values of the indexed attribute from all tuples in 
+    /* Project the values of the indexed attribute from all tuples in
        the relation, and insert them into the index again. */
     if(DB_ERROR(db_query(&handle, "SELECT %s FROM %s;", index->attr->name, index->rel->name))) {
       index->flags |= INDEX_LOAD_ERROR;

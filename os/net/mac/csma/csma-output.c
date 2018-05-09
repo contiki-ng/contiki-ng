@@ -50,10 +50,10 @@
 #include "lib/list.h"
 #include "lib/memb.h"
 
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
 
 /* Log configuration */
 #include "sys/log.h"
@@ -66,14 +66,14 @@
 #ifdef CSMA_CONF_MIN_BE
 #define CSMA_MIN_BE CSMA_CONF_MIN_BE
 #else
-#define CSMA_MIN_BE 0
+#define CSMA_MIN_BE 3
 #endif
 
 /* macMaxBE: Maximum backoff exponent. Range 3--8 */
 #ifdef CSMA_CONF_MAX_BE
 #define CSMA_MAX_BE CSMA_CONF_MAX_BE
 #else
-#define CSMA_MAX_BE 4
+#define CSMA_MAX_BE 5
 #endif
 
 /* macMaxCSMABackoffs: Maximum number of backoffs in case of channel busy/collision. Range 0--5 */
@@ -85,9 +85,9 @@
 
 /* macMaxFrameRetries: Maximum number of re-transmissions attampts. Range 0--7 */
 #ifdef CSMA_CONF_MAX_FRAME_RETRIES
-#define CSMA_MAX_MAX_FRAME_RETRIES CSMA_CONF_MAX_FRAME_RETRIES
+#define CSMA_MAX_FRAME_RETRIES CSMA_CONF_MAX_FRAME_RETRIES
 #else
-#define CSMA_MAX_MAX_FRAME_RETRIES 7
+#define CSMA_MAX_FRAME_RETRIES 7
 #endif
 
 /* Packet metadata */
@@ -154,9 +154,15 @@ neighbor_queue_from_addr(const linkaddr_t *addr)
 static clock_time_t
 backoff_period(void)
 {
+#if CONTIKI_TARGET_COOJA
+  /* Increase normal value by 20 to compensate for the coarse-grained
+  radio medium with Cooja motes */
+  return MAX(20 * CLOCK_SECOND / 3125, 1);
+#else /* CONTIKI_TARGET_COOJA */
   /* Use the default in IEEE 802.15.4: aUnitBackoffPeriod which is
    * 20 symbols i.e. 320 usec. That is, 1/3125 second. */
   return MAX(CLOCK_SECOND / 3125, 1);
+#endif /* CONTIKI_TARGET_COOJA */
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -201,10 +207,10 @@ send_one_packet(void *ptr)
           wt = RTIMER_NOW();
           watchdog_periodic();
           while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + CSMA_ACK_WAIT_TIME)) {
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
             simProcessRunValue = 1;
             cooja_mt_yield();
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
           }
 
           ret = MAC_TX_NOACK;
@@ -219,10 +225,10 @@ send_one_packet(void *ptr)
               watchdog_periodic();
               while(RTIMER_CLOCK_LT(RTIMER_NOW(),
                                     wt + CSMA_AFTER_ACK_DETECTED_WAIT_TIME)) {
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
                 simProcessRunValue = 1;
                 cooja_mt_yield();
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
               }
             }
 
@@ -281,7 +287,7 @@ schedule_transmission(struct neighbor_queue *n)
   clock_time_t delay;
   int backoff_exponent; /* BE in IEEE 802.15.4 */
 
-  backoff_exponent = MIN(n->collisions, CSMA_MAX_BE);
+  backoff_exponent = MIN(n->collisions + CSMA_MIN_BE, CSMA_MAX_BE);
 
   /* Compute max delay as per IEEE 802.15.4: 2^BE-1 backoff periods  */
   delay = ((1 << backoff_exponent) - 1) * backoff_period();
@@ -310,7 +316,7 @@ free_packet(struct neighbor_queue *n, struct packet_queue *p, int status)
     if(list_head(n->packet_queue) != NULL) {
       /* There is a next packet. We reset current tx information */
       n->transmissions = 0;
-      n->collisions = CSMA_MIN_BE;
+      n->collisions = 0;
       /* Schedule next transmissions */
       schedule_transmission(n);
     } else {
@@ -365,7 +371,7 @@ collision(struct packet_queue *q, struct neighbor_queue *n,
   n->collisions += num_transmissions;
 
   if(n->collisions > CSMA_MAX_BACKOFF) {
-    n->collisions = CSMA_MIN_BE;
+    n->collisions = 0;
     /* Increment to indicate a next retry */
     n->transmissions++;
   }
@@ -384,7 +390,7 @@ noack(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 
   metadata = (struct qbuf_metadata *)q->ptr;
 
-  n->collisions = CSMA_MIN_BE;
+  n->collisions = 0;
   n->transmissions += num_transmissions;
 
   if(n->transmissions >= metadata->max_transmissions) {
@@ -397,7 +403,7 @@ noack(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 static void
 tx_ok(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 {
-  n->collisions = CSMA_MIN_BE;
+  n->collisions = 0;
   n->transmissions += num_transmissions;
   tx_done(MAC_TX_OK, q, n);
 }
@@ -487,7 +493,7 @@ csma_output_packet(mac_callback_t sent, void *ptr)
       /* Init neighbor entry */
       linkaddr_copy(&n->addr, addr);
       n->transmissions = 0;
-      n->collisions = CSMA_MIN_BE;
+      n->collisions = 0;
       /* Init packet queue for this neighbor */
       LIST_STRUCT_INIT(n, packet_queue);
       /* Add neighbor to the neighbor list */
@@ -506,14 +512,19 @@ csma_output_packet(mac_callback_t sent, void *ptr)
           if(q->buf != NULL) {
             struct qbuf_metadata *metadata = (struct qbuf_metadata *)q->ptr;
             /* Neighbor and packet successfully allocated */
-            metadata->max_transmissions = CSMA_MAX_MAX_FRAME_RETRIES + 1;
+            metadata->max_transmissions = packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
+            if(metadata->max_transmissions == 0) {
+              /* If not set by the application, use the default CSMA value */
+              metadata->max_transmissions = CSMA_MAX_FRAME_RETRIES + 1;
+            }
             metadata->sent = sent;
             metadata->cptr = ptr;
             list_add(n->packet_queue, q);
 
             LOG_INFO("sending to ");
             LOG_INFO_LLADDR(addr);
-            LOG_INFO_(", seqno %u, queue length %d, free packets %d\n",
+            LOG_INFO_(", len %u, seqno %u, queue length %d, free packets %d\n",
+                    packetbuf_datalen(),
                     packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
                     list_length(n->packet_queue), memb_numfree(&packet_memb));
             /* If q is the first packet in the neighbor's queue, send asap */

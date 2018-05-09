@@ -9,36 +9,6 @@ CPU, device drivers and platform code
  */
 
 /**
- * \addtogroup cc2538dk The cc2538 Development Kit platform
- * \ingroup platform
- */
-
-/**
- * \addtogroup cooja COOJA network simulator node
- * \ingroup platform
- */
-
-/**
- * \addtogroup exp5438 MSP430F5438 Experimenter Board
- * \ingroup platform
- */
-
-/**
- * \addtogroup jn516x The JN516x Board
- * \ingroup platform
- */
-
-/**
- * \addtogroup native_platform Native platform
- * \ingroup platform
- */
-
-/**
- * \addtogroup nrf52dk nRF52 Development Kit
- * \ingroup platform
- */
-
-/**
 \defgroup net IoT networking
 The communication protocols
 */
@@ -89,18 +59,13 @@ Core system components such as processes and timers
 */
 
 /**
-\defgroup dev CPUs and Device driver
+\defgroup cpu CPUs
 \ingroup arch
 */
 
 /**
-* \defgroup arm ARM CPUs
-* \ingroup dev
-*/
-
-/**
-* \addtogroup nrf52832 nrf52832 SoC
-* \ingroup dev
+\defgroup dev Device Drivers
+\ingroup arch
 */
 
 /**

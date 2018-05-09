@@ -37,82 +37,86 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "coap.h"
+#include "net/ipv6/uip-ds6.h"
 #include "coap-server.h"
 #include "cc26xx-web-demo.h"
 
 #include "ti-lib.h"
 
 #include <string.h>
+#include <stdio.h>
 /*---------------------------------------------------------------------------*/
 extern int def_rt_rssi;
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_parent_rssi(void *request, void *response, uint8_t *buffer,
+res_get_handler_parent_rssi(coap_message_t *request, coap_message_t *response,
+                            uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
 
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", def_rt_rssi);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "%d", def_rt_rssi);
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"Parent RSSI\":\"%d\"}",
+    coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"Parent RSSI\":\"%d\"}",
              def_rt_rssi);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_XML) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE,
              "<parent-rssi val=\"%d\"/>", def_rt_rssi);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, coap_server_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, coap_server_supported_msg,
                               strlen(coap_server_supported_msg));
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-res_get_handler_pref_parent(void *request, void *response, uint8_t *buffer,
+res_get_handler_pref_parent(coap_message_t *request, coap_message_t *response,
+                            uint8_t *buffer,
                             uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
   char def_rt_str[64];
 
-  REST.get_header_accept(request, &accept);
+  coap_get_header_accept(request, &accept);
 
   memset(def_rt_str, 0, sizeof(def_rt_str));
   cc26xx_web_demo_ipaddr_sprintf(def_rt_str, sizeof(def_rt_str),
                                  uip_ds6_defrt_choose());
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", def_rt_str);
+  if(accept == -1 || accept == TEXT_PLAIN) {
+    coap_set_header_content_format(response, TEXT_PLAIN);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "%s", def_rt_str);
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"Parent\":\"%s\"}",
+    coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_JSON) {
+    coap_set_header_content_format(response, APPLICATION_JSON);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"Parent\":\"%s\"}",
              def_rt_str);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_XML) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
+    coap_set_payload(response, buffer, strlen((char *)buffer));
+  } else if(accept == APPLICATION_XML) {
+    coap_set_header_content_format(response, APPLICATION_XML);
+    snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE,
              "<parent=\"%s\"/>", def_rt_str);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    coap_set_payload(response, buffer, strlen((char *)buffer));
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, coap_server_supported_msg,
+    coap_set_status_code(response, NOT_ACCEPTABLE_4_06);
+    coap_set_payload(response, coap_server_supported_msg,
                               strlen(coap_server_supported_msg));
   }
 }

@@ -51,7 +51,6 @@
 #include "sys/node-id.h"
 #include "cfs-coffee-arch.h"
 #include "cfs/cfs-coffee.h"
-#include "sys/autostart.h"
 
 #if DCOSYNCH_CONF_ENABLED
 static struct timer mgt_timer;
@@ -200,18 +199,18 @@ platform_init_stage_three(void)
   cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
 
   if(node_id > 0) {
-    LOG_INFO("Node id is set to %u.\n", node_id);
+    LOG_INFO("Node id: %u\n", node_id);
   } else {
-    LOG_INFO("Node id is not set.\n");
+    LOG_INFO("Node id: N/A\n");
   }
 
 #if NETSTACK_CONF_WITH_IPV6
-  LOG_INFO("%s, radio channel %u, CCA threshold %i\n",
+  LOG_INFO("%s, rf channel %u, CCA threshold %i\n",
            NETSTACK_MAC.name,
            CC2420_CONF_CHANNEL,
            CC2420_CONF_CCA_THRESH);
 #else /* NETSTACK_CONF_WITH_IPV6 */
-  LOG_INFO("%s, radio channel %u\n",
+  LOG_INFO("%s, rf channel %u\n",
            NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 

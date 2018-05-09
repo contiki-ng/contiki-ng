@@ -46,7 +46,4 @@ struct cooja_mtarch_thread {
 
 struct cooja_mt_thread;
 
-int cooja_mtarch_stack_usage(struct cooja_mt_thread *t);
-
 #endif /* COOJA_MTARCH_H_ */
-	

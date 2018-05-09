@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, University of Bristol - http://www.bristol.ac.uk/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +46,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "rf-core/rf-core.h"
+#include "radio.h"
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
@@ -56,6 +58,23 @@
 /*---------------------------------------------------------------------------*/
 #define RF_BLE_IDLE   0
 #define RF_BLE_ACTIVE 1
+/*---------------------------------------------------------------------------*/
+/* Memory address of BLE MAC address. Can be overwritten by the user by defining BLE_ADDRESS_PTR. */
+#ifndef BLE_ADDRESS_PTR
+#define BLE_ADDRESS_PTR         (0x500012E8)
+#endif
+/*---------------------------------------------------------------------------*/
+/* BLE Advertisement channels. Not to be changed by the user. */
+#define BLE_ADV_CHANNEL_MASK    0x07
+
+#define BLE_ADV_CHANNEL_37      0x01
+#define BLE_ADV_CHANNEL_38      0x02
+#define BLE_ADV_CHANNEL_39      0x04
+
+#define BLE_ADV_CHANNEL_ALL     (BLE_ADV_CHANNEL_37 | BLE_ADV_CHANNEL_38 | BLE_ADV_CHANNEL_39)
+/*---------------------------------------------------------------------------*/
+/* Maximum BLE advertisement size. Not to be changed by the user. */
+#define BLE_ADV_MAX_SIZE        31
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Set the device name to use with the BLE advertisement/beacon daemon
@@ -89,6 +108,37 @@ void rf_ble_beacond_stop(void);
  * \retval 0 The BLE daemon is not active, or disabled
  */
 uint8_t rf_ble_is_active(void);
+
+/**
+ * \brief Set TX power for BLE advertisements
+ * \param power The 'at least' TX power in dBm, values avove 5 dBm will be ignored
+ *
+ * Set TX power to 'at least' power dBm.
+ * This works with a lookup table. If the value of 'power' does not exist in
+ * the lookup table, TXPOWER will be set to the immediately higher available
+ * value
+ */
+void rf_ble_set_tx_power(radio_value_t power);
+
+/**
+ * \brief Get TX power for BLE advertisements
+ * \return The TX power for BLE advertisements
+ */
+radio_value_t rf_ble_get_tx_power(void);
+
+/**
+ * \brief Transmit a single BLE advertisement in one or more advertisement channels
+ * \param channel Bitmask of advertisement channels to be used: use
+ * BLE_ADV_CHANNEL_37 for channel 37, BLE_ADV_CHANNEL_38 for channel 38,
+ * BLE_ADV_CHANNEL_39 for channel 39, or any 'or' combination of those
+ * \param data A pointer to the advertisement data buffer
+ * \param len The length of the advertisement data. If more than BLE_ADV_MAX_SIZE,
+ * the first BLE_ADV_MAX_SIZE bytes will be used.
+ *
+ * Transmits a given advertisement payload once in one or any arbitrary combination
+ * of advertisement channels.
+ */
+void rf_ble_beacon_single(uint8_t channel, uint8_t *data, uint8_t len);
 /*---------------------------------------------------------------------------*/
 #endif /* RF_BLE_H_ */
 /*---------------------------------------------------------------------------*/

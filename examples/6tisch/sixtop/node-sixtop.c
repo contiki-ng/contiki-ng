@@ -39,17 +39,11 @@
 
 #include "contiki.h"
 #include "node-id.h"
-#include "rpl.h"
-#include "rpl-dag-root.h"
 #include "sys/log.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/sixtop/sixtop.h"
-#if UIP_CONF_IPV6_RPL_LITE == 0
-#include "rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "net/routing/routing.h"
 
 #include "sf-simple.h"
 
@@ -77,7 +71,7 @@ PROCESS_THREAD(node_process, ev, data)
 #endif
 
   if(is_coordinator) {
-    rpl_dag_root_init_dag_immediately();
+    NETSTACK_ROUTING.root_start();
   }
 
   NETSTACK_MAC.on();

@@ -43,6 +43,7 @@
 #include "contiki.h"
 #include "dev/i2c.h"
 #include "dev/gpio.h"
+#include "dev/gpio-hal.h"
 #include "dev/zoul-sensors.h"
 #include "lib/sensors.h"
 #include "tsl256x.h"
@@ -255,13 +256,19 @@ PROCESS_THREAD(tsl256x_int_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-tsl256x_interrupt_handler(uint8_t port, uint8_t pin)
+tsl256x_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 {
   /* There's no alert/interruption flag to check, clear the interruption by
    * writting to the CLEAR bit in the COMMAND register
    */
   process_poll(&tsl256x_int_process);
 }
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t tsl256x_handler = {
+  .next = NULL,
+  .handler = tsl256x_interrupt_handler,
+  .pin_mask = gpio_hal_pin_to_mask(I2C_INT_PIN) << (I2C_INT_PORT << 3),
+};
 /*---------------------------------------------------------------------------*/
 static int
 configure(int type, int value)
@@ -440,7 +447,7 @@ configure(int type, int value)
   GPIO_DETECT_EDGE(TSL256X_INT_PORT_BASE, TSL256X_INT_PIN_MASK);
   GPIO_TRIGGER_SINGLE_EDGE(TSL256X_INT_PORT_BASE, TSL256X_INT_PIN_MASK);
   GPIO_DETECT_FALLING(TSL256X_INT_PORT_BASE, TSL256X_INT_PIN_MASK);
-  gpio_register_callback(tsl256x_interrupt_handler, I2C_INT_PORT, I2C_INT_PIN);
+  gpio_hal_register_handler(&tsl256x_handler);
 
   /* Spin process until an interrupt is received */
   process_start(&tsl256x_int_process, NULL);

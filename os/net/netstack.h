@@ -43,6 +43,22 @@
 
 #include "contiki.h"
 
+/* Routing protocol configuration. The Routing protocol is configured through the Makefile,
+   via the flag MAC_ROUTING */
+#ifdef NETSTACK_CONF_ROUTING
+#define NETSTACK_ROUTING NETSTACK_CONF_ROUTING
+#else /* NETSTACK_CONF_ROUTING */
+#if ROUTING_CONF_RPL_LITE
+#define NETSTACK_ROUTING rpl_lite_driver
+#elif ROUTING_CONF_RPL_CLASSIC
+#define NETSTACK_ROUTING rpl_classic_driver
+#elif ROUTING_CONF_NULLROUTING
+#define NETSTACK_ROUTING nullrouting_driver
+#else
+#error Unknown ROUTING configuration
+#endif
+#endif /* NETSTACK_CONF_ROUTING */
+
 /* Network layer configuration. The NET layer is configured through the Makefile,
    via the flag MAC_NET */
 #ifdef NETSTACK_CONF_NETWORK
@@ -68,6 +84,8 @@
 #define NETSTACK_MAC     csma_driver
 #elif MAC_CONF_WITH_TSCH
 #define NETSTACK_MAC     tschmac_driver
+#elif MAC_CONF_WITH_BLE
+#define NETSTACK_MAC   ble_l2cap_driver
 #else
 #error Unknown MAC configuration
 #endif
@@ -100,23 +118,22 @@ struct network_driver {
   char *name;
 
   /** Initialize the network driver */
-  void (* init)(void);
+  void (*init)(void);
 
   /** Callback for getting notified of incoming packet in packetbuf. */
-  void (* input)(void);
+  void (*input)(void);
 
   /** Output funtion, sends from uipbuf. */
-  uint8_t (* output)(const linkaddr_t *localdest);
-
+  uint8_t (*output)(const linkaddr_t *localdest);
 };
 
+extern const struct routing_driver NETSTACK_ROUTING;
 extern const struct network_driver NETSTACK_NETWORK;
-extern const struct mac_driver     NETSTACK_MAC;
-extern const struct radio_driver   NETSTACK_RADIO;
-extern const struct framer         NETSTACK_FRAMER;
+extern const struct mac_driver NETSTACK_MAC;
+extern const struct radio_driver NETSTACK_RADIO;
+extern const struct framer NETSTACK_FRAMER;
 
 void netstack_init(void);
-
 
 /* Netstack ip_packet_processor - for implementing packet filters, firewalls,
    debuggin info, etc */
@@ -133,8 +150,8 @@ enum netstack_ip_callback_type {
 
 struct netstack_ip_packet_processor {
   struct netstack_ip_packet_processor *next;
-  enum netstack_ip_action (* process_input)(void);
-  enum netstack_ip_action (* process_output)(const linkaddr_t *localdest);
+  enum netstack_ip_action (*process_input)(void);
+  enum netstack_ip_action (*process_output)(const linkaddr_t * localdest);
 };
 
 /* This function is intended for the IP stack to call whenever input/output
@@ -144,18 +161,16 @@ enum netstack_ip_action netstack_process_ip_callback(uint8_t type, const linkadd
 void netstack_ip_packet_processor_add(struct netstack_ip_packet_processor *p);
 void netstack_ip_packet_processor_remove(struct netstack_ip_packet_processor *p);
 
-
-
 /* Netstack sniffer - this will soon be deprecated... */
 
 struct netstack_sniffer {
   struct netstack_sniffer *next;
-  void (* input_callback)(void);
-  void (* output_callback)(int mac_status);
+  void (*input_callback)(void);
+  void (*output_callback)(int mac_status);
 };
 
 #define NETSTACK_SNIFFER(name, input_callback, output_callback) \
-static struct netstack_sniffer name = { NULL, input_callback, output_callback }
+  static struct netstack_sniffer name = { NULL, input_callback, output_callback }
 
 void netstack_sniffer_add(struct netstack_sniffer *s);
 void netstack_sniffer_remove(struct netstack_sniffer *s);

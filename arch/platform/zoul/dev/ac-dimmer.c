@@ -40,6 +40,7 @@
 #include "contiki.h"
 #include "ac-dimmer.h"
 #include "dev/gpio.h"
+#include "dev/gpio-hal.h"
 #include "lib/sensors.h"
 #include "dev/ioc.h"
 /*---------------------------------------------------------------------------*/
@@ -76,12 +77,16 @@ PROCESS_THREAD(ac_dimmer_int_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-dimmer_zero_cross_int_handler(uint8_t port, uint8_t pin)
+dimmer_zero_cross_int_handler(gpio_hal_pin_mask_t pin_mask)
 {
-  if((port == DIMMER_SYNC_PORT) && (pin == DIMMER_SYNC_PIN)) {
-    process_poll(&ac_dimmer_int_process);
-  }
+  process_poll(&ac_dimmer_int_process);
 }
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t dimmer_handler = {
+  .next = NULL,
+  .handler = dimmer_zero_cross_int_handler,
+  .pin_mask = gpio_hal_pin_to_mask(DIMMER_SYNC_PIN) << (DIMMER_SYNC_PORT << 3),
+};
 /*---------------------------------------------------------------------------*/
 static int
 status(int type)
@@ -128,8 +133,7 @@ configure(int type, int value)
     GPIO_DETECT_EDGE(DIMMER_SYNC_PORT_BASE, DIMMER_SYNC_PIN_MASK);
     GPIO_TRIGGER_SINGLE_EDGE(DIMMER_SYNC_PORT_BASE, DIMMER_SYNC_PIN_MASK);
     GPIO_DETECT_RISING(DIMMER_SYNC_PORT_BASE, DIMMER_SYNC_PIN_MASK);
-    gpio_register_callback(dimmer_zero_cross_int_handler, DIMMER_SYNC_PORT,
-                           DIMMER_SYNC_PIN);
+    gpio_hal_register_handler(&dimmer_handler);
 
     /* Spin process until an interrupt is received */
     process_start(&ac_dimmer_int_process, NULL);

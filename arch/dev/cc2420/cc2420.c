@@ -39,7 +39,7 @@
 #include "sys/energest.h"
 
 #include "dev/leds.h"
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "cc2420.h"
 #include "cc2420_const.h"
 

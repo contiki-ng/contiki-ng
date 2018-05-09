@@ -166,7 +166,7 @@ struct cfs_dirent {
  * \sa         cfs_close()
  */
 #ifndef cfs_open
-CCIF int cfs_open(const char *name, int flags);
+int cfs_open(const char *name, int flags);
 #endif
 
 /**
@@ -177,7 +177,7 @@ CCIF int cfs_open(const char *name, int flags);
  *             opened with cfs_open().
  */
 #ifndef cfs_close
-CCIF void cfs_close(int fd);
+void cfs_close(int fd);
 #endif
 
 /**
@@ -192,7 +192,7 @@ CCIF void cfs_close(int fd);
  *             cfs_open() and the CFS_READ flag.
  */
 #ifndef cfs_read
-CCIF int cfs_read(int fd, void *buf, unsigned int len);
+int cfs_read(int fd, void *buf, unsigned int len);
 #endif
 
 /**
@@ -207,7 +207,7 @@ CCIF int cfs_read(int fd, void *buf, unsigned int len);
  *             cfs_open() and the CFS_WRITE flag.
  */
 #ifndef cfs_write
-CCIF int cfs_write(int fd, const void *buf, unsigned int len);
+int cfs_write(int fd, const void *buf, unsigned int len);
 #endif
 
 /**
@@ -228,7 +228,7 @@ CCIF int cfs_write(int fd, const void *buf, unsigned int len);
  * \sa         CFS_SEEK_SET
  */
 #ifndef cfs_seek
-CCIF cfs_offset_t cfs_seek(int fd, cfs_offset_t offset, int whence);
+cfs_offset_t cfs_seek(int fd, cfs_offset_t offset, int whence);
 #endif
 
 /**
@@ -238,7 +238,7 @@ CCIF cfs_offset_t cfs_seek(int fd, cfs_offset_t offset, int whence);
  * \return -1  If the file could not be removed or if it doesn't exist.
  */
 #ifndef cfs_remove
-CCIF int cfs_remove(const char *name);
+int cfs_remove(const char *name);
 #endif
 
 /**
@@ -251,7 +251,7 @@ CCIF int cfs_remove(const char *name);
  * \sa         cfs_closedir()
  */
 #ifndef cfs_opendir
-CCIF int cfs_opendir(struct cfs_dir *dirp, const char *name);
+int cfs_opendir(struct cfs_dir *dirp, const char *name);
 #endif
 
 /**
@@ -265,7 +265,7 @@ CCIF int cfs_opendir(struct cfs_dir *dirp, const char *name);
  * \sa         cfs_closedir()
  */
 #ifndef cfs_readdir
-CCIF int cfs_readdir(struct cfs_dir *dirp, struct cfs_dirent *dirent);
+int cfs_readdir(struct cfs_dir *dirp, struct cfs_dirent *dirent);
 #endif
 
 /**
@@ -276,7 +276,7 @@ CCIF int cfs_readdir(struct cfs_dir *dirp, struct cfs_dirent *dirent);
  * \sa         cfs_readdir()
  */
 #ifndef cfs_closedir
-CCIF void cfs_closedir(struct cfs_dir *dirp);
+void cfs_closedir(struct cfs_dir *dirp);
 #endif
 
 #endif /* CFS_H_ */

@@ -1,0 +1,16 @@
+/**
+ * \defgroup cc26xx The TI CC13xx and CC26xx Systems-on-Chip
+ *
+ * This group documents the TI CC26xx and CC13xx CPUs. The two CPU families are
+ * very similar, with the main difference being related to radio capability.
+ *
+ * Documentation in this group should be considered to be applicable to both
+ * families, unless explicitly stated otherwise.
+ *
+ * \ingroup cpu
+ */
+
+/**
+ * \defgroup cc26xx-platforms TI CC26xx-powered platforms
+ * \ingroup platform
+ */

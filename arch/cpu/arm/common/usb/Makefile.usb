@@ -6,7 +6,7 @@ endif
 
 STRUCTGEN = structgen
 
-PROJECTDIRS += $(BUILTSRCDIR)
+MODULES_REL += $(BUILTSRCDIR)
 
 USB_STRING_DESCRIPTORS ?= $(CONTIKI_CPU_ARM)/common/usb/cdc-acm/string-descriptors.xml
 

@@ -1,13 +1,14 @@
 CONTIKI_PROJECT = uart1-test-node
 
+PLATFORMS_ONLY = jn516x
+
 TARGET = jn516x
 JN516x_WITH_DR1174 = 1
 TARGET_WITH_UART1 = 1
 
 CONTIKI=../../../../..
 
-PROJECTDIRS += .. ../tools
-PROJECT_SOURCEFILES += rpl-tools.c
+MODULES_REL += ..
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/net/app-layer/coap

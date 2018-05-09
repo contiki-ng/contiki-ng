@@ -54,18 +54,9 @@
 #include "net/link-stats.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-slot-operation.h"
-#include "net/mac/tsch/tsch-queue.h"
-#include "net/mac/tsch/tsch-private.h"
-#include "net/mac/tsch/tsch-log.h"
-#include "net/mac/tsch/tsch-packet.h"
-#include "net/mac/tsch/tsch-security.h"
 #include "net/mac/mac-sequence.h"
 #include "lib/random.h"
-
-#if UIP_CONF_IPV6_RPL
-#include "net/mac/tsch/tsch-rpl.h"
-#endif /* UIP_CONF_IPV6_RPL */
+#include "net/routing/routing.h"
 
 #if TSCH_WITH_SIXTOP
 #include "net/mac/tsch/sixtop/sixtop.h"
@@ -275,7 +266,7 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
   LOG_INFO_(", st %d-%d\n", status, transmissions);
 
   /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
-  if(status != MAC_TX_OK) {
+  if(status == MAC_TX_NOACK) {
     if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
       LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
       if(sync_count == 0) {
@@ -304,13 +295,17 @@ keepalive_send(void *ptr)
 {
   if(tsch_is_associated) {
     struct tsch_neighbor *n = tsch_queue_get_time_source();
-    /* Simply send an empty packet */
-    packetbuf_clear();
-    packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &n->addr);
-    NETSTACK_MAC.send(keepalive_packet_sent, NULL);
-    LOG_INFO("sending KA to ");
-    LOG_INFO_LLADDR(&n->addr);
-    LOG_INFO_("\n");
+    if(n != NULL) {
+        /* Simply send an empty packet */
+        packetbuf_clear();
+        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &n->addr);
+        NETSTACK_MAC.send(keepalive_packet_sent, NULL);
+        LOG_INFO("sending KA to ");
+        LOG_INFO_LLADDR(&n->addr);
+        LOG_INFO_("\n");
+    } else {
+        LOG_ERR("no timesource - KA not sent\n");
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -828,8 +823,8 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
         /* Prepare the EB packet and schedule it to be sent */
         if(tsch_packet_create_eb(&hdr_len, &tsch_sync_ie_offset) > 0) {
           struct tsch_packet *p;
-          /* Enqueue EB packet */
-          if(!(p = tsch_queue_add_packet(&tsch_eb_address, NULL, NULL))) {
+          /* Enqueue EB packet, for a single transmission only */
+          if(!(p = tsch_queue_add_packet(&tsch_eb_address, 1, NULL, NULL))) {
             LOG_ERR("! could not enqueue EB packet\n");
           } else {
               LOG_INFO("TSCH: enqueue EB packet %u %u\n",
@@ -954,6 +949,7 @@ send_packet(mac_callback_t sent, void *ptr)
   int ret = MAC_TX_DEFERRED;
   int hdr_len = 0;
   const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+  uint8_t max_transmissions = 0;
 
   if(!tsch_is_associated) {
     if(!tsch_is_initialized) {
@@ -1002,13 +998,19 @@ send_packet(mac_callback_t sent, void *ptr)
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
 #endif
 
+  max_transmissions = packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
+  if(max_transmissions == 0) {
+    /* If not set by the application, use the default TSCH value */
+    max_transmissions = TSCH_MAC_MAX_FRAME_RETRIES + 1;
+  }
+
   if((hdr_len = NETSTACK_FRAMER.create()) < 0) {
     LOG_ERR("! can't send packet due to framer error\n");
     ret = MAC_TX_ERR;
   } else {
     struct tsch_packet *p;
     /* Enqueue packet */
-    p = tsch_queue_add_packet(addr, sent, ptr);
+    p = tsch_queue_add_packet(addr, max_transmissions, sent, ptr);
     if(p == NULL) {
       LOG_ERR("! can't send packet to ");
       LOG_ERR_LLADDR(addr);

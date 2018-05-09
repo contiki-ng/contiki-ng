@@ -339,7 +339,7 @@ struct process {
  * process
  *
  */
-CCIF void process_start(struct process *p, process_data_t data);
+void process_start(struct process *p, process_data_t data);
 
 /**
  * Post an asynchronous event.
@@ -362,7 +362,7 @@ CCIF void process_start(struct process *p, process_data_t data);
  * \retval PROCESS_ERR_FULL The event queue was full and the event could
  * not be posted.
  */
-CCIF int process_post(struct process *p, process_event_t ev, process_data_t data);
+int process_post(struct process *p, process_event_t ev, process_data_t data);
 
 /**
  * Post a synchronous event to a process.
@@ -374,8 +374,8 @@ CCIF int process_post(struct process *p, process_event_t ev, process_data_t data
  * \param data A pointer to additional data that is posted together
  * with the event.
  */
-CCIF void process_post_synch(struct process *p,
-			     process_event_t ev, process_data_t data);
+void process_post_synch(struct process *p,
+                        process_event_t ev, process_data_t data);
 
 /**
  * \brief      Cause a process to exit
@@ -387,7 +387,7 @@ CCIF void process_post_synch(struct process *p,
  *
  * \sa PROCESS_CURRENT()
  */
-CCIF void process_exit(struct process *p);
+void process_exit(struct process *p);
 
 
 /**
@@ -400,7 +400,7 @@ CCIF void process_exit(struct process *p);
  * \hideinitializer
  */
 #define PROCESS_CURRENT() process_current
-CCIF extern struct process *process_current;
+extern struct process *process_current;
 
 /**
  * Switch context to another process
@@ -450,7 +450,7 @@ process_current = p
  * \note       There currently is no way to deallocate an allocated event
  *             number.
  */
-CCIF process_event_t process_alloc_event(void);
+process_event_t process_alloc_event(void);
 
 /** @} */
 
@@ -467,7 +467,7 @@ CCIF process_event_t process_alloc_event(void);
  *
  * \param p A pointer to the process' process structure.
  */
-CCIF void process_poll(struct process *p);
+void process_poll(struct process *p);
 
 /** @} */
 
@@ -509,7 +509,7 @@ int process_run(void);
  * \retval Non-zero if the process is running.
  * \retval Zero if the process is not running.
  */
-CCIF int process_is_running(struct process *p);
+int process_is_running(struct process *p);
 
 /**
  *  Number of events waiting to be processed.
@@ -521,7 +521,7 @@ int process_nevents(void);
 
 /** @} */
 
-CCIF extern struct process *process_list;
+extern struct process *process_list;
 
 #define PROCESS_LIST() process_list
 

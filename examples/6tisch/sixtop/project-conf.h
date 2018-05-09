@@ -28,19 +28,13 @@
  *
  */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
 #define WITH_SECURITY 0
 #endif /* WITH_SECURITY */
-
-/*******************************************************/
-/********* Enable RPL non-storing mode *****************/
-/*******************************************************/
-#define UIP_CONF_MAX_ROUTES 0 /* No need for routes */
-#define RPL_CONF_MOP RPL_MOP_NON_STORING /* Mode of operation*/
 
 /*******************************************************/
 /********************* Enable TSCH *********************/
@@ -88,7 +82,7 @@
 /* Save some space to fit the limited RAM of the z1 */
 #define UIP_CONF_TCP 0
 #define QUEUEBUF_CONF_NUM 2
-#define RPL_NS_CONF_LINK_NUM  2
+#define NETSTACK_MAX_ROUTE_ENTRIES  2
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 2
 #define UIP_CONF_ND6_SEND_NA 0
 #define SICSLOWPAN_CONF_FRAG 0
@@ -109,4 +103,4 @@
 #endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL \
        || CONTIKI_TARGET_OPENMOTE_CC2538 */
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */

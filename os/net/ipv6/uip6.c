@@ -79,15 +79,7 @@
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
-
-#if UIP_CONF_IPV6_RPL
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#endif
+#include "net/routing/routing.h"
 
 #if UIP_ND6_SEND_NS
 #include "net/ipv6/uip-ds6-nbr.h"
@@ -97,6 +89,10 @@
 #include "sys/log.h"
 #define LOG_MODULE "IPv6"
 #define LOG_LEVEL LOG_LEVEL_IPV6
+
+#if UIP_STATISTICS == 1
+struct uip_stats uip_stat;
+#endif /* UIP_STATISTICS == 1 */
 
 /*---------------------------------------------------------------------------*/
 /**
@@ -157,9 +153,6 @@ uint8_t uip_ext_opt_offset = 0;
 #define UIP_DESTO_BUF                    ((struct uip_desto_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 #define UIP_EXT_HDR_OPT_BUF            ((struct uip_ext_hdr_opt *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
 #define UIP_EXT_HDR_OPT_PADN_BUF  ((struct uip_ext_hdr_opt_padn *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
-#if UIP_CONF_IPV6_RPL
-#define UIP_EXT_HDR_OPT_RPL_BUF    ((struct uip_ext_hdr_opt_rpl *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
-#endif /* UIP_CONF_IPV6_RPL */
 #define UIP_ICMP6_ERROR_BUF            ((struct uip_icmp6_error *)&uip_buf[uip_l2_l3_icmp_hdr_len])
 /** @} */
 /**
@@ -519,6 +512,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 void
 remove_ext_hdr(void)
 {
+  int last_uip_ext_len;
   /* Remove ext header before TCP/UDP processing. */
   if(uip_ext_len > 0) {
     LOG_DBG("Cutting ext-header before processing (extlen: %d, uiplen: %d)\n",
@@ -528,15 +522,17 @@ remove_ext_hdr(void)
       uip_clear_buf();
       return;
     }
-    memmove(((uint8_t *)UIP_TCP_BUF), (uint8_t *)UIP_TCP_BUF + uip_ext_len,
-            uip_len - UIP_IPH_LEN - uip_ext_len);
+    last_uip_ext_len = uip_ext_len;
+    uip_ext_len = 0;
+    UIP_IP_BUF->proto = UIP_EXT_BUF->next;
+    memmove(((uint8_t *)UIP_TCP_BUF), (uint8_t *)UIP_TCP_BUF + last_uip_ext_len,
+	    uip_len - UIP_IPH_LEN - last_uip_ext_len);
 
-    uip_len -= uip_ext_len;
+    uip_len -= last_uip_ext_len;
 
     /* Update the IP length. */
     UIP_IP_BUF->len[0] = (uip_len - UIP_IPH_LEN) >> 8;
     UIP_IP_BUF->len[1] = (uip_len - UIP_IPH_LEN) & 0xff;
-    uip_ext_len = 0;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -876,13 +872,10 @@ ext_hdr_options_process(void)
        * Using this fix, the header is ignored, and the next header (if
        * present) is processed.
        */
-#if UIP_CONF_IPV6_RPL
-      LOG_DBG("Processing RPL option\n");
-      if(!rpl_ext_header_hbh_update(uip_ext_opt_offset)) {
+      if(!NETSTACK_ROUTING.ext_header_hbh_update(uip_ext_opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
-#endif /* UIP_CONF_IPV6_RPL */
       uip_ext_opt_offset += (UIP_EXT_HDR_OPT_BUF->len) + 2;
       return 0;
     default:
@@ -1224,7 +1217,7 @@ uip_process(uint8_t flag)
       }
 
       UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
-      LOG_INFO("Forwarding packet to ");
+      LOG_INFO("Forwarding packet towards ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
@@ -1263,9 +1256,9 @@ uip_process(uint8_t flag)
   uip_ext_bitmap = 0;
 #endif /* UIP_CONF_ROUTER */
 
-#if UIP_IPV6_MULTICAST
+#if UIP_IPV6_MULTICAST && UIP_CONF_ROUTER
   process:
-#endif
+#endif /* UIP_IPV6_MULTICAST && UIP_CONF_ROUTER */
 
   while(1) {
     switch(*uip_next_hdr){
@@ -1356,11 +1349,34 @@ uip_process(uint8_t flag)
 
           LOG_DBG("Processing Routing header\n");
           if(UIP_ROUTING_BUF->seg_left > 0) {
-#if UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING
-            if(rpl_ext_header_srh_update()) {
+            if(NETSTACK_ROUTING.ext_header_srh_update()) {
+
+              /* With routing header, the detination address is us and will
+               * be swapped later to the next hop. Because of this, the MTU
+               * and TTL were not checked and updated yet. Do this now. */
+
+              /* Check MTU */
+              if(uip_len > UIP_LINK_MTU) {
+                uip_icmp6_error_output(ICMP6_PACKET_TOO_BIG, 0, UIP_LINK_MTU);
+                UIP_STAT(++uip_stat.ip.drop);
+                goto send;
+              }
+              /* Check Hop Limit */
+              if(UIP_IP_BUF->ttl <= 1) {
+                uip_icmp6_error_output(ICMP6_TIME_EXCEEDED,
+                                       ICMP6_TIME_EXCEED_TRANSIT, 0);
+                UIP_STAT(++uip_stat.ip.drop);
+                goto send;
+              }
+              UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
+
+              LOG_INFO("Forwarding packet to next hop ");
+              LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+              LOG_INFO_("\n");
+              UIP_STAT(++uip_stat.ip.forwarded);
+
               goto send; /* Proceed to forwarding */
             }
-#endif /* UIP_CONF_IPV6_RPL && RPL_WITH_NON_STORING */
             uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER, UIP_IPH_LEN + uip_ext_len + 2);
             UIP_STAT(++uip_stat.ip.drop);
             LOG_ERR("unrecognized routing type");
@@ -1465,7 +1481,6 @@ uip_process(uint8_t flag)
   udp_input:
 
   remove_ext_hdr();
-  UIP_IP_BUF->proto = UIP_PROTO_UDP;
 
   LOG_INFO("Receiving UDP packet\n");
 
@@ -1545,6 +1560,8 @@ uip_process(uint8_t flag)
   UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
   UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
 
+  UIP_IP_BUF->vtc = 0x60;
+  UIP_IP_BUF->tcflow = 0x00;
   UIP_IP_BUF->ttl = uip_udp_conn->ttl;
   UIP_IP_BUF->proto = UIP_PROTO_UDP;
 
@@ -1576,7 +1593,6 @@ uip_process(uint8_t flag)
   tcp_input:
 
   remove_ext_hdr();
-  UIP_IP_BUF->proto = UIP_PROTO_TCP;
 
   UIP_STAT(++uip_stat.tcp.recv);
   LOG_INFO("Receiving TCP packet\n");
@@ -2249,6 +2265,9 @@ uip_process(uint8_t flag)
   UIP_TCP_BUF->srcport  = uip_connr->lport;
   UIP_TCP_BUF->destport = uip_connr->rport;
 
+  UIP_IP_BUF->vtc = 0x60;
+  UIP_IP_BUF->tcflow = 0x00;
+
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &uip_connr->ripaddr);
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
   LOG_INFO("Sending TCP packet to ");
@@ -2284,8 +2303,6 @@ uip_process(uint8_t flag)
 #if UIP_UDP
   ip_send_nolen:
 #endif
-  UIP_IP_BUF->vtc = 0x60;
-  UIP_IP_BUF->tcflow = 0x00;
   UIP_IP_BUF->flow = 0x00;
   send:
   LOG_INFO("Sending packet with length %d (%d)\n", uip_len,

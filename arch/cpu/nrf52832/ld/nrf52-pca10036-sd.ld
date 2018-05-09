@@ -10,3 +10,7 @@ MEMORY
 }
 
 INCLUDE "nrf5x_common.ld"
+
+/* These symbols are used by the stack check library. */
+_stack = end;
+_stack_origin = ORIGIN(RAM) + LENGTH(RAM);

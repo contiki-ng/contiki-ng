@@ -278,8 +278,7 @@ init(void)
     vMMAC_EnableInterrupts(&radio_interrupt_handler);
   }
   vMMAC_ConfigureRadio();
-  set_channel(current_channel);
-  set_txpower(current_tx_power);
+  set_txpower(current_tx_power); /* it sets also the current_channel */
 
   vMMAC_GetMacAddress(&node_long_address);
   /* Short addresses are disabled by default */
@@ -493,8 +492,7 @@ void
 set_channel(int c)
 {
   current_channel = c;
-  /* will fine tune TX power as well */
-  vMMAC_SetChannel(current_channel);
+  vMMAC_SetChannelAndPower(current_channel, current_tx_power);
 }
 /*---------------------------------------------------------------------------*/
 #if !MICROMAC_RADIO_MAC

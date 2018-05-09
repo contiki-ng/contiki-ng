@@ -39,10 +39,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "spi-arch.h"
+#include "dev/spi-arch-legacy.h"
 #include "dev/ioc.h"
 #include "dev/gpio.h"
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "mmc-arch.h"
 
 #define USD_SEL_PORT_BASE       GPIO_PORT_TO_BASE(USD_SEL_PORT)

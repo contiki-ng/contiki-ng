@@ -46,6 +46,7 @@
 #define SIXP_PKT_VERSION  0x00
 
 /* typedefs for code readability */
+typedef uint8_t sixp_pkt_version_t;
 typedef uint8_t sixp_pkt_cell_options_t;
 typedef uint8_t sixp_pkt_num_cells_t;
 typedef uint8_t sixp_pkt_reserved_t;
@@ -74,7 +75,8 @@ typedef enum {
   SIXP_PKT_CMD_RELOCATE     = 0x03, /**< CMD_STATUS */
   SIXP_PKT_CMD_COUNT        = 0x04, /**< CMD_STATUS */
   SIXP_PKT_CMD_LIST         = 0x05, /**< CMD_LIST */
-  SIXP_PKT_CMD_CLEAR        = 0x06, /**< CMD_CLEAR */
+  SIXP_PKT_CMD_SIGNAL       = 0x06, /**< CMD_SIGNAL */
+  SIXP_PKT_CMD_CLEAR        = 0x07, /**< CMD_CLEAR */
   SIXP_PKT_CMD_UNAVAILABLE  = 0xff, /**< for internal use */
 } sixp_pkt_cmd_t;
 
@@ -82,16 +84,17 @@ typedef enum {
  * \brief 6P Return Codes
  */
 typedef enum {
-  SIXP_PKT_RC_SUCCESS  = 0x00, /**< RC_SUCCESS */
-  SIXP_PKT_RC_ERROR    = 0x01, /**< RC_ERROR */
-  SIXP_PKT_RC_EOL      = 0x02, /**< RC_EOL */
-  SIXP_PKT_RC_RESET    = 0x03, /**< RC_RESET */
-  SIXP_PKT_RC_VERSION  = 0x04, /**< RC_ERR_VER */
-  SIXP_PKT_RC_SFID     = 0x05, /**< RC_ERR_SFID */
-  SIXP_PKT_RC_GEN      = 0x06, /**< RC_ERR_GEN */
-  SIXP_PKT_RC_BUSY     = 0x07, /**< RC_ERR_BUSY */
-  SIXP_PKT_RC_NORES    = 0x08, /**< RC_ERR_NORES */
-  SIXP_PKT_RC_CELLLIST = 0x09, /**< RC_ERR_CELLLIST */
+  SIXP_PKT_RC_SUCCESS      = 0x00, /**< RC_SUCCESS */
+  SIXP_PKT_RC_EOL          = 0x01, /**< RC_EOL */
+  SIXP_PKT_RC_ERR          = 0x02, /**< RC_ERR */
+  SIXP_PKT_RC_RESET        = 0x03, /**< RC_RESET */
+  SIXP_PKT_RC_ERR_VERSION  = 0x04, /**< RC_ERR_VERSION */
+  SIXP_PKT_RC_ERR_SFID     = 0x05, /**< RC_ERR_SFID */
+  SIXP_PKT_RC_ERR_SEQNUM   = 0x06, /**< RC_ERR_SEQNUM */
+  SIXP_PKT_RC_ERR_CELLLIST = 0x07, /**< RC_ERR_CELLLIST */
+  SIXP_PKT_RC_ERR_BUSY     = 0x08, /**< RC_ERR_BUSY */
+  SIXP_PKT_RC_ERR_LOCKED   = 0x09, /**< RC_ERR_LOCKED */
+
 } sixp_pkt_rc_t;
 
 /**
@@ -116,13 +119,13 @@ typedef enum {
  * \brief 6top IE Structure
  */
 typedef struct {
-  sixp_pkt_type_t type; /**< Type */
-  sixp_pkt_code_t code; /**< Code */
-  uint8_t sfid;         /**< SFID */
-  uint8_t seqno;        /**< SeqNum */
-  uint8_t gen;          /**< GEN */
-  const uint8_t *body;  /**< Other Fields... */
-  uint16_t body_len;    /**< The length of Other Fields */
+  sixp_pkt_version_t version; /**< Version */
+  sixp_pkt_type_t type;       /**< Type */
+  sixp_pkt_code_t code;       /**< Code */
+  uint8_t sfid;               /**< SFID */
+  uint8_t seqno;              /**< SeqNum */
+  const uint8_t *body;        /**< Other Fields... */
+  uint16_t body_len;          /**< The length of Other Fields */
 } sixp_pkt_t;
 
 /**
@@ -414,6 +417,34 @@ int sixp_pkt_get_total_num_cells(sixp_pkt_type_t type, sixp_pkt_code_t code,
                                  const uint8_t *body, uint16_t body_len);
 
 /**
+ * \brief Write Payload in "Other Fields" of 6P packet
+ * \param type 6P Message Type
+ * \param code 6P Command Identifier or Return Code
+ * \param payload "Payload" to write
+ * \param payload_len The length of "Payload" to write
+ * \param body The pointer to buffer pointing to "Other Fields"
+ * \param body_len The length of body, typically "Other Fields" length
+ * \return 0 on success, -1 on failure
+ */
+int sixp_pkt_set_payload(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                         const uint8_t *payload, uint16_t payload_len,
+                         uint8_t *body, uint16_t body_len);
+
+/**
+ * \brief Read Payload in "Other Fields" of 6P packet
+ * \param type 6P Message Type
+ * \param code 6P Command Identifier or Return Code
+ * \param buf The pointer to buffer to store "Payload" in
+ * \param buf_len The length of buf
+ * \param body The pointer to buffer pointing to "Other Fields"
+ * \param body_len The length of body, typically "Other Fields" length
+ * \return 0 on success, -1 on failure
+ */
+int sixp_pkt_get_payload(sixp_pkt_type_t type, sixp_pkt_code_t code,
+                         uint8_t *buf, uint16_t buf_len,
+                         const uint8_t *body, uint16_t body_len);
+
+/**
  * \brief Parse a 6P packet
  * \param buf The pointer to a buffer pointing 6top IE Content
  * \param len The length of the buffer
@@ -429,7 +460,6 @@ int sixp_pkt_parse(const uint8_t *buf, uint16_t len,
  * \param code 6P Message Code, Command Identifier or Return Code
  * \param sfid Scheduling Function Identifier
  * \param seqno Sequence Number
- * \param gen GEN
  * \param body The pointer to "Other Fields" in a buffer
  * \param body_len The length of body, typically "Other Fields" length
  * \param pkt The pointer to a sixp_pkt_t structure to store packet info
@@ -437,7 +467,7 @@ int sixp_pkt_parse(const uint8_t *buf, uint16_t len,
  * \return 0 on success, -1 on failure
  */
 int sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
-                    uint8_t sfid, uint8_t seqno, uint8_t gen,
+                    uint8_t sfid, uint8_t seqno,
                     const uint8_t *body, uint16_t body_len,
                     sixp_pkt_t *pkt);
 

@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH security
 */
 
 #ifndef __TSCH_SECURITY_H__
@@ -41,18 +43,16 @@
 /********** Includes **********/
 
 #include "contiki.h"
-#include "net/mac/tsch/tsch-asn.h"
-#include "net/mac/tsch/tsch-private.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/mac/framer/frame802154e-ie.h"
 #include "net/mac/llsec802154.h"
 
-/******** Configuration *******/
+/********** Configurarion *********/
 
 /* To enable TSCH security:
- * - set LLSEC802154_CONF_ENABLED
- * - set LLSEC802154_CONF_USES_EXPLICIT_KEYS
- * */
+* - set LLSEC802154_CONF_ENABLED
+* - set LLSEC802154_CONF_USES_EXPLICIT_KEYS
+* */
 
 #if LLSEC802154_ENABLED && !LLSEC802154_USES_EXPLICIT_KEYS
 #error LLSEC802154_ENABLED set but LLSEC802154_USES_EXPLICIT_KEYS unset
@@ -114,8 +114,9 @@
 #define TSCH_SECURITY_KEY_SEC_LEVEL_OTHER 5 /* Encryption + MIC-32, as per 6TiSCH minimal */
 #endif
 
-/************ Types ***********/
+/********** Data types *********/
 
+/* AES-128 key */
 typedef uint8_t aes_key[16];
 
 /********** Functions *********/

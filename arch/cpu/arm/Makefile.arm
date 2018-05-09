@@ -1,0 +1,54 @@
+CC       = arm-none-eabi-gcc
+CPP      = arm-none-eabi-cpp
+LD       = arm-none-eabi-gcc
+AR       = arm-none-eabi-ar
+OBJCOPY  = arm-none-eabi-objcopy
+OBJDUMP  = arm-none-eabi-objdump
+NM       = arm-none-eabi-nm
+SIZE     = arm-none-eabi-size
+SREC_CAT = srec_cat
+
+CFLAGS += -mthumb -mabi=aapcs -mlittle-endian
+CFLAGS += -Werror -Wall
+CFLAGS += -std=c99
+CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
+CFLAGS += -fshort-enums -fomit-frame-pointer -fno-builtin
+
+LDFLAGS += -mthumb -mlittle-endian
+
+OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
+
+### Are we building with code size optimisations?
+SMALL ?= 1
+ifeq ($(SMALL),1)
+  CFLAGS += -Os
+else
+  CFLAGS += -O2
+endif
+
+### Use CMSIS and the existing dbg-io from arch/cpu/arm/common
+CONTIKI_ARM_DIRS += . common/dbg-io
+CONTIKI_CPU_DIRS += $(addprefix ../arm/, $(CONTIKI_ARM_DIRS))
+
+### CPU-dependent cleanup files
+CLEAN += *.elf *.bin *.lst *.hex *.i16hex
+
+### Don't treat the following files as intermediate
+.PRECIOUS: %.elf %.hex %.bin
+
+%.i16hex: %.elf
+	$(OBJCOPY) -O ihex $< $@
+
+%.hex: %.i16hex
+	$(SREC_CAT) $< -intel -o $@ -intel
+
+%.bin: %.elf
+	$(OBJCOPY) -O binary $(OBJCOPY_FLAGS) $< $@
+
+%.lst: %.elf
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
+
+### We don't really need the .hex and .bin for the .$(TARGET) but let's make
+### sure they get built
+%.$(TARGET): %.elf %.hex %.bin
+	cp $< $@

@@ -1,4 +1,4 @@
-Contiki is licensed under the 3-clause BSD license. This license gives
+Contiki-NG is licensed under the 3-clause BSD license. This license gives
 everyone the right to use and distribute the code, either in binary or
 source code format, as long as the copyright license is retained in
 the source code.
