@@ -908,6 +908,8 @@ rpl_select_parent(rpl_dag_t *dag)
 #if RPL_WITH_PROBING
     if(rpl_parent_is_fresh(best)) {
       rpl_set_preferred_parent(dag, best);
+      /* Unschedule any already scheduled urgent probing */
+      dag->instance->urgent_probing_target = NULL;
     } else {
       /* The best is not fresh. Look for the best fresh now. */
       rpl_parent_t *best_fresh = best_parent(dag, 1);
@@ -920,7 +922,7 @@ rpl_select_parent(rpl_dag_t *dag)
       }
       /* Probe the best parent shortly in order to get a fresh estimate */
       dag->instance->urgent_probing_target = best;
-      rpl_schedule_probing(dag->instance);
+      rpl_schedule_probing_now(dag->instance);
     }
 #else /* RPL_WITH_PROBING */
     rpl_set_preferred_parent(dag, best);
