@@ -48,7 +48,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "lwm2m-device"
+#define LOG_MODULE "lwm2m-dev"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 static const lwm2m_resource_id_t resources[] =

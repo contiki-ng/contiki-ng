@@ -50,10 +50,10 @@
 #include "lib/list.h"
 #include "lib/memb.h"
 
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
 
 /* Log configuration */
 #include "sys/log.h"
@@ -207,10 +207,10 @@ send_one_packet(void *ptr)
           wt = RTIMER_NOW();
           watchdog_periodic();
           while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + CSMA_ACK_WAIT_TIME)) {
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
             simProcessRunValue = 1;
             cooja_mt_yield();
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
           }
 
           ret = MAC_TX_NOACK;
@@ -225,10 +225,10 @@ send_one_packet(void *ptr)
               watchdog_periodic();
               while(RTIMER_CLOCK_LT(RTIMER_NOW(),
                                     wt + CSMA_AFTER_ACK_DETECTED_WAIT_TIME)) {
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#if CONTIKI_TARGET_COOJA
                 simProcessRunValue = 1;
                 cooja_mt_yield();
-#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+#endif /* CONTIKI_TARGET_COOJA */
               }
             }
 

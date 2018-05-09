@@ -1,6 +1,6 @@
 CONTIKI = ../../..
 
-PLATFORMS_ONLY= cc2538 sky
+PLATFORMS_ONLY= cc2538dk zoul sky
 
 MODULES += os/services/unit-test
 MODULES += os/storage/cfs

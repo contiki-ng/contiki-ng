@@ -60,7 +60,7 @@ find_next_sep(const char *str, char sep, int pos)
 /*
  * l - list all discovered devices
  * s - set <IP> <URI> <value>
- * d - get <IP> <URI>
+ * g - get <IP> <URI>
  */
 void
 serial_protocol_input(char *data)
@@ -119,8 +119,12 @@ serial_protocol_input(char *data)
     }
     break;
   }
+  case '\0':
+    /* Ignore empty lines */
+    break;
   default:
     printf("Unknown command\n");
   }
+  printf("> ");
 }
 /*---------------------------------------------------------------------------*/

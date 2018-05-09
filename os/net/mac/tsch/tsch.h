@@ -37,6 +37,8 @@ The IEEE 802.15.4-2015 TimeSlotted Channel Hopping (TSCH) protocol. Provides
 scheduled communication on top of a globally-synchronized network. Performs
 frequency hopping for enhanced reliability.
 * @{
+* \file
+*	Main API declarations for TSCH.
 */
 
 #ifndef __TSCH_H__
@@ -180,21 +182,57 @@ PROCESS_NAME(tsch_pending_events_process);
 
 /********** Functions *********/
 
-/* The the TSCH join priority */
+/**
+ * Set the TSCH join priority (JP)
+ *
+ * \param jp the new join priority
+ */
 void tsch_set_join_priority(uint8_t jp);
-/* The period at which EBs are sent */
+/**
+ * Set the period at wich TSCH enhanced beacons (EBs) are sent. The period can
+ * not be set to exceed TSCH_MAX_EB_PERIOD. Set to 0 to stop sending EBs.
+ * Actual transmissions are jittered, spaced by a random number within
+ * [period*0.75, period[
+ *
+ * \param period The period in Clock ticks.
+ */
 void tsch_set_eb_period(uint32_t period);
-/* The keep-alive timeout */
+/**
+ * Set the desynchronization timeout after which a node sends a unicasst
+ * keep-alive (KA) to its time source. Set to 0 to stop sending KAs. The
+ * actual timeout is a random number within
+ * [timeout*0.9, timeout[
+ *
+ * \param timeout The timeout in Clock ticks.
+ */
 void tsch_set_ka_timeout(uint32_t timeout);
-/* Set the node as PAN coordinator */
+/**
+ * Set the node as PAN coordinator
+ *
+ * \param enable 1 to be coordinator, 0 to be a node
+ */
 void tsch_set_coordinator(int enable);
-/* Set the pan as secured or not */
+/**
+ * Enable/disable security. If done at the coordinator, the Information
+ * will be included in EBs, and all nodes will adopt the same security level.
+ * Enabling requires compilation with LLSEC802154_ENABLED set.
+ * Note: when LLSEC802154_ENABLED is set, nodes boot with security enabled.
+ *
+ * \param enable 1 to enable security, 0 to disable it
+ */
 void tsch_set_pan_secured(int enable);
-/* Set TSCH to send a keepalive message after TSCH_KEEPALIVE_TIMEOUT */
+/**
+  * Schedule a keep-alive transmission within [timeout*0.9, timeout[
+  * @see tsch_set_ka_timeout
+  */
 void tsch_schedule_keepalive(void);
-/* Set TSCH to send a keepalive message immediately */
+/**
+  * Schedule a keep-alive immediately
+  */
 void tsch_schedule_keepalive_immediately(void);
-/* Leave the TSCH network */
+/**
+  * Leave the TSCH network we are currently in
+  */
 void tsch_disassociate(void);
 
 #endif /* __TSCH_H__ */

@@ -44,7 +44,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "lwm2m-firmware"
+#define LOG_MODULE "lwm2m-fw"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 
 #define UPDATE_PACKAGE     0

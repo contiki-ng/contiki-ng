@@ -151,7 +151,7 @@ drop_route(uip_ds6_route_t *route)
 }
 /*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
-  "Null Routing",
+  "nullrouting",
   init,
   root_set_prefix,
   root_start,
