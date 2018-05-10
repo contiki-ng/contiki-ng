@@ -55,7 +55,7 @@ static struct etimer et;
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(remote_dht22_process, ev, data)
 {
-  int temperature, humidity;
+  int16_t temperature, humidity;
 
   PROCESS_BEGIN();
   SENSORS_ACTIVATE(dht22);

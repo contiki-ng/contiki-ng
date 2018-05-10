@@ -99,7 +99,7 @@
  * \name DHT22 auxiliary functions
  * @{
  */
-int dht22_read_all(int *temperature, int *humidity);
+int16_t dht22_read_all(int16_t *temperature, int16_t *humidity);
 /** @} */
 /* -------------------------------------------------------------------------- */
 #define DHT22_SENSOR "DHT22 sensor"

@@ -207,8 +207,8 @@ value(int type)
   }
 }
 /*---------------------------------------------------------------------------*/
-int
-dht22_read_all(int *temperature, int *humidity)
+int16_t
+dht22_read_all(int16_t *temperature, int16_t *humidity)
 {
   if((temperature == NULL) || (humidity == NULL)) {
     PRINTF("DHT22: Invalid arguments\n");
