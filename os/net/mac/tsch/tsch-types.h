@@ -31,16 +31,13 @@
  */
 
 /**
+* \addtogroup tsch
+* @{
  * \file
  *         TSCH types
  * \author
  *         Simon Duquennoy <simonduq@sics.se>
  */
-
-/**
- * \addtogroup tsch
- * @{
-*/
 
 #ifndef __TSCH_TYPES_H__
 #define __TSCH_TYPES_H__
@@ -53,10 +50,10 @@
 
 /********** Data types **********/
 
-/* 802.15.4e link types.
- * LINK_TYPE_ADVERTISING_ONLY is an extra one: for EB-only links. */
+/** \brief 802.15.4e link types. LINK_TYPE_ADVERTISING_ONLY is an extra one: for EB-only links. */
 enum link_type { LINK_TYPE_NORMAL, LINK_TYPE_ADVERTISING, LINK_TYPE_ADVERTISING_ONLY };
 
+/** \brief An IEEE 802.15.4-2015 TSCH link (also called cell or slot) */
 struct tsch_link {
   /* Links are stored as a list: "next" must be the first field */
   struct tsch_link *next;
@@ -83,7 +80,7 @@ struct tsch_link {
   void *data;
 };
 
-/* 802.15.4e slotframe (contains links) */
+/** \brief 802.15.4e slotframe (contains links) */
 struct tsch_slotframe {
   /* Slotframes are stored as a list: "next" must be the first field */
   struct tsch_slotframe *next;
@@ -96,7 +93,7 @@ struct tsch_slotframe {
   LIST_STRUCT(links_list);
 };
 
-/* TSCH packet information */
+/** \brief TSCH packet information */
 struct tsch_packet {
   struct queuebuf *qb;  /* pointer to the queuebuf to be sent */
   mac_callback_t sent; /* callback for this packet */
@@ -108,7 +105,7 @@ struct tsch_packet {
   uint8_t tsch_sync_ie_offset; /* Offset within the frame used for quick update of EB ASN and join priority */
 };
 
-/* TSCH neighbor information */
+/** \brief TSCH neighbor information */
 struct tsch_neighbor {
   /* Neighbors are stored as a list: "next" must be the first field */
   struct tsch_neighbor *next;
@@ -127,7 +124,7 @@ struct tsch_neighbor {
   struct ringbufindex tx_ringbuf;
 };
 
-/* TSCH timeslot timing elements. Used to index timeslot timing
+/** \brief TSCH timeslot timing elements. Used to index timeslot timing
  * of different units, such as rtimer tick or micro-second */
 enum tsch_timeslot_timing_elements {
   tsch_ts_cca_offset,
@@ -145,7 +142,7 @@ enum tsch_timeslot_timing_elements {
   tsch_ts_elements_count, /* Not a timing element */
 };
 
-/* Stores data about an incoming packet */
+/** \brief Stores data about an incoming packet */
 struct input_packet {
   uint8_t payload[TSCH_PACKET_MAX_LEN]; /* Packet payload */
   struct tsch_asn_t rx_asn; /* ASN when the packet was received */

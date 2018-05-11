@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH security
 */
 
 #ifndef __TSCH_SECURITY_H__

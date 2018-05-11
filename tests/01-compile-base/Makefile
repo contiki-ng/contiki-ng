@@ -17,6 +17,7 @@ lwm2m-ipso-objects/native \
 lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1 \
 rpl-udp/sky \
 rpl-border-router/native \
+rpl-border-router/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 rpl-border-router/sky \
 slip-radio/sky \
 libs/ipv6-hooks/sky \

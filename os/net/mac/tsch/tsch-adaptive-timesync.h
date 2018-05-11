@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH adaptive time synchronization
 */
 
 #ifndef __TSCH_ADAPTIVE_TIMESYNC_H__
@@ -44,15 +46,30 @@
 
 /***** External Variables *****/
 
-/* The neighbor last used as our time source */
+/** \brief The neighbor last used as our time source */
 extern struct tsch_neighbor *last_timesource_neighbor;
 
 /********** Functions *********/
 
+/**
+ * \brief Updates timesync information for a given neighbor
+ * \param n The neighbor
+ * \param time_delta_asn ASN time delta since last synchronization, i.e. number of slots elapsed
+ * \param drift_correction The measured drift in ticks since last synchronization
+ */
 void tsch_timesync_update(struct tsch_neighbor *n, uint16_t time_delta_asn, int32_t drift_correction);
 
+/**
+ * \brief Computes time compensation for a given point in the future
+ * \param delta_ticks The number of ticks in the future we want to calculate compensation for
+ * \return The time compensation
+ */
 int32_t tsch_timesync_adaptive_compensate(rtimer_clock_t delta_ticks);
 
+/**
+ * \brief Gives the estimated clock drift w.r.t. the time source in PPM (parts per million)
+ * \return The time drift in PPM
+ */
 long int tsch_adaptive_timesync_get_drift_ppm(void);
 
 #endif /* __TSCH_ADAPTIVE_TIMESYNC_H__ */
