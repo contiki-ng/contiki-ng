@@ -64,7 +64,7 @@
 /* ETX fixed point divisor. 128 is the value used by RPL (RFC 6551 and RFC 6719) */
 #define ETX_DIVISOR                     LINK_STATS_ETX_DIVISOR
 /* Number of Tx used to update the ETX EWMA in case of no-ACK */
-#define ETX_NOACK_PENALTY               16
+#define ETX_NOACK_PENALTY               20
 /* Initial ETX value */
 #define ETX_DEFAULT                      2
 
