@@ -90,7 +90,7 @@
 #define DHT22_COUNT             8    /**< Minimum ticks to detect a "1" bit   */
 #define DHT22_MAX_TIMMING       85   /**< Maximum ticks in a single operation */
 #define DHT22_READING_DELAY     1                                 /**< 1 us   */
-#define DHT22_READY_TIME        20                                /**< 40 us  */
+#define DHT22_READY_TIME        40                                /**< 40 us  */
 #define DHT22_START_TIME        (RTIMER_SECOND / 50)              /**< 20 ms  */
 #define DHT22_AWAKE_TIME        (RTIMER_SECOND / 4)               /**< 250 ms */
 /** @} */
@@ -99,7 +99,7 @@
  * \name DHT22 auxiliary functions
  * @{
  */
-int dht22_read_all(int *temperature, int *humidity);
+int16_t dht22_read_all(int16_t *temperature, int16_t *humidity);
 /** @} */
 /* -------------------------------------------------------------------------- */
 #define DHT22_SENSOR "DHT22 sensor"
