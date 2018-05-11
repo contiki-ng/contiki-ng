@@ -47,7 +47,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "lwm2m-tlv-writer"
+#define LOG_MODULE "lwm2m-tlv"
 #define LOG_LEVEL  LOG_LEVEL_NONE
 
 /*---------------------------------------------------------------------------*/

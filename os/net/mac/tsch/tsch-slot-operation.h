@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH runtime operation within timeslots
 */
 
 #ifndef __TSCH_SLOT_OPERATION_H__
@@ -58,19 +60,45 @@ extern clock_time_t last_sync_time;
 
 /********** Functions *********/
 
-/* Returns a 802.15.4 channel from an ASN and channel offset */
+/**
+ * Returns a 802.15.4 channel from an ASN and channel offset. Basically adds
+ * The offset to the ASN and performs a hopping sequence lookup.
+ *
+ * \param asn A given ASN
+ * \param channel_offset A given channel offset
+ * \return The resulting channel
+ */
 uint8_t tsch_calculate_channel(struct tsch_asn_t *asn, uint8_t channel_offset);
-/* Is TSCH locked? */
+/**
+ * Checks if the TSCH lock is set. Accesses to global structures outside of
+ * interrupts must be done through the lock, unless the sturcutre has
+ * atomic read/write
+ *
+ * \return 1 if the lock is taken, 0 otherwise
+ */
 int tsch_is_locked(void);
-/* Lock TSCH (no link operation) */
+/**
+ * Takes the TSCH lock. When the lock is taken, slot operation will be skipped
+ * until release.
+ *
+ * \return 1 if the lock was successfully taken, 0 otherwise
+ */
 int tsch_get_lock(void);
-/* Release TSCH lock */
+/**
+ * Releases the TSCH lock.
+ */
 void tsch_release_lock(void);
-/* Set global time before starting slot operation,
- * with a rtimer time and an ASN */
+/**
+ * Set global time before starting slot operation, with a rtimer time and an ASN
+ *
+ * \param next_slot_start the time to the start of the next slot, in rtimer ticks
+ * \param next_slot_asn the ASN of the next slot
+ */
 void tsch_slot_operation_sync(rtimer_clock_t next_slot_start,
     struct tsch_asn_t *next_slot_asn);
-/* Start actual slot operation */
+/**
+ * Start actual slot operation
+ */
 void tsch_slot_operation_start(void);
 
 #endif /* __TSCH_SLOT_OPERATION_H__ */
