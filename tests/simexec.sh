@@ -1,7 +1,4 @@
 #!/bin/bash
-# Do not return an error
-RUNALL=$1
-shift
 # The simulation to run
 CSC=$1
 shift
@@ -11,77 +8,71 @@ shift
 #The basename of the experiment
 BASENAME=$1
 shift
-# The test will end on the first successfull run
+#The random seed to start from
+BASESEED=$1
+shift
+#The number of runs (with different seeds)
+RUNCOUNT=$1
+shift
 
-#set -x
+# Counts all tests run
+declare -i TESTCOUNT=0
 
-while (( "$#" )); do
-	RANDOMSEED=$1
-	echo -n "Running test $BASENAME with random Seed $RANDOMSEED: "
+# Counts successfull tests
+declare -i OKCOUNT=0
 
-	java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$CSC -contiki=$CONTIKI -random-seed=$RANDOMSEED > $BASENAME.log &
+# A list of seeds the resulted in failure
+FAILSEEDS=
+
+for (( SEED=$BASESEED; SEED<$(($BASESEED+$RUNCOUNT)); SEED++ )); do
+	echo -n "Running test $BASENAME with random Seed $SEED"
+
+	# run simulation
+	java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$CSC -contiki=$CONTIKI -random-seed=$SEED > $BASENAME.$SEED.coojalog &
 	JPID=$!
 
 	# Copy the log and only print "." if it changed
-	touch $BASENAME.log.prog
+	touch progress.log
 	while kill -0 $JPID 2> /dev/null
 	do
 		sleep 1
-		diff $BASENAME.log $BASENAME.log.prog > /dev/null
-		if [ $? -ne 0 ] 
+		diff $BASENAME.$SEED.coojalog progress.log > /dev/null
+		if [ $? -ne 0 ]
 		then
 		  echo -n "."
-		  cp $BASENAME.log $BASENAME.log.prog
+		  cp $BASENAME.$SEED.coojalog progress.log
 		fi
 	done
-	rm $BASENAME.log.prog
+	rm progress.log
 
-
+  # wait for end of simulation
 	wait $JPID
 	JRV=$?
 
+	# Save testlog
+	touch COOJA.testlog;
+	mv COOJA.testlog $BASENAME.$SEED.scriptlog
+	rm COOJA.log
+
+  TESTCOUNT+=1
 	if [ $JRV -eq 0 ] ; then
-		touch COOJA.testlog; 
-		mv COOJA.testlog $BASENAME.testlog 
+		OKCOUNT+=1
 		echo " OK"
-		exit 0
-	fi
-
-
-
-	# In case of failure
-
-
-
-	#Verbose output when using CI
-	if [ "$CI" = "true" ]; then
-		echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
-		echo "==== COOJA.testlog ====" ; cat COOJA.testlog;
-		echo "==== Files used for simulation (sha1sum) ===="
-		grep "Loading firmware from:" COOJA.log | cut -d " " -f 10 | uniq  | xargs -r sha1sum
-		grep "Creating core communicator between Java class" COOJA.log | cut -d " " -f 17 | uniq  | xargs -r sha1sum
 	else
-		tail -50 $BASENAME.log ;
-	fi;
-
-	mv COOJA.testlog $BASENAME.$RANDOMSEED.faillog
-
-	shift
+		FAILSEEDS+=" $BASESEED"
+		echo " FAIL"
+		echo "==== $BASENAME.$SEED.coojalog ====" ; cat $BASENAME.$SEED.coojalog;
+		echo "==== $BASENAME.$SEED.scriptlog ====" ; cat $BASENAME.$SEED.scriptlog;
+	fi
 done
 
-#All seeds failed
-	echo " FAIL ಠ_ಠ" | tee -a $BASENAME.$RANDOMSEED.faillog;
-
-# We do not want Make to stop -> Return 0
-if [ "$RUNALL" = "true" ] ; then
-	touch COOJA.testlog; 
-	mv COOJA.testlog $BASENAME.testlog; 
-	exit 0
+if [ $TESTCOUNT -ne $OKCOUNT ] ; then
+	# At least one test failed
+	printf "%-40s TEST FAIL  %3d/%d -- failed seeds:%s\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" "$FAILSEEDS" > $BASENAME.testlog;
+else
+	printf "%-40s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" > $BASENAME.testlog;
 fi
 
-
-exit 1
-
-
-
-
+# We do not want Make to stop -> Return 0
+# The Makefile will check if a log contains FAIL at the end
+exit 0

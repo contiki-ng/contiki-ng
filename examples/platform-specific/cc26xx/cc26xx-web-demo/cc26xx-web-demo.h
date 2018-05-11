@@ -98,18 +98,18 @@
 /*---------------------------------------------------------------------------*/
 /* User configuration */
 /* Take a sensor reading on button press */
-#define CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER &button_left_sensor
+#define CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER BOARD_BUTTON_HAL_INDEX_KEY_LEFT
 
 /* Payload length of ICMPv6 echo requests used to measure RSSI with def rt */
 #define CC26XX_WEB_DEMO_ECHO_REQ_PAYLOAD_LEN   20
 
 #if BOARD_SENSORTAG
 /* Force an MQTT publish on sensor event */
-#define CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER &reed_relay_sensor
+#define CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER BOARD_BUTTON_HAL_INDEX_REED_RELAY
 #elif BOARD_LAUNCHPAD
-#define CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER &button_left_sensor
+#define CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER BOARD_BUTTON_HAL_INDEX_KEY_LEFT
 #else
-#define CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER &button_down_sensor
+#define CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER BOARD_BUTTON_HAL_INDEX_KEY_DOWN
 #endif
 
 #define CC26XX_WEB_DEMO_STATUS_LED LEDS_GREEN

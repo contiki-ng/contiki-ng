@@ -33,8 +33,8 @@
 #include "http-socket.h"
 #include "ipv6/ip64-addr.h"
 #include "dev/leds.h"
-#include "rpl.h"
-#include "dev/button-sensor.h"
+#include "net/routing/routing.h"
+#include "dev/button-hal.h"
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 static struct http_socket s;
@@ -138,13 +138,10 @@ PROCESS_THREAD(http_example_process, ev, data)
 
   while(1) {
     PROCESS_YIELD();
-    if((ev == sensors_event) && (data == &button_sensor)) {
-      if(button_sensor.value(BUTTON_SENSOR_VALUE_TYPE_LEVEL) ==
-        BUTTON_SENSOR_PRESSED_LEVEL) {
-        leds_on(LEDS_GREEN);
-        printf("Button pressed! sending a POST to IFTTT\n");
-        http_socket_post(&s, url_buffer, NULL, 0, NULL, callback, NULL);
-      }
+    if(ev == button_hal_release_event) {
+      leds_on(LEDS_GREEN);
+      printf("Button pressed! sending a POST to IFTTT\n");
+      http_socket_post(&s, url_buffer, NULL, 0, NULL, callback, NULL);
     }
   }
 

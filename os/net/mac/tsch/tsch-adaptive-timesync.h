@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH adaptive time synchronization
 */
 
 #ifndef __TSCH_ADAPTIVE_TIMESYNC_H__
@@ -41,56 +43,33 @@
 /********** Includes **********/
 
 #include "contiki.h"
-#include "net/mac/tsch/tsch-private.h"
-
-/******** Configuration *******/
-
-/* Use SFD timestamp for synchronization? By default we merely rely on rtimer and busy wait
- * until SFD is high, which we found to provide greater accuracy on JN516x and CC2420.
- * Note: for association, however, we always use SFD timestamp to know the time of arrival
- * of the EB (because we do not busy-wait for the whole scanning process)
- * */
-#ifdef TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
-#define TSCH_RESYNC_WITH_SFD_TIMESTAMPS TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
-#else
-#define TSCH_RESYNC_WITH_SFD_TIMESTAMPS 0
-#endif
-
-/* If enabled, remove jitter due to measurement errors */
-#ifdef TSCH_CONF_TIMESYNC_REMOVE_JITTER
-#define TSCH_TIMESYNC_REMOVE_JITTER TSCH_CONF_TIMESYNC_REMOVE_JITTER
-#else
-#define TSCH_TIMESYNC_REMOVE_JITTER TSCH_RESYNC_WITH_SFD_TIMESTAMPS
-#endif
-
-/* The jitter to remove in ticks.
- * This should be the sum of measurement errors on Tx and Rx nodes.
- * */
-#define TSCH_TIMESYNC_MEASUREMENT_ERROR US_TO_RTIMERTICKS(32)
-
-/* Base drift value.
- * Used to compensate locally know inaccuracies, such as
- * the effect of having a binary 32.768 kHz timer as the TSCH time base. */
-#ifdef TSCH_CONF_BASE_DRIFT_PPM
-#define TSCH_BASE_DRIFT_PPM TSCH_CONF_BASE_DRIFT_PPM
-#else
-#define TSCH_BASE_DRIFT_PPM 0
-#endif
-
-/* The approximate number of slots per second */
-#define TSCH_SLOTS_PER_SECOND (1000000 / TSCH_DEFAULT_TS_TIMESLOT_LENGTH)
 
 /***** External Variables *****/
 
-/* The neighbor last used as our time source */
+/** \brief The neighbor last used as our time source */
 extern struct tsch_neighbor *last_timesource_neighbor;
 
 /********** Functions *********/
 
+/**
+ * \brief Updates timesync information for a given neighbor
+ * \param n The neighbor
+ * \param time_delta_asn ASN time delta since last synchronization, i.e. number of slots elapsed
+ * \param drift_correction The measured drift in ticks since last synchronization
+ */
 void tsch_timesync_update(struct tsch_neighbor *n, uint16_t time_delta_asn, int32_t drift_correction);
 
+/**
+ * \brief Computes time compensation for a given point in the future
+ * \param delta_ticks The number of ticks in the future we want to calculate compensation for
+ * \return The time compensation
+ */
 int32_t tsch_timesync_adaptive_compensate(rtimer_clock_t delta_ticks);
 
+/**
+ * \brief Gives the estimated clock drift w.r.t. the time source in PPM (parts per million)
+ * \return The time drift in PPM
+ */
 long int tsch_adaptive_timesync_get_drift_ppm(void);
 
 #endif /* __TSCH_ADAPTIVE_TIMESYNC_H__ */

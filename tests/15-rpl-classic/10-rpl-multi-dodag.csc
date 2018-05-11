@@ -4,7 +4,6 @@
   <project EXPORT="discard">[APPS_DIR]/mspsim</project>
   <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
-  <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <project EXPORT="discard">[APPS_DIR]/serial2pty</project>
   <project EXPORT="discard">[APPS_DIR]/radiologger-headless</project>
@@ -27,7 +26,7 @@
       <identifier>mtype301</identifier>
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
-      <commands>make sender-node.cooja TARGET=cooja</commands>
+      <commands>make -j sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -51,7 +50,7 @@
       <identifier>mtype820</identifier>
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
-      <commands>make root-node.cooja TARGET=cooja</commands>
+      <commands>make -j root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -75,7 +74,7 @@
       <identifier>mtype306</identifier>
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
-      <commands>make receiver-node.cooja TARGET=cooja</commands>
+      <commands>make -j receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -386,4 +385,3 @@ while(true) {&#xD;
     <location_y>43</location_y>
   </plugin>
 </simconf>
-

@@ -37,15 +37,8 @@ endif
 CONTIKI_CPU_DIRS = $(CONTIKI_CPU_FAM_DIR) . dev
 
 MSP430     = msp430.c flash.c clock.c leds.c leds-arch.c \
-             watchdog.c lpm.c rtimer-arch.c
+             watchdog.c lpm.c rtimer-arch.c int-master.c
 UIPDRIVERS = slip.c crc16.c
-
-ifndef CPU_HAS_MSP430X
-# include mtarch.c only in the non-large memory model case, because
-# the current implementation assumes 16-bit addresses (function pointers
-# stored as "unsigned short").
-MSP430 += mtarch.c
-endif
 
 CONTIKI_TARGET_SOURCEFILES += $(MSP430) \
                               $(SYSAPPS) \
@@ -82,7 +75,7 @@ CFLAGSNO = --dlib_config "$(IAR_PATH)/LIB/DLIB/dl430xlfn.h" $(CFLAGSWERROR)
 # CFLAGSNO = --dlib_config $(IAR_PATH)/LIB/DLIB/dl430xlfn.h -Ohz --multiplier=32 --multiplier_location=4C0 --hw_workaround=CPU40 --core=430X $(CFLAGSWERROR) --data_model large --double=32
 endif
 
-LDFLAGSNO += -B -l contiki-$(TARGET).map -s __program_start
+LDFLAGSNO += -B -l $(CONTIKI_NG_PROJECT_MAP) -s __program_start
 # Stack and heap size in hex
 ifndef IAR_STACK_SIZE
  IAR_STACK_SIZE=300
@@ -114,11 +107,6 @@ $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 ifeq ($(HOST_OS),Windows)
 	@$(FINALIZE_CYGWIN_DEPENDENCY)
 endif
-
-CUSTOM_RULE_C_TO_CO = 1
-%.co: %.c
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -DAUTOSTART_ENABLE $< -o $@
 
 AROPTS = -o
 
@@ -177,7 +165,7 @@ ifndef CFLAGSNO
 CFLAGSNO = -Wall -mmcu=$(CC_MCU) $(CFLAGSWERROR)
 endif
 CFLAGS  += -Os -fno-strict-aliasing
-LDFLAGS += -mmcu=$(CC_MCU) -Wl,-Map=contiki-$(TARGET).map
+LDFLAGS += -mmcu=$(CC_MCU) -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP)
 
 ### These flags can reduce the code size and RAM usage with up to 10%
 SMALL ?= 1
@@ -189,18 +177,20 @@ endif # SMALL
 
 endif # IAR
 
+# Define the `_stack` symbol used by the stack check library to be equal to `_end`
+LDFLAGS += -Wl,--defsym=_stack=_end
+
 CFLAGS  += $(CFLAGSNO)
 
 PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
+
+### CPU-dependent cleanup files
+CLEAN += *.firmware *.ihex
 
 ### Compilation rules
 
 %-stripped.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
-	$(STRIP) --strip-unneeded -g -x $@
-
-%.cm: %.co
-	$(LD) -i -r --unresolved-symbols=ignore-in-object-files -mmsp430x149 -o $@ $^
 	$(STRIP) --strip-unneeded -g -x $@
 
 %-stripped.o: %.o
@@ -210,7 +200,7 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
 	mv $< $@
 
 ifdef IAR
-%.ihex: %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+%.ihex: %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	$(LD) $(LDFLAGSNO) -Fintel-extended $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
 else
 %.ihex: %.$(TARGET)
@@ -233,8 +223,8 @@ $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
 %.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
 	java -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
 
-mspsim-maptable:	contiki-${TARGET}.map
-	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $<
+%.mspsim-maptable: %.$(TARGET)
+	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
 
 core-labels.o: core.${TARGET}
 	${CONTIKI}/tools/msp430-make-labels core.${TARGET} > core-labels.S

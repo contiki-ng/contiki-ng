@@ -1,8 +1,6 @@
 #include "contiki.h"
 #include "os/net/mac/framer/frame802154.h"
 #include "os/net/mac/tsch/tsch.h"
-#include "os/net/mac/tsch/tsch-conf.h"
-#include "os/net/mac/tsch/tsch-schedule.h"
 #include "os/net/ipv6/uip-nd6.h"
 #include "os/net/ipv6/uipopt.h"
 #include "os/net/queuebuf.h"
@@ -62,10 +60,10 @@
 ##### "TSCH_CONF_DEFAULT_TIMESLOT_LENGTH": _____ -> TSCH_DEFAULT_TIMESLOT_LENGTH
 #endif
 
-#ifdef TSCH_CONF_SCHEDULE_DEFAULT_LENGTH
-##### "TSCH_CONF_SCHEDULE_DEFAULT_LENGTH": _____ == TSCH_CONF_SCHEDULE_DEFAULT_LENGTH
+#ifdef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
+##### "TSCH_SCHEDULE_CONF_DEFAULT_LENGTH": _____ == TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #else
-##### "TSCH_CONF_SCHEDULE_DEFAULT_LENGTH": _____ -> TSCH_CHEDULE_DEFAULT_LENGTH
+##### "TSCH_SCHEDULE_CONF_DEFAULT_LENGTH": _____ -> TSCH_SCHEDULE_DEFAULT_LENGTH
 #endif
 
 #else /* MAC_CONF_WITH_TSCH */
@@ -150,4 +148,6 @@
 ##### "LOG_CONF_LEVEL_MAC": ____________________ == LOG_CONF_LEVEL_MAC
 ##### "LOG_CONF_LEVEL_FRAMER": _________________ == LOG_CONF_LEVEL_FRAMER
 ##### "LOG_CONF_LEVEL_6TOP": ___________________ == LOG_CONF_LEVEL_6TOP
+##### "LOG_CONF_LEVEL_COAP": ___________________ == LOG_CONF_LEVEL_COAP
+##### "LOG_CONF_LEVEL_LWM2M": __________________ == LOG_CONF_LEVEL_LWM2M
 ##### "LOG_CONF_LEVEL_MAIN": ___________________ == LOG_CONF_LEVEL_MAIN

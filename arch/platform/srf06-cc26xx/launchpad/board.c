@@ -37,7 +37,6 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "lib/sensors.h"
 #include "lpm.h"
 #include "ti-lib.h"
 #include "board-peripherals.h"
@@ -94,7 +93,7 @@ board_init()
   while(!ti_lib_prcm_load_get());
 
   /* Make sure the external flash is in the lower power mode */
-  ext_flash_init();
+  ext_flash_init(NULL);
 
   lpm_register_module(&launchpad_module);
 

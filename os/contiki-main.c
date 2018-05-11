@@ -44,14 +44,12 @@
 #include "contiki-net.h"
 #include "sys/platform.h"
 #include "sys/energest.h"
+#include "sys/stack-check.h"
 #include "dev/watchdog.h"
 
-#if BUILD_WITH_ORCHESTRA
-#include "os/services/orchestra/orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "os/services/shell/serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
+#include "services/rpl-border-router/rpl-border-router.h"
+#include "services/orchestra/orchestra.h"
+#include "services/shell/serial-shell.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -81,14 +79,16 @@ main(void)
 
   energest_init();
 
+#if STACK_CHECK_ENABLED
+  stack_check_init();
+#endif
+
   platform_init_stage_two();
 
   LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
 
-  LOG_INFO(" Net: ");
-  LOG_INFO_("%s\n", NETSTACK_NETWORK.name);
-  LOG_INFO(" MAC: ");
-  LOG_INFO_("%s\n", NETSTACK_MAC.name);
+  LOG_INFO(" Net: %s\n", NETSTACK_NETWORK.name);
+  LOG_INFO(" MAC: %s\n", NETSTACK_MAC.name);
 
   netstack_init();
 
@@ -110,6 +110,11 @@ main(void)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   platform_init_stage_three();
+
+#if BUILD_WITH_RPL_BORDER_ROUTER
+  rpl_border_router_init();
+  LOG_DBG("With RPL Border Router\n");
+#endif /* BUILD_WITH_RPL_BORDER_ROUTER */
 
 #if BUILD_WITH_ORCHESTRA
   orchestra_init();

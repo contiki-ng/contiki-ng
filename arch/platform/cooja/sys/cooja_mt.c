@@ -48,18 +48,6 @@ static struct cooja_mt_thread *current;
 
 /*--------------------------------------------------------------------------*/
 void
-cooja_mt_init(void)
-{
-  cooja_mtarch_init();
-}
-/*--------------------------------------------------------------------------*/
-void
-cooja_mt_remove(void)
-{
-  cooja_mtarch_remove();
-}
-/*--------------------------------------------------------------------------*/
-void
 cooja_mt_start(struct cooja_mt_thread *thread, void (* function)(void *), void *data)
 {
   /* Call the architecture dependant function to set up the processor
@@ -79,14 +67,6 @@ cooja_mt_exec(struct cooja_mt_thread *thread)
        until the the thread has yielded, or is preempted. */
     cooja_mtarch_exec(&thread->thread);
   }
-}
-/*--------------------------------------------------------------------------*/
-void
-cooja_mt_exit(void)
-{
-  current->state = MT_STATE_EXITED;
-  current = NULL;
-  cooja_mtarch_yield();
 }
 /*--------------------------------------------------------------------------*/
 void

@@ -30,7 +30,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-#include "dev/spi.h"
+#include "dev/spi-legacy.h"
 #include "dev/cc2520/cc2520.h"
 #include "isr_compat.h"
 

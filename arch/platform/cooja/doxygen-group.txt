@@ -1,0 +1,4 @@
+/**
+ * \defgroup cooja COOJA network simulator node
+ * \ingroup platform
+ */

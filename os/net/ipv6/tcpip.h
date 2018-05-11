@@ -108,8 +108,7 @@ void tcpip_uipcall(void);
  * process whenever an event occurs on the connection.
  *
  */
-CCIF void tcp_attach(struct uip_conn *conn,
-		     void *appstate);
+void tcp_attach(struct uip_conn *conn, void *appstate);
 #define tcp_markconn(conn, appstate) tcp_attach(conn, appstate)
 
 /**
@@ -126,7 +125,7 @@ CCIF void tcp_attach(struct uip_conn *conn,
  * \param port The port number in network byte order.
  *
  */
-CCIF void tcp_listen(uint16_t port);
+void tcp_listen(uint16_t port);
 
 /**
  * Close a listening TCP port.
@@ -140,7 +139,7 @@ CCIF void tcp_listen(uint16_t port);
  * \param port The port number in network byte order.
  *
  */
-CCIF void tcp_unlisten(uint16_t port);
+void tcp_unlisten(uint16_t port);
 
 /**
  * Open a TCP connection to the specified IP address and port.
@@ -165,8 +164,8 @@ CCIF void tcp_unlisten(uint16_t port);
  * memory could not be allocated for the connection.
  *
  */
-CCIF struct uip_conn *tcp_connect(const uip_ipaddr_t *ripaddr, uint16_t port,
-				  void *appstate);
+struct uip_conn *tcp_connect(const uip_ipaddr_t *ripaddr, uint16_t port,
+                             void *appstate);
 
 /**
  * Cause a specified TCP connection to be polled.
@@ -226,8 +225,8 @@ void udp_attach(struct uip_udp_conn *conn,
  * \return A pointer to the newly created connection, or NULL if
  * memory could not be allocated for the connection.
  */
-CCIF struct uip_udp_conn *udp_new(const uip_ipaddr_t *ripaddr, uint16_t port,
-				  void *appstate);
+struct uip_udp_conn *udp_new(const uip_ipaddr_t *ripaddr, uint16_t port,
+                             void *appstate);
 
 /**
  * Create a new UDP broadcast connection.
@@ -272,7 +271,7 @@ struct uip_udp_conn *udp_broadcast_new(uint16_t port, void *appstate);
  * \param conn A pointer to the UDP connection that should be polled.
  *
  */
-CCIF void tcpip_poll_udp(struct uip_udp_conn *conn);
+void tcpip_poll_udp(struct uip_udp_conn *conn);
 
 /** @} */
 
@@ -288,7 +287,7 @@ CCIF void tcpip_poll_udp(struct uip_udp_conn *conn);
  *
  * This event is posted to a process whenever a uIP ICMP event has occurred.
  */
-CCIF extern process_event_t tcpip_icmp6_event;
+extern process_event_t tcpip_icmp6_event;
 
 /**
  * \brief register an ICMPv6 callback
@@ -318,7 +317,7 @@ void tcpip_icmp6_call(uint8_t type);
  *
  * This event is posted to a process whenever a uIP event has occurred.
  */
-CCIF extern process_event_t tcpip_event;
+extern process_event_t tcpip_event;
 
 
 /**
@@ -335,7 +334,7 @@ CCIF extern process_event_t tcpip_event;
  *             and the length of the packet must be in the global
  *             uip_len variable.
  */
-CCIF void tcpip_input(void);
+void tcpip_input(void);
 
 /**
  * \brief Output packet to layer 2

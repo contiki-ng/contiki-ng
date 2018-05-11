@@ -61,7 +61,6 @@ typedef struct sixp_nbr {
   struct sixp_nbr *next;
   linkaddr_t addr;
   uint8_t next_seqno;
-  uint8_t gen;
 } sixp_nbr_t;
 
 NBR_TABLE(sixp_nbr_t, sixp_nbrs);
@@ -105,7 +104,6 @@ sixp_nbr_alloc(const linkaddr_t *addr)
 
   linkaddr_copy(&nbr->addr, addr);
   nbr->next_seqno = SIXP_INITIAL_SEQUENCE_NUMBER;
-  nbr->gen = 0;
 
   return nbr;
 }
@@ -117,39 +115,6 @@ sixp_nbr_free(sixp_nbr_t *nbr)
   if(nbr != NULL) {
     (void)nbr_table_remove(sixp_nbrs, nbr);
   }
-}
-/*---------------------------------------------------------------------------*/
-int16_t
-sixp_nbr_get_gen(sixp_nbr_t *nbr)
-{
-  assert(nbr != NULL);
-  if(nbr == NULL) {
-    LOG_ERR("6P-nbr: sixp_nbr_get_gtx() fails because of invalid argument\n");
-    return -1;
-  }
-  return nbr->gen;
-}
-/*---------------------------------------------------------------------------*/
-int
-sixp_nbr_advance_gen(sixp_nbr_t *nbr)
-{
-  assert(nbr != NULL);
-  if(nbr == NULL) {
-    LOG_ERR("6P-nbr: sixp_nbr_advance_gen() fails because of invalid arg\n");
-    return -1;
-  }
-
-  if(nbr->gen == 0x00 || nbr->gen == 0x09) {
-    nbr->gen = 0x01;
-  } else if(nbr->gen < 0x09) {
-    nbr->gen++;
-  } else {
-    /* unexpected condition */
-    LOG_ERR("6P-nbr: nbr %p has an invalid generation number %02x\n",
-            nbr, nbr->gen);
-    return -1;
-  }
-  return 0;
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -164,6 +129,30 @@ sixp_nbr_get_next_seqno(sixp_nbr_t *nbr)
 }
 /*---------------------------------------------------------------------------*/
 int
+sixp_nbr_set_next_seqno(sixp_nbr_t *nbr, uint16_t seqno)
+{
+  assert(nbr != NULL);
+  if(nbr == NULL) {
+    LOG_ERR("6P-nbr: sixp_nbr_set_next_seqno() fails because of invalid arg\n");
+    return -1;
+  }
+  nbr->next_seqno = seqno;
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sixp_nbr_reset_next_seqno(sixp_nbr_t *nbr)
+{
+  assert(nbr != NULL);
+  if(nbr == NULL) {
+    LOG_ERR("6P-nbr: sixp_nbr_clear_next_seqno() fails; invalid arg\n");
+    return -1;
+  }
+  nbr->next_seqno = 0;
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
 sixp_nbr_increment_next_seqno(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
@@ -172,12 +161,12 @@ sixp_nbr_increment_next_seqno(sixp_nbr_t *nbr)
     return -1;
   }
   nbr->next_seqno++;
-  if(nbr->next_seqno > 0x0f) {
+  if(nbr->next_seqno == 0) {
     /*
-     * nbr->next_seqno, which represents a value of the SeqNum field, won't be
-     * larger than 0x0f since he length of SeqNum field is 4 bits.
+     * next_seqno can be 0 only by initialization of nbr or by a CLEAR
+     * transaction.
      */
-    nbr->next_seqno = 0;
+    nbr->next_seqno = 1;
   }
   return 0;
 }
@@ -186,7 +175,7 @@ int
 sixp_nbr_init(void)
 {
   sixp_nbr_t *nbr, *next_nbr;
-  if(nbr_table_is_register(sixp_nbrs) == 0) {
+  if(nbr_table_is_registered(sixp_nbrs) == 0) {
     nbr_table_register(sixp_nbrs, NULL);
   } else {
     /* remove all the existing nbrs */

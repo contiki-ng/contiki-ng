@@ -1,8 +1,6 @@
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
 #include <stdint.h>
-#define CCIF
-#define CLIF
 
 /* These names are deprecated, use C99 names. */
 typedef uint8_t   u8_t;

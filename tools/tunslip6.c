@@ -40,6 +40,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/types.h>
 
 #include <unistd.h>
@@ -683,7 +684,7 @@ ifconf(const char *tundev, const char *ipaddr)
     }
     ai=0;
     cc=scc=0;
-    while(c=*ptr++) {
+    while((c=*ptr++) != 0) {
       if(c=='/') break;
       if(c==':') {
 	if(cc)
@@ -1025,9 +1026,8 @@ exit(1);
        if(dmsec>delaymsec) delaymsec=0;
       }
       if(delaymsec==0) {
-        int size;
         if(slip_empty() && FD_ISSET(tunfd, &rset)) {
-          size=tun_to_serial(tunfd, slipfd);
+          tun_to_serial(tunfd, slipfd);
           slip_flushbuf(slipfd);
           if(ipa_enable) sigalarm_reset();
           if(basedelay) {

@@ -38,8 +38,7 @@
 
 #include "simple-udp.h"
 
-#include "rpl.h"
-#include "rpl-dag-root.h"
+#include "net/routing/routing.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -75,7 +74,7 @@ PROCESS_THREAD(unicast_receiver_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  rpl_dag_root_init_dag_immediately();
+  NETSTACK_ROUTING.root_start();
 
   simple_udp_register(&unicast_connection, UDP_PORT,
                       NULL, UDP_PORT, receiver);

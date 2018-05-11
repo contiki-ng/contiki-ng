@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,45 +28,32 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * \addtogroup cc2538-smartrf
- * @{
- *
- * \defgroup cc2538dk-leds SmartRF06EB LED driver
- *
- * LED driver implementation for the TI SmartRF06EB + cc2538EM
- * @{
- *
- * \file
- * LED driver implementation for the TI SmartRF06EB + cc2538EM
- */
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "reg.h"
 #include "dev/leds.h"
-#include "dev/gpio.h"
+#include "dev/gpio-hal.h"
+#include "dev/gpio-hal-arch.h"
 
-#define LEDS_GPIO_PIN_MASK   LEDS_ALL
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
-{
-  GPIO_SET_OUTPUT(GPIO_C_BASE, LEDS_GPIO_PIN_MASK);
-}
+const leds_t leds_arch_leds[] = {
+  {
+    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L1_PORT, LEDS_ARCH_L1_PIN),
+    .negative_logic = false
+  },
+  {
+    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L2_PORT, LEDS_ARCH_L2_PIN),
+    .negative_logic = false
+  },
+  {
+    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L3_PORT, LEDS_ARCH_L3_PIN),
+    .negative_logic = false
+  },
+#if !USB_SERIAL_CONF_ENABLE
+  {
+    .pin = GPIO_PORT_PIN_TO_GPIO_HAL_PIN(LEDS_ARCH_L4_PORT, LEDS_ARCH_L4_PIN),
+    .negative_logic = false
+  },
+#endif
+};
 /*---------------------------------------------------------------------------*/
-unsigned char
-leds_arch_get(void)
-{
-  return GPIO_READ_PIN(GPIO_C_BASE, LEDS_GPIO_PIN_MASK);
-}
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_set(unsigned char leds)
-{
-  GPIO_WRITE_PIN(GPIO_C_BASE, LEDS_GPIO_PIN_MASK, leds);
-}
-/*---------------------------------------------------------------------------*/
-
-/**
- * @}
- * @}
- */

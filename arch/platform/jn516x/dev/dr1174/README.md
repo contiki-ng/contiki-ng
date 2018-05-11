@@ -5,4 +5,4 @@ Mapping of LEDs on JN516x DR1174:
     leds.h:          led on DR1174:
     LEDS_GP0        LED D3
     LEDS_GP1        LED D6
-Note: LEDS_GPx definitions included in leds.h via platform-conf.h
+Note: LEDS_GPx definitions included in leds.h via jn516x-def.h

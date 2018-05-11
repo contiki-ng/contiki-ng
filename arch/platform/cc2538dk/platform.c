@@ -46,14 +46,15 @@
 #include "dev/adc.h"
 #include "dev/leds.h"
 #include "dev/uart.h"
-#include "dev/button-sensor.h"
 #include "dev/serial-line.h"
 #include "dev/slip.h"
 #include "dev/cc2538-rf.h"
 #include "dev/udma.h"
 #include "dev/crypto.h"
+#include "dev/button-hal.h"
 #include "usb/usb-serial.h"
 #include "lib/random.h"
+#include "lib/sensors.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/linkaddr.h"
@@ -74,7 +75,7 @@
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
@@ -83,11 +84,11 @@ fade(unsigned char l)
 
     leds_on(l);
     for(i = 0; i < j; ++i) {
-      asm("nop");
+      __asm("nop");
     }
     leds_off(l);
     for(i = 0; i < 400 - j; ++i) {
-      asm("nop");
+      __asm("nop");
     }
   }
 }
@@ -102,9 +103,6 @@ set_rf_params(void)
 
   short_addr = ext_addr[7];
   short_addr |= ext_addr[6] << 8;
-
-  /* Populate linkaddr_node_addr. Maintain endianness */
-  memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
@@ -124,8 +122,6 @@ platform_init_stage_one(void)
 void
 platform_init_stage_two()
 {
-  button_sensor_init();
-
   /*
    * Character I/O Initialisation.
    * When the UART receives a character it will call serial_line_input_byte to
@@ -159,7 +155,10 @@ platform_init_stage_two()
   crypto_disable();
 #endif
 
-  set_rf_params();
+  /* Populate linkaddr_node_addr */
+  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
+
+  button_hal_init();
 
   INTERRUPTS_ENABLE();
 
@@ -170,6 +169,8 @@ void
 platform_init_stage_three()
 {
   LOG_INFO("%s\n", BOARD_STRING);
+
+  set_rf_params();
 
   soc_print_info();
 

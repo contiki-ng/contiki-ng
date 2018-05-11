@@ -96,11 +96,18 @@ SECTIONS
         _ebss = .;
     } > FRSRAM
 
+    _end = .;  /* End of the .bss segment. */
+
+    /* This symbol is used by the stack check library. */
+    _stack = .;
+
     .stack (NOLOAD) :
     {
         *(.stack)
     } > FRSRAM
 
+    /* This symbol is used by the stack check library. */
+    _stack_origin = .;
     _heap = .;
     _eheap = ORIGIN(FRSRAM) + LENGTH(FRSRAM);
 

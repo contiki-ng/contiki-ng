@@ -2,7 +2,8 @@ sensniff Contiki Project
 ========================
 This example can be used to create an IEEE 802.15.4 wireless sniffer firmware,
 meant to be used in parallel with
-[sensniff](https://github.com/g-oikonomou/sensniff).
+[sensniff](https://github.com/g-oikonomou/sensniff). Sensniff is distributed
+standalone, but also as part of Contiki-NG under `tools/sensniff`.
 
 Running
 =======

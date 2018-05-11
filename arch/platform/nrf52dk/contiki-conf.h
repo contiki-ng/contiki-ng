@@ -41,6 +41,7 @@
 #define CONTIKI_CONF_H
 
 #include <stdint.h>
+#include <inttypes.h>
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_PATH
@@ -48,7 +49,8 @@
 #endif /* PROJECT_CONF_PATH */
 /*---------------------------------------------------------------------------*/
 /* Include platform peripherals configuration */
-#include "platform-conf.h"
+#include "nrf52dk-def.h"
+#include "nrf52832-def.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name Network Stack Configuration

@@ -41,9 +41,13 @@
 #define FRAME_802154E_H
 
 #include "contiki.h"
-/* We need definitions from tsch-private.h for TSCH-specific information elements */
-#include "net/mac/tsch/tsch.h"
-#include "net/mac/tsch/tsch-private.h"
+#include "net/mac/mac.h"
+#include "net/linkaddr.h"
+/* We need definitions from tsch.h for TSCH-specific information elements */
+#include "net/mac/tsch/tsch-conf.h"
+#include "net/mac/tsch/tsch-const.h"
+#include "net/mac/tsch/tsch-types.h"
+#include "net/mac/tsch/tsch-asn.h"
 
 #define FRAME802154E_IE_MAX_LINKS       4
 

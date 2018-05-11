@@ -68,17 +68,13 @@
 #include "net/ipv6/tcpip.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uipbuf.h"
 #include "net/ipv6/sicslowpan.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
-#if UIP_CONF_IPV6_RPL_LITE == 1
-#include "net/rpl-lite/rpl.h"
-#else /* UIP_CONF_IPV6_RPL_LITE == 1 */
-#include "net/rpl-classic/rpl.h"
-#include "net/rpl-classic/rpl-private.h"
-#endif /* UIP_CONF_IPV6_RPL_LITE == 1 */
+#include "net/routing/routing.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -101,6 +97,7 @@
 
 /* define the buffer as a byte array */
 #define PACKETBUF_IPHC_BUF              ((uint8_t *)(packetbuf_ptr + packetbuf_hdr_len))
+#define PACKETBUF_PAYLOAD_END           ((uint8_t *)(packetbuf_ptr + mac_max_payload))
 
 #define PACKETBUF_6LO_PTR            (packetbuf_ptr + packetbuf_hdr_len)
 #define PACKETBUF_6LO_DISPATCH       0 /* 8 bit */
@@ -122,7 +119,7 @@
 /* NOTE: In the multiple-reassembly context there is only room for the header / first fragment */
 #define SICSLOWPAN_IP_BUF(buf)   ((struct uip_ip_hdr *)buf)
 #define SICSLOWPAN_UDP_BUF(buf)  ((struct uip_udp_hdr *)&buf[UIP_IPH_LEN])
-#define SICSLOWPAN_IPPAYLOAD_BUF(buf) (&buf[UIP_LLIPH_LEN])
+#define SICSLOWPAN_IPPAYLOAD_BUF(buf) (&buf[UIP_IPH_LEN])
 
 
 #define UIP_IP_BUF          ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
@@ -200,6 +197,11 @@ static int packetbuf_payload_len;
  * is used this includes the UDP header in addition to the IP header).
  */
 static uint8_t uncomp_hdr_len;
+
+/**
+ * mac_max_payload is the maimum payload space on the MAC frame.
+ */
+static int mac_max_payload;
 
 /**
  * The current page (RFC 4944)
@@ -357,7 +359,7 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     for(i = 0; i < SICSLOWPAN_REASS_CONTEXTS; i++) {
       /* clear all fragment info with expired timer to free all fragment buffers */
       if(frag_info[i].len > 0 && timer_expired(&frag_info[i].reass_timer)) {
-	clear_fragments(i);
+        clear_fragments(i);
       }
 
       /* We use len as indication on used or not used */
@@ -425,12 +427,12 @@ copy_frags2uip(int context)
 
   /* Copy from the fragment context info buffer first */
   memcpy((uint8_t *)UIP_IP_BUF, (uint8_t *)frag_info[context].first_frag,
-	 frag_info[context].first_frag_len);
+         frag_info[context].first_frag_len);
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     /* And also copy all matching fragments */
     if(frag_buf[i].len > 0 && frag_buf[i].index == context) {
       memcpy((uint8_t *)UIP_IP_BUF + (uint16_t)(frag_buf[i].offset << 3),
-	     (uint8_t *)frag_buf[i].data, frag_buf[i].len);
+             (uint8_t *)frag_buf[i].data, frag_buf[i].len);
     }
   }
   /* deallocate all the fragments for this context */
@@ -667,26 +669,42 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
  * compress the IID.
  * \param link_destaddr L2 destination address, needed to compress IP
  * dest
+ * \return 1 if success, else 0
  */
-static void
+static int
 compress_hdr_iphc(linkaddr_t *link_destaddr)
 {
   uint8_t tmp, iphc0, iphc1, *next_hdr, *next_nhc;
   int ext_hdr_len;
   struct uip_udp_hdr *udp_buf;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("before compression (%d): ", UIP_IP_BUF->len[1]);
     for(ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
       uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
-      LOG_DBG("%02x", data);
+      LOG_DBG_("%02x", data);
     }
-    LOG_DBG("\n");
+    LOG_DBG_("\n");
   }
-#endif /* LOG_DBG_ENABLED */
+
+/* Macro used only internally, during header compression. Checks if there
+ * is sufficient space in packetbuf before writing any further. */
+#define CHECK_BUFFER_SPACE(writelen) do { \
+  if(hc06_ptr + (writelen) >= PACKETBUF_PAYLOAD_END) { \
+    LOG_WARN("Not enough packetbuf space to compress header (%u bytes, %u left). Aborting.\n", \
+                (unsigned)(writelen), (unsigned)(PACKETBUF_PAYLOAD_END - hc06_ptr)); \
+    return 0; \
+  } \
+} while(0);
 
   hc06_ptr = PACKETBUF_IPHC_BUF + 2;
+
+  /* Check if there is enough space for the compressed IPv6 header, in the
+   * worst case (least compressed case). Extension headers and transport
+   * layer will be checked when they are compressed. */
+  CHECK_BUFFER_SPACE(38);
+
   /*
    * As we copy some bit-length fields, in the IPHC encoding bytes,
    * we sometimes use |=
@@ -915,11 +933,13 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
            NHC byte extra - before the next header here. This is due to
            next not being elided in that case. */
         if(!IS_COMPRESSABLE_PROTO(*next_hdr)) {
+          CHECK_BUFFER_SPACE(1);
           hc06_ptr++;
           LOG_INFO("Keeping the next header in this ext hdr: %d\n",
                  ext_hdr->next);
         }
         /* copy the ext-hdr into the hc06 buffer */
+        CHECK_BUFFER_SPACE(len);
         memcpy(hc06_ptr, ext_hdr, len);
         /* modify the len to octets */
         ext_hdr = (struct uip_ext_hdr *) hc06_ptr;
@@ -949,6 +969,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
         /* we can compress 12 bits of both source and dest */
         *next_nhc = SICSLOWPAN_NHC_UDP_CS_P_11;
         LOG_INFO("IPHC: remove 12 b of both source & dest with prefix 0xFOB\n");
+        CHECK_BUFFER_SPACE(1);
         *hc06_ptr =
           (uint8_t)((UIP_HTONS(udp_buf->srcport) -
                      SICSLOWPAN_UDP_4_BIT_PORT_MIN) << 4) +
@@ -959,6 +980,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
         /* we can compress 8 bits of dest, leave source. */
         *next_nhc = SICSLOWPAN_NHC_UDP_CS_P_01;
         LOG_INFO("IPHC: leave source, remove 8 bits of dest with prefix 0xF0\n");
+        CHECK_BUFFER_SPACE(3);
         memcpy(hc06_ptr, &udp_buf->srcport, 2);
         *(hc06_ptr + 2) =
           (uint8_t)((UIP_HTONS(udp_buf->destport) -
@@ -968,6 +990,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
         /* we can compress 8 bits of src, leave dest. Copy compressed port */
         *next_nhc = SICSLOWPAN_NHC_UDP_CS_P_10;
         LOG_INFO("IPHC: remove 8 bits of source with prefix 0xF0, leave dest. hch: %i\n", *next_nhc);
+        CHECK_BUFFER_SPACE(3);
         *hc06_ptr =
           (uint8_t)((UIP_HTONS(udp_buf->srcport) -
                      SICSLOWPAN_UDP_8_BIT_PORT_MIN));
@@ -977,10 +1000,12 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
         /* we cannot compress. Copy uncompressed ports, full checksum  */
         *next_nhc = SICSLOWPAN_NHC_UDP_CS_P_00;
         LOG_INFO("IPHC: cannot compress UDP headers\n");
+        CHECK_BUFFER_SPACE(4);
         memcpy(hc06_ptr, &udp_buf->srcport, 4);
         hc06_ptr += 4;
       }
       /* always inline the checksum  */
+      CHECK_BUFFER_SPACE(2);
       memcpy(hc06_ptr, &udp_buf->udpchksum, 2);
       hc06_ptr += 2;
       uncomp_hdr_len += UIP_UDPH_LEN;
@@ -1000,18 +1025,19 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
   PACKETBUF_IPHC_BUF[0] = iphc0;
   PACKETBUF_IPHC_BUF[1] = iphc1;
 
-#if LOG_DBG_ENABLED
-  { uint16_t ndx;
+  if(LOG_DBG_ENABLED) {
+    uint16_t ndx;
     LOG_DBG("after compression %d: ", (int)(hc06_ptr - packetbuf_ptr));
     for(ndx = 0; ndx < hc06_ptr - packetbuf_ptr; ndx++) {
       uint8_t data = ((uint8_t *) packetbuf_ptr)[ndx];
-      LOG_DBG("%02x", data);
+      LOG_DBG_("%02x", data);
     }
-    LOG_DBG("\n");
-    }
-#endif
+    LOG_DBG_("\n");
+  }
 
   packetbuf_hdr_len = hc06_ptr - packetbuf_ptr;
+
+  return 1;
 }
 
 /*--------------------------------------------------------------------*/
@@ -1065,7 +1091,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
         SICSLOWPAN_IP_BUF(buf)->vtc = 0x60 | ((tmp >> 2) & 0x0f);
         /* ECN rolled down two steps + lowest DSCP bits at top two bits */
         SICSLOWPAN_IP_BUF(buf)->tcflow = ((tmp >> 2) & 0x30) | (tmp << 6) |
-	  (SICSLOWPAN_IP_BUF(buf)->tcflow & 0x0f);
+          (SICSLOWPAN_IP_BUF(buf)->tcflow & 0x0f);
       } else {
         /* Traffic class is compressed (set version and no TC)*/
         SICSLOWPAN_IP_BUF(buf)->vtc = 0x60;
@@ -1080,7 +1106,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
       /* Version and flow label are compressed */
       if((iphc0 & SICSLOWPAN_IPHC_TC_C) == 0) {
         /* Traffic class is inline */
-	SICSLOWPAN_IP_BUF(buf)->vtc = 0x60 | ((*hc06_ptr >> 2) & 0x0f);
+        SICSLOWPAN_IP_BUF(buf)->vtc = 0x60 | ((*hc06_ptr >> 2) & 0x0f);
           SICSLOWPAN_IP_BUF(buf)->tcflow = ((*hc06_ptr << 6) & 0xC0) | ((*hc06_ptr >> 2) & 0x30);
           SICSLOWPAN_IP_BUF(buf)->flow = 0;
           hc06_ptr += 1;
@@ -1435,10 +1461,8 @@ packet_sent(void *ptr, int status, int transmissions)
   /* Update neighbor link statistics */
   link_stats_packet_sent(dest, status, transmissions);
 
-#if UIP_CONF_IPV6_RPL
-  /* Call RPL link callback */
-  rpl_link_callback(dest, status, transmissions);
-#endif /* UIP_CONF_IPV6_RPL */
+  /* Call routing protocol link callback */
+  NETSTACK_ROUTING.link_callback(dest, status, transmissions);
 
   /* DS6 callback, used for UIP_DS6_LL_NUD */
   uip_ds6_link_callback(status, transmissions);
@@ -1485,7 +1509,6 @@ static uint8_t
 output(const linkaddr_t *localdest)
 {
   int framer_hdrlen;
-  int max_payload;
 
   /* The MAC address of the destination of the packet */
   linkaddr_t dest;
@@ -1517,6 +1540,24 @@ output(const linkaddr_t *localdest)
 
   LOG_INFO("output: sending packet len %d\n", uip_len);
 
+  /* copy over the retransmission count from uipbuf attributes */
+  packetbuf_set_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS,
+                     uipbuf_get_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS));
+
+/* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC */
+#ifndef SICSLOWPAN_USE_FIXED_HDRLEN
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
+  framer_hdrlen = NETSTACK_FRAMER.length();
+  if(framer_hdrlen < 0) {
+   /* Framing failed, we assume the maximum header length */
+   framer_hdrlen = SICSLOWPAN_FIXED_HDRLEN;
+  }
+#else /* USE_FRAMER_HDRLEN */
+  framer_hdrlen = SICSLOWPAN_FIXED_HDRLEN;
+#endif /* USE_FRAMER_HDRLEN */
+
+  mac_max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
+
   /* Try to compress the headers */
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
   compress_hdr_ipv6(&dest);
@@ -1530,26 +1571,14 @@ output(const linkaddr_t *localdest)
   }
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH */
 #if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC
-  compress_hdr_iphc(&dest);
+  if(compress_hdr_iphc(&dest) == 0) {
+    /* Warning should already be issued by function above */
+    return 0;
+  }
 #endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
   LOG_INFO("output: header of len %d\n", packetbuf_hdr_len);
 
-  /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
-   * We calculate it here only to make a better decision of whether the outgoing packet
-   * needs to be fragmented or not. */
-#ifndef SICSLOWPAN_USE_FIXED_HDRLEN
-  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
-  framer_hdrlen = NETSTACK_FRAMER.length();
-  if(framer_hdrlen < 0) {
-    /* Framing failed, we assume the maximum header length */
-    framer_hdrlen = SICSLOWPAN_FIXED_HDRLEN;
-  }
-#else /* USE_FRAMER_HDRLEN */
-  framer_hdrlen = SICSLOWPAN_FIXED_HDRLEN;
-#endif /* USE_FRAMER_HDRLEN */
-
-  max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
-  if((int)uip_len - (int)uncomp_hdr_len > max_payload - (int)packetbuf_hdr_len) {
+  if((int)uip_len - (int)uncomp_hdr_len > mac_max_payload - (int)packetbuf_hdr_len) {
 #if SICSLOWPAN_CONF_FRAG
     /* Number of bytes processed. */
     uint16_t processed_ip_out_len;
@@ -1564,7 +1593,7 @@ output(const linkaddr_t *localdest)
      * IPv6/IPHC/HC_UDP dispatchs/headers.
      * The following fragments contain only the fragn dispatch.
      */
-    int estimated_fragments = ((int)uip_len) / (max_payload - SICSLOWPAN_FRAGN_HDR_LEN) + 1;
+    int estimated_fragments = ((int)uip_len) / (mac_max_payload - SICSLOWPAN_FRAGN_HDR_LEN) + 1;
     int freebuf = queuebuf_numfree() - 1;
     LOG_INFO("uip_len: %d, fragments: %d, free bufs: %d\n", uip_len, estimated_fragments, freebuf);
     if(freebuf < estimated_fragments) {
@@ -1575,7 +1604,7 @@ output(const linkaddr_t *localdest)
     LOG_INFO("Fragmentation sending packet len %d\n", uip_len);
 
     /* Create 1st Fragment */
-    LOG_INFO("output: 1rst fragment ");
+    LOG_INFO("output: 1st fragment ");
 
     /* Reset last tx status to ok in case the fragment transmissions are deferred */
     last_tx_status = MAC_TX_OK;
@@ -1594,8 +1623,17 @@ output(const linkaddr_t *localdest)
 
     /* Copy payload and send */
     packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
-    packetbuf_payload_len = (max_payload - packetbuf_hdr_len) & 0xfffffff8;
-    LOG_INFO("(len %d, tag %d)\n", packetbuf_payload_len, frag_tag);
+    packetbuf_payload_len = (mac_max_payload - packetbuf_hdr_len) & 0xfffffff8;
+    LOG_INFO_("(len %d, tag %d)\n", packetbuf_payload_len, frag_tag);
+
+    if(packetbuf_payload_len < 0) {
+      /* The current implementation requires that all headers fit in the first
+       * fragment. Here is a corner case where the header did fit packetbuf
+       * but do no longer fit after truncating for a length multiple of 8. */
+      LOG_WARN("compressed header does not fit first fragment\n");
+      return 0;
+    }
+
     memcpy(packetbuf_ptr + packetbuf_hdr_len,
            (uint8_t *)UIP_IP_BUF + uncomp_hdr_len, packetbuf_payload_len);
     packetbuf_set_datalen(packetbuf_payload_len + packetbuf_hdr_len);
@@ -1630,7 +1668,7 @@ output(const linkaddr_t *localdest)
 /*       uip_htons((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len); */
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE,
           ((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len));
-    packetbuf_payload_len = (max_payload - packetbuf_hdr_len) & 0xfffffff8;
+    packetbuf_payload_len = (mac_max_payload - packetbuf_hdr_len) & 0xfffffff8;
     while(processed_ip_out_len < uip_len) {
       LOG_INFO("output: fragment ");
       PACKETBUF_FRAG_PTR[PACKETBUF_FRAG_OFFSET] = processed_ip_out_len >> 3;
@@ -1640,7 +1678,7 @@ output(const linkaddr_t *localdest)
         /* last fragment */
         packetbuf_payload_len = uip_len - processed_ip_out_len;
       }
-      LOG_INFO("(offset %d, len %d, tag %d)\n",
+      LOG_INFO_("(offset %d, len %d, tag %d)\n",
              processed_ip_out_len >> 3, packetbuf_payload_len, frag_tag);
       memcpy(packetbuf_ptr + packetbuf_hdr_len,
              (uint8_t *)UIP_IP_BUF + processed_ip_out_len, packetbuf_payload_len);
@@ -1746,7 +1784,7 @@ input(void)
       frag_offset = 0;
       frag_size = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0x07ff;
       frag_tag = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG);
-      LOG_INFO("size %d, tag %d, offset %d)\n",
+      LOG_INFO_ ("size %d, tag %d, offset %d)\n",
              frag_size, frag_tag, frag_offset);
       packetbuf_hdr_len += SICSLOWPAN_FRAG1_HDR_LEN;
       first_fragment = 1;
@@ -1771,13 +1809,13 @@ input(void)
       frag_offset = PACKETBUF_FRAG_PTR[PACKETBUF_FRAG_OFFSET];
       frag_tag = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG);
       frag_size = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0x07ff;
-      LOG_INFO("size %d, tag %d, offset %d)\n",
+      LOG_INFO_("size %d, tag %d, offset %d)\n",
              frag_size, frag_tag, frag_offset);
       packetbuf_hdr_len += SICSLOWPAN_FRAGN_HDR_LEN;
 
       /* If this is the last fragment, we may shave off any extrenous
          bytes at the end. We must be liberal in what we accept. */
-      LOG_INFO("last_fragment?: packetbuf_payload_len %d frag_size %d\n",
+      LOG_INFO_("last_fragment?: packetbuf_payload_len %d frag_size %d\n",
               packetbuf_datalen() - packetbuf_hdr_len, frag_size);
 
       /* Add the fragment to the fragmentation context (this will also
@@ -1906,19 +1944,17 @@ input(void)
     uip_len = packetbuf_payload_len + uncomp_hdr_len;
 #endif /* SICSLOWPAN_CONF_FRAG */
     LOG_INFO("input: IP packet ready (length %d)\n",
-	    uip_len);
+             uip_len);
 
-#if LOG_DBG_ENABLED
-    {
+    if(LOG_DBG_ENABLED) {
       uint16_t ndx;
       LOG_DBG("after decompression %u:", UIP_IP_BUF->len[1]);
       for (ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
         uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
-        LOG_DBG("%02x", data);
+        LOG_DBG_("%02x", data);
       }
-      LOG_DBG("\n");
+      LOG_DBG_("\n");
     }
-#endif /* LOG_DBG_ENABLED */
 
     /* if callback is set then set attributes and call */
     if(callback) {

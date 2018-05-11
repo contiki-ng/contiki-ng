@@ -33,6 +33,8 @@
 /**
  * \addtogroup tsch
  * @{
+ * \file
+ *	TSCH runtime operation within timeslots
 */
 
 #ifndef __TSCH_SLOT_OPERATION_H__
@@ -42,61 +44,6 @@
 
 #include "contiki.h"
 #include "lib/ringbufindex.h"
-#include "net/mac/tsch/tsch-packet.h"
-#include "net/mac/tsch/tsch-private.h"
-
-/******** Configuration *******/
-
-/* Size of the ring buffer storing dequeued outgoing packets (only an array of pointers).
- * Must be power of two, and greater or equal to QUEUEBUF_NUM */
-#ifdef TSCH_CONF_DEQUEUED_ARRAY_SIZE
-#define TSCH_DEQUEUED_ARRAY_SIZE TSCH_CONF_DEQUEUED_ARRAY_SIZE
-#else
-/* By default, round QUEUEBUF_CONF_NUM to next power of two
- * (in the range [4;256]) */
-#if QUEUEBUF_CONF_NUM <= 4
-#define TSCH_DEQUEUED_ARRAY_SIZE 4
-#elif QUEUEBUF_CONF_NUM <= 8
-#define TSCH_DEQUEUED_ARRAY_SIZE 8
-#elif QUEUEBUF_CONF_NUM <= 16
-#define TSCH_DEQUEUED_ARRAY_SIZE 16
-#elif QUEUEBUF_CONF_NUM <= 32
-#define TSCH_DEQUEUED_ARRAY_SIZE 32
-#elif QUEUEBUF_CONF_NUM <= 64
-#define TSCH_DEQUEUED_ARRAY_SIZE 64
-#elif QUEUEBUF_CONF_NUM <= 128
-#define TSCH_DEQUEUED_ARRAY_SIZE 128
-#else
-#define TSCH_DEQUEUED_ARRAY_SIZE 256
-#endif
-#endif
-
-/* Size of the ring buffer storing incoming packets.
- * Must be power of two */
-#ifdef TSCH_CONF_MAX_INCOMING_PACKETS
-#define TSCH_MAX_INCOMING_PACKETS TSCH_CONF_MAX_INCOMING_PACKETS
-#else
-#define TSCH_MAX_INCOMING_PACKETS 4
-#endif
-
-/*********** Callbacks *********/
-
-/* Called by TSCH form interrupt after receiving a frame, enabled upper-layer to decide
- * whether to ACK or NACK */
-#ifdef TSCH_CALLBACK_DO_NACK
-int TSCH_CALLBACK_DO_NACK(struct tsch_link *link, linkaddr_t *src, linkaddr_t *dst);
-#endif
-
-/************ Types ***********/
-
-/* Stores data about an incoming packet */
-struct input_packet {
-  uint8_t payload[TSCH_PACKET_MAX_LEN]; /* Packet payload */
-  struct tsch_asn_t rx_asn; /* ASN when the packet was received */
-  int len; /* Packet len */
-  int16_t rssi; /* RSSI for this packet */
-  uint8_t channel; /* Channel we received the packet on */
-};
 
 /***** External Variables *****/
 
@@ -113,19 +60,45 @@ extern clock_time_t last_sync_time;
 
 /********** Functions *********/
 
-/* Returns a 802.15.4 channel from an ASN and channel offset */
+/**
+ * Returns a 802.15.4 channel from an ASN and channel offset. Basically adds
+ * The offset to the ASN and performs a hopping sequence lookup.
+ *
+ * \param asn A given ASN
+ * \param channel_offset A given channel offset
+ * \return The resulting channel
+ */
 uint8_t tsch_calculate_channel(struct tsch_asn_t *asn, uint8_t channel_offset);
-/* Is TSCH locked? */
+/**
+ * Checks if the TSCH lock is set. Accesses to global structures outside of
+ * interrupts must be done through the lock, unless the sturcutre has
+ * atomic read/write
+ *
+ * \return 1 if the lock is taken, 0 otherwise
+ */
 int tsch_is_locked(void);
-/* Lock TSCH (no link operation) */
+/**
+ * Takes the TSCH lock. When the lock is taken, slot operation will be skipped
+ * until release.
+ *
+ * \return 1 if the lock was successfully taken, 0 otherwise
+ */
 int tsch_get_lock(void);
-/* Release TSCH lock */
+/**
+ * Releases the TSCH lock.
+ */
 void tsch_release_lock(void);
-/* Set global time before starting slot operation,
- * with a rtimer time and an ASN */
+/**
+ * Set global time before starting slot operation, with a rtimer time and an ASN
+ *
+ * \param next_slot_start the time to the start of the next slot, in rtimer ticks
+ * \param next_slot_asn the ASN of the next slot
+ */
 void tsch_slot_operation_sync(rtimer_clock_t next_slot_start,
     struct tsch_asn_t *next_slot_asn);
-/* Start actual slot operation */
+/**
+ * Start actual slot operation
+ */
 void tsch_slot_operation_start(void);
 
 #endif /* __TSCH_SLOT_OPERATION_H__ */

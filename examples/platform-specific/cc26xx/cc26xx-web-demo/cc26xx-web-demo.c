@@ -39,13 +39,13 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "contiki-net.h"
-#include "rest-engine.h"
+#include "coap-engine.h"
 #include "board-peripherals.h"
 #include "lib/sensors.h"
 #include "lib/list.h"
 #include "sys/process.h"
 #include "net/ipv6/sicslowpan.h"
-#include "button-sensor.h"
+#include "dev/button-hal.h"
 #include "batmon-sensor.h"
 #include "httpd-simple.h"
 #include "cc26xx-web-demo.h"
@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
@@ -194,15 +195,15 @@ save_config()
   int rv;
   cc26xx_web_demo_sensor_reading_t *reading = NULL;
 
-  rv = ext_flash_open();
+  rv = ext_flash_open(NULL);
 
   if(!rv) {
     printf("Could not open flash to save config\n");
-    ext_flash_close();
+    ext_flash_close(NULL);
     return;
   }
 
-  rv = ext_flash_erase(CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t));
+  rv = ext_flash_erase(NULL, CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t));
 
   if(!rv) {
     printf("Error erasing flash\n");
@@ -219,14 +220,14 @@ save_config()
       }
     }
 
-    rv = ext_flash_write(CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t),
+    rv = ext_flash_write(NULL, CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t),
                          (uint8_t *)&cc26xx_web_demo_config);
     if(!rv) {
       printf("Error saving config\n");
     }
   }
 
-  ext_flash_close();
+  ext_flash_close(NULL);
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -238,18 +239,18 @@ load_config()
   cc26xx_web_demo_config_t tmp_cfg;
   cc26xx_web_demo_sensor_reading_t *reading = NULL;
 
-  int rv = ext_flash_open();
+  int rv = ext_flash_open(NULL);
 
   if(!rv) {
     printf("Could not open flash to load config\n");
-    ext_flash_close();
+    ext_flash_close(NULL);
     return;
   }
 
-  rv = ext_flash_read(CONFIG_FLASH_OFFSET, sizeof(tmp_cfg),
+  rv = ext_flash_read(NULL, CONFIG_FLASH_OFFSET, sizeof(tmp_cfg),
                       (uint8_t *)&tmp_cfg);
 
-  ext_flash_close();
+  ext_flash_close(NULL);
 
   if(!rv) {
     printf("Error loading config\n");
@@ -881,8 +882,6 @@ init_sensors(void)
   list_add(sensor_list, &mpu_gyro_x_reading);
   list_add(sensor_list, &mpu_gyro_y_reading);
   list_add(sensor_list, &mpu_gyro_z_reading);
-
-  SENSORS_ACTIVATE(reed_relay_sensor);
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -976,16 +975,16 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
     }
 #endif
 
-    if(ev == sensors_event && data == CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
-      if((CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER)->value(
-           BUTTON_SENSOR_VALUE_DURATION) > CLOCK_SECOND * 5) {
-        printf("Restoring defaults!\n");
-        cc26xx_web_demo_restore_defaults();
-      } else {
-        init_sensor_readings();
-
-        process_post(PROCESS_BROADCAST, cc26xx_web_demo_publish_event, NULL);
-      }
+    if(ev == button_hal_release_event &&
+       ((button_hal_button_t *)data)->unique_id ==
+       CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
+      init_sensor_readings();
+      process_post(PROCESS_BROADCAST, cc26xx_web_demo_publish_event, NULL);
+    } else if(ev == button_hal_periodic_event &&
+              ((button_hal_button_t *)data)->unique_id ==
+              CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
+      printf("Restoring defaults!\n");
+      cc26xx_web_demo_restore_defaults();
     } else if(ev == httpd_simple_event_new_config) {
       save_config();
 #if BOARD_SENSORTAG

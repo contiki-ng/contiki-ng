@@ -81,6 +81,22 @@
 #define LOG_OUTPUT(...) printf(__VA_ARGS__)
 #endif /* LOG_CONF_OUTPUT */
 
+/*
+ * Custom output function to prefix logs with level and module.
+ *
+ * This will only be called when LOG_CONF_WITH_MODULE_PREFIX is enabled and
+ * all implementations should be based on LOG_OUTPUT.
+ *
+ * \param level     The log level
+ * \param levelstr  The log level as string
+ * \param module    The module string descriptor
+ */
+#ifdef LOG_CONF_OUTPUT_PREFIX
+#define LOG_OUTPUT_PREFIX(level, levelstr, module) LOG_CONF_OUTPUT_PREFIX(level, levelstr, module)
+#else /* LOG_CONF_OUTPUT_PREFIX */
+#define LOG_OUTPUT_PREFIX(level, levelstr, module) LOG_OUTPUT("[%-4s: %-10s] ", levelstr, module)
+#endif /* LOG_CONF_OUTPUT_PREFIX */
+
 /******************************************************************************/
 /********************* A list of currently supported modules ******************/
 /******************************************************************************/
@@ -116,6 +132,14 @@
 #ifndef LOG_CONF_LEVEL_6TOP
 #define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_NONE
 #endif /* LOG_CONF_LEVEL_6TOP */
+
+#ifndef LOG_CONF_LEVEL_COAP
+#define LOG_CONF_LEVEL_COAP                        LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_COAP */
+
+#ifndef LOG_CONF_LEVEL_LWM2M
+#define LOG_CONF_LEVEL_LWM2M                       LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_LWM2M */
 
 #ifndef LOG_CONF_LEVEL_MAIN
 #define LOG_CONF_LEVEL_MAIN                        LOG_LEVEL_INFO

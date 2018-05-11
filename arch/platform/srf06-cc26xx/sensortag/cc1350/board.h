@@ -58,27 +58,13 @@
 #include "ioc.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations
+ * \name LED HAL configuration
  *
  * Those values are not meant to be modified by the user
  * @{
  */
-/* Some files include leds.h before us, so we need to get rid of defaults in
- * leds.h before we provide correct definitions */
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
-
-#define LEDS_RED       1
-#define LEDS_GREEN     LEDS_RED
-#define LEDS_YELLOW    LEDS_RED
-#define LEDS_ORANGE    LEDS_RED
-
-#define LEDS_CONF_ALL  1
-
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS        1
+#define LEDS_CONF_COUNT                 1
+#define LEDS_CONF_RED                   1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -88,8 +74,6 @@
  * @{
  */
 #define BOARD_IOID_LED_1          IOID_10
-#define BOARD_LED_1               (1 << BOARD_IOID_LED_1)
-#define BOARD_LED_ALL             BOARD_LED_1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -130,16 +114,6 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \brief SPI IOID mappings
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define BOARD_IOID_SPI_MOSI       IOID_19
-#define BOARD_IOID_SPI_MISO       IOID_18
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name Buzzer configuration
  * @{
  */
@@ -161,9 +135,23 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#define BOARD_IOID_FLASH_CS       IOID_14
-#define BOARD_FLASH_CS            (1 << BOARD_IOID_FLASH_CS)
-#define BOARD_IOID_SPI_CLK_FLASH  IOID_17
+#define EXT_FLASH_SPI_CONTROLLER    SPI_CONTROLLER_SPI0
+
+#define BOARD_IOID_FLASH_SCK        IOID_17
+#define BOARD_IOID_FLASH_MOSI       IOID_19
+#define BOARD_IOID_FLASH_MISO       IOID_18
+#define BOARD_IOID_FLASH_CS         IOID_14
+
+#define EXT_FLASH_SPI_PIN_SCK       17
+#define EXT_FLASH_SPI_PIN_MOSI      19
+#define EXT_FLASH_SPI_PIN_MISO      18
+#define EXT_FLASH_SPI_PIN_CS        14
+
+#define EXT_FLASH_DEVICE_ID         0x14
+#define EXT_FLASH_MID               0xC2
+
+#define EXT_FLASH_PROGRAM_PAGE_SIZE 256
+#define EXT_FLASH_ERASE_SECTOR_SIZE 4096
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -252,6 +240,17 @@
 
 #define SMARTRF_SETTINGS_CONF_RSSI_OFFSET_779_930  0x00F688A3
 #define SMARTRF_SETTINGS_CONF_OVERRIDE_TRIM_OFFSET 0x00018883
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Board indices for the button HAL
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
+#define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
+#define BOARD_BUTTON_HAL_INDEX_REED_RELAY 0xFF
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

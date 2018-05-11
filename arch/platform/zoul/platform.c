@@ -30,7 +30,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup platform
+ * \addtogroup zoul-core
  * @{
  *
  * \defgroup zoul Zolertia Zoul core module
@@ -54,8 +54,10 @@
 #include "dev/udma.h"
 #include "dev/crypto.h"
 #include "dev/rtcc.h"
+#include "dev/button-hal.h"
 #include "usb/usb-serial.h"
 #include "lib/random.h"
+#include "lib/sensors.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/linkaddr.h"
@@ -69,6 +71,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -81,7 +84,7 @@
 void board_init(void);
 /*---------------------------------------------------------------------------*/
 static void
-fade(unsigned char l)
+fade(leds_mask_t l)
 {
   volatile int i;
   int k, j;
@@ -90,11 +93,11 @@ fade(unsigned char l)
 
     leds_on(l);
     for(i = 0; i < j; ++i) {
-      asm("nop");
+      __asm("nop");
     }
     leds_off(l);
     for(i = 0; i < 400 - j; ++i) {
-      asm("nop");
+      __asm("nop");
     }
   }
 }
@@ -124,7 +127,7 @@ rtc_init(void)
    */
 
   /* Get the system date in the following format: wd dd mm yy hh mm ss */
-  PRINTF("Setting RTC from system date: %s\n", DATE);
+  LOG_INFO("Setting RTC from system date: %s\n", DATE);
 
   /* Configure the RTC with the current values */
   td.weekdays = (uint8_t)strtol(DATE, &next, 10);
@@ -149,7 +152,7 @@ rtc_init(void)
 
   /* Set the time and date */
   if(rtcc_set_time_date(&td) == AB08_ERROR) {
-    PRINTF("Failed to set time and date\n");
+    LOG_ERR("Failed to set time and date\n");
   }
 #endif
 #endif
@@ -165,9 +168,6 @@ set_rf_params(void)
 
   short_addr = ext_addr[7];
   short_addr |= ext_addr[6] << 8;
-
-  /* Populate linkaddr_node_addr. Maintain endianness */
-  memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
@@ -220,7 +220,12 @@ platform_init_stage_two()
   crypto_disable();
 #endif
 
-  set_rf_params();
+  /* Populate linkaddr_node_addr */
+  ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
+
+#if PLATFORM_HAS_BUTTON
+  button_hal_init();
+#endif
 
   INTERRUPTS_ENABLE();
 
@@ -232,6 +237,8 @@ platform_init_stage_three()
 {
   LOG_INFO("%s\n", BOARD_STRING);
 
+  set_rf_params();
+
   board_init();
 
   rtc_init();
@@ -239,10 +246,6 @@ platform_init_stage_three()
   soc_print_info();
 
   process_start(&sensors_process, NULL);
-
-#if PLATFORM_HAS_BUTTON
-  SENSORS_ACTIVATE(button_sensor);
-#endif
 
   fade(LEDS_GREEN);
 }

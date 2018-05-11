@@ -57,24 +57,24 @@ static void
 input_callback(void)
 {
   /*PRINTF("SIN: %u\n", uip_len);*/
-  if(uip_buf[0] == '!') {
-    PRINTF("Got configuration message of type %c\n", uip_buf[1]);
+  if(uip_buf[UIP_LLH_LEN] == '!') {
+    PRINTF("Got configuration message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
     uip_clear_buf();
 #if 0
-    if(uip_buf[1] == 'P') {
+    if(uip_buf[UIP_LLH_LEN + 1] == 'P') {
       uip_ipaddr_t prefix;
       /* Here we set a prefix !!! */
       memset(&prefix, 0, 16);
-      memcpy(&prefix, &uip_buf[2], 8);
+      memcpy(&prefix, &uip_buf[UIP_LLH_LEN + 2], 8);
       PRINTF("Setting prefix ");
       PRINT6ADDR(&prefix);
       PRINTF("\n");
       set_prefix_64(&prefix);
     }
 #endif
-  } else if(uip_buf[0] == '?') {
-    PRINTF("Got request message of type %c\n", uip_buf[1]);
-    if(uip_buf[1] == 'M') {
+  } else if(uip_buf[UIP_LLH_LEN] == '?') {
+    PRINTF("Got request message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
+    if(uip_buf[UIP_LLH_LEN + 1] == 'M') {
       const char *hexchar = "0123456789abcdef";
       int j;
       /* this is just a test so far... just to see if it works */
@@ -84,8 +84,7 @@ input_callback(void)
         uip_buf[3 + j * 2] = hexchar[uip_lladdr.addr[j] & 15];
       }
       uip_len = 18;
-      slip_send();
-      
+      slip_write(uip_buf, uip_len);
     }
     uip_clear_buf();
   } else {
@@ -147,6 +146,3 @@ const struct uip_fallback_interface ip64_slip_interface = {
   init, output
 };
 /*---------------------------------------------------------------------------*/
-
-
-

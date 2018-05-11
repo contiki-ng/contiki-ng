@@ -52,7 +52,7 @@
 /**
  * \brief Exports a global symbol to be used by the sensor API
  */
-SENSORS(&button_sensor, &cc2538_temp_sensor);
+SENSORS(&cc2538_temp_sensor);
 /*---------------------------------------------------------------------------*/
 /**
  * @}

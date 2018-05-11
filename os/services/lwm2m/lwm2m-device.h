@@ -29,7 +29,7 @@
  */
 
 /**
- * \addtogroup oma-lwm2m
+ * \addtogroup lwm2m
  * @{
  */
 
@@ -46,6 +46,22 @@
 
 #include "contiki.h"
 
+#define LWM2M_DEVICE_MANUFACTURER_ID            0
+#define LWM2M_DEVICE_MODEL_NUMBER_ID            1
+#define LWM2M_DEVICE_SERIAL_NUMBER_ID           2
+#define LWM2M_DEVICE_FIRMWARE_VERSION_ID        3
+#define LWM2M_DEVICE_REBOOT_ID                  4
+#define LWM2M_DEVICE_FACTORY_DEFAULT_ID         5
+#define LWM2M_DEVICE_AVAILABLE_POWER_SOURCES    6
+/* These do have multiple instances */
+#define LWM2M_DEVICE_POWER_SOURCE_VOLTAGE       7
+#define LWM2M_DEVICE_POWER_SOURCE_CURRENT       8
+#define LWM2M_DEVICE_BATTERY_LEVEL              9
+
+#define LWM2M_DEVICE_ERROR_CODE                11
+#define LWM2M_DEVICE_TIME_ID                   13
+#define LWM2M_DEVICE_TYPE_ID                   17
+
 #ifndef LWM2M_DEVICE_MODEL_NUMBER
 #ifdef BOARD_STRING
 #define LWM2M_DEVICE_MODEL_NUMBER BOARD_STRING
@@ -53,8 +69,13 @@
 #endif /* LWM2M_DEVICE_MODEL_NUMBER */
 
 #ifndef LWM2M_DEVICE_FIRMWARE_VERSION
+#ifdef CONTIKI_VERSION_STRING
 #define LWM2M_DEVICE_FIRMWARE_VERSION CONTIKI_VERSION_STRING
+#endif /* CONTIKI_VERSION_STRING */
 #endif /* LWM2M_DEVICE_FIRMWARE_VERSION */
+
+int32_t lwm2m_device_get_time(void);
+void    lwm2m_device_set_time(int32_t time);
 
 void lwm2m_device_init(void);
 

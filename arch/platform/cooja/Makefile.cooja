@@ -38,10 +38,7 @@ endif ## QUICKSTART
 MAIN_OBJ = $(OBJECTDIR)/$(LIBNAME).o
 ARCHIVE = $(OBJECTDIR)/$(LIBNAME).a
 JNILIB = $(OBJECTDIR)/$(LIBNAME).$(TARGET)
-CONTIKI_APP_OBJ = $(CONTIKI_APP).co
-
-# Modules
-MODULES += os/net os/net/mac os/net/mac/framer
+CONTIKI_APP_OBJ = $(CONTIKI_APP).o
 
 ### COOJA platform sources
 COOJA = $(CONTIKI)/arch/platform/$(TARGET)
@@ -66,6 +63,8 @@ $(COOJA_BASE) $(COOJA_INTFS) $(COOJA_CORE) $(COOJA_NET) $(COOJA_SOURCEFILES)
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 .SUFFIXES:
+
+CLEAN += COOJA.log
 
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/arch/cpu/x86

@@ -38,11 +38,15 @@
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
 
-#ifdef PLATFORM_CONF_H
-#include PLATFORM_CONF_H
-#else
-#include "platform-conf.h"
-#endif /* PLATFORM_CONF_H */
+#include "jn516x-def.h"
+
+#ifdef RF_CHANNEL
+#define MICROMAC_CONF_CHANNEL RF_CHANNEL
+#endif
+
+#ifndef MICROMAC_CONF_CHANNEL
+#define MICROMAC_CONF_CHANNEL 26
+#endif
 
 /* Configure radio driver */
 #ifndef NETSTACK_CONF_RADIO

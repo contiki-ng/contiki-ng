@@ -7,12 +7,14 @@
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
-
-#ifdef PLATFORM_CONF_H
-#include PLATFORM_CONF_H
-#else
-#include "platform-conf.h"
-#endif /* PLATFORM_CONF_H */
+/*---------------------------------------------------------------------------*/
+#include "sky-def.h"
+#include "msp430-def.h"
+/*---------------------------------------------------------------------------*/
+/* Map RF_CHANNEL to cc2420 default channel */
+#ifdef RF_CHANNEL
+#define CC2420_CONF_CHANNEL RF_CHANNEL
+#endif /* RF_CHANNEL */
 
 /* Configure radio driver */
 #ifndef NETSTACK_CONF_RADIO
@@ -30,12 +32,16 @@
 #define UIP_CONF_BUFFER_SIZE		240
 #endif
 
-/* Platform-specific checksum implementation */
-#define UIP_ARCH_IPCHKSUM        1
-
 /* Platform-specific (H/W) AES implementation */
 #ifndef AES_128_CONF
 #define AES_128_CONF cc2420_aes_128_driver
 #endif /* AES_128_CONF */
 
+/* Disable the stack check library by default: .rom overflow otherwise */
+#ifndef STACK_CHECK_CONF_ENABLED
+#define STACK_CHECK_CONF_ENABLED 0
+#endif
+/*---------------------------------------------------------------------------*/
+#include "msp430-conf.h"
+/*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H */
