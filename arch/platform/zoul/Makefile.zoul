@@ -56,11 +56,11 @@ ifeq ($(HOST_OS),Darwin)
   USBDEVPREFIX=
   MOTELIST := $(CONTIKI)/tools/zolertia/motelist-zolertia-macos
   MOTES := $(shell $(MOTELIST) -c 2>&- | cut -f 2 -d ,)
-  SERIALDUMP := $(CONTIKI)/tools/sky/serialdump-macos
+  SERIALDUMP := rlwrap $(CONTIKI)/tools/sky/serialdump-macos
 else
 ### If we are not running under Mac, we assume Linux
   USBDEVPREFIX=
-  SERIALDUMP := $(CONTIKI)/tools/sky/serialdump-linux
+  SERIALDUMP := rlwrap $(CONTIKI)/tools/sky/serialdump-linux
   MOTELIST := $(CONTIKI)/tools/zolertia/motelist-zolertia
   MOTES := $(shell $(MOTELIST) -b $(MOTELIST_ZOLERTIA) -c 2>&- | cut -f 2 -d , | \
             perl -ne 'print $$1 . " " if(m-(/dev/\w+)-);')

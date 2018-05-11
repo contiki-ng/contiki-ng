@@ -56,14 +56,19 @@
 
 /* RFC6551 and RFC6719 do not mandate the use of a specific formula to
  * compute the ETX value. This MRHOF implementation relies on the value
- * computed by the link-stats module. It has an optional feature,
+ * computed by the link-stats module.It has an optional feature,
  * RPL_MRHOF_CONF_SQUARED_ETX, that consists in squaring this value.
- * This basically penalizes bad links while preserving the semantics of ETX
+ *
+ * Squaring basically penalizes bad links while preserving the semantics of ETX
  * (1 = perfect link, more = worse link). As a result, MRHOF will favor
- * good links over short paths. Recommended when reliability is a priority.
- * Without this feature, a hop with 50% PRR (ETX=2) is equivalent to two
- * perfect hops with 100% PRR (ETX=1+1=2). With this feature, the former
- * path obtains ETX=2*2=4 and the former ETX=1*1+1*1=2. */
+ * good links over short paths. Without this feature, a hop with 50% PRR (ETX=2)
+ * is equivalent to two perfect hops with 100% PRR (ETX=1+1=2). With this
+ * feature, the former path obtains ETX=2*2=4 and the former ETX=1*1+1*1=2.
+ *
+ * While this feature helps achieve extra relaibility, it also results in
+ * added churn. In networks with high congestion or poor links, this can lead
+ * to poor connectivity due to more parent switches, loops, Trickle resets, etc.
+  */
 #ifdef RPL_MRHOF_CONF_SQUARED_ETX
 #define RPL_MRHOF_SQUARED_ETX RPL_MRHOF_CONF_SQUARED_ETX
 #else /* RPL_MRHOF_CONF_SQUARED_ETX */

@@ -183,14 +183,14 @@ void
 rpl_refresh_routes(const char *str)
 {
   if(rpl_dag_root_is_root()) {
-    LOG_WARN("incrementing DTSN (%s), current %u)\n",
+    /* Increment DTSN */
+    RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
+
+    LOG_WARN("incremented DTSN (%s), current %u\n",
          str, curr_instance.dtsn_out);
     if(LOG_INFO_ENABLED) {
       rpl_neighbor_print_list("Refresh routes (before)");
     }
-
-    /* Increment DTSN */
-    RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -198,15 +198,16 @@ void
 rpl_global_repair(const char *str)
 {
   if(rpl_dag_root_is_root()) {
-    LOG_WARN("initiating global repair (%s), version %u, rank %u)\n",
+    RPL_LOLLIPOP_INCREMENT(curr_instance.dag.version);  /* New DAG version */
+    curr_instance.dtsn_out = RPL_LOLLIPOP_INIT;  /* Re-initialize DTSN */
+
+    LOG_WARN("initiating global repair (%s), version %u, rank %u\n",
          str, curr_instance.dag.version, curr_instance.dag.rank);
     if(LOG_INFO_ENABLED) {
       rpl_neighbor_print_list("Global repair (before)");
     }
 
-    /* Initiate global repair */
-    RPL_LOLLIPOP_INCREMENT(curr_instance.dag.version);  /* New DAG version */
-    RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out); /* Request new DAOs */
+    /* Now do a local repair to disseminate the new version */
     rpl_local_repair("Global repair");
   }
 }
@@ -215,12 +216,13 @@ static void
 global_repair_non_root(rpl_dio_t *dio)
 {
   if(!rpl_dag_root_is_root()) {
-    LOG_WARN("participating in global repair, version %u, rank %u)\n",
-         curr_instance.dag.version, curr_instance.dag.rank);
+    LOG_WARN("participating in global repair, version %u, rank %u\n",
+         dio->version, curr_instance.dag.rank);
     if(LOG_INFO_ENABLED) {
       rpl_neighbor_print_list("Global repair (before)");
     }
     /* Re-initialize configuration from DIO */
+    rpl_timers_stop_dag_timers();
     init_dag_from_dio(dio);
     rpl_local_repair("Global repair");
   }
@@ -395,9 +397,15 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
     return;
   }
 
-  /* If the DIO sender is on an older version of the DAG, ignore it. The node
-  will eventually hear the global repair and catch up. */
+  /* If the DIO sender is on an older version of the DAG, do not process it
+   * further. The sender will eventually hear the global repair and catch up. */
   if(rpl_lollipop_greater_than(curr_instance.dag.version, dio->version)) {
+    if(dio->rank == ROOT_RANK) {
+      /* Before returning, if the DIO was from the root, an old DAG versions
+       * likely incidates a root reboot. Reset our DIO timer to make sure the
+       * root hears our version ASAP, and in turn triggers a global repair. */
+      rpl_timers_dio_reset("Heard old version from root");
+    }
     return;
   }
 
@@ -412,10 +420,12 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
    * Must come first, as it might remove all neighbors, and we then need
    * to re-add this source of the DIO to the neighbor table */
   if(rpl_lollipop_greater_than(dio->version, curr_instance.dag.version)) {
-    if(curr_instance.dag.rank == ROOT_RANK) { /* The root should not hear newer versions */
+    if(curr_instance.dag.rank == ROOT_RANK) {
+      /* The root should not hear newer versions unless it just rebooted */
       LOG_ERR("inconsistent DIO version (current: %u, received: %u), initiate global repair\n",
           curr_instance.dag.version, dio->version);
-      curr_instance.dag.version = dio->version; /* Update version and trigger global repair */
+      /* Update version and trigger global repair */
+      curr_instance.dag.version = dio->version;
       rpl_global_repair("Inconsistent DIO version");
     } else {
       LOG_WARN("new DIO version (current: %u, received: %u), apply global repair\n",
@@ -451,7 +461,7 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   if(curr_instance.mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
     if(nbr != NULL && nbr == curr_instance.dag.preferred_parent && rpl_lollipop_greater_than(dio->dtsn, last_dtsn)) {
       RPL_LOLLIPOP_INCREMENT(curr_instance.dtsn_out);
-      LOG_INFO("DTSN increment %u->%u, schedule new DAO with DTSN %u",
+      LOG_WARN("DTSN increment %u->%u, schedule new DAO with DTSN %u\n",
         last_dtsn, dio->dtsn, curr_instance.dtsn_out);
       rpl_timers_schedule_dao();
     }

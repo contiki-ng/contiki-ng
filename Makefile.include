@@ -49,6 +49,8 @@ CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
 CFLAGS += -DCONTIKI_BOARD_STRING=\"$(BOARD)\"
 endif
 
+LDFLAGS = -Wl,--fatal-warnings
+
 MODULES += os os/sys os/dev os/lib os/services
 
 # Automatically include project-conf.h if found
@@ -165,14 +167,12 @@ MAKE_NET ?= MAKE_NET_IPV6
 
 ifeq ($(MAKE_NET),MAKE_NET_NULLNET)
   CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
+  MODULES += os/net/nullnet
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_IPV6)
   CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
   MODULES += os/net/ipv6
-else
-  CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
-  MODULES += os/net/nullnet
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_OTHER)
@@ -298,14 +298,15 @@ CONTIKI_NG_PROJECT_MAP = $(addsuffix -$(TARGET).map, $(basename $@))
 .PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
-	-rm -f *.d *.e *.o $(CONTIKI_NG_TARGET_LIB) $(CLEAN)
-	-rm -rf $(OBJECTDIR)
-	-rm -f $(addsuffix -$(TARGET).map, $(CONTIKI_PROJECT))
-	-rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	-$(Q)rm -f *.d *.e *.o $(CONTIKI_NG_TARGET_LIB) $(CLEAN)
+	-$(Q)rm -rf $(OBJECTDIR)
+	-$(Q)rm -f $(addsuffix -$(TARGET).map, $(CONTIKI_PROJECT))
+	-$(Q)rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	@echo Target $(TARGET) cleaned
 
 distclean:
 	@for TARG in `ls $(CONTIKI)/arch/platform $(TARGETDIRS)`; do \
-		echo make $$TARG clean; \
+		echo Running: make TARGET=$$TARG clean; \
 		make TARGET=$$TARG clean; \
 	done
 
@@ -397,7 +398,7 @@ usage:
 	@echo "Miscellaneous targets:"
 	@echo "    targets         Prints list of supported platforms"
 	@echo "    boards          Prints a list of supported boards for TARGET"
-	@echo "    savegtarget     Saves TARGET and BOARD for future invocations of make"
+	@echo "    savetarget      Saves TARGET and BOARD for future invocations of make"
 	@echo "    savedefines     Saves DEFINES for future invocations of make"
 	@echo "    clean           Removes all compiled files for TARGET"
 	@echo "    distclean       Removes all compiled files for all TARGETs"

@@ -250,9 +250,11 @@ uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
     }
   }
 
-  if(n >= size - 1) {
-    buf[size - 1] = '\0';
-  }
+  /*
+   * Make sure the output string is always null-terminated.
+   */
+  buf[MIN(n, size - 1)] = '\0';
+
   return n;
 }
 /*---------------------------------------------------------------------------*/

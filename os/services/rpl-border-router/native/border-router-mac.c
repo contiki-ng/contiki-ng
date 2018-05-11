@@ -44,13 +44,11 @@
 #include "border-router.h"
 #include <string.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "BR"
+#define LOG_LEVEL LOG_LEVEL_NONE
 
 #define MAX_CALLBACKS 16
 static int callback_pos;
@@ -76,7 +74,7 @@ packet_sent(uint8_t sessionid, uint8_t status, uint8_t tx)
     packetbuf_attr_copyfrom(callback->attrs, callback->addrs);
     mac_call_sent_callback(callback->cback, callback->ptr, status, tx);
   } else {
-    PRINTF("*** ERROR: too high session id %d\n", sessionid);
+    LOG_ERR("Session id to high (%d)\n", sessionid);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -117,7 +115,7 @@ send_packet(mac_callback_t sent, void *ptr)
 
   if(NETSTACK_FRAMER.create() < 0) {
     /* Failed to allocate space for headers */
-    PRINTF("br-rdc: send failed, too large header\n");
+    LOG_WARN("br-rdc: send failed, too large header\n");
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
   } else {
     /* here we send the data over SLIP to the radio-chip */
@@ -126,7 +124,7 @@ send_packet(mac_callback_t sent, void *ptr)
     size = packetutils_serialize_atts(&buf[3], sizeof(buf) - 3);
 #endif
     if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
-      PRINTF("br-rdc: send failed, too large header\n");
+      LOG_WARN("br-rdc: send failed, too large header\n");
       mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
     } else {
       sid = setup_callback(sent, ptr);
@@ -147,7 +145,7 @@ static void
 packet_input(void)
 {
   if(NETSTACK_FRAMER.parse() < 0) {
-    PRINTF("br-rdc: failed to parse %u\n", packetbuf_datalen());
+    LOG_DBG("br-rdc: failed to parse %u\n", packetbuf_datalen());
   } else {
     NETSTACK_NETWORK.input();
   }

@@ -52,7 +52,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
-#define LOG_MODULE "coap-timer-default"
+#define LOG_MODULE "coap-timer"
 #define LOG_LEVEL  LOG_LEVEL_NONE
 
 PROCESS(coap_timer_process, "coap timer process");

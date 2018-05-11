@@ -54,33 +54,38 @@ tab, as per the image below.
 
 CoAP Server
 -----------
-For this functionality to work, you will need to install the
-[Copper (Cu)](https://addons.mozilla.org/en-US/firefox/addon/copper-270430/)
-addon to your browser.
+For this functionality to work, you will need to install a CoAP client.
+You can achieve this by following the guides on how to set up your system
+[in the wiki](https://github.com/contiki-ng/contiki-ng/wiki#setting-up-contiki-ng).
 
-From the sensors tab in the 6lbr web page, click the 'coap' link in the line
-corresponding to your CC26xx device. Once the addon fires up, select
-".well-known/core" in the left pane and then hit the 'Get' button at the top.
+You should start by sending a CoAP GET request for the `.well-known/core`
+resource. If you are using libcoap's CoAP client, this can be achieved by:
 
-![CoAP Resources](img/coap-resources.png)
+```
+coap-client -m get coap://[<device IPv6 address here>]/.well-known/core
+```
+
+Adjust the above command to match the command line arguments of your CoAP
+client.
 
 The Device will respond with a list of all available CoAP resources. This list
-will be different between the Srf and the SensorTag. The screenshot below shows
-a (partial) list of resources exported by the SensorTag CoAP server. Select
-a resource on the left pane and hit 'Get' to retrieve its value. Select
-`lt/g` and hit 'Post' to toggle the green LED, `lt/r` for the red one.
+will be different between the various CC13x0/CC26x0 boards.
 
-You can also use CoAP to enable/disable BLE advertisements! Select
-`dev/ble_advd` and then hit the "Outgoing" button in the payload panel. Type in
-the desired payload, which can be:
+Send a CoAP GET request for any of those resrouces to retrieve its value.
+
+Send a CoAP POST to the `lt/g` or `lt/r` to toggle the green/red LED
+respectively.
+
+You can also use CoAP to enable/disable BLE advertisements! This can be done
+by sending a PUT or POST request to the `dev/ble_advd` resource. Your request
+should contain the desired payload, which can be:
 
 * `mode=on|off`
 * `name=<name>`
 * `interval=<secs>`
 
-or a combination of both delimited with an amp. For example, you can set as
-payload `mode=on&name=My CC26xx Device 4&interval=5`. Once you have set the
-payload, hit either the POST or PUT button.
+or a combination of the above delimited with an amp. For example, you can set
+as payload `mode=on&name=My CC26xx Device 4&interval=5`.
 
 Bear in mind that you must set `name` at least once before enabling BLE
 advertisements. If you fail to do so, the RF will refuse to enter BLE mode and
@@ -166,3 +171,9 @@ the state of the LED.
 Bear in mind that, even though the topic suggests that messages are of json
 format, they are in fact not. This was done in order to avoid linking a json
 parser into the firmware.
+
+IBM Watson IoT Platform
+----------------------------
+To use IBM Watson IoT Platform, you have to go to SECURITY tab of Device page to select "TLS Optional". This step is critical. If you don't do this, you need to use TLS for connection and default cc26xx-web-demo won't work.
+
+![IBM Watson IoT Platform TLS Optional Configuration](img/ibm-watson-iot-platform-tls-optional.png)
