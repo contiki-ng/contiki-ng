@@ -41,8 +41,12 @@
 #define MODE_SLIP        7
 #define MODE_SLIP_HIDE   8
 /*---------------------------------------------------------------------------*/
+#ifndef O_SYNC
+#define O_SYNC 0
+#endif
 
-
+#define OPEN_FLAGS (O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC)
+/*---------------------------------------------------------------------------*/
 static unsigned char rxbuf[2048];
 /*---------------------------------------------------------------------------*/
 static int
@@ -176,22 +180,13 @@ main(int argc, char **argv)
       }
     }
   }
-  fprintf(stderr, "connecting to %s (%s)", device, speedname);
 
-#ifndef O_SYNC
-#define O_SYNC 0
-#endif
-#ifdef O_DIRECT
-  fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_DIRECT | O_SYNC);
-  /* Some systems do not support certain parameters (e.g. raspbian)
-   * Just do some random testing. Not sure  whether there is a better way
-   * of doing this. */
-  if(fd < 0 && errno == EINVAL) {
-    fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
   }
-#else
-  fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
-#endif
+
+  fprintf(stderr, "connecting to %s", device);
+
+  fd = open(device, OPEN_FLAGS);
+
   if(fd < 0) {
     fprintf(stderr, "\n");
     perror("open");
