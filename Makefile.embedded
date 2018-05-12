@@ -1,0 +1,18 @@
+.PHONY: login serialdump serialview  
+
+BAUDRATE ?= 115200
+TIMESTAMP =  $(CONTIKI)/tools/timestamp
+ifeq ($(HOST_OS),Windows)
+  SERIALDUMP = $(SERIAL_DUMP_BIN)
+else
+  SERIALDUMP = rlwrap $(SERIAL_DUMP_BIN)
+endif
+
+serialdump: $(SERIAL_DUMP_BIN)
+	$(SERIALDUMP) -b$(BAUDRATE) $(PORT) | $(TIMESTAMP) | tee serialdump-`date +%Y%m%d-%H%M`
+
+serialview: $(SERIAL_DUMP_BIN)
+	$(SERIALDUMP) -b$(BAUDRATE) $(PORT) | $(TIMESTAMP)
+
+login: $(SERIAL_DUMP_BIN)
+	$(SERIALDUMP) -b$(BAUDRATE) $(PORT)

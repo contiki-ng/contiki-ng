@@ -396,7 +396,7 @@ endif
 
 usage:
 	@echo "Usage:"
-	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [DEFINES=(DEFINES)] [target]"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [DEFINES=(DEFINES)] [PORT=(PORT)] [target]"
 	@echo ""
 	@echo "Typical usage:"
 	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [all]"
@@ -417,6 +417,9 @@ usage:
 	@echo "    %.o             Produces an object file from a given source file (e.g. hello-world.o)"
 	@echo "    %.e             Produces the pre-processed version of a given source file (e.g. hello-world.e)"
 	@echo "    %.s             Produces an assembly file from a given source file (e.g. hello-world.s)"
+	@echo "    login           View the serial output of the device connected to PORT"
+	@echo "    serialview      Same as login, but prepend serial output with a unix timestamp"
+	@echo "    serialdump      same as serialview, but also save the output to a file"
 
 help: usage
 
@@ -461,6 +464,12 @@ endif
 	@echo "'><' Means the flag is unset and has no default value"
 	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
 	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
+
+### Include Makefile.embedded for relevant platforms, in order to pull in
+### rules for login, serialview etc
+ifeq ($(findstring $(TARGET),native cooja),)
+  include $(CONTIKI)/Makefile.embedded
+endif
 
 # Don't treat %.$(TARGET) as an intermediate file because it is
 # in fact the primary target.
