@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -9,15 +10,16 @@
 #include <string.h>
 #include <time.h>
 #include <signal.h>
-
+/*---------------------------------------------------------------------------*/
 #define BAUDRATE B115200
 #define BAUDRATE_S "115200"
+/*---------------------------------------------------------------------------*/
 #ifdef linux
 #define MODEMDEVICE "/dev/ttyS0"
 #else
 #define MODEMDEVICE "/dev/com1"
 #endif /* linux */
-
+/*---------------------------------------------------------------------------*/
 #define SLIP_END      0300
 #define SLIP_ESC      0333
 #define SLIP_ESC_END  0334
@@ -38,9 +40,11 @@
 #define MODE_SLIP_AUTO   6
 #define MODE_SLIP        7
 #define MODE_SLIP_HIDE   8
+/*---------------------------------------------------------------------------*/
+
 
 static unsigned char rxbuf[2048];
-
+/*---------------------------------------------------------------------------*/
 static int
 usage(int result)
 {
@@ -54,7 +58,7 @@ usage(int result)
   printf("         (see man page for strftime() for format description)\n");
   return result;
 }
-
+/*---------------------------------------------------------------------------*/
 static void
 print_hex_line(char *prefix, unsigned char *outbuf, int index)
 {
@@ -82,13 +86,13 @@ print_hex_line(char *prefix, unsigned char *outbuf, int index)
     }
   }
 }
-
+/*---------------------------------------------------------------------------*/
 static void
 intHandler(int sig)
 {
   exit(0);
 }
-
+/*---------------------------------------------------------------------------*/
 int
 main(int argc, char **argv)
 {
@@ -111,57 +115,57 @@ main(int argc, char **argv)
   while(index < argc) {
     if(argv[index][0] == '-') {
       switch(argv[index][1]) {
-        case 'b':
-          /* set speed */
-          if(strcmp(&argv[index][2], "38400") == 0) {
-            speed = B38400;
-            speedname = "38400";
-          } else if(strcmp(&argv[index][2], "19200") == 0) {
-            speed = B19200;
-            speedname = "19200";
-          } else if(strcmp(&argv[index][2], "57600") == 0) {
-            speed = B57600;
-            speedname = "57600";
-          } else if(strcmp(&argv[index][2], "115200") == 0) {
-            speed = B115200;
-            speedname = "115200";
-          } else {
-            fprintf(stderr, "unsupported speed: %s\n", &argv[index][2]);
-            return usage(1);
-          }
-          break;
-        case 'x':
-          mode = MODE_HEX;
-          break;
-        case 'i':
-          mode = MODE_INT;
-          break;
-        case 's':
-          switch(argv[index][2]) {
-            case 'n':
-              mode = MODE_SLIP_HIDE;
-              break;
-            case 'o':
-              mode = MODE_SLIP;
-              break;
-            default:
-              mode = MODE_SLIP_AUTO;
-              break;
-          }
-          break;
-        case 'T':
-          if(strlen(&argv[index][2]) == 0) {
-            timeformat = "%Y-%m-%d %H:%M:%S";
-          } else {
-            timeformat = &argv[index][2];
-          }
-          mode = MODE_START_DATE;
-          break;
-        case 'h':
-          return usage(0);
-        default:
-          fprintf(stderr, "unknown option '%c'\n", argv[index][1]);
+      case 'b':
+        /* set speed */
+        if(strcmp(&argv[index][2], "38400") == 0) {
+          speed = B38400;
+          speedname = "38400";
+        } else if(strcmp(&argv[index][2], "19200") == 0) {
+          speed = B19200;
+          speedname = "19200";
+        } else if(strcmp(&argv[index][2], "57600") == 0) {
+          speed = B57600;
+          speedname = "57600";
+        } else if(strcmp(&argv[index][2], "115200") == 0) {
+          speed = B115200;
+          speedname = "115200";
+        } else {
+          fprintf(stderr, "unsupported speed: %s\n", &argv[index][2]);
           return usage(1);
+        }
+        break;
+      case 'x':
+        mode = MODE_HEX;
+        break;
+      case 'i':
+        mode = MODE_INT;
+        break;
+      case 's':
+        switch(argv[index][2]) {
+        case 'n':
+          mode = MODE_SLIP_HIDE;
+          break;
+        case 'o':
+          mode = MODE_SLIP;
+          break;
+        default:
+          mode = MODE_SLIP_AUTO;
+          break;
+        }
+        break;
+      case 'T':
+        if(strlen(&argv[index][2]) == 0) {
+          timeformat = "%Y-%m-%d %H:%M:%S";
+        } else {
+          timeformat = &argv[index][2];
+        }
+        mode = MODE_START_DATE;
+        break;
+      case 'h':
+        return usage(0);
+      default:
+        fprintf(stderr, "unknown option '%c'\n", argv[index][1]);
+        return usage(1);
       }
       index++;
     } else {
@@ -174,8 +178,6 @@ main(int argc, char **argv)
   }
   fprintf(stderr, "connecting to %s (%s)", device, speedname);
 
-
-
 #ifndef O_SYNC
 #define O_SYNC 0
 #endif
@@ -184,7 +186,7 @@ main(int argc, char **argv)
   /* Some systems do not support certain parameters (e.g. raspbian)
    * Just do some random testing. Not sure  whether there is a better way
    * of doing this. */
-  if(fd < 0 && errno == EINVAL){
+  if(fd < 0 && errno == EINVAL) {
     fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
   }
 #else
@@ -241,7 +243,7 @@ main(int argc, char **argv)
   index = 0;
   for(;;) {
     smask = mask;
-    nfound = select(FD_SETSIZE, &smask, (fd_set *) 0, (fd_set *) 0, (struct timeval *) 0);
+    nfound = select(FD_SETSIZE, &smask, (fd_set *)0, (fd_set *)0, (struct timeval *)0);
     if(nfound < 0) {
       if(errno == EINTR) {
         fprintf(stderr, "interrupted system call\n");
@@ -260,7 +262,7 @@ main(int argc, char **argv)
         exit(-1);
       } else if(n > 0) {
         /* because commands might need parameters, lines needs to be
-         separated which means the terminating LF must be sent */
+           separated which means the terminating LF must be sent */
         /*   while(n > 0 && buf[n - 1] < 32) { */
         /*     n--; */
         /*   } */
@@ -298,103 +300,103 @@ main(int argc, char **argv)
 
       for(i = 0; i < n; i++) {
         switch(mode) {
-          case MODE_START_TEXT:
-          case MODE_TEXT:
-            printf("%c", buf[i]);
-            break;
-          case MODE_START_DATE: {
-            time_t t;
-            t = time(&t);
-            strftime(outbuf, HCOLS, timeformat, localtime(&t));
-            printf("%s|", outbuf);
-            mode = MODE_DATE;
+        case MODE_START_TEXT:
+        case MODE_TEXT:
+          printf("%c", buf[i]);
+          break;
+        case MODE_START_DATE: {
+          time_t t;
+          t = time(&t);
+          strftime(outbuf, HCOLS, timeformat, localtime(&t));
+          printf("%s|", outbuf);
+          mode = MODE_DATE;
+        }
+        /* continue into the MODE_DATE */
+        case MODE_DATE:
+          printf("%c", buf[i]);
+          if(buf[i] == '\n') {
+            mode = MODE_START_DATE;
           }
-            /* continue into the MODE_DATE */
-          case MODE_DATE:
+          break;
+        case MODE_INT:
+          printf("%03d ", buf[i]);
+          if(++index >= ICOLS) {
+            index = 0;
+            printf("\n");
+          }
+          break;
+        case MODE_HEX:
+          rxbuf[index++] = buf[i];
+          if(index >= HCOLS) {
+            print_hex_line("", rxbuf, index);
+            index = 0;
+            printf("\n");
+          }
+          break;
+
+        case MODE_SLIP_AUTO:
+        case MODE_SLIP_HIDE:
+          if(!flags && (buf[i] != SLIP_END)) {
+            /* Not a SLIP packet? */
             printf("%c", buf[i]);
-            if(buf[i] == '\n') {
-              mode = MODE_START_DATE;
-            }
             break;
-          case MODE_INT:
-            printf("%03d ", buf[i]);
-            if(++index >= ICOLS) {
+          }
+        /* continue to slip only mode */
+        case MODE_SLIP:
+          switch(buf[i]) {
+          case SLIP_ESC:
+            lastc = SLIP_ESC;
+            break;
+
+          case SLIP_END:
+            if(index > 0) {
+              if(flags != 2 && mode != MODE_SLIP_HIDE) {
+                /* not overflowed: show packet */
+                print_hex_line("SLIP: ", rxbuf, index > HCOLS ? HCOLS : index);
+                printf("\n");
+              }
+              lastc = '\0';
               index = 0;
-              printf("\n");
+              flags = 0;
+            } else {
+              flags = !flags;
             }
             break;
-          case MODE_HEX:
+
+          default:
+            if(lastc == SLIP_ESC) {
+              lastc = '\0';
+
+              /* Previous read byte was an escape byte, so this byte will be
+                 interpreted differently from others. */
+              switch(buf[i]) {
+              case SLIP_ESC_END:
+                buf[i] = SLIP_END;
+                break;
+              case SLIP_ESC_ESC:
+                buf[i] = SLIP_ESC;
+                break;
+              }
+            }
+
             rxbuf[index++] = buf[i];
-            if(index >= HCOLS) {
-              print_hex_line("", rxbuf, index);
+            if(index >= sizeof(rxbuf)) {
+              fprintf(stderr, "**** slip overflow\n");
               index = 0;
-              printf("\n");
+              flags = 2;
             }
             break;
-
-          case MODE_SLIP_AUTO:
-          case MODE_SLIP_HIDE:
-            if(!flags && (buf[i] != SLIP_END)) {
-              /* Not a SLIP packet? */
-              printf("%c", buf[i]);
-              break;
-            }
-            /* continue to slip only mode */
-          case MODE_SLIP:
-            switch(buf[i]) {
-              case SLIP_ESC:
-                lastc = SLIP_ESC;
-                break;
-
-              case SLIP_END:
-                if(index > 0) {
-                  if(flags != 2 && mode != MODE_SLIP_HIDE) {
-                    /* not overflowed: show packet */
-                    print_hex_line("SLIP: ", rxbuf, index > HCOLS ? HCOLS : index);
-                    printf("\n");
-                  }
-                  lastc = '\0';
-                  index = 0;
-                  flags = 0;
-                } else {
-                  flags = !flags;
-                }
-                break;
-
-              default:
-                if(lastc == SLIP_ESC) {
-                  lastc = '\0';
-
-                  /* Previous read byte was an escape byte, so this byte will be
-                   interpreted differently from others. */
-                  switch(buf[i]) {
-                    case SLIP_ESC_END:
-                      buf[i] = SLIP_END;
-                      break;
-                    case SLIP_ESC_ESC:
-                      buf[i] = SLIP_ESC;
-                      break;
-                  }
-                }
-
-                rxbuf[index++] = buf[i];
-                if(index >= sizeof(rxbuf)) {
-                  fprintf(stderr, "**** slip overflow\n");
-                  index = 0;
-                  flags = 2;
-                }
-                break;
-            }
-            break;
+          }
+          break;
         }
       }
 
       /* after processing for some output modes */
       if(index > 0) {
         switch(mode) {
-          case MODE_HEX:
-            print_hex_line("", rxbuf, index);
-            break;
+        case MODE_HEX:
+          print_hex_line("", rxbuf, index);
+          break;
         }
       }
       fflush(stdout);
