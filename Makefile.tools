@@ -1,0 +1,11 @@
+TOOLS_DIR = $(CONTIKI)/tools
+TOOL_DEPS = $(TOOLS_DIR)/tools-utils.c $(TOOLS_DIR)/tools-utils.h
+
+TUNSLIP6 = $(TOOLS_DIR)/tunslip6
+SERIAL_DUMP_BIN = $(TOOLS_DIR)/serialdump
+
+$(SERIAL_DUMP_BIN): $(TOOLS_DIR)/serialdump.c $(TOOL_DEPS)
+	make -C $(TOOLS_DIR) serialdump
+
+$(TUNSLIP6): $(TOOLS_DIR)/tunslip6.c $(TOOL_DEPS)
+	make -C $(TOOLS_DIR) tunslip6

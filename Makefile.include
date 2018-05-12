@@ -10,6 +10,9 @@ WERROR ?= 1
 
 include $(CONTIKI)/Makefile.identify-target
 
+### Include Makefile.tools to pull in targets that allow us to build tools dir
+include $(CONTIKI)/Makefile.tools
+
 CONTIKI_NG_TARGET_LIB = contiki-ng-$(TARGET).a
 
 ifeq ($(DEFINES),)

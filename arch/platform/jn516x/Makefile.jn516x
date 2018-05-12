@@ -299,9 +299,6 @@ serialdumpall:
 
 UART_BAUDRATE ?= 1000000
 
-$(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
-	($(MAKE) -C $(CONTIKI)/tools tunslip6 CFLAGS= LDFLAGS= LDLIBS= INCFLAGS=)
-
 $(SERIALDUMP): $(CONTIKI)/tools/jn516x/serialdump.c
 	(cd $(CONTIKI)/tools/jn516x; ${MAKE} $(notdir $(SERIALDUMP)))
 
