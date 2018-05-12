@@ -18,6 +18,7 @@ Makefile.*.defines
 tools/doxygen/html
 patches-*
 tools/tunslip6
+tools/serialdump
 build
 tools/coffee-manager/build/
 tools/coffee-manager/coffee.jar
