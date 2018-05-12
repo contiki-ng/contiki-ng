@@ -48,7 +48,7 @@ static unsigned char rxbuf[2048];
 static int
 usage(int result)
 {
-  printf("Usage: serialdump [-x] [-s[on]] [-i] [-bSPEED] [SERIALDEVICE]\n");
+  printf("Usage: serialdump [-x] [-s[on]] [-i] [-bSPEED] T[format] [SERIALDEVICE]\n");
   printf("       -x for hexadecimal output\n");
   printf("       -i for decimal output\n");
   printf("       -s for automatic SLIP mode\n");
