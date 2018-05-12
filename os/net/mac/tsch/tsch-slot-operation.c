@@ -477,7 +477,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       is_broadcast = current_neighbor->is_broadcast;
       /* Unicast. More packets in queue for the neighbor? */
       burst_link_requested = 0;
-      if(!is_broadcast && (current_link->link_options & LINK_OPTION_BURST)
+      if(!is_broadcast
              && tsch_current_burst_count + 1 < TSCH_BURST_MAX_LEN
              && tsch_queue_packet_count(&current_neighbor->addr) > 1) {
         burst_link_requested = 1;
