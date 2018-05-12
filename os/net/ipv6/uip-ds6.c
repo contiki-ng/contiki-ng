@@ -91,6 +91,7 @@ static uip_ds6_maddr_t *locmaddr;
 static uip_ds6_aaddr_t *locaaddr;
 #endif /* UIP_DS6_AADDR_NB */
 static uip_ds6_prefix_t *locprefix;
+static const uint8_t iid_prefix[] = { 0x00, 0x00 , 0x00 , 0xff , 0xfe , 0x00 };
 
 /*---------------------------------------------------------------------------*/
 void
@@ -564,12 +565,7 @@ uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, uip_lladdr_t *lladdr)
   ipaddr->u8[8] ^= 0x02;
 #elif (UIP_LLADDR_LEN == 2)
   /* derive IID as per RFC 6282 */
-  ipaddr->u8[8 + 0] = 0x00;
-  ipaddr->u8[8 + 1] = 0x00;
-  ipaddr->u8[8 + 2] = 0x00;
-  ipaddr->u8[8 + 3] = 0xFF;
-  ipaddr->u8[8 + 4] = 0xFE;
-  ipaddr->u8[8 + 5] = 0x00;
+  memcpy(ipaddr->u8 + 8, iid_prefix, 6);
   memcpy(ipaddr->u8 + 8 + 6, lladdr, UIP_LLADDR_LEN);
 #else
 #error uip-ds6.c cannot build interface address when UIP_LLADDR_LEN is not 6, 8, or 2
