@@ -31,16 +31,12 @@
  */
 
 /**
+ * \addtogroup tsch
+ * @{
  * \file
  *         TSCH 5-Byte Absolute Slot Number (ASN) management
  * \author
  *         Simon Duquennoy <simonduq@sics.se>
- *
- */
-
-/**
- * \addtogroup tsch
- * @{
 */
 
 #ifndef __TSCH_ASN_H__
@@ -48,13 +44,13 @@
 
 /************ Types ***********/
 
-/* The ASN is an absolute slot number over 5 bytes. */
+/** \brief The ASN is an absolute slot number over 5 bytes. */
 struct tsch_asn_t {
   uint32_t ls4b; /* least significant 4 bytes */
   uint8_t  ms1b; /* most significant 1 byte */
 };
 
-/* For quick modulo operation on ASN */
+/** \brief For quick modulo operation on ASN */
 struct tsch_asn_divisor_t {
   uint16_t val; /* Divisor value */
   uint16_t asn_ms1b_remainder; /* Remainder of the operation 0x100000000 / val */
@@ -62,37 +58,37 @@ struct tsch_asn_divisor_t {
 
 /************ Macros **********/
 
-/* Initialize ASN */
+/** \brief Initialize ASN */
 #define TSCH_ASN_INIT(asn, ms1b_, ls4b_) do { \
     (asn).ms1b = (ms1b_); \
     (asn).ls4b = (ls4b_); \
 } while(0);
 
-/* Increment an ASN by inc (32 bits) */
+/** \brief Increment an ASN by inc (32 bits) */
 #define TSCH_ASN_INC(asn, inc) do { \
     uint32_t new_ls4b = (asn).ls4b + (inc); \
     if(new_ls4b < (asn).ls4b) { (asn).ms1b++; } \
     (asn).ls4b = new_ls4b; \
 } while(0);
 
-/* Decrement an ASN by inc (32 bits) */
+/** \brief Decrement an ASN by inc (32 bits) */
 #define TSCH_ASN_DEC(asn, dec) do { \
     uint32_t new_ls4b = (asn).ls4b - (dec); \
     if(new_ls4b > (asn).ls4b) { (asn).ms1b--; } \
     (asn).ls4b = new_ls4b; \
 } while(0);
 
-/* Returns the 32-bit diff between asn1 and asn2 */
+/** \brief Returns the 32-bit diff between asn1 and asn2 */
 #define TSCH_ASN_DIFF(asn1, asn2) \
   ((asn1).ls4b - (asn2).ls4b)
 
-/* Initialize a struct asn_divisor_t */
+/** \brief Initialize a struct asn_divisor_t */
 #define TSCH_ASN_DIVISOR_INIT(div, val_) do { \
     (div).val = (val_); \
     (div).asn_ms1b_remainder = ((0xffffffff % (val_)) + 1) % (val_); \
 } while(0);
 
-/* Returns the result (16 bits) of a modulo operation on ASN,
+/** \brief Returns the result (16 bits) of a modulo operation on ASN,
  * with divisor being a struct asn_divisor_t */
 #define TSCH_ASN_MOD(asn, div) \
   ((uint16_t)((asn).ls4b % (div).val) \

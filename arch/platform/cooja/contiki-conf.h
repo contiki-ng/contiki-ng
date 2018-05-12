@@ -113,8 +113,9 @@ typedef unsigned short uip_stats_t;
 
 #define CLOCK_CONF_SECOND 1000L
 typedef unsigned long clock_time_t;
-typedef uint64_t rtimer_clock_t;
-#define RTIMER_CLOCK_DIFF(a,b)     ((int64_t)((a)-(b)))
+
+/* Use 64-bit rtimer (default in Contiki-NG is 32) */
+#define RTIMER_CONF_CLOCK_SIZE 8
 
 #define RADIO_DELAY_BEFORE_TX 0
 #define RADIO_DELAY_BEFORE_RX 0
