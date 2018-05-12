@@ -380,14 +380,7 @@ rpl_schedule_unicast_dio_immediately(rpl_instance_t *instance)
 clock_time_t
 get_probing_delay(rpl_dag_t *dag)
 {
-  if(dag != NULL && dag->instance != NULL
-      && dag->instance->urgent_probing_target != NULL) {
-    /* Urgent probing needed (to find out if a neighbor may become preferred parent) */
-    return random_rand() % (CLOCK_SECOND * 10);
-  } else {
-    /* Else, use normal probing interval */
-    return ((RPL_PROBING_INTERVAL) / 2) + random_rand() % (RPL_PROBING_INTERVAL);
-  }
+  return ((RPL_PROBING_INTERVAL) / 2) + random_rand() % (RPL_PROBING_INTERVAL);
 }
 /*---------------------------------------------------------------------------*/
 rpl_parent_t *
@@ -494,7 +487,6 @@ handle_probing_timer(void *ptr)
         );
     /* Send probe, e.g. unicast DIO or DIS */
     RPL_PROBING_SEND_FUNC(instance, target_ipaddr);
-    instance->urgent_probing_target = NULL;
   }
 
   /* Schedule next probing */
@@ -509,6 +501,13 @@ void
 rpl_schedule_probing(rpl_instance_t *instance)
 {
   ctimer_set(&instance->probing_timer, RPL_PROBING_DELAY_FUNC(instance->current_dag),
+                  handle_probing_timer, instance);
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_schedule_probing_now(rpl_instance_t *instance)
+{
+  ctimer_set(&instance->probing_timer, random_rand() % (CLOCK_SECOND * 4),
                   handle_probing_timer, instance);
 }
 #endif /* RPL_WITH_PROBING */
