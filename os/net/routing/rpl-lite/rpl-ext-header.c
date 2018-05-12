@@ -250,8 +250,10 @@ insert_srh_header(void)
 
   dest_node = uip_sr_get_node(NULL, &UIP_IP_BUF->destipaddr);
   if(dest_node == NULL) {
-    /* The destination is not found, skip SRH insertion */
+    /* The destination is not found, skip SRH insertion. This isn't en
+    error per se, only means that the dest IP address is not in the DODAG. */
     LOG_INFO("SRH node not found, skip SRH insertion\n");
+    rpl_dag_path_not_found(&UIP_IP_BUF->destipaddr);
     return 1;
   }
 
@@ -263,6 +265,7 @@ insert_srh_header(void)
 
   if(!uip_sr_is_addr_reachable(NULL, &UIP_IP_BUF->destipaddr)) {
     LOG_ERR("SRH no path found to destination\n");
+    rpl_dag_path_not_found(&UIP_IP_BUF->destipaddr);
     return 0;
   }
 
