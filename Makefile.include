@@ -403,6 +403,11 @@ usage:
 	@echo "    clean           Removes all compiled files for TARGET"
 	@echo "    distclean       Removes all compiled files for all TARGETs"
 	@echo "    viewconf        Prints Contiki-NG build configuration for TARGET"
+	@echo "    %.flashprof     Shows a Flash/ROM profile of a given firmware (e.g. hello-world.flashprof)"
+	@echo "    %.ramprof       Shows a RAM profile of a given firmware (e.g. hello-world.ramprof)"
+	@echo "    %.o             Produces an object file from a given source file (e.g. hello-world.o)"
+	@echo "    %.e             Produces the pre-processed version of a given source file (e.g. hello-world.e)"
+	@echo "    %.s             Produces an assembly file from a given source file (e.g. hello-world.s)"
 
 help: usage
 
