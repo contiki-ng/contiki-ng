@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 /*---------------------------------------------------------------------------*/
+#include "tools-utils.h"
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -13,6 +15,8 @@
 /*---------------------------------------------------------------------------*/
 #define BAUDRATE B115200
 #define BAUDRATE_S "115200"
+
+speed_t b_rate = BAUDRATE;
 /*---------------------------------------------------------------------------*/
 #ifdef linux
 #define MODEMDEVICE "/dev/ttyS0"
@@ -105,8 +109,7 @@ main(int argc, char **argv)
   struct termios options;
   fd_set mask, smask;
   int fd;
-  speed_t speed = BAUDRATE;
-  char *speedname = BAUDRATE_S;
+  int baudrate = BUNKNOWN;
   char *device = MODEMDEVICE;
   char *timeformat = NULL;
   unsigned char buf[BUFSIZE];
@@ -120,23 +123,7 @@ main(int argc, char **argv)
     if(argv[index][0] == '-') {
       switch(argv[index][1]) {
       case 'b':
-        /* set speed */
-        if(strcmp(&argv[index][2], "38400") == 0) {
-          speed = B38400;
-          speedname = "38400";
-        } else if(strcmp(&argv[index][2], "19200") == 0) {
-          speed = B19200;
-          speedname = "19200";
-        } else if(strcmp(&argv[index][2], "57600") == 0) {
-          speed = B57600;
-          speedname = "57600";
-        } else if(strcmp(&argv[index][2], "115200") == 0) {
-          speed = B115200;
-          speedname = "115200";
-        } else {
-          fprintf(stderr, "unsupported speed: %s\n", &argv[index][2]);
-          return usage(1);
-        }
+        baudrate = atoi(&argv[index][2]);
         break;
       case 'x':
         mode = MODE_HEX;
@@ -181,6 +168,12 @@ main(int argc, char **argv)
     }
   }
 
+  if(baudrate != BUNKNOWN) {
+    b_rate = select_baudrate(baudrate);
+    if(b_rate == 0) {
+      fprintf(stderr, "unknown baudrate %d\n", baudrate);
+      exit(-1);
+    }
   }
 
   fprintf(stderr, "connecting to %s", device);
@@ -203,9 +196,10 @@ main(int argc, char **argv)
     perror("could not get options");
     exit(-1);
   }
-  /*   fprintf(stderr, "serial options set\n"); */
-  cfsetispeed(&options, speed);
-  cfsetospeed(&options, speed);
+
+  cfsetispeed(&options, b_rate);
+  cfsetospeed(&options, b_rate);
+
   /* Enable the receiver and set local mode */
   options.c_cflag |= (CLOCAL | CREAD);
   /* Mask the character size bits and turn off (odd) parity */
