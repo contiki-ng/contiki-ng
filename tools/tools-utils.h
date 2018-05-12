@@ -35,6 +35,9 @@
 
 #include <termios.h>
 
+/* The unspecified baudrate */
+#define BUNKNOWN -2
+
 #if __APPLE__
 #ifndef B460800
 #define B460800 460800
