@@ -86,7 +86,7 @@ tsch_log_process_pending(void)
              log->asn.ms1b, log->asn.ls4b,
              log->link->slotframe_handle, sf ? sf->size.val : 0,
              log->burst_count, log->link->timeslot + log->burst_count, log->link->channel_offset,
-             tsch_calculate_channel(&log->asn, log->link->channel_offset));
+             log->channel);
     }
     switch(log->type) {
       case tsch_log_tx:
@@ -137,6 +137,7 @@ tsch_log_prepare_add(void)
     log->asn = tsch_current_asn;
     log->link = current_link;
     log->burst_count = tsch_current_burst_count;
+    log->channel = tsch_current_channel;
     return log;
   } else {
     log_dropped++;

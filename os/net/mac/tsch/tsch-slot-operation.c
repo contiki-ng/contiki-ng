@@ -155,7 +155,7 @@ static rtimer_clock_t volatile current_slot_start;
 static volatile int tsch_in_slot_operation = 0;
 
 /* If we are inside a slot, this tells the current channel */
-static uint8_t current_channel;
+uint8_t tsch_current_channel;
 
 /* Info about the link, packet and neighbor of
  * the current (or next) slot */
@@ -172,7 +172,7 @@ static int burst_link_scheduled = 0;
 /* Counts the length of the current burst */
 int tsch_current_burst_count = 0;
 /* The physical channel of the current burst */
-static uint16_t burst_current_channel = 0;
+static uint16_t burst_tsch_current_channel = 0;
 
 /* Protothread for association */
 PT_THREAD(tsch_scan(struct pt *pt));
@@ -772,7 +772,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
         NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_RSSI, &radio_last_rssi);
         current_input->rx_asn = tsch_current_asn;
         current_input->rssi = (signed)radio_last_rssi;
-        current_input->channel = current_channel;
+        current_input->channel = tsch_current_channel;
         header_len = frame802154_parse((uint8_t *)current_input->payload, current_input->len, &frame);
         frame_valid = header_len > 0 &&
           frame802154_check_dest_panid(&frame) &&
@@ -969,13 +969,13 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
         /* If we are in a burst, we stick to current channel instead of
          * doing channel hopping, as per IEEE 802.15.4-2015 */
         if(burst_link_scheduled) {
-          current_channel = burst_current_channel;
+          tsch_current_channel = burst_tsch_current_channel;
           burst_link_scheduled = 0;
         } else {
           /* Hop channel */
-          current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
+          tsch_current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
         }
-        NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
+        NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, tsch_current_channel);
         /* Turn the radio on already here if configured so; necessary for radios with slow startup */
         tsch_radio_on(TSCH_RADIO_CMD_ON_START_OF_TIMESLOT);
         /* Decide whether it is a TX/RX/IDLE or OFF slot */
@@ -1034,7 +1034,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
         next time offset */
         if(burst_link_scheduled) {
           timeslot_diff = 1;
-          burst_current_channel = current_channel;
+          burst_tsch_current_channel = tsch_current_channel;
           backup_link = NULL;
           /* Keep track of the number of repetitions */
           tsch_current_burst_count++;
