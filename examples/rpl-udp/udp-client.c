@@ -33,10 +33,7 @@ udp_rx_callback(struct simple_udp_connection *c,
          uint16_t datalen)
 {
   unsigned count = *(unsigned *)data;
-  /* If tagging of traffic class is enabled tc will print number of
-     transmission - otherwise it will be 0 */
-  LOG_INFO("Received response %u (tc:%d) from ", count,
-           uipbuf_get_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS));
+  LOG_INFO("Received response %u from ", count);
   LOG_INFO_6ADDR(sender_addr);
   LOG_INFO_("\n");
 }
@@ -62,12 +59,6 @@ PROCESS_THREAD(udp_client_process, ev, data)
       LOG_INFO("Sending request %u to ", count);
       LOG_INFO_6ADDR(&dest_ipaddr);
       LOG_INFO_("\n");
-      /* Set the number of transmissions to use for this packet -
-         this can be used to create more reliable transmissions or
-         less reliable than the default. Works end-to-end if
-         UIP_CONF_TAG_TC_WITH_VARIABLE_RETRANSMISSIONS is set to 1.
-       */
-      uipbuf_set_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS, 1 + count % 5);
       simple_udp_sendto(&udp_conn, &count, sizeof(count), &dest_ipaddr);
       count++;
     } else {
