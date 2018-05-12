@@ -230,12 +230,6 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  /* Make read() return immediately */
-  /*    if (fcntl(fd, F_SETFL, FNDELAY) < 0) { */
-  /*      perror("\ncould not set fcntl"); */
-  /*      exit(-1); */
-  /*    } */
-
   FD_ZERO(&mask);
   FD_SET(fd, &mask);
   FD_SET(fileno(stdin), &mask);
