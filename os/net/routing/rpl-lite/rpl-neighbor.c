@@ -368,6 +368,8 @@ rpl_neighbor_select_best(void)
 #if RPL_WITH_PROBING
   if(best != NULL) {
     if(rpl_neighbor_is_fresh(best)) {
+      /* Unschedule any already scheduled urgent probing */
+      curr_instance.dag.urgent_probing_target = NULL;
       /* Return best if it is fresh */
       return best;
     } else {
@@ -380,7 +382,7 @@ rpl_neighbor_select_best(void)
         LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(best));
         LOG_WARN_("\n");
         curr_instance.dag.urgent_probing_target = best;
-        rpl_schedule_probing();
+        rpl_schedule_probing_now();
       }
 
       /* The best is our preferred parent. It is not fresh but used to be,
