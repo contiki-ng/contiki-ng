@@ -171,6 +171,8 @@ static struct tsch_neighbor *current_neighbor = NULL;
 static int burst_link_scheduled = 0;
 /* Counts the length of the current burst */
 int tsch_current_burst_count = 0;
+/* The physical channel of the current burst */
+static uint16_t burst_current_channel = 0;
 
 /* Protothread for association */
 PT_THREAD(tsch_scan(struct pt *pt));
@@ -954,8 +956,6 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       /* Reset drift correction */
       drift_correction = 0;
       is_drift_correction_used = 0;
-      /* For the packet burst mechanism */
-      burst_link_scheduled = 0;
       /* Get a packet ready to be sent */
       current_packet = get_packet_and_neighbor_for_link(current_link, &current_neighbor);
       /* There is no packet to send, and this link does not have Rx flag. Instead of doing
@@ -966,8 +966,15 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       }
       is_active_slot = current_packet != NULL || (current_link->link_options & LINK_OPTION_RX);
       if(is_active_slot) {
-        /* Hop channel */
-        current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
+        /* If we are in a burst, we stick to current channel instead of
+         * doing channel hopping, as per IEEE 802.15.4-2015 */
+        if(burst_link_scheduled) {
+          current_channel = burst_current_channel;
+          burst_link_scheduled = 0;
+        } else {
+          /* Hop channel */
+          current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
+        }
         NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
         /* Turn the radio on already here if configured so; necessary for radios with slow startup */
         tsch_radio_on(TSCH_RADIO_CMD_ON_START_OF_TIMESLOT);
@@ -986,6 +993,10 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           static struct pt slot_rx_pt;
           PT_SPAWN(&slot_operation_pt, &slot_rx_pt, tsch_rx_slot(&slot_rx_pt, t));
         }
+      } else {
+        /* Make sure to end the burst in cast, for some reason, we were
+         * in a burst but now without any more packet to send. */
+        burst_link_scheduled = 0;
       }
       TSCH_DEBUG_SLOT_END();
     }
@@ -1023,6 +1034,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
         next time offset */
         if(burst_link_scheduled) {
           timeslot_diff = 1;
+          burst_current_channel = current_channel;
           backup_link = NULL;
           /* Keep track of the number of repetitions */
           tsch_current_burst_count++;
