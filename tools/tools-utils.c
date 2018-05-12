@@ -104,6 +104,7 @@ select_baudrate(int baudrate) {
     return B115200;
 #endif
 #ifdef B230400
+  case 230400:
     return B230400;
 #endif
 #ifdef B460800
