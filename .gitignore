@@ -17,7 +17,6 @@ Makefile.target
 Makefile.*.defines
 tools/doxygen/html
 patches-*
-tools/tunslip
 tools/tunslip6
 build
 tools/coffee-manager/build/
