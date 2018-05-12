@@ -70,11 +70,8 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
     if(((uint8_t *)IEEE_ADDR_LOCATION)[3] == oui_ti[0]
        && ((uint8_t *)IEEE_ADDR_LOCATION)[2] == oui_ti[1]
        && ((uint8_t *)IEEE_ADDR_LOCATION)[1] == oui_ti[2]) {
-      for(i = 0; i < len / 2; i++) {
-        dst[i] = ((uint8_t *)IEEE_ADDR_LOCATION)[len / 2 - 1 - i];
-      }
-      for(i = 0; i < len / 2; i++) {
-        dst[i + len / 2] = ((uint8_t *)IEEE_ADDR_LOCATION)[len - 1 - i];
+      for(i = 0; i < len; i++) {
+        dst[len - i - 1] = ((uint8_t *)IEEE_ADDR_LOCATION)[i < 4 ? i + 4 : i - 4];
       }
     } else {
       for(i = 0; i < len; i++) {

@@ -95,7 +95,7 @@ slip_input_callback(void)
       int j;
       /* this is just a test so far... just to see if it works */
       uip_buf[0] = '!';
-      for(j = 0; j < 8; j++) {
+      for(j = 0; j < UIP_LLADDR_LEN; j++) {
         uip_buf[2 + j * 2] = hexchar[uip_lladdr.addr[j] >> 4];
         uip_buf[3 + j * 2] = hexchar[uip_lladdr.addr[j] & 15];
       }
