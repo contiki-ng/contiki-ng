@@ -1,8 +1,13 @@
-all: tunslip6
+APPS = tunslip6 serialdump
+LIB_SRCS = tools-utils.c
+DEPEND = tools-utils.h
 
-CFLAGS += -Wall -Werror
+all: $(APPS)
 
-tunslip6: tools-utils.c tunslip6.c
+CFLAGS += -Wall -Werror -O2
+
+$(APPS) : % : %.c $(LIB_SRCS) $(DEPEND)
+	$(CC) $(CFLAGS) $< $(LIB_SRCS) -o $@
 
 clean:
-	rm -f *.o tunslip6
+	rm -f $(APPS)
