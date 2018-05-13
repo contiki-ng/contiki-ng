@@ -171,8 +171,6 @@ static struct tsch_neighbor *current_neighbor = NULL;
 static int burst_link_scheduled = 0;
 /* Counts the length of the current burst */
 int tsch_current_burst_count = 0;
-/* The physical channel of the current burst */
-static uint16_t burst_tsch_current_channel = 0;
 
 /* Protothread for association */
 PT_THREAD(tsch_scan(struct pt *pt));
@@ -969,7 +967,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
         /* If we are in a burst, we stick to current channel instead of
          * doing channel hopping, as per IEEE 802.15.4-2015 */
         if(burst_link_scheduled) {
-          tsch_current_channel = burst_tsch_current_channel;
+          /* Reset burst_link_scheduled flag. Will be set again if burst continue. */
           burst_link_scheduled = 0;
         } else {
           /* Hop channel */
@@ -1034,7 +1032,6 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
         next time offset */
         if(burst_link_scheduled) {
           timeslot_diff = 1;
-          burst_tsch_current_channel = tsch_current_channel;
           backup_link = NULL;
           /* Keep track of the number of repetitions */
           tsch_current_burst_count++;
