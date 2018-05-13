@@ -185,10 +185,10 @@
  * This value decides if this node must stay as a leaf or not
  * as allowed by draft-ietf-roll-rpl-19#section-8.5
  */
-#ifdef RPL_CONF_LEAF_ONLY
-#define RPL_LEAF_ONLY RPL_CONF_LEAF_ONLY
+#ifdef RPL_CONF_DEFAULT_LEAF_ONLY
+#define RPL_DEFAULT_LEAF_ONLY RPL_CONF_DEFAULT_LEAF_ONLY
 #else
-#define RPL_LEAF_ONLY 0
+#define RPL_DEFAULT_LEAF_ONLY 0
 #endif
 
 /******************************************************************************/

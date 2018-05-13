@@ -35,8 +35,40 @@
 /* Enable TCP */
 #define UIP_CONF_TCP 1
 
-/* If undefined, the demo will attempt to connect to IBM's quickstart */
+/* Change to 1 to use with the IBM Watson IoT platform */
+#define MQTT_CLIENT_CONF_WITH_IBM_WATSON 0
+
+/*
+ * The IPv6 address of the MQTT broker to connect to.
+ * Ignored if MQTT_CLIENT_CONF_WITH_IBM_WATSON is 1
+ */
 #define MQTT_CLIENT_CONF_BROKER_IP_ADDR "fd00::1"
+
+/*
+ * The Organisation ID.
+ *
+ * When in Watson mode, the example will default to Org ID "quickstart" and
+ * will connect using non-authenticated mode. If you want to use registered
+ * devices, set your Org ID here and then make sure you set the correct token
+ * through MQTT_CLIENT_CONF_AUTH_TOKEN.
+ */
+#define MQTT_CLIENT_CONF_ORG_ID "quickstart"
+
+/*
+ * The MQTT username.
+ *
+ * Ignored in Watson mode: In this mode the username is always "use-token-auth"
+ */
+#define MQTT_CLIENT_CONF_USERNAME "mqtt-client-username"
+
+/*
+ * The MQTT auth token (password) used when connecting to the MQTT broker.
+ *
+ * Used with as well as without Watson.
+ *
+ * Transported in cleartext!
+ */
+#define MQTT_CLIENT_CONF_AUTH_TOKEN "AUTHTOKEN"
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/

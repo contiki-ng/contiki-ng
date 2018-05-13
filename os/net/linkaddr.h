@@ -70,11 +70,6 @@ typedef union {
 #endif /* LINKADDR_SIZE == 2 */
 } linkaddr_t;
 
-typedef union {
-  uint8_t u8[8];
-  uint16_t u16[4];
-} linkaddr_extended_t;
-
 /**
  * \brief      Copy a link-layer address
  * \param dest The destination

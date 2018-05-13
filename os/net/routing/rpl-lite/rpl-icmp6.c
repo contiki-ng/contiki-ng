@@ -342,14 +342,14 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
   /* Make sure we're up-to-date before sending data out */
   rpl_dag_update_state();
 
-#if RPL_LEAF_ONLY
-  /* In leaf mode, we only send DIO messages as unicasts in response to
-     unicast DIS messages. */
-  if(uc_addr == NULL) {
-    /* Do not send multicast DIO in leaf mode */
-    return;
+  if(rpl_get_leaf_only()) {
+    /* In leaf mode, we only send DIO messages as unicasts in response to
+       unicast DIS messages. */
+    if(uc_addr == NULL) {
+      /* Do not send multicast DIO in leaf mode */
+      return;
+    }
   }
-#endif /* RPL_LEAF_ONLY */
 
   /* DAG Information Object */
   pos = 0;
@@ -358,11 +358,11 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
   buffer[pos++] = curr_instance.instance_id;
   buffer[pos++] = curr_instance.dag.version;
 
-#if RPL_LEAF_ONLY
-  set16(buffer, pos, RPL_INFINITE_RANK);
-#else /* RPL_LEAF_ONLY */
-  set16(buffer, pos, curr_instance.dag.rank);
-#endif /* RPL_LEAF_ONLY */
+  if(rpl_get_leaf_only()) {
+    set16(buffer, pos, RPL_INFINITE_RANK);
+  } else {
+    set16(buffer, pos, curr_instance.dag.rank);
+  }
   pos += 2;
 
   buffer[pos] = 0;
@@ -383,29 +383,29 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
   memcpy(buffer + pos, &curr_instance.dag.dag_id, sizeof(curr_instance.dag.dag_id));
   pos += 16;
 
-#if !RPL_LEAF_ONLY
-  if(curr_instance.mc.type != RPL_DAG_MC_NONE) {
-    buffer[pos++] = RPL_OPTION_DAG_METRIC_CONTAINER;
-    buffer[pos++] = 6;
-    buffer[pos++] = curr_instance.mc.type;
-    buffer[pos++] = curr_instance.mc.flags >> 1;
-    buffer[pos] = (curr_instance.mc.flags & 1) << 7;
-    buffer[pos++] |= (curr_instance.mc.aggr << 4) | curr_instance.mc.prec;
-    if(curr_instance.mc.type == RPL_DAG_MC_ETX) {
-      buffer[pos++] = 2;
-      set16(buffer, pos, curr_instance.mc.obj.etx);
-      pos += 2;
-    } else if(curr_instance.mc.type == RPL_DAG_MC_ENERGY) {
-      buffer[pos++] = 2;
-      buffer[pos++] = curr_instance.mc.obj.energy.flags;
-      buffer[pos++] = curr_instance.mc.obj.energy.energy_est;
-    } else {
-      LOG_ERR("unable to send DIO because of unsupported DAG MC type %u\n",
-             (unsigned)curr_instance.mc.type);
-      return;
+  if(!rpl_get_leaf_only()) {
+    if(curr_instance.mc.type != RPL_DAG_MC_NONE) {
+      buffer[pos++] = RPL_OPTION_DAG_METRIC_CONTAINER;
+      buffer[pos++] = 6;
+      buffer[pos++] = curr_instance.mc.type;
+      buffer[pos++] = curr_instance.mc.flags >> 1;
+      buffer[pos] = (curr_instance.mc.flags & 1) << 7;
+      buffer[pos++] |= (curr_instance.mc.aggr << 4) | curr_instance.mc.prec;
+      if(curr_instance.mc.type == RPL_DAG_MC_ETX) {
+        buffer[pos++] = 2;
+        set16(buffer, pos, curr_instance.mc.obj.etx);
+        pos += 2;
+      } else if(curr_instance.mc.type == RPL_DAG_MC_ENERGY) {
+        buffer[pos++] = 2;
+        buffer[pos++] = curr_instance.mc.obj.energy.flags;
+        buffer[pos++] = curr_instance.mc.obj.energy.energy_est;
+      } else {
+        LOG_ERR("unable to send DIO because of unsupported DAG MC type %u\n",
+               (unsigned)curr_instance.mc.type);
+        return;
+      }
     }
   }
-#endif /* !RPL_LEAF_ONLY */
 
   /* Always add a DAG configuration option. */
   buffer[pos++] = RPL_OPTION_DAG_CONF;
@@ -442,9 +442,9 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
     pos += 16;
   }
 
-#if !RPL_LEAF_ONLY
-  addr = addr != NULL ? addr : &rpl_multicast_addr;
-#endif /* RPL_LEAF_ONLY */
+  if(!rpl_get_leaf_only()) {
+    addr = addr != NULL ? addr : &rpl_multicast_addr;
+  }
 
   LOG_INFO("sending a %s-DIO with rank %u to ",
          uc_addr != NULL ? "unicast" : "multicast",

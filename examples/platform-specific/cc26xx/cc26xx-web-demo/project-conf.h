@@ -33,7 +33,7 @@
 /*---------------------------------------------------------------------------*/
 /* Change to match your configuration */
 #define IEEE802154_CONF_PANID            0xABCD
-#define RF_CORE_CONF_CHANNEL                 25
+#define IEEE802154_CONF_DEFAULT_CHANNEL      26
 #define RF_BLE_CONF_ENABLED                   1
 /*---------------------------------------------------------------------------*/
 
@@ -42,7 +42,7 @@
 
 /* Enable/Disable Components of this Demo */
 #define CC26XX_WEB_DEMO_CONF_MQTT_CLIENT      1
-#define CC26XX_WEB_DEMO_CONF_6LBR_CLIENT      1
+#define CC26XX_WEB_DEMO_CONF_6LBR_CLIENT      ROUTING_CONF_RPL_CLASSIC
 #define CC26XX_WEB_DEMO_CONF_COAP_SERVER      1
 #define CC26XX_WEB_DEMO_CONF_NET_UART         1
 

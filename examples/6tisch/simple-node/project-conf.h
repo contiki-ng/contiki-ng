@@ -32,8 +32,8 @@
  * \author Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __PROJECT_CONF_H__
-#define __PROJECT_CONF_H__
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
@@ -78,4 +78,4 @@
 #define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
 #define TSCH_LOG_CONF_PER_SLOT                     1
 
-#endif /* __PROJECT_CONF_H__ */
+#endif /* PROJECT_CONF_H_ */

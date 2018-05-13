@@ -106,7 +106,9 @@ local_repair(const char *str)
 static void
 ext_header_remove(void)
 {
+#if NETSTACK_CONF_WITH_IPV6
   uip_ext_len = 0;
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -149,7 +151,7 @@ drop_route(uip_ds6_route_t *route)
 }
 /*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
-  "Null Routing",
+  "nullrouting",
   init,
   root_set_prefix,
   root_start,

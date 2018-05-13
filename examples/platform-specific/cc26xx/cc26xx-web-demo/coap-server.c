@@ -133,9 +133,6 @@ PROCESS_THREAD(coap_server_process, ev, data)
 
   printf("CC26XX CoAP Server\n");
 
-  /* Initialize the REST engine. */
-  coap_engine_init();
-
   coap_activate_resource(&res_batmon_temp, "sen/batmon/temp");
   coap_activate_resource(&res_batmon_volt, "sen/batmon/voltage");
 

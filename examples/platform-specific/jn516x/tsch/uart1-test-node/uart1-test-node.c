@@ -151,7 +151,6 @@ PROCESS_THREAD(start_app, ev, data)
   NETSTACK_MAC.on();
   printf("Starting RPL node\n");
 
-  coap_engine_init();
   coap_activate_resource(&resource_coap_rx_uart1, "UART1-RX");
   coap_activate_resource(&resource_coap_tx_uart1, "UART1-TX");
 

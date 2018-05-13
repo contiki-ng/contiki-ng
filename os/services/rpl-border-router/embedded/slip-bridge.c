@@ -62,7 +62,7 @@ request_prefix(void)
   uip_buf[0] = '?';
   uip_buf[1] = 'P';
   uip_len = 2;
-  slip_send();
+  slip_write(uip_buf, uip_len);
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
@@ -70,38 +70,44 @@ static void
 slip_input_callback(void)
 {
   LOG_DBG("SIN: %u\n", uip_len);
-  if(uip_buf[0] == '!') {
-    LOG_INFO("Got configuration message of type %c\n", uip_buf[1]);
-    uip_clear_buf();
-    if(uip_buf[1] == 'P') {
+  if(uip_buf[UIP_LLH_LEN] == '!') {
+    LOG_INFO("Got configuration message of type %c\n",
+             uip_buf[UIP_LLH_LEN + 1]);
+    if(uip_buf[UIP_LLH_LEN + 1] == 'P') {
       uip_ipaddr_t prefix;
       /* Here we set a prefix !!! */
       memset(&prefix, 0, 16);
-      memcpy(&prefix, &uip_buf[2], 8);
+      memcpy(&prefix, &uip_buf[UIP_LLH_LEN + 2], 8);
+
+      uip_clear_buf();
+
       LOG_INFO("Setting prefix ");
       LOG_INFO_6ADDR(&prefix);
       LOG_INFO_("\n");
       set_prefix_64(&prefix);
     }
-  } else if(uip_buf[0] == '?') {
-    LOG_INFO("Got request message of type %c\n", uip_buf[1]);
-    if(uip_buf[1] == 'M') {
+    uip_clear_buf();
+
+  } else if(uip_buf[UIP_LLH_LEN] == '?') {
+    LOG_INFO("Got request message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
+    if(uip_buf[UIP_LLH_LEN + 1] == 'M') {
       char *hexchar = "0123456789abcdef";
       int j;
       /* this is just a test so far... just to see if it works */
       uip_buf[0] = '!';
-      for(j = 0; j < 8; j++) {
+      for(j = 0; j < UIP_LLADDR_LEN; j++) {
         uip_buf[2 + j * 2] = hexchar[uip_lladdr.addr[j] >> 4];
         uip_buf[3 + j * 2] = hexchar[uip_lladdr.addr[j] & 15];
       }
       uip_len = 18;
-      slip_send();
+      slip_write(uip_buf, uip_len);
     }
     uip_clear_buf();
+  } else {
+    /* Save the last sender received over SLIP to avoid bouncing the
+       packet back if no route is found */
+    uip_ipaddr_copy(&last_sender, &UIP_IP_BUF->srcipaddr);
   }
-  /* Save the last sender received over SLIP to avoid bouncing the
-     packet back if no route is found */
-  uip_ipaddr_copy(&last_sender, &UIP_IP_BUF->srcipaddr);
 }
 /*---------------------------------------------------------------------------*/
 static void

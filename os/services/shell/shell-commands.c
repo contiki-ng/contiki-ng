@@ -173,8 +173,12 @@ PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
 
     SHELL_OUTPUT(output, "-- State: %s\n", rpl_state_to_str(curr_instance.dag.state));
     SHELL_OUTPUT(output, "-- Preferred parent: ");
-    shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
-    SHELL_OUTPUT(output, "\n");
+    if(curr_instance.dag.preferred_parent) {
+      shell_output_6addr(output, rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+      SHELL_OUTPUT(output, " (last DTSN: %u)\n", curr_instance.dag.preferred_parent->dtsn);
+    } else {
+      SHELL_OUTPUT(output, "None\n");
+    }
     SHELL_OUTPUT(output, "-- Rank: %u\n", curr_instance.dag.rank);
     SHELL_OUTPUT(output, "-- Lowest rank: %u (%u)\n", curr_instance.dag.lowest_rank, curr_instance.max_rankinc);
     SHELL_OUTPUT(output, "-- DTSN out: %u\n", curr_instance.dtsn_out);
@@ -413,6 +417,7 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+#if ROUTING_CONF_RPL_LITE
 static
 PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *args))
 {
@@ -423,6 +428,7 @@ PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *
 
   PT_END(pt);
 }
+#endif /* ROUTING_CONF_RPL_LITE */
 #endif /* UIP_CONF_IPV6_RPL */
 /*---------------------------------------------------------------------------*/
 static
@@ -732,7 +738,9 @@ struct shell_command_t shell_commands[] = {
 #if UIP_CONF_IPV6_RPL
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
+#if ROUTING_CONF_RPL_LITE
   { "rpl-refresh-routes",   cmd_rpl_refresh_routes,   "'> rpl-refresh-routes': Refreshes all routes through a DTSN increment" },
+#endif /* ROUTING_CONF_RPL_LITE */
   { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
 #endif /* UIP_CONF_IPV6_RPL */
 #if ROUTING_CONF_RPL_LITE

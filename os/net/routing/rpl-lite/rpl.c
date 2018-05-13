@@ -50,6 +50,7 @@
 #define LOG_LEVEL LOG_LEVEL_RPL
 
 uip_ipaddr_t rpl_multicast_addr;
+static uint8_t rpl_leaf_only = RPL_DEFAULT_LEAF_ONLY;
 
 /*---------------------------------------------------------------------------*/
 int
@@ -98,6 +99,11 @@ rpl_link_callback(const linkaddr_t *addr, int status, int numtx)
   if(curr_instance.used == 1 ) {
     rpl_nbr_t *nbr = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)addr);
     if(nbr != NULL) {
+      /* If this is the neighbor we were probing urgently, mark urgent
+      probing as done */
+      if(curr_instance.dag.urgent_probing_target == nbr) {
+        curr_instance.dag.urgent_probing_target = NULL;
+      }
       /* Link stats were updated, and we need to update our internal state.
       Updating from here is unsafe; postpone */
       LOG_INFO("packet sent to ");
@@ -221,6 +227,18 @@ static void
 drop_route(uip_ds6_route_t *route)
 {
   /* Do nothing. RPL-lite only supports non-storing mode, i.e. no routes */
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_set_leaf_only(uint8_t value)
+{
+  rpl_leaf_only = value;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+rpl_get_leaf_only(void)
+{
+  return rpl_leaf_only;
 }
 /*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_lite_driver = {

@@ -128,6 +128,41 @@ uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
 }
 
 /*---------------------------------------------------------------------------*/
+int
+uip_ds6_nbr_update_ll(uip_ds6_nbr_t **nbr_pp, const uip_lladdr_t *new_ll_addr)
+{
+  uip_ds6_nbr_t nbr_backup;
+
+  if(nbr_pp == NULL || new_ll_addr == NULL) {
+    LOG_ERR("%s: invalid argument\n", __func__);
+    return -1;
+  }
+
+  /* make sure new_ll_addr is not used in some other nbr */
+  if(uip_ds6_nbr_ll_lookup(new_ll_addr) != NULL) {
+    LOG_ERR("%s: new_ll_addr, ", __func__);
+    LOG_ERR_LLADDR((const linkaddr_t *)new_ll_addr);
+    LOG_ERR_(", is already used in another nbr\n");
+    return -1;
+  }
+
+  memcpy(&nbr_backup, *nbr_pp, sizeof(uip_ds6_nbr_t));
+  if(uip_ds6_nbr_rm(*nbr_pp) == 0) {
+    LOG_ERR("%s: input nbr cannot be removed\n", __func__);
+    return -1;
+  }
+
+  if((*nbr_pp = uip_ds6_nbr_add(&nbr_backup.ipaddr, new_ll_addr,
+                                nbr_backup.isrouter, nbr_backup.state,
+                                NBR_TABLE_REASON_IPV6_ND, NULL)) == NULL) {
+    LOG_ERR("%s: cannot allocate a new nbr for new_ll_addr\n", __func__);
+    return -1;
+  }
+  memcpy(*nbr_pp, &nbr_backup, sizeof(uip_ds6_nbr_t));
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 const uip_ipaddr_t *
 uip_ds6_nbr_get_ipaddr(const uip_ds6_nbr_t *nbr)
 {

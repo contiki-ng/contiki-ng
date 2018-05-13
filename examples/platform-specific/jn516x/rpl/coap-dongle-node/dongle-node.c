@@ -135,7 +135,6 @@ PROCESS_THREAD(start_app, ev, data)
   NETSTACK_MAC.on();
   printf("Starting RPL node\n");
 
-  coap_engine_init();
   coap_activate_resource(&resource_led_toggle, "Dongle/LED-toggle");
 
   PROCESS_END();
