@@ -111,7 +111,8 @@ send_packet(mac_callback_t sent, void *ptr)
 
   /* Will make it send only DATA packets... for now */
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
-  /* printf("Sending packet of type: %s \n", get_frame_type(packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE))); */
+
+  LOG_INFO("br-rdc: sending packet (%u bytes)\n", packetbuf_datalen());
 
   if(NETSTACK_FRAMER.create() < 0) {
     /* Failed to allocate space for headers */
