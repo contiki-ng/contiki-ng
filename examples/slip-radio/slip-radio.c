@@ -143,7 +143,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       packetbuf_clear();
       pos = packetutils_deserialize_atts(&data[3], len - 3);
       if(pos < 0) {
-        LOG_ERR("slip-radio: illegal packet attributes\n");
+        LOG_ERR("illegal packet attributes\n");
         return 1;
       }
       pos += 3;
@@ -154,7 +154,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       memcpy(packetbuf_dataptr(), &data[pos], len);
       packetbuf_set_datalen(len);
 
-      LOG_DBG("slip-radio: sending %u (%d bytes)\n",
+      LOG_DBG("sending %u (%d bytes)\n",
               data[2], packetbuf_datalen());
 
       /* parse frame before sending to get addresses, etc. */

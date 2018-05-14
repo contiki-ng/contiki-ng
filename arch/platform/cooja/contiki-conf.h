@@ -91,6 +91,11 @@
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 300
 #endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 
+/* configure queues */
+#ifndef QUEUEBUF_CONF_NUM
+#define QUEUEBUF_CONF_NUM 64
+#endif /* QUEUEBUF_CONF_NUM */
+
 #ifndef UIP_CONF_IPV6_QUEUE_PKT
 #define UIP_CONF_IPV6_QUEUE_PKT         1
 #endif /* UIP_CONF_IPV6_QUEUE_PKT */
