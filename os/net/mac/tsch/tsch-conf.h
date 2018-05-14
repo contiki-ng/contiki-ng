@@ -317,6 +317,15 @@
 #define TSCH_SCHEDULE_WITH_6TISCH_MINIMAL (!(BUILD_WITH_ORCHESTRA))
 #endif
 
+/* Set an upper bound on burst length. Set to 0 to never set the frame pending
+ * bit, i.e., never trigger a burst. Note that receiver-side support for burst
+ * is always enabled, as it is part of IEEE 802.1.5.4-2015 (Section 7.2.1.3)*/
+#ifdef TSCH_CONF_BURST_MAX_LEN
+#define TSCH_BURST_MAX_LEN TSCH_CONF_BURST_MAX_LEN
+#else
+#define TSCH_BURST_MAX_LEN 32
+#endif
+
 /* 6TiSCH Minimal schedule slotframe length */
 #ifdef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
 #define TSCH_SCHEDULE_DEFAULT_LENGTH TSCH_SCHEDULE_CONF_DEFAULT_LENGTH

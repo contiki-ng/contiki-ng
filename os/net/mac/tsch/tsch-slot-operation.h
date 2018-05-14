@@ -57,6 +57,8 @@ extern struct ringbufindex input_ringbuf;
 extern struct input_packet input_array[TSCH_MAX_INCOMING_PACKETS];
 /* Last clock_time_t where synchronization happened */
 extern clock_time_t last_sync_time;
+/* Counts the length of the current burst */
+extern int tsch_current_burst_count;
 
 /********** Functions *********/
 

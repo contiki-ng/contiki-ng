@@ -82,10 +82,11 @@ tsch_log_process_pending(void)
       printf("[INFO: TSCH-LOG  ] {asn %02x.%08lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
     } else {
       struct tsch_slotframe *sf = tsch_schedule_get_slotframe_by_handle(log->link->slotframe_handle);
-      printf("[INFO: TSCH-LOG  ] {asn %02x.%08lx link %2u %3u %3u %2u ch %2u} ",
+      printf("[INFO: TSCH-LOG  ] {asn %02x.%08lx link %2u %3u %3u %2u %2u ch %2u} ",
              log->asn.ms1b, log->asn.ls4b,
-             log->link->slotframe_handle, sf ? sf->size.val : 0, log->link->timeslot, log->link->channel_offset,
-             tsch_calculate_channel(&log->asn, log->link->channel_offset));
+             log->link->slotframe_handle, sf ? sf->size.val : 0,
+             log->burst_count, log->link->timeslot + log->burst_count, log->link->channel_offset,
+             log->channel);
     }
     switch(log->type) {
       case tsch_log_tx:
@@ -135,6 +136,8 @@ tsch_log_prepare_add(void)
     struct tsch_log_t *log = &log_array[log_index];
     log->asn = tsch_current_asn;
     log->link = current_link;
+    log->burst_count = tsch_current_burst_count;
+    log->channel = tsch_current_channel;
     return log;
   } else {
     log_dropped++;
