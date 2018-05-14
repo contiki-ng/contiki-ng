@@ -34,6 +34,7 @@ libs/timers/zoul \
 libs/energest/zoul \
 libs/trickle-library/zoul \
 libs/data-structures/zoul \
+libs/ipv6-uipbuf/zoul \
 nullnet/zoul \
 slip-radio/zoul \
 dev/gpio-hal/zoul:BOARD=remote-reva \
