@@ -91,7 +91,9 @@ static uip_ds6_maddr_t *locmaddr;
 static uip_ds6_aaddr_t *locaaddr;
 #endif /* UIP_DS6_AADDR_NB */
 static uip_ds6_prefix_t *locprefix;
+#if (UIP_LLADDR_LEN == 2)
 static const uint8_t iid_prefix[] = { 0x00, 0x00 , 0x00 , 0xff , 0xfe , 0x00 };
+#endif /* (UIP_LLADDR_LEN == 2) */
 
 /*---------------------------------------------------------------------------*/
 void

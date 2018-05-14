@@ -49,6 +49,7 @@ CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
 CFLAGS += -DCONTIKI_BOARD_STRING=\"$(BOARD)\"
 endif
 
+CFLAGS += -Wno-unused-const-variable
 LDFLAGS = -Wl,--fatal-warnings
 
 MODULES += os os/sys os/dev os/lib os/services
