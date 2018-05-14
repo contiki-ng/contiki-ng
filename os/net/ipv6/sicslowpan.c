@@ -1664,11 +1664,12 @@ output(const linkaddr_t *localdest)
     }
 
     int freebuf = queuebuf_numfree() - 1;
-    LOG_INFO("output: fragmentation needed, fragments: %d, free queuebufs: %d\n",
+    LOG_INFO("output: fragmentation needed, fragments: %u, free queuebufs: %u\n",
+      fragment_count, freebuf);
 
-    fragment_count, freebuf);
     if(freebuf < fragment_count) {
-      LOG_WARN("output: dropping packet, not enough free bufs\n");
+      LOG_WARN("output: dropping packet, not enough free bufs (needed: %u, free: %u)\n",
+        fragment_count, freebuf);
       return 0;
     }
 

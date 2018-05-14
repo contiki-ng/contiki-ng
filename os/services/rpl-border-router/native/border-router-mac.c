@@ -47,7 +47,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "BR"
+#define LOG_MODULE "BR-MAC"
 #define LOG_LEVEL LOG_LEVEL_NONE
 
 #define MAX_CALLBACKS 16
@@ -112,11 +112,11 @@ send_packet(mac_callback_t sent, void *ptr)
   /* Will make it send only DATA packets... for now */
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
-  LOG_INFO("br-rdc: sending packet (%u bytes)\n", packetbuf_datalen());
+  LOG_INFO("sending packet (%u bytes)\n", packetbuf_datalen());
 
   if(NETSTACK_FRAMER.create() < 0) {
     /* Failed to allocate space for headers */
-    LOG_WARN("br-rdc: send failed, too large header\n");
+    LOG_WARN("send failed, too large header\n");
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
   } else {
     /* here we send the data over SLIP to the radio-chip */
@@ -125,7 +125,7 @@ send_packet(mac_callback_t sent, void *ptr)
     size = packetutils_serialize_atts(&buf[3], sizeof(buf) - 3);
 #endif
     if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
-      LOG_WARN("br-rdc: send failed, too large header\n");
+      LOG_WARN("send failed, too large header\n");
       mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
     } else {
       sid = setup_callback(sent, ptr);
@@ -146,7 +146,7 @@ static void
 packet_input(void)
 {
   if(NETSTACK_FRAMER.parse() < 0) {
-    LOG_DBG("br-rdc: failed to parse %u\n", packetbuf_datalen());
+    LOG_DBG("failed to parse %u\n", packetbuf_datalen());
   } else {
     NETSTACK_NETWORK.input();
   }
