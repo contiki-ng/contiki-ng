@@ -1,11 +1,20 @@
-.PHONY: login serialdump serialview  
+RLWRAPGOALS = login serialdump serialview
+
+.PHONY: $(RLWRAPGOALS)
 
 BAUDRATE ?= 115200
 TIMESTAMP =  $(CONTIKI)/tools/timestamp
 ifeq ($(HOST_OS),Windows)
   SERIALDUMP = $(SERIAL_DUMP_BIN)
 else
-  SERIALDUMP = rlwrap $(SERIAL_DUMP_BIN)
+  RLWRAP = $(notdir $(shell which rlwrap))
+  ifeq ($(RLWRAP),)
+    ifneq ($(filter $(RLWRAPGOALS),$(MAKECMDGOALS)),)
+      $(info Running serialdump without rlwrap support.)
+      $(info Consider installing rlwarp in order to be able to use command history)
+    endif
+  endif
+  SERIALDUMP = $(RLWRAP) $(SERIAL_DUMP_BIN)
 endif
 
 serialdump: $(SERIAL_DUMP_BIN)
