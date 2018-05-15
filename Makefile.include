@@ -50,7 +50,12 @@ CFLAGS += -DCONTIKI_BOARD_STRING=\"$(BOARD)\"
 endif
 
 CFLAGS += -Wno-unused-const-variable
-LDFLAGS = -Wl,--fatal-warnings
+
+LDFLAGS_WERROR ?= -Wl,--fatal-warnings
+
+ifeq ($(WERROR),1)
+ LDFLAGS += $(LDFLAGS_WERROR)
+endif
 
 MODULES += os os/sys os/dev os/lib os/services
 
