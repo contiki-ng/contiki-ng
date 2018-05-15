@@ -3,7 +3,7 @@ RLWRAPGOALS = login serialdump serialview
 .PHONY: $(RLWRAPGOALS)
 
 BAUDRATE ?= 115200
-TIMESTAMP =  $(CONTIKI)/tools/timestamp
+
 ifeq ($(HOST_OS),Windows)
   SERIALDUMP = $(SERIAL_DUMP_BIN)
 else
@@ -18,10 +18,10 @@ else
 endif
 
 serialdump: $(SERIAL_DUMP_BIN)
-	$(SERIALDUMP) -b$(BAUDRATE) $(PORT) | $(TIMESTAMP) | tee serialdump-`date +%Y%m%d-%H%M`
+	$(SERIALDUMP) -b$(BAUDRATE) -T $(PORT) | tee serialdump-`date +%Y%m%d-%H%M`
 
 serialview: $(SERIAL_DUMP_BIN)
-	$(SERIALDUMP) -b$(BAUDRATE) $(PORT) | $(TIMESTAMP)
+	$(SERIALDUMP) -b$(BAUDRATE) -T $(PORT)
 
 login: $(SERIAL_DUMP_BIN)
 	$(SERIALDUMP) -b$(BAUDRATE) $(PORT)
