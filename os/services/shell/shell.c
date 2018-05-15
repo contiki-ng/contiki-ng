@@ -50,40 +50,15 @@
 #include "shell-commands.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/ip64-addr.h"
+#include "net/ipv6/uiplib.h"
 
 /*---------------------------------------------------------------------------*/
 void
 shell_output_6addr(shell_output_func output, const uip_ipaddr_t *ipaddr)
 {
-  uint16_t a;
-  unsigned int i;
-  int f;
-
-  if(ipaddr == NULL) {
-    SHELL_OUTPUT(output, "(NULL IP addr)");
-    return;
-  }
-
-  if(ip64_addr_is_ipv4_mapped_addr(ipaddr)) {
-    /* Printing IPv4-mapped addresses is done according to RFC 4291 */
-    SHELL_OUTPUT(output, "::FFFF:%u.%u.%u.%u", ipaddr->u8[12], ipaddr->u8[13], ipaddr->u8[14], ipaddr->u8[15]);
-  } else {
-    for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
-      a = (ipaddr->u8[i] << 8) + ipaddr->u8[i + 1];
-      if(a == 0 && f >= 0) {
-        if(f++ == 0) {
-          SHELL_OUTPUT(output, "::");
-        }
-      } else {
-        if(f > 0) {
-          f = -1;
-        } else if(i > 0) {
-          SHELL_OUTPUT(output, ":");
-        }
-        SHELL_OUTPUT(output, "%x", a);
-      }
-    }
-  }
+  char buf[40];
+  uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
+  SHELL_OUTPUT(output, "%s", buf);
 }
 /*---------------------------------------------------------------------------*/
 void
