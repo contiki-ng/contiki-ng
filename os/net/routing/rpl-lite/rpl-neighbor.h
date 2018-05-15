@@ -196,8 +196,8 @@ rpl_nbr_t *rpl_neighbor_select_best(void);
 * Print a textual description of RPL neighbor into a string
 *
 * \param buf The buffer where to write content
-* \param len The buffer len
-* \param addr A pointer to a RPL neighbor that will be written to the buffer
+* \param buflen The buffer len
+* \param nbr A pointer to a RPL neighbor that will be written to the buffer
 * \return Identical to snprintf: number of bytes written excluding ending null
 * byte. A value >= buflen if the buffer was too small.
 */
