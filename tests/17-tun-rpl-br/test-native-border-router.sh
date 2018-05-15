@@ -12,6 +12,12 @@ IPADDR=$3
 # Time allocated for convergence
 WAIT_TIME=$4
 
+# Payload len. Default is ping6's default, 56.
+PING_SIZE=${5:-56}
+
+# Inter-ping delay. Default is ping6's default, 1s.
+PING_DELAY=${6:-1}
+
 # ICMP request-reply count
 COUNT=5
 
@@ -30,7 +36,7 @@ sleep $WAIT_TIME
 
 # Do ping
 echo "Pinging"
-ping6 $IPADDR -c $COUNT | tee $BASENAME.scriptlog
+ping6 $IPADDR -c $COUNT -s $PING_SIZE -i $PING_DELAY | tee $BASENAME.scriptlog
 # Fetch ping6 status code (not $? because this is piped)
 STATUS=${PIPESTATUS[0]}
 REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
