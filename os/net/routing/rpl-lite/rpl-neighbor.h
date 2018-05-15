@@ -192,6 +192,17 @@ void rpl_neighbor_remove_all(void);
 */
 rpl_nbr_t *rpl_neighbor_select_best(void);
 
+/**
+* Print a textual description of RPL neighbor into a string
+*
+* \param buf The buffer where to write content
+* \param len The buffer len
+* \param addr A pointer to a RPL neighbor that will be written to the buffer
+* \return Identical to snprintf: number of bytes written excluding ending null
+* byte. A value >= buflen if the buffer was too small.
+*/
+int rpl_neighbor_snprint(char *buf, int buflen, rpl_nbr_t *nbr);
+
 typedef rpl_nbr_t rpl_parent_t;
 #define rpl_parent_get_from_ipaddr(addr) rpl_neighbor_get_from_ipaddr(addr)
 #define rpl_parent_get_ipaddr(nbr) rpl_neighbor_get_ipaddr(nbr)
