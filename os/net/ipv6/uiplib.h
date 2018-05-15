@@ -82,6 +82,10 @@ int uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *addr);
  * @{
  */
 
+/* The maxium length of an IPv6 string, including terminating null bytes
+ * fd01:0002:0003:0004:0005:0006:0007:0008 => 39 + 1 bytes */
+#define UIPLIB_IPV6_MAX_STR_LEN 40
+
 /**
  * Print an IP address using printf().
  *

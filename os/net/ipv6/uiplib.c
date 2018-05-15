@@ -156,7 +156,7 @@ uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *ipaddr)
 void
 uiplib_ipaddr_print(const uip_ipaddr_t *addr)
 {
-  char buf[40];
+  char buf[UIPLIB_IPV6_MAX_STR_LEN];
   uiplib_ipaddr_snprint(buf, sizeof(buf), addr);
   printf("%s", buf);
 }

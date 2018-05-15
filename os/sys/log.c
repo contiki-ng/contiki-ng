@@ -85,7 +85,7 @@ struct log_module all_modules[] = {
 void
 log_6addr(const uip_ipaddr_t *ipaddr)
 {
-  char buf[40];
+  char buf[UIPLIB_IPV6_MAX_STR_LEN];
   uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
   LOG_OUTPUT("%s", buf);
 }
