@@ -3,6 +3,7 @@ RLWRAPGOALS = login serialdump serialview
 .PHONY: $(RLWRAPGOALS)
 
 BAUDRATE ?= 115200
+SERIALDUMP_TIME_FMT ?=
 
 ifeq ($(HOST_OS),Windows)
   SERIALDUMP = $(SERIAL_DUMP_BIN)
@@ -18,10 +19,10 @@ else
 endif
 
 serialdump: $(SERIAL_DUMP_BIN)
-	$(SERIALDUMP) -b$(BAUDRATE) -T $(PORT) | tee serialdump-`date +%Y%m%d-%H%M`
+	$(SERIALDUMP) -b$(BAUDRATE) -T$(SERIALDUMP_TIME_FMT) $(PORT) | tee serialdump-`date +%Y%m%d-%H%M`
 
 serialview: $(SERIAL_DUMP_BIN)
-	$(SERIALDUMP) -b$(BAUDRATE) -T $(PORT)
+	$(SERIALDUMP) -b$(BAUDRATE) -T$(SERIALDUMP_TIME_FMT) $(PORT)
 
 login: $(SERIAL_DUMP_BIN)
 	$(SERIALDUMP) -b$(BAUDRATE) $(PORT)
