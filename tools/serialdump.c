@@ -291,7 +291,7 @@ main(int argc, char **argv)
           time_t t;
           t = time(&t);
           strftime(outbuf, HCOLS, timeformat, localtime(&t));
-          printf("%s|", outbuf);
+          printf("[%s] ", outbuf);
           mode = MODE_DATE;
         }
         /* continue into the MODE_DATE */
