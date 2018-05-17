@@ -146,6 +146,27 @@ rpl_ocp_to_str(int ocp)
 }
 /*---------------------------------------------------------------------------*/
 static
+PT_THREAD(cmd_rpl_nbr(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  if(!curr_instance.used || rpl_neighbor_count() == 0) {
+    SHELL_OUTPUT(output, "RPL neighbors: none\n");
+  } else {
+    rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
+    SHELL_OUTPUT(output, "RPL neighbors:\n");
+    while(nbr != NULL) {
+      char buf[120];
+      rpl_neighbor_snprint(buf, sizeof(buf), nbr);
+      SHELL_OUTPUT(output, "%s\n", buf);
+      nbr = nbr_table_next(rpl_neighbors, nbr);
+    }
+  }
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
 PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
 {
   PT_BEGIN(pt);
@@ -745,6 +766,7 @@ struct shell_command_t shell_commands[] = {
 #endif /* UIP_CONF_IPV6_RPL */
 #if ROUTING_CONF_RPL_LITE
   { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
+  { "rpl-nbr",              cmd_rpl_nbr,              "'> rpl-nbr': Shows the RPL neighbor table" },
 #endif /* ROUTING_CONF_RPL_LITE */
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
 #if MAC_CONF_WITH_TSCH
