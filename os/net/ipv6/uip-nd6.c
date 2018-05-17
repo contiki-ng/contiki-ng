@@ -530,7 +530,7 @@ na_input(void)
     if(nd6_opt_llao != NULL) {
       is_llchange =
         memcmp(&nd6_opt_llao[UIP_ND6_OPT_DATA_OFFSET], lladdr,
-               UIP_LLADDR_LEN) ? 1 : 0;
+               UIP_LLADDR_LEN) == 0 ? 0 : 1;
     }
     if(nbr->state == NBR_INCOMPLETE) {
       if(nd6_opt_llao == NULL || !extract_lladdr_from_llao_aligned(&lladdr_aligned)) {
