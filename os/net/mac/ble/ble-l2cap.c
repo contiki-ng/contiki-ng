@@ -512,7 +512,6 @@ const struct mac_driver ble_l2cap_driver = {
   input,
   on,
   off,
-  NULL,
 };
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(ble_l2cap_tx_process, ev, data)
