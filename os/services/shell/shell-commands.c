@@ -615,24 +615,9 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
     SHELL_OUTPUT(output, "Routing links (%u in total):\n", uip_sr_num_nodes());
     link = uip_sr_node_head();
     while(link != NULL) {
-      uip_ipaddr_t child_ipaddr;
-      uip_ipaddr_t parent_ipaddr;
-      NETSTACK_ROUTING.get_sr_node_ipaddr(&child_ipaddr, link);
-      NETSTACK_ROUTING.get_sr_node_ipaddr(&parent_ipaddr, link->parent);
-      SHELL_OUTPUT(output, "-- ");
-      shell_output_6addr(output, &child_ipaddr);
-      if(link->parent == NULL) {
-        memset(&parent_ipaddr, 0, sizeof(parent_ipaddr));
-        SHELL_OUTPUT(output, " (DODAG root)");
-      } else {
-        SHELL_OUTPUT(output, " to ");
-        shell_output_6addr(output, &parent_ipaddr);
-      }
-      if(link->lifetime != UIP_SR_INFINITE_LIFETIME) {
-        SHELL_OUTPUT(output, " (lifetime: %lu seconds)\n", (unsigned long)link->lifetime);
-      } else {
-        SHELL_OUTPUT(output, " (lifetime: infinite)\n");
-      }
+      char buf[100];
+      uip_sr_link_snprint(buf, sizeof(buf), link);
+      SHELL_OUTPUT(output, "-- %s\n", buf);
       link = uip_sr_node_next(link);
     }
   } else {
