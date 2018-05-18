@@ -41,6 +41,7 @@
 
 #include "contiki.h"
 #include "net/ipv6/uip-sr.h"
+#include "net/ipv6/uiplib.h"
 #include "net/routing/routing.h"
 #include "lib/list.h"
 #include "lib/memb.h"
@@ -245,5 +246,50 @@ uip_sr_free_all(void)
     memb_free(&nodememb, l);
     num_nodes--;
   }
+}
+/*---------------------------------------------------------------------------*/
+int
+uip_sr_link_snprint(char *buf, int buflen, uip_sr_node_t *link)
+{
+  int index = 0;
+  uip_ipaddr_t child_ipaddr;
+  uip_ipaddr_t parent_ipaddr;
+
+  NETSTACK_ROUTING.get_sr_node_ipaddr(&child_ipaddr, link);
+  NETSTACK_ROUTING.get_sr_node_ipaddr(&parent_ipaddr, link->parent);
+
+  index += uiplib_ipaddr_snprint(buf+index, buflen-index, &child_ipaddr);
+  if(index >= buflen) {
+    return index;
+  }
+
+  if(link->parent == NULL) {
+    index += snprintf(buf+index, buflen-index, "  (DODAG root)");
+    if(index >= buflen) {
+      return index;
+    }
+  } else {
+    index += snprintf(buf+index, buflen-index, "  to ");
+    if(index >= buflen) {
+      return index;
+    }
+    index += uiplib_ipaddr_snprint(buf+index, buflen-index, &parent_ipaddr);
+    if(index >= buflen) {
+      return index;
+    }
+  }
+  if(link->lifetime != UIP_SR_INFINITE_LIFETIME) {
+    index += snprintf(buf+index, buflen-index,
+              " (lifetime: %lu seconds)", (unsigned long)link->lifetime);
+    if(index >= buflen) {
+      return index;
+    }
+  } else {
+    index += snprintf(buf+index, buflen-index, " (lifetime: infinite)");
+    if(index >= buflen) {
+      return index;
+    }
+  }
+  return index;
 }
 /** @} */
