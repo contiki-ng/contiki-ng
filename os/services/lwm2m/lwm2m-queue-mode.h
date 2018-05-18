@@ -29,37 +29,33 @@
  */
 
 /**
- * \addtogroup lwm2m
+ * \addtogroup oma-lwm2m
  * @{
  */
 
 /**
  * \file
- *         Header file for functions to manage the queue of notifications
+ *         Header file for the Contiki OMA LWM2M Queue Mode implementation
+ 		   to manage the parameters
  * \author
  *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
 
-#ifndef LWM2M_NOTIFICATION_QUEUE_H
-#define LWM2M_NOTIFICATION_QUEUE_H
+#ifndef LWM2M_QUEUE_MODE_H_
+#define LWM2M_QUEUE_MODE_H_
 
-#include "contiki.h"
 #include "lwm2m-queue-mode-conf.h"
-
 #include <inttypes.h>
 
-typedef struct notification_path {
-  struct notification_path *next;
-  uint16_t reduced_path[3];
-  uint8_t level; /* The depth level of the path: 1. object, 2. object/instance, 3. object/instance/resource */
-} notification_path_t;
+uint16_t lwm2m_queue_mode_get_awake_time();
+void lwm2m_queue_mode_set_awake_time(uint16_t time);
+uint32_t lwm2m_queue_mode_get_sleep_time();
+void lwm2m_queue_mode_set_sleep_time(uint32_t time);
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+uint8_t lwm2m_queue_mode_get_dynamic_adaptation_flag();
+void lwm2m_queue_mode_set_dynamic_adaptation_flag(uint8_t flag);
+void lwm2m_queue_mode_add_time_to_window(uint16_t time);
+#endif
 
-void lwm2m_notification_queue_init(void);
-
-/* For adding objects to the list in an ordered way, depending on the path*/
-void lwm2m_notification_queue_add_notification_path(char *path);
-
-void lwm2m_notification_queue_send_notifications();
-
-#endif /* LWM2M_NOTIFICATION_QUEUE_H */
+#endif /* LWM2M_QUEUE_MODE_H_ */
 /** @} */

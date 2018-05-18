@@ -5,10 +5,10 @@ class TestQueueModeSleep(unittest.TestCase):
     global client
 
     def test_read_awake_time(self):
-	self.assertIsNone(client.read("6000/0/3000"))
+	self.assertIsNone(client.read("30000/0/30000"))
 
     def test_read_sleep_time(self):
-	self.assertIsNone(client.read("6000/0/3001"))
+	self.assertIsNone(client.read("30000/0/30001"))
 
 
 print "----------------------------------------"

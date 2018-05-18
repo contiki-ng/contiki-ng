@@ -42,9 +42,9 @@
 /*---------------------------------------------------------------------------*/
 #include "lwm2m-notification-queue.h"
 
-#if LWM2M_Q_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_ENABLED
 
-#include "lwm2m-qmode-object.h"
+#include "lwm2m-queue-mode.h"
 #include "lwm2m-engine.h"
 #include "coap-engine.h"
 #include "lib/memb.h"
@@ -223,8 +223,8 @@ lwm2m_notification_queue_send_notifications()
 
   while(iteration_path != NULL) {
     extend_path(iteration_path, path, sizeof(path));
-#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
-    if(lwm2m_q_object_get_dynamic_adaptation_flag()) {
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+    if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
       lwm2m_engine_set_handler_from_notification();
     }
 #endif
@@ -235,5 +235,5 @@ lwm2m_notification_queue_send_notifications()
     remove_notification_path(aux);
   }
 }
-#endif /* LWM2M_Q_MODE_ENABLED */
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 /** @} */

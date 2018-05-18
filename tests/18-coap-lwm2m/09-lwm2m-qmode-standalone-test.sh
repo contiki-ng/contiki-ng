@@ -8,7 +8,7 @@ BASENAME=09-lwm2m-qmode-standalone-test
 # Building standalone posix example
 echo "Compiling standalone posix example"
 make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m clean >/dev/null
-make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1 >make.log 2>make.err
+make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m DEFINES=LWM2M_QUEUE_MODE_CONF_ENABLED=1,LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1,LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED=1 >make.log 2>make.err
 
 echo "Downloading leshan with Q-Mode support"
 wget -nc https://carlosgp143.github.io/resources/leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar

@@ -53,7 +53,7 @@
 #define LWM2M_RD_CLIENT_DISCONNECTED       5
 
 #include "lwm2m-object.h"
-#include "lwm2m-qmode-conf.h"
+#include "lwm2m-queue-mode-conf.h"
 
 struct lwm2m_session_info;
 typedef void (*session_callback_t)(struct lwm2m_session_info *session, int status);
@@ -77,11 +77,11 @@ void lwm2m_rd_client_init(const char *ep);
 
 void lwm2m_rd_client_set_session_callback(session_callback_t cb);
 
-#if LWM2M_Q_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_ENABLED
 uint8_t lwm2m_rd_client_is_client_awake(void);
 void lwm2m_rd_client_restart_client_awake_timer(void);
-void lwm2m_rd_client_fsm_execute_q_mode_awake();
-void lwm2m_rd_client_fsm_execute_q_mode_update();
+void lwm2m_rd_client_fsm_execute_queue_mode_awake();
+void lwm2m_rd_client_fsm_execute_queue_mode_update();
 #endif
 
 #ifndef LWM2M_RD_CLIENT_ASSIGNED_ENDPOINT_MAX_LEN

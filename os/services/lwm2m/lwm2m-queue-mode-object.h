@@ -35,31 +35,18 @@
 
 /**
  * \file
- *         Header file for the Contiki OMA LWM2M Queue Object for managing the queue mode
+ *         Header file for the Contiki OMA LWM2M Queue Mode object
+ 		   to manage the parameters from the server side
  * \author
  *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
 
-#ifndef LWM2M_Q_OBJECT_H_
-#define LWM2M_Q_OBJECT_H_
+#ifndef LWM2M_QUEUE_MODE_OBJECT_H_
+#define LWM2M_QUEUE_MODE_OBJECT_H_
 
-#include "contiki.h"
-#include "lwm2m-qmode-conf.h"
+#include "lwm2m-queue-mode-conf.h"
 
-#if LWM2M_Q_MODE_ENABLED
-#include <inttypes.h>
+void lwm2m_queue_mode_object_init(void);
 
-uint16_t lwm2m_q_object_get_awake_time();
-uint32_t lwm2m_q_object_get_sleep_time();
-#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
-uint8_t lwm2m_q_object_get_dynamic_adaptation_flag();
-void lwm2m_q_object_add_time_to_window(uint16_t time);
-#endif
-
-void lwm2m_q_object_send_notifications();
-
-void lwm2m_q_object_init(void);
-
-#endif /* LWM2M_Q_MODE_ENABLED */
 #endif /* LWM2M_Q_OBJECT_H_ */
 /** @} */

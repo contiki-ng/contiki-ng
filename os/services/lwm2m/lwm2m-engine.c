@@ -81,7 +81,7 @@
 #endif /* LWM2M_ENGINE_CONF_USE_RD_CLIENT */
 
 
-#if LWM2M_Q_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_ENABLED
  /* Queue Mode is handled using the RD Client and the Q-Mode object */
 #define USE_RD_CLIENT 1
 /* Queue Mode dynamic adaptation masks */
@@ -93,10 +93,13 @@
 #include "lwm2m-rd-client.h"
 #endif
 
-#if LWM2M_Q_MODE_ENABLED
-#include "lwm2m-qmode-object.h"
+#if LWM2M_QUEUE_MODE_ENABLED
+#include "lwm2m-queue-mode.h"
 #include "lwm2m-notification-queue.h"
-#endif
+#if LWM2M_QUEUE_MODE_OBJECT_ENABLED
+#include "lwm2m-queue-mode-object.h"
+#endif /* LWM2M_QUEUE_MODE_OBJECT_ENABLED */
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 
 /* MACRO for getting out resource ID from resource array ID + flags */
 #define RSC_ID(x)       ((uint16_t)(x & 0xffff))
@@ -143,18 +146,18 @@ static struct {
   /* in the future also a timeout */
 } created;
 
-#if LWM2M_Q_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_ENABLED
 static uint8_t waked_up_by_notification;
 /* For the dynamic adaptation of the awake time */ 
-#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
 static uint8_t dynamic_adaptation_params = 0x00; /* bit0: first_request, bit1: handler from notification */
 static uint64_t previous_request_time;
 static inline void clear_first_request();
 static inline uint8_t is_first_request();
 static inline void clear_handler_from_notification();
 static inline uint8_t get_handler_from_notification();
-#endif /* LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION */
-#endif /* LWM2M_Q_MODE_ENABLED */
+#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 
 COAP_HANDLER(lwm2m_handler, lwm2m_handler_callback);
 LIST(object_list);
@@ -581,8 +584,8 @@ lwm2m_engine_init(void)
   lwm2m_rd_client_init(endpoint);
 #endif
 
-#if LWM2M_Q_MODE_ENABLED
-  lwm2m_q_object_init();
+#if LWM2M_QUEUE_MODE_ENABLED && LWM2M_QUEUE_MODE_OBJECT_ENABLED
+  lwm2m_queue_mode_object_init();
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -1404,22 +1407,23 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   context.inbuf->pos = 0;
 
   /*If Queue Mode, restart the client awake timer */
-#if LWM2M_Q_MODE_ENABLED 
+#if LWM2M_QUEUE_MODE_ENABLED 
   if(lwm2m_rd_client_is_client_awake()) {
     lwm2m_rd_client_restart_client_awake_timer();
   }
 
-#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
-  if(lwm2m_q_object_get_dynamic_adaptation_flag() && !get_handler_from_notification()) {
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+  if(lwm2m_queue_mode_get_dynamic_adaptation_flag() && !get_handler_from_notification()) {
     if(is_first_request()) {
       previous_request_time = coap_timer_uptime();
       clear_first_request();
     } else {
       if(coap_timer_uptime()-previous_request_time >= 0) {
         if(coap_timer_uptime()-previous_request_time > 0xffff) {
-          lwm2m_q_object_add_time_to_window(0xffff);
+          lwm2m_queue_mode_add_time_to_window(0xffff);
+        } else {
+          lwm2m_queue_mode_add_time_to_window(coap_timer_uptime()-previous_request_time);
         }
-        lwm2m_q_object_add_time_to_window(coap_timer_uptime()-previous_request_time);
       }
       previous_request_time = coap_timer_uptime();
     }
@@ -1427,8 +1431,8 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
   if(get_handler_from_notification()) {
     clear_handler_from_notification();
   }
-#endif /* LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION */
-#endif /* LWM2M_Q_MODE_ENABLED */
+#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 
   /* Maybe this should be part of CoAP itself - this seems not to be working
      with the leshan server */
@@ -1692,8 +1696,8 @@ lwm2m_handler_callback(coap_message_t *request, coap_message_t *response,
 static void
 lwm2m_send_notification(char* path)
 {
-#if LWM2M_Q_MODE_ENABLED && LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
-    if(lwm2m_q_object_get_dynamic_adaptation_flag()) {
+#if LWM2M_QUEUE_MODE_ENABLED && LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+    if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
       lwm2m_engine_set_handler_from_notification();
     } 
 #endif
@@ -1709,7 +1713,7 @@ lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
     snprintf(path, 20, "%d/%d/%d", obj->object_id, obj->instance_id, resource);
   }
 
-#if LWM2M_Q_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_ENABLED
   
   if(coap_has_observers(path)) {
     /* Client is sleeping -> add the notification to the list */
@@ -1719,7 +1723,7 @@ lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
       /* if it is the first notification -> wake up and send update */
       if(!waked_up_by_notification) {
         waked_up_by_notification = 1;
-        lwm2m_rd_client_fsm_execute_q_mode_update();
+        lwm2m_rd_client_fsm_execute_queue_mode_update();
       }
     /* Client is awake -> send the notification */  
     } else {
@@ -1732,7 +1736,7 @@ lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
 }
 /*---------------------------------------------------------------------------*/
 /* Queue Mode Support and dynamic adaptation of the client awake time */
-#if LWM2M_Q_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_ENABLED
 uint8_t 
 lwm2m_engine_is_waked_up_by_notification()
 {
@@ -1745,7 +1749,7 @@ lwm2m_engine_clear_waked_up_by_notification()
  waked_up_by_notification = 0;
 }
 /*---------------------------------------------------------------------------*/
-#if LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
 void
 lwm2m_engine_set_first_request()
 {
@@ -1781,7 +1785,7 @@ clear_handler_from_notification()
 {
   dynamic_adaptation_params &= ~HANDLER_FROM_NOTIFICATION_MASK;
 }
-#endif /* LWM2M_Q_MODE_INCLUDE_DYNAMIC_ADAPTATION */
-#endif /* LWM2M_Q_MODE_ENABLED */
+#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 /*---------------------------------------------------------------------------*/
 /** @} */

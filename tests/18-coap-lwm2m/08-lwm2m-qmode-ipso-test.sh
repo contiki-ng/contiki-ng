@@ -10,7 +10,7 @@ IPADDR=fd00::302:304:506:708
 # Starting Contiki-NG native node
 echo "Starting native node - lwm2m/ipso objects with Q-Mode"
 make -C $CONTIKI/examples/lwm2m-ipso-objects clean >/dev/null
-make -C $CONTIKI/examples/lwm2m-ipso-objects DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1 > make.log 2> make.err
+make -C $CONTIKI/examples/lwm2m-ipso-objects DEFINES=LWM2M_QUEUE_MODE_CONF_ENABLED=1,LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1,LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED=1 > make.log 2> make.err
 sudo $CONTIKI/examples/lwm2m-ipso-objects/example-ipso-objects.native > node.log 2> node.err &
 CPID=$!
 sleep 10
