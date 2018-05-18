@@ -34,7 +34,8 @@
   * \addtogroup node-id
   * @{
   *
-  * \file Node-id (simple 16-bit identifiers) handling
+  * \file
+  *    Node-id (simple 16-bit identifiers) handling
   * \author Simon Duquennoy <simon.duquennoy@ri.se>
   *
   */
@@ -50,3 +51,5 @@ extern uint16_t node_id;
 void node_id_init(void);
 
 #endif /* NODE_ID_H_ */
+ /** @} */
+ 
