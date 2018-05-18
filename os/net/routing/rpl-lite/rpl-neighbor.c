@@ -94,10 +94,6 @@ rpl_neighbor_snprint(char *buf, int buflen, rpl_nbr_t *nbr)
   const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
   clock_time_t clock_now = clock_time();
 
-  index += snprintf(buf+index, buflen-index, "nbr: ");
-  if(index >= buflen) {
-    return index;
-  }
   index += uiplib_ipaddr_snprint(buf+index, buflen-index, rpl_neighbor_get_ipaddr(nbr));
   if(index >= buflen) {
     return index;
@@ -157,7 +153,7 @@ rpl_neighbor_print_list(const char *str)
     while(nbr != NULL) {
       char buf[120];
       rpl_neighbor_snprint(buf, sizeof(buf), nbr);
-      LOG_INFO("%s\n", buf);
+      LOG_INFO("nbr: %s\n", buf);
       nbr = nbr_table_next(rpl_neighbors, nbr);
     }
     LOG_INFO("nbr: end of list\n");
