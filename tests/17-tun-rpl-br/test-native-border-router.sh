@@ -1,4 +1,5 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -43,8 +44,8 @@ REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
 
 echo "Closing simulation and nbr"
 sleep 1
-kill -9 $JPID
-kill -9 $MPID
+kill_bg $JPID
+kill_bg $MPID
 sleep 1
 rm COOJA.testlog
 rm COOJA.log
