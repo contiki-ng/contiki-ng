@@ -35,7 +35,8 @@
 
 /**
  * \file
- *         Header file for functions to manage the queue of notifications
+ *         Header file for functions to manage the queue to store notifications
+       when waiting for the response to the update message in Queue Mode.
  * \author
  *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
@@ -56,8 +57,7 @@ typedef struct notification_path {
 
 void lwm2m_notification_queue_init(void);
 
-/* For adding objects to the list in an ordered way, depending on the path*/
-void lwm2m_notification_queue_add_notification_path(char *path);
+void lwm2m_notification_queue_add_notification_path(uint16_t object_id, uint16_t instance_id, uint16_t resource_id);
 
 void lwm2m_notification_queue_send_notifications();
 

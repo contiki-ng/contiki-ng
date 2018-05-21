@@ -35,7 +35,8 @@
 
 /**
  * \file
- *         Implementation of functions to manage the queue of notifications
+ *         Implementation of functions to manage the queue to store notifications
+           when waiting for the response to the update message in Queue Mode.
  * \author
  *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
@@ -62,34 +63,18 @@
 #ifdef LWM2M_NOTIFICATION_QUEUE_CONF_LENGTH
 #define LWM2M_NOTIFICATION_QUEUE_LENGTH LWM2M_NOTIFICATION_QUEUE_CONF_LENGTH
 #else
-#define LWM2M_NOTIFICATION_QUEUE_LENGTH 3
+#define LWM2M_NOTIFICATION_QUEUE_LENGTH COAP_MAX_OBSERVERS
 #endif
 
 /*---------------------------------------------------------------------------*/
 /* Queue to store the notifications in the period when the client has woken up, sent the update and it's waiting for the server response*/
-MEMB(notification_memb, notification_path_t, LWM2M_NOTIFICATION_QUEUE_LENGTH + 1); /* Length + 1 to allocate the new path to add */
+MEMB(notification_memb, notification_path_t, LWM2M_NOTIFICATION_QUEUE_LENGTH); /* Length + 1 to allocate the new path to add */
 LIST(notification_paths_queue);
 /*---------------------------------------------------------------------------*/
 void
 lwm2m_notification_queue_init(void)
 {
   list_init(notification_paths_queue);
-}
-/*---------------------------------------------------------------------------*/
-static void
-reduce_path(notification_path_t *path_object, char *path)
-{
-  char *cut = strtok(path, "/");
-  int i;
-  for(i = 0; i < 3; i++) {
-    if(cut != NULL) {
-      path_object->reduced_path[i] = (uint16_t)atoi(cut);
-      cut = strtok(NULL, "/");
-    } else {
-      break;
-    }
-  }
-  path_object->level = i;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -108,34 +93,18 @@ extend_path(notification_path_t *path_object, char *path, int path_size)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
-add_notification_path_object_ordered(notification_path_t *path)
+static int
+is_notification_path_present(uint16_t object_id, uint16_t instance_id, uint16_t resource_id)
 {
   notification_path_t *iteration_path = (notification_path_t *)list_head(notification_paths_queue);
-  if(list_length(notification_paths_queue) == 0) {
-    list_add(notification_paths_queue, path);
-  } else if(path->level < iteration_path->level) {
-    list_push(notification_paths_queue, path);
-  } else if(memcmp((path->reduced_path), (iteration_path->reduced_path), (path->level) * sizeof(uint16_t)) <= 0) {
-    list_push(notification_paths_queue, path);
-  } else {
-    notification_path_t *previous_path = iteration_path;
-    while(iteration_path != NULL) {
-      if(path->level < iteration_path->level) {
-        path->next = iteration_path;
-        previous_path->next = path;
-        return;
-      }
-      if(memcmp((path->reduced_path), (iteration_path->reduced_path), (path->level) * sizeof(uint16_t)) <= 0) {
-        path->next = iteration_path;
-        previous_path->next = path;
-        return;
-      }
-      previous_path = iteration_path;
-      iteration_path = iteration_path->next;
+  while(iteration_path != NULL) {
+    if(iteration_path->reduced_path[0] == object_id && iteration_path->reduced_path[1] == instance_id
+       && iteration_path->reduced_path[2] == resource_id) {
+      return 1;
     }
-    list_add(notification_paths_queue, path);
+    iteration_path = iteration_path->next;
   }
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -145,73 +114,24 @@ remove_notification_path(notification_path_t *path)
   memb_free(&notification_memb, path);
 }
 /*---------------------------------------------------------------------------*/
-static void
-notification_queue_remove_policy(uint16_t *reduced_path, uint8_t level)
-{
-  uint8_t path_removed_flag = 0;
-
-  notification_path_t *path_object = NULL;
-  notification_path_t *iteration_path = NULL;
-  notification_path_t *previous = NULL;
-  notification_path_t *next_next = NULL;
-  notification_path_t *path_to_remove = NULL;
-
-  for(iteration_path = (notification_path_t *)list_head(notification_paths_queue); iteration_path != NULL;
-      iteration_path = iteration_path->next) {
-    /* 1. check if there is one event of the same path -> remove it and add the new one */
-    if((level == iteration_path->level) && memcmp(iteration_path->reduced_path, reduced_path, level * sizeof(uint16_t)) == 0) {
-      remove_notification_path(iteration_path);
-      path_object = memb_alloc(&notification_memb);
-      memcpy(path_object->reduced_path, reduced_path, level * sizeof(uint16_t));
-      path_object->level = level;
-      add_notification_path_object_ordered(path_object);
-      return;
-    }
-    /* 2. If there is no event of the same type, look for repeated events of the same resource and remove the oldest one */
-    if(iteration_path->next != NULL && (iteration_path->level == iteration_path->next->level)
-       && (memcmp(iteration_path->reduced_path, (iteration_path->next)->reduced_path, iteration_path->level * sizeof(uint16_t)) == 0)) {
-      path_removed_flag = 1;
-      next_next = iteration_path->next->next;
-      path_to_remove = iteration_path->next;
-      previous = iteration_path;
-    }
-  }
-  /* 3. If there are no events for the same path, we remove a the oldest repeated event of another resource */
-  if(path_removed_flag) {
-    memb_free(&notification_memb, path_to_remove);
-    previous->next = next_next;
-    path_object = memb_alloc(&notification_memb);
-    memcpy(path_object->reduced_path, reduced_path, level * sizeof(uint16_t));
-    path_object->level = level;
-    add_notification_path_object_ordered(path_object);
-  } else {
-    /* 4. If all the events are from different resources, remove the last one */
-    list_chop(notification_paths_queue);
-    path_object = memb_alloc(&notification_memb);
-    memcpy(path_object->reduced_path, reduced_path, level * sizeof(uint16_t));
-    path_object->level = level;
-    add_notification_path_object_ordered(path_object);
-  }
-  return;
-}
-/*---------------------------------------------------------------------------*/
-/* For adding objects to the list in an ordered way, depending on the path*/
 void
-lwm2m_notification_queue_add_notification_path(char *path)
+lwm2m_notification_queue_add_notification_path(uint16_t object_id, uint16_t instance_id, uint16_t resource_id)
 {
-  notification_path_t *path_object = memb_alloc(&notification_memb);
-  if(path_object == NULL) {
-    LOG_DBG("Could not allocate new notification in the queue\n");
+  if(is_notification_path_present(object_id, instance_id, resource_id)) {
+    LOG_DBG("Notification path already present, not queueing it\n");
     return;
   }
-  reduce_path(path_object, path);
-  if(list_length(notification_paths_queue) >= LWM2M_NOTIFICATION_QUEUE_LENGTH) {
-    /* The queue is full, apply policy to remove */
-    notification_queue_remove_policy(path_object->reduced_path, path_object->level);
-  } else {
-    add_notification_path_object_ordered(path_object);
+  notification_path_t *path_object = memb_alloc(&notification_memb);
+  if(path_object == NULL) {
+    LOG_DBG("Queue is full, could not allocate new notification\n");
+    return;
   }
-  LOG_DBG("Notification path added to the list: %s\n", path);
+  path_object->reduced_path[0] = object_id;
+  path_object->reduced_path[1] = instance_id;
+  path_object->reduced_path[2] = resource_id;
+  path_object->level = 3;
+  list_add(notification_paths_queue, path_object);
+  LOG_DBG("Notification path added to the list: %u/%u/%u\n", object_id, instance_id, resource_id);
 }
 /*---------------------------------------------------------------------------*/
 void

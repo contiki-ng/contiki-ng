@@ -1718,7 +1718,7 @@ lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
   if(coap_has_observers(path)) {
     /* Client is sleeping -> add the notification to the list */
     if(!lwm2m_rd_client_is_client_awake()) {
-      lwm2m_notification_queue_add_notification_path(path);
+      lwm2m_notification_queue_add_notification_path(obj->object_id, obj->instance_id, resource);
 
       /* if it is the first notification -> wake up and send update */
       if(!waked_up_by_notification) {
