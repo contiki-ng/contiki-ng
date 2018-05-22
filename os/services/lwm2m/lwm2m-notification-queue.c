@@ -145,7 +145,7 @@ lwm2m_notification_queue_send_notifications()
     extend_path(iteration_path, path, sizeof(path));
 #if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
     if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
-      lwm2m_engine_set_handler_from_notification();
+      lwm2m_queue_mode_set_handler_from_notification();
     }
 #endif
     LOG_DBG("Sending stored notification with path: %s\n", path);

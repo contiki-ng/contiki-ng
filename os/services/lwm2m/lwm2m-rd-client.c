@@ -448,7 +448,7 @@ registration_callback(coap_request_state_t *state)
 #if LWM2M_QUEUE_MODE_ENABLED
 #if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
         if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
-          lwm2m_engine_set_first_request();
+          lwm2m_queue_mode_set_first_request();
         }
 #endif
         lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/
@@ -501,14 +501,14 @@ update_callback(coap_request_state_t *state)
       last_update = coap_timer_uptime();
 #if LWM2M_QUEUE_MODE_ENABLED
       /* If it has been waked up by a notification, send the stored notifications in queue */
-      if(lwm2m_engine_is_waked_up_by_notification()) {
+      if(lwm2m_queue_mode_is_waked_up_by_notification()) {
 
-        lwm2m_engine_clear_waked_up_by_notification();
+        lwm2m_queue_mode_clear_waked_up_by_notification();
         lwm2m_notification_queue_send_notifications();
       }
 #if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
       if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
-        lwm2m_engine_set_first_request();
+        lwm2m_queue_mode_set_first_request();
       }
 #endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
       lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/

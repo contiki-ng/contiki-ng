@@ -36,7 +36,7 @@
 /**
  * \file
  *         Header file for the Contiki OMA LWM2M Queue Mode implementation
- 		   to manage the parameters
+       to manage the parameters
  * \author
  *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
@@ -51,11 +51,21 @@ uint16_t lwm2m_queue_mode_get_awake_time();
 void lwm2m_queue_mode_set_awake_time(uint16_t time);
 uint32_t lwm2m_queue_mode_get_sleep_time();
 void lwm2m_queue_mode_set_sleep_time(uint32_t time);
+
 #if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
 uint8_t lwm2m_queue_mode_get_dynamic_adaptation_flag();
 void lwm2m_queue_mode_set_dynamic_adaptation_flag(uint8_t flag);
 void lwm2m_queue_mode_add_time_to_window(uint16_t time);
 #endif
+
+uint8_t lwm2m_queue_mode_is_waked_up_by_notification();
+void lwm2m_queue_mode_clear_waked_up_by_notification();
+void lwm2m_queue_mode_set_waked_up_by_notification();
+
+void lwm2m_queue_mode_set_first_request();
+void lwm2m_queue_mode_set_handler_from_notification();
+
+void lwm2m_queue_mode_request_received();
 
 #endif /* LWM2M_QUEUE_MODE_H_ */
 /** @} */

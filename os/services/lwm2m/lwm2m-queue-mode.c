@@ -55,17 +55,30 @@
 #define LOG_MODULE "lwm2m-queue-mode"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 
+/* Queue Mode dynamic adaptation masks */
+#define FIRST_REQUEST_MASK 0x01
+#define HANDLER_FROM_NOTIFICATION_MASK 0x02
 
 static uint16_t queue_mode_awake_time = LWM2M_QUEUE_MODE_DEFAULT_CLIENT_AWAKE_TIME;
 static uint32_t queue_mode_sleep_time = LWM2M_QUEUE_MODE_DEFAULT_CLIENT_SLEEP_TIME;
+
+/* Flag for notifications */
+static uint8_t waked_up_by_notification;
+
+/* For the dynamic adaptation of the awake time */
 #if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
 static uint8_t queue_mode_dynamic_adaptation_flag = LWM2M_QUEUE_MODE_DEFAULT_DYNAMIC_ADAPTATION_FLAG;
 
 /* Window to save the times and do the dynamic adaptation of the awake time*/
 uint16_t times_window[LWM2M_QUEUE_MODE_DYNAMIC_ADAPTATION_WINDOW_LENGTH] = { 0 };
 uint8_t times_window_index = 0;
-
-#endif
+static uint8_t dynamic_adaptation_params = 0x00; /* bit0: first_request, bit1: handler from notification */
+static uint64_t previous_request_time;
+static inline void clear_first_request();
+static inline uint8_t is_first_request();
+static inline void clear_handler_from_notification();
+static inline uint8_t get_handler_from_notification();
+#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
 /*---------------------------------------------------------------------------*/
 uint16_t
 lwm2m_queue_mode_get_awake_time()
@@ -106,6 +119,7 @@ lwm2m_queue_mode_set_dynamic_adaptation_flag(uint8_t flag)
 {
   queue_mode_dynamic_adaptation_flag = flag;
 }
+#endif
 /*---------------------------------------------------------------------------*/
 #if !UPDATE_WITH_MEAN
 static uint16_t
@@ -166,6 +180,89 @@ lwm2m_queue_mode_add_time_to_window(uint16_t time)
   times_window[times_window_index] = time;
   times_window_index++;
   update_awake_time();
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+lwm2m_queue_mode_is_waked_up_by_notification()
+{
+  return waked_up_by_notification;
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_queue_mode_clear_waked_up_by_notification()
+{
+  waked_up_by_notification = 0;
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_queue_mode_set_waked_up_by_notification()
+{
+  waked_up_by_notification = 1;
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_queue_mode_request_received()
+{
+  if(lwm2m_rd_client_is_client_awake()) {
+    lwm2m_rd_client_restart_client_awake_timer();
+  }
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+  if(lwm2m_queue_mode_get_dynamic_adaptation_flag() && !get_handler_from_notification()) {
+    if(is_first_request()) {
+      previous_request_time = coap_timer_uptime();
+      clear_first_request();
+    } else {
+      if(coap_timer_uptime() - previous_request_time >= 0) {
+        if(coap_timer_uptime() - previous_request_time > 0xffff) {
+          lwm2m_queue_mode_add_time_to_window(0xffff);
+        } else {
+          lwm2m_queue_mode_add_time_to_window(coap_timer_uptime() - previous_request_time);
+        }
+      }
+      previous_request_time = coap_timer_uptime();
+    }
+  }
+  if(get_handler_from_notification()) {
+    clear_handler_from_notification();
+  }
+#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+}
+/*---------------------------------------------------------------------------*/
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+void
+lwm2m_queue_mode_set_first_request()
+{
+  dynamic_adaptation_params |= FIRST_REQUEST_MASK;
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_queue_mode_set_handler_from_notification()
+{
+  dynamic_adaptation_params |= HANDLER_FROM_NOTIFICATION_MASK;
+}
+/*---------------------------------------------------------------------------*/
+static inline uint8_t
+is_first_request()
+{
+  return dynamic_adaptation_params & FIRST_REQUEST_MASK;
+}
+/*---------------------------------------------------------------------------*/
+static inline uint8_t
+get_handler_from_notification()
+{
+  return (dynamic_adaptation_params & HANDLER_FROM_NOTIFICATION_MASK) != 0;
+}
+/*---------------------------------------------------------------------------*/
+static inline void
+clear_first_request()
+{
+  dynamic_adaptation_params &= ~FIRST_REQUEST_MASK;
+}
+/*---------------------------------------------------------------------------*/
+static inline void
+clear_handler_from_notification()
+{
+  dynamic_adaptation_params &= ~HANDLER_FROM_NOTIFICATION_MASK;
 }
 #endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
 #endif /* LWM2M_QUEUE_MODE_ENABLED */

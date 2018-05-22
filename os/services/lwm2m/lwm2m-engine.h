@@ -116,14 +116,5 @@ void lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
 
 void lwm2m_engine_set_opaque_callback(lwm2m_context_t *ctx, lwm2m_write_opaque_callback cb);
 
-#if LWM2M_QUEUE_MODE_ENABLED
-uint8_t lwm2m_engine_is_waked_up_by_notification();
-void lwm2m_engine_clear_waked_up_by_notification();
-#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
-void lwm2m_engine_set_first_request();
-void lwm2m_engine_set_handler_from_notification();
-#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
-#endif /* LWM2M_QUEUE_MODE_ENABLED */
-
 #endif /* LWM2M_ENGINE_H */
 /** @} */
