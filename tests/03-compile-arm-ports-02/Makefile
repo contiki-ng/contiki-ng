@@ -62,6 +62,8 @@ dev/gpio-hal/openmote-cc2538 \
 dev/leds/openmote-cc2538 \
 rpl-border-router/openmote-cc2538 \
 libs/ipv6-hooks/openmote-cc2538 \
+libs/shell/openmote-cc2538 \
+libs/simple-energest/openmote-cc2538 \
 
 TOOLS=
 
