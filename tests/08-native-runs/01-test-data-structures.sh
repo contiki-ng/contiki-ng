@@ -1,4 +1,5 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -16,7 +17,7 @@ sleep 2
 
 echo "Closing native node"
 sleep 2
-pgrep $CODE | xargs kill -9
+kill_bg $CPID
 
 if grep -q "=check-me= FAILED" $CODE.log ; then
   echo "==== make.log ====" ; cat make.log;

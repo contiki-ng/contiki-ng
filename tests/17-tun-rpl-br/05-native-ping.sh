@@ -1,4 +1,5 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -22,7 +23,7 @@ STATUS=${PIPESTATUS[0]}
 
 echo "Closing native node"
 sleep 2
-pgrep hello-world | sudo xargs kill -9
+kill_bg $CPID
 
 if [ $STATUS -eq 0 ] ; then
   cp $BASENAME.log $BASENAME.testlog
