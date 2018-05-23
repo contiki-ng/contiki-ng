@@ -65,7 +65,7 @@ struct coap_request_state {
   void (*callback)(coap_request_state_t *state);
 };
 
-void coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
+int coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
                        coap_message_t *request,
                        void (*callback)(coap_request_state_t *state));
 
