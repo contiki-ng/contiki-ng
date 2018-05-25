@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,28 @@
  *
  * This file is part of the Contiki operating system.
  *
- * Author: Adam Dunkels <adam@sics.se>
- *
  */
+
+ /**
+  * \addtogroup node-id
+  * @{
+  *
+  * \file
+  *    Node-id (simple 16-bit identifiers) handling
+  * \author Simon Duquennoy <simon.duquennoy@ri.se>
+  *
+  */
 
 #ifndef NODE_ID_H_
 #define NODE_ID_H_
 
-void node_id_restore(void);
-void node_id_burn(unsigned short node_id);
-
-extern unsigned short node_id;
+/* A global variable that hosts the node ID */
+extern uint16_t node_id;
+/**
+ * Initialize the node ID. Must be called after initialized of linkaddr
+ */
+void node_id_init(void);
 
 #endif /* NODE_ID_H_ */
+ /** @} */
+ 
