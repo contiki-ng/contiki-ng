@@ -127,12 +127,12 @@ find_removable_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   /* Add the new neighbor only if it is better than the current worst. */
   if(dio->rank + curr_instance.min_hoprankinc < worst_rank - curr_instance.min_hoprankinc / 2) {
     /* Found *great* neighbor - add! */
-    LOG_INFO("nbr-policy: DIO rank %u, worse_rank %u -- add to cache\n",
+    LOG_INFO("nbr-policy: DIO rank %u, worst_rank %u -- add to cache\n",
            dio->rank, worst_rank);
     return worst_rank_nbr_lladdr;
   }
 
-  LOG_INFO("nbr-policy: DIO rank %u, worse_rank %u -- do not add to cache\n",
+  LOG_INFO("nbr-policy: DIO rank %u, worst_rank %u -- do not add to cache\n",
          dio->rank, worst_rank);
   return NULL;
 }
