@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,49 +32,20 @@
 
 /**
  * \file
- *         A program for burning a node ID into the flash ROM of a Tmote Sky node.
+ *         Node-id management
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
-#include "dev/leds.h"
-#include "dev/watchdog.h"
-#include "sys/node-id.h"
 #include "contiki.h"
-#include "sys/etimer.h"
+#include "sys/node-id.h"
+#include "net/linkaddr.h"
 
-#include <stdio.h>
+uint16_t node_id = 0;
 
-static struct etimer etimer;
-
-PROCESS(burn_process, "Burn node id");
-AUTOSTART_PROCESSES(&burn_process);
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(burn_process, ev, data)
-{
-  PROCESS_BEGIN();
-
-  etimer_set(&etimer, 5*CLOCK_SECOND);
-  PROCESS_WAIT_UNTIL(etimer_expired(&etimer));
-
-  watchdog_stop();
-  leds_on(LEDS_RED);
-#if NODEID
-  printf("Burning node id %d\n", NODEID);
-  node_id_burn(NODEID);
-  leds_on(LEDS_BLUE);
-  node_id_restore();
-  printf("Restored node id %d\n", node_id);
-#else
-#error "burn-nodeid must be compiled with nodeid=<the ID of the node>"
-  node_id_restore();
-  printf("Restored node id %d\n", node_id);
-#endif
-  leds_off(LEDS_RED + LEDS_BLUE);
-  watchdog_start();
-  while(1) {
-    PROCESS_WAIT_EVENT();
-  }
-  PROCESS_END();
+void
+node_id_init(void) {
+  /* Initialize with a default value derived from linkaddr */
+  node_id = linkaddr_node_addr.u8[LINKADDR_SIZE - 1]
+            + (linkaddr_node_addr.u8[LINKADDR_SIZE - 2] << 8);
 }
-/*---------------------------------------------------------------------------*/

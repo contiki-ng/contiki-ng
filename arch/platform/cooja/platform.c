@@ -64,6 +64,7 @@
 #include "dev/button-sensor.h"
 #include "dev/pir-sensor.h"
 #include "dev/vib-sensor.h"
+#include "dev/moteid.h"
 
 #include "sys/node-id.h"
 #include "services/rpl-border-router/rpl-border-router.h"
@@ -151,13 +152,13 @@ set_lladdr(void)
   {
     int i;
     for(i = 0; i < sizeof(uip_lladdr.addr); i += 2) {
-      addr.u8[i + 1] = node_id & 0xff;
-      addr.u8[i + 0] = node_id >> 8;
+      addr.u8[i + 1] = simMoteID & 0xff;
+      addr.u8[i + 0] = simMoteID >> 8;
     }
   }
 #else /* NETSTACK_CONF_WITH_IPV6 */
-  addr.u8[0] = node_id & 0xff;
-  addr.u8[1] = node_id >> 8;
+  addr.u8[0] = simMoteID & 0xff;
+  addr.u8[1] = simMoteID >> 8;
 #endif /* NETSTACK_CONF_WITH_IPV6 */
   linkaddr_set_node_addr(&addr);
 }
@@ -177,11 +178,6 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  if(node_id > 0) {
-    LOG_INFO("Node id is set to %u.\n", node_id);
-  } else {
-    LOG_INFO("Node id is not set.\n");
-  }
   /* Initialize eeprom */
   eeprom_init();
   /* Start serial process */

@@ -39,12 +39,14 @@
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
+ *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
 
 #ifndef LWM2M_ENGINE_H
 #define LWM2M_ENGINE_H
 
 #include "lwm2m-object.h"
+#include "lwm2m-queue-mode-conf.h"
 
 #define LWM2M_FLOAT32_BITS  10
 #define LWM2M_FLOAT32_FRAC (1L << LWM2M_FLOAT32_BITS)
@@ -113,7 +115,6 @@ void lwm2m_notify_object_observers(lwm2m_object_instance_t *obj,
                                    uint16_t resource);
 
 void lwm2m_engine_set_opaque_callback(lwm2m_context_t *ctx, lwm2m_write_opaque_callback cb);
-
 
 #endif /* LWM2M_ENGINE_H */
 /** @} */
