@@ -109,7 +109,7 @@ timesync_learn_drift_ticks(uint32_t time_delta_asn, int32_t drift_ticks)
 
   TSCH_LOG_ADD(tsch_log_message,
       snprintf(log->message, sizeof(log->message),
-          "drift %ld (min/max delta seen: %"PRId32"/%"PRId32")",
+          "drift %ld ppm (min/max delta seen: %"PRId32"/%"PRId32")",
           tsch_adaptive_timesync_get_drift_ppm(),
           min_drift_seen, max_drift_seen));
 }
