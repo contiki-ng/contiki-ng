@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2018, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,40 +32,25 @@
 
 /**
  * \file
- *         Utility to store a node id in the external flash
+ *         A very simple example of simple-energest
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
-#include "sys/node-id.h"
 #include "contiki.h"
-#include "dev/xmem.h"
 
-unsigned short node_id = 0;
+#include <stdio.h> /* For printf() */
+/*---------------------------------------------------------------------------*/
+PROCESS(example_process, "Example process: simple-energest");
+AUTOSTART_PROCESSES(&example_process);
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(example_process, ev, data)
+{
+  PROCESS_BEGIN();
 
-/*---------------------------------------------------------------------------*/
-void
-node_id_restore(void)
-{
-  unsigned char buf[4];
-  xmem_pread(buf, 4, NODE_ID_XMEM_OFFSET);
-  if(buf[0] == 0xad &&
-     buf[1] == 0xde) {
-    node_id = (buf[2] << 8) | buf[3];
-  } else {
-    node_id = 0;
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-node_id_burn(unsigned short id)
-{
-  unsigned char buf[4];
-  buf[0] = 0xad;
-  buf[1] = 0xde;
-  buf[2] = id >> 8;
-  buf[3] = id & 0xff;
-  xmem_erase(XMEM_ERASE_UNIT_SIZE, NODE_ID_XMEM_OFFSET);
-  xmem_pwrite(buf, 4, NODE_ID_XMEM_OFFSET);
+  /* Do nothing, just let simple-energest write its summary
+   * at a period of SIMPLE_ENERGEST_CONF_PERIOD */
+
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

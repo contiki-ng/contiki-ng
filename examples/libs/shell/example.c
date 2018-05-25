@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, SICS Swedish ICT.
+ * Copyright (c) 2018, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,30 +32,25 @@
 
 /**
  * \file
- * For compatibility with Contiki node-id interface
- *
+ *         A very simple example using the shell
  * \author
- *         Beshr Al Nahas <beshr@sics.se>
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
  */
 
 #include "contiki.h"
-#include "sys/node-id.h"
-#include "contiki.h"
 
+#include <stdio.h> /* For printf() */
 /*---------------------------------------------------------------------------*/
-extern unsigned char node_mac[8];
-unsigned short node_id = 0;
+PROCESS(example_process, "Example process: shell");
+AUTOSTART_PROCESSES(&example_process);
 /*---------------------------------------------------------------------------*/
-void
-node_id_restore(void)
+PROCESS_THREAD(example_process, ev, data)
 {
-  /* base node-id on MAC address */
-  node_id = (node_mac[6] << 8) | node_mac[7];
+  PROCESS_BEGIN();
+
+  /* This process does nothing. Connect to the node with `make login`
+   * to use the shell. */
+
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-void
-node_id_burn(unsigned short id)
-{
-  /* does not burn anything */
-  node_id = id;
-}

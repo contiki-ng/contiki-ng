@@ -42,6 +42,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "contiki-net.h"
+#include "sys/node-id.h"
 #include "sys/platform.h"
 #include "sys/energest.h"
 #include "sys/stack-check.h"
@@ -51,6 +52,7 @@
 #include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
+#include "services/simple-energest/simple-energest.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -86,6 +88,9 @@ main(void)
 
   platform_init_stage_two();
 
+  netstack_init();
+  node_id_init();
+
   LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
   LOG_INFO("- Routing: %s\n", NETSTACK_ROUTING.name);
   LOG_INFO("- Net: %s\n", NETSTACK_NETWORK.name);
@@ -97,9 +102,8 @@ main(void)
   LOG_INFO("- 802.15.4 Default channel: %u\n", IEEE802154_DEFAULT_CHANNEL);
 #endif /* MAC_CONF_WITH_TSCH */
 
-  netstack_init();
-
-  LOG_INFO("Link-layer address ");
+  LOG_INFO("Node ID: %u\n", node_id);
+  LOG_INFO("Link-layer address: ");
   LOG_INFO_LLADDR(&linkaddr_node_addr);
   LOG_INFO_("\n");
 
@@ -110,7 +114,7 @@ main(void)
     process_start(&tcpip_process, NULL);
 
     lladdr = uip_ds6_get_link_local(-1);
-    LOG_INFO("Tentative link-local IPv6 address ");
+    LOG_INFO("Tentative link-local IPv6 address: ");
     LOG_INFO_6ADDR(lladdr != NULL ? &lladdr->ipaddr : NULL);
     LOG_INFO_("\n");
   }
@@ -137,6 +141,10 @@ main(void)
   coap_engine_init();
   LOG_DBG("With CoAP\n");
 #endif /* BUILD_WITH_SHELL */
+
+#if BUILD_WITH_SIMPLE_ENERGEST
+  simple_energest_init();
+#endif /* BUILD_WITH_SIMPLE_ENERGEST */
 
   autostart_start(autostart_processes);
 

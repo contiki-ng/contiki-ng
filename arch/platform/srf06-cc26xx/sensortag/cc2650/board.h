@@ -149,8 +149,13 @@
 #define EXT_FLASH_SPI_PIN_MISO      18
 #define EXT_FLASH_SPI_PIN_CS        14
 
+#if SENSORTAG_CC2650_REV_1_2_0
+#define EXT_FLASH_DEVICE_ID         0x12
+#define EXT_FLASH_MID               0xEF
+#else
 #define EXT_FLASH_DEVICE_ID         0x14
 #define EXT_FLASH_MID               0xC2
+#endif
 
 #define EXT_FLASH_PROGRAM_PAGE_SIZE 256
 #define EXT_FLASH_ERASE_SECTOR_SIZE 4096

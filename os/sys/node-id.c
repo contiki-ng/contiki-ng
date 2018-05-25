@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Swedish Institute of Computer Science.
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * 
+ * This file is part of the Contiki operating system.
+ *
  */
 
-#ifndef NODE_ID_H_
-#define NODE_ID_H_
+/**
+ * \file
+ *         Node-id management
+ * \author
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
+ */
 
-#include "dev/moteid.h"
+#include "contiki.h"
+#include "sys/node-id.h"
+#include "net/linkaddr.h"
 
-#define node_id simMoteID
+uint16_t node_id = 0;
 
-#endif /* NODE_ID_H_ */
+void
+node_id_init(void) {
+  /* Initialize with a default value derived from linkaddr */
+  node_id = linkaddr_node_addr.u8[LINKADDR_SIZE - 1]
+            + (linkaddr_node_addr.u8[LINKADDR_SIZE - 2] << 8);
+}

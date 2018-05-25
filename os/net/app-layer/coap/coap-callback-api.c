@@ -65,7 +65,7 @@ static void coap_request_callback(void *callback_data, coap_message_t *response)
 
 /*---------------------------------------------------------------------------*/
 
-static void
+static int
 progress_request(coap_request_state_t *state) {
   coap_message_t *request = state->request;
   request->mid = coap_get_mid();
@@ -83,7 +83,9 @@ progress_request(coap_request_state_t *state) {
 
     coap_send_transaction(state->transaction);
     LOG_DBG("Requested #%"PRIu32" (MID %u)\n", state->block_num, request->mid);
+    return 1;
   }
+  return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -134,7 +136,7 @@ coap_request_callback(void *callback_data, coap_message_t *response)
 
 /*---------------------------------------------------------------------------*/
 
-void
+int
 coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
                   coap_message_t *request,
                   void (*callback)(coap_request_state_t *state))
@@ -151,7 +153,7 @@ coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
   state->remote_endpoint = endpoint;
   state->callback = callback;
 
-  progress_request(state);
+  return progress_request(state);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
