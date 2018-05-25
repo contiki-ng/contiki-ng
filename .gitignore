@@ -16,6 +16,7 @@ obj_*
 Makefile.target
 Makefile.*.defines
 tools/doxygen/html
+tools/readthedocs/_build
 patches-*
 tools/serial-io/tunslip6
 tools/serial-io/serialdump
