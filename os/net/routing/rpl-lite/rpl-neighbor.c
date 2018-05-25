@@ -405,9 +405,9 @@ rpl_neighbor_select_best(void)
       /* The best is not fresh. Probe it (unless there is already an urgent
          probing target). We will be called back after the probing anyway. */
       if(curr_instance.dag.urgent_probing_target == NULL) {
-        LOG_WARN("best parent is not fresh, schedule urgent probing to ");
-        LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(best));
-        LOG_WARN_("\n");
+        LOG_INFO("best parent is not fresh, schedule urgent probing to ");
+        LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(best));
+        LOG_INFO_("\n");
         curr_instance.dag.urgent_probing_target = best;
         rpl_schedule_probing_now();
       }
