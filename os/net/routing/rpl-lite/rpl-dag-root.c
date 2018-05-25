@@ -94,11 +94,12 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 
   uip_ds6_addr_add(&root_ipaddr, 0, ADDR_AUTOCONF);
 
-  LOG_INFO("IPv6 addresses: ");
+  LOG_INFO("IPv6 addresses:\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      LOG_INFO("-- ");
       LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
       LOG_INFO_("\n");
     }
