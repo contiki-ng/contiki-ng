@@ -746,7 +746,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
             }
             /* ---------- Read operation ------------- */
           } else if(ctx->operation == LWM2M_OP_READ) {
-            lwm2m_status_t success;
+            lwm2m_status_t success = 0;
             uint8_t lv;
 
             lv = ctx->level;
