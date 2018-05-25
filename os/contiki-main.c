@@ -52,6 +52,7 @@
 #include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
+#include "services/simple-energest/simple-energest.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -140,6 +141,10 @@ main(void)
   coap_engine_init();
   LOG_DBG("With CoAP\n");
 #endif /* BUILD_WITH_SHELL */
+
+#if BUILD_WITH_SIMPLE_ENERGEST
+  simple_energest_init();
+#endif /* BUILD_WITH_SIMPLE_ENERGEST */
 
   autostart_start(autostart_processes);
 
