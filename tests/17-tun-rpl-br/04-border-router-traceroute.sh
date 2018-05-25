@@ -1,4 +1,5 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -38,8 +39,8 @@ HOPS=`wc $BASENAME.scriptlog -l | cut -f 1 -d ' '`
 
 echo "Closing simulation and tunslip6"
 sleep 1
-kill -9 $JPID
-kill -9 $MPID
+kill_bg $JPID
+kill_bg $MPID
 sleep 1
 rm COOJA.testlog
 rm COOJA.log

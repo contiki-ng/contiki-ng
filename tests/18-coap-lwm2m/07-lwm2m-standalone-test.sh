@@ -1,4 +1,5 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -33,11 +34,11 @@ done
 
 echo "Closing standalone example"
 sleep 1
-pgrep lwm2m-example | sudo xargs kill -9
+kill_bg $CPID
 
 echo "Closing leshan"
 sleep 1
-pgrep java | sudo xargs kill -9
+kill_bg $LESHID
 
 
 if grep -q 'OK' leshan.err ; then
