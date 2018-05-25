@@ -82,6 +82,9 @@
  * One byte = 32us. Add two bytes for CRC and one for len field */
 #define TSCH_PACKET_DURATION(len) US_TO_RTIMERTICKS(32 * ((len) + 3))
 
+/* Link-layer preamble+SFD duration. 4 bytes preamble + SFD at 250 kbps takes 160 usec */
+#define TSCH_PREAMBLE_SFD_DURATION 160
+
 /* Convert rtimer ticks to clock and vice versa */
 #define TSCH_CLOCK_TO_TICKS(c) (((c) * RTIMER_SECOND) / CLOCK_SECOND)
 #define TSCH_CLOCK_TO_SLOTS(c, timeslot_length) (TSCH_CLOCK_TO_TICKS(c) / timeslot_length)
@@ -106,7 +109,7 @@
 #define TSCH_DEFAULT_TS_CCA_OFFSET         1800
 #define TSCH_DEFAULT_TS_CCA                128
 #define TSCH_DEFAULT_TS_TX_OFFSET          2120
-#define TSCH_DEFAULT_TS_RX_OFFSET          (TSCH_DEFAULT_TS_TX_OFFSET - (TSCH_CONF_RX_WAIT / 2))
+#define TSCH_DEFAULT_TS_RX_OFFSET          (TSCH_DEFAULT_TS_TX_OFFSET - ((TSCH_CONF_RX_WAIT-TSCH_PREAMBLE_SFD_DURATION) / 2))
 #define TSCH_DEFAULT_TS_RX_ACK_DELAY       800
 #define TSCH_DEFAULT_TS_TX_ACK_DELAY       1000
 #define TSCH_DEFAULT_TS_RX_WAIT            TSCH_CONF_RX_WAIT
@@ -122,7 +125,7 @@
 #define TSCH_DEFAULT_TS_CCA_OFFSET         1800
 #define TSCH_DEFAULT_TS_CCA                128
 #define TSCH_DEFAULT_TS_TX_OFFSET          4000
-#define TSCH_DEFAULT_TS_RX_OFFSET          (TSCH_DEFAULT_TS_TX_OFFSET - (TSCH_CONF_RX_WAIT / 2))
+#define TSCH_DEFAULT_TS_RX_OFFSET          (TSCH_DEFAULT_TS_TX_OFFSET - ((TSCH_CONF_RX_WAIT-TSCH_PREAMBLE_SFD_DURATION) / 2))
 #define TSCH_DEFAULT_TS_RX_ACK_DELAY       3600
 #define TSCH_DEFAULT_TS_TX_ACK_DELAY       4000
 #define TSCH_DEFAULT_TS_RX_WAIT            TSCH_CONF_RX_WAIT
