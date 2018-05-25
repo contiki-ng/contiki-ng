@@ -1,19 +1,18 @@
 #!/bin/bash
-source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
 # Test basename
-BASENAME=07-lwm2m-standalone-test
+BASENAME=09-lwm2m-qmode-standalone-test
 
 # Building standalone posix example
 echo "Compiling standalone posix example"
 make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m clean >/dev/null
-make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m >make.log 2>make.err
+make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m DEFINES=LWM2M_QUEUE_MODE_CONF_ENABLED=1,LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1,LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED=1 >make.log 2>make.err
 
-echo "Downloading leshan"
-wget -nc https://joakimeriksson.github.io/resources/leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
-echo "Starting leshan server"
+echo "Downloading leshan with Q-Mode support"
+wget -nc https://carlosgp143.github.io/resources/leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
+echo "Starting leshan server with Q-Mode enabled"
 java -jar leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar  -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
 LESHID=$!
 
@@ -25,8 +24,8 @@ CPID=$!
 COUNTER=10
 while [ $COUNTER -gt 0 ]; do
     sleep 5
-    if grep -q 'OK' leshan.err ; then
-        echo OK with $COUNTER
+	aux=$(grep -c 'OK' leshan.err)
+	if [ $aux -eq 2 ] ; then
         break
     fi
     let COUNTER-=1
@@ -34,14 +33,15 @@ done
 
 echo "Closing standalone example"
 sleep 1
-kill_bg $CPID
+pgrep lwm2m-example | sudo xargs kill -9
 
 echo "Closing leshan"
 sleep 1
-kill_bg $LESHID
+pgrep java | sudo xargs kill -9
 
-
-if grep -q 'OK' leshan.err ; then
+aux=$(grep -c 'OK' leshan.err)
+if [ $aux -eq 2 ]
+then
   cp leshan.err $BASENAME.testlog;
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else

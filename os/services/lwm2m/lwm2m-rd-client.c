@@ -41,8 +41,8 @@
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
  *         Joel Hoglund <joel@sics.se>
+ *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
-
 #include "lwm2m-engine.h"
 #include "lwm2m-object.h"
 #include "lwm2m-device.h"
@@ -61,6 +61,11 @@
 #if UIP_CONF_IPV6_RPL
 #include "rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
+
+#if LWM2M_QUEUE_MODE_ENABLED
+#include "lwm2m-queue-mode.h"
+#include "lwm2m-notification-queue.h"
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 
 /* Log configuration */
 #include "coap-log.h"
@@ -100,6 +105,10 @@ static coap_message_t request[1];      /* This way the message can be treated as
 #define DEREGISTER_SENT   11
 #define DEREGISTER_FAILED 12
 #define DEREGISTERED      13
+#if LWM2M_QUEUE_MODE_ENABLED
+#define QUEUE_MODE_AWAKE 14
+#define QUEUE_MODE_SEND_UPDATE 15
+#endif
 
 #define FLAG_RD_DATA_DIRTY            0x01
 #define FLAG_RD_DATA_UPDATE_TRIGGERED 0x02
@@ -120,6 +129,18 @@ static coap_timer_t rd_timer;
 static void (*rd_callback)(coap_request_state_t *state);
 
 static coap_timer_t block1_timer;
+
+#if LWM2M_QUEUE_MODE_ENABLED
+static coap_timer_t queue_mode_client_awake_timer; /* Timer to control the client's 
+                                                * awake time 
+                                                */
+static uint8_t queue_mode_client_awake; /* 1 - client is awake, 
+                                     * 0 - client is sleeping 
+                                     */
+static uint16_t queue_mode_client_awake_time; /* The time to be awake */
+/* Callback for the client awake timer */
+static void queue_mode_awake_timer_callback(coap_timer_t *timer); 
+#endif
 
 static void check_periodic_observations();
 static void update_callback(coap_request_state_t *state);
@@ -147,7 +168,8 @@ set_rd_data(coap_message_t *request)
 }
 /*---------------------------------------------------------------------------*/
 static void
-prepare_update(coap_message_t *request, int triggered) {
+prepare_update(coap_message_t *request, int triggered)
+{
   coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
   coap_set_header_uri_path(request, session_info.assigned_ep);
 
@@ -423,7 +445,16 @@ registration_callback(coap_request_state_t *state)
                state->response->location_path_len);
         session_info.assigned_ep[state->response->location_path_len] = 0;
         /* if we decide to not pass the lt-argument on registration, we should force an initial "update" to register lifetime with server */
+#if LWM2M_QUEUE_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+        if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
+          lwm2m_queue_mode_set_first_request();
+        }
+#endif
+        lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/
+#else
         rd_state = REGISTRATION_DONE;
+#endif
         /* remember the last reg time */
         last_update = coap_timer_uptime();
         LOG_DBG_("Done (assigned EP='%s')!\n", session_info.assigned_ep);
@@ -468,8 +499,23 @@ update_callback(coap_request_state_t *state)
       LOG_DBG_("Done!\n");
       /* remember the last reg time */
       last_update = coap_timer_uptime();
+#if LWM2M_QUEUE_MODE_ENABLED
+      /* If it has been waked up by a notification, send the stored notifications in queue */
+      if(lwm2m_queue_mode_is_waked_up_by_notification()) {
+
+        lwm2m_queue_mode_clear_waked_up_by_notification();
+        lwm2m_notification_queue_send_notifications();
+      }
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+      if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
+        lwm2m_queue_mode_set_first_request();
+      }
+#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+      lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/
+#else
       rd_state = REGISTRATION_DONE;
       rd_flags &= ~FLAG_RD_DATA_UPDATE_TRIGGERED;
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
     } else {
       /* Possible error response codes are 4.00 Bad request & 4.04 Not Found */
       LOG_DBG_("Failed with code %d. Retrying registration\n",
@@ -516,7 +562,15 @@ periodic_process(coap_timer_t *timer)
   uint64_t now;
 
   /* reschedule the CoAP timer */
+#if LWM2M_QUEUE_MODE_ENABLED
+  /* In Queue Mode, the machine is not executed periodically, but with the awake/sleeping times */
+  if(!((rd_state & 0xF) == 0xE)) {
+    coap_timer_reset(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
+  }
+#else
   coap_timer_reset(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
+#endif
+
   now = coap_timer_uptime();
 
   LOG_DBG("RD Client - state: %d, ms: %lu\n", rd_state,
@@ -685,6 +739,27 @@ periodic_process(coap_timer_t *timer)
       rd_state = UPDATE_SENT;
     }
     break;
+#if LWM2M_QUEUE_MODE_ENABLED
+  case QUEUE_MODE_AWAKE:
+    LOG_DBG("Queue Mode: Client is AWAKE at %lu\n", (unsigned long)coap_timer_uptime());
+    queue_mode_client_awake = 1;
+    queue_mode_client_awake_time = lwm2m_queue_mode_get_awake_time();
+    coap_timer_set(&queue_mode_client_awake_timer, queue_mode_client_awake_time);
+    break;
+  case QUEUE_MODE_SEND_UPDATE:
+/* Define this macro to make the necessary actions for waking up, 
+ * depending on the platform 
+ */
+#ifdef LWM2M_QUEUE_MODE_WAKE_UP
+    LWM2M_QUEUE_MODE_WAKE_UP();
+#endif /* LWM2M_QUEUE_MODE_WAKE_UP */
+    prepare_update(request, rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
+    coap_send_request(&rd_request_state, &session_info.server_ep, request,
+                      update_callback);
+    last_rd_progress = coap_timer_uptime();
+    rd_state = UPDATE_SENT;
+    break;
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 
   case UPDATE_SENT:
     /* just wait until the callback kicks us to the next state... */
@@ -718,15 +793,27 @@ lwm2m_rd_client_init(const char *ep)
 {
   session_info.ep = ep;
   /* default binding U = UDP, UQ = UDP Q-mode*/
+#if LWM2M_QUEUE_MODE_ENABLED
+  session_info.binding = "UQ";
+  /* Enough margin to ensure that the client is not unregistered (we
+   * do not know the time it can stay awake)
+   */
+  session_info.lifetime = (LWM2M_QUEUE_MODE_DEFAULT_CLIENT_SLEEP_TIME / 1000) * 2; 
+#else
   session_info.binding = "U";
   if(session_info.lifetime == 0) {
     session_info.lifetime = LWM2M_DEFAULT_CLIENT_LIFETIME;
   }
+#endif
+
   rd_state = INIT;
 
   /* call the RD client periodically */
   coap_timer_set_callback(&rd_timer, periodic_process);
   coap_timer_set(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
+#if LWM2M_QUEUE_MODE_ENABLED
+  coap_timer_set_callback(&queue_mode_client_awake_timer, queue_mode_awake_timer_callback);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -734,5 +821,55 @@ check_periodic_observations(void)
 {
 /* TODO */
 }
+/*---------------------------------------------------------------------------*/
+/*
+   *Queue Mode Support
+ */
+#if LWM2M_QUEUE_MODE_ENABLED
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_restart_client_awake_timer(void)
+{
+  coap_timer_set(&queue_mode_client_awake_timer, queue_mode_client_awake_time);
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+lwm2m_rd_client_is_client_awake(void)
+{
+  return queue_mode_client_awake;
+}
+/*---------------------------------------------------------------------------*/
+static void
+queue_mode_awake_timer_callback(coap_timer_t *timer)
+{
+  /* Timer has expired, no requests has been received, client can go to sleep */
+  LOG_DBG("Queue Mode: Client is SLEEPING at %lu\n", (unsigned long)coap_timer_uptime());
+  queue_mode_client_awake = 0;
+
+/* Define this macro to enter sleep mode depending on the platform */
+#ifdef LWM2M_QUEUE_MODE_SLEEP_MS
+  LWM2M_QUEUE_MODE_SLEEP_MS(lwm2m_queue_mode_get_sleep_time());
+#endif /* LWM2M_QUEUE_MODE_SLEEP_MS */
+  rd_state = QUEUE_MODE_SEND_UPDATE;
+  coap_timer_set(&rd_timer, lwm2m_queue_mode_get_sleep_time());
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_fsm_execute_queue_mode_awake()
+{
+  coap_timer_stop(&rd_timer);
+  rd_state = QUEUE_MODE_AWAKE;
+  periodic_process(&rd_timer);
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_fsm_execute_queue_mode_update()
+{
+  coap_timer_stop(&rd_timer);
+  rd_state = QUEUE_MODE_SEND_UPDATE;
+  periodic_process(&rd_timer);
+}
+/*---------------------------------------------------------------------------*/
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 /*---------------------------------------------------------------------------*/
 /** @} */
