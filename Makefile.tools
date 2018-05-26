@@ -3,13 +3,15 @@
 # recursively invoke the respective build under tools/.
 
 TOOLS_DIR = $(CONTIKI)/tools
-TOOL_DEPS = $(TOOLS_DIR)/tools-utils.c $(TOOLS_DIR)/tools-utils.h
+SERIAL_IO_TOOL_DIR = $(TOOLS_DIR)/serial-io
 
-TUNSLIP6 = $(TOOLS_DIR)/tunslip6
-SERIAL_DUMP_BIN = $(TOOLS_DIR)/serialdump
+SERIAL_IO_TOOL_DEPS = $(addprefix $(SERIAL_IO_TOOL_DIR)/, tools-utils.c tools-utils.h)
 
-$(SERIAL_DUMP_BIN): $(TOOLS_DIR)/serialdump.c $(TOOL_DEPS)
-	make -C $(TOOLS_DIR) serialdump
+TUNSLIP6 = $(SERIAL_IO_TOOL_DIR)/tunslip6
+SERIAL_DUMP_BIN = $(SERIAL_IO_TOOL_DIR)/serialdump
 
-$(TUNSLIP6): $(TOOLS_DIR)/tunslip6.c $(TOOL_DEPS)
-	make -C $(TOOLS_DIR) tunslip6
+$(SERIAL_DUMP_BIN): $(SERIAL_IO_TOOL_DIR)/serialdump.c $(SERIAL_IO_TOOL_DEPS)
+	make -C $(SERIAL_IO_TOOL_DIR) serialdump
+
+$(TUNSLIP6): $(SERIAL_IO_TOOL_DIR)/tunslip6.c $(SERIAL_IO_TOOL_DEPS)
+	make -C $(SERIAL_IO_TOOL_DIR) tunslip6

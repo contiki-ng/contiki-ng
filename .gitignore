@@ -17,8 +17,8 @@ Makefile.target
 Makefile.*.defines
 tools/doxygen/html
 patches-*
-tools/tunslip6
-tools/serialdump
+tools/serial-io/tunslip6
+tools/serial-io/serialdump
 serialdump-*
 build
 tools/coffee-manager/build/
