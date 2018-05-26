@@ -1,3 +1,7 @@
+# Some make rules in the main build system depend on the presence of utilities
+# under the tools/ dir. For those dependencies, we use this makefile here to
+# recursively invoke the respective build under tools/.
+
 TOOLS_DIR = $(CONTIKI)/tools
 TOOL_DEPS = $(TOOLS_DIR)/tools-utils.c $(TOOLS_DIR)/tools-utils.h
 
