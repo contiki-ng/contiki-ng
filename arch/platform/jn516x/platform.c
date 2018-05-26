@@ -158,10 +158,6 @@ xosc_init(void)
   return bAHI_Set32KhzClockMode(E_AHI_XTAL);
 }
 /*---------------------------------------------------------------------------*/
-#if WITH_TINYOS_AUTO_IDS
-uint16_t TOS_NODE_ID = 0x1234; /* non-zero */
-uint16_t TOS_LOCAL_ADDRESS = 0x1234; /* non-zero */
-#endif /* WITH_TINYOS_AUTO_IDS */
 void
 platform_init_stage_one(void)
 {
