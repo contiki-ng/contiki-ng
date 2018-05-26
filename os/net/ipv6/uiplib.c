@@ -33,8 +33,11 @@
  */
 
 /**
+ * \addtogroup uip-addr-lib
+ * @{
+ *
  * \file
- *         Various uIP library functions.
+ *         Implementation of the IP address manipulation library
  * \author
  *         Nicolas Tsiftes <nvt@sics.se>
  *         Niclas Finne <nfi@sics.se>
@@ -223,3 +226,6 @@ uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
   return n;
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */
