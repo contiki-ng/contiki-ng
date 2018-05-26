@@ -94,7 +94,11 @@ rpl_neighbor_snprint(char *buf, int buflen, rpl_nbr_t *nbr)
   const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
   clock_time_t clock_now = clock_time();
 
-  index += uiplib_ipaddr_snprint(buf+index, buflen-index, rpl_neighbor_get_ipaddr(nbr));
+  if(LOG_WITH_COMPACT_ADDR) {
+    index += log_6addr_compact_snprint(buf+index, buflen-index, rpl_neighbor_get_ipaddr(nbr));
+  } else {
+    index += uiplib_ipaddr_snprint(buf+index, buflen-index, rpl_neighbor_get_ipaddr(nbr));
+  }
   if(index >= buflen) {
     return index;
   }
