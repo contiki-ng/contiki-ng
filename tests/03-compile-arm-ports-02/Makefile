@@ -66,6 +66,7 @@ rpl-border-router/openmote-cc2538 \
 libs/ipv6-hooks/openmote-cc2538 \
 libs/shell/openmote-cc2538 \
 libs/simple-energest/openmote-cc2538 \
+libs/deployment/openmote-cc2538 \
 
 TOOLS=
 
