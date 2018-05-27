@@ -1,0 +1,33 @@
+# This Makefile contains make variables and rules that are only applicable
+# to builds for embedded devices (i.e. excluding platforms native and cooja).
+# Future extensions to the build system that are of a similar nature (for
+# embedded devices only), can be achieved by extending this Makefile here.
+
+RLWRAPGOALS = login serialdump serialview
+
+.PHONY: $(RLWRAPGOALS)
+
+BAUDRATE ?= 115200
+SERIALDUMP_TIME_FMT ?=
+
+ifeq ($(HOST_OS),Windows)
+  SERIALDUMP = $(SERIAL_DUMP_BIN)
+else
+  RLWRAP = $(notdir $(shell which rlwrap))
+  ifeq ($(RLWRAP),)
+    ifneq ($(filter $(RLWRAPGOALS),$(MAKECMDGOALS)),)
+      $(info Running serialdump without rlwrap support.)
+      $(info Consider installing rlwarp in order to be able to use command history)
+    endif
+  endif
+  SERIALDUMP = $(RLWRAP) $(SERIAL_DUMP_BIN)
+endif
+
+serialdump: $(SERIAL_DUMP_BIN)
+	$(SERIALDUMP) -b$(BAUDRATE) -T$(SERIALDUMP_TIME_FMT) $(PORT) | tee serialdump-`date +%Y%m%d-%H%M`
+
+serialview: $(SERIAL_DUMP_BIN)
+	$(SERIALDUMP) -b$(BAUDRATE) -T$(SERIALDUMP_TIME_FMT) $(PORT)
+
+login: $(SERIAL_DUMP_BIN)
+	$(SERIALDUMP) -b$(BAUDRATE) $(PORT)

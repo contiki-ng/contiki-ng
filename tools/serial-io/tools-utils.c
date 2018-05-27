@@ -30,50 +30,132 @@
  *
  */
 
-#ifndef TOOLS_UTILS
-#define TOOLS_UTILS
+#include "tools-utils.h"
 
-#include <termios.h>
-
-#if __APPLE__
-#ifndef B460800
-#define B460800 460800
+speed_t
+select_baudrate(int baudrate) {
+  switch(baudrate) {
+#ifdef B50
+  case 50:
+    return B50;
 #endif
-#ifndef B500000
-#define B500000 500000
+#ifdef B75
+  case 75:
+    return B75;
 #endif
-#ifndef B576000
-#define B576000 576000
+#ifdef B110
+  case 110:
+    return B110;
 #endif
-#ifndef B921600
-#define B921600 921600
+#ifdef B134
+  case 134:
+    return B134;
 #endif
-#ifndef B1000000
-#define B1000000 1000000
+#ifdef B150
+  case 150:
+    return B150;
 #endif
-#ifndef B1152000
-#define B1152000 1152000
+#ifdef B200
+  case 200:
+    return B200;
 #endif
-#ifndef B1500000
-#define B1500000 1500000
+#ifdef B300
+  case 300:
+    return B300;
 #endif
-#ifndef B2000000
-#define B2000000 2000000
+#ifdef B600
+  case 600:
+    return B600;
 #endif
-#ifndef B2500000
-#define B2500000 2500000
+#ifdef B1200
+  case 1200:
+    return B1200;
 #endif
-#ifndef B3000000
-#define B3000000 3000000
+#ifdef B1800
+  case 1800:
+    return B1800;
 #endif
-#ifndef B3500000
-#define B3500000 3500000
+#ifdef B2400
+  case 2400:
+    return B2400;
 #endif
-#ifndef B4000000
-#define B4000000 4000000
+#ifdef B4800
+  case 4800:
+    return B4800;
 #endif
+#ifdef B9600
+  case 9600:
+    return B9600;
 #endif
-
-speed_t select_baudrate(int baudrate);
-
-#endif /* TOOLS_UTILS */
+#ifdef B19200
+  case 19200:
+    return B19200;
+#endif
+#ifdef B38400
+  case 38400:
+    return B38400;
+#endif
+#ifdef B57600
+  case 57600:
+    return B57600;
+#endif
+#ifdef B115200
+  case 115200:
+    return B115200;
+#endif
+#ifdef B230400
+  case 230400:
+    return B230400;
+#endif
+#ifdef B460800
+  case 460800:
+    return B460800;
+#endif
+#ifdef B500000
+  case 500000:
+    return B500000;
+#endif
+#ifdef B576000
+  case 576000:
+    return B576000;
+#endif
+#ifdef B921600
+  case 921600:
+    return B921600;
+#endif
+#ifdef B1000000
+  case 1000000:
+    return B1000000;
+#endif
+#ifdef B1152000
+  case 1152000:
+    return B1152000;
+#endif
+#ifdef B1500000
+  case 1500000:
+    return B1500000;
+#endif
+#ifdef B2000000
+  case 2000000:
+    return B2000000;
+#endif
+#ifdef B2500000
+  case 2500000:
+    return B2500000;
+#endif
+#ifdef B3000000
+  case 3000000:
+    return B3000000;
+#endif
+#ifdef B3500000
+  case 3500000:
+    return B3500000;
+#endif
+#ifdef B4000000
+  case 4000000:
+    return B4000000;
+#endif
+  default:
+    return 0;
+  }
+}
