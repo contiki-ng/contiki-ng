@@ -88,12 +88,12 @@ RUN git clone https://github.com/renode/renode.git \
   && ./build.sh
 ENV PATH="${HOME}/renode:${PATH}"
 
-# Optional: download Contiki-NG and pre-compile Cooja.
-# Else, use a Docker bind mount to share the repo with the host.
-# Docker run option:
+# By default, we use a Docker bind mount to share the repo with the host,
+# with Docker run option:
 # -v <HOST_CONTIKI_NG_ABS_PATH>:/home/user/contiki-ng
-RUN git clone --recursive https://github.com/contiki-ng/contiki-ng.git ${CONTIKI_NG}
-RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
+# Alternatively, uncomment the next two lines to download Contiki-NG and pre-compile Cooja.
+#RUN git clone --recursive https://github.com/contiki-ng/contiki-ng.git ${CONTIKI_NG}
+#RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
 
 # Working directory
 WORKDIR ${CONTIKI_NG}
