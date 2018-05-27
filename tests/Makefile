@@ -36,7 +36,7 @@ summary: $(SUMMARIES)
 	@cat $(SUMMARIES) > $@
 
 %/summary:
-	@make -C $* summary || true
+	@$(MAKE) -C $* summary || true
 
 clean:
 	rm -f $(SUMMARIES) summary

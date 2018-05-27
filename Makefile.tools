@@ -11,7 +11,7 @@ TUNSLIP6 = $(SERIAL_IO_TOOL_DIR)/tunslip6
 SERIAL_DUMP_BIN = $(SERIAL_IO_TOOL_DIR)/serialdump
 
 $(SERIAL_DUMP_BIN): $(SERIAL_IO_TOOL_DIR)/serialdump.c $(SERIAL_IO_TOOL_DEPS)
-	make -C $(SERIAL_IO_TOOL_DIR) serialdump
+	$(MAKE) -C $(SERIAL_IO_TOOL_DIR) serialdump
 
 $(TUNSLIP6): $(SERIAL_IO_TOOL_DIR)/tunslip6.c $(SERIAL_IO_TOOL_DEPS)
-	make -C $(SERIAL_IO_TOOL_DIR) tunslip6
+	$(MAKE) -C $(SERIAL_IO_TOOL_DIR) tunslip6
