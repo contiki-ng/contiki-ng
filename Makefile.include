@@ -315,8 +315,8 @@ clean:
 
 distclean:
 	@for TARG in `ls $(CONTIKI)/arch/platform $(TARGETDIRS)`; do \
-		echo Running: make TARGET=$$TARG clean; \
-		make TARGET=$$TARG clean; \
+		echo Running: $(MAKE) TARGET=$$TARG clean; \
+		$(MAKE) TARGET=$$TARG clean; \
 	done
 
 -include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
