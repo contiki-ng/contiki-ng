@@ -1,74 +1,10 @@
 ################################################################################
 # CC13x2/CC26x2 CPU makefile
 
-# ccfg.c comes from the board-specific folder, and startup_cc13xx_cc26xx_gcc.c
-# comes from NoRTOS startup folder
-CPU_START_SOURCEFILES += ccfg.c startup_cc13xx_cc26xx_gcc.c
-
-EXTERNALDIRS += $(SDK_SOURCE)
-EXTERNALDIRS += $(SDK_KERNEL)
-EXTERNALDIRS += $(SDK_KERNEL)/startup
-EXTERNALDIRS += $(SDK_BOARD_PATH)
-EXTERNALDIRS += $(SDK_DEVICE)
-
-### If the user-specified a Node ID, pass a define
-ifdef NODEID
-DEFINES += IEEE_ADDR_NODE_ID=$(NODEID)
-endif
-
-### CPU-dependent source files
-CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
-CONTIKI_CPU_SOURCEFILES += watchdog-arch.c putchar-arch.c
-CONTIKI_CPU_SOURCEFILES += uart0-arch.c slip-arch.c
-CONTIKI_CPU_SOURCEFILES += rf-common.c
-CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c rf-prop-settings.c
-CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c rf-ieee-settings.c
-CONTIKI_CPU_SOURCEFILES += ieee-addr.c
-
-### CPU-dependent directories
-CONTIKI_CPU_DIRS += $(addprefix ../arm/, $(CPU_DIRS))
-CONTIKI_CPU_DIRS += . dev rf-settings cc13x2-cc26x2
-
-### CPU-dependent debug source files
-DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
-
-CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
-
-ifeq ($(SMALL),0)
-TARGET_LIBFILES += $(SDK_KERNEL)/lib/nortos_$(DEVICE_FAMILY_NAME).am4f
-TARGET_LIBFILES += $(SDK_DRIVERS)/rf/lib/rf_multiMode_$(DEVICE_FAMILY_NAME).am4f
-TARGET_LIBFILES += $(SDK_DRIVERS)/lib/drivers_$(DEVICE_FAMILY_NAME).am4f
-TARGET_LIBFILES += $(SDK_DEVICE)/driverlib/bin/gcc/driverlib.lib
-else
+### Simplelink SDK pre-compiled libraries
 TARGET_LIBFILES += $(SDK_KERNEL)/lib/nortos_$(DEVICE_FAMILY_NAME).am4fg
 TARGET_LIBFILES += $(SDK_DRIVERS)/rf/lib/rf_multiMode_$(DEVICE_FAMILY_NAME).am4fg
 TARGET_LIBFILES += $(SDK_DRIVERS)/lib/drivers_$(DEVICE_FAMILY_NAME).am4fg
 TARGET_LIBFILES += $(SDK_DEVICE)/driverlib/bin/gcc/driverlib.lib
-endif
-
-LDFLAGS += --entry resetISR
-LDFLAGS += -static
-LDFLAGS += --specs=nano.specs
-# NB! The symbol _stack, which points to the stack start, is expected to be defined,
-# but should already be defined in the linker script.
-LDFLAGS += -Wl,--defsym=_stack_origin=__stack_end
-LDFLAGS += -Wl,--defsym=_heap=__heap_start__
-LDFLAGS += -Wl,--defsym=_eheap=__heap_end__
-LDFLAGS += -Wl,--defsym=STACKSIZE=2048
-
-LDSCRIPT := $(SDK_BOARD_PATH)/$(SDK_BOARD_NAME)_NoRTOS.lds
-
-### Always re-build ieee-addr.o in case the command line passes a new NODEID
-FORCE:
-
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
-
-### Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
-### to make clean first
-$(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -include "ccfg-conf.h" -c $< -o $@
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4

@@ -43,13 +43,14 @@
  * Software clock implementation for the TI CC13xx/CC26xx
  */
 /*---------------------------------------------------------------------------*/
-#include <driverlib/aon_rtc.h>
-#include <driverlib/interrupt.h>
-#include <driverlib/prcm.h>
-#include <driverlib/timer.h>
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/aon_rtc.h)
+#include DeviceFamily_constructPath(driverlib/cpu.h)
+#include DeviceFamily_constructPath(driverlib/interrupt.h)
+#include DeviceFamily_constructPath(driverlib/prcm.h)
+#include DeviceFamily_constructPath(driverlib/timer.h)
 #include <ti/drivers/dpl/ClockP.h>
 #include <ti/drivers/power/PowerCC26XX.h>
-#include <unistd.h>
 
 #include "contiki.h"
 
@@ -75,21 +76,26 @@ clock_init(void)
 CCIF clock_time_t
 clock_time(void)
 {
-    uintptr_t hwiState = HwiP_disable();
-    clock_time_t result = count;
-    HwiP_restore(hwiState);
+  uint64_t count_read;
+  {
+    const uintptr_t key = HwiP_disable();
+    count_read = count;
+    HwiP_restore(key);
+  }
 
-  return (clock_time_t)(result & 0xFFFFFFFF);
+  return (clock_time_t)(count_read & 0xFFFFFFFF);
 }
 /*---------------------------------------------------------------------------*/
 static void
 clock_update(void)
 {
-  uintptr_t hwiState = HwiP_disable();
-  count++;
-  HwiP_restore(hwiState);
+  {
+    const uintptr_t key = HwiP_disable();
+    count += 1;
+    HwiP_restore(key);
+  }
 
-  if(etimer_pending()) {
+  if (etimer_pending()) {
     etimer_request_poll();
   }
 }
@@ -97,26 +103,33 @@ clock_update(void)
 CCIF unsigned long
 clock_seconds(void)
 {
-    uintptr_t hwiState = HwiP_disable();
-    unsigned long result = count / CLOCK_SECOND;
-    HwiP_restore(hwiState);
+  uint64_t count_read;
+  {
+    const uintptr_t key = HwiP_disable();
+    count_read = count;
+    HwiP_restore(key);
+  }
 
-    return result;
+  return (unsigned long)count_read / CLOCK_SECOND;
 }
 /*---------------------------------------------------------------------------*/
 void
 clock_wait(clock_time_t i)
 {
-  clock_time_t start;
-
-  start = clock_time();
+  const clock_time_t start = clock_time();
   while(clock_time() - start < (clock_time_t)i);
 }
 /*---------------------------------------------------------------------------*/
 void
 clock_delay_usec(uint16_t len)
 {
-    usleep(len);
+  // See driverlib/cpu.h
+  const uint32_t cpu_clock_mhz = 48;
+  // Code in flash, cache disabled: 7 cycles per loop
+  const uint32_t cycles_per_loop = 7;
+  // ui32Count = [delay in us] * [CPU clock in MHz] / [cycles per loop]
+  const uint32_t count = (uint32_t)len * cpu_clock_mhz / cycles_per_loop;
+  CPUdelay(count);
 }
 /*---------------------------------------------------------------------------*/
 /**

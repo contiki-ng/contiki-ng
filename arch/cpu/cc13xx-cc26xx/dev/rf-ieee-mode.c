@@ -123,20 +123,20 @@
 #ifdef TX_POWER_CONF_DRIVER
 #   define TX_POWER_DRIVER  TX_POWER_CONF_DRIVER
 #else
-#   define TX_POWER_DRIVER  RF_ieeeTxPower
+#   define TX_POWER_DRIVER  txPowerTable
 #endif
 
 #ifdef TX_POWER_CONF_COUNT
 #   define TX_POWER_COUNT  TX_POWER_CONF_COUNT
 #else
-#   define TX_POWER_COUNT  RF_ieeeTxPowerLen
+#   define TX_POWER_COUNT  txPowerTableLen
 #endif
 /*---------------------------------------------------------------------------*/
 /* TX power convenience macros */
-static RF_TxPower * const g_pTxPower = TX_POWER_DRIVER;
+static RF_TxPowerTable_Entry * const g_pTxPower = TX_POWER_DRIVER;
 
-#define TX_POWER_MAX  (g_pTxPower[0])
-#define TX_POWER_MIN  (g_pTxPower[(TX_POWER_COUNT) - 1])
+#define TX_POWER_MIN  (g_pTxPower[0])
+#define TX_POWER_MAX  (g_pTxPower[(TX_POWER_COUNT) - 1])
 
 #define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
 /*---------------------------------------------------------------------------*/
@@ -426,31 +426,14 @@ set_channel(uint8_t channel)
 static int
 set_tx_power(const radio_value_t dbm)
 {
-  g_pCurrTxPower = NULL;
-  if (dbm > TX_POWER_MAX.dbm) {
-    g_pCurrTxPower = &TX_POWER_MAX;
-  } else {
-    size_t i;
-    for (i = 0; g_pTxPower[i + 1].power != TX_POWER_UNKNOWN; ++i) {
-      if (dbm > g_pTxPower[i + 1].dbm) {
-        break;
-      }
-    }
-    g_pCurrTxPower = &g_pTxPower[i + 1];
-  }
-
-  if (!g_pCurrTxPower) {
+  const RF_TxPowerTable_Value txPowerTableValue = RF_TxPowerTable_findValue(txPowerTable, (int8_t)dbm);
+  if (txPowerTableValue.rawValue == RF_TxPowerTable_INVALID_VALUE) {
     return CMD_RESULT_ERROR;
   }
 
-  rfc_CMD_SET_TX_POWER_t cmdSetTxPower = {
-    .commandNo = CMD_SET_TX_POWER,
-    .txPower = g_pCurrTxPower->power,
-  };
-
-  const RF_Stat stat = RF_runImmediateCmd(g_rfHandle, (uint32_t*)&cmdSetTxPower);
-  if (stat != RF_StatCmdDoneSuccess) {
-    PRINTF("set_tx_power: stat=0x%02X\n", stat);
+  const RF_Stat stat = RF_setTxPower(g_rfHandle, txPowerTableValue);
+  if (stat != RF_StatSuccess) {
+    PRINTF("RF_setTxPower: stat=0x%02X\n", stat);
     return CMD_RESULT_ERROR;
   }
   return CMD_RESULT_OK;
@@ -930,11 +913,11 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_TXPOWER_MIN:
-    *value = (radio_value_t)(TX_POWER_MIN.dbm);
+    *value = (radio_value_t)(TX_POWER_MIN.power);
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_TXPOWER_MAX:
-    *value = (radio_value_t)(TX_POWER_MAX.dbm);
+    *value = (radio_value_t)(TX_POWER_MAX.power);
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_LAST_RSSI:
@@ -1037,7 +1020,7 @@ set_value(radio_param_t param, radio_value_t value)
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TXPOWER:
-    if(value < TX_POWER_MIN.dbm || value > TX_POWER_MAX.dbm) {
+    if(value < TX_POWER_MIN.power || value > TX_POWER_MAX.power) {
       return RADIO_RESULT_INVALID_VALUE;
     }
     return (set_tx_power(value) != CMD_RESULT_OK)

@@ -9,25 +9,25 @@
 #     use the same build structure as all other SimpleLink SDK Devices.
 
 # Device name in lower case (LC)
-SIMPLELINK_DEVICE_LC := $(shell echo $(SIMPLELINK_DEVICE) | tr A-Z a-z)
+SIMPLELINK_FAMILY_LC := $(shell echo $(SIMPLELINK_FAMILY) | tr A-Z a-z)
 # Device name in upper case (UC)
-SIMPLELINK_DEVICE_UC := $(shell echo $(SIMPLELINK_DEVICE) | tr a-z A-Z)
+SIMPLELINK_FAMILY_UC := $(shell echo $(SIMPLELINK_FAMILY) | tr a-z A-Z)
 
 ################################################################################
 # All supported SimpleLink Devices
-SIMPLELINK_DEVICES = cc13x0 cc13x2 cc26x0 cc26x2
+SIMPLELINK_FAMILIES = cc13x0 cc13x2 cc26x0 cc26x2
 
 ################################################################################
 # CC13X0/CC26X0 Family
 
 # CC13X0
-ifeq ($(SIMPLELINK_DEVICE_LC),cc13x0)
+ifeq ($(SIMPLELINK_FAMILY_LC),cc13x0)
 PLATFORM_FAMILY_DIR := cc13x0-cc26x0
 DEVICE_FAMILY := DeviceFamily_CC13X0
 CFLAGS += -D$(DEVICE_FAMILY)
 
 # CC26X0
-else ifeq ($(SIMPLELINK_DEVICE_LC),cc26x0)
+else ifeq ($(SIMPLELINK_FAMILY_LC),cc26x0)
 PLATFORM_FAMILY_DIR := cc13x0-cc26x0
 DEVICE_MAKEFILE := cc26x0
 DEVICE_FAMILY := DeviceFamily_CC26X0
@@ -37,13 +37,13 @@ CFLAGS += -D$(DEVICE_FAMILY)
 # CC13X2/CC26X2 Family
 
 # CC13X2
-else ifeq ($(SIMPLELINK_DEVICE_LC),cc13x2)
+else ifeq ($(SIMPLELINK_FAMILY_LC),cc13x2)
 PLATFORM_FAMILY_DIR := cc13x2-cc26x2
 DEVICE_FAMILY := DeviceFamily_CC13X2
 CFLAGS += -D$(DEVICE_FAMILY)
 
 # CC26X2
-else ifeq ($(SIMPLELINK_DEVICE_LC),cc26x2)
+else ifeq ($(SIMPLELINK_FAMILY_LC),cc26x2)
 PLATFORM_FAMILY_DIR := cc13x2-cc26x2
 DEVICE_FAMILY := DeviceFamily_CC26X2
 CFLAGS += -D$(DEVICE_FAMILY)
@@ -51,7 +51,7 @@ CFLAGS += -D$(DEVICE_FAMILY)
 ################################################################################
 # Specified Device not supported
 else
-  $(error Simplelink Device '$(SIMPLELINK_DEVICE)' is not supported)
+  $(error Simplelink Device '$(SIMPLELINK_FAMILY)' is not supported)
 endif
 
 ################################################################################
@@ -75,5 +75,5 @@ CONTIKI_TARGET_DIRS := $(addprefix $(PLATFORM_FAMILY_DIR)/, $(CONTIKI_TARGET_DIR
 
 ################################################################################
 # Rule for printing supported devices
-simplelink_devices:
-	@echo "$(SIMPLELINK_DEVICES) (current: $(SIMPLELINK_DEVICE_LC))"
+simplelink_families:
+	@echo "$(SIMPLELINK_FAMILIES) (current: $(SIMPLELINK_FAMILY_LC))"

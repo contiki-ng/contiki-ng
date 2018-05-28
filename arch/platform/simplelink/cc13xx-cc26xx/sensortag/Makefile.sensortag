@@ -1,0 +1,10 @@
+################################################################################
+# SimpleLink LaunchPad makefile
+
+BOARD_TYPE = BOARD_SENSORTAG
+
+# leds-arch.c/h etc.
+BOARD_SOURCEFILES += sensortag.c sensortag-sensors.c
+BOARD_SOURCEFILES += button-sensor-arch.c leds-arch.c
+
+TARGET_FAMILY_DIRS += sensortag

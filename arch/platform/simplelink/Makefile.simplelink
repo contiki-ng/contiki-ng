@@ -1,33 +1,50 @@
 ################################################################################
-# SimpleLink MCU platform makefile
+### SimpleLink MCU platform makefile
 
 ################################################################################
-# Sanity check of expected symbols
+### Sanity check of expected symbols
 
 ifndef CONTIKI
-  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+  $(error 'CONTIKI' not defined! You must specify where CONTIKI resides!)
+endif
+
+ifndef FAMILY
+  $(error 'FAMILY' not defined! You must specify which Simplelink family you are using!)
+endif
+
+ifndef BOARD
+  $(error 'BOARD' not defined! You must specify which board you are using!)
 endif
 
 ifndef SIMPLELINK_SDK
-  $(error SIMPLELINK_SDK not defined! You must specify where the SimpleLink SDK resides!)
+  $(error 'SIMPLELINK_SDK' not defined! You must specify where the installed SimpleLink SDK resides!)
 endif
 
-ifndef SIMPLELINK_DEVICE
-  $(error SIMPLELINK_DEVICE not defined! You must specify which device you are using!)
-endif
+SIMPLELINK_SDK_EXISTS := $(shell [ -d "$(SIMPLELINK_SDK)" ]; echo $$?)
 
-ifndef SIMPLELINK_BOARD
-  $(error SIMPLELINK_BOARD not defined! You must specify which board you are using!)
+ifneq ($(SIMPLELINK_SDK_EXISTS),0)
+  $(error Simplelink SDK path 'SIMPLELINK_SDK' does not exist)
 endif
 
 ################################################################################
-# Defines
+### Defines
 
-SIMPLELINK_PATH := $(CONTIKI)/arch/platform/simplelink
+SIMPLELINK_SDK := $(realpath $(SIMPLELINK_SDK))
 
-include $(SIMPLELINK_PATH)/Makefile.device-family
+SUPPORTED_FAMILIES := cc13xx-cc26xx
+
+ifeq ($(filter $(FAMILY), $(SUPPORTED_FAMILIES)),)
+  $(error Simlpelink Family $(FAMILY) is not supported.)
+endif
+
+FAMILY_PATH := $(realpath $(CONTIKI)/arch/platform/simplelink/$(FAMILY))
 
 CLEAN += *.simplelink
 
-# Build without code size optimisations, unless the project dictates otherwise
-SMALL ?= 0
+### Include the Simplelink Family specific Makefile
+include $(FAMILY_PATH)/Makefile.$(FAMILY)
+
+################################################################################
+# Display all supported SimpleLink Families
+simplelink_families:
+	@echo "$(SUPPORTED_FAMILIES) (current: $(FAMILY))"

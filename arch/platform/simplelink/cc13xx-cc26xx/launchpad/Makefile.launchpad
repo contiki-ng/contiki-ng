@@ -1,0 +1,10 @@
+################################################################################
+# SimpleLink LaunchPad makefile
+
+BOARD_TYPE = BOARD_LAUNCHPAD
+
+# leds-arch.c/h etc.
+BOARD_SOURCEFILES += launchpad.c launchpad-sensors.c
+BOARD_SOURCEFILES += button-sensor-arch.c leds-arch.c ext-flash.c
+
+TARGET_FAMILY_DIRS += launchpad
