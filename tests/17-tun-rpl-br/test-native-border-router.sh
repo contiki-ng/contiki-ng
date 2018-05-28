@@ -28,7 +28,7 @@ java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -c
 JPID=$!
 sleep 20
 
-# Connect to the simlation
+# Connect to the simulation
 echo "Starting native border-router"
 nohup make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=native >> $BASENAME.nbr.log 2>&1 &
 MPID=$!
