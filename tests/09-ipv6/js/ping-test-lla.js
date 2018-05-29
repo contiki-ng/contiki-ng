@@ -8,7 +8,7 @@ while(1) {
   YIELD();
   log.log(time + " " + id + " "+ msg + "\n");
 
-  if(msg.contains("Node id is set to")) {
+  if(msg.contains("Node ID: ")) {
     if(id == 1) {
       write(sim.getMoteWithID(1), "rpl-set-root 1");
     }

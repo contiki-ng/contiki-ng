@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,50 +30,22 @@
  *
  */
 
-#ifndef TOOLS_UTILS
-#define TOOLS_UTILS
+/**
+ * \file
+ *         Node-id management
+ * \author
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
+ */
 
-#include <termios.h>
+#include "contiki.h"
+#include "sys/node-id.h"
+#include "net/linkaddr.h"
 
-#if __APPLE__
-#ifndef B460800
-#define B460800 460800
-#endif
-#ifndef B500000
-#define B500000 500000
-#endif
-#ifndef B576000
-#define B576000 576000
-#endif
-#ifndef B921600
-#define B921600 921600
-#endif
-#ifndef B1000000
-#define B1000000 1000000
-#endif
-#ifndef B1152000
-#define B1152000 1152000
-#endif
-#ifndef B1500000
-#define B1500000 1500000
-#endif
-#ifndef B2000000
-#define B2000000 2000000
-#endif
-#ifndef B2500000
-#define B2500000 2500000
-#endif
-#ifndef B3000000
-#define B3000000 3000000
-#endif
-#ifndef B3500000
-#define B3500000 3500000
-#endif
-#ifndef B4000000
-#define B4000000 4000000
-#endif
-#endif
+uint16_t node_id = 0;
 
-speed_t select_baudrate(int baudrate);
-
-#endif /* TOOLS_UTILS */
+void
+node_id_init(void) {
+  /* Initialize with a default value derived from linkaddr */
+  node_id = linkaddr_node_addr.u8[LINKADDR_SIZE - 1]
+            + (linkaddr_node_addr.u8[LINKADDR_SIZE - 2] << 8);
+}

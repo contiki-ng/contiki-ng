@@ -30,7 +30,7 @@
  *
  */
 
-#include "tools-utils.h" 
+#include "tools-utils.h"
 
 speed_t
 select_baudrate(int baudrate) {
@@ -159,4 +159,3 @@ select_baudrate(int baudrate) {
     return 0;
   }
 }
-

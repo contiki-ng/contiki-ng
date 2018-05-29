@@ -31,23 +31,24 @@
  *
  *
  */
-
-/**
- * \file
- * Various uIP library functions.
- * \author
- * Adam Dunkels <adam@sics.se>
- *
- */
-
 #ifndef UIPLIB_H_
 #define UIPLIB_H_
 
 #include "net/ipv6/uip.h"
 
 /**
- * \addtogroup uipconvfunc
+ * \addtogroup uip
  * @{
+ *
+ * \defgroup uip-addr-lib uIP address manipulation library
+ *
+ * A library with various IP address manipulation functions
+ * @{
+ *
+ * \file
+ * Header file for the IP address manipulation library
+ * \author
+ * Adam Dunkels <adam@sics.se>
  */
 
 /**
@@ -77,10 +78,6 @@ int uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *addr);
 int uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *addr);
 /** @} */
 
-/**
- * \addtogroup uiplib
- * @{
- */
 
 /* The maxium length of an IPv6 string, including terminating null bytes
  * fd01:0002:0003:0004:0005:0006:0007:0008 => 39 + 1 bytes */
@@ -103,6 +100,8 @@ void uiplib_ipaddr_print(const uip_ipaddr_t *addr);
  */
 int uiplib_ipaddr_snprint(char *buffer, size_t size, const uip_ipaddr_t *addr);
 
-/** @} */
-
 #endif /* UIPLIB_H_ */
+/**
+ * @}
+ * @}
+ */

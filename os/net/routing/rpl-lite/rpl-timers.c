@@ -521,6 +521,7 @@ handle_periodic_timer(void *ptr)
 
   if(LOG_INFO_ENABLED) {
     rpl_neighbor_print_list("Periodic");
+    rpl_dag_root_print_links("Periodic");
   }
 
   ctimer_reset(&periodic_timer);

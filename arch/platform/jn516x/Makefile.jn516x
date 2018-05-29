@@ -82,7 +82,7 @@ OBJDUMP:=$(CROSS_COMPILE)-objdump
 
 ARCH = jn516x-ccm-star.c exceptions.c rtimer-arch.c rtimer-arch-slow.c \
        slip_uart0.c clock.c micromac-radio.c int-master.c \
-       node-id.c watchdog.c slip.c dbg.c
+       watchdog.c slip.c dbg.c
 # Default uart0 for printf and slip
 TARGET_WITH_UART0 ?= 1
 TARGET_WITH_UART1 ?= 0
@@ -175,17 +175,14 @@ MOTELIST = python $(CONTIKI)/tools/jn516x/mote-list.py
 ifeq ($(HOST_OS),Windows)
   USBDEVPREFIX=/dev/com
   USBDEVBASENAME=COM
-  SERIALDUMP ?= $(CONTIKI)/tools/jn516x/serialdump-windows
 else
 ifeq ($(HOST_OS),Darwin)
   USBDEVPREFIX=
   USBDEVBASENAME=/dev/tty.usbserial-
-  SERIALDUMP ?= rlwrap $(CONTIKI)/tools/jn516x/serialdump-macos
 else
   # Else we assume Linux
   USBDEVPREFIX=
   USBDEVBASENAME=/dev/ttyUSB
-  SERIALDUMP ?= rlwrap $(CONTIKI)/tools/jn516x/serialdump-linux
 endif
 endif
 
@@ -195,7 +192,7 @@ ifndef MOTE
   $(error MOTE not defined! You must specify which MOTE (serial port) to use)
 endif
 endif
-PORT = $(USBDEVBASENAME)$(MOTE)
+DEV_PORT = $(USBDEVBASENAME)$(MOTE)
 
 #### make targets
 
@@ -255,19 +252,19 @@ endif
 ### Upload target to one jn516x mote specified by MOTE=portNumber
 ifeq ($(HOST_OS),Windows)
 %.upload: %.$(TARGET).bin
-	${FLASH_PROGRAMMER} -a -c $(PORT) -B 1000000 -s -w -f $<
+	${FLASH_PROGRAMMER} -a -c $(DEV_PORT) -B 1000000 -s -w -f $<
 else
 %.upload: %.$(TARGET).bin
-	${FLASH_PROGRAMMER} -V 10 -v -s $(PORT) -I 38400 -P 1000000 -f $<
+	${FLASH_PROGRAMMER} -V 10 -v -s $(DEV_PORT) -I 38400 -P 1000000 -f $<
 endif
 
 ### Flash the given file
 ifeq ($(HOST_OS),Windows)
 %.flash: ${FLASH_PROGRAMMER}
-	${FLASH_PROGRAMMER} -a -c $(PORT) -B 1000000 -s -w -f $*.$(TARGET).bin
+	${FLASH_PROGRAMMER} -a -c $(DEV_PORT) -B 1000000 -s -w -f $*.$(TARGET).bin
 else
 %.flash: ${FLASH_PROGRAMMER}
-	${FLASH_PROGRAMMER} -V 10 -v -s $(PORT) -I 38400 -P 1000000 -s -f $*.$(TARGET).bin
+	${FLASH_PROGRAMMER} -V 10 -v -s $(DEV_PORT) -I 38400 -P 1000000 -s -f $*.$(TARGET).bin
 endif
 
 ### List the ports with connected jn516x motes
@@ -297,19 +294,6 @@ serialdumpall:
 ### UART_BAUDRATE: i.e., 115200. default is 1000000
 ### example: make TARGET=jn516x UART_BAUDRATE=115200 login MOTE=1
 
-UART_BAUDRATE ?= 1000000
-
-$(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
-	($(MAKE) -C $(CONTIKI)/tools tunslip6 CFLAGS= LDFLAGS= LDLIBS= INCFLAGS=)
-
-$(SERIALDUMP): $(CONTIKI)/tools/jn516x/serialdump.c
-	(cd $(CONTIKI)/tools/jn516x; ${MAKE} $(notdir $(SERIALDUMP)))
-
-login: $(SERIALDUMP)
-	$(SERIALDUMP) -b${UART_BAUDRATE} $(USBDEVPREFIX)$(PORT)
-
-serialview: $(SERIALDUMP)
-	$(SERIALDUMP) -b${UART_BAUDRATE} $(USBDEVPREFIX)$(PORT) | $(CONTIKI)/tools/timestamp
-
-serialdump: $(SERIALDUMP)
-	$(SERIALDUMP) -b${UART_BAUDRATE} $(USBDEVPREFIX)$(PORT) | $(CONTIKI)/tools/timestamp | tee serialdump-$(notdir $(PORT))-`date +%Y%m%d-%H%M`
+### For the login etc targets
+BAUDRATE = 1000000
+PORT = $(USBDEVPREFIX)$(DEV_PORT)

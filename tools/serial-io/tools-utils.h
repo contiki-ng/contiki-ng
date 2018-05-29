@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, SICS Swedish ICT.
+ * Copyright (c) 2015, SICS Swedish ICT
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,32 +30,53 @@
  *
  */
 
-/**
- * \file
- * For compatibility with Contiki node-id interface
- *
- * \author
- *         Beshr Al Nahas <beshr@sics.se>
- */
+#ifndef TOOLS_UTILS
+#define TOOLS_UTILS
 
-#include "contiki.h"
-#include "sys/node-id.h"
-#include "contiki.h"
+#include <termios.h>
 
-/*---------------------------------------------------------------------------*/
-extern unsigned char node_mac[8];
-unsigned short node_id = 0;
-/*---------------------------------------------------------------------------*/
-void
-node_id_restore(void)
-{
-  /* base node-id on MAC address */
-  node_id = (node_mac[6] << 8) | node_mac[7];
-}
-/*---------------------------------------------------------------------------*/
-void
-node_id_burn(unsigned short id)
-{
-  /* does not burn anything */
-  node_id = id;
-}
+/* The unspecified baudrate */
+#define BUNKNOWN -2
+
+#if __APPLE__
+#ifndef B460800
+#define B460800 460800
+#endif
+#ifndef B500000
+#define B500000 500000
+#endif
+#ifndef B576000
+#define B576000 576000
+#endif
+#ifndef B921600
+#define B921600 921600
+#endif
+#ifndef B1000000
+#define B1000000 1000000
+#endif
+#ifndef B1152000
+#define B1152000 1152000
+#endif
+#ifndef B1500000
+#define B1500000 1500000
+#endif
+#ifndef B2000000
+#define B2000000 2000000
+#endif
+#ifndef B2500000
+#define B2500000 2500000
+#endif
+#ifndef B3000000
+#define B3000000 3000000
+#endif
+#ifndef B3500000
+#define B3500000 3500000
+#endif
+#ifndef B4000000
+#define B4000000 4000000
+#endif
+#endif
+
+speed_t select_baudrate(int baudrate);
+
+#endif /* TOOLS_UTILS */

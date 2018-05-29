@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Swedish Institute of Computer Science.
+ * Copyright (c) 2018, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,31 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * 
+ * This file is part of the Contiki operating system.
+ *
  */
 
-#ifndef NODE_ID_H_
-#define NODE_ID_H_
+/**
+ * \file
+ *         A very simple example using the shell
+ * \author
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
+ */
 
-#include "dev/moteid.h"
+#include "contiki.h"
 
-#define node_id simMoteID
+#include <stdio.h> /* For printf() */
+/*---------------------------------------------------------------------------*/
+PROCESS(example_process, "Example process: shell");
+AUTOSTART_PROCESSES(&example_process);
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(example_process, ev, data)
+{
+  PROCESS_BEGIN();
 
-#endif /* NODE_ID_H_ */
+  /* This process does nothing. Connect to the node with `make login`
+   * to use the shell. */
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/

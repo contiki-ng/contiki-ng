@@ -29,11 +29,11 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-ext-flash
+ * \addtogroup ext-flash
  * @{
  *
  * \file
- * Sensortag/LaunchPad External Flash Driver
+ * Implementation of a generic external SPI flash driver
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
