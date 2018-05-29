@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2013, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,49 +30,10 @@
  *
  */
 
-/**
- * \file
- *         The 802.15.4 standard CSMA protocol (nonbeacon-enabled)
- * \author
- *         Adam Dunkels <adam@sics.se>
- *         Simon Duquennoy <simon.duquennoy@inria.fr>
- */
+#ifndef CCM_STAR_PACKETBUF_H_
+#define CCM_STAR_PACKETBUF_H_
 
-#ifndef CSMA_H_
-#define CSMA_H_
+/*---------------------------------------------------------------------------*/
+void ccm_star_packetbuf_set_nonce(uint8_t *nonce, int forward);
 
-#include "contiki.h"
-#include "net/mac/mac.h"
-#include "dev/radio.h"
-
-#ifdef CSMA_CONF_SEND_SOFT_ACK
-#define CSMA_SEND_SOFT_ACK CSMA_CONF_SEND_SOFT_ACK
-#else /* CSMA_CONF_SEND_SOFT_ACK */
-#define CSMA_SEND_SOFT_ACK 0
-#endif /* CSMA_CONF_SEND_SOFT_ACK */
-
-#ifdef CSMA_CONF_ACK_WAIT_TIME
-#define CSMA_ACK_WAIT_TIME CSMA_CONF_ACK_WAIT_TIME
-#else /* CSMA_CONF_ACK_WAIT_TIME */
-#define CSMA_ACK_WAIT_TIME                      RTIMER_SECOND / 2500
-#endif /* CSMA_CONF_ACK_WAIT_TIME */
-
-#ifdef CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME
-#define CSMA_AFTER_ACK_DETECTED_WAIT_TIME CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME
-#else /* CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME */
-#define CSMA_AFTER_ACK_DETECTED_WAIT_TIME       RTIMER_SECOND / 1500
-#endif /* CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME */
-
-#define CSMA_ACK_LEN 3
-
-extern const struct mac_driver csma_driver;
-
-/* CSMA security framer functions */
-int csma_security_create_frame(void);
-int csma_security_parse_frame(void);
-
-/* key management for CSMA */
-void csma_security_set_key(uint8_t index, uint8_t *key);
-
-
-#endif /* CSMA_H_ */
+#endif /* CCM_STAR_PACKETBUF_H_ */

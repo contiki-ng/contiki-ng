@@ -40,6 +40,7 @@
  */
 
 #include "net/mac/csma/csma.h"
+#include "net/mac/csma/csma-security.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "dev/watchdog.h"
@@ -169,7 +170,14 @@ send_one_packet(void *ptr)
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
 
-  if(NETSTACK_FRAMER.create() < 0) {
+#if LLSEC802154_ENABLED
+  /* These should possibly be taken from upper layers in the future */
+  packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, CSMA_LLSEC_SECURITY_LEVEL);
+  packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, CSMA_LLSEC_KEY_ID_MODE);
+  packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, CSMA_LLSEC_KEY_INDEX);
+#endif /* LLSEC802154_ENABLED */
+
+  if(csma_security_create_frame() < 0) {
     /* Failed to allocate space for headers */
     LOG_ERR("failed to create packet\n");
     ret = MAC_TX_ERR_FATAL;

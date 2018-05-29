@@ -70,7 +70,7 @@ input_packet(void)
   if(packetbuf_datalen() == CSMA_ACK_LEN) {
     /* Ignore ack packets */
     LOG_DBG("ignored ack\n");
-  } else if(NETSTACK_FRAMER.parse() < 0) {
+  } else if(csma_security_parse_frame() < 0) {
     LOG_ERR("failed to parse %u\n", packetbuf_datalen());
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
@@ -131,6 +131,12 @@ off(void)
 static void
 init(void)
 {
+
+#ifdef CSMA_LLSEC_DEFAULT_KEY0
+  uint8_t key[16] = CSMA_LLSEC_DEFAULT_KEY0;
+  csma_security_set_key(0, key);
+#endif
+
   csma_output_init();
   on();
 }
