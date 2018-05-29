@@ -446,6 +446,7 @@ savedefines:
 	@echo "saving Makefile.$(TARGET).defines"
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
+VIEWCONF = $(CONTIKI)/tools/viewconf/viewconf.c
 viewconf:
 	@echo "----------------- Make variables: --------------"
 	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
@@ -457,13 +458,13 @@ ifdef MAKE_COAP_DTLS_KEYSTORE
 	@echo "##### \"MAKE_COAP_DTLS_KEYSTORE\": _______________ $(MAKE_COAP_DTLS_KEYSTORE)"
 endif
 	@echo "----------------- C variables: -----------------"
-	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
+	$(Q)$(CC) $(CFLAGS) -E $(VIEWCONF) | grep \#\#\#\#\#
 	@echo "------------------------------------------------"
 	@echo "'==' Means the flag is set to a given a value"
 	@echo "'->' Means the flag is unset, but will default to a given value"
 	@echo "'><' Means the flag is unset and has no default value"
 	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
-	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
+	@echo "To view more C variables, edit $(VIEWCONF)"
 
 ### Include Makefile.embedded for relevant platforms, in order to pull in
 ### rules for login, serialview etc
