@@ -81,7 +81,6 @@ PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFI
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 ### Include target makefile (TODO Unsafe?)
-
 # Configurable arch path
 ARCH_PATH ?= $(CONTIKI)/arch
 

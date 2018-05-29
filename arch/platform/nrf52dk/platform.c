@@ -38,7 +38,8 @@
 #include "nordic_common.h"
 #include "contiki.h"
 
-#include "nrf_drv_config.h"
+/* #include "nrf_drv_config.h" */
+#include "nrfx_config.h"
 #include "nrf_drv_gpiote.h"
 #ifdef SOFTDEVICE_PRESENT
 #include "softdevice_handler.h"

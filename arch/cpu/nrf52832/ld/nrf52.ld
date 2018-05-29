@@ -9,7 +9,7 @@ MEMORY
   RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x8000
 }
 
-INCLUDE "nrf5x_common.ld"
+INCLUDE "nrf_common.ld"
 
 /* These symbols are used by the stack check library. */
 _stack = end;

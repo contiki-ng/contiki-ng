@@ -47,7 +47,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "nrf.h"
-#include "nrf_drv_config.h"
+/* #include "nrf_drv_config.h" */
 #include "nrf_drv_rtc.h"
 #include "nrf_drv_clock.h"
 #include "nrf_delay.h"
@@ -80,10 +80,10 @@ rtc_handler(nrf_drv_rtc_int_type_t int_type)
 static void
 lfclk_config(void)
 {
-  ret_code_t err_code = nrf_drv_clock_init(NULL);
+  ret_code_t err_code = nrf_drv_clock_init();
   APP_ERROR_CHECK(err_code);
 
-  nrf_drv_clock_lfclk_request();
+  nrf_drv_clock_lfclk_request(NULL);
 }
 #endif
 

@@ -41,7 +41,7 @@
  */
 #include <stdlib.h>
 #include "nrf.h"
-#include "nrf_drv_config.h"
+/* #include "nrf_drv_config.h" */
 #include "nrf_drv_uart.h"
 #include "app_util_platform.h"
 #include "app_error.h"
@@ -59,6 +59,8 @@ static int (*uart0_input_handler)(unsigned char c);
 static struct ringbuf txbuf;
 static uint8_t txbuf_data[TXBUFSIZE];
 
+static nrf_drv_uart_t uart_inst = NRF_DRV_UART_INSTANCE(0);
+
 /*---------------------------------------------------------------------------*/
 static void
 uart_event_handler(nrf_drv_uart_event_t * p_event, void * p_context)
@@ -67,11 +69,11 @@ uart_event_handler(nrf_drv_uart_event_t * p_event, void * p_context)
     if (uart0_input_handler != NULL) {
       uart0_input_handler(p_event->data.rxtx.p_data[0]);
     }
-    (void)nrf_drv_uart_rx(rx_buffer, 1);
+    (void)nrf_drv_uart_rx(&uart_inst, rx_buffer, 1);
   } else if (p_event->type == NRF_DRV_UART_EVT_TX_DONE) {
     if (ringbuf_elements(&txbuf) > 0) {
       uint8_t c = ringbuf_get(&txbuf);
-      nrf_drv_uart_tx(&c, 1);
+      nrf_drv_uart_tx(&uart_inst, &c, 1);
     }
   }
 }
@@ -85,7 +87,7 @@ uart0_set_input(int (*input)(unsigned char c))
 void
 uart0_writeb(unsigned char c)
 {
-  if (nrf_drv_uart_tx(&c, 1) == NRF_ERROR_BUSY) {
+  if (nrf_drv_uart_tx(&uart_inst, &c, 1) == NRF_ERROR_BUSY) {
     while (ringbuf_put(&txbuf, c) == 0) {
       __WFE();
     }
@@ -100,13 +102,13 @@ void
 uart0_init(unsigned long ubr)
 {
   nrf_drv_uart_config_t config = NRF_DRV_UART_DEFAULT_CONFIG;
-  ret_code_t retcode = nrf_drv_uart_init(&config, uart_event_handler);
+  ret_code_t retcode = nrf_drv_uart_init(&uart_inst, &config, uart_event_handler);
   APP_ERROR_CHECK(retcode);
 
   ringbuf_init(&txbuf, txbuf_data, sizeof(txbuf_data));
 
-  nrf_drv_uart_rx_enable();
-  nrf_drv_uart_rx(rx_buffer, 1);
+  nrf_drv_uart_rx_enable(&uart_inst);
+  nrf_drv_uart_rx(&uart_inst, rx_buffer, 1);
 }
 /**
  * @}
