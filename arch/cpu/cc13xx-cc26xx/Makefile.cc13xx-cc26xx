@@ -23,14 +23,14 @@ DEVICE_DEFINE := $(shell cat $(DEVICE_FAMILY_H) \
 # Else, it points to a sub-name of the device family, e.g. DeviceFamily_ID_CC13X2_V1.
 # This line checks if the extracted define is a number or not, based on this SO post:
 #     https://stackoverflow.com/a/19116862/5099169
-IS_NUMBER := $(shell if [ "$(DEVICE_DEFINE)" -eq "$(DEVICE_DEFINE)" ] 2>/dev/null; then echo 1 ; else echo 0 ; fi)
+# Return value 0 is no error, i.e. is a number.
+IS_NUMBER := $(shell [ "$(DEVICE_DEFINE)" -eq "$(DEVICE_DEFINE)" ] 2>/dev/null; echo $$?)
 
-ifeq ($(IS_NUMBER),1)
+ifeq ($(IS_NUMBER),0)
   # The define points to a number, meaning the device family name is the same as the
   # specified device name in lower case, e.g.
   #    cc13x2
-  DEVICE_FAMILY_NAME := $(shell echo "$(DEVICE_FAMILY)" \
-      | tr A-Z a-z)
+  DEVICE_FAMILY_NAME := $(DEVICE_FAMILY_LC)
 else
   # The define points to a sub-name of the device family. The resulting device family name
   # is therefore the name after specified after ID in lower case, e.g.
@@ -72,12 +72,18 @@ CONTIKI_CPU_SOURCEFILES += watchdog-arch.c putchar-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c slip-arch.c
 CONTIKI_CPU_SOURCEFILES += batmon-sensor.c
 CONTIKI_CPU_SOURCEFILES += rf-common.c
-CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c rf-prop-settings.c
-CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c rf-ieee-settings.c
 CONTIKI_CPU_SOURCEFILES += ieee-addr.c
 
+ifeq ($(SUPPORTS_PROP_MODE),1)
+CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c prop-settings.c
+endif
+
+ifeq ($(SUPPORTS_IEEE_MODE),1)
+CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c ieee-settings.c
+endif
+
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS += . dev $(SUBFAMILY) $(SUBFAMILY)/rf-settings
+CONTIKI_CPU_DIRS += . dev $(SUBFAMILY) rf-settings/$(DEVICE_FAMILY_LC)
 
 ### CPU-dependent debug source files
 ### CONTIKI_ARM_DIRS populated by Makefile.arm
@@ -110,4 +116,4 @@ $(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -include "ccfg-conf.h" -c $< -o $@
 
-include $(CONTIKI_CPU)/Makefile.$(SUBFAMILY)
+include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)

@@ -22,6 +22,8 @@ endif
 BOARD_PATH := $(FAMILY_PATH)/$(BOARD)
 include $(BOARD_PATH)/Makefile.$(notdir $(BOARD))
 
+DEVICE_FAMILY_LC := $(shell echo "$(DEVICE_FAMILY)" | tr A-Z a-z)
+
 # Add to the source dirs
 TARGET_FAMILY_DIRS += common
 TARGET_FAMILY_DIRS += $(BOARD)
@@ -44,17 +46,11 @@ CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
-# TODO fix for CC26x0
-ifeq ($(DEVICE_FAMILY),CC26X0)
-  # Pull in the correct CPU makefile
-  CPU_FAMILY = cc26x0
-else
-  # Pull in the correct CPU makefile
-  CPU_FAMILY = cc13xx-cc26xx
-endif
+# Pull in the correct CPU makefile
+CPU_FAMILY = cc13xx-cc26xx
 
 # Define the CPU directory and pull in the correct CPU Makefile
-CONTIKI_CPU := $(realpath $(CONTIKI)/arch/cpu/cc13xx-cc26xx)
+CONTIKI_CPU := $(realpath $(CONTIKI)/arch/cpu/$(CPU_FAMILY))
 include $(CONTIKI_CPU)/Makefile.$(CPU_FAMILY)
 
 MODULES += os/net os/net/mac os/net/mac/framer

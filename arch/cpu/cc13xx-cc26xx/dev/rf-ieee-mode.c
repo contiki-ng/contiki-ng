@@ -66,7 +66,7 @@
 #ifdef IEEE_MODE_CONF_RF_SETTINGS
 #   define IEEE_MODE_RF_SETTINGS  IEEE_MODE_CONF_RF_SETTINGS
 #else
-#   define IEEE_MODE_RF_SETTINGS "rf-settings/rf-ieee-settings.h"
+#   define IEEE_MODE_RF_SETTINGS "ieee-settings.h"
 #endif
 
 #include IEEE_MODE_RF_SETTINGS
@@ -120,23 +120,17 @@
 #endif
 
 /* Configuration for TX power table */
-#ifdef TX_POWER_CONF_DRIVER
-#   define TX_POWER_DRIVER  TX_POWER_CONF_DRIVER
+#ifdef TX_POWER_CONF_TABLE
+#   define TX_POWER_TABLE  TX_POWER_CONF_TABLE
 #else
-#   define TX_POWER_DRIVER  txPowerTable
-#endif
-
-#ifdef TX_POWER_CONF_COUNT
-#   define TX_POWER_COUNT  TX_POWER_CONF_COUNT
-#else
-#   define TX_POWER_COUNT  txPowerTableLen
+#   define TX_POWER_TABLE  txPowerTable
 #endif
 /*---------------------------------------------------------------------------*/
-/* TX power convenience macros */
-static RF_TxPowerTable_Entry * const g_pTxPower = TX_POWER_DRIVER;
+/* TX power table convenience macros */
+#define TX_POWER_TABLE_SIZE  ((sizeof(TX_POWER_TABLE) / sizeof(TX_POWER_TABLE[0])) - 1)
 
-#define TX_POWER_MIN  (g_pTxPower[0])
-#define TX_POWER_MAX  (g_pTxPower[(TX_POWER_COUNT) - 1])
+#define TX_POWER_MIN  (TX_POWER_TABLE[0])
+#define TX_POWER_MAX  (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1])
 
 #define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
 /*---------------------------------------------------------------------------*/

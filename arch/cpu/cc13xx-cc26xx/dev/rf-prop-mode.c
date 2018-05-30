@@ -59,7 +59,7 @@
 #   define PROP_MODE_RF_SETTINGS  PROP_MODE_CONF_RF_SETTINGS
 #   undef PROP_MODE_CONF_RF_SETTINGS
 #else
-#   define PROP_MODE_RF_SETTINGS "rf-settings/rf-prop-settings.h"
+#   define PROP_MODE_RF_SETTINGS "prop-settings.h"
 #endif
 
 #include PROP_MODE_RF_SETTINGS

@@ -9,6 +9,8 @@ BOARD_SOURCEFILES += CC1350STK.c
 SUPPORTS_PROP_MODE = 1
 SUPPORTS_IEEE_MODE = 1
 
+SUPPORTS_HIGH_PA = 0
+
 ### Signal that we can be programmed with cc2538-bsl
 BOARD_SUPPORTS_BSL = 1
 

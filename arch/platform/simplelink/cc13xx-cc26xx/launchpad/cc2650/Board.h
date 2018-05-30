@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, Texas Instruments Incorporated
+ * Copyright (c) 2015-2018, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,49 +33,111 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
+#define Board_CC2650_LAUNCHXL
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <ti/drivers/Power.h>
-
 #include "CC2650_LAUNCHXL.h"
 
+#define Board_initGeneral()     CC2650_LAUNCHXL_initGeneral()
+#define Board_shutDownExtFlash() CC2650_LAUNCHXL_shutDownExtFlash()
+#define Board_wakeUpExtFlash() CC2650_LAUNCHXL_wakeUpExtFlash()
+
 /* These #defines allow us to reuse TI-RTOS across other device families */
-#define     Board_LED0              Board_RLED
-#define     Board_LED1              Board_GLED
-#define     Board_LED2              Board_LED0
+#define Board_ADC0              CC2650_LAUNCHXL_ADC0
+#define Board_ADC1              CC2650_LAUNCHXL_ADC1
 
-#define     Board_BUTTON0           Board_BTN1
-#define     Board_BUTTON1           Board_BTN2
+#define Board_ADCBUF0           CC2650_LAUNCHXL_ADCBUF0
+#define Board_ADCBUF0CHANNEL0   CC2650_LAUNCHXL_ADCBUF0CHANNEL0
+#define Board_ADCBUF0CHANNEL1   CC2650_LAUNCHXL_ADCBUF0CHANNEL1
 
-#define     Board_UART0             Board_UART
-#define     Board_AES0              Board_AES
-#define     Board_WATCHDOG0         CC2650_LAUNCHXL_WATCHDOG0
+#define Board_CRYPTO0           CC2650_LAUNCHXL_CRYPTO0
 
-#define     Board_ADC0              CC2650_LAUNCHXL_ADCVSS
-#define     Board_ADC1              CC2650_LAUNCHXL_ADCVDDS
+#define Board_DIO0              CC2650_LAUNCHXL_DIO0
+#define Board_DIO1_RFSW         CC2650_LAUNCHXL_DIO1_RFSW
+#define Board_DIO12             CC2650_LAUNCHXL_DIO12
+#define Board_DIO15             CC2650_LAUNCHXL_DIO15
+#define Board_DIO16_TDO         CC2650_LAUNCHXL_DIO16_TDO
+#define Board_DIO17_TDI         CC2650_LAUNCHXL_DIO17_TDI
+#define Board_DIO21             CC2650_LAUNCHXL_DIO21
+#define Board_DIO22             CC2650_LAUNCHXL_DIO22
 
-#define     Board_ADCBuf0           CC2650_LAUNCHXL_ADCBuf0
-#define     Board_ADCBufChannel0    (0)
-#define     Board_ADCBufChannel1    (1)
+#define Board_DIO23_ANALOG      CC2650_LAUNCHXL_DIO23_ANALOG
+#define Board_DIO24_ANALOG      CC2650_LAUNCHXL_DIO24_ANALOG
+#define Board_DIO25_ANALOG      CC2650_LAUNCHXL_DIO25_ANALOG
+#define Board_DIO26_ANALOG      CC2650_LAUNCHXL_DIO26_ANALOG
+#define Board_DIO27_ANALOG      CC2650_LAUNCHXL_DIO27_ANALOG
+#define Board_DIO28_ANALOG      CC2650_LAUNCHXL_DIO28_ANALOG
+#define Board_DIO29_ANALOG      CC2650_LAUNCHXL_DIO29_ANALOG
+#define Board_DIO30_ANALOG      CC2650_LAUNCHXL_DIO30_ANALOG
 
-#define     Board_initGeneral() { \
-    Power_init(); \
-    if (PIN_init(BoardGpioInitTable) != PIN_SUCCESS) \
-        {System_abort("Error with PIN_init\n"); \
-    } \
-}
+#define Board_GPIO_BUTTON0      CC2650_LAUNCHXL_GPIO_S1
+#define Board_GPIO_BUTTON1      CC2650_LAUNCHXL_GPIO_S2
+#define Board_GPIO_BTN1         CC2650_LAUNCHXL_GPIO_S1
+#define Board_GPIO_BTN2         CC2650_LAUNCHXL_GPIO_S2
+#define Board_GPIO_LED0         CC2650_LAUNCHXL_GPIO_LED_RED
+#define Board_GPIO_LED1         CC2650_LAUNCHXL_GPIO_LED_GREEN
+#define Board_GPIO_RLED         CC2650_LAUNCHXL_GPIO_LED_RED
+#define Board_GPIO_GLED         CC2650_LAUNCHXL_GPIO_LED_GREEN
+#define Board_GPIO_LED_ON       CC2650_LAUNCHXL_GPIO_LED_ON
+#define Board_GPIO_LED_OFF      CC2650_LAUNCHXL_GPIO_LED_OFF
 
-#define     Board_initGPIO()
-#define     Board_initPWM()        PWM_init()
-#define     Board_initSPI()         SPI_init()
-#define     Board_initUART()        UART_init()
-#define     Board_initWatchdog()    Watchdog_init()
-#define     Board_initADCBuf()      ADCBuf_init()
-#define     Board_initADC()         ADC_init()
-#define     GPIO_toggle(n)
-#define     GPIO_write(n,m)
+#define Board_GPTIMER0A         CC2650_LAUNCHXL_GPTIMER0A
+#define Board_GPTIMER0B         CC2650_LAUNCHXL_GPTIMER0B
+#define Board_GPTIMER1A         CC2650_LAUNCHXL_GPTIMER1A
+#define Board_GPTIMER1B         CC2650_LAUNCHXL_GPTIMER1B
+#define Board_GPTIMER2A         CC2650_LAUNCHXL_GPTIMER2A
+#define Board_GPTIMER2B         CC2650_LAUNCHXL_GPTIMER2B
+#define Board_GPTIMER3A         CC2650_LAUNCHXL_GPTIMER3A
+#define Board_GPTIMER3B         CC2650_LAUNCHXL_GPTIMER3B
+
+#define Board_I2C0              CC2650_LAUNCHXL_I2C0
+#define Board_I2C_TMP           CC2650_LAUNCHXL_I2C0
+
+#define Board_NVSINTERNAL       CC2650_LAUNCHXL_NVSCC26XX0
+#define Board_NVSEXTERNAL       CC2650_LAUNCHXL_NVSSPI25X0
+
+#define Board_PIN_BUTTON0       CC2650_LAUNCHXL_PIN_BTN1
+#define Board_PIN_BUTTON1       CC2650_LAUNCHXL_PIN_BTN2
+#define Board_PIN_BTN1          CC2650_LAUNCHXL_PIN_BTN1
+#define Board_PIN_BTN2          CC2650_LAUNCHXL_PIN_BTN2
+#define Board_PIN_LED0          CC2650_LAUNCHXL_PIN_RLED
+#define Board_PIN_LED1          CC2650_LAUNCHXL_PIN_GLED
+#define Board_PIN_LED2          CC2650_LAUNCHXL_PIN_RLED
+#define Board_PIN_RLED          CC2650_LAUNCHXL_PIN_RLED
+#define Board_PIN_GLED          CC2650_LAUNCHXL_PIN_GLED
+
+#define Board_PWM0              CC2650_LAUNCHXL_PWM0
+#define Board_PWM1              CC2650_LAUNCHXL_PWM1
+#define Board_PWM2              CC2650_LAUNCHXL_PWM2
+#define Board_PWM3              CC2650_LAUNCHXL_PWM3
+#define Board_PWM4              CC2650_LAUNCHXL_PWM4
+#define Board_PWM5              CC2650_LAUNCHXL_PWM5
+#define Board_PWM6              CC2650_LAUNCHXL_PWM6
+#define Board_PWM7              CC2650_LAUNCHXL_PWM7
+
+#define Board_SD0               CC2650_LAUNCHXL_SDSPI0
+
+#define Board_SPI0              CC2650_LAUNCHXL_SPI0
+#define Board_SPI1              CC2650_LAUNCHXL_SPI1
+#define Board_SPI_FLASH_CS      CC2650_LAUNCHXL_SPI_FLASH_CS
+#define Board_FLASH_CS_ON       0
+#define Board_FLASH_CS_OFF      1
+
+#define Board_SPI_MASTER        CC2650_LAUNCHXL_SPI0
+#define Board_SPI_SLAVE         CC2650_LAUNCHXL_SPI0
+#define Board_SPI_MASTER_READY  CC2650_LAUNCHXL_SPI_MASTER_READY
+#define Board_SPI_SLAVE_READY   CC2650_LAUNCHXL_SPI_SLAVE_READY
+
+#define Board_UART0             CC2650_LAUNCHXL_UART0
+
+#define Board_WATCHDOG0         CC2650_LAUNCHXL_WATCHDOG0
+
+/* Board specific I2C addresses */
+#define Board_TMP_ADDR          (0x40)
+#define Board_SENSORS_BP_TMP_ADDR Board_TMP_ADDR
 
 #ifdef __cplusplus
 }

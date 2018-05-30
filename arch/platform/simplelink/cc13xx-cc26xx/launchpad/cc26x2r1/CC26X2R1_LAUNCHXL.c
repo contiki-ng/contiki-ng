@@ -584,11 +584,8 @@ const uint_least8_t I2C_count = CC26X2R1_LAUNCHXL_I2CCOUNT;
 #define NVS_REGIONS_BASE 0x48000
 #define SECTORSIZE       0x2000
 #define REGIONSIZE       (SECTORSIZE * 4)
-#define SPISECTORSIZE    0x1000
-#define SPIREGIONSIZE    (SPISECTORSIZE * 32)
-#define VERIFYBUFSIZE    64
 
-static uint8_t verifyBuf[VERIFYBUFSIZE];
+#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
 
 /*
  * Reserve flash sectors for NVS driver use by placing an uninitialized byte
@@ -627,11 +624,10 @@ static char flashBuf[REGIONSIZE];
 
 #endif
 
-/* Allocate objects for NVS and NVS SPI */
+/* Allocate objects for NVS Internal Regions */
 NVSCC26XX_Object nvsCC26xxObjects[1];
-NVSSPI25X_Object nvsSPI25XObjects[1];
 
-/* Hardware attributes for NVS */
+/* Hardware attributes for NVS Internal Regions */
 const NVSCC26XX_HWAttrs nvsCC26xxHWAttrs[1] = {
     {
         .regionBase = (void *)flashBuf,
@@ -639,7 +635,20 @@ const NVSCC26XX_HWAttrs nvsCC26xxHWAttrs[1] = {
     },
 };
 
-/* Hardware attributes for NVS SPI */
+#endif /* Board_EXCLUDE_NVS_INTERNAL_FLASH */
+
+#ifndef Board_EXCLUDE_NVS_EXTERNAL_FLASH
+
+#define SPISECTORSIZE    0x1000
+#define SPIREGIONSIZE    (SPISECTORSIZE * 32)
+#define VERIFYBUFSIZE    64
+
+static uint8_t verifyBuf[VERIFYBUFSIZE];
+
+/* Allocate objects for NVS External Regions */
+NVSSPI25X_Object nvsSPI25XObjects[1];
+
+/* Hardware attributes for NVS External Regions */
 const NVSSPI25X_HWAttrs nvsSPI25XHWAttrs[1] = {
     {
         .regionBaseOffset = 0,
@@ -654,18 +663,24 @@ const NVSSPI25X_HWAttrs nvsSPI25XHWAttrs[1] = {
     },
 };
 
+#endif /* Board_EXCLUDE_NVS_EXTERNAL_FLASH */
+
 /* NVS Region index 0 and 1 refer to NVS and NVS SPI respectively */
 const NVS_Config NVS_config[CC26X2R1_LAUNCHXL_NVSCOUNT] = {
+#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
     {
         .fxnTablePtr = &NVSCC26XX_fxnTable,
         .object = &nvsCC26xxObjects[0],
         .hwAttrs = &nvsCC26xxHWAttrs[0],
     },
+#endif
+#ifndef Board_EXCLUDE_NVS_EXTERNAL_FLASH
     {
         .fxnTablePtr = &NVSSPI25X_fxnTable,
         .object = &nvsSPI25XObjects[0],
         .hwAttrs = &nvsSPI25XHWAttrs[0],
     },
+#endif
 };
 
 const uint_least8_t NVS_count = CC26X2R1_LAUNCHXL_NVSCOUNT;
@@ -955,89 +970,10 @@ const Watchdog_Config Watchdog_config[CC26X2R1_LAUNCHXL_WATCHDOGCOUNT] = {
 const uint_least8_t Watchdog_count = CC26X2R1_LAUNCHXL_WATCHDOGCOUNT;
 
 /*
- *  ======== CC26X2R1_LAUNCHXL_wakeUpExtFlash ========
+ *  Board-specific initialization function to disable external flash.
+ *  This function is defined in the file CC26X2R1_LAUNCHXL_fxns.c
  */
-void CC26X2R1_LAUNCHXL_wakeUpExtFlash(void)
-{
-    PIN_Config extFlashPinTable[] = {
-        CC26X2R1_LAUNCHXL_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        PIN_TERMINATE
-    };
-    PIN_State extFlashPinState;
-    PIN_Handle extFlashPinHandle = PIN_open(&extFlashPinState, extFlashPinTable);
-
-    /*
-     *  To wake up we need to toggle the chip select at
-     *  least 20 ns and ten wait at least 35 us.
-     */
-
-    /* Toggle chip select for ~20ns to wake ext. flash */
-    PIN_setOutputValue(extFlashPinHandle, CC26X2R1_LAUNCHXL_SPI_FLASH_CS, 0);
-    /* 3 cycles per loop: 1 loop @ 48 Mhz ~= 62 ns */
-    CPUdelay(1);
-    PIN_setOutputValue(extFlashPinHandle, CC26X2R1_LAUNCHXL_SPI_FLASH_CS, 1);
-    /* 3 cycles per loop: 560 loops @ 48 Mhz ~= 35 us */
-    CPUdelay(560);
-
-    PIN_close(extFlashPinHandle);
-}
-
-/*
- *  ======== CC26X2R1_LAUNCHXL_sendExtFlashByte ========
- */
-void CC26X2R1_LAUNCHXL_sendExtFlashByte(PIN_Handle pinHandle, uint8_t byte)
-{
-    uint8_t i;
-
-    PIN_setOutputValue(pinHandle, CC26X2R1_LAUNCHXL_SPI_FLASH_CS, 0);
-
-    for (i = 0; i < 8; i++) {
-        PIN_setOutputValue(pinHandle, CC26X2R1_LAUNCHXL_SPI0_CLK, 0);
-        PIN_setOutputValue(pinHandle, CC26X2R1_LAUNCHXL_SPI0_MOSI, (byte >> (7 - i)) & 0x01);
-        PIN_setOutputValue(pinHandle, CC26X2R1_LAUNCHXL_SPI0_CLK, 1);
-
-        /*
-         * Waste a few cycles to keep the CLK high for at
-         * least 45% of the period.
-         * 3 cycles per loop: 8 loops @ 48 Mhz = 0.5 us.
-         */
-        CPUdelay(8);
-    }
-
-    PIN_setOutputValue(pinHandle, CC26X2R1_LAUNCHXL_SPI0_CLK, 0);
-    PIN_setOutputValue(pinHandle, CC26X2R1_LAUNCHXL_SPI_FLASH_CS, 1);
-
-    /*
-     * Keep CS high at least 40 us
-     * 3 cycles per loop: 700 loops @ 48 Mhz ~= 44 us
-     */
-    CPUdelay(700);
-}
-
-/*
- *  ======== CC26X2R1_LAUNCHXL_shutDownExtFlash ========
- */
-void CC26X2R1_LAUNCHXL_shutDownExtFlash(void)
-{
-    /* To be sure we are putting the flash into sleep and not waking it, we first have to make a wake up call */
-    CC26X2R1_LAUNCHXL_wakeUpExtFlash();
-
-    PIN_Config extFlashPinTable[] = {
-        CC26X2R1_LAUNCHXL_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        CC26X2R1_LAUNCHXL_SPI0_CLK | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        CC26X2R1_LAUNCHXL_SPI0_MOSI | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        CC26X2R1_LAUNCHXL_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,
-        PIN_TERMINATE
-    };
-    PIN_State extFlashPinState;
-    PIN_Handle extFlashPinHandle = PIN_open(&extFlashPinState, extFlashPinTable);
-
-    uint8_t extFlashShutdown = 0xB9;
-
-    CC26X2R1_LAUNCHXL_sendExtFlashByte(extFlashPinHandle, extFlashShutdown);
-
-    PIN_close(extFlashPinHandle);
-}
+extern void Board_initHook(void);
 
 /*
  *  ======== CC26X2R1_LAUNCHXL_initGeneral ========
@@ -1051,6 +987,6 @@ void CC26X2R1_LAUNCHXL_initGeneral(void)
         while (1);
     }
 
-    /* Shut down external flash as default */
-    CC26X2R1_LAUNCHXL_shutDownExtFlash();
+    /* Perform board-specific initialization */
+    Board_initHook();
 }
