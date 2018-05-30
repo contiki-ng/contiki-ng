@@ -151,6 +151,8 @@ void   list_insert(list_t list, void *previtem, void *newitem);
 
 void * list_item_next(void *item);
 
+int list_contains(list_t list, void *item);
+
 #endif /* LIST_H_ */
 
 /** @} */
