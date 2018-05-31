@@ -11,9 +11,10 @@ make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m clean >/dev/nul
 make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m DEFINES=LWM2M_QUEUE_MODE_CONF_ENABLED=1,LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1,LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED=1 >make.log 2>make.err
 
 echo "Downloading leshan with Q-Mode support"
-wget -nc https://carlosgp143.github.io/resources/leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
+LESHAN_JAR=leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
+wget -nc https://carlosgp143.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server with Q-Mode enabled"
-java -jar leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar  -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
+java -jar $LESHAN_JAR -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
 LESHID=$!
 
 echo "Starting lwm2m standalone example"

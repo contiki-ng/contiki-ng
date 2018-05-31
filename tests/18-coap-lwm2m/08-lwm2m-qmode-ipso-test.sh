@@ -16,9 +16,10 @@ CPID=$!
 sleep 10
 
 echo "Downloading leshan with Q-Mode support"
-wget -nc https://carlosgp143.github.io/resources/leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
+LESHAN_JAR=leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
+wget -nc https://carlosgp143.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server with Q-Mode enabled"
-java -jar leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar >leshan.log 2>leshan.err &
+java -jar $LESHAN_JAR >leshan.log 2>leshan.err &
 LESHID=$!
 
 COUNTER=10
