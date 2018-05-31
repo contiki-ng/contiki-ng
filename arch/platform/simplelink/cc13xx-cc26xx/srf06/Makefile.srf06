@@ -3,6 +3,8 @@
 
 BOARD_TYPE = BOARD_SRF06
 
+PLATFORM_HAS_BUTTON = 1
+
 # leds-arch.c/h etc.
 BOARD_SOURCEFILES += srf06.c srf06-sensors.c
 BOARD_SOURCEFILES += button-sensor-arch.c leds-arch.c

@@ -19,15 +19,19 @@
 extern RF_Mode RF_propMode;
 
 
+// TX Power Table
+extern RF_TxPowerTable_Entry propTxPowerTable[16];
+
+
 // RF Core API commands
 extern rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup;
-extern rfc_CMD_FS_t RF_cmdFs;
+extern rfc_CMD_FS_t RF_cmdPropFs;
 extern rfc_CMD_PROP_TX_ADV_t RF_cmdPropTxAdv;
 extern rfc_CMD_PROP_RX_ADV_t RF_cmdPropRxAdv;
 
 
 // RF Core API Overrides
-extern uint32_t pOverrides[];
+extern uint32_t pPropOverrides[];
 
 
 #endif // _PROP_SETTINGS_H_

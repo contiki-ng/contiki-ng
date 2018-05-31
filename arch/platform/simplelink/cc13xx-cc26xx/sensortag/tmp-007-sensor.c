@@ -38,16 +38,16 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "lib/sensors.h"
-#include "tmp-007-sensor.h"
 #include "sys/ctimer.h"
-#include "board-i2c.h"
-#include "sensor-common.h"
-#include "ti-lib.h"
-
+#include "tmp-007-sensor.h"
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
+#include <ti/drivers/I2C.h>
+#include <ti/drivers/PIN.h>
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -57,24 +57,33 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /* Slave address */
-#define SENSOR_I2C_ADDRESS              0x44
+#ifndef Board_TMP_ADDR
+#   error "Board file doesn't define I2C address Board_TMP_ADDR"
+#endif
+#define TMP_007_I2C_ADDRESS      Board_TMP_ADDR
+
+/* MPU Interrupt pin */
+#ifndef Board_TMP_RDY
+#   error "Board file doesn't define interrupt pin Board_TMP_RDY"
+#endif
+#define TMP_007_TMP_RDY          Board_TMP_RDY
 /*---------------------------------------------------------------------------*/
 /* TMP007 register addresses */
-#define TMP007_REG_ADDR_VOLTAGE         0x00
-#define TMP007_REG_ADDR_LOCAL_TEMP      0x01
-#define TMP007_REG_ADDR_CONFIG          0x02
-#define TMP007_REG_ADDR_OBJ_TEMP        0x03
-#define TMP007_REG_ADDR_STATUS          0x04
-#define TMP007_REG_PROD_ID              0x1F
+#define REG_VOLTAGE         0x00
+#define REG_LOCAL_TEMP      0x01
+#define REG_CONFIG          0x02
+#define REG_OBJ_TEMP        0x03
+#define REG_STATUS          0x04
+#define REG_PROD_ID              0x1F
 /*---------------------------------------------------------------------------*/
 /* TMP007 register values */
-#define TMP007_VAL_CONFIG_ON            0x1000  /* Sensor on state */
-#define TMP007_VAL_CONFIG_OFF           0x0000  /* Sensor off state */
-#define TMP007_VAL_CONFIG_RESET         0x8000
-#define TMP007_VAL_PROD_ID              0x0078  /* Product ID */
+#define VAL_CONFIG_ON            0x1000  /* Sensor on state */
+#define VAL_CONFIG_OFF           0x0000  /* Sensor off state */
+#define VAL_CONFIG_RESET         0x8000
+#define VAL_PROD_ID              0x0078  /* Product ID */
 /*---------------------------------------------------------------------------*/
 /* Conversion ready (status register) bit values */
-#define CONV_RDY_BIT                    0x4000
+#define CONV_RDY_BIT             0x4000
 /*---------------------------------------------------------------------------*/
 /* Register length */
 #define REGISTER_LENGTH                 2
@@ -86,33 +95,84 @@
 #define HI_UINT16(a) (((a) >> 8) & 0xFF)
 #define LO_UINT16(a) ((a) & 0xFF)
 
-#define SWAP(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
-/*---------------------------------------------------------------------------*/
-#define SELECT() board_i2c_select(BOARD_I2C_INTERFACE_0, SENSOR_I2C_ADDRESS)
-/*---------------------------------------------------------------------------*/
-static uint8_t buf[DATA_SIZE];
-static uint16_t val;
-/*---------------------------------------------------------------------------*/
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
+#define SWAP16(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
 
-static int enabled = SENSOR_STATUS_DISABLED;
+#define LSB16(v)  (LO_UINT16(v)), (HI_UINT16(v))
+#define MSB16(v)  (HI_UINT16(v)), (LO_UINT16(v))
+/*---------------------------------------------------------------------------*/
+static const PIN_Config pin_table[] = {
+  TMP_007_TMP_RDY | PIN_INPUT_EN | PIN_PULLUP | PIN_HYSTERESIS | PIN_IRQ_NEGEDGE,
+  PIN_TERMINATE
+};
+
+static PIN_State  pin_state;
+static PIN_Handle pin_handle;
+
+static I2C_Handle i2c_handle;
+/*---------------------------------------------------------------------------*/
+typedef struct {
+  TMP_007_TYPE            type;
+  volatile TMP_007_STATUS status;
+  uint16_t                local_tmp_latched;
+  uint16_t                obj_tmp_latched;
+} TMP_007_Object;
+
+static TMP_007_Object tmp_007;
 /*---------------------------------------------------------------------------*/
 /* Wait SENSOR_STARTUP_DELAY clock ticks for the sensor to be ready - 275ms */
 #define SENSOR_STARTUP_DELAY 36
 
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
-/* Latched values */
-static int obj_temp_latched;
-static int amb_temp_latched;
+static bool
+i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
+{
+  I2C_Transaction i2c_transaction = {
+    .writeBuf = writeBuf,
+    .writeCount = writeCount,
+    .readBuf = readBuf,
+    .readCount = readCount,
+    .slaveAddress = TMP_007_I2C_ADDRESS,
+  };
+
+  return I2C_transfer(i2c_handle, &i2c_transaction);
+}
+
+#define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
+#define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
+/*---------------------------------------------------------------------------*/
+static bool
+sensor_init(void)
+{
+  if (pin_handle && i2c_handle) {
+    return true;
+  }
+
+  pin_handle = PIN_open(&pin_state, pin_table);
+  if (!pin_handle) {
+    return false;
+  }
+
+  I2C_Params i2c_params;
+  I2C_Params_init(&i2c_params);
+  i2c_params.transferMode = I2C_MODE_BLOCKING;
+  i2c_params.bitRate = I2C_400kHz;
+
+  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
+  if (i2c_handle == NULL) {
+    PIN_close(pin_handle);
+    return false;
+  }
+
+  tmp_007.status = TMP_007_STATUS_DISABLED;
+
+  return true;
+}
 /*---------------------------------------------------------------------------*/
 static void
-notify_ready(void *not_used)
+notify_ready_cb(void *not_used)
 {
-  enabled = SENSOR_STATUS_READY;
+  tmp_007.status = TMP_007_STATUS_READY;
   sensors_changed(&tmp_007_sensor);
 }
 /*---------------------------------------------------------------------------*/
@@ -122,21 +182,13 @@ notify_ready(void *not_used)
 static bool
 enable_sensor(bool enable)
 {
-  bool success;
+  uint16_t cfg_value = (enable)
+    ? VAL_CONFIG_ON
+    : VAL_CONFIG_OFF;
 
-  SELECT();
+  uint8_t cfg_data[] = { REG_CONFIG, LSB16(cfg_value) };
 
-  if(enable) {
-    val = TMP007_VAL_CONFIG_ON;
-  } else {
-    val = TMP007_VAL_CONFIG_OFF;
-  }
-  val = SWAP(val);
-
-  success = sensor_common_write_reg(TMP007_REG_ADDR_CONFIG, (uint8_t *)&val,
-                                    REGISTER_LENGTH);
-
-  return success;
+  return i2c_write(cfg_data, sizeof(cfg_data));
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -146,38 +198,46 @@ enable_sensor(bool enable)
  * \return TRUE if valid data could be retrieved
  */
 static bool
-read_data(uint16_t *raw_temp, uint16_t *raw_obj_temp)
+read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
 {
-  bool success;
+  bool spi_ok = false;
 
-  SELECT();
+  uint8_t status_data[] = { REG_STATUS };
+  uint16_t status_value = 0;
 
-  success = sensor_common_read_reg(TMP007_REG_ADDR_STATUS, (uint8_t *)&val,
-                                   REGISTER_LENGTH);
+  spi_ok = i2c_write_read(status_data, sizeof(status_data),
+                          &status_value, sizeof(status_value));
+  if (!spi_ok) {
+    return false;
+  }
+  status_value = SWAP16(status_value);
 
-  if(success) {
-    val = SWAP(val);
-    success = val & CONV_RDY_BIT;
+  if ((status_value & CONV_RDY_BIT) == 0) {
+    return false;
   }
 
-  if(success) {
-    success = sensor_common_read_reg(TMP007_REG_ADDR_LOCAL_TEMP, &buf[0],
-                                     REGISTER_LENGTH);
-    if(success) {
-      success = sensor_common_read_reg(TMP007_REG_ADDR_OBJ_TEMP, &buf[2],
-                                       REGISTER_LENGTH);
-    }
+  uint8_t local_temp_data[] = { REG_LOCAL_TEMP };
+  uint16_t local_temp_value = 0;
+
+  spi_ok = i2c_write_read(local_temp_data, sizeof(local_temp_data),
+                          &local_temp_value, sizeof(local_temp_value));
+  if (!spi_ok) {
+    return false;
   }
 
-  if(!success) {
-    sensor_common_set_error_data(buf, 4);
+  uint8_t obj_temp_data[] = { REG_OBJ_TEMP };
+  uint16_t obj_temp_value = 0;
+
+  spi_ok = i2c_write_read(obj_temp_data, sizeof(obj_temp_data),
+                          &obj_temp_value, sizeof(obj_temp_value));
+  if (!spi_ok) {
+    return false;
   }
 
-  /* Swap byte order */
-  *raw_temp = buf[0] << 8 | buf[1];
-  *raw_obj_temp = buf[2] << 8 | buf[3];
+  *local_tmp = SWAP16(local_temp_value);
+  *obj_tmp = SWAP16(obj_temp_value);
 
-  return success;
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -188,19 +248,16 @@ read_data(uint16_t *raw_temp, uint16_t *raw_obj_temp)
  * \param amb converted ambient temperature
  */
 static void
-convert(uint16_t raw_temp, uint16_t raw_obj_temp, float *obj, float *amb)
+convert(uint16_t* local_tmp, uint16_t* obj_tmp)
 {
-  const float SCALE_LSB = 0.03125;
-  float t;
-  int it;
+  uint32_t local = (uint32_t)*local_tmp;
+  uint32_t obj   = (uint32_t)*obj_tmp;
 
-  it = (int)((raw_obj_temp) >> 2);
-  t = ((float)(it)) * SCALE_LSB;
-  *obj = t;
+  local = (local >> 2) * 3125 / 100;
+  obj   = (obj   >> 2) * 3125 / 100;
 
-  it = (int)((raw_temp) >> 2);
-  t = (float)it;
-  *amb = t * SCALE_LSB;
+  *local_tmp = (uint16_t)local;
+  *obj_tmp   = (uint16_t)obj;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -211,45 +268,39 @@ convert(uint16_t raw_temp, uint16_t raw_obj_temp, float *obj, float *amb)
 static int
 value(int type)
 {
-  int rv;
-  uint16_t raw_temp;
-  uint16_t raw_obj_temp;
-  float obj_temp;
-  float amb_temp;
+  uint16_t raw_local_tmp = 0, local_tmp = 0;
+  uint16_t raw_obj_tmp = 0,   obj_tmp = 0;
 
-  if(enabled != SENSOR_STATUS_READY) {
-    PRINTF("Sensor disabled or starting up (%d)\n", enabled);
-    return CC26XX_SENSOR_READING_ERROR;
+  if (tmp_007.status != TMP_007_STATUS_READY) {
+    PRINTF("Sensor disabled or starting up (%d)\n", tmp_007.status);
+    return TMP_007_READING_ERROR;
   }
 
-  if((type & TMP_007_SENSOR_TYPE_ALL) == 0) {
-    PRINTF("Invalid type\n");
-    return CC26XX_SENSOR_READING_ERROR;
-  }
+  switch (type) {
+  case TMP_007_TYPE_OBJECT:  return tmp_007.obj_tmp_latched;
+  case TMP_007_TYPE_AMBIENT: return tmp_007.local_tmp_latched;
 
-  rv = CC26XX_SENSOR_READING_ERROR;
-
-  if(type == TMP_007_SENSOR_TYPE_ALL) {
-    rv = read_data(&raw_temp, &raw_obj_temp);
-
-    if(rv == 0) {
-      return CC26XX_SENSOR_READING_ERROR;
+  case TMP_007_TYPE_ALL:
+    if (!read_data(&raw_local_tmp, &raw_obj_tmp)) {
+      return TMP_007_READING_ERROR;
     }
 
-    convert(raw_temp, raw_obj_temp, &obj_temp, &amb_temp);
-    PRINTF("TMP: %04X %04X       o=%d a=%d\n", raw_temp, raw_obj_temp,
-           (int)(obj_temp * 1000), (int)(amb_temp * 1000));
+    local_tmp = raw_local_tmp;
+    obj_tmp   = raw_obj_tmp;
+    convert(&local_tmp, &obj_tmp);
 
-    obj_temp_latched = (int)(obj_temp * 1000);
-    amb_temp_latched = (int)(amb_temp * 1000);
-    rv = 1;
-  } else if(type == TMP_007_SENSOR_TYPE_OBJECT) {
-    rv = obj_temp_latched;
-  } else if(type == TMP_007_SENSOR_TYPE_AMBIENT) {
-    rv = amb_temp_latched;
+    PRINTF("TMP: %04X %04X       o=%d a=%d\n", raw_local_tmp, raw_obj_tmp,
+                                               (int)(local_tmp), (int)(obj_tmp));
+
+    tmp_007.local_tmp_latched = (int)(local_tmp);
+    tmp_007.obj_tmp_latched   = (int)(obj_tmp);
+
+    return 0;
+
+  default:
+    PRINTF("Invalid type (%d)\n", type);
+    return TMP_007_READING_ERROR;
   }
-
-  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -265,34 +316,38 @@ value(int type)
 static int
 configure(int type, int enable)
 {
-  switch(type) {
+  switch (type) {
   case SENSORS_HW_INIT:
-    ti_lib_ioc_pin_type_gpio_input(BOARD_IOID_TMP_RDY);
-    ti_lib_ioc_io_port_pull_set(BOARD_IOID_TMP_RDY, IOC_IOPULL_UP);
-    ti_lib_ioc_io_hyst_set(BOARD_IOID_TMP_RDY, IOC_HYST_ENABLE);
+    if (!sensor_init()) {
+      return TMP_007_STATUS_DISABLED;
+    }
 
     enable_sensor(false);
-    enabled = SENSOR_STATUS_INITIALISED;
+
+    tmp_007.status = TMP_007_STATUS_INITIALIZED;
     break;
+
   case SENSORS_ACTIVE:
     /* Must be initialised first */
-    if(enabled == SENSOR_STATUS_DISABLED) {
-      return SENSOR_STATUS_DISABLED;
+    if (tmp_007.status == TMP_007_STATUS_DISABLED) {
+      return TMP_007_STATUS_DISABLED;
     }
-    if(enable) {
+    if (enable) {
       enable_sensor(true);
-      ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
-      enabled = SENSOR_STATUS_NOT_READY;
+      ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready_cb, NULL);
+      tmp_007.status = TMP_007_STATUS_NOT_READY;
     } else {
       ctimer_stop(&startup_timer);
       enable_sensor(false);
-      enabled = SENSOR_STATUS_INITIALISED;
+      tmp_007.status = TMP_007_STATUS_INITIALIZED;
     }
     break;
+
   default:
     break;
   }
-  return enabled;
+
+  return tmp_007.status;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -303,15 +358,9 @@ configure(int type, int enable)
 static int
 status(int type)
 {
-  switch(type) {
-  case SENSORS_ACTIVE:
-  case SENSORS_READY:
-    return enabled;
-    break;
-  default:
-    break;
-  }
-  return SENSOR_STATUS_DISABLED;
+  (void)type;
+
+  return tmp_007.status;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(tmp_007_sensor, "TMP007", value, configure, status);

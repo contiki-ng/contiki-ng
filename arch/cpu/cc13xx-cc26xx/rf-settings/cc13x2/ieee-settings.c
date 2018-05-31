@@ -47,7 +47,7 @@ RF_Mode RF_ieeeMode =
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry defaultPaTxPowerTable[16] =
+RF_TxPowerTable_Entry ieeeDefaultPaTxPowerTable[16] =
 {
     { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  3) },
     { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  3) },
@@ -73,7 +73,7 @@ RF_TxPowerTable_Entry defaultPaTxPowerTable[16] =
 // RF_TxPowerTable_HIGH_PA_ENTRY(bias, ibboost, boost, coefficient, ldoTrim)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry highPaTxPowerTable[16] =
+RF_TxPowerTable_Entry ieeeHighPaTxPowerTable[16] =
 {
     { 0,  RF_TxPowerTable_HIGH_PA_ENTRY(29, 0, 1, 17,  1) },
     { 3,  RF_TxPowerTable_HIGH_PA_ENTRY(39, 0, 1, 20,  1) },
@@ -95,7 +95,7 @@ RF_TxPowerTable_Entry highPaTxPowerTable[16] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pDefaultPaOverrides[] =
+uint32_t pIeeeDefaultPaOverrides[] =
 {
                                     // override_ieee_802_15_4.xml
     MCE_RFE_OVERRIDE(1,0,0,0,1,0),  // PHY: Use MCE RAM patch, RFE ROM bank 1
@@ -117,7 +117,7 @@ uint32_t pDefaultPaOverrides[] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pHighPaOverrides[] =
+uint32_t pIeeeHighPaOverrides[] =
 {
                                     // override_ieee_802_15_4.xml
     MCE_RFE_OVERRIDE(1,0,0,0,1,0),  // PHY: Use MCE RAM patch, RFE ROM bank 1
@@ -162,7 +162,7 @@ rfc_CMD_RADIO_SETUP_t RF_cmdRadioSetup =
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0x941E,
-    .pRegOverride = pOverrides,
+    .pRegOverride = pIeeeDefaultPaOverrides,
 };
 
 // CMD_FS

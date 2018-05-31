@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, Texas Instruments Incorporated
+ * Copyright (c) 2015-2018, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,55 +33,97 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
+#define Board_CC2650STK
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <ti/drivers/Power.h>
-
 #include "CC2650STK.h"
 
+#define Board_initGeneral()     CC2650STK_initGeneral()
+#define Board_shutDownExtFlash() CC2650STK_shutDownExtFlash()
+#define Board_wakeUpExtFlash() CC2650STK_wakeUpExtFlash()
+
 /* These #defines allow us to reuse TI-RTOS across other device families */
-#define     Board_LED1              Board_STK_LED1
-#define     Board_LED2              Board_STK_LED2
-#define     Board_LED0              Board_LED2
 
-#define     Board_BUTTON0           Board_KEY_LEFT
-#define     Board_BUTTON1           Board_KEY_RIGHT
+#define Board_BUZZER            CC2650STK_BUZZER
+#define Board_BUZZER_ON         CC2650STK_LED_ON
+#define Board_BUZZER_OFF        CC2650STK_LED_OFF
 
-#define     Board_I2C0              Board_I2C
-#define     Board_I2C_TMP           Board_I2C0
-#define     Board_UART0             Board_UART
-#define     Board_AES0              Board_AES
-#define     Board_WATCHDOG0         CC2650STK_WATCHDOG0
+#define Board_CRYPTO0           CC2650STK_CRYPTO0
 
-#define     Board_initGeneral() { \
-    Power_init(); \
-    if (PIN_init(BoardGpioInitTable) != PIN_SUCCESS) \
-        {System_abort("Error with PIN_init\n"); \
-    } \
-}
+#define Board_GPIO_BUTTON0      CC2650STK_GPIO_S1
+#define Board_GPIO_BUTTON1      CC2650STK_GPIO_S2
+#define Board_GPIO_LED0         CC2650STK_GPIO_LED0
+#define Board_GPIO_LED1         CC2650STK_GPIO_LED0
+#define Board_GPIO_LED_ON       CC2650STK_GPIO_LED_ON
+#define Board_GPIO_LED_OFF      CC2650STK_GPIO_LED_OFF
 
-#define     Board_initGPIO()
-#define     Board_initPWM()        PWM_init()
-#define     Board_initI2C()         I2C_init()
-#define     Board_initSPI()         SPI_init()
-#define     Board_initUART()        UART_init()
-#define     Board_initWatchdog()    Watchdog_init()
-#define     GPIO_toggle(n)
-#define     GPIO_write(n,m)
+#define Board_GPTIMER0A         CC2650STK_GPTIMER0A
+#define Board_GPTIMER0B         CC2650STK_GPTIMER0B
+#define Board_GPTIMER1A         CC2650STK_GPTIMER1A
+#define Board_GPTIMER1B         CC2650STK_GPTIMER1B
+#define Board_GPTIMER2A         CC2650STK_GPTIMER2A
+#define Board_GPTIMER2B         CC2650STK_GPTIMER2B
+#define Board_GPTIMER3A         CC2650STK_GPTIMER3A
+#define Board_GPTIMER3B         CC2650STK_GPTIMER3B
+
+#define Board_I2C0              CC2650STK_I2C0
+#define Board_I2C0_SDA1         CC2650STK_I2C0_SDA1
+#define Board_I2C0_SCL1         CC2650STK_I2C0_SCL1
+#define Board_I2C_TMP           CC2650STK_I2C0
+
+#define Board_KEY_LEFT          CC2650STK_KEY_LEFT
+#define Board_KEY_RIGHT         CC2650STK_KEY_RIGHT
+#define Board_RELAY             CC2650STK_RELAY
+
+#define Board_MIC_POWER         CC2650STK_MIC_POWER
+#define Board_MIC_POWER_OM      CC2650STK_MIC_POWER_ON
+#define Board_MIC_POWER_OFF     CC2650STK_MIC_POWER_OFF
+
+#define Board_MPU_INT           CC2650STK_MPU_INT
+#define Board_MPU_POWER         CC2650STK_MPU_POWER
+#define Board_MPU_POWER_OFF     CC2650STK_MPU_POWER_OFF
+#define Board_MPU_POWER_ON      CC2650STK_MPU_POWER_ON
+
+#define Board_NVSINTERNAL       CC2650STK_NVSCC26XX0
+#define Board_NVSEXTERNAL       CC2650STK_NVSSPI25X0
+
+#define Board_PDM0              CC2650STK_PDM0
+
+#define Board_PIN_BUTTON0       CC2650STK_KEY_LEFT
+#define Board_PIN_BUTTON1       CC2650STK_KEY_RIGHT
+#define Board_PIN_LED0          CC2650STK_PIN_LED1
+#define Board_PIN_LED1          CC2650STK_PIN_LED1
+#define Board_PIN_LED2          CC2650STK_PIN_LED1
+
+#define Board_PWM0              CC2650STK_PWM0
+#define Board_PWM1              CC2650STK_PWM0
+#define Board_PWM2              CC2650STK_PWM2
+#define Board_PWM3              CC2650STK_PWM3
+#define Board_PWM4              CC2650STK_PWM4
+#define Board_PWM5              CC2650STK_PWM5
+#define Board_PWM6              CC2650STK_PWM6
+#define Board_PWM7              CC2650STK_PWM7
+
+#define Board_SPI0              CC2650STK_SPI0
+#define Board_SPI1              CC2650STK_SPI1
+#define Board_SPI_FLASH_CS      CC2650STK_SPI_FLASH_CS
+#define Board_FLASH_CS_ON       CC2650STK_FLASH_CS_ON
+#define Board_FLASH_CS_OFF      CC2650STK_FLASH_CS_OFF
+
+#define Board_UART0             CC2650STK_UART0
+
+#define Board_WATCHDOG0         CC2650STK_WATCHDOG0
 
 /* Board specific I2C addresses */
-
-/* Interface #0 */
-#define     Board_HDC1000_ADDR      (0x43)
-#define     Board_TMP007_ADDR       (0x44)
-#define     Board_OPT3001_ADDR      (0x45)
-#define     Board_BMP280_ADDR       (0x77)
-
-/* Interface #1 */
-#define     Board_MPU9250_ADDR      (0x68)
-#define     Board_MPU9250_MAG_ADDR  (0x0C)
+#define Board_BMP280_ADDR       (0x77)
+#define Board_HDC1000_ADDR      (0x43)
+#define Board_MPU9250_ADDR      (0x68)
+#define Board_MPU9250_MAG_ADDR  (0x0C)
+#define Board_OPT3001_ADDR      (0x45)
+#define Board_TMP_ADDR          (0x44)
 
 #ifdef __cplusplus
 }

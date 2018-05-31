@@ -10,8 +10,10 @@
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_ieee.h)
+// This must be included "locally" frm the cpu directory,
+// as it isn't defined in CC13x0 driverlib
+#include "driverlib/rf_ieee_cmd.h"
+#include "rf_patches/rf_patch_cpe_ieee.h"
 
 #include <ti/drivers/rf/RF.h>
 
@@ -19,7 +21,7 @@
 
 
 // TI-RTOS RF Mode Object
-RF_Mode ieeeMode =
+RF_Mode RF_ieeeMode =
 {
     .rfMode = RF_MODE_IEEE_15_4,
     .cpePatchFxn = &rf_patch_cpe_ieee,
@@ -33,7 +35,7 @@ RF_Mode ieeeMode =
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry txPowerTable[14] =
+RF_TxPowerTable_Entry ieeeTxPowerTable[14] =
 {
     { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  6) },
     { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  6) },
@@ -53,7 +55,7 @@ RF_TxPowerTable_Entry txPowerTable[14] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pOverrides[] =
+uint32_t pIeeeOverrides[] =
 {
                                     // override_synth_ieee_15_4.xml
     HW_REG_OVERRIDE(0x4038,0x0035), // Synth: Set recommended RTRIM to 5
@@ -113,18 +115,17 @@ rfc_CMD_RADIO_SETUP_t RF_cmdRadioSetup =
     .condition.rule = 0x1,
     .condition.nSkip = 0x0,
     .mode = 0x01,
-    .__dummy0 = 0x00,
     .config.frontEndMode = 0x0,
     .config.biasMode = 0x0,
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0x9330,
-    .pRegOverride = pOverrides,
+    .pRegOverride = pIeeeOverrides,
 };
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdFs =
+rfc_CMD_FS_t RF_cmdIeeeFs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,

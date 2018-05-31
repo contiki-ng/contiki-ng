@@ -653,91 +653,11 @@ const Watchdog_Config Watchdog_config[CC1350STK_WATCHDOGCOUNT] = {
 
 const uint_least8_t Watchdog_count = CC1350STK_WATCHDOGCOUNT;
 
-
 /*
- *  ======== CC1350STK_wakeUpExtFlash ========
+ *  Board-specific initialization function to disable external flash.
+ *  This function is defined in the file CC1350STK_fxns.c
  */
-void CC1350STK_wakeUpExtFlash(void)
-{
-    PIN_Config extFlashPinTable[] = {
-        CC1350STK_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        PIN_TERMINATE
-    };
-    PIN_State extFlashPinState;
-    PIN_Handle extFlashPinHandle = PIN_open(&extFlashPinState, extFlashPinTable);
-
-    /*
-     *  To wake up we need to toggle the chip select at
-     *  least 20 ns and ten wait at least 35 us.
-     */
-
-    /* Toggle chip select for ~20ns to wake ext. flash */
-    PIN_setOutputValue(extFlashPinHandle, CC1350STK_SPI_FLASH_CS, 0);
-    /* 3 cycles per loop: 1 loop @ 48 Mhz ~= 62 ns */
-    CPUdelay(1);
-    PIN_setOutputValue(extFlashPinHandle, CC1350STK_SPI_FLASH_CS, 1);
-    /* 3 cycles per loop: 560 loops @ 48 Mhz ~= 35 us */
-    CPUdelay(560);
-
-    PIN_close(extFlashPinHandle);
-}
-
-/*
- *  ======== CC1350STK_sendExtFlashByte ========
- */
-void CC1350STK_sendExtFlashByte(PIN_Handle pinHandle, uint8_t byte)
-{
-    uint8_t i;
-
-    PIN_setOutputValue(pinHandle, CC1350STK_SPI_FLASH_CS, 0);
-
-    for (i = 0; i < 8; i++) {
-        PIN_setOutputValue(pinHandle, CC1350STK_SPI0_CLK, 0);
-        PIN_setOutputValue(pinHandle, CC1350STK_SPI0_MOSI, (byte >> (7 - i)) & 0x01);
-        PIN_setOutputValue(pinHandle, CC1350STK_SPI0_CLK, 1);
-
-        /*
-         * Waste a few cycles to keep the CLK high for at
-         * least 45% of the period.
-         * 3 cycles per loop: 8 loops @ 48 Mhz = 0.5 us.
-         */
-        CPUdelay(8);
-    }
-
-    PIN_setOutputValue(pinHandle, CC1350STK_SPI0_CLK, 0);
-    PIN_setOutputValue(pinHandle, CC1350STK_SPI_FLASH_CS, 1);
-
-    /*
-     * Keep CS high at least 40 us
-     * 3 cycles per loop: 700 loops @ 48 Mhz ~= 44 us
-     */
-    CPUdelay(700);
-}
-
-/*
- *  ======== CC1350STK_shutDownExtFlash ========
- */
-void CC1350STK_shutDownExtFlash(void)
-{
-    /* To be sure we are putting the flash into sleep and not waking it, we first have to make a wake up call */
-    CC1350STK_wakeUpExtFlash();
-
-    PIN_Config extFlashPinTable[] = {
-        CC1350STK_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        CC1350STK_SPI0_CLK | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        CC1350STK_SPI0_MOSI | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_INPUT_DIS | PIN_DRVSTR_MED,
-        CC1350STK_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,
-        PIN_TERMINATE
-    };
-    PIN_State extFlashPinState;
-    PIN_Handle extFlashPinHandle = PIN_open(&extFlashPinState, extFlashPinTable);
-
-    uint8_t extFlashShutdown = 0xB9;
-
-    CC1350STK_sendExtFlashByte(extFlashPinHandle, extFlashShutdown);
-
-    PIN_close(extFlashPinHandle);
-}
+extern void Board_initHook(void);
 
 /*
  *  ======== CC1350STK_initGeneral ========
@@ -751,6 +671,6 @@ void CC1350STK_initGeneral(void)
         while (1);
     }
 
-    /* Shut down external flash as default */
-    CC1350STK_shutDownExtFlash();
+    /* Perform board-specific initialization */
+    Board_initHook();
 }

@@ -64,18 +64,25 @@
 /*---------------------------------------------------------------------------*/
 #include "lib/sensors.h"
 /*---------------------------------------------------------------------------*/
-#define HDC_1000_SENSOR_TYPE_TEMP        1
-#define HDC_1000_SENSOR_TYPE_HUMIDITY    2
+typedef enum {
+  HDC_1000_SENSOR_TYPE_TEMP,
+  HDC_1000_SENSOR_TYPE_HUMIDITY
+} HDC_1000_SENSOR_TYPE;
 /*---------------------------------------------------------------------------*/
 /**
  * \name HDC1000 driver states
  * @{
  */
-#define HDC_1000_SENSOR_STATUS_DISABLED         0 /**< Not initialised */
-#define HDC_1000_SENSOR_STATUS_INITIALISED      1 /**< Initialised but idle */
-#define HDC_1000_SENSOR_STATUS_TAKING_READINGS  2 /**< Readings in progress */
-#define HDC_1000_SENSOR_STATUS_READINGS_READY   3 /**< Both readings ready */
+typedef enum {
+  HDC_1000_SENSOR_STATUS_DISABLED,          /**< Not initialised */
+  HDC_1000_SENSOR_STATUS_INITIALISED,       /**< Initialised but idle */
+  HDC_1000_SENSOR_STATUS_TAKING_READINGS,   /**< Readings in progress */
+  HDC_1000_SENSOR_STATUS_I2C_ERROR,         /**< I2C transaction failed */
+  HDC_1000_SENSOR_STATUS_READINGS_READY     /**< Both readings ready */
+} HDC_1000_SENSOR_STATUS;
 /** @} */
+/*---------------------------------------------------------------------------*/
+#define HDC_1000_READING_ERROR    -1
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor hdc_1000_sensor;
 /*---------------------------------------------------------------------------*/

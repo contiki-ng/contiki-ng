@@ -33,6 +33,8 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
+#define Board_CC1310_LAUNCHXL
+
 #ifdef __cplusplus
 extern "C" {
 #endif

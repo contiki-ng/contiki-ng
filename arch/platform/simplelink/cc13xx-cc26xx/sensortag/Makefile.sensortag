@@ -3,8 +3,14 @@
 
 BOARD_TYPE = BOARD_SENSORTAG
 
+PLATFORM_HAS_BUTTON = 1
+
 # leds-arch.c/h etc.
 BOARD_SOURCEFILES += sensortag.c sensortag-sensors.c
 BOARD_SOURCEFILES += button-sensor-arch.c leds-arch.c
+BOARD_SOURCEFILES += bmp-280-sensor.c hdc-1000-sensor.c
+BOARD_SOURCEFILES += mpu-9250-sensor.c opt-3001-sensor.c
+BOARD_SOURCEFILES += reed-relay.c tmp-007-sensor.c
+BOARD_SOURCEFILES += buzzer.c
 
 TARGET_FAMILY_DIRS += sensortag

@@ -59,6 +59,17 @@
 #ifndef OPT_3001_SENSOR_H_
 #define OPT_3001_SENSOR_H_
 /*---------------------------------------------------------------------------*/
+#define MPU_9250_READING_ERROR    -1
+/*---------------------------------------------------------------------------*/
+typedef enum {
+  OPT_3001_STATUS_DISABLED,
+  OPT_3001_STATUS_STANDBY,
+  OPT_3001_STATUS_BOOTING,
+  OPT_3001_STATUS_ACTIVE,
+  OPT_3001_STATUS_DATA_READY,
+  OPT_3001_STATUS_I2C_ERROR,
+} OPT_3001_STATUS;
+/*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor opt_3001_sensor;
 /*---------------------------------------------------------------------------*/
 #endif /* OPT_3001_SENSOR_H_ */

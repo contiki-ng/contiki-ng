@@ -38,106 +38,119 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "buzzer.h"
-#include "ti-lib.h"
-#include "lpm.h"
-
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
+#include <ti/drivers/PIN.h>
+#include <ti/drivers/Power.h>
+#include <ti/drivers/power/PowerCC26XX.h>
+#include <ti/drivers/pin/PINCC26XX.h>
+#include <ti/drivers/timer/GPTimerCC26XX.h>
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-static uint8_t buzzer_on;
-LPM_MODULE(buzzer_module, NULL, NULL, NULL, LPM_DOMAIN_PERIPH);
+/* Configure BUZZER pin */
+#ifndef Board_BUZZER
+#   error "Board file doesn't define pin Board_BUZZER"
+#endif
+#define BUZZER_PIN          Board_BUZZER
 /*---------------------------------------------------------------------------*/
-void
+static const PIN_Config pin_table[] = {
+  BUZZER_PIN | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW,
+  PIN_TERMINATE
+};
+
+static PIN_State pin_state;
+static PIN_Handle pin_handle;
+
+static GPTimerCC26XX_Handle gpt_handle;
+
+static bool has_init;
+static volatile bool is_running;
+/*---------------------------------------------------------------------------*/
+bool
 buzzer_init()
 {
-  buzzer_on = 0;
-}
-/*---------------------------------------------------------------------------*/
-uint8_t
-buzzer_state()
-{
-  return buzzer_on;
-}
-/*---------------------------------------------------------------------------*/
-void
-buzzer_start(int freq)
-{
-  uint32_t load;
-
-  /* Enable GPT0 clocks under active, sleep, deep sleep */
-  ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_TIMER0);
-  ti_lib_prcm_peripheral_sleep_enable(PRCM_PERIPH_TIMER0);
-  ti_lib_prcm_peripheral_deep_sleep_enable(PRCM_PERIPH_TIMER0);
-  ti_lib_prcm_load_set();
-  while(!ti_lib_prcm_load_get());
-
-  /* Drive the I/O ID with GPT0 / Timer A */
-  ti_lib_ioc_port_configure_set(BOARD_IOID_BUZZER, IOC_PORT_MCU_PORT_EVENT0,
-                                IOC_STD_OUTPUT);
-
-  /* GPT0 / Timer A: PWM, Interrupt Enable */
-  HWREG(GPT0_BASE + GPT_O_TAMR) = (TIMER_CFG_A_PWM & 0xFF) | GPT_TAMR_TAPWMIE;
-
-  buzzer_on = 1;
-
-  /*
-   * Register ourself with LPM. This will keep the PERIPH PD powered on
-   * during deep sleep, allowing the buzzer to keep working while the chip is
-   * being power-cycled
-   */
-  lpm_register_module(&buzzer_module);
-
-  /* Stop the timer */
-  ti_lib_timer_disable(GPT0_BASE, TIMER_A);
-
-  if(freq > 0) {
-    load = (GET_MCU_CLOCK / freq);
-
-    ti_lib_timer_load_set(GPT0_BASE, TIMER_A, load);
-    ti_lib_timer_match_set(GPT0_BASE, TIMER_A, load / 2);
-
-    /* Start */
-    ti_lib_timer_enable(GPT0_BASE, TIMER_A);
+  if (has_init) {
+    return true;
   }
+
+  GPTimerCC26XX_Params gpt_params;
+  GPTimerCC26XX_Params_init(&gpt_params);
+  gpt_params.mode = GPT_CONFIG_16BIT;
+  gpt_params.mode = GPT_MODE_PERIODIC_UP;
+  gpt_params.debugStallMode = GPTimerCC26XX_DEBUG_STALL_OFF;
+
+  gpt_handle = GPTimerCC26XX_open(Board_GPTIMER0A, &gpt_params);
+  if (!gpt_handle) {
+    PIN_close(pin_handle);
+    return false;
+  }
+
+  is_running = false;
+
+  has_init = true;
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+bool
+buzzer_running()
+{
+  return is_running;
+}
+/*---------------------------------------------------------------------------*/
+bool
+buzzer_start(uint32_t freq)
+{
+  if (!has_init) {
+    return false;
+  }
+
+  if (freq == 0) {
+    return false;
+  }
+
+  if (is_running) {
+    return true;
+  }
+
+  pin_handle = PIN_open(&pin_state, pin_table);
+  if (!pin_handle) {
+    return false;
+  }
+
+  Power_setDependency(PowerCC26XX_XOSC_HF );
+
+  PINCC26XX_setMux(pin_handle, BUZZER_PIN, GPT_PIN_0A);
+
+  // MCU runs at 48 MHz
+  GPTimerCC26XX_Value load_value = 48000000 / freq;
+
+  GPTimerCC26XX_setLoadValue(gpt_handle, load_value);
+  GPTimerCC26XX_start(gpt_handle);
+
+  is_running = true;
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 void
 buzzer_stop()
 {
-  buzzer_on = 0;
+  if (!gpt_handle) {
+    return;
+  }
 
-  /*
-   * Unregister the buzzer module from LPM. This will effectively release our
-   * lock for the PERIPH PD allowing it to be powered down (unless some other
-   * module keeps it on)
-   */
-  lpm_unregister_module(&buzzer_module);
+  if (!is_running) {
+    return;
+  }
 
-  /* Stop the timer */
-  ti_lib_timer_disable(GPT0_BASE, TIMER_A);
+  Power_releaseDependency(PowerCC26XX_XOSC_HF );
 
-  /*
-   * Stop the module clock:
-   *
-   * Currently GPT0 is in use by clock_delay_usec (GPT0/TB) and by this
-   * module here (GPT0/TA).
-   *
-   * clock_delay_usec
-   * - is definitely not running when we enter here and
-   * - handles the module clock internally
-   *
-   * Thus, we can safely change the state of module clocks here.
-   */
-  ti_lib_prcm_peripheral_run_disable(PRCM_PERIPH_TIMER0);
-  ti_lib_prcm_peripheral_sleep_disable(PRCM_PERIPH_TIMER0);
-  ti_lib_prcm_peripheral_deep_sleep_disable(PRCM_PERIPH_TIMER0);
-  ti_lib_prcm_load_set();
-  while(!ti_lib_prcm_load_get());
+  GPTimerCC26XX_stop(gpt_handle);
+  PIN_close(pin_handle);
 
-  /* Un-configure the pin */
-  ti_lib_ioc_pin_type_gpio_input(BOARD_IOID_BUZZER);
-  ti_lib_ioc_io_input_set(BOARD_IOID_BUZZER, IOC_INPUT_DISABLE);
+  is_running = false;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -40,40 +40,56 @@
 #include "sys/clock.h"
 #include "sys/timer.h"
 #include "lib/sensors.h"
-#include "sensortag/reed-relay.h"
-#include "gpio-interrupt.h"
 #include "sys/timer.h"
-
-#include "ti-lib.h"
-
+#include "reed-relay.h"
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
+#include <ti/drivers/PIN.h>
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 static struct timer debouncetimer;
 /*---------------------------------------------------------------------------*/
-#define REED_IO_CFG             (IOC_CURRENT_2MA  | IOC_STRENGTH_AUTO |       \
-                                 IOC_IOPULL_DOWN  | IOC_SLEW_DISABLE  |       \
-                                 IOC_HYST_DISABLE | IOC_BOTH_EDGES    |       \
-                                 IOC_INT_DISABLE  | IOC_IOMODE_NORMAL |       \
-                                 IOC_NO_WAKE_UP   | IOC_INPUT_ENABLE)
+static PIN_Config reed_pin_table[] = {
+  Board_RELAY | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_DIS,
+  PIN_TERMINATE
+};
+
+static PIN_State  pin_state;
+static PIN_Handle pin_handle;
+/*---------------------------------------------------------------------------*/
+static bool
+sensor_init(void)
+{
+  if (pin_handle) {
+    return true;
+  }
+
+  pin_handle = PIN_open(&pin_state, reed_pin_table);
+  return pin_handle != NULL;
+}
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Handler for Sensortag-CC26XX reed interrupts
  */
 static void
-reed_interrupt_handler(uint8_t ioid)
+reed_relay_isr(PIN_Handle handle, PIN_Id pinId)
 {
-  if(!timer_expired(&debouncetimer)) {
+  (void)handle;
+  (void)pinId;
+
+  if (!timer_expired(&debouncetimer)) {
     return;
   }
 
-  sensors_changed(&reed_relay_sensor);
   timer_set(&debouncetimer, CLOCK_SECOND / 2);
+  sensors_changed(&reed_relay_sensor);
 }
 /*---------------------------------------------------------------------------*/
 static int
 value(int type)
 {
-  return (int)ti_lib_gpio_read_dio(BOARD_IOID_REED_RELAY);
+  return (int)PIN_getInputValue(Board_RELAY);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -89,26 +105,22 @@ configure(int type, int value)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    ti_lib_ioc_int_disable(BOARD_IOID_REED_RELAY);
-    ti_lib_gpio_clear_event_dio(BOARD_IOID_REED_RELAY);
+    if (!sensor_init()) {
+      return REED_RELAY_READING_ERROR;
+    }
 
-    /* Enable the GPIO clock when the CM3 is running */
-    ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_GPIO);
-
-    /* S/W control, input, pull-down */
-    ti_lib_ioc_port_configure_set(BOARD_IOID_REED_RELAY, IOC_PORT_GPIO,
-                                  REED_IO_CFG);
-
-    gpio_interrupt_register_handler(BOARD_IOID_REED_RELAY,
-                                    reed_interrupt_handler);
+    PIN_setInterrupt(pin_handle, Board_RELAY | PIN_IRQ_DIS);
+    PIN_registerIntCb(pin_handle, reed_relay_isr);
     break;
+
   case SENSORS_ACTIVE:
-    if(value) {
-      ti_lib_ioc_int_enable(BOARD_IOID_REED_RELAY);
+    if (value) {
+      PIN_setInterrupt(pin_handle, Board_RELAY | PIN_IRQ_NEGEDGE);
     } else {
-      ti_lib_ioc_int_disable(BOARD_IOID_REED_RELAY);
+      PIN_setInterrupt(pin_handle, Board_RELAY | PIN_IRQ_DIS);
     }
     break;
+
   default:
     break;
   }
@@ -123,12 +135,12 @@ configure(int type, int value)
 static int
 status(int type)
 {
-  switch(type) {
+  switch (type) {
   case SENSORS_ACTIVE:
   case SENSORS_READY:
-    return (ti_lib_ioc_port_configure_get(BOARD_IOID_REED_RELAY)
-            & IOC_INT_ENABLE) == IOC_INT_ENABLE;
+    return (PIN_getConfig(Board_RELAY) & PIN_BM_IRQ) != 0;
     break;
+
   default:
     break;
   }

@@ -55,8 +55,14 @@
 #ifndef BMP_280_SENSOR_H_
 #define BMP_280_SENSOR_H_
 /*---------------------------------------------------------------------------*/
-#define BMP_280_SENSOR_TYPE_TEMP    1
-#define BMP_280_SENSOR_TYPE_PRESS   2
+#include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
+typedef enum {
+    BMP_280_SENSOR_TYPE_TEMP,
+    BMP_280_SENSOR_TYPE_PRESS
+} BMP_280_SENSOR_TYPE;
+/*---------------------------------------------------------------------------*/
+#define BMP_280_READING_ERROR    -1
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor bmp_280_sensor;
 /*---------------------------------------------------------------------------*/

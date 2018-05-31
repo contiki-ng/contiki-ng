@@ -52,7 +52,7 @@ RF_Mode RF_propMode =
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry defaultPaTxPowerTable[19] =
+RF_TxPowerTable_Entry propDefaultPaTxPowerTable[19] =
 {
     { -20, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  2) },
     { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 3, 0,  3) },
@@ -83,7 +83,7 @@ RF_TxPowerTable_Entry defaultPaTxPowerTable[19] =
 // RF_TxPowerTable_HIGH_PA_ENTRY(bias, ibboost, boost, coefficient, ldoTrim)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry highPaTxPowerTable[8] =
+RF_TxPowerTable_Entry propHighPaTxPowerTable[8] =
 {
     { 14, RF_TxPowerTable_HIGH_PA_ENTRY( 7, 0, 0, 23,  4) },
     { 15, RF_TxPowerTable_HIGH_PA_ENTRY(10, 0, 0, 26,  4) },
@@ -97,7 +97,7 @@ RF_TxPowerTable_Entry highPaTxPowerTable[8] =
 
 
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pDefaultPaOverrides[] =
+uint32_t pPropDefaultPaOverrides[] =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(1,0,0,1,0,0),      // PHY: Use MCE RAM patch, RFE RAM patch
@@ -135,7 +135,7 @@ uint32_t pDefaultPaOverrides[] =
 
 
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pHighPaOverrides[] =
+uint32_t pPropHighPaOverrides[] =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(1,0,0,1,0,0),      // PHY: Use MCE RAM patch, RFE RAM patch
@@ -205,7 +205,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup =
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0x013F,
-    .pRegOverride = pOverrides,
+    .pRegOverride = pPropDefaultPaOverrides,
     .centerFreq = 0x0393,
     .intFreq = 0x8000,
     .loDivider = 0x05,

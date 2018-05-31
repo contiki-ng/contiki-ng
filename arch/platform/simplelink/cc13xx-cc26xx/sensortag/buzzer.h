@@ -43,17 +43,18 @@
 #define BUZZER_H_
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialise the buzzer
  */
-void buzzer_init(void);
+bool buzzer_init(void);
 
 /**
  * \brief Start the buzzer
  * \param freq The buzzer frequency
  */
-void buzzer_start(int freq);
+bool buzzer_start(uint32_t freq);
 
 /**
  * \brief Stop the buzzer
@@ -64,7 +65,7 @@ void buzzer_stop(void);
  * \brief Retrieve the buzzer state
  * \return 1: on, 0: off
  */
-uint8_t buzzer_state(void);
+bool buzzer_running(void);
 /*---------------------------------------------------------------------------*/
 #endif /* BUZZER_H_ */
 /*---------------------------------------------------------------------------*/

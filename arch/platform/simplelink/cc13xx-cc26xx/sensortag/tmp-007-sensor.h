@@ -62,9 +62,22 @@
 #ifndef TMP_007_SENSOR_H_
 #define TMP_007_SENSOR_H_
 /*---------------------------------------------------------------------------*/
-#define TMP_007_SENSOR_TYPE_OBJECT    1
-#define TMP_007_SENSOR_TYPE_AMBIENT   2
-#define TMP_007_SENSOR_TYPE_ALL       3
+typedef enum {
+  TMP_007_TYPE_OBJECT  = (1 << 0),
+  TMP_007_TYPE_AMBIENT = (1 << 1),
+  TMP_007_TYPE_ALL     = TMP_007_TYPE_OBJECT
+                       | TMP_007_TYPE_AMBIENT,
+} TMP_007_TYPE;
+/*---------------------------------------------------------------------------*/
+typedef enum {
+  TMP_007_STATUS_DISABLED,
+  TMP_007_STATUS_INITIALIZED,
+  TMP_007_STATUS_NOT_READY,
+  TMP_007_STATUS_READY,
+  TMP_007_STATUS_I2C_ERROR,
+} TMP_007_STATUS;
+/*---------------------------------------------------------------------------*/
+#define TMP_007_READING_ERROR    -1
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor tmp_007_sensor;
 /*---------------------------------------------------------------------------*/

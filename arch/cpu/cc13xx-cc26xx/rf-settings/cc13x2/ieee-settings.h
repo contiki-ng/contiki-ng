@@ -20,8 +20,8 @@ extern RF_Mode RF_ieeeMode;
 
 
 // TX Power Table
-extern RF_TxPowerTable_Entry defaultPaTxPowerTable[16];
-extern RF_TxPowerTable_Entry highPaTxPowerTable[16];
+extern RF_TxPowerTable_Entry ieeeDefaultPaTxPowerTable[16];
+extern RF_TxPowerTable_Entry ieeeHighPaTxPowerTable[16];
 
 
 // RF Core API commands
@@ -32,8 +32,8 @@ extern rfc_CMD_IEEE_RX_t RF_cmdIeeeRx;
 
 
 // RF Core API Overrides
-extern uint32_t pDefaultPaOverrides[];
-extern uint32_t pHighPaOverrides[];
+extern uint32_t pIeeeDefaultPaOverrides[];
+extern uint32_t pIeeeHighPaOverrides[];
 
 
 #endif // _IEEE_SETTINGS_H_

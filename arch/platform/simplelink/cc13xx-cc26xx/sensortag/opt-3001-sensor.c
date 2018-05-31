@@ -38,17 +38,16 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "lib/sensors.h"
-#include "opt-3001-sensor.h"
 #include "sys/ctimer.h"
-#include "ti-lib.h"
-#include "board-i2c.h"
-#include "sensor-common.h"
-
+#include "opt-3001-sensor.h"
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
+#include <ti/drivers/I2C.h>
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -57,8 +56,11 @@
 #define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
+#ifndef Board_OPT3001_ADDR
+#   error "Board file doesn't define I2C address Board_OPT3001_ADDR"
+#endif
 /* Slave address */
-#define OPT3001_I2C_ADDRESS             0x45
+#define OPT_3001_I2C_ADDRESS            Board_OPT3001_ADDR
 /*---------------------------------------------------------------------------*/
 /* Register addresses */
 #define REG_RESULT                      0x00
@@ -74,37 +76,37 @@
  * We use uint16_t to read from / write to registers, meaning that the
  * register's MSB is the variable's LSB.
  */
-#define CONFIG_RN      0x00F0 /* [15..12] Range Number */
-#define CONFIG_CT      0x0008 /* [11] Conversion Time */
-#define CONFIG_M       0x0006 /* [10..9] Mode of Conversion */
-#define CONFIG_OVF     0x0001 /* [8] Overflow */
-#define CONFIG_CRF     0x8000 /* [7] Conversion Ready Field */
-#define CONFIG_FH      0x4000 /* [6] Flag High */
-#define CONFIG_FL      0x2000 /* [5] Flag Low */
-#define CONFIG_L       0x1000 /* [4] Latch */
-#define CONFIG_POL     0x0800 /* [3] Polarity */
-#define CONFIG_ME      0x0400 /* [2] Mask Exponent */
-#define CONFIG_FC      0x0300 /* [1..0] Fault Count */
+#define CFG_RN          0x00F0 /* [15..12] Range Number */
+#define CFG_CT          0x0008 /* [11] Conversion Time */
+#define CFG_M           0x0006 /* [10..9] Mode of Conversion */
+#define CFG_OVF         0x0001 /* [8] Overflow */
+#define CFG_CRF         0x8000 /* [7] Conversion Ready Field */
+#define CFG_FH          0x4000 /* [6] Flag High */
+#define CFG_FL          0x2000 /* [5] Flag Low */
+#define CFG_L           0x1000 /* [4] Latch */
+#define CFG_POL         0x0800 /* [3] Polarity */
+#define CFG_ME          0x0400 /* [2] Mask Exponent */
+#define CFG_FC          0x0300 /* [1..0] Fault Count */
 
 /* Possible Values for CT */
-#define CONFIG_CT_100      0x0000
-#define CONFIG_CT_800      CONFIG_CT
+#define CFG_CT_100      0x0000
+#define CFG_CT_800      CFG_CT
 
 /* Possible Values for M */
-#define CONFIG_M_CONTI     0x0004
-#define CONFIG_M_SINGLE    0x0002
-#define CONFIG_M_SHUTDOWN  0x0000
+#define CFG_M_CONTI     0x0004
+#define CFG_M_SINGLE    0x0002
+#define CFG_M_SHUTDOWN  0x0000
 
 /* Reset Value for the register 0xC810. All zeros except: */
-#define CONFIG_RN_RESET    0x00C0
-#define CONFIG_CT_RESET    CONFIG_CT_800
-#define CONFIG_L_RESET     0x1000
-#define CONFIG_DEFAULTS    (CONFIG_RN_RESET | CONFIG_CT_100 | CONFIG_L_RESET)
+#define CFG_RN_RESET    0x00C0
+#define CFG_CT_RESET    CFG_CT_800
+#define CFG_L_RESET     0x1000
+#define CFG_DEFAULTS    (CFG_RN_RESET | CFG_CT_100 | CFG_L_RESET)
 
 /* Enable / Disable */
-#define CONFIG_ENABLE_CONTINUOUS  (CONFIG_M_CONTI | CONFIG_DEFAULTS)
-#define CONFIG_ENABLE_SINGLE_SHOT (CONFIG_M_SINGLE | CONFIG_DEFAULTS)
-#define CONFIG_DISABLE             CONFIG_DEFAULTS
+#define CFG_ENABLE_CONTINUOUS  (CFG_M_CONTI | CFG_DEFAULTS)
+#define CFG_ENABLE_SINGLE_SHOT (CFG_M_SINGLE | CFG_DEFAULTS)
+#define CFG_DISABLE             CFG_DEFAULTS
 /*---------------------------------------------------------------------------*/
 /* Register length */
 #define REGISTER_LENGTH                 2
@@ -112,129 +114,106 @@
 /* Sensor data size */
 #define DATA_LENGTH                     2
 /*---------------------------------------------------------------------------*/
-/*
- * SENSOR_STATE_SLEEPING and SENSOR_STATE_ACTIVE are mutually exclusive.
- * SENSOR_STATE_DATA_READY can be ORd with both of the above. For example the
- * sensor may be sleeping but with a conversion ready to read out.
- */
-#define SENSOR_STATE_SLEEPING     0
-#define SENSOR_STATE_ACTIVE       1
-#define SENSOR_STATE_DATA_READY   2
+/* Byte swap of 16-bit register value */
+#define HI_UINT16(a) (((a) >> 8) & 0xFF)
+#define LO_UINT16(a) ((a) & 0xFF)
 
-static int state = SENSOR_STATE_SLEEPING;
+#define SWAP16(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
+
+#define LSB16(v)  (LO_UINT16(v)), (HI_UINT16(v))
+#define MSB16(v)  (HI_UINT16(v)), (LO_UINT16(v))
+/*---------------------------------------------------------------------------*/
+typedef struct {
+  volatile OPT_3001_STATUS status;
+} OPT_3001_Object;
+
+static OPT_3001_Object opt_3001;
 /*---------------------------------------------------------------------------*/
 /* Wait SENSOR_STARTUP_DELAY for the sensor to be ready - 125ms */
 #define SENSOR_STARTUP_DELAY (CLOCK_SECOND >> 3)
 
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Select the sensor on the I2C bus
- */
-static void
-select_on_bus(void)
-{
-  /* Select slave and set clock rate */
-  board_i2c_select(BOARD_I2C_INTERFACE_0, OPT3001_I2C_ADDRESS);
-}
+static I2C_Handle i2cHandle;
 /*---------------------------------------------------------------------------*/
-static void
-notify_ready(void *not_used)
+static bool
+i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
 {
-  /*
-   * Depending on the CONFIGURATION.CONVERSION_TIME bits, a conversion will
-   * take either 100 or 800 ms. Here we inspect the CONVERSION_READY bit and
-   * if the reading is ready we notify, otherwise we just reschedule ourselves
-   */
-  uint16_t val;
+  I2C_Transaction i2cTransaction = {
+    .writeBuf = writeBuf,
+    .writeCount = writeCount,
+    .readBuf = readBuf,
+    .readCount = readCount,
+    .slaveAddress = OPT_3001_I2C_ADDRESS,
+  };
 
-  select_on_bus();
+  return I2C_transfer(i2cHandle, &i2cTransaction);
+}
 
-  sensor_common_read_reg(REG_CONFIGURATION, (uint8_t *)&val, REGISTER_LENGTH);
-
-  if(val & CONFIG_CRF) {
-    sensors_changed(&opt_3001_sensor);
-    state = SENSOR_STATE_DATA_READY;
-  } else {
-    ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
+#define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
+#define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
+/*---------------------------------------------------------------------------*/
+static bool
+sensor_init(void)
+{
+  if (i2cHandle) {
+    return true;
   }
+
+  I2C_Params i2cParams;
+  I2C_Params_init(&i2cParams);
+  i2cParams.transferMode = I2C_MODE_BLOCKING;
+  i2cParams.bitRate = I2C_400kHz;
+
+  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
+  if (i2cHandle == NULL) {
+    return false;
+  }
+
+  opt_3001.status = OPT_3001_STATUS_DISABLED;
+
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Turn the sensor on/off
  * \param enable TRUE: on, FALSE: off
  */
-static void
-enable_sensor(bool enable)
-{
-  uint16_t val;
-  uint16_t had_data_ready = state & SENSOR_STATE_DATA_READY;
-
-  select_on_bus();
-
-  if(enable) {
-    val = CONFIG_ENABLE_SINGLE_SHOT;
-
-    /* Writing CONFIG_ENABLE_SINGLE_SHOT to M bits will clear CRF bits */
-    state = SENSOR_STATE_ACTIVE;
-  } else {
-    val = CONFIG_DISABLE;
-
-    /* Writing CONFIG_DISABLE to M bits will not clear CRF bits */
-    state = SENSOR_STATE_SLEEPING | had_data_ready;
-  }
-
-  sensor_common_write_reg(REG_CONFIGURATION, (uint8_t *)&val, REGISTER_LENGTH);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Read the result register
- * \param raw_data Pointer to a buffer to store the reading
- * \return TRUE if valid data
- */
 static bool
-read_data(uint16_t *raw_data)
+sensor_enable(bool enable)
 {
-  bool success;
-  uint16_t val;
+  uint16_t data = (enable)
+    ? CFG_ENABLE_SINGLE_SHOT
+    : CFG_DISABLE;
 
-  if((state & SENSOR_STATE_DATA_READY) != SENSOR_STATE_DATA_READY) {
-    return false;
-  }
-
-  select_on_bus();
-
-  success = sensor_common_read_reg(REG_CONFIGURATION, (uint8_t *)&val,
-                                   REGISTER_LENGTH);
-
-  if(success) {
-    success = sensor_common_read_reg(REG_RESULT, (uint8_t *)&val, DATA_LENGTH);
-  }
-
-  if(success) {
-    /* Swap bytes */
-    *raw_data = (val << 8) | (val >> 8 & 0xFF);
-  } else {
-    sensor_common_set_error_data((uint8_t *)raw_data, DATA_LENGTH);
-  }
-
-  return success;
+  uint8_t cfg_data[] = { REG_CONFIGURATION, LSB16(data) };
+  return i2c_write(cfg_data, sizeof(cfg_data));
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Convert raw data to a value in lux
- * \param raw_data data Pointer to a buffer with a raw sensor reading
- * \return Converted value (lux)
- */
-static float
-convert(uint16_t raw_data)
+static void
+notify_ready_cb(void *not_used)
 {
-  uint16_t e, m;
+  /*
+   * Depending on the CONFIGURATION.CONVERSION_TIME bits, a conversion will
+   * take either 100 or 800 ms. Here we inspect the CONVERSION_READY bit and
+   * if the reading is ready we notify, otherwise we just reschedule ourselves
+   */
 
-  m = raw_data & 0x0FFF;
-  e = (raw_data & 0xF000) >> 12;
+  uint8_t cfg_data[] = { REG_CONFIGURATION };
+  uint16_t cfg_value = 0;
 
-  return m * (0.01 * exp2(e));
+  bool spi_ok = i2c_write_read(cfg_data, sizeof(cfg_data), &cfg_value, sizeof(cfg_value));
+  if (!spi_ok) {
+    opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
+    return;
+  }
+
+  if (cfg_value & CFG_CRF) {
+    opt_3001.status = OPT_3001_STATUS_DATA_READY;
+    sensors_changed(&opt_3001_sensor);
+  } else {
+    ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready_cb, NULL);
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -245,23 +224,38 @@ convert(uint16_t raw_data)
 static int
 value(int type)
 {
-  int rv;
-  uint16_t raw_val;
-  float converted_val;
-
-  rv = read_data(&raw_val);
-
-  if(rv == false) {
-    return CC26XX_SENSOR_READING_ERROR;
+  if (opt_3001.status != OPT_3001_STATUS_DATA_READY) {
+    return MPU_9250_READING_ERROR;
   }
 
-  converted_val = convert(raw_val);
-  PRINTF("OPT: %04X            r=%d (centilux)\n", raw_val,
-         (int)(converted_val * 100));
+  uint8_t cfg_data[] = { REG_CONFIGURATION };
+  uint16_t cfg_value = 0;
 
-  rv = (int)(converted_val * 100);
+  bool spi_ok = i2c_write_read(cfg_data, sizeof(cfg_data), &cfg_value, sizeof(cfg_value));
+  if (!spi_ok) {
+    opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
+    return MPU_9250_READING_ERROR;
+  }
 
-  return rv;
+  uint8_t result_data[] = { REG_RESULT };
+  uint16_t result_value = 0;
+
+  spi_ok = i2c_write_read(result_data, sizeof(result_data), &result_value, sizeof(result_value));
+  if (!spi_ok) {
+    opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
+    return MPU_9250_READING_ERROR;
+  }
+
+  result_value = SWAP16(result_value);
+
+  uint32_t e = (result_value & 0x0FFF) >>  0;
+  uint32_t m = (result_value & 0xF000) >> 12;
+  uint32_t converted = m * 100 * (1 << e);
+
+  PRINTF("OPT: %04X            r=%d (centilux)\n", result_value,
+         (int)(converted));
+
+  return (int)converted;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -278,30 +272,32 @@ static int
 configure(int type, int enable)
 {
   int rv = 0;
-
   switch(type) {
   case SENSORS_HW_INIT:
-    /*
-     * Device reset won't reset the sensor, so we put it to sleep here
-     * explicitly
-     */
-    enable_sensor(0);
-    rv = 0;
-    break;
-  case SENSORS_ACTIVE:
-    if(enable) {
-      enable_sensor(1);
-      ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
-      rv = 1;
+    if (sensor_init()) {
+      opt_3001.status = OPT_3001_STATUS_STANDBY;
     } else {
-      ctimer_stop(&startup_timer);
-      enable_sensor(0);
-      rv = 0;
+      opt_3001.status = OPT_3001_STATUS_DISABLED;
+      rv = MPU_9250_READING_ERROR;
     }
     break;
+
+  case SENSORS_ACTIVE:
+    if(enable) {
+      sensor_enable(true);
+      ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready_cb, NULL);
+
+      opt_3001.status = OPT_3001_STATUS_BOOTING;
+    } else {
+      ctimer_stop(&startup_timer);
+      sensor_enable(false);
+    }
+    break;
+
   default:
     break;
   }
+
   return rv;
 }
 /*---------------------------------------------------------------------------*/
@@ -313,13 +309,9 @@ configure(int type, int enable)
 static int
 status(int type)
 {
-  switch(type) {
-  case SENSORS_ACTIVE:
-  case SENSORS_READY:
-  default:
-    break;
-  }
-  return state;
+  (void)type;
+
+  return opt_3001.status;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(opt_3001_sensor, "OPT3001", value, configure, status);

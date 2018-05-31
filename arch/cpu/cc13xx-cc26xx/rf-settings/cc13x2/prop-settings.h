@@ -20,8 +20,8 @@ extern RF_Mode RF_propMode;
 
 
 // Tx Power Tables
-extern RF_TxPowerTable_Entry defaultPaTxPowerTable[19];
-extern RF_TxPowerTable_Entry highPaTxPowerTable[8];
+extern RF_TxPowerTable_Entry propDefaultPaTxPowerTable[19];
+extern RF_TxPowerTable_Entry propHighPaTxPowerTable[8];
 
 
 // RF Core API commands
@@ -32,8 +32,8 @@ extern rfc_CMD_PROP_RX_ADV_t RF_cmdPropRxAdv;
 
 
 // RF Core API Overrides
-extern uint32_t pDefaultPaOverrides[];
-extern uint32_t pHighPaOverrides[];
+extern uint32_t pPropDefaultPaOverrides[];
+extern uint32_t pPropHighPaOverrides[];
 
 
 #endif // _PROP_SETTINGS_H_

@@ -38,15 +38,16 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "lib/sensors.h"
-#include "bmp-280-sensor.h"
 #include "sys/ctimer.h"
-#include "sensor-common.h"
-#include "board-i2c.h"
-#include "ti-lib.h"
-
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
+#include <ti/drivers/I2C.h>
+/*---------------------------------------------------------------------------*/
+#include "bmp-280-sensor.h"
+/*---------------------------------------------------------------------------*/
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -55,7 +56,11 @@
 #define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
-#define BMP280_I2C_ADDRESS                  0x77
+#ifndef Board_BMP280_ADDR
+#   error "Board file doesn't define I2C address Board_BMP280_ADDR"
+#endif
+/* Sensor I2C address */
+#define BMP280_I2C_ADDRESS                  Board_BMP280_ADDR
 /*---------------------------------------------------------------------------*/
 /* Registers */
 #define ADDR_CALIB                          0x88
@@ -105,35 +110,33 @@
 #define OSRST(v)                            ((v) << 5)
 #define OSRSP(v)                            ((v) << 2)
 /*---------------------------------------------------------------------------*/
-typedef struct bmp_280_calibration {
+typedef struct {
   uint16_t dig_t1;
-  int16_t dig_t2;
-  int16_t dig_t3;
+  int16_t  dig_t2;
+  int16_t  dig_t3;
   uint16_t dig_p1;
-  int16_t dig_p2;
-  int16_t dig_p3;
-  int16_t dig_p4;
-  int16_t dig_p5;
-  int16_t dig_p6;
-  int16_t dig_p7;
-  int16_t dig_p8;
-  int16_t dig_p9;
-  int32_t t_fine;
-} bmp_280_calibration_t;
+  int16_t  dig_p2;
+  int16_t  dig_p3;
+  int16_t  dig_p4;
+  int16_t  dig_p5;
+  int16_t  dig_p6;
+  int16_t  dig_p7;
+  int16_t  dig_p8;
+  int16_t  dig_p9;
+} BMP_280_Calibration;
 /*---------------------------------------------------------------------------*/
-static uint8_t calibration_data[CALIB_DATA_SIZE];
+static BMP_280_Calibration calib_data;
 /*---------------------------------------------------------------------------*/
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
+static I2C_Handle i2cHandle;
+/*---------------------------------------------------------------------------*/
+typedef enum {
+  SENSOR_STATUS_DISABLED,
+  SENSOR_STATUS_INITIALISED,
+  SENSOR_STATUS_NOT_READY,
+  SENSOR_STATUS_READY
+} SENSOR_STATUS;
 
-static int enabled = SENSOR_STATUS_DISABLED;
-/*---------------------------------------------------------------------------*/
-/* A buffer for the raw reading from the sensor */
-#define SENSOR_DATA_BUF_SIZE   6
-
-static uint8_t sensor_value[SENSOR_DATA_BUF_SIZE];
+static volatile SENSOR_STATUS sensor_status = SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/
 /* Wait SENSOR_STARTUP_DELAY clock ticks for the sensor to be ready - ~80ms */
 #define SENSOR_STARTUP_DELAY 3
@@ -141,35 +144,60 @@ static uint8_t sensor_value[SENSOR_DATA_BUF_SIZE];
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
 static void
-notify_ready(void *not_used)
+notify_ready(void *unused)
 {
-  enabled = SENSOR_STATUS_READY;
+  (void)unused;
+
+  sensor_status = SENSOR_STATUS_READY;
   sensors_changed(&bmp_280_sensor);
 }
 /*---------------------------------------------------------------------------*/
-static void
-select_on_bus(void)
+static bool
+i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
 {
-  /* Set up I2C */
-  board_i2c_select(BOARD_I2C_INTERFACE_0, BMP280_I2C_ADDRESS);
+  I2C_Transaction i2cTransaction = {
+    .writeBuf = writeBuf,
+    .writeCount = writeCount,
+    .readBuf = readBuf,
+    .readCount = readCount,
+    .slaveAddress = BMP280_I2C_ADDRESS,
+  };
+
+  return I2C_transfer(i2cHandle, &i2cTransaction);
 }
+
+#define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
+#define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initalise the sensor
+ *
+ * @return    true if success; else, false on error
  */
-static void
+static bool
 init(void)
 {
-  uint8_t val;
+  if (i2cHandle) {
+    return true;
+  }
 
-  select_on_bus();
+  I2C_Params i2cParams;
+  I2C_Params_init(&i2cParams);
+  i2cParams.transferMode = I2C_MODE_BLOCKING;
+  i2cParams.bitRate = I2C_400kHz;
+
+  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
+  if (i2cHandle == NULL) {
+    return false;
+  }
+
+  uint8_t reset_data[] = { ADDR_RESET, VAL_RESET_EXECUTE };
 
   /* Read and store calibration data */
-  sensor_common_read_reg(ADDR_CALIB, calibration_data, CALIB_DATA_SIZE);
-
-  /* Reset the sensor */
-  val = VAL_RESET_EXECUTE;
-  sensor_common_write_reg(ADDR_RESET, &val, sizeof(val));
+  uint8_t calib_reg = ADDR_CALIB;
+  return i2c_write_read(&calib_reg, sizeof(calib_reg), &calib_data, sizeof(calib_data))
+  /* then reset the sensor */
+      && i2c_write(reset_data, sizeof(reset_data));
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -178,20 +206,15 @@ init(void)
  *
  * @return      none
  */
-static void
+static bool
 enable_sensor(bool enable)
 {
-  uint8_t val;
+  uint8_t val = (enable)
+    ? PM_FORCED | OSRSP(1) | OSRST(1)
+    : PM_OFF;
 
-  select_on_bus();
-
-  if(enable) {
-    /* Enable forced mode */
-    val = PM_FORCED | OSRSP(1) | OSRST(1);
-  } else {
-    val = PM_OFF;
-  }
-  sensor_common_write_reg(ADDR_CTRL_MEAS, &val, sizeof(val));
+  uint8_t ctrl_meas_data[] = { ADDR_CTRL_MEAS, val };
+  return i2c_write(&ctrl_meas_data, sizeof(ctrl_meas_data));
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -201,18 +224,10 @@ enable_sensor(bool enable)
  * \return True if valid data could be retrieved
  */
 static bool
-read_data(uint8_t *data)
+read_data(uint8_t *data, size_t count)
 {
-  bool success;
-
-  select_on_bus();
-
-  success = sensor_common_read_reg(ADDR_PRESS_MSB, data, MEAS_DATA_SIZE);
-  if(!success) {
-    sensor_common_set_error_data(data, MEAS_DATA_SIZE);
-  }
-
-  return success;
+  uint8_t press_msb_reg = ADDR_PRESS_MSB;
+  return i2c_write_read(&press_msb_reg, sizeof(press_msb_reg), data, count);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -226,60 +241,97 @@ read_data(uint8_t *data)
 static void
 convert(uint8_t *data, int32_t *temp, uint32_t *press)
 {
-  int32_t utemp, upress;
-  bmp_280_calibration_t *p = (bmp_280_calibration_t *)calibration_data;
-  int32_t v_x1_u32r;
-  int32_t v_x2_u32r;
-  int32_t temperature;
-  uint32_t pressure;
+  BMP_280_Calibration *p = &calib_data;
 
   /* Pressure */
-  upress = (int32_t)((((uint32_t)(data[0])) << 12)
-                     | (((uint32_t)(data[1])) << 4) | ((uint32_t)data[2] >> 4));
-
+  const int32_t upress = (int32_t)(
+    (((uint32_t)data[0]) << 12) |
+    (((uint32_t)data[1]) <<  4) |
+    (((uint32_t)data[2]) >>  4)
+  );
   /* Temperature */
-  utemp = (int32_t)((((uint32_t)(data[3])) << 12) | (((uint32_t)(data[4])) << 4)
-                    | ((uint32_t)data[5] >> 4));
+  const int32_t utemp = (int32_t)(
+    (((uint32_t)data[3]) << 12) |
+    (((uint32_t)data[4]) <<  4) |
+    (((uint32_t)data[5]) >>  4)
+  );
 
   /* Compensate temperature */
-  v_x1_u32r = ((((utemp >> 3) - ((int32_t)p->dig_t1 << 1)))
-               * ((int32_t)p->dig_t2)) >> 11;
-  v_x2_u32r = (((((utemp >> 4) - ((int32_t)p->dig_t1))
-                 * ((utemp >> 4) - ((int32_t)p->dig_t1))) >> 12)
-               * ((int32_t)p->dig_t3))
-    >> 14;
-  p->t_fine = v_x1_u32r + v_x2_u32r;
-  temperature = (p->t_fine * 5 + 128) >> 8;
+  int32_t v_x1_u32r = ( (
+      (utemp >> 3) - ((int32_t)p->dig_t1 << 1)
+    ) * (int32_t)p->dig_t2
+  ) >> 11;
+  int32_t v_x2_u32r = ( ( ( (
+          (utemp >> 4) - (int32_t)p->dig_t1
+        ) * (
+          (utemp >> 4) - (int32_t)p->dig_t1
+        )
+      ) >> 12
+    ) * (int32_t)p->dig_t3
+  ) >> 14;
+
+  const uint32_t t_fine = v_x1_u32r + v_x2_u32r;
+  const int32_t temperature = (t_fine * 5 + 128) >> 8;
   *temp = temperature;
 
   /* Compensate pressure */
-  v_x1_u32r = (((int32_t)p->t_fine) >> 1) - (int32_t)64000;
-  v_x2_u32r = (((v_x1_u32r >> 2) * (v_x1_u32r >> 2)) >> 11)
-    * ((int32_t)p->dig_p6);
-  v_x2_u32r = v_x2_u32r + ((v_x1_u32r * ((int32_t)p->dig_p5)) << 1);
-  v_x2_u32r = (v_x2_u32r >> 2) + (((int32_t)p->dig_p4) << 16);
-  v_x1_u32r =
-    (((p->dig_p3 * (((v_x1_u32r >> 2) * (v_x1_u32r >> 2)) >> 13)) >> 3)
-     + ((((int32_t)p->dig_p2) * v_x1_u32r) >> 1)) >> 18;
-  v_x1_u32r = ((((32768 + v_x1_u32r)) * ((int32_t)p->dig_p1)) >> 15);
+  v_x1_u32r = ((int32_t)t_fine >> 1) - (int32_t)64000;
+  v_x2_u32r = ( (
+      (v_x1_u32r >> 2) * (v_x1_u32r >> 2)
+    ) >> 11
+  ) * (int32_t)p->dig_p6;
+  v_x2_u32r = ( (
+        v_x1_u32r * (int32_t)p->dig_p5
+      ) << 1
+  ) + v_x2_u32r;
+  v_x2_u32r = (v_x2_u32r >> 2) + ((int32_t)p->dig_p4 << 16);
+  v_x1_u32r = ( ( ( ( (
+            (v_x1_u32r >> 2) * (v_x1_u32r >> 2)
+          ) >> 13
+        ) * p->dig_p3
+      ) >> 3
+    ) + ( (
+        (int32_t)p->dig_p2 * v_x1_u32r
+      ) >> 1
+    )
+  ) >> 18;
+  v_x1_u32r = (
+    (32768 + v_x1_u32r) * (int32_t)p->dig_p1
+  ) >> 15;
 
-  if(v_x1_u32r == 0) {
-    return; /* Avoid exception caused by division by zero */
+  if (v_x1_u32r == 0) {
+    /* Avoid exception caused by division by zero */
+    *press = 0;
+    return;
   }
 
-  pressure = (((uint32_t)(((int32_t)1048576) - upress) - (v_x2_u32r >> 12)))
-    * 3125;
-  if(pressure < 0x80000000) {
-    pressure = (pressure << 1) / ((uint32_t)v_x1_u32r);
+  uint32_t pressure = ( (
+      (uint32_t)((int32_t)1048576 - upress)
+    ) - (
+      v_x2_u32r >> 12
+    )
+  ) * 3125;
+  if ((int32_t)pressure < 0) {
+    pressure = (pressure << 1) / (uint32_t)v_x1_u32r;
   } else {
     pressure = (pressure / (uint32_t)v_x1_u32r) * 2;
   }
 
-  v_x1_u32r = (((int32_t)p->dig_p9)
-               * ((int32_t)(((pressure >> 3) * (pressure >> 3)) >> 13))) >> 12;
-  v_x2_u32r = (((int32_t)(pressure >> 2)) * ((int32_t)p->dig_p8)) >> 13;
-  pressure = (uint32_t)((int32_t)pressure
-                        + ((v_x1_u32r + v_x2_u32r + p->dig_p7) >> 4));
+  v_x1_u32r = ( (
+      (int32_t)( (
+          (pressure >> 3) * (pressure >> 3)
+        ) >> 13
+      )
+    ) * (int32_t)p->dig_p9
+  ) >> 12;
+  v_x2_u32r = (
+    (int32_t)(pressure >> 2) * (int32_t)p->dig_p8
+  ) >> 13;
+  pressure = (uint32_t)( ( (
+        v_x1_u32r + v_x2_u32r + p->dig_p7
+      ) >> 4
+    ) + (int32_t)pressure
+  );
 
   *press = pressure;
 }
@@ -292,25 +344,23 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
 static int
 value(int type)
 {
-  int rv;
   int32_t temp = 0;
   uint32_t pres = 0;
 
-  if(enabled != SENSOR_STATUS_READY) {
-    PRINTF("Sensor disabled or starting up (%d)\n", enabled);
-    return CC26XX_SENSOR_READING_ERROR;
+  if (sensor_status != SENSOR_STATUS_READY) {
+    PRINTF("Sensor disabled or starting up (%d)\n", sensor_status);
+    return BMP_280_READING_ERROR;
   }
 
-  if((type != BMP_280_SENSOR_TYPE_TEMP) && type != BMP_280_SENSOR_TYPE_PRESS) {
-    PRINTF("Invalid type\n");
-    return CC26XX_SENSOR_READING_ERROR;
-  } else {
-    memset(sensor_value, 0, SENSOR_DATA_BUF_SIZE);
+  /* A buffer for the raw reading from the sensor */
+  uint8_t sensor_value[MEAS_DATA_SIZE];
 
-    rv = read_data(sensor_value);
-
-    if(rv == 0) {
-      return CC26XX_SENSOR_READING_ERROR;
+  switch (type) {
+  case BMP_280_SENSOR_TYPE_TEMP:
+  case BMP_280_SENSOR_TYPE_PRESS:
+    memset(sensor_value, 0, MEAS_DATA_SIZE);
+    if (!read_data(sensor_value, MEAS_DATA_SIZE)) {
+      return BMP_280_READING_ERROR;
     }
 
     PRINTF("val: %02x%02x%02x %02x%02x%02x\n",
@@ -320,12 +370,17 @@ value(int type)
     convert(sensor_value, &temp, &pres);
 
     if(type == BMP_280_SENSOR_TYPE_TEMP) {
-      rv = (int)temp;
+      return (int)temp;
     } else if(type == BMP_280_SENSOR_TYPE_PRESS) {
-      rv = (int)pres;
+      return (int)pres;
+    } else {
+      return 0;
     }
+
+  default:
+    PRINTF("Invalid BMP 208 Sensor Type\n");
+    return BMP_280_READING_ERROR;
   }
-  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -343,29 +398,34 @@ configure(int type, int enable)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    enabled = SENSOR_STATUS_INITIALISED;
-    init();
-    enable_sensor(0);
+    if (init()) {
+      enable_sensor(false);
+      sensor_status = SENSOR_STATUS_INITIALISED;
+    } else {
+      sensor_status = SENSOR_STATUS_DISABLED;
+    }
     break;
+
   case SENSORS_ACTIVE:
     /* Must be initialised first */
-    if(enabled == SENSOR_STATUS_DISABLED) {
-      return SENSOR_STATUS_DISABLED;
+    if (sensor_status == SENSOR_STATUS_DISABLED) {
+      break;
     }
-    if(enable) {
-      enable_sensor(1);
+    if (enable) {
+      enable_sensor(true);
       ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
-      enabled = SENSOR_STATUS_NOT_READY;
+      sensor_status = SENSOR_STATUS_NOT_READY;
     } else {
       ctimer_stop(&startup_timer);
-      enable_sensor(0);
-      enabled = SENSOR_STATUS_INITIALISED;
+      enable_sensor(false);
+      sensor_status = SENSOR_STATUS_INITIALISED;
     }
     break;
+
   default:
     break;
   }
-  return enabled;
+  return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -379,8 +439,7 @@ status(int type)
   switch(type) {
   case SENSORS_ACTIVE:
   case SENSORS_READY:
-    return enabled;
-    break;
+    return sensor_status;
   default:
     break;
   }

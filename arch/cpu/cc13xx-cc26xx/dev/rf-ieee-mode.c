@@ -123,7 +123,7 @@
 #ifdef TX_POWER_CONF_TABLE
 #   define TX_POWER_TABLE  TX_POWER_CONF_TABLE
 #else
-#   define TX_POWER_TABLE  txPowerTable
+#   define TX_POWER_TABLE  ieeeTxPowerTable
 #endif
 /*---------------------------------------------------------------------------*/
 /* TX power table convenience macros */
@@ -173,7 +173,7 @@ static RF_Handle g_rfHandle;
 
 /* RF Core command pointers */
 static volatile rfc_CMD_RADIO_SETUP_t *g_vpCmdRadioSetup = &RF_cmdRadioSetup;
-static volatile rfc_CMD_FS_t          *g_vpCmdFs         = &RF_cmdFs;
+static volatile rfc_CMD_FS_t          *g_vpCmdFs         = &RF_cmdIeeeFs;
 static volatile rfc_CMD_IEEE_TX_t     *g_vpCmdTx         = &RF_cmdIeeeTx;
 static volatile rfc_CMD_IEEE_RX_t     *g_vpCmdRx         = &RF_cmdIeeeRx;
 
@@ -420,7 +420,7 @@ set_channel(uint8_t channel)
 static int
 set_tx_power(const radio_value_t dbm)
 {
-  const RF_TxPowerTable_Value txPowerTableValue = RF_TxPowerTable_findValue(txPowerTable, (int8_t)dbm);
+  const RF_TxPowerTable_Value txPowerTableValue = RF_TxPowerTable_findValue(TX_POWER_TABLE, (int8_t)dbm);
   if (txPowerTableValue.rawValue == RF_TxPowerTable_INVALID_VALUE) {
     return CMD_RESULT_ERROR;
   }

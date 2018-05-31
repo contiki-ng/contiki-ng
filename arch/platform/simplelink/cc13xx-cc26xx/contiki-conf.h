@@ -34,17 +34,14 @@
  * \file
  *  Configuration for the srf06-cc26xx platform
  */
-#ifndef CONTIKI_CONF_H
-#define CONTIKI_CONF_H
-
-#include <stdint.h>
+/*---------------------------------------------------------------------------*/
+#ifndef CONTIKI_CONF_H_
+#define CONTIKI_CONF_H_
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
-/*---------------------------------------------------------------------------*/
-#include "simplelink-def.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name Button configurations
@@ -56,9 +53,6 @@
 #define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN 1
 #endif
 
-/* Notify various examples that we have Buttons */
-#define PLATFORM_HAS_BUTTON      1
-
 /*
  * Override button symbols from dev/button-sensor.h, for the examples that
  * include it
@@ -68,11 +62,11 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /* Platform-specific define to signify sensor reading failure */
+/* TODO: remove */
 #define CC26XX_SENSOR_READING_ERROR        0x80000000
 /*---------------------------------------------------------------------------*/
 /* Include CPU-related configuration */
-#include "simplelink-conf.h"
+#include "cc13xx-cc26xx-conf.h"
 /*---------------------------------------------------------------------------*/
-#endif /* CONTIKI_CONF_H */
-
+#endif /* CONTIKI_CONF_H_ */
 /** @} */

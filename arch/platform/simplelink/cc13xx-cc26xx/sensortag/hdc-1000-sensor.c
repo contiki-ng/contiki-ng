@@ -40,11 +40,11 @@
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
 #include "hdc-1000-sensor.h"
-#include "sensor-common.h"
-#include "board-i2c.h"
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
 
-#include "ti-lib.h"
-
+#include <ti/drivers/I2C.h>
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -57,9 +57,12 @@
 #define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
+#ifndef Board_HDC1000_ADDR
+#   error "Board file doesn't define I2C address Board_HDC1000_ADDR"
+#endif
 /* Sensor I2C address */
-#define SENSOR_I2C_ADDRESS         0x43
-
+#define HDC1000_I2C_ADDRESS        Board_HDC1000_ADDR
+/*---------------------------------------------------------------------------*/
 /* Registers */
 #define HDC1000_REG_TEMP           0x00 /* Temperature */
 #define HDC1000_REG_HUM            0x01 /* Humidity */
@@ -83,22 +86,21 @@
 #define HI_UINT16(a) (((a) >> 8) & 0xFF)
 #define LO_UINT16(a) ((a) & 0xFF)
 
-#define SWAP(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
+#define SWAP16(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
+
+#define LSB16(v)  (LO_UINT16(v)), (HI_UINT16(v))
+/*---------------------------------------------------------------------------*/
+static I2C_Handle i2cHandle;
 /*---------------------------------------------------------------------------*/
 /* Raw data as returned from the sensor (Big Endian) */
-typedef struct sensor_data {
+typedef struct {
   uint16_t temp;
   uint16_t hum;
-} sensor_data_t;
+} HDC_1000_SensorData;
 
-/* Raw data, little endian */
-static uint16_t raw_temp;
-static uint16_t raw_hum;
+static HDC_1000_SensorData sensor_data;
 /*---------------------------------------------------------------------------*/
-static bool success;
-static sensor_data_t data;
-/*---------------------------------------------------------------------------*/
-static int enabled = HDC_1000_SENSOR_STATUS_DISABLED;
+static volatile HDC_1000_SENSOR_STATUS sensor_status = HDC_1000_SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/
 /*
  * Maximum measurement durations in clock ticks. We use 14bit resolution, thus:
@@ -115,6 +117,25 @@ static int enabled = HDC_1000_SENSOR_STATUS_DISABLED;
 
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
+static bool
+i2c_transaction(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
+{
+  I2C_Transaction i2cTransaction = {
+    .writeBuf = writeBuf,
+    .writeCount = writeCount,
+    .readBuf = readBuf,
+    .readCount = readCount,
+    .slaveAddress = HDC1000_I2C_ADDRESS,
+  };
+
+  return I2C_transfer(i2cHandle, &i2cTransaction);
+}
+
+#define i2c_write(writeBuf, writeCount)   i2c_transaction(writeBuf, writeCount, NULL, 0)
+#define i2c_read(readBuf, readCount)      i2c_transaction(NULL, 0, readBuf, readCount)
+#define i2c_write_read(writeBuf, writeCount, readBuf, readCount) \
+                                          i2c_transaction(writeBuf, writeCount, readBuf, readCount)
+/*---------------------------------------------------------------------------*/
 /**
  * \brief       Initialise the humidity sensor driver
  * \return      True if I2C operation successful
@@ -122,59 +143,36 @@ static struct ctimer startup_timer;
 static bool
 sensor_init(void)
 {
-  uint16_t val;
+  if (i2cHandle) {
+    return true;
+  }
 
-  SENSOR_SELECT();
+  I2C_Params i2cParams;
+  I2C_Params_init(&i2cParams);
+  i2cParams.transferMode = I2C_MODE_BLOCKING;
+  i2cParams.bitRate = I2C_400kHz;
 
-  /* Enable reading data in one operation */
-  val = SWAP(HDC1000_VAL_CONFIG);
-  success = sensor_common_write_reg(HDC1000_REG_CONFIG, (uint8_t *)&val, 2);
+  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
+  if (i2cHandle == NULL) {
+    return false;
+  }
 
-  SENSOR_DESELECT();
+  // Enable reading data in one operation
+  uint8_t config_data[] = { HDC1000_REG_CONFIG, LSB16(HDC1000_VAL_CONFIG) };
 
-  return success;
+  return i2c_write(config_data, sizeof(config_data));
 }
 /*---------------------------------------------------------------------------*/
 /**
  * \brief       Start measurement
- */
-static void
-start(void)
-{
-  if(success) {
-    SENSOR_SELECT();
-
-    success = board_i2c_write_single(HDC1000_REG_TEMP);
-    SENSOR_DESELECT();
-  }
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief       Take readings from the sensor
- * \return      true of I2C operations successful
+ * \return      True if I2C operation successful
  */
 static bool
-read_data()
+start(void)
 {
-  bool valid;
+  uint8_t temp_reg[] = { HDC1000_REG_TEMP };
 
-  if(success) {
-    SENSOR_SELECT();
-
-    success = board_i2c_read((uint8_t *)&data, sizeof(data));
-    SENSOR_DESELECT();
-
-    /* Store temperature */
-    raw_temp = SWAP(data.temp);
-
-    /* Store humidity */
-    raw_hum = SWAP(data.hum);
-  }
-
-  valid = success;
-  success = true;
-
-  return valid;
+  return i2c_write(temp_reg, sizeof(temp_reg));
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -183,22 +181,26 @@ read_data()
  * \param       hum - converted humidity
  */
 static void
-convert(float *temp, float *hum)
+convert(int32_t *temp, int32_t *hum)
 {
-  /* Convert temperature to degrees C */
-  *temp = ((double)raw_temp / 65536) * 165 - 40;
+  int32_t raw_temp = SWAP16(sensor_data.temp);
+  int32_t raw_hum = SWAP16(sensor_data.hum);
 
+  /* Convert temperature to degrees C */
+  *temp = raw_temp * 100 * 165 / 65536 - 40000;
   /* Convert relative humidity to a %RH value */
-  *hum = ((double)raw_hum / 65536) * 100;
+  *hum = raw_hum * 100 * 100 / 65536;
 }
 /*---------------------------------------------------------------------------*/
 static void
 notify_ready(void *not_used)
 {
-  enabled = HDC_1000_SENSOR_STATUS_READINGS_READY;
-
   /* Latch readings */
-  read_data();
+  if (i2c_read(&sensor_data, sizeof(sensor_data))) {
+    sensor_status = HDC_1000_SENSOR_STATUS_READINGS_READY;
+  } else {
+    sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
+  }
 
   sensors_changed(&hdc_1000_sensor);
 }
@@ -211,31 +213,32 @@ notify_ready(void *not_used)
 static int
 value(int type)
 {
-  int rv;
-  float temp;
-  float hum;
+  int32_t temp = 0;
+  int32_t hum = 0;
 
-  if(enabled != HDC_1000_SENSOR_STATUS_READINGS_READY) {
-    PRINTF("Sensor disabled or starting up (%d)\n", enabled);
-    return CC26XX_SENSOR_READING_ERROR;
+  if (sensor_status != HDC_1000_SENSOR_STATUS_READINGS_READY) {
+    PRINTF("Sensor disabled or starting up (%d)\n", sensor_status);
+    return HDC_1000_READING_ERROR;
   }
 
-  if((type != HDC_1000_SENSOR_TYPE_TEMP) &&
-     type != HDC_1000_SENSOR_TYPE_HUMIDITY) {
-    PRINTF("Invalid type\n");
-    return CC26XX_SENSOR_READING_ERROR;
-  } else {
+  switch (type) {
+  case HDC_1000_SENSOR_TYPE_TEMP:
+  case HDC_1000_SENSOR_TYPE_HUMIDITY:
     convert(&temp, &hum);
-    PRINTF("HDC: %04X %04X       t=%d h=%d\n", raw_temp, raw_hum,
-           (int)(temp * 100), (int)(hum * 100));
+    PRINTF("HDC: t=%d h=%d\n", (int)temp, (int)hum);
 
-    if(type == HDC_1000_SENSOR_TYPE_TEMP) {
-      rv = (int)(temp * 100);
-    } else if(type == HDC_1000_SENSOR_TYPE_HUMIDITY) {
-      rv = (int)(hum * 100);
+    if (type == HDC_1000_SENSOR_TYPE_TEMP) {
+      return (int)temp;
+    } else if (type == HDC_1000_SENSOR_TYPE_HUMIDITY) {
+      return (int)hum;
+    } else {
+      return HDC_1000_READING_ERROR;
     }
+
+  default:
+    PRINTF("Invalid type\n");
+    return HDC_1000_READING_ERROR;
   }
-  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -251,33 +254,40 @@ value(int type)
 static int
 configure(int type, int enable)
 {
-  switch(type) {
+  switch (type) {
   case SENSORS_HW_INIT:
-    raw_temp = 0;
-    raw_hum = 0;
-    memset(&data, 0, sizeof(data));
+    memset(&sensor_data, 0, sizeof(sensor_data));
 
-    sensor_init();
-    enabled = HDC_1000_SENSOR_STATUS_INITIALISED;
+    if (sensor_init()) {
+      sensor_status = HDC_1000_SENSOR_STATUS_INITIALISED;
+    } else {
+      sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
+    }
     break;
+
   case SENSORS_ACTIVE:
     /* Must be initialised first */
-    if(enabled == HDC_1000_SENSOR_STATUS_DISABLED) {
-      return HDC_1000_SENSOR_STATUS_DISABLED;
+    if (sensor_status == HDC_1000_SENSOR_STATUS_DISABLED) {
+      break;
     }
-    if(enable) {
-      start();
+
+    if (enable) {
+      if (!start()) {
+        sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
+        break;
+      }
       ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
-      enabled = HDC_1000_SENSOR_STATUS_TAKING_READINGS;
+      sensor_status = HDC_1000_SENSOR_STATUS_TAKING_READINGS;
     } else {
       ctimer_stop(&startup_timer);
-      enabled = HDC_1000_SENSOR_STATUS_INITIALISED;
+      sensor_status = HDC_1000_SENSOR_STATUS_INITIALISED;
     }
     break;
+
   default:
     break;
   }
-  return enabled;
+  return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -291,8 +301,9 @@ status(int type)
   switch(type) {
   case SENSORS_ACTIVE:
   case SENSORS_READY:
-    return enabled;
+    return sensor_status;
     break;
+
   default:
     break;
   }

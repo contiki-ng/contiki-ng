@@ -33,6 +33,8 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
+#define Board_CC1350STK
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -74,6 +76,7 @@ extern "C" {
 
 #define Board_KEY_LEFT          CC1350STK_KEY_LEFT
 #define Board_KEY_RIGHT         CC1350STK_KEY_RIGHT
+#define Board_RELAY             CC1350STK_RELAY
 
 #define Board_MIC_POWER         CC1350STK_MIC_POWER
 #define Board_MIC_POWER_OM      CC1350STK_MIC_POWER_ON
@@ -83,6 +86,8 @@ extern "C" {
 #define Board_MPU_POWER         CC1350STK_MPU_POWER
 #define Board_MPU_POWER_OFF     CC1350STK_MPU_POWER_OFF
 #define Board_MPU_POWER_ON      CC1350STK_MPU_POWER_ON
+
+#define Board_TMP_RDY           CC1350STK_TMP_RDY
 
 #define Board_NVSINTERNAL       CC1350STK_NVSCC26XX0
 #define Board_NVSEXTERNAL       CC1350STK_NVSSPI25X0

@@ -30,7 +30,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx
+ * \addtogroup cc13xx-cc26xx
  * @{
  *
  * \file
@@ -39,6 +39,8 @@
 /*---------------------------------------------------------------------------*/
 #ifndef SIMPLELINK_CONF_H_
 #define SIMPLELINK_CONF_H_
+/*---------------------------------------------------------------------------*/
+#include "cc13xx-cc26xx-def.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name Network Stack Configuration
@@ -51,51 +53,74 @@
  * You need to set this to 1 to use TSCH with its default 2.2ms or larger guard time.
  */
 #ifndef CC2650_FAST_RADIO_STARTUP
-#define CC2650_FAST_RADIO_STARTUP               (MAC_CONF_WITH_TSCH)
+#define CC2650_FAST_RADIO_STARTUP           (MAC_CONF_WITH_TSCH)
 #endif
 
 #ifdef RF_CHANNEL
-#define RF_CORE_CONF_CHANNEL             RF_CHANNEL
+#define RF_CORE_CONF_CHANNEL                RF_CHANNEL
 #endif
 
 #ifndef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CONF_CHANNEL                     25
+#define RF_CORE_CONF_CHANNEL                25
 #endif
 
 /* Number of Prop Mode RX buffers */
 #ifndef PROP_MODE_CONF_RX_BUF_CNT
-#define PROP_MODE_CONF_RX_BUF_CNT        4
+#define PROP_MODE_CONF_RX_BUF_CNT           4
 #endif
 
-/*
- * Auto-configure Prop-mode radio if we are running on CC13xx, unless the
- * project has specified otherwise. Depending on the final mode, determine a
- * default channel (again, if unspecified) and configure RDC params
- */
-#if CPU_FAMILY_CC13XX
-#ifndef CC13XX_CONF_PROP_MODE
-#define CC13XX_CONF_PROP_MODE 1
-#endif /* CC13XX_CONF_PROP_MODE */
-#endif /* CPU_FAMILY_CC13XX */
+/* Configure Radio mode, i.e. prop or ieee */
+/* CC13xx supports both IEEE and Prop mode, depending on which device */
+/* CC26xx only supports IEEE mode */
+#if defined(DEVICE_LINE_CC13XX)
 
-#if CC13XX_CONF_PROP_MODE
-#define NETSTACK_CONF_RADIO        prop_mode_driver
+/* Default mode should be prop for prop-only devices (CC1310, CC1312);
+ * Else, IEEE mode is default. */
+#   ifndef CC13XX_CONF_PROP_MODE
+#       if (SUPPORTS_IEEE_MODE == 0)
+#           define CC13XX_CONF_PROP_MODE            1
+#       else
+#           define CC13XX_CONF_PROP_MODE            0
+#       endif
+#   endif
 
-#ifndef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CONF_CHANNEL                      0
-#endif
 
-#define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 400)
-#define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
-#define CSMA_CONF_SEND_SOFT_ACK              1
+#   if (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1)
+/*----- CC13xx Prop Mode ----------------------------------------------------*/
+#       define NETSTACK_CONF_RADIO          prop_mode_driver
 
-#else /* CC13XX_CONF_PROP_MODE */
-#define NETSTACK_CONF_RADIO        ieee_mode_driver
+#       define CSMA_CONF_ACK_WAIT_TIME      (RTIMER_SECOND / 400)
+#       define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME \
+                                            (RTIMER_SECOND / 1000)
+#       define CSMA_CONF_SEND_SOFT_ACK      1
 
-#define CSMA_CONF_SEND_SOFT_ACK              0
-#endif /* CC13XX_CONF_PROP_MODE */
+#   elif (CC13XX_CONF_PROP_MODE == 0) && (SUPPORTS_IEEE_MODE == 1)
+/*----- CC13xx IEEE Mode ----------------------------------------------------*/
+#       define NETSTACK_CONF_RADIO          ieee_mode_driver
 
-#define NETSTACK_RADIO_MAX_PAYLOAD_LEN        125
+#       define CSMA_CONF_SEND_SOFT_ACK      0
+
+#   else
+#       error "Invalid radio mode configuration of CC13xx device"
+#   endif /* (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1) */
+
+#elif defined(DEVICE_LINE_CC26XX)
+
+#   if (SUPPORTS_IEEE_MODE == 1)
+/*----- CC26xx IEEE Mode ----------------------------------------------------*/
+#       define NETSTACK_CONF_RADIO          ieee_mode_driver
+
+#       define CSMA_CONF_SEND_SOFT_ACK      0
+
+#   else
+#       error "IEEE mode only supported by CC26xx devices"
+#   endif /* (SUPPORTS_IEEE_MODE == 1) */
+
+#else
+#   error "Unsupported Device Line defined"
+#endif /* defined(DEVICE_LINE_CC13xx) */
+
+#define NETSTACK_RADIO_MAX_PAYLOAD_LEN      125
 
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -111,7 +136,7 @@
  * 1 => Use a hardcoded address, configured by IEEE_ADDR_CONF_ADDRESS
  */
 #ifndef IEEE_ADDR_CONF_HARDCODED
-#define IEEE_ADDR_CONF_HARDCODED             0
+#define IEEE_ADDR_CONF_HARDCODED            0
 #endif
 
 /**
@@ -119,7 +144,7 @@
  * is defined as 1
  */
 #ifndef IEEE_ADDR_CONF_ADDRESS
-#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
+#define IEEE_ADDR_CONF_ADDRESS              { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -131,15 +156,15 @@
 /* RF Config */
 
 #ifndef IEEE_MODE_CONF_AUTOACK
-#define IEEE_MODE_CONF_AUTOACK               1 /**< RF H/W generates ACKs */
+#define IEEE_MODE_CONF_AUTOACK              1 /**< RF H/W generates ACKs */
 #endif
 
 #ifndef IEEE_MODE_CONF_PROMISCOUS
-#define IEEE_MODE_CONF_PROMISCOUS            0 /**< 1 to enable promiscous mode */
+#define IEEE_MODE_CONF_PROMISCOUS           0 /**< 1 to enable promiscous mode */
 #endif
 
 #ifndef RF_BLE_CONF_ENABLED
-#define RF_BLE_CONF_ENABLED                  0 /**< 0 to disable BLE support */
+#define RF_BLE_CONF_ENABLED                 0 /**< 0 to disable BLE support */
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -149,16 +174,16 @@
  * @{
  */
 #ifndef SIMPLELINK_UART_CONF_ENABLE
-#define SIMPLELINK_UART_CONF_ENABLE            1 /**< Enable/Disable UART I/O */
+#define SIMPLELINK_UART_CONF_ENABLE         1 /**< Enable/Disable UART I/O */
 #endif
 
 #ifndef SIMPLELINK_UART_CONF_BAUD_RATE
-#define SIMPLELINK_UART_CONF_BAUD_RATE    115200 /**< Default UART0 baud rate */
+#define SIMPLELINK_UART_CONF_BAUD_RATE      115200 /**< Default UART0 baud rate */
 #endif
 
 /* Enable I/O over the Debugger Devpack - Only relevant for the SensorTag */
 #ifndef BOARD_CONF_DEBUGGER_DEVPACK
-#define BOARD_CONF_DEBUGGER_DEVPACK        1
+#define BOARD_CONF_DEBUGGER_DEVPACK         1
 #endif
 
 #ifndef SLIP_ARCH_CONF_ENABLED
@@ -168,35 +193,10 @@
  * keep using SLIP
  */
 #if defined(UIP_FALLBACK_INTERFACE) || defined(CMD_CONF_OUTPUT)
-#define SLIP_ARCH_CONF_ENABLED             1
+#define SLIP_ARCH_CONF_ENABLED              1
 #endif
-#endif
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name JTAG interface configuration
- *
- * Enable/Disable the JTAG DAP and TAP interfaces on the chip.
- * Setting this to 0 will disable access to the debug interface
- * to secure deployed images.
- * @{
- */
-#ifndef CCXXWARE_CONF_JTAG_INTERFACE_ENABLE
-#define CCXXWARE_CONF_JTAG_INTERFACE_ENABLE              1
-#endif
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name ROM Bootloader configuration
- *
- * Enable/Disable the ROM bootloader in your image, if the board supports it.
- * Look in board.h to choose the DIO and corresponding level that will cause
- * the chip to enter bootloader mode.
- * @{
- */
-#ifndef ROM_BOOTLOADER_ENABLE
-#define ROM_BOOTLOADER_ENABLE              0
-#endif
+
+#endif /* SLIP_ARCH_CONF_ENABLED */
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* SIMPLELINK_CONF_H_ */

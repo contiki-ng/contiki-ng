@@ -46,18 +46,18 @@
 #include "dev/watchdog.h"
 /*---------------------------------------------------------------------------*/
 /* RF Core Mailbox API */
-#include <driverlib/rf_mailbox.h>
-#include <driverlib/rf_common_cmd.h>
-#include <driverlib/rf_data_entry.h>
-#include <driverlib/rf_prop_cmd.h>
-#include <driverlib/rf_prop_mailbox.h>
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
+#include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
+#include DeviceFamily_constructPath(driverlib/rf_data_entry.h)
+#include DeviceFamily_constructPath(driverlib/rf_prop_cmd.h)
+#include DeviceFamily_constructPath(driverlib/rf_prop_mailbox.h)
+
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* RF settings */
-/* RF settings */
 #ifdef PROP_MODE_CONF_RF_SETTINGS
 #   define PROP_MODE_RF_SETTINGS  PROP_MODE_CONF_RF_SETTINGS
-#   undef PROP_MODE_CONF_RF_SETTINGS
 #else
 #   define PROP_MODE_RF_SETTINGS "prop-settings.h"
 #endif
@@ -164,32 +164,20 @@ static rfc_propRxOutput_t rx_stats;
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
 #define ENTER_RX_WAIT_TIMEOUT (RTIMER_SECOND >> 10)
 /*---------------------------------------------------------------------------*/
-/* TX power table for the 431-527MHz band */
-#ifdef PROP_MODE_CONF_TX_POWER_431_527
-#define PROP_MODE_TX_POWER_431_527 PROP_MODE_CONF_TX_POWER_431_527
+/* Configuration for TX power table */
+#ifdef TX_POWER_CONF_TABLE
+#   define TX_POWER_TABLE  TX_POWER_CONF_TABLE
 #else
-#define PROP_MODE_TX_POWER_431_527 RF_propTxPower431_527
+#   define TX_POWER_TABLE  propTxPowerTable
 #endif
 /*---------------------------------------------------------------------------*/
-/* TX power table for the 779-930MHz band */
-#ifdef PROP_MODE_CONF_TX_POWER_779_930
-#define PROP_MODE_TX_POWER_779_930 PROP_MODE_CONF_TX_POWER_779_930
-#else
-#define PROP_MODE_TX_POWER_779_930 RF_propTxPower779_930
-#endif
-/*---------------------------------------------------------------------------*/
-/* Select power table based on the frequency band */
-#if DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_470
-#define TX_POWER_DRIVER PROP_MODE_TX_POWER_431_527
-#else
-#define TX_POWER_DRIVER PROP_MODE_TX_POWER_779_930
-#endif
+/* TX power table convenience macros */
+#define TX_POWER_TABLE_SIZE  ((sizeof(TX_POWER_TABLE) / sizeof(TX_POWER_TABLE[0])) - 1)
 
-/* Max and Min Output Power in dBm */
-#define OUTPUT_POWER_MAX     (TX_POWER_DRIVER[0].dbm)
+#define TX_POWER_MIN  (TX_POWER_TABLE[0].power)
+#define TX_POWER_MAX  (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
 
-/* Default TX Power - position in output_power[] */
-static const RF_TxPower *tx_power_current = &TX_POWER_DRIVER[0];
+#define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
 /*---------------------------------------------------------------------------*/
 #ifdef PROP_MODE_CONF_RX_BUF_CNT
 #define PROP_MODE_RX_BUF_CNT PROP_MODE_CONF_RX_BUF_CNT
@@ -221,10 +209,10 @@ volatile static uint8_t *rx_read_entry;
 
 static uint8_t tx_buf[TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN] CC_ALIGN(4);
 /*---------------------------------------------------------------------------*/
-volatile static rfc_CMD_PROP_RADIO_DIV_SETUP_t *gvp_cmd_radio_div_setup = &rf_cmd_prop_radio_div_setup;
-volatile static rfc_CMD_FS_t                   *gvp_cmd_fs              = &rf_cmd_prop_fs;
-volatile static rfc_CMD_PROP_TX_ADV_t          *gvp_cmd_tx_adv          = &rf_cmd_prop_tx_adv;
-volatile static rfc_CMD_PROP_RX_ADV_t          *gvp_cmd_rx_adv          = &rf_cmd_prop_rx_adv;
+volatile static rfc_CMD_PROP_RADIO_DIV_SETUP_t *gvp_cmd_radio_div_setup = &RF_cmdPropRadioDivSetup;
+volatile static rfc_CMD_FS_t                   *gvp_cmd_fs              = &RF_cmdPropFs;
+volatile static rfc_CMD_PROP_TX_ADV_t          *gvp_cmd_tx_adv          = &RF_cmdPropTxAdv;
+volatile static rfc_CMD_PROP_RX_ADV_t          *gvp_cmd_rx_adv          = &RF_cmdPropRxAdv;
 /*---------------------------------------------------------------------------*/
 /* RF driver */
 static RF_Object rfObject;
@@ -378,60 +366,30 @@ set_channel(uint8_t channel)
     RF_postCmd(rfHandle, (RF_Op*)gvp_cmd_fs, RF_PriorityNormal, NULL, 0);
 }
 /*---------------------------------------------------------------------------*/
-static size_t
-get_tx_power_array_last_element(void)
-{
-  const RF_TxPower *array = TX_POWER_DRIVER;
-  uint8_t count = 0;
-
-  while(array->power != TX_POWER_UNKNOWN) {
-    count++;
-    array++;
-  }
-  return count - 1;
-}
-/*---------------------------------------------------------------------------*/
 /* Returns the current TX power in dBm */
 static radio_value_t
 get_tx_power(void)
 {
-  return tx_power_current->dbm;
+  const RF_TxPowerTable_Value value  = RF_getTxPower(rfHandle);
+  return (radio_value_t)RF_TxPowerTable_findPowerLevel(TX_POWER_TABLE, value);
 }
 /*---------------------------------------------------------------------------*/
 /*
  * The caller must make sure to send a new CMD_PROP_RADIO_DIV_SETUP to the
  * radio after calling this function.
  */
-static void
+static radio_result_t
 set_tx_power(const radio_value_t power)
 {
-  if (power > OUTPUT_POWER_MAX)
-  {
-      tx_power_current = &TX_POWER_DRIVER[0];
+  if (!TX_POWER_IN_RANGE(power)) {
+    return RADIO_RESULT_INVALID_VALUE;
   }
-  else
-  {
-      size_t i;
-      for (i = 0; TX_POWER_DRIVER[i + 1].power != TX_POWER_UNKNOWN; ++i)
-      {
-          if (power > TX_POWER_DRIVER[i + 1].dbm)
-          {
-              break;
-          }
-      }
+  const RF_TxPowerTable_Value value = RF_TxPowerTable_findValue(TX_POWER_TABLE, power);
+  RF_Stat stat = RF_setTxPower(rfHandle, value);
 
-      tx_power_current = &TX_POWER_DRIVER[i];
-  }
-
-  rfc_CMD_SET_TX_POWER_t cmd_set_tx_power;
-  memset(&cmd_set_tx_power, 0x00, sizeof(rfc_CMD_SET_TX_POWER_t));
-  cmd_set_tx_power.commandNo = CMD_SET_TX_POWER;
-  cmd_set_tx_power.txPower = tx_power_current->power;
-
-  RF_Stat stat = RF_runImmediateCmd(rfHandle, (uint32_t*)&cmd_set_tx_power);
-  if (stat != RF_StatCmdDoneSuccess) {
-      PRINTF("set_tx_power: stat=0x%02X\n", stat);
-  }
+  return (stat == RF_StatSuccess)
+    ? RADIO_RESULT_OK
+    : RADIO_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -719,10 +677,10 @@ get_value(radio_param_t param, radio_value_t *value)
     *value = DOT_15_4G_CHANNEL_MAX;
     return RADIO_RESULT_OK;
   case RADIO_CONST_TXPOWER_MIN:
-    *value = TX_POWER_DRIVER[get_tx_power_array_last_element()].dbm;
+    *value = (radio_value_t)TX_POWER_MIN;
     return RADIO_RESULT_OK;
   case RADIO_CONST_TXPOWER_MAX:
-    *value = OUTPUT_POWER_MAX;
+    *value = (radio_value_t)TX_POWER_MAX;
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
@@ -758,12 +716,8 @@ set_value(radio_param_t param, radio_value_t value)
     set_channel((uint8_t)value);
     break;
   case RADIO_PARAM_TXPOWER:
-    if(value < TX_POWER_DRIVER[get_tx_power_array_last_element()].dbm ||
-       value > OUTPUT_POWER_MAX) {
-      return RADIO_RESULT_INVALID_VALUE;
-    }
-    set_tx_power(value);
-    return RADIO_RESULT_OK;
+    return set_tx_power(value);
+
   case RADIO_PARAM_RX_MODE:
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CCA_THRESHOLD:

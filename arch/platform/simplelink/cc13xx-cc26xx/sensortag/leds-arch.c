@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,37 +29,71 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-peripherals
- * @{
- *
- * \defgroup sensortag-cc26xx-button-sensor SensorTag 2.0 Button Sensor
- *
- * One of the buttons can be configured as general purpose or as an on/off key
+ * \addtogroup simplelink-platform
  * @{
  *
  * \file
- * Header file for the Sensortag Button Driver
+ *  Driver for LaunchPad LEDs
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BUTTON_SENSOR_H_
-#define BUTTON_SENSOR_H_
+/* Contiki API */
+#include <contiki.h>
+#include <dev/leds.h>
 /*---------------------------------------------------------------------------*/
-#include "lib/sensors.h"
-/*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR "Button"
-/*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR_VALUE_STATE    0
-#define BUTTON_SENSOR_VALUE_DURATION 1
+/* Simplelink SDK API */
+#include <Board.h>
 
-#define BUTTON_SENSOR_VALUE_RELEASED 0
-#define BUTTON_SENSOR_VALUE_PRESSED  1
+#include <ti/drivers/GPIO.h>
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor button_left_sensor;
-extern const struct sensors_sensor button_right_sensor;
+/* Standard library */
+#include <stdbool.h>
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
-#endif /* BUTTON_SENSOR_H_ */
+/* Available LED configuration */
+
+/* LED */
+#define LEDS_ARCH     Board_GPIO_LED0
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
+static volatile unsigned char c;
+/*---------------------------------------------------------------------------*/
+void
+leds_arch_init(void)
+{
+  static bool bHasInit = false;
+  if(bHasInit) {
+    return;
+  }
+  bHasInit = true;
+
+  // GPIO_init will most likely be called in platform.c,
+  // but call it here to be sure GPIO is initialized.
+  // Calling GPIO_init multiple times is safe.
+  GPIO_init();
+}
+/*---------------------------------------------------------------------------*/
+unsigned char
+leds_arch_get(void)
+{
+  return c;
+}
+/*---------------------------------------------------------------------------*/
+static inline void
+write_led(const bool on, const uint_fast32_t gpioLed)
+{
+  const GPIO_PinConfig pinCfg = (on)
+    ? Board_GPIO_LED_ON
+    : Board_GPIO_LED_OFF;
+  GPIO_write(gpioLed, pinCfg);
+}
+/*---------------------------------------------------------------------------*/
+void
+leds_arch_set(unsigned char leds)
+{
+  c = leds;
+
+  // Green LED
+  uint_fast32_t gpioOn = (leds & (LEDS_ARCH)) == (LEDS_ARCH);
+  write_led(gpioOn, LEDS_ARCH);
+}
+/*---------------------------------------------------------------------------*/
+/** @} */

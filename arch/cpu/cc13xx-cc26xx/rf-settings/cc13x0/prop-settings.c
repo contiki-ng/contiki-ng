@@ -54,7 +54,7 @@ RF_Mode RF_propMode =
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry txPowerTable[16] =
+RF_TxPowerTable_Entry propTxPowerTable[16] =
 {
     { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  2) },
     {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  9) },
@@ -77,7 +77,7 @@ RF_TxPowerTable_Entry txPowerTable[16] =
 
 
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pOverrides[] =
+uint32_t pPropOverrides[] =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(0,4,0,1,0,0),      // PHY: Use MCE ROM bank 4, RFE RAM patch
@@ -107,7 +107,7 @@ uint32_t pOverrides[] =
     (uint32_t)0x00000943,               // IEEE 802.15.4g: Fix incorrect initialization value for CRC-16 calculation (see TRM section 23.7.5.2.1)
     (uint32_t)0x00000963,               // IEEE 802.15.4g: Fix incorrect initialization value for CRC-16 calculation (see TRM section 23.7.5.2.1)
                                         // override_phy_rx_rssi_offset_5db.xml
-    (uint32_t)0x00FB88A3,  / da/ Rx: Set RSSI offset to adjust reported RSSI by +5 dB
+    (uint32_t)0x00FB88A3,               // Rx: Set RSSI offset to adjust reported RSSI by +5 dB
                                         // TX power override
     ADI_REG_OVERRIDE(0,12,0xF8),        // Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8)
     (uint32_t)0xFFFFFFFF,
@@ -145,7 +145,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup =
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0xAB3F,
-    .pRegOverride = pOverrides,
+    .pRegOverride = pPropOverrides,
     .centerFreq = 0x0364,
     .intFreq = 0x8000,
     .loDivider = 0x05,
@@ -153,7 +153,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup =
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdFs =
+rfc_CMD_FS_t RF_cmdPropFs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,
