@@ -196,14 +196,10 @@ send_one_packet(void *ptr)
         if(is_broadcast) {
           ret = MAC_TX_OK;
         } else {
-          rtimer_clock_t wt;
-
           /* Check for ack */
-          wt = RTIMER_NOW();
-          watchdog_periodic();
-          while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + CSMA_ACK_WAIT_TIME)) {
-            watchdog_periodic();
-          }
+
+          /* Wait for max CSMA_ACK_WAIT_TIME */
+          RTIMER_BUSYWAIT_UNTIL(NETSTACK_RADIO.pending_packet(), CSMA_ACK_WAIT_TIME);
 
           ret = MAC_TX_NOACK;
           if(NETSTACK_RADIO.receiving_packet() ||
@@ -212,14 +208,8 @@ send_one_packet(void *ptr)
             int len;
             uint8_t ackbuf[CSMA_ACK_LEN];
 
-            if(CSMA_AFTER_ACK_DETECTED_WAIT_TIME > 0) {
-              wt = RTIMER_NOW();
-              watchdog_periodic();
-              while(RTIMER_CLOCK_LT(RTIMER_NOW(),
-                                    wt + CSMA_AFTER_ACK_DETECTED_WAIT_TIME)) {
-                watchdog_periodic();
-              }
-            }
+            /* Wait an additional CSMA_AFTER_ACK_DETECTED_WAIT_TIME to complete reception */
+            RTIMER_BUSYWAIT_UNTIL(NETSTACK_RADIO.pending_packet(), CSMA_AFTER_ACK_DETECTED_WAIT_TIME);
 
             if(NETSTACK_RADIO.pending_packet()) {
               len = NETSTACK_RADIO.read(ackbuf, CSMA_ACK_LEN);
