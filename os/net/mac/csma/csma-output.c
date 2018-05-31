@@ -207,6 +207,7 @@ send_one_packet(void *ptr)
           wt = RTIMER_NOW();
           watchdog_periodic();
           while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + CSMA_ACK_WAIT_TIME)) {
+            watchdog_periodic();
 #if CONTIKI_TARGET_COOJA
             simProcessRunValue = 1;
             cooja_mt_yield();
@@ -225,6 +226,7 @@ send_one_packet(void *ptr)
               watchdog_periodic();
               while(RTIMER_CLOCK_LT(RTIMER_NOW(),
                                     wt + CSMA_AFTER_ACK_DETECTED_WAIT_TIME)) {
+                watchdog_periodic();
 #if CONTIKI_TARGET_COOJA
                 simProcessRunValue = 1;
                 cooja_mt_yield();
