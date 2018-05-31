@@ -93,9 +93,9 @@
 #define COAP_MAX_HEADER_SIZE           (4 + COAP_TOKEN_LEN + 3 + 1 + COAP_ETAG_LEN + 4 + 4 + 30)  /* 65 */
 #endif /* COAP_MAX_HEADER_SIZE */
 
-/* Number of observer slots (each takes abot xxx bytes) */
+/* Number of observer slots */
 #ifndef COAP_MAX_OBSERVERS
-#define COAP_MAX_OBSERVERS    COAP_MAX_OPEN_TRANSACTIONS - 1
+#define COAP_MAX_OBSERVERS    20 
 #endif /* COAP_MAX_OBSERVERS */
 
 /* Interval in notifies in which NON notifies are changed to CON notifies to check client. */
