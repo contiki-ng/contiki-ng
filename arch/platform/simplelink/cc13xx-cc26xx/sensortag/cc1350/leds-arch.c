@@ -43,17 +43,20 @@
 /* Simplelink SDK API */
 #include <Board.h>
 
-#include <ti/drivers/GPIO.h>
+#include <ti/drivers/PIN.h>
 /*---------------------------------------------------------------------------*/
 /* Standard library */
 #include <stdbool.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-/* Available LED configuration */
+static const PIN_Config pin_table[] = {
+  Board_PIN_LED0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+  PIN_TERMINATE
+};
 
-/* LED */
-#define LEDS_ARCH     Board_GPIO_LED0
-/*---------------------------------------------------------------------------*/
+static PIN_State pin_state;
+static PIN_Handle pin_handle;
+
 static volatile unsigned char c;
 /*---------------------------------------------------------------------------*/
 void
@@ -63,12 +66,14 @@ leds_arch_init(void)
   if(bHasInit) {
     return;
   }
-  bHasInit = true;
 
-  // GPIO_init will most likely be called in platform.c,
-  // but call it here to be sure GPIO is initialized.
-  // Calling GPIO_init multiple times is safe.
-  GPIO_init();
+  // PIN_init() called from Board_initGeneral()
+  pin_handle = PIN_open(&pin_state, pin_table);
+  if (!pin_handle) {
+    return;
+  }
+
+  bHasInit = true;
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
@@ -77,23 +82,16 @@ leds_arch_get(void)
   return c;
 }
 /*---------------------------------------------------------------------------*/
-static inline void
-write_led(const bool on, const uint_fast32_t gpioLed)
-{
-  const GPIO_PinConfig pinCfg = (on)
-    ? Board_GPIO_LED_ON
-    : Board_GPIO_LED_OFF;
-  GPIO_write(gpioLed, pinCfg);
-}
-/*---------------------------------------------------------------------------*/
 void
 leds_arch_set(unsigned char leds)
 {
   c = leds;
 
-  // Green LED
-  uint_fast32_t gpioOn = (leds & (LEDS_ARCH)) == (LEDS_ARCH);
-  write_led(gpioOn, LEDS_ARCH);
+  PIN_setPortOutputValue(pin_handle, 0);
+
+  if (leds & LEDS_RED) {
+    PIN_setOutputValue(pin_handle, Board_PIN_LED0, 1);
+  }
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

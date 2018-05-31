@@ -45,6 +45,20 @@ extern "C" {
 #define Board_shutDownExtFlash() CC1350STK_shutDownExtFlash()
 #define Board_wakeUpExtFlash() CC1350STK_wakeUpExtFlash()
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \name LED configurations
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define LEDS_RED       (1 << 0)
+#define LEDS_GREEN     LEDS_RED
+#define LEDS_YELLOW    LEDS_RED
+#define LEDS_ORANGE    LEDS_RED
+
+#define LEDS_CONF_ALL  (LEDS_RED)
+/*---------------------------------------------------------------------------*/
 /* These #defines allow us to reuse TI-RTOS across other device families */
 
 #define Board_BUZZER            CC1350STK_BUZZER

@@ -45,6 +45,20 @@ extern "C" {
 #define Board_shutDownExtFlash() CC2650STK_shutDownExtFlash()
 #define Board_wakeUpExtFlash() CC2650STK_wakeUpExtFlash()
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \name LED configurations
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define LEDS_RED       (1 << 0)
+#define LEDS_GREEN     (1 << 1)
+#define LEDS_YELLOW    LEDS_GREEN
+#define LEDS_ORANGE    LEDS_RED
+
+#define LEDS_CONF_ALL  (LEDS_RED | LEDS_GREEN)
+/*---------------------------------------------------------------------------*/
 /* These #defines allow us to reuse TI-RTOS across other device families */
 
 #define Board_BUZZER            CC2650STK_BUZZER
@@ -87,6 +101,8 @@ extern "C" {
 #define Board_MPU_POWER_OFF     CC2650STK_MPU_POWER_OFF
 #define Board_MPU_POWER_ON      CC2650STK_MPU_POWER_ON
 
+#define Board_TMP_RDY           CC2650STK_TMP_RDY
+
 #define Board_NVSINTERNAL       CC2650STK_NVSCC26XX0
 #define Board_NVSEXTERNAL       CC2650STK_NVSSPI25X0
 
@@ -94,7 +110,7 @@ extern "C" {
 
 #define Board_PIN_BUTTON0       CC2650STK_KEY_LEFT
 #define Board_PIN_BUTTON1       CC2650STK_KEY_RIGHT
-#define Board_PIN_LED0          CC2650STK_PIN_LED1
+#define Board_PIN_LED0          CC2650STK_PIN_LED0
 #define Board_PIN_LED1          CC2650STK_PIN_LED1
 #define Board_PIN_LED2          CC2650STK_PIN_LED1
 

@@ -33,7 +33,7 @@ RF_Mode RF_ieeeMode =
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry txPowerTable[14] =
+RF_TxPowerTable_Entry ieeeTxPowerTable[14] =
 {
     { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  6) },
     { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  6) },
@@ -53,7 +53,7 @@ RF_TxPowerTable_Entry txPowerTable[14] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pOverrides[] =
+uint32_t pIeeeOverrides[] =
 {
                                     // override_synth_ieee_15_4.xml
     HW_REG_OVERRIDE(0x4038,0x0035), // Synth: Set recommended RTRIM to 5
@@ -101,12 +101,12 @@ rfc_CMD_RADIO_SETUP_t RF_cmdRadioSetup =
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0x9330,
-    .pRegOverride = pOverrides,
+    .pRegOverride = pIeeeOverrides,
 };
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdFs =
+rfc_CMD_FS_t RF_cmdIeeeFs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,

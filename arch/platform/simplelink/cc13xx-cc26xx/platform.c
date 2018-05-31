@@ -48,13 +48,17 @@
 /*---------------------------------------------------------------------------*/
 /* Simplelink SDK includes */
 #include <Board.h>
-#include <ti/drivers/GPIO.h>
-#include <ti/drivers/Power.h>
-#include <driverlib/driverlib_release.h>
-#include <driverlib/chipinfo.h>
-#include <driverlib/vims.h>
-#include <driverlib/interrupt.h>
 #include <NoRTOS.h>
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/driverlib_release.h)
+#include DeviceFamily_constructPath(driverlib/chipinfo.h)
+#include DeviceFamily_constructPath(driverlib/vims.h)
+#include DeviceFamily_constructPath(driverlib/interrupt.h)
+#include <ti/drivers/GPIO.h>
+#include <ti/drivers/I2C.h>
+#include <ti/drivers/PIN.h>
+#include <ti/drivers/Power.h>
+#include <ti/drivers/SPI.h>
 /*---------------------------------------------------------------------------*/
 /* Contiki API */
 #include "contiki.h"
@@ -135,34 +139,23 @@ platform_init_stage_one(void)
   // Configure round robin arbitration and prefetching
   VIMSConfigure(VIMS_BASE, true, true);
 
-  Board_initGeneral();
-  GPIO_init();
-
   // NoRTOS_start only enables HWI
   NoRTOS_start();
+
+  // Board_initGeneral() will call Power_init()
+  // Board_initGeneral() will call PIN_init(BoardGpioInitTable)
+  Board_initGeneral();
+  Board_shutDownExtFlash();
 
   // Contiki drivers init
   leds_init();
 
-//  ti_lib_int_master_disable();
-//
-//  /* Set the LF XOSC as the LF system clock source */
-//  oscillators_select_lf_xosc();
-//
-//  lpm_init();
-//
   fade(LEDS_RED);
-//
-//  /*
-//   * Disable I/O pad sleep mode and open I/O latches in the AON IOC interface
-//   * This is only relevant when returning from shutdown (which is what froze
-//   * latches in the first place. Before doing these things though, we should
-//   * allow software to first regain control of pins
-//   */
-//  ti_lib_pwr_ctrl_io_freeze_disable();
-//
-//  ti_lib_int_master_enable();
-//
+
+  GPIO_init();
+  I2C_init();
+  SPI_init();
+
   fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/

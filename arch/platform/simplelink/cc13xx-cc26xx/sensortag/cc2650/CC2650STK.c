@@ -43,10 +43,11 @@
 #include <ti/drivers/Power.h>
 #include <ti/drivers/power/PowerCC26XX.h>
 
-#include <ti/devices/cc13x0/driverlib/ioc.h>
-#include <ti/devices/cc13x0/driverlib/udma.h>
-#include <ti/devices/cc13x0/inc/hw_ints.h>
-#include <ti/devices/cc13x0/inc/hw_memmap.h>
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/ioc.h)
+#include DeviceFamily_constructPath(driverlib/udma.h)
+#include DeviceFamily_constructPath(inc/hw_ints.h)
+#include DeviceFamily_constructPath(inc/hw_memmap.h)
 
 #include "CC2650STK.h"
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,48 +27,76 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-srf-tag
+ * \addtogroup simplelink-platform
  * @{
  *
  * \file
- *  Configuration for the srf06-cc26xx platform
+ *  Driver for LaunchPad LEDs
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CONTIKI_CONF_H_
-#define CONTIKI_CONF_H_
+/* Contiki API */
+#include <contiki.h>
+#include <dev/leds.h>
 /*---------------------------------------------------------------------------*/
+/* Simplelink SDK API */
 #include <Board.h>
-/*---------------------------------------------------------------------------*/
-/* Include Project Specific conf */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Button configurations
- *
- * Configure a button as power on/off: We use the right button for both boards.
- * @{
- */
-#ifndef BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN
-#define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN 1
-#endif
 
-/*
- * Override button symbols from dev/button-sensor.h, for the examples that
- * include it
- */
-#define btn1_sensor button_left_sensor
-#define btn2_sensor button_right_sensor
-/** @} */
+#include <ti/drivers/PIN.h>
 /*---------------------------------------------------------------------------*/
-/* Platform-specific define to signify sensor reading failure */
-/* TODO: remove */
-#define CC26XX_SENSOR_READING_ERROR        0x80000000
+/* Standard library */
+#include <stdbool.h>
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
-/* Include CPU-related configuration */
-#include "cc13xx-cc26xx-conf.h"
+static const PIN_Config pin_table[] = {
+  Board_PIN_LED0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+  Board_PIN_LED1 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+  PIN_TERMINATE
+};
+
+static PIN_State pin_state;
+static PIN_Handle pin_handle;
+
+static volatile unsigned char c;
 /*---------------------------------------------------------------------------*/
-#endif /* CONTIKI_CONF_H_ */
+void
+leds_arch_init(void)
+{
+  static bool bHasInit = false;
+  if(bHasInit) {
+    return;
+  }
+
+  // PIN_init() called from Board_initGeneral()
+  pin_handle = PIN_open(&pin_state, pin_table);
+  if (!pin_handle) {
+    return;
+  }
+
+  bHasInit = true;
+}
+/*---------------------------------------------------------------------------*/
+unsigned char
+leds_arch_get(void)
+{
+  return c;
+}
+/*---------------------------------------------------------------------------*/
+void
+leds_arch_set(unsigned char leds)
+{
+  c = leds;
+
+  PIN_setPortOutputValue(pin_handle, 0);
+
+  if (leds & LEDS_RED) {
+    PIN_setOutputValue(pin_handle, Board_PIN_LED0, 1);
+  }
+
+  if (leds & LEDS_GREEN) {
+    PIN_setOutputValue(pin_handle, Board_PIN_LED1, 1);
+  }
+}
+/*---------------------------------------------------------------------------*/
 /** @} */

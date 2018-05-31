@@ -39,7 +39,6 @@
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
 #include "Board.h"
-#include "ti/drivers/dpl/HwiP.h"
 #include "ti/drivers/GPIO.h"
 #include "ti/drivers/I2C.h"
 #include "ti/drivers/PIN.h"
@@ -50,11 +49,8 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 void
-board_init()
+board_init(void)
 {
-  /* Disable interrupts */
-  const uintptr_t key = HwiP_disable();
-
   // Board_initGeneral() will call Power_init()
   // Board_initGeneral() will call PIN_init(BoardGpioInitTable)
   Board_initGeneral();
@@ -63,9 +59,6 @@ board_init()
   GPIO_init();
   I2C_init();
   SPI_init();
-
-  /* Restore interrupts. */
-  HwiP_restore(key);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
