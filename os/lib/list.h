@@ -66,6 +66,8 @@
 #ifndef LIST_H_
 #define LIST_H_
 
+#include <stdbool.h>
+
 #define LIST_CONCAT2(s1, s2) s1##s2
 #define LIST_CONCAT(s1, s2) LIST_CONCAT2(s1, s2)
 
@@ -151,7 +153,7 @@ void   list_insert(list_t list, void *previtem, void *newitem);
 
 void * list_item_next(void *item);
 
-int list_contains(list_t list, void *item);
+bool list_contains(list_t list, void *item);
 
 #endif /* LIST_H_ */
 

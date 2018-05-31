@@ -334,16 +334,16 @@ list_item_next(void *item)
  *			   0 if the list does not contain the item, and 1 if the item
  *			   is present in the list.
  */
-int
+bool
 list_contains(list_t list, void *item)
 {
   struct list *l;
   for(l = *list; l != NULL; l = l->next) {
     if(item == l) {
-    	return 1;
+    	return true;
     }
   }
-  return 0;
+  return false;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

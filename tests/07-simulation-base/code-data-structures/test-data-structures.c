@@ -167,7 +167,7 @@ UNIT_TEST(test_list)
   UNIT_TEST_ASSERT(list_contains(lst, &elements[3]));
   int i;
   for(i=4; i<ELEMENT_COUNT; i++) {
-    UNIT_TEST_ASSERT(list_contains(lst, &elements[i]) == 0);
+    UNIT_TEST_ASSERT(!list_contains(lst, &elements[i]));
   }
   /*
    * Remove the tail
