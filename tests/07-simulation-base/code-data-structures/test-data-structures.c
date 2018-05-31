@@ -157,6 +157,19 @@ UNIT_TEST(test_list)
   UNIT_TEST_ASSERT(list_length(lst) == 4);
 
   /*
+   * Check that list contains elements 0, 1, 2, 3
+   * and not others
+   * 0 --> 1 --> 2 --> 3 --> NULL
+   */
+  UNIT_TEST_ASSERT(list_contains(lst, &elements[0]));
+  UNIT_TEST_ASSERT(list_contains(lst, &elements[1]));
+  UNIT_TEST_ASSERT(list_contains(lst, &elements[2]));
+  UNIT_TEST_ASSERT(list_contains(lst, &elements[3]));
+  int i;
+  for(i=4; i<ELEMENT_COUNT; i++) {
+    UNIT_TEST_ASSERT(list_contains(lst, &elements[i]) == 0);
+  }
+  /*
    * Remove the tail
    * 0 --> 1 --> 2 --> NULL
    */
