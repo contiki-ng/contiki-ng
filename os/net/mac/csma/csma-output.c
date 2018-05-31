@@ -206,7 +206,8 @@ send_one_packet(void *ptr)
           /* Check for ack */
           wt = RTIMER_NOW();
           watchdog_periodic();
-          while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + CSMA_ACK_WAIT_TIME)) {
+          while(!NETSTACK_RADIO.pending_packet()
+                && RTIMER_CLOCK_LT(RTIMER_NOW(), wt + CSMA_ACK_WAIT_TIME)) {
             watchdog_periodic();
 #if CONTIKI_TARGET_COOJA
             simProcessRunValue = 1;
