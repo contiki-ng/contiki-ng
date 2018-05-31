@@ -60,37 +60,36 @@
 void
 coap_blocking_request_callback(void *callback_data, coap_message_t *response)
 {
-  coap_request_state_t *state = (coap_request_state_t *)callback_data;
+  coap_blocking_request_state_t *blocking_state = (coap_blocking_request_state_t *)callback_data;
 
-  state->response = response;
-  process_poll(state->process);
+  blocking_state->state.response = response;
+  process_poll(blocking_state->process);
 }
 /*---------------------------------------------------------------------------*/
 PT_THREAD(coap_blocking_request
-          (coap_request_state_t *state, process_event_t ev,
+          (coap_blocking_request_state_t *blocking_state, process_event_t ev,
            coap_endpoint_t *remote_ep,
            coap_message_t *request,
            coap_blocking_response_handler_t request_callback))
 {
-  PT_BEGIN(&state->pt);
+  /* Before PT_BEGIN in order to not be a local variable in the PT_Thread and maintain it */
+  coap_request_state_t *state = &blocking_state->state;
 
-  static uint32_t res_block;
-  static uint8_t more;
-  static uint8_t block_error;
+  PT_BEGIN(&blocking_state->pt);
 
   state->block_num = 0;
   state->response = NULL;
-  state->process = PROCESS_CURRENT();
+  blocking_state->process = PROCESS_CURRENT();
 
-  more = 0;
-  res_block = 0;
-  block_error = 0;
+  state->more = 0;
+  state->res_block = 0;
+  state->block_error = 0;
 
   do {
     request->mid = coap_get_mid();
     if((state->transaction = coap_new_transaction(request->mid, remote_ep))) {
       state->transaction->callback = coap_blocking_request_callback;
-      state->transaction->callback_data = state;
+      state->transaction->callback_data = blocking_state;
 
       if(state->block_num > 0) {
         coap_set_header_block2(request, state->block_num, 0,
@@ -104,33 +103,46 @@ PT_THREAD(coap_blocking_request
       coap_send_transaction(state->transaction);
       LOG_DBG("Requested #%"PRIu32" (MID %u)\n", state->block_num, request->mid);
 
-      PT_YIELD_UNTIL(&state->pt, ev == PROCESS_EVENT_POLL);
+      PT_YIELD_UNTIL(&blocking_state->pt, ev == PROCESS_EVENT_POLL);
 
       if(!state->response) {
         LOG_WARN("Server not responding\n");
-        PT_EXIT(&state->pt);
+        state->status = COAP_REQUEST_STATUS_TIMEOUT;
+        PT_EXIT(&blocking_state->pt);
       }
 
-      coap_get_header_block2(state->response, &res_block, &more, NULL, NULL);
+      coap_get_header_block2(state->response, &state->res_block, &state->more, NULL, NULL);
 
-      LOG_DBG("Received #%"PRIu32"%s (%u bytes)\n", res_block, more ? "+" : "",
+      LOG_DBG("Received #%"PRIu32"%s (%u bytes)\n", state->res_block, state->more ? "+" : "",
               state->response->payload_len);
+      if(state->more) {
+        state->status = COAP_REQUEST_STATUS_MORE;
+      } else {
+        state->status = COAP_REQUEST_STATUS_RESPONSE;
+      }
 
-      if(res_block == state->block_num) {
+      if(state->res_block == state->block_num) {
         request_callback(state->response);
         ++(state->block_num);
       } else {
         LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\n",
-                 res_block, state->block_num);
-        ++block_error;
+                 state->res_block, state->block_num);
+        ++(state->block_error);
       }
     } else {
       LOG_WARN("Could not allocate transaction buffer");
-      PT_EXIT(&state->pt);
+      PT_EXIT(&blocking_state->pt);
     }
-  } while(more && block_error < COAP_MAX_ATTEMPTS);
+  } while(state->more && (state->block_error) < COAP_MAX_ATTEMPTS);
 
-  PT_END(&state->pt);
+  if((state->block_error) >= COAP_MAX_ATTEMPTS) {
+     /* failure - now we give up */
+    state->status = COAP_REQUEST_STATUS_BLOCK_ERROR;
+  } else {
+    /* No more blocks, request finished */
+    state->status = COAP_REQUEST_STATUS_FINISHED;
+  }
+  PT_END(&blocking_state->pt);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
