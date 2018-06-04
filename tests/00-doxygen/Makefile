@@ -30,7 +30,7 @@ DOCDIR=../../tools/doxygen
 all: clean summary
 
 doxygen:
-	@make -C $(DOCDIR) 2> doxygen.err > /dev/null
+	-@$(MAKE) -C $(DOCDIR) 2> doxygen.err > /dev/null
 
 summary: doxygen
 	@( \
@@ -55,4 +55,4 @@ summary: doxygen
 
 clean:
 	@rm -f summary doxygen.err
-	@make -C $(DOCDIR) clean
+	@$(MAKE) -C $(DOCDIR) clean
