@@ -20,6 +20,10 @@ before_install:
     else
       echo "Docker image changed, build from Dockerfile"
       docker build tools/docker -t $DOCKER_IMG;
+      if [ $? != 0 ]; then
+        echo "Failed to build Docker image"
+        exit 1
+      fi
       if [ $TRAVIS_SECURE_ENV_VARS == true ] && [ $TRAVIS_PULL_REQUEST == false ] && [ $TRAVIS_BRANCH == 'develop' ]; then
         echo "This build is for an update of branch develop. Push image to Dockerhub"
         echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
