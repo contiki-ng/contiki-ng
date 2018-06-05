@@ -1,0 +1,482 @@
+# -*- makefile -*-
+
+ifndef CONTIKI
+  ${error CONTIKI not defined! You must specify where Contiki resides}
+endif
+
+# Enable Werror by default. To disable from command line, use make WERROR=0.
+# Setting this option is also important for tests on Cooja motes to check for warnings.
+WERROR ?= 1
+
+include $(CONTIKI)/Makefile.identify-target
+
+CONTIKI_NG_TARGET_LIB = contiki-ng-$(TARGET).a
+
+ifeq ($(DEFINES),)
+  -include Makefile.$(TARGET).defines
+  ifneq ($(DEFINES),)
+    ${info using saved defines '$(DEFINES)'}
+  endif
+endif
+
+ifndef HOST_OS
+  ifeq ($(OS),Windows_NT)
+  ## TODO: detect more specific Windows set-ups,
+  ## e.g. CygWin, MingW, VisualC, Watcom, Interix
+    HOST_OS := Windows
+  else
+    HOST_OS := $(shell uname)
+  endif
+endif
+
+#More debug information when running in CI
+ifdef CI
+  ifeq ($(CI),true)
+    V = 1
+  endif
+endif
+
+OBJECTDIR = obj_$(TARGET)
+
+LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
+UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
+TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
+CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
+CFLAGS += -DCONTIKI_TARGET_STRING=\"$(TARGET)\"
+ifneq ($(BOARD),)
+TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
+CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
+CFLAGS += -DCONTIKI_BOARD_STRING=\"$(BOARD)\"
+endif
+
+CFLAGS += -Wno-unused-const-variable
+
+LDFLAGS_WERROR ?= -Wl,--fatal-warnings
+
+ifeq ($(WERROR),1)
+ LDFLAGS += $(LDFLAGS_WERROR)
+endif
+
+MODULES += os os/sys os/dev os/lib os/services
+
+# Automatically include project-conf.h if found
+ifneq ("$(wildcard project-conf.h)","")
+CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
+endif
+
+MODULES += os os/net os/net/mac os/net/mac/framer os/net/routing os/storage
+
+define oname
+${patsubst %.c,%.o, \
+${patsubst %.S,%.o, \
+${patsubst %.s,%.o, \
+$(1) \
+}}}
+endef
+
+CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
+PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
+
+# Provide way to create $(OBJECTDIR) if it has been removed by make clean
+$(OBJECTDIR):
+	mkdir $@
+
+uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
+
+### Include target makefile (TODO Unsafe?)
+
+target_makefile := $(wildcard $(CONTIKI)/arch/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
+
+# Check if the target makefile exists, and create the object directory if necessary.
+ifeq ($(strip $(target_makefile)),)
+  ${error The target platform "$(TARGET)" does not exist (maybe it was misspelled?)}
+else
+  ifneq (1, ${words $(target_makefile)})
+    ${error More than one TARGET Makefile found: $(target_makefile)}
+  endif
+  include $(target_makefile)
+endif
+
+# Decide whether to build or to skip this target for this platform
+ifneq ("", "$(PLATFORMS_ONLY)")
+  ifeq ("","$(filter $(TARGET), $(PLATFORMS_ONLY))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+
+ifneq ("", "$(PLATFORMS_EXCLUDE)")
+  ifneq ("","$(filter $(TARGET), $(PLATFORMS_EXCLUDE))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+
+ifneq ($(BOARD),)
+ifneq ("", "$(BOARDS_ONLY)")
+  ifeq ("","$(filter $(BOARD), $(BOARDS_ONLY))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+
+ifneq ("", "$(BOARDS_EXCLUDE)")
+  ifneq ("","$(filter $(BOARD), $(BOARDS_EXCLUDE))")
+    PLATFORM_ACTION = skip
+  endif
+endif
+endif # $(BOARD) not empty
+
+PLATFORM_ACTION ?= build
+
+# Configure MAC layer
+
+# The different options
+MAKE_MAC_NULLMAC = 0
+MAKE_MAC_CSMA = 1
+MAKE_MAC_TSCH = 2
+MAKE_MAC_BLE = 3
+MAKE_MAC_OTHER = 4
+
+# Make CSMA the default MAC
+MAKE_MAC ?= MAKE_MAC_CSMA
+
+ifeq ($(MAKE_MAC),MAKE_MAC_NULLMAC)
+  MODULES+=os/net/mac/nullmac
+  CFLAGS += -DMAC_CONF_WITH_NULLMAC=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_CSMA)
+  MODULES += os/net/mac/csma
+  CFLAGS += -DMAC_CONF_WITH_CSMA=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_TSCH)
+  MODULES += os/net/mac/tsch
+  CFLAGS += -DMAC_CONF_WITH_TSCH=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_BLE)
+  MODULES += os/net/mac/ble
+  CFLAGS += -DMAC_CONF_WITH_BLE=1
+endif
+
+ifeq ($(MAKE_MAC),MAKE_MAC_OTHER)
+  CFLAGS += -DMAC_CONF_WITH_OTHER=1
+endif
+
+# Configure Network layer
+
+MAKE_NET_NULLNET = 0
+MAKE_NET_IPV6 = 1
+MAKE_NET_OTHER = 2
+
+# Make IPv6 the default stack
+MAKE_NET ?= MAKE_NET_IPV6
+
+ifeq ($(MAKE_NET),MAKE_NET_NULLNET)
+  CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
+  MODULES += os/net/nullnet
+endif
+
+ifeq ($(MAKE_NET),MAKE_NET_IPV6)
+  CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
+  MODULES += os/net/ipv6
+endif
+
+ifeq ($(MAKE_NET),MAKE_NET_OTHER)
+  CFLAGS += -DNETSTACK_CONF_WITH_OTHER=1
+endif
+
+ifeq ($(WITH_IP64),1)
+  MODULES += os/services/ip64
+endif
+
+# Configure Routing protocol
+MAKE_ROUTING_NULLROUTING = 0
+MAKE_ROUTING_RPL_CLASSIC = 1
+MAKE_ROUTING_RPL_LITE = 2
+
+# Default routing protocol: RPL for IPv6, None otherwise
+ifeq ($(MAKE_NET),MAKE_NET_IPV6)
+MAKE_ROUTING ?= MAKE_ROUTING_RPL_LITE
+else
+MAKE_ROUTING ?= MAKE_ROUTING_NULLROUTING
+endif
+
+ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
+  CFLAGS += -DROUTING_CONF_RPL_CLASSIC=1
+  MODULES += os/net/routing/rpl-classic
+else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_LITE)
+  CFLAGS += -DROUTING_CONF_RPL_LITE=1
+  MODULES += os/net/routing/rpl-lite
+else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
+  CFLAGS += -DROUTING_CONF_NULLROUTING=1
+  MODULES += os/net/routing/nullrouting
+endif
+
+MODULEDIRS = $(MODULES_REL) ${wildcard ${addprefix $(CONTIKI)/, $(MODULES)}}
+UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
+MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
+CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
+
+# Include module-specific makefiles
+MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
+include $(MODULES_INCLUDES)
+# Iterate once more: include the modules added from the previous include.
+# Only works with one level of nested module inclusion.
+include $(MODULES_INCLUDES)
+
+# C-include module-specific macros using -imacros
+MODULES_IMACROS = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/module-macros.h}}
+ifneq ($(MODULES_IMACROS),)
+  CFLAGS += ${foreach d, $(MODULES_IMACROS), -imacros $(d)}
+endif
+
+### Verbosity control. Use  make V=1  to get verbose builds.
+
+ifeq ($(V),1)
+  TRACE_CC =
+  TRACE_LD =
+  TRACE_AR =
+  TRACE_AS =
+  Q=
+else
+  TRACE_CC = @echo "  CC       " $<
+  TRACE_LD = @echo "  LD       " $@
+  TRACE_AR = @echo "  AR       " $@
+  TRACE_AS = @echo "  AS       " $<
+  Q=@
+endif
+
+### Forward comma-separated list of arbitrary defines to the compiler
+
+COMMA := ,
+CFLAGS += ${addprefix -D,${subst $(COMMA), ,$(DEFINES)}}
+
+### Setup directory search path for source and header files
+
+CONTIKI_TARGET_DIRS_CONCAT = ${addprefix ${dir $(target_makefile)}, \
+                               $(CONTIKI_TARGET_DIRS)}
+CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
+                               $(CONTIKI_CPU_DIRS)}
+CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
+
+SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
+             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) ${dir $(target_makefile)}
+
+vpath %.c $(SOURCEDIRS)
+vpath %.S $(SOURCEDIRS)
+vpath %.s $(SOURCEDIRS)
+
+CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
+
+### Check for a git repo and pass version if found
+### git.exe in Windows cmd shells may require no stderr redirection
+ifndef RELSTR
+RELSTR:=${shell git --git-dir ${CONTIKI}/.git --work-tree ${CONTIKI} describe \
+          --tags --always --dirty}
+endif
+
+ifneq ($(RELSTR),)
+CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG-$(RELSTR)\"
+else
+CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG\"
+endif
+
+### Automatic dependency generation
+
+ifneq ($(MAKECMDGOALS),clean)
+-include ${addprefix $(OBJECTDIR)/,$(CONTIKI_SOURCEFILES:.c=.d) \
+                                   $(PROJECT_SOURCEFILES:.c=.d)}
+endif
+
+### See http://make.paulandlesley.org/autodep.html#advanced
+
+define FINALIZE_DEPENDENCY
+cp $(@:.o=.d) $(@:.o=.$$$$); \
+sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+    -e '/^$$/ d' -e 's/$$/ :/' < $(@:.o=.$$$$) >> $(@:.o=.d); \
+rm -f $(@:.o=.$$$$)
+endef
+
+### Harmonize filename of a .map file, if the platform's build system wants
+### to create one
+CONTIKI_NG_PROJECT_MAP = $(addsuffix -$(TARGET).map, $(basename $@))
+
+.PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
+
+clean:
+	-$(Q)rm -f *.d *.e *.o $(CONTIKI_NG_TARGET_LIB) $(CLEAN)
+	-$(Q)rm -rf $(OBJECTDIR)
+	-$(Q)rm -f $(addsuffix -$(TARGET).map, $(CONTIKI_PROJECT))
+	-$(Q)rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	@echo Target $(TARGET) cleaned
+
+distclean:
+	@for TARG in `ls $(CONTIKI)/arch/platform $(TARGETDIRS)`; do \
+		echo Running: make TARGET=$$TARG clean; \
+		make TARGET=$$TARG clean; \
+	done
+
+-include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
+
+ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
+$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -MMD -c $< -o $@
+	@$(FINALIZE_DEPENDENCY)
+endif
+
+ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
+$(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
+	$(TRACE_AS)
+	$(Q)$(AS) $(ASFLAGS) -o $@ $<
+$(OBJECTDIR)/%.o: %.s | $(OBJECTDIR)
+	$(TRACE_AS)
+	$(Q)$(AS) $(ASFLAGS) -o $@ $<
+endif
+
+ifndef CUSTOM_RULE_C_TO_OBJECTDIR_S
+$(OBJECTDIR)/%.s: %.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -S $< -o $@
+endif
+
+ifndef CUSTOM_RULE_C_TO_OBJECTDIR_E
+$(OBJECTDIR)/%.e: %.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -E $< -o $@
+endif
+
+ifndef CUSTOM_RULE_C_TO_O
+%.o: %.c
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+endif
+
+ifndef CUSTOM_RULE_C_TO_S
+%.s: %.c
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -S $< -o $@
+endif
+
+ifndef CUSTOM_RULE_C_TO_E
+%.e: %.c
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -E $< -o $@
+endif
+
+ifndef AROPTS
+  AROPTS = rcf
+endif
+
+ifndef CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
+$(CONTIKI_NG_TARGET_LIB): $(CONTIKI_OBJECTFILES)
+	$(TRACE_AR)
+	$(Q)$(AR) $(AROPTS) $@ $^
+endif
+
+ifndef LD
+  LD = $(CC)
+endif
+
+ifndef CUSTOM_RULE_LINK
+%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+	$(TRACE_LD)
+	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
+	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+endif
+
+%.ramprof: %.$(TARGET)
+	$(NM) -S -td --size-sort $< | grep -i " [abdrw] " | cut -d' ' -f2,4
+
+%.flashprof: %.$(TARGET)
+	$(NM) -S -td --size-sort $< | grep -i " [t] " | cut -d' ' -f2,4
+
+usage:
+	@echo "Usage:"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [DEFINES=(DEFINES)] [target]"
+	@echo ""
+	@echo "Typical usage:"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [all]"
+	@echo ""
+	@echo "    Will build Contiki-NG firmware(s) from the current example dir"
+	@echo "    for platform TARGET, board BOARD."
+	@echo ""
+	@echo "Miscellaneous targets:"
+	@echo "    targets         Prints list of supported platforms"
+	@echo "    boards          Prints a list of supported boards for TARGET"
+	@echo "    savetarget      Saves TARGET and BOARD for future invocations of make"
+	@echo "    savedefines     Saves DEFINES for future invocations of make"
+	@echo "    clean           Removes all compiled files for TARGET"
+	@echo "    distclean       Removes all compiled files for all TARGETs"
+	@echo "    viewconf        Prints Contiki-NG build configuration for TARGET"
+	@echo "    %.flashprof     Shows a Flash/ROM profile of a given firmware (e.g. hello-world.flashprof)"
+	@echo "    %.ramprof       Shows a RAM profile of a given firmware (e.g. hello-world.ramprof)"
+	@echo "    %.o             Produces an object file from a given source file (e.g. hello-world.o)"
+	@echo "    %.e             Produces the pre-processed version of a given source file (e.g. hello-world.e)"
+	@echo "    %.s             Produces an assembly file from a given source file (e.g. hello-world.s)"
+
+help: usage
+
+targets:
+	@ls $(CONTIKI)/arch/platform $(TARGETDIRS)
+
+boards:
+ifdef BOARD
+	@echo "$(BOARDS) (current: $(BOARD))"
+else
+	@echo "Platform has no boards"
+endif
+
+savetarget:
+	-@rm -f Makefile.target
+	@echo "saving Makefile.target"
+	@echo >Makefile.target "TARGET = $(TARGET)"
+ifneq ($(BOARD),)
+	@echo >>Makefile.target "BOARD = $(BOARD)"
+endif
+
+savedefines:
+	-@rm -f Makefile.$(TARGET).defines
+	@echo "saving Makefile.$(TARGET).defines"
+	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
+
+viewconf:
+	@echo "----------------- Make variables: --------------"
+	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
+	@echo "##### \"BOARD\": _________________________________ $(BOARD)"
+	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
+	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
+	@echo "##### \"MAKE_ROUTING\": __________________________ $(MAKE_ROUTING)"
+ifdef MAKE_COAP_DTLS_KEYSTORE
+	@echo "##### \"MAKE_COAP_DTLS_KEYSTORE\": _______________ $(MAKE_COAP_DTLS_KEYSTORE)"
+endif
+	@echo "----------------- C variables: -----------------"
+	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
+	@echo "------------------------------------------------"
+	@echo "'==' Means the flag is set to a given a value"
+	@echo "'->' Means the flag is unset, but will default to a given value"
+	@echo "'><' Means the flag is unset and has no default value"
+	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
+	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
+
+# Don't treat %.$(TARGET) as an intermediate file because it is
+# in fact the primary target.
+.PRECIOUS: %.$(TARGET)
+
+# Cancel the predefined implict rule for compiling and linking
+# a single C source into a binary to force GNU make to consider
+# the match-anything rule below instead.
+%: %.c
+
+ifeq ($(PLATFORM_ACTION),skip)
+# Skip this target.
+$(CONTIKI_PROJECT):
+	@echo "Skipping $@: not for the '$(TARGET)/$(BOARD)' platform!"
+else
+# Build this target.
+# Match-anything pattern rule to allow the project makefiles to
+# abstract from the actual binary name. It needs to contain some
+# command in order to be a rule, not just a prerequisite.
+%: %.$(TARGET)
+	@
+endif

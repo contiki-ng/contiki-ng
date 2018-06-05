@@ -1,0 +1,4 @@
+/**
+ * \defgroup jn516x The JN516x Board
+ * \ingroup platform
+ */

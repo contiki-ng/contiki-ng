@@ -1,0 +1,9 @@
+/**
+
+\mainpage \os: The Next Generation Contiki
+
+This page provides API description.
+
+Full documentation can be found on the wiki: https://github.com/contiki-ng/contiki-ng/wiki
+
+*/

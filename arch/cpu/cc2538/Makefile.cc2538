@@ -1,0 +1,57 @@
+ifndef SOURCE_LDSCRIPT
+SOURCE_LDSCRIPT = $(CONTIKI_CPU)/cc2538.lds
+endif
+LDSCRIPT = $(OBJECTDIR)/cc2538.ld
+
+CFLAGS += -DCMSIS_DEV_HDR=\"cc2538_cm3.h\"
+
+### If the user-specified a Node ID, pass a define
+ifdef NODEID
+  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+endif
+
+### CPU-dependent directories
+CONTIKI_CPU_DIRS = . dev usb usb/common usb/common/cdc-acm
+
+### CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += soc.c clock.c rtimer-arch.c uart.c watchdog.c
+CONTIKI_CPU_SOURCEFILES += nvic.c sys-ctrl.c gpio.c ioc.c spi-legacy.c adc.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
+CONTIKI_CPU_SOURCEFILES += crypto.c aes.c ecb.c cbc.c ctr.c cbc-mac.c gcm.c
+CONTIKI_CPU_SOURCEFILES += ccm.c sha256.c gpio-hal-arch.c
+CONTIKI_CPU_SOURCEFILES += cc2538-aes-128.c cc2538-ccm-star.c
+CONTIKI_CPU_SOURCEFILES += cc2538-rf.c udma.c lpm.c int-master.c
+CONTIKI_CPU_SOURCEFILES += pka.c bignum-driver.c ecc-driver.c ecc-algorithm.c
+CONTIKI_CPU_SOURCEFILES += ecc-curve.c
+CONTIKI_CPU_SOURCEFILES += dbg.c ieee-addr.c
+CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c
+CONTIKI_CPU_SOURCEFILES += i2c.c cc2538-temp-sensor.c vdd3-sensor.c
+CONTIKI_CPU_SOURCEFILES += cfs-coffee.c cfs-coffee-arch.c pwm.c
+
+MODULES += os/lib/dbg-io
+
+USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descriptors.c
+
+CPU_START_SOURCEFILES = startup-gcc.c
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(USB_SOURCEFILES)
+
+### Always re-build ieee-addr.o in case the command line passes a new NODEID
+FORCE:
+
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+### This rule is used to generate the correct linker script
+LDGENFLAGS += $(CFLAGS)
+LDGENFLAGS += -imacros "contiki-conf.h" -imacros "dev/cc2538-dev.h"
+LDGENFLAGS += -imacros "dev/flash.h" -imacros "cfs-coffee-arch.h"
+LDGENFLAGS += -x c -P -E
+
+# NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
+$(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
+
+include $(CONTIKI)/arch/cpu/arm/cortex-m/cm3/Makefile.cm3

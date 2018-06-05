@@ -1,0 +1,4 @@
+/**
+ * \defgroup zoul-core Zolertia Zoul-based platforms
+ * \ingroup cc2538-platforms
+ */

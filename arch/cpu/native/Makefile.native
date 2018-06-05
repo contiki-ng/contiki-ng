@@ -1,0 +1,39 @@
+CONTIKI_CPU_DIRS = . net dev
+
+CONTIKI_SOURCEFILES += rtimer-arch.c watchdog.c eeprom.c int-master.c
+CONTIKI_SOURCEFILES += gpio-hal-arch.c
+
+### Compiler definitions
+CC       ?= gcc
+ifdef LD_OVERRIDE
+  LD     = $(LD_OVERRIDE)
+else
+  LD     = gcc
+endif
+AS       ?= as
+NM       ?= nm
+OBJCOPY  ?= objcopy
+STRIP    ?= strip
+ifeq ($(WERROR),1)
+CFLAGSWERROR=-Werror
+endif
+CFLAGSNO = -Wall -g -I/usr/local/include $(CFLAGSWERROR)
+CFLAGS  += $(CFLAGSNO)
+
+ifeq ($(HOST_OS),Darwin)
+AROPTS = -rc
+LDFLAGS_WERROR := -Wl,-fatal_warnings
+LDFLAGS += -Wl,-flat_namespace,-map,$(CONTIKI_NG_PROJECT_MAP)
+CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
+else
+ifeq ($(HOST_OS),Linux)
+LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),-export-dynamic
+endif
+endif
+
+MAKE_MAC ?= MAKE_MAC_NULLMAC
+
+### Compilation rules
+
+%.so: $(OBJECTDIR)/%.o
+	$(LD) -shared -o $@ $^

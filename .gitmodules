@@ -1,0 +1,21 @@
+[submodule "tools/cc2538-bsl"]
+	path = tools/cc2538-bsl
+	url = https://github.com/JelmerT/cc2538-bsl.git
+[submodule "arch/cpu/cc26xx-cc13xx/lib/cc26xxware"]
+	path = arch/cpu/cc26xx-cc13xx/lib/cc26xxware
+	url = https://github.com/contiki-ng/cc26xxware.git
+[submodule "arch/cpu/cc26xx-cc13xx/lib/cc13xxware"]
+	path = arch/cpu/cc26xx-cc13xx/lib/cc13xxware
+	url = https://github.com/contiki-ng/cc13xxware.git
+[submodule "tools/sensniff"]
+	path = tools/sensniff
+	url = https://github.com/g-oikonomou/sensniff.git
+[submodule "tools/cooja"]
+	path = tools/cooja
+	url = https://github.com/contiki-ng/cooja.git
+[submodule "os/net/security/tinydtls"]
+	path = os/net/security/tinydtls
+	url = https://github.com/contiki-ng/tinydtls.git
+[submodule "tests/18-coap-lwm2m/example-lwm2m-standalone"]
+	path = tests/18-coap-lwm2m/example-lwm2m-standalone
+	url = https://github.com/contiki-ng/example-lwm2m-standalone.git

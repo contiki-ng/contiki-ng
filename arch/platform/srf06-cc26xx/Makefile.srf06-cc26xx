@@ -1,0 +1,29 @@
+# srf06-cc26xx platform makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+### Board and BSP selection
+BOARD ?= srf06/cc26xx
+BOARDS = srf06/cc26xx srf06/cc13xx launchpad/cc2650 launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350
+
+CONTIKI_TARGET_DIRS += .
+
+### Include the board-specific makefile
+PLATFORM_ROOT_DIR = $(CONTIKI)/arch/platform/$(TARGET)
+-include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(notdir $(BOARD))
+
+CONTIKI_TARGET_SOURCEFILES += platform.c leds-arch.c
+CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+### Unless the example dictates otherwise, build without code size optimisations
+SMALL ?= 0
+
+### Define the CPU directory and pull in the correct CPU makefile. This will
+### be defined by one of the makefiles included above and it can be either
+### Makefile.cc26xx or Makefile.cc13xx
+CONTIKI_CPU=$(CONTIKI)/arch/cpu/cc26xx-cc13xx
+include $(CONTIKI_CPU)/Makefile.$(CPU_FAMILY)

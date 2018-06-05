@@ -1,0 +1,13 @@
+MODULES += os/services/slip-cmd
+MODULES += os/services/shell
+
+MAKE_MAC = MAKE_MAC_OTHER
+MAKE_NET = MAKE_NET_IPV6
+
+
+PREFIX ?= fd00::1/64
+connect-router:	border-router.native
+	sudo rlwrap ./border-router.native $(PREFIX)
+
+connect-router-cooja:	border-router.native
+	sudo rlwrap ./border-router.native -a localhost $(PREFIX)

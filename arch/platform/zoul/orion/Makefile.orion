@@ -1,0 +1,7 @@
+MOTELIST_ZOLERTIA = orion
+MODULES += arch/dev/enc28j60
+CC2538_ENC28J60_ARCH ?= gpio
+ifeq ($(WITH_IP64),1)
+CFLAGS += -DUIP_FALLBACK_INTERFACE=ip64_uip_fallback_interface
+endif
+BOARD_SOURCEFILES += board.c enc28j60-arch-$(CC2538_ENC28J60_ARCH).c leds-arch.c

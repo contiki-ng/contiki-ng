@@ -1,0 +1,31 @@
+MAKE_WITH_DTLS ?= 0
+
+ifeq ($(MAKE_WITH_DTLS),1)
+
+ TINYDTLS_PATH := os/net/security/tinydtls
+
+ ifeq (${wildcard $(CONTIKI)/$(TINYDTLS_PATH)/Makefile},)
+  ${error Could not find the tinyDTLS submodule. Please run "git submodule update --init" and try again}
+ endif
+
+ CFLAGS += -DWITH_DTLS=1
+
+ MODULES += os/net/app-layer/coap/tinydtls-support
+ MODULES += $(TINYDTLS_PATH) ${addprefix $(TINYDTLS_PATH)/,aes sha2 ecc}
+
+ MAKE_COAP_DTLS_KEYSTORE_NONE   := 0
+ MAKE_COAP_DTLS_KEYSTORE_SIMPLE := 1
+ MAKE_COAP_DTLS_KEYSTORE_LWM2M  := 2
+
+ MAKE_COAP_DTLS_KEYSTORE ?= MAKE_COAP_DTLS_KEYSTORE_LWM2M
+
+ ifeq ($(MAKE_COAP_DTLS_KEYSTORE),MAKE_COAP_DTLS_KEYSTORE_SIMPLE)
+  CFLAGS += -DCOAP_DTLS_KEYSTORE_CONF_WITH_SIMPLE=1
+ else ifeq ($(MAKE_COAP_DTLS_KEYSTORE),MAKE_COAP_DTLS_KEYSTORE_LWM2M)
+  CFLAGS += -DCOAP_DTLS_KEYSTORE_CONF_WITH_LWM2M=1
+ else ifeq ($(MAKE_COAP_DTLS_KEYSTORE),MAKE_COAP_DTLS_KEYSTORE_NONE)
+  # No C flag needed for no keystore
+ else
+  ${error Unsupported CoAP DTLS keystore: $(MAKE_COAP_DTLS_KEYSTORE)}
+ endif
+endif

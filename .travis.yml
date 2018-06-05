@@ -1,0 +1,36 @@
+# Setup environment for Docker
+language: generic
+services: docker
+
+notifications:
+  - email: false
+
+before_install:
+  # Environment setup before test script
+  - export CNG_HOST_PATH=`pwd`
+  - export DOCKER_IMG='simonduq/contiki-ng:latest'
+  - sudo chgrp -hR 1000 $CNG_HOST_PATH
+  - docker pull $DOCKER_IMG
+  - ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar
+
+script: # The test script for each build.
+  - docker run --privileged -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST_NAME";
+  # Check outcome of the test
+  - $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST_NAME; exit $?;
+
+env:
+  # Parallel builds
+  - TEST_NAME='compile-base'
+  - TEST_NAME='compile-arm-ports-01'
+  - TEST_NAME='compile-arm-ports-02'
+  - TEST_NAME='rpl-lite'
+  - TEST_NAME='rpl-classic'
+  - TEST_NAME='tun-rpl-br'
+  - TEST_NAME='coap-lwm2m'
+  - TEST_NAME='simulation-base'
+  - TEST_NAME='ieee802154'
+  - TEST_NAME='compile-nxp-ports'
+  - TEST_NAME='doxygen'
+  - TEST_NAME='compile-tools'
+  - TEST_NAME='native-runs'
+  - TEST_NAME='ipv6'

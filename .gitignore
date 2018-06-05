@@ -1,0 +1,66 @@
+*.a
+*.bin
+*.hex
+*.map
+*.png
+*.log
+*.elf
+*.zip
+*.d
+*.o
+*.e
+*.ihex
+*.pyc
+*~
+obj_*
+Makefile.target
+Makefile.*.defines
+tools/doxygen/html
+patches-*
+tools/tunslip
+tools/tunslip6
+build
+tools/coffee-manager/build/
+tools/coffee-manager/coffee.jar
+COOJA.testlog
+
+# platform build artifacts
+*.cc2538dk
+*.cooja
+*.jn516x
+*.native
+*.nrf52dk
+*.openmote-cc2538
+*.sky
+*.firmware
+*.srf06-cc26xx
+*.zoul
+
+# do not ignore platform makefiles
+!Makefile.cc2538dk
+!Makefile.cooja
+!Makefile.jn516x
+!Makefile.native
+!Makefile.nrf52dk
+!Makefile.openmote-cc2538
+!Makefile.sky
+!Makefile.srf06-cc26xx
+!Makefile.zoul
+
+# other nRF52 build artifacts
+*.jlink
+
+#test artifacts
+*.testlog
+*.scriptlog
+*.coojalog
+*.summary
+*.err
+summary
+tests/[0-9][0-9]-*/org/
+tests/18-coap-lwm2m/Californium.properties
+tests/18-coap-lwm2m/leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+
+# x86 UEFI files
+cpu/x86/uefi/Makefile.uefi
+cpu/x86/uefi/edk2

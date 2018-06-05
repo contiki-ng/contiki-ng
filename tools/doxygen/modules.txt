@@ -1,0 +1,86 @@
+/**
+\defgroup arch Hardware support
+CPU, device drivers and platform code
+*/
+
+/**
+ * \defgroup platform Platforms
+ * \ingroup arch
+ */
+
+/**
+\defgroup net IoT networking
+The communication protocols
+*/
+
+/**
+\defgroup net-layer Network layer
+Network-layer protocols and services
+\ingroup net
+*/
+
+/**
+\defgroup link-layer Link layer
+link-layer protocols and services
+\ingroup net
+*/
+
+/**
+\defgroup uip uIP: the IPv6 stack
+The low-power IPv6 stack
+\ingroup net-layer
+*/
+
+/**
+\defgroup rpl-lite RPL-lite
+RPL-lite is a lightweight implementation of RPL tailored for reliability.
+Supports only non-storing mode, one instance and one DAG.
+\ingroup net-layer
+*/
+
+/**
+\defgroup mem Memory functions
+\ingroup lib
+*/
+
+/**
+\defgroup data Data structures
+\ingroup lib
+*/
+
+/**
+\defgroup lib Libraries and services
+A set of libraries and services used by the os and applications
+*/
+
+/**
+\defgroup sys System functions
+Core system components such as processes and timers
+*/
+
+/**
+\defgroup cpu CPUs
+\ingroup arch
+*/
+
+/**
+\defgroup dev Device Drivers
+\ingroup arch
+*/
+
+/**
+ * \defgroup apps Application-layer protocols and profiles
+ * \ingroup net
+*/
+
+/**
+ * \defgroup threads Threads and processes
+This module contains protothreads, multithreading and processes
+ * \ingroup sys
+*/
+
+/**
+ * \defgroup timers Timers
+This module contains all different timers and clocks in \os
+ * \ingroup sys
+*/

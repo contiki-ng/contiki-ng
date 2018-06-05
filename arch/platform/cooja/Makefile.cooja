@@ -1,0 +1,78 @@
+# $Id: Makefile.cooja,v 1.42 2010/11/10 13:11:43 fros4943 Exp $
+
+## The COOJA Simulator Contiki platform Makefile
+##
+## This makefile should normally never be called directly, but
+## rather from inside the COOJA simulator.
+## The purpose of this file is to compile a shared library that
+## can be loaded into the Java part of COOJA.
+
+ifndef CONTIKI
+  $(error CONTIKI not defined!)
+endif
+
+### Assuming simulator quickstart if no JNI library name set from Cooja
+ifndef LIBNAME
+QUICKSTART=1
+endif
+
+### Quickstart simulator
+ifdef QUICKSTART
+
+# Create COOJA JAR rule
+$(CONTIKI)/tools/cooja/dist/cooja.jar:
+	@echo "Creating COOJA Java archive..."
+	(cd $(CONTIKI)/tools/cooja && ant jar)
+
+# Quickstart rule
+ifneq ($(MAKECMDGOALS),clean)
+.PHONY: $(MAKECMDGOALS)
+.PRECIOUS: $(MAKECMDGOALS)
+$(MAKECMDGOALS): $(CONTIKI)/tools/cooja/dist/cooja.jar
+	 java -mx512m -jar $< -quickstart='$(firstword $(MAKECMDGOALS))' -contiki='$(CONTIKI)'
+endif
+
+endif ## QUICKSTART
+
+#MAIN_SRC = $(OBJECTDIR)/$(LIBNAME).c
+MAIN_OBJ = $(OBJECTDIR)/$(LIBNAME).o
+ARCHIVE = $(OBJECTDIR)/$(LIBNAME).a
+JNILIB = $(OBJECTDIR)/$(LIBNAME).$(TARGET)
+CONTIKI_APP_OBJ = $(CONTIKI_APP).o
+
+### COOJA platform sources
+COOJA = $(CONTIKI)/arch/platform/$(TARGET)
+CONTIKI_TARGET_DIRS = . dev lib sys cfs net
+
+# (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
+vpath %.c $(COOJA_SOURCEDIRS)
+
+COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c slip.c watchdog.c
+
+COOJA_INTFS	= beep.c button-sensor.c ip.c leds-arch.c moteid.c \
+		    pir-sensor.c rs232.c vib-sensor.c \
+		    clock.c cooja-log.c cfs-cooja.c cooja-radio.c \
+			eeprom.c slip-arch.c
+
+COOJA_CORE = random.c sensors.c leds.c
+
+# (COOJA_SOURCEFILES contains additional sources set from simulator)
+CONTIKI_TARGET_SOURCEFILES = \
+$(COOJA_BASE) $(COOJA_INTFS) $(COOJA_CORE) $(COOJA_NET) $(COOJA_SOURCEFILES)
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+.SUFFIXES:
+
+CLEAN += COOJA.log
+
+### Define the CPU directory
+CONTIKI_CPU=$(CONTIKI)/arch/cpu/x86
+
+### Compiler arguments
+#CC = gcc
+CFLAGSNO = $(EXTRA_CC_ARGS) -Wall -g -I/usr/local/include -DCLASSNAME=$(CLASSNAME)
+ifeq ($(WERROR),1)
+CFLAGSNO += -Werror
+endif
+CFLAGS   += $(CFLAGSNO)
