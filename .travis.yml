@@ -7,7 +7,12 @@ notifications:
 # Environment setup before test script. Runs for each build
 before_install:
   # Check if anything has changed within the docker directory
-  - DOCKER_CHANGED=`git diff --name-only $TRAVIS_COMMIT_RANGE -- tools/docker | wc -l`
+  - >
+    if [ $TRAVIS_PULL_REQUEST == true ]; then
+      DOCKER_CHANGED=`git diff --name-only $TRAVIS_BRANCH...HEAD -- tools/docker | wc -l`
+    else
+      DOCKER_CHANGED=`git diff --name-only $TRAVIS_COMMIT_RANGE -- tools/docker | wc -l`
+    fi
   # If Docker directory has not changed, pull image from Dockerhub. Else, build
   # image from Dockerifle. This needs to be done for each job. Any build error
   # will count as Travis test failure. In case this updates develop, push new
