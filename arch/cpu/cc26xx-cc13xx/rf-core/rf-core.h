@@ -263,6 +263,9 @@ typedef struct rf_core_primary_mode_s {
 /* Radio timer register */
 #define RATCNT  0x00000004
 /*---------------------------------------------------------------------------*/
+/* Buffer full flag */
+extern volatile bool rx_is_full;
+/*---------------------------------------------------------------------------*/
 /* Make the main driver process visible to mode drivers */
 PROCESS_NAME(rf_core_process);
 /*---------------------------------------------------------------------------*/
