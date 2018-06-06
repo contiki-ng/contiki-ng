@@ -62,7 +62,7 @@ env:
     - TEST_NAME='simulation-base'
     - TEST_NAME='ieee802154'
     - TEST_NAME='compile-nxp-ports'
-    - TEST_NAME='doxygen'
+    - TEST_NAME='documentation'
     - TEST_NAME='compile-tools'
     - TEST_NAME='native-runs'
     - TEST_NAME='ipv6'
