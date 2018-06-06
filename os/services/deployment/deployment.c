@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Swedish Institute of Computer Science.
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
