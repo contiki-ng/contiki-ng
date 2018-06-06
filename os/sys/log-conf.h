@@ -46,7 +46,8 @@
 #ifndef __LOG_CONF_H__
 #define __LOG_CONF_H__
 
-/* Log only the last 16 bytes of link-layer and IPv6 addresses */
+/* Log only the last 16 bytes of link-layer and IPv6 addresses (or, if)
+ * the deployment module is enabled, the node IDs */
 #ifdef LOG_CONF_WITH_COMPACT_ADDR
 #define LOG_WITH_COMPACT_ADDR LOG_CONF_WITH_COMPACT_ADDR
 #else /* LOG_CONF_WITH_COMPACT_ADDR */
