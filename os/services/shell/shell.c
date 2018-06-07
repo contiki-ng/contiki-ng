@@ -89,7 +89,7 @@ output_prompt(shell_output_func output)
 PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
 {
   static char *args;
-  static struct shell_command_t *cmd_ptr;
+  static const struct shell_command_t *cmd_ptr;
 
   PT_BEGIN(pt);
 

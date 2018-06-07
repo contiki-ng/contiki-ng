@@ -345,7 +345,7 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
 static
 PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
 {
-  struct shell_command_t *cmd_ptr;
+  const struct shell_command_t *cmd_ptr;
 
   PT_BEGIN(pt);
 
@@ -734,7 +734,7 @@ shell_commands_init(void)
                                     echo_reply_handler);
 }
 /*---------------------------------------------------------------------------*/
-struct shell_command_t shell_commands[] = {
+const struct shell_command_t shell_commands[] = {
   { "help",                 cmd_help,                 "'> help': Shows this help" },
   { "reboot",               cmd_reboot,               "'> reboot': Reboot the board by watchdog_reboot()" },
   { "ip-addr",              cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },

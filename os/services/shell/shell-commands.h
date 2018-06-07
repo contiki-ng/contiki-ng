@@ -54,7 +54,7 @@ struct shell_command_t {
 };
 
 /* The set of supported commands */
-extern struct shell_command_t shell_commands[];
+extern const struct shell_command_t shell_commands[];
 
 /**
  * Initializes Shell-commands module
