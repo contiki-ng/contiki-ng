@@ -26,7 +26,7 @@ extern RF_TxPowerTable_Entry propHighPaTxPowerTable[8];
 
 // RF Core API commands
 extern rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup;
-extern rfc_CMD_FS_t RF_cmdFs;
+extern rfc_CMD_FS_t RF_cmdPropFs;
 extern rfc_CMD_PROP_TX_ADV_t RF_cmdPropTxAdv;
 extern rfc_CMD_PROP_RX_ADV_t RF_cmdPropRxAdv;
 

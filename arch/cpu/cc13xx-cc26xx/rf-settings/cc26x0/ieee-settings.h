@@ -11,6 +11,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
+#include DeviceFamily_constructPath(driverlib/rf_ieee_mailbox.h)
 
 #include <ti/drivers/rf/RF.h>
 

@@ -11,6 +11,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
+#include DeviceFamily_constructPath(driverlib/rf_ieee_mailbox.h)
 
 #include <ti/drivers/rf/RF.h>
 
@@ -26,7 +27,7 @@ extern RF_TxPowerTable_Entry ieeeHighPaTxPowerTable[16];
 
 // RF Core API commands
 extern rfc_CMD_RADIO_SETUP_t RF_cmdRadioSetup;
-extern rfc_CMD_FS_t RF_cmdFs;
+extern rfc_CMD_FS_t RF_cmdIeeeFs;
 extern rfc_CMD_IEEE_TX_t RF_cmdIeeeTx;
 extern rfc_CMD_IEEE_RX_t RF_cmdIeeeRx;
 

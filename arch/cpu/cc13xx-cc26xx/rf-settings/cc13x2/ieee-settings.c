@@ -20,6 +20,8 @@
 //      TX Power: 20 dBm (requires define CCFG_FORCE_VDDR_HH = 0 in ccfg.c, see CC13xx/CC26xx Technical Reference Manual)
 //      Enable high output power PA: true
 
+#include "sys/cc.h"
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -95,7 +97,7 @@ RF_TxPowerTable_Entry ieeeHighPaTxPowerTable[16] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pIeeeDefaultPaOverrides[] =
+uint32_t pIeeeDefaultPaOverrides[] CC_ALIGN(4) =
 {
                                     // override_ieee_802_15_4.xml
     MCE_RFE_OVERRIDE(1,0,0,0,1,0),  // PHY: Use MCE RAM patch, RFE ROM bank 1
@@ -117,7 +119,7 @@ uint32_t pIeeeDefaultPaOverrides[] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pIeeeHighPaOverrides[] =
+uint32_t pIeeeHighPaOverrides[] CC_ALIGN(4) =
 {
                                     // override_ieee_802_15_4.xml
     MCE_RFE_OVERRIDE(1,0,0,0,1,0),  // PHY: Use MCE RAM patch, RFE ROM bank 1
@@ -167,7 +169,7 @@ rfc_CMD_RADIO_SETUP_t RF_cmdRadioSetup =
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdFs =
+rfc_CMD_FS_t RF_cmdIeeeFs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,

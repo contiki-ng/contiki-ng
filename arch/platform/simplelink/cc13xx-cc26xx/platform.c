@@ -49,16 +49,20 @@
 /* Simplelink SDK includes */
 #include <Board.h>
 #include <NoRTOS.h>
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/driverlib_release.h)
 #include DeviceFamily_constructPath(driverlib/chipinfo.h)
 #include DeviceFamily_constructPath(driverlib/vims.h)
-#include DeviceFamily_constructPath(driverlib/interrupt.h)
+#include DeviceFamily_constructPath(inc/hw_cpu_scs.h)
+
+#include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/SPI.h>
+#include <ti/drivers/UART.h>
 /*---------------------------------------------------------------------------*/
 /* Contiki API */
 #include "contiki.h"
@@ -114,17 +118,15 @@ fade(unsigned char l)
 static void
 set_rf_params(void)
 {
-  uint16_t short_addr;
   uint8_t ext_addr[8];
 
   ieee_addr_cpy_to(ext_addr, sizeof(ext_addr));
 
-  short_addr = ext_addr[7];
-  short_addr |= ext_addr[6] << 8;
+  uint16_t short_addr = (ext_addr[7] << 0)
+                      | (ext_addr[6] << 8);
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
-  NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, sizeof(ext_addr));
 
   /* also set the global node id */
@@ -134,29 +136,34 @@ set_rf_params(void)
 void
 platform_init_stage_one(void)
 {
+  DRIVERLIB_ASSERT_CURR_RELEASE();
+
+  // TODO: TEMPORARY WHILE DEVELOP. REMOVE
+  HWREG(CPU_SCS_BASE + CPU_SCS_O_ACTLR) = CPU_SCS_ACTLR_DISDEFWBUF;
+
   // Enable flash cache
   VIMSModeSet(VIMS_BASE, VIMS_MODE_ENABLED);
   // Configure round robin arbitration and prefetching
   VIMSConfigure(VIMS_BASE, true, true);
 
-  // NoRTOS_start only enables HWI
-  NoRTOS_start();
-
   // Board_initGeneral() will call Power_init()
   // Board_initGeneral() will call PIN_init(BoardGpioInitTable)
   Board_initGeneral();
-  Board_shutDownExtFlash();
 
   // Contiki drivers init
   leds_init();
 
   fade(LEDS_RED);
 
-  GPIO_init();
+  // TI Drivers init
   I2C_init();
   SPI_init();
+  UART_init();
 
   fade(LEDS_GREEN);
+
+  // NoRTOS should be called last
+  NoRTOS_start();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -172,7 +179,7 @@ platform_init_stage_two(void)
   uart0_set_callback(serial_line_input_byte);
 #endif
 
-  //  random_init(0x1234);
+  random_init(0x1234);
 
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
@@ -183,7 +190,7 @@ platform_init_stage_two(void)
 void
 platform_init_stage_three(void)
 {
-  radio_value_t chan, pan;
+  radio_value_t chan = 0, pan = 0;
 
   set_rf_params();
 
@@ -192,15 +199,15 @@ platform_init_stage_three(void)
 
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
-  LOG_DBG("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s, Prop: %s\n",
+  LOG_DBG("IEEE 802.15.4: %s, Sub-GHz: %s, BLE: %s\n",
           ChipInfo_SupportsIEEE_802_15_4() ? "Yes" : "No",
-          ChipInfo_ChipFamilyIs_CC13x0() ? "Yes" : "No",
-          ChipInfo_SupportsBLE() ? "Yes" : "No",
-          ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No");
+          ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No",
+          ChipInfo_SupportsBLE() ? "Yes" : "No");
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);
   LOG_INFO("Node ID: %d\n", g_nodeId);
 
   process_start(&sensors_process, NULL);
+
   fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/

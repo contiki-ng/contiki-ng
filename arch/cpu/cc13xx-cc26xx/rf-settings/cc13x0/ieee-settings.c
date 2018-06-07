@@ -7,13 +7,14 @@
 // Preamble (32 bit): 01010101...
 // TX Power: 5 dBm
 
+#include "sys/cc.h"
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 // This must be included "locally" frm the cpu directory,
 // as it isn't defined in CC13x0 driverlib
 #include "driverlib/rf_ieee_cmd.h"
-#include "rf_patches/rf_patch_cpe_ieee.h"
 
 #include <ti/drivers/rf/RF.h>
 
@@ -24,7 +25,7 @@
 RF_Mode RF_ieeeMode =
 {
     .rfMode = RF_MODE_IEEE_15_4,
-    .cpePatchFxn = &rf_patch_cpe_ieee,
+    .cpePatchFxn = 0,
     .mcePatchFxn = 0,
     .rfePatchFxn = 0,
 };
@@ -54,8 +55,8 @@ RF_TxPowerTable_Entry ieeeTxPowerTable[14] =
 };
 
 
-// Overrides for CMD_RADIO_SETUP
-uint32_t pIeeeOverrides[] =
+// Overrides for CMD_RADIO_SETUP (CC2650)
+uint32_t pIeeeOverrides[] CC_ALIGN(4) =
 {
                                     // override_synth_ieee_15_4.xml
     HW_REG_OVERRIDE(0x4038,0x0035), // Synth: Set recommended RTRIM to 5
@@ -83,19 +84,20 @@ uint32_t pIeeeOverrides[] =
 
 
 // Old override list
-uint32_t ieee_overrides[] = {
-  (uint32_t)0x00354038,     // Synth: Set RTRIM (POTAILRESTRIM) to 5
-  (uint32_t)0x000784A3,     // Synth: Set FREF = 3.43 MHz (24 MHz / 7)
-  (uint32_t)0xA47E0583,     // Synth: Set loop bandwidth after lock to 80 kHz (K2)
-  (uint32_t)0xEAE00603,     // Synth: Set loop bandwidth after lock to 80 kHz (K3, LSB)
-  (uint32_t)0x00010623,     // Synth: Set loop bandwidth after lock to 80 kHz (K3, MSB)
-//  (uint32_t)0x1801F800,    // Synth: Set ANADIV DIV_BIAS_MODE to PG1 (value)
-  (uint32_t)0x4001402D,     // Synth: Correct CKVD latency setting (address)
-  (uint32_t)0x00608402,     // Synth: Correct CKVD latency setting (value)
-//  (uint32_t)0x4001405D,    // Synth: Set ANADIV DIV_BIAS_MODE to PG1 (address)
-  (uint32_t)0x002B50DC,     // Adjust AGC DC filter
-  (uint32_t)0x05000243,     // Increase synth programming timeout
-  (uint32_t)0x002082C3,     // Increase synth programming timeout
+uint32_t pIeeeOverridesOld[] CC_ALIGN(4) =
+{
+  (uint32_t)0x00354038, /* Synth: Set RTRIM (POTAILRESTRIM) to 5 */
+  (uint32_t)0x4001402D, /* Synth: Correct CKVD latency setting (address) */
+  (uint32_t)0x00608402, /* Synth: Correct CKVD latency setting (value) */
+//  (uint32_t)0x4001405D, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (address) */
+//  (uint32_t)0x1801F800, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (value) */
+  (uint32_t)0x000784A3, /* Synth: Set FREF = 3.43 MHz (24 MHz / 7) */
+  (uint32_t)0xA47E0583, /* Synth: Set loop bandwidth after lock to 80 kHz (K2) */
+  (uint32_t)0xEAE00603, /* Synth: Set loop bandwidth after lock to 80 kHz (K3, LSB) */
+  (uint32_t)0x00010623, /* Synth: Set loop bandwidth after lock to 80 kHz (K3, MSB) */
+  (uint32_t)0x002B50DC, /* Adjust AGC DC filter */
+  (uint32_t)0x05000243, /* Increase synth programming timeout */
+  (uint32_t)0x002082C3, /* Increase synth programming timeout */
   (uint32_t)0xFFFFFFFF,
 };
 

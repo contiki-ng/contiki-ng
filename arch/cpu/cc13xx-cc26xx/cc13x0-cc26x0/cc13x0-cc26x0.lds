@@ -34,7 +34,7 @@
  *  Default Linker script for the Texas Instruments CC1310
  */
 
-STACKSIZE = 1024;
+MIN_STACKSIZE = 0x600;
 HEAPSIZE = 256;
 
 MEMORY
@@ -46,6 +46,7 @@ MEMORY
      */
     FLASH_CCFG (RX) : ORIGIN = 0x0001ffa8, LENGTH = 0x00000058
     SRAM (RWX)      : ORIGIN = 0x20000000, LENGTH = 0x00005000
+    GPRAM (RWX)     : ORIGIN = 0x11000000, LENGTH = 0x00002000
 }
 
 REGION_ALIAS("REGION_TEXT", FLASH);
@@ -192,6 +193,8 @@ SECTIONS {
         __HeapLimit = __heap_end__;
     } > REGION_HEAP AT> REGION_HEAP
 
+    PROVIDE(STACKSIZE = ORIGIN(SRAM) + LENGTH(SRAM) - ALIGN(0x8));
+
     .stack (NOLOAD) : ALIGN(0x8) {
         _stack = .;
         __stack = .;
@@ -199,5 +202,6 @@ SECTIONS {
         . += STACKSIZE;
         _stack_end = .;
         __stack_end = .;
+        ASSERT(STACKSIZE >= MIN_STACKSIZE, "Error: No room left for the stack");
     } > REGION_STACK AT> REGION_STACK
 }

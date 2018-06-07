@@ -7,6 +7,8 @@
 // Preamble (32 bit): 01010101...
 // TX Power: 5 dBm
 
+#include "sys/cc.h"
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -53,7 +55,7 @@ RF_TxPowerTable_Entry ieeeTxPowerTable[14] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pIeeeOverrides[] =
+uint32_t pIeeeOverrides[] CC_ALIGN(4) =
 {
                                     // override_synth_ieee_15_4.xml
     HW_REG_OVERRIDE(0x4038,0x0035), // Synth: Set recommended RTRIM to 5

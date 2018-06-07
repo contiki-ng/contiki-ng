@@ -53,7 +53,7 @@
 #include <ti/drivers/ADCBuf.h>
 #include <ti/drivers/adcbuf/ADCBufCC26XX.h>
 
-ADCBufCC26XX_Object adcBufCC26XXobjects[CC1350_LAUNCHXL_ADCBUFCOUNT];
+static ADCBufCC26XX_Object adcBufCC26XXobjects[CC1350_LAUNCHXL_ADCBUFCOUNT];
 
 /*
  *  This table converts a virtual adc channel into a dio and internal analogue
@@ -90,6 +90,7 @@ const ADCBuf_Config ADCBuf_config[CC1350_LAUNCHXL_ADCBUFCOUNT] = {
     {
         &ADCBufCC26XX_fxnTable,
         &adcBufCC26XXobjects[CC1350_LAUNCHXL_ADCBUF0],
+        //NULL,
         &adcBufCC26XXHWAttrs[CC1350_LAUNCHXL_ADCBUF0]
     },
 };
@@ -102,7 +103,7 @@ const uint_least8_t ADCBuf_count = CC1350_LAUNCHXL_ADCBUFCOUNT;
 #include <ti/drivers/ADC.h>
 #include <ti/drivers/adc/ADCCC26XX.h>
 
-ADCCC26XX_Object adcCC26xxObjects[CC1350_LAUNCHXL_ADCCOUNT];
+static ADCCC26XX_Object adcCC26xxObjects[CC1350_LAUNCHXL_ADCCOUNT];
 
 const ADCCC26XX_HWAttrs adcCC26xxHWAttrs[CC1350_LAUNCHXL_ADCCOUNT] = {
     {

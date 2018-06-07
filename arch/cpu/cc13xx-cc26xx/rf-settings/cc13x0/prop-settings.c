@@ -27,6 +27,8 @@
 // TX Power: 14 dBm (requires define CCFG_FORCE_VDDR_HH = 1 in ccfg.c, see CC13xx/CC26xx Technical Reference Manual)
 // Whitening: Dynamically IEEE 802.15.4g compatible whitener and 16/32-bit CRC
 
+#include "sys/cc.h"
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -77,7 +79,7 @@ RF_TxPowerTable_Entry propTxPowerTable[16] =
 
 
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pPropOverrides[] =
+uint32_t pPropOverrides[] CC_ALIGN(4) =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(0,4,0,1,0,0),      // PHY: Use MCE ROM bank 4, RFE RAM patch

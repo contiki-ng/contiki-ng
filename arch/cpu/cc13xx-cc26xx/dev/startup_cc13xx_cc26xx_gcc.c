@@ -246,6 +246,8 @@ nmiISR(void)
     }
 }
 
+volatile int x__;
+
 //*****************************************************************************
 //
 // This is the code that gets called when the processor receives a fault
@@ -256,6 +258,7 @@ nmiISR(void)
 static void
 faultISR(void)
 {
+  x__ = 0;
     /* Enter an infinite loop. */
     while(1)
     {
@@ -273,6 +276,7 @@ faultISR(void)
 static void
 busFaultHandler(void)
 {
+  x__ = 0;
     /* Enter an infinite loop. */
     while(1)
     {

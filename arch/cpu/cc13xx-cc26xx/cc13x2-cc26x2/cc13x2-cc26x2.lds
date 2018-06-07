@@ -34,7 +34,7 @@
  *  Default Linker script for the Texas Instruments CC1352
  */
 
-STACKSIZE = 1024;
+MIN_STACKSIZE = 0x600;
 HEAPSIZE = 256; /* Size of heap buffer used by HeapMem */
 
 MEMORY
@@ -193,6 +193,8 @@ SECTIONS {
         __HeapLimit = __heap_end__;
     } > REGION_HEAP AT> REGION_HEAP
 
+    PROVIDE(STACKSIZE = ORIGIN(SRAM) + LENGTH(SRAM) - ALIGN(0x8));
+
     .stack (NOLOAD) : ALIGN(0x8) {
         _stack = .;
         __stack = .;
@@ -200,5 +202,6 @@ SECTIONS {
         . += STACKSIZE;
         _stack_end = .;
         __stack_end = .;
+        ASSERT(STACKSIZE >= MIN_STACKSIZE, "Error: No room left for the stack");
     } > REGION_STACK AT> REGION_STACK
 }

@@ -7,6 +7,8 @@
 // Preamble (32 bit): 01010101...
 // TX Power: 5 dBm
 
+#include "sys/cc.h"
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -20,7 +22,7 @@
 
 
 // TI-RTOS RF Mode Object
-RF_Mode RF_propMode =
+RF_Mode RF_ieeeMode =
 {
     .rfMode = RF_MODE_AUTO,
     .cpePatchFxn = &rf_patch_cpe_ieee_802_15_4,
@@ -34,7 +36,7 @@ RF_Mode RF_propMode =
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry txPowerTable[16] =
+RF_TxPowerTable_Entry ieeeTxPowerTable[16] =
 {
     { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY(7,  3, 0,   3) },
     { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY(9,  3, 0,   3) },
@@ -56,7 +58,7 @@ RF_TxPowerTable_Entry txPowerTable[16] =
 
 
 // Overrides for CMD_RADIO_SETUP
-uint32_t pOverrides[] =
+uint32_t pIeeeOverrides[] CC_ALIGN(4) =
 {
                                     // override_ieee_802_15_4.xml
     MCE_RFE_OVERRIDE(1,0,0,0,1,0),  // PHY: Use MCE RAM patch, RFE ROM bank 1
@@ -98,12 +100,12 @@ rfc_CMD_RADIO_SETUP_t RF_cmdRadioSetup =
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0x941E,
-    .pRegOverride = pOverrides,
+    .pRegOverride = pIeeeOverrides,
 };
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdFs =
+rfc_CMD_FS_t RF_cmdIeeeFs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,

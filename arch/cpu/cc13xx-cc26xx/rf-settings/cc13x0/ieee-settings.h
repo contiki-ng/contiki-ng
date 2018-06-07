@@ -10,9 +10,10 @@
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
-// This must be included "locally" frm the cpu directory,
-// as it isn't defined in CC13x0 driverlib
+// These two headers must be included "locally" frm the cpu directory,
+// as they aren't defined in CC13x0 driverlib
 #include "driverlib/rf_ieee_cmd.h"
+#include "driverlib/rf_ieee_mailbox.h"
 
 #include <ti/drivers/rf/RF.h>
 

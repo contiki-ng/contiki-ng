@@ -37,7 +37,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
-#include <ti/drivers/GPIO.h>
+#include <ti/drivers/PIN.h>
 #include <ti/drivers/SPI.h>
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -48,7 +48,17 @@
 #include <stdbool.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-static SPI_Handle spiHandle = NULL;
+static PIN_Config pin_table[] = {
+  Board_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,
+  PIN_TERMINATE
+};
+
+static PIN_State  pin_state;
+static PIN_Handle pin_handle;
+
+static SPI_Handle spi_handle;
+
+static bool ext_flash_opened;
 /*---------------------------------------------------------------------------*/
 #define SPI_BIT_RATE              4000000
 
@@ -115,7 +125,7 @@ spi_write(const uint8_t *buf, size_t len)
   spiTransaction.txBuf = (void *)buf;
   spiTransaction.rxBuf = NULL;
 
-  return SPI_transfer(spiHandle, &spiTransaction);
+  return SPI_transfer(spi_handle, &spiTransaction);
 }
 /*---------------------------------------------------------------------------*/
 static bool
@@ -126,19 +136,19 @@ spi_read(uint8_t *buf, size_t len)
   spiTransaction.txBuf = NULL;
   spiTransaction.rxBuf = buf;
 
-  return SPI_transfer(spiHandle, &spiTransaction);
+  return SPI_transfer(spi_handle, &spiTransaction);
 }
 /*---------------------------------------------------------------------------*/
 static void
 select(void)
 {
-    ti_lib_gpio_clear_dio(Board_SPI_FLASH_CS);
+  PIN_setOutputValue(pin_handle, Board_SPI_FLASH_CS, 1);
 }
 /*---------------------------------------------------------------------------*/
 static void
 deselect(void)
 {
-    ti_lib_gpio_set_dio(Board_SPI_FLASH_CS);
+  PIN_setOutputValue(pin_handle, Board_SPI_FLASH_CS, 0);
 }
 /*---------------------------------------------------------------------------*/
 static bool
@@ -258,7 +268,13 @@ verify_part(void)
 bool
 ext_flash_open()
 {
-  if (spiHandle != NULL) {
+  if (ext_flash_opened) {
+    return true;
+  }
+
+  pin_handle = PIN_open(&pin_state, pin_table);
+
+  if (pin_handle == NULL) {
     return false;
   }
 
@@ -268,13 +284,15 @@ ext_flash_open()
   spiParams.mode = SPI_MASTER;
   spiParams.transferMode = SPI_MODE_BLOCKING;
 
-  spiHandle = SPI_open(Board_SPI0, &spiParams);
+  spi_handle = SPI_open(Board_SPI0, &spiParams);
 
-  if (spiHandle == NULL) {
+  if (spi_handle == NULL) {
+    PIN_close(pin_handle);
     return false;
   }
 
-  ti_lib_ioc_pin_type_gpio_output(Board_SPI_FLASH_CS);
+  ext_flash_opened = true;
+
   deselect();
 
   const bool is_powered = power_standby();
@@ -289,18 +307,21 @@ ext_flash_open()
 void
 ext_flash_close()
 {
-  if (spiHandle == NULL) {
+  if (!ext_flash_opened) {
     return;
   }
+  ext_flash_opened = false;
 
   power_down();
-  SPI_close(spiHandle);
+
+  SPI_close(spi_handle);
+  PIN_close(pin_handle);
 }
 /*---------------------------------------------------------------------------*/
 bool
 ext_flash_read(size_t offset, size_t length, uint8_t *buf)
 {
-  if (spiHandle == NULL || buf == NULL) {
+  if (spi_handle == NULL || buf == NULL) {
     return false;
   }
 
@@ -333,7 +354,7 @@ ext_flash_read(size_t offset, size_t length, uint8_t *buf)
 bool
 ext_flash_write(size_t offset, size_t length, const uint8_t *buf)
 {
-  if (spiHandle == NULL || buf == NULL) {
+  if (spi_handle == NULL || buf == NULL) {
     return false;
   }
 
@@ -441,7 +462,6 @@ ext_flash_test(void)
 void
 ext_flash_init()
 {
-  GPIO_init();
   SPI_init();
 }
 /*---------------------------------------------------------------------------*/

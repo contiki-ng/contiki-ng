@@ -24,6 +24,8 @@
 //      Enable high output power PA: true
 // Whitening: Dynamically IEEE 802.15.4g compatible whitener and 16/32-bit CRC
 
+#include "sys/cc.h"
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -97,7 +99,7 @@ RF_TxPowerTable_Entry propHighPaTxPowerTable[8] =
 
 
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pPropDefaultPaOverrides[] =
+uint32_t pPropDefaultPaOverrides[] CC_ALIGN(4) =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(1,0,0,1,0,0),      // PHY: Use MCE RAM patch, RFE RAM patch
@@ -135,7 +137,7 @@ uint32_t pPropDefaultPaOverrides[] =
 
 
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pPropHighPaOverrides[] =
+uint32_t pPropHighPaOverrides[] CC_ALIGN(4) =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(1,0,0,1,0,0),      // PHY: Use MCE RAM patch, RFE RAM patch
@@ -213,7 +215,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup =
 
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdFs =
+rfc_CMD_FS_t RF_cmdPropFs =
 {
     .commandNo = 0x0803,
     .status = 0x0000,

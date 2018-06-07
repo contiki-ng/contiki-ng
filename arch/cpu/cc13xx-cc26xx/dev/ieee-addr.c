@@ -40,9 +40,17 @@
 #include "contiki.h"
 #include "net/linkaddr.h"
 #include "ieee-addr.h"
-
+/*---------------------------------------------------------------------------*/
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(inc/hw_memmap.h)
+#include DeviceFamily_constructPath(inc/hw_fcfg1.h)
+#include DeviceFamily_constructPath(inc/hw_ccfg.h)
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
+/*---------------------------------------------------------------------------*/
+#define IEEE_MAC_PRIMARY_ADDRESS    (FCFG1_BASE + FCFG1_O_MAC_15_4_0)
+#define IEEE_MAC_SECONDARY_ADDRESS  (CCFG_BASE + CCFG_O_IEEE_MAC_0)
 /*---------------------------------------------------------------------------*/
 void
 ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
@@ -55,7 +63,7 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
     int i;
 
     /* Reading from primary location... */
-    uint8_t *location = (uint8_t *)IEEE_ADDR_LOCATION_PRIMARY;
+    const uint8_t *location = (uint8_t *)IEEE_MAC_PRIMARY_ADDRESS;
 
     /*
      * ...unless we can find a byte != 0xFF in secondary
@@ -65,9 +73,9 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
      * actual number of bytes the caller wants to copy over.
      */
     for(i = 0; i < 8; i++) {
-      if(((uint8_t *)IEEE_ADDR_LOCATION_SECONDARY)[i] != 0xFF) {
+      if(((uint8_t *)IEEE_MAC_SECONDARY_ADDRESS)[i] != 0xFF) {
         /* A byte in the secondary location is not 0xFF. Use the secondary */
-        location = (uint8_t *)IEEE_ADDR_LOCATION_SECONDARY;
+        location = (uint8_t *)IEEE_MAC_SECONDARY_ADDRESS;
         break;
       }
     }

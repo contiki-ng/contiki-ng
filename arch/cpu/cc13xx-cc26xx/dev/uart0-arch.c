@@ -37,6 +37,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
+
 #include <ti/drivers/UART.h>
 /*---------------------------------------------------------------------------*/
 #include <contiki.h>
@@ -64,7 +65,7 @@ uart0_cb(UART_Handle handle, void *buf, size_t count)
   const uart0_input_cb currCb = g_input_cb;
   // Call the callback. Note this might reset g_input_cb
   currCb(g_char_buf);
-  // If the callback pointer didn't change after the call, do another read.
+  // If g_input_cb didn't change after the call, do another read.
   // Else, the uart0_set_callback was called with a different callback pointer
   // and triggered an another read.
   if (currCb == g_input_cb) {
@@ -77,8 +78,6 @@ uart0_init(void)
 {
   if (g_bIsInit) { return; }
   g_bIsInit = true;
-
-  UART_init();
 
   UART_Params params;
   UART_Params_init(&params);
@@ -118,8 +117,7 @@ uart0_set_callback(uart0_input_cb input_cb)
   g_input_cb = input_cb;
   if (input_cb) {
     return UART_read(gh_uart, &g_char_buf, 1);
-  }
-  else {
+  } else {
     UART_readCancel(gh_uart);
     return UART_STATUS_SUCCESS;
   }

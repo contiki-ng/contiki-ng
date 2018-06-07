@@ -4,23 +4,28 @@ CFLAGS += -mcpu=cortex-m3
 
 LDFLAGS += -mcpu=cortex-m3 -nostartfiles
 LDFLAGS += -T $(LDSCRIPT)
-LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
-LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),--cref,--no-warn-mismatch
+LDFLAGS += -Wl,--gc-sections
+LDFLAGS += -Wl,--sort-section=alignment
+LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map)
+LDFLAGS += -Wl,--cref
+LDFLAGS += -Wl,--no-warn-mismatch
+
+TARGET_LIBFLAGS := -Wl,--start-group $(TARGET_LIBFILES) -lc -lgcc -lm -lnosys -Wl,--end-group
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 
 ### Build syscalls for newlib
 MODULES += os/lib/newlib
 
-CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
+CPU_STARTFILES := ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
 
 ### Compilation rules
 CUSTOM_RULE_LINK = 1
 
 .SECONDEXPANSION:
 
-%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT)
+%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES)
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -lm -o $@
+	$(Q)$(LD) $(LDFLAGS) ${filter %.o %.a,$^} $(TARGET_LIBFLAGS) -o $@
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m

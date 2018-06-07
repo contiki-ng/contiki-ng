@@ -42,12 +42,14 @@
  * \file
  * Implementation of the CC13xx/CC26xx watchdog driver.
  */
-#include <driverlib/interrupt.h>
-#include <driverlib/watchdog.h>
-
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/watchdog.h"
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
 
+#include <ti/drivers/Watchdog.h>
+/*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
@@ -56,49 +58,8 @@
 #else
 #define CONTIKI_WATCHDOG_TIMER_TOP 0xFFFFF
 #endif
-
-#ifdef  CONTIKI_WATCHDOG_CONF_LOCK_CONFIG
-#define CONTIKI_WATCHDOG_LOCK_CONFIG CONTIKI_WATCHDOG_CONF_LOCK_CONFIG
-#else
-#define CONTIKI_WATCHDOG_LOCK_CONFIG 1
-#endif
-
-#define LOCK_INTERRUPTS_DISABLED 0x01
-#define LOCK_REGISTERS_UNLOCKED  0x02
 /*---------------------------------------------------------------------------*/
-static uint32_t
-unlock_config(void)
-{
-  uint32_t ret = 0;
-  bool int_status;
-
-  if(CONTIKI_WATCHDOG_LOCK_CONFIG) {
-    int_status = IntMasterDisable();
-
-    if(WatchdogLockState()) {
-      ret |= LOCK_REGISTERS_UNLOCKED;
-      WatchdogUnlock();
-    }
-
-    ret |= (int_status) ? (0) : (LOCK_INTERRUPTS_DISABLED);
-  }
-
-  return ret;
-}
-/*---------------------------------------------------------------------------*/
-static void
-lock_config(uint32_t status)
-{
-  if(CONTIKI_WATCHDOG_LOCK_CONFIG) {
-
-    if(status & LOCK_REGISTERS_UNLOCKED) {
-      WatchdogLock();
-    }
-    if(status & LOCK_INTERRUPTS_DISABLED) {
-      IntMasterEnable();
-    }
-  }
-}
+static Watchdog_Handle wd_handle;
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialises the CC26xx WDT
@@ -109,8 +70,14 @@ lock_config(uint32_t status)
 void
 watchdog_init(void)
 {
-  WatchdogReloadSet(CONTIKI_WATCHDOG_TIMER_TOP);
-  lock_config(LOCK_REGISTERS_UNLOCKED);
+  Watchdog_init();
+
+  Watchdog_Params params;
+  Watchdog_Params_init(&params);
+  params.resetMode = Watchdog_RESET_ON;
+  params.debugStallMode = Watchdog_DEBUG_STALL_ON;
+
+  wd_handle = Watchdog_open(Board_WATCHDOG0, &params);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -119,12 +86,7 @@ watchdog_init(void)
 void
 watchdog_start(void)
 {
-  uint32_t lock_status = unlock_config();
-
   watchdog_periodic();
-  WatchdogResetEnable();
-
-  lock_config(lock_status);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -133,8 +95,7 @@ watchdog_start(void)
 void
 watchdog_periodic(void)
 {
-  WatchdogReloadSet(CONTIKI_WATCHDOG_TIMER_TOP);
-  WatchdogIntClear();
+  Watchdog_setReload(wd_handle, CONTIKI_WATCHDOG_TIMER_TOP);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -143,11 +104,7 @@ watchdog_periodic(void)
 void
 watchdog_stop(void)
 {
-  uint32_t lock_status = unlock_config();
-
-  WatchdogResetDisable();
-
-  lock_config(lock_status);
+  Watchdog_clear(wd_handle);
 }
 /*---------------------------------------------------------------------------*/
 /**

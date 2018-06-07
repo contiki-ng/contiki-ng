@@ -51,14 +51,6 @@
 void
 board_init(void)
 {
-  // Board_initGeneral() will call Power_init()
-  // Board_initGeneral() will call PIN_init(BoardGpioInitTable)
-  Board_initGeneral();
-  Board_shutDownExtFlash();
-
-  GPIO_init();
-  I2C_init();
-  SPI_init();
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
