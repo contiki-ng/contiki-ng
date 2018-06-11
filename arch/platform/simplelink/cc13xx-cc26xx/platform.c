@@ -169,10 +169,7 @@ platform_init_stage_one(void)
 void
 platform_init_stage_two(void)
 {
-#if SIMPLELINK_UART_CONF_ENABLE
   uart0_init();
-#endif
-
   serial_line_init();
 
 #if BUILD_WITH_SHELL

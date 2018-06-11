@@ -209,10 +209,10 @@ volatile static uint8_t *rx_read_entry;
 
 static uint8_t tx_buf[TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN] CC_ALIGN(4);
 /*---------------------------------------------------------------------------*/
-#define cmd_radio_setup   ((volatile rfc_CMD_PROP_RADIO_DIV_SETUP_t *)&RF_cmdPropRadioDivSetup)
-#define cmd_fs            ((volatile rfc_CMD_FS_t *)&RF_cmdPropFs)
-#define cmd_tx            ((volatile rfc_CMD_PROP_TX_ADV_t *)&RF_cmdPropTxAdv)
-#define cmd_rx            ((volatile rfc_CMD_PROP_RX_ADV_t *)&RF_cmdPropRxAdv)
+#define cmd_radio_setup   ((volatile rfc_CMD_PROP_RADIO_DIV_SETUP_t *)&rf_cmd_prop_radio_div_setup)
+#define cmd_fs            ((volatile rfc_CMD_FS_t *)                  &rf_cmd_prop_fs)
+#define cmd_tx            ((volatile rfc_CMD_PROP_TX_ADV_t *)         &rf_cmd_prop_tx_adv)
+#define cmd_rx            ((volatile rfc_CMD_PROP_RX_ADV_t *)         &rf_cmd_prop_rx_adv)
 /*---------------------------------------------------------------------------*/
 /* RF driver */
 static RF_Object rfObject;
@@ -777,7 +777,7 @@ rf_init(void)
     // Disable automatic power-down just to not interfere with stack timing
     params.nInactivityTimeout = 0;
 
-    rfHandle = RF_open(&rfObject, &RF_propMode, (RF_RadioSetup*)cmd_radio_setup, &params);
+    rfHandle = RF_open(&rfObject, &rf_prop_mode, (RF_RadioSetup*)cmd_radio_setup, &params);
     assert(rfHandle != NULL);
 
     /* Initialise RX buffers */

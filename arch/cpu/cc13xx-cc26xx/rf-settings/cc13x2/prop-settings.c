@@ -1,4 +1,33 @@
-//*********************************************************************************
+/*
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*---------------------------------------------------------------------------*/
 // Parameter summary
 // Address: 0
 // Address0: 0xAA
@@ -23,9 +52,9 @@
 //      TX Power: 20 dBm (requires define CCFG_FORCE_VDDR_HH = 0 in ccfg.c, see CC13xx/CC26xx Technical Reference Manual)
 //      Enable high output power PA: true
 // Whitening: Dynamically IEEE 802.15.4g compatible whitener and 16/32-bit CRC
-
+/*---------------------------------------------------------------------------*/
 #include "sys/cc.h"
-
+/*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -35,26 +64,24 @@
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_genfsk.h)
 
 #include <ti/drivers/rf/RF.h>
-
+/*---------------------------------------------------------------------------*/
 #include "prop-settings.h"
-
-
+/*---------------------------------------------------------------------------*/
 // TI-RTOS RF Mode Object
-RF_Mode RF_propMode =
+RF_Mode rf_prop_mode =
 {
     .rfMode = RF_MODE_AUTO,
     .cpePatchFxn = &rf_patch_cpe_prop,
     .mcePatchFxn = &rf_patch_mce_genfsk,
     .rfePatchFxn = &rf_patch_rfe_genfsk,
 };
-
-
+/*---------------------------------------------------------------------------*/
 // TX Power table
 // The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry propDefaultPaTxPowerTable[19] =
+RF_TxPowerTable_Entry rf_prop_tx_power_table_default_pa[RF_PROP_TX_POWER_TABLE_DEFAULT_PA_SIZE+1] =
 {
     { -20, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  2) },
     { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 3, 0,  3) },
@@ -78,14 +105,13 @@ RF_TxPowerTable_Entry propDefaultPaTxPowerTable[19] =
     {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1,  0) },
     RF_TxPowerTable_TERMINATION_ENTRY
 };
-
-
+/*---------------------------------------------------------------------------*/
 // TX Power table
 // The RF_TxPowerTable_HIGH_PA_ENTRY macro is defined in RF.h and requires the following arguments:
 // RF_TxPowerTable_HIGH_PA_ENTRY(bias, ibboost, boost, coefficient, ldoTrim)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry propHighPaTxPowerTable[8] =
+RF_TxPowerTable_Entry rf_prop_tx_power_table_high_pa[RF_PROP_TX_POWER_TABLE_HIGH_PA_SIZE+1] =
 {
     { 14, RF_TxPowerTable_HIGH_PA_ENTRY( 7, 0, 0, 23,  4) },
     { 15, RF_TxPowerTable_HIGH_PA_ENTRY(10, 0, 0, 26,  4) },
@@ -96,10 +122,9 @@ RF_TxPowerTable_Entry propHighPaTxPowerTable[8] =
     { 20, RF_TxPowerTable_HIGH_PA_ENTRY(27, 0, 0, 85, 32) },
     RF_TxPowerTable_TERMINATION_ENTRY
 };
-
-
+/*---------------------------------------------------------------------------*/
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pPropDefaultPaOverrides[] CC_ALIGN(4) =
+uint32_t rf_prop_overrides_default_pa[] CC_ALIGN(4) =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(1,0,0,1,0,0),      // PHY: Use MCE RAM patch, RFE RAM patch
@@ -134,10 +159,9 @@ uint32_t pPropDefaultPaOverrides[] CC_ALIGN(4) =
     ADI_REG_OVERRIDE(0,12,0xF8),        // Tx: Set PA trim to max to maximize its output power (in ADI0, set PACTL0=0xF8)
     (uint32_t)0xFFFFFFFF,
 };
-
-
+/*---------------------------------------------------------------------------*/
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t pPropHighPaOverrides[] CC_ALIGN(4) =
+uint32_t rf_prop_overrides_high_pa[] CC_ALIGN(4) =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(1,0,0,1,0,0),      // PHY: Use MCE RAM patch, RFE RAM patch
@@ -172,21 +196,20 @@ uint32_t pPropHighPaOverrides[] CC_ALIGN(4) =
     (uint32_t)0x82A86C2B,               // txHighPA=0x20AA1B
     (uint32_t)0xFFFFFFFF,
 };
-
-
+/*---------------------------------------------------------------------------*/
 // CMD_PROP_RADIO_DIV_SETUP
 // Proprietary Mode Radio Setup Command for All Frequency Bands
-rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup =
+rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
 {
-    .commandNo = 0x3807,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+    .commandNo = CMD_PROP_RADIO_DIV_SETUP,
+    .status = IDLE,
+    .pNextOp = 0,
     .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x0,
+    .startTrigger.triggerType = TRIG_NOW,
     .startTrigger.bEnaCmd = 0x0,
     .startTrigger.triggerNo = 0x0,
     .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
+    .condition.rule = COND_NEVER,
     .condition.nSkip = 0x0,
     .modulation.modType = 0x1,
     .modulation.deviation = 0x64,
@@ -202,33 +225,33 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t RF_cmdPropRadioDivSetup =
     .formatConf.bMsbFirst = 0x1,
     .formatConf.fecMode = 0x0,
     .formatConf.whitenMode = 0x7,
-    .config.frontEndMode = 0x0,
-    .config.biasMode = 0x1,
+    .config.frontEndMode = 0x0, /* set by driver */
+    .config.biasMode = 0x0, /* set by driver */
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
-    .txPower = 0x013F,
-    .pRegOverride = pPropDefaultPaOverrides,
-    .centerFreq = 0x0393,
-    .intFreq = 0x8000,
-    .loDivider = 0x05,
+    .txPower = 0x013F, /* default 13.5 dBm */
+    .pRegOverride = rf_prop_overrides_default_pa,
+    .centerFreq = 0x0393, /* set by driver */
+    .intFreq = 0x8000, /* set by driver */
+    .loDivider = 0x05, /* set by driver */
 };
-
+/*---------------------------------------------------------------------------*/
 // CMD_FS
 // Frequency Synthesizer Programming Command
-rfc_CMD_FS_t RF_cmdPropFs =
+rfc_CMD_FS_t rf_cmd_prop_fs =
 {
-    .commandNo = 0x0803,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+    .commandNo = CMD_FS,
+    .status = IDLE,
+    .pNextOp = 0,
     .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x0,
+    .startTrigger.triggerType = TRIG_NOW,
     .startTrigger.bEnaCmd = 0x0,
     .startTrigger.triggerNo = 0x0,
     .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
+    .condition.rule = COND_NEVER,
     .condition.nSkip = 0x0,
-    .frequency = 0x0393,
-    .fractFreq = 0x0000,
+    .frequency = 0x0393, /* set by driver */
+    .fractFreq = 0x0000, /* set by driver */
     .synthConf.bTxMode = 0x0,
     .synthConf.refFreq = 0x0,
     .__dummy0 = 0x00,
@@ -236,85 +259,86 @@ rfc_CMD_FS_t RF_cmdPropFs =
     .__dummy2 = 0x00,
     .__dummy3 = 0x0000,
 };
-
+/*---------------------------------------------------------------------------*/
 // CMD_PROP_TX_ADV
 // Proprietary Mode Advanced Transmit Command
-rfc_CMD_PROP_TX_ADV_t RF_cmdPropTxAdv =
+rfc_CMD_PROP_TX_ADV_t rf_cmd_prop_tx_adv =
 {
-    .commandNo = 0x3803,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+    .commandNo = CMD_PROP_TX_ADV,
+    .status = IDLE,
+    .pNextOp = 0,
     .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x2,
+    .startTrigger.triggerType = TRIG_NOW,
     .startTrigger.bEnaCmd = 0x0,
     .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x1,
-    .condition.rule = 0x1,
+    .startTrigger.pastTrig = 0x0,
+    .condition.rule = COND_NEVER,
     .condition.nSkip = 0x0,
     .pktConf.bFsOff = 0x0,
     .pktConf.bUseCrc = 0x1,
     .pktConf.bCrcIncSw = 0x0,
     .pktConf.bCrcIncHdr = 0x0,
     .numHdrBits = 0x10,
-    .pktLen = 0x0014,
+    .pktLen = 0x0, /* set by driver */
     .startConf.bExtTxTrig = 0x0,
     .startConf.inputMode = 0x0,
     .startConf.source = 0x0,
-    .preTrigger.triggerType = 0x4,
+    .preTrigger.triggerType = TRIG_REL_START,
     .preTrigger.bEnaCmd = 0x0,
     .preTrigger.triggerNo = 0x0,
     .preTrigger.pastTrig = 0x1,
     .preTime = 0x00000000,
     .syncWord = 0x0055904E,
-    .pPkt = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+    .pPkt = 0,
 };
-
+/*---------------------------------------------------------------------------*/
 // CMD_PROP_RX_ADV
 // Proprietary Mode Advanced Receive Command
-rfc_CMD_PROP_RX_ADV_t RF_cmdPropRxAdv =
+rfc_CMD_PROP_RX_ADV_t rf_cmd_prop_rx_adv =
 {
-    .commandNo = 0x3804,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+    .commandNo = CMD_PROP_RX_ADV,
+    .status = IDLE,
+    .pNextOp = 0,
     .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x0,
+    .startTrigger.triggerType = TRIG_NOW,
     .startTrigger.bEnaCmd = 0x0,
     .startTrigger.triggerNo = 0x0,
     .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
+    .condition.rule = COND_NEVER,
     .condition.nSkip = 0x0,
     .pktConf.bFsOff = 0x0,
-    .pktConf.bRepeatOk = 0x0,
-    .pktConf.bRepeatNok = 0x0,
-    .pktConf.bUseCrc = 0x0,
+    .pktConf.bRepeatOk = 0x1,
+    .pktConf.bRepeatNok = 0x1,
+    .pktConf.bUseCrc = 0x1,
     .pktConf.bCrcIncSw = 0x0,
     .pktConf.bCrcIncHdr = 0x0,
     .pktConf.endType = 0x0,
-    .pktConf.filterOp = 0x0,
-    .rxConf.bAutoFlushIgnored = 0x0,
-    .rxConf.bAutoFlushCrcErr = 0x0,
+    .pktConf.filterOp = 0x1,
+    .rxConf.bAutoFlushIgnored = 0x1,
+    .rxConf.bAutoFlushCrcErr = 0x1,
     .rxConf.bIncludeHdr = 0x0,
     .rxConf.bIncludeCrc = 0x0,
-    .rxConf.bAppendRssi = 0x0,
+    .rxConf.bAppendRssi = 0x1,
     .rxConf.bAppendTimestamp = 0x0,
-    .rxConf.bAppendStatus = 0x0,
-    .syncWord0 = 0x930B51DE,
+    .rxConf.bAppendStatus = 0x1,
+    .syncWord0 = 0x0055904E,
     .syncWord1 = 0x00000000,
-    .maxPktLen = 0x00FF,
-    .hdrConf.numHdrBits = 0x0,
+    .maxPktLen = 0x0, /* set by driver */
+    .hdrConf.numHdrBits = 0x10,
     .hdrConf.lenPos = 0x0,
-    .hdrConf.numLenBits = 0x0,
+    .hdrConf.numLenBits = 0x0B,
     .addrConf.addrType = 0x0,
     .addrConf.addrSize = 0x0,
     .addrConf.addrPos = 0x0,
     .addrConf.numAddr = 0x0,
-    .lenOffset = 0x00,
-    .endTrigger.triggerType = 0x0,
+    .lenOffset = 0xFC,
+    .endTrigger.triggerType = TRIG_NEVER,
     .endTrigger.bEnaCmd = 0x0,
     .endTrigger.triggerNo = 0x0,
     .endTrigger.pastTrig = 0x0,
     .endTime = 0x00000000,
-    .pAddr = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
-    .pQueue = 0, // INSERT APPLICABLE POINTER: (dataQueue_t*)&xxx
-    .pOutput = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+    .pAddr = 0, /* set by driver */
+    .pQueue = 0, /* set by driver */
+    .pOutput = 0, /* set by driver */
 };
+/*---------------------------------------------------------------------------*/
