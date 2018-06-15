@@ -121,7 +121,7 @@
 #ifdef IEEE_MODE_CONF_CHANNEL
 #   define IEEE_MODE_CHANNEL  IEEE_MODE_CONF_CHANNEL
 #else
-#   define IEEE_MODE_CHANNEL  RF_CORE_CHANNEL
+#   define IEEE_MODE_CHANNEL  RF_CHANNEL
 #endif
 
 /* Configuration for TX power table */
@@ -301,10 +301,7 @@ static void
 rx_cb(RF_Handle h, RF_CmdHandle ch, RF_EventMask e)
 {
   if (e & RF_EventRxOk) {
-    process_poll(&RF_coreProcess);
-  }
-  if (e & RF_EventRxBufFull) {
-
+    process_poll(&rf_process);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -343,7 +340,7 @@ init_data_queue(void)
 static void
 init_rf_params(void)
 {
-    cmd_rx.channel = RF_CORE_CHANNEL;
+    cmd_rx.channel = IEEE_MODE_CHANNEL;
 
     cmd_rx.pRxQ = &g_rxDataQueue;
     cmd_rx.pOutput = &g_rxStats;
@@ -555,7 +552,7 @@ init(void)
   ctimer_set(&g_ratOverflowTimer, RAT_OVERFLOW_PERIOD_SECONDS * CLOCK_SECOND / 2,
              rat_overflow_cb, NULL);
 
-  process_start(&RF_coreProcess, NULL);
+  process_start(&rf_process, NULL);
 
   return CMD_RESULT_OK;
 }
@@ -812,23 +809,25 @@ pending_packet(void)
   const rfc_dataEntry_t *const pStartEntry = (rfc_dataEntry_t *)g_rxDataQueue.pCurrEntry;
   volatile const rfc_dataEntry_t *pCurrEntry = pStartEntry;
 
+  int rv = 0;
+
   // Check all RX buffers and check their statuses, stopping when looping the circular buffer
-  int bIsPending = 0;
   do {
     const uint8_t status = pCurrEntry->status;
     if ((status == DATA_ENTRY_FINISHED) ||
         (status == DATA_ENTRY_BUSY)) {
-      bIsPending = 1;
-      if (!g_bPollMode) {
-        process_poll(&RF_coreProcess);
-      }
+      rv += 1;
     }
 
     pCurrEntry = (rfc_dataEntry_t *)pCurrEntry->pNextEntry;
   } while (pCurrEntry != pStartEntry);
 
+  if ((rv > 0) && !g_bPollMode) {
+    process_poll(&rf_process);
+  }
+
   // If we didn't find an entry at status finished or busy, no frames are pending
-  return bIsPending;
+  return rv;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -909,7 +908,7 @@ get_value(radio_param_t param, radio_value_t *value)
 
   case RADIO_PARAM_TXPOWER:
     *value = get_tx_power();
-    return (*value == TX_POWER_UNKNOWN)
+    return (*value == RF_TxPowerTable_INVALID_DBM)
       ? RADIO_RESULT_ERROR
       : RADIO_RESULT_OK;
 

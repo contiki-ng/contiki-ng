@@ -43,34 +43,12 @@
 #ifndef RF_COMMON_H_
 #define RF_COMMON_H_
 /*---------------------------------------------------------------------------*/
-/* Contiki API */
-#include <sys/rtimer.h>
-#include <dev/radio.h>
-/*---------------------------------------------------------------------------*/
-/* Standard library */
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-#ifdef RF_CORE_CONF_CHANNEL
-#   define RF_CORE_CHANNEL  RF_CORE_CONF_CHANNEL
-#else
-#   define RF_CORE_CHANNEL  25
-#endif
-/*---------------------------------------------------------------------------*/
 typedef enum {
     CMD_RESULT_ERROR = 0,
     CMD_RESULT_OK = 1,
-} CmdResult;
+} cmd_result_t;
 /*---------------------------------------------------------------------------*/
-typedef struct {
-  radio_value_t dbm;
-  uint16_t      power; ///< Value for the .txPower field
-} RF_TxPower;
-
-#define TX_POWER_UNKNOWN  0xFFFF
-/*---------------------------------------------------------------------------*/
-#define RSSI_UNKNOWN      -128
-/*---------------------------------------------------------------------------*/
-PROCESS_NAME(RF_coreProcess);
+PROCESS_NAME(rf_process);
 /*---------------------------------------------------------------------------*/
 #endif /* RF_COMMON_H_ */
 /*---------------------------------------------------------------------------*/

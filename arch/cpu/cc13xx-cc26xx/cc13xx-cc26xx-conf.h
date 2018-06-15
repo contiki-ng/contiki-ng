@@ -56,12 +56,10 @@
 #define CC2650_FAST_RADIO_STARTUP           (MAC_CONF_WITH_TSCH)
 #endif
 
-#ifdef RF_CHANNEL
-#define RF_CORE_CONF_CHANNEL                RF_CHANNEL
-#endif
-
-#ifndef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CONF_CHANNEL                25
+#ifdef RF_CORE_CONF_CHANNEL
+#define RF_CHANNEL                RF_CORE_CONF_CHANNEL
+#else
+#define RF_CHANNEL                25
 #endif
 
 /* Number of Prop Mode RX buffers */
@@ -70,54 +68,59 @@
 #endif
 
 /* Configure Radio mode, i.e. prop or ieee */
+
+
+/*----- CC13xx Device Line --------------------------------------------------*/
 /* CC13xx supports both IEEE and Prop mode, depending on which device */
-/* CC26xx only supports IEEE mode */
 #if defined(DEVICE_LINE_CC13XX)
 
-/* Default mode should be prop for prop-only devices (CC1310, CC1312);
+/* Default mode should be prop for prop-only devices (CC1310, CC1312R);
  * Else, IEEE mode is default. */
-#   ifndef CC13XX_CONF_PROP_MODE
-#       if (SUPPORTS_IEEE_MODE == 0)
-#           define CC13XX_CONF_PROP_MODE            1
-#       else
-#           define CC13XX_CONF_PROP_MODE            0
-#       endif
-#   endif
-
-
-#   if (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1)
-/*----- CC13xx Prop Mode ----------------------------------------------------*/
-#       define NETSTACK_CONF_RADIO          prop_mode_driver
-
-#       define CSMA_CONF_ACK_WAIT_TIME      (RTIMER_SECOND / 400)
-#       define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME \
-                                            (RTIMER_SECOND / 1000)
-#       define CSMA_CONF_SEND_SOFT_ACK      1
-
-#   elif (CC13XX_CONF_PROP_MODE == 0) && (SUPPORTS_IEEE_MODE == 1)
-/*----- CC13xx IEEE Mode ----------------------------------------------------*/
-#       define NETSTACK_CONF_RADIO          ieee_mode_driver
-
-#       define CSMA_CONF_SEND_SOFT_ACK      0
-
+# ifndef CC13XX_CONF_PROP_MODE
+#   if (SUPPORTS_IEEE_MODE == 0)
+#     define CC13XX_CONF_PROP_MODE            1
 #   else
-#       error "Invalid radio mode configuration of CC13xx device"
-#   endif /* (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1) */
+#     define CC13XX_CONF_PROP_MODE            0
+#   endif
+# endif
 
+# if (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1)
+/*----- CC13xx Prop Mode ----------------------------------------------------*/
+#   define NETSTACK_CONF_RADIO          prop_mode_driver
+
+#   define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 300)
+#   define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
+#   define CSMA_CONF_SEND_SOFT_ACK      1
+
+# elif (CC13XX_CONF_PROP_MODE == 0) && (SUPPORTS_IEEE_MODE == 1)
+/*----- CC13xx IEEE Mode ----------------------------------------------------*/
+#   define NETSTACK_CONF_RADIO          ieee_mode_driver
+
+#   define CSMA_CONF_SEND_SOFT_ACK      0
+
+# else
+/*----- CC13xx Non-supported Mode -------------------------------------------*/
+#   error "Invalid radio mode configuration of CC13xx device"
+# endif /* (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1) */
+
+/*----- CC26xx Device Line --------------------------------------------------*/
+/* CC26xx only supports IEEE mode */
 #elif defined(DEVICE_LINE_CC26XX)
 
-#   if (SUPPORTS_IEEE_MODE == 1)
+# if (SUPPORTS_IEEE_MODE == 1)
 /*----- CC26xx IEEE Mode ----------------------------------------------------*/
-#       define NETSTACK_CONF_RADIO          ieee_mode_driver
+#   define NETSTACK_CONF_RADIO          ieee_mode_driver
 
-#       define CSMA_CONF_SEND_SOFT_ACK      0
+#   define CSMA_CONF_SEND_SOFT_ACK      0
 
-#   else
-#       error "IEEE mode only supported by CC26xx devices"
-#   endif /* (SUPPORTS_IEEE_MODE == 1) */
+# else
+/*----- CC26xx Non-supported Mode -------------------------------------------*/
+#   error "IEEE mode only supported by CC26xx devices"
+# endif /* (SUPPORTS_IEEE_MODE == 1) */
 
+/*----- Unsupported device line ---------------------------------------------*/
 #else
-#   error "Unsupported Device Line defined"
+# error "Unsupported Device Line defined"
 #endif /* defined(DEVICE_LINE_CC13xx) */
 
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN      125

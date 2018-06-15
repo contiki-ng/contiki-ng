@@ -97,7 +97,7 @@ RF_TxPowerTable_Entry rf_prop_tx_power_table[RF_PROP_TX_POWER_TABLE_SIZE+1] =
 };
 /*---------------------------------------------------------------------------*/
 // Overrides for CMD_PROP_RADIO_DIV_SETUP
-uint32_t p_prop_overrides[] CC_ALIGN(4) =
+uint32_t rf_prop_overrides[] CC_ALIGN(4) =
 {
                                         // override_use_patch_prop_genfsk.xml
     MCE_RFE_OVERRIDE(0,4,0,1,0,0),      // PHY: Use MCE ROM bank 4, RFE RAM patch
@@ -137,15 +137,15 @@ uint32_t p_prop_overrides[] CC_ALIGN(4) =
 // Proprietary Mode Radio Setup Command for All Frequency Bands
 rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
 {
-    .commandNo = 0x3807,
-    .status = 0x0000,
+    .commandNo = CMD_PROP_RADIO_DIV_SETUP,
+    .status = IDLE,
     .pNextOp = 0,
     .startTime = 0x00000000,
     .startTrigger.triggerType = 0x0,
     .startTrigger.bEnaCmd = 0x0,
     .startTrigger.triggerNo = 0x0,
     .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
+    .condition.rule = COND_NEVER,
     .condition.nSkip = 0x0,
     .modulation.modType = 0x1,
     .modulation.deviation = 0x64,
@@ -164,7 +164,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0xAB3F,
-    .pRegOverride = pPropOverrides,
+    .pRegOverride = rf_prop_overrides,
     .centerFreq = 0x0364,
     .intFreq = 0x8000,
     .loDivider = 0x05,
@@ -174,15 +174,15 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
 // Frequency Synthesizer Programming Command
 rfc_CMD_FS_t rf_cmd_prop_fs =
 {
-    .commandNo = 0x0803,
-    .status = 0x0000,
+    .commandNo = CMD_FS,
+    .status = IDLE,
     .pNextOp = 0,
     .startTime = 0x00000000,
     .startTrigger.triggerType = 0x0,
     .startTrigger.bEnaCmd = 0x0,
     .startTrigger.triggerNo = 0x0,
     .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
+    .condition.rule = COND_NEVER,
     .condition.nSkip = 0x0,
     .frequency = 0x0364,
     .fractFreq = 0x0000,
@@ -199,14 +199,14 @@ rfc_CMD_FS_t rf_cmd_prop_fs =
 rfc_CMD_PROP_TX_ADV_t rf_cmd_prop_tx_adv =
 {
     .commandNo = CMD_PROP_TX_ADV,
-    .status = 0x0000,
+    .status = IDLE,
     .pNextOp = 0,
     .startTime = 0x00000000,
     .startTrigger.triggerType = 0x2,
     .startTrigger.bEnaCmd = 0x0,
     .startTrigger.triggerNo = 0x0,
     .startTrigger.pastTrig = 0x1,
-    .condition.rule = 0x1,
+    .condition.rule = COND_NEVER,
     .condition.nSkip = 0x0,
     .pktConf.bFsOff = 0x0,
     .pktConf.bUseCrc = 0x1,

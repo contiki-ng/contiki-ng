@@ -52,7 +52,7 @@ extern rfc_CMD_PROP_TX_ADV_t          rf_cmd_prop_tx_adv;
 extern rfc_CMD_PROP_RX_ADV_t          rf_cmd_prop_rx_adv;
 /*---------------------------------------------------------------------------*/
 // RF Core API Overrides
-extern uint32_t p_prop_overrides[];
+extern uint32_t rf_prop_overrides[];
 /*---------------------------------------------------------------------------*/
 #endif /* PROP_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

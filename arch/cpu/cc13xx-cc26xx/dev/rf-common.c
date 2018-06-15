@@ -39,25 +39,18 @@
 #include <contiki.h>
 #include <dev/watchdog.h>
 #include <sys/process.h>
-#include <sys/energest.h>
 #include <net/netstack.h>
 #include <net/packetbuf.h>
 #include <net/mac/mac.h>
-/*---------------------------------------------------------------------------*/
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE  "RF"
 #define LOG_LEVEL   LOG_LEVEL_DBG
 /*---------------------------------------------------------------------------*/
-PROCESS(RF_coreProcess, "SimpleLink RF process");
+PROCESS(rf_process, "SimpleLink RF Process");
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(RF_coreProcess, ev, data)
+PROCESS_THREAD(rf_process, ev, data)
 {
   int len;
 

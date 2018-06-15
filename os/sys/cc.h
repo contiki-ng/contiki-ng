@@ -145,6 +145,10 @@
 #define ABS(n)      (((n) < 0) ? -(n) : (n))
 #endif
 
+#ifndef CLAMP
+#define CLAMP(v, vmin, vmax)  (MAX(MIN(v, vmax), vmin))
+#endif
+
 
 #define CC_CONCAT2(s1, s2) s1##s2
 /**

@@ -43,12 +43,8 @@
 /*---------------------------------------------------------------------------*/
 /* Exports a global symbol to be used by the sensor API */
 SENSORS(
-#ifdef BUTTON_SENSOR_ARCH_BTN1
-  &button_sensor,
-#endif
-#ifdef BUTTON_SENSOR_ARCH_BTN2
-  &button_sensor2,
-#endif
+  &btn1_sensor,
+  &btn2_sensor,
   NULL
 );
 /*---------------------------------------------------------------------------*/
