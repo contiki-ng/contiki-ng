@@ -2,7 +2,8 @@ CONTIKI_PROJECT = coap-plugtest-server
 all: $(CONTIKI_PROJECT)
 
 # Only intended for native
-PLATFORMS_ONLY = native
+PLATFORMS_ONLY = native, zoul
+
 
 # Include the CoAP implementation
 MODULES += os/net/app-layer/coap
