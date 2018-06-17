@@ -86,6 +86,7 @@ typedef uint64_t rtimer_clock_t;
 
 #define RTIMER_CLOCK_MAX           ((rtimer_clock_t)-1)
 #define RTIMER_CLOCK_LT(a, b)      (RTIMER_CLOCK_DIFF((a),(b)) < 0)
+#define RTIMER_CLOCK_LT_OR_EQ(a, b) (RTIMER_CLOCK_DIFF((a),(b)) < 0)
 
 #include "rtimer-arch.h"
 
@@ -146,6 +147,13 @@ int rtimer_set(struct rtimer *task, rtimer_clock_t time,
  *
  */
 void rtimer_run_next(void);
+
+/**
+ * \brief      Tells if a timestamp lies in the past
+ * \param t    The timestamp
+ * \return     true if the timeout lies in the past
+ */
+bool rtimer_has_timed_out(rtimer_clock_t t);
 
 /**
  * \brief      Get the current clock time
