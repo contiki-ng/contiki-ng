@@ -71,6 +71,7 @@ libs/simple-energest/openmote-cc2538 \
 libs/deployment/openmote-cc2538 \
 6tisch/simple-node/openmote-cc2538 \
 6tisch/simple-node/openmote-cc2538:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
+libs/csprng/openmote-cc2538 \
 
 TOOLS=
 
