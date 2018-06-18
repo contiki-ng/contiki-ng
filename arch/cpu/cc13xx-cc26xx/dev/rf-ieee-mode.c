@@ -176,6 +176,10 @@
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
+#define CCA_STATE_IDLE      0
+#define CCA_STATE_BUSY      1
+#define CCA_STATE_INVALID   2
+/*---------------------------------------------------------------------------*/
 /* TI-RTOS RF driver object */
 static RF_Object g_rfObj;
 static RF_Handle g_rfHandle;
@@ -204,23 +208,39 @@ static uint8_t g_txBuf[TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN] CC_ALIGN(4);
 /*---------------------------------------------------------------------------*/
 /* RX Data Queue */
 static dataQueue_t g_rxDataQueue;
-/* Receive entry pointer to keep track of read items */
-volatile static uint8_t *g_pRxReadEntry;
-
+/*---------------------------------------------------------------------------*/
 /* Constants for receive buffers */
 #define DATA_ENTRY_LENSZ_NONE  0
 #define DATA_ENTRY_LENSZ_BYTE  1
 #define DATA_ENTRY_LENSZ_WORD  2 /* 2 bytes */
 
-#define RX_BUF_ENTRIES  4
+#define DATA_ENTRY_LENSZ      DATA_ENTRY_LENSZ_BYTE
+typedef uint8_t lensz_t;
+
+#define FRAME_OFFSET          DATA_ENTRY_LENSZ
+#define FRAME_SHAVE           8   /* FCS (2) + RSSI (1) + Status (1) + Timestamp (4) */
+/*---------------------------------------------------------------------------*/
+/* RX buf configuration */
+#ifdef IEEE_MODE_CONF_RX_BUF_CNT
+# define RX_BUF_CNT             IEEE_MODE_CONF_RX_BUF_CNT
+#else
+# define RX_BUF_CNT             4
+#endif
+
 #define RX_BUF_SIZE     144
 
 /* Receive buffer entries with room for 1 IEEE 802.15.4 frame in each */
+typedef rfc_dataEntryGeneral_t data_entry_t;
+
 typedef union {
-    rfc_dataEntry_t dataEntry;
-    uint8_t         buf[RX_BUF_SIZE] CC_ALIGN(4);
-} RxBuf;
-static RxBuf g_rxBufs[RX_BUF_ENTRIES];
+  data_entry_t data_entry;
+  uint8_t      buf[RX_BUF_SIZE];
+} rx_buf_t CC_ALIGN(4);
+
+static rx_buf_t rx_bufs[RX_BUF_CNT];
+
+/* Receive entry pointer to keep track of read items */
+static data_entry_t *rx_read_entry;
 /*---------------------------------------------------------------------------*/
 /* RAT overflow upkeep */
 static struct ctimer g_ratOverflowTimer;
@@ -331,10 +351,10 @@ static void
 init_data_queue(void)
 {
   // Initialize RF core data queue, circular buffer
-  g_rxDataQueue.pCurrEntry = g_rxBufs[0].buf;
+  g_rxDataQueue.pCurrEntry = rx_bufs[0].buf;
   g_rxDataQueue.pLastEntry = NULL;
   // Set current read pointer to first element
-  g_pRxReadEntry = g_rxDataQueue.pCurrEntry;
+  rx_read_entry = &rx_bufs[0].data_entry;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -368,25 +388,20 @@ init_rf_params(void)
 static void
 init_rx_buffers(void)
 {
-#define GET_ENTRY(n) (&(g_rxBufs[(n)].dataEntry))
-
-  rfc_dataEntry_t *entry = NULL;
-  const size_t length = sizeof(g_rxBufs[0].buf) - 8;
-
-  size_t i;
-  for (i = 0; i < (size_t)(RX_BUF_ENTRIES - 1); ++i) {
-      entry = GET_ENTRY(i);
-      entry->pNextEntry = (uint8_t*)GET_ENTRY(i + 1);
-      entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-      entry->length = (uint16_t)length;
+  size_t i = 0;
+  for (i = 0; i < RX_BUF_CNT; ++i) {
+    const data_entry_t data_entry = {
+      .status       = DATA_ENTRY_PENDING,
+      .config.type  = DATA_ENTRY_TYPE_GEN,
+      .config.lenSz = DATA_ENTRY_LENSZ,
+      .length       = RX_BUF_SIZE - sizeof(data_entry_t), /* TODO: is  this sizeof sound? */
+      /* Point to fist entry if this is last entry, else point to next entry */
+      .pNextEntry   = (i == (RX_BUF_CNT - 1))
+        ? rx_bufs[0].buf
+        : rx_bufs[i].buf
+    };
+    rx_bufs[i].data_entry = data_entry;
   }
-
-  entry = GET_ENTRY(RX_BUF_ENTRIES - 1);
-  entry->pNextEntry = (uint8_t*)GET_ENTRY(0);
-  entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-  entry->length = (uint16_t)length;
-
-#undef getEntry
 }
 /*---------------------------------------------------------------------------*/
 static bool
@@ -613,8 +628,6 @@ transmit_aux(unsigned short transmit_len)
   // Configure TX command
   cmd_tx.payloadLen = (uint8_t)transmit_len;
   cmd_tx.pPayload = &g_txBuf[TX_BUF_HDR_LEN];
-  cmd_tx.startTime = 0;
-  cmd_tx.startTrigger.triggerType = TRIG_NOW;
 
   RF_ScheduleCmdParams schedParams;
   RF_ScheduleCmdParams_init(&schedParams);
@@ -672,68 +685,88 @@ send(const void *payload, unsigned short payload_len)
 static void
 release_data_entry(void)
 {
-  rfc_dataEntryGeneral_t *pEntry = (rfc_dataEntryGeneral_t *)g_pRxReadEntry;
+  data_entry_t *const data_entry = rx_read_entry;
+  uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
+
 
   // Clear the length byte and set status to 0: "Pending"
-  g_pRxReadEntry[8] = 0;
-  pEntry->status = DATA_ENTRY_PENDING;
-  // Set next entry
-  g_pRxReadEntry = pEntry->pNextEntry;
+  *(lensz_t*)frame_ptr = 0;
+  data_entry->status = DATA_ENTRY_PENDING;
+  rx_read_entry = (data_entry_t*)data_entry->pNextEntry;
 }
 /*---------------------------------------------------------------------------*/
 static int
 read(void *buf, unsigned short buf_len)
 {
-  volatile rfc_dataEntryGeneral_t *pEntry = (rfc_dataEntryGeneral_t *)g_pRxReadEntry;
+  volatile data_entry_t *data_entry = rx_read_entry;
 
   const rtimer_clock_t t0 = RTIMER_NOW();
   // Only wait if the Radio timer is accessing the entry
-  while ((pEntry->status == DATA_ENTRY_BUSY) &&
+  while ((data_entry->status == DATA_ENTRY_BUSY) &&
           RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
 
-  if (pEntry->status != DATA_ENTRY_FINISHED) {
+  if (data_entry->status != DATA_ENTRY_FINISHED) {
     // No available data
     return 0;
   }
 
-  // FIXME: something is wrong here about length constraints
-  const uint8_t frame_len = g_pRxReadEntry[8];
-  if (frame_len < 8) {
-    PRINTF("read_frame: frame too short len=%d\n", frame_len);
+  /* First byte in the data entry is the length.
+   * Data frame is on the following format:
+   *    Length (1) + Payload (N) + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
+   * Data frame DOES NOT contain the following:
+   *    no PHY Header bytes
+   *    no Source Index bytes
+   * +--------+---------+---------+--------+--------+-----------+
+   * | 1 byte | N bytes | 2 bytes | 1 byte | 1 byte | 4 bytes   |
+   * +--------+---------+---------+--------+--------+-----------+
+   * | Length | Payload | FCS     | RSSI   | Status | Timestamp |
+   * +--------+---------+---------+--------+--------+-----------+
+   * Length bytes equal total length of entire frame excluding itself,
+   * i.e.: Length = N + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
+   *              = N + 8
+   *            N = Length - 8 */
+
+  uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
+  const lensz_t frame_len = *(lensz_t*)frame_ptr;
+
+  /* Sanity check that Frame is at least Frame Shave bytes long */
+  if (frame_len < FRAME_SHAVE) {
+    PRINTF("read: frame too short len=%d\n", frame_len);
     release_data_entry();
     return 0;
   }
 
-  const uint8_t payload_len = frame_len - 8;
+  const uint8_t *payload_ptr = frame_ptr + sizeof(lensz_t);
+  const unsigned short payload_len = (unsigned short)(frame_len - FRAME_SHAVE);
 
+  /* Sanity check that Payload fits in Buffer */
   if (payload_len > buf_len) {
-    PRINTF("read_frame: frame larger than buffer\n");
+    PRINTF("read: payload too large for buffer len=%d buf_len=%d\n", payload_len, buf_len);
     release_data_entry();
     return 0;
   }
 
-  const uint8_t *pData = (uint8_t *)&g_pRxReadEntry[9];
 
-  memcpy(buf, pData, payload_len);
+  memcpy(buf, payload_ptr, payload_len);
 
-  g_lastRssi = (int8_t)(pData[payload_len + 2]);
-  g_lastCorrLqi = (uint8_t)(pData[payload_len + 3]) & STATUS_CORRELATION;
-
-  uint32_t ratTimestamp;
-  memcpy(&ratTimestamp, pData + payload_len + 4, sizeof(ratTimestamp));
+  /* RSSI stored FCS (2) bytes after payload */
+  g_lastRssi = (int8_t)payload_ptr[payload_len + 2];
+  /* LQI retrieved from Status byte, FCS (2) + RSSI (1) bytes after payload */
+  g_lastCorrLqi = ((uint8_t)payload_ptr[payload_len + 3]) & STATUS_CORRELATION;
+  /* Timestamp stored FCS (2) + RSSI (1) + Status (1) bytes after payload */
+  const uint32_t ratTimestamp = *(uint32_t*)(payload_ptr + payload_len + 4);
   g_lastTimestamp = rat_to_timestamp(ratTimestamp);
 
   if (!g_bPollMode) {
     // Not in poll mode: packetbuf should not be accessed in interrupt context.
     // In poll mode, the last packet RSSI and link quality can be obtained through
     // RADIO_PARAM_LAST_RSSI and RADIO_PARAM_LAST_LINK_QUALITY
-    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, g_lastRssi);
-    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, g_lastCorrLqi);
+    packetbuf_set_attr(PACKETBUF_ATTR_RSSI,         (packetbuf_attr_t)g_lastRssi);
+    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, (packetbuf_attr_t)g_lastCorrLqi);
   }
 
   release_data_entry();
-
-  return payload_len;
+  return (int)payload_len;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -779,28 +812,18 @@ receiving_packet(void)
     return 0;
   }
 
-  rfc_CMD_IEEE_CCA_REQ_t RF_cmdIeeeCaaReq;
-  memset(&RF_cmdIeeeCaaReq, 0x0, sizeof(rfc_CMD_IEEE_CCA_REQ_t));
-  RF_cmdIeeeCaaReq.commandNo = CMD_IEEE_CCA_REQ;
+  rfc_CMD_IEEE_CCA_REQ_t cca_req;
+  memset(&cca_req, 0x0, sizeof(rfc_CMD_IEEE_CCA_REQ_t));
+  cca_req.commandNo = CMD_IEEE_CCA_REQ;
 
-  const RF_Stat stat = RF_runImmediateCmd(g_rfHandle, (uint32_t*)&RF_cmdIeeeCaaReq);
+  const RF_Stat stat = RF_runImmediateCmd(g_rfHandle, (uint32_t*)&cca_req);
   if (stat != RF_StatCmdDoneSuccess) {
     PRINTF("receiving_packet: CCA request failed stat=0x%02X\n", stat);
     return 0;
   }
 
-  // If the radio is transmitting an ACK or is suspended for running a TX operation,
-  // ccaEnergy, ccaCorr and ccaSync are all busy (1)
-  if ((RF_cmdIeeeCaaReq.ccaInfo.ccaEnergy == 1) &&
-      (RF_cmdIeeeCaaReq.ccaInfo.ccaCorr == 1) &&
-      (RF_cmdIeeeCaaReq.ccaInfo.ccaSync == 1)) {
-    PRINTF("receiving_packet: we were TXing\n");
-    return 0;
-  }
-
-  // We are on and not in TX, then we are in RX if a CCA sync has been seen,
-  // i.e. ccaSync is busy (1)
-  return (RF_cmdIeeeCaaReq.ccaInfo.ccaSync == 1);
+  // We are in RX if a CCA sync has been seen, i.e. ccaSync is busy (1)
+  return (cca_req.ccaInfo.ccaSync == CCA_STATE_BUSY);
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -853,8 +876,8 @@ off(void)
 
   // Reset RX buffers if there was an ongoing RX
   size_t i;
-  for (i = 0; i < RX_BUF_ENTRIES; ++i) {
-    rfc_dataEntry_t *entry = &(g_rxBufs[i].dataEntry);
+  for (i = 0; i < RX_BUF_CNT; ++i) {
+    data_entry_t *entry = &rx_bufs[i].data_entry;
     if (entry->status == DATA_ENTRY_BUSY) {
       entry->status = DATA_ENTRY_PENDING;
     }

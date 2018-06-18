@@ -6,7 +6,7 @@
 BOARD_PLATFORMS = launchpad sensortag srf06
 
 # Assigned lazily to avoid breaking environments which doesn't have cd and find
-BOARDS = $(foreach BOARD_TYPE, $(BOARD_PLATFORMS), \
+BOARDS := $(foreach BOARD_TYPE, $(BOARD_PLATFORMS), \
     $(shell cd $(FAMILY_PATH); find $(BOARD_TYPE)/* -type d -print))
 
 BOARD_EXISTS := $(shell [ -d "$(FAMILY_PATH)/$(BOARD)" ]; echo $$?)

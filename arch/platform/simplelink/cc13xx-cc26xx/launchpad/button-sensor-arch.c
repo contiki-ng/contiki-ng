@@ -84,7 +84,7 @@ static PIN_Handle pin_handle;
 static void
 button_press_cb(PIN_Handle handle, PIN_Id pin_id)
 {
-#ifdef BUTTON_SENSOR_ENABLE_SHUTDOWN
+#if BUTTON_SENSOR_ENABLE_SHUTDOWN
   if (pin_id == BTN2_PIN) {
     Power_shutdown(Power_ENTERING_SHUTDOWN, 0);
     return;
