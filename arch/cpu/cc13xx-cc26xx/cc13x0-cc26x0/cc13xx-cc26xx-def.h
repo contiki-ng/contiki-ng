@@ -45,12 +45,13 @@
 #define RADIO_DELAY_BEFORE_DETECT ((unsigned)US_TO_RTIMERTICKS(352))
 
 /* Timer conversion; radio is running at 4 MHz */
-#define RADIO_TIMER_SECOND   4000000u
-#if (RTIMER_SECOND % 256) || (RADIO_TIMER_SECOND % 256)
-#error RADIO_TO_RTIMER macro must be fixed!
+#define RAT_SECOND            4000000u
+#define RAT_TO_RTIMER(X)      ((uint32_t)(((uint64_t)(X) * (RTIMER_SECOND / 256)) / (RAT_SECOND / 256)))
+#define USEC_TO_RAT(X)        ((X) * 4)
+
+#if (RTIMER_SECOND % 256) || (RAT_SECOND % 256)
+# error RAT_TO_RTIMER macro must be fixed!
 #endif
-#define RADIO_TO_RTIMER(X)   ((uint32_t)(((uint64_t)(X) * (RTIMER_SECOND / 256)) / (RADIO_TIMER_SECOND / 256)))
-#define USEC_TO_RADIO(X)     ((X) * 4)
 
 /* The PHY header (preamble + SFD, 4+1 bytes) duration is equivalent to 10 symbols */
 #define RADIO_IEEE_802154_PHY_HEADER_DURATION_USEC 160

@@ -100,20 +100,13 @@
 # define PROP_MODE_USE_CRC16  0
 #endif
 /*---------------------------------------------------------------------------*/
-/* Used for the return value of channel_clear */
-#define RF_CCA_CLEAR                       1
-#define RF_CCA_BUSY                        0
+/* Used for checking result of CCA_REQ command */
+#define CCA_STATE_IDLE      0
+#define CCA_STATE_BUSY      1
+#define CCA_STATE_INVALID   2
 
 /* Used as an error return value for get_cca_info */
 #define RF_GET_CCA_INFO_ERROR           0xFF
-
-/*
- * Values of the individual bits of the ccaInfo field in CMD_IEEE_CCA_REQ's
- * status struct
- */
-#define RF_CMD_CCA_REQ_CCA_STATE_IDLE      0 /* 0b00 */
-#define RF_CMD_CCA_REQ_CCA_STATE_BUSY      1 /* 0b01 */
-#define RF_CMD_CCA_REQ_CCA_STATE_INVALID   2 /* 0b10 */
 
 #ifdef PROP_MODE_CONF_RSSI_THRESHOLD
 # define PROP_MODE_RSSI_THRESHOLD  PROP_MODE_CONF_RSSI_THRESHOLD
@@ -159,12 +152,12 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /* TX power table convenience macros */
-#define TX_POWER_TABLE_SIZE  ((sizeof(TX_POWER_TABLE) / sizeof(TX_POWER_TABLE[0])) - 1)
+#define TX_POWER_TABLE_SIZE     ((sizeof(TX_POWER_TABLE) / sizeof(TX_POWER_TABLE[0])) - 1)
 
-#define TX_POWER_MIN  (TX_POWER_TABLE[0].power)
-#define TX_POWER_MAX  (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
+#define TX_POWER_MIN            (TX_POWER_TABLE[0].power)
+#define TX_POWER_MAX            (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
 
-#define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
+#define TX_POWER_IN_RANGE(dbm)  ((TX_POWER_MIN <= (dbm)) && ((dbm) <= TX_POWER_MAX))
 /*---------------------------------------------------------------------------*/
 /* TX buf configuration */
 #define TX_BUF_HDR_LEN          2
@@ -181,14 +174,10 @@
 
 #define RX_BUF_SIZE             140
 /*---------------------------------------------------------------------------*/
-#define DATA_ENTRY_LENSZ_NONE 0 /* 0 bytes */
-#define DATA_ENTRY_LENSZ_BYTE 1 /* 1 byte */
-#define DATA_ENTRY_LENSZ_WORD 2 /* 2 bytes */
+/* Size of the Length field in Data Entry, two bytes in this case */
+typedef uint16_t              lensz_t;
 
-#define DATA_ENTRY_LENSZ      DATA_ENTRY_LENSZ_WORD
-typedef uint16_t lensz_t;
-
-#define FRAME_OFFSET          DATA_ENTRY_LENSZ
+#define FRAME_OFFSET          sizeof(lensz_t)
 #define FRAME_SHAVE           2   /* RSSI (1) + Status (1) */
 /*---------------------------------------------------------------------------*/
 #define MAC_RADIO_RECEIVER_SENSITIVITY_DBM              -110
@@ -199,8 +188,12 @@ typedef uint16_t lensz_t;
 #define ED_RF_POWER_MIN_DBM   (MAC_RADIO_RECEIVER_SENSITIVITY_DBM + MAC_SPEC_ED_MIN_DBM_ABOVE_RECEIVER_SENSITIVITY)
 #define ED_RF_POWER_MAX_DBM   MAC_RADIO_RECEIVER_SATURATION_DBM
 /*---------------------------------------------------------------------------*/
+/* RF Core typedefs */
+typedef dataQueue_t            data_queue_t;
 typedef rfc_dataEntryGeneral_t data_entry_t;
+typedef rfc_propRxOutput_t     rx_output_t;
 
+/* Receive buffer entries with room for 1 IEEE 802.15.4 frame in each */
 typedef union {
   data_entry_t data_entry;
   uint8_t      buf[RX_BUF_SIZE];
@@ -209,13 +202,13 @@ typedef union {
 typedef struct {
   /* Outgoing frame buffer */
   uint8_t             tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
-  /* Incoming frame buffer */
+  /* Incoming frame buffers */
   rx_buf_t            rx_bufs[RX_BUF_CNT];
 
   /* RX Data Queue */
-  dataQueue_t         rx_data_queue;
+  data_queue_t        rx_data_queue;
   /* RX Statistics struct */
-  rfc_propRxOutput_t  rx_stats;
+  rx_output_t         rx_stats;
   /* Receive entry pointer to keep track of read items */
   data_entry_t*       rx_read_entry;
 
@@ -300,7 +293,7 @@ stop_rx(void)
 static cmd_result_t
 rf_run_setup()
 {
-  // TODO not the right way to do this.
+  /* TODO not the right way to do this. */
   RF_runCmd(prop_radio.rf_handle, (RF_Op*)&cmd_radio_setup, RF_PriorityNormal, NULL, 0);
   if (cmd_radio_setup.status != PROP_DONE_OK) {
     return CMD_RESULT_ERROR;
@@ -352,22 +345,21 @@ get_channel(void)
 }
 /*---------------------------------------------------------------------------*/
 static cmd_result_t
-set_channel(uint8_t channel)
+set_channel(uint32_t channel)
 {
-  uint32_t new_freq = DOT_15_4G_CHAN0_FREQUENCY + (channel * DOT_15_4G_CHANNEL_SPACING);
-
-  uint16_t freq = (uint16_t)(new_freq / 1000);
-  uint16_t frac = (new_freq - (freq * 1000)) * 65536 / 1000;
+  const uint32_t new_freq = DOT_15_4G_CHAN0_FREQUENCY + (channel * DOT_15_4G_CHANNEL_SPACING);
+  const uint32_t freq = new_freq / 1000;
+  const uint32_t frac = ((new_freq - (freq * 1000)) * 65536) / 1000;
 
   PRINTF("set_channel: %u = 0x%04x.0x%04x (%lu)\n",
-         channel, freq, frac, new_freq);
+         (int)channel, (uint16_t)freq, (uint16_t)frac, new_freq);
 
   cmd_radio_setup.centerFreq = freq;
-  cmd_fs.frequency = freq;
-  cmd_fs.fractFreq = frac;
+  cmd_fs.frequency = (uint16_t)freq;
+  cmd_fs.fractFreq = (uint16_t)frac;
 
-  // We don't care whether the FS command is successful because subsequent
-  // TX and RX commands will tell us indirectly.
+  /* We don't care whether the FS command is successful because subsequent */
+  /* TX and RX commands will tell us indirectly. */
   RF_EventMask rf_events = RF_runCmd(prop_radio.rf_handle, (RF_Op*)&cmd_fs,
                                      RF_PriorityNormal, NULL, 0);
   if ((rf_events & (RF_EventCmdDone | RF_EventLastCmdDone)) == 0) {
@@ -384,29 +376,27 @@ set_channel(uint8_t channel)
 }
 /*---------------------------------------------------------------------------*/
 /* Returns the current TX power in dBm */
+static radio_result_t
+set_tx_power(const radio_value_t dBm)
+{
+  if (!TX_POWER_IN_RANGE(dBm)) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+
+  const RF_TxPowerTable_Value value = RF_TxPowerTable_findValue(TX_POWER_TABLE, (int8_t)dBm);
+  const RF_Stat stat = RF_setTxPower(prop_radio.rf_handle, value);
+
+  return (stat == RF_StatSuccess)
+    ? RADIO_RESULT_OK
+    : RADIO_RESULT_ERROR;
+}
+/*---------------------------------------------------------------------------*/
+/* Returns the current TX power in dBm */
 static radio_value_t
 get_tx_power(void)
 {
   const RF_TxPowerTable_Value value = RF_getTxPower(prop_radio.rf_handle);
   return (radio_value_t)RF_TxPowerTable_findPowerLevel(TX_POWER_TABLE, value);
-}
-/*---------------------------------------------------------------------------*/
-/*
- * The caller must make sure to send a new CMD_PROP_RADIO_DIV_SETUP to the
- * radio after calling this function.
- */
-static radio_result_t
-set_tx_power(const radio_value_t power)
-{
-  if (!TX_POWER_IN_RANGE(power)) {
-    return RADIO_RESULT_INVALID_VALUE;
-  }
-  const RF_TxPowerTable_Value value = RF_TxPowerTable_findValue(TX_POWER_TABLE, power);
-  RF_Stat stat = RF_setTxPower(prop_radio.rf_handle, value);
-
-  return (stat == RF_StatSuccess)
-    ? RADIO_RESULT_OK
-    : RADIO_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -432,7 +422,7 @@ init_rx_buffers(void)
     const data_entry_t data_entry = {
       .status       = DATA_ENTRY_PENDING,
       .config.type  = DATA_ENTRY_TYPE_GEN,
-      .config.lenSz = DATA_ENTRY_LENSZ,
+      .config.lenSz = sizeof(lensz_t),
       .length       = RX_BUF_SIZE - sizeof(data_entry_t), /* TODO: is this sizeof sound? */
       /* Point to fist entry if this is last entry, else point to next entry */
       .pNextEntry   = (i == (RX_BUF_CNT - 1))
@@ -493,7 +483,7 @@ transmit(unsigned short transmit_len)
 
   ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
 
-  // watchdog_periodic();
+  /* watchdog_periodic(); */
 
   /* Idle away while the command is running */
   RF_EventMask rf_events = RF_pendCmd(prop_radio.rf_handle, tx_handle, RF_EventLastCmdDone);
@@ -535,7 +525,7 @@ release_data_entry(void)
   data_entry_t *const data_entry = prop_radio.rx_read_entry;
   uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
 
-  // Clear the Length byte(s) and set status to 0: "Pending"
+  /* Clear the Length byte(s) and set status to 0: "Pending" */
   *(lensz_t*)frame_ptr = 0;
   data_entry->status = DATA_ENTRY_PENDING;
   prop_radio.rx_read_entry = (data_entry_t*)data_entry->pNextEntry;
@@ -547,12 +537,12 @@ read(void *buf, unsigned short buf_len)
   volatile data_entry_t *data_entry = prop_radio.rx_read_entry;
 
   const rtimer_clock_t t0 = RTIMER_NOW();
-  // Only wait if the Radio timer is accessing the entry
+  /* Only wait if the Radio timer is accessing the entry */
   while ((data_entry->status == DATA_ENTRY_BUSY) &&
           RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
 
   if (data_entry->status != DATA_ENTRY_FINISHED) {
-    // No available data
+    /* No available data */
     return 0;
   }
 
@@ -612,7 +602,7 @@ channel_clear(void)
 {
   if (tx_active()) {
     PRINTF("channel_clear: called while in TX\n");
-    return RF_CCA_CLEAR;
+    return CCA_STATE_IDLE;
   }
 
   const bool rx_was_off = !rx_active();
@@ -630,10 +620,10 @@ channel_clear(void)
   }
 
   if(rssi >= prop_radio.rssi_threshold) {
-    return RF_CCA_BUSY;
+    return CCA_STATE_BUSY;
   }
 
-  return RF_CCA_CLEAR;
+  return CCA_STATE_IDLE;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -643,7 +633,7 @@ receiving_packet(void)
     return 0;
   }
 
-  if (channel_clear() == RF_CCA_CLEAR) {
+  if (channel_clear() == CCA_STATE_IDLE) {
     return 0;
   }
 
@@ -653,28 +643,29 @@ receiving_packet(void)
 static int
 pending_packet(void)
 {
-  const rfc_dataEntry_t *const first_entry = (rfc_dataEntry_t *)prop_radio.rx_data_queue.pCurrEntry;
-  volatile const rfc_dataEntry_t *entry = first_entry;
+  const data_entry_t *const read_entry = prop_radio.rx_read_entry;
+  volatile const data_entry_t *curr_entry = read_entry;
 
-  int rv = 0;
+  int num_pending = 0;
 
   /* Go through RX Circular buffer and check their status */
   do {
-    const uint8_t status = entry->status;
+    const uint8_t status = curr_entry->status;
     if ((status == DATA_ENTRY_FINISHED) ||
         (status == DATA_ENTRY_BUSY)) {
-      rv += 1;
+      num_pending += 1;
     }
 
-    entry = (rfc_dataEntry_t *)entry->pNextEntry;
-  } while (entry != first_entry);
+    /* Stop when we have looped the circular buffer */
+    curr_entry = (data_entry_t *)curr_entry->pNextEntry;
+  } while (curr_entry != read_entry);
 
-  if (rv > 0) {
+  if (num_pending > 0) {
     process_poll(&rf_process);
   }
 
   /* If we didn't find an entry at status finished, no frames are pending */
-  return rv;
+  return num_pending;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -710,18 +701,12 @@ off(void)
     return CMD_RESULT_OK;
   }
 
-  // Force abort of any ongoing RF operation.
+  /* Force abort of any ongoing RF operation */
   RF_flushCmd(prop_radio.rf_handle, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
-
-  // Trigger a manual power-down
+  /* Trigger a manual power-down */
   RF_yield(prop_radio.rf_handle);
 
-  /* We pulled the plug, so we need to restore the status manually */
-  cmd_fs.status = IDLE;
-  cmd_tx.status = IDLE;
-  cmd_rx.status = IDLE;
-
-  // Reset RX buffers if there was an ongoing RX
+  /* Reset RX buffers if there was an ongoing RX */
   size_t i;
   for (i = 0; i < RX_BUF_CNT; ++i) {
     data_entry_t *entry = &prop_radio.rx_bufs[i].data_entry;
@@ -795,7 +780,7 @@ set_value(radio_param_t param, radio_value_t value)
   switch(param) {
   case RADIO_PARAM_POWER_MODE:
     if(value == RADIO_POWER_MODE_ON) {
-      // Powering on happens implicitly
+      /* Powering on happens implicitly */
       return RADIO_RESULT_OK;
     }
     if(value == RADIO_POWER_MODE_OFF) {
@@ -836,19 +821,19 @@ set_value(radio_param_t param, radio_value_t value)
   /* If we reach here we had no errors. Apply new settings */
   if (rx_active()) {
     stop_rx();
-    // TODO fix this
+    /* TODO fix this */
     if (rf_run_setup() != CMD_RESULT_OK) {
       return RADIO_RESULT_ERROR;
     }
     start_rx();
   } else if (tx_active()) {
-    // Should not happen. TX is always synchronous and blocking.
-    // Todo: maybe remove completely here.
+    /* Should not happen. TX is always synchronous and blocking. */
+    /* Todo: maybe remove completely here. */
     PRINTF("set_value: cannot apply new value while transmitting. \n");
     return RADIO_RESULT_ERROR;
   } else {
-    // was powered off. Nothing to do. New values will be
-    // applied automatically on next power-up.
+    /* was powered off. Nothing to do. New values will be */
+    /* applied automatically on next power-up. */
   }
 
   return RADIO_RESULT_OK;
@@ -869,6 +854,11 @@ set_object(radio_param_t param, const void *src, size_t size)
 static int
 init(void)
 {
+  if (prop_radio.rf_handle) {
+    PRINTF("init: Radio already initialized\n");
+    return CMD_RESULT_OK;
+  }
+
   /* Zero initalize TX and RX buffers */
   memset(prop_radio.tx_buf,  0x0, sizeof(prop_radio.tx_buf));
   memset(prop_radio.rx_bufs, 0x0, sizeof(prop_radio.rx_bufs));
@@ -894,12 +884,13 @@ init(void)
   /* Init RF params and specify non-default params */
   RF_Params       rf_params;
   RF_Params_init(&rf_params);
-  rf_params.nInactivityTimeout = 2000; /* 2 ms  */
+  rf_params.nInactivityTimeout = 2000; /* 2 ms */
 
   /* Open RF Driver */
   prop_radio.rf_handle = RF_open(&prop_radio.rf_object, &rf_prop_mode,
                                  (RF_RadioSetup*)&cmd_radio_setup, &rf_params);
   if (prop_radio.rf_handle == NULL) {
+    PRINTF("init: unable to open RF driver\n");
     return CMD_RESULT_ERROR;
   }
 
