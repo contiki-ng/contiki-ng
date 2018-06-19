@@ -44,6 +44,10 @@
 #include "lpm.h"
 
 #include <stdint.h>
+#include <stdbool.h>
+
+static int schedule(rtimer_clock_t t, bool auto_delay);
+
 /*---------------------------------------------------------------------------*/
 static volatile rtimer_clock_t next_trigger;
 /*---------------------------------------------------------------------------*/
@@ -70,7 +74,22 @@ rtimer_arch_init(void)
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
+  schedule(t, true);
+}
+/*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  return schedule(t, false);
+}
+/*---------------------------------------------------------------------------*/
+static int
+schedule(rtimer_clock_t t, bool auto_delay)
+{
   rtimer_clock_t now;
+  int result;
+
+  result = RTIMER_OK;
 
   /* STLOAD must be 1 */
   while((REG(SMWDTHROSC_STLOAD) & SMWDTHROSC_STLOAD_STLOAD) != 1);
@@ -84,21 +103,32 @@ rtimer_arch_schedule(rtimer_clock_t t)
    * writing the registers. We play it safe here and we add a bit of leeway
    */
   if(!RTIMER_CLOCK_LT(now, t - RTIMER_GUARD_TIME)) {
-    t = now + RTIMER_GUARD_TIME;
+    if(auto_delay) {
+      t = now + RTIMER_GUARD_TIME;
+    } else {
+      result = RTIMER_ERR_TIME;
+    }
   }
 
-  /* ST0 latches ST[1:3] and must be written last */
-  REG(SMWDTHROSC_ST3) = (t >> 24) & 0x000000FF;
-  REG(SMWDTHROSC_ST2) = (t >> 16) & 0x000000FF;
-  REG(SMWDTHROSC_ST1) = (t >> 8) & 0x000000FF;
-  REG(SMWDTHROSC_ST0) = t & 0x000000FF;
+  if(result == RTIMER_OK) {
+    /* ST0 latches ST[1:3] and must be written last */
+    REG(SMWDTHROSC_ST3) = (t >> 24) & 0x000000FF;
+    REG(SMWDTHROSC_ST2) = (t >> 16) & 0x000000FF;
+    REG(SMWDTHROSC_ST1) = (t >> 8) & 0x000000FF;
+    REG(SMWDTHROSC_ST0) = t & 0x000000FF;
+  }
 
   INTERRUPTS_ENABLE();
+
+  if(result != RTIMER_OK) {
+    return result;
+  }
 
   /* Store the value. The LPM module will query us for it */
   next_trigger = t;
 
   NVIC_EnableIRQ(SMT_IRQn);
+  return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/
 rtimer_clock_t

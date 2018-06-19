@@ -95,3 +95,10 @@ rtimer_arch_schedule(rtimer_clock_t t)
   TA1CCR0 = t;
 }
 /*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  rtimer_arch_schedule(t);
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/

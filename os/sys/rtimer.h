@@ -140,6 +140,16 @@ int rtimer_set(struct rtimer *task, rtimer_clock_t time,
 	       rtimer_clock_t duration, rtimer_callback_t func, void *ptr);
 
 /**
+ * \brief      Schedules a real-time task for a given instant
+ * \param task metadata about the real-time task
+ *
+ *             This variant does not auto-delay real-time tasks that
+ *             lie less than RTIMER_GUARD_TIME ticks in the future,
+ *             but returns an error code in such cases.
+ */
+int rtimer_set_precise(struct rtimer *task);
+
+/**
  * \brief      Execute the next real-time task and schedule the next task, if any
  *
  *             This function is called by the architecture dependent
@@ -182,7 +192,13 @@ bool rtimer_has_timed_out(rtimer_clock_t t);
 
 void rtimer_arch_init(void);
 void rtimer_arch_schedule(rtimer_clock_t t);
-/*rtimer_clock_t rtimer_arch_now(void);*/
+
+/**
+ * \brief      This variant does not auto-delay real-time tasks that
+ *             lie less than RTIMER_GUARD_TIME ticks in the future,
+ *             but returns an error code in such cases.
+ */
+int rtimer_arch_schedule_precise(rtimer_clock_t t);
 
 #define RTIMER_SECOND RTIMER_ARCH_SECOND
 

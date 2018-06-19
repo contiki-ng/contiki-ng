@@ -90,3 +90,10 @@ rtimer_arch_schedule(rtimer_clock_t t)
 #endif /* !_WIN32 */
 }
 /*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  rtimer_arch_schedule(t);
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
