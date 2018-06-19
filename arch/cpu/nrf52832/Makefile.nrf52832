@@ -87,7 +87,6 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   $(NRF52_SDK_ROOT)/components/libraries/queue/nrf_queue.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/mdk/system_nrf52.c \
   $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/ble_6lowpan.c
-  # $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   # $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)

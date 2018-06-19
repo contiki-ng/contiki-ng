@@ -38,9 +38,8 @@
 #include "nordic_common.h"
 #include "contiki.h"
 
-/* #include "nrf_drv_config.h" */
 #include "nrfx_config.h"
-#include "nrf_drv_gpiote.h"
+#include "nrfx_gpiote.h"
 #ifdef SOFTDEVICE_PRESENT
 #include "softdevice_handler.h"
 #include "ble/ble-core.h"
@@ -106,8 +105,8 @@ board_init(void)
   SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, NULL);
 #endif
 #ifdef PLATFORM_HAS_BUTTON
-  if (!nrf_drv_gpiote_is_init()) {
-    nrf_drv_gpiote_init();
+  if (!nrfx_gpiote_is_init()) {
+    nrfx_gpiote_init();
   }
 #endif
 }
@@ -117,6 +116,19 @@ platform_init_stage_one(void)
 {
   board_init();
   leds_init();
+  // stage completed
+  leds_on(LEDS_1);
+  clock_delay_usec(50000);
+  leds_on(LEDS_2);
+  clock_delay_usec(50000);
+  leds_on(LEDS_3);
+  clock_delay_usec(50000);
+  leds_on(LEDS_4);
+  clock_delay_usec(50000);
+  clock_delay_usec(50000);
+  clock_delay_usec(50000);
+  clock_delay_usec(50000);
+  leds_off(LEDS_CONF_ALL);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -125,7 +137,8 @@ platform_init_stage_two(void)
   // Seed value is ignored since hardware RNG is used.
   random_init(0);
 
-#ifdef UART0_ENABLED
+/* #ifdef UART0_ENABLED */
+#if NRFX_UART0_ENABLED==1
   uart0_init();
 #if SLIP_ARCH_CONF_ENABLE
   #error Platform does not support SLIP

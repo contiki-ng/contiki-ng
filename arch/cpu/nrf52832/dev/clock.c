@@ -47,15 +47,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "nrf.h"
-/* #include "nrf_drv_config.h" */
-#include "nrf_drv_rtc.h"
+#include "nrfx_config.h"
+#include "nrfx_rtc.h"
 #include "nrf_drv_clock.h"
 #include "nrf_delay.h"
 #include "app_error.h"
 #include "contiki.h"
 
 /*---------------------------------------------------------------------------*/
-const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(PLATFORM_RTC_INSTANCE_ID); /**< RTC instance used for platform clock */
+const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(PLATFORM_RTC_INSTANCE_ID); /**< RTC instance used for platform clock */
 /*---------------------------------------------------------------------------*/
 static volatile uint32_t ticks;
 void clock_update(void);
@@ -67,9 +67,9 @@ void clock_update(void);
  * \param int_type Type of interrupt to be handled
  */
 static void
-rtc_handler(nrf_drv_rtc_int_type_t int_type)
+rtc_handler(nrfx_rtc_int_type_t int_type)
 {
-  if (int_type == NRF_DRV_RTC_INT_TICK) {
+  if (int_type == NRFX_RTC_INT_TICK) {
     clock_update();
   }
 }
@@ -96,14 +96,16 @@ rtc_config(void)
   uint32_t err_code;
 
   //Initialize RTC instance
-  err_code = nrf_drv_rtc_init(&rtc, NULL, rtc_handler);
+  nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
+  config.prescaler = 255;
+  err_code = nrfx_rtc_init(&rtc, &config, rtc_handler);
   APP_ERROR_CHECK(err_code);
 
   //Enable tick event & interrupt
-  nrf_drv_rtc_tick_enable(&rtc, true);
+  nrfx_rtc_tick_enable(&rtc, true);
 
   //Power on RTC instance
-  nrf_drv_rtc_enable(&rtc);
+  nrfx_rtc_enable(&rtc);
 }
 /*---------------------------------------------------------------------------*/
 void

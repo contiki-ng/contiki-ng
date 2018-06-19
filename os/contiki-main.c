@@ -58,11 +58,12 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include "dev/leds.h"
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Main"
-#define LOG_LEVEL LOG_LEVEL_MAIN
+#define LOG_LEVEL LOG_LEVEL_DBG
 /*---------------------------------------------------------------------------*/
 int
 #if PLATFORM_MAIN_ACCEPTS_ARGS
@@ -74,6 +75,7 @@ main(void)
 {
 #endif
   platform_init_stage_one();
+  leds_on(LEDS_1);
 
   clock_init();
   rtimer_init();
@@ -89,6 +91,7 @@ main(void)
 #endif
 
   platform_init_stage_two();
+  leds_on(LEDS_2);
 
 #if QUEUEBUF_ENABLED
   queuebuf_init();
@@ -126,6 +129,7 @@ main(void)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   platform_init_stage_three();
+  leds_on(LEDS_3);
 
 #if BUILD_WITH_RPL_BORDER_ROUTER
   rpl_border_router_init();
@@ -148,7 +152,7 @@ main(void)
 #endif /* BUILD_WITH_SHELL */
 
 #if BUILD_WITH_SIMPLE_ENERGEST
-  simple_energest_init();
+  /* simple_energest_init(); */
 #endif /* BUILD_WITH_SIMPLE_ENERGEST */
 
 #if BUILD_WITH_TSCH_CS
@@ -157,8 +161,10 @@ main(void)
 #endif /* BUILD_WITH_TSCH_CS */
 
   autostart_start(autostart_processes);
+  LOG_DBG("autostart processes done\n");
+  leds_on(LEDS_4);
 
-  watchdog_start();
+   /* watchdog_start(); */
 
 #if PLATFORM_PROVIDES_MAIN_LOOP
   platform_main_loop();
@@ -167,7 +173,7 @@ main(void)
     uint8_t r;
     do {
       r = process_run();
-      watchdog_periodic();
+      /* watchdog_periodic(); */
     } while(r > 0);
 
     platform_idle();

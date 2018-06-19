@@ -162,6 +162,7 @@ PROCESS_THREAD(temp, ev, data)
   static struct etimer tick;
   PROCESS_BEGIN();
 
+  printf("temp process etimer set\n");
   etimer_set(&tick, CLOCK_SECOND);
 
   while (1) {
