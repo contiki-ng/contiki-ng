@@ -54,10 +54,6 @@
 * - set LLSEC802154_CONF_USES_EXPLICIT_KEYS
 * */
 
-#if LLSEC802154_ENABLED && !LLSEC802154_USES_EXPLICIT_KEYS
-#error LLSEC802154_ENABLED set but LLSEC802154_USES_EXPLICIT_KEYS unset
-#endif /* LLSEC802154_ENABLED */
-
 /* K1, defined in 6TiSCH minimal, is well-known (offers no security) and used for EBs only */
 #ifdef TSCH_SECURITY_CONF_K1
 #define TSCH_SECURITY_K1 TSCH_SECURITY_CONF_K1
