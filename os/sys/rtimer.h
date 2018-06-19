@@ -200,6 +200,17 @@ void rtimer_arch_schedule(rtimer_clock_t t);
  */
 int rtimer_arch_schedule_precise(rtimer_clock_t t);
 
+/**
+ * \brief      Executes the next real-time task as soon as possible
+ * \return     false if the current real-time task could not be canceled
+ */
+bool rtimer_cancel(void);
+
+/**
+ * \brief      Platform-specific implementation of rtimer_cancel()
+ */
+bool rtimer_arch_cancel(void);
+
 #define RTIMER_SECOND RTIMER_ARCH_SECOND
 
 /* RTIMER_GUARD_TIME is the minimum amount of rtimer ticks between

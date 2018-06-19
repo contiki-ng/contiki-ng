@@ -100,6 +100,12 @@ rtimer_arch_schedule_precise(rtimer_clock_t t)
   return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  return false;
+}
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Returns the current real-time clock time
  * \return The current rtimer time in ticks

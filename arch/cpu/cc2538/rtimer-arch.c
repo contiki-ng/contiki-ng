@@ -47,6 +47,7 @@
 #include <stdbool.h>
 
 static int schedule(rtimer_clock_t t, bool auto_delay);
+static void set_sleep_timer_value(rtimer_clock_t);
 
 /*---------------------------------------------------------------------------*/
 static volatile rtimer_clock_t next_trigger;
@@ -111,11 +112,7 @@ schedule(rtimer_clock_t t, bool auto_delay)
   }
 
   if(result == RTIMER_OK) {
-    /* ST0 latches ST[1:3] and must be written last */
-    REG(SMWDTHROSC_ST3) = (t >> 24) & 0x000000FF;
-    REG(SMWDTHROSC_ST2) = (t >> 16) & 0x000000FF;
-    REG(SMWDTHROSC_ST1) = (t >> 8) & 0x000000FF;
-    REG(SMWDTHROSC_ST0) = t & 0x000000FF;
+    set_sleep_timer_value(t);
   }
 
   INTERRUPTS_ENABLE();
@@ -129,6 +126,42 @@ schedule(rtimer_clock_t t, bool auto_delay)
 
   NVIC_EnableIRQ(SMT_IRQn);
   return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  bool result;
+  rtimer_clock_t soonest_cancelation;
+
+  /* STLOAD must be 1 */
+  while((REG(SMWDTHROSC_STLOAD) & SMWDTHROSC_STLOAD_STLOAD) != 1);
+
+  INTERRUPTS_DISABLE();
+
+  soonest_cancelation = RTIMER_NOW() + RTIMER_GUARD_TIME;
+  result = RTIMER_CLOCK_LT(soonest_cancelation, next_trigger);
+  if(result) {
+    set_sleep_timer_value(soonest_cancelation);
+  }
+
+  INTERRUPTS_ENABLE();
+
+  if(result) {
+    next_trigger = soonest_cancelation;
+  }
+
+  return result;
+}
+/*---------------------------------------------------------------------------*/
+void
+set_sleep_timer_value(rtimer_clock_t t)
+{
+  /* ST0 latches ST[1:3] and must be written last */
+  REG(SMWDTHROSC_ST3) = (t >> 24) & 0x000000FF;
+  REG(SMWDTHROSC_ST2) = (t >> 16) & 0x000000FF;
+  REG(SMWDTHROSC_ST1) = (t >> 8) & 0x000000FF;
+  REG(SMWDTHROSC_ST0) = t & 0x000000FF;
 }
 /*---------------------------------------------------------------------------*/
 rtimer_clock_t
