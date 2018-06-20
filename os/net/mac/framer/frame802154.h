@@ -102,6 +102,7 @@ frame-filtering-friendly on some platforms) */
 #define FRAME802154_DATAFRAME       (0x01)
 #define FRAME802154_ACKFRAME        (0x02)
 #define FRAME802154_CMDFRAME        (0x03)
+#define FRAME802154_MPFRAME         (0x05)
 
 #define FRAME802154_BEACONREQ       (0x07)
 
@@ -161,6 +162,7 @@ typedef struct {
   uint8_t dest_addr_mode;    /**< 2 bit. Destination address mode, see 802.15.4 */
   uint8_t frame_version;     /**< 2 bit. 802.15.4 frame version */
   uint8_t src_addr_mode;     /**< 2 bit. Source address mode, see 802.15.4 */
+  uint8_t long_frame_control;/**< 1 bit. True if the Long Frame Control field is set */
 } frame802154_fcf_t;
 
 /** \brief 802.15.4 security control bitfield.  See section 7.6.2.2.1 in 802.15.4 specification */
@@ -213,10 +215,10 @@ typedef struct {
 /* Prototypes */
 
 int frame802154_hdrlen(frame802154_t *p);
-void frame802154_create_fcf(frame802154_fcf_t *fcf, uint8_t *buf);
+int frame802154_create_fcf(frame802154_fcf_t *fcf, uint8_t *buf);
 int frame802154_create(frame802154_t *p, uint8_t *buf);
 int frame802154_parse(uint8_t *data, int length, frame802154_t *pf);
-void frame802154_parse_fcf(uint8_t *data, frame802154_fcf_t *pfcf);
+int frame802154_parse_fcf(uint8_t *data, frame802154_fcf_t *pfcf);
 
 /* Get current PAN ID */
 uint16_t frame802154_get_pan_id(void);
