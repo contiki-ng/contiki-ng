@@ -48,7 +48,6 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 #include "button-sensor.h"
-#include "button-sensor-arch.h"
 /*---------------------------------------------------------------------------*/
 /* LaunchPad has 2 buttons: BTN1 and BTN2 */
 /* Map the GPIO defines from the Board file */
@@ -96,9 +95,9 @@ button_press_cb(PIN_Handle handle, PIN_Id pin_id)
 
   switch (pin_id) {
     case BTN1_PIN: btn_timer  = &btn1_timer;
-                   btn_sensor = &btn1_sensor; break;
+                   btn_sensor = &button_left_sensor; break;
     case BTN2_PIN: btn_timer  = &btn2_timer;
-                   btn_sensor = &btn2_sensor; break;
+                   btn_sensor = &button_right_sensor; break;
     default: return; /* No matching PIN */
   }
 
@@ -121,14 +120,18 @@ button_press_cb(PIN_Handle handle, PIN_Id pin_id)
 static int
 button_value(int type, uint8_t pin, BtnTimer *btn_timer)
 {
-  if (type == BUTTON_SENSOR_VALUE_STATE) {
+  switch (type) {
+  case BUTTON_SENSOR_TYPE_STATE:
     return (PIN_getInputValue(pin) == 0)
       ? BUTTON_SENSOR_VALUE_PRESSED
       : BUTTON_SENSOR_VALUE_RELEASED;
-  } else if (type == BUTTON_SENSOR_VALUE_DURATION) {
+
+  case BUTTON_SENSOR_TYPE_DURATION:
     return (int)btn_timer->duration;
+
+  default:
+    return 0;
   }
-  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -212,7 +215,7 @@ btn2_status(int type)
   return button_status(type, BTN2_PIN);
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(btn1_sensor, BUTTON_SENSOR, btn1_value, btn1_config, btn1_status);
-SENSORS_SENSOR(btn2_sensor, BUTTON_SENSOR, btn2_value, btn2_config, btn2_status);
+SENSORS_SENSOR(button_left_sensor,  BUTTON_SENSOR, btn1_value, btn1_config, btn1_status);
+SENSORS_SENSOR(button_right_sensor, BUTTON_SENSOR, btn2_value, btn2_config, btn2_status);
 /*---------------------------------------------------------------------------*/
 /** @} */

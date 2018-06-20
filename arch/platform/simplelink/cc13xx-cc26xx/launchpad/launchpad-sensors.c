@@ -43,8 +43,8 @@
 /*---------------------------------------------------------------------------*/
 /* Exports a global symbol to be used by the sensor API */
 SENSORS(
-  &btn1_sensor,
-  &btn2_sensor,
+  &button_left_sensor,
+  &button_right_sensor,
   NULL
 );
 /*---------------------------------------------------------------------------*/

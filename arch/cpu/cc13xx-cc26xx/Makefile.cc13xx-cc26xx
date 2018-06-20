@@ -47,7 +47,7 @@ endif
 # root path. Note that the returned path is encased in angular brackets, <...>,
 # and is therefore extracted with sed.
 SDK_DEVICE_DIR := $(shell echo "DeviceFamily_constructPath(dummy)" \
-    | arm-none-eabi-gcc -x c -E -DDeviceFamily_$(DEVICE_FAMILY) -include $(DEVICE_FAMILY_H) - \
+    | arm-none-eabi-cpp -x c -E -DDeviceFamily_$(DEVICE_FAMILY) -include $(DEVICE_FAMILY_H) - \
     | tail -1 \
     | sed -E 's:<(.+)/dummy>:\1:')
 

@@ -45,18 +45,22 @@
 #define BUTTON_SENSOR_H_
 /*---------------------------------------------------------------------------*/
 /* Contiki API */
-#include <lib/sensors.h>
+#include "lib/sensors.h"
 /*---------------------------------------------------------------------------*/
 /* Board specific button sensors */
 #include "button-sensor-arch.h"
 /*---------------------------------------------------------------------------*/
 #define BUTTON_SENSOR "Button"
 /*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR_VALUE_STATE    0
-#define BUTTON_SENSOR_VALUE_DURATION 1
+typedef enum {
+  BUTTON_SENSOR_TYPE_STATE,
+  BUTTON_SENSOR_TYPE_DURATION
+} button_sensor_type_t;
 
-#define BUTTON_SENSOR_VALUE_RELEASED 0
-#define BUTTON_SENSOR_VALUE_PRESSED  1
+typedef enum {
+  BUTTON_SENSOR_VALUE_RELEASED,
+  BUTTON_SENSOR_VALUE_PRESSED
+} button_sensor_value_t;
 /*---------------------------------------------------------------------------*/
 #endif /* BUTTON_SENSOR_H_ */
 /*---------------------------------------------------------------------------*/

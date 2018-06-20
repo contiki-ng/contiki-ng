@@ -59,13 +59,9 @@
  * Override button symbols from dev/button-sensor.h, for the examples that
  * include it
  */
-#define button_left_sensor  btn1_sensor
-#define button_right_sensor btn2_sensor
+#define button_sensor  button_left_sensor
+#define button_sensor2 button_right_sensor
 /** @} */
-/*---------------------------------------------------------------------------*/
-/* Platform-specific define to signify sensor reading failure */
-/* TODO: remove */
-#define CC26XX_SENSOR_READING_ERROR        0x80000000
 /*---------------------------------------------------------------------------*/
 /* Include CPU-related configuration */
 #include "cc13xx-cc26xx-conf.h"

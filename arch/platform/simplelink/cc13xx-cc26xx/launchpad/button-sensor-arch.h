@@ -45,10 +45,10 @@
 #define BUTTON_SENSOR_ARCH_H_
 /*---------------------------------------------------------------------------*/
 /* Contiki API */
-#include <lib/sensors.h>
+#include "lib/sensors.h"
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor btn1_sensor;
-extern const struct sensors_sensor btn2_sensor;
+extern const struct sensors_sensor button_left_sensor;
+extern const struct sensors_sensor button_right_sensor;
 /*---------------------------------------------------------------------------*/
 #endif /* BUTTON_SENSOR_ARCH_H_ */
 /*---------------------------------------------------------------------------*/

@@ -79,7 +79,6 @@
 /* Arch driver implementations */
 #include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
-//#include "gpio-interrupt.h"
 #include "ieee-addr.h"
 #include "dev/rf-common.h"
 #include "lib/random.h"
@@ -94,8 +93,11 @@
 /*---------------------------------------------------------------------------*/
 unsigned short g_nodeId = 0;
 /*---------------------------------------------------------------------------*/
-/** \brief Board specific initialization */
-void board_init(void);
+/*
+ *  Board-specific initialization function.
+ *  This function is defined in the file <BOARD>_fxns.c
+ */
+extern void Board_initHook(void);
 /*---------------------------------------------------------------------------*/
 static void
 fade(unsigned char l)
@@ -138,17 +140,20 @@ platform_init_stage_one(void)
 {
   DRIVERLIB_ASSERT_CURR_RELEASE();
 
-  // TODO: TEMPORARY WHILE DEVELOP. REMOVE
-  HWREG(CPU_SCS_BASE + CPU_SCS_O_ACTLR) = CPU_SCS_ACTLR_DISDEFWBUF;
-
   // Enable flash cache
   VIMSModeSet(VIMS_BASE, VIMS_MODE_ENABLED);
   // Configure round robin arbitration and prefetching
   VIMSConfigure(VIMS_BASE, true, true);
 
-  // Board_initGeneral() will call Power_init()
-  // Board_initGeneral() will call PIN_init(BoardGpioInitTable)
-  Board_initGeneral();
+  Power_init();
+
+  if (PIN_init(BoardGpioInitTable) != PIN_SUCCESS) {
+    /* Error with PIN_init */
+    while (1);
+  }
+
+  /* Perform board-specific initialization */
+  Board_initHook();
 
   // Contiki drivers init
   leds_init();
