@@ -47,6 +47,13 @@
 #define LOG_MODULE "Frame 15.4"
 #define LOG_LEVEL LOG_LEVEL_FRAMER
 
+#ifdef FRAMER_802154_CONF_INIT_SEQNOS
+#define INIT_SEQNOS FRAMER_802154_CONF_INIT_SEQNOS
+#else /* FRAMER_802154_CONF_INIT_SEQNOS */
+#define INIT_SEQNOS 1
+#endif /* FRAMER_802154_CONF_INIT_SEQNOS */
+
+#if INIT_SEQNOS
 /**  \brief The sequence number (0x00 - 0xff) added to the transmitted
  *   data or MAC command frame. The default is a random value within
  *   the range.
@@ -54,6 +61,7 @@
 static uint8_t mac_dsn;
 
 static uint8_t initialized = 0;
+#endif /* INIT_SEQNOS */
 
 /*---------------------------------------------------------------------------*/
 static int
@@ -69,6 +77,7 @@ create_frame(int do_create)
   /* init to zeros */
   memset(&params, 0, sizeof(params));
 
+#if INIT_SEQNOS
   if(!initialized) {
     initialized = 1;
     mac_dsn = random_rand() & 0xff;
@@ -88,6 +97,7 @@ create_frame(int do_create)
     packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, mac_dsn);
     mac_dsn++;
   }
+#endif /* INIT_SEQNOS */
 
   framer_802154_setup_params(packetbuf_attr, packetbuf_holds_broadcast(),
                              &params);
