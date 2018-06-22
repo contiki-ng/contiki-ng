@@ -68,6 +68,7 @@ struct tsch_slotframe_and_links {
 /* The information elements that we currently support */
 struct ieee802154_ies {
   /* Header IEs */
+  uint16_t rendezvous_time;
   int16_t ie_time_correction;
   uint8_t ie_is_nack;
   /* Payload MLME */
@@ -93,6 +94,9 @@ struct ieee802154_ies {
 };
 
 /** Insert various Information Elements **/
+/* Header IE. Time until the transmission of a payload frame. Used in wake-up frames */
+int frame802154e_create_ie_rendezvous_time(uint8_t *buf, int len,
+    struct ieee802154_ies *ies);
 /* Header IE. ACK/NACK time correction. Used in enhanced ACKs */
 int frame80215e_create_ie_header_ack_nack_time_correction(uint8_t *buf, int len,
     struct ieee802154_ies *ies);

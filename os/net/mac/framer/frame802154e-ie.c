@@ -134,6 +134,19 @@ create_mlme_long_ie_descriptor(uint8_t *buf, uint8_t sub_id, int ie_len)
   WRITE16(buf, ie_desc);
 }
 
+int
+frame802154e_create_ie_rendezvous_time(uint8_t *buf, int len,
+    struct ieee802154_ies *ies)
+{
+  if(!ies || (len < 4)) {
+    return -1;
+  }
+
+  WRITE16(buf + 2, ies->rendezvous_time);
+  create_header_ie_descriptor(buf, HEADER_IE_RZ_TIME, 2);
+  return 4;
+}
+
 /* Header IE. ACK/NACK time correction. Used in enhanced ACKs */
 int
 frame80215e_create_ie_header_ack_nack_time_correction(uint8_t *buf, int len,
@@ -368,6 +381,12 @@ frame802154e_parse_header_ie(const uint8_t *buf, int len,
           /* Convert to RTIMER ticks */
           ies->ie_time_correction = drift_us;
         }
+        return len;
+      }
+      break;
+    case HEADER_IE_RZ_TIME:
+      if((len == 2) && ies) {
+        READ16(buf, ies->rendezvous_time);
         return len;
       }
       break;
