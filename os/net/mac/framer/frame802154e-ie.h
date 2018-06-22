@@ -68,6 +68,11 @@ struct tsch_slotframe_and_links {
 /* The information elements that we currently support */
 struct ieee802154_ies {
   /* Header IEs */
+#if MAC_CONF_WITH_CSL
+  uint16_t rendezvous_time;
+  uint16_t csl_period;
+  uint16_t csl_phase;
+#endif /* MAC_CONF_WITH_CSL */
   int16_t ie_time_correction;
   uint8_t ie_is_nack;
   /* Payload MLME */
@@ -93,6 +98,16 @@ struct ieee802154_ies {
 };
 
 /** Insert various Information Elements **/
+#if MAC_CONF_WITH_CSL
+/* Header IE. Time until the transmission of a payload frame. Used in wake-up frames */
+int frame802154e_create_ie_rendezvous_time(uint8_t *buf, int len,
+    const struct ieee802154_ies *ies);
+/* Header IE. Carries the time from the first symbol of the frame containing the CSL IE
+ * until the next duty cycle. Used in Enh-Acks. */
+int frame802154e_create_ie_csl(uint8_t *buf, int len,
+    const struct ieee802154_ies *ies);
+#endif /* MAC_CONF_WITH_CSL */
+
 /* Header IE. ACK/NACK time correction. Used in enhanced ACKs */
 int frame80215e_create_ie_header_ack_nack_time_correction(uint8_t *buf, int len,
     struct ieee802154_ies *ies);
