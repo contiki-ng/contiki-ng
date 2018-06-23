@@ -63,7 +63,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Main"
-#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_LEVEL LOG_LEVEL_INFO
 /*---------------------------------------------------------------------------*/
 int
 #if PLATFORM_MAIN_ACCEPTS_ARGS
@@ -78,11 +78,11 @@ main(void)
   leds_on(LEDS_1);
 
   clock_init();
-  rtimer_init();
+  /* rtimer_init(); */
   process_init();
-  process_start(&etimer_process, NULL);
-  ctimer_init();
-  watchdog_init();
+  /* process_start(&etimer_process, NULL); */
+  /* ctimer_init(); */
+  /* watchdog_init(); */
 
   energest_init();
 
@@ -90,12 +90,25 @@ main(void)
   stack_check_init();
 #endif
 
+  int i;
+  for(i = 0;i < 30;i++) {
+    i++;
+    clock_delay_usec(62500);
+    leds_toggle(LEDS_2);
+  }
+
   platform_init_stage_two();
   leds_on(LEDS_2);
 
 #if QUEUEBUF_ENABLED
   queuebuf_init();
 #endif /* QUEUEBUF_ENABLED */
+  while(1) {
+    clock_delay_usec(62500);
+    leds_toggle(LEDS_3);
+    printf("%lu\n", clock_time());
+  }
+
   netstack_init();
   node_id_init();
 

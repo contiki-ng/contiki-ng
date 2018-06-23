@@ -105,9 +105,9 @@ board_init(void)
   SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, NULL);
 #endif
 #ifdef PLATFORM_HAS_BUTTON
-  if (!nrfx_gpiote_is_init()) {
-    nrfx_gpiote_init();
-  }
+  /* if (!nrfx_gpiote_is_init()) { */
+  /*   nrfx_gpiote_init(); */
+  /* } */
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -116,19 +116,6 @@ platform_init_stage_one(void)
 {
   board_init();
   leds_init();
-  // stage completed
-  leds_on(LEDS_1);
-  clock_delay_usec(50000);
-  leds_on(LEDS_2);
-  clock_delay_usec(50000);
-  leds_on(LEDS_3);
-  clock_delay_usec(50000);
-  leds_on(LEDS_4);
-  clock_delay_usec(50000);
-  clock_delay_usec(50000);
-  clock_delay_usec(50000);
-  clock_delay_usec(50000);
-  leds_off(LEDS_CONF_ALL);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -143,8 +130,8 @@ platform_init_stage_two(void)
 #if SLIP_ARCH_CONF_ENABLE
   #error Platform does not support SLIP
 #else
-  uart0_set_input(serial_line_input_byte);
-  serial_line_init();
+  /* uart0_set_input(serial_line_input_byte); */
+  /* serial_line_init(); */
 #endif
 #endif
 

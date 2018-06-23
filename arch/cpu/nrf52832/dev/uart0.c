@@ -108,11 +108,14 @@ uart0_init(unsigned long ubr)
   config.pselrts = 5;
   ret_code_t retcode = nrfx_uart_init(&uart_inst, &config, uart_event_handler);
   APP_ERROR_CHECK(retcode);
+  if(retcode != NRFX_SUCCESS) {
+    perror("nrfx_uart_init()");
+  }
 
   ringbuf_init(&txbuf, txbuf_data, sizeof(txbuf_data));
 
-  nrfx_uart_rx_enable(&uart_inst);
-  nrfx_uart_rx(&uart_inst, rx_buffer, 1);
+  /* nrfx_uart_rx_enable(&uart_inst); */
+  /* nrfx_uart_rx(&uart_inst, rx_buffer, 1); */
 }
 /**
  * @}
