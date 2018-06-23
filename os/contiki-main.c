@@ -78,6 +78,14 @@ main(void)
   leds_on(LEDS_1);
 
   clock_init();
+
+  int i;
+  for(i = 0;i < 30;i++) {
+    i++;
+    clock_delay_usec(62500);
+    leds_toggle(LEDS_2);
+  }
+
   /* rtimer_init(); */
   process_init();
   /* process_start(&etimer_process, NULL); */
@@ -89,13 +97,6 @@ main(void)
 #if STACK_CHECK_ENABLED
   stack_check_init();
 #endif
-
-  int i;
-  for(i = 0;i < 30;i++) {
-    i++;
-    clock_delay_usec(62500);
-    leds_toggle(LEDS_2);
-  }
 
   platform_init_stage_two();
   leds_on(LEDS_2);
