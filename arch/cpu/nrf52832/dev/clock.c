@@ -82,7 +82,9 @@ lfclk_config(void)
 {
   ret_code_t err_code = nrf_drv_clock_init();
   APP_ERROR_CHECK(err_code);
-
+  if(err_code != NRF_SUCCESS) {
+    printf("nrf_drv_clock_init() returns error");
+  }
   nrf_drv_clock_lfclk_request(NULL);
 }
 #endif
@@ -98,8 +100,15 @@ rtc_config(void)
   //Initialize RTC instance
   nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
   config.prescaler = 255;
+  config.interrupt_priority = 3;
+  config.reliable = 0;
+  config.tick_latency = NRFX_RTC_US_TO_TICKS(2000, 128);
+
   err_code = nrfx_rtc_init(&rtc, &config, rtc_handler);
   APP_ERROR_CHECK(err_code);
+  if(err_code != NRF_SUCCESS) {
+    perror("nrfx_rtc_init() returns error");
+  }
 
   //Enable tick event & interrupt
   nrfx_rtc_tick_enable(&rtc, true);
