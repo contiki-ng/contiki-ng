@@ -77,13 +77,13 @@ rtimer_arch_schedule(rtimer_clock_t t)
   struct itimerval val;
   rtimer_clock_t c;
 
-  c = t - (unsigned short)clock_time();
+  c = t - clock_time();
   
   val.it_value.tv_sec = c / CLOCK_SECOND;
   val.it_value.tv_usec = (c % CLOCK_SECOND) * CLOCK_SECOND;
 
-  PRINTF("rtimer_arch_schedule time %u %u in %d.%d seconds\n", t, c, val.it_value.tv_sec,
-      val.it_value.tv_usec);
+  PRINTF("rtimer_arch_schedule time %"PRIu32 " %"PRIu32 " in %ld.%ld seconds\n",
+         t, c, (long)val.it_value.tv_sec, (long)val.it_value.tv_usec);
 
   val.it_interval.tv_sec = val.it_interval.tv_usec = 0;
   setitimer(ITIMER_REAL, &val, NULL);
