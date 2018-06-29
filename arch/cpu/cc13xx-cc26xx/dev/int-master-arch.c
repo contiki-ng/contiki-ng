@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,60 +29,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include <stdio.h>
-#include <string.h>
-
-#include "uart0-arch.h"
-
-
-#undef putchar
-#undef puts
+/**
+ * \addtogroup cc26xx
+ * @{
+ *
+ * \defgroup cc26xx-interrupts CC13xx-CC26xx master interrupt manipulation
+ *
+ * Master interrupt manipulation routines for the CC13xx and CC26xx CPUs
+ *
+ * @{
+ *
+ * \file
+ * Master interrupt manipulation implementation for the TI CC13xx/CC26xx
+ */
 /*---------------------------------------------------------------------------*/
-int
-putchar(int c)
+#include "contiki.h"
+
+#include "sys/int-master.h"
+/*---------------------------------------------------------------------------*/
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/cpu.h)
+
+#include <ti/drivers/dpl/HwiP.h>
+/*---------------------------------------------------------------------------*/
+void
+int_master_enable(void)
 {
-  const unsigned char ch = (unsigned char)c;
-  return (uart0_write(&ch, 1) == 1)
-    ? (int)ch
-    : EOF;
+  HwiP_enable();
 }
 /*---------------------------------------------------------------------------*/
-int
-puts(const char *str)
+int_master_status_t
+int_master_read_and_disable(void)
 {
-  if(!str)
-  {
-    return EOF;
-  }
-
-  const size_t len = strlen(str);
-  const unsigned char newline = '\n';
-
-  if ((uart0_write(str, len) != len) &&
-      (uart0_write(&newline, 1) != 1))
-  {
-    return EOF;
-  }
-
-  return len + 1;
+  return HwiP_disable();
 }
 /*---------------------------------------------------------------------------*/
-unsigned int
-dbg_send_bytes(const unsigned char *s, unsigned int len)
+void
+int_master_status_set(int_master_status_t status)
 {
-  if(!s || strlen((const char *)s) < len)
-  {
-    return EOF;
-  }
-
-  const unsigned char newline = '\n';
-
-  if ((uart0_write(s, len) != len) &&
-      (uart0_write(&newline, 1) != 1))
-  {
-    return EOF;
-  }
-
-  return len + 1;
+  HwiP_restore(status);
 }
 /*---------------------------------------------------------------------------*/
+bool
+int_master_is_enabled(void)
+{
+  return CPUprimask() ? false : true;
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

@@ -34,8 +34,8 @@
  *  Default Linker script for the Texas Instruments CC1352
  */
 
-MIN_STACKSIZE = 0x600;
-HEAPSIZE = 256; /* Size of heap buffer used by HeapMem */
+MIN_STACKSIZE = 0x800;  /* 2048 bytes */
+HEAPSIZE      = 0x100;  /* 256 bytes */
 
 MEMORY
 {

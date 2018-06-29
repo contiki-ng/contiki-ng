@@ -71,6 +71,7 @@
 #include "sys/rtimer.h"
 #include "sys/node-id.h"
 #include "sys/platform.h"
+#include "dev/gpio-hal.h"
 #include "dev/serial-line.h"
 #include "dev/leds.h"
 #include "net/mac/framer/frame802154.h"
@@ -85,6 +86,7 @@
 #include "button-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <stdio.h>
+#include <string.h>
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -107,13 +109,9 @@ fade(unsigned char l)
     int j = k > 400 ? 800 - k : k;
 
     leds_on(l);
-    for(i = 0; i < j; ++i) {
-      __asm("nop");
-    }
+    for(i = 0; i < j; ++i) { __asm("nop"); }
     leds_off(l);
-    for(i = 0; i < 400 - j; ++i) {
-      __asm("nop");
-    }
+    for(i = 0; i < 400 - j; ++i) { __asm("nop"); }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -121,6 +119,7 @@ static void
 set_rf_params(void)
 {
   uint8_t ext_addr[8];
+  memset(ext_addr, 0x0, sizeof(ext_addr));
 
   ieee_addr_cpy_to(ext_addr, sizeof(ext_addr));
 
@@ -140,9 +139,9 @@ platform_init_stage_one(void)
 {
   DRIVERLIB_ASSERT_CURR_RELEASE();
 
-  // Enable flash cache
+  /* Enable flash cache */
   VIMSModeSet(VIMS_BASE, VIMS_MODE_ENABLED);
-  // Configure round robin arbitration and prefetching
+  /* Configure round robin arbitration and prefetching */
   VIMSConfigure(VIMS_BASE, true, true);
 
   Power_init();
@@ -155,19 +154,20 @@ platform_init_stage_one(void)
   /* Perform board-specific initialization */
   Board_initHook();
 
-  // Contiki drivers init
+  /* Contiki drivers init */
+  gpio_hal_init();
   leds_init();
 
   fade(LEDS_RED);
 
-  // TI Drivers init
+  /* TI Drivers init */
   I2C_init();
   SPI_init();
   UART_init();
 
   fade(LEDS_GREEN);
 
-  // NoRTOS should be called last
+  /* NoRTOS should be called last */
   NoRTOS_start();
 }
 /*---------------------------------------------------------------------------*/
@@ -205,6 +205,9 @@ platform_init_stage_three(void)
           ChipInfo_SupportsIEEE_802_15_4() ? "Yes" : "No",
           ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No",
           ChipInfo_SupportsBLE() ? "Yes" : "No");
+
+  LOG_INFO("Operating frequency on %s\n",
+      (RF_CORE_MODE == RF_CORE_MODE_SUB_1_GHZ) ? "Sub-1 GHz" : "2.4 GHz");
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);
   LOG_INFO("Node ID: %d\n", g_nodeId);
 
@@ -216,7 +219,7 @@ platform_init_stage_three(void)
 void
 platform_idle(void)
 {
-  // Drop to some low power mode
+  /* Drop to some low power mode */
   Power_idleFunc();
 }
 /*---------------------------------------------------------------------------*/

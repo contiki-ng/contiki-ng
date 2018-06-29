@@ -68,11 +68,14 @@ EXTERNALDIRS += $(SDK_DEVICE)/startup_files
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
-CONTIKI_CPU_SOURCEFILES += watchdog-arch.c putchar-arch.c
+CONTIKI_CPU_SOURCEFILES += watchdog-arch.c dbg-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c slip-arch.c
-CONTIKI_CPU_SOURCEFILES += batmon-sensor.c
-CONTIKI_CPU_SOURCEFILES += rf-common.c
+CONTIKI_CPU_SOURCEFILES += batmon-sensor.c gpio-hal-arch.c
+CONTIKI_CPU_SOURCEFILES += rf-common.c int-master-arch.c
 CONTIKI_CPU_SOURCEFILES += ieee-addr.c
+
+### CPU-dependent debug source files
+MODULES += os/lib/dbg-io
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
 CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c prop-settings.c
@@ -84,10 +87,6 @@ endif
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev $(SUBFAMILY) rf-settings/$(DEVICE_FAMILY_LC)
-
-### CPU-dependent debug source files
-### CONTIKI_ARM_DIRS populated by Makefile.arm
-DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 

@@ -53,6 +53,7 @@
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
+#define gpio_hal_arch_init()               do { /* do nothing */ } while (0)
 #define gpio_hal_arch_interrupt_enable(p)  interrupt_enable(p)
 #define gpio_hal_arch_interrupt_disable(p) ti_lib_rom_ioc_int_disable(p)
 

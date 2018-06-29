@@ -42,6 +42,10 @@
 /*---------------------------------------------------------------------------*/
 #include "cc13xx-cc26xx-def.h"
 /*---------------------------------------------------------------------------*/
+
+#define GPIO_HAL_CONF_ARCH_SW_TOGGLE        0
+#define GPIO_HAL_CONF_ARCH_HDR_PATH         "dev/gpio-hal-arch.h"
+
 /**
  * \name Network Stack Configuration
  *
@@ -56,10 +60,27 @@
 #define CC2650_FAST_RADIO_STARTUP           (MAC_CONF_WITH_TSCH)
 #endif
 
-#ifdef RF_CORE_CONF_CHANNEL
-#define RF_CHANNEL                RF_CORE_CONF_CHANNEL
+#define RF_CORE_MODE_SUB_1_GHZ        (1 << 0)
+#define RF_CORE_MODE_2_4_GHZ          (1 << 1)
+
+#define RF_CORE_MODE_MASK             ( RF_CORE_MODE_SUB_1_GHZ \
+                                      | RF_CORE_MODE_2_4_GHZ \
+                                      )
+
+/* Default RF mode is 2.4 GHz */
+#ifdef RF_CORE_CONF_MODE
+# if !(RF_CORE_CONF_MODE & RF_CORE_MODE_MASK)
+#   error "Invalid RF_CORE_CONF_MODE"
+# endif
+# define RF_CORE_MODE                 RF_CORE_CONF_MODE
 #else
-#define RF_CHANNEL                25
+# define RF_CORE_MODE                 RF_CORE_MODE_2_4_GHZ
+#endif
+
+#ifdef RF_CORE_CONF_CHANNEL
+# define RF_CHANNEL                   RF_CORE_CONF_CHANNEL
+#else
+# define RF_CHANNEL                   25
 #endif
 
 /* Number of Prop Mode RX buffers */
@@ -69,22 +90,11 @@
 
 /* Configure Radio mode, i.e. prop or ieee */
 
-
 /*----- CC13xx Device Line --------------------------------------------------*/
 /* CC13xx supports both IEEE and Prop mode, depending on which device */
 #if defined(DEVICE_LINE_CC13XX)
 
-/* Default mode should be prop for prop-only devices (CC1310, CC1312R);
- * Else, IEEE mode is default. */
-# ifndef CC13XX_CONF_PROP_MODE
-#   if (SUPPORTS_IEEE_MODE == 0)
-#     define CC13XX_CONF_PROP_MODE            1
-#   else
-#     define CC13XX_CONF_PROP_MODE            0
-#   endif
-# endif
-
-# if (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1)
+# if (RF_CORE_MODE == RF_CORE_MODE_SUB_1_GHZ) && (SUPPORTS_PROP_MODE)
 /*----- CC13xx Prop Mode ----------------------------------------------------*/
 #   define NETSTACK_CONF_RADIO          prop_mode_driver
 
@@ -92,7 +102,7 @@
 #   define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
 #   define CSMA_CONF_SEND_SOFT_ACK      1
 
-# elif (CC13XX_CONF_PROP_MODE == 0) && (SUPPORTS_IEEE_MODE == 1)
+# elif (RF_CORE_MODE == RF_CORE_MODE_2_4_GHZ) && (SUPPORTS_IEEE_MODE)
 /*----- CC13xx IEEE Mode ----------------------------------------------------*/
 #   define NETSTACK_CONF_RADIO          ieee_mode_driver
 
@@ -101,13 +111,13 @@
 # else
 /*----- CC13xx Non-supported Mode -------------------------------------------*/
 #   error "Invalid radio mode configuration of CC13xx device"
-# endif /* (CC13XX_CONF_PROP_MODE == 1) && (SUPPORTS_PROP_MODE == 1) */
+# endif /* (RF_CORE_IS_SUB_1_GHZ == 1) && (SUPPORTS_PROP_MODE == 1) */
 
 /*----- CC26xx Device Line --------------------------------------------------*/
 /* CC26xx only supports IEEE mode */
 #elif defined(DEVICE_LINE_CC26XX)
 
-# if (SUPPORTS_IEEE_MODE == 1)
+# if (SUPPORTS_IEEE_MODE)
 /*----- CC26xx IEEE Mode ----------------------------------------------------*/
 #   define NETSTACK_CONF_RADIO          ieee_mode_driver
 

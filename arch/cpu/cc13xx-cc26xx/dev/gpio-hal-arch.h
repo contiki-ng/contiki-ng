@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -32,32 +33,45 @@
  * \addtogroup cc26xx
  * @{
  *
- * \defgroup cc26xx-char-io CC13xx/CC26xx Character I/O
+ * \defgroup cc26xx-gpio-hal CC13xx/CC26xx GPIO HAL implementation
  *
- * CC13xx/CC26xx CPU-specific functions for debugging and SLIP I/O
  * @{
  *
  * \file
- * Header file for the CC13xx/CC26xx Debug I/O module
+ *     Header file for the CC13xx/CC26xx GPIO HAL functions
+ *
+ * \note
+ *     Do not include this header directly
  */
-#ifndef DBG_H_
-#define DBG_H_
+/*---------------------------------------------------------------------------*/
+#ifndef GPIO_HAL_ARCH_H_
+#define GPIO_HAL_ARCH_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/gpio.h)
+#include DeviceFamily_constructPath(driverlib/ioc.h)
+
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Print a stream of bytes
- * \param seq A pointer to the stream
- * \param len The number of bytes to print
- * \return The number of printed bytes
- *
- * This function is an arch-specific implementation required by the dbg-io
- * API in cpu/arm/common/dbg-io. It prints a stream of bytes over the
- * peripheral used by the platform.
- */
-unsigned int dbg_send_bytes(const unsigned char *seq, unsigned int len);
+#define gpio_hal_arch_init()                  do { /* do nothing */ } while (0)
+#define gpio_hal_arch_interrupt_disable(p)    IOCIntDisable(p)
+
+#define gpio_hal_arch_pin_set_input(p)        IOCPinTypeGpioInput(p)
+#define gpio_hal_arch_pin_set_output(p)       IOCPinTypeGpioOutput(p)
+
+#define gpio_hal_arch_set_pin(p)              GPIO_setDio(p)
+#define gpio_hal_arch_clear_pin(p)            GPIO_clearDio(p)
+#define gpio_hal_arch_toggle_pin(p)           GPIO_toggleDio(p)
+#define gpio_hal_arch_write_pin(p, v)         GPIO_writeDio(p, v)
+
+#define gpio_hal_arch_set_pins(p)             GPIO_setMultiDio(p)
+#define gpio_hal_arch_clear_pins(p)           GPIO_clearMultiDio(p)
+#define gpio_hal_arch_toggle_pins(p)          GPIO_toggleMultiDio(p)
+#define gpio_hal_arch_write_pins(p, v)        GPIO_writeMultiDio(p, v)
 /*---------------------------------------------------------------------------*/
-#endif /* DBG_H_ */
+#endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

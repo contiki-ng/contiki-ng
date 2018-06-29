@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,21 +28,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup cc26xx-char-io
- * @{
- *
- * \file
- * This file is here because DBG I/O expects it to be. It just includes
- * our own dbg.h which has a non-misleading name and which also adheres
- * to Contiki's naming convention
- */
+#include "sys/cc.h"
 /*---------------------------------------------------------------------------*/
-#ifndef DEBUG_UART_H_
-#define DEBUG_UART_H_
+#include <stdio.h>
+#include <stddef.h>
+#include <string.h>
 /*---------------------------------------------------------------------------*/
-#include "dbg.h"
+#include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
-#endif /* DEBUG_UART_H_ */
+int
+dbg_putchar(int c)
+{
+  const unsigned char ch = (unsigned char)c;
+
+  const int num_bytes = (int)uart0_write(&ch, 1);
+  return (num_bytes > 0)
+    ? num_bytes
+    : 0;
+}
 /*---------------------------------------------------------------------------*/
-/** @} */
+unsigned int
+dbg_send_bytes(const unsigned char *seq, unsigned int len)
+{
+  const size_t seq_len = strlen((const char *)seq);
+
+  const size_t max_len = MIN(seq_len, (size_t)len);
+
+  if (max_len == 0) {
+    return 0;
+  }
+
+  const int num_bytes = (int)uart0_write(seq, max_len);
+  return (num_bytes > 0)
+      ? num_bytes
+      : 0;
+}
+/*---------------------------------------------------------------------------*/

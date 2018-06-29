@@ -73,7 +73,7 @@ clock_init(void)
   ClockP_construct(&etimerClock, (ClockP_Fxn)&clock_update, CLOCK_TICKS_SECOND, &params);
 }
 /*---------------------------------------------------------------------------*/
-CCIF clock_time_t
+clock_time_t
 clock_time(void)
 {
   uint64_t count_read;
@@ -100,7 +100,7 @@ clock_update(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-CCIF unsigned long
+unsigned long
 clock_seconds(void)
 {
   uint64_t count_read;

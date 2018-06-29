@@ -34,8 +34,8 @@
  *  Default Linker script for the Texas Instruments CC1310
  */
 
-MIN_STACKSIZE = 0x600;
-HEAPSIZE = 256;
+MIN_STACKSIZE = 0x800;  /* 2048 bytes */
+HEAPSIZE      = 0x100;  /* 256 bytes */
 
 MEMORY
 {

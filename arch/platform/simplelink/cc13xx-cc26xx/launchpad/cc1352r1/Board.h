@@ -52,12 +52,12 @@ extern "C" {
  * Those values are not meant to be modified by the user
  * @{
  */
-#define LEDS_RED       (1 << 0)
-#define LEDS_GREEN     (1 << 1)
-#define LEDS_YELLOW    LEDS_GREEN
-#define LEDS_ORANGE    LEDS_RED
+#define LEDS_CONF_COUNT     2
 
-#define LEDS_CONF_ALL  (LEDS_RED | LEDS_GREEN)
+#define LEDS_CONF_RED       0
+#define LEDS_CONF_GREEN     1
+
+#define LEDS_CONF_ALL       ((1 << LEDS_CONF_COUNT) - 1)
 /*---------------------------------------------------------------------------*/
 /* These #defines allow us to reuse TI-RTOS across other device families */
 

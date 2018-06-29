@@ -37,66 +37,17 @@
  */
 /*---------------------------------------------------------------------------*/
 /* Contiki API */
-#include <contiki.h>
-#include <dev/leds.h>
+#include "contiki.h"
+#include "dev/leds.h"
 /*---------------------------------------------------------------------------*/
-/* Simplelink SDK API */
 #include <Board.h>
-
-#include <ti/drivers/PIN.h>
 /*---------------------------------------------------------------------------*/
 /* Standard library */
 #include <stdbool.h>
-#include <stdint.h>
 /*---------------------------------------------------------------------------*/
-static const PIN_Config pin_table[] = {
-  Board_PIN_LED0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
-  Board_PIN_LED1 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
-  PIN_TERMINATE
+const leds_t leds_arch_leds[] = {
+  { .pin = Board_PIN_LED0, .negative_logic = false },
+  { .pin = Board_PIN_LED1, .negative_logic = false },
 };
-
-static PIN_State pin_state;
-static PIN_Handle pin_handle;
-
-static volatile unsigned char c;
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
-{
-  static bool bHasInit = false;
-  if(bHasInit) {
-    return;
-  }
-
-  // PIN_init() called from Board_initGeneral()
-  pin_handle = PIN_open(&pin_state, pin_table);
-  if (!pin_handle) {
-    return;
-  }
-
-  bHasInit = true;
-}
-/*---------------------------------------------------------------------------*/
-unsigned char
-leds_arch_get(void)
-{
-  return c;
-}
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_set(unsigned char leds)
-{
-  c = leds;
-
-  PIN_setPortOutputValue(pin_handle, 0);
-
-  if (leds & LEDS_RED) {
-    PIN_setOutputValue(pin_handle, Board_PIN_LED0, 1);
-  }
-
-  if (leds & LEDS_GREEN) {
-    PIN_setOutputValue(pin_handle, Board_PIN_LED1, 1);
-  }
-}
 /*---------------------------------------------------------------------------*/
 /** @} */

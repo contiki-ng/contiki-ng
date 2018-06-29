@@ -82,7 +82,7 @@ typedef uint8_t gpio_hal_pin_t;
  * A logical representation of a pin's configuration. It is an OR combination
  * of GPIO_HAL_PIN_CFG_xyz macros.
  */
-typedef uint8_t gpio_hal_pin_cfg_t;
+typedef uint32_t gpio_hal_pin_cfg_t;
 
 #ifdef GPIO_HAL_CONF_PIN_COUNT
 #define GPIO_HAL_PIN_COUNT GPIO_HAL_CONF_PIN_COUNT
@@ -101,21 +101,23 @@ typedef uint32_t gpio_hal_pin_mask_t;
 
 typedef void (*gpio_hal_callback_t)(gpio_hal_pin_mask_t pin_mask);
 /*---------------------------------------------------------------------------*/
-#define GPIO_HAL_PIN_CFG_PULL_NONE        0x00
-#define GPIO_HAL_PIN_CFG_PULL_UP          0x01
-#define GPIO_HAL_PIN_CFG_PULL_DOWN        0x02
-#define GPIO_HAL_PIN_CFG_PULL_MASK        (GPIO_HAL_PIN_CFG_PULL_UP | \
-                                           GPIO_HAL_PIN_CFG_PULL_DOWN)
+#define GPIO_HAL_PIN_CFG_PULL_NONE        (0)
+#define GPIO_HAL_PIN_CFG_PULL_UP          (1 << 0)
+#define GPIO_HAL_PIN_CFG_PULL_DOWN        (1 << 1)
 
-#define GPIO_HAL_PIN_CFG_EDGE_NONE        0x00
-#define GPIO_HAL_PIN_CFG_EDGE_RISING      0x04
-#define GPIO_HAL_PIN_CFG_EDGE_FALLING     0x08
-#define GPIO_HAL_PIN_CFG_EDGE_BOTH        (GPIO_HAL_PIN_CFG_EDGE_RISING | \
-                                           GPIO_HAL_PIN_CFG_EDGE_FALLING)
+#define GPIO_HAL_PIN_CFG_PULL_MASK        ( GPIO_HAL_PIN_CFG_PULL_UP \
+                                          | GPIO_HAL_PIN_CFG_PULL_DOWN \
+                                          )
 
-#define GPIO_HAL_PIN_CFG_INT_DISABLE      0x00
-#define GPIO_HAL_PIN_CFG_INT_ENABLE       0x80
-#define GPIO_HAL_PIN_CFG_INT_MASK         0x80
+#define GPIO_HAL_PIN_CFG_INT_DISABLE      (0)
+#define GPIO_HAL_PIN_CFG_INT_FALLING      (1 << 2)
+#define GPIO_HAL_PIN_CFG_INT_RISING       (1 << 3)
+#define GPIO_HAL_PIN_CFG_INT_BOTH         (1 << 4)
+
+#define GPIO_HAL_PIN_CFG_INT_MASK         ( GPIO_HAL_PIN_CFG_INT_RISING \
+                                          | GPIO_HAL_PIN_CFG_INT_FALLING \
+                                          | GPIO_HAL_PIN_CFG_INT_BOTH \
+                                          )
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Datatype for GPIO event handlers
@@ -233,6 +235,18 @@ void gpio_hal_event_handler(gpio_hal_pin_mask_t pins);
 #include GPIO_HAL_CONF_ARCH_HDR_PATH
 #endif /* GPIO_HAL_CONF_ARCH_HDR_PATH */
 /*---------------------------------------------------------------------------*/
+#ifndef gpio_hal_arch_init
+/**
+ * \brief Perform architecture specific gpio initaliaztion
+ *
+ * It is the platform developer's responsibility to provide an implementation.
+ *
+ * The implementation can be provided as a global symbol, an inline function
+ * or a function-like macro, as described above.
+ */
+void gpio_hal_arch_init(void);
+#endif
+/*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_interrupt_enable
 /**
  * \brief Enable interrupts for a gpio pin
@@ -243,7 +257,7 @@ void gpio_hal_event_handler(gpio_hal_pin_mask_t pins);
  * The implementation can be provided as a global symbol, an inline function
  * or a function-like macro, as described above.
  */
-void gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin);
+void gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg);
 #endif
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_interrupt_disable
