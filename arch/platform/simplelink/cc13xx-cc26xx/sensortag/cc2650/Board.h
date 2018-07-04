@@ -41,24 +41,10 @@ extern "C" {
 
 #include "CC2650STK.h"
 
-#define Board_initGeneral()     CC2650STK_initGeneral()
+#define Board_initGeneral()      CC2650STK_initGeneral()
 #define Board_shutDownExtFlash() CC2650STK_shutDownExtFlash()
-#define Board_wakeUpExtFlash() CC2650STK_wakeUpExtFlash()
+#define Board_wakeUpExtFlash()   CC2650STK_wakeUpExtFlash()
 
-/*---------------------------------------------------------------------------*/
-/**
- * \name LED configurations
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define LEDS_RED       (1 << 0)
-#define LEDS_GREEN     (1 << 1)
-#define LEDS_YELLOW    LEDS_GREEN
-#define LEDS_ORANGE    LEDS_RED
-
-#define LEDS_CONF_ALL  (LEDS_RED | LEDS_GREEN)
-/*---------------------------------------------------------------------------*/
 /* These #defines allow us to reuse TI-RTOS across other device families */
 
 #define Board_BUZZER            CC2650STK_BUZZER

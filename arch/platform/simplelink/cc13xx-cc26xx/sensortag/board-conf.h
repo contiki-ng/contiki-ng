@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,29 +28,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup simplelink-platform
+/** \addtogroup cc26xx-srf-tag
  * @{
  *
- * \defgroup simplelink-button-sensor Simplelink Button Driver
+ * \defgroup sensortag-cc26xx-peripherals Sensortag CC1350/CC2650 common
  *
- * One of the buttons can be configured as general purpose or as an on/off key
+ * Defines related to Sensortag sensors. The two sensortags are identical to a
+ * very large extent. Everything documented within this group applies to both
+ * sensortags.
+ *
  * @{
  *
  * \file
- * Header file for the Simplelink Button Driver
+ * Header file with definitions related to the sensors on the Sensortags
+ *
+ * \note   Do not include this file directly.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BUTTON_SENSOR_ARCH_H_
-#define BUTTON_SENSOR_ARCH_H_
+#ifndef BOARD_CONF_H_
+#define BOARD_CONF_H_
 /*---------------------------------------------------------------------------*/
-/* Contiki API */
-#include "lib/sensors.h"
+#include "leds-arch.h"
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor button_left_sensor;
-extern const struct sensors_sensor button_right_sensor;
+#define BUTTON_HAL_ID_KEY_LEFT      0
+#define BUTTON_HAL_ID_KEY_RIGHT     1
+#define BUTTON_HAL_ID_REED_RELAY    2
 /*---------------------------------------------------------------------------*/
-#endif /* BUTTON_SENSOR_ARCH_H_ */
+#endif /* BOARD_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

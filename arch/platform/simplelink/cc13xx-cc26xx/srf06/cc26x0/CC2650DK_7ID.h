@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, Texas Instruments Incorporated
+ * Copyright (c) 2015-2018, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,234 +32,165 @@
 /** ============================================================================
  *  @file       CC2650DK_7ID.h
  *
- *  @brief      CC2650EM_7ID Board Specific header file.
- *              The project options should point to this file if this is the
- *              CC2650EM you are developing code for.
+ *  @brief      CC2650 LaunchPad Board Specific header file.
  *
- *  The CC2650 header file should be included in an application as follows:
+ *  The CC2650DK_7ID header file should be included in an application as
+ *  follows:
  *  @code
- *  #include <Board.h>
+ *  #include "CC2650DK_7ID.h"
  *  @endcode
  *
  *  ============================================================================
  */
-#ifndef __CC2650EM_7ID_H__
-#define __CC2650EM_7ID_H__
+#ifndef __CC2650DK_7ID_BOARD_H__
+#define __CC2650DK_7ID_BOARD_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** ============================================================================
- *  Symbol by generic Board.c to include the correct kit specific Board.c
- *  ==========================================================================*/
-#define CC2650EM_7ID
-#define CC2650DK_7ID
-
-
-/** ============================================================================
- *  Includes
- *  ==========================================================================*/
+/* Includes */
 #include <ti/drivers/PIN.h>
-#include <driverlib/ioc.h>
+#include <ti/devices/cc26x0/driverlib/ioc.h>
 
-/** ============================================================================
- *  Externs
- *  ==========================================================================*/
+/* Externs */
 extern const PIN_Config BoardGpioInitTable[];
 
-/** ============================================================================
- *  Defines
- *  ==========================================================================*/
+/* Defines */
+#define CC2650DK_7ID
 
 /* Mapping of pins to board signals using general board aliases
- *      <board signal alias>                <pin mapping>
+ *      <board signal alias>                  <pin mapping>
  */
-/* Leds */
-#define Board_LED_ON                        1               /* LEDs on SmartRF06 EB are active high */
-#define Board_LED_OFF                       0
-#define Board_DK_LED1                       IOID_25         /* P2.11 */
-#define Board_DK_LED2                       IOID_27         /* P2.13 */
-#define Board_DK_LED3                       IOID_7          /* P1.2  */
-#define Board_DK_LED4                       IOID_6          /* P1.4  */
-/* Button Board */
-#define Board_KEY_SELECT                    IOID_11         /* P1.14 */
-#define Board_KEY_UP                        IOID_19         /* P1.10 */
-#define Board_KEY_DOWN                      IOID_12         /* P1.12 */
-#define Board_KEY_LEFT                      IOID_15         /* P1.6  */
-#define Board_KEY_RIGHT                     IOID_18         /* P1.8  */
-/* LCD  Board */
-#define Board_LCD_MODE                      IOID_4          /* P1.11 */
-#define Board_LCD_RST                       IOID_5          /* P1.13 */
-#define Board_LCD_CSN                       IOID_14         /* P1.17 */
-/* UART Board */
-#define Board_UART_RX                       IOID_2          /* P1.7  */
-#define Board_UART_TX                       IOID_3          /* P1.9  */
-#define Board_UART_CTS                      IOID_0          /* P1.3  */
-#define Board_UART_RTS                      IOID_21         /* P2.18 */
+
+/* Analog Capable DIOs */
+#define CC2650DK_7ID_DIO23_ANALOG          IOID_23
+#define CC2650DK_7ID_DIO24_ANALOG          IOID_24
+#define CC2650DK_7ID_DIO25_ANALOG          IOID_25
+#define CC2650DK_7ID_DIO26_ANALOG          IOID_26
+#define CC2650DK_7ID_DIO27_ANALOG          IOID_27
+#define CC2650DK_7ID_DIO28_ANALOG          IOID_28
+#define CC2650DK_7ID_DIO29_ANALOG          IOID_29
+#define CC2650DK_7ID_DIO30_ANALOG          IOID_30
+
+/* Digital IOs */
+#define CC2650DK_7ID_DIO0                  IOID_0
+#define CC2650DK_7ID_DIO1_RFSW             IOID_1
+#define CC2650DK_7ID_DIO12                 IOID_12
+#define CC2650DK_7ID_DIO15                 IOID_15
+#define CC2650DK_7ID_DIO16_TDO             IOID_16
+#define CC2650DK_7ID_DIO17_TDI             IOID_17
+#define CC2650DK_7ID_DIO21                 IOID_21
+#define CC2650DK_7ID_DIO22                 IOID_22
+
+/* Discrete Inputs */
+#define CC2650DK_7ID_PIN_KEY_SELECT        IOID_11
+#define CC2650DK_7ID_PIN_KEY_UP            IOID_19
+#define CC2650DK_7ID_PIN_KEY_DOWN          IOID_12
+#define CC2650DK_7ID_PIN_KEY_LEFT          IOID_15
+#define CC2650DK_7ID_PIN_KEY_RIGHT         IOID_18
+
+/* GPIO */
+#define CC2650DK_7ID_GPIO_LED_ON           1
+#define CC2650DK_7ID_GPIO_LED_OFF          0
+
+/* I2C */
+#define CC2650DK_7ID_I2C0_SCL0             PIN_UNASSIGNED
+#define CC2650DK_7ID_I2C0_SDA0             PIN_UNASSIGNED
+
+/* LEDs */
+#define CC2650DK_7ID_PIN_LED_ON            1
+#define CC2650DK_7ID_PIN_LED_OFF           0
+#define CC2650DK_7ID_PIN_LED1              IOID_25
+#define CC2650DK_7ID_PIN_LED2              IOID_27
+#define CC2650DK_7ID_PIN_LED3              IOID_7
+#define CC2650DK_7ID_PIN_LED4              IOID_6
+
+/* PWM Outputs */
+#define CC2650DK_7ID_PWMPIN0               CC2650DK_7ID_PIN_LED1
+#define CC2650DK_7ID_PWMPIN1               CC2650DK_7ID_PIN_LED2
+#define CC2650DK_7ID_PWMPIN2               PIN_UNASSIGNED
+#define CC2650DK_7ID_PWMPIN3               PIN_UNASSIGNED
+#define CC2650DK_7ID_PWMPIN4               PIN_UNASSIGNED
+#define CC2650DK_7ID_PWMPIN5               PIN_UNASSIGNED
+#define CC2650DK_7ID_PWMPIN6               PIN_UNASSIGNED
+#define CC2650DK_7ID_PWMPIN7               PIN_UNASSIGNED
+
 /* SPI Board */
-#define Board_SPI0_MISO                     IOID_8          /* P1.20 */
-#define Board_SPI0_MOSI                     IOID_9          /* P1.18 */
-#define Board_SPI0_CLK                      IOID_10         /* P1.16 */
-#define Board_SPI0_CSN                      PIN_UNASSIGNED  /* P1.14, separate CSn for LCD, SDCARD, and ACC */
-#define Board_SPI1_MISO                     IOID_24         /* RF2.10 for testing only */
-#define Board_SPI1_MOSI                     IOID_23         /* RF2.5  for testing only */
-#define Board_SPI1_CLK                      IOID_30         /* RF2.12 for testing only */
-#define Board_SPI1_CSN                      PIN_UNASSIGNED  /* RF2.6  for testing only */
-/* Ambient Light Sensor */
-#define Board_ALS_OUT                       IOID_23         /* P2.5 */
-#define Board_ALS_PWR                       IOID_26         /* P2.6 */
-/* Accelerometer */
-#define Board_ACC_PWR                       IOID_20         /* P2.8 */
-#define Board_ACC_CSN                       IOID_24         /* P2.10 */
+#define CC2650DK_7ID_SPI0_MISO             IOID_8
+#define CC2650DK_7ID_SPI0_MOSI             IOID_9
+#define CC2650DK_7ID_SPI0_CLK              IOID_10
+#define CC2650DK_7ID_SPI0_CSN              PIN_UNASSIGNED
+#define CC2650DK_7ID_SPI1_MISO             PIN_UNASSIGNED
+#define CC2650DK_7ID_SPI1_MOSI             PIN_UNASSIGNED
+#define CC2650DK_7ID_SPI1_CLK              PIN_UNASSIGNED
+#define CC2650DK_7ID_SPI1_CSN              PIN_UNASSIGNED
+
+/* UART Board */
+#define CC2650DK_7ID_UART_RX               IOID_2
+#define CC2650DK_7ID_UART_TX               IOID_3
+#define CC2650DK_7ID_UART_CTS              IOID_0
+#define CC2650DK_7ID_UART_RTS              IOID_21
+
 /* SD Card */
-#define Board_SDCARD_CSN                    IOID_30         /* P2.12 */
-/* Power Board */
-#define Board_3V3_EN                        IOID_13         /* P1.15 */
-/* PWM outputs */
-#define Board_PWMPIN0                       Board_DK_LED1
-#define Board_PWMPIN1                       Board_DK_LED2
-#define Board_PWMPIN2                       PIN_UNASSIGNED
-#define Board_PWMPIN3                       PIN_UNASSIGNED
-#define Board_PWMPIN4                       PIN_UNASSIGNED
-#define Board_PWMPIN5                       PIN_UNASSIGNED
-#define Board_PWMPIN6                       PIN_UNASSIGNED
-#define Board_PWMPIN7                       PIN_UNASSIGNED
-/* Analog capable DIO's */
-#define Board_DIO23_ANALOG                  IOID_23
-#define Board_DIO24_ANALOG                  IOID_24
-#define Board_DIO25_ANALOG                  IOID_25
-#define Board_DIO26_ANALOG                  IOID_26
-#define Board_DIO27_ANALOG                  IOID_27
-#define Board_DIO28_ANALOG                  IOID_28
-#define Board_DIO29_ANALOG                  IOID_29
-#define Board_DIO30_ANALOG                  IOID_30
+#define CC2650DK_7ID_SDCARD_CS             IOID_30
 
-/** ============================================================================
- *  Instance identifiers
- *  ==========================================================================*/
-/* Generic SPI instance identifiers */
-#define Board_SPI0                  CC2650DK_7ID_SPI0
-#define Board_SPI1                  CC2650DK_7ID_SPI1
-/* Generic UART instance identifiers */
-#define Board_UART                  CC2650DK_7ID_UART0
-/* Generic Crypto instance identifiers */
-#define Board_CRYPTO                CC2650DK_7ID_CRYPTO0
-/* Generic GPTimer instance identifiers */
-#define Board_GPTIMER0A             CC2650DK_7ID_GPTIMER0A
-#define Board_GPTIMER0B             CC2650DK_7ID_GPTIMER0B
-#define Board_GPTIMER1A             CC2650DK_7ID_GPTIMER1A
-#define Board_GPTIMER1B             CC2650DK_7ID_GPTIMER1B
-#define Board_GPTIMER2A             CC2650DK_7ID_GPTIMER2A
-#define Board_GPTIMER2B             CC2650DK_7ID_GPTIMER2B
-#define Board_GPTIMER3A             CC2650DK_7ID_GPTIMER3A
-#define Board_GPTIMER3B             CC2650DK_7ID_GPTIMER3B
-/* Generic PWM instance identifiers */
-#define Board_PWM0                  CC2650DK_7ID_PWM0
-#define Board_PWM1                  CC2650DK_7ID_PWM1
-#define Board_PWM2                  CC2650DK_7ID_PWM2
-#define Board_PWM3                  CC2650DK_7ID_PWM3
-#define Board_PWM4                  CC2650DK_7ID_PWM4
-#define Board_PWM5                  CC2650DK_7ID_PWM5
-#define Board_PWM6                  CC2650DK_7ID_PWM6
-#define Board_PWM7                  CC2650DK_7ID_PWM7
+/* LCD Board */
+#define CC2650DK_7ID_LCD_MODE              IOID_4
+#define CC2650DK_7ID_LCD_RST               IOID_5
+#define CC2650DK_7ID_LCD_CS                IOID_14
 
-/** ============================================================================
- *  Number of peripherals and their names
- *  ==========================================================================*/
+/* Ambient Light Sensor */
+#define CC2650DK_7ID_ALS_OUT               IOID_23
+#define CC2650DK_7ID_ALS_PWR               IOID_26
+
+/* Accelerometer */
+#define CC2650DK_7ID_ACC_PWR               IOID_20
+#define CC2650DK_7ID_ACC_CS                IOID_24
 
 /*!
- *  @def    CC2650DK_7ID_CryptoName
- *  @brief  Enum of Crypto names on the CC2650 dev board
+ *  @brief  Initialize the general board specific settings
+ *
+ *  This function initializes the general board specific settings.
  */
-typedef enum CC2650DK_7ID_CryptoName {
-    CC2650DK_7ID_CRYPTO0 = 0,
-    CC2650DK_7ID_CRYPTOCOUNT
-} CC2650DK_7ID_CryptoName;
+void CC2650DK_7ID_initGeneral(void);
 
 /*!
- *  @def    CC2650DK_7ID_SPIName
- *  @brief  Enum of SPI names on the CC2650 dev board
+ *  @brief  Turn off the external flash on LaunchPads
+ *
  */
-typedef enum CC2650DK_7ID_SPIName {
-    CC2650DK_7ID_SPI0 = 0,
-    CC2650DK_7ID_SPI1,
-    CC2650DK_7ID_SPICOUNT
-} CC2650DK_7ID_SPIName;
+void CC2650DK_7ID_shutDownExtFlash(void);
 
 /*!
- *  @def    CC2650DK_7ID_UARTName
- *  @brief  Enum of UARTs on the CC2650 dev board
+ *  @brief  Wake up the external flash present on the board files
+ *
+ *  This function toggles the chip select for the amount of time needed
+ *  to wake the chip up.
  */
-typedef enum CC2650DK_7ID_UARTName {
-    CC2650DK_7ID_UART0 = 0,
-    CC2650DK_7ID_UARTCOUNT
-} CC2650DK_7ID_UARTName;
-
-/*!
- *  @def    CC2650DK_7ID_UdmaName
- *  @brief  Enum of DMA buffers
- */
-typedef enum CC2650DK_7ID_UdmaName {
-    CC2650DK_7ID_UDMA0 = 0,
-    CC2650DK_7ID_UDMACOUNT
-} CC2650DK_7ID_UdmaName;
-
-/*!
- *  @def    CC2650DK_7ID_GPTimerName
- *  @brief  Enum of GPTimer parts
- */
-typedef enum CC2650DK_7ID_GPTimerName
-{
-    CC2650DK_7ID_GPTIMER0A = 0,
-    CC2650DK_7ID_GPTIMER0B,
-    CC2650DK_7ID_GPTIMER1A,
-    CC2650DK_7ID_GPTIMER1B,
-    CC2650DK_7ID_GPTIMER2A,
-    CC2650DK_7ID_GPTIMER2B,
-    CC2650DK_7ID_GPTIMER3A,
-    CC2650DK_7ID_GPTIMER3B,
-    CC2650DK_7ID_GPTIMERPARTSCOUNT
-} CC2650DK_7ID_GPTimerName;
-
-/*!
- *  @def    CC2650DK_7ID_GPTimers
- *  @brief  Enum of GPTimers
- */
-typedef enum CC2650DK_7ID_GPTimers
-{
-    CC2650DK_7ID_GPTIMER0 = 0,
-    CC2650DK_7ID_GPTIMER1,
-    CC2650DK_7ID_GPTIMER2,
-    CC2650DK_7ID_GPTIMER3,
-    CC2650DK_7ID_GPTIMERCOUNT
-} CC2650DK_7ID_GPTimers;
-
-/*!
- *  @def    CC2650DK_7ID_PWM
- *  @brief  Enum of PWM outputs on the board
- */
-typedef enum CC2650DK_7ID_PWM
-{
-    CC2650DK_7ID_PWM0 = 0,
-    CC2650DK_7ID_PWM1,
-    CC2650DK_7ID_PWM2,
-    CC2650DK_7ID_PWM3,
-    CC2650DK_7ID_PWM4,
-    CC2650DK_7ID_PWM5,
-    CC2650DK_7ID_PWM6,
-    CC2650DK_7ID_PWM7,
-    CC2650DK_7ID_PWMCOUNT
-} CC2650DK_7ID_PWM;
+void CC2650DK_7ID_wakeUpExtFlash(void);
 
 /*!
  *  @def    CC2650DK_7ID_ADCBufName
- *  @brief  Enum of ADCBufs
+ *  @brief  Enum of ADCs
  */
 typedef enum CC2650DK_7ID_ADCBufName {
-    CC2650DK_7ID_ADCBuf0 = 0,
-    CC2650DK_7ID_ADCBufCOUNT
+    CC2650DK_7ID_ADCBUF0 = 0,
+
+    CC2650DK_7ID_ADCBUFCOUNT
 } CC2650DK_7ID_ADCBufName;
+
+/*!
+ *  @def    CC2650DK_7ID_ADCBuf0SourceName
+ *  @brief  Enum of ADCBuf channels
+ */
+typedef enum CC2650DK_7ID_ADCBuf0ChannelName {
+    CC2650DK_7ID_ADCBUF0CHANNELADCALS = 0,
+    CC2650DK_7ID_ADCBUF0CHANNELVDDS,
+    CC2650DK_7ID_ADCBUF0CHANNELDCOUPL,
+    CC2650DK_7ID_ADCBUF0CHANNELVSS,
+
+    CC2650DK_7ID_ADCBUF0CHANNELCOUNT
+} CC2650DK_7ID_ADCBuf0ChannelName;
 
 /*!
  *  @def    CC2650DK_7ID_ADCName
@@ -270,12 +201,158 @@ typedef enum CC2650DK_7ID_ADCName {
     CC2650DK_7ID_ADCDCOUPL,
     CC2650DK_7ID_ADCVSS,
     CC2650DK_7ID_ADCVDDS,
+
     CC2650DK_7ID_ADCCOUNT
 } CC2650DK_7ID_ADCName;
 
 /*!
+ *  @def    CC2650DK_7ID_CryptoName
+ *  @brief  Enum of Crypto names
+ */
+typedef enum CC2650DK_7ID_CryptoName {
+    CC2650DK_7ID_CRYPTO0 = 0,
+
+    CC2650DK_7ID_CRYPTOCOUNT
+} CC2650DK_7ID_CryptoName;
+
+/*!
+ *  @def    CC2650DK_7ID_GPIOName
+ *  @brief  Enum of GPIO names
+ */
+typedef enum CC2650DK_7ID_GPIOName {
+    CC2650DK_7ID_GPIO_KEY_SELECT = 0,
+    CC2650DK_7ID_GPIO_KEY_UP,
+    CC2650DK_7ID_GPIO_KEY_DOWN,
+    CC2650DK_7ID_GPIO_KEY_LEFT,
+    CC2650DK_7ID_GPIO_KEY_RIGHT,
+    CC2650DK_7ID_SPI_MASTER_READY,
+    CC2650DK_7ID_SPI_SLAVE_READY,
+    CC2650DK_7ID_GPIO_LED1,
+    CC2650DK_7ID_GPIO_LED2,
+    CC2650DK_7ID_GPIO_LED3,
+    CC2650DK_7ID_GPIO_LED4,
+    CC2650DK_7ID_GPIO_SDCARD_CS,
+    CC2650DK_7ID_GPIO_ACC_CS,
+    CC2650DK_7ID_GPIO_LCD_CS,
+    CC2650DK_7ID_GPIO_LCD_POWER,
+    CC2650DK_7ID_GPIO_LCD_ENABLE,
+
+    CC2650DK_7ID_GPIOCOUNT
+} CC2650DK_7ID_GPIOName;
+
+/*!
+ *  @def    CC2650DK_7ID_GPTimerName
+ *  @brief  Enum of GPTimer parts
+ */
+typedef enum CC2650DK_7ID_GPTimerName {
+    CC2650DK_7ID_GPTIMER0A = 0,
+    CC2650DK_7ID_GPTIMER0B,
+    CC2650DK_7ID_GPTIMER1A,
+    CC2650DK_7ID_GPTIMER1B,
+    CC2650DK_7ID_GPTIMER2A,
+    CC2650DK_7ID_GPTIMER2B,
+    CC2650DK_7ID_GPTIMER3A,
+    CC2650DK_7ID_GPTIMER3B,
+
+    CC2650DK_7ID_GPTIMERPARTSCOUNT
+} CC2650DK_7ID_GPTimerName;
+
+/*!
+ *  @def    CC2650DK_7ID_GPTimers
+ *  @brief  Enum of GPTimers
+ */
+typedef enum CC2650DK_7ID_GPTimers {
+    CC2650DK_7ID_GPTIMER0 = 0,
+    CC2650DK_7ID_GPTIMER1,
+    CC2650DK_7ID_GPTIMER2,
+    CC2650DK_7ID_GPTIMER3,
+
+    CC2650DK_7ID_GPTIMERCOUNT
+} CC2650DK_7ID_GPTimers;
+
+/*!
+ *  @def    CC2650DK_7ID_I2CName
+ *  @brief  Enum of I2C names
+ */
+typedef enum CC2650DK_7ID_I2CName {
+    CC2650DK_7ID_I2C0 = 0,
+
+    CC2650DK_7ID_I2CCOUNT
+} CC2650DK_7ID_I2CName;
+
+/*!
+ *  @def    CC2650DK_7ID_NVSName
+ *  @brief  Enum of NVS names
+ */
+typedef enum CC2650DK_7ID_NVSName {
+#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
+    CC2650DK_7ID_NVSCC26XX0 = 0,
+#endif
+
+    CC2650DK_7ID_NVSCOUNT
+} CC2650DK_7ID_NVSName;
+
+/*!
+ *  @def    CC2650DK_7ID_PWM
+ *  @brief  Enum of PWM outputs
+ */
+typedef enum CC2650DK_7ID_PWMName {
+    CC2650DK_7ID_PWM0 = 0,
+    CC2650DK_7ID_PWM1,
+    CC2650DK_7ID_PWM2,
+    CC2650DK_7ID_PWM3,
+    CC2650DK_7ID_PWM4,
+    CC2650DK_7ID_PWM5,
+    CC2650DK_7ID_PWM6,
+    CC2650DK_7ID_PWM7,
+
+    CC2650DK_7ID_PWMCOUNT
+} CC2650DK_7ID_PWMName;
+
+/*!
+ *  @def    CC2650DK_7ID_SDName
+ *  @brief  Enum of SD names
+ */
+typedef enum CC2650DK_7ID_SDName {
+    CC2650DK_7ID_SDSPI0 = 0,
+
+    CC2650DK_7ID_SDCOUNT
+} CC2650DK_7ID_SDName;
+
+/*!
+ *  @def    CC2650DK_7ID_SPIName
+ *  @brief  Enum of SPI names
+ */
+typedef enum CC2650DK_7ID_SPIName {
+    CC2650DK_7ID_SPI0 = 0,
+    CC2650DK_7ID_SPI1,
+
+    CC2650DK_7ID_SPICOUNT
+} CC2650DK_7ID_SPIName;
+
+/*!
+ *  @def    CC2650DK_7ID_UARTName
+ *  @brief  Enum of UARTs
+ */
+typedef enum CC2650DK_7ID_UARTName {
+    CC2650DK_7ID_UART0 = 0,
+
+    CC2650DK_7ID_UARTCOUNT
+} CC2650DK_7ID_UARTName;
+
+/*!
+ *  @def    CC2650DK_7ID_UDMAName
+ *  @brief  Enum of DMA buffers
+ */
+typedef enum CC2650DK_7ID_UDMAName {
+    CC2650DK_7ID_UDMA0 = 0,
+
+    CC2650DK_7ID_UDMACOUNT
+} CC2650DK_7ID_UDMAName;
+
+/*!
  *  @def    CC2650DK_7ID_WatchdogName
- *  @brief  Enum of Watchdogs on the CC2650DK_7ID dev board
+ *  @brief  Enum of Watchdogs
  */
 typedef enum CC2650DK_7ID_WatchdogName {
     CC2650DK_7ID_WATCHDOG0 = 0,
@@ -287,4 +364,4 @@ typedef enum CC2650DK_7ID_WatchdogName {
 }
 #endif
 
-#endif /* __CC2650EM_H__ */
+#endif /* __CC2650DK_7ID_BOARD_H__ */

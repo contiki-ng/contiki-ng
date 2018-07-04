@@ -28,34 +28,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup launchpad-peripherals
+/** \addtogroup cc26xx-srf-tag
+ * @{
+ *
+ * \defgroup launchpad-peripherals LaunchPad peripherals
+ *
+ * Defines related to LaunchPad peripherals.
+ *
  * @{
  *
  * \file
- *  LaunchPad-specific board initialisation driver
+ * Header file with definitions related to LaunchPad peripherals
+ *
+ * \note   Do not include this file directly.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
+#ifndef LEDS_ARCH_H_
+#define LEDS_ARCH_H_
 /*---------------------------------------------------------------------------*/
-#include "Board.h"
-#include "ti/drivers/dpl/HwiP.h"
-/*---------------------------------------------------------------------------*/
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
-/*---------------------------------------------------------------------------*/
-void
-board_init()
-{
-  /* Disable interrupts */
-  const uintptr_t key = HwiP_disable();
+/**
+ * \name LED configurations
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define LEDS_CONF_COUNT             1
 
-  Board_initGeneral();
-  Board_shutDownExtFlash();
+#define LEDS_CONF_RED               0
 
-  /* Restore interrupts. */
-  HwiP_restore(key);
-}
+#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
 /*---------------------------------------------------------------------------*/
-/** @} */
+#endif /* LEDS_ARCH_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

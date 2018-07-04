@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,21 +31,26 @@
 /** \addtogroup cc26xx-srf-tag
  * @{
  *
- * \defgroup srf06-common-peripherals SmartRF06EB + CC13xx/CC26xx common
+ * \defgroup launchpad-peripherals LaunchPad peripherals
  *
- * Defines related to the SmartRF06 Evaluation Board irrespective of the EM
- * mounted on it
- *
- * This file provides connectivity information on LEDs, Buttons, UART and
- * other peripherals
+ * Defines related to LaunchPad peripherals.
  *
  * @{
+ *
+ * \file
+ * Header file with definitions related to LaunchPad peripherals
+ *
+ * \note   Do not include this file directly.
  */
 /*---------------------------------------------------------------------------*/
 #ifndef BOARD_PERIPHERALS_H_
 #define BOARD_PERIPHERALS_H_
 /*---------------------------------------------------------------------------*/
 #include "als-sensor.h"
+/*---------------------------------------------------------------------------*/
+#include "board-conf.h"
+/*---------------------------------------------------------------------------*/
+#define BOARD_CONF_HAS_SENSORS      1
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_PERIPHERALS_H_ */
 /*---------------------------------------------------------------------------*/

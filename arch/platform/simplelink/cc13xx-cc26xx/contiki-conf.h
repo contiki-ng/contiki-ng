@@ -39,29 +39,13 @@
 #define CONTIKI_CONF_H_
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
+
+#include "board-conf.h"
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Button configurations
- *
- * Configure a button as power on/off: We use the right button for both boards.
- * @{
- */
-#ifndef BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN
-#define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN 0
-#endif
-
-/*
- * Override button symbols from dev/button-sensor.h, for the examples that
- * include it
- */
-#define button_sensor  button_left_sensor
-#define button_sensor2 button_right_sensor
-/** @} */
 /*---------------------------------------------------------------------------*/
 /* Include CPU-related configuration */
 #include "cc13xx-cc26xx-conf.h"

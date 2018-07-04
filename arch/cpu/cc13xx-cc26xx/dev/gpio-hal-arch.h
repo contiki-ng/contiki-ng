@@ -50,21 +50,24 @@
 #include "contiki.h"
 
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/gpio.h)
 #include DeviceFamily_constructPath(driverlib/ioc.h)
+#include DeviceFamily_constructPath(driverlib/gpio.h)
+
+#include <ti/drivers/PIN.h>
+#include <ti/drivers/pin/PINCC26XX.h>
 
 #include <stdint.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#define gpio_hal_arch_init()                  do { /* do nothing */ } while (0)
-#define gpio_hal_arch_interrupt_disable(p)    IOCIntDisable(p)
+#define gpio_hal_arch_pin_set_input(p)        PINCC26XX_setOutputEnable(p, false)
+#define gpio_hal_arch_pin_set_output(p)       PINCC26XX_setOutputEnable(p, true)
 
-#define gpio_hal_arch_pin_set_input(p)        IOCPinTypeGpioInput(p)
-#define gpio_hal_arch_pin_set_output(p)       IOCPinTypeGpioOutput(p)
-
-#define gpio_hal_arch_set_pin(p)              GPIO_setDio(p)
-#define gpio_hal_arch_clear_pin(p)            GPIO_clearDio(p)
-#define gpio_hal_arch_toggle_pin(p)           GPIO_toggleDio(p)
-#define gpio_hal_arch_write_pin(p, v)         GPIO_writeDio(p, v)
+#define gpio_hal_arch_set_pin(p)              PINCC26XX_setOutputValue(p, 1)
+#define gpio_hal_arch_clear_pin(p)            PINCC26XX_setOutputValue(p, 0)
+#define gpio_hal_arch_toggle_pin(p)           PINCC26XX_setOutputValue(p, \
+                                                PINCC26XX_getOutputValue(p) \
+                                                  ? 0 : 1)
+#define gpio_hal_arch_write_pin(p, v)         PINCC26XX_setOutputValue(p, v)
 
 #define gpio_hal_arch_set_pins(p)             GPIO_setMultiDio(p)
 #define gpio_hal_arch_clear_pins(p)           GPIO_clearMultiDio(p)

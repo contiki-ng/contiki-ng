@@ -37,12 +37,12 @@
 /* TSCH related defines */
 
 /* Delay between GO signal and SFD */
-#define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(81))
+#define RADIO_DELAY_BEFORE_TX       ((unsigned)US_TO_RTIMERTICKS(81))
 /* Delay between GO signal and start listening.
  * This value is so small because the radio is constantly on within each timeslot. */
-#define RADIO_DELAY_BEFORE_RX ((unsigned)US_TO_RTIMERTICKS(15))
+#define RADIO_DELAY_BEFORE_RX       ((unsigned)US_TO_RTIMERTICKS(15))
 /* Delay between the SFD finishes arriving and it is detected in software. */
-#define RADIO_DELAY_BEFORE_DETECT ((unsigned)US_TO_RTIMERTICKS(352))
+#define RADIO_DELAY_BEFORE_DETECT   ((unsigned)US_TO_RTIMERTICKS(352))
 
 /* Timer conversion; radio is running at 4 MHz */
 #define RAT_SECOND            4000000u

@@ -29,62 +29,26 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup srf06-common-peripherals
+ * \addtogroup simplelink-platform
  * @{
  *
  * \file
- * Driver for the SmartRF06EB LEDs when a CC13xx/CC26xx EM is mounted on it
+ *  Driver for LaunchPad LEDs
  */
 /*---------------------------------------------------------------------------*/
+/* Contiki API */
 #include "contiki.h"
 #include "dev/leds.h"
-#include "ti-lib.h"
-/*---------------------------------------------------------------------------*/
-static unsigned char c;
-static int inited = 0;
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
-{
-  if(inited) {
-    return;
-  }
-  inited = 1;
 
-  ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_LED_1);
-  ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_LED_2);
-  ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_LED_3);
-  ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_LED_4);
+#include <Board.h>
 
-  ti_lib_gpio_clear_multi_dio(BOARD_LED_ALL);
-}
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-unsigned char
-leds_arch_get(void)
-{
-  return c;
-}
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_set(unsigned char leds)
-{
-  c = leds;
-
-  /* Clear everything */
-  ti_lib_gpio_clear_multi_dio(BOARD_LED_ALL);
-
-  if((leds & LEDS_RED) == LEDS_RED) {
-    ti_lib_gpio_set_dio(BOARD_IOID_LED_1);
-  }
-  if((leds & LEDS_YELLOW) == LEDS_YELLOW) {
-    ti_lib_gpio_set_dio(BOARD_IOID_LED_2);
-  }
-  if((leds & LEDS_GREEN) == LEDS_GREEN) {
-    ti_lib_gpio_set_dio(BOARD_IOID_LED_3);
-  }
-  if((leds & LEDS_ORANGE) == LEDS_ORANGE) {
-    ti_lib_gpio_set_dio(BOARD_IOID_LED_4);
-  }
-}
+const leds_t leds_arch_leds[] = {
+  { .pin = Board_PIN_LED0, .negative_logic = false },
+  { .pin = Board_PIN_LED1, .negative_logic = false },
+  { .pin = Board_PIN_LED2, .negative_logic = false },
+  { .pin = Board_PIN_LED3, .negative_logic = false },
+};
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -168,7 +168,7 @@
 #define RAT_THREE_QUARTERS    ((RAT_RANGE * (uint32_t)3) / (uint32_t)4)
 
 /* XXX: don't know what exactly is this, looks like the time to TX 3 octets */
-#define RAT_TIMESTAMP_OFFSET  -(USEC_TO_RADIO(32 * 3) - 1) /* -95.75 usec */
+#define RAT_TIMESTAMP_OFFSET  -(USEC_TO_RAT(32 * 3) - 1) /* -95.75 usec */
 /*---------------------------------------------------------------------------*/
 #define STATUS_CORRELATION   0x3f  /* bits 0-5 */
 #define STATUS_REJECT_FRAME  0x40  /* bit 6 */

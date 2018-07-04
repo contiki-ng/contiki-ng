@@ -53,7 +53,7 @@ extern RF_TxPowerTable_Entry rf_ieee_tx_power_table[RF_IEEE_TX_POWER_TABLE_SIZE+
 extern rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup;
 extern rfc_CMD_FS_t          rf_cmd_ieee_fs;
 extern rfc_CMD_IEEE_TX_t     rf_cmd_ieee_tx;
-extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_xx;
+extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
 /*---------------------------------------------------------------------------*/
 // RF Core API Overrides
 extern uint32_t rf_ieee_overrides[];

@@ -42,70 +42,184 @@
 
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/gpio.h)
-#include DeviceFamily_constructPath(driverlib/ioc.h)
+
+#include <ti/drivers/PIN.h>
+#include <ti/drivers/pin/PINCC26XX.h>
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-#define CONFIG_MASK (IOC_IOPULL_M | IOC_INT_M | IOC_IOMODE_OPEN_SRC_INV)
+static PIN_Config pin_config[] =
+{
+  PIN_TERMINATE
+};
+
+static PIN_State  pin_state;
+static PIN_Handle pin_handle;
+/*---------------------------------------------------------------------------*/
+static void
+from_hal_cfg(gpio_hal_pin_cfg_t cfg, PIN_Config *pin_cfg, PIN_Config *pin_mask)
+{
+  cfg &= GPIO_HAL_PIN_BM_ALL;
+
+  /* Input config */
+  if (cfg & GPIO_HAL_PIN_BM_INPUT) {
+    *pin_mask |= PIN_BM_INPUT_MODE;
+
+    if ((cfg & GPIO_HAL_PIN_BM_INPUT_HYSTERESIS) == GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS) {
+      *pin_cfg |= PIN_HYSTERESIS;
+    }
+
+    switch (cfg & GPIO_HAL_PIN_BM_INPUT_PULLING) {
+    case GPIO_HAL_PIN_CFG_INPUT_NOPULL:   *pin_cfg |= PIN_NOPULL;   break;
+    case GPIO_HAL_PIN_CFG_INPUT_PULLUP:   *pin_cfg |= PIN_PULLUP;   break;
+    case GPIO_HAL_PIN_CFG_INPUT_PULLDOWN: *pin_cfg |= PIN_PULLDOWN; break;
+    }
+  }
+
+  /* Output config */
+  if (cfg & GPIO_HAL_PIN_BM_OUTPUT) {
+    *pin_mask |= PIN_BM_OUTPUT_MODE;
+
+    switch (cfg & GPIO_HAL_PIN_BM_OUTPUT_BUF) {
+    case GPIO_HAL_PIN_CFG_OUTPUT_PUSHPULL:   *pin_cfg |= PIN_PUSHPULL;   break;
+    case GPIO_HAL_PIN_CFG_OUTPUT_OPENDRAIN:  *pin_cfg |= PIN_OPENDRAIN;  break;
+    case GPIO_HAL_PIN_CFG_OUTPUT_OPENSOURCE: *pin_cfg |= PIN_OPENSOURCE; break;
+    }
+
+    if ((cfg & GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL) == GPIO_HAL_PIN_CFG_OUTPUT_SLEWCTRL) {
+      *pin_cfg |= PIN_SLEWCTRL;
+    }
+
+    switch (cfg & GPIO_HAL_PIN_BM_OUTPUT_DRVSTR) {
+    case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MIN: *pin_cfg |= PIN_DRVSTR_MIN; break;
+    case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED: *pin_cfg |= PIN_DRVSTR_MED; break;
+    case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MAX: *pin_cfg |= PIN_DRVSTR_MAX; break;
+    }
+  }
+
+  /* Interrupt config */
+  if (cfg & GPIO_HAL_PIN_BM_INT) {
+    *pin_mask |= PIN_BM_IRQ;
+
+    switch (cfg & GPIO_HAL_PIN_BM_OUTPUT_BUF) {
+    case GPIO_HAL_PIN_CFG_INT_DISABLE: *pin_cfg |= PIN_IRQ_DIS;       break;
+    case GPIO_HAL_PIN_CFG_INT_FALLING: *pin_cfg |= PIN_IRQ_NEGEDGE;   break;
+    case GPIO_HAL_PIN_CFG_INT_RISING:  *pin_cfg |= PIN_IRQ_POSEDGE;   break;
+    case GPIO_HAL_PIN_CFG_INT_BOTH:    *pin_cfg |= PIN_IRQ_BOTHEDGES; break;
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
+{
+  /* Input config */
+  if (pin_cfg & PIN_BM_INPUT_MODE) {
+    if ((pin_cfg & PIN_BM_HYSTERESIS) == PIN_HYSTERESIS) {
+      *cfg |= GPIO_HAL_PIN_BM_INPUT_HYSTERESIS;
+    }
+
+    switch (pin_cfg & PIN_BM_PULLING) {
+    case PIN_NOPULL:   *cfg |= GPIO_HAL_PIN_CFG_INPUT_NOPULL;   break;
+    case PIN_PULLUP:   *cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLUP;   break;
+    case PIN_PULLDOWN: *cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLDOWN; break;
+    }
+  }
+
+  /* Output config */
+  if (pin_cfg & PIN_BM_OUTPUT_MODE) {
+    switch (pin_cfg & PIN_BM_OUTPUT_BUF) {
+    case PIN_PUSHPULL:   *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_PUSHPULL;   break;
+    case PIN_OPENDRAIN:  *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_OPENDRAIN;  break;
+    case PIN_OPENSOURCE: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_OPENSOURCE; break;
+    }
+
+    if ((pin_cfg & PIN_BM_SLEWCTRL) == PIN_SLEWCTRL) {
+      *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_SLEWCTRL;
+    }
+
+    switch (pin_cfg & PIN_BM_DRVSTR) {
+    case PIN_DRVSTR_MIN: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MIN; break;
+    case PIN_DRVSTR_MED: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED; break;
+    case PIN_DRVSTR_MAX: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MAX; break;
+    }
+  }
+
+  /* Interrupt config */
+  if (pin_cfg & PIN_BM_IRQ) {
+    switch (pin_cfg & PIN_BM_IRQ) {
+    case PIN_IRQ_DIS:       *cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE; break;
+    case PIN_IRQ_NEGEDGE:   *cfg |= GPIO_HAL_PIN_CFG_INT_FALLING; break;
+    case PIN_IRQ_POSEDGE:   *cfg |= GPIO_HAL_PIN_CFG_INT_RISING;  break;
+    case PIN_IRQ_BOTHEDGES: *cfg |= GPIO_HAL_PIN_CFG_INT_BOTH;    break;
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+gpio_int_cb(PIN_Handle handle, PIN_Id pin_id)
+{
+  /* Unused args */
+  (void)handle;
+
+  gpio_hal_event_handler(gpio_hal_pin_to_mask(pin_id));
+}
+
+/*---------------------------------------------------------------------------*/
+void
+gpio_hal_arch_init(void)
+{
+  /* No error checking */
+  pin_handle = PIN_open(&pin_state, pin_config);
+  PIN_registerIntCb(pin_handle, gpio_int_cb);
+}
 /*---------------------------------------------------------------------------*/
 void
 gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
-  GPIO_clearEventDio(pin);
-  gpio_hal_arch_pin_cfg_set(pin, cfg);
-  IOCIntEnable(pin);
+  PIN_add(pin_handle, PIN_getConfig(pin));
+
+  cfg &= GPIO_HAL_PIN_BM_INT;
+
+  PIN_Config int_cfg = PIN_IRQ_DIS;
+  switch (cfg) {
+  case GPIO_HAL_PIN_CFG_INT_FALLING: int_cfg |= PIN_IRQ_NEGEDGE;   break;
+  case GPIO_HAL_PIN_CFG_INT_RISING:  int_cfg |= PIN_IRQ_POSEDGE;   break;
+  case GPIO_HAL_PIN_CFG_INT_BOTH:    int_cfg |= PIN_IRQ_BOTHEDGES; break;
+  }
+
+  PIN_setInterrupt(pin_handle, pin | int_cfg);
+}
+/*---------------------------------------------------------------------------*/
+void
+gpio_hal_arch_interrupt_disable(gpio_hal_pin_t pin)
+{
+  PIN_add(pin_handle, PIN_getConfig(pin));
+
+  PIN_setInterrupt(pin_handle, pin | PIN_IRQ_DIS);
 }
 /*---------------------------------------------------------------------------*/
 void
 gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
+  PIN_add(pin_handle, PIN_getConfig(pin));
+
   /* Clear settings that we are about to change, keep everything else */
-  uint32_t config = IOCPortConfigureGet(pin);
-  config &= ~CONFIG_MASK;
+  PIN_Config pin_cfg = 0;
+  PIN_Config pin_mask = 0;
 
-  switch (cfg & GPIO_HAL_PIN_CFG_INT_MASK) {
-  case GPIO_HAL_PIN_CFG_INT_DISABLE: config |= (IOC_NO_EDGE      | IOC_INT_DISABLE); break;
-  case GPIO_HAL_PIN_CFG_INT_FALLING: config |= (IOC_FALLING_EDGE | IOC_INT_ENABLE);  break;
-  case GPIO_HAL_PIN_CFG_INT_RISING:  config |= (IOC_RISING_EDGE  | IOC_INT_ENABLE);  break;
-  case GPIO_HAL_PIN_CFG_INT_BOTH:    config |= (IOC_BOTH_EDGES   | IOC_INT_ENABLE);  break;
-  default: {}
-  }
+  from_hal_cfg(cfg, &pin_cfg, &pin_mask);
 
-  switch (cfg & GPIO_HAL_PIN_CFG_PULL_MASK) {
-  case GPIO_HAL_PIN_CFG_PULL_NONE: config |= IOC_NO_IOPULL;   break;
-  case GPIO_HAL_PIN_CFG_PULL_DOWN: config |= IOC_IOPULL_DOWN; break;
-  case GPIO_HAL_PIN_CFG_PULL_UP:   config |= IOC_IOPULL_UP;   break;
-  default: {}
-  }
-
-  IOCPortConfigureSet(pin, IOC_PORT_GPIO, config);
+  PIN_setConfig(pin_handle, pin_mask, pin | pin_cfg);
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_cfg_t
 gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
 {
+  PIN_Config pin_cfg = PIN_getConfig(pin);
   gpio_hal_pin_cfg_t cfg = 0;
-  uint32_t config = IOCPortConfigureGet(pin);
 
-  switch (config & IOC_IOPULL_M) {
-  case IOC_IOPULL_UP:   cfg |= GPIO_HAL_PIN_CFG_PULL_UP;   break;
-  case IOC_IOPULL_DOWN: cfg |= GPIO_HAL_PIN_CFG_PULL_DOWN; break;
-  case IOC_NO_IOPULL:   cfg |= GPIO_HAL_PIN_CFG_PULL_NONE; break;
-  default: {}
-  }
-
-  /* Interrupt enable/disable */
-  uint32_t tmp = config & IOC_INT_M;
-  if (tmp & IOC_INT_ENABLE) {
-    switch (tmp) {
-    case IOC_FALLING_EDGE: cfg |= GPIO_HAL_PIN_CFG_INT_FALLING; break;
-    case IOC_RISING_EDGE:  cfg |= GPIO_HAL_PIN_CFG_INT_RISING;  break;
-    case IOC_BOTH_EDGES:   cfg |= GPIO_HAL_PIN_CFG_INT_BOTH;    break;
-    default: {}
-    }
-  } else {
-    cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE;
-  }
+  to_hal_cfg(pin_cfg, &cfg);
 
   return cfg;
 }
@@ -125,11 +239,9 @@ gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
 uint8_t
 gpio_hal_arch_read_pin(gpio_hal_pin_t pin)
 {
-  if (GPIO_getOutputEnableDio(pin)) {
-    return (HWREG(GPIO_BASE + GPIO_O_DOUT31_0) >> pin) & 1;
-  }
-
-  return GPIO_readDio(pin);
+  return (GPIO_getOutputEnableDio(pin))
+    ? PINCC26XX_getOutputValue(pin)
+    : PINCC26XX_getInputValue(pin);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

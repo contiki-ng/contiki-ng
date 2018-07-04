@@ -31,9 +31,9 @@
  */
 
 /*
- *  ====================== CC2650DK_7ID.c ===================================
+ *  ====================== CC1350DK_7XD.c ===================================
  *  This file is responsible for setting up the board specific items for the
- *  CC2650DK_7ID board.
+ *  CC1350DK_7XD board.
  */
 
 #include <stdbool.h>
@@ -45,7 +45,7 @@
 #include <ti/devices/cc26x0/inc/hw_ints.h>
 #include <ti/devices/cc26x0/inc/hw_memmap.h>
 
-#include "CC2650DK_7ID.h"
+#include "CC1350DK_7XD.h"
 
 /*
  *  =============================== ADCBuf ===============================
@@ -53,7 +53,7 @@
 #include <ti/drivers/ADCBuf.h>
 #include <ti/drivers/adcbuf/ADCBufCC26XX.h>
 
-ADCBufCC26XX_Object adcBufCC26xxObjects[CC2650DK_7ID_ADCBUFCOUNT];
+ADCBufCC26XX_Object adcBufCC26xxObjects[CC1350DK_7XD_ADCBUFCOUNT];
 
 /*
  *  This table converts a virtual adc channel into a dio and internal analogue
@@ -62,32 +62,32 @@ ADCBufCC26XX_Object adcBufCC26xxObjects[CC2650DK_7ID_ADCBUFCOUNT];
  *  pairs are hardwired. Do not remap them in the table. You may reorder entire
  *  entries. The mapping of dio and internal signals is package dependent.
  */
-const ADCBufCC26XX_AdcChannelLutEntry ADCBufCC26XX_adcChannelLut[CC2650DK_7ID_ADCBUF0CHANNELCOUNT] = {
-    {CC2650DK_7ID_ALS_OUT, ADC_COMPB_IN_AUXIO7},
+const ADCBufCC26XX_AdcChannelLutEntry ADCBufCC26XX_adcChannelLut[CC1350DK_7XD_ADCBUF0CHANNELCOUNT] = {
+    {CC1350DK_7XD_ALS_OUT, ADC_COMPB_IN_AUXIO7},
     {PIN_UNASSIGNED, ADC_COMPB_IN_DCOUPL},
     {PIN_UNASSIGNED, ADC_COMPB_IN_VSS},
     {PIN_UNASSIGNED, ADC_COMPB_IN_VDDS},
 };
 
-const ADCBufCC26XX_HWAttrs adcBufCC26xxHWAttrs[CC2650DK_7ID_ADCBUFCOUNT] = {
+const ADCBufCC26XX_HWAttrs adcBufCC26xxHWAttrs[CC1350DK_7XD_ADCBUFCOUNT] = {
     {
         .intPriority       = ~0,
         .swiPriority       = 0,
         .adcChannelLut     = ADCBufCC26XX_adcChannelLut,
-        .gpTimerUnit       = CC2650DK_7ID_GPTIMER0A,
+        .gpTimerUnit       = CC1350DK_7XD_GPTIMER0A,
         .gptDMAChannelMask = 1 << UDMA_CHAN_TIMER0_A,
     }
 };
 
-const ADCBuf_Config ADCBuf_config[CC2650DK_7ID_ADCBUFCOUNT] = {
+const ADCBuf_Config ADCBuf_config[CC1350DK_7XD_ADCBUFCOUNT] = {
     {
         &ADCBufCC26XX_fxnTable,
-        &adcBufCC26xxObjects[CC2650DK_7ID_ADCBUF0],
-        &adcBufCC26xxHWAttrs[CC2650DK_7ID_ADCBUF0]
+        &adcBufCC26xxObjects[CC1350DK_7XD_ADCBUF0],
+        &adcBufCC26xxHWAttrs[CC1350DK_7XD_ADCBUF0]
     },
 };
 
-const uint_least8_t ADCBuf_count = CC2650DK_7ID_ADCBUFCOUNT;
+const uint_least8_t ADCBuf_count = CC1350DK_7XD_ADCBUFCOUNT;
 
 /*
  *  =============================== ADC ===============================
@@ -95,11 +95,11 @@ const uint_least8_t ADCBuf_count = CC2650DK_7ID_ADCBUFCOUNT;
 #include <ti/drivers/ADC.h>
 #include <ti/drivers/adc/ADCCC26XX.h>
 
-ADCCC26XX_Object adcCC26xxObjects[CC2650DK_7ID_ADCCOUNT];
+ADCCC26XX_Object adcCC26xxObjects[CC1350DK_7XD_ADCCOUNT];
 
-const ADCCC26XX_HWAttrs adcCC26xxHWAttrs[CC2650DK_7ID_ADCCOUNT] = {
+const ADCCC26XX_HWAttrs adcCC26xxHWAttrs[CC1350DK_7XD_ADCCOUNT] = {
     {
-        .adcDIO              = CC2650DK_7ID_DIO23_ANALOG,
+        .adcDIO              = CC1350DK_7XD_DIO23_ANALOG,
         .adcCompBInput       = ADC_COMPB_IN_AUXIO7,
         .refSource           = ADCCC26XX_FIXED_REFERENCE,
         .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
@@ -136,23 +136,23 @@ const ADCCC26XX_HWAttrs adcCC26xxHWAttrs[CC2650DK_7ID_ADCCOUNT] = {
     }
 };
 
-const ADC_Config ADC_config[CC2650DK_7ID_ADCCOUNT] = {
-    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650DK_7ID_ADCALS], &adcCC26xxHWAttrs[CC2650DK_7ID_ADCALS]},
-    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650DK_7ID_ADCDCOUPL], &adcCC26xxHWAttrs[CC2650DK_7ID_ADCDCOUPL]},
-    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650DK_7ID_ADCVSS], &adcCC26xxHWAttrs[CC2650DK_7ID_ADCVSS]},
-    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650DK_7ID_ADCVDDS], &adcCC26xxHWAttrs[CC2650DK_7ID_ADCVDDS]},
+const ADC_Config ADC_config[CC1350DK_7XD_ADCCOUNT] = {
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC1350DK_7XD_ADCALS], &adcCC26xxHWAttrs[CC1350DK_7XD_ADCALS]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC1350DK_7XD_ADCDCOUPL], &adcCC26xxHWAttrs[CC1350DK_7XD_ADCDCOUPL]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC1350DK_7XD_ADCVSS], &adcCC26xxHWAttrs[CC1350DK_7XD_ADCVSS]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC1350DK_7XD_ADCVDDS], &adcCC26xxHWAttrs[CC1350DK_7XD_ADCVDDS]},
 };
 
-const uint_least8_t ADC_count = CC2650DK_7ID_ADCCOUNT;
+const uint_least8_t ADC_count = CC1350DK_7XD_ADCCOUNT;
 
 /*
  *  =============================== Crypto ===============================
  */
 #include <ti/drivers/crypto/CryptoCC26XX.h>
 
-CryptoCC26XX_Object cryptoCC26XXObjects[CC2650DK_7ID_CRYPTOCOUNT];
+CryptoCC26XX_Object cryptoCC26XXObjects[CC1350DK_7XD_CRYPTOCOUNT];
 
-const CryptoCC26XX_HWAttrs cryptoCC26XXHWAttrs[CC2650DK_7ID_CRYPTOCOUNT] = {
+const CryptoCC26XX_HWAttrs cryptoCC26XXHWAttrs[CC1350DK_7XD_CRYPTOCOUNT] = {
     {
         .baseAddr       = CRYPTO_BASE,
         .powerMngrId    = PowerCC26XX_PERIPH_CRYPTO,
@@ -161,10 +161,10 @@ const CryptoCC26XX_HWAttrs cryptoCC26XXHWAttrs[CC2650DK_7ID_CRYPTOCOUNT] = {
     }
 };
 
-const CryptoCC26XX_Config CryptoCC26XX_config[CC2650DK_7ID_CRYPTOCOUNT] = {
+const CryptoCC26XX_Config CryptoCC26XX_config[CC1350DK_7XD_CRYPTOCOUNT] = {
     {
-         .object  = &cryptoCC26XXObjects[CC2650DK_7ID_CRYPTO0],
-         .hwAttrs = &cryptoCC26XXHWAttrs[CC2650DK_7ID_CRYPTO0]
+         .object  = &cryptoCC26XXObjects[CC1350DK_7XD_CRYPTO0],
+         .hwAttrs = &cryptoCC26XXHWAttrs[CC1350DK_7XD_CRYPTO0]
     },
 };
 
@@ -190,7 +190,7 @@ static char uartStringBuf[BOARD_DISPLAY_UART_STRBUF_SIZE];
 static uint_least8_t sharpDisplayBuf[BOARD_DISPLAY_SHARP_SIZE * BOARD_DISPLAY_SHARP_SIZE / 8];
 
 const DisplayUart_HWAttrs displayUartHWAttrs = {
-    .uartIdx      = CC2650DK_7ID_UART0,
+    .uartIdx      = CC1350DK_7XD_UART0,
     .baudRate     = 115200,
     .mutexTimeout = (unsigned int)(-1),
     .strBuf       = uartStringBuf,
@@ -198,10 +198,10 @@ const DisplayUart_HWAttrs displayUartHWAttrs = {
 };
 
 const DisplaySharp_HWAttrsV1 displaySharpHWattrs = {
-    .spiIndex    = CC2650DK_7ID_SPI0,
-    .csPin       = CC2650DK_7ID_GPIO_LCD_CS,
-    .powerPin    = CC2650DK_7ID_GPIO_LCD_POWER,
-    .enablePin   = CC2650DK_7ID_GPIO_LCD_ENABLE,
+    .spiIndex    = CC1350DK_7XD_SPI0,
+    .csPin       = CC1350DK_7XD_GPIO_LCD_CS,
+    .powerPin    = CC1350DK_7XD_GPIO_LCD_POWER,
+    .enablePin   = CC1350DK_7XD_GPIO_LCD_ENABLE,
     .pixelWidth  = BOARD_DISPLAY_SHARP_SIZE,
     .pixelHeight = BOARD_DISPLAY_SHARP_SIZE,
     .displayBuf  = sharpDisplayBuf,
@@ -263,7 +263,7 @@ const uint_least8_t Display_count = 0;
 /*
  * Array of Pin configurations
  * NOTE: The order of the pin configurations must coincide with what was
- *       defined in CC2650DK_7ID.h
+ *       defined in CC1350DK_7XD.h
  * NOTE: Pins not used for interrupts should be placed at the end of the
  *       array. Callback entries can be omitted from callbacks array to
  *       reduce memory usage.
@@ -276,8 +276,8 @@ GPIO_PinConfig gpioPinConfigs[] = {
     GPIOCC26XX_DIO_15 | GPIO_DO_NOT_CONFIG,  /* Key Left */
     GPIOCC26XX_DIO_18 | GPIO_DO_NOT_CONFIG,  /* Key Right */
 
-    GPIOCC26XX_DIO_15 | GPIO_DO_NOT_CONFIG,  /* CC2650DK_7ID_SPI_MASTER_READY */
-    GPIOCC26XX_DIO_21 | GPIO_DO_NOT_CONFIG,  /* CC2650DK_7ID_SPI_SLAVE_READY */
+    GPIOCC26XX_DIO_15 | GPIO_DO_NOT_CONFIG,  /* CC1350DK_7XD_SPI_MASTER_READY */
+    GPIOCC26XX_DIO_21 | GPIO_DO_NOT_CONFIG,  /* CC1350DK_7XD_SPI_SLAVE_READY */
 
     /* Output pins */
     GPIOCC26XX_DIO_25 | GPIO_DO_NOT_CONFIG,  /* LED 1 */
@@ -308,14 +308,14 @@ GPIO_PinConfig gpioPinConfigs[] = {
 GPIO_CallbackFxn gpioCallbackFunctions[] = {
     NULL,  /* Button 0 */
     NULL,  /* Button 1 */
-    NULL,  /* CC2650DK_7ID_SPI_MASTER_READY */
-    NULL,  /* CC2650DK_7ID_SPI_SLAVE_READY */
+    NULL,  /* CC1350DK_7XD_SPI_MASTER_READY */
+    NULL,  /* CC1350DK_7XD_SPI_SLAVE_READY */
 };
 
 const GPIOCC26XX_Config GPIOCC26XX_config = {
     .pinConfigs         = (GPIO_PinConfig *)gpioPinConfigs,
     .callbacks          = (GPIO_CallbackFxn *)gpioCallbackFunctions,
-    .numberOfPinConfigs = CC2650DK_7ID_GPIOCOUNT,
+    .numberOfPinConfigs = CC1350DK_7XD_GPIOCOUNT,
     .numberOfCallbacks  = sizeof(gpioCallbackFunctions)/sizeof(GPIO_CallbackFxn),
     .intPriority        = (~0)
 };
@@ -326,9 +326,9 @@ const GPIOCC26XX_Config GPIOCC26XX_config = {
  */
 #include <ti/drivers/timer/GPTimerCC26XX.h>
 
-GPTimerCC26XX_Object gptimerCC26XXObjects[CC2650DK_7ID_GPTIMERCOUNT];
+GPTimerCC26XX_Object gptimerCC26XXObjects[CC1350DK_7XD_GPTIMERCOUNT];
 
-const GPTimerCC26XX_HWAttrs gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMERPARTSCOUNT] = {
+const GPTimerCC26XX_HWAttrs gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMERPARTSCOUNT] = {
     { .baseAddr = GPT0_BASE, .intNum = INT_GPT0A, .intPriority = (~0), .powerMngrId = PowerCC26XX_PERIPH_GPT0, .pinMux = GPT_PIN_0A, },
     { .baseAddr = GPT0_BASE, .intNum = INT_GPT0B, .intPriority = (~0), .powerMngrId = PowerCC26XX_PERIPH_GPT0, .pinMux = GPT_PIN_0B, },
     { .baseAddr = GPT1_BASE, .intNum = INT_GPT1A, .intPriority = (~0), .powerMngrId = PowerCC26XX_PERIPH_GPT1, .pinMux = GPT_PIN_1A, },
@@ -339,15 +339,15 @@ const GPTimerCC26XX_HWAttrs gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMERPARTSCOUNT]
     { .baseAddr = GPT3_BASE, .intNum = INT_GPT3B, .intPriority = (~0), .powerMngrId = PowerCC26XX_PERIPH_GPT3, .pinMux = GPT_PIN_3B, },
 };
 
-const GPTimerCC26XX_Config GPTimerCC26XX_config[CC2650DK_7ID_GPTIMERPARTSCOUNT] = {
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER0], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER0A], GPT_A },
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER0], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER0B], GPT_B },
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER1], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER1A], GPT_A },
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER1], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER1B], GPT_B },
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER2], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER2A], GPT_A },
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER2], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER2B], GPT_B },
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER3], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER3A], GPT_A },
-    { &gptimerCC26XXObjects[CC2650DK_7ID_GPTIMER3], &gptimerCC26xxHWAttrs[CC2650DK_7ID_GPTIMER3B], GPT_B },
+const GPTimerCC26XX_Config GPTimerCC26XX_config[CC1350DK_7XD_GPTIMERPARTSCOUNT] = {
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER0], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER0A], GPT_A },
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER0], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER0B], GPT_B },
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER1], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER1A], GPT_A },
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER1], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER1B], GPT_B },
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER2], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER2A], GPT_A },
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER2], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER2B], GPT_B },
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER3], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER3A], GPT_A },
+    { &gptimerCC26XXObjects[CC1350DK_7XD_GPTIMER3], &gptimerCC26xxHWAttrs[CC1350DK_7XD_GPTIMER3B], GPT_B },
 };
 
 /*
@@ -356,29 +356,29 @@ const GPTimerCC26XX_Config GPTimerCC26XX_config[CC2650DK_7ID_GPTIMERPARTSCOUNT] 
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/i2c/I2CCC26XX.h>
 
-I2CCC26XX_Object i2cCC26xxObjects[CC2650DK_7ID_I2CCOUNT];
+I2CCC26XX_Object i2cCC26xxObjects[CC1350DK_7XD_I2CCOUNT];
 
-const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC2650DK_7ID_I2CCOUNT] = {
+const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC1350DK_7XD_I2CCOUNT] = {
     {
         .baseAddr    = I2C0_BASE,
         .powerMngrId = PowerCC26XX_PERIPH_I2C0,
         .intNum      = INT_I2C_IRQ,
         .intPriority = ~0,
         .swiPriority = 0,
-        .sdaPin      = CC2650DK_7ID_I2C0_SDA0,
-        .sclPin      = CC2650DK_7ID_I2C0_SCL0,
+        .sdaPin      = CC1350DK_7XD_I2C0_SDA0,
+        .sclPin      = CC1350DK_7XD_I2C0_SCL0,
     }
 };
 
-const I2C_Config I2C_config[CC2650DK_7ID_I2CCOUNT] = {
+const I2C_Config I2C_config[CC1350DK_7XD_I2CCOUNT] = {
     {
         .fxnTablePtr = &I2CCC26XX_fxnTable,
-        .object      = &i2cCC26xxObjects[CC2650DK_7ID_I2C0],
-        .hwAttrs     = &i2cCC26xxHWAttrs[CC2650DK_7ID_I2C0]
+        .object      = &i2cCC26xxObjects[CC1350DK_7XD_I2C0],
+        .hwAttrs     = &i2cCC26xxHWAttrs[CC1350DK_7XD_I2C0]
     },
 };
 
-const uint_least8_t I2C_count = CC2650DK_7ID_I2CCOUNT;
+const uint_least8_t I2C_count = CC1350DK_7XD_I2CCOUNT;
 
 /*
  *  =============================== NVS ===============================
@@ -444,7 +444,7 @@ const NVSCC26XX_HWAttrs nvsCC26xxHWAttrs[1] = {
 #endif /* Board_EXCLUDE_NVS_INTERNAL_FLASH */
 
 /* NVS Region index 0 and 1 refer to NVS and NVS SPI respectively */
-const NVS_Config NVS_config[CC2650DK_7ID_NVSCOUNT] = {
+const NVS_Config NVS_config[CC1350DK_7XD_NVSCOUNT] = {
 #ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
     {
         .fxnTablePtr = &NVSCC26XX_fxnTable,
@@ -454,7 +454,7 @@ const NVS_Config NVS_config[CC2650DK_7ID_NVSCOUNT] = {
 #endif
 };
 
-const uint_least8_t NVS_count = CC2650DK_7ID_NVSCOUNT;
+const uint_least8_t NVS_count = CC1350DK_7XD_NVSCOUNT;
 
 /*
  *  =============================== PIN ===============================
@@ -464,23 +464,23 @@ const uint_least8_t NVS_count = CC2650DK_7ID_NVSCOUNT;
 
 const PIN_Config BoardGpioInitTable[] = {
 
-    CC2650DK_7ID_PIN_LED1 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
-    CC2650DK_7ID_PIN_LED2 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
-    CC2650DK_7ID_PIN_LED3 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
-    CC2650DK_7ID_PIN_LED4 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
-    CC2650DK_7ID_PIN_KEY_SELECT | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,    /* Button is active low */
-    CC2650DK_7ID_PIN_KEY_UP | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,        /* Button is active low */
-    CC2650DK_7ID_PIN_KEY_DOWN | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,      /* Button is active low */
-    CC2650DK_7ID_PIN_KEY_LEFT | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,      /* Button is active low */
-    CC2650DK_7ID_PIN_KEY_UP | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,        /* Button is active low */
-    CC2650DK_7ID_SDCARD_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,     /* External flash chip select */
-    CC2650DK_7ID_LCD_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,        /* External flash chip select */
-    CC2650DK_7ID_ACC_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,        /* External flash chip select */
-    CC2650DK_7ID_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                              /* UART RX via debugger back channel */
-    CC2650DK_7ID_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                        /* UART TX via debugger back channel */
-    CC2650DK_7ID_SPI0_MOSI | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master out - slave in */
-    CC2650DK_7ID_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master in - slave out */
-    CC2650DK_7ID_SPI0_CLK | PIN_INPUT_EN | PIN_PULLDOWN,                                             /* SPI clock */
+    CC1350DK_7XD_PIN_LED1 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
+    CC1350DK_7XD_PIN_LED2 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
+    CC1350DK_7XD_PIN_LED3 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
+    CC1350DK_7XD_PIN_LED4 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
+    CC1350DK_7XD_PIN_KEY_SELECT | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,    /* Button is active low */
+    CC1350DK_7XD_PIN_KEY_UP | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,        /* Button is active low */
+    CC1350DK_7XD_PIN_KEY_DOWN | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,      /* Button is active low */
+    CC1350DK_7XD_PIN_KEY_LEFT | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,      /* Button is active low */
+    CC1350DK_7XD_PIN_KEY_UP | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,        /* Button is active low */
+    CC1350DK_7XD_SDCARD_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,     /* External flash chip select */
+    CC1350DK_7XD_LCD_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,        /* External flash chip select */
+    CC1350DK_7XD_ACC_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,        /* External flash chip select */
+    CC1350DK_7XD_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                              /* UART RX via debugger back channel */
+    CC1350DK_7XD_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                        /* UART TX via debugger back channel */
+    CC1350DK_7XD_SPI0_MOSI | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master out - slave in */
+    CC1350DK_7XD_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master in - slave out */
+    CC1350DK_7XD_SPI0_CLK | PIN_INPUT_EN | PIN_PULLDOWN,                                             /* SPI clock */
 
     PIN_TERMINATE
 };
@@ -512,31 +512,31 @@ const PowerCC26XX_Config PowerCC26XX_config = {
 #include <ti/drivers/PWM.h>
 #include <ti/drivers/pwm/PWMTimerCC26XX.h>
 
-PWMTimerCC26XX_Object pwmtimerCC26xxObjects[CC2650DK_7ID_PWMCOUNT];
+PWMTimerCC26XX_Object pwmtimerCC26xxObjects[CC1350DK_7XD_PWMCOUNT];
 
-const PWMTimerCC26XX_HwAttrs pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWMCOUNT] = {
-    { .pwmPin = CC2650DK_7ID_PWMPIN0, .gpTimerUnit = CC2650DK_7ID_GPTIMER0A },
-    { .pwmPin = CC2650DK_7ID_PWMPIN1, .gpTimerUnit = CC2650DK_7ID_GPTIMER0B },
-    { .pwmPin = CC2650DK_7ID_PWMPIN2, .gpTimerUnit = CC2650DK_7ID_GPTIMER1A },
-    { .pwmPin = CC2650DK_7ID_PWMPIN3, .gpTimerUnit = CC2650DK_7ID_GPTIMER1B },
-    { .pwmPin = CC2650DK_7ID_PWMPIN4, .gpTimerUnit = CC2650DK_7ID_GPTIMER2A },
-    { .pwmPin = CC2650DK_7ID_PWMPIN5, .gpTimerUnit = CC2650DK_7ID_GPTIMER2B },
-    { .pwmPin = CC2650DK_7ID_PWMPIN6, .gpTimerUnit = CC2650DK_7ID_GPTIMER3A },
-    { .pwmPin = CC2650DK_7ID_PWMPIN7, .gpTimerUnit = CC2650DK_7ID_GPTIMER3B },
+const PWMTimerCC26XX_HwAttrs pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWMCOUNT] = {
+    { .pwmPin = CC1350DK_7XD_PWMPIN0, .gpTimerUnit = CC1350DK_7XD_GPTIMER0A },
+    { .pwmPin = CC1350DK_7XD_PWMPIN1, .gpTimerUnit = CC1350DK_7XD_GPTIMER0B },
+    { .pwmPin = CC1350DK_7XD_PWMPIN2, .gpTimerUnit = CC1350DK_7XD_GPTIMER1A },
+    { .pwmPin = CC1350DK_7XD_PWMPIN3, .gpTimerUnit = CC1350DK_7XD_GPTIMER1B },
+    { .pwmPin = CC1350DK_7XD_PWMPIN4, .gpTimerUnit = CC1350DK_7XD_GPTIMER2A },
+    { .pwmPin = CC1350DK_7XD_PWMPIN5, .gpTimerUnit = CC1350DK_7XD_GPTIMER2B },
+    { .pwmPin = CC1350DK_7XD_PWMPIN6, .gpTimerUnit = CC1350DK_7XD_GPTIMER3A },
+    { .pwmPin = CC1350DK_7XD_PWMPIN7, .gpTimerUnit = CC1350DK_7XD_GPTIMER3B },
 };
 
-const PWM_Config PWM_config[CC2650DK_7ID_PWMCOUNT] = {
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM0], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM0] },
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM1], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM1] },
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM2], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM2] },
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM3], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM3] },
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM4], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM4] },
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM5], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM5] },
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM6], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM6] },
-    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC2650DK_7ID_PWM7], &pwmtimerCC26xxHWAttrs[CC2650DK_7ID_PWM7] },
+const PWM_Config PWM_config[CC1350DK_7XD_PWMCOUNT] = {
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM0], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM0] },
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM1], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM1] },
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM2], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM2] },
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM3], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM3] },
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM4], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM4] },
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM5], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM5] },
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM6], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM6] },
+    { &PWMTimerCC26XX_fxnTable, &pwmtimerCC26xxObjects[CC1350DK_7XD_PWM7], &pwmtimerCC26xxHWAttrs[CC1350DK_7XD_PWM7] },
 };
 
-const uint_least8_t PWM_count = CC2650DK_7ID_PWMCOUNT;
+const uint_least8_t PWM_count = CC1350DK_7XD_PWMCOUNT;
 
 /*
  *  =============================== RF Driver ===============================
@@ -557,24 +557,24 @@ const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
 #include <ti/drivers/SD.h>
 #include <ti/drivers/sd/SDSPI.h>
 
-SDSPI_Object sdspiObjects[CC2650DK_7ID_SDCOUNT];
+SDSPI_Object sdspiObjects[CC1350DK_7XD_SDCOUNT];
 
-const SDSPI_HWAttrs sdspiHWAttrs[CC2650DK_7ID_SDCOUNT] = {
+const SDSPI_HWAttrs sdspiHWAttrs[CC1350DK_7XD_SDCOUNT] = {
     {
-        .spiIndex = CC2650DK_7ID_SPI0,
-        .spiCsGpioIndex = CC2650DK_7ID_SDCARD_CS
+        .spiIndex = CC1350DK_7XD_SPI0,
+        .spiCsGpioIndex = CC1350DK_7XD_SDCARD_CS
     }
 };
 
-const SD_Config SD_config[CC2650DK_7ID_SDCOUNT] = {
+const SD_Config SD_config[CC1350DK_7XD_SDCOUNT] = {
     {
         .fxnTablePtr = &SDSPI_fxnTable,
-        .object = &sdspiObjects[CC2650DK_7ID_SDSPI0],
-        .hwAttrs = &sdspiHWAttrs[CC2650DK_7ID_SDSPI0]
+        .object = &sdspiObjects[CC1350DK_7XD_SDSPI0],
+        .hwAttrs = &sdspiHWAttrs[CC1350DK_7XD_SDSPI0]
     },
 };
 
-const uint_least8_t SD_count = CC2650DK_7ID_SDCOUNT;
+const uint_least8_t SD_count = CC1350DK_7XD_SDCOUNT;
 
 /*
  *  =============================== SPI DMA ===============================
@@ -582,14 +582,14 @@ const uint_least8_t SD_count = CC2650DK_7ID_SDCOUNT;
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/spi/SPICC26XXDMA.h>
 
-SPICC26XXDMA_Object spiCC26XXDMAObjects[CC2650DK_7ID_SPICOUNT];
+SPICC26XXDMA_Object spiCC26XXDMAObjects[CC1350DK_7XD_SPICOUNT];
 
 /*
  * NOTE: The SPI instances below can be used by the SD driver to communicate
  * with a SD card via SPI.  The 'defaultTxBufValue' fields below are set to 0xFF
  * to satisfy the SDSPI driver requirement.
  */
-const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC2650DK_7ID_SPICOUNT] = {
+const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPICOUNT] = {
     {
         .baseAddr           = SSI0_BASE,
         .intNum             = INT_SSI0_COMB,
@@ -599,10 +599,10 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC2650DK_7ID_SPICOUNT] = {
         .defaultTxBufValue  = 0xFF,
         .rxChannelBitMask   = 1<<UDMA_CHAN_SSI0_RX,
         .txChannelBitMask   = 1<<UDMA_CHAN_SSI0_TX,
-        .mosiPin            = CC2650DK_7ID_SPI0_MOSI,
-        .misoPin            = CC2650DK_7ID_SPI0_MISO,
-        .clkPin             = CC2650DK_7ID_SPI0_CLK,
-        .csnPin             = CC2650DK_7ID_SPI0_CSN,
+        .mosiPin            = CC1350DK_7XD_SPI0_MOSI,
+        .misoPin            = CC1350DK_7XD_SPI0_MISO,
+        .clkPin             = CC1350DK_7XD_SPI0_CLK,
+        .csnPin             = CC1350DK_7XD_SPI0_CSN,
         .minDmaTransferSize = 10
     },
     {
@@ -614,28 +614,28 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC2650DK_7ID_SPICOUNT] = {
         .defaultTxBufValue  = 0xFF,
         .rxChannelBitMask   = 1<<UDMA_CHAN_SSI1_RX,
         .txChannelBitMask   = 1<<UDMA_CHAN_SSI1_TX,
-        .mosiPin            = CC2650DK_7ID_SPI1_MOSI,
-        .misoPin            = CC2650DK_7ID_SPI1_MISO,
-        .clkPin             = CC2650DK_7ID_SPI1_CLK,
-        .csnPin             = CC2650DK_7ID_SPI1_CSN,
+        .mosiPin            = CC1350DK_7XD_SPI1_MOSI,
+        .misoPin            = CC1350DK_7XD_SPI1_MISO,
+        .clkPin             = CC1350DK_7XD_SPI1_CLK,
+        .csnPin             = CC1350DK_7XD_SPI1_CSN,
         .minDmaTransferSize = 10
     }
 };
 
-const SPI_Config SPI_config[CC2650DK_7ID_SPICOUNT] = {
+const SPI_Config SPI_config[CC1350DK_7XD_SPICOUNT] = {
     {
          .fxnTablePtr = &SPICC26XXDMA_fxnTable,
-         .object      = &spiCC26XXDMAObjects[CC2650DK_7ID_SPI0],
-         .hwAttrs     = &spiCC26XXDMAHWAttrs[CC2650DK_7ID_SPI0]
+         .object      = &spiCC26XXDMAObjects[CC1350DK_7XD_SPI0],
+         .hwAttrs     = &spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPI0]
     },
     {
          .fxnTablePtr = &SPICC26XXDMA_fxnTable,
-         .object      = &spiCC26XXDMAObjects[CC2650DK_7ID_SPI1],
-         .hwAttrs     = &spiCC26XXDMAHWAttrs[CC2650DK_7ID_SPI1]
+         .object      = &spiCC26XXDMAObjects[CC1350DK_7XD_SPI1],
+         .hwAttrs     = &spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPI1]
     },
 };
 
-const uint_least8_t SPI_count = CC2650DK_7ID_SPICOUNT;
+const uint_least8_t SPI_count = CC1350DK_7XD_SPICOUNT;
 
 /*
  *  =============================== UART ===============================
@@ -643,47 +643,47 @@ const uint_least8_t SPI_count = CC2650DK_7ID_SPICOUNT;
 #include <ti/drivers/UART.h>
 #include <ti/drivers/uart/UARTCC26XX.h>
 
-UARTCC26XX_Object uartCC26XXObjects[CC2650DK_7ID_UARTCOUNT];
+UARTCC26XX_Object uartCC26XXObjects[CC1350DK_7XD_UARTCOUNT];
 
-uint8_t uartCC26XXRingBuffer[CC2650DK_7ID_UARTCOUNT][32];
+uint8_t uartCC26XXRingBuffer[CC1350DK_7XD_UARTCOUNT][32];
 
-const UARTCC26XX_HWAttrsV2 uartCC26XXHWAttrs[CC2650DK_7ID_UARTCOUNT] = {
+const UARTCC26XX_HWAttrsV2 uartCC26XXHWAttrs[CC1350DK_7XD_UARTCOUNT] = {
     {
         .baseAddr       = UART0_BASE,
         .powerMngrId    = PowerCC26XX_PERIPH_UART0,
         .intNum         = INT_UART0_COMB,
         .intPriority    = ~0,
         .swiPriority    = 0,
-        .txPin          = CC2650DK_7ID_UART_TX,
-        .rxPin          = CC2650DK_7ID_UART_RX,
+        .txPin          = CC1350DK_7XD_UART_TX,
+        .rxPin          = CC1350DK_7XD_UART_RX,
         .ctsPin         = PIN_UNASSIGNED,
         .rtsPin         = PIN_UNASSIGNED,
-        .ringBufPtr     = uartCC26XXRingBuffer[CC2650DK_7ID_UART0],
-        .ringBufSize    = sizeof(uartCC26XXRingBuffer[CC2650DK_7ID_UART0]),
+        .ringBufPtr     = uartCC26XXRingBuffer[CC1350DK_7XD_UART0],
+        .ringBufSize    = sizeof(uartCC26XXRingBuffer[CC1350DK_7XD_UART0]),
         .txIntFifoThr   = UARTCC26XX_FIFO_THRESHOLD_1_8,
         .rxIntFifoThr   = UARTCC26XX_FIFO_THRESHOLD_4_8,
         .errorFxn       = NULL
     }
 };
 
-const UART_Config UART_config[CC2650DK_7ID_UARTCOUNT] = {
+const UART_Config UART_config[CC1350DK_7XD_UARTCOUNT] = {
     {
         .fxnTablePtr = &UARTCC26XX_fxnTable,
-        .object      = &uartCC26XXObjects[CC2650DK_7ID_UART0],
-        .hwAttrs     = &uartCC26XXHWAttrs[CC2650DK_7ID_UART0]
+        .object      = &uartCC26XXObjects[CC1350DK_7XD_UART0],
+        .hwAttrs     = &uartCC26XXHWAttrs[CC1350DK_7XD_UART0]
     },
 };
 
-const uint_least8_t UART_count = CC2650DK_7ID_UARTCOUNT;
+const uint_least8_t UART_count = CC1350DK_7XD_UARTCOUNT;
 
 /*
  *  =============================== UDMA ===============================
  */
 #include <ti/drivers/dma/UDMACC26XX.h>
 
-UDMACC26XX_Object udmaObjects[CC2650DK_7ID_UDMACOUNT];
+UDMACC26XX_Object udmaObjects[CC1350DK_7XD_UDMACOUNT];
 
-const UDMACC26XX_HWAttrs udmaHWAttrs[CC2650DK_7ID_UDMACOUNT] = {
+const UDMACC26XX_HWAttrs udmaHWAttrs[CC1350DK_7XD_UDMACOUNT] = {
     {
         .baseAddr    = UDMA0_BASE,
         .powerMngrId = PowerCC26XX_PERIPH_UDMA,
@@ -692,10 +692,10 @@ const UDMACC26XX_HWAttrs udmaHWAttrs[CC2650DK_7ID_UDMACOUNT] = {
     }
 };
 
-const UDMACC26XX_Config UDMACC26XX_config[CC2650DK_7ID_UDMACOUNT] = {
+const UDMACC26XX_Config UDMACC26XX_config[CC1350DK_7XD_UDMACOUNT] = {
     {
-         .object  = &udmaObjects[CC2650DK_7ID_UDMA0],
-         .hwAttrs = &udmaHWAttrs[CC2650DK_7ID_UDMA0]
+         .object  = &udmaObjects[CC1350DK_7XD_UDMA0],
+         .hwAttrs = &udmaHWAttrs[CC1350DK_7XD_UDMA0]
     },
 };
 
@@ -707,35 +707,35 @@ const UDMACC26XX_Config UDMACC26XX_config[CC2650DK_7ID_UDMACOUNT] = {
 #include <ti/drivers/Watchdog.h>
 #include <ti/drivers/watchdog/WatchdogCC26XX.h>
 
-WatchdogCC26XX_Object watchdogCC26XXObjects[CC2650DK_7ID_WATCHDOGCOUNT];
+WatchdogCC26XX_Object watchdogCC26XXObjects[CC1350DK_7XD_WATCHDOGCOUNT];
 
-const WatchdogCC26XX_HWAttrs watchdogCC26XXHWAttrs[CC2650DK_7ID_WATCHDOGCOUNT] = {
+const WatchdogCC26XX_HWAttrs watchdogCC26XXHWAttrs[CC1350DK_7XD_WATCHDOGCOUNT] = {
     {
         .baseAddr    = WDT_BASE,
         .reloadValue = 1000 /* Reload value in milliseconds */
     },
 };
 
-const Watchdog_Config Watchdog_config[CC2650DK_7ID_WATCHDOGCOUNT] = {
+const Watchdog_Config Watchdog_config[CC1350DK_7XD_WATCHDOGCOUNT] = {
     {
         .fxnTablePtr = &WatchdogCC26XX_fxnTable,
-        .object      = &watchdogCC26XXObjects[CC2650DK_7ID_WATCHDOG0],
-        .hwAttrs     = &watchdogCC26XXHWAttrs[CC2650DK_7ID_WATCHDOG0]
+        .object      = &watchdogCC26XXObjects[CC1350DK_7XD_WATCHDOG0],
+        .hwAttrs     = &watchdogCC26XXHWAttrs[CC1350DK_7XD_WATCHDOG0]
     },
 };
 
-const uint_least8_t Watchdog_count = CC2650DK_7ID_WATCHDOGCOUNT;
+const uint_least8_t Watchdog_count = CC1350DK_7XD_WATCHDOGCOUNT;
 
 /*
  *  Board-specific initialization function to disable external flash.
- *  This function is defined in the file CC2650DK_7ID_fxns.c
+ *  This function is defined in the file CC1350DK_7XD_fxns.c
  */
 extern void Board_initHook(void);
 
 /*
- *  ======== CC2650DK_7ID_initGeneral ========
+ *  ======== CC1350DK_7XD_initGeneral ========
  */
-void CC2650DK_7ID_initGeneral(void)
+void CC1350DK_7XD_initGeneral(void)
 {
     Power_init();
 

@@ -117,7 +117,7 @@
 /* CC26xx only supports IEEE mode */
 #elif defined(DEVICE_LINE_CC26XX)
 
-# if (SUPPORTS_IEEE_MODE)
+# if (RF_CORE_MODE == RF_CORE_MODE_2_4_GHZ) && (SUPPORTS_IEEE_MODE)
 /*----- CC26xx IEEE Mode ----------------------------------------------------*/
 #   define NETSTACK_CONF_RADIO          ieee_mode_driver
 

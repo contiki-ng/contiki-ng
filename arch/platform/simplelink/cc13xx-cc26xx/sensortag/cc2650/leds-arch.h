@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,29 +28,40 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup sensortag-cc26xx-peripherals
+/** \addtogroup cc26xx-srf-tag
+ * @{
+ *
+ * \defgroup launchpad-peripherals LaunchPad peripherals
+ *
+ * Defines related to LaunchPad peripherals.
+ *
  * @{
  *
  * \file
- *  Sensortag-specific board initialisation driver
+ * Header file with definitions related to LaunchPad peripherals
+ *
+ * \note   Do not include this file directly.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
+#ifndef LEDS_ARCH_H_
+#define LEDS_ARCH_H_
 /*---------------------------------------------------------------------------*/
-#include "Board.h"
-#include "ti/drivers/GPIO.h"
-#include "ti/drivers/I2C.h"
-#include "ti/drivers/PIN.h"
-#include "ti/drivers/SPI.h"
+/**
+ * \name LED configurations
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define LEDS_CONF_COUNT             2
+
+#define LEDS_CONF_RED               0
+#define LEDS_CONF_GREEN             1
+
+#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
 /*---------------------------------------------------------------------------*/
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
+#endif /* LEDS_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
-void
-board_init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-/** @} */
+/**
+ * @}
+ * @}
+ */

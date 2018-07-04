@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,24 +28,48 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup simplelink-peripherals
+/** \addtogroup cc26xx-srf-tag
+ * @{
+ *
+ * \defgroup launchpad-peripherals LaunchPad peripherals
+ *
+ * Defines related to LaunchPad peripherals.
+ *
  * @{
  *
  * \file
- * Generic module controlling Simplelink sensors
+ * Header file with definitions related to LaunchPad peripherals
+ *
+ * \note   Do not include this file directly.
  */
 /*---------------------------------------------------------------------------*/
-#include <contiki.h>
-#include <lib/sensors.h>
+#ifndef BOARD_CONF_H_
+#define BOARD_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include "button-sensor.h"
+/**
+ * \name LED configurations
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define LEDS_CONF_COUNT             4
+
+#define LEDS_CONF_RED               0
+#define LEDS_CONF_YELLOW            1
+#define LEDS_CONF_GREEN             2
+#define LEDS_CONF_ORANGE            3
+
+#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
 /*---------------------------------------------------------------------------*/
-/* Exports a global symbol to be used by the sensor API */
-SENSORS(
-  &button_left_sensor,
-  &button_right_sensor,
-  NULL
-);
+#define BUTTON_HAL_ID_KEY_LEFT      0
+#define BUTTON_HAL_ID_KEY_RIGHT     1
+#define BUTTON_HAL_ID_KEY_UP        2
+#define BUTTON_HAL_ID_KEY_DOWN      3
+#define BUTTON_HAL_ID_KEY_SELECT    4
 /*---------------------------------------------------------------------------*/
-/** @} */
+#endif /* BOARD_CONF_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

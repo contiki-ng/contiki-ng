@@ -6,7 +6,7 @@ BOARD_TYPE = BOARD_LAUNCHPAD
 PLATFORM_HAS_BUTTON = 1
 
 # leds-arch.c/h etc.
-BOARD_SOURCEFILES += launchpad.c launchpad-sensors.c
-BOARD_SOURCEFILES += button-sensor-arch.c leds-arch.c ext-flash.c
+BOARD_SOURCEFILES += button-sensor-arch.c leds-arch.c
+BOARD_SOURCEFILES += ext-flash.c
 
 TARGET_FAMILY_DIRS += launchpad

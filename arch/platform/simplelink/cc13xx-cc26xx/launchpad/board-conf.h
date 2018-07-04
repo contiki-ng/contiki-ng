@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,29 +28,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup simplelink-platform
+/** \addtogroup cc26xx-srf-tag
  * @{
  *
- * \defgroup simplelink-button-sensor Simplelink Button Driver
+ * \defgroup launchpad-peripherals LaunchPad peripherals
  *
- * One of the buttons can be configured as general purpose or as an on/off key
+ * Defines related to LaunchPad peripherals.
+ *
  * @{
  *
  * \file
- * Header file for the Simplelink Button Driver
+ * Header file with definitions related to LaunchPad peripherals
+ *
+ * \note   Do not include this file directly.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BUTTON_SENSOR_ARCH_H_
-#define BUTTON_SENSOR_ARCH_H_
+#ifndef BOARD_CONF_H_
+#define BOARD_CONF_H_
 /*---------------------------------------------------------------------------*/
-/* Contiki API */
-#include "lib/sensors.h"
+/**
+ * \name LED configurations
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define LEDS_CONF_COUNT             2
+
+#define LEDS_CONF_RED               0
+#define LEDS_CONF_GREEN             1
+
+#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor btn1_sensor;
-extern const struct sensors_sensor btn2_sensor;
+#define BUTTON_HAL_ID_KEY_LEFT      0
+#define BUTTON_HAL_ID_KEY_RIGHT     1
 /*---------------------------------------------------------------------------*/
-#endif /* BUTTON_SENSOR_ARCH_H_ */
+#endif /* BOARD_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

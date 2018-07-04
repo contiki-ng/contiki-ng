@@ -148,7 +148,7 @@
 #ifdef PROP_MODE_CONF_TX_POWER_TABLE
 # define TX_POWER_TABLE  PROP_MODE_CONF_TX_POWER_TABLE
 #else
-# define TX_POWER_TABLE  propTxPowerTable
+# define TX_POWER_TABLE  rf_prop_tx_power_table
 #endif
 /*---------------------------------------------------------------------------*/
 /* TX power table convenience macros */

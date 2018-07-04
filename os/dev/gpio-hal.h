@@ -74,7 +74,7 @@
 /**
  * \brief GPIO pin number representation
  */
-typedef uint8_t gpio_hal_pin_t;
+typedef uint_fast8_t gpio_hal_pin_t;
 
 /**
  * \brief GPIO pin configuration
@@ -82,7 +82,7 @@ typedef uint8_t gpio_hal_pin_t;
  * A logical representation of a pin's configuration. It is an OR combination
  * of GPIO_HAL_PIN_CFG_xyz macros.
  */
-typedef uint32_t gpio_hal_pin_cfg_t;
+typedef uint_least32_t gpio_hal_pin_cfg_t;
 
 #ifdef GPIO_HAL_CONF_PIN_COUNT
 #define GPIO_HAL_PIN_COUNT GPIO_HAL_CONF_PIN_COUNT
@@ -90,34 +90,73 @@ typedef uint32_t gpio_hal_pin_cfg_t;
 #define GPIO_HAL_PIN_COUNT 32
 #endif
 
-#if GPIO_HAL_PIN_COUNT > 32
-typedef uint64_t gpio_hal_pin_mask_t;
-#else
 /**
  * \brief GPIO pin mask representation
  */
-typedef uint32_t gpio_hal_pin_mask_t;
+#if GPIO_HAL_PIN_COUNT > 32
+typedef uint_least64_t gpio_hal_pin_mask_t;
+#else
+typedef uint_least32_t gpio_hal_pin_mask_t;
 #endif
 
 typedef void (*gpio_hal_callback_t)(gpio_hal_pin_mask_t pin_mask);
 /*---------------------------------------------------------------------------*/
-#define GPIO_HAL_PIN_CFG_PULL_NONE        (0)
-#define GPIO_HAL_PIN_CFG_PULL_UP          (1 << 0)
-#define GPIO_HAL_PIN_CFG_PULL_DOWN        (1 << 1)
+/*
+ * Configuration bits
+ *  bit 8 ->  bit 0 ->
+ *  xxxxxxff  eedccbba
+ *
+ * Input config:
+ *   a - 1 bit  - hystersis
+ *   b - 2 bits - pulling
+ *
+ * Output config:
+ *   c - 2 bits - output buffer
+ *   d - 1 bit  - slew control
+ *   e - 2 bits - drive strength
+ *
+ * Interrupt config:
+ *   f - 2 bits - interrupt mode
+ *
+ * Unused config:
+ *   x: unused
+ */
 
-#define GPIO_HAL_PIN_CFG_PULL_MASK        ( GPIO_HAL_PIN_CFG_PULL_UP \
-                                          | GPIO_HAL_PIN_CFG_PULL_DOWN \
-                                          )
+#define GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS       (1 << 0)
+#define GPIO_HAL_PIN_CFG_INPUT_NOPULL           (0 << 1)
+#define GPIO_HAL_PIN_CFG_INPUT_PULLUP           (1 << 1)
+#define GPIO_HAL_PIN_CFG_INPUT_PULLDOWN         (2 << 1)
 
-#define GPIO_HAL_PIN_CFG_INT_DISABLE      (0)
-#define GPIO_HAL_PIN_CFG_INT_FALLING      (1 << 2)
-#define GPIO_HAL_PIN_CFG_INT_RISING       (1 << 3)
-#define GPIO_HAL_PIN_CFG_INT_BOTH         (1 << 4)
+#define GPIO_HAL_PIN_BM_INPUT_HYSTERESIS        (0b00000001 << 0)
+#define GPIO_HAL_PIN_BM_INPUT_PULLING           (0b00000110 << 0)
+#define GPIO_HAL_PIN_BM_INPUT                   ( GPIO_HAL_PIN_BM_INPUT_HYSTERESIS \
+                                                | GPIO_HAL_PIN_BM_INPUT_PULLING)
 
-#define GPIO_HAL_PIN_CFG_INT_MASK         ( GPIO_HAL_PIN_CFG_INT_RISING \
-                                          | GPIO_HAL_PIN_CFG_INT_FALLING \
-                                          | GPIO_HAL_PIN_CFG_INT_BOTH \
-                                          )
+#define GPIO_HAL_PIN_CFG_OUTPUT_PUSHPULL        (0 << 3)
+#define GPIO_HAL_PIN_CFG_OUTPUT_OPENDRAIN       (1 << 3)
+#define GPIO_HAL_PIN_CFG_OUTPUT_OPENSOURCE      (2 << 3)
+#define GPIO_HAL_PIN_CFG_OUTPUT_SLEWCTRL        (1 << 5)
+#define GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MIN      (0 << 6)
+#define GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED      (1 << 6)
+#define GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MAX      (2 << 6)
+
+#define GPIO_HAL_PIN_BM_OUTPUT_BUF              (0b00011000 << 0)
+#define GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL         (0b00100000 << 0)
+#define GPIO_HAL_PIN_BM_OUTPUT_DRVSTR           (0b11000000 << 0)
+#define GPIO_HAL_PIN_BM_OUTPUT                  ( GPIO_HAL_PIN_BM_OUTPUT_BUF \
+                                                | GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL \
+                                                | GPIO_HAL_PIN_BM_OUTPUT_DRVSTR)
+
+#define GPIO_HAL_PIN_CFG_INT_DISABLE            (0 << 8)
+#define GPIO_HAL_PIN_CFG_INT_FALLING            (1 << 8)
+#define GPIO_HAL_PIN_CFG_INT_RISING             (2 << 8)
+#define GPIO_HAL_PIN_CFG_INT_BOTH               (3 << 8)
+
+#define GPIO_HAL_PIN_BM_INT                     (0b00000011 << 8)
+
+#define GPIO_HAL_PIN_BM_ALL                     ( GPIO_HAL_PIN_BM_INPUT \
+                                                | GPIO_HAL_PIN_BM_OUTPUT \
+                                                | GPIO_HAL_PIN_BM_INT)
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Datatype for GPIO event handlers

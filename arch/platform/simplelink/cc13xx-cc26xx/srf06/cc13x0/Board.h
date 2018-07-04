@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, Texas Instruments Incorporated
+ * Copyright (c) 2015-2018, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,53 +33,131 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
+#define Board_CC1350DK_7XD
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <ti/drivers/Power.h>
+#include "CC1350DK_7XD.h"
 
-#include "CC1310DK_7XD.h"
+#define Board_initGeneral()      CC1350DK_7XD_initGeneral()
+#define Board_shutDownExtFlash() CC1350DK_7XD_shutDownExtFlash()
+#define Board_wakeUpExtFlash()   CC1350DK_7XD_wakeUpExtFlash()
 
 /* These #defines allow us to reuse TI-RTOS across other device families */
-#define     Board_LED1              Board_DK_LED1
-#define     Board_LED2              Board_DK_LED2
-#define     Board_LED3              Board_DK_LED3
-#define     Board_LED4              Board_DK_LED4
 
-#define     Board_LED0              Board_DK_LED4
+#define Board_ADCALS            CC1350DK_7XD_ADCALS
 
-#define     Board_ADC0              CC1310DK_7XD_ADCVDDS
-#define     Board_ADC1              CC1310DK_7XD_ADCALS
+#define Board_ADC0              CC1350DK_7XD_ADCVDDS
+#define Board_ADC1              CC1350DK_7XD_ADCALS
 
-#define     Board_ADCBuf0           CC1310DK_7XD_ADCBuf0
-#define     Board_ADCBufChannel0    (0)
-#define     Board_ADCBufChannel1    (1)
+#define Board_ADCBUF0           CC1350DK_7XD_ADCBUF0
+#define Board_ADCBUF0CHANNEL0   CC1350DK_7XD_ADCBUF0CHANNELVDDS
+#define Board_ADCBUF0CHANNEL1   CC1350DK_7XD_ADCBUF0CHANNELADCALS
 
-#define     Board_BUTTON0           Board_KEY_UP
-#define     Board_BUTTON1           Board_KEY_DOWN
+#define Board_CRYPTO0           CC1350DK_7XD_CRYPTO0
 
-#define     Board_I2C0              Board_I2C
-#define     Board_UART0             Board_UART
-#define     Board_AES0              Board_AES
-#define     Board_WATCHDOG0         CC1310DK_7XD_WATCHDOG0
+#define Board_DIO0              CC1350DK_7XD_DIO0
+#define Board_DIO1_RFSW         CC1350DK_7XD_DIO1_RFSW
+#define Board_DIO12             CC1350DK_7XD_DIO12
+#define Board_DIO15             CC1350DK_7XD_DIO15
+#define Board_DIO16_TDO         CC1350DK_7XD_DIO16_TDO
+#define Board_DIO17_TDI         CC1350DK_7XD_DIO17_TDI
+#define Board_DIO21             CC1350DK_7XD_DIO21
+#define Board_DIO22             CC1350DK_7XD_DIO22
 
-#define     Board_initGeneral() { \
-    Power_init(); \
-    if (PIN_init(BoardGpioInitTable) != PIN_SUCCESS) \
-        {System_abort("Error with PIN_init\n"); \
-    } \
-}
+#define Board_DIO23_ANALOG      CC1350DK_7XD_DIO23_ANALOG
+#define Board_DIO24_ANALOG      CC1350DK_7XD_DIO24_ANALOG
+#define Board_DIO25_ANALOG      CC1350DK_7XD_DIO25_ANALOG
+#define Board_DIO26_ANALOG      CC1350DK_7XD_DIO26_ANALOG
+#define Board_DIO27_ANALOG      CC1350DK_7XD_DIO27_ANALOG
+#define Board_DIO28_ANALOG      CC1350DK_7XD_DIO28_ANALOG
+#define Board_DIO29_ANALOG      CC1350DK_7XD_DIO29_ANALOG
+#define Board_DIO30_ANALOG      CC1350DK_7XD_DIO30_ANALOG
 
-#define     Board_initGPIO()
-#define     Board_initPWM()        PWM_init()
-#define     Board_initSPI()         SPI_init()
-#define     Board_initUART()        UART_init()
-#define     Board_initWatchdog()    Watchdog_init()
-#define     Board_initADCBuf()      ADCBuf_init()
-#define     Board_initADC()         ADC_init()
-#define     GPIO_toggle(n)
-#define     GPIO_write(n,m)
+#define Board_GPIO_BTN0         CC1350DK_7XD_PIN_KEY_SELECT
+#define Board_GPIO_BTN1         CC1350DK_7XD_PIN_KEY_UP
+#define Board_GPIO_BTN2         CC1350DK_7XD_PIN_KEY_DOWN
+#define Board_GPIO_BTN3         CC1350DK_7XD_PIN_KEY_LEFT
+#define Board_GPIO_BTN4         CC1350DK_7XD_PIN_KEY_RIGHT
+#define Board_GPIO_LED0         CC1350DK_7XD_PIN_LED1
+#define Board_GPIO_LED1         CC1350DK_7XD_PIN_LED2
+#define Board_GPIO_LED2         CC1350DK_7XD_PIN_LED3
+#define Board_GPIO_LED3         CC1350DK_7XD_PIN_LED4
+#define Board_GPIO_LED_ON       CC1350DK_7XD_GPIO_LED_ON
+#define Board_GPIO_LED_OFF      CC1350DK_7XD_GPIO_LED_OFF
+
+#define Board_GPTIMER0A         CC1350DK_7XD_GPTIMER0A
+#define Board_GPTIMER0B         CC1350DK_7XD_GPTIMER0B
+#define Board_GPTIMER1A         CC1350DK_7XD_GPTIMER1A
+#define Board_GPTIMER1B         CC1350DK_7XD_GPTIMER1B
+#define Board_GPTIMER2A         CC1350DK_7XD_GPTIMER2A
+#define Board_GPTIMER2B         CC1350DK_7XD_GPTIMER2B
+#define Board_GPTIMER3A         CC1350DK_7XD_GPTIMER3A
+#define Board_GPTIMER3B         CC1350DK_7XD_GPTIMER3B
+
+#define Board_I2C0              CC1350DK_7XD_I2C0
+
+#define Board_NVSINTERNAL       CC1350DK_7XD_NVSCC26XX0
+
+#define Board_KEY_SELECT        CC1350DK_7XD_PIN_KEY_SELECT
+#define Board_KEY_UP            CC1350DK_7XD_PIN_KEY_UP
+#define Board_KEY_DOWN          CC1350DK_7XD_PIN_KEY_DOWN
+#define Board_KEY_LEFT          CC1350DK_7XD_PIN_KEY_LEFT
+#define Board_KEY_RIGHT         CC1350DK_7XD_PIN_KEY_RIGHT
+
+#define Board_PIN_BUTTON0       CC1350DK_7XD_PIN_KEY_SELECT
+#define Board_PIN_BUTTON1       CC1350DK_7XD_PIN_KEY_UP
+#define Board_PIN_BUTTON2       CC1350DK_7XD_PIN_KEY_DOWN
+#define Board_PIN_BUTTON3       CC1350DK_7XD_PIN_KEY_LEFT
+#define Board_PIN_BUTTON4       CC1350DK_7XD_PIN_KEY_RIGHT
+#define Board_PIN_BTN1          CC1350DK_7XD_PIN_KEY_SELECT
+#define Board_PIN_BTN2          CC1350DK_7XD_PIN_KEY_UP
+#define Board_PIN_BTN3          CC1350DK_7XD_PIN_KEY_DOWN
+#define Board_PIN_BTN4          CC1350DK_7XD_PIN_KEY_LEFT
+#define Board_PIN_BTN5          CC1350DK_7XD_PIN_KEY_RIGHT
+#define Board_PIN_LED0          CC1350DK_7XD_PIN_LED1
+#define Board_PIN_LED1          CC1350DK_7XD_PIN_LED2
+#define Board_PIN_LED2          CC1350DK_7XD_PIN_LED3
+#define Board_PIN_LED3          CC1350DK_7XD_PIN_LED4
+
+#define Board_PWM0              CC1350DK_7XD_PWM0
+#define Board_PWM1              CC1350DK_7XD_PWM1
+#define Board_PWM2              CC1350DK_7XD_PWM2
+#define Board_PWM3              CC1350DK_7XD_PWM3
+#define Board_PWM4              CC1350DK_7XD_PWM4
+#define Board_PWM5              CC1350DK_7XD_PWM5
+#define Board_PWM6              CC1350DK_7XD_PWM6
+#define Board_PWM7              CC1350DK_7XD_PWM7
+
+#define Board_SD0               CC1350DK_7XD_SDSPI0
+
+#define Board_SPI0              CC1350DK_7XD_SPI0
+#define Board_SPI1              CC1350DK_7XD_SPI1
+#define Board_FLASH_CS_ON       0
+#define Board_FLASH_CS_OFF      1
+
+#define Board_SPI_MASTER        CC1350DK_7XD_SPI0
+#define Board_SPI_SLAVE         CC1350DK_7XD_SPI0
+#define Board_SPI_MASTER_READY  CC1350DK_7XD_SPI_MASTER_READY
+#define Board_SPI_SLAVE_READY   CC1350DK_7XD_SPI_SLAVE_READY
+
+#define Board_UART0             CC1350DK_7XD_UART0
+
+#define Board_WATCHDOG0         CC1350DK_7XD_WATCHDOG0
+
+#define Board_SDCARD_CS         CC1350DK_7XD_SDCARD_CS
+
+#define Board_LCD_MODE          CC1350DK_7XD_LCD_MODE
+#define Board_LCD_RST           CC1350DK_7XD_LCD_RST
+#define Board_LCD_CS            CC1350DK_7XD_LCD_CS
+
+#define Board_ALS_OUT           CC1350DK_7XD_ALS_OUT
+#define Board_ALS_PWR           CC1350DK_7XD_ALS_PWR
+
+#define Board_ACC_PWR           CC1350DK_7XD_ACC_PWR
+#define Board_ACC_CS            CC1350DK_7XD_ACC_CS
 
 #ifdef __cplusplus
 }

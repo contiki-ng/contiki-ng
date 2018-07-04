@@ -71,6 +71,7 @@
 #include "sys/rtimer.h"
 #include "sys/node-id.h"
 #include "sys/platform.h"
+#include "dev/button-hal.h"
 #include "dev/gpio-hal.h"
 #include "dev/serial-line.h"
 #include "dev/leds.h"
@@ -78,6 +79,7 @@
 #include "lib/sensors.h"
 /*---------------------------------------------------------------------------*/
 /* Arch driver implementations */
+#include "board-peripherals.h"
 #include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
 #include "ieee-addr.h"
@@ -100,6 +102,12 @@ unsigned short g_nodeId = 0;
  *  This function is defined in the file <BOARD>_fxns.c
  */
 extern void Board_initHook(void);
+/*---------------------------------------------------------------------------*/
+#ifdef BOARD_CONF_HAS_SENSORS
+#define BOARD_HAS_SENSORS   BOARD_CONF_HAS_SENSORS
+#else
+#define BOARD_HAS_SENSORS   1
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 fade(unsigned char l)
@@ -186,6 +194,8 @@ platform_init_stage_two(void)
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
+  button_hal_init();
+
   fade(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
@@ -211,7 +221,9 @@ platform_init_stage_three(void)
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);
   LOG_INFO("Node ID: %d\n", g_nodeId);
 
+#if BOARD_HAS_SENSORS
   process_start(&sensors_process, NULL);
+#endif
 
   fade(LEDS_GREEN);
 }

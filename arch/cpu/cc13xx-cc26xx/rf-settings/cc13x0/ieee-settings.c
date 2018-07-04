@@ -108,24 +108,6 @@ uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
     (uint32_t)0xFFFFFFFF,
 };
 /*---------------------------------------------------------------------------*/
-// Old override list
-uint32_t rf_ieee_overrides_old[] CC_ALIGN(4) =
-{
-  (uint32_t)0x00354038, /* Synth: Set RTRIM (POTAILRESTRIM) to 5 */
-  (uint32_t)0x4001402D, /* Synth: Correct CKVD latency setting (address) */
-  (uint32_t)0x00608402, /* Synth: Correct CKVD latency setting (value) */
-//  (uint32_t)0x4001405D, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (address) */
-//  (uint32_t)0x1801F800, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (value) */
-  (uint32_t)0x000784A3, /* Synth: Set FREF = 3.43 MHz (24 MHz / 7) */
-  (uint32_t)0xA47E0583, /* Synth: Set loop bandwidth after lock to 80 kHz (K2) */
-  (uint32_t)0xEAE00603, /* Synth: Set loop bandwidth after lock to 80 kHz (K3, LSB) */
-  (uint32_t)0x00010623, /* Synth: Set loop bandwidth after lock to 80 kHz (K3, MSB) */
-  (uint32_t)0x002B50DC, /* Adjust AGC DC filter */
-  (uint32_t)0x05000243, /* Increase synth programming timeout */
-  (uint32_t)0x002082C3, /* Increase synth programming timeout */
-  (uint32_t)0xFFFFFFFF,
-};
-/*---------------------------------------------------------------------------*/
 // CMD_RADIO_SETUP
 // Radio Setup Command for Pre-Defined Schemes
 rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
@@ -197,7 +179,7 @@ rfc_CMD_IEEE_TX_t rf_cmd_ieee_tx =
 /*---------------------------------------------------------------------------*/
 // CMD_IEEE_RX
 // The command ID number 0x2801
-rfc_CMD_IEEE_RX_t rf_cmd_ieee_xx =
+rfc_CMD_IEEE_RX_t rf_cmd_ieee_rx =
 {
     .commandNo = CMD_IEEE_RX,
     .status = IDLE,

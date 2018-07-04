@@ -43,7 +43,8 @@ extern RF_Mode rf_prop_mode;
 /*---------------------------------------------------------------------------*/
 // TX Power Table
 #define RF_PROP_TX_POWER_TABLE_SIZE   15
-extern RF_TxPowerTable_Entry rf_prop_tx_power_table[PROP_TX_POWER_TABLE_SIZE+1];
+
+extern RF_TxPowerTable_Entry rf_prop_tx_power_table[RF_PROP_TX_POWER_TABLE_SIZE+1];
 /*---------------------------------------------------------------------------*/
 // RF Core API commands
 extern rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup;

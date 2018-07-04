@@ -36,20 +36,13 @@
  * Generic module controlling Simplelink sensors
  */
 /*---------------------------------------------------------------------------*/
-#include <contiki.h>
-#include <lib/sensors.h>
-/*---------------------------------------------------------------------------*/
-#include "common/button-sensor.h"
+#include "contiki.h"
+#include "lib/sensors.h"
+
+#include "board-peripherals.h"
 /*---------------------------------------------------------------------------*/
 /* Exports a global symbol to be used by the sensor API */
-SENSORS(
-#ifdef BUTTON_SENSOR_ARCH_BTN1
-  &button_sensor,
-#endif
-#ifdef BUTTON_SENSOR_ARCH_BTN2
-  &button_sensor2,
-#endif
-  NULL
-);
+SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor,
+        &mpu_9250_sensor);
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -45,20 +45,6 @@ extern "C" {
 #define Board_shutDownExtFlash() CC1352R1_LAUNCHXL_shutDownExtFlash()
 #define Board_wakeUpExtFlash()   CC1352R1_LAUNCHXL_wakeUpExtFlash()
 
-/*---------------------------------------------------------------------------*/
-/**
- * \name LED configurations
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define LEDS_CONF_COUNT     2
-
-#define LEDS_CONF_RED       0
-#define LEDS_CONF_GREEN     1
-
-#define LEDS_CONF_ALL       ((1 << LEDS_CONF_COUNT) - 1)
-/*---------------------------------------------------------------------------*/
 /* These #defines allow us to reuse TI-RTOS across other device families */
 
 #define Board_ADC0              CC1352R1_LAUNCHXL_ADC0
