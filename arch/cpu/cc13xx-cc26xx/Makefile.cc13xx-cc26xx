@@ -71,11 +71,12 @@ CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
 CONTIKI_CPU_SOURCEFILES += watchdog-arch.c dbg-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c slip-arch.c
 CONTIKI_CPU_SOURCEFILES += batmon-sensor.c gpio-hal-arch.c
-CONTIKI_CPU_SOURCEFILES += rf-common.c int-master-arch.c
-CONTIKI_CPU_SOURCEFILES += ieee-addr.c
+CONTIKI_CPU_SOURCEFILES += int-master-arch.c
 
-### CPU-dependent debug source files
-MODULES += os/lib/dbg-io
+### RF source files
+CONTIKI_CPU_SOURCEFILES += rf-core.c
+CONTIKI_CPU_SOURCEFILES += ieee-addr.c ble-addr.c
+CONTIKI_CPU_SOURCEFILES += rf-ble-beacon.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
 CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c prop-settings.c
@@ -84,6 +85,13 @@ endif
 ifeq ($(SUPPORTS_IEEE_MODE),1)
 CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c ieee-settings.c
 endif
+
+ifeq ($(SUPPORTS_BLE_BEACON),1)
+CONTIKI_CPU_SOURCEFILES += rf-ble-beacond.c ble-settings.c
+endif
+
+### CPU-dependent debug source files
+MODULES += os/lib/dbg-io
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev $(SUBFAMILY) rf-settings/$(DEVICE_FAMILY_LC)
