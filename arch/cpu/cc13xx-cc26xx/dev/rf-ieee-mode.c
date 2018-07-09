@@ -64,17 +64,9 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* SimpleLink Platform RF dev */
-#include "rf-common.h"
 #include "dot-15-4g.h"
-/*---------------------------------------------------------------------------*/
-/* RF settings */
-#ifdef IEEE_MODE_CONF_RF_SETTINGS
-#   define IEEE_MODE_RF_SETTINGS  IEEE_MODE_CONF_RF_SETTINGS
-#else
-#   define IEEE_MODE_RF_SETTINGS "ieee-settings.h"
-#endif
-
-#include IEEE_MODE_RF_SETTINGS
+#include "rf-core.h"
+#include "netstack-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stddef.h>
@@ -162,6 +154,9 @@
 
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
+
+/* How long to wait for RX to become active after scheduled */
+#define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 /*---------------------------------------------------------------------------*/
 #define RAT_RANGE             (~(uint32_t)0)
 #define RAT_ONE_QUARTER       (RAT_RANGE / (uint32_t)4)
@@ -169,6 +164,8 @@
 
 /* XXX: don't know what exactly is this, looks like the time to TX 3 octets */
 #define RAT_TIMESTAMP_OFFSET  -(USEC_TO_RAT(32 * 3) - 1) /* -95.75 usec */
+/*---------------------------------------------------------------------------*/
+#define CMD_RX_EVENTS         (RF_EventRxOk | RF_EventRxBufFull | RF_EventRxEntryDone)
 /*---------------------------------------------------------------------------*/
 #define STATUS_CORRELATION   0x3f  /* bits 0-5 */
 #define STATUS_REJECT_FRAME  0x40  /* bit 6 */
@@ -201,12 +198,6 @@ typedef enum {
   CCA_STATE_BUSY    = 1,
   CCA_STATE_INVALID = 2
 } cca_state_t;
-/*---------------------------------------------------------------------------*/
-typedef enum {
-    POWER_STATE_ON      = (1 << 0),
-    POWER_STATE_OFF     = (1 << 1),
-    POWER_STATE_RESTART = POWER_STATE_ON | POWER_STATE_OFF,
-} PowerState;
 /*---------------------------------------------------------------------------*/
 /* RF Core typedefs */
 typedef dataQueue_t             data_queue_t;
@@ -256,7 +247,6 @@ typedef struct {
   } rat;
 
   /* RF driver */
-  RF_Object           rf_object;
   RF_Handle           rf_handle;
 } ieee_radio_t;
 
@@ -271,11 +261,9 @@ static cmd_mod_filt_t cmd_mod_filt;
 #define cmd_tx           (*(volatile rfc_CMD_IEEE_TX_t*)    &rf_cmd_ieee_tx)
 #define cmd_rx           (*(volatile rfc_CMD_IEEE_RX_t*)    &rf_cmd_ieee_rx)
 /*---------------------------------------------------------------------------*/
-static CC_INLINE bool tx_active(void) { return cmd_tx.status == ACTIVE; }
-static CC_INLINE bool rx_active(void) { return cmd_rx.status == ACTIVE; }
+static inline bool rx_is_active(void) { return cmd_rx.status == ACTIVE; }
 /*---------------------------------------------------------------------------*/
-/* Forward declarations of static functions */
-static int set_rx(const PowerState);
+/* Forward declarations of local functions */
 static void check_rat_overflow(void);
 static uint32_t rat_to_timestamp(const uint32_t);
 /*---------------------------------------------------------------------------*/
@@ -321,7 +309,11 @@ rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
   (void)command;
 
   if (events & RF_EventRxOk) {
-    process_poll(&rf_process);
+    process_poll(&rf_core_process);
+  }
+
+  if (events & RF_EventRxBufFull) {
+
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -347,8 +339,6 @@ init_data_queue(void)
 static void
 init_rf_params(void)
 {
-    cmd_rx.channel = IEEE_MODE_CHANNEL;
-
     cmd_rx.pRxQ    = &ieee_radio.rx_data_queue;
     cmd_rx.pOutput = &ieee_radio.rx_stats;
 
@@ -373,9 +363,9 @@ init_rf_params(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-init_rx_buffers(void)
+init_rx_bufs(void)
 {
-  size_t i = 0;
+  size_t i;
   for (i = 0; i < RX_BUF_CNT; ++i) {
     const data_entry_t data_entry = {
       .status       = DATA_ENTRY_PENDING,
@@ -391,7 +381,16 @@ init_rx_buffers(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-static cmd_result_t
+static void
+reset_rx_bufs(void)
+{
+  size_t i;
+  for (i = 0; i < RX_BUF_CNT; ++i) {
+    ieee_radio.rx_bufs[i].data_entry.status = DATA_ENTRY_PENDING;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static rf_result_t
 set_channel(uint32_t channel)
 {
   if (!IEEE_MODE_CHAN_IN_RANGE(channel)) {
@@ -399,73 +398,31 @@ set_channel(uint32_t channel)
            (int)channel, IEEE_MODE_CHANNEL);
     channel = IEEE_MODE_CHANNEL;
   }
+
+  /*
+   * cmd_rx.channel is initialized to 0, causing any initial call to
+   * set_channel() to cause a synth calibration, since channel must be in
+   * range 11-26.
+   */
   if (channel == cmd_rx.channel) {
     /* We are already calibrated to this channel */
-      return true;
-  }
-
-  cmd_rx.channel = 0;
-
-  /* freq = freq_base + freq_spacing * (channel - channel_min) */
-  const uint32_t new_freq = IEEE_MODE_FREQ_BASE + IEEE_MODE_FREQ_SPACING * (channel - IEEE_MODE_CHAN_MIN);
-  const uint32_t freq = new_freq / 1000;
-  const uint32_t frac = ((new_freq - (freq * 1000)) * 65536) / 1000;
-
-  PRINTF("set_channel: %d = 0x%04X.0x%04X (%lu)\n",
-         (int)channel, (uint16_t)freq, (uint16_t)frac, new_freq);
-
-  cmd_fs.frequency = (uint16_t)freq;
-  cmd_fs.fractFreq = (uint16_t)frac;
-
-  const bool was_on = rx_active();
-
-  if (was_on) {
-    RF_flushCmd(ieee_radio.rf_handle, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
-  }
-
-  /* Start FS command asynchronously. We don't care when it is finished */
-  RF_EventMask events = 0;
-  uint8_t tries = 0;
-  bool cmd_ok = false;
-  do {
-    events = RF_runCmd(ieee_radio.rf_handle, (RF_Op*)&cmd_fs, RF_PriorityNormal, NULL, 0);
-    cmd_ok = ((events & RF_EventLastCmdDone) != 0)
-          && (cmd_fs.status == DONE_OK);
-  } while (!cmd_ok && (tries++ < 3));
-
-  if (!cmd_ok) {
-    return false;
+    return true;
   }
 
   cmd_rx.channel = channel;
 
-  if (was_on) {
-      set_rx(POWER_STATE_ON);
-  }
+  /* freq = freq_base + freq_spacing * (channel - channel_min) */
+  const uint32_t new_freq = IEEE_MODE_FREQ_BASE + IEEE_MODE_FREQ_SPACING * (channel - IEEE_MODE_CHAN_MIN);
+  const uint16_t freq = (uint16_t)(new_freq / 1000);
+  const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
-  return true;
-}
-/*---------------------------------------------------------------------------*/
-static radio_result_t
-set_tx_power(const radio_value_t dBm)
-{
-  if (!TX_POWER_IN_RANGE(dBm)) {
-    return RADIO_RESULT_INVALID_VALUE;
-  }
+  PRINTF("set_channel: %d = 0x%04X.0x%04X (%lu)\n",
+         (int)channel, freq, frac, new_freq);
 
-  const RF_TxPowerTable_Value tx_power_table_value = RF_TxPowerTable_findValue(TX_POWER_TABLE, (int8_t)dBm);
-  const RF_Stat stat = RF_setTxPower(ieee_radio.rf_handle, tx_power_table_value);
+  cmd_fs.frequency = freq;
+  cmd_fs.fractFreq = frac;
 
-  return (stat == RF_StatSuccess)
-    ? RADIO_RESULT_OK
-    : RADIO_RESULT_ERROR;
-}
-/*---------------------------------------------------------------------------*/
-static radio_value_t
-get_tx_power(void)
-{
-  const RF_TxPowerTable_Value value = RF_getTxPower(ieee_radio.rf_handle);
-  return (radio_value_t)RF_TxPowerTable_findPowerLevel(TX_POWER_TABLE, value);
+  return netstack_sched_fs();
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -477,7 +434,7 @@ set_send_on_cca(bool enable)
 static void
 check_rat_overflow(void)
 {
-  const bool was_off = !rx_active();
+  const bool was_off = !rx_is_active();
 
   if (was_off) {
     RF_runDirectCmd(ieee_radio.rf_handle, CMD_NOP);
@@ -535,7 +492,7 @@ init(void)
 {
   if (ieee_radio.rf_handle) {
     PRINTF("init: Radio already initialized\n");
-    return CMD_RESULT_OK;
+    return RF_RESULT_OK;
   }
 
   /* RX is off */
@@ -549,11 +506,11 @@ init(void)
   RF_Params_init(&rf_params);
   rf_params.nInactivityTimeout = 2000; /* 2 ms */
 
-  ieee_radio.rf_handle = RF_open(&ieee_radio.rf_object, &rf_ieee_mode,
-                                 (RF_RadioSetup*)&cmd_radio_setup, &rf_params);
+  ieee_radio.rf_handle = netstack_open(&rf_params);
+
   if (ieee_radio.rf_handle == NULL) {
-    PRINTF("init: unable to open RF driver\n");
-    return CMD_RESULT_ERROR;
+    PRINTF("init: unable to open IEEE RF driver\n");
+    return RF_RESULT_ERROR;
   }
 
   set_channel(IEEE_MODE_CHANNEL);
@@ -566,9 +523,9 @@ init(void)
   ctimer_set(&ieee_radio.rat.overflow_timer, two_quarters, rat_overflow_cb, NULL);
 
   /* Start RF process */
-  process_start(&rf_process, NULL);
+  process_start(&rf_core_process, NULL);
 
-  return CMD_RESULT_OK;
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -576,86 +533,30 @@ prepare(const void *payload, unsigned short payload_len)
 {
   const size_t len = MIN((size_t)payload_len,
                          (size_t)TX_BUF_PAYLOAD_LEN);
-  memcpy(&ieee_radio.tx_buf[TX_BUF_HDR_LEN], payload, len);
+
+  memcpy(ieee_radio.tx_buf + TX_BUF_HDR_LEN, payload, len);
   return 0;
-}
-/*---------------------------------------------------------------------------*/
-static int
-set_rx(const PowerState state)
-{
-  if (state & POWER_STATE_OFF) {
-    /* Stop RX gracefully, don't care about the result */
-    RF_cancelCmd(ieee_radio.rf_handle, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
-  }
-
-  if (state & POWER_STATE_ON) {
-    if (cmd_rx.status == ACTIVE) {
-      PRINTF("set_rx(on): already in RX\n");
-      return CMD_RESULT_OK;
-    }
-
-    RF_ScheduleCmdParams sched_params;
-    RF_ScheduleCmdParams_init(&sched_params);
-
-    cmd_rx.status = IDLE;
-    RF_CmdHandle rx_handle = RF_scheduleCmd(ieee_radio.rf_handle, (RF_Op*)&cmd_rx, &sched_params, rx_cb,
-                                            RF_EventRxOk | RF_EventRxBufFull | RF_EventRxEntryDone);
-    if ((rx_handle == RF_ALLOC_ERROR) || (rx_handle == RF_SCHEDULE_CMD_ERROR)) {
-      PRINTF("transmit: unable to schedule RX command cmd_handle=%d\n", rx_handle);
-      return CMD_RESULT_ERROR;
-    }
-  }
-
-  return CMD_RESULT_OK;
-}
-/*---------------------------------------------------------------------------*/
-static int
-transmit_aux(unsigned short transmit_len)
-{
-  /* Configure TX command */
-  cmd_tx.payloadLen = (uint8_t)transmit_len;
-  cmd_tx.pPayload = &ieee_radio.tx_buf[TX_BUF_HDR_LEN];
-
-  RF_ScheduleCmdParams sched_params;
-  RF_ScheduleCmdParams_init(&sched_params);
-
-  /* As IEEE_TX is a FG command, the TX operation will be executed
-   * either way if RX is running or not */
-  cmd_tx.status = IDLE;
-  RF_CmdHandle tx_handle = RF_scheduleCmd(ieee_radio.rf_handle, (RF_Op*)&cmd_tx, &sched_params,
-                                          NULL, 0);
-  if ((tx_handle == RF_ALLOC_ERROR) || (tx_handle == RF_SCHEDULE_CMD_ERROR)) {
-      /* Failure sending the CMD_IEEE_TX command */
-      PRINTF("transmit: unable to schedule TX command cmd_handle=%d, status=%04x\n",
-             tx_handle, cmd_tx.status);
-      return RADIO_TX_ERR;
-  }
-
-  ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
-
-  /* Wait until TX operation finishes */
-  RF_EventMask tx_events = RF_pendCmd(ieee_radio.rf_handle, tx_handle, 0);
-  if ((tx_events & (RF_EventFGCmdDone | RF_EventLastFGCmdDone)) == 0) {
-    PRINTF("transmit: TX command pend error events=0x%08llx, status=0x%04x\n",
-           tx_events, cmd_tx.status);
-    return RADIO_TX_ERR;
-  }
-
-  return RADIO_TX_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
 transmit(unsigned short transmit_len)
 {
+  rf_result_t res;
+
   if (ieee_radio.send_on_cca && channel_clear() != 1) {
     PRINTF("transmit: channel wasn't clear\n");
     return RADIO_TX_COLLISION;
   }
 
-  const int rv = transmit_aux(transmit_len);
-  ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
+  /* Configure TX command */
+  cmd_tx.payloadLen = (uint8_t)transmit_len;
+  cmd_tx.pPayload = &ieee_radio.tx_buf[TX_BUF_HDR_LEN];
 
-  return rv;
+  res = netstack_sched_tx(NULL, 0);
+
+  return (res == RF_RESULT_OK)
+    ? RADIO_TX_OK
+    : RADIO_TX_ERR;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -692,7 +593,8 @@ read(void *buf, unsigned short buf_len)
     return 0;
   }
 
-  /* First byte in the data entry is the length.
+  /*
+   * First byte in the data entry is the length.
    * Data frame is on the following format:
    *    Length (1) + Payload (N) + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
    * Data frame DOES NOT contain the following:
@@ -705,9 +607,9 @@ read(void *buf, unsigned short buf_len)
    * +--------+---------+---------+--------+--------+-----------+
    * Length bytes equal total length of entire frame excluding itself,
    * i.e.: Length = N + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
-   *              = N + 8
-   *            N = Length - 8 */
-
+   *       Length = N + 8
+   *            N = Length - 8
+   */
   uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
   const lensz_t frame_len = *(lensz_t*)frame_ptr;
 
@@ -750,24 +652,36 @@ read(void *buf, unsigned short buf_len)
   return (int)payload_len;
 }
 /*---------------------------------------------------------------------------*/
-static cmd_result_t
+static rf_result_t
 cca_request(cmd_cca_req_t *cmd_cca_req)
 {
-  const bool rx_is_off = !rx_active();
+  rf_result_t res;
 
-  if (rx_is_off && set_rx(POWER_STATE_ON) != CMD_RESULT_OK) {
-    return CMD_RESULT_ERROR;
+  const bool rx_is_idle = !rx_is_active();
+
+  if (rx_is_idle) {
+    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    if (res != RF_RESULT_OK) {
+      return RF_RESULT_ERROR;
+    }
   }
 
-  const RF_Stat stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t*)&cmd_cca_req);
+  const rtimer_clock_t t0 = RTIMER_NOW();
+  while ((cmd_rx.status != ACTIVE) &&
+          RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT));
 
-  if (rx_is_off) {
-    set_rx(POWER_STATE_OFF);
+  RF_Stat stat = RF_StatRadioInactiveError;
+  if (rx_is_active()) {
+    stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t*)&cmd_cca_req);
+  }
+
+  if (rx_is_idle) {
+    netstack_stop_rx();
   }
 
   return (stat == RF_StatCmdDoneSuccess)
-    ? CMD_RESULT_OK
-    : CMD_RESULT_ERROR;
+    ? RF_RESULT_OK
+    : RF_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -777,7 +691,7 @@ channel_clear(void)
   memset(&cmd_cca_req, 0x0, sizeof(cmd_cca_req_t));
   cmd_cca_req.commandNo = CMD_IEEE_CCA_REQ;
 
-  if (cca_request(&cmd_cca_req) != CMD_RESULT_OK) {
+  if (cca_request(&cmd_cca_req) != RF_RESULT_OK) {
     return 0;
   }
 
@@ -792,7 +706,7 @@ receiving_packet(void)
   memset(&cmd_cca_req, 0x0, sizeof(cmd_cca_req_t));
   cmd_cca_req.commandNo = CMD_IEEE_CCA_REQ;
 
-  if (cca_request(&cmd_cca_req) != CMD_RESULT_OK) {
+  if (cca_request(&cmd_cca_req) != RF_RESULT_OK) {
     return 0;
   }
 
@@ -816,7 +730,7 @@ pending_packet(void)
 
   int num_pending = 0;
 
-  /* Go through RX Circular buffer and check their status */
+  /* Go through RX Circular buffer and check each data entry status */
   do {
     const uint8_t status = curr_entry->status;
     if ((status == DATA_ENTRY_FINISHED) ||
@@ -829,7 +743,7 @@ pending_packet(void)
   } while (curr_entry != read_entry);
 
   if ((num_pending > 0) && !ieee_radio.poll_mode) {
-    process_poll(&rf_process);
+    process_poll(&rf_core_process);
   }
 
   /* If we didn't find an entry at status finished or busy, no frames are pending */
@@ -839,28 +753,23 @@ pending_packet(void)
 static int
 on(void)
 {
+  rf_result_t res;
+
   if (ieee_radio.rf_is_on) {
     PRINTF("on: Radio already on\n");
-    return CMD_RESULT_OK;
+    return RF_RESULT_OK;
   }
 
-  /* Reset all RF command statuses */
-  cmd_fs.status = IDLE;
-  cmd_tx.status = IDLE;
-  cmd_rx.status = IDLE;
+  init_rx_bufs();
 
-  init_rx_buffers();
+  res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
 
-  const int rx_ok = set_rx(POWER_STATE_ON);
-  if (!rx_ok) {
-    off();
-    return CMD_RESULT_ERROR;
+  if (res != RF_RESULT_OK) {
+    return RF_RESULT_ERROR;
   }
-
-  ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
   ieee_radio.rf_is_on = true;
-  return rx_ok;
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -868,55 +777,51 @@ off(void)
 {
   if (!ieee_radio.rf_is_on) {
     PRINTF("off: Radio already off\n");
-    return CMD_RESULT_OK;
+    return RF_RESULT_OK;
   }
 
-  /* Force abort of any ongoing RF operation */
-  RF_flushCmd(ieee_radio.rf_handle, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
-  /* Trigger a manual power-down */
-  RF_yield(ieee_radio.rf_handle);
+  rf_yield();
 
-  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-
-  /* Reset RX buffers if there was an ongoing RX */
-  size_t i;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
-    data_entry_t *entry = &ieee_radio.rx_bufs[i].data_entry;
-    if (entry->status == DATA_ENTRY_BUSY) {
-      entry->status = DATA_ENTRY_PENDING;
-    }
-  }
+  reset_rx_bufs();
 
   ieee_radio.rf_is_on = false;
-  return CMD_RESULT_OK;
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
 get_value(radio_param_t param, radio_value_t *value)
 {
+  rf_result_t res;
+
   if (!value) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
   switch (param) {
+
+  /* Power Mode */
   case RADIO_PARAM_POWER_MODE:
     *value = (ieee_radio.rf_is_on)
       ? RADIO_POWER_MODE_ON
       : RADIO_POWER_MODE_OFF;
     return RADIO_RESULT_OK;
 
+  /* Channel */
   case RADIO_PARAM_CHANNEL:
     *value = (radio_value_t)cmd_rx.channel;
     return RADIO_RESULT_OK;
 
+  /* PAN ID */
   case RADIO_PARAM_PAN_ID:
     *value = (radio_value_t)cmd_rx.localPanID;
     return RADIO_RESULT_OK;
 
+  /* 16-bit address */
   case RADIO_PARAM_16BIT_ADDR:
     *value = (radio_value_t)cmd_rx.localShortAddr;
     return RADIO_RESULT_OK;
 
+  /* RX mode */
   case RADIO_PARAM_RX_MODE:
     *value = 0;
     if (cmd_rx.frameFiltOpt.frameFiltEn) {
@@ -930,30 +835,37 @@ get_value(radio_param_t param, radio_value_t *value)
     }
     return RADIO_RESULT_OK;
 
+  /* TX mode */
   case RADIO_PARAM_TX_MODE:
     *value = 0;
     return RADIO_RESULT_OK;
 
+  /* TX power */
   case RADIO_PARAM_TXPOWER:
-    *value = get_tx_power();
-    return (*value == RF_TxPowerTable_INVALID_DBM)
-      ? RADIO_RESULT_ERROR
-      : RADIO_RESULT_OK;
+    res = rf_get_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, (int8_t*)&value);
+    return ((res == RF_RESULT_OK) &&
+            (*value != RF_TxPowerTable_INVALID_DBM))
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
 
+  /* CCA threshold */
   case RADIO_PARAM_CCA_THRESHOLD:
     *value = cmd_rx.ccaRssiThr;
     return RADIO_RESULT_OK;
 
+  /* RSSI */
   case RADIO_PARAM_RSSI:
     *value = RF_getRssi(ieee_radio.rf_handle);
     return (*value == RF_GET_RSSI_ERROR_VAL)
       ? RADIO_RESULT_ERROR
       : RADIO_RESULT_OK;
 
+  /* Channel min */
   case RADIO_CONST_CHANNEL_MIN:
     *value = (radio_value_t)IEEE_MODE_CHAN_MIN;
     return RADIO_RESULT_OK;
 
+  /* Channel max */
   case RADIO_CONST_CHANNEL_MAX:
     *value = (radio_value_t)IEEE_MODE_CHAN_MAX;
     return RADIO_RESULT_OK;
@@ -962,14 +874,17 @@ get_value(radio_param_t param, radio_value_t *value)
     *value = (radio_value_t)TX_POWER_MIN;
     return RADIO_RESULT_OK;
 
+  /* TX power max */
   case RADIO_CONST_TXPOWER_MAX:
     *value = (radio_value_t)TX_POWER_MAX;
     return RADIO_RESULT_OK;
 
+  /* Last RSSI */
   case RADIO_PARAM_LAST_RSSI:
     *value = (radio_value_t)ieee_radio.last.rssi;
     return RADIO_RESULT_OK;
 
+  /* Last link quality */
   case RADIO_PARAM_LAST_LINK_QUALITY:
     *value = (radio_value_t)ieee_radio.last.corr_lqi;
     return RADIO_RESULT_OK;
@@ -982,14 +897,18 @@ get_value(radio_param_t param, radio_value_t *value)
 static radio_result_t
 set_value(radio_param_t param, radio_value_t value)
 {
+  rf_result_t res;
+
   switch (param) {
+
+  /* Power Mode */
   case RADIO_PARAM_POWER_MODE:
+
     if (value == RADIO_POWER_MODE_ON) {
-      if (on() != CMD_RESULT_OK) {
-        PRINTF("set_value: on() failed (1)\n");
-        return RADIO_RESULT_ERROR;
-      }
-      return RADIO_RESULT_OK;
+      return (on() == RF_RESULT_OK)
+        ? RADIO_RESULT_OK
+        : RADIO_RESULT_ERROR;
+
     } else if (value == RADIO_POWER_MODE_OFF) {
       off();
       return RADIO_RESULT_OK;
@@ -997,6 +916,7 @@ set_value(radio_param_t param, radio_value_t value)
 
     return RADIO_RESULT_INVALID_VALUE;
 
+  /* Channel */
   case RADIO_PARAM_CHANNEL:
     if (!IEEE_MODE_CHAN_IN_RANGE(value)) {
       return RADIO_RESULT_INVALID_VALUE;
@@ -1004,22 +924,33 @@ set_value(radio_param_t param, radio_value_t value)
     set_channel((uint8_t)value);
     return RADIO_RESULT_OK;
 
+  /* PAN ID */
   case RADIO_PARAM_PAN_ID:
     cmd_rx.localPanID = (uint16_t)value;
-    if (ieee_radio.rf_is_on && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
-      PRINTF("failed to restart RX");
-      return RADIO_RESULT_ERROR;
+    if (!ieee_radio.rf_is_on) {
+      return RADIO_RESULT_OK;
     }
-    return RADIO_RESULT_OK;
 
+    netstack_stop_rx();
+    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
+
+  /* 16bit address */
   case RADIO_PARAM_16BIT_ADDR:
     cmd_rx.localShortAddr = (uint16_t)value;
-    if (ieee_radio.rf_is_on && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
-      PRINTF("failed to restart RX");
-      return RADIO_RESULT_ERROR;
+    if (!ieee_radio.rf_is_on) {
+      return RADIO_RESULT_OK;
     }
-    return RADIO_RESULT_OK;
 
+    netstack_stop_rx();
+    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
+
+  /* RX Mode */
   case RADIO_PARAM_RX_MODE: {
     if (value & ~(RADIO_RX_MODE_ADDRESS_FILTER |
                   RADIO_RX_MODE_AUTOACK | RADIO_RX_MODE_POLL_MODE)) {
@@ -1048,13 +979,18 @@ set_value(radio_param_t param, radio_value_t value)
       }
       return RADIO_RESULT_OK;
     }
-    if (ieee_radio.rf_is_on && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
-      PRINTF("failed to restart RX");
-      return RADIO_RESULT_ERROR;
+    if (!ieee_radio.rf_is_on) {
+      return RADIO_RESULT_OK;
     }
-    return RADIO_RESULT_OK;
+
+    netstack_stop_rx();
+    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
   }
 
+  /* TX Mode */
   case RADIO_PARAM_TX_MODE:
     if(value & ~(RADIO_TX_MODE_SEND_ON_CCA)) {
       return RADIO_RESULT_INVALID_VALUE;
@@ -1062,16 +998,28 @@ set_value(radio_param_t param, radio_value_t value)
     set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
     return RADIO_RESULT_OK;
 
+  /* TX Power */
   case RADIO_PARAM_TXPOWER:
-    return set_tx_power(value);
+    if (!TX_POWER_IN_RANGE((int8_t)value)) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    res = rf_set_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
 
+  /* CCA Threshold */
   case RADIO_PARAM_CCA_THRESHOLD:
     cmd_rx.ccaRssiThr = (int8_t)value;
-    if (ieee_radio.rf_is_on && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
-      PRINTF("failed to restart RX");
-      return RADIO_RESULT_ERROR;
+    if (!ieee_radio.rf_is_on) {
+      return RADIO_RESULT_OK;
     }
-    return RADIO_RESULT_OK;
+
+    netstack_stop_rx();
+    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
 
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
@@ -1086,6 +1034,7 @@ get_object(radio_param_t param, void *dest, size_t size)
   }
 
   switch (param) {
+  /* 64bit address */
   case RADIO_PARAM_64BIT_ADDR: {
     const size_t srcSize = sizeof(cmd_rx.localExtAddr);
     if(size != srcSize) {
@@ -1100,6 +1049,7 @@ get_object(radio_param_t param, void *dest, size_t size)
 
     return RADIO_RESULT_OK;
   }
+  /* Last packet timestamp */
   case RADIO_PARAM_LAST_PACKET_TIMESTAMP:
     if(size != sizeof(rtimer_clock_t)) {
       return RADIO_RESULT_INVALID_VALUE;
@@ -1117,11 +1067,14 @@ get_object(radio_param_t param, void *dest, size_t size)
 static radio_result_t
 set_object(radio_param_t param, const void *src, size_t size)
 {
+  rf_result_t res;
+
   if (!src) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
   switch (param) {
+  /* 64-bit address */
   case RADIO_PARAM_64BIT_ADDR: {
     const size_t destSize = sizeof(cmd_rx.localExtAddr);
     if (size != destSize) {
@@ -1129,16 +1082,20 @@ set_object(radio_param_t param, const void *src, size_t size)
     }
 
     const uint8_t *pSrc = (const uint8_t *)src;
-    uint8_t *pDest = (uint8_t *)&(cmd_rx.localExtAddr);
+    volatile uint8_t *pDest = (uint8_t *)&(cmd_rx.localExtAddr);
     for (size_t i = 0; i < destSize; ++i) {
       pDest[i] = pSrc[destSize - 1 - i];
     }
 
-    const bool is_rx = (cmd_rx.status == ACTIVE);
-    if (is_rx && set_rx(POWER_STATE_RESTART) != CMD_RESULT_OK) {
-      return RADIO_RESULT_ERROR;
+    if (!rx_is_active()) {
+      return RADIO_RESULT_OK;
     }
-    return RADIO_RESULT_OK;
+
+    netstack_stop_rx();
+    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
   }
   default:
     return RADIO_RESULT_NOT_SUPPORTED;

@@ -55,18 +55,10 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-/* RF settings */
-#ifdef PROP_MODE_CONF_RF_SETTINGS
-# define PROP_MODE_RF_SETTINGS  PROP_MODE_CONF_RF_SETTINGS
-#else
-# define PROP_MODE_RF_SETTINGS "prop-settings.h"
-#endif
-
-#include PROP_MODE_RF_SETTINGS
-/*---------------------------------------------------------------------------*/
 /* Platform RF dev */
-#include "rf-common.h"
 #include "dot-15-4g.h"
+#include "rf-core.h"
+#include "netstack-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
@@ -139,10 +131,12 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
-#define ENTER_RX_WAIT_TIMEOUT (RTIMER_SECOND >> 10)
+#define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
+/*---------------------------------------------------------------------------*/
+#define CMD_RX_EVENTS         (RF_EventRxOk | RF_EventRxBufFull | RF_EventRxEntryDone)
 /*---------------------------------------------------------------------------*/
 /* Configuration for TX power table */
 #ifdef PROP_MODE_CONF_TX_POWER_TABLE
@@ -214,12 +208,12 @@ typedef struct {
 
   /* RSSI Threshold */
   int8_t              rssi_threshold;
+  uint16_t            channel;
 
   /* Indicates RF is supposed to be on or off */
   uint8_t             rf_is_on;
 
   /* RF driver */
-  RF_Object           rf_object;
   RF_Handle           rf_handle;
 } prop_radio_t;
 
@@ -230,99 +224,67 @@ static prop_radio_t prop_radio;
 #define cmd_tx            (*(volatile rfc_CMD_PROP_TX_ADV_t *)         &rf_cmd_prop_tx_adv)
 #define cmd_rx            (*(volatile rfc_CMD_PROP_RX_ADV_t *)         &rf_cmd_prop_rx_adv)
 /*---------------------------------------------------------------------------*/
-static CC_INLINE bool tx_active(void) { return cmd_tx.status == ACTIVE; }
-static CC_INLINE bool rx_active(void) { return cmd_rx.status == ACTIVE; }
+static inline bool tx_is_active(void) { return cmd_tx.status == ACTIVE; }
+static inline bool rx_is_active(void) { return cmd_rx.status == ACTIVE; }
 /*---------------------------------------------------------------------------*/
 static int on(void);
 static int off(void);
 /*---------------------------------------------------------------------------*/
 static void
-cmd_rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
+rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
 {
   /* Unused arguments */
   (void)client;
   (void)command;
 
   if (events & RF_EventRxEntryDone) {
-    process_poll(&rf_process);
+    process_poll(&rf_core_process);
   }
 }
 /*---------------------------------------------------------------------------*/
-static cmd_result_t
-start_rx(void)
+static void
+init_data_queue(void)
 {
-  cmd_rx.status = IDLE;
-  RF_CmdHandle rx_handle = RF_postCmd(prop_radio.rf_handle, (RF_Op*)&cmd_rx, RF_PriorityNormal,
-                                      &cmd_rx_cb, RF_EventRxEntryDone);
-  if (rx_handle == RF_ALLOC_ERROR) {
-    PRINTF("start_rx: RF_ALLOC_ERROR for cmd_rx\n");
-    return CMD_RESULT_ERROR;
-  }
-
-  /* Wait to enter RX */
-  const rtimer_clock_t t0 = RTIMER_NOW();
-  while (!rx_active() &&
-      (RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + ENTER_RX_WAIT_TIMEOUT)));
-
-  if (!rx_active()) {
-    PRINTF("cmd_rx: status=0x%04x\n", cmd_rx.status);
-    return CMD_RESULT_ERROR;
-  }
-
-  return CMD_RESULT_OK;
+  /* Initialize RF core data queue, circular buffer */
+  prop_radio.rx_data_queue.pCurrEntry = prop_radio.rx_bufs[0].buf;
+  prop_radio.rx_data_queue.pLastEntry = NULL;
+  /* Set current read pointer to first element */
+  prop_radio.rx_read_entry = &prop_radio.rx_bufs[0].data_entry;
 }
 /*---------------------------------------------------------------------------*/
-static cmd_result_t
-stop_rx(void)
+static void
+init_rf_params(void)
 {
-  /* Abort any ongoing operation. Don't care about the result. */
-  RF_cancelCmd(prop_radio.rf_handle, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
-
-  if (cmd_rx.status != PROP_DONE_STOPPED &&
-      cmd_rx.status != PROP_DONE_ABORT) {
-    PRINTF("RF_cmdPropRxAdv cancel: status=0x%04x\n",
-           cmd_rx.status);
-    return CMD_RESULT_ERROR;
-  }
-
-  /* Stopped gracefully */
-  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-  return CMD_RESULT_OK;
+  cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx.lenOffset;
+  cmd_rx.pQueue = &prop_radio.rx_data_queue;
+  cmd_rx.pOutput = (uint8_t *)&prop_radio.rx_stats;
 }
 /*---------------------------------------------------------------------------*/
-static cmd_result_t
-rf_run_setup()
-{
-  /* TODO not the right way to do this. */
-  RF_runCmd(prop_radio.rf_handle, (RF_Op*)&cmd_radio_setup, RF_PriorityNormal, NULL, 0);
-  if (cmd_radio_setup.status != PROP_DONE_OK) {
-    return CMD_RESULT_ERROR;
-  }
-
-  return CMD_RESULT_OK;
-}
-/*---------------------------------------------------------------------------*/
-static radio_value_t
+static int8_t
 get_rssi(void)
 {
-  if (tx_active()) {
-    PRINTF("get_rssi: called while in TX\n");
-    return RF_GET_RSSI_ERROR_VAL;
+  rf_result_t res;
+
+  const bool rx_is_idle = !rx_is_active();
+
+  if (rx_is_idle) {
+    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    if (res != RF_RESULT_OK) {
+      return RF_GET_RSSI_ERROR_VAL;
+    }
   }
 
-  const bool was_off = !rx_active();
-  if (was_off && start_rx() == CMD_RESULT_ERROR) {
-    PRINTF("get_rssi: unable to start RX\n");
-    return RF_GET_RSSI_ERROR_VAL;
-  }
+  const rtimer_clock_t t0 = RTIMER_NOW();
+  while ((cmd_rx.status != ACTIVE) &&
+          RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT));
 
   int8_t rssi = RF_GET_RSSI_ERROR_VAL;
-  while(rssi == RF_GET_RSSI_ERROR_VAL || rssi == 0) {
+  if (rx_is_active()) {
     rssi = RF_getRssi(prop_radio.rf_handle);
   }
 
-  if (was_off) {
-    stop_rx();
+  if (rx_is_idle) {
+    netstack_stop_rx();
   }
 
   return rssi;
@@ -344,59 +306,40 @@ get_channel(void)
   return (freq_khz - DOT_15_4G_CHAN0_FREQUENCY) / DOT_15_4G_CHANNEL_SPACING;
 }
 /*---------------------------------------------------------------------------*/
-static cmd_result_t
-set_channel(uint32_t channel)
+static rf_result_t
+set_channel(uint16_t channel)
 {
-  const uint32_t new_freq = DOT_15_4G_CHAN0_FREQUENCY + (channel * DOT_15_4G_CHANNEL_SPACING);
-  const uint32_t freq = new_freq / 1000;
-  const uint32_t frac = ((new_freq - (freq * 1000)) * 65536) / 1000;
+  rf_result_t res;
+
+  if (!DOT_15_4_G_CHANNEL_IN_RANGE(channel)) {
+    PRINTF("set_channel: illegal channel %d, defaults to %d\n",
+           (int)channel, DOT_15_4G_CHANNEL_MAX);
+    channel = DOT_15_4G_CHANNEL_MAX;
+  }
+
+  if (channel == prop_radio.channel) {
+    /* We are already calibrated to this channel */
+    return RF_RESULT_OK;
+  }
+
+  const uint32_t new_freq = DOT_15_4G_CHAN0_FREQUENCY + ((uint32_t)channel * DOT_15_4G_CHANNEL_SPACING);
+  const uint16_t freq = (uint16_t)(new_freq / 1000);
+  const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
   PRINTF("set_channel: %u = 0x%04x.0x%04x (%lu)\n",
-         (int)channel, (uint16_t)freq, (uint16_t)frac, new_freq);
+         (int)channel, freq, frac, new_freq);
 
-  cmd_radio_setup.centerFreq = freq;
-  cmd_fs.frequency = (uint16_t)freq;
-  cmd_fs.fractFreq = (uint16_t)frac;
+  cmd_fs.frequency = freq;
+  cmd_fs.fractFreq = frac;
 
-  /* We don't care whether the FS command is successful because subsequent */
-  /* TX and RX commands will tell us indirectly. */
-  RF_EventMask rf_events = RF_runCmd(prop_radio.rf_handle, (RF_Op*)&cmd_fs,
-                                     RF_PriorityNormal, NULL, 0);
-  if ((rf_events & (RF_EventCmdDone | RF_EventLastCmdDone)) == 0) {
-    PRINTF("set_channel: RF_runCmd failed, events=0x%llx\n", rf_events);
-    return CMD_RESULT_ERROR;
+  res = netstack_sched_fs();
+
+  if (res != RF_RESULT_OK) {
+    return res;
   }
 
-  if (cmd_fs.status != DONE_OK) {
-    PRINTF("set_channel: cmd_fs failed, status=0x%04x\n", cmd_fs.status);
-    return CMD_RESULT_ERROR;
-  }
-
-  return CMD_RESULT_OK;
-}
-/*---------------------------------------------------------------------------*/
-/* Returns the current TX power in dBm */
-static radio_result_t
-set_tx_power(const radio_value_t dBm)
-{
-  if (!TX_POWER_IN_RANGE(dBm)) {
-    return RADIO_RESULT_INVALID_VALUE;
-  }
-
-  const RF_TxPowerTable_Value value = RF_TxPowerTable_findValue(TX_POWER_TABLE, (int8_t)dBm);
-  const RF_Stat stat = RF_setTxPower(prop_radio.rf_handle, value);
-
-  return (stat == RF_StatSuccess)
-    ? RADIO_RESULT_OK
-    : RADIO_RESULT_ERROR;
-}
-/*---------------------------------------------------------------------------*/
-/* Returns the current TX power in dBm */
-static radio_value_t
-get_tx_power(void)
-{
-  const RF_TxPowerTable_Value value = RF_getTxPower(prop_radio.rf_handle);
-  return (radio_value_t)RF_TxPowerTable_findPowerLevel(TX_POWER_TABLE, value);
+  prop_radio.channel = channel;
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -415,7 +358,7 @@ calculate_lqi(int8_t rssi)
 }
 /*---------------------------------------------------------------------------*/
 static void
-init_rx_buffers(void)
+init_rx_bufs(void)
 {
   size_t i = 0;
   for (i = 0; i < RX_BUF_CNT; ++i) {
@@ -434,10 +377,20 @@ init_rx_buffers(void)
   }
 }
 /*---------------------------------------------------------------------------*/
+static void
+reset_rx_bufs(void)
+{
+  size_t i;
+  for (i = 0; i < RX_BUF_CNT; ++i) {
+    prop_radio.rx_bufs[i].data_entry.status = DATA_ENTRY_PENDING;
+  }
+}
+/*---------------------------------------------------------------------------*/
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  int len = MIN(payload_len, TX_BUF_PAYLOAD_LEN);
+  const size_t len = MIN((size_t)payload_len,
+                         (size_t)TX_BUF_PAYLOAD_LEN);
 
   memcpy(prop_radio.tx_buf + TX_BUF_HDR_LEN, payload, len);
   return 0;
@@ -446,26 +399,23 @@ prepare(const void *payload, unsigned short payload_len)
 static int
 transmit(unsigned short transmit_len)
 {
-  int ret = RADIO_TX_OK;
+  rf_result_t res;
 
-  if (tx_active()) {
+  if (tx_is_active()) {
     PRINTF("transmit: not allowed while transmitting\n");
     return RADIO_TX_ERR;
   }
 
-  const bool rx_is_on = rx_active();
-  if (rx_is_on) {
-      stop_rx();
-  }
-
   /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
-  uint16_t total_length = transmit_len + CRC_LEN;
-  /* Prepare the .15.4g PHY header
+  const uint16_t total_length = transmit_len + CRC_LEN;
+  /*
+   * Prepare the .15.4g PHY header
    * MS=0, Length MSBits=0, DW and CRC configurable
    * Total length = transmit_len (payload) + CRC length
    *
    * The Radio will flip the bits around, so tx_buf[0] must have the length
-   * LSBs (PHR[15:8] and tx_buf[1] will have PHR[7:0] */
+   * LSBs (PHR[15:8] and tx_buf[1] will have PHR[7:0]
+   */
   prop_radio.tx_buf[0] = total_length & 0xFF;
   prop_radio.tx_buf[1] = (total_length >> 8) + DOT_4G_PHR_DW_BIT + DOT_4G_PHR_CRC_BIT;
 
@@ -474,42 +424,11 @@ transmit(unsigned short transmit_len)
   cmd_tx.pktLen = transmit_len + DOT_4G_PHR_LEN;
   cmd_tx.pPkt = prop_radio.tx_buf;
 
-  RF_CmdHandle tx_handle = RF_postCmd(prop_radio.rf_handle, (RF_Op*)&cmd_tx, RF_PriorityNormal, NULL, 0);
-  if (tx_handle == RF_ALLOC_ERROR) {
-    /* Failure sending the CMD_PROP_TX command */
-    PRINTF("transmit: unable to allocate RF command handle\n");
-    return RADIO_TX_ERR;
-  }
+  res = netstack_sched_tx(NULL, 0);
 
-  ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
-
-  /* watchdog_periodic(); */
-
-  /* Idle away while the command is running */
-  RF_EventMask rf_events = RF_pendCmd(prop_radio.rf_handle, tx_handle, RF_EventLastCmdDone);
-
-  if ((rf_events & (RF_EventCmdDone | RF_EventLastCmdDone)) == 0) {
-    PRINTF("transmit: RF_pendCmd failed, events=0x%llx\n", rf_events);
-    ret = RADIO_TX_ERR;
-  }
-
-  else if (cmd_tx.status != PROP_DONE_OK) {
-    /* Operation completed, but frame was not sent */
-    PRINTF("transmit: Not Sent OK status=0x%04x\n",
-           cmd_tx.status);
-    ret = RADIO_TX_ERR;
-  }
-
-  ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
-
-  /* Workaround. Set status to IDLE */
-  cmd_tx.status = IDLE;
-
-  if (rx_is_on) {
-    start_rx();
-  }
-
-  return ret;
+  return (res == RF_RESULT_OK)
+    ? RADIO_TX_OK
+    : RADIO_TX_ERR;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -597,47 +516,44 @@ read(void *buf, unsigned short buf_len)
   return (int)payload_len;
 }
 /*---------------------------------------------------------------------------*/
+static uint8_t
+cca_request(void)
+{
+  const int8_t rssi = get_rssi();
+
+  if (rssi == RF_GET_RSSI_ERROR_VAL) {
+    return CCA_STATE_INVALID;
+  }
+
+  return (rssi < prop_radio.rssi_threshold)
+    ? CCA_STATE_IDLE
+    : CCA_STATE_BUSY;
+}
+/*---------------------------------------------------------------------------*/
 static int
 channel_clear(void)
 {
-  if (tx_active()) {
+  if (tx_is_active()) {
     PRINTF("channel_clear: called while in TX\n");
-    return CCA_STATE_IDLE;
+    return 0;
   }
 
-  const bool rx_was_off = !rx_active();
-  if (rx_was_off) {
-    start_rx();
-  }
+  const uint8_t cca_state = cca_request();
 
-  int8_t rssi = RF_GET_RSSI_ERROR_VAL;
-  while (rssi == RF_GET_RSSI_ERROR_VAL || rssi == 0) {
-    rssi = RF_getRssi(prop_radio.rf_handle);
-  }
-
-  if (rx_was_off) {
-    stop_rx();
-  }
-
-  if(rssi >= prop_radio.rssi_threshold) {
-    return CCA_STATE_BUSY;
-  }
-
-  return CCA_STATE_IDLE;
+  /* Channel is clear if CCA state is IDLE */
+  return (cca_state == CCA_STATE_IDLE);
 }
 /*---------------------------------------------------------------------------*/
 static int
 receiving_packet(void)
 {
-  if (!rx_active()) {
+  if (!rx_is_active()) {
     return 0;
   }
 
-  if (channel_clear() == CCA_STATE_IDLE) {
-    return 0;
-  }
+  const uint8_t cca_state = cca_request();
 
-  return 1;
+  return (cca_state == CCA_STATE_BUSY);
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -661,7 +577,7 @@ pending_packet(void)
   } while (curr_entry != read_entry);
 
   if (num_pending > 0) {
-    process_poll(&rf_process);
+    process_poll(&rf_core_process);
   }
 
   /* If we didn't find an entry at status finished, no frames are pending */
@@ -671,26 +587,23 @@ pending_packet(void)
 static int
 on(void)
 {
+  rf_result_t res;
+
   if (prop_radio.rf_is_on) {
     PRINTF("on: Radio already on\n");
-    return CMD_RESULT_OK;
+    return RF_RESULT_OK;
   }
 
-  /* Reset all RF command statuses */
-  cmd_fs.status = IDLE;
-  cmd_tx.status = IDLE;
-  cmd_rx.status = IDLE;
+  init_rx_bufs();
 
-  init_rx_buffers();
+  res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
 
-  const int rx_ok = start_rx();
-  if (!rx_ok) {
-    off();
-    return CMD_RESULT_ERROR;
+  if (res != RF_RESULT_OK) {
+    return RF_RESULT_ERROR;
   }
 
   prop_radio.rf_is_on = true;
-  return CMD_RESULT_OK;
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -698,30 +611,22 @@ off(void)
 {
   if (!prop_radio.rf_is_on) {
     PRINTF("off: Radio already off\n");
-    return CMD_RESULT_OK;
+    return RF_RESULT_OK;
   }
 
-  /* Force abort of any ongoing RF operation */
-  RF_flushCmd(prop_radio.rf_handle, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
-  /* Trigger a manual power-down */
-  RF_yield(prop_radio.rf_handle);
+  rf_yield();
 
-  /* Reset RX buffers if there was an ongoing RX */
-  size_t i;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
-    data_entry_t *entry = &prop_radio.rx_bufs[i].data_entry;
-    if (entry->status == DATA_ENTRY_BUSY) {
-      entry->status = DATA_ENTRY_PENDING;
-    }
-  }
+  reset_rx_bufs();
 
   prop_radio.rf_is_on = false;
-  return CMD_RESULT_OK;
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
 get_value(radio_param_t param, radio_value_t *value)
 {
+  rf_result_t res;
+
   if (!value) {
     return RADIO_RESULT_INVALID_VALUE;
   }
@@ -740,8 +645,11 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TXPOWER:
-    *value = get_tx_power();
-    return RADIO_RESULT_OK;
+    res = rf_get_tx_power(prop_radio.rf_handle, TX_POWER_TABLE, (int8_t*)&value);
+    return ((res == RF_RESULT_OK) &&
+            (*value != RF_TxPowerTable_INVALID_DBM))
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_CCA_THRESHOLD:
     *value = prop_radio.rssi_threshold;
@@ -777,35 +685,37 @@ get_value(radio_param_t param, radio_value_t *value)
 static radio_result_t
 set_value(radio_param_t param, radio_value_t value)
 {
+  rf_result_t res;
+
   switch(param) {
   case RADIO_PARAM_POWER_MODE:
+
     if(value == RADIO_POWER_MODE_ON) {
-      /* Powering on happens implicitly */
-      return RADIO_RESULT_OK;
-    }
-    if(value == RADIO_POWER_MODE_OFF) {
+      return (on() == RF_RESULT_OK)
+        ? RADIO_RESULT_OK
+        : RADIO_RESULT_ERROR;
+
+    } else if(value == RADIO_POWER_MODE_OFF) {
       off();
       return RADIO_RESULT_OK;
     }
+
     return RADIO_RESULT_INVALID_VALUE;
 
   case RADIO_PARAM_CHANNEL:
-    if(value < 0 ||
-       value > DOT_15_4G_CHANNEL_MAX) {
-      return RADIO_RESULT_INVALID_VALUE;
-    }
-
-    if(get_channel() == (uint8_t)value) {
-      /* We already have that very same channel configured.
-       * Nothing to do here. */
-      return RADIO_RESULT_OK;
-    }
-
-    set_channel((uint8_t)value);
-    break;
+    res = set_channel((uint16_t)value);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_TXPOWER:
-    return set_tx_power(value);
+    if (!TX_POWER_IN_RANGE((int8_t)value)) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    res = rf_set_tx_power(prop_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
+    return (res == RF_RESULT_OK)
+      ? RADIO_RESULT_OK
+      : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_RX_MODE:
     return RADIO_RESULT_OK;
@@ -817,26 +727,6 @@ set_value(radio_param_t param, radio_value_t value)
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
   }
-
-  /* If we reach here we had no errors. Apply new settings */
-  if (rx_active()) {
-    stop_rx();
-    /* TODO fix this */
-    if (rf_run_setup() != CMD_RESULT_OK) {
-      return RADIO_RESULT_ERROR;
-    }
-    start_rx();
-  } else if (tx_active()) {
-    /* Should not happen. TX is always synchronous and blocking. */
-    /* Todo: maybe remove completely here. */
-    PRINTF("set_value: cannot apply new value while transmitting. \n");
-    return RADIO_RESULT_ERROR;
-  } else {
-    /* was powered off. Nothing to do. New values will be */
-    /* applied automatically on next power-up. */
-  }
-
-  return RADIO_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
@@ -856,30 +746,17 @@ init(void)
 {
   if (prop_radio.rf_handle) {
     PRINTF("init: Radio already initialized\n");
-    return CMD_RESULT_OK;
+    return RF_RESULT_OK;
   }
-
-  /* Zero initalize TX and RX buffers */
-  memset(prop_radio.tx_buf,  0x0, sizeof(prop_radio.tx_buf));
-  memset(prop_radio.rx_bufs, 0x0, sizeof(prop_radio.rx_bufs));
-
-  /* Circular buffer, no last entry */
-  prop_radio.rx_data_queue.pCurrEntry = prop_radio.rx_bufs[0].buf;
-  prop_radio.rx_data_queue.pLastEntry = NULL;
-
-  /* Initialize current read pointer to first element (used in ISR) */
-  prop_radio.rx_read_entry = &prop_radio.rx_bufs[0].data_entry;
-
-  /* Set configured RSSI threshold */
-  prop_radio.rssi_threshold = PROP_MODE_RSSI_THRESHOLD;
 
   /* RX is off */
   prop_radio.rf_is_on = false;
 
-  /* Configure RX command */
-  cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx.lenOffset;
-  cmd_rx.pQueue = &prop_radio.rx_data_queue;
-  cmd_rx.pOutput = (uint8_t *)&prop_radio.rx_stats;
+  /* Set configured RSSI threshold */
+  prop_radio.rssi_threshold = PROP_MODE_RSSI_THRESHOLD;
+
+  init_rf_params();
+  init_data_queue();
 
   /* Init RF params and specify non-default params */
   RF_Params       rf_params;
@@ -887,11 +764,11 @@ init(void)
   rf_params.nInactivityTimeout = 2000; /* 2 ms */
 
   /* Open RF Driver */
-  prop_radio.rf_handle = RF_open(&prop_radio.rf_object, &rf_prop_mode,
-                                 (RF_RadioSetup*)&cmd_radio_setup, &rf_params);
+  prop_radio.rf_handle = netstack_open(&rf_params);
+
   if (prop_radio.rf_handle == NULL) {
     PRINTF("init: unable to open RF driver\n");
-    return CMD_RESULT_ERROR;
+    return RF_RESULT_ERROR;
   }
 
   set_channel(PROP_MODE_CHANNEL);
@@ -899,9 +776,9 @@ init(void)
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
   /* Start RF process */
-  process_start(&rf_process, NULL);
+  process_start(&rf_core_process, NULL);
 
-  return CMD_RESULT_OK;
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 const struct radio_driver prop_mode_driver = {

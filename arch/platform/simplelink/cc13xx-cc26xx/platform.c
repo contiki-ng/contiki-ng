@@ -83,7 +83,7 @@
 #include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
 #include "ieee-addr.h"
-#include "dev/rf-common.h"
+#include "rf-core.h"
 #include "lib/random.h"
 #include "button-sensor.h"
 /*---------------------------------------------------------------------------*/

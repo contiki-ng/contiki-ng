@@ -32,45 +32,52 @@
  * \addtogroup simplelink
  * @{
  *
+ * \defgroup rf-common Common functionality fpr the CC13xx/CC26xx RF
+ *
+ * @{
+ *
  * \file
- * Implementation of common CC13xx/CC26xx RF functionality
+ * Header file of common CC13xx/CC26xx RF functionality
  */
 /*---------------------------------------------------------------------------*/
-#include <contiki.h>
-#include <dev/watchdog.h>
-#include <sys/process.h>
-#include <net/netstack.h>
-#include <net/packetbuf.h>
-#include <net/mac/mac.h>
+#ifndef RF_CORE_H_
+#define RF_CORE_H_
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE  "RF"
-#define LOG_LEVEL   LOG_LEVEL_DBG
+#include "contiki.h"
+
+#include "rf-ble-beacond.h"
+
+#include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-PROCESS(rf_process, "SimpleLink RF Process");
+typedef enum {
+    RF_RESULT_OK = 0,
+    RF_RESULT_ERROR,
+} rf_result_t;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(rf_process, ev, data)
-{
-  int len;
-
-  PROCESS_BEGIN();
-
-  while(1) {
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
-    do {
-      //watchdog_periodic();
-      packetbuf_clear();
-      len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
-
-      if(len > 0) {
-        packetbuf_set_datalen(len);
-
-        NETSTACK_MAC.input();
-      }
-    } while(len > 0);
-  }
-  PROCESS_END();
-}
+PROCESS_NAME(rf_core_process);
 /*---------------------------------------------------------------------------*/
-/** @} */
+/* Common */
+rf_result_t rf_yield(void);
+
+rf_result_t rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm);
+rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm);
+/*---------------------------------------------------------------------------*/
+/* Netstack radio: IEEE-mode or prop-mode */
+RF_Handle   netstack_open(RF_Params *params);
+
+rf_result_t netstack_sched_fs(void);
+rf_result_t netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event);
+rf_result_t netstack_sched_rx(RF_Callback cb, RF_EventMask bm_event);
+rf_result_t netstack_stop_rx(void);
+/*---------------------------------------------------------------------------*/
+/* BLE radio: BLE Beacon Daemon */
+RF_Handle   ble_open(RF_Params *params);
+
+rf_result_t ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event);
+/*---------------------------------------------------------------------------*/
+#endif /* RF_CORE_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

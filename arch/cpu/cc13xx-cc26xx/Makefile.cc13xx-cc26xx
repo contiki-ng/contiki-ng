@@ -76,7 +76,7 @@ CONTIKI_CPU_SOURCEFILES += int-master-arch.c
 ### RF source files
 CONTIKI_CPU_SOURCEFILES += rf-core.c
 CONTIKI_CPU_SOURCEFILES += ieee-addr.c ble-addr.c
-CONTIKI_CPU_SOURCEFILES += rf-ble-beacon.c
+#CONTIKI_CPU_SOURCEFILES += rf-ble-beacond.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
 CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c prop-settings.c
@@ -87,14 +87,16 @@ CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c ieee-settings.c
 endif
 
 ifeq ($(SUPPORTS_BLE_BEACON),1)
-CONTIKI_CPU_SOURCEFILES += rf-ble-beacond.c ble-settings.c
+CONTIKI_CPU_SOURCEFILES += ble-settings.c
+#CONTIKI_CPU_SOURCEFILES += rf-ble-beacond.c
 endif
 
 ### CPU-dependent debug source files
 MODULES += os/lib/dbg-io
 
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS += . dev $(SUBFAMILY) rf-settings/$(DEVICE_FAMILY_LC)
+CONTIKI_CPU_DIRS += . dev $(SUBFAMILY)
+CONTIKI_CPU_DIRS += rf-settings rf-settings/$(DEVICE_FAMILY_LC)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 

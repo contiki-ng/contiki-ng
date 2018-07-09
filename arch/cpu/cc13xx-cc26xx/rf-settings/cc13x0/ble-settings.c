@@ -51,7 +51,7 @@
 #include "ble-settings.h"
 /*---------------------------------------------------------------------------*/
 // TI-RTOS RF Mode Object
-RF_Mode RF_ble =
+RF_Mode rf_ble_mode =
 {
     .rfMode = RF_MODE_BLE,
     .cpePatchFxn = &rf_patch_cpe_ble,
@@ -64,7 +64,7 @@ RF_Mode RF_ble =
 // RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
 // See the Technical Reference Manual for further details about the "txPower" Command field.
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
-RF_TxPowerTable_Entry txPowerTable[TX_POWER_TABLE_SIZE] =
+RF_TxPowerTable_Entry rf_ble_tx_power_table[RF_BLE_TX_POWER_TABLE_SIZE+1] =
 {
     { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 1,  6) },
     { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 1,  6) },
@@ -119,7 +119,7 @@ uint32_t rf_ble_overrides[] CC_ALIGN(4) =
 /*---------------------------------------------------------------------------*/
 // CMD_RADIO_SETUP
 // Radio Setup Command for Pre-Defined Schemes
-rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radiosetup =
+rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radio_setup =
 {
     .commandNo = 0x0802,
     .status = 0x0000,
@@ -139,30 +139,6 @@ rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radiosetup =
     .config.bNoFsPowerUp = 0x0,
     .txPower = 0x3D3F,
     .pRegOverride = rf_ble_overrides,
-};
-/*---------------------------------------------------------------------------*/
-// CMD_FS
-// Frequency Synthesizer Programming Command
-rfc_CMD_FS_t rf_ble_cmd_fs =
-{
-    .commandNo = 0x0803,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x0,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
-    .condition.nSkip = 0x0,
-    .frequency = 0x0988,
-    .fractFreq = 0x0000,
-    .synthConf.bTxMode = 0x0,
-    .synthConf.refFreq = 0x0,
-    .__dummy0 = 0x00,
-    .__dummy1 = 0x00,
-    .__dummy2 = 0x00,
-    .__dummy3 = 0x0000,
 };
 /*---------------------------------------------------------------------------*/
 // Structure for CMD_BLE_ADV_NC.pParams

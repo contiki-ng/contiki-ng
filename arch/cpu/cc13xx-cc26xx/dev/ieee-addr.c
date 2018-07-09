@@ -69,11 +69,11 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
   } else {
     int i;
 
-    const uint8_t * const primary = (uint8_t *)IEEE_MAC_PRIMARY_ADDRESS;
-    const uint8_t * const secondary = (uint8_t *)IEEE_MAC_SECONDARY_ADDRESS;
+    volatile const uint8_t * const primary   = (uint8_t *)IEEE_MAC_PRIMARY_ADDRESS;
+    volatile const uint8_t * const secondary = (uint8_t *)IEEE_MAC_SECONDARY_ADDRESS;
 
     /* Reading from primary location... */
-    const uint8_t *ieee_addr = primary;
+    volatile const uint8_t *ieee_addr = primary;
 
     /*
      * ...unless we can find a byte != 0xFF in secondary
@@ -83,7 +83,7 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
      * actual number of bytes the caller wants to copy over.
      */
     for(i = 0; i < IEEE_ADDR_SIZE; i++) {
-      if(HWREG(secondary + i) != 0xFF) {
+      if(secondary[i] != 0xFF) {
         /* A byte in the secondary location is not 0xFF. Use the secondary */
         ieee_addr = secondary;
         break;
@@ -95,7 +95,7 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
      * inverting byte order
      */
     for(i = 0; i < len; i++) {
-      dst[i] = HWREG(ieee_addr + len - 1 - i);
+      dst[i] = ieee_addr[len - 1 - i];
     }
   }
 

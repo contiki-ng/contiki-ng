@@ -119,7 +119,7 @@ ble_addr_to_eui64_cpy(uint8_t *dst)
   int res;
   uint8_t ble_addr[BLE_ADDR_SIZE];
 
-  res = ble_addr_cpy_to(ble_addr);
+  res = ble_addr_cpy(ble_addr);
   if (res) {
     return -1;
   }
