@@ -42,7 +42,7 @@
 extern RF_Mode rf_prop_mode;
 /*---------------------------------------------------------------------------*/
 // TX Power Table
-#define RF_PROP_TX_POWER_TABLE_SIZE   15
+#define RF_PROP_TX_POWER_TABLE_SIZE   16
 
 extern RF_TxPowerTable_Entry rf_prop_tx_power_table[RF_PROP_TX_POWER_TABLE_SIZE+1];
 /*---------------------------------------------------------------------------*/

@@ -77,22 +77,22 @@ RF_Mode rf_prop_mode =
 // The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
 RF_TxPowerTable_Entry rf_prop_tx_power_table[RF_PROP_TX_POWER_TABLE_SIZE+1] =
 {
-    { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  2) },
-    {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  9) },
-    {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0, 11) },
-    {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0, 12) },
-    {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0, 14) },
-    {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 1, 0, 12) },
-    {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 0, 16) },
-    {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0, 18) },
-    {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 21) },
-    {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 0, 25) },
-    {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 3, 0, 32) },
-    {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 3, 0, 44) },
-    {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY(37, 3, 0, 72) },
-    {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(43, 0, 0, 94) },
-    // This setting requires CCFG_FORCE_VDDR_HH = 1.
-    {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 85) },
+    { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  4) },
+    {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 1, 0,  0) },
+    {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  8) },
+    {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 2, 1, 0,  8) },
+    {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0, 10) },
+    {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0, 12) },
+    {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0, 12) },
+    {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0, 14) },
+    {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0, 16) },
+    {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 18) },
+    {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 3, 0, 22) },
+    {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(19, 3, 0, 28) },
+    {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 0, 40) },
+    {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 92) },
+    {  13, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 0, 83) }, // The original PA value (12.5 dBm) have been rounded to an integer value.
+    {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 83) }, // This setting requires CCFG_FORCE_VDDR_HH = 1.
     RF_TxPowerTable_TERMINATION_ENTRY
 };
 /*---------------------------------------------------------------------------*/
@@ -151,7 +151,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
     .modulation.deviation = 0x64,
     .symbolRate.preScale = 0xF,
     .symbolRate.rateWord = 0x8000,
-    .rxBw = 0x52,
+    .rxBw = 0x24,
     .preamConf.nPreamBytes = 0x3,
     .preamConf.preamMode = 0x0,
     .formatConf.nSwBits = 0x18,
@@ -163,7 +163,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
     .config.biasMode = 0x1,
     .config.analogCfgMode = 0x0,
     .config.bNoFsPowerUp = 0x0,
-    .txPower = 0xAB3F,
+    .txPower = 0xA73F,
     .pRegOverride = rf_prop_overrides,
     .centerFreq = 0x0364,
     .intFreq = 0x8000,
