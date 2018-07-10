@@ -242,3 +242,25 @@ rfc_CMD_IEEE_RX_t rf_cmd_ieee_rx =
     .endTime = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/
+// CMD_IEEE_RX_ACK
+// IEEE 802.15.4 Receive ACK Command
+rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack =
+{
+    .commandNo = CMD_IEEE_RX_ACK,
+    .status = IDLE,
+    .pNextOp = 0,
+    .startTime = 0x00000000,
+    .startTrigger.triggerType = TRIG_NOW,
+    .startTrigger.bEnaCmd = 0x0,
+    .startTrigger.triggerNo = 0x0,
+    .startTrigger.pastTrig = 0x0,
+    .condition.rule = COND_NEVER,
+    .condition.nSkip = 0x0,
+    .seqNo = 0x0,
+    .endTrigger.triggerType = TRIG_NEVER,
+    .endTrigger.bEnaCmd = 0x0,
+    .endTrigger.triggerNo = 0x0,
+    .endTrigger.pastTrig = 0x0,
+    .endTime = 0x00000000,
+};
+/*---------------------------------------------------------------------------*/

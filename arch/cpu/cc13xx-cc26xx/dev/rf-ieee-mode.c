@@ -171,11 +171,13 @@
 #define STATUS_REJECT_FRAME  0x40  /* bit 6 */
 #define STATUS_CRC_FAIL      0x80  /* bit 7 */
 /*---------------------------------------------------------------------------*/
-/* TX buf configuration */
-#define TX_BUF_HDR_LEN      2
-#define TX_BUF_PAYLOAD_LEN  180
+#define FRAME_FCF_OFFSET     0
+#define FRAME_SEQNUM_OFFSET  2
 
-#define TX_BUF_SIZE         (TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN)
+#define FRAME_ACK_REQUEST    0x20  /* bit 5 */
+
+/* TX buf configuration */
+#define TX_BUF_SIZE         180
 
 /* RX buf configuration */
 #ifdef IEEE_MODE_CONF_RX_BUF_CNT
@@ -260,6 +262,7 @@ static cmd_mod_filt_t cmd_mod_filt;
 #define cmd_fs           (*(volatile rfc_CMD_FS_t*)         &rf_cmd_ieee_fs)
 #define cmd_tx           (*(volatile rfc_CMD_IEEE_TX_t*)    &rf_cmd_ieee_tx)
 #define cmd_rx           (*(volatile rfc_CMD_IEEE_RX_t*)    &rf_cmd_ieee_rx)
+#define cmd_rx_ack       (*(volatile rfc_CMD_IEEE_RX_ACK_t*)&rf_cmd_ieee_rx_ack)
 /*---------------------------------------------------------------------------*/
 static inline bool rx_is_active(void) { return cmd_rx.status == ACTIVE; }
 /*---------------------------------------------------------------------------*/
@@ -355,6 +358,17 @@ init_rf_params(void)
 #endif
 
     cmd_rx.ccaRssiThr = IEEE_MODE_RSSI_THRESHOLD;
+
+    cmd_tx.pNextOp = (RF_Op*)&cmd_rx_ack;
+    cmd_tx.condition.rule = COND_NEVER; /* Initially ACK turned off */
+
+    cmd_rx_ack.startTrigger.triggerType = TRIG_NOW;
+    cmd_rx_ack.endTrigger.triggerType = TRIG_REL_SUBMIT;
+    /*
+     * ACK packet is transmitted 192 us after the end of the received packet.
+     * See TRM Section ACK Transmission for more info.
+     */
+    cmd_rx_ack.endTime = RF_convertUsToRatTicks(195);
 
     /* Initialize address filter command */
     cmd_mod_filt.commandNo = CMD_IEEE_MOD_FILT;
@@ -532,9 +546,9 @@ static int
 prepare(const void *payload, unsigned short payload_len)
 {
   const size_t len = MIN((size_t)payload_len,
-                         (size_t)TX_BUF_PAYLOAD_LEN);
+                         (size_t)TX_BUF_SIZE);
 
-  memcpy(ieee_radio.tx_buf + TX_BUF_HDR_LEN, payload, len);
+  memcpy(ieee_radio.tx_buf, payload, len);
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -548,15 +562,48 @@ transmit(unsigned short transmit_len)
     return RADIO_TX_COLLISION;
   }
 
+  /*
+   * Are we expecting ACK? The ACK Request flag is in the first Frame
+   * Control Field byte, that is the first byte in the frame.
+   */
+  const bool ack_request = (bool)(ieee_radio.tx_buf[FRAME_FCF_OFFSET] & FRAME_ACK_REQUEST);
+  if (ack_request) {
+    /* Yes, turn on chaining */
+    cmd_tx.condition.rule = COND_STOP_ON_FALSE;
+
+    /* Reset CMD_IEEE_RX_ACK command */
+    cmd_rx_ack.status = IDLE;
+    /* Sequence number is the third byte in the frame */
+    cmd_rx_ack.seqNo = ieee_radio.tx_buf[FRAME_SEQNUM_OFFSET];
+  } else {
+    /* No, turn off chaining */
+    cmd_tx.condition.rule = COND_NEVER;
+  }
+
   /* Configure TX command */
   cmd_tx.payloadLen = (uint8_t)transmit_len;
-  cmd_tx.pPayload = &ieee_radio.tx_buf[TX_BUF_HDR_LEN];
+  cmd_tx.pPayload = ieee_radio.tx_buf;
 
   res = netstack_sched_tx(NULL, 0);
 
-  return (res == RF_RESULT_OK)
-    ? RADIO_TX_OK
-    : RADIO_TX_ERR;
+  if (res != RF_RESULT_OK) {
+    return RADIO_TX_ERR;
+  }
+
+  if (ack_request) {
+    switch(cmd_rx_ack.status) {
+    /* CMD_IEEE_RX_ACK timed out, i.e. never received ACK */
+    case IEEE_DONE_TIMEOUT: return RADIO_TX_NOACK;
+    /* An ACK was received with either pending data bit set or cleared */
+    case IEEE_DONE_ACK:     /* fallthrough */
+    case IEEE_DONE_ACKPEND: return RADIO_TX_OK;
+    /* Any other statuses are errors */
+    default:                return RADIO_TX_ERR;
+    }
+  }
+
+  /* No ACK expected, TX OK */
+  return RADIO_TX_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
