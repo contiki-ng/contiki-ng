@@ -248,6 +248,29 @@ nmiISR(void)
 
 volatile int x__;
 
+volatile uint32_t r0;
+volatile uint32_t r1;
+volatile uint32_t r2;
+volatile uint32_t r3;
+volatile uint32_t r12;
+volatile uint32_t lr;
+volatile uint32_t pc;
+volatile uint32_t psr;
+
+void debugHardfault(uint32_t *sp)
+{
+    r0  = sp[0];
+    r1  = sp[1];
+    r2  = sp[2];
+    r3  = sp[3];
+    r12 = sp[4];
+    lr  = sp[5];
+    pc  = sp[6];
+    psr = sp[7];
+
+    while(1);
+}
+
 //*****************************************************************************
 //
 // This is the code that gets called when the processor receives a fault
@@ -258,11 +281,14 @@ volatile int x__;
 static void
 faultISR(void)
 {
-  x__ = 0;
-    /* Enter an infinite loop. */
-    while(1)
-    {
-    }
+  __asm volatile
+  (
+      "tst lr, #4                                    \n"
+      "ite eq                                        \n"
+      "mrseq r0, msp                                 \n"
+      "mrsne r0, psp                                 \n"
+      "b debugHardfault                              \n"
+  );
 }
 
 //*****************************************************************************
