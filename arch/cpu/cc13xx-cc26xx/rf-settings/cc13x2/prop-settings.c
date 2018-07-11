@@ -218,7 +218,7 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
     .symbolRate.rateWord = 0x8000,
     .symbolRate.decimMode = 0x0,
     .rxBw = 0x52,
-    .preamConf.nPreamBytes = 0x3,
+    .preamConf.nPreamBytes = 0x7,
     .preamConf.preamMode = 0x0,
     .formatConf.nSwBits = 0x18,
     .formatConf.bBitReversal = 0x0,
@@ -289,7 +289,7 @@ rfc_CMD_PROP_TX_ADV_t rf_cmd_prop_tx_adv =
     .preTrigger.pastTrig = 0x1,
     .preTime = 0x00000000,
     .syncWord = 0x0055904E,
-    .pPkt = 0,
+    .pPkt = 0, /* set by driver */
 };
 /*---------------------------------------------------------------------------*/
 // CMD_PROP_RX_ADV

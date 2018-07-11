@@ -273,7 +273,7 @@ netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event)
 
   /*
    * IEEE_TX can be scheduled while IEEE_RX is running, as the radio supports
-   * FG commandos to be scheduled while a BG commando is running.
+   * FG commands to be scheduled while a BG command is running.
    * For Prop-mode, RX must be turned off as usual.
    */
   const uint_fast8_t rx_key = (RF_CORE_CONF_MODE != RF_CORE_MODE_2_4_GHZ)
