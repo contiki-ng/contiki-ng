@@ -39,24 +39,24 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-// TI-RTOS RF Mode Object
+/* TI-RTOS RF Mode Object */
 extern RF_Mode rf_ieee_mode;
 /*---------------------------------------------------------------------------*/
-// TX Power Table
+/* TX Power Table */
 #define RF_IEEE_TX_POWER_TABLE_DEFAULT_PA_SIZE      15
 #define RF_IEEE_TX_POWER_TABLE_HIGH_PA_SIZE         15
 
 extern RF_TxPowerTable_Entry rf_ieee_tx_power_table_default_pa[RF_IEEE_TX_POWER_TABLE_DEFAULT_PA_SIZE+1];
 extern RF_TxPowerTable_Entry rf_ieee_tx_power_table_high_pa[RF_IEEE_TX_POWER_TABLE_HIGH_PA_SIZE+1];
 /*---------------------------------------------------------------------------*/
-// RF Core API commands
+/* RF Core API commands */
 extern rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup;
 extern rfc_CMD_FS_t          rf_cmd_ieee_fs;
 extern rfc_CMD_IEEE_TX_t     rf_cmd_ieee_tx;
 extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
 extern rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack;
 /*---------------------------------------------------------------------------*/
-// RF Core API Overrides
+/* RF Core API Overrides */
 extern uint32_t rf_ieee_overrides_default_pa[];
 extern uint32_t rf_ieee_overrides_high_pa[];
 /*---------------------------------------------------------------------------*/

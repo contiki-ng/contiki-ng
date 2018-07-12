@@ -32,27 +32,34 @@
 #define NETSTACK_SETTINGS_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
+/*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 /*---------------------------------------------------------------------------*/
+/* Prop-mode RF settings configuration */
 #ifdef RF_CORE_CONF_PROP_RF_SETTINGS
-#   define RF_CORE_PROP_RF_SETTINGS  RF_CORE_CONF_PROP_RF_SETTINGS
+# define RF_CORE_PROP_RF_SETTINGS  RF_CORE_CONF_PROP_RF_SETTINGS
 #else
-#   define RF_CORE_PROP_RF_SETTINGS "prop-settings.h"
+# define RF_CORE_PROP_RF_SETTINGS "prop-settings.h"
 #endif
 
-#include RF_CORE_PROP_RF_SETTINGS
-
+/* IEEE-mode RF settings configuration */
 #ifdef RF_CORE_CONF_IEEE_RF_SETTINGS
-#   define RF_CORE_IEEE_RF_SETTINGS  RF_CORE_CONF_IEEE_RF_SETTINGS
+# define RF_CORE_IEEE_RF_SETTINGS  RF_CORE_CONF_IEEE_RF_SETTINGS
 #else
-#   define RF_CORE_IEEE_RF_SETTINGS "ieee-settings.h"
+# define RF_CORE_IEEE_RF_SETTINGS "ieee-settings.h"
 #endif
 
-#include RF_CORE_IEEE_RF_SETTINGS
+/* BLE RF settings configuration */
+#ifdef RF_CORE_CONF_BLE_RF_SETTINGS
+# define RF_CORE_BLE_RF_SETTINGS  RF_CORE_CONF_BLE_RF_SETTINGS
+#else
+# define RF_CORE_BLE_RF_SETTINGS "ble-settings.h"
+#endif
 /*---------------------------------------------------------------------------*/
 /* Prop-mode RF settings */
 #if (RF_CORE_CONF_MODE == RF_CORE_MODE_SUB_1_GHZ)
+
+#include RF_CORE_PROP_RF_SETTINGS
 
 #define netstack_mode             rf_prop_mode
 #define netstack_cmd_radio_setup  rf_cmd_prop_radio_div_setup
@@ -62,6 +69,8 @@
 /*---------------------------------------------------------------------------*/
 /* IEEE-mode RF settings */
 #elif (RF_CORE_CONF_MODE == RF_CORE_MODE_2_4_GHZ)
+
+#include RF_CORE_IEEE_RF_SETTINGS
 
 #define netstack_mode             rf_ieee_mode
 #define netstack_cmd_radio_setup  rf_cmd_ieee_radio_setup
@@ -73,7 +82,8 @@
 # error "Unsupported RF_CORE_MODE"
 #endif
 /*---------------------------------------------------------------------------*/
-#include "ble-settings.h"
+/* BLE RF settings */
+#include RF_CORE_BLE_RF_SETTINGS
 
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
 

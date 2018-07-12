@@ -46,8 +46,10 @@
 #include "contiki.h"
 
 #include "rf-ble-beacond.h"
-
+/*---------------------------------------------------------------------------*/
 #include <ti/drivers/rf/RF.h>
+/*---------------------------------------------------------------------------*/
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 typedef enum {
     RF_RESULT_OK = 0,
@@ -66,8 +68,9 @@ rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8
 RF_Handle   netstack_open(RF_Params *params);
 
 rf_result_t netstack_sched_fs(void);
-rf_result_t netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event);
-rf_result_t netstack_sched_rx(RF_Callback cb, RF_EventMask bm_event);
+rf_result_t netstack_sched_ieee_tx(bool recieve_ack);
+rf_result_t netstack_sched_prop_tx(void);
+rf_result_t netstack_sched_rx(void);
 rf_result_t netstack_stop_rx(void);
 /*---------------------------------------------------------------------------*/
 /* BLE radio: BLE Beacon Daemon */

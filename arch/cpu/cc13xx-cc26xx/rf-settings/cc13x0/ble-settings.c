@@ -28,14 +28,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-// Parameter summary
-// Adv. Address: 010203040506
-// Adv. Data: 255
-// BLE Channel: 17
-// Frequency: 2440 MHz
-// PDU Payload length: 30
-// TX Power: 9 dBm (requires define CCFG_FORCE_VDDR_HH = 1 in ccfg.c, see CC13xx/CC26xx Technical Reference Manual)
-// Whitening: true
+/*
+ * Parameter summary
+ * Adv. Address: 010203040506
+ * Adv. Data: 255
+ * BLE Channel: 17
+ * Frequency: 2440 MHz
+ * PDU Payload length: 30
+ * TX Power: 9 dBm (requires define CCFG_FORCE_VDDR_HH = 1 in ccfg.c,
+ *                  see CC13xx/CC26xx Technical Reference Manual)
+ * Whitening: true
+ */
 /*---------------------------------------------------------------------------*/
 #include "sys/cc.h"
 /*---------------------------------------------------------------------------*/
@@ -50,147 +53,150 @@
 /*---------------------------------------------------------------------------*/
 #include "ble-settings.h"
 /*---------------------------------------------------------------------------*/
-// TI-RTOS RF Mode Object
+/* TI-RTOS RF Mode Object */
 RF_Mode rf_ble_mode =
 {
-    .rfMode = RF_MODE_BLE,
-    .cpePatchFxn = &rf_patch_cpe_ble,
-    .mcePatchFxn = 0,
-    .rfePatchFxn = &rf_patch_rfe_ble,
+  .rfMode = RF_MODE_BLE,
+  .cpePatchFxn = &rf_patch_cpe_ble,
+  .mcePatchFxn = 0,
+  .rfePatchFxn = &rf_patch_rfe_ble,
 };
 /*---------------------------------------------------------------------------*/
-// TX Power table
-// The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
-// RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
-// See the Technical Reference Manual for further details about the "txPower" Command field.
-// The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
+/* TX Power table */
+/* The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments: */
+/* RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient) */
+/* See the Technical Reference Manual for further details about the "txPower" Command field. */
+/* The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise. */
 RF_TxPowerTable_Entry rf_ble_tx_power_table[RF_BLE_TX_POWER_TABLE_SIZE+1] =
 {
-    { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 1,  6) },
-    { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 1,  6) },
-    { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 1, 10) },
-    { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 3, 1, 12) },
-    {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 1, 14) },
-    {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(35, 3, 1, 18) },
-    {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(47, 3, 1, 22) },
-    {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(29, 0, 1, 45) },
-    {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 0, 1, 49) },
-    {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 55) },
-    {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(44, 0, 1, 63) },
-    {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(52, 0, 1, 59) },
-    {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(60, 0, 1, 47) },
-    {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 49) }, // This setting requires CCFG_FORCE_VDDR_HH = 1.
-    {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY(46, 0, 1, 59) }, // This setting requires CCFG_FORCE_VDDR_HH = 1.
-    {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(55, 0, 1, 51) }, // This setting requires CCFG_FORCE_VDDR_HH = 1.
-    {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 30) }, // This setting requires CCFG_FORCE_VDDR_HH = 1.
-    RF_TxPowerTable_TERMINATION_ENTRY
+  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 1,  6) },
+  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 1,  6) },
+  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 1, 10) },
+  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 3, 1, 12) },
+  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 1, 14) },
+  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(35, 3, 1, 18) },
+  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(47, 3, 1, 22) },
+  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(29, 0, 1, 45) },
+  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 0, 1, 49) },
+  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 55) },
+  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(44, 0, 1, 63) },
+  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(52, 0, 1, 59) },
+  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(60, 0, 1, 47) },
+  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
+  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 49) },
+  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
+  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY(46, 0, 1, 59) },
+  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
+  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(55, 0, 1, 51) },
+  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
+  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 30) },
+  RF_TxPowerTable_TERMINATION_ENTRY
 };
 /*---------------------------------------------------------------------------*/
-// Overrides for CMD_RADIO_SETUP
+/* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ble_overrides[] CC_ALIGN(4) =
 {
-                                       // override_use_patch_ble_1mbps.xml
-    MCE_RFE_OVERRIDE(0,0,0,1,0,0),     // PHY: Use MCE ROM, RFE RAM patch
-                                       // override_synth_ble_1mbps.xml
-    HW_REG_OVERRIDE(0x4038,0x0034),    // Synth: Set recommended RTRIM to 4
-    (uint32_t)0x000784A3,              // Synth: Set Fref to 3.43 MHz
-    HW_REG_OVERRIDE(0x4020,0x7F00),    // Synth: Configure fine calibration setting
-    HW_REG_OVERRIDE(0x4064,0x0040),    // Synth: Configure fine calibration setting
-    (uint32_t)0xB1070503,              // Synth: Configure fine calibration setting
-    (uint32_t)0x05330523,              // Synth: Configure fine calibration setting
-    (uint32_t)0xA47E0583,              // Synth: Set loop bandwidth after lock to 80 kHz
-    (uint32_t)0xEAE00603,              // Synth: Set loop bandwidth after lock to 80 kHz
-    (uint32_t)0x00010623,              // Synth: Set loop bandwidth after lock to 80 kHz
-    HW32_ARRAY_OVERRIDE(0x405C,1),     // Synth: Configure PLL bias
-    (uint32_t)0x18000000,              // Synth: Configure PLL bias
-    ADI_REG_OVERRIDE(1,4,0x9F),        // Synth: Configure VCO LDO (in ADI1, set VCOLDOCFG=0x9F to use voltage input reference)
-    ADI_HALFREG_OVERRIDE(1,7,0x4,0x4), // Synth: Configure synth LDO (in ADI1, set SLDOCTL0.COMP_CAP=1)
-                                       // override_phy_ble_1mbps.xml
-    (uint32_t)0x013800C3,              // Tx: Configure symbol shape for BLE frequency deviation requirements
-    HW_REG_OVERRIDE(0x6088, 0x0045),   // Rx: Configure AGC reference level
-    HW_REG_OVERRIDE(0x6084, 0x05FD),   // Rx: Configure AGC gain level
-    (uint32_t)0x00038883,              // Rx: Configure LNA bias current trim offset
-                                       // override_frontend_xd.xml
-    (uint32_t)0x00F388A3,              // Rx: Set RSSI offset to adjust reported RSSI by +13 dB
-                                       // TX power override
-    ADI_REG_OVERRIDE(0,12,0xF8),       // Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8)
-    (uint32_t)0xFFFFFFFF,
+                                     /* override_use_patch_ble_1mbps.xml */
+  MCE_RFE_OVERRIDE(0,0,0,1,0,0),     /* PHY: Use MCE ROM, RFE RAM patch */
+                                     /* override_synth_ble_1mbps.xml */
+  HW_REG_OVERRIDE(0x4038,0x0034),    /* Synth: Set recommended RTRIM to 4 */
+  (uint32_t)0x000784A3,              /* Synth: Set Fref to 3.43 MHz */
+  HW_REG_OVERRIDE(0x4020,0x7F00),    /* Synth: Configure fine calibration setting */
+  HW_REG_OVERRIDE(0x4064,0x0040),    /* Synth: Configure fine calibration setting */
+  (uint32_t)0xB1070503,              /* Synth: Configure fine calibration setting */
+  (uint32_t)0x05330523,              /* Synth: Configure fine calibration setting */
+  (uint32_t)0xA47E0583,              /* Synth: Set loop bandwidth after lock to 80 kHz */
+  (uint32_t)0xEAE00603,              /* Synth: Set loop bandwidth after lock to 80 kHz */
+  (uint32_t)0x00010623,              /* Synth: Set loop bandwidth after lock to 80 kHz */
+  HW32_ARRAY_OVERRIDE(0x405C,1),     /* Synth: Configure PLL bias */
+  (uint32_t)0x18000000,              /* Synth: Configure PLL bias */
+                                     /* Synth: Configure VCO LDO */
+  ADI_REG_OVERRIDE(1,4,0x9F),        /* (in ADI1, set VCOLDOCFG=0x9F to use voltage input reference) */
+  ADI_HALFREG_OVERRIDE(1,7,0x4,0x4), /* Synth: Configure synth LDO (in ADI1, set SLDOCTL0.COMP_CAP=1) */
+                                     /* override_phy_ble_1mbps.xml */
+  (uint32_t)0x013800C3,              /* Tx: Configure symbol shape for BLE frequency deviation requirements */
+  HW_REG_OVERRIDE(0x6088, 0x0045),   /* Rx: Configure AGC reference level */
+  HW_REG_OVERRIDE(0x6084, 0x05FD),   /* Rx: Configure AGC gain level */
+  (uint32_t)0x00038883,              /* Rx: Configure LNA bias current trim offset */
+                                     /* override_frontend_xd.xml */
+  (uint32_t)0x00F388A3,              /* Rx: Set RSSI offset to adjust reported RSSI by +13 dB */
+                                     /* TX power override */
+  ADI_REG_OVERRIDE(0,12,0xF8),       /* Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8) */
+  (uint32_t)0xFFFFFFFF,
 };
 /*---------------------------------------------------------------------------*/
-// CMD_RADIO_SETUP
-// Radio Setup Command for Pre-Defined Schemes
+/* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
 rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radio_setup =
 {
-    .commandNo = 0x0802,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x0,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
-    .condition.nSkip = 0x0,
-    .mode = 0x00,
-    .loDivider = 0x00,
-    .config.frontEndMode = 0x0,
-    .config.biasMode = 0x1,
-    .config.analogCfgMode = 0x0,
-    .config.bNoFsPowerUp = 0x0,
-    .txPower = 0x3D3F,
-    .pRegOverride = rf_ble_overrides,
+  .commandNo = CMD_RADIO_SETUP,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .mode = 0x00,
+  .loDivider = 0x00,
+  .config.frontEndMode = 0x0,
+  .config.biasMode = 0x1,
+  .config.analogCfgMode = 0x0,
+  .config.bNoFsPowerUp = 0x0,
+  .txPower = 0x3D3F,
+  .pRegOverride = rf_ble_overrides,
 };
 /*---------------------------------------------------------------------------*/
-// Structure for CMD_BLE_ADV_NC.pParams
+/* Structure for CMD_BLE_ADV_NC.pParams */
 rfc_bleAdvPar_t rf_ble_adv_par =
 {
-    .pRxQ = 0, // INSERT APPLICABLE POINTER: (dataQueue_t*)&xxx
-    .rxConfig.bAutoFlushIgnored = 0x0,
-    .rxConfig.bAutoFlushCrcErr = 0x0,
-    .rxConfig.bAutoFlushEmpty = 0x0,
-    .rxConfig.bIncludeLenByte = 0x0,
-    .rxConfig.bIncludeCrc = 0x0,
-    .rxConfig.bAppendRssi = 0x0,
-    .rxConfig.bAppendStatus = 0x0,
-    .rxConfig.bAppendTimestamp = 0x0,
-    .advConfig.advFilterPolicy = 0x0,
-    .advConfig.deviceAddrType = 0x0,
-    .advConfig.peerAddrType = 0x0,
-    .advConfig.bStrictLenFilter = 0x0,
-    .advConfig.rpaMode = 0x0,
-    .advLen = 0x18,
-    .scanRspLen = 0x00,
-    .pAdvData = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
-    .pScanRspData = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
-    .pDeviceAddress = 0, // INSERT APPLICABLE POINTER: (uint16_t*)&xxx
-    .pWhiteList = 0, // INSERT APPLICABLE POINTER: (uint32_t*)&xxx
-    .__dummy0 = 0x0000,
-    .__dummy1 = 0x00,
-    .endTrigger.triggerType = 0x1,
-    .endTrigger.bEnaCmd = 0x0,
-    .endTrigger.triggerNo = 0x0,
-    .endTrigger.pastTrig = 0x0,
-    .endTime = 0x00000000,
+  .pRxQ = 0,
+  .rxConfig.bAutoFlushIgnored = 0x0,
+  .rxConfig.bAutoFlushCrcErr = 0x0,
+  .rxConfig.bAutoFlushEmpty = 0x0,
+  .rxConfig.bIncludeLenByte = 0x0,
+  .rxConfig.bIncludeCrc = 0x0,
+  .rxConfig.bAppendRssi = 0x0,
+  .rxConfig.bAppendStatus = 0x0,
+  .rxConfig.bAppendTimestamp = 0x0,
+  .advConfig.advFilterPolicy = 0x0,
+  .advConfig.deviceAddrType = 0x0,
+  .advConfig.peerAddrType = 0x0,
+  .advConfig.bStrictLenFilter = 0x0,
+  .advConfig.rpaMode = 0x0,
+  .advLen = 0x18,
+  .scanRspLen = 0x00,
+  .pAdvData = 0,
+  .pScanRspData = 0,
+  .pDeviceAddress = 0,
+  .pWhiteList = 0,
+  .__dummy0 = 0x0000,
+  .__dummy1 = 0x00,
+  .endTrigger.triggerType = TRIG_NEVER,
+  .endTrigger.bEnaCmd = 0x0,
+  .endTrigger.triggerNo = 0x0,
+  .endTrigger.pastTrig = 0x0,
+  .endTime = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/
-// CMD_BLE_ADV_NC
-// BLE Non-Connectable Advertiser Command
+/* CMD_BLE_ADV_NC: BLE Non-Connectable Advertiser Command */
 rfc_CMD_BLE_ADV_NC_t rf_ble_cmd_ble_adv_nc =
 {
-    .commandNo = 0x1805,
-    .status = 0x0000,
-    .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = 0x0,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = 0x1,
-    .condition.nSkip = 0x0,
-    .channel = 0x8C,
-    .whitening.init = 0x51,
-    .whitening.bOverride = 0x1,
-    .pParams = &rf_ble_adv_par,
-    .pOutput = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+  .commandNo = CMD_BLE_ADV_NC,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .channel = 0x8C,
+  .whitening.init = 0x51,
+  .whitening.bOverride = 0x1,
+  .pParams = &rf_ble_adv_par,
+  .pOutput = 0,
 };
 /*---------------------------------------------------------------------------*/

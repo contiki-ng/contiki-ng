@@ -58,6 +58,7 @@
 /* Platform RF dev */
 #include "dot-15-4g.h"
 #include "rf-core.h"
+#include "rf-data-queue.h"
 #include "netstack-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
@@ -65,6 +66,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "RF Prop Mode"
+#define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 #ifdef NDEBUG
 # define PRINTF(...)
@@ -136,8 +142,6 @@
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
-#define CMD_RX_EVENTS         (RF_EventRxOk | RF_EventRxBufFull | RF_EventRxEntryDone)
-/*---------------------------------------------------------------------------*/
 /* Configuration for TX power table */
 #ifdef PROP_MODE_CONF_TX_POWER_TABLE
 # define TX_POWER_TABLE  PROP_MODE_CONF_TX_POWER_TABLE
@@ -158,15 +162,6 @@
 #define TX_BUF_PAYLOAD_LEN      180
 
 #define TX_BUF_SIZE             (TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN)
-
-/* RX buf configuration */
-#ifdef PROP_MODE_CONF_RX_BUF_CNT
-# define RX_BUF_CNT             PROP_MODE_CONF_RX_BUF_CNT
-#else
-# define RX_BUF_CNT             4
-#endif
-
-#define RX_BUF_SIZE             140
 /*---------------------------------------------------------------------------*/
 /* Size of the Length field in Data Entry, two bytes in this case */
 typedef uint16_t              lensz_t;
@@ -183,28 +178,14 @@ typedef uint16_t              lensz_t;
 #define ED_RF_POWER_MAX_DBM   MAC_RADIO_RECEIVER_SATURATION_DBM
 /*---------------------------------------------------------------------------*/
 /* RF Core typedefs */
-typedef dataQueue_t            data_queue_t;
-typedef rfc_dataEntryGeneral_t data_entry_t;
 typedef rfc_propRxOutput_t     rx_output_t;
-
-/* Receive buffer entries with room for 1 IEEE 802.15.4 frame in each */
-typedef union {
-  data_entry_t data_entry;
-  uint8_t      buf[RX_BUF_SIZE];
-} rx_buf_t CC_ALIGN(4);
 
 typedef struct {
   /* Outgoing frame buffer */
   uint8_t             tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
-  /* Incoming frame buffers */
-  rx_buf_t            rx_bufs[RX_BUF_CNT];
 
-  /* RX Data Queue */
-  data_queue_t        rx_data_queue;
   /* RX Statistics struct */
   rx_output_t         rx_stats;
-  /* Receive entry pointer to keep track of read items */
-  data_entry_t*       rx_read_entry;
 
   /* RSSI Threshold */
   int8_t              rssi_threshold;
@@ -231,32 +212,12 @@ static int on(void);
 static int off(void);
 /*---------------------------------------------------------------------------*/
 static void
-rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
-{
-  /* Unused arguments */
-  (void)client;
-  (void)command;
-
-  if (events & RF_EventRxEntryDone) {
-    process_poll(&rf_core_process);
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
-init_data_queue(void)
-{
-  /* Initialize RF core data queue, circular buffer */
-  prop_radio.rx_data_queue.pCurrEntry = prop_radio.rx_bufs[0].buf;
-  prop_radio.rx_data_queue.pLastEntry = NULL;
-  /* Set current read pointer to first element */
-  prop_radio.rx_read_entry = &prop_radio.rx_bufs[0].data_entry;
-}
-/*---------------------------------------------------------------------------*/
-static void
 init_rf_params(void)
 {
+  data_queue_t *data_queue = data_queue_init(sizeof(lensz_t));
+
   cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx.lenOffset;
-  cmd_rx.pQueue = &prop_radio.rx_data_queue;
+  cmd_rx.pQueue = data_queue;
   cmd_rx.pOutput = (uint8_t *)&prop_radio.rx_stats;
 }
 /*---------------------------------------------------------------------------*/
@@ -268,7 +229,7 @@ get_rssi(void)
   const bool rx_is_idle = !rx_is_active();
 
   if (rx_is_idle) {
-    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    res = netstack_sched_rx();
     if (res != RF_RESULT_OK) {
       return RF_GET_RSSI_ERROR_VAL;
     }
@@ -357,35 +318,6 @@ calculate_lqi(int8_t rssi)
   return (MAC_SPEC_ED_MAX * (rssi - ED_RF_POWER_MIN_DBM)) / (ED_RF_POWER_MAX_DBM - ED_RF_POWER_MIN_DBM);
 }
 /*---------------------------------------------------------------------------*/
-static void
-init_rx_bufs(void)
-{
-  size_t i = 0;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
-    const data_entry_t data_entry = {
-      .status       = DATA_ENTRY_PENDING,
-      .config.type  = DATA_ENTRY_TYPE_GEN,
-      .config.lenSz = sizeof(lensz_t),
-      .length       = RX_BUF_SIZE - sizeof(data_entry_t), /* TODO: is this sizeof sound? */
-      /* Point to fist entry if this is last entry, else point to next entry */
-      .pNextEntry   = (i == (RX_BUF_CNT - 1))
-        ? prop_radio.rx_bufs[0].buf
-        : prop_radio.rx_bufs[i].buf
-    };
-    /* Write back data entry struct */
-    prop_radio.rx_bufs[i].data_entry = data_entry;
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
-reset_rx_bufs(void)
-{
-  size_t i;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
-    prop_radio.rx_bufs[i].data_entry.status = DATA_ENTRY_PENDING;
-  }
-}
-/*---------------------------------------------------------------------------*/
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
@@ -416,15 +348,15 @@ transmit(unsigned short transmit_len)
    * The Radio will flip the bits around, so tx_buf[0] must have the length
    * LSBs (PHR[15:8] and tx_buf[1] will have PHR[7:0]
    */
-  prop_radio.tx_buf[0] = total_length & 0xFF;
-  prop_radio.tx_buf[1] = (total_length >> 8) + DOT_4G_PHR_DW_BIT + DOT_4G_PHR_CRC_BIT;
+  prop_radio.tx_buf[0] = ((total_length >> 0) & 0xFF);
+  prop_radio.tx_buf[1] = ((total_length >> 8) & 0xFF) + DOT_4G_PHR_DW_BIT + DOT_4G_PHR_CRC_BIT;
 
   /* pktLen: Total number of bytes in the TX buffer, including the header if
    * one exists, but not including the CRC (which is not present in the buffer) */
   cmd_tx.pktLen = transmit_len + DOT_4G_PHR_LEN;
   cmd_tx.pPkt = prop_radio.tx_buf;
 
-  res = netstack_sched_tx(NULL, 0);
+  res = netstack_sched_prop_tx();
 
   return (res == RF_RESULT_OK)
     ? RADIO_TX_OK
@@ -438,25 +370,13 @@ send(const void *payload, unsigned short payload_len)
   return transmit(payload_len);
 }
 /*---------------------------------------------------------------------------*/
-static void
-release_data_entry(void)
-{
-  data_entry_t *const data_entry = prop_radio.rx_read_entry;
-  uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
-
-  /* Clear the Length byte(s) and set status to 0: "Pending" */
-  *(lensz_t*)frame_ptr = 0;
-  data_entry->status = DATA_ENTRY_PENDING;
-  prop_radio.rx_read_entry = (data_entry_t*)data_entry->pNextEntry;
-}
-/*---------------------------------------------------------------------------*/
 static int
 read(void *buf, unsigned short buf_len)
 {
-  volatile data_entry_t *data_entry = prop_radio.rx_read_entry;
+  volatile data_entry_t *data_entry = data_queue_current_entry();
 
   const rtimer_clock_t t0 = RTIMER_NOW();
-  /* Only wait if the Radio timer is accessing the entry */
+  /* Only wait if the Radio is accessing the entry */
   while ((data_entry->status == DATA_ENTRY_BUSY) &&
           RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
 
@@ -465,7 +385,8 @@ read(void *buf, unsigned short buf_len)
     return 0;
   }
 
-  /* First 2 bytes in the data entry are the length.
+  /*
+   * First 2 bytes in the data entry are the length.
    * Data frame is on the following format:
    *    Length (2) + Payload (N) + RSSI (1) + Status (1)
    * Data frame DOES NOT contain the following:
@@ -478,17 +399,18 @@ read(void *buf, unsigned short buf_len)
    * | Length  | Payload | RSSI   | Status |
    * +---------+---------+--------+--------+
    * Length bytes equal total length of entire frame excluding itself,
-   * i.e.: Length = N + RSSI (1) + Status (1)
+   *       Length = N + RSSI (1) + Status (1)
    *              = N + 2
-   *            N = Length - 2 */
-
+   *            N = Length - 2
+   */
   uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
   const lensz_t frame_len = *(lensz_t*)frame_ptr;
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if (frame_len < FRAME_SHAVE) {
     PRINTF("read: frame too short len=%d\n", frame_len);
-    release_data_entry();
+
+    data_queue_release_entry();
     return 0;
   }
 
@@ -498,7 +420,8 @@ read(void *buf, unsigned short buf_len)
   /* Sanity check that Payload fits in Buffer */
   if (payload_len > buf_len) {
     PRINTF("read: payload too large for buffer len=%d buf_len=%d\n", payload_len, buf_len);
-    release_data_entry();
+
+    data_queue_release_entry();
     return 0;
   }
 
@@ -512,7 +435,7 @@ read(void *buf, unsigned short buf_len)
   packetbuf_set_attr(PACKETBUF_ATTR_RSSI,         (packetbuf_attr_t)rssi);
   packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, (packetbuf_attr_t)lqi);
 
-  release_data_entry();
+  data_queue_release_entry();
   return (int)payload_len;
 }
 /*---------------------------------------------------------------------------*/
@@ -559,7 +482,7 @@ receiving_packet(void)
 static int
 pending_packet(void)
 {
-  const data_entry_t *const read_entry = prop_radio.rx_read_entry;
+  const data_entry_t *const read_entry = data_queue_current_entry();
   volatile const data_entry_t *curr_entry = read_entry;
 
   int num_pending = 0;
@@ -594,9 +517,9 @@ on(void)
     return RF_RESULT_OK;
   }
 
-  init_rx_bufs();
+  data_queue_reset();
 
-  res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+  res = netstack_sched_rx();
 
   if (res != RF_RESULT_OK) {
     return RF_RESULT_ERROR;
@@ -615,8 +538,6 @@ off(void)
   }
 
   rf_yield();
-
-  reset_rx_bufs();
 
   prop_radio.rf_is_on = false;
   return RF_RESULT_OK;
@@ -756,7 +677,6 @@ init(void)
   prop_radio.rssi_threshold = PROP_MODE_RSSI_THRESHOLD;
 
   init_rf_params();
-  init_data_queue();
 
   /* Init RF params and specify non-default params */
   RF_Params       rf_params;

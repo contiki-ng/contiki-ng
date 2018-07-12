@@ -84,6 +84,7 @@
 /*---------------------------------------------------------------------------*/
 #include "ieee-addr.h"
 #include "rf-core.h"
+#include "rf-ble-beacond.h"
 #include "lib/random.h"
 #include "button-sensor.h"
 /*---------------------------------------------------------------------------*/
@@ -202,6 +203,8 @@ platform_init_stage_two(void)
 void
 platform_init_stage_three(void)
 {
+  rf_ble_beacond_init();
+
   radio_value_t chan = 0, pan = 0;
 
   set_rf_params();

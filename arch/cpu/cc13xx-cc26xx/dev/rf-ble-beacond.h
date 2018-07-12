@@ -58,7 +58,7 @@ typedef enum {
     RF_BLE_BEACOND_OK,
     RF_BLE_BEACOND_ERROR,
     RF_BLE_BEACOND_DISABLED,
-} rf_ble_beacond_result_e;
+} rf_ble_beacond_result_t;
 /**
  * \brief Set the device name to use with the BLE advertisement/beacon daemon
  * \param interval The interval (ticks) between two consecutive beacon bursts
@@ -68,7 +68,7 @@ typedef enum {
  * this function can be used to configure a single parameter at a time if so
  * desired.
  */
-rf_ble_beacond_result_e rf_ble_beacond_config(clock_time_t interval, const char *name);
+rf_ble_beacond_result_t rf_ble_beacond_init(void);
 
 /**
  * \brief Start the BLE advertisement/beacon daemon
@@ -78,50 +78,37 @@ rf_ble_beacond_result_e rf_ble_beacond_config(clock_time_t interval, const char 
  * calling rf_ble_beacond_config(). Otherwise, this function will return an
  * error.
  */
-rf_ble_beacond_result_e rf_ble_beacond_start(void);
+rf_ble_beacond_result_t rf_ble_beacond_start(clock_time_t interval, const char *name);
 
 /**
  * \brief Stop the BLE advertisement/beacon daemon
  */
-rf_ble_beacond_result_e rf_ble_beacond_stop(void);
+rf_ble_beacond_result_t rf_ble_beacond_stop(void);
 
 /**
  * \brief Check whether the BLE beacond is currently active
- * \retval 1 The radio is in BLE mode
- * \retval 0 The BLE daemon is not active, or disabled
+ * \retval  1 BLE daemon is active
+ * \retval  0 BLE daemon is inactive
+ * \retval -1 BLE daemon is disabled
  */
-uint8_t rf_ble_is_active(void);
+int8_t rf_ble_is_active(void);
 
 /**
  * \brief Set TX power for BLE advertisements
- * \param dBm The 'at least' TX power in dBm, values avove 5 dBm will be ignored
+ * \param dbm The 'at least' TX power in dBm, values avove 5 dBm will be ignored
  *
  * Set TX power to 'at least' power dBm.
  * This works with a lookup table. If the value of 'power' does not exist in
  * the lookup table, TXPOWER will be set to the immediately higher available
  * value
  */
-rf_ble_beacond_result_e rf_ble_set_tx_power(radio_value_t dBm);
+rf_ble_beacond_result_t rf_ble_set_tx_power(int8_t dbm);
 
 /**
  * \brief Get TX power for BLE advertisements
  * \return The TX power for BLE advertisements
  */
-radio_value_t rf_ble_get_tx_power(void);
-
-/**
- * \brief Transmit a single BLE advertisement in one or more advertisement channels
- * \param channel Bitmask of advertisement channels to be used: use
- * BLE_ADV_CHANNEL_37 for channel 37, BLE_ADV_CHANNEL_38 for channel 38,
- * BLE_ADV_CHANNEL_39 for channel 39, or any 'or' combination of those
- * \param data A pointer to the advertisement data buffer
- * \param len The length of the advertisement data. If more than BLE_ADV_MAX_SIZE,
- * the first BLE_ADV_MAX_SIZE bytes will be used.
- *
- * Transmits a given advertisement payload once in one or any arbitrary combination
- * of advertisement channels.
- */
-rf_ble_beacond_result_e rf_ble_beacon_single(uint8_t channel, uint8_t *data, uint8_t len);
+int8_t rf_ble_get_tx_power(void);
 /*---------------------------------------------------------------------------*/
 #endif /* RF_BLE_BEACOND_H_ */
 /*---------------------------------------------------------------------------*/

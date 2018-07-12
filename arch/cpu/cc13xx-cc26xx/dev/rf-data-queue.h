@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Michael Spoerk
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,109 +26,29 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
-/**
- * \file
- *    Driver for the retrieval of an BLE address from flash
- *
- * \author
- *    Michael Spoerk <mi.spoerk@gmail.com>
- */
+/*---------------------------------------------------------------------------*/
+#ifndef RF_DATA_QUEUE_H_
+#define RF_DATA_QUEUE_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
-#include "dev/ble-hal.h"
-#include "net/linkaddr.h"
-
-#include "ble-addr.h"
-
-#include <string.h>
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(inc/hw_memmap.h)
-#include DeviceFamily_constructPath(inc/hw_fcfg1.h)
-#include DeviceFamily_constructPath(inc/hw_ccfg.h)
+#include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
+#include DeviceFamily_constructPath(driverlib/rf_data_entry.h)
 /*---------------------------------------------------------------------------*/
-#define BLE_MAC_PRIMARY_ADDRESS    (FCFG1_BASE + FCFG1_O_MAC_BLE_0)
-#define BLE_MAC_SECONDARY_ADDRESS  (CCFG_BASE  + CCFG_O_IEEE_BLE_0)
+#include <stddef.h>
 /*---------------------------------------------------------------------------*/
-uint8_t*
-ble_addr_ptr(void)
-{
-  volatile const uint8_t * const primary   = (uint8_t *)BLE_MAC_PRIMARY_ADDRESS;
-  volatile const uint8_t * const secondary = (uint8_t *)BLE_MAC_SECONDARY_ADDRESS;
-
-  /*
-   * Reading from primary location...
-   * ...unless we can find a byte != 0xFF in secondary
-   *
-   * Intentionally checking all bytes here instead of len, because we
-   * are checking validity of the entire address irrespective of the
-   * actual number of bytes the caller wants to copy over.
-   */
-  size_t i;
-  for(i = 0; i < BLE_ADDR_SIZE; i++) {
-    if(secondary[i] != 0xFF) {
-      /* A byte in secondary is not 0xFF. Use secondary address. */
-      return (uint8_t*)secondary;
-    }
-  }
-
-  /* All bytes in secondary is 0xFF. Use primary address. */
-  return (uint8_t*)primary;
-}
+typedef dataQueue_t            data_queue_t;
+typedef rfc_dataEntryGeneral_t data_entry_t;
 /*---------------------------------------------------------------------------*/
-int
-ble_addr_cpy(uint8_t *dst)
-{
-  if(!dst) {
-    return -1;
-  }
-
-  volatile const uint8_t *const ble_addr = ble_addr_ptr();
-
-  /*
-   * We have chosen what address to read the BLE address from. Do so,
-   * inverting byte order
-   */
-  size_t i;
-  for(i = 0; i < BLE_ADDR_SIZE; i++) {
-    dst[i] = ble_addr[BLE_ADDR_SIZE - 1 - i];
-  }
-
-  return 0;
-}
+data_queue_t* data_queue_init(size_t lensz);
 /*---------------------------------------------------------------------------*/
-int
-ble_addr_to_eui64(uint8_t *dst, uint8_t *src)
-{
-  if (!dst || !src) {
-    return -1;
-  }
-
-  memcpy(dst, src, 3);
-  dst[3] = 0xFF;
-  dst[4] = 0xFE;
-  memcpy(&dst[5], &src[3], 3);
-
-  return 0;
-}
+void data_queue_reset(void);
 /*---------------------------------------------------------------------------*/
-int
-ble_addr_to_eui64_cpy(uint8_t *dst)
-{
-  if (!dst) {
-    return -1;
-  }
-
-  int res;
-  uint8_t ble_addr[BLE_ADDR_SIZE];
-
-  res = ble_addr_cpy(ble_addr);
-  if (res) {
-    return -1;
-  }
-
-  return ble_addr_to_eui64(dst, ble_addr);
-}
+data_entry_t* data_queue_current_entry(void);
+/*---------------------------------------------------------------------------*/
+void data_queue_release_entry(void);
+/*---------------------------------------------------------------------------*/
+#endif /* RF_DATA_QUEUE_H_ */
+/*---------------------------------------------------------------------------*/

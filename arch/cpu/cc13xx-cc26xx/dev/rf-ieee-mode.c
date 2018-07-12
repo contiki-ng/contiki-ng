@@ -55,16 +55,18 @@
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_data_entry.h)
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
-/* rf_ieee_cmd and rf_ieee_mailbox included by RF settings because of the
+/*
+ * rf_ieee_cmd.h and rf_ieee_mailbox.h are included by RF settings because a
  * discrepancy between CC13x0 and CC13x2 IEEE support. CC13x0 doesn't provide
- * RFCore definitions of IEEE commandos, and are therefore included locally
+ * RFCore definitions of IEEE commands, and are therefore included locally
  * from the Contiki build system. CC13x2 includes these normally from driverlib.
- * This is taken care of RF settings. */
+ * This is taken care of RF settings.
+ */
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* SimpleLink Platform RF dev */
-#include "dot-15-4g.h"
+#include "rf-data-queue.h"
 #include "rf-core.h"
 #include "netstack-settings.h"
 /*---------------------------------------------------------------------------*/
@@ -76,7 +78,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "RF"
+#define LOG_MODULE "RF IEEE Mode"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 #ifdef NDEBUG
@@ -144,6 +146,10 @@
 #define IEEE_MODE_CHAN_MAX      26
 
 #define IEEE_MODE_CHAN_IN_RANGE(ch)  ((IEEE_MODE_CHAN_MIN <= (ch)) && ((ch) <= IEEE_MODE_CHAN_MAX))
+  /* freq(channel) = freq_base + freq_spacing * (channel - channel_min) */
+#define IEEE_MODE_FREQ(chan) \
+  ((uint32_t)IEEE_MODE_FREQ_BASE + (uint32_t)IEEE_MODE_FREQ_SPACING * \
+    ((uint32_t)(channel) - (uint32_t)IEEE_MODE_CHAN_MIN))
 
 /* Sanity check of default IEEE channel */
 #if !IEEE_MODE_CHAN_IN_RANGE(IEEE_MODE_CHANNEL)
@@ -165,8 +171,6 @@
 /* XXX: don't know what exactly is this, looks like the time to TX 3 octets */
 #define RAT_TIMESTAMP_OFFSET  -(USEC_TO_RAT(32 * 3) - 1) /* -95.75 usec */
 /*---------------------------------------------------------------------------*/
-#define CMD_RX_EVENTS         (RF_EventRxOk | RF_EventRxBufFull | RF_EventRxEntryDone)
-/*---------------------------------------------------------------------------*/
 #define STATUS_CORRELATION   0x3f  /* bits 0-5 */
 #define STATUS_REJECT_FRAME  0x40  /* bit 6 */
 #define STATUS_CRC_FAIL      0x80  /* bit 7 */
@@ -178,15 +182,6 @@
 
 /* TX buf configuration */
 #define TX_BUF_SIZE         180
-
-/* RX buf configuration */
-#ifdef IEEE_MODE_CONF_RX_BUF_CNT
-# define RX_BUF_CNT             IEEE_MODE_CONF_RX_BUF_CNT
-#else
-# define RX_BUF_CNT             4
-#endif
-
-#define RX_BUF_SIZE     144
 /*---------------------------------------------------------------------------*/
 /* Size of the Length representation in Data Entry, one byte in this case */
 typedef uint8_t               lensz_t;
@@ -202,30 +197,16 @@ typedef enum {
 } cca_state_t;
 /*---------------------------------------------------------------------------*/
 /* RF Core typedefs */
-typedef dataQueue_t             data_queue_t;
-typedef rfc_dataEntryGeneral_t  data_entry_t;
 typedef rfc_ieeeRxOutput_t      rx_output_t;
 typedef rfc_CMD_IEEE_MOD_FILT_t cmd_mod_filt_t;
 typedef rfc_CMD_IEEE_CCA_REQ_t  cmd_cca_req_t;
 
-/* Receive buffer entries with room for 1 IEEE 802.15.4 frame in each */
-typedef union {
-  data_entry_t data_entry;
-  uint8_t      buf[RX_BUF_SIZE];
-} rx_buf_t CC_ALIGN(4);
-
 typedef struct {
   /* Outgoing frame buffer */
   uint8_t             tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
-  /* Ingoing frame buffers */
-  rx_buf_t            rx_bufs[RX_BUF_CNT];
 
-  /* RX Data Queue */
-  data_queue_t        rx_data_queue;
   /* RF Statistics struct */
   rx_output_t         rx_stats;
-  /* Receive entry pointer to keep track of read items */
-  data_entry_t*       rx_read_entry;
 
   /* Indicates RF is supposed to be on or off */
   bool                rf_is_on;
@@ -305,22 +286,6 @@ const struct radio_driver ieee_mode_driver = {
 };
 /*---------------------------------------------------------------------------*/
 static void
-rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
-{
-  /* Unused arguments */
-  (void)client;
-  (void)command;
-
-  if (events & RF_EventRxOk) {
-    process_poll(&rf_core_process);
-  }
-
-  if (events & RF_EventRxBufFull) {
-
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
 rat_overflow_cb(void *arg)
 {
   check_rat_overflow();
@@ -330,82 +295,50 @@ rat_overflow_cb(void *arg)
 }
 /*---------------------------------------------------------------------------*/
 static void
-init_data_queue(void)
-{
-  /* Initialize RF core data queue, circular buffer */
-  ieee_radio.rx_data_queue.pCurrEntry = ieee_radio.rx_bufs[0].buf;
-  ieee_radio.rx_data_queue.pLastEntry = NULL;
-  /* Set current read pointer to first element */
-  ieee_radio.rx_read_entry = &ieee_radio.rx_bufs[0].data_entry;
-}
-/*---------------------------------------------------------------------------*/
-static void
 init_rf_params(void)
 {
-    cmd_rx.pRxQ    = &ieee_radio.rx_data_queue;
-    cmd_rx.pOutput = &ieee_radio.rx_stats;
+  data_queue_t *rx_q = data_queue_init(sizeof(lensz_t));
+
+  cmd_rx.pRxQ    = rx_q;
+  cmd_rx.pOutput = &ieee_radio.rx_stats;
 
 #if IEEE_MODE_PROMISCOUS
-    cmd_rx.frameFiltOpt.frameFiltEn = 0;
+  cmd_rx.frameFiltOpt.frameFiltEn = 0;
 #else
-    cmd_rx.frameFiltOpt.frameFiltEn = 1;
+  cmd_rx.frameFiltOpt.frameFiltEn = 1;
 #endif
 
 #if IEEE_MODE_AUTOACK
-    cmd_rx.frameFiltOpt.autoAckEn = 1;
+  cmd_rx.frameFiltOpt.autoAckEn = 1;
 #else
-    cmd_rx.frameFiltOpt.autoAckEn = 0;
+  cmd_rx.frameFiltOpt.autoAckEn = 0;
 #endif
 
-    cmd_rx.ccaRssiThr = IEEE_MODE_RSSI_THRESHOLD;
+  cmd_rx.ccaRssiThr = IEEE_MODE_RSSI_THRESHOLD;
 
-    cmd_tx.pNextOp = (RF_Op*)&cmd_rx_ack;
-    cmd_tx.condition.rule = COND_NEVER; /* Initially ACK turned off */
+  cmd_tx.pNextOp = (RF_Op*)&cmd_rx_ack;
+  cmd_tx.condition.rule = COND_NEVER; /* Initially ACK turned off */
 
-    cmd_rx_ack.startTrigger.triggerType = TRIG_NOW;
-    cmd_rx_ack.endTrigger.triggerType = TRIG_REL_SUBMIT;
-    /*
-     * ACK packet is transmitted 192 us after the end of the received packet.
-     * See TRM Section ACK Transmission for more info.
-     */
-    cmd_rx_ack.endTime = RF_convertUsToRatTicks(195);
+  /*
+   * ACK packet is transmitted 192 us after the end of the received packet,
+   * takes 352 us for ACK transmission, total of 546 us of expected time to
+   * recieve ACK in ideal conditions. 700 us endTime for CMD_IEEE_RX_ACK
+   * should give some margins.
+   * The ACK frame consists of 6 bytes of SHR/PDR and 5 bytes of PSDU, total
+   * of 11 bytes. 11 bytes x 32 us/byte equals 352 us of ACK transmission time.
+   */
+  cmd_rx_ack.startTrigger.triggerType = TRIG_NOW;
+  cmd_rx_ack.endTrigger.triggerType   = TRIG_REL_START;
+  cmd_rx_ack.endTime = RF_convertUsToRatTicks(700);
 
-    /* Initialize address filter command */
-    cmd_mod_filt.commandNo = CMD_IEEE_MOD_FILT;
-    memcpy(&(cmd_mod_filt.newFrameFiltOpt), &(rf_cmd_ieee_rx.frameFiltOpt), sizeof(rf_cmd_ieee_rx.frameFiltOpt));
-    memcpy(&(cmd_mod_filt.newFrameTypes),   &(rf_cmd_ieee_rx.frameTypes),   sizeof(rf_cmd_ieee_rx.frameTypes));
-}
-/*---------------------------------------------------------------------------*/
-static void
-init_rx_bufs(void)
-{
-  size_t i;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
-    const data_entry_t data_entry = {
-      .status       = DATA_ENTRY_PENDING,
-      .config.type  = DATA_ENTRY_TYPE_GEN,
-      .config.lenSz = sizeof(lensz_t),
-      .length       = RX_BUF_SIZE - sizeof(data_entry_t), /* TODO: is this sizeof sound? */
-      /* Point to fist entry if this is last entry, else point to next entry */
-      .pNextEntry   = (i == (RX_BUF_CNT - 1))
-        ? ieee_radio.rx_bufs[0].buf
-        : ieee_radio.rx_bufs[i].buf
-    };
-    ieee_radio.rx_bufs[i].data_entry = data_entry;
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
-reset_rx_bufs(void)
-{
-  size_t i;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
-    ieee_radio.rx_bufs[i].data_entry.status = DATA_ENTRY_PENDING;
-  }
+  /* Initialize address filter command */
+  cmd_mod_filt.commandNo = CMD_IEEE_MOD_FILT;
+  memcpy(&(cmd_mod_filt.newFrameFiltOpt), &(rf_cmd_ieee_rx.frameFiltOpt), sizeof(rf_cmd_ieee_rx.frameFiltOpt));
+  memcpy(&(cmd_mod_filt.newFrameTypes),   &(rf_cmd_ieee_rx.frameTypes),   sizeof(rf_cmd_ieee_rx.frameTypes));
 }
 /*---------------------------------------------------------------------------*/
 static rf_result_t
-set_channel(uint32_t channel)
+set_channel(uint8_t channel)
 {
   if (!IEEE_MODE_CHAN_IN_RANGE(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
@@ -425,8 +358,7 @@ set_channel(uint32_t channel)
 
   cmd_rx.channel = channel;
 
-  /* freq = freq_base + freq_spacing * (channel - channel_min) */
-  const uint32_t new_freq = IEEE_MODE_FREQ_BASE + IEEE_MODE_FREQ_SPACING * (channel - IEEE_MODE_CHAN_MIN);
+  const uint32_t new_freq = IEEE_MODE_FREQ(channel);
   const uint16_t freq = (uint16_t)(new_freq / 1000);
   const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
@@ -513,7 +445,6 @@ init(void)
   ieee_radio.rf_is_on = false;
 
   init_rf_params();
-  init_data_queue();
 
   /* Init RF params and specify non-default params */
   RF_Params rf_params;
@@ -527,7 +458,7 @@ init(void)
     return RF_RESULT_ERROR;
   }
 
-  set_channel(IEEE_MODE_CHANNEL);
+  set_channel((uint8_t)IEEE_MODE_CHANNEL);
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
@@ -584,7 +515,7 @@ transmit(unsigned short transmit_len)
   cmd_tx.payloadLen = (uint8_t)transmit_len;
   cmd_tx.pPayload = ieee_radio.tx_buf;
 
-  res = netstack_sched_tx(NULL, 0);
+  res = netstack_sched_ieee_tx(ack_request);
 
   if (res != RF_RESULT_OK) {
     return RADIO_TX_ERR;
@@ -613,22 +544,10 @@ send(const void *payload, unsigned short payload_len)
   return transmit(payload_len);
 }
 /*---------------------------------------------------------------------------*/
-static void
-release_data_entry(void)
-{
-  data_entry_t *const data_entry = ieee_radio.rx_read_entry;
-  uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
-
-  /* Clear the length byte and set status to 0: "Pending" */
-  *(lensz_t*)frame_ptr = 0;
-  data_entry->status = DATA_ENTRY_PENDING;
-  ieee_radio.rx_read_entry = (data_entry_t*)data_entry->pNextEntry;
-}
-/*---------------------------------------------------------------------------*/
 static int
 read(void *buf, unsigned short buf_len)
 {
-  volatile data_entry_t *data_entry = ieee_radio.rx_read_entry;
+  volatile data_entry_t *data_entry = data_queue_current_entry();
 
   const rtimer_clock_t t0 = RTIMER_NOW();
   /* Only wait if the Radio timer is accessing the entry */
@@ -653,7 +572,7 @@ read(void *buf, unsigned short buf_len)
    * | Length | Payload | FCS     | RSSI   | Status | Timestamp |
    * +--------+---------+---------+--------+--------+-----------+
    * Length bytes equal total length of entire frame excluding itself,
-   * i.e.: Length = N + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
+   *       Length = N + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
    *       Length = N + 8
    *            N = Length - 8
    */
@@ -663,7 +582,8 @@ read(void *buf, unsigned short buf_len)
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if (frame_len < FRAME_SHAVE) {
     PRINTF("read: frame too short len=%d\n", frame_len);
-    release_data_entry();
+
+    data_queue_release_entry();
     return 0;
   }
 
@@ -673,7 +593,8 @@ read(void *buf, unsigned short buf_len)
   /* Sanity check that Payload fits in Buffer */
   if (payload_len > buf_len) {
     PRINTF("read: payload too large for buffer len=%d buf_len=%d\n", payload_len, buf_len);
-    release_data_entry();
+
+    data_queue_release_entry();
     return 0;
   }
 
@@ -682,7 +603,7 @@ read(void *buf, unsigned short buf_len)
   /* RSSI stored FCS (2) bytes after payload */
   ieee_radio.last.rssi = (int8_t)payload_ptr[payload_len + 2];
   /* LQI retrieved from Status byte, FCS (2) + RSSI (1) bytes after payload */
-  ieee_radio.last.corr_lqi = ((uint8_t)payload_ptr[payload_len + 3]) & STATUS_CORRELATION;
+  ieee_radio.last.corr_lqi = (uint8_t)(payload_ptr[payload_len + 3] & STATUS_CORRELATION);
   /* Timestamp stored FCS (2) + RSSI (1) + Status (1) bytes after payload */
   const uint32_t rat_ticks = *(uint32_t*)(payload_ptr + payload_len + 4);
   ieee_radio.last.timestamp = rat_to_timestamp(rat_ticks);
@@ -695,7 +616,7 @@ read(void *buf, unsigned short buf_len)
     packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, (packetbuf_attr_t)ieee_radio.last.corr_lqi);
   }
 
-  release_data_entry();
+  data_queue_release_entry();
   return (int)payload_len;
 }
 /*---------------------------------------------------------------------------*/
@@ -707,7 +628,7 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
   const bool rx_is_idle = !rx_is_active();
 
   if (rx_is_idle) {
-    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    res = netstack_sched_rx();
     if (res != RF_RESULT_OK) {
       return RF_RESULT_ERROR;
     }
@@ -772,7 +693,7 @@ receiving_packet(void)
 static int
 pending_packet(void)
 {
-  const data_entry_t *const read_entry = ieee_radio.rx_read_entry;
+  const data_entry_t *const read_entry = data_queue_current_entry();
   volatile const data_entry_t *curr_entry = read_entry;
 
   int num_pending = 0;
@@ -807,9 +728,9 @@ on(void)
     return RF_RESULT_OK;
   }
 
-  init_rx_bufs();
+  data_queue_reset();
 
-  res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+  res = netstack_sched_rx();
 
   if (res != RF_RESULT_OK) {
     return RF_RESULT_ERROR;
@@ -828,8 +749,6 @@ off(void)
   }
 
   rf_yield();
-
-  reset_rx_bufs();
 
   ieee_radio.rf_is_on = false;
   return RF_RESULT_OK;
@@ -979,7 +898,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    res = netstack_sched_rx();
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -992,7 +911,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    res = netstack_sched_rx();
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -1031,7 +950,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    res = netstack_sched_rx();
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -1063,7 +982,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    res = netstack_sched_rx();
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -1139,7 +1058,7 @@ set_object(radio_param_t param, const void *src, size_t size)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx(rx_cb, CMD_RX_EVENTS);
+    res = netstack_sched_rx();
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;

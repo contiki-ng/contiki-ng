@@ -53,6 +53,7 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
+#include "rf-data-queue.h"
 #include "netstack-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
@@ -85,13 +86,27 @@
 static RF_Object  rf_netstack;
 static RF_Object  rf_ble;
 
-typedef struct {
-  RF_CmdHandle  handle;
-  RF_Callback   cb;
-  RF_EventMask  bm_event;
-} rf_cmd_t;
+static RF_CmdHandle cmd_rx_handle;
+/*---------------------------------------------------------------------------*/
+static void
+cmd_rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
+{
+  /* Unused arguments */
+  (void)client;
+  (void)command;
 
-static rf_cmd_t   netstack_rx;
+  if (events & RF_EventRxEntryDone) {
+    process_poll(&rf_core_process);
+  }
+
+  if (events & RF_EventRxBufFull) {
+    data_queue_reset();
+    /* TODO: Check status of RX to verify RX was running before rescheduling */
+    netstack_sched_rx();
+
+    process_poll(&rf_core_process);
+  }
+}
 /*---------------------------------------------------------------------------*/
 static inline bool
 cmd_rx_is_active(void)
@@ -112,8 +127,8 @@ cmd_rx_disable(void)
 
   if (is_active) {
     CMD_STATUS(netstack_cmd_rx) = DONE_STOPPED;
-    RF_cancelCmd(&rf_netstack, netstack_rx.handle, RF_ABORT_GRACEFULLY);
-    netstack_rx.handle = 0;
+    RF_cancelCmd(&rf_netstack, cmd_rx_handle, RF_ABORT_GRACEFULLY);
+    cmd_rx_handle = 0;
   }
 
   return (uint_fast8_t)is_active;
@@ -137,16 +152,16 @@ cmd_rx_restore(uint_fast8_t rx_key)
 
   CMD_STATUS(netstack_cmd_rx) = PENDING;
 
-  netstack_rx.handle = RF_scheduleCmd(&rf_netstack,
+  cmd_rx_handle = RF_scheduleCmd(&rf_netstack,
     (RF_Op*)&netstack_cmd_rx,
     &sched_params,
-    netstack_rx.cb,
-    netstack_rx.bm_event
+    cmd_rx_cb,
+    RF_EventRxEntryDone | RF_EventRxBufFull
   );
 
-  if (!CMD_HANDLE_OK(netstack_rx.handle)) {
+  if (!CMD_HANDLE_OK(cmd_rx_handle)) {
     PRINTF("cmd_rx_restore: unable to schedule RX command handle=%d status=0x%04x",
-           netstack_rx.handle, CMD_STATUS(netstack_cmd_rx));
+           cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
     return RF_RESULT_ERROR;
   }
 
@@ -196,7 +211,11 @@ rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm)
 RF_Handle
 netstack_open(RF_Params *params)
 {
-  return RF_open(&rf_netstack, &netstack_mode, (RF_RadioSetup*)&netstack_cmd_radio_setup, params);
+  return RF_open(&rf_netstack,
+    &netstack_mode,
+    (RF_RadioSetup*)&netstack_cmd_radio_setup,
+    params
+  );
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
@@ -247,7 +266,78 @@ netstack_sched_fs(void)
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
-netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event)
+netstack_sched_ieee_tx(bool recieve_ack)
+{
+  rf_result_t res;
+
+  RF_ScheduleCmdParams sched_params;
+  RF_ScheduleCmdParams_init(&sched_params);
+
+  sched_params.priority   = RF_PriorityNormal;
+  sched_params.endTime    = 0;
+  sched_params.allowDelay = RF_AllowDelayAny;
+
+  const bool is_active = cmd_rx_is_active();
+  const bool rx_ack_required = (recieve_ack && !is_active);
+
+  /*
+   * If we expect ACK after transmission, RX must be running to be able to
+   * run the RX_ACK command. Therefore, turn on RX before starting the
+   * chained TX command.
+   */
+  if (rx_ack_required) {
+    res = netstack_sched_rx();
+    if (res != RF_RESULT_OK) {
+      return res;
+    }
+  }
+
+  CMD_STATUS(netstack_cmd_tx) = PENDING;
+
+  RF_CmdHandle tx_handle = RF_scheduleCmd(&rf_netstack,
+    (RF_Op*)&netstack_cmd_tx,
+    &sched_params,
+    NULL,
+    0
+  );
+
+  if (!CMD_HANDLE_OK(tx_handle)) {
+    PRINTF("netstack_sched_tx: unable to schedule TX command handle=%d status=0x%04x\n",
+           tx_handle, CMD_STATUS(netstack_cmd_tx));
+    return RF_RESULT_ERROR;
+  }
+
+  if (is_active) {
+    ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
+  } else {
+    ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
+  }
+
+  /* Wait until TX operation finishes */
+  RF_EventMask tx_events = RF_pendCmd(&rf_netstack, tx_handle, 0);
+
+  /* Stop RX if it was turned on only for ACK */
+  if (rx_ack_required) {
+    netstack_stop_rx();
+  }
+
+  if (is_active) {
+    ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
+  } else {
+    ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
+  }
+
+  if (!EVENTS_CMD_DONE(tx_events)) {
+    PRINTF("netstack_sched_tx: TX command pend error events=0x%08llx status=0x%04x\n",
+           tx_events, CMD_STATUS(netstack_cmd_tx));
+    return RF_RESULT_ERROR;
+  }
+
+  return RF_RESULT_OK;
+}
+/*---------------------------------------------------------------------------*/
+rf_result_t
+netstack_sched_prop_tx(void)
 {
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
@@ -261,8 +351,8 @@ netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event)
   RF_CmdHandle tx_handle = RF_scheduleCmd(&rf_netstack,
     (RF_Op*)&netstack_cmd_tx,
     &sched_params,
-    cb,
-    bm_event
+    NULL,
+    0
   );
 
   if (!CMD_HANDLE_OK(tx_handle)) {
@@ -272,13 +362,10 @@ netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event)
   }
 
   /*
-   * IEEE_TX can be scheduled while IEEE_RX is running, as the radio supports
-   * FG commands to be scheduled while a BG command is running.
-   * For Prop-mode, RX must be turned off as usual.
+   * Prop TX requires any on-going RX operation to be stopped to be
+   * able to transmit. Therefore, disable RX if running.
    */
-  const uint_fast8_t rx_key = (RF_CORE_CONF_MODE != RF_CORE_MODE_2_4_GHZ)
-    ? cmd_rx_disable()
-    : false;
+  const bool rx_key = cmd_rx_disable();
 
   if (rx_key) {
     ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
@@ -289,13 +376,13 @@ netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event)
   /* Wait until TX operation finishes */
   RF_EventMask tx_events = RF_pendCmd(&rf_netstack, tx_handle, 0);
 
+  cmd_rx_restore(rx_key);
+
   if (rx_key) {
     ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
   } else {
     ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
   }
-
-  cmd_rx_restore(rx_key);
 
   if (!EVENTS_CMD_DONE(tx_events)) {
     PRINTF("netstack_sched_tx: TX command pend error events=0x%08llx status=0x%04x\n",
@@ -307,7 +394,7 @@ netstack_sched_tx(RF_Callback cb, RF_EventMask bm_event)
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
-netstack_sched_rx(RF_Callback cb, RF_EventMask bm_event)
+netstack_sched_rx(void)
 {
   if (cmd_rx_is_active()) {
     PRINTF("netstack_sched_rx: already in RX\n");
@@ -323,18 +410,16 @@ netstack_sched_rx(RF_Callback cb, RF_EventMask bm_event)
 
   CMD_STATUS(netstack_cmd_rx) = PENDING;
 
-  netstack_rx.cb = cb;
-  netstack_rx.bm_event = bm_event;
-  netstack_rx.handle = RF_scheduleCmd(&rf_netstack,
+  cmd_rx_handle = RF_scheduleCmd(&rf_netstack,
     (RF_Op*)&netstack_cmd_rx,
     &sched_params,
-    cb,
-    bm_event
+    cmd_rx_cb,
+    RF_EventRxEntryDone | RF_EventRxBufFull
   );
 
-  if (!CMD_HANDLE_OK(netstack_rx.handle)) {
+  if (!CMD_HANDLE_OK(cmd_rx_handle)) {
     PRINTF("netstack_sched_rx: unable to schedule RX command handle=%d status=0x%04x\n",
-           netstack_rx.handle, CMD_STATUS(netstack_cmd_rx));
+           cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
     return RF_RESULT_ERROR;
   }
 
@@ -352,8 +437,8 @@ netstack_stop_rx(void)
   }
 
   CMD_STATUS(netstack_cmd_rx) = DONE_STOPPED;
-  const RF_Stat stat = RF_cancelCmd(&rf_netstack, netstack_rx.handle, RF_ABORT_GRACEFULLY);
-  netstack_rx.handle = 0;
+  const RF_Stat stat = RF_cancelCmd(&rf_netstack, cmd_rx_handle, RF_ABORT_GRACEFULLY);
+  cmd_rx_handle = 0;
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 

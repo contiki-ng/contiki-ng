@@ -28,6 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+/*---------------------------------------------------------------------------*/
 /**
  * \file
  *    Driver for the retrieval of an BLE address from flash
@@ -42,6 +43,8 @@
 #include "contiki.h"
 
 #include <stdint.h>
+/*---------------------------------------------------------------------------*/
+uint8_t* ble_addr_ptr(void);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Copy the node's factory BLE address to a destination memory area

@@ -28,242 +28,244 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-// Parameter summary
-// IEEE Channel: 11
-// Frequency: 2405 MHz
-// SFD: 0
-// Packet Data: 255
-// Preamble (32 bit): 01010101...
-// TX Power: 5 dBm
+/*
+ * Parameter summary
+ * IEEE Channel: 11
+ * Frequency: 2405 MHz
+ * SFD: 0
+ * Packet Data: 255
+ * Preamble (32 bit): 01010101...
+ * TX Power: 5 dBm (requires define CCFG_FORCE_VDDR_HH = 0 in ccfg.c,
+ *                  see CC13xx/CC26xx Technical Reference Manual)
+ */
 /*---------------------------------------------------------------------------*/
 #include "sys/cc.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
-// This must be included "locally" frm the cpu directory,
-// as it isn't defined in CC13x0 driverlib
+/*
+ * rf_ieee_cmd.h must be included "locally" from the arch/cpu directory,
+ * as it isn't defined in CC13x0 driverlib.
+ */
 #include "driverlib/rf_ieee_cmd.h"
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 #include "ieee-settings.h"
 /*---------------------------------------------------------------------------*/
-// TI-RTOS RF Mode Object
+/* TI-RTOS RF Mode Object */
 RF_Mode rf_ieee_mode =
 {
-    .rfMode = RF_MODE_IEEE_15_4,
-    .cpePatchFxn = 0,
-    .mcePatchFxn = 0,
-    .rfePatchFxn = 0,
+  .rfMode = RF_MODE_IEEE_15_4,
+  .cpePatchFxn = 0,
+  .mcePatchFxn = 0,
+  .rfePatchFxn = 0,
 };
 /*---------------------------------------------------------------------------*/
-// TX Power table
-// The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
-// RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
-// See the Technical Reference Manual for further details about the "txPower" Command field.
-// The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
+/*
+ * TX Power table
+ * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
+ * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
+ * See the Technical Reference Manual for further details about the "txPower" Command field.
+ * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
+ */
 RF_TxPowerTable_Entry rf_ieee_tx_power_table[RF_IEEE_TX_POWER_TABLE_SIZE+1] =
 {
-    { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  6) },
-    { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  6) },
-    { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0,  6) },
-    { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 1, 0, 10) },
-    {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 1, 12) },
-    {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 1, 1, 14) },
-    {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 1, 1, 18) },
-    {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 1, 1, 24) },
-    {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 0, 0, 33) },
-    {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 39) },
-    {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 0, 0, 45) },
-    {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(36, 0, 1, 73) },
-    {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(48, 0, 1, 73) },
-    RF_TxPowerTable_TERMINATION_ENTRY
+  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  6) },
+  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  6) },
+  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0,  6) },
+  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 1, 0, 10) },
+  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 1, 12) },
+  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 1, 1, 14) },
+  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 1, 1, 18) },
+  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 1, 1, 24) },
+  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 0, 0, 33) },
+  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 39) },
+  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 0, 0, 45) },
+  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(36, 0, 1, 73) },
+  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(48, 0, 1, 73) },
+  RF_TxPowerTable_TERMINATION_ENTRY
 };
 /*---------------------------------------------------------------------------*/
-// Overrides for CMD_RADIO_SETUP (CC2650)
+/* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
 {
-                                    // override_synth_ieee_15_4.xml
-    HW_REG_OVERRIDE(0x4038,0x0035), // Synth: Set recommended RTRIM to 5
-    (uint32_t)0x000784A3,           // Synth: Set Fref to 3.43 MHz
-    (uint32_t)0xA47E0583,           // Synth: Set loop bandwidth after lock to 80 kHz
-    (uint32_t)0xEAE00603,           // Synth: Set loop bandwidth after lock to 80 kHz
-    (uint32_t)0x00010623,           // Synth: Set loop bandwidth after lock to 80 kHz
-    HW32_ARRAY_OVERRIDE(0x405C,1),  // Synth: Configure PLL bias
-    (uint32_t)0x1801F800,           // Synth: Configure PLL bias
-    HW32_ARRAY_OVERRIDE(0x402C,1),  // Synth: Configure PLL latency
-    (uint32_t)0x00608402,           // Synth: Configure PLL latency
-    (uint32_t)0x02010403,           // Synth: Use 24 MHz XOSC as synth clock, enable extra PLL filtering
-    HW32_ARRAY_OVERRIDE(0x4034,1),  // Synth: Configure extra PLL filtering
-    (uint32_t)0x177F0408,           // Synth: Configure extra PLL filtering
-    (uint32_t)0x38000463,           // Synth: Configure extra PLL filtering
-                                    // override_phy_ieee_15_4.xml
-    (uint32_t)0x05000243,           // Synth: Increase synth programming timeout
-    (uint32_t)0x002082C3,           // Rx: Adjust Rx FIFO threshold to avoid overflow
-                                    // override_frontend_id.xml
-    (uint32_t)0x000288A3,           // Rx: Set RSSI offset to adjust reported RSSI by -2 dB
-    (uint32_t)0x000F8883,           // Rx: Configure LNA bias current trim offset
-    HW_REG_OVERRIDE(0x50DC,0x002B), // Rx: Adjust AGC DC filter
-    (uint32_t)0xFFFFFFFF,
+                                  /* override_synth_ieee_15_4.xml */
+  HW_REG_OVERRIDE(0x4038,0x0035), /* Synth: Set recommended RTRIM to 5 */
+  (uint32_t)0x000784A3,           /* Synth: Set Fref to 3.43 MHz */
+  (uint32_t)0xA47E0583,           /* Synth: Set loop bandwidth after lock to 80 kHz */
+  (uint32_t)0xEAE00603,           /* Synth: Set loop bandwidth after lock to 80 kHz */
+  (uint32_t)0x00010623,           /* Synth: Set loop bandwidth after lock to 80 kHz */
+  HW32_ARRAY_OVERRIDE(0x405C,1),  /* Synth: Configure PLL bias */
+  (uint32_t)0x1801F800,           /* Synth: Configure PLL bias */
+  HW32_ARRAY_OVERRIDE(0x402C,1),  /* Synth: Configure PLL latency */
+  (uint32_t)0x00608402,           /* Synth: Configure PLL latency */
+  (uint32_t)0x02010403,           /* Synth: Use 24 MHz XOSC as synth clock, enable extra PLL filtering */
+  HW32_ARRAY_OVERRIDE(0x4034,1),  /* Synth: Configure extra PLL filtering */
+  (uint32_t)0x177F0408,           /* Synth: Configure extra PLL filtering */
+  (uint32_t)0x38000463,           /* Synth: Configure extra PLL filtering */
+                                  /* override_phy_ieee_15_4.xml */
+  (uint32_t)0x05000243,           /* Synth: Increase synth programming timeout */
+  (uint32_t)0x002082C3,           /* Rx: Adjust Rx FIFO threshold to avoid overflow */
+                                  /* override_frontend_id.xml */
+  (uint32_t)0x000288A3,           /* Rx: Set RSSI offset to adjust reported RSSI by -2 dB */
+  (uint32_t)0x000F8883,           /* Rx: Configure LNA bias current trim offset */
+  HW_REG_OVERRIDE(0x50DC,0x002B), /* Rx: Adjust AGC DC filter */
+  (uint32_t)0xFFFFFFFF,
 };
 /*---------------------------------------------------------------------------*/
-// CMD_RADIO_SETUP
-// Radio Setup Command for Pre-Defined Schemes
+/* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
 rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
 {
-    .commandNo = CMD_RADIO_SETUP,
-    .status = IDLE,
-    .pNextOp = 0,
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = TRIG_NOW,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = COND_NEVER,
-    .condition.nSkip = 0x0,
-    .mode = 0x01,
-    .config.frontEndMode = 0x0,
-    .config.biasMode = 0x1,
-    .config.analogCfgMode = 0x0,
-    .config.bNoFsPowerUp = 0x0,
-    .txPower = 0x9330, /* 5 dBm default */
-    .pRegOverride = rf_ieee_overrides,
+  .commandNo = CMD_RADIO_SETUP,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .mode = 0x01,
+  .config.frontEndMode = 0x0,
+  .config.biasMode = 0x1,
+  .config.analogCfgMode = 0x0,
+  .config.bNoFsPowerUp = 0x0,
+  .txPower = 0x9330, /* 5 dBm default */
+  .pRegOverride = rf_ieee_overrides,
 };
 /*---------------------------------------------------------------------------*/
-// CMD_FS
-// Frequency Synthesizer Programming Command
+/* CMD_FS: Frequency Synthesizer Programming Command */
 rfc_CMD_FS_t rf_cmd_ieee_fs =
 {
-    .commandNo = CMD_FS,
-    .status = IDLE,
-    .pNextOp = 0,
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = TRIG_NOW,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = COND_NEVER,
-    .condition.nSkip = 0x0,
-    .frequency = 0x0965, /* set by driver */
-    .fractFreq = 0x0000, /* set by driver */
-    .synthConf.bTxMode = 0x1,
-    .synthConf.refFreq = 0x0,
-    .__dummy0 = 0x00,
-    .__dummy1 = 0x00,
-    .__dummy2 = 0x00,
-    .__dummy3 = 0x0000,
+  .commandNo = CMD_FS,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .frequency = 0x0965, /* set by driver */
+  .fractFreq = 0x0000, /* set by driver */
+  .synthConf.bTxMode = 0x1,
+  .synthConf.refFreq = 0x0,
+  .__dummy0 = 0x00,
+  .__dummy1 = 0x00,
+  .__dummy2 = 0x00,
+  .__dummy3 = 0x0000,
 };
 /*---------------------------------------------------------------------------*/
-// CMD_IEEE_TX
-// The command ID number 0x2C01
+/* CMD_IEEE_TX: IEEE 802.15.4 Transmit Command */
 rfc_CMD_IEEE_TX_t rf_cmd_ieee_tx =
 {
-    .commandNo = CMD_IEEE_TX,
-    .status = IDLE,
-    .pNextOp = 0,
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = TRIG_NOW,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = COND_NEVER,
-    .condition.nSkip = 0x0,
-    .txOpt.bIncludePhyHdr = 0x0,
-    .txOpt.bIncludeCrc = 0x0,
-    .txOpt.payloadLenMsb = 0x0,
-    .payloadLen = 0x0, /* set by driver */
-    .pPayload = 0, /* set by driver */
-    .timeStamp = 0x00000000,
+  .commandNo = CMD_IEEE_TX,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .txOpt.bIncludePhyHdr = 0x0,
+  .txOpt.bIncludeCrc = 0x0,
+  .txOpt.payloadLenMsb = 0x0,
+  .payloadLen = 0x0, /* set by driver */
+  .pPayload = 0, /* set by driver */
+  .timeStamp = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/
-// CMD_IEEE_RX
-// The command ID number 0x2801
+/* CMD_IEEE_RX: IEEE 802.15.4 Receive Command */
 rfc_CMD_IEEE_RX_t rf_cmd_ieee_rx =
 {
-    .commandNo = CMD_IEEE_RX,
-    .status = IDLE,
-    .pNextOp = 0,
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = TRIG_NOW,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = COND_NEVER,
-    .condition.nSkip = 0x0,
-    .channel = 0x00, /* set by driver */
-    .rxConfig.bAutoFlushCrc = 0x1,
-    .rxConfig.bAutoFlushIgn = 0x0,
-    .rxConfig.bIncludePhyHdr = 0x0,
-    .rxConfig.bIncludeCrc = 0x1,
-    .rxConfig.bAppendRssi = 0x1,
-    .rxConfig.bAppendCorrCrc = 0x1,
-    .rxConfig.bAppendSrcInd = 0x0,
-    .rxConfig.bAppendTimestamp = 0x1,
-    .pRxQ = 0, /* set by driver */
-    .pOutput = 0, /* set by driver */
-    .frameFiltOpt.frameFiltEn = 0x0, /* set by driver */
-    .frameFiltOpt.frameFiltStop = 0x1,
-    .frameFiltOpt.autoAckEn = 0x0, /* set by driver */
-    .frameFiltOpt.slottedAckEn = 0x0,
-    .frameFiltOpt.autoPendEn = 0x0,
-    .frameFiltOpt.defaultPend = 0x0,
-    .frameFiltOpt.bPendDataReqOnly = 0x0,
-    .frameFiltOpt.bPanCoord = 0x0,
-    .frameFiltOpt.maxFrameVersion = 0x2,
-    .frameFiltOpt.fcfReservedMask = 0x0,
-    .frameFiltOpt.modifyFtFilter = 0x0,
-    .frameFiltOpt.bStrictLenFilter = 0x0,
-    .frameTypes.bAcceptFt0Beacon = 0x1,
-    .frameTypes.bAcceptFt1Data = 0x1,
-    .frameTypes.bAcceptFt2Ack = 0x1,
-    .frameTypes.bAcceptFt3MacCmd = 0x1,
-    .frameTypes.bAcceptFt4Reserved = 0x1,
-    .frameTypes.bAcceptFt5Reserved = 0x1,
-    .frameTypes.bAcceptFt6Reserved = 0x1,
-    .frameTypes.bAcceptFt7Reserved = 0x1,
-    .ccaOpt.ccaEnEnergy = 0x1,
-    .ccaOpt.ccaEnCorr = 0x1,
-    .ccaOpt.ccaEnSync = 0x1,
-    .ccaOpt.ccaCorrOp = 0x1,
-    .ccaOpt.ccaSyncOp = 0x0,
-    .ccaOpt.ccaCorrThr = 0x3,
-    .ccaRssiThr = 0x0, /* set by driver */
-    .__dummy0 = 0x00,
-    .numExtEntries = 0x00,
-    .numShortEntries = 0x00,
-    .pExtEntryList = 0,
-    .pShortEntryList = 0,
-    .localExtAddr = 0x0, /* set by driver */
-    .localShortAddr = 0x0, /* set by driver */
-    .localPanID = 0x0000,
-    .__dummy1 = 0x000000,
-    .endTrigger.triggerType = TRIG_NEVER,
-    .endTrigger.bEnaCmd = 0x0,
-    .endTrigger.triggerNo = 0x0,
-    .endTrigger.pastTrig = 0x0,
-    .endTime = 0x00000000,
+  .commandNo = CMD_IEEE_RX,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .channel = 0x00, /* set by driver */
+  .rxConfig.bAutoFlushCrc = 0x1,
+  .rxConfig.bAutoFlushIgn = 0x0,
+  .rxConfig.bIncludePhyHdr = 0x0,
+  .rxConfig.bIncludeCrc = 0x1,
+  .rxConfig.bAppendRssi = 0x1,
+  .rxConfig.bAppendCorrCrc = 0x1,
+  .rxConfig.bAppendSrcInd = 0x0,
+  .rxConfig.bAppendTimestamp = 0x1,
+  .pRxQ = 0, /* set by driver */
+  .pOutput = 0, /* set by driver */
+  .frameFiltOpt.frameFiltEn = 0x0, /* set by driver */
+  .frameFiltOpt.frameFiltStop = 0x1,
+  .frameFiltOpt.autoAckEn = 0x0, /* set by driver */
+  .frameFiltOpt.slottedAckEn = 0x0,
+  .frameFiltOpt.autoPendEn = 0x0,
+  .frameFiltOpt.defaultPend = 0x0,
+  .frameFiltOpt.bPendDataReqOnly = 0x0,
+  .frameFiltOpt.bPanCoord = 0x0,
+  .frameFiltOpt.maxFrameVersion = 0x2,
+  .frameFiltOpt.fcfReservedMask = 0x0,
+  .frameFiltOpt.modifyFtFilter = 0x0,
+  .frameFiltOpt.bStrictLenFilter = 0x0,
+  .frameTypes.bAcceptFt0Beacon = 0x1,
+  .frameTypes.bAcceptFt1Data = 0x1,
+  .frameTypes.bAcceptFt2Ack = 0x1,
+  .frameTypes.bAcceptFt3MacCmd = 0x1,
+  .frameTypes.bAcceptFt4Reserved = 0x1,
+  .frameTypes.bAcceptFt5Reserved = 0x1,
+  .frameTypes.bAcceptFt6Reserved = 0x1,
+  .frameTypes.bAcceptFt7Reserved = 0x1,
+  .ccaOpt.ccaEnEnergy = 0x1,
+  .ccaOpt.ccaEnCorr = 0x1,
+  .ccaOpt.ccaEnSync = 0x1,
+  .ccaOpt.ccaCorrOp = 0x1,
+  .ccaOpt.ccaSyncOp = 0x0,
+  .ccaOpt.ccaCorrThr = 0x3,
+  .ccaRssiThr = 0x0, /* set by driver */
+  .__dummy0 = 0x00,
+  .numExtEntries = 0x00,
+  .numShortEntries = 0x00,
+  .pExtEntryList = 0,
+  .pShortEntryList = 0,
+  .localExtAddr = 0x0, /* set by driver */
+  .localShortAddr = 0x0, /* set by driver */
+  .localPanID = 0x0000,
+  .__dummy1 = 0x000000,
+  .endTrigger.triggerType = TRIG_NEVER,
+  .endTrigger.bEnaCmd = 0x0,
+  .endTrigger.triggerNo = 0x0,
+  .endTrigger.pastTrig = 0x0,
+  .endTime = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/
-// CMD_IEEE_RX_ACK
-// IEEE 802.15.4 Receive ACK Command
+/* CMD_IEEE_RX_ACK: IEEE 802.15.4 Receive ACK Command */
 rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack =
 {
-    .commandNo = CMD_IEEE_RX_ACK,
-    .status = IDLE,
-    .pNextOp = 0,
-    .startTime = 0x00000000,
-    .startTrigger.triggerType = TRIG_NOW,
-    .startTrigger.bEnaCmd = 0x0,
-    .startTrigger.triggerNo = 0x0,
-    .startTrigger.pastTrig = 0x0,
-    .condition.rule = COND_NEVER,
-    .condition.nSkip = 0x0,
-    .seqNo = 0x0,
-    .endTrigger.triggerType = TRIG_NEVER,
-    .endTrigger.bEnaCmd = 0x0,
-    .endTrigger.triggerNo = 0x0,
-    .endTrigger.pastTrig = 0x0,
-    .endTime = 0x00000000,
+  .commandNo = CMD_IEEE_RX_ACK,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .seqNo = 0x0,
+  .endTrigger.triggerType = TRIG_NEVER,
+  .endTrigger.bEnaCmd = 0x0,
+  .endTrigger.triggerNo = 0x0,
+  .endTrigger.pastTrig = 0x0,
+  .endTime = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/
