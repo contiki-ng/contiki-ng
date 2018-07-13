@@ -60,6 +60,7 @@
 #include "rf-core.h"
 #include "rf-data-queue.h"
 #include "netstack-settings.h"
+#include RF_CORE_PROP_RF_SETTINGS
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
@@ -264,7 +265,7 @@ get_channel(void)
    */
   freq_khz += (((cmd_fs.fractFreq * 1000) + 65535) / 65536);
 
-  return (freq_khz - DOT_15_4G_CHAN0_FREQUENCY) / DOT_15_4G_CHANNEL_SPACING;
+  return (uint8_t)((freq_khz - DOT_15_4G_CHAN0_FREQ) / DOT_15_4G_FREQ_SPACING);
 }
 /*---------------------------------------------------------------------------*/
 static rf_result_t
@@ -272,10 +273,10 @@ set_channel(uint16_t channel)
 {
   rf_result_t res;
 
-  if (!DOT_15_4_G_CHANNEL_IN_RANGE(channel)) {
+  if (!DOT_15_4_G_CHAN_IN_RANGE(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
-           (int)channel, DOT_15_4G_CHANNEL_MAX);
-    channel = DOT_15_4G_CHANNEL_MAX;
+           (int)channel, DOT_15_4G_CHAN_MAX);
+    channel = DOT_15_4G_CHAN_MAX;
   }
 
   if (channel == prop_radio.channel) {
@@ -283,7 +284,7 @@ set_channel(uint16_t channel)
     return RF_RESULT_OK;
   }
 
-  const uint32_t new_freq = DOT_15_4G_CHAN0_FREQUENCY + ((uint32_t)channel * DOT_15_4G_CHANNEL_SPACING);
+  const uint32_t new_freq = DOT_15_4_G_FREQ(channel);
   const uint16_t freq = (uint16_t)(new_freq / 1000);
   const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
@@ -583,11 +584,11 @@ get_value(radio_param_t param, radio_value_t *value)
       : RADIO_RESULT_OK;
 
   case RADIO_CONST_CHANNEL_MIN:
-    *value = 0;
+    *value = DOT_15_4G_CHAN_MIN;
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_CHANNEL_MAX:
-    *value = DOT_15_4G_CHANNEL_MAX;
+    *value = DOT_15_4G_CHAN_MAX;
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_TXPOWER_MIN:

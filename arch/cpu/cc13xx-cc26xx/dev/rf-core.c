@@ -87,6 +87,8 @@ static RF_Object  rf_netstack;
 static RF_Object  rf_ble;
 
 static RF_CmdHandle cmd_rx_handle;
+
+static volatile bool rx_buf_full;
 /*---------------------------------------------------------------------------*/
 static void
 cmd_rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
@@ -100,9 +102,7 @@ cmd_rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
   }
 
   if (events & RF_EventRxBufFull) {
-    data_queue_reset();
-    /* TODO: Check status of RX to verify RX was running before rescheduling */
-    netstack_sched_rx();
+    rx_buf_full = true;
 
     process_poll(&rf_core_process);
   }
@@ -224,10 +224,10 @@ netstack_sched_fs(void)
   const uint_fast8_t rx_key = cmd_rx_disable();
 
   /*
-   * For IEEE-mode, restarting IEEE_RX recalibrates the synth by using the
-   * channel field in the IEEE_RX commando. It is assumed this field is
-   * already configured before this functions is called.
-   * However, if IEEE_RX wasn't active, manually calibrate the synth
+   * For IEEE-mode, restarting CMD_IEEE_RX re-calibrates the synth by using the
+   * channel field in the CMD_IEEE_RX command. It is assumed this field is
+   * already configured before this function is called.
+   * However, if CMD_IEEE_RX wasn't active, manually calibrate the synth
    * with CMD_FS.
    *
    * For Prop-mode, the synth is always manually calibrated with CMD_FS.
@@ -504,10 +504,17 @@ PROCESS_THREAD(rf_core_process, ev, data)
 
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+
     do {
       //watchdog_periodic();
       packetbuf_clear();
       len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
+
+      if (rx_buf_full) {
+        PRINTF("rf_core: RX buf full, restart RX\n");
+        rx_buf_full = false;
+        netstack_sched_rx();
+      }
 
       if(len > 0) {
         packetbuf_set_datalen(len);

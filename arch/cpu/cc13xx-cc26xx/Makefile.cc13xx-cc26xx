@@ -103,11 +103,6 @@ CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 LDFLAGS += --entry resetISR
 LDFLAGS += -static
 LDFLAGS += --specs=nano.specs
-# NB! The symbol _stack, which points to the stack start, is expected to be defined,
-# but should already be defined in the linker script.
-LDFLAGS += -Wl,--defsym=_stack_origin=__stack_end
-LDFLAGS += -Wl,--defsym=_heap=__heap_start__
-LDFLAGS += -Wl,--defsym=_eheap=__heap_end__
 
 LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 

@@ -35,6 +35,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_prop_cmd.h)
+#include DeviceFamily_constructPath(driverlib/rf_prop_mailbox.h)
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/

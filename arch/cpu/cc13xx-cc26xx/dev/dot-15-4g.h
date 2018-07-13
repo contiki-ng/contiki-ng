@@ -46,29 +46,30 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 
-#include "driverlib/rf_mailbox.h"
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 /*---------------------------------------------------------------------------*/
 /* IEEE 802.15.4g frequency band identifiers (Table 68f) */
-#define DOT_15_4G_FREQUENCY_BAND_169  0 /* 169.400–169.475 (Europe) - 169 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_450  1 /* 450–470 (US FCC Part 22/90) - 450 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_470  2 /* 470–510 (China) - 470 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_780  3 /* 779–787 (China) - 780 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_863  4 /* 863–870 (Europe) - 863 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_896  5 /* 896–901 (US FCC Part 90) - 896 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_901  6 /* 901–902 (US FCC Part 24) - 901 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_915  7 /* 902–928 (US) - 915 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_917  8 /* 917–923.5 (Korea) - 917 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_920  9 /* 920–928 (Japan) - 920 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_928  10 /* 928–960 (US, non-contiguous) - 928 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_950  11 /* 950–958 (Japan) - 950 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_1427 12 /* 1427–1518 (US and Canada, non-contiguous) - 1427 MHz band */
-#define DOT_15_4G_FREQUENCY_BAND_2450 13 /* 2400–2483.5 2450 MHz band */
+#define DOT_15_4G_FREQ_BAND_169     0 /* 169.400–169.475 (Europe) - 169 MHz band */
+#define DOT_15_4G_FREQ_BAND_450     1 /* 450–470 (US FCC Part 22/90) - 450 MHz band */
+#define DOT_15_4G_FREQ_BAND_470     2 /* 470–510 (China) - 470 MHz band */
+#define DOT_15_4G_FREQ_BAND_780     3 /* 779–787 (China) - 780 MHz band */
+#define DOT_15_4G_FREQ_BAND_863     4 /* 863–870 (Europe) - 863 MHz band */
+#define DOT_15_4G_FREQ_BAND_896     5 /* 896–901 (US FCC Part 90) - 896 MHz band */
+#define DOT_15_4G_FREQ_BAND_901     6 /* 901–902 (US FCC Part 24) - 901 MHz band */
+#define DOT_15_4G_FREQ_BAND_915     7 /* 902–928 (US) - 915 MHz band */
+#define DOT_15_4G_FREQ_BAND_917     8 /* 917–923.5 (Korea) - 917 MHz band */
+#define DOT_15_4G_FREQ_BAND_920     9 /* 920–928 (Japan) - 920 MHz band */
+#define DOT_15_4G_FREQ_BAND_928    10 /* 928–960 (US, non-contiguous) - 928 MHz band */
+#define DOT_15_4G_FREQ_BAND_950    11 /* 950–958 (Japan) - 950 MHz band */
+#define DOT_15_4G_FREQ_BAND_1427   12 /* 1427–1518 (US and Canada, non-contiguous) - 1427 MHz band */
+#define DOT_15_4G_FREQ_BAND_2450   13 /* 2400–2483.5 2450 MHz band */
 /*---------------------------------------------------------------------------*/
 /* Default band selection to band 4 - 863MHz */
-#ifdef DOT_15_4G_CONF_FREQUENCY_BAND_ID
-#define DOT_15_4G_FREQUENCY_BAND_ID DOT_15_4G_CONF_FREQUENCY_BAND_ID
+#ifdef DOT_15_4G_CONF_FREQ_BAND_ID
+# define DOT_15_4G_FREQ_BAND_ID    DOT_15_4G_CONF_FREQ_BAND_ID
 #else
-#define DOT_15_4G_FREQUENCY_BAND_ID DOT_15_4G_FREQUENCY_BAND_863
+# define DOT_15_4G_FREQ_BAND_ID    DOT_15_4G_FREQ_BAND_863
 #endif
 /*---------------------------------------------------------------------------*/
 /*
@@ -76,53 +77,71 @@
  * currently only support some of the bands defined in .15.4g and for those
  * bands we only support operating mode #1 (Table 134).
  *
- * DOT_15_4G_CHAN0_FREQUENCY is specified here in KHz
+ * DOT_15_4G_CHAN0_FREQ is specified here in KHz
  */
-#if DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_470
-#   define DOT_15_4G_CHANNEL_MAX        198
-#   define DOT_15_4G_CHANNEL_SPACING    200
-#   define DOT_15_4G_CHAN0_FREQUENCY 470200
-#   define PROP_MODE_CONF_LO_DIVIDER   0x0A
-#   define SMARTRF_SETTINGS_CONF_BAND_OVERRIDES \
-        HW32_ARRAY_OVERRIDE(0x405C,1), \
-        (uint32_t)0x18000280,
+#if DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_470
+# define DOT_15_4G_CHAN_MIN           0
+# define DOT_15_4G_CHAN_MAX           198
+# define DOT_15_4G_FREQ_SPACING       200
+# define DOT_15_4G_CHAN0_FREQ         470200
 
-#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_780
-#   define DOT_15_4G_CHANNEL_MAX         38
-#   define DOT_15_4G_CHANNEL_SPACING    200
-#   define DOT_15_4G_CHAN0_FREQUENCY 779200
-#   define PROP_MODE_CONF_LO_DIVIDER   0x06
+# define PROP_MODE_CONF_LO_DIVIDER    0x0A
 
-#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_863
-#   define DOT_15_4G_CHANNEL_MAX         33
-#   define DOT_15_4G_CHANNEL_SPACING    200
-#   define DOT_15_4G_CHAN0_FREQUENCY 863125
-#   define PROP_MODE_CONF_LO_DIVIDER   0x05
+#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_780
+# define DOT_15_4G_CHAN_MIN           0
+# define DOT_15_4G_CHAN_MAX           38
+# define DOT_15_4G_FREQ_SPACING       200
+# define DOT_15_4G_CHAN0_FREQ         779200
 
-#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_915
-#   define DOT_15_4G_CHANNEL_MAX        128
-#   define DOT_15_4G_CHANNEL_SPACING    200
-#   define DOT_15_4G_CHAN0_FREQUENCY 902200
-#   define PROP_MODE_CONF_LO_DIVIDER   0x05
+# define PROP_MODE_CONF_LO_DIVIDER    0x06
 
-#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_920
-#   define DOT_15_4G_CHANNEL_MAX         37
-#   define DOT_15_4G_CHANNEL_SPACING    200
-#   define DOT_15_4G_CHAN0_FREQUENCY 920600
-#   define PROP_MODE_CONF_LO_DIVIDER   0x05
+#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_863
+# define DOT_15_4G_CHAN_MIN           0
+# define DOT_15_4G_CHAN_MAX           33
+# define DOT_15_4G_FREQ_SPACING       200
+# define DOT_15_4G_CHAN0_FREQ         863125
 
-#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_950
-#   define DOT_15_4G_CHANNEL_MAX         32
-#   define DOT_15_4G_CHANNEL_SPACING    200
-#   define DOT_15_4G_CHAN0_FREQUENCY 951000
-#   define PROP_MODE_CONF_LO_DIVIDER   0x05
+# define PROP_MODE_CONF_LO_DIVIDER    0x05
+
+#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_915
+# define DOT_15_4G_CHAN_MIN           0
+# define DOT_15_4G_CHAN_MAX           128
+# define DOT_15_4G_FREQ_SPACING       200
+# define DOT_15_4G_CHAN0_FREQ         902200
+
+# define PROP_MODE_CONF_LO_DIVIDER    0x05
+
+#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_920
+# define DOT_15_4G_CHAN_MIN           0
+# define DOT_15_4G_CHAN_MAX           37
+# define DOT_15_4G_FREQ_SPACING       200
+# define DOT_15_4G_CHAN0_FREQ         920600
+
+# define PROP_MODE_CONF_LO_DIVIDER    0x05
+
+#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_950
+# define DOT_15_4G_CHAN_MIN           0
+# define DOT_15_4G_CHAN_MAX           32
+# define DOT_15_4G_FREQ_SPACING       200
+# define DOT_15_4G_CHAN0_FREQ         951000
+
+# define PROP_MODE_CONF_LO_DIVIDER    0x05
+
+#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_2450
+# define DOT_15_4G_CHAN_MIN           11
+# define DOT_15_4G_CHAN_MAX           26
+# define DOT_15_4G_FREQ_SPACING       5000
+# define DOT_15_4G_CHAN0_FREQ         2405000
 
 #else
-#   error The selected IEEE 802.15.4g frequency band is not supported
+# error The selected IEEE 802.15.4g frequency band is not supported
 #endif
 /*---------------------------------------------------------------------------*/
-#define DOT_15_4_G_CHANNEL_IN_RANGE(channel) \
-        (((channel) >= 0) && ((channel) <= DOT_15_4G_CHANNEL_MAX))
+#define DOT_15_4_G_FREQ(chan) \
+        (DOT_15_4G_CHAN0_FREQ + DOT_15_4G_FREQ_SPACING * ((chan) - DOT_15_4G_CHAN_MIN))
+
+#define DOT_15_4_G_CHAN_IN_RANGE(chan) \
+        (((chan) >= DOT_15_4G_CHAN_MIN) && ((chan) <= DOT_15_4G_CHAN_MAX))
 /*---------------------------------------------------------------------------*/
 #endif /* DOT_15_4G_H_ */
 /*---------------------------------------------------------------------------*/
