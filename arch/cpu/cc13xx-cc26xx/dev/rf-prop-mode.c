@@ -73,17 +73,10 @@
 #define LOG_MODULE "RF Prop Mode"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
-#ifdef NDEBUG
+#if 0
 # define PRINTF(...)
 #else
 # define PRINTF(...)  printf(__VA_ARGS__)
-#endif
-/*---------------------------------------------------------------------------*/
-/* Configuration for default Prop channel */
-#ifdef PROP_MODE_CONF_CHANNEL
-#   define PROP_MODE_CHANNEL  PROP_MODE_CONF_CHANNEL
-#else
-#   define PROP_MODE_CHANNEL  RF_CHANNEL
 #endif
 /*---------------------------------------------------------------------------*/
 /* Data whitener. 1: Whitener, 0: No whitener */
@@ -275,8 +268,8 @@ set_channel(uint16_t channel)
 
   if (!DOT_15_4_G_CHAN_IN_RANGE(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
-           (int)channel, DOT_15_4G_CHAN_MAX);
-    channel = DOT_15_4G_CHAN_MAX;
+           (int)channel, IEEE802154_DEFAULT_CHANNEL);
+    channel = IEEE802154_DEFAULT_CHANNEL;
   }
 
   if (channel == prop_radio.channel) {
@@ -692,7 +685,7 @@ init(void)
     return RF_RESULT_ERROR;
   }
 
-  set_channel(PROP_MODE_CHANNEL);
+  set_channel(IEEE802154_DEFAULT_CHANNEL);
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 

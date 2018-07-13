@@ -46,21 +46,12 @@
 #include DeviceFamily_constructPath(driverlib/rf_data_entry.h)
 /*---------------------------------------------------------------------------*/
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 /* RX buf configuration */
-
-#ifdef RF_CORE_CONF_RX_BUF_CNT
-# define RX_BUF_CNT      RF_CORE_CONF_RX_BUF_CNT
-#else
-# define RX_BUF_CNT      4
-#endif
-
-#ifdef RF_CORE_CONF_RX_BUF_SIZE
-# define RX_BUF_SIZE     RF_CORE_CONF_RX_BUF_SIZE
-#else
-# define RX_BUF_SIZE     144
-#endif
+#define RX_BUF_CNT        RF_RX_BUF_CNT
+#define RX_BUF_SIZE       RF_RX_BUF_SIZE
 /*---------------------------------------------------------------------------*/
 /* Receive buffer entries with room for 1 IEEE 802.15.4 frame in each */
 typedef union {

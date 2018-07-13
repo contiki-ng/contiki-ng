@@ -35,6 +35,7 @@
  *  This file is responsible for setting up the board specific items for the
  *  CC26X2R1_LAUNCHXL board.
  */
+#include "contiki.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -550,6 +551,8 @@ const GPTimerCC26XX_Config GPTimerCC26XX_config[CC26X2R1_LAUNCHXL_GPTIMERPARTSCO
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/i2c/I2CCC26XX.h>
 
+#if TI_I2C_CONF_ENABLE
+
 I2CCC26XX_Object i2cCC26xxObjects[CC26X2R1_LAUNCHXL_I2CCOUNT];
 
 const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC26X2R1_LAUNCHXL_I2CCOUNT] = {
@@ -574,6 +577,8 @@ const I2C_Config I2C_config[CC26X2R1_LAUNCHXL_I2CCOUNT] = {
 
 const uint_least8_t I2C_count = CC26X2R1_LAUNCHXL_I2CCOUNT;
 
+#endif /* TI_I2C_CONF_ENABLE */
+
 /*
  *  =============================== NVS ===============================
  */
@@ -585,7 +590,9 @@ const uint_least8_t I2C_count = CC26X2R1_LAUNCHXL_I2CCOUNT;
 #define SECTORSIZE       0x2000
 #define REGIONSIZE       (SECTORSIZE * 4)
 
-#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
+#if TI_NVS_CONF_ENABLE
+
+#if TI_NVS_CONF_NVS_INTERNAL_ENABLE
 
 /*
  * Reserve flash sectors for NVS driver use by placing an uninitialized byte
@@ -635,9 +642,9 @@ const NVSCC26XX_HWAttrs nvsCC26xxHWAttrs[1] = {
     },
 };
 
-#endif /* Board_EXCLUDE_NVS_INTERNAL_FLASH */
+#endif /* TI_NVS_CONF_NVS_INTERNAL_ENABLE */
 
-#ifndef Board_EXCLUDE_NVS_EXTERNAL_FLASH
+#if TI_NVS_CONF_NVS_EXTERNAL_ENABLE
 
 #define SPISECTORSIZE    0x1000
 #define SPIREGIONSIZE    (SPISECTORSIZE * 32)
@@ -667,14 +674,14 @@ const NVSSPI25X_HWAttrs nvsSPI25XHWAttrs[1] = {
 
 /* NVS Region index 0 and 1 refer to NVS and NVS SPI respectively */
 const NVS_Config NVS_config[CC26X2R1_LAUNCHXL_NVSCOUNT] = {
-#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
+#if TI_NVS_CONF_NVS_INTERNAL_ENABLE
     {
         .fxnTablePtr = &NVSCC26XX_fxnTable,
         .object = &nvsCC26xxObjects[0],
         .hwAttrs = &nvsCC26xxHWAttrs[0],
     },
 #endif
-#ifndef Board_EXCLUDE_NVS_EXTERNAL_FLASH
+#if TI_NVS_CONF_NVS_EXTERNAL_ENABLE
     {
         .fxnTablePtr = &NVSSPI25X_fxnTable,
         .object = &nvsSPI25XObjects[0],
@@ -684,6 +691,8 @@ const NVS_Config NVS_config[CC26X2R1_LAUNCHXL_NVSCOUNT] = {
 };
 
 const uint_least8_t NVS_count = CC26X2R1_LAUNCHXL_NVSCOUNT;
+
+#endif /* TI_NVS_CONF_ENABLE */
 
 /*
  *  =============================== PIN ===============================
@@ -804,6 +813,8 @@ const uint_least8_t SD_count = CC26X2R1_LAUNCHXL_SDCOUNT;
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/spi/SPICC26XXDMA.h>
 
+#if TI_SPI_CONF_ENABLE
+
 SPICC26XXDMA_Object spiCC26XXDMAObjects[CC26X2R1_LAUNCHXL_SPICOUNT];
 
 /*
@@ -812,6 +823,7 @@ SPICC26XXDMA_Object spiCC26XXDMAObjects[CC26X2R1_LAUNCHXL_SPICOUNT];
  * to satisfy the SDSPI driver requirement.
  */
 const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC26X2R1_LAUNCHXL_SPICOUNT] = {
+#if TI_SPI_CONF_SPI0_ENABLE
     {
         .baseAddr           = SSI0_BASE,
         .intNum             = INT_SSI0_COMB,
@@ -827,6 +839,8 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC26X2R1_LAUNCHXL_SPICOUNT] = {
         .csnPin             = CC26X2R1_LAUNCHXL_SPI0_CSN,
         .minDmaTransferSize = 10
     },
+#endif
+#if TI_SPI_CONF_SPI1_ENABLE
     {
         .baseAddr           = SSI1_BASE,
         .intNum             = INT_SSI1_COMB,
@@ -841,23 +855,30 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC26X2R1_LAUNCHXL_SPICOUNT] = {
         .clkPin             = CC26X2R1_LAUNCHXL_SPI1_CLK,
         .csnPin             = CC26X2R1_LAUNCHXL_SPI1_CSN,
         .minDmaTransferSize = 10
-    }
+    },
+#endif
 };
 
 const SPI_Config SPI_config[CC26X2R1_LAUNCHXL_SPICOUNT] = {
+#if TI_SPI_CONF_SPI0_ENABLE
     {
          .fxnTablePtr = &SPICC26XXDMA_fxnTable,
          .object      = &spiCC26XXDMAObjects[CC26X2R1_LAUNCHXL_SPI0],
          .hwAttrs     = &spiCC26XXDMAHWAttrs[CC26X2R1_LAUNCHXL_SPI0]
     },
+#endif
+#if TI_SPI_CONF_SPI1_ENABLE
     {
          .fxnTablePtr = &SPICC26XXDMA_fxnTable,
          .object      = &spiCC26XXDMAObjects[CC26X2R1_LAUNCHXL_SPI1],
          .hwAttrs     = &spiCC26XXDMAHWAttrs[CC26X2R1_LAUNCHXL_SPI1]
     },
+#endif
 };
 
 const uint_least8_t SPI_count = CC26X2R1_LAUNCHXL_SPICOUNT;
+
+#endif /* TI_SPI_CONF_ENABLE */
 
 /*
  *  =============================== UART ===============================
@@ -865,11 +886,14 @@ const uint_least8_t SPI_count = CC26X2R1_LAUNCHXL_SPICOUNT;
 #include <ti/drivers/UART.h>
 #include <ti/drivers/uart/UARTCC26XX.h>
 
+#if TI_UART_CONF_ENABLE
+
 UARTCC26XX_Object uartCC26XXObjects[CC26X2R1_LAUNCHXL_UARTCOUNT];
 
 uint8_t uartCC26XXRingBuffer[CC26X2R1_LAUNCHXL_UARTCOUNT][32];
 
 const UARTCC26XX_HWAttrsV2 uartCC26XXHWAttrs[CC26X2R1_LAUNCHXL_UARTCOUNT] = {
+#if TI_UART_CONF_UART0_ENABLE
     {
         .baseAddr       = UART0_BASE,
         .powerMngrId    = PowerCC26XX_PERIPH_UART0,
@@ -886,6 +910,8 @@ const UARTCC26XX_HWAttrsV2 uartCC26XXHWAttrs[CC26X2R1_LAUNCHXL_UARTCOUNT] = {
         .rxIntFifoThr   = UARTCC26XX_FIFO_THRESHOLD_4_8,
         .errorFxn       = NULL
     },
+#endif
+#if TI_UART_CONF_UART1_ENABLE
     {
         .baseAddr       = UART1_BASE,
         .powerMngrId    = PowerCC26X2_PERIPH_UART1,
@@ -901,23 +927,30 @@ const UARTCC26XX_HWAttrsV2 uartCC26XXHWAttrs[CC26X2R1_LAUNCHXL_UARTCOUNT] = {
         .txIntFifoThr   = UARTCC26XX_FIFO_THRESHOLD_1_8,
         .rxIntFifoThr   = UARTCC26XX_FIFO_THRESHOLD_4_8,
         .errorFxn       = NULL
-    }
+    },
+#endif
 };
 
 const UART_Config UART_config[CC26X2R1_LAUNCHXL_UARTCOUNT] = {
+#if TI_UART_CONF_UART0_ENABLE
     {
         .fxnTablePtr = &UARTCC26XX_fxnTable,
         .object      = &uartCC26XXObjects[CC26X2R1_LAUNCHXL_UART0],
         .hwAttrs     = &uartCC26XXHWAttrs[CC26X2R1_LAUNCHXL_UART0]
     },
+#endif
+#if TI_UART_CONF_UART1_ENABLE
     {
         .fxnTablePtr = &UARTCC26XX_fxnTable,
         .object      = &uartCC26XXObjects[CC26X2R1_LAUNCHXL_UART1],
         .hwAttrs     = &uartCC26XXHWAttrs[CC26X2R1_LAUNCHXL_UART1]
     },
+#endif
 };
 
 const uint_least8_t UART_count = CC26X2R1_LAUNCHXL_UARTCOUNT;
+
+#endif /* TI_UART_CONF_ENABLE */
 
 /*
  *  =============================== UDMA ===============================

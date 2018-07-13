@@ -36,30 +36,30 @@
 #include <ti/devices/DeviceFamily.h>
 /*---------------------------------------------------------------------------*/
 /* Prop-mode RF settings configuration */
-#ifdef RF_CORE_CONF_PROP_RF_SETTINGS
-# define RF_CORE_PROP_RF_SETTINGS  RF_CORE_CONF_PROP_RF_SETTINGS
+#ifdef RF_CONF_PROP_SETTINGS
+# define RF_PROP_SETTINGS  RF_CONF_PROP_SETTINGS
 #else
-# define RF_CORE_PROP_RF_SETTINGS "prop-settings.h"
+# define RF_PROP_SETTINGS "prop-settings.h"
 #endif
 
 /* IEEE-mode RF settings configuration */
-#ifdef RF_CORE_CONF_IEEE_RF_SETTINGS
-# define RF_CORE_IEEE_RF_SETTINGS  RF_CORE_CONF_IEEE_RF_SETTINGS
+#ifdef RF_CONF_IEEE_SETTINGS
+# define RF_IEEE_SETTINGS  RF_CONF_IEEE_SETTINGS
 #else
-# define RF_CORE_IEEE_RF_SETTINGS "ieee-settings.h"
+# define RF_IEEE_SETTINGS "ieee-settings.h"
 #endif
 
 /* BLE RF settings configuration */
-#ifdef RF_CORE_CONF_BLE_RF_SETTINGS
-# define RF_CORE_BLE_RF_SETTINGS  RF_CORE_CONF_BLE_RF_SETTINGS
+#ifdef RF_CONF_BLE_SETTINGS
+# define RF_BLE_SETTINGS  RF_CONF_BLE_SETTINGS
 #else
-# define RF_CORE_BLE_RF_SETTINGS "ble-settings.h"
+# define RF_BLE_SETTINGS "ble-settings.h"
 #endif
 /*---------------------------------------------------------------------------*/
 /* Prop-mode RF settings */
-#if (RF_CORE_CONF_MODE == RF_CORE_MODE_SUB_1_GHZ)
+#if (RF_MODE == RF_MODE_SUB_1_GHZ)
 
-#include RF_CORE_PROP_RF_SETTINGS
+#include RF_PROP_SETTINGS
 
 #define netstack_mode             rf_prop_mode
 #define netstack_cmd_radio_setup  rf_cmd_prop_radio_div_setup
@@ -68,9 +68,9 @@
 #define netstack_cmd_rx           rf_cmd_prop_rx_adv
 /*---------------------------------------------------------------------------*/
 /* IEEE-mode RF settings */
-#elif (RF_CORE_CONF_MODE == RF_CORE_MODE_2_4_GHZ)
+#elif (RF_MODE == RF_MODE_2_4_GHZ)
 
-#include RF_CORE_IEEE_RF_SETTINGS
+#include RF_IEEE_SETTINGS
 
 #define netstack_mode             rf_ieee_mode
 #define netstack_cmd_radio_setup  rf_cmd_ieee_radio_setup
@@ -79,11 +79,11 @@
 #define netstack_cmd_rx           rf_cmd_ieee_rx
 /*---------------------------------------------------------------------------*/
 #else
-# error "Unsupported RF_CORE_MODE"
+# error "Unsupported RF_MODE"
 #endif
 /*---------------------------------------------------------------------------*/
 /* BLE RF settings */
-#include RF_CORE_BLE_RF_SETTINGS
+#include RF_BLE_SETTINGS
 
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
 

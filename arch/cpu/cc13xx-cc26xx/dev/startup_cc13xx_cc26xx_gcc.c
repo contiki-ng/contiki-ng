@@ -248,25 +248,25 @@ nmiISR(void)
 
 volatile int x__;
 
-volatile uint32_t r0;
-volatile uint32_t r1;
-volatile uint32_t r2;
-volatile uint32_t r3;
-volatile uint32_t r12;
-volatile uint32_t lr;
-volatile uint32_t pc;
-volatile uint32_t psr;
-
 void debugHardfault(uint32_t *sp)
 {
-    r0  = sp[0];
-    r1  = sp[1];
-    r2  = sp[2];
-    r3  = sp[3];
-    r12 = sp[4];
-    lr  = sp[5];
-    pc  = sp[6];
-    psr = sp[7];
+    volatile uint32_t r0;
+    volatile uint32_t r1;
+    volatile uint32_t r2;
+    volatile uint32_t r3;
+    volatile uint32_t r12;
+    volatile uint32_t lr;
+    volatile uint32_t pc;
+    volatile uint32_t psr;
+
+    (void)(r0  = sp[0]);
+    (void)(r1  = sp[1]);
+    (void)(r2  = sp[2]);
+    (void)(r3  = sp[3]);
+    (void)(r12 = sp[4]);
+    (void)(lr  = sp[5]);
+    (void)(pc  = sp[6]);
+    (void)(psr = sp[7]);
 
     while(1);
 }

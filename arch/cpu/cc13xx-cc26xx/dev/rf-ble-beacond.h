@@ -48,12 +48,6 @@
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-#ifdef RF_BLE_BEACON_CONF_ENABLED
-#define RF_BLE_BEACON_ENABLED   RF_BLE_BEACON_CONF_ENABLED
-#else
-#define RF_BLE_BEACON_ENABLED   1
-#endif
-/*---------------------------------------------------------------------------*/
 typedef enum {
     RF_BLE_BEACOND_OK,
     RF_BLE_BEACOND_ERROR,

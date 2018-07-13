@@ -143,6 +143,13 @@
 #define DOT_15_4_G_CHAN_IN_RANGE(chan) \
         (((chan) >= DOT_15_4G_CHAN_MIN) && ((chan) <= DOT_15_4G_CHAN_MAX))
 /*---------------------------------------------------------------------------*/
+#define DOT_15_4_G_DEFAULT_CHAN      IEEE802154_DEFAULT_CHANNEL
+
+/* Sanity check default channel */
+#if !(DOT_15_4_G_CHAN_IN_RANGE(DOT_15_4_G_DEFAULT_CHAN))
+# error IEEE802154_DEFAULT_CHANNEL is not in valid channel range
+#endif
+/*---------------------------------------------------------------------------*/
 #endif /* DOT_15_4G_H_ */
 /*---------------------------------------------------------------------------*/
 /**

@@ -68,8 +68,9 @@
 /* SimpleLink Platform RF dev */
 #include "rf-data-queue.h"
 #include "rf-core.h"
+#include "dot-15-4g.h"
 #include "netstack-settings.h"
-#include RF_CORE_IEEE_RF_SETTINGS
+#include RF_IEEE_SETTINGS
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stddef.h>
@@ -77,15 +78,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "RF IEEE Mode"
-#define LOG_LEVEL LOG_LEVEL_NONE
-/*---------------------------------------------------------------------------*/
-#ifdef NDEBUG
-#   define PRINTF(...)
+#if 0
+# define PRINTF(...)
 #else
-#   define PRINTF(...)  printf(__VA_ARGS__)
+# define PRINTF(...)  printf(__VA_ARGS__)
 #endif
 /*---------------------------------------------------------------------------*/
 /* Configuration parameters */
@@ -111,13 +107,6 @@
 #   define IEEE_MODE_RSSI_THRESHOLD  0xA6
 #endif /* IEEE_MODE_CONF_RSSI_THRESHOLD */
 
-/* Configuration for default IEEE channel */
-#ifdef IEEE_MODE_CONF_CHANNEL
-#   define IEEE_MODE_CHANNEL  IEEE_MODE_CONF_CHANNEL
-#else
-#   define IEEE_MODE_CHANNEL  RF_CHANNEL
-#endif
-
 /* Configuration for TX power table */
 #ifdef IEEE_MODE_CONF_TX_POWER_TABLE
 #   define TX_POWER_TABLE  IEEE_MODE_CONF_TX_POWER_TABLE
@@ -136,26 +125,6 @@
 #define TX_POWER_MAX  (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
 
 #define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
-/*---------------------------------------------------------------------------*/
-/* IEEE channel-to-frequency conversion constants */
-/* Channel frequency base: 2.405 GHz */
-/* Channel frequency spacing: 5 MHz */
-/* Channel range: 11 - 26 */
-#define IEEE_MODE_FREQ_BASE     2405000
-#define IEEE_MODE_FREQ_SPACING  5000
-#define IEEE_MODE_CHAN_MIN      11
-#define IEEE_MODE_CHAN_MAX      26
-
-#define IEEE_MODE_CHAN_IN_RANGE(ch)  ((IEEE_MODE_CHAN_MIN <= (ch)) && ((ch) <= IEEE_MODE_CHAN_MAX))
-  /* freq(channel) = freq_base + freq_spacing * (channel - channel_min) */
-#define IEEE_MODE_FREQ(chan) \
-  ((uint32_t)IEEE_MODE_FREQ_BASE + (uint32_t)IEEE_MODE_FREQ_SPACING * \
-    ((uint32_t)(channel) - (uint32_t)IEEE_MODE_CHAN_MIN))
-
-/* Sanity check of default IEEE channel */
-#if !IEEE_MODE_CHAN_IN_RANGE(IEEE_MODE_CHANNEL)
-#   error "Default IEEE channel IEEE_MODE_CHANNEL is outside allowed channel range"
-#endif
 /*---------------------------------------------------------------------------*/
 /* Timeout constants */
 
@@ -341,10 +310,10 @@ init_rf_params(void)
 static rf_result_t
 set_channel(uint8_t channel)
 {
-  if (!IEEE_MODE_CHAN_IN_RANGE(channel)) {
+  if (!DOT_15_4_G_CHAN_IN_RANGE(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
-           (int)channel, IEEE_MODE_CHANNEL);
-    channel = IEEE_MODE_CHANNEL;
+           (int)channel, DOT_15_4_G_DEFAULT_CHAN);
+    channel = DOT_15_4_G_DEFAULT_CHAN;
   }
 
   /*
@@ -359,9 +328,9 @@ set_channel(uint8_t channel)
 
   cmd_rx.channel = channel;
 
-  const uint32_t new_freq = IEEE_MODE_FREQ(channel);
-  const uint16_t freq = (uint16_t)(new_freq / 1000);
-  const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
+  const uint32_t new_freq = (uint32_t)DOT_15_4_G_FREQ(channel);
+  const uint16_t freq     = (uint16_t)(new_freq / 1000);
+  const uint16_t frac     = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
   PRINTF("set_channel: %d = 0x%04X.0x%04X (%lu)\n",
          (int)channel, freq, frac, new_freq);
@@ -459,7 +428,7 @@ init(void)
     return RF_RESULT_ERROR;
   }
 
-  set_channel((uint8_t)IEEE_MODE_CHANNEL);
+  set_channel(DOT_15_4_G_DEFAULT_CHAN);
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
@@ -829,12 +798,12 @@ get_value(radio_param_t param, radio_value_t *value)
 
   /* Channel min */
   case RADIO_CONST_CHANNEL_MIN:
-    *value = (radio_value_t)IEEE_MODE_CHAN_MIN;
+    *value = (radio_value_t)DOT_15_4G_CHAN_MIN;
     return RADIO_RESULT_OK;
 
   /* Channel max */
   case RADIO_CONST_CHANNEL_MAX:
-    *value = (radio_value_t)IEEE_MODE_CHAN_MAX;
+    *value = (radio_value_t)DOT_15_4G_CHAN_MAX;
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_TXPOWER_MIN:
@@ -885,7 +854,7 @@ set_value(radio_param_t param, radio_value_t value)
 
   /* Channel */
   case RADIO_PARAM_CHANNEL:
-    if (!IEEE_MODE_CHAN_IN_RANGE(value)) {
+    if (!DOT_15_4_G_CHAN_IN_RANGE(value)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
     set_channel((uint8_t)value);

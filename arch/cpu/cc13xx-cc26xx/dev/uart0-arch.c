@@ -59,14 +59,18 @@ uart0_cb(UART_Handle handle, void *buf, size_t count)
 {
   if (!g_input_cb) { return; }
 
-  // Save the current callback function, as this might be overwritten after
-  // the callback is called.
+  /*
+   * Save the current callback function, as this might be overwritten after
+   * the callback is called.
+   */
   const uart0_input_cb currCb = g_input_cb;
-  // Call the callback. Note this might reset g_input_cb
+  /* Call the callback. Note this might reset g_input_cb */
   currCb(g_char_buf);
-  // If g_input_cb didn't change after the call, do another read.
-  // Else, the uart0_set_callback was called with a different callback pointer
-  // and triggered an another read.
+  /*
+   * If g_input_cb didn't change after the call, do another read.
+   * Else, the uart0_set_callback was called with a different callback pointer
+   * and triggered an another read.
+   */
   if (currCb == g_input_cb) {
     UART_read(gh_uart, &g_char_buf, 1);
   }
@@ -80,13 +84,12 @@ uart0_init(void)
 
   UART_Params params;
   UART_Params_init(&params);
-#ifdef SIMPLELINK_UART_CONF_BAUD_RATE
-  params.baudRate = SIMPLELINK_UART_CONF_BAUD_RATE;
-#endif
-  params.readMode = UART_MODE_CALLBACK;
-  params.writeMode = UART_MODE_BLOCKING;
-  params.readCallback = uart0_cb;
-  params.readDataMode = UART_DATA_TEXT;
+
+  params.baudRate       = TI_UART_CONF_BAUD_RATE;
+  params.readMode       = UART_MODE_CALLBACK;
+  params.writeMode      = UART_MODE_BLOCKING;
+  params.readCallback   = uart0_cb;
+  params.readDataMode   = UART_DATA_TEXT;
   params.readReturnMode = UART_RETURN_NEWLINE;
 
   gh_uart = UART_open(Board_UART0, &params);

@@ -60,12 +60,7 @@
 #include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE  "RF Core"
-#define LOG_LEVEL   LOG_LEVEL_DBG
-/*---------------------------------------------------------------------------*/
-#ifdef NDEBUG
+#if 0
 # define PRINTF(...)
 #else
 # define PRINTF(...)  printf(__VA_ARGS__)
@@ -173,11 +168,15 @@ rf_yield(void)
 {
   /* Force abort of any ongoing RF operation */
   RF_flushCmd(&rf_netstack, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
+#if RF_BLE_BEACON_ENABLE
   RF_flushCmd(&rf_ble,      RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
+#endif
 
   /* Trigger a manual power-down */
   RF_yield(&rf_netstack);
+#if RF_BLE_BEACON_ENABLE
   RF_yield(&rf_ble);
+#endif
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 

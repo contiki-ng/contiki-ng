@@ -57,8 +57,8 @@
 #include DeviceFamily_constructPath(inc/hw_cpu_scs.h)
 
 #include <ti/drivers/dpl/HwiP.h>
-#include <ti/drivers/GPIO.h>
 #include <ti/drivers/I2C.h>
+#include <ti/drivers/NVS.h>
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/SPI.h>
@@ -170,9 +170,19 @@ platform_init_stage_one(void)
   fade(LEDS_RED);
 
   /* TI Drivers init */
-  I2C_init();
-  SPI_init();
+#if TI_UART_CONF_ENABLE
   UART_init();
+  uart0_init();
+#endif
+#if TI_I2C_CONF_ENABLE
+  I2C_init();
+#endif
+#if TI_SPI_CONF_ENABLE
+  SPI_init();
+#endif
+#if TI_NVS_CONF_ENABLE
+  NVS_init();
+#endif
 
   fade(LEDS_GREEN);
 
@@ -183,7 +193,6 @@ platform_init_stage_one(void)
 void
 platform_init_stage_two(void)
 {
-  uart0_init();
   serial_line_init();
 
 #if BUILD_WITH_SHELL
@@ -203,7 +212,9 @@ platform_init_stage_two(void)
 void
 platform_init_stage_three(void)
 {
+#if RF_BLE_BEACON_ENABLE
   rf_ble_beacond_init();
+#endif
 
   radio_value_t chan = 0, pan = 0;
 
@@ -219,8 +230,11 @@ platform_init_stage_three(void)
           ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No",
           ChipInfo_SupportsBLE() ? "Yes" : "No");
 
-  LOG_INFO("Operating frequency on %s\n",
-      (RF_CORE_MODE == RF_CORE_MODE_SUB_1_GHZ) ? "Sub-1 GHz" : "2.4 GHz");
+#if (RF_MODE == RF_MODE_SUB_1_GHZ)
+  LOG_INFO("Operating frequency on Sub-1 GHz\n");
+#else
+  LOG_INFO("Operating frequency on 2.4 GHz\n");
+#endif
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);
   LOG_INFO("Node ID: %d\n", g_nodeId);
 

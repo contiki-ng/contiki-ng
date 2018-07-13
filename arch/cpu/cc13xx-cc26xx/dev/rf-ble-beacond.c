@@ -63,34 +63,13 @@
 #include <stdio.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-#define DEBUG 0
-#if DEBUG
+#if 0
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
-#if !(RF_BLE_BEACOND_ENABLED)
-/*---------------------------------------------------------------------------*/
-rf_ble_beacond_result_t
-rf_ble_beacond_init(void) { return RF_BLE_BEACOND_DISABLED; }
-/*---------------------------------------------------------------------------*/
-rf_ble_beacond_result_t
-rf_ble_beacond_start(clock_time_t interval, const char *name) { return RF_BLE_BEACOND_DISABLED; }
-/*---------------------------------------------------------------------------*/
-rf_ble_beacond_result_t
-rf_ble_beacond_stop(void) { return RF_BLE_BEACOND_DISABLED; }
-/*---------------------------------------------------------------------------*/
-int8_t
-rf_ble_is_active(void) { return -1; }
-/*---------------------------------------------------------------------------*/
-rf_ble_beacond_result_t
-rf_ble_set_tx_power(int8_t power) { return RF_BLE_BEACOND_DISABLED; }
-/*---------------------------------------------------------------------------*/
-int8_t
-rf_ble_get_tx_power(void) { return ~(int8_t)(0); }
-/*---------------------------------------------------------------------------*/
-#else /* RF_BLE_BEACOND_ENABLED */
+#if RF_BLE_BEACON_ENABLE
 /*---------------------------------------------------------------------------*/
 /* BLE Advertisement channels. Not to be changed by the user. */
 typedef enum {
@@ -332,7 +311,27 @@ PROCESS_THREAD(ble_beacond_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-#endif /* RF_BLE_BEACOND_ENABLED */
+#else /* RF_BLE_BEACON_ENABLE */
+/*---------------------------------------------------------------------------*/
+rf_ble_beacond_result_t
+rf_ble_beacond_init(void) { return RF_BLE_BEACOND_DISABLED; }
+/*---------------------------------------------------------------------------*/
+rf_ble_beacond_result_t
+rf_ble_beacond_start(clock_time_t interval, const char *name) { return RF_BLE_BEACOND_DISABLED; }
+/*---------------------------------------------------------------------------*/
+rf_ble_beacond_result_t
+rf_ble_beacond_stop(void) { return RF_BLE_BEACOND_DISABLED; }
+/*---------------------------------------------------------------------------*/
+int8_t
+rf_ble_is_active(void) { return -1; }
+/*---------------------------------------------------------------------------*/
+rf_ble_beacond_result_t
+rf_ble_set_tx_power(int8_t power) { return RF_BLE_BEACOND_DISABLED; }
+/*---------------------------------------------------------------------------*/
+int8_t
+rf_ble_get_tx_power(void) { return ~(int8_t)(0); }
+/*---------------------------------------------------------------------------*/
+#endif /* RF_BLE_BEACON_ENABLE */
 /*---------------------------------------------------------------------------*/
 /**
  * @}
