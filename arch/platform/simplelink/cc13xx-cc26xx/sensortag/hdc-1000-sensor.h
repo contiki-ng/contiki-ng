@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-peripherals
+ * \addtogroup sensortag-peripherals
  * @{
  *
- * \defgroup sensortag-cc26xx-hdc-sensor SensorTag 2.0 TI HDC1000 Sensor
+ * \defgroup sensortag-hdc-sensor SensorTag HDC1000 - Temperature and
+ *                                Humidity Sensor
  *
  * Due to the time required for the sensor to startup, this driver is meant to
  * be used in an asynchronous fashion. The caller must first activate the
@@ -45,28 +45,35 @@
  * and latch them. It will then generate a sensors_changed event.
  *
  * The user can then retrieve readings by calling .value() and by passing
- * either HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMIDITY as the
+ * either HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMID as the
  * argument. Multiple calls to value() will not trigger new readings, they will
  * simply return the most recent latched values.
  *
- * The user can query the sensor's status by calling .status()
+ * The user can query the sensor's status by calling status().
  *
  * To get a fresh reading, the user must trigger a new reading cycle by calling
  * SENSORS_ACTIVATE().
  * @{
  *
  * \file
- * Header file for the Sensortag TI HDC1000 sensor
+ *        Header file for the Sensortag HDC1000 sensor.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef HDC_1000_SENSOR_H
 #define HDC_1000_SENSOR_H
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
 #include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
+#if (TI_I2C_CONF_ENABLE == 0) || (TI_I2C_CONF_I2C0_ENABLE == 0)
+# error "The HDC-1000 requires the I2C driver (TI_I2C_CONF_ENABLE = 1)"
+#endif
 /*---------------------------------------------------------------------------*/
 typedef enum {
   HDC_1000_SENSOR_TYPE_TEMP,
-  HDC_1000_SENSOR_TYPE_HUMIDITY
+  HDC_1000_SENSOR_TYPE_HUMID
 } HDC_1000_SENSOR_TYPE;
 /*---------------------------------------------------------------------------*/
 /**

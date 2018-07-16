@@ -220,7 +220,7 @@
 #endif
 
 #ifndef TI_UART_CONF_UART1_ENABLE
-#define TI_UART_CONF_UART1_ENABLE           1
+#define TI_UART_CONF_UART1_ENABLE           0
 #endif
 
 #ifndef TI_UART_CONF_BAUD_RATE
@@ -237,12 +237,16 @@
 #endif
 
 #ifndef TI_SPI_CONF_SPI1_ENABLE
-#define TI_SPI_CONF_SPI1_ENABLE             1
+#define TI_SPI_CONF_SPI1_ENABLE             0
 #endif
 
 /* I2C */
 #ifndef TI_I2C_CONF_ENABLE
 #define TI_I2C_CONF_ENABLE                  1
+#endif
+
+#ifndef TI_I2C_CONF_I2C0_ENABLE
+#define TI_I2C_CONF_I2C0_ENABLE             TI_I2C_CONF_ENABLE
 #endif
 
 /* NVS */
@@ -257,6 +261,31 @@
 #ifndef TI_NVS_CONF_NVS_EXTERNAL_ENABLE
 #define TI_NVS_CONF_NVS_EXTERNAL_ENABLE     TI_NVS_CONF_ENABLE
 #endif
+
+/* Display */
+#ifndef TI_DISPLAY_CONF_ENABLE
+#define TI_DISPLAY_CONF_ENABLE              0
+#endif
+
+/* UART Display uses UART0 */
+#ifndef TI_DISPLAY_CONF_UART_ENABLE
+#define TI_DISPLAY_CONF_UART_ENABLE         TI_UART_CONF_UART0_ENABLE
+#endif
+
+#ifndef TI_DISPLAY_CONF_USE_UART_ANSI
+#define TI_DISPLAY_CONF_USE_UART_ANSI       0
+#endif
+
+/* LCD Display uses SPI0 */
+#ifndef TI_DISPLAY_CONF_LCD_ENABLE
+#define TI_DISPLAY_CONF_LCD_ENABLE          TI_SPI_CONF_SPI0_ENABLE
+#endif
+
+/* SD card */
+#ifndef TI_SD_CONF_ENABLE
+#define TI_SD_CONF_ENABLE                   0
+#endif
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

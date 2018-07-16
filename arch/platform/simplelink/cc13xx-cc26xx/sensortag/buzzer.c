@@ -29,11 +29,13 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-buzzer
+ * \addtogroup sensortag-buzzer
  * @{
  *
  * \file
- *  Driver for the Sensortag Buzzer
+ *        Driver for the Sensortag Buzzer.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -78,13 +80,13 @@ buzzer_init()
 
   GPTimerCC26XX_Params gpt_params;
   GPTimerCC26XX_Params_init(&gpt_params);
+
   gpt_params.mode = GPT_CONFIG_16BIT;
   gpt_params.mode = GPT_MODE_PERIODIC_UP;
   gpt_params.debugStallMode = GPTimerCC26XX_DEBUG_STALL_OFF;
 
   gpt_handle = GPTimerCC26XX_open(Board_GPTIMER0A, &gpt_params);
   if (!gpt_handle) {
-    PIN_close(pin_handle);
     return false;
   }
 
@@ -120,7 +122,7 @@ buzzer_start(uint32_t freq)
     return false;
   }
 
-  Power_setDependency(PowerCC26XX_XOSC_HF );
+  Power_setDependency(PowerCC26XX_XOSC_HF);
 
   PINCC26XX_setMux(pin_handle, BUZZER_PIN, GPT_PIN_0A);
 
@@ -145,10 +147,12 @@ buzzer_stop()
     return;
   }
 
-  Power_releaseDependency(PowerCC26XX_XOSC_HF );
+  Power_releaseDependency(PowerCC26XX_XOSC_HF);
 
   GPTimerCC26XX_stop(gpt_handle);
+
   PIN_close(pin_handle);
+  pin_handle = NULL;
 
   is_running = false;
 }

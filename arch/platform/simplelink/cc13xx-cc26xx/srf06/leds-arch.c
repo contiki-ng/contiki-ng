@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,27 +27,32 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup simplelink-platform
+ * \addtogroup srf06-peripherals
  * @{
  *
  * \file
- *  Driver for LaunchPad LEDs
+ *        LED HAL definitions for the SmartRF06 Evaluation Board's LEDs.
+ *        Common across all CC13xx/CC26xx devices for the SmartRF06 EB.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-/* Contiki API */
 #include "contiki.h"
 #include "dev/leds.h"
-
+/*---------------------------------------------------------------------------*/
 #include <Board.h>
-
+/*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 const leds_t leds_arch_leds[] = {
+  /* Red LED, AKA LED0 */
   { .pin = Board_PIN_LED0, .negative_logic = false },
+  /* Yellow LED, AKA LED1 */
   { .pin = Board_PIN_LED1, .negative_logic = false },
+  /* Green LED, AKA LED2 */
   { .pin = Board_PIN_LED2, .negative_logic = false },
+  /* Red-orange LED, AKA LED3 */
   { .pin = Board_PIN_LED3, .negative_logic = false },
 };
 /*---------------------------------------------------------------------------*/

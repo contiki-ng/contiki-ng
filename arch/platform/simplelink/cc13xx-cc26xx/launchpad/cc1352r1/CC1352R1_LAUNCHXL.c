@@ -364,19 +364,21 @@ const uint_least8_t AESECB_count = CC1352R1_LAUNCHXL_AESECBCOUNT;
 #include <ti/display/DisplayUart.h>
 #include <ti/display/DisplaySharp.h>
 
+#if TI_DISPLAY_CONF_ENABLE
+
+#if TI_DISPLAY_CONF_UART_ENABLE
+
+#if !(TI_UART_CONF_UART0_ENABLE)
+#error "Display UART driver requires UART0"
+#endif
+
 #ifndef BOARD_DISPLAY_UART_STRBUF_SIZE
 #define BOARD_DISPLAY_UART_STRBUF_SIZE    128
 #endif
 
-#ifndef BOARD_DISPLAY_SHARP_SIZE
-#define BOARD_DISPLAY_SHARP_SIZE    96
-#endif
+static char uartStringBuf[BOARD_DISPLAY_UART_STRBUF_SIZE];
 
 DisplayUart_Object     displayUartObject;
-DisplaySharp_Object    displaySharpObject;
-
-static char uartStringBuf[BOARD_DISPLAY_UART_STRBUF_SIZE];
-static uint_least8_t sharpDisplayBuf[BOARD_DISPLAY_SHARP_SIZE * BOARD_DISPLAY_SHARP_SIZE / 8];
 
 const DisplayUart_HWAttrs displayUartHWAttrs = {
     .uartIdx      = CC1352R1_LAUNCHXL_UART0,
@@ -385,6 +387,22 @@ const DisplayUart_HWAttrs displayUartHWAttrs = {
     .strBuf       = uartStringBuf,
     .strBufLen    = BOARD_DISPLAY_UART_STRBUF_SIZE,
 };
+
+#endif /* TI_DISPLAY_CONF_UART_ENABLE */
+
+#if TI_DISPLAY_CONF_LCD_ENABLE
+
+#if !(TI_SPI_CONF_SPI0_ENABLE)
+#error "Display LCD driver requires SPI0"
+#endif
+
+#ifndef BOARD_DISPLAY_SHARP_SIZE
+#define BOARD_DISPLAY_SHARP_SIZE    96
+#endif
+
+static uint_least8_t sharpDisplayBuf[BOARD_DISPLAY_SHARP_SIZE * BOARD_DISPLAY_SHARP_SIZE / 8];
+
+DisplaySharp_Object    displaySharpObject;
 
 const DisplaySharp_HWAttrsV1 displaySharpHWattrs = {
     .spiIndex    = CC1352R1_LAUNCHXL_SPI0,
@@ -396,27 +414,18 @@ const DisplaySharp_HWAttrsV1 displaySharpHWattrs = {
     .displayBuf  = sharpDisplayBuf,
 };
 
-#ifndef BOARD_DISPLAY_USE_UART
-#define BOARD_DISPLAY_USE_UART 1
-#endif
-#ifndef BOARD_DISPLAY_USE_UART_ANSI
-#define BOARD_DISPLAY_USE_UART_ANSI 0
-#endif
-#ifndef BOARD_DISPLAY_USE_LCD
-#define BOARD_DISPLAY_USE_LCD 0
-#endif
+#endif /* TI_DISPLAY_CONF_LCD_ENABLE */
 
 /*
  * This #if/#else is needed to workaround a problem with the
  * IAR compiler. The IAR compiler doesn't like the empty array
  * initialization. (IAR Error[Pe1345])
  */
-#if (BOARD_DISPLAY_USE_UART || BOARD_DISPLAY_USE_LCD)
 
 const Display_Config Display_config[] = {
-#if (BOARD_DISPLAY_USE_UART)
+#if TI_DISPLAY_CONF_UART_ENABLE
     {
-#  if (BOARD_DISPLAY_USE_UART_ANSI)
+#  if TI_DISPLAY_CONF_USE_UART_ANSI
         .fxnTablePtr = &DisplayUartAnsi_fxnTable,
 #  else /* Default to minimal UART with no cursor placement */
         .fxnTablePtr = &DisplayUartMin_fxnTable,
@@ -425,7 +434,7 @@ const Display_Config Display_config[] = {
         .hwAttrs     = &displayUartHWAttrs,
     },
 #endif
-#if (BOARD_DISPLAY_USE_LCD)
+#if TI_DISPLAY_CONF_LCD_ENABLE
     {
         .fxnTablePtr = &DisplaySharp_fxnTable,
         .object      = &displaySharpObject,
@@ -441,7 +450,7 @@ const uint_least8_t Display_count = sizeof(Display_config) / sizeof(Display_Conf
 const Display_Config *Display_config = NULL;
 const uint_least8_t Display_count = 0;
 
-#endif /* (BOARD_DISPLAY_USE_UART || BOARD_DISPLAY_USE_LCD) */
+#endif /* TI_DISPLAY_CONF_ENABLE */
 
 /*
  *  =============================== GPIO ===============================
@@ -545,6 +554,7 @@ const GPTimerCC26XX_Config GPTimerCC26XX_config[CC1352R1_LAUNCHXL_GPTIMERPARTSCO
 I2CCC26XX_Object i2cCC26xxObjects[CC1352R1_LAUNCHXL_I2CCOUNT];
 
 const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC1352R1_LAUNCHXL_I2CCOUNT] = {
+#if TI_I2C_CONF_I2C0_ENABLE
     {
         .baseAddr    = I2C0_BASE,
         .powerMngrId = PowerCC26XX_PERIPH_I2C0,
@@ -553,15 +563,18 @@ const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC1352R1_LAUNCHXL_I2CCOUNT] = {
         .swiPriority = 0,
         .sdaPin      = CC1352R1_LAUNCHXL_I2C0_SDA0,
         .sclPin      = CC1352R1_LAUNCHXL_I2C0_SCL0,
-    }
+    },
+#endif
 };
 
 const I2C_Config I2C_config[CC1352R1_LAUNCHXL_I2CCOUNT] = {
+#if TI_I2C_CONF_I2C0_ENABLE
     {
         .fxnTablePtr = &I2CCC26XX_fxnTable,
         .object      = &i2cCC26xxObjects[CC1352R1_LAUNCHXL_I2C0],
         .hwAttrs     = &i2cCC26xxHWAttrs[CC1352R1_LAUNCHXL_I2C0]
     },
+#endif
 };
 
 const uint_least8_t I2C_count = CC1352R1_LAUNCHXL_I2CCOUNT;
@@ -790,6 +803,12 @@ const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
 #include <ti/drivers/SD.h>
 #include <ti/drivers/sd/SDSPI.h>
 
+#if TI_SD_CONF_ENABLE
+
+#if !(TI_SPI_CONF_SPI0_ENABLE)
+#error "SD driver requires SPI0 enabled"
+#endif
+
 SDSPI_Object sdspiObjects[CC1352R1_LAUNCHXL_SDCOUNT];
 
 const SDSPI_HWAttrs sdspiHWAttrs[CC1352R1_LAUNCHXL_SDCOUNT] = {
@@ -808,6 +827,8 @@ const SD_Config SD_config[CC1352R1_LAUNCHXL_SDCOUNT] = {
 };
 
 const uint_least8_t SD_count = CC1352R1_LAUNCHXL_SDCOUNT;
+
+#endif /* TI_SD_CONF_ENABLE */
 
 /*
  *  =============================== SPI DMA ===============================

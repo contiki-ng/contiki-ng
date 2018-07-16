@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,24 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-opt-sensor
+ * \addtogroup sensortag-opt-sensor
  * @{
  *
  * \file
- *  Driver for the Sensortag Opt3001 light sensor
+ *        Driver for the Sensortag OPT-3001 light sensor.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/ctimer.h"
+
 #include "opt-3001-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
+
 #include <ti/drivers/I2C.h>
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
@@ -63,65 +66,65 @@
 #define OPT_3001_I2C_ADDRESS            Board_OPT3001_ADDR
 /*---------------------------------------------------------------------------*/
 /* Register addresses */
-#define REG_RESULT                      0x00
-#define REG_CONFIGURATION               0x01
-#define REG_LOW_LIMIT                   0x02
-#define REG_HIGH_LIMIT                  0x03
+#define REG_RESULT                  0x00
+#define REG_CONFIGURATION           0x01
+#define REG_LOW_LIMIT               0x02
+#define REG_HIGH_LIMIT              0x03
 
-#define REG_MANUFACTURER_ID             0x7E
-#define REG_DEVICE_ID                   0x7F
+#define REG_MANUFACTURER_ID         0x7E
+#define REG_DEVICE_ID               0x7F
 /*---------------------------------------------------------------------------*/
 /*
  * Configuration Register Bits and Masks.
  * We use uint16_t to read from / write to registers, meaning that the
  * register's MSB is the variable's LSB.
  */
-#define CFG_RN          0x00F0 /* [15..12] Range Number */
-#define CFG_CT          0x0008 /* [11] Conversion Time */
-#define CFG_M           0x0006 /* [10..9] Mode of Conversion */
-#define CFG_OVF         0x0001 /* [8] Overflow */
-#define CFG_CRF         0x8000 /* [7] Conversion Ready Field */
-#define CFG_FH          0x4000 /* [6] Flag High */
-#define CFG_FL          0x2000 /* [5] Flag Low */
-#define CFG_L           0x1000 /* [4] Latch */
-#define CFG_POL         0x0800 /* [3] Polarity */
-#define CFG_ME          0x0400 /* [2] Mask Exponent */
-#define CFG_FC          0x0300 /* [1..0] Fault Count */
-
+#define CFG_RN                    0x00F0 /**< [15..12] Range Number */
+#define CFG_CT                    0x0008 /**< [11] Conversion Time */
+#define CFG_M                     0x0006 /**< [10..9] Mode of Conversion */
+#define CFG_OVF                   0x0001 /**< [8] Overflow */
+#define CFG_CRF                   0x8000 /**< [7] Conversion Ready Field */
+#define CFG_FH                    0x4000 /**< [6] Flag High */
+#define CFG_FL                    0x2000 /**< [5] Flag Low */
+#define CFG_L                     0x1000 /**< [4] Latch */
+#define CFG_POL                   0x0800 /**< [3] Polarity */
+#define CFG_ME                    0x0400 /**< [2] Mask Exponent */
+#define CFG_FC                    0x0300 /**< [1..0] Fault Count */
+/*---------------------------------------------------------------------------*/
 /* Possible Values for CT */
-#define CFG_CT_100      0x0000
-#define CFG_CT_800      CFG_CT
-
+#define CFG_CT_100                0x0000
+#define CFG_CT_800                CFG_CT
+/*---------------------------------------------------------------------------*/
 /* Possible Values for M */
-#define CFG_M_CONTI     0x0004
-#define CFG_M_SINGLE    0x0002
-#define CFG_M_SHUTDOWN  0x0000
-
+#define CFG_M_CONTI               0x0004
+#define CFG_M_SINGLE              0x0002
+#define CFG_M_SHUTDOWN            0x0000
+/*---------------------------------------------------------------------------*/
 /* Reset Value for the register 0xC810. All zeros except: */
-#define CFG_RN_RESET    0x00C0
-#define CFG_CT_RESET    CFG_CT_800
-#define CFG_L_RESET     0x1000
-#define CFG_DEFAULTS    (CFG_RN_RESET | CFG_CT_100 | CFG_L_RESET)
-
+#define CFG_RN_RESET              0x00C0
+#define CFG_CT_RESET              CFG_CT_800
+#define CFG_L_RESET               0x1000
+#define CFG_DEFAULTS              (CFG_RN_RESET | CFG_CT_100 | CFG_L_RESET)
+/*---------------------------------------------------------------------------*/
 /* Enable / Disable */
-#define CFG_ENABLE_CONTINUOUS  (CFG_M_CONTI | CFG_DEFAULTS)
-#define CFG_ENABLE_SINGLE_SHOT (CFG_M_SINGLE | CFG_DEFAULTS)
-#define CFG_DISABLE             CFG_DEFAULTS
+#define CFG_ENABLE_CONTINUOUS     (CFG_M_CONTI | CFG_DEFAULTS)
+#define CFG_ENABLE_SINGLE_SHOT    (CFG_M_SINGLE | CFG_DEFAULTS)
+#define CFG_DISABLE               CFG_DEFAULTS
 /*---------------------------------------------------------------------------*/
 /* Register length */
-#define REGISTER_LENGTH                 2
+#define REGISTER_LENGTH           2
 /*---------------------------------------------------------------------------*/
 /* Sensor data size */
-#define DATA_LENGTH                     2
+#define DATA_LENGTH               2
 /*---------------------------------------------------------------------------*/
 /* Byte swap of 16-bit register value */
-#define HI_UINT16(a) (((a) >> 8) & 0xFF)
-#define LO_UINT16(a) ((a) & 0xFF)
+#define HI_UINT16(a)              (((a) >> 8) & 0xFF)
+#define LO_UINT16(a)              (((a) >> 0) & 0xFF)
 
-#define SWAP16(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
+#define SWAP16(v)                 ((LO_UINT16(v) << 8) | (HI_UINT16(v) << 0))
 
-#define LSB16(v)  (LO_UINT16(v)), (HI_UINT16(v))
-#define MSB16(v)  (HI_UINT16(v)), (LO_UINT16(v))
+#define LSB16(v)                  (LO_UINT16(v)), (HI_UINT16(v))
+#define MSB16(v)                  (HI_UINT16(v)), (LO_UINT16(v))
 /*---------------------------------------------------------------------------*/
 typedef struct {
   volatile OPT_3001_STATUS status;
@@ -134,39 +137,76 @@ static OPT_3001_Object opt_3001;
 
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
-static I2C_Handle i2cHandle;
+static I2C_Handle i2c_handle;
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief         Setup and peform an I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
 static bool
-i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
+i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
-  I2C_Transaction i2cTransaction = {
-    .writeBuf = writeBuf,
-    .writeCount = writeCount,
-    .readBuf = readBuf,
-    .readCount = readCount,
+  I2C_Transaction i2c_transaction = {
+    .writeBuf     = wbuf,
+    .writeCount   = wcount,
+    .readBuf      = rbuf,
+    .readCount    = rcount,
     .slaveAddress = OPT_3001_I2C_ADDRESS,
   };
 
-  return I2C_transfer(i2cHandle, &i2cTransaction);
+  return I2C_transfer(i2c_handle, &i2c_transaction);
 }
 
-#define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
-#define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
+/**
+ * \brief         Peform a write only I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_write(void *wbuf, size_t wcount)
+{
+  return i2c_write_read(wbuf, wcount, NULL, 0);
+}
+
+/**
+ * \brief         Peform a read only I2C transaction.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_read(void *rbuf, size_t rcount)
+{
+  return i2c_write_read(NULL, 0, rbuf, rcount);
+}
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief   Initialize the OPT-3001 sensor driver.
+ * \return  true if I2C operation successful; else, return false.
+ */
 static bool
 sensor_init(void)
 {
-  if (i2cHandle) {
+  if (i2c_handle) {
     return true;
   }
 
-  I2C_Params i2cParams;
-  I2C_Params_init(&i2cParams);
-  i2cParams.transferMode = I2C_MODE_BLOCKING;
-  i2cParams.bitRate = I2C_400kHz;
+  I2C_Params i2c_params;
+  I2C_Params_init(&i2c_params);
 
-  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
-  if (i2cHandle == NULL) {
+  i2c_params.transferMode = I2C_MODE_BLOCKING;
+  i2c_params.bitRate = I2C_400kHz;
+
+  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
+  if (i2c_handle == NULL) {
     return false;
   }
 
@@ -176,8 +216,8 @@ sensor_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Turn the sensor on/off
- * \param enable TRUE: on, FALSE: off
+ * \brief         Turn the sensor on/off
+ * \param enable  Enable sensor if true; else, disable sensor.
  */
 static bool
 sensor_enable(bool enable)
@@ -190,9 +230,15 @@ sensor_enable(bool enable)
   return i2c_write(cfg_data, sizeof(cfg_data));
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief  Callback when sensor is ready to read data from.
+ */
 static void
-notify_ready_cb(void *not_used)
+notify_ready_cb(void *unused)
 {
+  /* Unused args */
+  (void)unused;
+
   /*
    * Depending on the CONFIGURATION.CONVERSION_TIME bits, a conversion will
    * take either 100 or 800 ms. Here we inspect the CONVERSION_READY bit and
@@ -217,15 +263,18 @@ notify_ready_cb(void *not_used)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns a reading from the sensor
- * \param type Ignored
- * \return Illuminance in centilux
+ * \brief       Returns a reading from the sensor.
+ * \param type  Ignored.
+ * \return      Illuminance in centilux.
  */
 static int
 value(int type)
 {
+  /* Unused args */
+  (void)type;
+
   if (opt_3001.status != OPT_3001_STATUS_DATA_READY) {
-    return MPU_9250_READING_ERROR;
+    return OPT_3001_READING_ERROR;
   }
 
   uint8_t cfg_data[] = { REG_CONFIGURATION };
@@ -234,7 +283,7 @@ value(int type)
   bool spi_ok = i2c_write_read(cfg_data, sizeof(cfg_data), &cfg_value, sizeof(cfg_value));
   if (!spi_ok) {
     opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
-    return MPU_9250_READING_ERROR;
+    return OPT_3001_READING_ERROR;
   }
 
   uint8_t result_data[] = { REG_RESULT };
@@ -243,7 +292,7 @@ value(int type)
   spi_ok = i2c_write_read(result_data, sizeof(result_data), &result_value, sizeof(result_value));
   if (!spi_ok) {
     opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
-    return MPU_9250_READING_ERROR;
+    return OPT_3001_READING_ERROR;
   }
 
   result_value = SWAP16(result_value);
@@ -259,14 +308,13 @@ value(int type)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Configuration function for the OPT3001 sensor.
+ * \brief         Configuration function for the OPT3001 sensor.
+ * \param type    Activate, enable or disable the sensor. See below.
+ * \param enable  Enable or disable sensor.
  *
- * \param type Activate, enable or disable the sensor. See below
- * \param enable
- *
- * When type == SENSORS_HW_INIT we turn on the hardware
- * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
- * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
+ *                When type == SENSORS_HW_INIT we turn on the hardware.
+ *                When type == SENSORS_ACTIVE and enable==1 we enable the sensor.
+ *                When type == SENSORS_ACTIVE and enable==0 we disable the sensor.
  */
 static int
 configure(int type, int enable)
@@ -278,7 +326,7 @@ configure(int type, int enable)
       opt_3001.status = OPT_3001_STATUS_STANDBY;
     } else {
       opt_3001.status = OPT_3001_STATUS_DISABLED;
-      rv = MPU_9250_READING_ERROR;
+      rv = OPT_3001_READING_ERROR;
     }
     break;
 
@@ -302,13 +350,14 @@ configure(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns the status of the sensor
- * \param type ignored
- * \return The state of the sensor SENSOR_STATE_xyz
+ * \brief       Returns the status of the sensor.
+ * \param type  Ignored.
+ * \return      The state of the sensor SENSOR_STATE_xyz.
  */
 static int
 status(int type)
 {
+  /* Unused args */
   (void)type;
 
   return opt_3001.status;

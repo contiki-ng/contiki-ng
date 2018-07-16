@@ -27,16 +27,17 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-peripherals
+ * \addtogroup sensortag-peripherals
  * @{
  *
- * \defgroup sensortag-cc26xx-buzzer SensorTag 2.0 Buzzer
+ * \defgroup sensortag-buzzer SensorTag Buzzer
  * @{
  *
  * \file
- * Header file for the Sensortag Buzzer
+ *        Header file for the Sensortag Buzzer.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>.
  */
 /*---------------------------------------------------------------------------*/
 #ifndef BUZZER_H_
@@ -46,24 +47,26 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Initialise the buzzer
+ * \brief  Initialise the buzzer
  */
 bool buzzer_init(void);
 
 /**
- * \brief Start the buzzer
- * \param freq The buzzer frequency
+ * \brief       Start the buzzer.
+ * \param freq  The buzzer frequency in Hz.
  */
 bool buzzer_start(uint32_t freq);
 
 /**
- * \brief Stop the buzzer
+ * \brief  Stop the buzzer.
  */
 void buzzer_stop(void);
 
 /**
- * \brief Retrieve the buzzer state
- * \return 1: on, 0: off
+ * \brief     Retrieve the buzzer state.
+ * \return    Running status of the buzzer.
+ * \retval 0  Buzzer is off
+ * \retval 1  Buzzer is on
  */
 bool buzzer_running(void);
 /*---------------------------------------------------------------------------*/

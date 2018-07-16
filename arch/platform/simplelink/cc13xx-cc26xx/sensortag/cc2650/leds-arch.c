@@ -27,26 +27,28 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup simplelink-platform
+ * \addtogroup sensortag-peripherals
  * @{
  *
  * \file
- *  Driver for LaunchPad LEDs
+ *        LED HAL definitions for the CC2650STK LEDs. Is not compatible with
+ *        the CC1350STK.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-/* Contiki API */
 #include "contiki.h"
 #include "dev/leds.h"
 /*---------------------------------------------------------------------------*/
-/* Simplelink SDK API */
 #include <Board.h>
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 const leds_t leds_arch_leds[] = {
+  /* Red LED, AKA LED0 */
   { .pin = Board_PIN_LED0, .negative_logic = false },
+  /* Green LED, AKA LED1 */
   { .pin = Board_PIN_LED1, .negative_logic = false },
 };
 /*---------------------------------------------------------------------------*/

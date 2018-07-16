@@ -49,6 +49,8 @@
 extern "C" {
 #endif
 
+#include "contiki-conf.h"
+
 /* Includes */
 #include <ti/drivers/PIN.h>
 #include <ti/devices/cc13x0/driverlib/ioc.h>

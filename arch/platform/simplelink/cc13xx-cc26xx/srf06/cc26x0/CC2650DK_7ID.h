@@ -49,6 +49,8 @@
 extern "C" {
 #endif
 
+#include "contiki-conf.h"
+
 /* Includes */
 #include <ti/drivers/PIN.h>
 #include <ti/devices/cc26x0/driverlib/ioc.h>
@@ -275,7 +277,9 @@ typedef enum CC2650DK_7ID_GPTimers {
  *  @brief  Enum of I2C names
  */
 typedef enum CC2650DK_7ID_I2CName {
+#if TI_I2C_CONF_I2C0_ENABLE
     CC2650DK_7ID_I2C0 = 0,
+#endif
 
     CC2650DK_7ID_I2CCOUNT
 } CC2650DK_7ID_I2CName;
@@ -285,7 +289,7 @@ typedef enum CC2650DK_7ID_I2CName {
  *  @brief  Enum of NVS names
  */
 typedef enum CC2650DK_7ID_NVSName {
-#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
+#if TI_NVS_CONF_NVS_INTERNAL_ENABLE
     CC2650DK_7ID_NVSCC26XX0 = 0,
 #endif
 
@@ -324,8 +328,12 @@ typedef enum CC2650DK_7ID_SDName {
  *  @brief  Enum of SPI names
  */
 typedef enum CC2650DK_7ID_SPIName {
+#if TI_SPI_CONF_SPI0_ENABLE
     CC2650DK_7ID_SPI0 = 0,
+#endif
+#if TI_SPI_CONF_SPI1_ENABLE
     CC2650DK_7ID_SPI1,
+#endif
 
     CC2650DK_7ID_SPICOUNT
 } CC2650DK_7ID_SPIName;
@@ -335,7 +343,9 @@ typedef enum CC2650DK_7ID_SPIName {
  *  @brief  Enum of UARTs
  */
 typedef enum CC2650DK_7ID_UARTName {
+#if TI_UART_CONF_UART0_ENABLE
     CC2650DK_7ID_UART0 = 0,
+#endif
 
     CC2650DK_7ID_UARTCOUNT
 } CC2650DK_7ID_UARTName;

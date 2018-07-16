@@ -27,64 +27,71 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup launchpad-button-sensor
+ * \addtogroup srf06-peripherals
  * @{
  *
  * \file
- * Driver for LaunchPad buttons
+ *        Button HAL definitions for the SmartRF06 Evaluation Board's buttons.
+ *        Common across all CC13xx/CC26xx devices on SmartRF06 EB.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/button-hal.h"
-
+/*---------------------------------------------------------------------------*/
 #include <Board.h>
 /*---------------------------------------------------------------------------*/
 /* Key select button */
-BUTTON_HAL_BUTTON(key_select,                         /**< Name */
-                  "Key Select",                       /**< Description */
-                  Board_KEY_SELECT,                   /**< PIN */
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
-                  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
-                  BUTTON_HAL_ID_KEY_SELECT,           /**< Unique ID */
-                  true);                              /**< Negative logic */
+BUTTON_HAL_BUTTON(
+  key_select,                         /**< Name */
+  "Key Select",                       /**< Description */
+  Board_KEY_SELECT,                   /**< PIN */
+  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
+  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
+  BUTTON_HAL_ID_KEY_SELECT,           /**< Unique ID */
+  true);                              /**< Negative logic */
 
 /* Key up button */
-BUTTON_HAL_BUTTON(key_up,                             /**< Name */
-                  "Key Up",                           /**< Description */
-                  Board_KEY_UP,                       /**< PIN */
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
-                  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
-                  BUTTON_HAL_ID_KEY_UP,               /**< Unique ID */
-                  true);                              /**< Negative logic */
+BUTTON_HAL_BUTTON(
+  key_up,                             /**< Name */
+  "Key Up",                           /**< Description */
+  Board_KEY_UP,                       /**< PIN */
+  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
+  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
+  BUTTON_HAL_ID_KEY_UP,               /**< Unique ID */
+  true);                              /**< Negative logic */
 
 /* Key down button */
-BUTTON_HAL_BUTTON(key_down,                           /**< Name */
-                  "Key Down",                         /**< Description */
-                  Board_KEY_DOWN,                     /**< PIN */
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
-                  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
-                  BUTTON_HAL_ID_KEY_DOWN,             /**< Unique ID */
-                  true);                              /**< Negative logic */
+BUTTON_HAL_BUTTON(
+  key_down,                           /**< Name */
+  "Key Down",                         /**< Description */
+  Board_KEY_DOWN,                     /**< PIN */
+  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
+  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
+  BUTTON_HAL_ID_KEY_DOWN,             /**< Unique ID */
+  true);                              /**< Negative logic */
 
 /* Key left button */
-BUTTON_HAL_BUTTON(key_left,                            /**< Name */
-                  "Key Left",                          /**< Description */
-                  Board_KEY_LEFT,                      /**< PIN */
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
-                  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,   /**< Pull configuration */
-                  BUTTON_HAL_ID_KEY_LEFT,              /**< Unique ID */
-                  true);                               /**< Negative logic */
+BUTTON_HAL_BUTTON(
+  key_left,                            /**< Name */
+  "Key Left",                          /**< Description */
+  Board_KEY_LEFT,                      /**< PIN */
+  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
+  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,   /**< Pull configuration */
+  BUTTON_HAL_ID_KEY_LEFT,              /**< Unique ID */
+  true);                               /**< Negative logic */
 
 /* Key right button */
-BUTTON_HAL_BUTTON(key_right,                           /**< Name */
-                  "Key Right",                         /**< Description */
-                  Board_KEY_RIGHT,                     /**< PIN */
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
-                  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
-                  BUTTON_HAL_ID_KEY_RIGHT,            /**< Unique ID */
-                  true);                              /**< Negative logic */
+BUTTON_HAL_BUTTON(
+  key_right,                           /**< Name */
+  "Key Right",                         /**< Description */
+  Board_KEY_RIGHT,                     /**< PIN */
+  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
+  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
+  BUTTON_HAL_ID_KEY_RIGHT,            /**< Unique ID */
+  true);                              /**< Negative logic */
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTONS(&key_select, &key_up, &key_down, &key_left, &key_right);
 /*---------------------------------------------------------------------------*/

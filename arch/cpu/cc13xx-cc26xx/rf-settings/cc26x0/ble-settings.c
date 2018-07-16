@@ -50,7 +50,7 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-#include "ieee_settings.h"
+#include "ble-settings.h"
 /*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
 RF_Mode rf_ble_mode =

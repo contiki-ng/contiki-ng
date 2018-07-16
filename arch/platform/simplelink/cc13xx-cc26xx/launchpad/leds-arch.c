@@ -27,26 +27,28 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup simplelink-platform
+ * \addtogroup launchpad-peripherals
  * @{
  *
  * \file
- *  Driver for LaunchPad LEDs
+ *        LED HAL definitions for the LaunchPad LEDs. Common across all
+ *        CC13xx/CC26xx LaunchPad LEDs.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-/* Contiki API */
 #include "contiki.h"
 #include "dev/leds.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
 /*---------------------------------------------------------------------------*/
-/* Standard library */
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 const leds_t leds_arch_leds[] = {
+  /* Red LED, AKA LED0 */
   { .pin = Board_PIN_LED0, .negative_logic = false },
+  /* Green LED, AKA LED1 */
   { .pin = Board_PIN_LED1, .negative_logic = false },
 };
 /*---------------------------------------------------------------------------*/

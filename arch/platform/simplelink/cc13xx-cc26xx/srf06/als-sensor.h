@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, University of Bristol - http://www.bris.ac.uk/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup srf06-common-peripherals
+ * \addtogroup srf06-peripherals
  * @{
  *
  * \file
- * Header file for the SmartRF06EB + CC13xx/CC26xxEM ALS Driver
+ *        Header file for the SmartRF06 EB ALS sensor.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef ALS_SENSOR_H_

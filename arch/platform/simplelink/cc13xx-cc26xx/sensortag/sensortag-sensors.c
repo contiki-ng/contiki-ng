@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup simplelink-peripherals
+ * \addtogroup sensortag-peripherals
  * @{
  *
  * \file
- * Generic module controlling Simplelink sensors
+ *        Generic module controlling sensors on SensorTag.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -42,7 +43,6 @@
 #include "board-peripherals.h"
 /*---------------------------------------------------------------------------*/
 /* Exports a global symbol to be used by the sensor API */
-SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor,
-        &mpu_9250_sensor);
+SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor, &mpu_9250_sensor);
 /*---------------------------------------------------------------------------*/
 /** @} */

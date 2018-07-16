@@ -175,19 +175,21 @@ const CryptoCC26XX_Config CryptoCC26XX_config[CC1350DK_7XD_CRYPTOCOUNT] = {
 #include <ti/display/DisplayUart.h>
 #include <ti/display/DisplaySharp.h>
 
+#if TI_DISPLAY_CONF_ENABLE
+
+#if TI_DISPLAY_CONF_UART_ENABLE
+
+#if !(TI_UART_CONF_UART0_ENABLE)
+#error "Display UART driver requires UART0"
+#endif
+
 #ifndef BOARD_DISPLAY_UART_STRBUF_SIZE
 #define BOARD_DISPLAY_UART_STRBUF_SIZE    128
 #endif
 
-#ifndef BOARD_DISPLAY_SHARP_SIZE
-#define BOARD_DISPLAY_SHARP_SIZE    96
-#endif
+static char uartStringBuf[BOARD_DISPLAY_UART_STRBUF_SIZE];
 
 DisplayUart_Object     displayUartObject;
-DisplaySharp_Object    displaySharpObject;
-
-static char uartStringBuf[BOARD_DISPLAY_UART_STRBUF_SIZE];
-static uint_least8_t sharpDisplayBuf[BOARD_DISPLAY_SHARP_SIZE * BOARD_DISPLAY_SHARP_SIZE / 8];
 
 const DisplayUart_HWAttrs displayUartHWAttrs = {
     .uartIdx      = CC1350DK_7XD_UART0,
@@ -196,6 +198,22 @@ const DisplayUart_HWAttrs displayUartHWAttrs = {
     .strBuf       = uartStringBuf,
     .strBufLen    = BOARD_DISPLAY_UART_STRBUF_SIZE,
 };
+
+#endif /* TI_DISPLAY_CONF_UART_ENABLE */
+
+#if TI_DISPLAY_CONF_LCD_ENABLE
+
+#if !(TI_SPI_CONF_SPI0_ENABLE)
+#error "Display LCD driver requires SPI0"
+#endif
+
+#ifndef BOARD_DISPLAY_SHARP_SIZE
+#define BOARD_DISPLAY_SHARP_SIZE    96
+#endif
+
+static uint_least8_t sharpDisplayBuf[BOARD_DISPLAY_SHARP_SIZE * BOARD_DISPLAY_SHARP_SIZE / 8];
+
+DisplaySharp_Object    displaySharpObject;
 
 const DisplaySharp_HWAttrsV1 displaySharpHWattrs = {
     .spiIndex    = CC1350DK_7XD_SPI0,
@@ -207,27 +225,18 @@ const DisplaySharp_HWAttrsV1 displaySharpHWattrs = {
     .displayBuf  = sharpDisplayBuf,
 };
 
-#ifndef BOARD_DISPLAY_USE_UART
-#define BOARD_DISPLAY_USE_UART 1
-#endif
-#ifndef BOARD_DISPLAY_USE_UART_ANSI
-#define BOARD_DISPLAY_USE_UART_ANSI 0
-#endif
-#ifndef BOARD_DISPLAY_USE_LCD
-#define BOARD_DISPLAY_USE_LCD 0
-#endif
+#endif /* TI_DISPLAY_CONF_LCD_ENABLE */
 
 /*
  * This #if/#else is needed to workaround a problem with the
  * IAR compiler. The IAR compiler doesn't like the empty array
  * initialization. (IAR Error[Pe1345])
  */
-#if (BOARD_DISPLAY_USE_UART || BOARD_DISPLAY_USE_LCD)
 
 const Display_Config Display_config[] = {
-#if (BOARD_DISPLAY_USE_UART)
+#if TI_DISPLAY_CONF_UART_ENABLE
     {
-#  if (BOARD_DISPLAY_USE_UART_ANSI)
+#  if TI_DISPLAY_CONF_USE_UART_ANSI
         .fxnTablePtr = &DisplayUartAnsi_fxnTable,
 #  else /* Default to minimal UART with no cursor placement */
         .fxnTablePtr = &DisplayUartMin_fxnTable,
@@ -236,7 +245,7 @@ const Display_Config Display_config[] = {
         .hwAttrs     = &displayUartHWAttrs,
     },
 #endif
-#if (BOARD_DISPLAY_USE_LCD)
+#if TI_DISPLAY_CONF_LCD_ENABLE
     {
         .fxnTablePtr = &DisplaySharp_fxnTable,
         .object      = &displaySharpObject,
@@ -252,7 +261,7 @@ const uint_least8_t Display_count = sizeof(Display_config) / sizeof(Display_Conf
 const Display_Config *Display_config = NULL;
 const uint_least8_t Display_count = 0;
 
-#endif /* (BOARD_DISPLAY_USE_UART || BOARD_DISPLAY_USE_LCD) */
+#endif /* TI_DISPLAY_CONF_ENABLE */
 
 /*
  *  =============================== GPIO ===============================
@@ -356,9 +365,12 @@ const GPTimerCC26XX_Config GPTimerCC26XX_config[CC1350DK_7XD_GPTIMERPARTSCOUNT] 
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/i2c/I2CCC26XX.h>
 
+#if TI_I2C_CONF_ENABLE
+
 I2CCC26XX_Object i2cCC26xxObjects[CC1350DK_7XD_I2CCOUNT];
 
 const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC1350DK_7XD_I2CCOUNT] = {
+#if TI_I2C_CONF_I2C0_ENABLE
     {
         .baseAddr    = I2C0_BASE,
         .powerMngrId = PowerCC26XX_PERIPH_I2C0,
@@ -367,18 +379,23 @@ const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC1350DK_7XD_I2CCOUNT] = {
         .swiPriority = 0,
         .sdaPin      = CC1350DK_7XD_I2C0_SDA0,
         .sclPin      = CC1350DK_7XD_I2C0_SCL0,
-    }
+    },
+#endif
 };
 
 const I2C_Config I2C_config[CC1350DK_7XD_I2CCOUNT] = {
+#if TI_I2C_CONF_I2C0_ENABLE
     {
         .fxnTablePtr = &I2CCC26XX_fxnTable,
         .object      = &i2cCC26xxObjects[CC1350DK_7XD_I2C0],
         .hwAttrs     = &i2cCC26xxHWAttrs[CC1350DK_7XD_I2C0]
     },
+#endif
 };
 
 const uint_least8_t I2C_count = CC1350DK_7XD_I2CCOUNT;
+
+#endif /* TI_I2C_CONF_ENABLE */
 
 /*
  *  =============================== NVS ===============================
@@ -391,8 +408,9 @@ const uint_least8_t I2C_count = CC1350DK_7XD_I2CCOUNT;
 #define SECTORSIZE       0x1000
 #define REGIONSIZE       (SECTORSIZE * 4)
 
-#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
+#if TI_NVS_CONF_ENABLE
 
+#if TI_NVS_CONF_NVS_INTERNAL_ENABLE
 /*
  * Reserve flash sectors for NVS driver use by placing an uninitialized byte
  * array at the desired flash address.
@@ -441,11 +459,11 @@ const NVSCC26XX_HWAttrs nvsCC26xxHWAttrs[1] = {
     },
 };
 
-#endif /* Board_EXCLUDE_NVS_INTERNAL_FLASH */
+#endif /* TI_NVS_CONF_NVS_INTERNAL_ENABLE */
 
 /* NVS Region index 0 and 1 refer to NVS and NVS SPI respectively */
 const NVS_Config NVS_config[CC1350DK_7XD_NVSCOUNT] = {
-#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
+#if TI_NVS_CONF_NVS_INTERNAL_ENABLE
     {
         .fxnTablePtr = &NVSCC26XX_fxnTable,
         .object = &nvsCC26xxObjects[0],
@@ -455,6 +473,8 @@ const NVS_Config NVS_config[CC1350DK_7XD_NVSCOUNT] = {
 };
 
 const uint_least8_t NVS_count = CC1350DK_7XD_NVSCOUNT;
+
+#endif /* TI_NVS_CONF_ENABLE */
 
 /*
  *  =============================== PIN ===============================
@@ -557,6 +577,12 @@ const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
 #include <ti/drivers/SD.h>
 #include <ti/drivers/sd/SDSPI.h>
 
+#if TI_SD_CONF_ENABLE
+
+#if !(TI_SPI_CONF_SPI0_ENABLE)
+#error "SD driver requires SPI0 enabled"
+#endif
+
 SDSPI_Object sdspiObjects[CC1350DK_7XD_SDCOUNT];
 
 const SDSPI_HWAttrs sdspiHWAttrs[CC1350DK_7XD_SDCOUNT] = {
@@ -576,11 +602,15 @@ const SD_Config SD_config[CC1350DK_7XD_SDCOUNT] = {
 
 const uint_least8_t SD_count = CC1350DK_7XD_SDCOUNT;
 
+#endif /* TI_SD_CONF_ENABLE */
+
 /*
  *  =============================== SPI DMA ===============================
  */
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/spi/SPICC26XXDMA.h>
+
+#if TI_SPI_CONF_ENABLE
 
 SPICC26XXDMA_Object spiCC26XXDMAObjects[CC1350DK_7XD_SPICOUNT];
 
@@ -590,6 +620,7 @@ SPICC26XXDMA_Object spiCC26XXDMAObjects[CC1350DK_7XD_SPICOUNT];
  * to satisfy the SDSPI driver requirement.
  */
 const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPICOUNT] = {
+#if TI_SPI_CONF_SPI0_ENABLE
     {
         .baseAddr           = SSI0_BASE,
         .intNum             = INT_SSI0_COMB,
@@ -605,6 +636,8 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPICOUNT] = {
         .csnPin             = CC1350DK_7XD_SPI0_CSN,
         .minDmaTransferSize = 10
     },
+#endif
+#if TI_SPI_CONF_SPI1_ENABLE
     {
         .baseAddr           = SSI1_BASE,
         .intNum             = INT_SSI1_COMB,
@@ -619,23 +652,30 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPICOUNT] = {
         .clkPin             = CC1350DK_7XD_SPI1_CLK,
         .csnPin             = CC1350DK_7XD_SPI1_CSN,
         .minDmaTransferSize = 10
-    }
+    },
+#endif
 };
 
 const SPI_Config SPI_config[CC1350DK_7XD_SPICOUNT] = {
+#if TI_SPI_CONF_SPI0_ENABLE
     {
          .fxnTablePtr = &SPICC26XXDMA_fxnTable,
          .object      = &spiCC26XXDMAObjects[CC1350DK_7XD_SPI0],
          .hwAttrs     = &spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPI0]
     },
+#endif
+#if TI_SPI_CONF_SPI1_ENABLE
     {
          .fxnTablePtr = &SPICC26XXDMA_fxnTable,
          .object      = &spiCC26XXDMAObjects[CC1350DK_7XD_SPI1],
          .hwAttrs     = &spiCC26XXDMAHWAttrs[CC1350DK_7XD_SPI1]
     },
+#endif
 };
 
 const uint_least8_t SPI_count = CC1350DK_7XD_SPICOUNT;
+
+#endif /* TI_SPI_CONF_ENABLE */
 
 /*
  *  =============================== UART ===============================
@@ -643,11 +683,14 @@ const uint_least8_t SPI_count = CC1350DK_7XD_SPICOUNT;
 #include <ti/drivers/UART.h>
 #include <ti/drivers/uart/UARTCC26XX.h>
 
+#if TI_UART_CONF_ENABLE
+
 UARTCC26XX_Object uartCC26XXObjects[CC1350DK_7XD_UARTCOUNT];
 
 uint8_t uartCC26XXRingBuffer[CC1350DK_7XD_UARTCOUNT][32];
 
 const UARTCC26XX_HWAttrsV2 uartCC26XXHWAttrs[CC1350DK_7XD_UARTCOUNT] = {
+#if TI_UART_CONF_UART0_ENABLE
     {
         .baseAddr       = UART0_BASE,
         .powerMngrId    = PowerCC26XX_PERIPH_UART0,
@@ -663,18 +706,23 @@ const UARTCC26XX_HWAttrsV2 uartCC26XXHWAttrs[CC1350DK_7XD_UARTCOUNT] = {
         .txIntFifoThr   = UARTCC26XX_FIFO_THRESHOLD_1_8,
         .rxIntFifoThr   = UARTCC26XX_FIFO_THRESHOLD_4_8,
         .errorFxn       = NULL
-    }
+    },
+#endif
 };
 
 const UART_Config UART_config[CC1350DK_7XD_UARTCOUNT] = {
+#if TI_UART_CONF_UART0_ENABLE
     {
         .fxnTablePtr = &UARTCC26XX_fxnTable,
         .object      = &uartCC26XXObjects[CC1350DK_7XD_UART0],
         .hwAttrs     = &uartCC26XXHWAttrs[CC1350DK_7XD_UART0]
     },
+#endif
 };
 
 const uint_least8_t UART_count = CC1350DK_7XD_UARTCOUNT;
+
+#endif /* TI_UART_CONF_ENABLE */
 
 /*
  *  =============================== UDMA ===============================

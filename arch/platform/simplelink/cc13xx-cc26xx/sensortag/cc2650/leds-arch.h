@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,27 +27,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-/** \addtogroup cc26xx-srf-tag
- * @{
- *
- * \defgroup launchpad-peripherals LaunchPad peripherals
- *
- * Defines related to LaunchPad peripherals.
- *
+/** \addtogroup sensortag-peripherals
  * @{
  *
  * \file
- * Header file with definitions related to LaunchPad peripherals
- *
- * \note   Do not include this file directly.
+ *        LED HAL definitions for the CC1350STK LEDs. Is not compatible with
+ *        the CC2650STK.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef LEDS_ARCH_H_
 #define LEDS_ARCH_H_
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations
+ * \name LED configurations for the dev/leds.h API.
  *
  * Those values are not meant to be modified by the user
  * @{
@@ -58,10 +52,10 @@
 #define LEDS_CONF_GREEN             1
 
 #define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
+/** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* LEDS_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  */

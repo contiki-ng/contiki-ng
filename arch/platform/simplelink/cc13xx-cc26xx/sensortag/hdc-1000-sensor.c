@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-hdc-sensor
+ * \addtogroup sensortag-hdc-sensor
  * @{
  *
  * \file
- *  Driver for the Sensortag HDC sensor
+ *        Driver for the Sensortag HDC1000 sensor.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -58,7 +59,7 @@
 #endif
 /*---------------------------------------------------------------------------*/
 #ifndef Board_HDC1000_ADDR
-#   error "Board file doesn't define I2C address Board_HDC1000_ADDR"
+# error "Board file doesn't define the I2C address Board_HDC1000_ADDR"
 #endif
 /* Sensor I2C address */
 #define HDC1000_I2C_ADDRESS        Board_HDC1000_ADDR
@@ -72,15 +73,11 @@
 #define HDC1000_REG_SERID_L        0xFD /* Serial ID low */
 #define HDC1000_REG_MANF_ID        0xFE /* Manufacturer ID */
 #define HDC1000_REG_DEV_ID         0xFF /* Device ID */
-
+/*---------------------------------------------------------------------------*/
 /* Fixed values */
 #define HDC1000_VAL_MANF_ID        0x5449
 #define HDC1000_VAL_DEV_ID         0x1000
 #define HDC1000_VAL_CONFIG         0x1000 /* 14 bit, acquired in sequence */
-
-/* Sensor selection/deselection */
-#define SENSOR_SELECT()     board_i2c_select(BOARD_I2C_INTERFACE_0, SENSOR_I2C_ADDRESS)
-#define SENSOR_DESELECT()   board_i2c_deselect()
 /*---------------------------------------------------------------------------*/
 /* Byte swap of 16-bit register value */
 #define HI_UINT16(a) (((a) >> 8) & 0xFF)
@@ -90,7 +87,7 @@
 
 #define LSB16(v)  (LO_UINT16(v)), (HI_UINT16(v))
 /*---------------------------------------------------------------------------*/
-static I2C_Handle i2cHandle;
+static I2C_Handle i2c_handle;
 /*---------------------------------------------------------------------------*/
 /* Raw data as returned from the sensor (Big Endian) */
 typedef struct {
@@ -117,43 +114,74 @@ static volatile HDC_1000_SENSOR_STATUS sensor_status = HDC_1000_SENSOR_STATUS_DI
 
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief         Setup and peform an I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
 static bool
-i2c_transaction(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
+i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
-  I2C_Transaction i2cTransaction = {
-    .writeBuf = writeBuf,
-    .writeCount = writeCount,
-    .readBuf = readBuf,
-    .readCount = readCount,
+  I2C_Transaction i2c_transaction = {
+    .writeBuf     = wbuf,
+    .writeCount   = wcount,
+    .readBuf      = rbuf,
+    .readCount    = rcount,
     .slaveAddress = HDC1000_I2C_ADDRESS,
   };
 
-  return I2C_transfer(i2cHandle, &i2cTransaction);
+  return I2C_transfer(i2c_handle, &i2c_transaction);
 }
 
-#define i2c_write(writeBuf, writeCount)   i2c_transaction(writeBuf, writeCount, NULL, 0)
-#define i2c_read(readBuf, readCount)      i2c_transaction(NULL, 0, readBuf, readCount)
-#define i2c_write_read(writeBuf, writeCount, readBuf, readCount) \
-                                          i2c_transaction(writeBuf, writeCount, readBuf, readCount)
+/**
+ * \brief         Peform a write only I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_write(void *wbuf, size_t wcount)
+{
+  return i2c_write_read(wbuf, wcount, NULL, 0);
+}
+
+/**
+ * \brief         Peform a read only I2C transaction.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_read(void *rbuf, size_t rcount)
+{
+  return i2c_write_read(NULL, 0, rbuf, rcount);
+}
 /*---------------------------------------------------------------------------*/
 /**
- * \brief       Initialise the humidity sensor driver
- * \return      True if I2C operation successful
+ * \brief   Initialize the HDC-1000 sensor driver.
+ * \return  true if I2C operation successful; else, return false.
  */
 static bool
 sensor_init(void)
 {
-  if (i2cHandle) {
+  if (i2c_handle) {
     return true;
   }
 
-  I2C_Params i2cParams;
-  I2C_Params_init(&i2cParams);
-  i2cParams.transferMode = I2C_MODE_BLOCKING;
-  i2cParams.bitRate = I2C_400kHz;
+  I2C_Params i2c_params;
+  I2C_Params_init(&i2c_params);
 
-  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
-  if (i2cHandle == NULL) {
+  i2c_params.transferMode = I2C_MODE_BLOCKING;
+  i2c_params.bitRate = I2C_400kHz;
+
+  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
+  if (i2c_handle == NULL) {
     return false;
   }
 
@@ -164,8 +192,8 @@ sensor_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief       Start measurement
- * \return      True if I2C operation successful
+ * \brief   Start measurement.
+ * \return  true if I2C operation successful; else, return false.
  */
 static bool
 start(void)
@@ -176,9 +204,9 @@ start(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief       Convert raw data to temperature and humidity
- * \param       temp - converted temperature
- * \param       hum - converted humidity
+ * \brief       Convert raw data to temperature and humidity.
+ * \param temp  Output variable to store converted temperature.
+ * \param hum   Output variable to store converted humidity.
  */
 static void
 convert(int32_t *temp, int32_t *hum)
@@ -192,9 +220,15 @@ convert(int32_t *temp, int32_t *hum)
   *hum = raw_hum * 100 * 100 / 65536;
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief  Callback when sensor is ready to read data from.
+ */
 static void
-notify_ready(void *not_used)
+notify_ready(void *unused)
 {
+  /* Unused args */
+  (void)unused;
+
   /* Latch readings */
   if (i2c_read(&sensor_data, sizeof(sensor_data))) {
     sensor_status = HDC_1000_SENSOR_STATUS_READINGS_READY;
@@ -206,9 +240,9 @@ notify_ready(void *not_used)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns a reading from the sensor
- * \param type HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMIDITY
- * \return Temperature (centi degrees C) or Humidity (centi %RH)
+ * \brief       Returns a reading from the sensor.
+ * \param type  HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMID.
+ * \return      Temperature (centi degrees C) or Humidity (centi %RH).
  */
 static int
 value(int type)
@@ -223,13 +257,13 @@ value(int type)
 
   switch (type) {
   case HDC_1000_SENSOR_TYPE_TEMP:
-  case HDC_1000_SENSOR_TYPE_HUMIDITY:
+  case HDC_1000_SENSOR_TYPE_HUMID:
     convert(&temp, &hum);
     PRINTF("HDC: t=%d h=%d\n", (int)temp, (int)hum);
 
     if (type == HDC_1000_SENSOR_TYPE_TEMP) {
       return (int)temp;
-    } else if (type == HDC_1000_SENSOR_TYPE_HUMIDITY) {
+    } else if (type == HDC_1000_SENSOR_TYPE_HUMID) {
       return (int)hum;
     } else {
       return HDC_1000_READING_ERROR;
@@ -242,14 +276,12 @@ value(int type)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Configuration function for the HDC1000 sensor.
- *
- * \param type Activate, enable or disable the sensor. See below
- * \param enable
- *
- * When type == SENSORS_HW_INIT we turn on the hardware
- * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
- * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
+ * \brief         Configuration function for the HDC1000 sensor.
+ * \param type    Activate, enable or disable the sensor. See below.
+ * \param enable  Either enable or disable the sensor.
+ *                When type == SENSORS_HW_INIT we turn on the hardware.
+ *                When type == SENSORS_ACTIVE and enable==1 we enable the sensor.
+ *                When type == SENSORS_ACTIVE and enable==0 we disable the sensor.
  */
 static int
 configure(int type, int enable)
@@ -291,9 +323,9 @@ configure(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns the status of the sensor
- * \param type SENSORS_ACTIVE or SENSORS_READY
- * \return One of the SENSOR_STATUS_xyz defines
+ * \brief       Returns the status of the sensor.
+ * \param type  SENSORS_ACTIVE or SENSORS_READY.
+ * \return      One of the SENSOR_STATUS_xyz defines.
  */
 static int
 status(int type)
@@ -302,12 +334,10 @@ status(int type)
   case SENSORS_ACTIVE:
   case SENSORS_READY:
     return sensor_status;
-    break;
 
   default:
-    break;
+    return HDC_1000_SENSOR_STATUS_DISABLED;
   }
-  return HDC_1000_SENSOR_STATUS_DISABLED;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(hdc_1000_sensor, "HDC1000", value, configure, status);

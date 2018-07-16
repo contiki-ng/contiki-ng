@@ -1,0 +1,16 @@
+/**
+ * \defgroup cc13xx-cc26xx-cpu The TI SimpleLink CC13xx and CC26xx SoC
+ *
+ * This group documents the TI CC13xx and CC26xx CPUs. The two CPU families are
+ * very similar, with the main difference being related to radio capability.
+ *
+ * Documentation in this group should be considered to be applicable to both
+ * families, unless explicitly stated otherwise.
+ *
+ * \ingroup cpu
+ */
+
+/**
+ * \defgroup cc13xx-cc26xx-platform TI SimpleLink CC13xx/CC26xx platform
+ * \ingroup platform
+ */

@@ -49,6 +49,8 @@
 extern "C" {
 #endif
 
+#include "contiki-conf.h"
+
 /* Includes */
 #include <ti/drivers/PIN.h>
 #include <ti/devices/cc13x2_cc26x2_v1/driverlib/ioc.h>
@@ -332,7 +334,9 @@ typedef enum CC26X2R1_LAUNCHXL_GPTimers {
  *  @brief  Enum of I2C names
  */
 typedef enum CC26X2R1_LAUNCHXL_I2CName {
+#if TI_I2C_CONF_I2C0_ENABLE
     CC26X2R1_LAUNCHXL_I2C0 = 0,
+#endif
 
     CC26X2R1_LAUNCHXL_I2CCOUNT
 } CC26X2R1_LAUNCHXL_I2CName;
@@ -342,10 +346,10 @@ typedef enum CC26X2R1_LAUNCHXL_I2CName {
  *  @brief  Enum of NVS names
  */
 typedef enum CC26X2R1_LAUNCHXL_NVSName {
-#ifndef Board_EXCLUDE_NVS_INTERNAL_FLASH
+#if TI_NVS_CONF_NVS_INTERNAL_ENABLE
     CC26X2R1_LAUNCHXL_NVSCC26XX0 = 0,
 #endif
-#ifndef Board_EXCLUDE_NVS_EXTERNAL_FLASH
+#if TI_NVS_CONF_NVS_EXTERNAL_ENABLE
     CC26X2R1_LAUNCHXL_NVSSPI25X0,
 #endif
 
@@ -384,8 +388,12 @@ typedef enum CC26X2R1_LAUNCHXL_SDName {
  *  @brief  Enum of SPI names
  */
 typedef enum CC26X2R1_LAUNCHXL_SPIName {
+#if TI_SPI_CONF_SPI0_ENABLE
     CC26X2R1_LAUNCHXL_SPI0 = 0,
+#endif
+#if TI_SPI_CONF_SPI1_ENABLE
     CC26X2R1_LAUNCHXL_SPI1,
+#endif
 
     CC26X2R1_LAUNCHXL_SPICOUNT
 } CC26X2R1_LAUNCHXL_SPIName;
@@ -395,8 +403,12 @@ typedef enum CC26X2R1_LAUNCHXL_SPIName {
  *  @brief  Enum of UARTs
  */
 typedef enum CC26X2R1_LAUNCHXL_UARTName {
+#if TI_UART_CONF_UART0_ENABLE
     CC26X2R1_LAUNCHXL_UART0 = 0,
+#endif
+#if TI_UART_CONF_UART1_ENABLE
     CC26X2R1_LAUNCHXL_UART1,
+#endif
 
     CC26X2R1_LAUNCHXL_UARTCOUNT
 } CC26X2R1_LAUNCHXL_UARTName;

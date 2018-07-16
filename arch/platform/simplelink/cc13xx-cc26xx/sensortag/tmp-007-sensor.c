@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,24 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-tmp-sensor
+ * \addtogroup sensortag-tmp-sensor
  * @{
  *
  * \file
- *  Driver for the Sensortag TI TMP007 infrared thermophile sensor
+ *        Driver for the Sensortag TI TMP-007 IR Thermophile sensor.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/ctimer.h"
+
 #include "tmp-007-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
+
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/PIN.h>
 /*---------------------------------------------------------------------------*/
@@ -58,47 +61,47 @@
 /*---------------------------------------------------------------------------*/
 /* Slave address */
 #ifndef Board_TMP_ADDR
-#   error "Board file doesn't define I2C address Board_TMP_ADDR"
+# error "Board file doesn't define I2C address Board_TMP_ADDR"
 #endif
-#define TMP_007_I2C_ADDRESS      Board_TMP_ADDR
+#define TMP_007_I2C_ADDRESS     Board_TMP_ADDR
 
-/* MPU Interrupt pin */
+/* Sensor Interrupt pin */
 #ifndef Board_TMP_RDY
-#   error "Board file doesn't define interrupt pin Board_TMP_RDY"
+# error "Board file doesn't define interrupt pin Board_TMP_RDY"
 #endif
-#define TMP_007_TMP_RDY          Board_TMP_RDY
+#define TMP_007_TMP_RDY         Board_TMP_RDY
 /*---------------------------------------------------------------------------*/
-/* TMP007 register addresses */
-#define REG_VOLTAGE         0x00
-#define REG_LOCAL_TEMP      0x01
-#define REG_CONFIG          0x02
-#define REG_OBJ_TEMP        0x03
-#define REG_STATUS          0x04
-#define REG_PROD_ID              0x1F
+/* TMP-007 register addresses */
+#define REG_VOLTAGE             0x00
+#define REG_LOCAL_TEMP          0x01
+#define REG_CONFIG              0x02
+#define REG_OBJ_TEMP            0x03
+#define REG_STATUS              0x04
+#define REG_PROD_ID             0x1F
 /*---------------------------------------------------------------------------*/
-/* TMP007 register values */
-#define VAL_CONFIG_ON            0x1000  /* Sensor on state */
-#define VAL_CONFIG_OFF           0x0000  /* Sensor off state */
-#define VAL_CONFIG_RESET         0x8000
-#define VAL_PROD_ID              0x0078  /* Product ID */
+/* TMP-007 register values */
+#define VAL_CONFIG_ON           0x1000  /**< Sensor on state */
+#define VAL_CONFIG_OFF          0x0000  /**< Sensor off state */
+#define VAL_CONFIG_RESET        0x8000
+#define VAL_PROD_ID             0x0078  /**< Product ID */
 /*---------------------------------------------------------------------------*/
 /* Conversion ready (status register) bit values */
-#define CONV_RDY_BIT             0x4000
+#define CONV_RDY_BIT            0x4000
 /*---------------------------------------------------------------------------*/
 /* Register length */
-#define REGISTER_LENGTH                 2
+#define REGISTER_LENGTH         2
 /*---------------------------------------------------------------------------*/
 /* Sensor data size */
-#define DATA_SIZE                       4
+#define DATA_SIZE               4
 /*---------------------------------------------------------------------------*/
 /* Byte swap of 16-bit register value */
-#define HI_UINT16(a) (((a) >> 8) & 0xFF)
-#define LO_UINT16(a) ((a) & 0xFF)
+#define HI_UINT16(a)            (((a) >> 8) & 0xFF)
+#define LO_UINT16(a)            (((a) >> 0) & 0xFF)
 
-#define SWAP16(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
+#define SWAP16(v)               ((LO_UINT16(v) << 8) | (HI_UINT16(v) << 0))
 
-#define LSB16(v)  (LO_UINT16(v)), (HI_UINT16(v))
-#define MSB16(v)  (HI_UINT16(v)), (LO_UINT16(v))
+#define LSB16(v)                (LO_UINT16(v)), (HI_UINT16(v))
+#define MSB16(v)                (HI_UINT16(v)), (LO_UINT16(v))
 /*---------------------------------------------------------------------------*/
 static const PIN_Config pin_table[] = {
   TMP_007_TMP_RDY | PIN_INPUT_EN | PIN_PULLUP | PIN_HYSTERESIS | PIN_IRQ_NEGEDGE,
@@ -120,27 +123,63 @@ typedef struct {
 static TMP_007_Object tmp_007;
 /*---------------------------------------------------------------------------*/
 /* Wait SENSOR_STARTUP_DELAY clock ticks for the sensor to be ready - 275ms */
-#define SENSOR_STARTUP_DELAY 36
+#define SENSOR_STARTUP_DELAY    36
 
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief         Setup and peform an I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
 static bool
-i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
+i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
   I2C_Transaction i2c_transaction = {
-    .writeBuf = writeBuf,
-    .writeCount = writeCount,
-    .readBuf = readBuf,
-    .readCount = readCount,
+    .writeBuf     = wbuf,
+    .writeCount   = wcount,
+    .readBuf      = rbuf,
+    .readCount    = rcount,
     .slaveAddress = TMP_007_I2C_ADDRESS,
   };
 
   return I2C_transfer(i2c_handle, &i2c_transaction);
 }
 
-#define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
-#define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
+/**
+ * \brief         Peform a write only I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_write(void *wbuf, size_t wcount)
+{
+  return i2c_write_read(wbuf, wcount, NULL, 0);
+}
+
+/**
+ * \brief         Peform a read only I2C transaction.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_read(void *rbuf, size_t rcount)
+{
+  return i2c_write_read(NULL, 0, rbuf, rcount);
+}
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief   Initialize the TMP-007 sensor driver.
+ * \return  true if I2C operation successful; else, return false.
+ */
 static bool
 sensor_init(void)
 {
@@ -155,6 +194,7 @@ sensor_init(void)
 
   I2C_Params i2c_params;
   I2C_Params_init(&i2c_params);
+
   i2c_params.transferMode = I2C_MODE_BLOCKING;
   i2c_params.bitRate = I2C_400kHz;
 
@@ -169,6 +209,9 @@ sensor_init(void)
   return true;
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief  Callback when sensor is ready to read data from.
+ */
 static void
 notify_ready_cb(void *not_used)
 {
@@ -177,7 +220,7 @@ notify_ready_cb(void *not_used)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Turn the sensor on/off
+ * \brief  Turn the sensor on or off.
  */
 static bool
 enable_sensor(bool enable)
@@ -192,10 +235,12 @@ enable_sensor(bool enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Read the sensor value registers
- * \param raw_temp Temperature in 16 bit format
- * \param raw_obj_temp object temperature in 16 bit format
- * \return TRUE if valid data could be retrieved
+ * \brief               Read the sensor value registers.
+ * \param raw_temp      Output variable holding the Temperature in
+ *                      16-bit format.
+ * \param raw_obj_temp  Output variable holding the Object temperature in
+ *                      16-bit format.
+ * \return              true if valid data could be retrieved; else, false.
  */
 static bool
 read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
@@ -241,11 +286,11 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Convert raw data to values in degrees C
- * \param raw_temp raw ambient temperature from sensor
- * \param raw_obj_temp raw object temperature from sensor
- * \param obj converted object temperature
- * \param amb converted ambient temperature
+ * \brief               Convert raw data to values in degrees Celsius.
+ * \param raw_temp      Output variable holding the raw ambient temperature
+ *                      from sensor.
+ * \param raw_obj_temp  Output variable holding the raw object temperature
+ *                      from sensor.
  */
 static void
 convert(uint16_t* local_tmp, uint16_t* obj_tmp)
@@ -261,9 +306,9 @@ convert(uint16_t* local_tmp, uint16_t* obj_tmp)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns a reading from the sensor
- * \param type TMP_007_SENSOR_TYPE_OBJECT or TMP_007_SENSOR_TYPE_AMBIENT
- * \return Object or Ambient temperature in milli degrees C
+ * \brief       Returns a reading from the sensor.
+ * \param type  TMP_007_SENSOR_TYPE_OBJECT or TMP_007_SENSOR_TYPE_AMBIENT.
+ * \return      Object or Ambient temperature in milli degrees Celsius.
  */
 static int
 value(int type)
@@ -304,14 +349,13 @@ value(int type)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Configuration function for the TMP007 sensor.
+ * \brief         Configuration function for the TMP-007 sensor.
+ * \param type    Activate, enable or disable the sensor. See below.
+ * \param enable  Enable or disable sensor.
  *
- * \param type Activate, enable or disable the sensor. See below
- * \param enable
- *
- * When type == SENSORS_HW_INIT we turn on the hardware
- * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
- * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
+ *                When type == SENSORS_HW_INIT we turn on the hardware.
+ *                When type == SENSORS_ACTIVE and enable==1 we enable the sensor.
+ *                When type == SENSORS_ACTIVE and enable==0 we disable the sensor.
  */
 static int
 configure(int type, int enable)
@@ -351,9 +395,9 @@ configure(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns the status of the sensor
- * \param type SENSORS_ACTIVE or SENSORS_READY
- * \return 1 if the sensor is enabled
+ * \brief       Returns the status of the sensor.
+ * \param type  Ignored.
+ * \return      Status of the sensor.
  */
 static int
 status(int type)
@@ -363,6 +407,6 @@ status(int type)
   return tmp_007.status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(tmp_007_sensor, "TMP007", value, configure, status);
+SENSORS_SENSOR(tmp_007_sensor, "TMP-007", value, configure, status);
 /*---------------------------------------------------------------------------*/
 /** @} */

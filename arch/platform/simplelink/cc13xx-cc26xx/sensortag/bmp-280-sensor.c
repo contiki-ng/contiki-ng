@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-bmp-sensor
+ * \addtogroup sensortag-bmp-sensor
  * @{
  *
  * \file
- *  Driver for the Sensortag BMP280 Altimeter / Pressure Sensor
+ *        Driver for the Sensortag BMP280 Altimeter / Pressure Sensor
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -41,6 +42,7 @@
 #include "sys/ctimer.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
+
 #include <ti/drivers/I2C.h>
 /*---------------------------------------------------------------------------*/
 #include "bmp-280-sensor.h"
@@ -57,7 +59,7 @@
 #endif
 /*---------------------------------------------------------------------------*/
 #ifndef Board_BMP280_ADDR
-#   error "Board file doesn't define I2C address Board_BMP280_ADDR"
+# error "Board file doesn't define I2C address Board_BMP280_ADDR"
 #endif
 /* Sensor I2C address */
 #define BMP280_I2C_ADDRESS                  Board_BMP280_ADDR
@@ -127,7 +129,7 @@ typedef struct {
 /*---------------------------------------------------------------------------*/
 static BMP_280_Calibration calib_data;
 /*---------------------------------------------------------------------------*/
-static I2C_Handle i2cHandle;
+static I2C_Handle i2c_handle;
 /*---------------------------------------------------------------------------*/
 typedef enum {
   SENSOR_STATUS_DISABLED,
@@ -163,48 +165,53 @@ i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCoun
     .slaveAddress = BMP280_I2C_ADDRESS,
   };
 
-  return I2C_transfer(i2cHandle, &i2cTransaction);
+  return I2C_transfer(i2c_handle, &i2cTransaction);
 }
 
 #define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
 #define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Initalise the sensor
- *
- * @return    true if success; else, false on error
+ * \brief          Initalise the sensor.
+ * \return Boolean Value descibing whether initialization were
+ *                 successful or not.
+ * \retval true    Successful initialization
+ * \retval false   Error during initialization
  */
 static bool
 init(void)
 {
-  if (i2cHandle) {
+  if (i2c_handle) {
     return true;
   }
 
   I2C_Params i2cParams;
   I2C_Params_init(&i2cParams);
+
   i2cParams.transferMode = I2C_MODE_BLOCKING;
   i2cParams.bitRate = I2C_400kHz;
 
-  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
-  if (i2cHandle == NULL) {
+  i2c_handle = I2C_open(Board_I2C0, &i2cParams);
+  if (i2c_handle == NULL) {
     return false;
   }
 
   uint8_t reset_data[] = { ADDR_RESET, VAL_RESET_EXECUTE };
 
-  /* Read and store calibration data */
   uint8_t calib_reg = ADDR_CALIB;
+  /* Read and store calibration data */
   return i2c_write_read(&calib_reg, sizeof(calib_reg), &calib_data, sizeof(calib_data))
   /* then reset the sensor */
       && i2c_write(reset_data, sizeof(reset_data));
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Enable/disable measurements
- * \param enable 0: disable, enable otherwise
- *
- * @return      none
+ * \brief          Enable/disable measurements.
+ * \param enable   Enable if true; else, disable.
+ * \return Boolean Value descibing whether initialization were
+ *                 successful or not.
+ * \retval true    Successful initialization
+ * \retval false   Error during initialization
  */
 static bool
 enable_sensor(bool enable)
@@ -218,10 +225,13 @@ enable_sensor(bool enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Read temperature and pressure data
- * \param data Pointer to a buffer where temperature and pressure will be
- *             written (6 bytes)
- * \return True if valid data could be retrieved
+ * \brief          Read temperature and pressure data.
+ * \param data     Pointer to a buffer where temperature and pressure will be
+ *                 written (6 bytes).
+ * \return Boolean Value descibing whether initialization were
+ *                 successful or not.
+ * \retval true    Successful initialization
+ * \retval false   Error during initialization
  */
 static bool
 read_data(uint8_t *data, size_t count)
@@ -231,12 +241,13 @@ read_data(uint8_t *data, size_t count)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Convert raw data to values in degrees C (temp) and Pascal (pressure)
- * \param data Pointer to a buffer that holds raw sensor data
- * \param temp Pointer to a variable where the converted temperature will be
- *             written
+ * \brief       Convert raw data to values in degrees C (temp) and Pascal
+ *              (pressure).
+ * \param data  Pointer to a buffer that holds raw sensor data.
+ * \param temp  Pointer to a variable where the converted temperature will
+ *              be written.
  * \param press Pointer to a variable where the converted pressure will be
- *              written
+ *              written.
  */
 static void
 convert(uint8_t *data, int32_t *temp, uint32_t *press)
@@ -337,9 +348,11 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns a reading from the sensor
- * \param type BMP_280_SENSOR_TYPE_TEMP or BMP_280_SENSOR_TYPE_PRESS
- * \return Temperature (centi degrees C) or Pressure (Pascal).
+ * \brief      Returns a reading from the sensor.
+ * \param type Parameter of type BMP_280_SENSOR_TYPE, choosing between either
+ *             measuring temperature or pressure.
+ * \return     Sensor data of either Temperature (centi degrees C) or
+ *             Pressure (Pascal).
  */
 static int
 value(int type)
@@ -384,14 +397,12 @@ value(int type)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Configuration function for the BMP280 sensor.
- *
- * \param type Activate, enable or disable the sensor. See below
- * \param enable
- *
- * When type == SENSORS_HW_INIT we turn on the hardware
- * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
- * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
+ * \brief        Configuration function for the BMP280 sensor.
+ * \param type   Activate, enable or disable the sensor. See below
+ * \param enable Disable sensor if 0; else, enable sensor otherwise.
+ *               When type == SENSORS_HW_INIT we turn on the hardware.
+ *               When type == SENSORS_ACTIVE and enable==1 we enable the sensor.
+ *               When type == SENSORS_ACTIVE and enable==0 we disable the sensor.
  */
 static int
 configure(int type, int enable)
@@ -429,9 +440,9 @@ configure(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns the status of the sensor
- * \param type SENSORS_ACTIVE or SENSORS_READY
- * \return 1 if the sensor is enabled
+ * \brief      Returns the status of the sensor.
+ * \param type SENSORS_ACTIVE or SENSORS_READY.
+ * \return     Current status of the sensor.
  */
 static int
 status(int type)
@@ -441,9 +452,8 @@ status(int type)
   case SENSORS_READY:
     return sensor_status;
   default:
-    break;
+    return SENSOR_STATUS_DISABLED;
   }
-  return SENSOR_STATUS_DISABLED;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(bmp_280_sensor, "BMP280", value, configure, status);

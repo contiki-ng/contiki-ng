@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, University of Bristol - http://www.bris.ac.uk/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup srf06-common-peripherals
+ * \addtogroup srf06-peripherals
  * @{
  *
  * \file
- *  Driver for the SmartRF06EB ALS when a CC13xx/CC26xxEM is mounted on it
+ *        Driver for the SmartRF06 EB ALS sensor.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -42,11 +43,11 @@
 #include "sys/timer.h"
 
 #include "als-sensor.h"
-
+/*---------------------------------------------------------------------------*/
 #include <Board.h>
 
 #include <ti/drivers/ADC.h>
-
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 static ADC_Handle adc_handle;

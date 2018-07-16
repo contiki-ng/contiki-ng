@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup simplelink-peripherals
+ * \addtogroup srf06-peripherals
  * @{
  *
  * \file
- * Generic module controlling Simplelink sensors
+ *        Generic module controlling sensors on SmartRF06 Evaluation Board.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,27 +28,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-srf-tag
+ * \addtogroup cc13xx-cc26xx-platform
  * @{
  *
  * \file
- *  Configuration for the srf06-cc26xx platform
+ *        Configuration for the SimpleLink CC13xx/CC26xx platform.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include <Board.h>
-
 #include "board-conf.h"
 /*---------------------------------------------------------------------------*/
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
+#endif
 /*---------------------------------------------------------------------------*/
 /* Include CPU-related configuration */
 #include "cc13xx-cc26xx-conf.h"
 /*---------------------------------------------------------------------------*/
+/* Must be included after cc13xx-cc26xx-conf.h */
+#include <Board.h>
+/*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
-/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

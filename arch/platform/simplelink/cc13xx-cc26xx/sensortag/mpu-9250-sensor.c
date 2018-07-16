@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,23 +27,27 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-mpu
+ * \addtogroup sensortag-mpu
  * @{
  *
  * \file
- *  Driver for the Sensortag Invensense MPU9250 motion processing unit
+ *        Driver for the Sensortag Invensense MPU9250 motion processing unit
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/rtimer.h"
+
 #include "mpu-9250-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/cpu.h)
+
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/I2C.h>
 /*---------------------------------------------------------------------------*/
@@ -60,16 +64,17 @@
 #endif
 /*---------------------------------------------------------------------------*/
 #ifndef Board_MPU9250_ADDR
-#   error "Board file doesn't define I2C address Board_MPU9250_ADDR"
+# error "Board file doesn't define I2C address Board_MPU9250_ADDR"
 #endif
 #ifndef Board_MPU9250_MAG_ADDR
-#   error "Board file doesn't define I2C address Board_MPU9250_MAG_ADDR"
+# error "Board file doesn't define I2C address Board_MPU9250_MAG_ADDR"
 #endif
+
 /* Sensor I2C address */
 #define MPU_9250_I2C_ADDRESS          Board_MPU9250_ADDR
 #define MPU_9250_MAG_I2C_ADDRESS      Board_MPU9250_MAG_ADDR
 /*-------------a--------------------------------------------------------------*/
-/* Registers */
+/* Self Test Registers */
 #define REG_SELF_TEST_X_GYRO          0x00 /* R/W */
 #define REG_SELF_TEST_Y_GYRO          0x01 /* R/W */
 #define REG_SELF_TEST_Z_GYRO          0x02 /* R/W */
@@ -77,6 +82,7 @@
 #define REG_SELF_TEST_Z_ACCEL         0x0E /* R/W */
 #define REG_SELF_TEST_Y_ACCEL         0x0F /* R/W */
 /*---------------------------------------------------------------------------*/
+/* Axis Registers */
 #define REG_XG_OFFSET_H               0x13 /* R/W */
 #define REG_XG_OFFSET_L               0x14 /* R/W */
 #define REG_YG_OFFSET_H               0x15 /* R/W */
@@ -84,6 +90,7 @@
 #define REG_ZG_OFFSET_H               0x17 /* R/W */
 #define REG_ZG_OFFSET_L               0x18 /* R/W */
 /*---------------------------------------------------------------------------*/
+/* Control Registers */
 #define REG_SMPLRT_DIV                0x19 /* R/W */
 #define REG_CONFIG                    0x1A /* R/W */
 #define REG_GYRO_CONFIG               0x1B /* R/W */
@@ -180,9 +187,9 @@ static PIN_Config mpu_9250_pin_table[] = {
   PIN_TERMINATE
 };
 
-static PIN_State pinState;
-static PIN_Handle pinHandle;
-static I2C_Handle i2cHandle;
+static PIN_State  pin_state;
+static PIN_Handle pin_handle;
+static I2C_Handle i2c_handle;
 
 /*---------------------------------------------------------------------------*/
 typedef struct {
@@ -219,30 +226,64 @@ static struct ctimer startup_timer;
 /* ui32Count = [delay in us] * [CPU clock in MHz] / [cycles per loop] */
 #define delay_ms(ms)    CPUdelay((ms) * 1000 * 48 / 7)
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief         Setup and peform an I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
 static bool
-i2c_transaction(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
+i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
-  I2C_Transaction i2cTransaction = {
-    .writeBuf = writeBuf,
-    .writeCount = writeCount,
-    .readBuf = readBuf,
-    .readCount = readCount,
+  I2C_Transaction i2c_transaction = {
+    .writeBuf     = wbuf,
+    .writeCount   = wcount,
+    .readBuf      = rbuf,
+    .readCount    = rcount,
     .slaveAddress = MPU_9250_I2C_ADDRESS,
   };
 
-  return I2C_transfer(i2cHandle, &i2cTransaction);
+  return I2C_transfer(i2c_handle, &i2c_transaction);
 }
 
-#define i2c_write(writeBuf, writeCount)   i2c_transaction(writeBuf, writeCount, NULL, 0)
-#define i2c_read(readBuf, readCount)      i2c_transaction(NULL, 0, readBuf, readCount)
-#define i2c_write_read(writeBuf, writeCount, readBuf, readCount) \
-                                          i2c_transaction(writeBuf, writeCount, readBuf, readCount)
+/**
+ * \brief         Peform a write only I2C transaction.
+ * \param wbuf    Output buffer during the I2C transation.
+ * \param wcount  How many bytes in the wbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_write(void *wbuf, size_t wcount)
+{
+  return i2c_write_read(wbuf, wcount, NULL, 0);
+}
+
+/**
+ * \brief         Peform a read only I2C transaction.
+ * \param rbuf    Input buffer during the I2C transation.
+ * \param rcount  How many bytes to read into rbuf.
+ * \return        true if the I2C operation was successful;
+ *                else, return false.
+ */
+static inline bool
+i2c_read(void *rbuf, size_t rcount)
+{
+  return i2c_write_read(NULL, 0, rbuf, rcount);
+}
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief   Initialize the MPU-9250 sensor driver.
+ * \return  true if I2C operation successful; else, return false.
+ */
 static bool
 sensor_init(void)
 {
-  pinHandle = PIN_open(&pinState, mpu_9250_pin_table);
-  if (pinHandle == NULL) {
+  pin_handle = PIN_open(&pin_state, mpu_9250_pin_table);
+  if (pin_handle == NULL) {
     return false;
   }
 
@@ -251,9 +292,9 @@ sensor_init(void)
   i2cParams.transferMode = I2C_MODE_BLOCKING;
   i2cParams.bitRate = I2C_400kHz;
 
-  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
-  if (i2cHandle == NULL) {
-    PIN_close(&pinState);
+  i2c_handle = I2C_open(Board_I2C0, &i2cParams);
+  if (i2c_handle == NULL) {
+    PIN_close(&pin_state);
     return false;
   }
 
@@ -265,7 +306,7 @@ sensor_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Place the MPU in low power mode
+ * \brief  Place the sensor in low-power mode.
  */
 static void
 sensor_sleep(void)
@@ -281,7 +322,7 @@ sensor_sleep(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Exit low power mode
+ * \brief  Wakeup the sensor from low-power mode.
  */
 static void
 sensor_wakeup(void)
@@ -336,11 +377,11 @@ convert_to_le(uint8_t *data, uint8_t len)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Check whether a data or wake on motion interrupt has occurred
- * \return Return the interrupt status
+ * \brief   Check whether a data or wake on motion interrupt has occurred.
+ * \return  Return the interrupt status.
  *
- * This driver does not use interrupts, however this function allows us to
- * determine whether a new sensor reading is available
+ *          This driver does not use interrupts, however this function allows
+ *          us to determine whether a new sensor reading is available.
  */
 static bool
 sensor_data_ready(uint8_t* int_status)
@@ -352,8 +393,8 @@ sensor_data_ready(uint8_t* int_status)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Read data from the accelerometer - X, Y, Z - 3 words
- * \return True if a valid reading could be taken, false otherwise
+ * \brief   Read data from the accelerometer, total of 3 words (X, Y, Z).
+ * \return  true if a valid reading could be taken; otherwise, false.
  */
 static bool
 acc_read(uint8_t int_status, uint16_t *data)
@@ -375,8 +416,8 @@ acc_read(uint8_t int_status, uint16_t *data)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Read data from the gyroscope - X, Y, Z - 3 words
- * \return True if a valid reading could be taken, false otherwise
+ * \brief   Read data from the accelerometer, total of 3 words (X, Y, Z).
+ * \return  true if a valid reading could be taken; otherwise, false.
  */
 static bool
 gyro_read(uint8_t int_status, uint16_t *data)
@@ -398,9 +439,9 @@ gyro_read(uint8_t int_status, uint16_t *data)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Convert accelerometer raw reading to a value in G
- * \param raw_data The raw accelerometer reading
- * \return The converted value
+ * \brief           Convert accelerometer raw reading to a value in G.
+ * \param raw_data  The raw accelerometer reading.
+ * \return          The converted value.
  */
 static int32_t
 acc_convert(int32_t raw_data)
@@ -415,9 +456,9 @@ acc_convert(int32_t raw_data)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Convert gyro raw reading to a value in deg/sec
- * \param raw_data The raw accelerometer reading
- * \return The converted value
+ * \brief           Convert gyro raw reading to a value in deg/sec.
+ * \param raw_data  The raw accelerometer reading.
+ * \return          The converted value.
  */
 static int32_t
 gyro_convert(int32_t raw_data)
@@ -460,9 +501,10 @@ initialise_cb(void *unused)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns a reading from the sensor
- * \param type MPU_9250_SENSOR_TYPE_ACC_[XYZ] or MPU_9250_SENSOR_TYPE_GYRO_[XYZ]
- * \return centi-G (ACC) or centi-Deg/Sec (Gyro)
+ * \brief       Returns a reading from the sensor.
+ * \param type  MPU_9250_SENSOR_TYPE_ACC_[XYZ] or
+ *              MPU_9250_SENSOR_TYPE_GYRO_[XYZ].
+ * \return      Centi-G (ACC) or centi-Deg/Sec (Gyro).
  */
 static int
 value(int type)
@@ -531,14 +573,12 @@ value(int type)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Configuration function for the MPU9250 sensor.
- *
- * \param type Activate, enable or disable the sensor. See below
- * \param enable
- *
- * When type == SENSORS_HW_INIT we turn on the hardware
- * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
- * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
+ * \brief         Configuration function for the MPU9250 sensor.
+ * \param type    Activate, enable or disable the sensor. See below.
+ * \param enable  Enable or disable sensor.
+ *                When type == SENSORS_HW_INIT we turn on the hardware.
+ *                When type == SENSORS_ACTIVE and enable==1 we enable the sensor.
+ *                When type == SENSORS_ACTIVE and enable==0 we disable the sensor.
  */
 static int
 configure(int type, int enable)
@@ -562,7 +602,7 @@ configure(int type, int enable)
       mpu_9250.type = enable_type;
       mpu_9250.status = MPU_9250_SENSOR_STATUS_BOOTING;
 
-      PIN_setOutputValue(pinHandle, Board_MPU_POWER, 1);
+      PIN_setOutputValue(pin_handle, Board_MPU_POWER, 1);
 
       ctimer_set(&startup_timer, SENSOR_BOOT_DELAY, initialise_cb, NULL);
     } else {
@@ -573,8 +613,8 @@ configure(int type, int enable)
       if (PIN_getOutputValue(Board_MPU_POWER)) {
         sensor_sleep();
 
-        I2C_cancel(i2cHandle);
-        PIN_setOutputValue(pinHandle, Board_MPU_POWER, 0);
+        I2C_cancel(i2c_handle);
+        PIN_setOutputValue(pin_handle, Board_MPU_POWER, 0);
       }
 
       mpu_9250.type = MPU_9250_SENSOR_TYPE_NONE;
@@ -589,9 +629,9 @@ configure(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns the status of the sensor
- * \param type SENSORS_ACTIVE or SENSORS_READY
- * \return 1 if the sensor is enabled
+ * \brief       Returns the status of the sensor
+ * \param type  SENSORS_ACTIVE or SENSORS_READY
+ * \return      1 if the sensor is enabled, else 0.
  */
 static int
 status(int type)

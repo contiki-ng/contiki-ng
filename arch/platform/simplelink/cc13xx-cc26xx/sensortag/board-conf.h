@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,32 +27,48 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-/** \addtogroup cc26xx-srf-tag
+/**
+ * \addtogroup cc13xx-cc26xx-platform
  * @{
  *
- * \defgroup sensortag-cc26xx-peripherals Sensortag CC1350/CC2650 common
+ * \defgroup sensortag-peripherals Sensortag peripherals
  *
- * Defines related to Sensortag sensors. The two sensortags are identical to a
- * very large extent. Everything documented within this group applies to both
- * sensortags.
+ * Defines related to configuring SensorTag peripherals. The two sensortags,
+ * CC1350STK and CC2650STK, are identical to a very large extent.
+ * Everything documented within this group applies to both sensortags.
  *
  * @{
  *
  * \file
- * Header file with definitions related to the sensors on the Sensortags
- *
- * \note   Do not include this file directly.
+ *        Header file with definitions related to the sensors on the Sensortags
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ * \note
+ *        This file should not be included directly
  */
 /*---------------------------------------------------------------------------*/
 #ifndef BOARD_CONF_H_
 #define BOARD_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include "leds-arch.h"
-/*---------------------------------------------------------------------------*/
+/**
+ * \name Button configurations for the dev/button-hal.h API.
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
 #define BUTTON_HAL_ID_KEY_LEFT      0
 #define BUTTON_HAL_ID_KEY_RIGHT     1
 #define BUTTON_HAL_ID_REED_RELAY    2
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name SensorTag does have sensors.
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define BOARD_CONF_HAS_SENSORS      1
+/** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_CONF_H_ */
 /*---------------------------------------------------------------------------*/

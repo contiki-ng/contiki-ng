@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-peripherals
+ * \addtogroup sensortag-peripherals
  * @{
  *
- * \defgroup sensortag-cc26xx-bmp-sensor SensorTag 2.0 Pressure Sensor
+ * \defgroup sensortag-bmp-sensor SensorTag Pressure Sensor
  *
  * Due to the time required for the sensor to startup, this driver is meant to
  * be used in an asynchronous fashion. The caller must first activate the
@@ -49,13 +48,21 @@
  * @{
  *
  * \file
- * Header file for the Sensortag BMP280 Altimeter / Pressure Sensor
+ *        Header file for the Sensortag BMP280 Altimeter / Pressure Sensor
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef BMP_280_SENSOR_H_
 #define BMP_280_SENSOR_H_
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
 #include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
+/* The BMP-280 driver uses the I2C0 peripheral to access the senssor */
+#if (TI_I2C_CONF_ENABLE == 0) || (TI_I2C_CONF_I2C0_ENABLE == 0)
+# error "The BMP280 requires the I2C driver (TI_I2C_CONF_ENABLE = 1)"
+#endif
 /*---------------------------------------------------------------------------*/
 typedef enum {
     BMP_280_SENSOR_TYPE_TEMP,
