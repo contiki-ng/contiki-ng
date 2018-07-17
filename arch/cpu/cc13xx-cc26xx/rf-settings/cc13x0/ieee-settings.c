@@ -70,7 +70,7 @@ RF_Mode rf_ieee_mode =
  * See the Technical Reference Manual for further details about the "txPower" Command field.
  * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
  */
-RF_TxPowerTable_Entry rf_ieee_tx_power_table[RF_IEEE_TX_POWER_TABLE_SIZE+1] =
+RF_TxPowerTable_Entry rf_ieee_tx_power_table[] =
 {
   { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  6) },
   { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  6) },
@@ -87,6 +87,20 @@ RF_TxPowerTable_Entry rf_ieee_tx_power_table[RF_IEEE_TX_POWER_TABLE_SIZE+1] =
   {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(48, 0, 1, 73) },
   RF_TxPowerTable_TERMINATION_ENTRY
 };
+
+/*
+ * TX power table size, with one less entry excluding the
+ * termination entry.
+ */
+const size_t rf_ieee_tx_power_table_size =
+    (sizeof(rf_ieee_tx_power_table) / sizeof(rf_ieee_tx_power_table[0])) - 1;
+
+/*
+ * CMD_RADIO_SETUP must be configured with default TX power value
+ * in the .txPower field.
+ */
+#define DEFAULT_TX_POWER    0x9330 /* 5 dBm */
+
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
@@ -133,7 +147,7 @@ rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
   .config.biasMode = 0x1,
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = 0x9330, /* 5 dBm default */
+  .txPower = DEFAULT_TX_POWER, /* 5 dBm default */
   .pRegOverride = rf_ieee_overrides,
 };
 /*---------------------------------------------------------------------------*/

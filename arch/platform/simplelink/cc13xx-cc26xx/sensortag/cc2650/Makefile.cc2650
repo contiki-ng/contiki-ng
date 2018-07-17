@@ -1,9 +1,10 @@
 ################################################################################
 # SimpleLink Device makefile
 
-SUBFAMILY = cc13x0-cc26x0
+SUBFAMILY     = cc13x0-cc26x0
 DEVICE_FAMILY = CC26X0
-DEVICE_LINE = CC26XX
+DEVICE_LINE   = CC26XX
+DEVICE        = CC1350
 
 BOARD_SOURCEFILES += CC2650STK.c CC2650STK_fxns.c
 BOARD_SOURCEFILES += leds-arch.c

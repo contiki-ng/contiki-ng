@@ -1,9 +1,10 @@
 ################################################################################
 # SimpleLink Device makefile
 
-SUBFAMILY = cc13x0-cc26x0
+SUBFAMILY     = cc13x0-cc26x0
 DEVICE_FAMILY = CC13X0
-DEVICE_LINE = CC13XX
+DEVICE_LINE   = CC13XX
+DEVICE        = CC1350
 
 BOARD_SOURCEFILES += CC1350DK_7XD.c CC1350DK_7XD_fxns.c
 

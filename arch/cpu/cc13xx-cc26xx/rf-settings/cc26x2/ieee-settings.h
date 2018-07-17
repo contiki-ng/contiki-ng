@@ -31,6 +31,9 @@
 #ifndef IEEE_SETTINGS_H_
 #define IEEE_SETTINGS_H_
 /*---------------------------------------------------------------------------*/
+#include "contiki-conf.h"
+
+/*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -40,12 +43,11 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
-extern RF_Mode rf_ieee_mode;
+extern RF_Mode               rf_ieee_mode;
 /*---------------------------------------------------------------------------*/
 /* TX Power Table */
-#define RF_IEEE_TX_POWER_TABLE_SIZE             15
-
-extern RF_TxPowerTable_Entry rf_ieee_tx_power_table[RF_IEEE_TX_POWER_TABLE_SIZE+1];
+extern RF_TxPowerTable_Entry rf_ieee_tx_power_table[];
+extern const size_t          rf_ieee_tx_power_table_size;
 /*---------------------------------------------------------------------------*/
 /* RF Core API commands */
 extern rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup;
@@ -55,7 +57,7 @@ extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
 extern rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack;
 /*---------------------------------------------------------------------------*/
 /* RF Core API Overrides */
-extern uint32_t rf_ieee_overrides[];
+extern uint32_t              rf_ieee_overrides[];
 /*---------------------------------------------------------------------------*/
 #endif /* IEEE_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/
