@@ -45,9 +45,12 @@
 #define DOT_15_4G_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
+/*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
+/*---------------------------------------------------------------------------*/
+#include <stdint.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 /* IEEE 802.15.4g frequency band identifiers (Table 68f) */
 #define DOT_15_4G_FREQ_BAND_169     0 /* 169.400–169.475 (Europe) - 169 MHz band */
@@ -79,76 +82,89 @@
  *
  * DOT_15_4G_CHAN0_FREQ is specified here in KHz
  */
-#if DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_470
+#if (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_470)
 # define DOT_15_4G_CHAN_MIN           0
 # define DOT_15_4G_CHAN_MAX           198
 # define DOT_15_4G_FREQ_SPACING       200
 # define DOT_15_4G_CHAN0_FREQ         470200
 
+# define PROP_MODE_CONF_CENTER_FREQ   0x01EA
 # define PROP_MODE_CONF_LO_DIVIDER    0x0A
 
-#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_780
+#elif (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_780)
 # define DOT_15_4G_CHAN_MIN           0
 # define DOT_15_4G_CHAN_MAX           38
 # define DOT_15_4G_FREQ_SPACING       200
 # define DOT_15_4G_CHAN0_FREQ         779200
 
+# define PROP_MODE_CONF_CENTER_FREQ   0x030F
 # define PROP_MODE_CONF_LO_DIVIDER    0x06
 
-#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_863
+#elif (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_863)
 # define DOT_15_4G_CHAN_MIN           0
 # define DOT_15_4G_CHAN_MAX           33
 # define DOT_15_4G_FREQ_SPACING       200
 # define DOT_15_4G_CHAN0_FREQ         863125
 
+# define PROP_MODE_CONF_CENTER_FREQ   0x0362
 # define PROP_MODE_CONF_LO_DIVIDER    0x05
 
-#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_915
+#elif (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_915)
 # define DOT_15_4G_CHAN_MIN           0
 # define DOT_15_4G_CHAN_MAX           128
 # define DOT_15_4G_FREQ_SPACING       200
 # define DOT_15_4G_CHAN0_FREQ         902200
 
+# define PROP_MODE_CONF_CENTER_FREQ   0x0393
 # define PROP_MODE_CONF_LO_DIVIDER    0x05
 
-#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_920
+#elif (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_920)
 # define DOT_15_4G_CHAN_MIN           0
 # define DOT_15_4G_CHAN_MAX           37
 # define DOT_15_4G_FREQ_SPACING       200
 # define DOT_15_4G_CHAN0_FREQ         920600
 
+# define PROP_MODE_CONF_CENTER_FREQ   0x039C
 # define PROP_MODE_CONF_LO_DIVIDER    0x05
 
-#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_950
+#elif (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_950)
 # define DOT_15_4G_CHAN_MIN           0
 # define DOT_15_4G_CHAN_MAX           32
 # define DOT_15_4G_FREQ_SPACING       200
 # define DOT_15_4G_CHAN0_FREQ         951000
 
+# define PROP_MODE_CONF_CENTER_FREQ   0x03BA
 # define PROP_MODE_CONF_LO_DIVIDER    0x05
 
-#elif DOT_15_4G_FREQ_BAND_ID==DOT_15_4G_FREQ_BAND_2450
+#elif (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_2450)
 # define DOT_15_4G_CHAN_MIN           11
 # define DOT_15_4G_CHAN_MAX           26
 # define DOT_15_4G_FREQ_SPACING       5000
 # define DOT_15_4G_CHAN0_FREQ         2405000
 
 #else
-# error The selected IEEE 802.15.4g frequency band is not supported
+# error "The selected IEEE 802.15.4g frequency band is not supported"
 #endif
 /*---------------------------------------------------------------------------*/
-#define DOT_15_4_G_FREQ(chan) \
-        (DOT_15_4G_CHAN0_FREQ + DOT_15_4G_FREQ_SPACING * ((chan) - DOT_15_4G_CHAN_MIN))
-
-#define DOT_15_4_G_CHAN_IN_RANGE(chan) \
-        (((chan) >= DOT_15_4G_CHAN_MIN) && ((chan) <= DOT_15_4G_CHAN_MAX))
+static inline uint32_t
+dot_15_4g_freq(const uint16_t chan)
+{
+    const uint32_t chan0    = DOT_15_4G_CHAN0_FREQ;
+    const uint32_t spacing  = DOT_15_4G_FREQ_SPACING;
+    const uint32_t chan_min = DOT_15_4G_CHAN_MIN;
+    return (chan0 + spacing * ((uint32_t)chan - chan_min));
+}
 /*---------------------------------------------------------------------------*/
-#define DOT_15_4_G_DEFAULT_CHAN      IEEE802154_DEFAULT_CHANNEL
-
-/* Sanity check default channel */
-#if !(DOT_15_4_G_CHAN_IN_RANGE(DOT_15_4_G_DEFAULT_CHAN))
-# error IEEE802154_DEFAULT_CHANNEL is not in valid channel range
-#endif
+static inline bool
+dot_15_4g_chan_in_range(const uint16_t chan)
+{
+    const uint16_t chan_min = DOT_15_4G_CHAN_MIN;
+    const uint16_t chan_max = DOT_15_4G_CHAN_MAX;
+    return ((chan >= chan_min) &&
+            (chan <= chan_max));
+}
+/*---------------------------------------------------------------------------*/
+#define DOT_15_4G_DEFAULT_CHAN      IEEE802154_DEFAULT_CHANNEL
 /*---------------------------------------------------------------------------*/
 #endif /* DOT_15_4G_H_ */
 /*---------------------------------------------------------------------------*/

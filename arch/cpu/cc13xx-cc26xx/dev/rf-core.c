@@ -39,6 +39,7 @@
 #include "contiki.h"
 #include "dev/watchdog.h"
 #include "sys/cc.h"
+#include "sys/etimer.h"
 #include "sys/process.h"
 #include "sys/energest.h"
 #include "net/netstack.h"
@@ -60,10 +61,10 @@
 #include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-#if 0
-# define PRINTF(...)
-#else
+#if 1
 # define PRINTF(...)  printf(__VA_ARGS__)
+#else
+# define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
 #define CMD_FS_RETRIES          3
@@ -78,11 +79,17 @@
 
 #define EVENTS_CMD_DONE(events) (((events) & RF_EVENTS_CMD_DONE) != 0)
 /*---------------------------------------------------------------------------*/
+/* Synth re-calibration every 3 minutes */
+#define SYNTH_RECAL_INTERVAL (CLOCK_SECOND * 60 * 3)
+
+static struct etimer synth_recal_timer;
+/*---------------------------------------------------------------------------*/
 static RF_Object  rf_netstack;
 static RF_Object  rf_ble;
 
 static RF_CmdHandle cmd_rx_handle;
 
+static bool          rf_is_on;
 static volatile bool rx_buf_full;
 /*---------------------------------------------------------------------------*/
 static void
@@ -179,6 +186,9 @@ rf_yield(void)
 #endif
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+
+  etimer_stop(&synth_recal_timer);
+  rf_is_on = false;
 
   return RF_RESULT_OK;
 }
@@ -285,7 +295,7 @@ netstack_sched_ieee_tx(bool recieve_ack)
    * chained TX command.
    */
   if (rx_ack_required) {
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     if (res != RF_RESULT_OK) {
       return res;
     }
@@ -393,7 +403,7 @@ netstack_sched_prop_tx(void)
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
-netstack_sched_rx(void)
+netstack_sched_rx(bool start)
 {
   if (cmd_rx_is_active()) {
     PRINTF("netstack_sched_rx: already in RX\n");
@@ -423,6 +433,11 @@ netstack_sched_rx(void)
   }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+
+  if (start) {
+    rf_is_on = true;
+    process_poll(&rf_core_process);
+  }
 
   return RF_RESULT_OK;
 }
@@ -502,27 +517,47 @@ PROCESS_THREAD(rf_core_process, ev, data)
   PROCESS_BEGIN();
 
   while(1) {
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+    PROCESS_YIELD_UNTIL((ev == PROCESS_EVENT_POLL) ||
+                        etimer_expired(&synth_recal_timer));
 
-    do {
-      //watchdog_periodic();
-      packetbuf_clear();
-      len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
+    if (ev == PROCESS_EVENT_POLL) {
+      do {
+        watchdog_periodic();
+        packetbuf_clear();
+        len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
-      if (rx_buf_full) {
-        PRINTF("rf_core: RX buf full, restart RX\n");
-        rx_buf_full = false;
-        /* Restart RX */
-        netstack_stop_rx();
-        netstack_sched_rx();
-      }
+        /*
+         * RX will stop if the RX buffers are full. In this case, restart
+         * RX after we've freed at least on packet.
+         */
+        if (rx_buf_full) {
+          PRINTF("rf_core: RX buf full, restart RX\n");
+          rx_buf_full = false;
 
-      if(len > 0) {
-        packetbuf_set_datalen(len);
+          /* Restart RX. */
+          netstack_stop_rx();
+          netstack_sched_rx(false);
+        }
 
-        NETSTACK_MAC.input();
-      }
-    } while(len > 0);
+        if(len > 0) {
+          packetbuf_set_datalen(len);
+
+          NETSTACK_MAC.input();
+        }
+      } while(len > 0);
+    }
+
+    /* start the synth re-calibration timer once. */
+    if (rf_is_on) {
+      rf_is_on = false;
+      etimer_set(&synth_recal_timer, SYNTH_RECAL_INTERVAL);
+    }
+    /* Scheduling CMD_FS will re-calibrate the synth. */
+    if (etimer_expired(&synth_recal_timer)) {
+      netstack_sched_fs();
+
+      etimer_reset(&synth_recal_timer);
+    }
   }
   PROCESS_END();
 }

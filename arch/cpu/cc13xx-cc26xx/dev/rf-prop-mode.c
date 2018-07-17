@@ -136,15 +136,9 @@
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
-/* Configuration for TX power table */
-#ifdef PROP_MODE_CONF_TX_POWER_TABLE
-# define TX_POWER_TABLE  PROP_MODE_CONF_TX_POWER_TABLE
-#else
-# define TX_POWER_TABLE  rf_prop_tx_power_table
-#endif
-/*---------------------------------------------------------------------------*/
 /* TX power table convenience macros */
-#define TX_POWER_TABLE_SIZE     ((sizeof(TX_POWER_TABLE) / sizeof(TX_POWER_TABLE[0])) - 1)
+#define TX_POWER_TABLE          rf_prop_tx_power_table
+#define TX_POWER_TABLE_SIZE     rf_prop_tx_power_table_size
 
 #define TX_POWER_MIN            (TX_POWER_TABLE[0].power)
 #define TX_POWER_MAX            (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
@@ -208,11 +202,14 @@ static int off(void);
 static void
 init_rf_params(void)
 {
+  cmd_radio_setup.centerFreq = PROP_MODE_CONF_CENTER_FREQ;
+  cmd_radio_setup.loDivider  = PROP_MODE_CONF_LO_DIVIDER;
+
   data_queue_t *data_queue = data_queue_init(sizeof(lensz_t));
 
   cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx.lenOffset;
-  cmd_rx.pQueue = data_queue;
-  cmd_rx.pOutput = (uint8_t *)&prop_radio.rx_stats;
+  cmd_rx.pQueue    = data_queue;
+  cmd_rx.pOutput   = (uint8_t *)&prop_radio.rx_stats;
 }
 /*---------------------------------------------------------------------------*/
 static int8_t
@@ -223,7 +220,7 @@ get_rssi(void)
   const bool rx_is_idle = !rx_is_active();
 
   if (rx_is_idle) {
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     if (res != RF_RESULT_OK) {
       return RF_GET_RSSI_ERROR_VAL;
     }
@@ -266,10 +263,10 @@ set_channel(uint16_t channel)
 {
   rf_result_t res;
 
-  if (!DOT_15_4_G_CHAN_IN_RANGE(channel)) {
+  if (!dot_15_4g_chan_in_range(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
-           (int)channel, IEEE802154_DEFAULT_CHANNEL);
-    channel = IEEE802154_DEFAULT_CHANNEL;
+           (int)channel, DOT_15_4G_DEFAULT_CHAN);
+    channel = DOT_15_4G_DEFAULT_CHAN;
   }
 
   if (channel == prop_radio.channel) {
@@ -277,7 +274,7 @@ set_channel(uint16_t channel)
     return RF_RESULT_OK;
   }
 
-  const uint32_t new_freq = DOT_15_4_G_FREQ(channel);
+  const uint32_t new_freq = dot_15_4g_freq(channel);
   const uint16_t freq = (uint16_t)(new_freq / 1000);
   const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
@@ -513,7 +510,7 @@ on(void)
 
   data_queue_reset();
 
-  res = netstack_sched_rx();
+  res = netstack_sched_rx(true);
 
   if (res != RF_RESULT_OK) {
     return RF_RESULT_ERROR;

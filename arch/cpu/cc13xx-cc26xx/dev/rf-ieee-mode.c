@@ -78,7 +78,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#if 0
+#if 1
 # define PRINTF(...)
 #else
 # define PRINTF(...)  printf(__VA_ARGS__)
@@ -106,23 +106,13 @@
 #else
 #   define IEEE_MODE_RSSI_THRESHOLD  0xA6
 #endif /* IEEE_MODE_CONF_RSSI_THRESHOLD */
-
-/* Configuration for TX power table */
-#ifdef IEEE_MODE_CONF_TX_POWER_TABLE
-#   define TX_POWER_TABLE  IEEE_MODE_CONF_TX_POWER_TABLE
-#else
-#   define TX_POWER_TABLE  rf_ieee_tx_power_table
-#endif
-
-#ifdef IEEE_MODE_CONF_TX_POWER_TABLE_SIZE
-#   define TX_POWER_TABLE_SIZE  IEEE_MODE_CONF_TX_POWER_TABLE_SIZE
-#else
-#   define TX_POWER_TABLE_SIZE  RF_IEEE_TX_POWER_TABLE_SIZE
-#endif
 /*---------------------------------------------------------------------------*/
 /* TX power table convenience macros */
-#define TX_POWER_MIN  (TX_POWER_TABLE[0].power)
-#define TX_POWER_MAX  (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
+#define TX_POWER_TABLE          rf_ieee_tx_power_table
+#define TX_POWER_TABLE_SIZE     rf_ieee_tx_power_table_size
+
+#define TX_POWER_MIN            (TX_POWER_TABLE[0].power)
+#define TX_POWER_MAX            (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
 
 #define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
 /*---------------------------------------------------------------------------*/
@@ -310,10 +300,10 @@ init_rf_params(void)
 static rf_result_t
 set_channel(uint8_t channel)
 {
-  if (!DOT_15_4_G_CHAN_IN_RANGE(channel)) {
+  if (!dot_15_4g_chan_in_range(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
-           (int)channel, DOT_15_4_G_DEFAULT_CHAN);
-    channel = DOT_15_4_G_DEFAULT_CHAN;
+           (int)channel, DOT_15_4G_DEFAULT_CHAN);
+    channel = DOT_15_4G_DEFAULT_CHAN;
   }
 
   /*
@@ -328,7 +318,7 @@ set_channel(uint8_t channel)
 
   cmd_rx.channel = channel;
 
-  const uint32_t new_freq = (uint32_t)DOT_15_4_G_FREQ(channel);
+  const uint32_t new_freq = dot_15_4g_freq(channel);
   const uint16_t freq     = (uint16_t)(new_freq / 1000);
   const uint16_t frac     = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
@@ -428,7 +418,7 @@ init(void)
     return RF_RESULT_ERROR;
   }
 
-  set_channel(DOT_15_4_G_DEFAULT_CHAN);
+  set_channel(DOT_15_4G_DEFAULT_CHAN);
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
@@ -598,7 +588,7 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
   const bool rx_is_idle = !rx_is_active();
 
   if (rx_is_idle) {
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     if (res != RF_RESULT_OK) {
       return RF_RESULT_ERROR;
     }
@@ -700,7 +690,7 @@ on(void)
 
   data_queue_reset();
 
-  res = netstack_sched_rx();
+  res = netstack_sched_rx(true);
 
   if (res != RF_RESULT_OK) {
     return RF_RESULT_ERROR;
@@ -854,7 +844,7 @@ set_value(radio_param_t param, radio_value_t value)
 
   /* Channel */
   case RADIO_PARAM_CHANNEL:
-    if (!DOT_15_4_G_CHAN_IN_RANGE(value)) {
+    if (!dot_15_4g_chan_in_range(value)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
     set_channel((uint8_t)value);
@@ -868,7 +858,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -881,7 +871,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -920,7 +910,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -952,7 +942,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;
@@ -1028,7 +1018,7 @@ set_object(radio_param_t param, const void *src, size_t size)
     }
 
     netstack_stop_rx();
-    res = netstack_sched_rx();
+    res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
       ? RADIO_RESULT_OK
       : RADIO_RESULT_ERROR;

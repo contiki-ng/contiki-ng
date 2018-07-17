@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Alex Stanoev
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc13xx-cc26xx
+ * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
  * \file
- *  Customer Configuration (CCFG) for the cc13xx-cc26xx CPU family
+ *        Customer Configuration (CCFG) for the CC13xx/CC26xx CPU family.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef CCFG_CONF_H_
@@ -50,14 +51,14 @@
  * @{
  */
 #if CCFG_CONF_JTAG_INTERFACE_DISABLE
-#   define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE        0x00
-#   define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE       0x00
-#   define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE      0x00
-#   define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE      0x00
-#   define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE    0x00
-#   define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE    0x00
-#   define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE       0x00
-#endif /* CCFG_CONF_JTAG_INTERFACE_DISABLE */
+# define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE        0x00
+# define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE       0x00
+# define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE      0x00
+# define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE      0x00
+# define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE    0x00
+# define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE    0x00
+# define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE       0x00
+#endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -67,36 +68,35 @@
  * output power with the default PA front-end configuration.
  * @{
  */
-#if defined(DEVICE_LINE_CC13XX) && CC13XX_CONF_TXPOWER_BOOST_MODE
-#   define CCFG_FORCE_VDDR_HH                           1
-#endif /* CCFG_CONF_TXPOWER_BOOST_MODE */
+#if defined(DEVICE_LINE_CC13XX) && (RF_CONF_TXPOWER_BOOST_MODE)
+# define CCFG_FORCE_VDDR_HH                           1
+#endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
  * \name ROM Bootloader configuration
  *
  * Enable/Disable the ROM bootloader in your image, if the board supports it.
- * Look in board.h to choose the DIO and corresponding level that will cause
+ * Look in Board.h to choose the DIO and corresponding level that will cause
  * the chip to enter bootloader mode.
  * @{
  */
 #ifndef CCFG_CONF_ROM_BOOTLOADER_ENABLE
-#define CCFG_CONF_ROM_BOOTLOADER_ENABLE                 0
+#define CCFG_CONF_ROM_BOOTLOADER_ENABLE               0
 #endif
 
 #if CCFG_CONF_ROM_BOOTLOADER_ENABLE
-#   define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE         0xC5
-#   define SET_CCFG_BL_CONFIG_BL_LEVEL                  0x00
-#   if defined(CCFG_CONF_BL_PIN_NUMBER)
-#       define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER         CCFG_CONF_BL_PIN_NUMBER
-#   endif
-#   define SET_CCFG_BL_CONFIG_BL_ENABLE                 0xC5
+# define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE         0xC5
+# define SET_CCFG_BL_CONFIG_BL_LEVEL                  0x00
+# if defined(CCFG_CONF_BL_PIN_NUMBER)
+#  define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER            CCFG_CONF_BL_PIN_NUMBER
+# endif
+# define SET_CCFG_BL_CONFIG_BL_ENABLE                 0xC5
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* CCFG_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  */

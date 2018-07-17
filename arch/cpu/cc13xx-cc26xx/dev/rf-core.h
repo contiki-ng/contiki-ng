@@ -78,7 +78,7 @@ RF_Handle   netstack_open(RF_Params *params);
 rf_result_t netstack_sched_fs(void);
 rf_result_t netstack_sched_ieee_tx(bool recieve_ack);
 rf_result_t netstack_sched_prop_tx(void);
-rf_result_t netstack_sched_rx(void);
+rf_result_t netstack_sched_rx(bool start);
 rf_result_t netstack_stop_rx(void);
 /*---------------------------------------------------------------------------*/
 /* BLE radio: BLE Beacon Daemon */
