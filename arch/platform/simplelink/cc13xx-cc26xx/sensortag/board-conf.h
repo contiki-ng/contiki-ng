@@ -50,6 +50,8 @@
 #ifndef BOARD_CONF_H_
 #define BOARD_CONF_H_
 /*---------------------------------------------------------------------------*/
+#include "leds-arch.h"
+/*---------------------------------------------------------------------------*/
 /**
  * \name Button configurations for the dev/button-hal.h API.
  *
