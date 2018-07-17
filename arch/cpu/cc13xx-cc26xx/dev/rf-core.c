@@ -512,6 +512,8 @@ PROCESS_THREAD(rf_core_process, ev, data)
       if (rx_buf_full) {
         PRINTF("rf_core: RX buf full, restart RX\n");
         rx_buf_full = false;
+        /* Restart RX */
+        netstack_stop_rx();
         netstack_sched_rx();
       }
 

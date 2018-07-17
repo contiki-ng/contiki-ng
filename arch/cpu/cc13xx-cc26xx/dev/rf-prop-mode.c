@@ -60,7 +60,7 @@
 #include "rf-core.h"
 #include "rf-data-queue.h"
 #include "netstack-settings.h"
-#include RF_CORE_PROP_RF_SETTINGS
+#include RF_PROP_SETTINGS
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
