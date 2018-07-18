@@ -27,9 +27,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup simplelink
+ * \addtogroup
  * @{
  *
  * \file
@@ -46,7 +45,6 @@
 #include "net/packetbuf.h"
 #include "net/mac/mac.h"
 
-#include "rf-core.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -54,8 +52,10 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
+#include "rf-core.h"
+#include "rf-sched.h"
 #include "rf-data-queue.h"
-#include "netstack-settings.h"
+#include "rf-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stdint.h>
@@ -100,13 +100,13 @@ cmd_rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
   (void)command;
 
   if (events & RF_EventRxEntryDone) {
-    process_poll(&rf_core_process);
+    process_poll(&rf_sched_process);
   }
 
   if (events & RF_EventRxBufFull) {
     rx_buf_full = true;
 
-    process_poll(&rf_core_process);
+    process_poll(&rf_sched_process);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -275,7 +275,7 @@ netstack_sched_fs(void)
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
-netstack_sched_ieee_tx(bool recieve_ack)
+netstack_sched_ieee_tx(bool ack_request)
 {
   rf_result_t res;
 
@@ -286,15 +286,15 @@ netstack_sched_ieee_tx(bool recieve_ack)
   sched_params.endTime    = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
-  const bool is_active = cmd_rx_is_active();
-  const bool rx_ack_required = (recieve_ack && !is_active);
+  const bool rx_is_active = cmd_rx_is_active();
+  const bool rx_needed = (ack_request && !rx_is_active);
 
   /*
    * If we expect ACK after transmission, RX must be running to be able to
    * run the RX_ACK command. Therefore, turn on RX before starting the
    * chained TX command.
    */
-  if (rx_ack_required) {
+  if (rx_needed) {
     res = netstack_sched_rx(false);
     if (res != RF_RESULT_OK) {
       return res;
@@ -316,7 +316,7 @@ netstack_sched_ieee_tx(bool recieve_ack)
     return RF_RESULT_ERROR;
   }
 
-  if (is_active) {
+  if (rx_is_active) {
     ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
   } else {
     ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
@@ -326,11 +326,11 @@ netstack_sched_ieee_tx(bool recieve_ack)
   RF_EventMask tx_events = RF_pendCmd(&rf_netstack, tx_handle, 0);
 
   /* Stop RX if it was turned on only for ACK */
-  if (rx_ack_required) {
+  if (rx_needed) {
     netstack_stop_rx();
   }
 
-  if (is_active) {
+  if (rx_is_active) {
     ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
   } else {
     ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
@@ -436,7 +436,7 @@ netstack_sched_rx(bool start)
 
   if (start) {
     rf_is_on = true;
-    process_poll(&rf_core_process);
+    process_poll(&rf_sched_process);
   }
 
   return RF_RESULT_OK;
@@ -508,9 +508,9 @@ ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
   return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
-PROCESS(rf_core_process, "RF Core Process");
+PROCESS(rf_sched_process, "RF Core Process");
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(rf_core_process, ev, data)
+PROCESS_THREAD(rf_sched_process, ev, data)
 {
   int len;
 

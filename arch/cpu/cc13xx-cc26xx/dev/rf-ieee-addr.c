@@ -40,7 +40,7 @@
 #include "contiki.h"
 #include "net/linkaddr.h"
 
-#include "ieee-addr.h"
+#include "rf-ieee-addr.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_memmap.h)

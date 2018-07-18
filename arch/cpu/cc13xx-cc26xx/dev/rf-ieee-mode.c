@@ -68,9 +68,9 @@
 /* SimpleLink Platform RF dev */
 #include "rf-data-queue.h"
 #include "rf-core.h"
-#include "dot-15-4g.h"
-#include "netstack-settings.h"
-#include RF_IEEE_SETTINGS
+#include "rf-sched.h"
+#include "rf-15-4g.h"
+#include "ieee-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stddef.h>
@@ -428,7 +428,7 @@ init(void)
   ctimer_set(&ieee_radio.rat.overflow_timer, two_quarters, rat_overflow_cb, NULL);
 
   /* Start RF process */
-  process_start(&rf_core_process, NULL);
+  process_start(&rf_sched_process, NULL);
 
   return RF_RESULT_OK;
 }
@@ -671,7 +671,7 @@ pending_packet(void)
   } while (curr_entry != read_entry);
 
   if ((num_pending > 0) && !ieee_radio.poll_mode) {
-    process_poll(&rf_core_process);
+    process_poll(&rf_sched_process);
   }
 
   /* If we didn't find an entry at status finished or busy, no frames are pending */

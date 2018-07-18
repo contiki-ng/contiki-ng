@@ -74,8 +74,8 @@ CONTIKI_CPU_SOURCEFILES += batmon-sensor.c gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += int-master-arch.c
 
 ### RF source files
-CONTIKI_CPU_SOURCEFILES += rf-core.c rf-data-queue.c
-CONTIKI_CPU_SOURCEFILES += ieee-addr.c ble-addr.c
+CONTIKI_CPU_SOURCEFILES += rf-sched.c rf-data-queue.c
+CONTIKI_CPU_SOURCEFILES += rf-ieee-addr.c rf-ble-addr.c
 CONTIKI_CPU_SOURCEFILES += rf-ble-beacond.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)

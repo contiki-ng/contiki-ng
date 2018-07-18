@@ -44,8 +44,6 @@
 #include "sys/etimer.h"
 #include "net/netstack.h"
 #include "net/linkaddr.h"
-
-#include "rf-ble-beacond.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/chipinfo.h)
@@ -54,9 +52,10 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-#include "netstack-settings.h"
+#include "rf-ble-addr.h"
+#include "rf-ble-beacond.h"
 #include "rf-core.h"
-#include "ble-addr.h"
+#include "rf-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stdint.h>

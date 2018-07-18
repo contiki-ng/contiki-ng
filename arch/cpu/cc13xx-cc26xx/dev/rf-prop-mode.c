@@ -297,15 +297,19 @@ set_channel(uint16_t channel)
 static uint8_t
 calculate_lqi(int8_t rssi)
 {
-  /* Note : Currently the LQI value is simply the energy detect measurement.
+  /*
+   * Note : Currently the LQI value is simply the energy detect measurement.
    *        A more accurate value could be derived by using the correlation
-   *        value along with the RSSI value. */
+   *        value along with the RSSI value.
+   */
   rssi = CLAMP(rssi, ED_RF_POWER_MIN_DBM, ED_RF_POWER_MAX_DBM);
 
-  /* Create energy detect measurement by normalizing and scaling RF power level.
+  /*
+   * Create energy detect measurement by normalizing and scaling RF power level.
    * Note : The division operation below is designed for maximum accuracy and
-   *        best granularity.  This is done by grouping the math operations to
-   *        compute the entire numerator before doing any division. */
+   *        best granularity. This is done by grouping the math operations to
+   *        compute the entire numerator before doing any division.
+   */
   return (MAC_SPEC_ED_MAX * (rssi - ED_RF_POWER_MIN_DBM)) / (ED_RF_POWER_MAX_DBM - ED_RF_POWER_MIN_DBM);
 }
 /*---------------------------------------------------------------------------*/

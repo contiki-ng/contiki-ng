@@ -28,41 +28,53 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc13xx-cc26xx-cpu
- * @{
- *
- * \defgroup rf-core Common functionality for the CC13xx/CC26xx RF
- *
+ * \addtogroup rf-core
  * @{
  *
  * \file
- *        Header file of common CC13xx/CC26xx RF functionality
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
-
+ *        Header file of the CC13xx/CC26xx RF scheduler.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef RF_CORE_H_
-#define RF_CORE_H_
+#ifndef RF_SCHED_H_
+#define RF_SCHED_H_
 /*---------------------------------------------------------------------------*/
-/**
- * \name  Different modes the RF can operate on, denoted by which frequency
- *        band said mode operates on. Currently supports the following modes:
- *        - Sub-1 GHz, called prop-mode
- *        - 2.4 GHz,   called ieee-mode
- *
- * @{
- */
-#define RF_MODE_SUB_1_GHZ      (1 << 0)
-#define RF_MODE_2_4_GHZ        (1 << 1)
+#include "contiki.h"
+#include "sys/process.h"
 
-/* Bitmask of supported RF modes */
-#define RF_MODE_BM             ( RF_MODE_SUB_1_GHZ \
-                               | RF_MODE_2_4_GHZ \
-                               )
-/** @} */
+#include "rf-ble-beacond.h"
 /*---------------------------------------------------------------------------*/
-#endif /* RF_CORE_H_ */
+#include <ti/drivers/rf/RF.h>
+/*---------------------------------------------------------------------------*/
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+PROCESS_NAME(rf_sched_process);
+/*---------------------------------------------------------------------------*/
+typedef enum {
+    RF_RESULT_OK = 0,
+    RF_RESULT_ERROR,
+} rf_result_t;
+/*---------------------------------------------------------------------------*/
+/* Common */
+rf_result_t rf_yield(void);
+
+rf_result_t rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm);
+rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm);
+/*---------------------------------------------------------------------------*/
+/* Netstack radio: IEEE-mode or prop-mode */
+RF_Handle   netstack_open(RF_Params *params);
+
+rf_result_t netstack_sched_fs(void);
+rf_result_t netstack_sched_ieee_tx(bool ack_request);
+rf_result_t netstack_sched_prop_tx(void);
+rf_result_t netstack_sched_rx(bool start);
+rf_result_t netstack_stop_rx(void);
+/*---------------------------------------------------------------------------*/
+/* BLE radio: BLE Beacon Daemon */
+RF_Handle   ble_open(RF_Params *params);
+
+rf_result_t ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event);
+/*---------------------------------------------------------------------------*/
+#endif /* RF_SCHED_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

@@ -35,31 +35,10 @@
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 /*---------------------------------------------------------------------------*/
-/* Prop-mode RF settings configuration */
-#ifdef RF_CONF_PROP_SETTINGS
-# define RF_PROP_SETTINGS  RF_CONF_PROP_SETTINGS
-#else
-# define RF_PROP_SETTINGS "prop-settings.h"
-#endif
-
-/* IEEE-mode RF settings configuration */
-#ifdef RF_CONF_IEEE_SETTINGS
-# define RF_IEEE_SETTINGS  RF_CONF_IEEE_SETTINGS
-#else
-# define RF_IEEE_SETTINGS "ieee-settings.h"
-#endif
-
-/* BLE RF settings configuration */
-#ifdef RF_CONF_BLE_SETTINGS
-# define RF_BLE_SETTINGS  RF_CONF_BLE_SETTINGS
-#else
-# define RF_BLE_SETTINGS "ble-settings.h"
-#endif
-/*---------------------------------------------------------------------------*/
 /* Prop-mode RF settings */
 #if (RF_MODE == RF_MODE_SUB_1_GHZ)
 
-#include RF_PROP_SETTINGS
+#include "prop-settings.h"
 
 #define netstack_mode             rf_prop_mode
 #define netstack_cmd_radio_setup  rf_cmd_prop_radio_div_setup
@@ -70,7 +49,7 @@
 /* IEEE-mode RF settings */
 #elif (RF_MODE == RF_MODE_2_4_GHZ)
 
-#include RF_IEEE_SETTINGS
+#include "ieee-settings.h"
 
 #define netstack_mode             rf_ieee_mode
 #define netstack_cmd_radio_setup  rf_cmd_ieee_radio_setup
@@ -83,22 +62,27 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /* BLE RF settings */
-#include RF_BLE_SETTINGS
 
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+
+#include "ble-settings.h"
 
 #define ble_mode                rf_ble_mode
 #define ble_cmd_radio_setup     rf_ble_cmd_radio_setup
 #define ble_adv_par             rf_ble_adv_par
 #define ble_cmd_beacon          rf_ble_cmd_ble_adv_nc
 
+/*---------------------------------------------------------------------------*/
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
+
+#include "ble-settings.h"
 
 #define ble_mode                rf_ble_mode
 #define ble_cmd_radio_setup     rf_cmd_ble5_radio_setup
 #define ble_adv_par             rf_ble5_adv_aux_par
 #define ble_cmd_beacon          rf_cmd_ble5_adv_aux
 
+/*---------------------------------------------------------------------------*/
 #else
 # error "Unsupported DeviceFamily_PARENT for BLE settings"
 #endif

@@ -38,8 +38,8 @@
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef SIMPLELINK_CONF_H_
-#define SIMPLELINK_CONF_H_
+#ifndef CC13XX_CC26XX_CONF_H_
+#define CC13XX_CC26XX_CONF_H_
 /*---------------------------------------------------------------------------*/
 #include "cc13xx-cc26xx-def.h"
 
@@ -390,6 +390,6 @@
 #endif /* SLIP_ARCH_CONF_ENABLED */
 /** @} */
 /*---------------------------------------------------------------------------*/
-#endif /* SIMPLELINK_CONF_H_ */
+#endif /* CC13XX_CC26XX_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */

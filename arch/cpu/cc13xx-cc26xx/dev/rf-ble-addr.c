@@ -37,18 +37,17 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
 #include "dev/ble-hal.h"
 #include "net/linkaddr.h"
 
-#include "ble-addr.h"
-
-#include <string.h>
+#include "rf-ble-addr.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_memmap.h)
 #include DeviceFamily_constructPath(inc/hw_fcfg1.h)
 #include DeviceFamily_constructPath(inc/hw_ccfg.h)
+/*---------------------------------------------------------------------------*/
+#include <string.h>
 /*---------------------------------------------------------------------------*/
 #define BLE_MAC_PRIMARY_ADDRESS    (FCFG1_BASE + FCFG1_O_MAC_BLE_0)
 #define BLE_MAC_SECONDARY_ADDRESS  (CCFG_BASE  + CCFG_O_IEEE_BLE_0)

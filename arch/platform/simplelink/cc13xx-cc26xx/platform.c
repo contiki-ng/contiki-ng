@@ -72,13 +72,13 @@
 #include <ti/drivers/UART.h>
 /*---------------------------------------------------------------------------*/
 /* Arch driver implementations */
+#include "button-sensor.h"
 #include "board-peripherals.h"
 #include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
-#include "ieee-addr.h"
 #include "rf-core.h"
+#include "rf-ieee-addr.h"
 #include "rf-ble-beacond.h"
-#include "button-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <string.h>

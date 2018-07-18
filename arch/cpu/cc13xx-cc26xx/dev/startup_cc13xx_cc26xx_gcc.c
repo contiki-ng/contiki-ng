@@ -107,10 +107,6 @@ static void (* const resetVectors[16])(void) =
     defaultHandler,                      // The PendSV handler
     defaultHandler                       // The SysTick handler
 };
-
-__attribute__ ((section(".ramVecs")))
-static unsigned long ramVectors[50];
-
 //*****************************************************************************
 //
 // The following are arrays of pointers to constructor functions that need to
@@ -192,14 +188,6 @@ void localProgramStart(void)
     count = (uint32_t)(__init_array_end - __init_array_start);
     for (i = 0; i < count; i++) {
         __init_array_start[i]();
-    }
-
-    /* Copy from reset vector table into RAM vector table */
-    memcpy(ramVectors, resetVectors, 16*4);
-
-    /* fill remaining vectors with default handler */
-    for (i=16; i < 50; i++) {
-        ramVectors[i] = (unsigned long)defaultHandler;
     }
 
     /* Call the application's entry point. */
