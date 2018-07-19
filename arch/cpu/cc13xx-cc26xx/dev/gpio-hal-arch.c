@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,31 +27,30 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-gpio-hal
+ * \addtogroup cc13xx-cc26xx-gpio-hal
  * @{
  *
  * \file
- *     Implementation file for the CC13xx/CC26xx GPIO HAL functions
+ *        Implementation of the GPIO HAL module for CC13xx/CC26xx. The GPIO
+ *        HAL module is implemented by using the PINCC26XX module, except
+ *        for multi-dio functions which use the GPIO driverlib module.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/gpio-hal.h"
-
+/*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/gpio.h)
 
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/pin/PINCC26XX.h>
-
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-static PIN_Config pin_config[] =
-{
-  PIN_TERMINATE
-};
-
+static PIN_Config pin_config[] = { PIN_TERMINATE };
 static PIN_State  pin_state;
 static PIN_Handle pin_handle;
 /*---------------------------------------------------------------------------*/
@@ -65,10 +63,12 @@ from_hal_cfg(gpio_hal_pin_cfg_t cfg, PIN_Config *pin_cfg, PIN_Config *pin_mask)
   if (cfg & GPIO_HAL_PIN_BM_INPUT) {
     *pin_mask |= PIN_BM_INPUT_MODE;
 
+    /* Hysteresis config */
     if ((cfg & GPIO_HAL_PIN_BM_INPUT_HYSTERESIS) == GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS) {
       *pin_cfg |= PIN_HYSTERESIS;
     }
 
+    /* Pulling config */
     switch (cfg & GPIO_HAL_PIN_BM_INPUT_PULLING) {
     case GPIO_HAL_PIN_CFG_INPUT_NOPULL:   *pin_cfg |= PIN_NOPULL;   break;
     case GPIO_HAL_PIN_CFG_INPUT_PULLUP:   *pin_cfg |= PIN_PULLUP;   break;
@@ -80,16 +80,19 @@ from_hal_cfg(gpio_hal_pin_cfg_t cfg, PIN_Config *pin_cfg, PIN_Config *pin_mask)
   if (cfg & GPIO_HAL_PIN_BM_OUTPUT) {
     *pin_mask |= PIN_BM_OUTPUT_MODE;
 
+    /* Output buffer type config */
     switch (cfg & GPIO_HAL_PIN_BM_OUTPUT_BUF) {
     case GPIO_HAL_PIN_CFG_OUTPUT_PUSHPULL:   *pin_cfg |= PIN_PUSHPULL;   break;
     case GPIO_HAL_PIN_CFG_OUTPUT_OPENDRAIN:  *pin_cfg |= PIN_OPENDRAIN;  break;
     case GPIO_HAL_PIN_CFG_OUTPUT_OPENSOURCE: *pin_cfg |= PIN_OPENSOURCE; break;
     }
 
+    /* Slew control config */
     if ((cfg & GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL) == GPIO_HAL_PIN_CFG_OUTPUT_SLEWCTRL) {
       *pin_cfg |= PIN_SLEWCTRL;
     }
 
+    /* Drive strength config */
     switch (cfg & GPIO_HAL_PIN_BM_OUTPUT_DRVSTR) {
     case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MIN: *pin_cfg |= PIN_DRVSTR_MIN; break;
     case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED: *pin_cfg |= PIN_DRVSTR_MED; break;
@@ -101,7 +104,8 @@ from_hal_cfg(gpio_hal_pin_cfg_t cfg, PIN_Config *pin_cfg, PIN_Config *pin_mask)
   if (cfg & GPIO_HAL_PIN_BM_INT) {
     *pin_mask |= PIN_BM_IRQ;
 
-    switch (cfg & GPIO_HAL_PIN_BM_OUTPUT_BUF) {
+    /* Interrupt edge config */
+    switch (cfg & GPIO_HAL_PIN_BM_INT) {
     case GPIO_HAL_PIN_CFG_INT_DISABLE: *pin_cfg |= PIN_IRQ_DIS;       break;
     case GPIO_HAL_PIN_CFG_INT_FALLING: *pin_cfg |= PIN_IRQ_NEGEDGE;   break;
     case GPIO_HAL_PIN_CFG_INT_RISING:  *pin_cfg |= PIN_IRQ_POSEDGE;   break;
@@ -115,10 +119,12 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
 {
   /* Input config */
   if (pin_cfg & PIN_BM_INPUT_MODE) {
+    /* Hysteresis config */
     if ((pin_cfg & PIN_BM_HYSTERESIS) == PIN_HYSTERESIS) {
       *cfg |= GPIO_HAL_PIN_BM_INPUT_HYSTERESIS;
     }
 
+    /* Pulling config */
     switch (pin_cfg & PIN_BM_PULLING) {
     case PIN_NOPULL:   *cfg |= GPIO_HAL_PIN_CFG_INPUT_NOPULL;   break;
     case PIN_PULLUP:   *cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLUP;   break;
@@ -128,16 +134,19 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
 
   /* Output config */
   if (pin_cfg & PIN_BM_OUTPUT_MODE) {
+    /* Output buffer type config */
     switch (pin_cfg & PIN_BM_OUTPUT_BUF) {
     case PIN_PUSHPULL:   *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_PUSHPULL;   break;
     case PIN_OPENDRAIN:  *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_OPENDRAIN;  break;
     case PIN_OPENSOURCE: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_OPENSOURCE; break;
     }
 
+    /* Slew control config */
     if ((pin_cfg & PIN_BM_SLEWCTRL) == PIN_SLEWCTRL) {
       *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_SLEWCTRL;
     }
 
+    /* Drive strength config */
     switch (pin_cfg & PIN_BM_DRVSTR) {
     case PIN_DRVSTR_MIN: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MIN; break;
     case PIN_DRVSTR_MED: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED; break;
@@ -147,6 +156,7 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
 
   /* Interrupt config */
   if (pin_cfg & PIN_BM_IRQ) {
+    /* Interrupt edge config */
     switch (pin_cfg & PIN_BM_IRQ) {
     case PIN_IRQ_DIS:       *cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE; break;
     case PIN_IRQ_NEGEDGE:   *cfg |= GPIO_HAL_PIN_CFG_INT_FALLING; break;
@@ -162,6 +172,7 @@ gpio_int_cb(PIN_Handle handle, PIN_Id pin_id)
   /* Unused args */
   (void)handle;
 
+  /* Notify the GPIO HAL driver */
   gpio_hal_event_handler(gpio_hal_pin_to_mask(pin_id));
 }
 
@@ -204,7 +215,7 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
   PIN_add(pin_handle, PIN_getConfig(pin));
 
-  /* Clear settings that we are about to change, keep everything else */
+  /* Clear settings that we are about to change, keep everything else. */
   PIN_Config pin_cfg = 0;
   PIN_Config pin_mask = 0;
 

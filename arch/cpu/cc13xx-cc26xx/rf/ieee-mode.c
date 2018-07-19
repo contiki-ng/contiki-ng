@@ -66,10 +66,10 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* SimpleLink Platform RF dev */
-#include "rf-data-queue.h"
-#include "rf-core.h"
-#include "rf-sched.h"
-#include "rf-15-4g.h"
+#include "rf/rf.h"
+#include "rf/data-queue.h"
+#include "rf/dot-15-4g.h"
+#include "rf/sched.h"
 #include "ieee-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>

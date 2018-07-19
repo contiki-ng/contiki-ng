@@ -324,6 +324,16 @@ typedef enum CC2650DK_7ID_SDName {
 } CC2650DK_7ID_SDName;
 
 /*!
+ *  @def    CC2650DK_7ID_TRNGName
+ *  @brief  Enum of TRNGs
+ */
+typedef enum CC2650DK_7ID_TRNGName {
+    CC2650DK_7ID_TRNG0 = 0,
+
+    CC2650DK_7ID_TRNGCOUNT
+} CC2650DK_7ID_TRNGName;
+
+/*!
  *  @def    CC2650DK_7ID_SPIName
  *  @brief  Enum of SPI names
  */

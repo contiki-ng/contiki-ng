@@ -38,10 +38,12 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "lib/sensors.h"
+
 #include "batmon-sensor.h"
-
-#include "ti-lib.h"
-
+/*---------------------------------------------------------------------------*/
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/aon_batmon.h)
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
@@ -71,15 +73,13 @@ value(int type)
     return 0;
   }
 
-  if(type == BATMON_SENSOR_TYPE_TEMP) {
-    return (int)ti_lib_aon_batmon_temperature_get_deg_c();
-  } else if(type == BATMON_SENSOR_TYPE_VOLT) {
-    return (int)ti_lib_aon_batmon_battery_voltage_get();
-  } else {
+  switch(type) {
+  case BATMON_SENSOR_TYPE_TEMP: return (int)AONBatMonTemperatureGetDegC();
+  case BATMON_SENSOR_TYPE_VOLT: return (int)AONBatMonBatteryVoltageGet();
+  default:
     PRINTF("Invalid type\n");
+    return 0;
   }
-
-  return 0;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -97,15 +97,15 @@ configure(int type, int enable)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    ti_lib_aon_batmon_enable();
+    AONBatMonEnable();
     enabled = SENSOR_STATUS_ENABLED;
     break;
   case SENSORS_ACTIVE:
     if(enable) {
-      ti_lib_aon_batmon_enable();
+      AONBatMonEnable();
       enabled = SENSOR_STATUS_ENABLED;
     } else {
-      ti_lib_aon_batmon_disable();
+      AONBatMonDisable();
       enabled = SENSOR_STATUS_DISABLED;
     }
     break;

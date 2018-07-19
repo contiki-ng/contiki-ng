@@ -52,9 +52,9 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-#include "rf-ble-addr.h"
-#include "rf-ble-beacond.h"
-#include "rf-core.h"
+#include "rf/rf.h"
+#include "rf/ble-addr.h"
+#include "rf/ble-beacond.h"
 #include "rf-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>

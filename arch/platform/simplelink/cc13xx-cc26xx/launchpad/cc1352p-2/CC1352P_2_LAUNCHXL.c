@@ -884,6 +884,29 @@ const uint_least8_t SPI_count = CC1352P_2_LAUNCHXL_SPICOUNT;
 
 #endif /* TI_SPI_CONF_ENABLE */
 
+
+/*
+ *  =============================== TRNG ===============================
+ */
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/trng/TRNGCC26X2.h>
+
+TRNGCC26X2_Object trngCC26X2Object[CC1352P_2_LAUNCHXL_TRNGCOUNT];
+
+const TRNGCC26X2_HWAttrs trngCC26X2HWAttrs[CC1352P_2_LAUNCHXL_TRNGCOUNT] = {
+    {
+         .swiPriority = 0,
+         .intPriority = ~0,
+    }
+};
+
+const TRNG_Config TRNG_config[] = {
+    { &trngCC26X2Object[0], &trngCC26X2HWAttrs[0] },
+};
+
+const uint8_t TRNG_count = CC1352P_2_LAUNCHXL_TRNGCOUNT;
+
+
 /*
  *  =============================== UART ===============================
  */

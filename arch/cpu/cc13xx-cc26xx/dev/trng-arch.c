@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,83 +28,67 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-ieee-addr
+ * \addtogroup cc13xx-cc26xx-trng
  * @{
  *
  * \file
- * Driver for the CC13xx/CC26xx IEEE addresses
+ *        Implementation of True Random Number Generator for CC13xx/CC26xx.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "net/linkaddr.h"
 
-#include "rf-ieee-addr.h"
+#include "trng-arch.h"
 /*---------------------------------------------------------------------------*/
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.h>
+/*---------------------------------------------------------------------------*/
+/*
+ * Very dirty workaround because of the pre-compiled TI drivers library for
+ * CC13xx/CC26x0 is missing the CryptoKey object file.
+ */
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(inc/hw_memmap.h)
-#include DeviceFamily_constructPath(inc/hw_fcfg1.h)
-#include DeviceFamily_constructPath(inc/hw_ccfg.h)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+# include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintextCC26xx.c>
+#endif
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
-#include <string.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#define IEEE_MAC_PRIMARY_ADDRESS    (FCFG1_BASE + FCFG1_O_MAC_15_4_0)
-#define IEEE_MAC_SECONDARY_ADDRESS  (CCFG_BASE  + CCFG_O_IEEE_MAC_0)
-/*---------------------------------------------------------------------------*/
-#define IEEE_ADDR_SIZE              8
-/*---------------------------------------------------------------------------*/
-int
-ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
+void
+trng_init(void)
 {
-  if (len > IEEE_ADDR_SIZE) {
-    return -1;
+  TRNG_init();
+}
+/*---------------------------------------------------------------------------*/
+bool
+trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us)
+{
+  TRNG_Params trng_params;
+  TRNG_Handle trng_handle;
+  CryptoKey entropy_key;
+  int_fast16_t result;
+
+  TRNG_Params_init(&trng_params);
+  trng_params.returnBehavior = TRNG_RETURN_BEHAVIOR_BLOCKING;
+  if(timeout_us != TRNG_WAIT_FOREVER) {
+    trng_params.timeout = timeout_us;
   }
 
-  if(IEEE_ADDR_CONF_HARDCODED) {
-    const uint8_t ieee_addr_hc[IEEE_ADDR_SIZE] = IEEE_ADDR_CONF_ADDRESS;
-
-    memcpy(dst, &ieee_addr_hc[IEEE_ADDR_SIZE - len], len);
-  } else {
-    int i;
-
-    volatile const uint8_t * const primary   = (uint8_t *)IEEE_MAC_PRIMARY_ADDRESS;
-    volatile const uint8_t * const secondary = (uint8_t *)IEEE_MAC_SECONDARY_ADDRESS;
-
-    /* Reading from primary location... */
-    volatile const uint8_t *ieee_addr = primary;
-
-    /*
-     * ...unless we can find a byte != 0xFF in secondary
-     *
-     * Intentionally checking all 8 bytes here instead of len, because we
-     * are checking validity of the entire address irrespective of the
-     * actual number of bytes the caller wants to copy over.
-     */
-    for(i = 0; i < IEEE_ADDR_SIZE; i++) {
-      if(secondary[i] != 0xFF) {
-        /* A byte in the secondary location is not 0xFF. Use the secondary */
-        ieee_addr = secondary;
-        break;
-      }
-    }
-
-    /*
-     * We have chosen what address to read the address from. Do so,
-     * inverting byte order
-     */
-    for(i = 0; i < len; i++) {
-      dst[i] = ieee_addr[len - 1 - i];
-    }
+  trng_handle = TRNG_open(0, &trng_params);
+  if (!trng_handle) {
+    return false;
   }
 
-#ifdef IEEE_ADDR_NODE_ID
-  dst[len - 1] = (IEEE_ADDR_NODE_ID >> 0) & 0xFF;
-  dst[len - 2] = (IEEE_ADDR_NODE_ID >> 8) & 0xFF;
-#endif
+  CryptoKeyPlaintext_initBlankKey(&entropy_key, entropy_buf, entropy_len);
 
-  return 0;
+  result = TRNG_generateEntropy(trng_handle, &entropy_key);
+
+  TRNG_close(trng_handle);
+
+  return (result == TRNG_STATUS_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

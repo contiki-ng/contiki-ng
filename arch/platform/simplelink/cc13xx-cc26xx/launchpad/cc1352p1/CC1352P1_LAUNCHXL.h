@@ -405,6 +405,16 @@ typedef enum CC1352P1_LAUNCHXL_SPIName {
 } CC1352P1_LAUNCHXL_SPIName;
 
 /*!
+ *  @def    CC1352P1_LAUNCHXL_TRNGName
+ *  @brief  Enum of TRNGs
+ */
+typedef enum CC1352P1_LAUNCHXL_TRNGName {
+    CC1352P1_LAUNCHXL_TRNG0 = 0,
+
+    CC1352P1_LAUNCHXL_TRNGCOUNT
+} CC1352P1_LAUNCHXL_TRNGName;
+
+/*!
  *  @def    CC1352P1_LAUNCHXL_UARTName
  *  @brief  Enum of UARTs
  */

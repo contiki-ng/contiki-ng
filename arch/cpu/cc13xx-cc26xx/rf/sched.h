@@ -28,55 +28,51 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc13xx-cc26xx-cpu
- * @{
- *
- * \defgroup cc13xx-cc26xx-int-master CC13xx/CC26xx master interrupt manipulation
- *
- * Master interrupt manipulation routines for CC13xx/CC26xx.
- *
+ * \addtogroup rf-core
  * @{
  *
  * \file
- *        Master interrupt manipulation implementation for CC13xx/CC26xx.
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ *        Header file of the CC13xx/CC26xx RF scheduler.
  */
 /*---------------------------------------------------------------------------*/
+#ifndef RF_SCHED_H_
+#define RF_SCHED_H_
+/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "sys/int-master.h"
+#include "sys/process.h"
 /*---------------------------------------------------------------------------*/
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/cpu.h)
-
-#include <ti/drivers/dpl/HwiP.h>
+#include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-#include <stddef.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-void
-int_master_enable(void)
-{
-  HwiP_enable();
-}
+PROCESS_NAME(rf_sched_process);
 /*---------------------------------------------------------------------------*/
-int_master_status_t
-int_master_read_and_disable(void)
-{
-  return (int_master_status_t)HwiP_disable();
-}
+typedef enum {
+    RF_RESULT_OK = 0,
+    RF_RESULT_ERROR,
+} rf_result_t;
 /*---------------------------------------------------------------------------*/
-void
-int_master_status_set(int_master_status_t status)
-{
-  HwiP_restore((uintptr_t)status);
-}
+/* Common */
+rf_result_t rf_yield(void);
+
+rf_result_t rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm);
+rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm);
 /*---------------------------------------------------------------------------*/
-bool
-int_master_is_enabled(void)
-{
-  return CPUprimask() ? false : true;
-}
+/* Netstack radio: IEEE-mode or prop-mode */
+RF_Handle   netstack_open(RF_Params *params);
+
+rf_result_t netstack_sched_fs(void);
+rf_result_t netstack_sched_ieee_tx(bool ack_request);
+rf_result_t netstack_sched_prop_tx(void);
+rf_result_t netstack_sched_rx(bool start);
+rf_result_t netstack_stop_rx(void);
+/*---------------------------------------------------------------------------*/
+/* BLE radio: BLE Beacon Daemon */
+RF_Handle   ble_open(RF_Params *params);
+
+rf_result_t ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event);
+/*---------------------------------------------------------------------------*/
+#endif /* RF_SCHED_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

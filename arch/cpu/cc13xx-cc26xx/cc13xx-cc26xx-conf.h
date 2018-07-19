@@ -43,7 +43,7 @@
 /*---------------------------------------------------------------------------*/
 #include "cc13xx-cc26xx-def.h"
 
-#include "rf-core.h"
+#include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name GPIO HAL configuration.
@@ -68,7 +68,7 @@
 #ifndef RF_CONF_FAST_RADIO_STARTUP
 # define RF_FAST_RADIO_STARTUP        (MAC_CONF_WITH_TSCH)
 #else
-# define RF_FAST_RADIO_STARTUP        0
+# define RF_FAST_RADIO_STARTUP        RF_CONF_FAST_RADIO_STARTUP
 #endif
 
 /*

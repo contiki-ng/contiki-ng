@@ -39,7 +39,7 @@
 #include "contiki.h"
 #include "sys/cc.h"
 
-#include "rf-data-queue.h"
+#include "rf/data-queue.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)

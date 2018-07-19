@@ -339,6 +339,16 @@ typedef enum CC1350DK_7XD_SPIName {
 } CC1350DK_7XD_SPIName;
 
 /*!
+ *  @def    CC1350DK_7XD_TRNGName
+ *  @brief  Enum of TRNGs
+ */
+typedef enum CC1350DK_7XD_TRNGName {
+    CC1350DK_7XD_TRNG0 = 0,
+
+    CC1350DK_7XD_TRNGCOUNT
+} CC1350DK_7XD_TRNGName;
+
+/*!
  *  @def    CC1350DK_7XD_UARTName
  *  @brief  Enum of UARTs
  */

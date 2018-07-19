@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,36 +27,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx
+ * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
- * \defgroup cc26xx-gpio-hal CC13xx/CC26xx GPIO HAL implementation
+ * \defgroup cc13xx-cc26xx-gpio-hal CC13xx/CC26xx GPIO HAL implementation
  *
  * @{
  *
  * \file
- *     Header file for the CC13xx/CC26xx GPIO HAL functions
- *
+ *        Header file for the CC13xx/CC26xx GPIO HAL functions.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  * \note
- *     Do not include this header directly
+ *        Do not include this header directly.
  */
 /*---------------------------------------------------------------------------*/
 #ifndef GPIO_HAL_ARCH_H_
 #define GPIO_HAL_ARCH_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
+/*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/ioc.h)
 #include DeviceFamily_constructPath(driverlib/gpio.h)
 
-#include <ti/drivers/PIN.h>
 #include <ti/drivers/pin/PINCC26XX.h>
-
-#include <stdint.h>
-#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 #define gpio_hal_arch_pin_set_input(p)        PINCC26XX_setOutputEnable(p, false)
 #define gpio_hal_arch_pin_set_output(p)       PINCC26XX_setOutputEnable(p, true)

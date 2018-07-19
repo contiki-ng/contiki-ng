@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,35 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup cc13xx-cc26xx-platform
+ * @{
+ *
+ * \file
+ *        Implementation of the dbg module for CC13xx/CC26xx, used by stdio.
+ *        The dbg module is implemented by writing to UART0.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ */
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
 #include "sys/cc.h"
+/*---------------------------------------------------------------------------*/
+#include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-#include "uart0-arch.h"
-/*---------------------------------------------------------------------------*/
 int
 dbg_putchar(int c)
 {
-  const unsigned char ch = (unsigned char)c;
+  unsigned char ch;
+  int num_bytes;
 
-  const int num_bytes = (int)uart0_write(&ch, 1);
+  ch = (unsigned char)c;
+
+  num_bytes = (int)uart0_write(&ch, 1);
   return (num_bytes > 0)
     ? num_bytes
     : 0;
@@ -50,17 +64,21 @@ dbg_putchar(int c)
 unsigned int
 dbg_send_bytes(const unsigned char *seq, unsigned int len)
 {
-  const size_t seq_len = strlen((const char *)seq);
+  size_t seq_len;
+  size_t max_len;
+  int num_bytes;
 
-  const size_t max_len = MIN(seq_len, (size_t)len);
+  seq_len = strlen((const char *)seq);
+  max_len = MIN(seq_len, (size_t)len);
 
   if (max_len == 0) {
     return 0;
   }
 
-  const int num_bytes = (int)uart0_write(seq, max_len);
+  num_bytes = (int)uart0_write(seq, max_len);
   return (num_bytes > 0)
-      ? num_bytes
-      : 0;
+    ? num_bytes
+    : 0;
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

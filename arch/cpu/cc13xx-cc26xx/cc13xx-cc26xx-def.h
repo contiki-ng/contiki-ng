@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,11 +27,32 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \file
+ *        Header with configuration defines for the Contiki system.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ */
 /*---------------------------------------------------------------------------*/
 #ifndef CC13XX_CC26XX_DEF_H_
 #define CC13XX_CC26XX_DEF_H_
 /*---------------------------------------------------------------------------*/
-#include <cm4/cm4-def.h>
+#include <ti/devices/DeviceFamily.h>
+/*---------------------------------------------------------------------------*/
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+# include <cm3/cm3-def.h>
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
+# include <cm4/cm4-def.h>
+#endif
+/*---------------------------------------------------------------------------*/
+#include <stddef.h>
+/*---------------------------------------------------------------------------*/
+#define RTIMER_ARCH_SECOND               65536
+/*---------------------------------------------------------------------------*/
+#define INT_MASTER_CONF_STATUS_DATATYPE  uintptr_t
 /*---------------------------------------------------------------------------*/
 /* TSCH related defines */
 
@@ -45,7 +65,6 @@
 #define RADIO_DELAY_BEFORE_DETECT   ((unsigned)US_TO_RTIMERTICKS(352))
 
 /* Timer conversion; radio is running at 4 MHz */
-/* Timer conversion; radio is running at 4 MHz */
 #define RAT_SECOND            4000000u
 #define RAT_TO_RTIMER(X)      ((uint32_t)(((uint64_t)(X) * (RTIMER_SECOND / 256)) / (RAT_SECOND / 256)))
 #define USEC_TO_RAT(X)        ((X) * 4)
@@ -53,8 +72,6 @@
 #if (RTIMER_SECOND % 256) || (RAT_SECOND % 256)
 # error RAT_TO_RTIMER macro must be fixed!
 #endif
-
-#define USEC_TO_RADIO(X)     ((X) * 4)
 
 /* The PHY header (preamble + SFD, 4+1 bytes) duration is equivalent to 10 symbols */
 #define RADIO_IEEE_802154_PHY_HEADER_DURATION_USEC 160
@@ -72,7 +89,8 @@
 #endif
 
 #ifndef TSCH_CONF_BASE_DRIFT_PPM
-/* The drift compared to "true" 10ms slots.
+/*
+ * The drift compared to "true" 10ms slots.
  * Enable adaptive sync to enable compensation for this.
  * Slot length 10000 usec
  *             328 ticks
@@ -95,14 +113,17 @@
 #define TSCH_CONF_RX_WAIT 1800
 #endif
 /*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 65536
-/*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc13x2-cc26x2-cm4.h"
-
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+# define CMSIS_CONF_HEADER_PATH               "cc13x0-cc26x0-cm3.h"
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
+# define CMSIS_CONF_HEADER_PATH               "cc13x2-cc26x2-cm4.h"
+#endif
+/*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
 /*---------------------------------------------------------------------------*/
 #endif /* CC13XX_CC26XX_DEF_H_ */
 /*---------------------------------------------------------------------------*/
+/** @} */

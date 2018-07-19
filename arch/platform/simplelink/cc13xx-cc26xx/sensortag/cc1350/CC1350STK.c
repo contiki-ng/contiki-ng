@@ -611,6 +611,29 @@ const uint_least8_t SPI_count = CC1350STK_SPICOUNT;
 
 #endif /* TI_SPI_CONF_ENABLE */
 
+
+/*
+ *  =============================== TRNG ===============================
+ */
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/trng/TRNGCC26X0.h>
+
+TRNGCC26X0_Object trngCC26X0Object[CC1350STK_TRNGCOUNT];
+
+const TRNGCC26X0_HWAttrs trngCC26X0HWAttrs[CC1350STK_TRNGCOUNT] = {
+    {
+         .swiPriority = 0,
+         .intPriority = ~0,
+    }
+};
+
+const TRNG_Config TRNG_config[] = {
+    { &trngCC26X0Object[0], &trngCC26X0HWAttrs[0] },
+};
+
+const uint8_t TRNG_count = CC1350STK_TRNGCOUNT;
+
+
 /*
  *  =============================== UART ===============================
  */

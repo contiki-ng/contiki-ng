@@ -399,6 +399,16 @@ typedef enum CC26X2R1_LAUNCHXL_SPIName {
 } CC26X2R1_LAUNCHXL_SPIName;
 
 /*!
+ *  @def    CC26X2R1_LAUNCHXL_TRNGName
+ *  @brief  Enum of TRNGs
+ */
+typedef enum CC26X2R1_LAUNCHXL_TRNGName {
+    CC26X2R1_LAUNCHXL_TRNG0 = 0,
+
+    CC26X2R1_LAUNCHXL_TRNGCOUNT
+} CC26X2R1_LAUNCHXL_TRNGName;
+
+/*!
  *  @def    CC26X2R1_LAUNCHXL_UARTName
  *  @brief  Enum of UARTs
  */

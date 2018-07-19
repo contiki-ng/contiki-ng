@@ -67,23 +67,23 @@ EXTERNALDIRS += $(SDK_DEVICE)
 EXTERNALDIRS += $(SDK_DEVICE)/startup_files
 
 ### CPU-dependent source files
-CONTIKI_CPU_SOURCEFILES += rtimer-arch.c clock-arch.c
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c   clock-arch.c
 CONTIKI_CPU_SOURCEFILES += watchdog-arch.c dbg-arch.c
-CONTIKI_CPU_SOURCEFILES += uart0-arch.c slip-arch.c
-CONTIKI_CPU_SOURCEFILES += batmon-sensor.c gpio-hal-arch.c
-CONTIKI_CPU_SOURCEFILES += int-master-arch.c
+CONTIKI_CPU_SOURCEFILES += uart0-arch.c    slip-arch.c
+CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c int-master-arch.c
+CONTIKI_CPU_SOURCEFILES += random.c        trng-arch.c
 
 ### RF source files
-CONTIKI_CPU_SOURCEFILES += rf-sched.c rf-data-queue.c
-CONTIKI_CPU_SOURCEFILES += rf-ieee-addr.c rf-ble-addr.c
-CONTIKI_CPU_SOURCEFILES += rf-ble-beacond.c
+CONTIKI_CPU_SOURCEFILES += sched.c     data-queue.c
+CONTIKI_CPU_SOURCEFILES += ieee-addr.c ble-addr.c
+CONTIKI_CPU_SOURCEFILES += ble-beacond.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
-CONTIKI_CPU_SOURCEFILES += rf-prop-mode.c prop-settings.c
+CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c
 endif
 
 ifeq ($(SUPPORTS_IEEE_MODE),1)
-CONTIKI_CPU_SOURCEFILES += rf-ieee-mode.c ieee-settings.c
+CONTIKI_CPU_SOURCEFILES += ieee-mode.c ieee-settings.c
 endif
 
 ifeq ($(SUPPORTS_BLE_BEACON),1)
@@ -95,7 +95,7 @@ MODULES += os/lib/dbg-io
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev $(SUBFAMILY)
-CONTIKI_CPU_DIRS += rf-settings rf-settings/$(DEVICE_FAMILY_LC)
+CONTIKI_CPU_DIRS += rf rf-settings rf-settings/$(DEVICE_FAMILY_LC)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 

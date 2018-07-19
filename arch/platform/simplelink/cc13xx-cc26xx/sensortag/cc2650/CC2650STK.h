@@ -301,6 +301,16 @@ typedef enum CC2650STK_SPIName {
 } CC2650STK_SPIName;
 
 /*!
+ *  @def    CC2650STK_TRNGName
+ *  @brief  Enum of TRNGs
+ */
+typedef enum CC2650STK_TRNGName {
+    CC2650STK_TRNG0 = 0,
+
+    CC2650STK_TRNGCOUNT
+} CC2650STK_TRNGName;
+
+/*!
  *  @def    CC2650STK_UARTName
  *  @brief  Enum of UARTs
  */

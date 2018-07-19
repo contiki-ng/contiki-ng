@@ -52,9 +52,9 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-#include "rf-core.h"
-#include "rf-sched.h"
-#include "rf-data-queue.h"
+#include "rf/rf.h"
+#include "rf/sched.h"
+#include "rf/data-queue.h"
 #include "rf-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>

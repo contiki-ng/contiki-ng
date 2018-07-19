@@ -38,7 +38,6 @@
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-/* Contiki API */
 #include "contiki.h"
 #include "contiki-net.h"
 #include "sys/clock.h"
@@ -53,7 +52,6 @@
 #include "lib/random.h"
 #include "lib/sensors.h"
 /*---------------------------------------------------------------------------*/
-/* Simplelink SDK includes */
 #include <Board.h>
 #include <NoRTOS.h>
 
@@ -71,14 +69,13 @@
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/UART.h>
 /*---------------------------------------------------------------------------*/
-/* Arch driver implementations */
-#include "button-sensor.h"
 #include "board-peripherals.h"
 #include "uart0-arch.h"
+#include "trng-arch.h"
 /*---------------------------------------------------------------------------*/
-#include "rf-core.h"
-#include "rf-ieee-addr.h"
-#include "rf-ble-beacond.h"
+#include "rf/rf.h"
+#include "rf/ble-beacond.h"
+#include "rf/ieee-addr.h"
 /*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <string.h>
@@ -200,7 +197,15 @@ platform_init_stage_two(void)
   uart0_set_callback(serial_line_input_byte);
 #endif
 
-  random_init(0x1234);
+  /* Use TRNG to seed PRNG. If TRNG fails, use a hard-coded seed. */
+  unsigned short trn = 0;
+  trng_init();
+  bool result = trng_rand((uint8_t*)&trn, sizeof(trn), TRNG_WAIT_FOREVER);
+  if (!result) {
+    /* Default to some hard-coded seed. */
+    trn = 0x1234;
+  }
+  random_init(trn);
 
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);

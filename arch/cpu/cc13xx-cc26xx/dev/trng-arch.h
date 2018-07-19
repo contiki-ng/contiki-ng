@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,53 +29,45 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup rf-core
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-trng True Random Number Generator for CC13xx/CC26xx.
  * @{
  *
  * \file
- *        Header file of the CC13xx/CC26xx RF scheduler.
+ *        Header file of True Random Number Generator for CC13xx/CC26xx.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef RF_SCHED_H_
-#define RF_SCHED_H_
+#ifndef TRNG_ARCH_H_
+#define TRNG_ARCH_H_
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "sys/process.h"
-
-#include "rf-ble-beacond.h"
-/*---------------------------------------------------------------------------*/
-#include <ti/drivers/rf/RF.h>
+#include <contiki.h>
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
-PROCESS_NAME(rf_sched_process);
+#define TRNG_WAIT_FOREVER       (~(uint32_t)0)
 /*---------------------------------------------------------------------------*/
-typedef enum {
-    RF_RESULT_OK = 0,
-    RF_RESULT_ERROR,
-} rf_result_t;
-/*---------------------------------------------------------------------------*/
-/* Common */
-rf_result_t rf_yield(void);
+/**
+ * \breif  Initialize the TRNG module.
+ */
+void trng_init(void);
 
-rf_result_t rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm);
-rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm);
+/**
+ * \brief              Generates a stream of true random numbers. This is
+ *                     a blocking function call with a specified timeout.
+ * \param entropy_buf  Buffer to store a stream of entropy.
+ * \param entropy_len  Length of the entropy buffer.
+ * \param timeout_us   How long to wait until timing out the operation. A
+ *                     timeout of TRNG_WAIT_FOREVER blocks forever.
+ * \return             true if successful; else, false.
+ */
+bool trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us);
 /*---------------------------------------------------------------------------*/
-/* Netstack radio: IEEE-mode or prop-mode */
-RF_Handle   netstack_open(RF_Params *params);
-
-rf_result_t netstack_sched_fs(void);
-rf_result_t netstack_sched_ieee_tx(bool ack_request);
-rf_result_t netstack_sched_prop_tx(void);
-rf_result_t netstack_sched_rx(bool start);
-rf_result_t netstack_stop_rx(void);
-/*---------------------------------------------------------------------------*/
-/* BLE radio: BLE Beacon Daemon */
-RF_Handle   ble_open(RF_Params *params);
-
-rf_result_t ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event);
-/*---------------------------------------------------------------------------*/
-#endif /* RF_SCHED_H_ */
+#endif /* TRNG_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}
