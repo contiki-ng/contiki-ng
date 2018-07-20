@@ -49,6 +49,7 @@
 #endif
 /*---------------------------------------------------------------------------*/
 #include <stddef.h>
+#include <stdint.h>
 /*---------------------------------------------------------------------------*/
 #define RTIMER_ARCH_SECOND               65536
 /*---------------------------------------------------------------------------*/
@@ -115,9 +116,9 @@
 /*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
-# define CMSIS_CONF_HEADER_PATH               "cc13x0-cc26x0-cm3.h"
+# define CMSIS_CONF_HEADER_PATH              "cc13x0-cc26x0-cm3.h"
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
-# define CMSIS_CONF_HEADER_PATH               "cc13x2-cc26x2-cm4.h"
+# define CMSIS_CONF_HEADER_PATH              "cc13x2-cc26x2-cm4.h"
 #endif
 /*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes and memory barriers */

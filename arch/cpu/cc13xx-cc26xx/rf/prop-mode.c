@@ -56,11 +56,10 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* Platform RF dev */
-#include "dot-15-4g.h"
-#include "rf-core.h"
-#include "rf-data-queue.h"
-#include "netstack-settings.h"
-#include RF_PROP_SETTINGS
+#include "rf/dot-15-4g.h"
+#include "rf/sched.h"
+#include "rf/data-queue.h"
+#include "prop-settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
@@ -495,7 +494,7 @@ pending_packet(void)
   } while (curr_entry != read_entry);
 
   if (num_pending > 0) {
-    process_poll(&rf_core_process);
+    process_poll(&rf_sched_process);
   }
 
   /* If we didn't find an entry at status finished, no frames are pending */
@@ -691,7 +690,7 @@ init(void)
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
   /* Start RF process */
-  process_start(&rf_core_process, NULL);
+  process_start(&rf_sched_process, NULL);
 
   return RF_RESULT_OK;
 }

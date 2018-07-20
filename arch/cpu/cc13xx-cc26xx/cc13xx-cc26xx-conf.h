@@ -55,6 +55,20 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
+ * \name Watchdog Configuration.
+ *
+ * @{
+ */
+#ifndef WATCHDOG_CONF_DISABLE
+#define WATCHDOG_CONF_DISABLE               0
+#endif
+
+#ifndef WATCHDOG_CONF_TIMER_TOP
+#define WATCHDOG_CONF_TIMER_TOP             0xFFFFF
+#endif
+ /** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name RF configuration.
  *
  * @{

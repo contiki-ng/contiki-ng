@@ -28,23 +28,27 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-char-io
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-slip-arch SLIP for CC13xx/CC26xx.
  * @{
  *
  * \file
- * Arch-specific SLIP functions for the CC13xx/CC26xx
+ *        Implementation of SLIP driver for CC13xx/CC26xx.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-#include <contiki.h>
-#include <dev/slip.h>
+#include "contiki.h"
+#include "dev/slip.h"
 /*---------------------------------------------------------------------------*/
-#include "dev/uart0-arch.h"
+#include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Write a byte over SLIP
- * \param c the byte
+ * \brief    Write a single byte over SLIP.
+ * \param c  The byte to write.
  */
 void
 slip_arch_writeb(unsigned char c)
@@ -53,16 +57,20 @@ slip_arch_writeb(unsigned char c)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Initialise the arch-specific SLIP driver
+ * \brief  Initialize the SLIP driver.
  */
 void
-slip_arch_init()
+slip_arch_init(void)
 {
-  // Enable an input handler. In doing so, the driver will make sure that UART
-  // RX stays operational during deep sleep
+  /*
+   * Set an input handler. In doing so, the driver will make sure that UART
+   * RX stays operational during deep sleep.
+   */
   uart0_init();
   uart0_set_callback(slip_input_byte);
 }
 /*---------------------------------------------------------------------------*/
-
-/** @} */
+/**
+ * @}
+ * @}
+ */

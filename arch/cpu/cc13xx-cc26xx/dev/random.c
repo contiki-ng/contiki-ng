@@ -29,14 +29,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc13xx-cc26xx-prng
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-prng Pseudo Random Number Generator (PRNG) for CC13xx/CC26xx.
  * @{
  *
  * Implementation based on Bob Jenkins' small noncryptographic PRNG.
- *  http://burtleburtle.net/bob/rand/smallprng.html
+ * - http://burtleburtle.net/bob/rand/smallprng.html
+ *
+ * This file overrides os/lib/random.c. Note that the file name must
+ * match the original file for the override to work.
  *
  * \file
- *        This file overrides os/lib/random.c.
+ *        Implementation of Pseudo Random Number Generator for CC13xx/CC26xx.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
@@ -75,8 +81,8 @@ random_rand(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief  Function required by the API
- * \param  seed Ignored.
+ * \brief       Initialize the PRNG.
+ * \param seed  Seed for the PRNG.
  */
 void
 random_init(unsigned short seed)
@@ -91,5 +97,6 @@ random_init(unsigned short seed)
 }
 /*---------------------------------------------------------------------------*/
 /**
+ * @}
  * @}
  */

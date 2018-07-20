@@ -67,6 +67,7 @@
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/SPI.h>
+#include <ti/drivers/TRNG.h>
 #include <ti/drivers/UART.h>
 /*---------------------------------------------------------------------------*/
 #include "board-peripherals.h"
@@ -152,7 +153,7 @@ platform_init_stage_one(void)
      * Something is seriously wrong if PIN initialization of the Board GPIO
      * table fails.
      */
-    while (1);
+    for (;;);
   }
 
   /* Perform board-specific initialization */
@@ -178,6 +179,8 @@ platform_init_stage_one(void)
   NVS_init();
 #endif
 
+  TRNG_init();
+
   fade(LEDS_GREEN);
 
   /* NoRTOS must be called last */
@@ -198,14 +201,12 @@ platform_init_stage_two(void)
 #endif
 
   /* Use TRNG to seed PRNG. If TRNG fails, use a hard-coded seed. */
-  unsigned short trn = 0;
-  trng_init();
-  bool result = trng_rand((uint8_t*)&trn, sizeof(trn), TRNG_WAIT_FOREVER);
-  if (!result) {
+  unsigned short seed = 0;
+  if (!trng_rand((uint8_t*)&seed, sizeof(seed), TRNG_WAIT_FOREVER)) {
     /* Default to some hard-coded seed. */
-    trn = 0x1234;
+    seed = 0x1234;
   }
-  random_init(trn);
+  random_init(seed);
 
   /* Populate linkaddr_node_addr */
   ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);

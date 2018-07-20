@@ -46,8 +46,8 @@
 #include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.h>
 /*---------------------------------------------------------------------------*/
 /*
- * Very dirty workaround because of the pre-compiled TI drivers library for
- * CC13xx/CC26x0 is missing the CryptoKey object file.
+ * Very dirty workaround because the pre-compiled TI drivers library for
+ * CC13x0/CC26x0 is missing the CryptoKey object file.
  */
 #include <ti/devices/DeviceFamily.h>
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
@@ -57,18 +57,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-void
-trng_init(void)
-{
-  TRNG_init();
-}
-/*---------------------------------------------------------------------------*/
 bool
 trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us)
 {
-  TRNG_Params trng_params;
-  TRNG_Handle trng_handle;
-  CryptoKey entropy_key;
+  TRNG_Params  trng_params;
+  TRNG_Handle  trng_handle;
+  CryptoKey    entropy_key;
   int_fast16_t result;
 
   TRNG_Params_init(&trng_params);
@@ -78,7 +72,7 @@ trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us)
   }
 
   trng_handle = TRNG_open(0, &trng_params);
-  if (!trng_handle) {
+  if(!trng_handle) {
     return false;
   }
 

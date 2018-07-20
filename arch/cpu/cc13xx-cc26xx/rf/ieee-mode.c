@@ -79,9 +79,9 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 #if 1
-# define PRINTF(...)
-#else
 # define PRINTF(...)  printf(__VA_ARGS__)
+#else
+# define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
 /* Configuration parameters */
@@ -419,6 +419,8 @@ init(void)
   }
 
   set_channel(DOT_15_4G_DEFAULT_CHAN);
+
+  rf_set_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, TX_POWER_MAX);
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 

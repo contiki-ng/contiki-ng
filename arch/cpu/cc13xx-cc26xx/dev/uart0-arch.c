@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -27,99 +28,102 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-uart
+ * \addtogroup cc13xx-cc26xx-uart
  * @{
  *
  * \file
- * Implementation of the CC13xx/CC26xx UART driver.
+ *        Implementation of UART driver for CC13xx/CC26xx.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+/*---------------------------------------------------------------------------*/
+#include "uart0-arch.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
 
 #include <ti/drivers/UART.h>
 /*---------------------------------------------------------------------------*/
-#include <contiki.h>
-/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#include "uart0-arch.h"
-/*---------------------------------------------------------------------------*/
-static UART_Handle gh_uart;
+static UART_Handle uart_handle;
 
-static volatile uart0_input_cb curr_input_cb;
+static volatile uart0_input_fxn_t curr_input_cb;
 static unsigned char char_buf;
 
-static bool is_init;
+static bool initialized;
 /*---------------------------------------------------------------------------*/
 static void
 uart0_cb(UART_Handle handle, void *buf, size_t count)
 {
-  if (!curr_input_cb) { return; }
+  /* Simply return if the current callback is NULL. */
+  if(!curr_input_cb) { return; }
 
   /*
-   * Save the current callback function, as this might be overwritten after
-   * the callback is called.
+   * Save the current callback function locally, as it might be overwritten
+   * after calling the callback.
    */
-  const uart0_input_cb currCb = curr_input_cb;
-  /* Call the callback. Note this might reset curr_input_cb */
-  currCb(char_buf);
+  const uart0_input_fxn_t curr_cb = curr_input_cb;
+  curr_cb(char_buf);
   /*
    * If curr_input_cb didn't change after the call, do another read.
    * Else, the uart0_set_callback was called with a different callback pointer
    * and triggered an another read.
    */
-  if (currCb == curr_input_cb) {
-    UART_read(gh_uart, &char_buf, 1);
+  if(curr_cb == curr_input_cb) {
+    UART_read(uart_handle, &char_buf, 1);
   }
 }
 /*---------------------------------------------------------------------------*/
 void
 uart0_init(void)
 {
-  if (is_init) { return; }
-  is_init = true;
+  if(initialized) { return; }
 
-  UART_Params params;
-  UART_Params_init(&params);
+  UART_Params uart_params;
+  UART_Params_init(&uart_params);
 
-  params.baudRate       = TI_UART_CONF_BAUD_RATE;
-  params.readMode       = UART_MODE_CALLBACK;
-  params.writeMode      = UART_MODE_BLOCKING;
-  params.readCallback   = uart0_cb;
-  params.readDataMode   = UART_DATA_TEXT;
-  params.readReturnMode = UART_RETURN_NEWLINE;
+  uart_params.baudRate       = TI_UART_CONF_BAUD_RATE;
+  uart_params.readMode       = UART_MODE_CALLBACK;
+  uart_params.writeMode      = UART_MODE_BLOCKING;
+  uart_params.readCallback   = uart0_cb;
+  uart_params.readDataMode   = UART_DATA_TEXT;
+  uart_params.readReturnMode = UART_RETURN_NEWLINE;
 
-  gh_uart = UART_open(Board_UART0, &params);
+  /* No error handling. */
+  uart_handle = UART_open(Board_UART0, &uart_params);
+
+  initialized = true;
 }
 /*---------------------------------------------------------------------------*/
 int_fast32_t
-uart0_write(const void *buffer, size_t size)
+uart0_write(const void *buf, size_t buf_size)
 {
-  if (!is_init) {
+  if(!initialized) {
     return UART_STATUS_ERROR;
   }
-  return UART_write(gh_uart, buffer, size);
+  return UART_write(uart_handle, buf, buf_size);
 }
 /*---------------------------------------------------------------------------*/
 int_fast32_t
-uart0_set_callback(uart0_input_cb input_cb)
+uart0_set_callback(uart0_input_fxn_t input_cb)
 {
-  if (!is_init) {
+  if(!initialized) {
     return UART_STATUS_ERROR;
   }
 
-  if (curr_input_cb == input_cb) {
+  if(curr_input_cb == input_cb) {
     return UART_STATUS_SUCCESS;
   }
 
   curr_input_cb = input_cb;
-  if (input_cb) {
-    return UART_read(gh_uart, &char_buf, 1);
+  if(input_cb) {
+    return UART_read(uart_handle, &char_buf, 1);
   } else {
-    UART_readCancel(gh_uart);
+    UART_readCancel(uart_handle);
     return UART_STATUS_SUCCESS;
   }
 }

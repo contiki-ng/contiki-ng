@@ -44,7 +44,7 @@
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/mac/mac.h"
-
+#include "lib/random.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
@@ -81,6 +81,8 @@
 /*---------------------------------------------------------------------------*/
 /* Synth re-calibration every 3 minutes */
 #define SYNTH_RECAL_INTERVAL (CLOCK_SECOND * 60 * 3)
+/* Set re-calibration interval with a jitter of 10 seconds */
+#define SYNTH_RECAL_JITTER   (CLOCK_SECOND * 10)
 
 static struct etimer synth_recal_timer;
 /*---------------------------------------------------------------------------*/
@@ -105,9 +107,18 @@ cmd_rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
 
   if (events & RF_EventRxBufFull) {
     rx_buf_full = true;
-
     process_poll(&rf_sched_process);
   }
+}
+/*---------------------------------------------------------------------------*/
+static inline clock_time_t
+synth_recal_interval(void)
+{
+  /*
+   * Add jitter centered around SYNTH_RECAL_INTERVAL,
+   * giving a +- jitter halved.
+   */
+  return SYNTH_RECAL_INTERVAL + (random_rand() % SYNTH_RECAL_JITTER) - (SYNTH_RECAL_JITTER / 2);
 }
 /*---------------------------------------------------------------------------*/
 static inline bool
@@ -241,12 +252,12 @@ netstack_sched_fs(void)
    *
    * For Prop-mode, the synth is always manually calibrated with CMD_FS.
    */
-#if (RF_CORE_CONF_MODE == RF_CORE_MODE_2_4_GHZ)
+#if (RF_MODE == RF_CORE_MODE_2_4_GHZ)
   if (rx_key) {
     cmd_rx_restore(rx_key);
     return RF_RESULT_OK;
   }
-#endif /* RF_CORE_CONF_MODE == RF_CORE_MODE_2_4_GHZ */
+#endif /* RF_MODE == RF_CORE_MODE_2_4_GHZ */
 
   RF_EventMask events;
   bool synth_error = false;
@@ -518,11 +529,18 @@ PROCESS_THREAD(rf_sched_process, ev, data)
 
   while(1) {
     PROCESS_YIELD_UNTIL((ev == PROCESS_EVENT_POLL) ||
-                        etimer_expired(&synth_recal_timer));
+                        (ev == PROCESS_EVENT_TIMER));
+
+    /* start the synth re-calibration timer once. */
+    if (rf_is_on) {
+      rf_is_on = false;
+      etimer_set(&synth_recal_timer, synth_recal_interval());
+    }
 
     if (ev == PROCESS_EVENT_POLL) {
       do {
         watchdog_periodic();
+
         packetbuf_clear();
         len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
@@ -531,7 +549,7 @@ PROCESS_THREAD(rf_sched_process, ev, data)
          * RX after we've freed at least on packet.
          */
         if (rx_buf_full) {
-          PRINTF("rf_core: RX buf full, restart RX\n");
+          PRINTF("rf_core: RX buf full, restart RX status=0x%04x\n", CMD_STATUS(netstack_cmd_rx));
           rx_buf_full = false;
 
           /* Restart RX. */
@@ -547,16 +565,13 @@ PROCESS_THREAD(rf_sched_process, ev, data)
       } while(len > 0);
     }
 
-    /* start the synth re-calibration timer once. */
-    if (rf_is_on) {
-      rf_is_on = false;
-      etimer_set(&synth_recal_timer, SYNTH_RECAL_INTERVAL);
-    }
     /* Scheduling CMD_FS will re-calibrate the synth. */
-    if (etimer_expired(&synth_recal_timer)) {
+    if ((ev == PROCESS_EVENT_TIMER) &&
+        etimer_expired(&synth_recal_timer)) {
+      PRINTF("rf_core: Re-calibrate synth\n");
       netstack_sched_fs();
 
-      etimer_reset(&synth_recal_timer);
+      etimer_set(&synth_recal_timer, synth_recal_interval());
     }
   }
   PROCESS_END();

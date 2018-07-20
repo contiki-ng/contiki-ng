@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -32,8 +33,12 @@
  * @{
  *
  * \file
- * Implementation of the arch-specific rtimer functions for the CC13xx/CC26xx
+ *        Implementation of the rtimer driver for CC13xx/CC26xx.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/aon_event.h)
@@ -41,29 +46,29 @@
 #include DeviceFamily_constructPath(driverlib/interrupt.h)
 
 #include <ti/drivers/dpl/ClockP.h>
+#include <ti/drivers/dpl/HwiP.h>
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-/*---------------------------------------------------------------------------*/
+#include <stddef.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 #define HWIP_RTC_CH     AON_RTC_CH0
 #define RTIMER_RTC_CH   AON_RTC_CH1
 /*---------------------------------------------------------------------------*/
-static ClockP_Struct gClk;
-static ClockP_Handle hClk;
-/*---------------------------------------------------------------------------*/
-typedef void (*IsrFxn)(void);
-typedef void (*HwiDispatchFxn)(void);
+typedef void (*isr_fxn_t)(void);
+typedef void (*hwi_dispatch_fxn_t)(void);
 
-static volatile HwiDispatchFxn hwiDispatch = NULL;
+static hwi_dispatch_fxn_t hwi_dispatch_fxn;
 /*---------------------------------------------------------------------------*/
 /**
- * \brief TODO
+ * \brief  Stub function used when creating the dummy clock object.
  */
-static void rtimer_clock_stub(uintptr_t arg) { /* do nothing */ }
+static void rtimer_clock_stub(uintptr_t unused) { (void)unused; /* do nothing */ }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief TODO
+ * \brief  The Man-in-the-Middle ISR hook for the HWI dispatch ISR. This
+ *         will be the ISR dispatched when INT_AON_RTC_COMB is triggered,
+ *         and will either dispatch the interrupt to the rtimer driver or
+ *         the HWI driver, depening on which event triggered the interrupt.
  */
 static void
 rtimer_isr_hook(void)
@@ -75,9 +80,13 @@ rtimer_isr_hook(void)
 
     rtimer_run_next();
   }
-  if (hwiDispatch && AONRTCEventGet(HWIP_RTC_CH))
+  /*
+   * HWI Dispatch clears the interrupt. If HWI wasn't triggered, clear
+   * the interrupt manually.
+   */
+  if (AONRTCEventGet(HWIP_RTC_CH))
   {
-    hwiDispatch();
+    hwi_dispatch_fxn();
   }
   else
   {
@@ -91,50 +100,73 @@ rtimer_isr_hook(void)
 void
 rtimer_arch_init(void)
 {
-  const bool intkey = IntMasterDisable();
+  uintptr_t key;
+  ClockP_Struct clk_object;
+  ClockP_Params clk_params;
+  volatile isr_fxn_t *ramvec_table;
 
-  // Create dummy clock to trigger init of the RAM vector table
-  ClockP_Params clkParams;
-  ClockP_Params_init(&clkParams);
-  hClk = ClockP_construct(&gClk, rtimer_clock_stub, 0, &clkParams);
+  key = HwiP_disable();
 
-  // Try to access the RAM vector table
-  volatile IsrFxn * const pfnRAMVectors = (volatile IsrFxn *)(HWREG(NVIC_VTABLE));
-  if (!pfnRAMVectors)
+  /*
+   * Create a dummy clock to guarantee the RAM vector table is initialized.
+   *
+   * Creating a dummy clock will trigger initialization of TimerP, which
+   * subsequently initializes the driverlib/interrupt.h module. It is the
+   * interrupt module that initializes the RAM vector table.
+   *
+   * It is safe to destruct the Clock object immediately afterwards.
+   */
+  ClockP_Params_init(&clk_params);
+  ClockP_construct(&clk_object, rtimer_clock_stub, 0, &clk_params);
+  ClockP_destruct(&clk_object);
+
+  /* Try to access the RAM vector table. */
+  ramvec_table = (isr_fxn_t*)HWREG(NVIC_VTABLE);
+  if (!ramvec_table)
   {
+    /*
+     * Unable to find the RAM vector table is a serious fault.
+     * Spin-lock forever.
+     */
     for (;;) { /* hang */ }
   }
 
-  // The HWI Dispatch ISR should be located at int num INT_AON_RTC_COMB.
-  // Fetch and store it.
-  hwiDispatch = (HwiDispatchFxn)pfnRAMVectors[INT_AON_RTC_COMB];
-  if (!hwiDispatch)
+  /*
+   * The HWI Dispatch ISR is located at interrupt number INT_AON_RTC_COMB
+   * in the RAM vector table. Fetch and store it.
+   */
+  hwi_dispatch_fxn = (hwi_dispatch_fxn_t)ramvec_table[INT_AON_RTC_COMB];
+  if (!hwi_dispatch_fxn)
   {
+    /*
+     * Unable to find the HWI dispatch ISR in the RAM vector table is
+     * a serious fault. Spin-lock forever.
+     */
     for (;;) { /* hang */ }
   }
 
-  // Override the INT_AON_RTC_COMB int num with own ISR hook
+  /*
+   * Override the INT_AON_RTC_COMB interrupt number with our own ISR hook,
+   * which will act as a man-in-the-middle ISR for the HWI dispatch.
+   */
   IntRegister(INT_AON_RTC_COMB, rtimer_isr_hook);
 
   AONEventMcuWakeUpSet(AON_EVENT_MCU_WU1, AON_EVENT_RTC_CH1);
   AONRTCCombinedEventConfig(HWIP_RTC_CH | RTIMER_RTC_CH);
 
-  if (!intkey)
-  {
-    IntMasterEnable();
-  }
+  HwiP_restore(key);
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Schedules an rtimer task to be triggered at time t
- * \param t The time when the task will need executed.
+ * \brief    Schedules an rtimer task to be triggered at time \p t.
+ * \param t  The time when the task will need executed.
  *
- * \e t is an absolute time, in other words the task will be executed AT
- * time \e t, not IN \e t rtimer ticks.
+ *           \p t is an absolute time, in other words the task will be
+ *           executed AT time \p t, not IN \p t rtimer ticks.
  *
- * This function schedules a one-shot event with the AON RTC.
+ *           This function schedules a one-shot event with the AON RTC.
  *
- * This functions converts \e to a value suitable for the AON RTC.
+ *           This functions converts \p t to a value suitable for the AON RTC.
  */
 void
 rtimer_arch_schedule(rtimer_clock_t t)
@@ -145,17 +177,16 @@ rtimer_arch_schedule(rtimer_clock_t t)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns the current real-time clock time
- * \return The current rtimer time in ticks
+ * \brief   Returns the current real-time clock time.
+ * \return  The current rtimer time in ticks.
  *
- * The value is read from the AON RTC counter and converted to a number of
- * rtimer ticks
- *
+ *          The value is read from the AON RTC counter and converted to a
+ *          number of rtimer ticks.
  */
 rtimer_clock_t
 rtimer_arch_now()
 {
-  return ((rtimer_clock_t)AONRTCCurrentCompareValueGet());
+  return (rtimer_clock_t)AONRTCCurrentCompareValueGet();
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

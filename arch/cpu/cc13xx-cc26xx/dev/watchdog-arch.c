@@ -28,10 +28,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-clocks
+ * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
- * \defgroup cc26xx-wdt CC13xx/CC26xx watchdog timer driver
+ * \defgroup cc13xx-cc26xx-watchdog CC13xx/CC26xx watchdog timer driver
  *
  * Driver for the CC13xx/CC26xx Watchdog Timer
  *
@@ -53,66 +53,85 @@
 #include <stdbool.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-#ifdef CONTIKI_WATCHDOG_CONF_TIMER_TOP
-#define CONTIKI_WATCHDOG_TIMER_TOP CONTIKI_WATCHDOG_CONF_TIMER_TOP
-#else
-#define CONTIKI_WATCHDOG_TIMER_TOP 0xFFFFF
-#endif
+#define WATCHDOG_DISABLE    WATCHDOG_CONF_DISABLE
+#define WATCHDOG_TIMER_TOP  WATCHDOG_CONF_TIMER_TOP
 /*---------------------------------------------------------------------------*/
-static Watchdog_Handle wd_handle;
+static Watchdog_Handle wdt_handle;
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Initialises the CC26xx WDT
+ * \brief  Initialises the Watchdog module.
  *
- * Simply sets the reload counter to a default value. The WDT is not started
- * yet. To start it, watchdog_start() must be called.
+ *         Simply sets the reload counter to a default value. The WDT is not
+ *         started yet. To start it, watchdog_start() must be called.
  */
 void
 watchdog_init(void)
 {
+  if(WATCHDOG_DISABLE) {
+    return;
+  }
+
   Watchdog_init();
 
-  Watchdog_Params params;
-  Watchdog_Params_init(&params);
-  params.resetMode = Watchdog_RESET_ON;
-  params.debugStallMode = Watchdog_DEBUG_STALL_ON;
+  Watchdog_Params wdt_params;
+  Watchdog_Params_init(&wdt_params);
 
-  wd_handle = Watchdog_open(Board_WATCHDOG0, &params);
+  wdt_params.resetMode      = Watchdog_RESET_ON;
+  wdt_params.debugStallMode = Watchdog_DEBUG_STALL_ON;
+
+  wdt_handle = Watchdog_open(Board_WATCHDOG0, &wdt_params);
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Starts the CC26xx WDT
+ * \brief  Start the Watchdog.
  */
 void
 watchdog_start(void)
 {
+  if(WATCHDOG_DISABLE) {
+    return;
+  }
+
   watchdog_periodic();
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Refreshes the CC26xx WDT
+ * \brief  Refresh (feed) the Watchdog.
  */
 void
 watchdog_periodic(void)
 {
-  Watchdog_setReload(wd_handle, CONTIKI_WATCHDOG_TIMER_TOP);
+  if(WATCHDOG_DISABLE) {
+    return;
+  }
+
+  Watchdog_setReload(wdt_handle, WATCHDOG_TIMER_TOP);
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Stops the WDT such that it won't timeout and cause MCU reset
+ * \brief  Stop the Watchdog such that it won't timeout and cause a
+ *         system reset.
  */
 void
 watchdog_stop(void)
 {
-  Watchdog_clear(wd_handle);
+  if(WATCHDOG_DISABLE) {
+    return;
+  }
+
+  Watchdog_clear(wdt_handle);
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Manually trigger a WDT reboot
+ * \brief  Manually trigger a Watchdog timeout.
  */
 void
 watchdog_reboot(void)
 {
+  if(WATCHDOG_DISABLE) {
+    return;
+  }
+
   watchdog_start();
   while(1);
 }

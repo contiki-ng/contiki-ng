@@ -52,13 +52,9 @@
 #define TRNG_WAIT_FOREVER       (~(uint32_t)0)
 /*---------------------------------------------------------------------------*/
 /**
- * \breif  Initialize the TRNG module.
- */
-void trng_init(void);
-
-/**
- * \brief              Generates a stream of true random numbers. This is
- *                     a blocking function call with a specified timeout.
+ * \brief              Generates a stream of entropy from which you can create
+ *                     a true random number from. This is a blocking function
+ *                     call with a specified timeout.
  * \param entropy_buf  Buffer to store a stream of entropy.
  * \param entropy_len  Length of the entropy buffer.
  * \param timeout_us   How long to wait until timing out the operation. A

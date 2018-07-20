@@ -28,16 +28,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx
+ * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
- * \defgroup cc26xx-uart CC13xx/CC26xx UARTs
+ * \defgroup cc13xx-cc26xx-uart UART for CC13xx/CC26xx.
  *
- * Driver for the CC13xx/CC26xx UART controller
+ * This particular driver utilizes the UART0 peripheral specifically.
+ *
+ * Driver for the CC13xx/CC26xx UART controller.
  * @{
  *
  * \file
- * Header file for the CC13xx/CC26xx UART driver
+ *        Header file of UART driver for CC13xx/CC26xx.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 #ifndef UART0_ARCH_H_
 #define UART0_ARCH_H_
@@ -45,37 +49,31 @@
 #include <stddef.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-typedef int (*uart0_input_cb)(unsigned char);
+typedef int (*uart0_input_fxn_t)(unsigned char);
 /*---------------------------------------------------------------------------*/
-/** \name UART functions
- * @{
- */
-
 /**
- * \brief Initializes the UART driver
+ * \brief  Initializes the UART driver.
  */
 void uart0_init(void);
 
 /**
- * \brief       Writes data from a memory buffer to the UART interface.
- * \param buffer A pointer to the data buffer.
- * \param size  Size of the data buffer.
- * \return      Number of bytes that has been written to the UART. If an
- *              error occurs, a negative value is returned.
+ * \brief           Writes data from a memory buffer to the UART interface.
+ * \param buf       A pointer to the data buffer.
+ * \param buf_size  Size of the data buffer.
+ * \return          Number of bytes that has been written to the UART. If an
+ *                  error occurs, a negative value is returned.
  */
-int_fast32_t uart0_write(const void *buffer, size_t size);
+int_fast32_t uart0_write(const void *buf, size_t buf_size);
 
 /**
- * \brief       Sets the callback function for when bytes are received
- *              on UART0.
- * \param input_cb Pointer to the callback function. A valid pointer subscribes
- *              for UART0 callbacks when bytes are received, while a NULL pointer
- *              unsubscribes.
- * \return      0 for success, negative value for errors.
+ * \brief           Set the callback function for when bytes are received
+ *                  on UART0.
+ * \param input_cb  Pointer to the callback function. A valid pointer
+ *                  subscribes for UART0 callbacks when bytes are received,
+ *                  while a NULL pointer unsubscribes.
+ * \return          0 for success, negative value for errors.
  */
-int_fast32_t uart0_set_callback(uart0_input_cb input_cb);
-
-/** @} */
+int_fast32_t uart0_set_callback(uart0_input_fxn_t input_cb);
 /*---------------------------------------------------------------------------*/
 #endif /* UART0_ARCH_H_ */
 /**
