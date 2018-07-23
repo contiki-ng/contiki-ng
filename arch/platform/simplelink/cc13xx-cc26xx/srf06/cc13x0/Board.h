@@ -34,6 +34,7 @@
 #define __BOARD_H
 
 #define Board_CC1350DK_7XD
+#define BOARD_STRING    "TI SmartRF06EB + CC13x0 EM"
 
 #ifdef __cplusplus
 extern "C" {

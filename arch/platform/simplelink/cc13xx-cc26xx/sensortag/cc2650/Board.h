@@ -34,6 +34,7 @@
 #define __BOARD_H
 
 #define Board_CC2650STK
+#define BOARD_STRING    "TI CC2650 SensorTag"
 
 #ifdef __cplusplus
 extern "C" {

@@ -34,6 +34,7 @@
 #define __BOARD_H
 
 #define Board_CC1352P_4_LAUNCHXL
+#define BOARD_STRING    "TI CC1352P-4 LaunchPad"
 
 #ifdef __cplusplus
 extern "C" {
