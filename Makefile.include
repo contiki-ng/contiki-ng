@@ -41,8 +41,8 @@ endif
 
 # Prevent Make from remaking any makefiles. This was particularly an
 # issue when you had a Makefile with a suffix equal to that of $(TARGET),
-# as it managed to match with the %.$(TARGET) rule, which in turn fucked up
-# everything. Now this isn't the case.
+# as it managed to match with the %.$(TARGET) rule, which in turn screwed
+# everything up.
 Makefile.%: ;
 
 OBJECTDIR := obj_$(TARGET)
