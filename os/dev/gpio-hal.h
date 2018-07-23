@@ -127,8 +127,8 @@ typedef void (*gpio_hal_callback_t)(gpio_hal_pin_mask_t pin_mask);
 #define GPIO_HAL_PIN_CFG_INPUT_PULLUP           (1 << 1)
 #define GPIO_HAL_PIN_CFG_INPUT_PULLDOWN         (2 << 1)
 
-#define GPIO_HAL_PIN_BM_INPUT_HYSTERESIS        (0b00000001 << 0)
-#define GPIO_HAL_PIN_BM_INPUT_PULLING           (0b00000110 << 0)
+#define GPIO_HAL_PIN_BM_INPUT_HYSTERESIS        (0x01 << 0)  /**< 0b00000001 */
+#define GPIO_HAL_PIN_BM_INPUT_PULLING           (0x06 << 0)  /**< 0b00000110 */
 #define GPIO_HAL_PIN_BM_INPUT                   ( GPIO_HAL_PIN_BM_INPUT_HYSTERESIS \
                                                 | GPIO_HAL_PIN_BM_INPUT_PULLING)
 
@@ -140,9 +140,9 @@ typedef void (*gpio_hal_callback_t)(gpio_hal_pin_mask_t pin_mask);
 #define GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED      (1 << 6)
 #define GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MAX      (2 << 6)
 
-#define GPIO_HAL_PIN_BM_OUTPUT_BUF              (0b00011000 << 0)
-#define GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL         (0b00100000 << 0)
-#define GPIO_HAL_PIN_BM_OUTPUT_DRVSTR           (0b11000000 << 0)
+#define GPIO_HAL_PIN_BM_OUTPUT_BUF              (0x18 << 0)  /**< 0b00011000 */
+#define GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL         (0x20 << 0)  /**< 0b00100000 */
+#define GPIO_HAL_PIN_BM_OUTPUT_DRVSTR           (0xC0 << 0)  /**< 0b11000000 */
 #define GPIO_HAL_PIN_BM_OUTPUT                  ( GPIO_HAL_PIN_BM_OUTPUT_BUF \
                                                 | GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL \
                                                 | GPIO_HAL_PIN_BM_OUTPUT_DRVSTR)
@@ -152,7 +152,7 @@ typedef void (*gpio_hal_callback_t)(gpio_hal_pin_mask_t pin_mask);
 #define GPIO_HAL_PIN_CFG_INT_RISING             (2 << 8)
 #define GPIO_HAL_PIN_CFG_INT_BOTH               (3 << 8)
 
-#define GPIO_HAL_PIN_BM_INT                     (0b00000011 << 8)
+#define GPIO_HAL_PIN_BM_INT                     (0x03 << 8)  /**< 0b00000011 */
 
 #define GPIO_HAL_PIN_BM_ALL                     ( GPIO_HAL_PIN_BM_INPUT \
                                                 | GPIO_HAL_PIN_BM_OUTPUT \
