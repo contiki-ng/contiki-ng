@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,19 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup rf-core
+ * \addtogroup cc13xx-cc26xx-rf
  * @{
  *
- * \defgroup rf-core-15-4g-modes IEEE 802.15.4g Frequency Bands and Modes
+ * \defgroup cc13xx-cc26xx-rf-15-4g-modes IEEE 802.15.4g Frequency Bands and Modes
  *
  * @{
  *
  * \file
- * Header file with descriptors for the various modes of operation defined in
- * IEEE 802.15.4g
+ *        Header file with descriptors for the various modes of operation
+ *        defined in IEEE 802.15.4g.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef DOT_15_4G_H_
@@ -149,19 +150,19 @@
 static inline uint32_t
 dot_15_4g_freq(const uint16_t chan)
 {
-    const uint32_t chan0    = DOT_15_4G_CHAN0_FREQ;
-    const uint32_t spacing  = DOT_15_4G_FREQ_SPACING;
-    const uint32_t chan_min = DOT_15_4G_CHAN_MIN;
-    return (chan0 + spacing * ((uint32_t)chan - chan_min));
+  const uint32_t chan0    = DOT_15_4G_CHAN0_FREQ;
+  const uint32_t spacing  = DOT_15_4G_FREQ_SPACING;
+  const uint32_t chan_min = DOT_15_4G_CHAN_MIN;
+  return (chan0 + spacing * ((uint32_t)chan - chan_min));
 }
 /*---------------------------------------------------------------------------*/
 static inline bool
 dot_15_4g_chan_in_range(const uint16_t chan)
 {
-    const uint16_t chan_min = DOT_15_4G_CHAN_MIN;
-    const uint16_t chan_max = DOT_15_4G_CHAN_MAX;
-    return ((chan >= chan_min) &&
-            (chan <= chan_max));
+  const uint16_t chan_min = DOT_15_4G_CHAN_MIN;
+  const uint16_t chan_max = DOT_15_4G_CHAN_MAX;
+  return ((chan >= chan_min) &&
+          (chan <= chan_max));
 }
 /*---------------------------------------------------------------------------*/
 #define DOT_15_4G_DEFAULT_CHAN      IEEE802154_DEFAULT_CHANNEL

@@ -27,6 +27,19 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup cc13xx-cc26xx-rf
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-rf-data-queue RF data queue for CC13xx/CC26xx
+ *
+ * @{
+ *
+ * \file
+ *        Header file of the CC13xx/CC26xx RF data queue.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ */
 /*---------------------------------------------------------------------------*/
 #ifndef RF_DATA_QUEUE_H_
 #define RF_DATA_QUEUE_H_
@@ -43,12 +56,13 @@ typedef dataQueue_t            data_queue_t;
 typedef rfc_dataEntryGeneral_t data_entry_t;
 /*---------------------------------------------------------------------------*/
 data_queue_t* data_queue_init(size_t lensz);
-/*---------------------------------------------------------------------------*/
-void data_queue_reset(void);
-/*---------------------------------------------------------------------------*/
+void          data_queue_reset(void);
 data_entry_t* data_queue_current_entry(void);
-/*---------------------------------------------------------------------------*/
-void data_queue_release_entry(void);
+void          data_queue_release_entry(void);
 /*---------------------------------------------------------------------------*/
 #endif /* RF_DATA_QUEUE_H_ */
 /*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

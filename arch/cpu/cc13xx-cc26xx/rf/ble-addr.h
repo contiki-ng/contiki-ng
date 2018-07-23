@@ -26,15 +26,20 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \file
- *    Driver for the retrieval of an BLE address from flash
+ * \addtogroup cc13xx-cc26xx-rf
+ * @{
  *
+ * \defgroup cc13xx-cc26xx-rf-ble-addr Driver for CC13xx/CC26xx BLE addresses
+ *
+ * @{
+ *
+ * \file
+ *        Header file for the CC13xx/CC26xx BLE address driver.
  * \author
- *    Michael Spoerk <mi.spoerk@gmail.com>
+ *        Michael Spoerk <mi.spoerk@gmail.com>
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef BLE_ADDR_H_
@@ -44,6 +49,12 @@
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Retrieve the pointer to where the BLE address is stored.
+ *
+ * This function will return the primary address from info page, unless a
+ * valid address is found in the secondary address from CCFG.
+ */
 uint8_t* ble_addr_ptr(void);
 /*---------------------------------------------------------------------------*/
 /**

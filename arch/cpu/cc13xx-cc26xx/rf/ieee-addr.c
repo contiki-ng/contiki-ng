@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-ieee-addr
+ * \addtogroup cc13xx-cc26xx-rf-ieee-addr
  * @{
  *
  * \file
- * Driver for the CC13xx/CC26xx IEEE addresses
+ *        Implementation of the CC13xx/CC26xx IEEE addresses driver.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -50,22 +50,23 @@
 #include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
+#define IEEE_ADDR_HARDCODED         IEEE_ADDR_CONF_HARDCODED
+#define IEEE_ADDR_ADDRESS           IEEE_ADDR_CONF_ADDRESS
+/*---------------------------------------------------------------------------*/
 #define IEEE_MAC_PRIMARY_ADDRESS    (FCFG1_BASE + FCFG1_O_MAC_15_4_0)
 #define IEEE_MAC_SECONDARY_ADDRESS  (CCFG_BASE  + CCFG_O_IEEE_MAC_0)
-/*---------------------------------------------------------------------------*/
-#define IEEE_ADDR_SIZE              8
 /*---------------------------------------------------------------------------*/
 int
 ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
 {
-  if (len > IEEE_ADDR_SIZE) {
+  if(len > LINKADDR_SIZE) {
     return -1;
   }
 
-  if(IEEE_ADDR_CONF_HARDCODED) {
-    const uint8_t ieee_addr_hc[IEEE_ADDR_SIZE] = IEEE_ADDR_CONF_ADDRESS;
+  if(IEEE_ADDR_HARDCODED) {
+    const uint8_t ieee_addr_hc[LINKADDR_SIZE] = IEEE_ADDR_ADDRESS;
 
-    memcpy(dst, &ieee_addr_hc[IEEE_ADDR_SIZE - len], len);
+    memcpy(dst, &ieee_addr_hc[LINKADDR_SIZE - len], len);
   } else {
     int i;
 
@@ -76,13 +77,13 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
     volatile const uint8_t *ieee_addr = primary;
 
     /*
-     * ...unless we can find a byte != 0xFF in secondary
+     * ...unless we can find a byte != 0xFF in secondary.
      *
      * Intentionally checking all 8 bytes here instead of len, because we
-     * are checking validity of the entire address irrespective of the
+     * are checking validity of the entire address respective of the
      * actual number of bytes the caller wants to copy over.
      */
-    for(i = 0; i < IEEE_ADDR_SIZE; i++) {
+    for(i = 0; i < len; i++) {
       if(secondary[i] != 0xFF) {
         /* A byte in the secondary location is not 0xFF. Use the secondary */
         ieee_addr = secondary;
@@ -92,7 +93,7 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
 
     /*
      * We have chosen what address to read the address from. Do so,
-     * inverting byte order
+     * in inverted byte order.
      */
     for(i = 0; i < len; i++) {
       dst[i] = ieee_addr[len - 1 - i];

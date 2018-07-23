@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,14 +27,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx
+ * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
- * \defgroup cc26xx-ieee-addr CC13xx/CC26xx IEEE Address Control
+ * \defgroup cc13xx-cc26xx-rf-ieee-addr CC13xx/CC26xx IEEE Address Control
  *
- * Driver for the retrieval of an IEEE address from flash
+ * Driver for the retrieval of an IEEE address from flash.
  *
  * The user can specify a hardcoded IEEE address through the
  * IEEE_ADDR_CONF_HARDCODED configuration macro.
@@ -57,8 +55,9 @@
  * @{
  *
  * \file
- * Header file with register and macro declarations for the cc26xx IEEE address
- * driver
+ *        Header file for the CC13xx/CC26xx IEEE address driver.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef IEEE_ADDR_H_
@@ -67,15 +66,15 @@
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Copy the node's IEEE address to a destination memory area
- * \param dst A pointer to the destination area where the IEEE address is to be
- *            written
- * \param len The number of bytes to write to destination area
+ * \brief      Copy the device's IEEE address to a destination buffer.
+ * \param dst  A pointer to the destination area where the IEEE address is to
+ *             be written.
+ * \param len  The number of bytes to write to destination area
  * \return  0 : Returned successfully
  *         -1 : Returned with error
  *
- * This function will copy \e len LS bytes and it will invert byte order in
- * the process. The factory address on devices is normally little-endian,
+ * This function will copy \p len bytes in LSB and it will invert byte order
+ * in the process. The factory address on devices is normally little-endian,
  * therefore you should expect dst to store the address in a big-endian order.
  */
 int ieee_addr_cpy_to(uint8_t *dst, uint8_t len);

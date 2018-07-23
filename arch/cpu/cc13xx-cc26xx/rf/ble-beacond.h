@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
- * Copyright (c) 2017, University of Bristol - http://www.bristol.ac.uk/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,24 +27,25 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup rf-core
+ * \addtogroup cc13xx-cc26xx-rf
  * @{
  *
- * \defgroup rf-core-ble CC13xx/CC26xx BLE driver
+ * \defgroup cc13xx-cc26xx-rf-ble CC13xx/CC26xx BLE Beacon Daemon
  *
  * @{
  *
  * \file
- * Header file for the CC13xx/CC26xx BLE driver
+ *        Header file for the CC13xx/CC26xx BLE Beacon Daemon.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef RF_BLE_BEACOND_H_
 #define RF_BLE_BEACOND_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 typedef enum {
@@ -53,6 +53,7 @@ typedef enum {
     RF_BLE_BEACOND_ERROR,
     RF_BLE_BEACOND_DISABLED,
 } rf_ble_beacond_result_t;
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Set the device name to use with the BLE advertisement/beacon daemon
  * \param interval The interval (ticks) between two consecutive beacon bursts
@@ -65,7 +66,7 @@ typedef enum {
 rf_ble_beacond_result_t rf_ble_beacond_init(void);
 
 /**
- * \brief Start the BLE advertisement/beacon daemon
+ * \brief  Start the BLE advertisement/beacon daemon
  * \return RF_CORE_CMD_OK: Success, RF_CORE_CMD_ERROR: Failure
  *
  * Before calling this function, the name to advertise must first be set by
@@ -99,8 +100,8 @@ int8_t rf_ble_is_active(void);
 rf_ble_beacond_result_t rf_ble_set_tx_power(int8_t dbm);
 
 /**
- * \brief Get TX power for BLE advertisements
- * \return The TX power for BLE advertisements
+ * \brief   Get TX power for BLE advertisements
+ * \return  The TX power for BLE advertisements
  */
 int8_t rf_ble_get_tx_power(void);
 /*---------------------------------------------------------------------------*/

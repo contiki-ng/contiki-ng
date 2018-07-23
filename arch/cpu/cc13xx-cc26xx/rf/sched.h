@@ -28,11 +28,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup rf-core
+ * \addtogroup cc13xx-cc26xx-rf
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-rf-sched RF Scheduler for CC13xx/CC26xx
+ *
  * @{
  *
  * \file
  *        Header file of the CC13xx/CC26xx RF scheduler.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef RF_SCHED_H_
@@ -52,25 +58,41 @@ typedef enum {
     RF_RESULT_ERROR,
 } rf_result_t;
 /*---------------------------------------------------------------------------*/
-/* Common */
+/**
+ * \name Common RF scheduler functionality.
+ *
+ * @{
+ */
 rf_result_t rf_yield(void);
-
 rf_result_t rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm);
 rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm);
+/** @} */
 /*---------------------------------------------------------------------------*/
-/* Netstack radio: IEEE-mode or prop-mode */
+/**
+ * \name Nestack Radio scheduler functionality.
+ *
+ * Either for Prop-mode or IEEE-mode Radio driver.
+ *
+ * @{
+ */
 RF_Handle   netstack_open(RF_Params *params);
-
 rf_result_t netstack_sched_fs(void);
 rf_result_t netstack_sched_ieee_tx(bool ack_request);
 rf_result_t netstack_sched_prop_tx(void);
 rf_result_t netstack_sched_rx(bool start);
 rf_result_t netstack_stop_rx(void);
+/** @} */
 /*---------------------------------------------------------------------------*/
-/* BLE radio: BLE Beacon Daemon */
+/**
+ * \name BLE Radio scheduler functionality.
+ *
+ * Only for the BLE Beacon Daemon.
+ *
+ * @{
+ */
 RF_Handle   ble_open(RF_Params *params);
-
 rf_result_t ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event);
+/** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* RF_SCHED_H_ */
 /*---------------------------------------------------------------------------*/

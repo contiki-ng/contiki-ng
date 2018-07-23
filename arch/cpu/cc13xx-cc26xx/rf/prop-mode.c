@@ -27,13 +27,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup rf-core-prop
+ * \addtogroup cc13xx-cc26xx-rf
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-rf-prop Prop-mode driver for CC13xx/CC26xx
+ *
  * @{
  *
  * \file
- * Implementation of the CC13xx prop mode NETSTACK_RADIO driver
+ *        Implementation of the CC13xx/CC26xx prop-mode NETSTACK_RADIO driver.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -218,23 +223,23 @@ get_rssi(void)
 
   const bool rx_is_idle = !rx_is_active();
 
-  if (rx_is_idle) {
+  if(rx_is_idle) {
     res = netstack_sched_rx(false);
-    if (res != RF_RESULT_OK) {
+    if(res != RF_RESULT_OK) {
       return RF_GET_RSSI_ERROR_VAL;
     }
   }
 
   const rtimer_clock_t t0 = RTIMER_NOW();
-  while ((cmd_rx.status != ACTIVE) &&
+  while((cmd_rx.status != ACTIVE) &&
           RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT));
 
   int8_t rssi = RF_GET_RSSI_ERROR_VAL;
-  if (rx_is_active()) {
+  if(rx_is_active()) {
     rssi = RF_getRssi(prop_radio.rf_handle);
   }
 
-  if (rx_is_idle) {
+  if(rx_is_idle) {
     netstack_stop_rx();
   }
 
@@ -262,13 +267,13 @@ set_channel(uint16_t channel)
 {
   rf_result_t res;
 
-  if (!dot_15_4g_chan_in_range(channel)) {
+  if(!dot_15_4g_chan_in_range(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
            (int)channel, DOT_15_4G_DEFAULT_CHAN);
     channel = DOT_15_4G_DEFAULT_CHAN;
   }
 
-  if (channel == prop_radio.channel) {
+  if(channel == prop_radio.channel) {
     /* We are already calibrated to this channel */
     return RF_RESULT_OK;
   }
@@ -285,7 +290,7 @@ set_channel(uint16_t channel)
 
   res = netstack_sched_fs();
 
-  if (res != RF_RESULT_OK) {
+  if(res != RF_RESULT_OK) {
     return res;
   }
 
@@ -327,7 +332,7 @@ transmit(unsigned short transmit_len)
 {
   rf_result_t res;
 
-  if (tx_is_active()) {
+  if(tx_is_active()) {
     PRINTF("transmit: not allowed while transmitting\n");
     return RADIO_TX_ERR;
   }
@@ -371,10 +376,10 @@ read(void *buf, unsigned short buf_len)
 
   const rtimer_clock_t t0 = RTIMER_NOW();
   /* Only wait if the Radio is accessing the entry */
-  while ((data_entry->status == DATA_ENTRY_BUSY) &&
+  while((data_entry->status == DATA_ENTRY_BUSY) &&
           RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
 
-  if (data_entry->status != DATA_ENTRY_FINISHED) {
+  if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
     return -1;
   }
@@ -404,7 +409,7 @@ read(void *buf, unsigned short buf_len)
   const lensz_t frame_len = *(lensz_t*)frame_ptr;
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
-  if (frame_len < FRAME_SHAVE) {
+  if(frame_len < FRAME_SHAVE) {
     PRINTF("read: frame too short len=%d\n", frame_len);
 
     data_queue_release_entry();
@@ -415,7 +420,7 @@ read(void *buf, unsigned short buf_len)
   const unsigned short payload_len = (unsigned short)(frame_len - FRAME_SHAVE);
 
   /* Sanity check that Payload fits in Buffer */
-  if (payload_len > buf_len) {
+  if(payload_len > buf_len) {
     PRINTF("read: payload too large for buffer len=%d buf_len=%d\n", payload_len, buf_len);
 
     data_queue_release_entry();
@@ -441,7 +446,7 @@ cca_request(void)
 {
   const int8_t rssi = get_rssi();
 
-  if (rssi == RF_GET_RSSI_ERROR_VAL) {
+  if(rssi == RF_GET_RSSI_ERROR_VAL) {
     return CCA_STATE_INVALID;
   }
 
@@ -453,7 +458,7 @@ cca_request(void)
 static int
 channel_clear(void)
 {
-  if (tx_is_active()) {
+  if(tx_is_active()) {
     PRINTF("channel_clear: called while in TX\n");
     return 0;
   }
@@ -467,7 +472,7 @@ channel_clear(void)
 static int
 receiving_packet(void)
 {
-  if (!rx_is_active()) {
+  if(!rx_is_active()) {
     return 0;
   }
 
@@ -487,16 +492,16 @@ pending_packet(void)
   /* Go through RX Circular buffer and check their status */
   do {
     const uint8_t status = curr_entry->status;
-    if ((status == DATA_ENTRY_FINISHED) ||
+    if((status == DATA_ENTRY_FINISHED) ||
         (status == DATA_ENTRY_BUSY)) {
       num_pending += 1;
     }
 
     /* Stop when we have looped the circular buffer */
     curr_entry = (data_entry_t *)curr_entry->pNextEntry;
-  } while (curr_entry != read_entry);
+  } while(curr_entry != read_entry);
 
-  if (num_pending > 0) {
+  if(num_pending > 0) {
     process_poll(&rf_sched_process);
   }
 
@@ -509,7 +514,7 @@ on(void)
 {
   rf_result_t res;
 
-  if (prop_radio.rf_is_on) {
+  if(prop_radio.rf_is_on) {
     PRINTF("on: Radio already on\n");
     return RF_RESULT_OK;
   }
@@ -518,7 +523,7 @@ on(void)
 
   res = netstack_sched_rx(true);
 
-  if (res != RF_RESULT_OK) {
+  if(res != RF_RESULT_OK) {
     return RF_RESULT_ERROR;
   }
 
@@ -529,7 +534,7 @@ on(void)
 static int
 off(void)
 {
-  if (!prop_radio.rf_is_on) {
+  if(!prop_radio.rf_is_on) {
     PRINTF("off: Radio already off\n");
     return RF_RESULT_OK;
   }
@@ -545,7 +550,7 @@ get_value(radio_param_t param, radio_value_t *value)
 {
   rf_result_t res;
 
-  if (!value) {
+  if(!value) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
@@ -627,7 +632,7 @@ set_value(radio_param_t param, radio_value_t value)
       : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_TXPOWER:
-    if (!TX_POWER_IN_RANGE((int8_t)value)) {
+    if(!TX_POWER_IN_RANGE((int8_t)value)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
     res = rf_set_tx_power(prop_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
@@ -662,7 +667,7 @@ set_object(radio_param_t param, const void *src, size_t size)
 static int
 init(void)
 {
-  if (prop_radio.rf_handle) {
+  if(prop_radio.rf_handle) {
     PRINTF("init: Radio already initialized\n");
     return RF_RESULT_OK;
   }
@@ -683,7 +688,7 @@ init(void)
   /* Open RF Driver */
   prop_radio.rf_handle = netstack_open(&rf_params);
 
-  if (prop_radio.rf_handle == NULL) {
+  if(prop_radio.rf_handle == NULL) {
     PRINTF("init: unable to open RF driver\n");
     return RF_RESULT_ERROR;
   }
@@ -716,5 +721,6 @@ const struct radio_driver prop_mode_driver = {
 };
 /*---------------------------------------------------------------------------*/
 /**
+ * @}
  * @}
  */

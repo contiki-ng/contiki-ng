@@ -45,6 +45,14 @@
 
 #include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
+#ifndef BOARD_CONF_HAS_SENSORS
+#define BOARD_CONF_HAS_SENSORS              0
+#endif
+
+#ifndef BOARD_CONF_SENSORS_ENABLE
+#define BOARD_CONF_SENSORS_ENABLE           BOARD_CONF_HAS_SENSORS
+#endif
+/*---------------------------------------------------------------------------*/
 /**
  * \name GPIO HAL configuration.
  *

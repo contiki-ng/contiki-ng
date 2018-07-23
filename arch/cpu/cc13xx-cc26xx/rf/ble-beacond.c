@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
- * Copyright (c) 2017, University of Bristol - http://www.bristol.ac.uk/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,22 +27,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup rf-core-ble
+ * \addtogroup cc13xx-cc26xx-rf-ble
  * @{
  *
  * \file
- * Implementation of the CC13xx/CC26xx RF BLE driver
+ *        Implementation for the CC13xx/CC26xx BLE Beacon Daemon.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "sys/process.h"
-#include "sys/clock.h"
 #include "sys/cc.h"
+#include "sys/clock.h"
 #include "sys/etimer.h"
-#include "net/netstack.h"
+#include "sys/process.h"
 #include "net/linkaddr.h"
+#include "net/netstack.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/chipinfo.h)
@@ -155,7 +155,7 @@ rf_ble_beacond_init(void)
 
   ble_beacond.handle = ble_open(&rf_params);
 
-  if (ble_beacond.handle == NULL) {
+  if(ble_beacond.handle == NULL) {
     return RF_BLE_BEACOND_ERROR;
   }
 
@@ -165,11 +165,11 @@ rf_ble_beacond_init(void)
 rf_ble_beacond_result_t
 rf_ble_beacond_start(clock_time_t interval, const char *name)
 {
-  if (interval == 0) {
+  if(interval == 0) {
     return RF_BLE_BEACOND_ERROR;
   }
 
-  if (name == NULL) {
+  if(name == NULL) {
     return RF_BLE_BEACOND_ERROR;
   }
 
@@ -177,7 +177,7 @@ rf_ble_beacond_start(clock_time_t interval, const char *name)
 
   const size_t name_len = strlen(name);
 
-  if ((name_len == 0) ||
+  if((name_len == 0) ||
       (name_len >= BLE_ADV_NAME_BUF_LEN)) {
     return RF_BLE_BEACOND_ERROR;
   }
@@ -213,7 +213,7 @@ rf_ble_set_tx_power(int8_t dBm)
 {
   rf_result_t res;
 
-  if (!TX_POWER_IN_RANGE(dBm)) {
+  if(!TX_POWER_IN_RANGE(dBm)) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
@@ -232,7 +232,7 @@ rf_ble_get_tx_power(void)
   int8_t dbm;
   res = rf_get_tx_power(ble_beacond.rf_handle, TX_POWER_TABLE, &dbm)
 
-  if (res != RF_RESULT_OK) {
+  if(res != RF_RESULT_OK) {
     return ~(int8_t)0;
   }
 
@@ -245,9 +245,9 @@ ble_beacon_burst(uint8_t channels_bm, uint8_t *data, uint8_t len)
   rf_result_t res;
 
   uint8_t channel;
-  for (channel = BLE_ADV_CHANNEL_MIN; channel <= BLE_ADV_CHANNEL_MAX; ++channel) {
+  for(channel = BLE_ADV_CHANNEL_MIN; channel <= BLE_ADV_CHANNEL_MAX; ++channel) {
     const uint8_t channel_bv = (1 << (channel - BLE_ADV_CHANNEL_MIN));
-    if ((channel_bv & channels_bm) == 0) {
+    if((channel_bv & channels_bm) == 0) {
       continue;
     }
 
@@ -258,7 +258,7 @@ ble_beacon_burst(uint8_t channels_bm, uint8_t *data, uint8_t len)
 
     res = ble_sched_beacon(NULL, 0);
 
-    if (res != RF_RESULT_OK) {
+    if(res != RF_RESULT_OK) {
       return RF_BLE_BEACOND_ERROR;
     }
   }
@@ -332,7 +332,4 @@ rf_ble_get_tx_power(void) { return ~(int8_t)(0); }
 /*---------------------------------------------------------------------------*/
 #endif /* RF_BLE_BEACON_ENABLE */
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */
+/** @} */

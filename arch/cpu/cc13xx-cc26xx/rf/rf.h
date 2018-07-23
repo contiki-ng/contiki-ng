@@ -31,15 +31,14 @@
  * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
- * \defgroup rf-core Common functionality for the CC13xx/CC26xx RF
+ * \defgroup cc13xx-cc26xx-rf RF specific files for CC13xx/CC26xx
  *
  * @{
  *
  * \file
- *        Header file of common CC13xx/CC26xx RF functionality
+ *        Header file of common CC13xx/CC26xx RF functionality.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
-
  */
 /*---------------------------------------------------------------------------*/
 #ifndef RF_CORE_H_

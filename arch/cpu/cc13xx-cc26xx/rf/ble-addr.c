@@ -26,14 +26,16 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
 /**
- * \file
- *    Driver for the retrieval of an BLE address from flash
+ * \addtogroup cc13xx-cc26xx-rf-ble-addr
+ * @{
  *
+ * \file
+ *        Implementation of the CC13xx/CC26xx IEEE addresses driver.
  * \author
- *    Michael Spoerk <mi.spoerk@gmail.com>
+ *        Michael Spoerk <mi.spoerk@gmail.com>
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -131,3 +133,5 @@ ble_addr_to_eui64_cpy(uint8_t *dst)
 
   return ble_addr_to_eui64(dst, ble_addr);
 }
+/*---------------------------------------------------------------------------*/
+/** @} */

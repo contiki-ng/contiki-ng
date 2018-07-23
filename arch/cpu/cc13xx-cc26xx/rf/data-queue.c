@@ -27,13 +27,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup simplelink
+ * \addtogroup cc13xx-cc26xx-rf-data-queue
  * @{
  *
  * \file
- * Implementation of common CC13xx/CC26xx RF functionality
+ *        Implementation of the CC13xx/CC26xx RF data queue.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -75,9 +76,11 @@ static rx_data_queue_t rx_data_queue;
 static void
 rx_bufs_init(void)
 {
+  data_entry_t *data_entry;
   size_t i;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
-    data_entry_t *const data_entry = &(rx_data_queue.bufs[i].data_entry);
+
+  for(i = 0; i < RX_BUF_CNT; ++i) {
+    data_entry = &(rx_data_queue.bufs[i].data_entry);
 
     data_entry->status       = DATA_ENTRY_PENDING;
     data_entry->config.type  = DATA_ENTRY_TYPE_GEN;
@@ -94,7 +97,7 @@ static void
 rx_bufs_reset(void)
 {
   size_t i;
-  for (i = 0; i < RX_BUF_CNT; ++i) {
+  for(i = 0; i < RX_BUF_CNT; ++i) {
     data_entry_t *const data_entry = &(rx_data_queue.bufs[i].data_entry);
 
     /* Clear length bytes */
@@ -155,3 +158,4 @@ data_queue_release_entry(void)
   rx_data_queue.curr_entry = (data_entry_t*)(curr_entry->pNextEntry);
 }
 /*---------------------------------------------------------------------------*/
+/** @} */

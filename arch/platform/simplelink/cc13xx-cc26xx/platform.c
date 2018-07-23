@@ -59,12 +59,12 @@
 #include DeviceFamily_constructPath(driverlib/driverlib_release.h)
 #include DeviceFamily_constructPath(driverlib/chipinfo.h)
 #include DeviceFamily_constructPath(driverlib/vims.h)
-#include DeviceFamily_constructPath(inc/hw_cpu_scs.h)
 
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/NVS.h>
 #include <ti/drivers/PIN.h>
+#include <ti/drivers/pin/PINCC26XX.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/TRNG.h>
@@ -92,30 +92,31 @@
  */
 extern void Board_initHook(void);
 /*---------------------------------------------------------------------------*/
-#ifdef BOARD_CONF_HAS_SENSORS
-#define BOARD_HAS_SENSORS   BOARD_CONF_HAS_SENSORS
-#else
-#define BOARD_HAS_SENSORS   1
-#endif
-/*---------------------------------------------------------------------------*/
-/* Fade a specified LED */
+/*
+ * \brief  Fade a specified LED.
+ */
 static void
-fade(unsigned char l)
+fade(PIN_Id pin)
 {
-  volatile int i;
-  int k;
-  int j;
-  for(k = 0; k < 800; ++k) {
-    j = (k > 400) ? 800 - k : k;
+  volatile uint32_t i;
+  uint32_t k;
+  uint32_t j;
+  uint32_t pivot = 800;
+  uint32_t pivot_half = pivot / 2;
 
-    leds_single_on(l);
-    for(i = 0; i < j; ++i) { __asm("nop"); }
-    leds_single_off(l);
-    for(i = 0; i < 400 - j; ++i) { __asm("nop"); }
+  for(k = 0; k < pivot; ++k) {
+    j = (k > pivot_half) ? pivot - k : k;
+
+    PINCC26XX_setOutputValue(pin, 1);
+    for (i = 0; i < j; ++i) { __asm__ __volatile__ ("nop"); }
+    PINCC26XX_setOutputValue(pin, 0);
+    for (i = 0; i < pivot_half - j; ++i) { __asm__ __volatile__ ("nop"); }
   }
 }
 /*---------------------------------------------------------------------------*/
-/* Configure RF params for the radio driver */
+/*
+ * \brief  Configure RF params for the radio driver.
+ */
 static void
 set_rf_params(void)
 {
@@ -163,7 +164,7 @@ platform_init_stage_one(void)
   gpio_hal_init();
   leds_init();
 
-  fade(LEDS_RED);
+  fade(Board_PIN_RLED);
 
   /* TI Drivers init */
 #if TI_UART_CONF_ENABLE
@@ -181,7 +182,7 @@ platform_init_stage_one(void)
 
   TRNG_init();
 
-  fade(LEDS_GREEN);
+  fade(Board_PIN_GLED);
 
   /* NoRTOS must be called last */
   NoRTOS_start();
@@ -213,7 +214,7 @@ platform_init_stage_two(void)
 
   button_hal_init();
 
-  fade(LEDS_RED);
+  fade(Board_PIN_RLED);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -246,11 +247,11 @@ platform_init_stage_three(void)
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);
   LOG_INFO("Node ID: %d\n", node_id);
 
-#if BOARD_HAS_SENSORS
+#if BOARD_CONF_SENSORS_ENABLE
   process_start(&sensors_process, NULL);
 #endif
 
-  fade(LEDS_GREEN);
+  fade(Board_PIN_GLED);
 }
 /*---------------------------------------------------------------------------*/
 void

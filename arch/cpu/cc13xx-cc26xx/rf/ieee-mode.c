@@ -27,17 +27,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup rf-core
+ * \addtogroup cc13xx-cc26xx-rf
  * @{
  *
- * \defgroup rf-core-ieee CC13xx/CC26xx IEEE mode driver
+ * \defgroup cc13xx-cc26xx-rf-ieee IEEE-mode driver for CC13xx/CC26xx
  *
  * @{
  *
  * \file
- * Implementation of the CC13xx/CC26xx IEEE mode NETSTACK_RADIO driver
+ *        Implementation of the CC13xx/CC26xx IEEE-mode NETSTACK_RADIO driver.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -300,7 +301,7 @@ init_rf_params(void)
 static rf_result_t
 set_channel(uint8_t channel)
 {
-  if (!dot_15_4g_chan_in_range(channel)) {
+  if(!dot_15_4g_chan_in_range(channel)) {
     PRINTF("set_channel: illegal channel %d, defaults to %d\n",
            (int)channel, DOT_15_4G_DEFAULT_CHAN);
     channel = DOT_15_4G_DEFAULT_CHAN;
@@ -311,7 +312,7 @@ set_channel(uint8_t channel)
    * set_channel() to cause a synth calibration, since channel must be in
    * range 11-26.
    */
-  if (channel == cmd_rx.channel) {
+  if(channel == cmd_rx.channel) {
     /* We are already calibrated to this channel */
     return true;
   }
@@ -342,7 +343,7 @@ check_rat_overflow(void)
 {
   const bool was_off = !rx_is_active();
 
-  if (was_off) {
+  if(was_off) {
     RF_runDirectCmd(ieee_radio.rf_handle, CMD_NOP);
   }
 
@@ -351,12 +352,12 @@ check_rat_overflow(void)
   static bool initial_iteration = true;
   static uint32_t last_value;
 
-  if (initial_iteration) {
+  if(initial_iteration) {
     /* First time checking overflow will only store the current value */
     initial_iteration = false;
   } else {
     /* Overflow happens in the last quarter of the RAT range */
-    if ((current_value + RAT_ONE_QUARTER) < last_value) {
+    if((current_value + RAT_ONE_QUARTER) < last_value) {
       /* Overflow detected */
       ieee_radio.rat.last_overflow = RTIMER_NOW();
       ieee_radio.rat.overflow_count += 1;
@@ -365,7 +366,7 @@ check_rat_overflow(void)
 
   last_value = current_value;
 
-  if (was_off) {
+  if(was_off) {
     RF_yield(ieee_radio.rf_handle);
   }
 }
@@ -379,9 +380,9 @@ rat_to_timestamp(const uint32_t rat_ticks)
 
   /* If the timestamp is in the 4th quarter and the last overflow was recently,
    * assume that the timestamp refers to the time before the overflow */
-  if (rat_ticks > RAT_THREE_QUARTERS) {
+  if(rat_ticks > RAT_THREE_QUARTERS) {
     const rtimer_clock_t one_quarter = (RAT_ONE_QUARTER * RTIMER_SECOND) / RAT_SECOND;
-    if (RTIMER_CLOCK_LT(RTIMER_NOW(), ieee_radio.rat.last_overflow + one_quarter)) {
+    if(RTIMER_CLOCK_LT(RTIMER_NOW(), ieee_radio.rat.last_overflow + one_quarter)) {
       adjusted_overflow_count -= 1;
     }
   }
@@ -396,7 +397,7 @@ rat_to_timestamp(const uint32_t rat_ticks)
 static int
 init(void)
 {
-  if (ieee_radio.rf_handle) {
+  if(ieee_radio.rf_handle) {
     PRINTF("init: Radio already initialized\n");
     return RF_RESULT_OK;
   }
@@ -413,7 +414,7 @@ init(void)
 
   ieee_radio.rf_handle = netstack_open(&rf_params);
 
-  if (ieee_radio.rf_handle == NULL) {
+  if(ieee_radio.rf_handle == NULL) {
     PRINTF("init: unable to open IEEE RF driver\n");
     return RF_RESULT_ERROR;
   }
@@ -450,7 +451,7 @@ transmit(unsigned short transmit_len)
 {
   rf_result_t res;
 
-  if (ieee_radio.send_on_cca && channel_clear() != 1) {
+  if(ieee_radio.send_on_cca && channel_clear() != 1) {
     PRINTF("transmit: channel wasn't clear\n");
     return RADIO_TX_COLLISION;
   }
@@ -460,7 +461,7 @@ transmit(unsigned short transmit_len)
    * Control Field byte, that is the first byte in the frame.
    */
   const bool ack_request = (bool)(ieee_radio.tx_buf[FRAME_FCF_OFFSET] & FRAME_ACK_REQUEST);
-  if (ack_request) {
+  if(ack_request) {
     /* Yes, turn on chaining */
     cmd_tx.condition.rule = COND_STOP_ON_FALSE;
 
@@ -479,11 +480,11 @@ transmit(unsigned short transmit_len)
 
   res = netstack_sched_ieee_tx(ack_request);
 
-  if (res != RF_RESULT_OK) {
+  if(res != RF_RESULT_OK) {
     return RADIO_TX_ERR;
   }
 
-  if (ack_request) {
+  if(ack_request) {
     switch(cmd_rx_ack.status) {
     /* CMD_IEEE_RX_ACK timed out, i.e. never received ACK */
     case IEEE_DONE_TIMEOUT: return RADIO_TX_NOACK;
@@ -513,10 +514,10 @@ read(void *buf, unsigned short buf_len)
 
   const rtimer_clock_t t0 = RTIMER_NOW();
   /* Only wait if the Radio timer is accessing the entry */
-  while ((data_entry->status == DATA_ENTRY_BUSY) &&
+  while((data_entry->status == DATA_ENTRY_BUSY) &&
           RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
 
-  if (data_entry->status != DATA_ENTRY_FINISHED) {
+  if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
     return -1;
   }
@@ -545,7 +546,7 @@ read(void *buf, unsigned short buf_len)
   const lensz_t frame_len = *(lensz_t*)frame_ptr;
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
-  if (frame_len < FRAME_SHAVE) {
+  if(frame_len < FRAME_SHAVE) {
     PRINTF("read: frame too short len=%d\n", frame_len);
 
     data_queue_release_entry();
@@ -556,7 +557,7 @@ read(void *buf, unsigned short buf_len)
   const unsigned short payload_len = (unsigned short)(frame_len - FRAME_SHAVE);
 
   /* Sanity check that Payload fits in Buffer */
-  if (payload_len > buf_len) {
+  if(payload_len > buf_len) {
     PRINTF("read: payload too large for buffer len=%d buf_len=%d\n", payload_len, buf_len);
 
     data_queue_release_entry();
@@ -573,7 +574,7 @@ read(void *buf, unsigned short buf_len)
   const uint32_t rat_ticks = *(uint32_t*)(payload_ptr + payload_len + 4);
   ieee_radio.last.timestamp = rat_to_timestamp(rat_ticks);
 
-  if (!ieee_radio.poll_mode) {
+  if(!ieee_radio.poll_mode) {
     /* Not in poll mode: packetbuf should not be accessed in interrupt context. */
     /* In poll mode, the last packet RSSI and link quality can be obtained through */
     /* RADIO_PARAM_LAST_RSSI and RADIO_PARAM_LAST_LINK_QUALITY */
@@ -592,23 +593,23 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
 
   const bool rx_is_idle = !rx_is_active();
 
-  if (rx_is_idle) {
+  if(rx_is_idle) {
     res = netstack_sched_rx(false);
-    if (res != RF_RESULT_OK) {
+    if(res != RF_RESULT_OK) {
       return RF_RESULT_ERROR;
     }
   }
 
   const rtimer_clock_t t0 = RTIMER_NOW();
-  while ((cmd_rx.status != ACTIVE) &&
+  while((cmd_rx.status != ACTIVE) &&
           RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT));
 
   RF_Stat stat = RF_StatRadioInactiveError;
-  if (rx_is_active()) {
+  if(rx_is_active()) {
     stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t*)&cmd_cca_req);
   }
 
-  if (rx_is_idle) {
+  if(rx_is_idle) {
     netstack_stop_rx();
   }
 
@@ -624,7 +625,7 @@ channel_clear(void)
   memset(&cmd_cca_req, 0x0, sizeof(cmd_cca_req_t));
   cmd_cca_req.commandNo = CMD_IEEE_CCA_REQ;
 
-  if (cca_request(&cmd_cca_req) != RF_RESULT_OK) {
+  if(cca_request(&cmd_cca_req) != RF_RESULT_OK) {
     return 0;
   }
 
@@ -639,12 +640,12 @@ receiving_packet(void)
   memset(&cmd_cca_req, 0x0, sizeof(cmd_cca_req_t));
   cmd_cca_req.commandNo = CMD_IEEE_CCA_REQ;
 
-  if (cca_request(&cmd_cca_req) != RF_RESULT_OK) {
+  if(cca_request(&cmd_cca_req) != RF_RESULT_OK) {
     return 0;
   }
 
   /* If we are transmitting (can only be an ACK here), we are not receiving */
-  if ((cmd_cca_req.ccaInfo.ccaEnergy == CCA_STATE_BUSY) &&
+  if((cmd_cca_req.ccaInfo.ccaEnergy == CCA_STATE_BUSY) &&
       (cmd_cca_req.ccaInfo.ccaCorr   == CCA_STATE_BUSY) &&
       (cmd_cca_req.ccaInfo.ccaSync   == CCA_STATE_BUSY)) {
     PRINTF("receiving_packet: we were TXing ACK\n");
@@ -666,16 +667,16 @@ pending_packet(void)
   /* Go through RX Circular buffer and check each data entry status */
   do {
     const uint8_t status = curr_entry->status;
-    if ((status == DATA_ENTRY_FINISHED) ||
+    if((status == DATA_ENTRY_FINISHED) ||
         (status == DATA_ENTRY_BUSY)) {
       num_pending += 1;
     }
 
     /* Stop when we have looped the circular buffer */
     curr_entry = (data_entry_t *)curr_entry->pNextEntry;
-  } while (curr_entry != read_entry);
+  } while(curr_entry != read_entry);
 
-  if ((num_pending > 0) && !ieee_radio.poll_mode) {
+  if((num_pending > 0) && !ieee_radio.poll_mode) {
     process_poll(&rf_sched_process);
   }
 
@@ -688,7 +689,7 @@ on(void)
 {
   rf_result_t res;
 
-  if (ieee_radio.rf_is_on) {
+  if(ieee_radio.rf_is_on) {
     PRINTF("on: Radio already on\n");
     return RF_RESULT_OK;
   }
@@ -697,7 +698,7 @@ on(void)
 
   res = netstack_sched_rx(true);
 
-  if (res != RF_RESULT_OK) {
+  if(res != RF_RESULT_OK) {
     return RF_RESULT_ERROR;
   }
 
@@ -708,7 +709,7 @@ on(void)
 static int
 off(void)
 {
-  if (!ieee_radio.rf_is_on) {
+  if(!ieee_radio.rf_is_on) {
     PRINTF("off: Radio already off\n");
     return RF_RESULT_OK;
   }
@@ -724,7 +725,7 @@ get_value(radio_param_t param, radio_value_t *value)
 {
   rf_result_t res;
 
-  if (!value) {
+  if(!value) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
@@ -755,13 +756,13 @@ get_value(radio_param_t param, radio_value_t *value)
   /* RX mode */
   case RADIO_PARAM_RX_MODE:
     *value = 0;
-    if (cmd_rx.frameFiltOpt.frameFiltEn) {
+    if(cmd_rx.frameFiltOpt.frameFiltEn) {
       *value |= (radio_value_t)RADIO_RX_MODE_ADDRESS_FILTER;
     }
-    if (cmd_rx.frameFiltOpt.autoAckEn) {
+    if(cmd_rx.frameFiltOpt.autoAckEn) {
       *value |= (radio_value_t)RADIO_RX_MODE_AUTOACK;
     }
-    if (ieee_radio.poll_mode) {
+    if(ieee_radio.poll_mode) {
       *value |= (radio_value_t)RADIO_RX_MODE_POLL_MODE;
     }
     return RADIO_RESULT_OK;
@@ -835,12 +836,12 @@ set_value(radio_param_t param, radio_value_t value)
   /* Power Mode */
   case RADIO_PARAM_POWER_MODE:
 
-    if (value == RADIO_POWER_MODE_ON) {
+    if(value == RADIO_POWER_MODE_ON) {
       return (on() == RF_RESULT_OK)
         ? RADIO_RESULT_OK
         : RADIO_RESULT_ERROR;
 
-    } else if (value == RADIO_POWER_MODE_OFF) {
+    } else if(value == RADIO_POWER_MODE_OFF) {
       off();
       return RADIO_RESULT_OK;
     }
@@ -849,7 +850,7 @@ set_value(radio_param_t param, radio_value_t value)
 
   /* Channel */
   case RADIO_PARAM_CHANNEL:
-    if (!dot_15_4g_chan_in_range(value)) {
+    if(!dot_15_4g_chan_in_range(value)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
     set_channel((uint8_t)value);
@@ -858,7 +859,7 @@ set_value(radio_param_t param, radio_value_t value)
   /* PAN ID */
   case RADIO_PARAM_PAN_ID:
     cmd_rx.localPanID = (uint16_t)value;
-    if (!ieee_radio.rf_is_on) {
+    if(!ieee_radio.rf_is_on) {
       return RADIO_RESULT_OK;
     }
 
@@ -871,7 +872,7 @@ set_value(radio_param_t param, radio_value_t value)
   /* 16bit address */
   case RADIO_PARAM_16BIT_ADDR:
     cmd_rx.localShortAddr = (uint16_t)value;
-    if (!ieee_radio.rf_is_on) {
+    if(!ieee_radio.rf_is_on) {
       return RADIO_RESULT_OK;
     }
 
@@ -883,7 +884,7 @@ set_value(radio_param_t param, radio_value_t value)
 
   /* RX Mode */
   case RADIO_PARAM_RX_MODE: {
-    if (value & ~(RADIO_RX_MODE_ADDRESS_FILTER |
+    if(value & ~(RADIO_RX_MODE_ADDRESS_FILTER |
                   RADIO_RX_MODE_AUTOACK | RADIO_RX_MODE_POLL_MODE)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
@@ -900,17 +901,17 @@ set_value(radio_param_t param, radio_value_t value)
 
     const bool old_poll_mode = ieee_radio.poll_mode;
     ieee_radio.poll_mode = (value & RADIO_RX_MODE_POLL_MODE) != 0;
-    if (old_poll_mode == ieee_radio.poll_mode) {
+    if(old_poll_mode == ieee_radio.poll_mode) {
       /* Do not turn the radio off and on, just send an update command */
       memcpy(&cmd_mod_filt.newFrameFiltOpt, &(rf_cmd_ieee_rx.frameFiltOpt), sizeof(rf_cmd_ieee_rx.frameFiltOpt));
       const RF_Stat stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t*)&cmd_mod_filt);
-      if (stat != RF_StatCmdDoneSuccess) {
+      if(stat != RF_StatCmdDoneSuccess) {
         PRINTF("setting address filter failed: stat=0x%02X\n", stat);
         return RADIO_RESULT_ERROR;
       }
       return RADIO_RESULT_OK;
     }
-    if (!ieee_radio.rf_is_on) {
+    if(!ieee_radio.rf_is_on) {
       return RADIO_RESULT_OK;
     }
 
@@ -931,7 +932,7 @@ set_value(radio_param_t param, radio_value_t value)
 
   /* TX Power */
   case RADIO_PARAM_TXPOWER:
-    if (!TX_POWER_IN_RANGE((int8_t)value)) {
+    if(!TX_POWER_IN_RANGE((int8_t)value)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
     res = rf_set_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
@@ -942,7 +943,7 @@ set_value(radio_param_t param, radio_value_t value)
   /* CCA Threshold */
   case RADIO_PARAM_CCA_THRESHOLD:
     cmd_rx.ccaRssiThr = (int8_t)value;
-    if (!ieee_radio.rf_is_on) {
+    if(!ieee_radio.rf_is_on) {
       return RADIO_RESULT_OK;
     }
 
@@ -960,7 +961,7 @@ set_value(radio_param_t param, radio_value_t value)
 static radio_result_t
 get_object(radio_param_t param, void *dest, size_t size)
 {
-  if (!dest) {
+  if(!dest) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
@@ -1000,7 +1001,7 @@ set_object(radio_param_t param, const void *src, size_t size)
 {
   rf_result_t res;
 
-  if (!src) {
+  if(!src) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
@@ -1008,17 +1009,17 @@ set_object(radio_param_t param, const void *src, size_t size)
   /* 64-bit address */
   case RADIO_PARAM_64BIT_ADDR: {
     const size_t destSize = sizeof(cmd_rx.localExtAddr);
-    if (size != destSize) {
+    if(size != destSize) {
       return RADIO_RESULT_INVALID_VALUE;
     }
 
     const uint8_t *pSrc = (const uint8_t *)src;
     volatile uint8_t *pDest = (uint8_t *)&(cmd_rx.localExtAddr);
-    for (size_t i = 0; i < destSize; ++i) {
+    for(size_t i = 0; i < destSize; ++i) {
       pDest[i] = pSrc[destSize - 1 - i];
     }
 
-    if (!rx_is_active()) {
+    if(!rx_is_active()) {
       return RADIO_RESULT_OK;
     }
 

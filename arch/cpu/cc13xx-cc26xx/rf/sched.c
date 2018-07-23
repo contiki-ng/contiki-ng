@@ -28,11 +28,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup
+ * \addtogroup cc13xx-cc26xx-rf-sched
  * @{
  *
  * \file
- * Implementation of common CC13xx/CC26xx RF functionality
+ *        Implementation of the CC13xx/CC26xx RF scheduler.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -101,11 +103,11 @@ cmd_rx_cb(RF_Handle client, RF_CmdHandle command, RF_EventMask events)
   (void)client;
   (void)command;
 
-  if (events & RF_EventRxEntryDone) {
+  if(events & RF_EventRxEntryDone) {
     process_poll(&rf_sched_process);
   }
 
-  if (events & RF_EventRxBufFull) {
+  if(events & RF_EventRxBufFull) {
     rx_buf_full = true;
     process_poll(&rf_sched_process);
   }
@@ -138,7 +140,7 @@ cmd_rx_disable(void)
 {
   const bool is_active = cmd_rx_is_active();
 
-  if (is_active) {
+  if(is_active) {
     CMD_STATUS(netstack_cmd_rx) = DONE_STOPPED;
     RF_cancelCmd(&rf_netstack, cmd_rx_handle, RF_ABORT_GRACEFULLY);
     cmd_rx_handle = 0;
@@ -152,7 +154,7 @@ cmd_rx_restore(uint_fast8_t rx_key)
 {
   const bool was_active = (rx_key != 0) ? true : false;
 
-  if (!was_active) {
+  if(!was_active) {
     return RF_RESULT_OK;
   }
 
@@ -172,7 +174,7 @@ cmd_rx_restore(uint_fast8_t rx_key)
     RF_EventRxEntryDone | RF_EventRxBufFull
   );
 
-  if (!CMD_HANDLE_OK(cmd_rx_handle)) {
+  if(!CMD_HANDLE_OK(cmd_rx_handle)) {
     PRINTF("cmd_rx_restore: unable to schedule RX command handle=%d status=0x%04x",
            cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
     return RF_RESULT_ERROR;
@@ -246,14 +248,13 @@ netstack_sched_fs(void)
   /*
    * For IEEE-mode, restarting CMD_IEEE_RX re-calibrates the synth by using the
    * channel field in the CMD_IEEE_RX command. It is assumed this field is
-   * already configured before this function is called.
-   * However, if CMD_IEEE_RX wasn't active, manually calibrate the synth
-   * with CMD_FS.
+   * already configured before this function is called. However, if
+   * CMD_IEEE_RX wasn't active, manually calibrate the synth with CMD_FS.
    *
    * For Prop-mode, the synth is always manually calibrated with CMD_FS.
    */
 #if (RF_MODE == RF_CORE_MODE_2_4_GHZ)
-  if (rx_key) {
+  if(rx_key) {
     cmd_rx_restore(rx_key);
     return RF_RESULT_OK;
   }
@@ -276,7 +277,7 @@ netstack_sched_fs(void)
     synth_error = (EVENTS_CMD_DONE(events))
                && (CMD_STATUS(netstack_cmd_fs) == ERROR_SYNTH_PROG);
 
-  } while (synth_error && (num_tries++ < CMD_FS_RETRIES));
+  } while(synth_error && (num_tries++ < CMD_FS_RETRIES));
 
   cmd_rx_restore(rx_key);
 
@@ -305,9 +306,9 @@ netstack_sched_ieee_tx(bool ack_request)
    * run the RX_ACK command. Therefore, turn on RX before starting the
    * chained TX command.
    */
-  if (rx_needed) {
+  if(rx_needed) {
     res = netstack_sched_rx(false);
-    if (res != RF_RESULT_OK) {
+    if(res != RF_RESULT_OK) {
       return res;
     }
   }
@@ -321,13 +322,13 @@ netstack_sched_ieee_tx(bool ack_request)
     0
   );
 
-  if (!CMD_HANDLE_OK(tx_handle)) {
+  if(!CMD_HANDLE_OK(tx_handle)) {
     PRINTF("netstack_sched_tx: unable to schedule TX command handle=%d status=0x%04x\n",
            tx_handle, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
   }
 
-  if (rx_is_active) {
+  if(rx_is_active) {
     ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
   } else {
     ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
@@ -337,17 +338,17 @@ netstack_sched_ieee_tx(bool ack_request)
   RF_EventMask tx_events = RF_pendCmd(&rf_netstack, tx_handle, 0);
 
   /* Stop RX if it was turned on only for ACK */
-  if (rx_needed) {
+  if(rx_needed) {
     netstack_stop_rx();
   }
 
-  if (rx_is_active) {
+  if(rx_is_active) {
     ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
   } else {
     ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
   }
 
-  if (!EVENTS_CMD_DONE(tx_events)) {
+  if(!EVENTS_CMD_DONE(tx_events)) {
     PRINTF("netstack_sched_tx: TX command pend error events=0x%08llx status=0x%04x\n",
            tx_events, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
@@ -375,7 +376,7 @@ netstack_sched_prop_tx(void)
     0
   );
 
-  if (!CMD_HANDLE_OK(tx_handle)) {
+  if(!CMD_HANDLE_OK(tx_handle)) {
     PRINTF("netstack_sched_tx: unable to schedule TX command handle=%d status=0x%04x\n",
            tx_handle, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
@@ -387,7 +388,7 @@ netstack_sched_prop_tx(void)
    */
   const bool rx_key = cmd_rx_disable();
 
-  if (rx_key) {
+  if(rx_key) {
     ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
   } else {
     ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
@@ -398,13 +399,13 @@ netstack_sched_prop_tx(void)
 
   cmd_rx_restore(rx_key);
 
-  if (rx_key) {
+  if(rx_key) {
     ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
   } else {
     ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
   }
 
-  if (!EVENTS_CMD_DONE(tx_events)) {
+  if(!EVENTS_CMD_DONE(tx_events)) {
     PRINTF("netstack_sched_tx: TX command pend error events=0x%08llx status=0x%04x\n",
            tx_events, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
@@ -416,7 +417,7 @@ netstack_sched_prop_tx(void)
 rf_result_t
 netstack_sched_rx(bool start)
 {
-  if (cmd_rx_is_active()) {
+  if(cmd_rx_is_active()) {
     PRINTF("netstack_sched_rx: already in RX\n");
     return RF_RESULT_OK;
   }
@@ -437,7 +438,7 @@ netstack_sched_rx(bool start)
     RF_EventRxEntryDone | RF_EventRxBufFull
   );
 
-  if (!CMD_HANDLE_OK(cmd_rx_handle)) {
+  if(!CMD_HANDLE_OK(cmd_rx_handle)) {
     PRINTF("netstack_sched_rx: unable to schedule RX command handle=%d status=0x%04x\n",
            cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
     return RF_RESULT_ERROR;
@@ -445,7 +446,7 @@ netstack_sched_rx(bool start)
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
-  if (start) {
+  if(start) {
     rf_is_on = true;
     process_poll(&rf_sched_process);
   }
@@ -456,7 +457,7 @@ netstack_sched_rx(bool start)
 rf_result_t
 netstack_stop_rx(void)
 {
-  if (!cmd_rx_is_active()) {
+  if(!cmd_rx_is_active()) {
     PRINTF("netstack_stop_rx: RX not active\n");
     return RF_RESULT_OK;
   }
@@ -497,7 +498,7 @@ ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
     bm_event
   );
 
-  if (!CMD_HANDLE_OK(beacon_handle)) {
+  if(!CMD_HANDLE_OK(beacon_handle)) {
     PRINTF("ble_sched_beacon: unable to schedule BLE Beacon command handle=%d status=0x%04x\n",
            beacon_handle, CMD_STATUS(ble_cmd_beacon));
     return RF_RESULT_ERROR;
@@ -507,7 +508,7 @@ ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
 
   /* Wait until Beacon operation finishes */
   RF_EventMask beacon_events = RF_pendCmd(&rf_ble, beacon_handle, 0);
-  if (!EVENTS_CMD_DONE(beacon_events)) {
+  if(!EVENTS_CMD_DONE(beacon_events)) {
     PRINTF("ble_sched_beacon: Beacon command pend error events=0x%08llx status=0x%04x\n",
            beacon_events, CMD_STATUS(ble_cmd_beacon));
 
@@ -532,12 +533,12 @@ PROCESS_THREAD(rf_sched_process, ev, data)
                         (ev == PROCESS_EVENT_TIMER));
 
     /* start the synth re-calibration timer once. */
-    if (rf_is_on) {
+    if(rf_is_on) {
       rf_is_on = false;
       etimer_set(&synth_recal_timer, synth_recal_interval());
     }
 
-    if (ev == PROCESS_EVENT_POLL) {
+    if(ev == PROCESS_EVENT_POLL) {
       do {
         watchdog_periodic();
 
@@ -548,7 +549,7 @@ PROCESS_THREAD(rf_sched_process, ev, data)
          * RX will stop if the RX buffers are full. In this case, restart
          * RX after we've freed at least on packet.
          */
-        if (rx_buf_full) {
+        if(rx_buf_full) {
           PRINTF("rf_core: RX buf full, restart RX status=0x%04x\n", CMD_STATUS(netstack_cmd_rx));
           rx_buf_full = false;
 
@@ -567,7 +568,7 @@ PROCESS_THREAD(rf_sched_process, ev, data)
     }
 
     /* Scheduling CMD_FS will re-calibrate the synth. */
-    if ((ev == PROCESS_EVENT_TIMER) &&
+    if((ev == PROCESS_EVENT_TIMER) &&
         etimer_expired(&synth_recal_timer)) {
       PRINTF("rf_core: Re-calibrate synth\n");
       netstack_sched_fs();
