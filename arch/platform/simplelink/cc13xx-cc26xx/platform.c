@@ -241,7 +241,7 @@ platform_init_stage_three(void)
 
 #if (RF_MODE == RF_MODE_SUB_1_GHZ)
   LOG_INFO("Operating frequency on Sub-1 GHz\n");
-#else
+#elif (RF_MODE == RF_MODE_2_4_GHZ)
   LOG_INFO("Operating frequency on 2.4 GHz\n");
 #endif
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);
