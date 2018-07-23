@@ -38,8 +38,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <ti/devices/cc13x0/driverlib/ioc.h>
-#include <ti/devices/cc13x0/driverlib/cpu.h>
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/ioc.h)
+#include DeviceFamily_constructPath(driverlib/cpu.h)
 
 #include "Board.h"
 

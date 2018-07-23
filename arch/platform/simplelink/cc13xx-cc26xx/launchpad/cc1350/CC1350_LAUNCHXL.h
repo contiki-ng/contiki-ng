@@ -53,7 +53,8 @@ extern "C" {
 
 /* Includes */
 #include <ti/drivers/PIN.h>
-#include <ti/devices/cc13x0/driverlib/ioc.h>
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/ioc.h)
 
 /* Externs */
 extern const PIN_Config BoardGpioInitTable[];

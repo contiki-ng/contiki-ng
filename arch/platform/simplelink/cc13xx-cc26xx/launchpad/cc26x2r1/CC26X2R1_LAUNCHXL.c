@@ -41,10 +41,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <ti/devices/cc13x2_cc26x2_v1/driverlib/ioc.h>
-#include <ti/devices/cc13x2_cc26x2_v1/driverlib/udma.h>
-#include <ti/devices/cc13x2_cc26x2_v1/inc/hw_ints.h>
-#include <ti/devices/cc13x2_cc26x2_v1/inc/hw_memmap.h>
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/ioc.h)
+#include DeviceFamily_constructPath(driverlib/udma.h)
+#include DeviceFamily_constructPath(inc/hw_ints.h)
+#include DeviceFamily_constructPath(inc/hw_memmap.h)
 
 #include "CC26X2R1_LAUNCHXL.h"
 
