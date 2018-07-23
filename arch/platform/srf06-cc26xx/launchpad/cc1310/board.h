@@ -198,8 +198,8 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
-#define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
+#define BUTTON_HAL_ID_KEY_LEFT   0x00
+#define BUTTON_HAL_ID_KEY_RIGHT  0x01
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

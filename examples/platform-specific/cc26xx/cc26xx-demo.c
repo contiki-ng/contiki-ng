@@ -98,11 +98,11 @@
 #define CC26XX_DEMO_LEDS_BUTTON         LEDS_RED
 #define CC26XX_DEMO_LEDS_REBOOT         LEDS_ALL
 /*---------------------------------------------------------------------------*/
-#define CC26XX_DEMO_TRIGGER_1     BOARD_BUTTON_HAL_INDEX_KEY_LEFT
-#define CC26XX_DEMO_TRIGGER_2     BOARD_BUTTON_HAL_INDEX_KEY_RIGHT
+#define CC26XX_DEMO_TRIGGER_1     BUTTON_HAL_ID_KEY_LEFT
+#define CC26XX_DEMO_TRIGGER_2     BUTTON_HAL_ID_KEY_RIGHT
 
 #if BOARD_SENSORTAG
-#define CC26XX_DEMO_TRIGGER_3     BOARD_BUTTON_HAL_INDEX_REED_RELAY
+#define CC26XX_DEMO_TRIGGER_3     BUTTON_HAL_ID_REED_RELAY
 #endif
 /*---------------------------------------------------------------------------*/
 static struct etimer et;
