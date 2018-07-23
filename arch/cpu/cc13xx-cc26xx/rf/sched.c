@@ -115,8 +115,8 @@ static inline clock_time_t
 synth_recal_interval(void)
 {
   /*
-   * Add jitter centered around SYNTH_RECAL_INTERVAL,
-   * giving a +- jitter halved.
+   * Add jitter centered around SYNTH_RECAL_INTERVAL, giving a plus/minus
+   * jitter seconds halved.
    */
   return SYNTH_RECAL_INTERVAL + (random_rand() % SYNTH_RECAL_JITTER) - (SYNTH_RECAL_JITTER / 2);
 }
@@ -519,7 +519,7 @@ ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
   return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
-PROCESS(rf_sched_process, "RF Core Process");
+PROCESS(rf_sched_process, "RF Scheduler Process");
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(rf_sched_process, ev, data)
 {
@@ -562,7 +562,8 @@ PROCESS_THREAD(rf_sched_process, ev, data)
 
           NETSTACK_MAC.input();
         }
-      } while(len > 0);
+      /* Only break when we receive -1 => No available data */
+      } while(len >= 0);
     }
 
     /* Scheduling CMD_FS will re-calibrate the synth. */

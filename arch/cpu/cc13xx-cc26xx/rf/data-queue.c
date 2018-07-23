@@ -84,9 +84,9 @@ rx_bufs_init(void)
     data_entry->config.lenSz = rx_data_queue.lensz;
     data_entry->length       = RX_BUF_SIZE - sizeof(data_entry_t); /* TODO: is this sizeof sound? */
     /* Point to fist entry if this is last entry, else point to next entry */
-    data_entry->pNextEntry   = (i == (RX_BUF_CNT - 1))
+    data_entry->pNextEntry   = ((i + 1) == RX_BUF_CNT)
       ? rx_data_queue.bufs[0].buf
-      : rx_data_queue.bufs[i].buf;
+      : rx_data_queue.bufs[i+1].buf;
   }
 }
 /*---------------------------------------------------------------------------*/

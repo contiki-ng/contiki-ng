@@ -518,21 +518,24 @@ read(void *buf, unsigned short buf_len)
 
   if (data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
-    return 0;
+    return -1;
   }
 
   /*
-   * First byte in the data entry is the length.
+   * lensz bytes (1) in the data entry are the length of the received frame.
    * Data frame is on the following format:
    *    Length (1) + Payload (N) + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
    * Data frame DOES NOT contain the following:
    *    no PHY Header bytes
    *    no Source Index bytes
-   * +--------+---------+---------+--------+--------+-----------+
-   * | 1 byte | N bytes | 2 bytes | 1 byte | 1 byte | 4 bytes   |
-   * +--------+---------+---------+--------+--------+-----------+
-   * | Length | Payload | FCS     | RSSI   | Status | Timestamp |
-   * +--------+---------+---------+--------+--------+-----------+
+   * Visual representation of frame format:
+   *
+   *  +--------+---------+---------+--------+--------+-----------+
+   *  | 1 byte | N bytes | 2 bytes | 1 byte | 1 byte | 4 bytes   |
+   *  +--------+---------+---------+--------+--------+-----------+
+   *  | Length | Payload | FCS     | RSSI   | Status | Timestamp |
+   *  +--------+---------+---------+--------+--------+-----------+
+   *
    * Length bytes equal total length of entire frame excluding itself,
    *       Length = N + FCS (2) + RSSI (1) + Status (1) + Timestamp (4)
    *       Length = N + 8

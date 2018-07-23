@@ -376,22 +376,25 @@ read(void *buf, unsigned short buf_len)
 
   if (data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
-    return 0;
+    return -1;
   }
 
   /*
-   * First 2 bytes in the data entry are the length.
+   * lensz bytes (2) in the data entry are the length of the received frame.
    * Data frame is on the following format:
    *    Length (2) + Payload (N) + RSSI (1) + Status (1)
    * Data frame DOES NOT contain the following:
    *    no Header/PHY bytes
    *    no appended Received CRC bytes
    *    no Timestamp bytes
-   * +---------+---------+--------+--------+
-   * | 2 bytes | N bytes | 1 byte | 1 byte |
-   * +---------+---------+--------+--------+
-   * | Length  | Payload | RSSI   | Status |
-   * +---------+---------+--------+--------+
+   * Visual representation of frame format:
+   *
+   *  +---------+---------+--------+--------+
+   *  | 2 bytes | N bytes | 1 byte | 1 byte |
+   *  +---------+---------+--------+--------+
+   *  | Length  | Payload | RSSI   | Status |
+   *  +---------+---------+--------+--------+
+   *
    * Length bytes equal total length of entire frame excluding itself,
    *       Length = N + RSSI (1) + Status (1)
    *              = N + 2
