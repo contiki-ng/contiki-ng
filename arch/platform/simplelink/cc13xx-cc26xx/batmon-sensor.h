@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,17 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx
+ * \addtogroup cc13xx-cc26xx-platform
  * @{
  *
- * \defgroup cc26xx-batmon CC13xx/CC26xx BatMon sensor driver
+ * \defgroup cc13xx-cc26xx-batmon CC13xx/CC26xx Battery Monitor sensor driver.
  *
  * Driver for the on-chip battery voltage and chip temperature sensor.
  * @{
  *
  * \file
- * Header file for the CC13xx/CC26xx battery monitor
+ *        Header file for the CC13xx/CC26xx battery monitor.
  */
 /*---------------------------------------------------------------------------*/
 #ifndef BATMON_SENSOR_H_

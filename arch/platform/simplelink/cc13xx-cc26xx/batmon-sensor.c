@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-batmon
+ * \addtogroup cc13xx-cc26xx-batmon
  * @{
  *
  * \file
- *  Driver for the CC13xx/CC26xx AON battery monitor
+ *        Driver for the CC13xx/CC26xx AON battery monitor.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

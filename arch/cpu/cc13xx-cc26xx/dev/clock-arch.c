@@ -65,7 +65,7 @@ clock_update_cb(void)
   HwiP_restore(key);
 
   /* Notify the etimer system. */
-  if (etimer_pending()) {
+  if(etimer_pending()) {
     etimer_request_poll();
   }
 }

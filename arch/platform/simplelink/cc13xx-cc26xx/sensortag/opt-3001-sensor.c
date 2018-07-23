@@ -195,7 +195,7 @@ i2c_read(void *rbuf, size_t rcount)
 static bool
 sensor_init(void)
 {
-  if (i2c_handle) {
+  if(i2c_handle) {
     return true;
   }
 
@@ -206,7 +206,7 @@ sensor_init(void)
   i2c_params.bitRate = I2C_400kHz;
 
   i2c_handle = I2C_open(Board_I2C0, &i2c_params);
-  if (i2c_handle == NULL) {
+  if(i2c_handle == NULL) {
     return false;
   }
 
@@ -249,12 +249,12 @@ notify_ready_cb(void *unused)
   uint16_t cfg_value = 0;
 
   bool spi_ok = i2c_write_read(cfg_data, sizeof(cfg_data), &cfg_value, sizeof(cfg_value));
-  if (!spi_ok) {
+  if(!spi_ok) {
     opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
     return;
   }
 
-  if (cfg_value & CFG_CRF) {
+  if(cfg_value & CFG_CRF) {
     opt_3001.status = OPT_3001_STATUS_DATA_READY;
     sensors_changed(&opt_3001_sensor);
   } else {
@@ -273,7 +273,7 @@ value(int type)
   /* Unused args */
   (void)type;
 
-  if (opt_3001.status != OPT_3001_STATUS_DATA_READY) {
+  if(opt_3001.status != OPT_3001_STATUS_DATA_READY) {
     return OPT_3001_READING_ERROR;
   }
 
@@ -281,7 +281,7 @@ value(int type)
   uint16_t cfg_value = 0;
 
   bool spi_ok = i2c_write_read(cfg_data, sizeof(cfg_data), &cfg_value, sizeof(cfg_value));
-  if (!spi_ok) {
+  if(!spi_ok) {
     opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
     return OPT_3001_READING_ERROR;
   }
@@ -290,7 +290,7 @@ value(int type)
   uint16_t result_value = 0;
 
   spi_ok = i2c_write_read(result_data, sizeof(result_data), &result_value, sizeof(result_value));
-  if (!spi_ok) {
+  if(!spi_ok) {
     opt_3001.status = OPT_3001_STATUS_I2C_ERROR;
     return OPT_3001_READING_ERROR;
   }
@@ -322,7 +322,7 @@ configure(int type, int enable)
   int rv = 0;
   switch(type) {
   case SENSORS_HW_INIT:
-    if (sensor_init()) {
+    if(sensor_init()) {
       opt_3001.status = OPT_3001_STATUS_STANDBY;
     } else {
       opt_3001.status = OPT_3001_STATUS_DISABLED;

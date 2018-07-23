@@ -59,7 +59,7 @@ init(void)
   ADC_Params_init(&adc_params);
 
   adc_handle = ADC_open(Board_ADCALS, &adc_params);
-  if (adc_handle == NULL) {
+  if(adc_handle == NULL) {
     return 0;
   }
 
@@ -97,7 +97,7 @@ value(int type)
 
   uint16_t adc_value = 0;
   int_fast16_t res = ADC_convert(adc_handle, &adc_value);
-  if (res != ADC_STATUS_SUCCESS) {
+  if(res != ADC_STATUS_SUCCESS) {
     return -1;
   }
 

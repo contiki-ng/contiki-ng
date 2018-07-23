@@ -74,7 +74,7 @@ static volatile bool is_running;
 bool
 buzzer_init()
 {
-  if (has_init) {
+  if(has_init) {
     return true;
   }
 
@@ -86,7 +86,7 @@ buzzer_init()
   gpt_params.debugStallMode = GPTimerCC26XX_DEBUG_STALL_OFF;
 
   gpt_handle = GPTimerCC26XX_open(Board_GPTIMER0A, &gpt_params);
-  if (!gpt_handle) {
+  if(!gpt_handle) {
     return false;
   }
 
@@ -105,20 +105,20 @@ buzzer_running()
 bool
 buzzer_start(uint32_t freq)
 {
-  if (!has_init) {
+  if(!has_init) {
     return false;
   }
 
-  if (freq == 0) {
+  if(freq == 0) {
     return false;
   }
 
-  if (is_running) {
+  if(is_running) {
     return true;
   }
 
   pin_handle = PIN_open(&pin_state, pin_table);
-  if (!pin_handle) {
+  if(!pin_handle) {
     return false;
   }
 
@@ -139,11 +139,11 @@ buzzer_start(uint32_t freq)
 void
 buzzer_stop()
 {
-  if (!gpt_handle) {
+  if(!gpt_handle) {
     return;
   }
 
-  if (!is_running) {
+  if(!is_running) {
     return;
   }
 

@@ -108,9 +108,9 @@ fade(PIN_Id pin)
     j = (k > pivot_half) ? pivot - k : k;
 
     PINCC26XX_setOutputValue(pin, 1);
-    for (i = 0; i < j; ++i) { __asm__ __volatile__ ("nop"); }
+    for(i = 0; i < j; ++i) { __asm__ __volatile__ ("nop"); }
     PINCC26XX_setOutputValue(pin, 0);
-    for (i = 0; i < pivot_half - j; ++i) { __asm__ __volatile__ ("nop"); }
+    for(i = 0; i < pivot_half - j; ++i) { __asm__ __volatile__ ("nop"); }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -149,12 +149,12 @@ platform_init_stage_one(void)
   Power_init();
 
   /* BoardGpioInitTable declared in Board.h */
-  if (PIN_init(BoardGpioInitTable) != PIN_SUCCESS) {
+  if(PIN_init(BoardGpioInitTable) != PIN_SUCCESS) {
     /*
      * Something is seriously wrong if PIN initialization of the Board GPIO
      * table fails.
      */
-    for (;;);
+    for(;;) { /* hang */ }
   }
 
   /* Perform board-specific initialization */
@@ -203,7 +203,7 @@ platform_init_stage_two(void)
 
   /* Use TRNG to seed PRNG. If TRNG fails, use a hard-coded seed. */
   unsigned short seed = 0;
-  if (!trng_rand((uint8_t*)&seed, sizeof(seed), TRNG_WAIT_FOREVER)) {
+  if(!trng_rand((uint8_t*)&seed, sizeof(seed), TRNG_WAIT_FOREVER)) {
     /* Default to some hard-coded seed. */
     seed = 0x1234;
   }
@@ -239,9 +239,9 @@ platform_init_stage_three(void)
           ChipInfo_SupportsPROPRIETARY()   ? "Yes" : "No",
           ChipInfo_SupportsBLE()           ? "Yes" : "No");
 
-#if (RF_MODE == RF_MODE_SUB_1_GHZ)
+#if(RF_MODE == RF_MODE_SUB_1_GHZ)
   LOG_INFO("Operating frequency on Sub-1 GHz\n");
-#elif (RF_MODE == RF_MODE_2_4_GHZ)
+#elif(RF_MODE == RF_MODE_2_4_GHZ)
   LOG_INFO("Operating frequency on 2.4 GHz\n");
 #endif
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);

@@ -170,7 +170,7 @@ i2c_read(void *rbuf, size_t rcount)
 static bool
 sensor_init(void)
 {
-  if (i2c_handle) {
+  if(i2c_handle) {
     return true;
   }
 
@@ -181,7 +181,7 @@ sensor_init(void)
   i2c_params.bitRate = I2C_400kHz;
 
   i2c_handle = I2C_open(Board_I2C0, &i2c_params);
-  if (i2c_handle == NULL) {
+  if(i2c_handle == NULL) {
     return false;
   }
 
@@ -230,7 +230,7 @@ notify_ready(void *unused)
   (void)unused;
 
   /* Latch readings */
-  if (i2c_read(&sensor_data, sizeof(sensor_data))) {
+  if(i2c_read(&sensor_data, sizeof(sensor_data))) {
     sensor_status = HDC_1000_SENSOR_STATUS_READINGS_READY;
   } else {
     sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
@@ -250,20 +250,20 @@ value(int type)
   int32_t temp = 0;
   int32_t hum = 0;
 
-  if (sensor_status != HDC_1000_SENSOR_STATUS_READINGS_READY) {
+  if(sensor_status != HDC_1000_SENSOR_STATUS_READINGS_READY) {
     PRINTF("Sensor disabled or starting up (%d)\n", sensor_status);
     return HDC_1000_READING_ERROR;
   }
 
-  switch (type) {
+  switch(type) {
   case HDC_1000_SENSOR_TYPE_TEMP:
   case HDC_1000_SENSOR_TYPE_HUMID:
     convert(&temp, &hum);
     PRINTF("HDC: t=%d h=%d\n", (int)temp, (int)hum);
 
-    if (type == HDC_1000_SENSOR_TYPE_TEMP) {
+    if(type == HDC_1000_SENSOR_TYPE_TEMP) {
       return (int)temp;
-    } else if (type == HDC_1000_SENSOR_TYPE_HUMID) {
+    } else if(type == HDC_1000_SENSOR_TYPE_HUMID) {
       return (int)hum;
     } else {
       return HDC_1000_READING_ERROR;
@@ -286,11 +286,11 @@ value(int type)
 static int
 configure(int type, int enable)
 {
-  switch (type) {
+  switch(type) {
   case SENSORS_HW_INIT:
     memset(&sensor_data, 0, sizeof(sensor_data));
 
-    if (sensor_init()) {
+    if(sensor_init()) {
       sensor_status = HDC_1000_SENSOR_STATUS_INITIALISED;
     } else {
       sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
@@ -299,12 +299,12 @@ configure(int type, int enable)
 
   case SENSORS_ACTIVE:
     /* Must be initialised first */
-    if (sensor_status == HDC_1000_SENSOR_STATUS_DISABLED) {
+    if(sensor_status == HDC_1000_SENSOR_STATUS_DISABLED) {
       break;
     }
 
-    if (enable) {
-      if (!start()) {
+    if(enable) {
+      if(!start()) {
         sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
         break;
       }

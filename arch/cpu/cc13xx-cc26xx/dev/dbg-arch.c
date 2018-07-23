@@ -71,7 +71,7 @@ dbg_send_bytes(const unsigned char *seq, unsigned int len)
   seq_len = strlen((const char *)seq);
   max_len = MIN(seq_len, (size_t)len);
 
-  if (max_len == 0) {
+  if(max_len == 0) {
     return 0;
   }
 

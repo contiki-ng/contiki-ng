@@ -554,7 +554,7 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_INVALID_VALUE;
   }
 
-  switch (param) {
+  switch(param) {
   case RADIO_PARAM_POWER_MODE:
     /* On / off */
     *value = (prop_radio.rf_is_on)

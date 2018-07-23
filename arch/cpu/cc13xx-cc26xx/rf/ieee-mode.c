@@ -729,7 +729,7 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_INVALID_VALUE;
   }
 
-  switch (param) {
+  switch(param) {
 
   /* Power Mode */
   case RADIO_PARAM_POWER_MODE:
@@ -831,7 +831,7 @@ set_value(radio_param_t param, radio_value_t value)
 {
   rf_result_t res;
 
-  switch (param) {
+  switch(param) {
 
   /* Power Mode */
   case RADIO_PARAM_POWER_MODE:
@@ -965,7 +965,7 @@ get_object(radio_param_t param, void *dest, size_t size)
     return RADIO_RESULT_INVALID_VALUE;
   }
 
-  switch (param) {
+  switch(param) {
   /* 64bit address */
   case RADIO_PARAM_64BIT_ADDR: {
     const size_t srcSize = sizeof(cmd_rx.localExtAddr);
@@ -1005,7 +1005,7 @@ set_object(radio_param_t param, const void *src, size_t size)
     return RADIO_RESULT_INVALID_VALUE;
   }
 
-  switch (param) {
+  switch(param) {
   /* 64-bit address */
   case RADIO_PARAM_64BIT_ADDR: {
     const size_t destSize = sizeof(cmd_rx.localExtAddr);

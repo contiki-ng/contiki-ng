@@ -183,12 +183,12 @@ i2c_read(void *rbuf, size_t rcount)
 static bool
 sensor_init(void)
 {
-  if (pin_handle && i2c_handle) {
+  if(pin_handle && i2c_handle) {
     return true;
   }
 
   pin_handle = PIN_open(&pin_state, pin_table);
-  if (!pin_handle) {
+  if(!pin_handle) {
     return false;
   }
 
@@ -199,7 +199,7 @@ sensor_init(void)
   i2c_params.bitRate = I2C_400kHz;
 
   i2c_handle = I2C_open(Board_I2C0, &i2c_params);
-  if (i2c_handle == NULL) {
+  if(i2c_handle == NULL) {
     PIN_close(pin_handle);
     return false;
   }
@@ -252,12 +252,12 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
 
   spi_ok = i2c_write_read(status_data, sizeof(status_data),
                           &status_value, sizeof(status_value));
-  if (!spi_ok) {
+  if(!spi_ok) {
     return false;
   }
   status_value = SWAP16(status_value);
 
-  if ((status_value & CONV_RDY_BIT) == 0) {
+  if((status_value & CONV_RDY_BIT) == 0) {
     return false;
   }
 
@@ -266,7 +266,7 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
 
   spi_ok = i2c_write_read(local_temp_data, sizeof(local_temp_data),
                           &local_temp_value, sizeof(local_temp_value));
-  if (!spi_ok) {
+  if(!spi_ok) {
     return false;
   }
 
@@ -275,7 +275,7 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
 
   spi_ok = i2c_write_read(obj_temp_data, sizeof(obj_temp_data),
                           &obj_temp_value, sizeof(obj_temp_value));
-  if (!spi_ok) {
+  if(!spi_ok) {
     return false;
   }
 
@@ -316,17 +316,17 @@ value(int type)
   uint16_t raw_local_tmp = 0, local_tmp = 0;
   uint16_t raw_obj_tmp = 0,   obj_tmp = 0;
 
-  if (tmp_007.status != TMP_007_STATUS_READY) {
+  if(tmp_007.status != TMP_007_STATUS_READY) {
     PRINTF("Sensor disabled or starting up (%d)\n", tmp_007.status);
     return TMP_007_READING_ERROR;
   }
 
-  switch (type) {
+  switch(type) {
   case TMP_007_TYPE_OBJECT:  return tmp_007.obj_tmp_latched;
   case TMP_007_TYPE_AMBIENT: return tmp_007.local_tmp_latched;
 
   case TMP_007_TYPE_ALL:
-    if (!read_data(&raw_local_tmp, &raw_obj_tmp)) {
+    if(!read_data(&raw_local_tmp, &raw_obj_tmp)) {
       return TMP_007_READING_ERROR;
     }
 
@@ -360,9 +360,9 @@ value(int type)
 static int
 configure(int type, int enable)
 {
-  switch (type) {
+  switch(type) {
   case SENSORS_HW_INIT:
-    if (!sensor_init()) {
+    if(!sensor_init()) {
       return TMP_007_STATUS_DISABLED;
     }
 
@@ -373,10 +373,10 @@ configure(int type, int enable)
 
   case SENSORS_ACTIVE:
     /* Must be initialised first */
-    if (tmp_007.status == TMP_007_STATUS_DISABLED) {
+    if(tmp_007.status == TMP_007_STATUS_DISABLED) {
       return TMP_007_STATUS_DISABLED;
     }
-    if (enable) {
+    if(enable) {
       enable_sensor(true);
       ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready_cb, NULL);
       tmp_007.status = TMP_007_STATUS_NOT_READY;

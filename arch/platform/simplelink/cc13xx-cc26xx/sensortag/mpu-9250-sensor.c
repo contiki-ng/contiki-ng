@@ -283,7 +283,7 @@ static bool
 sensor_init(void)
 {
   pin_handle = PIN_open(&pin_state, mpu_9250_pin_table);
-  if (pin_handle == NULL) {
+  if(pin_handle == NULL) {
     return false;
   }
 
@@ -293,7 +293,7 @@ sensor_init(void)
   i2cParams.bitRate = I2C_400kHz;
 
   i2c_handle = I2C_open(Board_I2C0, &i2cParams);
-  if (i2c_handle == NULL) {
+  if(i2c_handle == NULL) {
     PIN_close(&pin_state);
     return false;
   }
@@ -399,14 +399,14 @@ sensor_data_ready(uint8_t* int_status)
 static bool
 acc_read(uint8_t int_status, uint16_t *data)
 {
-  if (!(int_status & BIT_RAW_RDY_EN)) {
+  if(!(int_status & BIT_RAW_RDY_EN)) {
     return false;
   }
 
   /* Burst read of all accelerometer values */
   uint8_t accel_xout_h[] = { REG_ACCEL_XOUT_H };
   bool spi_ok = i2c_write_read(accel_xout_h, sizeof(accel_xout_h), data, DATA_SIZE);
-  if (!spi_ok) {
+  if(!spi_ok) {
     return false;
   }
 
@@ -422,14 +422,14 @@ acc_read(uint8_t int_status, uint16_t *data)
 static bool
 gyro_read(uint8_t int_status, uint16_t *data)
 {
-  if (!(int_status & BIT_RAW_RDY_EN)) {
+  if(!(int_status & BIT_RAW_RDY_EN)) {
     return false;
   }
 
   /* Burst read of all accelerometer values */
   uint8_t gyro_xout_h[] = { REG_GYRO_XOUT_H };
   bool spi_ok = i2c_write_read(gyro_xout_h, sizeof(gyro_xout_h), data, DATA_SIZE);
-  if (!spi_ok) {
+  if(!spi_ok) {
     return false;
   }
 
@@ -446,7 +446,7 @@ gyro_read(uint8_t int_status, uint16_t *data)
 static int32_t
 acc_convert(int32_t raw_data)
 {
-  switch (mpu_9250.acc_range) {
+  switch(mpu_9250.acc_range) {
   case MPU_9250_SENSOR_ACC_RANGE_2G:  return raw_data * 100 *  2 / 32768;
   case MPU_9250_SENSOR_ACC_RANGE_4G:  return raw_data * 100 *  4 / 32768;
   case MPU_9250_SENSOR_ACC_RANGE_8G:  return raw_data * 100 *  8 / 32768;
@@ -481,7 +481,7 @@ initialise_cb(void *unused)
 {
   (void)unused;
 
-  if (mpu_9250.type == MPU_9250_SENSOR_TYPE_NONE) {
+  if(mpu_9250.type == MPU_9250_SENSOR_TYPE_NONE) {
     return;
   }
 
@@ -489,7 +489,7 @@ initialise_cb(void *unused)
   sensor_wakeup();
 
   /* Configure the accelerometer range */
-  if ((mpu_9250.type & MPU_9250_SENSOR_TYPE_ACC) != 0) {
+  if((mpu_9250.type & MPU_9250_SENSOR_TYPE_ACC) != 0) {
     sensor_set_acc_range(mpu_9250.acc_range);
   }
 
@@ -514,14 +514,14 @@ value(int type)
     return MPU_9250_READING_ERROR;
   }
 
-  if (mpu_9250.type == MPU_9250_SENSOR_TYPE_NONE) {
+  if(mpu_9250.type == MPU_9250_SENSOR_TYPE_NONE) {
     return MPU_9250_READING_ERROR;
   }
 
   uint8_t int_status = 0;
   const rtimer_clock_t t0 = RTIMER_NOW();
-  while (!sensor_data_ready(&int_status)) {
-    if (!(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + READING_WAIT_TIMEOUT))) {
+  while(!sensor_data_ready(&int_status)) {
+    if(!(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + READING_WAIT_TIMEOUT))) {
       return MPU_9250_READING_ERROR;
     }
   }
@@ -530,9 +530,9 @@ value(int type)
   memset(sensor_value, 0, sizeof(sensor_value));
 
   /* Read accel data */
-  if ((type & MPU_9250_SENSOR_TYPE_ACC) != 0) {
+  if((type & MPU_9250_SENSOR_TYPE_ACC) != 0) {
 
-    if (!acc_read(int_status, sensor_value)) {
+    if(!acc_read(int_status, sensor_value)) {
       return MPU_9250_READING_ERROR;
     }
 
@@ -540,7 +540,7 @@ value(int type)
            sensor_value[0], sensor_value[1], sensor_value[2]);
 
     /* Convert */
-    switch (type) {
+    switch(type) {
     case MPU_9250_SENSOR_TYPE_ACC_X: return acc_convert(sensor_value[0]);
     case MPU_9250_SENSOR_TYPE_ACC_Y: return acc_convert(sensor_value[1]);
     case MPU_9250_SENSOR_TYPE_ACC_Z: return acc_convert(sensor_value[2]);
@@ -550,7 +550,7 @@ value(int type)
   /* Read gyro data */
   } else if((type & MPU_9250_SENSOR_TYPE_GYRO) != 0) {
 
-    if (!gyro_read(int_status, sensor_value)) {
+    if(!gyro_read(int_status, sensor_value)) {
       return MPU_9250_READING_ERROR;
     }
 
@@ -558,7 +558,7 @@ value(int type)
            sensor_value[0], sensor_value[1], sensor_value[2]);
 
     /* Convert */
-    switch (type) {
+    switch(type) {
     case MPU_9250_SENSOR_TYPE_GYRO_X: return gyro_convert(sensor_value[0]);
     case MPU_9250_SENSOR_TYPE_GYRO_Y: return gyro_convert(sensor_value[1]);
     case MPU_9250_SENSOR_TYPE_GYRO_Z: return gyro_convert(sensor_value[2]);
@@ -588,7 +588,7 @@ configure(int type, int enable)
 
   switch(type) {
   case SENSORS_HW_INIT:
-    if (sensor_init()) {
+    if(sensor_init()) {
       mpu_9250.status = MPU_9250_SENSOR_STATUS_ENABLED;
     } else {
       mpu_9250.status = MPU_9250_SENSOR_STATUS_DISABLED;
@@ -596,7 +596,7 @@ configure(int type, int enable)
     break;
 
   case SENSORS_ACTIVE:
-    if (enable_type != MPU_9250_SENSOR_TYPE_NONE) {
+    if(enable_type != MPU_9250_SENSOR_TYPE_NONE) {
       PRINTF("MPU: Enabling\n");
 
       mpu_9250.type = enable_type;
@@ -610,7 +610,7 @@ configure(int type, int enable)
 
       ctimer_stop(&startup_timer);
 
-      if (PIN_getOutputValue(Board_MPU_POWER)) {
+      if(PIN_getOutputValue(Board_MPU_POWER)) {
         sensor_sleep();
 
         I2C_cancel(i2c_handle);
@@ -636,7 +636,7 @@ configure(int type, int enable)
 static int
 status(int type)
 {
-  switch (type) {
+  switch(type) {
   case SENSORS_ACTIVE:
   case SENSORS_READY:
     return mpu_9250.status;

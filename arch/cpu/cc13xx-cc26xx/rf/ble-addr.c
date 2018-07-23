@@ -104,7 +104,7 @@ ble_addr_cpy(uint8_t *dst)
 int
 ble_addr_to_eui64(uint8_t *dst, uint8_t *src)
 {
-  if (!dst || !src) {
+  if(!dst || !src) {
     return -1;
   }
 
@@ -119,7 +119,7 @@ ble_addr_to_eui64(uint8_t *dst, uint8_t *src)
 int
 ble_addr_to_eui64_cpy(uint8_t *dst)
 {
-  if (!dst) {
+  if(!dst) {
     return -1;
   }
 
@@ -127,7 +127,7 @@ ble_addr_to_eui64_cpy(uint8_t *dst)
   uint8_t ble_addr[BLE_ADDR_SIZE];
 
   res = ble_addr_cpy(ble_addr);
-  if (res) {
+  if(res) {
     return -1;
   }
 

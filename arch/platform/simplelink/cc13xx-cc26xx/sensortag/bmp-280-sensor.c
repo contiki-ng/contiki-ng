@@ -181,7 +181,7 @@ i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCoun
 static bool
 init(void)
 {
-  if (i2c_handle) {
+  if(i2c_handle) {
     return true;
   }
 
@@ -192,7 +192,7 @@ init(void)
   i2cParams.bitRate = I2C_400kHz;
 
   i2c_handle = I2C_open(Board_I2C0, &i2cParams);
-  if (i2c_handle == NULL) {
+  if(i2c_handle == NULL) {
     return false;
   }
 
@@ -310,7 +310,7 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
     (32768 + v_x1_u32r) * (int32_t)p->dig_p1
   ) >> 15;
 
-  if (v_x1_u32r == 0) {
+  if(v_x1_u32r == 0) {
     /* Avoid exception caused by division by zero */
     *press = 0;
     return;
@@ -322,7 +322,7 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
       v_x2_u32r >> 12
     )
   ) * 3125;
-  if ((int32_t)pressure < 0) {
+  if((int32_t)pressure < 0) {
     pressure = (pressure << 1) / (uint32_t)v_x1_u32r;
   } else {
     pressure = (pressure / (uint32_t)v_x1_u32r) * 2;
@@ -360,7 +360,7 @@ value(int type)
   int32_t temp = 0;
   uint32_t pres = 0;
 
-  if (sensor_status != SENSOR_STATUS_READY) {
+  if(sensor_status != SENSOR_STATUS_READY) {
     PRINTF("Sensor disabled or starting up (%d)\n", sensor_status);
     return BMP_280_READING_ERROR;
   }
@@ -368,11 +368,11 @@ value(int type)
   /* A buffer for the raw reading from the sensor */
   uint8_t sensor_value[MEAS_DATA_SIZE];
 
-  switch (type) {
+  switch(type) {
   case BMP_280_SENSOR_TYPE_TEMP:
   case BMP_280_SENSOR_TYPE_PRESS:
     memset(sensor_value, 0, MEAS_DATA_SIZE);
-    if (!read_data(sensor_value, MEAS_DATA_SIZE)) {
+    if(!read_data(sensor_value, MEAS_DATA_SIZE)) {
       return BMP_280_READING_ERROR;
     }
 
@@ -409,7 +409,7 @@ configure(int type, int enable)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    if (init()) {
+    if(init()) {
       enable_sensor(false);
       sensor_status = SENSOR_STATUS_INITIALISED;
     } else {
@@ -419,10 +419,10 @@ configure(int type, int enable)
 
   case SENSORS_ACTIVE:
     /* Must be initialised first */
-    if (sensor_status == SENSOR_STATUS_DISABLED) {
+    if(sensor_status == SENSOR_STATUS_DISABLED) {
       break;
     }
-    if (enable) {
+    if(enable) {
       enable_sensor(true);
       ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
       sensor_status = SENSOR_STATUS_NOT_READY;
