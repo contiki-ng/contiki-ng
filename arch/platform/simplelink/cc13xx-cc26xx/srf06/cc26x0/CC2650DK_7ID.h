@@ -138,11 +138,6 @@ extern const PIN_Config BoardGpioInitTable[];
 /* SD Card */
 #define CC2650DK_7ID_SDCARD_CS             IOID_30
 
-/* LCD Board */
-#define CC2650DK_7ID_LCD_MODE              IOID_4
-#define CC2650DK_7ID_LCD_RST               IOID_5
-#define CC2650DK_7ID_LCD_CS                IOID_14
-
 /* Ambient Light Sensor */
 #define CC2650DK_7ID_ALS_OUT               IOID_23
 #define CC2650DK_7ID_ALS_PWR               IOID_26
@@ -236,9 +231,6 @@ typedef enum CC2650DK_7ID_GPIOName {
     CC2650DK_7ID_GPIO_LED4,
     CC2650DK_7ID_GPIO_SDCARD_CS,
     CC2650DK_7ID_GPIO_ACC_CS,
-    CC2650DK_7ID_GPIO_LCD_CS,
-    CC2650DK_7ID_GPIO_LCD_POWER,
-    CC2650DK_7ID_GPIO_LCD_ENABLE,
 
     CC2650DK_7ID_GPIOCOUNT
 } CC2650DK_7ID_GPIOName;

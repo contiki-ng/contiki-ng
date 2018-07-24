@@ -75,102 +75,6 @@ const CryptoCC26XX_Config CryptoCC26XX_config[CC1350STK_CRYPTOCOUNT] = {
 };
 
 /*
- *  =============================== Display ===============================
- */
-#include <ti/display/Display.h>
-#include <ti/display/DisplayUart.h>
-#include <ti/display/DisplaySharp.h>
-
-#if TI_DISPLAY_CONF_ENABLE
-
-#if TI_DISPLAY_CONF_UART_ENABLE
-
-#if !(TI_UART_CONF_UART0_ENABLE)
-#error "Display UART driver requires UART0"
-#endif
-
-#ifndef BOARD_DISPLAY_UART_STRBUF_SIZE
-#define BOARD_DISPLAY_UART_STRBUF_SIZE    128
-#endif
-
-static char uartStringBuf[CC1350STK_DISPLAY_UART_STRBUF_SIZE];
-
-DisplayUart_Object     displayUartObject;
-
-const DisplayUart_HWAttrs displayUartHWAttrs = {
-    .uartIdx      = CC1350STK_UART0,
-    .baudRate     = 115200,
-    .mutexTimeout = (unsigned int)(-1),
-    .strBuf       = uartStringBuf,
-    .strBufLen    = CC1350STK_DISPLAY_UART_STRBUF_SIZE,
-};
-
-#endif /* TI_DISPLAY_CONF_UART_ENABLE */
-
-#if TI_DISPLAY_CONF_LCD_ENABLE
-
-#if !(TI_SPI_CONF_SPI0_ENABLE)
-#error "Display LCD driver requires SPI0"
-#endif
-
-#ifndef BOARD_DISPLAY_SHARP_SIZE
-#define BOARD_DISPLAY_SHARP_SIZE    96
-#endif
-
-static uint_least8_t sharpDisplayBuf[CC1350STK_DISPLAY_SHARP_SIZE * CC1350STK_DISPLAY_SHARP_SIZE / 8];
-
-DisplaySharp_Object    displaySharpObject;
-
-const DisplaySharp_HWAttrsV1 displaySharpHWattrs = {
-    .spiIndex    = CC1350STK_SPI0,
-    .csPin       = CC1350STK_GPIO_LCD_CS,
-    .powerPin    = (uint32_t)(-1),  /* no need to apply power for this LCD */
-    .enablePin   = CC1350STK_GPIO_LCD_ENABLE,
-    .pixelWidth  = CC1350STK_DISPLAY_SHARP_SIZE,
-    .pixelHeight = CC1350STK_DISPLAY_SHARP_SIZE,
-    .displayBuf  = sharpDisplayBuf,
-};
-
-#endif /* TI_DISPLAY_CONF_LCD_ENABLE */
-
-/*
- * This #if/#else is needed to workaround a problem with the
- * IAR compiler. The IAR compiler doesn't like the empty array
- * initialization. (IAR Error[Pe1345])
- */
-
-const Display_Config Display_config[] = {
-#if TI_DISPLAY_CONF_UART_ENABLE
-    {
-#  if TI_DISPLAY_CONF_USE_UART_ANSI
-        .fxnTablePtr = &DisplayUartAnsi_fxnTable,
-#  else /* Default to minimal UART with no cursor placement */
-        .fxnTablePtr = &DisplayUartMin_fxnTable,
-#  endif
-        .fxnTablePtr = &DisplayUart_fxnTable,
-        .object      = &displayUartObject,
-        .hwAttrs     = &displayUartHWAttrs,
-    },
-#endif
-#if TI_DISPLAY_CONF_LCD_ENABLE
-    {
-        .fxnTablePtr = &DisplaySharp_fxnTable,
-        .object      = &displaySharpObject,
-        .hwAttrs     = &displaySharpHWattrs
-    },
-#endif
-};
-
-const uint_least8_t Display_count = sizeof(Display_config) / sizeof(Display_Config);
-
-#else
-
-const Display_Config *Display_config = NULL;
-const uint_least8_t Display_count = 0;
-
-#endif /* TI_DISPLAY_CONF_ENABLE */
-
-/*
  *  =============================== GPIO ===============================
  */
 #include <ti/drivers/GPIO.h>
@@ -194,10 +98,6 @@ GPIO_PinConfig gpioPinConfigs[] = {
 
     /* SPI Flash CSN */
     GPIOCC26XX_DIO_14 | GPIO_DO_NOT_CONFIG,
-
-    /* Sharp Display - GPIO configurations will be done in the Display files */
-    GPIOCC26XX_DIO_20 | GPIO_DO_NOT_CONFIG,    /* LCD CS */
-    GPIOCC26XX_DIO_29 | GPIO_DO_NOT_CONFIG,    /* LCD Enable */
 };
 
 /*

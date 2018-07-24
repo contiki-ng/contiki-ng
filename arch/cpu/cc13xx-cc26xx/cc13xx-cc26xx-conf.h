@@ -403,34 +403,6 @@
 #endif
 
 /**
- * \brief  Enable or disable Display driver.
- */
-#ifndef TI_DISPLAY_CONF_ENABLE
-#define TI_DISPLAY_CONF_ENABLE              0
-#endif
-
-/**
- * \brief  Enable or disable UART Display peripheral.
- */
-#ifndef TI_DISPLAY_CONF_UART_ENABLE
-#define TI_DISPLAY_CONF_UART_ENABLE         TI_UART_CONF_UART0_ENABLE
-#endif
-
-/**
- * \brief  Configure UART Display peripheral to use ANSI or not.
- */
-#ifndef TI_DISPLAY_CONF_USE_UART_ANSI
-#define TI_DISPLAY_CONF_USE_UART_ANSI       0
-#endif
-
-/**
- * \brief  Enable or disable LCD Display peripheral.
- */
-#ifndef TI_DISPLAY_CONF_LCD_ENABLE
-#define TI_DISPLAY_CONF_LCD_ENABLE          TI_SPI_CONF_SPI0_ENABLE
-#endif
-
-/**
  * \brief  Enable or disable SD driver.
  */
 #ifndef TI_SD_CONF_ENABLE
