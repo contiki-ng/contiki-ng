@@ -140,7 +140,7 @@ data_queue_reset(void)
 data_entry_t*
 data_queue_current_entry(void)
 {
-    return rx_data_queue.curr_entry;
+  return rx_data_queue.curr_entry;
 }
 /*---------------------------------------------------------------------------*/
 void

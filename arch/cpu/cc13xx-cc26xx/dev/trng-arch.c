@@ -51,7 +51,7 @@
  */
 #include <ti/devices/DeviceFamily.h>
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
-# include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintextCC26xx.c>
+#include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintextCC26xx.c>
 #endif
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
@@ -82,7 +82,7 @@ trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us)
 
   TRNG_close(trng_handle);
 
-  return (result == TRNG_STATUS_SUCCESS);
+  return result == TRNG_STATUS_SUCCESS;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

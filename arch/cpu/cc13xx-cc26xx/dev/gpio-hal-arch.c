@@ -175,7 +175,6 @@ gpio_int_cb(PIN_Handle handle, PIN_Id pin_id)
   /* Notify the GPIO HAL driver */
   gpio_hal_event_handler(gpio_hal_pin_to_mask(pin_id));
 }
-
 /*---------------------------------------------------------------------------*/
 void
 gpio_hal_arch_init(void)
@@ -244,15 +243,15 @@ gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
   pins &= ~oe_pins;
 
   return (HWREG(GPIO_BASE + GPIO_O_DOUT31_0) & oe_pins) |
-          GPIO_readMultiDio(pins);
+         GPIO_readMultiDio(pins);
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
 gpio_hal_arch_read_pin(gpio_hal_pin_t pin)
 {
   return (GPIO_getOutputEnableDio(pin))
-    ? PINCC26XX_getOutputValue(pin)
-    : PINCC26XX_getInputValue(pin);
+         ? PINCC26XX_getOutputValue(pin)
+         : PINCC26XX_getInputValue(pin);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

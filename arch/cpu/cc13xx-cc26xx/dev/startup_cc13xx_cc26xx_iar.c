@@ -39,8 +39,7 @@
 #error "startup_cc13xx_cc26xx_iar.c: Unsupported compiler!"
 #endif
 
-
-// We need intrinsic functions for IAR (if used in source code)
+/* We need intrinsic functions for IAR (if used in source code) */
 #include <intrinsics.h>
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_types.h)
@@ -58,48 +57,48 @@ static void faultISR( void );
 static void intDefaultHandler( void );
 extern int  main( void );
 
-extern void MPUFaultIntHandler( void );
-extern void BusFaultIntHandler( void );
-extern void UsageFaultIntHandler( void );
-extern void SVCallIntHandler( void );
-extern void DebugMonIntHandler( void );
-extern void PendSVIntHandler( void );
-extern void SysTickIntHandler( void );
-extern void GPIOIntHandler( void );
-extern void I2CIntHandler( void );
-extern void RFCCPE1IntHandler( void );
-extern void AONRTCIntHandler( void );
-extern void UART0IntHandler( void );
-extern void AUXSWEvent0IntHandler( void );
-extern void SSI0IntHandler( void );
-extern void SSI1IntHandler( void );
-extern void RFCCPE0IntHandler( void );
-extern void RFCHardwareIntHandler( void );
-extern void RFCCmdAckIntHandler( void );
-extern void I2SIntHandler( void );
-extern void AUXSWEvent1IntHandler( void );
-extern void WatchdogIntHandler( void );
-extern void Timer0AIntHandler( void );
-extern void Timer0BIntHandler( void );
-extern void Timer1AIntHandler( void );
-extern void Timer1BIntHandler( void );
-extern void Timer2AIntHandler( void );
-extern void Timer2BIntHandler( void );
-extern void Timer3AIntHandler( void );
-extern void Timer3BIntHandler( void );
-extern void CryptoIntHandler( void );
-extern void uDMAIntHandler( void );
-extern void uDMAErrIntHandler( void );
-extern void FlashIntHandler( void );
-extern void SWEvent0IntHandler( void );
-extern void AUXCombEventIntHandler( void );
-extern void AONProgIntHandler( void );
-extern void DynProgIntHandler( void );
-extern void AUXCompAIntHandler( void );
-extern void AUXADCIntHandler( void );
-extern void TRNGIntHandler( void );
+extern void MPUFaultIntHandler(void);
+extern void BusFaultIntHandler(void);
+extern void UsageFaultIntHandler(void);
+extern void SVCallIntHandler(void);
+extern void DebugMonIntHandler(void);
+extern void PendSVIntHandler(void);
+extern void SysTickIntHandler(void);
+extern void GPIOIntHandler(void);
+extern void I2CIntHandler(void);
+extern void RFCCPE1IntHandler(void);
+extern void AONRTCIntHandler(void);
+extern void UART0IntHandler(void);
+extern void AUXSWEvent0IntHandler(void);
+extern void SSI0IntHandler(void);
+extern void SSI1IntHandler(void);
+extern void RFCCPE0IntHandler(void);
+extern void RFCHardwareIntHandler(void);
+extern void RFCCmdAckIntHandler(void);
+extern void I2SIntHandler(void);
+extern void AUXSWEvent1IntHandler(void);
+extern void WatchdogIntHandler(void);
+extern void Timer0AIntHandler(void);
+extern void Timer0BIntHandler(void);
+extern void Timer1AIntHandler(void);
+extern void Timer1BIntHandler(void);
+extern void Timer2AIntHandler(void);
+extern void Timer2BIntHandler(void);
+extern void Timer3AIntHandler(void);
+extern void Timer3BIntHandler(void);
+extern void CryptoIntHandler(void);
+extern void uDMAIntHandler(void);
+extern void uDMAErrIntHandler(void);
+extern void FlashIntHandler(void);
+extern void SWEvent0IntHandler(void);
+extern void AUXCombEventIntHandler(void);
+extern void AONProgIntHandler(void);
+extern void DynProgIntHandler(void);
+extern void AUXCompAIntHandler(void);
+extern void AUXADCIntHandler(void);
+extern void TRNGIntHandler(void);
 
-// Default interrupt handlers
+/* Default interrupt handlers */
 #pragma weak MPUFaultIntHandler     = intDefaultHandler
 #pragma weak BusFaultIntHandler     = intDefaultHandler
 #pragma weak UsageFaultIntHandler   = intDefaultHandler

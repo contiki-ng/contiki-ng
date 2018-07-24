@@ -85,15 +85,15 @@
 /*---------------------------------------------------------------------------*/
 /* Data whitener. 1: Whitener, 0: No whitener */
 #ifdef PROP_MODE_CONF_DW
-# define PROP_MODE_DW  PROP_MODE_CONF_DW
+#define PROP_MODE_DW  PROP_MODE_CONF_DW
 #else
-# define PROP_MODE_DW  0
+#define PROP_MODE_DW  0
 #endif
 
 #ifdef PROP_MODE_CONF_USE_CRC16
-# define PROP_MODE_USE_CRC16  PROP_MODE_CONF_USE_CRC16
+#define PROP_MODE_USE_CRC16  PROP_MODE_CONF_USE_CRC16
 #else
-# define PROP_MODE_USE_CRC16  0
+#define PROP_MODE_USE_CRC16  0
 #endif
 /*---------------------------------------------------------------------------*/
 /* Used for checking result of CCA_REQ command */
@@ -105,9 +105,9 @@
 #define RF_GET_CCA_INFO_ERROR           0xFF
 
 #ifdef PROP_MODE_CONF_RSSI_THRESHOLD
-# define PROP_MODE_RSSI_THRESHOLD  PROP_MODE_CONF_RSSI_THRESHOLD
+#define PROP_MODE_RSSI_THRESHOLD  PROP_MODE_CONF_RSSI_THRESHOLD
 #else
-# define PROP_MODE_RSSI_THRESHOLD  0xA6
+#define PROP_MODE_RSSI_THRESHOLD  0xA6
 #endif
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
@@ -120,18 +120,18 @@
 
 #if PROP_MODE_USE_CRC16
 /* CRC16 */
-# define DOT_4G_PHR_CRC_BIT DOT_4G_PHR_CRC16
-# define CRC_LEN            2
+#define DOT_4G_PHR_CRC_BIT DOT_4G_PHR_CRC16
+#define CRC_LEN            2
 #else
 /* CRC32 */
-# define DOT_4G_PHR_CRC_BIT 0
-# define CRC_LEN            4
+#define DOT_4G_PHR_CRC_BIT 0
+#define CRC_LEN            4
 #endif /* PROP_MODE_USE_CRC16 */
 
 #if PROP_MODE_DW
-# define DOT_4G_PHR_DW_BIT DOT_4G_PHR_DW
+#define DOT_4G_PHR_DW_BIT DOT_4G_PHR_DW
 #else
- #define DOT_4G_PHR_DW_BIT 0
+#define DOT_4G_PHR_DW_BIT 0
 #endif
 /*---------------------------------------------------------------------------*/
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
@@ -197,8 +197,16 @@ static prop_radio_t prop_radio;
 #define cmd_tx            (*(volatile rfc_CMD_PROP_TX_ADV_t *)         &rf_cmd_prop_tx_adv)
 #define cmd_rx            (*(volatile rfc_CMD_PROP_RX_ADV_t *)         &rf_cmd_prop_rx_adv)
 /*---------------------------------------------------------------------------*/
-static inline bool tx_is_active(void) { return cmd_tx.status == ACTIVE; }
-static inline bool rx_is_active(void) { return cmd_rx.status == ACTIVE; }
+static inline bool
+tx_is_active(void)
+{
+  return cmd_tx.status == ACTIVE;
+}
+static inline bool
+rx_is_active(void)
+{
+  return cmd_rx.status == ACTIVE;
+}
 /*---------------------------------------------------------------------------*/
 static int on(void);
 static int off(void);
@@ -232,7 +240,7 @@ get_rssi(void)
 
   const rtimer_clock_t t0 = RTIMER_NOW();
   while((cmd_rx.status != ACTIVE) &&
-          RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT));
+        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT)) ;
 
   int8_t rssi = RF_GET_RSSI_ERROR_VAL;
   if(rx_is_active()) {
@@ -358,8 +366,8 @@ transmit(unsigned short transmit_len)
   res = netstack_sched_prop_tx();
 
   return (res == RF_RESULT_OK)
-    ? RADIO_TX_OK
-    : RADIO_TX_ERR;
+         ? RADIO_TX_OK
+         : RADIO_TX_ERR;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -377,7 +385,7 @@ read(void *buf, unsigned short buf_len)
   const rtimer_clock_t t0 = RTIMER_NOW();
   /* Only wait if the Radio is accessing the entry */
   while((data_entry->status == DATA_ENTRY_BUSY) &&
-          RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
+        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY)) ;
 
   if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
@@ -451,8 +459,8 @@ cca_request(void)
   }
 
   return (rssi < prop_radio.rssi_threshold)
-    ? CCA_STATE_IDLE
-    : CCA_STATE_BUSY;
+         ? CCA_STATE_IDLE
+         : CCA_STATE_BUSY;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -466,7 +474,7 @@ channel_clear(void)
   const uint8_t cca_state = cca_request();
 
   /* Channel is clear if CCA state is IDLE */
-  return (cca_state == CCA_STATE_IDLE);
+  return cca_state == CCA_STATE_IDLE;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -478,7 +486,7 @@ receiving_packet(void)
 
   const uint8_t cca_state = cca_request();
 
-  return (cca_state == CCA_STATE_BUSY);
+  return cca_state == CCA_STATE_BUSY;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -493,7 +501,7 @@ pending_packet(void)
   do {
     const uint8_t status = curr_entry->status;
     if((status == DATA_ENTRY_FINISHED) ||
-        (status == DATA_ENTRY_BUSY)) {
+       (status == DATA_ENTRY_BUSY)) {
       num_pending += 1;
     }
 
@@ -558,8 +566,8 @@ get_value(radio_param_t param, radio_value_t *value)
   case RADIO_PARAM_POWER_MODE:
     /* On / off */
     *value = (prop_radio.rf_is_on)
-        ? RADIO_POWER_MODE_ON
-        : RADIO_POWER_MODE_OFF;
+      ? RADIO_POWER_MODE_ON
+      : RADIO_POWER_MODE_OFF;
 
     return RADIO_RESULT_OK;
 
@@ -571,8 +579,8 @@ get_value(radio_param_t param, radio_value_t *value)
     res = rf_get_tx_power(prop_radio.rf_handle, TX_POWER_TABLE, (int8_t*)&value);
     return ((res == RF_RESULT_OK) &&
             (*value != RF_TxPowerTable_INVALID_DBM))
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_CCA_THRESHOLD:
     *value = prop_radio.rssi_threshold;
@@ -581,8 +589,8 @@ get_value(radio_param_t param, radio_value_t *value)
   case RADIO_PARAM_RSSI:
     *value = get_rssi();
     return (*value == RF_GET_RSSI_ERROR_VAL)
-      ? RADIO_RESULT_ERROR
-      : RADIO_RESULT_OK;
+           ? RADIO_RESULT_ERROR
+           : RADIO_RESULT_OK;
 
   case RADIO_CONST_CHANNEL_MIN:
     *value = DOT_15_4G_CHAN_MIN;
@@ -615,9 +623,8 @@ set_value(radio_param_t param, radio_value_t value)
 
     if(value == RADIO_POWER_MODE_ON) {
       return (on() == RF_RESULT_OK)
-        ? RADIO_RESULT_OK
-        : RADIO_RESULT_ERROR;
-
+             ? RADIO_RESULT_OK
+             : RADIO_RESULT_ERROR;
     } else if(value == RADIO_POWER_MODE_OFF) {
       off();
       return RADIO_RESULT_OK;
@@ -628,8 +635,8 @@ set_value(radio_param_t param, radio_value_t value)
   case RADIO_PARAM_CHANNEL:
     res = set_channel((uint16_t)value);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_TXPOWER:
     if(!TX_POWER_IN_RANGE((int8_t)value)) {
@@ -637,8 +644,8 @@ set_value(radio_param_t param, radio_value_t value)
     }
     res = rf_set_tx_power(prop_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_RX_MODE:
     return RADIO_RESULT_OK;

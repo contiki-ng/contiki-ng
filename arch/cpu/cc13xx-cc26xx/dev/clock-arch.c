@@ -87,7 +87,7 @@ clock_init(void)
 {
   /* ClockP_getSystemTickPeriod() returns ticks per us. */
   const uint32_t clockp_ticks_second =
-      (uint32_t)(1000 * 1000) / (CLOCK_SECOND) / ClockP_getSystemTickPeriod();
+    (uint32_t)(1000 * 1000) / (CLOCK_SECOND) / ClockP_getSystemTickPeriod();
 
   count = 0;
 

@@ -80,7 +80,7 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 #if 1
-# define PRINTF(...)  printf(__VA_ARGS__)
+#define PRINTF(...)  printf(__VA_ARGS__)
 #else
 # define PRINTF(...)
 #endif
@@ -89,23 +89,23 @@
 
 /* Configuration to enable/disable auto ACKs in IEEE mode */
 #ifdef IEEE_MODE_CONF_AUTOACK
-#   define IEEE_MODE_AUTOACK  IEEE_MODE_CONF_AUTOACK
+#define IEEE_MODE_AUTOACK  IEEE_MODE_CONF_AUTOACK
 #else
-#   define IEEE_MODE_AUTOACK  1
+#define IEEE_MODE_AUTOACK  1
 #endif /* IEEE_MODE_CONF_AUTOACK */
 
 /* Configuration to enable/disable frame filtering in IEEE mode */
 #ifdef IEEE_MODE_CONF_PROMISCOUS
-#   define IEEE_MODE_PROMISCOUS  IEEE_MODE_CONF_PROMISCOUS
+#define IEEE_MODE_PROMISCOUS  IEEE_MODE_CONF_PROMISCOUS
 #else
-#   define IEEE_MODE_PROMISCOUS  0
+#define IEEE_MODE_PROMISCOUS  0
 #endif /* IEEE_MODE_CONF_PROMISCOUS */
 
 /* Configuration to set the RSSI threshold */
 #ifdef IEEE_MODE_CONF_RSSI_THRESHOLD
-#   define IEEE_MODE_RSSI_THRESHOLD  IEEE_MODE_CONF_RSSI_THRESHOLD
+#define IEEE_MODE_RSSI_THRESHOLD  IEEE_MODE_CONF_RSSI_THRESHOLD
 #else
-#   define IEEE_MODE_RSSI_THRESHOLD  0xA6
+#define IEEE_MODE_RSSI_THRESHOLD  0xA6
 #endif /* IEEE_MODE_CONF_RSSI_THRESHOLD */
 /*---------------------------------------------------------------------------*/
 /* TX power table convenience macros */
@@ -206,7 +206,11 @@ static cmd_mod_filt_t cmd_mod_filt;
 #define cmd_rx           (*(volatile rfc_CMD_IEEE_RX_t*)    &rf_cmd_ieee_rx)
 #define cmd_rx_ack       (*(volatile rfc_CMD_IEEE_RX_ACK_t*)&rf_cmd_ieee_rx_ack)
 /*---------------------------------------------------------------------------*/
-static inline bool rx_is_active(void) { return cmd_rx.status == ACTIVE; }
+static inline bool
+rx_is_active(void)
+{
+  return cmd_rx.status == ACTIVE;
+}
 /*---------------------------------------------------------------------------*/
 /* Forward declarations of local functions */
 static void check_rat_overflow(void);
@@ -515,7 +519,7 @@ read(void *buf, unsigned short buf_len)
   const rtimer_clock_t t0 = RTIMER_NOW();
   /* Only wait if the Radio timer is accessing the entry */
   while((data_entry->status == DATA_ENTRY_BUSY) &&
-          RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
+        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY)) ;
 
   if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
@@ -602,7 +606,7 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
 
   const rtimer_clock_t t0 = RTIMER_NOW();
   while((cmd_rx.status != ACTIVE) &&
-          RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT));
+        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT)) ;
 
   RF_Stat stat = RF_StatRadioInactiveError;
   if(rx_is_active()) {
@@ -614,8 +618,8 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
   }
 
   return (stat == RF_StatCmdDoneSuccess)
-    ? RF_RESULT_OK
-    : RF_RESULT_ERROR;
+         ? RF_RESULT_OK
+         : RF_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -630,7 +634,7 @@ channel_clear(void)
   }
 
   /* Channel is clear if CCA state is IDLE */
-  return (cmd_cca_req.ccaInfo.ccaState == CCA_STATE_IDLE);
+  return cmd_cca_req.ccaInfo.ccaState == CCA_STATE_IDLE;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -646,14 +650,14 @@ receiving_packet(void)
 
   /* If we are transmitting (can only be an ACK here), we are not receiving */
   if((cmd_cca_req.ccaInfo.ccaEnergy == CCA_STATE_BUSY) &&
-      (cmd_cca_req.ccaInfo.ccaCorr   == CCA_STATE_BUSY) &&
-      (cmd_cca_req.ccaInfo.ccaSync   == CCA_STATE_BUSY)) {
+     (cmd_cca_req.ccaInfo.ccaCorr == CCA_STATE_BUSY) &&
+     (cmd_cca_req.ccaInfo.ccaSync == CCA_STATE_BUSY)) {
     PRINTF("receiving_packet: we were TXing ACK\n");
     return 0;
   }
 
   /* We are receiving a packet if a CCA sync has been seen, i.e. ccaSync is busy (1) */
-  return (cmd_cca_req.ccaInfo.ccaSync == CCA_STATE_BUSY);
+  return cmd_cca_req.ccaInfo.ccaSync == CCA_STATE_BUSY;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -668,7 +672,7 @@ pending_packet(void)
   do {
     const uint8_t status = curr_entry->status;
     if((status == DATA_ENTRY_FINISHED) ||
-        (status == DATA_ENTRY_BUSY)) {
+       (status == DATA_ENTRY_BUSY)) {
       num_pending += 1;
     }
 
@@ -777,8 +781,8 @@ get_value(radio_param_t param, radio_value_t *value)
     res = rf_get_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, (int8_t*)&value);
     return ((res == RF_RESULT_OK) &&
             (*value != RF_TxPowerTable_INVALID_DBM))
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   /* CCA threshold */
   case RADIO_PARAM_CCA_THRESHOLD:
@@ -789,8 +793,8 @@ get_value(radio_param_t param, radio_value_t *value)
   case RADIO_PARAM_RSSI:
     *value = RF_getRssi(ieee_radio.rf_handle);
     return (*value == RF_GET_RSSI_ERROR_VAL)
-      ? RADIO_RESULT_ERROR
-      : RADIO_RESULT_OK;
+           ? RADIO_RESULT_ERROR
+           : RADIO_RESULT_OK;
 
   /* Channel min */
   case RADIO_CONST_CHANNEL_MIN:
@@ -838,9 +842,8 @@ set_value(radio_param_t param, radio_value_t value)
 
     if(value == RADIO_POWER_MODE_ON) {
       return (on() == RF_RESULT_OK)
-        ? RADIO_RESULT_OK
-        : RADIO_RESULT_ERROR;
-
+             ? RADIO_RESULT_OK
+             : RADIO_RESULT_ERROR;
     } else if(value == RADIO_POWER_MODE_OFF) {
       off();
       return RADIO_RESULT_OK;
@@ -866,8 +869,8 @@ set_value(radio_param_t param, radio_value_t value)
     netstack_stop_rx();
     res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   /* 16bit address */
   case RADIO_PARAM_16BIT_ADDR:
@@ -879,8 +882,8 @@ set_value(radio_param_t param, radio_value_t value)
     netstack_stop_rx();
     res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   /* RX Mode */
   case RADIO_PARAM_RX_MODE: {
@@ -918,8 +921,8 @@ set_value(radio_param_t param, radio_value_t value)
     netstack_stop_rx();
     res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
   }
 
   /* TX Mode */
@@ -937,8 +940,8 @@ set_value(radio_param_t param, radio_value_t value)
     }
     res = rf_set_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   /* CCA Threshold */
   case RADIO_PARAM_CCA_THRESHOLD:
@@ -950,8 +953,8 @@ set_value(radio_param_t param, radio_value_t value)
     netstack_stop_rx();
     res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
 
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
@@ -1026,8 +1029,8 @@ set_object(radio_param_t param, const void *src, size_t size)
     netstack_stop_rx();
     res = netstack_sched_rx(false);
     return (res == RF_RESULT_OK)
-      ? RADIO_RESULT_OK
-      : RADIO_RESULT_ERROR;
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
   }
   default:
     return RADIO_RESULT_NOT_SUPPORTED;

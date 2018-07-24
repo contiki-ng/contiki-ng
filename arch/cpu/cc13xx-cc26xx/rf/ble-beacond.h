@@ -49,9 +49,9 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 typedef enum {
-    RF_BLE_BEACOND_OK,
-    RF_BLE_BEACOND_ERROR,
-    RF_BLE_BEACOND_DISABLED,
+  RF_BLE_BEACOND_OK,
+  RF_BLE_BEACOND_ERROR,
+  RF_BLE_BEACOND_DISABLED,
 } rf_ble_beacond_result_t;
 /*---------------------------------------------------------------------------*/
 /**

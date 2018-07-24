@@ -74,7 +74,7 @@
 #ifndef WATCHDOG_CONF_TIMER_TOP
 #define WATCHDOG_CONF_TIMER_TOP             0xFFFFF
 #endif
- /** @} */
+/** @} */
 /*---------------------------------------------------------------------------*/
 /**
  * \name RF configuration.
@@ -88,9 +88,9 @@
  * or larger guard time.
  */
 #ifndef RF_CONF_FAST_RADIO_STARTUP
-# define RF_FAST_RADIO_STARTUP        (MAC_CONF_WITH_TSCH)
+#define RF_FAST_RADIO_STARTUP        (MAC_CONF_WITH_TSCH)
 #else
-# define RF_FAST_RADIO_STARTUP        RF_CONF_FAST_RADIO_STARTUP
+#define RF_FAST_RADIO_STARTUP        RF_CONF_FAST_RADIO_STARTUP
 #endif
 
 /*
@@ -102,7 +102,7 @@
 #endif
 
 #if (RF_CONF_TXPOWER_HIGH_PA) && !(SUPPORTS_HIGH_PA)
-# error "Device does not support High PA"
+#error "Device does not support High PA"
 #endif
 
 /*
@@ -120,36 +120,36 @@
  */
 #ifdef RF_CONF_MODE
 /* Sanity check a valid configuration is provided. */
-# if !(RF_CONF_MODE & RF_MODE_BM)
-#  error "Invalid RF_CONF_MODE provided"
-# endif
+#if !(RF_CONF_MODE & RF_MODE_BM)
+#error "Invalid RF_CONF_MODE provided"
+#endif
 
-# define RF_MODE                      RF_CONF_MODE
+#define RF_MODE                      RF_CONF_MODE
 #endif /* RF_CONF_MODE */
 
 /* Number of RX buffers. */
 #ifdef RF_CONF_RX_BUF_CNT
-# define RF_RX_BUF_CNT                RF_CONF_RX_BUF_CNT
+#define RF_RX_BUF_CNT                RF_CONF_RX_BUF_CNT
 #else
-# define RF_RX_BUF_CNT                4
+#define RF_RX_BUF_CNT                4
 #endif
 
 /* Size of each RX buffer in bytes. */
 #ifdef RF_CONF_RX_BUF_SIZE
-# define RF_RX_BUF_SIZE               RF_CONF_RX_BUF_SIZE
+#define RF_RX_BUF_SIZE               RF_CONF_RX_BUF_SIZE
 #else
-# define RF_RX_BUF_SIZE               144
+#define RF_RX_BUF_SIZE               144
 #endif
 
 /* Enable/disable BLE beacon. */
 #ifdef RF_CONF_BLE_BEACON_ENABLE
-# define RF_BLE_BEACON_ENABLE         RF_CONF_BLE_BEACON_ENABLE
+#define RF_BLE_BEACON_ENABLE         RF_CONF_BLE_BEACON_ENABLE
 #else
-# define RF_BLE_BEACON_ENABLE         0
+#define RF_BLE_BEACON_ENABLE         0
 #endif
 
 #if (RF_BLE_BEACON_ENABLE) && !(SUPPORTS_BLE_BEACON)
-# error "Device does not support BLE for BLE beacon"
+#error "Device does not support BLE for BLE beacon"
 #endif
 
 /*----- CC13xx Device Line --------------------------------------------------*/
@@ -157,65 +157,65 @@
 #if defined(DEVICE_LINE_CC13XX)
 
 /* Default to Prop-mode for CC13xx devices if not configured. */
-# ifndef RF_MODE
-# define RF_MODE                      RF_MODE_SUB_1_GHZ
-# endif
+#ifndef RF_MODE
+#define RF_MODE                      RF_MODE_SUB_1_GHZ
+#endif
 
 /*----- CC13xx Prop-mode ----------------------------------------------------*/
-# if (RF_MODE == RF_MODE_SUB_1_GHZ) && (SUPPORTS_PROP_MODE)
+#if (RF_MODE == RF_MODE_SUB_1_GHZ) && (SUPPORTS_PROP_MODE)
 
 /* Netstack configuration. */
-#  define NETSTACK_CONF_RADIO         prop_mode_driver
+#define NETSTACK_CONF_RADIO         prop_mode_driver
 
 /* CSMA configuration. */
-#  define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 300)
-#  define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
-#  define CSMA_CONF_SEND_SOFT_ACK      1
+#define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 300)
+#define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
+#define CSMA_CONF_SEND_SOFT_ACK      1
 
 /*----- CC13xx IEEE-mode ----------------------------------------------------*/
-# elif (RF_MODE == RF_MODE_2_4_GHZ) && (SUPPORTS_IEEE_MODE)
+#elif (RF_MODE == RF_MODE_2_4_GHZ) && (SUPPORTS_IEEE_MODE)
 
 /* Netstack configuration. */
-#  define NETSTACK_CONF_RADIO         ieee_mode_driver
+#define NETSTACK_CONF_RADIO         ieee_mode_driver
 
 /* CSMA configuration. */
-#  define CSMA_CONF_SEND_SOFT_ACK     0
+#define CSMA_CONF_SEND_SOFT_ACK     0
 
-# else
+#else
 /*----- CC13xx Unsupported Mode ---------------------------------------------*/
-#  error "Invalid RF mode configuration of CC13xx device"
-# endif /* CC13xx RF Mode configuration */
+#error "Invalid RF mode configuration of CC13xx device"
+#endif /* CC13xx RF Mode configuration */
 
 /*----- CC26xx Device Line --------------------------------------------------*/
 /* CC26xx only supports IEEE mode */
 #elif defined(DEVICE_LINE_CC26XX)
 
 /* Default to IEEE-mode for CC26xx devices if not configured */
-# ifndef RF_MODE
-# define RF_MODE                      RF_MODE_2_4_GHZ
-# endif
+#ifndef RF_MODE
+#define RF_MODE                      RF_MODE_2_4_GHZ
+#endif
 
 /*----- CC26xx IEEE-mode ----------------------------------------------------*/
-# if (RF_MODE == RF_MODE_2_4_GHZ) && (SUPPORTS_IEEE_MODE)
+#if (RF_MODE == RF_MODE_2_4_GHZ) && (SUPPORTS_IEEE_MODE)
 
 /* Netstack configuration */
-#  define NETSTACK_CONF_RADIO         ieee_mode_driver
+#define NETSTACK_CONF_RADIO         ieee_mode_driver
 
 /* CSMA configuration */
-#  define CSMA_CONF_SEND_SOFT_ACK     0
+#define CSMA_CONF_SEND_SOFT_ACK     0
 
 /* Frequncy band configuration */
-#  undef DOT_15_4G_FREQ_BAND_ID
-#  define DOT_15_4G_CONF_FREQ_BAND_ID   DOT_15_4G_FREQ_BAND_2450
+#undef DOT_15_4G_FREQ_BAND_ID
+#define DOT_15_4G_CONF_FREQ_BAND_ID   DOT_15_4G_FREQ_BAND_2450
 
-# else
+#else
 /*----- CC26xx Unsupported Mode ---------------------------------------------*/
-#  error "IEEE-mode only supported by CC26xx devices"
-# endif /* CC26xx RF Mode configuration */
+#error "IEEE-mode only supported by CC26xx devices"
+#endif /* CC26xx RF Mode configuration */
 
 /*----- Unsupported device line ---------------------------------------------*/
 #else
-# error "Unsupported Device Line defined"
+#error "Unsupported Device Line defined"
 #endif /* Unsupported device line */
 
 /** @} */

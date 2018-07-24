@@ -73,8 +73,7 @@ static void rtimer_clock_stub(uintptr_t unused) { (void)unused; /* do nothing */
 static void
 rtimer_isr_hook(void)
 {
-  if(AONRTCEventGet(RTIMER_RTC_CH))
-  {
+  if(AONRTCEventGet(RTIMER_RTC_CH)) {
     AONRTCEventClear(RTIMER_RTC_CH);
     AONRTCChannelDisable(RTIMER_RTC_CH);
 
@@ -84,12 +83,9 @@ rtimer_isr_hook(void)
    * HWI Dispatch clears the interrupt. If HWI wasn't triggered, clear
    * the interrupt manually.
    */
-  if(AONRTCEventGet(HWIP_RTC_CH))
-  {
+  if(AONRTCEventGet(HWIP_RTC_CH)) {
     hwi_dispatch_fxn();
-  }
-  else
-  {
+  } else {
     IntPendClear(INT_AON_RTC_COMB);
   }
 }
@@ -121,9 +117,8 @@ rtimer_arch_init(void)
   ClockP_destruct(&clk_object);
 
   /* Try to access the RAM vector table. */
-  ramvec_table = (isr_fxn_t*)HWREG(NVIC_VTABLE);
-  if(!ramvec_table)
-  {
+  ramvec_table = (isr_fxn_t *)HWREG(NVIC_VTABLE);
+  if(!ramvec_table) {
     /*
      * Unable to find the RAM vector table is a serious fault.
      * Spin-lock forever.
@@ -136,8 +131,7 @@ rtimer_arch_init(void)
    * in the RAM vector table. Fetch and store it.
    */
   hwi_dispatch_fxn = (hwi_dispatch_fxn_t)ramvec_table[INT_AON_RTC_COMB];
-  if(!hwi_dispatch_fxn)
-  {
+  if(!hwi_dispatch_fxn) {
     /*
      * Unable to find the HWI dispatch ISR in the RAM vector table is
      * a serious fault. Spin-lock forever.

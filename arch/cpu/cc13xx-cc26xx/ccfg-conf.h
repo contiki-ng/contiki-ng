@@ -51,13 +51,13 @@
  * @{
  */
 #if CCFG_CONF_JTAG_INTERFACE_DISABLE
-# define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE        0x00
-# define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE       0x00
-# define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE      0x00
-# define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE      0x00
-# define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE    0x00
-# define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE    0x00
-# define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE       0x00
+#define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE        0x00
+#define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE       0x00
+#define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE      0x00
+#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE      0x00
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE    0x00
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE    0x00
+#define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE       0x00
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -69,7 +69,7 @@
  * @{
  */
 #if defined(DEVICE_LINE_CC13XX) && (RF_CONF_TXPOWER_BOOST_MODE)
-# define CCFG_FORCE_VDDR_HH                           1
+#define CCFG_FORCE_VDDR_HH                           1
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -86,12 +86,12 @@
 #endif
 
 #if CCFG_CONF_ROM_BOOTLOADER_ENABLE
-# define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE         0xC5
-# define SET_CCFG_BL_CONFIG_BL_LEVEL                  0x00
-# if defined(CCFG_CONF_BL_PIN_NUMBER)
-#  define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER            CCFG_CONF_BL_PIN_NUMBER
-# endif
-# define SET_CCFG_BL_CONFIG_BL_ENABLE                 0xC5
+#define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE         0xC5
+#define SET_CCFG_BL_CONFIG_BL_LEVEL                  0x00
+#if defined(CCFG_CONF_BL_PIN_NUMBER)
+#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER            CCFG_CONF_BL_PIN_NUMBER
+#endif
+#define SET_CCFG_BL_CONFIG_BL_ENABLE                 0xC5
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/

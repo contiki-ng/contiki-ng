@@ -57,8 +57,8 @@ dbg_putchar(int c)
 
   num_bytes = (int)uart0_write(&ch, 1);
   return (num_bytes > 0)
-    ? num_bytes
-    : 0;
+         ? num_bytes
+         : 0;
 }
 /*---------------------------------------------------------------------------*/
 unsigned int
@@ -77,8 +77,8 @@ dbg_send_bytes(const unsigned char *seq, unsigned int len)
 
   num_bytes = (int)uart0_write(seq, max_len);
   return (num_bytes > 0)
-    ? num_bytes
-    : 0;
+         ? num_bytes
+         : 0;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

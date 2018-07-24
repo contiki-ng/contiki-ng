@@ -58,7 +58,7 @@
 #define netstack_cmd_rx           rf_cmd_ieee_rx
 /*---------------------------------------------------------------------------*/
 #else
-# error "Unsupported RF_MODE"
+#error "Unsupported RF_MODE"
 #endif
 /*---------------------------------------------------------------------------*/
 /* BLE RF settings */
@@ -84,7 +84,7 @@
 
 /*---------------------------------------------------------------------------*/
 #else
-# error "Unsupported DeviceFamily_PARENT for BLE settings"
+#error "Unsupported DeviceFamily_PARENT for BLE settings"
 #endif
 /*---------------------------------------------------------------------------*/
 #endif /* NETSTACK_SETTINGS_H_ */

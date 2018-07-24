@@ -64,9 +64,9 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 #if 1
-# define PRINTF(...)  printf(__VA_ARGS__)
+#define PRINTF(...)  printf(__VA_ARGS__)
 #else
-# define PRINTF(...)
+#define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
 #define CMD_FS_RETRIES          3
@@ -88,12 +88,12 @@
 
 static struct etimer synth_recal_timer;
 /*---------------------------------------------------------------------------*/
-static RF_Object  rf_netstack;
-static RF_Object  rf_ble;
+static RF_Object rf_netstack;
+static RF_Object rf_ble;
 
 static RF_CmdHandle cmd_rx_handle;
 
-static bool          rf_is_on;
+static bool rf_is_on;
 static volatile bool rx_buf_full;
 /*---------------------------------------------------------------------------*/
 static void
@@ -214,8 +214,8 @@ rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm)
   );
 
   return (stat == RF_StatSuccess)
-    ? RF_RESULT_OK
-    : RF_RESULT_ERROR;
+         ? RF_RESULT_OK
+         : RF_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
@@ -226,8 +226,8 @@ rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm)
   );
 
   return (*dbm != RF_TxPowerTable_INVALID_DBM)
-    ? RF_RESULT_OK
-    : RF_RESULT_ERROR;
+         ? RF_RESULT_OK
+         : RF_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 RF_Handle
@@ -275,15 +275,14 @@ netstack_sched_fs(void)
     );
 
     synth_error = (EVENTS_CMD_DONE(events))
-               && (CMD_STATUS(netstack_cmd_fs) == ERROR_SYNTH_PROG);
-
+      && (CMD_STATUS(netstack_cmd_fs) == ERROR_SYNTH_PROG);
   } while(synth_error && (num_tries++ < CMD_FS_RETRIES));
 
   cmd_rx_restore(rx_key);
 
   return (CMD_STATUS(netstack_cmd_fs) == DONE_OK)
-    ? RF_RESULT_OK
-    : RF_RESULT_ERROR;
+         ? RF_RESULT_OK
+         : RF_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
@@ -469,8 +468,8 @@ netstack_stop_rx(void)
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 
   return (stat == RF_StatSuccess)
-    ? RF_RESULT_OK
-    : RF_RESULT_ERROR;
+         ? RF_RESULT_OK
+         : RF_RESULT_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 RF_Handle
@@ -563,13 +562,13 @@ PROCESS_THREAD(rf_sched_process, ev, data)
 
           NETSTACK_MAC.input();
         }
-      /* Only break when we receive -1 => No available data */
+        /* Only break when we receive -1 => No available data */
       } while(len >= 0);
     }
 
     /* Scheduling CMD_FS will re-calibrate the synth. */
     if((ev == PROCESS_EVENT_TIMER) &&
-        etimer_expired(&synth_recal_timer)) {
+       etimer_expired(&synth_recal_timer)) {
       PRINTF("rf_core: Re-calibrate synth\n");
       netstack_sched_fs();
 

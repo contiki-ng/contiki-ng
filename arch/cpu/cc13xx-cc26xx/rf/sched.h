@@ -54,8 +54,8 @@
 PROCESS_NAME(rf_sched_process);
 /*---------------------------------------------------------------------------*/
 typedef enum {
-    RF_RESULT_OK = 0,
-    RF_RESULT_ERROR,
+  RF_RESULT_OK = 0,
+  RF_RESULT_ERROR,
 } rf_result_t;
 /*---------------------------------------------------------------------------*/
 /**

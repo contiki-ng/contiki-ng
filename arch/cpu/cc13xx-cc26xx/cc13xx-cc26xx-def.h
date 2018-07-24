@@ -43,9 +43,9 @@
 #include <ti/devices/DeviceFamily.h>
 /*---------------------------------------------------------------------------*/
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
-# include <cm3/cm3-def.h>
+#include <cm3/cm3-def.h>
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
-# include <cm4/cm4-def.h>
+#include <cm4/cm4-def.h>
 #endif
 /*---------------------------------------------------------------------------*/
 #include <stddef.h>
@@ -71,7 +71,7 @@
 #define USEC_TO_RAT(X)        ((X) * 4)
 
 #if (RTIMER_SECOND % 256) || (RAT_SECOND % 256)
-# error RAT_TO_RTIMER macro must be fixed!
+#error RAT_TO_RTIMER macro must be fixed!
 #endif
 
 /* The PHY header (preamble + SFD, 4+1 bytes) duration is equivalent to 10 symbols */
@@ -116,9 +116,9 @@
 /*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
-# define CMSIS_CONF_HEADER_PATH              "cc13x0-cc26x0-cm3.h"
+#define CMSIS_CONF_HEADER_PATH              "cc13x0-cc26x0-cm3.h"
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
-# define CMSIS_CONF_HEADER_PATH              "cc13x2-cc26x2-cm4.h"
+#define CMSIS_CONF_HEADER_PATH              "cc13x2-cc26x2-cm4.h"
 #endif
 /*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes and memory barriers */

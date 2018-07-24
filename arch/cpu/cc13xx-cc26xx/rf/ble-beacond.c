@@ -112,26 +112,26 @@ typedef struct {
   bool is_active;
 
   /* Periodic timer for sending out BLE advertisements */
-  clock_time_t  ble_adv_interval;
+  clock_time_t ble_adv_interval;
   struct etimer ble_adv_et;
 
   /* RF driver */
-  RF_Handle           rf_handle;
+  RF_Handle rf_handle;
 } ble_beacond_t;
 
 static ble_beacond_t ble_beacond;
 /*---------------------------------------------------------------------------*/
 /* Configuration for TX power table */
 #ifdef BLE_MODE_CONF_TX_POWER_TABLE
-#   define TX_POWER_TABLE  BLE_MODE_CONF_TX_POWER_TABLE
+#define TX_POWER_TABLE  BLE_MODE_CONF_TX_POWER_TABLE
 #else
-#   define TX_POWER_TABLE  rf_ble_tx_power_table
+#define TX_POWER_TABLE  rf_ble_tx_power_table
 #endif
 
 #ifdef BLE_MODE_CONF_TX_POWER_TABLE_SIZE
-#   define TX_POWER_TABLE_SIZE  BLE_MODE_CONF_TX_POWER_TABLE_SIZE
+#define TX_POWER_TABLE_SIZE  BLE_MODE_CONF_TX_POWER_TABLE_SIZE
 #else
-#   define TX_POWER_TABLE_SIZE  RF_BLE_TX_POWER_TABLE_SIZE
+#define TX_POWER_TABLE_SIZE  RF_BLE_TX_POWER_TABLE_SIZE
 #endif
 
 /* TX power table convenience macros */
@@ -150,7 +150,7 @@ rf_ble_beacond_init(void)
   RF_Params rf_params;
   RF_Params_init(&rf_params);
 
-   /* Should immediately turn off radio if possible */
+  /* Should immediately turn off radio if possible */
   rf_params.nInactivityTimeout = 0;
 
   ble_beacond.handle = ble_open(&rf_params);
@@ -178,7 +178,7 @@ rf_ble_beacond_start(clock_time_t interval, const char *name)
   const size_t name_len = strlen(name);
 
   if((name_len == 0) ||
-      (name_len >= BLE_ADV_NAME_BUF_LEN)) {
+     (name_len >= BLE_ADV_NAME_BUF_LEN)) {
     return RF_BLE_BEACOND_ERROR;
   }
 
@@ -220,8 +220,8 @@ rf_ble_set_tx_power(int8_t dBm)
   res = rf_set_tx_power(ble_beacond.rf_handle, TX_POWER_TABLE, dbm);
 
   return (res == RF_RESULT_OK)
-    ? RF_BLE_BEACOND_OK
-    : RF_BLE_BEACOND_ERROR;
+         ? RF_BLE_BEACOND_OK
+         : RF_BLE_BEACOND_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 int8_t

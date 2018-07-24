@@ -87,25 +87,25 @@ extern unsigned long _stack_end;
 //
 //*****************************************************************************
 __attribute__ ((section(".resetVecs"))) __attribute__ ((used))
-static void (* const resetVectors[16])(void) =
+static void(*const resetVectors[16]) (void) =
 {
   (void (*)(void))((uint32_t)&_stack_end),
-                                       // The initial stack pointer
-  resetISR,                            // The reset handler
-  nmiISR,                              // The NMI handler
-  faultISR,                            // The hard fault handler
-  defaultHandler,                      // The MPU fault handler
-  busFaultHandler,                     // The bus fault handler
-  defaultHandler,                      // The usage fault handler
-  0,                                   // Reserved
-  0,                                   // Reserved
-  0,                                   // Reserved
-  0,                                   // Reserved
-  defaultHandler,                      // SVCall handler
-  defaultHandler,                      // Debug monitor handler
-  0,                                   // Reserved
-  defaultHandler,                      // The PendSV handler
-  defaultHandler                       // The SysTick handler
+  /* The initial stack pointer */
+  resetISR,                            /* The reset handler */
+  nmiISR,                              /* The NMI handler */
+  faultISR,                            /* The hard fault handler */
+  defaultHandler,                      /* The MPU fault handler */
+  busFaultHandler,                     /* The bus fault handler */
+  defaultHandler,                      /* The usage fault handler */
+  0,                                   /* Reserved */
+  0,                                   /* Reserved */
+  0,                                   /* Reserved */
+  0,                                   /* Reserved */
+  defaultHandler,                      /* SVCall handler */
+  defaultHandler,                      /* Debug monitor handler */
+  0,                                   /* Reserved */
+  defaultHandler,                      /* The PendSV handler */
+  defaultHandler                       /* The SysTick handler */
 };
 //*****************************************************************************
 //
@@ -155,7 +155,7 @@ void localProgramStart(void)
   uint32_t  count;
   uint32_t  i;
 
-#if defined (__ARM_ARCH_7EM__) && defined(__VFP_FP__) && !defined(__SOFTFP__)
+#if defined(__ARM_ARCH_7EM__) && defined(__VFP_FP__) && !defined(__SOFTFP__)
   volatile uint32_t *pui32Cpacr = (uint32_t *)0xE000ED88;
 
   /* Enable Coprocessor Access Control (CPAC) */
@@ -193,11 +193,11 @@ void localProgramStart(void)
     __init_array_start[i]();
   }
 
-    /* Call the application's entry point. */
-    main();
+  /* Call the application's entry point. */
+  main();
 
-    /* If we ever return signal Error */
-    faultISR();
+  /* If we ever return signal Error */
+  faultISR();
 }
 
 //*****************************************************************************
@@ -233,8 +233,7 @@ static void
 nmiISR(void)
 {
   /* Enter an infinite loop. */
-  while(1)
-  {
+  while(1) {
   }
 }
 
@@ -296,8 +295,7 @@ busFaultHandler(void)
 {
   x__ = 0;
   /* Enter an infinite loop. */
-  while(1)
-  {
+  while(1) {
   }
 }
 
@@ -312,8 +310,7 @@ static void
 defaultHandler(void)
 {
   /* Enter an infinite loop. */
-  while(1)
-  {
+  while(1) {
   }
 }
 
@@ -326,5 +323,5 @@ defaultHandler(void)
 //*****************************************************************************
 void _fini(void)
 {
-    /* Function body left empty intentionally */
+  /* Function body left empty intentionally */
 }
