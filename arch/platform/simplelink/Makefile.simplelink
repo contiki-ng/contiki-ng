@@ -8,10 +8,6 @@ ifndef CONTIKI
  $(error 'CONTIKI' not defined! You must specify where CONTIKI resides!)
 endif
 
-ifndef FAMILY
- $(error 'FAMILY' not defined! You must specify which Simplelink family you are using!)
-endif
-
 ifndef BOARD
  $(error 'BOARD' not defined! You must specify which board you are using!)
 endif
@@ -19,12 +15,16 @@ endif
 ################################################################################
 ### Defines
 
-SIMPLELINK_SDK := $(realpath $(SIMPLELINK_SDK))
+SIMPLELINK_FAMILIES := cc13xx-cc26xx
 
-SUPPORTED_FAMILIES := cc13xx-cc26xx
+# Given a SimpleLink family as argument, check if it has the Board file and if so return itself.
+verify_family = $(shell [ -d $(CONTIKI)/arch/platform/simplelink/$(1)/$(BOARD) ] && echo $(1))
 
-ifeq ($(filter $(FAMILY), $(SUPPORTED_FAMILIES)),)
-  $(error Simlpelink Family $(FAMILY) is not supported.)
+# Test each supported SimpleLink family and see if it contains the specified Board.
+# Throw an error if it isn't found.
+FAMILY := $(firstword $(foreach FAMILY, $(SIMPLELINK_FAMILIES), $(call verify_family,$(FAMILY))))
+ifeq ($(FAMILY),)
+ $(error Board '$(BOARD)' does not corresponding to any SimpleLink family. Make sure your BOARD variable is correct.)
 endif
 
 FAMILY_PATH := $(realpath $(CONTIKI)/arch/platform/simplelink/$(FAMILY))
@@ -37,4 +37,4 @@ include $(FAMILY_PATH)/Makefile.$(FAMILY)
 ################################################################################
 # Display all supported SimpleLink Families
 simplelink_families:
-	@echo "$(SUPPORTED_FAMILIES) (current: $(FAMILY))"
+	@echo "$(SIMPLELINK_FAMILIES) (current: $(FAMILY))"

@@ -7,13 +7,7 @@ BOARD_PLATFORMS = launchpad sensortag srf06
 
 # Assigned lazily to avoid breaking environments which doesn't have cd and find
 BOARDS := $(foreach BOARD_TYPE, $(BOARD_PLATFORMS), \
-    $(shell cd $(FAMILY_PATH); find $(BOARD_TYPE)/* -type d -print))
-
-BOARD_EXISTS := $(shell [ -d "$(FAMILY_PATH)/$(BOARD)" ]; echo $$?)
-
-ifneq ($(BOARD_EXISTS),0)
-  $(error Simplelink Board '$(BOARD)' is not supported for Simplelink Family '$(FAMILY)')
-endif
+  $(shell cd $(FAMILY_PATH); find $(BOARD_TYPE)/* -type d -print))
 
 ################################################################################
 # Directory and source configurations
@@ -35,7 +29,6 @@ DEFINES += DeviceFamily_$(DEVICE_FAMILY)
 DEFINES += DEVICE_LINE_$(DEVICE_LINE)
 DEFINES += DEVICE_$(DEVICE)
 DEFINES += $(BOARD_TYPE)
-DEFINES += PLATFORM_HAS_BUTTON=$(PLATFORM_HAS_BUTTON)
 DEFINES += SUPPORTS_PROP_MODE=$(SUPPORTS_PROP_MODE)
 DEFINES += SUPPORTS_IEEE_MODE=$(SUPPORTS_IEEE_MODE)
 DEFINES += SUPPORTS_BLE_BEACON=$(SUPPORTS_BLE_BEACON)

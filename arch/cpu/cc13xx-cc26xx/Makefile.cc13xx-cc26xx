@@ -1,6 +1,8 @@
 ################################################################################
 # CC13x2/CC26x2 CPU makefile
 
+PRE_RTM = 1
+
 # Core SDK is placed as a submodule under the arch/cpu/cc13xx-cc26xx/lib.
 # Do a sanity check that Core SDK submodule has been initialized.
 # Note that Core SDK can be overriden with a user-specified SimpleLink SDK.
@@ -37,8 +39,8 @@ DEVICE_FAMILY_H := $(CORE_SDK)/source/ti/devices/DeviceFamily.h
 # We are interested in the right-hand side of the define, i.e. the third word on the line,
 # as it either defines a number or an another Device Family ID.
 DEVICE_DEFINE := $(shell cat $(DEVICE_FAMILY_H) \
-    | grep "\#define DeviceFamily_ID_$(DEVICE_FAMILY)\\b" \
-    | awk '{print $$3}')
+  | grep "\#define DeviceFamily_ID_$(DEVICE_FAMILY)\\b" \
+  | awk '{print $$3}')
 
 # If the define is a number, then the device family name is the resulting device name;
 # Else, it points to a sub-name of the device family, e.g. DeviceFamily_ID_CC13X2_V1.
@@ -48,19 +50,19 @@ DEVICE_DEFINE := $(shell cat $(DEVICE_FAMILY_H) \
 IS_NUMBER := $(shell [ "$(DEVICE_DEFINE)" -eq "$(DEVICE_DEFINE)" ] 2>/dev/null; echo $$?)
 
 ifeq ($(IS_NUMBER),0)
-  # The define points to a number, meaning the device family name is the same as the
-  # specified device name in lower case, e.g.
-  #    cc13x2
-  DEVICE_FAMILY_NAME := $(DEVICE_FAMILY_LC)
+ # The define points to a number, meaning the device family name is the same as the
+ # specified device name in lower case, e.g.
+ #    cc13x2
+ DEVICE_FAMILY_NAME := $(DEVICE_FAMILY_LC)
 else
-  # The define points to a sub-name of the device family. The resulting device family name
-  # is therefore the name after specified after ID in lower case, e.g.
-  #    DeviceFamily_ID_CC13X2_V1
-  # will result in
-  #    cc13x2_v1
-  DEVICE_FAMILY_NAME := $(shell echo "$(DEVICE_DEFINE)" \
-      | sed -E "s/DeviceFamily_ID_(.+)/\1/" \
-      | tr A-Z a-z)
+ # The define points to a sub-name of the device family. The resulting device family name
+ # is therefore the name after specified after ID in lower case, e.g.
+ #    DeviceFamily_ID_CC13X2_V1
+ # will result in
+ #    cc13x2_v1
+ DEVICE_FAMILY_NAME := $(shell echo "$(DEVICE_DEFINE)" \
+     | sed -E "s/DeviceFamily_ID_(.+)/\1/" \
+     | tr A-Z a-z)
 endif
 
 # The DeviceFamily_constructPath() macro in DeviceFamily.h will always construct the
@@ -68,9 +70,9 @@ endif
 # root path. Note that the returned path is encased in angular brackets, <...>,
 # and is therefore extracted with sed.
 SDK_DEVICE_DIR := $(shell echo "DeviceFamily_constructPath(dummy)" \
-    | arm-none-eabi-cpp -x c -E -DDeviceFamily_$(DEVICE_FAMILY) -include $(DEVICE_FAMILY_H) - \
-    | tail -1 \
-    | sed -E 's:<(.+)/dummy>:\1:')
+  | arm-none-eabi-cpp -x c -E -DDeviceFamily_$(DEVICE_FAMILY) -include $(DEVICE_FAMILY_H) - \
+  | tail -1 \
+  | sed -E 's:<(.+)/dummy>:\1:')
 
 ################################################################################
 # Simplelink SDK paths
@@ -100,15 +102,15 @@ CONTIKI_CPU_SOURCEFILES += ieee-addr.c ble-addr.c
 CONTIKI_CPU_SOURCEFILES += ble-beacond.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
-CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c prop-tx-power.c
+ CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c prop-tx-power.c
 endif
 
 ifeq ($(SUPPORTS_IEEE_MODE),1)
-CONTIKI_CPU_SOURCEFILES += ieee-mode.c ieee-settings.c ieee-tx-power.c
+ CONTIKI_CPU_SOURCEFILES += ieee-mode.c ieee-settings.c ieee-tx-power.c
 endif
 
 ifeq ($(SUPPORTS_BLE_BEACON),1)
-CONTIKI_CPU_SOURCEFILES += ble-settings.c ble-tx-power.c
+ CONTIKI_CPU_SOURCEFILES += ble-settings.c ble-tx-power.c
 endif
 
 ### CPU-dependent debug source files
