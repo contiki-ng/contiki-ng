@@ -2,9 +2,9 @@
 # CC13x2/CC26x2 CPU makefile
 
 ### Simplelink SDK pre-compiled libraries
-TARGET_LIBFILES += $(SDK_KERNEL)/lib/nortos_$(DEVICE_FAMILY_NAME).am4fg
-TARGET_LIBFILES += $(SDK_DRIVERS)/rf/lib/rf_multiMode_$(DEVICE_FAMILY_NAME).am4fg
-TARGET_LIBFILES += $(SDK_DRIVERS)/lib/drivers_$(DEVICE_FAMILY_NAME).am4fg
+TARGET_LIBFILES += $(SDK_KERNEL)/lib/nortos_$(SDK_LIB_NAME).am4fg
+TARGET_LIBFILES += $(SDK_DRIVERS)/rf/lib/rf_multiMode_$(SDK_LIB_NAME).am4fg
+TARGET_LIBFILES += $(SDK_DRIVERS)/lib/drivers_$(SDK_LIB_NAME).am4fg
 TARGET_LIBFILES += $(SDK_DEVICE)/driverlib/bin/gcc/driverlib.lib
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4

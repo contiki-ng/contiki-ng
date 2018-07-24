@@ -1,7 +1,7 @@
 ################################################################################
-# CC13x2/CC26x2 CPU makefile
+# CC13xx/CC26xx CPU makefile
 
-PRE_RTM = 1
+CC13x2_CC26x2_PRE_RTM ?= 1
 
 # Core SDK is placed as a submodule under the arch/cpu/cc13xx-cc26xx/lib.
 # Do a sanity check that Core SDK submodule has been initialized.
@@ -30,49 +30,19 @@ CPU_START_SOURCEFILES += ccfg.c startup_cc13xx_cc26xx_gcc.c
 
 ################################################################################
 # Device Family
-DEVICE_FAMILY_H := $(CORE_SDK)/source/ti/devices/DeviceFamily.h
 
-# The define of the Device Family ID is on the format of either
-#       #define DeviceFamily_ID_<device>        <number>
-# or
-#       #define DeviceFamily_ID_<device>        <sub-device-family-id>
-# We are interested in the right-hand side of the define, i.e. the third word on the line,
-# as it either defines a number or an another Device Family ID.
-DEVICE_DEFINE := $(shell cat $(DEVICE_FAMILY_H) \
-  | grep "\#define DeviceFamily_ID_$(DEVICE_FAMILY)\\b" \
-  | awk '{print $$3}')
-
-# If the define is a number, then the device family name is the resulting device name;
-# Else, it points to a sub-name of the device family, e.g. DeviceFamily_ID_CC13X2_V1.
-# This line checks if the extracted define is a number or not, based on this SO post:
-#     https://stackoverflow.com/a/19116862/5099169
-# Return value 0 is no error, i.e. is a number.
-IS_NUMBER := $(shell [ "$(DEVICE_DEFINE)" -eq "$(DEVICE_DEFINE)" ] 2>/dev/null; echo $$?)
-
-ifeq ($(IS_NUMBER),0)
- # The define points to a number, meaning the device family name is the same as the
- # specified device name in lower case, e.g.
- #    cc13x2
- DEVICE_FAMILY_NAME := $(DEVICE_FAMILY_LC)
+ifeq ($(SUBFAMILY),cc13x2-cc26x2)
+ ifeq ($(CC13x2_CC26x2_PRE_RTM),1)
+  SDK_DEVICES_NAME := cc13x2_cc26x2_v1
+  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v1
+ else
+  SDK_DEVICES_NAME := cc13x2_cc26x2_v2
+  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v2
+ endif
 else
- # The define points to a sub-name of the device family. The resulting device family name
- # is therefore the name after specified after ID in lower case, e.g.
- #    DeviceFamily_ID_CC13X2_V1
- # will result in
- #    cc13x2_v1
- DEVICE_FAMILY_NAME := $(shell echo "$(DEVICE_DEFINE)" \
-     | sed -E "s/DeviceFamily_ID_(.+)/\1/" \
-     | tr A-Z a-z)
+ SDK_DEVICES_NAME := $(DEVICE_FAMILY_LC)
+ SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
 endif
-
-# The DeviceFamily_constructPath() macro in DeviceFamily.h will always construct the
-# correct path for device specific files. In this case, constructing the device specific
-# root path. Note that the returned path is encased in angular brackets, <...>,
-# and is therefore extracted with sed.
-SDK_DEVICE_DIR := $(shell echo "DeviceFamily_constructPath(dummy)" \
-  | arm-none-eabi-cpp -x c -E -DDeviceFamily_$(DEVICE_FAMILY) -include $(DEVICE_FAMILY_H) - \
-  | tail -1 \
-  | sed -E 's:<(.+)/dummy>:\1:')
 
 ################################################################################
 # Simplelink SDK paths
@@ -81,7 +51,7 @@ SDK_KERNEL := $(CORE_SDK)/kernel/nortos
 SDK_SOURCE := $(CORE_SDK)/source
 SDK_BOARDS := $(SDK_SOURCE)/ti/boards
 SDK_DRIVERS := $(SDK_SOURCE)/ti/drivers
-SDK_DEVICE := $(SDK_SOURCE)/$(SDK_DEVICE_DIR)
+SDK_DEVICE := $(SDK_SOURCE)/ti/devices/$(SDK_DEVICES_NAME)
 
 EXTERNALDIRS += $(SDK_SOURCE)
 EXTERNALDIRS += $(SDK_KERNEL)
