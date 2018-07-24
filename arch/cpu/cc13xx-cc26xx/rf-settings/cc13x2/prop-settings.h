@@ -44,10 +44,6 @@
 /* TI-RTOS RF Mode Object */
 extern RF_Mode                        rf_prop_mode;
 /*---------------------------------------------------------------------------*/
-/* Tx Power Tables */
-extern RF_TxPowerTable_Entry          rf_prop_tx_power_table[];
-extern const size_t                   rf_prop_tx_power_table_size;
-/*---------------------------------------------------------------------------*/
 /* RF Core API commands */
 extern rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup;
 extern rfc_CMD_FS_t                   rf_cmd_prop_fs;

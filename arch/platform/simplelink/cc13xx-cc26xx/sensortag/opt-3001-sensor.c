@@ -40,7 +40,8 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/ctimer.h"
-
+/*---------------------------------------------------------------------------*/
+#include "board-conf.h"
 #include "opt-3001-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
@@ -58,6 +59,13 @@
 #else
 #define PRINTF(...)
 #endif
+/*---------------------------------------------------------------------------*/
+/*
+ * Disable the entire file if sensors are disabled, as it could potentially
+ * create compile errors with missing defines from either the Board file or
+ * configuration defines.
+ */
+#if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 #ifndef Board_OPT3001_ADDR
 #   error "Board file doesn't define I2C address Board_OPT3001_ADDR"
@@ -364,5 +372,7 @@ status(int type)
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(opt_3001_sensor, "OPT3001", value, configure, status);
+/*---------------------------------------------------------------------------*/
+#endif /* BOARD_SENSORS_ENABLE */
 /*---------------------------------------------------------------------------*/
 /** @} */

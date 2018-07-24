@@ -55,7 +55,7 @@
 #include "rf/rf.h"
 #include "rf/ble-addr.h"
 #include "rf/ble-beacond.h"
-#include "rf-settings.h"
+#include "rf/settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stdint.h>
@@ -120,25 +120,6 @@ typedef struct {
 } ble_beacond_t;
 
 static ble_beacond_t ble_beacond;
-/*---------------------------------------------------------------------------*/
-/* Configuration for TX power table */
-#ifdef BLE_MODE_CONF_TX_POWER_TABLE
-#define TX_POWER_TABLE  BLE_MODE_CONF_TX_POWER_TABLE
-#else
-#define TX_POWER_TABLE  rf_ble_tx_power_table
-#endif
-
-#ifdef BLE_MODE_CONF_TX_POWER_TABLE_SIZE
-#define TX_POWER_TABLE_SIZE  BLE_MODE_CONF_TX_POWER_TABLE_SIZE
-#else
-#define TX_POWER_TABLE_SIZE  RF_BLE_TX_POWER_TABLE_SIZE
-#endif
-
-/* TX power table convenience macros */
-#define TX_POWER_MIN  (TX_POWER_TABLE[0].power)
-#define TX_POWER_MAX  (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
-
-#define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
 /*---------------------------------------------------------------------------*/
 PROCESS(ble_beacond_process, "RF BLE Beacon Daemon Process");
 /*---------------------------------------------------------------------------*/
@@ -209,11 +190,11 @@ rf_ble_is_active(void)
 }
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
-rf_ble_set_tx_power(int8_t dBm)
+rf_ble_set_tx_power(int8_t dbm)
 {
   rf_result_t res;
 
-  if(!TX_POWER_IN_RANGE(dBm)) {
+  if(!tx_power_in_range(dbm, ble_tx_power_table, ble_tx_power_table_size)) {
     return RADIO_RESULT_INVALID_VALUE;
   }
 
@@ -233,7 +214,7 @@ rf_ble_get_tx_power(void)
   res = rf_get_tx_power(ble_beacond.rf_handle, TX_POWER_TABLE, &dbm)
 
   if(res != RF_RESULT_OK) {
-    return ~(int8_t)0;
+    return RF_TxPowerTable_INVALID_DBM;
   }
 
   return dbm;

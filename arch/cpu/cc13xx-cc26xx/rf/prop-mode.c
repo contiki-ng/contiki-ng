@@ -64,7 +64,8 @@
 #include "rf/dot-15-4g.h"
 #include "rf/sched.h"
 #include "rf/data-queue.h"
-#include "prop-settings.h"
+#include "rf/tx-power.h"
+#include "rf/settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
@@ -74,64 +75,43 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "RF Prop Mode"
+#define LOG_MODULE "Radio"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
-#if 0
-# define PRINTF(...)
-#else
-# define PRINTF(...)  printf(__VA_ARGS__)
-#endif
-/*---------------------------------------------------------------------------*/
-/* Data whitener. 1: Whitener, 0: No whitener */
-#ifdef PROP_MODE_CONF_DW
-#define PROP_MODE_DW  PROP_MODE_CONF_DW
-#else
-#define PROP_MODE_DW  0
-#endif
-
-#ifdef PROP_MODE_CONF_USE_CRC16
-#define PROP_MODE_USE_CRC16  PROP_MODE_CONF_USE_CRC16
-#else
-#define PROP_MODE_USE_CRC16  0
-#endif
+/* Configuration parameters */
+#define PROP_MODE_DW                  PROP_MODE_CONF_DW
+#define PROP_MODE_USE_CRC16           PROP_MODE_CONF_USE_CRC16
+#define PROP_MODE_CCA_RSSI_THRESHOLD  PROP_MODE_CONF_CCA_RSSI_THRESHOLD
 /*---------------------------------------------------------------------------*/
 /* Used for checking result of CCA_REQ command */
-#define CCA_STATE_IDLE      0
-#define CCA_STATE_BUSY      1
-#define CCA_STATE_INVALID   2
-
-/* Used as an error return value for get_cca_info */
-#define RF_GET_CCA_INFO_ERROR           0xFF
-
-#ifdef PROP_MODE_CONF_RSSI_THRESHOLD
-#define PROP_MODE_RSSI_THRESHOLD  PROP_MODE_CONF_RSSI_THRESHOLD
-#else
-#define PROP_MODE_RSSI_THRESHOLD  0xA6
-#endif
+typedef enum {
+  CCA_STATE_IDLE    = 0,
+  CCA_STATE_BUSY    = 1,
+  CCA_STATE_INVALID = 2
+} cca_state_t;
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
 #define DOT_4G_MAX_FRAME_LEN    2047
-#define DOT_4G_PHR_LEN             2
+#define DOT_4G_PHR_LEN          2
 
 /* PHY HDR bits */
-#define DOT_4G_PHR_CRC16  0x10
-#define DOT_4G_PHR_DW     0x08
+#define DOT_4G_PHR_CRC16        0x10
+#define DOT_4G_PHR_DW           0x08
 
 #if PROP_MODE_USE_CRC16
 /* CRC16 */
-#define DOT_4G_PHR_CRC_BIT DOT_4G_PHR_CRC16
-#define CRC_LEN            2
+#define DOT_4G_PHR_CRC_BIT      DOT_4G_PHR_CRC16
+#define CRC_LEN                 2
 #else
 /* CRC32 */
-#define DOT_4G_PHR_CRC_BIT 0
-#define CRC_LEN            4
+#define DOT_4G_PHR_CRC_BIT      0
+#define CRC_LEN                 4
 #endif /* PROP_MODE_USE_CRC16 */
 
 #if PROP_MODE_DW
-#define DOT_4G_PHR_DW_BIT DOT_4G_PHR_DW
+#define DOT_4G_PHR_DW_BIT       DOT_4G_PHR_DW
 #else
-#define DOT_4G_PHR_DW_BIT 0
+#define DOT_4G_PHR_DW_BIT       0
 #endif
 /*---------------------------------------------------------------------------*/
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
@@ -140,15 +120,6 @@
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
-/* TX power table convenience macros */
-#define TX_POWER_TABLE          rf_prop_tx_power_table
-#define TX_POWER_TABLE_SIZE     rf_prop_tx_power_table_size
-
-#define TX_POWER_MIN            (TX_POWER_TABLE[0].power)
-#define TX_POWER_MAX            (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
-
-#define TX_POWER_IN_RANGE(dbm)  ((TX_POWER_MIN <= (dbm)) && ((dbm) <= TX_POWER_MAX))
-/*---------------------------------------------------------------------------*/
 /* TX buf configuration */
 #define TX_BUF_HDR_LEN          2
 #define TX_BUF_PAYLOAD_LEN      180
@@ -156,42 +127,44 @@
 #define TX_BUF_SIZE             (TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN)
 /*---------------------------------------------------------------------------*/
 /* Size of the Length field in Data Entry, two bytes in this case */
-typedef uint16_t              lensz_t;
+typedef uint16_t                lensz_t;
 
-#define FRAME_OFFSET          sizeof(lensz_t)
-#define FRAME_SHAVE           2   /* RSSI (1) + Status (1) */
+#define FRAME_OFFSET            sizeof(lensz_t)
+#define FRAME_SHAVE             2   /**< RSSI (1) + Status (1) */
 /*---------------------------------------------------------------------------*/
-#define MAC_RADIO_RECEIVER_SENSITIVITY_DBM              -110
-#define MAC_RADIO_RECEIVER_SATURATION_DBM               10
-#define MAC_SPEC_ED_MIN_DBM_ABOVE_RECEIVER_SENSITIVITY  10
-#define MAC_SPEC_ED_MAX                                 0xFF
+/* Constants used when calculating the LQI from the RSSI */
+#define RX_SENSITIVITY_DBM                -110
+#define RX_SATURATION_DBM                 10
+#define ED_MIN_DBM_ABOVE_RX_SENSITIVITY   10
+#define ED_MAX                            0xFF
 
-#define ED_RF_POWER_MIN_DBM   (MAC_RADIO_RECEIVER_SENSITIVITY_DBM + MAC_SPEC_ED_MIN_DBM_ABOVE_RECEIVER_SENSITIVITY)
-#define ED_RF_POWER_MAX_DBM   MAC_RADIO_RECEIVER_SATURATION_DBM
+#define ED_RF_POWER_MIN_DBM               (RX_SENSITIVITY_DBM + ED_MIN_DBM_ABOVE_RX_SENSITIVITY)
+#define ED_RF_POWER_MAX_DBM               RX_SATURATION_DBM
 /*---------------------------------------------------------------------------*/
 /* RF Core typedefs */
 typedef rfc_propRxOutput_t     rx_output_t;
 
 typedef struct {
   /* Outgoing frame buffer */
-  uint8_t             tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
+  uint8_t     tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
 
   /* RX Statistics struct */
-  rx_output_t         rx_stats;
+  rx_output_t rx_stats;
 
   /* RSSI Threshold */
-  int8_t              rssi_threshold;
-  uint16_t            channel;
+  int8_t      rssi_threshold;
+  uint16_t    channel;
 
   /* Indicates RF is supposed to be on or off */
-  uint8_t             rf_is_on;
+  uint8_t     rf_is_on;
 
   /* RF driver */
-  RF_Handle           rf_handle;
+  RF_Handle   rf_handle;
 } prop_radio_t;
 
 static prop_radio_t prop_radio;
 /*---------------------------------------------------------------------------*/
+/* Convenience macros for volatile access with the RF commands */
 #define cmd_radio_setup   (*(volatile rfc_CMD_PROP_RADIO_DIV_SETUP_t *)&rf_cmd_prop_radio_div_setup)
 #define cmd_fs            (*(volatile rfc_CMD_FS_t *)                  &rf_cmd_prop_fs)
 #define cmd_tx            (*(volatile rfc_CMD_PROP_TX_ADV_t *)         &rf_cmd_prop_tx_adv)
@@ -202,6 +175,7 @@ tx_is_active(void)
 {
   return cmd_tx.status == ACTIVE;
 }
+/*---------------------------------------------------------------------------*/
 static inline bool
 rx_is_active(void)
 {
@@ -322,7 +296,7 @@ calculate_lqi(int8_t rssi)
    *        best granularity. This is done by grouping the math operations to
    *        compute the entire numerator before doing any division.
    */
-  return (MAC_SPEC_ED_MAX * (rssi - ED_RF_POWER_MIN_DBM)) / (ED_RF_POWER_MAX_DBM - ED_RF_POWER_MIN_DBM);
+  return (ED_MAX * (rssi - ED_RF_POWER_MIN_DBM)) / (ED_RF_POWER_MAX_DBM - ED_RF_POWER_MIN_DBM);
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -576,7 +550,7 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TXPOWER:
-    res = rf_get_tx_power(prop_radio.rf_handle, TX_POWER_TABLE, (int8_t*)&value);
+    res = rf_get_tx_power(prop_radio.rf_handle, rf_tx_power_table, (int8_t*)&value);
     return ((res == RF_RESULT_OK) &&
             (*value != RF_TxPowerTable_INVALID_DBM))
            ? RADIO_RESULT_OK
@@ -601,11 +575,11 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_TXPOWER_MIN:
-    *value = (radio_value_t)TX_POWER_MIN;
+    *value = (radio_value_t)tx_power_min(rf_tx_power_table);
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_TXPOWER_MAX:
-    *value = (radio_value_t)TX_POWER_MAX;
+    *value = (radio_value_t)tx_power_max(rf_tx_power_table, rf_tx_power_table_size);
     return RADIO_RESULT_OK;
 
   default:
@@ -639,10 +613,10 @@ set_value(radio_param_t param, radio_value_t value)
            : RADIO_RESULT_ERROR;
 
   case RADIO_PARAM_TXPOWER:
-    if(!TX_POWER_IN_RANGE((int8_t)value)) {
+    if(!tx_power_in_range((int8_t)value, rf_tx_power_table, rf_tx_power_table_size)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-    res = rf_set_tx_power(prop_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
+    res = rf_set_tx_power(prop_radio.rf_handle, rf_tx_power_table, (int8_t)value);
     return (res == RF_RESULT_OK)
            ? RADIO_RESULT_OK
            : RADIO_RESULT_ERROR;

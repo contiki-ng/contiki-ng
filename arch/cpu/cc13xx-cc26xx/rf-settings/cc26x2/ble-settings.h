@@ -38,12 +38,6 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-/* TX Power table size definition */
-#define RF_BLE_TX_POWER_TABLE_SIZE  15
-
-/* TX Power Table Object */
-extern RF_TxPowerTable_Entry        rf_ble_tx_power_table[RF_BLE_TX_POWER_TABLE_SIZE+1];
-/*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
 extern RF_Mode                      rf_ble_mode;
 /*---------------------------------------------------------------------------*/

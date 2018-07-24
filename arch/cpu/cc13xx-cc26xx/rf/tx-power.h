@@ -27,34 +27,80 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-rf-tx-power TX power functioanlity for CC13xx/CC26xx
+ *
+ * @{
+ *
+ * \file
+ *        Header file of TX power functionality of CC13xx/CC26xx.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef IEEE_SETTINGS_H_
-#define IEEE_SETTINGS_H_
+#ifndef TX_POWER_H_
+#define TX_POWER_H_
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
-
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
-#include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ieee_mailbox.h)
-
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-/* TI-RTOS RF Mode Object */
-extern RF_Mode               rf_ieee_mode;
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-/* RF Core API commands */
-extern rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup;
-extern rfc_CMD_FS_t          rf_cmd_ieee_fs;
-extern rfc_CMD_IEEE_TX_t     rf_cmd_ieee_tx;
-extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
-extern rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack;
+#define RF_TXPOWER_HIGH_PA      RF_CONF_TXPOWER_HIGH_PA
+#define RF_TXPOWER_BOOST_MODE   RF_CONF_TXPOWER_BOOST_MODE
 /*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t              rf_ieee_overrides[];
+typedef RF_TxPowerTable_Entry tx_power_table_t;
 /*---------------------------------------------------------------------------*/
-#endif /* IEEE_SETTINGS_H_ */
-/*---------------------------------------------------------------------------*/
+/**
+ * \name Extern declarations of TX Power Table variables.
+ *
+ * @{
+ */
 
+/* Nestack RF TX power table */
+extern tx_power_table_t *const rf_tx_power_table;
+extern const size_t rf_tx_power_table_size;
+
+/* BLE Beacon RF TX power table */
+extern tx_power_table_t *const ble_tx_power_table;
+extern const size_t ble_tx_power_table_size;
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name TX power table convenience functions.
+ *
+ * @{
+ */
+
+static inline int8_t
+tx_power_min(tx_power_table_t *table)
+{
+    return table[0].power;
+}
+
+static inline int8_t
+tx_power_max(tx_power_table_t *table, size_t size)
+{
+    return table[size - 1].power;
+}
+
+static inline bool
+tx_power_in_range(int8_t dbm, tx_power_table_t *table, size_t size)
+{
+    return (dbm >= tx_power_min(table)) &&
+           (dbm <= tx_power_max(table, size));
+}
+/** @} */
+/*---------------------------------------------------------------------------*/
+#endif /* TX_POWER_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

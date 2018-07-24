@@ -28,70 +28,63 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup srf06-peripherals
+ * \addtogroup cc13xx-cc26xx-rf-tx-power
  * @{
  *
  * \file
- *        Header file with definitions related to SmartRF06 EB boards.
+ *        Source file for BLE Beacon TX power tables for CC26x2.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
- * \note
- *        This file should not be included directly
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BOARD_CONF_H_
-#define BOARD_CONF_H_
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
-/**
- * \name LED configurations for the dev/leds.h API.
- *
- * Those values are not meant to be modified by the user
- * @{
+#include "rf/tx-power.h"
+/*---------------------------------------------------------------------------*/
+/*
+ * TX Power table for CC2652R
+ * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
+ * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
+ * See the Technical Reference Manual for further details about the "txPower" Command field.
+ * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
  */
-#define LEDS_CONF_COUNT             4
+tx_power_table_t rf_ble_tx_power_table_cc2652r[] =
+{
+  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  3) },
+  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  3) },
+  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 2, 0,  6) },
+  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 2, 0,  8) },
+  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0, 11) },
+  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 2, 0,  5) },
+  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 1, 0, 16) },
+  {  -5, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0, 17) },
+  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 1, 0, 20) },
+  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 26) },
+  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 1, 0, 28) },
+  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 0, 0, 34) },
+  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 0, 0, 42) },
+  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 0, 0, 54) },
+  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(30, 0, 0, 74) },
+  RF_TxPowerTable_TERMINATION_ENTRY
+};
+/*---------------------------------------------------------------------------*/
+tx_power_table_t rf_ble_tx_power_table_empty[] =
+{
+  RF_TxPowerTable_TERMINATION_ENTRY
+};
+/*---------------------------------------------------------------------------*/
+/* TX power table, based on which board is used. */
+#if defined(DEVICE_CC2652R)
+#define TX_POWER_TABLE  rf_ble_tx_power_table_cc2652r
 
-#define LEDS_CONF_RED               0
-#define LEDS_CONF_YELLOW            1
-#define LEDS_CONF_GREEN             2
-#define LEDS_CONF_ORANGE            3
+#else
+#define TX_POWER_TABLE  rf_ble_tx_power_table_empty
+#endif
 
-#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Button configurations for the dev/button-hal.h API.
- *
- * Those values are not meant to be modified by the user
- * @{
+/*
+ * Define symbols for both the TX power table and its size. The TX power
+ * table size is with one less entry by excluding the termination entry.
  */
-#define BUTTON_HAL_ID_KEY_LEFT      0
-#define BUTTON_HAL_ID_KEY_RIGHT     1
-#define BUTTON_HAL_ID_KEY_UP        2
-#define BUTTON_HAL_ID_KEY_DOWN      3
-#define BUTTON_HAL_ID_KEY_SELECT    4
-/** @} */
+tx_power_table_t *const ble_tx_power_table = TX_POWER_TABLE;
+const size_t ble_tx_power_table_size = (sizeof(TX_POWER_TABLE) / sizeof(TX_POWER_TABLE[0])) - 1;
 /*---------------------------------------------------------------------------*/
-/**
- * \name SmartRF06 EB does have sensors.
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define BOARD_CONF_HAS_SENSORS      1
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Enable or disable the SmartRF06EB sensors.
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define BOARD_SENSORS_ENABLE      (!(BOARD_CONF_SENSORS_DISABLE))
-/** @} */
-/*---------------------------------------------------------------------------*/
-#endif /* BOARD_CONF_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- */

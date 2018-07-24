@@ -63,33 +63,6 @@ RF_Mode rf_ble_mode =
   .rfePatchFxn = &rf_patch_rfe_bt5,
 };
 /*---------------------------------------------------------------------------*/
-/*
- * TX Power table
- * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
- * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
- * See the Technical Reference Manual for further details about the "txPower" Command field.
- * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
- */
-RF_TxPowerTable_Entry rf_ble_tx_power_table[RF_BLE_TX_POWER_TABLE_SIZE+1] =
-{
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  3) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  3) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 2, 0,  6) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 2, 0,  8) },
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0, 11) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 2, 0,  5) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 1, 0, 16) },
-  {  -5, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0, 17) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 1, 0, 20) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 26) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 1, 0, 28) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 0, 0, 34) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 0, 0, 42) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 0, 0, 54) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(30, 0, 0, 74) },
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-/*---------------------------------------------------------------------------*/
 /* Overrides for CMD_BLE5_RADIO_SETUP */
 uint32_t rf_ble_overrides_common[] CC_ALIGN(4) =
 {

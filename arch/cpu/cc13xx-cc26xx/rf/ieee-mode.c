@@ -71,7 +71,8 @@
 #include "rf/data-queue.h"
 #include "rf/dot-15-4g.h"
 #include "rf/sched.h"
-#include "ieee-settings.h"
+#include "rf/settings.h"
+#include "rf/tx-power.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stddef.h>
@@ -79,43 +80,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#if 1
-#define PRINTF(...)  printf(__VA_ARGS__)
-#else
-# define PRINTF(...)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Radio"
+#define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 /* Configuration parameters */
-
-/* Configuration to enable/disable auto ACKs in IEEE mode */
-#ifdef IEEE_MODE_CONF_AUTOACK
-#define IEEE_MODE_AUTOACK  IEEE_MODE_CONF_AUTOACK
-#else
-#define IEEE_MODE_AUTOACK  1
-#endif /* IEEE_MODE_CONF_AUTOACK */
-
-/* Configuration to enable/disable frame filtering in IEEE mode */
-#ifdef IEEE_MODE_CONF_PROMISCOUS
-#define IEEE_MODE_PROMISCOUS  IEEE_MODE_CONF_PROMISCOUS
-#else
-#define IEEE_MODE_PROMISCOUS  0
-#endif /* IEEE_MODE_CONF_PROMISCOUS */
-
-/* Configuration to set the RSSI threshold */
-#ifdef IEEE_MODE_CONF_RSSI_THRESHOLD
-#define IEEE_MODE_RSSI_THRESHOLD  IEEE_MODE_CONF_RSSI_THRESHOLD
-#else
-#define IEEE_MODE_RSSI_THRESHOLD  0xA6
-#endif /* IEEE_MODE_CONF_RSSI_THRESHOLD */
-/*---------------------------------------------------------------------------*/
-/* TX power table convenience macros */
-#define TX_POWER_TABLE          rf_ieee_tx_power_table
-#define TX_POWER_TABLE_SIZE     rf_ieee_tx_power_table_size
-
-#define TX_POWER_MIN            (TX_POWER_TABLE[0].power)
-#define TX_POWER_MAX            (TX_POWER_TABLE[TX_POWER_TABLE_SIZE - 1].power)
-
-#define TX_POWER_IN_RANGE(dbm)  (((dbm) >= TX_POWER_MIN) && ((dbm) <= TX_POWER_MAX))
+#define IEEE_MODE_AUTOACK             IEEE_MODE_CONF_AUTOACK
+#define IEEE_MODE_PROMISCOUS          IEEE_MODE_CONF_PROMISCOUS
+#define IEEE_MODE_CCA_RSSI_THRESHOLD  IEEE_MODE_CONF_CCA_RSSI_THRESHOLD
 /*---------------------------------------------------------------------------*/
 /* Timeout constants */
 
@@ -232,24 +205,6 @@ static radio_result_t set_value(radio_param_t, radio_value_t);
 static radio_result_t get_object(radio_param_t, void*, size_t);
 static radio_result_t set_object(radio_param_t, const void*, size_t);
 /*---------------------------------------------------------------------------*/
-/* Radio driver object */
-const struct radio_driver ieee_mode_driver = {
-  init,
-  prepare,
-  transmit,
-  send,
-  read,
-  channel_clear,
-  receiving_packet,
-  pending_packet,
-  on,
-  off,
-  get_value,
-  set_value,
-  get_object,
-  set_object,
-};
-/*---------------------------------------------------------------------------*/
 static void
 rat_overflow_cb(void *arg)
 {
@@ -279,7 +234,7 @@ init_rf_params(void)
   cmd_rx.frameFiltOpt.autoAckEn = 0;
 #endif
 
-  cmd_rx.ccaRssiThr = IEEE_MODE_RSSI_THRESHOLD;
+  cmd_rx.ccaRssiThr = IEEE_MODE_CCA_RSSI_THRESHOLD;
 
   cmd_tx.pNextOp = (RF_Op*)&cmd_rx_ack;
   cmd_tx.condition.rule = COND_NEVER; /* Initially ACK turned off */
@@ -306,8 +261,8 @@ static rf_result_t
 set_channel(uint8_t channel)
 {
   if(!dot_15_4g_chan_in_range(channel)) {
-    PRINTF("set_channel: illegal channel %d, defaults to %d\n",
-           (int)channel, DOT_15_4G_DEFAULT_CHAN);
+    LOG_WARN("Supplied hannel %d is illegal, defaults to %d\n",
+             (int)channel, DOT_15_4G_DEFAULT_CHAN);
     channel = DOT_15_4G_DEFAULT_CHAN;
   }
 
@@ -327,7 +282,7 @@ set_channel(uint8_t channel)
   const uint16_t freq     = (uint16_t)(new_freq / 1000);
   const uint16_t frac     = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
-  PRINTF("set_channel: %d = 0x%04X.0x%04X (%lu)\n",
+  LOG_DBG("Set channel to %d, frequency 0x%04X.0x%04X (%lu)\n",
          (int)channel, freq, frac, new_freq);
 
   cmd_fs.frequency = freq;
@@ -402,7 +357,7 @@ static int
 init(void)
 {
   if(ieee_radio.rf_handle) {
-    PRINTF("init: Radio already initialized\n");
+    LOG_WARN("Radio already initialized\n");
     return RF_RESULT_OK;
   }
 
@@ -419,13 +374,14 @@ init(void)
   ieee_radio.rf_handle = netstack_open(&rf_params);
 
   if(ieee_radio.rf_handle == NULL) {
-    PRINTF("init: unable to open IEEE RF driver\n");
+    LOG_ERR("Unable to open RF driver\n");
     return RF_RESULT_ERROR;
   }
 
   set_channel(DOT_15_4G_DEFAULT_CHAN);
 
-  rf_set_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, TX_POWER_MAX);
+  int8_t max_tx_power = tx_power_max(rf_tx_power_table, rf_tx_power_table_size);
+  rf_set_tx_power(ieee_radio.rf_handle, rf_tx_power_table, max_tx_power);
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
@@ -456,7 +412,7 @@ transmit(unsigned short transmit_len)
   rf_result_t res;
 
   if(ieee_radio.send_on_cca && channel_clear() != 1) {
-    PRINTF("transmit: channel wasn't clear\n");
+    LOG_WARN("Channel is not clear for transmission\n");
     return RADIO_TX_COLLISION;
   }
 
@@ -551,7 +507,7 @@ read(void *buf, unsigned short buf_len)
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if(frame_len < FRAME_SHAVE) {
-    PRINTF("read: frame too short len=%d\n", frame_len);
+    LOG_ERR("Received frame too short, len=%d\n", frame_len);
 
     data_queue_release_entry();
     return 0;
@@ -560,9 +516,10 @@ read(void *buf, unsigned short buf_len)
   const uint8_t *payload_ptr = frame_ptr + sizeof(lensz_t);
   const unsigned short payload_len = (unsigned short)(frame_len - FRAME_SHAVE);
 
-  /* Sanity check that Payload fits in Buffer */
+  /* Sanity check that Payload fits in buffer. */
   if(payload_len > buf_len) {
-    PRINTF("read: payload too large for buffer len=%d buf_len=%d\n", payload_len, buf_len);
+    LOG_ERR("MAC payload too large for buffer, len=%d buf_len=%d\n",
+            payload_len, buf_len);
 
     data_queue_release_entry();
     return 0;
@@ -570,11 +527,11 @@ read(void *buf, unsigned short buf_len)
 
   memcpy(buf, payload_ptr, payload_len);
 
-  /* RSSI stored FCS (2) bytes after payload */
+  /* RSSI stored FCS (2) bytes after payload. */
   ieee_radio.last.rssi = (int8_t)payload_ptr[payload_len + 2];
-  /* LQI retrieved from Status byte, FCS (2) + RSSI (1) bytes after payload */
+  /* LQI retrieved from Status byte, FCS (2) + RSSI (1) bytes after payload. */
   ieee_radio.last.corr_lqi = (uint8_t)(payload_ptr[payload_len + 3] & STATUS_CORRELATION);
-  /* Timestamp stored FCS (2) + RSSI (1) + Status (1) bytes after payload */
+  /* Timestamp stored FCS (2) + RSSI (1) + Status (1) bytes after payload. */
   const uint32_t rat_ticks = *(uint32_t*)(payload_ptr + payload_len + 4);
   ieee_radio.last.timestamp = rat_to_timestamp(rat_ticks);
 
@@ -617,9 +574,12 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
     netstack_stop_rx();
   }
 
-  return (stat == RF_StatCmdDoneSuccess)
-         ? RF_RESULT_OK
-         : RF_RESULT_ERROR;
+  if(stat != RF_StatCmdDoneSuccess) {
+    LOG_ERR("CCA request failed, stat=0x%02X\n", stat);
+    return RF_RESULT_ERROR;
+  }
+
+  return RF_RESULT_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -652,7 +612,7 @@ receiving_packet(void)
   if((cmd_cca_req.ccaInfo.ccaEnergy == CCA_STATE_BUSY) &&
      (cmd_cca_req.ccaInfo.ccaCorr == CCA_STATE_BUSY) &&
      (cmd_cca_req.ccaInfo.ccaSync == CCA_STATE_BUSY)) {
-    PRINTF("receiving_packet: we were TXing ACK\n");
+    LOG_WARN("We are TXing ACK, therefore not receiving packets\n");
     return 0;
   }
 
@@ -694,7 +654,7 @@ on(void)
   rf_result_t res;
 
   if(ieee_radio.rf_is_on) {
-    PRINTF("on: Radio already on\n");
+    LOG_WARN("Radio is already on\n");
     return RF_RESULT_OK;
   }
 
@@ -714,7 +674,7 @@ static int
 off(void)
 {
   if(!ieee_radio.rf_is_on) {
-    PRINTF("off: Radio already off\n");
+    LOG_WARN("Radio is already off\n");
     return RF_RESULT_OK;
   }
 
@@ -778,7 +738,7 @@ get_value(radio_param_t param, radio_value_t *value)
 
   /* TX power */
   case RADIO_PARAM_TXPOWER:
-    res = rf_get_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, (int8_t*)&value);
+    res = rf_get_tx_power(ieee_radio.rf_handle, rf_tx_power_table, (int8_t*)&value);
     return ((res == RF_RESULT_OK) &&
             (*value != RF_TxPowerTable_INVALID_DBM))
            ? RADIO_RESULT_OK
@@ -807,12 +767,12 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_CONST_TXPOWER_MIN:
-    *value = (radio_value_t)TX_POWER_MIN;
+    *value = (radio_value_t)tx_power_min(rf_tx_power_table);
     return RADIO_RESULT_OK;
 
   /* TX power max */
   case RADIO_CONST_TXPOWER_MAX:
-    *value = (radio_value_t)TX_POWER_MAX;
+    *value = (radio_value_t)tx_power_max(rf_tx_power_table, rf_tx_power_table_size);
     return RADIO_RESULT_OK;
 
   /* Last RSSI */
@@ -909,7 +869,7 @@ set_value(radio_param_t param, radio_value_t value)
       memcpy(&cmd_mod_filt.newFrameFiltOpt, &(rf_cmd_ieee_rx.frameFiltOpt), sizeof(rf_cmd_ieee_rx.frameFiltOpt));
       const RF_Stat stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t*)&cmd_mod_filt);
       if(stat != RF_StatCmdDoneSuccess) {
-        PRINTF("setting address filter failed: stat=0x%02X\n", stat);
+        LOG_ERR("Setting address filter failed, stat=0x%02X\n", stat);
         return RADIO_RESULT_ERROR;
       }
       return RADIO_RESULT_OK;
@@ -935,10 +895,10 @@ set_value(radio_param_t param, radio_value_t value)
 
   /* TX Power */
   case RADIO_PARAM_TXPOWER:
-    if(!TX_POWER_IN_RANGE((int8_t)value)) {
+    if(!tx_power_in_range((int8_t)value, rf_tx_power_table, rf_tx_power_table_size)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-    res = rf_set_tx_power(ieee_radio.rf_handle, TX_POWER_TABLE, (int8_t)value);
+    res = rf_set_tx_power(ieee_radio.rf_handle, rf_tx_power_table, (int8_t)value);
     return (res == RF_RESULT_OK)
            ? RADIO_RESULT_OK
            : RADIO_RESULT_ERROR;
@@ -1036,6 +996,23 @@ set_object(radio_param_t param, const void *src, size_t size)
     return RADIO_RESULT_NOT_SUPPORTED;
   }
 }
+/*---------------------------------------------------------------------------*/
+const struct radio_driver ieee_mode_driver = {
+  init,
+  prepare,
+  transmit,
+  send,
+  read,
+  channel_clear,
+  receiving_packet,
+  pending_packet,
+  on,
+  off,
+  get_value,
+  set_value,
+  get_object,
+  set_object,
+};
 /*---------------------------------------------------------------------------*/
 /**
  * @}

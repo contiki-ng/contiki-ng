@@ -40,7 +40,8 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/ctimer.h"
-
+/*---------------------------------------------------------------------------*/
+#include "board-conf.h"
 #include "tmp-007-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
@@ -58,6 +59,13 @@
 #else
 #define PRINTF(...)
 #endif
+/*---------------------------------------------------------------------------*/
+/*
+ * Disable the entire file if sensors are disabled, as it could potentially
+ * create compile errors with missing defines from either the Board file or
+ * configuration defines.
+ */
+#if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 /* Slave address */
 #ifndef Board_TMP_ADDR
@@ -408,5 +416,7 @@ status(int type)
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(tmp_007_sensor, "TMP-007", value, configure, status);
+/*---------------------------------------------------------------------------*/
+#endif /* BOARD_SENSORS_ENABLE */
 /*---------------------------------------------------------------------------*/
 /** @} */

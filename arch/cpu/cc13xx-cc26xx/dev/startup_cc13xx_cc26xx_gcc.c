@@ -1,93 +1,77 @@
 /*
- * Copyright (c) 2017, Texas Instruments Incorporated
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
- * *  Redistributions of source code must retain the above copyright
+ * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
+ * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-//*****************************************************************************
-//
-// Check if compiler is GNU Compiler
-//
-//*****************************************************************************
+/**
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \file
+ *        Startup file for GCC for CC13xx/CC26xx.
+ */
+/*---------------------------------------------------------------------------*/
+/* Check if compiler is GNU Compiler. */
 #if !(defined(__GNUC__))
 #error "startup_cc13xx_cc26xx_gcc.c: Unsupported compiler!"
 #endif
-
+/*---------------------------------------------------------------------------*/
 #include <string.h>
 
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_types.h)
 #include DeviceFamily_constructPath(driverlib/interrupt.h)
 #include DeviceFamily_constructPath(driverlib/setup.h)
-
-//*****************************************************************************
-//
-// Forward declaration of the default fault handlers.
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/* Forward declaration of the default fault handlers. */
 void resetISR(void);
 static void nmiISR(void);
 static void faultISR(void);
 static void defaultHandler(void);
 static void busFaultHandler(void);
-
-//*****************************************************************************
-//
-// External declaration for the reset handler that is to be called when the
-// processor is started
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/*
+ * External declaration for the reset handler that is to be called when the
+ * processor is started.
+ */
 extern void _c_int00(void);
 
-//*****************************************************************************
-//
-// The entry point for the application.
-//
-//*****************************************************************************
+/* The entry point for the application. */
 extern int main(void);
-
-//*****************************************************************************
-//
-// linker variable that marks the top of stack.
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/* Linker variable that marks the top of stack. */
 extern unsigned long _stack_end;
 
-//*****************************************************************************
-//
-// The vector table.  Note that the proper constructs must be placed on this to
-// ensure that it ends up at physical address 0x0000.0000.
-//
-//*****************************************************************************
-__attribute__ ((section(".resetVecs"))) __attribute__ ((used))
-static void(*const resetVectors[16]) (void) =
+/*
+ * The vector table. Note that the proper constructs must be placed on this to
+ * ensure that it ends up at physical address 0x0000.0000.
+ */
+__attribute__((section(".resetVecs"))) __attribute__((used))
+static void(*const resetVectors[16])(void) =
 {
   (void (*)(void))((uint32_t)&_stack_end),
   /* The initial stack pointer */
@@ -107,45 +91,35 @@ static void(*const resetVectors[16]) (void) =
   defaultHandler,                      /* The PendSV handler */
   defaultHandler                       /* The SysTick handler */
 };
-//*****************************************************************************
-//
-// The following are arrays of pointers to constructor functions that need to
-// be called during startup to initialize global objects.
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/*
+ * The following are arrays of pointers to constructor functions that need to
+ * be called during startup to initialize global objects.
+ */
 extern void (*__init_array_start[])(void);
 extern void (*__init_array_end[])(void);
 
-//*****************************************************************************
-//
-// The following global variable is required for C++ support.
-//
-//*****************************************************************************
+/* The following global variable is required for C++ support. */
 void *__dso_handle = (void *)&__dso_handle;
-
-//*****************************************************************************
-//
-// The following are constructs created by the linker, indicating where the
-// the "data" and "bss" segments reside in memory.  The initializers for the
-// for the "data" segment resides immediately following the "text" segment.
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/*
+ * The following are constructs created by the linker, indicating where the
+ * the "data" and "bss" segments reside in memory. The initializers for the
+ * for the "data" segment resides immediately following the "text" segment.
+ */
 extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
 extern uint32_t __data_load__;
 extern uint32_t __data_start__;
 extern uint32_t __data_end__;
-
-//
-//*****************************************************************************
-//
-// Initialize the .data and .bss sections and copy the first 16 vectors from
-// the read-only/reset table to the runtime RAM table. Fill the remaining
-// vectors with a stub. This vector table will be updated at runtime.
-//
-//*****************************************************************************
-//
-void localProgramStart(void)
+/*---------------------------------------------------------------------------*/
+/*
+ * \brief  Entry point of the startup code.
+ *
+ * Initialize the .data and .bss sections, and call main.
+ */
+void
+localProgramStart(void)
 {
   uint32_t *bs;
   uint32_t *be;
@@ -199,18 +173,19 @@ void localProgramStart(void)
   /* If we ever return signal Error */
   faultISR();
 }
-
-//*****************************************************************************
-//
-// This is the code that gets called when the processor first starts execution
-// following a reset event.  Only the absolutely necessary set is performed,
-// after which the application supplied entry() routine is called.  Any fancy
-// actions (such as making decisions based on the reset cause register, and
-// resetting the bits in that register) are left solely in the hands of the
-// application.
-//
-//*****************************************************************************
-void __attribute__((naked)) resetISR(void)
+/*---------------------------------------------------------------------------*/
+/*
+ * \brief  Reset ISR.
+ *
+ * This is the code that gets called when the processor first starts execution
+ * following a reset event. Only the absolutely necessary set is performed,
+ * after which the application supplied entry() routine is called.  Any fancy
+ * actions (such as making decisions based on the reset cause register, and
+ * resetting the bits in that register) are left solely in the hands of the
+ * application.
+ */
+void __attribute__((naked))
+resetISR(void)
 {
   __asm__ __volatile__
   (
@@ -221,40 +196,38 @@ void __attribute__((naked)) resetISR(void)
     "bl localProgramStart             \n"
   );
 }
-
-//*****************************************************************************
-//
-// This is the code that gets called when the processor receives a NMI.  This
-// simply enters an infinite loop, preserving the system state for examination
-// by a debugger.
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/*
+ * \brief  Non-Maskable Interrupt (NMI) ISR.
+ *
+ * This is the code that gets called when the processor receives a NMI. This
+ * simply enters an infinite loop, preserving the system state for examination
+ * by a debugger.
+ */
 static void
 nmiISR(void)
 {
   /* Enter an infinite loop. */
-  while(1) {
-  }
+  for(;;) { /* hang */ }
 }
-
-//*****************************************************************************
-//
-// This is the code that gets called when the processor receives a fault
-// interrupt.  This simply enters an infinite loop, preserving the system state
-// for examination by a debugger.
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/*
+ * \brief     Debug stack pointer.
+ * \param sp  Stack pointer.
+ *
+ * Provide a view into the CPU state from the provided stack pointer.
+ */
 void
 debugHardfault(uint32_t *sp)
 {
-  volatile uint32_t r0;
-  volatile uint32_t r1;
-  volatile uint32_t r2;
-  volatile uint32_t r3;
-  volatile uint32_t r12;
-  volatile uint32_t lr;
-  volatile uint32_t pc;
-  volatile uint32_t psr;
+  volatile uint32_t r0;  /**< R0 register */
+  volatile uint32_t r1;  /**< R1 register */
+  volatile uint32_t r2;  /**< R2 register */
+  volatile uint32_t r3;  /**< R3 register */
+  volatile uint32_t r12; /**< R12 register */
+  volatile uint32_t lr;  /**< LR register */
+  volatile uint32_t pc;  /**< PC register */
+  volatile uint32_t psr; /**< PSR register */
 
   (void)(r0  = sp[0]);
   (void)(r1  = sp[1]);
@@ -265,9 +238,18 @@ debugHardfault(uint32_t *sp)
   (void)(pc  = sp[6]);
   (void)(psr = sp[7]);
 
-  while(1);
+  /* Enter an infinite loop. */
+  for(;;) { /* hang */ }
 }
-
+/*---------------------------------------------------------------------------*/
+/*
+ * \brief  CPU Fault ISR.
+ *
+ * This is the code that gets called when the processor receives a fault
+ * interrupt. Setup a call to debugStackPointer with the current stack pointer.
+ * The stack pointer in this case would be the CPU state which caused the CPU
+ * fault.
+ */
 static void
 faultISR(void)
 {
@@ -280,48 +262,50 @@ faultISR(void)
     "b debugHardfault  \n"
   );
 }
-
-//*****************************************************************************
-//
-// This is the code that gets called when the processor receives an unexpected
-// interrupt.  This simply enters an infinite loop, preserving the system state
-// for examination by a debugger.
-//
-//*****************************************************************************
+/*---------------------------------------------------------------------------*/
+/* Dummy variable */
 volatile int x__;
 
+/*
+ * \brief  Bus Fault Handler.
+ *
+ * This is the code that gets called when the processor receives an unexpected
+ * interrupt. This simply enters an infinite loop, preserving the system state
+ * for examination by a debugger.
+ */
 static void
 busFaultHandler(void)
 {
   x__ = 0;
-  /* Enter an infinite loop. */
-  while(1) {
-  }
-}
 
-//*****************************************************************************
-//
-// This is the code that gets called when the processor receives an unexpected
-// interrupt.  This simply enters an infinite loop, preserving the system state
-// for examination by a debugger.
-//
-//*****************************************************************************
+  /* Enter an infinite loop. */
+  for(;;) { /* hang */ }
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * \brief  Default Handler.
+ *
+ * This is the code that gets called when the processor receives an unexpected
+ * interrupt.  This simply enters an infinite loop, preserving the system state
+ * for examination by a debugger.
+ */
 static void
 defaultHandler(void)
 {
   /* Enter an infinite loop. */
-  while(1) {
-  }
+  for(;;) { /* hang */ }
 }
-
-//*****************************************************************************
-//
-// This function is called by __libc_fini_array which gets called when exit()
-// is called. In order to support exit(), an empty _fini() stub function is
-// required.
-//
-//*****************************************************************************
-void _fini(void)
+/*---------------------------------------------------------------------------*/
+/*
+ * \brief  Finalize object function.
+ *
+ * This function is called by __libc_fini_array which gets called when exit()
+ * is called. In order to support exit(), an empty _fini() stub function is
+ * required.
+ */
+void
+_fini(void)
 {
   /* Function body left empty intentionally */
 }
+/*---------------------------------------------------------------------------*/

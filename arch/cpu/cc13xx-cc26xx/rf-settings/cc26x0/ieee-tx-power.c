@@ -27,32 +27,67 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup cc13xx-cc26xx-rf-tx-power
+ * @{
+ *
+ * \file
+ *        Source file for IEEE-mode TX power tables for CC26x0.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef IEEE_SETTINGS_H_
-#define IEEE_SETTINGS_H_
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "rf/tx-power.h"
 /*---------------------------------------------------------------------------*/
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
-#include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ieee_mailbox.h)
+/*
+ * TX Power table for CC2650
+ * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
+ * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
+ * See the Technical Reference Manual for further details about the "txPower" Command field.
+ * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
+ */
+tx_power_table_t rf_ieee_tx_power_table_cc2650[] =
+{
+  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  6) },
+  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  6) },
+  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0,  6) },
+  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 1, 0, 10) },
+  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 1, 12) },
+  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 1, 1, 14) },
+  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 1, 1, 18) },
+  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 1, 1, 24) },
+  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 0, 0, 33) },
+  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 39) },
+  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 0, 0, 45) },
+  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(36, 0, 1, 73) },
+  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(48, 0, 1, 73) },
+  RF_TxPowerTable_TERMINATION_ENTRY
+};
+/*---------------------------------------------------------------------------*/
+tx_power_table_t rf_ieee_tx_power_table_empty[] =
+{
+  RF_TxPowerTable_TERMINATION_ENTRY
+};
+/*---------------------------------------------------------------------------*/
+/* Only define the symbols if Prop-mode is selected */
+#if (RF_MODE == RF_MODE_2_4_GHZ)
+/*---------------------------------------------------------------------------*/
+/* TX power table, based on which board is used. */
+#if defined(DEVICE_CC2650)
+#define TX_POWER_TABLE  rf_ieee_tx_power_table_cc2650
 
-#include <ti/drivers/rf/RF.h>
+#else
+#define TX_POWER_TABLE  rf_ieee_tx_power_table_empty
+#endif
+
+/*
+ * Define symbols for both the TX power table and its size. The TX power
+ * table size is with one less entry by excluding the termination entry.
+ */
+tx_power_table_t *const rf_tx_power_table = TX_POWER_TABLE;
+const size_t rf_tx_power_table_size = (sizeof(TX_POWER_TABLE) / sizeof(TX_POWER_TABLE[0])) - 1;
 /*---------------------------------------------------------------------------*/
-/* TI-RTOS RF Mode Object */
-extern RF_Mode               rf_ieee_mode;
-/*---------------------------------------------------------------------------*/
-/* RF Core API commands */
-extern rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup;
-extern rfc_CMD_FS_t          rf_cmd_ieee_fs;
-extern rfc_CMD_IEEE_TX_t     rf_cmd_ieee_tx;
-extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
-extern rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack;
-/*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t              rf_ieee_overrides[];
-/*---------------------------------------------------------------------------*/
-#endif /* IEEE_SETTINGS_H_ */
+#endif /* RF_MODE */
 /*---------------------------------------------------------------------------*/

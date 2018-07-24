@@ -79,15 +79,15 @@ CONTIKI_CPU_SOURCEFILES += ieee-addr.c ble-addr.c
 CONTIKI_CPU_SOURCEFILES += ble-beacond.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
-CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c
+CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c prop-tx-power.c
 endif
 
 ifeq ($(SUPPORTS_IEEE_MODE),1)
-CONTIKI_CPU_SOURCEFILES += ieee-mode.c ieee-settings.c
+CONTIKI_CPU_SOURCEFILES += ieee-mode.c ieee-settings.c ieee-tx-power.c
 endif
 
 ifeq ($(SUPPORTS_BLE_BEACON),1)
-CONTIKI_CPU_SOURCEFILES += ble-settings.c
+CONTIKI_CPU_SOURCEFILES += ble-settings.c ble-tx-power.c
 endif
 
 ### CPU-dependent debug source files

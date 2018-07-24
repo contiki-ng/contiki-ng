@@ -51,8 +51,8 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 /* RX buf configuration */
-#define RX_BUF_CNT        RF_RX_BUF_CNT
-#define RX_BUF_SIZE       RF_RX_BUF_SIZE
+#define RX_BUF_CNT        RF_CONF_RX_BUF_CNT
+#define RX_BUF_SIZE       RF_CONF_RX_BUF_SIZE
 /*---------------------------------------------------------------------------*/
 /* Receive buffer entries with room for 1 IEEE 802.15.4 frame in each */
 typedef union {

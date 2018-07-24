@@ -72,6 +72,15 @@
 #define BOARD_CONF_HAS_SENSORS      1
 /** @} */
 /*---------------------------------------------------------------------------*/
+/**
+ * \name Enable or disable the SensorTag sensors.
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define BOARD_SENSORS_ENABLE      (!(BOARD_CONF_SENSORS_DISABLE))
+/** @} */
+/*---------------------------------------------------------------------------*/
 #endif /* BOARD_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**

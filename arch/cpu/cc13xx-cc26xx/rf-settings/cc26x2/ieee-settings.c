@@ -61,40 +61,6 @@ RF_Mode rf_ieee_mode =
 };
 /*---------------------------------------------------------------------------*/
 /*
- * TX Power table
- * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
- * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
- * See the Technical Reference Manual for further details about the "txPower" Command field.
- * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
- */
-RF_TxPowerTable_Entry rf_ieee_tx_power_table[] =
-{
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY(7,  3, 0,   3) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY(9,  3, 0,   3) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0, 100) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(40, 2, 0,   8) },
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0,  11) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 2, 0,   5) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 1, 0,  16) },
-  {  -5, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0,  17) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 1, 0,  20) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0,  26) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 1, 0,  28) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 0, 0,  34) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 0, 0,  42) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 0, 0,  54) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(30, 0, 0,  74) },
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-
-/*
- * TX power table size, with one less entry excluding the
- * termination entry.
- */
-const size_t rf_ieee_tx_power_table_size =
-    (sizeof(rf_ieee_tx_power_table) / sizeof(rf_ieee_tx_power_table[0])) - 1;
-
-/*
  * CMD_RADIO_SETUP must be configured with default TX power value
  * in the .txPower field.
  */

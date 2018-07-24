@@ -57,17 +57,18 @@
 #include "rf/rf.h"
 #include "rf/sched.h"
 #include "rf/data-queue.h"
-#include "rf-settings.h"
+#include "rf/settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-#if 1
-#define PRINTF(...)  printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Radio"
+#define LOG_LEVEL LOG_LEVEL_NONE
+/*---------------------------------------------------------------------------*/
+/* Configuration parameters */
 /*---------------------------------------------------------------------------*/
 #define CMD_FS_RETRIES          3
 
@@ -175,7 +176,7 @@ cmd_rx_restore(uint_fast8_t rx_key)
   );
 
   if(!CMD_HANDLE_OK(cmd_rx_handle)) {
-    PRINTF("cmd_rx_restore: unable to schedule RX command handle=%d status=0x%04x",
+    LOG_ERR("Unable to restore RX command, handle=%d status=0x%04x",
            cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
     return RF_RESULT_ERROR;
   }
@@ -322,7 +323,7 @@ netstack_sched_ieee_tx(bool ack_request)
   );
 
   if(!CMD_HANDLE_OK(tx_handle)) {
-    PRINTF("netstack_sched_tx: unable to schedule TX command handle=%d status=0x%04x\n",
+    LOG_ERR("Unable to schedule TX command, handle=%d status=0x%04x\n",
            tx_handle, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
   }
@@ -348,7 +349,7 @@ netstack_sched_ieee_tx(bool ack_request)
   }
 
   if(!EVENTS_CMD_DONE(tx_events)) {
-    PRINTF("netstack_sched_tx: TX command pend error events=0x%08llx status=0x%04x\n",
+    LOG_ERR("Pending on TX comand generated error, events=0x%08llx status=0x%04x\n",
            tx_events, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
   }
@@ -376,8 +377,8 @@ netstack_sched_prop_tx(void)
   );
 
   if(!CMD_HANDLE_OK(tx_handle)) {
-    PRINTF("netstack_sched_tx: unable to schedule TX command handle=%d status=0x%04x\n",
-           tx_handle, CMD_STATUS(netstack_cmd_tx));
+    LOG_ERR("Unable to schedule TX command, handle=%d status=0x%04x\n",
+            tx_handle, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
   }
 
@@ -405,8 +406,8 @@ netstack_sched_prop_tx(void)
   }
 
   if(!EVENTS_CMD_DONE(tx_events)) {
-    PRINTF("netstack_sched_tx: TX command pend error events=0x%08llx status=0x%04x\n",
-           tx_events, CMD_STATUS(netstack_cmd_tx));
+    LOG_ERR("Pending on scheduled TX command generated error, events=0x%08llx status=0x%04x\n",
+            tx_events, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
   }
 
@@ -417,7 +418,7 @@ rf_result_t
 netstack_sched_rx(bool start)
 {
   if(cmd_rx_is_active()) {
-    PRINTF("netstack_sched_rx: already in RX\n");
+    LOG_WARN("Already in RX when scheduling RX\n");
     return RF_RESULT_OK;
   }
 
@@ -438,8 +439,8 @@ netstack_sched_rx(bool start)
   );
 
   if(!CMD_HANDLE_OK(cmd_rx_handle)) {
-    PRINTF("netstack_sched_rx: unable to schedule RX command handle=%d status=0x%04x\n",
-           cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
+    LOG_ERR("Unable to schedule RX command, handle=%d status=0x%04x\n",
+            cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
     return RF_RESULT_ERROR;
   }
 
@@ -457,7 +458,7 @@ rf_result_t
 netstack_stop_rx(void)
 {
   if(!cmd_rx_is_active()) {
-    PRINTF("netstack_stop_rx: RX not active\n");
+    LOG_WARN("RX not active when stopping RX\n");
     return RF_RESULT_OK;
   }
 
@@ -498,8 +499,8 @@ ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
   );
 
   if(!CMD_HANDLE_OK(beacon_handle)) {
-    PRINTF("ble_sched_beacon: unable to schedule BLE Beacon command handle=%d status=0x%04x\n",
-           beacon_handle, CMD_STATUS(ble_cmd_beacon));
+    LOG_ERR("Unable to schedule BLE Beacon command, handle=%d status=0x%04x\n",
+            beacon_handle, CMD_STATUS(ble_cmd_beacon));
     return RF_RESULT_ERROR;
   }
 
@@ -508,8 +509,8 @@ ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
   /* Wait until Beacon operation finishes */
   RF_EventMask beacon_events = RF_pendCmd(&rf_ble, beacon_handle, 0);
   if(!EVENTS_CMD_DONE(beacon_events)) {
-    PRINTF("ble_sched_beacon: Beacon command pend error events=0x%08llx status=0x%04x\n",
-           beacon_events, CMD_STATUS(ble_cmd_beacon));
+    LOG_ERR("Pending on scheduled BLE Beacon command generated error, events=0x%08llx status=0x%04x\n",
+            beacon_events, CMD_STATUS(ble_cmd_beacon));
 
     cmd_rx_restore(rx_key);
     return RF_RESULT_ERROR;
@@ -534,7 +535,9 @@ PROCESS_THREAD(rf_sched_process, ev, data)
     /* start the synth re-calibration timer once. */
     if(rf_is_on) {
       rf_is_on = false;
-      etimer_set(&synth_recal_timer, synth_recal_interval());
+      clock_time_t interval = synth_recal_interval();
+      LOG_INFO("Starting synth re-calibration timer, next timeout %lu\n", interval);
+      etimer_set(&synth_recal_timer, interval);
     }
 
     if(ev == PROCESS_EVENT_POLL) {
@@ -549,7 +552,7 @@ PROCESS_THREAD(rf_sched_process, ev, data)
          * RX after we've freed at least on packet.
          */
         if(rx_buf_full) {
-          PRINTF("rf_core: RX buf full, restart RX status=0x%04x\n", CMD_STATUS(netstack_cmd_rx));
+          LOG_ERR("RX buffer full, restart RX status=0x%04x\n", CMD_STATUS(netstack_cmd_rx));
           rx_buf_full = false;
 
           /* Restart RX. */
@@ -569,10 +572,11 @@ PROCESS_THREAD(rf_sched_process, ev, data)
     /* Scheduling CMD_FS will re-calibrate the synth. */
     if((ev == PROCESS_EVENT_TIMER) &&
        etimer_expired(&synth_recal_timer)) {
-      PRINTF("rf_core: Re-calibrate synth\n");
-      netstack_sched_fs();
+      clock_time_t interval = synth_recal_interval();
+      LOG_DBG("Re-calibrate synth, next interval %lu\n", interval);
 
-      etimer_set(&synth_recal_timer, synth_recal_interval());
+      netstack_sched_fs();
+      etimer_set(&synth_recal_timer, interval);
     }
   }
   PROCESS_END();

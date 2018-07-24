@@ -40,7 +40,8 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/rtimer.h"
-
+/*---------------------------------------------------------------------------*/
+#include "board-conf.h"
 #include "mpu-9250-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
@@ -62,6 +63,13 @@
 #else
 #define PRINTF(...)
 #endif
+/*---------------------------------------------------------------------------*/
+/*
+ * Disable the entire file if sensors are disabled, as it could potentially
+ * create compile errors with missing defines from either the Board file or
+ * configuration defines.
+ */
+#if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 #ifndef Board_MPU9250_ADDR
 # error "Board file doesn't define I2C address Board_MPU9250_ADDR"
@@ -647,5 +655,7 @@ status(int type)
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(mpu_9250_sensor, "MPU9250", value, configure, status);
+/*---------------------------------------------------------------------------*/
+#endif /* BOARD_SENSORS_ENABLE */
 /*---------------------------------------------------------------------------*/
 /** @} */

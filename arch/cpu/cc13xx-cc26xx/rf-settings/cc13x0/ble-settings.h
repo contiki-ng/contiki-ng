@@ -38,22 +38,16 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-/* TX Power table size definition */
-#define RF_BLE_TX_POWER_TABLE_SIZE      17
-
-/* TX Power Table Object */
-extern RF_TxPowerTable_Entry rf_ble_tx_power_table[RF_BLE_TX_POWER_TABLE_SIZE+1];
-/*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
-extern RF_Mode rf_ble_mode;
+extern RF_Mode               rf_ble_mode;
 /*---------------------------------------------------------------------------*/
 /* RF Core API commands */
-extern rfc_CMD_RADIO_SETUP_t    rf_ble_cmd_radio_setup;
-extern rfc_bleAdvPar_t          rf_ble_adv_par;
-extern rfc_CMD_BLE_ADV_NC_t     rf_ble_cmd_ble_adv_nc;
+extern rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radio_setup;
+extern rfc_bleAdvPar_t       rf_ble_adv_par;
+extern rfc_CMD_BLE_ADV_NC_t  rf_ble_cmd_ble_adv_nc;
 /*---------------------------------------------------------------------------*/
 /* RF Core API Overrides */
-extern uint32_t rf_ble_overrides[];
+extern uint32_t              rf_ble_overrides[];
 /*---------------------------------------------------------------------------*/
 #endif /* BLE_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

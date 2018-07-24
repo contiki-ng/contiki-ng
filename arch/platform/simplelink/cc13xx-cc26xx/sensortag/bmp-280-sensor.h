@@ -59,9 +59,13 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 /*---------------------------------------------------------------------------*/
+#include "board-conf.h"
+/*---------------------------------------------------------------------------*/
 /* The BMP-280 driver uses the I2C0 peripheral to access the senssor */
+#if BOARD_SENSORS_ENABLE
 #if (TI_I2C_CONF_ENABLE == 0) || (TI_I2C_CONF_I2C0_ENABLE == 0)
 # error "The BMP280 requires the I2C driver (TI_I2C_CONF_ENABLE = 1)"
+#endif
 #endif
 /*---------------------------------------------------------------------------*/
 typedef enum {

@@ -62,37 +62,6 @@ RF_Mode rf_ble_mode =
   .rfePatchFxn = &rf_patch_rfe_ble,
 };
 /*---------------------------------------------------------------------------*/
-/* TX Power table */
-/* The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments: */
-/* RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient) */
-/* See the Technical Reference Manual for further details about the "txPower" Command field. */
-/* The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise. */
-RF_TxPowerTable_Entry rf_ble_tx_power_table[RF_BLE_TX_POWER_TABLE_SIZE+1] =
-{
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 1,  6) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 1,  6) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 1, 10) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 3, 1, 12) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 1, 14) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(35, 3, 1, 18) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(47, 3, 1, 22) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(29, 0, 1, 45) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 0, 1, 49) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 55) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(44, 0, 1, 63) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(52, 0, 1, 59) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(60, 0, 1, 47) },
-  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
-  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 49) },
-  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
-  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY(46, 0, 1, 59) },
-  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
-  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(55, 0, 1, 51) },
-  /* This setting requires CCFG_FORCE_VDDR_HH = 1. */
-  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 30) },
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-/*---------------------------------------------------------------------------*/
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ble_overrides[] CC_ALIGN(4) =
 {

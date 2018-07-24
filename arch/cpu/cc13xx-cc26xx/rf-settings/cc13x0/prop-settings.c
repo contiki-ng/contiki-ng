@@ -76,45 +76,6 @@ RF_Mode rf_prop_mode =
 /*---------------------------------------------------------------------------*/
 #if defined(DEVICE_CC1310)
 /*
- * TX Power table for CC1310
- * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
- * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
- * See the Technical Reference Manual for further details about the "txPower" Command field.
- * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
- */
-RF_TxPowerTable_Entry rf_prop_tx_power_table[] =
-{
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  4) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 1, 0,  0) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  8) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 2, 1, 0,  8) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0, 10) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0, 12) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0, 12) },
-  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0, 14) },
-  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0, 16) },
-  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 18) },
-  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 3, 0, 22) },
-  {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(19, 3, 0, 28) },
-  {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 0, 40) },
-  {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 92) },
-  /* The original PA value (12.5 dBm) have been rounded to an integer value. */
-  {  13, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 0, 83) },
-#if RF_CONF_TXPOWER_BOOST_MODE
-  /* This setting requires RF_CONF_TXPOWER_BOOST_MODE = 1. */
-  {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 83) },
-#endif
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-
-/*
- * TX power table size, with one less entry excluding the
- * termination entry.
- */
-const size_t rf_prop_tx_power_table_size =
-    (sizeof(rf_prop_tx_power_table) / sizeof(rf_prop_tx_power_table[0])) - 1;
-
-/*
  * CMD_PROP_RADIO_DIV_SETUP must be configured with default TX power value
  * in the .txPower field. This depends on whether RF_CONF_TXPOWER_BOOST_MODE
  * is configured or not.
@@ -129,43 +90,6 @@ const size_t rf_prop_tx_power_table_size =
 /*---------------------------------------------------------------------------*/
 #if defined(DEVICE_CC1350)
 /*
- * TX Power table for CC1350
- * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
- * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
- * See the Technical Reference Manual for further details about the "txPower" Command field.
- * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
- */
-RF_TxPowerTable_Entry rf_prop_tx_power_table[] =
-{
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  2) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  9) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0, 11) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0, 12) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0, 14) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 1, 0, 12) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 0, 16) },
-  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0, 18) },
-  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 21) },
-  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 0, 25) },
-  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 3, 0, 32) },
-  {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 3, 0, 44) },
-  {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY(37, 3, 0, 72) },
-  {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(43, 0, 0, 94) },
-#if RF_CONF_TXPOWER_BOOST_MODE
-  /* This setting requires RF_CONF_TXPOWER_BOOST_MODE = 1. */
-  {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 85) },
-#endif
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-
-/*
- * TX power table size, with one less entry excluding the
- * termination entry.
- */
-const size_t rf_prop_tx_power_table_size =
-    (sizeof(rf_prop_tx_power_table) / sizeof(rf_prop_tx_power_table[0])) - 1;
-
-/*
  * CMD_PROP_RADIO_DIV_SETUP must be configured with default TX power value
  * in the .txPower field. This depends on whether RF_CONF_TXPOWER_BOOST_MODE
  * is configured or not.
@@ -179,45 +103,6 @@ const size_t rf_prop_tx_power_table_size =
 #endif /* defined(DEVICE_CC1350) */
     /*---------------------------------------------------------------------------*/
 #if defined(DEVICE_CC1350_4)
-/*
- * TX Power table for CC1350_433
- * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
- * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
- * See the Technical Reference Manual for further details about the "txPower" Command field.
- * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
- */
-RF_TxPowerTable_Entry rf_prop_tx_power_table[] =
-{
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,   2) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 3, 0,   7) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 3, 0,   9) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 2, 3, 0,  11) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 2, 3, 0,  12) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  16) },
-  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0,  18) },
-  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0,  21) },
-  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0,  23) },
-  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 0,  28) },
-  {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0,  35) },
-  {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 1, 0,  39) },
-  {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0,  60) },
-  {  13, RF_TxPowerTable_DEFAULT_PA_ENTRY(15, 0, 0, 108) },
-  /* The original PA value (13.7 dBm) have been rounded to an integer value. */
-  {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 0,  92) },
-#if RF_CONF_TXPOWER_BOOST_MODE
-  /* This setting requires RF_CONF_TXPOWER_BOOST_MODE = 1. */
-  {  15, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1,  72) },
-#endif
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-
-/*
- * TX power table size, with one less entry excluding the
- * termination entry.
- */
-const size_t rf_prop_tx_power_table_size =
-    (sizeof(rf_prop_tx_power_table) / sizeof(rf_prop_tx_power_table[0])) - 1;
-
 /*
  * CMD_PROP_RADIO_DIV_SETUP must be configured with default TX power value
  * in the .txPower field. This depends on whether RF_CONF_TXPOWER_BOOST_MODE

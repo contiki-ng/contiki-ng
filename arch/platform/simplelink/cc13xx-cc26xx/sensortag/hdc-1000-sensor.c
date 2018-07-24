@@ -40,6 +40,8 @@
 #include "contiki.h"
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
+#include "board-conf.h"
 #include "hdc-1000-sensor.h"
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
@@ -57,6 +59,13 @@
 #else
 #define PRINTF(...)
 #endif
+/*---------------------------------------------------------------------------*/
+/*
+ * Disable the entire file if sensors are disabled, as it could potentially
+ * create compile errors with missing defines from either the Board file or
+ * configuration defines.
+ */
+#if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 #ifndef Board_HDC1000_ADDR
 # error "Board file doesn't define the I2C address Board_HDC1000_ADDR"
@@ -341,5 +350,7 @@ status(int type)
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(hdc_1000_sensor, "HDC1000", value, configure, status);
+/*---------------------------------------------------------------------------*/
+#endif /* BOARD_SENSORS_ENABLE */
 /*---------------------------------------------------------------------------*/
 /** @} */

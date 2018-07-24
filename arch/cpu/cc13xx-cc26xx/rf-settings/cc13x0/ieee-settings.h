@@ -48,10 +48,6 @@
 /* TI-RTOS RF Mode Object */
 extern RF_Mode               rf_ieee_mode;
 /*---------------------------------------------------------------------------*/
-/* TX Power Table */
-extern RF_TxPowerTable_Entry rf_ieee_tx_power_table[];
-extern const size_t          rf_ieee_tx_power_table_size;
-/*---------------------------------------------------------------------------*/
 /* RF Core API commands */
 extern rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup;
 extern rfc_CMD_FS_t          rf_cmd_ieee_fs;

@@ -84,7 +84,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "CC13xx/CC26xx"
-#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /*
  * Board-specific initialization function. This function is defined in
@@ -164,7 +164,7 @@ platform_init_stage_one(void)
   gpio_hal_init();
   leds_init();
 
-  fade(Board_PIN_RLED);
+  fade(Board_PIN_LED0);
 
   /* TI Drivers init */
 #if TI_UART_CONF_ENABLE
@@ -182,7 +182,7 @@ platform_init_stage_one(void)
 
   TRNG_init();
 
-  fade(Board_PIN_GLED);
+  fade(Board_PIN_LED1);
 
   /* NoRTOS must be called last */
   NoRTOS_start();
@@ -214,7 +214,7 @@ platform_init_stage_two(void)
 
   button_hal_init();
 
-  fade(Board_PIN_RLED);
+  fade(Board_PIN_LED0);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -251,7 +251,7 @@ platform_init_stage_three(void)
   process_start(&sensors_process, NULL);
 #endif
 
-  fade(Board_PIN_GLED);
+  fade(Board_PIN_LED1);
 }
 /*---------------------------------------------------------------------------*/
 void
