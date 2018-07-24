@@ -1,13 +1,34 @@
 ################################################################################
 # CC13x2/CC26x2 CPU makefile
 
+# Core SDK is placed as a submodule under the arch/cpu/cc13xx-cc26xx/lib.
+# Do a sanity check that Core SDK submodule has been initialized.
+# Note that Core SDK can be overriden with a user-specified SimpleLink SDK.
+# As long as the SimpleLink SDK matches the device in use and is of a reasonable
+# newer version, then it should be no different than using Core SDK.
+ifeq ($(CORE_SDK),)
+ CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
+ CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ]; echo $$?)
+ ifeq ($(CORE_SDK_INIT),1)
+  $(error The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
+ endif
+else
+ # Core SDK was overriden. Do a sanity check the path exists.
+ CORE_SDK_VALID := $(shell [ -d $(CORE_SDK) ]; echo $$?)
+ ifeq ($(CORE_SDK_VALID),1)
+  $(error Supplied CORE_SDK is not a valid path.)
+ endif
+endif
+# Clean up the path.
+CORE_SDK := ${realpath $(CORE_SDK)}
+
 # ccfg.c comes from the device-specific startp_files folder,
 # and startup_cc13xx_cc26xx_gcc.c comes from NoRTOS startup folder
 CPU_START_SOURCEFILES += ccfg.c startup_cc13xx_cc26xx_gcc.c
 
 ################################################################################
 # Device Family
-DEVICE_FAMILY_H := $(SIMPLELINK_SDK)/source/ti/devices/DeviceFamily.h
+DEVICE_FAMILY_H := $(CORE_SDK)/source/ti/devices/DeviceFamily.h
 
 # The define of the Device Family ID is on the format of either
 #       #define DeviceFamily_ID_<device>        <number>
@@ -54,8 +75,8 @@ SDK_DEVICE_DIR := $(shell echo "DeviceFamily_constructPath(dummy)" \
 ################################################################################
 # Simplelink SDK paths
 
-SDK_KERNEL := $(SIMPLELINK_SDK)/kernel/nortos
-SDK_SOURCE := $(SIMPLELINK_SDK)/source
+SDK_KERNEL := $(CORE_SDK)/kernel/nortos
+SDK_SOURCE := $(CORE_SDK)/source
 SDK_BOARDS := $(SDK_SOURCE)/ti/boards
 SDK_DRIVERS := $(SDK_SOURCE)/ti/drivers
 SDK_DEVICE := $(SDK_SOURCE)/$(SDK_DEVICE_DIR)

@@ -5,25 +5,15 @@
 ### Sanity check of expected symbols
 
 ifndef CONTIKI
-  $(error 'CONTIKI' not defined! You must specify where CONTIKI resides!)
+ $(error 'CONTIKI' not defined! You must specify where CONTIKI resides!)
 endif
 
 ifndef FAMILY
-  $(error 'FAMILY' not defined! You must specify which Simplelink family you are using!)
+ $(error 'FAMILY' not defined! You must specify which Simplelink family you are using!)
 endif
 
 ifndef BOARD
-  $(error 'BOARD' not defined! You must specify which board you are using!)
-endif
-
-ifndef SIMPLELINK_SDK
-  $(error 'SIMPLELINK_SDK' not defined! You must specify where the installed SimpleLink SDK resides!)
-endif
-
-SIMPLELINK_SDK_EXISTS := $(shell [ -d "$(SIMPLELINK_SDK)" ]; echo $$?)
-
-ifneq ($(SIMPLELINK_SDK_EXISTS),0)
-  $(error Simplelink SDK path 'SIMPLELINK_SDK' does not exist)
+ $(error 'BOARD' not defined! You must specify which board you are using!)
 endif
 
 ################################################################################
