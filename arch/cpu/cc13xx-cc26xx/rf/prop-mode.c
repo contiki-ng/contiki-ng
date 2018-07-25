@@ -250,8 +250,8 @@ set_channel(uint16_t channel)
   rf_result_t res;
 
   if(!dot_15_4g_chan_in_range(channel)) {
-    PRINTF("set_channel: illegal channel %d, defaults to %d\n",
-           (int)channel, DOT_15_4G_DEFAULT_CHAN);
+    LOG_WARN("Supplied hannel %d is illegal, defaults to %d\n",
+             (int)channel, DOT_15_4G_DEFAULT_CHAN);
     channel = DOT_15_4G_DEFAULT_CHAN;
   }
 
@@ -264,7 +264,7 @@ set_channel(uint16_t channel)
   const uint16_t freq = (uint16_t)(new_freq / 1000);
   const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
-  PRINTF("set_channel: %u = 0x%04x.0x%04x (%lu)\n",
+  LOG_DBG("Set channel to %d, frequency 0x%04X.0x%04X (%lu)\n",
          (int)channel, freq, frac, new_freq);
 
   cmd_fs.frequency = freq;
@@ -315,7 +315,7 @@ transmit(unsigned short transmit_len)
   rf_result_t res;
 
   if(tx_is_active()) {
-    PRINTF("transmit: not allowed while transmitting\n");
+    LOG_ERR("A transmission is already active\n");
     return RADIO_TX_ERR;
   }
 
@@ -392,7 +392,7 @@ read(void *buf, unsigned short buf_len)
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if(frame_len < FRAME_SHAVE) {
-    PRINTF("read: frame too short len=%d\n", frame_len);
+    LOG_ERR("Received rame is too short, len=%d\n", frame_len);
 
     data_queue_release_entry();
     return 0;
@@ -403,7 +403,8 @@ read(void *buf, unsigned short buf_len)
 
   /* Sanity check that Payload fits in Buffer */
   if(payload_len > buf_len) {
-    PRINTF("read: payload too large for buffer len=%d buf_len=%d\n", payload_len, buf_len);
+    LOG_ERR("Payload of received frame is too large for local buffer, len=%d buf_len=%d\n",
+            payload_len, buf_len);
 
     data_queue_release_entry();
     return 0;
@@ -441,7 +442,7 @@ static int
 channel_clear(void)
 {
   if(tx_is_active()) {
-    PRINTF("channel_clear: called while in TX\n");
+    LOG_ERR("Channel clear called while in TX\n");
     return 0;
   }
 
@@ -497,7 +498,7 @@ on(void)
   rf_result_t res;
 
   if(prop_radio.rf_is_on) {
-    PRINTF("on: Radio already on\n");
+    LOG_WARN("Radio is already on\n");
     return RF_RESULT_OK;
   }
 
@@ -517,7 +518,7 @@ static int
 off(void)
 {
   if(!prop_radio.rf_is_on) {
-    PRINTF("off: Radio already off\n");
+    LOG_WARN("Radio is already off\n");
     return RF_RESULT_OK;
   }
 
@@ -649,7 +650,7 @@ static int
 init(void)
 {
   if(prop_radio.rf_handle) {
-    PRINTF("init: Radio already initialized\n");
+    LOG_WARN("Radio is already initialized\n");
     return RF_RESULT_OK;
   }
 
@@ -657,7 +658,7 @@ init(void)
   prop_radio.rf_is_on = false;
 
   /* Set configured RSSI threshold */
-  prop_radio.rssi_threshold = PROP_MODE_RSSI_THRESHOLD;
+  prop_radio.rssi_threshold = PROP_MODE_CCA_RSSI_THRESHOLD;
 
   init_rf_params();
 
@@ -670,7 +671,7 @@ init(void)
   prop_radio.rf_handle = netstack_open(&rf_params);
 
   if(prop_radio.rf_handle == NULL) {
-    PRINTF("init: unable to open RF driver\n");
+    LOG_ERR("Unable to open RF driver during initialization\n");
     return RF_RESULT_ERROR;
   }
 

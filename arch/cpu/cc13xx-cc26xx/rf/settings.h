@@ -48,6 +48,8 @@
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 /*---------------------------------------------------------------------------*/
+/* Netstack RF command configuration */
+
 #if SUPPORTS_PROP_MODE
 #include "prop-settings.h"
 #endif
@@ -55,12 +57,6 @@
 #if SUPPORTS_IEEE_MODE
 #include "ieee-settings.h"
 #endif
-
-#if SUPPORTS_BLE_BEACON
-#include "ble-settings.h"
-#endif
-/*---------------------------------------------------------------------------*/
-/* Netstack RF command configuration */
 
 /* Prop-mode RF settings */
 #if (RF_MODE == RF_MODE_SUB_1_GHZ)
@@ -83,6 +79,9 @@
 #endif /* RF_MODE */
 /*---------------------------------------------------------------------------*/
 /* BLE Beacon RF command configuration */
+#if SUPPORTS_BLE_BEACON
+
+#include "ble-settings.h"
 
 /* CC13x0/CC26x0 devices */
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
@@ -101,6 +100,8 @@
 #define ble_cmd_beacon          rf_cmd_ble5_adv_aux
 
 #endif /* DeviceFamily_PARENT */
+
+#endif /* SUPPORTS_BLE_BEACON */
 /*---------------------------------------------------------------------------*/
 #endif /* NETSTACK_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

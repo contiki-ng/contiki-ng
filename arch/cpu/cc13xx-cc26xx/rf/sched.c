@@ -83,14 +83,17 @@
 #define EVENTS_CMD_DONE(events) (((events) & RF_EVENTS_CMD_DONE) != 0)
 /*---------------------------------------------------------------------------*/
 /* Synth re-calibration every 3 minutes */
-#define SYNTH_RECAL_INTERVAL (CLOCK_SECOND * 60 * 3)
+#define SYNTH_RECAL_INTERVAL    (CLOCK_SECOND * 60 * 3)
 /* Set re-calibration interval with a jitter of 10 seconds */
-#define SYNTH_RECAL_JITTER   (CLOCK_SECOND * 10)
+#define SYNTH_RECAL_JITTER      (CLOCK_SECOND * 10)
 
 static struct etimer synth_recal_timer;
 /*---------------------------------------------------------------------------*/
 static RF_Object rf_netstack;
+
+#if RF_BLE_BEACON_ENABLE
 static RF_Object rf_ble;
+#endif
 
 static RF_CmdHandle cmd_rx_handle;
 
@@ -476,12 +479,18 @@ netstack_stop_rx(void)
 RF_Handle
 ble_open(RF_Params *params)
 {
+#if RF_BLE_BEACON_ENABLE
   return RF_open(&rf_ble, &ble_mode, (RF_RadioSetup*)&ble_cmd_radio_setup, params);
+
+#else
+  return (RF_Handle)NULL;
+#endif
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
 ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
 {
+#if RF_BLE_BEACON_ENABLE
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
@@ -518,6 +527,10 @@ ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
 
   cmd_rx_restore(rx_key);
   return RF_RESULT_OK;
+
+#else
+  return RF_RESULT_ERROR;
+#endif
 }
 /*---------------------------------------------------------------------------*/
 PROCESS(rf_sched_process, "RF Scheduler Process");

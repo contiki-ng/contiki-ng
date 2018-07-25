@@ -82,7 +82,7 @@ tx_power_table_t rf_ble_tx_power_table_empty[] =
 };
 /*---------------------------------------------------------------------------*/
 /* TX power table, based on which board is used. */
-#elif defined(DEVICE_CC1350) || defined(DEVICE_CC1350_4)
+#if defined(DEVICE_CC1350) || defined(DEVICE_CC1350_4)
 #define TX_POWER_TABLE  rf_ble_tx_power_table_cc1350
 
 #else
