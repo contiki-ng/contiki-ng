@@ -27,18 +27,19 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
+ /**
  * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
+ * \defgroupt cc13xx-cc26xx-ccfg Customer Configuration (CCFG)
+ *
+ * @{
+ *
  * \file
- *        Customer Configuration (CCFG) for the CC13xx/CC26xx CPU family.
+ *        Configuration of CCFG.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
-/*---------------------------------------------------------------------------*/
-#ifndef CCFG_CONF_H_
-#define CCFG_CONF_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki-conf.h"
 /*---------------------------------------------------------------------------*/
@@ -58,7 +59,7 @@
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE    0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE    0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE       0x00
-#endif
+#endif /* CCFG_CONF_JTAG_INTERFACE_DISABLE */
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -92,11 +93,19 @@
 #define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER            CCFG_CONF_BL_PIN_NUMBER
 #endif
 #define SET_CCFG_BL_CONFIG_BL_ENABLE                 0xC5
-#endif
+#endif /* CCFG_CONF_ROM_BOOTLOADER_ENABLE */
 /** @} */
 /*---------------------------------------------------------------------------*/
-#endif /* CCFG_CONF_H_ */
+/**
+ * \name Include the device-specific CCFG file from the SDK.
+ *
+ * @{
+ */
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(startup_files/ccfg.c)
+/** @} */
 /*---------------------------------------------------------------------------*/
 /**
+ * @}
  * @}
  */

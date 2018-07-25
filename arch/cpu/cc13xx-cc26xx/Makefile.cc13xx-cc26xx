@@ -25,9 +25,9 @@ endif
 # Clean up the path.
 CORE_SDK := $(realpath $(CORE_SDK))
 
-# Both ccfg.c and startup_cc13xx_cc26xx_gcc.c is located locally in
+# Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
 # the arch/cpu/cc13xx-cc26xx folder.
-CPU_START_SOURCEFILES += ccfg.c startup_cc13xx_cc26xx_gcc.c
+CPU_START_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
 
 ################################################################################
 ### Device Family
@@ -107,7 +107,7 @@ CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 ################################################################################
 ### Linker configuration
 
-# Linker flag
+# Linker flags
 LDFLAGS += --entry resetISR
 LDFLAGS += -static
 LDFLAGS += --specs=nano.specs
@@ -117,16 +117,17 @@ LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 ################################################################################
 ### Specialized build targets
 
-# Always re-build ieee-addr.o in case the command line passes a new NODEID
+.PHONY: FORCE
 FORCE:
 
+# Always re-build ieee-addr.o in case the command line passes a new NODEID
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
-# Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
-# to make clean first
-$(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
+# Always re-build ccfg-conf.c so any changes to CCFG configuration
+# always applies
+$(OBJECTDIR)/ccfg-conf.o: ccfg-conf.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
