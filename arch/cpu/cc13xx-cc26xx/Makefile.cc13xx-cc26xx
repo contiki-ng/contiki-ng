@@ -1,36 +1,43 @@
 ################################################################################
-# CC13xx/CC26xx CPU makefile
+### CC13xx/CC26xx CPU makefile
 
 CC13x2_CC26x2_PRE_RTM ?= 1
 
-# Core SDK is placed as a submodule under the arch/cpu/cc13xx-cc26xx/lib.
+# Core SDK is placed as a submodule under arch/cpu/cc13xx-cc26xx/lib.
 # Do a sanity check that Core SDK submodule has been initialized.
+ifeq ($(CORE_SDK),)
+ CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
+ CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ] && echo 1)
+ ifeq ($(CORE_SDK_INIT),)
+  $(error The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
+ endif
 # Note that Core SDK can be overriden with a user-specified SimpleLink SDK.
 # As long as the SimpleLink SDK matches the device in use and is of a reasonable
 # newer version, then it should be no different than using Core SDK.
-ifeq ($(CORE_SDK),)
- CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
- CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ]; echo $$?)
- ifeq ($(CORE_SDK_INIT),1)
-  $(error The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
- endif
 else
- # Core SDK was overriden. Do a sanity check the path exists.
- CORE_SDK_VALID := $(shell [ -d $(CORE_SDK) ]; echo $$?)
- ifeq ($(CORE_SDK_VALID),1)
+ # Do a sanity check the path exists.
+ CORE_SDK_VALID := $(shell [ -d $(CORE_SDK) ] && echo 1)
+ ifeq ($(CORE_SDK_VALID),)
   $(error Supplied CORE_SDK is not a valid path.)
  endif
 endif
-# Clean up the path.
-CORE_SDK := ${realpath $(CORE_SDK)}
 
-# ccfg.c comes from the device-specific startp_files folder,
-# and startup_cc13xx_cc26xx_gcc.c comes from NoRTOS startup folder
+# Clean up the path.
+CORE_SDK := $(realpath $(CORE_SDK))
+
+# Both ccfg.c and startup_cc13xx_cc26xx_gcc.c is located locally in
+# the arch/cpu/cc13xx-cc26xx folder.
 CPU_START_SOURCEFILES += ccfg.c startup_cc13xx_cc26xx_gcc.c
 
 ################################################################################
-# Device Family
+### Device Family
 
+# CC13x2/CC26x2 has to differentiate both pre-RTM and RTM devices. As of now,
+# pre-RTM is suffixed with _v1 while RTM is suffixed with _v2. This will be
+# removed when CC13x2/CC26x2 RTMs. For now, provide a switch to choose
+# either pre-RTM or RTM.
+# Also note that the devices name is cc13x2_cc26x2 for all CC13x2/CC26x2
+# devices, while the library name is individual for each device family.
 ifeq ($(SUBFAMILY),cc13x2-cc26x2)
  ifeq ($(CC13x2_CC26x2_PRE_RTM),1)
   SDK_DEVICES_NAME := cc13x2_cc26x2_v1
@@ -39,36 +46,37 @@ ifeq ($(SUBFAMILY),cc13x2-cc26x2)
   SDK_DEVICES_NAME := cc13x2_cc26x2_v2
   SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v2
  endif
+# CC13x0/CC26x0 does not have this, with both its devices name and library
+# name he same as its own device family name.
 else
  SDK_DEVICES_NAME := $(DEVICE_FAMILY_LC)
  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
 endif
 
 ################################################################################
-# Simplelink SDK paths
+### Core SDK paths
 
-SDK_KERNEL := $(CORE_SDK)/kernel/nortos
-SDK_SOURCE := $(CORE_SDK)/source
-SDK_BOARDS := $(SDK_SOURCE)/ti/boards
-SDK_DRIVERS := $(SDK_SOURCE)/ti/drivers
-SDK_DEVICE := $(SDK_SOURCE)/ti/devices/$(SDK_DEVICES_NAME)
+SDK_NORTOS  := $(CORE_SDK)/kernel/nortos
+SDK_SOURCE  := $(CORE_SDK)/source
+SDK_DRIVERS := $(CORE_SDK)/source/ti/drivers
+SDK_DEVICES := $(CORE_SDK)/source/ti/devices/$(SDK_DEVICES_NAME)
 
 EXTERNALDIRS += $(SDK_SOURCE)
-EXTERNALDIRS += $(SDK_KERNEL)
-EXTERNALDIRS += $(SDK_KERNEL)/startup
-EXTERNALDIRS += $(SDK_DEVICE)
-EXTERNALDIRS += $(SDK_DEVICE)/startup_files
+EXTERNALDIRS += $(SDK_NORTOS)
 
-### CPU-dependent source files
-CONTIKI_CPU_SOURCEFILES += rtimer-arch.c   clock-arch.c
-CONTIKI_CPU_SOURCEFILES += watchdog-arch.c dbg-arch.c
-CONTIKI_CPU_SOURCEFILES += uart0-arch.c    slip-arch.c
-CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c int-master-arch.c
-CONTIKI_CPU_SOURCEFILES += random.c        trng-arch.c
+################################################################################
+### CC13xx/CC26xx CPU files
 
-### RF source files
-CONTIKI_CPU_SOURCEFILES += sched.c     data-queue.c
-CONTIKI_CPU_SOURCEFILES += ieee-addr.c ble-addr.c
+# CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c    clock-arch.c
+CONTIKI_CPU_SOURCEFILES += watchdog-arch.c  dbg-arch.c
+CONTIKI_CPU_SOURCEFILES += uart0-arch.c     slip-arch.c
+CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c  int-master-arch.c
+CONTIKI_CPU_SOURCEFILES += random.c         trng-arch.c
+
+# RF source files
+CONTIKI_CPU_SOURCEFILES += sched.c          data-queue.c
+CONTIKI_CPU_SOURCEFILES += ieee-addr.c      ble-addr.c
 CONTIKI_CPU_SOURCEFILES += ble-beacond.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
@@ -83,33 +91,43 @@ ifeq ($(SUPPORTS_BLE_BEACON),1)
  CONTIKI_CPU_SOURCEFILES += ble-settings.c ble-tx-power.c
 endif
 
-### CPU-dependent debug source files
+################################################################################
+### Modules and paths
+
+# CPU-dependent debug source files
 MODULES += os/lib/dbg-io
 
-### CPU-dependent directories
+# CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev $(SUBFAMILY)
 CONTIKI_CPU_DIRS += rf rf-settings rf-settings/$(DEVICE_FAMILY_LC)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 
-### Linker flag
+################################################################################
+### Linker configuration
+
+# Linker flag
 LDFLAGS += --entry resetISR
 LDFLAGS += -static
 LDFLAGS += --specs=nano.specs
 
 LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 
-### Always re-build ieee-addr.o in case the command line passes a new NODEID
+################################################################################
+### Specialized build targets
+
+# Always re-build ieee-addr.o in case the command line passes a new NODEID
 FORCE:
 
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
-### Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
-### to make clean first
+# Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
+# to make clean first
 $(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -include "ccfg-conf.h" -c $< -o $@
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
+# Include the Sub-family specific Makefile
 include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)
