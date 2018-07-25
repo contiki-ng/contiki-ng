@@ -67,8 +67,8 @@
 
 /* Timer conversion; radio is running at 4 MHz */
 #define RAT_SECOND            4000000u
-#define RAT_TO_RTIMER(X)      ((uint32_t)(((uint64_t)(X) * (RTIMER_SECOND / 256)) / (RAT_SECOND / 256)))
-#define USEC_TO_RAT(X)        ((X) * 4)
+#define RAT_TO_RTIMER(x)      ((uint32_t)(((uint64_t)(x)*(RTIMER_SECOND / 256)) / (RAT_SECOND / 256)))
+#define USEC_TO_RAT(x)        ((x) * 4)
 
 #if (RTIMER_SECOND % 256) || (RAT_SECOND % 256)
 #error RAT_TO_RTIMER macro must be fixed!

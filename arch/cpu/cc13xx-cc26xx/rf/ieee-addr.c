@@ -54,7 +54,7 @@
 #define IEEE_ADDR_ADDRESS           IEEE_ADDR_CONF_ADDRESS
 /*---------------------------------------------------------------------------*/
 #define IEEE_MAC_PRIMARY_ADDRESS    (FCFG1_BASE + FCFG1_O_MAC_15_4_0)
-#define IEEE_MAC_SECONDARY_ADDRESS  (CCFG_BASE  + CCFG_O_IEEE_MAC_0)
+#define IEEE_MAC_SECONDARY_ADDRESS  (CCFG_BASE + CCFG_O_IEEE_MAC_0)
 /*---------------------------------------------------------------------------*/
 int
 ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
@@ -70,8 +70,8 @@ ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
   } else {
     int i;
 
-    volatile const uint8_t * const primary   = (uint8_t *)IEEE_MAC_PRIMARY_ADDRESS;
-    volatile const uint8_t * const secondary = (uint8_t *)IEEE_MAC_SECONDARY_ADDRESS;
+    volatile const uint8_t *const primary = (uint8_t *)IEEE_MAC_PRIMARY_ADDRESS;
+    volatile const uint8_t *const secondary = (uint8_t *)IEEE_MAC_SECONDARY_ADDRESS;
 
     /* Reading from primary location... */
     volatile const uint8_t *ieee_addr = primary;

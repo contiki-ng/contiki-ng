@@ -69,13 +69,13 @@
 /*---------------------------------------------------------------------------*/
 /* Slave address */
 #ifndef Board_TMP_ADDR
-# error "Board file doesn't define I2C address Board_TMP_ADDR"
+#error "Board file doesn't define I2C address Board_TMP_ADDR"
 #endif
 #define TMP_007_I2C_ADDRESS     Board_TMP_ADDR
 
 /* Sensor Interrupt pin */
 #ifndef Board_TMP_RDY
-# error "Board file doesn't define interrupt pin Board_TMP_RDY"
+#error "Board file doesn't define interrupt pin Board_TMP_RDY"
 #endif
 #define TMP_007_TMP_RDY         Board_TMP_RDY
 /*---------------------------------------------------------------------------*/
@@ -116,16 +116,16 @@ static const PIN_Config pin_table[] = {
   PIN_TERMINATE
 };
 
-static PIN_State  pin_state;
+static PIN_State pin_state;
 static PIN_Handle pin_handle;
 
 static I2C_Handle i2c_handle;
 /*---------------------------------------------------------------------------*/
 typedef struct {
-  TMP_007_TYPE            type;
+  TMP_007_TYPE type;
   volatile TMP_007_STATUS status;
-  uint16_t                local_tmp_latched;
-  uint16_t                obj_tmp_latched;
+  uint16_t local_tmp_latched;
+  uint16_t obj_tmp_latched;
 } TMP_007_Object;
 
 static TMP_007_Object tmp_007;
@@ -148,16 +148,15 @@ static bool
 i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
   I2C_Transaction i2c_transaction = {
-    .writeBuf     = wbuf,
-    .writeCount   = wcount,
-    .readBuf      = rbuf,
-    .readCount    = rcount,
+    .writeBuf = wbuf,
+    .writeCount = wcount,
+    .readBuf = rbuf,
+    .readCount = rcount,
     .slaveAddress = TMP_007_I2C_ADDRESS,
   };
 
   return I2C_transfer(i2c_handle, &i2c_transaction);
 }
-
 /**
  * \brief         Peform a write only I2C transaction.
  * \param wbuf    Output buffer during the I2C transation.
@@ -170,7 +169,6 @@ i2c_write(void *wbuf, size_t wcount)
 {
   return i2c_write_read(wbuf, wcount, NULL, 0);
 }
-
 /**
  * \brief         Peform a read only I2C transaction.
  * \param rbuf    Input buffer during the I2C transation.
@@ -301,16 +299,16 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
  *                      from sensor.
  */
 static void
-convert(uint16_t* local_tmp, uint16_t* obj_tmp)
+convert(uint16_t *local_tmp, uint16_t *obj_tmp)
 {
   uint32_t local = (uint32_t)*local_tmp;
-  uint32_t obj   = (uint32_t)*obj_tmp;
+  uint32_t obj = (uint32_t)*obj_tmp;
 
   local = (local >> 2) * 3125 / 100;
-  obj   = (obj   >> 2) * 3125 / 100;
+  obj = (obj >> 2) * 3125 / 100;
 
   *local_tmp = (uint16_t)local;
-  *obj_tmp   = (uint16_t)obj;
+  *obj_tmp = (uint16_t)obj;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -322,7 +320,7 @@ static int
 value(int type)
 {
   uint16_t raw_local_tmp = 0, local_tmp = 0;
-  uint16_t raw_obj_tmp = 0,   obj_tmp = 0;
+  uint16_t raw_obj_tmp = 0, obj_tmp = 0;
 
   if(tmp_007.status != TMP_007_STATUS_READY) {
     PRINTF("Sensor disabled or starting up (%d)\n", tmp_007.status);
@@ -339,14 +337,14 @@ value(int type)
     }
 
     local_tmp = raw_local_tmp;
-    obj_tmp   = raw_obj_tmp;
+    obj_tmp = raw_obj_tmp;
     convert(&local_tmp, &obj_tmp);
 
     PRINTF("TMP: %04X %04X       o=%d a=%d\n", raw_local_tmp, raw_obj_tmp,
-                                               (int)(local_tmp), (int)(obj_tmp));
+           (int)(local_tmp), (int)(obj_tmp));
 
     tmp_007.local_tmp_latched = (int)(local_tmp);
-    tmp_007.obj_tmp_latched   = (int)(obj_tmp);
+    tmp_007.obj_tmp_latched = (int)(obj_tmp);
 
     return 0;
 

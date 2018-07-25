@@ -54,7 +54,7 @@
 /*---------------------------------------------------------------------------*/
 /* Configure BUZZER pin */
 #ifndef Board_BUZZER
-#   error "Board file doesn't define pin Board_BUZZER"
+#error "Board file doesn't define pin Board_BUZZER"
 #endif
 #define BUZZER_PIN          Board_BUZZER
 /*---------------------------------------------------------------------------*/
@@ -126,8 +126,8 @@ buzzer_start(uint32_t freq)
 
   PINCC26XX_setMux(pin_handle, BUZZER_PIN, GPT_PIN_0A);
 
-  // MCU runs at 48 MHz
-  GPTimerCC26XX_Value load_value = 48000000 / freq;
+  /* MCU runs at 48 MHz */
+  GPTimerCC26XX_Value load_value = (48 * 1000 * 1000) / freq;
 
   GPTimerCC26XX_setLoadValue(gpt_handle, load_value);
   GPTimerCC26XX_start(gpt_handle);

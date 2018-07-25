@@ -52,12 +52,12 @@
 /*---------------------------------------------------------------------------*/
 #include <stddef.h>
 /*---------------------------------------------------------------------------*/
-typedef dataQueue_t            data_queue_t;
+typedef dataQueue_t data_queue_t;
 typedef rfc_dataEntryGeneral_t data_entry_t;
 /*---------------------------------------------------------------------------*/
-data_queue_t* data_queue_init(size_t lensz);
+data_queue_t *data_queue_init(size_t lensz);
 void          data_queue_reset(void);
-data_entry_t* data_queue_current_entry(void);
+data_entry_t *data_queue_current_entry(void);
 void          data_queue_release_entry(void);
 /*---------------------------------------------------------------------------*/
 #endif /* RF_DATA_QUEUE_H_ */

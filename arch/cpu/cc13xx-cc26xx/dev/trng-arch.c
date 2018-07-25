@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -60,9 +59,9 @@
 bool
 trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us)
 {
-  TRNG_Params  trng_params;
-  TRNG_Handle  trng_handle;
-  CryptoKey    entropy_key;
+  TRNG_Params trng_params;
+  TRNG_Handle trng_handle;
+  CryptoKey entropy_key;
   int_fast16_t result;
 
   TRNG_Params_init(&trng_params);

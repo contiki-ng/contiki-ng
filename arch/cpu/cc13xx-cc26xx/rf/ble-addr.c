@@ -52,13 +52,13 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 #define BLE_MAC_PRIMARY_ADDRESS    (FCFG1_BASE + FCFG1_O_MAC_BLE_0)
-#define BLE_MAC_SECONDARY_ADDRESS  (CCFG_BASE  + CCFG_O_IEEE_BLE_0)
+#define BLE_MAC_SECONDARY_ADDRESS  (CCFG_BASE + CCFG_O_IEEE_BLE_0)
 /*---------------------------------------------------------------------------*/
-uint8_t*
+uint8_t *
 ble_addr_ptr(void)
 {
-  volatile const uint8_t * const primary   = (uint8_t *)BLE_MAC_PRIMARY_ADDRESS;
-  volatile const uint8_t * const secondary = (uint8_t *)BLE_MAC_SECONDARY_ADDRESS;
+  volatile const uint8_t *const primary = (uint8_t *)BLE_MAC_PRIMARY_ADDRESS;
+  volatile const uint8_t *const secondary = (uint8_t *)BLE_MAC_SECONDARY_ADDRESS;
 
   /*
    * Reading from primary location...
@@ -72,12 +72,12 @@ ble_addr_ptr(void)
   for(i = 0; i < BLE_ADDR_SIZE; i++) {
     if(secondary[i] != 0xFF) {
       /* A byte in secondary is not 0xFF. Use secondary address. */
-      return (uint8_t*)secondary;
+      return (uint8_t *)secondary;
     }
   }
 
   /* All bytes in secondary is 0xFF. Use primary address. */
-  return (uint8_t*)primary;
+  return (uint8_t *)primary;
 }
 /*---------------------------------------------------------------------------*/
 int

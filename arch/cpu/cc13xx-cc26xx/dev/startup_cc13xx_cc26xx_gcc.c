@@ -73,7 +73,7 @@ extern unsigned long _stack_end;
 __attribute__((section(".resetVecs"))) __attribute__((used))
 static void(*const resetVectors[16])(void) =
 {
-  (void (*)(void))((uint32_t)&_stack_end),
+  (void(*)(void))((uint32_t)&_stack_end),
   /* The initial stack pointer */
   resetISR,                            /* The reset handler */
   nmiISR,                              /* The NMI handler */
@@ -126,8 +126,8 @@ localProgramStart(void)
   uint32_t *dl;
   uint32_t *ds;
   uint32_t *de;
-  uint32_t  count;
-  uint32_t  i;
+  uint32_t count;
+  uint32_t i;
 
 #if defined(__ARM_ARCH_7EM__) && defined(__VFP_FP__) && !defined(__SOFTFP__)
   volatile uint32_t *pui32Cpacr = (uint32_t *)0xE000ED88;

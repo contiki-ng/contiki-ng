@@ -108,9 +108,13 @@ fade(PIN_Id pin)
     j = (k > pivot_half) ? pivot - k : k;
 
     PINCC26XX_setOutputValue(pin, 1);
-    for(i = 0; i < j; ++i) { __asm__ __volatile__ ("nop"); }
+    for(i = 0; i < j; ++i) {
+      __asm__ __volatile__ ("nop");
+    }
     PINCC26XX_setOutputValue(pin, 0);
-    for(i = 0; i < pivot_half - j; ++i) { __asm__ __volatile__ ("nop"); }
+    for(i = 0; i < pivot_half - j; ++i) {
+      __asm__ __volatile__ ("nop");
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -128,8 +132,8 @@ set_rf_params(void)
   ieee_addr_cpy_to(ext_addr, sizeof(ext_addr));
 
   /* Short address is the last two bytes of the MAC address */
-  short_addr = ((uint16_t)ext_addr[7] << 0)
-             | ((uint16_t)ext_addr[6] << 8);
+  short_addr = (((uint16_t)ext_addr[7] << 0) |
+                ((uint16_t)ext_addr[6] << 8));
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
@@ -203,7 +207,7 @@ platform_init_stage_two(void)
 
   /* Use TRNG to seed PRNG. If TRNG fails, use a hard-coded seed. */
   unsigned short seed = 0;
-  if(!trng_rand((uint8_t*)&seed, sizeof(seed), TRNG_WAIT_FOREVER)) {
+  if(!trng_rand((uint8_t *)&seed, sizeof(seed), TRNG_WAIT_FOREVER)) {
     /* Default to some hard-coded seed. */
     seed = 0x1234;
   }
@@ -220,7 +224,7 @@ platform_init_stage_two(void)
 void
 platform_init_stage_three(void)
 {
-#if RF_BLE_BEACON_ENABLE
+#if RF_CONF_BLE_BEACON_ENABLE
   rf_ble_beacond_init();
 #endif
 
@@ -236,12 +240,12 @@ platform_init_stage_three(void)
           DRIVERLIB_RELEASE_BUILD);
   LOG_DBG("IEEE 802.15.4: %s, Sub-1 GHz: %s, BLE: %s\n",
           ChipInfo_SupportsIEEE_802_15_4() ? "Yes" : "No",
-          ChipInfo_SupportsPROPRIETARY()   ? "Yes" : "No",
-          ChipInfo_SupportsBLE()           ? "Yes" : "No");
+          ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No",
+          ChipInfo_SupportsBLE() ? "Yes" : "No");
 
-#if(RF_MODE == RF_MODE_SUB_1_GHZ)
+#if (RF_MODE == RF_MODE_SUB_1_GHZ)
   LOG_INFO("Operating frequency on Sub-1 GHz\n");
-#elif(RF_MODE == RF_MODE_2_4_GHZ)
+#elif (RF_MODE == RF_MODE_2_4_GHZ)
   LOG_INFO("Operating frequency on 2.4 GHz\n");
 #endif
   LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);

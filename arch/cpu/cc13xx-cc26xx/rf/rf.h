@@ -56,9 +56,8 @@
 #define RF_MODE_2_4_GHZ        (1 << 1)
 
 /* Bitmask of supported RF modes */
-#define RF_MODE_BM             ( RF_MODE_SUB_1_GHZ \
-                               | RF_MODE_2_4_GHZ \
-                               )
+#define RF_MODE_BM             (RF_MODE_SUB_1_GHZ | \
+                                RF_MODE_2_4_GHZ)
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* RF_CORE_H_ */

@@ -67,7 +67,7 @@
 #if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 #ifndef Board_BMP280_ADDR
-# error "Board file doesn't define I2C address Board_BMP280_ADDR"
+#error "Board file doesn't define I2C address Board_BMP280_ADDR"
 #endif
 /* Sensor I2C address */
 #define BMP280_I2C_ADDRESS                  Board_BMP280_ADDR
@@ -122,17 +122,17 @@
 /*---------------------------------------------------------------------------*/
 typedef struct {
   uint16_t dig_t1;
-  int16_t  dig_t2;
-  int16_t  dig_t3;
+  int16_t dig_t2;
+  int16_t dig_t3;
   uint16_t dig_p1;
-  int16_t  dig_p2;
-  int16_t  dig_p3;
-  int16_t  dig_p4;
-  int16_t  dig_p5;
-  int16_t  dig_p6;
-  int16_t  dig_p7;
-  int16_t  dig_p8;
-  int16_t  dig_p9;
+  int16_t dig_p2;
+  int16_t dig_p3;
+  int16_t dig_p4;
+  int16_t dig_p5;
+  int16_t dig_p6;
+  int16_t dig_p7;
+  int16_t dig_p8;
+  int16_t dig_p9;
 } BMP_280_Calibration;
 /*---------------------------------------------------------------------------*/
 static BMP_280_Calibration calib_data;
@@ -175,7 +175,6 @@ i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCoun
 
   return I2C_transfer(i2c_handle, &i2cTransaction);
 }
-
 #define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
 #define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
 /*---------------------------------------------------------------------------*/
@@ -209,8 +208,8 @@ init(void)
   uint8_t calib_reg = ADDR_CALIB;
   /* Read and store calibration data */
   return i2c_write_read(&calib_reg, sizeof(calib_reg), &calib_data, sizeof(calib_data))
-  /* then reset the sensor */
-      && i2c_write(reset_data, sizeof(reset_data));
+         /* then reset the sensor */
+         && i2c_write(reset_data, sizeof(reset_data));
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -264,30 +263,20 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
 
   /* Pressure */
   const int32_t upress = (int32_t)(
-    (((uint32_t)data[0]) << 12) |
-    (((uint32_t)data[1]) <<  4) |
-    (((uint32_t)data[2]) >>  4)
-  );
+      (((uint32_t)data[0]) << 12) |
+      (((uint32_t)data[1]) << 4) |
+      (((uint32_t)data[2]) >> 4)
+      );
   /* Temperature */
   const int32_t utemp = (int32_t)(
-    (((uint32_t)data[3]) << 12) |
-    (((uint32_t)data[4]) <<  4) |
-    (((uint32_t)data[5]) >>  4)
-  );
+      (((uint32_t)data[3]) << 12) |
+      (((uint32_t)data[4]) << 4) |
+      (((uint32_t)data[5]) >> 4)
+      );
 
   /* Compensate temperature */
-  int32_t v_x1_u32r = ( (
-      (utemp >> 3) - ((int32_t)p->dig_t1 << 1)
-    ) * (int32_t)p->dig_t2
-  ) >> 11;
-  int32_t v_x2_u32r = ( ( ( (
-          (utemp >> 4) - (int32_t)p->dig_t1
-        ) * (
-          (utemp >> 4) - (int32_t)p->dig_t1
-        )
-      ) >> 12
-    ) * (int32_t)p->dig_t3
-  ) >> 14;
+  int32_t v_x1_u32r = (((utemp >> 3) - ((int32_t)p->dig_t1 << 1)) * (int32_t)p->dig_t2) >> 11;
+  int32_t v_x2_u32r = (((((utemp >> 4) - (int32_t)p->dig_t1) * ((utemp >> 4) - (int32_t)p->dig_t1)) >> 12) * (int32_t)p->dig_t3) >> 14;
 
   const uint32_t t_fine = v_x1_u32r + v_x2_u32r;
   const int32_t temperature = (t_fine * 5 + 128) >> 8;
@@ -295,28 +284,11 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
 
   /* Compensate pressure */
   v_x1_u32r = ((int32_t)t_fine >> 1) - (int32_t)64000;
-  v_x2_u32r = ( (
-      (v_x1_u32r >> 2) * (v_x1_u32r >> 2)
-    ) >> 11
-  ) * (int32_t)p->dig_p6;
-  v_x2_u32r = ( (
-        v_x1_u32r * (int32_t)p->dig_p5
-      ) << 1
-  ) + v_x2_u32r;
+  v_x2_u32r = (((v_x1_u32r >> 2) * (v_x1_u32r >> 2)) >> 11) * (int32_t)p->dig_p6;
+  v_x2_u32r = ((v_x1_u32r * (int32_t)p->dig_p5) << 1) + v_x2_u32r;
   v_x2_u32r = (v_x2_u32r >> 2) + ((int32_t)p->dig_p4 << 16);
-  v_x1_u32r = ( ( ( ( (
-            (v_x1_u32r >> 2) * (v_x1_u32r >> 2)
-          ) >> 13
-        ) * p->dig_p3
-      ) >> 3
-    ) + ( (
-        (int32_t)p->dig_p2 * v_x1_u32r
-      ) >> 1
-    )
-  ) >> 18;
-  v_x1_u32r = (
-    (32768 + v_x1_u32r) * (int32_t)p->dig_p1
-  ) >> 15;
+  v_x1_u32r = ((((((v_x1_u32r >> 2) * (v_x1_u32r >> 2)) >> 13) * p->dig_p3) >> 3) + (((int32_t)p->dig_p2 * v_x1_u32r) >> 1)) >> 18;
+  v_x1_u32r = ((32768 + v_x1_u32r) * (int32_t)p->dig_p1) >> 15;
 
   if(v_x1_u32r == 0) {
     /* Avoid exception caused by division by zero */
@@ -324,33 +296,16 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
     return;
   }
 
-  uint32_t pressure = ( (
-      (uint32_t)((int32_t)1048576 - upress)
-    ) - (
-      v_x2_u32r >> 12
-    )
-  ) * 3125;
+  uint32_t pressure = (((uint32_t)((int32_t)1048576 - upress)) - (v_x2_u32r >> 12)) * 3125;
   if((int32_t)pressure < 0) {
     pressure = (pressure << 1) / (uint32_t)v_x1_u32r;
   } else {
     pressure = (pressure / (uint32_t)v_x1_u32r) * 2;
   }
 
-  v_x1_u32r = ( (
-      (int32_t)( (
-          (pressure >> 3) * (pressure >> 3)
-        ) >> 13
-      )
-    ) * (int32_t)p->dig_p9
-  ) >> 12;
-  v_x2_u32r = (
-    (int32_t)(pressure >> 2) * (int32_t)p->dig_p8
-  ) >> 13;
-  pressure = (uint32_t)( ( (
-        v_x1_u32r + v_x2_u32r + p->dig_p7
-      ) >> 4
-    ) + (int32_t)pressure
-  );
+  v_x1_u32r = (((int32_t)(((pressure >> 3) * (pressure >> 3)) >> 13)) * (int32_t)p->dig_p9) >> 12;
+  v_x2_u32r = ((int32_t)(pressure >> 2) * (int32_t)p->dig_p8) >> 13;
+  pressure = (uint32_t)(((v_x1_u32r + v_x2_u32r + p->dig_p7) >> 4) + (int32_t)pressure);
 
   *press = pressure;
 }

@@ -63,7 +63,7 @@ static spi_arch_t spi_arches[SPI_CONTROLLER_COUNT];
 static spi_arch_t *spi_arches = NULL;
 #endif
 /*---------------------------------------------------------------------------*/
-static inline spi_arch_t*
+static inline spi_arch_t *
 get_handle(uint8_t spi_controller)
 {
   if(spi_controller < SPI_CONTROLLER_COUNT) {
@@ -144,10 +144,10 @@ spi_arch_lock_and_open(spi_device_t *dev)
   SPI_Params_init(&spi_params);
 
   spi_params.transferMode = SPI_MODE_BLOCKING;
-  spi_params.mode         = SPI_MASTER;
-  spi_params.bitRate      = dev->spi_bit_rate;
-  spi_params.dataSize     = 8;
-  spi_params.frameFormat  = convert_frame_format(dev->spi_pol, dev->spi_pha);
+  spi_params.mode = SPI_MASTER;
+  spi_params.bitRate = dev->spi_bit_rate;
+  spi_params.dataSize = 8;
+  spi_params.frameFormat = convert_frame_format(dev->spi_pol, dev->spi_pha);
 
   /*
    * Try to open the SPI driver. Accessing the SPI driver also ensures

@@ -79,7 +79,7 @@
 /*---------------------------------------------------------------------------*/
 #if BOARD_SENSORS_ENABLE
 #if (TI_I2C_CONF_ENABLE == 0) || (TI_I2C_CONF_I2C0_ENABLE == 0)
-# error "The MPU-9250 requires the I2C driver (TI_I2C_CONF_ENABLE = 1)"
+#error "The MPU-9250 requires the I2C driver (TI_I2C_CONF_ENABLE = 1)"
 #endif
 #endif
 /*---------------------------------------------------------------------------*/
@@ -87,31 +87,31 @@
 /*---------------------------------------------------------------------------*/
 /* Accelerometer / Gyro Axes */
 typedef enum {
-  MPU_9250_SENSOR_TYPE_NONE   = (0),        /**< 0b000000 = 0x00 */
+  MPU_9250_SENSOR_TYPE_NONE = (0),          /**< 0b000000 = 0x00 */
   MPU_9250_SENSOR_TYPE_GYRO_X = (1 << 0),   /**< 0b000001 = 0x01 */
   MPU_9250_SENSOR_TYPE_GYRO_Y = (1 << 1),   /**< 0b000010 = 0x02 */
   MPU_9250_SENSOR_TYPE_GYRO_Z = (1 << 2),   /**< 0b000100 = 0x04 */
-  MPU_9250_SENSOR_TYPE_ACC_X  = (1 << 3),   /**< 0b001000 = 0x08 */
-  MPU_9250_SENSOR_TYPE_ACC_Y  = (1 << 4),   /**< 0b010000 = 0x10 */
-  MPU_9250_SENSOR_TYPE_ACC_Z  = (1 << 5),   /**< 0b100000 = 0x20 */
-  MPU_9250_SENSOR_TYPE_GYRO   = MPU_9250_SENSOR_TYPE_GYRO_X
-                              | MPU_9250_SENSOR_TYPE_GYRO_Y
-                              | MPU_9250_SENSOR_TYPE_GYRO_Z,
-                                            /**< 0b000111 = 0x07 */
-  MPU_9250_SENSOR_TYPE_ACC    = MPU_9250_SENSOR_TYPE_ACC_X
-                              | MPU_9250_SENSOR_TYPE_ACC_Y
-                              | MPU_9250_SENSOR_TYPE_ACC_Z,
-                                            /**< 0b111000 = 0x38 */
-  MPU_9250_SENSOR_TYPE_ALL    = MPU_9250_SENSOR_TYPE_GYRO
-                              | MPU_9250_SENSOR_TYPE_ACC
-                                            /**< 0b111111 = 0x3F */
+  MPU_9250_SENSOR_TYPE_ACC_X = (1 << 3),    /**< 0b001000 = 0x08 */
+  MPU_9250_SENSOR_TYPE_ACC_Y = (1 << 4),    /**< 0b010000 = 0x10 */
+  MPU_9250_SENSOR_TYPE_ACC_Z = (1 << 5),    /**< 0b100000 = 0x20 */
+  MPU_9250_SENSOR_TYPE_GYRO = MPU_9250_SENSOR_TYPE_GYRO_X
+    | MPU_9250_SENSOR_TYPE_GYRO_Y
+    | MPU_9250_SENSOR_TYPE_GYRO_Z,
+  /**< 0b000111 = 0x07 */
+  MPU_9250_SENSOR_TYPE_ACC = MPU_9250_SENSOR_TYPE_ACC_X
+    | MPU_9250_SENSOR_TYPE_ACC_Y
+    | MPU_9250_SENSOR_TYPE_ACC_Z,
+  /**< 0b111000 = 0x38 */
+  MPU_9250_SENSOR_TYPE_ALL = MPU_9250_SENSOR_TYPE_GYRO
+    | MPU_9250_SENSOR_TYPE_ACC
+    /**< 0b111111 = 0x3F */
 } MPU_9250_SENSOR_TYPE;
 /*---------------------------------------------------------------------------*/
 /* Accelerometer range */
 typedef enum {
-  MPU_9250_SENSOR_ACC_RANGE_2G  = 0,
-  MPU_9250_SENSOR_ACC_RANGE_4G  = 1,
-  MPU_9250_SENSOR_ACC_RANGE_8G  = 2,
+  MPU_9250_SENSOR_ACC_RANGE_2G = 0,
+  MPU_9250_SENSOR_ACC_RANGE_4G = 1,
+  MPU_9250_SENSOR_ACC_RANGE_8G = 2,
   MPU_9250_SENSOR_ACC_RANGE_16G = 3
 } MPU_9250_SENSOR_ACC_RANGE;
 /*---------------------------------------------------------------------------*/
@@ -125,9 +125,9 @@ typedef enum {
 /*---------------------------------------------------------------------------*/
 /* Accelerometer range configuration, type MPU_9250_SENSOR_ACC_RANGE */
 #ifdef MPU_9250_SENSOR_CONF_ACC_RANGE_ARG
-# define MPU_9250_SENSOR_ACC_RANGE_ARG  MPU_9250_SENSOR_CONF_ACC_RANGE
+#define MPU_9250_SENSOR_ACC_RANGE_ARG  MPU_9250_SENSOR_CONF_ACC_RANGE
 #else
-# define MPU_9250_SENSOR_ACC_RANGE_ARG  MPU_9250_SENSOR_ACC_RANGE_2G
+#define MPU_9250_SENSOR_ACC_RANGE_ARG  MPU_9250_SENSOR_ACC_RANGE_2G
 #endif
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor mpu_9250_sensor;

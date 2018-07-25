@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -58,24 +57,25 @@ rtimer_clock_t rtimer_arch_now(void);
  * returns an odd value; US_TO_RTIMERTICKS always rounds to the nearest
  * even number.
  */
-#define US_TO_RTIMERTICKS(us)   (2 * (                                  \
-  ((us) >= 0)                                                           \
-    ? (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2) + 500000) / 1000000L)  \
-    : (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2) - 500000) / 1000000L)  \
-  ))
+#define US_TO_RTIMERTICKS(us)   ( \
+  (((us) >= 0) \
+    ? (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2) + 500000) / 1000000L) \
+    : (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2) - 500000) / 1000000L) \
+  ) * 2)
 
-#define RTIMERTICKS_TO_US(rt)   (                                                   \
-  ((rt) >= 0)                                                                       \
-    ? (((int32_t)(rt) * 1000000L + (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND)  \
-    : (((int32_t)(rt) * 1000000L - (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND)  \
+#define RTIMERTICKS_TO_US(rt)   ( \
+  ((rt) >= 0) \
+    ? (((int32_t)(rt) * 1000000L + (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND) \
+    : (((int32_t)(rt) * 1000000L - (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND) \
   )
 
 /*
  * A 64-bit version because the 32-bit one cannot handle T >= 4295 ticks.
  * Intended only for positive values of T.
  */
-#define RTIMERTICKS_TO_US_64(rt)  ((uint32_t)(                                  \
-    ((uint64_t)(rt) * 1000000 + (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND  \
+#define RTIMERTICKS_TO_US_64(rt)  ( \
+  (uint32_t)( \
+    ((uint64_t)(rt) * 1000000 + (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND \
   ))
 /*---------------------------------------------------------------------------*/
 #endif /* RTIMER_ARCH_H_ */

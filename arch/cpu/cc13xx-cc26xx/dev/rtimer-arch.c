@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -62,7 +61,12 @@ static hwi_dispatch_fxn_t hwi_dispatch_fxn;
 /**
  * \brief  Stub function used when creating the dummy clock object.
  */
-static void rtimer_clock_stub(uintptr_t unused) { (void)unused; /* do nothing */ }
+static void
+rtimer_clock_stub(uintptr_t unused)
+{
+  (void)unused;
+  /* do nothing */
+}
 /*---------------------------------------------------------------------------*/
 /**
  * \brief  The Man-in-the-Middle ISR hook for the HWI dispatch ISR. This

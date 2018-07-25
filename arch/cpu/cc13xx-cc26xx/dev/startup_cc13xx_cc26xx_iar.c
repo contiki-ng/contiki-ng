@@ -49,10 +49,10 @@
 #include DeviceFamily_constructPath(driverlib/interrupt.h)
 /*---------------------------------------------------------------------------*/
 /* Forward declaration of the reset ISR and the default fault handlers. */
-static void nmiISR( void );
-static void faultISR( void );
-static void intDefaultHandler( void );
-extern int  main( void );
+static void nmiISR(void);
+static void faultISR(void);
+static void intDefaultHandler(void);
+extern int  main(void);
 
 extern void MPUFaultIntHandler(void);
 extern void BusFaultIntHandler(void);
@@ -141,22 +141,22 @@ extern void TRNGIntHandler(void);
 extern void __iar_program_start(void);
 
 /* Get stack start (highest address) symbol from linker file. */
-extern const void* STACK_TOP;
+extern const void *STACK_TOP;
 /*---------------------------------------------------------------------------*/
 /*
  * It is required to place something in the CSTACK segment to get the stack
  * check feature in IAR to work as expected
  */
-__root static void* dummy_stack @ ".stack";
+__root static void *dummy_stack @ ".stack";
 
 /*
  * The vector table. Note that the proper constructs must be placed on this to
  * ensure that it ends up at physical address 0x0000.0000 or at the start of
  * the program if located at a start address other than 0.
  */
-__root void (* const __vector_table[])(void) @ ".intvec" =
+__root void(*const __vector_table[])(void) @ ".intvec" =
 {
-  (void (*)(void))&STACK_TOP,             /*  0 The initial stack pointer */
+  (void (*)(void)) & STACK_TOP,           /*  0 The initial stack pointer */
   __iar_program_start,                    /*  1 The reset handler */
   nmiISR,                                 /*  2 The NMI handler */
   faultISR,                               /*  3 The hard fault handler */
@@ -209,7 +209,7 @@ __root void (* const __vector_table[])(void) @ ".intvec" =
   AUXADCIntHandler,                       /* 48 AUX ADC new sample or ADC DMA */
                                           /*    done, ADC underflow, ADC overflow */
   TRNGIntHandler                          /* 49 TRNG event */
-};
+}
 /*---------------------------------------------------------------------------*/
 /*
  * \brief   Setup trim device.

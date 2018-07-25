@@ -72,7 +72,7 @@
 /*---------------------------------------------------------------------------*/
 #define CMD_FS_RETRIES          3
 
-#define RF_EVENTS_CMD_DONE      (RF_EventCmdDone   | RF_EventLastCmdDone | \
+#define RF_EVENTS_CMD_DONE      (RF_EventCmdDone | RF_EventLastCmdDone | \
                                  RF_EventFGCmdDone | RF_EventLastFGCmdDone)
 
 #define CMD_STATUS(cmd)         (CC_ACCESS_NOW(RF_Op, cmd).status)
@@ -91,7 +91,7 @@ static struct etimer synth_recal_timer;
 /*---------------------------------------------------------------------------*/
 static RF_Object rf_netstack;
 
-#if RF_BLE_BEACON_ENABLE
+#if RF_CONF_BLE_BEACON_ENABLE
 static RF_Object rf_ble;
 #endif
 
@@ -165,22 +165,22 @@ cmd_rx_restore(uint_fast8_t rx_key)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority   = RF_PriorityNormal;
-  sched_params.endTime    = 0;
+  sched_params.priority = RF_PriorityNormal;
+  sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
   CMD_STATUS(netstack_cmd_rx) = PENDING;
 
-  cmd_rx_handle = RF_scheduleCmd(&rf_netstack,
-    (RF_Op*)&netstack_cmd_rx,
-    &sched_params,
-    cmd_rx_cb,
-    RF_EventRxEntryDone | RF_EventRxBufFull
-  );
+  cmd_rx_handle = RF_scheduleCmd(
+      &rf_netstack,
+      (RF_Op *)&netstack_cmd_rx,
+      &sched_params,
+      cmd_rx_cb,
+      RF_EventRxEntryDone | RF_EventRxBufFull);
 
   if(!CMD_HANDLE_OK(cmd_rx_handle)) {
     LOG_ERR("Unable to restore RX command, handle=%d status=0x%04x",
-           cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
+            cmd_rx_handle, CMD_STATUS(netstack_cmd_rx));
     return RF_RESULT_ERROR;
   }
 
@@ -192,13 +192,13 @@ rf_yield(void)
 {
   /* Force abort of any ongoing RF operation */
   RF_flushCmd(&rf_netstack, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
-#if RF_BLE_BEACON_ENABLE
-  RF_flushCmd(&rf_ble,      RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
+#if RF_CONF_BLE_BEACON_ENABLE
+  RF_flushCmd(&rf_ble, RF_CMDHANDLE_FLUSH_ALL, RF_ABORT_GRACEFULLY);
 #endif
 
   /* Trigger a manual power-down */
   RF_yield(&rf_netstack);
-#if RF_BLE_BEACON_ENABLE
+#if RF_CONF_BLE_BEACON_ENABLE
   RF_yield(&rf_ble);
 #endif
 
@@ -213,9 +213,7 @@ rf_yield(void)
 rf_result_t
 rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm)
 {
-  const RF_Stat stat = RF_setTxPower(handle,
-    RF_TxPowerTable_findValue(table, dbm)
-  );
+  const RF_Stat stat = RF_setTxPower(handle, RF_TxPowerTable_findValue(table, dbm));
 
   return (stat == RF_StatSuccess)
          ? RF_RESULT_OK
@@ -225,9 +223,7 @@ rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm)
 rf_result_t
 rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm)
 {
-  *dbm = RF_TxPowerTable_findPowerLevel(table,
-    RF_getTxPower(handle)
-  );
+  *dbm = RF_TxPowerTable_findPowerLevel(table, RF_getTxPower(handle));
 
   return (*dbm != RF_TxPowerTable_INVALID_DBM)
          ? RF_RESULT_OK
@@ -237,11 +233,7 @@ rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm)
 RF_Handle
 netstack_open(RF_Params *params)
 {
-  return RF_open(&rf_netstack,
-    &netstack_mode,
-    (RF_RadioSetup*)&netstack_cmd_radio_setup,
-    params
-  );
+  return RF_open(&rf_netstack, &netstack_mode, (RF_RadioSetup *)&netstack_cmd_radio_setup, params);
 }
 /*---------------------------------------------------------------------------*/
 rf_result_t
@@ -271,15 +263,15 @@ netstack_sched_fs(void)
   do {
     CMD_STATUS(netstack_cmd_fs) = PENDING;
 
-    events = RF_runCmd(&rf_netstack,
-      (RF_Op*)&netstack_cmd_fs,
-      RF_PriorityNormal,
-      NULL,
-      0
-    );
+    events = RF_runCmd(
+        &rf_netstack,
+        (RF_Op *)&netstack_cmd_fs,
+        RF_PriorityNormal,
+        NULL,
+        0);
 
-    synth_error = (EVENTS_CMD_DONE(events))
-      && (CMD_STATUS(netstack_cmd_fs) == ERROR_SYNTH_PROG);
+    synth_error = (EVENTS_CMD_DONE(events)) && (CMD_STATUS(netstack_cmd_fs) == ERROR_SYNTH_PROG);
+
   } while(synth_error && (num_tries++ < CMD_FS_RETRIES));
 
   cmd_rx_restore(rx_key);
@@ -297,8 +289,8 @@ netstack_sched_ieee_tx(bool ack_request)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority   = RF_PriorityNormal;
-  sched_params.endTime    = 0;
+  sched_params.priority = RF_PriorityNormal;
+  sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
   const bool rx_is_active = cmd_rx_is_active();
@@ -318,16 +310,16 @@ netstack_sched_ieee_tx(bool ack_request)
 
   CMD_STATUS(netstack_cmd_tx) = PENDING;
 
-  RF_CmdHandle tx_handle = RF_scheduleCmd(&rf_netstack,
-    (RF_Op*)&netstack_cmd_tx,
-    &sched_params,
-    NULL,
-    0
-  );
+  RF_CmdHandle tx_handle = RF_scheduleCmd(
+      &rf_netstack,
+      (RF_Op *)&netstack_cmd_tx,
+      &sched_params,
+      NULL,
+      0);
 
   if(!CMD_HANDLE_OK(tx_handle)) {
     LOG_ERR("Unable to schedule TX command, handle=%d status=0x%04x\n",
-           tx_handle, CMD_STATUS(netstack_cmd_tx));
+            tx_handle, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
   }
 
@@ -353,7 +345,7 @@ netstack_sched_ieee_tx(bool ack_request)
 
   if(!EVENTS_CMD_DONE(tx_events)) {
     LOG_ERR("Pending on TX comand generated error, events=0x%08llx status=0x%04x\n",
-           tx_events, CMD_STATUS(netstack_cmd_tx));
+            tx_events, CMD_STATUS(netstack_cmd_tx));
     return RF_RESULT_ERROR;
   }
 
@@ -366,18 +358,18 @@ netstack_sched_prop_tx(void)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority   = RF_PriorityNormal;
-  sched_params.endTime    = 0;
+  sched_params.priority = RF_PriorityNormal;
+  sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
   CMD_STATUS(netstack_cmd_tx) = PENDING;
 
-  RF_CmdHandle tx_handle = RF_scheduleCmd(&rf_netstack,
-    (RF_Op*)&netstack_cmd_tx,
-    &sched_params,
-    NULL,
-    0
-  );
+  RF_CmdHandle tx_handle = RF_scheduleCmd(
+      &rf_netstack,
+      (RF_Op *)&netstack_cmd_tx,
+      &sched_params,
+      NULL,
+      0);
 
   if(!CMD_HANDLE_OK(tx_handle)) {
     LOG_ERR("Unable to schedule TX command, handle=%d status=0x%04x\n",
@@ -428,18 +420,18 @@ netstack_sched_rx(bool start)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority   = RF_PriorityNormal;
-  sched_params.endTime    = 0;
+  sched_params.priority = RF_PriorityNormal;
+  sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
   CMD_STATUS(netstack_cmd_rx) = PENDING;
 
-  cmd_rx_handle = RF_scheduleCmd(&rf_netstack,
-    (RF_Op*)&netstack_cmd_rx,
-    &sched_params,
-    cmd_rx_cb,
-    RF_EventRxEntryDone | RF_EventRxBufFull
-  );
+  cmd_rx_handle = RF_scheduleCmd(
+      &rf_netstack,
+      (RF_Op *)&netstack_cmd_rx,
+      &sched_params,
+      cmd_rx_cb,
+      RF_EventRxEntryDone | RF_EventRxBufFull);
 
   if(!CMD_HANDLE_OK(cmd_rx_handle)) {
     LOG_ERR("Unable to schedule RX command, handle=%d status=0x%04x\n",
@@ -479,8 +471,8 @@ netstack_stop_rx(void)
 RF_Handle
 ble_open(RF_Params *params)
 {
-#if RF_BLE_BEACON_ENABLE
-  return RF_open(&rf_ble, &ble_mode, (RF_RadioSetup*)&ble_cmd_radio_setup, params);
+#if RF_CONF_BLE_BEACON_ENABLE
+  return RF_open(&rf_ble, &ble_mode, (RF_RadioSetup *)&ble_cmd_radio_setup, params);
 
 #else
   return (RF_Handle)NULL;
@@ -490,22 +482,22 @@ ble_open(RF_Params *params)
 rf_result_t
 ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
 {
-#if RF_BLE_BEACON_ENABLE
+#if RF_CONF_BLE_BEACON_ENABLE
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority   = RF_PriorityNormal;
-  sched_params.endTime    = 0;
+  sched_params.priority = RF_PriorityNormal;
+  sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
   CMD_STATUS(ble_cmd_beacon) = PENDING;
 
-  RF_CmdHandle beacon_handle = RF_scheduleCmd(&rf_ble,
-    (RF_Op*)&ble_cmd_beacon,
-    &sched_params,
-    cb,
-    bm_event
-  );
+  RF_CmdHandle beacon_handle = RF_scheduleCmd(
+      &rf_ble,
+      (RF_Op *)&ble_cmd_beacon,
+      &sched_params,
+      cb,
+      bm_event);
 
   if(!CMD_HANDLE_OK(beacon_handle)) {
     LOG_ERR("Unable to schedule BLE Beacon command, handle=%d status=0x%04x\n",

@@ -81,20 +81,18 @@ extern const size_t ble_tx_power_table_size;
 static inline int8_t
 tx_power_min(tx_power_table_t *table)
 {
-    return table[0].power;
+  return table[0].power;
 }
-
 static inline int8_t
 tx_power_max(tx_power_table_t *table, size_t size)
 {
-    return table[size - 1].power;
+  return table[size - 1].power;
 }
-
 static inline bool
 tx_power_in_range(int8_t dbm, tx_power_table_t *table, size_t size)
 {
-    return (dbm >= tx_power_min(table)) &&
-           (dbm <= tx_power_max(table, size));
+  return (dbm >= tx_power_min(table)) &&
+         (dbm <= tx_power_max(table, size));
 }
 /** @} */
 /*---------------------------------------------------------------------------*/

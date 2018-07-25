@@ -68,7 +68,7 @@
 #if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 #ifndef Board_HDC1000_ADDR
-# error "Board file doesn't define the I2C address Board_HDC1000_ADDR"
+#error "Board file doesn't define the I2C address Board_HDC1000_ADDR"
 #endif
 /* Sensor I2C address */
 #define HDC1000_I2C_ADDRESS        Board_HDC1000_ADDR
@@ -136,16 +136,15 @@ static bool
 i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
   I2C_Transaction i2c_transaction = {
-    .writeBuf     = wbuf,
-    .writeCount   = wcount,
-    .readBuf      = rbuf,
-    .readCount    = rcount,
+    .writeBuf = wbuf,
+    .writeCount = wcount,
+    .readBuf = rbuf,
+    .readCount = rcount,
     .slaveAddress = HDC1000_I2C_ADDRESS,
   };
 
   return I2C_transfer(i2c_handle, &i2c_transaction);
 }
-
 /**
  * \brief         Peform a write only I2C transaction.
  * \param wbuf    Output buffer during the I2C transation.
@@ -158,7 +157,6 @@ i2c_write(void *wbuf, size_t wcount)
 {
   return i2c_write_read(wbuf, wcount, NULL, 0);
 }
-
 /**
  * \brief         Peform a read only I2C transaction.
  * \param rbuf    Input buffer during the I2C transation.
@@ -194,7 +192,7 @@ sensor_init(void)
     return false;
   }
 
-  // Enable reading data in one operation
+  /* Enable reading data in one operation */
   uint8_t config_data[] = { HDC1000_REG_CONFIG, LSB16(HDC1000_VAL_CONFIG) };
 
   return i2c_write(config_data, sizeof(config_data));

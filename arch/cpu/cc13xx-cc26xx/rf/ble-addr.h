@@ -55,7 +55,7 @@
  * This function will return the primary address from info page, unless a
  * valid address is found in the secondary address from CCFG.
  */
-uint8_t* ble_addr_ptr(void);
+uint8_t *ble_addr_ptr(void);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Copy the node's factory BLE address to a destination memory area

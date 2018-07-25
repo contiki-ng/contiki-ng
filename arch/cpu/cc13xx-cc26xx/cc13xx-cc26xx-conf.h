@@ -150,7 +150,7 @@
 #define RF_CONF_BLE_BEACON_ENABLE    0
 #endif
 
-#if (RF_BLE_BEACON_ENABLE) && !(SUPPORTS_BLE_BEACON)
+#if (RF_CONF_BLE_BEACON_ENABLE) && !(SUPPORTS_BLE_BEACON)
 #error "Device does not support BLE for BLE beacon"
 #endif
 

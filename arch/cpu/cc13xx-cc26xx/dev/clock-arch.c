@@ -94,10 +94,10 @@ clock_init(void)
   ClockP_Params params;
   ClockP_Params_init(&params);
 
-  params.period    = clockp_ticks_second;
+  params.period = clockp_ticks_second;
   params.startFlag = true;
 
-  ClockP_construct(&etimer_clock, (ClockP_Fxn)&clock_update_cb,
+  ClockP_construct(&etimer_clock, (ClockP_Fxn)clock_update_cb,
                    clockp_ticks_second, &params);
 }
 /*---------------------------------------------------------------------------*/

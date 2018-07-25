@@ -79,14 +79,16 @@
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 /* Configuration parameters */
-#define PROP_MODE_DW                  PROP_MODE_CONF_DW
+#define PROP_MODE_DYN_WHITENER        PROP_MODE_CONF_DW
 #define PROP_MODE_USE_CRC16           PROP_MODE_CONF_USE_CRC16
+#define PROP_MODE_CENTER_FREQ         PROP_MODE_CONF_CENTER_FREQ
+#define PROP_MODE_LO_DIVIDER          PROP_MODE_CONF_LO_DIVIDER
 #define PROP_MODE_CCA_RSSI_THRESHOLD  PROP_MODE_CONF_CCA_RSSI_THRESHOLD
 /*---------------------------------------------------------------------------*/
 /* Used for checking result of CCA_REQ command */
 typedef enum {
-  CCA_STATE_IDLE    = 0,
-  CCA_STATE_BUSY    = 1,
+  CCA_STATE_IDLE = 0,
+  CCA_STATE_BUSY = 1,
   CCA_STATE_INVALID = 2
 } cca_state_t;
 /*---------------------------------------------------------------------------*/
@@ -108,7 +110,7 @@ typedef enum {
 #define CRC_LEN                 4
 #endif /* PROP_MODE_USE_CRC16 */
 
-#if PROP_MODE_DW
+#if PROP_MODE_DYN_WHITENER
 #define DOT_4G_PHR_DW_BIT       DOT_4G_PHR_DW
 #else
 #define DOT_4G_PHR_DW_BIT       0
@@ -127,7 +129,7 @@ typedef enum {
 #define TX_BUF_SIZE             (TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN)
 /*---------------------------------------------------------------------------*/
 /* Size of the Length field in Data Entry, two bytes in this case */
-typedef uint16_t                lensz_t;
+typedef uint16_t lensz_t;
 
 #define FRAME_OFFSET            sizeof(lensz_t)
 #define FRAME_SHAVE             2   /**< RSSI (1) + Status (1) */
@@ -142,24 +144,24 @@ typedef uint16_t                lensz_t;
 #define ED_RF_POWER_MAX_DBM               RX_SATURATION_DBM
 /*---------------------------------------------------------------------------*/
 /* RF Core typedefs */
-typedef rfc_propRxOutput_t     rx_output_t;
+typedef rfc_propRxOutput_t rx_output_t;
 
 typedef struct {
   /* Outgoing frame buffer */
-  uint8_t     tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
+  uint8_t tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
 
   /* RX Statistics struct */
   rx_output_t rx_stats;
 
   /* RSSI Threshold */
-  int8_t      rssi_threshold;
-  uint16_t    channel;
+  int8_t rssi_threshold;
+  uint16_t channel;
 
   /* Indicates RF is supposed to be on or off */
-  uint8_t     rf_is_on;
+  uint8_t rf_is_on;
 
   /* RF driver */
-  RF_Handle   rf_handle;
+  RF_Handle rf_handle;
 } prop_radio_t;
 
 static prop_radio_t prop_radio;
@@ -188,14 +190,14 @@ static int off(void);
 static void
 init_rf_params(void)
 {
-  cmd_radio_setup.centerFreq = PROP_MODE_CONF_CENTER_FREQ;
-  cmd_radio_setup.loDivider  = PROP_MODE_CONF_LO_DIVIDER;
+  cmd_radio_setup.centerFreq = PROP_MODE_CENTER_FREQ;
+  cmd_radio_setup.loDivider = PROP_MODE_LO_DIVIDER;
 
   data_queue_t *data_queue = data_queue_init(sizeof(lensz_t));
 
   cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx.lenOffset;
-  cmd_rx.pQueue    = data_queue;
-  cmd_rx.pOutput   = (uint8_t *)&prop_radio.rx_stats;
+  cmd_rx.pQueue = data_queue;
+  cmd_rx.pOutput = (uint8_t *)&prop_radio.rx_stats;
 }
 /*---------------------------------------------------------------------------*/
 static int8_t
@@ -265,7 +267,7 @@ set_channel(uint16_t channel)
   const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
   LOG_DBG("Set channel to %d, frequency 0x%04X.0x%04X (%lu)\n",
-         (int)channel, freq, frac, new_freq);
+          (int)channel, freq, frac, new_freq);
 
   cmd_fs.frequency = freq;
   cmd_fs.fractFreq = frac;
@@ -387,8 +389,8 @@ read(void *buf, unsigned short buf_len)
    *              = N + 2
    *            N = Length - 2
    */
-  uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
-  const lensz_t frame_len = *(lensz_t*)frame_ptr;
+  uint8_t *const frame_ptr = (uint8_t *)&data_entry->data;
+  const lensz_t frame_len = *(lensz_t *)frame_ptr;
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if(frame_len < FRAME_SHAVE) {
@@ -417,7 +419,7 @@ read(void *buf, unsigned short buf_len)
   /* LQI calculated from RSSI */
   const uint8_t lqi = calculate_lqi(rssi);
 
-  packetbuf_set_attr(PACKETBUF_ATTR_RSSI,         (packetbuf_attr_t)rssi);
+  packetbuf_set_attr(PACKETBUF_ATTR_RSSI, (packetbuf_attr_t)rssi);
   packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, (packetbuf_attr_t)lqi);
 
   data_queue_release_entry();
@@ -551,7 +553,7 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TXPOWER:
-    res = rf_get_tx_power(prop_radio.rf_handle, rf_tx_power_table, (int8_t*)&value);
+    res = rf_get_tx_power(prop_radio.rf_handle, rf_tx_power_table, (int8_t *)&value);
     return ((res == RF_RESULT_OK) &&
             (*value != RF_TxPowerTable_INVALID_DBM))
            ? RADIO_RESULT_OK
@@ -663,7 +665,7 @@ init(void)
   init_rf_params();
 
   /* Init RF params and specify non-default params */
-  RF_Params       rf_params;
+  RF_Params rf_params;
   RF_Params_init(&rf_params);
   rf_params.nInactivityTimeout = 2000; /* 2 ms */
 

@@ -118,53 +118,53 @@
 #define TX_BUF_SIZE         180
 /*---------------------------------------------------------------------------*/
 /* Size of the Length representation in Data Entry, one byte in this case */
-typedef uint8_t               lensz_t;
+typedef uint8_t lensz_t;
 
 #define FRAME_OFFSET          sizeof(lensz_t)
 #define FRAME_SHAVE           8   /* FCS (2) + RSSI (1) + Status (1) + Timestamp (4) */
 /*---------------------------------------------------------------------------*/
 /* Used for checking result of CCA_REQ command */
 typedef enum {
-  CCA_STATE_IDLE    = 0,
-  CCA_STATE_BUSY    = 1,
+  CCA_STATE_IDLE = 0,
+  CCA_STATE_BUSY = 1,
   CCA_STATE_INVALID = 2
 } cca_state_t;
 /*---------------------------------------------------------------------------*/
 /* RF Core typedefs */
-typedef rfc_ieeeRxOutput_t      rx_output_t;
+typedef rfc_ieeeRxOutput_t rx_output_t;
 typedef rfc_CMD_IEEE_MOD_FILT_t cmd_mod_filt_t;
-typedef rfc_CMD_IEEE_CCA_REQ_t  cmd_cca_req_t;
+typedef rfc_CMD_IEEE_CCA_REQ_t cmd_cca_req_t;
 
 typedef struct {
   /* Outgoing frame buffer */
-  uint8_t             tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
+  uint8_t tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
 
   /* RF Statistics struct */
-  rx_output_t         rx_stats;
+  rx_output_t rx_stats;
 
   /* Indicates RF is supposed to be on or off */
-  bool                rf_is_on;
+  bool rf_is_on;
   /* Enable/disable CCA before sending */
-  bool                send_on_cca;
+  bool send_on_cca;
   /* Are we currently in poll mode? */
-  bool                poll_mode;
+  bool poll_mode;
 
   /* Last RX operation stats */
   struct {
-    int8_t            rssi;
-    uint8_t           corr_lqi;
-    uint32_t          timestamp;
+    int8_t rssi;
+    uint8_t corr_lqi;
+    uint32_t timestamp;
   } last;
 
   /* RAT Overflow Upkeep */
   struct {
-    struct ctimer     overflow_timer;
-    rtimer_clock_t    last_overflow;
+    struct ctimer overflow_timer;
+    rtimer_clock_t last_overflow;
     volatile uint32_t overflow_count;
   } rat;
 
   /* RF driver */
-  RF_Handle           rf_handle;
+  RF_Handle rf_handle;
 } ieee_radio_t;
 
 static ieee_radio_t ieee_radio;
@@ -173,11 +173,11 @@ static ieee_radio_t ieee_radio;
 static cmd_mod_filt_t cmd_mod_filt;
 /*---------------------------------------------------------------------------*/
 /* RF Command volatile objects */
-#define cmd_radio_setup  (*(volatile rfc_CMD_RADIO_SETUP_t*)&rf_cmd_ieee_radio_setup)
-#define cmd_fs           (*(volatile rfc_CMD_FS_t*)         &rf_cmd_ieee_fs)
-#define cmd_tx           (*(volatile rfc_CMD_IEEE_TX_t*)    &rf_cmd_ieee_tx)
-#define cmd_rx           (*(volatile rfc_CMD_IEEE_RX_t*)    &rf_cmd_ieee_rx)
-#define cmd_rx_ack       (*(volatile rfc_CMD_IEEE_RX_ACK_t*)&rf_cmd_ieee_rx_ack)
+#define cmd_radio_setup  (*(volatile rfc_CMD_RADIO_SETUP_t *)&rf_cmd_ieee_radio_setup)
+#define cmd_fs           (*(volatile rfc_CMD_FS_t *)         &rf_cmd_ieee_fs)
+#define cmd_tx           (*(volatile rfc_CMD_IEEE_TX_t *)    &rf_cmd_ieee_tx)
+#define cmd_rx           (*(volatile rfc_CMD_IEEE_RX_t *)    &rf_cmd_ieee_rx)
+#define cmd_rx_ack       (*(volatile rfc_CMD_IEEE_RX_ACK_t *)&rf_cmd_ieee_rx_ack)
 /*---------------------------------------------------------------------------*/
 static inline bool
 rx_is_active(void)
@@ -191,19 +191,19 @@ static uint32_t rat_to_timestamp(const uint32_t);
 /*---------------------------------------------------------------------------*/
 /* Forward declarations of Radio driver functions */
 static int init(void);
-static int prepare(const void*, unsigned short);
+static int prepare(const void *, unsigned short);
 static int transmit(unsigned short);
-static int send(const void*, unsigned short);
-static int read(void*, unsigned short);
+static int send(const void *, unsigned short);
+static int read(void *, unsigned short);
 static int channel_clear(void);
 static int receiving_packet(void);
 static int pending_packet(void);
 static int on(void);
 static int off(void);
-static radio_result_t get_value(radio_param_t, radio_value_t*);
+static radio_result_t get_value(radio_param_t, radio_value_t *);
 static radio_result_t set_value(radio_param_t, radio_value_t);
-static radio_result_t get_object(radio_param_t, void*, size_t);
-static radio_result_t set_object(radio_param_t, const void*, size_t);
+static radio_result_t get_object(radio_param_t, void *, size_t);
+static radio_result_t set_object(radio_param_t, const void *, size_t);
 /*---------------------------------------------------------------------------*/
 static void
 rat_overflow_cb(void *arg)
@@ -219,7 +219,7 @@ init_rf_params(void)
 {
   data_queue_t *rx_q = data_queue_init(sizeof(lensz_t));
 
-  cmd_rx.pRxQ    = rx_q;
+  cmd_rx.pRxQ = rx_q;
   cmd_rx.pOutput = &ieee_radio.rx_stats;
 
 #if IEEE_MODE_PROMISCOUS
@@ -236,7 +236,7 @@ init_rf_params(void)
 
   cmd_rx.ccaRssiThr = IEEE_MODE_CCA_RSSI_THRESHOLD;
 
-  cmd_tx.pNextOp = (RF_Op*)&cmd_rx_ack;
+  cmd_tx.pNextOp = (RF_Op *)&cmd_rx_ack;
   cmd_tx.condition.rule = COND_NEVER; /* Initially ACK turned off */
 
   /*
@@ -248,13 +248,13 @@ init_rf_params(void)
    * of 11 bytes. 11 bytes x 32 us/byte equals 352 us of ACK transmission time.
    */
   cmd_rx_ack.startTrigger.triggerType = TRIG_NOW;
-  cmd_rx_ack.endTrigger.triggerType   = TRIG_REL_START;
+  cmd_rx_ack.endTrigger.triggerType = TRIG_REL_START;
   cmd_rx_ack.endTime = RF_convertUsToRatTicks(700);
 
   /* Initialize address filter command */
   cmd_mod_filt.commandNo = CMD_IEEE_MOD_FILT;
   memcpy(&(cmd_mod_filt.newFrameFiltOpt), &(rf_cmd_ieee_rx.frameFiltOpt), sizeof(rf_cmd_ieee_rx.frameFiltOpt));
-  memcpy(&(cmd_mod_filt.newFrameTypes),   &(rf_cmd_ieee_rx.frameTypes),   sizeof(rf_cmd_ieee_rx.frameTypes));
+  memcpy(&(cmd_mod_filt.newFrameTypes), &(rf_cmd_ieee_rx.frameTypes), sizeof(rf_cmd_ieee_rx.frameTypes));
 }
 /*---------------------------------------------------------------------------*/
 static rf_result_t
@@ -279,11 +279,11 @@ set_channel(uint8_t channel)
   cmd_rx.channel = channel;
 
   const uint32_t new_freq = dot_15_4g_freq(channel);
-  const uint16_t freq     = (uint16_t)(new_freq / 1000);
-  const uint16_t frac     = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
+  const uint16_t freq = (uint16_t)(new_freq / 1000);
+  const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
   LOG_DBG("Set channel to %d, frequency 0x%04X.0x%04X (%lu)\n",
-         (int)channel, freq, frac, new_freq);
+          (int)channel, freq, frac, new_freq);
 
   cmd_fs.frequency = freq;
   cmd_fs.fractFreq = frac;
@@ -502,8 +502,8 @@ read(void *buf, unsigned short buf_len)
    *       Length = N + 8
    *            N = Length - 8
    */
-  uint8_t *const frame_ptr = (uint8_t*)&data_entry->data;
-  const lensz_t frame_len = *(lensz_t*)frame_ptr;
+  uint8_t *const frame_ptr = (uint8_t *)&data_entry->data;
+  const lensz_t frame_len = *(lensz_t *)frame_ptr;
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if(frame_len < FRAME_SHAVE) {
@@ -532,14 +532,14 @@ read(void *buf, unsigned short buf_len)
   /* LQI retrieved from Status byte, FCS (2) + RSSI (1) bytes after payload. */
   ieee_radio.last.corr_lqi = (uint8_t)(payload_ptr[payload_len + 3] & STATUS_CORRELATION);
   /* Timestamp stored FCS (2) + RSSI (1) + Status (1) bytes after payload. */
-  const uint32_t rat_ticks = *(uint32_t*)(payload_ptr + payload_len + 4);
+  const uint32_t rat_ticks = *(uint32_t *)(payload_ptr + payload_len + 4);
   ieee_radio.last.timestamp = rat_to_timestamp(rat_ticks);
 
   if(!ieee_radio.poll_mode) {
     /* Not in poll mode: packetbuf should not be accessed in interrupt context. */
     /* In poll mode, the last packet RSSI and link quality can be obtained through */
     /* RADIO_PARAM_LAST_RSSI and RADIO_PARAM_LAST_LINK_QUALITY */
-    packetbuf_set_attr(PACKETBUF_ATTR_RSSI,         (packetbuf_attr_t)ieee_radio.last.rssi);
+    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, (packetbuf_attr_t)ieee_radio.last.rssi);
     packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, (packetbuf_attr_t)ieee_radio.last.corr_lqi);
   }
 
@@ -567,7 +567,7 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
 
   RF_Stat stat = RF_StatRadioInactiveError;
   if(rx_is_active()) {
-    stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t*)&cmd_cca_req);
+    stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)&cmd_cca_req);
   }
 
   if(rx_is_idle) {
@@ -738,7 +738,7 @@ get_value(radio_param_t param, radio_value_t *value)
 
   /* TX power */
   case RADIO_PARAM_TXPOWER:
-    res = rf_get_tx_power(ieee_radio.rf_handle, rf_tx_power_table, (int8_t*)&value);
+    res = rf_get_tx_power(ieee_radio.rf_handle, rf_tx_power_table, (int8_t *)&value);
     return ((res == RF_RESULT_OK) &&
             (*value != RF_TxPowerTable_INVALID_DBM))
            ? RADIO_RESULT_OK
@@ -848,18 +848,19 @@ set_value(radio_param_t param, radio_value_t value)
   /* RX Mode */
   case RADIO_PARAM_RX_MODE: {
     if(value & ~(RADIO_RX_MODE_ADDRESS_FILTER |
-                  RADIO_RX_MODE_AUTOACK | RADIO_RX_MODE_POLL_MODE)) {
+                 RADIO_RX_MODE_AUTOACK |
+                 RADIO_RX_MODE_POLL_MODE)) {
       return RADIO_RESULT_INVALID_VALUE;
     }
 
-    cmd_rx.frameFiltOpt.frameFiltEn      = (value & RADIO_RX_MODE_ADDRESS_FILTER) != 0;
-    cmd_rx.frameFiltOpt.frameFiltStop    = 1;
-    cmd_rx.frameFiltOpt.autoAckEn        = (value & RADIO_RX_MODE_AUTOACK) != 0;
-    cmd_rx.frameFiltOpt.slottedAckEn     = 0;
-    cmd_rx.frameFiltOpt.autoPendEn       = 0;
-    cmd_rx.frameFiltOpt.defaultPend      = 0;
+    cmd_rx.frameFiltOpt.frameFiltEn = (value & RADIO_RX_MODE_ADDRESS_FILTER) != 0;
+    cmd_rx.frameFiltOpt.frameFiltStop = 1;
+    cmd_rx.frameFiltOpt.autoAckEn = (value & RADIO_RX_MODE_AUTOACK) != 0;
+    cmd_rx.frameFiltOpt.slottedAckEn = 0;
+    cmd_rx.frameFiltOpt.autoPendEn = 0;
+    cmd_rx.frameFiltOpt.defaultPend = 0;
     cmd_rx.frameFiltOpt.bPendDataReqOnly = 0;
-    cmd_rx.frameFiltOpt.bPanCoord        = 0;
+    cmd_rx.frameFiltOpt.bPanCoord = 0;
     cmd_rx.frameFiltOpt.bStrictLenFilter = 0;
 
     const bool old_poll_mode = ieee_radio.poll_mode;
@@ -867,7 +868,7 @@ set_value(radio_param_t param, radio_value_t value)
     if(old_poll_mode == ieee_radio.poll_mode) {
       /* Do not turn the radio off and on, just send an update command */
       memcpy(&cmd_mod_filt.newFrameFiltOpt, &(rf_cmd_ieee_rx.frameFiltOpt), sizeof(rf_cmd_ieee_rx.frameFiltOpt));
-      const RF_Stat stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t*)&cmd_mod_filt);
+      const RF_Stat stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)&cmd_mod_filt);
       if(stat != RF_StatCmdDoneSuccess) {
         LOG_ERR("Setting address filter failed, stat=0x%02X\n", stat);
         return RADIO_RESULT_ERROR;

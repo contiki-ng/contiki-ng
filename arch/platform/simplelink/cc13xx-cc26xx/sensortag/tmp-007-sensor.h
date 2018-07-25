@@ -72,15 +72,16 @@
 /*---------------------------------------------------------------------------*/
 #if BOARD_SENSORS_ENABLE
 #if (TI_I2C_CONF_ENABLE == 0) || (TI_I2C_CONF_I2C0_ENABLE == 0)
-# error "The BMP280 requires the I2C driver to be enabled (TI_I2C_CONF_ENABLE = 1)"
+#error "The BMP280 requires the I2C driver to be enabled (TI_I2C_CONF_ENABLE = 1)"
 #endif
 #endif
 /*---------------------------------------------------------------------------*/
 typedef enum {
-  TMP_007_TYPE_OBJECT  = (1 << 0),
+  TMP_007_TYPE_OBJECT = (1 << 0),
   TMP_007_TYPE_AMBIENT = (1 << 1),
-  TMP_007_TYPE_ALL     = TMP_007_TYPE_OBJECT
-                       | TMP_007_TYPE_AMBIENT,
+
+  TMP_007_TYPE_ALL = (TMP_007_TYPE_OBJECT |
+                      TMP_007_TYPE_AMBIENT),
 } TMP_007_TYPE;
 /*---------------------------------------------------------------------------*/
 typedef enum {

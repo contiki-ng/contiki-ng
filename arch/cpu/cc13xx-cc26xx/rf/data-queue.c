@@ -39,12 +39,12 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "sys/cc.h"
-
-#include "rf/data-queue.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_data_entry.h)
+/*---------------------------------------------------------------------------*/
+#include "rf/data-queue.h"
 /*---------------------------------------------------------------------------*/
 #include <stddef.h>
 #include <stdint.h>
@@ -57,18 +57,18 @@
 /* Receive buffer entries with room for 1 IEEE 802.15.4 frame in each */
 typedef union {
   data_entry_t data_entry;
-  uint8_t      buf[RX_BUF_SIZE];
-} rx_buf_t CC_ALIGN(4);
+  uint8_t buf[RX_BUF_SIZE];
+} rx_buf_t CC_ALIGN (4);
 /*---------------------------------------------------------------------------*/
 typedef struct {
   /* RX bufs */
-  rx_buf_t      bufs[RX_BUF_CNT];
+  rx_buf_t bufs[RX_BUF_CNT];
   /* RFC data queue object */
-  data_queue_t  data_queue;
+  data_queue_t data_queue;
   /* Current data entry in use by RF */
-  data_entry_t* curr_entry;
+  data_entry_t *curr_entry;
   /* Size in bytes of length field in data entry */
-  size_t        lensz;
+  size_t lensz;
 } rx_data_queue_t;
 
 static rx_data_queue_t rx_data_queue;
@@ -82,14 +82,14 @@ rx_bufs_init(void)
   for(i = 0; i < RX_BUF_CNT; ++i) {
     data_entry = &(rx_data_queue.bufs[i].data_entry);
 
-    data_entry->status       = DATA_ENTRY_PENDING;
-    data_entry->config.type  = DATA_ENTRY_TYPE_GEN;
+    data_entry->status = DATA_ENTRY_PENDING;
+    data_entry->config.type = DATA_ENTRY_TYPE_GEN;
     data_entry->config.lenSz = rx_data_queue.lensz;
-    data_entry->length       = RX_BUF_SIZE - sizeof(data_entry_t); /* TODO: is this sizeof sound? */
+    data_entry->length = RX_BUF_SIZE - sizeof(data_entry_t);
     /* Point to fist entry if this is last entry, else point to next entry */
-    data_entry->pNextEntry   = ((i + 1) == RX_BUF_CNT)
+    data_entry->pNextEntry = ((i + 1) == RX_BUF_CNT)
       ? rx_data_queue.bufs[0].buf
-      : rx_data_queue.bufs[i+1].buf;
+      : rx_data_queue.bufs[i + 1].buf;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -107,7 +107,7 @@ rx_bufs_reset(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-data_queue_t*
+data_queue_t *
 data_queue_init(size_t lensz)
 {
   rx_data_queue.lensz = lensz;
@@ -137,7 +137,7 @@ data_queue_reset(void)
   rx_data_queue.curr_entry = &(rx_data_queue.bufs[0].data_entry);
 }
 /*---------------------------------------------------------------------------*/
-data_entry_t*
+data_entry_t *
 data_queue_current_entry(void)
 {
   return rx_data_queue.curr_entry;
@@ -147,7 +147,7 @@ void
 data_queue_release_entry(void)
 {
   data_entry_t *const curr_entry = rx_data_queue.curr_entry;
-  uint8_t *const frame_ptr = (uint8_t*)&(curr_entry->data);
+  uint8_t *const frame_ptr = (uint8_t *)&(curr_entry->data);
 
   /* Clear length bytes */
   memset(frame_ptr, 0x0, rx_data_queue.lensz);
@@ -155,7 +155,7 @@ data_queue_release_entry(void)
   curr_entry->status = DATA_ENTRY_PENDING;
 
   /* Move current entry to the next entry */
-  rx_data_queue.curr_entry = (data_entry_t*)(curr_entry->pNextEntry);
+  rx_data_queue.curr_entry = (data_entry_t *)(curr_entry->pNextEntry);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

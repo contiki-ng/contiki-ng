@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -60,7 +59,9 @@ static void
 uart0_cb(UART_Handle handle, void *buf, size_t count)
 {
   /* Simply return if the current callback is NULL. */
-  if(!curr_input_cb) { return; }
+  if(!curr_input_cb) {
+    return;
+  }
 
   /*
    * Save the current callback function locally, as it might be overwritten
@@ -81,16 +82,18 @@ uart0_cb(UART_Handle handle, void *buf, size_t count)
 void
 uart0_init(void)
 {
-  if(initialized) { return; }
+  if(initialized) {
+    return;
+  }
 
   UART_Params uart_params;
   UART_Params_init(&uart_params);
 
-  uart_params.baudRate       = TI_UART_CONF_BAUD_RATE;
-  uart_params.readMode       = UART_MODE_CALLBACK;
-  uart_params.writeMode      = UART_MODE_BLOCKING;
-  uart_params.readCallback   = uart0_cb;
-  uart_params.readDataMode   = UART_DATA_TEXT;
+  uart_params.baudRate = TI_UART_CONF_BAUD_RATE;
+  uart_params.readMode = UART_MODE_CALLBACK;
+  uart_params.writeMode = UART_MODE_BLOCKING;
+  uart_params.readCallback = uart0_cb;
+  uart_params.readDataMode = UART_DATA_TEXT;
   uart_params.readReturnMode = UART_RETURN_NEWLINE;
 
   /* No error handling. */

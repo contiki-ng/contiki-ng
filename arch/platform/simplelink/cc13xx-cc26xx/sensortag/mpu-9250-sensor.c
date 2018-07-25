@@ -47,7 +47,7 @@
 #include <Board.h>
 
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/cpu.h)
+#include DeviceFamily_constructPath(driverlib / cpu.h)
 
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/I2C.h>
@@ -72,10 +72,10 @@
 #if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 #ifndef Board_MPU9250_ADDR
-# error "Board file doesn't define I2C address Board_MPU9250_ADDR"
+#error "Board file doesn't define I2C address Board_MPU9250_ADDR"
 #endif
 #ifndef Board_MPU9250_MAG_ADDR
-# error "Board file doesn't define I2C address Board_MPU9250_MAG_ADDR"
+#error "Board file doesn't define I2C address Board_MPU9250_MAG_ADDR"
 #endif
 
 /* Sensor I2C address */
@@ -190,20 +190,20 @@
 #define BIT_STBY_XYZG                 (BIT_STBY_XG | BIT_STBY_YG | BIT_STBY_ZG)
 /*---------------------------------------------------------------------------*/
 static PIN_Config mpu_9250_pin_table[] = {
-  Board_MPU_INT   | PIN_INPUT_EN       | PIN_PULLDOWN   | PIN_HYSTERESIS,
+  Board_MPU_INT | PIN_INPUT_EN | PIN_PULLDOWN | PIN_HYSTERESIS,
   Board_MPU_POWER | PIN_GPIO_OUTPUT_EN | PIN_DRVSTR_MAX | PIN_GPIO_LOW,
   PIN_TERMINATE
 };
 
-static PIN_State  pin_state;
+static PIN_State pin_state;
 static PIN_Handle pin_handle;
 static I2C_Handle i2c_handle;
 
 /*---------------------------------------------------------------------------*/
 typedef struct {
-  volatile MPU_9250_SENSOR_STATUS  status;
-  volatile MPU_9250_SENSOR_TYPE    type;
-  MPU_9250_SENSOR_ACC_RANGE        acc_range;
+  volatile MPU_9250_SENSOR_STATUS status;
+  volatile MPU_9250_SENSOR_TYPE type;
+  MPU_9250_SENSOR_ACC_RANGE acc_range;
 } MPU_9250_Object;
 
 static MPU_9250_Object mpu_9250;
@@ -247,16 +247,15 @@ static bool
 i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
   I2C_Transaction i2c_transaction = {
-    .writeBuf     = wbuf,
-    .writeCount   = wcount,
-    .readBuf      = rbuf,
-    .readCount    = rcount,
+    .writeBuf = wbuf,
+    .writeCount = wcount,
+    .readBuf = rbuf,
+    .readCount = rcount,
     .slaveAddress = MPU_9250_I2C_ADDRESS,
   };
 
   return I2C_transfer(i2c_handle, &i2c_transaction);
 }
-
 /**
  * \brief         Peform a write only I2C transaction.
  * \param wbuf    Output buffer during the I2C transation.
@@ -269,7 +268,6 @@ i2c_write(void *wbuf, size_t wcount)
 {
   return i2c_write_read(wbuf, wcount, NULL, 0);
 }
-
 /**
  * \brief         Peform a read only I2C transaction.
  * \param rbuf    Input buffer during the I2C transation.
@@ -392,7 +390,7 @@ convert_to_le(uint8_t *data, uint8_t len)
  *          us to determine whether a new sensor reading is available.
  */
 static bool
-sensor_data_ready(uint8_t* int_status)
+sensor_data_ready(uint8_t *int_status)
 {
   uint8_t int_status_data[] = { REG_INT_STATUS };
   const bool spi_ok = i2c_write_read(int_status_data, sizeof(int_status_data), int_status, 1);
@@ -418,7 +416,7 @@ acc_read(uint8_t int_status, uint16_t *data)
     return false;
   }
 
-  convert_to_le((uint8_t*)data, DATA_SIZE);
+  convert_to_le((uint8_t *)data, DATA_SIZE);
 
   return true;
 }
@@ -441,7 +439,7 @@ gyro_read(uint8_t int_status, uint16_t *data)
     return false;
   }
 
-  convert_to_le((uint8_t*)data, DATA_SIZE);
+  convert_to_le((uint8_t *)data, DATA_SIZE);
 
   return true;
 }
@@ -455,9 +453,9 @@ static int32_t
 acc_convert(int32_t raw_data)
 {
   switch(mpu_9250.acc_range) {
-  case MPU_9250_SENSOR_ACC_RANGE_2G:  return raw_data * 100 *  2 / 32768;
-  case MPU_9250_SENSOR_ACC_RANGE_4G:  return raw_data * 100 *  4 / 32768;
-  case MPU_9250_SENSOR_ACC_RANGE_8G:  return raw_data * 100 *  8 / 32768;
+  case MPU_9250_SENSOR_ACC_RANGE_2G:  return raw_data * 100 * 2 / 32768;
+  case MPU_9250_SENSOR_ACC_RANGE_4G:  return raw_data * 100 * 4 / 32768;
+  case MPU_9250_SENSOR_ACC_RANGE_8G:  return raw_data * 100 * 8 / 32768;
   case MPU_9250_SENSOR_ACC_RANGE_16G: return raw_data * 100 * 16 / 32768;
   }
   return 0;
@@ -555,7 +553,7 @@ value(int type)
     default:                         return MPU_9250_READING_ERROR;
     }
 
-  /* Read gyro data */
+    /* Read gyro data */
   } else if((type & MPU_9250_SENSOR_TYPE_GYRO) != 0) {
 
     if(!gyro_read(int_status, sensor_value)) {
@@ -573,7 +571,7 @@ value(int type)
     default:                          return MPU_9250_READING_ERROR;
     }
 
-  /* Invalid sensor type */
+    /* Invalid sensor type */
   } else {
     PRINTF("MPU: Invalid type\n");
     return MPU_9250_READING_ERROR;
@@ -591,7 +589,7 @@ value(int type)
 static int
 configure(int type, int enable)
 {
-  // Mask enable
+  /* Mask enable */
   const MPU_9250_SENSOR_TYPE enable_type = enable & MPU_9250_SENSOR_TYPE_ALL;
 
   switch(type) {

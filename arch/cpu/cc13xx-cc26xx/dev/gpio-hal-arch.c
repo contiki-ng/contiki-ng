@@ -51,7 +51,7 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 static PIN_Config pin_config[] = { PIN_TERMINATE };
-static PIN_State  pin_state;
+static PIN_State pin_state;
 static PIN_Handle pin_handle;
 /*---------------------------------------------------------------------------*/
 static void

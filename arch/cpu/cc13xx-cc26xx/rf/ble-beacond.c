@@ -67,7 +67,7 @@
 #define LOG_MODULE "Radio"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
-#if RF_BLE_BEACON_ENABLE
+#if RF_CONF_BLE_BEACON_ENABLE
 /*---------------------------------------------------------------------------*/
 /* BLE Advertisement channels. Not to be changed by the user. */
 typedef enum {
@@ -75,9 +75,9 @@ typedef enum {
   BLE_ADV_CHANNEL_38 = (1 << 1),
   BLE_ADV_CHANNEL_39 = (1 << 2),
 
-  BLE_ADV_CHANNEL_MASK = BLE_ADV_CHANNEL_37
-                       | BLE_ADV_CHANNEL_38
-                       | BLE_ADV_CHANNEL_39,
+  BLE_ADV_CHANNEL_MASK = (BLE_ADV_CHANNEL_37 |
+                          BLE_ADV_CHANNEL_38 |
+                          BLE_ADV_CHANNEL_39),
 } ble_adv_channel_t;
 
 #define BLE_ADV_CHANNEL_MIN         37
@@ -210,7 +210,7 @@ rf_ble_get_tx_power(void)
   rf_result_t res;
 
   int8_t dbm;
-  res = rf_get_tx_power(ble_beacond.rf_handle, TX_POWER_TABLE, &dbm)
+  res = rf_get_tx_power(ble_beacond.rf_handle, TX_POWER_TABLE, &dbm);
 
   if(res != RF_RESULT_OK) {
     return RF_TxPowerTable_INVALID_DBM;
@@ -290,26 +290,44 @@ PROCESS_THREAD(ble_beacond_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-#else /* RF_BLE_BEACON_ENABLE */
+#else /* RF_CONF_BLE_BEACON_ENABLE */
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
-rf_ble_beacond_init(void) { return RF_BLE_BEACOND_DISABLED; }
+rf_ble_beacond_init(void)
+{
+  return RF_BLE_BEACOND_DISABLED;
+}
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
-rf_ble_beacond_start(clock_time_t interval, const char *name) { return RF_BLE_BEACOND_DISABLED; }
+rf_ble_beacond_start(clock_time_t interval, const char *name)
+{
+  return RF_BLE_BEACOND_DISABLED;
+}
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
-rf_ble_beacond_stop(void) { return RF_BLE_BEACOND_DISABLED; }
+rf_ble_beacond_stop(void)
+{
+  return RF_BLE_BEACOND_DISABLED;
+}
 /*---------------------------------------------------------------------------*/
 int8_t
-rf_ble_is_active(void) { return -1; }
+rf_ble_is_active(void)
+{
+  return -1;
+}
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
-rf_ble_set_tx_power(int8_t power) { return RF_BLE_BEACOND_DISABLED; }
+rf_ble_set_tx_power(int8_t power)
+{
+  return RF_BLE_BEACOND_DISABLED;
+}
 /*---------------------------------------------------------------------------*/
 int8_t
-rf_ble_get_tx_power(void) { return ~(int8_t)(0); }
+rf_ble_get_tx_power(void)
+{
+  return ~(int8_t)(0);
+}
 /*---------------------------------------------------------------------------*/
-#endif /* RF_BLE_BEACON_ENABLE */
+#endif /* RF_CONF_BLE_BEACON_ENABLE */
 /*---------------------------------------------------------------------------*/
 /** @} */

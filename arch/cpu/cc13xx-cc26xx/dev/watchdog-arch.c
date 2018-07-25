@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
+ /**
  * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
@@ -76,7 +76,7 @@ watchdog_init(void)
   Watchdog_Params wdt_params;
   Watchdog_Params_init(&wdt_params);
 
-  wdt_params.resetMode      = Watchdog_RESET_ON;
+  wdt_params.resetMode = Watchdog_RESET_ON;
   wdt_params.debugStallMode = Watchdog_DEBUG_STALL_ON;
 
   wdt_handle = Watchdog_open(Board_WATCHDOG0, &wdt_params);
@@ -133,7 +133,9 @@ watchdog_reboot(void)
   }
 
   watchdog_start();
-  while(1);
+
+  /* Busy loop until watchdog times out */
+  for (;;) { /* hang */ }
 }
 /*---------------------------------------------------------------------------*/
 /**

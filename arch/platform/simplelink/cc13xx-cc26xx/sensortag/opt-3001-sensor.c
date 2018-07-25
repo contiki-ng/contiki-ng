@@ -68,7 +68,7 @@
 #if BOARD_SENSORS_ENABLE
 /*---------------------------------------------------------------------------*/
 #ifndef Board_OPT3001_ADDR
-#   error "Board file doesn't define I2C address Board_OPT3001_ADDR"
+#error "Board file doesn't define I2C address Board_OPT3001_ADDR"
 #endif
 /* Slave address */
 #define OPT_3001_I2C_ADDRESS            Board_OPT3001_ADDR
@@ -160,16 +160,15 @@ static bool
 i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
 {
   I2C_Transaction i2c_transaction = {
-    .writeBuf     = wbuf,
-    .writeCount   = wcount,
-    .readBuf      = rbuf,
-    .readCount    = rcount,
+    .writeBuf = wbuf,
+    .writeCount = wcount,
+    .readBuf = rbuf,
+    .readCount = rcount,
     .slaveAddress = OPT_3001_I2C_ADDRESS,
   };
 
   return I2C_transfer(i2c_handle, &i2c_transaction);
 }
-
 /**
  * \brief         Peform a write only I2C transaction.
  * \param wbuf    Output buffer during the I2C transation.
@@ -182,7 +181,6 @@ i2c_write(void *wbuf, size_t wcount)
 {
   return i2c_write_read(wbuf, wcount, NULL, 0);
 }
-
 /**
  * \brief         Peform a read only I2C transaction.
  * \param rbuf    Input buffer during the I2C transation.
@@ -305,7 +303,7 @@ value(int type)
 
   result_value = SWAP16(result_value);
 
-  uint32_t e = (result_value & 0x0FFF) >>  0;
+  uint32_t e = (result_value & 0x0FFF) >> 0;
   uint32_t m = (result_value & 0xF000) >> 12;
   uint32_t converted = m * 100 * (1 << e);
 
