@@ -411,6 +411,47 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
+ * \name SPI HAL configuration.
+ *
+ * CC13x0/CC26x0 has one SPI interface, while CC13x2/CC26x2 has two
+ * SPI interfaces. Some additional checks has to be made for the
+ * SPI_CONF_CONTROLLER_COUNT configuration, as this relies on whether the
+ * available SPI interfaces are enabled or not, as well as if the SPI driver
+ * is enabled at all.
+ *
+ * @{
+ */
+#if TI_SPI_CONF_ENABLE
+/*
+ * The SPI driver is enabled. Therefore, the number of SPI interfaces depends
+ * on which Device family parent the device falls under and if any of its
+ * corresponding SPI interfaces are enabled or not.
+ */
+
+#define SPI0_IS_ENABLED                     ((TI_SPI_CONF_SPI0_ENABLE) ? 1 : 0)
+#define SPI1_IS_ENABLED                     ((TI_SPI_CONF_SPI1_ENABLE) ? 1 : 0)
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+
+/* CC13x0/CC26x0 only has one SPI interface: SPI0. */
+#define SPI_CONF_CONTROLLER_COUNT           (SPI0_IS_ENABLED)
+
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
+
+/* CC13x0/CC26x0 only has two SPI interface: SPI0 and SPI1. */
+#define SPI_CONF_CONTROLLER_COUNT           (SPI0_ENABLED + SPI1_IS_ENABLED)
+
+#endif /* DeviceFamily_PARENT */
+
+#else /* TI_SPI_CONF_ENABLE */
+/*
+ * If the SPI driver is disabled then there are 0 available
+ * SPI interfaces. */
+#define SPI_CONF_CONTROLLER_COUNT           0
+#endif /* TI_SPI_CONF_ENABLE */
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name Slip configuration
  *
  * @{

@@ -50,6 +50,8 @@
 #ifndef BOARD_CONF_H_
 #define BOARD_CONF_H_
 /*---------------------------------------------------------------------------*/
+#include "contiki-conf.h"
+/*---------------------------------------------------------------------------*/
 /**
  * \name LED configurations for the dev/leds.h API.
  *
@@ -81,6 +83,15 @@
  * @{
  */
 #define BOARD_CONF_HAS_SENSORS      0
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name The external flash SPI CS pin, defined in Board.h.
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define EXT_FLASH_SPI_PIN_CS        Board_SPI_FLASH_CS
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_CONF_H_ */

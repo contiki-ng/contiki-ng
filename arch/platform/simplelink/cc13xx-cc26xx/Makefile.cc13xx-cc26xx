@@ -6,8 +6,8 @@
 BOARD_PLATFORMS = launchpad sensortag srf06
 
 # All supported boards for this SimpleLink family
-BOARDS := $(foreach BOARD_TYPE, $(BOARD_PLATFORMS), \
-  $(shell cd $(FAMILY_PATH); find $(BOARD_TYPE)/* -type d -print))
+BOARDS := $(foreach BOARD, $(BOARD_PLATFORMS), \
+  $(shell cd $(FAMILY_PATH); find $(BOARD)/* -type d -print))
 
 ################################################################################
 # Directory and source configurations

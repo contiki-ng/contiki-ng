@@ -1,7 +1,7 @@
 ################################################################################
 # SimpleLink LaunchPad makefile
 
-BOARD_TYPE = BOARD_SRF06
+BOARD_TYPE = BOARD_SMARTRF06EB
 
 # leds-arch.c etc.
 BOARD_SOURCEFILES += srf06-sensors.c

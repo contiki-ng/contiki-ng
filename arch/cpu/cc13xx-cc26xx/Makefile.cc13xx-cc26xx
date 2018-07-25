@@ -73,6 +73,7 @@ CONTIKI_CPU_SOURCEFILES += watchdog-arch.c  dbg-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c     slip-arch.c
 CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c  int-master-arch.c
 CONTIKI_CPU_SOURCEFILES += random.c         trng-arch.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
 
 # RF source files
 CONTIKI_CPU_SOURCEFILES += sched.c          data-queue.c
