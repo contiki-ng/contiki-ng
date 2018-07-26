@@ -47,7 +47,7 @@
 #include <Board.h>
 
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib / cpu.h)
+#include DeviceFamily_constructPath(driverlib/cpu.h)
 
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/I2C.h>

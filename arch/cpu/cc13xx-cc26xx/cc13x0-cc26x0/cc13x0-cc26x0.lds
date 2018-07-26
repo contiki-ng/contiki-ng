@@ -29,10 +29,6 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*
- *  ======== CC1310_LAUNCHXL_NoRTOS.lds ========
- *  Default Linker script for the Texas Instruments CC1310
- */
 
 MIN_STACKSIZE = 0x800;  /* 2048 bytes */
 HEAPSIZE      = 0x100;  /* 256 bytes */

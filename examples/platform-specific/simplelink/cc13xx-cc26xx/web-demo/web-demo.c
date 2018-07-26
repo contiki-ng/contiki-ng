@@ -580,7 +580,7 @@ get_tmp_reading()
     (random_rand() % SENSOR_READING_RANDOM);
 
   if(tmp_amb_reading.publish || tmp_obj_reading.publish) {
-    if(tmp_007_sensor.value(TMP_007_SENSOR_TYPE_ALL) ==
+    if(tmp_007_sensor.value(TMP_007_TYPE_ALL) ==
        TMP_007_READING_ERROR) {
 
       SENSORS_DEACTIVATE(tmp_007_sensor);
@@ -589,7 +589,7 @@ get_tmp_reading()
   }
 
   if(tmp_amb_reading.publish) {
-    value = tmp_007_sensor.value(TMP_007_SENSOR_TYPE_AMBIENT);
+    value = tmp_007_sensor.value(TMP_007_TYPE_AMBIENT);
     tmp_amb_reading.raw = value;
 
     compare_and_update(&tmp_amb_reading);
@@ -601,7 +601,7 @@ get_tmp_reading()
   }
 
   if(tmp_obj_reading.publish) {
-    value = tmp_007_sensor.value(TMP_007_SENSOR_TYPE_OBJECT);
+    value = tmp_007_sensor.value(TMP_007_TYPE_OBJECT);
     tmp_obj_reading.raw = value;
 
     compare_and_update(&tmp_obj_reading);
@@ -640,7 +640,7 @@ get_hdc_reading()
   }
 
   if(hdc_hum_reading.publish) {
-    value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMIDITY);
+    value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMID);
     if(value != HDC_1000_READING_ERROR) {
       hdc_hum_reading.raw = value;
 
