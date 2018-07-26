@@ -39,16 +39,10 @@ ifdef CI
   endif
 endif
 
-# Prevent Make from remaking any makefiles. This was particularly an
-# issue when you had a Makefile with a suffix equal to that of $(TARGET),
-# as it managed to match with the %.$(TARGET) rule, which in turn screwed
-# everything up.
-Makefile.%: ;
-
 OBJECTDIR := obj_$(TARGET)
 
-LOWERCASE := -abcdefghijklmnopqrstuvwxyz/
-UPPERCASE := _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
+LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
+UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
 TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
 CFLAGS += -DCONTIKI=1
 CFLAGS += -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
@@ -270,7 +264,7 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
 CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
-SOURCEDIRS = $(CONTIKI) $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
+SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
 			 $(CONTIKI_ARCH_DIRS) $(CONTIKI_CPU_DIRS_CONCAT) \
 			 $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) \
 			 $(dir $(target_makefile))
@@ -493,6 +487,12 @@ endif
 # a single C source into a binary to force GNU make to consider
 # the match-anything rule below instead.
 %: %.c
+
+# Prevent Make from remaking any makefiles. This was particularly an
+# issue when you had a Makefile with a suffix equal to that of $(TARGET),
+# as it managed to match with the %.$(TARGET) rule, which in turn screwed
+# everything up.
+Makefile.%: ;
 
 ifeq ($(PLATFORM_ACTION),skip)
 # Skip this target.

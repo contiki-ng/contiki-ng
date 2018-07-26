@@ -1,6 +1,3 @@
-MAKEFILE := $(lastword $(MAKEFILE_LIST))
-BASE_DIR := $(realpath $(dir $(MAKEFILE)))
-
 CC       = arm-none-eabi-gcc
 CPP      = arm-none-eabi-cpp
 LD       = arm-none-eabi-gcc
@@ -36,9 +33,8 @@ else
 endif
 
 ### Use CMSIS and the existing dbg-io from arch/cpu/arm/common
-CONTIKI_ARM_DIRS += .
-CONTIKI_ARM_DIRS += ../common/dbg-io
-CONTIKI_CPU_DIRS += $(realpath $(addprefix $(BASE_DIR)/, $(CONTIKI_ARM_DIRS)))
+CONTIKI_ARM_DIRS += . common/dbg-io
+CONTIKI_CPU_DIRS += $(addprefix ../arm/, $(CONTIKI_ARM_DIRS))
 
 ### CPU-dependent cleanup files
 CLEAN += *.elf *.bin *.lst *.hex *.i16hex
