@@ -48,6 +48,7 @@
 #include "sys/cc.h"
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 /* Log configuration */
 #include "coap-log.h"

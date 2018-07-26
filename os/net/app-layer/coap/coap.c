@@ -47,6 +47,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include "sys/cc.h"
 
 #include "coap.h"
