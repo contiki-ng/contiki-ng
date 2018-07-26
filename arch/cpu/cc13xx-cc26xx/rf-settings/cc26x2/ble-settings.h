@@ -39,18 +39,18 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
-extern RF_Mode                      rf_ble_mode;
+extern RF_Mode                    rf_ble_mode;
 /*---------------------------------------------------------------------------*/
 /* RF Core API commands */
-extern rfc_CMD_BLE5_RADIO_SETUP_t   rf_cmd_ble5_radio_setup;
-extern rfc_ble5AdvAuxPar_t          rf_ble5_adv_aux_par;
-extern rfc_CMD_BLE5_ADV_AUX_t       rf_cmd_ble5_adv_aux;
+extern rfc_CMD_BLE5_RADIO_SETUP_t rf_ble_cmd_radio_setup;
+extern rfc_bleAdvPar_t            rf_ble_adv_par;
+extern rfc_CMD_BLE5_ADV_NC_t      rf_ble_cmd_ble_adv_nc;
 /*---------------------------------------------------------------------------*/
 /* RF Core API Overrides */
-extern uint32_t                     rf_ble_overrides_common[];
-extern uint32_t                     rf_ble_overrides_1mbps[];
-extern uint32_t                     rf_ble_overrides_2mbps[];
-extern uint32_t                     rf_ble_overrides_coded[];
+extern uint32_t                   rf_ble_overrides_common[];
+extern uint32_t                   rf_ble_overrides_1mbps[];
+extern uint32_t                   rf_ble_overrides_2mbps[];
+extern uint32_t                   rf_ble_overrides_coded[];
 /*---------------------------------------------------------------------------*/
 #endif /* BLE_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

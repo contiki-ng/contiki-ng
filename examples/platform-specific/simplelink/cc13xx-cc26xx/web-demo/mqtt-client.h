@@ -28,11 +28,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
- *     Header file for the CC26xx web demo MQTT client functionality
+ *     Header file for the CC13xx/CC26xx web demo MQTT client functionality
  */
 /*---------------------------------------------------------------------------*/
 #ifndef MQTT_CLIENT_H_

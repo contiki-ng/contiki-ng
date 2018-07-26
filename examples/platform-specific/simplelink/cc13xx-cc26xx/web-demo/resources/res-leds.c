@@ -29,20 +29,20 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
- *      CoAP resource handler for the CC26xx LEDs. Slightly modified copy of
+ *      CoAP resource handler for the CC13xx/CC26xx LEDs. Slightly modified copy of
  *      the one found in Contiki's original CoAP example.
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch> (original)
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "coap-engine.h"
 #include "dev/leds.h"
-
+#include "net/app-layer/coap/coap-engine.h"
+/*---------------------------------------------------------------------------*/
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 static void

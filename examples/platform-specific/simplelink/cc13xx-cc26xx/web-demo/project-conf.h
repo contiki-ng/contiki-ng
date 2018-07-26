@@ -31,27 +31,36 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
+/* Platform configuration */
+#define BOARD_CONF_SENSORS_DISABLE                  1
+#define WATCHDOG_CONF_DISABLE                       1
+/*---------------------------------------------------------------------------*/
 /* Change to match your configuration */
-#define IEEE802154_CONF_PANID            0xABCD
-#define IEEE802154_CONF_DEFAULT_CHANNEL      26
-#define RF_BLE_CONF_ENABLED                   1
+#define IEEE802154_CONF_PANID                       0xABCD
+#define IEEE802154_CONF_DEFAULT_CHANNEL             25
+#define RF_CONF_MODE                                RF_MODE_2_4_GHZ
+#define RF_CONF_BLE_BEACON_ENABLE                   1
+/*---------------------------------------------------------------------------*/
+/* TI drivers configuration */
+#define TI_SPI_CONF_ENABLE                          1
+#define TI_I2C_CONF_ENABLE                          0
 /*---------------------------------------------------------------------------*/
 
 /* Enable TCP */
 #define UIP_CONF_TCP 1
 
 /* Enable/Disable Components of this Demo */
-#define CC26XX_WEB_DEMO_CONF_MQTT_CLIENT      1
-#define CC26XX_WEB_DEMO_CONF_6LBR_CLIENT      ROUTING_CONF_RPL_CLASSIC
-#define CC26XX_WEB_DEMO_CONF_COAP_SERVER      1
-#define CC26XX_WEB_DEMO_CONF_NET_UART         1
+#define WEB_DEMO_CONF_MQTT_CLIENT      1
+#define WEB_DEMO_CONF_6LBR_CLIENT      ROUTING_CONF_RPL_CLASSIC
+#define WEB_DEMO_CONF_COAP_SERVER      1
+#define WEB_DEMO_CONF_NET_UART         1
 
 /*
  * ADC sensor functionality. To test this, an external voltage source should be
  * connected to DIO23
- * Enable/Disable DIO23 ADC reading by setting CC26XX_WEB_DEMO_CONF_ADC_DEMO
+ * Enable/Disable DIO23 ADC reading by setting WEB_DEMO_CONF_ADC_DEMO
  */
-#define CC26XX_WEB_DEMO_CONF_ADC_DEMO         0
+#define WEB_DEMO_CONF_ADC_DEMO         0
 /*---------------------------------------------------------------------------*/
 /*
  * Change to 1 if you are using an older CC2650 Sensortag (look for Rev: 1.2

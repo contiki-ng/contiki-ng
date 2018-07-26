@@ -69,7 +69,7 @@ value(int type)
 {
   if(enabled == SENSOR_STATUS_DISABLED) {
     PRINTF("Sensor Disabled\n");
-    return 0;
+    return BATMON_SENSOR_READING_ERROR;
   }
 
   switch(type) {
@@ -77,7 +77,7 @@ value(int type)
   case BATMON_SENSOR_TYPE_VOLT: return (int)AONBatMonBatteryVoltageGet();
   default:
     PRINTF("Invalid type\n");
-    return 0;
+    return BATMON_SENSOR_READING_ERROR;
   }
 }
 /*---------------------------------------------------------------------------*/

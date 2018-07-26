@@ -31,25 +31,31 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
-/* Change to match your configuration */
-#define IEEE802154_CONF_PANID            0xABCD
-#define IEEE802154_CONF_DEFAULT_CHANNEL      25
+/* Platform configuration */
+#define BOARD_CONF_SENSORS_DISABLE                  1
+#define WATCHDOG_CONF_DISABLE                       1
 /*---------------------------------------------------------------------------*/
-
-/* Enable the ROM bootloader */
-#define ROM_BOOTLOADER_ENABLE                 1
+/* Nestack configuration */
+#define IEEE802154_CONF_PANID                       0xABCD
+#define IEEE802154_CONF_DEFAULT_CHANNEL             25
+//#define RF_CONF_MODE                                RF_MODE_SUB_1_GHZ
+#define RF_CONF_MODE                                RF_MODE_2_4_GHZ
+#define RF_CONF_BLE_BEACON_ENABLE                   0
+/*---------------------------------------------------------------------------*/
+/* TI drivers configuration */
+#define TI_SPI_CONF_ENABLE                          0
+#define TI_I2C_CONF_ENABLE                          0
 /*---------------------------------------------------------------------------*/
 /* For very sleepy operation */
-#define RF_BLE_CONF_ENABLED                   0
-#define UIP_DS6_CONF_PERIOD        CLOCK_SECOND
-#define UIP_CONF_TCP                          0
-#define RPL_CONF_LEAF_ONLY                    1
+#define UIP_DS6_CONF_PERIOD                         CLOCK_SECOND
+#define UIP_CONF_TCP                                0
+#define RPL_CONF_LEAF_ONLY                          1
 
 /*
  * We'll fail without RPL probing, so turn it on explicitly even though it's
  * on by default
  */
-#define RPL_CONF_WITH_PROBING                 1
+#define RPL_CONF_WITH_PROBING                       1
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/

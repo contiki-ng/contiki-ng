@@ -29,7 +29,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
@@ -37,14 +37,13 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "coap-engine.h"
-#include "coap.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/app-layer/coap/coap.h"
+#include "net/app-layer/coap/coap-engine.h"
+/*---------------------------------------------------------------------------*/
 #include "coap-server.h"
-#include "cc26xx-web-demo.h"
-
-#include "ti-lib.h"
-
+#include "web-demo.h"
+/*---------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
@@ -94,7 +93,7 @@ res_get_handler_pref_parent(coap_message_t *request, coap_message_t *response,
   coap_get_header_accept(request, &accept);
 
   memset(def_rt_str, 0, sizeof(def_rt_str));
-  cc26xx_web_demo_ipaddr_sprintf(def_rt_str, sizeof(def_rt_str),
+  web_demo_ipaddr_sprintf(def_rt_str, sizeof(def_rt_str),
                                  uip_ds6_defrt_choose());
 
   if(accept == -1 || accept == TEXT_PLAIN) {

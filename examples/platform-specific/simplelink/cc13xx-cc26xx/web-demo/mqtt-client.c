@@ -28,28 +28,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
- *   MQTT/IBM cloud service client for the CC26XX web demo.
+ *   MQTT/IBM cloud service client for the CC13xx/CC26xx web demo.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "net/routing/routing.h"
-#include "mqtt.h"
-#include "net/ipv6/uip.h"
-#include "net/ipv6/uip-icmp6.h"
+#include "dev/button-hal.h"
+#include "dev/leds.h"
 #include "sys/etimer.h"
 #include "sys/ctimer.h"
+#include "net/routing/routing.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uip-icmp6.h"
+#include "net/app-layer/mqtt/mqtt.h"
 #include "lib/sensors.h"
-#include "dev/button-hal.h"
+/*---------------------------------------------------------------------------*/
 #include "board-peripherals.h"
-#include "cc26xx-web-demo.h"
-#include "dev/leds.h"
-#include "mqtt-client.h"
+/*---------------------------------------------------------------------------*/
+#include "web-demo.h"
 #include "httpd-simple.h"
-
+#include "mqtt-client.h"
+/*---------------------------------------------------------------------------*/
 #include <string.h>
 #include <strings.h>
 /*---------------------------------------------------------------------------*/
@@ -139,16 +141,16 @@ static uip_ip6addr_t def_route;
 /* Parent RSSI functionality */
 extern int def_rt_rssi;
 /*---------------------------------------------------------------------------*/
-const static cc26xx_web_demo_sensor_reading_t *reading;
+const static web_demo_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
 /*---------------------------------------------------------------------------*/
-PROCESS(mqtt_client_process, "CC26XX MQTT Client");
+PROCESS(mqtt_client_process, "CC13xx/CC26xx MQTT Client");
 /*---------------------------------------------------------------------------*/
 static void
 publish_led_off(void *d)
 {
-  leds_off(CC26XX_WEB_DEMO_STATUS_LED);
+  leds_off(WEB_DEMO_STATUS_LED);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -579,14 +581,14 @@ init_config()
   /* Populate configuration with default values */
   memset(conf, 0, sizeof(mqtt_client_config_t));
 
-  memcpy(conf->org_id, CC26XX_WEB_DEMO_DEFAULT_ORG_ID, 11);
-  memcpy(conf->type_id, CC26XX_WEB_DEMO_DEFAULT_TYPE_ID, 7);
-  memcpy(conf->event_type_id, CC26XX_WEB_DEMO_DEFAULT_EVENT_TYPE_ID, 7);
+  memcpy(conf->org_id, WEB_DEMO_DEFAULT_ORG_ID, 11);
+  memcpy(conf->type_id, WEB_DEMO_DEFAULT_TYPE_ID, 7);
+  memcpy(conf->event_type_id, WEB_DEMO_DEFAULT_EVENT_TYPE_ID, 7);
   memcpy(conf->broker_ip, broker_ip, strlen(broker_ip));
-  memcpy(conf->cmd_type, CC26XX_WEB_DEMO_DEFAULT_SUBSCRIBE_CMD_TYPE, 1);
+  memcpy(conf->cmd_type, WEB_DEMO_DEFAULT_SUBSCRIBE_CMD_TYPE, 1);
 
-  conf->broker_port = CC26XX_WEB_DEMO_DEFAULT_BROKER_PORT;
-  conf->pub_interval = CC26XX_WEB_DEMO_DEFAULT_PUBLISH_INTERVAL;
+  conf->broker_port = WEB_DEMO_DEFAULT_BROKER_PORT;
+  conf->pub_interval = WEB_DEMO_DEFAULT_PUBLISH_INTERVAL;
 
   return 1;
 }
@@ -649,7 +651,7 @@ publish(void)
 
   /* Put our Default route's string representation in a buffer */
   memset(def_rt_str, 0, sizeof(def_rt_str));
-  cc26xx_web_demo_ipaddr_sprintf(def_rt_str, sizeof(def_rt_str),
+  web_demo_ipaddr_sprintf(def_rt_str, sizeof(def_rt_str),
                                  uip_ds6_defrt_choose());
 
   len = snprintf(buf_ptr, remaining, ",\"Def Route\":\"%s\",\"RSSI (dBm)\":%d",
@@ -664,9 +666,9 @@ publish(void)
 
   memcpy(&def_route, uip_ds6_defrt_choose(), sizeof(uip_ip6addr_t));
 
-  for(reading = cc26xx_web_demo_sensor_first();
+  for(reading = web_demo_sensor_first();
       reading != NULL; reading = reading->next) {
-    if(reading->publish && reading->raw != CC26XX_SENSOR_READING_ERROR) {
+    if(reading->publish && reading->raw != -1) {
       len = snprintf(buf_ptr, remaining,
                      ",\"%s (%s)\":%s", reading->descr, reading->units,
                      reading->converted);
@@ -751,11 +753,11 @@ state_machine(void)
       DBG("Registered. Connect attempt %u\n", connect_attempt);
       connect_to_broker();
     }
-    etimer_set(&publish_periodic_timer, CC26XX_WEB_DEMO_NET_CONNECT_PERIODIC);
+    etimer_set(&publish_periodic_timer, WEB_DEMO_NET_CONNECT_PERIODIC);
     return;
     break;
   case MQTT_CLIENT_STATE_CONNECTING:
-    leds_on(CC26XX_WEB_DEMO_STATUS_LED);
+    leds_on(WEB_DEMO_STATUS_LED);
     ctimer_set(&ct, CONNECTING_LED_DURATION, publish_led_off, NULL);
     /* Not connected yet. Wait */
     DBG("Connecting (%u)\n", connect_attempt);
@@ -783,7 +785,7 @@ state_machine(void)
         subscribe();
         state = MQTT_CLIENT_STATE_PUBLISHING;
       } else {
-        leds_on(CC26XX_WEB_DEMO_STATUS_LED);
+        leds_on(WEB_DEMO_STATUS_LED);
         ctimer_set(&ct, PUBLISH_LED_ON_DURATION, publish_led_off, NULL);
         publish();
       }
@@ -846,7 +848,7 @@ state_machine(void)
     return;
   case MQTT_CLIENT_STATE_ERROR:
   default:
-    leds_on(CC26XX_WEB_DEMO_STATUS_LED);
+    leds_on(WEB_DEMO_STATUS_LED);
     /*
      * 'default' should never happen.
      *
@@ -866,9 +868,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
   PROCESS_BEGIN();
 
-  printf("CC26XX MQTT Client Process\n");
+  printf("CC13xx/CC26xx MQTT Client Process\n");
 
-  conf = &cc26xx_web_demo_config.mqtt_config;
+  conf = &web_demo_config.mqtt_config;
   if(init_config() != 1) {
     PROCESS_EXIT();
   }
@@ -885,7 +887,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
     if(ev == button_hal_release_event) {
       button_hal_button_t *btn = (button_hal_button_t *)data;
 
-      if(btn->unique_id == CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER) {
+      if(btn->unique_id == WEB_DEMO_MQTT_PUBLISH_TRIGGER) {
         if(state == MQTT_CLIENT_STATE_ERROR) {
           connect_attempt = 1;
           state = MQTT_CLIENT_STATE_REGISTERED;
@@ -904,14 +906,14 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
     if((ev == PROCESS_EVENT_TIMER && data == &publish_periodic_timer) ||
        ev == PROCESS_EVENT_POLL ||
-       ev == cc26xx_web_demo_publish_event ||
+       ev == web_demo_publish_event ||
        (ev == button_hal_release_event &&
         ((button_hal_button_t *)data)->unique_id ==
-        CC26XX_WEB_DEMO_MQTT_PUBLISH_TRIGGER)) {
+        WEB_DEMO_MQTT_PUBLISH_TRIGGER)) {
       state_machine();
     }
 
-    if(ev == cc26xx_web_demo_load_config_defaults) {
+    if(ev == web_demo_load_config_defaults) {
       init_config();
       etimer_set(&publish_periodic_timer, NEW_CONFIG_WAIT_INTERVAL);
     }

@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
@@ -35,20 +35,20 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/routing/routing.h"
 #include "net/ipv6/uip.h"
-#if ROUTING_CONF_RPL_CLASSIC
+#include "net/routing/routing.h"
 #include "net/routing/rpl-classic/rpl.h"
 #include "net/routing/rpl-classic/rpl-private.h"
-#else
-#error The 6LBR client is only meant for RPL Classic. Set MAKE_ROUTING accordingly.
-#endif
-
+/*---------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #include "net/ipv6/uip-debug.h"
+/*---------------------------------------------------------------------------*/
+#if (ROUTING_CONF_RPL_CLASSIC == 0)
+#error "The 6LBR client is only meant for RPL Classic. Set MAKE_ROUTING accordingly."
+#endif
 /*---------------------------------------------------------------------------*/
 #ifndef CETIC_6LBR_NODE_INFO_PORT
 #define CETIC_6LBR_NODE_INFO_PORT 3000

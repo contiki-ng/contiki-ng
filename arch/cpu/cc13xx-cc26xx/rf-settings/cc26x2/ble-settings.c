@@ -122,7 +122,7 @@ uint32_t rf_ble_overrides_coded[] CC_ALIGN(4) =
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_BLE5_RADIO_SETUP: Bluetooth 5 Radio Setup Command for all PHYs */
-rfc_CMD_BLE5_RADIO_SETUP_t RF_cmdBle5RadioSetup =
+rfc_CMD_BLE5_RADIO_SETUP_t rf_ble_cmd_radio_setup =
 {
   .commandNo = CMD_BLE5_RADIO_SETUP,
   .status = IDLE,
@@ -148,8 +148,8 @@ rfc_CMD_BLE5_RADIO_SETUP_t RF_cmdBle5RadioSetup =
   .pRegOverrideCoded = rf_ble_overrides_coded,
 };
 /*---------------------------------------------------------------------------*/
-/* Structure for CMD_BLE5_ADV_AUX.pParams */
-rfc_ble5AdvAuxPar_t rf_ble5_adv_aux_par =
+/* Structure for CMD_BLE5_ADV_NC.pParams */
+rfc_bleAdvPar_t rf_ble_adv_par =
 {
   .pRxQ = 0,
   .rxConfig.bAutoFlushIgnored = 0x0,
@@ -162,32 +162,36 @@ rfc_ble5AdvAuxPar_t rf_ble5_adv_aux_par =
   .rxConfig.bAppendTimestamp = 0x0,
   .advConfig.advFilterPolicy = 0x0,
   .advConfig.deviceAddrType = 0x0,
-  .advConfig.targetAddrType = 0x0,
+  .advConfig.peerAddrType = 0x0,
   .advConfig.bStrictLenFilter = 0x0,
-  .advConfig.bDirected = 0x0,
-  .advConfig.privIgnMode = 0x0,
   .advConfig.rpaMode = 0x0,
-  .__dummy0 = 0x00,
-  .auxPtrTargetType = 0x00,
-  .auxPtrTargetTime = 0x00000000,
-  .pAdvPkt = 0,
-  .pRspPkt = 0,
+  .advLen = 0x18,
+  .scanRspLen = 0x00,
+  .pAdvData = 0,
+  .pScanRspData = 0,
   .pDeviceAddress = 0,
   .pWhiteList = 0,
+  .__dummy0 = 0x0000,
+  .__dummy1 = 0x00,
+  .endTrigger.triggerType = TRIG_NEVER,
+  .endTrigger.bEnaCmd = 0x0,
+  .endTrigger.triggerNo = 0x0,
+  .endTrigger.pastTrig = 0x0,
+  .endTime = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/
-/* CMD_BLE5_ADV_AUX: Bluetooth 5 Secondary Channel Advertiser Command */
-rfc_CMD_BLE5_ADV_AUX_t rf_cmd_ble5_adv_aux =
+/* CMD_BLE5_ADV_NC: Bluetooth 5 Non-Connectable Advertiser Command */
+rfc_CMD_BLE5_ADV_NC_t rf_ble_cmd_ble_adv_nc =
 {
-  .commandNo = CMD_BLE5_ADV_AUX,
-  .status = IDLE,
-  .pNextOp = 0,
+  .commandNo = 0x182D,
+  .status = 0x0000,
+  .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
   .startTime = 0x00000000,
-  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.triggerType = 0x0,
   .startTrigger.bEnaCmd = 0x0,
   .startTrigger.triggerNo = 0x0,
   .startTrigger.pastTrig = 0x0,
-  .condition.rule = COND_NEVER,
+  .condition.rule = 0x1,
   .condition.nSkip = 0x0,
   .channel = 0x8C,
   .whitening.init = 0x51,
@@ -196,8 +200,8 @@ rfc_CMD_BLE5_ADV_AUX_t rf_cmd_ble5_adv_aux =
   .phyMode.coding = 0x0,
   .rangeDelay = 0x00,
   .txPower = 0x0000,
-  .pParams = &rf_ble5_adv_aux_par,
-  .pOutput = 0,
+  .pParams = &rf_ble_adv_par,
+  .pOutput = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
   .tx20Power = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/

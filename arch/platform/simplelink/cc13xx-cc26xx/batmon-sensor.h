@@ -46,6 +46,8 @@
 #define BATMON_SENSOR_TYPE_TEMP    1
 #define BATMON_SENSOR_TYPE_VOLT    2
 /*---------------------------------------------------------------------------*/
+#define BATMON_SENSOR_READING_ERROR     -1
+/*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor batmon_sensor;
 /*---------------------------------------------------------------------------*/
 #endif /* BATMON_SENSOR_H_ */

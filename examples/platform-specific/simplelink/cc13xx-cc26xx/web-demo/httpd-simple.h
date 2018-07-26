@@ -31,7 +31,7 @@
 /*---------------------------------------------------------------------------*/
 /**
  * \file
- *         Header file for the HTTPD of the cc26xx web demo example.
+ *         Header file for the HTTPD of the CC13xx/CC26xx web demo example.
  * \author
  *         Adam Dunkels <adam@sics.se>
  *         Niclas Finne <nfi@sics.se>
@@ -44,7 +44,8 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki-net.h"
 #include "sys/process.h"
-#include "cc26xx-web-demo.h"
+/*---------------------------------------------------------------------------*/
+#include "web-demo.h"
 /*---------------------------------------------------------------------------*/
 /* Ideally a multiple of TCP_MSS */
 #ifdef HTTPD_SIMPLE_CONF_MAIN_BUF_SIZE

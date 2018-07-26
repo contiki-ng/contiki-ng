@@ -28,20 +28,22 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
- *     A CC26XX-specific CoAP server
+ *     A CC13xx/CC26xx-specific CoAP server
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "contiki-net.h"
-#include "coap-engine.h"
+#include "net/app-layer/coap/coap-engine.h"
+/*---------------------------------------------------------------------------*/
 #include "board-peripherals.h"
-#include "rf-core/rf-ble.h"
-#include "cc26xx-web-demo.h"
-
+#include "rf/ble-beacond.h"
+/*---------------------------------------------------------------------------*/
+#include "web-demo.h"
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,7 +62,7 @@ extern coap_resource_t res_device_cfg_reset;
 extern coap_resource_t res_parent_rssi;
 extern coap_resource_t res_parent_ip;
 
-#if RF_BLE_ENABLED
+#if RF_CONF_BLE_BEACON_ENABLE
 extern coap_resource_t res_ble_advd;
 #endif
 
@@ -87,7 +89,7 @@ extern coap_resource_t res_toggle_orange;
 extern coap_resource_t res_toggle_yellow;
 #endif
 
-#if CC26XX_WEB_DEMO_ADC_DEMO
+#if WEB_DEMO_ADC_DEMO
 extern coap_resource_t res_adc_dio23;
 #endif
 /*---------------------------------------------------------------------------*/
@@ -125,18 +127,18 @@ start_board_resources(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-PROCESS(coap_server_process, "CC26XX CoAP Server");
+PROCESS(coap_server_process, "CC13xx/CC26xx CoAP Server");
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_server_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("CC26XX CoAP Server\n");
+  printf("CC13xx/CC26xx CoAP Server\n");
 
   coap_activate_resource(&res_batmon_temp, "sen/batmon/temp");
   coap_activate_resource(&res_batmon_volt, "sen/batmon/voltage");
 
-#if CC26XX_WEB_DEMO_ADC_DEMO
+#if WEB_DEMO_ADC_DEMO
   coap_activate_resource(&res_adc_dio23, "sen/adc/dio23");
 #endif
 
@@ -148,7 +150,7 @@ PROCESS_THREAD(coap_server_process, ev, data)
   coap_activate_resource(&res_parent_rssi, "net/parent/RSSI");
   coap_activate_resource(&res_parent_ip, "net/parent/IPv6");
 
-#if RF_BLE_ENABLED
+#if RF_CONF_BLE_BEACON_ENABLE
   coap_activate_resource(&res_ble_advd, "dev/ble_advd");
 #endif
 

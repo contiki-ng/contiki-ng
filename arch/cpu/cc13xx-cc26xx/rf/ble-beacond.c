@@ -52,9 +52,10 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
-#include "rf/rf.h"
+#include "rf/sched.h"
 #include "rf/ble-addr.h"
 #include "rf/ble-beacond.h"
+#include "rf/tx-power.h"
 #include "rf/settings.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
@@ -75,9 +76,9 @@ typedef enum {
   BLE_ADV_CHANNEL_38 = (1 << 1),
   BLE_ADV_CHANNEL_39 = (1 << 2),
 
-  BLE_ADV_CHANNEL_MASK = (BLE_ADV_CHANNEL_37 |
-                          BLE_ADV_CHANNEL_38 |
-                          BLE_ADV_CHANNEL_39),
+  BLE_ADV_CHANNEL_ALL = (BLE_ADV_CHANNEL_37 |
+                         BLE_ADV_CHANNEL_38 |
+                         BLE_ADV_CHANNEL_39),
 } ble_adv_channel_t;
 
 #define BLE_ADV_CHANNEL_MIN         37
@@ -133,9 +134,9 @@ rf_ble_beacond_init(void)
   /* Should immediately turn off radio if possible */
   rf_params.nInactivityTimeout = 0;
 
-  ble_beacond.handle = ble_open(&rf_params);
+  ble_beacond.rf_handle = ble_open(&rf_params);
 
-  if(ble_beacond.handle == NULL) {
+  if(ble_beacond.rf_handle == NULL) {
     return RF_BLE_BEACOND_ERROR;
   }
 
@@ -143,27 +144,38 @@ rf_ble_beacond_init(void)
 }
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
-rf_ble_beacond_start(clock_time_t interval, const char *name)
+rf_ble_beacond_config(clock_time_t interval, const char *name)
 {
-  if(interval == 0) {
-    return RF_BLE_BEACOND_ERROR;
+  rf_ble_beacond_result_t res;
+
+  res = RF_BLE_BEACOND_ERROR;
+
+  if(interval > 0) {
+    ble_beacond.ble_adv_interval = interval;
+
+    res = RF_BLE_BEACOND_OK;
   }
 
-  if(name == NULL) {
-    return RF_BLE_BEACOND_ERROR;
+  if(name != NULL) {
+    const size_t name_len = strlen(name);
+
+    if((name_len == 0) || (name_len >= BLE_ADV_NAME_BUF_LEN)) {
+      ble_beacond.adv_name_len = name_len;
+      memcpy(ble_beacond.adv_name, name, name_len);
+
+      res = RF_BLE_BEACOND_OK;
+    }
   }
 
-  ble_beacond.ble_adv_interval = interval;
-
-  const size_t name_len = strlen(name);
-
-  if((name_len == 0) ||
-     (name_len >= BLE_ADV_NAME_BUF_LEN)) {
-    return RF_BLE_BEACOND_ERROR;
+  return res;
+}
+/*---------------------------------------------------------------------------*/
+rf_ble_beacond_result_t
+rf_ble_beacond_start(void)
+{
+  if(ble_beacond.is_active) {
+    return RF_BLE_BEACOND_OK;
   }
-
-  ble_beacond.adv_name_len = name_len;
-  memcpy(ble_beacond.adv_name, name, name_len);
 
   ble_beacond.is_active = true;
 
@@ -175,6 +187,10 @@ rf_ble_beacond_start(clock_time_t interval, const char *name)
 rf_ble_beacond_result_t
 rf_ble_beacond_stop(void)
 {
+  if(!ble_beacond.is_active) {
+    return RF_BLE_BEACOND_OK;
+  }
+
   ble_beacond.is_active = false;
 
   process_exit(&ble_beacond_process);
@@ -197,7 +213,7 @@ rf_ble_set_tx_power(int8_t dbm)
     return RADIO_RESULT_INVALID_VALUE;
   }
 
-  res = rf_set_tx_power(ble_beacond.rf_handle, TX_POWER_TABLE, dbm);
+  res = rf_set_tx_power(ble_beacond.rf_handle, ble_tx_power_table, dbm);
 
   return (res == RF_RESULT_OK)
          ? RF_BLE_BEACOND_OK
@@ -210,7 +226,7 @@ rf_ble_get_tx_power(void)
   rf_result_t res;
 
   int8_t dbm;
-  res = rf_get_tx_power(ble_beacond.rf_handle, TX_POWER_TABLE, &dbm);
+  res = rf_get_tx_power(ble_beacond.rf_handle, ble_tx_power_table, &dbm);
 
   if(res != RF_RESULT_OK) {
     return RF_TxPowerTable_INVALID_DBM;
@@ -254,8 +270,8 @@ PROCESS_THREAD(ble_beacond_process, ev, data)
   PROCESS_BEGIN();
 
   while(1) {
-    etimer_set(&beacond_config.ble_adv_et, beacond_config.ble_adv_interval);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&beacond_config.ble_adv_et) ||
+    etimer_set(&ble_beacond.ble_adv_et, ble_beacond.ble_adv_interval);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ble_beacond.ble_adv_et) ||
                              (ev == PROCESS_EVENT_EXIT));
 
     if(ev == PROCESS_EVENT_EXIT) {
@@ -266,25 +282,25 @@ PROCESS_THREAD(ble_beacond_process, ev, data)
     len = 0;
 
     /* Device info */
-    beacond_config.tx_buf[len++] = (uint8_t)0x02;          /* 2 bytes */
-    beacond_config.tx_buf[len++] = (uint8_t)BLE_ADV_TYPE_DEVINFO;
-    beacond_config.tx_buf[len++] = (uint8_t)0x1A;          /* LE general discoverable + BR/EDR */
-    beacond_config.tx_buf[len++] = (uint8_t)beacond_config.adv_name_len;
-    beacond_config.tx_buf[len++] = (uint8_t)BLE_ADV_TYPE_NAME;
+    ble_beacond.tx_buf[len++] = (uint8_t)0x02;          /* 2 bytes */
+    ble_beacond.tx_buf[len++] = (uint8_t)BLE_ADV_TYPE_DEVINFO;
+    ble_beacond.tx_buf[len++] = (uint8_t)0x1A;          /* LE general discoverable + BR/EDR */
+    ble_beacond.tx_buf[len++] = (uint8_t)ble_beacond.adv_name_len;
+    ble_beacond.tx_buf[len++] = (uint8_t)BLE_ADV_TYPE_NAME;
 
-    memcpy(beacond_config.tx_buf + len, beacond_config.adv_name, beacond_config.adv_name_len);
-    len += beacond_config.adv_name_len;
+    memcpy(ble_beacond.tx_buf + len, ble_beacond.adv_name, ble_beacond.adv_name_len);
+    len += ble_beacond.adv_name_len;
 
     /*
      * Send BLE_ADV_MESSAGES beacon bursts. Each burst on all three
      * channels, with a BLE_ADV_DUTY_CYCLE interval between bursts
      */
-    ble_beacon_burst(BLE_ADV_CHANNEL_ALL, beacond_config.tx_buf, len);
+    ble_beacon_burst(BLE_ADV_CHANNEL_ALL, ble_beacond.tx_buf, len);
     for(i = 1; i < BLE_ADV_MESSAGES; ++i) {
-      etimer_set(&beacond_config.ble_adv_et, BLE_ADV_DUTY_CYCLE);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ble_adv_et));
+      etimer_set(&ble_beacond.ble_adv_et, BLE_ADV_DUTY_CYCLE);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ble_beacond.ble_adv_et));
 
-      ble_beacon_burst(BLE_ADV_CHANNEL_ALL, beacond_config.tx_buf, len);
+      ble_beacon_burst(BLE_ADV_CHANNEL_ALL, ble_beacond.tx_buf, len);
     }
   }
   PROCESS_END();
@@ -299,10 +315,19 @@ rf_ble_beacond_init(void)
 }
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
-rf_ble_beacond_start(clock_time_t interval, const char *name)
+rf_ble_beacond_config(clock_time_t interval, const char *name)
+{
+  (void)interval;
+  (void)name;
+  return RF_BLE_BEACOND_DISABLED;
+}
+/*---------------------------------------------------------------------------*/
+rf_ble_beacond_result_t
+rf_ble_beacond_start(void)
 {
   return RF_BLE_BEACOND_DISABLED;
 }
+
 /*---------------------------------------------------------------------------*/
 rf_ble_beacond_result_t
 rf_ble_beacond_stop(void)
@@ -319,6 +344,7 @@ rf_ble_is_active(void)
 rf_ble_beacond_result_t
 rf_ble_set_tx_power(int8_t power)
 {
+  (void)power;
   return RF_BLE_BEACOND_DISABLED;
 }
 /*---------------------------------------------------------------------------*/

@@ -28,39 +28,43 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
- *   Main module for the CC26XX web demo. Activates on-device resources,
+ *   Main module for the CC13xx/CC26xx web demo. Activates on-device resources,
  *   takes sensor readings periodically and caches them for all other modules
  *   to use.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "contiki-net.h"
-#include "coap-engine.h"
-#include "board-peripherals.h"
-#include "lib/sensors.h"
-#include "lib/list.h"
+#include "dev/button-hal.h"
+#include "dev/ext-flash/ext-flash.h"
 #include "sys/process.h"
 #include "net/ipv6/sicslowpan.h"
-#include "dev/button-hal.h"
+#include "net/app-layer/coap/coap-engine.h"
+#include "lib/sensors.h"
+#include "lib/list.h"
+/*---------------------------------------------------------------------------*/
+#include <Board.h>
+#include <ti/drivers/ADC.h>
+/*---------------------------------------------------------------------------*/
+#include "board-peripherals.h"
 #include "batmon-sensor.h"
+/*---------------------------------------------------------------------------*/
+#include "web-demo.h"
 #include "httpd-simple.h"
-#include "cc26xx-web-demo.h"
 #include "mqtt-client.h"
 #include "coap-server.h"
-
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-
-#include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
 PROCESS_NAME(cetic_6lbr_client_process);
-PROCESS(cc26xx_web_demo_process, "CC26XX Web Demo");
+PROCESS(web_demo_process, "CC13xx/CC26xx Web Demo");
 /*---------------------------------------------------------------------------*/
 /*
  * Update sensor readings in a staggered fashion every SENSOR_READING_PERIOD
@@ -76,101 +80,101 @@ struct ctimer bmp_timer, hdc_timer, tmp_timer, opt_timer, mpu_timer;
 #endif
 /*---------------------------------------------------------------------------*/
 /* Provide visible feedback via LEDS while searching for a network */
-#define NO_NET_LED_DURATION        (CC26XX_WEB_DEMO_NET_CONNECT_PERIODIC >> 1)
+#define NO_NET_LED_DURATION        (WEB_DEMO_NET_CONNECT_PERIODIC >> 1)
 
 static struct etimer et;
 static struct ctimer ct;
 /*---------------------------------------------------------------------------*/
 /* Parent RSSI functionality */
-#if CC26XX_WEB_DEMO_READ_PARENT_RSSI
+#if WEB_DEMO_READ_PARENT_RSSI
 static struct uip_icmp6_echo_reply_notification echo_reply_notification;
 static struct etimer echo_request_timer;
 int def_rt_rssi = 0;
 #endif
 /*---------------------------------------------------------------------------*/
-#if CC26XX_WEB_DEMO_ADC_DEMO
+#if WEB_DEMO_ADC_DEMO
 PROCESS(adc_process, "ADC process");
 
-static uint16_t single_adc_sample;
+static uint_fast16_t single_adc_sample;
 static struct etimer et_adc;
 #endif
 /*---------------------------------------------------------------------------*/
-process_event_t cc26xx_web_demo_publish_event;
-process_event_t cc26xx_web_demo_config_loaded_event;
-process_event_t cc26xx_web_demo_load_config_defaults;
+process_event_t web_demo_publish_event;
+process_event_t web_demo_config_loaded_event;
+process_event_t web_demo_load_config_defaults;
 /*---------------------------------------------------------------------------*/
 /* Saved settings on flash: store, offset, magic */
 #define CONFIG_FLASH_OFFSET        0
 #define CONFIG_MAGIC      0xCC265002
 
-cc26xx_web_demo_config_t cc26xx_web_demo_config;
+web_demo_config_t web_demo_config;
 /*---------------------------------------------------------------------------*/
 /* A cache of sensor values. Updated periodically or upon key press */
 LIST(sensor_list);
 /*---------------------------------------------------------------------------*/
 /* The objects representing sensors used in this demo */
 #define DEMO_SENSOR(name, type, descr, xml_element, form_field, units) \
-  cc26xx_web_demo_sensor_reading_t name##_reading = \
+  web_demo_sensor_reading_t name##_reading = \
   { NULL, 0, 0, descr, xml_element, form_field, units, type, 1, 1 }
 
-/* CC26xx sensors */
-DEMO_SENSOR(batmon_temp, CC26XX_WEB_DEMO_SENSOR_BATMON_TEMP,
+/* CC13xx/CC26xx sensors */
+DEMO_SENSOR(batmon_temp, WEB_DEMO_SENSOR_BATMON_TEMP,
             "Battery Temp", "battery-temp", "batmon_temp",
-            CC26XX_WEB_DEMO_UNIT_TEMP);
-DEMO_SENSOR(batmon_volt, CC26XX_WEB_DEMO_SENSOR_BATMON_VOLT,
+            WEB_DEMO_UNIT_TEMP);
+DEMO_SENSOR(batmon_volt, WEB_DEMO_SENSOR_BATMON_VOLT,
             "Battery Volt", "battery-volt", "batmon_volt",
-            CC26XX_WEB_DEMO_UNIT_VOLT);
+            WEB_DEMO_UNIT_VOLT);
 
-#if CC26XX_WEB_DEMO_ADC_DEMO
-DEMO_SENSOR(adc_dio23, CC26XX_WEB_DEMO_SENSOR_ADC_DIO23,
+#if WEB_DEMO_ADC_DEMO
+DEMO_SENSOR(adc_dio23, WEB_DEMO_SENSOR_ADC_DIO23,
             "ADC DIO23", "adc-dio23", "adc_dio23",
-            CC26XX_WEB_DEMO_UNIT_VOLT);
+            WEB_DEMO_UNIT_VOLT);
 #endif
 
 /* Sensortag sensors */
 #if BOARD_SENSORTAG
-DEMO_SENSOR(bmp_pres, CC26XX_WEB_DEMO_SENSOR_BMP_PRES,
+DEMO_SENSOR(bmp_pres, WEB_DEMO_SENSOR_BMP_PRES,
             "Air Pressure", "air-pressure", "bmp_pres",
-            CC26XX_WEB_DEMO_UNIT_PRES);
-DEMO_SENSOR(bmp_temp, CC26XX_WEB_DEMO_SENSOR_BMP_TEMP,
+            WEB_DEMO_UNIT_PRES);
+DEMO_SENSOR(bmp_temp, WEB_DEMO_SENSOR_BMP_TEMP,
             "Air Temp", "air-temp", "bmp_temp",
-            CC26XX_WEB_DEMO_UNIT_TEMP);
-DEMO_SENSOR(hdc_temp, CC26XX_WEB_DEMO_SENSOR_HDC_TEMP,
+            WEB_DEMO_UNIT_TEMP);
+DEMO_SENSOR(hdc_temp, WEB_DEMO_SENSOR_HDC_TEMP,
             "HDC Temp", "hdc-temp", "hdc_temp",
-            CC26XX_WEB_DEMO_UNIT_TEMP);
-DEMO_SENSOR(hdc_hum, CC26XX_WEB_DEMO_SENSOR_HDC_HUMIDITY,
+            WEB_DEMO_UNIT_TEMP);
+DEMO_SENSOR(hdc_hum, WEB_DEMO_SENSOR_HDC_HUMIDITY,
             "HDC Humidity", "hdc-humidity", "hdc_hum",
-            CC26XX_WEB_DEMO_UNIT_HUMIDITY);
-DEMO_SENSOR(tmp_amb, CC26XX_WEB_DEMO_SENSOR_TMP_AMBIENT,
+            WEB_DEMO_UNIT_HUMIDITY);
+DEMO_SENSOR(tmp_amb, WEB_DEMO_SENSOR_TMP_AMBIENT,
             "Ambient Temp", "ambient-temp", "tmp_amb",
-            CC26XX_WEB_DEMO_UNIT_TEMP);
-DEMO_SENSOR(tmp_obj, CC26XX_WEB_DEMO_SENSOR_TMP_OBJECT,
+            WEB_DEMO_UNIT_TEMP);
+DEMO_SENSOR(tmp_obj, WEB_DEMO_SENSOR_TMP_OBJECT,
             "Object Temp", "object-temp", "tmp_obj",
-            CC26XX_WEB_DEMO_UNIT_TEMP);
-DEMO_SENSOR(opt, CC26XX_WEB_DEMO_SENSOR_OPT_LIGHT,
+            WEB_DEMO_UNIT_TEMP);
+DEMO_SENSOR(opt, WEB_DEMO_SENSOR_OPT_LIGHT,
             "Light", "light", "light",
-            CC26XX_WEB_DEMO_UNIT_LIGHT);
+            WEB_DEMO_UNIT_LIGHT);
 
 /* MPU Readings */
-DEMO_SENSOR(mpu_acc_x, CC26XX_WEB_DEMO_SENSOR_MPU_ACC_X,
+DEMO_SENSOR(mpu_acc_x, WEB_DEMO_SENSOR_MPU_ACC_X,
             "Acc X", "acc-x", "acc_x",
-            CC26XX_WEB_DEMO_UNIT_ACC);
-DEMO_SENSOR(mpu_acc_y, CC26XX_WEB_DEMO_SENSOR_MPU_ACC_Y,
+            WEB_DEMO_UNIT_ACC);
+DEMO_SENSOR(mpu_acc_y, WEB_DEMO_SENSOR_MPU_ACC_Y,
             "Acc Y", "acc-y", "acc_y",
-            CC26XX_WEB_DEMO_UNIT_ACC);
-DEMO_SENSOR(mpu_acc_z, CC26XX_WEB_DEMO_SENSOR_MPU_ACC_Z,
+            WEB_DEMO_UNIT_ACC);
+DEMO_SENSOR(mpu_acc_z, WEB_DEMO_SENSOR_MPU_ACC_Z,
             "Acc Z", "acc-z", "acc_z",
-            CC26XX_WEB_DEMO_UNIT_ACC);
+            WEB_DEMO_UNIT_ACC);
 
-DEMO_SENSOR(mpu_gyro_x, CC26XX_WEB_DEMO_SENSOR_MPU_GYRO_X,
+DEMO_SENSOR(mpu_gyro_x, WEB_DEMO_SENSOR_MPU_GYRO_X,
             "Gyro X", "gyro-x", "gyro_x",
-            CC26XX_WEB_DEMO_UNIT_GYRO);
-DEMO_SENSOR(mpu_gyro_y, CC26XX_WEB_DEMO_SENSOR_MPU_GYRO_Y,
+            WEB_DEMO_UNIT_GYRO);
+DEMO_SENSOR(mpu_gyro_y, WEB_DEMO_SENSOR_MPU_GYRO_Y,
             "Gyro Y", "gyro-y", "gyro_y",
-            CC26XX_WEB_DEMO_UNIT_GYRO);
-DEMO_SENSOR(mpu_gyro_z, CC26XX_WEB_DEMO_SENSOR_MPU_GYRO_Z,
+            WEB_DEMO_UNIT_GYRO);
+DEMO_SENSOR(mpu_gyro_z, WEB_DEMO_SENSOR_MPU_GYRO_Z,
             "Gyro Z", "gyro-z", "gyro_Z",
-            CC26XX_WEB_DEMO_UNIT_GYRO);
+            WEB_DEMO_UNIT_GYRO);
 #endif
 /*---------------------------------------------------------------------------*/
 #if BOARD_SENSORTAG
@@ -184,7 +188,7 @@ static void init_mpu_reading(void *data);
 static void
 publish_led_off(void *d)
 {
-  leds_off(CC26XX_WEB_DEMO_STATUS_LED);
+  leds_off(WEB_DEMO_STATUS_LED);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -193,7 +197,7 @@ save_config()
   /* Dump current running config to flash */
 #if BOARD_SENSORTAG || BOARD_LAUNCHPAD
   int rv;
-  cc26xx_web_demo_sensor_reading_t *reading = NULL;
+  web_demo_sensor_reading_t *reading = NULL;
 
   rv = ext_flash_open(NULL);
 
@@ -203,25 +207,25 @@ save_config()
     return;
   }
 
-  rv = ext_flash_erase(NULL, CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t));
+  rv = ext_flash_erase(NULL, CONFIG_FLASH_OFFSET, sizeof(web_demo_config_t));
 
   if(!rv) {
     printf("Error erasing flash\n");
   } else {
-    cc26xx_web_demo_config.magic = CONFIG_MAGIC;
-    cc26xx_web_demo_config.len = sizeof(cc26xx_web_demo_config_t);
-    cc26xx_web_demo_config.sensors_bitmap = 0;
+    web_demo_config.magic = CONFIG_MAGIC;
+    web_demo_config.len = sizeof(web_demo_config_t);
+    web_demo_config.sensors_bitmap = 0;
 
     for(reading = list_head(sensor_list);
         reading != NULL;
         reading = list_item_next(reading)) {
       if(reading->publish) {
-        cc26xx_web_demo_config.sensors_bitmap |= (1 << reading->type);
+        web_demo_config.sensors_bitmap |= (1 << reading->type);
       }
     }
 
-    rv = ext_flash_write(NULL, CONFIG_FLASH_OFFSET, sizeof(cc26xx_web_demo_config_t),
-                         (uint8_t *)&cc26xx_web_demo_config);
+    rv = ext_flash_write(NULL, CONFIG_FLASH_OFFSET, sizeof(web_demo_config_t),
+                         (uint8_t *)&web_demo_config);
     if(!rv) {
       printf("Error saving config\n");
     }
@@ -236,8 +240,8 @@ load_config()
 {
 #if BOARD_SENSORTAG || BOARD_LAUNCHPAD
   /* Read from flash into a temp buffer */
-  cc26xx_web_demo_config_t tmp_cfg;
-  cc26xx_web_demo_sensor_reading_t *reading = NULL;
+  web_demo_config_t tmp_cfg;
+  web_demo_sensor_reading_t *reading = NULL;
 
   int rv = ext_flash_open(NULL);
 
@@ -258,27 +262,27 @@ load_config()
   }
 
   if(tmp_cfg.magic == CONFIG_MAGIC && tmp_cfg.len == sizeof(tmp_cfg)) {
-    memcpy(&cc26xx_web_demo_config, &tmp_cfg, sizeof(cc26xx_web_demo_config));
+    memcpy(&web_demo_config, &tmp_cfg, sizeof(web_demo_config));
   }
 
   for(reading = list_head(sensor_list);
       reading != NULL;
       reading = list_item_next(reading)) {
-    if(cc26xx_web_demo_config.sensors_bitmap & (1 << reading->type)) {
+    if(web_demo_config.sensors_bitmap & (1 << reading->type)) {
       reading->publish = 1;
     } else {
       reading->publish = 0;
-      snprintf(reading->converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+      snprintf(reading->converted, WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
     }
   }
 #endif
 }
 /*---------------------------------------------------------------------------*/
 /* Don't start everything here, we need to dictate order of initialisation */
-AUTOSTART_PROCESSES(&cc26xx_web_demo_process);
+AUTOSTART_PROCESSES(&web_demo_process);
 /*---------------------------------------------------------------------------*/
 int
-cc26xx_web_demo_ipaddr_sprintf(char *buf, uint8_t buf_len,
+web_demo_ipaddr_sprintf(char *buf, uint8_t buf_len,
                                const uip_ipaddr_t *addr)
 {
   uint16_t a;
@@ -303,10 +307,10 @@ cc26xx_web_demo_ipaddr_sprintf(char *buf, uint8_t buf_len,
   return len;
 }
 /*---------------------------------------------------------------------------*/
-const cc26xx_web_demo_sensor_reading_t *
-cc26xx_web_demo_sensor_lookup(int sens_type)
+const web_demo_sensor_reading_t *
+web_demo_sensor_lookup(int sens_type)
 {
-  cc26xx_web_demo_sensor_reading_t *reading = NULL;
+  web_demo_sensor_reading_t *reading = NULL;
 
   for(reading = list_head(sensor_list);
       reading != NULL;
@@ -319,16 +323,16 @@ cc26xx_web_demo_sensor_lookup(int sens_type)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
-const cc26xx_web_demo_sensor_reading_t *
-cc26xx_web_demo_sensor_first()
+const web_demo_sensor_reading_t *
+web_demo_sensor_first()
 {
   return list_head(sensor_list);
 }
 /*---------------------------------------------------------------------------*/
 void
-cc26xx_web_demo_restore_defaults(void)
+web_demo_restore_defaults(void)
 {
-  cc26xx_web_demo_sensor_reading_t *reading = NULL;
+  web_demo_sensor_reading_t *reading = NULL;
 
   leds_on(LEDS_ALL);
 
@@ -338,13 +342,13 @@ cc26xx_web_demo_restore_defaults(void)
     reading->publish = 1;
   }
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+#if WEB_DEMO_MQTT_CLIENT
   process_post_synch(&mqtt_client_process,
-                     cc26xx_web_demo_load_config_defaults, NULL);
+                     web_demo_load_config_defaults, NULL);
 #endif
 
-#if CC26XX_WEB_DEMO_NET_UART
-  process_post_synch(&net_uart_process, cc26xx_web_demo_load_config_defaults,
+#if WEB_DEMO_NET_UART
+  process_post_synch(&net_uart_process, web_demo_load_config_defaults,
                      NULL);
 #endif
 
@@ -362,7 +366,7 @@ defaults_post_handler(char *key, int key_len, char *val, int val_len)
     return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
   }
 
-  cc26xx_web_demo_restore_defaults();
+  web_demo_restore_defaults();
 
   return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
@@ -370,7 +374,7 @@ defaults_post_handler(char *key, int key_len, char *val, int val_len)
 static int
 sensor_readings_handler(char *key, int key_len, char *val, int val_len)
 {
-  cc26xx_web_demo_sensor_reading_t *reading = NULL;
+  web_demo_sensor_reading_t *reading = NULL;
   int rv;
 
   for(reading = list_head(sensor_list);
@@ -384,7 +388,7 @@ sensor_readings_handler(char *key, int key_len, char *val, int val_len)
       /* Be pedantic: only accept 0 and 1, not just any non-zero value */
       if(rv == 0) {
         reading->publish = 0;
-        snprintf(reading->converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+        snprintf(reading->converted, WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
       } else if(rv == 1) {
         reading->publish = 1;
       } else {
@@ -398,7 +402,7 @@ sensor_readings_handler(char *key, int key_len, char *val, int val_len)
   return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
 }
 /*---------------------------------------------------------------------------*/
-#if CC26XX_WEB_DEMO_READ_PARENT_RSSI
+#if WEB_DEMO_READ_PARENT_RSSI
 static int
 ping_interval_post_handler(char *key, int key_len, char *val, int val_len)
 {
@@ -412,12 +416,12 @@ ping_interval_post_handler(char *key, int key_len, char *val, int val_len)
 
   rv = atoi(val);
 
-  if(rv < CC26XX_WEB_DEMO_RSSI_MEASURE_INTERVAL_MIN ||
-     rv > CC26XX_WEB_DEMO_RSSI_MEASURE_INTERVAL_MAX) {
+  if(rv < WEB_DEMO_RSSI_MEASURE_INTERVAL_MIN ||
+     rv > WEB_DEMO_RSSI_MEASURE_INTERVAL_MAX) {
     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
   }
 
-  cc26xx_web_demo_config.def_rt_ping_interval = rv * CLOCK_SECOND;
+  web_demo_config.def_rt_ping_interval = rv * CLOCK_SECOND;
 
   return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
@@ -426,7 +430,7 @@ ping_interval_post_handler(char *key, int key_len, char *val, int val_len)
 HTTPD_SIMPLE_POST_HANDLER(sensor, sensor_readings_handler);
 HTTPD_SIMPLE_POST_HANDLER(defaults, defaults_post_handler);
 
-#if CC26XX_WEB_DEMO_READ_PARENT_RSSI
+#if WEB_DEMO_READ_PARENT_RSSI
 HTTPD_SIMPLE_POST_HANDLER(ping_interval, ping_interval_post_handler);
 /*---------------------------------------------------------------------------*/
 static void
@@ -446,7 +450,7 @@ ping_parent(void)
   }
 
   uip_icmp6_send(uip_ds6_defrt_choose(), ICMP6_ECHO_REQUEST, 0,
-                 CC26XX_WEB_DEMO_ECHO_REQ_PAYLOAD_LEN);
+                 WEB_DEMO_ECHO_REQ_PAYLOAD_LEN);
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -460,30 +464,30 @@ get_batmon_reading(void *data)
 
   if(batmon_temp_reading.publish) {
     value = batmon_sensor.value(BATMON_SENSOR_TYPE_TEMP);
-    if(value != CC26XX_SENSOR_READING_ERROR) {
+    if(value != BATMON_SENSOR_READING_ERROR) {
       batmon_temp_reading.raw = value;
 
       buf = batmon_temp_reading.converted;
-      memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-      snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d", value);
+      memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+      snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d", value);
     }
   }
 
   if(batmon_volt_reading.publish) {
     value = batmon_sensor.value(BATMON_SENSOR_TYPE_VOLT);
-    if(value != CC26XX_SENSOR_READING_ERROR) {
+    if(value != BATMON_SENSOR_READING_ERROR) {
       batmon_volt_reading.raw = value;
 
       buf = batmon_volt_reading.converted;
-      memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-      snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d", (value * 125) >> 5);
+      memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+      snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d", (value * 125) >> 5);
     }
   }
 
   ctimer_set(&batmon_timer, next, get_batmon_reading, NULL);
 }
 /*---------------------------------------------------------------------------*/
-#if CC26XX_WEB_DEMO_ADC_DEMO
+#if WEB_DEMO_ADC_DEMO
 static void
 get_adc_reading(void *data)
 {
@@ -493,8 +497,8 @@ get_adc_reading(void *data)
   if(adc_dio23_reading.publish) {
     value = single_adc_sample;
     buf = adc_dio23_reading.converted;
-    memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-    snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d", (value * 4300) >> 12);
+    memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+    snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d", (value * 4300) >> 12);
   }
 }
 #endif
@@ -502,7 +506,7 @@ get_adc_reading(void *data)
 #if BOARD_SENSORTAG
 /*---------------------------------------------------------------------------*/
 static void
-compare_and_update(cc26xx_web_demo_sensor_reading_t *reading)
+compare_and_update(web_demo_sensor_reading_t *reading)
 {
   if(reading->last == reading->raw) {
     reading->changed = 0;
@@ -536,28 +540,28 @@ get_bmp_reading()
 
   if(bmp_pres_reading.publish) {
     value = bmp_280_sensor.value(BMP_280_SENSOR_TYPE_PRESS);
-    if(value != CC26XX_SENSOR_READING_ERROR) {
+    if(value != BMP_280_READING_ERROR) {
       bmp_pres_reading.raw = value;
 
       compare_and_update(&bmp_pres_reading);
 
       buf = bmp_pres_reading.converted;
-      memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-      snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
+      memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+      snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
                value % 100);
     }
   }
 
   if(bmp_temp_reading.publish) {
     value = bmp_280_sensor.value(BMP_280_SENSOR_TYPE_TEMP);
-    if(value != CC26XX_SENSOR_READING_ERROR) {
+    if(value != BMP_280_READING_ERROR) {
       bmp_temp_reading.raw = value;
 
       compare_and_update(&bmp_temp_reading);
 
       buf = bmp_temp_reading.converted;
-      memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-      snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
+      memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+      snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
                value % 100);
     }
   }
@@ -577,7 +581,7 @@ get_tmp_reading()
 
   if(tmp_amb_reading.publish || tmp_obj_reading.publish) {
     if(tmp_007_sensor.value(TMP_007_SENSOR_TYPE_ALL) ==
-       CC26XX_SENSOR_READING_ERROR) {
+       TMP_007_READING_ERROR) {
 
       SENSORS_DEACTIVATE(tmp_007_sensor);
       ctimer_set(&tmp_timer, next, init_tmp_reading, NULL);
@@ -591,8 +595,8 @@ get_tmp_reading()
     compare_and_update(&tmp_amb_reading);
 
     buf = tmp_amb_reading.converted;
-    memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-    snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%03d", value / 1000,
+    memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+    snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d.%03d", value / 1000,
              value % 1000);
   }
 
@@ -603,8 +607,8 @@ get_tmp_reading()
     compare_and_update(&tmp_obj_reading);
 
     buf = tmp_obj_reading.converted;
-    memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-    snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%03d", value / 1000,
+    memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+    snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d.%03d", value / 1000,
              value % 1000);
   }
 
@@ -623,28 +627,28 @@ get_hdc_reading()
 
   if(hdc_temp_reading.publish) {
     value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_TEMP);
-    if(value != CC26XX_SENSOR_READING_ERROR) {
+    if(value != HDC_1000_READING_ERROR) {
       hdc_temp_reading.raw = value;
 
       compare_and_update(&hdc_temp_reading);
 
       buf = hdc_temp_reading.converted;
-      memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-      snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
+      memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+      snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
                value % 100);
     }
   }
 
   if(hdc_hum_reading.publish) {
     value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMIDITY);
-    if(value != CC26XX_SENSOR_READING_ERROR) {
+    if(value != HDC_1000_READING_ERROR) {
       hdc_hum_reading.raw = value;
 
       compare_and_update(&hdc_hum_reading);
 
       buf = hdc_hum_reading.converted;
-      memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-      snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
+      memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+      snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
                value % 100);
     }
   }
@@ -662,14 +666,14 @@ get_light_reading()
 
   value = opt_3001_sensor.value(0);
 
-  if(value != CC26XX_SENSOR_READING_ERROR) {
+  if(value != OPT_3001_READING_ERROR) {
     opt_reading.raw = value;
 
     compare_and_update(&opt_reading);
 
     buf = opt_reading.converted;
-    memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
-    snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
+    memset(buf, 0, WEB_DEMO_CONVERTED_LEN);
+    snprintf(buf, WEB_DEMO_CONVERTED_LEN, "%d.%02d", value / 100,
              value % 100);
   }
 
@@ -686,42 +690,42 @@ get_mpu_reading()
 
   if(mpu_gyro_x_reading.publish) {
     raw = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_GYRO_X);
-    if(raw != CC26XX_SENSOR_READING_ERROR) {
+    if(raw != MPU_9250_READING_ERROR) {
       mpu_gyro_x_reading.raw = raw;
     }
   }
 
   if(mpu_gyro_y_reading.publish) {
     raw = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_GYRO_Y);
-    if(raw != CC26XX_SENSOR_READING_ERROR) {
+    if(raw != MPU_9250_READING_ERROR) {
       mpu_gyro_y_reading.raw = raw;
     }
   }
 
   if(mpu_gyro_z_reading.publish) {
     raw = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_GYRO_Z);
-    if(raw != CC26XX_SENSOR_READING_ERROR) {
+    if(raw != MPU_9250_READING_ERROR) {
       mpu_gyro_z_reading.raw = raw;
     }
   }
 
   if(mpu_acc_x_reading.publish) {
     raw = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_ACC_X);
-    if(raw != CC26XX_SENSOR_READING_ERROR) {
+    if(raw != MPU_9250_READING_ERROR) {
       mpu_acc_x_reading.raw = raw;
     }
   }
 
   if(mpu_acc_y_reading.publish) {
     raw = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_ACC_Y);
-    if(raw != CC26XX_SENSOR_READING_ERROR) {
+    if(raw != MPU_9250_READING_ERROR) {
       mpu_acc_y_reading.raw = raw;
     }
   }
 
   if(mpu_acc_z_reading.publish) {
     raw = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_ACC_Z);
-    if(raw != CC26XX_SENSOR_READING_ERROR) {
+    if(raw != MPU_9250_READING_ERROR) {
       mpu_acc_z_reading.raw = raw;
     }
   }
@@ -730,37 +734,37 @@ get_mpu_reading()
 
   if(mpu_gyro_x_reading.publish) {
     compare_and_update(&mpu_gyro_x_reading);
-    memset(mpu_gyro_x_reading.converted, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+    memset(mpu_gyro_x_reading.converted, 0, WEB_DEMO_CONVERTED_LEN);
     print_mpu_reading(mpu_gyro_x_reading.raw, mpu_gyro_x_reading.converted);
   }
 
   if(mpu_gyro_y_reading.publish) {
     compare_and_update(&mpu_gyro_y_reading);
-    memset(mpu_gyro_y_reading.converted, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+    memset(mpu_gyro_y_reading.converted, 0, WEB_DEMO_CONVERTED_LEN);
     print_mpu_reading(mpu_gyro_y_reading.raw, mpu_gyro_y_reading.converted);
   }
 
   if(mpu_gyro_z_reading.publish) {
     compare_and_update(&mpu_gyro_z_reading);
-    memset(mpu_gyro_z_reading.converted, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+    memset(mpu_gyro_z_reading.converted, 0, WEB_DEMO_CONVERTED_LEN);
     print_mpu_reading(mpu_gyro_z_reading.raw, mpu_gyro_z_reading.converted);
   }
 
   if(mpu_acc_x_reading.publish) {
     compare_and_update(&mpu_acc_x_reading);
-    memset(mpu_acc_x_reading.converted, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+    memset(mpu_acc_x_reading.converted, 0, WEB_DEMO_CONVERTED_LEN);
     print_mpu_reading(mpu_acc_x_reading.raw, mpu_acc_x_reading.converted);
   }
 
   if(mpu_acc_y_reading.publish) {
     compare_and_update(&mpu_acc_y_reading);
-    memset(mpu_acc_y_reading.converted, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+    memset(mpu_acc_y_reading.converted, 0, WEB_DEMO_CONVERTED_LEN);
     print_mpu_reading(mpu_acc_y_reading.raw, mpu_acc_y_reading.converted);
   }
 
   if(mpu_acc_z_reading.publish) {
     compare_and_update(&mpu_acc_z_reading);
-    memset(mpu_acc_z_reading.converted, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+    memset(mpu_acc_z_reading.converted, 0, WEB_DEMO_CONVERTED_LEN);
     print_mpu_reading(mpu_acc_z_reading.raw, mpu_acc_z_reading.converted);
   }
 
@@ -858,7 +862,7 @@ init_sensors(void)
   list_add(sensor_list, &batmon_temp_reading);
   list_add(sensor_list, &batmon_volt_reading);
 
-#if CC26XX_WEB_DEMO_ADC_DEMO
+#if WEB_DEMO_ADC_DEMO
   list_add(sensor_list, &adc_dio23_reading);
 #endif
 
@@ -885,38 +889,38 @@ init_sensors(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
+PROCESS_THREAD(web_demo_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("CC26XX Web Demo Process\n");
+  printf("CC13xx/CC26xx Web Demo Process\n");
 
   init_sensors();
 
-  cc26xx_web_demo_publish_event = process_alloc_event();
-  cc26xx_web_demo_config_loaded_event = process_alloc_event();
-  cc26xx_web_demo_load_config_defaults = process_alloc_event();
+  web_demo_publish_event = process_alloc_event();
+  web_demo_config_loaded_event = process_alloc_event();
+  web_demo_load_config_defaults = process_alloc_event();
 
   /* Start all other (enabled) processes first */
   process_start(&httpd_simple_process, NULL);
 
-#if CC26XX_WEB_DEMO_COAP_SERVER
+#if WEB_DEMO_COAP_SERVER
   process_start(&coap_server_process, NULL);
 #endif
 
-#if CC26XX_WEB_DEMO_6LBR_CLIENT
+#if WEB_DEMO_6LBR_CLIENT
   process_start(&cetic_6lbr_client_process, NULL);
 #endif
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+#if WEB_DEMO_MQTT_CLIENT
   process_start(&mqtt_client_process, NULL);
 #endif
 
-#if CC26XX_WEB_DEMO_NET_UART
+#if WEB_DEMO_NET_UART
   process_start(&net_uart_process, NULL);
 #endif
 
-#if CC26XX_WEB_DEMO_ADC_DEMO
+#if WEB_DEMO_ADC_DEMO
   process_start(&adc_process, NULL);
 #endif
 
@@ -924,32 +928,32 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
    * Now that processes have set their own config default values, set our
    * own defaults and restore saved config from flash...
    */
-  cc26xx_web_demo_config.sensors_bitmap = 0xFFFFFFFF; /* all on by default */
-  cc26xx_web_demo_config.def_rt_ping_interval =
-    CC26XX_WEB_DEMO_DEFAULT_RSSI_MEAS_INTERVAL;
+  web_demo_config.sensors_bitmap = 0xFFFFFFFF; /* all on by default */
+  web_demo_config.def_rt_ping_interval =
+    WEB_DEMO_DEFAULT_RSSI_MEAS_INTERVAL;
   load_config();
 
   /*
    * Notify all other processes (basically the ones in this demo) that the
    * configuration has been loaded from flash, in case they care
    */
-  process_post(PROCESS_BROADCAST, cc26xx_web_demo_config_loaded_event, NULL);
+  process_post(PROCESS_BROADCAST, web_demo_config_loaded_event, NULL);
 
   init_sensor_readings();
 
   httpd_simple_register_post_handler(&sensor_handler);
   httpd_simple_register_post_handler(&defaults_handler);
 
-#if CC26XX_WEB_DEMO_READ_PARENT_RSSI
+#if WEB_DEMO_READ_PARENT_RSSI
   httpd_simple_register_post_handler(&ping_interval_handler);
 
   def_rt_rssi = 0x8000000;
   uip_icmp6_echo_reply_callback_add(&echo_reply_notification,
                                     echo_reply_handler);
-  etimer_set(&echo_request_timer, CC26XX_WEB_DEMO_NET_CONNECT_PERIODIC);
+  etimer_set(&echo_request_timer, WEB_DEMO_NET_CONNECT_PERIODIC);
 #endif
 
-  etimer_set(&et, CC26XX_WEB_DEMO_NET_CONNECT_PERIODIC);
+  etimer_set(&et, WEB_DEMO_NET_CONNECT_PERIODIC);
 
   /*
    * Update all sensor readings on a configurable sensors_event
@@ -958,33 +962,33 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
   while(1) {
     if(ev == PROCESS_EVENT_TIMER && etimer_expired(&et)) {
       if(uip_ds6_get_global(ADDR_PREFERRED) == NULL) {
-        leds_on(CC26XX_WEB_DEMO_STATUS_LED);
+        leds_on(WEB_DEMO_STATUS_LED);
         ctimer_set(&ct, NO_NET_LED_DURATION, publish_led_off, NULL);
-        etimer_set(&et, CC26XX_WEB_DEMO_NET_CONNECT_PERIODIC);
+        etimer_set(&et, WEB_DEMO_NET_CONNECT_PERIODIC);
       }
     }
 
-#if CC26XX_WEB_DEMO_READ_PARENT_RSSI
+#if WEB_DEMO_READ_PARENT_RSSI
     if(ev == PROCESS_EVENT_TIMER && etimer_expired(&echo_request_timer)) {
       if(uip_ds6_get_global(ADDR_PREFERRED) == NULL) {
-        etimer_set(&echo_request_timer, CC26XX_WEB_DEMO_NET_CONNECT_PERIODIC);
+        etimer_set(&echo_request_timer, WEB_DEMO_NET_CONNECT_PERIODIC);
       } else {
         ping_parent();
-        etimer_set(&echo_request_timer, cc26xx_web_demo_config.def_rt_ping_interval);
+        etimer_set(&echo_request_timer, web_demo_config.def_rt_ping_interval);
       }
     }
 #endif
 
     if(ev == button_hal_release_event &&
        ((button_hal_button_t *)data)->unique_id ==
-       CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
+       WEB_DEMO_SENSOR_READING_TRIGGER) {
       init_sensor_readings();
-      process_post(PROCESS_BROADCAST, cc26xx_web_demo_publish_event, NULL);
+      process_post(PROCESS_BROADCAST, web_demo_publish_event, NULL);
     } else if(ev == button_hal_periodic_event &&
               ((button_hal_button_t *)data)->unique_id ==
-              CC26XX_WEB_DEMO_SENSOR_READING_TRIGGER) {
+              WEB_DEMO_SENSOR_READING_TRIGGER) {
       printf("Restoring defaults!\n");
-      cc26xx_web_demo_restore_defaults();
+      web_demo_restore_defaults();
     } else if(ev == httpd_simple_event_new_config) {
       save_config();
 #if BOARD_SENSORTAG
@@ -1007,48 +1011,36 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-#if CC26XX_WEB_DEMO_ADC_DEMO
+#if WEB_DEMO_ADC_DEMO
 PROCESS_THREAD(adc_process, ev, data)
 {
+  static ADC_Params adc_params;
+  ADC_Handle adc_handle;
+  int_fast16_t res;
+  uint_fast16_t adc_value;
+
   PROCESS_BEGIN();
+
+  ADC_init();
+  ADC_Params_init(&adc_params);
 
   etimer_set(&et_adc, CLOCK_SECOND * 5);
 
   while(1) {
-
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et_adc));
 
-    /* intialisation of ADC */
-    ti_lib_aon_wuc_aux_wakeup_event(AONWUC_AUX_WAKEUP);
-    while(!(ti_lib_aon_wuc_power_status_get() & AONWUC_AUX_POWER_ON));
+    adc_handle = ADC_open(Board_ADC0, &adc_params);
 
-    /*
-     * Enable clock for ADC digital and analog interface (not currently enabled
-     * in driver)
-     */
-    ti_lib_aux_wuc_clock_enable(AUX_WUC_ADI_CLOCK | AUX_WUC_ANAIF_CLOCK |
-                                AUX_WUC_SMPH_CLOCK);
-    while(ti_lib_aux_wuc_clock_status(AUX_WUC_ADI_CLOCK | AUX_WUC_ANAIF_CLOCK |
-                                      AUX_WUC_SMPH_CLOCK)
-          != AUX_WUC_CLOCK_READY);
+    if(adc_handle != NULL) {
+      res = ADC_convert(adc_handle, &single_adc_sample);
 
-    /* Connect AUX IO7 (DIO23, but also DP2 on XDS110) as analog input. */
-    ti_lib_aux_adc_select_input(ADC_COMPB_IN_AUXIO7);
+      if(res == ADC_STATUS_SUCCESS) {
+        single_adc_sample = adc_value;
+        get_adc_reading(NULL);
+      }
 
-    /* Set up ADC range, AUXADC_REF_FIXED = nominally 4.3 V */
-    ti_lib_aux_adc_enable_sync(AUXADC_REF_FIXED, AUXADC_SAMPLE_TIME_2P7_US,
-                               AUXADC_TRIGGER_MANUAL);
-
-    /* Trigger ADC converting */
-    ti_lib_aux_adc_gen_manual_trigger();
-
-    /* Read value */
-    single_adc_sample = ti_lib_aux_adc_read_fifo();
-
-    /* Shut the adc down */
-    ti_lib_aux_adc_disable();
-
-    get_adc_reading(NULL);
+      ADC_close(adc_handle);
+    }
 
     etimer_reset(&et_adc);
   }

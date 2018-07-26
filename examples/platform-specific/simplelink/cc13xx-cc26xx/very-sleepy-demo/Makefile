@@ -1,10 +1,12 @@
 CONTIKI_PROJECT = very-sleepy-demo
 
-PLATFORMS_ONLY = srf06-cc26xx
+PLATFORMS_ONLY = simplelink
 
-all: $(CONTIKI_PROJECT)
+all: $(CONTIKI_PROJECT).$(TARGET)
+
+SMALL = 1
 
 MODULES += os/net/app-layer/coap
 
-CONTIKI = ../../../..
+CONTIKI = ../../../../..
 include $(CONTIKI)/Makefile.include

@@ -350,7 +350,7 @@
  * \brief  Enable or disable SPI driver.
  */
 #ifndef TI_SPI_CONF_ENABLE
-#define TI_SPI_CONF_ENABLE                  0
+#define TI_SPI_CONF_ENABLE                  1
 #endif
 
 /**
@@ -371,7 +371,7 @@
  * \brief  Enable or disable I2C driver.
  */
 #ifndef TI_I2C_CONF_ENABLE
-#define TI_I2C_CONF_ENABLE                  0
+#define TI_I2C_CONF_ENABLE                  1
 #endif
 
 /**
@@ -439,7 +439,7 @@
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
 
 /* CC13x0/CC26x0 only has two SPI interface: SPI0 and SPI1. */
-#define SPI_CONF_CONTROLLER_COUNT           (SPI0_ENABLED + SPI1_IS_ENABLED)
+#define SPI_CONF_CONTROLLER_COUNT           (SPI0_IS_ENABLED + SPI1_IS_ENABLED)
 
 #endif /* DeviceFamily_PARENT */
 

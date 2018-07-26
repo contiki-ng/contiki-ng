@@ -29,49 +29,44 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
- *  CoAP resource handler for CC26XX software and hardware version
+ *  CoAP resource handler for CC13xx/CC26xx software and hardware version
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "coap-engine.h"
-#include "coap.h"
 #include "sys/clock.h"
+#include "net/app-layer/coap/coap.h"
+#include "net/app-layer/coap/coap-engine.h"
+/*---------------------------------------------------------------------------*/
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/chipinfo.h)
+/*---------------------------------------------------------------------------*/
+#include "web-demo.h"
 #include "coap-server.h"
-#include "cc26xx-web-demo.h"
-
-#include "ti-lib.h"
-
+/*---------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-static uint16_t
+static const char *
 detect_chip(void)
 {
-  if(ti_lib_chipinfo_chip_family_is_cc26xx()) {
-    if(ti_lib_chipinfo_supports_ieee_802_15_4() == true) {
-      if(ti_lib_chipinfo_supports_ble() == true) {
-        return 2650;
-      } else {
-        return 2630;
-      }
-    } else {
-      return 2640;
-    }
-  } else if(ti_lib_chipinfo_chip_family_is_cc13xx()) {
-    if(ti_lib_chipinfo_supports_ble() == false &&
-       ti_lib_chipinfo_supports_ieee_802_15_4() == false) {
-      return 1310;
-    } else if(ti_lib_chipinfo_supports_ble() == true &&
-        ti_lib_chipinfo_supports_ieee_802_15_4() == true) {
-      return 1350;
-    }
+  switch(ChipInfo_GetChipType()) {
+  case CHIP_TYPE_CC1310:  return "CC1310";
+  case CHIP_TYPE_CC1350:  return "CC1350";
+  case CHIP_TYPE_CC2620:  return "CC2620";
+  case CHIP_TYPE_CC2630:  return "CC2630";
+  case CHIP_TYPE_CC2640:  return "CC2640";
+  case CHIP_TYPE_CC2650:  return "CC2650";
+  case CHIP_TYPE_CC2642:  return "CC2642";
+  case CHIP_TYPE_CC2652:  return "CC2652";
+  case CHIP_TYPE_CC1312:  return "CC1312";
+  case CHIP_TYPE_CC1352:  return "CC1352";
+  case CHIP_TYPE_CC1352P: return "CC1352P";
+  default:                return "Unknown";
   }
-
-  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -80,26 +75,26 @@ res_get_handler_hw(coap_message_t *request, coap_message_t *response,
                    uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  uint16_t chip = detect_chip();
+  const char *chip = detect_chip();
 
   coap_get_header_accept(request, &accept);
 
   if(accept == -1 || accept == TEXT_PLAIN) {
     coap_set_header_content_format(response, TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s on CC%u", BOARD_STRING,
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s on %s", BOARD_STRING,
              chip);
 
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
   } else if(accept == APPLICATION_JSON) {
     coap_set_header_content_format(response, APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"HW Ver\":\"%s on CC%u\"}",
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{\"HW Ver\":\"%s on %s\"}",
              BOARD_STRING, chip);
 
     coap_set_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == APPLICATION_XML) {
     coap_set_header_content_format(response, APPLICATION_XML);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE,
-             "<hw-ver val=\"%s on CC%u\"/>", BOARD_STRING,
+             "<hw-ver val=\"%s on %s\"/>", BOARD_STRING,
              chip);
 
     coap_set_payload(response, buffer, strlen((char *)buffer));
@@ -181,7 +176,7 @@ res_post_handler_cfg_reset(coap_message_t *request, coap_message_t *response,
                            uint8_t *buffer,
                            uint16_t preferred_size, int32_t *offset)
 {
-  cc26xx_web_demo_restore_defaults();
+  web_demo_restore_defaults();
 }
 /*---------------------------------------------------------------------------*/
 RESOURCE(res_device_sw,

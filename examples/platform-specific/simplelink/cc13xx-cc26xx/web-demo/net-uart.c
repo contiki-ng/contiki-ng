@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
@@ -44,7 +44,7 @@
  *
  *     (REMOTE_PORT should be the actual value of the define below, e.g. 7777)
  *
- *     Once netcat is up and listening, type something to the CC26xx's terminal
+ *     Once netcat is up and listening, type something to the CC13xx/CC26xx's terminal
  *     Bear in mind that the datagram will only be sent after a 0x0a (LF) char
  *     has been received. Therefore, if you are on Win, do NOT use PuTTY for
  *     this purpose, since it does not send 0x0a as part of the line end. On
@@ -57,18 +57,18 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "sys/cc.h"
 #include "sys/process.h"
 #include "dev/serial-line.h"
-#include "dev/cc26xx-uart.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-udp-packet.h"
 #include "net/ipv6/uiplib.h"
+/*---------------------------------------------------------------------------*/
+#include "uart0-arch.h"
+/*---------------------------------------------------------------------------*/
 #include "net-uart.h"
 #include "httpd-simple.h"
-#include "sys/cc.h"
-
-#include "ti-lib.h"
-
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
 #include <strings.h>
@@ -149,13 +149,13 @@ net_input(void)
 static void
 release_uart(void)
 {
-  cc26xx_uart_set_input(NULL);
+  uart0_set_callback(NULL);
 }
 /*---------------------------------------------------------------------------*/
 static void
 keep_uart_on(void)
 {
-  cc26xx_uart_set_input(serial_line_input_byte);
+  uart0_set_callback(serial_line_input_byte);
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -172,7 +172,7 @@ remote_port_post_handler(char *key, int key_len, char *val, int val_len)
   rv = atoi(val);
 
   if(rv <= 65535 && rv > 0) {
-    cc26xx_web_demo_config.net_uart.remote_port = (uint16_t)rv;
+    web_demo_config.net_uart.remote_port = (uint16_t)rv;
   } else {
     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
   }
@@ -196,9 +196,9 @@ remote_ipv6_post_handler(char *key, int key_len, char *val, int val_len)
     rv = HTTPD_SIMPLE_POST_HANDLER_ERROR;
   } else {
     if(set_new_ip_address(val)) {
-      memset(cc26xx_web_demo_config.net_uart.remote_address, 0,
+      memset(web_demo_config.net_uart.remote_address, 0,
              NET_UART_IP_ADDR_STRLEN);
-      memcpy(cc26xx_web_demo_config.net_uart.remote_address, val, val_len);
+      memcpy(web_demo_config.net_uart.remote_address, val, val_len);
       rv = HTTPD_SIMPLE_POST_HANDLER_OK;
     }
   }
@@ -221,10 +221,10 @@ on_off_post_handler(char *key, int key_len, char *val, int val_len)
 
   /* Be pedantic: only accept 0 and 1, not just any non-zero value */
   if(rv == 0) {
-    cc26xx_web_demo_config.net_uart.enable = 0;
+    web_demo_config.net_uart.enable = 0;
     release_uart();
   } else if(rv == 1) {
-    cc26xx_web_demo_config.net_uart.enable = 1;
+    web_demo_config.net_uart.enable = 1;
     keep_uart_on();
   } else {
     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
@@ -244,17 +244,17 @@ set_config_defaults(void)
   set_dest_addr();
 
   /* Set config defaults */
-  cc26xx_web_demo_ipaddr_sprintf(cc26xx_web_demo_config.net_uart.remote_address,
+  web_demo_ipaddr_sprintf(web_demo_config.net_uart.remote_address,
                                  NET_UART_IP_ADDR_STRLEN, &remote_addr);
-  cc26xx_web_demo_config.net_uart.remote_port = REMOTE_PORT;
-  cc26xx_web_demo_config.net_uart.enable = 1;
+  web_demo_config.net_uart.remote_port = REMOTE_PORT;
+  web_demo_config.net_uart.enable = 1;
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(net_uart_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("CC26XX Net UART Process\n");
+  printf("CC13xx/CC26xx Net UART Process\n");
 
   set_config_defaults();
 
@@ -293,21 +293,21 @@ PROCESS_THREAD(net_uart_process, ev, data)
 
         uip_udp_packet_sendto(
           udp_conn, buffer, msg_len, &remote_addr,
-          UIP_HTONS(cc26xx_web_demo_config.net_uart.remote_port));
+          UIP_HTONS(web_demo_config.net_uart.remote_port));
       }
     } else if(ev == tcpip_event) {
       net_input();
-    } else if(ev == cc26xx_web_demo_config_loaded_event) {
+    } else if(ev == web_demo_config_loaded_event) {
       /*
        * New config. Check if it's possible to update the remote address.
        * The port will have been updated already
        */
-      set_new_ip_address(cc26xx_web_demo_config.net_uart.remote_address);
+      set_new_ip_address(web_demo_config.net_uart.remote_address);
 
-      if(cc26xx_web_demo_config.net_uart.enable == 1) {
+      if(web_demo_config.net_uart.enable == 1) {
         keep_uart_on();
       }
-    } else if(ev == cc26xx_web_demo_load_config_defaults) {
+    } else if(ev == web_demo_load_config_defaults) {
       set_config_defaults();
     }
   }

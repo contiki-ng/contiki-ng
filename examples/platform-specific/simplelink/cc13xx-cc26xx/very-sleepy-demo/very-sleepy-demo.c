@@ -32,20 +32,20 @@
 #include "sys/etimer.h"
 #include "sys/stimer.h"
 #include "sys/process.h"
+#include "lib/sensors.h"
 #include "dev/leds.h"
 #include "dev/watchdog.h"
 #include "dev/button-hal.h"
-#include "batmon-sensor.h"
-#include "board-peripherals.h"
 #include "net/netstack.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/routing/routing.h"
-#include "coap-engine.h"
-#include "coap.h"
-
-#include "ti-lib.h"
-
+#include "net/app-layer/coap/coap.h"
+#include "net/app-layer/coap/coap-engine.h"
+/*---------------------------------------------------------------------------*/
+#include "board-peripherals.h"
+#include "batmon-sensor.h"
+/*---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>

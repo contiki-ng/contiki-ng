@@ -89,7 +89,18 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#define EXT_FLASH_SPI_PIN_CS        Board_SPI_FLASH_CS
+#define EXT_FLASH_SPI_CONTROLLER      Board_SPI0
+
+#define EXT_FLASH_SPI_PIN_SCK         GPIO_HAL_PIN_UNKNOWN
+#define EXT_FLASH_SPI_PIN_MOSI        GPIO_HAL_PIN_UNKNOWN
+#define EXT_FLASH_SPI_PIN_MISO        GPIO_HAL_PIN_UNKNOWN
+#define EXT_FLASH_SPI_PIN_CS          Board_SPI_FLASH_CS
+
+#define EXT_FLASH_DEVICE_ID           0x14
+#define EXT_FLASH_MID                 0xC2
+
+#define EXT_FLASH_PROGRAM_PAGE_SIZE   256
+#define EXT_FLASH_ERASE_SECTOR_SIZE   4096
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_CONF_H_ */

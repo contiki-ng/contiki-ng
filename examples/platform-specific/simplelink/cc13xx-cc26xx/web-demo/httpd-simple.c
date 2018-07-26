@@ -29,7 +29,7 @@
  *
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
@@ -37,15 +37,17 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "httpd-simple.h"
 #include "net/ipv6/uip-ds6-route.h"
-#include "batmon-sensor.h"
 #include "lib/sensors.h"
 #include "lib/list.h"
-#include "cc26xx-web-demo.h"
+/*---------------------------------------------------------------------------*/
+#include "batmon-sensor.h"
+/*---------------------------------------------------------------------------*/
+#include "web-demo.h"
 #include "mqtt-client.h"
+#include "httpd-simple.h"
 #include "net-uart.h"
-
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
 #include <strings.h>
@@ -93,8 +95,8 @@ static int state;
 #define STRINGIFY(x) XSTR(x)
 #define XSTR(x)      #x
 
-#define RSSI_INT_MAX STRINGIFY(CC26XX_WEB_DEMO_RSSI_MEASURE_INTERVAL_MAX)
-#define RSSI_INT_MIN STRINGIFY(CC26XX_WEB_DEMO_RSSI_MEASURE_INTERVAL_MIN)
+#define RSSI_INT_MAX STRINGIFY(WEB_DEMO_RSSI_MEASURE_INTERVAL_MAX)
+#define RSSI_INT_MIN STRINGIFY(WEB_DEMO_RSSI_MEASURE_INTERVAL_MIN)
 #define PUB_INT_MAX  STRINGIFY(MQTT_CLIENT_PUBLISH_INTERVAL_MAX)
 #define PUB_INT_MIN  STRINGIFY(MQTT_CLIENT_PUBLISH_INTERVAL_MIN)
 /*---------------------------------------------------------------------------*/
@@ -109,7 +111,7 @@ static int state;
  */
 static struct httpd_state *lock;
 /*---------------------------------------------------------------------------*/
-PROCESS(httpd_simple_process, "CC26XX Web Server");
+PROCESS(httpd_simple_process, "CC13xx/CC26xx Web Server");
 /*---------------------------------------------------------------------------*/
 #define ISO_nl        0x0A
 #define ISO_space     0x20
@@ -216,7 +218,7 @@ static page_t http_dev_cfg_page = {
   generate_config,
 };
 
-#if CC26XX_WEB_DEMO_NET_UART
+#if WEB_DEMO_NET_UART
 static char generate_net_uart_config(struct httpd_state *s);
 
 static page_t http_net_cfg_page = {
@@ -227,7 +229,7 @@ static page_t http_net_cfg_page = {
 };
 #endif
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+#if WEB_DEMO_MQTT_CLIENT
 static char generate_mqtt_config(struct httpd_state *s);
 
 static page_t http_mqtt_cfg_page = {
@@ -257,7 +259,7 @@ struct httpd_state {
   struct psock sin, sout;
   int blen;
   const char **ptr;
-  const cc26xx_web_demo_sensor_reading_t *reading;
+  const web_demo_sensor_reading_t *reading;
   const page_t *page;
   uip_ds6_route_t *r;
   uip_ds6_nbr_t *nbr;
@@ -411,7 +413,7 @@ PT_THREAD(generate_top_matter(struct httpd_state *s, const char *title,
                                  s->page->filename, s->page->title));
   }
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+#if WEB_DEMO_MQTT_CLIENT
   PT_WAIT_THREAD(&s->top_matter_pt,
                  enqueue_chunk(s, 0, " | %s", http_mqtt_a));
 #endif
@@ -442,7 +444,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
+    web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
@@ -459,7 +461,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
                                SECTION_OPEN "Default Route" CONTENT_OPEN));
 
   memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-  cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
+  web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
                                  uip_ds6_defrt_choose());
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
@@ -475,14 +477,14 @@ PT_THREAD(generate_index(struct httpd_state *s))
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
+    web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
     PT_WAIT_THREAD(&s->generate_pt,
                    enqueue_chunk(s, 0, " / %u via ", s->r->length));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
+    web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
                                    uip_ds6_route_nexthop(s->r));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
@@ -498,7 +500,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, SECTION_OPEN "Sensors" CONTENT_OPEN));
 
-  for(s->reading = cc26xx_web_demo_sensor_first();
+  for(s->reading = web_demo_sensor_first();
       s->reading != NULL; s->reading = s->reading->next) {
     PT_WAIT_THREAD(&s->generate_pt,
                    enqueue_chunk(s, 0, "\n%s = %s %s", s->reading->descr,
@@ -547,7 +549,7 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
 
-  for(s->reading = cc26xx_web_demo_sensor_first();
+  for(s->reading = web_demo_sensor_first();
       s->reading != NULL; s->reading = s->reading->next) {
     PT_WAIT_THREAD(&s->generate_pt,
                    enqueue_chunk(s, 0, "%s%s:%s%s", config_div_left,
@@ -576,7 +578,7 @@ PT_THREAD(generate_config(struct httpd_state *s))
                  enqueue_chunk(s, 0, "</form>"));
 
   /* RSSI measurements */
-#if CC26XX_WEB_DEMO_READ_PARENT_RSSI
+#if WEB_DEMO_READ_PARENT_RSSI
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>RSSI Probing</h1>"));
 
@@ -600,7 +602,7 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%lu\" ",
                                (clock_time_t)
-                               (cc26xx_web_demo_config.def_rt_ping_interval
+                               (web_demo_config.def_rt_ping_interval
                                 / CLOCK_SECOND)));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0,
@@ -641,7 +643,7 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_END(&s->generate_pt);
 }
 /*---------------------------------------------------------------------------*/
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+#if WEB_DEMO_MQTT_CLIENT
 static
 PT_THREAD(generate_mqtt_config(struct httpd_state *s))
 {
@@ -675,7 +677,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%s\" ",
-                               cc26xx_web_demo_config.mqtt_config.type_id));
+                               web_demo_config.mqtt_config.type_id));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "name=\"type_id\">%s", config_div_close));
 
@@ -687,7 +689,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%s\" ",
-                               cc26xx_web_demo_config.mqtt_config.org_id));
+                               web_demo_config.mqtt_config.org_id));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "name=\"org_id\">%s", config_div_close));
 
@@ -711,7 +713,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%s\" ",
-                               cc26xx_web_demo_config.mqtt_config.cmd_type));
+                               web_demo_config.mqtt_config.cmd_type));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "name=\"cmd_type\">%s",
                                config_div_close));
@@ -724,7 +726,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%s\" ",
-                               cc26xx_web_demo_config.mqtt_config.event_type_id));
+                               web_demo_config.mqtt_config.event_type_id));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "name=\"event_type_id\">%s",
                                config_div_close));
@@ -738,7 +740,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%lu\" ",
                                (clock_time_t)
-                               (cc26xx_web_demo_config.mqtt_config.pub_interval
+                               (web_demo_config.mqtt_config.pub_interval
                                 / CLOCK_SECOND)));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0,
@@ -755,7 +757,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%s\" ",
-                               cc26xx_web_demo_config.mqtt_config.broker_ip));
+                               web_demo_config.mqtt_config.broker_ip));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "name=\"broker_ip\">%s",
                                config_div_close));
@@ -768,7 +770,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%d\" ",
-                               cc26xx_web_demo_config.mqtt_config.broker_port));
+                               web_demo_config.mqtt_config.broker_port));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "min=\"1\" max=\"65535\" "
                                      "name=\"broker_port\">%s",
@@ -803,7 +805,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
 }
 #endif
 /*---------------------------------------------------------------------------*/
-#if CC26XX_WEB_DEMO_NET_UART
+#if WEB_DEMO_NET_UART
 static
 PT_THREAD(generate_net_uart_config(struct httpd_state *s))
 {
@@ -838,7 +840,7 @@ PT_THREAD(generate_net_uart_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%s\" ",
-                               cc26xx_web_demo_config.net_uart.remote_address));
+                               web_demo_config.net_uart.remote_address));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "name=\"net_uart_ip\">%s",
                                config_div_close));
@@ -851,7 +853,7 @@ PT_THREAD(generate_net_uart_config(struct httpd_state *s))
                                config_div_right));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "value=\"%u\" ",
-                               cc26xx_web_demo_config.net_uart.remote_port));
+                               web_demo_config.net_uart.remote_port));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "min=\"1\" max=\"65535\" "
                                      "name=\"net_uart_port\">%s",
@@ -866,14 +868,14 @@ PT_THREAD(generate_net_uart_config(struct httpd_state *s))
                  enqueue_chunk(s, 0, "<input type=\"radio\" value=\"1\" "));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "title=\"On\" name=\"net_uart_on\"%s>",
-                               cc26xx_web_demo_config.net_uart.enable ?
+                               web_demo_config.net_uart.enable ?
                                " Checked" : ""));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "title=\"Off\" name=\"net_uart_on\""
                                      "%s>%s",
-                               cc26xx_web_demo_config.net_uart.enable ?
+                               web_demo_config.net_uart.enable ?
                                "" : " Checked", config_div_close));
 
   PT_WAIT_THREAD(&s->generate_pt,
@@ -1310,11 +1312,11 @@ init(void)
   list_add(pages_list, &http_index_page);
   list_add(pages_list, &http_dev_cfg_page);
 
-#if CC26XX_WEB_DEMO_NET_UART
+#if WEB_DEMO_NET_UART
   list_add(pages_list, &http_net_cfg_page);
 #endif
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+#if WEB_DEMO_MQTT_CLIENT
   list_add(pages_list, &http_mqtt_cfg_page);
 #endif
 }

@@ -28,7 +28,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc13xx-cc26xx-web-demo
  * @{
  *
  * \file
@@ -36,10 +36,11 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "coap-engine.h"
-#include "coap.h"
-#include "rf-core/rf-ble.h"
-
+#include "net/app-layer/coap/coap.h"
+#include "net/app-layer/coap/coap-engine.h"
+/*---------------------------------------------------------------------------*/
+#include "rf/ble-beacond.h"
+/*---------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdlib.h>
 /*---------------------------------------------------------------------------*/
