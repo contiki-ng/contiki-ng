@@ -91,14 +91,12 @@
  */
 
 /*
- * If set, the systems keeps the HF crystal oscillator on even when the
- * radio is off. You need to set this to 1 to use TSCH with its default 2.2ms
- * or larger guard time.
+ * Set the inactivity timeout peroid for the RF driver. This determines how
+ * long the RF driver will wait when inactive until turning off the RF Core.
+ * Specified in microseconds.
  */
-#ifndef RF_CONF_FAST_RADIO_STARTUP
-#define RF_FAST_RADIO_STARTUP        (MAC_CONF_WITH_TSCH)
-#else
-#define RF_FAST_RADIO_STARTUP        RF_CONF_FAST_RADIO_STARTUP
+#ifndef RF_CONF_INACTIVITY_TIMEOUT
+#define RF_CONF_INACTIVITY_TIMEOUT      2000    /**< 2 ms */
 #endif
 
 /*
@@ -106,7 +104,7 @@
  * default PA.
  */
 #ifndef RF_CONF_TXPOWER_HIGH_PA
-#define RF_CONF_TXPOWER_HIGH_PA       0
+#define RF_CONF_TXPOWER_HIGH_PA         0
 #endif
 
 #if (RF_CONF_TXPOWER_HIGH_PA) && !(SUPPORTS_HIGH_PA)
@@ -119,7 +117,7 @@
  * consumption.
  */
 #ifndef RF_CONF_TXPOWER_BOOST_MODE
-#define RF_CONF_TXPOWER_BOOST_MODE    0
+#define RF_CONF_TXPOWER_BOOST_MODE      0
 #endif
 
 /*

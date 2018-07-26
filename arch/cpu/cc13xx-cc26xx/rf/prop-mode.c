@@ -667,7 +667,7 @@ init(void)
   /* Init RF params and specify non-default params */
   RF_Params rf_params;
   RF_Params_init(&rf_params);
-  rf_params.nInactivityTimeout = 2000; /* 2 ms */
+  rf_params.nInactivityTimeout = RF_CONF_INACTIVITY_TIMEOUT;
 
   /* Open RF Driver */
   prop_radio.rf_handle = netstack_open(&rf_params);
