@@ -89,6 +89,7 @@
  * Those values are not meant to be modified by the user
  * @{
  */
+#if TI_SPI_CONF_SPI0_ENABLE
 #define EXT_FLASH_SPI_CONTROLLER      Board_SPI0
 
 #define EXT_FLASH_SPI_PIN_SCK         GPIO_HAL_PIN_UNKNOWN
@@ -101,6 +102,7 @@
 
 #define EXT_FLASH_PROGRAM_PAGE_SIZE   256
 #define EXT_FLASH_ERASE_SECTOR_SIZE   4096
+#endif /* TI_SPI_CONF_SPI0_ENABLE */
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_CONF_H_ */
