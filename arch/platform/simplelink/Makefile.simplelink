@@ -27,7 +27,7 @@ FAMILY := $(foreach FAMILY, $(SIMPLELINK_FAMILIES), $(call verify_family,$(FAMIL
 ifeq ($(FAMILY),)
  $(error Board '$(BOARD)' does not corresponding to any SimpleLink family. Make sure your BOARD variable is correct.)
 endif
-# If multiple families are found, only the first one is chosen. If this every
+# If multiple families are found, only the first one is chosen. If this ever
 # happens something is not correct.
 ifneq ($(words $(FAMILY)),1)
  FAMILY := $(firstword $(FAMILY))

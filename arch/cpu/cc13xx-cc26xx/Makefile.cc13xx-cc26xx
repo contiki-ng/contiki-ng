@@ -5,10 +5,11 @@ CC13x2_CC26x2_PRE_RTM ?= 1
 
 # Core SDK is placed as a submodule under arch/cpu/cc13xx-cc26xx/lib.
 # Do a sanity check that Core SDK submodule has been initialized.
-ifeq ($(CORE_SDK),)
+ifndef CORE_SDK
  CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
  CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ] && echo 1)
- ifeq ($(CORE_SDK_INIT),)
+
+ ifneq ($(CORE_SDK_INIT),1)
   $(error The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
  endif
 # Note that Core SDK can be overriden with a user-specified SimpleLink SDK.
@@ -17,13 +18,11 @@ ifeq ($(CORE_SDK),)
 else
  # Do a sanity check the path exists.
  CORE_SDK_VALID := $(shell [ -d $(CORE_SDK) ] && echo 1)
- ifeq ($(CORE_SDK_VALID),)
-  $(error Supplied CORE_SDK is not a valid path.)
+
+ ifneq ($(CORE_SDK_VALID),1)
+  $(error User-specified CORE_SDK is not a valid path.)
  endif
 endif
-
-# Clean up the path.
-CORE_SDK := $(realpath $(CORE_SDK))
 
 # Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
 # the arch/cpu/cc13xx-cc26xx folder.
@@ -47,7 +46,7 @@ ifeq ($(SUBFAMILY),cc13x2-cc26x2)
   SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v2
  endif
 # CC13x0/CC26x0 does not have this, with both its devices name and library
-# name he same as its own device family name.
+# name the same as its own device family name.
 else
  SDK_DEVICES_NAME := $(DEVICE_FAMILY_LC)
  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
