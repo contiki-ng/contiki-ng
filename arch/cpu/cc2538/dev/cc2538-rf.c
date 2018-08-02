@@ -172,16 +172,50 @@ is_transmitting(void)
 static void
 prepare_raw(const uint8_t *src, uint8_t len)
 {
-  /* Set the transfer source's end address */
-  udma_set_channel_src(CC2538_RF_CONF_TX_DMA_CHAN,
-      (uint32_t)(src) + (len - 1));
-  /* Configure the control word */
-  udma_set_channel_control_word(CC2538_RF_CONF_TX_DMA_CHAN,
-      UDMA_TX_FLAGS | udma_xfer_size(len));
-  /* Enable the RF TX uDMA channel */
-  udma_channel_enable(CC2538_RF_CONF_TX_DMA_CHAN);
-  /* Trigger the uDMA transfer */
-  udma_channel_sw_request(CC2538_RF_CONF_TX_DMA_CHAN);
+  uint8_t i;
+
+  if(CC2538_RF_CONF_TX_USE_DMA) {
+    /* Set the transfer source's end address */
+    udma_set_channel_src(CC2538_RF_CONF_TX_DMA_CHAN,
+        (uint32_t)(src) + (len - 1));
+    /* Configure the control word */
+    udma_set_channel_control_word(CC2538_RF_CONF_TX_DMA_CHAN,
+        UDMA_TX_FLAGS | udma_xfer_size(len));
+    /* Enable the RF TX uDMA channel */
+    udma_channel_enable(CC2538_RF_CONF_TX_DMA_CHAN);
+    /* Trigger the uDMA transfer */
+    udma_channel_sw_request(CC2538_RF_CONF_TX_DMA_CHAN);
+  } else {
+    for(i = 0; i < len; i++) {
+      REG(RFCORE_SFR_RFDATA) = src[i];
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+read_raw(uint8_t *dst, uint8_t len)
+{
+  uint8_t i;
+
+  /* Don't bother with uDMA for short frames (e.g. ACKs) */
+  if(CC2538_RF_CONF_RX_USE_DMA && (len > UDMA_RX_SIZE_THRESHOLD)) {
+    /* Set the transfer destination's end address */
+    udma_set_channel_dst(CC2538_RF_CONF_RX_DMA_CHAN,
+        (uint32_t)(dst) + len - 1);
+    /* Configure the control word */
+    udma_set_channel_control_word(CC2538_RF_CONF_RX_DMA_CHAN,
+        UDMA_RX_FLAGS | udma_xfer_size(len));
+    /* Enabled the RF RX uDMA channel */
+    udma_channel_enable(CC2538_RF_CONF_RX_DMA_CHAN);
+    /* Trigger the uDMA transfer */
+    udma_channel_sw_request(CC2538_RF_CONF_RX_DMA_CHAN);
+    /* Wait for the transfer to complete. */
+    while(udma_channel_get_mode(CC2538_RF_CONF_RX_DMA_CHAN));
+  } else {
+    for(i = 0; i < len; ++i) {
+      dst[i] = REG(RFCORE_SFR_RFDATA);
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -632,8 +666,6 @@ init(void)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  uint8_t i;
-
   if(payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
@@ -652,39 +684,10 @@ prepare(const void *payload, unsigned short payload_len)
 
   CC2538_RF_CSP_ISFLUSHTX();
 
-  LOG_INFO("data = ");
   /* Send the phy length byte first */
   REG(RFCORE_SFR_RFDATA) = payload_len + CHECKSUM_LEN;
 
-  if(CC2538_RF_CONF_TX_USE_DMA) {
-    LOG_INFO_("<uDMA payload>");
-
-    /* Set the transfer source's end address */
-    udma_set_channel_src(CC2538_RF_CONF_TX_DMA_CHAN,
-                         (uint32_t)(payload) + payload_len - 1);
-
-    /* Configure the control word */
-    udma_set_channel_control_word(CC2538_RF_CONF_TX_DMA_CHAN,
-                                  UDMA_TX_FLAGS | udma_xfer_size(payload_len));
-
-    /* Enabled the RF TX uDMA channel */
-    udma_channel_enable(CC2538_RF_CONF_TX_DMA_CHAN);
-
-    /* Trigger the uDMA transfer */
-    udma_channel_sw_request(CC2538_RF_CONF_TX_DMA_CHAN);
-
-    /*
-     * No need to wait for this to end. Even if transmit() gets called
-     * immediately, the uDMA controller will stream the frame to the TX FIFO
-     * faster than transmit() can empty it
-     */
-  } else {
-    for(i = 0; i < payload_len; i++) {
-      REG(RFCORE_SFR_RFDATA) = ((unsigned char *)(payload))[i];
-      LOG_INFO_("%02x", ((unsigned char *)(payload))[i]);
-    }
-  }
-  LOG_INFO_("\n");
+  prepare_raw(payload, payload_len);
 
   return 0;
 }
@@ -763,7 +766,6 @@ send(const void *payload, unsigned short payload_len)
 static int
 read(void *buf, unsigned short bufsize)
 {
-  uint8_t i;
   uint8_t len;
 
   LOG_INFO("Read\n");
@@ -799,41 +801,13 @@ read(void *buf, unsigned short bufsize)
   }
 
   /* If we reach here, chances are the FIFO is holding a valid frame */
-  LOG_INFO("read (0x%02x bytes) = ", len);
   len -= CHECKSUM_LEN;
 
-  /* Don't bother with uDMA for short frames (e.g. ACKs) */
-  if(CC2538_RF_CONF_RX_USE_DMA && len > UDMA_RX_SIZE_THRESHOLD) {
-    LOG_INFO_("<uDMA payload>");
-
-    /* Set the transfer destination's end address */
-    udma_set_channel_dst(CC2538_RF_CONF_RX_DMA_CHAN,
-                         (uint32_t)(buf) + len - 1);
-
-    /* Configure the control word */
-    udma_set_channel_control_word(CC2538_RF_CONF_RX_DMA_CHAN,
-                                  UDMA_RX_FLAGS | udma_xfer_size(len));
-
-    /* Enabled the RF RX uDMA channel */
-    udma_channel_enable(CC2538_RF_CONF_RX_DMA_CHAN);
-
-    /* Trigger the uDMA transfer */
-    udma_channel_sw_request(CC2538_RF_CONF_RX_DMA_CHAN);
-
-    /* Wait for the transfer to complete. */
-    while(udma_channel_get_mode(CC2538_RF_CONF_RX_DMA_CHAN));
-  } else {
-    for(i = 0; i < len; ++i) {
-      ((unsigned char *)(buf))[i] = REG(RFCORE_SFR_RFDATA);
-      LOG_INFO_("%02x", ((unsigned char *)(buf))[i]);
-    }
-  }
+  read_raw(buf, len);
 
   /* Read the RSSI and CRC/Corr bytes */
   rssi = ((int8_t)REG(RFCORE_SFR_RFDATA)) - RSSI_OFFSET;
   crc_corr = REG(RFCORE_SFR_RFDATA);
-
-  LOG_INFO_("%02x%02x\n", (uint8_t)rssi, crc_corr);
 
   /* MS bit CRC OK/Not OK, 7 LS Bits, Correlation value */
   if(crc_corr & CRC_BIT_MASK) {
@@ -1245,15 +1219,11 @@ async_read_phy_header(void)
 static bool
 async_read_payload(uint8_t *buf, uint8_t bytes)
 {
-  uint8_t i;
-
   if(radio_remaining_payload_bytes() < bytes) {
     return false;
   }
   while(REG(RFCORE_XREG_RXFIFOCNT) < bytes);
-  for(i = 0; i < bytes; i++) {
-    buf[i] = REG(RFCORE_SFR_RFDATA);
-  }
+  read_raw(buf, bytes);
   read_bytes += bytes;
   return true;
 }
