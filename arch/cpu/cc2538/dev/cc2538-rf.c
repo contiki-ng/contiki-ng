@@ -321,6 +321,16 @@ set_frame_filtering(uint8_t enable)
 }
 /*---------------------------------------------------------------------------*/
 static void
+set_shr_search(int enable)
+{
+  if(enable) {
+    REG(RFCORE_XREG_FRMCTRL0) &= ~RFCORE_XREG_FRMCTRL0_RX_MODE;
+  } else {
+    REG(RFCORE_XREG_FRMCTRL0) |= RFCORE_XREG_FRMCTRL0_RX_MODE;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
 mac_timer_init(void)
 {
   CLOCK_STABLE();
@@ -512,6 +522,9 @@ init(void)
   REG(RFCORE_XREG_TXPOWER) = CC2538_RF_TX_POWER;
 
   set_channel(rf_channel);
+
+  /* Enable SHR search */
+  set_shr_search(1);
 
   /* Acknowledge all RF Error interrupts */
   REG(RFCORE_XREG_RFERRM) = RFCORE_XREG_RFERRM_RFERRM;
@@ -921,6 +934,9 @@ set_value(radio_param_t param, radio_value_t value)
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CCA_THRESHOLD:
     set_cca_threshold(value);
+    return RADIO_RESULT_OK;
+  case RADIO_PARAM_SHR_SEARCH:
+    set_shr_search(value);
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
