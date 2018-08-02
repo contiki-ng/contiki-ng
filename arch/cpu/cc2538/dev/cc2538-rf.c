@@ -86,6 +86,7 @@
 #define LQI_BIT_MASK 0x7F
 /* RSSI Offset */
 #define RSSI_OFFSET    73
+#define RSSI_INVALID -128
 
 /* 192 usec off -> on interval (RX Callib -> SFD Wait). We wait a bit more */
 #define ONOFF_TIME                    RTIMER_ARCH_SECOND / 3125
@@ -244,10 +245,11 @@ get_rssi(void)
     on();
   }
 
-  /* Wait on RSSI_VALID */
-  while((REG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) == 0);
-
-  rssi = (int8_t)(REG(RFCORE_XREG_RSSI) & RFCORE_XREG_RSSI_RSSI_VAL) - RSSI_OFFSET;
+  /* Wait for a valid RSSI reading */
+  do {
+    rssi = REG(RFCORE_XREG_RSSI);
+  } while(rssi == RSSI_INVALID);
+  rssi -= RSSI_OFFSET;
 
   /* If we were off, turn back off */
   if(was_off) {
