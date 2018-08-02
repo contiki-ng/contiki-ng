@@ -490,6 +490,7 @@ init(void)
   REG(RFCORE_XREG_TXFILTCFG) = 0x09;    /** TX anti-aliasing filter bandwidth */
   REG(RFCORE_XREG_AGCCTRL1) = 0x15;     /** AGC target value */
   REG(ANA_REGS_IVCTRL) = 0x0B;          /** Bias currents */
+  REG(RFCORE_XREG_FSCAL1) = 0x01;       /** Tune frequency calibration */
 
   /*
    * Defaults:
