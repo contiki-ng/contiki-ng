@@ -154,10 +154,7 @@ PROCESS(cc2538_rf_process, "cc2538 RF driver");
 static uint8_t
 get_channel()
 {
-  uint8_t chan = REG(RFCORE_XREG_FREQCTRL) & RFCORE_XREG_FREQCTRL_FREQ;
-
-  return (chan - CC2538_RF_CHANNEL_MIN) / CC2538_RF_CHANNEL_SPACING
-         + CC2538_RF_CHANNEL_MIN;
+  return rf_channel;
 }
 /*---------------------------------------------------------------------------*/
 /**
