@@ -136,16 +136,6 @@ extern const struct radio_driver cc2538_rf_driver;
  */
 void cc2538_rf_set_addr(uint16_t pan);
 
-/**
- * \brief Turn promiscous mode on or off
- * \param p If promiscous mode should be on (1) or off (0)
- *
- * This function turns promiscous mode on or off. In promiscous mode,
- * every received frame is returned from the RF core. In
- * non-promiscous mode, only broadcast frames or frames with our
- * address as the receive address are returned from the RF core.
- */
-void cc2538_rf_set_promiscous_mode(char p);
 /*---------------------------------------------------------------------------*/
 #endif /* CC2538_RF_H__ */
 
