@@ -527,7 +527,7 @@ off(void)
   LOG_INFO("Off\n");
 
   /* Wait for ongoing TX to complete (e.g. this could be an outgoing ACK) */
-  while(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
+  while(is_transmitting());
 
   if(!(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP)) {
     CC2538_RF_CSP_ISFLUSHRX();
@@ -644,7 +644,7 @@ prepare(const void *payload, unsigned short payload_len)
    * When we transmit in very quick bursts, make sure previous transmission
    * is not still in progress before re-writing to the TX FIFO
    */
-  while(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
+  while(is_transmitting());
 
   if(!rf_flags.in_rx_mode) {
     on();
@@ -730,18 +730,18 @@ transmit(unsigned short transmit_len)
   CC2538_RF_CSP_ISTXON();
 
   counter = 0;
-  while(!((REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE))
+  while(!((is_transmitting()))
         && (counter++ < 3)) {
     clock_delay_usec(6);
   }
 
-  if(!(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE)) {
+  if(!(is_transmitting())) {
     LOG_ERR("TX never active.\n");
     CC2538_RF_CSP_ISFLUSHTX();
     ret = RADIO_TX_ERR;
   } else {
     /* Wait for the transmission to finish */
-    while(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
+    while(is_transmitting());
     ret = RADIO_TX_OK;
   }
   ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
