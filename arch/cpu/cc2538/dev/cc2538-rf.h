@@ -113,14 +113,12 @@
  */
 #define CC2538_RF_CSP_ISFLUSHRX()  do { \
   REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX; \
-  REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX; \
 } while(0)
 
 /**
  * \brief Flush the TX FIFO
  */
 #define CC2538_RF_CSP_ISFLUSHTX()  do { \
-  REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX; \
   REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX; \
 } while(0)
 /*---------------------------------------------------------------------------*/
