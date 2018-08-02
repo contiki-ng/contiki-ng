@@ -546,8 +546,6 @@ init(void)
 
   rf_flags |= RF_ON;
 
-  ENERGEST_ON(ENERGEST_TYPE_LISTEN);
-
   return 1;
 }
 /*---------------------------------------------------------------------------*/
