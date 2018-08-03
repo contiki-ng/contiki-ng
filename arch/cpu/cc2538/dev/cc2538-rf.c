@@ -160,19 +160,13 @@ get_channel()
 /**
  * \brief Set the current operating channel
  * \param channel The desired channel as a value in [11,26]
- * \return Returns a value in [11,26] representing the current channel
- *         or a negative value if \e channel was out of bounds
  */
-static int8_t
+static void
 set_channel(uint8_t channel)
 {
   uint8_t was_on = 0;
 
   LOG_INFO("Set Channel\n");
-
-  if((channel < CC2538_RF_CHANNEL_MIN) || (channel > CC2538_RF_CHANNEL_MAX)) {
-    return CC2538_RF_CHANNEL_SET_ERROR;
-  }
 
   /* Changes to FREQCTRL take effect after the next recalibration */
 
@@ -190,8 +184,6 @@ set_channel(uint8_t channel)
   }
 
   rf_channel = channel;
-
-  return (int8_t)channel;
 }
 /*---------------------------------------------------------------------------*/
 static radio_value_t
@@ -894,9 +886,7 @@ set_value(radio_param_t param, radio_value_t value)
        value > CC2538_RF_CHANNEL_MAX) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-    if(set_channel(value) == CC2538_RF_CHANNEL_SET_ERROR) {
-      return RADIO_RESULT_ERROR;
-    }
+    set_channel(value);
     return RADIO_RESULT_OK;
   case RADIO_PARAM_PAN_ID:
     set_pan_id(value & 0xffff);

@@ -56,7 +56,6 @@
 #define CC2538_RF_CHANNEL_MIN            11
 #define CC2538_RF_CHANNEL_MAX            26
 #define CC2538_RF_CHANNEL_SPACING         5
-#define CC2538_RF_CHANNEL_SET_ERROR      -1
 #define CC2538_RF_MAX_PACKET_LEN        127
 #define CC2538_RF_MIN_PACKET_LEN          4
 #define CC2538_RF_CCA_CLEAR               1
