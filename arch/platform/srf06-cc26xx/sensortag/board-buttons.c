@@ -38,23 +38,23 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio-hal.h"
 #include "dev/button-hal.h"
+#include "dev/gpio-hal.h"
 
 #include "ti-lib.h"
 
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTON(reed_relay, "Reed Relay", BOARD_IOID_REED_RELAY, \
-                  GPIO_HAL_PIN_CFG_PULL_DOWN, \
+                  GPIO_HAL_PIN_CFG_INPUT_PULLDOWN, \
                   BUTTON_HAL_ID_REED_RELAY, true);
 
 BUTTON_HAL_BUTTON(key_left, "Key Left", BOARD_IOID_KEY_LEFT, \
-                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_KEY_LEFT, \
+                  GPIO_HAL_PIN_CFG_INPUT_PULLUP, BUTTON_HAL_ID_KEY_LEFT, \
                   true);
 
 BUTTON_HAL_BUTTON(key_right, "Key Right", BOARD_IOID_KEY_RIGHT, \
-                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_KEY_RIGHT, \
+                  GPIO_HAL_PIN_CFG_INPUT_PULLUP, BUTTON_HAL_ID_KEY_RIGHT, \
                   true);
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTONS(&reed_relay, &key_left, &key_right);

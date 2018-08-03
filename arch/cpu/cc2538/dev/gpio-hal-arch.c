@@ -57,37 +57,33 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 
   gpio_hal_pin_cfg_t tmp;
 
-  tmp = cfg & GPIO_HAL_PIN_CFG_EDGE_BOTH;
-  if(tmp == GPIO_HAL_PIN_CFG_EDGE_NONE) {
-    GPIO_DISABLE_INTERRUPT(port_base, pin_mask);
-  } else if(tmp == GPIO_HAL_PIN_CFG_EDGE_RISING) {
-    GPIO_DETECT_EDGE(port_base, pin_mask);
-    GPIO_TRIGGER_SINGLE_EDGE(port_base, pin_mask);
-    GPIO_DETECT_RISING(port_base, pin_mask);
-  } else if(tmp == GPIO_HAL_PIN_CFG_EDGE_FALLING) {
-    GPIO_DETECT_EDGE(port_base, pin_mask);
-    GPIO_TRIGGER_SINGLE_EDGE(port_base, pin_mask);
-    GPIO_DETECT_FALLING(port_base, pin_mask);
-  } else if(tmp == GPIO_HAL_PIN_CFG_EDGE_BOTH) {
-    GPIO_DETECT_EDGE(port_base, pin_mask);
-    GPIO_TRIGGER_BOTH_EDGES(port_base, pin_mask);
-  }
-
-  tmp = cfg & GPIO_HAL_PIN_CFG_PULL_MASK;
-  if(tmp == GPIO_HAL_PIN_CFG_PULL_NONE) {
-    ioc_set_over(port, pin_num, IOC_OVERRIDE_DIS);
-  } else if(tmp == GPIO_HAL_PIN_CFG_PULL_DOWN) {
-    ioc_set_over(port, pin_num, IOC_OVERRIDE_PDE);
-  } else if(tmp == GPIO_HAL_PIN_CFG_PULL_UP) {
-    ioc_set_over(port, pin_num, IOC_OVERRIDE_PUE);
-  }
-
-  tmp = cfg & GPIO_HAL_PIN_CFG_INT_MASK;
+  tmp = cfg & GPIO_HAL_PIN_BM_INT;
   if(tmp == GPIO_HAL_PIN_CFG_INT_DISABLE) {
     GPIO_DISABLE_INTERRUPT(port_base, pin_mask);
-  } else if(tmp == GPIO_HAL_PIN_CFG_INT_ENABLE) {
+  } else {
+    if(tmp == GPIO_HAL_PIN_CFG_INT_RISING) {
+      GPIO_DETECT_EDGE(port_base, pin_mask);
+      GPIO_TRIGGER_SINGLE_EDGE(port_base, pin_mask);
+      GPIO_DETECT_RISING(port_base, pin_mask);
+    } else if(tmp == GPIO_HAL_PIN_CFG_INT_FALLING) {
+      GPIO_DETECT_EDGE(port_base, pin_mask);
+      GPIO_TRIGGER_SINGLE_EDGE(port_base, pin_mask);
+      GPIO_DETECT_FALLING(port_base, pin_mask);
+    } else if(tmp == GPIO_HAL_PIN_CFG_INT_BOTH) {
+      GPIO_DETECT_EDGE(port_base, pin_mask);
+      GPIO_TRIGGER_BOTH_EDGES(port_base, pin_mask);
+    }
     GPIO_ENABLE_INTERRUPT(port_base, pin_mask);
     NVIC_EnableIRQ(port);
+  }
+
+  tmp = cfg & GPIO_HAL_PIN_BM_INPUT;
+  if(tmp == GPIO_HAL_PIN_CFG_INPUT_NOPULL) {
+    ioc_set_over(port, pin_num, IOC_OVERRIDE_DIS);
+  } else if(tmp == GPIO_HAL_PIN_CFG_INPUT_PULLDOWN) {
+    ioc_set_over(port, pin_num, IOC_OVERRIDE_PDE);
+  } else if(tmp == GPIO_HAL_PIN_CFG_INPUT_PULLUP) {
+    ioc_set_over(port, pin_num, IOC_OVERRIDE_PUE);
   }
 
   GPIO_SOFTWARE_CONTROL(port_base, pin_mask);
@@ -111,11 +107,11 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
   /* Pull */
   tmp = ioc_get_over(port, pin_num);
   if(tmp == IOC_OVERRIDE_PUE) {
-    cfg |= GPIO_HAL_PIN_CFG_PULL_UP;
+    cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLUP;
   } else if(tmp == IOC_OVERRIDE_PDE) {
-    cfg |= GPIO_HAL_PIN_CFG_PULL_DOWN;
+    cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLDOWN;
   } else {
-    cfg |= GPIO_HAL_PIN_CFG_PULL_NONE;
+    cfg |= GPIO_HAL_PIN_CFG_INPUT_NOPULL;
   }
 
   /* Interrupt enable/disable */
@@ -123,20 +119,14 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
   if(tmp == 0) {
     cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE;
   } else {
-    cfg |= GPIO_HAL_PIN_CFG_INT_ENABLE;
-  }
-
-  /* Edge detection */
-  if(REG((port_base) + GPIO_IS) & pin_mask) {
-    cfg |= GPIO_HAL_PIN_CFG_EDGE_NONE;
-  } else {
+    /* Edge detection */
     if(REG((port_base) + GPIO_IBE) & pin_mask) {
-      cfg |= GPIO_HAL_PIN_CFG_EDGE_BOTH;
+      cfg |= GPIO_HAL_PIN_CFG_INT_BOTH;
     } else {
       if(REG((port_base) + GPIO_IEV) & pin_mask) {
-        cfg |= GPIO_HAL_PIN_CFG_EDGE_RISING;
+        cfg |= GPIO_HAL_PIN_CFG_INT_RISING;
       } else {
-        cfg |= GPIO_HAL_PIN_CFG_EDGE_FALLING;
+        cfg |= GPIO_HAL_PIN_CFG_INT_FALLING;
       }
     }
   }
