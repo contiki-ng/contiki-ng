@@ -7,7 +7,7 @@ sudo apt install -y --no-install-recommends \
   libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386 \
   build-essential doxygen git wget unzip python-serial rlwrap npm \
   default-jdk ant srecord python-pip iputils-tracepath uncrustify \
-  python-magic
+  python-magic linux-image-extra-virtual
 
 sudo apt-get clean
 sudo python2 -m pip install intelhex
