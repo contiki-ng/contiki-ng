@@ -493,6 +493,7 @@ publish(void)
   int len;
   int remaining = APP_BUFFER_SIZE;
   int i;
+  char def_rt_str[64];
 
   seq_nr_value++;
 
@@ -519,7 +520,6 @@ publish(void)
   buf_ptr += len;
 
   /* Put our Default route's string representation in a buffer */
-  char def_rt_str[64];
   memset(def_rt_str, 0, sizeof(def_rt_str));
   ipaddr_sprintf(def_rt_str, sizeof(def_rt_str), uip_ds6_defrt_choose());
 
