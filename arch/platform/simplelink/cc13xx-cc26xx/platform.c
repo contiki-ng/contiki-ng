@@ -233,9 +233,6 @@ platform_init_stage_three(void)
 
   set_rf_params();
 
-  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
-  NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan);
-
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
   LOG_DBG("IEEE 802.15.4: %s, Sub-1 GHz: %s, BLE: %s\n",
@@ -248,7 +245,15 @@ platform_init_stage_three(void)
 #elif (RF_MODE == RF_MODE_2_4_GHZ)
   LOG_INFO("Operating frequency on 2.4 GHz\n");
 #endif
-  LOG_INFO("RF: Channel %d, PANID 0x%04X\n", chan, pan);
+
+  NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &chan);
+  LOG_INFO("RF: Channel %d", chan);
+
+  if(NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan) == RADIO_RESULT_OK) {
+    LOG_INFO(", PANID 0x%04X", pan);
+  }
+  LOG_INFO("\n");
+
   LOG_INFO("Node ID: %d\n", node_id);
 
 #if BOARD_CONF_SENSORS_ENABLE
