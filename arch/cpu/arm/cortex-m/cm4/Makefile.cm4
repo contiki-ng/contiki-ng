@@ -3,12 +3,12 @@ CONTIKI_ARM_DIRS += cortex-m/cm4
 CFLAGS += -mcpu=cortex-m4
 
 LDFLAGS += -mcpu=cortex-m4 -nostartfiles
-LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -Wl,--sort-section=alignment
 LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map)
 LDFLAGS += -Wl,--cref
 LDFLAGS += -Wl,--no-warn-mismatch
+LDFLAGS += -T $(LDSCRIPT)
 
 TARGET_LIBFLAGS := -Wl,--start-group $(TARGET_LIBFILES) -lc -lgcc -lm -lnosys -Wl,--end-group
 
@@ -24,7 +24,7 @@ CUSTOM_RULE_LINK = 1
 
 .SECONDEXPANSION:
 
-%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(TARGET_LIBS)
+%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(TARGET_LIBS) $(LDSCRIPT)
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) ${filter %.o %.a,$^} $(TARGET_LIBFLAGS) -o $@
 
