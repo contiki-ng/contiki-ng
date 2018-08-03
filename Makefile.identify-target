@@ -11,6 +11,4 @@ ifeq ($(TARGET),)
   else
     ${info using saved target '$(TARGET)'}
   endif
-else
-  ${info using set target '$(TARGET)'}
 endif

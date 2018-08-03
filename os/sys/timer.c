@@ -84,9 +84,7 @@ timer_set(struct timer *t, clock_time_t interval)
 void
 timer_reset(struct timer *t)
 {
-  if(timer_expired(t)) {
-    t->start += t->interval;
-  }
+  t->start += t->interval;
 }
 /*---------------------------------------------------------------------------*/
 /**

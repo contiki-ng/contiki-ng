@@ -24,10 +24,6 @@ else
  endif
 endif
 
-# Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
-# the arch/cpu/cc13xx-cc26xx folder.
-CPU_START_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
-
 ################################################################################
 ### Device Family
 
@@ -53,18 +49,11 @@ else
 endif
 
 ################################################################################
-### Core SDK paths
-
-SDK_NORTOS  := $(CORE_SDK)/kernel/nortos
-SDK_SOURCE  := $(CORE_SDK)/source
-SDK_DRIVERS := $(CORE_SDK)/source/ti/drivers
-SDK_DEVICES := $(CORE_SDK)/source/ti/devices/$(SDK_DEVICES_NAME)
-
-EXTERNALDIRS += $(SDK_SOURCE)
-EXTERNALDIRS += $(SDK_NORTOS)
-
-################################################################################
 ### CC13xx/CC26xx CPU files
+
+# Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
+# the arch/cpu/cc13xx-cc26xx folder.
+CPU_START_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
 
 # CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c    clock-arch.c
@@ -94,6 +83,14 @@ endif
 ################################################################################
 ### Modules and paths
 
+# Core SDK paths
+SDK_NORTOS  := $(CORE_SDK)/kernel/nortos
+SDK_SOURCE  := $(CORE_SDK)/source
+SDK_DRIVERS := $(CORE_SDK)/source/ti/drivers
+SDK_DEVICES := $(CORE_SDK)/source/ti/devices/$(SDK_DEVICES_NAME)
+
+EXTERNALDIRS += $(SDK_SOURCE) $(SDK_NORTOS)
+
 # CPU-dependent debug source files
 MODULES += os/lib/dbg-io
 
@@ -104,6 +101,19 @@ CONTIKI_CPU_DIRS += rf rf-settings rf-settings/$(DEVICE_FAMILY_LC)
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 
 ################################################################################
+### Compiler configuration
+
+# A weird behaviour of GCC garbage collector has been observed, where
+# unitialized global variables with global linkage (aka non-static) put in the
+# COMMON section weren't analyzed by the garbage collector at all. No idea why.
+# The solution is to disable the common section, which subsequently places all
+# unitialized global variables with global linkage in the .bss section,
+# allowing the GC to analyze the variables. This is especially an issue with
+# Board.h files, as they rely heavily on global variables placed in COMMON to
+# be garbage collected if unused.
+CFLAGS += -fno-common
+
+################################################################################
 ### Linker configuration
 
 # Linker flags
@@ -111,7 +121,11 @@ LDFLAGS += --entry resetISR
 LDFLAGS += -static
 LDFLAGS += --specs=nano.specs
 
+# Linker script
 LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
+
+# Globally linked libraries
+TARGET_LIBFILES += -lc -lgcc -lnosys
 
 ################################################################################
 ### Specialized build targets
@@ -130,5 +144,8 @@ $(OBJECTDIR)/ccfg-conf.o: ccfg-conf.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
-# Include the Sub-family specific Makefile
+################################################################################
+### Sub-family Makefile
+
+# Include the Sub-family Makefile specific for the specified device
 include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)
