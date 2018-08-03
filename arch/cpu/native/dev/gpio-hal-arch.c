@@ -43,14 +43,22 @@ static gpio_hal_pin_cfg_t pin_cfg[GPIO_HAL_PIN_COUNT];
 static uint8_t pin_state[GPIO_HAL_PIN_COUNT];
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin)
+gpio_hal_arch_init(void)
+{
+  LOG_DBG("Initialized\n");
+}
+/*---------------------------------------------------------------------------*/
+void
+gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
   if(pin >= GPIO_HAL_PIN_COUNT) {
     LOG_ERR("Pin %u out of bounds\n", pin);
     return;
   }
 
-  LOG_DBG("Pin %u: Enabled interrupt\n", pin);
+  pin_cfg[pin] &= ~(gpio_hal_pin_cfg_t)GPIO_HAL_PIN_BM_INT;
+  pin_cfg[pin] |= cfg;
+  LOG_DBG("Pin %u: Enabled interrupt, config=0x%02x\n", pin, pin_cfg[pin]);
 }
 /*---------------------------------------------------------------------------*/
 void
