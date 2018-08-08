@@ -50,6 +50,8 @@
 
 #include "sys/log.h"
 #include "net/ipv6/ip64-addr.h"
+#include "net/ipv6/uiplib.h"
+#include "deployment/deployment.h"
 
 int curr_log_level_rpl = LOG_CONF_LEVEL_RPL;
 int curr_log_level_tcpip = LOG_CONF_LEVEL_TCPIP;
@@ -84,53 +86,41 @@ struct log_module all_modules[] = {
 void
 log_6addr(const uip_ipaddr_t *ipaddr)
 {
-  uint16_t a;
-  unsigned int i;
-  int f;
-
+  char buf[UIPLIB_IPV6_MAX_STR_LEN];
+  uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
+  LOG_OUTPUT("%s", buf);
+}
+/*---------------------------------------------------------------------------*/
+int
+log_6addr_compact_snprint(char *buf, size_t size, const uip_ipaddr_t *ipaddr)
+{
   if(ipaddr == NULL) {
-    LOG_OUTPUT("(NULL IP addr)");
-    return;
-  }
-
-  if(ip64_addr_is_ipv4_mapped_addr(ipaddr)) {
-    /* Printing IPv4-mapped addresses is done according to RFC 4291 */
-    LOG_OUTPUT("::FFFF:%u.%u.%u.%u", ipaddr->u8[12], ipaddr->u8[13], ipaddr->u8[14], ipaddr->u8[15]);
+    return snprintf(buf, size, "6A-NULL");
   } else {
-    for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
-      a = (ipaddr->u8[i] << 8) + ipaddr->u8[i + 1];
-      if(a == 0 && f >= 0) {
-        if(f++ == 0) {
-          LOG_OUTPUT("::");
-        }
-      } else {
-        if(f > 0) {
-          f = -1;
-        } else if(i > 0) {
-          LOG_OUTPUT(":");
-        }
-        LOG_OUTPUT("%x", a);
-      }
+    char *prefix = NULL;
+    if(uip_is_addr_mcast(ipaddr)) {
+      prefix = "6M";
+    } else if(uip_is_addr_linklocal(ipaddr)) {
+      prefix = "6L";
+    } else {
+      prefix = "6G";
     }
+#if BUILD_WITH_DEPLOYMENT
+    return snprintf(buf, size, "%s-%03u", prefix, deployment_id_from_iid(ipaddr));
+#else /* BUILD_WITH_DEPLOYMENT */
+    return snprintf(buf, size, "%s-%04x", prefix, UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
+#endif /* BUILD_WITH_DEPLOYMENT */
   }
 }
 /*---------------------------------------------------------------------------*/
 void
 log_6addr_compact(const uip_ipaddr_t *ipaddr)
 {
-  if(ipaddr == NULL) {
-    LOG_OUTPUT("6A-NULL");
-  } else if(uip_is_addr_mcast(ipaddr)) {
-    LOG_OUTPUT("6M-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
-  } else if(uip_is_addr_linklocal(ipaddr)) {
-    LOG_OUTPUT("6L-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
-  } else {
-    LOG_OUTPUT("6G-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
-  }
+  char buf[8];
+  log_6addr_compact_snprint(buf, sizeof(buf), ipaddr);
+  LOG_OUTPUT("%s", buf);
 }
-
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
 /*---------------------------------------------------------------------------*/
 void
 log_lladdr(const linkaddr_t *lladdr)
@@ -155,7 +145,15 @@ log_lladdr_compact(const linkaddr_t *lladdr)
   if(lladdr == NULL || linkaddr_cmp(lladdr, &linkaddr_null)) {
     LOG_OUTPUT("LL-NULL");
   } else {
+#if BUILD_WITH_DEPLOYMENT
+    LOG_OUTPUT("LL-%04u", deployment_id_from_lladdr(lladdr));
+#else /* BUILD_WITH_DEPLOYMENT */
+#if LINKADDR_SIZE == 8
     LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE/2-1]));
+#elif LINKADDR_SIZE == 2
+    LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16));
+#endif
+#endif /* BUILD_WITH_DEPLOYMENT */
   }
 }
 /*---------------------------------------------------------------------------*/

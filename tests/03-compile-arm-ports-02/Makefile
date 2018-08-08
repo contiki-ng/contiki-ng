@@ -17,6 +17,8 @@ coap/coap-example-server/zoul \
 multicast/zoul \
 lwm2m-ipso-objects/zoul \
 lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
+lwm2m-ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1 \
+lwm2m-ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 hello-world/zoul \
 sensniff/zoul \
 sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
@@ -34,6 +36,7 @@ libs/timers/zoul \
 libs/energest/zoul \
 libs/trickle-library/zoul \
 libs/data-structures/zoul \
+libs/ipv6-uipbuf/zoul \
 nullnet/zoul \
 slip-radio/zoul \
 dev/gpio-hal/zoul:BOARD=remote-reva \
@@ -61,6 +64,9 @@ dev/gpio-hal/openmote-cc2538 \
 dev/leds/openmote-cc2538 \
 rpl-border-router/openmote-cc2538 \
 libs/ipv6-hooks/openmote-cc2538 \
+libs/shell/openmote-cc2538 \
+libs/simple-energest/openmote-cc2538 \
+libs/deployment/openmote-cc2538 \
 
 TOOLS=
 

@@ -356,7 +356,6 @@ PROCESS_THREAD(start_app, ev, data)
   NETSTACK_MAC.on();
   printf("Starting RPL node\n");
 
-  coap_engine_init();
   coap_activate_resource(&resource_switch_sw1, "DR1199/Switch/SW1");
   coap_activate_resource(&resource_switch_sw2, "DR1199/Switch/SW2");
   coap_activate_resource(&resource_switch_sw3, "DR1199/Switch/SW3");

@@ -57,13 +57,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-/* The channel to use in IEEE or prop mode. */
-#ifdef RF_CORE_CONF_CHANNEL
-#define RF_CORE_CHANNEL RF_CORE_CONF_CHANNEL
-#else
-#define RF_CORE_CHANNEL 25
-#endif /* RF_CORE_CONF_IEEE_MODE_CHANNEL */
-/*---------------------------------------------------------------------------*/
 #define RF_CORE_FRONT_END_MODE_DIFFERENTIAL   0
 #define RF_CORE_FRONT_END_MODE_SINGLE_RFP     1
 #define RF_CORE_FRONT_END_MODE_SINGLE_RFN     2
@@ -269,6 +262,9 @@ typedef struct rf_core_primary_mode_s {
 /*---------------------------------------------------------------------------*/
 /* Radio timer register */
 #define RATCNT  0x00000004
+/*---------------------------------------------------------------------------*/
+/* Buffer full flag */
+extern volatile bool rx_is_full;
 /*---------------------------------------------------------------------------*/
 /* Make the main driver process visible to mode drivers */
 PROCESS_NAME(rf_core_process);

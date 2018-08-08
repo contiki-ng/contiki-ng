@@ -42,11 +42,7 @@
 
 #include "sys/rtimer.h"
 
-#ifdef RTIMER_CONF_SECOND
-#define RTIMER_ARCH_SECOND RTIMER_CONF_SECOND
-#else
 #define RTIMER_ARCH_SECOND (4096U*8)
-#endif
 
 /* Do the math in 32bits to save precision.
  * Round to nearest integer rather than truncate. */

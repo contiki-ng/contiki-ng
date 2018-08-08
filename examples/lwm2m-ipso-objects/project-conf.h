@@ -30,9 +30,6 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-/* No sleep on CC2538 to enable full 32 KiB RAM */
-#define LPM_CONF_ENABLE 0
-
 #ifdef BOARD_STRING
 #define LWM2M_DEVICE_MODEL_NUMBER BOARD_STRING
 #elif defined(CONTIKI_TARGET_WISMOTE)
@@ -61,5 +58,13 @@
 
 /* Enable client-side support for COAP observe */
 #define COAP_OBSERVE_CLIENT 1
+
+/* Definitions to enable Queue Mode, include the dynamic adaptation and change the default parameters  */
+/* #define LWM2M_QUEUE_MODE_CONF_ENABLED 1
+   #define LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION 1
+   #define LWM2M_QUEUE_MODE_CONF_DEFAULT_CLIENT_AWAKE_TIME 2000
+   #define LWM2M_QUEUE_MODE_CONF_DEFAULT_CLIENT_SLEEP_TIME 10000
+   #define LWM2M_QUEUE_MODE_CONF_DEFAULT_DYNAMIC_ADAPTATION_FLAG 0
+   #define LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED 1 */
 
 #endif /* PROJECT_CONF_H_ */

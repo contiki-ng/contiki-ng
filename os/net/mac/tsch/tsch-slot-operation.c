@@ -155,7 +155,7 @@ static rtimer_clock_t volatile current_slot_start;
 static volatile int tsch_in_slot_operation = 0;
 
 /* If we are inside a slot, this tells the current channel */
-static uint8_t current_channel;
+uint8_t tsch_current_channel;
 
 /* Info about the link, packet and neighbor of
  * the current (or next) slot */
@@ -166,6 +166,11 @@ struct tsch_link *current_link = NULL;
 static struct tsch_link *backup_link = NULL;
 static struct tsch_packet *current_packet = NULL;
 static struct tsch_neighbor *current_neighbor = NULL;
+
+/* Indicates whether an extra link is needed to handle the current burst */
+static int burst_link_scheduled = 0;
+/* Counts the length of the current burst */
+int tsch_current_burst_count = 0;
 
 /* Protothread for association */
 PT_THREAD(tsch_scan(struct pt *pt));
@@ -456,6 +461,8 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       /* is this a broadcast packet? (wait for ack?) */
       static uint8_t is_broadcast;
       static rtimer_clock_t tx_start_time;
+      /* Did we set the frame pending bit to request an extra burst link? */
+      static int burst_link_requested;
 
 #if CCA_ENABLED
       static uint8_t cca_status;
@@ -466,6 +473,14 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       packet_len = queuebuf_datalen(current_packet->qb);
       /* is this a broadcast packet? (wait for ack?) */
       is_broadcast = current_neighbor->is_broadcast;
+      /* Unicast. More packets in queue for the neighbor? */
+      burst_link_requested = 0;
+      if(!is_broadcast
+             && tsch_current_burst_count + 1 < TSCH_BURST_MAX_LEN
+             && tsch_queue_packet_count(&current_neighbor->addr) > 1) {
+        burst_link_requested = 1;
+        tsch_packet_set_frame_pending(packet, packet_len);
+      }
       /* read seqno from payload */
       seqno = ((uint8_t *)(packet))[2];
       /* if this is an EB, then update its Sync-IE */
@@ -618,6 +633,12 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   tsch_schedule_keepalive();
                 }
                 mac_tx_status = MAC_TX_OK;
+
+                /* We requested an extra slot and got an ack. This means
+                the extra slot will be scheduled at the received */
+                if(burst_link_requested) {
+                  burst_link_scheduled = 1;
+                }
               } else {
                 mac_tx_status = MAC_TX_NOACK;
               }
@@ -749,7 +770,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
         NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_RSSI, &radio_last_rssi);
         current_input->rx_asn = tsch_current_asn;
         current_input->rssi = (signed)radio_last_rssi;
-        current_input->channel = current_channel;
+        current_input->channel = tsch_current_channel;
         header_len = frame802154_parse((uint8_t *)current_input->payload, current_input->len, &frame);
         frame_valid = header_len > 0 &&
           frame802154_check_dest_panid(&frame) &&
@@ -844,6 +865,9 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
                 TSCH_DEBUG_RX_EVENT();
                 NETSTACK_RADIO.transmit(ack_len);
                 tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
+
+                /* Schedule a burst link iff the frame pending bit was set */
+                burst_link_scheduled = tsch_packet_get_frame_pending(current_input->payload, current_input->len);
               }
             }
 
@@ -940,9 +964,16 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       }
       is_active_slot = current_packet != NULL || (current_link->link_options & LINK_OPTION_RX);
       if(is_active_slot) {
-        /* Hop channel */
-        current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
-        NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
+        /* If we are in a burst, we stick to current channel instead of
+         * doing channel hopping, as per IEEE 802.15.4-2015 */
+        if(burst_link_scheduled) {
+          /* Reset burst_link_scheduled flag. Will be set again if burst continue. */
+          burst_link_scheduled = 0;
+        } else {
+          /* Hop channel */
+          tsch_current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
+        }
+        NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, tsch_current_channel);
         /* Turn the radio on already here if configured so; necessary for radios with slow startup */
         tsch_radio_on(TSCH_RADIO_CMD_ON_START_OF_TIMESLOT);
         /* Decide whether it is a TX/RX/IDLE or OFF slot */
@@ -960,6 +991,10 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           static struct pt slot_rx_pt;
           PT_SPAWN(&slot_operation_pt, &slot_rx_pt, tsch_rx_slot(&slot_rx_pt, t));
         }
+      } else {
+        /* Make sure to end the burst in cast, for some reason, we were
+         * in a burst but now without any more packet to send. */
+        burst_link_scheduled = 0;
       }
       TSCH_DEBUG_SLOT_END();
     }
@@ -993,13 +1028,27 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           tsch_queue_update_all_backoff_windows(&current_link->addr);
         }
 
-        /* Get next active link */
-        current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
-        if(current_link == NULL) {
-          /* There is no next link. Fall back to default
-           * behavior: wake up at the next slot. */
+        /* A burst link was scheduled. Replay the current link at the
+        next time offset */
+        if(burst_link_scheduled) {
           timeslot_diff = 1;
+          backup_link = NULL;
+          /* Keep track of the number of repetitions */
+          tsch_current_burst_count++;
+        } else {
+          /* Get next active link */
+          current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
+          if(current_link == NULL) {
+            /* There is no next link. Fall back to default
+             * behavior: wake up at the next slot. */
+            timeslot_diff = 1;
+          } else {
+            /* Reset burst index now that the link was scheduled from
+              normal schedule (as opposed to from ongoing burst) */
+            tsch_current_burst_count = 0;
+          }
         }
+
         /* Update ASN */
         TSCH_ASN_INC(tsch_current_asn, timeslot_diff);
         /* Time to next wake up */

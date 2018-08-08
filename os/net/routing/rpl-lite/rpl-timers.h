@@ -105,6 +105,11 @@ void rpl_timers_schedule_dao_ack(uip_ipaddr_t *target, uint16_t sequence);
 void rpl_schedule_probing(void);
 
 /**
+ * Schedule probing within a few seconds
+*/
+void rpl_schedule_probing_now(void);
+
+/**
  * Schedule a state update ASAP. Useful to force an update from a context
  * where updating directly would be unsafe.
 */

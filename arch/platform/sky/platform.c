@@ -103,23 +103,14 @@ set_lladdr(void)
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(addr.u8, ds2411_id, sizeof(addr.u8));
 #else
-  if(node_id == 0) {
-    int i;
-    for(i = 0; i < sizeof(linkaddr_t); ++i) {
-      addr.u8[i] = ds2411_id[7 - i];
-    }
-  } else {
-    addr.u8[0] = node_id & 0xff;
-    addr.u8[1] = node_id >> 8;
+  int i;
+  for(i = 0; i < sizeof(linkaddr_t); ++i) {
+    addr.u8[i] = ds2411_id[7 - i];
   }
 #endif
   linkaddr_set_node_addr(&addr);
 }
 /*---------------------------------------------------------------------------*/
-#if WITH_TINYOS_AUTO_IDS
-uint16_t TOS_NODE_ID = 0x1234; /* non-zero */
-uint16_t TOS_LOCAL_ADDRESS = 0x1234; /* non-zero */
-#endif /* WITH_TINYOS_AUTO_IDS */
 void
 platform_init_stage_one(void)
 {
@@ -153,23 +144,7 @@ platform_init_stage_two(void)
    * Hardware initialization done!
    */
 
-#if WITH_TINYOS_AUTO_IDS
-  node_id = TOS_NODE_ID;
-#else /* WITH_TINYOS_AUTO_IDS */
-  /* Restore node id if such has been stored in external mem */
-  node_id_restore();
-#endif /* WITH_TINYOS_AUTO_IDS */
-
-  /* for setting "hardcoded" IEEE 802.15.4 MAC addresses */
-#ifdef IEEE_802154_MAC_ADDRESS
-  {
-    uint8_t ieee[] = IEEE_802154_MAC_ADDRESS;
-    memcpy(ds2411_id, ieee, sizeof(uip_lladdr.addr));
-    ds2411_id[7] = node_id & 0xff;
-  }
-#endif
-
-  random_init(ds2411_id[0] + node_id);
+  random_init(ds2411_id[0]);
 
   leds_off(LEDS_BLUE);
 
@@ -198,21 +173,7 @@ platform_init_stage_three(void)
 
   cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
 
-  if(node_id > 0) {
-    LOG_INFO("Node id: %u\n", node_id);
-  } else {
-    LOG_INFO("Node id: N/A\n");
-  }
-
-#if NETSTACK_CONF_WITH_IPV6
-  LOG_INFO("%s, rf channel %u, CCA threshold %i\n",
-           NETSTACK_MAC.name,
-           CC2420_CONF_CHANNEL,
-           CC2420_CONF_CCA_THRESH);
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  LOG_INFO("%s, rf channel %u\n",
-           NETSTACK_MAC.name, CC2420_CONF_CHANNEL);
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+  LOG_INFO("CC2420 CCA threshold %i\n", CC2420_CONF_CCA_THRESH);
 
 #if !NETSTACK_CONF_WITH_IPV6
   uart1_set_input(serial_line_input_byte);

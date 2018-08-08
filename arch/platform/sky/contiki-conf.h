@@ -11,10 +11,6 @@
 #include "sky-def.h"
 #include "msp430-def.h"
 /*---------------------------------------------------------------------------*/
-/* Map RF_CHANNEL to cc2420 default channel */
-#ifdef RF_CHANNEL
-#define CC2420_CONF_CHANNEL RF_CHANNEL
-#endif /* RF_CHANNEL */
 
 /* Configure radio driver */
 #ifndef NETSTACK_CONF_RADIO

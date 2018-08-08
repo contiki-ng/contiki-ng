@@ -29,14 +29,23 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup common-cc26xx-peripherals
+ * \addtogroup dev
  * @{
  *
- * \defgroup sensortag-cc26xx-ext-flash SensorTag/LaunchPad External Flash
+ * \defgroup ext-flash Generic external SPI flash driver
+ *
+ * This is a generic driver for external SPI flash memories. The driver has
+ * been tested and works with multiple external SPI flash parts. The list of
+ * parts the driver has been tested against is shown in the README in this
+ * directory.
+ *
+ * If you successfully use this driver with a part that is not listed in the
+ * README, please let us know so we can update it.
+ *
  * @{
  *
  * \file
- * Header file for the Sensortag/LaunchPad External Flash Driver
+ * Header file for the external SPI flash API
  */
 /*---------------------------------------------------------------------------*/
 #ifndef EXT_FLASH_H_

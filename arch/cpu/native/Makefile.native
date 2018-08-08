@@ -22,6 +22,7 @@ CFLAGS  += $(CFLAGSNO)
 
 ifeq ($(HOST_OS),Darwin)
 AROPTS = -rc
+LDFLAGS_WERROR := -Wl,-fatal_warnings
 LDFLAGS += -Wl,-flat_namespace,-map,$(CONTIKI_NG_PROJECT_MAP)
 CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
 else

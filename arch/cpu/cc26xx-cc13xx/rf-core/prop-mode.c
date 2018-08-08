@@ -45,6 +45,7 @@
 #include "net/netstack.h"
 #include "sys/energest.h"
 #include "sys/clock.h"
+#include "sys/critical.h"
 #include "sys/rtimer.h"
 #include "sys/cc.h"
 #include "lpm.h"
@@ -629,7 +630,7 @@ init(void)
   smartrf_settings_cmd_prop_rx_adv.pQueue = &rx_data_queue;
   smartrf_settings_cmd_prop_rx_adv.pOutput = (uint8_t *)&rx_stats;
 
-  set_channel(RF_CORE_CHANNEL);
+  set_channel(IEEE802154_DEFAULT_CHANNEL);
 
   if(on() != RF_CORE_CMD_OK) {
     PRINTF("init: on() failed\n");
@@ -766,6 +767,7 @@ send(const void *payload, unsigned short payload_len)
 static int
 read_frame(void *buf, unsigned short buf_len)
 {
+  int_master_status_t status;
   rfc_dataEntryGeneral_t *entry = (rfc_dataEntryGeneral_t *)rx_read_entry;
   uint8_t *data_ptr = &entry->data;
   int len = 0;
@@ -795,6 +797,14 @@ read_frame(void *buf, unsigned short buf_len)
     entry->status = DATA_ENTRY_STATUS_PENDING;
   }
 
+  status = critical_enter();
+  if(rx_is_full) {
+    rx_is_full = false;
+    PRINTF("RXQ was full, re-enabling radio!\n");
+    rx_on_prop();
+  }
+  critical_exit(status);
+    
   return len;
 }
 /*---------------------------------------------------------------------------*/

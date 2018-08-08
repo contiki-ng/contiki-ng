@@ -1089,7 +1089,7 @@ uip_process(uint8_t flag)
   if((UIP_IP_BUF->vtc & 0xf0) != 0x60)  { /* IP version and header length. */
     UIP_STAT(++uip_stat.ip.drop);
     UIP_STAT(++uip_stat.ip.vhlerr);
-    LOG_ERR("invalid version.");
+    LOG_ERR("invalid version\n");
     goto drop;
   }
   /*

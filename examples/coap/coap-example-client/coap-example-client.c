@@ -92,9 +92,6 @@ PROCESS_THREAD(er_example_client, ev, data)
 
   coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);
 
-  /* receives all CoAP messages */
-  coap_engine_init();
-
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 
 #if PLATFORM_HAS_BUTTON

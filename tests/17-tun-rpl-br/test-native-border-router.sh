@@ -1,4 +1,5 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -12,6 +13,12 @@ IPADDR=$3
 # Time allocated for convergence
 WAIT_TIME=$4
 
+# Payload len. Default is ping6's default, 56.
+PING_SIZE=${5:-56}
+
+# Inter-ping delay. Default is ping6's default, 1s.
+PING_DELAY=${6:-1}
+
 # ICMP request-reply count
 COUNT=5
 
@@ -21,7 +28,7 @@ java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -c
 JPID=$!
 sleep 20
 
-# Connect to the simlation
+# Connect to the simulation
 echo "Starting native border-router"
 nohup make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=native >> $BASENAME.nbr.log 2>&1 &
 MPID=$!
@@ -30,15 +37,15 @@ sleep $WAIT_TIME
 
 # Do ping
 echo "Pinging"
-ping6 $IPADDR -c $COUNT | tee $BASENAME.scriptlog
+ping6 $IPADDR -c $COUNT -s $PING_SIZE -i $PING_DELAY | tee $BASENAME.scriptlog
 # Fetch ping6 status code (not $? because this is piped)
 STATUS=${PIPESTATUS[0]}
 REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
 
 echo "Closing simulation and nbr"
 sleep 1
-kill -9 $JPID
-kill -9 $MPID
+kill_bg $JPID
+kill_bg $MPID
 sleep 1
 rm COOJA.testlog
 rm COOJA.log

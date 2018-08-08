@@ -33,7 +33,7 @@
 /*---------------------------------------------------------------------------*/
 /* Change to match your configuration */
 #define IEEE802154_CONF_PANID            0xABCD
-#define RF_CORE_CONF_CHANNEL                 26
+#define IEEE802154_CONF_DEFAULT_CHANNEL      26
 #define RF_BLE_CONF_ENABLED                   1
 /*---------------------------------------------------------------------------*/
 
@@ -52,6 +52,16 @@
  * Enable/Disable DIO23 ADC reading by setting CC26XX_WEB_DEMO_CONF_ADC_DEMO
  */
 #define CC26XX_WEB_DEMO_CONF_ADC_DEMO         0
+/*---------------------------------------------------------------------------*/
+/*
+ * Change to 1 if you are using an older CC2650 Sensortag (look for Rev: 1.2
+ * printed on the PCB, or for a sticker reading "HW Rev 1.2.0").
+ *
+ * This may be the case if you are getting this error:
+ * "Could not open flash to load config"
+ * when your sensortag is starting up.
+ */
+#define SENSORTAG_CC2650_REV_1_2_0            0
 /*---------------------------------------------------------------------------*/
 /* Enable the ROM bootloader */
 #define ROM_BOOTLOADER_ENABLE                 1

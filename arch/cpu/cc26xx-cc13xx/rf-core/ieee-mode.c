@@ -610,7 +610,7 @@ init_rf_params(void)
   cmd->startTime = 0x00000000;
   cmd->startTrigger.triggerType = TRIG_NOW;
   cmd->condition.rule = COND_NEVER;
-  cmd->channel = RF_CORE_CHANNEL;
+  cmd->channel = IEEE802154_DEFAULT_CHANNEL;
 
   cmd->rxConfig.bAutoFlushCrc = 1;
   cmd->rxConfig.bAutoFlushIgn = 0;

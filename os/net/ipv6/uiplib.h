@@ -1,19 +1,19 @@
 /*
  * Copyright (c) 2002, Adam Dunkels.
- * All rights reserved. 
+ * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
- * are met: 
- * 1. Redistributions of source code must retain the above copyright 
- *    notice, this list of conditions and the following disclaimer. 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above
  *    copyright notice, this list of conditions and the following
  *    disclaimer in the documentation and/or other materials provided
- *    with the distribution. 
+ *    with the distribution.
  * 3. The name of the author may not be used to endorse or promote
  *    products derived from this software without specific prior
- *    written permission.  
+ *    written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -25,29 +25,30 @@
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * This file is part of the Contiki desktop environment for the C64.
  *
  *
  */
-
-/**
- * \file
- * Various uIP library functions.
- * \author
- * Adam Dunkels <adam@sics.se>
- *
- */
-
 #ifndef UIPLIB_H_
 #define UIPLIB_H_
 
 #include "net/ipv6/uip.h"
 
 /**
- * \addtogroup uipconvfunc
+ * \addtogroup uip
  * @{
+ *
+ * \defgroup uip-addr-lib uIP address manipulation library
+ *
+ * A library with various IP address manipulation functions
+ * @{
+ *
+ * \file
+ * Header file for the IP address manipulation library
+ * \author
+ * Adam Dunkels <adam@sics.se>
  */
 
 /**
@@ -65,7 +66,7 @@
  * the numerical representation of the address.
  *
  * \retval 0 If the IP address could not be parsed.
- * \retval Non-zero If the IP address was parsed. 
+ * \retval Non-zero If the IP address was parsed.
  */
 #if NETSTACK_CONF_WITH_IPV6
 #define uiplib_ipaddrconv uiplib_ip6addrconv
@@ -77,10 +78,10 @@ int uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *addr);
 int uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *addr);
 /** @} */
 
-/**
- * \addtogroup uiplib
- * @{
- */
+
+/* The maxium length of an IPv6 string, including terminating null bytes
+ * fd01:0002:0003:0004:0005:0006:0007:0008 => 39 + 1 bytes */
+#define UIPLIB_IPV6_MAX_STR_LEN 40
 
 /**
  * Print an IP address using printf().
@@ -99,6 +100,8 @@ void uiplib_ipaddr_print(const uip_ipaddr_t *addr);
  */
 int uiplib_ipaddr_snprint(char *buffer, size_t size, const uip_ipaddr_t *addr);
 
-/** @} */
-
 #endif /* UIPLIB_H_ */
+/**
+ * @}
+ * @}
+ */

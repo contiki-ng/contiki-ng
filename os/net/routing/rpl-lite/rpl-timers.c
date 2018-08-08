@@ -150,11 +150,11 @@ rpl_timers_dio_reset(const char *str)
 {
   if(rpl_dag_ready_to_advertise()) {
     LOG_INFO("reset DIO timer (%s)\n", str);
-#if !RPL_LEAF_ONLY
-    curr_instance.dag.dio_counter = 0;
-    curr_instance.dag.dio_intcurrent = curr_instance.dio_intmin;
-    new_dio_interval();
-#endif /* RPL_LEAF_ONLY */
+    if(!rpl_get_leaf_only()) {
+        curr_instance.dag.dio_counter = 0;
+        curr_instance.dag.dio_intcurrent = curr_instance.dio_intmin;
+        new_dio_interval();
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -342,13 +342,7 @@ handle_dao_ack_timer(void *ptr)
 clock_time_t
 get_probing_delay(void)
 {
-  if(curr_instance.used && curr_instance.dag.urgent_probing_target != NULL) {
-    /* Urgent probing needed (to find out if a neighbor may become preferred parent) */
-    return random_rand() % (CLOCK_SECOND * 4);
-  } else {
-    /* Else, use normal probing interval */
-    return ((RPL_PROBING_INTERVAL) / 2) + random_rand() % (RPL_PROBING_INTERVAL);
-  }
+  return ((RPL_PROBING_INTERVAL) / 2) + random_rand() % (RPL_PROBING_INTERVAL);
 }
 /*---------------------------------------------------------------------------*/
 rpl_nbr_t *
@@ -440,7 +434,7 @@ handle_probing_timer(void *ptr)
         );
     /* Send probe, e.g. unicast DIO or DIS */
     RPL_PROBING_SEND_FUNC(target_ipaddr);
-    curr_instance.dag.urgent_probing_target = NULL;
+    /* urgent_probing_target will be NULLed in the packet_sent callback */
   } else {
     LOG_INFO("no neighbor needs probing\n");
   }
@@ -455,6 +449,15 @@ rpl_schedule_probing(void)
   if(curr_instance.used) {
     ctimer_set(&curr_instance.dag.probing_timer, RPL_PROBING_DELAY_FUNC(),
                   handle_probing_timer, NULL);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_schedule_probing_now(void)
+{
+  if(curr_instance.used) {
+    ctimer_set(&curr_instance.dag.probing_timer,
+      random_rand() % (CLOCK_SECOND * 4), handle_probing_timer, NULL);
   }
 }
 #endif /* RPL_WITH_PROBING */
@@ -518,6 +521,7 @@ handle_periodic_timer(void *ptr)
 
   if(LOG_INFO_ENABLED) {
     rpl_neighbor_print_list("Periodic");
+    rpl_dag_root_print_links("Periodic");
   }
 
   ctimer_reset(&periodic_timer);

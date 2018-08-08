@@ -91,6 +91,11 @@
 #define NBR_TABLE_CONF_MAX_NEIGHBORS 300
 #endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 
+/* configure queues */
+#ifndef QUEUEBUF_CONF_NUM
+#define QUEUEBUF_CONF_NUM 64
+#endif /* QUEUEBUF_CONF_NUM */
+
 #ifndef UIP_CONF_IPV6_QUEUE_PKT
 #define UIP_CONF_IPV6_QUEUE_PKT         1
 #endif /* UIP_CONF_IPV6_QUEUE_PKT */
@@ -113,8 +118,9 @@ typedef unsigned short uip_stats_t;
 
 #define CLOCK_CONF_SECOND 1000L
 typedef unsigned long clock_time_t;
-typedef uint64_t rtimer_clock_t;
-#define RTIMER_CLOCK_DIFF(a,b)     ((int64_t)((a)-(b)))
+
+/* Use 64-bit rtimer (default in Contiki-NG is 32) */
+#define RTIMER_CONF_CLOCK_SIZE 8
 
 #define RADIO_DELAY_BEFORE_TX 0
 #define RADIO_DELAY_BEFORE_RX 0
@@ -133,7 +139,6 @@ typedef uint64_t rtimer_clock_t;
 
 #define CFS_CONF_OFFSET_TYPE	long
 
-#define RF_CHANNEL                     26
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN 125
 
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0

@@ -76,7 +76,7 @@
 /*---------------------------------------------------------------------------*/
 /* RF interrupts */
 #define RX_FRAME_IRQ IRQ_RX_ENTRY_DONE
-#define ERROR_IRQ    IRQ_INTERNAL_ERROR
+#define ERROR_IRQ    (IRQ_INTERNAL_ERROR | IRQ_RX_BUF_FULL)
 #define RX_NOK_IRQ   IRQ_RX_NOK
 
 /* Those IRQs are enabled all the time */
@@ -102,6 +102,9 @@ static const rf_core_primary_mode_t *primary_mode = NULL;
 /* Radio timer (RAT) offset as compared to the rtimer counter (RTC) */
 int32_t rat_offset = 0;
 static bool rat_offset_known = false;
+/*---------------------------------------------------------------------------*/
+/* Buffer full flag */
+volatile bool rx_is_full = false;
 /*---------------------------------------------------------------------------*/
 PROCESS(rf_core_process, "CC13xx / CC26xx RF driver");
 /*---------------------------------------------------------------------------*/
@@ -573,6 +576,16 @@ cc26xx_rf_cpe1_isr(void)
     if(rf_core_power_up() != RF_CORE_CMD_OK) {
       return;
     }
+  }
+    
+  if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_RX_BUF_FULL) {
+    PRINTF("\nRF: BUF_FULL\n\n");
+    /* set a flag that the buffer is full*/
+    rx_is_full = true;
+    /* make sure read_frame() will be called to make space in RX buffer */
+    process_poll(&rf_core_process);
+    /* Clear the IRQ_RX_BUF_FULL interrupt flag by writing zero to bit */
+    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~(IRQ_RX_BUF_FULL);
   }
 
   /* Clear INTERNAL_ERROR interrupt flag */

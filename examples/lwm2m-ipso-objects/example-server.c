@@ -288,9 +288,6 @@ PROCESS_THREAD(router_process, ev, data)
 
   PROCESS_BEGIN();
 
-  /* receives all CoAP messages */
-  coap_engine_init();
-
   /* Initialize DAG root */
   NETSTACK_ROUTING.root_start();
 

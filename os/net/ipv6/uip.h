@@ -81,6 +81,7 @@
 
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"
+#include "net/linkaddr.h"
 
 /* For memcmp */
 #include <string.h>
@@ -107,14 +108,16 @@ typedef uip_ip4addr_t uip_ipaddr_t;
 
 
 /*---------------------------------------------------------------------------*/
+#define UIP_802154_SHORTADDR_LEN 2
+#define UIP_802154_LONGADDR_LEN  8
 
 /** \brief 16 bit 802.15.4 address */
 typedef struct uip_802154_shortaddr {
-  uint8_t addr[2];
+  uint8_t addr[UIP_802154_SHORTADDR_LEN];
 } uip_802154_shortaddr;
 /** \brief 64 bit 802.15.4 address */
 typedef struct uip_802154_longaddr {
-  uint8_t addr[8];
+  uint8_t addr[UIP_802154_LONGADDR_LEN];
 } uip_802154_longaddr;
 
 /** \brief 802.11 address */
@@ -134,11 +137,15 @@ typedef struct uip_eth_addr {
 
 #if UIP_CONF_LL_802154
 /** \brief 802.15.4 address */
+#if LINKADDR_SIZE == UIP_802154_LONGADDR_LEN
 typedef uip_802154_longaddr uip_lladdr_t;
-#define UIP_802154_SHORTADDR_LEN 2
-#define UIP_802154_LONGADDR_LEN  8
+#elif LINKADDR_SIZE == UIP_802154_SHORTADDR_LEN
+typedef uip_802154_shortaddr uip_lladdr_t;
+#else /* LINKADDR_SIZE == 8 */
+#error unsupported configuration of LINKADDR_SIZE
+#endif /* LINKADDR_SIZE == 8 */
 /** \brief Link layer address length */
-#define UIP_LLADDR_LEN UIP_802154_LONGADDR_LEN
+#define UIP_LLADDR_LEN LINKADDR_SIZE
 #else /*UIP_CONF_LL_802154*/
 #if UIP_CONF_LL_80211
 /** \brief 802.11 address */

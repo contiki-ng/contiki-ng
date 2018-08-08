@@ -355,7 +355,6 @@ PROCESS_THREAD(start_app, ev, data)
   NETSTACK_MAC.on();
   printf("Starting RPL node\n");
 
-  coap_engine_init();
   coap_activate_resource(&resource_light_sensor_value, "DR1175/LightSensor/Value");
   coap_activate_resource(&resource_light_sensor_unit, "DR1175/LightSensor/Unit");
   coap_activate_resource(&resource_temperature_unit, "DR1175/Temperature/Unit");
