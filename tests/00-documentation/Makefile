@@ -24,35 +24,56 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
+TOOLS_DIR = ../../tools
 
-DOCDIR=../../tools/doxygen
+DOXYGEN = doxygen
+DOXYGEN_DIR = $(TOOLS_DIR)/doxygen
+DOXYGEN_LOG = $(DOXYGEN).log
+DOXYGEN_ERR = $(DOXYGEN).err
+
+RAEDTHEDOCS = readthedocs
+READTHEDOCS_DIR = $(TOOLS_DIR)/readthedocs
+READTHEDOCS_LOG = $(RAEDTHEDOCS).log
+READTHEDOCS_ERR = $(RAEDTHEDOCS).err
+
+CLEAN_TARGETS += $(DOXYGEN_LOG) $(DOXYGEN_ERR)
+CLEAN_TARGETS += $(READTHEDOCS_LOG) $(READTHEDOCS_ERR)
 
 all: clean summary
 
 doxygen:
-	-@$(MAKE) -C $(DOCDIR) 2> doxygen.err > /dev/null
+	-@$(MAKE) -C $(DOXYGEN_DIR) 2> $(DOXYGEN_ERR) > /dev/null
 
-summary: doxygen
+readthedocs:
+	-@$(MAKE) -C $(READTHEDOCS_DIR) 2> $(READTHEDOCS_ERR) > /dev/null
+
+summary: doxygen readthedocs
 	@( \
 		1> summary; \
-		if [ -s doxygen.err ] ; then \
-			echo "Doxygen: TEST FAIL" | tee summary; \
+		if [ -s $(DOXYGEN_ERR) ] ; then \
+			echo "Doxygen: TEST FAIL" | tee -a summary; \
 			echo "Errors:"; \
-			cat doxygen.err; \
+			cat $(DOXYGEN_ERR); \
 		fi ; \
-		if [ -s $(DOCDIR)/doxygen.log ] ; then \
-			echo "Doxygen: TEST FAIL" | tee summary; \
+		if [ -s $(DOXYGEN_DIR)/doxygen.log ] ; then \
+			echo "Doxygen: TEST FAIL" | tee -a summary; \
 			echo "Warnings:"; \
-			cat $(DOCDIR)/doxygen.log; \
+			cat $(DOXYGEN_DIR)/doxygen.log; \
+		fi ; \
+		if [ -s $(READTHEDOCS_ERR) ] ; then \
+			echo "Readthedocs: TEST FAIL" | tee -a summary; \
+			echo "Errors:"; \
+			cat $(READTHEDOCS_ERR); \
 		fi ; \
 		if [ ! -s summary ] ; then \
-			echo "Doxygen: TEST OK (no warning nor error)" | tee summary; \
+			echo "Documentation: TEST OK (no warning nor error)" | tee summary; \
 		fi ; \
 	)
-	@rm doxygen.err
+	@rm -f $(CLEAN_TARGETS)
 	@echo "========== Summary =========="
 	@cat summary
 
 clean:
-	@rm -f summary doxygen.err
-	@$(MAKE) -C $(DOCDIR) clean
+	@rm -f summary $(CLEAN_TARGETS)
+	@$(MAKE) -C $(DOXYGEN_DIR) clean
+	@$(MAKE) -C $(READTHEDOCS_DIR) clean

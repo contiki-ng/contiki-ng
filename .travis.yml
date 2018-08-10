@@ -7,7 +7,7 @@ notifications:
 # Environment setup before test script. Runs for each build
 before_install:
   # Check if anything has changed within the docker directory
-  - DOCKER_CHANGED=`git diff --name-only $TRAVIS_BRANCH...HEAD -- tools/docker | wc -l`
+  - DOCKER_CHANGED=`git diff --name-only $TRAVIS_COMMIT_RANGE -- tools/docker | wc -l`
   # If Docker directory has not changed, pull image from Dockerhub. Else, build
   # image from Dockerifle. This needs to be done for each job. Any build error
   # will count as Travis test failure. In case this updates develop, push new
@@ -20,6 +20,10 @@ before_install:
     else
       echo "Docker image changed, build from Dockerfile"
       docker build tools/docker -t $DOCKER_IMG;
+      if [ $? != 0 ]; then
+        echo "Failed to build Docker image"
+        exit 1
+      fi
       if [ $TRAVIS_SECURE_ENV_VARS == true ] && [ $TRAVIS_PULL_REQUEST == false ] && [ $TRAVIS_BRANCH == 'develop' ]; then
         echo "This build is for an update of branch develop. Push image to Dockerhub"
         echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
@@ -58,7 +62,7 @@ env:
     - TEST_NAME='simulation-base'
     - TEST_NAME='ieee802154'
     - TEST_NAME='compile-nxp-ports'
-    - TEST_NAME='doxygen'
+    - TEST_NAME='documentation'
     - TEST_NAME='compile-tools'
     - TEST_NAME='native-runs'
     - TEST_NAME='ipv6'
