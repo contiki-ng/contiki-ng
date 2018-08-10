@@ -194,6 +194,17 @@ void log_6addr(const uip_ipaddr_t *ipaddr);
 */
 void log_6addr_compact(const uip_ipaddr_t *ipaddr);
 
+/**
+ * Write at most size - 1 characters of the IP address to the output string,
+ * in a compact representation. The output is always null-terminated, unless
+ * size is 0.
+ *
+ * \param buf A pointer to an output string with at least size bytes.
+ * \param size The max number of characters to write to the output string.
+ * \param ipaddr A pointer to a uip_ipaddr_t that will be printed with printf().
+ */
+int log_6addr_compact_snprint(char *buf, size_t size, const uip_ipaddr_t *ipaddr);
+
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 /**

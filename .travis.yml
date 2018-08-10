@@ -1,36 +1,68 @@
 # Setup environment for Docker
 language: generic
 services: docker
-
 notifications:
-  - email: false
+  email: false
 
+# Environment setup before test script. Runs for each build
 before_install:
-  # Environment setup before test script
-  - export CNG_HOST_PATH=`pwd`
-  - export DOCKER_IMG='simonduq/contiki-ng:latest'
-  - sudo chgrp -hR 1000 $CNG_HOST_PATH
-  - docker pull $DOCKER_IMG
+  # Check if anything has changed within the docker directory
+  - DOCKER_CHANGED=`git diff --name-only $TRAVIS_COMMIT_RANGE -- tools/docker | wc -l`
+  # If Docker directory has not changed, pull image from Dockerhub. Else, build
+  # image from Dockerifle. This needs to be done for each job. Any build error
+  # will count as Travis test failure. In case this updates develop, push new
+  # image to Dockerhub (secure credentials only readable on bulids to
+  # contiki-ng/contiki-ng branches, not forks or PRs)
+  - >
+    if [ $DOCKER_CHANGED == 0 ]; then
+      echo "Docker image unchanged, pull from Dockerhub"
+      docker pull $DOCKER_IMG;
+    else
+      echo "Docker image changed, build from Dockerfile"
+      docker build tools/docker -t $DOCKER_IMG;
+      if [ $? != 0 ]; then
+        echo "Failed to build Docker image"
+        exit 1
+      fi
+      if [ $TRAVIS_SECURE_ENV_VARS == true ] && [ $TRAVIS_PULL_REQUEST == false ] && [ $TRAVIS_BRANCH == 'develop' ]; then
+        echo "This build is for an update of branch develop. Push image to Dockerhub"
+        echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
+        docker push $DOCKER_IMG;
+      fi
+    fi
+  # Build Cooja
   - ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar
+  # Set permissions for Docker mount
+  - sudo chgrp -hR 1000 $CNG_HOST_PATH
 
-script: # The test script for each build.
+# The test script for each build
+script:
   - docker run --privileged -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST_NAME";
   # Check outcome of the test
   - $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST_NAME; exit $?;
 
+# Environment variables
 env:
-  # Parallel builds
-  - TEST_NAME='compile-base'
-  - TEST_NAME='compile-arm-ports-01'
-  - TEST_NAME='compile-arm-ports-02'
-  - TEST_NAME='rpl-lite'
-  - TEST_NAME='rpl-classic'
-  - TEST_NAME='tun-rpl-br'
-  - TEST_NAME='coap-lwm2m'
-  - TEST_NAME='simulation-base'
-  - TEST_NAME='ieee802154'
-  - TEST_NAME='compile-nxp-ports'
-  - TEST_NAME='doxygen'
-  - TEST_NAME='compile-tools'
-  - TEST_NAME='native-runs'
-  - TEST_NAME='ipv6'
+  # Global environment variables, i.e., set for all builds
+  global:
+    - DOCKER_IMG='contiker/contiki-ng'
+    - CNG_HOST_PATH=`pwd`
+    # Encrypted environment variables.
+    # Only available on builds of contiki-ng/contiki-ng branches, not PRs or forks.
+    - secure: 0nrV5yjpT2kE19Hlm7t619Qbmyjx/G7bSUI1c+U3kZbyuxnRlASjVcDN5uPBoimIfGiBRI0nRq690BogAJt4EKwbC1Dy8kC1XD8mRtQ2AIZ6PHaUoG9iS5sBhFBQK0XkB83bwh6omRn/04O0uuX74ooSWT7fDrWxi/y5+0ysXK6gRtOhdrJ3FU5OkNVewX8NeCdx3pOWhMOtXWdFkMIi1XRdDnvMM5/hHlHMkdXXtaZQX9UsK3Q3DSjPRLZjKRiOlcx9MIg2ebh9ITmd2Du2p2q/LKtoutJckvhbKQPWcZi/B+1ZTSff0FHBIg+EYxf6TeFuia7XSTWH7sr2CDCCtcvSR9bB5yW6jdmGfa8Af8I1TCBuqoSUo0Re50BZBZF7COleEh+IojbjXn2CIDMg5rT4Sh3qcMGvFn9OW1cz5h5UNSOk7EIAXXPcI7Aloxh2sBo4/DrvvbfIsKrvxV9Fx4bdyNtR7dZ7xsoOw6L0zttC3K9naf3VAOeBAyjBiRwm0tWxJC/buhTsKlYrthhyUrwLtYAFL4UHcazvz57hY/cEzR2X6F//9Hp7HFoNtn1E36doX3ZfeI22yxHMo9SYW7O69C45wbhJ29lAA9XXbYVyGBKFkY8C1NCZ0Xckt9H8/Ow5Sz8HmW/NNBJCn0Fsx+jezdGc4ED5naugNbLAyNg=
+  # Each line in the 'matrix' triggers a separate Travis build
+  matrix:
+    - TEST_NAME='compile-base'
+    - TEST_NAME='compile-arm-ports-01'
+    - TEST_NAME='compile-arm-ports-02'
+    - TEST_NAME='rpl-lite'
+    - TEST_NAME='rpl-classic'
+    - TEST_NAME='tun-rpl-br'
+    - TEST_NAME='coap-lwm2m'
+    - TEST_NAME='simulation-base'
+    - TEST_NAME='ieee802154'
+    - TEST_NAME='compile-nxp-ports'
+    - TEST_NAME='documentation'
+    - TEST_NAME='compile-tools'
+    - TEST_NAME='native-runs'
+    - TEST_NAME='ipv6'

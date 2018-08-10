@@ -211,30 +211,27 @@ coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep)
   /* Only IPv6 supported */
   int start = index_of(text, 0, size, '[');
   int end = index_of(text, start, size, ']');
-  int secure = strncmp((const char *)text, "coaps:", 6) == 0;
   uint32_t port;
-  if(start > 0 && end > start &&
-     uiplib_ipaddrconv((const char *)&text[start], &ep->ipaddr)) {
+
+  ep->secure = strncmp(text, "coaps:", 6) == 0;
+  if(start >= 0 && end > start &&
+     uiplib_ipaddrconv(&text[start], &ep->ipaddr)) {
     if(text[end + 1] == ':' &&
        get_port(text + end + 2, size - end - 2, &port)) {
       ep->port = UIP_HTONS(port);
-    } else if(secure) {
-      /**
-       * Secure CoAP should use a different port but for now
-       * the same port is used.
-       */
-      LOG_DBG("Using secure port (coaps)\n");
+    } else if(ep->secure) {
+      /* Use secure CoAP port by default for secure endpoints. */
       ep->port = SERVER_LISTEN_SECURE_PORT;
-      ep->secure = 1;
     } else {
       ep->port = SERVER_LISTEN_PORT;
-      ep->secure = 0;
     }
     return 1;
-  } else {
-    if(uiplib_ipaddrconv((const char *)&text, &ep->ipaddr)) {
+  } else if(size < UIPLIB_IPV6_MAX_STR_LEN) {
+    char buf[UIPLIB_IPV6_MAX_STR_LEN];
+    memcpy(buf, text, size);
+    buf[size] = '\0';
+    if(uiplib_ipaddrconv(buf, &ep->ipaddr)) {
       ep->port = SERVER_LISTEN_PORT;
-      ep->secure = 0;
       return 1;
     }
   }

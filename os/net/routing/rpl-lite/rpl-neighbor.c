@@ -46,6 +46,7 @@
 #include "net/routing/rpl-lite/rpl.h"
 #include "net/link-stats.h"
 #include "net/nbr-table.h"
+#include "net/ipv6/uiplib.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -85,6 +86,59 @@ acceptable_rank(rpl_rank_t rank)
       && rank <= max_acceptable_rank();
 }
 /*---------------------------------------------------------------------------*/
+int
+rpl_neighbor_snprint(char *buf, int buflen, rpl_nbr_t *nbr)
+{
+  int index = 0;
+  rpl_nbr_t *best = best_parent(0);
+  const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
+  clock_time_t clock_now = clock_time();
+
+  if(LOG_WITH_COMPACT_ADDR) {
+    index += log_6addr_compact_snprint(buf+index, buflen-index, rpl_neighbor_get_ipaddr(nbr));
+  } else {
+    index += uiplib_ipaddr_snprint(buf+index, buflen-index, rpl_neighbor_get_ipaddr(nbr));
+  }
+  if(index >= buflen) {
+    return index;
+  }
+  index += snprintf(buf+index, buflen-index,
+      "%5u, %5u => %5u -- %2u %c%c%c%c%c",
+      nbr->rank,
+      rpl_neighbor_get_link_metric(nbr),
+      rpl_neighbor_rank_via_nbr(nbr),
+      stats != NULL ? stats->freshness : 0,
+      (nbr->rank == ROOT_RANK) ? 'r' : ' ',
+      nbr == best ? 'b' : ' ',
+      (acceptable_rank(rpl_neighbor_rank_via_nbr(nbr)) && rpl_neighbor_is_acceptable_parent(nbr)) ? 'a' : ' ',
+      link_stats_is_fresh(stats) ? 'f' : ' ',
+      nbr == curr_instance.dag.preferred_parent ? 'p' : ' '
+  );
+  if(index >= buflen) {
+    return index;
+  }
+  if(stats->last_tx_time > 0) {
+    index += snprintf(buf+index, buflen-index,
+                              " (last tx %u min ago",
+                              (unsigned)((clock_now - stats->last_tx_time) / (60 * CLOCK_SECOND)));
+  } else {
+    index += snprintf(buf+index, buflen-index,
+                              " (no tx");
+  }
+  if(index >= buflen) {
+    return index;
+  }
+  if(nbr->better_parent_since > 0) {
+    index += snprintf(buf+index, buflen-index,
+                              ", better since %u min)",
+                              (unsigned)((clock_now - nbr->better_parent_since) / (60 * CLOCK_SECOND)));
+  } else {
+    index += snprintf(buf+index, buflen-index,
+                              ")");
+  }
+  return index;
+}
+/*---------------------------------------------------------------------------*/
 void
 rpl_neighbor_print_list(const char *str)
 {
@@ -92,8 +146,6 @@ rpl_neighbor_print_list(const char *str)
     int curr_dio_interval = curr_instance.dag.dio_intcurrent;
     int curr_rank = curr_instance.dag.rank;
     rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
-    rpl_nbr_t *best = best_parent(0);
-    clock_time_t clock_now = clock_time();
 
     LOG_INFO("nbr: own state, addr ");
     LOG_INFO_6ADDR(rpl_get_global_address());
@@ -103,30 +155,9 @@ rpl_neighbor_print_list(const char *str)
         max_acceptable_rank(),
         curr_dio_interval, rpl_neighbor_count(), str);
     while(nbr != NULL) {
-      const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
-      LOG_INFO("nbr: ");
-      LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(nbr));
-      LOG_INFO_(" %5u, %5u => %5u -- %2u %c%c%c%c%c",
-          nbr->rank,
-          rpl_neighbor_get_link_metric(nbr),
-          rpl_neighbor_rank_via_nbr(nbr),
-          stats != NULL ? stats->freshness : 0,
-          (nbr->rank == ROOT_RANK) ? 'r' : ' ',
-          nbr == best ? 'b' : ' ',
-          (acceptable_rank(rpl_neighbor_rank_via_nbr(nbr)) && rpl_neighbor_is_acceptable_parent(nbr)) ? 'a' : ' ',
-          link_stats_is_fresh(stats) ? 'f' : ' ',
-          nbr == curr_instance.dag.preferred_parent ? 'p' : ' '
-      );
-      if(stats->last_tx_time > 0) {
-        LOG_INFO_(" (last tx %u min ago", (unsigned)((clock_now - stats->last_tx_time) / (60 * CLOCK_SECOND)));
-      } else {
-        LOG_INFO_(" (no tx");
-      }
-      if(nbr->better_parent_since > 0) {
-        LOG_INFO_(", better since %u min)\n", (unsigned)((clock_now - nbr->better_parent_since) / (60 * CLOCK_SECOND)));
-      } else {
-        LOG_INFO_(")\n");
-      }
+      char buf[120];
+      rpl_neighbor_snprint(buf, sizeof(buf), nbr);
+      LOG_INFO("nbr: %s\n", buf);
       nbr = nbr_table_next(rpl_neighbors, nbr);
     }
     LOG_INFO("nbr: end of list\n");
@@ -378,9 +409,9 @@ rpl_neighbor_select_best(void)
       /* The best is not fresh. Probe it (unless there is already an urgent
          probing target). We will be called back after the probing anyway. */
       if(curr_instance.dag.urgent_probing_target == NULL) {
-        LOG_WARN("best parent is not fresh, schedule urgent probing to ");
-        LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(best));
-        LOG_WARN_("\n");
+        LOG_INFO("best parent is not fresh, schedule urgent probing to ");
+        LOG_INFO_6ADDR(rpl_neighbor_get_ipaddr(best));
+        LOG_INFO_("\n");
         curr_instance.dag.urgent_probing_target = best;
         rpl_schedule_probing_now();
       }

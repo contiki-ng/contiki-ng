@@ -113,8 +113,7 @@ static uint32_t sleep_start_ticks;
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /* Reads MAC from SoC
- * Must be called before node_id_restore()
- * and network addresses initialization */
+ * Must be called before network addresses initialization */
 static void
 init_node_mac(void)
 {
@@ -139,14 +138,9 @@ set_linkaddr(void)
 #if NETSTACK_CONF_WITH_IPV6
   memcpy(addr.u8, node_mac, sizeof(addr.u8));
 #else
-  if(node_id == 0) {
-    int i;
-    for(i = 0; i < LINKADDR_SIZE; ++i) {
-      addr.u8[i] = node_mac[LINKADDR_SIZE - 1 - i];
-    }
-  } else {
-    addr.u8[0] = node_id & 0xff;
-    addr.u8[1] = node_id >> 8;
+  int i;
+  for(i = 0; i < LINKADDR_SIZE; ++i) {
+    addr.u8[i] = node_mac[LINKADDR_SIZE - 1 - i];
   }
 #endif
   linkaddr_set_node_addr(&addr);
@@ -164,10 +158,6 @@ xosc_init(void)
   return bAHI_Set32KhzClockMode(E_AHI_XTAL);
 }
 /*---------------------------------------------------------------------------*/
-#if WITH_TINYOS_AUTO_IDS
-uint16_t TOS_NODE_ID = 0x1234; /* non-zero */
-uint16_t TOS_LOCAL_ADDRESS = 0x1234; /* non-zero */
-#endif /* WITH_TINYOS_AUTO_IDS */
 void
 platform_init_stage_one(void)
 {
@@ -194,20 +184,6 @@ platform_init_stage_one(void)
   leds_init();
   leds_on(LEDS_ALL);
   init_node_mac();
-
-  node_id_restore();
-
-#if WITH_TINYOS_AUTO_IDS
-  node_id = TOS_NODE_ID;
-#endif /* WITH_TINYOS_AUTO_IDS */
-  /* for setting "hardcoded" IEEE 802.15.4 MAC addresses */
-#ifdef IEEE_802154_MAC_ADDRESS
-  {
-    uint8_t ieee[] = IEEE_802154_MAC_ADDRESS;
-    memcpy(node_mac, ieee, sizeof(uip_lladdr.addr));
-    node_mac[7] = node_id & 0xff;
-  }
-#endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -225,12 +201,6 @@ platform_init_stage_two(void)
 void
 platform_init_stage_three(void)
 {
-  if(node_id > 0) {
-    LOG_INFO("Node id is set to %u.\n", node_id);
-  } else {
-    LOG_INFO("Node id is not set.\n");
-  }
-
 #ifndef UIP_FALLBACK_INTERFACE
   uart0_set_input(serial_line_input_byte);
   serial_line_init();

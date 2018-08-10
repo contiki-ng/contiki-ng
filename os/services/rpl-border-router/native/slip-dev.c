@@ -336,7 +336,7 @@ slip_flushbuf(int fd)
     if(slip_begin == slip_packet_end) {
       slip_packet_count--;
       if(slip_end > slip_packet_end) {
-        memcpy(slip_buf, slip_buf + slip_packet_end,
+        memmove(slip_buf, slip_buf + slip_packet_end,
                slip_end - slip_packet_end);
       }
       slip_end -= slip_packet_end;

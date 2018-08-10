@@ -38,7 +38,7 @@
 #include "net/routing/routing.h"
 #include "net/ipv6/uip-debug.h"
 #include "lib/random.h"
-#include "node-id.h"
+#include "sys/node-id.h"
 #include "waveform.h"
 #include "leds.h"
 #include "net/ipv6/uiplib.h"

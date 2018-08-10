@@ -1,4 +1,5 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -16,9 +17,10 @@ CPID=$!
 sleep 10
 
 echo "Downloading leshan"
-wget -nc https://joakimeriksson.github.io/resources/leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+wget -nc https://joakimeriksson.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server"
-java -jar leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar >leshan.log 2>leshan.err &
+java -jar $LESHAN_JAR >leshan.log 2>leshan.err &
 LESHID=$!
 
 COUNTER=10
@@ -32,11 +34,11 @@ done
 
 echo "Closing native node"
 sleep 1
-pgrep ipso | sudo xargs kill -9
+kill_bg $CPID
 
 echo "Closing leshan"
 sleep 1
-pgrep java | sudo xargs kill -9
+kill_bg $LESHID
 
 
 if grep -q 'OK' leshan.err ; then

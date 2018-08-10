@@ -63,6 +63,12 @@ int rpl_dag_root_start(void);
  * \return 1 if we are dag root, 0 otherwise
 */
 int rpl_dag_root_is_root(void);
+/**
+ * Prints a summary of all routing links
+ *
+ * \param str A descriptive text on the caller
+*/
+void rpl_dag_root_print_links(const char *str);
 
  /** @} */
 

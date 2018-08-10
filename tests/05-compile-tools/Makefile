@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-TOOLS=tools tools/sky tools/jn516x
+TOOLS=tools/serial-io
 BASEDIR=../../
 TESTLOGS=$(subst /,__,$(patsubst %,%.testlog, $(TOOLS)))
 

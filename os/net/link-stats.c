@@ -63,8 +63,8 @@
 
 /* ETX fixed point divisor. 128 is the value used by RPL (RFC 6551 and RFC 6719) */
 #define ETX_DIVISOR                     LINK_STATS_ETX_DIVISOR
-/* Number of Tx used to update the ETX EWMA in case of no-ACK */
-#define ETX_NOACK_PENALTY               20
+/* In case of no-ACK, add ETX_NOACK_PENALTY to the real Tx count, as a penalty */
+#define ETX_NOACK_PENALTY               12
 /* Initial ETX value */
 #define ETX_DEFAULT                      2
 
@@ -156,9 +156,13 @@ link_stats_packet_sent(const linkaddr_t *lladdr, int status, int numtx)
   stats->last_tx_time = clock_time();
   stats->freshness = MIN(stats->freshness + numtx, FRESHNESS_MAX);
 
+  /* Add penalty in case of no-ACK */
+  if(status == MAC_TX_NOACK) {
+    numtx += ETX_NOACK_PENALTY;
+  }
+
 #if LINK_STATS_ETX_FROM_PACKET_COUNT
   /* Compute ETX from packet and ACK count */
-  numtx = (status == MAC_TX_NOACK) ? ETX_NOACK_PENALTY : numtx;
   /* Halve both counter after TX_COUNT_MAX */
   if(stats->tx_count + numtx > TX_COUNT_MAX) {
     stats->tx_count /= 2;
@@ -179,7 +183,7 @@ link_stats_packet_sent(const linkaddr_t *lladdr, int status, int numtx)
   /* Compute ETX using an EWMA */
 
   /* ETX used for this update */
-  packet_etx = ((status == MAC_TX_NOACK) ? ETX_NOACK_PENALTY : numtx) * ETX_DIVISOR;
+  packet_etx = numtx * ETX_DIVISOR;
   /* ETX alpha used for this update */
   ewma_alpha = link_stats_is_fresh(stats) ? EWMA_ALPHA : EWMA_BOOTSTRAP_ALPHA;
 
