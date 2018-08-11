@@ -210,6 +210,28 @@
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
+/**
+ * \name Internal flash configuration
+ *
+ * Controls the start offset and length of the flash area available for the
+ * firmware image. You will normally not have to change this.
+ * @{
+ */
+#ifndef FLASH_FW_ORIGIN
+/**
+ * \brief Start address on flash available for firmware
+ */
+#define FLASH_FW_ORIGIN            0x00000000
+#endif
+
+#ifndef FLASH_FW_LENGTH
+/**
+ * \brief Length of the flash area that is available for firmware
+ */
+#define FLASH_FW_LENGTH            0x0001FFA8
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
 #endif /* CC13XX_CC26XX_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */

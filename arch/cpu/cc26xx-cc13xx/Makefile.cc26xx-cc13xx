@@ -24,7 +24,8 @@ CFLAGS += -I$(TI_XXWARE) -I$(CONTIKI)/$(TI_XXWARE_SRC)
 CFLAGS += -I$(TI_XXWARE)/inc
 MODULES += $(TI_XXWARE_SRC)
 
-LDSCRIPT = $(CONTIKI_CPU)/cc26xx.ld
+SOURCE_LDSCRIPT ?= $(CONTIKI_CPU)/cc26xx.lds
+LDSCRIPT = $(OBJECTDIR)/cc26xx.ld
 
 ### If the user-specified a Node ID, pass a define
 ifdef NODEID
@@ -70,6 +71,16 @@ $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 $(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -include "ccxxware-conf.h" -c $< -o $@
+
+### This rule is used to generate the correct linker script
+LDGENFLAGS += $(CFLAGS)
+LDGENFLAGS += -imacros "contiki-conf.h"
+LDGENFLAGS += -x c -P -E
+
+# NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
+$(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
 
 # a target that gives a user-friendly memory profile, taking into account the RAM
 # that is statically occupied by the stack as defined in the linker script

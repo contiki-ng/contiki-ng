@@ -28,7 +28,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* CC26XX linker script */
+/* CC26XX linker configuration file. This is not the actual file used at link
+ * stage. Rather, it is used as input for the auto-generation of the actual
+ * ld script.
+ */
 
 /* Entry Point */
 ENTRY(ResetISR)
@@ -36,7 +39,7 @@ ENTRY(ResetISR)
 MEMORY
 {
     /* Flash Size 128 KB minus the CCA area below (88 bytes) */
-    FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x0001FFA8
+    FLASH (RX) : ORIGIN = FLASH_FW_ORIGIN, LENGTH = FLASH_FW_LENGTH
 
     /*
      * Customer Configuration Area and Bootloader Backdoor configuration
