@@ -53,6 +53,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if LLSEC802154_ENABLED && !LLSEC802154_USES_EXPLICIT_KEYS
+#error LLSEC802154_ENABLED set but LLSEC802154_USES_EXPLICIT_KEYS unset
+#endif /* LLSEC802154_ENABLED */
+
 /* The two keys K1 and K2 from 6TiSCH minimal configuration
  * K1: well-known, used for EBs
  * K2: secret, used for data and ACK

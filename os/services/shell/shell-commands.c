@@ -45,6 +45,7 @@
 #include "contiki.h"
 #include "shell.h"
 #include "shell-commands.h"
+#include "lib/list.h"
 #include "sys/log.h"
 #include "dev/watchdog.h"
 #include "net/ipv6/uip.h"
@@ -76,7 +77,8 @@ static uint16_t curr_ping_datalen;
 #if TSCH_WITH_SIXTOP
 static shell_command_6top_sub_cmd_t sixtop_sub_cmd = NULL;
 #endif /* TSCH_WITH_SIXTOP */
-
+static struct shell_command_set_t builtin_shell_command_set;
+LIST(shell_command_sets);
 /*---------------------------------------------------------------------------*/
 static const char *
 ds6_nbr_state_to_str(uint8_t state)
@@ -345,15 +347,16 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
 static
 PT_THREAD(cmd_help(struct pt *pt, shell_output_func output, char *args))
 {
-  struct shell_command_t *cmd_ptr;
-
+  struct shell_command_set_t *set;
+  const struct shell_command_t *cmd;
   PT_BEGIN(pt);
 
   SHELL_OUTPUT(output, "Available commands:\n");
-  cmd_ptr = shell_commands;
-  while(cmd_ptr->name != NULL) {
-    SHELL_OUTPUT(output, "%s\n", cmd_ptr->help);
-    cmd_ptr++;
+  /* Note: we explicitly don't expend any code space to deal with shadowing */
+  for(set = list_head(shell_command_sets); set != NULL; set = list_item_next(set)) {
+    for(cmd = set->commands; cmd->name != NULL; ++cmd) {
+      SHELL_OUTPUT(output, "%s\n", cmd->help);
+    }
   }
 
   PT_END(pt);
@@ -729,12 +732,48 @@ PT_THREAD(cmd_6top(struct pt *pt, shell_output_func output, char *args))
 void
 shell_commands_init(void)
 {
+  list_init(shell_command_sets);
+  list_add(shell_command_sets, &builtin_shell_command_set);
   /* Set up Ping Reply callback */
   uip_icmp6_echo_reply_callback_add(&echo_reply_notification,
                                     echo_reply_handler);
 }
 /*---------------------------------------------------------------------------*/
-struct shell_command_t shell_commands[] = {
+void
+shell_command_set_register(struct shell_command_set_t *set)
+{
+  list_push(shell_command_sets, set);
+}
+/*---------------------------------------------------------------------------*/
+int
+shell_command_set_deregister(struct shell_command_set_t *set)
+{
+  if(!list_contains(shell_command_sets, set)) {
+    return !0;
+  }
+  list_remove(shell_command_sets, set);
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+const struct shell_command_t *
+shell_command_lookup(const char *name)
+{
+  struct shell_command_set_t *set;
+  const struct shell_command_t *cmd;
+
+  for(set = list_head(shell_command_sets);
+      set != NULL;
+      set = list_item_next(set)) {
+    for(cmd = set->commands; cmd->name != NULL; ++cmd) {
+      if(!strcmp(cmd->name, name)) {
+        return cmd;
+      }
+    }
+  }
+  return NULL;
+}
+/*---------------------------------------------------------------------------*/
+const struct shell_command_t builtin_shell_commands[] = {
   { "help",                 cmd_help,                 "'> help': Shows this help" },
   { "reboot",               cmd_reboot,               "'> reboot': Reboot the board by watchdog_reboot()" },
   { "ip-addr",              cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },
@@ -765,4 +804,8 @@ struct shell_command_t shell_commands[] = {
   { NULL, NULL, NULL },
 };
 
+static struct shell_command_set_t builtin_shell_command_set = {
+  .next = NULL,
+  .commands = builtin_shell_commands,
+};
 /** @} */

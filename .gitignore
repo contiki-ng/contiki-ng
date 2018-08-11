@@ -16,9 +16,11 @@ obj_*
 Makefile.target
 Makefile.*.defines
 tools/doxygen/html
+tools/readthedocs/_build
 patches-*
-tools/tunslip
-tools/tunslip6
+tools/serial-io/tunslip6
+tools/serial-io/serialdump
+serialdump-*
 build
 tools/coffee-manager/build/
 tools/coffee-manager/coffee.jar
@@ -59,7 +61,7 @@ COOJA.testlog
 summary
 tests/[0-9][0-9]-*/org/
 tests/18-coap-lwm2m/Californium.properties
-tests/18-coap-lwm2m/leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+tests/18-coap-lwm2m/leshan-server-demo*.jar
 
 # x86 UEFI files
 cpu/x86/uefi/Makefile.uefi

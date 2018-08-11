@@ -108,7 +108,7 @@ print_cell_list(const uint8_t *cell_list, uint16_t cell_list_len)
   uint16_t i;
   sf_simple_cell_t cell;
 
-  for(i = 0; i < (cell_list_len / sizeof(cell)); i++) {
+  for(i = 0; i < cell_list_len; i += sizeof(cell)) {
     read_cell(&cell_list[i], &cell);
     PRINTF("%u ", cell.timeslot_offset);
   }
@@ -132,7 +132,7 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
     return;
   }
 
-  for(i = 0; i < (cell_list_len / sizeof(cell)); i++) {
+  for(i = 0; i < cell_list_len; i += sizeof(cell)) {
     read_cell(&cell_list[i], &cell);
     if(cell.timeslot_offset == 0xffff) {
       continue;
@@ -166,7 +166,7 @@ remove_links_to_schedule(const uint8_t *cell_list, uint16_t cell_list_len)
     return;
   }
 
-  for(i = 0; i < (cell_list_len / sizeof(cell)); i++) {
+  for(i = 0; i < cell_list_len; i += sizeof(cell)) {
     read_cell(&cell_list[i], &cell);
     if(cell.timeslot_offset == 0xffff) {
       continue;
@@ -335,7 +335,7 @@ delete_req_input(const uint8_t *body, uint16_t body_len,
 
   if(num_cells > 0 && cell_list_len > 0) {
     /* ensure before delete */
-    for(i = 0, removed_link = 0; i < (cell_list_len / sizeof(cell)); i++) {
+    for(i = 0, removed_link = 0; i < cell_list_len; i += sizeof(cell)) {
       read_cell(&cell_list[i], &cell);
       if(tsch_schedule_get_link_by_timeslot(slotframe,
                                             cell.timeslot_offset) != NULL) {

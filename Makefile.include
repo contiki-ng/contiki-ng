@@ -10,6 +10,9 @@ WERROR ?= 1
 
 include $(CONTIKI)/Makefile.identify-target
 
+### Include Makefile.tools to pull in targets that allow us to build tools dir
+include $(CONTIKI)/Makefile.tools
+
 CONTIKI_NG_TARGET_LIB = contiki-ng-$(TARGET).a
 
 ifeq ($(DEFINES),)
@@ -312,8 +315,8 @@ clean:
 
 distclean:
 	@for TARG in `ls $(CONTIKI)/arch/platform $(TARGETDIRS)`; do \
-		echo Running: make TARGET=$$TARG clean; \
-		make TARGET=$$TARG clean; \
+		echo Running: $(MAKE) TARGET=$$TARG clean; \
+		$(MAKE) TARGET=$$TARG clean; \
 	done
 
 -include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
@@ -393,7 +396,7 @@ endif
 
 usage:
 	@echo "Usage:"
-	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [DEFINES=(DEFINES)] [target]"
+	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [DEFINES=(DEFINES)] [PORT=(PORT)] [target]"
 	@echo ""
 	@echo "Typical usage:"
 	@echo "    make [TARGET=(TARGET)] [BOARD=(BOARD)] [all]"
@@ -414,6 +417,9 @@ usage:
 	@echo "    %.o             Produces an object file from a given source file (e.g. hello-world.o)"
 	@echo "    %.e             Produces the pre-processed version of a given source file (e.g. hello-world.e)"
 	@echo "    %.s             Produces an assembly file from a given source file (e.g. hello-world.s)"
+	@echo "    login           View the serial output of the device connected to PORT"
+	@echo "    serialview      Same as login, but prepend serial output with a unix timestamp"
+	@echo "    serialdump      same as serialview, but also save the output to a file"
 
 help: usage
 
@@ -440,6 +446,7 @@ savedefines:
 	@echo "saving Makefile.$(TARGET).defines"
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
+VIEWCONF = $(CONTIKI)/tools/viewconf/viewconf.c
 viewconf:
 	@echo "----------------- Make variables: --------------"
 	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
@@ -451,13 +458,19 @@ ifdef MAKE_COAP_DTLS_KEYSTORE
 	@echo "##### \"MAKE_COAP_DTLS_KEYSTORE\": _______________ $(MAKE_COAP_DTLS_KEYSTORE)"
 endif
 	@echo "----------------- C variables: -----------------"
-	$(Q)$(CC) $(CFLAGS) -E $(CONTIKI)/tools/viewconf.c | grep \#\#\#\#\#
+	$(Q)$(CC) $(CFLAGS) -E $(VIEWCONF) | grep \#\#\#\#\#
 	@echo "------------------------------------------------"
 	@echo "'==' Means the flag is set to a given a value"
 	@echo "'->' Means the flag is unset, but will default to a given value"
 	@echo "'><' Means the flag is unset and has no default value"
 	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
-	@echo "To view more C variables, edit $(CONTIKI)/tools/viewconf.c"
+	@echo "To view more C variables, edit $(VIEWCONF)"
+
+### Include Makefile.embedded for relevant platforms, in order to pull in
+### rules for login, serialview etc
+ifeq ($(findstring $(TARGET),native cooja),)
+  include $(CONTIKI)/Makefile.embedded
+endif
 
 # Don't treat %.$(TARGET) as an intermediate file because it is
 # in fact the primary target.

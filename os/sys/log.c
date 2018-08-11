@@ -51,6 +51,7 @@
 #include "sys/log.h"
 #include "net/ipv6/ip64-addr.h"
 #include "net/ipv6/uiplib.h"
+#include "deployment/deployment.h"
 
 int curr_log_level_rpl = LOG_CONF_LEVEL_RPL;
 int curr_log_level_tcpip = LOG_CONF_LEVEL_TCPIP;
@@ -90,22 +91,36 @@ log_6addr(const uip_ipaddr_t *ipaddr)
   LOG_OUTPUT("%s", buf);
 }
 /*---------------------------------------------------------------------------*/
+int
+log_6addr_compact_snprint(char *buf, size_t size, const uip_ipaddr_t *ipaddr)
+{
+  if(ipaddr == NULL) {
+    return snprintf(buf, size, "6A-NULL");
+  } else {
+    char *prefix = NULL;
+    if(uip_is_addr_mcast(ipaddr)) {
+      prefix = "6M";
+    } else if(uip_is_addr_linklocal(ipaddr)) {
+      prefix = "6L";
+    } else {
+      prefix = "6G";
+    }
+#if BUILD_WITH_DEPLOYMENT
+    return snprintf(buf, size, "%s-%03u", prefix, deployment_id_from_iid(ipaddr));
+#else /* BUILD_WITH_DEPLOYMENT */
+    return snprintf(buf, size, "%s-%04x", prefix, UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
+#endif /* BUILD_WITH_DEPLOYMENT */
+  }
+}
+/*---------------------------------------------------------------------------*/
 void
 log_6addr_compact(const uip_ipaddr_t *ipaddr)
 {
-  if(ipaddr == NULL) {
-    LOG_OUTPUT("6A-NULL");
-  } else if(uip_is_addr_mcast(ipaddr)) {
-    LOG_OUTPUT("6M-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
-  } else if(uip_is_addr_linklocal(ipaddr)) {
-    LOG_OUTPUT("6L-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
-  } else {
-    LOG_OUTPUT("6G-%04x", UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
-  }
+  char buf[8];
+  log_6addr_compact_snprint(buf, sizeof(buf), ipaddr);
+  LOG_OUTPUT("%s", buf);
 }
-
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
 /*---------------------------------------------------------------------------*/
 void
 log_lladdr(const linkaddr_t *lladdr)
@@ -130,11 +145,15 @@ log_lladdr_compact(const linkaddr_t *lladdr)
   if(lladdr == NULL || linkaddr_cmp(lladdr, &linkaddr_null)) {
     LOG_OUTPUT("LL-NULL");
   } else {
+#if BUILD_WITH_DEPLOYMENT
+    LOG_OUTPUT("LL-%04u", deployment_id_from_lladdr(lladdr));
+#else /* BUILD_WITH_DEPLOYMENT */
 #if LINKADDR_SIZE == 8
     LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE/2-1]));
 #elif LINKADDR_SIZE == 2
     LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16));
 #endif
+#endif /* BUILD_WITH_DEPLOYMENT */
   }
 }
 /*---------------------------------------------------------------------------*/

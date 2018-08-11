@@ -68,9 +68,9 @@
 
 #ifndef LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX
 #ifdef LWM2M_DEVICE_MODEL_NUMBER
-#define LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX LWM2M_DEVICE_MODEL_NUMBER
+#define LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX "Contiki-NG-"LWM2M_DEVICE_MODEL_NUMBER
 #else /* LWM2M_DEVICE_MODEL_NUMBER */
-#define LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX "Contiki-"
+#define LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX "Contiki-NG"
 #endif /* LWM2M_DEVICE_MODEL_NUMBER */
 #endif /* LWM2M_ENGINE_CLIENT_ENDPOINT_PREFIX */
 
@@ -763,7 +763,7 @@ perform_multi_resource_read_op(lwm2m_object_t *object,
             }
             /* ---------- Read operation ------------- */
           } else if(ctx->operation == LWM2M_OP_READ) {
-            lwm2m_status_t success;
+            lwm2m_status_t success = 0;
             uint8_t lv;
 
             lv = ctx->level;

@@ -78,6 +78,19 @@ typedef unsigned int uip_stats_t;
 
 #define NETSTACK_CONF_LINUXRADIO_DEV "wpan0"
 
+/* configure network size and density */
+#ifndef NETSTACK_MAX_ROUTE_ENTRIES
+#define NETSTACK_MAX_ROUTE_ENTRIES   300
+#endif /* NETSTACK_MAX_ROUTE_ENTRIES */
+#ifndef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS 300
+#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
+
+/* configure queues */
+#ifndef QUEUEBUF_CONF_NUM
+#define QUEUEBUF_CONF_NUM 64
+#endif /* QUEUEBUF_CONF_NUM */
+
 #define UIP_CONF_IPV6_QUEUE_PKT  1
 #define UIP_ARCH_IPCHKSUM        1
 

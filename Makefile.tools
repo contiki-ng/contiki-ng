@@ -1,0 +1,17 @@
+# Some make rules in the main build system depend on the presence of utilities
+# under the tools/ dir. For those dependencies, we use this makefile here to
+# recursively invoke the respective build under tools/.
+
+TOOLS_DIR = $(CONTIKI)/tools
+SERIAL_IO_TOOL_DIR = $(TOOLS_DIR)/serial-io
+
+SERIAL_IO_TOOL_DEPS = $(addprefix $(SERIAL_IO_TOOL_DIR)/, tools-utils.c tools-utils.h)
+
+TUNSLIP6 = $(SERIAL_IO_TOOL_DIR)/tunslip6
+SERIAL_DUMP_BIN = $(SERIAL_IO_TOOL_DIR)/serialdump
+
+$(SERIAL_DUMP_BIN): $(SERIAL_IO_TOOL_DIR)/serialdump.c $(SERIAL_IO_TOOL_DEPS)
+	$(MAKE) -C $(SERIAL_IO_TOOL_DIR) serialdump
+
+$(TUNSLIP6): $(SERIAL_IO_TOOL_DIR)/tunslip6.c $(SERIAL_IO_TOOL_DEPS)
+	$(MAKE) -C $(SERIAL_IO_TOOL_DIR) tunslip6

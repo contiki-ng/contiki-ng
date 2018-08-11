@@ -3,9 +3,9 @@ FROM 32bit/ubuntu:16.04
 # Tools
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
-  build-essential doxygen git wget unzip python-serial \
+  build-essential doxygen git wget unzip python-serial python-pip \
   default-jdk ant srecord iputils-tracepath rlwrap \
-  mosquitto mosquitto-clients \
+  mosquitto mosquitto-clients gdb \
   && apt-get clean
 
 # Install ARM toolchain
@@ -41,6 +41,12 @@ RUN wget https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_
     rm nrf5_iot_sdk_3288530.zip
 
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
+
+# Install sphinx and sphinx_rtd_theme, required for building and testing the
+# readthedocs API documentation
+RUN pip install --upgrade pip
+RUN pip install setuptools
+RUN pip install sphinx_rtd_theme sphinx
 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
@@ -88,12 +94,12 @@ RUN git clone https://github.com/renode/renode.git \
   && ./build.sh
 ENV PATH="${HOME}/renode:${PATH}"
 
-# Optional: download Contiki-NG and pre-compile Cooja.
-# Else, use a Docker bind mount to share the repo with the host.
-# Docker run option:
+# By default, we use a Docker bind mount to share the repo with the host,
+# with Docker run option:
 # -v <HOST_CONTIKI_NG_ABS_PATH>:/home/user/contiki-ng
-RUN git clone --recursive https://github.com/contiki-ng/contiki-ng.git ${CONTIKI_NG}
-RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
+# Alternatively, uncomment the next two lines to download Contiki-NG and pre-compile Cooja.
+#RUN git clone --recursive https://github.com/contiki-ng/contiki-ng.git ${CONTIKI_NG}
+#RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
 
 # Working directory
 WORKDIR ${CONTIKI_NG}

@@ -258,7 +258,11 @@ uip_sr_link_snprint(char *buf, int buflen, uip_sr_node_t *link)
   NETSTACK_ROUTING.get_sr_node_ipaddr(&child_ipaddr, link);
   NETSTACK_ROUTING.get_sr_node_ipaddr(&parent_ipaddr, link->parent);
 
-  index += uiplib_ipaddr_snprint(buf+index, buflen-index, &child_ipaddr);
+  if(LOG_WITH_COMPACT_ADDR) {
+    index += log_6addr_compact_snprint(buf+index, buflen-index, &child_ipaddr);
+  } else {
+    index += uiplib_ipaddr_snprint(buf+index, buflen-index, &child_ipaddr);
+  }
   if(index >= buflen) {
     return index;
   }
@@ -273,7 +277,11 @@ uip_sr_link_snprint(char *buf, int buflen, uip_sr_node_t *link)
     if(index >= buflen) {
       return index;
     }
-    index += uiplib_ipaddr_snprint(buf+index, buflen-index, &parent_ipaddr);
+    if(LOG_WITH_COMPACT_ADDR) {
+      index += log_6addr_compact_snprint(buf+index, buflen-index, &parent_ipaddr);
+    } else {
+      index += uiplib_ipaddr_snprint(buf+index, buflen-index, &parent_ipaddr);
+    }
     if(index >= buflen) {
       return index;
     }
