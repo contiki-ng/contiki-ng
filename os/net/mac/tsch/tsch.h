@@ -175,6 +175,8 @@ extern rtimer_clock_t tsch_timing[tsch_ts_elements_count];
 extern unsigned long tx_count;
 extern unsigned long rx_count;
 extern unsigned long sync_count;
+extern int32_t min_drift_seen;
+extern int32_t max_drift_seen;
 
 /* TSCH processes */
 PROCESS_NAME(tsch_process);
