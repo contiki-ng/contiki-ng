@@ -6,4 +6,4 @@ CONTIKI=$1
 # Simulation file
 BASENAME=07-native-border-router-cooja
 
-bash test-native-border-router.sh $CONTIKI $BASENAME fd00::204:4:4:4 60 600 2
+bash test-native-border-router.sh $CONTIKI $BASENAME fd00::204:4:4:4 60 1200 4
