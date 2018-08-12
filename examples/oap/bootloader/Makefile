@@ -1,6 +1,8 @@
 CONTIKI_PROJECT = bootloader
 all: $(CONTIKI_PROJECT)
 
+MODULES += os/net/app-layer/ota
+
 PLATFORMS_EXCLUDE = native 
 
 MAKE_NET = MAKE_NET_NULLNET

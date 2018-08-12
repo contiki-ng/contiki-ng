@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * Copyright (c) 2016, Mark Solters <msolters@gmail.com>
  * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
@@ -7,6 +6,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -30,73 +30,58 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "dev/ext-flash/ext-flash.h"
-#include "lib/crc16.h"
-#include "ota.h"
-
-#include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
-/*---------------------------------------------------------------------------*/
-/*
- * We assume the external flash has 4x 128KB areas, each holding a firmware
- * image and its metadata. Metatdata are placed at the low 128 bytes.
+/**
+ * \addtogroup apps
+ * @{
  *
- * The area at offset 0x00 is reserved for a golden image, again with its
- * metadata occupying the low 128 bytes. Therefore the golden image itself
- * starts at offset 0x80.
+ * \defgroup ota Contiki-NG Over the Air firmware update engine
+ * @{
+ *
+ * The Contiki-NG OTA engine allows users to update firmware on running
+ * devices using a number of different application layers, including HTTP and
+ * CoAP.
+ *
+ * Largely based on the excellent work of Mark Solters <msolters@gmail.com>
+ *
+ * http://marksolters.com/programming/2016/06/07/contiki-ota.html
+ *
  */
-#define FLASH_AREA_COUNT   4
-#define FLASH_AREA_LEN     0x00020000
-#define FLASH_METADATA_LEN 0x80
-#define FLASH_GOLDEN_LOC   0
 /*---------------------------------------------------------------------------*/
-#define BUF_LEN 128
-static uint8_t buf[BUF_LEN];
+/**
+ * \file
+ *    Header file for the Contiki-NG OTA engine
+ */
 /*---------------------------------------------------------------------------*/
-bool
-bootloader_validate_image()
-{
-  int i, j, k;
-  unsigned short crc;
-  ota_firmware_metadata_t metadata;
-
-  bool success = ext_flash_open(NULL);
-
-  if(!success) {
-    return false;
-  }
-
-  for(i = 0; i < FLASH_AREA_COUNT; i++) {
-    uint32_t metadata_loc = i * FLASH_AREA_LEN;
-    crc = 0;
-    memset(&metadata, 0, 0);
-    success = ext_flash_read(NULL, metadata_loc, sizeof(metadata),
-                             (uint8_t *)&metadata);
-    if(!success) {
-      ext_flash_close(NULL);
-      return false;
-    }
-
-    for(j = 1; j < FLASH_AREA_LEN / BUF_LEN; j += 1) {
-      memset(&buf, 0, BUF_LEN);
-      success = ext_flash_read(NULL, metadata_loc + j * BUF_LEN, BUF_LEN, buf);
-      if(!success) {
-        ext_flash_close(NULL);
-        return false;
-      }
-
-
-      for(k = 0; k < BUF_LEN; k++) {
-        crc = crc16_add(buf[k], crc);
-      }
-    }
-
-    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
-           (unsigned long)metadata.length,
-           metadata.crc, crc);
-  }
-
-  return true;
-}
+#ifndef OTA_H_
+#define OTA_H_
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
+
+#include <stdint.h>
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief A data type representing firmware image metadata
+ */
+typedef struct ota_firmware_metadata_s {
+  /**< Image length, not including metadata */
+  uint32_t length;
+
+  /**< Image unique identifier. Generation is implementation specific */
+  uint32_t uuid;
+
+  /**< Image verification code. */
+  uint16_t crc;
+
+  /**< Not quite sure why we need this */
+  uint16_t crc_shadow;
+
+  /**< Image version. Comparison uses signed arithmetic */
+  uint16_t version;
+} ota_firmware_metadata_t;
+/*---------------------------------------------------------------------------*/
+#endif /* OTA_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */
