@@ -44,14 +44,8 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 int
-#if PLATFORM_MAIN_ACCEPTS_ARGS
-main(int argc, char **argv)
-{
-  platform_process_args(argc, argv);
-#else
 main(void)
 {
-#endif
   bootloader_arch_init();
 
   clock_init();
