@@ -30,23 +30,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-void
-bootloader_jump_to_app()
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+bool
+bootloader_validate_image()
 {
-  /* Load the address of the vector to R0 */
-  __asm(" MOV R0, #0x2000");
-
-  /* Load the address of the Reset Handler to R1:
-   * Offset by 0x04 from the vector start */
-  __asm(" LDR R1, [R0, #0x4] ");
-
-  /* Reset the stack pointer */
-  __asm(" LDR SP, [R0, #0x0] ");
-
-  /* Make sure we are in thumb mode after the jump */
-  __asm(" ORR R1, #1");
-
-  /* And jump */
-  __asm(" BX R1 ");
+  return true;
 }
 /*---------------------------------------------------------------------------*/

@@ -32,9 +32,12 @@
 #ifndef BOOTLOADER_H_
 #define BOOTLOADER_H_
 /*---------------------------------------------------------------------------*/
-void bootloader_jump_to_app(void);
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+void bootloader_arch_jump_to_app(void);
+void bootloader_arch_init(void);
 
-void bootloader_validate_image(void);
+bool bootloader_validate_image(void);
 /*---------------------------------------------------------------------------*/
 #endif /* BOOTLOADER_H_ */
 /*---------------------------------------------------------------------------*/
