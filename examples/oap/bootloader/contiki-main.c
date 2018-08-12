@@ -42,11 +42,6 @@
 #include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "Main"
-#define LOG_LEVEL LOG_LEVEL_MAIN
-/*---------------------------------------------------------------------------*/
 int
 #if PLATFORM_MAIN_ACCEPTS_ARGS
 main(int argc, char **argv)
@@ -67,7 +62,6 @@ main(void)
   ext_flash_init(NULL);
 //  platform_init_stage_two();
 
-//  LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
 
   watchdog_start();
 
