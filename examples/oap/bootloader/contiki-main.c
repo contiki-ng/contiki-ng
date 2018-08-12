@@ -54,24 +54,17 @@ main(void)
   platform_init_stage_one();
 
   clock_init();
-//  rtimer_init();
-//  process_init();
-//  process_start(&etimer_process, NULL);
+  rtimer_init();
+  process_init();
+  process_start(&etimer_process, NULL);
   watchdog_init();
 
   ext_flash_init(NULL);
-//  platform_init_stage_two();
-
 
   watchdog_start();
 
-//  validate_image();
-
-//  leds_on(LEDS_GREEN);
 
   bootloader_jump_to_app();
-
-//  leds_off(LEDS_ALL);
 
   return 0;
 }
