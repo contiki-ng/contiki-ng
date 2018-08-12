@@ -1,0 +1,3 @@
+PROJECTDIRS += arch/platform/$(TARGET)
+
+include arch/cpu/cc26xx-cc13xx/Makefile.cc26xx-cc13xx

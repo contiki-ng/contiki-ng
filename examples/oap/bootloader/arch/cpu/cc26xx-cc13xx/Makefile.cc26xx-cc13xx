@@ -1,0 +1,3 @@
+PROJECTDIRS += arch/cpu/cc26xx-cc13xx
+
+STARTUP_GCC_SRC = startup-gcc.c
