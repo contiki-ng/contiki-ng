@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = golden-image
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_EXCLUDE = native 
+PLATFORMS_ONLY = srf06-cc26xx cc2538dk openmote-cc2538 zoul
 
 CONTIKI = ../../..
 -include $(CONTIKI)/Makefile.identify-target
