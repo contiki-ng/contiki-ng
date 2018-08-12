@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2016, Mark Solters <msolters@gmail.com>
  * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
@@ -31,20 +33,20 @@
 void
 bootloader_jump_to_app()
 {
-#if 0
-  // Load address of reset function from the fixed location of the image's
-  // reset vector and jump.
+  /* Load the address of the vector to R0 */
   __asm(" MOV R0, #0x2000");
+
+  /* Load the address of the Reset Handler to R1:
+   * Offset by 0x04 from the vector start */
   __asm(" LDR R1, [R0, #0x4] ");
 
-  // Reset the stack pointer,
+  /* Reset the stack pointer */
   __asm(" LDR SP, [R0, #0x0] ");
 
-  // And jump.
+  /* Make sure we are in thumb mode after the jump */
+  __asm(" ORR R1, #1");
+
+  /* And jump */
   __asm(" BX R1 ");
-#endif
-  __asm("LDR R0, [%[dest]]"::[dest]"r"(0x2000)); //  Load the destination address
-  __asm("ORR R0, #1");                                        //  Make sure the Thumb State bit is set.
-  __asm("BX R0"); //  Branch execution
 }
 /*---------------------------------------------------------------------------*/
