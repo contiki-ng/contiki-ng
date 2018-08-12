@@ -16,7 +16,9 @@ TI_XXWARE_SRC = $(CPU_ABS_PATH)/$(TI_XXWARE_PATH)/driverlib
 ### also listed explicitly in the linker command (through TARGET_STARTFILES),
 ### to make sure they always get linked in the image
 TI_XXWARE_STARTUP_DIR = $(TI_XXWARE_PATH)/startup_files
-TI_XXWARE_STARTUP_SRCS = ccfg.c startup_gcc.c
+TI_XXWARE_STARTUP_SRCS = ccfg.c
+
+STARTUP_GCC_SRC ?= startup_gcc.c
 
 ### MODULES will add some of these to the include path, but we need to add
 ### them earlier to prevent filename clashes with Contiki core files
@@ -49,6 +51,7 @@ CONTIKI_CPU_SOURCEFILES += spi-arch.c
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
 CPU_START_SOURCEFILES += fault-handlers.c $(TI_XXWARE_STARTUP_SRCS)
+CPU_START_SOURCEFILES += $(STARTUP_GCC_SRC)
 
 PYTHON = python
 BSL_FLAGS += -e -w -v
