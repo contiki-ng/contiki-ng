@@ -1,5 +1,3 @@
 PROJECTDIRS += arch/platform/$(TARGET)
 
-PROJECT_SOURCEFILES += bootloader-arch.c
-
 include arch/cpu/cc26xx-cc13xx/Makefile.cc26xx-cc13xx

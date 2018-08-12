@@ -48,16 +48,16 @@ bootloader_arch_jump_to_app()
 
   /* Load the address of the Reset Handler to R1:
    * Offset by 0x04 from the vector start */
-  __asm(" LDR R1, [R0, #0x4] ");
+  __asm(" LDR R1, [R0, #0x4]");
 
   /* Reset the stack pointer */
-  __asm(" LDR SP, [R0, #0x0] ");
+  __asm(" LDR SP, [R0, #0x0]");
 
   /* Make sure we are in thumb mode after the jump */
   __asm(" ORR R1, #1");
 
   /* And jump */
-  __asm(" BX R1 ");
+  __asm(" BX R1");
 }
 /*---------------------------------------------------------------------------*/
 void board_init(void);
