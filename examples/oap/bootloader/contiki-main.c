@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 int
 #if PLATFORM_MAIN_ACCEPTS_ARGS
@@ -51,7 +52,7 @@ main(int argc, char **argv)
 main(void)
 {
 #endif
-  platform_init_stage_one();
+  bootloader_arch_init();
 
   clock_init();
   rtimer_init();
@@ -63,8 +64,9 @@ main(void)
 
   watchdog_start();
 
-
-  bootloader_jump_to_app();
+  if(bootloader_validate_image()) {
+    bootloader_arch_jump_to_app();
+  }
 
   return 0;
 }

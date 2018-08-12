@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2016, Mark Solters <msolters@gmail.com>
+ * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,20 +39,31 @@
 #include "dev/button-hal.h"
 
 #include "ti-lib.h"
-
-#include <stdio.h>
-/*---------------------------------------------------------------------------*/
-/** \brief Board specific iniatialisation */
-void board_init(void);
-/*---------------------------------------------------------------------------*/
-#ifdef BOARD_CONF_HAS_SENSORS
-#define BOARD_HAS_SENSORS BOARD_CONF_HAS_SENSORS
-#else
-#define BOARD_HAS_SENSORS 1
-#endif
 /*---------------------------------------------------------------------------*/
 void
-platform_init_stage_one()
+bootloader_arch_jump_to_app()
+{
+  /* Load the address of the vector to R0 */
+  __asm(" MOV R0, #0x2000");
+
+  /* Load the address of the Reset Handler to R1:
+   * Offset by 0x04 from the vector start */
+  __asm(" LDR R1, [R0, #0x4] ");
+
+  /* Reset the stack pointer */
+  __asm(" LDR SP, [R0, #0x0] ");
+
+  /* Make sure we are in thumb mode after the jump */
+  __asm(" ORR R1, #1");
+
+  /* And jump */
+  __asm(" BX R1 ");
+}
+/*---------------------------------------------------------------------------*/
+void board_init(void);
+/*---------------------------------------------------------------------------*/
+void
+bootloader_arch_init()
 {
   /* Enable flash cache and prefetch. */
   ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_ENABLED);
@@ -59,14 +72,17 @@ platform_init_stage_one()
   ti_lib_int_master_disable();
 
   /* Set the LF XOSC as the LF system clock source */
-  oscillators_select_lf_xosc();
+  ti_lib_osc_clock_source_set(OSC_SRC_CLK_LF, OSC_XOSC_LF);
+
+  /* Wait for LF clock source to become XOSC_LF */
+  while(ti_lib_osc_clock_source_get(OSC_SRC_CLK_LF) != OSC_XOSC_LF);
 
   board_init();
 
-//  gpio_hal_init();
+  gpio_hal_init();
 
-//  leds_init();
-//  leds_on(LEDS_RED);
+  leds_init();
+  leds_on(LEDS_RED);
 
   /*
    * Disable I/O pad sleep mode and open I/O latches in the AON IOC interface
@@ -80,16 +96,5 @@ platform_init_stage_one()
   ti_lib_int_master_enable();
 
   soc_rtc_init();
-}
-/*---------------------------------------------------------------------------*/
-void
-platform_init_stage_two()
-{
-  /* Character I/O Initialisation */
-#if CC26XX_UART_CONF_ENABLE
-  cc26xx_uart_init();
-#endif
-
-  button_hal_init();
 }
 /*---------------------------------------------------------------------------*/
