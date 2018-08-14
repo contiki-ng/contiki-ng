@@ -4,7 +4,7 @@ source ../utils.sh
 # Contiki directory
 CONTIKI=$1
 # Test basename
-BASENAME=06-native-coap
+BASENAME=$(basename $0 .sh)
 
 IPADDR=fd00::302:304:506:708
 

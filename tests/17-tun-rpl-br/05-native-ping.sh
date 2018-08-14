@@ -4,7 +4,7 @@ source ../utils.sh
 # Contiki directory
 CONTIKI=$1
 # Test basename
-BASENAME=01-native-ping
+BASENAME=$(basename $0 .sh)
 
 IPADDR=fd00::302:304:506:708
 
