@@ -191,6 +191,13 @@
 #define RPL_DEFAULT_LEAF_ONLY 0
 #endif
 
+/*
+ * Function used to validate dio before using it to init dag
+ */
+#ifdef RPL_CONF_VALIDATE_DIO_FUNC
+#define RPL_VALIDATE_DIO_FUNC RPL_CONF_VALIDATE_DIO_FUNC
+#endif
+
 /******************************************************************************/
 /********************************** Timing ************************************/
 /******************************************************************************/
