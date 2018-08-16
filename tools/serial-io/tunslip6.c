@@ -795,9 +795,9 @@ main(int argc, char **argv)
 
     case 's':
       if(strncmp("/dev/", optarg, 5) == 0) {
-	siodev = optarg + 5;
+        siodev = optarg + 5;
       } else {
-	siodev = optarg;
+        siodev = optarg;
       }
       break;
 
