@@ -208,10 +208,19 @@ void leds_arch_set(leds_mask_t leds);
  * \e pin corresponds to the GPIO pin a LED is driven by, using GPIO HAL pin
  * representation.
  *
+ * \e port corresponds to the GPIO port that the pin is connected to. This
+ * only makes sense if GPIO_HAL_CONF_PORT_PIN_NUMBERING is non-zero.
+ *
  * \e negative_logic should be set to false if the LED is active low.
+ *
+ * \note Do not access the \e port member of this struct direct, use the
+ * LED_PORT() macro instead.
  */
 typedef struct leds_s {
   gpio_hal_pin_t pin;
+#if GPIO_HAL_PORT_PIN_NUMBERING
+  gpio_hal_port_t port;
+#endif
   bool negative_logic;
 } leds_t;
 /*---------------------------------------------------------------------------*/
