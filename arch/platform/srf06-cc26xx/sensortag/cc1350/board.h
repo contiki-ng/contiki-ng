@@ -254,6 +254,16 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
+ * \brief ROM bootloader configuration
+ *
+ * Sensortags do not support the bootloader
+ * @{
+ */
+#define CCXXWARE_CONF_BL_PIN_NUMBER   IOID_UNUSED
+#define CCXXWARE_CONF_BL_LEVEL        0
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name Device string used on startup
  * @{
  */
