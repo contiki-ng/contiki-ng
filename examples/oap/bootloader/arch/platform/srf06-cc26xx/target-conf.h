@@ -34,5 +34,13 @@
 /*---------------------------------------------------------------------------*/
 #include "cc26xx-cc13xx-bootloader-conf.h"
 /*---------------------------------------------------------------------------*/
+/* External flash map
+ * 4 images, 128KB each. Each image placed at the start of an area
+ */
+#define BOOTLOADER_EXT_FLASH_AREA_COUNT                     4
+#define BOOTLOADER_EXT_FLASH_GOLDEN_AREA                    0
+#define BOOTLOADER_EXT_FLASH_AREA_LEN              0x00020000
+#define BOOTLOADER_EXT_FLASH_OTA_METADATA_OFFSET   OTA_METADATA_OFFSET
+/*---------------------------------------------------------------------------*/
 #endif /* TARGET_CONF_H_ */
 /*---------------------------------------------------------------------------*/

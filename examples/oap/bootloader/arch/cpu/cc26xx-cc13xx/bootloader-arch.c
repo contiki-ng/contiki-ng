@@ -40,11 +40,14 @@
 
 #include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
+#define __STR(x) #x
+#define STR(x) __STR(x)
+/*---------------------------------------------------------------------------*/
 void
 bootloader_arch_jump_to_app()
 {
   /* Load the address of the vector to R0 */
-  __asm(" MOV R0, #0x2000");
+  __asm(" MOV R0, " STR(MAIN_FW_OFFSET));
 
   /* Load the address of the Reset Handler to R1:
    * Offset by 0x04 from the vector start */

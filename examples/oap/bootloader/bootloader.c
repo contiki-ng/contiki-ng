@@ -32,27 +32,30 @@
 /*---------------------------------------------------------------------------*/
 #include "dev/ext-flash/ext-flash.h"
 #include "lib/crc16.h"
+#include "dev/watchdog.h"
 #include "ota.h"
 
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-/*
- * We assume the external flash has 4x 128KB areas, each holding a firmware
- * image and its metadata. Metatdata are placed at the low 128 bytes.
- *
- * The area at offset 0x00 is reserved for a golden image, again with its
- * metadata occupying the low 128 bytes. Therefore the golden image itself
- * starts at offset 0x80.
- */
-#define FLASH_AREA_COUNT   4
-#define FLASH_AREA_LEN     0x00020000
-#define FLASH_METADATA_LEN 0x80
-#define FLASH_GOLDEN_LOC   0
-/*---------------------------------------------------------------------------*/
 #define BUF_LEN 128
 static uint8_t buf[BUF_LEN];
+/*---------------------------------------------------------------------------*/
+bool
+bootloader_validate_internal_image()
+{
+  unsigned short crc;
+  ota_firmware_metadata_t *md;
+
+  md = (ota_firmware_metadata_t *)OTA_METADATA_LOC;
+
+  watchdog_periodic();
+
+  crc = crc16_data((unsigned char *)MAIN_FW_OFFSET, MAIN_FW_LENGTH, 0);
+
+  return md->crc == crc;
+}
 /*---------------------------------------------------------------------------*/
 bool
 bootloader_validate_image()
@@ -67,8 +70,9 @@ bootloader_validate_image()
     return false;
   }
 
-  for(i = 0; i < FLASH_AREA_COUNT; i++) {
-    uint32_t metadata_loc = i * FLASH_AREA_LEN;
+  for(i = 0; i < BOOTLOADER_EXT_FLASH_AREA_COUNT; i++) {
+    uint32_t metadata_loc = i * BOOTLOADER_EXT_FLASH_AREA_LEN +
+                            BOOTLOADER_EXT_FLASH_OTA_METADATA_OFFSET;
     crc = 0;
     memset(&metadata, 0, 0);
     success = ext_flash_read(NULL, metadata_loc, sizeof(metadata),
@@ -78,7 +82,7 @@ bootloader_validate_image()
       return false;
     }
 
-    for(j = 1; j < FLASH_AREA_LEN / BUF_LEN; j += 1) {
+    for(j = 1; j < BOOTLOADER_EXT_FLASH_AREA_LEN / BUF_LEN; j += 1) {
       memset(&buf, 0, BUF_LEN);
       success = ext_flash_read(NULL, metadata_loc + j * BUF_LEN, BUF_LEN, buf);
       if(!success) {
@@ -92,9 +96,9 @@ bootloader_validate_image()
       }
     }
 
-    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
-           (unsigned long)metadata.length,
-           metadata.crc, crc);
+//    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
+//           (unsigned long)metadata.length,
+//           metadata.crc, crc);
   }
 
   return true;

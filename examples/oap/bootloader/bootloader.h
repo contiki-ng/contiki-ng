@@ -38,6 +38,8 @@ void bootloader_arch_jump_to_app(void);
 void bootloader_arch_init(void);
 
 bool bootloader_validate_image(void);
+bool bootloader_validate_internal_image(void);
+
 /*---------------------------------------------------------------------------*/
 #endif /* BOOTLOADER_H_ */
 /*---------------------------------------------------------------------------*/
