@@ -78,14 +78,14 @@ void(*const vectors[]) (void) =
   0,                                    /* Reserved */
   default_handler,                      /* The PendSV handler */
   default_handler,                      /* The SysTick handler */
-  GPIOIntHandler,                       /* AON edge detect */
-  I2CIntHandler,                        /* I2C */
+  default_handler,                       /* AON edge detect */
+  default_handler,                        /* I2C */
   default_handler,                      /* RF Core Command & Packet Engine 1 */
   default_handler,                      /* AON SpiSplave Rx, Tx and CS */
   AONRTCIntHandler,                     /* AON RTC */
   default_handler,                      /* UART0 Rx and Tx */
   default_handler,                      /* AUX software event 0 */
-  SSI0IntHandler,                       /* SSI0 Rx and Tx */
+  default_handler,                       /* SSI0 Rx and Tx */
   default_handler,                      /* SSI1 Rx and Tx */
   default_handler,                      /* RF Core Command & Packet Engine 0 */
   default_handler,                      /* RF Core Hardware */
@@ -104,7 +104,7 @@ void(*const vectors[]) (void) =
   default_handler,                      /* Crypto Core Result available */
   default_handler,                      /* uDMA Software */
   default_handler,                      /* uDMA Error */
-  FlashIntHandler,                      /* Flash controller */
+  default_handler,                      /* Flash controller */
   default_handler,                      /* Software Event 0 */
   default_handler,                      /* AUX combined event */
   default_handler,                      /* AON programmable 0 */
