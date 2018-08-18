@@ -29,9 +29,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/* Offset the image by 0x00002000 and reserve 16 bytes for OTA metadata */
-#define FLASH_FW_ORIGIN     0x00002000
-#define FLASH_FW_LENGTH     0x0001FF98
-#define OTA_METADATA_ORIGIN (FLASH_FW_ORIGIN + FLASH_FW_LENGTH)
-#define OTA_METADATA_LENGTH 0x00000010
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
+/*---------------------------------------------------------------------------*/
+/*
+ * Signal to the rest of the code that we are building with OTA extensions
+ * The platform will be responsible to generate an offset firmware and to
+ * reserve space for metadata.
+ */
+#define OTA 1
+/*---------------------------------------------------------------------------*/
+#endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/
