@@ -41,16 +41,13 @@ MEMORY
     /* Flash Size 128 KB minus the CCA area below (88 bytes) */
     FLASH (RX) : ORIGIN = FLASH_FW_ORIGIN, LENGTH = FLASH_FW_LENGTH
 
-#if OTA
-    /* Reserve space for OTA metadata in the high area of flash */
-    FLASH_OTA_METADATA (RX) : ORIGIN = OTA_METADATA_ORIGIN, LENGTH = OTA_METADATA_LENGTH
-#endif
-
+#if !OTA
     /*
      * Customer Configuration Area and Bootloader Backdoor configuration
      * in flash, up to 88 bytes
      */
     FLASH_CCFG (RX) : ORIGIN = 0x0001FFA8, LENGTH = 88
+#endif
 
     /* RAM Size 20KB */
     SRAM (RWX) : ORIGIN = 0x20000000, LENGTH = 0x00005000
@@ -107,16 +104,11 @@ SECTIONS
     _heap = _stack;
     _eheap = _stack_origin;
 
+#if !OTA
     .ccfg :
     {
         KEEP(*(.ccfg))
     } > FLASH_CCFG
-
-#if OTA
-    .ota_metadata :
-    {
-        KEEP(*(.ota_metadata))
-    } > FLASH_OTA_METADATA
 #endif
 
     /* User_heap_stack section, used to check that there is enough RAM left */
