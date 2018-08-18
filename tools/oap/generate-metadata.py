@@ -129,8 +129,8 @@ def print_version():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False,
-                                     description='Calculate OA{ metadata for a'
-                                                 'Contiki-NG firmware')
+                                     description='Calculate OAP metadata for '
+                                                 'a Contiki-NG firmware')
     parser.add_argument('firmware', help='Path to firmware file')
     parser.add_argument('-b', '--build', action = 'store', type = int,
                           default = 0,
