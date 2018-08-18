@@ -1,1 +1,1 @@
-MODULES_REL += arch/cpu/cc26xx-cc13xx arch/arm-common
+MODULES_REL += arch/cpu/cc26xx-cc13xx arch/cpu/arm-common
