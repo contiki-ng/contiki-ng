@@ -58,6 +58,21 @@ main(void)
 
   watchdog_start();
 
+  /*
+   * Collect firmware versions from ext flash
+   *
+   * Compare with version in internal flash
+   *
+   * start with highest version > current
+   *   calculate CRC
+   *     if pass, copy, verify then break
+   *     else fallback to next highest version
+   *
+   * calculate internal CRC
+   *   if pass jump
+   *   else copy golden image, verify, jump
+   */
+
   if(bootloader_validate_image()) {
     bootloader_arch_jump_to_app();
   }
