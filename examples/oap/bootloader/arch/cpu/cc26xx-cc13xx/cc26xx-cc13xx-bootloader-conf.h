@@ -29,10 +29,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef TARGET_CONF_H_
-#define TARGET_CONF_H_
+#ifndef CC26XX_CC13XX_BOOTLOADER_CONF_H_
+#define CC26XX_CC13XX_BOOTLOADER_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include "cc26xx-cc13xx-bootloader-conf.h"
+/* Limit the image to 0x2000 bytes */
+#define FLASH_FW_ORIGIN 0x00000000
+#define FLASH_FW_LENGTH 0x00002000
 /*---------------------------------------------------------------------------*/
-#endif /* TARGET_CONF_H_ */
+#endif /* CC26XX_CC13XX_BOOTLOADER_CONF_H_ */
 /*---------------------------------------------------------------------------*/

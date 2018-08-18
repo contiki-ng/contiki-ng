@@ -35,4 +35,7 @@
 /* Include platform-specific header */
 #include "target-conf.h"
 /*---------------------------------------------------------------------------*/
+/* We are _not_ building an OTA-enabled image, so do not change this. */
+#define OTA 0
+/*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
