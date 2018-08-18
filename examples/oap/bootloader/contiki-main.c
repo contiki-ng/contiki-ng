@@ -33,9 +33,6 @@
 #include "sys/platform.h"
 #include "dev/watchdog.h"
 #include "dev/ext-flash/ext-flash.h"
-#include "dev/spi.h"
-#include "lib/crc16.h"
-#include "dev/leds.h"
 #include "bootloader.h"
 
 #include <stdio.h>
