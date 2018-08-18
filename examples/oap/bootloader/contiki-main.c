@@ -49,9 +49,6 @@ main(void)
   bootloader_arch_init();
 
   clock_init();
-  rtimer_init();
-  process_init();
-  process_start(&etimer_process, NULL);
   watchdog_init();
 
   ext_flash_init(NULL);
