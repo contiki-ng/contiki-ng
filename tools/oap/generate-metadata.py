@@ -33,6 +33,7 @@ import os
 import argparse
 import subprocess
 import random
+import struct
 
 try:
     import magic
@@ -57,8 +58,12 @@ class GenerateMetadataException(Exception):
 class FirmwareFile(object):
     HEX_FILE_EXTENSIONS = ('hex', 'ihx', 'ihex')
 
-    def __init__(self, path, build):
+    def __init__(self, path, build, out_hex, offset, big_endian=False):
         self.build = build
+        self._out_hex = out_hex
+        self._offset = offset
+        self.big_endian = big_endian
+        self.random = random.randint(0, 0xFFFFFFFF)
         firmware_is_hex = False
 
         if have_magic:
@@ -112,8 +117,15 @@ class FirmwareFile(object):
     def length(self):
         return len(self.bytes)
 
-    def random(self):
-        return random.randint(0, 0xFFFFFFFF)
+    def save_hex(self):
+        ord_char = '>' if self.big_endian else '<'
+        out_fmt = ord_char + 'LLHHH'
+        packed = struct.pack(out_fmt, self.length(), self.random,
+                             self.crc(), self.crc(), self.build)
+
+        oh = IntelHex()
+        oh.frombytes(bytearray(packed), offset=self._offset)
+        oh.write_hex_file(self._out_hex)
 
 
 def print_version():
@@ -135,6 +147,22 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--build', action = 'store', type = int,
                           default = 0,
                           help = 'Set firmware build number (Default: 0)')
+    parser.add_argument('-B', '--big-endian', action = 'store_true',
+                        default = False,
+                        help = 'Save metadata in big-endian format. '
+                               'Only makes sense with -o')
+    parser.add_argument('-o', '--out-file', action = 'store', nargs = '?',
+                        const = 'metadata.hex', default = False,
+                        help = 'Save the metadata in OUT_FILE. \
+                                If -o is specified but OUT_FILE is omitted, \
+                                metadata.hex will be used. If the argument is \
+                                omitted altogether, metadata will not \
+                                be saved.')
+    parser.add_argument('-O', '--offset', action = 'store',
+                        type = lambda x: int(x, 0),
+                        default = 0,
+                        help = 'Save metadata at offset OFFSET. Only makes '
+                               'sense with -o')
     parser.add_argument('-h', '--help', action='help',
                         help='Show this message and exit')
     parser.add_argument('-v', '--version', action='version',
@@ -143,7 +171,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    firmware = FirmwareFile(args.firmware, args.build)
+    firmware = FirmwareFile(args.firmware, args.build, args.out_file,
+                            args.offset, args.big_endian)
+
+    if args.out_file is not False:
+        firmware.save_hex()
+
     print("Length=%u bytes, CRC16=0x%04x, ID=0x%08x, Build=%u"
-          % (firmware.length(), firmware.crc(), firmware.random(),
+          % (firmware.length(), firmware.crc(), firmware.random,
              firmware.build))
