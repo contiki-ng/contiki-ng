@@ -42,6 +42,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/ext-flash/ext-flash.h"
+#include "dev/watchdog.h"
 #include "net/app-layer/ota/ota.h"
 #include "net/app-layer/ota/ota-ext-flash.h"
 #include "lib/crc16.h"
@@ -131,6 +132,7 @@ ota_ext_flash_area_write_chunk(uint8_t area, uint32_t offset, uint8_t *chunk,
 
   write_addr = area * OTA_EXT_FLASH_AREA_LEN + offset;
 
+  watchdog_periodic();
   success = ext_flash_write(NULL, write_addr, chunk_len, chunk);
 
   if(!success) {
@@ -179,6 +181,7 @@ ota_ext_flash_area_write_image(uint8_t area, const uint8_t *img,
     write_size = bytes_written + WRITE_CHUNK_SIZE <= img_len ?
                  WRITE_CHUNK_SIZE : img_len - bytes_written;
 
+    watchdog_periodic();
     success = ext_flash_write(NULL, write_addr, write_size, read_addr);
 
     if(!success) {
@@ -201,6 +204,7 @@ ota_ext_flash_area_write_image(uint8_t area, const uint8_t *img,
     LOG_INFO("  Metadata from 0x%08lX to 0x%08lX, 0x%08lX bytes\n",
              (unsigned long)OTA_METADATA_BASE, (unsigned long)write_addr,
              (unsigned long)OTA_METADATA_LEN);
+    watchdog_periodic();
     success = ext_flash_write(NULL, write_addr, OTA_METADATA_LEN,
                               (const uint8_t *)OTA_METADATA_BASE);
   }
