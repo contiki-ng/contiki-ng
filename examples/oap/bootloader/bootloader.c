@@ -33,7 +33,7 @@
 #include "dev/ext-flash/ext-flash.h"
 #include "lib/crc16.h"
 #include "dev/watchdog.h"
-#include "ota.h"
+#include "net/app-layer/ota/ota.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -48,13 +48,24 @@ bootloader_validate_internal_image()
   unsigned short crc;
   ota_firmware_metadata_t *md;
 
-  md = (ota_firmware_metadata_t *)OTA_METADATA_ABS_LOC;
+  md = (ota_firmware_metadata_t *)OTA_METADATA_BASE;
+
+  if((md->length == OTA_IMAGE_INVALID_LEN) ||
+     (md->length > OTA_MAIN_FW_MAX_LEN)) {
+    printf("Invalid Length: 0x%08lX (Max=0x%08lX)\n",
+           (unsigned long)md->length, (unsigned long)OTA_MAIN_FW_MAX_LEN);
+    return false;
+  }
+
+  printf("Firmware Length: 0x%08lX\n", (unsigned long)md->length);
+  printf("Firmware Version: 0x%04X\n", md->version);
+  printf("Firmware UUID: 0x%08lX\n", (unsigned long)md->uuid);
 
   watchdog_periodic();
 
-  crc = crc16_data((unsigned char *)MAIN_FW_OFFSET, md->length, 0);
+  crc = crc16_data((unsigned char *)OTA_MAIN_FW_BASE, md->length, 0);
 
-  printf("CRC=0x%04x, MD CRC=0x%04x\n", crc, md->crc);
+  printf("CRC=0x%04X, MD CRC=0x%04X\n", crc, md->crc);
 
   return md->crc == crc;
 }

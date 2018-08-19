@@ -33,6 +33,8 @@
 #include "sys/platform.h"
 #include "dev/watchdog.h"
 #include "dev/ext-flash/ext-flash.h"
+#include "dev/leds.h"
+#include "net/app-layer/ota/ota.h"
 #include "bootloader.h"
 
 #include <stdio.h>
@@ -51,6 +53,11 @@ main(void)
 //  ext_flash_init(NULL);
 
   watchdog_start();
+
+  printf("OTA_MAIN_FW_BASE=0x%08lX\n", (unsigned long)OTA_MAIN_FW_BASE);
+  printf("OTA_MAIN_FW_MAX_LEN=0x%08lX\n", (unsigned long)OTA_MAIN_FW_MAX_LEN);
+  printf("OTA_METADATA_OFFSET=0x%08lX\n", (unsigned long)OTA_METADATA_OFFSET);
+  printf("OTA_METADATA_BASE=0x%08lX\n", (unsigned long)OTA_METADATA_BASE);
 
   /*
    * Collect firmware versions from ext flash
@@ -71,6 +78,10 @@ main(void)
   //           (unsigned long)metadata.length,
   //           metadata.crc, crc);
 
+  if(bootloader_validate_internal_image()) {
+    bootloader_arch_jump_to_app();
+  }
+  leds_on(LEDS_RED);
 
 //  if(bootloader_validate_image()) {
 //    bootloader_arch_jump_to_app();

@@ -29,9 +29,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/* Offset the image by 0x00002000 and reserve 16 bytes for OTA metadata */
+/* Offset the image by 0x00002000 and reserve space for metadata */
+#define OTA_METADATA_LEN    0x0C
 #define FLASH_FW_ORIGIN     0x00002000
-#define FLASH_FW_LENGTH     (0x0001FFA8 - 0x00002000)
-#define OTA_METADATA_ORIGIN (FLASH_FW_ORIGIN + FLASH_FW_LENGTH)
-#define OTA_METADATA_LENGTH 0x00000010
+#define FLASH_FW_LENGTH     (0x0001FFA8 - FLASH_FW_ORIGIN - OTA_METADATA_LEN)
 /*---------------------------------------------------------------------------*/

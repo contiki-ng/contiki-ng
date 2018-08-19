@@ -35,8 +35,7 @@
 #include "dev/gpio-hal.h"
 #include "dev/oscillators.h"
 #include "dev/soc-rtc.h"
-#include "dev/cc26xx-uart.h"
-#include "dev/button-hal.h"
+#include "net/app-layer/ota/ota.h"
 
 #include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
@@ -47,7 +46,7 @@ void
 bootloader_arch_jump_to_app()
 {
   /* Load the address of the vector to R0 */
-  __asm(" MOV R0, " STR(MAIN_FW_OFFSET));
+  __asm(" MOV R0, " STR(OTA_MAIN_FW_BASE));
 
   /* Load the address of the Reset Handler to R1:
    * Offset by 0x04 from the vector start */
