@@ -105,8 +105,6 @@ ota_ext_flash_read_metadata(uint8_t area, ota_firmware_metadata_t *md)
 
   read_addr = area * OTA_EXT_FLASH_AREA_LEN + OTA_METADATA_OFFSET;
 
-  LOG_DBG("Read from 0x%08lX\n", (unsigned long)read_addr);
-
   success = ext_flash_read(NULL, read_addr, sizeof(ota_firmware_metadata_t),
                            (uint8_t *)md);
 
