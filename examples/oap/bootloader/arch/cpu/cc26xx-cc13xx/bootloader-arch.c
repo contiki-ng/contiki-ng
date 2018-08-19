@@ -62,8 +62,6 @@ bootloader_arch_jump_to_app()
   __asm(" BX R1");
 }
 /*---------------------------------------------------------------------------*/
-void board_init(void);
-/*---------------------------------------------------------------------------*/
 void
 bootloader_arch_init()
 {
@@ -79,12 +77,23 @@ bootloader_arch_init()
   /* Wait for LF clock source to become XOSC_LF */
   while(ti_lib_osc_clock_source_get(OSC_SRC_CLK_LF) != OSC_XOSC_LF);
 
-//  board_init();
+  /* Turn on the PERIPH PD */
+  ti_lib_prcm_power_domain_on(PRCM_DOMAIN_PERIPH);
+
+  /* Wait for domains to power on */
+  while((ti_lib_prcm_power_domain_status(PRCM_DOMAIN_PERIPH)
+        != PRCM_DOMAIN_POWER_ON));
+
+  /* Enable GPIO peripheral */
+  ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_GPIO);
+
+  /* Apply settings and wait for them to take effect */
+  ti_lib_prcm_load_set();
+  while(!ti_lib_prcm_load_get());
 
   gpio_hal_init();
 
   leds_init();
-  leds_on(LEDS_RED);
 
   /*
    * Disable I/O pad sleep mode and open I/O latches in the AON IOC interface
