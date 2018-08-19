@@ -29,7 +29,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "dev/ext-flash/ext-flash.h"
+#include "contiki.h"
 #include "lib/crc16.h"
 #include "net/app-layer/ota/ota.h"
 
