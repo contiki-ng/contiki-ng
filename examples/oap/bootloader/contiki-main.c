@@ -71,11 +71,6 @@ main(void)
 
   ext_flash_init(NULL);
 
-  LOG_INFO("OTA_MAIN_FW_BASE=0x%08lX\n", (unsigned long)OTA_MAIN_FW_BASE);
-  LOG_INFO("OTA_MAIN_FW_MAX_LEN=0x%08lX\n", (unsigned long)OTA_MAIN_FW_MAX_LEN);
-  LOG_INFO("OTA_METADATA_OFFSET=0x%08lX\n", (unsigned long)OTA_METADATA_OFFSET);
-  LOG_INFO("OTA_METADATA_BASE=0x%08lX\n", (unsigned long)OTA_METADATA_BASE);
-
   internal_metadata = (ota_firmware_metadata_t *)OTA_METADATA_BASE;
 
 #if BOOTLOADER_ERASE_EXT_FLASH
@@ -92,21 +87,6 @@ main(void)
     LOG_ERR("Write image to external flash failed\n");
   }
 #endif
-
-  /*
-   * Collect firmware versions from ext flash
-   *
-   * Compare with version in internal flash
-   *
-   * start with highest version > current
-   *   calculate CRC
-   *     if pass, copy, verify then break
-   *     else fallback to next highest version
-   *
-   * calculate internal CRC
-   *   if pass jump
-   *   else copy golden image, verify, jump
-   */
 
   latest = internal_metadata->version;
   newer_in_ext_flash = false;
