@@ -50,6 +50,8 @@
  */
 #define CCFG_LENGTH           0x00000058
 
+#define CCFG_ABS_ADDR         (INTERNAL_FLASH_LENGTH - CCFG_LENGTH)
+
 /*
  * Max area available for the main firmware on internal flash, including
  * metadata

@@ -34,6 +34,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 /* Set to 1 to backup the golden image to external flash */
@@ -52,6 +53,7 @@
 /*---------------------------------------------------------------------------*/
 void bootloader_arch_jump_to_app(void);
 void bootloader_arch_init(void);
+void bootloader_arch_install_image_from_area(uint8_t area);
 bool bootloader_validate_internal_image(void);
 /*---------------------------------------------------------------------------*/
 #endif /* BOOTLOADER_H_ */
