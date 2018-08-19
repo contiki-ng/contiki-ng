@@ -80,7 +80,7 @@ bootloader_arch_init()
   /* Wait for LF clock source to become XOSC_LF */
   while(ti_lib_osc_clock_source_get(OSC_SRC_CLK_LF) != OSC_XOSC_LF);
 
-  board_init();
+//  board_init();
 
   gpio_hal_init();
 

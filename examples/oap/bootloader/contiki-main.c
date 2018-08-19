@@ -48,7 +48,7 @@ main(void)
   clock_init();
   watchdog_init();
 
-  ext_flash_init(NULL);
+//  ext_flash_init(NULL);
 
   watchdog_start();
 
@@ -67,9 +67,14 @@ main(void)
    *   else copy golden image, verify, jump
    */
 
-  if(bootloader_validate_image()) {
-    bootloader_arch_jump_to_app();
-  }
+  //    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
+  //           (unsigned long)metadata.length,
+  //           metadata.crc, crc);
+
+
+//  if(bootloader_validate_image()) {
+//    bootloader_arch_jump_to_app();
+//  }
 
   return 0;
 }
