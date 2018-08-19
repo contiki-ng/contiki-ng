@@ -116,12 +116,15 @@ bool ota_ext_flash_read_metadata(uint8_t area, ota_firmware_metadata_t *md);
 /**
  * \brief Validate an image in an external flash area
  * \param area The area to validate
+ * \param md A pointer to an ota_firmware_metadata_t variable where data will be stored
  * \retval true Operation succeeded and image valie
  * \retval false Operation failed or image invalid
  *
  * \e area must be less than OTA_EXT_FLASH_AREA_COUNT
+ *
+ * It is the caller's responsibility to allocate sufficient space for \e md
  */
-bool ota_ext_flash_area_validate(uint8_t area);
+bool ota_ext_flash_area_validate(uint8_t area, ota_firmware_metadata_t *md);
 
 /**
  * \brief Write a chunk of data to an external flash area

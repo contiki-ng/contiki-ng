@@ -214,7 +214,7 @@ ota_ext_flash_area_write_image(uint8_t area, const uint8_t *img,
 }
 /*---------------------------------------------------------------------------*/
 bool
-ota_ext_flash_area_validate(uint8_t area)
+ota_ext_flash_area_validate(uint8_t area, ota_firmware_metadata_t *md)
 {
   int i;
   unsigned short crc;
@@ -283,6 +283,8 @@ ota_ext_flash_area_validate(uint8_t area)
   LOG_INFO("  Calc CRC=0x%04X\n", crc);
 
   ext_flash_close(NULL);
+
+  memcpy(md, &metadata, sizeof(metadata));
 
   return crc == metadata.crc;
 }

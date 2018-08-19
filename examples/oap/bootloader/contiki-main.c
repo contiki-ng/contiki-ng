@@ -49,6 +49,8 @@
 #endif
 #define LOG_LEVEL LOG_LEVEL_BOOTLOADER
 /*---------------------------------------------------------------------------*/
+static ota_firmware_metadata_t external_metadata[OTA_EXT_FLASH_AREA_COUNT];
+/*---------------------------------------------------------------------------*/
 int
 main(void)
 {
@@ -61,6 +63,8 @@ main(void)
   clock_init();
   process_init();
   process_start(&etimer_process, NULL);
+
+  memset(external_metadata, 0, sizeof(external_metadata));
 
   ext_flash_init(NULL);
 
@@ -114,8 +118,7 @@ main(void)
   }
 
   for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
-    success = ota_ext_flash_area_validate(i);
-    LOG_INFO("Ext flash validation\n");
+    success = ota_ext_flash_area_validate(i, &external_metadata[i]);
     if(success) {
       LOG_INFO("Area %d: valid\n", i);
     } else {
