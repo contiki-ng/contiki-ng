@@ -112,6 +112,42 @@ void ota_ext_flash_area_erase(uint8_t area);
  * It is the caller's responsibility to allocate sufficient space for \e md
  */
 bool ota_ext_flash_read_metadata(uint8_t area, ota_firmware_metadata_t *md);
+
+/**
+ * \brief Validate an image in an external flash area
+ * \param area The area to validate
+ * \retval true Operation succeeded and image valie
+ * \retval false Operation failed or image invalid
+ *
+ * \e area must be less than OTA_EXT_FLASH_AREA_COUNT
+ */
+bool ota_ext_flash_area_validate(uint8_t area);
+
+/**
+ * \brief Write a chunk of data to an external flash area
+ * \param area The area to write to
+ * \param offset The offset from the start of the area to write
+ * \param chunk A pointer to the data to write
+ * \param chunk_len The number of bytes to write
+ *
+ * \e area must be less than OTA_EXT_FLASH_AREA_COUNT
+ *
+ * \note This function will not check for alignment with the start of external
+ * flash writable sector start
+ */
+bool ota_ext_flash_area_write_chunk(uint8_t area, uint32_t offset,
+                                    uint8_t *chunk, uint8_t chunk_len);
+
+/**
+ * \brief Write an entire image to an external flash area
+ * \param area The area to write to
+ * \param img A pointer to the start of the image to write
+ * \param img_len The image length
+ *
+ * \e area must be less than OTA_EXT_FLASH_AREA_COUNT
+ */
+bool ota_ext_flash_area_write_image(uint8_t area, uint8_t *img,
+                                    uint32_t img_len);
 /*---------------------------------------------------------------------------*/
 #endif /* OTA_EXT_FLASH_H_ */
 /*---------------------------------------------------------------------------*/
