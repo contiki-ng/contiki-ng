@@ -36,6 +36,7 @@
 #include "dev/oscillators.h"
 #include "dev/soc-rtc.h"
 #include "dev/ext-flash/ext-flash.h"
+#include "dev/watchdog.h"
 #include "net/app-layer/ota/ota.h"
 #include "net/app-layer/ota/ota-ext-flash.h"
 #include "driverlib/flash.h"
@@ -129,6 +130,8 @@ sector_erase(uint32_t write_addr)
   int_master_status_t status;
   uint32_t rv;
 
+  watchdog_periodic();
+
   status = critical_enter();
   rv = FlashSectorErase(write_addr);
   critical_exit(status);
@@ -146,6 +149,8 @@ sector_write(uint8_t *src, uint32_t write_addr)
 {
   int_master_status_t status;
   uint32_t rv;
+
+  watchdog_periodic();
 
   status = critical_enter();
   rv = FlashProgram(src, write_addr, FLASH_SECTOR_SIZE);

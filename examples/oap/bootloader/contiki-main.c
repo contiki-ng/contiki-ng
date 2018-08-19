@@ -34,6 +34,7 @@
 #include "sys/platform.h"
 #include "dev/ext-flash/ext-flash.h"
 #include "dev/leds.h"
+#include "dev/watchdog.h"
 #include "net/app-layer/ota/ota.h"
 #include "net/app-layer/ota/ota-ext-flash.h"
 #include "bootloader.h"
@@ -67,6 +68,9 @@ main(void)
   process_init();
   process_start(&etimer_process, NULL);
 
+  watchdog_init();
+  watchdog_start();
+
   memset(&this, 0, sizeof(this));
 
   ext_flash_init(NULL);
@@ -75,12 +79,15 @@ main(void)
 
 #if BOOTLOADER_ERASE_EXT_FLASH
   for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
+    watchdog_periodic();
     ota_ext_flash_area_erase(i);
   }
 #endif
 
 #if BOOTLOADER_BACKUP_GOLDEN_IMAGE
+  watchdog_periodic();
   ota_ext_flash_area_erase(OTA_EXT_FLASH_GOLDEN_AREA);
+  watchdog_periodic();
   if(!ota_ext_flash_area_write_image(
        OTA_EXT_FLASH_GOLDEN_AREA, (const uint8_t *)OTA_MAIN_FW_BASE,
        internal_metadata->length)) {
@@ -93,6 +100,7 @@ main(void)
 
   LOG_INFO("Ext flash validation\n");
   for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
+    watchdog_periodic();
     success = ota_ext_flash_area_validate(i, &this);
     if(success) {
       LOG_INFO("Area %d: valid, Ver=0x%04X\n", i, this.version);
