@@ -56,7 +56,7 @@
 #define LOG_LEVEL LOG_LEVEL_OTA
 /*---------------------------------------------------------------------------*/
 void
-ext_flash_area_erase(uint8_t area)
+ota_ext_flash_area_erase(uint8_t area)
 {
   uint32_t erase_offset;
 

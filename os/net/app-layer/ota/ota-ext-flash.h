@@ -98,7 +98,7 @@
  * to map the external flash such that this offset is aligned with a sector
  * erase boundary.
  */
-void ext_flash_area_erase(uint8_t area);
+void ota_ext_flash_area_erase(uint8_t area);
 
 /**
  * \brief Retrieve metadata from an external flash image area
