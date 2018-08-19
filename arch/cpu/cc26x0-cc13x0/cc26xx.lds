@@ -51,7 +51,7 @@ MEMORY
 
     /* RAM Size 20KB */
     SRAM (RWX) : ORIGIN = 0x20000000, LENGTH = 0x00005000
-    
+
     /* Application can use GPRAM region as RAM if cache is disabled in CCFG */
     GPRAM (RWX) : ORIGIN = 0x11000000, LENGTH = 0x00002000
 }
@@ -119,9 +119,8 @@ SECTIONS
       . = . + _Min_Stack_Size;
       . = ALIGN(4);
     } > SRAM
-    
+
     .gpram :
-    { 
+    {
     } > GPRAM
-    
 }
