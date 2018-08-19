@@ -39,30 +39,40 @@
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
+#include "sys/log.h"
+#define LOG_MODULE "bootloader"
+#ifndef LOG_LEVEL_BOOTLOADER
+#define LOG_LEVEL_BOOTLOADER LOG_LEVEL_NONE
+#endif
+#define LOG_LEVEL LOG_LEVEL_BOOTLOADER
+/*---------------------------------------------------------------------------*/
 bool
 bootloader_validate_internal_image()
 {
   unsigned short crc;
   ota_firmware_metadata_t *md;
 
+  LOG_INFO("Read internal metadata from: 0x%08lX\n",
+           (unsigned long)OTA_METADATA_BASE);
+
   md = (ota_firmware_metadata_t *)OTA_METADATA_BASE;
 
   if((md->length == OTA_IMAGE_INVALID_LEN) ||
      (md->length > OTA_MAIN_FW_MAX_LEN)) {
-    printf("Invalid Length: 0x%08lX (Max=0x%08lX)\n",
+    LOG_ERR("Invalid Length: 0x%08lX (Max=0x%08lX)\n",
            (unsigned long)md->length, (unsigned long)OTA_MAIN_FW_MAX_LEN);
     return false;
   }
 
-  printf("Firmware Length: 0x%08lX\n", (unsigned long)md->length);
-  printf("Firmware Version: 0x%04X\n", md->version);
-  printf("Firmware UUID: 0x%08lX\n", (unsigned long)md->uuid);
+  LOG_INFO("Firmware Length: 0x%08lX\n", (unsigned long)md->length);
+  LOG_INFO("Firmware Version: 0x%04X\n", md->version);
+  LOG_INFO("Firmware UUID: 0x%08lX\n", (unsigned long)md->uuid);
 
   watchdog_periodic();
 
   crc = crc16_data((unsigned char *)OTA_MAIN_FW_BASE, md->length, 0);
 
-  printf("CRC=0x%04X, MD CRC=0x%04X\n", crc, md->crc);
+  LOG_INFO("CRC=0x%04X, MD CRC=0x%04X\n", crc, md->crc);
 
   return md->crc == crc;
 }

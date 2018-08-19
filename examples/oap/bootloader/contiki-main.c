@@ -42,6 +42,13 @@
 #include <string.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
+#include "sys/log.h"
+#define LOG_MODULE "main"
+#ifndef LOG_LEVEL_BOOTLOADER
+#define LOG_LEVEL_BOOTLOADER LOG_LEVEL_NONE
+#endif
+#define LOG_LEVEL LOG_LEVEL_BOOTLOADER
+/*---------------------------------------------------------------------------*/
 int
 main(void)
 {
@@ -54,10 +61,10 @@ main(void)
 
   watchdog_start();
 
-  printf("OTA_MAIN_FW_BASE=0x%08lX\n", (unsigned long)OTA_MAIN_FW_BASE);
-  printf("OTA_MAIN_FW_MAX_LEN=0x%08lX\n", (unsigned long)OTA_MAIN_FW_MAX_LEN);
-  printf("OTA_METADATA_OFFSET=0x%08lX\n", (unsigned long)OTA_METADATA_OFFSET);
-  printf("OTA_METADATA_BASE=0x%08lX\n", (unsigned long)OTA_METADATA_BASE);
+  LOG_INFO("OTA_MAIN_FW_BASE=0x%08lX\n", (unsigned long)OTA_MAIN_FW_BASE);
+  LOG_INFO("OTA_MAIN_FW_MAX_LEN=0x%08lX\n", (unsigned long)OTA_MAIN_FW_MAX_LEN);
+  LOG_INFO("OTA_METADATA_OFFSET=0x%08lX\n", (unsigned long)OTA_METADATA_OFFSET);
+  LOG_INFO("OTA_METADATA_BASE=0x%08lX\n", (unsigned long)OTA_METADATA_BASE);
 
   /*
    * Collect firmware versions from ext flash
