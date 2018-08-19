@@ -55,7 +55,8 @@ int
 main(void)
 {
   int i;
-  ota_firmware_metadata_t md;
+  uint16_t latest;
+  ota_firmware_metadata_t *internal_metadata;
   bool success;
 
   bootloader_arch_init();
@@ -73,6 +74,8 @@ main(void)
   LOG_INFO("OTA_METADATA_OFFSET=0x%08lX\n", (unsigned long)OTA_METADATA_OFFSET);
   LOG_INFO("OTA_METADATA_BASE=0x%08lX\n", (unsigned long)OTA_METADATA_BASE);
 
+  internal_metadata = (ota_firmware_metadata_t *)OTA_METADATA_BASE;
+
 #if BOOTLOADER_ERASE_EXT_FLASH
   for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
     ota_ext_flash_area_erase(i);
@@ -82,8 +85,8 @@ main(void)
 #if BOOTLOADER_BACKUP_GOLDEN_IMAGE
   ota_ext_flash_area_erase(OTA_EXT_FLASH_GOLDEN_AREA);
   if(!ota_ext_flash_area_write_image(
-       ((ota_firmware_metadata_t *)OTA_METADATA_BASE)->length)) {
        OTA_EXT_FLASH_GOLDEN_AREA, (const uint8_t *)OTA_MAIN_FW_BASE,
+       internal_metadata->length)) {
     LOG_ERR("Write image to external flash failed\n");
   }
 #endif
@@ -103,28 +106,24 @@ main(void)
    *   else copy golden image, verify, jump
    */
 
-  for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
-    memset(&md, 0, sizeof(md));
-    success = ota_ext_flash_read_metadata(i, &md);
-    if(success) {
-      LOG_INFO("Read metadata area %d:\n", i);
-      LOG_INFO("   Len=0x%08lX:\n", (unsigned long)md.length);
-      LOG_INFO("  UUID=0x%08lX:\n", (unsigned long)md.uuid);
-      LOG_INFO("   Ver=0x%04X:\n", md.version);
-      LOG_INFO("   CRC=0x%04X:\n", md.crc);
-    } else {
-      LOG_ERR("Read metadata from area %d failed\n", i);
-    }
-  }
+  latest = internal_metadata->version;
 
+  LOG_INFO("Ext flash validation\n");
   for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
     success = ota_ext_flash_area_validate(i, &external_metadata[i]);
     if(success) {
-      LOG_INFO("Area %d: valid\n", i);
+      LOG_INFO("Area %d: valid, Ver=0x%04X\n", i,
+               external_metadata[i].version );
+      if(external_metadata[i].version > latest) {
+        latest = external_metadata[i].version;
+      }
     } else {
       LOG_INFO("Area %d: invalid or error\n", i);
     }
   }
+
+  LOG_INFO("Internal Ver=0x%04X, Latest=0x%04X\n",
+           internal_metadata->version, latest);
 
   if(bootloader_validate_internal_image()) {
     bootloader_arch_jump_to_app();
