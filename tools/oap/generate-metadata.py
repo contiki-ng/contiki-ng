@@ -177,6 +177,6 @@ if __name__ == '__main__':
     if args.out_file is not False:
         firmware.save_hex()
 
-    print("Length=%u bytes, CRC16=0x%04x, ID=0x%08x, Build=%u"
+    print("Length=%u bytes, CRC16=0x%04X, ID=0x%08X, Build=%u"
           % (firmware.length(), firmware.crc(), firmware.random,
              firmware.build))
