@@ -19,7 +19,7 @@ all: $(FINAL_IMAGE)
 .PHONY: clean distclean
 
 clean:
-	rm -f $(FINAL_IMAGE)
+	rm -f $(FINAL_IMAGE) $(METADATA)
 	
 distclean: clean
 	$(MAKE) -C $(dir $(BOOTLOADER)) clean
