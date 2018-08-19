@@ -119,9 +119,9 @@ class FirmwareFile(object):
 
     def save_hex(self):
         ord_char = '>' if self.big_endian else '<'
-        out_fmt = ord_char + 'LLHHH'
+        out_fmt = ord_char + 'LLHH'
         packed = struct.pack(out_fmt, self.length(), self.random,
-                             self.crc(), self.crc(), self.build)
+                             self.crc(), self.build)
 
         oh = IntelHex()
         oh.frombytes(bytearray(packed), offset=self._offset)
