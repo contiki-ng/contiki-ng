@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * Copyright (c) 2016, Mark Solters <msolters@gmail.com>
  * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
