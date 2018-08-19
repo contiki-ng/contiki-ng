@@ -31,7 +31,7 @@
 /*---------------------------------------------------------------------------*/
 /* Offset the image by 0x00002000 and reserve 16 bytes for OTA metadata */
 #define FLASH_FW_ORIGIN     0x00002000
-#define FLASH_FW_LENGTH     0x0001DF98
+#define FLASH_FW_LENGTH     (0x0001FFA8 - 0x00002000)
 #define OTA_METADATA_ORIGIN (FLASH_FW_ORIGIN + FLASH_FW_LENGTH)
 #define OTA_METADATA_LENGTH 0x00000010
 /*---------------------------------------------------------------------------*/
