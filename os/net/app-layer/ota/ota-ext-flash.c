@@ -237,10 +237,10 @@ ota_ext_flash_area_validate(uint8_t area, ota_firmware_metadata_t *md)
   }
 
   LOG_INFO("Read metadata area %u:\n", area);
-  LOG_INFO("   Len=0x%08lX:\n", (unsigned long)metadata.length);
-  LOG_INFO("  UUID=0x%08lX:\n", (unsigned long)metadata.uuid);
-  LOG_INFO("   Ver=0x%04X:\n", metadata.version);
-  LOG_INFO("   CRC=0x%04X:\n", metadata.crc);
+  LOG_INFO("   Len=0x%08lX=\n", (unsigned long)metadata.length);
+  LOG_INFO("  UUID=0x%08lX=\n", (unsigned long)metadata.uuid);
+  LOG_INFO("   Ver=0x%04X=\n", metadata.version);
+  LOG_INFO("   CRC=0x%04X=\n", metadata.crc);
 
   if((metadata.length == OTA_IMAGE_INVALID_LEN) ||
      (metadata.length > OTA_MAIN_FW_MAX_LEN)) {
