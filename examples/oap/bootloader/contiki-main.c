@@ -113,7 +113,7 @@ main(void)
     success = ota_ext_flash_area_validate(i, &external_metadata[i]);
     if(success) {
       LOG_INFO("Area %d: valid, Ver=0x%04X\n", i,
-               external_metadata[i].version );
+               external_metadata[i].version);
       if(external_metadata[i].version > latest) {
         latest = external_metadata[i].version;
       }
