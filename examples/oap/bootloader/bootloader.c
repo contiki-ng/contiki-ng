@@ -59,7 +59,7 @@ bootloader_validate_internal_image()
   if((md->length == OTA_IMAGE_INVALID_LEN) ||
      (md->length > OTA_MAIN_FW_MAX_LEN)) {
     LOG_ERR("Invalid Length: 0x%08lX (Max=0x%08lX)\n",
-           (unsigned long)md->length, (unsigned long)OTA_MAIN_FW_MAX_LEN);
+            (unsigned long)md->length, (unsigned long)OTA_MAIN_FW_MAX_LEN);
     return false;
   }
 

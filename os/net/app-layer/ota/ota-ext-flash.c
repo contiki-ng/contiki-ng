@@ -78,7 +78,6 @@ ota_ext_flash_area_erase(uint8_t area)
   LOG_INFO("Erase area %u, addr=0x%08lX, 0x%08lX bytes\n", area,
            (unsigned long)erase_offset, (unsigned long)OTA_EXT_FLASH_AREA_LEN);
 
-
   if(!ext_flash_open(NULL)) {
     LOG_ERR("Failed to open external flash\n");
     return;
@@ -151,7 +150,7 @@ ota_ext_flash_area_write_image(uint8_t area, const uint8_t *img,
                                uint32_t img_len)
 {
   uint32_t write_addr;
-  uint32_t bytes_written = 0;;
+  uint32_t bytes_written = 0;
   const uint8_t *read_addr;
   uint8_t write_size;
   bool success;
@@ -202,8 +201,8 @@ ota_ext_flash_area_write_image(uint8_t area, const uint8_t *img,
     write_addr = area * OTA_EXT_FLASH_AREA_LEN + OTA_METADATA_OFFSET;
 
     LOG_INFO("  Metadata from 0x%08lX to 0x%08lX, 0x%08lX bytes\n",
-        (unsigned long)OTA_METADATA_BASE, (unsigned long)write_addr,
-        (unsigned long)OTA_METADATA_LEN);
+             (unsigned long)OTA_METADATA_BASE, (unsigned long)write_addr,
+             (unsigned long)OTA_METADATA_LEN);
     success = ext_flash_write(NULL, write_addr, OTA_METADATA_LEN,
                               (const uint8_t *)OTA_METADATA_BASE);
   }

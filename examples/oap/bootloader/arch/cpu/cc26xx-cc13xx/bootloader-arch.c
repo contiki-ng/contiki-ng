@@ -82,7 +82,7 @@ bootloader_arch_init()
 
   /* Wait for domains to power on */
   while((ti_lib_prcm_power_domain_status(PRCM_DOMAIN_PERIPH)
-        != PRCM_DOMAIN_POWER_ON));
+         != PRCM_DOMAIN_POWER_ON));
 
   /* Enable GPIO peripheral */
   ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_GPIO);
