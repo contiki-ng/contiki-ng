@@ -60,6 +60,94 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 /**
+ * \name Properties of firmware on internal flash
+ * @{
+ */
+
+/**
+ * \brief Start address of main firmware on internal flash
+ *
+ * Must be provided by the platform
+ */
+#define OTA_MAIN_FW_BASE OTA_CONF_MAIN_FW_BASE
+#if !OTA_MAIN_FW_BASE
+#error "OTA_CONF_MAIN_FW_BASE must be defined by the platform"
+#endif
+
+/**
+ * \brief Maximum space on internal flash available for firmware
+ *
+ * Must be provided by the platform.
+ */
+#define OTA_MAIN_FW_MAX_LEN OTA_CONF_MAIN_FW_MAX_LEN
+#if !OTA_MAIN_FW_MAX_LEN
+#error "OTA_MAIN_FW_MAX_LEN must be defined by the platform"
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name External flash map
+ *
+ * The external flash contains a number of image areas. "Areas" are logical
+ * partitions used by the Contiki-NG OAP engine and are not to be confused
+ * with sectors or pages of the actual flash part.
+ *
+ * Area 0 is reserved for a golden image.
+ *
+ * Each stored firmware will be stored at offset 0 from the start of an area
+ * @{
+ */
+
+/**
+ * \brief Area on flash reserved for a golden image. Not configurable
+ */
+#define OTA_EXT_FLASH_GOLDEN_AREA                    0
+
+/**
+ * \brief Number of areas on external flash.
+ *
+ * Must be provided by the platform
+ */
+#define OTA_EXT_FLASH_AREA_COUNT OTA_CONF_EXT_FLASH_AREA_COUNT
+#if !OTA_EXT_FLASH_AREA_COUNT
+#error "OTA_CONF_EXT_FLASH_AREA_COUNT must be defined by the platform"
+#endif
+
+/**
+ * \brief Length of each area on external flash.
+ *
+ * Must be provided by the platform and must be an exact multiple of the
+ * part's erasable block size.
+ */
+#define OTA_EXT_FLASH_AREA_LEN OTA_CONF_EXT_FLASH_AREA_LEN
+#if !OTA_EXT_FLASH_AREA_LEN
+#error "OTA_CONF_EXT_FLASH_AREA_LEN must be defined by the platform"
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Metadata properties
+ * @{
+ */
+/**
+ * \brief Offset of OTA metadata from the start of any image
+ *
+ * Must be provided by the platform. It is assumed that the metadata will be
+ * at the same offset on external flash as it will be in the current image in
+ * internal flash
+ */
+#define OTA_METADATA_OFFSET OTA_CONF_METADATA_OFFSET
+#if !OTA_METADATA_OFFSET
+#error "OTA_CONF_METADATA_OFFSET must be defined by the platform"
+#endif
+
+/**
+ * \brief Absolute metadata location on internal flash
+ */
+#define OTA_METADATA_BASE (OTA_MAIN_FW_BASE + OTA_METADATA_OFFSET)
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \brief A data type representing firmware image metadata
  */
 typedef struct ota_firmware_metadata_s {
@@ -75,6 +163,11 @@ typedef struct ota_firmware_metadata_s {
   /**< Image version. Comparison uses signed arithmetic */
   uint16_t version;
 } ota_firmware_metadata_t;
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Used to test an image for validity
+ */
+#define OTA_IMAGE_INVALID_LEN  0xFFFFFFFF
 /*---------------------------------------------------------------------------*/
 #endif /* OTA_H_ */
 /*---------------------------------------------------------------------------*/

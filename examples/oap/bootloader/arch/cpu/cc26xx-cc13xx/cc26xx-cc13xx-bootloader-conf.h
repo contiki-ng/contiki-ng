@@ -42,9 +42,6 @@
 /* Total internal flash length */
 #define INTERNAL_FLASH_LENGTH 0x00020000
 
-/* Length of OTA metadata */
-#define OTA_METADATA_LENGTH   0x00000010
-
 /*
  * Length of the CC13xx/CC26xx CCFG area, high 88 bytes on flash
  * Even though incoming images will not overwrite CCFG, the current CCFG must
@@ -53,27 +50,29 @@
 #define CCFG_LENGTH           0x00000058
 
 /*
- * Start offset of main firmware on internal flash
- * This is where we will start the validation of the internal image. This is
- * where we will start writing a new image
- */
-#define MAIN_FW_OFFSET (FLASH_FW_ORIGIN + FLASH_FW_LENGTH)
-
-/*
  * Max area available for the main firmware on internal flash, including
  * metadata
  */
-#define MAIN_FW_LENGTH (INTERNAL_FLASH_LENGTH - FLASH_FW_LENGTH - \
-                        CCFG_LENGTH)
+#define OTA_CONF_MAIN_FW_MAX_LEN (INTERNAL_FLASH_LENGTH - FLASH_FW_LENGTH - \
+                                  CCFG_LENGTH)
+
+/*
+ * Start address of main firmware on internal flash
+ * This is where we will start the validation of the internal image. This is
+ * where we will start writing a new image
+ */
+#define OTA_CONF_MAIN_FW_BASE (FLASH_FW_ORIGIN + FLASH_FW_LENGTH)
+
+/*
+ * 12 bytes for metadata
+ */
+#define OTA_METADATA_LEN    0x0C
 
 /*
  * Offset of OTA metadata from the start of any image (including one in
  * external flash)
  */
-#define OTA_METADATA_OFFSET (MAIN_FW_LENGTH - OTA_METADATA_LENGTH)
-
-/* Absolute location of OTA metadata for the image on internal flash */
-#define OTA_METADATA_ABS_LOC (MAIN_FW_OFFSET + OTA_METADATA_OFFSET)
+#define OTA_CONF_METADATA_OFFSET (OTA_CONF_MAIN_FW_MAX_LEN - OTA_METADATA_LEN)
 /*---------------------------------------------------------------------------*/
 #endif /* CC26XX_CC13XX_BOOTLOADER_CONF_H_ */
 /*---------------------------------------------------------------------------*/
