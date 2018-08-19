@@ -29,8 +29,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/* Offset the image by 0x00002000 and reserve space for metadata */
+/* Offset the image by FLASH_FW_ORIGIN and reserve space for metadata */
+#if BUILD_WITH_BOOTLOADER_DEBUG
+#define FLASH_FW_ORIGIN     0x00003000
+#else
 #define FLASH_FW_ORIGIN     0x00002000
+#endif
 #define FLASH_FW_LENGTH     (INTERNAL_FLASH_LENGTH - FLASH_FW_ORIGIN - \
                              CCFG_LENGTH - OTA_METADATA_LEN)
 
