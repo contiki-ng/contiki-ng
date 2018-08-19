@@ -72,9 +72,6 @@ typedef struct ota_firmware_metadata_s {
   /**< Image verification code. */
   uint16_t crc;
 
-  /**< Not quite sure why we need this */
-  uint16_t crc_shadow;
-
   /**< Image version. Comparison uses signed arithmetic */
   uint16_t version;
 } ota_firmware_metadata_t;
