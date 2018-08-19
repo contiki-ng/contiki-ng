@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2016, Mark Solters <msolters@gmail.com>
  * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
