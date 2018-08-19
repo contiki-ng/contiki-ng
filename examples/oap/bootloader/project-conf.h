@@ -37,5 +37,11 @@
 /*---------------------------------------------------------------------------*/
 /* We are _not_ building an OTA-enabled image, so do not change this. */
 #define OTA 0
+
+/* Set to 1 to backup the golden image to external flash */
+#define BOOTLOADER_CONF_BACKUP_GOLDEN_IMAGE 0
+
+/* Set to 1 to erase the entire external flash */
+#define BOOTLOADER_CONF_ERASE_EXT_FLASH     0
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
