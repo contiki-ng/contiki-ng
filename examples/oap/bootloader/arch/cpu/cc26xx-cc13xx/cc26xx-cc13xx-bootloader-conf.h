@@ -32,12 +32,13 @@
 #ifndef CC26XX_CC13XX_BOOTLOADER_CONF_H_
 #define CC26XX_CC13XX_BOOTLOADER_CONF_H_
 /*---------------------------------------------------------------------------*/
-/*
- * Limit the bootloader image to 0x2000 bytes. Needed by the C13xx/CC26xx
- * linker script
- */
+/* Limit the bootloader image to the early pages on flash. */
 #define FLASH_FW_ORIGIN  0x00000000
+#if BUILD_WITH_BOOTLOADER_DEBUG
+#define FLASH_FW_LENGTH  0x00003000
+#else
 #define FLASH_FW_LENGTH  0x00002000
+#endif
 
 /* Total internal flash length */
 #define INTERNAL_FLASH_LENGTH 0x00020000
