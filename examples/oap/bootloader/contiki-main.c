@@ -128,10 +128,6 @@ main(void)
   }
   leds_on(LEDS_RED);
 
-//  if(bootloader_validate_image()) {
-//    bootloader_arch_jump_to_app();
-//  }
-
   return 0;
 }
 /*---------------------------------------------------------------------------*/
