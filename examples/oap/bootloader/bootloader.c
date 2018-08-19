@@ -32,7 +32,6 @@
 /*---------------------------------------------------------------------------*/
 #include "dev/ext-flash/ext-flash.h"
 #include "lib/crc16.h"
-#include "dev/watchdog.h"
 #include "net/app-layer/ota/ota.h"
 
 #include <stdbool.h>
@@ -67,8 +66,6 @@ bootloader_validate_internal_image()
   LOG_INFO("Firmware Length: 0x%08lX\n", (unsigned long)md->length);
   LOG_INFO("Firmware Version: 0x%04X\n", md->version);
   LOG_INFO("Firmware UUID: 0x%08lX\n", (unsigned long)md->uuid);
-
-  watchdog_periodic();
 
   crc = crc16_data((unsigned char *)OTA_MAIN_FW_BASE, md->length, 0);
 
