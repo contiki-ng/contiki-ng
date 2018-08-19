@@ -146,7 +146,7 @@ bool ota_ext_flash_area_write_chunk(uint8_t area, uint32_t offset,
  *
  * \e area must be less than OTA_EXT_FLASH_AREA_COUNT
  */
-bool ota_ext_flash_area_write_image(uint8_t area, uint8_t *img,
+bool ota_ext_flash_area_write_image(uint8_t area, const uint8_t *img,
                                     uint32_t img_len);
 /*---------------------------------------------------------------------------*/
 #endif /* OTA_EXT_FLASH_H_ */
