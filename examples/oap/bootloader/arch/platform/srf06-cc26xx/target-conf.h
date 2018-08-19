@@ -34,7 +34,8 @@
 /*---------------------------------------------------------------------------*/
 #include "cc26xx-cc13xx-bootloader-conf.h"
 /*---------------------------------------------------------------------------*/
-/* External flash map
+/*
+ * External flash map
  * 4 images, 128KB each. Each image placed at the start of an area
  */
 #define BOOTLOADER_EXT_FLASH_AREA_COUNT                     4

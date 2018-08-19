@@ -48,11 +48,13 @@ bootloader_validate_internal_image()
   unsigned short crc;
   ota_firmware_metadata_t *md;
 
-  md = (ota_firmware_metadata_t *)OTA_METADATA_LOC;
+  md = (ota_firmware_metadata_t *)OTA_METADATA_ABS_LOC;
 
   watchdog_periodic();
 
-  crc = crc16_data((unsigned char *)MAIN_FW_OFFSET, MAIN_FW_LENGTH, 0);
+  crc = crc16_data((unsigned char *)MAIN_FW_OFFSET, md->length, 0);
+
+  printf("CRC=0x%04x, MD CRC=0x%04x\n", crc, md->crc);
 
   return md->crc == crc;
 }
