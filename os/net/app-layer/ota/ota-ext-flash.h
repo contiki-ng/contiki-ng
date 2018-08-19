@@ -99,6 +99,19 @@
  * erase boundary.
  */
 void ext_flash_area_erase(uint8_t area);
+
+/**
+ * \brief Retrieve metadata from an external flash image area
+ * \param area The area to retrieve data from
+ * \param md A pointer to an ota_firmware_metadata_t variable where data will be stored
+ * \retval true Operation succeeded
+ * \retval false Operation failed
+ *
+ * \e area must be less than OTA_EXT_FLASH_AREA_COUNT
+ *
+ * It is the caller's responsibility to allocate sufficient space for \e md
+ */
+bool ota_ext_flash_read_metadata(uint8_t area, ota_firmware_metadata_t *md);
 /*---------------------------------------------------------------------------*/
 #endif /* OTA_EXT_FLASH_H_ */
 /*---------------------------------------------------------------------------*/

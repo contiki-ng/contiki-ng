@@ -35,6 +35,7 @@
 #include "dev/ext-flash/ext-flash.h"
 #include "dev/leds.h"
 #include "net/app-layer/ota/ota.h"
+#include "net/app-layer/ota/ota-ext-flash.h"
 #include "bootloader.h"
 
 #include <stdio.h>
@@ -52,6 +53,10 @@
 int
 main(void)
 {
+  int i;
+  ota_firmware_metadata_t md;
+  bool success;
+
   bootloader_arch_init();
 
   clock_init();
@@ -81,9 +86,19 @@ main(void)
    *   else copy golden image, verify, jump
    */
 
-  //    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
-  //           (unsigned long)metadata.length,
-  //           metadata.crc, crc);
+  for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
+    memset(&md, 0, sizeof(md));
+    success = ota_ext_flash_read_metadata(i, &md);
+    if(success) {
+      LOG_INFO("Read metadata area %d:\n", i);
+      LOG_INFO("   Len=0x%08lX:\n", (unsigned long)md.length);
+      LOG_INFO("  UUID=0x%08lX:\n", (unsigned long)md.uuid);
+      LOG_INFO("   Ver=0x%04X:\n", md.version);
+      LOG_INFO("   CRC=0x%04X:\n", md.crc);
+    } else {
+      LOG_ERR("Read metadata area %d failed\n", i);
+    }
+  }
 
   if(bootloader_validate_internal_image()) {
     bootloader_arch_jump_to_app();

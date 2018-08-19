@@ -46,6 +46,14 @@
 #include "net/app-layer/ota/ota-ext-flash.h"
 
 #include <stdint.h>
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+#include "sys/log.h"
+#define LOG_MODULE "ota-ext-flash"
+#ifndef LOG_LEVEL_OTA
+#define LOG_LEVEL_OTA LOG_LEVEL_NONE
+#endif
+#define LOG_LEVEL LOG_LEVEL_OTA
 /*---------------------------------------------------------------------------*/
 void
 ext_flash_area_erase(uint8_t area)
@@ -65,6 +73,32 @@ ext_flash_area_erase(uint8_t area)
   ext_flash_erase(NULL, erase_offset, OTA_EXT_FLASH_AREA_LEN);
 
   ext_flash_close(NULL);
+}
+/*---------------------------------------------------------------------------*/
+bool
+ota_ext_flash_read_metadata(uint8_t area, ota_firmware_metadata_t *md)
+{
+  bool success = false;
+  uint32_t read_addr;
+
+  if(area >= OTA_EXT_FLASH_AREA_COUNT) {
+    return false;
+  }
+
+  if(!ext_flash_open(NULL)) {
+    return false;
+  }
+
+  read_addr = area * OTA_EXT_FLASH_AREA_LEN + OTA_METADATA_OFFSET;
+
+  LOG_INFO("Read from 0x%08lX\n", (unsigned long)read_addr);
+
+  success = ext_flash_read(NULL, read_addr, sizeof(ota_firmware_metadata_t),
+                           (uint8_t *)md);
+
+  ext_flash_close(NULL);
+
+  return success;
 }
 /*---------------------------------------------------------------------------*/
 #if 0
