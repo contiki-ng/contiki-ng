@@ -106,7 +106,7 @@ ota_ext_flash_read_metadata(uint8_t area, ota_firmware_metadata_t *md)
 
   read_addr = area * OTA_EXT_FLASH_AREA_LEN + OTA_METADATA_OFFSET;
 
-  LOG_INFO("Read from 0x%08lX\n", (unsigned long)read_addr);
+  LOG_DBG("Read from 0x%08lX\n", (unsigned long)read_addr);
 
   success = ext_flash_read(NULL, read_addr, sizeof(ota_firmware_metadata_t),
                            (uint8_t *)md);
@@ -235,6 +235,12 @@ ota_ext_flash_area_validate(uint8_t area)
     return false;
   }
 
+  LOG_INFO("Read metadata area %u:\n", area);
+  LOG_INFO("   Len=0x%08lX:\n", (unsigned long)metadata.length);
+  LOG_INFO("  UUID=0x%08lX:\n", (unsigned long)metadata.uuid);
+  LOG_INFO("   Ver=0x%04X:\n", metadata.version);
+  LOG_INFO("   CRC=0x%04X:\n", metadata.crc);
+
   if((metadata.length == OTA_IMAGE_INVALID_LEN) ||
      (metadata.length > OTA_MAIN_FW_MAX_LEN)) {
     LOG_ERR("Invalid image length 0x%08lX\n", (unsigned long)metadata.length);
@@ -273,9 +279,7 @@ ota_ext_flash_area_validate(uint8_t area)
     bytes_read += read_len;
   }
 
-  LOG_INFO("Area %u: Read=0x%08lx, Len=0x%08lx, CRC=0x%04x, Calc CRC=0x%04x\n",
-           area, (unsigned long)bytes_read, (unsigned long)metadata.length,
-           metadata.crc, crc);
+  LOG_INFO("  Calc CRC=0x%04X\n", crc);
 
   ext_flash_close(NULL);
 
