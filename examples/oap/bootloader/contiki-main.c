@@ -31,7 +31,6 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "sys/platform.h"
-#include "dev/watchdog.h"
 #include "dev/ext-flash/ext-flash.h"
 #include "dev/leds.h"
 #include "net/app-layer/ota/ota.h"
@@ -60,11 +59,10 @@ main(void)
   bootloader_arch_init();
 
   clock_init();
-  watchdog_init();
+  process_init();
+  process_start(&etimer_process, NULL);
 
   ext_flash_init(NULL);
-
-  watchdog_start();
 
   LOG_INFO("OTA_MAIN_FW_BASE=0x%08lX\n", (unsigned long)OTA_MAIN_FW_BASE);
   LOG_INFO("OTA_MAIN_FW_MAX_LEN=0x%08lX\n", (unsigned long)OTA_MAIN_FW_MAX_LEN);
