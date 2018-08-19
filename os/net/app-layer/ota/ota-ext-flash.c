@@ -147,11 +147,12 @@ ota_ext_flash_area_write_chunk(uint8_t area, uint32_t offset, uint8_t *chunk,
 }
 /*---------------------------------------------------------------------------*/
 bool
-ota_ext_flash_area_write_image(uint8_t area, uint8_t *img, uint32_t img_len)
+ota_ext_flash_area_write_image(uint8_t area, const uint8_t *img,
+                               uint32_t img_len)
 {
   uint32_t write_addr;
   uint32_t bytes_written = 0;;
-  uint8_t *read_addr;
+  const uint8_t *read_addr;
   uint8_t write_size;
   bool success;
 

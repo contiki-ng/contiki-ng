@@ -78,8 +78,8 @@ main(void)
 #if BOOTLOADER_BACKUP_GOLDEN_IMAGE
   ota_ext_flash_area_erase(OTA_EXT_FLASH_GOLDEN_AREA);
   if(!ota_ext_flash_area_write_image(
-       OTA_EXT_FLASH_GOLDEN_AREA, (uint8_t *)OTA_MAIN_FW_BASE,
        ((ota_firmware_metadata_t *)OTA_METADATA_BASE)->length)) {
+       OTA_EXT_FLASH_GOLDEN_AREA, (const uint8_t *)OTA_MAIN_FW_BASE,
     LOG_ERR("Write image to external flash failed\n");
   }
 #endif
