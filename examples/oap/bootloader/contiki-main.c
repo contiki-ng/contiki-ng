@@ -71,6 +71,21 @@ main(void)
   LOG_INFO("OTA_METADATA_OFFSET=0x%08lX\n", (unsigned long)OTA_METADATA_OFFSET);
   LOG_INFO("OTA_METADATA_BASE=0x%08lX\n", (unsigned long)OTA_METADATA_BASE);
 
+#if BOOTLOADER_ERASE_EXT_FLASH
+  for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
+    ota_ext_flash_area_erase(i);
+  }
+#endif
+
+#if BOOTLOADER_BACKUP_GOLDEN_IMAGE
+  ota_ext_flash_area_erase(OTA_EXT_FLASH_GOLDEN_AREA);
+  if(!ota_ext_flash_area_write_image(
+       OTA_EXT_FLASH_GOLDEN_AREA, (uint8_t *)OTA_MAIN_FW_BASE,
+       ((ota_firmware_metadata_t *)OTA_METADATA_BASE)->length)) {
+    LOG_ERR("Write image to external flash failed\n");
+  }
+#endif
+
   /*
    * Collect firmware versions from ext flash
    *
@@ -96,7 +111,17 @@ main(void)
       LOG_INFO("   Ver=0x%04X:\n", md.version);
       LOG_INFO("   CRC=0x%04X:\n", md.crc);
     } else {
-      LOG_ERR("Read metadata area %d failed\n", i);
+      LOG_ERR("Read metadata from area %d failed\n", i);
+    }
+  }
+
+  for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
+    success = ota_ext_flash_area_validate(i);
+    LOG_INFO("Ext flash validation\n");
+    if(success) {
+      LOG_INFO("Area %d: valid\n", i);
+    } else {
+      LOG_INFO("Area %d: invalid or error\n", i);
     }
   }
 

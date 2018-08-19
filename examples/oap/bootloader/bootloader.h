@@ -32,14 +32,27 @@
 #ifndef BOOTLOADER_H_
 #define BOOTLOADER_H_
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
+
 #include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+/* Set to 1 to backup the golden image to external flash */
+#ifdef BOOTLOADER_CONF_BACKUP_GOLDEN_IMAGE
+#define BOOTLOADER_BACKUP_GOLDEN_IMAGE BOOTLOADER_CONF_BACKUP_GOLDEN_IMAGE
+#else
+#define BOOTLOADER_BACKUP_GOLDEN_IMAGE 0
+#endif
+
+/* Set to 1 to erase the entire external flash */
+#ifdef BOOTLOADER_CONF_ERASE_EXT_FLASH
+#define BOOTLOADER_ERASE_EXT_FLASH BOOTLOADER_CONF_ERASE_EXT_FLASH
+#else
+#define BOOTLOADER_ERASE_EXT_FLASH 0
+#endif
 /*---------------------------------------------------------------------------*/
 void bootloader_arch_jump_to_app(void);
 void bootloader_arch_init(void);
-
-bool bootloader_validate_image(void);
 bool bootloader_validate_internal_image(void);
-
 /*---------------------------------------------------------------------------*/
 #endif /* BOOTLOADER_H_ */
 /*---------------------------------------------------------------------------*/
