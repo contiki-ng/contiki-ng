@@ -29,43 +29,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/* Offset the image by 0x00002000 and reserve space for metadata */
-#define FLASH_FW_ORIGIN     0x00002000
-#define FLASH_FW_LENGTH     (INTERNAL_FLASH_LENGTH - FLASH_FW_ORIGIN - \
-                             CCFG_LENGTH - OTA_METADATA_LEN)
-
-/* Total internal flash length */
-#define INTERNAL_FLASH_LENGTH 0x00020000
-
-/*
- * Length of the CC13xx/CC26xx CCFG area, high 88 bytes on flash
- * Even though incoming images will not overwrite CCFG, the current CCFG must
- * be protected and therefore the area is reserved
- */
-#define CCFG_LENGTH           0x00000058
-
-/*
- * Max area available for the main firmware on internal flash, including
- * metadata
- */
-#define OTA_CONF_MAIN_FW_MAX_LEN (INTERNAL_FLASH_LENGTH - FLASH_FW_LENGTH - \
-                                  CCFG_LENGTH)
-
-/*
- * Start address of main firmware on internal flash
- * This is where we will start the validation of the internal image. This is
- * where we will start writing a new image
- */
-#define OTA_CONF_MAIN_FW_BASE FLASH_FW_ORIGIN
-
-/*
- * 12 bytes for metadata
- */
-#define OTA_METADATA_LEN    0x0C
-
-/*
- * Offset of OTA metadata from the start of any image (including one in
- * external flash)
- */
-#define OTA_CONF_METADATA_OFFSET (OTA_CONF_MAIN_FW_MAX_LEN - OTA_METADATA_LEN)
+/* Configuration of the OTA external flash map */
+#define OTA_CONF_EXT_FLASH_AREA_COUNT                     4
+#define OTA_CONF_EXT_FLASH_AREA_LEN              0x00020000
 /*---------------------------------------------------------------------------*/
