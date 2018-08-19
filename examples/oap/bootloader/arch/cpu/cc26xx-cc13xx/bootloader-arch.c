@@ -35,12 +35,26 @@
 #include "dev/gpio-hal.h"
 #include "dev/oscillators.h"
 #include "dev/soc-rtc.h"
+#include "dev/ext-flash/ext-flash.h"
 #include "net/app-layer/ota/ota.h"
+#include "net/app-layer/ota/ota-ext-flash.h"
+#include "driverlib/flash.h"
+#include "sys/int-master.h"
+#include "sys/critical.h"
 
 #include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
+#include "sys/log.h"
+#define LOG_MODULE "bootloader"
+#ifndef LOG_LEVEL_BOOTLOADER
+#define LOG_LEVEL_BOOTLOADER LOG_LEVEL_NONE
+#endif
+#define LOG_LEVEL LOG_LEVEL_BOOTLOADER
+/*---------------------------------------------------------------------------*/
 #define __STR(x) #x
 #define STR(x) __STR(x)
+/*---------------------------------------------------------------------------*/
+#define FLASH_SECTOR_SIZE 4096
 /*---------------------------------------------------------------------------*/
 void
 bootloader_arch_jump_to_app()
@@ -107,5 +121,121 @@ bootloader_arch_init()
   ti_lib_int_master_enable();
 
   soc_rtc_init();
+}
+/*---------------------------------------------------------------------------*/
+static bool
+sector_erase(uint32_t write_addr)
+{
+  int_master_status_t status;
+  uint32_t rv;
+
+  status = critical_enter();
+  rv = FlashSectorErase(write_addr);
+  critical_exit(status);
+  if(rv != FAPI_STATUS_SUCCESS) {
+    LOG_ERR("sector_erase failed at 0x%08lX, value 0x%08lX\n",
+            write_addr, rv);
+    return false;
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+static bool
+sector_write(uint8_t *src, uint32_t write_addr)
+{
+  int_master_status_t status;
+  uint32_t rv;
+
+  status = critical_enter();
+  rv = FlashProgram(src, write_addr, FLASH_SECTOR_SIZE);
+  critical_exit(status);
+  if(rv != FAPI_STATUS_SUCCESS) {
+    LOG_ERR("Failed to write at 0x%08lX, value 0x%08lX\n", write_addr, rv);
+    return false;
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+void
+bootloader_arch_install_image_from_area(uint8_t area)
+{
+  uint32_t write_addr;
+  uint32_t ext_read_addr;
+  uint32_t rv;
+  uint8_t buf[FLASH_SECTOR_SIZE];
+
+  if(area >= OTA_EXT_FLASH_AREA_COUNT) {
+    return;
+  }
+
+  if(!ext_flash_open(NULL)) {
+    LOG_ERR("Failed to open external flash\n");
+    return;
+  }
+
+  /*
+   * Start at OTA_MAIN_FW_BASE, for all sectors delete and the copy from
+   * external flash, except for the last sector which requires special
+   * attention in order to retain the CCFG.
+   */
+  write_addr = OTA_MAIN_FW_BASE;
+  ext_read_addr = area * OTA_EXT_FLASH_AREA_LEN;
+  while(write_addr < INTERNAL_FLASH_LENGTH - FLASH_SECTOR_SIZE) {
+    /* Erase sector */
+    if(!sector_erase(write_addr)) {
+      return;
+    }
+
+    /* Read external flash */
+    memset(buf, 0, FLASH_SECTOR_SIZE);
+    rv = ext_flash_read(NULL, ext_read_addr, FLASH_SECTOR_SIZE, buf);
+    if(!rv) {
+      LOG_ERR("Failed to read ext flash address 0x%08lX\n", ext_read_addr);
+    }
+
+    /* Write new sector */
+    if(!sector_write(buf, write_addr)) {
+      return;
+    }
+
+    write_addr += FLASH_SECTOR_SIZE;
+    ext_read_addr += FLASH_SECTOR_SIZE;
+  }
+
+  /*
+   * Last sector requires special treatment
+   *
+   * We will first read the remaining data on external flash and store it in
+   * our buffer. We will then add to the buffer the current value of the CCFG
+   * area. We will erase the sector and write data + CCFG in one go.
+   */
+
+  /* Read CCFG. Destination in buffer: FLASH_SECTOR_SIZE - CCFG_LENGTH */
+  memset(buf, 0, FLASH_SECTOR_SIZE);
+  LOG_INFO("Read CCFG 0x%02x bytes at 0x%08lX\n", CCFG_LENGTH,
+           (unsigned long)CCFG_ABS_ADDR);
+  memcpy(&buf[FLASH_SECTOR_SIZE - CCFG_LENGTH],
+         (const void *)CCFG_ABS_ADDR, CCFG_LENGTH);
+
+  /* Read the rest FLASH_SECTOR_SIZE - CCFG_LENGTH data from ext flash. */
+  rv = ext_flash_read(NULL, ext_read_addr, FLASH_SECTOR_SIZE - CCFG_LENGTH,
+                      buf);
+  if(!rv) {
+    LOG_ERR("Failed to read ext flash address 0x%08lX\n", ext_read_addr);
+  }
+
+  /* Erase sector */
+  if(!sector_erase(write_addr)) {
+    return;
+  }
+
+  /* Write the entire thing back */
+  if(!sector_write(buf, write_addr)) {
+    return;
+  }
+
+  ext_flash_close(NULL);
 }
 /*---------------------------------------------------------------------------*/
