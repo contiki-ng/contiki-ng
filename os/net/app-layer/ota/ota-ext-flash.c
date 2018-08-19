@@ -1,16 +1,17 @@
 /*
+ * Copyright (c) 2016, Mark Solters <msolters@gmail.com>
  * Copyright (c) 2018, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,64 +30,94 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "sys/platform.h"
-#include "dev/watchdog.h"
-#include "dev/ext-flash/ext-flash.h"
-#include "dev/leds.h"
-#include "net/app-layer/ota/ota.h"
-#include "bootloader.h"
-
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
+/**
+ * \addtogroup ota
+ * @{
+ */
 /*---------------------------------------------------------------------------*/
-int
-main(void)
+/**
+ * \file
+ *    Implementation of the Contiki-NG OTA engine external flash manipulation
+ */
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+#include "dev/ext-flash/ext-flash.h"
+#include "net/app-layer/ota/ota.h"
+#include "net/app-layer/ota/ota-ext-flash.h"
+
+#include <stdint.h>
+/*---------------------------------------------------------------------------*/
+void
+ext_flash_area_erase(uint8_t area)
 {
-  bootloader_arch_init();
+  uint32_t erase_offset;
 
-  clock_init();
-  watchdog_init();
-
-  ext_flash_init(NULL);
-
-  watchdog_start();
-
-  printf("OTA_MAIN_FW_BASE=0x%08lX\n", (unsigned long)OTA_MAIN_FW_BASE);
-  printf("OTA_MAIN_FW_MAX_LEN=0x%08lX\n", (unsigned long)OTA_MAIN_FW_MAX_LEN);
-  printf("OTA_METADATA_OFFSET=0x%08lX\n", (unsigned long)OTA_METADATA_OFFSET);
-  printf("OTA_METADATA_BASE=0x%08lX\n", (unsigned long)OTA_METADATA_BASE);
-
-  /*
-   * Collect firmware versions from ext flash
-   *
-   * Compare with version in internal flash
-   *
-   * start with highest version > current
-   *   calculate CRC
-   *     if pass, copy, verify then break
-   *     else fallback to next highest version
-   *
-   * calculate internal CRC
-   *   if pass jump
-   *   else copy golden image, verify, jump
-   */
-
-  //    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
-  //           (unsigned long)metadata.length,
-  //           metadata.crc, crc);
-
-  if(bootloader_validate_internal_image()) {
-    bootloader_arch_jump_to_app();
+  if(area >= OTA_EXT_FLASH_AREA_COUNT) {
+    return;
   }
-  leds_on(LEDS_RED);
 
-//  if(bootloader_validate_image()) {
-//    bootloader_arch_jump_to_app();
-//  }
+  erase_offset = area * OTA_EXT_FLASH_AREA_LEN;
 
-  return 0;
+  if(!ext_flash_open(NULL)) {
+    return;
+  }
+
+  ext_flash_erase(NULL, erase_offset, OTA_EXT_FLASH_AREA_LEN);
+
+  ext_flash_close(NULL);
 }
 /*---------------------------------------------------------------------------*/
+#if 0
+bool
+bootloader_validate_image()
+{
+  int i, j, k;
+  unsigned short crc;
+  ota_firmware_metadata_t metadata;
+
+  bool success = ext_flash_open(NULL);
+
+  if(!success) {
+    return false;
+  }
+
+  for(i = 0; i < BOOTLOADER_EXT_FLASH_AREA_COUNT; i++) {
+    uint32_t metadata_loc = i * BOOTLOADER_EXT_FLASH_AREA_LEN +
+                            BOOTLOADER_EXT_FLASH_OTA_METADATA_OFFSET;
+    crc = 0;
+    memset(&metadata, 0, 0);
+    success = ext_flash_read(NULL, metadata_loc, sizeof(metadata),
+                             (uint8_t *)&metadata);
+    if(!success) {
+      ext_flash_close(NULL);
+      return false;
+    }
+
+    for(j = 1; j < BOOTLOADER_EXT_FLASH_AREA_LEN / BUF_LEN; j += 1) {
+      memset(&buf, 0, BUF_LEN);
+      success = ext_flash_read(NULL, metadata_loc + j * BUF_LEN, BUF_LEN, buf);
+      if(!success) {
+        ext_flash_close(NULL);
+        return false;
+      }
+
+
+      for(k = 0; k < BUF_LEN; k++) {
+        crc = crc16_add(buf[k], crc);
+      }
+    }
+
+//    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
+//           (unsigned long)metadata.length,
+//           metadata.crc, crc);
+  }
+
+  return true;
+}
+#endif
+
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */
+

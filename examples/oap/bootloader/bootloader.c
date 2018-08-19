@@ -39,9 +39,6 @@
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#define BUF_LEN 128
-static uint8_t buf[BUF_LEN];
-/*---------------------------------------------------------------------------*/
 bool
 bootloader_validate_internal_image()
 {
@@ -68,52 +65,5 @@ bootloader_validate_internal_image()
   printf("CRC=0x%04X, MD CRC=0x%04X\n", crc, md->crc);
 
   return md->crc == crc;
-}
-/*---------------------------------------------------------------------------*/
-bool
-bootloader_validate_image()
-{
-  int i, j, k;
-  unsigned short crc;
-  ota_firmware_metadata_t metadata;
-
-  bool success = ext_flash_open(NULL);
-
-  if(!success) {
-    return false;
-  }
-
-  for(i = 0; i < BOOTLOADER_EXT_FLASH_AREA_COUNT; i++) {
-    uint32_t metadata_loc = i * BOOTLOADER_EXT_FLASH_AREA_LEN +
-                            BOOTLOADER_EXT_FLASH_OTA_METADATA_OFFSET;
-    crc = 0;
-    memset(&metadata, 0, 0);
-    success = ext_flash_read(NULL, metadata_loc, sizeof(metadata),
-                             (uint8_t *)&metadata);
-    if(!success) {
-      ext_flash_close(NULL);
-      return false;
-    }
-
-    for(j = 1; j < BOOTLOADER_EXT_FLASH_AREA_LEN / BUF_LEN; j += 1) {
-      memset(&buf, 0, BUF_LEN);
-      success = ext_flash_read(NULL, metadata_loc + j * BUF_LEN, BUF_LEN, buf);
-      if(!success) {
-        ext_flash_close(NULL);
-        return false;
-      }
-
-
-      for(k = 0; k < BUF_LEN; k++) {
-        crc = crc16_add(buf[k], crc);
-      }
-    }
-
-//    printf("Len=0x%08lx, CRC=0x%04x, Calculated CRC=0x%04x\n",
-//           (unsigned long)metadata.length,
-//           metadata.crc, crc);
-  }
-
-  return true;
 }
 /*---------------------------------------------------------------------------*/
