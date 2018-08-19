@@ -50,15 +50,16 @@
 #endif
 #define LOG_LEVEL LOG_LEVEL_BOOTLOADER
 /*---------------------------------------------------------------------------*/
-static ota_firmware_metadata_t external_metadata[OTA_EXT_FLASH_AREA_COUNT];
-/*---------------------------------------------------------------------------*/
 int
 main(void)
 {
   int i;
   uint16_t latest;
   ota_firmware_metadata_t *internal_metadata;
+  ota_firmware_metadata_t this;
+  uint8_t area_with_latest_valid_ver;
   bool success;
+  bool newer_in_ext_flash;
 
   bootloader_arch_init();
 
@@ -66,7 +67,7 @@ main(void)
   process_init();
   process_start(&etimer_process, NULL);
 
-  memset(external_metadata, 0, sizeof(external_metadata));
+  memset(&this, 0, sizeof(this));
 
   ext_flash_init(NULL);
 
@@ -108,15 +109,17 @@ main(void)
    */
 
   latest = internal_metadata->version;
+  newer_in_ext_flash = false;
 
   LOG_INFO("Ext flash validation\n");
   for(i = 0; i < OTA_EXT_FLASH_AREA_COUNT; i++) {
-    success = ota_ext_flash_area_validate(i, &external_metadata[i]);
+    success = ota_ext_flash_area_validate(i, &this);
     if(success) {
-      LOG_INFO("Area %d: valid, Ver=0x%04X\n", i,
-               external_metadata[i].version);
-      if(external_metadata[i].version > latest) {
-        latest = external_metadata[i].version;
+      LOG_INFO("Area %d: valid, Ver=0x%04X\n", i, this.version);
+      if(this.version > latest) {
+        newer_in_ext_flash = true;
+        latest = this.version;
+        area_with_latest_valid_ver = i;
       }
     } else {
       LOG_INFO("Area %d: invalid or error\n", i);
@@ -126,9 +129,32 @@ main(void)
   LOG_INFO("Internal Ver=0x%04X, Latest=0x%04X\n",
            internal_metadata->version, latest);
 
+  /* Found newer image on flash, copy over */
+  if(newer_in_ext_flash) {
+    LOG_INFO("Copy image Ver=0x%04X from area %u\n",
+             latest, area_with_latest_valid_ver);
+    bootloader_arch_install_image_from_area(area_with_latest_valid_ver);
+  }
+
+  /* Validate internal image: This could well be the one just copied over */
   if(bootloader_validate_internal_image()) {
     bootloader_arch_jump_to_app();
   }
+
+  /* Copy golden image */
+  LOG_INFO("Fall back to golden image\n");
+  bootloader_arch_install_image_from_area(OTA_EXT_FLASH_GOLDEN_AREA);
+
+  /* Validate the golden image. This should work, really... */
+  if(bootloader_validate_internal_image()) {
+    bootloader_arch_jump_to_app();
+  }
+
+  /*
+   * Fail... Toggle a LED and let the dog reset us. If this was a transient
+   * golden image fallback failure, next time it could work. Or we will
+   * end up restarting forever...
+   */
   leds_on(LEDS_RED);
 
   return 0;
