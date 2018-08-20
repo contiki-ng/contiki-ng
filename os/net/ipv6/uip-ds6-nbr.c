@@ -65,12 +65,39 @@
 #define LOG_LEVEL LOG_LEVEL_IPV6
 
 #if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+/**
+ * Add nbr to the list in nbr_entry. In other words, this function associates an
+ * IPv6 address in nbr with a link-layer address in nbr_entry.
+ * \param nbr the neighbor cache entry for an IPv6 address
+ * \param nbr_entry the nbr_table entry for an link-layer address
+ */
 static void add_uip_ds6_nbr_to_nbr_entry(uip_ds6_nbr_t *nbr,
                                          uip_ds6_nbr_entry_t *nbr_entry);
+
+/**
+ * Remove nbr from the list of the corresponding nbr_entry
+ * \param nbr a neighbor cache entry (nbr) to be removed
+ */
 static void remove_uip_ds6_nbr_from_nbr_entry(uip_ds6_nbr_t *nbr);
+
+/**
+ * Remove nbr_etnry from nbr_table
+ * \param nbr_entry a nbr_table entry (nbr_entry) to be removed
+ */
 static void remove_nbr_entry(uip_ds6_nbr_entry_t *nbr_entry);
+
+/**
+ * Free memory for a specified neighbor cache entry
+ * \param nbr a neighbor cache entry to be freed
+ */
 static void free_uip_ds6_nbr(uip_ds6_nbr_t *nbr);
+
+/**
+ * Callback function called when a nbr_table entry is removed
+ * \param nbr_entry a nbr_entry to be removed
+ */
 static void callback_nbr_entry_removal(uip_ds6_nbr_entry_t *nbr_entry);
+
 NBR_TABLE(uip_ds6_nbr_entry_t, uip_ds6_nbr_entries);
 MEMB(uip_ds6_nbr_memb, uip_ds6_nbr_t, UIP_DS6_NBR_MAX_NEIGHBOR_CACHES);
 #else
