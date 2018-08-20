@@ -813,9 +813,9 @@ relation_process_select(void *handle_ptr)
     }
   }
 
-  wanted_result = TRUE;
+  wanted_result = LVM_TRUE;
   if(AQL_GET_FLAGS(adt) & AQL_FLAG_INVERSE_LOGIC) {
-    wanted_result = FALSE;
+    wanted_result = LVM_FALSE;
   }
 
   /* Check whether the given predicate is true for this tuple. */
