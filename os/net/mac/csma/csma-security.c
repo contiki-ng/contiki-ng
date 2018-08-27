@@ -63,6 +63,18 @@
 
 #if LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER
 
+#define MIC_LEN LLSEC802154_MIC_LEN(CSMA_LLSEC_SECURITY_LEVEL)
+
+#if LLSEC802154_USES_EXPLICIT_KEYS
+#define LLSEC_KEY_INDEX (FRAME802154_IMPLICIT_KEY == packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE) \
+                          ? 0 \
+                          : packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX))
+#define LLSEC_KEY_MODE (packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE))
+#else
+#define LLSEC_KEY_INDEX (0)
+#define LLSEC_KEY_MODE (FRAME802154_IMPLICIT_KEY)
+#endif /* LLSEC802154_USES_EXPLICIT_KEYS */
+
 /**
  *  The keys for LLSEC for CSMA
  */
@@ -98,7 +110,7 @@ aead(uint8_t hdrlen, int forward)
   aes_key_t *key;
   uint8_t with_encryption;
 
-  key_index = packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX);
+  key_index = LLSEC_KEY_INDEX;
   if(key_index > CSMA_LLSEC_MAXKEYS) {
     LOG_ERR("Key not available: %u\n", key_index);
     return 0;
@@ -149,7 +161,7 @@ csma_security_create_frame(void)
 
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0 &&
-     packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX) != 0xffff) {
+     LLSEC_KEY_INDEX != 0xffff) {
     anti_replay_set_counter();
   }
 
@@ -170,7 +182,7 @@ csma_security_create_frame(void)
     LOG_INFO_(" ");
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     LOG_INFO_(" %u (%u) KEY:0x%02x\n", packetbuf_datalen(), packetbuf_totlen(),
-              packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX));
+              LLSEC_KEY_INDEX);
   }
   return hdr_len;
 }
@@ -180,7 +192,7 @@ int
 csma_security_frame_len(void)
 {
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0 &&
-     packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX) != 0xffff) {
+     LLSEC_KEY_INDEX != 0xffff) {
     return NETSTACK_FRAMER.length() + MIC_LEN;
   }
   return NETSTACK_FRAMER.length();
@@ -207,8 +219,8 @@ csma_security_parse_frame(void)
   LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
   LOG_INFO_(" %d %u (%u) LV:%d KM:%d KEY:0x%02x\n", hdr_len, packetbuf_datalen(),
             packetbuf_totlen(), packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL),
-            packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE),
-            packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX));
+            LLSEC_KEY_MODE,
+            LLSEC_KEY_INDEX);
 
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) != CSMA_LLSEC_SECURITY_LEVEL) {
     LOG_INFO("received frame with wrong security level (%u) from ",
@@ -218,9 +230,8 @@ csma_security_parse_frame(void)
     return FRAMER_FAILED;
   }
 
-  if(packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE) != CSMA_LLSEC_KEY_ID_MODE) {
-    LOG_INFO("received frame with wrong key id mode (%u) from ",
-           packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE));
+  if(LLSEC_KEY_MODE != CSMA_LLSEC_KEY_ID_MODE) {
+    LOG_INFO("received frame with wrong key id mode (%u) from ", LLSEC_KEY_MODE);
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     LOG_INFO("\n");
     return FRAMER_FAILED;
@@ -262,6 +273,7 @@ csma_security_parse_frame(void)
 {
   return NETSTACK_FRAMER.parse();
 }
+
 #endif /* LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER */
 
 /** @} */

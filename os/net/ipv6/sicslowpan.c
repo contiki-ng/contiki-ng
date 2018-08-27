@@ -74,6 +74,10 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
+#if MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED
+#include "net/mac/csma/csma-security.h"
+#endif /* MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED */
+
 #include "net/routing/routing.h"
 
 /* Log configuration */
@@ -1614,6 +1618,11 @@ output(const linkaddr_t *localdest)
     return 0;
   }
 #endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
+
+#if MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED
+    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
+                       FRAME802154_SECURITY_LEVEL_NONE != CSMA_LLSEC_SECURITY_LEVEL);
+#endif /* MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED */
 
   /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
    * We calculate it here only to make a better decision of whether the outgoing packet

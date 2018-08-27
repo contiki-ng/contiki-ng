@@ -173,13 +173,15 @@ send_one_packet(void *ptr)
 #if LLSEC802154_ENABLED
   /* These should possibly be taken from upper layers in the future */
   packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, CSMA_LLSEC_SECURITY_LEVEL);
+#if LLSEC802154_USES_EXPLICIT_KEYS
   packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, CSMA_LLSEC_KEY_ID_MODE);
   packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, CSMA_LLSEC_KEY_INDEX);
+#endif /* LLSEC802154_USES_EXPLICIT_KEYS */
 #endif /* LLSEC802154_ENABLED */
 
   if(csma_security_create_frame() < 0) {
     /* Failed to allocate space for headers */
-    LOG_ERR("failed to create packet\n");
+    LOG_ERR("failed to create packet, seqno: %d\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     ret = MAC_TX_ERR_FATAL;
   } else {
     int is_broadcast;
