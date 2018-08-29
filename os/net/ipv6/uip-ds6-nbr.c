@@ -136,6 +136,13 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     return NULL;
   }
 
+  /* firstly, allocate memory for a new nbr cache entry */
+  if((nbr = (uip_ds6_nbr_t *)memb_alloc(&uip_ds6_nbr_memb)) == NULL) {
+    LOG_ERR("%s: cannot allocate a new uip_ds6_nbr\n", __func__);
+    return NULL;
+  }
+
+  /* secondly, get or allocate nbr_entry for the link-layer address */
   nbr_entry = nbr_table_get_from_lladdr(uip_ds6_nbr_entries,
                                         (const linkaddr_t *)lladdr);
   if(nbr_entry == NULL) {
@@ -143,31 +150,30 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
         nbr_table_add_lladdr(uip_ds6_nbr_entries,
                              (linkaddr_t*)lladdr, reason, data)) == NULL) {
       LOG_ERR("%s: cannot allocate a new uip_ds6_nbr_entry\n", __func__);
-      return NULL;
+      /* return from this function later */
     } else {
       LIST_STRUCT_INIT(nbr_entry, uip_ds6_nbrs);
     }
   }
 
-  if(list_length(nbr_entry->uip_ds6_nbrs) < UIP_DS6_NBR_MAX_6ADDRS_PER_NBR) {
-    /* it has room to add another IPv6 address */
-  } else {
-    /*
-     * it's already had the maximum number of IPv6 addresses; cannot
-     * add another.
-     */
-    LOG_ERR("%s: no room in nbr_entry for ", __func__);
-    LOG_ERR_LLADDR((const linkaddr_t *)lladdr);
-    LOG_ERR_("\n");
-    return NULL;
-  }
-
-  if((nbr = (uip_ds6_nbr_t *)memb_alloc(&uip_ds6_nbr_memb)) == NULL) {
-    LOG_ERR("%s: cannot allocate a new uip_ds6_nbr\n", __func__);
-    if(list_length(nbr_entry->uip_ds6_nbrs) == 0) {
-      nbr_table_remove(uip_ds6_nbr_entries, nbr_entry);
+  /* free nbr and return if nbr_entry is not available */
+  if((nbr_entry == NULL) ||
+     (list_length(nbr_entry->uip_ds6_nbrs) == UIP_DS6_NBR_MAX_6ADDRS_PER_NBR)) {
+    if(list_length(nbr_entry->uip_ds6_nbrs) == UIP_DS6_NBR_MAX_6ADDRS_PER_NBR) {
+      /*
+       * it's already had the maximum number of IPv6 addresses; cannot
+       * add another.
+       */
+      LOG_ERR("%s: no room in nbr_entry for ", __func__);
+      LOG_ERR_LLADDR((const linkaddr_t *)lladdr);
+      LOG_ERR_("\n");
     }
+    /* free the newly allocated memory in this function call */
+    memb_free(&uip_ds6_nbr_memb, nbr);
+    return NULL;
   } else {
+    /* everything is fine; nbr is ready to be used */
+    /* it has room to add another IPv6 address */
     add_uip_ds6_nbr_to_nbr_entry(nbr, nbr_entry);
   }
 #else
