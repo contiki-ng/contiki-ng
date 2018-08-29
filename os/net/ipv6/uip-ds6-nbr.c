@@ -149,6 +149,19 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     }
   }
 
+  if(list_length(nbr_entry->uip_ds6_nbrs) < UIP_DS6_NBR_MAX_6ADDRS_PER_NBR) {
+    /* it has room to add another IPv6 address */
+  } else {
+    /*
+     * it's already had the maximum number of IPv6 addresses; cannot
+     * add another.
+     */
+    LOG_ERR("%s: no room in nbr_entry for ", __func__);
+    LOG_ERR_LLADDR((const linkaddr_t *)lladdr);
+    LOG_ERR_("\n");
+    return NULL;
+  }
+
   if((nbr = (uip_ds6_nbr_t *)memb_alloc(&uip_ds6_nbr_memb)) == NULL) {
     LOG_ERR("%s: cannot allocate a new uip_ds6_nbr\n", __func__);
     if(list_length(nbr_entry->uip_ds6_nbrs) == 0) {

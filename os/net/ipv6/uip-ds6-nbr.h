@@ -75,6 +75,14 @@
 #define UIP_DS6_NBR_MULTI_IPV6_ADDRS 0
 #endif /* UIP_DS6_NBR_CONF_MULTI_IPV6_ADDRS */
 
+/** \brief Set the maximum number of IPv6 addresses per link-layer
+ * address */
+#ifdef UIP_DS6_NBR_CONF_MAX_6ADDRS_PER_NBR
+#define UIP_DS6_NBR_MAX_6ADDRS_PER_NBR UIP_DS6_NBR_CONF_MAX_6ADDRS_PER_NBR
+#else
+#define UIP_DS6_NBR_MAX_6ADDRS_PER_NBR 2
+#endif /* UIP_DS6_NBR_CONF_MAX_6ADDRS_PER_NBR */
+
 /** \brief Set the maximum number of neighbor cache entries */
 #ifdef UIP_DS6_NBR_CONF_MAX_NEIGHBOR_CACHES
 #define UIP_DS6_NBR_MAX_NEIGHBOR_CACHES UIP_DS6_NBR_CONF_MAX_NEIGHBOR_CACHES
