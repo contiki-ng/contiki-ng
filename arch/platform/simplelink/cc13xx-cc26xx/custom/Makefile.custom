@@ -1,6 +1,0 @@
-################################################################################
-# SimpleLink Custom makefile
-
-BOARD_TYPE = BOARD_CUSTOM
-
-TARGET_FAMILY_DIRS += custom
