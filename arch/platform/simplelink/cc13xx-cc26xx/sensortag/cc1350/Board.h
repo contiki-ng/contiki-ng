@@ -111,7 +111,15 @@ extern "C" {
 #define Board_PWM7              CC1350STK_PWM7
 
 #define Board_SPI0              CC1350STK_SPI0
+#define Board_SPI0_MISO         CC1350STK_SPI0_MISO
+#define Board_SPI0_MOSI         CC1350STK_SPI0_MOSI
+#define Board_SPI0_CLK          CC1350STK_SPI0_CLK
+#define Board_SPI0_CSN          CC1350STK_SPI0_CSN
 #define Board_SPI1              CC1350STK_SPI1
+#define Board_SPI1_MISO         CC1350STK_SPI1_MISO
+#define Board_SPI1_MOSI         CC1350STK_SPI1_MOSI
+#define Board_SPI1_CLK          CC1350STK_SPI1_CLK
+#define Board_SPI1_CSN          CC1350STK_SPI1_CSN
 #define Board_SPI_FLASH_CS      CC1350STK_SPI_FLASH_CS
 #define Board_FLASH_CS_ON       CC1350STK_FLASH_CS_ON
 #define Board_FLASH_CS_OFF      CC1350STK_FLASH_CS_OFF

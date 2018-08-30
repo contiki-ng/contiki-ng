@@ -135,7 +135,15 @@ extern "C" {
 #define Board_SD0               CC1350DK_7XD_SDSPI0
 
 #define Board_SPI0              CC1350DK_7XD_SPI0
+#define Board_SPI0_MISO         CC1350DK_7XD_SPI0_MISO
+#define Board_SPI0_MOSI         CC1350DK_7XD_SPI0_MOSI
+#define Board_SPI0_CLK          CC1350DK_7XD_SPI0_CLK
+#define Board_SPI0_CSN          CC1350DK_7XD_SPI0_CSN
 #define Board_SPI1              CC1350DK_7XD_SPI1
+#define Board_SPI1_MISO         CC1350DK_7XD_SPI1_MISO
+#define Board_SPI1_MOSI         CC1350DK_7XD_SPI1_MOSI
+#define Board_SPI1_CLK          CC1350DK_7XD_SPI1_CLK
+#define Board_SPI1_CSN          CC1350DK_7XD_SPI1_CSN
 #define Board_FLASH_CS_ON       0
 #define Board_FLASH_CS_OFF      1
 

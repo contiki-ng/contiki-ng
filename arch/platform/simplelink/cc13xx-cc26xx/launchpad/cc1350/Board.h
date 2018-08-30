@@ -131,7 +131,15 @@ extern "C" {
 #define Board_SD0               CC1350_LAUNCHXL_SDSPI0
 
 #define Board_SPI0              CC1350_LAUNCHXL_SPI0
+#define Board_SPI0_MISO         CC1350_LAUNCHXL_SPI0_MISO
+#define Board_SPI0_MOSI         CC1350_LAUNCHXL_SPI0_MOSI
+#define Board_SPI0_CLK          CC1350_LAUNCHXL_SPI0_CLK
+#define Board_SPI0_CSN          CC1350_LAUNCHXL_SPI0_CSN
 #define Board_SPI1              CC1350_LAUNCHXL_SPI1
+#define Board_SPI1_MISO         CC1350_LAUNCHXL_SPI1_MISO
+#define Board_SPI1_MOSI         CC1350_LAUNCHXL_SPI1_MOSI
+#define Board_SPI1_CLK          CC1350_LAUNCHXL_SPI1_CLK
+#define Board_SPI1_CSN          CC1350_LAUNCHXL_SPI1_CSN
 #define Board_SPI_FLASH_CS      CC1350_LAUNCHXL_SPI_FLASH_CS
 #define Board_FLASH_CS_ON       (0)
 #define Board_FLASH_CS_OFF      (1)
