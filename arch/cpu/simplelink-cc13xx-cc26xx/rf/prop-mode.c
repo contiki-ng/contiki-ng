@@ -78,6 +78,9 @@
 #define LOG_MODULE "Radio"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
+#undef CLAMP
+#define CLAMP(v, vmin, vmax)  (MAX(MIN(v, vmax), vmin))
+/*---------------------------------------------------------------------------*/
 /* Configuration parameters */
 #define PROP_MODE_DYN_WHITENER        PROP_MODE_CONF_DW
 #define PROP_MODE_USE_CRC16           PROP_MODE_CONF_USE_CRC16

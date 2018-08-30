@@ -129,13 +129,6 @@ localProgramStart(void)
   uint32_t count;
   uint32_t i;
 
-#if defined(__ARM_ARCH_7EM__) && defined(__VFP_FP__) && !defined(__SOFTFP__)
-  volatile uint32_t *pui32Cpacr = (uint32_t *)0xE000ED88;
-
-  /* Enable Coprocessor Access Control (CPAC) */
-  *pui32Cpacr |= (0xF << 20);
-#endif
-
   IntMasterDisable();
 
   /* Final trim of device */
@@ -193,7 +186,10 @@ resetISR(void)
     "movt r0, #:upper16:resetVectors  \n"
     "ldr r0, [r0]                     \n"
     "mov sp, r0                       \n"
-    "bl localProgramStart             \n"
+    "bx %0                            \n"
+    : /* output */
+    : /* input */
+    "r"(localProgramStart)
   );
 }
 /*---------------------------------------------------------------------------*/
@@ -217,7 +213,7 @@ nmiISR(void)
  *
  * Provide a view into the CPU state from the provided stack pointer.
  */
-void
+static void
 debugHardfault(uint32_t *sp)
 {
   volatile uint32_t r0;  /**< R0 register */
@@ -259,7 +255,10 @@ faultISR(void)
     "ite eq            \n"
     "mrseq r0, msp     \n"
     "mrsne r0, psp     \n"
-    "b debugHardfault  \n"
+    "bx %0             \n"
+    : /* output */
+    : /* input */
+    "r"(debugHardfault)
   );
 }
 /*---------------------------------------------------------------------------*/

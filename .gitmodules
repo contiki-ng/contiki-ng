@@ -22,6 +22,7 @@
 [submodule "tools/motelist"]
 	path = tools/motelist
 	url = https://github.com/contiki-ng/motelist
-[submodule "arch/cpu/cc13xx-cc26xx/lib/coresdk_cc13xx_cc26xx"]
-	path = arch/cpu/cc13xx-cc26xx/lib/coresdk_cc13xx_cc26xx
+[submodule "arch/cpu/simplelink-cc13xx-cc26xx/lib/coresdk_cc13xx_cc26xx"]
+	path = arch/cpu/simplelink-cc13xx-cc26xx/lib/coresdk_cc13xx_cc26xx
 	url = https://github.com/tiepettersen/coresdk_cc13xx_cc26xx.git
+

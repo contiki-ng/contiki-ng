@@ -28,55 +28,61 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc13xx-cc26xx-cpu
- * @{
- *
- * \defgroup cc13xx-cc26xx-uart UART for CC13xx/CC26xx.
- *
- * This particular driver utilizes the UART0 peripheral specifically.
- *
- * Driver for the CC13xx/CC26xx UART controller.
+ * \addtogroup cc13xx-cc26xx-trng
  * @{
  *
  * \file
- *        Header file of UART driver for CC13xx/CC26xx.
+ *        Implementation of True Random Number Generator for CC13xx/CC26xx.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
-#ifndef UART0_ARCH_H_
-#define UART0_ARCH_H_
 /*---------------------------------------------------------------------------*/
-#include <stddef.h>
+#include "contiki.h"
+
+#include "trng-arch.h"
+/*---------------------------------------------------------------------------*/
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.h>
+/*---------------------------------------------------------------------------*/
+/*
+ * Very dirty workaround because the pre-compiled TI drivers library for
+ * CC13x0/CC26x0 is missing the CryptoKey object file. This can be removed
+ * when the pre-compiled library includes the missing object file.
+ */
+#include <ti/devices/DeviceFamily.h>
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+#include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintextCC26xx.c>
+#endif
+/*---------------------------------------------------------------------------*/
 #include <stdint.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-typedef int (*uart0_input_fxn_t)(unsigned char);
-/*---------------------------------------------------------------------------*/
-/**
- * \brief  Initializes the UART driver.
- */
-void uart0_init(void);
+bool
+trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us)
+{
+  TRNG_Params trng_params;
+  TRNG_Handle trng_handle;
+  CryptoKey entropy_key;
+  int_fast16_t result;
 
-/**
- * \brief           Writes data from a memory buffer to the UART interface.
- * \param buf       A pointer to the data buffer.
- * \param buf_size  Size of the data buffer.
- * \return          Number of bytes that has been written to the UART. If an
- *                  error occurs, a negative value is returned.
- */
-int_fast32_t uart0_write(const void *buf, size_t buf_size);
+  TRNG_Params_init(&trng_params);
+  trng_params.returnBehavior = TRNG_RETURN_BEHAVIOR_BLOCKING;
+  if(timeout_us != TRNG_WAIT_FOREVER) {
+    trng_params.timeout = timeout_us;
+  }
 
-/**
- * \brief           Set the callback function for when bytes are received
- *                  on UART0.
- * \param input_cb  Pointer to the callback function. A valid pointer
- *                  subscribes for UART0 callbacks when bytes are received,
- *                  while a NULL pointer unsubscribes.
- * \return          0 for success, negative value for errors.
- */
-int_fast32_t uart0_set_callback(uart0_input_fxn_t input_cb);
+  trng_handle = TRNG_open(0, &trng_params);
+  if(!trng_handle) {
+    return false;
+  }
+
+  CryptoKeyPlaintext_initBlankKey(&entropy_key, entropy_buf, entropy_len);
+
+  result = TRNG_generateEntropy(trng_handle, &entropy_key);
+
+  TRNG_close(trng_handle);
+
+  return result == TRNG_STATUS_SUCCESS;
+}
 /*---------------------------------------------------------------------------*/
-#endif /* UART0_ARCH_H_ */
-/**
- * @}
- * @}
- */
+/** @} */

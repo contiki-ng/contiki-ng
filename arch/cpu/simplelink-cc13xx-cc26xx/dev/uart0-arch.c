@@ -112,6 +112,15 @@ uart0_write(const void *buf, size_t buf_size)
 }
 /*---------------------------------------------------------------------------*/
 int_fast32_t
+uart0_write_byte(uint8_t byte)
+{
+  if(!initialized) {
+    return UART_STATUS_ERROR;
+  }
+  return UART_write(uart_handle, &byte, 1);
+}
+/*---------------------------------------------------------------------------*/
+int_fast32_t
 uart0_set_callback(uart0_input_fxn_t input_cb)
 {
   if(!initialized) {

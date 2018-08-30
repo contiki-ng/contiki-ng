@@ -6,7 +6,7 @@
 BOARD_PLATFORMS = launchpad sensortag srf06
 
 # All supported boards for this SimpleLink family
-BOARDS := $(foreach BOARD, $(BOARD_PLATFORMS), \
+BOARDS = $(foreach BOARD, $(BOARD_PLATFORMS), \
   $(shell cd $(FAMILY_PATH); find $(BOARD)/* -type d -print))
 
 ################################################################################
@@ -34,7 +34,7 @@ DEFINES += SUPPORTS_IEEE_MODE=$(SUPPORTS_IEEE_MODE)
 DEFINES += SUPPORTS_BLE_BEACON=$(SUPPORTS_BLE_BEACON)
 DEFINES += SUPPORTS_HIGH_PA=$(SUPPORTS_HIGH_PA)
 
-### If the user-specified a Node ID, pass a define
+# If the user-specified a Node ID, pass a define
 ifdef NODEID
   DEFINES += IEEE_ADDR_NODE_ID=$(NODEID)
 endif
@@ -49,7 +49,7 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 CPU_FAMILY = cc13xx-cc26xx
 
 # Define the CPU directory and pull in the correct CPU Makefile
-CONTIKI_CPU := $(realpath $(CONTIKI)/arch/cpu/$(CPU_FAMILY))
+CONTIKI_CPU := $(realpath $(CONTIKI)/arch/cpu/simplelink-$(CPU_FAMILY))
 include $(CONTIKI_CPU)/Makefile.$(CPU_FAMILY)
 
 MODULES += os/net os/net/mac os/net/mac/framer
