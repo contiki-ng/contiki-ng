@@ -108,7 +108,7 @@
 /* The maximum size of the LVM bytecode compiled from a
    single database query. */
 #ifndef DB_VM_BYTECODE_SIZE
-#define DB_VM_BYTECODE_SIZE		128
+#define DB_VM_BYTECODE_SIZE		256
 #endif /* DB_VM_BYTECODE_SIZE */
 
 /*----------------------------------------------------------------------------*/

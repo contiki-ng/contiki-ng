@@ -45,16 +45,16 @@
 #include "db-options.h"
 
 enum lvm_status {
-  FALSE = 0,
-  TRUE = 1,
-  INVALID_IDENTIFIER = 2,
-  SEMANTIC_ERROR = 3,
-  MATH_ERROR = 4,
-  STACK_OVERFLOW = 5,
-  TYPE_ERROR = 6,
-  VARIABLE_LIMIT_REACHED = 7,
-  EXECUTION_ERROR = 8,
-  DERIVATION_ERROR = 9
+  LVM_FALSE = 0,
+  LVM_TRUE = 1,
+  LVM_INVALID_IDENTIFIER = 2,
+  LVM_SEMANTIC_ERROR = 3,
+  LVM_MATH_ERROR = 4,
+  LVM_STACK_OVERFLOW = 5,
+  LVM_TYPE_ERROR = 6,
+  LVM_VARIABLE_LIMIT_REACHED = 7,
+  LVM_EXECUTION_ERROR = 8,
+  LVM_DERIVATION_ERROR = 9
 };
 
 typedef enum lvm_status lvm_status_t;
@@ -135,10 +135,10 @@ lvm_ip_t lvm_jump_to_operand(lvm_instance_t *p);
 lvm_ip_t lvm_shift_for_operator(lvm_instance_t *p, lvm_ip_t end);
 lvm_ip_t lvm_get_end(lvm_instance_t *p);
 lvm_ip_t lvm_set_end(lvm_instance_t *p, lvm_ip_t end);
-void lvm_set_op(lvm_instance_t *p, operator_t op);
-void lvm_set_relation(lvm_instance_t *p, operator_t op);
-void lvm_set_operand(lvm_instance_t *p, operand_t *op);
-void lvm_set_long(lvm_instance_t *p, long l);
-void lvm_set_variable(lvm_instance_t *p, char *name);
+lvm_status_t lvm_set_op(lvm_instance_t *p, operator_t op);
+lvm_status_t lvm_set_relation(lvm_instance_t *p, operator_t op);
+lvm_status_t lvm_set_operand(lvm_instance_t *p, operand_t *op);
+lvm_status_t lvm_set_long(lvm_instance_t *p, long l);
+lvm_status_t lvm_set_variable(lvm_instance_t *p, char *name);
 
 #endif /* LVM_H */

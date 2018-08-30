@@ -19,3 +19,6 @@
 [submodule "tests/18-coap-lwm2m/example-lwm2m-standalone"]
 	path = tests/18-coap-lwm2m/example-lwm2m-standalone
 	url = https://github.com/contiki-ng/example-lwm2m-standalone.git
+[submodule "tools/motelist"]
+	path = tools/motelist
+	url = https://github.com/contiki-ng/motelist
