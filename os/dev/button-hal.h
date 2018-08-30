@@ -83,7 +83,6 @@
 #include "dev/gpio-hal.h"
 #include "sys/clock.h"
 #include "sys/ctimer.h"
-#include "sys/process.h"
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -103,8 +103,6 @@
 
 #ifdef CC_CONF_ALIGN
 #define CC_ALIGN(n) CC_CONF_ALIGN(n)
-#else
-#define CC_ALIGN(n)
 #endif /* CC_CONF_INLINE */
 
 /**
@@ -145,10 +143,6 @@
 
 #ifndef ABS
 #define ABS(n)      (((n) < 0) ? -(n) : (n))
-#endif
-
-#ifndef CLAMP
-#define CLAMP(v, vmin, vmax)  (MAX(MIN(v, vmax), vmin))
 #endif
 
 
