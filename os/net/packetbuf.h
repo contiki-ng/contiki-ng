@@ -238,6 +238,8 @@ enum {
   PACKETBUF_ATTR_KEY_INDEX,
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
 
+  PACKETBUF_ATTR_BROADCAST_PAN,
+
   /* Scope 2 attributes: used between end-to-end nodes. */
   /* These must be last */
   PACKETBUF_ADDR_SENDER,

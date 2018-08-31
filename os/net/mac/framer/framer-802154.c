@@ -62,7 +62,8 @@ create_frame(int do_create)
   frame802154_t params;
   int hdr_len;
 
-  if(frame802154_get_pan_id() == 0xffff) {
+
+  if(frame802154_get_pan_id() == 0xffff && 1 != broadcastpan) {
     return -1;
   }
 
@@ -193,7 +194,9 @@ framer_802154_setup_params(packetbuf_attr_t (*get_attr)(uint8_t type),
     }
   }
 
-  params->dest_pid = frame802154_get_pan_id();
+  params->dest_pid = get_attr(PACKETBUF_ATTR_BROADCAST_PAN)
+                      ? FRAME802154_BROADCASTPANDID
+                      : frame802154_get_pan_id();
 
   /* Destination address itself should be set outside this function. */
   if(get_attr(PACKETBUF_ATTR_MAC_NO_DEST_ADDR) == 1) {

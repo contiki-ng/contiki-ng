@@ -123,6 +123,7 @@ void uipbuf_clear_attr(void);
 #define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_NHC_COMPRESSION      0x01
 /* Avoid using prefix compression on the packet (6LoWPAN) */
 #define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_PREFIX_COMPRESSION   0x02
+#define UIPBUF_ATTR_FLAGS_FRAMER_BROADCAST                0x04
 
 /**
  * \brief The attributes defined for uipbuf attributes function.
