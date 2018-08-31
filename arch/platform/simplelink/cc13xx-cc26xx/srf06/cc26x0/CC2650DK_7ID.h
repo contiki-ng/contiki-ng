@@ -178,7 +178,7 @@ typedef enum CC2650DK_7ID_ADCBufName {
 } CC2650DK_7ID_ADCBufName;
 
 /*!
- *  @def    CC2650DK_7ID_ADCBuf0SourceName
+ *  @def    CC2650DK_7ID_ADCBuf0ChannelName
  *  @brief  Enum of ADCBuf channels
  */
 typedef enum CC2650DK_7ID_ADCBuf0ChannelName {
@@ -290,7 +290,7 @@ typedef enum CC2650DK_7ID_NVSName {
 } CC2650DK_7ID_NVSName;
 
 /*!
- *  @def    CC2650DK_7ID_PWM
+ *  @def    CC2650DK_7ID_PWMName
  *  @brief  Enum of PWM outputs
  */
 typedef enum CC2650DK_7ID_PWMName {

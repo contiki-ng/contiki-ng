@@ -31,7 +31,7 @@
  * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
- * \defgroupt cc13xx-cc26xx-ccfg Customer Configuration (CCFG)
+ * \defgroup cc13xx-cc26xx-ccfg Customer Configuration (CCFG)
  *
  * @{
  *

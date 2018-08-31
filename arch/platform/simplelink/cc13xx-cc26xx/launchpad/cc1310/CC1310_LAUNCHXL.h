@@ -167,7 +167,7 @@ typedef enum CC1310_LAUNCHXL_ADCBufName {
 } CC1310_LAUNCHXL_ADCBufName;
 
 /*!
- *  @def    CC1310_LAUNCHXL_ADCBuf0SourceName
+ *  @def    CC1310_LAUNCHXL_ADCBuf0ChannelName
  *  @brief  Enum of ADCBuf channels
  */
 typedef enum CC1310_LAUNCHXL_ADCBuf0ChannelName {
@@ -290,7 +290,7 @@ typedef enum CC1310_LAUNCHXL_NVSName {
 } CC1310_LAUNCHXL_NVSName;
 
 /*!
- *  @def    CC1310_LAUNCHXL_PWM
+ *  @def    CC1310_LAUNCHXL_PWMName
  *  @brief  Enum of PWM outputs
  */
 typedef enum CC1310_LAUNCHXL_PWMName {

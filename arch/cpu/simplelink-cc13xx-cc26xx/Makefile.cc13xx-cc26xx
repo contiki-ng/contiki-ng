@@ -118,14 +118,15 @@ CFLAGS += -fno-common
 
 # Linker flags
 LDFLAGS += --entry resetISR
-LDFLAGS += -static
 LDFLAGS += --specs=nano.specs
+LDFLAGS += -nostartfiles
+LDFLAGS += -static
 
 # Linker script
 LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 
 # Globally linked libraries
-TARGET_LIBFILES += -lc -lgcc -lnosys
+TARGET_LIBFILES += -lc -lgcc -lnosys -lm
 
 ################################################################################
 ### Specialized build targets

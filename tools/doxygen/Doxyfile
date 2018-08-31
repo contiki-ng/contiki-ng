@@ -809,10 +809,10 @@ EXCLUDE_SYMLINKS       = NO
 
 EXCLUDE_PATTERNS       = */cpu/cc26xx-cc13xx/lib/* \
                          */cpu/cc26xx-cc13xx/rf-core/api/* \
-                         */cpu/cc13xx-cc26xx/lib/* \
-                         */cpu/cc13xx-cc26xx/rf-settings/* \
-                         */cpu/cc13xx-cc26xx/cc13x0-cc26x0/driverlib/* \
-                         */cpu/cc13xx-cc26xx/cc13x0-cc26x0/rf_patches/* \
+                         */cpu/simplelink-cc13xx-cc26xx/lib/* \
+                         */cpu/simplelink-cc13xx-cc26xx/rf-settings/* \
+                         */cpu/simplelink-cc13xx-cc26xx/cc13x0-cc26x0/driverlib/* \
+                         */cpu/simplelink-cc13xx-cc26xx/cc13x0-cc26x0/rf_patches/* \
                          */platform/stm32nucleo-spirit1/stm32cube-lib/* \
                          */os/net/security/tinydtls/*
 

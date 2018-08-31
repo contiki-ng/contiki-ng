@@ -241,12 +241,12 @@ enable_sensor(bool enable)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief               Read the sensor value registers.
- * \param raw_temp      Output variable holding the Temperature in
- *                      16-bit format.
- * \param raw_obj_temp  Output variable holding the Object temperature in
- *                      16-bit format.
- * \return              true if valid data could be retrieved; else, false.
+ * \brief            Read the sensor value registers.
+ * \param local_tmp  Output variable holding the Temperature in
+ *                   16-bit format.
+ * \param obj_tmp    Output variable holding the Object temperature in
+ *                   16-bit format.
+ * \return           true if valid data could be retrieved; else, false.
  */
 static bool
 read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
@@ -292,11 +292,11 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief               Convert raw data to values in degrees Celsius.
- * \param raw_temp      Output variable holding the raw ambient temperature
- *                      from sensor.
- * \param raw_obj_temp  Output variable holding the raw object temperature
- *                      from sensor.
+ * \brief            Convert raw data to values in degrees Celsius.
+ * \param local_tmp  Output variable holding the raw ambient temperature
+ *                   from sensor.
+ * \param obj_tmp    Output variable holding the raw object temperature
+ *                   from sensor.
  */
 static void
 convert(uint16_t *local_tmp, uint16_t *obj_tmp)

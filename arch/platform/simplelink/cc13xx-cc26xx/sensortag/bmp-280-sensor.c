@@ -234,7 +234,8 @@ enable_sensor(bool enable)
 /**
  * \brief          Read temperature and pressure data.
  * \param data     Pointer to a buffer where temperature and pressure will be
- *                 written (6 bytes).
+ *                 written.
+ * \param count    Number of byes to read.
  * \return Boolean Value descibing whether initialization were
  *                 successful or not.
  * \retval true    Successful initialization

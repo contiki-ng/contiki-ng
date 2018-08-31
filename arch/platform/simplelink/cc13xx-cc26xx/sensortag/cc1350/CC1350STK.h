@@ -256,7 +256,7 @@ typedef enum CC1350STK_NVSName {
 } CC1350STK_NVSName;
 
 /*!
- *  @def    CC1350STK_PdmName
+ *  @def    CC1350STK_PDMName
  *  @brief  Enum of PDM names
  */
 typedef enum CC1350STK_PDMName {
@@ -266,7 +266,7 @@ typedef enum CC1350STK_PDMName {
 } CC1350STK_PDMName;
 
 /*!
- *  @def    CC1350STK_PWM
+ *  @def    CC1350STK_PWMName
  *  @brief  Enum of PWM outputs
  */
 typedef enum CC1350STK_PWMName {

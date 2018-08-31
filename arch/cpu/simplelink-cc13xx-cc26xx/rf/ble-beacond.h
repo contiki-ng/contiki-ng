@@ -55,13 +55,7 @@ typedef enum {
 } rf_ble_beacond_result_t;
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Set the device name to use with the BLE advertisement/beacon daemon
- * \param interval The interval (ticks) between two consecutive beacon bursts
- * \param name The device name to advertise
- *
- * If name is NULL it will be ignored. If interval==0 it will be ignored. Thus,
- * this function can be used to configure a single parameter at a time if so
- * desired.
+ * \brief Initialize the BLE advertisement/beacon daemon
  */
 rf_ble_beacond_result_t rf_ble_beacond_init(void);
 

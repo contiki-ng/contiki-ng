@@ -167,7 +167,7 @@ typedef enum CC2650_LAUNCHXL_ADCBufName {
 } CC2650_LAUNCHXL_ADCBufName;
 
 /*!
- *  @def    CC2650_LAUNCHXL_ADCBuf0SourceName
+ *  @def    CC2650_LAUNCHXL_ADCBuf0ChannelName
  *  @brief  Enum of ADCBuf channels
  */
 typedef enum CC2650_LAUNCHXL_ADCBuf0ChannelName {
@@ -290,7 +290,7 @@ typedef enum CC2650_LAUNCHXL_NVSName {
 } CC2650_LAUNCHXL_NVSName;
 
 /*!
- *  @def    CC2650_LAUNCHXL_PWM
+ *  @def    CC2650_LAUNCHXL_PWMName
  *  @brief  Enum of PWM outputs
  */
 typedef enum CC2650_LAUNCHXL_PWMName {
