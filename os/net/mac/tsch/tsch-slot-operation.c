@@ -625,6 +625,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                             "!truncated dr %d %d", (int)eack_time_correction, (int)drift_correction);
                     );
                   }
+                  tsch_stats_on_time_synchronization(eack_time_correction);
                   is_drift_correction_used = 1;
                   tsch_timesync_update(current_neighbor, since_last_timesync, drift_correction);
                   /* Keep track of sync time */
@@ -664,6 +665,11 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
     if(in_queue == 0) {
       dequeued_array[dequeued_index] = current_packet;
       ringbufindex_put(&dequeued_ringbuf);
+    }
+
+    /* If this is an unicast packet to timesource, update stats */
+    if(current_neighbor != NULL && current_neighbor->is_time_source) {
+      tsch_stats_tx_packet(current_neighbor, mac_tx_status, tsch_current_channel);
     }
 
     /* Log every tx attempt */
@@ -764,6 +770,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
         static int header_len;
         static frame802154_t frame;
         radio_value_t radio_last_rssi;
+        radio_value_t radio_last_lqi;
 
         /* Read packet */
         current_input->len = NETSTACK_RADIO.read((void *)current_input->payload, TSCH_PACKET_MAX_LEN);
@@ -821,6 +828,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
             int do_nack = 0;
             rx_count++;
             estimated_drift = RTIMER_CLOCK_DIFF(expected_rx_time, rx_start_time);
+            tsch_stats_on_time_synchronization(estimated_drift);
 
 #if TSCH_TIMESYNC_REMOVE_JITTER
             /* remove jitter due to measurement errors */
@@ -889,6 +897,12 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
             /* Add current input to ringbuf */
             ringbufindex_put(&input_ringbuf);
 
+            /* If the neighbor is known, update its stats */
+            if(n != NULL) {
+              NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_LINK_QUALITY, &radio_last_lqi);
+              tsch_stats_rx_packet(n, current_input->rssi, radio_last_lqi, tsch_current_channel);
+            }
+
             /* Log every reception */
             TSCH_LOG_ADD(tsch_log_rx,
               linkaddr_copy(&log->rx.src, (linkaddr_t *)&frame.src_addr);
@@ -951,6 +965,8 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       int is_active_slot;
       TSCH_DEBUG_SLOT_START();
       tsch_in_slot_operation = 1;
+      /* Measure on-air noise level while TSCH is idle */
+      tsch_stats_sample_rssi();
       /* Reset drift correction */
       drift_correction = 0;
       is_drift_correction_used = 0;
