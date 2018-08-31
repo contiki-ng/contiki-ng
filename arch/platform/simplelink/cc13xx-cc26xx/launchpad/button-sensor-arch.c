@@ -45,23 +45,23 @@
 /*---------------------------------------------------------------------------*/
 /* Key left button, AKA BTN-1. */
 BUTTON_HAL_BUTTON(
-  key_left,                            /**< Name */
-  "Key Left",                          /**< Description */
-  Board_PIN_BTN1,                      /**< Board PIN */
-  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
-  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,   /**< Pull configuration */
-  BUTTON_HAL_ID_KEY_LEFT,              /**< Unique ID */
-  true);                               /**< Negative logic */
+  key_left,                     /**< Name */
+  "Key Left",                   /**< Description */
+  Board_PIN_BTN1,               /**< Board PIN */
+  GPIO_HAL_PIN_CFG_PULL_UP |
+  GPIO_HAL_PIN_CFG_HYSTERESIS,  /**< Pull configuration */
+  BUTTON_HAL_ID_KEY_LEFT,       /**< Unique ID */
+  true);                        /**< Negative logic */
 
 /* Key right button, AKA BTN-2. */
 BUTTON_HAL_BUTTON(
-  key_right,                           /**< Name */
-  "Key Right",                         /**< Description */
-  Board_PIN_BTN2,                      /**< Board PIN */
-  GPIO_HAL_PIN_CFG_INPUT_PULLUP |
-  GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS,  /**< Pull configuration */
-  BUTTON_HAL_ID_KEY_RIGHT,            /**< Unique ID */
-  true);                              /**< Negative logic */
+  key_right,                    /**< Name */
+  "Key Right",                  /**< Description */
+  Board_PIN_BTN2,               /**< Board PIN */
+  GPIO_HAL_PIN_CFG_PULL_UP |
+  GPIO_HAL_PIN_CFG_HYSTERESIS,  /**< Pull configuration */
+  BUTTON_HAL_ID_KEY_RIGHT,      /**< Unique ID */
+  true);                        /**< Negative logic */
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTONS(&key_left, &key_right);
 /*---------------------------------------------------------------------------*/

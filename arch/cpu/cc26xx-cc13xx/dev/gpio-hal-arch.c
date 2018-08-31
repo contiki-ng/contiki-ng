@@ -47,18 +47,6 @@
 #define CONFIG_MASK (IOC_IOPULL_M | IOC_INT_M | IOC_IOMODE_OPEN_SRC_INV)
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
-{
-  gpio_hal_pin_cfg_t config = gpio_hal_arch_pin_cfg_get(pin);
-  config &= ~GPIO_HAL_PIN_BM_INT;
-  config |= cfg;
-  gpio_hal_arch_pin_cfg_set(pin, cfg);
-
-  ti_lib_gpio_clear_event_dio(pin);
-  ti_lib_rom_ioc_int_enable(pin);
-}
-/*---------------------------------------------------------------------------*/
-void
 gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
   uint32_t config;
@@ -68,24 +56,31 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
   config = ti_lib_rom_ioc_port_configure_get(pin);
   config &= ~CONFIG_MASK;
 
-  tmp = cfg & GPIO_HAL_PIN_BM_INT;
-  if(tmp == GPIO_HAL_PIN_CFG_INT_DISABLE) {
-    config |= (IOC_NO_EDGE | IOC_INT_DISABLE);
-  } else if(tmp == GPIO_HAL_PIN_CFG_INT_RISING) {
-    config |= (IOC_RISING_EDGE | IOC_INT_ENABLE);
-  } else if(tmp == GPIO_HAL_PIN_CFG_INT_FALLING) {
-    config |= (IOC_FALLING_EDGE | IOC_INT_ENABLE);
-  } else if(tmp == GPIO_HAL_PIN_CFG_INT_BOTH) {
-    config |= (IOC_BOTH_EDGES | IOC_INT_ENABLE);
+  tmp = cfg & GPIO_HAL_PIN_CFG_EDGE_BOTH;
+  if(tmp == GPIO_HAL_PIN_CFG_EDGE_NONE) {
+    config |= IOC_NO_EDGE;
+  } else if(tmp == GPIO_HAL_PIN_CFG_EDGE_RISING) {
+    config |= IOC_RISING_EDGE;
+  } else if(tmp == GPIO_HAL_PIN_CFG_EDGE_FALLING) {
+    config |= IOC_FALLING_EDGE;
+  } else if(tmp == GPIO_HAL_PIN_CFG_EDGE_BOTH) {
+    config |= IOC_BOTH_EDGES;
   }
 
-  tmp = cfg & GPIO_HAL_PIN_BM_INPUT;
-  if(tmp == GPIO_HAL_PIN_CFG_INPUT_NOPULL) {
+  tmp = cfg & GPIO_HAL_PIN_CFG_PULL_MASK;
+  if(tmp == GPIO_HAL_PIN_CFG_PULL_NONE) {
     config |= IOC_NO_IOPULL;
-  } else if(tmp == GPIO_HAL_PIN_CFG_INPUT_PULLDOWN) {
+  } else if(tmp == GPIO_HAL_PIN_CFG_PULL_DOWN) {
     config |= IOC_IOPULL_DOWN;
-  } else if(tmp == GPIO_HAL_PIN_CFG_INPUT_PULLUP) {
+  } else if(tmp == GPIO_HAL_PIN_CFG_PULL_UP) {
     config |= IOC_IOPULL_UP;
+  }
+
+  tmp = cfg & GPIO_HAL_PIN_CFG_INT_MASK;
+  if(tmp == GPIO_HAL_PIN_CFG_INT_DISABLE) {
+    config |= IOC_INT_DISABLE;
+  } else if(tmp == GPIO_HAL_PIN_CFG_INT_ENABLE) {
+    config |= IOC_INT_ENABLE;
   }
 
   ti_lib_rom_ioc_port_configure_set(pin, IOC_PORT_GPIO, config);
@@ -104,27 +99,31 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
   /* Pull */
   tmp = config & IOC_IOPULL_M;
   if(tmp == IOC_IOPULL_UP) {
-    cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLUP;
+    cfg |= GPIO_HAL_PIN_CFG_PULL_UP;
   } else if(tmp == IOC_IOPULL_DOWN) {
-    cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLDOWN;
+    cfg |= GPIO_HAL_PIN_CFG_PULL_DOWN;
   } else if(tmp == IOC_NO_IOPULL) {
-    cfg |= GPIO_HAL_PIN_CFG_INPUT_NOPULL;
+    cfg |= GPIO_HAL_PIN_CFG_PULL_NONE;
   }
 
   /* Interrupt enable/disable */
   tmp = config & IOC_INT_ENABLE;
   if(tmp == IOC_INT_DISABLE) {
     cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE;
-  } else {
-    /* Edge detection */
-    tmp = config & IOC_BOTH_EDGES;
-    if(tmp == IOC_FALLING_EDGE) {
-      cfg |= GPIO_HAL_PIN_CFG_INT_FALLING;
-    } else if(tmp == IOC_RISING_EDGE) {
-      cfg |= GPIO_HAL_PIN_CFG_INT_RISING;
-    } else if(tmp == IOC_BOTH_EDGES) {
-      cfg |= GPIO_HAL_PIN_CFG_INT_BOTH;
-    }
+  } else if(tmp == IOC_INT_ENABLE) {
+    cfg |= GPIO_HAL_PIN_CFG_INT_ENABLE;
+  }
+
+  /* Edge detection */
+  tmp = config & IOC_BOTH_EDGES;
+  if(tmp == IOC_NO_EDGE) {
+    cfg |= GPIO_HAL_PIN_CFG_EDGE_NONE;
+  } else if(tmp == IOC_FALLING_EDGE) {
+    cfg |= GPIO_HAL_PIN_CFG_EDGE_FALLING;
+  } else if(tmp == IOC_RISING_EDGE) {
+    cfg |= GPIO_HAL_PIN_CFG_EDGE_RISING;
+  } else if(tmp == IOC_BOTH_EDGES) {
+    cfg |= GPIO_HAL_PIN_CFG_EDGE_BOTH;
   }
 
   return cfg;

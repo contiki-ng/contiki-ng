@@ -53,7 +53,9 @@
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-#define gpio_hal_arch_init()               do { /* do nothing */ } while (0)
+#define gpio_hal_arch_init()               do { /* Do nothing */ } while(0)
+
+#define gpio_hal_arch_interrupt_enable(p)  interrupt_enable(p)
 #define gpio_hal_arch_interrupt_disable(p) ti_lib_rom_ioc_int_disable(p)
 
 #define gpio_hal_arch_pin_set_input(p)     ti_lib_rom_ioc_pin_type_gpio_input(p)
@@ -68,6 +70,13 @@
 #define gpio_hal_arch_clear_pins(p)        ti_lib_gpio_clear_multi_dio(p)
 #define gpio_hal_arch_toggle_pins(p)       ti_lib_gpio_toggle_multi_dio(p)
 #define gpio_hal_arch_write_pins(p, v)     ti_lib_gpio_write_multi_dio(p, v)
+/*---------------------------------------------------------------------------*/
+static inline void
+interrupt_enable(gpio_hal_pin_t pin)
+{
+  ti_lib_gpio_clear_event_dio(pin);
+  ti_lib_rom_ioc_int_enable(pin);
+}
 /*---------------------------------------------------------------------------*/
 #endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/

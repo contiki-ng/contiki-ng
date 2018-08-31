@@ -238,11 +238,11 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#define BUTTON_HAL_ID_KEY_LEFT   0x00
-#define BUTTON_HAL_ID_KEY_RIGHT  0x01
-#define BUTTON_HAL_ID_KEY_UP     0x02
-#define BUTTON_HAL_ID_KEY_DOWN   0x03
-#define BUTTON_HAL_ID_KEY_SELECT 0x04
+#define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
+#define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
+#define BOARD_BUTTON_HAL_INDEX_KEY_UP     0x02
+#define BOARD_BUTTON_HAL_INDEX_KEY_DOWN   0x03
+#define BOARD_BUTTON_HAL_INDEX_KEY_SELECT 0x04
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

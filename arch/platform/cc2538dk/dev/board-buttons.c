@@ -44,23 +44,22 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/button-hal.h"
-#include "dev/gpio-hal.h"
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTON(key_left, "Key Left", \
                   GPIO_PORT_PIN_TO_GPIO_HAL_PIN(BUTTON_LEFT_PORT, BUTTON_LEFT_PIN), \
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP, BUTTON_HAL_ID_BUTTON_ZERO, true);
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_ZERO, true);
 BUTTON_HAL_BUTTON(key_right, "Key Right", \
                   GPIO_PORT_PIN_TO_GPIO_HAL_PIN(BUTTON_RIGHT_PORT, BUTTON_RIGHT_PIN), \
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP, BUTTON_HAL_ID_BUTTON_ONE, true);
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_ONE, true);
 BUTTON_HAL_BUTTON(key_up, "Key Up", \
                   GPIO_PORT_PIN_TO_GPIO_HAL_PIN(BUTTON_UP_PORT, BUTTON_UP_PIN), \
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP, BUTTON_HAL_ID_BUTTON_TWO, true);
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_TWO, true);
 BUTTON_HAL_BUTTON(key_down, "Key Down", \
                   GPIO_PORT_PIN_TO_GPIO_HAL_PIN(BUTTON_DOWN_PORT, BUTTON_DOWN_PIN), \
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP, BUTTON_HAL_ID_BUTTON_THREE, true);
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_THREE, true);
 BUTTON_HAL_BUTTON(key_select, "Key Select", \
                   GPIO_PORT_PIN_TO_GPIO_HAL_PIN(BUTTON_SELECT_PORT, BUTTON_SELECT_PIN), \
-                  GPIO_HAL_PIN_CFG_INPUT_PULLUP, BUTTON_HAL_ID_BUTTON_FOUR, true);
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_FOUR, true);
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTONS(&key_left, &key_right, &key_up, &key_down, &key_select);
 /*---------------------------------------------------------------------------*/

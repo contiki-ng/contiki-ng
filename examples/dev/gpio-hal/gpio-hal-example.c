@@ -115,11 +115,11 @@ PROCESS_THREAD(gpio_hal_example, ev, data)
         gpio_hal_pin_cfg_t interrupt;
 
         interrupt = gpio_hal_arch_pin_cfg_get(btn_pin) &
-          GPIO_HAL_PIN_BM_INT;
+          GPIO_HAL_PIN_CFG_INT_ENABLE;
 
-        if(interrupt != GPIO_HAL_PIN_CFG_INT_DISABLE) {
+        if(interrupt == 0) {
           printf("Enabling button interrupt\n");
-          gpio_hal_arch_interrupt_enable(btn_pin, GPIO_HAL_PIN_CFG_INT_BOTH);
+          gpio_hal_arch_interrupt_enable(btn_pin);
         } else {
           printf("Disabling button interrupt\n");
           gpio_hal_arch_interrupt_disable(btn_pin);

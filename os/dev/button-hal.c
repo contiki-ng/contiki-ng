@@ -178,10 +178,11 @@ button_hal_init()
   button_event_handler.handler = press_release_handler;
 
   for(button = button_hal_buttons; *button != NULL; button++) {
-    cfg = (*button)->pull;
+    cfg = GPIO_HAL_PIN_CFG_EDGE_BOTH | GPIO_HAL_PIN_CFG_INT_ENABLE |
+      (*button)->pull;
     gpio_hal_arch_pin_set_input((*button)->pin);
     gpio_hal_arch_pin_cfg_set((*button)->pin, cfg);
-    gpio_hal_arch_interrupt_enable((*button)->pin, GPIO_HAL_PIN_CFG_INT_BOTH);
+    gpio_hal_arch_interrupt_enable((*button)->pin);
     button_event_handler.pin_mask |= gpio_hal_pin_to_mask((*button)->pin);
   }
 

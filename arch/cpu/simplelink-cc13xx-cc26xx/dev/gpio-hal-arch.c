@@ -57,60 +57,36 @@ static PIN_Handle pin_handle;
 static void
 from_hal_cfg(gpio_hal_pin_cfg_t cfg, PIN_Config *pin_cfg, PIN_Config *pin_mask)
 {
-  cfg &= GPIO_HAL_PIN_BM_ALL;
+  /* Pulling config */
+  *pin_mask |= PIN_BM_PULLING;
 
-  /* Input config */
-  if(cfg & GPIO_HAL_PIN_BM_INPUT) {
-    *pin_mask |= PIN_BM_INPUT_MODE;
-
-    /* Hysteresis config */
-    if((cfg & GPIO_HAL_PIN_BM_INPUT_HYSTERESIS) == GPIO_HAL_PIN_CFG_INPUT_HYSTERESIS) {
-      *pin_cfg |= PIN_HYSTERESIS;
-    }
-
-    /* Pulling config */
-    switch(cfg & GPIO_HAL_PIN_BM_INPUT_PULLING) {
-    case GPIO_HAL_PIN_CFG_INPUT_NOPULL:   *pin_cfg |= PIN_NOPULL;   break;
-    case GPIO_HAL_PIN_CFG_INPUT_PULLUP:   *pin_cfg |= PIN_PULLUP;   break;
-    case GPIO_HAL_PIN_CFG_INPUT_PULLDOWN: *pin_cfg |= PIN_PULLDOWN; break;
-    }
+  switch(cfg & GPIO_HAL_PIN_CFG_PULL_MASK) {
+  default: /* Default to no pullup/pulldown */
+  case GPIO_HAL_PIN_CFG_PULL_NONE: *pin_cfg |= PIN_NOPULL;   break;
+  case GPIO_HAL_PIN_CFG_PULL_UP:   *pin_cfg |= PIN_PULLUP;   break;
+  case GPIO_HAL_PIN_CFG_PULL_DOWN: *pin_cfg |= PIN_PULLDOWN; break;
   }
 
-  /* Output config */
-  if(cfg & GPIO_HAL_PIN_BM_OUTPUT) {
-    *pin_mask |= PIN_BM_OUTPUT_MODE;
+  /* Hysteresis config */
+  *pin_mask |= PIN_BM_HYSTERESIS;
 
-    /* Output buffer type config */
-    switch(cfg & GPIO_HAL_PIN_BM_OUTPUT_BUF) {
-    case GPIO_HAL_PIN_CFG_OUTPUT_PUSHPULL:   *pin_cfg |= PIN_PUSHPULL;   break;
-    case GPIO_HAL_PIN_CFG_OUTPUT_OPENDRAIN:  *pin_cfg |= PIN_OPENDRAIN;  break;
-    case GPIO_HAL_PIN_CFG_OUTPUT_OPENSOURCE: *pin_cfg |= PIN_OPENSOURCE; break;
-    }
-
-    /* Slew control config */
-    if((cfg & GPIO_HAL_PIN_BM_OUTPUT_SLEWCTRL) == GPIO_HAL_PIN_CFG_OUTPUT_SLEWCTRL) {
-      *pin_cfg |= PIN_SLEWCTRL;
-    }
-
-    /* Drive strength config */
-    switch(cfg & GPIO_HAL_PIN_BM_OUTPUT_DRVSTR) {
-    case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MIN: *pin_cfg |= PIN_DRVSTR_MIN; break;
-    case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED: *pin_cfg |= PIN_DRVSTR_MED; break;
-    case GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MAX: *pin_cfg |= PIN_DRVSTR_MAX; break;
-    }
+  if(cfg & GPIO_HAL_PIN_CFG_HYSTERESIS) {
+    *pin_cfg |= PIN_HYSTERESIS;
   }
 
   /* Interrupt config */
-  if(cfg & GPIO_HAL_PIN_BM_INT) {
-    *pin_mask |= PIN_BM_IRQ;
+  *pin_mask |= PIN_BM_IRQ;
 
+  if((cfg & GPIO_HAL_PIN_CFG_INT_MASK) == GPIO_HAL_PIN_CFG_INT_ENABLE) {
     /* Interrupt edge config */
-    switch(cfg & GPIO_HAL_PIN_BM_INT) {
-    case GPIO_HAL_PIN_CFG_INT_DISABLE: *pin_cfg |= PIN_IRQ_DIS;       break;
-    case GPIO_HAL_PIN_CFG_INT_FALLING: *pin_cfg |= PIN_IRQ_NEGEDGE;   break;
-    case GPIO_HAL_PIN_CFG_INT_RISING:  *pin_cfg |= PIN_IRQ_POSEDGE;   break;
-    case GPIO_HAL_PIN_CFG_INT_BOTH:    *pin_cfg |= PIN_IRQ_BOTHEDGES; break;
+    switch(cfg & GPIO_HAL_PIN_CFG_EDGE_BOTH) {
+    case GPIO_HAL_PIN_CFG_EDGE_NONE:    *pin_cfg |= PIN_IRQ_DIS;       break;
+    case GPIO_HAL_PIN_CFG_EDGE_FALLING: *pin_cfg |= PIN_IRQ_NEGEDGE;   break;
+    case GPIO_HAL_PIN_CFG_EDGE_RISING:  *pin_cfg |= PIN_IRQ_POSEDGE;   break;
+    case GPIO_HAL_PIN_CFG_EDGE_BOTH:    *pin_cfg |= PIN_IRQ_BOTHEDGES; break;
     }
+  } else {
+    *pin_cfg |= PIN_IRQ_DIS;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -121,36 +97,14 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
   if(pin_cfg & PIN_BM_INPUT_MODE) {
     /* Hysteresis config */
     if((pin_cfg & PIN_BM_HYSTERESIS) == PIN_HYSTERESIS) {
-      *cfg |= GPIO_HAL_PIN_BM_INPUT_HYSTERESIS;
+      *cfg |= GPIO_HAL_PIN_CFG_HYSTERESIS;
     }
 
     /* Pulling config */
     switch(pin_cfg & PIN_BM_PULLING) {
-    case PIN_NOPULL:   *cfg |= GPIO_HAL_PIN_CFG_INPUT_NOPULL;   break;
-    case PIN_PULLUP:   *cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLUP;   break;
-    case PIN_PULLDOWN: *cfg |= GPIO_HAL_PIN_CFG_INPUT_PULLDOWN; break;
-    }
-  }
-
-  /* Output config */
-  if(pin_cfg & PIN_BM_OUTPUT_MODE) {
-    /* Output buffer type config */
-    switch(pin_cfg & PIN_BM_OUTPUT_BUF) {
-    case PIN_PUSHPULL:   *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_PUSHPULL;   break;
-    case PIN_OPENDRAIN:  *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_OPENDRAIN;  break;
-    case PIN_OPENSOURCE: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_OPENSOURCE; break;
-    }
-
-    /* Slew control config */
-    if((pin_cfg & PIN_BM_SLEWCTRL) == PIN_SLEWCTRL) {
-      *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_SLEWCTRL;
-    }
-
-    /* Drive strength config */
-    switch(pin_cfg & PIN_BM_DRVSTR) {
-    case PIN_DRVSTR_MIN: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MIN; break;
-    case PIN_DRVSTR_MED: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MED; break;
-    case PIN_DRVSTR_MAX: *cfg |= GPIO_HAL_PIN_CFG_OUTPUT_DRVSTR_MAX; break;
+    case PIN_NOPULL:   *cfg |= GPIO_HAL_PIN_CFG_PULL_NONE; break;
+    case PIN_PULLUP:   *cfg |= GPIO_HAL_PIN_CFG_PULL_UP;   break;
+    case PIN_PULLDOWN: *cfg |= GPIO_HAL_PIN_CFG_PULL_DOWN; break;
     }
   }
 
@@ -158,10 +112,18 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
   if(pin_cfg & PIN_BM_IRQ) {
     /* Interrupt edge config */
     switch(pin_cfg & PIN_BM_IRQ) {
-    case PIN_IRQ_DIS:       *cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE; break;
-    case PIN_IRQ_NEGEDGE:   *cfg |= GPIO_HAL_PIN_CFG_INT_FALLING; break;
-    case PIN_IRQ_POSEDGE:   *cfg |= GPIO_HAL_PIN_CFG_INT_RISING;  break;
-    case PIN_IRQ_BOTHEDGES: *cfg |= GPIO_HAL_PIN_CFG_INT_BOTH;    break;
+    case PIN_IRQ_DIS:       *cfg |= GPIO_HAL_PIN_CFG_EDGE_NONE;
+                            *cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE;
+                            break;
+    case PIN_IRQ_NEGEDGE:   *cfg |= GPIO_HAL_PIN_CFG_EDGE_FALLING;
+                            *cfg |= GPIO_HAL_PIN_CFG_INT_ENABLE;
+                            break;
+    case PIN_IRQ_POSEDGE:   *cfg |= GPIO_HAL_PIN_CFG_EDGE_RISING;
+                            *cfg |= GPIO_HAL_PIN_CFG_INT_ENABLE;
+                            break;
+    case PIN_IRQ_BOTHEDGES: *cfg |= GPIO_HAL_PIN_CFG_EDGE_BOTH;
+                            *cfg |= GPIO_HAL_PIN_CFG_INT_ENABLE;
+                            break;
     }
   }
 }
@@ -185,20 +147,16 @@ gpio_hal_arch_init(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
+gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin)
 {
-  PIN_add(pin_handle, PIN_getConfig(pin));
+  PIN_Config pin_cfg;
+  PIN_Config irq_cfg;
 
-  cfg &= GPIO_HAL_PIN_BM_INT;
+  pin_cfg = PIN_getConfig(pin);
+  PIN_add(pin_handle, pin_cfg);
 
-  PIN_Config int_cfg = PIN_IRQ_DIS;
-  switch(cfg) {
-  case GPIO_HAL_PIN_CFG_INT_FALLING: int_cfg |= PIN_IRQ_NEGEDGE;   break;
-  case GPIO_HAL_PIN_CFG_INT_RISING:  int_cfg |= PIN_IRQ_POSEDGE;   break;
-  case GPIO_HAL_PIN_CFG_INT_BOTH:    int_cfg |= PIN_IRQ_BOTHEDGES; break;
-  }
-
-  PIN_setInterrupt(pin_handle, pin | int_cfg);
+  irq_cfg = pin_cfg & PIN_BM_IRQ;
+  PIN_setInterrupt(pin_handle, pin | irq_cfg);
 }
 /*---------------------------------------------------------------------------*/
 void

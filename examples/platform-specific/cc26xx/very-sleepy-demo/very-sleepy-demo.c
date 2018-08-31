@@ -63,7 +63,7 @@
 #define VERY_SLEEPY_MODE_OFF 0
 #define VERY_SLEEPY_MODE_ON  1
 /*---------------------------------------------------------------------------*/
-#define BUTTON_TRIGGER BUTTON_HAL_ID_KEY_LEFT
+#define BUTTON_TRIGGER BOARD_BUTTON_HAL_INDEX_KEY_LEFT
 /*---------------------------------------------------------------------------*/
 #define MAC_CAN_BE_TURNED_OFF  0
 #define MAC_MUST_STAY_ON       1
