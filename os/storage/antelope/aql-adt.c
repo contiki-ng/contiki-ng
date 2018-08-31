@@ -91,6 +91,21 @@ aql_clear(aql_adt_t *adt)
 }
 
 db_result_t
+aql_add_relation(aql_adt_t *adt, const char *name)
+{
+  if(adt->relation_count >= AQL_RELATION_LIMIT) {
+    return DB_LIMIT_ERROR;
+  }
+
+  strncpy(adt->relations[adt->relation_count], name,
+	  sizeof(adt->relations[0]) - 1);
+  adt->relations[adt->relation_count][sizeof(adt->relations[0]) - 1] = '\0';
+  adt->relation_count++;
+
+  return DB_OK;
+}
+
+db_result_t
 aql_add_attribute(aql_adt_t *adt, char *name, domain_t domain,
                    unsigned element_size, int processed_only)
 {

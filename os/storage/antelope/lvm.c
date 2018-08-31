@@ -82,10 +82,10 @@ typedef struct derivation derivation_t;
 
 /* Registered variables for a LVM expression. Their values may be 
    changed between executions of the expression. */
-static variable_t variables[LVM_MAX_VARIABLE_ID - 1];
+static variable_t variables[LVM_MAX_VARIABLE_ID];
 
 /* Range derivations of variables that are used for index searches. */
-static derivation_t derivations[LVM_MAX_VARIABLE_ID - 1];
+static derivation_t derivations[LVM_MAX_VARIABLE_ID];
 
 #if DEBUG
 static void
@@ -187,7 +187,7 @@ eval_expr(lvm_instance_t *p, operator_t op, operand_t *result)
       get_operand(p, &operand[i]);
       break;
     default:
-      return SEMANTIC_ERROR;
+      return LVM_SEMANTIC_ERROR;
     }
     value[i] = operand_to_long(&operand[i]);
   }
@@ -204,18 +204,18 @@ eval_expr(lvm_instance_t *p, operator_t op, operand_t *result)
     break;
   case LVM_DIV:
     if(value[1] == 0) {
-      return MATH_ERROR;
+      return LVM_MATH_ERROR;
     }
     result_value = value[0] / value[1];
     break;
   default:
-    return EXECUTION_ERROR;
+    return LVM_EXECUTION_ERROR;
   }
 
   result->type = LVM_LONG;
   result->value.l = result_value;
 
-  return TRUE;
+  return LVM_TRUE;
 }
 
 static int
@@ -236,7 +236,7 @@ eval_logic(lvm_instance_t *p, operator_t *op)
     for(i = 0; i < arguments; i++) {
       type = get_type(p);
       if(type != LVM_CMP_OP) {
-	return SEMANTIC_ERROR;
+	return LVM_SEMANTIC_ERROR;
       }
       operator = get_operator(p);
       logic_result[i] = eval_logic(p, operator);
@@ -248,9 +248,9 @@ eval_logic(lvm_instance_t *p, operator_t *op)
     if(*op == LVM_NOT) {
       return !logic_result[0];
     } else if(*op == LVM_AND) {
-      return logic_result[0] == TRUE && logic_result[1] == TRUE;
+      return logic_result[0] == LVM_TRUE && logic_result[1] == LVM_TRUE;
     } else {
-      return logic_result[0] == TRUE || logic_result[1] == TRUE;
+      return logic_result[0] == LVM_TRUE || logic_result[1] == LVM_TRUE;
     }
   }
 
@@ -268,7 +268,7 @@ eval_logic(lvm_instance_t *p, operator_t *op)
       get_operand(p, &operand);
       break;
     default:
-      return SEMANTIC_ERROR;
+      return LVM_SEMANTIC_ERROR;
     }
     result[i] = operand_to_long(&operand);
   }
@@ -294,7 +294,7 @@ eval_logic(lvm_instance_t *p, operator_t *op)
     break;
   }
 
-  return EXECUTION_ERROR;
+  return LVM_EXECUTION_ERROR;
 }
 
 void
@@ -334,7 +334,8 @@ lvm_shift_for_operator(lvm_instance_t *p, lvm_ip_t end)
 
   old_end = p->end;
 
-  if(p->end + sizeof(operator_t) > p->size || end >= old_end) {
+  if(p->end + sizeof(operator_t) + sizeof(node_type_t) > p->size ||
+     end >= old_end) {
     p->error = __LINE__;
     return 0;
   }
@@ -369,13 +370,6 @@ lvm_set_end(lvm_instance_t *p, lvm_ip_t end)
   return old_end;
 }
 
-void
-lvm_set_type(lvm_instance_t *p, node_type_t type)
-{
-  *(node_type_t *)(p->code + p->end) = type;
-  p->end += sizeof(type);
-}
-
 lvm_status_t
 lvm_execute(lvm_instance_t *p)
 {
@@ -384,14 +378,14 @@ lvm_execute(lvm_instance_t *p)
   lvm_status_t status;
 
   p->ip = 0;
-  status = EXECUTION_ERROR;
+  status = LVM_EXECUTION_ERROR;
   type = get_type(p);
   switch(type) {
   case LVM_CMP_OP:
     operator = get_operator(p);
     status = eval_logic(p, operator);
     if(!LVM_ERROR(status)) {
-      PRINTF("The statement is %s\n", status == TRUE ? "true" : "false");
+      PRINTF("The statement is %s\n", status == LVM_TRUE ? "true" : "false");
     } else {
       PRINTF("Execution error: %d\n", (int)status);
     }
@@ -403,31 +397,80 @@ lvm_execute(lvm_instance_t *p)
   return status;
 }
 
-void
+lvm_status_t
+lvm_set_type(lvm_instance_t *p, node_type_t type)
+{
+  if(p->end + sizeof(node_type_t) >= DB_VM_BYTECODE_SIZE) {
+    PRINTF("Error: overflow in lvm_set_type\n");
+    return LVM_STACK_OVERFLOW;
+  }
+
+  *(node_type_t *)(p->code + p->end) = type;
+  p->end += sizeof(type);
+  return LVM_TRUE;
+}
+
+lvm_status_t
 lvm_set_op(lvm_instance_t *p, operator_t op)
 {
-  lvm_set_type(p, LVM_ARITH_OP);
+  lvm_status_t status;
+
+  status = lvm_set_type(p, LVM_ARITH_OP);
+  if(status != LVM_TRUE) {
+    return status;
+  }
+
+  if(p->end + sizeof(op) >= DB_VM_BYTECODE_SIZE) {
+    PRINTF("Error: overflow in lvm_set_op\n");
+    return LVM_STACK_OVERFLOW;
+  }
+
   memcpy(&p->code[p->end], &op, sizeof(op));
   p->end += sizeof(op);
+  return LVM_TRUE;
 }
 
-void
+lvm_status_t
 lvm_set_relation(lvm_instance_t *p, operator_t op)
 {
-  lvm_set_type(p, LVM_CMP_OP);
+  lvm_status_t status;
+
+  status = lvm_set_type(p, LVM_CMP_OP);
+  if(status != LVM_TRUE) {
+    return status;
+  }
+
+  if(p->end + sizeof(op) >= DB_VM_BYTECODE_SIZE) {
+    PRINTF("Error: overflow in lvm_set_relation\n");
+    return LVM_STACK_OVERFLOW;
+  }
+
   memcpy(&p->code[p->end], &op, sizeof(op));
   p->end += sizeof(op);
+  return LVM_TRUE;
 }
 
-void
+lvm_status_t
 lvm_set_operand(lvm_instance_t *p, operand_t *op)
 {
-  lvm_set_type(p, LVM_OPERAND);
+  lvm_status_t status;
+
+  status = lvm_set_type(p, LVM_OPERAND);
+  if(status != LVM_TRUE) {
+    return status;
+  }
+
+  if(p->end + sizeof(*op) >= DB_VM_BYTECODE_SIZE) {
+    PRINTF("Error: overflow in lvm_set_operand\n");
+    return LVM_STACK_OVERFLOW;
+  }
+
   memcpy(&p->code[p->end], op, sizeof(*op));
   p->end += sizeof(*op);
+  return LVM_TRUE;
 }
 
-void
+lvm_status_t
 lvm_set_long(lvm_instance_t *p, long l)
 {
   operand_t op;
@@ -435,7 +478,7 @@ lvm_set_long(lvm_instance_t *p, long l)
   op.type = LVM_LONG;
   op.value.l = l;
 
-  lvm_set_operand(p, &op);
+  return lvm_set_operand(p, &op);
 }
 
 lvm_status_t
@@ -446,7 +489,7 @@ lvm_register_variable(char *name, operand_type_t type)
 
   id = lookup(name);
   if(id == LVM_MAX_VARIABLE_ID) {
-    return VARIABLE_LIMIT_REACHED;
+    return LVM_VARIABLE_LIMIT_REACHED;
   }
 
   var = &variables[id];
@@ -456,7 +499,7 @@ lvm_register_variable(char *name, operand_type_t type)
     var->type = type;
   }
 
-  return TRUE;
+  return LVM_TRUE;
 }
 
 lvm_status_t
@@ -466,25 +509,28 @@ lvm_set_variable_value(char *name, operand_value_t value)
 
   id = lookup(name);
   if(id == LVM_MAX_VARIABLE_ID) {
-    return INVALID_IDENTIFIER;
+    return LVM_INVALID_IDENTIFIER;
   }
+
   variables[id].value = value;
-  return TRUE;
+  return LVM_TRUE;
 }
 
-void
+lvm_status_t
 lvm_set_variable(lvm_instance_t *p, char *name)
 {
   operand_t op;
   variable_id_t id;
 
   id = lookup(name);
-  if(id < LVM_MAX_VARIABLE_ID) {
-    PRINTF("var id = %d\n", id);
-    op.type = LVM_VARIABLE;
-    op.value.id = id;
-    lvm_set_operand(p, &op);
+  if(id == LVM_MAX_VARIABLE_ID) {
+    return LVM_INVALID_IDENTIFIER;
   }
+
+  PRINTF("var id = %d\n", id);
+  op.type = LVM_VARIABLE;
+  op.value.id = id;
+  return lvm_set_operand(p, &op);
 }
 
 void
@@ -598,7 +644,7 @@ derive_relation(lvm_instance_t *p, derivation_t *local_derivations)
     derivation_t d2[LVM_MAX_VARIABLE_ID];
 
     if(*operator != LVM_AND && *operator != LVM_OR) {
-      return DERIVATION_ERROR;
+      return LVM_DERIVATION_ERROR;
     }
 
     PRINTF("Attempting to infer ranges from a logical connective\n");
@@ -608,7 +654,7 @@ derive_relation(lvm_instance_t *p, derivation_t *local_derivations)
 
     if(LVM_ERROR(derive_relation(p, d1)) ||
        LVM_ERROR(derive_relation(p, d2))) {
-      return DERIVATION_ERROR;
+      return LVM_DERIVATION_ERROR;
     }
 
     if(*operator == LVM_AND) {
@@ -616,7 +662,7 @@ derive_relation(lvm_instance_t *p, derivation_t *local_derivations)
     } else if(*operator == LVM_OR) {
       create_union(local_derivations, d1, d2);
     }
-    return TRUE;
+    return LVM_TRUE;
   }
 
   for(i = 0; i < 2; i++) {
@@ -626,18 +672,18 @@ derive_relation(lvm_instance_t *p, derivation_t *local_derivations)
       get_operand(p, &operand[i]);
       break;
     default:
-      return DERIVATION_ERROR;
+      return LVM_DERIVATION_ERROR;
     }
   }
 
   if(operand[0].type == LVM_VARIABLE && operand[1].type == LVM_VARIABLE) {
-    return DERIVATION_ERROR;
+    return LVM_DERIVATION_ERROR;
   }
 
   /* Determine which of the operands that is the variable. */
   if(operand[0].type == LVM_VARIABLE) {
     if(operand[1].type == LVM_VARIABLE) {
-      return DERIVATION_ERROR;
+      return LVM_DERIVATION_ERROR;
     }
     variable_id = operand[0].value.id;
     value = &operand[1].value;
@@ -647,7 +693,7 @@ derive_relation(lvm_instance_t *p, derivation_t *local_derivations)
   }
 
   if(variable_id >= LVM_MAX_VARIABLE_ID) {
-     return DERIVATION_ERROR;
+     return LVM_DERIVATION_ERROR;
   }
 
   PRINTF("variable id %d, value %ld\n", variable_id, *(long *)value);
@@ -675,12 +721,12 @@ derive_relation(lvm_instance_t *p, derivation_t *local_derivations)
     derivation->max.l = value->l;
     break;
   default:
-    return DERIVATION_ERROR;
+    return LVM_DERIVATION_ERROR;
   }
 
   derivation->derived = 1;
 
-  return TRUE;
+  return LVM_TRUE;
 }
 
 lvm_status_t
@@ -700,12 +746,12 @@ lvm_get_derived_range(lvm_instance_t *p, char *name,
       if(derivations[i].derived) {
         *min = derivations[i].min;
         *max = derivations[i].max;
-        return TRUE;
+        return LVM_TRUE;
       }
-      return DERIVATION_ERROR;
+      return LVM_DERIVATION_ERROR;
     }
   }
-  return INVALID_IDENTIFIER;
+  return LVM_INVALID_IDENTIFIER;
 }
 
 #if DEBUG
@@ -755,7 +801,8 @@ print_operand(lvm_instance_t *p, lvm_ip_t index)
 
   switch(operand.type) {
   case LVM_VARIABLE:
-  if(operand.value.id >= LVM_MAX_VARIABLE_ID || variables[operand.value.id].name == NULL) {
+  if(operand.value.id >= LVM_MAX_VARIABLE_ID ||
+     variables[operand.value.id].name == NULL) {
     PRINTF("var(id:%d):?? ", operand.value.id);
   } else {
     PRINTF("var(%s):%ld ", variables[operand.value.id].name,
