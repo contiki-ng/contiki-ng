@@ -98,12 +98,11 @@ coap_send_transaction(coap_transaction_t *t)
 {
   LOG_DBG("Sending transaction %u\n", t->mid);
 
-  coap_sendto(&t->endpoint, t->message, t->message_len);
-
   if(COAP_TYPE_CON ==
      ((COAP_HEADER_TYPE_MASK & t->message[0]) >> COAP_HEADER_TYPE_POSITION)) {
-    if(t->retrans_counter < COAP_MAX_RETRANSMIT) {
+    if(t->retrans_counter <= COAP_MAX_RETRANSMIT) {
       /* not timed out yet */
+      coap_sendto(&t->endpoint, t->message, t->message_len);
       LOG_DBG("Keeping transaction %u\n", t->mid);
 
       if(t->retrans_counter == 0) {
@@ -138,6 +137,7 @@ coap_send_transaction(coap_transaction_t *t)
       }
     }
   } else {
+    coap_sendto(&t->endpoint, t->message, t->message_len);
     coap_clear_transaction(t);
   }
 }
