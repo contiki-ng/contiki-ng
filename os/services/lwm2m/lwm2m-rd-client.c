@@ -300,31 +300,6 @@ lwm2m_rd_client_register_with_server(lwm2m_session_info_t *session_info,
   list_add(session_info_list, session_info); /* Add to the list of sessions */
 }
 /*---------------------------------------------------------------------------*/
-static int
-update_registration_server(lwm2m_session_info_t *session_info)
-{
-  if(session_info->has_registration_server_info) {
-    return 1;
-  }
-
-#if UIP_CONF_IPV6_RPL
-  {
-    rpl_dag_t *dag;
-
-    /* Use the DAG id as server address if no other has been specified */
-    dag = rpl_get_any_dag();
-    if(dag != NULL) {
-      /* create coap-endpoint? */
-      /* uip_ipaddr_copy(&server_ipaddr, &dag->dag_id); */
-      /* server_port = REMOTE_PORT; */
-      return 1;
-    }
-  }
-#endif /* UIP_CONF_IPV6_RPL */
-
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
 int
 lwm2m_rd_client_deregister(lwm2m_session_info_t *session_info)
 {
@@ -357,31 +332,6 @@ lwm2m_rd_client_update_triggered(const coap_endpoint_t *server_ep)
     session_info->rd_flags |= FLAG_RD_DATA_UPDATE_TRIGGERED;
   }
   /* Here we need to do an CoAP timer poll - to get a quick request transmission! */
-}
-/*---------------------------------------------------------------------------*/
-static int
-update_bootstrap_server(lwm2m_session_info_t *session_info)
-{
-  if(session_info->has_bs_server_info) {
-    return 1;
-  }
-
-#if UIP_CONF_IPV6_RPL
-  {
-    rpl_dag_t *dag;
-
-    /* Use the DAG id as server address if no other has been specified */
-    dag = rpl_get_any_dag();
-    if(dag != NULL) {
-      /* create coap endpoint */
-      /* uip_ipaddr_copy(&bs_server_ipaddr, &dag->dag_id); */
-      /* bs_server_port = REMOTE_PORT; */
-      return 1;
-    }
-  }
-#endif /* UIP_CONF_IPV6_RPL */
-
-  return 0;
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -676,24 +626,23 @@ periodic_process(coap_timer_t *timer)
       break;
     case DO_BOOTSTRAP:
       if(session_info->use_server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER &&
-         session_info->bootstrapped == 0) {
-        if(update_bootstrap_server(session_info)) {
+         session_info->bootstrapped == 0 &&
+         session_info->has_bs_server_info) {
 
-          /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-          coap_init_message(session_info->request, COAP_TYPE_CON, COAP_POST, 0);
-          coap_set_header_uri_path(session_info->request, "/bs");
+        /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
+        coap_init_message(session_info->request, COAP_TYPE_CON, COAP_POST, 0);
+        coap_set_header_uri_path(session_info->request, "/bs");
 
-          snprintf(query_data, sizeof(query_data) - 1, "?ep=%s", session_info->ep);
-          coap_set_header_uri_query(session_info->request, query_data);
-          LOG_INFO("Registering ID with bootstrap server [");
-          LOG_INFO_COAP_EP(&session_info->bs_server_ep);
-          LOG_INFO_("] as '%s'\n", query_data);
-          /* Add session info as user data to use it in the callbacks */
-          session_info->rd_request_state.state.user_data = (void *)session_info;
-          if(coap_send_request(&session_info->rd_request_state, &session_info->bs_server_ep,
-                               session_info->request, bootstrap_callback)) {
-            session_info->rd_state = BOOTSTRAP_SENT;
-          }
+        snprintf(query_data, sizeof(query_data) - 1, "?ep=%s", session_info->ep);
+        coap_set_header_uri_query(session_info->request, query_data);
+        LOG_INFO("Registering ID with bootstrap server [");
+        LOG_INFO_COAP_EP(&session_info->bs_server_ep);
+        LOG_INFO_("] as '%s'\n", query_data);
+        /* Add session info as user data to use it in the callbacks */
+        session_info->rd_request_state.state.user_data = (void *)session_info;
+        if(coap_send_request(&session_info->rd_request_state, &session_info->bs_server_ep,
+                             session_info->request, bootstrap_callback)) {
+          session_info->rd_state = BOOTSTRAP_SENT;
         }
       }
       break;
@@ -770,7 +719,7 @@ periodic_process(coap_timer_t *timer)
 
       if(session_info->use_server_type == LWM2M_RD_CLIENT_LWM2M_SERVER &&
          !lwm2m_rd_client_is_registered(session_info) &&
-         update_registration_server(session_info)) {
+         session_info->has_registration_server_info) {
         int len;
 
         /* prepare request, TID was set by COAP_BLOCKING_REQUEST() */
