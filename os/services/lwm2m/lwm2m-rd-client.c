@@ -108,10 +108,6 @@
 #define FLAG_RD_DATA_UPDATE_TRIGGERED 0x02
 #define FLAG_RD_DATA_UPDATE_ON_DIRTY  0x10
 
-/* The type of server to use: bootstrap or registration */
-#define USE_BOOTSTRAP_SERVER    0
-#define USE_REGISTRATION_SERVER 1
-
 LIST(session_info_list);
 
 /* Shared by all sessions, used by only one at a time in the FSM */
@@ -119,7 +115,7 @@ static char query_data[64]; /* allocate some data for queries and updates */
 static uint8_t rd_data[128]; /* allocate some data for the RD */
 
 static coap_timer_t rd_timer; /* Timer to tick the FSM periodically */
-static char default_ep [20];
+static char default_ep[20];
 
 #if LWM2M_QUEUE_MODE_ENABLED
 static coap_timer_t queue_mode_client_awake_timer; /* Timer to control the client's
@@ -135,7 +131,7 @@ static void queue_mode_awake_timer_callback(coap_timer_t *timer);
 
 static void check_periodic_observations();
 static void update_callback(coap_callback_request_state_t *callback_state);
-
+/*---------------------------------------------------------------------------*/
 static int
 set_rd_data(lwm2m_session_info_t *session_info)
 {
@@ -239,9 +235,8 @@ lwm2m_rd_client_set_endpoint_name(lwm2m_session_info_t *session_info, const char
 void
 lwm2m_rd_client_set_default_endpoint_name(const char *endpoint)
 {
-  if(default_ep != NULL) {
-    strcpy(default_ep, endpoint);
-  }
+  strncpy(default_ep, endpoint, sizeof(default_ep) - 1);
+  default_ep[sizeof(default_ep) - 1] = '\0';
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -261,8 +256,10 @@ lwm2m_rd_client_set_automatic_update(lwm2m_session_info_t *session_info, int upd
     (update != 0 ? FLAG_RD_DATA_UPDATE_ON_DIRTY : 0);
 }
 /*---------------------------------------------------------------------------*/
-static void
-setup_session_default_values(lwm2m_session_info_t *session_info)
+void
+lwm2m_rd_client_register_with_server(lwm2m_session_info_t *session_info,
+                                     const coap_endpoint_t *server,
+                                     lwm2m_rd_client_server_type_t server_type)
 {
   if(session_info->ep == NULL) {
     session_info->ep = default_ep;
@@ -282,21 +279,25 @@ setup_session_default_values(lwm2m_session_info_t *session_info)
 #endif /* LWM2M_QUEUE_MODE_CONF_ENABLED */
 
   session_info->rd_flags = FLAG_RD_DATA_UPDATE_ON_DIRTY;
+  session_info->has_bs_server_info = 0;
+  session_info->has_registration_server_info = 0;
   session_info->wait_until_network_check = 0;
   session_info->last_update = 0;
   session_info->last_rd_progress = 0;
+  session_info->bootstrapped = 0;
   session_info->rd_state = INIT;
-}
-/*---------------------------------------------------------------------------*/
-void
-lwm2m_rd_client_register_with_server(lwm2m_session_info_t *session_info, const coap_endpoint_t *server)
-{
+
+  if(server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER) {
+    coap_endpoint_copy(&session_info->bs_server_ep, server);
+    session_info->has_bs_server_info = 1;
+    session_info->use_server_type = LWM2M_RD_CLIENT_BOOTSTRAP_SERVER;
+  } else {
+    coap_endpoint_copy(&session_info->server_ep, server);
+    session_info->use_server_type = LWM2M_RD_CLIENT_LWM2M_SERVER;
+    session_info->has_registration_server_info = 1;
+  }
+
   list_add(session_info_list, session_info); /* Add to the list of sessions */
-  setup_session_default_values(session_info);
-  coap_endpoint_copy(&session_info->server_ep, server);
-  session_info->has_registration_server_info = 1;
-  session_info->use_server_type = USE_REGISTRATION_SERVER;
-  session_info->rd_state = INIT;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -324,18 +325,6 @@ update_registration_server(lwm2m_session_info_t *session_info)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-void
-lwm2m_rd_client_register_with_bootstrap_server(lwm2m_session_info_t *session_info, const coap_endpoint_t *server)
-{
-  list_add(session_info_list, session_info); /* Add to the list of sessions */
-  setup_session_default_values(session_info);
-  coap_endpoint_copy(&session_info->bs_server_ep, server);
-  session_info->has_bs_server_info = 1;
-  session_info->use_server_type = USE_BOOTSTRAP_SERVER;
-  session_info->bootstrapped = 0;
-  session_info->rd_state = INIT;
-}
-/*---------------------------------------------------------------------------*/
 int
 lwm2m_rd_client_deregister(lwm2m_session_info_t *session_info)
 {
@@ -348,7 +337,7 @@ lwm2m_rd_client_deregister(lwm2m_session_info_t *session_info)
 }
 /*---------------------------------------------------------------------------*/
 static lwm2m_session_info_t *
-get_sessio_info_from_server_ep(const coap_endpoint_t *server_ep)
+get_session_info_from_server_ep(const coap_endpoint_t *server_ep)
 {
   lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)list_head(session_info_list);
   while(session_info != NULL) {
@@ -359,10 +348,11 @@ get_sessio_info_from_server_ep(const coap_endpoint_t *server_ep)
   }
   return NULL;
 }
+/*---------------------------------------------------------------------------*/
 void
 lwm2m_rd_client_update_triggered(const coap_endpoint_t *server_ep)
 {
-  lwm2m_session_info_t *session_info = get_sessio_info_from_server_ep(server_ep);
+  lwm2m_session_info_t *session_info = get_session_info_from_server_ep(server_ep);
   if(session_info) {
     session_info->rd_flags |= FLAG_RD_DATA_UPDATE_TRIGGERED;
   }
@@ -675,7 +665,7 @@ periodic_process(coap_timer_t *timer)
         session_info->wait_until_network_check = now + 10000;
         if(has_network_access()) {
           /* Either do bootstrap then registration */
-          if(session_info->use_server_type == USE_BOOTSTRAP_SERVER) {
+          if(session_info->use_server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER) {
             session_info->rd_state = DO_BOOTSTRAP;
           } else {
             session_info->rd_state = DO_REGISTRATION;
@@ -685,7 +675,8 @@ periodic_process(coap_timer_t *timer)
       }
       break;
     case DO_BOOTSTRAP:
-      if(session_info->use_server_type == USE_BOOTSTRAP_SERVER && session_info->bootstrapped == 0) {
+      if(session_info->use_server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER &&
+         session_info->bootstrapped == 0) {
         if(update_bootstrap_server(session_info)) {
 
           /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
@@ -711,7 +702,7 @@ periodic_process(coap_timer_t *timer)
       break;
     case BOOTSTRAP_DONE:
       /* check that we should still use bootstrap */
-      if(session_info->use_server_type == USE_BOOTSTRAP_SERVER) {
+      if(session_info->use_server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER) {
         lwm2m_security_server_t *security;
         LOG_DBG("*** Bootstrap - checking for server info...\n");
         /* get the security object - ignore bootstrap servers */
@@ -748,7 +739,7 @@ periodic_process(coap_timer_t *timer)
               if(secure) {
                 LOG_DBG("Secure CoAP requested but not supported - can not bootstrap\n");
               } else {
-                lwm2m_rd_client_register_with_server(session_info, &session_info->server_ep);
+                lwm2m_rd_client_register_with_server(session_info, &session_info->server_ep, LWM2M_RD_CLIENT_LWM2M_SERVER);
                 session_info->bootstrapped++;
               }
             }
@@ -777,7 +768,8 @@ periodic_process(coap_timer_t *timer)
         return;
       }
 
-      if(session_info->use_server_type == USE_REGISTRATION_SERVER && !lwm2m_rd_client_is_registered(session_info) &&
+      if(session_info->use_server_type == LWM2M_RD_CLIENT_LWM2M_SERVER &&
+         !lwm2m_rd_client_is_registered(session_info) &&
          update_registration_server(session_info)) {
         int len;
 
@@ -891,7 +883,7 @@ periodic_process(coap_timer_t *timer)
 void
 lwm2m_rd_client_init(const char *ep)
 {
-  strcpy(default_ep, ep);
+  lwm2m_rd_client_set_default_endpoint_name(ep);
 
   /* call the RD client periodically */
   coap_timer_set_callback(&rd_timer, periodic_process);
@@ -908,7 +900,7 @@ check_periodic_observations(void)
 }
 /*---------------------------------------------------------------------------*/
 /*
-   *Queue Mode Support
+ * Queue Mode Support
  */
 #if LWM2M_QUEUE_MODE_ENABLED
 /*---------------------------------------------------------------------------*/

@@ -46,6 +46,13 @@
 #ifndef LWM2M_RD_CLIENT_H_
 #define LWM2M_RD_CLIENT_H_
 
+/* The type of server to use for registration: bootstrap or LWM2M */
+typedef enum {
+  LWM2M_RD_CLIENT_BOOTSTRAP_SERVER,
+  LWM2M_RD_CLIENT_LWM2M_SERVER
+} lwm2m_rd_client_server_type_t;
+
+/* Session callback states */
 #define LWM2M_RD_CLIENT_BOOTSTRAPPED       1
 #define LWM2M_RD_CLIENT_REGISTERED         2
 #define LWM2M_RD_CLIENT_DEREGISTERED       3
@@ -76,7 +83,7 @@ typedef struct lwm2m_session_info {
   uint16_t lifetime;
   coap_endpoint_t bs_server_ep;
   coap_endpoint_t server_ep;
-  uint8_t use_server_type;
+  lwm2m_rd_client_server_type_t use_server_type;
   uint8_t has_bs_server_info;
   uint8_t has_registration_server_info;
   uint8_t bootstrapped; /* bootstrap done */
@@ -101,8 +108,7 @@ typedef struct lwm2m_session_info {
 } lwm2m_session_info_t;
 
 int  lwm2m_rd_client_is_registered(lwm2m_session_info_t *session_info);
-void lwm2m_rd_client_register_with_server(lwm2m_session_info_t *session_info, const coap_endpoint_t *server);
-void lwm2m_rd_client_register_with_bootstrap_server(lwm2m_session_info_t *session_info, const coap_endpoint_t *server);
+void lwm2m_rd_client_register_with_server(lwm2m_session_info_t *session_info, const coap_endpoint_t *server, lwm2m_rd_client_server_type_t server_type);
 uint16_t lwm2m_rd_client_get_lifetime(lwm2m_session_info_t *session_info);
 void lwm2m_rd_client_set_lifetime(lwm2m_session_info_t *session_info, uint16_t lifetime);
 void lwm2m_rd_client_set_endpoint_name(lwm2m_session_info_t *session_info, const char *endpoint);

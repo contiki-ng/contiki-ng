@@ -52,29 +52,25 @@
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
+/* Define this macro to non-zero to register via a bootstrap server */
 #ifndef REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER
 #define REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER 0
 #endif
 
-#ifndef REGISTER_WITH_LWM2M_SERVER
-#define REGISTER_WITH_LWM2M_SERVER 1
+#if REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER
+#define SERVER_TYPE LWM2M_RD_CLIENT_BOOTSTRAP_SERVER
+#else
+#define SERVER_TYPE LWM2M_RD_CLIENT_LWM2M_SERVER
 #endif
 
 #ifndef LWM2M_SERVER_ADDRESS
 #define LWM2M_SERVER_ADDRESS "coap://[fd00::1]"
 #endif
 
-#ifndef LWM2M_SERVER_ADDRESS_SECOND
-#define LWM2M_SERVER_ADDRESS_SECOND "coap://[fd00::1]:5686"
-#endif
+static lwm2m_session_info_t session_info;
 
-#ifndef LWM2M_SESSIONS
-#define LWM2M_SESSIONS 2
-#endif
-
- static lwm2m_session_info_t session_info;
-
-#if LWM2M_SESSIONS == 2
+/* Define this macro to register with a second LWM2M server */
+#ifdef LWM2M_SERVER_ADDRESS_SECOND
 static lwm2m_session_info_t session_info_second;
 #endif
 
@@ -163,27 +159,17 @@ setup_lwm2m_servers(void)
   coap_endpoint_t server_ep;
   if(coap_endpoint_parse(LWM2M_SERVER_ADDRESS, strlen(LWM2M_SERVER_ADDRESS),
                          &server_ep) != 0) {
-#if REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER
-    lwm2m_rd_client_register_with_bootstrap_server(&session_info, &server_ep);
-#else
-    lwm2m_rd_client_register_with_server(&session_info, &server_ep);
-#endif
+    lwm2m_rd_client_register_with_server(&session_info, &server_ep, SERVER_TYPE);
   }
 #endif /* LWM2M_SERVER_ADDRESS */
 
-#if LWM2M_SESSIONS == 2
 #ifdef LWM2M_SERVER_ADDRESS_SECOND
   coap_endpoint_t server_ep_second;
   if(coap_endpoint_parse(LWM2M_SERVER_ADDRESS_SECOND, strlen(LWM2M_SERVER_ADDRESS_SECOND),
                          &server_ep_second) != 0) {
-#if REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER
-    lwm2m_rd_client_register_with_bootstrap_server(&session_info_second, &server_ep_second);
-#else
-    lwm2m_rd_client_register_with_server(&session_info_second, &server_ep_second);
-#endif
+    lwm2m_rd_client_register_with_server(&session_info_second, &server_ep_second, SERVER_TYPE);
   }
 #endif /* LWM2M_SERVER_ADDRESS_SECOND */
-#endif /* LWM2M_SESSIONS == 2 */
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_ipso_objects, ev, data)
