@@ -47,8 +47,10 @@
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+#include "sys/log.h"
+
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 /* Constants from RFC6552. We use the default values. */
 #define RANK_STRETCH       0 /* Must be in the range [0;5] */
@@ -87,7 +89,7 @@
 static void
 reset(rpl_dag_t *dag)
 {
-  PRINTF("RPL: Reset OF0\n");
+  LOG_INFO("Reset OF0\n");
 }
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_DAO_ACK
@@ -98,7 +100,7 @@ dao_ack_callback(rpl_parent_t *p, int status)
     return;
   }
   /* here we need to handle failed DAO's and other stuff */
-  PRINTF("RPL: OF0 - DAO ACK received with status: %d\n", status);
+  LOG_DBG("OF0 - DAO ACK received with status: %d\n", status);
   if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
     /* punish the ETX as if this was 10 packets lost */
     link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
