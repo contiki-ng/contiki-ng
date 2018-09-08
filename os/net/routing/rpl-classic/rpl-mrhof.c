@@ -51,8 +51,10 @@
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+#include "sys/log.h"
+
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 /* RFC6551 and RFC6719 do not mandate the use of a specific formula to
  * compute the ETX value. This MRHOF implementation relies on the value
@@ -97,7 +99,7 @@ to the threshold of 96 in the non-squared case) */
 static void
 reset(rpl_dag_t *dag)
 {
-  PRINTF("RPL: Reset MRHOF\n");
+  LOG_INFO("Reset MRHOF\n");
 }
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_DAO_ACK
@@ -108,7 +110,7 @@ dao_ack_callback(rpl_parent_t *p, int status)
     return;
   }
   /* here we need to handle failed DAO's and other stuff */
-  PRINTF("RPL: MRHOF - DAO ACK received with status: %d\n", status);
+  LOG_DBG("MRHOF - DAO ACK received with status: %d\n", status);
   if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
     /* punish the ETX as if this was 10 packets lost */
     link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
@@ -262,7 +264,7 @@ update_metric_container(rpl_instance_t *instance)
 
   dag = instance->current_dag;
   if(dag == NULL || !dag->joined) {
-    PRINTF("RPL: Cannot update the metric container when not joined\n");
+    LOG_WARN("Cannot update the metric container when not joined\n");
     return;
   }
 
@@ -297,7 +299,7 @@ update_metric_container(rpl_instance_t *instance)
       instance->mc.obj.energy.energy_est = path_cost >> 8;
       break;
     default:
-      PRINTF("RPL: MRHOF, non-supported MC %u\n", instance->mc.type);
+      LOG_WARN("MRHOF, non-supported MC %u\n", instance->mc.type);
       break;
   }
 }
