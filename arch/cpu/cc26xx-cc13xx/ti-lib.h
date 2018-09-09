@@ -399,6 +399,9 @@
 
 #define ti_lib_rfc_rtrim(...)                    RFCRTrim(__VA_ARGS__)
 #define ti_lib_rfc_adi3vco_ldo_voltage_mode(...) RFCAdi3VcoLdoVoltageMode(__VA_ARGS__)
+#define ti_lib_rfc_hw_int_enable(...)            RFCHwIntEnable(__VA_ARGS__)
+#define ti_lib_rfc_hw_int_disable(...)           RFCHwIntDisable(__VA_ARGS__)
+#define ti_lib_rfc_hw_int_clear(...)             RFCHwIntClear(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
 /* sys_ctrl.h */
 #include "driverlib/sys_ctrl.h"
