@@ -100,7 +100,7 @@ do
     if [[ "$platform" == "srf06-cc26xx" ]]
     then
         # srf06-cc26xx has multiple boards
-        BOARDS="srf06/cc26xx srf06/cc13xx launchpad/cc2650 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350"
+        BOARDS="srf06/cc26xx srf06/cc13xx launchpad/cc2650 launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350"
     elif [[ "$platform" == "zoul" ]]
     then
         # Zoul has multiple boards
