@@ -37,12 +37,10 @@
 #include "net/link-stats.h"
 #include <stdio.h>
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "Link Stats"
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /* Maximum value for the Tx count counter */
 #define TX_COUNT_MAX                    32
@@ -80,6 +78,13 @@ const struct link_stats *
 link_stats_from_lladdr(const linkaddr_t *lladdr)
 {
   return nbr_table_get_from_lladdr(link_stats, lladdr);
+}
+/*---------------------------------------------------------------------------*/
+/* Returns the neighbor's address given a link stats item */
+const linkaddr_t *
+link_stats_get_lladdr(const struct link_stats *stat)
+{
+  return nbr_table_get_lladdr(link_stats, stat);
 }
 /*---------------------------------------------------------------------------*/
 /* Are the statistics fresh? */
@@ -156,6 +161,14 @@ link_stats_packet_sent(const linkaddr_t *lladdr, int status, int numtx)
   stats->last_tx_time = clock_time();
   stats->freshness = MIN(stats->freshness + numtx, FRESHNESS_MAX);
 
+#if LINK_STATS_PACKET_COUNTERS
+  /* Update paket counters */
+  stats->cnt_current.num_packets_tx += numtx;
+  if(status == MAC_TX_OK) {
+    stats->cnt_current.num_packets_acked++;
+  }
+#endif
+
   /* Add penalty in case of no-ACK */
   if(status == MAC_TX_NOACK) {
     numtx += ETX_NOACK_PENALTY;
@@ -219,7 +232,37 @@ link_stats_input_callback(const linkaddr_t *lladdr)
   /* Update RSSI EWMA */
   stats->rssi = ((int32_t)stats->rssi * (EWMA_SCALE - EWMA_ALPHA) +
       (int32_t)packet_rssi * EWMA_ALPHA) / EWMA_SCALE;
+
+#if LINK_STATS_PACKET_COUNTERS
+  stats->cnt_current.num_packets_rx++;
+#endif
 }
+/*---------------------------------------------------------------------------*/
+#if LINK_STATS_PACKET_COUNTERS
+/*---------------------------------------------------------------------------*/
+static void
+print_and_update_counters(void)
+{
+  struct link_stats *stats;
+
+  for(stats = nbr_table_head(link_stats); stats != NULL;
+      stats = nbr_table_next(link_stats, stats)) {
+
+    struct link_packet_counter *c = &stats->cnt_current;
+
+    LOG_INFO("num packets: tx=%u ack=%u rx=%u to=",
+             c->num_packets_tx, c->num_packets_acked, c->num_packets_rx);
+    LOG_INFO_LLADDR(link_stats_get_lladdr(stats));
+    LOG_INFO_("\n");
+
+    stats->cnt_total.num_packets_tx += stats->cnt_current.num_packets_tx;
+    stats->cnt_total.num_packets_acked += stats->cnt_current.num_packets_acked;
+    stats->cnt_total.num_packets_rx += stats->cnt_current.num_packets_rx;
+    memset(&stats->cnt_current, 0, sizeof(stats->cnt_current));
+  }
+}
+/*---------------------------------------------------------------------------*/
+#endif /* LINK_STATS_PACKET_COUNTERS */
 /*---------------------------------------------------------------------------*/
 /* Periodic timer called at a period of FRESHNESS_HALF_LIFE */
 static void
@@ -231,6 +274,10 @@ periodic(void *ptr)
   for(stats = nbr_table_head(link_stats); stats != NULL; stats = nbr_table_next(link_stats, stats)) {
     stats->freshness >>= 1;
   }
+
+#if LINK_STATS_PACKET_COUNTERS
+  print_and_update_counters();
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /* Resets link-stats module */
