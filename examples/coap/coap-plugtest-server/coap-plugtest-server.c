@@ -71,11 +71,14 @@ extern coap_resource_t
   res_plugtest_link3,
   res_plugtest_path,
   res_plugtest_separate,
-  res_plugtest_large,
+  res_mirror;
+
+#if CONTIKI_TARGET_NATIVE
+extern  res_plugtest_large,
   res_plugtest_large_update,
   res_plugtest_large_create,
-  res_plugtest_obs,
-  res_mirror;
+  res_plugtest_obs; 
+#endif
 
 PROCESS(plugtest_server, "PlugtestServer");
 AUTOSTART_PROCESSES(&plugtest_server);
@@ -101,12 +104,13 @@ PROCESS_THREAD(plugtest_server, ev, data)
   coap_activate_resource(&res_plugtest_link3, "link3");
   coap_activate_resource(&res_plugtest_path, "path");
   coap_activate_resource(&res_plugtest_separate, "separate");
+  coap_activate_resource(&res_mirror, "mirror");
+#if CONTIKI_TARGET_NATIVE
   coap_activate_resource(&res_plugtest_large, "large");
   coap_activate_resource(&res_plugtest_large_update, "large-update");
   coap_activate_resource(&res_plugtest_large_create, "large-create");
   coap_activate_resource(&res_plugtest_obs, "obs");
-
-  coap_activate_resource(&res_mirror, "mirror");
+#endif
 
   /* Define application-specific events here. */
   while(1) {
