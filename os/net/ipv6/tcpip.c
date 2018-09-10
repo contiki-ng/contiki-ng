@@ -480,7 +480,7 @@ output_fallback(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-annotate_transmission(uip_ipaddr_t *nexthop)
+annotate_transmission(const uip_ipaddr_t *nexthop)
 {
 #if TCPIP_CONF_ANNOTATE_TRANSMISSIONS
   static uint8_t annotate_last;
@@ -495,10 +495,10 @@ annotate_transmission(uip_ipaddr_t *nexthop)
 #endif /* TCPIP_CONF_ANNOTATE_TRANSMISSIONS */
 }
 /*---------------------------------------------------------------------------*/
-static uip_ipaddr_t*
+static const uip_ipaddr_t*
 get_nexthop(uip_ipaddr_t *addr)
 {
-  uip_ipaddr_t *nexthop;
+  const uip_ipaddr_t *nexthop;
   uip_ds6_route_t *route;
 
   LOG_INFO("output: processing %u bytes packet from ", uip_len);
@@ -597,7 +597,7 @@ send_queued(uip_ds6_nbr_t *nbr)
 }
 /*---------------------------------------------------------------------------*/
 static int
-send_nd6_ns(uip_ipaddr_t *nexthop)
+send_nd6_ns(const uip_ipaddr_t *nexthop)
 {
   int err = 1;
 
@@ -638,7 +638,7 @@ tcpip_ipv6_output(void)
   uip_ipaddr_t ipaddr;
   uip_ds6_nbr_t *nbr = NULL;
   const uip_lladdr_t *linkaddr;
-  uip_ipaddr_t *nexthop;
+  const uip_ipaddr_t *nexthop;
 
   if(uip_len == 0) {
     return;
