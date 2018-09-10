@@ -39,6 +39,7 @@ libs/data-structures/zoul \
 libs/ipv6-uipbuf/zoul \
 nullnet/zoul \
 slip-radio/zoul \
+benchmarks/rpl-req-resp/zoul \
 dev/gpio-hal/zoul:BOARD=remote-reva \
 dev/gpio-hal/zoul:BOARD=remote-revb \
 dev/gpio-hal/zoul:BOARD=firefly-reva \
