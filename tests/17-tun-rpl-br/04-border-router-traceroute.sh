@@ -5,7 +5,7 @@ source ../utils.sh
 CONTIKI=$1
 
 # Simulation file
-BASENAME=04-border-router-traceroute
+BASENAME=$(basename $0 .sh)
 
 # Destination IPv6
 IPADDR=fd00::204:4:4:4

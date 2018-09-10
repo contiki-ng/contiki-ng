@@ -74,8 +74,8 @@ static lwm2m_status_t
 get_temp_value(const ipso_sensor_t *s, int32_t *value)
 {
 #ifdef IPSO_TEMPERATURE
-  if(IPSO_TEMPERATURE.read_value == NULL ||
-     IPSO_TEMPERATURE.read_value(value) != 0) {
+  if(IPSO_TEMPERATURE.read_value != NULL &&
+     IPSO_TEMPERATURE.read_value(value) == 0) {
     return LWM2M_STATUS_OK;
   }
 #endif /* IPSO_TEMPERATURE */
