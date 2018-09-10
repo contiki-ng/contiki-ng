@@ -120,6 +120,7 @@ PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
 /*---------------------------------------------------------------------------*/
 const char http_header_200[] = "HTTP/1.0 200 OK\r\nServer: Contiki/2.4 http://www.sics.se/contiki/\r\nConnection: close\r\n";
 const char http_header_404[] = "HTTP/1.0 404 Not found\r\nServer: Contiki/2.4 http://www.sics.se/contiki/\r\nConnection: close\r\n";
+const char http_notfound_html[] = "/notfound.html";
 static
 PT_THREAD(handle_output(struct httpd_state *s))
 {
@@ -128,7 +129,11 @@ PT_THREAD(handle_output(struct httpd_state *s))
   s->script = NULL;
   s->script = httpd_simple_get_script(&s->filename[1]);
   if(s->script == NULL) {
-    strncpy(s->filename, "/notfound.html", sizeof(s->filename));
+    /* Using a local variable in strncpy below avoids a gcc >= 8 stringop    */
+    /* truncation warning. See gcc.gnu.org/bugzilla/show_bug.cgi?id=87028    */
+    const char *notfound_html = http_notfound_html ;
+    strncpy(s->filename, notfound_html, sizeof(s->filename)-1);
+    s->filename[sizeof(s->filename)-1] = '\0';
     PT_WAIT_THREAD(&s->outputpt,
                    send_headers(s, http_header_404));
     PT_WAIT_THREAD(&s->outputpt,
@@ -170,7 +175,11 @@ PT_THREAD(handle_input(struct httpd_state *s))
   urlconv_tofilename(s->filename, s->inputbuf, sizeof(s->filename));
 #else /* URLCONV */
   if(s->inputbuf[1] == ISO_space) {
-    strncpy(s->filename, http_index_html, sizeof(s->filename));
+    /* Using a local variable in strncpy below avoids a gcc >= 8 stringop    */
+    /* truncation warning. See gcc.gnu.org/bugzilla/show_bug.cgi?id=87028    */
+    const char *index_html = http_index_html;
+    strncpy(s->filename, index_html, sizeof(s->filename)-1);
+    s->filename[sizeof(s->filename)-1] = '\0';
   } else {
     s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
     strncpy(s->filename, s->inputbuf, sizeof(s->filename));
