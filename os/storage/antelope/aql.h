@@ -188,10 +188,10 @@ typedef struct aql_adt aql_adt_t;
 
 #define AQL_SET_FLAG(adt, flag)	(((adt)->flags) |= (flag))
 #define AQL_GET_FLAGS(adt)		((adt)->flags)
-#define AQL_ADD_RELATION(adt, rel)					\
-  strcpy((adt)->relations[(adt)->relation_count++], (rel))
 #define AQL_RELATION_COUNT(adt)	((adt)->relation_count)
-#define AQL_ADD_ATTRIBUTE(adt, attr, dom, size)			\
+#define AQL_ADD_RELATION(adt, name) \
+    aql_add_relation(adt, name)
+#define AQL_ADD_ATTRIBUTE(adt, attr, dom, size)	\
     aql_add_attribute(adt, attr, dom, size, 0)
 #define AQL_ADD_PROCESSING_ATTRIBUTE(adt, attr)			\
     aql_add_attribute((adt), (attr), DOMAIN_UNSPECIFIED, 0, 1)
@@ -211,6 +211,7 @@ void lexer_rewind(lexer_t *);
 
 void aql_clear(aql_adt_t *adt);
 aql_status_t aql_parse(aql_adt_t *adt, char *query_string);
+db_result_t aql_add_relation(aql_adt_t *adt, const char *name);
 db_result_t aql_add_attribute(aql_adt_t *adt, char *name,
                                domain_t domain, unsigned element_size,
                                int processed_only);

@@ -36,10 +36,12 @@
 #include "net/routing/rpl-classic/rpl-private.h"
 #include "net/ipv6/uip-ds6-route.h"
 
+#include "sys/log.h"
+
 #include <string.h>
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -47,7 +49,6 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 {
   static uip_ipaddr_t root_ipaddr;
   int i;
-  uint8_t state;
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
@@ -64,13 +65,17 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 
   uip_ds6_addr_add(&root_ipaddr, 0, ADDR_AUTOCONF);
 
-  printf("IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      printf("\n");
+  if(LOG_DBG_ENABLED) {
+    uint8_t state;
+
+    LOG_DBG("IPv6 addresses: ");
+    for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+      state = uip_ds6_if.addr_list[i].state;
+      if(uip_ds6_if.addr_list[i].isused &&
+         (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+        LOG_DBG_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+        LOG_DBG_("\n");
+      }
     }
   }
 }
@@ -126,14 +131,14 @@ rpl_dag_root_start(void)
 
       uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
       rpl_set_prefix(dag, &prefix, 64);
-      PRINTF("rpl_dag_root_set_prefix_dag: created a new RPL dag\n");
+      LOG_INFO("root_set_prefix: created a new RPL dag\n");
       return 0;
     } else {
-      PRINTF("rpl_dag_root_set_prefix_dag: failed to create a new RPL DAG\n");
+      LOG_ERR("root_set_prefix: failed to create a new RPL DAG\n");
       return -1;
     }
   } else {
-    PRINTF("rpl_dag_root_set_prefix_dag: failed to create a new RPL DAG, no preferred IP address found\n");
+    LOG_ERR("root_set_prefix_dag: failed to create a new RPL DAG, no preferred IP address found\n");
     return -2;
   }
 }

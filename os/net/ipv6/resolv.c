@@ -1017,7 +1017,8 @@ newdata(void)
 
     namemapptr->state = STATE_DONE;
 #if RESOLV_SUPPORTS_RECORD_EXPIRATION
-    namemapptr->expiration = ans->ttl[1] + (ans->ttl[0] << 8);
+    namemapptr->expiration = (uint32_t) uip_ntohs(ans->ttl[0]) << 16 |
+        (uint32_t) uip_ntohs(ans->ttl[1]);
     namemapptr->expiration += clock_seconds();
 #endif /* RESOLV_SUPPORTS_RECORD_EXPIRATION */
 

@@ -269,8 +269,10 @@ PARSER(operand)
   NEXT;
   switch(TOKEN) {
   case IDENTIFIER:
-    lvm_register_variable(VALUE, LVM_LONG);
-    lvm_set_variable(&p, VALUE);
+    if(LVM_ERROR(lvm_register_variable(VALUE, LVM_LONG)) ||
+       LVM_ERROR(lvm_set_variable(&p, VALUE))) {
+      RETURN(SYNTAX_ERROR);
+    }
     AQL_ADD_PROCESSING_ATTRIBUTE(adt, VALUE);
     break;
   case STRING_VALUE:
@@ -278,7 +280,9 @@ PARSER(operand)
   case FLOAT_VALUE:
     break;
   case INTEGER_VALUE:
-    lvm_set_long(&p, *(long *)lexer->value);
+    if(LVM_ERROR(lvm_set_long(&p, *(long *)lexer->value))) {
+      RETURN(SYNTAX_ERROR);
+    }
     break;
   default:
     RETURN(SYNTAX_ERROR);
@@ -340,7 +344,9 @@ PARSER(expr)
     default:
       RETURN(SYNTAX_ERROR);
     }
-    lvm_set_op(&p, op);
+    if(LVM_ERROR(lvm_set_op(&p, op))) {
+      RETURN(SYNTAX_ERROR);
+    }
     lvm_set_end(&p, saved_end);
   }
 
@@ -389,7 +395,9 @@ PARSER(comparison)
     RETURN(SYNTAX_ERROR);
   }
 
-  lvm_set_relation(&p, rel);
+  if(LVM_ERROR(lvm_set_relation(&p, rel))) {
+    RETURN(SYNTAX_ERROR);
+  }
   lvm_set_end(&p, saved_end);
 
   if(!PARSE(expr)) {
@@ -422,7 +430,9 @@ PARSER(where)
     connective = TOKEN == AND ? LVM_AND : LVM_OR;
 
     saved_end = lvm_shift_for_operator(&p, saved_end);
-    lvm_set_relation(&p, connective);
+    if(LVM_ERROR(lvm_set_relation(&p, connective))) {
+      RETURN(SYNTAX_ERROR);
+    }
     lvm_set_end(&p, saved_end);
   
     NEXT;

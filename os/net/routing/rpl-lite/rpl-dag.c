@@ -62,6 +62,12 @@ static int init_dag_from_dio(rpl_dio_t *dio);
 rpl_instance_t curr_instance;
 
 /*---------------------------------------------------------------------------*/
+
+#ifdef RPL_VALIDATE_DIO_FUNC
+int RPL_VALIDATE_DIO_FUNC(rpl_dio_t *dio);
+#endif /* RPL_PROBING_SELECT_FUNC */
+
+/*---------------------------------------------------------------------------*/
 const char *
 rpl_dag_state_to_str(enum rpl_dag_state state)
 {
@@ -542,6 +548,13 @@ init_dag_from_dio(rpl_dio_t *dio)
 static int
 process_dio_init_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
+#ifdef RPL_VALIDATE_DIO_FUNC
+  if(!RPL_VALIDATE_DIO_FUNC(dio)) {
+    LOG_WARN("DIO validation failed\n");
+    return 0;
+  }
+#endif
+
   /* Check MOP */
   if(dio->mop != RPL_MOP_NO_DOWNWARD_ROUTES && dio->mop != RPL_MOP_NON_STORING) {
     LOG_WARN("ignoring DIO with an unsupported MOP: %d\n", dio->mop);

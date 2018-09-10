@@ -9,10 +9,13 @@ SIZE     = arm-none-eabi-size
 SREC_CAT = srec_cat
 
 CFLAGS += -mthumb -mabi=aapcs -mlittle-endian
-CFLAGS += -Werror -Wall
+CFLAGS += -Wall
 CFLAGS += -std=c99
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fshort-enums -fomit-frame-pointer -fno-builtin
+ifeq ($(WERROR),1)
+  CFLAGS += -Werror
+endif
 
 LDFLAGS += -mthumb -mlittle-endian
 
