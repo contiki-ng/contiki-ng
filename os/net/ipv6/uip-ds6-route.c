@@ -134,7 +134,7 @@ assert_nbr_routes_list_sane(void)
 #if UIP_DS6_NOTIFICATIONS
 static void
 call_route_callback(int event, const uip_ipaddr_t *route,
-		    const uip_ipaddr_t *nexthop)
+                    const uip_ipaddr_t *nexthop)
 {
   int num;
   struct uip_ds6_notification *n;
@@ -322,7 +322,7 @@ uip_ds6_route_lookup(const uip_ipaddr_t *addr)
 /*---------------------------------------------------------------------------*/
 uip_ds6_route_t *
 uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
-		  const uip_ipaddr_t *nexthop)
+                  const uip_ipaddr_t *nexthop)
 {
 #if (UIP_MAX_ROUTES != 0)
   uip_ds6_route_t *r;
