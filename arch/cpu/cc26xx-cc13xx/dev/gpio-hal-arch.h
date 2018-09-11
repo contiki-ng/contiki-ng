@@ -81,7 +81,7 @@ interrupt_enable(gpio_hal_pin_t pin)
 #ifndef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
   ti_lib_rom_ioc_int_enable(pin);
 #else
-  ti_lib_ioc_int_enable(pin)
+  ti_lib_ioc_int_enable(pin);
 #endif
 }
 /*---------------------------------------------------------------------------*/
