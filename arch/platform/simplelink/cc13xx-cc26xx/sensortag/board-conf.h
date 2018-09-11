@@ -55,11 +55,24 @@
 #include "leds-arch.h"
 /*---------------------------------------------------------------------------*/
 /**
+ * \name LED configurations for the dev/leds.h API. The actual LED
+ *       configuration of available LEDs are done in leds-arch.h.
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define PLATFORM_HAS_LEDS           1
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name Button configurations for the dev/button-hal.h API.
  *
  * Those values are not meant to be modified by the user
  * @{
  */
+#define PLATFORM_HAS_BUTTON           1
+#define PLATFORM_SUPPORTS_BUTTON_HAL  1
+
 #define BUTTON_HAL_ID_KEY_LEFT      0
 #define BUTTON_HAL_ID_KEY_RIGHT     1
 #define BUTTON_HAL_ID_REED_RELAY    2

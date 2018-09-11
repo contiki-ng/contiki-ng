@@ -48,6 +48,8 @@
  * Those values are not meant to be modified by the user
  * @{
  */
+#define PLATFORM_HAS_LEDS           1
+
 #define LEDS_CONF_COUNT             4
 
 #define LEDS_CONF_RED               0
@@ -64,6 +66,9 @@
  * Those values are not meant to be modified by the user
  * @{
  */
+#define PLATFORM_HAS_BUTTON           1
+#define PLATFORM_SUPPORTS_BUTTON_HAL  1
+
 #define BUTTON_HAL_ID_KEY_LEFT      0
 #define BUTTON_HAL_ID_KEY_RIGHT     1
 #define BUTTON_HAL_ID_KEY_UP        2
