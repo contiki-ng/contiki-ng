@@ -24,7 +24,7 @@ verify_family = $(shell [ -d $(CONTIKI)/arch/platform/simplelink/$(1)/$(BOARD) ]
 # Test each supported SimpleLink family and see if it contains the specified Board.
 # Throw an error if it isn't found.
 FAMILY := $(foreach FAMILY, $(SIMPLELINK_FAMILIES), $(call verify_family,$(FAMILY)))
-ifeq ($(FAMILY),)
+ifeq ($(strip $(FAMILY)),)
  $(error Board '$(BOARD)' does not corresponding to any SimpleLink family. Make sure your BOARD variable is correct.)
 endif
 # If multiple families are found, only the first one is chosen. If this ever

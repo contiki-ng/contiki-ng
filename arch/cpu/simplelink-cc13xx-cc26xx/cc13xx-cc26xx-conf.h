@@ -91,7 +91,7 @@
  */
 
 /*
- * Set the inactivity timeout peroid for the RF driver. This determines how
+ * Set the inactivity timeout period for the RF driver. This determines how
  * long the RF driver will wait when inactive until turning off the RF Core.
  * Specified in microseconds.
  */
