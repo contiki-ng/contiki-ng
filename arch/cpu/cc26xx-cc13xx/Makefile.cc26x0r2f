@@ -1,0 +1,3 @@
+TI_XXWARE_PATH = lib/cc2640r2-sdk
+
+include $(CONTIKI_CPU)/Makefile.cc26xx-cc13xx

@@ -200,8 +200,14 @@
 #define ti_lib_chipinfo_get_device_id_hw_rev_code(...) ChipInfo_GetDeviceIdHwRevCode(__VA_ARGS__)
 #define ti_lib_chipinfo_get_chip_type(...)             ChipInfo_GetChipType(__VA_ARGS__)
 #define ti_lib_chipinfo_get_chip_family(...)           ChipInfo_GetChipFamily(__VA_ARGS__)
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated	
+#define ti_lib_chipinfo_chip_family_is_cc26xx(...)     ChipInfo_ChipFamilyIs_CC26x0(__VA_ARGS__)
+#define ti_lib_chipinfo_chip_family_is_cc13xx(...)     ChipInfo_ChipFamilyIs_CC13x0(__VA_ARGS__)
+#define ti_lib_chipinfo_chip_family_is_cc26x0r2(...)     ChipInfo_ChipFamilyIs_CC26x0R2(__VA_ARGS__)
+#else
 #define ti_lib_chipinfo_chip_family_is_cc26xx(...)     ChipInfo_ChipFamilyIsCC26xx(__VA_ARGS__)
 #define ti_lib_chipinfo_chip_family_is_cc13xx(...)     ChipInfo_ChipFamilyIsCC13xx(__VA_ARGS__)
+#endif
 #define ti_lib_chipinfo_get_hw_revision(...)           ChipInfo_GetHwRevision(__VA_ARGS__)
 #define ti_lib_chipinfo_hw_revision_is_1_0(...)        ChipInfo_HwRevisionIs_1_0(__VA_ARGS__)
 #define ti_lib_chipinfo_hw_revision_is_gteq_2_0(...)   ChipInfo_HwRevisionIs_GTEQ_2_0(__VA_ARGS__)
@@ -388,8 +394,10 @@
 #define ti_lib_pwr_ctrl_source_get(...)         PowerCtrlSourceGet(__VA_ARGS__)
 #define ti_lib_pwr_ctrl_reset_source_get(...)   PowerCtrlResetSourceGet(__VA_ARGS__)
 #define ti_lib_pwr_ctrl_reset_source_clear(...) PowerCtrlResetSourceClear(__VA_ARGS__)
+#if !defined(ThisLibraryIsFor_CC26x0R2_HaltIfViolated)
 #define ti_lib_pwr_ctrl_io_freeze_enable(...)   PowerCtrlIOFreezeEnable(__VA_ARGS__)
 #define ti_lib_pwr_ctrl_io_freeze_disable(...)  PowerCtrlIOFreezeDisable(__VA_ARGS__)
+#endif
 /*---------------------------------------------------------------------------*/
 /* rfc.h */
 #include "driverlib/rfc.h"
