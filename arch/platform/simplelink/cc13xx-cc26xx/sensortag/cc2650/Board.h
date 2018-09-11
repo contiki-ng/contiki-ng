@@ -97,6 +97,8 @@ extern "C" {
 
 #define Board_PIN_BUTTON0       CC2650STK_KEY_LEFT
 #define Board_PIN_BUTTON1       CC2650STK_KEY_RIGHT
+#define Board_PIN_BTN1          CC2650STK_KEY_LEFT
+#define Board_PIN_BTN2          CC2650STK_KEY_RIGHT
 #define Board_PIN_LED0          CC2650STK_PIN_LED0
 #define Board_PIN_LED1          CC2650STK_PIN_LED1
 #define Board_PIN_LED2          CC2650STK_PIN_LED1
