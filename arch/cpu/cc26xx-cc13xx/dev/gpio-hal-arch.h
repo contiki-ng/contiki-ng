@@ -54,12 +54,13 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 #define gpio_hal_arch_interrupt_enable(p)  interrupt_enable(p)
-#define gpio_hal_arch_interrupt_disable(p) ti_lib_rom_ioc_int_disable(p)
 
 #ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+#define gpio_hal_arch_interrupt_disable(p) ti_lib_ioc_int_disable(p)
 #define gpio_hal_arch_pin_set_input(p)     ti_lib_ioc_pin_type_gpio_input(p)
 #define gpio_hal_arch_pin_set_output(p)    ti_lib_ioc_pin_type_gpio_output(p)
 #else
+#define gpio_hal_arch_interrupt_disable(p) ti_lib_rom_ioc_int_disable(p)
 #define gpio_hal_arch_pin_set_input(p)     ti_lib_rom_ioc_pin_type_gpio_input(p)
 #define gpio_hal_arch_pin_set_output(p)    ti_lib_rom_ioc_pin_type_gpio_output(p)
 #endif
@@ -79,6 +80,8 @@ interrupt_enable(gpio_hal_pin_t pin)
   ti_lib_gpio_clear_event_dio(pin);
 #ifndef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
   ti_lib_rom_ioc_int_enable(pin);
+#else
+  ti_lib_ioc_int_enable(pin)
 #endif
 }
 /*---------------------------------------------------------------------------*/
