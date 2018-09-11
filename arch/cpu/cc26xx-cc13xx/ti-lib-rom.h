@@ -91,25 +91,25 @@
 /* IOC API */
 #define ti_lib_rom_ioc_port_configure_set             ROM_IOCPortConfigureSet
 #if !defined(ThisLibraryIsFor_CC26x0R2_HaltIfViolated)
-	#define ti_lib_rom_ioc_port_configure_get             ROM_IOCPortConfigureGet
-	#define ti_lib_rom_ioc_io_shutdown_set                ROM_IOCIOShutdownSet
-	#define ti_lib_rom_ioc_io_mode_set                    ROM_IOCIOModeSet
-	#define ti_lib_rom_ioc_io_int_set                     ROM_IOCIOIntSet
-	#define ti_lib_rom_ioc_io_port_pull_set               ROM_IOCIOPortPullSet
-	#define ti_lib_rom_ioc_io_hyst_set                    ROM_IOCIOHystSet
-	#define ti_lib_rom_ioc_io_input_set                   ROM_IOCIOInputSet
-	#define ti_lib_rom_ioc_io_slew_ctrl_set               ROM_IOCIOSlewCtrlSet
-	#define ti_lib_rom_ioc_io_drv_strength_set            ROM_IOCIODrvStrengthSet
-	#define ti_lib_rom_ioc_io_port_id_set                 ROM_IOCIOPortIdSet
-	#define ti_lib_rom_ioc_int_enable                     ROM_IOCIntEnable
-	#define ti_lib_rom_ioc_int_disable                    ROM_IOCIntDisable
-	#define ti_lib_rom_ioc_pin_type_gpio_input            ROM_IOCPinTypeGpioInput
-	#define ti_lib_rom_ioc_pin_type_gpio_output           ROM_IOCPinTypeGpioOutput
-	#define ti_lib_rom_ioc_pin_type_uart                  ROM_IOCPinTypeUart
-	#define ti_lib_rom_ioc_pin_type_ssi_master            ROM_IOCPinTypeSsiMaster
-	#define ti_lib_rom_ioc_pin_type_ssi_slave             ROM_IOCPinTypeSsiSlave
-	#define ti_lib_rom_ioc_pin_type_i2c                   ROM_IOCPinTypeI2c
-	#define ti_lib_rom_ioc_pin_type_aux                   ROM_IOCPinTypeAux
+#define ti_lib_rom_ioc_port_configure_get             ROM_IOCPortConfigureGet
+#define ti_lib_rom_ioc_io_shutdown_set                ROM_IOCIOShutdownSet
+#define ti_lib_rom_ioc_io_mode_set                    ROM_IOCIOModeSet
+#define ti_lib_rom_ioc_io_int_set                     ROM_IOCIOIntSet
+#define ti_lib_rom_ioc_io_port_pull_set               ROM_IOCIOPortPullSet
+#define ti_lib_rom_ioc_io_hyst_set                    ROM_IOCIOHystSet
+#define ti_lib_rom_ioc_io_input_set                   ROM_IOCIOInputSet
+#define ti_lib_rom_ioc_io_slew_ctrl_set               ROM_IOCIOSlewCtrlSet
+#define ti_lib_rom_ioc_io_drv_strength_set            ROM_IOCIODrvStrengthSet
+#define ti_lib_rom_ioc_io_port_id_set                 ROM_IOCIOPortIdSet
+#define ti_lib_rom_ioc_int_enable                     ROM_IOCIntEnable
+#define ti_lib_rom_ioc_int_disable                    ROM_IOCIntDisable
+#define ti_lib_rom_ioc_pin_type_gpio_input            ROM_IOCPinTypeGpioInput
+#define ti_lib_rom_ioc_pin_type_gpio_output           ROM_IOCPinTypeGpioOutput
+#define ti_lib_rom_ioc_pin_type_uart                  ROM_IOCPinTypeUart
+#define ti_lib_rom_ioc_pin_type_ssi_master            ROM_IOCPinTypeSsiMaster
+#define ti_lib_rom_ioc_pin_type_ssi_slave             ROM_IOCPinTypeSsiSlave
+#define ti_lib_rom_ioc_pin_type_i2c                   ROM_IOCPinTypeI2c
+#define ti_lib_rom_ioc_pin_type_aux                   ROM_IOCPinTypeAux
 #endif
 
 /* PRCM API */

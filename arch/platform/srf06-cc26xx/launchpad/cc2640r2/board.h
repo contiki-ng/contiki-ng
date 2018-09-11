@@ -31,9 +31,9 @@
 /** \addtogroup launchpad-peripherals
  * @{
  *
- * \defgroup launchpad-cc26xx-specific CC2650 LaunchPad Peripherals
+ * \defgroup launchpad-cc2640r2-specific CC2640R2 LaunchPad Peripherals
  *
- * Defines related to the CC2650 LaunchPad
+ * Defines related to the CC2640R2 LaunchPad
  *
  * This file provides connectivity information on LEDs, Buttons, UART and
  * other peripherals
@@ -43,7 +43,7 @@
  *
  * \file
  * Header file with definitions related to the I/O connections on the TI
- * CC2650 LaunchPad
+ * CC2640R2 LaunchPad
  *
  * \note   Do not include this file directly. It gets included by contiki-conf
  *         after all relevant directives have been set.

@@ -200,7 +200,7 @@
 #define ti_lib_chipinfo_get_device_id_hw_rev_code(...) ChipInfo_GetDeviceIdHwRevCode(__VA_ARGS__)
 #define ti_lib_chipinfo_get_chip_type(...)             ChipInfo_GetChipType(__VA_ARGS__)
 #define ti_lib_chipinfo_get_chip_family(...)           ChipInfo_GetChipFamily(__VA_ARGS__)
-#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated	
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
 #define ti_lib_chipinfo_chip_family_is_cc26xx(...)     ChipInfo_ChipFamilyIs_CC26x0(__VA_ARGS__)
 #define ti_lib_chipinfo_chip_family_is_cc13xx(...)     ChipInfo_ChipFamilyIs_CC13x0(__VA_ARGS__)
 #define ti_lib_chipinfo_chip_family_is_cc26x0r2(...)     ChipInfo_ChipFamilyIs_CC26x0R2(__VA_ARGS__)
