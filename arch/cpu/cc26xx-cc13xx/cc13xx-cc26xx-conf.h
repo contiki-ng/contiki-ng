@@ -71,7 +71,9 @@
 #endif /* CPU_FAMILY_CC13XX */
 
 #if CC13XX_CONF_PROP_MODE
+#ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO        prop_mode_driver
+#endif /* NETSTACK_CONF_RADIO */
 
 /* Channels count from 0 upwards in IEEE 802.15.4g */
 #ifndef IEEE802154_CONF_DEFAULT_CHANNEL

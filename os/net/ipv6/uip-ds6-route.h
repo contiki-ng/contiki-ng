@@ -89,8 +89,8 @@ void uip_ds6_route_init(void);
 #define UIP_DS6_NOTIFICATION_ROUTE_RM  3
 
 typedef void (* uip_ds6_notification_callback)(int event,
-					       uip_ipaddr_t *route,
-					       uip_ipaddr_t *nexthop,
+					       const uip_ipaddr_t *route,
+					       const uip_ipaddr_t *nexthop,
 					       int num_routes);
 struct uip_ds6_notification {
   struct uip_ds6_notification *next;
@@ -201,11 +201,11 @@ typedef struct uip_ds6_defrt {
 /** \name Default router list basic routines */
 /** @{ */
 uip_ds6_defrt_t *uip_ds6_defrt_head(void);
-uip_ds6_defrt_t *uip_ds6_defrt_add(uip_ipaddr_t *ipaddr,
+uip_ds6_defrt_t *uip_ds6_defrt_add(const uip_ipaddr_t *ipaddr,
                                    unsigned long interval);
 void uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt);
-uip_ds6_defrt_t *uip_ds6_defrt_lookup(uip_ipaddr_t *ipaddr);
-uip_ipaddr_t *uip_ds6_defrt_choose(void);
+uip_ds6_defrt_t *uip_ds6_defrt_lookup(const uip_ipaddr_t *ipaddr);
+const uip_ipaddr_t *uip_ds6_defrt_choose(void);
 
 void uip_ds6_defrt_periodic(void);
 /** @} */
@@ -213,13 +213,13 @@ void uip_ds6_defrt_periodic(void);
 
 /** \name Routing Table basic routines */
 /** @{ */
-uip_ds6_route_t *uip_ds6_route_lookup(uip_ipaddr_t *destipaddr);
-uip_ds6_route_t *uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
-                                   uip_ipaddr_t *next_hop);
+uip_ds6_route_t *uip_ds6_route_lookup(const uip_ipaddr_t *destipaddr);
+uip_ds6_route_t *uip_ds6_route_add(const uip_ipaddr_t *ipaddr, uint8_t length,
+                                   const uip_ipaddr_t *next_hop);
 void uip_ds6_route_rm(uip_ds6_route_t *route);
-void uip_ds6_route_rm_by_nexthop(uip_ipaddr_t *nexthop);
+void uip_ds6_route_rm_by_nexthop(const uip_ipaddr_t *nexthop);
 
-uip_ipaddr_t *uip_ds6_route_nexthop(uip_ds6_route_t *);
+const uip_ipaddr_t *uip_ds6_route_nexthop(uip_ds6_route_t *);
 int uip_ds6_route_num_routes(void);
 uip_ds6_route_t *uip_ds6_route_head(void);
 uip_ds6_route_t *uip_ds6_route_next(uip_ds6_route_t *);
