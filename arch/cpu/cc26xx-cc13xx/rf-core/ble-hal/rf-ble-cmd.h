@@ -112,7 +112,7 @@ void rf_ble_cmd_create_adv_params(uint8_t *param, dataQueue_t *rx_queue,
  *      BLE initiation event when sent to the radio core
  * \param cmd     A pointer to command that is created
  * \param channel The BLE data channel used for the connection event
- * \param param   A pointer to the radio command parameters
+ * \param params   A pointer to the radio command parameters
  * \param output  A pointer to the radio command output
  * \param start_time
  *          The time in rf_core_ticks when the connection event will start
@@ -193,7 +193,7 @@ void rf_ble_cmd_create_slave_params(uint8_t *param, dataQueue_t *rx_queue,
  *      BLE connection event when sent to the radio core
  * \param cmd     A pointer to command that is created
  * \param channel The BLE data channel used for the connection event
- * \param param   A pointer to the radio command parameters
+ * \param params   A pointer to the radio command parameters
  * \param output  A pointer to the radio command output
  * \param start_time
  *          The time in rf_core_ticks when the connection event will start
@@ -205,7 +205,7 @@ void rf_ble_cmd_create_master_cmd(uint8_t *cmd, uint8_t channel, uint8_t *params
 /**
  * \brief Creates BLE radio command parameters that are used to set up
  *      BLE connection event on the radio core
- * \param param      A pointer to parameter structure that is created
+ * \param params      A pointer to parameter structure that is created
  * \param rx_queue  A pointer to the RX queue that is used
  * \param tx_queue  A pointer to the TX queue that is used
  * \param access_address
