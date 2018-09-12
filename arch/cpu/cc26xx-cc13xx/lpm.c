@@ -162,8 +162,10 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
   ti_lib_aon_wuc_mcu_power_off_config(MCU_VIRT_PWOFF_DISABLE);
 
   /* Latch the IOs in the padring and enable I/O pad sleep mode */
+#if !defined(ThisLibraryIsFor_CC26x0R2_HaltIfViolated)
   ti_lib_pwr_ctrl_io_freeze_enable();
 
+#endif
   /* Turn off VIMS cache, CRAM and TRAM - possibly not required */
   ti_lib_prcm_cache_retention_disable();
   ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_OFF);
@@ -191,7 +193,12 @@ wake_up(void)
   ti_lib_sys_ctrl_aon_sync();
 
   /* Adjust recharge settings */
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+  // May need to change to XOSC_IN_LOW_POWER_MODE
+  ti_lib_sys_ctrl_adjust_recharge_after_power_down(XOSC_IN_HIGH_POWER_MODE);
+#else
   ti_lib_sys_ctrl_adjust_recharge_after_power_down();
+#endif
 
   /*
    * Release the request to the uLDO
