@@ -75,6 +75,7 @@ void
 gpio_hal_init()
 {
   list_init(handlers);
+  gpio_hal_arch_init();
 }
 /*---------------------------------------------------------------------------*/
 #if GPIO_HAL_ARCH_SW_TOGGLE

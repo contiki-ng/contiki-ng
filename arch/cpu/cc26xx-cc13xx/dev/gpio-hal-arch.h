@@ -53,6 +53,8 @@
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
+#define gpio_hal_arch_init()               do { /* Do nothing */ } while(0)
+
 #define gpio_hal_arch_interrupt_enable(p)  interrupt_enable(p)
 
 #ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
