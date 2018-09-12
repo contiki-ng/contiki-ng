@@ -1,0 +1,50 @@
+################################################################################
+### SimpleLink MCU platform makefile
+
+################################################################################
+### Sanity check of expected symbols
+
+ifndef CONTIKI
+ $(error 'CONTIKI' not defined! You must specify where CONTIKI resides!)
+endif
+
+ifndef BOARD
+ $(error 'BOARD' not defined! You must specify which board you are using!)
+endif
+
+################################################################################
+### Resolve the SimpleLink Family
+
+SIMPLELINK_FAMILIES := cc13xx-cc26xx
+
+# Given a SimpleLink family as argument, check if it has the Board file.
+# If so, return itself; else, return empty string.
+verify_family = $(shell [ -d $(CONTIKI)/arch/platform/simplelink/$(1)/$(BOARD) ] && echo $(1))
+
+# Test each supported SimpleLink family and see if it contains the specified Board.
+# Throw an error if it isn't found.
+FAMILY := $(foreach FAMILY, $(SIMPLELINK_FAMILIES), $(call verify_family,$(FAMILY)))
+ifeq ($(strip $(FAMILY)),)
+ $(error Board '$(BOARD)' does not corresponding to any SimpleLink family. Make sure your BOARD variable is correct.)
+endif
+# If multiple families are found, only the first one is chosen. If this ever
+# happens something is not correct.
+ifneq ($(words $(FAMILY)),1)
+ FAMILY := $(firstword $(FAMILY))
+ $(warning Multiple SimpleLink families found to support '$(BOARD)'. Resolve to '$(FAMILY)'.)
+endif
+
+# Remove any excess whitespace.
+FAMILY := $(strip $(FAMILY))
+
+FAMILY_PATH := $(realpath $(CONTIKI)/arch/platform/simplelink/$(FAMILY))
+CLEAN += *.simplelink
+
+# Include the Simplelink Family specific Makefile
+include $(FAMILY_PATH)/Makefile.$(FAMILY)
+
+################################################################################
+### SimpleLink targets
+
+simplelink_families:
+	@echo "$(SIMPLELINK_FAMILIES) (current: $(FAMILY))"

@@ -193,8 +193,12 @@ wake_up(void)
   ti_lib_sys_ctrl_aon_sync();
 
   /* Adjust recharge settings */
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
   // May need to change to XOSC_IN_LOW_POWER_MODE
   ti_lib_sys_ctrl_adjust_recharge_after_power_down(XOSC_IN_HIGH_POWER_MODE);
+#else
+  ti_lib_sys_ctrl_adjust_recharge_after_power_down();
+#endif
 
   /*
    * Release the request to the uLDO

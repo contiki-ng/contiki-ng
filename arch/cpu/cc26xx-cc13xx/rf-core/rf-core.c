@@ -399,9 +399,11 @@ rf_core_set_modesel()
   } else if(chip_type == CHIP_TYPE_CC1350) {
     HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE5;
     rv = RF_CORE_CMD_OK;
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
   } else if (chip_type == CHIP_TYPE_CC2640R2) {
-	  HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE1;
-	  rv = RF_CORE_CMD_OK;
+    HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE1;
+    rv = RF_CORE_CMD_OK;
+#endif
   }
 
   return rv;

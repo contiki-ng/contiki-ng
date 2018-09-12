@@ -99,9 +99,9 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
 
   cfg = 0;
 #ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
-    config = ti_lib_ioc_port_configure_get(pin);
+  config = ti_lib_ioc_port_configure_get(pin);
 #else
-    config = ti_lib_rom_ioc_port_configure_get(pin);
+  config = ti_lib_rom_ioc_port_configure_get(pin);
 #endif
 
   /* Pull */

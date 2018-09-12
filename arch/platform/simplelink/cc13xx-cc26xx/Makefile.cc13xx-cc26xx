@@ -1,0 +1,62 @@
+################################################################################
+### SimpleLink MCU platform makefile
+
+################################################################################
+# Board and BSP selection
+BOARD_PLATFORMS = launchpad sensortag srf06
+
+# All supported boards for this SimpleLink family
+BOARDS = $(foreach BOARD, $(BOARD_PLATFORMS), \
+  $(shell cd $(FAMILY_PATH); find $(BOARD)/* -type d -print))
+
+################################################################################
+# Directory and source configurations
+
+# Include the board-specific Makefile
+BOARD_PATH := $(FAMILY_PATH)/$(BOARD)
+include $(BOARD_PATH)/Makefile.$(notdir $(BOARD))
+
+DEVICE_FAMILY_LC := $(shell echo "$(DEVICE_FAMILY)" | tr A-Z a-z)
+
+# Add to the source dirs
+TARGET_FAMILY_DIRS += common
+TARGET_FAMILY_DIRS += $(BOARD)
+
+CONTIKI_TARGET_DIRS += $(FAMILY)
+CONTIKI_TARGET_DIRS += $(addprefix $(FAMILY)/, $(TARGET_FAMILY_DIRS))
+
+BOARD_DEFINES += DeviceFamily_$(DEVICE_FAMILY)
+BOARD_DEFINES += DEVICE_LINE_$(DEVICE_LINE)
+BOARD_DEFINES += DEVICE_$(DEVICE)
+BOARD_DEFINES += $(BOARD_TYPE)
+BOARD_DEFINES += SUPPORTS_PROP_MODE=$(SUPPORTS_PROP_MODE)
+BOARD_DEFINES += SUPPORTS_IEEE_MODE=$(SUPPORTS_IEEE_MODE)
+BOARD_DEFINES += SUPPORTS_BLE_BEACON=$(SUPPORTS_BLE_BEACON)
+BOARD_DEFINES += SUPPORTS_HIGH_PA=$(SUPPORTS_HIGH_PA)
+
+# If the user-specified a Node ID, pass a define
+ifdef NODEID
+  BOARD_DEFINES += IEEE_ADDR_NODE_ID=$(NODEID)
+endif
+
+CFLAGS += $(addprefix -D, $(BOARD_DEFINES))
+
+CONTIKI_TARGET_SOURCEFILES += platform.c
+CONTIKI_TARGET_SOURCEFILES += batmon-sensor.c
+CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+# Pull in the correct CPU makefile
+CPU_FAMILY = cc13xx-cc26xx
+
+# Define the CPU directory and pull in the correct CPU Makefile
+CONTIKI_CPU := $(realpath $(CONTIKI)/arch/cpu/simplelink-$(CPU_FAMILY))
+include $(CONTIKI_CPU)/Makefile.$(CPU_FAMILY)
+
+MODULES += os/net os/net/mac os/net/mac/framer
+
+################################################################################
+# Display all supported Boards for the given SimpleLink Family
+simplelink_boards:
+	@echo "$(BOARDS) (current: $(BOARD))"

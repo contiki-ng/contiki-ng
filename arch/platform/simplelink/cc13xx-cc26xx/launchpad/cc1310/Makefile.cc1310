@@ -1,0 +1,21 @@
+################################################################################
+# SimpleLink Device makefile
+
+SUBFAMILY     = cc13x0-cc26x0
+DEVICE_FAMILY = CC13X0
+DEVICE_LINE   = CC13XX
+DEVICE        = CC1310
+
+BOARD_SOURCEFILES += CC1310_LAUNCHXL.c CC1310_LAUNCHXL_fxns.c
+
+SUPPORTS_PROP_MODE  = 1
+SUPPORTS_IEEE_MODE  = 0
+SUPPORTS_BLE_BEACON = 0
+
+SUPPORTS_HIGH_PA = 0
+
+### Signal that we can be programmed with cc2538-bsl
+BOARD_SUPPORTS_BSL = 1
+
+# Include the common board makefile
+include $(FAMILY_PATH)/launchpad/Makefile.launchpad
