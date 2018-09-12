@@ -51,7 +51,7 @@
  */
 #include <ti/devices/DeviceFamily.h>
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
-#include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintextCC26xx.c>
+#include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintextCC26XX.c>
 #endif
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
