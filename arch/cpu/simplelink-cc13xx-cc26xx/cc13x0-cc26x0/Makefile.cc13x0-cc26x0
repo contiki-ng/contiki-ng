@@ -1,0 +1,11 @@
+################################################################################
+### CC13x0/CC26x0 CPU makefile
+
+# Simplelink SDK pre-compiled libraries
+TARGET_LIBFILES += $(SDK_NORTOS)/lib/nortos_$(SDK_LIB_NAME).am3g
+TARGET_LIBFILES += $(SDK_DRIVERS)/rf/lib/rf_multiMode_$(SDK_LIB_NAME).am3g
+TARGET_LIBFILES += $(SDK_DRIVERS)/lib/drivers_$(SDK_LIB_NAME).am3g
+TARGET_LIBFILES += $(SDK_DEVICES)/driverlib/bin/gcc/driverlib.lib
+
+# CC13x0/CC26x0 is a Cortex-M3 architecture
+include $(CONTIKI)/arch/cpu/arm/cortex-m/cm3/Makefile.cm3

@@ -33,6 +33,7 @@ COOJA.testlog
 *.native
 *.nrf52dk
 *.openmote-cc2538
+*.simplelink
 *.sky
 *.firmware
 *.srf06-cc26xx

@@ -90,6 +90,7 @@
 
 /* IOC API */
 #define ti_lib_rom_ioc_port_configure_set             ROM_IOCPortConfigureSet
+#if !defined(ThisLibraryIsFor_CC26x0R2_HaltIfViolated)
 #define ti_lib_rom_ioc_port_configure_get             ROM_IOCPortConfigureGet
 #define ti_lib_rom_ioc_io_shutdown_set                ROM_IOCIOShutdownSet
 #define ti_lib_rom_ioc_io_mode_set                    ROM_IOCIOModeSet
@@ -109,6 +110,7 @@
 #define ti_lib_rom_ioc_pin_type_ssi_slave             ROM_IOCPinTypeSsiSlave
 #define ti_lib_rom_ioc_pin_type_i2c                   ROM_IOCPinTypeI2c
 #define ti_lib_rom_ioc_pin_type_aux                   ROM_IOCPinTypeAux
+#endif
 
 /* PRCM API */
 #define ti_lib_rom_prcm_inf_clock_configure_set       ROM_PRCMInfClockConfigureSet

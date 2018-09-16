@@ -1,0 +1,152 @@
+################################################################################
+### CC13xx/CC26xx CPU makefile
+
+CC13x2_CC26x2_PRE_RTM ?= 1
+
+# Core SDK is placed as a submodule under arch/cpu/cc13xx-cc26xx/lib.
+# Do a sanity check that Core SDK submodule has been initialized.
+ifndef CORE_SDK
+ CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
+ CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ] && echo 1)
+
+ ifneq ($(CORE_SDK_INIT),1)
+  $(error The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
+ endif
+# Note that Core SDK can be overriden with a user-specified SimpleLink SDK.
+# As long as the SimpleLink SDK matches the device in use and is of a reasonable
+# newer version, then it should be no different than using Core SDK.
+else
+ # Do a sanity check the path exists.
+ CORE_SDK_VALID := $(shell [ -d $(CORE_SDK) ] && echo 1)
+
+ ifneq ($(CORE_SDK_VALID),1)
+  $(error User-specified CORE_SDK is not a valid path.)
+ endif
+endif
+
+################################################################################
+### Device Family
+
+# CC13x2/CC26x2 has to differentiate both pre-RTM and RTM devices. As of now,
+# pre-RTM is suffixed with _v1 while RTM is suffixed with _v2. This will be
+# removed when CC13x2/CC26x2 RTMs. For now, provide a switch to choose
+# either pre-RTM or RTM.
+# Also note that the devices name is cc13x2_cc26x2 for all CC13x2/CC26x2
+# devices, while the library name is individual for each device family.
+ifeq ($(SUBFAMILY),cc13x2-cc26x2)
+ ifeq ($(CC13x2_CC26x2_PRE_RTM),1)
+  SDK_DEVICES_NAME := cc13x2_cc26x2_v1
+  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v1
+ else
+  SDK_DEVICES_NAME := cc13x2_cc26x2_v2
+  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v2
+ endif
+# CC13x0/CC26x0 does not have this, with both its devices name and library
+# name the same as its own device family name.
+else
+ SDK_DEVICES_NAME := $(DEVICE_FAMILY_LC)
+ SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
+endif
+
+################################################################################
+### CC13xx/CC26xx CPU files
+
+# Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
+# the arch/cpu/cc13xx-cc26xx folder.
+CPU_START_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
+
+# CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c    clock-arch.c
+CONTIKI_CPU_SOURCEFILES += watchdog-arch.c  dbg-arch.c
+CONTIKI_CPU_SOURCEFILES += uart0-arch.c     slip-arch.c
+CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c  int-master-arch.c
+CONTIKI_CPU_SOURCEFILES += random.c         trng-arch.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
+
+# RF source files
+CONTIKI_CPU_SOURCEFILES += sched.c          data-queue.c
+CONTIKI_CPU_SOURCEFILES += ieee-addr.c      ble-addr.c
+CONTIKI_CPU_SOURCEFILES += ble-beacond.c
+
+ifeq ($(SUPPORTS_PROP_MODE),1)
+ CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c prop-tx-power.c
+endif
+
+ifeq ($(SUPPORTS_IEEE_MODE),1)
+ CONTIKI_CPU_SOURCEFILES += ieee-mode.c ieee-settings.c ieee-tx-power.c
+endif
+
+ifeq ($(SUPPORTS_BLE_BEACON),1)
+ CONTIKI_CPU_SOURCEFILES += ble-settings.c ble-tx-power.c
+endif
+
+################################################################################
+### Modules and paths
+
+# Core SDK paths
+SDK_NORTOS  := $(CORE_SDK)/kernel/nortos
+SDK_SOURCE  := $(CORE_SDK)/source
+SDK_DRIVERS := $(CORE_SDK)/source/ti/drivers
+SDK_DEVICES := $(CORE_SDK)/source/ti/devices/$(SDK_DEVICES_NAME)
+
+EXTERNALDIRS += $(SDK_SOURCE) $(SDK_NORTOS)
+
+# CPU-dependent debug source files
+MODULES += os/lib/dbg-io
+
+# CPU-dependent directories
+CONTIKI_CPU_DIRS += . dev $(SUBFAMILY)
+CONTIKI_CPU_DIRS += rf rf-settings rf-settings/$(DEVICE_FAMILY_LC)
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
+
+################################################################################
+### Compiler configuration
+
+# A weird behaviour of GCC garbage collector has been observed, where
+# unitialized global variables with global linkage (aka non-static) put in the
+# COMMON section weren't analyzed by the garbage collector at all. No idea why.
+# The solution is to disable the common section, which subsequently places all
+# unitialized global variables with global linkage in the .bss section,
+# allowing the GC to analyze the variables. This is especially an issue with
+# Board.h files, as they rely heavily on global variables placed in COMMON to
+# be garbage collected if unused.
+CFLAGS += -fno-common
+
+################################################################################
+### Linker configuration
+
+# Linker flags
+LDFLAGS += --entry resetISR
+LDFLAGS += --specs=nano.specs
+LDFLAGS += -nostartfiles
+LDFLAGS += -static
+
+# Linker script
+LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
+
+# Globally linked libraries
+TARGET_LIBFILES += -lc -lgcc -lnosys -lm
+
+################################################################################
+### Specialized build targets
+
+.PHONY: FORCE
+FORCE:
+
+# Always re-build ieee-addr.o in case the command line passes a new NODEID
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+# Always re-build ccfg-conf.c so any changes to CCFG configuration
+# always applies
+$(OBJECTDIR)/ccfg-conf.o: ccfg-conf.c FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+################################################################################
+### Sub-family Makefile
+
+# Include the Sub-family Makefile specific for the specified device
+include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)

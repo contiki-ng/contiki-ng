@@ -80,6 +80,7 @@
 typedef enum {
   SPI_DEV_STATUS_OK,              /* Everything OK */
   SPI_DEV_STATUS_EINVAL,          /* Erroneous input value */
+  SPI_DEV_STATUS_TRANSFER_ERR,    /* Error during SPI transfer */
   SPI_DEV_STATUS_BUS_LOCKED,      /* SPI bus is already locked */
   SPI_DEV_STATUS_BUS_NOT_OWNED,   /* SPI bus is locked by someone else */
   SPI_DEV_STATUS_CLOSED           /* SPI bus has not opened properly */

@@ -1,0 +1,91 @@
+/*
+ * Copyright (c) 2017, Texas Instruments Incorporated
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+define symbol STACK_SIZE       = 0x800; /* 2048 bytes */
+define symbol HEAP_SIZE        = 0x100; /* 256 bytes */
+
+define symbol __intvec_start__ = 0x00000000;
+
+/*-Memory Regions-*/
+define symbol ROM_start__      = 0x00000000;
+define symbol ROM_end__        = 0x00057FFF;
+define symbol RAM_start__      = 0x20000000;
+define symbol RAM_end__        = 0x20013FFF;
+define symbol GPRAM_start__    = 0x11000000;
+define symbol GPRAM_end__      = 0x11001FFF;
+
+/* Define a memory region that covers the entire 4 GB addressable space */
+define memory mem with size = 4G;
+
+/* Define a region for the on-chip flash */
+define region FLASH_region   = mem:[from ROM_start__ to ROM_end__];
+
+/* Define a region for the on-chip SRAM */
+define region RAM_region     = mem:[from RAM_start__ to RAM_end__];
+
+/* Define a region for the on-chip GPRAM */
+define region GPRAM_region     = mem:[from GPRAM_start__ to GPRAM_end__];
+
+/* Place the interrupt vectors at the start of flash */
+place at address mem:__intvec_start__ { readonly section .intvec };
+keep { section .intvec };
+
+/* Place the CCA area at the end of flash */
+place at end of FLASH_region { readonly section .ccfg };
+keep { section .ccfg };
+
+/* Place remaining 'read only' in Flash */
+place in FLASH_region { readonly };
+
+/* Place all read/write items into RAM */
+place in RAM_region { readwrite };
+initialize by copy { readwrite };
+
+/*
+ * Define CSTACK block to contain .stack section. This enables the IAR IDE
+ * to properly show the stack content during debug. Place stack at end of
+ * retention RAM, do not initialize (initializing the stack will destroy the
+ * return address from the initialization code, causing the processor to branch
+ * to zero and fault)
+ */
+define block CSTACK with alignment = 8, size = STACK_SIZE { section .stack };
+place at end of RAM_region { block CSTACK };
+do not initialize { section .stack, section .noinit };
+
+/* Export stack top symbol. Used by startup file */
+define exported symbol STACK_TOP = RAM_end__ + 1;
+
+/* Primary Heap configuration */
+define block HEAP with alignment = 8, size = HEAP_SIZE { };
+
+/* Place heap just before CSTACK */
+place in RAM_region { block HEAP };

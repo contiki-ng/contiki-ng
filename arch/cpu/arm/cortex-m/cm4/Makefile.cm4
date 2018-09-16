@@ -1,13 +1,28 @@
 CONTIKI_ARM_DIRS += cortex-m/cm4
 
 CFLAGS += -mcpu=cortex-m4
+
 LDFLAGS += -mcpu=cortex-m4
+LDFLAGS += -T $(LDSCRIPT)
+LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
+LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),--cref,--no-warn-mismatch
+
+OBJCOPY_FLAGS += --gap-fill 0xff
+
+### Build syscalls for newlib
+MODULES += os/lib/newlib
+
+CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
 
 ### Compilation rules
-CUSTOM_RULE_LINK=1
+CUSTOM_RULE_LINK = 1
 
-%.elf: $(TARGET_STARTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(TARGET_LIBS)
+### Resolve any potential circular dependencies between the linked libraries
+### See: https://stackoverflow.com/questions/5651869/gcc-what-are-the-start-group-and-end-group-command-line-options/5651895
+TARGET_LIBFLAGS := -Wl,--start-group $(TARGET_LIBFILES) -Wl,--end-group
+
+%.elf: $(CPU_STARTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(TARGET_LIBS)
 	$(TRACE_LD)
-	$(Q)$(CC) $(LDFLAGS) ${filter %.o %.a,$^} -o $@
+	$(Q)$(LD) $(LDFLAGS) ${filter %.o %.a,$^} $(TARGET_LIBFLAGS) -o $@
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m

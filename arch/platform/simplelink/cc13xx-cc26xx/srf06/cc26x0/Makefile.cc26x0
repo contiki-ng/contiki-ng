@@ -1,0 +1,21 @@
+################################################################################
+# SimpleLink Device makefile
+
+SUBFAMILY     = cc13x0-cc26x0
+DEVICE_FAMILY = CC26X0
+DEVICE_LINE   = CC26XX
+DEVICE        = CC2650
+
+BOARD_SOURCEFILES += CC2650DK_7ID.c CC2650DK_7ID_fxns.c
+
+SUPPORTS_PROP_MODE  = 0
+SUPPORTS_IEEE_MODE  = 1
+SUPPORTS_BLE_BEACON = 1
+
+SUPPORTS_HIGH_PA = 0
+
+### Signal that we can be programmed with cc2538-bsl
+BOARD_SUPPORTS_BSL = 1
+
+# Include the common board makefile
+include $(FAMILY_PATH)/srf06/Makefile.srf06

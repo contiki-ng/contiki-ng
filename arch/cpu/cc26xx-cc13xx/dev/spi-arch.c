@@ -130,10 +130,18 @@ spi_arch_lock_and_open(spi_device_t *dev)
   /* SPI configuration */
   ti_lib_ssi_int_disable(spi_controller[dev->spi_controller].ssi_base, SSI_RXOR | SSI_RXFF | SSI_RXTO | SSI_TXFF);
   ti_lib_ssi_int_clear(spi_controller[dev->spi_controller].ssi_base, SSI_RXOR | SSI_RXTO);
-  ti_lib_rom_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
+  
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+  ti_lib_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
                                     get_mode(dev), SSI_MODE_MASTER, dev->spi_bit_rate, 8);
-  ti_lib_rom_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
+  ti_lib_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
                                      dev->pin_spi_mosi, IOID_UNUSED, dev->pin_spi_sck);
+#else
+  ti_lib_rom_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
+                                      get_mode(dev), SSI_MODE_MASTER, dev->spi_bit_rate, 8);
+  ti_lib_rom_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
+                                       dev->pin_spi_mosi, IOID_UNUSED, dev->pin_spi_sck);
+#endif
 
   ti_lib_ssi_enable(spi_controller[dev->spi_controller].ssi_base);
 
@@ -205,14 +213,20 @@ spi_arch_transfer(spi_device_t *dev,
   for(i = 0; i < totlen; i++) {
     c = i < wlen ? write_buf[i] : 0;
     ti_lib_ssi_data_put(spi_controller[dev->spi_controller].ssi_base, (uint8_t)c);
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+    ti_lib_ssi_data_get(spi_controller[dev->spi_controller].ssi_base, &c);
+#else
     ti_lib_rom_ssi_data_get(spi_controller[dev->spi_controller].ssi_base, &c);
+#endif
     if(i < rlen) {
       inbuf[i] = (uint8_t)c;
     }
   }
-
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+  while(ti_lib_ssi_data_get_non_blocking(spi_controller[dev->spi_controller].ssi_base, &c)) ;
+#else
   while(ti_lib_rom_ssi_data_get_non_blocking(spi_controller[dev->spi_controller].ssi_base, &c)) ;
-
+#endif
   return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
