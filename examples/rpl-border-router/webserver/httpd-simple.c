@@ -128,7 +128,8 @@ PT_THREAD(handle_output(struct httpd_state *s))
   s->script = NULL;
   s->script = httpd_simple_get_script(&s->filename[1]);
   if(s->script == NULL) {
-    strncpy(s->filename, "/notfound.html", sizeof(s->filename));
+    strncpy(s->filename, "/notfound.html", sizeof(s->filename) - 1);
+    s->filename[sizeof(s->filename) - 1] = '\0';
     PT_WAIT_THREAD(&s->outputpt,
                    send_headers(s, http_header_404));
     PT_WAIT_THREAD(&s->outputpt,
@@ -170,7 +171,8 @@ PT_THREAD(handle_input(struct httpd_state *s))
   urlconv_tofilename(s->filename, s->inputbuf, sizeof(s->filename));
 #else /* URLCONV */
   if(s->inputbuf[1] == ISO_space) {
-    strncpy(s->filename, http_index_html, sizeof(s->filename));
+    strncpy(s->filename, http_index_html, sizeof(s->filename) - 1);
+    s->filename[sizeof(s->filename) - 1] = '\0';
   } else {
     s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
     strncpy(s->filename, s->inputbuf, sizeof(s->filename));
