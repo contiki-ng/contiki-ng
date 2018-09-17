@@ -199,8 +199,14 @@
  * the chip to enter bootloader mode.
  * @{
  */
-#ifndef ROM_BOOTLOADER_ENABLE
-#define ROM_BOOTLOADER_ENABLE              1
+
+/* Backward compatibility */
+#ifdef ROM_BOOTLOADER_ENABLE
+#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE ROM_BOOTLOADER_ENABLE
+#endif
+
+#ifndef CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE
+#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE              1
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/

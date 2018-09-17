@@ -64,7 +64,7 @@
 #define SENSORTAG_CC2650_REV_1_2_0            0
 /*---------------------------------------------------------------------------*/
 /* Enable the ROM bootloader */
-#define ROM_BOOTLOADER_ENABLE                 1
+#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE   1
 /*---------------------------------------------------------------------------*/
 /*
  * Shrink the size of the uIP buffer, routing table and ND cache.
