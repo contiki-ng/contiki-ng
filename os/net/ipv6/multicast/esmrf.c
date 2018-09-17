@@ -376,7 +376,9 @@ in()
 static void
 init()
 {
-  UIP_MCAST6_STATS_INIT(NULL);
+  ESMRF_STATS_INIT();
+  UIP_MCAST6_STATS_INIT(&stats);
+
   uip_mcast6_route_init();
   /* Register the ICMPv6 input handler */
   uip_icmp6_register_input_handler(&esmrf_icmp_handler);

@@ -50,23 +50,13 @@
 /**
  * \name Button configurations
  *
- * Configure a button as power on/off: We use the right button for both boards.
  * @{
  */
-#ifndef BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN
-#define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN 1
-#endif
 
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON      1
 #define PLATFORM_SUPPORTS_BUTTON_HAL 1
 
-/*
- * Override button symbols from dev/button-sensor.h, for the examples that
- * include it
- */
-#define button_sensor button_left_sensor
-#define button_sensor2 button_right_sensor
 /** @} */
 /*---------------------------------------------------------------------------*/
 /* Platform-specific define to signify sensor reading failure */
