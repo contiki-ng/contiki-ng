@@ -68,16 +68,9 @@
 /* Stats datatype */
 /*---------------------------------------------------------------------------*/
 struct esmrf_stats {
-  uint16_t mcast_in_unique;
-  uint16_t mcast_in_all;        /* At layer 3 */
-  uint16_t mcast_in_ours;       /* Unique and we are a group member */
-  uint16_t mcast_fwd;           /* Forwarded by us but we are not the seed */
-  uint16_t mcast_out;           /* We are the seed */
-  uint16_t mcast_bad;
-  uint16_t mcast_dropped;
   uint16_t icmp_out;
   uint16_t icmp_in;
   uint16_t icmp_bad;
 };
-
+/*---------------------------------------------------------------------------*/
 #endif /* ESMRF_H_ */
