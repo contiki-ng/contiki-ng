@@ -111,15 +111,10 @@
  */
 #define EXT_FLASH_SPI_CONTROLLER    SPI_CONTROLLER_SPI0
 
-#define BOARD_IOID_FLASH_SCK        IOID_10
-#define BOARD_IOID_FLASH_MOSI       IOID_9
-#define BOARD_IOID_FLASH_MISO       IOID_8
-#define BOARD_IOID_FLASH_CS         IOID_20
-
-#define EXT_FLASH_SPI_PIN_SCK       10
-#define EXT_FLASH_SPI_PIN_MOSI      9
-#define EXT_FLASH_SPI_PIN_MISO      8
-#define EXT_FLASH_SPI_PIN_CS        20
+#define EXT_FLASH_SPI_PIN_SCK       IOID_10
+#define EXT_FLASH_SPI_PIN_MOSI      IOID_9
+#define EXT_FLASH_SPI_PIN_MISO      IOID_8
+#define EXT_FLASH_SPI_PIN_CS        IOID_20
 
 #define EXT_FLASH_DEVICE_ID         0x14
 #define EXT_FLASH_MID               0xC2
