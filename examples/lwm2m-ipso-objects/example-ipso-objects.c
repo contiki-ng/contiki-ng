@@ -77,7 +77,7 @@ read_temp_value(const ipso_sensor_t *s, int32_t *value)
 static lwm2m_status_t
 read_hum_value(const ipso_sensor_t *s, int32_t *value)
 {
-  *value = 10 * hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMIDITY);
+  *value = 10 * hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMID);
   return LWM2M_STATUS_OK;
 }
 /* Lux reading */

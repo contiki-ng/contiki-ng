@@ -205,7 +205,7 @@ notify_ready(void *not_used)
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Returns a reading from the sensor
- * \param type HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMIDITY
+ * \param type HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMID
  * \return Temperature (centi degrees C) or Humidity (centi %RH)
  */
 static int
@@ -221,7 +221,7 @@ value(int type)
   }
 
   if((type != HDC_1000_SENSOR_TYPE_TEMP) &&
-     type != HDC_1000_SENSOR_TYPE_HUMIDITY) {
+     type != HDC_1000_SENSOR_TYPE_HUMID) {
     PRINTF("Invalid type\n");
     return CC26XX_SENSOR_READING_ERROR;
   } else {
@@ -231,7 +231,7 @@ value(int type)
 
     if(type == HDC_1000_SENSOR_TYPE_TEMP) {
       rv = (int)(temp * 100);
-    } else if(type == HDC_1000_SENSOR_TYPE_HUMIDITY) {
+    } else if(type == HDC_1000_SENSOR_TYPE_HUMID) {
       rv = (int)(hum * 100);
     }
   }

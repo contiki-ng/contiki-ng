@@ -203,7 +203,7 @@ get_hdc_reading()
     printf("HDC: Temp Read Error\n");
   }
 
-  value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMIDITY);
+  value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMID);
   if(value != CC26XX_SENSOR_READING_ERROR) {
     printf("HDC: Humidity=%d.%02d %%RH\n", value / 100, value % 100);
   } else {
