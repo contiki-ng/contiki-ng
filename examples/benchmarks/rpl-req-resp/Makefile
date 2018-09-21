@@ -1,6 +1,9 @@
 CONTIKI_PROJECT = node
 all: $(CONTIKI_PROJECT)
 
+PLATFORMS_EXCLUDE = sky nrf52dk native simplelink
+BOARDS_EXCLUDE = srf06/cc13xx launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350
+
 MODULES_REL += ../testbeds
 MODULES += os/services/deployment
 MODULES += os/services/simple-energest
