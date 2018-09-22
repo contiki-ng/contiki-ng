@@ -3,6 +3,8 @@
 #ifndef CONTIKI_CONF_H
 #define CONTIKI_CONF_H
 
+#include <inttypes.h>
+/*---------------------------------------------------------------------------*/
 /* include the project config */
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
