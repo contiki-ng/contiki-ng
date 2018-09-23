@@ -55,6 +55,7 @@
 
 #include "contiki.h"
 #include "dev/watchdog.h"
+#include <stdbool.h>
 
 /** \brief The rtimer size (in bytes) */
 #ifdef RTIMER_CONF_CLOCK_SIZE
@@ -189,18 +190,20 @@ void rtimer_arch_schedule(rtimer_clock_t t);
 
 /** \brief Busy-wait until a condition. Start time is t0, max wait time is max_time */
 #define RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time) \
-  do { \
-    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (max_time))) { \
-      watchdog_periodic(); \
-    } \
-  } while(0)
+  ({                                                                \
+    bool c;                                                         \
+    while(!(c = cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (max_time))) { \
+      watchdog_periodic();                                          \
+    }                                                               \
+    c;                                                              \
+  })
 
 /** \brief Busy-wait until a condition for at most max_time */
-#define RTIMER_BUSYWAIT_UNTIL(cond, max_time) \
-  do { \
-    rtimer_clock_t t0 = RTIMER_NOW(); \
-    RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time); \
-  } while(0)
+#define RTIMER_BUSYWAIT_UNTIL(cond, max_time)       \
+  ({                                                \
+    rtimer_clock_t t0 = RTIMER_NOW();               \
+    RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time);  \
+  })
 
 /** \brief Busy-wait for a fixed duration */
 #define RTIMER_BUSYWAIT(duration) RTIMER_BUSYWAIT_UNTIL(0, duration)
