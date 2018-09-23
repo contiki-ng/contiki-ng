@@ -104,9 +104,9 @@ do
     elif [[ "$platform" == "simplelink" ]]
     then
         # SimpleLink has multiple boards
-        BOARDS="launchpad/cc1310 launchpad/cc1350 launchpad/cc1350-4 launchpad/cc2650"
-        BOARDS+="sensortag/cc1350 sensortag/cc2650 srf06/cc13x0 srf06/cc26x0"
-        BOARDS+="launchpad/cc1312r1 launchpad/cc1352r1 launchpad/cc1352p1 launchpad/cc1352p-2 launchpad/cc1352p-4 launchpad/cc26x2r1"
+        BOARDS="launchpad/cc1310 launchpad/cc1350 launchpad/cc1350-4 launchpad/cc2650 \
+                sensortag/cc1350 sensortag/cc2650 srf06/cc13x0 srf06/cc26x0 \
+                launchpad/cc1312r1 launchpad/cc1352r1 launchpad/cc1352p1 launchpad/cc1352p-2 launchpad/cc1352p-4 launchpad/cc26x2r1"
     elif [[ "$platform" == "zoul" ]]
     then
         # Zoul has multiple boards
