@@ -8,9 +8,7 @@ ifndef CONTIKI
  $(error 'CONTIKI' not defined! You must specify where CONTIKI resides!)
 endif
 
-ifndef BOARD
- $(error 'BOARD' not defined! You must specify which board you are using!)
-endif
+BOARD ?= srf06/cc26x0
 
 ################################################################################
 ### Resolve the SimpleLink Family
