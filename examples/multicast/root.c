@@ -45,6 +45,7 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 #include <string.h>
+#include <inttypes.h>
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
