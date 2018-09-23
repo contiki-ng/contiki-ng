@@ -45,7 +45,7 @@
  * and latch them. It will then generate a sensors_changed event.
  *
  * The user can then retrieve readings by calling .value() and by passing
- * either HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMIDITY as the
+ * either HDC_1000_SENSOR_TYPE_TEMP or HDC_1000_SENSOR_TYPE_HUMID as the
  * argument. Multiple calls to value() will not trigger new readings, they will
  * simply return the most recent latched values.
  *
@@ -65,7 +65,7 @@
 #include "lib/sensors.h"
 /*---------------------------------------------------------------------------*/
 #define HDC_1000_SENSOR_TYPE_TEMP        1
-#define HDC_1000_SENSOR_TYPE_HUMIDITY    2
+#define HDC_1000_SENSOR_TYPE_HUMID       2
 /*---------------------------------------------------------------------------*/
 /**
  * \name HDC1000 driver states
