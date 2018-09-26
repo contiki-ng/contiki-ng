@@ -43,7 +43,7 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_acquire(spi_device_t *dev)
+spi_acquire(const spi_device_t *dev)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
@@ -54,7 +54,7 @@ spi_acquire(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_release(spi_device_t *dev)
+spi_release(const spi_device_t *dev)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
@@ -65,19 +65,19 @@ spi_release(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_select(spi_device_t *dev)
+spi_select(const spi_device_t *dev)
 {
   return spi_arch_select(dev);
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_deselect(spi_device_t *dev)
+spi_deselect(const spi_device_t *dev)
 {
   return spi_arch_deselect(dev);
 }
 /*---------------------------------------------------------------------------*/
 bool
-spi_has_bus(spi_device_t *dev)
+spi_has_bus(const spi_device_t *dev)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return false;
@@ -87,7 +87,7 @@ spi_has_bus(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_write_byte(spi_device_t *dev, uint8_t data)
+spi_write_byte(const spi_device_t *dev, uint8_t data)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
@@ -101,7 +101,7 @@ spi_write_byte(spi_device_t *dev, uint8_t data)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_write(spi_device_t *dev, const uint8_t *data, int size)
+spi_write(const spi_device_t *dev, const uint8_t *data, int size)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
@@ -115,7 +115,7 @@ spi_write(spi_device_t *dev, const uint8_t *data, int size)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_read_byte(spi_device_t *dev, uint8_t *buf)
+spi_read_byte(const spi_device_t *dev, uint8_t *buf)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
@@ -129,7 +129,7 @@ spi_read_byte(spi_device_t *dev, uint8_t *buf)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_read(spi_device_t *dev, uint8_t *buf, int size)
+spi_read(const spi_device_t *dev, uint8_t *buf, int size)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
@@ -143,7 +143,7 @@ spi_read(spi_device_t *dev, uint8_t *buf, int size)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_read_skip(spi_device_t *dev, int size)
+spi_read_skip(const spi_device_t *dev, int size)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;
@@ -157,7 +157,7 @@ spi_read_skip(spi_device_t *dev, int size)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_transfer(spi_device_t *dev,
+spi_transfer(const spi_device_t *dev,
              const uint8_t *wdata, int wsize,
              uint8_t *rbuf, int rsize, int ignore)
 {
@@ -181,7 +181,7 @@ spi_transfer(spi_device_t *dev,
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_read_register(spi_device_t *dev, uint8_t reg, uint8_t *data, int size)
+spi_read_register(const spi_device_t *dev, uint8_t reg, uint8_t *data, int size)
 {
   spi_status_t status;
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
@@ -204,7 +204,7 @@ spi_read_register(spi_device_t *dev, uint8_t reg, uint8_t *data, int size)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_strobe(spi_device_t *dev, uint8_t strobe, uint8_t *result)
+spi_strobe(const spi_device_t *dev, uint8_t strobe, uint8_t *result)
 {
   if(dev == NULL || dev->spi_controller >= SPI_CONTROLLER_COUNT) {
     return SPI_DEV_STATUS_EINVAL;

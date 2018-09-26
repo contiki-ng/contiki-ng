@@ -54,7 +54,7 @@
 /*---------------------------------------------------------------------------*/
 typedef struct {
   SPI_Handle handle;
-  spi_device_t *owner;
+  const spi_device_t *owner;
 } spi_arch_t;
 /*---------------------------------------------------------------------------*/
 #if (SPI_CONTROLLER_COUNT > 0)
@@ -96,7 +96,7 @@ convert_frame_format(uint8_t pol, uint8_t pha)
 }
 /*---------------------------------------------------------------------------*/
 bool
-spi_arch_has_lock(spi_device_t *dev)
+spi_arch_has_lock(const spi_device_t *dev)
 {
   /*
    * The SPI device is the owner if the SPI controller returns a valid
@@ -107,7 +107,7 @@ spi_arch_has_lock(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 bool
-spi_arch_is_bus_locked(spi_device_t *dev)
+spi_arch_is_bus_locked(const spi_device_t *dev)
 {
   /*
    * The SPI controller is locked by any device if the SPI controller returns
@@ -118,7 +118,7 @@ spi_arch_is_bus_locked(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_lock_and_open(spi_device_t *dev)
+spi_arch_lock_and_open(const spi_device_t *dev)
 {
   uint_least8_t spi_index;
   spi_arch_t *spi_arch;
@@ -167,7 +167,7 @@ spi_arch_lock_and_open(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_close_and_unlock(spi_device_t *dev)
+spi_arch_close_and_unlock(const spi_device_t *dev)
 {
   spi_arch_t *spi_arch;
 
@@ -196,7 +196,7 @@ spi_arch_close_and_unlock(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_transfer(spi_device_t *dev,
+spi_arch_transfer(const spi_device_t *dev,
                   const uint8_t *write_buf, int wlen,
                   uint8_t *inbuf, int rlen, int ignore_len)
 {
@@ -236,7 +236,7 @@ spi_arch_transfer(spi_device_t *dev,
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_select(spi_device_t *dev)
+spi_arch_select(const spi_device_t *dev)
 {
   if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_NOT_OWNED;
@@ -248,7 +248,7 @@ spi_arch_select(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_deselect(spi_device_t *dev)
+spi_arch_deselect(const spi_device_t *dev)
 {
   if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_NOT_OWNED;
