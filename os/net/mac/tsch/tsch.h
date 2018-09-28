@@ -60,6 +60,7 @@ frequency hopping for enhanced reliability.
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
 #include "net/mac/tsch/tsch-schedule.h"
+#include "net/mac/tsch/tsch-stats.h"
 #if UIP_CONF_IPV6_RPL
 #include "net/mac/tsch/tsch-rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */

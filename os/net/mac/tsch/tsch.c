@@ -412,6 +412,22 @@ eb_input(struct input_packet *current_input)
         }
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
       }
+
+      /* TSCH hopping sequence */
+      if(eb_ies.ie_channel_hopping_sequence_id != 0) {
+        if(eb_ies.ie_hopping_sequence_len != tsch_hopping_sequence_length.val
+            || memcmp((uint8_t *)tsch_hopping_sequence, eb_ies.ie_hopping_sequence_list, tsch_hopping_sequence_length.val)) {
+          if(eb_ies.ie_hopping_sequence_len <= sizeof(tsch_hopping_sequence)) {
+            memcpy((uint8_t *)tsch_hopping_sequence, eb_ies.ie_hopping_sequence_list,
+                   eb_ies.ie_hopping_sequence_len);
+            TSCH_ASN_DIVISOR_INIT(tsch_hopping_sequence_length, eb_ies.ie_hopping_sequence_len);
+
+            LOG_WARN("Updating TSCH hopping sequence from EB\n");
+          } else {
+            LOG_WARN("TSCH:! parse_eb: hopping sequence too long (%u)\n", eb_ies.ie_hopping_sequence_len);
+          }
+        }
+      }
     }
   }
 }
@@ -864,6 +880,9 @@ PROCESS_THREAD(tsch_pending_events_process, ev, data)
     tsch_rx_process_pending();
     tsch_tx_process_pending();
     tsch_log_process_pending();
+#ifdef TSCH_CALLBACK_SELECT_CHANNELS
+    TSCH_CALLBACK_SELECT_CHANNELS();
+#endif
   }
   PROCESS_END();
 }
@@ -944,6 +963,8 @@ tsch_init(void)
 #if TSCH_WITH_SIXTOP
   sixtop_init();
 #endif
+
+  tsch_stats_init();
 }
 /*---------------------------------------------------------------------------*/
 /* Function send for TSCH-MAC, puts the packet in packetbuf in the MAC queue */
