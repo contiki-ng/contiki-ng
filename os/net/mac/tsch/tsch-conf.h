@@ -365,18 +365,21 @@
 /******** Configuration: CSMA *******/
 
 /* TSCH CSMA-CA parameters, see IEEE 802.15.4e-2012 */
+
 /* Min backoff exponent */
 #ifdef TSCH_CONF_MAC_MIN_BE
 #define TSCH_MAC_MIN_BE TSCH_CONF_MAC_MIN_BE
 #else
 #define TSCH_MAC_MIN_BE 1
 #endif
+
 /* Max backoff exponent */
 #ifdef TSCH_CONF_MAC_MAX_BE
 #define TSCH_MAC_MAX_BE TSCH_CONF_MAC_MAX_BE
 #else
 #define TSCH_MAC_MAX_BE 5
 #endif
+
 /* Max number of re-transmissions */
 #ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #define TSCH_MAC_MAX_FRAME_RETRIES TSCH_CONF_MAC_MAX_FRAME_RETRIES
@@ -389,6 +392,13 @@
 #define TSCH_PACKET_EACK_WITH_SRC_ADDR TSCH_PACKET_CONF_EACK_WITH_SRC_ADDR
 #else
 #define TSCH_PACKET_EACK_WITH_SRC_ADDR 0
+#endif
+
+/* Perform CCA before sending? */
+#ifdef TSCH_CONF_CCA_ENABLED
+#define TSCH_CCA_ENABLED TSCH_CONF_CCA_ENABLED
+#else
+#define TSCH_CCA_ENABLED 0
 #endif
 
 /* Include destination address in ACK? */

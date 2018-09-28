@@ -464,9 +464,9 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       /* Did we set the frame pending bit to request an extra burst link? */
       static int burst_link_requested;
 
-#if CCA_ENABLED
+#if TSCH_CCA_ENABLED
       static uint8_t cca_status;
-#endif
+#endif /* TSCH_CCA_ENABLED */
 
       /* get payload */
       packet = queuebuf_dataptr(current_packet->qb);
@@ -507,7 +507,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       if(packet_ready && NETSTACK_RADIO.prepare(packet, packet_len) == 0) { /* 0 means success */
         static rtimer_clock_t tx_duration;
 
-#if CCA_ENABLED
+#if TSCH_CCA_ENABLED
         cca_status = 1;
         /* delay before CCA */
         TSCH_SCHEDULE_AND_YIELD(pt, t, current_slot_start, TS_CCA_OFFSET, "cca");
@@ -522,7 +522,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
         if(cca_status == 0) {
           mac_tx_status = MAC_TX_COLLISION;
         } else
-#endif /* CCA_ENABLED */
+#endif /* TSCH_CCA_ENABLED */
         {
           /* delay before TX */
           TSCH_SCHEDULE_AND_YIELD(pt, t, current_slot_start, tsch_timing[tsch_ts_tx_offset] - RADIO_DELAY_BEFORE_TX, "TxBeforeTx");
