@@ -514,7 +514,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
         TSCH_DEBUG_TX_EVENT();
         tsch_radio_on(TSCH_RADIO_CMD_ON_WITHIN_TIMESLOT);
         /* CCA */
-        BUSYWAIT_UNTIL_ABS(!(cca_status |= NETSTACK_RADIO.channel_clear()),
+        BUSYWAIT_UNTIL_ABS(!(cca_status &= NETSTACK_RADIO.channel_clear()),
                            current_slot_start, tsch_timing[tsch_ts_cca_offset] + tsch_timing[tsch_ts_cca]);
         TSCH_DEBUG_TX_EVENT();
         /* there is not enough time to turn radio off */
