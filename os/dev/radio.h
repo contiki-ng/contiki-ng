@@ -170,6 +170,9 @@ enum {
    * it needs to be used with radio.get_object()/set_object(). */
   RADIO_PARAM_LAST_PACKET_TIMESTAMP,
 
+  /* For enabling and disabling the SHR search */
+  RADIO_PARAM_SHR_SEARCH,
+
   /* Constants (read only) */
 
   /* The lowest radio channel. */
