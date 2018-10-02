@@ -52,9 +52,6 @@
 #ifndef TI_LIB_H_
 #define TI_LIB_H_
 /*---------------------------------------------------------------------------*/
-/* Include ROM API */
-#include "ti-lib-rom.h"
-/*---------------------------------------------------------------------------*/
 /* aon_batmon.h */
 #include "driverlib/aon_batmon.h"
 

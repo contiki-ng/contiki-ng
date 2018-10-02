@@ -39,7 +39,6 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "ti-lib.h"
-#include "ti-lib-rom.h"
 #include "dev/gpio-hal.h"
 
 #include <stdint.h>
