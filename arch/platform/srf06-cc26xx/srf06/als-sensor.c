@@ -61,7 +61,7 @@ config(int type, int enable)
   case SENSORS_ACTIVE:
     ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_ALS_PWR);
     ti_lib_ioc_port_configure_set(BOARD_IOID_ALS_OUT, IOC_PORT_GPIO,
-                                      IOC_STD_OUTPUT);
+                                  IOC_STD_OUTPUT);
     ti_lib_ioc_pin_type_gpio_input(BOARD_IOID_ALS_OUT);
 
     if(enable) {
