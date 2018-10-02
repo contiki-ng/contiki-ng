@@ -59,10 +59,10 @@ config(int type, int enable)
     ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_ALS_PWR);
     break;
   case SENSORS_ACTIVE:
-    ti_lib_rom_ioc_pin_type_gpio_output(BOARD_IOID_ALS_PWR);
-    ti_lib_rom_ioc_port_configure_set(BOARD_IOID_ALS_OUT, IOC_PORT_GPIO,
+    ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_ALS_PWR);
+    ti_lib_ioc_port_configure_set(BOARD_IOID_ALS_OUT, IOC_PORT_GPIO,
                                       IOC_STD_OUTPUT);
-    ti_lib_rom_ioc_pin_type_gpio_input(BOARD_IOID_ALS_OUT);
+    ti_lib_ioc_pin_type_gpio_input(BOARD_IOID_ALS_OUT);
 
     if(enable) {
       ti_lib_gpio_set_dio(BOARD_IOID_ALS_PWR);

@@ -162,7 +162,7 @@ platform_init_stage_one()
   ti_lib_pwr_ctrl_io_freeze_disable();
 
 #endif
-  ti_lib_rom_int_enable(INT_AON_GPIO_EDGE);
+  ti_lib_int_enable(INT_AON_GPIO_EDGE);
   ti_lib_int_master_enable();
 
   soc_rtc_init();
