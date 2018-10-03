@@ -1180,6 +1180,34 @@ get_value(radio_param_t param, radio_value_t *value)
     *value = (radio_value_t)CC1200_RF_CFG.max_txpower;
     return RADIO_RESULT_OK;
 
+  case RADIO_CONST_PHY_OVERHEAD:
+#if CC1200_802154G
+#if CC1200_802154G_CRC16
+    *value = (radio_value_t)4; /* 2 bytes PHR, 2 bytes CRC */
+#else
+    *value = (radio_value_t)6; /* 2 bytes PHR, 4 bytes CRC */
+#endif
+#else
+    *value = (radio_value_t)3; /* 1 len byte, 2 bytes CRC */
+#endif
+    return RADIO_RESULT_OK;
+
+  case RADIO_CONST_BYTE_AIR_TIME:
+      *value = (radio_value_t)8*1000*1000 / CC1200_RF_CFG.bitrate;
+      return RADIO_RESULT_OK;
+
+  case RADIO_CONST_DELAY_BEFORE_TX:
+    *value = (radio_value_t)CC1200_RF_CFG.delay_before_tx;
+    return RADIO_RESULT_OK;
+
+  case RADIO_CONST_DELAY_BEFORE_RX:
+      *value = (radio_value_t)CC1200_RF_CFG.delay_before_rx;
+      return RADIO_RESULT_OK;
+
+  case RADIO_CONST_DELAY_BEFORE_DETECT:
+      *value = (radio_value_t)CC1200_RF_CFG.delay_before_detect;
+      return RADIO_RESULT_OK;
+
   default:
 
     return RADIO_RESULT_NOT_SUPPORTED;
@@ -1282,6 +1310,13 @@ set_value(radio_param_t param, radio_value_t value)
 static radio_result_t
 get_object(radio_param_t param, void *dest, size_t size)
 {
+  if(param == RADIO_CONST_TSCH_TIMING) {
+    if(size != sizeof(uint16_t *) || !dest) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    *(uint16_t **)dest = CC1200_RF_CFG.tsch_timing;
+    return RADIO_RESULT_OK;
+  }
 
   return RADIO_RESULT_NOT_SUPPORTED;
 
