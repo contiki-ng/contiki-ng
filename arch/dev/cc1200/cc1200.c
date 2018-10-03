@@ -1098,6 +1098,16 @@ off(void)
 
     idle();
 
+    if(single_read(CC1200_NUM_RXBYTES) > 0) {
+      RELEASE_SPI();
+      /* In case there is something in the Rx FIFO, read it */
+      cc1200_rx_interrupt();
+      if(SPI_IS_LOCKED()) {
+        return 0;
+      }
+      LOCK_SPI();
+    }
+
     /*
      * As we use GPIO as CHIP_RDYn signal on wake-up / on(),
      * we re-configure it for CHIP_RDYn.
