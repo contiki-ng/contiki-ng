@@ -47,6 +47,9 @@
 #include <string.h>
 #include <stdio.h>
 
+static int16_t rssi;
+static rtimer_clock_t sfd_timestamp = 0;
+
 /*---------------------------------------------------------------------------*/
 /* Various implementation specific defines */
 /*---------------------------------------------------------------------------*/
@@ -249,6 +252,8 @@ extern const cc1200_rf_cfg_t CC1200_RF_CFG;
 #define RF_UPDATE_CHANNEL               0x10
 /* SPI was locked when calling RX interrupt, let the pollhandler do the job */
 #define RF_POLL_RX_INTERRUPT            0x20
+/* Ongoing reception */
+#define RF_RX_ONGOING                   0x40
 /* Force calibration in case we don't use CC1200 AUTOCAL + timeout */
 #if !CC1200_AUTOCAL
 #if CC1200_CAL_TIMEOUT_SECONDS
@@ -861,7 +866,7 @@ read(void *buf, unsigned short buf_len)
 
   if(rx_pkt_len > 0) {
 
-    int8_t rssi = rx_pkt[rx_pkt_len - 2];
+    rssi = (int8_t)rx_pkt[rx_pkt_len - 2] + (int)CC1200_RF_CFG.rssi_offset;
     /* CRC is already checked */
     uint8_t crc_lqi = rx_pkt[rx_pkt_len - 1];
 
@@ -1106,6 +1111,40 @@ off(void)
 
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Reads the current signal strength (RSSI)
+ * \return The current RSSI in dBm
+ *
+ * This function reads the current RSSI on the currently configured
+ * channel.
+ */
+static int16_t
+get_rssi(void)
+{
+  int16_t rssi0, rssi1;
+  uint8_t was_off = 0;
+
+  /* If we are off, turn on first */
+  if(!(rf_flags & RF_ON)) {
+    was_off = 1;
+    on();
+  }
+
+  /* Wait for CARRIER_SENSE_VALID signal */
+  BUSYWAIT_UNTIL(((rssi0 = single_read(CC1200_RSSI0))
+                & CC1200_CARRIER_SENSE_VALID),
+                RTIMER_SECOND / 100);
+  RF_ASSERT(rssi0 & CC1200_CARRIER_SENSE_VALID);
+  rssi1 = (int8_t)single_read(CC1200_RSSI1) + (int)CC1200_RF_CFG.rssi_offset;
+
+  /* If we were off, turn back off */
+  if(was_off) {
+    off();
+  }
+
+  return rssi1;
+}
+/*---------------------------------------------------------------------------*/
 /* Get a radio parameter value. */
 static radio_result_t
 get_value(radio_param_t param, radio_value_t *value)
@@ -1156,6 +1195,13 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_RSSI:
+    *value = get_rssi();
+    return RADIO_RESULT_OK;
+
+  case RADIO_PARAM_LAST_RSSI:
+    *value = (radio_value_t)rssi;
+    return RADIO_RESULT_OK;
+
   case RADIO_PARAM_64BIT_ADDR:
 
     return RADIO_RESULT_NOT_SUPPORTED;
@@ -1310,6 +1356,14 @@ set_value(radio_param_t param, radio_value_t value)
 static radio_result_t
 get_object(radio_param_t param, void *dest, size_t size)
 {
+  if(param == RADIO_PARAM_LAST_PACKET_TIMESTAMP) {
+    if(size != sizeof(rtimer_clock_t) || !dest) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    *(rtimer_clock_t *)dest = sfd_timestamp;
+    return RADIO_RESULT_OK;
+  }
+
   if(param == RADIO_CONST_TSCH_TIMING) {
     if(size != sizeof(uint16_t *) || !dest) {
       return RADIO_RESULT_INVALID_VALUE;
@@ -2238,6 +2292,23 @@ cc1200_rx_interrupt(void)
    * LQI in this buffer
    */
   static uint8_t buf[CC1200_MAX_PAYLOAD_LEN + APPENDIX_LEN];
+
+  /*
+   * If CC1200_USE_GPIO2 is enabled, we come here either once RX FIFO
+   * threshold is reached (GPIO2 rising edge)
+   * or at the end of the packet (GPIO0 falling edge).
+   */
+#if CC1200_USE_GPIO2
+  int gpio2 = cc1200_arch_gpio2_read_pin();
+  int gpio0 = cc1200_arch_gpio0_read_pin();
+  if((rf_flags & RF_RX_ONGOING) == 0 && gpio2 > 0) {
+    rf_flags |= RF_RX_ONGOING;
+    sfd_timestamp = RTIMER_NOW();
+  }
+  if(gpio0 == 0) {
+    rf_flags &= ~RF_RX_ONGOING;
+  }
+#endif
 
   if(SPI_IS_LOCKED()) {
 
