@@ -972,6 +972,7 @@ get_object(radio_param_t param, void *dest, size_t size)
     return RADIO_RESULT_OK;
   }
 
+#if MAC_CONF_WITH_TSCH
   if(param == RADIO_CONST_TSCH_TIMING) {
     if(size != sizeof(uint16_t *) || !dest) {
       return RADIO_RESULT_INVALID_VALUE;
@@ -979,6 +980,7 @@ get_object(radio_param_t param, void *dest, size_t size)
     *(uint16_t **)dest = tsch_timeslot_timing_us_10000;
     return RADIO_RESULT_OK;
   }
+#endif /* MAC_CONF_WITH_TSCH */
 
   return RADIO_RESULT_NOT_SUPPORTED;
 }
