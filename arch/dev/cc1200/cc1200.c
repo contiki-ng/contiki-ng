@@ -1026,9 +1026,16 @@ receiving_packet(void)
 static int
 pending_packet(void)
 {
+  int ret;
+  ret = ((rx_pkt_len != 0) ? 1 : 0);
+  if(ret == 0 && !SPI_IS_LOCKED()) {
+    LOCK_SPI();
+    ret = (single_read(CC1200_NUM_RXBYTES) > 0);
+    RELEASE_SPI();
+  }
 
-  INFO("RF: Pending (%d)\n", ((rx_pkt_len != 0) ? 1 : 0));
-  return (rx_pkt_len != 0) ? 1 : 0;
+  INFO("RF: Pending (%d)\n", ret);
+  return ret;
 
 }
 /*---------------------------------------------------------------------------*/
