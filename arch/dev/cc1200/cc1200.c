@@ -1055,6 +1055,7 @@ on(void)
     RF_ASSERT((cc1200_arch_gpio0_read_pin() == 0));
     cc1200_arch_spi_deselect();
 
+    rf_flags = RF_INITIALIZED;
     rf_flags |= RF_ON;
 
     /* Radio is IDLE now, re-configure GPIO0 (modified inside off()) */
