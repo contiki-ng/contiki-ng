@@ -415,12 +415,12 @@ by default, useful in case of duplicate seqno */
 #define TSCH_RADIO_ON_DURING_TIMESLOT 0
 #endif
 
-
-
-/* Timeslot timing */
-#ifndef TSCH_CONF_DEFAULT_TIMESLOT_LENGTH
-#define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 10000
-#endif /* TSCH_CONF_DEFAULT_TIMESLOT_LENGTH */
+/* TSCH timeslot timing template */
+#ifdef TSCH_CONF_DEFAULT_TIMESLOT_TIMING
+#define TSCH_DEFAULT_TIMESLOT_TIMING TSCH_CONF_DEFAULT_TIMESLOT_TIMING
+#else
+#define TSCH_DEFAULT_TIMESLOT_TIMING tsch_timeslot_timing_us_10000
+#endif
 
 /* Configurable Rx guard time is micro-seconds */
 #ifndef TSCH_CONF_RX_WAIT

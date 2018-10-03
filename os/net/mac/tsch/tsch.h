@@ -170,6 +170,8 @@ extern uint8_t tsch_current_channel;
 /* TSCH channel hopping sequence */
 extern uint8_t tsch_hopping_sequence[TSCH_HOPPING_SEQUENCE_MAX_LEN];
 extern struct tsch_asn_divisor_t tsch_hopping_sequence_length;
+/* TSCH timeslot timing (in micro-second) */
+uint16_t tsch_timing_us[tsch_ts_elements_count];
 /* TSCH timeslot timing (in rtimer ticks) */
 extern rtimer_clock_t tsch_timing[tsch_ts_elements_count];
 /* Statistics on the current session */
@@ -178,6 +180,8 @@ extern unsigned long rx_count;
 extern unsigned long sync_count;
 extern int32_t min_drift_seen;
 extern int32_t max_drift_seen;
+
+extern uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count];
 
 /* TSCH processes */
 PROCESS_NAME(tsch_process);

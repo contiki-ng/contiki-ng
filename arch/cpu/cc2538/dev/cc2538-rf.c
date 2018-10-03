@@ -42,6 +42,7 @@
 #include "net/packetbuf.h"
 #include "net/linkaddr.h"
 #include "net/netstack.h"
+#include "net/mac/tsch/tsch.h"
 #include "sys/energest.h"
 #include "dev/cc2538-rf.h"
 #include "dev/rfcore.h"

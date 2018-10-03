@@ -43,6 +43,7 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
+#include "net/mac/tsch/tsch.h"
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
@@ -62,6 +63,22 @@ extern int msp430_dco_required;
 #ifdef EXPERIMENT_SETUP
 #include "experiment-setup.h"
 #endif
+
+/* TSCH timeslot timing for platforms requiring 15ms slots */
+uint16_t tsch_timeslot_timing_us_15000[tsch_ts_elements_count] = {
+   1800, /* CCAOffset */
+    128, /* CCA */
+   4000, /* TxOffset */
+  (4000 - (TSCH_CONF_RX_WAIT / 2)), /* RxOffset */
+   3600, /* RxAckDelay */
+   4000, /* TxAckDelay */
+  TSCH_CONF_RX_WAIT, /* RxWait */
+    800, /* AckWait */
+   2072, /* RxTx */
+   2400, /* MaxAck */
+   4256, /* MaxTx */
+  15000, /* TimeslotLength */
+};
 
 void init_platform(void);
 /*---------------------------------------------------------------------------*/
