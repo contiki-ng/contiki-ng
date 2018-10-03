@@ -641,7 +641,7 @@ pollhandler(void)
     set_channel(new_rf_channel);
   }
 
-  if(rx_pkt_len > 0) {
+  if((rx_mode_value & RADIO_RX_MODE_POLL_MODE) == 0 && rx_pkt_len > 0) {
 
     int len;
 
