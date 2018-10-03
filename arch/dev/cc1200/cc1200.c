@@ -2115,6 +2115,9 @@ set_channel(uint8_t channel)
   uint8_t was_off = 0;
   uint32_t freq;
 
+  channel %= (CC1200_RF_CFG.max_channel - CC1200_RF_CFG.min_channel + 1);
+  channel += CC1200_RF_CFG.min_channel;
+
 #if 0
   /*
    * We explicitly allow a channel update even if the channel does not change.
