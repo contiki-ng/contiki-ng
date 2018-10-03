@@ -83,6 +83,14 @@ static rtimer_clock_t sfd_timestamp = 0;
 #endif
 #endif
 /*
+ * When set, a software buffer is used to store outgoing packets before copying
+ * to Tx FIFO. This enabled sending packets larger than the FIFO. When unset,
+ * no buffer is used; instead, the payload is copied directly to the Tx FIFO.
+ * This is requried by TSCH, for shorter and more predictable delay in the Tx
+ * chain. This, however, restircts the payload length to the Tx FIFO size.
+ */
+#define CC1200_WITH_TX_BUF (!MAC_CONF_WITH_TSCH)
+/*
  * Set this parameter to 1 in order to use the MARC_STATE register when
  * polling the chips's status. Else use the status byte returned when sending
  * a NOP strobe.
@@ -398,10 +406,14 @@ extern const cc1200_rf_cfg_t CC1200_RF_CFG;
 /*---------------------------------------------------------------------------*/
 /* Flag indicating whether non-interrupt routines are using SPI */
 static volatile uint8_t spi_locked = 0;
+#if CC1200_WITH_TX_BUF
 /* Packet buffer for transmission, filled within prepare() */
 static uint8_t tx_pkt[CC1200_MAX_PAYLOAD_LEN];
+#endif /* CC1200_WITH_TX_BUF */
 /* The number of bytes waiting in tx_pkt */
 static uint16_t tx_pkt_len;
+/* Number of bytes from tx_pkt left to write to FIFO */
+uint16_t bytes_left_to_write;
 /* Packet buffer for reception */
 static uint8_t rx_pkt[CC1200_MAX_PAYLOAD_LEN + APPENDIX_LEN];
 /* The number of bytes placed in rx_pkt */
@@ -439,6 +451,9 @@ static struct etimer et;
 /* Init the radio. */
 static int
 init(void);
+/* Prepare and copy PHY header to Tx FIFO */
+static int
+copy_header_to_tx_fifo(unsigned short payload_len);
 /* Prepare the radio with a packet to be sent. */
 static int
 prepare(const void *payload, unsigned short payload_len);
@@ -547,7 +562,7 @@ idle_calibrate_rx(void);
 /* Restart RX from within RX interrupt. */
 static void
 rx_rx(void);
-/* Fill TX FIFO, start TX and wait for TX to complete (blocking!). */
+/* Fill TX FIFO (if not already done), start TX and wait for TX to complete (blocking!). */
 static int
 idle_tx_rx(const uint8_t *payload, uint16_t payload_len);
 /* Update TX power */
@@ -739,10 +754,67 @@ prepare(const void *payload, unsigned short payload_len)
   }
 
   tx_pkt_len = payload_len;
+
+#if CC1200_WITH_TX_BUF
+  /* Copy payload to buffer, will be sent later */
   memcpy(tx_pkt, payload, tx_pkt_len);
+#else /* CC1200_WITH_TX_BUF */
+#if (CC1200_MAX_PAYLOAD_LEN > (CC1200_FIFO_SIZE - PHR_LEN))
+#error CC1200 max payload too large
+#else
+  /* Copy header and payload directly to Radio Tx FIFO (127 bytes max) */
+  copy_header_to_tx_fifo(payload_len);
+  burst_write(CC1200_TXFIFO, payload, payload_len);
+#endif
+#endif /* CC1200_WITH_TX_BUF */
 
   return RADIO_TX_OK;
+}
+/*---------------------------------------------------------------------------*/
+/* Prepare the radio with a packet to be sent. */
+static int
+copy_header_to_tx_fifo(unsigned short payload_len)
+{
+#if CC1200_802154G
+  /* Prepare PHR for 802.15.4g frames */
+  struct {
+    uint8_t phra;
+    uint8_t phrb;
+  } phr;
+#if CC1200_802154G_CRC16
+  payload_len += 2;
+#else
+  payload_len += 4;
+#endif
+  /* Frame length */
+  phr.phrb = (uint8_t)(payload_len & 0x00FF);
+  phr.phra = (uint8_t)((payload_len >> 8) & 0x0007);
+#if CC1200_802154G_WHITENING
+  /* Enable Whitening */
+  phr.phra |= (1 << 3);
+#endif /* #if CC1200_802154G_WHITENING */
+#if CC1200_802154G_CRC16
+  /* FCS type 1, 2 Byte CRC */
+  phr.phra |= (1 << 4);
+#endif /* #if CC1200_802154G_CRC16 */
+#endif /* #if CC1200_802154G */
 
+  idle();
+
+  rf_flags &= ~RF_RX_PROCESSING_PKT;
+  strobe(CC1200_SFRX);
+  /* Flush TX FIFO */
+  strobe(CC1200_SFTX);
+
+#if CC1200_802154G
+  /* Write PHR */
+  burst_write(CC1200_TXFIFO, (uint8_t *)&phr, PHR_LEN);
+#else
+  /* Write length byte */
+  burst_write(CC1200_TXFIFO, (uint8_t *)&payload_len, PHR_LEN);
+#endif /* #if CC1200_802154G */
+
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 /* Send the packet that has previously been prepared. */
@@ -752,6 +824,7 @@ transmit(unsigned short transmit_len)
 
   uint8_t was_off = 0;
   int ret = RADIO_TX_OK;
+  int txret;
 
   INFO("RF: Transmit (%d)\n", transmit_len);
 
@@ -807,7 +880,12 @@ transmit(unsigned short transmit_len)
 #endif
 
   /* Send data using TX FIFO */
-  if(idle_tx_rx((const uint8_t *)tx_pkt, tx_pkt_len) == RADIO_TX_OK) {
+#if CC1200_WITH_TX_BUF
+  txret = idle_tx_rx(tx_pkt, tx_pkt_len);
+#else /* CC1200_WITH_TX_BUF */
+  txret = idle_tx_rx(NULL, tx_pkt_len);
+#endif /* CC1200_WITH_TX_BUF */
+  if(txret == RADIO_TX_OK) {
 
     /*
      * TXOFF_MODE is set to RX,
@@ -1885,75 +1963,25 @@ rx_rx(void)
 
 }
 /*---------------------------------------------------------------------------*/
-/* Fill TX FIFO, start TX and wait for TX to complete (blocking!). */
+/* Fill TX FIFO (if not already done), start TX and wait for TX to complete (blocking!). */
 static int
 idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
 {
-
 #if (CC1200_MAX_PAYLOAD_LEN > (CC1200_FIFO_SIZE - PHR_LEN))
-  uint16_t bytes_left_to_write;
   uint8_t to_write;
   const uint8_t *p;
 #endif
-
-#if CC1200_802154G
-  /* Prepare PHR for 802.15.4g frames */
-  struct {
-    uint8_t phra;
-    uint8_t phrb;
-  } phr;
-#if CC1200_802154G_CRC16
-  payload_len += 2;
-#else
-  payload_len += 4;
-#endif
-  /* Frame length */
-  phr.phrb = (uint8_t)(payload_len & 0x00FF);
-  phr.phra = (uint8_t)((payload_len >> 8) & 0x0007);
-#if CC1200_802154G_WHITENING
-  /* Enable Whitening */
-  phr.phra |= (1 << 3);
-#endif /* #if CC1200_802154G_WHITENING */
-#if CC1200_802154G_CRC16
-  /* FCS type 1, 2 Byte CRC */
-  phr.phra |= (1 << 4);
-#endif /* #if CC1200_802154G_CRC16 */
-#endif /* #if CC1200_802154G */
 
   /* Prepare for RX */
   rf_flags &= ~RF_RX_PROCESSING_PKT;
   strobe(CC1200_SFRX);
 
-  /* Flush TX FIFO */
-  strobe(CC1200_SFTX);
-
-#if USE_SFSTXON
-  /*
-   * Enable synthesizer. Saves us a few µs especially if it takes
-   * long enough to fill the FIFO. This strobe must not be
-   * send before SFTX!
-   */
-  strobe(CC1200_SFSTXON);
-#endif
-
   /* Configure GPIO0 to detect TX state */
   single_write(CC1200_IOCFG0, CC1200_IOCFG_MARC_2PIN_STATUS_0);
 
-#if (CC1200_MAX_PAYLOAD_LEN > (CC1200_FIFO_SIZE - PHR_LEN))
-  /*
-   * We already checked that GPIO2 is used if
-   * CC1200_MAX_PAYLOAD_LEN > 127 / 126 in the header of this file
-   */
-  single_write(CC1200_IOCFG2, CC1200_IOCFG_TXFIFO_THR);
-#endif
-
-#if CC1200_802154G
-  /* Write PHR */
-  burst_write(CC1200_TXFIFO, (uint8_t *)&phr, PHR_LEN);
-#else
-  /* Write length byte */
-  burst_write(CC1200_TXFIFO, (uint8_t *)&payload_len, PHR_LEN);
-#endif /* #if CC1200_802154G */
+#if CC1200_WITH_TX_BUF
+  /* Prepare and write header */
+  copy_header_to_tx_fifo(payload_len);
 
   /*
    * Fill FIFO with data. If SPI is slow it might make sense
@@ -1970,6 +1998,7 @@ idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
 #else
   burst_write(CC1200_TXFIFO, payload, payload_len);
 #endif
+#endif /* CC1200_WITH_TX_BUF */
 
 #if USE_SFSTXON
   /* Wait for synthesizer to be ready */
@@ -2009,7 +2038,7 @@ idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
 
   }
 
-#if (CC1200_MAX_PAYLOAD_LEN > (CC1200_FIFO_SIZE - PHR_LEN))
+#if (CC1200_MAX_PAYLOAD_LEN > (CC1200_FIFO_SIZE - PHR_LEN)) && CC1200_WITH_TX_BUF
   if(bytes_left_to_write != 0) {
     rtimer_clock_t t0;
     uint8_t s;
@@ -2280,6 +2309,7 @@ addr_check_auto_ack(uint8_t *frame, uint16_t frame_len)
         idle();
 #endif
 
+        prepare((const uint8_t *)ack, ACK_LEN);
         idle_tx_rx((const uint8_t *)ack, ACK_LEN);
 
         /* rx_rx() will follow */
