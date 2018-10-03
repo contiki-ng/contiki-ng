@@ -36,6 +36,10 @@
 /*---------------------------------------------------------------------------*/
 /* TSCH related defines */
 
+/* 1 len byte, 2 bytes CRC */
+#define RADIO_PHY_OVERHEAD         3
+/* 250kbps data rate. One byte = 32us */
+#define RADIO_BYTE_AIR_TIME       32
 /* Delay between GO signal and SFD */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(81))
 /* Delay between GO signal and start listening.
