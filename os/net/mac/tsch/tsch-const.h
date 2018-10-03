@@ -75,7 +75,7 @@
 #define TSCH_TIMESYNC_MEASUREMENT_ERROR US_TO_RTIMERTICKS(32)
 
 /* The approximate number of slots per second */
-#define TSCH_SLOTS_PER_SECOND (1000000 / TSCH_DEFAULT_TS_TIMESLOT_LENGTH)
+#define TSCH_SLOTS_PER_SECOND (1000000 / tsch_timing_us[tsch_ts_timeslot_length])
 
 /* Calculate packet tx/rx duration in rtimer ticks based on sent
  * packet len in bytes with 802.15.4 250kbps data rate.
