@@ -9,12 +9,12 @@ CONTIKI_TARGET_DIRS += . dev config
 CONTIKI_SOURCEFILES += platform.c leds-arch.c nrf52dk-sensors.c button-sensor.c temperature-sensor.c
 
 ifeq ($(NRF52_USE_RTT),1)
-### Use the existing debug I/O in arch/cpu/arm/common
+### Suppress the existing debug I/O in os/lib
+PLATFORM_DBG_IO = 1
 CONTIKI_TARGET_DIRS += rtt
 CONTIKI_SOURCEFILES += rtt-printf.c segger-rtt.c segger-rtt-printf.c
 else
 CONTIKI_SOURCEFILES += dbg.c
-MODULES += os/lib/dbg-io
 endif
 
 ### Unless the example dictates otherwise, build with code size optimisations switched off

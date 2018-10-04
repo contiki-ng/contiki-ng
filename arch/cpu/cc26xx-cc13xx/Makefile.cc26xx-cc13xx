@@ -45,8 +45,6 @@ CONTIKI_CPU_SOURCEFILES += ble-cc2650.c ble-hal-cc26xx.c ble-addr.c rf-ble-cmd.c
 CONTIKI_CPU_SOURCEFILES += random.c soc-trng.c int-master.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c
 
-MODULES += os/lib/dbg-io
-
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
 CPU_START_SOURCEFILES += fault-handlers.c $(TI_XXWARE_STARTUP_SRCS)

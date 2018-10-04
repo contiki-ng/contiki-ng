@@ -29,9 +29,16 @@ else
   CFLAGS += -O2
 endif
 
-### Use CMSIS and the existing dbg-io from arch/cpu/arm/common
-CONTIKI_ARM_DIRS += . common/dbg-io
+### Use CMSIS from arch/cpu/arm/common
+CONTIKI_ARM_DIRS += . 
 CONTIKI_CPU_DIRS += $(addprefix ../arm/, $(CONTIKI_ARM_DIRS))
+
+### Default to use os/lib/dbg-io unless configured to do otherwise
+PLATFORM_DBG_IO ?= 0
+
+ifeq ($(PLATFORM_DBG_IO),0)
+  MODULES += os/lib/dbg-io
+endif
 
 ### CPU-dependent cleanup files
 CLEAN += *.elf *.bin *.lst *.hex *.i16hex
