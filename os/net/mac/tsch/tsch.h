@@ -181,7 +181,7 @@ extern unsigned long sync_count;
 extern int32_t min_drift_seen;
 extern int32_t max_drift_seen;
 /* The TSCH standard 10ms timeslot timing */
-extern uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count];
+extern const uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count];
 
 /* TSCH processes */
 PROCESS_NAME(tsch_process);

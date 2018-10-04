@@ -97,7 +97,7 @@ typedef struct cc1200_rf_cfg {
   /* The bitrate in bps */
   uint32_t bitrate;
   /* TSCH timeslot timing */
-  uint16_t *tsch_timing;
+  const uint16_t *tsch_timing;
 } cc1200_rf_cfg_t;
 /*---------------------------------------------------------------------------*/
 #endif /* CC1200_RF_CFG_H  */

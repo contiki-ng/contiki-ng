@@ -18,7 +18,7 @@
 #endif /* NETSTACK_CONF_RADIO */
 
 /* TSCH 15ms timeslot timing template, required for cc2420 */
-extern uint16_t tsch_timeslot_timing_us_15000[];
+extern const uint16_t tsch_timeslot_timing_us_15000[];
 
 /* The TSCH default slot length of 10ms is a bit too short for this platform,
  * use 15ms instead. */
