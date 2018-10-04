@@ -101,34 +101,6 @@ NBR_TABLE(struct eb_stat, eb_stats);
 uint8_t tsch_hopping_sequence[TSCH_HOPPING_SEQUENCE_MAX_LEN];
 struct tsch_asn_divisor_t tsch_hopping_sequence_length;
 
-/* The default timeslot timing in the standard is a guard time of
- * 2200 us, a Tx offset of 2120 us and a Rx offset of 1120 us.
- * As a result, the listening device has a guard time not centered
- * on the expected Tx time. This is to be fixed in the next iteration
- * of the standard. This can be enabled with:
- * TxOffset: 2120
- * RxOffset: 1120
- * RxWait:   2200
- *
- * Instead, we align the Rx guard time on expected Tx time. The Rx
- * guard time is user-configurable with TSCH_CONF_RX_WAIT.
- * (TxOffset - (RxWait / 2)) instead */
-
-uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count] = {
-   1800, /* CCAOffset */
-    128, /* CCA */
-   2120, /* TxOffset */
-  (2120 - (TSCH_CONF_RX_WAIT / 2)), /* RxOffset */
-    800, /* RxAckDelay */
-   1000, /* TxAckDelay */
-  TSCH_CONF_RX_WAIT, /* RxWait */
-    400, /* AckWait */
-    192, /* RxTx */
-   2400, /* MaxAck */
-   4256, /* MaxTx */
-  10000, /* TimeslotLength */
-};
-
 /* Default TSCH timeslot timing (in micro-second) */
 static const uint16_t *tsch_default_timing_us;
 /* TSCH timeslot timing (in micro-second) */
