@@ -899,6 +899,12 @@ tsch_init(void)
   radio_value_t radio_tx_mode;
   rtimer_clock_t t;
 
+  /* Check that the platform provides a TSCH timeslot timing template */
+  if(TSCH_DEFAULT_TIMESLOT_TIMING == NULL) {
+    LOG_ERR("! platform does not provide a timeslot timing template.\n");
+    return;
+  }
+
   /* Radio Rx mode */
   if(NETSTACK_RADIO.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode) != RADIO_RESULT_OK) {
     LOG_ERR("! radio does not support getting RADIO_PARAM_RX_MODE. Abort init.\n");
