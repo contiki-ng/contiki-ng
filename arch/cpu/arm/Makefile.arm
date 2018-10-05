@@ -34,9 +34,9 @@ CONTIKI_ARM_DIRS += .
 CONTIKI_CPU_DIRS += $(addprefix ../arm/, $(CONTIKI_ARM_DIRS))
 
 ### Default to use os/lib/dbg-io unless configured to do otherwise
-PLATFORM_DBG_IO ?= 0
+MAKE_WITH_LIB_DBG_IO ?= 1
 
-ifeq ($(PLATFORM_DBG_IO),0)
+ifeq ($(MAKE_WITH_LIB_DBG_IO),1)
   MODULES += os/lib/dbg-io
 endif
 

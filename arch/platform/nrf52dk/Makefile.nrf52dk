@@ -10,7 +10,7 @@ CONTIKI_SOURCEFILES += platform.c leds-arch.c nrf52dk-sensors.c button-sensor.c 
 
 ifeq ($(NRF52_USE_RTT),1)
 ### Suppress the existing debug I/O in os/lib
-PLATFORM_DBG_IO = 1
+MAKE_WITH_LIB_DBG_IO = 0
 CONTIKI_TARGET_DIRS += rtt
 CONTIKI_SOURCEFILES += rtt-printf.c segger-rtt.c segger-rtt-printf.c
 else
