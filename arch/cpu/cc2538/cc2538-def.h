@@ -41,6 +41,21 @@
 /* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
 #define CC2538_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
 #define CC2538_DELAY_BEFORE_DETECT 0
+/* Frame filtering done in software */
+#define TSCH_CONF_HW_FRAME_FILTERING  0
+
+#ifndef TSCH_CONF_BASE_DRIFT_PPM
+/* The drift compared to "true" 10ms slots.
+ * Enable adaptive sync to enable compensation for this.
+ * Slot length 10000 usec
+ *             328 ticks
+ * Tick duration 30.517578125 usec
+ * Real slot duration 10009.765625 usec
+ * Target - real duration = -9.765625 usec
+ * TSCH_CONF_BASE_DRIFT_PPM -977
+ */
+#define TSCH_CONF_BASE_DRIFT_PPM -977
+#endif
 
 /*---------------------------------------------------------------------------*/
 #define SPI_CONF_CONTROLLER_COUNT 2

@@ -74,14 +74,4 @@
 
 #endif /* WITH_SECURITY */
 
-/*******************************************************/
-/************* Other system configuration **************/
-/*******************************************************/
-
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL || \
-  CONTIKI_TARGET_OPENMOTE_CC2538
-#define TSCH_CONF_HW_FRAME_FILTERING    0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL \
-       || CONTIKI_TARGET_OPENMOTE_CC2538 */
-
 #endif /* PROJECT_CONF_H_ */
