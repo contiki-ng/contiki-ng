@@ -70,6 +70,11 @@ frequency hopping for enhanced reliability.
 #include "sys/cooja_mt.h"
 #endif /* CONTIKI_TARGET_COOJA */
 
+/* Include Arch-Specific conf */
+#ifdef TSCH_CONF_ARCH_HDR_PATH
+#include TSCH_CONF_ARCH_HDR_PATH
+#endif /* TSCH_CONF_ARCH_HDR_PATH */
+
 /*********** Macros *********/
 
 /* Wait for a condition with timeout t0+offset. */
