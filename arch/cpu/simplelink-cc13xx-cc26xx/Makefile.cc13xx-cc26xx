@@ -91,9 +91,6 @@ SDK_DEVICES := $(CORE_SDK)/source/ti/devices/$(SDK_DEVICES_NAME)
 
 EXTERNALDIRS += $(SDK_SOURCE) $(SDK_NORTOS)
 
-# CPU-dependent debug source files
-MODULES += os/lib/dbg-io
-
 # CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev $(SUBFAMILY)
 CONTIKI_CPU_DIRS += rf rf-settings rf-settings/$(DEVICE_FAMILY_LC)
