@@ -43,6 +43,11 @@
  * Definitions below are dictated by the hardware and not really
  * changeable!
  */
+
+ /* 1 len byte, 2 bytes CRC */
+ #define RADIO_PHY_OVERHEAD         3
+ /* 250kbps data rate. One byte = 32us */
+ #define RADIO_BYTE_AIR_TIME       32
 /* Delay between GO signal and SFD: radio fixed delay + 4Bytes preample + 1B SFD -- 1Byte time is 32us
  * ~327us + 129preample = 456 us */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(456))

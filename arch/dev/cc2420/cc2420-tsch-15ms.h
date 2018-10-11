@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
+ *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "contiki.h"
 
-/* Set to enable TSCH security */
-#ifndef WITH_SECURITY
-#define WITH_SECURITY 0
-#endif /* WITH_SECURITY */
-
-/*******************************************************/
-/********************* Enable TSCH *********************/
-/*******************************************************/
-
-/* Needed for CC2538 platforms only */
-/* For TSCH we have to use the more accurate crystal oscillator
- * by default the RC oscillator is activated */
-#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
-
-/* Needed for cc2420 platforms only */
-/* Disable DCO calibration (uses timerB) */
-#define DCOSYNCH_CONF_ENABLED 0
-/* Enable SFD timestamps (uses timerB) */
-#define CC2420_CONF_SFD_TIMESTAMPS 1
-
-/* Enable Sixtop Implementation */
-#define TSCH_CONF_WITH_SIXTOP 1
-
-/*******************************************************/
-/******************* Configure TSCH ********************/
-/*******************************************************/
-
-/* IEEE802.15.4 PANID */
-#define IEEE802154_CONF_PANID 0xabcd
-
-/* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#define TSCH_CONF_AUTOSTART 0
-
-/* 6TiSCH schedule length */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 11
-
-#if WITH_SECURITY
-
-/* Enable security */
-#define LLSEC802154_CONF_ENABLED 1
-
-#endif /* WITH_SECURITY */
-
-#endif /* PROJECT_CONF_H_ */
+extern const uint16_t tsch_timeslot_timing_us_15000[];
