@@ -65,29 +65,11 @@ frequency hopping for enhanced reliability.
 #include "net/mac/tsch/tsch-rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
-#if CONTIKI_TARGET_COOJA
-#include "lib/simEnvChange.h"
-#include "sys/cooja_mt.h"
-#endif /* CONTIKI_TARGET_COOJA */
 
 /* Include Arch-Specific conf */
 #ifdef TSCH_CONF_ARCH_HDR_PATH
 #include TSCH_CONF_ARCH_HDR_PATH
 #endif /* TSCH_CONF_ARCH_HDR_PATH */
-
-/*********** Macros *********/
-
-/* Wait for a condition with timeout t0+offset. */
-#if CONTIKI_TARGET_COOJA
-#define BUSYWAIT_UNTIL_ABS(cond, t0, offset) \
-  while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (offset))) { \
-    simProcessRunValue = 1; \
-    cooja_mt_yield(); \
-  };
-#else
-#define BUSYWAIT_UNTIL_ABS(cond, t0, offset) \
-  while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (offset))) ;
-#endif /* CONTIKI_TARGET_COOJA */
 
 /*********** Callbacks *********/
 

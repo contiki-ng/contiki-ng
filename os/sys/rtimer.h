@@ -54,6 +54,7 @@
 #define RTIMER_H_
 
 #include "contiki.h"
+#include "dev/watchdog.h"
 
 /** \brief The rtimer size (in bytes) */
 #ifdef RTIMER_CONF_CLOCK_SIZE
@@ -185,6 +186,24 @@ void rtimer_arch_schedule(rtimer_clock_t t);
 #else /* RTIMER_CONF_GUARD_TIME */
 #define RTIMER_GUARD_TIME (RTIMER_ARCH_SECOND >> 14)
 #endif /* RTIMER_CONF_GUARD_TIME */
+
+/** \brief Busy-wait until a condition. Start time is t0, max wait time is max_time */
+#define RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time) \
+  do { \
+    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (max_time))) { \
+      watchdog_periodic(); \
+    } \
+  } while(0)
+
+/** \brief Busy-wait until a condition for at most max_time */
+#define RTIMER_BUSYWAIT_UNTIL(cond, max_time) \
+  do { \
+    rtimer_clock_t t0 = RTIMER_NOW(); \
+    RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time); \
+  } while(0)
+
+/** \brief Busy-wait for a fixed duration */
+#define RTIMER_BUSYWAIT(duration) RTIMER_BUSYWAIT_UNTIL(0, duration)
 
 #endif /* RTIMER_H_ */
 
