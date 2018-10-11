@@ -170,6 +170,9 @@ enum {
    * it needs to be used with radio.get_object()/set_object(). */
   RADIO_PARAM_LAST_PACKET_TIMESTAMP,
 
+  /* For enabling and disabling the SHR search */
+  RADIO_PARAM_SHR_SEARCH,
+
   /* Constants (read only) */
 
   /* The lowest radio channel. */
@@ -180,7 +183,14 @@ enum {
   /* The minimum transmission power in dBm. */
   RADIO_CONST_TXPOWER_MIN,
   /* The maximum transmission power in dBm. */
-  RADIO_CONST_TXPOWER_MAX
+  RADIO_CONST_TXPOWER_MAX,
+
+  RADIO_CONST_TSCH_TIMING,
+  RADIO_CONST_PHY_OVERHEAD,
+  RADIO_CONST_BYTE_AIR_TIME,
+  RADIO_CONST_DELAY_BEFORE_TX,
+  RADIO_CONST_DELAY_BEFORE_RX,
+  RADIO_CONST_DELAY_BEFORE_DETECT,
 };
 
 /* Radio power modes */

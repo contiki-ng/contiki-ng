@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,54 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
+ *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+/**
+ * \file
+ *         IEEE 802.15.4 TSCH timeslot timings
+ * \author
+ *         Simon Duquennoy <simon.duquennoy@ri.se>
+ *
+ */
 
-/* Set to enable TSCH security */
-#ifndef WITH_SECURITY
-#define WITH_SECURITY 0
-#endif /* WITH_SECURITY */
+/**
+ * \addtogroup tsch
+ * @{
+*/
 
-/*******************************************************/
-/********************* Enable TSCH *********************/
-/*******************************************************/
+#include "contiki.h"
+#include "net/mac/tsch/tsch.h"
 
-/* Needed for CC2538 platforms only */
-/* For TSCH we have to use the more accurate crystal oscillator
- * by default the RC oscillator is activated */
-#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
+/**
+ * \brief The default timeslot timing in the standard is a guard time of
+ * 2200 us, a Tx offset of 2120 us and a Rx offset of 1120 us.
+ * As a result, the listening device has a guard time not centered
+ * on the expected Tx time. This is to be fixed in the next iteration
+ * of the standard. This can be enabled with:
+ * TxOffset: 2120
+ * RxOffset: 1120
+ * RxWait:   2200
+ *
+ * Instead, we align the Rx guard time on expected Tx time. The Rx
+ * guard time is user-configurable with TSCH_CONF_RX_WAIT.
+ * (TxOffset - (RxWait / 2)) instead
+ */
 
-/* Needed for cc2420 platforms only */
-/* Disable DCO calibration (uses timerB) */
-#define DCOSYNCH_CONF_ENABLED 0
-/* Enable SFD timestamps (uses timerB) */
-#define CC2420_CONF_SFD_TIMESTAMPS 1
+const uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count] = {
+   1800, /* CCAOffset */
+    128, /* CCA */
+   2120, /* TxOffset */
+  (2120 - (TSCH_CONF_RX_WAIT / 2)), /* RxOffset */
+    800, /* RxAckDelay */
+   1000, /* TxAckDelay */
+  TSCH_CONF_RX_WAIT, /* RxWait */
+    400, /* AckWait */
+    192, /* RxTx */
+   2400, /* MaxAck */
+   4256, /* MaxTx */
+  10000, /* TimeslotLength */
+};
 
-/* Enable Sixtop Implementation */
-#define TSCH_CONF_WITH_SIXTOP 1
-
-/*******************************************************/
-/******************* Configure TSCH ********************/
-/*******************************************************/
-
-/* IEEE802.15.4 PANID */
-#define IEEE802154_CONF_PANID 0xabcd
-
-/* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
-#define TSCH_CONF_AUTOSTART 0
-
-/* 6TiSCH schedule length */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 11
-
-#if WITH_SECURITY
-
-/* Enable security */
-#define LLSEC802154_CONF_ENABLED 1
-
-#endif /* WITH_SECURITY */
-
-#endif /* PROJECT_CONF_H_ */
+/** @} */

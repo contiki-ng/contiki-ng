@@ -126,6 +126,9 @@ const cc1200_rf_cfg_t cc1200_868_fsk_1_2kbps = {
   .size_of_register_settings = sizeof(preferredSettings),
   .tx_pkt_lifetime = (2 * RTIMER_SECOND),
   .tx_rx_turnaround = (RTIMER_SECOND / 2),
+  .delay_before_tx = 0,
+  .delay_before_rx = 0,
+  .delay_before_detect = 0,
   .chan_center_freq0 = RF_CFG_CHAN_CENTER_F0,
   .chan_spacing = RF_CFG_CHAN_SPACING,
   .min_channel = RF_CFG_MIN_CHANNEL,
@@ -133,5 +136,7 @@ const cc1200_rf_cfg_t cc1200_868_fsk_1_2kbps = {
   .max_txpower = RF_CFG_MAX_TXPOWER,
   .cca_threshold = RF_CFG_CCA_THRESHOLD,
   .rssi_offset = RF_CFG_RSSI_OFFSET,
+  .bitrate = 1200,
+  .tsch_timing = NULL,
 };
 /*---------------------------------------------------------------------------*/
