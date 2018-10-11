@@ -102,9 +102,6 @@ int cc2420_get_txpower(void);
  */
 int cc2420_interrupt(void);
 
-/* XXX hack: these will be made as Chameleon packet attributes */
-extern rtimer_clock_t cc2420_time_of_arrival,
-  cc2420_time_of_departure;
 extern int cc2420_authority_level_of_sender;
 
 int cc2420_on(void);
