@@ -330,6 +330,10 @@ get_value(radio_param_t param, radio_value_t *value)
   case RADIO_PARAM_LAST_LINK_QUALITY:
     *value = simLQI;
     return RADIO_RESULT_OK;
+  case RADIO_PARAM_RSSI:
+    /* return a fixed value depending on the channel */
+    *value = -90 + simRadioChannel - 11;
+    return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
   }

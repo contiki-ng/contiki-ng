@@ -64,11 +64,11 @@
  * project has specified otherwise. Depending on the final mode, determine a
  * default channel (again, if unspecified) and configure RDC params
  */
-#if CPU_FAMILY_CC13XX
+#if CPU_FAMILY_CC13X0
 #ifndef CC13XX_CONF_PROP_MODE
 #define CC13XX_CONF_PROP_MODE 1
 #endif /* CC13XX_CONF_PROP_MODE */
-#endif /* CPU_FAMILY_CC13XX */
+#endif /* CPU_FAMILY_CC13X0 */
 
 #if CC13XX_CONF_PROP_MODE
 #ifndef NETSTACK_CONF_RADIO

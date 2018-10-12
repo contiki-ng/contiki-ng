@@ -130,13 +130,6 @@
 #define MICROMAC_CONF_ALWAYS_ON 1
 #endif /* MICROMAC_CONF_ALWAYS_ON */
 
-#define BUSYWAIT_UNTIL(cond, max_time) \
-  do { \
-    rtimer_clock_t t0; \
-    t0 = RTIMER_NOW(); \
-    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time))) ; \
-  } while(0)
-
 /* Local variables */
 static volatile signed char radio_last_rssi;
 static volatile uint8_t radio_last_correlation; /* LQI */
@@ -377,14 +370,14 @@ transmit(unsigned short payload_len)
                          (send_on_cca ? E_MMAC_TX_USE_CCA : E_MMAC_TX_NO_CCA));
 #endif
   if(poll_mode) {
-    BUSYWAIT_UNTIL(u32MMAC_PollInterruptSource(E_MMAC_INT_TX_COMPLETE), MAX_PACKET_DURATION);
+    RTIMER_BUSYWAIT_UNTIL(u32MMAC_PollInterruptSource(E_MMAC_INT_TX_COMPLETE), MAX_PACKET_DURATION);
   } else {
     if(in_ack_transmission) {
       /* as nested interupts are not possible, the tx flag will never be cleared */
-      BUSYWAIT_UNTIL(FALSE, MAX_ACK_DURATION);
+      RTIMER_BUSYWAIT_UNTIL(FALSE, MAX_ACK_DURATION);
     } else {
       /* wait until the tx flag is cleared */
-      BUSYWAIT_UNTIL(!tx_in_progress, MAX_PACKET_DURATION);
+      RTIMER_BUSYWAIT_UNTIL(!tx_in_progress, MAX_PACKET_DURATION);
     }
   }
 

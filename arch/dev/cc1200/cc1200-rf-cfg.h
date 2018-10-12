@@ -69,6 +69,13 @@ typedef struct cc1200_rf_cfg {
   rtimer_clock_t tx_pkt_lifetime;
   /* The maximum time it takes to switch from Tx to Rx */
   rtimer_clock_t tx_rx_turnaround;
+  /* The delay between a call to transmit() and end of SFD */
+  rtimer_clock_t delay_before_tx;
+  /* Delay between GO signal and start listening
+   * Measured 104us: between GO signal and start listening */
+  rtimer_clock_t delay_before_rx;
+  /* Delay between the SFD finishes arriving and it is detected in software */
+  rtimer_clock_t delay_before_detect;
   /* Base frequency in kHz */
   uint32_t chan_center_freq0;
   /* Channel spacing in Hz */
@@ -87,6 +94,10 @@ typedef struct cc1200_rf_cfg {
   /* The RSSI offset in dBm.
    * -99 when MDMCFG1.DVGA_GAIN=00, -81 when MDMCFG1.DVGA_GAIN=01 */
   int8_t rssi_offset;
+  /* The bitrate in bps */
+  uint32_t bitrate;
+  /* TSCH timeslot timing */
+  const uint16_t *tsch_timing;
 } cc1200_rf_cfg_t;
 /*---------------------------------------------------------------------------*/
 #endif /* CC1200_RF_CFG_H  */

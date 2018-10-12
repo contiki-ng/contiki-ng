@@ -55,6 +55,25 @@
 #endif /* PROJECT_CONF_PATH */
 /*---------------------------------------------------------------------------*/
 #include "cc2538-def.h"
+
+unsigned radio_phy_overhead(void);
+unsigned radio_byte_air_time(void);
+unsigned radio_delay_before_tx(void);
+unsigned radio_delay_before_rx(void);
+unsigned radio_delay_before_detect(void);
+uint16_t *radio_tsch_timeslot_timing(void);
+
+/** @} */
+/*---------------------------------------------------------------------------*/
+
+#define RADIO_PHY_OVERHEAD        radio_phy_overhead()
+#define RADIO_BYTE_AIR_TIME       radio_byte_air_time()
+#define RADIO_DELAY_BEFORE_TX     radio_delay_before_tx()
+#define RADIO_DELAY_BEFORE_RX     radio_delay_before_rx()
+#define RADIO_DELAY_BEFORE_DETECT radio_delay_before_detect()
+
+#define TSCH_CONF_DEFAULT_TIMESLOT_TIMING   radio_tsch_timeslot_timing()
+
 /*---------------------------------------------------------------------------*/
 /**
  * \name Serial Boot Loader Backdoor configuration
