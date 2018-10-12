@@ -67,13 +67,21 @@ spi_release(const spi_device_t *dev)
 spi_status_t
 spi_select(const spi_device_t *dev)
 {
-  return spi_arch_select(dev);
+  if(!spi_arch_has_lock(dev)) {
+    return SPI_DEV_STATUS_BUS_NOT_OWNED;
+  }
+
+  gpio_hal_arch_clear_pin(dev->pin_spi_cs);
+
+  return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
 spi_deselect(const spi_device_t *dev)
 {
-  return spi_arch_deselect(dev);
+  gpio_hal_arch_set_pin(dev->pin_spi_cs);
+
+  return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
 bool
