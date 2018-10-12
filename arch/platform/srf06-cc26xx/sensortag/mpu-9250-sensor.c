@@ -601,11 +601,11 @@ configure(int type, int enable)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    ti_lib_rom_ioc_pin_type_gpio_input(BOARD_IOID_MPU_INT);
+    ti_lib_ioc_pin_type_gpio_input(BOARD_IOID_MPU_INT);
     ti_lib_ioc_io_port_pull_set(BOARD_IOID_MPU_INT, IOC_IOPULL_DOWN);
     ti_lib_ioc_io_hyst_set(BOARD_IOID_MPU_INT, IOC_HYST_ENABLE);
 
-    ti_lib_rom_ioc_pin_type_gpio_output(BOARD_IOID_MPU_POWER);
+    ti_lib_ioc_pin_type_gpio_output(BOARD_IOID_MPU_POWER);
     ti_lib_ioc_io_drv_strength_set(BOARD_IOID_MPU_POWER, IOC_CURRENT_4MA,
                                    IOC_STRENGTH_MAX);
     ti_lib_gpio_clear_dio(BOARD_IOID_MPU_POWER);
