@@ -76,18 +76,8 @@
 /*---------------------------------------------------------------------------*/
 #if DEBUG_CC1200_ARCH > 0
 #define PRINTF(...) printf(__VA_ARGS__)
-#define BUSYWAIT_UNTIL(cond, max_time)                                  \
-  do {                                                                  \
-    rtimer_clock_t t0;                                                  \
-    t0 = RTIMER_NOW();                                                  \
-    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time))) {} \
-    if(!(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time)))) { \
-      printf("ARCH: Timeout exceeded in line %d!\n", __LINE__); \
-    } \
-  } while(0)
 #else
 #define PRINTF(...)
-#define BUSYWAIT_UNTIL(cond, max_time) while(!cond)
 #endif
 /*---------------------------------------------------------------------------*/
 extern int cc1200_rx_interrupt(void);
@@ -105,7 +95,7 @@ cc1200_arch_spi_select(void)
   /* Set CSn to low (0) */
   GPIO_CLR_PIN(CC1200_SPI_CSN_PORT_BASE, CC1200_SPI_CSN_PIN_MASK);
   /* The MISO pin should go low before chip is fully enabled. */
-  BUSYWAIT_UNTIL(
+  RTIMER_BUSYWAIT_UNTIL(
     GPIO_READ_PIN(CC1200_SPI_MISO_PORT_BASE, CC1200_SPI_MISO_PIN_MASK) == 0,
     RTIMER_SECOND / 100);
 }
@@ -288,7 +278,7 @@ cc1200_arch_init(void)
   cc1200_arch_spi_deselect();
 
   /* Ensure MISO is high */
-  BUSYWAIT_UNTIL(
+  RTIMER_BUSYWAIT_UNTIL(
     GPIO_READ_PIN(CC1200_SPI_MISO_PORT_BASE, CC1200_SPI_MISO_PIN_MASK),
     RTIMER_SECOND / 10);
 }
@@ -297,4 +287,3 @@ cc1200_arch_init(void)
  * @}
  * @}
  */
-

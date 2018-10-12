@@ -310,15 +310,7 @@ extern const cc1200_rf_cfg_t CC1200_RF_CFG;
 #define LOCK_SPI()                      do { spi_locked++; } while(0)
 #define SPI_IS_LOCKED()                 (spi_locked != 0)
 #define RELEASE_SPI()                   do { spi_locked--; } while(0)
-/*---------------------------------------------------------------------------*/
-#define BUSYWAIT_UNTIL(cond, max_time) \
-  do { \
-    rtimer_clock_t t0; \
-    t0 = RTIMER_NOW(); \
-    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time))) { \
-      watchdog_periodic(); \
-    } \
-  } while(0)
+
 /*---------------------------------------------------------------------------*/
 #if CC1200_USE_GPIO2
 /* Configure GPIO interrupts. GPIO0: falling, GPIO2: rising edge */
@@ -378,29 +370,9 @@ extern const cc1200_rf_cfg_t CC1200_RF_CFG;
 #define INFO(...)
 #endif
 
-#if DEBUG_LEVEL > 0
-/*
- * As BUSYWAIT_UNTIL was mainly used to test for a state transition,
- * we define a separate macro for this adding the possibility to
- * throw an error message when the timeout exceeds
- */
-#define BUSYWAIT_UNTIL_STATE(s, t) \
-  do { \
-    rtimer_clock_t t0; \
-    t0 = RTIMER_NOW(); \
-    while((state() != s) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (t))) {} \
-    if(!(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (t)))) { \
-      printf("RF: Timeout exceeded in line %d!\n", __LINE__); \
-    } \
-  } while(0)
-#else
-#define BUSYWAIT_UNTIL_STATE(s, t) \
-  do { \
-    rtimer_clock_t t0; \
-    t0 = RTIMER_NOW(); \
-    while((state() != s) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (t))) {} \
-  } while(0)
-#endif
+/* Busy-wait (time-bounded) until the radio reaches a given state */
+#define RTIMER_BUSYWAIT_UNTIL_STATE(s, t) RTIMER_BUSYWAIT_UNTIL(state() == (s), t)
+
 /*---------------------------------------------------------------------------*/
 /* Variables */
 /*---------------------------------------------------------------------------*/
@@ -604,7 +576,7 @@ PROCESS_THREAD(cc1200_process, ev, data)
       /*
        * We are on and not in TX. As every function of this driver
        * assures that we are in RX mode
-       * (using BUSYWAIT_UNTIL_STATE(STATE_RX, ...) construct) in
+       * (using RTIMER_BUSYWAIT_UNTIL_STATE(STATE_RX, ...) construct) in
        * either rx_rx(), idle_calibrate_rx() or transmit(),
        * something probably went wrong in the rx interrupt handler
        * if we are not in RX at this point.
@@ -893,7 +865,7 @@ transmit(unsigned short transmit_len)
      * again as they were turned off in idle()
      */
 
-    BUSYWAIT_UNTIL_STATE(STATE_RX,
+    RTIMER_BUSYWAIT_UNTIL_STATE(STATE_RX,
         CC1200_RF_CFG.tx_rx_turnaround);
 
     ENABLE_GPIO_INTERRUPTS();
@@ -1033,7 +1005,7 @@ channel_clear(void)
     }
 
     /* Wait for CARRIER_SENSE_VALID signal */
-    BUSYWAIT_UNTIL(((rssi0 = single_read(CC1200_RSSI0))
+    RTIMER_BUSYWAIT_UNTIL(((rssi0 = single_read(CC1200_RSSI0))
                     & CC1200_CARRIER_SENSE_VALID),
                    RTIMER_SECOND / 100);
     RF_ASSERT(rssi0 & CC1200_CARRIER_SENSE_VALID);
@@ -1135,7 +1107,7 @@ on(void)
 
     /* Wake-up procedure. Wait for GPIO0 to de-assert (CHIP_RDYn) */
     cc1200_arch_spi_select();
-    BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 0),
+    RTIMER_BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 0),
                    RTIMER_SECOND / 100);
     RF_ASSERT((cc1200_arch_gpio0_read_pin() == 0));
     cc1200_arch_spi_deselect();
@@ -1239,7 +1211,7 @@ get_rssi(void)
   }
 
   /* Wait for CARRIER_SENSE_VALID signal */
-  BUSYWAIT_UNTIL(((rssi0 = single_read(CC1200_RSSI0))
+  RTIMER_BUSYWAIT_UNTIL(((rssi0 = single_read(CC1200_RSSI0))
                 & CC1200_CARRIER_SENSE_VALID),
                 RTIMER_SECOND / 100);
   RF_ASSERT(rssi0 & CC1200_CARRIER_SENSE_VALID);
@@ -1706,20 +1678,20 @@ configure(void)
   while(1) {
 #if (CC1200_RF_TESTMODE == 1)
     watchdog_periodic();
-    BUSYWAIT_UNTIL(0, RTIMER_SECOND / 10);
+    RTIMER_BUSYWAIT(RTIMER_SECOND / 10);
     leds_off(LEDS_YELLOW);
     leds_on(LEDS_RED);
     watchdog_periodic();
-    BUSYWAIT_UNTIL(0, RTIMER_SECOND / 10);
+    RTIMER_BUSYWAIT(RTIMER_SECOND / 10);
     leds_off(LEDS_RED);
     leds_on(LEDS_YELLOW);
 #else
     watchdog_periodic();
-    BUSYWAIT_UNTIL(0, RTIMER_SECOND / 10);
+    RTIMER_BUSYWAIT(RTIMER_SECOND / 10);
     leds_off(LEDS_GREEN);
     leds_on(LEDS_RED);
     watchdog_periodic();
-    BUSYWAIT_UNTIL(0, RTIMER_SECOND / 10);
+    RTIMER_BUSYWAIT(RTIMER_SECOND / 10);
     leds_off(LEDS_RED);
     leds_on(LEDS_GREEN);
 #endif
@@ -1741,11 +1713,11 @@ configure(void)
   while(1) {
 
     watchdog_periodic();
-    BUSYWAIT_UNTIL(0, RTIMER_SECOND / 10);
+    RTIMER_BUSYWAIT(RTIMER_SECOND / 10);
     leds_off(LEDS_GREEN);
     leds_on(LEDS_YELLOW);
     watchdog_periodic();
-    BUSYWAIT_UNTIL(0, RTIMER_SECOND / 10);
+    RTIMER_BUSYWAIT(RTIMER_SECOND / 10);
     leds_off(LEDS_YELLOW);
     leds_on(LEDS_GREEN);
     clock_delay_usec(1000);
@@ -1866,8 +1838,8 @@ calibrate(void)
   INFO("RF: Calibrate\n");
 
   strobe(CC1200_SCAL);
-  BUSYWAIT_UNTIL_STATE(STATE_CALIBRATE, RTIMER_SECOND / 100);
-  BUSYWAIT_UNTIL_STATE(STATE_IDLE, RTIMER_SECOND / 100);
+  RTIMER_BUSYWAIT_UNTIL_STATE(STATE_CALIBRATE, RTIMER_SECOND / 100);
+  RTIMER_BUSYWAIT_UNTIL_STATE(STATE_IDLE, RTIMER_SECOND / 100);
 
 #if CC1200_CAL_TIMEOUT_SECONDS
   cal_timer = clock_seconds();
@@ -1904,7 +1876,7 @@ idle(void)
   }
 
   strobe(CC1200_SIDLE);
-  BUSYWAIT_UNTIL_STATE(STATE_IDLE, RTIMER_SECOND / 100);
+  RTIMER_BUSYWAIT_UNTIL_STATE(STATE_IDLE, RTIMER_SECOND / 100);
 
 } /* idle(), 21.05.2015 */
 /*---------------------------------------------------------------------------*/
@@ -1922,7 +1894,7 @@ idle_calibrate_rx(void)
   rf_flags &= ~RF_RX_PROCESSING_PKT;
   strobe(CC1200_SFRX);
   strobe(CC1200_SRX);
-  BUSYWAIT_UNTIL_STATE(STATE_RX, RTIMER_SECOND / 100);
+  RTIMER_BUSYWAIT_UNTIL_STATE(STATE_RX, RTIMER_SECOND / 100);
 
   ENABLE_GPIO_INTERRUPTS();
 
@@ -1947,7 +1919,7 @@ rx_rx(void)
     strobe(CC1200_SFTX);
   } else {
     strobe(CC1200_SIDLE);
-    BUSYWAIT_UNTIL_STATE(STATE_IDLE,
+    RTIMER_BUSYWAIT_UNTIL_STATE(STATE_IDLE,
                          RTIMER_SECOND / 100);
   }
 
@@ -1959,7 +1931,7 @@ rx_rx(void)
 
   strobe(CC1200_SFRX);
   strobe(CC1200_SRX);
-  BUSYWAIT_UNTIL_STATE(STATE_RX, RTIMER_SECOND / 100);
+  RTIMER_BUSYWAIT_UNTIL_STATE(STATE_RX, RTIMER_SECOND / 100);
 
 }
 /*---------------------------------------------------------------------------*/
@@ -2002,14 +1974,14 @@ idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
 
 #if USE_SFSTXON
   /* Wait for synthesizer to be ready */
-  BUSYWAIT_UNTIL_STATE(STATE_FSTXON, RTIMER_SECOND / 100);
+  RTIMER_BUSYWAIT_UNTIL_STATE(STATE_FSTXON, RTIMER_SECOND / 100);
 #endif
 
   /* Start TX */
   strobe(CC1200_STX);
 
   /* Wait for TX to start. */
-  BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 1), RTIMER_SECOND / 100);
+  RTIMER_BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 1), RTIMER_SECOND / 100);
 
   /* Turned off at the latest in idle() */
   TX_LEDS_ON();
@@ -2072,7 +2044,7 @@ idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
        */
 
       INFO("RF: TX failure!\n");
-      BUSYWAIT_UNTIL((state() != STATE_TX), RTIMER_SECOND / 100);
+      RTIMER_BUSYWAIT_UNTIL((state() != STATE_TX), RTIMER_SECOND / 100);
       /* Re-configure GPIO2 */
       single_write(CC1200_IOCFG2, GPIO2_IOCFG);
       idle();
@@ -2086,12 +2058,12 @@ idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
 
   } else {
     /* Wait for TX to complete */
-    BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 0),
+    RTIMER_BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 0),
                    CC1200_RF_CFG.tx_pkt_lifetime);
   }
 #else
   /* Wait for TX to complete */
-  BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 0),
+  RTIMER_BUSYWAIT_UNTIL((cc1200_arch_gpio0_read_pin() == 0),
                  CC1200_RF_CFG.tx_pkt_lifetime);
 #endif
 
