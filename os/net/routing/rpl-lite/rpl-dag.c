@@ -104,7 +104,7 @@ rpl_dag_leave(void)
 
   /* Issue a no-path DAO */
   if(!rpl_dag_root_is_root()) {
-    RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
+    RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_last_seqno);
     rpl_icmp6_dao_output(0);
   }
 
@@ -507,7 +507,7 @@ init_dag(uint8_t instance_id, uip_ipaddr_t *dag_id, rpl_ocp_t ocp,
   curr_instance.dag.lowest_rank = RPL_INFINITE_RANK;
   curr_instance.dag.dao_last_seqno = RPL_LOLLIPOP_INIT;
   curr_instance.dag.dao_last_acked_seqno = RPL_LOLLIPOP_INIT;
-  curr_instance.dag.dao_curr_seqno = RPL_LOLLIPOP_INIT;
+  curr_instance.dag.dao_last_seqno = RPL_LOLLIPOP_INIT;
   memcpy(&curr_instance.dag.dag_id, dag_id, sizeof(curr_instance.dag.dag_id));
 
   return 1;
@@ -657,6 +657,8 @@ rpl_process_dao_ack(uint8_t sequence, uint8_t status)
       curr_instance.dag.state = DAG_REACHABLE;
       rpl_timers_dio_reset("Reachable");
     }
+    /* Let the rpl-timers module know that we got an ACK for the last DAO */
+    rpl_timers_notify_dao_ack();
 
     if(!status_ok) {
       /* We got a NACK, start poisoning and leave */

@@ -100,6 +100,11 @@ void rpl_timers_schedule_dao(void);
 void rpl_timers_schedule_dao_ack(uip_ipaddr_t *target, uint16_t sequence);
 
 /**
+ * Let the rpl-timers module know that the last DAO was ACKed
+*/
+void rpl_timers_notify_dao_ack(void);
+
+/**
  * Schedule probing with delay RPL_PROBING_DELAY_FUNC()
 */
 void rpl_schedule_probing(void);

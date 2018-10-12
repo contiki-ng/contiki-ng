@@ -71,8 +71,9 @@ clock_time_t RPL_PROBING_DELAY_FUNC(void);
 static void handle_dis_timer(void *ptr);
 static void handle_dio_timer(void *ptr);
 static void handle_unicast_dio_timer(void *ptr);
-static void handle_dao_timer(void *ptr);
+static void send_new_dao(void *ptr);
 #if RPL_WITH_DAO_ACK
+static void resend_dao(void *ptr);
 static void handle_dao_ack_timer(void *ptr);
 #endif /* RPL_WITH_DAO_ACK */
 #if RPL_WITH_PROBING
@@ -224,7 +225,7 @@ static void
 schedule_dao_retransmission(void)
 {
   clock_time_t expiration_time = RPL_DAO_RETRANSMISSION_TIMEOUT / 2 + (random_rand() % (RPL_DAO_RETRANSMISSION_TIMEOUT));
-  ctimer_set(&curr_instance.dag.dao_timer, expiration_time, handle_dao_timer, NULL);
+  ctimer_set(&curr_instance.dag.dao_timer, expiration_time, resend_dao, NULL);
 }
 #endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
@@ -247,9 +248,8 @@ schedule_dao_refresh(void)
       target_refresh -= safety_margin;
     }
 
-    /* Increment next sequno */
-    RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
-    ctimer_set(&curr_instance.dag.dao_timer, target_refresh, handle_dao_timer, NULL);
+    /* Schedule transmission */
+    ctimer_set(&curr_instance.dag.dao_timer, target_refresh, send_new_dao, NULL);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -261,36 +261,16 @@ rpl_timers_schedule_dao(void)
     * only serves storing mode. Use simple delay instead, with the only purpose
     * to reduce congestion. */
     clock_time_t expiration_time = RPL_DAO_DELAY / 2 + (random_rand() % (RPL_DAO_DELAY));
-    /* Increment next seqno */
-    RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_curr_seqno);
-    ctimer_set(&curr_instance.dag.dao_timer, expiration_time, handle_dao_timer, NULL);
+    ctimer_set(&curr_instance.dag.dao_timer, expiration_time, send_new_dao, NULL);
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-handle_dao_timer(void *ptr)
+send_new_dao(void *ptr)
 {
 #if RPL_WITH_DAO_ACK
-  if(rpl_lollipop_greater_than(curr_instance.dag.dao_curr_seqno,
-    curr_instance.dag.dao_last_seqno)) {
-    /* We are sending a new DAO here. Prepare retransmissions */
-    curr_instance.dag.dao_transmissions = 0;
-  } else {
-    /* We are called for the same DAO again */
-    if(curr_instance.dag.dao_last_acked_seqno == curr_instance.dag.dao_last_seqno) {
-      /* The last seqno sent is ACKed! Schedule refresh to avoid route expiration */
-      schedule_dao_refresh();
-      return;
-    }
-    /* We need to re-send the last DAO */
-    if(curr_instance.dag.dao_transmissions >= RPL_DAO_MAX_RETRANSMISSIONS) {
-      /* No more retransmissions. Perform local repair and hope to find another . */
-      rpl_local_repair("DAO max rtx");
-      return;
-    }
-  }
-  /* Increment transmission counter before sending */
-  curr_instance.dag.dao_transmissions++;
+  /* We are sending a new DAO here. Prepare retransmissions */
+  curr_instance.dag.dao_transmissions = 1;
   /* Schedule next retransmission */
   schedule_dao_retransmission();
 #else /* RPL_WITH_DAO_ACK */
@@ -299,19 +279,14 @@ handle_dao_timer(void *ptr)
     curr_instance.dag.state = DAG_REACHABLE;
   }
   rpl_timers_dio_reset("Reachable");
-#endif /* !RPL_WITH_DAO_ACK */
-
-  curr_instance.dag.dao_last_seqno = curr_instance.dag.dao_curr_seqno;
-  /* Send a DAO with own prefix as target and default lifetime */
-  rpl_icmp6_dao_output(curr_instance.default_lifetime);
-
-#if !RPL_WITH_DAO_ACK
-  /* There is no DAO-ACK, schedule a refresh. Must be done after rpl_icmp6_dao_output,
-  because we increment curr_instance.dag.dao_curr_seqno for the next DAO (refresh).
-  Where there is DAO-ACK, the refresh is scheduled after reception of the ACK.
-  Happens when handle_dao_timer is called again next. */
+  /* There is no DAO-ACK, schedule a refresh. */
   schedule_dao_refresh();
 #endif /* !RPL_WITH_DAO_ACK */
+
+  /* Increment seqno */
+  RPL_LOLLIPOP_INCREMENT(curr_instance.dag.dao_last_seqno);
+  /* Send a DAO with own prefix as target and default lifetime */
+  rpl_icmp6_dao_output(curr_instance.default_lifetime);
 }
 #if RPL_WITH_DAO_ACK
 /*---------------------------------------------------------------------------*/
@@ -333,6 +308,32 @@ handle_dao_ack_timer(void *ptr)
 {
   rpl_icmp6_dao_ack_output(&curr_instance.dag.dao_ack_target,
     curr_instance.dag.dao_ack_sequence, RPL_DAO_ACK_UNCONDITIONAL_ACCEPT);
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_timers_notify_dao_ack(void)
+{
+  /* The last DAO was ACKed. Schedule refresh to avoid route expiration. This
+  implicitly de-schedules resend_dao, as both share curr_instance.dag.dao_timer */
+  schedule_dao_refresh();
+}
+/*---------------------------------------------------------------------------*/
+static void
+resend_dao(void *ptr)
+{
+  /* Increment transmission counter before sending */
+  curr_instance.dag.dao_transmissions++;
+  /* Send a DAO with own prefix as target and default lifetime */
+  rpl_icmp6_dao_output(curr_instance.default_lifetime);
+
+  /* Schedule next retransmission, or abort */
+  if(curr_instance.dag.dao_transmissions < RPL_DAO_MAX_RETRANSMISSIONS) {
+    schedule_dao_retransmission();
+  } else {
+    /* No more retransmissions. Perform local repair. */
+    rpl_local_repair("DAO max rtx");
+    return;
+  }
 }
 #endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
