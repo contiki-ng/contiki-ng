@@ -122,6 +122,10 @@ typedef unsigned long clock_time_t;
 /* Use 64-bit rtimer (default in Contiki-NG is 32) */
 #define RTIMER_CONF_CLOCK_SIZE 8
 
+/* 1 len byte, 2 bytes CRC */
+#define RADIO_PHY_OVERHEAD         3
+/* 250kbps data rate. One byte = 32us */
+#define RADIO_BYTE_AIR_TIME       32
 #define RADIO_DELAY_BEFORE_TX 0
 #define RADIO_DELAY_BEFORE_RX 0
 #define RADIO_DELAY_BEFORE_DETECT 0

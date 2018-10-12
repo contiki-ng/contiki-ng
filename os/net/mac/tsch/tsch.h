@@ -60,28 +60,16 @@ frequency hopping for enhanced reliability.
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
 #include "net/mac/tsch/tsch-schedule.h"
+#include "net/mac/tsch/tsch-stats.h"
 #if UIP_CONF_IPV6_RPL
 #include "net/mac/tsch/tsch-rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
-#if CONTIKI_TARGET_COOJA
-#include "lib/simEnvChange.h"
-#include "sys/cooja_mt.h"
-#endif /* CONTIKI_TARGET_COOJA */
 
-/*********** Macros *********/
-
-/* Wait for a condition with timeout t0+offset. */
-#if CONTIKI_TARGET_COOJA
-#define BUSYWAIT_UNTIL_ABS(cond, t0, offset) \
-  while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (offset))) { \
-    simProcessRunValue = 1; \
-    cooja_mt_yield(); \
-  };
-#else
-#define BUSYWAIT_UNTIL_ABS(cond, t0, offset) \
-  while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (offset))) ;
-#endif /* CONTIKI_TARGET_COOJA */
+/* Include Arch-Specific conf */
+#ifdef TSCH_CONF_ARCH_HDR_PATH
+#include TSCH_CONF_ARCH_HDR_PATH
+#endif /* TSCH_CONF_ARCH_HDR_PATH */
 
 /*********** Callbacks *********/
 
@@ -169,6 +157,8 @@ extern uint8_t tsch_current_channel;
 /* TSCH channel hopping sequence */
 extern uint8_t tsch_hopping_sequence[TSCH_HOPPING_SEQUENCE_MAX_LEN];
 extern struct tsch_asn_divisor_t tsch_hopping_sequence_length;
+/* TSCH timeslot timing (in micro-second) */
+uint16_t tsch_timing_us[tsch_ts_elements_count];
 /* TSCH timeslot timing (in rtimer ticks) */
 extern rtimer_clock_t tsch_timing[tsch_ts_elements_count];
 /* Statistics on the current session */
@@ -177,6 +167,8 @@ extern unsigned long rx_count;
 extern unsigned long sync_count;
 extern int32_t min_drift_seen;
 extern int32_t max_drift_seen;
+/* The TSCH standard 10ms timeslot timing */
+extern const uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count];
 
 /* TSCH processes */
 PROCESS_NAME(tsch_process);

@@ -107,7 +107,7 @@ static const spi_regs_t spi_regs[SSI_INSTANCE_COUNT] = {
 
 typedef struct spi_locks_s {
   mutex_t lock;
-  spi_device_t *owner;
+  const spi_device_t *owner;
 } spi_locks_t;
 
 /* One lock per SPI controller */
@@ -115,40 +115,40 @@ spi_locks_t board_spi_locks_spi[SPI_CONTROLLER_COUNT] = { { MUTEX_STATUS_UNLOCKE
 
 /*---------------------------------------------------------------------------*/
 static void
-spix_wait_tx_ready(spi_device_t *dev)
+spix_wait_tx_ready(const spi_device_t *dev)
 {
   /* Infinite loop until SR_TNF - Transmit FIFO Not Full */
   while(!(REG(spi_regs[dev->spi_controller].base + SSI_SR) & SSI_SR_TNF));
 }
 /*---------------------------------------------------------------------------*/
 static int
-spix_read_buf(spi_device_t *dev)
+spix_read_buf(const spi_device_t *dev)
 {
   return REG(spi_regs[dev->spi_controller].base + SSI_DR);
 }
 /*---------------------------------------------------------------------------*/
 static void
-spix_write_buf(spi_device_t *dev, int data)
+spix_write_buf(const spi_device_t *dev, int data)
 {
   REG(spi_regs[dev->spi_controller].base + SSI_DR) = data;
 }
 /*---------------------------------------------------------------------------*/
 static void
-spix_wait_eotx(spi_device_t *dev)
+spix_wait_eotx(const spi_device_t *dev)
 {
   /* wait until not busy */
   while(REG(spi_regs[dev->spi_controller].base + SSI_SR) & SSI_SR_BSY);
 }
 /*---------------------------------------------------------------------------*/
 static void
-spix_wait_eorx(spi_device_t *dev)
+spix_wait_eorx(const spi_device_t *dev)
 {
   /* wait as long as receive is empty */
   while(!(REG(spi_regs[dev->spi_controller].base + SSI_SR) & SSI_SR_RNE));
 }
 /*---------------------------------------------------------------------------*/
 bool
-spi_arch_has_lock(spi_device_t *dev)
+spi_arch_has_lock(const spi_device_t *dev)
 {
   if(board_spi_locks_spi[dev->spi_controller].owner == dev) {
     return true;
@@ -158,7 +158,7 @@ spi_arch_has_lock(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 bool
-spi_arch_is_bus_locked(spi_device_t *dev)
+spi_arch_is_bus_locked(const spi_device_t *dev)
 {
   if(board_spi_locks_spi[dev->spi_controller].lock == MUTEX_STATUS_LOCKED) {
     return true;
@@ -168,7 +168,7 @@ spi_arch_is_bus_locked(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_lock_and_open(spi_device_t *dev)
+spi_arch_lock_and_open(const spi_device_t *dev)
 {
   const spi_regs_t *regs;
   uint32_t scr;
@@ -265,7 +265,7 @@ spi_arch_lock_and_open(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_close_and_unlock(spi_device_t *dev)
+spi_arch_close_and_unlock(const spi_device_t *dev)
 {
   if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_NOT_OWNED;
@@ -282,7 +282,7 @@ spi_arch_close_and_unlock(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_select(spi_device_t *dev)
+spi_arch_select(const spi_device_t *dev)
 {
 
   if(!spi_arch_has_lock(dev)) {
@@ -295,7 +295,7 @@ spi_arch_select(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_deselect(spi_device_t *dev)
+spi_arch_deselect(const spi_device_t *dev)
 {
   SPIX_CS_SET(PIN_TO_PORT(dev->pin_spi_cs), PIN_TO_NUM(dev->pin_spi_cs));
 
@@ -304,7 +304,7 @@ spi_arch_deselect(spi_device_t *dev)
 /*---------------------------------------------------------------------------*/
 /* Assumes that checking dev and bus is not NULL before calling this */
 spi_status_t
-spi_arch_transfer(spi_device_t *dev,
+spi_arch_transfer(const spi_device_t *dev,
                   const uint8_t *write_buf, int wlen,
                   uint8_t *inbuf, int rlen, int ignore_len)
 {

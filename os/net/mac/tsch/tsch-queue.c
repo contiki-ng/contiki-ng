@@ -173,6 +173,8 @@ tsch_queue_update_time_source(const linkaddr_t *new_addr)
           old_time_src->is_time_source = 0;
         }
 
+        tsch_stats_reset_neighbor_stats();
+
 #ifdef TSCH_CALLBACK_NEW_TIME_SOURCE
         TSCH_CALLBACK_NEW_TIME_SOURCE(old_time_src, new_time_src);
 #endif

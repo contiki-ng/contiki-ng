@@ -272,7 +272,7 @@
 #ifdef RPL_CONF_DAG_LIFETIME
 #define RPL_DAG_LIFETIME                RPL_CONF_DAG_LIFETIME
 #else
-#define RPL_DAG_LIFETIME                (60 * 60) /* one hour */
+#define RPL_DAG_LIFETIME                (8 * 60) /* 8 hours */
 #endif /* RPL_CONF_DAG_LIFETIME */
 
 /*

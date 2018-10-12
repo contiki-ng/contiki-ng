@@ -56,7 +56,6 @@
 #define CC2538_RF_CHANNEL_MIN            11
 #define CC2538_RF_CHANNEL_MAX            26
 #define CC2538_RF_CHANNEL_SPACING         5
-#define CC2538_RF_CHANNEL_SET_ERROR      -1
 #define CC2538_RF_MAX_PACKET_LEN        127
 #define CC2538_RF_MIN_PACKET_LEN          4
 #define CC2538_RF_CCA_CLEAR               1
@@ -113,14 +112,12 @@
  */
 #define CC2538_RF_CSP_ISFLUSHRX()  do { \
   REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX; \
-  REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX; \
 } while(0)
 
 /**
  * \brief Flush the TX FIFO
  */
 #define CC2538_RF_CSP_ISFLUSHTX()  do { \
-  REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX; \
   REG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX; \
 } while(0)
 /*---------------------------------------------------------------------------*/
@@ -138,16 +135,6 @@ extern const struct radio_driver cc2538_rf_driver;
  */
 void cc2538_rf_set_addr(uint16_t pan);
 
-/**
- * \brief Turn promiscous mode on or off
- * \param p If promiscous mode should be on (1) or off (0)
- *
- * This function turns promiscous mode on or off. In promiscous mode,
- * every received frame is returned from the RF core. In
- * non-promiscous mode, only broadcast frames or frames with our
- * address as the receive address are returned from the RF core.
- */
-void cc2538_rf_set_promiscous_mode(char p);
 /*---------------------------------------------------------------------------*/
 #endif /* CC2538_RF_H__ */
 
