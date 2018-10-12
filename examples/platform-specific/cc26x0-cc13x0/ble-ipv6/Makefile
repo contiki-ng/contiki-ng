@@ -2,7 +2,7 @@ CONTIKI_PROJECT=client
 
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_ONLY = srf06-cc26xx
+PLATFORMS_ONLY = cc26x0-cc13x0
 BOARDS_ONLY = launchpad/cc2650 sensortag/cc2650 srf06/cc26xx
 
 MAKE_MAC = MAKE_MAC_BLE

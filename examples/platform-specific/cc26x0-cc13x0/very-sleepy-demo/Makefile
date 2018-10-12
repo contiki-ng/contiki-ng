@@ -1,6 +1,6 @@
 CONTIKI_PROJECT = very-sleepy-demo
 
-PLATFORMS_ONLY = srf06-cc26xx
+PLATFORMS_ONLY = cc26x0-cc13x0
 
 all: $(CONTIKI_PROJECT)
 

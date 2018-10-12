@@ -18,7 +18,7 @@ The following hardwares were used in the event:
 
 * Zolertia Remote (TARGET=`zoul`, BOARD=`remote`)
 * JN156x (TARGET=`jn516`)
-* CC2650 LaunchPad (TARGET=`srf06-cc26xx`, BOARD=`launchpad/cc2650`)
+* CC2650 LaunchPad (TARGET=`cc26x0-cc13x0`, BOARD=`launchpad/cc2650`)
 
 ## Usage
 

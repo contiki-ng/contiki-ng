@@ -32,7 +32,7 @@
  * @{
  *
  * \file
- *  Configuration for the srf06-cc26xx platform
+ *  Configuration for the cc26x0-cc13x0 platform
  */
 #ifndef CONTIKI_CONF_H
 #define CONTIKI_CONF_H
