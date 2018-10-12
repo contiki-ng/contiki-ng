@@ -17,11 +17,14 @@
 #define NETSTACK_CONF_RADIO   cc2420_driver
 #endif /* NETSTACK_CONF_RADIO */
 
+/* Symbol for the TSCH 15ms timeslot timing template */
+#define TSCH_CONF_ARCH_HDR_PATH "dev/cc2420/cc2420-tsch-15ms.h"
+
 /* The TSCH default slot length of 10ms is a bit too short for this platform,
  * use 15ms instead. */
-#ifndef TSCH_CONF_DEFAULT_TIMESLOT_LENGTH
-#define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 15000
-#endif /* TSCH_CONF_DEFAULT_TIMESLOT_LENGTH */
+#ifndef TSCH_CONF_DEFAULT_TIMESLOT_TIMING
+#define TSCH_CONF_DEFAULT_TIMESLOT_TIMING tsch_timeslot_timing_us_15000
+#endif /* TSCH_CONF_DEFAULT_TIMESLOT_TIMING */
 
 /* Save RAM through a smaller uIP buffer */
 #ifndef UIP_CONF_BUFFER_SIZE

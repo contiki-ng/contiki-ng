@@ -37,7 +37,7 @@
 
 typedef struct spi_locks_s {
   mutex_t lock;
-  spi_device_t *owner;
+  const spi_device_t *owner;
 } spi_locks_t;
 
 /* One lock per SPI controller */
@@ -68,7 +68,7 @@ static const board_spi_controller_t spi_controller[SPI_CONTROLLER_COUNT] = {
 };
 /*---------------------------------------------------------------------------*/
 bool
-spi_arch_has_lock(spi_device_t *dev)
+spi_arch_has_lock(const spi_device_t *dev)
 {
   if(board_spi_locks_spi[dev->spi_controller].owner == dev) {
     return true;
@@ -78,7 +78,7 @@ spi_arch_has_lock(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 bool
-spi_arch_is_bus_locked(spi_device_t *dev)
+spi_arch_is_bus_locked(const spi_device_t *dev)
 {
   if(board_spi_locks_spi[dev->spi_controller].lock == MUTEX_STATUS_LOCKED) {
     return true;
@@ -88,7 +88,7 @@ spi_arch_is_bus_locked(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 static uint32_t
-get_mode(spi_device_t *dev)
+get_mode(const spi_device_t *dev)
 {
   /* Select the correct SPI mode */
   if(dev->spi_pha == 0 && dev->spi_pol == 0) {
@@ -103,7 +103,7 @@ get_mode(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_lock_and_open(spi_device_t *dev)
+spi_arch_lock_and_open(const spi_device_t *dev)
 {
   uint32_t c;
 
@@ -130,10 +130,18 @@ spi_arch_lock_and_open(spi_device_t *dev)
   /* SPI configuration */
   ti_lib_ssi_int_disable(spi_controller[dev->spi_controller].ssi_base, SSI_RXOR | SSI_RXFF | SSI_RXTO | SSI_TXFF);
   ti_lib_ssi_int_clear(spi_controller[dev->spi_controller].ssi_base, SSI_RXOR | SSI_RXTO);
-  ti_lib_rom_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
+  
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+  ti_lib_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
                                     get_mode(dev), SSI_MODE_MASTER, dev->spi_bit_rate, 8);
-  ti_lib_rom_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
+  ti_lib_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
                                      dev->pin_spi_mosi, IOID_UNUSED, dev->pin_spi_sck);
+#else
+  ti_lib_rom_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
+                                      get_mode(dev), SSI_MODE_MASTER, dev->spi_bit_rate, 8);
+  ti_lib_rom_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
+                                       dev->pin_spi_mosi, IOID_UNUSED, dev->pin_spi_sck);
+#endif
 
   ti_lib_ssi_enable(spi_controller[dev->spi_controller].ssi_base);
 
@@ -144,7 +152,7 @@ spi_arch_lock_and_open(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_close_and_unlock(spi_device_t *dev)
+spi_arch_close_and_unlock(const spi_device_t *dev)
 {
   if(!spi_arch_has_lock(dev)) {
     return SPI_DEV_STATUS_BUS_NOT_OWNED;
@@ -173,7 +181,7 @@ spi_arch_close_and_unlock(spi_device_t *dev)
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_transfer(spi_device_t *dev,
+spi_arch_transfer(const spi_device_t *dev,
                   const uint8_t *write_buf, int wlen,
                   uint8_t *inbuf, int rlen, int ignore_len)
 {
@@ -205,19 +213,25 @@ spi_arch_transfer(spi_device_t *dev,
   for(i = 0; i < totlen; i++) {
     c = i < wlen ? write_buf[i] : 0;
     ti_lib_ssi_data_put(spi_controller[dev->spi_controller].ssi_base, (uint8_t)c);
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+    ti_lib_ssi_data_get(spi_controller[dev->spi_controller].ssi_base, &c);
+#else
     ti_lib_rom_ssi_data_get(spi_controller[dev->spi_controller].ssi_base, &c);
+#endif
     if(i < rlen) {
       inbuf[i] = (uint8_t)c;
     }
   }
-
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+  while(ti_lib_ssi_data_get_non_blocking(spi_controller[dev->spi_controller].ssi_base, &c)) ;
+#else
   while(ti_lib_rom_ssi_data_get_non_blocking(spi_controller[dev->spi_controller].ssi_base, &c)) ;
-
+#endif
   return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
 spi_status_t
-spi_arch_select(spi_device_t *dev)
+spi_arch_select(const spi_device_t *dev)
 {
 
   if(!spi_arch_has_lock(dev)) {
@@ -229,7 +243,7 @@ spi_arch_select(spi_device_t *dev)
   return SPI_DEV_STATUS_OK;
 }
 spi_status_t
-spi_arch_deselect(spi_device_t *dev)
+spi_arch_deselect(const spi_device_t *dev)
 {
   ti_lib_gpio_set_dio(dev->pin_spi_cs);
 

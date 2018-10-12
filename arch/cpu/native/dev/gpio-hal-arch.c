@@ -43,6 +43,12 @@ static gpio_hal_pin_cfg_t pin_cfg[GPIO_HAL_PIN_COUNT];
 static uint8_t pin_state[GPIO_HAL_PIN_COUNT];
 /*---------------------------------------------------------------------------*/
 void
+gpio_hal_arch_init(void)
+{
+  /* Do nothing */
+}
+/*---------------------------------------------------------------------------*/
+void
 gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin)
 {
   if(pin >= GPIO_HAL_PIN_COUNT) {

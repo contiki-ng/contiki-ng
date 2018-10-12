@@ -151,7 +151,7 @@
 #ifdef TSCH_CONF_HOPPING_SEQUENCE_MAX_LEN
 #define TSCH_HOPPING_SEQUENCE_MAX_LEN TSCH_CONF_HOPPING_SEQUENCE_MAX_LEN
 #else
-#define TSCH_HOPPING_SEQUENCE_MAX_LEN 16
+#define TSCH_HOPPING_SEQUENCE_MAX_LEN sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE)
 #endif
 
 /******** Configuration: association *******/
@@ -365,18 +365,21 @@
 /******** Configuration: CSMA *******/
 
 /* TSCH CSMA-CA parameters, see IEEE 802.15.4e-2012 */
+
 /* Min backoff exponent */
 #ifdef TSCH_CONF_MAC_MIN_BE
 #define TSCH_MAC_MIN_BE TSCH_CONF_MAC_MIN_BE
 #else
 #define TSCH_MAC_MIN_BE 1
 #endif
+
 /* Max backoff exponent */
 #ifdef TSCH_CONF_MAC_MAX_BE
 #define TSCH_MAC_MAX_BE TSCH_CONF_MAC_MAX_BE
 #else
 #define TSCH_MAC_MAX_BE 5
 #endif
+
 /* Max number of re-transmissions */
 #ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #define TSCH_MAC_MAX_FRAME_RETRIES TSCH_CONF_MAC_MAX_FRAME_RETRIES
@@ -389,6 +392,13 @@
 #define TSCH_PACKET_EACK_WITH_SRC_ADDR TSCH_PACKET_CONF_EACK_WITH_SRC_ADDR
 #else
 #define TSCH_PACKET_EACK_WITH_SRC_ADDR 0
+#endif
+
+/* Perform CCA before sending? */
+#ifdef TSCH_CONF_CCA_ENABLED
+#define TSCH_CCA_ENABLED TSCH_CONF_CCA_ENABLED
+#else
+#define TSCH_CCA_ENABLED 0
 #endif
 
 /* Include destination address in ACK? */
@@ -415,12 +425,12 @@ by default, useful in case of duplicate seqno */
 #define TSCH_RADIO_ON_DURING_TIMESLOT 0
 #endif
 
-
-
-/* Timeslot timing */
-#ifndef TSCH_CONF_DEFAULT_TIMESLOT_LENGTH
-#define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 10000
-#endif /* TSCH_CONF_DEFAULT_TIMESLOT_LENGTH */
+/* TSCH timeslot timing template */
+#ifdef TSCH_CONF_DEFAULT_TIMESLOT_TIMING
+#define TSCH_DEFAULT_TIMESLOT_TIMING TSCH_CONF_DEFAULT_TIMESLOT_TIMING
+#else
+#define TSCH_DEFAULT_TIMESLOT_TIMING tsch_timeslot_timing_us_10000
+#endif
 
 /* Configurable Rx guard time is micro-seconds */
 #ifndef TSCH_CONF_RX_WAIT

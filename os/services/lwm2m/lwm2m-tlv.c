@@ -44,6 +44,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "lwm2m-tlv.h"
 
 /* Log configuration */

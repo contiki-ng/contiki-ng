@@ -48,6 +48,7 @@ static void
 set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 {
   static uip_ipaddr_t root_ipaddr;
+  int i;
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
@@ -68,7 +69,7 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
     uint8_t state;
 
     LOG_DBG("IPv6 addresses: ");
-    for(int i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
       state = uip_ds6_if.addr_list[i].state;
       if(uip_ds6_if.addr_list[i].isused &&
          (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {

@@ -52,10 +52,10 @@ gpio_interrupt_isr(void)
   /* Read interrupt flags */
   pin_mask = (HWREG(GPIO_BASE + GPIO_O_EVFLAGS31_0) & GPIO_DIO_ALL_MASK);
 
-  gpio_hal_event_handler(pin_mask);
-
   /* Clear the interrupt flags */
   HWREG(GPIO_BASE + GPIO_O_EVFLAGS31_0) = pin_mask;
+
+  gpio_hal_event_handler(pin_mask);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

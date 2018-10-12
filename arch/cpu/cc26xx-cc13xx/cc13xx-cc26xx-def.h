@@ -36,6 +36,10 @@
 /*---------------------------------------------------------------------------*/
 /* TSCH related defines */
 
+/* 1 len byte, 2 bytes CRC */
+#define RADIO_PHY_OVERHEAD         3
+/* 250kbps data rate. One byte = 32us */
+#define RADIO_BYTE_AIR_TIME       32
 /* Delay between GO signal and SFD */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(81))
 /* Delay between GO signal and start listening.
@@ -83,6 +87,11 @@
 /* 10 times per second */
 #ifndef TSCH_CONF_CHANNEL_SCAN_DURATION
 #define TSCH_CONF_CHANNEL_SCAN_DURATION (CLOCK_SECOND / 10)
+#endif
+
+/* Increase this from the default 100 to improve TSCH association speed on this platform */
+#ifndef TSCH_CONF_ASSOCIATION_POLL_FREQUENCY
+#define TSCH_CONF_ASSOCIATION_POLL_FREQUENCY 1000
 #endif
 
 /* Slightly reduce the TSCH guard time (from 2200 usec to 1800 usec) to make sure

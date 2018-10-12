@@ -74,33 +74,4 @@
 
 #endif /* WITH_SECURITY */
 
-/*******************************************************/
-/************* Other system configuration **************/
-/*******************************************************/
-
-#if CONTIKI_TARGET_Z1
-/* Save some space to fit the limited RAM of the z1 */
-#define UIP_CONF_TCP 0
-#define QUEUEBUF_CONF_NUM 2
-#define NETSTACK_MAX_ROUTE_ENTRIES  2
-#define NBR_TABLE_CONF_MAX_NEIGHBORS 2
-#define UIP_CONF_ND6_SEND_NA 0
-#define SICSLOWPAN_CONF_FRAG 0
-
-#if WITH_SECURITY
-/* Note: on sky or z1 in cooja, crypto operations are done in S/W and
- * cannot be accommodated in normal slots. Use 65ms slots instead, and
- * a very short 6TiSCH minimal schedule length */
-#define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 65000
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 2
-#endif /* WITH_SECURITY */
-
-#endif /* CONTIKI_TARGET_Z1 */
-
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL || \
-  CONTIKI_TARGET_OPENMOTE_CC2538
-#define TSCH_CONF_HW_FRAME_FILTERING    0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL \
-       || CONTIKI_TARGET_OPENMOTE_CC2538 */
-
 #endif /* PROJECT_CONF_H_ */

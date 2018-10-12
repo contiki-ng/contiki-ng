@@ -96,9 +96,6 @@ static const struct output_config output_power[] = {
 
 void cc2420_arch_init(void);
 
-/* XXX hack: these will be made as Chameleon packet attributes */
-rtimer_clock_t cc2420_time_of_arrival, cc2420_time_of_departure;
-
 int cc2420_authority_level_of_sender;
 
 volatile uint8_t cc2420_sfd_counter;

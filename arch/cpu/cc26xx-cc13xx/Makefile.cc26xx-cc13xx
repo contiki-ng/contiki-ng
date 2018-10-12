@@ -7,7 +7,8 @@ ifeq (,$(wildcard $(TI_XXWARE)))
     $(error "")
 endif
 
-### cc26xxware sources under driverlib will be added to the MODULES list
+### cc26xxware / cc26x0r2fware sources under driverlib will be added to the
+### MODULES list
 TI_XXWARE_SRC = $(CPU_ABS_PATH)/$(TI_XXWARE_PATH)/driverlib
 
 ### The directory with startup sources will be added to the CONTIKI_CPU_DIRS
@@ -43,8 +44,6 @@ CONTIKI_CPU_SOURCEFILES += rf-core.c rf-ble.c ieee-mode.c
 CONTIKI_CPU_SOURCEFILES += ble-cc2650.c ble-hal-cc26xx.c ble-addr.c rf-ble-cmd.c
 CONTIKI_CPU_SOURCEFILES += random.c soc-trng.c int-master.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c
-
-MODULES += os/lib/dbg-io
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 

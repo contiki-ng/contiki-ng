@@ -99,7 +99,7 @@
 #define VERIFY_PART_POWERED_DOWN     0
 #define VERIFY_PART_OK               1
 /*---------------------------------------------------------------------------*/
-static spi_device_t flash_spi_configuration_default = {
+static const spi_device_t flash_spi_configuration_default = {
   .spi_controller = EXT_FLASH_SPI_CONTROLLER,
   .pin_spi_sck = EXT_FLASH_SPI_PIN_SCK,
   .pin_spi_miso = EXT_FLASH_SPI_PIN_MISO,
@@ -113,8 +113,8 @@ static spi_device_t flash_spi_configuration_default = {
 /**
  * Get spi configuration, return default configuration if NULL
  */
-static spi_device_t *
-get_spi_conf(spi_device_t *conf)
+static const spi_device_t *
+get_spi_conf(const spi_device_t *conf)
 {
   if(conf == NULL) {
     return &flash_spi_configuration_default;
@@ -126,7 +126,7 @@ get_spi_conf(spi_device_t *conf)
  * Clear external flash CSN line
  */
 static bool
-select_on_bus(spi_device_t *flash_spi_configuration)
+select_on_bus(const spi_device_t *flash_spi_configuration)
 {
   if(spi_select(flash_spi_configuration) == SPI_DEV_STATUS_OK) {
     return true;
@@ -138,7 +138,7 @@ select_on_bus(spi_device_t *flash_spi_configuration)
  * Set external flash CSN line
  */
 static void
-deselect(spi_device_t *flash_spi_configuration)
+deselect(const spi_device_t *flash_spi_configuration)
 {
   spi_deselect(flash_spi_configuration);
 }
@@ -148,7 +148,7 @@ deselect(spi_device_t *flash_spi_configuration)
  * \return True when successful.
  */
 static bool
-wait_ready(spi_device_t *flash_spi_configuration)
+wait_ready(const spi_device_t *flash_spi_configuration)
 {
   bool ret;
   const uint8_t wbuf[1] = { BLS_CODE_READ_STATUS };
@@ -196,7 +196,7 @@ wait_ready(spi_device_t *flash_spi_configuration)
  *         was powered down
  */
 static uint8_t
-verify_part(spi_device_t *flash_spi_configuration)
+verify_part(const spi_device_t *flash_spi_configuration)
 {
   const uint8_t wbuf[] = { BLS_CODE_MDID, 0xFF, 0xFF, 0x00 };
   uint8_t rbuf[2] = { 0, 0 };
@@ -230,7 +230,7 @@ verify_part(spi_device_t *flash_spi_configuration)
  *        the status register is accessible.
  */
 static bool
-power_down(spi_device_t *flash_spi_configuration)
+power_down(const spi_device_t *flash_spi_configuration)
 {
   uint8_t cmd;
   uint8_t i;
@@ -271,7 +271,7 @@ power_down(spi_device_t *flash_spi_configuration)
  * \return   True if the command was written successfully
  */
 static bool
-power_standby(spi_device_t *flash_spi_configuration)
+power_standby(const spi_device_t *flash_spi_configuration)
 {
   uint8_t cmd;
   bool success;
@@ -297,7 +297,7 @@ power_standby(spi_device_t *flash_spi_configuration)
  * \return True when successful.
  */
 static bool
-write_enable(spi_device_t *flash_spi_configuration)
+write_enable(const spi_device_t *flash_spi_configuration)
 {
   bool ret;
   const uint8_t wbuf[] = { BLS_CODE_WRITE_ENABLE };
@@ -316,9 +316,9 @@ write_enable(spi_device_t *flash_spi_configuration)
 }
 /*---------------------------------------------------------------------------*/
 bool
-ext_flash_open(spi_device_t *conf)
+ext_flash_open(const spi_device_t *conf)
 {
-  spi_device_t *flash_spi_configuration;
+  const spi_device_t *flash_spi_configuration;
 
   flash_spi_configuration = get_spi_conf(conf);
 
@@ -346,10 +346,10 @@ ext_flash_open(spi_device_t *conf)
 }
 /*---------------------------------------------------------------------------*/
 bool
-ext_flash_close(spi_device_t *conf)
+ext_flash_close(const spi_device_t *conf)
 {
   bool ret;
-  spi_device_t *flash_spi_configuration;
+  const spi_device_t *flash_spi_configuration;
 
   flash_spi_configuration = get_spi_conf(conf);
 
@@ -365,12 +365,12 @@ ext_flash_close(spi_device_t *conf)
 }
 /*---------------------------------------------------------------------------*/
 bool
-ext_flash_read(spi_device_t *conf, uint32_t offset, uint32_t length, uint8_t *buf)
+ext_flash_read(const spi_device_t *conf, uint32_t offset, uint32_t length, uint8_t *buf)
 {
   uint8_t wbuf[4];
   bool ret;
 
-  spi_device_t *flash_spi_configuration;
+  const spi_device_t *flash_spi_configuration;
 
   flash_spi_configuration = get_spi_conf(conf);
 
@@ -406,12 +406,12 @@ ext_flash_read(spi_device_t *conf, uint32_t offset, uint32_t length, uint8_t *bu
 }
 /*---------------------------------------------------------------------------*/
 bool
-ext_flash_write(spi_device_t *conf, uint32_t offset, uint32_t length, const uint8_t *buf)
+ext_flash_write(const spi_device_t *conf, uint32_t offset, uint32_t length, const uint8_t *buf)
 {
   uint8_t wbuf[4];
   uint32_t ilen; /* interim length per instruction */
 
-  spi_device_t *flash_spi_configuration;
+  const spi_device_t *flash_spi_configuration;
 
   flash_spi_configuration = get_spi_conf(conf);
 
@@ -466,7 +466,7 @@ ext_flash_write(spi_device_t *conf, uint32_t offset, uint32_t length, const uint
 }
 /*---------------------------------------------------------------------------*/
 bool
-ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length)
+ext_flash_erase(const spi_device_t *conf, uint32_t offset, uint32_t length)
 {
   /*
    * Note that Block erase might be more efficient when the floor map
@@ -477,7 +477,7 @@ ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length)
   uint32_t i, numsectors;
   uint32_t endoffset = offset + length - 1;
 
-  spi_device_t *flash_spi_configuration;
+  const spi_device_t *flash_spi_configuration;
 
   flash_spi_configuration = get_spi_conf(conf);
 
@@ -518,7 +518,7 @@ ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length)
 }
 /*---------------------------------------------------------------------------*/
 bool
-ext_flash_init(spi_device_t *conf)
+ext_flash_init(const spi_device_t *conf)
 {
   if(ext_flash_open(conf) == false) {
     return false;

@@ -32,7 +32,7 @@
 #define PROJECT_CONF_H_
 /*---------------------------------------------------------------------------*/
 /* Enable the ROM bootloader */
-#define ROM_BOOTLOADER_ENABLE                 1
+#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE   1
 /*---------------------------------------------------------------------------*/
 /* Change to match your configuration */
 #define IEEE802154_CONF_PANID            0xABCD

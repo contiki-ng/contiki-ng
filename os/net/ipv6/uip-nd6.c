@@ -69,6 +69,7 @@
  */
 
 #include <string.h>
+#include <inttypes.h>
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"

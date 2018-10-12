@@ -53,7 +53,11 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
   gpio_hal_pin_cfg_t tmp;
 
   /* Clear settings that we are about to change, keep everything else */
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+  config = ti_lib_ioc_port_configure_get(pin);
+#else
   config = ti_lib_rom_ioc_port_configure_get(pin);
+#endif
   config &= ~CONFIG_MASK;
 
   tmp = cfg & GPIO_HAL_PIN_CFG_EDGE_BOTH;
@@ -94,7 +98,11 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
   uint32_t config;
 
   cfg = 0;
+#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
+  config = ti_lib_ioc_port_configure_get(pin);
+#else
   config = ti_lib_rom_ioc_port_configure_get(pin);
+#endif
 
   /* Pull */
   tmp = config & IOC_IOPULL_M;
