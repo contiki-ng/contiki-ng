@@ -158,11 +158,11 @@ platform_init_stage_one()
    * latches in the first place. Before doing these things though, we should
    * allow software to first regain control of pins
    */
-#if !defined(ThisLibraryIsFor_CC26x0R2_HaltIfViolated)
-  ti_lib_pwr_ctrl_io_freeze_disable();
+  ti_lib_aon_ioc_freeze_disable();
+  HWREG(AON_SYSCTL_BASE + AON_SYSCTL_O_SLEEPCTL) = 1;
+  ti_lib_sys_ctrl_aon_sync();
 
-#endif
-  ti_lib_rom_int_enable(INT_AON_GPIO_EDGE);
+  ti_lib_int_enable(INT_AON_GPIO_EDGE);
   ti_lib_int_master_enable();
 
   soc_rtc_init();

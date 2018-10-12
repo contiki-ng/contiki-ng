@@ -71,7 +71,7 @@ static void
 disable_number_ready_interrupt(void)
 {
   ti_lib_trng_int_disable(TRNG_NUMBER_READY);
-  ti_lib_rom_int_disable(INT_TRNG_IRQ);
+  ti_lib_int_disable(INT_TRNG_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -79,14 +79,14 @@ enable_number_ready_interrupt(void)
 {
   ti_lib_trng_int_clear(TRNG_NUMBER_READY);
   ti_lib_trng_int_enable(TRNG_NUMBER_READY);
-  ti_lib_rom_int_enable(INT_TRNG_IRQ);
+  ti_lib_int_enable(INT_TRNG_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 static bool
 accessible(void)
 {
   /* First, check the PD */
-  if(ti_lib_rom_prcm_power_domain_status(PRCM_DOMAIN_PERIPH)
+  if(ti_lib_prcm_power_domain_status(PRCM_DOMAIN_PERIPH)
      != PRCM_DOMAIN_POWER_ON) {
     return false;
   }
@@ -104,12 +104,12 @@ static void
 power_up(void)
 {
   /* First, make sure the PERIPH PD is on */
-  ti_lib_rom_prcm_power_domain_on(PRCM_DOMAIN_PERIPH);
-  while((ti_lib_rom_prcm_power_domain_status(PRCM_DOMAIN_PERIPH)
+  ti_lib_prcm_power_domain_on(PRCM_DOMAIN_PERIPH);
+  while((ti_lib_prcm_power_domain_status(PRCM_DOMAIN_PERIPH)
          != PRCM_DOMAIN_POWER_ON));
 
   /* Enable clock in active mode */
-  ti_lib_rom_prcm_peripheral_run_enable(PRCM_PERIPH_TRNG);
+  ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_TRNG);
   ti_lib_prcm_load_set();
   while(!ti_lib_prcm_load_get());
 }
@@ -136,7 +136,7 @@ static uint64_t
 read_number(void)
 {
   uint64_t ran = (uint64_t)HWREG(TRNG_BASE + TRNG_O_OUT1) << 32;
-  ran += ti_lib_rom_trng_number_get(TRNG_LOW_WORD);
+  ran += ti_lib_trng_number_get(TRNG_LOW_WORD);
 
   return ran;
 }
@@ -237,7 +237,7 @@ soc_trng_rand_asynchronous(uint32_t samples, soc_trng_callback_t cb)
   ti_lib_trng_int_clear(TRNG_NUMBER_READY);
 
   /* Enable clock in sleep mode and register with LPM */
-  ti_lib_rom_prcm_peripheral_sleep_enable(PRCM_PERIPH_TRNG);
+  ti_lib_prcm_peripheral_sleep_enable(PRCM_PERIPH_TRNG);
   ti_lib_prcm_load_set();
   while(!ti_lib_prcm_load_get());
 
@@ -271,7 +271,7 @@ PROCESS_THREAD(soc_trng_process, ev, data)
     }
 
     /* Disable clock in sleep mode */
-    ti_lib_rom_prcm_peripheral_sleep_disable(PRCM_PERIPH_TRNG);
+    ti_lib_prcm_peripheral_sleep_disable(PRCM_PERIPH_TRNG);
     ti_lib_prcm_load_set();
     while(!ti_lib_prcm_load_get());
 
