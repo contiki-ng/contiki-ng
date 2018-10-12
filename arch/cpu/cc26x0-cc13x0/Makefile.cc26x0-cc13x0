@@ -1,4 +1,4 @@
-CPU_ABS_PATH       = arch/cpu/cc26xx-cc13xx
+CPU_ABS_PATH       = arch/cpu/cc26x0-cc13x0
 TI_XXWARE = $(CONTIKI_CPU)/$(TI_XXWARE_PATH)
 
 ifeq (,$(wildcard $(TI_XXWARE)/*))

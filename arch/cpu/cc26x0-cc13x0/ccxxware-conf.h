@@ -36,7 +36,7 @@
  * @{
  *
  * \file
- *  CCxxware-specific configuration for the cc26xx-cc13xx CPU family
+ *  CCxxware-specific configuration for the cc26x0-cc13x0 CPU family
  */
 #ifndef CCXXWARE_CONF_H_
 #define CCXXWARE_CONF_H_

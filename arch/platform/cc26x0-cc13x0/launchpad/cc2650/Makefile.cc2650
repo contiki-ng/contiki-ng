@@ -1,5 +1,5 @@
 ### Will allow the inclusion of the correct CPU makefile
-CPU_FAMILY = cc26xx
+CPU_FAMILY = cc26x0
 
 ### Add to the source dirs
 CONTIKI_TARGET_DIRS += launchpad/cc2650
