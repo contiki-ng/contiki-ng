@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = cc26xx-web-demo
+CONTIKI_PROJECT = cc26x0-web-demo
 all: $(CONTIKI_PROJECT)
 
 PLATFORMS_ONLY = cc26x0-cc13x0

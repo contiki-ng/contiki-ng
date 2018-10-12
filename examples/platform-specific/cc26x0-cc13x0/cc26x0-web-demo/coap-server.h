@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc26x0-web-demo
  * @{
  *
  * \file

@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc26x0-web-demo
  * @{
  *
  * \file
@@ -48,7 +48,7 @@
 #include "dev/button-hal.h"
 #include "batmon-sensor.h"
 #include "httpd-simple.h"
-#include "cc26xx-web-demo.h"
+#include "cc26x0-web-demo.h"
 #include "mqtt-client.h"
 #include "coap-server.h"
 

@@ -5,8 +5,8 @@ ifndef CONTIKI
 endif
 
 ### Board and BSP selection
-BOARD ?= srf06/cc26xx
-BOARDS = srf06/cc26xx srf06/cc13xx launchpad/cc2640r2 launchpad/cc2650 launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350
+BOARD ?= srf06/cc26x0
+BOARDS = srf06/cc26x0 srf06/cc13x0 launchpad/cc2640r2 launchpad/cc2650 launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350
 
 CONTIKI_TARGET_DIRS += .
 

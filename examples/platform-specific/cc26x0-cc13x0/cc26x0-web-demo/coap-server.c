@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc26x0-web-demo
  * @{
  *
  * \file
@@ -40,7 +40,7 @@
 #include "coap-engine.h"
 #include "board-peripherals.h"
 #include "rf-core/rf-ble.h"
-#include "cc26xx-web-demo.h"
+#include "cc26x0-web-demo.h"
 
 #include <stdio.h>
 #include <stdlib.h>

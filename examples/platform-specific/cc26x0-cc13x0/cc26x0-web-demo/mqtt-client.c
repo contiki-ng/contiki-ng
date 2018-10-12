@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc26x0-web-demo
  * @{
  *
  * \file
@@ -45,7 +45,7 @@
 #include "lib/sensors.h"
 #include "dev/button-hal.h"
 #include "board-peripherals.h"
-#include "cc26xx-web-demo.h"
+#include "cc26x0-web-demo.h"
 #include "dev/leds.h"
 #include "mqtt-client.h"
 #include "httpd-simple.h"

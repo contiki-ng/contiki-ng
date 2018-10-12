@@ -29,7 +29,7 @@
  *
  */
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc26x0-web-demo
  * @{
  *
  * \file
@@ -42,7 +42,7 @@
 #include "batmon-sensor.h"
 #include "lib/sensors.h"
 #include "lib/list.h"
-#include "cc26xx-web-demo.h"
+#include "cc26x0-web-demo.h"
 #include "mqtt-client.h"
 #include "net-uart.h"
 

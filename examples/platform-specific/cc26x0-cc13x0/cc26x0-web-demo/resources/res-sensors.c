@@ -29,7 +29,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc26x0-web-demo
  * @{
  *
  * \file
@@ -39,7 +39,7 @@
 #include "contiki.h"
 #include "coap-engine.h"
 #include "coap.h"
-#include "cc26xx-web-demo.h"
+#include "cc26x0-web-demo.h"
 #include "coap-server.h"
 
 #include <stdio.h>

@@ -29,7 +29,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-web-demo
+ * \addtogroup cc26x0-web-demo
  * @{
  *
  * \file
@@ -41,7 +41,7 @@
 #include "coap.h"
 #include "net/ipv6/uip-ds6.h"
 #include "coap-server.h"
-#include "cc26xx-web-demo.h"
+#include "cc26x0-web-demo.h"
 
 #include "ti-lib.h"
 

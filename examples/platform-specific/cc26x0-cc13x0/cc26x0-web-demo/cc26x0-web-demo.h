@@ -31,7 +31,7 @@
  * \addtogroup cc26xx-examples
  * @{
  *
- * \defgroup cc26xx-web-demo CC26xx Web Demo
+ * \defgroup cc26x0-web-demo CC26xx Web Demo
  * @{
  *
  *   An example demonstrating:

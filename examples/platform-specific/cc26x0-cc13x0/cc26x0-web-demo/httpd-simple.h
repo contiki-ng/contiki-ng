@@ -44,7 +44,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki-net.h"
 #include "sys/process.h"
-#include "cc26xx-web-demo.h"
+#include "cc26x0-web-demo.h"
 /*---------------------------------------------------------------------------*/
 /* Ideally a multiple of TCP_MSS */
 #ifdef HTTPD_SIMPLE_CONF_MAIN_BUF_SIZE

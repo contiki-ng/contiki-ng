@@ -2,31 +2,31 @@ EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
 EXAMPLES = \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0 \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0 \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 platform-specific/cc26x0-cc13x0/very-sleepy-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0:BOARD=srf06/cc13xx \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
-platform-specific/cc26x0-cc13x0/cc26xx-web-demo/cc26x0-cc13x0:BOARD=launchpad/cc1350 \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=srf06/cc13x0 \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
+platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=launchpad/cc1350 \
 platform-specific/cc26x0-cc13x0/very-sleepy-demo/cc26x0-cc13x0 \
 platform-specific/cc26x0-cc13x0/ble-ipv6/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 nullnet/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 rpl-border-router/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
 sensniff/cc26x0-cc13x0 \
 sensniff/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
-dev/gpio-hal/cc26x0-cc13x0:BOARD=srf06/cc13xx \
-dev/gpio-hal/cc26x0-cc13x0:BOARD=srf06/cc26xx \
+dev/gpio-hal/cc26x0-cc13x0:BOARD=srf06/cc13x0 \
+dev/gpio-hal/cc26x0-cc13x0:BOARD=srf06/cc26x0 \
 dev/gpio-hal/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
 dev/gpio-hal/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 dev/gpio-hal/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
 dev/gpio-hal/cc26x0-cc13x0:BOARD=launchpad/cc1350 \
 dev/gpio-hal/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
 dev/gpio-hal/cc26x0-cc13x0:BOARD=launchpad/cc2640r2 \
-dev/leds/cc26x0-cc13x0:BOARD=srf06/cc13xx \
-dev/leds/cc26x0-cc13x0:BOARD=srf06/cc26xx \
+dev/leds/cc26x0-cc13x0:BOARD=srf06/cc13x0 \
+dev/leds/cc26x0-cc13x0:BOARD=srf06/cc26x0 \
 dev/leds/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
 dev/leds/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 dev/leds/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
@@ -34,7 +34,7 @@ dev/leds/cc26x0-cc13x0:BOARD=launchpad/cc1350 \
 dev/leds/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
 dev/leds/cc26x0-cc13x0:BOARD=launchpad/cc2640r2 \
 6tisch/etsi-plugtest-2017/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
-mqtt-client/cc26x0-cc13x0:BOARD=srf06/cc26xx \
+mqtt-client/cc26x0-cc13x0:BOARD=srf06/cc26x0 \
 mqtt-client/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
 mqtt-client/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 hello-world/simplelink:BOARD=launchpad/cc26x2r1 \
