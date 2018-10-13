@@ -32,7 +32,8 @@
 #ifndef NATIVE_DEF_H_
 #define NATIVE_DEF_H_
 /*---------------------------------------------------------------------------*/
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE 1
+#define GPIO_HAL_CONF_ARCH_SW_TOGGLE     1
+#define GPIO_HAL_CONF_PORT_PIN_NUMBERING 0
 /*---------------------------------------------------------------------------*/
 #endif /* NATIVE_DEF_H_ */
 /*---------------------------------------------------------------------------*/
