@@ -77,7 +77,8 @@ PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFI
 
 # Provide way to create $(OBJECTDIR) if it has been removed by make clean
 $(OBJECTDIR):
-	mkdir $@
+	$(TRACE_MKDIR)
+	$(Q)mkdir $@
 
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
@@ -241,12 +242,20 @@ ifeq ($(V),1)
   TRACE_LD =
   TRACE_AR =
   TRACE_AS =
+  TRACE_OBJCOPY  =
+  TRACE_OBJDUMP  =
+  TRACE_MKDIR =
+  TRACE_CP =
   Q=
 else
   TRACE_CC = @echo "  CC       " $<
   TRACE_LD = @echo "  LD       " $@
   TRACE_AR = @echo "  AR       " $@
   TRACE_AS = @echo "  AS       " $<
+  TRACE_OBJCOPY  = @echo "  OBJCOPY  " $< "-->" $@
+  TRACE_OBJDUMP  = @echo "  OBJDUMP  " $< "-->" $@
+  TRACE_MKDIR = @echo "  MKDIR    " $@
+  TRACE_CP       = @echo "  CP       " $< "-->" $@
   Q=@
 endif
 
