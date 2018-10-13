@@ -13,8 +13,6 @@ include $(CONTIKI)/Makefile.identify-target
 ### Include Makefile.tools to pull in targets that allow us to build tools dir
 include $(CONTIKI)/Makefile.tools
 
-CONTIKI_NG_TARGET_LIB = contiki-ng-$(TARGET).a
-
 ifeq ($(DEFINES),)
   -include Makefile.$(TARGET).defines
   ifneq ($(DEFINES),)
@@ -39,7 +37,12 @@ ifdef CI
   endif
 endif
 
-OBJECTDIR = obj_$(TARGET)
+BUILD_DIR = build
+BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)
+BUILD_DIR_BOARD = $(BUILD_DIR_TARGET)/$(BOARD)
+OBJECTDIR = $(BUILD_DIR_BOARD)/obj
+
+CONTIKI_NG_TARGET_LIB = $(BUILD_DIR_BOARD)/contiki-ng-$(TARGET).a
 
 LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
 UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
@@ -74,11 +77,6 @@ endef
 
 CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
 PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
-
-# Provide way to create $(OBJECTDIR) if it has been removed by make clean
-$(OBJECTDIR):
-	$(TRACE_MKDIR)
-	$(Q)mkdir $@
 
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
@@ -124,6 +122,11 @@ endif
 endif # $(BOARD) not empty
 
 PLATFORM_ACTION ?= build
+
+# Provide way to create $(OBJECTDIR) if it has been removed by make clean
+$(OBJECTDIR):
+	$(TRACE_MKDIR)
+	$(Q)mkdir -p $@
 
 ifneq ($(BOARD),)
   TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
@@ -312,14 +315,13 @@ endef
 
 ### Harmonize filename of a .map file, if the platform's build system wants
 ### to create one
-CONTIKI_NG_PROJECT_MAP = $(addsuffix -$(TARGET).map, $(basename $@))
+CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
 
 .PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
-	-$(Q)rm -f *.d *.e *.o $(CONTIKI_NG_TARGET_LIB) $(CLEAN)
-	-$(Q)rm -rf $(OBJECTDIR)
-	-$(Q)rm -f $(addsuffix -$(TARGET).map, $(CONTIKI_PROJECT))
+	-$(Q)rm -f *.d *.e *.o $(CLEAN)
+	-$(Q)rm -rf $(BUILD_DIR_TARGET)
 	-$(Q)rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
 	@echo Target $(TARGET) cleaned
 
@@ -328,6 +330,7 @@ distclean:
 		echo Running: $(MAKE) TARGET=$$TARG clean; \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
+	rmdir $(BUILD_DIR)
 
 -include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
 

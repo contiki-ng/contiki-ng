@@ -51,27 +51,32 @@ endif
 ### CPU-dependent cleanup files
 CLEAN += *.elf *.bin *.lst *.hex *.i16hex
 
-### Don't treat the following files as intermediate
-.PRECIOUS: %.elf %.hex %.bin
+OUT_HEX = $(BUILD_DIR_BOARD)/%.hex
+OUT_I16HEX = $(BUILD_DIR_BOARD)/%.i16hex
+OUT_BIN = $(BUILD_DIR_BOARD)/%.bin
+OUT_LST = $(BUILD_DIR_BOARD)/%.lst
 
-%.i16hex: %.elf
+### Don't treat the following files as intermediate
+.PRECIOUS: $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
+
+$(OUT_I16HEX): $(OUT_ELF)
 	$(TRACE_OBJCOPY)
 	$(Q)$(OBJCOPY) -O ihex $< $@
 
-%.hex: %.i16hex
+$(OUT_HEX): $(OUT_I16HEX)
 	$(TRACE_SREC_CAT)
 	$(Q)$(SREC_CAT) $< -intel -o $@ -intel
 
-%.bin: %.elf
+$(OUT_BIN): $(OUT_ELF)
 	$(TRACE_OBJCOPY)
 	$(Q)$(OBJCOPY) -O binary $(OBJCOPY_FLAGS) $< $@
 
-%.lst: %.elf
+$(OUT_LST): $(OUT_ELF)
 	$(TRACE_OBJDUMP)
 	$(Q)$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
 
 ### We don't really need the .hex and .bin for the .$(TARGET) but let's make
 ### sure they get built
-%.$(TARGET): %.elf %.hex %.bin
+%.$(TARGET): $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
 	$(TRACE_CP)
 	$(Q)cp $< $@
