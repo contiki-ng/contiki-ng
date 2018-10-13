@@ -62,15 +62,6 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /**
- * \name GPIO HAL configuration.
- *
- * @{
- */
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE        0
-#define GPIO_HAL_CONF_ARCH_HDR_PATH         "dev/gpio-hal-arch.h"
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name Watchdog Configuration.
  *
  * @{
