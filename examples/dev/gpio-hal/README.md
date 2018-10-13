@@ -8,7 +8,9 @@ developing a new port.
 
 This example assumes a device with:
 
-* 3 output pins (e.g. LEDs).
+* 3 output pins (e.g. LEDs). If the platform uses the port/pin GPIO numbering
+  scheme then this example assumes that at least 2 of those pins are part of
+  the same port.
 * 1 button.
 
 # Supported devices
@@ -34,3 +36,10 @@ board that you wish to test with the example. For example, if you have a LED
 connected to pin 20, then you will need to
 
     gpio_hal_pin_t out_pin1 = 20;
+
+If the platform uses the port/pin GPIO numbering scheme then you will also
+need to provide definitions for the following variables:
+
+* `out_port1` and `out_port2_3`. `out_port2_3` corresponds to the port that
+  `out_pin2` and `out_pin3` are members of.
+* `btn_port` for the button pin's port.
