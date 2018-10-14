@@ -9,9 +9,9 @@ RUN apt-get update && \
   && apt-get clean
 
 # Install ARM toolchain
-RUN wget https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
-  tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/ && \
+RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2017q4/gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 && \
+  tar xjf gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 -C /tmp/ && \
+  cp -f -r /tmp/gcc-arm-none-eabi-7-2017-q4-major/* /usr/local/ && \
   rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
