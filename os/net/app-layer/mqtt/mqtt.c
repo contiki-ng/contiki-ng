@@ -872,6 +872,7 @@ parse_publish_vhdr(struct mqtt_connection *conn,
 
   /* Read out topic length */
   if(conn->in_packet.topic_len_received == 0) {
+    conn->in_packet.topic_pos = 0;
     conn->in_packet.topic_len = (input_data_ptr[(*pos)++] << 8);
     conn->in_packet.byte_counter++;
     if(*pos >= input_data_len) {
