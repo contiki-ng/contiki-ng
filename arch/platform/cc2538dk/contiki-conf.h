@@ -51,6 +51,36 @@
 #include "cc2538-def.h"
 /*---------------------------------------------------------------------------*/
 /**
+ * \name CC2538 radio TSCH configuration
+ *
+ * @{
+ */
+#ifndef RADIO_PHY_OVERHEAD
+/* 1 len byte, 2 bytes CRC */
+#define RADIO_PHY_OVERHEAD 3 
+#endif
+
+#ifndef RADIO_BYTE_AIR_TIME
+/* 250kbps data rate. One byte = 32us.*/
+#define RADIO_BYTE_AIR_TIME 32 
+#endif
+
+#ifndef RADIO_DELAY_BEFORE_TX
+/* 352us from calling transmit() until the SFD byte has been sent */
+#define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(352))
+#endif
+
+#ifndef RADIO_DELAY_BEFORE_RX
+/* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
+#define RADIO_DELAY_BEFORE_RX ((unsigned)US_TO_RTIMERTICKS(250))
+#endif 
+
+#ifndef RADIO_DELAY_BEFORE_DETECT
+#define RADIO_DELAY_BEFORE_DETECT 0
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name Serial Boot Loader Backdoor configuration
  *
  * @{
