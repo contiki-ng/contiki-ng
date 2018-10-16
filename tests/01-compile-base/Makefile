@@ -24,6 +24,8 @@ rpl-border-router/sky \
 slip-radio/sky \
 libs/ipv6-hooks/sky \
 nullnet/native \
+nullnet/sky \
+nullnet/sky:MAKE_MAC=MAKE_MAC_TSCH \
 mqtt-client/native \
 coap/coap-example-client/native \
 coap/coap-example-server/native \
