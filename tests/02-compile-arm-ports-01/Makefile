@@ -89,6 +89,8 @@ platform-specific/cc2538-common/pka/cc2538dk \
 hello-world/cc2538dk \
 rpl-border-router/cc2538dk \
 rpl-border-router/cc2538dk:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
+6tisch/simple-node/cc2538dk \
+6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
 hello-world/nrf52dk \
 platform-specific/nrf52dk/coap-demo/coap-server/nrf52dk \
 platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
