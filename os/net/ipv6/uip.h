@@ -84,10 +84,11 @@
 /**
  * Direct access to ICMP, UDP, and TCP headers and payload
  */
-#define UIP_ICMP_BUF                    ((struct uip_icmp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
+#define UIP_IP_PAYLOAD                        ((unsigned char *)&uip_buf[uip_l2_l3_hdr_len])
+#define UIP_ICMP_BUF                    ((struct uip_icmp_hdr *)UIP_IP_PAYLOAD)
 #define UIP_ICMP_PAYLOAD                      ((unsigned char *)&uip_buf[uip_l2_l3_icmp_hdr_len])
-#define UIP_UDP_BUF                      ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_TCP_BUF                      ((struct uip_tcp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
+#define UIP_UDP_BUF                      ((struct uip_udp_hdr *)UIP_IP_PAYLOAD)
+#define UIP_TCP_BUF                      ((struct uip_tcp_hdr *)UIP_IP_PAYLOAD)
 
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"
