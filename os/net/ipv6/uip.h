@@ -79,16 +79,19 @@
 /**
  * Direct access to IPv6 header
  */
-#define UIP_IP_BUF                        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+#define UIP_IP_BUF_CHAR                            ((unsigned char *)uip_buf + UIP_LLH_LEN)
+#define UIP_IP_BUF                             ((struct uip_ip_hdr *)UIP_IP_BUF_CHAR)
+#define UIP_IP_PAYLOAD(ext)                        ((unsigned char *)UIP_IP_BUF_CHAR + UIP_IPH_LEN + (ext))
 
 /**
- * Direct access to ICMP, UDP, and TCP headers and payload
+ * Direct access to ICMP, UDP, and TCP headers and payload, with implicit ext header offset
  */
-#define UIP_IP_PAYLOAD                        ((unsigned char *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_ICMP_BUF                    ((struct uip_icmp_hdr *)UIP_IP_PAYLOAD)
-#define UIP_ICMP_PAYLOAD                      ((unsigned char *)&uip_buf[uip_l2_l3_icmp_hdr_len])
-#define UIP_UDP_BUF                      ((struct uip_udp_hdr *)UIP_IP_PAYLOAD)
-#define UIP_TCP_BUF                      ((struct uip_tcp_hdr *)UIP_IP_PAYLOAD)
+#define UIP_ICMP_BUF                         ((struct uip_icmp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
+#define UIP_ICMP_PAYLOAD                           ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_ICMPH_LEN)
+#define UIP_UDP_BUF                           ((struct uip_udp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
+#define UIP_UDP_PAYLOAD                            ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_UDPH_LEN)
+#define UIP_TCP_BUF                           ((struct uip_tcp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
+#define UIP_TCP_PAYLOAD                            ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_TCPH_LEN)
 
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"
