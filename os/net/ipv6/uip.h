@@ -65,7 +65,7 @@
 #define UIP_TCPIP_HLEN UIP_IPTCPH_LEN
 #define UIP_IPICMPH_LEN (UIP_IPH_LEN + UIP_ICMPH_LEN) /* Size of ICMP + IP header */
 #define UIP_LLIPH_LEN (UIP_LLH_LEN + UIP_IPH_LEN)     /* Size of L2 + IP header */
-#if NETSTACK_CONF_WITH_IPV6
+
 /**
  * The sums below are quite used in ND. When used for uip_buf, we
  * include link layer length when used for uip_len, we do not, hence
@@ -76,8 +76,6 @@
 #define uip_l2_l3_icmp_hdr_len (UIP_LLH_LEN + UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
 #define uip_l3_hdr_len (UIP_IPH_LEN + uip_ext_len)
 #define uip_l3_icmp_hdr_len (UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
-#endif /*NETSTACK_CONF_WITH_IPV6*/
-
 
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"
@@ -100,12 +98,7 @@ typedef union uip_ip6addr_t {
   uint16_t u16[8];
 } uip_ip6addr_t;
 
-#if NETSTACK_CONF_WITH_IPV6
 typedef uip_ip6addr_t uip_ipaddr_t;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-typedef uip_ip4addr_t uip_ipaddr_t;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
 
 /*---------------------------------------------------------------------------*/
 #define UIP_802154_SHORTADDR_LEN 2
@@ -1048,11 +1041,7 @@ struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport);
                                        (addr1)->u16[1] == (addr2)->u16[1])
 #define uip_ip6addr_cmp(addr1, addr2) (memcmp(addr1, addr2, sizeof(uip_ip6addr_t)) == 0)
 
-#if NETSTACK_CONF_WITH_IPV6
 #define uip_ipaddr_cmp(addr1, addr2) uip_ip6addr_cmp(addr1, addr2)
-#else /* NETSTACK_CONF_WITH_IPV6 */
-#define uip_ipaddr_cmp(addr1, addr2) uip_ip4addr_cmp(addr1, addr2)
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 /**
  * Compare two IP addresses with netmasks
@@ -1320,18 +1309,11 @@ extern uint16_t uip_urglen, uip_surglen;
  * This function clears the uIP buffer by reseting the uip_len and
  * uip_ext_len pointers.
  */
-#if NETSTACK_CONF_WITH_IPV6
 #define uip_clear_buf() { \
   uip_len = 0; \
   uip_ext_len = 0; \
   uipbuf_clear_attr();\
 }
-#else /*NETSTACK_CONF_WITH_IPV6*/
-#define uip_clear_buf() { \
-  uip_len = 0; \
-  uipbuf_clear_attr();\
-}
-#endif /*NETSTACK_CONF_WITH_IPV6*/
 
 /**
  * Representation of a uIP TCP connection.
@@ -1494,13 +1476,11 @@ struct uip_stats {
                                checksum. */
   } udp;                  /**< UDP statistics. */
 #endif /* UIP_UDP */
-#if NETSTACK_CONF_WITH_IPV6
   struct {
     uip_stats_t drop;     /**< Number of dropped ND6 packets. */
     uip_stats_t recv;     /**< Number of recived ND6 packets */
     uip_stats_t sent;     /**< Number of sent ND6 packets */
   } nd6;
-#endif /*NETSTACK_CONF_WITH_IPV6*/
 };
 
 
@@ -1621,7 +1601,6 @@ void uip_process(uint8_t flag);
 
 /* The TCP and IP headers. */
 struct uip_tcpip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
   /* IPv6 header. */
   uint8_t vtc,
     tcflow;
@@ -1629,18 +1608,6 @@ struct uip_tcpip_hdr {
   uint8_t len[2];
   uint8_t proto, ttl;
   uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IPv4 header. */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
   /* TCP header. */
   uint16_t srcport,
@@ -1657,7 +1624,6 @@ struct uip_tcpip_hdr {
 
 /* The ICMP and IP headers. */
 struct uip_icmpip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
   /* IPv6 header. */
   uint8_t vtc,
     tcf;
@@ -1665,32 +1631,15 @@ struct uip_icmpip_hdr {
   uint8_t len[2];
   uint8_t proto, ttl;
   uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IPv4 header. */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
   /* ICMP header. */
   uint8_t type, icode;
   uint16_t icmpchksum;
-#if !NETSTACK_CONF_WITH_IPV6
-  uint16_t id, seqno;
-  uint8_t payload[1];
-#endif /* !NETSTACK_CONF_WITH_IPV6 */
 };
 
 
 /* The UDP and IP headers. */
 struct uip_udpip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
   /* IPv6 header. */
   uint8_t vtc,
     tcf;
@@ -1698,18 +1647,6 @@ struct uip_udpip_hdr {
   uint8_t len[2];
   uint8_t proto, ttl;
   uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IP header. */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
   /* UDP header. */
   uint16_t srcport,
@@ -1725,7 +1662,6 @@ struct uip_udpip_hdr {
  */
 /* The IP header */
 struct uip_ip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
   /* IPV6 header */
   uint8_t vtc;
   uint8_t tcflow;
@@ -1733,18 +1669,6 @@ struct uip_ip_hdr {
   uint8_t len[2];
   uint8_t proto, ttl;
   uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IPV4 header */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 };
 
 
@@ -1860,9 +1784,6 @@ struct uip_tcp_hdr {
 struct uip_icmp_hdr {
   uint8_t type, icode;
   uint16_t icmpchksum;
-#if !NETSTACK_CONF_WITH_IPV6
-  uint16_t id, seqno;
-#endif /* !NETSTACK_CONF_WITH_IPV6 */
 };
 
 
@@ -1898,7 +1819,6 @@ struct uip_udp_hdr {
 #define UIP_PROTO_ICMP6 58
 
 
-#if NETSTACK_CONF_WITH_IPV6
 /** @{ */
 /** \brief  extension headers types */
 #define UIP_PROTO_HBHO        0
@@ -1937,9 +1857,6 @@ struct uip_udp_hdr {
 /** @} */
 
 
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
-
 #if UIP_FIXEDADDR
 extern const uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
 #else /* UIP_FIXEDADDR */
@@ -1954,10 +1871,6 @@ extern const uip_lladdr_t uip_lladdr;
 extern uip_lladdr_t uip_lladdr;
 #endif
 
-
-
-
-#if NETSTACK_CONF_WITH_IPV6
 /** Length of the link local prefix */
 #define UIP_LLPREF_LEN     10
 
@@ -2173,8 +2086,6 @@ extern uip_lladdr_t uip_lladdr;
   ((((a)->u8[13])  == ((b)->u8[13])) &&                 \
    (((a)->u8[14])  == ((b)->u8[14])) &&                 \
    (((a)->u8[15])  == ((b)->u8[15])))
-
-#endif /*NETSTACK_CONF_WITH_IPV6*/
 
 /**
  * A non-error message that indicates that a packet should be

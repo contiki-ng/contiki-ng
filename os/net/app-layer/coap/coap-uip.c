@@ -79,11 +79,7 @@
 
 /* direct access into the buffer */
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-#if NETSTACK_CONF_WITH_IPV6
 #define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#else
-#define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN])
-#endif
 
 #ifdef WITH_DTLS
 static dtls_handler_t cb;

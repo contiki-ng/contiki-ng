@@ -68,11 +68,7 @@
  * \retval 0 If the IP address could not be parsed.
  * \retval Non-zero If the IP address was parsed.
  */
-#if NETSTACK_CONF_WITH_IPV6
 #define uiplib_ipaddrconv uiplib_ip6addrconv
-#else /* NETSTACK_CONF_WITH_IPV6 */
-#define uiplib_ipaddrconv uiplib_ip4addrconv
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 int uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *addr);
 int uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *addr);
