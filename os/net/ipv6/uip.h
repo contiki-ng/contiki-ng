@@ -101,6 +101,14 @@
 #define UIP_RH_BUF(ext)                   ((struct uip_routing_hdr *)UIP_IP_PAYLOAD(ext))
 #define UIP_FRAG_BUF(ext)                    ((struct uip_frag_hdr *)UIP_IP_PAYLOAD(ext))
 #define UIP_DESTO_BUF(ext)                  ((struct uip_desto_hdr *)UIP_IP_PAYLOAD(ext))
+#define UIP_RPL_SRH_BUF(ext)              ((struct uip_rpl_srh_hdr *)(UIP_IP_PAYLOAD(ext) + RPL_RH_LEN))
+
+/**
+ * Direct access to extension header options, with explicit ext header and option offset
+ */
+#define UIP_EXT_HDR_OPT_BUF(ext, opt)            ((struct uip_ext_hdr_opt *)(UIP_IP_PAYLOAD(ext) + (opt)))
+#define UIP_EXT_HDR_OPT_PADN_BUF(ext, opt)  ((struct uip_ext_hdr_opt_padn *)(UIP_IP_PAYLOAD(ext) + (opt)))
+#define UIP_EXT_HDR_OPT_RPL_BUF(ext, opt)    ((struct uip_ext_hdr_opt_rpl *)(UIP_IP_PAYLOAD(ext) + (opt)))
 
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"

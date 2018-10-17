@@ -54,7 +54,6 @@
 #define LOG_LEVEL LOG_LEVEL_IPV6
 
 #define UIP_ICMP6_ERROR_BUF  ((struct uip_icmp6_error *)UIP_ICMP_PAYLOAD)
-#define UIP_FIRST_EXT_BUF        ((struct uip_ext_hdr *)&uip_buf[UIP_LLIPH_LEN])
 
 /** \brief temporary IP address */
 static uip_ipaddr_t tmp_ipaddr;
@@ -194,14 +193,14 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
     uip_len = UIP_LINK_MTU;
   }
 
-  memmove((uint8_t *)UIP_ICMP6_ERROR_BUF + uip_ext_len + UIP_ICMP6_ERROR_LEN,
+  memmove(UIP_ICMP_PAYLOAD + uip_ext_len + UIP_ICMP6_ERROR_LEN,
           (void *)UIP_IP_BUF, uip_len - UIP_IPICMPH_LEN - uip_ext_len - UIP_ICMP6_ERROR_LEN);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
   UIP_IP_BUF->flow = 0;
   if (uip_ext_len) {
-    UIP_FIRST_EXT_BUF->next = UIP_PROTO_ICMP6;
+    UIP_EXT_BUF(0)->next = UIP_PROTO_ICMP6;
   } else {
     UIP_IP_BUF->proto = UIP_PROTO_ICMP6;
   }

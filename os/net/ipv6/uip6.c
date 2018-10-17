@@ -138,12 +138,11 @@ uint8_t uip_ext_opt_offset = 0;
 /* Buffers                                                                   */
 /*---------------------------------------------------------------------------*/
 /**
- * \name Buffer defines
+ * \name Reassembly buffer definition
  * @{
  */
 #define FBUF                                ((struct uip_ip_hdr *)&uip_reassbuf[0])
-#define UIP_EXT_HDR_OPT_BUF            ((struct uip_ext_hdr_opt *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
-#define UIP_EXT_HDR_OPT_PADN_BUF  ((struct uip_ext_hdr_opt_padn *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
+
 /** @} */
 /**
  * \name Buffer variables
@@ -839,7 +838,7 @@ ext_hdr_options_process(void)
    */
   uip_ext_opt_offset = 2;
   while(uip_ext_opt_offset < ((UIP_EXT_BUF(uip_ext_len)->len << 3) + 8)) {
-    switch(UIP_EXT_HDR_OPT_BUF->type) {
+    switch(UIP_EXT_HDR_OPT_BUF(uip_ext_len, uip_ext_opt_offset)->type) {
     /*
      * for now we do not support any options except padding ones
      * PAD1 does not make sense as the header must be 8bytes aligned,
@@ -851,7 +850,7 @@ ext_hdr_options_process(void)
       break;
     case UIP_EXT_HDR_OPT_PADN:
       LOG_DBG("Processing PADN option\n");
-      uip_ext_opt_offset += UIP_EXT_HDR_OPT_PADN_BUF->opt_len + 2;
+      uip_ext_opt_offset += UIP_EXT_HDR_OPT_PADN_BUF(uip_ext_len, uip_ext_opt_offset)->opt_len + 2;
       break;
     case UIP_EXT_HDR_OPT_RPL:
       /* Fixes situation when a node that is not using RPL
@@ -866,7 +865,7 @@ ext_hdr_options_process(void)
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
-      uip_ext_opt_offset += (UIP_EXT_HDR_OPT_BUF->len) + 2;
+      uip_ext_opt_offset += (UIP_EXT_HDR_OPT_BUF(uip_ext_len, uip_ext_opt_offset)->len) + 2;
       return 0;
     default:
       /*
@@ -882,8 +881,8 @@ ext_hdr_options_process(void)
        *   Problem, Code 2, message to the packet's Source Address,
        *   pointing to the unrecognized Option Type.
        */
-      LOG_DBG("MSB %x\n", UIP_EXT_HDR_OPT_BUF->type);
-      switch(UIP_EXT_HDR_OPT_BUF->type & 0xC0) {
+      LOG_DBG("MSB %x\n", UIP_EXT_HDR_OPT_BUF(uip_ext_len, uip_ext_opt_offset)->type);
+      switch(UIP_EXT_HDR_OPT_BUF(uip_ext_len, uip_ext_opt_offset)->type & 0xC0) {
       case 0:
         break;
       case 0x40:
@@ -898,7 +897,7 @@ ext_hdr_options_process(void)
         return 2;
       }
       /* in the cases were we did not discard, update ext_opt* */
-      uip_ext_opt_offset += UIP_EXT_HDR_OPT_BUF->len + 2;
+      uip_ext_opt_offset += UIP_EXT_HDR_OPT_BUF(uip_ext_len, uip_ext_opt_offset)->len + 2;
       break;
     }
   }
