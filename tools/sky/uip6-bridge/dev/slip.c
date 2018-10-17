@@ -38,7 +38,6 @@
 #include "contiki.h"
 
 #include "net/ipv6/uip.h"
-#define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #include "dev/slip.h"
 

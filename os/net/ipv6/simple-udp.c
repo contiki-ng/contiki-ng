@@ -52,8 +52,6 @@ PROCESS(simple_udp_process, "Simple UDP process");
 static uint8_t started = 0;
 static uint8_t databuffer[UIP_BUFSIZE];
 
-#define UIP_UDPIP_BUF   ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 /*---------------------------------------------------------------------------*/
 static void
 init_simple_udp(void)
@@ -164,10 +162,10 @@ PROCESS_THREAD(simple_udp_process, ev, data)
           if(c->receive_callback != NULL) {
             PROCESS_CONTEXT_BEGIN(c->client_process);
             c->receive_callback(c,
-                                &(UIP_UDPIP_BUF->srcipaddr),
-                                UIP_HTONS(UIP_UDPIP_BUF->srcport),
-                                &(UIP_UDPIP_BUF->destipaddr),
-                                UIP_HTONS(UIP_UDPIP_BUF->destport),
+                                &(UIP_IP_BUF->srcipaddr),
+                                UIP_HTONS(UIP_UDP_BUF->srcport),
+                                &(UIP_IP_BUF->destipaddr),
+                                UIP_HTONS(UIP_UDP_BUF->destport),
                                 databuffer, uip_datalen());
             PROCESS_CONTEXT_END();
           }

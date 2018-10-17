@@ -141,7 +141,7 @@ uint8_t uip_ext_opt_offset = 0;
  * \name Buffer defines
  * @{
  */
-#define FBUF                             ((struct uip_tcpip_hdr *)&uip_reassbuf[0])
+#define FBUF                                ((struct uip_ip_hdr *)&uip_reassbuf[0])
 #define UIP_EXT_BUF                        ((struct uip_ext_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 #define UIP_ROUTING_BUF                ((struct uip_routing_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 #define UIP_FRAG_BUF                      ((struct uip_frag_hdr *)&uip_buf[uip_l2_l3_hdr_len])

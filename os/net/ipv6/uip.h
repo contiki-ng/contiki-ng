@@ -1611,62 +1611,6 @@ void uip_process(uint8_t flag);
 
 #define UIP_STOPPED      16
 
-/* The TCP and IP headers. */
-struct uip_tcpip_hdr {
-  /* IPv6 header. */
-  uint8_t vtc,
-    tcflow;
-  uint16_t flow;
-  uint8_t len[2];
-  uint8_t proto, ttl;
-  uip_ip6addr_t srcipaddr, destipaddr;
-
-  /* TCP header. */
-  uint16_t srcport,
-    destport;
-  uint8_t seqno[4],
-    ackno[4],
-    tcpoffset,
-    flags,
-    wnd[2];
-  uint16_t tcpchksum;
-  uint8_t urgp[2];
-  uint8_t optdata[4];
-};
-
-/* The ICMP and IP headers. */
-struct uip_icmpip_hdr {
-  /* IPv6 header. */
-  uint8_t vtc,
-    tcf;
-  uint16_t flow;
-  uint8_t len[2];
-  uint8_t proto, ttl;
-  uip_ip6addr_t srcipaddr, destipaddr;
-
-  /* ICMP header. */
-  uint8_t type, icode;
-  uint16_t icmpchksum;
-};
-
-
-/* The UDP and IP headers. */
-struct uip_udpip_hdr {
-  /* IPv6 header. */
-  uint8_t vtc,
-    tcf;
-  uint16_t flow;
-  uint8_t len[2];
-  uint8_t proto, ttl;
-  uip_ip6addr_t srcipaddr, destipaddr;
-
-  /* UDP header. */
-  uint16_t srcport,
-    destport;
-  uint16_t udplen;
-  uint16_t udpchksum;
-};
-
 /*
  * In IPv6 the length of the L3 headers before the transport header is
  * not fixed, due to the possibility to include extension option headers
