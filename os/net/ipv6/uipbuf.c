@@ -39,6 +39,15 @@
 static uint16_t uipbuf_attrs[UIPBUF_ATTR_MAX];
 
 /*---------------------------------------------------------------------------*/
+void
+uipbuf_clear(void)
+{
+  uip_len = 0;
+  uip_ext_len = 0;
+  uip_last_proto = 0;
+  uipbuf_clear_attr();
+}
+/*---------------------------------------------------------------------------*/
 bool
 uipbuf_add_ext_hdr(int16_t len)
 {

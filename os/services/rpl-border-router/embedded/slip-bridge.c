@@ -61,7 +61,7 @@ request_prefix(void)
   uip_buf[1] = 'P';
   uip_len = 2;
   slip_write(uip_buf, uip_len);
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -77,14 +77,14 @@ slip_input_callback(void)
       memset(&prefix, 0, 16);
       memcpy(&prefix, &uip_buf[UIP_LLH_LEN + 2], 8);
 
-      uip_clear_buf();
+      uipbuf_clear();
 
       LOG_INFO("Setting prefix ");
       LOG_INFO_6ADDR(&prefix);
       LOG_INFO_("\n");
       set_prefix_64(&prefix);
     }
-    uip_clear_buf();
+    uipbuf_clear();
 
   } else if(uip_buf[UIP_LLH_LEN] == '?') {
     LOG_INFO("Got request message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
@@ -100,7 +100,7 @@ slip_input_callback(void)
       uip_len = 18;
       slip_write(uip_buf, uip_len);
     }
-    uip_clear_buf();
+    uipbuf_clear();
   } else {
     /* Save the last sender received over SLIP to avoid bouncing the
        packet back if no route is found */

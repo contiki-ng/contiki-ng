@@ -87,7 +87,7 @@ tcpip_input(void)
     if(uip_len > 0) {
       slip_write(uip_buf, uip_len);
       leds_toggle(LEDS_RED);
-      uip_clear_buf();
+      uipbuf_clear();
     }
   }
 }

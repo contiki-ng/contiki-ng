@@ -36,6 +36,11 @@
 #include "contiki.h"
 
 /**
+ * \brief          Resets uIP buffer
+ */
+void uipbuf_clear(void);
+
+/**
  * \brief          Update uip buffer length for addition of an extension header
  * \param len      The length of the new extension header
  * \retval         true if the length fields were successfully set, false otherwise

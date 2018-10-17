@@ -156,7 +156,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   /* check if originating packet is not an ICMP error */
   uint16_t shift;
   if(uip_last_proto == UIP_PROTO_ICMP6 && UIP_ICMP_BUF->type < 128) {
-    uip_clear_buf();
+    uipbuf_clear();
     return;
   }
 
@@ -185,7 +185,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   /* the source should not be unspecified nor multicast, the check for
      multicast is done in uip_process */
   if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)){
-    uip_clear_buf();
+    uipbuf_clear();
     return;
   }
 
@@ -195,7 +195,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
     if(type == ICMP6_PARAM_PROB && code == ICMP6_PARAMPROB_OPTION){
       uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &tmp_ipaddr);
     } else {
-      uip_clear_buf();
+      uipbuf_clear();
       return;
     }
   } else {
@@ -286,7 +286,7 @@ echo_reply_input(void)
     }
   }
 
-  uip_clear_buf();
+  uipbuf_clear();
   return;
 }
 /*---------------------------------------------------------------------------*/

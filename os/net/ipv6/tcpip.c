@@ -125,7 +125,7 @@ tcpip_output(const uip_lladdr_t *a)
     return ret;
   } else {
     /* Ok, ignore and drop... */
-    uip_clear_buf();
+    uipbuf_clear();
     return 0;
   }
 }
@@ -448,7 +448,7 @@ tcpip_input(void)
      NETSTACK_IP_PROCESS) {
     process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
   } /* else - do nothing and drop */
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -652,7 +652,7 @@ tcpip_ipv6_output(void)
   if(!NETSTACK_ROUTING.ext_header_update()) {
     /* Packet can not be forwarded */
     LOG_ERR("output: routing protocol extension header update error\n");
-    uip_clear_buf();
+    uipbuf_clear();
     return;
   }
 
@@ -740,7 +740,7 @@ send_packet:
   }
 
 exit:
-  uip_clear_buf();
+  uipbuf_clear();
   return;
 }
 /*---------------------------------------------------------------------------*/

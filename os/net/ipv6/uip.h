@@ -1340,19 +1340,6 @@ extern uint8_t uip_last_proto;
 extern uint16_t uip_urglen, uip_surglen;
 #endif /* UIP_URGDATA > 0 */
 
-/*
- * Clear uIP buffer
- *
- * This function clears the uIP buffer by reseting the uip_len and
- * uip_ext_len pointers.
- */
-#define uip_clear_buf() { \
-  uip_len = 0; \
-  uip_ext_len = 0; \
-  uip_last_proto = 0; \
-  uipbuf_clear_attr();\
-}
-
 /**
  * Representation of a uIP TCP connection.
  *

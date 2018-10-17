@@ -143,7 +143,7 @@ dis_input(void)
   rpl_process_dis(&UIP_IP_BUF->srcipaddr, uip_is_addr_mcast(&UIP_IP_BUF->destipaddr));
 
   discard:
-    uip_clear_buf();
+    uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -325,7 +325,7 @@ dio_input(void)
   rpl_process_dio(&from, &dio);
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -536,7 +536,7 @@ dao_input(void)
   rpl_process_dao(&from, &dao);
 
   discard:
-    uip_clear_buf();
+    uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -647,7 +647,7 @@ dao_ack_input(void)
   rpl_process_dao_ack(sequence, status);
 
   discard:
-    uip_clear_buf();
+    uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void

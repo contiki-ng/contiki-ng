@@ -231,7 +231,7 @@ slip_input_callback(void)
   if(!cmd_input(&uip_buf[UIP_LLH_LEN], uip_len)) {
     cmd_send((uint8_t *)"EUnknown command", 16);
   }
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static void

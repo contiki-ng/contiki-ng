@@ -314,7 +314,7 @@ create_na:
 #if UIP_CONF_ROUTER
     flags = flags | UIP_ND6_NA_FLAG_ROUTER;
 #endif
-  uip_clear_buf();
+  uipbuf_clear();
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
   UIP_IP_BUF->flow = 0;
@@ -348,7 +348,7 @@ create_na:
   return;
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
   return;
 }
 #endif /* UIP_ND6_SEND_NA */
@@ -359,7 +359,7 @@ discard:
 void
 uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
 {
-  uip_clear_buf();
+  uipbuf_clear();
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
   UIP_IP_BUF->flow = 0;
@@ -388,7 +388,7 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
     }
     if (uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
       LOG_ERR("Dropping NS due to no suitable source address\n");
-      uip_clear_buf();
+      uipbuf_clear();
       return;
     }
     UIP_IP_BUF->len[1] =
@@ -595,7 +595,7 @@ na_input(void)
 #endif /*UIP_CONF_IPV6_QUEUE_PKT */
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
   return;
 }
 #endif /* UIP_ND6_SEND_NS */
@@ -691,7 +691,7 @@ rs_input(void)
   uip_ds6_send_ra_sollicited();
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
   return;
 }
 
@@ -1082,7 +1082,7 @@ ra_input(void)
 #endif /*UIP_CONF_IPV6_QUEUE_PKT */
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
   return;
 }
 #endif /* !UIP_CONF_ROUTER */

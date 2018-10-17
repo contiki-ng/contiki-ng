@@ -244,7 +244,7 @@ icmp_input()
     /* If we enter here, we will definitely forward */
     tcpip_ipv6_output();
   }
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -254,7 +254,7 @@ mcast_fwd(void *p)
   uip_len = mcast_len;
   UIP_IP_BUF->ttl--;
   tcpip_output(NULL);
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t

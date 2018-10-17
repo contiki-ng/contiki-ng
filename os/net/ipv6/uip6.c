@@ -511,7 +511,7 @@ uip_remove_ext_hdr(void)
            uip_ext_len, uip_len);
     if(uip_len < UIP_IPH_LEN + uip_ext_len) {
       LOG_ERR("uip_len too short compared to ext len\n");
-      uip_clear_buf();
+      uipbuf_clear();
       return;
     }
     last_uip_ext_len = uip_ext_len;
@@ -802,7 +802,7 @@ uip_reass_over(void)
      * any RFC, we decided not to include it as it reduces the size of
      * the packet.
      */
-    uip_clear_buf();
+    uipbuf_clear();
     memcpy(UIP_IP_BUF, FBUF, UIP_IPH_LEN); /* copy the header for src
                                               and dest address*/
     uip_icmp6_error_output(ICMP6_TIME_EXCEEDED, ICMP6_TIME_EXCEED_REASSEMBLY, 0);
@@ -948,7 +948,7 @@ uip_process(uint8_t flag)
   } else if(flag == UIP_TIMER) {
     /* Reset the length variables. */
 #if UIP_TCP
-    uip_clear_buf();
+    uipbuf_clear();
     uip_slen = 0;
 
     /* Increase the initial sequence number. */
@@ -1473,7 +1473,7 @@ uip_process(uint8_t flag)
     LOG_ERR("Unknown ICMPv6 message type/code %d\n", UIP_ICMP_BUF->type);
     UIP_STAT(++uip_stat.icmp.drop);
     UIP_STAT(++uip_stat.icmp.typeerr);
-    uip_clear_buf();
+    uipbuf_clear();
   }
 
   if(uip_len > 0) {
@@ -1989,7 +1989,7 @@ uip_process(uint8_t flag)
       uip_add_rcv_nxt(1);
       uip_flags = UIP_CONNECTED | UIP_NEWDATA;
       uip_connr->len = 0;
-      uip_clear_buf();
+      uipbuf_clear();
       uip_slen = 0;
       UIP_APPCALL();
       goto appsend;
@@ -2322,7 +2322,7 @@ uip_process(uint8_t flag)
   return;
 
   drop:
-  uip_clear_buf();
+  uipbuf_clear();
   uip_ext_bitmap = 0;
   uip_flags = 0;
   return;
