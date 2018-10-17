@@ -95,10 +95,10 @@
  */
 
 /**@{  Pointers to messages just after icmp header */
-#define UIP_ND6_RS_BUF            ((uip_nd6_rs *)&uip_buf[uip_l2_l3_icmp_hdr_len])
-#define UIP_ND6_RA_BUF            ((uip_nd6_ra *)&uip_buf[uip_l2_l3_icmp_hdr_len])
-#define UIP_ND6_NS_BUF            ((uip_nd6_ns *)&uip_buf[uip_l2_l3_icmp_hdr_len])
-#define UIP_ND6_NA_BUF            ((uip_nd6_na *)&uip_buf[uip_l2_l3_icmp_hdr_len])
+#define UIP_ND6_RS_BUF            ((uip_nd6_rs *)UIP_ICMP_PAYLOAD)
+#define UIP_ND6_RA_BUF            ((uip_nd6_ra *)UIP_ICMP_PAYLOAD)
+#define UIP_ND6_NS_BUF            ((uip_nd6_ns *)UIP_ICMP_PAYLOAD)
+#define UIP_ND6_NA_BUF            ((uip_nd6_na *)UIP_ICMP_PAYLOAD)
 /** @} */
 /** Pointer to ND option */
 #define UIP_ND6_OPT_HDR_BUF  ((uip_nd6_opt_hdr *)&uip_buf[uip_l2_l3_icmp_hdr_len + nd6_opt_offset])

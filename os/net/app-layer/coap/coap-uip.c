@@ -77,9 +77,6 @@
 #define SERVER_LISTEN_PORT        UIP_HTONS(COAP_DEFAULT_PORT)
 #define SERVER_LISTEN_SECURE_PORT UIP_HTONS(COAP_DEFAULT_SECURE_PORT)
 
-/* direct access into the buffer */
-#define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-
 #ifdef WITH_DTLS
 static dtls_handler_t cb;
 static dtls_context_t *dtls_context = NULL;
