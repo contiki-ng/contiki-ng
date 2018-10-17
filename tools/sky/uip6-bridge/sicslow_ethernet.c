@@ -379,7 +379,6 @@ typedef struct {
   uint8_t data[16];
 } icmp_opts_t;
 
-#define UIP_ICMP_BUF     ((struct uip_icmp_hdr *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN])
 #define UIP_ICMP_OPTS(x) ((icmp_opts_t *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN + x])
 
 void slide(uint8_t * data, uint8_t length, int16_t slide);

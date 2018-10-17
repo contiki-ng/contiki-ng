@@ -55,9 +55,6 @@
 #define LOG_MODULE "TCP/IP"
 #define LOG_LEVEL LOG_LEVEL_TCPIP
 
-#define UIP_ICMP_BUF ((struct uip_icmp_hdr *)&uip_buf[UIP_LLIPH_LEN + uip_ext_len])
-#define UIP_TCP_BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 #ifdef UIP_FALLBACK_INTERFACE
 extern struct uip_fallback_interface UIP_FALLBACK_INTERFACE;
 #endif
