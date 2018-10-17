@@ -107,7 +107,7 @@ static void
 ext_header_remove(void)
 {
 #if NETSTACK_CONF_WITH_IPV6
-  uip_ext_len = 0;
+  uip_remove_ext_hdr();
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 }
 /*---------------------------------------------------------------------------*/
@@ -118,7 +118,7 @@ ext_header_update(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
-ext_header_hbh_update(int uip_ext_opt_offset)
+ext_header_hbh_update(int ext_offset, int opt_offset)
 {
   return 1;
 }

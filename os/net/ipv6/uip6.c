@@ -132,6 +132,9 @@ uint8_t uip_ext_bitmap = 0;
 uint8_t uip_ext_len = 0;
 /** \brief length of the header options read */
 uint8_t uip_ext_opt_offset = 0;
+/** \brief The final protocol after IPv6 extension headers:
+  * UIP_PROTO_TCP, UIP_PROTO_UDP or UIP_PROTO_ICMP6 */
+uint8_t uip_last_proto = 0;
 /** @} */
 
 /*---------------------------------------------------------------------------*/
@@ -499,15 +502,15 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 #endif /* UIP_TCP && UIP_ACTIVE_OPEN */
 /*---------------------------------------------------------------------------*/
 void
-remove_ext_hdr(void)
+uip_remove_ext_hdr(void)
 {
   int last_uip_ext_len;
   /* Remove ext header before TCP/UDP processing. */
   if(uip_ext_len > 0) {
-    LOG_DBG("Cutting ext-header before processing (extlen: %d, uiplen: %d)\n",
+    LOG_DBG("Removing IPv6 extension headers (extlen: %d, uiplen: %d)\n",
            uip_ext_len, uip_len);
     if(uip_len < UIP_IPH_LEN + uip_ext_len) {
-      LOG_ERR("ERROR: uip_len too short compared to ext len\n");
+      LOG_ERR("uip_len too short compared to ext len\n");
       uip_clear_buf();
       return;
     }
@@ -861,7 +864,7 @@ ext_hdr_options_process(void)
        * Using this fix, the header is ignored, and the next header (if
        * present) is processed.
        */
-      if(!NETSTACK_ROUTING.ext_header_hbh_update(uip_ext_opt_offset)) {
+      if(!NETSTACK_ROUTING.ext_header_hbh_update(uip_ext_len, uip_ext_opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
@@ -909,6 +912,7 @@ ext_hdr_options_process(void)
 void
 uip_process(uint8_t flag)
 {
+  uint8_t *last_header;
 #if UIP_TCP
   int c;
   uint16_t tmp16;
@@ -1104,9 +1108,20 @@ uip_process(uint8_t flag)
      * header (40 bytes).
      */
   } else {
-    LOG_ERR("packet shorter than reported in IP header.");
+    LOG_ERR("packet shorter than reported in IP header");
     goto drop;
   }
+
+  /* Check sanity of extension headers, and compute the total extension header
+   * length (uip_ext_len) as well as the final protocol (uip_last_proto) */
+  uip_last_proto = 0;
+  last_header = uipbuf_get_last_header(UIP_IP_BUF_CHAR, uip_len, &uip_last_proto);
+  if(last_header == NULL) {
+    LOG_ERR("invalid extension header chain");
+    goto drop;
+  }
+  /* Set uip_ext_len */
+  uip_ext_len = last_header - UIP_IP_BUF_CHAR;
 
   LOG_INFO("packet received from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
@@ -1136,6 +1151,7 @@ uip_process(uint8_t flag)
   uip_next_hdr = &UIP_IP_BUF->proto;
   uip_ext_len = 0;
   uip_ext_bitmap = 0;
+
   if(*uip_next_hdr == UIP_PROTO_HBHO) {
 #if UIP_CONF_IPV6_CHECKS
     uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_HBHO;
@@ -1254,15 +1270,18 @@ uip_process(uint8_t flag)
 #if UIP_TCP
     case UIP_PROTO_TCP:
       /* TCP, for both IPv4 and IPv6 */
+      uip_last_proto = *uip_next_hdr;
       goto tcp_input;
 #endif /* UIP_TCP */
 #if UIP_UDP
     case UIP_PROTO_UDP:
       /* UDP, for both IPv4 and IPv6 */
+      uip_last_proto = *uip_next_hdr;
       goto udp_input;
 #endif /* UIP_UDP */
     case UIP_PROTO_ICMP6:
       /* ICMPv6 */
+      uip_last_proto = *uip_next_hdr;
       goto icmp6_input;
     case UIP_PROTO_HBHO:
       LOG_DBG("Processing hbh header\n");
@@ -1469,7 +1488,7 @@ uip_process(uint8_t flag)
   /* UDP input processing. */
   udp_input:
 
-  remove_ext_hdr();
+  uip_remove_ext_hdr();
 
   LOG_INFO("Receiving UDP packet\n");
 
@@ -1581,7 +1600,7 @@ uip_process(uint8_t flag)
   /* TCP input processing. */
   tcp_input:
 
-  remove_ext_hdr();
+  uip_remove_ext_hdr();
 
   UIP_STAT(++uip_stat.tcp.recv);
   LOG_INFO("Receiving TCP packet\n");

@@ -451,15 +451,13 @@ tcpip_input(void)
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
-extern void remove_ext_hdr(void);
-/*---------------------------------------------------------------------------*/
 static void
 output_fallback(void)
 {
 #ifdef UIP_FALLBACK_INTERFACE
   LOG_INFO("fallback: removing ext hdrs & setting proto %d %d\n",
          uip_ext_len, *((uint8_t *)UIP_IP_BUF + 40));
-  remove_ext_hdr();
+  uip_remove_ext_hdr();
   /* Inform the other end that the destination is not reachable. If it's
    * not informed routes might get lost unexpectedly until there's a need
    * to send a new packet to the peer */

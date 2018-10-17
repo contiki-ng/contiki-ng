@@ -108,7 +108,6 @@ static uip_ipaddr_t des_ip;
 static void icmp_input(void);
 static void icmp_output(void);
 static void mcast_fwd(void *p);
-int remove_ext_hdr(void);
 /*---------------------------------------------------------------------------*/
 /* Internal Data Structures */
 /*---------------------------------------------------------------------------*/
@@ -192,7 +191,7 @@ icmp_input()
   }
 #endif
 
-  remove_ext_hdr();
+  uip_remove_ext_hdr();
 
   PRINTF("ESMRF: ICMPv6 In from ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);

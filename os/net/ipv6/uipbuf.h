@@ -36,16 +36,30 @@
 #include "contiki.h"
 
 /**
+ * \brief          Update uip buffer length for addition of an extension header
+ * \param len      The length of the new extension header
+ * \retval         true if the length fields were successfully set, false otherwise
+ */
+bool uipbuf_add_ext_hdr(int16_t len);
+
+/**
+ * \brief          Set the length of the uIP buffer
+ * \param len      The new length
+ * \retval         true if the len was successfully set, false otherwise
+ */
+bool uipbuf_set_len(uint16_t len);
+
+/**
  * \brief          Get the next IPv6 header.
  * \param buffer   A pointer to the buffer holding the IPv6 packet
  * \param size     The size of the data in the buffer
  * \param protocol A pointer to a variable where the protocol of the header will be stored
  * \param start    A flag that indicates if this is expected to be the IPv6 packet header or a later header (Extension header)
- * \retval         returns address of the starting position of the next header
+ * \retval         returns address of the next header, or NULL in case of insufficient buffer space
  *
  *                 This function moves to the next header in a IPv6 packet.
  */
-uint8_t* uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protocol, uint8_t start);
+uint8_t *uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protocol, bool start);
 
 
 /**
@@ -53,12 +67,22 @@ uint8_t* uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protoco
  * \param buffer   A pointer to the buffer holding the IPv6 packet
  * \param size     The size of the data in the buffer
  * \param protocol A pointer to a variable where the protocol of the header will be stored
- * \retval         returns address of the starting position of the next header
+ * \retval         returns address of the last header, or NULL in case of insufficient buffer space
  *
  *                 This function moves to the last header of the IPv6 packet.
  */
-uint8_t* uipbuf_get_last_header(uint8_t *buffer, uint16_t size, uint8_t *protocol);
+uint8_t *uipbuf_get_last_header(uint8_t *buffer, uint16_t size, uint8_t *protocol);
 
+/**
+ * \brief          Get an IPv6 header with a given protocol field.
+ * \param buffer   A pointer to the buffer holding the IPv6 packet
+ * \param size     The size of the data in the buffer
+ * \param protocol The protocol we are looking for
+ * \retval         returns address of the header if found, else NULL
+ *
+ *                 This function moves to the last header of the IPv6 packet.
+ */
+uint8_t *uipbuf_search_header(uint8_t *buffer, uint16_t size, uint8_t protocol);
 
 /**
  * \brief          Get the value of the attribute

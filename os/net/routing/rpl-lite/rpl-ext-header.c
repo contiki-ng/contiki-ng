@@ -57,31 +57,12 @@
 int
 rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 {
-  uint8_t *uip_next_hdr;
-  int last_uip_ext_len = uip_ext_len;
+  struct uip_routing_hdr *rh_header;
   uip_sr_node_t *dest_node;
   uip_sr_node_t *root_node;
 
-  uip_ext_len = 0;
-  uip_next_hdr = &UIP_IP_BUF->proto;
-
-  /* Look for routing header */
-  while(uip_next_hdr != NULL && *uip_next_hdr != UIP_PROTO_ROUTING) {
-    switch(*uip_next_hdr) {
-      case UIP_PROTO_HBHO:
-      case UIP_PROTO_DESTO:
-        /*
-         * As per RFC 2460, only the Hop-by-Hop Options header and
-         * Destination Options header can appear before the Routing header.
-         */
-        uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-        uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-        break;
-      default:
-        uip_next_hdr = NULL;
-        break;
-    }
-  }
+  /* Look for routing ext header */
+  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(UIP_IP_BUF_CHAR, uip_len, UIP_PROTO_ROUTING);
 
   if(!rpl_is_addr_in_our_dag(&UIP_IP_BUF->destipaddr)) {
     return 0;
@@ -90,8 +71,7 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
   root_node = uip_sr_get_node(NULL, &curr_instance.dag.dag_id);
   dest_node = uip_sr_get_node(NULL, &UIP_IP_BUF->destipaddr);
 
-  if((uip_next_hdr != NULL && *uip_next_hdr == UIP_PROTO_ROUTING
-      && UIP_RH_BUF(uip_ext_len)->routing_type == RPL_RH_TYPE_SRH) ||
+  if((rh_header != NULL && rh_header->routing_type == RPL_RH_TYPE_SRH) ||
      (dest_node != NULL && root_node != NULL &&
       dest_node->parent == root_node)) {
     /* Routing header found or the packet destined for a direct child of the root.
@@ -100,20 +80,18 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
      * forwarding to next hop */
     uip_ipaddr_copy(ipaddr, &UIP_IP_BUF->destipaddr);
     uip_create_linklocal_prefix(ipaddr);
-    uip_ext_len = last_uip_ext_len;
     return 1;
   }
 
   LOG_DBG("no SRH found\n");
-  uip_ext_len = last_uip_ext_len;
   return 0;
 }
 /*---------------------------------------------------------------------------*/
 int
 rpl_ext_header_srh_update(void)
 {
-  uint8_t *uip_next_hdr;
-  int last_uip_ext_len = uip_ext_len;
+  struct uip_routing_hdr *rh_header;
+  struct uip_rpl_srh_hdr *srh_header;
   uint8_t cmpri, cmpre;
   uint8_t ext_len;
   uint8_t padding;
@@ -121,40 +99,21 @@ rpl_ext_header_srh_update(void)
   uint8_t segments_left;
   uip_ipaddr_t current_dest_addr;
 
-  uip_ext_len = 0;
-  uip_next_hdr = &UIP_IP_BUF->proto;
+  /* Look for routing ext header */
+  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(UIP_IP_BUF_CHAR, uip_len, UIP_PROTO_ROUTING);
 
-  /* Look for routing header */
-  while(uip_next_hdr != NULL && *uip_next_hdr != UIP_PROTO_ROUTING) {
-    switch(*uip_next_hdr) {
-      case UIP_PROTO_HBHO:
-      case UIP_PROTO_DESTO:
-        /*
-         * As per RFC 2460, only the Hop-by-Hop Options header and
-         * Destination Options header can appear before the Routing header.
-         */
-        uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-        uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-        break;
-      default:
-        uip_next_hdr = NULL;
-        break;
-    }
-  }
-
-  if(uip_next_hdr == NULL || *uip_next_hdr != UIP_PROTO_ROUTING
-      || UIP_RH_BUF(uip_ext_len)->routing_type != RPL_RH_TYPE_SRH) {
+  if(rh_header == NULL || rh_header->routing_type != RPL_RH_TYPE_SRH) {
     LOG_INFO("SRH not found\n");
-    uip_ext_len = last_uip_ext_len;
     return 0;
   }
 
   /* Parse SRH */
-  segments_left = UIP_RH_BUF(uip_ext_len)->seg_left;
-  ext_len = (UIP_RH_BUF(uip_ext_len)->len * 8) + 8;
-  cmpri = UIP_RPL_SRH_BUF(uip_ext_len)->cmpr >> 4;
-  cmpre = UIP_RPL_SRH_BUF(uip_ext_len)->cmpr & 0x0f;
-  padding = UIP_RPL_SRH_BUF(uip_ext_len)->pad >> 4;
+  srh_header = (struct uip_rpl_srh_hdr *)(((uint8_t *)rh_header) + RPL_RH_LEN);
+  segments_left = rh_header->seg_left;
+  ext_len = rh_header->len * 8 + 8;
+  cmpri = srh_header->cmpr >> 4;
+  cmpre = srh_header->cmpr & 0x0f;
+  padding = srh_header->pad >> 4;
   path_len = ((ext_len - padding - RPL_RH_LEN - RPL_SRH_LEN - (16 - cmpre)) / (16 - cmpri)) + 1;
   (void)path_len;
 
@@ -166,7 +125,7 @@ rpl_ext_header_srh_update(void)
     /* We are the final destination, do nothing */
   } else {
     uint8_t i = path_len - segments_left; /* The index of the next address to be visited */
-    uint8_t *addr_ptr = ((uint8_t *)UIP_RH_BUF(uip_ext_len)) + RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
+    uint8_t *addr_ptr = ((uint8_t *)rh_header) + RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
     uint8_t cmpr = segments_left == 1 ? cmpre : cmpri;
 
     /* As per RFC6554: swap the IPv6 destination address with address[i] */
@@ -179,14 +138,13 @@ rpl_ext_header_srh_update(void)
     memcpy(addr_ptr, ((uint8_t *)&current_dest_addr) + cmpr, 16 - cmpr);
 
     /* Update segments left field */
-    UIP_RH_BUF(uip_ext_len)->seg_left--;
+    rh_header->seg_left--;
 
     LOG_INFO("SRH next hop ");
     LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
     LOG_INFO_("\n");
   }
 
-  uip_ext_len = last_uip_ext_len;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -293,7 +251,7 @@ insert_srh_header(void)
       path_len, cmpri, cmpre, ext_len, padding);
 
   /* Check if there is enough space to store the extension header */
-  if(uip_len + ext_len > UIP_BUFSIZE - UIP_LLH_LEN) {
+  if(uip_len + ext_len > UIP_LINK_MTU) {
     LOG_ERR("packet too long: impossible to add source routing header (%u bytes)\n", ext_len);
     return 0;
   }
@@ -303,23 +261,23 @@ insert_srh_header(void)
       uip_buf + uip_l2_l3_hdr_len, uip_len - UIP_IPH_LEN);
   memset(uip_buf + uip_l2_l3_hdr_len, 0, ext_len);
 
-  /* Insert source routing header */
-  UIP_RH_BUF(uip_ext_len)->next = UIP_IP_BUF->proto;
+  /* Insert source routing header (as first ext header) */
+  UIP_RH_BUF(0)->next = UIP_IP_BUF->proto;
   UIP_IP_BUF->proto = UIP_PROTO_ROUTING;
 
   /* Initialize IPv6 Routing Header */
-  UIP_RH_BUF(uip_ext_len)->len = (ext_len - 8) / 8;
-  UIP_RH_BUF(uip_ext_len)->routing_type = RPL_RH_TYPE_SRH;
-  UIP_RH_BUF(uip_ext_len)->seg_left = path_len;
+  UIP_RH_BUF(0)->len = (ext_len - 8) / 8;
+  UIP_RH_BUF(0)->routing_type = RPL_RH_TYPE_SRH;
+  UIP_RH_BUF(0)->seg_left = path_len;
 
   /* Initialize RPL Source Routing Header */
-  UIP_RPL_SRH_BUF(uip_ext_len)->cmpr = (cmpri << 4) + cmpre;
-  UIP_RPL_SRH_BUF(uip_ext_len)->pad = padding << 4;
+  UIP_RPL_SRH_BUF(0)->cmpr = (cmpri << 4) + cmpre;
+  UIP_RPL_SRH_BUF(0)->pad = padding << 4;
 
   /* Initialize addresses field (the actual source route).
    * From last to first. */
   node = dest_node;
-  hop_ptr = ((uint8_t *)UIP_RH_BUF(uip_ext_len)) + ext_len - padding; /* Pointer where to write the next hop compressed address */
+  hop_ptr = ((uint8_t *)UIP_RH_BUF(0)) + ext_len - padding; /* Pointer where to write the next hop compressed address */
 
   while(node != NULL && node->parent != root_node) {
     NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
@@ -341,14 +299,13 @@ insert_srh_header(void)
     UIP_IP_BUF->len[0]++;
   }
 
-  uip_ext_len += ext_len;
-  uip_len += ext_len;
+  uipbuf_add_ext_hdr(ext_len);
 
   return 1;
 }
 /*---------------------------------------------------------------------------*/
 int
-rpl_ext_header_hbh_update(int uip_ext_opt_offset)
+rpl_ext_header_hbh_update(int ext_offset, int opt_offset)
 {
   int down;
   int rank_error_signaled;
@@ -356,32 +313,32 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
   uint16_t sender_rank;
   uint8_t sender_closer;
   rpl_nbr_t *sender;
-  uint8_t opt_type = UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_type;
-  uint8_t opt_len = UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_len;
+  uint8_t opt_type = UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->opt_type;
+  uint8_t opt_len = UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->opt_len;
 
-  if(UIP_HBHO_BUF(uip_ext_len)->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
+  if(UIP_HBHO_BUF(ext_offset)->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
       || opt_type != UIP_EXT_HDR_OPT_RPL
       || opt_len != RPL_HDR_OPT_LEN) {
     LOG_ERR("hop-by-hop extension header has wrong size or type (%u %u %u)\n",
-        UIP_HBHO_BUF(uip_ext_len)->len, opt_type, opt_len);
+        UIP_HBHO_BUF(ext_offset)->len, opt_type, opt_len);
     return 0; /* Drop */
   }
 
-  if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->instance) {
+  if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->instance) {
     LOG_ERR("unknown instance: %u\n",
-           UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->instance);
+           UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->instance);
     return 0; /* Drop */
   }
 
-  if(UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->flags & RPL_HDR_OPT_FWD_ERR) {
+  if(UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags & RPL_HDR_OPT_FWD_ERR) {
     LOG_ERR("forward error!\n");
     return 0; /* Drop */
   }
 
-  down = (UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->flags & RPL_HDR_OPT_DOWN) ? 1 : 0;
-  sender_rank = UIP_HTONS(UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->senderrank);
+  down = (UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags & RPL_HDR_OPT_DOWN) ? 1 : 0;
+  sender_rank = UIP_HTONS(UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->senderrank);
   sender = nbr_table_get_from_lladdr(rpl_neighbors, packetbuf_addr(PACKETBUF_ADDR_SENDER));
-  rank_error_signaled = (UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->flags & RPL_HDR_OPT_RANK_ERR) ? 1 : 0;
+  rank_error_signaled = (UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags & RPL_HDR_OPT_RANK_ERR) ? 1 : 0;
   sender_closer = sender_rank < curr_instance.dag.rank;
   loop_detected = (down && !sender_closer) || (!down && sender_closer);
 
@@ -395,7 +352,7 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
 
   if(loop_detected) {
     /* Set forward error flag */
-    UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->flags |= RPL_HDR_OPT_RANK_ERR;
+    UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags |= RPL_HDR_OPT_RANK_ERR;
   }
 
   return rpl_process_hbh(sender, sender_rank, loop_detected, rank_error_signaled);
@@ -407,34 +364,27 @@ rpl_ext_header_hbh_update(int uip_ext_opt_offset)
 static int
 update_hbh_header(void)
 {
-  int uip_ext_opt_offset;
-  int last_uip_ext_len;
+  int opt_offset = 2;
 
-  last_uip_ext_len = uip_ext_len;
-  uip_ext_len = 0;
-  uip_ext_opt_offset = 2;
+  if(UIP_IP_BUF->proto == UIP_PROTO_HBHO && UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_type == UIP_EXT_HDR_OPT_RPL) {
+    if(UIP_HBHO_BUF(0)->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
+        || UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_len != RPL_HDR_OPT_LEN) {
 
-  if(UIP_IP_BUF->proto == UIP_PROTO_HBHO && UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_type == UIP_EXT_HDR_OPT_RPL) {
-    if(UIP_HBHO_BUF(uip_ext_len)->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
-        || UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_len != RPL_HDR_OPT_LEN) {
-
-      LOG_ERR("hop-by-hop extension header has wrong size (%u %u)\n",
-          UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_len, uip_ext_len);
+      LOG_ERR("hop-by-hop extension header has wrong size (%u)\n",
+          UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_len);
       return 0; /* Drop */
     }
 
-    if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->instance) {
+    if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->instance) {
       LOG_ERR("unable to add/update hop-by-hop extension header: incorrect instance\n");
-      uip_ext_len = last_uip_ext_len;
       return 0; /* Drop */
     }
 
     /* Update sender rank and instance, will update flags next */
-    UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->senderrank = UIP_HTONS(curr_instance.dag.rank);
-    UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->instance = curr_instance.instance_id;
+    UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->senderrank = UIP_HTONS(curr_instance.dag.rank);
+    UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->instance = curr_instance.instance_id;
   }
 
-  uip_ext_len = last_uip_ext_len;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -445,19 +395,13 @@ update_hbh_header(void)
 static int
 insert_hbh_header(void)
 {
-  int uip_ext_opt_offset;
-  int last_uip_ext_len;
   uint8_t temp_len;
-
-  last_uip_ext_len = uip_ext_len;
-  uip_ext_len = 0;
-  uip_ext_opt_offset = 2;
+  int opt_offset = 2;
 
   /* Insert hop-by-hop header */
   LOG_INFO("creating hop-by-hop option\n");
-  if(uip_len + RPL_HOP_BY_HOP_LEN > UIP_BUFSIZE - UIP_LLH_LEN) {
+  if(uip_len + RPL_HOP_BY_HOP_LEN > UIP_LINK_MTU) {
     LOG_ERR("packet too long: impossible to add hop-by-hop option\n");
-    uip_ext_len = last_uip_ext_len;
     return 0;
   }
 
@@ -465,25 +409,25 @@ insert_hbh_header(void)
   memmove(UIP_IP_PAYLOAD(RPL_HOP_BY_HOP_LEN), UIP_IP_PAYLOAD(0), uip_len - UIP_IPH_LEN);
   memset(UIP_IP_PAYLOAD(0), 0, RPL_HOP_BY_HOP_LEN);
 
-  /* Update IP and HBH protocol and fields */
-  UIP_HBHO_BUF(uip_ext_len)->next = UIP_IP_BUF->proto;
+  /* Insert HBH header (as first ext header) */
+  UIP_HBHO_BUF(0)->next = UIP_IP_BUF->proto;
   UIP_IP_BUF->proto = UIP_PROTO_HBHO;
 
   /* Initialize HBH option */
-  UIP_HBHO_BUF(uip_ext_len)->len = (RPL_HOP_BY_HOP_LEN - 8) / 8;
-  UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_type = UIP_EXT_HDR_OPT_RPL;
-  UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_len = RPL_HDR_OPT_LEN;
-  UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->flags = 0;
-  UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->senderrank = UIP_HTONS(curr_instance.dag.rank);
-  UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->instance = curr_instance.instance_id;
-  uip_len += RPL_HOP_BY_HOP_LEN;
+  UIP_HBHO_BUF(0)->len = (RPL_HOP_BY_HOP_LEN - 8) / 8;
+  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_type = UIP_EXT_HDR_OPT_RPL;
+  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_len = RPL_HDR_OPT_LEN;
+  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->flags = 0;
+  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->senderrank = UIP_HTONS(curr_instance.dag.rank);
+  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->instance = curr_instance.instance_id;
+
   temp_len = UIP_IP_BUF->len[1];
   UIP_IP_BUF->len[1] += RPL_HOP_BY_HOP_LEN;
   if(UIP_IP_BUF->len[1] < temp_len) {
     UIP_IP_BUF->len[0]++;
   }
 
-  uip_ext_len = last_uip_ext_len + RPL_HOP_BY_HOP_LEN;
+  uipbuf_add_ext_hdr(RPL_HOP_BY_HOP_LEN);
 
   /* Update header before returning */
   return update_hbh_header();
@@ -520,54 +464,35 @@ rpl_ext_header_update(void)
 void
 rpl_ext_header_remove(void)
 {
-  uint8_t temp_len;
-  uint8_t rpl_ext_hdr_len;
-  int uip_ext_opt_offset;
-  uint8_t *uip_next_hdr;
+  uint8_t *prev_proto_ptr;
+  uint8_t protocol;
+  uint8_t ext_len;
+  uint8_t *next_header;
+  struct uip_ext_hdr *ext_ptr;
+  struct uip_ext_hdr_opt *opt_ptr;
 
-  uip_ext_len = 0;
-  uip_ext_opt_offset = 2;
-  uip_next_hdr = &UIP_IP_BUF->proto;
-
-  /* Look for hop-by-hop and routing headers */
-  while(uip_next_hdr != NULL) {
-    switch(*uip_next_hdr) {
-      case UIP_PROTO_HBHO:
-      case UIP_PROTO_ROUTING:
-        if((*uip_next_hdr != UIP_PROTO_HBHO || UIP_EXT_HDR_OPT_RPL_BUF(uip_ext_len, uip_ext_opt_offset)->opt_type == UIP_EXT_HDR_OPT_RPL)) {
-          /* Remove hop-by-hop and routing headers */
-          *uip_next_hdr = UIP_EXT_BUF(uip_ext_len)->next;
-          rpl_ext_hdr_len = (UIP_EXT_BUF(uip_ext_len)->len * 8) + 8;
-          temp_len = UIP_IP_BUF->len[1];
-          uip_len -= rpl_ext_hdr_len;
-          UIP_IP_BUF->len[1] -= rpl_ext_hdr_len;
-          if(UIP_IP_BUF->len[1] > temp_len) {
-            UIP_IP_BUF->len[0]--;
-          }
-          LOG_INFO("removing RPL extension header (type %u, len %u)\n", *uip_next_hdr, rpl_ext_hdr_len);
-          memmove(UIP_EXT_BUF(uip_ext_len), ((uint8_t *)UIP_EXT_BUF(uip_ext_len)) + rpl_ext_hdr_len, uip_len - UIP_IPH_LEN);
-        } else {
-          uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-          uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-        }
-        break;
-      case UIP_PROTO_DESTO:
-        /*
-         * As per RFC 2460, any header other than the Destination
-         * Options header does not appear between the Hop-by-Hop
-         * Options header and the Routing header.
-         *
-         * We're moving to the next header only if uip_next_hdr has
-         * UIP_PROTO_DESTO. Otherwise, we'll return.
-         */
-        /* Move to next header */
-        uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-        uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-        break;
-    default:
-      return;
+  next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+  ext_ptr = (struct uip_ext_hdr *)next_header;
+  prev_proto_ptr = &UIP_IP_BUF->proto;
+  while(next_header != NULL && uip_is_proto_ext_hdr(protocol)) {
+    opt_ptr = (struct uip_ext_hdr_opt *)(next_header + 2);
+    if(protocol == UIP_PROTO_ROUTING || (protocol == UIP_PROTO_HBHO && opt_ptr->type == UIP_EXT_HDR_OPT_RPL)) {
+      /* Remove ext header */
+      *prev_proto_ptr = ext_ptr->next;
+      ext_len = ext_ptr->len * 8 + 8;
+      uipbuf_add_ext_hdr(-ext_len);
+      /* Update length field and rest of packer to the "left" */
+      UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
+      UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+      memmove(next_header, next_header + ext_len, uip_len - (next_header - UIP_IP_BUF_CHAR));
+      /* Update loop variables */
+      protocol = *prev_proto_ptr;
+    } else {
+      /* move to the ext hdr */
+      next_header = uipbuf_get_next_header(next_header, uip_len - (next_header - UIP_IP_BUF_CHAR), &protocol, false);
+      ext_ptr = (struct uip_ext_hdr *)next_header;
+      prev_proto_ptr = &ext_ptr->next;
     }
   }
 }
-
 /** @}*/

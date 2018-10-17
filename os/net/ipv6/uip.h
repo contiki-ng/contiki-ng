@@ -1330,6 +1330,10 @@ extern uint16_t uip_len;
  * The length of the extension headers
  */
 extern uint8_t uip_ext_len;
+
+/** The final protocol after IPv6 extension headers:
+  * UIP_PROTO_TCP, UIP_PROTO_UDP or UIP_PROTO_ICMP6 */
+extern uint8_t uip_last_proto;
 /** @} */
 
 #if UIP_URGDATA > 0
@@ -1345,6 +1349,7 @@ extern uint16_t uip_urglen, uip_surglen;
 #define uip_clear_buf() { \
   uip_len = 0; \
   uip_ext_len = 0; \
+  uip_last_proto = 0; \
   uipbuf_clear_attr();\
 }
 
@@ -1804,7 +1809,7 @@ struct uip_udp_hdr {
 #define UIP_PROTO_NONE        59
 /** @} */
 
-#define uip_is_proto_ext_hdr(proto) (proto == UIP_PROTO_HBHO || proto == UIP_PROTO_DESTO || proto == UIP_PROTO_ROUTING || proto == UIP_PROTO_FRAG || proto == UIP_PROTO_NONE)
+#define uip_is_proto_ext_hdr(proto) ((proto) != UIP_PROTO_TCP && (proto) != UIP_PROTO_UDP && (proto) != UIP_PROTO_ICMP6)
 
 /** @{ */
 /** \brief  Destination and Hop By Hop extension headers option types */
@@ -2175,6 +2180,11 @@ uint16_t uip_udpchksum(void);
  */
 uint16_t uip_icmp6chksum(void);
 
+/**
+ * Removes all IPv6 extension headers from uip_buf, updates length fields
+ * (uip_len and uip_ext_len)
+ */
+void uip_remove_ext_hdr(void);
 
 #endif /* UIP_H_ */
 

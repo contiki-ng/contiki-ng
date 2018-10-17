@@ -1349,8 +1349,7 @@ out()
   HBH_SET_M(lochbhmptr);
 #endif
 
-  uip_ext_len += HBHO_TOTAL_LEN;
-  uip_len += HBHO_TOTAL_LEN;
+  uipbuf_add_ext_hdr(HBHO_TOTAL_LEN);
 
   /* Update the proto and length field in the v6 header */
   UIP_IP_BUF->proto = UIP_PROTO_HBHO;

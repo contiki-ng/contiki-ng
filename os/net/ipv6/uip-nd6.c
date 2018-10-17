@@ -322,7 +322,7 @@ create_na:
 #if UIP_CONF_ROUTER
     flags = flags | UIP_ND6_NA_FLAG_ROUTER;
 #endif
-  uip_ext_len = 0;
+  uip_clear_buf();
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
   UIP_IP_BUF->flow = 0;
@@ -343,8 +343,7 @@ create_na:
   UIP_ICMP_BUF->icmpchksum = 0;
   UIP_ICMP_BUF->icmpchksum = ~uip_icmp6chksum();
 
-  uip_len =
-    UIP_IPH_LEN + UIP_ICMPH_LEN + UIP_ND6_NA_LEN + UIP_ND6_OPT_LLAO_LEN;
+  uipbuf_set_len(UIP_IPH_LEN + UIP_ICMPH_LEN + UIP_ND6_NA_LEN + UIP_ND6_OPT_LLAO_LEN);
 
   UIP_STAT(++uip_stat.nd6.sent);
   LOG_INFO("Sending NA to ");
@@ -368,7 +367,7 @@ discard:
 void
 uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
 {
-  uip_ext_len = 0;
+  uip_clear_buf();
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
   UIP_IP_BUF->flow = 0;
