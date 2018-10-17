@@ -101,10 +101,11 @@
 #define UIP_ND6_NA_BUF            ((uip_nd6_na *)UIP_ICMP_PAYLOAD)
 /** @} */
 /** Pointer to ND option */
-#define UIP_ND6_OPT_HDR_BUF  ((uip_nd6_opt_hdr *)&uip_buf[uip_l2_l3_icmp_hdr_len + nd6_opt_offset])
-#define UIP_ND6_OPT_PREFIX_BUF ((uip_nd6_opt_prefix_info *)&uip_buf[uip_l2_l3_icmp_hdr_len + nd6_opt_offset])
-#define UIP_ND6_OPT_MTU_BUF ((uip_nd6_opt_mtu *)&uip_buf[uip_l2_l3_icmp_hdr_len + nd6_opt_offset])
-#define UIP_ND6_OPT_RDNSS_BUF ((uip_nd6_opt_dns *)&uip_buf[uip_l2_l3_icmp_hdr_len + nd6_opt_offset])
+#define ND6_OPT(opt)                         ((unsigned char *)(UIP_ICMP_PAYLOAD + (opt)))
+#define ND6_OPT_HDR_BUF(opt)               ((uip_nd6_opt_hdr *)ND6_OPT(opt))
+#define ND6_OPT_PREFIX_BUF(opt)    ((uip_nd6_opt_prefix_info *)ND6_OPT(opt))
+#define ND6_OPT_MTU_BUF(opt)               ((uip_nd6_opt_mtu *)ND6_OPT(opt))
+#define ND6_OPT_RDNSS_BUF(opt)             ((uip_nd6_opt_dns *)ND6_OPT(opt))
 /** @} */
 
 #if UIP_ND6_SEND_NS || UIP_ND6_SEND_NA || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER
@@ -201,12 +202,12 @@ ns_input(void)
   nd6_opt_offset = UIP_ND6_NS_LEN;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
 #if UIP_CONF_IPV6_CHECKS
-    if(UIP_ND6_OPT_HDR_BUF->len == 0) {
+    if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
       LOG_ERR("NS received is bad\n");
       goto discard;
     }
 #endif /* UIP_CONF_IPV6_CHECKS */
-    switch (UIP_ND6_OPT_HDR_BUF->type) {
+    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_SLLAO:
       nd6_opt_llao = &uip_buf[uip_l2_l3_icmp_hdr_len + nd6_opt_offset];
 #if UIP_CONF_IPV6_CHECKS
@@ -250,7 +251,7 @@ ns_input(void)
       LOG_WARN("ND option not supported in NS");
       break;
     }
-    nd6_opt_offset += (UIP_ND6_OPT_HDR_BUF->len << 3);
+    nd6_opt_offset += (ND6_OPT_HDR_BUF(nd6_opt_offset)->len << 3);
   }
 
   addr = uip_ds6_addr_lookup(&UIP_ND6_NS_BUF->tgtipaddr);
@@ -491,20 +492,20 @@ na_input(void)
   nd6_opt_llao = NULL;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
 #if UIP_CONF_IPV6_CHECKS
-    if(UIP_ND6_OPT_HDR_BUF->len == 0) {
+    if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
       LOG_ERR("NA received is bad\n");
       goto discard;
     }
 #endif /*UIP_CONF_IPV6_CHECKS */
-    switch (UIP_ND6_OPT_HDR_BUF->type) {
+    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_TLLAO:
-      nd6_opt_llao = (uint8_t *)UIP_ND6_OPT_HDR_BUF;
+      nd6_opt_llao = (uint8_t *)ND6_OPT_HDR_BUF(nd6_opt_offset);
       break;
     default:
       LOG_WARN("ND option not supported in NA\n");
       break;
     }
-    nd6_opt_offset += (UIP_ND6_OPT_HDR_BUF->len << 3);
+    nd6_opt_offset += (ND6_OPT_HDR_BUF(nd6_opt_offset)->len << 3);
   }
   addr = uip_ds6_addr_lookup(&UIP_ND6_NA_BUF->tgtipaddr);
   /* Message processing, including TLLAO if any */
@@ -642,20 +643,20 @@ rs_input(void)
 
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
 #if UIP_CONF_IPV6_CHECKS
-    if(UIP_ND6_OPT_HDR_BUF->len == 0) {
+    if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
       LOG_ERR("RS received is bad\n");
       goto discard;
     }
 #endif /*UIP_CONF_IPV6_CHECKS */
-    switch (UIP_ND6_OPT_HDR_BUF->type) {
+    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_SLLAO:
-      nd6_opt_llao = (uint8_t *)UIP_ND6_OPT_HDR_BUF;
+      nd6_opt_llao = (uint8_t *)ND6_OPT_HDR_BUF(nd6_opt_offset);
       break;
     default:
       LOG_WARN("ND option not supported in RS\n");
       break;
     }
-    nd6_opt_offset += (UIP_ND6_OPT_HDR_BUF->len << 3);
+    nd6_opt_offset += (ND6_OPT_HDR_BUF(nd6_opt_offset)->len << 3);
   }
   /* Options processing: only SLLAO */
   if(nd6_opt_llao != NULL) {
@@ -744,31 +745,31 @@ uip_nd6_ra_output(uip_ipaddr_t * dest)
   for(prefix = uip_ds6_prefix_list;
       prefix < uip_ds6_prefix_list + UIP_DS6_PREFIX_NB; prefix++) {
     if((prefix->isused) && (prefix->advertise)) {
-      UIP_ND6_OPT_PREFIX_BUF->type = UIP_ND6_OPT_PREFIX_INFO;
-      UIP_ND6_OPT_PREFIX_BUF->len = UIP_ND6_OPT_PREFIX_INFO_LEN / 8;
-      UIP_ND6_OPT_PREFIX_BUF->preflen = prefix->length;
-      UIP_ND6_OPT_PREFIX_BUF->flagsreserved1 = prefix->l_a_reserved;
-      UIP_ND6_OPT_PREFIX_BUF->validlt = uip_htonl(prefix->vlifetime);
-      UIP_ND6_OPT_PREFIX_BUF->preferredlt = uip_htonl(prefix->plifetime);
-      UIP_ND6_OPT_PREFIX_BUF->reserved2 = 0;
-      uip_ipaddr_copy(&(UIP_ND6_OPT_PREFIX_BUF->prefix), &(prefix->ipaddr));
+      ND6_OPT_PREFIX_BUF(nd6_opt_offset)->type = UIP_ND6_OPT_PREFIX_INFO;
+      ND6_OPT_PREFIX_BUF(nd6_opt_offset)->len = UIP_ND6_OPT_PREFIX_INFO_LEN / 8;
+      ND6_OPT_PREFIX_BUF(nd6_opt_offset)->preflen = prefix->length;
+      ND6_OPT_PREFIX_BUF(nd6_opt_offset)->flagsreserved1 = prefix->l_a_reserved;
+      ND6_OPT_PREFIX_BUF(nd6_opt_offset)->validlt = uip_htonl(prefix->vlifetime);
+      ND6_OPT_PREFIX_BUF(nd6_opt_offset)->preferredlt = uip_htonl(prefix->plifetime);
+      ND6_OPT_PREFIX_BUF(nd6_opt_offset)->reserved2 = 0;
+      uip_ipaddr_copy(&(ND6_OPT_PREFIX_BUF(nd6_opt_offset)->prefix), &(prefix->ipaddr));
       nd6_opt_offset += UIP_ND6_OPT_PREFIX_INFO_LEN;
       uip_len += UIP_ND6_OPT_PREFIX_INFO_LEN;
     }
   }
 
   /* Source link-layer option */
-  create_llao((uint8_t *)UIP_ND6_OPT_HDR_BUF, UIP_ND6_OPT_SLLAO);
+  create_llao((uint8_t *)ND6_OPT_HDR_BUF(nd6_opt_offset), UIP_ND6_OPT_SLLAO);
 
   uip_len += UIP_ND6_OPT_LLAO_LEN;
   nd6_opt_offset += UIP_ND6_OPT_LLAO_LEN;
 
   /* MTU */
-  UIP_ND6_OPT_MTU_BUF->type = UIP_ND6_OPT_MTU;
-  UIP_ND6_OPT_MTU_BUF->len = UIP_ND6_OPT_MTU_LEN >> 3;
-  UIP_ND6_OPT_MTU_BUF->reserved = 0;
-  //UIP_ND6_OPT_MTU_BUF->mtu = uip_htonl(uip_ds6_if.link_mtu);
-  UIP_ND6_OPT_MTU_BUF->mtu = uip_htonl(1500);
+  ND6_OPT_MTU_BUF(nd6_opt_offset)->type = UIP_ND6_OPT_MTU;
+  ND6_OPT_MTU_BUF(nd6_opt_offset)->len = UIP_ND6_OPT_MTU_LEN >> 3;
+  ND6_OPT_MTU_BUF(nd6_opt_offset)->reserved = 0;
+  //ND6_OPT_MTU_BUF(nd6_opt_offset)->mtu = uip_htonl(uip_ds6_if.link_mtu);
+  ND6_OPT_MTU_BUF(nd6_opt_offset)->mtu = uip_htonl(1500);
 
   uip_len += UIP_ND6_OPT_MTU_LEN;
   nd6_opt_offset += UIP_ND6_OPT_MTU_LEN;
@@ -776,22 +777,22 @@ uip_nd6_ra_output(uip_ipaddr_t * dest)
 #if UIP_ND6_RA_RDNSS
   if(uip_nameserver_count() > 0) {
     uint8_t i = 0;
-    uip_ipaddr_t *ip = &UIP_ND6_OPT_RDNSS_BUF->ip;
+    uip_ipaddr_t *ip = &ND6_OPT_RDNSS_BUF(nd6_opt_offset)->ip;
     uip_ipaddr_t *dns = NULL;
-    UIP_ND6_OPT_RDNSS_BUF->type = UIP_ND6_OPT_RDNSS;
-    UIP_ND6_OPT_RDNSS_BUF->reserved = 0;
-    UIP_ND6_OPT_RDNSS_BUF->lifetime = uip_nameserver_next_expiration();
-    if(UIP_ND6_OPT_RDNSS_BUF->lifetime != UIP_NAMESERVER_INFINITE_LIFETIME) {
-      UIP_ND6_OPT_RDNSS_BUF->lifetime -= clock_seconds();
+    ND6_OPT_RDNSS_BUF(nd6_opt_offset)->type = UIP_ND6_OPT_RDNSS;
+    ND6_OPT_RDNSS_BUF(nd6_opt_offset)->reserved = 0;
+    ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime = uip_nameserver_next_expiration();
+    if(ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime != UIP_NAMESERVER_INFINITE_LIFETIME) {
+      ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime -= clock_seconds();
     }
     while((dns = uip_nameserver_get(i)) != NULL) {
       uip_ipaddr_copy(ip++, dns);
       i++;
     }
-    UIP_ND6_OPT_RDNSS_BUF->len = UIP_ND6_OPT_RDNSS_LEN + (i << 1);
+    ND6_OPT_RDNSS_BUF(nd6_opt_offset)->len = UIP_ND6_OPT_RDNSS_LEN + (i << 1);
     LOG_INFO("%d nameservers reported\n", i);
-    uip_len += UIP_ND6_OPT_RDNSS_BUF->len << 3;
-    nd6_opt_offset += UIP_ND6_OPT_RDNSS_BUF->len << 3;
+    uip_len += ND6_OPT_RDNSS_BUF(nd6_opt_offset)->len << 3;
+    nd6_opt_offset += ND6_OPT_RDNSS_BUF(nd6_opt_offset)->len << 3;
   }
 #endif /* UIP_ND6_RA_RDNSS */
 
@@ -902,14 +903,14 @@ ra_input(void)
   /* Options processing */
   nd6_opt_offset = UIP_ND6_RA_LEN;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
-    if(UIP_ND6_OPT_HDR_BUF->len == 0) {
+    if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
       LOG_ERR("RA received is bad");
       goto discard;
     }
-    switch (UIP_ND6_OPT_HDR_BUF->type) {
+    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_SLLAO:
       LOG_DBG("Processing SLLAO option in RA\n");
-      nd6_opt_llao = (uint8_t *) UIP_ND6_OPT_HDR_BUF;
+      nd6_opt_llao = (uint8_t *) ND6_OPT_HDR_BUF(nd6_opt_offset);
       nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
       if(!extract_lladdr_from_llao_aligned(&lladdr_aligned)) {
         /* failed to extract llao - discard packet */
@@ -942,11 +943,11 @@ ra_input(void)
     case UIP_ND6_OPT_MTU:
       LOG_DBG("Processing MTU option in RA\n");
       uip_ds6_if.link_mtu =
-        uip_ntohl(((uip_nd6_opt_mtu *) UIP_ND6_OPT_HDR_BUF)->mtu);
+        uip_ntohl(((uip_nd6_opt_mtu *) ND6_OPT_HDR_BUF(nd6_opt_offset))->mtu);
       break;
     case UIP_ND6_OPT_PREFIX_INFO:
       LOG_DBG("Processing PREFIX option in RA\n");
-      nd6_opt_prefix_info = (uip_nd6_opt_prefix_info *) UIP_ND6_OPT_HDR_BUF;
+      nd6_opt_prefix_info = (uip_nd6_opt_prefix_info *) ND6_OPT_HDR_BUF(nd6_opt_offset);
       if((uip_ntohl(nd6_opt_prefix_info->validlt) >=
           uip_ntohl(nd6_opt_prefix_info->preferredlt))
          && (!uip_is_addr_linklocal(&nd6_opt_prefix_info->prefix))) {
@@ -1033,14 +1034,14 @@ ra_input(void)
 #if UIP_ND6_RA_RDNSS
     case UIP_ND6_OPT_RDNSS:
       LOG_DBG("Processing RDNSS option\n");
-      uint8_t naddr = (UIP_ND6_OPT_RDNSS_BUF->len - 1) / 2;
-      uip_ipaddr_t *ip = (uip_ipaddr_t *)(&UIP_ND6_OPT_RDNSS_BUF->ip);
+      uint8_t naddr = (ND6_OPT_RDNSS_BUF(nd6_opt_offset)->len - 1) / 2;
+      uip_ipaddr_t *ip = (uip_ipaddr_t *)(&ND6_OPT_RDNSS_BUF(nd6_opt_offset)->ip);
       LOG_DBG("got %d nameservers\n", naddr);
       while(naddr-- > 0) {
         LOG_DBG("nameserver: ");
         LOG_DBG_6ADDR(ip);
-        LOG_DBG_(" lifetime: %"PRIx32"\n", uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
-        uip_nameserver_update(ip, uip_ntohl(UIP_ND6_OPT_RDNSS_BUF->lifetime));
+        LOG_DBG_(" lifetime: %"PRIx32"\n", uip_ntohl(ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime));
+        uip_nameserver_update(ip, uip_ntohl(ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime));
         ip++;
       }
       break;
@@ -1049,7 +1050,7 @@ ra_input(void)
       LOG_ERR("ND option not supported in RA\n");
       break;
     }
-    nd6_opt_offset += (UIP_ND6_OPT_HDR_BUF->len << 3);
+    nd6_opt_offset += (ND6_OPT_HDR_BUF(nd6_opt_offset)->len << 3);
   }
 
   defrt = uip_ds6_defrt_lookup(&UIP_IP_BUF->srcipaddr);
