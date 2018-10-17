@@ -8,8 +8,6 @@
 #include "net/ipv6/uip-ds6.h"
 #include <string.h>
 
-#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 uip_buf_t uip_aligned_buf;
 
 uint16_t uip_len;

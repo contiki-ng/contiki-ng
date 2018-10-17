@@ -77,10 +77,6 @@ static uip_buf_t mcast_buf;
 static uint8_t fwd_delay;
 static uint8_t fwd_spread;
 /*---------------------------------------------------------------------------*/
-/* uIPv6 Pointers */
-/*---------------------------------------------------------------------------*/
-#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-/*---------------------------------------------------------------------------*/
 static void
 mcast_fwd(void *p)
 {

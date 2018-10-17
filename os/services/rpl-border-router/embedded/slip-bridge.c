@@ -43,8 +43,6 @@
 #include "dev/slip.h"
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-/*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "SLIP"

@@ -39,8 +39,6 @@
 
 #include <string.h>
 
-#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 #define printf(...)

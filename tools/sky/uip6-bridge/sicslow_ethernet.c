@@ -155,7 +155,6 @@
 //#define PRINTF printf
 #define PRINTF(...)
 
-#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define ETHBUF(x) ((struct uip_eth_hdr *)x)
 
 //For little endian, such as our friend mr. AVR

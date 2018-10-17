@@ -65,7 +65,6 @@
  * neighbors and are not only MAC neighbors.
  */
 #define MAX_CHILDREN (NBR_TABLE_MAX_NEIGHBORS - 2)
-#define UIP_IP_BUF       ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 static int num_parents; /* any node that are possible parents */
 static int num_children;  /* all children that we have as nexthop */

@@ -59,7 +59,6 @@
  * NOTE: this policy assumes that all neighbors end up being IPv6
  * neighbors and are not only MAC neighbors.
  */
-#define UIP_IP_BUF    ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 static int num_parents;   /* all nodes that are possible parents */
 static int num_free;

@@ -48,8 +48,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define UIP_IP_BUF ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 PROCESS(uip6_bridge, "IPv6/6lowpan TAP bridge");
 PROCESS(tcpip_process, "tcpip dummy");
 AUTOSTART_PROCESSES(&uip6_bridge);

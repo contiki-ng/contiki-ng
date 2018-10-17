@@ -38,8 +38,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 
@@ -88,12 +86,12 @@ input_callback(void)
     }
     uip_clear_buf();
   } else {
-    
+
     /* Save the last sender received over SLIP to avoid bouncing the
        packet back if no route is found */
     uip_ipaddr_copy(&last_sender, &UIP_IP_BUF->srcipaddr);
-    
-    uint16_t len = ip64_4to6(&uip_buf[UIP_LLH_LEN], uip_len, 
+
+    uint16_t len = ip64_4to6(&uip_buf[UIP_LLH_LEN], uip_len,
 			     ip64_packet_buffer);
     if(len > 0) {
       memcpy(&uip_buf[UIP_LLH_LEN], ip64_packet_buffer, len);

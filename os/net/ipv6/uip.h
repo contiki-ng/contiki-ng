@@ -76,6 +76,11 @@
 #define uip_l2_l3_icmp_hdr_len (UIP_LLH_LEN + UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
 #define uip_l3_icmp_hdr_len (UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
 
+/**
+ * Direct access to IPv6 header
+ */
+#define UIP_IP_BUF                          ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"
 #include "net/linkaddr.h"

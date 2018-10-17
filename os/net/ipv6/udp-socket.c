@@ -38,8 +38,7 @@ PROCESS(udp_socket_process, "UDP socket process");
 
 static uint8_t buf[UIP_BUFSIZE];
 
-#define UIP_IP_BUF   ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
-
+#define UIP_UDPIP_BUF   ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -181,10 +180,10 @@ PROCESS_THREAD(udp_socket_process, ev, data)
           if(c->input_callback != NULL) {
             PROCESS_CONTEXT_BEGIN(c->p);
             c->input_callback(c, c->ptr,
-                              &(UIP_IP_BUF->srcipaddr),
-                              UIP_HTONS(UIP_IP_BUF->srcport),
-                              &(UIP_IP_BUF->destipaddr),
-                              UIP_HTONS(UIP_IP_BUF->destport),
+                              &(UIP_UDPIP_BUF->srcipaddr),
+                              UIP_HTONS(UIP_UDPIP_BUF->srcport),
+                              &(UIP_UDPIP_BUF->destipaddr),
+                              UIP_HTONS(UIP_UDPIP_BUF->destport),
                               buf, uip_datalen());
             PROCESS_CONTEXT_END();
           }
