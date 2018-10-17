@@ -54,7 +54,6 @@
 #define LOG_LEVEL LOG_LEVEL_IPV6
 
 #define UIP_ICMP6_ERROR_BUF  ((struct uip_icmp6_error *)UIP_ICMP_PAYLOAD)
-#define UIP_EXT_BUF              ((struct uip_ext_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 #define UIP_FIRST_EXT_BUF        ((struct uip_ext_hdr *)&uip_buf[UIP_LLIPH_LEN])
 
 /** \brief temporary IP address */
@@ -172,7 +171,7 @@ void
 uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   /* check if originating packet is not an ICMP error */
   if(uip_ext_len) {
-    if(UIP_EXT_BUF->next == UIP_PROTO_ICMP6 && UIP_ICMP_BUF->type < 128) {
+    if(UIP_EXT_BUF(uip_ext_len)->next == UIP_PROTO_ICMP6 && UIP_ICMP_BUF->type < 128) {
       uip_clear_buf();
       return;
     }

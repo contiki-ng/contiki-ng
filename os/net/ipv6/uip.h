@@ -93,6 +93,15 @@
 #define UIP_TCP_BUF                           ((struct uip_tcp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
 #define UIP_TCP_PAYLOAD                            ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_TCPH_LEN)
 
+/**
+ * Direct access to extension headers, with explicit ext header offset
+ */
+#define UIP_EXT_BUF(ext)                      ((struct uip_ext_hdr *)UIP_IP_PAYLOAD(ext))
+#define UIP_HBHO_BUF(ext)                    ((struct uip_hbho_hdr *)UIP_IP_PAYLOAD(ext))
+#define UIP_RH_BUF(ext)                   ((struct uip_routing_hdr *)UIP_IP_PAYLOAD(ext))
+#define UIP_FRAG_BUF(ext)                    ((struct uip_frag_hdr *)UIP_IP_PAYLOAD(ext))
+#define UIP_DESTO_BUF(ext)                  ((struct uip_desto_hdr *)UIP_IP_PAYLOAD(ext))
+
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"
 #include "net/linkaddr.h"

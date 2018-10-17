@@ -142,14 +142,8 @@ uint8_t uip_ext_opt_offset = 0;
  * @{
  */
 #define FBUF                                ((struct uip_ip_hdr *)&uip_reassbuf[0])
-#define UIP_EXT_BUF                        ((struct uip_ext_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_ROUTING_BUF                ((struct uip_routing_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_FRAG_BUF                      ((struct uip_frag_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_HBHO_BUF                      ((struct uip_hbho_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_DESTO_BUF                    ((struct uip_desto_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 #define UIP_EXT_HDR_OPT_BUF            ((struct uip_ext_hdr_opt *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
 #define UIP_EXT_HDR_OPT_PADN_BUF  ((struct uip_ext_hdr_opt_padn *)&uip_buf[uip_l2_l3_hdr_len + uip_ext_opt_offset])
-#define UIP_ICMP6_ERROR_BUF            ((struct uip_icmp6_error *)&uip_buf[uip_l2_l3_icmp_hdr_len])
 /** @} */
 /**
  * \name Buffer variables
@@ -520,7 +514,7 @@ remove_ext_hdr(void)
     }
     last_uip_ext_len = uip_ext_len;
     uip_ext_len = 0;
-    UIP_IP_BUF->proto = UIP_EXT_BUF->next;
+    UIP_IP_BUF->proto = UIP_EXT_BUF(uip_ext_len)->next;
     memmove(((uint8_t *)UIP_TCP_BUF), (uint8_t *)UIP_TCP_BUF + last_uip_ext_len,
 	    uip_len - UIP_IPH_LEN - last_uip_ext_len);
 
@@ -658,7 +652,7 @@ uip_reass(void)
     etimer_set(&uip_reass_timer, UIP_REASS_MAXAGE*CLOCK_SECOND);
     uip_reass_on = 1;
     uip_reassflags = 0;
-    uip_id = UIP_FRAG_BUF->id;
+    uip_id = UIP_FRAG_BUF(uip_ext_len)->id;
     /* Clear the bitmap. */
     memset(uip_reassbitmap, 0, sizeof(uip_reassbitmap));
   }
@@ -669,9 +663,9 @@ uip_reass(void)
    */
   if(uip_ipaddr_cmp(&FBUF->srcipaddr, &UIP_IP_BUF->srcipaddr) &&
      uip_ipaddr_cmp(&FBUF->destipaddr, &UIP_IP_BUF->destipaddr) &&
-     UIP_FRAG_BUF->id == uip_id) {
+     UIP_FRAG_BUF(uip_ext_len)->id == uip_id) {
     len = uip_len - uip_ext_len - UIP_IPH_LEN - UIP_FRAGH_LEN;
-    offset = (uip_ntohs(UIP_FRAG_BUF->offsetresmore) & 0xfff8);
+    offset = (uip_ntohs(UIP_FRAG_BUF(uip_ext_len)->offsetresmore) & 0xfff8);
     /* in byte, originaly in multiple of 8 bytes*/
     LOG_INFO("len %d\n", len);
     LOG_INFO("offset %d\n", offset);
@@ -682,7 +676,7 @@ uip_reass(void)
        * Part is obtained from the Next Header field of the first
        * fragment's Fragment header.
        */
-      *uip_next_hdr = UIP_FRAG_BUF->next;
+      *uip_next_hdr = UIP_FRAG_BUF(uip_ext_len)->next;
       memcpy(FBUF, UIP_IP_BUF, uip_ext_len + UIP_IPH_LEN);
       LOG_INFO("src ");
       LOG_INFO_6ADDR(&FBUF->srcipaddr);
@@ -703,7 +697,7 @@ uip_reass(void)
 
     /* If this fragment has the More Fragments flag set to zero, it is the
        last fragment*/
-    if((uip_ntohs(UIP_FRAG_BUF->offsetresmore) & IP_MF) == 0) {
+    if((uip_ntohs(UIP_FRAG_BUF(uip_ext_len)->offsetresmore) & IP_MF) == 0) {
       uip_reassflags |= UIP_REASS_FLAG_LASTFRAG;
       /*calculate the size of the entire packet*/
       uip_reasslen = offset + len;
@@ -727,7 +721,7 @@ uip_reass(void)
     /* Copy the fragment into the reassembly buffer, at the right
        offset. */
     memcpy((uint8_t *)FBUF + UIP_IPH_LEN + uip_ext_len + offset,
-           (uint8_t *)UIP_FRAG_BUF + UIP_FRAGH_LEN, len);
+           (uint8_t *)UIP_FRAG_BUF(uip_ext_len) + UIP_FRAGH_LEN, len);
 
     /* Update the bitmap. */
     if(offset >> 6 == (offset + len) >> 6) {
@@ -844,7 +838,7 @@ ext_hdr_options_process(void)
    * length field in an option : the length of data in the option
    */
   uip_ext_opt_offset = 2;
-  while(uip_ext_opt_offset < ((UIP_EXT_BUF->len << 3) + 8)) {
+  while(uip_ext_opt_offset < ((UIP_EXT_BUF(uip_ext_len)->len << 3) + 8)) {
     switch(UIP_EXT_HDR_OPT_BUF->type) {
     /*
      * for now we do not support any options except padding ones
@@ -1150,8 +1144,8 @@ uip_process(uint8_t flag)
     switch(ext_hdr_options_process()) {
     case 0:
       /* continue */
-      uip_next_hdr = &UIP_EXT_BUF->next;
-      uip_ext_len += (UIP_EXT_BUF->len << 3) + 8;
+      uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
+      uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
       break;
     case 1:
       LOG_ERR("Dropping packet after extension header processing\n");
@@ -1285,8 +1279,8 @@ uip_process(uint8_t flag)
       switch(ext_hdr_options_process()) {
       case 0:
         /*continue*/
-        uip_next_hdr = &UIP_EXT_BUF->next;
-        uip_ext_len += (UIP_EXT_BUF->len << 3) + 8;
+        uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
+        uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
         break;
       case 1:
         /*silently discard*/
@@ -1314,8 +1308,8 @@ uip_process(uint8_t flag)
         switch(ext_hdr_options_process()) {
         case 0:
           /*continue*/
-          uip_next_hdr = &UIP_EXT_BUF->next;
-          uip_ext_len += (UIP_EXT_BUF->len << 3) + 8;
+          uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
+          uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
           break;
         case 1:
           /*silently discard*/
@@ -1344,7 +1338,7 @@ uip_process(uint8_t flag)
            */
 
           LOG_DBG("Processing Routing header\n");
-          if(UIP_ROUTING_BUF->seg_left > 0) {
+          if(UIP_RH_BUF(uip_ext_len)->seg_left > 0) {
             if(NETSTACK_ROUTING.ext_header_srh_update()) {
 
               /* With routing header, the detination address is us and will
@@ -1378,8 +1372,8 @@ uip_process(uint8_t flag)
             LOG_ERR("unrecognized routing type");
             goto send;
           }
-          uip_next_hdr = &UIP_EXT_BUF->next;
-          uip_ext_len += (UIP_EXT_BUF->len << 3) + 8;
+          uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
+          uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
           break;
         case UIP_PROTO_FRAG:
           /* Fragmentation header:call the reassembly function, then leave */
