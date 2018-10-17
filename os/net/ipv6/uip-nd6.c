@@ -84,14 +84,6 @@
 /*------------------------------------------------------------------*/
 /** @{ */
 /** \name Pointers to the header structures.
- *  All pointers except UIP_IP_BUF depend on uip_ext_len, which at
- *  packet reception, is the total length of the extension headers.
- *
- *  The pointer to ND6 options header also depends on nd6_opt_offset,
- *  which we set in each function.
- *
- *  Care should be taken when manipulating these buffers about the
- *  value of these length variables
  */
 
 /**@{  Pointers to messages just after icmp header */
