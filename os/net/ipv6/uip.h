@@ -84,7 +84,7 @@
 #define UIP_IP_PAYLOAD(ext)                        ((unsigned char *)UIP_IP_BUF_CHAR + UIP_IPH_LEN + (ext))
 
 /**
- * Direct access to ICMP, UDP, and TCP headers and payload, with implicit ext header offset
+ * Direct access to ICMP, UDP, and TCP headers and payload, with implicit ext header offset (global uip_ext_len)
  */
 #define UIP_ICMP_BUF                         ((struct uip_icmp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
 #define UIP_ICMP_PAYLOAD                           ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_ICMPH_LEN)
