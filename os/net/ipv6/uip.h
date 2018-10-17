@@ -1788,7 +1788,6 @@ struct uip_udp_hdr {
  * \hideinitializer
  */
 #define UIP_APPDATA_SIZE (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN)
-#define UIP_APPDATA_PTR (void *)&uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN]
 
 #define UIP_PROTO_ICMP  1
 #define UIP_PROTO_TCP   6

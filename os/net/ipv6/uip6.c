@@ -2328,8 +2328,7 @@ uip_send(const void *data, int len)
 
   if(uip_sappdata != NULL) {
     copylen = MIN(len, UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN -
-        (int)((char *)uip_sappdata -
-            (char *)&uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN]));
+        (int)((char *)uip_sappdata - (char *)UIP_TCP_PAYLOAD));
   } else {
     copylen = MIN(len, UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN);
   }
@@ -2337,8 +2336,7 @@ uip_send(const void *data, int len)
     uip_slen = copylen;
     if(data != uip_sappdata) {
       if(uip_sappdata == NULL) {
-        memcpy((char *)&uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN],
-            (data), uip_slen);
+        memcpy(UIP_TCP_PAYLOAD, (data), uip_slen);
       } else {
         memcpy(uip_sappdata, (data), uip_slen);
       }
