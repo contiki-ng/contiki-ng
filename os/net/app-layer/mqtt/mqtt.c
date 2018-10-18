@@ -872,6 +872,7 @@ parse_publish_vhdr(struct mqtt_connection *conn,
 
   /* Read out topic length */
   if(conn->in_packet.topic_len_received == 0) {
+    conn->in_packet.topic_pos = 0;
     conn->in_packet.topic_len = (input_data_ptr[(*pos)++] << 8);
     conn->in_packet.byte_counter++;
     if(*pos >= input_data_len) {
@@ -880,7 +881,11 @@ parse_publish_vhdr(struct mqtt_connection *conn,
     conn->in_packet.topic_len |= input_data_ptr[(*pos)++];
     conn->in_packet.byte_counter++;
     conn->in_packet.topic_len_received = 1;
-
+    /* Abort if topic is longer than our topic buffer */
+    if(conn->in_packet.topic_len > MQTT_MAX_TOPIC_LENGTH) {
+      DBG("MQTT - topic too long %u/%u\n", conn->in_packet.topic_len, MQTT_MAX_TOPIC_LENGTH);
+      return;
+    }
     DBG("MQTT - Read PUBLISH topic len %i\n", conn->in_packet.topic_len);
     /* WARNING: Check here if TOPIC fits in payload area, otherwise error */
   }
