@@ -9,22 +9,10 @@ LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),--cref,--no-warn-mismatch
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 
-### Build syscalls for newlib
-MODULES += os/lib/newlib
-
 CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
-
-### Compilation rules
-CUSTOM_RULE_LINK = 1
 
 ### Resolve any potential circular dependencies between the linked libraries
 ### See: https://stackoverflow.com/questions/5651869/gcc-what-are-the-start-group-and-end-group-command-line-options/5651895
 TARGET_LIBFLAGS := -Wl,--start-group $(TARGET_LIBFILES) -lm -Wl,--end-group
-
-.SECONDEXPANSION:
-
-%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT)
-	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFLAGS) -o $@
 
 include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m

@@ -20,6 +20,30 @@ endif
 CFLAGSNO = -Wall -g -I/usr/local/include $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
 
+### Are we building with code size optimisations?
+SMALL ?= 0
+
+# The optimizations on native platform cannot be enabled in GCC (not Clang) versions less than 7.2
+GCC_IS_CLANG := $(shell gcc --version 2> /dev/null | grep clang)
+ifneq ($(GCC_IS_CLANG),)
+  NATIVE_CAN_OPTIIMIZE = 1
+else
+  GCC_VERSION := $(shell gcc -dumpfullversion -dumpversion | cut -b1-3)
+  ifeq ($(shell expr $(GCC_VERSION) \>= 7.2), 1)
+  	NATIVE_CAN_OPTIIMIZE = 1
+  else
+  	NATIVE_CAN_OPTIIMIZE = 0
+  endif
+endif
+
+ifeq ($(NATIVE_CAN_OPTIIMIZE),1)
+  ifeq ($(SMALL),1)
+    CFLAGS += -Os
+  else
+    CFLAGS += -O2
+  endif
+endif
+
 ifeq ($(HOST_OS),Darwin)
 AROPTS = -rc
 LDFLAGS_WERROR := -Wl,-fatal_warnings
