@@ -816,7 +816,7 @@ uip_add_rcv_nxt(uint16_t n)
  * \brief Process the options in Destination and Hop By Hop extension headers
  */
 static uint8_t
-ext_hdr_options_process(int ext_offset)
+ext_hdr_options_process(uint8_t *ext_buf)
 {
   /*
    * Length field in the extension header: length of the header in units of
@@ -824,8 +824,10 @@ ext_hdr_options_process(int ext_offset)
    * length field in an option : the length of data in the option
    */
   uint8_t opt_offset = 2;
-  while(opt_offset < ((UIP_EXT_BUF(ext_offset)->len << 3) + 8)) {
-    switch(UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->type) {
+  struct uip_hbho_hdr *ext_hdr = (struct uip_hbho_hdr *)ext_buf;
+  while(opt_offset < ((ext_hdr->len << 3) + 8)) {
+    struct uip_ext_hdr_opt *opt_hdr = (struct uip_ext_hdr_opt *)(ext_buf + opt_offset);
+    switch(opt_hdr->type) {
     /*
      * for now we do not support any options except padding ones
      * PAD1 does not make sense as the header must be 8bytes aligned,
@@ -837,7 +839,7 @@ ext_hdr_options_process(int ext_offset)
       break;
     case UIP_EXT_HDR_OPT_PADN:
       LOG_DBG("Processing PADN option\n");
-      opt_offset += UIP_EXT_HDR_OPT_PADN_BUF(ext_offset, opt_offset)->opt_len + 2;
+      opt_offset += ((struct uip_ext_hdr_opt_padn *)opt_hdr)->opt_len + 2;
       break;
     case UIP_EXT_HDR_OPT_RPL:
       /* Fixes situation when a node that is not using RPL
@@ -849,11 +851,11 @@ ext_hdr_options_process(int ext_offset)
        * present) is processed.
        */
       LOG_DBG("Processing RPL option\n");
-      if(!NETSTACK_ROUTING.ext_header_hbh_update(UIP_IP_PAYLOAD(ext_offset), opt_offset)) {
+      if(!NETSTACK_ROUTING.ext_header_hbh_update(ext_buf, opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
-      opt_offset += (UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->len) + 2;
+      opt_offset += opt_hdr->len + 2;
       return 0;
     default:
       /*
@@ -869,8 +871,8 @@ ext_hdr_options_process(int ext_offset)
        *   Problem, Code 2, message to the packet's Source Address,
        *   pointing to the unrecognized Option Type.
        */
-      LOG_DBG("Unrecognized option, MSB 0x%x\n", UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->type);
-      switch(UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->type & 0xC0) {
+      LOG_DBG("Unrecognized option, MSB 0x%x\n", opt_hdr->type);
+      switch(opt_hdr->type & 0xC0) {
       case 0:
         break;
       case 0x40:
@@ -881,11 +883,11 @@ ext_hdr_options_process(int ext_offset)
         }
       case 0x80:
         uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_OPTION,
-            (uint32_t)UIP_IPH_LEN + ext_offset + opt_offset);
+            (ext_buf + opt_offset) - uip_buf);
         return 2;
       }
       /* in the cases were we did not discard, update ext_opt* */
-      opt_offset += UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->len + 2;
+      opt_offset += opt_hdr->len + 2;
       break;
     }
   }
@@ -1161,7 +1163,7 @@ uip_process(uint8_t flag)
 
   next_header = uipbuf_get_next_header(uip_buf, uip_len, &protocol, true);
   if(next_header != NULL && protocol == UIP_PROTO_HBHO) {
-    switch(ext_hdr_options_process(next_header - UIP_IP_PAYLOAD(0))) {
+    switch(ext_hdr_options_process(next_header)) {
     case 0:
       break; /* done */
     case 1:
@@ -1263,7 +1265,7 @@ uip_process(uint8_t flag)
         uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_HBHO;
       }
 #endif /*UIP_CONF_IPV6_CHECKS*/
-      switch(ext_hdr_options_process(next_header - UIP_IP_PAYLOAD(0))) {
+      switch(ext_hdr_options_process(next_header)) {
       case 0:
         break; /* done */
       case 1:
@@ -1287,7 +1289,7 @@ uip_process(uint8_t flag)
         uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_DESTO1;
       }
 #endif /*UIP_CONF_IPV6_CHECKS*/
-      switch(ext_hdr_options_process(next_header - UIP_IP_PAYLOAD(0))) {
+      switch(ext_hdr_options_process(next_header)) {
       case 0:
         break; /* done */
       case 1:
