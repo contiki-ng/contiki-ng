@@ -104,7 +104,7 @@ upper_layer_chksum(uint8_t proto)
   uint16_t upper_layer_len;
   uint16_t sum;
 
-  upper_layer_len = (((uint16_t)(UIP_IP_BUF->len[0]) << 8) + UIP_IP_BUF->len[1]) ;
+  upper_layer_len = uipbuf_get_len_field(UIP_IP_BUF);
 
   /* First sum pseudoheader. */
   /* IP protocol and length fields. This addition cannot carry. */

@@ -279,7 +279,7 @@ count_matching_bytes(const void *p1, const void *p2, size_t n)
 static int
 insert_srh_header(void)
 {
-  /* Implementation of RFC6554
+  /* Implementation of RFC6554 */
   uint8_t path_len;
   uint8_t ext_len;
   uint8_t cmpri, cmpre; /* ComprI and ComprE fields of the RPL Source Routing Header */
@@ -479,7 +479,6 @@ update_hbh_header(void)
 static int
 insert_hbh_header(const rpl_instance_t *instance)
 {
-  uint8_t temp_len;
   int opt_offset = 2;
 
   /* Insert hop-by-hop header */

@@ -397,7 +397,7 @@ void slide(uint8_t * data, uint8_t length, int16_t slide);
 int8_t mac_translateIcmpLinkLayer(lltype_t target)
 {
   uint16_t icmp_opt_offset = 0;
-  int16_t len = UIP_IP_BUF->len[1] | (UIP_IP_BUF->len[0] << 8);
+  int16_t len = uipbuf_get_len_field(UIP_IP_BUF);
 
   uint16_t iplen;
 
@@ -492,7 +492,7 @@ int8_t mac_translateIcmpLinkLayer(lltype_t target)
       }
 
       //Adjust the IP header length, as well as uIP length
-      iplen = UIP_IP_BUF->len[1] | (UIP_IP_BUF->len[0] << 8);
+      iplen = uipbuf_get_len_field(UIP_IP_BUF);
       iplen += sizechange;
       len += sizechange;
 

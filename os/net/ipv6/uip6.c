@@ -114,20 +114,10 @@ uip_lladdr_t uip_lladdr = {{0x00,0x06,0x98,0x00,0x02,0x32}};
  * @{
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Type of the next header in IPv6 header or extension headers
- *
- * Can be the next header field in the IPv6 header or in an extension header.
- * When doing fragment reassembly, we must change the value of the next header
- * field in the header before the fragmentation header, hence we need a pointer
- * to this field.
- */
-uint8_t *uip_next_hdr;
 /** \brief bitmap we use to record which IPv6 headers we have already seen */
 uint8_t uip_ext_bitmap = 0;
 /**
- * \brief length of the extension headers read. updated each time we process
- * a header
+ * \brief Total length of all IPv6 extension headers
  */
 uint8_t uip_ext_len = 0;
 /** \brief The final protocol after IPv6 extension headers:
@@ -352,10 +342,10 @@ upper_layer_chksum(uint8_t proto)
   volatile uint16_t upper_layer_len;
   uint16_t sum;
 
-  upper_layer_len = (((uint16_t)(UIP_IP_BUF->len[0]) << 8) + UIP_IP_BUF->len[1] - uip_ext_len);
+  upper_layer_len = uipbuf_get_len_field(UIP_IP_BUF) - uip_ext_len;
 
   LOG_DBG("Upper layer checksum len: %d from: %d\n", upper_layer_len,
-         UIP_IPH_LEN + UIP_LLH_LEN + uip_ext_len);
+         (int)(UIP_IP_PAYLOAD(uip_ext_len) - uip_buf));
 
   /* First sum pseudoheader. */
   /* IP protocol and length fields. This addition cannot carry. */
@@ -363,9 +353,8 @@ upper_layer_chksum(uint8_t proto)
   /* Sum IP source and destination addresses. */
   sum = chksum(sum, (uint8_t *)&UIP_IP_BUF->srcipaddr, 2 * sizeof(uip_ipaddr_t));
 
-  /* Sum TCP header and data. */
-  sum = chksum(sum, &uip_buf[UIP_IPH_LEN + UIP_LLH_LEN + uip_ext_len],
-               upper_layer_len);
+  /* Sum upper-layer header and data. */
+  sum = chksum(sum, UIP_IP_PAYLOAD(uip_ext_len), upper_layer_len);
 
   return (sum == 0) ? 0xffff : uip_htons(sum);
 }
@@ -502,7 +491,6 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 void
 uip_remove_ext_hdr(void)
 {
-  int last_uip_ext_len;
   /* Remove ext header before TCP/UDP processing. */
   if(uip_ext_len > 0) {
     LOG_DBG("Removing IPv6 extension headers (extlen: %d, uiplen: %d)\n",
@@ -512,15 +500,15 @@ uip_remove_ext_hdr(void)
       uipbuf_clear();
       return;
     }
-    last_uip_ext_len = uip_ext_len;
-    uip_ext_len = 0;
-    UIP_IP_BUF->proto = UIP_EXT_BUF(uip_ext_len)->next;
-    memmove(((uint8_t *)UIP_TCP_BUF), (uint8_t *)UIP_TCP_BUF + last_uip_ext_len,
-	    uip_len - UIP_IPH_LEN - last_uip_ext_len);
 
-    uip_len -= last_uip_ext_len;
+    /* Set proto */
+    UIP_IP_BUF->proto = uip_last_proto;
+    /* Move IP payload to the "left"*/
+    memmove(UIP_IP_PAYLOAD(0), UIP_IP_PAYLOAD(uip_ext_len),
+	    uip_len - UIP_IPH_LEN - uip_ext_len);
 
     /* Update the IP length. */
+    uipbuf_add_ext_hdr(-uip_ext_len);
     uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
   }
 }
@@ -635,11 +623,12 @@ static uint32_t uip_id; /* For every packet that is to be fragmented, the source
 #define IP_MF   0x0001
 
 static uint16_t
-uip_reass(void)
+uip_reass(uint8_t *prev_proto_ptr)
 {
   uint16_t offset=0;
   uint16_t len;
   uint16_t i;
+  struct uip_frag_hdr *frag_buf = UIP_FRAG_BUF(uip_ext_len);
 
   /* If ip_reasstmr is zero, no packet is present in the buffer */
   /* We first write the unfragmentable part of IP header into the reassembly
@@ -651,7 +640,7 @@ uip_reass(void)
     etimer_set(&uip_reass_timer, UIP_REASS_MAXAGE*CLOCK_SECOND);
     uip_reass_on = 1;
     uip_reassflags = 0;
-    uip_id = UIP_FRAG_BUF(uip_ext_len)->id;
+    uip_id = frag_buf->id;
     /* Clear the bitmap. */
     memset(uip_reassbitmap, 0, sizeof(uip_reassbitmap));
   }
@@ -662,9 +651,9 @@ uip_reass(void)
    */
   if(uip_ipaddr_cmp(&FBUF->srcipaddr, &UIP_IP_BUF->srcipaddr) &&
      uip_ipaddr_cmp(&FBUF->destipaddr, &UIP_IP_BUF->destipaddr) &&
-     UIP_FRAG_BUF(uip_ext_len)->id == uip_id) {
+     frag_buf->id == uip_id) {
     len = uip_len - uip_ext_len - UIP_IPH_LEN - UIP_FRAGH_LEN;
-    offset = (uip_ntohs(UIP_FRAG_BUF(uip_ext_len)->offsetresmore) & 0xfff8);
+    offset = (uip_ntohs(frag_buf->offsetresmore) & 0xfff8);
     /* in byte, originaly in multiple of 8 bytes*/
     LOG_INFO("len %d\n", len);
     LOG_INFO("offset %d\n", offset);
@@ -675,7 +664,7 @@ uip_reass(void)
        * Part is obtained from the Next Header field of the first
        * fragment's Fragment header.
        */
-      *uip_next_hdr = UIP_FRAG_BUF(uip_ext_len)->next;
+      *prev_proto_ptr = frag_buf->next;
       memcpy(FBUF, UIP_IP_BUF, uip_ext_len + UIP_IPH_LEN);
       LOG_INFO("src ");
       LOG_INFO_6ADDR(&FBUF->srcipaddr);
@@ -696,7 +685,7 @@ uip_reass(void)
 
     /* If this fragment has the More Fragments flag set to zero, it is the
        last fragment*/
-    if((uip_ntohs(UIP_FRAG_BUF(uip_ext_len)->offsetresmore) & IP_MF) == 0) {
+    if((uip_ntohs(frag_buf->offsetresmore) & IP_MF) == 0) {
       uip_reassflags |= UIP_REASS_FLAG_LASTFRAG;
       /*calculate the size of the entire packet*/
       uip_reasslen = offset + len;
@@ -720,7 +709,7 @@ uip_reass(void)
     /* Copy the fragment into the reassembly buffer, at the right
        offset. */
     memcpy((uint8_t *)FBUF + UIP_IPH_LEN + uip_ext_len + offset,
-           (uint8_t *)UIP_FRAG_BUF(uip_ext_len) + UIP_FRAGH_LEN, len);
+           (uint8_t *)frag_buf + UIP_FRAGH_LEN, len);
 
     /* Update the bitmap. */
     if(offset >> 6 == (offset + len) >> 6) {
@@ -767,8 +756,7 @@ uip_reass(void)
       uip_reasslen += UIP_IPH_LEN + uip_ext_len;
       memcpy(UIP_IP_BUF, FBUF, uip_reasslen);
       uipbuf_set_len_field(UIP_IP_BUF, uip_reasslen - UIP_IPH_LEN);
-      LOG_INFO("reassembled packet %d (%d)\n", uip_reasslen,
-             (UIP_IP_BUF->len[0] << 8) | UIP_IP_BUF->len[1]);
+      LOG_INFO("reassembled packet %d (%d)\n", uip_reasslen, uipbuf_get_len_field(UIP_IP_BUF));
 
       return uip_reasslen;
 
@@ -828,16 +816,16 @@ uip_add_rcv_nxt(uint16_t n)
  * \brief Process the options in Destination and Hop By Hop extension headers
  */
 static uint8_t
-ext_hdr_options_process(void)
+ext_hdr_options_process(int ext_offset)
 {
   /*
    * Length field in the extension header: length of the header in units of
    * 8 bytes, excluding the first 8 bytes
    * length field in an option : the length of data in the option
    */
-  uint8_t ext_opt_offset = 2;
-  while(ext_opt_offset < ((UIP_EXT_BUF(uip_ext_len)->len << 3) + 8)) {
-    switch(UIP_EXT_HDR_OPT_BUF(uip_ext_len, ext_opt_offset)->type) {
+  uint8_t opt_offset = 2;
+  while(opt_offset < ((UIP_EXT_BUF(ext_offset)->len << 3) + 8)) {
+    switch(UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->type) {
     /*
      * for now we do not support any options except padding ones
      * PAD1 does not make sense as the header must be 8bytes aligned,
@@ -845,11 +833,11 @@ ext_hdr_options_process(void)
      */
     case UIP_EXT_HDR_OPT_PAD1:
       LOG_DBG("Processing PAD1 option\n");
-      ext_opt_offset += 1;
+      opt_offset += 1;
       break;
     case UIP_EXT_HDR_OPT_PADN:
       LOG_DBG("Processing PADN option\n");
-      ext_opt_offset += UIP_EXT_HDR_OPT_PADN_BUF(uip_ext_len, ext_opt_offset)->opt_len + 2;
+      opt_offset += UIP_EXT_HDR_OPT_PADN_BUF(ext_offset, opt_offset)->opt_len + 2;
       break;
     case UIP_EXT_HDR_OPT_RPL:
       /* Fixes situation when a node that is not using RPL
@@ -860,11 +848,12 @@ ext_hdr_options_process(void)
        * Using this fix, the header is ignored, and the next header (if
        * present) is processed.
        */
-      if(!NETSTACK_ROUTING.ext_header_hbh_update(uip_ext_len, ext_opt_offset)) {
+      LOG_DBG("Processing RPL option\n");
+      if(!NETSTACK_ROUTING.ext_header_hbh_update(ext_offset, opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
-      ext_opt_offset += (UIP_EXT_HDR_OPT_BUF(uip_ext_len, ext_opt_offset)->len) + 2;
+      opt_offset += (UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->len) + 2;
       return 0;
     default:
       /*
@@ -880,8 +869,8 @@ ext_hdr_options_process(void)
        *   Problem, Code 2, message to the packet's Source Address,
        *   pointing to the unrecognized Option Type.
        */
-      LOG_DBG("MSB %x\n", UIP_EXT_HDR_OPT_BUF(uip_ext_len, ext_opt_offset)->type);
-      switch(UIP_EXT_HDR_OPT_BUF(uip_ext_len, ext_opt_offset)->type & 0xC0) {
+      LOG_DBG("Unrecognized option, MSB 0x%x\n", UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->type);
+      switch(UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->type & 0xC0) {
       case 0:
         break;
       case 0x40:
@@ -892,23 +881,49 @@ ext_hdr_options_process(void)
         }
       case 0x80:
         uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_OPTION,
-            (uint32_t)UIP_IPH_LEN + uip_ext_len + ext_opt_offset);
+            (uint32_t)UIP_IPH_LEN + ext_offset + opt_offset);
         return 2;
       }
       /* in the cases were we did not discard, update ext_opt* */
-      ext_opt_offset += UIP_EXT_HDR_OPT_BUF(uip_ext_len, ext_opt_offset)->len + 2;
+      opt_offset += UIP_EXT_HDR_OPT_BUF(ext_offset, opt_offset)->len + 2;
       break;
     }
   }
   return 0;
 }
-
-
+/*---------------------------------------------------------------------------*/
+static bool
+uip_check_mtu(void)
+{
+  if(uip_len > UIP_LINK_MTU) {
+    uip_icmp6_error_output(ICMP6_PACKET_TOO_BIG, 0, UIP_LINK_MTU);
+    UIP_STAT(++uip_stat.ip.drop);
+    return false;
+  } else {
+    return true;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static bool
+uip_update_ttl(void)
+{
+  if(UIP_IP_BUF->ttl <= 1) {
+    uip_icmp6_error_output(ICMP6_TIME_EXCEEDED, ICMP6_TIME_EXCEED_TRANSIT, 0);
+    UIP_STAT(++uip_stat.ip.drop);
+    return false;
+  } else {
+    UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
+    return true;
+  }
+}
 /*---------------------------------------------------------------------------*/
 void
 uip_process(uint8_t flag)
 {
   uint8_t *last_header;
+  uint8_t protocol;
+  uint8_t *next_header;
+  struct uip_ext_hdr *ext_ptr;
 #if UIP_TCP
   int c;
   uint16_t tmp16;
@@ -1090,8 +1105,8 @@ uip_process(uint8_t flag)
    * value..
    */
 
-  if((UIP_IP_BUF->len[0] << 8) + UIP_IP_BUF->len[1] <= uip_len) {
-    uip_len = (UIP_IP_BUF->len[0] << 8) + UIP_IP_BUF->len[1] + UIP_IPH_LEN;
+  if(uipbuf_get_len_field(UIP_IP_BUF) <= uip_len) {
+    uip_len = uipbuf_get_len_field(UIP_IP_BUF) + UIP_IPH_LEN;
     /*
      * The length reported in the IPv6 header is the
      * length of the payload that follows the
@@ -1104,7 +1119,7 @@ uip_process(uint8_t flag)
      * header (40 bytes).
      */
   } else {
-    LOG_ERR("packet shorter than reported in IP header");
+    LOG_ERR("packet shorter than reported in IP header\n");
     goto drop;
   }
 
@@ -1113,11 +1128,11 @@ uip_process(uint8_t flag)
   uip_last_proto = 0;
   last_header = uipbuf_get_last_header(UIP_IP_BUF_CHAR, uip_len, &uip_last_proto);
   if(last_header == NULL) {
-    LOG_ERR("invalid extension header chain");
+    LOG_ERR("invalid extension header chain\n");
     goto drop;
   }
   /* Set uip_ext_len */
-  uip_ext_len = last_header - UIP_IP_BUF_CHAR;
+  uip_ext_len = last_header - UIP_IP_PAYLOAD(0);
 
   LOG_INFO("packet received from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
@@ -1140,33 +1155,20 @@ uip_process(uint8_t flag)
 
 #if UIP_CONF_ROUTER
   /*
-   * Next header field processing. In IPv6, we can have extension headers,
-   * if present, the Hop-by-Hop Option must be processed before forwarding
+   * If present, the Hop-by-Hop Option must be processed before forwarding
    * the packet.
    */
-  uip_next_hdr = &UIP_IP_BUF->proto;
-  uip_ext_len = 0;
-  uip_ext_bitmap = 0;
 
-  if(*uip_next_hdr == UIP_PROTO_HBHO) {
-#if UIP_CONF_IPV6_CHECKS
-    uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_HBHO;
-#endif /* UIP_CONF_IPV6_CHECKS */
-    switch(ext_hdr_options_process()) {
+  next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+  if(next_header != NULL && protocol == UIP_PROTO_HBHO) {
+    switch(ext_hdr_options_process(next_header - UIP_IP_PAYLOAD(0))) {
     case 0:
-      /* continue */
-      uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-      uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-      break;
+      break; /* done */
     case 1:
-      LOG_ERR("Dropping packet after extension header processing\n");
-      /* silently discard */
-      goto drop;
+      goto drop; /* silently discard */
     case 2:
-      LOG_ERR("Sending error message after extension header processing\n");
-      /* send icmp error message (created in ext_hdr_options_process)
-       * and discard*/
-      goto send;
+      goto send; /* send icmp error message (created in
+                    ext_hdr_options_process) and discard */
     }
   }
 
@@ -1202,23 +1204,12 @@ uip_process(uint8_t flag)
        !uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr) &&
        !uip_is_addr_loopback(&UIP_IP_BUF->destipaddr)) {
 
-
-      /* Check MTU */
-      if(uip_len > UIP_LINK_MTU) {
-        uip_icmp6_error_output(ICMP6_PACKET_TOO_BIG, 0, UIP_LINK_MTU);
-        UIP_STAT(++uip_stat.ip.drop);
-        goto send;
-      }
-      /* Check Hop Limit */
-      if(UIP_IP_BUF->ttl <= 1) {
-        uip_icmp6_error_output(ICMP6_TIME_EXCEEDED,
-                               ICMP6_TIME_EXCEED_TRANSIT, 0);
-        UIP_STAT(++uip_stat.ip.drop);
+      if(!uip_check_mtu() || !uip_update_ttl()) {
+        /* Send ICMPv6 error, prepared by the function that just returned false */
         goto send;
       }
 
-      UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
-      LOG_INFO("Forwarding packet towards ");
+      LOG_INFO("Forwarding packet to next hop ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
@@ -1247,38 +1238,20 @@ uip_process(uint8_t flag)
     UIP_STAT(++uip_stat.ip.drop);
     goto drop;
   }
-
-  /*
-   * Next header field processing. In IPv6, we can have extension headers,
-   * they are processed here
-   */
-  uip_next_hdr = &UIP_IP_BUF->proto;
-  uip_ext_len = 0;
-  uip_ext_bitmap = 0;
 #endif /* UIP_CONF_ROUTER */
 
 #if UIP_IPV6_MULTICAST && UIP_CONF_ROUTER
   process:
 #endif /* UIP_IPV6_MULTICAST && UIP_CONF_ROUTER */
 
-  while(1) {
-    switch(*uip_next_hdr){
-#if UIP_TCP
-    case UIP_PROTO_TCP:
-      /* TCP, for both IPv4 and IPv6 */
-      uip_last_proto = *uip_next_hdr;
-      goto tcp_input;
-#endif /* UIP_TCP */
-#if UIP_UDP
-    case UIP_PROTO_UDP:
-      /* UDP, for both IPv4 and IPv6 */
-      uip_last_proto = *uip_next_hdr;
-      goto udp_input;
-#endif /* UIP_UDP */
-    case UIP_PROTO_ICMP6:
-      /* ICMPv6 */
-      uip_last_proto = *uip_next_hdr;
-      goto icmp6_input;
+  /* IPv6 extension header processing: loop until reaching upper-layer protocol */
+  uip_ext_bitmap = 0;
+  for(next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+      next_header != NULL && uip_is_proto_ext_hdr(protocol);
+      next_header = uipbuf_get_next_header(next_header, uip_len - (next_header - UIP_IP_BUF_CHAR), &protocol, false)) {
+
+    ext_ptr = (struct uip_ext_hdr *)next_header;
+    switch(protocol) {
     case UIP_PROTO_HBHO:
       LOG_DBG("Processing hbh header\n");
       /* Hop by hop option header */
@@ -1290,145 +1263,140 @@ uip_process(uint8_t flag)
         uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_HBHO;
       }
 #endif /*UIP_CONF_IPV6_CHECKS*/
-      switch(ext_hdr_options_process()) {
+      switch(ext_hdr_options_process(next_header - UIP_IP_PAYLOAD(0))) {
       case 0:
-        /*continue*/
-        uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-        uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-        break;
+        break; /* done */
       case 1:
-        /*silently discard*/
-        goto drop;
+        goto drop; /* silently discard */
       case 2:
-        /* send icmp error message (created in ext_hdr_options_process)
-         * and discard*/
-        goto send;
+        goto send; /* send icmp error message (created in
+                      ext_hdr_options_process) and discard */
       }
       break;
-      case UIP_PROTO_DESTO:
+    case UIP_PROTO_DESTO:
 #if UIP_CONF_IPV6_CHECKS
-        /* Destination option header. if we saw two already, drop */
-        LOG_DBG("Processing desto header\n");
-        if(uip_ext_bitmap & UIP_EXT_HDR_BITMAP_DESTO1) {
-          if(uip_ext_bitmap & UIP_EXT_HDR_BITMAP_DESTO2) {
-            goto bad_hdr;
-          } else{
-            uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_DESTO2;
-          }
-        } else {
-          uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_DESTO1;
-        }
-#endif /*UIP_CONF_IPV6_CHECKS*/
-        switch(ext_hdr_options_process()) {
-        case 0:
-          /*continue*/
-          uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-          uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-          break;
-        case 1:
-          /*silently discard*/
-          goto drop;
-        case 2:
-          /* send icmp error message (created in ext_hdr_options_process)
-           * and discard*/
-          goto send;
-        }
-        break;
-        case UIP_PROTO_ROUTING:
-#if UIP_CONF_IPV6_CHECKS
-          /* Routing header. If we saw one already, drop */
-          if(uip_ext_bitmap & UIP_EXT_HDR_BITMAP_ROUTING) {
-            goto bad_hdr;
-          } else {
-            uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_ROUTING;
-          }
-#endif /*UIP_CONF_IPV6_CHECKS*/
-          /*
-           * Routing Header  length field is in units of 8 bytes, excluding
-           * As per RFC2460 section 4.4, if routing type is unrecognized:
-           * if segments left = 0, ignore the header
-           * if segments left > 0, discard packet and send icmp error pointing
-           * to the routing type
-           */
-
-          LOG_DBG("Processing Routing header\n");
-          if(UIP_RH_BUF(uip_ext_len)->seg_left > 0) {
-            if(NETSTACK_ROUTING.ext_header_srh_update()) {
-
-              /* With routing header, the detination address is us and will
-               * be swapped later to the next hop. Because of this, the MTU
-               * and TTL were not checked and updated yet. Do this now. */
-
-              /* Check MTU */
-              if(uip_len > UIP_LINK_MTU) {
-                uip_icmp6_error_output(ICMP6_PACKET_TOO_BIG, 0, UIP_LINK_MTU);
-                UIP_STAT(++uip_stat.ip.drop);
-                goto send;
-              }
-              /* Check Hop Limit */
-              if(UIP_IP_BUF->ttl <= 1) {
-                uip_icmp6_error_output(ICMP6_TIME_EXCEEDED,
-                                       ICMP6_TIME_EXCEED_TRANSIT, 0);
-                UIP_STAT(++uip_stat.ip.drop);
-                goto send;
-              }
-              UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
-
-              LOG_INFO("Forwarding packet to next hop ");
-              LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
-              LOG_INFO_("\n");
-              UIP_STAT(++uip_stat.ip.forwarded);
-
-              goto send; /* Proceed to forwarding */
-            }
-            uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER, UIP_IPH_LEN + uip_ext_len + 2);
-            UIP_STAT(++uip_stat.ip.drop);
-            LOG_ERR("unrecognized routing type");
-            goto send;
-          }
-          uip_next_hdr = &UIP_EXT_BUF(uip_ext_len)->next;
-          uip_ext_len += (UIP_EXT_BUF(uip_ext_len)->len << 3) + 8;
-          break;
-        case UIP_PROTO_FRAG:
-          /* Fragmentation header:call the reassembly function, then leave */
-#if UIP_CONF_IPV6_REASSEMBLY
-          LOG_INFO("Processing fragmentation header\n");
-          uip_len = uip_reass();
-          if(uip_len == 0) {
-            goto drop;
-          }
-          if(uip_reassflags & UIP_REASS_FLAG_ERROR_MSG){
-            /* we are not done with reassembly, this is an error message */
-            goto send;
-          }
-          /*packet is reassembled, reset the next hdr to the beginning
-           of the IP header and restart the parsing of the reassembled pkt*/
-          LOG_INFO("Processing reassembled packet\n");
-          uip_ext_len = 0;
-          uip_ext_bitmap = 0;
-          uip_next_hdr = &UIP_IP_BUF->proto;
-          break;
-#else /* UIP_CONF_IPV6_REASSEMBLY */
-          UIP_STAT(++uip_stat.ip.drop);
-          UIP_STAT(++uip_stat.ip.fragerr);
-          LOG_ERR("fragment dropped.");
-          goto drop;
-#endif /* UIP_CONF_IPV6_REASSEMBLY */
-        case UIP_PROTO_NONE:
-          goto drop;
-        default:
+      /* Destination option header. if we saw two already, drop */
+      LOG_DBG("Processing desto header\n");
+      if(uip_ext_bitmap & UIP_EXT_HDR_BITMAP_DESTO1) {
+        if(uip_ext_bitmap & UIP_EXT_HDR_BITMAP_DESTO2) {
           goto bad_hdr;
+        } else{
+          uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_DESTO2;
+        }
+      } else {
+        uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_DESTO1;
+      }
+#endif /*UIP_CONF_IPV6_CHECKS*/
+      switch(ext_hdr_options_process(next_header - UIP_IP_PAYLOAD(0))) {
+      case 0:
+        break; /* done */
+      case 1:
+        goto drop; /* silently discard */
+      case 2:
+        goto send; /* send icmp error message (created in
+                      ext_hdr_options_process) and discard */
+      }
+      break;
+    case UIP_PROTO_ROUTING:
+#if UIP_CONF_IPV6_CHECKS
+      /* Routing header. If we saw one already, drop */
+      if(uip_ext_bitmap & UIP_EXT_HDR_BITMAP_ROUTING) {
+        goto bad_hdr;
+      } else {
+        uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_ROUTING;
+      }
+#endif /*UIP_CONF_IPV6_CHECKS*/
+      /*
+       * Routing Header  length field is in units of 8 bytes, excluding
+       * As per RFC2460 section 4.4, if routing type is unrecognized:
+       * if segments left = 0, ignore the header
+       * if segments left > 0, discard packet and send icmp error pointing
+       * to the routing type
+       */
+
+      LOG_DBG("Processing Routing header\n");
+      if(((struct uip_routing_hdr *)ext_ptr)->seg_left > 0) {
+        /* Process source routing header */
+        if(NETSTACK_ROUTING.ext_header_srh_update()) {
+
+          /* The MTU and TTL were not checked and updated yet, because with
+           * a routing header, the IPv6 destination address was set to us
+           * even though we act only as forwarder. Check MTU and TTL now */
+          if(!uip_check_mtu() || !uip_update_ttl()) {
+            /* Send ICMPv6 error, prepared by the function that just returned false */
+            goto send;
+          }
+
+          LOG_INFO("Forwarding packet to next hop ");
+          LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+          LOG_INFO_("\n");
+          UIP_STAT(++uip_stat.ip.forwarded);
+
+          goto send; /* Proceed to forwarding */
+        } else {
+          LOG_ERR("Unrecognized routing type\n");
+          goto bad_hdr;
+        }
+      }
+      break;
+    case UIP_PROTO_FRAG:
+      /* Fragmentation header:call the reassembly function, then leave */
+#if UIP_CONF_IPV6_REASSEMBLY
+      LOG_INFO("Processing fragmentation header\n");
+      uip_len = uip_reass(&ext_ptr->next);
+      if(uip_len == 0) {
+        goto drop;
+      }
+      if(uip_reassflags & UIP_REASS_FLAG_ERROR_MSG) {
+        /* we are not done with reassembly, this is an error message */
+        goto send;
+      }
+      /* packet is reassembled. Restart the parsing of the reassembled pkt */
+      LOG_INFO("Processing reassembled packet\n");
+      uip_ext_bitmap = 0;
+      next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+      break;
+#else /* UIP_CONF_IPV6_REASSEMBLY */
+      UIP_STAT(++uip_stat.ip.drop);
+      UIP_STAT(++uip_stat.ip.fragerr);
+      LOG_ERR("fragment dropped.");
+      goto drop;
+#endif /* UIP_CONF_IPV6_REASSEMBLY */
+    case UIP_PROTO_NONE:
+      goto drop;
+    default:
+      goto bad_hdr;
     }
   }
+
+  /* Process upper-layer input */
+  if(next_header != NULL) {
+    switch(protocol) {
+#if UIP_TCP
+    case UIP_PROTO_TCP:
+      /* TCP, for both IPv4 and IPv6 */
+      goto tcp_input;
+#endif
+#if UIP_UDP
+    case UIP_PROTO_UDP:
+      /* UDP, for both IPv4 and IPv6 */
+      goto udp_input;
+#endif
+    case UIP_PROTO_ICMP6:
+      /* ICMPv6 */
+      goto icmp6_input;
+    }
+  }
+
   bad_hdr:
   /*
    * RFC 2460 send error message parameterr problem, code unrecognized
    * next header, pointing to the next header field
    */
-  uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_NEXTHEADER, (uint32_t)(uip_next_hdr - (uint8_t *)UIP_IP_BUF));
+  uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_NEXTHEADER, (uint32_t)(next_header - UIP_IP_BUF_CHAR));
   UIP_STAT(++uip_stat.ip.drop);
   UIP_STAT(++uip_stat.ip.protoerr);
-  LOG_ERR("unrecognized header");
+  LOG_ERR("unrecognized header\n");
   goto send;
   /* End of headers processing */
 
@@ -1612,7 +1580,7 @@ uip_process(uint8_t flag)
 
   /* Make sure that the TCP port number is not zero. */
   if(UIP_TCP_BUF->destport == 0 || UIP_TCP_BUF->srcport == 0) {
-    LOG_ERR("tcp: zero port.");
+    LOG_ERR("tcp: zero port\n");
     goto drop;
   }
 
@@ -1729,7 +1697,7 @@ uip_process(uint8_t flag)
        the remote end will retransmit the packet at a time when we
        have more spare connections. */
     UIP_STAT(++uip_stat.tcp.syndrop);
-    LOG_ERR("tcp: found no unused connections.");
+    LOG_ERR("tcp: found no unused connections\n");
     goto drop;
   }
   uip_conn = uip_connr;
@@ -2307,8 +2275,7 @@ uip_process(uint8_t flag)
 #endif
   UIP_IP_BUF->flow = 0x00;
   send:
-  LOG_INFO("Sending packet with length %d (%d)\n", uip_len,
-      (UIP_IP_BUF->len[0] << 8) | UIP_IP_BUF->len[1]);
+  LOG_INFO("Sending packet with length %d (%d)\n", uip_len, uipbuf_get_len_field(UIP_IP_BUF));
 
   UIP_STAT(++uip_stat.ip.sent);
   /* Return and let the caller do the actual transmission. */
