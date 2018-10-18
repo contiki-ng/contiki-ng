@@ -386,7 +386,7 @@ on(void)
       rf_core_power_down();
       return RF_CORE_CMD_ERROR;
     }
-    rf_core_setup_interrupts(0);
+    rf_core_setup_interrupts();
     oscillators_switch_to_hf_xosc();
 
     if(rf_ble_cmd_setup_ble_mode() != RF_BLE_CMD_OK) {
