@@ -318,8 +318,7 @@ create_na:
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
   UIP_IP_BUF->flow = 0;
-  UIP_IP_BUF->len[0] = 0;       /* length will not be more than 255 */
-  UIP_IP_BUF->len[1] = UIP_ICMPH_LEN + UIP_ND6_NA_LEN + UIP_ND6_OPT_LLAO_LEN;
+  uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + UIP_ND6_NA_LEN + UIP_ND6_OPT_LLAO_LEN);
   UIP_IP_BUF->proto = UIP_PROTO_ICMP6;
   UIP_IP_BUF->ttl = UIP_ND6_HOP_LIMIT;
 
@@ -375,7 +374,6 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
   UIP_ICMP_BUF->icode = 0;
   UIP_ND6_NS_BUF->reserved = 0;
   uip_ipaddr_copy((uip_ipaddr_t *) &UIP_ND6_NS_BUF->tgtipaddr, tgt);
-  UIP_IP_BUF->len[0] = 0;       /* length will not be more than 255 */
   /*
    * check if we add a SLLAO option: for DAD, MUST NOT, for NUD, MAY
    * (here yes), for Address resolution , MUST
@@ -391,8 +389,7 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
       uipbuf_clear();
       return;
     }
-    UIP_IP_BUF->len[1] =
-      UIP_ICMPH_LEN + UIP_ND6_NS_LEN + UIP_ND6_OPT_LLAO_LEN;
+    uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + UIP_ND6_NS_LEN + UIP_ND6_OPT_LLAO_LEN);
 
     create_llao(&uip_buf[uip_l2_l3_icmp_hdr_len + UIP_ND6_NS_LEN],
                 UIP_ND6_OPT_SLLAO);
@@ -787,8 +784,7 @@ uip_nd6_ra_output(uip_ipaddr_t * dest)
   }
 #endif /* UIP_ND6_RA_RDNSS */
 
-  UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
-  UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+  uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
   /*ICMP checksum */
   UIP_ICMP_BUF->icmpchksum = 0;
@@ -819,15 +815,13 @@ uip_nd6_rs_output(void)
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
   UIP_ICMP_BUF->type = ICMP6_RS;
   UIP_ICMP_BUF->icode = 0;
-  UIP_IP_BUF->len[0] = 0;       /* length will not be more than 255 */
 
   if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
     UIP_IP_BUF->len[1] = UIP_ICMPH_LEN + UIP_ND6_RS_LEN;
     uip_len = uip_l3_icmp_hdr_len + UIP_ND6_RS_LEN;
   } else {
     uip_len = uip_l3_icmp_hdr_len + UIP_ND6_RS_LEN + UIP_ND6_OPT_LLAO_LEN;
-    UIP_IP_BUF->len[1] =
-      UIP_ICMPH_LEN + UIP_ND6_RS_LEN + UIP_ND6_OPT_LLAO_LEN;
+    uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + UIP_ND6_RS_LEN + UIP_ND6_OPT_LLAO_LEN);
 
     create_llao(&uip_buf[uip_l2_l3_icmp_hdr_len + UIP_ND6_RS_LEN],
                 UIP_ND6_OPT_SLLAO);

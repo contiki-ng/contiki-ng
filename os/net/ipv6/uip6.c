@@ -521,8 +521,7 @@ uip_remove_ext_hdr(void)
     uip_len -= last_uip_ext_len;
 
     /* Update the IP length. */
-    UIP_IP_BUF->len[0] = (uip_len - UIP_IPH_LEN) >> 8;
-    UIP_IP_BUF->len[1] = (uip_len - UIP_IPH_LEN) & 0xff;
+    uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -767,8 +766,7 @@ uip_reass(void)
 
       uip_reasslen += UIP_IPH_LEN + uip_ext_len;
       memcpy(UIP_IP_BUF, FBUF, uip_reasslen);
-      UIP_IP_BUF->len[0] = ((uip_reasslen - UIP_IPH_LEN) >> 8);
-      UIP_IP_BUF->len[1] = ((uip_reasslen - UIP_IPH_LEN) & 0xff);
+      uipbuf_set_len_field(UIP_IP_BUF, uip_reasslen - UIP_IPH_LEN);
       LOG_INFO("reassembled packet %d (%d)\n", uip_reasslen,
              (UIP_IP_BUF->len[0] << 8) | UIP_IP_BUF->len[1]);
 
@@ -1563,8 +1561,7 @@ uip_process(uint8_t flag)
 
   /* For IPv6, the IP length field does not include the IPv6 IP header
      length. */
-  UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
-  UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+  uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0x00;
@@ -2295,8 +2292,7 @@ uip_process(uint8_t flag)
   UIP_IP_BUF->proto = UIP_PROTO_TCP;
 
   UIP_IP_BUF->ttl = uip_ds6_if.cur_hop_limit;
-  UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
-  UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+  uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
   UIP_TCP_BUF->urgp[0] = UIP_TCP_BUF->urgp[1] = 0;
 

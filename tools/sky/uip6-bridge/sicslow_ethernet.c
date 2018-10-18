@@ -492,12 +492,11 @@ int8_t mac_translateIcmpLinkLayer(lltype_t target)
       }
 
       //Adjust the IP header length, as well as uIP length
-      iplen = UIP_IP_BUF->len[1] | (UIP_IP_BUF->len[0]<<8);
+      iplen = UIP_IP_BUF->len[1] | (UIP_IP_BUF->len[0] << 8);
       iplen += sizechange;
       len += sizechange;
 
-      UIP_IP_BUF->len[1] = (uint8_t)iplen;
-      UIP_IP_BUF->len[0] = (uint8_t)(iplen >> 8);
+      uipbuf_set_len_field(UIP_IP_BUF, iplen);
 
       uip_len += sizechange;
 

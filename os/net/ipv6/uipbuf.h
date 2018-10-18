@@ -34,6 +34,7 @@
 #define UIPBUF_H_
 
 #include "contiki.h"
+struct uip_ip_hdr;
 
 /**
  * \brief          Resets uIP buffer
@@ -53,6 +54,13 @@ bool uipbuf_add_ext_hdr(int16_t len);
  * \retval         true if the len was successfully set, false otherwise
  */
 bool uipbuf_set_len(uint16_t len);
+
+/**
+ * \brief          Updates the length field in the uIP buffer
+ * \param buffer   The new IPv6 header
+ * \param len      The new length value
+ */
+void uipbuf_set_len_field(struct uip_ip_hdr *hdr, uint16_t len);
 
 /**
  * \brief          Get the next IPv6 header.

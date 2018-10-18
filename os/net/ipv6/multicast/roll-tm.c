@@ -858,8 +858,7 @@ icmp_output()
   roll_tm_create_dest(&UIP_IP_BUF->destipaddr);
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
 
-  UIP_IP_BUF->len[0] = (UIP_ICMPH_LEN + payload_len) >> 8;
-  UIP_IP_BUF->len[1] = (UIP_ICMPH_LEN + payload_len) & 0xff;
+  uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + payload_len);
 
   UIP_ICMP_BUF->type = ICMP6_ROLL_TM;
   UIP_ICMP_BUF->icode = ROLL_TM_ICMP_CODE;
@@ -1353,8 +1352,7 @@ out()
 
   /* Update the proto and length field in the v6 header */
   UIP_IP_BUF->proto = UIP_PROTO_HBHO;
-  UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
-  UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+  uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
   PRINTF("ROLL TM: Multicast Out, HBHO: T=%u, L=%u, M=%u, S=0x%02x%02x\n",
          lochbhmptr->type, lochbhmptr->len, HBH_GET_M(lochbhmptr),

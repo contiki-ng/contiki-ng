@@ -279,8 +279,7 @@ count_matching_bytes(const void *p1, const void *p2, size_t n)
 static int
 insert_srh_header(void)
 {
-  /* Implementation of RFC6554 */
-  uint8_t temp_len;
+  /* Implementation of RFC6554
   uint8_t path_len;
   uint8_t ext_len;
   uint8_t cmpri, cmpre; /* ComprI and ComprE fields of the RPL Source Routing Header */
@@ -403,14 +402,9 @@ insert_srh_header(void)
   NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &node_addr);
 
-  /* In-place update of IPv6 length field */
-  temp_len = UIP_IP_BUF->len[1];
-  UIP_IP_BUF->len[1] += ext_len;
-  if(UIP_IP_BUF->len[1] < temp_len) {
-    UIP_IP_BUF->len[0]++;
-  }
-
+  /* Update the IPv6 length field */
   uipbuf_add_ext_hdr(ext_len);
+  uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
   return 1;
 }
@@ -511,13 +505,8 @@ insert_hbh_header(const rpl_instance_t *instance)
   UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->senderrank = UIP_HTONS(instance->current_dag->rank);
   UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->instance = instance->instance_id;
 
-  temp_len = UIP_IP_BUF->len[1];
-  UIP_IP_BUF->len[1] += RPL_HOP_BY_HOP_LEN;
-  if(UIP_IP_BUF->len[1] < temp_len) {
-    UIP_IP_BUF->len[0]++;
-  }
-
   uipbuf_add_ext_hdr(RPL_HOP_BY_HOP_LEN);
+  uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
   /* Update header before returning */
   return update_hbh_header();
@@ -544,8 +533,7 @@ rpl_ext_header_remove(void)
       ext_len = ext_ptr->len * 8 + 8;
       uipbuf_add_ext_hdr(-ext_len);
       /* Update length field and rest of packer to the "left" */
-      UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
-      UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+      uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
       memmove(next_header, next_header + ext_len, uip_len - (next_header - UIP_IP_BUF_CHAR));
       /* Update loop variables */
       protocol = *prev_proto_ptr;

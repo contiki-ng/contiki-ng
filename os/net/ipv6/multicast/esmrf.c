@@ -156,8 +156,7 @@ icmp_output()
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF("\n");
 
-  UIP_IP_BUF->len[0] = (UIP_ICMPH_LEN + payload_len) >> 8;
-  UIP_IP_BUF->len[1] = (UIP_ICMPH_LEN + payload_len) & 0xff;
+  uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + payload_len);
 
   UIP_ICMP_BUF->type = ICMP6_ESMRF;
   UIP_ICMP_BUF->icode = ESMRF_ICMP_CODE;

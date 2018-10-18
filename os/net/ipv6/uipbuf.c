@@ -30,7 +30,7 @@
  *
  */
 #include "contiki.h"
-#include "uip.h"
+#include "net/ipv6/uip.h"
 #include "net/ipv6/uipbuf.h"
 #include <string.h>
 
@@ -69,6 +69,14 @@ uipbuf_set_len(uint16_t len)
   } else {
     return false;
   }
+}
+/*---------------------------------------------------------------------------*/
+void
+uipbuf_set_len_field(struct uip_ip_hdr *hdr, uint16_t len)
+{
+
+  hdr->len[0] = (len >> 8);
+  hdr->len[1] = (len & 0xff);
 }
 /*---------------------------------------------------------------------------*/
 /* Get the next header given the buffer - start indicates that this is

@@ -1630,6 +1630,7 @@ void uip_process(uint8_t flag);
  * after the IP header. hence we split here L3 and L4 headers
  */
 /* The IP header */
+
 struct uip_ip_hdr {
   /* IPV6 header */
   uint8_t vtc;
