@@ -456,6 +456,7 @@ static uint16_t last_seq;
 /*---------------------------------------------------------------------------*/
 /* uIPv6 Pointers */
 /*---------------------------------------------------------------------------*/
+#define UIP_EXT_BUF        ((struct uip_ext_hdr *)UIP_IP_PAYLOAD(0))
 #define UIP_EXT_BUF_NEXT            ((uint8_t *)(UIP_IP_PAYLOAD(HBHO_TOTAL_LEN)))
 #define UIP_EXT_OPT_FIRST ((struct hbho_mcast *)(UIP_IP_PAYLOAD(0) + 2))
 extern uint16_t uip_slen;
@@ -1320,11 +1321,11 @@ out()
   }
 
   /* Slide 'right' by HBHO_TOTAL_LEN bytes */
-  memmove(UIP_EXT_BUF_NEXT, UIP_EXT_BUF(0), uip_len - UIP_IPH_LEN);
-  memset(UIP_EXT_BUF(0), 0, HBHO_TOTAL_LEN);
+  memmove(UIP_EXT_BUF_NEXT, UIP_EXT_BUF, uip_len - UIP_IPH_LEN);
+  memset(UIP_EXT_BUF, 0, HBHO_TOTAL_LEN);
 
-  UIP_EXT_BUF(0)->next = UIP_IP_BUF->proto;
-  UIP_EXT_BUF(0)->len = 0;
+  UIP_EXT_BUF->next = UIP_IP_BUF->proto;
+  UIP_EXT_BUF->len = 0;
 
   lochbhmptr = UIP_EXT_OPT_FIRST;
   lochbhmptr->type = HBHO_OPT_TYPE_TRICKLE;

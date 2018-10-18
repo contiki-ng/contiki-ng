@@ -628,7 +628,7 @@ uip_reass(uint8_t *prev_proto_ptr)
   uint16_t offset=0;
   uint16_t len;
   uint16_t i;
-  struct uip_frag_hdr *frag_buf = UIP_FRAG_BUF(uip_ext_len);
+  struct uip_frag_hdr *frag_buf = (struct uip_frag_hdr *)UIP_IP_PAYLOAD(uip_ext_len);
 
   /* If ip_reasstmr is zero, no packet is present in the buffer */
   /* We first write the unfragmentable part of IP header into the reassembly

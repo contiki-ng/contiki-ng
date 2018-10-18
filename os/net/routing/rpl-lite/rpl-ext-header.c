@@ -180,6 +180,10 @@ insert_srh_header(void)
   uip_sr_node_t *node;
   uip_ipaddr_t node_addr;
 
+  /* Always insest SRH as first extension header */
+  struct uip_routing_hdr *rh_hdr = (struct uip_routing_hdr *)UIP_IP_PAYLOAD(0);
+  struct uip_rpl_srh_hdr *srh_hdr = (struct uip_rpl_srh_hdr *)(UIP_IP_PAYLOAD(0) + RPL_RH_LEN);
+
   LOG_INFO("SRH creating source routing header with destination ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_(" \n");
@@ -261,22 +265,22 @@ insert_srh_header(void)
   memset(uip_buf + UIP_IPH_LEN + uip_ext_len, 0, ext_len);
 
   /* Insert source routing header (as first ext header) */
-  UIP_RH_BUF(0)->next = UIP_IP_BUF->proto;
+  rh_hdr->next = UIP_IP_BUF->proto;
   UIP_IP_BUF->proto = UIP_PROTO_ROUTING;
 
   /* Initialize IPv6 Routing Header */
-  UIP_RH_BUF(0)->len = (ext_len - 8) / 8;
-  UIP_RH_BUF(0)->routing_type = RPL_RH_TYPE_SRH;
-  UIP_RH_BUF(0)->seg_left = path_len;
+  rh_hdr->len = (ext_len - 8) / 8;
+  rh_hdr->routing_type = RPL_RH_TYPE_SRH;
+  rh_hdr->seg_left = path_len;
 
   /* Initialize RPL Source Routing Header */
-  UIP_RPL_SRH_BUF(0)->cmpr = (cmpri << 4) + cmpre;
-  UIP_RPL_SRH_BUF(0)->pad = padding << 4;
+  srh_hdr->cmpr = (cmpri << 4) + cmpre;
+  srh_hdr->pad = padding << 4;
 
   /* Initialize addresses field (the actual source route).
    * From last to first. */
   node = dest_node;
-  hop_ptr = ((uint8_t *)UIP_RH_BUF(0)) + ext_len - padding; /* Pointer where to write the next hop compressed address */
+  hop_ptr = ((uint8_t *)rh_hdr) + ext_len - padding; /* Pointer where to write the next hop compressed address */
 
   while(node != NULL && node->parent != root_node) {
     NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
