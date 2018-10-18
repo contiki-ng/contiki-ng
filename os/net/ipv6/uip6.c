@@ -1126,7 +1126,7 @@ uip_process(uint8_t flag)
   /* Check sanity of extension headers, and compute the total extension header
    * length (uip_ext_len) as well as the final protocol (uip_last_proto) */
   uip_last_proto = 0;
-  last_header = uipbuf_get_last_header(UIP_IP_BUF_CHAR, uip_len, &uip_last_proto);
+  last_header = uipbuf_get_last_header(uip_buf, uip_len, &uip_last_proto);
   if(last_header == NULL) {
     LOG_ERR("invalid extension header chain\n");
     goto drop;
@@ -1159,7 +1159,7 @@ uip_process(uint8_t flag)
    * the packet.
    */
 
-  next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+  next_header = uipbuf_get_next_header(uip_buf, uip_len, &protocol, true);
   if(next_header != NULL && protocol == UIP_PROTO_HBHO) {
     switch(ext_hdr_options_process(next_header - UIP_IP_PAYLOAD(0))) {
     case 0:
@@ -1246,9 +1246,9 @@ uip_process(uint8_t flag)
 
   /* IPv6 extension header processing: loop until reaching upper-layer protocol */
   uip_ext_bitmap = 0;
-  for(next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+  for(next_header = uipbuf_get_next_header(uip_buf, uip_len, &protocol, true);
       next_header != NULL && uip_is_proto_ext_hdr(protocol);
-      next_header = uipbuf_get_next_header(next_header, uip_len - (next_header - UIP_IP_BUF_CHAR), &protocol, false)) {
+      next_header = uipbuf_get_next_header(next_header, uip_len - (next_header - uip_buf), &protocol, false)) {
 
     ext_ptr = (struct uip_ext_hdr *)next_header;
     switch(protocol) {
@@ -1354,7 +1354,7 @@ uip_process(uint8_t flag)
       /* packet is reassembled. Restart the parsing of the reassembled pkt */
       LOG_INFO("Processing reassembled packet\n");
       uip_ext_bitmap = 0;
-      next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+      next_header = uipbuf_get_next_header(uip_buf, uip_len, &protocol, true);
       break;
 #else /* UIP_CONF_IPV6_REASSEMBLY */
       UIP_STAT(++uip_stat.ip.drop);
@@ -1393,7 +1393,7 @@ uip_process(uint8_t flag)
    * RFC 2460 send error message parameterr problem, code unrecognized
    * next header, pointing to the next header field
    */
-  uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_NEXTHEADER, (uint32_t)(next_header - UIP_IP_BUF_CHAR));
+  uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_NEXTHEADER, (uint32_t)(next_header - uip_buf));
   UIP_STAT(++uip_stat.ip.drop);
   UIP_STAT(++uip_stat.ip.protoerr);
   LOG_ERR("unrecognized header\n");

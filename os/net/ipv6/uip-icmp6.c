@@ -174,7 +174,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   shift = UIP_IPH_LEN + UIP_ICMPH_LEN + UIP_ICMP6_ERROR_LEN;
   uip_len += shift;
   uip_len = MIN(uip_len, UIP_LINK_MTU);
-  memmove(UIP_IP_BUF_CHAR + shift, (void *)UIP_IP_BUF, uip_len - shift);
+  memmove(uip_buf + shift, (void *)UIP_IP_BUF, uip_len - shift);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;

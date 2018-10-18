@@ -62,7 +62,7 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
   uip_sr_node_t *root_node;
 
   /* Look for routing ext header */
-  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(UIP_IP_BUF_CHAR, uip_len, UIP_PROTO_ROUTING);
+  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len, UIP_PROTO_ROUTING);
 
   if(!rpl_is_addr_in_our_dag(&UIP_IP_BUF->destipaddr)) {
     return 0;
@@ -100,7 +100,7 @@ rpl_ext_header_srh_update(void)
   uip_ipaddr_t current_dest_addr;
 
   /* Look for routing ext header */
-  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(UIP_IP_BUF_CHAR, uip_len, UIP_PROTO_ROUTING);
+  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len, UIP_PROTO_ROUTING);
 
   if(rh_header == NULL || rh_header->routing_type != RPL_RH_TYPE_SRH) {
     LOG_INFO("SRH not found\n");
@@ -459,7 +459,7 @@ rpl_ext_header_remove(void)
   struct uip_ext_hdr *ext_ptr;
   struct uip_ext_hdr_opt *opt_ptr;
 
-  next_header = uipbuf_get_next_header(UIP_IP_BUF_CHAR, uip_len, &protocol, true);
+  next_header = uipbuf_get_next_header(uip_buf, uip_len, &protocol, true);
   ext_ptr = (struct uip_ext_hdr *)next_header;
   prev_proto_ptr = &UIP_IP_BUF->proto;
   while(next_header != NULL && uip_is_proto_ext_hdr(protocol)) {
@@ -471,12 +471,12 @@ rpl_ext_header_remove(void)
       uipbuf_add_ext_hdr(-ext_len);
       /* Update length field and move rest of packet to the "left" */
       uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
-      memmove(next_header, next_header + ext_len, uip_len - (next_header - UIP_IP_BUF_CHAR));
+      memmove(next_header, next_header + ext_len, uip_len - (next_header - uip_buf));
       /* Update loop variables */
       protocol = *prev_proto_ptr;
     } else {
       /* move to the ext hdr */
-      next_header = uipbuf_get_next_header(next_header, uip_len - (next_header - UIP_IP_BUF_CHAR), &protocol, false);
+      next_header = uipbuf_get_next_header(next_header, uip_len - (next_header - uip_buf), &protocol, false);
       ext_ptr = (struct uip_ext_hdr *)next_header;
       prev_proto_ptr = &ext_ptr->next;
     }

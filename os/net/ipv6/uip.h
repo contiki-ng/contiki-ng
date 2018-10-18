@@ -79,9 +79,8 @@
 /**
  * Direct access to IPv6 header
  */
-#define UIP_IP_BUF_CHAR                            ((unsigned char *)uip_buf)
-#define UIP_IP_BUF                             ((struct uip_ip_hdr *)UIP_IP_BUF_CHAR)
-#define UIP_IP_PAYLOAD(ext)                        ((unsigned char *)UIP_IP_BUF_CHAR + UIP_IPH_LEN + (ext))
+#define UIP_IP_BUF                             ((struct uip_ip_hdr *)uip_buf)
+#define UIP_IP_PAYLOAD(ext)                        ((unsigned char *)uip_buf + UIP_IPH_LEN + (ext))
 
 /**
  * Direct access to ICMP, UDP, and TCP headers and payload, with implicit ext header offset (global uip_ext_len)
