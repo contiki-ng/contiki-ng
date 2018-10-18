@@ -512,8 +512,12 @@ rf_core_setup_interrupts(void)
 void
 rf_core_cmd_done_en(bool fg)
 {
-  uint32_t irq = fg ? IRQ_LAST_FG_COMMAND_DONE : IRQ_LAST_COMMAND_DONE;
+  uint32_t irq = 0;
   const uint32_t enabled_irqs = rf_core_poll_mode ? ENABLED_IRQS_POLL_MODE : ENABLED_IRQS;
+
+  if(!rf_core_poll_mode) {
+    irq = fg ? IRQ_LAST_FG_COMMAND_DONE : IRQ_LAST_COMMAND_DONE;
+  }
 
   HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = enabled_irqs;
   HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = enabled_irqs | irq;
