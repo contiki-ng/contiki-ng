@@ -64,7 +64,7 @@
 #define UIP_IPTCPH_LEN (UIP_TCPH_LEN + UIP_IPH_LEN)   /* Size of IP + TCP header */
 #define UIP_TCPIP_HLEN UIP_IPTCPH_LEN
 #define UIP_IPICMPH_LEN (UIP_IPH_LEN + UIP_ICMPH_LEN) /* Size of ICMP + IP header */
-#define UIP_LLIPH_LEN (UIP_LLH_LEN + UIP_IPH_LEN)     /* Size of L2 + IP header */
+#define UIP_LLIPH_LEN (UIP_IPH_LEN)     /* Size of L2 + IP header */
 
 /**
  * The sums below are quite used in ND. When used for uip_buf, we
@@ -72,14 +72,14 @@
  * we need values with and without LLH_LEN we do not use capital
  * letters as these values are variable
  */
-#define uip_l2_l3_hdr_len (UIP_LLH_LEN + UIP_IPH_LEN + uip_ext_len)
-#define uip_l2_l3_icmp_hdr_len (UIP_LLH_LEN + UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
+#define uip_l2_l3_hdr_len (UIP_IPH_LEN + uip_ext_len)
+#define uip_l2_l3_icmp_hdr_len (UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
 #define uip_l3_icmp_hdr_len (UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
 
 /**
  * Direct access to IPv6 header
  */
-#define UIP_IP_BUF_CHAR                            ((unsigned char *)uip_buf + UIP_LLH_LEN)
+#define UIP_IP_BUF_CHAR                            ((unsigned char *)uip_buf)
 #define UIP_IP_BUF                             ((struct uip_ip_hdr *)UIP_IP_BUF_CHAR)
 #define UIP_IP_PAYLOAD(ext)                        ((unsigned char *)UIP_IP_BUF_CHAR + UIP_IPH_LEN + (ext))
 
@@ -1780,7 +1780,7 @@ struct uip_udp_hdr {
  *
  * \hideinitializer
  */
-#define UIP_APPDATA_SIZE (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN)
+#define UIP_APPDATA_SIZE (UIP_BUFSIZE - UIP_TCPIP_HLEN)
 
 #define UIP_PROTO_ICMP  1
 #define UIP_PROTO_TCP   6

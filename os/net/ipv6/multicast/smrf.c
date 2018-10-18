@@ -80,7 +80,7 @@ static uint8_t fwd_spread;
 static void
 mcast_fwd(void *p)
 {
-  memcpy(&uip_buf[UIP_LLH_LEN], &mcast_buf, mcast_len);
+  memcpy(uip_buf, &mcast_buf, mcast_len);
   uip_len = mcast_len;
   UIP_IP_BUF->ttl--;
   tcpip_output(NULL);
@@ -174,7 +174,7 @@ in()
         fwd_delay = fwd_delay * (1 + ((random_rand() >> 11) % fwd_spread));
       }
 
-      memcpy(&mcast_buf, &uip_buf[UIP_LLH_LEN], uip_len);
+      memcpy(&mcast_buf, uip_buf, uip_len);
       mcast_len = uip_len;
       ctimer_set(&mcast_periodic, fwd_delay, mcast_fwd, NULL);
     }

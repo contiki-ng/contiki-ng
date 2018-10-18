@@ -114,7 +114,7 @@ static void mcast_fwd(void *p);
 struct multicast_on_behalf{   /*  ICMP message of multicast_on_behalf */
   uint16_t mcast_port;
   uip_ipaddr_t mcast_ip;
-  uint8_t mcast_payload[UIP_BUFSIZE - UIP_LLH_LEN - UIP_IPUDPH_LEN];
+  uint8_t mcast_payload[UIP_BUFSIZE - UIP_IPUDPH_LEN];
 };
 #define UIP_ICMP_MOB 18 /* Size of multicast_on_behalf ICMP header */
 /*---------------------------------------------------------------------------*/
@@ -135,7 +135,7 @@ icmp_output()
 
   struct multicast_on_behalf *mob;
   mob = (struct multicast_on_behalf *)UIP_ICMP_PAYLOAD;
-  memcpy(&mob->mcast_payload, &uip_buf[UIP_LLH_LEN + UIP_IPUDPH_LEN], uip_slen);
+  memcpy(&mob->mcast_payload, &uip_buf[UIP_IPUDPH_LEN], uip_slen);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
@@ -215,13 +215,13 @@ icmp_input()
   c->rport = locmobptr->mcast_port;
   uip_slen = loclen;
   uip_udp_conn=c;
-  memcpy(&uip_buf[UIP_LLH_LEN + UIP_IPUDPH_LEN], locmobptr->mcast_payload,
-         loclen > UIP_BUFSIZE - UIP_LLH_LEN - UIP_IPUDPH_LEN?
-         UIP_BUFSIZE - UIP_LLH_LEN - UIP_IPUDPH_LEN: loclen);
+  memcpy(&uip_buf[UIP_IPUDPH_LEN], locmobptr->mcast_payload,
+         loclen > UIP_BUFSIZE - UIP_IPUDPH_LEN?
+         UIP_BUFSIZE - UIP_IPUDPH_LEN: loclen);
 
   uip_process(UIP_UDP_SEND_CONN);
 
-  memcpy(&mcast_buf, &uip_buf[UIP_LLH_LEN], uip_len);
+  memcpy(&mcast_buf, uip_buf, uip_len);
   mcast_len = uip_len;
   /* pass the packet to our uip_process to check if it is allowed to
    * accept this packet or not */
@@ -231,7 +231,7 @@ icmp_input()
 
   uip_process(UIP_DATA);
 
-  memcpy(&uip_buf[UIP_LLH_LEN], &mcast_buf, mcast_len);
+  memcpy(uip_buf, &mcast_buf, mcast_len);
   uip_len = mcast_len;
   /* Return the IP of the original Multicast sender */
   uip_ipaddr_copy(&UIP_IP_BUF->srcipaddr, &src_ip);
@@ -249,7 +249,7 @@ icmp_input()
 static void
 mcast_fwd(void *p)
 {
-  memcpy(&uip_buf[UIP_LLH_LEN], &mcast_buf, mcast_len);
+  memcpy(uip_buf, &mcast_buf, mcast_len);
   uip_len = mcast_len;
   UIP_IP_BUF->ttl--;
   tcpip_output(NULL);
@@ -343,7 +343,7 @@ in()
         fwd_delay = fwd_delay * (1 + ((random_rand() >> 11) % fwd_spread));
       }
 
-      memcpy(&mcast_buf, &uip_buf[UIP_LLH_LEN], uip_len);
+      memcpy(&mcast_buf, uip_buf, uip_len);
       mcast_len = uip_len;
       ctimer_set(&mcast_periodic, fwd_delay, mcast_fwd, NULL);
     }

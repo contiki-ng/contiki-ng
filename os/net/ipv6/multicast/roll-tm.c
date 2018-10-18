@@ -276,7 +276,7 @@ struct mcast_packet {
   uint16_t seq_val;             /* host-byte order */
   struct sliding_window *sw;    /* Pointer to the SW this packet belongs to */
   uint8_t flags;                /* Is-Used, Must Send, Is Listed */
-  uint8_t buff[UIP_BUFSIZE - UIP_LLH_LEN];
+  uint8_t buff[UIP_BUFSIZE];
 };
 
 /* Flag bits */
@@ -289,7 +289,7 @@ struct mcast_packet {
 #define MCAST_PACKET_GET_SEED(p) ((seed_id_t *)&((p)->seed_id))
 #else
 #define MCAST_PACKET_GET_SEED(p) \
-    ((seed_id_t *)&((struct uip_ip_hdr *)&(p)->buff[UIP_LLH_LEN])->srcipaddr)
+    ((seed_id_t *)&((struct uip_ip_hdr *)&(p)->buff[0])->srcipaddr)
 #endif
 
 /**
@@ -1314,7 +1314,7 @@ static void
 out()
 {
 
-  if(uip_len + HBHO_TOTAL_LEN > UIP_BUFSIZE - UIP_LLH_LEN) {
+  if(uip_len + HBHO_TOTAL_LEN > UIP_BUFSIZE) {
     PRINTF("ROLL TM: Multicast Out can not add HBHO. Packet too long\n");
     goto drop;
   }

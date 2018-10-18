@@ -97,7 +97,6 @@ PROCESS_THREAD(er_example_server, ev, data)
   PRINTF("Starting Erbium Example Server\n");
 
   PRINTF("uIP buffer: %u\n", UIP_BUFSIZE);
-  PRINTF("LL header: %u\n", UIP_LLH_LEN);
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
   PRINTF("REST max chunk: %u\n", COAP_MAX_CHUNK_SIZE);
 

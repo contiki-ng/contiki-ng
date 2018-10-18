@@ -55,24 +55,24 @@ static void
 input_callback(void)
 {
   /*PRINTF("SIN: %u\n", uip_len);*/
-  if(uip_buf[UIP_LLH_LEN] == '!') {
-    PRINTF("Got configuration message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
+  if(uip_buf[0] == '!') {
+    PRINTF("Got configuration message of type %c\n", uip_buf[1]);
     uipbuf_clear();
 #if 0
-    if(uip_buf[UIP_LLH_LEN + 1] == 'P') {
+    if(uip_buf[1] == 'P') {
       uip_ipaddr_t prefix;
       /* Here we set a prefix !!! */
       memset(&prefix, 0, 16);
-      memcpy(&prefix, &uip_buf[UIP_LLH_LEN + 2], 8);
+      memcpy(&prefix, &uip_buf[2], 8);
       PRINTF("Setting prefix ");
       PRINT6ADDR(&prefix);
       PRINTF("\n");
       set_prefix_64(&prefix);
     }
 #endif
-  } else if(uip_buf[UIP_LLH_LEN] == '?') {
-    PRINTF("Got request message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
-    if(uip_buf[UIP_LLH_LEN + 1] == 'M') {
+  } else if(uip_buf[0] == '?') {
+    PRINTF("Got request message of type %c\n", uip_buf[1]);
+    if(uip_buf[1] == 'M') {
       const char *hexchar = "0123456789abcdef";
       int j;
       /* this is just a test so far... just to see if it works */
@@ -91,10 +91,10 @@ input_callback(void)
        packet back if no route is found */
     uip_ipaddr_copy(&last_sender, &UIP_IP_BUF->srcipaddr);
 
-    uint16_t len = ip64_4to6(&uip_buf[UIP_LLH_LEN], uip_len,
+    uint16_t len = ip64_4to6(uip_buf, uip_len,
 			     ip64_packet_buffer);
     if(len > 0) {
-      memcpy(&uip_buf[UIP_LLH_LEN], ip64_packet_buffer, len);
+      memcpy(uip_buf, ip64_packet_buffer, len);
       uip_len = len;
       /*      PRINTF("send len %d\n", len); */
     } else {
@@ -127,11 +127,11 @@ output(void)
   if(uip_ipaddr_cmp(&last_sender, &UIP_IP_BUF->srcipaddr)) {
     PRINTF("ip64-interface: output, not sending bounced message\n");
   } else {
-    len = ip64_6to4(&uip_buf[UIP_LLH_LEN], uip_len,
+    len = ip64_6to4(uip_buf, uip_len,
 		    ip64_packet_buffer);
     PRINTF("ip64-interface: output len %d\n", len);
     if(len > 0) {
-      memcpy(&uip_buf[UIP_LLH_LEN], ip64_packet_buffer, len);
+      memcpy(uip_buf, ip64_packet_buffer, len);
       uip_len = len;
       slip_send();
       return len;

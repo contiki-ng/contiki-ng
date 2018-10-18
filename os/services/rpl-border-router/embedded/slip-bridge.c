@@ -68,14 +68,14 @@ static void
 slip_input_callback(void)
 {
   LOG_DBG("SIN: %u\n", uip_len);
-  if(uip_buf[UIP_LLH_LEN] == '!') {
+  if(uip_buf[0] == '!') {
     LOG_INFO("Got configuration message of type %c\n",
-             uip_buf[UIP_LLH_LEN + 1]);
-    if(uip_buf[UIP_LLH_LEN + 1] == 'P') {
+             uip_buf[1]);
+    if(uip_buf[1] == 'P') {
       uip_ipaddr_t prefix;
       /* Here we set a prefix !!! */
       memset(&prefix, 0, 16);
-      memcpy(&prefix, &uip_buf[UIP_LLH_LEN + 2], 8);
+      memcpy(&prefix, &uip_buf[2], 8);
 
       uipbuf_clear();
 
@@ -86,9 +86,9 @@ slip_input_callback(void)
     }
     uipbuf_clear();
 
-  } else if(uip_buf[UIP_LLH_LEN] == '?') {
-    LOG_INFO("Got request message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
-    if(uip_buf[UIP_LLH_LEN + 1] == 'M') {
+  } else if(uip_buf[0] == '?') {
+    LOG_INFO("Got request message of type %c\n", uip_buf[1]);
+    if(uip_buf[1] == 'M') {
       char *hexchar = "0123456789abcdef";
       int j;
       /* this is just a test so far... just to see if it works */

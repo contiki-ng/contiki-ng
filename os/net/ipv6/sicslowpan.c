@@ -1932,12 +1932,12 @@ input(void)
 
   /* Sanity-check size of incoming packet to avoid buffer overflow */
   {
-    int req_size = UIP_LLH_LEN + uncomp_hdr_len + (uint16_t)(frag_offset << 3)
+    int req_size = uncomp_hdr_len + (uint16_t)(frag_offset << 3)
         + packetbuf_payload_len;
     if(req_size > sizeof(uip_buf)) {
       LOG_ERR(
-          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d+%d=%d (current size: %u)\n",
-          UIP_LLH_LEN, uncomp_hdr_len, (uint16_t)(frag_offset << 3),
+          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          uncomp_hdr_len, (uint16_t)(frag_offset << 3),
           packetbuf_payload_len, req_size, (unsigned)sizeof(uip_buf));
       return;
     }
