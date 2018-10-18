@@ -201,7 +201,7 @@ ns_input(void)
 #endif /* UIP_CONF_IPV6_CHECKS */
     switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_SLLAO:
-      nd6_opt_llao = &uip_buf[uip_l2_l3_icmp_hdr_len + nd6_opt_offset];
+      nd6_opt_llao = &uip_buf[uip_l3_icmp_hdr_len + nd6_opt_offset];
 #if UIP_CONF_IPV6_CHECKS
       /* There must be NO option in a DAD NS */
       if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
@@ -328,7 +328,7 @@ create_na:
   UIP_ND6_NA_BUF->flagsreserved = flags;
   memcpy(&UIP_ND6_NA_BUF->tgtipaddr, &addr->ipaddr, sizeof(uip_ipaddr_t));
 
-  create_llao(&uip_buf[uip_l2_l3_icmp_hdr_len + UIP_ND6_NA_LEN],
+  create_llao(&uip_buf[uip_l3_icmp_hdr_len + UIP_ND6_NA_LEN],
               UIP_ND6_OPT_TLLAO);
 
   UIP_ICMP_BUF->icmpchksum = 0;
@@ -391,7 +391,7 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
     }
     uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + UIP_ND6_NS_LEN + UIP_ND6_OPT_LLAO_LEN);
 
-    create_llao(&uip_buf[uip_l2_l3_icmp_hdr_len + UIP_ND6_NS_LEN],
+    create_llao(&uip_buf[uip_l3_icmp_hdr_len + UIP_ND6_NS_LEN],
                 UIP_ND6_OPT_SLLAO);
 
     uip_len =
@@ -823,7 +823,7 @@ uip_nd6_rs_output(void)
     uip_len = uip_l3_icmp_hdr_len + UIP_ND6_RS_LEN + UIP_ND6_OPT_LLAO_LEN;
     uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + UIP_ND6_RS_LEN + UIP_ND6_OPT_LLAO_LEN);
 
-    create_llao(&uip_buf[uip_l2_l3_icmp_hdr_len + UIP_ND6_RS_LEN],
+    create_llao(&uip_buf[uip_l3_icmp_hdr_len + UIP_ND6_RS_LEN],
                 UIP_ND6_OPT_SLLAO);
   }
 

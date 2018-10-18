@@ -121,7 +121,7 @@
 #define SICSLOWPAN_UDP_BUF(buf)  ((struct uip_udp_hdr *)&buf[UIP_IPH_LEN])
 #define SICSLOWPAN_IPPAYLOAD_BUF(buf) (&buf[UIP_IPH_LEN])
 
-#define UIP_IPPAYLOAD_BUF_POS(pos)         (&uip_buf[UIP_LLIPH_LEN + (pos)])
+#define UIP_IPPAYLOAD_BUF_POS(pos)         (&uip_buf[UIP_IPH_LEN + (pos)])
 #define UIP_UDP_BUF_POS(pos)               ((struct uip_udp_hdr *)UIP_IPPAYLOAD_BUF_POS(pos))
 
 /** @} */

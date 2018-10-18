@@ -409,7 +409,7 @@ ip64_arp_create_arp_request(uint8_t *llhdr, const uint8_t *nlhdr)
   arp_hdr->protolen = 4;
   arp_hdr->ethhdr.type = UIP_HTONS(IP64_ETH_TYPE_ARP);
 
-  uip_appdata = &uip_buf[UIP_TCPIP_HLEN];
+  uip_appdata = &uip_buf[UIP_IPTCPH_LEN];
 
   return sizeof(struct arp_hdr);
 }

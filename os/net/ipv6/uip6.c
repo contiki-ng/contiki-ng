@@ -1728,7 +1728,7 @@ uip_process(uint8_t flag)
   /* Parse the TCP MSS option, if present. */
   if((UIP_TCP_BUF->tcpoffset & 0xf0) > 0x50) {
     for(c = 0; c < ((UIP_TCP_BUF->tcpoffset >> 4) - 5) << 2 ;) {
-      opt = uip_buf[UIP_TCPIP_HLEN + c];
+      opt = uip_buf[UIP_IPTCPH_LEN + c];
       if(opt == TCP_OPT_END) {
         /* End of options. */
         break;
@@ -1736,9 +1736,9 @@ uip_process(uint8_t flag)
         ++c;
         /* NOP option. */
       } else if(opt == TCP_OPT_MSS &&
-                uip_buf[UIP_TCPIP_HLEN + 1 + c] == TCP_OPT_MSS_LEN) {
+                uip_buf[UIP_IPTCPH_LEN + 1 + c] == TCP_OPT_MSS_LEN) {
         /* An MSS option with the right option length. */
-        tmp16 = ((uint16_t)uip_buf[UIP_TCPIP_HLEN + 2 + c] << 8) |
+        tmp16 = ((uint16_t)uip_buf[UIP_IPTCPH_LEN + 2 + c] << 8) |
           (uint16_t)uip_buf[UIP_IPTCPH_LEN + 3 + c];
         uip_connr->initialmss = uip_connr->mss =
           tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
@@ -1748,12 +1748,12 @@ uip_process(uint8_t flag)
       } else {
         /* All other options have a length field, so that we easily
            can skip past them. */
-        if(uip_buf[UIP_TCPIP_HLEN + 1 + c] == 0) {
+        if(uip_buf[UIP_IPTCPH_LEN + 1 + c] == 0) {
           /* If the length field is zero, the options are malformed
              and we don't process them further. */
           break;
         }
-        c += uip_buf[UIP_TCPIP_HLEN + 1 + c];
+        c += uip_buf[UIP_IPTCPH_LEN + 1 + c];
       }
     }
   }
@@ -1923,10 +1923,10 @@ uip_process(uint8_t flag)
             ++c;
             /* NOP option. */
           } else if(opt == TCP_OPT_MSS &&
-              uip_buf[UIP_TCPIP_HLEN + 1 + c] == TCP_OPT_MSS_LEN) {
+              uip_buf[UIP_IPTCPH_LEN + 1 + c] == TCP_OPT_MSS_LEN) {
             /* An MSS option with the right option length. */
-            tmp16 = (uip_buf[UIP_TCPIP_HLEN + 2 + c] << 8) |
-                uip_buf[UIP_TCPIP_HLEN + 3 + c];
+            tmp16 = (uip_buf[UIP_IPTCPH_LEN + 2 + c] << 8) |
+                uip_buf[UIP_IPTCPH_LEN + 3 + c];
             uip_connr->initialmss =
                 uip_connr->mss = tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
 
@@ -1935,12 +1935,12 @@ uip_process(uint8_t flag)
           } else {
             /* All other options have a length field, so that we easily
                  can skip past them. */
-            if(uip_buf[UIP_TCPIP_HLEN + 1 + c] == 0) {
+            if(uip_buf[UIP_IPTCPH_LEN + 1 + c] == 0) {
               /* If the length field is zero, the options are malformed
                    and we don't process them further. */
               break;
             }
-            c += uip_buf[UIP_TCPIP_HLEN + 1 + c];
+            c += uip_buf[UIP_IPTCPH_LEN + 1 + c];
           }
         }
       }
@@ -2123,7 +2123,7 @@ uip_process(uint8_t flag)
            packet had new data in it, we must send out a packet. */
       if(uip_slen > 0 && uip_connr->len > 0) {
         /* Add the length of the IP and TCP headers. */
-        uip_len = uip_connr->len + UIP_TCPIP_HLEN;
+        uip_len = uip_connr->len + UIP_IPTCPH_LEN;
         /* We always set the ACK flag in response packets. */
         UIP_TCP_BUF->flags = TCP_ACK | TCP_PSH;
         /* Send the packet. */
@@ -2132,7 +2132,7 @@ uip_process(uint8_t flag)
       /* If there is no data to send, just send out a pure ACK if
            there is newdata. */
       if(uip_flags & UIP_NEWDATA) {
-        uip_len = UIP_TCPIP_HLEN;
+        uip_len = UIP_IPTCPH_LEN;
         UIP_TCP_BUF->flags = TCP_ACK;
         goto tcp_send_noopts;
       }
@@ -2307,10 +2307,10 @@ uip_send(const void *data, int len)
   int copylen;
 
   if(uip_sappdata != NULL) {
-    copylen = MIN(len, UIP_BUFSIZE - UIP_TCPIP_HLEN -
+    copylen = MIN(len, UIP_BUFSIZE - UIP_IPTCPH_LEN -
         (int)((char *)uip_sappdata - (char *)UIP_TCP_PAYLOAD));
   } else {
-    copylen = MIN(len, UIP_BUFSIZE - UIP_TCPIP_HLEN);
+    copylen = MIN(len, UIP_BUFSIZE - UIP_IPTCPH_LEN);
   }
   if(copylen > 0) {
     uip_slen = copylen;

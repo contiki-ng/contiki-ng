@@ -1146,10 +1146,10 @@ icmp_input()
   VERBOSE_PRINTF("ROLL TM: ICMPv6 In, parse from %p to %p\n",
                  UIP_ICMP_PAYLOAD,
                  (uint8_t *)UIP_ICMP_PAYLOAD + uip_len -
-                 uip_l2_l3_icmp_hdr_len);
+                 uip_l3_icmp_hdr_len);
   while(locslhptr <
         (struct sequence_list_header *)((uint8_t *)UIP_ICMP_PAYLOAD +
-                                        uip_len - uip_l2_l3_icmp_hdr_len)) {
+                                        uip_len - uip_l3_icmp_hdr_len)) {
     VERBOSE_PRINTF("ROLL TM: ICMPv6 In, seq hdr @ %p\n", locslhptr);
 
     if((locslhptr->flags & SEQUENCE_LIST_RES) != 0) {

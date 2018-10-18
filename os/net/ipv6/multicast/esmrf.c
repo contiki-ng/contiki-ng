@@ -201,11 +201,11 @@ icmp_input()
   VERBOSE_PRINTF("ESMRF: ICMPv6 In, parse from %p to %p\n",
                  UIP_ICMP_PAYLOAD,
                  (uint8_t *)UIP_ICMP_PAYLOAD + uip_len -
-                 uip_l2_l3_icmp_hdr_len);
+                 uip_l3_icmp_hdr_len);
 
 
   locmobptr = (struct multicast_on_behalf *) UIP_ICMP_PAYLOAD;
-  loclen = uip_len - (uip_l2_l3_icmp_hdr_len + UIP_ICMP_MOB);
+  loclen = uip_len - (uip_l3_icmp_hdr_len + UIP_ICMP_MOB);
 
   uip_ipaddr_copy(&src_ip, &UIP_IP_BUF->srcipaddr);
   uip_ipaddr_copy(&des_ip, &UIP_IP_BUF->destipaddr);

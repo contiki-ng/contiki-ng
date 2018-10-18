@@ -414,15 +414,15 @@ void uip_log(char *msg);
  * The TCP maximum segment size.
  *
  * This is should not be to set to more than
- * UIP_BUFSIZE - UIP_TCPIP_HLEN.
+ * UIP_BUFSIZE - UIP_IPTCPH_LEN.
  */
 #ifdef UIP_CONF_TCP_MSS
-#if UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_TCPIP_HLEN)
+#if UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_IPTCPH_LEN)
 #error UIP_CONF_TCP_MSS is too large for the current UIP_BUFSIZE
-#endif /* UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_TCPIP_HLEN) */
+#endif /* UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_IPTCPH_LEN) */
 #define UIP_TCP_MSS     (UIP_CONF_TCP_MSS)
 #else /* UIP_CONF_TCP_MSS */
-#define UIP_TCP_MSS     (UIP_BUFSIZE - UIP_TCPIP_HLEN)
+#define UIP_TCP_MSS     (UIP_BUFSIZE - UIP_IPTCPH_LEN)
 #endif /* UIP_CONF_TCP_MSS */
 
 /**

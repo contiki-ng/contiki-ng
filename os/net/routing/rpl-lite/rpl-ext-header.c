@@ -256,9 +256,9 @@ insert_srh_header(void)
   }
 
   /* Move existing ext headers and payload ext_len further */
-  memmove(uip_buf + uip_l2_l3_hdr_len + ext_len,
-      uip_buf + uip_l2_l3_hdr_len, uip_len - UIP_IPH_LEN);
-  memset(uip_buf + uip_l2_l3_hdr_len, 0, ext_len);
+  memmove(uip_buf + UIP_IPH_LEN + uip_ext_len + ext_len,
+      uip_buf + UIP_IPH_LEN + uip_ext_len, uip_len - UIP_IPH_LEN);
+  memset(uip_buf + UIP_IPH_LEN + uip_ext_len, 0, ext_len);
 
   /* Insert source routing header (as first ext header) */
   UIP_RH_BUF(0)->next = UIP_IP_BUF->proto;
