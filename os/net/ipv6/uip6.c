@@ -849,7 +849,7 @@ ext_hdr_options_process(int ext_offset)
        * present) is processed.
        */
       LOG_DBG("Processing RPL option\n");
-      if(!NETSTACK_ROUTING.ext_header_hbh_update(ext_offset, opt_offset)) {
+      if(!NETSTACK_ROUTING.ext_header_hbh_update(UIP_IP_PAYLOAD(ext_offset), opt_offset)) {
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }

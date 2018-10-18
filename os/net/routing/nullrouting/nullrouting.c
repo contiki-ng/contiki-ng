@@ -118,7 +118,7 @@ ext_header_update(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
-ext_header_hbh_update(int ext_offset, int opt_offset)
+ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
 {
   return 1;
 }

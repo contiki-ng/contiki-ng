@@ -299,7 +299,7 @@ insert_srh_header(void)
 }
 /*---------------------------------------------------------------------------*/
 int
-rpl_ext_header_hbh_update(int ext_offset, int opt_offset)
+rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
 {
   int down;
   int rank_error_signaled;
@@ -307,32 +307,31 @@ rpl_ext_header_hbh_update(int ext_offset, int opt_offset)
   uint16_t sender_rank;
   uint8_t sender_closer;
   rpl_nbr_t *sender;
-  uint8_t opt_type = UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->opt_type;
-  uint8_t opt_len = UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->opt_len;
+  struct uip_hbho_hdr *hbh_hdr = (struct uip_hbho_hdr *)ext_buf;
+  struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(ext_buf + opt_offset);
 
-  if(UIP_HBHO_BUF(ext_offset)->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
-      || opt_type != UIP_EXT_HDR_OPT_RPL
-      || opt_len != RPL_HDR_OPT_LEN) {
+  if(hbh_hdr->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
+      || rpl_opt->opt_type != UIP_EXT_HDR_OPT_RPL
+      || rpl_opt->opt_len != RPL_HDR_OPT_LEN) {
     LOG_ERR("hop-by-hop extension header has wrong size or type (%u %u %u)\n",
-        UIP_HBHO_BUF(ext_offset)->len, opt_type, opt_len);
+        hbh_hdr->len, rpl_opt->opt_type, rpl_opt->opt_len);
     return 0; /* Drop */
   }
 
-  if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->instance) {
-    LOG_ERR("unknown instance: %u\n",
-           UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->instance);
+  if(!curr_instance.used || curr_instance.instance_id != rpl_opt->instance) {
+    LOG_ERR("unknown instance: %u\n", rpl_opt->instance);
     return 0; /* Drop */
   }
 
-  if(UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags & RPL_HDR_OPT_FWD_ERR) {
+  if(rpl_opt->flags & RPL_HDR_OPT_FWD_ERR) {
     LOG_ERR("forward error!\n");
     return 0; /* Drop */
   }
 
-  down = (UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags & RPL_HDR_OPT_DOWN) ? 1 : 0;
-  sender_rank = UIP_HTONS(UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->senderrank);
+  down = (rpl_opt->flags & RPL_HDR_OPT_DOWN) ? 1 : 0;
+  sender_rank = UIP_HTONS(rpl_opt->senderrank);
   sender = nbr_table_get_from_lladdr(rpl_neighbors, packetbuf_addr(PACKETBUF_ADDR_SENDER));
-  rank_error_signaled = (UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags & RPL_HDR_OPT_RANK_ERR) ? 1 : 0;
+  rank_error_signaled = (rpl_opt->flags & RPL_HDR_OPT_RANK_ERR) ? 1 : 0;
   sender_closer = sender_rank < curr_instance.dag.rank;
   loop_detected = (down && !sender_closer) || (!down && sender_closer);
 
@@ -346,7 +345,7 @@ rpl_ext_header_hbh_update(int ext_offset, int opt_offset)
 
   if(loop_detected) {
     /* Set forward error flag */
-    UIP_EXT_HDR_OPT_RPL_BUF(ext_offset, opt_offset)->flags |= RPL_HDR_OPT_RANK_ERR;
+    rpl_opt->flags |= RPL_HDR_OPT_RANK_ERR;
   }
 
   return rpl_process_hbh(sender, sender_rank, loop_detected, rank_error_signaled);
@@ -358,25 +357,25 @@ rpl_ext_header_hbh_update(int ext_offset, int opt_offset)
 static int
 update_hbh_header(void)
 {
-  int opt_offset = 2;
+  struct uip_hbho_hdr *hbh_hdr = (struct uip_hbho_hdr *)UIP_IP_PAYLOAD(0);
+  struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(UIP_IP_PAYLOAD(2));
 
-  if(UIP_IP_BUF->proto == UIP_PROTO_HBHO && UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_type == UIP_EXT_HDR_OPT_RPL) {
-    if(UIP_HBHO_BUF(0)->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
-        || UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_len != RPL_HDR_OPT_LEN) {
+  if(UIP_IP_BUF->proto == UIP_PROTO_HBHO && rpl_opt->opt_type == UIP_EXT_HDR_OPT_RPL) {
+    if(hbh_hdr->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
+        || rpl_opt->opt_len != RPL_HDR_OPT_LEN) {
 
-      LOG_ERR("hop-by-hop extension header has wrong size (%u)\n",
-          UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_len);
+      LOG_ERR("hop-by-hop extension header has wrong size (%u)\n", rpl_opt->opt_len);
       return 0; /* Drop */
     }
 
-    if(!curr_instance.used || curr_instance.instance_id != UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->instance) {
+    if(!curr_instance.used || curr_instance.instance_id != rpl_opt->instance) {
       LOG_ERR("unable to add/update hop-by-hop extension header: incorrect instance\n");
       return 0; /* Drop */
     }
 
     /* Update sender rank and instance, will update flags next */
-    UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->senderrank = UIP_HTONS(curr_instance.dag.rank);
-    UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->instance = curr_instance.instance_id;
+    rpl_opt->senderrank = UIP_HTONS(curr_instance.dag.rank);
+    rpl_opt->instance = curr_instance.instance_id;
   }
 
   return 1;
@@ -389,7 +388,8 @@ update_hbh_header(void)
 static int
 insert_hbh_header(void)
 {
-  int opt_offset = 2;
+  struct uip_hbho_hdr *hbh_hdr = (struct uip_hbho_hdr *)UIP_IP_PAYLOAD(0);
+  struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(UIP_IP_PAYLOAD(2));
 
   /* Insert hop-by-hop header */
   LOG_INFO("creating hop-by-hop option\n");
@@ -403,16 +403,16 @@ insert_hbh_header(void)
   memset(UIP_IP_PAYLOAD(0), 0, RPL_HOP_BY_HOP_LEN);
 
   /* Insert HBH header (as first ext header) */
-  UIP_HBHO_BUF(0)->next = UIP_IP_BUF->proto;
+  hbh_hdr->next = UIP_IP_BUF->proto;
   UIP_IP_BUF->proto = UIP_PROTO_HBHO;
 
   /* Initialize HBH option */
-  UIP_HBHO_BUF(0)->len = (RPL_HOP_BY_HOP_LEN - 8) / 8;
-  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_type = UIP_EXT_HDR_OPT_RPL;
-  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->opt_len = RPL_HDR_OPT_LEN;
-  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->flags = 0;
-  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->senderrank = UIP_HTONS(curr_instance.dag.rank);
-  UIP_EXT_HDR_OPT_RPL_BUF(0, opt_offset)->instance = curr_instance.instance_id;
+  hbh_hdr->len = (RPL_HOP_BY_HOP_LEN - 8) / 8;
+  rpl_opt->opt_type = UIP_EXT_HDR_OPT_RPL;
+  rpl_opt->opt_len = RPL_HDR_OPT_LEN;
+  rpl_opt->flags = 0;
+  rpl_opt->senderrank = UIP_HTONS(curr_instance.dag.rank);
+  rpl_opt->instance = curr_instance.instance_id;
 
   uipbuf_add_ext_hdr(RPL_HOP_BY_HOP_LEN);
   uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
