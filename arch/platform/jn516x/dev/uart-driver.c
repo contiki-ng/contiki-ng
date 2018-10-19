@@ -66,14 +66,6 @@ extern volatile unsigned char xonxoff_state;
 
 #endif /* UART_XONXOFF_FLOW_CTRL */
 
-/***        Macro Definitions                                             ***/
-#define BUSYWAIT_UNTIL(cond, max_time) \
-  do { \
-    rtimer_clock_t t0; \
-    t0 = RTIMER_NOW(); \
-    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time))) ; \
-  } while(0)
-
 #define DEBUG_UART_BUFFERED FALSE
 
 #define CHAR_DEADLINE (uart_char_delay * 100)
@@ -276,7 +268,7 @@ uart_driver_write_with_deadline(uint8_t uart_dev, uint8_t ch)
   volatile int16_t write = 0;
   watchdog_periodic();
   /* wait until there is space in tx fifo */
-  BUSYWAIT_UNTIL(write = (uart_driver_get_tx_fifo_available_space(uart_dev) > 0),
+  RTIMER_BUSYWAIT_UNTIL(write = (uart_driver_get_tx_fifo_available_space(uart_dev) > 0),
                  CHAR_DEADLINE);
   /* write only if there is space so we do not get stuck */
   if(write) {

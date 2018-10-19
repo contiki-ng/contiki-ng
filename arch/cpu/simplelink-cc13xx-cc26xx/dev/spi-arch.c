@@ -235,30 +235,6 @@ spi_arch_transfer(const spi_device_t *dev,
   return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-spi_status_t
-spi_arch_select(const spi_device_t *dev)
-{
-  if(!spi_arch_has_lock(dev)) {
-    return SPI_DEV_STATUS_BUS_NOT_OWNED;
-  }
-
-  PINCC26XX_setOutputValue(dev->pin_spi_cs, 0);
-
-  return SPI_DEV_STATUS_OK;
-}
-/*---------------------------------------------------------------------------*/
-spi_status_t
-spi_arch_deselect(const spi_device_t *dev)
-{
-  if(!spi_arch_has_lock(dev)) {
-    return SPI_DEV_STATUS_BUS_NOT_OWNED;
-  }
-
-  PINCC26XX_setOutputValue(dev->pin_spi_cs, 1);
-
-  return SPI_DEV_STATUS_OK;
-}
-/*---------------------------------------------------------------------------*/
 /**
  * @}
  * @}

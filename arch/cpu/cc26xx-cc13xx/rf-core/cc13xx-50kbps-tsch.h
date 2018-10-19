@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Swedish Institute of Computer Science
+ * Copyright (c) 2018, University of Bristol - http://www.bristol.ac.uk/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,37 +30,12 @@
  *
  */
 
- /* Dummy watchdog routines for Cooja motes */
-#include "dev/watchdog.h"
-#include "lib/simEnvChange.h"
-#include "sys/cooja_mt.h"
+#ifndef CC13XX_50KBPS_TSCH_H_
+#define CC13XX_50KBPS_TSCH_H_
 
-/*---------------------------------------------------------------------------*/
-void
-watchdog_init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_start(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_periodic(void)
-{
-  /* Yield and give control back to the simulator scheduler */
-  simProcessRunValue = 1;
-  cooja_mt_yield();
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_stop(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_reboot(void)
-{
-}
-/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+
+/* TSCH timeslot timing (microseconds) */
+extern const uint16_t tsch_timing_cc13xx_50kbps[];
+
+#endif /* CC13XX_50KBPS_TSCH_H_ */

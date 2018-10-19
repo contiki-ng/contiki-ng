@@ -323,25 +323,6 @@ spi_status_t spi_arch_transfer(const spi_device_t *dev,
                                uint8_t *buf, int rlen,
                                int ignore_len);
 
-/**
- * \brief Selects an SPI device
- * \param dev An SPI device configuration that specifies the CS pin.
- * \return SPI return code
- *
- * Clears the CS pin. It should work only if the device has already
- * locked the SPI controller.
- */
-spi_status_t spi_arch_select(const spi_device_t *dev);
-
-/**
- * \brief Deselects an SPI device
- * \param dev An SPI device configuration that specifies the CS pin.
- * \return SPI return code
- *
- * Set the CS pin. Locking the SPI controller is not needed.
- */
-spi_status_t spi_arch_deselect(const spi_device_t *dev);
-
 #endif /* SPI_H_ */
 /*---------------------------------------------------------------------------*/
 /**

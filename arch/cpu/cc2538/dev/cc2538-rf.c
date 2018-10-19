@@ -865,6 +865,7 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
   case RADIO_CONST_PHY_OVERHEAD:
     *value = (radio_value_t)3; /* 1 len byte, 2 bytes CRC */
+    return RADIO_RESULT_OK;
   case RADIO_CONST_BYTE_AIR_TIME:
     *value = (radio_value_t)32; /* 250kbps data rate. One byte = 32us.*/
     return RADIO_RESULT_OK;

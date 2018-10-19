@@ -96,6 +96,8 @@ SECTIONS
     /* These symbols are used by the stack check library. */
     _stack = .;
     _stack_origin = ORIGIN(SRAM) + LENGTH(SRAM);
+    _heap = _stack;
+    _eheap = _stack_origin;
 
     .ccfg :
     {

@@ -123,7 +123,7 @@ spi_arch_lock_and_open(const spi_device_t *dev)
          != PRCM_DOMAIN_POWER_ON)) ;
 
   /* Enable clock in active mode */
-  ti_lib_rom_prcm_peripheral_run_enable(spi_controller[dev->spi_controller].prcm_periph);
+  ti_lib_prcm_peripheral_run_enable(spi_controller[dev->spi_controller].prcm_periph);
   ti_lib_prcm_load_set();
   while(!ti_lib_prcm_load_get()) ;
 
@@ -131,17 +131,14 @@ spi_arch_lock_and_open(const spi_device_t *dev)
   ti_lib_ssi_int_disable(spi_controller[dev->spi_controller].ssi_base, SSI_RXOR | SSI_RXFF | SSI_RXTO | SSI_TXFF);
   ti_lib_ssi_int_clear(spi_controller[dev->spi_controller].ssi_base, SSI_RXOR | SSI_RXTO);
   
-#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
-  ti_lib_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
-                                    get_mode(dev), SSI_MODE_MASTER, dev->spi_bit_rate, 8);
-  ti_lib_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
-                                     dev->pin_spi_mosi, IOID_UNUSED, dev->pin_spi_sck);
-#else
-  ti_lib_rom_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base, ti_lib_sys_ctrl_clock_get(),
-                                      get_mode(dev), SSI_MODE_MASTER, dev->spi_bit_rate, 8);
-  ti_lib_rom_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base, dev->pin_spi_miso,
-                                       dev->pin_spi_mosi, IOID_UNUSED, dev->pin_spi_sck);
-#endif
+  ti_lib_ssi_config_set_exp_clk(spi_controller[dev->spi_controller].ssi_base,
+                                ti_lib_sys_ctrl_clock_get(),
+                                get_mode(dev), SSI_MODE_MASTER,
+                                dev->spi_bit_rate, 8);
+  ti_lib_ioc_pin_type_ssi_master(spi_controller[dev->spi_controller].ssi_base,
+                                 dev->pin_spi_miso,
+                                 dev->pin_spi_mosi, IOID_UNUSED,
+                                 dev->pin_spi_sck);
 
   ti_lib_ssi_enable(spi_controller[dev->spi_controller].ssi_base);
 
@@ -159,7 +156,7 @@ spi_arch_close_and_unlock(const spi_device_t *dev)
   }
 
   /* Power down SSI */
-  ti_lib_rom_prcm_peripheral_run_disable(spi_controller[dev->spi_controller].prcm_periph);
+  ti_lib_prcm_peripheral_run_disable(spi_controller[dev->spi_controller].prcm_periph);
   ti_lib_prcm_load_set();
   while(!ti_lib_prcm_load_get()) ;
 
@@ -213,39 +210,12 @@ spi_arch_transfer(const spi_device_t *dev,
   for(i = 0; i < totlen; i++) {
     c = i < wlen ? write_buf[i] : 0;
     ti_lib_ssi_data_put(spi_controller[dev->spi_controller].ssi_base, (uint8_t)c);
-#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
     ti_lib_ssi_data_get(spi_controller[dev->spi_controller].ssi_base, &c);
-#else
-    ti_lib_rom_ssi_data_get(spi_controller[dev->spi_controller].ssi_base, &c);
-#endif
     if(i < rlen) {
       inbuf[i] = (uint8_t)c;
     }
   }
-#ifdef ThisLibraryIsFor_CC26x0R2_HaltIfViolated
   while(ti_lib_ssi_data_get_non_blocking(spi_controller[dev->spi_controller].ssi_base, &c)) ;
-#else
-  while(ti_lib_rom_ssi_data_get_non_blocking(spi_controller[dev->spi_controller].ssi_base, &c)) ;
-#endif
   return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-spi_status_t
-spi_arch_select(const spi_device_t *dev)
-{
-
-  if(!spi_arch_has_lock(dev)) {
-    return SPI_DEV_STATUS_BUS_NOT_OWNED;
-  }
-
-  ti_lib_gpio_clear_dio(dev->pin_spi_cs);
-
-  return SPI_DEV_STATUS_OK;
-}
-spi_status_t
-spi_arch_deselect(const spi_device_t *dev)
-{
-  ti_lib_gpio_set_dio(dev->pin_spi_cs);
-
-  return SPI_DEV_STATUS_OK;
-}
