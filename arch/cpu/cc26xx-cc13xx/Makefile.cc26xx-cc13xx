@@ -1,8 +1,8 @@
 CPU_ABS_PATH       = arch/cpu/cc26xx-cc13xx
 TI_XXWARE = $(CONTIKI_CPU)/$(TI_XXWARE_PATH)
 
-ifeq (,$(wildcard $(TI_XXWARE)))
-    $(warning $(TI_XXWARE) does not exist.)
+ifeq (,$(wildcard $(TI_XXWARE)/*))
+    $(warning $(TI_XXWARE) does not exist or is empty.)
     $(warning Did you run 'git submodule update --init' ?)
     $(error "")
 endif

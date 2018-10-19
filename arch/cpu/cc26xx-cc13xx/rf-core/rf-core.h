@@ -133,6 +133,17 @@ typedef struct rf_core_primary_mode_s {
    * \return RF_CORE_CMD_OK or RF_CORE_CMD_ERROR
    */
   uint8_t (*restore)(void);
+
+  /**
+   * \brief A pointer to a function that checks if the radio is on
+   * \return 1 or 0
+   */
+  uint8_t (*is_on)(void);
+
+  /**
+   * \brief Offset of the end of SFD when compared to the radio HW-generated timestamp
+   */
+   int16_t sfd_timestamp_offset;
 } rf_core_primary_mode_t;
 /*---------------------------------------------------------------------------*/
 /* RF Command status constants - Correspond to values in the CMDSTA register */
@@ -263,11 +274,64 @@ typedef struct rf_core_primary_mode_s {
 /* Radio timer register */
 #define RATCNT  0x00000004
 /*---------------------------------------------------------------------------*/
-/* Buffer full flag */
-extern volatile bool rx_is_full;
+/* Special value returned by CMD_IEEE_CCA_REQ when an RSSI is not available */
+#define RF_CORE_CMD_CCA_REQ_RSSI_UNKNOWN     -128
+
+/* Used for the return value of channel_clear */
+#define RF_CORE_CCA_CLEAR                       1
+#define RF_CORE_CCA_BUSY                        0
+
+/* Used as an error return value for get_cca_info */
+#define RF_CORE_GET_CCA_INFO_ERROR           0xFF
+
+/*
+ * Values of the individual bits of the ccaInfo field in CMD_IEEE_CCA_REQ's
+ * status struct
+ */
+#define RF_CORE_CMD_CCA_REQ_CCA_STATE_IDLE      0 /* 00 */
+#define RF_CORE_CMD_CCA_REQ_CCA_STATE_BUSY      1 /* 01 */
+#define RF_CORE_CMD_CCA_REQ_CCA_STATE_INVALID   2 /* 10 */
+
+#define RF_CORE_CMD_CCA_REQ_CCA_CORR_IDLE       (0 << 4)
+#define RF_CORE_CMD_CCA_REQ_CCA_CORR_BUSY       (1 << 4)
+#define RF_CORE_CMD_CCA_REQ_CCA_CORR_INVALID    (3 << 4)
+#define RF_CORE_CMD_CCA_REQ_CCA_CORR_MASK       (3 << 4)
+
+#define RF_CORE_CMD_CCA_REQ_CCA_SYNC_BUSY       (1 << 6)
+/*---------------------------------------------------------------------------*/
+#define RF_CORE_RX_BUF_INCLUDE_CRC 0
+#define RF_CORE_RX_BUF_INCLUDE_RSSI 1
+#define RF_CORE_RX_BUF_INCLUDE_CORR 1
+#define RF_CORE_RX_BUF_INCLUDE_TIMESTAMP 1
+/*---------------------------------------------------------------------------*/
+/* How long to wait for an ongoing ACK TX to finish before starting frame TX */
+#define RF_CORE_TX_TIMEOUT       (RTIMER_SECOND >> 11)
+
+/* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
+#define RF_CORE_ENTER_RX_TIMEOUT (RTIMER_SECOND >> 10)
+
+/* How long to wait for the RF to react on CMD_ABORT: around 1 msec */
+#define RF_CORE_TURN_OFF_TIMEOUT (RTIMER_SECOND >> 10)
+
+/* How long to wait for the RF to finish TX of a packet or an ACK */
+#define RF_CORE_TX_FINISH_TIMEOUT (RTIMER_SECOND >> 7)
+
 /*---------------------------------------------------------------------------*/
 /* Make the main driver process visible to mode drivers */
 PROCESS_NAME(rf_core_process);
+/*---------------------------------------------------------------------------*/
+/* Buffer full flag */
+extern volatile bool rf_core_rx_is_full;
+/*---------------------------------------------------------------------------*/
+/* RSSI of the last read frame */
+extern volatile int8_t rf_core_last_rssi;
+/* Correlation/LQI of the last read frame */
+extern volatile uint8_t rf_core_last_corr_lqi;
+/* SFD timestamp of the last read frame, in rtimer ticks */
+extern volatile uint32_t rf_core_last_packet_timestamp;
+/*---------------------------------------------------------------------------*/
+/* Are we currently in poll mode? */
+extern uint8_t rf_core_poll_mode;
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Check whether the RF core is accessible
@@ -383,20 +447,19 @@ uint8_t rf_core_boot(void);
 /**
  * \brief Setup RF core interrupts
  */
-void rf_core_setup_interrupts(bool poll_mode);
+void rf_core_setup_interrupts(void);
 
 /**
  * \brief Enable interrupt on command done.
  * \param fg set true to enable irq on foreground command done and false for
  * background commands or if not in ieee mode.
- * \param poll_mode true if the driver is in poll mode
  *
  * This is used within TX routines in order to be able to sleep the CM3 and
  * wake up after TX has finished
  *
  * \sa rf_core_cmd_done_dis()
  */
-void rf_core_cmd_done_en(bool fg, bool poll_mode);
+void rf_core_cmd_done_en(bool fg);
 
 /**
  * \brief Disable the LAST_CMD_DONE and LAST_FG_CMD_DONE interrupts.
@@ -405,7 +468,7 @@ void rf_core_cmd_done_en(bool fg, bool poll_mode);
  *
  * \sa rf_core_cmd_done_en()
  */
-void rf_core_cmd_done_dis(bool poll_mode);
+void rf_core_cmd_done_dis(void);
 
 /**
  * \brief Returns a pointer to the most recent proto-dependent Radio Op
@@ -467,6 +530,22 @@ void rf_core_primary_mode_abort(void);
  * \brief Abort the currently running primary radio op
  */
 uint8_t rf_core_primary_mode_restore(void);
+
+/**
+ * \brief Initialize the RAT to RTC conversion machinery
+ */
+uint8_t rf_core_rat_init(void);
+
+/**
+ * \brief Check if RAT overflow has occured and increment the overflow counter if so
+ */
+uint8_t rf_core_check_rat_overflow(void);
+
+/**
+ * \brief Convert from RAT timestamp to rtimer ticks
+ */
+uint32_t rf_core_convert_rat_to_rtimer(uint32_t rat_timestamp);
+
 /*---------------------------------------------------------------------------*/
 #endif /* RF_CORE_H_ */
 /*---------------------------------------------------------------------------*/
