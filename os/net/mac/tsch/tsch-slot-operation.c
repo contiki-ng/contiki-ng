@@ -643,7 +643,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
             mac_tx_status = MAC_TX_ERR;
           }
         }
-      }else {
+      } else {
         mac_tx_status = MAC_TX_ERR;
       }
     }
