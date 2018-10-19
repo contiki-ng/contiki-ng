@@ -823,10 +823,21 @@ ext_hdr_options_process(uint8_t *ext_buf)
    * 8 bytes, excluding the first 8 bytes
    * length field in an option : the length of data in the option
    */
-  uint8_t opt_offset = 2;
+  uint8_t opt_offset = 2; /* 2 first bytes in ext header */
   struct uip_hbho_hdr *ext_hdr = (struct uip_hbho_hdr *)ext_buf;
-  while(opt_offset < ((ext_hdr->len << 3) + 8)) {
+  uint8_t ext_hdr_len = (ext_hdr->len << 3) + 8;
+
+  while(opt_offset + 2 <= ext_hdr_len) { /* + 2 for opt header */
     struct uip_ext_hdr_opt *opt_hdr = (struct uip_ext_hdr_opt *)(ext_buf + opt_offset);
+    uint8_t opt_len = opt_hdr->len + 2;
+
+    if(opt_offset + opt_len > ext_hdr_len) {
+      LOG_ERR("RPL Option too long: Dropping Packet\n");
+      uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_OPTION,
+          (ext_buf + opt_offset) - uip_buf);
+      return 2;
+    }
+
     switch(opt_hdr->type) {
     /*
      * for now we do not support any options except padding ones
@@ -839,7 +850,7 @@ ext_hdr_options_process(uint8_t *ext_buf)
       break;
     case UIP_EXT_HDR_OPT_PADN:
       LOG_DBG("Processing PADN option\n");
-      opt_offset += ((struct uip_ext_hdr_opt_padn *)opt_hdr)->opt_len + 2;
+      opt_offset += opt_len;
       break;
     case UIP_EXT_HDR_OPT_RPL:
       /* Fixes situation when a node that is not using RPL
@@ -855,8 +866,8 @@ ext_hdr_options_process(uint8_t *ext_buf)
         LOG_ERR("RPL Option Error: Dropping Packet\n");
         return 1;
       }
-      opt_offset += opt_hdr->len + 2;
-      return 0;
+      opt_offset += opt_len;
+      break;
     default:
       /*
        * check the two highest order bits of the option
@@ -887,7 +898,7 @@ ext_hdr_options_process(uint8_t *ext_buf)
         return 2;
       }
       /* in the cases were we did not discard, update ext_opt* */
-      opt_offset += opt_hdr->len + 2;
+      opt_offset += opt_len;
       break;
     }
   }
