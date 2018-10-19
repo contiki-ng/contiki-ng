@@ -90,7 +90,7 @@ RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E
 # Download, build and install Renode
 RUN git clone https://github.com/renode/renode.git \
   && cd ${HOME}/renode \
-  && git checkout v1.3 \
+  && git checkout v1.5 \
   && ./build.sh
 ENV PATH="${HOME}/renode:${PATH}"
 
