@@ -79,7 +79,7 @@ PROCESS_THREAD(timer_process, ev, data)
   PROCESS_BEGIN();
 
   ctimer_set(&timer_ctimer, CLOCK_SECOND, ctimer_callback, NULL);
-  rtimer_set(&timer_rtimer, RTIMER_NOW() + CLOCK_SECOND / 2, 0,
+  rtimer_set(&timer_rtimer, RTIMER_NOW() + RTIMER_SECOND / 2, 0,
              rtimer_callback, NULL);
 
   while(1) {
