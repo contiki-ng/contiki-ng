@@ -46,9 +46,8 @@ ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 
 # Install sphinx and sphinx_rtd_theme, required for building and testing the
 # readthedocs API documentation
-RUN pip install --upgrade pip
-RUN pip install setuptools
-RUN pip install sphinx_rtd_theme sphinx
+RUN pip -q install --upgrade pip
+RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
