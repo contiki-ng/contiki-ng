@@ -11,21 +11,21 @@ RUN apt-get update && \
   && apt-get clean
 
 # Install ARM toolchain
-RUN wget https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
+RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
   tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/ && \
   cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/ && \
   rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
-RUN wget http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
+RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
   tar xjf mspgcc*.tar.bz2 -C /tmp/ && \
   cp -f -r /tmp/msp430/* /usr/local/ && \
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
 # Install NXP toolchain (partial, with binaries excluded. Download from nxp.com)
-RUN wget http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 && \
-  wget http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part2.tar.bz2 && \
-  wget http://simonduq.github.io/resources/jn516x-sdk-4163-1416.tar.bz2 && \
+RUN wget -nv http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 && \
+  wget -nv http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part2.tar.bz2 && \
+  wget -nv http://simonduq.github.io/resources/jn516x-sdk-4163-1416.tar.bz2 && \
   mkdir /tmp/jn516x-sdk /tmp/ba-elf-gcc && \
   tar xjf jn516x-sdk-*.tar.bz2 -C /tmp/jn516x-sdk && \
   tar xjf ba-elf-gcc-*part1.tar.bz2 -C /tmp/ba-elf-gcc && \
@@ -37,7 +37,7 @@ RUN wget http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 && \
 ENV PATH="/usr/ba-elf-gcc/bin:${PATH}"
 
 ## Install nRF52 SDK
-RUN wget https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
+RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
     mkdir /usr/nrf52-sdk && \
     unzip nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk && \
     rm nrf5_iot_sdk_3288530.zip
