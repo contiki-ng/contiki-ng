@@ -729,6 +729,75 @@ PT_THREAD(cmd_6top(struct pt *pt, shell_output_func output, char *args))
 }
 #endif /* TSCH_WITH_SIXTOP */
 /*---------------------------------------------------------------------------*/
+#if LLSEC802154_ENABLED
+static
+PT_THREAD(cmd_llsec_setlv(struct pt *pt, shell_output_func output, char *args))
+{
+  char *next_args;
+
+  PT_BEGIN(pt);
+
+  SHELL_ARGS_INIT(args, next_args);
+
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "Default LLSEC level is %d\n",
+                 uipbuf_get_attr(UIPBUF_ATTR_LLSEC_LEVEL));
+    PT_EXIT(pt);
+  } else {
+    int lv = atoi(args);
+    if(lv < 0 || lv > 7) {
+      SHELL_OUTPUT(output, "Illegal LLSEC Level %d\n", lv);
+      PT_EXIT(pt);
+    } else {
+      uipbuf_set_default_attr(UIPBUF_ATTR_LLSEC_LEVEL, lv);
+      uipbuf_clear_attr();
+      SHELL_OUTPUT(output, "LLSEC default level set %d\n", lv);
+    }
+  }
+  SHELL_ARGS_NEXT(args, next_args);
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_llsec_setkey(struct pt *pt, shell_output_func output, char *args))
+{
+  char *next_args;
+
+  PT_BEGIN(pt);
+
+  SHELL_ARGS_INIT(args, next_args);
+
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "Provide an index and a 16-char string for the key\n");
+    PT_EXIT(pt);
+  } else {
+    int key;
+    SHELL_ARGS_NEXT(args, next_args);
+    key = atoi(args);
+    if(key < 0 || key > 16) {
+      SHELL_OUTPUT(output, "Illegal LLSEC Key index %d\n", key);
+      PT_EXIT(pt);
+    } else {
+#if MAC_CONF_WITH_CSMA
+      /* Get next arg (key-string) */
+      SHELL_ARGS_NEXT(args, next_args);
+      if(args != NULL && strlen(args) == 16) {
+        csma_security_set_key(key, (uint8_t *) args);
+        SHELL_OUTPUT(output, "Set key for index %d\n", key);
+      } else {
+        SHELL_OUTPUT(output, "Wrong length of key: '%s' (%d)\n", args, strlen(args));
+      }
+#else
+      SHELL_OUTPUT(output, "Set key not supported.\n");
+      PT_EXIT(pt);
+#endif
+    }
+  }
+  PT_END(pt);
+}
+#endif /* LLSEC802154_ENABLED */
+/*---------------------------------------------------------------------------*/
 void
 shell_commands_init(void)
 {
@@ -801,6 +870,10 @@ const struct shell_command_t builtin_shell_commands[] = {
 #if TSCH_WITH_SIXTOP
   { "6top",                 cmd_6top,                 "'> 6top help': Shows 6top command usage" },
 #endif /* TSCH_WITH_SIXTOP */
+#if LLSEC802154_ENABLED
+  { "llsec-set-level", cmd_llsec_setlv, "'> llsec-set-level <lv>': Set the level of link layer security (show if no lv argument)"},
+  { "llsec-set-key", cmd_llsec_setkey, "'> llsec-set-key <id> <key>': Set the key of link layer security (show if no id key argument)"},
+#endif /* LLSEC802154_ENABLED */
   { NULL, NULL, NULL },
 };
 
