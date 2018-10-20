@@ -32,8 +32,7 @@ udp_rx_callback(struct simple_udp_connection *c,
          const uint8_t *data,
          uint16_t datalen)
 {
-  unsigned count = *(unsigned *)data;
-  LOG_INFO("Received response %u from ", count);
+  LOG_INFO("Received response '%s' from ", (char *) data);
   LOG_INFO_6ADDR(sender_addr);
   LOG_INFO_("\n");
 }
@@ -42,6 +41,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
 {
   static struct etimer periodic_timer;
   static unsigned count;
+  static char str[32];
   uip_ipaddr_t dest_ipaddr;
 
   PROCESS_BEGIN();
@@ -59,7 +59,8 @@ PROCESS_THREAD(udp_client_process, ev, data)
       LOG_INFO("Sending request %u to ", count);
       LOG_INFO_6ADDR(&dest_ipaddr);
       LOG_INFO_("\n");
-      simple_udp_sendto(&udp_conn, &count, sizeof(count), &dest_ipaddr);
+      snprintf(str, sizeof(str), "hello from the client:%d", count);
+      simple_udp_sendto(&udp_conn, str, strlen(str), &dest_ipaddr);
       count++;
     } else {
       LOG_INFO("Not reachable yet\n");

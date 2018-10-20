@@ -54,15 +54,19 @@ udp_rx_callback(struct simple_udp_connection *c,
          const uint8_t *data,
          uint16_t datalen)
 {
-  unsigned count = *(unsigned *)data;
-  LOG_INFO("Received request %u from ", count);
+  char *str = (char *)data;
+  char outstr[32];
+  LOG_INFO("Received request '%s' from ", str);
   LOG_INFO_6ADDR(sender_addr);
   LOG_INFO_("\n");
 #if WITH_SERVER_REPLY
-  LOG_INFO("Sending response %u to ", count);
+  /* send the number that came in - and is at the end */
+  snprintf(outstr, sizeof(outstr), "hello from the server:%s",
+           &data[strlen("hello from the client:")]);
+  LOG_INFO("Sending response '%s' to ", outstr);
   LOG_INFO_6ADDR(sender_addr);
   LOG_INFO_("\n");
-  simple_udp_sendto(&udp_conn, &count, sizeof(count), sender_addr);
+  simple_udp_sendto(&udp_conn, outstr, strlen(outstr), sender_addr);
 #endif /* WITH_SERVER_REPLY */
 }
 /*---------------------------------------------------------------------------*/
