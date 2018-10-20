@@ -61,7 +61,9 @@
 #define LOG_MODULE "CSMA"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
+#if LOG_LEVEL == LOG_LEVEL_DBG
 static const char * HEX = "0123456789ABCDEF";
+#endif
 
 #if LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER
 
@@ -174,6 +176,7 @@ csma_security_create_frame(void)
   }
 
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0) {
+#if LOG_LEVEL == LOG_LEVEL_DBG
     int i = 0;
     uint8_t *p;
     LOG_DBG("  Payload before (%d):", packetbuf_totlen());
@@ -182,6 +185,7 @@ csma_security_create_frame(void)
       LOG_DBG_("%c%c", HEX[(p[i] >> 4) & 0x0f], HEX[p[i] & 0x0f]);
     }
     LOG_DBG("\n");
+#endif
 
     if(!aead(hdr_len, 1)) {
       LOG_ERR("failed to encrypt packet to ");
@@ -196,12 +200,14 @@ csma_security_create_frame(void)
     LOG_INFO_(" %u (%u) KEY:0x%02x\n", packetbuf_datalen(), packetbuf_totlen(),
               LLSEC_KEY_INDEX);
 
+#if LOG_LEVEL == LOG_LEVEL_DBG
     LOG_DBG("  Payload after: (%d)", packetbuf_totlen());
     p = packetbuf_hdrptr();
     for(i = 0; i < packetbuf_totlen(); i++) {
       LOG_DBG_("%c%c", HEX[(p[i] >> 4) & 0x0f], HEX[p[i] & 0x0f]);
     }
     LOG_DBG_("\n");
+#endif
 
   }
   return hdr_len;
