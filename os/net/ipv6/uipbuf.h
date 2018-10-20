@@ -82,6 +82,17 @@ uint16_t uipbuf_get_attr(uint8_t type);
 int uipbuf_set_attr(uint8_t type, uint16_t value);
 
 /**
+ * \brief          Set the default value of the attribute
+ * \param type     The attribute to set the default value of
+ * \param value    The value to set
+ * \retval         0 - indicates failure of setting the value
+ * \retval         1 - indicates success of setting the value
+ *
+ *                 This function sets the default value of a uipbuf attribute.
+ */
+int uipbuf_set_default_attr(uint8_t type, uint16_t value);
+
+/**
  * \brief          Set bits in the uipbuf attribute flags.
  * \param flag_bits The bits to set in the flag.
  *
@@ -116,6 +127,14 @@ uint16_t uipbuf_is_attr_flag(uint16_t flag_bits);
 void uipbuf_clear_attr(void);
 
 /**
+ * \brief          Initialize uipbuf attributes.
+ *
+ *                 This function initialize all attributes in the uipbuf
+ *                 attributes including all flags.
+ */
+void uipbuf_init(void);
+
+/**
  * \brief The bits defined for uipbuf attributes flag.
  *
  */
@@ -123,6 +142,9 @@ void uipbuf_clear_attr(void);
 #define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_NHC_COMPRESSION      0x01
 /* Avoid using prefix compression on the packet (6LoWPAN) */
 #define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_PREFIX_COMPRESSION   0x02
+
+/* MAC will set the default for this packet */
+#define UIPBUF_ATTR_LLSEC_LEVEL_MAC_DEFAULT               0xffff
 
 /**
  * \brief The attributes defined for uipbuf attributes function.

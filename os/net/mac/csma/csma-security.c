@@ -61,9 +61,11 @@
 #define LOG_MODULE "CSMA"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
+static const char * HEX = "0123456789ABCDEF";
+
 #if LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER
 
-#define MIC_LEN LLSEC802154_MIC_LEN(CSMA_LLSEC_SECURITY_LEVEL)
+#define MIC_LEN(level) LLSEC802154_MIC_LEN(level)
 
 #if LLSEC802154_USES_EXPLICIT_KEYS
 #define LLSEC_KEY_INDEX (FRAME802154_IMPLICIT_KEY == packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE) \
@@ -104,7 +106,8 @@ aead(uint8_t hdrlen, int forward)
   uint8_t *a;
   uint8_t a_len;
   uint8_t *result;
-  uint8_t generated_mic[MIC_LEN];
+  /* Allocate for MAX level */
+  uint8_t generated_mic[MIC_LEN(7)];
   uint8_t *mic;
   uint8_t key_index;
   aes_key_t *key;
@@ -142,14 +145,14 @@ aead(uint8_t hdrlen, int forward)
   CCM_STAR.aead(nonce,
       m, m_len,
       a, a_len,
-      result, MIC_LEN,
+      result, MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07),
       forward);
 
   if(forward) {
-    packetbuf_set_datalen(packetbuf_datalen() + MIC_LEN);
+    packetbuf_set_datalen(packetbuf_datalen() + MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07));
     return 1;
   } else {
-    return (memcmp(generated_mic, mic, MIC_LEN) == 0);
+    return (memcmp(generated_mic, mic, MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07)) == 0);
   }
 }
 
@@ -171,6 +174,15 @@ csma_security_create_frame(void)
   }
 
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0) {
+    int i = 0;
+    uint8_t *p;
+    LOG_DBG("  Payload before (%d):", packetbuf_totlen());
+    p = packetbuf_hdrptr();
+    for(i = 0; i < packetbuf_totlen(); i++) {
+      LOG_DBG_("%c%c", HEX[(p[i] >> 4) & 0x0f], HEX[p[i] & 0x0f]);
+    }
+    LOG_DBG("\n");
+
     if(!aead(hdr_len, 1)) {
       LOG_ERR("failed to encrypt packet to ");
       LOG_ERR_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
@@ -183,6 +195,14 @@ csma_security_create_frame(void)
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     LOG_INFO_(" %u (%u) KEY:0x%02x\n", packetbuf_datalen(), packetbuf_totlen(),
               LLSEC_KEY_INDEX);
+
+    LOG_DBG("  Payload after: (%d)", packetbuf_totlen());
+    p = packetbuf_hdrptr();
+    for(i = 0; i < packetbuf_totlen(); i++) {
+      LOG_DBG_("%c%c", HEX[(p[i] >> 4) & 0x0f], HEX[p[i] & 0x0f]);
+    }
+    LOG_DBG_("\n");
+
   }
   return hdr_len;
 }
@@ -193,7 +213,8 @@ csma_security_frame_len(void)
 {
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0 &&
      LLSEC_KEY_INDEX != 0xffff) {
-    return NETSTACK_FRAMER.length() + MIC_LEN;
+    return NETSTACK_FRAMER.length() +
+      MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07);
   }
   return NETSTACK_FRAMER.length();
 }
@@ -242,12 +263,12 @@ csma_security_parse_frame(void)
     return FRAMER_FAILED;
   }
 
-  if(packetbuf_datalen() <= MIC_LEN) {
+  if(packetbuf_datalen() <= MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07)) {
     LOG_ERR("MIC error - too little data in frame!\n");
     return FRAMER_FAILED;
   }
 
-  packetbuf_set_datalen(packetbuf_datalen() - MIC_LEN);
+  packetbuf_set_datalen(packetbuf_datalen() - MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07));
   if(!aead(hdr_len, 0)) {
     LOG_INFO("received unauthentic frame %u from ",
              (unsigned int) anti_replay_get_counter());

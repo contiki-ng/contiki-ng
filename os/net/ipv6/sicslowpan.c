@@ -74,10 +74,6 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 
-#if MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED
-#include "net/mac/csma/csma-security.h"
-#endif /* MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED */
-
 #include "net/routing/routing.h"
 
 /* Log configuration */
@@ -1618,23 +1614,26 @@ output(const linkaddr_t *localdest)
     return 0;
   }
 #endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
-
-#if MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED
-    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
-                       FRAME802154_SECURITY_LEVEL_NONE != CSMA_LLSEC_SECURITY_LEVEL);
-#endif /* MAC_CONF_WITH_CSMA && LLSEC802154_CONF_ENABLED */
-
+#if LLSEC802154_USES_AUX_HEADER
+  /* copy LLSEC level */
+  packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
+    uipbuf_get_attr(UIPBUF_ATTR_LLSEC_LEVEL));
+#if LLSEC802154_USES_EXPLICIT_KEYS
+  packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX,
+    uipbuf_get_attr(UIPBUF_ATTR_LLSEC_KEY_ID));
+#endif /* LLSEC802154_USES_EXPLICIT_KEYS */
+#endif /*  LLSEC802154_USES_AUX_HEADER */
   /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
    * We calculate it here only to make a better decision of whether the outgoing packet
    * needs to be fragmented or not. */
   packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
-  framer_hdrlen = NETSTACK_FRAMER.length();
-  if(framer_hdrlen < 0) {
-    /* Framing failed, we assume the maximum header length */
-    framer_hdrlen = MAC_MAX_HEADER;
+  max_payload = NETSTACK_MAC.max_payload();
+  if(max_payload <= 0) {
+  /* Framing failed, drop packet */
+    LOG_WARN("output: failed to calculate payload size - dropping packet\n");
+    return 0;
   }
 
-  max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
   frag_needed = (int)uip_len - (int)uncomp_hdr_len + (int)packetbuf_hdr_len > max_payload;
   LOG_INFO("output: header len %d -> %d, total len %d -> %d, MAC max payload %d, frag_needed %d\n",
             uncomp_hdr_len, packetbuf_hdr_len,

@@ -37,6 +37,7 @@
 /*---------------------------------------------------------------------------*/
 
 static uint16_t uipbuf_attrs[UIPBUF_ATTR_MAX];
+static uint16_t uipbuf_default_attrs[UIPBUF_ATTR_MAX];
 
 /*---------------------------------------------------------------------------*/
 /* Get the next header given the buffer - start indicates that this is
@@ -101,15 +102,21 @@ uipbuf_set_attr(uint8_t type, uint16_t value)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+int
+uipbuf_set_default_attr(uint8_t type, uint16_t value)
+{
+  if(type < UIPBUF_ATTR_MAX) {
+    uipbuf_default_attrs[type] = value;
+    return 1;
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 void
 uipbuf_clear_attr(void)
 {
-  /* set everything to "zero" */
-  memset(uipbuf_attrs, 0, sizeof(uipbuf_attrs));
-
-  /* And initialize anything that should be initialized */
-  uipbuf_set_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS,
-                  UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED);
+  /* set everything to "defaults" */
+  memcpy(uipbuf_attrs, uipbuf_default_attrs, sizeof(uipbuf_attrs));
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -130,4 +137,16 @@ uipbuf_is_attr_flag(uint16_t flag)
 {
   return (uipbuf_attrs[UIPBUF_ATTR_FLAGS] & flag) == flag;
 }
+/*---------------------------------------------------------------------------*/
+void
+uipbuf_init(void)
+{
+  /* And initialize anything that should be initialized */
+  uipbuf_set_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS,
+                  UIP_MAX_MAC_TRANSMISSIONS_UNDEFINED);
+  /* set the not-set default value - this will cause the MAC layer to
+     configure its default */
+  uipbuf_set_attr(UIPBUF_ATTR_LLSEC_LEVEL, UIPBUF_ATTR_LLSEC_LEVEL_MAC_DEFAULT);
+}
+
 /*---------------------------------------------------------------------------*/

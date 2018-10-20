@@ -55,6 +55,7 @@
 #include "contiki.h"
 #include "net/linkaddr.h"
 #include "net/mac/llsec802154.h"
+#include "net/mac/csma/csma-security.h"
 #include "net/mac/tsch/tsch-conf.h"
 
 /**
@@ -281,6 +282,8 @@ void              packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
 #define PACKETBUF_ATTR_BIT  1
 #define PACKETBUF_ATTR_BYTE 8
 #define PACKETBUF_ADDRSIZE (LINKADDR_SIZE * PACKETBUF_ATTR_BYTE)
+
+#define PACKETBUF_ATTR_SECURITY_LEVEL_DEFAULT 0xffff
 
 struct packetbuf_attrlist {
   uint8_t type;

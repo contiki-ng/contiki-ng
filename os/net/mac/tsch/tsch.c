@@ -62,6 +62,9 @@
 #include "net/mac/tsch/sixtop/sixtop.h"
 #endif
 
+/* Needed to estimate the MAC lenght */
+#define TSCH_MAC_MAX_LEN 127
+
 #if FRAME802154_VERSION < FRAME802154_IEEE802154_2015
 #error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154_2015
 #endif
@@ -1128,13 +1131,21 @@ turn_off(void)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+static int
+max_payload(void)
+{
+  /* Setup security... before. */
+  return TSCH_MAC_MAX_LEN -  NETSTACK_FRAMER.length();
+}
+/*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {
   "TSCH",
   tsch_init,
   send_packet,
   packet_input,
   turn_on,
-  turn_off
+  turn_off,
+  max_payload,
 };
 /*---------------------------------------------------------------------------*/
 /** @} */
