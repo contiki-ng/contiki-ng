@@ -11,7 +11,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     default-jdk ant srecord iputils-tracepath rlwrap \
     mosquitto mosquitto-clients gdb npm \
     mono-complete gksu libgtk2.0-0 screen uml-utilities gtk-sharp2 \
-    libcanberra-gtk-module:i386 \
+    libcanberra-gtk-module:i386 > /dev/null \
   && apt-get -qq clean
 
 # Install coap-cli
