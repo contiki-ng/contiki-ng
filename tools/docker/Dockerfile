@@ -39,7 +39,7 @@ ENV PATH="/usr/ba-elf-gcc/bin:${PATH}"
 ## Install nRF52 SDK
 RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
     mkdir /usr/nrf52-sdk && \
-    unzip nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk && \
+    unzip -q nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk && \
     rm nrf5_iot_sdk_3288530.zip
 
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
