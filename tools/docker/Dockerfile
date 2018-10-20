@@ -3,12 +3,20 @@ FROM 32bit/ubuntu:16.04
 ENV DEBIAN_FRONTEND noninteractive
 
 # Tools
-RUN apt-get update && \
-  apt-get install -y --no-install-recommends \
-  build-essential doxygen git wget unzip python-serial python-pip \
-  default-jdk ant srecord iputils-tracepath rlwrap \
-  mosquitto mosquitto-clients gdb \
-  && apt-get clean
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+  echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  apt-get -qq update && \
+  apt-get -qq -y --no-install-recommends install \
+    build-essential doxygen git wget unzip python-serial python-pip \
+    default-jdk ant srecord iputils-tracepath rlwrap \
+    mosquitto mosquitto-clients gdb npm \
+    mono-complete gksu libgtk2.0-0 screen uml-utilities gtk-sharp2 \
+    libcanberra-gtk-module:i386 \
+  && apt-get -qq clean
+
+# Install coap-cli
+RUN npm -q install coap-cli -g \
+  && sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 # Install ARM toolchain
 RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
@@ -74,19 +82,6 @@ WORKDIR                 ${HOME}
 # Create Cooja shortcut
 RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && \
   chmod +x ${HOME}/cooja
-
-# Install coap-cli
-RUN sudo apt-get install -y npm \
-  && sudo apt-get clean \
-  && sudo npm install coap-cli -g \
-  && sudo ln -s /usr/bin/nodejs /usr/bin/node
-
-# Install Mono and libcanberra-gtk:i386 (for Renode)
-RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
-  && echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list \
-  && sudo apt-get update \
-  && sudo apt-get install -y mono-complete gksu libgtk2.0-0 screen uml-utilities gtk-sharp2 libcanberra-gtk-module:i386 \
-  && sudo apt-get clean
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
