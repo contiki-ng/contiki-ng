@@ -7,11 +7,30 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
-    build-essential doxygen git wget unzip python-serial python-pip \
-    default-jdk ant srecord iputils-tracepath rlwrap \
-    mosquitto mosquitto-clients gdb npm \
-    mono-complete gksu libgtk2.0-0 screen uml-utilities gtk-sharp2 \
-    libcanberra-gtk-module:i386 > /dev/null \
+    ant \
+    build-essential \
+    default-jdk \
+    doxygen \
+    gdb \
+    git \
+    gksu \
+    gtk-sharp2 \
+    iputils-tracepath \
+    libcanberra-gtk-module:i386 \
+    libgtk2.0-0 \
+    mono-complete \
+    mosquitto \
+    mosquitto-clients \
+    npm \
+    python-pip \
+    python-serial \
+    rlwrap \
+    screen \
+    srecord \
+    uml-utilities \
+    unzip \
+    wget \
+    > /dev/null \
   && apt-get -qq clean
 
 # Install coap-cli
