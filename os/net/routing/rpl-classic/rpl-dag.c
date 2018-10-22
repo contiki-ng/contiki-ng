@@ -368,15 +368,16 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
         if(uip_ipaddr_cmp(&dag->dag_id, dag_id)) {
           version = dag->version;
           RPL_LOLLIPOP_INCREMENT(version);
-        }
-        if(dag == dag->instance->current_dag) {
-          LOG_INFO("Dropping a joined DAG when setting this node as root\n");
-          rpl_set_default_route(instance, NULL);
-          dag->instance->current_dag = NULL;
         } else {
-          LOG_INFO("Dropping a DAG when setting this node as root\n");
+          if(dag == dag->instance->current_dag) {
+            LOG_INFO("Dropping a joined DAG when setting this node as root\n");
+            rpl_set_default_route(instance, NULL);
+            dag->instance->current_dag = NULL;
+          } else {
+            LOG_INFO("Dropping a DAG when setting this node as root\n");
+          }
+          rpl_free_dag(dag);
         }
-        rpl_free_dag(dag);
       }
     }
   }
