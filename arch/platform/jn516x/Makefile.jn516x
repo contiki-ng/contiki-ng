@@ -229,30 +229,34 @@ ALLLIBS = $(addprefix -l,$(LDLIBS)) $(addprefix -l,$(LDSTACKLIBS)) $(addprefix -
 ABS_APPLIBS = $(addsuffix _$(JENNIC_CHIP_FAMILY).a,$(addprefix $(COMPONENTS_BASE_DIR)/Library/lib,$(APPLIBS)))
 
 ifneq ($(wildcard $(SDK_BASE_DIR)/Components/Library/*),)
-# The SDK is fully installed, proceed to linking and objcopy to ready-to-upload .jn516x.bin file
-%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(ABS_APPLIBS)
-	echo  ${filter %.a,$^}
+# The SDK is fully installed, proceed to linking
+$(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(ABS_APPLIBS)
+	@echo  ${filter %.a,$^}
 	$(Q)$(CC) -Wl,--gc-sections $(LDFLAGS) -T$(LINKCMD) -o $@ -Wl,--start-group \
 	  $(patsubst /cygdrive/c/%,c:/%,${filter-out %.a,$^}) \
 	  $(patsubst /cygdrive/c/%,c:/%,${filter %.a,$^}) \
 	  $(ALLLIBS) -Wl,--end-group -Wl,-Map,$(CONTIKI_NG_PROJECT_MAP)
-	$(OBJCOPY) -S -O binary $@ $@.bin
 else
 # The SDK does not include libraries, only build objects and libraries, skip linking
-%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
-	echo Creating empty $@
+$(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+	@echo Creating empty $@
 	touch $@
 endif
 
-%.$(TARGET).bin: %.$(TARGET)
+$(BUILD_DIR_BOARD)/%.$(TARGET).bin: $(BUILD_DIR_BOARD)/%.$(TARGET)
+	$(TRACE_OBJCOPY)
 	$(Q)$(OBJCOPY) -S -O binary $< $@
+
+%.$(TARGET).bin: $(BUILD_DIR_BOARD)/%.$(TARGET).bin
+	$(TRACE_CP)
+	$(Q)$(CP) $< $@
 
 ### Upload target to one jn516x mote specified by MOTE=portNumber
 ifeq ($(HOST_OS),Windows)
-%.upload: %.$(TARGET).bin
+%.upload: $(BUILD_DIR_BOARD)/%.$(TARGET).bin
 	${FLASH_PROGRAMMER} -a -c $(DEV_PORT) -B 1000000 -s -w -f $<
 else
-%.upload: %.$(TARGET).bin
+%.upload: $(BUILD_DIR_BOARD)/%.$(TARGET).bin
 	${FLASH_PROGRAMMER} -V 10 -v -s $(DEV_PORT) -I 38400 -P 1000000 -f $<
 endif
 
@@ -276,7 +280,7 @@ motelistinfo:
 	$(Q)$(MOTELIST) ${FLASH_PROGRAMMER} \?
 
 ### Upload target to all connected jn516x motes
-%.uploadall: %.$(TARGET).bin
+%.uploadall: $(BUILD_DIR_BOARD)/%.$(TARGET).bin
 	$(Q)$(MOTELIST) ${FLASH_PROGRAMMER} $<
 
 ### Flash the given file to all connected jn516x motes
