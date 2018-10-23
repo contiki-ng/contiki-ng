@@ -330,7 +330,7 @@ distclean:
 		echo Running: $(MAKE) TARGET=$$TARG clean; \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
-	rmdir $(BUILD_DIR)
+	-$(Q)rm -rf $(BUILD_DIR)
 
 -include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
 
