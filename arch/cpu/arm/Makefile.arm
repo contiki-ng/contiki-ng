@@ -77,6 +77,6 @@ $(OUT_LST): $(OUT_ELF)
 
 ### We don't really need the .hex and .bin for the .$(TARGET) but let's make
 ### sure they get built
-%.$(TARGET): $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
 	$(TRACE_CP)
 	$(Q)cp $< $@

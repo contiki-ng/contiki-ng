@@ -395,11 +395,15 @@ ifndef LD
 endif
 
 ifndef CUSTOM_RULE_LINK
-%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+$(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
 	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
 endif
+
+%.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
+	$(TRACE_CP)
+	$(Q)cp $< $@
 
 %.ramprof: %.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [abdrw] " | cut -d' ' -f2,4
@@ -458,9 +462,9 @@ ifeq ($(findstring $(TARGET),native cooja),)
   include $(CONTIKI)/Makefile.embedded
 endif
 
-# Don't treat %.$(TARGET) as an intermediate file because it is
-# in fact the primary target.
-.PRECIOUS: %.$(TARGET)
+# Don't treat $(BUILD_DIR_BOARD)/%.$(TARGET) and $(TARGET) as intermediate
+# files because for many platforms they are in fact the primary target.
+.PRECIOUS: $(BUILD_DIR_BOARD)/%.$(TARGET) %.$(TARGET)
 
 # Cancel the predefined implict rule for compiling and linking
 # a single C source into a binary to force GNU make to consider
