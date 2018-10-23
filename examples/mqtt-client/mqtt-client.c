@@ -47,7 +47,11 @@
 #include <strings.h>
 /*---------------------------------------------------------------------------*/
 #define LOG_MODULE "mqtt-client"
+#ifdef MQTT_CLIENT_CONF_LOG_LEVEL
+#define LOG_LEVEL MQTT_CLIENT_CONF_LOG_LEVEL
+#else
 #define LOG_LEVEL LOG_LEVEL_NONE
+#endif
 /*---------------------------------------------------------------------------*/
 /* Controls whether the example will work in IBM Watson IoT platform mode */
 #ifdef MQTT_CLIENT_CONF_WITH_IBM_WATSON
@@ -305,6 +309,7 @@ pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
   }
 
   if(strncmp(&topic[10], "leds", 4) == 0) {
+    LOG_DBG("Received MQTT SUB\n");
     if(chunk[0] == '1') {
       leds_on(LEDS_RED);
     } else if(chunk[0] == '0') {
