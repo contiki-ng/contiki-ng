@@ -42,7 +42,6 @@
 #include "net/netstack.h"
 #include "packetutils.h"
 #include "border-router.h"
-#include "net/mac/csma-security.h"
 #include <string.h>
 
 /*---------------------------------------------------------------------------*/
@@ -65,6 +64,7 @@ struct tx_callback {
 /*---------------------------------------------------------------------------*/
 static struct tx_callback callbacks[MAX_CALLBACKS];
 /*---------------------------------------------------------------------------*/
+void
 init_sec(void)
 {
   /* use the CSMA LLSEC config parameter */
