@@ -172,11 +172,11 @@ vpath %.s $(ASM_PATHS)
 
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
-CLEAN += nrf52832.a
+NRFLIB = $(BUILD_DIR_BOARD)/nrf52832.a
 
-TARGET_LIBS = nrf52832.a $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
+TARGET_LIBS = $(NRFLIB) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
-nrf52832.a: $(OBJECTS)
+$(NRFLIB): $(OBJECTS)
 	$(TRACE_AR)
 	$(Q)$(AR) $(AROPTS) $@ $^
 
