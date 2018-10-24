@@ -36,11 +36,13 @@
 /*---------------------------------------------------------------------------*/
 #define RTIMER_ARCH_SECOND 32768
 /*---------------------------------------------------------------------------*/
+#define CC2538_PHY_OVERHEAD          3
+#define CC2538_BYTE_AIR_TIME         32
 /* 352us from calling transmit() until the SFD byte has been sent */
-#define CC2538_DELAY_BEFORE_TX     ((unsigned)US_TO_RTIMERTICKS(352))
+#define CC2538_DELAY_BEFORE_TX       ((unsigned)US_TO_RTIMERTICKS(352))
 /* 192us as in datasheet but ACKs are not always received, so adjusted to 250us */
-#define CC2538_DELAY_BEFORE_RX     ((unsigned)US_TO_RTIMERTICKS(250))
-#define CC2538_DELAY_BEFORE_DETECT 0
+#define CC2538_DELAY_BEFORE_RX       ((unsigned)US_TO_RTIMERTICKS(250))
+#define CC2538_DELAY_BEFORE_DETECT   0
 /* Frame filtering done in software */
 #define TSCH_CONF_HW_FRAME_FILTERING  0
 

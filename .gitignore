@@ -12,7 +12,7 @@
 *.ihex
 *.pyc
 *~
-obj_*
+build/*
 Makefile.target
 Makefile.*.defines
 tools/doxygen/html

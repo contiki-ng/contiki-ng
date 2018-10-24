@@ -28,6 +28,7 @@ storage/antelope-shell/zoul \
 6tisch/simple-node/zoul:MAKE_WITH_ORCHESTRA=1 \
 6tisch/simple-node/zoul:MAKE_WITH_SECURITY=1 \
 libs/logging/zoul \
+libs/logging/zoul:MAKE_MAC=MAKE_MAC_TSCH \
 6tisch/etsi-plugtest-2017/zoul:BOARD=remote \
 6tisch/6p-packet/zoul \
 6tisch/sixtop/zoul \
@@ -68,6 +69,8 @@ libs/ipv6-hooks/openmote-cc2538 \
 libs/shell/openmote-cc2538 \
 libs/simple-energest/openmote-cc2538 \
 libs/deployment/openmote-cc2538 \
+6tisch/simple-node/openmote-cc2538 \
+6tisch/simple-node/openmote-cc2538:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
 
 TOOLS=
 

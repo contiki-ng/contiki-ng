@@ -46,23 +46,8 @@ MODULES += arch/dev/cc1200 arch/dev/rgb-led os/storage/cfs
 
 BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
 
-### Use the specific Zoul subplatform to query for connected devices
-ifdef MOTELIST_ZOLERTIA
-  MOTELIST_FLAGS += -b $(MOTELIST_ZOLERTIA)
-endif
-
-### Detect if a mote is connected over serial port
-ifeq ($(HOST_OS),Darwin)
-  USBDEVPREFIX=
-  MOTELIST := $(CONTIKI)/tools/zolertia/motelist-zolertia-macos
-  MOTES := $(shell $(MOTELIST) -c 2>&- | cut -f 2 -d ,)
-else
-### If we are not running under Mac, we assume Linux
-  USBDEVPREFIX=
-  MOTELIST := $(CONTIKI)/tools/zolertia/motelist-zolertia
-  MOTES := $(shell $(MOTELIST) -b $(MOTELIST_ZOLERTIA) -c 2>&- | cut -f 2 -d , | \
-            perl -ne 'print $$1 . " " if(m-(/dev/\w+)-);')
-endif
+MOTES := $(shell python $(TOOLS_DIR)/motelist/motelist.py --omit-header \
+                 | grep $(MOTELIST_ZOLERTIA) | cut -f1 -d " ")
 
 ### If PORT is defined, override to keep backward compatibility
 ifdef PORT
@@ -81,11 +66,12 @@ endif
 
 ### Variable that expands into a pattern rule to upload to a given MOTE.
 ### Requires $(MOTE) to be defined
-### $$$$ Double escapes $s that need to be passed to the shell - once for when make parses UPLOAD_RULE, and once for when the expanded rule is parsed by make.
+### $$$$ Double escapes $s that need to be passed to the shell - once for when
+### make parses UPLOAD_RULE, and once for when the expanded rule is parsed by make.
 define UPLOAD_RULE
-%.$(MOTE): %.bin %.elf
+%.$(MOTE): $(OUT_BIN) $(OUT_ELF)
 	@echo "Flashing $(MOTE)"
-	@BSL_ADDRESS=`$(OBJDUMP) -h $$*.elf | grep -B1 LOAD | \
+	@BSL_ADDRESS=`$(OBJDUMP) -h $(BUILD_DIR_BOARD)/$$*.elf | grep -B1 LOAD | \
 	             grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$$$5}' | \
 	             sort -g | head -1`; \
 	$(PYTHON) $(BSL) $(BSL_FLAGS) -b $(BSL_SPEED) -a $$$${BSL_ADDRESS} -p $(MOTE) $$<
@@ -94,10 +80,8 @@ endef
 ### Create an upload rule for every MOTE connected
 $(foreach MOTE,$(MOTES),$(eval $(UPLOAD_RULE)))
 
-motelist:
-	$(MOTELIST)
-zoul-motelist:
-	$(MOTELIST) $(MOTELIST_FLAGS)
+.PHONY: zoul-motes
+
 zoul-motes:
 	@echo $(MOTES)
 
