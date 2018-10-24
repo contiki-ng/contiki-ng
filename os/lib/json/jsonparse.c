@@ -32,34 +32,42 @@
 #include "jsonparse.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 /*--------------------------------------------------------------------*/
-static int
+static bool
 push(struct jsonparse_state *state, char c)
 {
-  state->stack[state->depth] = c;
-  state->depth++;
-  state->vtype = 0;
-  return state->depth < JSONPARSE_MAX_DEPTH;
+  if(state->depth < JSONPARSE_MAX_DEPTH) {
+    state->stack[state->depth] = c;
+    state->depth++;
+    state->vtype = 0;
+    return true;
+  } else {
+    return false;
+  }
 }
 /*--------------------------------------------------------------------*/
-static void
+static bool
 modify(struct jsonparse_state *state, char c)
 {
   if(state->depth > 0) {
     state->stack[state->depth - 1] = c;
+    return true;
+  } else {
+    return false;
   }
 }
 /*--------------------------------------------------------------------*/
-static char
+static bool
 pop(struct jsonparse_state *state)
 {
   if(state->depth == 0) {
-    return JSON_TYPE_ERROR;
+    return false;
   }
   state->depth--;
   state->vtype = state->stack[state->depth];
-  return state->stack[state->depth];
+  return true;
 }
 /*--------------------------------------------------------------------*/
 /* will pass by the value and store the start and length of the value for
@@ -134,15 +142,11 @@ skip_ws(struct jsonparse_state *state)
   }
 }
 /*--------------------------------------------------------------------*/
-static int
+static bool
 is_atomic(struct jsonparse_state *state)
 {
   char v = state->vtype;
-  if(v == 'N' || v == '"' || v == '0' || v == 'n' || v == 't' || v == 'f') {
-    return 1;
-  } else {
-    return 0;
-  }
+  return v == 'N' || v == '"' || v == '0' || v == 'n' || v == 't' || v == 'f';
 }
 /*--------------------------------------------------------------------*/
 void
@@ -163,6 +167,7 @@ jsonparse_next(struct jsonparse_state *state)
   char c;
   char s;
   char v;
+  bool ret;
 
   skip_ws(state);
   c = state->json[state->pos];
@@ -173,48 +178,51 @@ jsonparse_next(struct jsonparse_state *state)
   switch(c) {
   case '{':
     if((s == 0 && v == 0) || s == '[' || s == ':') {
-      push(state, c);
-    } else {
-      state->error = JSON_ERROR_UNEXPECTED_OBJECT;
-      return JSON_TYPE_ERROR;
+      if(push(state, c)) {
+        return c;
+      }
     }
-    return c;
+    state->error = JSON_ERROR_UNEXPECTED_OBJECT;
+    return JSON_TYPE_ERROR;
   case '}':
     if((s == ':' && v != ',' && v != 0 ) || (s == '{' && v == 0)) {
-      pop(state);
-    } else {
-      state->error = JSON_ERROR_UNEXPECTED_END_OF_OBJECT;
-      return JSON_TYPE_ERROR;
+      if(pop(state)) {
+        return c;
+      }
     }
-    return c;
+    state->error = JSON_ERROR_UNEXPECTED_END_OF_OBJECT;
+    return JSON_TYPE_ERROR;
   case ']':
     if(s == '[' && v != ',') {
-      pop(state);
-    } else {
-      state->error = JSON_ERROR_UNEXPECTED_END_OF_ARRAY;
-      return JSON_TYPE_ERROR;
+      if(pop(state)) {
+        return c;
+      }
     }
-    return c;
+    state->error = JSON_ERROR_UNEXPECTED_END_OF_ARRAY;
+    return JSON_TYPE_ERROR;
   case ':':
     if(s == '{' && v == 'N') {
-      modify(state, ':');
+      ret = modify(state, ':');
       state->vtype = 0;
-    } else {
-      state->error = JSON_ERROR_SYNTAX;
-      return JSON_TYPE_ERROR;
+      if(ret) {
+        return jsonparse_next(state);
+      }
     }
-    return jsonparse_next(state);
+    state->error = JSON_ERROR_SYNTAX;
+    return JSON_TYPE_ERROR;
   case ',':
     if(s == ':' && v != 0) {
-      modify(state, '{');
+      ret = modify(state, '{');
       state->vtype = c;
+      if(ret) {
+        return c;
+      }
     } else if(s == '[') {
       state->vtype = c;
-    } else {
-      state->error = JSON_ERROR_SYNTAX;
-      return JSON_TYPE_ERROR;
+      return c;
     }
-    return c;
+    state->error = JSON_ERROR_SYNTAX;
+    return JSON_TYPE_ERROR;
   case '"':
     if((s == 0 && v == 0) || s == '{' || s == '[' || s == ':') {
       return atomic(state, c = (s == '{' ? JSON_TYPE_PAIR_NAME : c));
@@ -225,12 +233,12 @@ jsonparse_next(struct jsonparse_state *state)
     return c;
   case '[':
     if((s == 0 && v == 0) || s == '[' || s == ':') {
-      push(state, c);
-    } else {
-      state->error = JSON_ERROR_UNEXPECTED_ARRAY;
-      return JSON_TYPE_ERROR;
+      if(push(state, c)) {
+        return c;
+      }
     }
-    return c;
+    state->error = JSON_ERROR_UNEXPECTED_ARRAY;
+    return JSON_TYPE_ERROR;
   case 0:
     if(v == 0 || state->depth > 0) {
       state->error = JSON_ERROR_SYNTAX;
