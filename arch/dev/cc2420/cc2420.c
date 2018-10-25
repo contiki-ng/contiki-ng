@@ -159,7 +159,7 @@ get_value(radio_param_t param, radio_value_t *value)
   }
   switch(param) {
   case RADIO_PARAM_POWER_MODE:
-    if ((getreg(CC2420_MDMCTRL1) & TX_MODE) & 0x08) {
+    if((getreg(CC2420_MDMCTRL1) & TX_MODE) & 0x08) {
       *value = RADIO_POWER_MODE_CARRIER_ON;
     } else {
       *value = receive_on ? RADIO_POWER_MODE_ON : RADIO_POWER_MODE_OFF;
@@ -1140,17 +1140,17 @@ static uint16_t prev_MDMCTRL1, prev_DACTST;
 static void
 set_test_mode(uint8_t enable, uint8_t modulated)
 {
-  if (enable) {
+  if(enable) {
     prev_MDMCTRL1 = getreg(CC2420_MDMCTRL1);
     setreg(CC2420_MDMCTRL1, 0x050C); 
-    if (!modulated) {
+    if(!modulated) {
       prev_DACTST = getreg(CC2420_DACTST);
       setreg(CC2420_DACTST, 0x1800);
     }
     /* actually starts the test mode */    
     strobe(CC2420_STXON);
   } else {
-    if (!modulated) {
+    if(!modulated) {
       setreg(CC2420_DACTST, prev_DACTST);
     }
     setreg(CC2420_MDMCTRL1, prev_MDMCTRL1);

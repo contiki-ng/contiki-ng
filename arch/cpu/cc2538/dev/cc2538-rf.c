@@ -408,33 +408,31 @@ set_test_mode(uint8_t enable, uint8_t modulated)
   radio_value_t mode;
   get_value(RADIO_PARAM_POWER_MODE, &mode);
   
-  if (enable) {
-    if (mode == RADIO_POWER_MODE_CARRIER_ON) {
+  if(enable) {
+    if(mode == RADIO_POWER_MODE_CARRIER_ON) {
       return;
     }
     was_on = (mode == RADIO_POWER_MODE_ON);
     off();
     prev_FRMCTRL0 = REG(RFCORE_XREG_FRMCTRL0);
-    // This constantly transmits random data
-    printf("FRMCTRL0: %08X\n", (unsigned int)prev_FRMCTRL0);
+    /* This constantly transmits random data */
     REG(RFCORE_XREG_FRMCTRL0) = 0x00000042; 
-    if (!modulated) {
+    if(!modulated) {
       prev_MDMTEST1 = REG(RFCORE_XREG_MDMTEST1);
-      printf("MDMTEST1: %08X\n", (unsigned int)prev_MDMTEST1);
-      // ...adding this we send an unmodulated carrier instead
+      /* ...adding this we send an unmodulated carrier instead */
       REG(RFCORE_XREG_MDMTEST1) = 0x00000018;
     }
     CC2538_RF_CSP_ISTXON();
   } else {
-    if (mode != RADIO_POWER_MODE_CARRIER_ON) {
+    if(mode != RADIO_POWER_MODE_CARRIER_ON) {
       return;
     }
     CC2538_RF_CSP_ISRFOFF();
     REG(RFCORE_XREG_FRMCTRL0) = prev_FRMCTRL0;
-    if (!modulated) {
+    if(!modulated) {
       REG(RFCORE_XREG_MDMTEST1) = prev_MDMTEST1;
     }
-    if (was_on) {
+    if(was_on) {
       on();
     }
   }
