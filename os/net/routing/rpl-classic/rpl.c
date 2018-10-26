@@ -423,6 +423,12 @@ get_root_ipaddr(uip_ipaddr_t *ipaddr)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+should_use_fallback_interface(uip_ipaddr_t *dest)
+{
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_classic_driver = {
   "RPL Classic",
   init,
@@ -444,6 +450,7 @@ const struct routing_driver rpl_classic_driver = {
   rpl_link_callback,
   rpl_ipv6_neighbor_callback,
   drop_route,
+  should_use_fallback_interface,
 };
 /*---------------------------------------------------------------------------*/
 

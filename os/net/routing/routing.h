@@ -172,6 +172,14 @@ struct routing_driver {
    * \param route The route that will be dropped after this function returns
    */
   void (* drop_route)(uip_ds6_route_t *route);
+  /**
+   * Tells whether or not to use the fallback interface for packets intended
+   * to a given IPv6 address.
+   *
+   * \param dest The destination IPv6 address
+   * \return 1 if the fallback interface should be used, else 0
+  */
+  int (* should_use_fallback_interface)(uip_ipaddr_t *dest);
 };
 
 #endif /* ROUTING_H_ */
