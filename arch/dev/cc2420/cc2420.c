@@ -1136,11 +1136,20 @@ set_send_on_cca(uint8_t enable)
  * (carrier) signal. See datasheet page 55.
 */
 static uint16_t prev_MDMCTRL1, prev_DACTST;
+static uint8_t was_on;
 
 static void
 set_test_mode(uint8_t enable, uint8_t modulated)
 {
+  radio_value_t mode;
+  get_value(RADIO_PARAM_POWER_MODE, &mode);
+
   if(enable) {
+    if(mode == RADIO_POWER_MODE_CARRIER_ON) {
+      return;
+    }
+    was_on = (mode == RADIO_POWER_MODE_ON);
+    off();
     prev_MDMCTRL1 = getreg(CC2420_MDMCTRL1);
     setreg(CC2420_MDMCTRL1, 0x050C); 
     if(!modulated) {
@@ -1150,12 +1159,18 @@ set_test_mode(uint8_t enable, uint8_t modulated)
     /* actually starts the test mode */    
     strobe(CC2420_STXON);
   } else {
+    if(mode != RADIO_POWER_MODE_CARRIER_ON) {
+      return;
+    }
+    strobe(CC2420_SRFOFF);
     if(!modulated) {
       setreg(CC2420_DACTST, prev_DACTST);
     }
     setreg(CC2420_MDMCTRL1, prev_MDMCTRL1);
     /* actually stops the carrier */
-    strobe(CC2420_SRFOFF);
+    if(was_on) {
+      on();
+    }
   }
 }
 /*---------------------------------------------------------------------------*/

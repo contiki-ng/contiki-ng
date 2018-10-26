@@ -397,7 +397,7 @@ get_sfd_timestamp(void)
 }
 /*---------------------------------------------------------------------------*/
 /* Enable or disable radio test mode emmiting modulated or unmodulated 
- * (carrier) signal. See datasheet page XX
+ * (carrier) signal. See User's Guide pages 719 and 741.
 */
 static uint32_t prev_FRMCTRL0, prev_MDMTEST1;
 static uint8_t was_on;
