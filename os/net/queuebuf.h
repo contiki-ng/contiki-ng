@@ -55,6 +55,12 @@
 
 #include "net/packetbuf.h"
 
+#ifdef QUEUEBUF_CONF_ENABLED
+#define QUEUEBUF_ENABLED QUEUEBUF_CONF_ENABLED
+#else /* QUEUEBUF_CONF_ENABLED */
+#define QUEUEBUF_ENABLED 1
+#endif /* QUEUEBUF_CONF_ENABLED */
+
 /* QUEUEBUF_NUM is the total number of queuebuf */
 #ifdef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_NUM QUEUEBUF_CONF_NUM
