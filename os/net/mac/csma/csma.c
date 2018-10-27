@@ -72,6 +72,8 @@ input_packet(void)
                                          &linkaddr_node_addr) &&
             !packetbuf_holds_broadcast()) {
     LOG_WARN("not for us\n");
+  } else if(linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER), &linkaddr_node_addr)) {
+    LOG_WARN("frame from ourselves\n");
   } else {
     int duplicate = 0;
 
