@@ -972,8 +972,7 @@ tsch_init(void)
     return;
   }
 
-  /* Init the queuebuf and TSCH sub-modules */
-  queuebuf_init();
+  /* Init TSCH sub-modules */
   tsch_reset();
   tsch_queue_init();
   tsch_schedule_init();
