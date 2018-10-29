@@ -62,7 +62,7 @@
 
 static int num_parents;   /* all nodes that are possible parents */
 static int num_free;
-static linkaddr_t *worst_rank_nbr_lladdr; /* lladdr of the the neighbor with the worst rank */
+static const linkaddr_t *worst_rank_nbr_lladdr; /* lladdr of the the neighbor with the worst rank */
 static rpl_rank_t worst_rank;
 
 /*---------------------------------------------------------------------------*/
@@ -78,10 +78,10 @@ update_state(void)
   worst_rank_nbr_lladdr = NULL;
   num_parents = 0;
 
-  ds6_nbr = nbr_table_head(ds6_neighbors);
+  ds6_nbr = uip_ds6_nbr_head();
   while(ds6_nbr != NULL) {
 
-    linkaddr_t *nbr_lladdr = nbr_table_get_lladdr(ds6_neighbors, ds6_nbr);
+    const linkaddr_t *nbr_lladdr = (const linkaddr_t *)uip_ds6_nbr_get_ll(ds6_nbr);
     rpl_nbr = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)nbr_lladdr);
 
     if(rpl_nbr != NULL && rpl_neighbor_is_parent(rpl_nbr)) {
@@ -97,7 +97,7 @@ update_state(void)
       worst_rank_nbr_lladdr = nbr_lladdr;
     }
 
-    ds6_nbr = nbr_table_next(ds6_neighbors, ds6_nbr);
+    ds6_nbr = uip_ds6_nbr_next(ds6_nbr);
     num_used++;
   }
   /* how many more IP neighbors can be have? */

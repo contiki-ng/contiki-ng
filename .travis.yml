@@ -30,8 +30,10 @@ before_install:
         docker push $DOCKER_IMG;
       fi
     fi
-  # Build Cooja
-  - ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar
+  # Build Cooja conditionally
+  - if [ ${BUILD_COOJA:-false} = true ] ; then
+      ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar ;
+    fi
   # Set permissions for Docker mount
   - sudo chgrp -hR 1000 $CNG_HOST_PATH
 
@@ -55,14 +57,15 @@ env:
     - TEST_NAME='compile-base'
     - TEST_NAME='compile-arm-ports-01'
     - TEST_NAME='compile-arm-ports-02'
-    - TEST_NAME='rpl-lite'
-    - TEST_NAME='rpl-classic'
-    - TEST_NAME='tun-rpl-br'
+    - TEST_NAME='rpl-lite' BUILD_COOJA=true
+    - TEST_NAME='rpl-classic' BUILD_COOJA=true
+    - TEST_NAME='tun-rpl-br' BUILD_COOJA=true
     - TEST_NAME='coap-lwm2m'
-    - TEST_NAME='simulation-base'
-    - TEST_NAME='ieee802154'
+    - TEST_NAME='simulation-base' BUILD_COOJA=true
+    - TEST_NAME='ieee802154' BUILD_COOJA=true
     - TEST_NAME='compile-nxp-ports'
     - TEST_NAME='documentation'
     - TEST_NAME='compile-tools'
     - TEST_NAME='native-runs'
-    - TEST_NAME='ipv6'
+    - TEST_NAME='ipv6' BUILD_COOJA=true
+    - TEST_NAME='ipv6-nbr' BUILD_COOJA=true

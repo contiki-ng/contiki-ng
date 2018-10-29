@@ -285,7 +285,7 @@ uint16_t rpl_get_parent_link_metric(rpl_parent_t *p);
 rpl_rank_t rpl_rank_via_parent(rpl_parent_t *p);
 const linkaddr_t *rpl_get_parent_lladdr(rpl_parent_t *p);
 uip_ipaddr_t *rpl_parent_get_ipaddr(rpl_parent_t *nbr);
-rpl_parent_t *rpl_get_parent(uip_lladdr_t *addr);
+rpl_parent_t *rpl_get_parent(const uip_lladdr_t *addr);
 rpl_rank_t rpl_get_parent_rank(uip_lladdr_t *addr);
 void rpl_dag_init(void);
 uip_ds6_nbr_t *rpl_get_nbr(rpl_parent_t *parent);
