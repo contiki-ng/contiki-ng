@@ -275,7 +275,7 @@ rpl_dag_t *rpl_get_dag(const uip_ipaddr_t *addr);
 rpl_dag_t *rpl_get_any_dag(void);
 rpl_instance_t *rpl_get_instance(uint8_t instance_id);
 int rpl_ext_header_update(void);
-int rpl_ext_header_hbh_update(int);
+int rpl_ext_header_hbh_update(uint8_t *, int);
 void rpl_insert_header(void);
 void rpl_ext_header_remove(void);
 const struct link_stats *rpl_get_parent_link_stats(rpl_parent_t *p);

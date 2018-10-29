@@ -48,7 +48,7 @@
 static uint8_t
 uip_driver_send(const linkaddr_t *addr)
 {
-  packetbuf_copyfrom(&uip_buf[UIP_LLH_LEN], uip_len);
+  packetbuf_copyfrom(uip_buf, uip_len);
 
   /* XXX we should provide a callback function that is called when the
      packet is sent. For now, we just supply a NULL pointer. */
@@ -64,9 +64,8 @@ init(void)
 static void
 input(void)
 {
-  if(packetbuf_datalen() > 0 &&
-     packetbuf_datalen() <= UIP_BUFSIZE - UIP_LLH_LEN) {
-    memcpy(&uip_buf[UIP_LLH_LEN], packetbuf_dataptr(), packetbuf_datalen());
+  if(packetbuf_datalen() > 0 && packetbuf_datalen() <= UIP_BUFSIZE) {
+    memcpy(uip_buf, packetbuf_dataptr(), packetbuf_datalen());
     uip_len = packetbuf_datalen();
     tcpip_input();
   }

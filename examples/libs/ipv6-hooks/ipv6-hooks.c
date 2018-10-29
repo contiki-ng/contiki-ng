@@ -10,8 +10,6 @@
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
-#define UIP_IP_BUF       ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 /*---------------------------------------------------------------------------*/
 PROCESS(ipv6_hooks_process, "IPv6 Hooks");
 AUTOSTART_PROCESSES(&ipv6_hooks_process);

@@ -116,8 +116,6 @@ int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif /* __SDCC */
 
-#define UIP_UDP_BUF ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 /* If RESOLV_CONF_SUPPORTS_MDNS is set, then queries
  * for domain names in the local TLD will use mDNS as
  * described by draft-cheshire-dnsext-multicastdns.
@@ -837,7 +835,7 @@ newdata(void)
         } else {
           uip_udp_packet_sendto(resolv_conn, uip_appdata,
                                 mdns_prep_host_announce_packet(),
-                                &UIP_UDP_BUF->srcipaddr,
+                                &UIP_IP_BUF->srcipaddr,
                                 UIP_UDP_BUF->srcport);
         }
         return;

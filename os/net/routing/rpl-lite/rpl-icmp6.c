@@ -62,10 +62,6 @@
 #define RPL_DIO_MOP_MASK                 0x38
 #define RPL_DIO_PREFERENCE_MASK          0x07
 
-#define UIP_IP_BUF       ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-#define UIP_ICMP_BUF     ((struct uip_icmp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_ICMP_PAYLOAD ((unsigned char *)&uip_buf[uip_l2_l3_icmp_hdr_len])
-
 /*---------------------------------------------------------------------------*/
 static void dis_input(void);
 static void dio_input(void);
@@ -147,7 +143,7 @@ dis_input(void)
   rpl_process_dis(&UIP_IP_BUF->srcipaddr, uip_is_addr_mcast(&UIP_IP_BUF->destipaddr));
 
   discard:
-    uip_clear_buf();
+    uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -329,7 +325,7 @@ dio_input(void)
   rpl_process_dio(&from, &dio);
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -540,7 +536,7 @@ dao_input(void)
   rpl_process_dao(&from, &dao);
 
   discard:
-    uip_clear_buf();
+    uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -651,7 +647,7 @@ dao_ack_input(void)
   rpl_process_dao_ack(sequence, status);
 
   discard:
-    uip_clear_buf();
+    uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void

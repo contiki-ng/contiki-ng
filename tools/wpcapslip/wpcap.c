@@ -451,7 +451,7 @@ arp_out(struct ethip_hdr *iphdr, int len)
       arphdr->protolen = 4;
       arphdr->ethhdr.type = UIP_HTONS(UIP_ETHTYPE_ARP);
 
-      /*      uip_appdata = &uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN];*/
+      /*      uip_appdata = &uip_buf[UIP_IPTCPH_LEN];*/
 
       return sizeof(struct arp_hdr);
     }
