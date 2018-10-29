@@ -396,9 +396,9 @@ get_sfd_timestamp(void)
   return RTIMER_NOW() - RADIO_TO_RTIMER(timer_val - sfd);
 }
 /*---------------------------------------------------------------------------*/
-/* Enable or disable radio test mode emmiting modulated or unmodulated 
+/* Enable or disable radio test mode emmiting modulated or unmodulated
  * (carrier) signal. See User's Guide pages 719 and 741.
-*/
+ */
 static uint32_t prev_FRMCTRL0, prev_MDMTEST1;
 static uint8_t was_on;
 
@@ -407,7 +407,7 @@ set_test_mode(uint8_t enable, uint8_t modulated)
 {
   radio_value_t mode;
   get_value(RADIO_PARAM_POWER_MODE, &mode);
-  
+
   if(enable) {
     if(mode == RADIO_POWER_MODE_CARRIER_ON) {
       return;
@@ -416,7 +416,7 @@ set_test_mode(uint8_t enable, uint8_t modulated)
     off();
     prev_FRMCTRL0 = REG(RFCORE_XREG_FRMCTRL0);
     /* This constantly transmits random data */
-    REG(RFCORE_XREG_FRMCTRL0) = 0x00000042; 
+    REG(RFCORE_XREG_FRMCTRL0) = 0x00000042;
     if(!modulated) {
       prev_MDMTEST1 = REG(RFCORE_XREG_MDMTEST1);
       /* ...adding this we send an unmodulated carrier instead */
@@ -850,7 +850,7 @@ get_value(radio_param_t param, radio_value_t *value)
 
   switch(param) {
   case RADIO_PARAM_POWER_MODE:
-    if ((REG(RFCORE_XREG_RXENABLE) & RFCORE_XREG_RXENABLE_RXENMASK) == 0) {
+    if((REG(RFCORE_XREG_RXENABLE) & RFCORE_XREG_RXENABLE_RXENMASK) == 0) {
       *value = RADIO_POWER_MODE_OFF;
     } else {
       *value = (REG(RFCORE_XREG_FRMCTRL0) & RFCORE_XREG_FRMCTRL0_TX_MODE) == 0
@@ -943,7 +943,7 @@ set_value(radio_param_t param, radio_value_t value)
     if(value == RADIO_POWER_MODE_OFF) {
       off();
       return RADIO_RESULT_OK;
-    } 
+    }
     if(value == RADIO_POWER_MODE_CARRIER_ON ||
        value == RADIO_POWER_MODE_CARRIER_OFF) {
       set_test_mode((value == RADIO_POWER_MODE_CARRIER_ON), 0);

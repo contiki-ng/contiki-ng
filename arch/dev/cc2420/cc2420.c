@@ -1132,9 +1132,9 @@ set_send_on_cca(uint8_t enable)
   send_on_cca = enable;
 }
 /*---------------------------------------------------------------------------*/
-/* Enable or disable radio test mode emmiting modulated or unmodulated 
+/* Enable or disable radio test mode emmiting modulated or unmodulated
  * (carrier) signal. See datasheet page 55.
-*/
+ */
 static uint16_t prev_MDMCTRL1, prev_DACTST;
 static uint8_t was_on;
 
@@ -1151,12 +1151,12 @@ set_test_mode(uint8_t enable, uint8_t modulated)
     was_on = (mode == RADIO_POWER_MODE_ON);
     off();
     prev_MDMCTRL1 = getreg(CC2420_MDMCTRL1);
-    setreg(CC2420_MDMCTRL1, 0x050C); 
+    setreg(CC2420_MDMCTRL1, 0x050C);
     if(!modulated) {
       prev_DACTST = getreg(CC2420_DACTST);
       setreg(CC2420_DACTST, 0x1800);
     }
-    /* actually starts the test mode */    
+    /* actually starts the test mode */
     strobe(CC2420_STXON);
   } else {
     if(mode != RADIO_POWER_MODE_CARRIER_ON) {
