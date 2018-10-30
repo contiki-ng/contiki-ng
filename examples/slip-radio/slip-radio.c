@@ -226,12 +226,11 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
 static void
 slip_input_callback(void)
 {
-  LOG_DBG("SR-SIN: %u '%c%c'\n", uip_len,
-          uip_buf[UIP_LLH_LEN], uip_buf[UIP_LLH_LEN + 1]);
-  if(!cmd_input(&uip_buf[UIP_LLH_LEN], uip_len)) {
+  LOG_DBG("SR-SIN: %u '%c%c'\n", uip_len, uip_buf[0], uip_buf[1]);
+  if(!cmd_input(uip_buf, uip_len)) {
     cmd_send((uint8_t *)"EUnknown command", 16);
   }
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static void

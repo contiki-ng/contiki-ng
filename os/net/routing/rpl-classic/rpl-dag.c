@@ -126,7 +126,7 @@ rpl_get_nbr(rpl_parent_t *parent)
 {
   const linkaddr_t *lladdr = rpl_get_parent_lladdr(parent);
   if(lladdr != NULL) {
-    return nbr_table_get_from_lladdr(ds6_neighbors, lladdr);
+    return uip_ds6_nbr_ll_lookup((const uip_lladdr_t *)lladdr);
   } else {
     return NULL;
   }
@@ -145,9 +145,9 @@ rpl_dag_init(void)
 }
 /*---------------------------------------------------------------------------*/
 rpl_parent_t *
-rpl_get_parent(uip_lladdr_t *addr)
+rpl_get_parent(const uip_lladdr_t *addr)
 {
-  rpl_parent_t *p = nbr_table_get_from_lladdr(rpl_parents, (linkaddr_t *)addr);
+  rpl_parent_t *p = nbr_table_get_from_lladdr(rpl_parents, (const linkaddr_t *)addr);
   return p;
 }
 /*---------------------------------------------------------------------------*/

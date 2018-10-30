@@ -2,10 +2,10 @@
 	path = tools/cc2538-bsl
 	url = https://github.com/JelmerT/cc2538-bsl.git
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc26xxware"]
-	path = arch/cpu/cc26xx-cc13xx/lib/cc26xxware
+	path = arch/cpu/cc26x0-cc13x0/lib/cc26xxware
 	url = https://github.com/contiki-ng/cc26xxware.git
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc13xxware"]
-	path = arch/cpu/cc26xx-cc13xx/lib/cc13xxware
+	path = arch/cpu/cc26x0-cc13x0/lib/cc13xxware
 	url = https://github.com/contiki-ng/cc13xxware.git
 [submodule "tools/sensniff"]
 	path = tools/sensniff
@@ -26,5 +26,5 @@
 	path = arch/cpu/simplelink-cc13xx-cc26xx/lib/coresdk_cc13xx_cc26xx
 	url = https://github.com/contiki-ng/coresdk_cc13xx_cc26xx.git
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc2640r2-sdk"]
-	path = arch/cpu/cc26xx-cc13xx/lib/cc2640r2-sdk
+	path = arch/cpu/cc26x0-cc13x0/lib/cc2640r2-sdk
 	url = https://github.com/contiki-ng/cc2640r2-sdk.git
