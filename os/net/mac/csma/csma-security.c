@@ -88,12 +88,14 @@ typedef struct {
 static aes_key_t keys[CSMA_LLSEC_MAXKEYS];
 
 /* assumed to be 16 bytes */
-void
-csma_security_set_key(uint8_t index, uint8_t *key)
+int
+csma_security_set_key(uint8_t index, const uint8_t *key)
 {
   if(key != NULL && index < CSMA_LLSEC_MAXKEYS) {
     memcpy(keys[index].u8, key, 16);
+    return 1;
   }
+  return 0;
 }
 
 #define N_KEYS (sizeof(keys) / sizeof(aes_key))
@@ -116,7 +118,7 @@ aead(uint8_t hdrlen, int forward)
   uint8_t with_encryption;
 
   key_index = LLSEC_KEY_INDEX;
-  if(key_index > CSMA_LLSEC_MAXKEYS) {
+  if(key_index >= CSMA_LLSEC_MAXKEYS) {
     LOG_ERR("Key not available: %u\n", key_index);
     return 0;
   }
@@ -197,8 +199,8 @@ csma_security_create_frame(void)
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     LOG_INFO_(" ");
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
-    LOG_INFO_(" %u (%u) KEY:0x%02x\n", packetbuf_datalen(), packetbuf_totlen(),
-              LLSEC_KEY_INDEX);
+    LOG_INFO_(" %u (%u) LV:%d, KEY:0x%02x\n", packetbuf_datalen(), packetbuf_totlen(),
+              packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL), LLSEC_KEY_INDEX);
 
 #if LOG_LEVEL == LOG_LEVEL_DBG
     LOG_DBG("  Payload after: (%d)", packetbuf_totlen());

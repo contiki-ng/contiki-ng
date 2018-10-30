@@ -55,6 +55,9 @@
 #if MAC_CONF_WITH_TSCH
 #include "net/mac/tsch/tsch.h"
 #endif /* MAC_CONF_WITH_TSCH */
+#if MAC_CONF_WITH_CSMA
+#include "net/mac/csma/csma.h"
+#endif
 #include "net/routing/routing.h"
 #include "net/mac/llsec802154.h"
 
@@ -424,7 +427,7 @@ PT_THREAD(cmd_rpl_global_repair(struct pt *pt, shell_output_func output, char *a
 {
   PT_BEGIN(pt);
 
-  SHELL_OUTPUT(output, "Triggering routing global repair\n")
+  SHELL_OUTPUT(output, "Triggering routing global repair\n");
   NETSTACK_ROUTING.global_repair("Shell");
 
   PT_END(pt);
@@ -447,7 +450,7 @@ PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *
 {
   PT_BEGIN(pt);
 
-  SHELL_OUTPUT(output, "Triggering routes refresh\n")
+  SHELL_OUTPUT(output, "Triggering routes refresh\n");
   rpl_refresh_routes("Shell");
 
   PT_END(pt);
@@ -733,11 +736,8 @@ PT_THREAD(cmd_6top(struct pt *pt, shell_output_func output, char *args))
 static
 PT_THREAD(cmd_llsec_setlv(struct pt *pt, shell_output_func output, char *args))
 {
-  char *next_args;
 
   PT_BEGIN(pt);
-
-  SHELL_ARGS_INIT(args, next_args);
 
   if(args == NULL) {
     SHELL_OUTPUT(output, "Default LLSEC level is %d\n",
@@ -754,7 +754,6 @@ PT_THREAD(cmd_llsec_setlv(struct pt *pt, shell_output_func output, char *args))
       SHELL_OUTPUT(output, "LLSEC default level set %d\n", lv);
     }
   }
-  SHELL_ARGS_NEXT(args, next_args);
 
   PT_END(pt);
 }
@@ -775,7 +774,7 @@ PT_THREAD(cmd_llsec_setkey(struct pt *pt, shell_output_func output, char *args))
     int key;
     SHELL_ARGS_NEXT(args, next_args);
     key = atoi(args);
-    if(key < 0 || key > 16) {
+    if(key < 0) {
       SHELL_OUTPUT(output, "Illegal LLSEC Key index %d\n", key);
       PT_EXIT(pt);
     } else {
@@ -783,7 +782,7 @@ PT_THREAD(cmd_llsec_setkey(struct pt *pt, shell_output_func output, char *args))
       /* Get next arg (key-string) */
       SHELL_ARGS_NEXT(args, next_args);
       if(args != NULL && strlen(args) == 16) {
-        csma_security_set_key(key, (uint8_t *) args);
+        csma_security_set_key(key, (const uint8_t *) args);
         SHELL_OUTPUT(output, "Set key for index %d\n", key);
       } else {
         SHELL_OUTPUT(output, "Wrong length of key: '%s' (%d)\n", args, strlen(args));

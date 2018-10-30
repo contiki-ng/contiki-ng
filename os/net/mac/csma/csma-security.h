@@ -71,6 +71,4 @@
 #define CSMA_LLSEC_MAXKEYS 1
 #endif
 
-void csma_security_set_key(uint8_t index, uint8_t *key);
-
 #endif /* CSMA_SECURITY_H_ */

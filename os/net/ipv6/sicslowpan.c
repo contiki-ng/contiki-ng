@@ -2012,6 +2012,19 @@ input(void)
       callback->input_callback();
     }
 
+#if LLSEC802154_USES_AUX_HEADER
+    /*
+     * Assuming that the last packet in packetbuf is containing
+     *  the LLSEC state so that it can be copied to uipbuf.
+     */
+    uipbuf_set_attr(UIPBUF_ATTR_LLSEC_LEVEL,
+      packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL));
+#if LLSEC802154_USES_EXPLICIT_KEYS
+    uipbuf_set_attr(UIPBUF_ATTR_LLSEC_KEY_ID,
+      packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX));
+#endif /* LLSEC802154_USES_EXPLICIT_KEYS */
+#endif /*  LLSEC802154_USES_AUX_HEADER */
+
     tcpip_input();
 #if SICSLOWPAN_CONF_FRAG
   }

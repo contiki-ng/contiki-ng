@@ -171,11 +171,9 @@ send_one_packet(void *ptr)
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
 
 #if LLSEC802154_ENABLED
-  /* These should possibly be taken from upper layers in the future */
-  packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, CSMA_LLSEC_SECURITY_LEVEL);
 #if LLSEC802154_USES_EXPLICIT_KEYS
+  /* This should possibly be taken from upper layers in the future */
   packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, CSMA_LLSEC_KEY_ID_MODE);
-  packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, CSMA_LLSEC_KEY_INDEX);
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
 #endif /* LLSEC802154_ENABLED */
 

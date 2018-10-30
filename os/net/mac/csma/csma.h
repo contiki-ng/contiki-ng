@@ -83,7 +83,7 @@ int csma_security_create_frame(void);
 int csma_security_parse_frame(void);
 
 /* key management for CSMA */
-void csma_security_set_key(uint8_t index, uint8_t *key);
+int csma_security_set_key(uint8_t index, const uint8_t *key);
 
 
 #endif /* CSMA_H_ */
