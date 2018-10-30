@@ -69,7 +69,7 @@
 #ifdef  CSMA_MAC_CONF_LEN
 #define CSMA_MAC_LEN CSMA_MAC_CONF_LEN
 #else
-#define CSMA_MAC_LEN 127
+#define CSMA_MAC_LEN 127 - 2
 #endif
 
 /* just a default - with LLSEC, etc */

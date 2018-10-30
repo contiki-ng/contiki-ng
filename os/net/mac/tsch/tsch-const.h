@@ -66,8 +66,8 @@
 /* 1 channel, sequence length 1 */
 #define TSCH_HOPPING_SEQUENCE_1_1 (uint8_t[]){ 20 }
 
-/* Max TSCH packet lenght */
-#define TSCH_PACKET_MAX_LEN MIN(127, PACKETBUF_SIZE)
+/* Max TSCH packet lenght - last bytes are CRC in default 802.15.4 packets */
+#define TSCH_PACKET_MAX_LEN MIN(127 - 2, PACKETBUF_SIZE)
 
 /* The jitter to remove in ticks.
  * This should be the sum of measurement errors on Tx and Rx nodes.
