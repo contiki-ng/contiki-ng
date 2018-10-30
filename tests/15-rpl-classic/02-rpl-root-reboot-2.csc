@@ -232,7 +232,7 @@
       <script>var last_msg = 0;
 var root_id = 4;
 var ip_addresses = [];
-var rpl_done = 10000 // expected time for all motes to be part of rpl instance
+var rpl_done = 60000; // 1 minute - expected time for all motes to be part of rpl instance
 
 function MY_GENERATE_MSG(wait, string)
 {
@@ -246,14 +246,14 @@ MY_GENERATE_MSG(rpl_done, "get ip addresses");
 MY_GENERATE_MSG(1000, "check ip addresses");
 
 /* Root restarts and acts as root before rejoining existing rpl instance */
-MY_GENERATE_MSG(1000, "remove mote " + root_id);
-MY_GENERATE_MSG(1000, "add mote " + root_id);
+MY_GENERATE_MSG(1000, "remove root " + root_id);
+MY_GENERATE_MSG(1000, "add root " + root_id);
 MY_GENERATE_MSG(1000, "set root");
 MY_GENERATE_MSG(rpl_done, "get ip addresses");
 MY_GENERATE_MSG(1000, "check ip addresses");
 /* Set root 2nd time should be ignored */
 MY_GENERATE_MSG(100, "set root");
-MY_GENERATE_MSG(rpl_done, "get ip addresses");
+MY_GENERATE_MSG(1000, "get ip addresses");
 MY_GENERATE_MSG(1000, "check ip addresses");
 
 /* Root restarts and rejoins existing rpl instance */
