@@ -65,12 +65,11 @@
  * neighbors and are not only MAC neighbors.
  */
 #define MAX_CHILDREN (NBR_TABLE_MAX_NEIGHBORS - 2)
-#define UIP_IP_BUF       ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 static int num_parents; /* any node that are possible parents */
 static int num_children;  /* all children that we have as nexthop */
 static int num_free;
-static linkaddr_t *worst_rank_nbr; /* the parent that has the worst rank */
+static const linkaddr_t *worst_rank_nbr; /* the parent that has the worst rank */
 static rpl_rank_t worst_rank;
 /*---------------------------------------------------------------------------*/
 #if LOG_DBG_ENABLED
@@ -112,9 +111,9 @@ update_nbr(void)
   num_parents = 0;
   num_children = 0;
 
-  nbr = nbr_table_head(ds6_neighbors);
+  nbr = uip_ds6_nbr_head();
   while(nbr != NULL) {
-    linkaddr_t *lladdr = nbr_table_get_lladdr(ds6_neighbors, nbr);
+    const linkaddr_t *lladdr = (const linkaddr_t *)uip_ds6_nbr_get_ll(nbr);
     is_used = 0;
 
     /*
@@ -127,7 +126,7 @@ update_nbr(void)
       num_children++;
     }
 
-    parent = rpl_get_parent((uip_lladdr_t *)lladdr);
+    parent = rpl_get_parent((const uip_lladdr_t *)lladdr);
     if(parent != NULL) {
       num_parents++;
 
@@ -159,7 +158,7 @@ update_nbr(void)
       LOG_DBG_("\n");
     }
 
-    nbr = nbr_table_next(ds6_neighbors, nbr);
+    nbr = uip_ds6_nbr_next(nbr);
     num_used++;
   }
   /* how many more IP neighbors can be have? */

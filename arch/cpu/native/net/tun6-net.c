@@ -263,7 +263,7 @@ output(const linkaddr_t *localdest)
 {
   LOG_DBG("SUT: %u\n", uip_len);
   if(uip_len > 0) {
-    return tun_output(&uip_buf[UIP_LLH_LEN], uip_len);
+    return tun_output(uip_buf, uip_len);
   }
   return 0;
 }
@@ -297,7 +297,7 @@ handle_fd(fd_set *rset, fd_set *wset)
   LOG_INFO("Tun6-handle FD\n");
 
   if(FD_ISSET(tunfd, rset)) {
-    size = tun_input(&uip_buf[UIP_LLH_LEN], sizeof(uip_buf));
+    size = tun_input(uip_buf, sizeof(uip_buf));
     LOG_DBG("TUN data incoming read:%d\n", size);
     uip_len = size;
     tcpip_input();

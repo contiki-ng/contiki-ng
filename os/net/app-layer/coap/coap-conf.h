@@ -99,7 +99,9 @@
 #endif /* COAP_MAX_OBSERVERS */
 
 /* Interval in notifies in which NON notifies are changed to CON notifies to check client. */
-#ifndef COAP_OBSERVE_REFRESH_INTERVAL
+#ifdef COAP_CONF_OBSERVE_REFRESH_INTERVAL
+#define COAP_OBSERVE_REFRESH_INTERVAL COAP_CONF_OBSERVE_REFRESH_INTERVAL
+#else
 #define COAP_OBSERVE_REFRESH_INTERVAL  20
 #endif /* COAP_OBSERVE_REFRESH_INTERVAL */
 

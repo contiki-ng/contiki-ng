@@ -70,9 +70,6 @@
 #define RPL_DIO_MOP_MASK                 0x38
 #define RPL_DIO_PREFERENCE_MASK          0x07
 
-#define UIP_IP_BUF       ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-#define UIP_ICMP_BUF     ((struct uip_icmp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_ICMP_PAYLOAD ((unsigned char *)&uip_buf[uip_l2_l3_icmp_hdr_len])
 /*---------------------------------------------------------------------------*/
 static void dis_input(void);
 static void dio_input(void);
@@ -251,7 +248,7 @@ dis_input(void)
       }
     }
   }
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -471,7 +468,7 @@ dio_input(void)
   rpl_process_dio(&from, &dio);
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -810,7 +807,7 @@ dao_input_storing(void)
     /* independent if we remove or not - ACK the request */
     if(flags & RPL_DAO_K_FLAG) {
       /* indicate that we accepted the no-path DAO */
-      uip_clear_buf();
+      uipbuf_clear();
       dao_ack_output(instance, &dao_sender_addr, sequence,
                      RPL_DAO_ACK_UNCONDITIONAL_ACCEPT);
     }
@@ -900,7 +897,7 @@ fwd_dao:
     }
     if(should_ack) {
       LOG_DBG("Sending DAO ACK\n");
-      uip_clear_buf();
+      uipbuf_clear();
       dao_ack_output(instance, &dao_sender_addr, sequence,
                      RPL_DAO_ACK_UNCONDITIONAL_ACCEPT);
     }
@@ -1014,7 +1011,7 @@ dao_input_nonstoring(void)
 
   if(flags & RPL_DAO_K_FLAG) {
     LOG_DBG("Sending DAO ACK\n");
-    uip_clear_buf();
+    uipbuf_clear();
     dao_ack_output(instance, &dao_sender_addr, sequence,
                    RPL_DAO_ACK_UNCONDITIONAL_ACCEPT);
   }
@@ -1047,7 +1044,7 @@ dao_input(void)
   }
 
 discard:
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_DAO_ACK
@@ -1286,7 +1283,7 @@ dao_ack_input(void)
 
   instance = rpl_get_instance(instance_id);
   if(instance == NULL) {
-    uip_clear_buf();
+    uipbuf_clear();
     return;
   }
 
@@ -1294,7 +1291,7 @@ dao_ack_input(void)
     parent = rpl_find_parent(instance->current_dag, &UIP_IP_BUF->srcipaddr);
     if(parent == NULL) {
       /* not a known instance - drop the packet and ignore */
-      uip_clear_buf();
+      uipbuf_clear();
       return;
     }
   } else {
@@ -1303,7 +1300,7 @@ dao_ack_input(void)
 
   if(instance->current_dag->rank == ROOT_RANK(instance)) {
     LOG_DBG("DODAG root received a DAO ACK, ignoring it\n");
-    uip_clear_buf();
+    uipbuf_clear();
     return;
   }
 
@@ -1363,7 +1360,7 @@ dao_ack_input(void)
     }
   }
 #endif /* RPL_WITH_DAO_ACK */
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 void

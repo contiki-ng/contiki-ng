@@ -39,8 +39,6 @@
 
 #include <string.h>
 
-#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 #define DEBUG DEBUG_NONE
 #include "net/ipv6/uip-debug.h"
 #define printf(...)
@@ -62,7 +60,7 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
     printf("-------------->\n");
     uip_len = ip64_4to6(&packet[sizeof(struct ip64_eth_hdr)],
 			len - sizeof(struct ip64_eth_hdr),
-			&uip_buf[UIP_LLH_LEN]);
+			uip_buf);
     if(uip_len > 0) {
       printf("ip64_interface_process: converted %d bytes\n", uip_len);
 
@@ -96,7 +94,7 @@ output(void)
   PRINTF("\n");
 
   printf("<--------------\n");
-  len = ip64_6to4(&uip_buf[UIP_LLH_LEN], uip_len,
+  len = ip64_6to4(uip_buf, uip_len,
 		  &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
 
   printf("ip64-interface: output len %d\n", len);

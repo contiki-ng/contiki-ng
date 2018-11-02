@@ -121,12 +121,8 @@
 #define SICSLOWPAN_UDP_BUF(buf)  ((struct uip_udp_hdr *)&buf[UIP_IPH_LEN])
 #define SICSLOWPAN_IPPAYLOAD_BUF(buf) (&buf[UIP_IPH_LEN])
 
-
-#define UIP_IP_BUF          ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-#define UIP_UDP_BUF(p)          ((struct uip_udp_hdr *)&uip_buf[UIP_LLIPH_LEN + p])
-#define UIP_TCP_BUF          ((struct uip_tcp_hdr *)&uip_buf[UIP_LLIPH_LEN])
-#define UIP_ICMP_BUF          ((struct uip_icmp_hdr *)&uip_buf[UIP_LLIPH_LEN])
-#define UIP_IPPAYLOAD_BUF(pos)          (&uip_buf[UIP_LLIPH_LEN + pos])
+#define UIP_IPPAYLOAD_BUF_POS(pos)         (&uip_buf[UIP_IPH_LEN + (pos)])
+#define UIP_UDP_BUF_POS(pos)               ((struct uip_udp_hdr *)UIP_IPPAYLOAD_BUF_POS(pos))
 
 /** @} */
 
@@ -448,9 +444,9 @@ set_packet_attrs(void)
 
   /* assign values to the channel attribute (port or type + code) */
   if(UIP_IP_BUF->proto == UIP_PROTO_UDP) {
-    c = UIP_UDP_BUF(0)->srcport;
-    if(UIP_UDP_BUF(0)->destport < c) {
-      c = UIP_UDP_BUF(0)->destport;
+    c = UIP_UDP_BUF_POS(0)->srcport;
+    if(UIP_UDP_BUF_POS(0)->destport < c) {
+      c = UIP_UDP_BUF_POS(0)->destport;
     }
   } else if(UIP_IP_BUF->proto == UIP_PROTO_TCP) {
     c = UIP_TCP_BUF->srcport;
@@ -901,7 +897,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
       /* Handle the header here! */
       {
         struct uip_ext_hdr *ext_hdr =
-          (struct uip_ext_hdr *) UIP_IPPAYLOAD_BUF(ext_hdr_len);
+          (struct uip_ext_hdr *) UIP_IPPAYLOAD_BUF_POS(ext_hdr_len);
         int len;
         proto = proto == -1 ? SICSLOWPAN_NHC_ETX_HDR_DESTO : proto;
         /* Len is defined to be in octets from the length byte */
@@ -940,7 +936,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
     case UIP_PROTO_UDP:
       /* allocate a byte for the next header posision as UDP has no next */
       hc06_ptr++;
-      udp_buf = UIP_UDP_BUF(ext_hdr_len);
+      udp_buf = UIP_UDP_BUF_POS(ext_hdr_len);
       LOG_DBG("compression: inlined UDP ports on send side: %x, %x\n",
              UIP_HTONS(udp_buf->srcport), UIP_HTONS(udp_buf->destport));
       /* Mask out the last 4 bits can be used as a mask */
@@ -1921,12 +1917,12 @@ input(void)
 
   /* Sanity-check size of incoming packet to avoid buffer overflow */
   {
-    int req_size = UIP_LLH_LEN + uncomp_hdr_len + (uint16_t)(frag_offset << 3)
+    int req_size = uncomp_hdr_len + (uint16_t)(frag_offset << 3)
         + packetbuf_payload_len;
     if(req_size > sizeof(uip_buf)) {
       LOG_ERR(
-          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d+%d=%d (current size: %u)\n",
-          UIP_LLH_LEN, uncomp_hdr_len, (uint16_t)(frag_offset << 3),
+          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          uncomp_hdr_len, (uint16_t)(frag_offset << 3),
           packetbuf_payload_len, req_size, (unsigned)sizeof(uip_buf));
       return;
     }
@@ -2059,11 +2055,6 @@ sicslowpan_init(void)
 #endif /* SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS > 1 */
 
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC */
-
-  /* We use the queuebuf module if fragmentation is enabled */
-#if SICSLOWPAN_CONF_FRAG
-  queuebuf_init();
-#endif
 }
 /*--------------------------------------------------------------------*/
 int
