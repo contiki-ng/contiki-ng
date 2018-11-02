@@ -871,7 +871,7 @@ const struct shell_command_t builtin_shell_commands[] = {
 #endif /* TSCH_WITH_SIXTOP */
 #if LLSEC802154_ENABLED
   { "llsec-set-level", cmd_llsec_setlv, "'> llsec-set-level <lv>': Set the level of link layer security (show if no lv argument)"},
-  { "llsec-set-key", cmd_llsec_setkey, "'> llsec-set-key <id> <key>': Set the key of link layer security (show if no id key argument)"},
+  { "llsec-set-key", cmd_llsec_setkey, "'> llsec-set-key <id> <key>': Set the key of link layer security"},
 #endif /* LLSEC802154_ENABLED */
   { NULL, NULL, NULL },
 };
