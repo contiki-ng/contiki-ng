@@ -781,7 +781,9 @@ PT_THREAD(cmd_llsec_setkey(struct pt *pt, shell_output_func output, char *args))
 #if MAC_CONF_WITH_CSMA
       /* Get next arg (key-string) */
       SHELL_ARGS_NEXT(args, next_args);
-      if(args != NULL && strlen(args) == 16) {
+      if(args == NULL) {
+        SHELL_OUTPUT(output, "Provide both an index and a key\n");
+      } else if(strlen(args) == 16) {
         csma_security_set_key(key, (const uint8_t *) args);
         SHELL_OUTPUT(output, "Set key for index %d\n", key);
       } else {
