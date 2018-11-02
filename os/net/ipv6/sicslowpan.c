@@ -1787,6 +1787,9 @@ input(void)
     return;
   }
 
+  /* Clear uipbuf and set default attributes */
+  uipbuf_clear();
+
   /* This is default uip_buf since we assume that this is not fragmented */
   buffer = (uint8_t *)UIP_IP_BUF;
 
@@ -1821,7 +1824,6 @@ input(void)
       }
 
       buffer = frag_info[frag_context].first_frag;
-
       break;
     case SICSLOWPAN_DISPATCH_FRAGN:
       /*
