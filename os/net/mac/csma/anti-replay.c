@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2014, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,59 +32,84 @@
 
 /**
  * \file
- *         A MAC protocol that does not do anything.
+ *         Protects against replay attacks by comparing with the last
+ *         unicast or broadcast frame counter of the sender.
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Konrad Krentz <konrad.krentz@gmail.com>
  */
 
-#include "net/mac/nullmac/nullmac.h"
-#include "net/netstack.h"
-#include "net/ipv6/uip.h"
-#include "net/ipv6/tcpip.h"
+/**
+ * \addtogroup csma
+ * @{
+ */
+
+#include "net/mac/csma/anti-replay.h"
 #include "net/packetbuf.h"
-#include "net/netstack.h"
+#include "net/mac/llsec802154.h"
+
+#if LLSEC802154_USES_FRAME_COUNTER
+
+/* This node's current frame counter value */
+static uint32_t counter;
 
 /*---------------------------------------------------------------------------*/
-static void
-send_packet(mac_callback_t sent, void *ptr)
+void
+anti_replay_set_counter(void)
 {
+  frame802154_frame_counter_t reordered_counter;
+
+  ++counter;
+  reordered_counter.u32 = LLSEC802154_HTONL(counter);
+  
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1, reordered_counter.u16[0]);
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3, reordered_counter.u16[1]);
 }
 /*---------------------------------------------------------------------------*/
-static void
-packet_input(void)
+uint32_t
+anti_replay_get_counter(void)
 {
+  frame802154_frame_counter_t disordered_counter;
+  
+  disordered_counter.u16[0] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1);
+  disordered_counter.u16[1] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3);
+  
+  return LLSEC802154_HTONL(disordered_counter.u32); 
 }
 /*---------------------------------------------------------------------------*/
-static int
-on(void)
+void
+anti_replay_init_info(struct anti_replay_info *info)
 {
-  return 0;
+  info->last_broadcast_counter
+      = info->last_unicast_counter
+      = anti_replay_get_counter();
 }
 /*---------------------------------------------------------------------------*/
-static int
-off(void)
+int
+anti_replay_was_replayed(struct anti_replay_info *info)
 {
-  return 0;
+  uint32_t received_counter;
+  
+  received_counter = anti_replay_get_counter();
+  
+  if(packetbuf_holds_broadcast()) {
+    /* broadcast */
+    if(received_counter <= info->last_broadcast_counter) {
+      return 1;
+    } else {
+      info->last_broadcast_counter = received_counter;
+      return 0;
+    }
+  } else {
+    /* unicast */
+    if(received_counter <= info->last_unicast_counter) {
+      return 1;
+    } else {
+      info->last_unicast_counter = received_counter;
+      return 0;
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
-static int
-max_payload(void)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-const struct mac_driver nullmac_driver = {
-  "nullmac",
-  init,
-  send_packet,
-  packet_input,
-  on,
-  off,
-  max_payload,
-};
-/*---------------------------------------------------------------------------*/
+#endif /* LLSEC802154_USES_FRAME_COUNTER */
+
+/** @} */

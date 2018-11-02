@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2018, Tiny Mesh AS
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -27,54 +30,45 @@
  *
  */
 
-#include "contiki.h"
-#include "net/routing/routing.h"
-#include "net/netstack.h"
-#include "net/ipv6/simple-udp.h"
+/**
+ * \file
+ *         LLSEC802154 Security related configuration
+ * \author
+ *         Olav Frengstad <olav@tiny-mesh.com>
+ */
 
-#include "sys/log.h"
-#define LOG_MODULE "App"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#ifndef CSMA_SECURITY_H_
+#define CSMA_SECURITY_H_
 
-#define WITH_SERVER_REPLY  1
-#define UDP_CLIENT_PORT	8765
-#define UDP_SERVER_PORT	5678
 
-static struct simple_udp_connection udp_conn;
+#ifdef CSMA_CONF_LLSEC_DEFAULT_KEY0
+#define CSMA_LLSEC_DEFAULT_KEY0 CSMA_CONF_LLSEC_DEFAULT_KEY0
+#else
+#define CSMA_LLSEC_DEFAULT_KEY0 {0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f}
+#endif
 
-PROCESS(udp_server_process, "UDP server");
-AUTOSTART_PROCESSES(&udp_server_process);
-/*---------------------------------------------------------------------------*/
-static void
-udp_rx_callback(struct simple_udp_connection *c,
-         const uip_ipaddr_t *sender_addr,
-         uint16_t sender_port,
-         const uip_ipaddr_t *receiver_addr,
-         uint16_t receiver_port,
-         const uint8_t *data,
-         uint16_t datalen)
-{
-  LOG_INFO("Received request '%.*s' from ", datalen, (char *) data);
-  LOG_INFO_6ADDR(sender_addr);
-  LOG_INFO_("\n");
-#if WITH_SERVER_REPLY
-  /* send back the same string to the client as an echo reply */
-  LOG_INFO("Sending response.\n");
-  simple_udp_sendto(&udp_conn, data, datalen, sender_addr);
-#endif /* WITH_SERVER_REPLY */
-}
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(udp_server_process, ev, data)
-{
-  PROCESS_BEGIN();
+#ifdef CSMA_CONF_LLSEC_SECURITY_LEVEL
+#define CSMA_LLSEC_SECURITY_LEVEL   CSMA_CONF_LLSEC_SECURITY_LEVEL
+#else
+#define CSMA_LLSEC_SECURITY_LEVEL   5
+#endif /* CSMA_CONF_LLSEC_SECURITY_LEVEL */
 
-  /* Initialize DAG root */
-  NETSTACK_ROUTING.root_start();
+#ifdef CSMA_CONF_LLSEC_KEY_ID_MODE
+#define CSMA_LLSEC_KEY_ID_MODE   CSMA_CONF_LLSEC_KEY_ID_MODE
+#else
+#define CSMA_LLSEC_KEY_ID_MODE   FRAME802154_IMPLICIT_KEY
+#endif /* CSMA_CONF_LLSEC_KEY_ID_MODE */
 
-  /* Initialize UDP connection */
-  simple_udp_register(&udp_conn, UDP_SERVER_PORT, NULL,
-                      UDP_CLIENT_PORT, udp_rx_callback);
+#ifdef CSMA_CONF_LLSEC_KEY_INDEX
+#define CSMA_LLSEC_KEY_INDEX   CSMA_CONF_LLSEC_KEY_INDEX
+#else
+#define CSMA_LLSEC_KEY_INDEX   0
+#endif /* CSMA_CONF_LLSEC_KEY_INDEX */
 
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/
+#ifdef CSMA_CONF_LLSEC_MAXKEYS
+#define CSMA_LLSEC_MAXKEYS CSMA_CONF_LLSEC_MAXKEYS
+#else
+#define CSMA_LLSEC_MAXKEYS 1
+#endif
+
+#endif /* CSMA_SECURITY_H_ */

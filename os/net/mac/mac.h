@@ -76,6 +76,9 @@ struct mac_driver {
 
   /** Turn the MAC layer off. */
   int (* off)(void);
+
+  /** Read out estimated max payload size based on payload in packetbuf */
+  int (* max_payload)(void);
 };
 
 /* Generic MAC return values. */

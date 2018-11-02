@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2013, Hasso-Plattner-Institut.
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -27,54 +30,51 @@
  *
  */
 
-#include "contiki.h"
-#include "net/routing/routing.h"
-#include "net/netstack.h"
-#include "net/ipv6/simple-udp.h"
+/**
+ * \file
+ *         CCM* convenience functions for LLSEC use
+ * \author
+ *         Justin King-Lacroix <justin.kinglacroix@gmail.com>
+ *         Konrad Krentz <konrad.krentz@gmail.com>
+ */
 
-#include "sys/log.h"
-#define LOG_MODULE "App"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#include "net/linkaddr.h"
+#include "net/packetbuf.h"
+#include "net/mac/llsec802154.h"
+#include <string.h>
 
-#define WITH_SERVER_REPLY  1
-#define UDP_CLIENT_PORT	8765
-#define UDP_SERVER_PORT	5678
+#if LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER
 
-static struct simple_udp_connection udp_conn;
-
-PROCESS(udp_server_process, "UDP server");
-AUTOSTART_PROCESSES(&udp_server_process);
 /*---------------------------------------------------------------------------*/
-static void
-udp_rx_callback(struct simple_udp_connection *c,
-         const uip_ipaddr_t *sender_addr,
-         uint16_t sender_port,
-         const uip_ipaddr_t *receiver_addr,
-         uint16_t receiver_port,
-         const uint8_t *data,
-         uint16_t datalen)
+static const uint8_t *
+get_extended_address(const linkaddr_t *addr)
+#if LINKADDR_SIZE == 2
 {
-  LOG_INFO("Received request '%.*s' from ", datalen, (char *) data);
-  LOG_INFO_6ADDR(sender_addr);
-  LOG_INFO_("\n");
-#if WITH_SERVER_REPLY
-  /* send back the same string to the client as an echo reply */
-  LOG_INFO("Sending response.\n");
-  simple_udp_sendto(&udp_conn, data, datalen, sender_addr);
-#endif /* WITH_SERVER_REPLY */
+  /* workaround for short addresses: derive EUI64 as in RFC 6282 */
+  static linkaddr_extended_t template = { { 0x00 , 0x00 , 0x00 ,
+                                            0xFF , 0xFE , 0x00 , 0x00 , 0x00 } };
+  template.u16[3] = LLSEC802154_HTONS(addr->u16);
+
+  return template.u8;
+}
+#else /* LINKADDR_SIZE == 2 */
+{
+  return addr->u8;
+}
+#endif /* LINKADDR_SIZE == 2 */
+/*---------------------------------------------------------------------------*/
+void
+ccm_star_packetbuf_set_nonce(uint8_t *nonce, int forward)
+{
+  const linkaddr_t *source_addr;
+
+  source_addr = forward ? &linkaddr_node_addr : packetbuf_addr(PACKETBUF_ADDR_SENDER);
+  memcpy(nonce, get_extended_address(source_addr), 8);
+  nonce[8] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3) >> 8;
+  nonce[9] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3) & 0xff;
+  nonce[10] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1) >> 8;
+  nonce[11] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1) & 0xff;
+  nonce[12] = packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL);
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(udp_server_process, ev, data)
-{
-  PROCESS_BEGIN();
-
-  /* Initialize DAG root */
-  NETSTACK_ROUTING.root_start();
-
-  /* Initialize UDP connection */
-  simple_udp_register(&udp_conn, UDP_SERVER_PORT, NULL,
-                      UDP_CLIENT_PORT, udp_rx_callback);
-
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/
+#endif /* LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER */

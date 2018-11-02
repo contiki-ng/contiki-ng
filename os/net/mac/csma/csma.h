@@ -65,6 +65,25 @@
 
 #define CSMA_ACK_LEN 3
 
+/* Default MAC len for 802.15.4 classic */
+#ifdef  CSMA_MAC_CONF_LEN
+#define CSMA_MAC_LEN CSMA_MAC_CONF_LEN
+#else
+#define CSMA_MAC_LEN 127 - 2
+#endif
+
+/* just a default - with LLSEC, etc */
+#define CSMA_MAC_MAX_HEADER 21
+
+
 extern const struct mac_driver csma_driver;
+
+/* CSMA security framer functions */
+int csma_security_create_frame(void);
+int csma_security_parse_frame(void);
+
+/* key management for CSMA */
+int csma_security_set_key(uint8_t index, const uint8_t *key);
+
 
 #endif /* CSMA_H_ */
