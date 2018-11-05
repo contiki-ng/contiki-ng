@@ -32,6 +32,7 @@
 
 #include "contiki.h"
 #include "net/routing/routing.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/ipv6/uip-sr.h"
 
@@ -90,9 +91,9 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
   ADD("  Neighbors\n  <ul>\n");
   SEND(&s->sout);
-  for(nbr = nbr_table_head(ds6_neighbors);
+  for(nbr = uip_ds6_nbr_head();
       nbr != NULL;
-      nbr = nbr_table_next(ds6_neighbors, nbr)) {
+      nbr = uip_ds6_nbr_next(nbr)) {
     ADD("    <li>");
     ipaddr_add(&nbr->ipaddr);
     ADD("</li>\n");

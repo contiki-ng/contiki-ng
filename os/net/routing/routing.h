@@ -131,12 +131,13 @@ struct routing_driver {
   * Process and update the routing protocol hob-by-hop
   * extention headers of the current uIP packet.
   *
-  * \param uip_ext_opt_offset The offset within the uIP packet where
-  * extension headers start
+  * \param ext_buf A pointer to the ext header buffer
+  * \param opt_offset The offset within the extension header where
+  * the option starts
   * \return 1 in case the packet is valid and to be processed further,
   * 0 in case the packet must be dropped.
   */
-  int (* ext_header_hbh_update)(int uip_ext_opt_offset);
+  int (* ext_header_hbh_update)(uint8_t *ext_buf, int opt_offset);
   /**
   * Process and update SRH in-place,
   * i.e. internal address swapping as per RFC6554

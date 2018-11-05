@@ -139,7 +139,7 @@ ip64_arp_timer(void)
 {
   struct arp_entry *tabptr;
   int i;
-  
+
   ++arptime;
   for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
     tabptr = &arp_table[i];
@@ -157,7 +157,7 @@ arp_update(uip_ip4addr_t *ipaddr, struct uip_eth_addr *ethaddr)
 {
   register struct arp_entry *tabptr = arp_table;
   int i, c;
-  
+
   /* Walk through the ARP mapping table and try to find an entry to
      update. If none is found, the IP -> MAC address mapping is
      inserted in the ARP table. */
@@ -170,7 +170,7 @@ arp_update(uip_ip4addr_t *ipaddr, struct uip_eth_addr *ethaddr)
       /* Check if the source IP address of the incoming packet matches
          the IP address in this ARP table entry. */
       if(uip_ip4addr_cmp(ipaddr, &tabptr->ipaddr)) {
-	 
+
 	/* An old entry found, update this and return. */
 	memcpy(tabptr->ethaddr.addr, ethaddr->addr, 6);
 	tabptr->time = arptime;
@@ -239,7 +239,7 @@ ip64_arp_arp_input(const uint8_t *packet, uint16_t packet_len)
 	 table, since it is likely that we will do more communication
 	 with this host in the future. */
       arp_update(&arphdr->sipaddr, &arphdr->shwaddr);
-      
+
       arphdr->opcode = UIP_HTONS(ARP_REPLY);
 
       memcpy(arphdr->dhwaddr.addr, arphdr->shwaddr.addr, 6);
@@ -275,7 +275,7 @@ ip64_arp_check_cache(const uint8_t *nlhdr)
 
   printf("check cache %d.%d.%d.%d\n",
 	 uip_ipaddr_to_quad(&ipv4_hdr->destipaddr));
-  
+
   /* First check if destination is a local broadcast. */
   uip_ipaddr(&broadcast_addr, 255,255,255,255);
   if(uip_ip4addr_cmp(&ipv4_hdr->destipaddr, &broadcast_addr)) {
@@ -321,7 +321,7 @@ ip64_arp_create_ethhdr(uint8_t *llhdr, const uint8_t *nlhdr)
   struct ipv4_hdr *ipv4_hdr = (struct ipv4_hdr *)nlhdr;
   struct ip64_eth_hdr *ethhdr = (struct ip64_eth_hdr *)llhdr;
   uip_ip4addr_t broadcast_addr;
-  
+
   /* Find the destination IP address in the ARP table and construct
      the Ethernet header. If the destination IP addres isn't on the
      local network, we use the default router's IP address instead.
@@ -371,7 +371,7 @@ ip64_arp_create_ethhdr(uint8_t *llhdr, const uint8_t *nlhdr)
 
   }
   memcpy(ethhdr->src.addr, ip64_eth_addr.addr, 6);
-  
+
   ethhdr->type = UIP_HTONS(IP64_ETH_TYPE_IP);
   return sizeof(struct ip64_eth_hdr);
 }
@@ -382,7 +382,7 @@ ip64_arp_create_arp_request(uint8_t *llhdr, const uint8_t *nlhdr)
   struct ipv4_hdr *ipv4_hdr = (struct ipv4_hdr *)nlhdr;
   struct arp_hdr *arp_hdr = (struct arp_hdr *)llhdr;
   uip_ip4addr_t ipaddr;
-  
+
   if(!uip_ipaddr_maskcmp(&ipv4_hdr->destipaddr,
 			 ip64_get_hostaddr(),
 			 ip64_get_netmask())) {
@@ -394,7 +394,7 @@ ip64_arp_create_arp_request(uint8_t *llhdr, const uint8_t *nlhdr)
     /* Else, we use the destination IP address. */
     uip_ip4addr_copy(&ipaddr, &ipv4_hdr->destipaddr);
   }
-  
+
   memset(arp_hdr->ethhdr.dest.addr, 0xff, 6);
   memset(arp_hdr->dhwaddr.addr, 0x00, 6);
   memcpy(arp_hdr->ethhdr.src.addr, ip64_eth_addr.addr, 6);
@@ -408,8 +408,8 @@ ip64_arp_create_arp_request(uint8_t *llhdr, const uint8_t *nlhdr)
   arp_hdr->hwlen = 6;
   arp_hdr->protolen = 4;
   arp_hdr->ethhdr.type = UIP_HTONS(IP64_ETH_TYPE_ARP);
-  
-  uip_appdata = &uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN];
+
+  uip_appdata = &uip_buf[UIP_IPTCPH_LEN];
 
   return sizeof(struct arp_hdr);
 }

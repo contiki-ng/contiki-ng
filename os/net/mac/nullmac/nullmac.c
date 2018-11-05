@@ -67,6 +67,12 @@ off(void)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+max_payload(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
@@ -78,6 +84,7 @@ const struct mac_driver nullmac_driver = {
   send_packet,
   packet_input,
   on,
-  off
+  off,
+  max_payload,
 };
 /*---------------------------------------------------------------------------*/

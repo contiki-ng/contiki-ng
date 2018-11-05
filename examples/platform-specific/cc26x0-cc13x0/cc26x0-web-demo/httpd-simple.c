@@ -38,6 +38,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "httpd-simple.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "batmon-sensor.h"
 #include "lib/sensors.h"
@@ -436,8 +437,8 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, SECTION_OPEN "Neighbors" CONTENT_OPEN));
 
-  for(s->nbr = nbr_table_head(ds6_neighbors); s->nbr != NULL;
-      s->nbr = nbr_table_next(ds6_neighbors, s->nbr)) {
+  for(s->nbr = uip_ds6_nbr_head(); s->nbr != NULL;
+      s->nbr = uip_ds6_nbr_next(s->nbr)) {
 
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
 

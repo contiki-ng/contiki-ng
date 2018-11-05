@@ -46,7 +46,6 @@
 
 #include <MicroInt.h>
 #include "net/ipv6/uip.h"
-#define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 #include "dev/slip.h"
 
@@ -117,7 +116,7 @@ unsigned long slip_received, slip_frames;
 #ifdef SLIP_CONF_RX_BUFSIZE
 #define RX_BUFSIZE SLIP_CONF_RX_BUFSIZE
 
-#if RX_BUFSIZE < (UIP_BUFSIZE - UIP_LLH_LEN + 16)
+#if RX_BUFSIZE < (UIP_BUFSIZE + 16)
 #error "SLIP_CONF_RX_BUFSIZE too small for UIP_BUFSIZE"
 #endif
 
@@ -195,7 +194,7 @@ slip_send(void)
 
   slip_arch_writeb(SLIP_END);
 
-  ptr = &uip_buf[UIP_LLH_LEN];
+  ptr = uip_buf;
   for(i = 0; i < uip_len; ++i) {
     c = *ptr++;
     slip_write_char(c);
@@ -317,8 +316,7 @@ PROCESS_THREAD(slip_process, ev, data)
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
     /* Move packet from rxbuf to buffer provided by uIP. */
-    uip_len = slip_poll_handler(&uip_buf[UIP_LLH_LEN],
-                                UIP_BUFSIZE - UIP_LLH_LEN);
+    uip_len = slip_poll_handler(uip_buf, UIP_BUFSIZE);
 
     PRINTF("SLIP: recv bytes %u frames RECV: %u. is_full %u, is_dropping %u.\n",
            end_counter, uip_len, is_full, is_dropping);

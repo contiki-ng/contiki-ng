@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Swedish Institute of Computer Science.
+ * Copyright (c) 2013, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
+ *
  */
 
-/**
- * \file
- *         A brief description of what this file is
- * \author
- *         Niclas Finne <nfi@sics.se>
- *         Joakim Eriksson <joakime@sics.se>
- */
+#ifndef CCM_STAR_PACKETBUF_H_
+#define CCM_STAR_PACKETBUF_H_
 
-#ifndef BRIDGE_CONF_H_
-#define BRIDGE_CONF_H_
+/*---------------------------------------------------------------------------*/
+void ccm_star_packetbuf_set_nonce(uint8_t *nonce, int forward);
 
-#undef UIP_CONF_ROUTER
-
-#undef UIP_CONF_LLH_LEN
-#define UIP_CONF_LLH_LEN         14
-
-#undef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE  256
-#endif /* BRIDGE_CONF_H_ */
+#endif /* CCM_STAR_PACKETBUF_H_ */

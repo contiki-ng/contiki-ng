@@ -34,6 +34,40 @@
 #define UIPBUF_H_
 
 #include "contiki.h"
+struct uip_ip_hdr;
+
+/**
+ * \brief          Resets uIP buffer
+ */
+void uipbuf_clear(void);
+
+/**
+ * \brief          Update uip buffer length for addition of an extension header
+ * \param len      The length of the new extension header
+ * \retval         true if the length fields were successfully set, false otherwise
+ */
+bool uipbuf_add_ext_hdr(int16_t len);
+
+/**
+ * \brief          Set the length of the uIP buffer
+ * \param len      The new length
+ * \retval         true if the len was successfully set, false otherwise
+ */
+bool uipbuf_set_len(uint16_t len);
+
+/**
+ * \brief          Updates the length field in the uIP buffer
+ * \param buffer   The IPv6 header
+ * \param len      The new length value
+ */
+void uipbuf_set_len_field(struct uip_ip_hdr *hdr, uint16_t len);
+
+/**
+ * \brief          Returns the value of the length field in the uIP buffer
+ * \param buffer   The IPv6 header
+ * \retvel         The length value
+ */
+uint16_t uipbuf_get_len_field(struct uip_ip_hdr *hdr);
 
 /**
  * \brief          Get the next IPv6 header.
@@ -41,11 +75,11 @@
  * \param size     The size of the data in the buffer
  * \param protocol A pointer to a variable where the protocol of the header will be stored
  * \param start    A flag that indicates if this is expected to be the IPv6 packet header or a later header (Extension header)
- * \retval         returns address of the starting position of the next header
+ * \retval         returns address of the next header, or NULL in case of insufficient buffer space
  *
  *                 This function moves to the next header in a IPv6 packet.
  */
-uint8_t* uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protocol, uint8_t start);
+uint8_t *uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protocol, bool start);
 
 
 /**
@@ -53,12 +87,22 @@ uint8_t* uipbuf_get_next_header(uint8_t *buffer, uint16_t size, uint8_t *protoco
  * \param buffer   A pointer to the buffer holding the IPv6 packet
  * \param size     The size of the data in the buffer
  * \param protocol A pointer to a variable where the protocol of the header will be stored
- * \retval         returns address of the starting position of the next header
+ * \retval         returns address of the last header, or NULL in case of insufficient buffer space
  *
  *                 This function moves to the last header of the IPv6 packet.
  */
-uint8_t* uipbuf_get_last_header(uint8_t *buffer, uint16_t size, uint8_t *protocol);
+uint8_t *uipbuf_get_last_header(uint8_t *buffer, uint16_t size, uint8_t *protocol);
 
+/**
+ * \brief          Get an IPv6 header with a given protocol field.
+ * \param buffer   A pointer to the buffer holding the IPv6 packet
+ * \param size     The size of the data in the buffer
+ * \param protocol The protocol we are looking for
+ * \retval         returns address of the header if found, else NULL
+ *
+ *                 This function moves to the last header of the IPv6 packet.
+ */
+uint8_t *uipbuf_search_header(uint8_t *buffer, uint16_t size, uint8_t protocol);
 
 /**
  * \brief          Get the value of the attribute
@@ -80,6 +124,17 @@ uint16_t uipbuf_get_attr(uint8_t type);
  *                 This function sets the value of a specific uipbuf attribute.
  */
 int uipbuf_set_attr(uint8_t type, uint16_t value);
+
+/**
+ * \brief          Set the default value of the attribute
+ * \param type     The attribute to set the default value of
+ * \param value    The value to set
+ * \retval         0 - indicates failure of setting the value
+ * \retval         1 - indicates success of setting the value
+ *
+ *                 This function sets the default value of a uipbuf attribute.
+ */
+int uipbuf_set_default_attr(uint8_t type, uint16_t value);
 
 /**
  * \brief          Set bits in the uipbuf attribute flags.
@@ -116,6 +171,14 @@ uint16_t uipbuf_is_attr_flag(uint16_t flag_bits);
 void uipbuf_clear_attr(void);
 
 /**
+ * \brief          Initialize uipbuf attributes.
+ *
+ *                 This function initialize all attributes in the uipbuf
+ *                 attributes including all flags.
+ */
+void uipbuf_init(void);
+
+/**
  * \brief The bits defined for uipbuf attributes flag.
  *
  */
@@ -123,6 +186,9 @@ void uipbuf_clear_attr(void);
 #define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_NHC_COMPRESSION      0x01
 /* Avoid using prefix compression on the packet (6LoWPAN) */
 #define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_PREFIX_COMPRESSION   0x02
+
+/* MAC will set the default for this packet */
+#define UIPBUF_ATTR_LLSEC_LEVEL_MAC_DEFAULT               0xffff
 
 /**
  * \brief The attributes defined for uipbuf attributes function.

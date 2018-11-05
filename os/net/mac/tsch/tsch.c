@@ -972,8 +972,7 @@ tsch_init(void)
     return;
   }
 
-  /* Init the queuebuf and TSCH sub-modules */
-  queuebuf_init();
+  /* Init TSCH sub-modules */
   tsch_reset();
   tsch_queue_init();
   tsch_schedule_init();
@@ -1152,13 +1151,21 @@ turn_off(void)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+static int
+max_payload(void)
+{
+  /* Setup security... before. */
+  return TSCH_PACKET_MAX_LEN -  NETSTACK_FRAMER.length();
+}
+/*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {
   "TSCH",
   tsch_init,
   send_packet,
   packet_input,
   turn_on,
-  turn_off
+  turn_off,
+  max_payload,
 };
 /*---------------------------------------------------------------------------*/
 /** @} */
