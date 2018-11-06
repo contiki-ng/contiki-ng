@@ -98,19 +98,22 @@ PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
     cmd++;
   }
 
-  /* Look for arguments */
-  args = strchr(cmd, ' ');
-  if(args != NULL) {
-    *args = '\0';
-    args++;
-  }
+  /* Skip empty lines */
+  if(*cmd != '\0') {
+    /* Look for arguments */
+    args = strchr(cmd, ' ');
+    if(args != NULL) {
+      *args = '\0';
+      args++;
+    }
 
-  cmd_descr = shell_command_lookup(cmd);
-  if(cmd_descr != NULL) {
-    static struct pt cmd_pt;
-    PT_SPAWN(pt, &cmd_pt, cmd_descr->func(&cmd_pt, output, args));
-  } else {
-    SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
+    cmd_descr = shell_command_lookup(cmd);
+    if(cmd_descr != NULL) {
+      static struct pt cmd_pt;
+      PT_SPAWN(pt, &cmd_pt, cmd_descr->func(&cmd_pt, output, args));
+    } else {
+      SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
+    }
   }
 
   output_prompt(output);
