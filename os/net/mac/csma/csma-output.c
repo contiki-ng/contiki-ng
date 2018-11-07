@@ -49,6 +49,7 @@
 #include "net/netstack.h"
 #include "lib/list.h"
 #include "lib/memb.h"
+#include "lib/assert.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -396,6 +397,9 @@ packet_sent(struct neighbor_queue *n,
     int status,
     int num_transmissions)
 {
+  assert(n != NULL);
+  assert(q != NULL);
+
   if(q->ptr == NULL) {
     LOG_WARN("packet sent: no metadata\n");
     return;
