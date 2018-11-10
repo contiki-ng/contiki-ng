@@ -197,15 +197,11 @@ static void
 set_global_address(void)
 {
   static uip_ipaddr_t ipaddr;
-  static uip_ipaddr_t *prefix = NULL;
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
-  if(prefix == NULL) {
-    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-  } else {
-    memcpy(&ipaddr, prefix, 8);
-  }
+  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+
   /* Assumes that the uip_lladdr is set */
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
