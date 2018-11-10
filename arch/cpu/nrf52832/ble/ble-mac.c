@@ -347,6 +347,12 @@ off(void)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+static int
+max_payload(void)
+{
+  return PACKETBUF_SIZE;
+}
+/*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
@@ -371,7 +377,8 @@ const struct mac_driver ble_ipsp_mac_driver = {
   send_packet,
   NULL,
   on,
-  off
+  off,
+  max_payload
 };
 /*---------------------------------------------------------------------------*/
 /**

@@ -34,12 +34,22 @@ before_install:
   - if [ ${BUILD_COOJA:-false} = true ] ; then
       ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar ;
     fi
+
+  # Create a directory for out of tree tests and clone the test repo therein
+  # The directory will need created unconditionally so we can always chgrp and
+  # mount it, even if empty. Checkout a pre-defined version.
+  - mkdir -p $OUT_OF_TREE_TEST_PATH
+  - if [ ${TEST_NAME} = "out-of-tree-build" ] ; then
+      git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH &&
+      cd $OUT_OF_TREE_TEST_PATH &&
+      git checkout $OUT_OF_TREE_TEST_VER ;
+    fi
   # Set permissions for Docker mount
-  - sudo chgrp -hR 1000 $CNG_HOST_PATH
+  - sudo chgrp -hR 1000 $CNG_HOST_PATH $OUT_OF_TREE_TEST_PATH
 
 # The test script for each build
 script:
-  - docker run --privileged -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST_NAME";
+  - docker run --privileged -v $OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST_NAME";
   # Check outcome of the test
   - $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST_NAME; exit $?;
 
@@ -49,6 +59,8 @@ env:
   global:
     - DOCKER_IMG='contiker/contiki-ng'
     - CNG_HOST_PATH=`pwd`
+    - OUT_OF_TREE_TEST_PATH=$HOME/out-of-tree-tests
+    - OUT_OF_TREE_TEST_VER=2869ae7
     # Encrypted environment variables.
     # Only available on builds of contiki-ng/contiki-ng branches, not PRs or forks.
     - secure: 0nrV5yjpT2kE19Hlm7t619Qbmyjx/G7bSUI1c+U3kZbyuxnRlASjVcDN5uPBoimIfGiBRI0nRq690BogAJt4EKwbC1Dy8kC1XD8mRtQ2AIZ6PHaUoG9iS5sBhFBQK0XkB83bwh6omRn/04O0uuX74ooSWT7fDrWxi/y5+0ysXK6gRtOhdrJ3FU5OkNVewX8NeCdx3pOWhMOtXWdFkMIi1XRdDnvMM5/hHlHMkdXXtaZQX9UsK3Q3DSjPRLZjKRiOlcx9MIg2ebh9ITmd2Du2p2q/LKtoutJckvhbKQPWcZi/B+1ZTSff0FHBIg+EYxf6TeFuia7XSTWH7sr2CDCCtcvSR9bB5yW6jdmGfa8Af8I1TCBuqoSUo0Re50BZBZF7COleEh+IojbjXn2CIDMg5rT4Sh3qcMGvFn9OW1cz5h5UNSOk7EIAXXPcI7Aloxh2sBo4/DrvvbfIsKrvxV9Fx4bdyNtR7dZ7xsoOw6L0zttC3K9naf3VAOeBAyjBiRwm0tWxJC/buhTsKlYrthhyUrwLtYAFL4UHcazvz57hY/cEzR2X6F//9Hp7HFoNtn1E36doX3ZfeI22yxHMo9SYW7O69C45wbhJ29lAA9XXbYVyGBKFkY8C1NCZ0Xckt9H8/Ow5Sz8HmW/NNBJCn0Fsx+jezdGc4ED5naugNbLAyNg=
@@ -69,3 +81,4 @@ env:
     - TEST_NAME='native-runs'
     - TEST_NAME='ipv6' BUILD_COOJA=true
     - TEST_NAME='ipv6-nbr' BUILD_COOJA=true
+    - TEST_NAME='out-of-tree-build'

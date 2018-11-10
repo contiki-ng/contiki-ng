@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Inria.
+ * Copyright (c) 2014, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,97 +32,84 @@
 
 /**
  * \file
- *         The shell application
+ *         Protects against replay attacks by comparing with the last
+ *         unicast or broadcast frame counter of the sender.
  * \author
- *         Simon Duquennoy <simon.duquennoy@inria.fr>
+ *         Konrad Krentz <konrad.krentz@gmail.com>
  */
 
 /**
- * \addtogroup shell Shell
- The shell enables to inspect and manage the network layer and provides
- other system functionalities
- * \ingroup lib
+ * \addtogroup csma
  * @{
  */
 
-#include "contiki.h"
-#include "shell.h"
-#include "shell-commands.h"
-#include "net/ipv6/uip.h"
-#include "net/ipv6/ip64-addr.h"
-#include "net/ipv6/uiplib.h"
+#include "net/mac/csma/anti-replay.h"
+#include "net/packetbuf.h"
+#include "net/mac/llsec802154.h"
+
+#if LLSEC802154_USES_FRAME_COUNTER
+
+/* This node's current frame counter value */
+static uint32_t counter;
 
 /*---------------------------------------------------------------------------*/
 void
-shell_output_6addr(shell_output_func output, const uip_ipaddr_t *ipaddr)
+anti_replay_set_counter(void)
 {
-  char buf[UIPLIB_IPV6_MAX_STR_LEN];
-  uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
-  SHELL_OUTPUT(output, "%s", buf);
+  frame802154_frame_counter_t reordered_counter;
+
+  ++counter;
+  reordered_counter.u32 = LLSEC802154_HTONL(counter);
+  
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1, reordered_counter.u16[0]);
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3, reordered_counter.u16[1]);
+}
+/*---------------------------------------------------------------------------*/
+uint32_t
+anti_replay_get_counter(void)
+{
+  frame802154_frame_counter_t disordered_counter;
+  
+  disordered_counter.u16[0] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1);
+  disordered_counter.u16[1] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3);
+  
+  return LLSEC802154_HTONL(disordered_counter.u32); 
 }
 /*---------------------------------------------------------------------------*/
 void
-shell_output_lladdr(shell_output_func output, const linkaddr_t *lladdr)
+anti_replay_init_info(struct anti_replay_info *info)
 {
-  if(lladdr == NULL) {
-    SHELL_OUTPUT(output, "(NULL LL addr)");
-    return;
-  } else {
-    unsigned int i;
-    for(i = 0; i < LINKADDR_SIZE; i++) {
-      if(i > 0 && i % 2 == 0) {
-        SHELL_OUTPUT(output, ".");
-      }
-      SHELL_OUTPUT(output, "%02x", lladdr->u8[i]);
-    }
-  }
+  info->last_broadcast_counter
+      = info->last_unicast_counter
+      = anti_replay_get_counter();
 }
 /*---------------------------------------------------------------------------*/
-static void
-output_prompt(shell_output_func output)
+int
+anti_replay_was_replayed(struct anti_replay_info *info)
 {
-  SHELL_OUTPUT(output, "#");
-  shell_output_lladdr(output, &linkaddr_node_addr);
-  SHELL_OUTPUT(output, "> ");
-}
-/*---------------------------------------------------------------------------*/
-PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
-{
-  static char *args;
-  static const struct shell_command_t *cmd_descr = NULL;
-
-  PT_BEGIN(pt);
-
-  /* Shave off any leading spaces. */
-  while(*cmd == ' ') {
-    cmd++;
-  }
-
-  /* Skip empty lines */
-  if(*cmd != '\0') {
-    /* Look for arguments */
-    args = strchr(cmd, ' ');
-    if(args != NULL) {
-      *args = '\0';
-      args++;
-    }
-
-    cmd_descr = shell_command_lookup(cmd);
-    if(cmd_descr != NULL) {
-      static struct pt cmd_pt;
-      PT_SPAWN(pt, &cmd_pt, cmd_descr->func(&cmd_pt, output, args));
+  uint32_t received_counter;
+  
+  received_counter = anti_replay_get_counter();
+  
+  if(packetbuf_holds_broadcast()) {
+    /* broadcast */
+    if(received_counter <= info->last_broadcast_counter) {
+      return 1;
     } else {
-      SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
+      info->last_broadcast_counter = received_counter;
+      return 0;
+    }
+  } else {
+    /* unicast */
+    if(received_counter <= info->last_unicast_counter) {
+      return 1;
+    } else {
+      info->last_unicast_counter = received_counter;
+      return 0;
     }
   }
-
-  output_prompt(output);
-  PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
-void
-shell_init(void)
-{
-  shell_commands_init();
-}
+#endif /* LLSEC802154_USES_FRAME_COUNTER */
+
 /** @} */
