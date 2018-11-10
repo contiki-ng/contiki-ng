@@ -95,10 +95,29 @@ static uip_ds6_prefix_t *locprefix;
 static const uint8_t iid_prefix[] = { 0x00, 0x00 , 0x00 , 0xff , 0xfe , 0x00 };
 #endif /* (UIP_LLADDR_LEN == 2) */
 
+/* The default prefix */
+static uip_ip6addr_t default_prefix = {
+    .u16 = { 0, 0, 0, 0, 0, 0, 0, 0 }
+};
+/*---------------------------------------------------------------------------*/
+const uip_ip6addr_t *
+uip_ds6_default_prefix()
+{
+  return &default_prefix;
+}
+/*---------------------------------------------------------------------------*/
+void
+uip_ds6_set_default_prefix(const uip_ip6addr_t *prefix)
+{
+  uip_ip6addr_copy(&default_prefix, prefix);
+}
 /*---------------------------------------------------------------------------*/
 void
 uip_ds6_init(void)
 {
+  if(uip_is_addr_unspecified(&default_prefix)) {
+    uip_ip6addr(&default_prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  }
 
   uip_ds6_neighbors_init();
   uip_ds6_route_init();

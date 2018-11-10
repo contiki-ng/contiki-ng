@@ -71,8 +71,9 @@ set_global_address(void)
   uip_ipaddr_t ipaddr;
   int i;
   uint8_t state;
+  const uip_ipaddr_t *default_prefix = uip_ds6_default_prefix();
 
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  uip_ip6addr_copy(&ipaddr, default_prefix);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
@@ -92,6 +93,7 @@ PROCESS_THREAD(sender_node_process, ev, data)
   static struct etimer periodic_timer;
   static struct etimer send_timer;
   uip_ipaddr_t addr;
+  const uip_ipaddr_t *default_prefix;
 
   PROCESS_BEGIN();
 
@@ -109,7 +111,13 @@ PROCESS_THREAD(sender_node_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&send_timer));
 
-    uip_ip6addr(&addr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0x0201, 0x001, 0x001, 0x001);
+    default_prefix = uip_ds6_default_prefix();
+    uip_ip6addr_copy(&addr, default_prefix);
+
+    addr.u16[4] = UIP_HTONS(0x0201);
+    addr.u16[5] = UIP_HTONS(0x0001);
+    addr.u16[6] = UIP_HTONS(0x0001);
+    addr.u16[7] = UIP_HTONS(0x0001);
 
     {
       static unsigned int message_number;

@@ -397,7 +397,8 @@ PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
       PT_EXIT(pt);
     }
   } else {
-    uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+    const uip_ipaddr_t *default_prefix = uip_ds6_default_prefix();
+    uip_ip6addr_copy(&prefix, default_prefix);
   }
 
   if(is_on) {

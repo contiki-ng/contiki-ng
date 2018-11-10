@@ -36,10 +36,13 @@ PROCESS_THREAD(udp_process, ev, data)
   static struct etimer send_timer;
   uip_ipaddr_t addr;
   static int alive;
+  const uip_ipaddr_t *default_prefix;
 
   PROCESS_BEGIN();
 
-  uip_ip6addr(&addr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 2);
+  default_prefix = uip_ds6_default_prefix();
+  uip_ip6addr_copy(&addr, default_prefix);
+  addr.u16[7] = UIP_HTONS(2);
   uip_ds6_addr_add(&addr, 0, ADDR_AUTOCONF);
 
   simple_udp_register(&broadcast_connection, UDP_PORT,
