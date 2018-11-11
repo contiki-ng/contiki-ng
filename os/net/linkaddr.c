@@ -81,42 +81,54 @@ linkaddr_set_node_addr(linkaddr_t *t)
 int
 linkaddr_from_string(linkaddr_t *addr, const char *addr_str)
 {
-  unsigned int values[LINKADDR_SIZE];
-  int i;
-  int byte_count;
+  uint8_t value = 0;
+  uint8_t byte_count = 0;
+  int tmp;
+  unsigned int len;
+  const char *digit = addr_str;
+  uint8_t digit_cnt = 0; /* Count the number of consecutive hex digits */
 
-  /*
-   * End formats with %*c to get rid of any unexpected characters beyond the
-   * end of the expected format.
-   */
-  switch(LINKADDR_SIZE) {
-  case 2:
-    byte_count = sscanf(addr_str, "%2x:%2x%*c", &values[0], &values[1]);
-    break;
-  case 6:
-    byte_count = sscanf(addr_str, "%2x:%2x:%2x:%2x:%2x:%2x%*c",
-                        &values[0], &values[1], &values[2],
-                        &values[3], &values[4], &values[5]);
-    break;
-  case 8:
-    byte_count = sscanf(addr_str, "%2x:%2x:%2x:%2x:%2x:%2x:%2x:%2x%*c",
-                        &values[0], &values[1], &values[2],
-                        &values[3], &values[4], &values[5],
-                        &values[6], &values[7]);
-    break;
-  default:
-    return -1;
+  for(len = 0; len < LINKADDR_SIZE; digit ++) {
+    if(*digit == ':' || *digit == '\0') {
+      addr->u8[len] = value;
+      byte_count++;
+      len++;
+      value = 0;
+      tmp = 0;
+
+      if(*digit == ':' && digit_cnt == 0) {
+        /* Two consecutive delimiters - invalid format */
+        return -1;
+      }
+
+      digit_cnt = 0;
+
+      if(*digit == '\0') {
+        break;
+      }
+    } else {
+      if(*digit >= '0' && *digit <= '9') {
+        tmp = *digit - '0';
+      } else if(*digit >= 'a' && *digit <= 'f') {
+        tmp = *digit - 'a' + 10;
+      } else if(*digit >= 'A' && *digit <= 'F') {
+        tmp = *digit - 'A' + 10;
+      } else {
+        /* Invalid character */
+        return -1;
+      }
+      digit_cnt++;
+
+      if(digit_cnt > 2) {
+        /* More than 2 hex digits in a row - invalid format */
+        return -1;
+      }
+      value = (value << 4) + (tmp & 0xf);
+    }
   }
 
-  /*
-   * Return an error unless we converted exactly LINKADDR_SIZE bytes.
-   * Otherwise convert unsigned int to uint8_t before copying to the
-   * destination address.
-   */
+  /* Return an error unless we converted exactly LINKADDR_SIZE bytes. */
   if(byte_count == LINKADDR_SIZE) {
-    for(i = 0; i < LINKADDR_SIZE; ++i)
-      addr->u8[i] = (uint8_t)values[i];
-
     return byte_count;
   }
 
