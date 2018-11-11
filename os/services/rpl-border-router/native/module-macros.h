@@ -38,6 +38,7 @@
 #define SERIALIZE_ATTRIBUTES 1
 
 #define CMD_CONF_OUTPUT border_router_cmd_output
+#define PLATFORM_CONF_PROCESS_ARGS_FUNC slip_config_handle_arguments
 
 /* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
 #define SELECT_CALLBACK 1

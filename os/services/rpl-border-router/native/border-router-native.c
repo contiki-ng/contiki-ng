@@ -111,8 +111,6 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   LOG_INFO("RPL-Border router started\n");
 
-  slip_config_handle_arguments(contiki_argc, contiki_argv);
-
   /* tun init is also responsible for setting up the SLIP connection */
   tun_init();
 
