@@ -113,13 +113,6 @@
 
 static const struct select_callback *select_callback[SELECT_MAX];
 static int select_max = 0;
-
-#ifdef PLATFORM_CONF_MAC_ADDR
-static uint8_t mac_addr[] = PLATFORM_CONF_MAC_ADDR;
-#else /* PLATFORM_CONF_MAC_ADDR */
-static uint8_t mac_addr[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
-#endif /* PLATFORM_CONF_MAC_ADDR */
-
 /*---------------------------------------------------------------------------*/
 int
 select_set_callback(int fd, const struct select_callback *callback)
@@ -174,23 +167,6 @@ const static struct select_callback stdin_fd = {
   stdin_set_fd, stdin_handle_fd
 };
 #endif /* SELECT_STDIN */
-/*---------------------------------------------------------------------------*/
-static void
-set_lladdr(void)
-{
-  linkaddr_t addr;
-
-  memset(&addr, 0, sizeof(linkaddr_t));
-#if NETSTACK_CONF_WITH_IPV6
-  memcpy(addr.u8, mac_addr, sizeof(addr.u8));
-#else
-  int i;
-  for(i = 0; i < sizeof(linkaddr_t); ++i) {
-    addr.u8[i] = mac_addr[7 - i];
-  }
-#endif
-  linkaddr_set_node_addr(&addr);
-}
 /*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
 static void
@@ -255,7 +231,6 @@ platform_init_stage_one()
 void
 platform_init_stage_two()
 {
-  set_lladdr();
   serial_line_init();
 }
 /*---------------------------------------------------------------------------*/
