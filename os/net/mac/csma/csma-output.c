@@ -50,6 +50,7 @@
 #include "net/netstack.h"
 #include "lib/list.h"
 #include "lib/memb.h"
+#include "lib/assert.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -131,7 +132,10 @@ MEMB(packet_memb, struct packet_queue, MAX_QUEUED_PACKETS);
 MEMB(metadata_memb, struct qbuf_metadata, MAX_QUEUED_PACKETS);
 LIST(neighbor_list);
 
-static void packet_sent(void *ptr, int status, int num_transmissions);
+static void packet_sent(struct neighbor_queue *n,
+    struct packet_queue *q,
+    int status,
+    int num_transmissions);
 static void transmit_from_queue(void *ptr);
 /*---------------------------------------------------------------------------*/
 static struct neighbor_queue *
@@ -162,7 +166,7 @@ backoff_period(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
-send_one_packet(void *ptr)
+send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
 {
   int ret;
   int last_sent_ok = 0;
@@ -245,7 +249,7 @@ send_one_packet(void *ptr)
     last_sent_ok = 1;
   }
 
-  packet_sent(ptr, ret, 1);
+  packet_sent(n, q, ret, 1);
   return last_sent_ok;
 }
 /*---------------------------------------------------------------------------*/
@@ -263,7 +267,7 @@ transmit_from_queue(void *ptr)
         n->transmissions, list_length(n->packet_queue));
       /* Send first packet in the neighbor queue */
       queuebuf_to_packetbuf(q->buf);
-      send_one_packet(n);
+      send_one_packet(n, q);
     }
   }
 }
@@ -396,30 +400,15 @@ tx_ok(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 }
 /*---------------------------------------------------------------------------*/
 static void
-packet_sent(void *ptr, int status, int num_transmissions)
+packet_sent(struct neighbor_queue *n,
+    struct packet_queue *q,
+    int status,
+    int num_transmissions)
 {
-  struct neighbor_queue *n;
-  struct packet_queue *q;
+  assert(n != NULL);
+  assert(q != NULL);
 
-  n = ptr;
-  if(n == NULL) {
-    return;
-  }
-
-  /* Find out what packet this callback refers to */
-  for(q = list_head(n->packet_queue);
-      q != NULL; q = list_item_next(q)) {
-    if(queuebuf_attr(q->buf, PACKETBUF_ATTR_MAC_SEQNO) ==
-       packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO)) {
-      break;
-    }
-  }
-
-  if(q == NULL) {
-    LOG_WARN("packet sent: seqno %u not found\n",
-           packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
-    return;
-  } else if(q->ptr == NULL) {
+  if(q->ptr == NULL) {
     LOG_WARN("packet sent: no metadata\n");
     return;
   }
