@@ -51,15 +51,6 @@
 #define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
-#define BUSYWAIT_UNTIL(max_time) \
-  do { \
-    rtimer_clock_t t0; \
-    t0 = RTIMER_NOW(); \
-    while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time))) { \
-      watchdog_periodic(); \
-    } \
-  } while(0)
-/*---------------------------------------------------------------------------*/
 #define DHT22_PORT_BASE          GPIO_PORT_TO_BASE(DHT22_PORT)
 #define DHT22_PIN_MASK           GPIO_PIN_MASK(DHT22_PIN)
 /*---------------------------------------------------------------------------*/
@@ -72,7 +63,7 @@ dht22_read(void)
 {
   uint8_t i;
   uint8_t j = 0;
-  uint8_t last_state;
+  uint8_t last_state = 0xFF;
   uint8_t counter = 0;
   uint8_t checksum = 0;
 
@@ -80,12 +71,12 @@ dht22_read(void)
     /* Exit low power mode and initialize variables */
     GPIO_SET_OUTPUT(DHT22_PORT_BASE, DHT22_PIN_MASK);
     GPIO_SET_PIN(DHT22_PORT_BASE, DHT22_PIN_MASK);
-    BUSYWAIT_UNTIL(DHT22_AWAKE_TIME);
+    RTIMER_BUSYWAIT(DHT22_AWAKE_TIME);
     memset(dht22_data, 0, DHT22_BUFFER);
 
     /* Initialization sequence */
     GPIO_CLR_PIN(DHT22_PORT_BASE, DHT22_PIN_MASK);
-    BUSYWAIT_UNTIL(DHT22_START_TIME);
+    RTIMER_BUSYWAIT(DHT22_START_TIME);
     GPIO_SET_PIN(DHT22_PORT_BASE, DHT22_PIN_MASK);
     clock_delay_usec(DHT22_READY_TIME);
 
@@ -95,7 +86,6 @@ dht22_read(void)
      * if the line is high between 70-74us the bit sent will be "1" (one).
      */
     GPIO_SET_INPUT(DHT22_PORT_BASE, DHT22_PIN_MASK);
-    last_state = GPIO_READ_PIN(DHT22_PORT_BASE, DHT22_PIN_MASK);
 
     for(i = 0; i < DHT22_MAX_TIMMING; i++) {
       counter = 0;
@@ -208,8 +198,8 @@ value(int type)
   }
 }
 /*---------------------------------------------------------------------------*/
-int
-dht22_read_all(int *temperature, int *humidity)
+int16_t
+dht22_read_all(int16_t *temperature, int16_t *humidity)
 {
   if((temperature == NULL) || (humidity == NULL)) {
     PRINTF("DHT22: Invalid arguments\n");

@@ -103,8 +103,6 @@ PROCESS_THREAD(er_example_server, ev, data)
 
   print_local_addresses();
 
-  /* Initialize the REST engine. */
-  coap_engine_init();
   coap_activate_resource(&res_led3, "lights/led3");
 
   SENSORS_ACTIVATE(button_1);

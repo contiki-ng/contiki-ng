@@ -81,8 +81,6 @@
 #define LOG_MODULE "CC26xx/CC13xx"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
-unsigned short node_id = 0;
-/*---------------------------------------------------------------------------*/
 /** \brief Board specific iniatialisation */
 void board_init(void);
 /*---------------------------------------------------------------------------*/
@@ -128,11 +126,8 @@ set_rf_params(void)
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
-  NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, RF_CORE_CHANNEL);
+  NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, IEEE802154_DEFAULT_CHANNEL);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
-
-  /* also set the global node id */
-  node_id = short_addr;
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -163,9 +158,11 @@ platform_init_stage_one()
    * latches in the first place. Before doing these things though, we should
    * allow software to first regain control of pins
    */
-  ti_lib_pwr_ctrl_io_freeze_disable();
+  ti_lib_aon_ioc_freeze_disable();
+  HWREG(AON_SYSCTL_BASE + AON_SYSCTL_O_SLEEPCTL) = 1;
+  ti_lib_sys_ctrl_aon_sync();
 
-  ti_lib_rom_int_enable(INT_AON_GPIO_EDGE);
+  ti_lib_int_enable(INT_AON_GPIO_EDGE);
   ti_lib_int_master_enable();
 
   soc_rtc_init();
@@ -226,8 +223,6 @@ platform_init_stage_three()
     LOG_INFO_(", PANID 0x%04X", pan);
   }
   LOG_INFO_("\n");
-
-  LOG_INFO(" Node ID: %d\n", node_id);
 
 #if BOARD_HAS_SENSORS
   process_start(&sensors_process, NULL);

@@ -244,7 +244,9 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
       /*TODO implement special transaction for CON, sharing the same buffer to allow for more observers */
 
       if((transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint))) {
-        if(obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
+        /* if COAP_OBSERVE_REFRESH_INTERVAL is zero, never send observations as confirmable messages */
+        if(COAP_OBSERVE_REFRESH_INTERVAL != 0
+            && (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0)) {
           LOG_DBG("           Force Confirmable for\n");
           notification->type = COAP_TYPE_CON;
         }
@@ -351,6 +353,20 @@ coap_observe_handler(coap_resource_t *resource, coap_message_t *coap_req,
       }
     }
   }
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+coap_has_observers(char *path)
+{
+  coap_observer_t *obs = NULL;
+
+  for(obs = (coap_observer_t *)list_head(observers_list); obs;
+      obs = obs->next) {
+    if((strncmp(obs->url, path, strlen(path))) == 0) {
+      return 1;
+    }
+  }
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

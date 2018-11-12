@@ -86,9 +86,6 @@ PROCESS_THREAD(plugtest_server, ev, data)
 
   LOG_INFO("ETSI IoT CoAP Plugtests Server\n");
 
-  /* Initialize the REST engine. */
-  coap_engine_init();
-
   /* Activate the application-specific resources. */
   coap_activate_resource(&res_plugtest_test, "test");
   coap_activate_resource(&res_plugtest_validate, "validate");

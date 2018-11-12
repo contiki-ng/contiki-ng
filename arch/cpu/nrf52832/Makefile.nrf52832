@@ -25,9 +25,9 @@ ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
     NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name *iot*_softdevice.hex | head -n 1)
   endif
   $(info SoftDevice: $(NRF52_SOFTDEVICE))
-  LINKER_SCRIPT := $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
+  LDSCRIPT := $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
 else
-  LINKER_SCRIPT := $(CONTIKI_CPU)/ld/nrf52.ld
+  LDSCRIPT := $(CONTIKI_CPU)/ld/nrf52.ld
 endif
 
 OUTPUT_FILENAME := $(CONTIKI_PROJECT)
@@ -140,7 +140,7 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(CONTIKI_NG_PROJECT_MAP)
-LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH) -T$(LINKER_SCRIPT)
+LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH)
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker to dump unused sections
 LDFLAGS += -Wl,--gc-sections
@@ -172,11 +172,11 @@ vpath %.s $(ASM_PATHS)
 
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
-CLEAN += nrf52832.a
+NRFLIB = $(BUILD_DIR_BOARD)/nrf52832.a
 
-TARGET_LIBS= nrf52832.a $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
+TARGET_LIBS = $(NRFLIB) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
-nrf52832.a: $(OBJECTS)
+$(NRFLIB): $(OBJECTS)
 	$(TRACE_AR)
 	$(Q)$(AR) $(AROPTS) $@ $^
 

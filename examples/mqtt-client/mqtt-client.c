@@ -47,23 +47,66 @@
 #include <strings.h>
 /*---------------------------------------------------------------------------*/
 #define LOG_MODULE "mqtt-client"
+#ifdef MQTT_CLIENT_CONF_LOG_LEVEL
+#define LOG_LEVEL MQTT_CLIENT_CONF_LOG_LEVEL
+#else
 #define LOG_LEVEL LOG_LEVEL_NONE
+#endif
+/*---------------------------------------------------------------------------*/
+/* Controls whether the example will work in IBM Watson IoT platform mode */
+#ifdef MQTT_CLIENT_CONF_WITH_IBM_WATSON
+#define MQTT_CLIENT_WITH_IBM_WATSON MQTT_CLIENT_CONF_WITH_IBM_WATSON
+#else
+#define MQTT_CLIENT_WITH_IBM_WATSON 0
+#endif
+/*---------------------------------------------------------------------------*/
+/* MQTT broker address. Ignored in Watson mode */
+#ifdef MQTT_CLIENT_CONF_BROKER_IP_ADDR
+#define MQTT_CLIENT_BROKER_IP_ADDR MQTT_CLIENT_CONF_BROKER_IP_ADDR
+#else
+#define MQTT_CLIENT_BROKER_IP_ADDR "fd00::1"
+#endif
 /*---------------------------------------------------------------------------*/
 /*
- * IBM server: messaging.quickstart.internetofthings.ibmcloud.com
- * (184.172.124.189) mapped in an NAT64 (prefix 64:ff9b::/96) IPv6 address
- * Note: If not able to connect; lookup the IP address again as it may change.
+ * MQTT Org ID.
  *
- * Alternatively, publish to a local MQTT broker (e.g. mosquitto) running on
- * the node that hosts your border router
+ * If it equals "quickstart", the client will connect without authentication.
+ * In all other cases, the client will connect with authentication mode.
+ *
+ * In Watson mode, the username will be "use-token-auth". In non-Watson mode
+ * the username will be MQTT_CLIENT_USERNAME.
+ *
+ * In all cases, the password will be MQTT_CLIENT_AUTH_TOKEN.
  */
-#ifdef MQTT_CLIENT_CONF_BROKER_IP_ADDR
-static const char *broker_ip = MQTT_CLIENT_CONF_BROKER_IP_ADDR;
-#define DEFAULT_ORG_ID              "contiki-ng"
+#ifdef MQTT_CLIENT_CONF_ORG_ID
+#define MQTT_CLIENT_ORG_ID MQTT_CLIENT_CONF_ORG_ID
 #else
-static const char *broker_ip = "0064:ff9b:0000:0000:0000:0000:b8ac:7cbd";
-#define DEFAULT_ORG_ID              "quickstart"
+#define MQTT_CLIENT_ORG_ID "quickstart"
 #endif
+/*---------------------------------------------------------------------------*/
+/* MQTT token */
+#ifdef MQTT_CLIENT_CONF_AUTH_TOKEN
+#define MQTT_CLIENT_AUTH_TOKEN MQTT_CLIENT_CONF_AUTH_TOKEN
+#else
+#define MQTT_CLIENT_AUTH_TOKEN "AUTHTOKEN"
+#endif
+/*---------------------------------------------------------------------------*/
+#if MQTT_CLIENT_WITH_IBM_WATSON
+/* With IBM Watson support */
+static const char *broker_ip = "0064:ff9b:0000:0000:0000:0000:b8ac:7cbd";
+#define MQTT_CLIENT_USERNAME "use-token-auth"
+
+#else /* MQTT_CLIENT_WITH_IBM_WATSON */
+/* Without IBM Watson support. To be used with other brokers, e.g. Mosquitto */
+static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
+
+#ifdef MQTT_CLIENT_CONF_USERNAME
+#define MQTT_CLIENT_USERNAME MQTT_CLIENT_CONF_USERNAME
+#else
+#define MQTT_CLIENT_USERNAME "use-token-auth"
+#endif
+
+#endif /* MQTT_CLIENT_WITH_IBM_WATSON */
 /*---------------------------------------------------------------------------*/
 #ifdef MQTT_CLIENT_CONF_STATUS_LED
 #define MQTT_CLIENT_STATUS_LED MQTT_CLIENT_CONF_STATUS_LED
@@ -122,18 +165,12 @@ static uint8_t state;
 #define CONFIG_CMD_TYPE_LEN       8
 #define CONFIG_IP_ADDR_STR_LEN   64
 /*---------------------------------------------------------------------------*/
-#define RSSI_MEASURE_INTERVAL_MAX 86400 /* secs: 1 day */
-#define RSSI_MEASURE_INTERVAL_MIN     5 /* secs */
-#define PUBLISH_INTERVAL_MAX      86400 /* secs: 1 day */
-#define PUBLISH_INTERVAL_MIN          5 /* secs */
-/*---------------------------------------------------------------------------*/
 /* A timeout used when waiting to connect to a network */
 #define NET_CONNECT_PERIODIC        (CLOCK_SECOND >> 2)
 #define NO_NET_LED_DURATION         (NET_CONNECT_PERIODIC >> 1)
 /*---------------------------------------------------------------------------*/
 /* Default configuration values */
 #define DEFAULT_TYPE_ID             "mqtt-client"
-#define DEFAULT_AUTH_TOKEN          "AUTHZ"
 #define DEFAULT_EVENT_TYPE_ID       "status"
 #define DEFAULT_SUBSCRIBE_CMD_TYPE  "+"
 #define DEFAULT_BROKER_PORT         1883
@@ -272,6 +309,7 @@ pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
   }
 
   if(strncmp(&topic[10], "leds", 4) == 0) {
+    LOG_DBG("Received MQTT SUB\n");
     if(chunk[0] == '1') {
       leds_on(LEDS_RED);
     } else if(chunk[0] == '0') {
@@ -423,9 +461,10 @@ init_config()
   /* Populate configuration with default values */
   memset(&conf, 0, sizeof(mqtt_client_config_t));
 
-  memcpy(conf.org_id, DEFAULT_ORG_ID, strlen(DEFAULT_ORG_ID));
+  memcpy(conf.org_id, MQTT_CLIENT_ORG_ID, strlen(MQTT_CLIENT_ORG_ID));
   memcpy(conf.type_id, DEFAULT_TYPE_ID, strlen(DEFAULT_TYPE_ID));
-  memcpy(conf.auth_token, DEFAULT_AUTH_TOKEN, strlen(DEFAULT_AUTH_TOKEN));
+  memcpy(conf.auth_token, MQTT_CLIENT_AUTH_TOKEN,
+         strlen(MQTT_CLIENT_AUTH_TOKEN));
   memcpy(conf.event_type_id, DEFAULT_EVENT_TYPE_ID,
          strlen(DEFAULT_EVENT_TYPE_ID));
   memcpy(conf.broker_ip, broker_ip, strlen(broker_ip));
@@ -459,6 +498,7 @@ publish(void)
   int len;
   int remaining = APP_BUFFER_SIZE;
   int i;
+  char def_rt_str[64];
 
   seq_nr_value++;
 
@@ -485,7 +525,6 @@ publish(void)
   buf_ptr += len;
 
   /* Put our Default route's string representation in a buffer */
-  char def_rt_str[64];
   memset(def_rt_str, 0, sizeof(def_rt_str));
   ipaddr_sprintf(def_rt_str, sizeof(def_rt_str), uip_ds6_defrt_choose());
 
@@ -568,7 +607,7 @@ state_machine(void)
         state = STATE_ERROR;
         break;
       } else {
-        mqtt_set_username_password(&conn, "use-token-auth",
+        mqtt_set_username_password(&conn, MQTT_CLIENT_USERNAME,
                                    conf.auth_token);
       }
     }

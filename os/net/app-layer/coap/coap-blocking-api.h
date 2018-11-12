@@ -39,31 +39,30 @@
 
 #include "sys/pt.h"
 #include "coap-transactions.h"
+#include "coap-request-state.h"
 
 /*---------------------------------------------------------------------------*/
 /*- Client Part -------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-typedef struct coap_request_state {
+typedef struct coap_blocking_request_state {
+  coap_request_state_t state;
   struct pt pt;
   struct process *process;
-  coap_transaction_t *transaction;
-  coap_message_t *response;
-  uint32_t block_num;
-} coap_request_state_t;
+} coap_blocking_request_state_t;
 
 typedef void (* coap_blocking_response_handler_t)(coap_message_t *response);
 
 PT_THREAD(coap_blocking_request
-          (coap_request_state_t *state, process_event_t ev,
+          (coap_blocking_request_state_t *blocking_state, process_event_t ev,
            coap_endpoint_t *remote,
            coap_message_t *request,
            coap_blocking_response_handler_t request_callback));
 
 #define COAP_BLOCKING_REQUEST(server_endpoint, request, chunk_handler)  \
   {                                                                     \
-    static coap_request_state_t request_state;                          \
-    PT_SPAWN(process_pt, &request_state.pt,                             \
-             coap_blocking_request(&request_state, ev,                  \
+    static coap_blocking_request_state_t blocking_state;                          \
+    PT_SPAWN(process_pt, &blocking_state.pt,                             \
+             coap_blocking_request(&blocking_state, ev,                  \
                                    server_endpoint,                     \
                                    request, chunk_handler)              \
              );                                                         \

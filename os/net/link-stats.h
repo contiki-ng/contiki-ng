@@ -56,6 +56,25 @@
 #define LINK_STATS_ETX_FROM_PACKET_COUNT           0
 #endif /* LINK_STATS_ETX_FROM_PACKET_COUNT */
 
+/* Store and periodically print packet counters? */
+#ifdef LINK_STATS_CONF_PACKET_COUNTERS
+#define LINK_STATS_PACKET_COUNTERS LINK_STATS_CONF_PACKET_COUNTERS
+#else /* LINK_STATS_CONF_PACKET_COUNTERS */
+#define LINK_STATS_PACKET_COUNTERS           0
+#endif /* LINK_STATS_PACKET_COUNTERS */
+
+typedef uint16_t link_packet_stat_t;
+
+struct link_packet_counter {
+  /* total attempts to transmit unicast packets */
+  link_packet_stat_t num_packets_tx;
+  /* total ACKs for unicast packets */
+  link_packet_stat_t num_packets_acked;
+  /* total number of unicast and broadcast packets received */
+  link_packet_stat_t num_packets_rx;
+};
+
+
 /* All statistics of a given link */
 struct link_stats {
   clock_time_t last_tx_time;  /* Last Tx timestamp */
@@ -66,10 +85,17 @@ struct link_stats {
   uint8_t tx_count;           /* Tx count, used for ETX calculation */
   uint8_t ack_count;          /* ACK count, used for ETX calculation */
 #endif /* LINK_STATS_ETX_FROM_PACKET_COUNT */
+
+#if LINK_STATS_PACKET_COUNTERS
+  struct link_packet_counter cnt_current; /* packets in the current period */
+  struct link_packet_counter cnt_total;   /* packets in total */
+#endif
 };
 
 /* Returns the neighbor's link statistics */
 const struct link_stats *link_stats_from_lladdr(const linkaddr_t *lladdr);
+/* Returns the address of the neighbor */
+const linkaddr_t *link_stats_get_lladdr(const struct link_stats *);
 /* Are the statistics fresh? */
 int link_stats_is_fresh(const struct link_stats *stats);
 /* Resets link-stats module */

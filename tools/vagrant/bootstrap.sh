@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
-# i386 binary support on x64 system
+# Install i386 binary support on x64 system and required tools
 sudo dpkg --add-architecture i386
 sudo apt update
 sudo apt install -y --no-install-recommends \
-  libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386
+  libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386 \
+  build-essential doxygen git wget unzip python-serial rlwrap npm \
+  default-jdk ant srecord python-pip iputils-tracepath uncrustify \
+  python-magic linux-image-extra-virtual
 
-# Tools
-sudo apt-get install -y --no-install-recommends \
-  build-essential doxygen git wget unzip python-serial \
-  default-jdk ant srecord python-pip iputils-tracepath uncrustify python-magic
 sudo apt-get clean
 sudo python2 -m pip install intelhex
 
@@ -61,8 +60,6 @@ source ${HOME}/.bashrc
 echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && chmod +x ${HOME}/cooja
 
 # Install coap-cli
-sudo apt-get install -y npm
-sudo apt-get clean
 sudo npm install coap-cli -g
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 

@@ -50,8 +50,11 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#define DEBUG DEBUG_FULL
-#include "net/ipv6/uip-debug.h"
+/*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "BR"
+#define LOG_LEVEL LOG_LEVEL_NONE
 
 #ifdef linux
 #include <linux/if.h>
@@ -202,12 +205,12 @@ tun_init()
 
   slip_init();
 
-  PRINTF("Opening tun interface:%s\n", slip_config_tundev);
+  LOG_INFO("Opening tun interface:%s\n", slip_config_tundev);
 
   tunfd = tun_alloc(slip_config_tundev);
 
   if(tunfd == -1) {
-    err(1, "main: open");
+    err(1, "tun_init: open");
   }
 
   select_set_callback(tunfd, &tun_select_callback);
@@ -251,7 +254,7 @@ init(void)
 static int
 output(void)
 {
-  PRINTF("SUT: %u\n", uip_len);
+  LOG_DBG("SUT: %u\n", uip_len);
   if(uip_len > 0) {
     return tun_output(&uip_buf[UIP_LLH_LEN], uip_len);
   }

@@ -3,17 +3,17 @@
  * Computer Science.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
- * are met: 
- * 1. Redistributions of source code must retain the above copyright 
- *    notice, this list of conditions and the following disclaimer. 
- * 2. Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in the 
- *    documentation and/or other materials provided with the distribution. 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote
  *    products derived from this software without specific prior
- *    written permission.  
+ *    written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -25,7 +25,7 @@
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * This file is part of the uIP TCP/IP stack and the Contiki operating system.
  *
@@ -33,8 +33,11 @@
  */
 
 /**
+ * \addtogroup uip-addr-lib
+ * @{
+ *
  * \file
- *         Various uIP library functions.
+ *         Implementation of the IP address manipulation library
  * \author
  *         Nicolas Tsiftes <nvt@sics.se>
  *         Niclas Finne <nfi@sics.se>
@@ -117,7 +120,7 @@ uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *ipaddr)
 }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 /*---------------------------------------------------------------------------*/
-/* Parse a IPv4-address from a string. Returns the number of characters read 
+/* Parse a IPv4-address from a string. Returns the number of characters read
  * for the address. */
 int
 uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *ipaddr)
@@ -156,48 +159,9 @@ uiplib_ip4addrconv(const char *addrstr, uip_ip4addr_t *ipaddr)
 void
 uiplib_ipaddr_print(const uip_ipaddr_t *addr)
 {
-  uint16_t a;
-  unsigned int i;
-  int f;
-
-  if(addr == NULL) {
-    printf("(NULL IP addr)");
-    return;
-  }
-
-  if(ip64_addr_is_ipv4_mapped_addr(addr)) {
-    /*
-     * Printing IPv4-mapped addresses is done according to RFC 4291 [1]
-     *
-     *     "An alternative form that is sometimes more
-     *     convenient when dealing with a mixed environment
-     *     of IPv4 and IPv6 nodes is x:x:x:x:x:x:d.d.d.d,
-     *     where the 'x's are the hexadecimal values of the
-     *     six high-order 16-bit pieces of the address, and
-     *     the 'd's are the decimal values of the four
-     *     low-order 8-bit pieces of the address (standard
-     *     IPv4 representation)."
-     *
-     * [1] https://tools.ietf.org/html/rfc4291#page-4
-     */
-    printf("::FFFF:%u.%u.%u.%u", addr->u8[12], addr->u8[13], addr->u8[14], addr->u8[15]);
-  } else {
-    for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
-      a = (addr->u8[i] << 8) + addr->u8[i + 1];
-      if(a == 0 && f >= 0) {
-        if(f++ == 0) {
-          printf("::");
-        }
-      } else {
-        if(f > 0) {
-          f = -1;
-        } else if(i > 0) {
-          printf(":");
-        }
-        printf("%x", a);
-      }
-    }
-  }
+  char buf[UIPLIB_IPV6_MAX_STR_LEN];
+  uiplib_ipaddr_snprint(buf, sizeof(buf), addr);
+  printf("%s", buf);
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -205,15 +169,16 @@ uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
 {
   uint16_t a;
   unsigned int i;
-  int f, n;
+  int f;
+  int n = 0;
 
   if(size == 0) {
     return 0;
   }
 
   if(addr == NULL) {
-    n = snprintf(buf, size - 1, "(NULL IP addr)");
-
+    n = snprintf(buf, size, "(NULL IP addr)");
+    return n;
   } else if(ip64_addr_is_ipv4_mapped_addr(addr)) {
     /*
      * Printing IPv4-mapped addresses is done according to RFC 4291 [1]
@@ -229,32 +194,38 @@ uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
      *
      * [1] https://tools.ietf.org/html/rfc4291#page-4
      */
-    n = snprintf(buf, size - 1, "::FFFF:%u.%u.%u.%u", addr->u8[12],
+    n = snprintf(buf, size, "::FFFF:%u.%u.%u.%u", addr->u8[12],
                  addr->u8[13], addr->u8[14], addr->u8[15]);
+    return n;
   } else {
-    for(n = 0, i = 0, f = 0; i < sizeof(uip_ipaddr_t) && n < size - 1; i += 2) {
+    for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
       a = (addr->u8[i] << 8) + addr->u8[i + 1];
       if(a == 0 && f >= 0) {
         if(f++ == 0) {
-          buf[n++] = ':';
-          buf[n++] = ':';
+          n += snprintf(buf+n, size-n, "::");
+          if(n >= size) {
+            return n;
+          }
         }
       } else {
         if(f > 0) {
           f = -1;
         } else if(i > 0) {
-          buf[n++] = ':';
+          n += snprintf(buf+n, size-n, ":");
+          if(n >= size) {
+            return n;
+          }
         }
-        n += snprintf(&buf[n], size - n - 1, "%x", a);
+        n += snprintf(buf+n, size-n, "%x", a);
+        if(n >= size) {
+          return n;
+        }
       }
     }
   }
-
-  /*
-   * Make sure the output string is always null-terminated.
-   */
-  buf[MIN(n, size - 1)] = '\0';
-
   return n;
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

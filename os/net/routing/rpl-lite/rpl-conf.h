@@ -185,10 +185,17 @@
  * This value decides if this node must stay as a leaf or not
  * as allowed by draft-ietf-roll-rpl-19#section-8.5
  */
-#ifdef RPL_CONF_LEAF_ONLY
-#define RPL_LEAF_ONLY RPL_CONF_LEAF_ONLY
+#ifdef RPL_CONF_DEFAULT_LEAF_ONLY
+#define RPL_DEFAULT_LEAF_ONLY RPL_CONF_DEFAULT_LEAF_ONLY
 #else
-#define RPL_LEAF_ONLY 0
+#define RPL_DEFAULT_LEAF_ONLY 0
+#endif
+
+/*
+ * Function used to validate dio before using it to init dag
+ */
+#ifdef RPL_CONF_VALIDATE_DIO_FUNC
+#define RPL_VALIDATE_DIO_FUNC RPL_CONF_VALIDATE_DIO_FUNC
 #endif
 
 /******************************************************************************/
@@ -265,7 +272,7 @@
 #ifdef RPL_CONF_DAG_LIFETIME
 #define RPL_DAG_LIFETIME                RPL_CONF_DAG_LIFETIME
 #else
-#define RPL_DAG_LIFETIME                (60 * 60) /* one hour */
+#define RPL_DAG_LIFETIME                (8 * 60) /* 8 hours */
 #endif /* RPL_CONF_DAG_LIFETIME */
 
 /*

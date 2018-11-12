@@ -1,7 +1,14 @@
 CPU_ABS_PATH       = arch/cpu/cc26xx-cc13xx
 TI_XXWARE = $(CONTIKI_CPU)/$(TI_XXWARE_PATH)
 
-### cc26xxware sources under driverlib will be added to the MODULES list
+ifeq (,$(wildcard $(TI_XXWARE)/*))
+    $(warning $(TI_XXWARE) does not exist or is empty.)
+    $(warning Did you run 'git submodule update --init' ?)
+    $(error "")
+endif
+
+### cc26xxware / cc26x0r2fware sources under driverlib will be added to the
+### MODULES list
 TI_XXWARE_SRC = $(CPU_ABS_PATH)/$(TI_XXWARE_PATH)/driverlib
 
 ### The directory with startup sources will be added to the CONTIKI_CPU_DIRS
@@ -37,8 +44,6 @@ CONTIKI_CPU_SOURCEFILES += rf-core.c rf-ble.c ieee-mode.c
 CONTIKI_CPU_SOURCEFILES += ble-cc2650.c ble-hal-cc26xx.c ble-addr.c rf-ble-cmd.c
 CONTIKI_CPU_SOURCEFILES += random.c soc-trng.c int-master.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c
-
-MODULES += os/lib/dbg-io
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
@@ -76,8 +81,10 @@ STACK_SIZE = 0
 	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "[RAM]   used %6d, free %6d\n",s,f;}'
 	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "[Flash] used %6d, free %6d\n",s,f;}'
 
+include $(CONTIKI)/arch/cpu/arm/cortex-m/cm3/Makefile.cm3
+
 ifeq ($(BOARD_SUPPORTS_BSL),1)
-%.upload: %.bin
+%.upload: $(OUT_BIN)
 ifeq ($(wildcard $(BSL)), )
 	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
 else
@@ -88,21 +95,5 @@ else
 	@echo "This board cannot be programmed through the ROM bootloader and therefore does not support the .upload target."
 endif
 
-# Check if we are running under Windows
-ifeq ($(HOST_OS),Windows)
-  SERIALDUMP ?= $(CONTIKI)/tools/sky/serialdump-windows
-else
-ifeq ($(HOST_OS),Darwin)
-  SERIALDUMP ?= $(CONTIKI)/tools/sky/serialdump-macos
-else
-  # Else assume Linux
-  SERIALDUMP ?= $(CONTIKI)/tools/sky/serialdump-linux
-endif
-endif
-
-UART_BAUDRATE = 115200
-
-login:
-	$(SERIALDUMP) -b$(UART_BAUDRATE) $(PORT)
-
-include $(CONTIKI)/arch/cpu/arm/cortex-m/cm3/Makefile.cm3
+### For the login etc targets
+BAUDRATE = 115200

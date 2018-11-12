@@ -1,28 +1,58 @@
 FROM 32bit/ubuntu:16.04
 
+ENV DEBIAN_FRONTEND noninteractive
+
 # Tools
-RUN apt-get update && \
-  apt-get install -y --no-install-recommends \
-  build-essential doxygen git wget unzip python-serial \
-  default-jdk ant srecord iputils-tracepath && \
-  apt-get clean
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+  echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  apt-get -qq update && \
+  apt-get -qq -y --no-install-recommends install \
+    ant \
+    build-essential \
+    default-jdk \
+    doxygen \
+    gdb \
+    git \
+    gksu \
+    gtk-sharp2 \
+    iputils-tracepath \
+    libcanberra-gtk-module:i386 \
+    libgtk2.0-0 \
+    mono-complete \
+    mosquitto \
+    mosquitto-clients \
+    npm \
+    python-pip \
+    python-serial \
+    rlwrap \
+    screen \
+    srecord \
+    uml-utilities \
+    unzip \
+    wget \
+    > /dev/null \
+  && apt-get -qq clean
+
+# Install coap-cli
+RUN npm -q install coap-cli -g \
+  && sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 # Install ARM toolchain
-RUN wget https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
+RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
   tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/ && \
   cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/ && \
   rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
-RUN wget http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
+RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
   tar xjf mspgcc*.tar.bz2 -C /tmp/ && \
   cp -f -r /tmp/msp430/* /usr/local/ && \
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
 # Install NXP toolchain (partial, with binaries excluded. Download from nxp.com)
-RUN wget http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 && \
-  wget http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part2.tar.bz2 && \
-  wget http://simonduq.github.io/resources/jn516x-sdk-4163-1416.tar.bz2 && \
+RUN wget -nv http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 && \
+  wget -nv http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part2.tar.bz2 && \
+  wget -nv http://simonduq.github.io/resources/jn516x-sdk-4163-1416.tar.bz2 && \
   mkdir /tmp/jn516x-sdk /tmp/ba-elf-gcc && \
   tar xjf jn516x-sdk-*.tar.bz2 -C /tmp/jn516x-sdk && \
   tar xjf ba-elf-gcc-*part1.tar.bz2 -C /tmp/ba-elf-gcc && \
@@ -34,12 +64,17 @@ RUN wget http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 && \
 ENV PATH="/usr/ba-elf-gcc/bin:${PATH}"
 
 ## Install nRF52 SDK
-RUN wget https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
+RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
     mkdir /usr/nrf52-sdk && \
-    unzip nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk && \
+    unzip -q nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk && \
     rm nrf5_iot_sdk_3288530.zip
 
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
+
+# Install sphinx and sphinx_rtd_theme, required for building and testing the
+# readthedocs API documentation
+RUN pip -q install --upgrade pip
+RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
@@ -67,24 +102,25 @@ WORKDIR                 ${HOME}
 RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && \
   chmod +x ${HOME}/cooja
 
-# Install coap-cli
-RUN sudo apt-get install -y npm \
-  && sudo apt-get clean \
-  && sudo npm install coap-cli -g \
-  && sudo ln -s /usr/bin/nodejs /usr/bin/node
+# Download, build and install Renode
+RUN git clone --quiet https://github.com/renode/renode.git \
+  && cd ${HOME}/renode \
+  && git checkout v1.3 \
+  && ./build.sh
+ENV PATH="${HOME}/renode:${PATH}"
 
-# Optional: download Contiki-NG and pre-compile Cooja.
-# Else, use a Docker bind mount to share the repo with the host.
-# Docker run option:
+# By default, we use a Docker bind mount to share the repo with the host,
+# with Docker run option:
 # -v <HOST_CONTIKI_NG_ABS_PATH>:/home/user/contiki-ng
-RUN git clone --recursive https://github.com/contiki-ng/contiki-ng.git ${CONTIKI_NG}
-RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
+# Alternatively, uncomment the next two lines to download Contiki-NG and pre-compile Cooja.
+#RUN git clone --recursive https://github.com/contiki-ng/contiki-ng.git ${CONTIKI_NG}
+#RUN ant -q -f ${CONTIKI_NG}/tools/cooja/build.xml jar
 
 # Working directory
 WORKDIR ${CONTIKI_NG}
 
-# Enable IPv6 -- must be done at runtime, not in Dockerfile
-RUN echo "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null" >> /home/user/.profile
+# Enable IPv6 -- must be done at runtime, hence added to .profile
+RUN echo "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null" >> ${HOME}/.profile
 
 # Start a bash
 CMD bash --login

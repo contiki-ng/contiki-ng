@@ -68,6 +68,26 @@
 #define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0x00
 #endif
 /** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief ROM bootloader configuration
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#if CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE
+#define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE      0xC5
+#define SET_CCFG_BL_CONFIG_BL_LEVEL               CCXXWARE_CONF_BL_LEVEL
+#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER          CCXXWARE_CONF_BL_PIN_NUMBER
+#define SET_CCFG_BL_CONFIG_BL_ENABLE              0xC5
+#else
+#define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE      0x00
+#define SET_CCFG_BL_CONFIG_BL_LEVEL               0x01
+#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER          IOID_UNUSED
+#define SET_CCFG_BL_CONFIG_BL_ENABLE              0xFF
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
 #endif /* CCXXWARE_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**

@@ -119,7 +119,7 @@
 /*---------------------------------------------------------------------------*/
 /* Default configuration values */
 #define CC26XX_WEB_DEMO_DEFAULT_ORG_ID              "quickstart"
-#if CPU_FAMILY_CC13XX
+#if CPU_FAMILY_CC13X0
 #define CC26XX_WEB_DEMO_DEFAULT_TYPE_ID             "cc13xx"
 #else
 #define CC26XX_WEB_DEMO_DEFAULT_TYPE_ID             "cc26xx"

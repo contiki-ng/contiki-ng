@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017, Graz University of Technology
+ * Copyright (c) 2018, University of Bristol - http://www.bristol.ac.uk/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +35,7 @@
  *
  * \author
  *    Michael Spoerk <michael.spoerk@tugraz.at>
+ *    Jinyan BAI <onefreebjy@outlook.com>
  */
 /*---------------------------------------------------------------------------*/
 
@@ -63,6 +65,9 @@
 #include <string.h>
 
 #include "rf-core/ble-hal/rf-ble-cmd.h"
+#if RADIO_CONF_BLE5
+#include "rf_patches/rf_patch_cpe_bt5.h"
+#endif
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "BLE-RADIO"
@@ -117,9 +122,15 @@ ticks_to_unit(rtimer_clock_t value, uint32_t unit)
   return (uint32_t)temp;
 }
 /*---------------------------------------------------------------------------*/
+#if RADIO_CONF_BLE5
+#define CMD_BUFFER_SIZE         28
+#define PARAM_BUFFER_SIZE       48
+#define OUTPUT_BUFFER_SIZE        24
+#else
 #define CMD_BUFFER_SIZE         24
 #define PARAM_BUFFER_SIZE       36
 #define OUTPUT_BUFFER_SIZE        24
+#endif
 /*---------------------------------------------------------------------------*/
 /* ADVERTISING data structures												 */
 #define ADV_RX_BUFFERS_OVERHEAD     8
@@ -358,12 +369,24 @@ on(void)
   oscillators_request_hf_xosc();
   if(!rf_core_is_accessible()) {
     /* boot the rf core */
-    if(rf_core_boot() != RF_CORE_CMD_OK) {
-      LOG_ERR("ble_controller_reset() could not boot rf-core\n");
-      return BLE_RESULT_ERROR;
-    }
 
-    rf_core_setup_interrupts(0);
+    /*    boot and apply Bluetooth 5 Patch    */
+    if(rf_core_power_up() != RF_CORE_CMD_OK) {
+      LOG_ERR("rf_core_boot: rf_core_power_up() failed\n");
+      rf_core_power_down();
+      return RF_CORE_CMD_ERROR;
+    }
+    
+#if RADIO_CONF_BLE5
+    /*  Apply Bluetooth 5 patch, if applicable  */
+    rf_patch_cpe_bt5();
+#endif
+    if(rf_core_start_rat() != RF_CORE_CMD_OK) {
+      LOG_ERR("rf_core_boot: rf_core_start_rat() failed\n");
+      rf_core_power_down();
+      return RF_CORE_CMD_ERROR;
+    }
+    rf_core_setup_interrupts();
     oscillators_switch_to_hf_xosc();
 
     if(rf_ble_cmd_setup_ble_mode() != RF_BLE_CMD_OK) {
@@ -845,7 +868,11 @@ connection_rx(ble_conn_param_t *param)
 
   while(RX_ENTRY_STATUS(param->rx_queue_current) == DATA_ENTRY_FINISHED) {
     rx_data = RX_ENTRY_DATA_PTR(param->rx_queue_current);
+#if RADIO_CONF_BLE5
+    len = RX_ENTRY_DATA_LENGTH(param->rx_queue_current) - 7 - 2;  /* last 9 bytes are status, timestamp, ... */
+#else
     len = RX_ENTRY_DATA_LENGTH(param->rx_queue_current) - 6 - 2;  /* last 8 bytes are status, timestamp, ... */
+#endif
     channel = (rx_data[len + 3] & 0x3F);
     frame_type = rx_data[0] & 0x03;
     more_data = (rx_data[0] & 0x10) >> 4;

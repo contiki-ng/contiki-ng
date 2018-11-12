@@ -29,14 +29,23 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup common-cc26xx-peripherals
+ * \addtogroup dev
  * @{
  *
- * \defgroup sensortag-cc26xx-ext-flash SensorTag/LaunchPad External Flash
+ * \defgroup ext-flash Generic external SPI flash driver
+ *
+ * This is a generic driver for external SPI flash memories. The driver has
+ * been tested and works with multiple external SPI flash parts. The list of
+ * parts the driver has been tested against is shown in the README in this
+ * directory.
+ *
+ * If you successfully use this driver with a part that is not listed in the
+ * README, please let us know so we can update it.
+ *
  * @{
  *
  * \file
- * Header file for the Sensortag/LaunchPad External Flash Driver
+ * Header file for the external SPI flash API
  */
 /*---------------------------------------------------------------------------*/
 #ifndef EXT_FLASH_H_
@@ -52,7 +61,7 @@
  * \param conf SPI bus configuration struct. NULL for default.
  * \return True when successful.
  */
-bool ext_flash_open(spi_device_t *conf);
+bool ext_flash_open(const spi_device_t *conf);
 
 /**
  * \brief Close the storage driver
@@ -61,7 +70,7 @@ bool ext_flash_open(spi_device_t *conf);
  *
  * This call will put the device in its lower power mode (power down).
  */
-bool ext_flash_close(spi_device_t *conf);
+bool ext_flash_close(const spi_device_t *conf);
 
 /**
  * \brief Read storage content
@@ -73,7 +82,7 @@ bool ext_flash_close(spi_device_t *conf);
  *
  * buf must be allocated by the caller
  */
-bool ext_flash_read(spi_device_t *conf, uint32_t offset, uint32_t length, uint8_t *buf);
+bool ext_flash_read(const spi_device_t *conf, uint32_t offset, uint32_t length, uint8_t *buf);
 
 /**
  * \brief Erase storage sectors corresponding to the range.
@@ -85,7 +94,7 @@ bool ext_flash_read(spi_device_t *conf, uint32_t offset, uint32_t length, uint8_
  * The erase operation will be sector-wise, therefore a call to this function
  * will generally start the erase procedure at an address lower than offset
  */
-bool ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length);
+bool ext_flash_erase(const spi_device_t *conf, uint32_t offset, uint32_t length);
 
 /**
  * \brief Write to storage sectors.
@@ -96,7 +105,7 @@ bool ext_flash_erase(spi_device_t *conf, uint32_t offset, uint32_t length);
  *
  * \return True when successful.
  */
-bool ext_flash_write(spi_device_t *conf, uint32_t offset, uint32_t length, const uint8_t *buf);
+bool ext_flash_write(const spi_device_t *conf, uint32_t offset, uint32_t length, const uint8_t *buf);
 
 /**
  * \brief Initialise the external flash
@@ -108,7 +117,7 @@ bool ext_flash_write(spi_device_t *conf, uint32_t offset, uint32_t length, const
  * In order to perform any operation, the caller must first wake the device
  * up by calling ext_flash_open()
  */
-bool ext_flash_init(spi_device_t *conf);
+bool ext_flash_init(const spi_device_t *conf);
 /*---------------------------------------------------------------------------*/
 #endif /* EXT_FLASH_H_ */
 /*---------------------------------------------------------------------------*/

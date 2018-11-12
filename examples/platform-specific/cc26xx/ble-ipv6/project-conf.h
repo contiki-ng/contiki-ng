@@ -37,9 +37,6 @@
 #define PROJECT_CONF_H_
 
 /*---------------------------------------------------------------------------*/
-/* Disable button shutdown functionality */
-#define BUTTON_SENSOR_CONF_ENABLE_SHUTDOWN      0
-/*---------------------------------------------------------------------------*/
 /* Change to match your configuration */
 #define BOARD_CONF_DEBUGGER_DEVPACK             1
 /*---------------------------------------------------------------------------*/

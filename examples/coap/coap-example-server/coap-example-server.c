@@ -92,9 +92,6 @@ PROCESS_THREAD(er_example_server, ev, data)
 
   LOG_INFO("Starting Erbium Example Server\n");
 
-  /* Initialize the REST engine. */
-  coap_engine_init();
-
   /*
    * Bind the resources to their Uri-Path.
    * WARNING: Activating twice only means alternate path, not two instances!

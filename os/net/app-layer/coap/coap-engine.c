@@ -371,7 +371,6 @@ coap_engine_init(void)
 {
   /* avoid initializing twice */
   if(is_initialized) {
-    LOG_DBG("already running - double initialization?\n");
     return;
   }
   is_initialized = 1;

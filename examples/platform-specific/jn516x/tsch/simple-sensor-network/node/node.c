@@ -38,7 +38,7 @@
 #include "net/routing/routing.h"
 #include "net/ipv6/uip-debug.h"
 #include "lib/random.h"
-#include "node-id.h"
+#include "sys/node-id.h"
 #include "waveform.h"
 #include "leds.h"
 #include "net/ipv6/uiplib.h"
@@ -194,7 +194,7 @@ PROCESS_THREAD(node_process, ev, data)
       if (host_found) {
         /* Make sample count dependent on asn. After a disconnect, waveforms remain
            synchronous. Use node_mac to create phase offset between waveforms in different nodes */
-        sample_count = ((tsch_current_asn.ls4b/((1000/(TSCH_CONF_DEFAULT_TIMESLOT_LENGTH/1000)))/INTERVAL)+node_mac[7]) % (SIZE_OF_WAVEFORM-1);
+        sample_count = ((tsch_current_asn.ls4b/((1000/(tsch_timing_us[tsch_ts_timeslot_length]/1000)))/INTERVAL)+node_mac[7]) % (SIZE_OF_WAVEFORM-1);
         printf("%d sec. waveform=%s. cnt=%d. value=%d\n", total_time, waveform_table[selected_waveform].str, sample_count, waveform_table[selected_waveform].table[sample_count]);
         my_sprintf(udp_buf, waveform_table[selected_waveform].table[sample_count]);
         uip_udp_packet_send(udp_conn_tx, udp_buf, strlen(udp_buf));

@@ -111,15 +111,10 @@
  */
 #define EXT_FLASH_SPI_CONTROLLER    SPI_CONTROLLER_SPI0
 
-#define BOARD_IOID_FLASH_SCK        IOID_10
-#define BOARD_IOID_FLASH_MOSI       IOID_9
-#define BOARD_IOID_FLASH_MISO       IOID_8
-#define BOARD_IOID_FLASH_CS         IOID_20
-
-#define EXT_FLASH_SPI_PIN_SCK       10
-#define EXT_FLASH_SPI_PIN_MOSI      9
-#define EXT_FLASH_SPI_PIN_MISO      8
-#define EXT_FLASH_SPI_PIN_CS        20
+#define EXT_FLASH_SPI_PIN_SCK       IOID_10
+#define EXT_FLASH_SPI_PIN_MOSI      IOID_9
+#define EXT_FLASH_SPI_PIN_MISO      IOID_8
+#define EXT_FLASH_SPI_PIN_CS        IOID_20
 
 #define EXT_FLASH_DEVICE_ID         0x14
 #define EXT_FLASH_MID               0xC2
@@ -141,23 +136,14 @@
 /**
  * \brief ROM bootloader configuration
  *
- * Change SET_CCFG_BL_CONFIG_BL_PIN_NUMBER to BOARD_IOID_KEY_xyz to select
- * which button triggers the bootloader on reset.
- *
- * The remaining values are not meant to be modified by the user
+ * Change CCXXWARE_CONF_BL_PIN_NUMBER to BOARD_IOID_KEY_xyz to select which
+ * button triggers the bootloader on reset. Use CCXXWARE_CONF_BL_LEVEL to
+ * control the pin level that enables the bootloader (0: low, 1: high). It is
+ * also possible to use any other externally-controlled DIO.
  * @{
  */
-#if ROM_BOOTLOADER_ENABLE
-#define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE            0xC5
-#define SET_CCFG_BL_CONFIG_BL_LEVEL                     0x00
-#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER                BOARD_IOID_KEY_LEFT
-#define SET_CCFG_BL_CONFIG_BL_ENABLE                    0xC5
-#else
-#define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE            0x00
-#define SET_CCFG_BL_CONFIG_BL_LEVEL                     0x01
-#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER                0xFF
-#define SET_CCFG_BL_CONFIG_BL_ENABLE                    0xFF
-#endif
+#define CCXXWARE_CONF_BL_PIN_NUMBER   BOARD_IOID_KEY_LEFT
+#define CCXXWARE_CONF_BL_LEVEL        0
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

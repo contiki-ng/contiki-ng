@@ -40,16 +40,20 @@
 # To invoke the building for a specific platform, run:
 # $ PLATFORMS=zoul ./build.sh
 #
+CONTIKI_NG_TOP_DIR="../.."
+EXAMPLES_DIR=$CONTIKI_NG_TOP_DIR/examples
 
 if [[ "$PLATFORMS" == "" ]]
 then
-    PLATFORMS=`ls ../../arch/platform`
+    PLATFORMS=`ls $CONTIKI_NG_TOP_DIR/arch/platform`
 fi
 
 if [[ "$MAKEFILES" == "" ]]
 then
-    MAKEFILES=`find ../../examples/ -name Makefile`
+    MAKEFILES=`find $EXAMPLES_DIR -name Makefile`
 fi
+
+HELLO_WORLD=$EXAMPLES_DIR/hello-world
 
 # Set the make goal the first argument of the script or to "all" if called w/o arguments
 if [[ $# -gt 0 ]]
@@ -97,16 +101,14 @@ do
         continue
     fi
 
-    if [[ "$platform" == "srf06-cc26xx" ]]
+    # Detect all boards for the current platform by calling
+    # make TARGET=$platform boards
+    # in the hello-world dir.
+    BOARDS=`make -s -C $HELLO_WORLD TARGET=$platform boards \
+            | grep -v "no boards" | rev | cut -f3- -d" " | rev`
+
+    if [[ -z $BOARDS ]]
     then
-        # srf06-cc26xx has multiple boards
-        BOARDS="srf06/cc26xx srf06/cc13xx launchpad/cc2650 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350"
-    elif [[ "$platform" == "zoul" ]]
-    then
-        # Zoul has multiple boards
-        BOARDS="remote-reva remote-revb firefly-reva firefly orion"
-    else
-        # Other platforms have just a single board
         BOARDS="default"
     fi
 

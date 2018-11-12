@@ -344,8 +344,6 @@ PROCESS_THREAD(very_sleepy_demo_process, ev, data)
 
   event_new_config = process_alloc_event();
 
-  coap_engine_init();
-
   readings_resource.flags += IS_OBSERVABLE;
   coap_activate_resource(&readings_resource, "sen/readings");
   coap_activate_resource(&very_sleepy_conf, "very_sleepy_config");

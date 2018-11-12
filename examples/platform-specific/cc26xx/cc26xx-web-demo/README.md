@@ -10,11 +10,17 @@ demonstrate the CC26xx capability. The applications are:
 * A web server which can be used to display sensor readings but also to
   configure MQTT functionality
 
-The example has been configured to run for all CC26xx-based boards: i) The
-SensorTag 2.0 and ii) The Srf06EB with a CC26xx or CC13xx EM mounted on it.
+The example has been configured to run for all CC26xx-based boards.
 
-To change between target boards, follow the instructions in the platform's
-REDME file. Do not forget to `make clean` when switching between the boards.
+To change between target boards, follow the instructions in the wiki.
+Do not forget to `make clean` when switching between the boards.
+
+Specifically for some older CC2650 SensorTags, you may also need to change
+`project-conf.h` such that `SENSORTAG_CC2650_REV_1_2_0` is defined as 1. To
+check if your sensortag is one of those older ones, look for "REV: 1.2"
+printed on the PCB. There may also be a sticker that reads "HW Rev 1.2.0". An
+indication that you may need to do this is if you get a "Could not open flash
+to load config" error on device startup.
 
 You can disable some of those individual components by changing the respective
 defines in `project-conf.h`. For instance, to disable the CoAP functionality,
@@ -171,3 +177,9 @@ the state of the LED.
 Bear in mind that, even though the topic suggests that messages are of json
 format, they are in fact not. This was done in order to avoid linking a json
 parser into the firmware.
+
+IBM Watson IoT Platform
+----------------------------
+To use IBM Watson IoT Platform, you have to go to SECURITY tab of Device page to select "TLS Optional". This step is critical. If you don't do this, you need to use TLS for connection and default cc26xx-web-demo won't work.
+
+![IBM Watson IoT Platform TLS Optional Configuration](img/ibm-watson-iot-platform-tls-optional.png)

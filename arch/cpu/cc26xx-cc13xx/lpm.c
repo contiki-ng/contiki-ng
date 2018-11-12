@@ -162,7 +162,9 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
   ti_lib_aon_wuc_mcu_power_off_config(MCU_VIRT_PWOFF_DISABLE);
 
   /* Latch the IOs in the padring and enable I/O pad sleep mode */
-  ti_lib_pwr_ctrl_io_freeze_enable();
+  ti_lib_aon_ioc_freeze_enable();
+  HWREG(AON_SYSCTL_BASE + AON_SYSCTL_O_SLEEPCTL) = 0;
+  ti_lib_sys_ctrl_aon_sync();
 
   /* Turn off VIMS cache, CRAM and TRAM - possibly not required */
   ti_lib_prcm_cache_retention_disable();

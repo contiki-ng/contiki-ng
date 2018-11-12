@@ -137,15 +137,10 @@
  */
 #define EXT_FLASH_SPI_CONTROLLER    SPI_CONTROLLER_SPI0
 
-#define BOARD_IOID_FLASH_SCK        IOID_17
-#define BOARD_IOID_FLASH_MOSI       IOID_19
-#define BOARD_IOID_FLASH_MISO       IOID_18
-#define BOARD_IOID_FLASH_CS         IOID_14
-
-#define EXT_FLASH_SPI_PIN_SCK       17
-#define EXT_FLASH_SPI_PIN_MOSI      19
-#define EXT_FLASH_SPI_PIN_MISO      18
-#define EXT_FLASH_SPI_PIN_CS        14
+#define EXT_FLASH_SPI_PIN_SCK       IOID_17
+#define EXT_FLASH_SPI_PIN_MOSI      IOID_19
+#define EXT_FLASH_SPI_PIN_MISO      IOID_18
+#define EXT_FLASH_SPI_PIN_CS        IOID_14
 
 #define EXT_FLASH_DEVICE_ID         0x14
 #define EXT_FLASH_MID               0xC2
@@ -251,6 +246,16 @@
 #define BOARD_BUTTON_HAL_INDEX_KEY_LEFT   0x00
 #define BOARD_BUTTON_HAL_INDEX_KEY_RIGHT  0x01
 #define BOARD_BUTTON_HAL_INDEX_REED_RELAY 0xFF
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief ROM bootloader configuration
+ *
+ * Sensortags do not support the bootloader
+ * @{
+ */
+#define CCXXWARE_CONF_BL_PIN_NUMBER   IOID_UNUSED
+#define CCXXWARE_CONF_BL_LEVEL        0
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

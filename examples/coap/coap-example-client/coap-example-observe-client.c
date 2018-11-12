@@ -141,8 +141,6 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
 
   /* store server address in server_ipaddr */
   SERVER_NODE(server_ipaddr);
-  /* receives all CoAP messages */
-  coap_init_engine();
   /* init timer and button (if available) */
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 #if PLATFORM_HAS_BUTTON

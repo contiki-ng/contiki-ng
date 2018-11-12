@@ -52,11 +52,13 @@
 #include "net/routing/rpl-classic/rpl-dag-root.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+#include "sys/log.h"
 
 #include <limits.h>
 #include <string.h>
+
+#define LOG_MODULE "RPL"
+#define LOG_LEVEL LOG_LEVEL_RPL
 
 #if RPL_CONF_STATS
 rpl_stats_t rpl_stats;
@@ -83,7 +85,7 @@ rpl_set_mode(enum rpl_mode m)
        inform our parent that we now are reachable. Before we do this,
        we must set the mode variable, since DAOs will not be sent if
        we are in feather mode. */
-    PRINTF("RPL: switching to mesh mode\n");
+    LOG_DBG("rpl_set_mode: switching to mesh mode\n");
     mode = m;
 
     if(default_instance != NULL) {
@@ -91,15 +93,15 @@ rpl_set_mode(enum rpl_mode m)
     }
   } else if(m == RPL_MODE_FEATHER) {
 
-    PRINTF("RPL: switching to feather mode\n");
+    LOG_INFO("rpl_set_mode: switching to feather mode\n");
     if(default_instance != NULL) {
-      PRINTF("rpl_set_mode: RPL sending DAO with zero lifetime\n");
+      LOG_INFO("rpl_set_mode: RPL sending DAO with zero lifetime\n");
       if(default_instance->current_dag != NULL) {
         dao_output(default_instance->current_dag->preferred_parent, RPL_ZERO_LIFETIME);
       }
       rpl_cancel_dao(default_instance);
     } else {
-      PRINTF("rpl_set_mode: no default instance\n");
+      LOG_INFO("rpl_set_mode: no default instance\n");
     }
 
     mode = m;
@@ -145,17 +147,17 @@ rpl_purge_routes(void)
       uip_ipaddr_copy(&prefix, &r->ipaddr);
       uip_ds6_route_rm(r);
       r = uip_ds6_route_head();
-      PRINTF("No more routes to ");
-      PRINT6ADDR(&prefix);
+      LOG_INFO("No more routes to ");
+      LOG_INFO_6ADDR(&prefix);
       dag = default_instance->current_dag;
       /* Propagate this information with a No-Path DAO to preferred parent if we are not a RPL Root */
       if(dag->rank != ROOT_RANK(default_instance)) {
-        PRINTF(" -> generate No-Path DAO\n");
+        LOG_INFO_(" -> generate No-Path DAO\n");
         dao_output_target(dag->preferred_parent, &prefix, RPL_ZERO_LIFETIME);
         /* Don't schedule more than 1 No-Path DAO, let next iteration handle that */
         return;
       }
-      PRINTF("\n");
+      LOG_INFO_("\n");
     } else {
       r = uip_ds6_route_next(r);
     }
@@ -223,7 +225,7 @@ rpl_remove_routes_by_nexthop(uip_ipaddr_t *nexthop, rpl_dag_t *dag)
     }
     r = uip_ds6_route_next(r);
   }
-  ANNOTATE("#L %u 0\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
+  LOG_ANNOTATE("#L %u 0\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_route_t *
@@ -233,7 +235,7 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
   uip_ds6_route_t *rep;
 
   if((rep = uip_ds6_route_add(prefix, prefix_len, next_hop)) == NULL) {
-    PRINTF("RPL: No space for more route entries\n");
+    LOG_ERR("No space for more route entries\n");
     return NULL;
   }
 
@@ -242,11 +244,11 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
   /* always clear state flags for the no-path received when adding/refreshing */
   RPL_ROUTE_CLEAR_NOPATH_RECEIVED(rep);
 
-  PRINTF("RPL: Added a route to ");
-  PRINT6ADDR(prefix);
-  PRINTF("/%d via ", prefix_len);
-  PRINT6ADDR(next_hop);
-  PRINTF("\n");
+  LOG_INFO("Added a route to ");
+  LOG_INFO_6ADDR(prefix);
+  LOG_INFO_("/%d via ", prefix_len);
+  LOG_INFO_6ADDR(next_hop);
+  LOG_INFO_("\n");
 
   return rep;
 }
@@ -266,8 +268,15 @@ rpl_link_callback(const linkaddr_t *addr, int status, int numtx)
     if(instance->used == 1 ) {
       parent = rpl_find_parent_any_dag(instance, &ipaddr);
       if(parent != NULL) {
+        /* If this is the neighbor we were probing urgently, mark urgent
+        probing as done */
+#if RPL_WITH_PROBING
+        if(instance->urgent_probing_target == parent) {
+          instance->urgent_probing_target = NULL;
+        }
+#endif /* RPL_WITH_PROBING */
         /* Trigger DAG rank recalculation. */
-        PRINTF("RPL: rpl_link_callback triggering update\n");
+        LOG_DBG("rpl_link_callback triggering update\n");
         parent->flags |= RPL_PARENT_FLAG_UPDATED;
       }
     }
@@ -281,12 +290,12 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
   rpl_instance_t *instance;
   rpl_instance_t *end;
 
-  PRINTF("RPL: Neighbor state changed for ");
-  PRINT6ADDR(&nbr->ipaddr);
+  LOG_DBG("Neighbor state changed for ");
+  LOG_DBG_6ADDR(&nbr->ipaddr);
 #if UIP_ND6_SEND_NS || UIP_ND6_SEND_RA
-  PRINTF(", nscount=%u, state=%u\n", nbr->nscount, nbr->state);
+  LOG_DBG_(", nscount=%u, state=%u\n", nbr->nscount, nbr->state);
 #else /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA */
-  PRINTF(", state=%u\n", nbr->state);
+  LOG_DBG_(", state=%u\n", nbr->state);
 #endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA */
   for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES; instance < end; ++instance) {
     if(instance->used == 1 ) {
@@ -294,7 +303,7 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
       if(p != NULL) {
         p->rank = RPL_INFINITE_RANK;
         /* Trigger DAG rank recalculation. */
-        PRINTF("RPL: rpl_ipv6_neighbor_callback infinite rank\n");
+        LOG_DBG("rpl_ipv6_neighbor_callback infinite rank\n");
         p->flags |= RPL_PARENT_FLAG_UPDATED;
       }
     }
@@ -315,9 +324,9 @@ rpl_purge_dags(void)
         if(instance->dag_table[i].used) {
           if(instance->dag_table[i].lifetime == 0) {
             if(!instance->dag_table[i].joined) {
-              PRINTF("Removing dag ");
-              PRINT6ADDR(&instance->dag_table[i].dag_id);
-              PRINTF("\n");
+              LOG_INFO("Removing dag ");
+              LOG_INFO_6ADDR(&instance->dag_table[i].dag_id);
+              LOG_INFO_("\n");
               rpl_free_dag(&instance->dag_table[i]);
             }
           } else {
@@ -333,7 +342,7 @@ static void
 init(void)
 {
   uip_ipaddr_t rplmaddr;
-  PRINTF("RPL started\n");
+  LOG_INFO("rpl-classic started\n");
   default_instance = NULL;
 
   rpl_dag_init();
@@ -398,7 +407,7 @@ drop_route(uip_ds6_route_t *route)
 static void
 leave_network(void)
 {
-  PRINTF("RPL: leave_network not supported in RPL Classic\n");
+  LOG_ERR("leave_network not supported in RPL Classic\n");
 }
 /*---------------------------------------------------------------------------*/
 static int

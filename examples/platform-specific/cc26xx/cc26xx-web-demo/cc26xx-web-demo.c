@@ -636,7 +636,7 @@ get_hdc_reading()
   }
 
   if(hdc_hum_reading.publish) {
-    value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMIDITY);
+    value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMID);
     if(value != CC26XX_SENSOR_READING_ERROR) {
       hdc_hum_reading.raw = value;
 

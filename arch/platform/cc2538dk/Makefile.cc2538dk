@@ -28,12 +28,27 @@ endif
 
 BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
 
-%.upload: %.bin %.elf
+%.upload: $(OUT_BIN) $(OUT_ELF)
 ifeq ($(wildcard $(BSL)), )
 	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
 else
-	$(eval BSL_ADDRESS_ARG := -a $(shell $(OBJDUMP) -h $*.elf | grep -B1 LOAD | \
+	$(eval BSL_ADDRESS_ARG := -a $(shell $(OBJDUMP) -h \
+	                               $(BUILD_DIR_BOARD)/$*.elf | grep -B1 LOAD | \
 	                               grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$5}' | \
 	                               sort -g | head -1))
 	$(PYTHON) $(BSL) $(BSL_FLAGS) $(BSL_ADDRESS_ARG) $<
 endif
+
+ifeq ($(HOST_OS),Darwin)
+  RENODE = mono /Applications/Renode.app/Contents/MacOS/bin/Renode.exe
+else
+  RENODE = renode
+endif
+
+SCRIPT ?= $(notdir $(CURDIR)).resc
+
+.PHONY: renode
+
+renode: all
+	$(RENODE) $(SCRIPT)
+

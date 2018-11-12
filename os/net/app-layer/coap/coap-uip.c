@@ -49,6 +49,7 @@
 #include "contiki.h"
 #include "net/ipv6/uip-udp-packet.h"
 #include "net/ipv6/uiplib.h"
+#include "net/routing/routing.h"
 #include "coap.h"
 #include "coap-engine.h"
 #include "coap-endpoint.h"
@@ -57,10 +58,6 @@
 #include "coap-constants.h"
 #include "coap-keystore.h"
 #include "coap-keystore-simple.h"
-
-#if UIP_CONF_IPV6_RPL
-#include "rpl.h"
-#endif /* UIP_CONF_IPV6_RPL */
 
 /* Log configuration */
 #include "coap-log.h"
@@ -214,30 +211,27 @@ coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep)
   /* Only IPv6 supported */
   int start = index_of(text, 0, size, '[');
   int end = index_of(text, start, size, ']');
-  int secure = strncmp((const char *)text, "coaps:", 6) == 0;
   uint32_t port;
-  if(start > 0 && end > start &&
-     uiplib_ipaddrconv((const char *)&text[start], &ep->ipaddr)) {
+
+  ep->secure = strncmp(text, "coaps:", 6) == 0;
+  if(start >= 0 && end > start &&
+     uiplib_ipaddrconv(&text[start], &ep->ipaddr)) {
     if(text[end + 1] == ':' &&
        get_port(text + end + 2, size - end - 2, &port)) {
       ep->port = UIP_HTONS(port);
-    } else if(secure) {
-      /**
-       * Secure CoAP should use a different port but for now
-       * the same port is used.
-       */
-      LOG_DBG("Using secure port (coaps)\n");
+    } else if(ep->secure) {
+      /* Use secure CoAP port by default for secure endpoints. */
       ep->port = SERVER_LISTEN_SECURE_PORT;
-      ep->secure = 1;
     } else {
       ep->port = SERVER_LISTEN_PORT;
-      ep->secure = 0;
     }
     return 1;
-  } else {
-    if(uiplib_ipaddrconv((const char *)&text, &ep->ipaddr)) {
+  } else if(size < UIPLIB_IPV6_MAX_STR_LEN) {
+    char buf[UIPLIB_IPV6_MAX_STR_LEN];
+    memcpy(buf, text, size);
+    buf[size] = '\0';
+    if(uiplib_ipaddrconv(buf, &ep->ipaddr)) {
       ep->port = SERVER_LISTEN_PORT;
-      ep->secure = 0;
       return 1;
     }
   }
@@ -263,13 +257,12 @@ coap_endpoint_is_secure(const coap_endpoint_t *ep)
 int
 coap_endpoint_is_connected(const coap_endpoint_t *ep)
 {
-#if UIP_CONF_IPV6_RPL
 #ifndef CONTIKI_TARGET_NATIVE
-  if(rpl_get_any_dag() == NULL) {
+  if(!uip_is_addr_linklocal(&ep->ipaddr)
+    && NETSTACK_ROUTING.node_is_reachable() == 0) {
     return 0;
   }
 #endif
-#endif /* UIP_CONF_IPV6_RPL */
 
 #ifdef WITH_DTLS
   if(ep != NULL && ep->secure != 0) {

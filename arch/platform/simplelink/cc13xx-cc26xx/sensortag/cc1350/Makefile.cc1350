@@ -1,0 +1,22 @@
+################################################################################
+# SimpleLink Device makefile
+
+SUBFAMILY     = cc13x0-cc26x0
+DEVICE_FAMILY = CC13X0
+DEVICE_LINE   = CC13XX
+DEVICE        = CC1350
+
+BOARD_SOURCEFILES += CC1350STK.c CC1350STK_fxns.c
+BOARD_SOURCEFILES += leds-arch.c
+
+SUPPORTS_PROP_MODE  = 1
+SUPPORTS_IEEE_MODE  = 1
+SUPPORTS_BLE_BEACON = 1
+
+SUPPORTS_HIGH_PA = 0
+
+### Signal that we can be programmed with cc2538-bsl
+BOARD_SUPPORTS_BSL = 1
+
+# Include the common board makefile
+include $(FAMILY_PATH)/sensortag/Makefile.sensortag

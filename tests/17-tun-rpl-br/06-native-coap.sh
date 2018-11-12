@@ -1,9 +1,10 @@
 #!/bin/bash
+source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
 # Test basename
-BASENAME=06-native-coap
+BASENAME=$(basename $0 .sh)
 
 IPADDR=fd00::302:304:506:708
 
@@ -38,7 +39,7 @@ done
 
 echo "Closing native node"
 sleep 2
-pgrep coap-example | sudo xargs kill -9
+kill_bg $CPID
 
 if [ $TESTCOUNT -eq $OKCOUNT ] ; then
   printf "%-32s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" | tee $BASENAME.testlog;

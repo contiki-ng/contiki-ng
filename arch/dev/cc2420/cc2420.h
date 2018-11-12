@@ -50,10 +50,6 @@
 
 #define WITH_SEND_CCA 1
 
-#ifndef CC2420_CONF_CHANNEL
-#define CC2420_CONF_CHANNEL 26
-#endif /* CC2420_CONF_CHANNEL */
-
 #ifndef CC2420_CONF_CCA_THRESH
 #define CC2420_CONF_CCA_THRESH -45
 #endif /* CC2420_CONF_CCA_THRESH */
@@ -106,9 +102,6 @@ int cc2420_get_txpower(void);
  */
 int cc2420_interrupt(void);
 
-/* XXX hack: these will be made as Chameleon packet attributes */
-extern rtimer_clock_t cc2420_time_of_arrival,
-  cc2420_time_of_departure;
 extern int cc2420_authority_level_of_sender;
 
 int cc2420_on(void);

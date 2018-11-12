@@ -38,6 +38,10 @@
 
 #undef putchar
 
+/* 1 len byte, 2 bytes CRC */
+#define RADIO_PHY_OVERHEAD         3
+/* 250kbps data rate. One byte = 32us */
+#define RADIO_BYTE_AIR_TIME       32
 /* Delay between GO signal and SFD
  * Measured 153us between GO and preamble. Add 5 bytes (preamble + SFD) air time: 153+5*32 = 313 */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(313))
@@ -78,10 +82,6 @@
 #ifndef JN516X_EXTERNAL_CRYSTAL_OSCILLATOR
 #define JN516X_EXTERNAL_CRYSTAL_OSCILLATOR (RTIMER_USE_32KHZ || JN516X_SLEEP_ENABLED)
 #endif /* JN516X_EXTERNAL_CRYSTAL_OSCILLATOR */
-
-/* Core rtimer.h defaults to 16 bit timer unless RTIMER_CLOCK_DIFF is defined */
-typedef uint32_t rtimer_clock_t;
-#define RTIMER_CLOCK_DIFF(a, b)     ((int32_t)((a) - (b)))
 
 /* 8ms timer tick */
 #define CLOCK_CONF_SECOND 125

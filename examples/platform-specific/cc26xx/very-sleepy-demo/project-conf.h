@@ -33,11 +33,10 @@
 /*---------------------------------------------------------------------------*/
 /* Change to match your configuration */
 #define IEEE802154_CONF_PANID            0xABCD
-#define RF_CORE_CONF_CHANNEL                 25
+#define IEEE802154_CONF_DEFAULT_CHANNEL      25
 /*---------------------------------------------------------------------------*/
-
 /* Enable the ROM bootloader */
-#define ROM_BOOTLOADER_ENABLE                 1
+#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE   1
 /*---------------------------------------------------------------------------*/
 /* For very sleepy operation */
 #define RF_BLE_CONF_ENABLED                   0

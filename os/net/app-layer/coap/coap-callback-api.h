@@ -47,27 +47,30 @@
 
 #include "coap-engine.h"
 #include "coap-transactions.h"
+#include "coap-request-state.h"
 #include "sys/cc.h"
 
 /*---------------------------------------------------------------------------*/
 /*- Client Part -------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-typedef struct coap_request_state coap_request_state_t;
+typedef struct coap_callback_request_state coap_callback_request_state_t;
 
-struct coap_request_state {
-  coap_transaction_t *transaction;
-  coap_message_t *response;
-  coap_message_t *request;
-  coap_endpoint_t *remote_endpoint;
-  uint32_t block_num;
-  void *user_data;
-  coap_timer_t coap_timer;
-  void (*callback)(coap_request_state_t *state);
+struct coap_callback_request_state {
+  coap_request_state_t state;
+  void (*callback)(coap_callback_request_state_t *state);
 };
 
-void coap_send_request(coap_request_state_t *state, coap_endpoint_t *endpoint,
+/**
+ * \brief Send a CoAP request to a remote endpoint
+ * \param callback_state The callback state to handle the CoAP request
+ * \param endpoint The destination endpoint
+ * \param request The request to be sent
+ * \param callback callback to execute when the response arrives or the timeout expires
+ * \return 1 if there is a transaction available to send, 0 otherwise
+ */
+int coap_send_request(coap_callback_request_state_t *callback_state, coap_endpoint_t *endpoint,
                        coap_message_t *request,
-                       void (*callback)(coap_request_state_t *state));
+                       void (*callback)(coap_callback_request_state_t *callback_state));
 
 #endif /* COAP_CALLBACK_API_H_ */
 /** @} */

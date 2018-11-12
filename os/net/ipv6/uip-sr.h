@@ -180,6 +180,17 @@ void uip_sr_init(void);
 */
 void uip_sr_free_all(void);
 
+/**
+* Print a textual description of a source routing link
+*
+* \param buf The buffer where to write content
+* \param buflen The buffer len
+* \param link A pointer to the source routing link
+* \return Identical to snprintf: number of bytes written excluding ending null
+* byte. A value >= buflen if the buffer was too small.
+*/
+int uip_sr_link_snprint(char *buf, int buflen, uip_sr_node_t *link);
+
  /** @} */
 
 #endif /* UIP_SR_H */

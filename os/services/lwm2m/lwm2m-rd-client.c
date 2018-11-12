@@ -41,8 +41,8 @@
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
  *         Joel Hoglund <joel@sics.se>
+ *         Carlos Gonzalo Peces <carlosgp143@gmail.com>
  */
-
 #include "lwm2m-engine.h"
 #include "lwm2m-object.h"
 #include "lwm2m-device.h"
@@ -62,6 +62,11 @@
 #include "rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
 
+#if LWM2M_QUEUE_MODE_ENABLED
+#include "lwm2m-queue-mode.h"
+#include "lwm2m-notification-queue.h"
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
+
 /* Log configuration */
 #include "coap-log.h"
 #define LOG_MODULE "lwm2m-rd"
@@ -79,7 +84,7 @@
 #define STATE_MACHINE_UPDATE_INTERVAL 500
 
 static struct lwm2m_session_info session_info;
-static coap_request_state_t rd_request_state;
+static coap_callback_request_state_t rd_request_state;
 
 static coap_message_t request[1];      /* This way the message can be treated as pointer as usual. */
 
@@ -100,6 +105,10 @@ static coap_message_t request[1];      /* This way the message can be treated as
 #define DEREGISTER_SENT   11
 #define DEREGISTER_FAILED 12
 #define DEREGISTERED      13
+#if LWM2M_QUEUE_MODE_ENABLED
+#define QUEUE_MODE_AWAKE 14
+#define QUEUE_MODE_SEND_UPDATE 15
+#endif
 
 #define FLAG_RD_DATA_DIRTY            0x01
 #define FLAG_RD_DATA_UPDATE_TRIGGERED 0x02
@@ -109,7 +118,6 @@ static uint8_t rd_state = 0;
 static uint8_t rd_flags = FLAG_RD_DATA_UPDATE_ON_DIRTY;
 static uint64_t wait_until_network_check = 0;
 static uint64_t last_update;
-static uint64_t last_rd_progress = 0;
 
 static char query_data[64]; /* allocate some data for queries and updates */
 static uint8_t rd_data[128]; /* allocate some data for the RD */
@@ -117,12 +125,24 @@ static uint8_t rd_data[128]; /* allocate some data for the RD */
 static uint32_t rd_block1;
 static uint8_t rd_more;
 static coap_timer_t rd_timer;
-static void (*rd_callback)(coap_request_state_t *state);
+static void (*rd_callback)(coap_callback_request_state_t *callback_state);
 
 static coap_timer_t block1_timer;
 
+#if LWM2M_QUEUE_MODE_ENABLED
+static coap_timer_t queue_mode_client_awake_timer; /* Timer to control the client's 
+                                                * awake time 
+                                                */
+static uint8_t queue_mode_client_awake; /* 1 - client is awake, 
+                                     * 0 - client is sleeping 
+                                     */
+static uint16_t queue_mode_client_awake_time; /* The time to be awake */
+/* Callback for the client awake timer */
+static void queue_mode_awake_timer_callback(coap_timer_t *timer); 
+#endif
+
 static void check_periodic_observations();
-static void update_callback(coap_request_state_t *state);
+static void update_callback(coap_callback_request_state_t *callback_state);
 
 static int
 set_rd_data(coap_message_t *request)
@@ -147,7 +167,8 @@ set_rd_data(coap_message_t *request)
 }
 /*---------------------------------------------------------------------------*/
 static void
-prepare_update(coap_message_t *request, int triggered) {
+prepare_update(coap_message_t *request, int triggered)
+{
   coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
   coap_set_header_uri_path(request, session_info.assigned_ep);
 
@@ -348,10 +369,11 @@ update_bootstrap_server(void)
  * TODO
  */
 static void
-bootstrap_callback(coap_request_state_t *state)
+bootstrap_callback(coap_callback_request_state_t *callback_state)
 {
+  coap_request_state_t *state = &callback_state->state;
   LOG_DBG("Bootstrap callback Response: %d, ", state->response != NULL);
-  if(state->response) {
+  if(state->status == COAP_REQUEST_STATUS_RESPONSE) {
     if(CHANGED_2_04 == state->response->code) {
       LOG_DBG_("Considered done!\n");
       rd_state = BOOTSTRAP_DONE;
@@ -361,12 +383,14 @@ bootstrap_callback(coap_request_state_t *state)
     LOG_DBG_("Failed with code %d. Retrying\n", state->response->code);
     /* TODO Application callback? */
     rd_state = INIT;
-  } else if(BOOTSTRAP_SENT == rd_state) { /* this can handle double invocations */
-    /* Failure! */
-    LOG_DBG("Bootstrap failed! Retry?");
+  } else if(state->status == COAP_REQUEST_STATUS_TIMEOUT) { 
+    LOG_DBG_("Server not responding! Retry?");
     rd_state = DO_BOOTSTRAP;
+  } else if(state->status == COAP_REQUEST_STATUS_FINISHED) {
+    LOG_DBG_("Request finished. Ignore\n");
   } else {
-    LOG_DBG("Ignore\n");
+    LOG_DBG_("Unexpected error! Retry?");
+    rd_state = DO_BOOTSTRAP;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -405,10 +429,11 @@ block1_rd_callback(coap_timer_t *timer)
  * Page 65-66 in 07 April 2016 spec.
  */
 static void
-registration_callback(coap_request_state_t *state)
+registration_callback(coap_callback_request_state_t *callback_state)
 {
-  LOG_DBG("Registration callback. Response: %d, ", state->response != NULL);
-  if(state->response) {
+  coap_request_state_t *state = &callback_state->state;
+  LOG_DBG("Registration callback. Status: %d. Response: %d, ", state->status, state->response != NULL);
+  if(state->status == COAP_REQUEST_STATUS_RESPONSE) {
     /* check state and possibly set registration to done */
     /* If we get a continue - we need to call the rd generator one more time */
     if(CONTINUE_2_31 == state->response->code) {
@@ -423,7 +448,16 @@ registration_callback(coap_request_state_t *state)
                state->response->location_path_len);
         session_info.assigned_ep[state->response->location_path_len] = 0;
         /* if we decide to not pass the lt-argument on registration, we should force an initial "update" to register lifetime with server */
+#if LWM2M_QUEUE_MODE_ENABLED
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+        if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
+          lwm2m_queue_mode_set_first_request();
+        }
+#endif
+        lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/
+#else
         rd_state = REGISTRATION_DONE;
+#endif
         /* remember the last reg time */
         last_update = coap_timer_uptime();
         LOG_DBG_("Done (assigned EP='%s')!\n", session_info.assigned_ep);
@@ -441,10 +475,14 @@ registration_callback(coap_request_state_t *state)
     }
     /* TODO Application callback? */
     rd_state = INIT;
-    /* remember last progress time */
-    last_rd_progress = coap_timer_uptime();
+  } else if(state->status == COAP_REQUEST_STATUS_TIMEOUT) {
+    LOG_DBG_("Server not responding, trying to reconnect\n");
+    rd_state = INIT;
+  } else if(state->status == COAP_REQUEST_STATUS_FINISHED){
+    LOG_DBG_("Request finished. Ignore\n");
   } else {
-    LOG_DBG_("Ignore\n");
+    LOG_DBG_("Unexpected error, trying to reconnect\n");
+    rd_state = INIT;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -452,11 +490,12 @@ registration_callback(coap_request_state_t *state)
  * Page 65-66 in 07 April 2016 spec.
  */
 static void
-update_callback(coap_request_state_t *state)
+update_callback(coap_callback_request_state_t *callback_state)
 {
-  LOG_DBG("Update callback. Response: %d, ", state->response != NULL);
+  coap_request_state_t *state = &callback_state->state;
+  LOG_DBG("Update callback. Status: %d. Response: %d, ", state->status, state->response != NULL);
 
-  if(state->response) {
+  if(state->status == COAP_REQUEST_STATUS_RESPONSE) {
     /* If we get a continue - we need to call the rd generator one more time */
     if(CONTINUE_2_31 == state->response->code) {
       /* We assume that size never change?! */
@@ -468,28 +507,49 @@ update_callback(coap_request_state_t *state)
       LOG_DBG_("Done!\n");
       /* remember the last reg time */
       last_update = coap_timer_uptime();
+#if LWM2M_QUEUE_MODE_ENABLED
+      /* If it has been waked up by a notification, send the stored notifications in queue */
+      if(lwm2m_queue_mode_is_waked_up_by_notification()) {
+
+        lwm2m_queue_mode_clear_waked_up_by_notification();
+        lwm2m_notification_queue_send_notifications();
+      }
+#if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
+      if(lwm2m_queue_mode_get_dynamic_adaptation_flag()) {
+        lwm2m_queue_mode_set_first_request();
+      }
+#endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
+      lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/
+#else
       rd_state = REGISTRATION_DONE;
       rd_flags &= ~FLAG_RD_DATA_UPDATE_TRIGGERED;
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
     } else {
       /* Possible error response codes are 4.00 Bad request & 4.04 Not Found */
       LOG_DBG_("Failed with code %d. Retrying registration\n",
                state->response->code);
       rd_state = DO_REGISTRATION;
     }
-    /* remember last progress */
-    last_rd_progress = coap_timer_uptime();
+  } else if(state->status == COAP_REQUEST_STATUS_TIMEOUT) {
+    LOG_DBG_("Server not responding, trying to reconnect\n");
+    rd_state = INIT;
+  } else if(state->status == COAP_REQUEST_STATUS_FINISHED){
+    LOG_DBG_("Request finished. Ignore\n");
   } else {
-    LOG_DBG("Ignore\n");
+    LOG_DBG_("Unexpected error, trying to reconnect\n");
+    rd_state = INIT;
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-deregister_callback(coap_request_state_t *state)
+deregister_callback(coap_callback_request_state_t *callback_state)
 {
-  LOG_DBG("Deregister callback. Response Code: %d\n",
+  coap_request_state_t *state = &callback_state->state;
+  LOG_DBG("Deregister callback. Status: %d. Response Code: %d\n",
+          state->status,
           state->response != NULL ? state->response->code : 0);
 
-  if(state->response && (DELETED_2_02 == state->response->code)) {
+  if(state->status == COAP_REQUEST_STATUS_RESPONSE && (DELETED_2_02 == state->response->code)) {
     LOG_DBG("Deregistration success\n");
     rd_state = DEREGISTERED;
     perform_session_callback(LWM2M_RD_CLIENT_DEREGISTERED);
@@ -502,13 +562,6 @@ deregister_callback(coap_request_state_t *state)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
-recover_from_rd_delay(void)
-{
-  /* This can be improved in the future... */
-  rd_state = INIT;
-}
-/*---------------------------------------------------------------------------*/
 /* CoAP timer callback */
 static void
 periodic_process(coap_timer_t *timer)
@@ -516,7 +569,15 @@ periodic_process(coap_timer_t *timer)
   uint64_t now;
 
   /* reschedule the CoAP timer */
+#if LWM2M_QUEUE_MODE_ENABLED
+  /* In Queue Mode, the machine is not executed periodically, but with the awake/sleeping times */
+  if(!((rd_state & 0xF) == 0xE)) {
+    coap_timer_reset(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
+  }
+#else
   coap_timer_reset(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
+#endif
+
   now = coap_timer_uptime();
 
   LOG_DBG("RD Client - state: %d, ms: %lu\n", rd_state,
@@ -557,10 +618,10 @@ periodic_process(coap_timer_t *timer)
         LOG_INFO_COAP_EP(&session_info.bs_server_ep);
         LOG_INFO_("] as '%s'\n", query_data);
 
-        coap_send_request(&rd_request_state, &session_info.bs_server_ep,
-                          request, bootstrap_callback);
-
-        rd_state = BOOTSTRAP_SENT;
+        if(coap_send_request(&rd_request_state, &session_info.bs_server_ep,
+                          request, bootstrap_callback)) {
+          rd_state = BOOTSTRAP_SENT;
+        }
       }
     }
     break;
@@ -656,18 +717,14 @@ periodic_process(coap_timer_t *timer)
       }
       LOG_INFO_("' More:%d\n", rd_more);
 
-      coap_send_request(&rd_request_state, &session_info.server_ep,
-                        request, registration_callback);
-      last_rd_progress = coap_timer_uptime();
-      rd_state = REGISTRATION_SENT;
+      if(coap_send_request(&rd_request_state, &session_info.server_ep,
+                        request, registration_callback)){
+        rd_state = REGISTRATION_SENT;
+      }
     }
     break;
   case REGISTRATION_SENT:
     /* just wait until the callback kicks us to the next state... */
-    if(last_rd_progress + MAX_RD_UPDATE_WAIT < coap_timer_uptime()) {
-      /* Timeout on the update - something is wrong? */
-      recover_from_rd_delay();
-    }
     break;
   case REGISTRATION_DONE:
     /* All is done! */
@@ -679,27 +736,45 @@ periodic_process(coap_timer_t *timer)
        ((uint32_t)session_info.lifetime * 500) <= now - last_update) {
       /* triggered or time to send an update to the server, at half-time! sec vs ms */
       prepare_update(request, rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
-      coap_send_request(&rd_request_state, &session_info.server_ep, request,
-                        update_callback);
-      last_rd_progress = coap_timer_uptime();
+      if(coap_send_request(&rd_request_state, &session_info.server_ep, request,
+                        update_callback)) {
+        rd_state = UPDATE_SENT;
+      }
+    }
+    break;
+#if LWM2M_QUEUE_MODE_ENABLED
+  case QUEUE_MODE_AWAKE:
+    LOG_DBG("Queue Mode: Client is AWAKE at %lu\n", (unsigned long)coap_timer_uptime());
+    queue_mode_client_awake = 1;
+    queue_mode_client_awake_time = lwm2m_queue_mode_get_awake_time();
+    coap_timer_set(&queue_mode_client_awake_timer, queue_mode_client_awake_time);
+    break;
+  case QUEUE_MODE_SEND_UPDATE:
+/* Define this macro to make the necessary actions for waking up, 
+ * depending on the platform 
+ */
+#ifdef LWM2M_QUEUE_MODE_WAKE_UP
+    LWM2M_QUEUE_MODE_WAKE_UP();
+#endif /* LWM2M_QUEUE_MODE_WAKE_UP */
+    prepare_update(request, rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
+    if(coap_send_request(&rd_request_state, &session_info.server_ep, request,
+                      update_callback)) {
       rd_state = UPDATE_SENT;
     }
     break;
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 
   case UPDATE_SENT:
     /* just wait until the callback kicks us to the next state... */
-    if(last_rd_progress + MAX_RD_UPDATE_WAIT < coap_timer_uptime()) {
-      /* Timeout on the update - something is wrong? */
-      recover_from_rd_delay();
-    }
     break;
   case DEREGISTER:
     LOG_INFO("DEREGISTER %s\n", session_info.assigned_ep);
     coap_init_message(request, COAP_TYPE_CON, COAP_DELETE, 0);
     coap_set_header_uri_path(request, session_info.assigned_ep);
-    coap_send_request(&rd_request_state, &session_info.server_ep, request,
-                      deregister_callback);
-    rd_state = DEREGISTER_SENT;
+    if(coap_send_request(&rd_request_state, &session_info.server_ep, request,
+                      deregister_callback)) {
+      rd_state = DEREGISTER_SENT;
+    }
     break;
   case DEREGISTER_SENT:
     break;
@@ -718,15 +793,27 @@ lwm2m_rd_client_init(const char *ep)
 {
   session_info.ep = ep;
   /* default binding U = UDP, UQ = UDP Q-mode*/
+#if LWM2M_QUEUE_MODE_ENABLED
+  session_info.binding = "UQ";
+  /* Enough margin to ensure that the client is not unregistered (we
+   * do not know the time it can stay awake)
+   */
+  session_info.lifetime = (LWM2M_QUEUE_MODE_DEFAULT_CLIENT_SLEEP_TIME / 1000) * 2; 
+#else
   session_info.binding = "U";
   if(session_info.lifetime == 0) {
     session_info.lifetime = LWM2M_DEFAULT_CLIENT_LIFETIME;
   }
+#endif
+
   rd_state = INIT;
 
   /* call the RD client periodically */
   coap_timer_set_callback(&rd_timer, periodic_process);
   coap_timer_set(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
+#if LWM2M_QUEUE_MODE_ENABLED
+  coap_timer_set_callback(&queue_mode_client_awake_timer, queue_mode_awake_timer_callback);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -734,5 +821,55 @@ check_periodic_observations(void)
 {
 /* TODO */
 }
+/*---------------------------------------------------------------------------*/
+/*
+   *Queue Mode Support
+ */
+#if LWM2M_QUEUE_MODE_ENABLED
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_restart_client_awake_timer(void)
+{
+  coap_timer_set(&queue_mode_client_awake_timer, queue_mode_client_awake_time);
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+lwm2m_rd_client_is_client_awake(void)
+{
+  return queue_mode_client_awake;
+}
+/*---------------------------------------------------------------------------*/
+static void
+queue_mode_awake_timer_callback(coap_timer_t *timer)
+{
+  /* Timer has expired, no requests has been received, client can go to sleep */
+  LOG_DBG("Queue Mode: Client is SLEEPING at %lu\n", (unsigned long)coap_timer_uptime());
+  queue_mode_client_awake = 0;
+
+/* Define this macro to enter sleep mode depending on the platform */
+#ifdef LWM2M_QUEUE_MODE_SLEEP_MS
+  LWM2M_QUEUE_MODE_SLEEP_MS(lwm2m_queue_mode_get_sleep_time());
+#endif /* LWM2M_QUEUE_MODE_SLEEP_MS */
+  rd_state = QUEUE_MODE_SEND_UPDATE;
+  coap_timer_set(&rd_timer, lwm2m_queue_mode_get_sleep_time());
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_fsm_execute_queue_mode_awake()
+{
+  coap_timer_stop(&rd_timer);
+  rd_state = QUEUE_MODE_AWAKE;
+  periodic_process(&rd_timer);
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_fsm_execute_queue_mode_update()
+{
+  coap_timer_stop(&rd_timer);
+  rd_state = QUEUE_MODE_SEND_UPDATE;
+  periodic_process(&rd_timer);
+}
+/*---------------------------------------------------------------------------*/
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 /*---------------------------------------------------------------------------*/
 /** @} */
