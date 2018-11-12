@@ -95,42 +95,42 @@ SECTIONS {
      * --------- DO NOT MODIFY -----------
      */
     UDMACC26XX_dmaSpi0RxControlTableEntry_is_placed = 0;
-    .dmaSpi0RxControlTableEntry DMA_SPI0_RX_CTEA : AT (DMA_SPI0_RX_CTEA) {
+    .dmaSpi0RxControlTableEntry DMA_SPI0_RX_CTEA (NOLOAD) : AT (DMA_SPI0_RX_CTEA) {
         *(.dmaSpi0RxControlTableEntry)
     } > REGION_DATA
 
     UDMACC26XX_dmaSpi0TxControlTableEntry_is_placed = 0;
-    .dmaSpi0TxControlTableEntry DMA_SPI0_TX_CTEA : AT (DMA_SPI0_TX_CTEA) {
+    .dmaSpi0TxControlTableEntry DMA_SPI0_TX_CTEA (NOLOAD) : AT (DMA_SPI0_TX_CTEA) {
         *(.dmaSpi0TxControlTableEntry)
     } > REGION_DATA
 
     UDMACC26XX_dmaADCPriControlTableEntry_is_placed = 0;
-    .dmaADCPriControlTableEntry DMA_ADC_PRI_CTEA : AT (DMA_ADC_PRI_CTEA) {
+    .dmaADCPriControlTableEntry DMA_ADC_PRI_CTEA (NOLOAD) : AT (DMA_ADC_PRI_CTEA) {
         *(.dmaADCPriControlTableEntry)
     } > REGION_DATA
 
     UDMACC26XX_dmaGPT0APriControlTableEntry_is_placed = 0;
-    .dmaGPT0APriControlTableEntry DMA_GPT0A_PRI_CTEA : AT (DMA_GPT0A_PRI_CTEA) {
+    .dmaGPT0APriControlTableEntry DMA_GPT0A_PRI_CTEA (NOLOAD) : AT (DMA_GPT0A_PRI_CTEA) {
         *(.dmaGPT0APriControlTableEntry)
     } > REGION_DATA
 
     UDMACC26XX_dmaSpi1RxControlTableEntry_is_placed = 0;
-    .dmaSpi1RxControlTableEntry DMA_SPI1_RX_CTEA : AT (DMA_SPI1_RX_CTEA) {
+    .dmaSpi1RxControlTableEntry DMA_SPI1_RX_CTEA (NOLOAD) : AT (DMA_SPI1_RX_CTEA) {
         *(.dmaSpi1RxControlTableEntry)
     } > REGION_DATA
 
     UDMACC26XX_dmaSpi1TxControlTableEntry_is_placed = 0;
-    .dmaSpi1TxControlTableEntry DMA_SPI1_TX_CTEA : AT (DMA_SPI1_TX_CTEA) {
+    .dmaSpi1TxControlTableEntry DMA_SPI1_TX_CTEA (NOLOAD) : AT (DMA_SPI1_TX_CTEA) {
         *(.dmaSpi1TxControlTableEntry)
     } > REGION_DATA
 
     UDMACC26XX_dmaADCAltControlTableEntry_is_placed = 0;
-    .dmaADCAltControlTableEntry DMA_ADC_ALT_CTEA : AT (DMA_ADC_ALT_CTEA) {
+    .dmaADCAltControlTableEntry DMA_ADC_ALT_CTEA (NOLOAD) : AT (DMA_ADC_ALT_CTEA) {
         *(.dmaADCAltControlTableEntry)
     } > REGION_DATA
 
     UDMACC26XX_dmaGPT0AAltControlTableEntry_is_placed = 0;
-    .dmaGPT0AAltControlTableEntry DMA_GPT0A_ALT_CTEA : AT (DMA_GPT0A_ALT_CTEA) {
+    .dmaGPT0AAltControlTableEntry DMA_GPT0A_ALT_CTEA (NOLOAD) : AT (DMA_GPT0A_ALT_CTEA) {
         *(.dmaGPT0AAltControlTableEntry)
     } > REGION_DATA
 
