@@ -111,9 +111,9 @@ PROCESS_THREAD(rpl_root_process, ev, data)
   PROCESS_BEGIN();
 
   PRINTF("Multicast Engine: '%s'\n", UIP_MCAST6.name);
-#ifndef DISABLE_AUTO_ROOT
+
   NETSTACK_ROUTING.root_start();
-#endif
+
   prepare_mcast();
 
   etimer_set(&et, START_DELAY * CLOCK_SECOND);
