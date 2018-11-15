@@ -70,6 +70,9 @@ def parseRPL(log):
     if res:
         # This was the last line, commit full topology
         return {'event': 'topology' }
+    res = re.compile('initialized DAG').match(log)
+    if res:
+        return {'event': 'DAGinit' }
     return None
 
 def parseEnergest(log):
@@ -123,6 +126,7 @@ def doParse(file):
         "ranks": [],
         "trickle": [],
         "switches": [],
+        "DAGinits": [],
         "topology": [],
     }
 
@@ -178,6 +182,8 @@ def doParse(file):
                         arrays["trickle"].append(entry)
                     elif(ret['event'] == 'switch'):
                         arrays["switches"].append(entry)
+                    elif(ret['event'] == 'DAGinit'):
+                        arrays["DAGinits"].append(entry)
                     elif(ret['event'] == 'sending'):
                         if not ret['message'] in arrays:
                             arrays[ret['message']] = []
@@ -255,6 +261,7 @@ def main():
 
     outputStats(dfs, "ranks", "rank", "mean", "RPL rank (ETX-128)")
     outputStats(dfs, "switches", "pswitch", "count", "RPL parent switches (#)")
+    outputStats(dfs, "DAGinits", "event", "count", "RPL joining DAG (#)")
     outputStats(dfs, "trickle", "trickle", "mean", "RPL Trickle period (min)")
 
     outputStats(dfs, "DIS", "message", "count", "RPL DIS sent (#)", "rpl-dis")

@@ -65,6 +65,20 @@ struct tx_callback {
 static struct tx_callback callbacks[MAX_CALLBACKS];
 /*---------------------------------------------------------------------------*/
 void
+init_sec(void)
+{
+  /* use the CSMA LLSEC config parameter */
+#if LLSEC802154_USES_AUX_HEADER
+  if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) ==
+     PACKETBUF_ATTR_SECURITY_LEVEL_DEFAULT) {
+    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
+                       CSMA_LLSEC_SECURITY_LEVEL);
+  }
+#endif
+}
+/*---------------------------------------------------------------------------*/
+
+void
 packet_sent(uint8_t sessionid, uint8_t status, uint8_t tx)
 {
   if(sessionid < MAX_CALLBACKS) {
@@ -164,6 +178,13 @@ off()
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+static int
+max_payload()
+{
+  init_sec();
+  return 127 - NETSTACK_FRAMER.length();
+}
+/*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
@@ -176,6 +197,7 @@ const struct mac_driver border_router_mac_driver = {
   send_packet,
   packet_input,
   on,
-  off
+  off,
+  max_payload,
 };
 /*---------------------------------------------------------------------------*/

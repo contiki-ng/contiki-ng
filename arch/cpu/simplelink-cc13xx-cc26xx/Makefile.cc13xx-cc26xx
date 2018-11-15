@@ -120,7 +120,7 @@ LDFLAGS += -nostartfiles
 LDFLAGS += -static
 
 # Linker script
-LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
+LDSCRIPT ?= $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 
 # Globally linked libraries
 TARGET_LIBFILES += -lc -lgcc -lnosys -lm
