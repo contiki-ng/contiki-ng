@@ -181,7 +181,7 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
 #endif /* LLSEC802154_ENABLED */
 
-  if(csma_security_create_frame() < 0) {
+  if(CSMA_FRAMER.create() < 0) {
     /* Failed to allocate space for headers */
     LOG_ERR("failed to create packet, seqno: %d\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
     ret = MAC_TX_ERR_FATAL;

@@ -40,6 +40,7 @@
 #ifndef CSMA_SECURITY_H_
 #define CSMA_SECURITY_H_
 
+#include "net/mac/framer/framer.h"
 
 #ifdef CSMA_CONF_LLSEC_DEFAULT_KEY0
 #define CSMA_LLSEC_DEFAULT_KEY0 CSMA_CONF_LLSEC_DEFAULT_KEY0
@@ -70,5 +71,7 @@
 #else
 #define CSMA_LLSEC_MAXKEYS 1
 #endif
+
+extern const struct framer csma_security_framer;
 
 #endif /* CSMA_SECURITY_H_ */
