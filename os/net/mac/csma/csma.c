@@ -43,6 +43,7 @@
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
+#include "services/akes/akes-mac.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -92,6 +93,7 @@ input_packet(void)
   } else {
     int duplicate = 0;
 
+#if !AKES_MAC_ENABLED
     /* Check for duplicate packet. */
     duplicate = mac_sequence_is_duplicate();
     if(duplicate) {
@@ -102,6 +104,7 @@ input_packet(void)
     } else {
       mac_sequence_register_seqno();
     }
+#endif /* !AKES_MAC_ENABLED */
 
 #if CSMA_SEND_SOFT_ACK
     if(packetbuf_attr(PACKETBUF_ATTR_MAC_ACK)) {
@@ -115,7 +118,11 @@ input_packet(void)
       LOG_INFO("received packet from ");
       LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
       LOG_INFO_(", seqno %u, len %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), packetbuf_datalen());
+#if AKES_MAC_ENABLED
+      akes_mac_input_from_csma();
+#else /* AKES_MAC_ENABLED */
       NETSTACK_NETWORK.input();
+#endif /* AKES_MAC_ENABLED */
     }
   }
 }
@@ -136,12 +143,12 @@ static void
 init(void)
 {
 
-#if LLSEC802154_USES_AUX_HEADER
+#if LLSEC802154_USES_AUX_HEADER && !AKES_MAC_ENABLED
 #ifdef CSMA_LLSEC_DEFAULT_KEY0
   uint8_t key[16] = CSMA_LLSEC_DEFAULT_KEY0;
   csma_security_set_key(0, key);
 #endif
-#endif /* LLSEC802154_USES_AUX_HEADER */
+#endif /* LLSEC802154_USES_AUX_HEADER && !AKES_MAC_ENABLED */
   csma_output_init();
   on();
 }

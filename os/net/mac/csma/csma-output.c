@@ -51,6 +51,9 @@
 #include "lib/list.h"
 #include "lib/memb.h"
 #include "lib/assert.h"
+#include "services/akes/akes-mac.h"
+#include "services/akes/akes-delete.h"
+#include "services/akes/akes-nbr.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -168,6 +171,9 @@ backoff_period(void)
 static int
 send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
 {
+#if AKES_MAC_ENABLED
+  struct akes_nbr_entry *entry;
+#endif /* AKES_MAC_ENABLED */
   int ret;
   int last_sent_ok = 0;
 
@@ -228,6 +234,12 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
               if(len == CSMA_ACK_LEN && ackbuf[2] == dsn) {
                 /* Ack received */
                 ret = MAC_TX_OK;
+#if AKES_MAC_ENABLED
+                entry = akes_nbr_get_receiver_entry();
+                if(!akes_mac_is_helloack() && entry && entry->permanent) {
+                  AKES_DELETE_STRATEGY.prolong_permanent(entry->permanent);
+                }
+#endif /* AKES_MAC_ENABLED */
               } else {
                 /* Not an ack or ack not for us: collision */
                 ret = MAC_TX_COLLISION;
@@ -442,9 +454,10 @@ csma_output_packet(mac_callback_t sent, void *ptr)
 {
   struct packet_queue *q;
   struct neighbor_queue *n;
+  const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+#if !AKES_MAC_ENABLED
   static uint8_t initialized = 0;
   static uint8_t seqno;
-  const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
   if(!initialized) {
     initialized = 1;
@@ -459,6 +472,7 @@ csma_output_packet(mac_callback_t sent, void *ptr)
   }
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, seqno++);
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
+#endif /* !AKES_MAC_ENABLED */
 
   /* Look for the neighbor entry */
   n = neighbor_queue_from_addr(addr);

@@ -60,6 +60,7 @@
 #endif
 #include "net/routing/routing.h"
 #include "net/mac/llsec802154.h"
+#include "services/akes/akes-mac.h"
 
 /* For RPL-specific commands */
 #if ROUTING_CONF_RPL_LITE
@@ -801,7 +802,7 @@ PT_THREAD(cmd_llsec_setkey(struct pt *pt, shell_output_func output, char *args))
       SHELL_OUTPUT(output, "Illegal LLSEC Key index %d\n", key);
       PT_EXIT(pt);
     } else {
-#if MAC_CONF_WITH_CSMA
+#if MAC_CONF_WITH_CSMA && !AKES_MAC_ENABLED
       /* Get next arg (key-string) */
       SHELL_ARGS_NEXT(args, next_args);
       if(args == NULL) {
