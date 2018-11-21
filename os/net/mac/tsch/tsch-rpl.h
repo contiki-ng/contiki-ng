@@ -79,6 +79,12 @@ void tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval);
  * \param new The new RPL parent
  */
 void tsch_rpl_callback_parent_switch(rpl_parent_t *old, rpl_parent_t *new);
+/**
+ * \brief Check RPL has joined DODAG.
+ * To use, set TSCH_RPL_CHECK_DODAG_JOINED tsch_rpl_check_dodag_joined
+ * \return 1 if joined, 0 otherwise
+ */
+int tsch_rpl_check_dodag_joined(void);
 
 #endif /* __TSCH_RPL_H__ */
 /** @} */
