@@ -45,6 +45,7 @@
 
 #include "net/mac/tsch/tsch.h"
 #include <stdio.h>
+#include <inttypes.h>
 
 #if TSCH_ADAPTIVE_TIMESYNC
 
