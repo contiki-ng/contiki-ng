@@ -72,16 +72,19 @@
 
 #define PING_TIMEOUT (5 * CLOCK_SECOND)
 
+#if NETSTACK_CONF_WITH_IPV6
 static struct uip_icmp6_echo_reply_notification echo_reply_notification;
 static shell_output_func *curr_ping_output_func = NULL;
 static struct process *curr_ping_process;
 static uint8_t curr_ping_ttl;
 static uint16_t curr_ping_datalen;
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 #if TSCH_WITH_SIXTOP
 static shell_command_6top_sub_cmd_t sixtop_sub_cmd = NULL;
 #endif /* TSCH_WITH_SIXTOP */
 static struct shell_command_set_t builtin_shell_command_set;
 LIST(shell_command_sets);
+#if NETSTACK_CONF_WITH_IPV6
 /*---------------------------------------------------------------------------*/
 static const char *
 ds6_nbr_state_to_str(uint8_t state)
@@ -101,6 +104,7 @@ ds6_nbr_state_to_str(uint8_t state)
       return "Unknown";
   }
 }
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 #if ROUTING_CONF_RPL_LITE
 /*---------------------------------------------------------------------------*/
 static const char *
@@ -219,6 +223,7 @@ PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 #endif /* ROUTING_CONF_RPL_LITE */
+#if NETSTACK_CONF_WITH_IPV6
 /*---------------------------------------------------------------------------*/
 static void
 echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
@@ -275,6 +280,7 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 /*---------------------------------------------------------------------------*/
 static void
 shell_output_log_levels(shell_output_func output)
@@ -457,6 +463,7 @@ PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *
 }
 #endif /* ROUTING_CONF_RPL_LITE */
 #endif /* UIP_CONF_IPV6_RPL */
+#if NETSTACK_CONF_WITH_IPV6
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
@@ -478,7 +485,6 @@ PT_THREAD(cmd_ipaddr(struct pt *pt, shell_output_func output, char *args))
   }
 
   PT_END(pt);
-
 }
 /*---------------------------------------------------------------------------*/
 static
@@ -509,6 +515,7 @@ PT_THREAD(cmd_ip_neighbors(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 
 }
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 #if MAC_CONF_WITH_TSCH
 /*---------------------------------------------------------------------------*/
 static
@@ -591,6 +598,7 @@ PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 #endif /* MAC_CONF_WITH_TSCH */
+#if NETSTACK_CONF_WITH_IPV6
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
@@ -656,6 +664,7 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(cmd_reboot(struct pt *pt, shell_output_func output, char *args))
@@ -804,9 +813,11 @@ shell_commands_init(void)
 {
   list_init(shell_command_sets);
   list_add(shell_command_sets, &builtin_shell_command_set);
+#if NETSTACK_CONF_WITH_IPV6
   /* Set up Ping Reply callback */
   uip_icmp6_echo_reply_callback_add(&echo_reply_notification,
                                     echo_reply_handler);
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -846,10 +857,12 @@ shell_command_lookup(const char *name)
 const struct shell_command_t builtin_shell_commands[] = {
   { "help",                 cmd_help,                 "'> help': Shows this help" },
   { "reboot",               cmd_reboot,               "'> reboot': Reboot the board by watchdog_reboot()" },
+  { "log",                  cmd_log,                  "'> log module level': Sets log level (0--4) for a given module (or \"all\"). For module \"mac\", level 4 also enables per-slot logging." },
+#if NETSTACK_CONF_WITH_IPV6
   { "ip-addr",              cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
-  { "log",                  cmd_log,                  "'> log module level': Sets log level (0--4) for a given module (or \"all\"). For module \"mac\", level 4 also enables per-slot logging." },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 #if UIP_CONF_IPV6_RPL
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
@@ -862,7 +875,9 @@ const struct shell_command_t builtin_shell_commands[] = {
   { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
   { "rpl-nbr",              cmd_rpl_nbr,              "'> rpl-nbr': Shows the RPL neighbor table" },
 #endif /* ROUTING_CONF_RPL_LITE */
+#if NETSTACK_CONF_WITH_IPV6
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 #if MAC_CONF_WITH_TSCH
   { "tsch-set-coordinator", cmd_tsch_set_coordinator, "'> tsch-set-coordinator 0/1 [0/1]': Sets node as coordinator (1) or not (0). Second, optional parameter: enable (1) or disable (0) security." },
   { "tsch-schedule",        cmd_tsch_schedule,        "'> tsch-schedule': Shows the current TSCH schedule" },
