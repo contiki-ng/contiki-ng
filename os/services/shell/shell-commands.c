@@ -463,6 +463,18 @@ PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *
 }
 #endif /* ROUTING_CONF_RPL_LITE */
 #endif /* UIP_CONF_IPV6_RPL */
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_macaddr(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+
+  SHELL_OUTPUT(output, "Node MAC address: ");
+  shell_output_lladdr(output, &linkaddr_node_addr);
+  SHELL_OUTPUT(output, "\n");
+
+  PT_END(pt);
+}
 #if NETSTACK_CONF_WITH_IPV6
 /*---------------------------------------------------------------------------*/
 static
@@ -858,6 +870,7 @@ const struct shell_command_t builtin_shell_commands[] = {
   { "help",                 cmd_help,                 "'> help': Shows this help" },
   { "reboot",               cmd_reboot,               "'> reboot': Reboot the board by watchdog_reboot()" },
   { "log",                  cmd_log,                  "'> log module level': Sets log level (0--4) for a given module (or \"all\"). For module \"mac\", level 4 also enables per-slot logging." },
+  { "mac-addr",             cmd_macaddr,               "'> mac-addr': Shows the node's MAC address" },
 #if NETSTACK_CONF_WITH_IPV6
   { "ip-addr",              cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
