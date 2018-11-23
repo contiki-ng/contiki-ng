@@ -14,7 +14,7 @@ CONTIKI_TARGET_SOURCEFILES += board-buttons.c als-sensor.c
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Define the CPU directory
-CONTIKI_CPU=$(CONTIKI)/arch/cpu/cc2538
+CONTIKI_CPU=$(ARCH_PATH)/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
 MODULES += os/storage/cfs

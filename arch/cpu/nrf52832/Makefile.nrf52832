@@ -204,4 +204,4 @@ erase:
 
 .PHONY: softdevice.jlink
 
-include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4
+include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4

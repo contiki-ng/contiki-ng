@@ -4,4 +4,4 @@ CFLAGS += -mcpu=cortex-m4
 
 LDFLAGS += -mcpu=cortex-m4
 
-include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m
+include $(ARCH_PATH)/cpu/arm/cortex-m/Makefile.cortex-m

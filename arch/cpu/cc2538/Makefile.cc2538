@@ -52,4 +52,4 @@ $(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
 
-include $(CONTIKI)/arch/cpu/arm/cortex-m/cm3/Makefile.cm3
+include $(ARCH_PATH)/cpu/arm/cortex-m/cm3/Makefile.cm3
