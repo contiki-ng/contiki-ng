@@ -44,7 +44,7 @@
 
 #include "contiki.h"
 #include "net/mac/csma/csma.h"
-#include "net/mac/csma/anti-replay.h"
+#include "net/mac/anti-replay.h"
 #include "net/mac/csma/csma-security.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/mac/framer/framer-802154.h"
@@ -55,7 +55,7 @@
 #include "lib/aes-128.h"
 #include <stdio.h>
 #include <string.h>
-#include "ccm-star-packetbuf.h"
+#include "net/mac/ccm-star-packetbuf.h"
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "CSMA"
