@@ -45,35 +45,53 @@
 #ifndef ANTI_REPLAY_H
 #define ANTI_REPLAY_H
 
-#include "contiki.h"
+#include "net/mac/framer/frame802154.h"
+#include "net/mac/llsec802154.h"
 
 struct anti_replay_info {
-  uint32_t last_broadcast_counter;
-  uint32_t last_unicast_counter;
+  frame802154_frame_counter_t his_broadcast_counter;
+  frame802154_frame_counter_t his_unicast_counter;
 };
 
 /**
- * \brief Sets the frame counter packetbuf attributes.
+ * \brief Parses the frame counter to packetbuf attributes
  */
-void anti_replay_set_counter(void);
+void anti_replay_parse_counter(uint8_t *p);
 
 /**
- * \brief Gets the frame counter from packetbuf.
+ * \brief Writes the frame counter of packetbuf to dst
+ */
+void anti_replay_write_counter(uint8_t *dst);
+
+/**
+ * \brief                Copies a new frame counter value to the packetbuf attributes
+ * \retval 0             Frame counter is exhausted
+ */
+int anti_replay_set_counter(void);
+
+/**
+ * \brief                Copies a new frame counter value to the specified location
+ * \retval 0             Frame counter is exhausted
+ */
+int anti_replay_set_counter_to(frame802154_frame_counter_t *counter);
+
+/**
+ * \brief Gets the frame counter from packetbuf
  */
 uint32_t anti_replay_get_counter(void);
 
 /**
- * \brief Initializes the anti-replay information about the sender
- * \param info Anti-replay information about the sender
+ * \brief             Initializes the anti-replay information about the sender
+ * \param sender_info Anti-replay information about the sender
  */
-void anti_replay_init_info(struct anti_replay_info *info);
+void anti_replay_init_info(struct anti_replay_info *sender_info);
 
 /**
- * \brief               Checks if received frame was replayed
- * \param info          Anti-replay information about the sender
- * \retval 0            <-> received frame was not replayed
+ * \brief              Checks if received frame was replayed
+ * \param  sender_info Anti-replay information about the sender
+ * \retval 0           <-> received frame was not replayed
  */
-int anti_replay_was_replayed(struct anti_replay_info *info);
+int anti_replay_was_replayed(struct anti_replay_info *sender_info);
 
 #endif /* ANTI_REPLAY_H */
 
