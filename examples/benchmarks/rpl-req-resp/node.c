@@ -42,6 +42,8 @@
 #include "contiki-net.h"
 #include "services/deployment/deployment.h"
 
+#include <inttypes.h>
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "App"

@@ -25,9 +25,9 @@ ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
     NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name *iot*_softdevice.hex | head -n 1)
   endif
   $(info SoftDevice: $(NRF52_SOFTDEVICE))
-  LDSCRIPT := $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
 else
-  LDSCRIPT := $(CONTIKI_CPU)/ld/nrf52.ld
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52.ld
 endif
 
 OUTPUT_FILENAME := $(CONTIKI_PROJECT)
@@ -204,4 +204,4 @@ erase:
 
 .PHONY: softdevice.jlink
 
-include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4
+include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4

@@ -82,7 +82,10 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 ### Include target makefile (TODO Unsafe?)
 
-target_makefile := $(wildcard $(CONTIKI)/arch/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
+# Configurable arch path
+ARCH_PATH ?= $(CONTIKI)/arch
+
+target_makefile := $(wildcard $(ARCH_PATH)/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
 
 # Check if the target makefile exists, and create the object directory if necessary.
 ifeq ($(strip $(target_makefile)),)
@@ -326,13 +329,13 @@ clean:
 	@echo Target $(TARGET) cleaned
 
 distclean:
-	@for TARG in `ls $(CONTIKI)/arch/platform $(TARGETDIRS)`; do \
+	@for TARG in `ls $(ARCH_PATH)/platform $(TARGETDIRS)`; do \
 		echo Running: $(MAKE) TARGET=$$TARG clean; \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 	-$(Q)rm -rf $(BUILD_DIR)
 
--include $(CONTIKI)/arch/platform/$(TARGET)/Makefile.customrules-$(TARGET)
+-include $(ARCH_PATH)/platform/$(TARGET)/Makefile.customrules-$(TARGET)
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
@@ -414,7 +417,7 @@ endif
 include $(CONTIKI)/Makefile.help
 
 targets:
-	@ls $(CONTIKI)/arch/platform $(TARGETDIRS)
+	@ls $(ARCH_PATH)/platform $(TARGETDIRS)
 
 boards:
 ifdef BOARD
