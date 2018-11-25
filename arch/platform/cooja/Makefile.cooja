@@ -41,7 +41,7 @@ JNILIB = $(BUILD_DIR_BOARD)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).o
 
 ### COOJA platform sources
-COOJA = $(CONTIKI)/arch/platform/$(TARGET)
+COOJA = $(ARCH_PATH)/platform/$(TARGET)
 CONTIKI_TARGET_DIRS = . dev lib sys cfs net
 
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
@@ -67,7 +67,7 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 CLEAN += COOJA.log
 
 ### Define the CPU directory
-CONTIKI_CPU=$(CONTIKI)/arch/cpu/x86
+CONTIKI_CPU=$(ARCH_PATH)/cpu/x86
 
 ### Compiler arguments
 #CC = gcc
