@@ -493,7 +493,7 @@ const PIN_Config BoardGpioInitTable[] = {
     CC1350_LAUNCHXL_433_PIN_BTN1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,             /* Button is active low          */
     CC1350_LAUNCHXL_433_PIN_BTN2 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,             /* Button is active low          */
     CC1350_LAUNCHXL_433_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,     /* External flash chip select    */
-    CC1350_LAUNCHXL_433_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                                 /* UART RX via debugger back channel */
+    CC1350_LAUNCHXL_433_UART_RX | PIN_INPUT_EN | PIN_PULLUP,                                                   /* UART RX via debugger back channel */
     CC1350_LAUNCHXL_433_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                           /* UART TX via debugger back channel */
     CC1350_LAUNCHXL_433_DIO1_RF_SUB1GHZ   | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* RF SW Switch defaults to 2.4 GHz path*/
     CC1350_LAUNCHXL_433_DIO30_RF_POWER | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,    /* External RF Switch is powered off by default */
