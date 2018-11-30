@@ -250,9 +250,9 @@ platform_init_stage_three(void)
   LOG_INFO("RF: Channel %d", chan);
 
   if(NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan) == RADIO_RESULT_OK) {
-    LOG_INFO(", PANID 0x%04X", pan);
+    LOG_INFO_(", PANID 0x%04X", pan);
   }
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   LOG_INFO("Node ID: %d\n", node_id);
 
