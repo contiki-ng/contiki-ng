@@ -47,6 +47,7 @@
 
 #include "contiki.h"
 #include "sys/process.h"
+#include "sys/mutex.h"
 
 /*
  * Pointer to the currently running process structure.
@@ -65,6 +66,7 @@ struct event_data {
   struct process *p;
 };
 
+static mutex_t events_mutex;
 static process_num_events_t nevents, fevent;
 static struct event_data events[PROCESS_CONF_NUMEVENTS];
 
@@ -209,6 +211,7 @@ process_init(void)
 {
   lastevent = PROCESS_EVENT_MAX;
 
+  events_mutex = MUTEX_STATUS_UNLOCKED;
   nevents = fevent = 0;
 #if PROCESS_CONF_STATS
   process_maxevents = 0;
@@ -250,6 +253,14 @@ do_event(void)
   struct process *receiver;
   struct process *p;
 
+  if(!mutex_try_lock(&events_mutex)) {
+    return;
+  }
+  if(nevents == 0) {
+    mutex_unlock(&events_mutex);
+    return;
+  }
+  
   /*
    * If there are any events in the queue, take the first one and walk
    * through the list of processes to see if the event should be
@@ -258,43 +269,42 @@ do_event(void)
    * call the poll handlers inbetween.
    */
 
-  if(nevents > 0) {
+  /* There are events that we should deliver. */
+  ev = events[fevent].ev;
+  data = events[fevent].data;
+  receiver = events[fevent].p;
 
-    /* There are events that we should deliver. */
-    ev = events[fevent].ev;
+  /* Since we have seen the new event, we move pointer upwards
+     and decrease the number of events. */
+  fevent = (fevent + 1) % PROCESS_CONF_NUMEVENTS;
+  --nevents;
 
-    data = events[fevent].data;
-    receiver = events[fevent].p;
+  /* Because we have popped the event, we can now release the lock. */
+  mutex_unlock(&events_mutex);
 
-    /* Since we have seen the new event, we move pointer upwards
-       and decrease the number of events. */
-    fevent = (fevent + 1) % PROCESS_CONF_NUMEVENTS;
-    --nevents;
+  /* If this is a broadcast event, we deliver it to all events, in
+     order of their priority. */
+  if(receiver == PROCESS_BROADCAST) {
+    for(p = process_list; p != NULL; p = p->next) {
 
-    /* If this is a broadcast event, we deliver it to all events, in
-       order of their priority. */
-    if(receiver == PROCESS_BROADCAST) {
-      for(p = process_list; p != NULL; p = p->next) {
-
-	/* If we have been requested to poll a process, we do this in
-	   between processing the broadcast event. */
-	if(poll_requested) {
-	  do_poll();
-	}
-	call_process(p, ev, data);
+      /* If we have been requested to poll a process, we do this in
+         between processing the broadcast event. */
+      if(poll_requested) {
+        do_poll();
       }
-    } else {
-      /* This is not a broadcast event, so we deliver it to the
-	 specified process. */
-      /* If the event was an INIT event, we should also update the
-	 state of the process. */
-      if(ev == PROCESS_EVENT_INIT) {
-	receiver->state = PROCESS_STATE_RUNNING;
-      }
-
-      /* Make sure that the process actually is running. */
-      call_process(receiver, ev, data);
+      call_process(p, ev, data);
     }
+  } else {
+    /* This is not a broadcast event, so we deliver it to the
+       specified process. */
+    /* If the event was an INIT event, we should also update the
+       state of the process. */
+    if(ev == PROCESS_EVENT_INIT) {
+      receiver->state = PROCESS_STATE_RUNNING;
+    }
+
+    /* Make sure that the process actually is running. */
+    call_process(receiver, ev, data);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -318,21 +328,33 @@ process_nevents(void)
   return nevents + poll_requested;
 }
 /*---------------------------------------------------------------------------*/
+static void
+print_debug_process_post(struct process *p, process_event_t ev, process_num_events_t current_nevents)
+{
+  if(PROCESS_CURRENT() == NULL) {
+    PRINTF("process_post: NULL process posts event %d to process '%s', nevents %d\n",
+	   ev,PROCESS_NAME_STRING(p), current_nevents);
+  } else {
+    PRINTF("process_post: Process '%s' posts event %d to process '%s', nevents %d\n",
+	   PROCESS_NAME_STRING(PROCESS_CURRENT()), ev,
+	   p == PROCESS_BROADCAST? "<broadcast>": PROCESS_NAME_STRING(p), current_nevents);
+  }
+}
+/*---------------------------------------------------------------------------*/
 int
 process_post(struct process *p, process_event_t ev, process_data_t data)
 {
   process_num_events_t snum;
+  process_num_events_t before_nevents;
 
-  if(PROCESS_CURRENT() == NULL) {
-    PRINTF("process_post: NULL process posts event %d to process '%s', nevents %d\n",
-	   ev,PROCESS_NAME_STRING(p), nevents);
-  } else {
-    PRINTF("process_post: Process '%s' posts event %d to process '%s', nevents %d\n",
-	   PROCESS_NAME_STRING(PROCESS_CURRENT()), ev,
-	   p == PROCESS_BROADCAST? "<broadcast>": PROCESS_NAME_STRING(p), nevents);
+  if(!mutex_try_lock(&events_mutex)) {
+    return PROCESS_ERR_LOCKED;
   }
-
+  before_nevents = nevents;
+  
   if(nevents == PROCESS_CONF_NUMEVENTS) {
+    mutex_unlock(&events_mutex);
+    print_debug_process_post(p, ev, before_nevents);
 #if DEBUG
     if(p == PROCESS_BROADCAST) {
       printf("soft panic: event queue is full when broadcast event %d was posted from %s\n", ev, PROCESS_NAME_STRING(process_current));
@@ -354,6 +376,10 @@ process_post(struct process *p, process_event_t ev, process_data_t data)
     process_maxevents = nevents;
   }
 #endif /* PROCESS_CONF_STATS */
+
+  mutex_unlock(&events_mutex);
+
+  print_debug_process_post(p, ev, before_nevents);
 
   return PROCESS_ERR_OK;
 }
