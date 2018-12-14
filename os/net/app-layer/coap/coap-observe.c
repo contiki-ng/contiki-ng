@@ -101,8 +101,8 @@ coap_remove_observer(coap_observer_t *o)
   LOG_INFO("Removing observer for /%s [0x%02X%02X]\n", o->url, o->token[0],
            o->token[1]);
 
-  memb_free(&observers_memb, o);
   list_remove(unactive_observers_list, o);
+  memb_free(&observers_memb, o);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -135,6 +135,13 @@ coap_remove_observer_by_client(const coap_endpoint_t *endpoint)
       removed++;
     }
   }
+  for(obs = (coap_observer_t *)list_head(pending_observers_list); obs;
+      obs = obs->next) {
+    if(coap_endpoint_cmp(&obs->endpoint, endpoint)) {
+      coap_remove_observer(obs);
+      removed++;
+    }
+  }
   return removed;
 }
 /*---------------------------------------------------------------------------*/
@@ -146,6 +153,16 @@ coap_remove_observer_by_token(const coap_endpoint_t *endpoint,
   coap_observer_t *obs = NULL;
 
   for(obs = (coap_observer_t *)list_head(unactive_observers_list); obs;
+      obs = obs->next) {
+    LOG_DBG("Remove check Token 0x%02X%02X\n", token[0], token[1]);
+    if(coap_endpoint_cmp(&obs->endpoint, endpoint)
+       && obs->token_len == token_len
+       && memcmp(obs->token, token, token_len) == 0) {
+      coap_remove_observer(obs);
+      removed++;
+    }
+  }
+  for(obs = (coap_observer_t *)list_head(pending_observers_list); obs;
       obs = obs->next) {
     LOG_DBG("Remove check Token 0x%02X%02X\n", token[0], token[1]);
     if(coap_endpoint_cmp(&obs->endpoint, endpoint)
@@ -175,6 +192,16 @@ coap_remove_observer_by_uri(const coap_endpoint_t *endpoint,
       removed++;
     }
   }
+  for(obs = (coap_observer_t *)list_head(pending_observers_list); obs;
+      obs = obs->next) {
+    LOG_DBG("Remove check URL %p\n", uri);
+    if((endpoint == NULL
+        || (coap_endpoint_cmp(&obs->endpoint, endpoint)))
+       && (obs->url == uri || memcmp(obs->url, uri, strlen(obs->url)) == 0)) {
+      coap_remove_observer(obs);
+      removed++;
+    }
+  }
   return removed;
 }
 /*---------------------------------------------------------------------------*/
@@ -185,6 +212,15 @@ coap_remove_observer_by_mid(const coap_endpoint_t *endpoint, uint16_t mid)
   coap_observer_t *obs = NULL;
 
   for(obs = (coap_observer_t *)list_head(unactive_observers_list); obs;
+      obs = obs->next) {
+    LOG_DBG("Remove check MID %u\n", mid);
+    if(coap_endpoint_cmp(&obs->endpoint, endpoint)
+       && obs->last_mid == mid) {
+      coap_remove_observer(obs);
+      removed++;
+    }
+  }
+  for(obs = (coap_observer_t *)list_head(pending_observers_list); obs;
       obs = obs->next) {
     LOG_DBG("Remove check MID %u\n", mid);
     if(coap_endpoint_cmp(&obs->endpoint, endpoint)
@@ -212,6 +248,7 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
   char url[COAP_OBSERVER_URL_LEN];
   uint8_t sub_ok = 0;
   coap_observer_t *obs = NULL;
+  coap_observer_t *obs_aux = NULL;
 
   if(resource != NULL) {
    url_len = strlen(resource->url);
@@ -235,8 +272,9 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
   /* Assumes lazy evaluation... */
   sub_ok = (resource == NULL) || (resource->flags & HAS_SUB_RESOURCES);
 
-  for(obs = (coap_observer_t *)list_head(unactive_observers_list); obs;
-    obs = obs->next) {
+  obs = (coap_observer_t *)list_head(unactive_observers_list);
+
+  while(obs) {
     obs_url_len = strlen(obs->url);
 
     /* Do a match based on the parent/sub-resource match so that it is
@@ -249,7 +287,9 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
             && sub_ok
             && obs->url[url_len] == '/'))
       && strncmp(url, obs->url, url_len) == 0) {
-   
+      
+      /* To continue the iteration in the unactive observers list */
+      obs_aux = obs->next;
       list_remove(unactive_observers_list, obs);
       list_add(pending_observers_list, obs);
       LOG_INFO("Marked observer /%s [0x%02X%02X] as pending (Pending list length: %d, Unactive list length: %d)\n",
@@ -260,6 +300,9 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
         coap_timer_set_callback(&observers_timer, coap_observers_send_notification);
         coap_timer_set(&observers_timer, 10);        
       }
+      obs = obs_aux;
+    } else {
+      obs = obs->next;
     }
   } 
 }
