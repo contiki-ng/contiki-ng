@@ -188,6 +188,33 @@ void rtimer_arch_schedule(rtimer_clock_t t);
 #define RTIMER_GUARD_TIME (RTIMER_ARCH_SECOND >> 14)
 #endif /* RTIMER_CONF_GUARD_TIME */
 
+/**
+ * \brief      Post a real-time task: safe version.
+ * \param task A pointer to the task variable previously declared with RTIMER_TASK().
+ * \param time The time when the task is to be executed.
+ * \param duration Unused argument.
+ * \param func A function to be called when the task is executed.
+ * \param ptr An opaque pointer that will be supplied as an argument to the callback function.
+ * \return     Non-zero (true) if the task could be scheduled, zero
+ *             (false) if the task could not be scheduled.
+ *
+ *             This function schedules a real-time task at a specified
+ *             time in the future. The difference from `rtimer_set()` is that
+ *             this function checks the `time` parameter against the current time
+ *             and `RTIMER_GUARD_TIME`. If the check fails, the `time` is modified
+ *             to avoid accidentally scheduling the callback in the past.
+ */
+static inline int
+rtimer_set_safe(struct rtimer *task, rtimer_clock_t time,
+                rtimer_clock_t duration, rtimer_callback_t func, void *ptr)
+{
+  rtimer_clock_t now = RTIMER_NOW();
+  if(RTIMER_CLOCK_LT(time, now + RTIMER_GUARD_TIME)) {
+    time = now + RTIMER_GUARD_TIME;
+  }
+  return rtimer_set(task, time, duration, func, ptr);
+}
+
 /** \brief Busy-wait until a condition. Start time is t0, max wait time is max_time */
 #define RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time) \
   ({                                                                \

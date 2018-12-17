@@ -504,8 +504,8 @@ set_adv_enable(unsigned short enable)
   if((enable) && (!adv_param.active)) {
     adv_param.start_rt = now + ticks_from_unit(adv_param.adv_interval,
                                                TIME_UNIT_1_25_MS);
-    rtimer_set(&adv_param.timer, adv_param.start_rt,
-               0, advertising_event, (void *)&adv_param);
+    rtimer_set_safe(&adv_param.timer, adv_param.start_rt,
+                    0, advertising_event, (void *)&adv_param);
   }
   return BLE_RESULT_OK;
 }
@@ -712,7 +712,7 @@ advertising_rx(ble_adv_param_t *param)
        * (add an interval, because we skip the first connection event ) */
       wakeup = c_param->timestamp_rt + ticks_from_unit(c_param->win_offset, TIME_UNIT_1_25_MS) - CONN_WINDOW_WIDENING_TICKS;
       wakeup += ticks_from_unit(c_param->interval, TIME_UNIT_1_25_MS) - CONN_PREPROCESSING_TIME_TICKS;
-      rtimer_set(&c_param->timer, wakeup, 0, connection_event_slave, (void *)c_param);
+      rtimer_set_safe(&c_param->timer, wakeup, 0, connection_event_slave, (void *)c_param);
 
       /* initialization for the connection */
       c_param->counter = 0;
@@ -764,7 +764,7 @@ advertising_event(struct rtimer *t, void *ptr)
 
   param->start_rt = param->start_rt + ticks_from_unit(param->adv_interval, TIME_UNIT_MS);
   wakeup = adv_param.start_rt - ADV_PREPROCESSING_TIME_TICKS;
-  rtimer_set(&param->timer, wakeup, 0, advertising_event, (void *)param);
+  rtimer_set_safe(&param->timer, wakeup, 0, advertising_event, (void *)param);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -1007,7 +1007,7 @@ connection_event_slave(struct rtimer *t, void *ptr)
     output->pktStatus.bTimeStampValid = 0;
   }
   wakeup = conn->start_rt + ticks_from_unit(conn->interval, TIME_UNIT_1_25_MS) - CONN_PREPROCESSING_TIME_TICKS;
-  rtimer_set(&conn->timer, wakeup, 0, connection_event_slave, ptr);
+  rtimer_set_safe(&conn->timer, wakeup, 0, connection_event_slave, ptr);
   process_post(&ble_hal_conn_rx_process, rx_data_event, ptr);
 }
 /*---------------------------------------------------------------------------*/
