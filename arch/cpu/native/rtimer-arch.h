@@ -44,6 +44,6 @@
 
 #define RTIMER_ARCH_SECOND CLOCK_CONF_SECOND
 
-#define rtimer_arch_now() clock_time()
+rtimer_clock_t rtimer_arch_now(void);
 
 #endif /* RTIMER_ARCH_H_ */
