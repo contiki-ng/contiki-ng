@@ -1875,10 +1875,13 @@ input(void)
   }
 
   /* Process next dispatch and headers */
+#if SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6
   if((PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
     LOG_DBG("uncompression: IPHC dispatch\n");
     uncompress_hdr_iphc(buffer, frag_size);
-  } else if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
+  } else
+#endif /* SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6 */
+    if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
     LOG_DBG("uncompression: IPV6 dispatch\n");
     packetbuf_hdr_len += SICSLOWPAN_IPV6_HDR_LEN;
 
@@ -1889,7 +1892,7 @@ input(void)
     packetbuf_hdr_len += UIP_IPH_LEN;
     uncomp_hdr_len += UIP_IPH_LEN;
   } else {
-    LOG_ERR("uncompression: unknown dispatch: 0x%02x\n",
+    LOG_ERR("uncompression: unknown dispatch: 0x%02x, or IPHC disabled\n",
              PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK);
     return;
   }
