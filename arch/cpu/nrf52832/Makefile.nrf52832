@@ -126,6 +126,8 @@ INC_PATHS += components/ble/ble_services/ble_ipsp/
 INC_PATHS += components/iot/common
 INC_PATHS += components/iot/context_manager
 INC_PATHS += components/libraries/mem_manager
+INC_PATHS += components/libraries/log
+INC_PATHS += components/libraries/log/src
 INC_PATHS += config/nrf52832/config
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
