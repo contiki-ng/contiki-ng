@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2017, RISE SICS AB
+ * Copyright (c) 2018, Joakim Eriksson, RISE AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -14,10 +15,10 @@
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
  * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -27,69 +28,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#ifndef CONTIKI_CONF_H_
-#define CONTIKI_CONF_H_
-
-#include <stdint.h>
-#include <inttypes.h>
-
-/* Include project specific configuration */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
-
-#include "efr32-def.h"
-
-/* Board specific configuration */
-#include "board.h"
-
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE 0
-
-/* Disable the stack check library for now */
-#define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
-
 /*---------------------------------------------------------------------------*/
 /**
- * \name Compiler configuration and platform-specific type definitions
- *
- * Those values are not meant to be modified by the user
+ * \addtogroup thunderboard peripherals
  * @{
+ *
+ * \file
+ * Defines TB Sense 2's buttons for use with the button HAL
  */
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+#include "dev/gpio-hal.h"
+#include "dev/button-hal.h"
+#include "em_gpio.h"
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+BUTTON_HAL_BUTTON(button_left, "Button Left", BOARD_BUTTON_PORT,        \
+                  BOARD_BUTTON_LEFT_PIN,                                \
+                  GPIO_HAL_PIN_CFG_PULL_DOWN, \
+                  BOARD_BUTTON_LEFT_PIN, true);
 
-#define RTIMER_CONF_CLOCK_SIZE 2
-/* 38.4 MHz divided by 1024 */
-#define RTIMER_ARCH_SECOND  (38400000UL / 1024)
-
-
-/* Clock (time) comparison macro */
-#define CLOCK_LT(a, b)  ((int64_t)((a) - (b)) < 0)
-
-typedef uint64_t clock_time_t;
-typedef uint32_t uip_stats_t;
-
-#define CLOCK_CONF_SECOND   1000
-
+BUTTON_HAL_BUTTON(button_right, "Button Right", BOARD_BUTTON_PORT,      \
+                  BOARD_BUTTON_RIGHT_PIN,                               \
+                  GPIO_HAL_PIN_CFG_PULL_DOWN, \
+                  BOARD_BUTTON_RIGHT_PIN, true);
+/*---------------------------------------------------------------------------*/
+BUTTON_HAL_BUTTONS(&button_left, &button_right);
+/*---------------------------------------------------------------------------*/
 /** @} */
-
-/*---------------------------------------------------------------------------*/
-/**
- * \name SPI configuration
- *
- */
-#ifndef PLATFORM_HAS_SPI_DEV_ARCH
-#define PLATFORM_HAS_SPI_DEV_ARCH               0
-#endif
-/*---------------------------------------------------------------------------*/
-/**
- * \name I2C configuration
- *
- */
-#ifndef PLATFORM_HAS_I2C_ARCH
-#define PLATFORM_HAS_I2C_ARCH                   0
-#endif
-/*---------------------------------------------------------------------------*/
-/* Include CPU-related configuration */
-#include "efr32-conf.h"
-/*---------------------------------------------------------------------------*/
-#endif /* CONTIKI_CONF_H_ */

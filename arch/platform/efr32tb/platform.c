@@ -55,8 +55,8 @@
  */
 void board_init(void);
 
-void dbg_init(void);
-void dbg_set_input_handler(int (* handler)(unsigned char c));
+void debug_uart_init(void);
+void debug_uart_set_input_handler(int (* handler)(unsigned char c));
 /*---------------------------------------------------------------------------*/
 static inline uint64_t
 swap_long(uint64_t val)
@@ -123,9 +123,6 @@ platform_init_stage_one(void)
   CMU_ClockDivSet(cmuClock_LETIMER0, cmuClkDiv_32);
   CMU_ClockEnable(cmuClock_LETIMER0, true);
 
-
-  leds_init();
-  leds_on(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -134,7 +131,12 @@ platform_init_stage_two()
   uint64_t uid = SYSTEM_GetUnique();
   uint64_t uid_net_order = swap_long(uid);
 
-  dbg_init();
+  debug_uart_init();
+
+  gpio_hal_init();
+
+  leds_init();
+  leds_on(LEDS_RED);
 
   /* linkaddr configuration */
   memcpy(linkaddr_node_addr.u8, &uid_net_order, LINKADDR_SIZE);
@@ -152,7 +154,7 @@ platform_init_stage_three()
   board_init();
   process_start(&sensors_process, NULL);
 
-  dbg_set_input_handler(serial_line_input_byte);
+  debug_uart_set_input_handler(serial_line_input_byte);
   serial_line_init();
 }
 /*---------------------------------------------------------------------------*/

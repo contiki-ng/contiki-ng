@@ -36,11 +36,11 @@
 #define PLATFORM_HAS_RADIO    1
 #define PLATFORM_HAS_SENSORS  0
 
-#define LEDS_CONF_LEGACY_API  1
 #define LEDS_CONF_RED    1
 #define LEDS_CONF_GREEN  2
+#define LEDS_CONF_COUNT  2
 
-#define GPIO_HAL_CONF_PIN_COUNT 64
+#define GPIO_HAL_CONF_PIN_COUNT 16
 #define GPIO_EFR32_CONFIG {}
 
 /*
@@ -80,6 +80,9 @@ extern const struct sensors_sensor button_right_sensor;
 #define BSP_SERIAL_APP_RTS_PIN                (3)
 #define BSP_SERIAL_APP_RTS_PORT               (gpioPortA)
 #define BSP_SERIAL_APP_RTS_LOC                (30)
+
+#define DEBUG_UART_TX_LOC  BSP_SERIAL_APP_TX_LOC
+#define DEBUG_UART_RX_LOC  BSP_SERIAL_APP_RX_LOC
 
 
 #define BOARD_STRING      "TB-Sense-2"

@@ -29,20 +29,20 @@ CONTIKI_CPU_DIRS = . dev
 
 #includes common to all targets
 INC_PATHS += ${addprefix Device/SiliconLabs/$(EFR32_MCU)/,Include Source Source/GCC}
-INC_PATHS += emlib/inc emlib/src emdrv/uartdrv/inc emdrv/uartdrv/src emdrv/uartdrv/config emdrv/common/inc emdrv/dmadrv/src emdrv/dmadrv/inc emdrv/dmadrv/config emdrv/gpiointerrupt/inc emdrv/gpiointerrupt/src
+INC_PATHS += emlib/inc emlib/src emdrv/uartdrv/inc emdrv/uartdrv/src emdrv/uartdrv/config emdrv/common/inc emdrv/dmadrv/src emdrv/dmadrv/inc emdrv/dmadrv/config
 INC_PATHS += ${addprefix radio/rail_lib/,chip/efr32 chip/efr32/rf/common/cortex common protocol plugin/pa-conversions}
 
 EXTERNALDIRS += $(addprefix $(GECKO_SDK_PLATFORM)/,$(INC_PATHS))
 
 EFR32MG    := clock.c \
+              int-master.c \
               rtimer-arch.c \
-              dbg.c \
+              debug-uart.c \
               watchdog.c \
               efr32-radio.c \
-              i2c-arch.c
-EMDRV      := uartdrv.c \
-              dmadrv.c  \
-	      gpiointerrupt.c
+              i2c-arch.c \
+              gpio-hal-arch.c
+EMDRV      := dmadrv.c
 EMLIB_ALL  := ${notdir ${wildcard $(GECKO_SDK_PLATFORM)/emlib/src/*.c}}
 
 # Some library files are deprecated and should not be included

@@ -35,9 +35,10 @@
 #include "lib/sensors.h"
 #include "dev/i2c.h"
 #include "button-sensor.h"
-#include "gpiointerrupt.h"
 #include "bmp-280-sensor.h"
 #include "rgbleds.h"
+#include "dev/gpio-hal.h"
+#include "dev/button-hal.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -57,41 +58,23 @@ i2c_bus_t i2c1_bus = {.lock_device = NULL,
                     };
 
 /*---------------------------------------------------------------------------*/
-void button_sensor_button_irq(int button);
-
-static void gpioInterruptHandler(uint8_t pin)
-{
-  switch(pin) {
-  case EXTI_BUTTON0:
-    button_sensor_button_irq(0);
-    break;
-  case EXTI_BUTTON1:
-    button_sensor_button_irq(1);
-    break;
-  }
-}
-/*---------------------------------------------------------------------------*/
 void
 board_init(void)
 {
-  /* Enable GPIO clock */
-  CMU_ClockEnable(cmuClock_GPIO, true);
-  /* enavble GPIO interrupts */
-  GPIOINT_Init();
-
-  /* Initialize LEDs (RED and Green) */
-  GPIO_PinModeSet(BOARD_LED_RED_PORT, BOARD_LED_RED_PIN, gpioModePushPull, 0);
-  GPIO_PinModeSet(BOARD_LED_GREEN_PORT, BOARD_LED_GREEN_PIN, gpioModePushPull, 0);
-
   /* Route UART output to USB */
-  GPIO_PinModeSet(VCOM_ENABLE_PORT, VCOM_ENABLE_PIN, gpioModePushPull, 1);
+  /* GPIO_PinModeSet(VCOM_ENABLE_PORT, VCOM_ENABLE_PIN, gpioModePushPull, 1); */
+  gpio_hal_arch_pin_set_output(VCOM_ENABLE_PORT,  VCOM_ENABLE_PIN);
+  gpio_hal_arch_set_pin(VCOM_ENABLE_PORT, VCOM_ENABLE_PIN);
 
-  SENSORS_ACTIVATE(button_left_sensor);
-  SENSORS_ACTIVATE(button_right_sensor);
+  /* SENSORS_ACTIVATE(button_left_sensor); */
+  /* SENSORS_ACTIVATE(button_right_sensor); */
 
   /* setup button interrupts  */
-  GPIOINT_CallbackRegister(EXTI_BUTTON0, gpioInterruptHandler);
-  GPIOINT_CallbackRegister(EXTI_BUTTON1, gpioInterruptHandler);
+
+  /* GPIOINT_CallbackRegister(EXTI_BUTTON0, gpioInterruptHandler); */
+  /* GPIOINT_CallbackRegister(EXTI_BUTTON1, gpioInterruptHandler); */
+
+  button_hal_init();
 
   SENSORS_ACTIVATE(bmp_280_sensor);
 
@@ -99,5 +82,5 @@ board_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&button_left_sensor, &button_right_sensor, &bmp_280_sensor);
+SENSORS(&bmp_280_sensor);
 /*---------------------------------------------------------------------------*/
