@@ -79,18 +79,14 @@ main(void)
 
   clock_init();
 
-  int i;
-  for(i = 0;i < 30;i++) {
-    i++;
-    clock_delay_usec(62500);
-    leds_toggle(LEDS_2);
-  }
+  leds_off(LEDS_1);
+  leds_on(LEDS_2);
 
-  /* rtimer_init(); */
+  rtimer_init();
   process_init();
-  /* process_start(&etimer_process, NULL); */
-  /* ctimer_init(); */
-  /* watchdog_init(); */
+  process_start(&etimer_process, NULL);
+  ctimer_init();
+  watchdog_init();
 
   energest_init();
 
@@ -104,11 +100,6 @@ main(void)
 #if QUEUEBUF_ENABLED
   queuebuf_init();
 #endif /* QUEUEBUF_ENABLED */
-  while(1) {
-    clock_delay_usec(62500);
-    leds_toggle(LEDS_3);
-    printf("%lu\n", clock_time());
-  }
 
   netstack_init();
   node_id_init();
@@ -143,6 +134,7 @@ main(void)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   platform_init_stage_three();
+  leds_off(LEDS_2);
   leds_on(LEDS_3);
 
 #if BUILD_WITH_RPL_BORDER_ROUTER
@@ -176,9 +168,10 @@ main(void)
 
   autostart_start(autostart_processes);
   LOG_DBG("autostart processes done\n");
+  leds_off(LEDS_3);
   leds_on(LEDS_4);
 
-   /* watchdog_start(); */
+  watchdog_start();
 
 #if PLATFORM_PROVIDES_MAIN_LOOP
   platform_main_loop();
@@ -187,7 +180,7 @@ main(void)
     uint8_t r;
     do {
       r = process_run();
-      /* watchdog_periodic(); */
+      watchdog_periodic();
     } while(r > 0);
 
     platform_idle();

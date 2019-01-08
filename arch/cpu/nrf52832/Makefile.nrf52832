@@ -69,11 +69,12 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   $(NRF52_SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
   $(NRF52_SDK_ROOT)/components/libraries/util/app_error_weak.c \
   $(NRF52_SDK_ROOT)/components/libraries/util/nrf_assert.c \
+  $(NRF52_SDK_ROOT)/components/libraries/queue/nrf_queue.c \
   $(NRF52_SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
   $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c \
   $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c \
+  $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/ble_6lowpan.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
-  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power_clock.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_rtc.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
@@ -82,11 +83,10 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_rng.c \
-  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_rng.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_wdt.c \
-  $(NRF52_SDK_ROOT)/components/libraries/queue/nrf_queue.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/mdk/system_nrf52.c \
-  $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/ble_6lowpan.c
+  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
+  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_rng.c \
   # $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
@@ -110,8 +110,8 @@ INC_PATHS += components
 INC_PATHS += components/libraries/experimental_memobj
 INC_PATHS += components/libraries/experimental_section_vars
 INC_PATHS += components/libraries/balloc
-INC_PATHS += components/libraries/experimental_log
-INC_PATHS += components/libraries/experimental_log/src
+#INC_PATHS += components/libraries/experimental_log
+#INC_PATHS += components/libraries/experimental_log/src
 INC_PATHS += components/libraries/bsp
 INC_PATHS += components/libraries/strerror
 INC_PATHS += components/libraries/delay
@@ -131,12 +131,13 @@ INC_PATHS += components/libraries/log/src
 INC_PATHS += config/nrf52832/config
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-INC_PATHS += components/softdevice/s1xx_iot/headers
-INC_PATHS += components/softdevice/s1xx_iot/headers/nrf52
-INC_PATHS += components/softdevice/common/softdevice_handler
+# FIXME: these softdevice subdirs from the iot sdk should be changed to those in nrf5 sdk under components/softdevice/*
+# INC_PATHS += components/softdevice/s1xx_iot/headers
+# INC_PATHS += components/softdevice/s1xx_iot/headers/nrf52
+# INC_PATHS += components/softdevice/common/softdevice_handler
 INC_PATHS += components/ble/common
 INC_PATHS += components/iot/common
-INC_PATHS += components/iot/ble_ipsp
+INC_PATHS += components/ble/ble_services/ble_ipsp
 else
 INC_PATHS += components/drivers_nrf/nrf_soc_nosd
 INC_PATHS += components/libraries/fifo

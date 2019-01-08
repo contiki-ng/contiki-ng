@@ -47,12 +47,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "nrf.h"
-#include "nrfx_config.h"
+/* #include "nrfx_config.h" */
+#include "sdk_config.h"
 #include "nrf_drv_rtc.h"
 #include "nrf_drv_clock.h"
 #include "nrf_delay.h"
 #include "app_error.h"
 #include "contiki.h"
+#include "dev/leds.h"
 
 /*---------------------------------------------------------------------------*/
 const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(PLATFORM_RTC_INSTANCE_ID); /**< RTC instance used for platform clock */
@@ -82,9 +84,9 @@ lfclk_config(void)
 {
   ret_code_t err_code = nrf_drv_clock_init();
   APP_ERROR_CHECK(err_code);
-  if(err_code != NRF_SUCCESS) {
-    printf("nrf_drv_clock_init() returns error");
-  }
+  /* if(err_code != NRF_SUCCESS) { */
+  /*   printf("nrf_drv_clock_init() returns error"); */
+  /* } */
   nrf_drv_clock_lfclk_request(NULL);
 }
 #endif
@@ -100,14 +102,14 @@ rtc_config(void)
   //Initialize RTC instance
   nrf_drv_rtc_config_t config = NRF_DRV_RTC_DEFAULT_CONFIG;
   config.prescaler = 255;
-  config.interrupt_priority = 3;
+  config.interrupt_priority = 6;
   config.reliable = 0;
 
   err_code = nrf_drv_rtc_init(&rtc, &config, rtc_handler);
   APP_ERROR_CHECK(err_code);
-  if(err_code != NRF_SUCCESS) {
-    perror("nrf_drv_rtc_init() returns error");
-  }
+  /* if(err_code != NRF_SUCCESS) { */
+  /*   perror("nrf_drv_rtc_init() returns error"); */
+  /* } */
 
   //Enable tick event & interrupt
   nrf_drv_rtc_tick_enable(&rtc, true);
@@ -135,6 +137,9 @@ clock_time(void)
 void
 clock_update(void)
 {
+  if(ticks % 128 == 0) {
+    leds_toggle(LEDS_1);
+  }
   ticks++;
   if (etimer_pending()) {
     etimer_request_poll();
