@@ -1,0 +1,4 @@
+/**
+ * \defgroup nrf52840 nrf52840 SoC
+ * \ingroup cpu
+ */
