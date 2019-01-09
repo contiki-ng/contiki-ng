@@ -64,7 +64,15 @@ static int
 value(int type)
 {
 #ifndef SOFTDEVICE_PRESENT
-  return nrf_temp_read();
+  int32_t volatile temp;
+
+  NRF_TEMP->TASKS_START = 1;
+  while(NRF_TEMP->EVENTS_DATARDY == 0);
+  NRF_TEMP->EVENTS_DATARDY = 0;
+  temp = nrf_temp_read();
+  NRF_TEMP->TASKS_STOP = 1;
+
+  return temp;
 #else
   int32_t temp;
   sd_temp_get(&temp);
