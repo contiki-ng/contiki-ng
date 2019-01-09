@@ -22,7 +22,7 @@ endif
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
   ifeq ($(NRF52_SOFTDEVICE),)
-    NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name *iot*_softdevice.hex | head -n 1)
+    NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name s132_nrf52*_softdevice.hex | head -n 1)
   endif
   $(info SoftDevice: $(NRF52_SOFTDEVICE))
   LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
@@ -90,7 +90,7 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   # $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
+C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
                   $(NRF52_SDK_ROOT)/components/ble/common/ble_advdata.c
 else
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/libraries/fifo/app_fifo.c \
@@ -131,10 +131,9 @@ INC_PATHS += components/libraries/log/src
 INC_PATHS += config/nrf52832/config
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-# FIXME: these softdevice subdirs from the iot sdk should be changed to those in nrf5 sdk under components/softdevice/*
-# INC_PATHS += components/softdevice/s1xx_iot/headers
-# INC_PATHS += components/softdevice/s1xx_iot/headers/nrf52
-# INC_PATHS += components/softdevice/common/softdevice_handler
+INC_PATHS += components/softdevice/s132/headers
+INC_PATHS += components/softdevice/s132/headers/nrf52
+INC_PATHS += components/softdevice/common
 INC_PATHS += components/ble/common
 INC_PATHS += components/iot/common
 INC_PATHS += components/ble/ble_services/ble_ipsp

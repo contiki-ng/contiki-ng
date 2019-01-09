@@ -41,7 +41,7 @@
 #include "sdk_config.h"
 #include "nrfx_gpiote.h"
 #ifdef SOFTDEVICE_PRESENT
-#include "softdevice_handler.h"
+#include "nrf_sdh.h"
 #include "ble/ble-core.h"
 #include "ble/ble-mac.h"
 #endif
