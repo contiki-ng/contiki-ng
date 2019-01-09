@@ -162,16 +162,13 @@ PROCESS_THREAD(temp, ev, data)
   static struct etimer tick;
   PROCESS_BEGIN();
 
-  printf("temp process etimer set\n");
-  etimer_set(&tick, CLOCK_SECOND / 8);
+  etimer_set(&tick, CLOCK_SECOND);
 
   while (1) {
     PROCESS_WAIT_EVENT();
     if (ev == PROCESS_EVENT_TIMER && etimer_expired(&tick)) {
-      /* int32_t temp = temperature_sensor.value(0); */
-      /* printf("temp: %"PRId32".%02"PRId32"\n", temp >> 2, (temp & 0x03)*25); */
-      leds_toggle(LEDS_2);
-      printf("time %lu\n", clock_seconds());
+      int32_t temp = temperature_sensor.value(0);
+      printf("temp: %"PRId32".%02"PRId32"\n", temp >> 2, (temp & 0x03)*25);
       etimer_reset(&tick);
     }
   }
