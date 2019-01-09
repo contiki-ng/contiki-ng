@@ -58,12 +58,11 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include "dev/leds.h"
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Main"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 int
 #if PLATFORM_MAIN_ACCEPTS_ARGS
@@ -75,13 +74,8 @@ main(void)
 {
 #endif
   platform_init_stage_one();
-  leds_on(LEDS_1);
 
   clock_init();
-
-  leds_off(LEDS_1);
-  leds_on(LEDS_2);
-
   rtimer_init();
   process_init();
   process_start(&etimer_process, NULL);
@@ -95,12 +89,10 @@ main(void)
 #endif
 
   platform_init_stage_two();
-  leds_on(LEDS_2);
 
 #if QUEUEBUF_ENABLED
   queuebuf_init();
 #endif /* QUEUEBUF_ENABLED */
-
   netstack_init();
   node_id_init();
 
@@ -134,8 +126,6 @@ main(void)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   platform_init_stage_three();
-  leds_off(LEDS_2);
-  leds_on(LEDS_3);
 
 #if BUILD_WITH_RPL_BORDER_ROUTER
   rpl_border_router_init();
@@ -158,7 +148,7 @@ main(void)
 #endif /* BUILD_WITH_SHELL */
 
 #if BUILD_WITH_SIMPLE_ENERGEST
-  /* simple_energest_init(); */
+  simple_energest_init();
 #endif /* BUILD_WITH_SIMPLE_ENERGEST */
 
 #if BUILD_WITH_TSCH_CS
@@ -167,9 +157,6 @@ main(void)
 #endif /* BUILD_WITH_TSCH_CS */
 
   autostart_start(autostart_processes);
-  LOG_DBG("autostart processes done\n");
-  leds_off(LEDS_3);
-  leds_on(LEDS_4);
 
   watchdog_start();
 
