@@ -38,7 +38,7 @@
 #include "nordic_common.h"
 #include "contiki.h"
 
-#include "nrfx_config.h"
+#include "sdk_config.h"
 #include "nrfx_gpiote.h"
 #ifdef SOFTDEVICE_PRESENT
 #include "softdevice_handler.h"

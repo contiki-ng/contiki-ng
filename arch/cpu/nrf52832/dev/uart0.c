@@ -41,7 +41,7 @@
  */
 #include <stdlib.h>
 #include "nrf.h"
-#include "nrfx_config.h"
+#include "sdk_config.h"
 #include "nrfx_uart.h"
 #include "app_util_platform.h"
 #include "app_error.h"

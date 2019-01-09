@@ -47,7 +47,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "nrf.h"
-/* #include "nrfx_config.h" */
 #include "sdk_config.h"
 #include "nrf_drv_rtc.h"
 #include "nrf_drv_clock.h"
@@ -84,9 +83,6 @@ lfclk_config(void)
 {
   ret_code_t err_code = nrf_drv_clock_init();
   APP_ERROR_CHECK(err_code);
-  /* if(err_code != NRF_SUCCESS) { */
-  /*   printf("nrf_drv_clock_init() returns error"); */
-  /* } */
   nrf_drv_clock_lfclk_request(NULL);
 }
 #endif
@@ -107,9 +103,6 @@ rtc_config(void)
 
   err_code = nrf_drv_rtc_init(&rtc, &config, rtc_handler);
   APP_ERROR_CHECK(err_code);
-  /* if(err_code != NRF_SUCCESS) { */
-  /*   perror("nrf_drv_rtc_init() returns error"); */
-  /* } */
 
   //Enable tick event & interrupt
   nrf_drv_rtc_tick_enable(&rtc, true);
