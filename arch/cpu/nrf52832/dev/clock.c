@@ -53,7 +53,6 @@
 #include "nrf_delay.h"
 #include "app_error.h"
 #include "contiki.h"
-#include "dev/leds.h"
 
 /*---------------------------------------------------------------------------*/
 const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(PLATFORM_RTC_INSTANCE_ID); /**< RTC instance used for platform clock */
@@ -130,9 +129,6 @@ clock_time(void)
 void
 clock_update(void)
 {
-  if(ticks % 128 == 0) {
-    leds_toggle(LEDS_1);
-  }
   ticks++;
   if (etimer_pending()) {
     etimer_request_poll();
