@@ -6,7 +6,7 @@ NRF52_WITHOUT_SOFTDEVICE=1
 
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_ONLY = nrf52dk
+PLATFORMS_ONLY = nrf52dk nrf52840dk
 
 CONTIKI = ../../../..
 include $(CONTIKI)/Makefile.include
