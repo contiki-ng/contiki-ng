@@ -152,9 +152,11 @@ echo_request_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
+uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param)
+{
   /* check if originating packet is not an ICMP error */
   uint16_t shift;
+
   if(uip_last_proto == UIP_PROTO_ICMP6 && UIP_ICMP_BUF->type < 128) {
     uipbuf_clear();
     return;
@@ -162,7 +164,9 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
 
   /* Remove all extension headers related to the routing protocol in place.
    * Keep all other extension headers, so as to match original packet. */
-  NETSTACK_ROUTING.ext_header_remove();
+  if(NETSTACK_ROUTING.ext_header_remove() == 0) {
+    LOG_WARN("Unable to remove ext header before sending ICMPv6 ERROR message\n");
+  }
 
   /* remember data of original packet before shifting */
   uip_ipaddr_copy(&tmp_ipaddr, &UIP_IP_BUF->destipaddr);
