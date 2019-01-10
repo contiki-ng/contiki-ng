@@ -67,7 +67,8 @@ value(int type)
   int32_t volatile temp;
 
   NRF_TEMP->TASKS_START = 1;
-  while(NRF_TEMP->EVENTS_DATARDY == 0);
+  /* nRF52832 datasheet: one temperature measurement takes typically 36 us */
+  RTIMER_BUSYWAIT_UNTIL(NRF_TEMP->EVENTS_DATARDY, RTIMER_SECOND * 72 / 1000000);
   NRF_TEMP->EVENTS_DATARDY = 0;
   temp = nrf_temp_read();
   NRF_TEMP->TASKS_STOP = 1;
