@@ -3,7 +3,7 @@ CONTIKI_PROJECT = coap-example-client
 all: $(CONTIKI_PROJECT)
 
 # Do not try to build on Sky because of code size limitation
-PLATFORMS_EXCLUDE = sky
+PLATFORMS_EXCLUDE = sky z1
 
 # Include the CoAP implementation
 MODULES += os/net/app-layer/coap
