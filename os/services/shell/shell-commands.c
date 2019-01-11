@@ -104,7 +104,64 @@ ds6_nbr_state_to_str(uint8_t state)
       return "Unknown";
   }
 }
+/*---------------------------------------------------------------------------*/
+static void
+echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
+{
+  if(curr_ping_output_func != NULL) {
+    curr_ping_output_func = NULL;
+    curr_ping_ttl = ttl;
+    curr_ping_datalen = datalen;
+    process_poll(curr_ping_process);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
+{
+  static uip_ipaddr_t remote_addr;
+  static struct etimer timeout_timer;
+  char *next_args;
+
+  PT_BEGIN(pt);
+
+  SHELL_ARGS_INIT(args, next_args);
+
+  /* Get argument (remote IPv6) */
+  SHELL_ARGS_NEXT(args, next_args);
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "Destination IPv6 address is not specified\n");
+    PT_EXIT(pt);
+  } else if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
+    SHELL_OUTPUT(output, "Invalid IPv6 address: %s\n", args);
+    PT_EXIT(pt);
+  }
+
+  SHELL_OUTPUT(output, "Pinging ");
+  shell_output_6addr(output, &remote_addr);
+  SHELL_OUTPUT(output, "\n");
+
+  /* Send ping request */
+  curr_ping_process = PROCESS_CURRENT();
+  curr_ping_output_func = output;
+  etimer_set(&timeout_timer, PING_TIMEOUT);
+  uip_icmp6_send(&remote_addr, ICMP6_ECHO_REQUEST, 0, 4);
+  PT_WAIT_UNTIL(pt, curr_ping_output_func == NULL || etimer_expired(&timeout_timer));
+
+  if(curr_ping_output_func != NULL) {
+    SHELL_OUTPUT(output, "Timeout\n");
+    curr_ping_output_func = NULL;
+  } else {
+    SHELL_OUTPUT(output, "Received ping reply from ");
+    shell_output_6addr(output, &remote_addr);
+    SHELL_OUTPUT(output, ", len %u, ttl %u, delay %lu ms\n",
+      curr_ping_datalen, curr_ping_ttl, (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
+  }
+
+  PT_END(pt);
+}
 #endif /* NETSTACK_CONF_WITH_IPV6 */
+
 #if ROUTING_CONF_RPL_LITE
 /*---------------------------------------------------------------------------*/
 static const char *
@@ -222,65 +279,18 @@ PT_THREAD(cmd_rpl_status(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
-#endif /* ROUTING_CONF_RPL_LITE */
-#if NETSTACK_CONF_WITH_IPV6
-/*---------------------------------------------------------------------------*/
-static void
-echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
-{
-  if(curr_ping_output_func != NULL) {
-    curr_ping_output_func = NULL;
-    curr_ping_ttl = ttl;
-    curr_ping_datalen = datalen;
-    process_poll(curr_ping_process);
-  }
-}
 /*---------------------------------------------------------------------------*/
 static
-PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
+PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *args))
 {
-  static uip_ipaddr_t remote_addr;
-  static struct etimer timeout_timer;
-  char *next_args;
-
   PT_BEGIN(pt);
 
-  SHELL_ARGS_INIT(args, next_args);
-
-  /* Get argument (remote IPv6) */
-  SHELL_ARGS_NEXT(args, next_args);
-  if(args == NULL) {
-    SHELL_OUTPUT(output, "Destination IPv6 address is not specified\n");
-    PT_EXIT(pt);
-  } else if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
-    SHELL_OUTPUT(output, "Invalid IPv6 address: %s\n", args);
-    PT_EXIT(pt);
-  }
-
-  SHELL_OUTPUT(output, "Pinging ");
-  shell_output_6addr(output, &remote_addr);
-  SHELL_OUTPUT(output, "\n");
-
-  /* Send ping request */
-  curr_ping_process = PROCESS_CURRENT();
-  curr_ping_output_func = output;
-  etimer_set(&timeout_timer, PING_TIMEOUT);
-  uip_icmp6_send(&remote_addr, ICMP6_ECHO_REQUEST, 0, 4);
-  PT_WAIT_UNTIL(pt, curr_ping_output_func == NULL || etimer_expired(&timeout_timer));
-
-  if(curr_ping_output_func != NULL) {
-    SHELL_OUTPUT(output, "Timeout\n");
-    curr_ping_output_func = NULL;
-  } else {
-    SHELL_OUTPUT(output, "Received ping reply from ");
-    shell_output_6addr(output, &remote_addr);
-    SHELL_OUTPUT(output, ", len %u, ttl %u, delay %lu ms\n",
-      curr_ping_datalen, curr_ping_ttl, (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
-  }
+  SHELL_OUTPUT(output, "Triggering routes refresh\n");
+  rpl_refresh_routes("Shell");
 
   PT_END(pt);
 }
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+#endif /* ROUTING_CONF_RPL_LITE */
 /*---------------------------------------------------------------------------*/
 static void
 shell_output_log_levels(shell_output_func output)
@@ -449,19 +459,6 @@ PT_THREAD(cmd_rpl_local_repair(struct pt *pt, shell_output_func output, char *ar
 
   PT_END(pt);
 }
-/*---------------------------------------------------------------------------*/
-#if ROUTING_CONF_RPL_LITE
-static
-PT_THREAD(cmd_rpl_refresh_routes(struct pt *pt, shell_output_func output, char *args))
-{
-  PT_BEGIN(pt);
-
-  SHELL_OUTPUT(output, "Triggering routes refresh\n");
-  rpl_refresh_routes("Shell");
-
-  PT_END(pt);
-}
-#endif /* ROUTING_CONF_RPL_LITE */
 #endif /* UIP_CONF_IPV6_RPL */
 /*---------------------------------------------------------------------------*/
 static
@@ -875,22 +872,18 @@ const struct shell_command_t builtin_shell_commands[] = {
   { "ip-addr",              cmd_ipaddr,               "'> ip-addr': Shows all IPv6 addresses" },
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
+  { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 #if UIP_CONF_IPV6_RPL
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },
   { "rpl-local-repair",     cmd_rpl_local_repair,     "'> rpl-local-repair': Triggers a RPL local repair" },
 #if ROUTING_CONF_RPL_LITE
   { "rpl-refresh-routes",   cmd_rpl_refresh_routes,   "'> rpl-refresh-routes': Refreshes all routes through a DTSN increment" },
-#endif /* ROUTING_CONF_RPL_LITE */
-  { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
-#endif /* UIP_CONF_IPV6_RPL */
-#if ROUTING_CONF_RPL_LITE
   { "rpl-status",           cmd_rpl_status,           "'> rpl-status': Shows a summary of the current RPL state" },
   { "rpl-nbr",              cmd_rpl_nbr,              "'> rpl-nbr': Shows the RPL neighbor table" },
 #endif /* ROUTING_CONF_RPL_LITE */
-#if NETSTACK_CONF_WITH_IPV6
-  { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
-#endif /* NETSTACK_CONF_WITH_IPV6 */
+  { "rpl-global-repair",    cmd_rpl_global_repair,    "'> rpl-global-repair': Triggers a RPL global repair" },
+#endif /* UIP_CONF_IPV6_RPL */
 #if MAC_CONF_WITH_TSCH
   { "tsch-set-coordinator", cmd_tsch_set_coordinator, "'> tsch-set-coordinator 0/1 [0/1]': Sets node as coordinator (1) or not (0). Second, optional parameter: enable (1) or disable (0) security." },
   { "tsch-schedule",        cmd_tsch_schedule,        "'> tsch-schedule': Shows the current TSCH schedule" },
