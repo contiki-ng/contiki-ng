@@ -600,8 +600,12 @@ PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
     } else {
       SHELL_OUTPUT(output, "none\n");
     }
-    SHELL_OUTPUT(output, "-- Last synchronized: %lu seconds ago\n", (clock_time() - last_sync_time) / CLOCK_SECOND);
-    SHELL_OUTPUT(output, "-- Drift w.r.t. coordinator: %ld ppm\n", tsch_adaptive_timesync_get_drift_ppm());
+    SHELL_OUTPUT(output, "-- Last synchronized: %lu seconds ago\n",
+                 (clock_time() - tsch_last_sync_time) / CLOCK_SECOND);
+    SHELL_OUTPUT(output, "-- Drift w.r.t. coordinator: %ld ppm\n",
+                 tsch_adaptive_timesync_get_drift_ppm());
+    SHELL_OUTPUT(output, "-- Network uptime: %lu seconds\n",
+                 (unsigned long)(tsch_get_network_uptime_ticks() / CLOCK_SECOND));
   }
 
   PT_END(pt);

@@ -572,6 +572,14 @@
 #define ti_lib_watchdog_stall_enable(...)   WatchdogStallEnable(__VA_ARGS__)
 #define ti_lib_watchdog_stall_disable(...)  WatchdogStallDisable(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
+/* crypto.h */
+#include "driverlib/crypto.h"
+
+#define ti_lib_crypto_aes_load_key(...)   CRYPTOAesLoadKey(__VA_ARGS__)
+#define ti_lib_crypto_aes_ecb(...)        CRYPTOAesEcb(__VA_ARGS__)
+#define ti_lib_crypto_aes_ecb_status(...) CRYPTOAesEcbStatus(__VA_ARGS__)
+#define ti_lib_crypto_aes_ecb_finish(...) CRYPTOAesEcbFinish(__VA_ARGS__)
+/*---------------------------------------------------------------------------*/
 #endif /* TI_LIB_H_ */
 /*---------------------------------------------------------------------------*/
 /**
