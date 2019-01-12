@@ -6,6 +6,7 @@ hello-world/native \
 hello-world/native:MAKE_NET=MAKE_NET_NULLNET \
 hello-world/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 hello-world/sky \
+hello-world/z1 \
 storage/eeprom-test/native \
 libs/logging/native \
 libs/energest/native \
@@ -30,6 +31,7 @@ mqtt-client/native \
 coap/coap-example-client/native \
 coap/coap-example-server/native \
 coap/coap-plugtest-server/native \
+sensniff/z1 \
 
 TOOLS=
 
