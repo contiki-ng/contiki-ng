@@ -861,13 +861,12 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
   while(1) {
     unsigned long delay;
 
-    if(tsch_is_associated && tsch_current_eb_period > 0) {
+    if(tsch_is_associated && tsch_current_eb_period > 0
 #ifdef TSCH_RPL_CHECK_DODAG_JOINED
       /* Implementation section 6.3 of RFC 8180 */
-      if(!TSCH_RPL_CHECK_DODAG_JOINED()) {
-        goto tsch_send_eb_skipped;
-      }
+      && TSCH_RPL_CHECK_DODAG_JOINED()
 #endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+        ) {
       /* Enqueue EB only if there isn't already one in queue */
       if(tsch_queue_packet_count(&tsch_eb_address) == 0) {
         uint8_t hdr_len = 0;
@@ -887,9 +886,6 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
         }
       }
     }
-#ifdef TSCH_RPL_CHECK_DODAG_JOINED
-tsch_send_eb_skipped:
-#endif /* TSCH_RPL_CHECK_DODAG_JOINED */
     if(tsch_current_eb_period > 0) {
       /* Next EB transmission with a random delay
        * within [tsch_current_eb_period*0.75, tsch_current_eb_period[ */
