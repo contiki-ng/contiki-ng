@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2019, Toshiba Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,16 +32,14 @@
 /**
  * \addtogroup arm
  *
- * Arm Cortex-M implementation of mutexes using the LDREX, STREX and DMB
- * instructions.
+ * Arm Cortex-M implementation of atomic operations using the LDREX,
+ * STREX and DMB instructions.
  *
  * @{
  */
-/*---------------------------------------------------------------------------*/
-#ifndef MUTEX_CORTEX_H_
-#define MUTEX_CORTEX_H_
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
+#ifndef ATOMIC_CORTEX_H_
+#define ATOMIC_CORTEX_H_
+#include <contiki.h>
 
 #ifdef CMSIS_CONF_HEADER_PATH
 #include CMSIS_CONF_HEADER_PATH
@@ -49,21 +47,22 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "atomic-cortex.h"
-/*---------------------------------------------------------------------------*/
-#define mutex_try_lock(m) atomic_cortex_cas_uint8((m),0,1)
-#define mutex_unlock(m)   mutex_cortex_unlock(m)
-/*---------------------------------------------------------------------------*/
-#define MUTEX_CONF_HAS_MUTEX_T 1
-typedef uint8_t mutex_t;
-/*---------------------------------------------------------------------------*/
-static inline void
-mutex_cortex_unlock(volatile mutex_t *mutex)
+
+#define atomic_cas_uint8(t,o,n) atomic_cortex_cas_uint8((t),(o),(n))
+
+static inline bool
+atomic_cortex_cas_uint8(volatile uint8_t *target, uint8_t old_val, uint8_t new_val)
 {
+  int status = 1;
+  
+  if(__LDREXB(target) == old_val) {
+    status = __STREXB(new_val, target);
+  }
+
   __DMB();
-  *mutex = 0;
+  
+  return status == 0 ? true : false;
 }
-/*---------------------------------------------------------------------------*/
-#endif /* MUTEX_CORTEX_H_ */
-/*---------------------------------------------------------------------------*/
+
+#endif /* ATOMIC_CORTEX_H_ */
 /** @} */
