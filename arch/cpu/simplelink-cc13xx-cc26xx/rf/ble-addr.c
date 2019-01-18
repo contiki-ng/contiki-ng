@@ -81,7 +81,7 @@ ble_addr_ptr(void)
 }
 /*---------------------------------------------------------------------------*/
 int
-ble_addr_cpy(uint8_t *dst)
+ble_addr_be_cpy(uint8_t *dst)
 {
   if(!dst) {
     return -1;
@@ -96,6 +96,23 @@ ble_addr_cpy(uint8_t *dst)
   size_t i;
   for(i = 0; i < BLE_ADDR_SIZE; i++) {
     dst[i] = ble_addr[BLE_ADDR_SIZE - 1 - i];
+  }
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+ble_addr_le_cpy(uint8_t *dst)
+{
+  if(!dst) {
+    return -1;
+  }
+
+  volatile const uint8_t *const ble_addr = ble_addr_ptr();
+
+  size_t i;
+  for(i = 0; i < BLE_ADDR_SIZE; i++) {
+    dst[i] = ble_addr[i];
   }
 
   return 0;
@@ -126,7 +143,7 @@ ble_addr_to_eui64_cpy(uint8_t *dst)
   int res;
   uint8_t ble_addr[BLE_ADDR_SIZE];
 
-  res = ble_addr_cpy(ble_addr);
+  res = ble_addr_le_cpy(ble_addr);
   if(res) {
     return -1;
   }

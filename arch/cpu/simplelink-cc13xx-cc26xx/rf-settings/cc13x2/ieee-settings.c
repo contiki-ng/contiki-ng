@@ -51,7 +51,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_ieee_802_15_4.h)
+#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_multi_protocol.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_ieee_802_15_4.h)
 
 #include <ti/drivers/rf/RF.h>
@@ -62,7 +62,7 @@
 RF_Mode rf_ieee_mode =
 {
   .rfMode = RF_MODE_AUTO,
-  .cpePatchFxn = &rf_patch_cpe_ieee_802_15_4,
+  .cpePatchFxn = &rf_patch_cpe_multi_protocol,
   .mcePatchFxn = &rf_patch_mce_ieee_802_15_4,
   .rfePatchFxn = 0,
 };

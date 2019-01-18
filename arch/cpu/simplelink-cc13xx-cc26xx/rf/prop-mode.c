@@ -207,26 +207,36 @@ static int8_t
 get_rssi(void)
 {
   rf_result_t res;
+  bool stop_rx = false;
+  int8_t rssi = RF_GET_RSSI_ERROR_VAL;
 
-  const bool rx_is_idle = !rx_is_active();
+ /* RX is required to be running in order to do a RSSI measurement */
+  if(!rx_is_active()) {
+    /* If RX is not pending, i.e. soon to be running, schedule the RX command */
+    if(cmd_rx.status != PENDING) {
+      res = netstack_sched_rx(false);
+      if(res != RF_RESULT_OK) {
+        LOG_ERR("RSSI measurement failed to schedule RX\n");
+        return res;
+      }
 
-  if(rx_is_idle) {
-    res = netstack_sched_rx(false);
-    if(res != RF_RESULT_OK) {
-      return RF_GET_RSSI_ERROR_VAL;
+      /* We only stop RX if we had to schedule it */
+      stop_rx = true;
+    }
+
+    /* Make sure RX is running before we continue, unless we timeout and fail */
+    RTIMER_BUSYWAIT_UNTIL(!rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
+
+    if(!rx_is_active()) {
+      LOG_ERR("RSSI measurement failed to turn on RX, RX status=0x%04X\n", cmd_rx.status);
+      return RF_RESULT_ERROR;
     }
   }
 
-  const rtimer_clock_t t0 = RTIMER_NOW();
-  while((cmd_rx.status != ACTIVE) &&
-        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT)) ;
+  /* Perform the RSSI measurement */
+  rssi = RF_getRssi(prop_radio.rf_handle);
 
-  int8_t rssi = RF_GET_RSSI_ERROR_VAL;
-  if(rx_is_active()) {
-    rssi = RF_getRssi(prop_radio.rf_handle);
-  }
-
-  if(rx_is_idle) {
+  if(stop_rx) {
     netstack_stop_rx();
   }
 

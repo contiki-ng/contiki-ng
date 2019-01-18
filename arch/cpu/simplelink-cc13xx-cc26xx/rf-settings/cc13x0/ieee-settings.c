@@ -57,7 +57,7 @@
 /* TI-RTOS RF Mode Object */
 RF_Mode rf_ieee_mode =
 {
-  .rfMode = RF_MODE_IEEE_15_4,
+  .rfMode = RF_MODE_MULTIPLE,
   .cpePatchFxn = 0,
   .mcePatchFxn = 0,
   .rfePatchFxn = 0,
