@@ -133,6 +133,18 @@
 #define RF_MODE                      RF_CONF_MODE
 #endif /* RF_CONF_MODE */
 
+#ifdef RF_CONF_FRONT_END_MODE
+#define RF_FRONT_END_MODE           RF_CONF_FRONT_END_MODE
+#else
+#define RF_FRONT_END_MODE           RF_FRONT_END_MODE_DIFFERENTIAL
+#endif
+
+#ifdef RF_CONF_BIAS_MODE
+#define RF_BIAS_MODE           RF_CONF_BIAS_MODE
+#else
+#define RF_BIAS_MODE           RF_BIAS_MODE_INTERNAL
+#endif
+
 /* Number of RX buffers. */
 #ifndef RF_CONF_RX_BUF_CNT
 #define RF_CONF_RX_BUF_CNT           4

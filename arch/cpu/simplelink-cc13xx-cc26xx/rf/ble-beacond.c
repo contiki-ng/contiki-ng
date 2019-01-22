@@ -52,6 +52,7 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
+#include "rf/rf.h"
 #include "rf/sched.h"
 #include "rf/ble-addr.h"
 #include "rf/ble-beacond.h"
@@ -157,6 +158,9 @@ PROCESS(ble_beacond_process, "RF BLE Beacon Daemon Process");
 rf_ble_beacond_result_t
 rf_ble_beacond_init(void)
 {
+  ble_cmd_radio_setup.config.frontEndMode = RF_FRONT_END_MODE;
+  ble_cmd_radio_setup.config.biasMode = RF_BIAS_MODE;
+
   RF_Params rf_params;
   RF_Params_init(&rf_params);
 

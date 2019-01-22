@@ -61,6 +61,7 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* Platform RF dev */
+#include "rf/rf.h"
 #include "rf/dot-15-4g.h"
 #include "rf/sched.h"
 #include "rf/data-queue.h"
@@ -193,6 +194,8 @@ static int off(void);
 static void
 init_rf_params(void)
 {
+  cmd_radio_setup.config.frontEndMode = RF_FRONT_END_MODE;
+  cmd_radio_setup.config.biasMode = RF_BIAS_MODE;
   cmd_radio_setup.centerFreq = PROP_MODE_CENTER_FREQ;
   cmd_radio_setup.loDivider = PROP_MODE_LO_DIVIDER;
 

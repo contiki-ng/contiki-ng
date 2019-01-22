@@ -62,6 +62,12 @@ RF_Mode rf_ble_mode =
   .rfePatchFxn = &rf_patch_rfe_ble,
 };
 /*---------------------------------------------------------------------------*/
+/*
+ * CMD_RADIO_SETUP must be configured with default TX power value
+ * in the .txPower field.
+ */
+#define DEFAULT_TX_POWER    0x5F3C /* 5 dBm */
+/*---------------------------------------------------------------------------*/
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ble_overrides[] CC_ALIGN(4) =
 {
@@ -109,11 +115,11 @@ rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radio_setup =
   .condition.nSkip = 0x0,
   .mode = 0x00,
   .loDivider = 0x00,
-  .config.frontEndMode = 0x0,
-  .config.biasMode = 0x0,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = 0x3D3F,
+  .txPower = DEFAULT_TX_POWER,
   .pRegOverride = rf_ble_overrides,
 };
 /*---------------------------------------------------------------------------*/

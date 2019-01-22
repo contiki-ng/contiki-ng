@@ -28,77 +28,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup srf06-peripherals
+ * \addtogroup launchpad-peripherals
  * @{
  *
  * \file
- *        Header file with definitions related to SmartRF06 EB boards.
+ *        Header file with board-specific RF configurations.
  * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ *        Texas Instruments <e2e.ti.com>
  * \note
  *        This file should not be included directly
  */
 /*---------------------------------------------------------------------------*/
-#ifndef BOARD_CONF_H_
-#define BOARD_CONF_H_
+#ifndef RF_CONF_H_
+#define RF_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include "rf-conf.h"
+#include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations for the dev/leds.h API.
+ * \name  Board-specific front-end configurations for the radio.
  *
- * Those values are not meant to be modified by the user
  * @{
  */
-#define PLATFORM_HAS_LEDS           1
-
-#define LEDS_CONF_COUNT             4
-
-#define LEDS_CONF_RED               0
-#define LEDS_CONF_YELLOW            1
-#define LEDS_CONF_GREEN             2
-#define LEDS_CONF_ORANGE            3
-
-#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
+#define RF_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_SINGLE_ENDED_RFP
+#define RF_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
 /** @} */
 /*---------------------------------------------------------------------------*/
-/**
- * \name Button configurations for the dev/button-hal.h API.
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define PLATFORM_HAS_BUTTON           1
-#define PLATFORM_SUPPORTS_BUTTON_HAL  1
-
-#define BUTTON_HAL_ID_KEY_LEFT      0
-#define BUTTON_HAL_ID_KEY_RIGHT     1
-#define BUTTON_HAL_ID_KEY_UP        2
-#define BUTTON_HAL_ID_KEY_DOWN      3
-#define BUTTON_HAL_ID_KEY_SELECT    4
-/** @} */
+#endif /* RF_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**
- * \name SmartRF06 EB does have sensors.
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define BOARD_CONF_HAS_SENSORS      1
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Enable or disable the SmartRF06EB sensors.
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define BOARD_SENSORS_ENABLE      (!(BOARD_CONF_SENSORS_DISABLE))
-/** @} */
-/*---------------------------------------------------------------------------*/
-#endif /* BOARD_CONF_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
  * @}
  */
