@@ -27,10 +27,27 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file
+ *         packetbuf data package utility implementation.
+ * \author
+ *         Niclas Finne <nfi@sics.se>
+ *         Takeshi Sakoda <takeshi1.sakoda@toshiba.co.jp>
+ *
+ */
+
+/**
+ * \addtogroup packetutils
+ * @{
+*/
+
 #include "contiki.h"
+#include "packetutils.h"
 #include "net/packetbuf.h"
-#define DEBUG DEBUG_NONE
-#include "net/ipv6/uip-debug.h"
+
+/* Log configuration */
+#define LOG_MODULE "P-utils"
+#define LOG_LEVEL LOG_LEVEL_PACKETUTILS
 
 /*---------------------------------------------------------------------------*/
 int
@@ -53,10 +70,10 @@ packetutils_serialize_atts(uint8_t *data, int size)
       data[pos++] = val >> 8;
       data[pos++] = val & 255;
       cnt++;
-      PRINTF(" %d=%d", i, val);
+      LOG_DBG(" %2d=%d\n", i, val);
     }
   }
-  PRINTF(" (%d)\n", cnt);
+  LOG_INFO("serialized %d packet atts\n", cnt);
 
   data[0] = cnt;
   return pos;
@@ -69,22 +86,97 @@ packetutils_deserialize_atts(const uint8_t *data, int size)
 
   pos = 0;
   cnt = data[pos++];
-  PRINTF("packetutils: deserializing %d packet atts:", cnt);
+  LOG_INFO("deserializing %d packet atts\n", cnt);
   if(cnt > PACKETBUF_NUM_ATTRS) {
-    PRINTF(" *** too many: %u!\n", PACKETBUF_NUM_ATTRS);
+    LOG_ERR(" *** too many: %u!\n", PACKETBUF_NUM_ATTRS);
     return -1;
   }
   for(i = 0; i < cnt; i++) {
     if(data[pos] >= PACKETBUF_NUM_ATTRS) {
       /* illegal attribute identifier */
-      PRINTF(" *** unknown attribute %u\n", data[pos]);
+      LOG_ERR(" *** unknown attribute %u\n", data[pos]);
       return -1;
     }
-    PRINTF(" %d=%d", data[pos], (data[pos + 1] << 8) | data[pos + 2]);
+    LOG_DBG(" %2d=%d\n", data[pos], (data[pos + 1] << 8) | data[pos + 2]);
     packetbuf_set_attr(data[pos], (data[pos + 1] << 8) | data[pos + 2]);
     pos += 3;
   }
-  PRINTF("\n");
   return pos;
 }
 /*---------------------------------------------------------------------------*/
+int
+packetutils_serialize_addrs(uint8_t *data, int size)
+{
+  int i, j;
+  /* set the length first later */
+  int pos = 1;
+  int cnt = 0;
+  /* assume that values are 16-bit */
+  linkaddr_t *val;
+
+  for(i = PACKETBUF_ADDR_FIRST;
+      i < (PACKETBUF_ADDR_FIRST + PACKETBUF_NUM_ADDRS);
+      i++) {
+    val = (linkaddr_t *)packetbuf_addr(i);
+    if(linkaddr_cmp(val, &linkaddr_null)) {
+      continue;
+    } else {
+      if(pos + 1 + LINKADDR_SIZE > size) {
+        /* serialize data length is over */
+        LOG_ERR(" *** too large serialize data length %u\n", pos + 1 + LINKADDR_SIZE);
+        return -1;
+      }
+      data[pos++] = i;
+      LOG_DBG(" %2d=", i);
+      for(j = 0; j < LINKADDR_SIZE; j++) {
+        if(j > 0 && j % 2 == 0)
+          LOG_DBG_(".");
+        data[pos++] = val->u8[j];
+        LOG_DBG_("%02x", val->u8[j]);
+      }
+      LOG_DBG_("\n");
+      cnt++;
+    }
+  }
+  LOG_INFO("serialized %d packet addrs\n", cnt);
+
+  data[0] = cnt;
+  return pos;
+}
+/*---------------------------------------------------------------------------*/
+int
+packetutils_deserialize_addrs(const uint8_t *data, int size)
+{
+  int i, j, cnt, pos;
+  linkaddr_t addr;
+
+  pos = 0;
+  cnt = data[pos++];
+  LOG_INFO("deserializing %d packet addrs\n", cnt);
+  if(cnt > PACKETBUF_NUM_ADDRS) {
+    LOG_ERR(" *** too many: %u!\n", PACKETBUF_NUM_ADDRS);
+    return -1;
+  }
+  for(i = 0; i < cnt; i++) {
+    if(data[pos] < PACKETBUF_ADDR_FIRST ||
+       data[pos] > PACKETBUF_ADDR_FIRST + PACKETBUF_NUM_ADDRS) {
+      /* illegal attribute identifier */
+      LOG_ERR(" *** unknown attribute %u\n", data[pos]);
+      return -1;
+    }
+    LOG_DBG(" %2d=", data[pos]);
+    for(j = 0; j < LINKADDR_SIZE; j++) {
+      if(j > 0 && j % 2 == 0)
+        LOG_DBG_(".");
+      addr.u8[j] = data[pos + 1 + j];
+      LOG_DBG_("%02x", addr.u8[j]);
+    }
+    LOG_DBG_("\n");
+
+    packetbuf_set_addr(data[pos], &addr);
+    pos += (1 + LINKADDR_SIZE);
+  }
+  return pos;
+}
+/*---------------------------------------------------------------------------*/
+/** @} */
