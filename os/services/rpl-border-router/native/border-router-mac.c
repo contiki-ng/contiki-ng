@@ -114,8 +114,10 @@ static void
 send_packet(mac_callback_t sent, void *ptr)
 {
   int size;
-  /* 3 bytes per packet attribute is required for serialization */
-  uint8_t buf[PACKETBUF_NUM_ATTRS * 3 + PACKETBUF_SIZE + 3];
+ /* 3 bytes per packet attribute and LINKADDR_SIZE + 1 bytes per packet addr
+   * are required for serialization */
+  uint8_t buf[PACKETBUF_NUM_ATTRS * 3
+              + PACKETBUF_NUM_ADDRS * (LINKADDR_SIZE + 1) + PACKETBUF_SIZE + 3];
   uint8_t sid;
 
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
@@ -128,42 +130,38 @@ send_packet(mac_callback_t sent, void *ptr)
 
   LOG_INFO("sending packet (%u bytes)\n", packetbuf_datalen());
 
-  if(NETSTACK_FRAMER.create() < 0) {
-    /* Failed to allocate space for headers */
-    LOG_WARN("send failed, too large header\n");
+  /* Send the data over SLIP to the device running "examples/slip-radio" */
+  size = 0;
+#if SERIALIZE_ATTRIBUTES
+  size = packetutils_serialize_atts(&buf[3], sizeof(buf) - 3);
+  if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
+    LOG_ERR("send failed, too large header\n");
+    mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
+    return;
+  }
+  size += packetutils_serialize_addrs(&buf[3+size], sizeof(buf) - 3 - size);
+#endif
+  if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
+    LOG_ERR("send failed, too large header\n");
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
   } else {
-    /* here we send the data over SLIP to the radio-chip */
-    size = 0;
-#if SERIALIZE_ATTRIBUTES
-    size = packetutils_serialize_atts(&buf[3], sizeof(buf) - 3);
-#endif
-    if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
-      LOG_WARN("send failed, too large header\n");
-      mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
-    } else {
-      sid = setup_callback(sent, ptr);
+    sid = setup_callback(sent, ptr);
 
-      buf[0] = '!';
-      buf[1] = 'S';
-      buf[2] = sid; /* sequence or session number for this packet */
+    buf[0] = '!';
+    buf[1] = 'S';
+    buf[2] = sid; /* sequence or session number for this packet */
 
-      /* Copy packet data */
-      memcpy(&buf[3 + size], packetbuf_hdrptr(), packetbuf_totlen());
+    /* Copy packet data */
+    memcpy(&buf[3 + size], packetbuf_hdrptr(), packetbuf_totlen());
 
-      write_to_slip(buf, packetbuf_totlen() + size + 3);
-    }
+    write_to_slip(buf, packetbuf_totlen() + size + 3);
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
 packet_input(void)
 {
-  if(NETSTACK_FRAMER.parse() < 0) {
-    LOG_DBG("failed to parse %u\n", packetbuf_datalen());
-  } else {
-    NETSTACK_NETWORK.input();
-  }
+  NETSTACK_NETWORK.input();
 }
 /*---------------------------------------------------------------------------*/
 static int
