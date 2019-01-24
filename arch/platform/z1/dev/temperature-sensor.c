@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,67 +27,44 @@
  * SUCH DAMAGE.
  *
  */
+
 /**
  * \file
- *         A RPL+TSCH node able to act as either a simple node (6ln),
- *         DAG Root (6dr) or DAG Root with security (6dr-sec)
- *         Press use button at startup to configure.
- *
- * \author Simon Duquennoy <simonduq@sics.se>
+ *         Sensor driver for reading the built-in temperature sensor in the CPU.
+ * \author
+ *         Adam Dunkels <adam@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
+ *         Niclas Finne <nfi@sics.se>
  */
 
+#include "dev/temperature-sensor.h"
+#include "dev/sky-sensors.h"
 #include "contiki.h"
-#include "sys/node-id.h"
-#include "sys/log.h"
-#include "net/ipv6/uip-ds6-route.h"
-#include "net/ipv6/uip-sr.h"
-#include "net/mac/tsch/tsch.h"
-#include "net/routing/routing.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/ipv6/uip-debug.h"
+#define INPUT_CHANNEL      (1 << INCH_10)
+#define INPUT_REFERENCE    SREF_1
+#define TEMPERATURE_MEM    ADC12MEM10
+
+const struct sensors_sensor temperature_sensor;
 
 /*---------------------------------------------------------------------------*/
-PROCESS(node_process, "RPL Node");
-AUTOSTART_PROCESSES(&node_process);
-
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(node_process, ev, data)
+static int
+value(int type)
 {
-  int is_coordinator;
-
-  PROCESS_BEGIN();
-
-  is_coordinator = 0;
-
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1
-  is_coordinator = (node_id == 1);
-#endif
-
-  if(is_coordinator) {
-    NETSTACK_ROUTING.root_start();
-  }
-  NETSTACK_MAC.on();
-
-#if WITH_PERIODIC_ROUTES_PRINT
-  {
-    static struct etimer et;
-    /* Print out routing tables every minute */
-    etimer_set(&et, CLOCK_SECOND * 60);
-    while(1) {
-      /* Used for non-regression testing */
-      #if (UIP_MAX_ROUTES != 0)
-        PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
-      #endif
-      #if (UIP_SR_LINK_NUM != 0)
-        PRINTF("Routing links: %u\n", uip_sr_num_nodes());
-      #endif
-      PROCESS_YIELD_UNTIL(etimer_expired(&et));
-      etimer_reset(&et);
-    }
-  }
-#endif /* WITH_PERIODIC_ROUTES_PRINT */
-
-  PROCESS_END();
+  return TEMPERATURE_MEM;
 }
 /*---------------------------------------------------------------------------*/
+static int
+configure(int type, int c)
+{
+  return sky_sensors_configure(INPUT_CHANNEL, INPUT_REFERENCE, type, c);
+}
+/*---------------------------------------------------------------------------*/
+static int
+status(int type)
+{
+  return sky_sensors_status(INPUT_CHANNEL, type);
+}
+/*---------------------------------------------------------------------------*/
+SENSORS_SENSOR(temperature_sensor, TEMPERATURE_SENSOR,
+               value, configure, status);

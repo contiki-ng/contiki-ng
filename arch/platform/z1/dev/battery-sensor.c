@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2006, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,68 +26,42 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- */
-/**
- * \file
- *         A RPL+TSCH node able to act as either a simple node (6ln),
- *         DAG Root (6dr) or DAG Root with security (6dr-sec)
- *         Press use button at startup to configure.
  *
- * \author Simon Duquennoy <simonduq@sics.se>
+ * -----------------------------------------------------------------
+ *
+ * Author  : Adam Dunkels, Joakim Eriksson, Niclas Finne
+ * Created : 2005-11-01
+ * Updated : $Date: 2010/08/25 19:30:52 $
+ *           $Revision: 1.11 $
  */
-
 #include "contiki.h"
-#include "sys/node-id.h"
-#include "sys/log.h"
-#include "net/ipv6/uip-ds6-route.h"
-#include "net/ipv6/uip-sr.h"
-#include "net/mac/tsch/tsch.h"
-#include "net/routing/routing.h"
+#include "dev/battery-sensor.h"
+#include "dev/sky-sensors.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/ipv6/uip-debug.h"
+/* Configure ADC12_2 to sample channel 11 (voltage) and use */
+/* the Vref+ as reference (SREF_1) since it is a stable reference */
+#define INPUT_CHANNEL   (1 << INCH_11)
+#define INPUT_REFERENCE SREF_1
+#define BATTERY_MEM     ADC12MEM11
 
+const struct sensors_sensor battery_sensor;
 /*---------------------------------------------------------------------------*/
-PROCESS(node_process, "RPL Node");
-AUTOSTART_PROCESSES(&node_process);
-
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(node_process, ev, data)
+static int
+value(int type)
 {
-  int is_coordinator;
-
-  PROCESS_BEGIN();
-
-  is_coordinator = 0;
-
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1
-  is_coordinator = (node_id == 1);
-#endif
-
-  if(is_coordinator) {
-    NETSTACK_ROUTING.root_start();
-  }
-  NETSTACK_MAC.on();
-
-#if WITH_PERIODIC_ROUTES_PRINT
-  {
-    static struct etimer et;
-    /* Print out routing tables every minute */
-    etimer_set(&et, CLOCK_SECOND * 60);
-    while(1) {
-      /* Used for non-regression testing */
-      #if (UIP_MAX_ROUTES != 0)
-        PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
-      #endif
-      #if (UIP_SR_LINK_NUM != 0)
-        PRINTF("Routing links: %u\n", uip_sr_num_nodes());
-      #endif
-      PROCESS_YIELD_UNTIL(etimer_expired(&et));
-      etimer_reset(&et);
-    }
-  }
-#endif /* WITH_PERIODIC_ROUTES_PRINT */
-
-  PROCESS_END();
+  return BATTERY_MEM;
 }
 /*---------------------------------------------------------------------------*/
+static int
+configure(int type, int c)
+{
+  return sky_sensors_configure(INPUT_CHANNEL, INPUT_REFERENCE, type, c);
+}
+/*---------------------------------------------------------------------------*/
+static int
+status(int type)
+{
+  return sky_sensors_status(INPUT_CHANNEL, type);
+}
+/*---------------------------------------------------------------------------*/
+SENSORS_SENSOR(battery_sensor, BATTERY_SENSOR, value, configure, status);

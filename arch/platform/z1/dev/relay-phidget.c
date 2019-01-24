@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,68 +26,80 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- */
-/**
- * \file
- *         A RPL+TSCH node able to act as either a simple node (6ln),
- *         DAG Root (6dr) or DAG Root with security (6dr-sec)
- *         Press use button at startup to configure.
+ * This file is part of the Contiki operating system.
  *
- * \author Simon Duquennoy <simonduq@sics.se>
+ *
+ * -----------------------------------------------------------------
+ *
+ * \file
+ *         Device simple driver for generic relay in phidget port of Zolertia Z1
+ * \author
+ *         Antonio Lignan, Zolertia <alinan@zolertia.com>
+ *
  */
 
 #include "contiki.h"
-#include "sys/node-id.h"
-#include "sys/log.h"
-#include "net/ipv6/uip-ds6-route.h"
-#include "net/ipv6/uip-sr.h"
-#include "net/mac/tsch/tsch.h"
-#include "net/routing/routing.h"
+#include "relay-phidget.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/ipv6/uip-debug.h"
+static uint8_t controlPin;
+
+enum PHIDGET_RELAY_STATUSTYPES {
+  /* must be a bit and not more, not using 0x00. */
+  INITED = 0x01,
+  RUNNING = 0x02,
+  STOPPED = 0x04,
+};
+
+static enum PHIDGET_RELAY_STATUSTYPES _RELAY_STATUS = 0x00;
 
 /*---------------------------------------------------------------------------*/
-PROCESS(node_process, "RPL Node");
-AUTOSTART_PROCESSES(&node_process);
 
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(node_process, ev, data)
+void
+relay_enable(uint8_t pin)
 {
-  int is_coordinator;
 
-  PROCESS_BEGIN();
+  if(!(_RELAY_STATUS & INITED)) {
 
-  is_coordinator = 0;
+    _RELAY_STATUS |= INITED;
 
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1
-  is_coordinator = (node_id == 1);
-#endif
+    /* Selects the pin to be configure as the control pin of the relay module */
+    controlPin = (1 << pin);
 
-  if(is_coordinator) {
-    NETSTACK_ROUTING.root_start();
+    /* Configures the control pin */
+    P6SEL &= ~controlPin;
+    P6DIR |= controlPin;
   }
-  NETSTACK_MAC.on();
-
-#if WITH_PERIODIC_ROUTES_PRINT
-  {
-    static struct etimer et;
-    /* Print out routing tables every minute */
-    etimer_set(&et, CLOCK_SECOND * 60);
-    while(1) {
-      /* Used for non-regression testing */
-      #if (UIP_MAX_ROUTES != 0)
-        PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
-      #endif
-      #if (UIP_SR_LINK_NUM != 0)
-        PRINTF("Routing links: %u\n", uip_sr_num_nodes());
-      #endif
-      PROCESS_YIELD_UNTIL(etimer_expired(&et));
-      etimer_reset(&et);
-    }
-  }
-#endif /* WITH_PERIODIC_ROUTES_PRINT */
-
-  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+
+void
+relay_on()
+{
+  if((_RELAY_STATUS & INITED)) {
+    P6OUT |= controlPin;
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+relay_off()
+{
+  if((_RELAY_STATUS & INITED)) {
+    P6OUT &= ~controlPin;
+  }
+}
+/*---------------------------------------------------------------------------*/
+
+int8_t
+relay_toggle()
+{
+  if((_RELAY_STATUS & INITED)) {
+    P6OUT ^= controlPin;
+    if((P6OUT & controlPin)) {
+      return 1;
+    }
+    return 0;
+  }
+  return -1;
+}
+/*---------------------------------------------------------------------------*/
+

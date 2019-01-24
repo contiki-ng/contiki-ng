@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2006, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,68 +26,58 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
+ *
  */
+
 /**
  * \file
- *         A RPL+TSCH node able to act as either a simple node (6ln),
- *         DAG Root (6dr) or DAG Root with security (6dr-sec)
- *         Press use button at startup to configure.
- *
- * \author Simon Duquennoy <simonduq@sics.se>
+ *         A program for burning a node ID into the flash ROM of a Tmote Sky node.
+ * \author
+ *         Adam Dunkels <adam@sics.se>
  */
 
-#include "contiki.h"
+#include "dev/leds.h"
+#include "dev/watchdog.h"
 #include "sys/node-id.h"
-#include "sys/log.h"
-#include "net/ipv6/uip-ds6-route.h"
-#include "net/ipv6/uip-sr.h"
-#include "net/mac/tsch/tsch.h"
-#include "net/routing/routing.h"
+#include "contiki.h"
+#include "sys/etimer.h"
 
-#define DEBUG DEBUG_PRINT
-#include "net/ipv6/uip-debug.h"
+#include "node-id-z1.h"
 
+#include <stdio.h>
+
+static struct etimer etimer;
+
+PROCESS(burn_process, "Burn node id");
+AUTOSTART_PROCESSES(&burn_process);
 /*---------------------------------------------------------------------------*/
-PROCESS(node_process, "RPL Node");
-AUTOSTART_PROCESSES(&node_process);
-
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(node_process, ev, data)
+PROCESS_THREAD(burn_process, ev, data)
 {
-  int is_coordinator;
-
   PROCESS_BEGIN();
 
-  is_coordinator = 0;
+  etimer_set(&etimer, 5*CLOCK_SECOND);
+  PROCESS_WAIT_UNTIL(etimer_expired(&etimer));
 
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1
-  is_coordinator = (node_id == 1);
+  watchdog_stop();
+  leds_on(LEDS_RED);
+#if NODEID
+  #warning "***** BURNING NODE ID"
+  printf("Burning node id %d\n", NODEID);
+  node_id_burn(NODEID);
+  leds_on(LEDS_BLUE);
+  node_id_restore();
+  printf("Restored node id %d\n", node_id);
+#else
+#error "burn-nodeid must be compiled with nodeid=<the ID of the node>"
+  node_id_restore();
+  printf("Restored node id %d\n", node_id);
 #endif
-
-  if(is_coordinator) {
-    NETSTACK_ROUTING.root_start();
+  leds_off(LEDS_RED + LEDS_BLUE);
+  watchdog_start();
+  while(1) {
+    PROCESS_WAIT_EVENT();
   }
-  NETSTACK_MAC.on();
-
-#if WITH_PERIODIC_ROUTES_PRINT
-  {
-    static struct etimer et;
-    /* Print out routing tables every minute */
-    etimer_set(&et, CLOCK_SECOND * 60);
-    while(1) {
-      /* Used for non-regression testing */
-      #if (UIP_MAX_ROUTES != 0)
-        PRINTF("Routing entries: %u\n", uip_ds6_route_num_routes());
-      #endif
-      #if (UIP_SR_LINK_NUM != 0)
-        PRINTF("Routing links: %u\n", uip_sr_num_nodes());
-      #endif
-      PROCESS_YIELD_UNTIL(etimer_expired(&et));
-      etimer_reset(&et);
-    }
-  }
-#endif /* WITH_PERIODIC_ROUTES_PRINT */
-
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
