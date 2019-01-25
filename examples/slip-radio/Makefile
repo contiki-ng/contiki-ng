@@ -1,5 +1,7 @@
 CONTIKI_PROJECT=slip-radio
 all: $(CONTIKI_PROJECT)
+MODULES += os/services/slip-cmd
+CFLAGS += -DSLIP_ARCH_CONF_ENABLE=1
 
 # slip-radio is only intended for platforms with SLIP support
 PLATFORMS_EXCLUDE = native nrf52dk
