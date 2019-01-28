@@ -51,6 +51,7 @@
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
+#include DeviceFamily_constructPath(driverlib/rf_ble_mailbox.h)
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
@@ -68,8 +69,6 @@
 #define LOG_MODULE "Radio"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
-/* Configuration parameters */
-/*---------------------------------------------------------------------------*/
 #define CMD_FS_RETRIES          3
 
 #define RF_EVENTS_CMD_DONE      (RF_EventCmdDone | RF_EventLastCmdDone | \
@@ -82,12 +81,25 @@
 
 #define EVENTS_CMD_DONE(events) (((events) & RF_EVENTS_CMD_DONE) != 0)
 /*---------------------------------------------------------------------------*/
+/* BLE advertisement channel range (inclusive) */
+#define BLE_ADV_CHANNEL_MIN     37
+#define BLE_ADV_CHANNEL_MAX     39
+
+/* Number of BLE advertisement channels */
+#define NUM_BLE_ADV_CHANNELS    (BLE_ADV_CHANNEL_MAX - BLE_ADV_CHANNEL_MIN + 1)
+/*---------------------------------------------------------------------------*/
 /* Synth re-calibration every 3 minutes */
 #define SYNTH_RECAL_INTERVAL    (CLOCK_SECOND * 60 * 3)
 /* Set re-calibration interval with a jitter of 10 seconds */
 #define SYNTH_RECAL_JITTER      (CLOCK_SECOND * 10)
 
 static struct etimer synth_recal_timer;
+/*---------------------------------------------------------------------------*/
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+typedef rfc_CMD_BLE_ADV_NC_t ble_cmd_adv_nc_t;
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
+typedef rfc_CMD_BLE5_ADV_NC_t ble_cmd_adv_nc_t;
+#endif
 /*---------------------------------------------------------------------------*/
 static RF_Object rf_netstack;
 
@@ -479,45 +491,171 @@ ble_open(RF_Params *params)
 #endif
 }
 /*---------------------------------------------------------------------------*/
+#if RF_CONF_BLE_BEACON_ENABLE
+static RF_Op *
+init_ble_adv_array(ble_cmd_adv_nc_t *ble_adv_array, uint8_t bm_channel)
+{
+  RF_Op *first_ble_adv = NULL;
+  ble_cmd_adv_nc_t *cmd_adv_37 = &ble_adv_array[0];
+  ble_cmd_adv_nc_t *cmd_adv_38 = &ble_adv_array[1];
+  ble_cmd_adv_nc_t *cmd_adv_39 = &ble_adv_array[2];
+
+  /* Setup channel 37 advertisement if enabled */
+  if(bm_channel & BLE_ADV_CHANNEL_37) {
+    /* Default configurations from ble_cmd_adv_nc */
+    memcpy(cmd_adv_37, &ble_cmd_adv_nc, sizeof(ble_cmd_adv_nc));
+
+    cmd_adv_37->channel = 37;
+    /* Magic number: initialization for whitener, specific for channel 37 */
+    cmd_adv_37->whitening.init = 0x65;
+
+    /*
+     * The next advertisement is chained depending on whether they are
+     * enbled or not. If both 38 and 39 are disabled, then there is no
+     * chaining.
+     */
+    if(bm_channel & BLE_ADV_CHANNEL_38) {
+      cmd_adv_37->pNextOp = (RF_Op *)cmd_adv_38;
+      cmd_adv_37->condition.rule = COND_ALWAYS;
+    } else if(bm_channel & BLE_ADV_CHANNEL_39) {
+      cmd_adv_37->pNextOp = (RF_Op *)cmd_adv_39;
+      cmd_adv_37->condition.rule = COND_ALWAYS;
+    } else {
+      cmd_adv_37->pNextOp = NULL;
+      cmd_adv_37->condition.rule = COND_NEVER;
+    }
+
+    /* Channel 37 will always be first if enabled */
+    first_ble_adv = (RF_Op *)cmd_adv_37;
+  }
+
+  /* Setup channel 38 advertisement if enabled */
+  if(bm_channel & BLE_ADV_CHANNEL_38) {
+    memcpy(cmd_adv_38, &ble_cmd_adv_nc, sizeof(ble_cmd_adv_nc));
+
+    cmd_adv_38->channel = 38;
+    /* Magic number: initialization for whitener, specific for channel 38 */
+    cmd_adv_38->whitening.init = 0x66;
+
+    /*
+     * The next advertisement is chained depending on whether they are
+     * enbled or not. If 39 is disabled, then there is no chaining.
+     */
+    if(bm_channel & BLE_ADV_CHANNEL_39) {
+      cmd_adv_38->pNextOp = (RF_Op *)cmd_adv_39;
+      cmd_adv_38->condition.rule = COND_ALWAYS;
+    } else {
+      cmd_adv_38->pNextOp = NULL;
+      cmd_adv_38->condition.rule = COND_NEVER;
+    }
+
+    /*
+     * Channel 38 is only first if the first_ble_adv pointer is not
+     * set by channel 37.
+     */
+    if(first_ble_adv == NULL) {
+      first_ble_adv = (RF_Op *)cmd_adv_38;
+    }
+  }
+
+  /* Setup channel 39 advertisement if enabled */
+  if(bm_channel & BLE_ADV_CHANNEL_39) {
+    memcpy(cmd_adv_39, &ble_cmd_adv_nc, sizeof(ble_cmd_adv_nc));
+
+    cmd_adv_39->channel = 39;
+    /* Magic number: initialization for whitener, specific for channel 39 */
+    cmd_adv_39->whitening.init = 0x67;
+
+    /* Channel 39 is always the last advertisement in the chain */
+    cmd_adv_39->pNextOp = NULL;
+    cmd_adv_39->condition.rule = COND_NEVER;
+
+    /*
+     * Channel 39 is only first if the first_ble_adv pointer is not
+     * set by channel 37 or channel 38.
+     */
+    if(first_ble_adv == NULL) {
+      first_ble_adv = (RF_Op *)cmd_adv_39;
+    }
+  }
+
+  return first_ble_adv;
+}
+#endif /* RF_CONF_BLE_BEACON_ENABLE */
+/*---------------------------------------------------------------------------*/
 rf_result_t
-ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event)
+ble_sched_beacons(uint8_t bm_channel)
 {
 #if RF_CONF_BLE_BEACON_ENABLE
-  RF_ScheduleCmdParams sched_params;
-  RF_ScheduleCmdParams_init(&sched_params);
+  /*
+   * Allocate the advertisement commands on the stack rather than statically
+   * to RAM in order to save space. We don't need them after the
+   * advertisements have been transmitted.
+   */
+  ble_cmd_adv_nc_t ble_cmd_adv_nc_array[NUM_BLE_ADV_CHANNELS];
 
+  RF_Op *initial_adv = NULL;
+  RF_ScheduleCmdParams sched_params;
+  RF_CmdHandle beacon_handle;
+  RF_EventMask beacon_events;
+  rf_result_t rf_result;
+
+  /* If no channels are mapped, then early return OK */
+  if((bm_channel & BLE_ADV_CHANNEL_ALL) == 0) {
+    return RF_RESULT_OK;
+  }
+
+  initial_adv = init_ble_adv_array(ble_cmd_adv_nc_array, bm_channel);
+
+  if(initial_adv == NULL) {
+    LOG_ERR("Initializing BLE Advertisement chain failed\n");
+    return RF_RESULT_ERROR;
+  }
+
+  RF_ScheduleCmdParams_init(&sched_params);
   sched_params.priority = RF_PriorityNormal;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
-  CMD_STATUS(ble_cmd_beacon) = PENDING;
-
-  RF_CmdHandle beacon_handle = RF_scheduleCmd(
-      &rf_ble,
-      (RF_Op *)&ble_cmd_beacon,
-      &sched_params,
-      cb,
-      bm_event);
+  /*
+   * The most efficient way to schedule the command is as follows:
+   *   1. Schedule the BLE advertisement chain
+   *   2. Reschedule the RX command IF it was running.
+   *   3. Pend on the BLE avertisement chain
+   */
+  beacon_handle = RF_scheduleCmd(
+    &rf_ble,
+    initial_adv,
+    &sched_params,
+    NULL,
+    0);
 
   if(!CMD_HANDLE_OK(beacon_handle)) {
     LOG_ERR("Unable to schedule BLE Beacon command, handle=%d status=0x%04x\n",
-            beacon_handle, CMD_STATUS(ble_cmd_beacon));
+            beacon_handle, CMD_STATUS(ble_cmd_adv_nc));
+
     return RF_RESULT_ERROR;
   }
 
-  const uint_fast8_t rx_key = cmd_rx_disable();
+  /* Note that this only reschedules RX if it is running */
+  rf_result = cmd_rx_restore(cmd_rx_disable());
 
   /* Wait until Beacon operation finishes */
-  RF_EventMask beacon_events = RF_pendCmd(&rf_ble, beacon_handle, 0);
-  if(!EVENTS_CMD_DONE(beacon_events)) {
-    LOG_ERR("Pending on scheduled BLE Beacon command generated error, events=0x%08llx status=0x%04x\n",
-            beacon_events, CMD_STATUS(ble_cmd_beacon));
+  beacon_events = RF_pendCmd(&rf_ble, beacon_handle, 0);
 
-    cmd_rx_restore(rx_key);
+  if(rf_result != RF_RESULT_OK) {
+    LOG_ERR("Rescheduling CMD_RX failed when BLE advertising\n");
+
     return RF_RESULT_ERROR;
   }
 
-  cmd_rx_restore(rx_key);
+  if(!EVENTS_CMD_DONE(beacon_events)) {
+    LOG_ERR("Pending on scheduled BLE Beacon command generated error, events=0x%08llx status=0x%04x\n",
+            beacon_events, CMD_STATUS(ble_cmd_adv_nc));
+
+    return RF_RESULT_ERROR;
+  }
+
   return RF_RESULT_OK;
 
 #else

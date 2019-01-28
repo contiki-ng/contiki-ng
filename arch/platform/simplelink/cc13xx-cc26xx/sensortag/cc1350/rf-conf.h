@@ -27,26 +27,43 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup launchpad-peripherals
+ * @{
+ *
+ * \file
+ *        Header file with board-specific RF configurations.
+ * \author
+ *        Texas Instruments <e2e.ti.com>
+ * \note
+ *        This file should not be included directly
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef BLE_SETTINGS_H_
-#define BLE_SETTINGS_H_
+#ifndef RF_CONF_H_
+#define RF_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
-#include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ble_cmd.h)
+#include "rf/rf.h"
+/*---------------------------------------------------------------------------*/
+/**
+ * \name  Board-specific front-end mode configurations for both the Sub-1 GHz
+ *        path and the 2.4 GHz path on the radio.
+ *
+ * These are the following front-end mode configurations for the
+ * CC1350STK board:
+ *  - Sub-1 GHz: single-ended RFN and external bias
+ *  - 2.4 GHz: single-ended RFP and external bias
+ *
+ * @{
+ */
+#define RF_SUB_1_GHZ_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_SINGLE_ENDED_RFN
+#define RF_SUB_1_GHZ_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
 
-#include <ti/drivers/rf/RF.h>
+#define RF_2_4_GHZ_CONF_FRONT_END_MODE    RF_FRONT_END_MODE_SINGLE_ENDED_RFP
+#define RF_2_4_GHZ_CONF_BIAS_MODE         RF_BIAS_MODE_EXTERNAL
+/** @} */
 /*---------------------------------------------------------------------------*/
-/* TI-RTOS RF Mode Object */
-extern RF_Mode                rf_ble_mode;
+#endif /* RF_CONF_H_ */
 /*---------------------------------------------------------------------------*/
-/* RF Core API commands */
-extern rfc_CMD_RADIO_SETUP_t  rf_ble_cmd_radio_setup;
-extern rfc_CMD_BLE_ADV_NC_t   rf_ble_cmd_ble_adv_nc;
-/*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t               rf_ble_overrides[];
-/*---------------------------------------------------------------------------*/
-#endif /* BLE_SETTINGS_H_ */
-/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

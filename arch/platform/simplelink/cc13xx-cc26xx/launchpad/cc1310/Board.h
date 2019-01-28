@@ -36,6 +36,9 @@
 #define Board_CC1310_LAUNCHXL
 #define BOARD_STRING    "TI CC1310 LaunchPad"
 
+#define RF_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
+
 #ifdef __cplusplus
 extern "C" {
 #endif

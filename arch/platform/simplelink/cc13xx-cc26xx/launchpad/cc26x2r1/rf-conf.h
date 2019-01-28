@@ -27,26 +27,39 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup launchpad-peripherals
+ * @{
+ *
+ * \file
+ *        Header file with board-specific RF configurations.
+ * \author
+ *        Texas Instruments <e2e.ti.com>
+ * \note
+ *        This file should not be included directly
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef BLE_SETTINGS_H_
-#define BLE_SETTINGS_H_
+#ifndef RF_CONF_H_
+#define RF_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
-#include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ble_cmd.h)
-
-#include <ti/drivers/rf/RF.h>
+#include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
-/* TI-RTOS RF Mode Object */
-extern RF_Mode                rf_ble_mode;
+/**
+ * \name  Board-specific front-end mode configurations for the 2.4 GHz path
+ *        on the radio.
+ *
+ * These are the following front-end mode configurations for the
+ * CC26X2R1-LAUNCHXL board:
+ *  - 2.4 GHz: differential and internal bias
+ *
+ * @{
+ */
+#define RF_2_4_GHZ_CONF_FRONT_END_MODE    RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_2_4_GHZ_CONF_BIAS_MODE         RF_BIAS_MODE_INTERNAL
+/** @} */
 /*---------------------------------------------------------------------------*/
-/* RF Core API commands */
-extern rfc_CMD_RADIO_SETUP_t  rf_ble_cmd_radio_setup;
-extern rfc_CMD_BLE_ADV_NC_t   rf_ble_cmd_ble_adv_nc;
+#endif /* RF_CONF_H_ */
 /*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t               rf_ble_overrides[];
-/*---------------------------------------------------------------------------*/
-#endif /* BLE_SETTINGS_H_ */
-/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

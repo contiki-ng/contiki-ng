@@ -59,6 +59,7 @@ uint8_t *ble_addr_ptr(void);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Copy the node's factory BLE address to a destination memory area
+ *        in big-endian (be) order.
  * \param dst A pointer to the destination area where the BLE address is to be
  *            written
  * \return  0 : Returned successfully
@@ -68,7 +69,21 @@ uint8_t *ble_addr_ptr(void);
  * the process. The factory address on devices is normally little-endian,
  * therefore you should expect dst to store the address in a big-endian order.
  */
-int ble_addr_cpy(uint8_t *dst);
+int ble_addr_be_cpy(uint8_t *dst);
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Copy the node's factory BLE address to a destination memory area
+ *        in little-endian (le) order.
+ * \param dst A pointer to the destination area where the BLE address is to be
+ *            written
+ * \return  0 : Returned successfully
+ *         -1 : Returned with error
+ *
+ * This function will copy 6 bytes, but will **not** invert the byte order.
+ * This is usefull for the RF core which assumes the BLE MAC address in
+ * little-endian order.
+ */
+int ble_addr_le_cpy(uint8_t *dst);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Copy the node's BLE address to a destination memory area and converts
