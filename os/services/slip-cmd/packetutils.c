@@ -59,7 +59,7 @@ packetutils_serialize_atts(uint8_t *data, int size)
   int cnt = 0;
   /* assume that values are 16-bit */
   uint16_t val;
-  PRINTF("packetutils: serializing packet atts");
+  LOG_INFO("packetutils: serializing packet atts");
   for(i = 0; i < PACKETBUF_NUM_ATTRS; i++) {
     val = packetbuf_attr(i);
     if(val != 0) {
