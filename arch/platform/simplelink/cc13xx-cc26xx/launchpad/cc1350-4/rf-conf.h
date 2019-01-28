@@ -45,12 +45,21 @@
 #include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name  Board-specific front-end configurations for the radio.
+ * \name  Board-specific front-end mode configurations for both the Sub-1 GHz
+ *        path and the 2.4 GHz path on the radio.
+ *
+ * These are the following front-end mode configurations for the
+ * CC1350-4-LAUNCHXL board:
+ *  - Sub-1 GHz: differential and external bias
+ *  - 2.4 GHz: differential and external bias
  *
  * @{
  */
-#define RF_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_DIFFERENTIAL
-#define RF_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
+#define RF_SUB_1_GHZ_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_SUB_1_GHZ_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
+
+#define RF_2_4_GHZ_CONF_FRONT_END_MODE    RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_2_4_GHZ_CONF_BIAS_MODE         RF_BIAS_MODE_EXTERNAL
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* RF_CONF_H_ */

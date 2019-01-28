@@ -217,8 +217,8 @@ rat_overflow_cb(void *arg)
 static void
 init_rf_params(void)
 {
-  cmd_radio_setup.config.frontEndMode = RF_FRONT_END_MODE;
-  cmd_radio_setup.config.biasMode = RF_BIAS_MODE;
+  cmd_radio_setup.config.frontEndMode = RF_2_4_GHZ_FRONT_END_MODE;
+  cmd_radio_setup.config.biasMode = RF_2_4_GHZ_BIAS_MODE;
 
   data_queue_t *rx_q = data_queue_init(sizeof(lensz_t));
 

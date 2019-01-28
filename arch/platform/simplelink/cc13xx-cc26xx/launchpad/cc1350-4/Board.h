@@ -33,17 +33,14 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC1350_LAUNCHXL_433
-#define BOARD_STRING    "TI CC1350-433 LaunchPad"
-
-#define RF_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_DIFFERENTIAL
-#define RF_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "CC1350_LAUNCHXL_433.h"
+
+#define Board_CC1350_LAUNCHXL_433
+#define BOARD_STRING            "TI CC1350-433 LaunchPad"
 
 #define Board_initGeneral()      CC1350_LAUNCHXL_433_initGeneral()
 #define Board_shutDownExtFlash() CC1350_LAUNCHXL_433_shutDownExtFlash()

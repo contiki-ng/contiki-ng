@@ -80,7 +80,7 @@
 /**
  * \name  The different bias modes the CC13xx/CC26xx devices support. The
  *        bias mode can be configured independently of the front-end mode. The
- *         two different modes are as follows:
+ *        two different modes are as follows:
  *        - Internal bias: the LNA is biased by an internal bias.
  *        - External bias: the LNA is biased by an external bias.
  *

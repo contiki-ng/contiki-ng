@@ -608,7 +608,7 @@ ble_sched_beacons(uint8_t bm_channel)
   initial_adv = init_ble_adv_array(ble_cmd_adv_nc_array, bm_channel);
 
   if(initial_adv == NULL) {
-    LOG_ERR("Initializing BLE Advertismenet chain failed\n");
+    LOG_ERR("Initializing BLE Advertisement chain failed\n");
     return RF_RESULT_ERROR;
   }
 

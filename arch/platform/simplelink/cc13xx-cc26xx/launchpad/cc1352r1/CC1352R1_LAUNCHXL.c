@@ -36,8 +36,6 @@
  *  CC1352R1_LAUNCHXL board.
  */
 
-#include "contiki.h"
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -158,8 +158,8 @@ PROCESS(ble_beacond_process, "RF BLE Beacon Daemon Process");
 rf_ble_beacond_result_t
 rf_ble_beacond_init(void)
 {
-  ble_cmd_radio_setup.config.frontEndMode = RF_FRONT_END_MODE;
-  ble_cmd_radio_setup.config.biasMode = RF_BIAS_MODE;
+  ble_cmd_radio_setup.config.frontEndMode = RF_2_4_GHZ_FRONT_END_MODE;
+  ble_cmd_radio_setup.config.biasMode = RF_2_4_GHZ_BIAS_MODE;
 
   RF_Params rf_params;
   RF_Params_init(&rf_params);

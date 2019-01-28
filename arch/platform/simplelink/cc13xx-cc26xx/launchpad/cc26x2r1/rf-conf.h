@@ -45,12 +45,17 @@
 #include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name  Board-specific front-end configurations for the radio.
+ * \name  Board-specific front-end mode configurations for the 2.4 GHz path
+ *        on the radio.
+ *
+ * These are the following front-end mode configurations for the
+ * CC26X2R1-LAUNCHXL board:
+ *  - 2.4 GHz: differential and internal bias
  *
  * @{
  */
-#define RF_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_DIFFERENTIAL
-#define RF_CONF_BIAS_MODE       RF_BIAS_MODE_INTERNAL
+#define RF_2_4_GHZ_CONF_FRONT_END_MODE    RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_2_4_GHZ_CONF_BIAS_MODE         RF_BIAS_MODE_INTERNAL
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* RF_CONF_H_ */

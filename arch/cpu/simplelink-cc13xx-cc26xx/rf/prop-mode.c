@@ -194,8 +194,8 @@ static int off(void);
 static void
 init_rf_params(void)
 {
-  cmd_radio_setup.config.frontEndMode = RF_FRONT_END_MODE;
-  cmd_radio_setup.config.biasMode = RF_BIAS_MODE;
+  cmd_radio_setup.config.frontEndMode = RF_SUB_1_GHZ_FRONT_END_MODE;
+  cmd_radio_setup.config.biasMode = RF_SUB_1_GHZ_BIAS_MODE;
   cmd_radio_setup.centerFreq = PROP_MODE_CENTER_FREQ;
   cmd_radio_setup.loDivider = PROP_MODE_LO_DIVIDER;
 
