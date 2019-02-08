@@ -50,7 +50,7 @@
 #ifndef BOARD_CONF_H_
 #define BOARD_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include "contiki-conf.h"
+#include "rf-conf.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \name LED configurations for the dev/leds.h API.

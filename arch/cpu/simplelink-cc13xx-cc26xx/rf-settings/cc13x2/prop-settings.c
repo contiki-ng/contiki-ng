@@ -63,7 +63,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_prop_cmd.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_prop.h)
+#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_multi_protocol.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_rfe_genfsk.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_genfsk.h)
 
@@ -75,7 +75,7 @@
 RF_Mode rf_prop_mode =
 {
   .rfMode = RF_MODE_AUTO,
-  .cpePatchFxn = &rf_patch_cpe_prop,
+  .cpePatchFxn = &rf_patch_cpe_multi_protocol,
   .mcePatchFxn = &rf_patch_mce_genfsk,
   .rfePatchFxn = &rf_patch_rfe_genfsk,
 };

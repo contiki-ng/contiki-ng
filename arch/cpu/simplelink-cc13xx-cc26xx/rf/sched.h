@@ -58,6 +58,16 @@ typedef enum {
   RF_RESULT_ERROR,
 } rf_result_t;
 /*---------------------------------------------------------------------------*/
+typedef enum {
+    BLE_ADV_CHANNEL_37 = (1 << 0),
+    BLE_ADV_CHANNEL_38 = (1 << 1),
+    BLE_ADV_CHANNEL_39 = (1 << 2),
+
+    BLE_ADV_CHANNEL_ALL = (BLE_ADV_CHANNEL_37 |
+                           BLE_ADV_CHANNEL_38 |
+                           BLE_ADV_CHANNEL_39),
+} ble_adv_channel_t;
+/*---------------------------------------------------------------------------*/
 /**
  * \name Common RF scheduler functionality.
  *
@@ -91,7 +101,7 @@ rf_result_t netstack_stop_rx(void);
  * @{
  */
 RF_Handle   ble_open(RF_Params *params);
-rf_result_t ble_sched_beacon(RF_Callback cb, RF_EventMask bm_event);
+rf_result_t ble_sched_beacons(uint8_t bm_adv_channel);
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* RF_SCHED_H_ */

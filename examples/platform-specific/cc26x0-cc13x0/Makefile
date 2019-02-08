@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = cc26xx-demo
+CONTIKI_PROJECT = cc26x0-demo
 
 PLATFORMS_ONLY = cc26x0-cc13x0
 
