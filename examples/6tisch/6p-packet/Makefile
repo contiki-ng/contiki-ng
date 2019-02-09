@@ -1,7 +1,7 @@
 CONTIKI_PROJECT      = sixp-node
 PROJECT_SOURCEFILES += test-sf.c
 
-PLATFORMS_EXCLUDE = sky nrf52dk native simplelink
+PLATFORMS_EXCLUDE = sky z1 nrf52dk native simplelink
 
 CONTIKI  = ../../../
 

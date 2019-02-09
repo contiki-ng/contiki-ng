@@ -133,6 +133,32 @@
 #define RF_MODE                      RF_CONF_MODE
 #endif /* RF_CONF_MODE */
 
+/* Sub-1 GHz path front-end mode configuration */
+#ifdef RF_SUB_1_GHZ_CONF_FRONT_END_MODE
+#define RF_SUB_1_GHZ_FRONT_END_MODE     RF_SUB_1_GHZ_CONF_FRONT_END_MODE
+#else
+#define RF_SUB_1_GHZ_FRONT_END_MODE     RF_FRONT_END_MODE_DIFFERENTIAL
+#endif
+
+#ifdef RF_SUB_1_GHZ_CONF_BIAS_MODE
+#define RF_SUB_1_GHZ_BIAS_MODE          RF_SUB_1_GHZ_CONF_BIAS_MODE
+#else
+#define RF_SUB_1_GHZ_BIAS_MODE          RF_BIAS_MODE_INTERNAL
+#endif
+
+/* 2.4 GHz path front-end mode configuration */
+#ifdef RF_2_4_GHZ_CONF_FRONT_END_MODE
+#define RF_2_4_GHZ_FRONT_END_MODE       RF_2_4_GHZ_CONF_FRONT_END_MODE
+#else
+#define RF_2_4_GHZ_FRONT_END_MODE       RF_FRONT_END_MODE_DIFFERENTIAL
+#endif
+
+#ifdef RF_2_4_GHZ_CONF_BIAS_MODE
+#define RF_2_4_GHZ_BIAS_MODE            RF_2_4_GHZ_CONF_BIAS_MODE
+#else
+#define RF_2_4_GHZ_BIAS_MODE            RF_BIAS_MODE_INTERNAL
+#endif
+
 /* Number of RX buffers. */
 #ifndef RF_CONF_RX_BUF_CNT
 #define RF_CONF_RX_BUF_CNT           4

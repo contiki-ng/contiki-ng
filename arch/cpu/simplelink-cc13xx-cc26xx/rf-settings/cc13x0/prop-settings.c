@@ -68,7 +68,7 @@
 /* TI-RTOS RF Mode Object */
 RF_Mode rf_prop_mode =
 {
-  .rfMode = RF_MODE_PROPRIETARY_SUB_1,
+  .rfMode = RF_MODE_MULTIPLE,
   .cpePatchFxn = &rf_patch_cpe_genfsk,
   .mcePatchFxn = 0,
   .rfePatchFxn = &rf_patch_rfe_genfsk,
