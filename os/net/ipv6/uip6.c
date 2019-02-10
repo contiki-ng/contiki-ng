@@ -824,13 +824,13 @@ ext_hdr_options_process(uint8_t *ext_buf)
    * 8 bytes, excluding the first 8 bytes
    * length field in an option : the length of data in the option
    */
-  uint8_t opt_offset = 2; /* 2 first bytes in ext header */
+  uint16_t opt_offset = 2; /* 2 first bytes in ext header */
   struct uip_hbho_hdr *ext_hdr = (struct uip_hbho_hdr *)ext_buf;
-  uint8_t ext_hdr_len = (ext_hdr->len << 3) + 8;
+  uint16_t ext_hdr_len = (ext_hdr->len << 3) + 8;
 
   while(opt_offset + 2 <= ext_hdr_len) { /* + 2 for opt header */
     struct uip_ext_hdr_opt *opt_hdr = (struct uip_ext_hdr_opt *)(ext_buf + opt_offset);
-    uint8_t opt_len = opt_hdr->len + 2;
+    uint16_t opt_len = opt_hdr->len + 2;
 
     if(opt_offset + opt_len > ext_hdr_len) {
       LOG_ERR("RPL Option too long: Dropping Packet\n");
