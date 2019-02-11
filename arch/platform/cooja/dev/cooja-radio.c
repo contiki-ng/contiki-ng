@@ -197,8 +197,6 @@ channel_clear(void)
 static int
 radio_send(const void *payload, unsigned short payload_len)
 {
-  int radiostate = simRadioHWOn;
-
   /* Simulate turnaround time of 2ms for packets, 1ms for acks*/
 #if COOJA_SIMULATE_TURNAROUND
   simProcessRunValue = 1;
@@ -210,8 +208,7 @@ radio_send(const void *payload, unsigned short payload_len)
 #endif /* COOJA_SIMULATE_TURNAROUND */
 
   if(!simRadioHWOn) {
-    /* Turn on radio temporarily */
-    simRadioHWOn = 1;
+    return RADIO_TX_ERR;
   }
   if(payload_len > COOJA_RADIO_BUFSIZE) {
     return RADIO_TX_ERR;
@@ -239,7 +236,6 @@ radio_send(const void *payload, unsigned short payload_len)
     cooja_mt_yield();
   }
 
-  simRadioHWOn = radiostate;
   return RADIO_TX_OK;
 }
 /*---------------------------------------------------------------------------*/
