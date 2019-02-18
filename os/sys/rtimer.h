@@ -57,6 +57,11 @@
 #include "dev/watchdog.h"
 #include <stdbool.h>
 
+#if CONTIKI_TARGET_COOJA
+#include "lib/simEnvChange.h"
+#include "sys/cooja_mt.h"
+#endif
+
 /** \brief The rtimer size (in bytes) */
 #ifdef RTIMER_CONF_CLOCK_SIZE
 #define RTIMER_CLOCK_SIZE RTIMER_CONF_CLOCK_SIZE
@@ -189,14 +194,24 @@ void rtimer_arch_schedule(rtimer_clock_t t);
 #endif /* RTIMER_CONF_GUARD_TIME */
 
 /** \brief Busy-wait until a condition. Start time is t0, max wait time is max_time */
+#if CONTIKI_TARGET_COOJA
 #define RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time) \
   ({                                                                \
     bool c;                                                         \
     while(!(c = cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (max_time))) { \
-      watchdog_periodic();                                          \
+      simProcessRunValue = 1;                                       \
+      cooja_mt_yield();                                             \
     }                                                               \
     c;                                                              \
   })
+#else /* CONTIKI_TARGET_COOJA */
+#define RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time) \
+  ({                                                                \
+    bool c;                                                         \
+    while(!(c = cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (max_time))); \
+    c;                                                              \
+  })
+#endif /* CONTIKI_TARGET_COOJA */
 
 /** \brief Busy-wait until a condition for at most max_time */
 #define RTIMER_BUSYWAIT_UNTIL(cond, max_time)       \
