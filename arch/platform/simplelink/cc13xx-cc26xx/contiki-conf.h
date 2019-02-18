@@ -31,6 +31,10 @@
  * \addtogroup cc13xx-cc26xx-platform
  * @{
  *
+ * The order of which these header files are included is important in order
+ * for the configurations to be correctly set. This has to do with some
+ * slight unfortunate configuration dependencies of the board file.
+ *
  * \file
  *        Configuration for the SimpleLink CC13xx/CC26xx platform.
  * \author
@@ -40,18 +44,16 @@
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
 /*---------------------------------------------------------------------------*/
-#include "board-conf.h"
-/*---------------------------------------------------------------------------*/
-/* Include Project Specific conf */
+/* Include project-specific configurations */
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif
 /*---------------------------------------------------------------------------*/
-/* Include CPU-related configuration */
-#include "cc13xx-cc26xx-conf.h"
+/* Include board-specific configurations */
+#include "board-conf.h"
 /*---------------------------------------------------------------------------*/
-/* Must be included after cc13xx-cc26xx-conf.h */
-#include <Board.h>
+/* Include CPU-related configurations */
+#include "cc13xx-cc26xx-conf.h"
 /*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
 /*---------------------------------------------------------------------------*/

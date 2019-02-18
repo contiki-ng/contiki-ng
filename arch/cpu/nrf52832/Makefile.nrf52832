@@ -185,10 +185,12 @@ $(OBJECT_DIRECTORY)/%.o: %.s
 	$(TRACE_CC)
 	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
 
-%.jlink:
-	sed -e 's/#OUTPUT_FILENAME#/$*.hex/' $(CONTIKI_CPU)/flash.jlink > $@
+include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4
 
-%.flash: %.hex %.jlink
+%.jlink: $(OUT_HEX)
+	sed -e 's,#OUTPUT_FILENAME#,$<,' $(CONTIKI_CPU)/flash.jlink > $@
+
+%.flash: %.jlink
 	@echo Flashing: $^
 	$(JLINK) $(JLINK_OPTS) -CommanderScript $*.jlink
 
@@ -203,5 +205,3 @@ erase:
 	$(JLINK) $(JLINK_OPTS) -CommanderScript $(CONTIKI_CPU)/erase.jlink
 
 .PHONY: softdevice.jlink
-
-include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4

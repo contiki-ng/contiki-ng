@@ -227,6 +227,12 @@ void tsch_schedule_keepalive(void);
   */
 void tsch_schedule_keepalive_immediately(void);
 /**
+  * Get the time, in clock ticks, since the TSCH network was started.
+  *
+  * \return The network uptime, or -1 if the node is not part of a TSCH network.
+  */
+uint64_t tsch_get_network_uptime_ticks(void);
+/**
   * Leave the TSCH network we are currently in
   */
 void tsch_disassociate(void);

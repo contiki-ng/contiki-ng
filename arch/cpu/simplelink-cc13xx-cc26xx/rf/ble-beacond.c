@@ -52,6 +52,7 @@
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
+#include "rf/rf.h"
 #include "rf/sched.h"
 #include "rf/ble-addr.h"
 #include "rf/ble-beacond.h"
@@ -70,32 +71,58 @@
 /*---------------------------------------------------------------------------*/
 #if RF_CONF_BLE_BEACON_ENABLE
 /*---------------------------------------------------------------------------*/
-/* BLE Advertisement channels. Not to be changed by the user. */
-typedef enum {
-  BLE_ADV_CHANNEL_37 = (1 << 0),
-  BLE_ADV_CHANNEL_38 = (1 << 1),
-  BLE_ADV_CHANNEL_39 = (1 << 2),
-
-  BLE_ADV_CHANNEL_ALL = (BLE_ADV_CHANNEL_37 |
-                         BLE_ADV_CHANNEL_38 |
-                         BLE_ADV_CHANNEL_39),
-} ble_adv_channel_t;
-
-#define BLE_ADV_CHANNEL_MIN         37
-#define BLE_ADV_CHANNEL_MAX         39
-/*---------------------------------------------------------------------------*/
 /* Maximum BLE advertisement size. Not to be changed by the user. */
 #define BLE_ADV_MAX_SIZE            31
 /*---------------------------------------------------------------------------*/
-/* BLE Intervals: Send a burst of advertisements every BLE_ADV_INTERVAL secs */
-#define BLE_ADV_INTERVAL            (CLOCK_SECOND * 5)
-#define BLE_ADV_DUTY_CYCLE          (CLOCK_SECOND / 10)
-#define BLE_ADV_MESSAGES            10
+/*
+ * BLE Intervals: Send a burst of advertisements every BLE_ADV_INTERVAL
+ * specified in milliseconds.
+ */
+#define BLE_ADV_INTERVAL                        ((100 * CLOCK_SECOND) / 1000)
 
-/* BLE Advertisement-related macros */
-#define BLE_ADV_TYPE_DEVINFO        0x01
-#define BLE_ADV_TYPE_NAME           0x09
-#define BLE_ADV_TYPE_MANUFACTURER   0xFF
+/* GAP Advertisement data types */
+#define BLE_ADV_TYPE_FLAGS                      0x01
+#define BLE_ADV_TYPE_16BIT_MORE                 0x02
+#define BLE_ADV_TYPE_16BIT_COMPLETE             0x03
+#define BLE_ADV_TYPE_32BIT_MORE                 0x04
+#define BLE_ADV_TYPE_32BIT_COMPLETE             0x05
+#define BLE_ADV_TYPE_128BIT_MORE                0x06
+#define BLE_ADV_TYPE_128BIT_COMPLETE            0x07
+#define BLE_ADV_TYPE_LOCAL_NAME_SHORT           0x08
+#define BLE_ADV_TYPE_LOCAL_NAME_COMPLETE        0x09
+#define BLE_ADV_TYPE_POWER_LEVEL                0x0A
+#define BLE_ADV_TYPE_OOB_CLASS_OF_DEVICE        0x0D
+#define BLE_ADV_TYPE_OOB_SIMPLE_PAIRING_HASHC   0x0E
+#define BLE_ADV_TYPE_OOB_SIMPLE_PAIRING_RANDR   0x0F
+#define BLE_ADV_TYPE_SM_TK                      0x10
+#define BLE_ADV_TYPE_SM_OOB_FLAG                0x11
+#define BLE_ADV_TYPE_SLAVE_CONN_INTERVAL_RANGE  0x12
+#define BLE_ADV_TYPE_SIGNED_DATA                0x13
+#define BLE_ADV_TYPE_SERVICE_LIST_16BIT         0x14
+#define BLE_ADV_TYPE_SERVICE_LIST_128BIT        0x15
+#define BLE_ADV_TYPE_SERVICE_DATA               0x16
+#define BLE_ADV_TYPE_PUBLIC_TARGET_ADDR         0x17
+#define BLE_ADV_TYPE_RANDOM_TARGET_ADDR         0x18
+#define BLE_ADV_TYPE_APPEARANCE                 0x19
+#define BLE_ADV_TYPE_ADV_INTERVAL               0x1A
+#define BLE_ADV_TYPE_LE_BD_ADDR                 0x1B
+#define BLE_ADV_TYPE_LE_ROLE                    0x1C
+#define BLE_ADV_TYPE_SIMPLE_PAIRING_HASHC_256   0x1D
+#define BLE_ADV_TYPE_SIMPLE_PAIRING_RANDR_256   0x1E
+#define BLE_ADV_TYPE_SERVICE_DATA_32BIT         0x20
+#define BLE_ADV_TYPE_SERVICE_DATA_128BIT        0x21
+#define BLE_ADV_TYPE_3D_INFO_DATA               0x3D
+#define BLE_ADV_TYPE_MANUFACTURER_SPECIFIC      0xFF
+
+/* GAP Advertisement data type flags */
+
+/* Discovery Mode: LE Limited Discoverable Mode */
+#define BLE_ADV_TYPE_FLAGS_LIMITED              0x01
+/* Discovery Mode: LE General Discoverable Mode */
+#define BLE_ADV_TYPE_FLAGS_GENERAL              0x02
+/* Discovery Mode: BR/EDR Not Supported */
+#define BLE_ADV_TYPE_FLAGS_BREDR_NOT_SUPPORTED  0x04
+
 #define BLE_ADV_NAME_BUF_LEN        BLE_ADV_MAX_SIZE
 #define BLE_ADV_PAYLOAD_BUF_LEN     64
 #define BLE_UUID_SIZE               16
@@ -117,6 +144,11 @@ typedef struct {
 
   /* RF driver */
   RF_Handle rf_handle;
+
+  /* BLE command specific structures. Common accross BLE and BLE5. */
+  uint8_t ble_mac_addr[6];
+  rfc_bleAdvPar_t ble_adv_par;
+  rfc_bleAdvOutput_t ble_adv_output;
 } ble_beacond_t;
 
 static ble_beacond_t ble_beacond;
@@ -126,19 +158,31 @@ PROCESS(ble_beacond_process, "RF BLE Beacon Daemon Process");
 rf_ble_beacond_result_t
 rf_ble_beacond_init(void)
 {
-  ble_adv_par.pDeviceAddress = (uint16_t *)ble_addr_ptr();
+  ble_cmd_radio_setup.config.frontEndMode = RF_2_4_GHZ_FRONT_END_MODE;
+  ble_cmd_radio_setup.config.biasMode = RF_2_4_GHZ_BIAS_MODE;
 
   RF_Params rf_params;
   RF_Params_init(&rf_params);
 
-  /* Should immediately turn off radio if possible */
-  rf_params.nInactivityTimeout = 0;
+  rf_params.nInactivityTimeout = RF_CONF_INACTIVITY_TIMEOUT;
 
   ble_beacond.rf_handle = ble_open(&rf_params);
 
   if(ble_beacond.rf_handle == NULL) {
     return RF_BLE_BEACOND_ERROR;
   }
+
+  /*
+   * It is important that the contents of the BLE MAC address is copied into
+   * RAM, as the System CPU, and subsequently flash, goes idle when pending
+   * on an RF command. This causes pend to hang forever.
+   */
+  ble_addr_le_cpy(ble_beacond.ble_mac_addr);
+  ble_beacond.ble_adv_par.pDeviceAddress = (uint16_t *)ble_beacond.ble_mac_addr;
+  ble_beacond.ble_adv_par.endTrigger.triggerType = TRIG_NEVER;
+
+  rf_ble_cmd_ble_adv_nc.pParams = &ble_beacond.ble_adv_par;
+  rf_ble_cmd_ble_adv_nc.pOutput = &ble_beacond.ble_adv_output;
 
   return RF_BLE_BEACOND_OK;
 }
@@ -154,12 +198,14 @@ rf_ble_beacond_config(clock_time_t interval, const char *name)
     ble_beacond.ble_adv_interval = interval;
 
     res = RF_BLE_BEACOND_OK;
+  } else {
+    ble_beacond.ble_adv_interval = BLE_ADV_INTERVAL;
   }
 
   if(name != NULL) {
     const size_t name_len = strlen(name);
 
-    if((name_len == 0) || (name_len >= BLE_ADV_NAME_BUF_LEN)) {
+    if((0 < name_len) && (name_len < BLE_ADV_NAME_BUF_LEN)) {
       ble_beacond.adv_name_len = name_len;
       memcpy(ble_beacond.adv_name, name, name_len);
 
@@ -235,37 +281,9 @@ rf_ble_get_tx_power(void)
   return dbm;
 }
 /*---------------------------------------------------------------------------*/
-static rf_ble_beacond_result_t
-ble_beacon_burst(uint8_t channels_bm, uint8_t *data, uint8_t len)
-{
-  rf_result_t res;
-
-  uint8_t channel;
-  for(channel = BLE_ADV_CHANNEL_MIN; channel <= BLE_ADV_CHANNEL_MAX; ++channel) {
-    const uint8_t channel_bv = (1 << (channel - BLE_ADV_CHANNEL_MIN));
-    if((channel_bv & channels_bm) == 0) {
-      continue;
-    }
-
-    ble_adv_par.advLen = len;
-    ble_adv_par.pAdvData = data;
-
-    ble_cmd_beacon.channel = channel;
-
-    res = ble_sched_beacon(NULL, 0);
-
-    if(res != RF_RESULT_OK) {
-      return RF_BLE_BEACOND_ERROR;
-    }
-  }
-
-  return RF_BLE_BEACOND_OK;
-}
-/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(ble_beacond_process, ev, data)
 {
-  static size_t i;
-  static size_t len;
+  size_t len;
 
   PROCESS_BEGIN();
 
@@ -278,30 +296,33 @@ PROCESS_THREAD(ble_beacond_process, ev, data)
       PROCESS_EXIT();
     }
 
+    /* Device info */
     /* Set the adv payload each pass: The device name may have changed */
     len = 0;
 
-    /* Device info */
-    ble_beacond.tx_buf[len++] = (uint8_t)0x02;          /* 2 bytes */
-    ble_beacond.tx_buf[len++] = (uint8_t)BLE_ADV_TYPE_DEVINFO;
-    ble_beacond.tx_buf[len++] = (uint8_t)0x1A;          /* LE general discoverable + BR/EDR */
-    ble_beacond.tx_buf[len++] = (uint8_t)ble_beacond.adv_name_len;
-    ble_beacond.tx_buf[len++] = (uint8_t)BLE_ADV_TYPE_NAME;
+    #define append_byte(x)  ble_beacond.tx_buf[len++] = (uint8_t)((x))
+
+    /* 2 bytes */
+    append_byte(2);
+    append_byte(BLE_ADV_TYPE_FLAGS);
+    /* LE general discoverable + BR/EDR not supported */
+    append_byte(BLE_ADV_TYPE_FLAGS_GENERAL |
+                BLE_ADV_TYPE_FLAGS_BREDR_NOT_SUPPORTED);
+
+    /* 1 + len(name) bytes (excluding zero termination) */
+    append_byte(1 + ble_beacond.adv_name_len);
+    append_byte(BLE_ADV_TYPE_LOCAL_NAME_COMPLETE);
 
     memcpy(ble_beacond.tx_buf + len, ble_beacond.adv_name, ble_beacond.adv_name_len);
     len += ble_beacond.adv_name_len;
 
-    /*
-     * Send BLE_ADV_MESSAGES beacon bursts. Each burst on all three
-     * channels, with a BLE_ADV_DUTY_CYCLE interval between bursts
-     */
-    ble_beacon_burst(BLE_ADV_CHANNEL_ALL, ble_beacond.tx_buf, len);
-    for(i = 1; i < BLE_ADV_MESSAGES; ++i) {
-      etimer_set(&ble_beacond.ble_adv_et, BLE_ADV_DUTY_CYCLE);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ble_beacond.ble_adv_et));
+    #undef append_byte
 
-      ble_beacon_burst(BLE_ADV_CHANNEL_ALL, ble_beacond.tx_buf, len);
-    }
+    /* Send advertisements on all three channels */
+    ble_beacond.ble_adv_par.advLen = len;
+    ble_beacond.ble_adv_par.pAdvData = ble_beacond.tx_buf;
+
+    ble_sched_beacons(BLE_ADV_CHANNEL_ALL);
   }
   PROCESS_END();
 }
