@@ -96,7 +96,7 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
   /* Input config */
   if(pin_cfg & PIN_BM_INPUT_MODE) {
     /* Hysteresis config */
-    if((pin_cfg & PIN_BM_HYSTERESIS) == PIN_HYSTERESIS) {
+    if((pin_cfg & PIN_BM_HYSTERESIS) == PIN_BM_HYSTERESIS) {
       *cfg |= GPIO_HAL_PIN_CFG_HYSTERESIS;
     }
 

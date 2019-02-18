@@ -18,7 +18,7 @@ endif
 CONTIKI_TARGET_SOURCEFILES += $(ARCH) $(UIPDRIVERS)
 
 MCU=msp430f1611
-include $(CONTIKI)/arch/cpu/msp430/Makefile.msp430
+include $(ARCH_PATH)/cpu/msp430/Makefile.msp430
 
 
 ifdef IAR

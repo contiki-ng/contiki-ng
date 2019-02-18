@@ -6,4 +6,4 @@ LDFLAGS += -mcpu=cortex-m3 -nostartfiles
 
 TARGET_LIBFILES += -lm
 
-include $(CONTIKI)/arch/cpu/arm/cortex-m/Makefile.cortex-m
+include $(ARCH_PATH)/cpu/arm/cortex-m/Makefile.cortex-m
