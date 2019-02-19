@@ -7,7 +7,7 @@
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
     <title>RPL+TSCH (Z1)</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -108,20 +108,6 @@
       </interface_config>
       <motetype_identifier>z11</motetype_identifier>
     </mote>
-    <mote>
-      <breakpoints />
-      <interface_config>
-        org.contikios.cooja.interfaces.Position
-        <x>10.622284947035123</x>
-        <y>109.81862399725188</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspMoteID
-        <id>6</id>
-      </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
-    </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
@@ -168,7 +154,6 @@
       <mote>2</mote>
       <mote>3</mote>
       <mote>4</mote>
-      <mote>5</mote>
       <showRadioRXTX />
       <showRadioHW />
       <showLEDs />
