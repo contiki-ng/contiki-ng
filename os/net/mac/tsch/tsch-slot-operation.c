@@ -549,6 +549,14 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           /* delay before TX */
           TSCH_SCHEDULE_AND_YIELD(pt, t, current_slot_start, tsch_timing[tsch_ts_tx_offset] - RADIO_DELAY_BEFORE_TX, "TxBeforeTx");
           TSCH_DEBUG_TX_EVENT();
+#if !TSCH_CCA_ENABLED
+          /*
+           * turn radio on -- the radio has not been turned on when
+           * both of TSCH_RADIO_ON_DURING_TIMESLOT and CCA are
+           * disabled.
+           */
+          tsch_radio_on(TSCH_RADIO_CMD_ON_WITHIN_TIMESLOT);
+#endif /* TSCH_CCA_ENABLED */
           /* send packet already in radio tx buffer */
           mac_tx_status = NETSTACK_RADIO.transmit(packet_len);
           tx_count++;
