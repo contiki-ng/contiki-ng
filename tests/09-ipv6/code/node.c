@@ -44,6 +44,7 @@ PROCESS_THREAD(node_process, ev, data)
   static struct etimer et;
 #if WITH_ULA
   static uip_ipaddr_t ipaddr;
+  const uip_ipaddr_t *default_prefix;
 #endif /* WITH_ULA */
 
 #if WITH_TSCH
@@ -60,7 +61,8 @@ PROCESS_THREAD(node_process, ev, data)
 #endif /* WITH_TSCH */
 
 #if WITH_ULA
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  default_prefix = uip_ds6_default_prefix();
+  uip_ip6addr_copy(&ipaddr, default_prefix);
   uip_ds6_prefix_add(&ipaddr, UIP_DEFAULT_PREFIX_LEN, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
