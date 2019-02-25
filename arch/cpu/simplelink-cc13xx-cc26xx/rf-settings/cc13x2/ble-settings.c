@@ -47,7 +47,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ble_cmd.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_bt5.h)
+#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_multi_protocol.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_rfe_bt5.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_bt5.h)
 
@@ -59,10 +59,16 @@
 RF_Mode rf_ble_mode =
 {
   .rfMode = RF_MODE_AUTO,
-  .cpePatchFxn = &rf_patch_cpe_bt5,
+  .cpePatchFxn = &rf_patch_cpe_multi_protocol,
   .mcePatchFxn = &rf_patch_mce_bt5,
   .rfePatchFxn = &rf_patch_rfe_bt5,
 };
+/*---------------------------------------------------------------------------*/
+/*
+ * CMD_RADIO_SETUP must be configured with default TX power value
+ * in the .txPower field.
+ */
+#define DEFAULT_TX_POWER    0x941E /* 5 dBm */
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_BLE5_RADIO_SETUP */
 uint32_t rf_ble_overrides_common[] CC_ALIGN(4) =
@@ -137,71 +143,39 @@ rfc_CMD_BLE5_RADIO_SETUP_t rf_ble_cmd_radio_setup =
   .defaultPhy.mainMode = 0x0,
   .defaultPhy.coding = 0x0,
   .loDivider = 0x00,
-  .config.frontEndMode = 0x0,
-  .config.biasMode = 0x0,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = 0x941E,
+  .txPower = DEFAULT_TX_POWER,
   .pRegOverrideCommon = rf_ble_overrides_common,
   .pRegOverride1Mbps = rf_ble_overrides_1mbps,
   .pRegOverride2Mbps = rf_ble_overrides_2mbps,
   .pRegOverrideCoded = rf_ble_overrides_coded,
 };
 /*---------------------------------------------------------------------------*/
-/* Structure for CMD_BLE5_ADV_NC.pParams */
-rfc_bleAdvPar_t rf_ble_adv_par =
-{
-  .pRxQ = 0,
-  .rxConfig.bAutoFlushIgnored = 0x0,
-  .rxConfig.bAutoFlushCrcErr = 0x0,
-  .rxConfig.bAutoFlushEmpty = 0x0,
-  .rxConfig.bIncludeLenByte = 0x0,
-  .rxConfig.bIncludeCrc = 0x0,
-  .rxConfig.bAppendRssi = 0x0,
-  .rxConfig.bAppendStatus = 0x0,
-  .rxConfig.bAppendTimestamp = 0x0,
-  .advConfig.advFilterPolicy = 0x0,
-  .advConfig.deviceAddrType = 0x0,
-  .advConfig.peerAddrType = 0x0,
-  .advConfig.bStrictLenFilter = 0x0,
-  .advConfig.rpaMode = 0x0,
-  .advLen = 0x18,
-  .scanRspLen = 0x00,
-  .pAdvData = 0,
-  .pScanRspData = 0,
-  .pDeviceAddress = 0,
-  .pWhiteList = 0,
-  .__dummy0 = 0x0000,
-  .__dummy1 = 0x00,
-  .endTrigger.triggerType = TRIG_NEVER,
-  .endTrigger.bEnaCmd = 0x0,
-  .endTrigger.triggerNo = 0x0,
-  .endTrigger.pastTrig = 0x0,
-  .endTime = 0x00000000,
-};
-/*---------------------------------------------------------------------------*/
 /* CMD_BLE5_ADV_NC: Bluetooth 5 Non-Connectable Advertiser Command */
 rfc_CMD_BLE5_ADV_NC_t rf_ble_cmd_ble_adv_nc =
 {
-  .commandNo = 0x182D,
-  .status = 0x0000,
-  .pNextOp = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+  .commandNo = CMD_BLE5_ADV_NC,
+  .status = IDLE,
+  .pNextOp = 0,
   .startTime = 0x00000000,
-  .startTrigger.triggerType = 0x0,
+  .startTrigger.triggerType = TRIG_NOW,
   .startTrigger.bEnaCmd = 0x0,
   .startTrigger.triggerNo = 0x0,
-  .startTrigger.pastTrig = 0x0,
-  .condition.rule = 0x1,
+  .startTrigger.pastTrig = 0x1,
+  .condition.rule = 0x0, /* set by driver */
   .condition.nSkip = 0x0,
-  .channel = 0x8C,
-  .whitening.init = 0x51,
+  .channel = 0x00, /* set by driver */
+  .whitening.init = 0x00, /* set by driver */
   .whitening.bOverride = 0x1,
   .phyMode.mainMode = 0x0,
   .phyMode.coding = 0x0,
   .rangeDelay = 0x00,
   .txPower = 0x0000,
-  .pParams = &rf_ble_adv_par,
-  .pOutput = 0, // INSERT APPLICABLE POINTER: (uint8_t*)&xxx
+  .pParams = 0x00000000, /* set by driver */
+  .pOutput = 0x00000000, /* set by driver */
   .tx20Power = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/

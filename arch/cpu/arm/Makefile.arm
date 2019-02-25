@@ -1,3 +1,11 @@
+### Verbosity control. Use  make V=1 to get verbose builds.
+### Extends what we already have in the top-level Makefile
+ifeq ($(V),1)
+  TRACE_SREC_CAT =
+else
+  TRACE_SREC_CAT = @echo "  SREC_CAT " $< "-->" $@
+endif
+
 CC       = arm-none-eabi-gcc
 CPP      = arm-none-eabi-cpp
 LD       = arm-none-eabi-gcc
@@ -43,22 +51,32 @@ endif
 ### CPU-dependent cleanup files
 CLEAN += *.elf *.bin *.lst *.hex *.i16hex
 
+OUT_HEX = $(BUILD_DIR_BOARD)/%.hex
+OUT_I16HEX = $(BUILD_DIR_BOARD)/%.i16hex
+OUT_BIN = $(BUILD_DIR_BOARD)/%.bin
+OUT_LST = $(BUILD_DIR_BOARD)/%.lst
+
 ### Don't treat the following files as intermediate
-.PRECIOUS: %.elf %.hex %.bin
+.PRECIOUS: $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
 
-%.i16hex: %.elf
-	$(OBJCOPY) -O ihex $< $@
+$(OUT_I16HEX): $(OUT_ELF)
+	$(TRACE_OBJCOPY)
+	$(Q)$(OBJCOPY) -O ihex $< $@
 
-%.hex: %.i16hex
-	$(SREC_CAT) $< -intel -o $@ -intel
+$(OUT_HEX): $(OUT_I16HEX)
+	$(TRACE_SREC_CAT)
+	$(Q)$(SREC_CAT) $< -intel -o $@ -intel
 
-%.bin: %.elf
-	$(OBJCOPY) -O binary $(OBJCOPY_FLAGS) $< $@
+$(OUT_BIN): $(OUT_ELF)
+	$(TRACE_OBJCOPY)
+	$(Q)$(OBJCOPY) -O binary $(OBJCOPY_FLAGS) $< $@
 
-%.lst: %.elf
-	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
+$(OUT_LST): $(OUT_ELF)
+	$(TRACE_OBJDUMP)
+	$(Q)$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
 
 ### We don't really need the .hex and .bin for the .$(TARGET) but let's make
 ### sure they get built
-%.$(TARGET): %.elf %.hex %.bin
-	cp $< $@
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
+	$(TRACE_CP)
+	$(Q)cp $< $@

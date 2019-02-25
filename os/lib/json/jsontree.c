@@ -198,7 +198,10 @@ jsontree_print_next(struct jsontree_context *js_ctx)
     } else {
       ov = o->values[index];
     }
-    /* TODO check max depth */
+    if(js_ctx->depth >= JSONTREE_MAX_DEPTH - 1) {
+      /* Too deep: return 0 */
+      return 0;
+    }
     js_ctx->depth++;          /* step down to value... */
     js_ctx->index[js_ctx->depth] = 0; /* and init index */
     js_ctx->values[js_ctx->depth] = ov;
@@ -299,7 +302,10 @@ find_next(struct jsontree_context *js_ctx)
       } else {
         ov = o->values[index];
       }
-      /* TODO check max depth */
+      if(js_ctx->depth >= JSONTREE_MAX_DEPTH - 1) {
+        /* Too deep: return NULL */
+        return NULL;
+      }
       js_ctx->depth++;        /* step down to value... */
       js_ctx->index[js_ctx->depth] = 0;       /* and init index */
       js_ctx->values[js_ctx->depth] = ov;

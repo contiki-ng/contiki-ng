@@ -61,7 +61,7 @@ struct dhcp_msg {
   uint8_t options[312];
 };
 
-#if (UIP_BUFSIZE - UIP_LLH_LEN - UIP_UDPIP_HLEN) < 548
+#if (UIP_BUFSIZE - UIP_UDPIP_HLEN) < 548
 #error UIP_CONF_BUFFER_SIZE may be too small to accomodate DHCPv4 packets
 #error Increase UIP_CONF_BUFFER_SIZE in your project-conf.h, or contiki-conf.h
 #error A good size is 600 bytes
@@ -191,12 +191,12 @@ send_request(void)
   struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
 
   create_msg(m);
-  
+
   end = add_msg_type(&m->options[4], DHCPREQUEST);
   end = add_server_id(end);
   end = add_req_ipaddr(end);
   end = add_end(end);
-  
+
   uip_send(uip_appdata, (int)(end - (uint8_t *)uip_appdata));
 }
 /*---------------------------------------------------------------------------*/
@@ -239,7 +239,7 @@ static uint8_t
 parse_msg(void)
 {
   struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
-  
+
   if(m->op == DHCP_REPLY &&
      memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
      memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
@@ -258,7 +258,7 @@ msg_for_me(void)
   struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
   uint8_t *optptr = &m->options[4];
   uint8_t *end = (uint8_t*)uip_appdata + uip_datalen();
-  
+
   if(m->op == DHCP_REPLY &&
      memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
      memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
@@ -280,7 +280,7 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
   clock_time_t ticks;
 
   PT_BEGIN(&s.pt);
-  
+
  init:
   xid++;
   s.state = STATE_SENDING;
@@ -305,7 +305,7 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
       s.ticks *= 2;
     }
   }
-  
+
  selecting:
   s.ticks = CLOCK_SECOND;
   do {
@@ -330,7 +330,7 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
       goto init;
     }
   } while(s.state != STATE_CONFIG_RECEIVED);
-  
+
  bound:
 #if 0
   printf("Got IP address %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.ipaddr));
@@ -343,7 +343,7 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
 #endif
 
   ip64_dhcpc_configured(&s);
-  
+
 #define MAX_TICKS (~((clock_time_t)0) / 2)
 #define MAX_TICKS32 (~((uint32_t)0))
 #define IMIN(a, b) ((a) < (b) ? (a) : (b))
@@ -407,12 +407,12 @@ ip64_dhcpc_init(const void *mac_addr, int mac_len)
   uip_ip6addr_t v6addr;
   uip_ip4addr_t v4addr;
   struct uip_udp_conn *conn2;
-  
+
   s.mac_addr = mac_addr;
   s.mac_len  = mac_len;
 
   s.state = STATE_INITIAL;
-  uip_ipaddr(&v4addr, 255,255,255,255); 
+  uip_ipaddr(&v4addr, 255,255,255,255);
   ip64_addr_4to6(&v4addr, &v6addr);
   s.conn = udp_new(&v6addr, UIP_HTONS(IP64_DHCPC_SERVER_PORT), NULL);
   conn2 = udp_new(NULL, UIP_HTONS(IP64_DHCPC_SERVER_PORT), NULL);
@@ -437,7 +437,7 @@ void
 ip64_dhcpc_request(void)
 {
   uip_ipaddr_t ipaddr;
-  
+
   if(s.state == STATE_INITIAL) {
     uip_ipaddr(&ipaddr, 0,0,0,0);
     uip_sethostaddr(&ipaddr);

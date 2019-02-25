@@ -60,6 +60,37 @@
                                 RF_MODE_2_4_GHZ)
 /** @} */
 /*---------------------------------------------------------------------------*/
+/**
+ * \name  The different front-end modes the CC13xx/CC26xx devices support. The
+ *        front-end mode can be configured independently of the bias mode. The
+ *        two types of modes are as follows:
+ *        - Differential: Both RF_P and RF_N are used as a differential RF
+ *          interface.
+ *        - Single ended: Either the RF_P pin or the RF_N pin is used as the
+ *          RF path.
+ *
+ * @{
+ */
+/* Available front-end mode configurations */
+#define RF_FRONT_END_MODE_DIFFERENTIAL      0
+#define RF_FRONT_END_MODE_SINGLE_ENDED_RFP  1
+#define RF_FRONT_END_MODE_SINGLE_ENDED_RFN  2
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name  The different bias modes the CC13xx/CC26xx devices support. The
+ *        bias mode can be configured independently of the front-end mode. The
+ *        two different modes are as follows:
+ *        - Internal bias: the LNA is biased by an internal bias.
+ *        - External bias: the LNA is biased by an external bias.
+ *
+ * @{
+ */
+/* Available bias mode configurations */
+#define RF_BIAS_MODE_INTERNAL       0
+#define RF_BIAS_MODE_EXTERNAL       1
+/** @} */
+/*---------------------------------------------------------------------------*/
 #endif /* RF_CORE_H_ */
 /*---------------------------------------------------------------------------*/
 /**

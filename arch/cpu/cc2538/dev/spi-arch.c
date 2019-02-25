@@ -281,27 +281,6 @@ spi_arch_close_and_unlock(const spi_device_t *dev)
   return SPI_DEV_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
-spi_status_t
-spi_arch_select(const spi_device_t *dev)
-{
-
-  if(!spi_arch_has_lock(dev)) {
-    return SPI_DEV_STATUS_BUS_NOT_OWNED;
-  }
-
-  SPIX_CS_CLR(PIN_TO_PORT(dev->pin_spi_cs), PIN_TO_NUM(dev->pin_spi_cs));
-
-  return SPI_DEV_STATUS_OK;
-}
-/*---------------------------------------------------------------------------*/
-spi_status_t
-spi_arch_deselect(const spi_device_t *dev)
-{
-  SPIX_CS_SET(PIN_TO_PORT(dev->pin_spi_cs), PIN_TO_NUM(dev->pin_spi_cs));
-
-  return SPI_DEV_STATUS_OK;
-}
-/*---------------------------------------------------------------------------*/
 /* Assumes that checking dev and bus is not NULL before calling this */
 spi_status_t
 spi_arch_transfer(const spi_device_t *dev,

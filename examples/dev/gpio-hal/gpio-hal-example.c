@@ -46,9 +46,9 @@ static uint8_t counter;
 /*---------------------------------------------------------------------------*/
 /* Print gpio_hal_pin_mask_t using the correct format */
 #if GPIO_HAL_PIN_COUNT > 32
-#define PIN_MASK_FMT PRIx64
+#define PIN_MASK_FMT "0x%016" PRIx64
 #else
-#define PIN_MASK_FMT PRIx32
+#define PIN_MASK_FMT "0x%08" PRIx32
 #endif
 /*---------------------------------------------------------------------------*/
 PROCESS(gpio_hal_example, "GPIO HAL Example");
@@ -127,7 +127,7 @@ PROCESS_THREAD(gpio_hal_example, ev, data)
       }
 
       /* Test read */
-      printf("%u: Pins are 1-%u, 2=%u, 3=%u, mask=0x%08" PIN_MASK_FMT "\n",
+      printf("%u: Pins are 1-%u, 2=%u, 3=%u, mask=" PIN_MASK_FMT "\n",
              counter & 7,
              gpio_hal_arch_read_pin(out_pin1),
              gpio_hal_arch_read_pin(out_pin2),

@@ -562,7 +562,7 @@ slip_init(void)
   slip_send(slipfd, SLIP_END);
   inslip = fdopen(slipfd, "r");
   if(inslip == NULL) {
-    err(1, "main: fdopen");
+    err(1, "slip_init: fdopen");
   }
 }
 /*---------------------------------------------------------------------------*/

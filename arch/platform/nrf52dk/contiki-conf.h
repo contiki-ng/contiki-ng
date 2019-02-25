@@ -74,6 +74,10 @@
 
 /* Packet buffer */
 #define PACKETBUF_CONF_SIZE                     1280  /**< Required IPv6 MTU size */
+
+/* Queuebuf */
+#define QUEUEBUF_CONF_ENABLED                   0
+
 /** @} */
 
 /**

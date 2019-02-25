@@ -276,7 +276,7 @@ struct mcast_packet {
   uint16_t seq_val;             /* host-byte order */
   struct sliding_window *sw;    /* Pointer to the SW this packet belongs to */
   uint8_t flags;                /* Is-Used, Must Send, Is Listed */
-  uint8_t buff[UIP_BUFSIZE - UIP_LLH_LEN];
+  uint8_t buff[UIP_BUFSIZE];
 };
 
 /* Flag bits */
@@ -289,7 +289,7 @@ struct mcast_packet {
 #define MCAST_PACKET_GET_SEED(p) ((seed_id_t *)&((p)->seed_id))
 #else
 #define MCAST_PACKET_GET_SEED(p) \
-    ((seed_id_t *)&((struct uip_ip_hdr *)&(p)->buff[UIP_LLH_LEN])->srcipaddr)
+    ((seed_id_t *)&((struct uip_ip_hdr *)&(p)->buff[0])->srcipaddr)
 #endif
 
 /**
@@ -456,14 +456,9 @@ static uint16_t last_seq;
 /*---------------------------------------------------------------------------*/
 /* uIPv6 Pointers */
 /*---------------------------------------------------------------------------*/
-#define UIP_DATA_BUF      ((uint8_t *)&uip_buf[uip_l2_l3_hdr_len + UIP_UDPH_LEN])
-#define UIP_UDP_BUF       ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_EXT_BUF       ((struct uip_ext_hdr *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN])
-#define UIP_EXT_BUF_NEXT  ((uint8_t *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN + HBHO_TOTAL_LEN])
-#define UIP_EXT_OPT_FIRST ((struct hbho_mcast *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN + 2])
-#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-#define UIP_ICMP_BUF      ((struct uip_icmp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
-#define UIP_ICMP_PAYLOAD  ((unsigned char *)&uip_buf[uip_l2_l3_icmp_hdr_len])
+#define UIP_EXT_BUF        ((struct uip_ext_hdr *)UIP_IP_PAYLOAD(0))
+#define UIP_EXT_BUF_NEXT            ((uint8_t *)(UIP_IP_PAYLOAD(HBHO_TOTAL_LEN)))
+#define UIP_EXT_OPT_FIRST ((struct hbho_mcast *)(UIP_IP_PAYLOAD(0) + 2))
 extern uint16_t uip_slen;
 /*---------------------------------------------------------------------------*/
 /* Local function prototypes */
@@ -864,8 +859,7 @@ icmp_output()
   roll_tm_create_dest(&UIP_IP_BUF->destipaddr);
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
 
-  UIP_IP_BUF->len[0] = (UIP_ICMPH_LEN + payload_len) >> 8;
-  UIP_IP_BUF->len[1] = (UIP_ICMPH_LEN + payload_len) & 0xff;
+  uipbuf_set_len_field(UIP_IP_BUF, UIP_ICMPH_LEN + payload_len);
 
   UIP_ICMP_BUF->type = ICMP6_ROLL_TM;
   UIP_ICMP_BUF->icode = ROLL_TM_ICMP_CODE;
@@ -1153,10 +1147,10 @@ icmp_input()
   VERBOSE_PRINTF("ROLL TM: ICMPv6 In, parse from %p to %p\n",
                  UIP_ICMP_PAYLOAD,
                  (uint8_t *)UIP_ICMP_PAYLOAD + uip_len -
-                 uip_l2_l3_icmp_hdr_len);
+                 uip_l3_icmp_hdr_len);
   while(locslhptr <
         (struct sequence_list_header *)((uint8_t *)UIP_ICMP_PAYLOAD +
-                                        uip_len - uip_l2_l3_icmp_hdr_len)) {
+                                        uip_len - uip_l3_icmp_hdr_len)) {
     VERBOSE_PRINTF("ROLL TM: ICMPv6 In, seq hdr @ %p\n", locslhptr);
 
     if((locslhptr->flags & SEQUENCE_LIST_RES) != 0) {
@@ -1321,7 +1315,7 @@ static void
 out()
 {
 
-  if(uip_len + HBHO_TOTAL_LEN > UIP_BUFSIZE - UIP_LLH_LEN) {
+  if(uip_len + HBHO_TOTAL_LEN > UIP_BUFSIZE) {
     PRINTF("ROLL TM: Multicast Out can not add HBHO. Packet too long\n");
     goto drop;
   }
@@ -1355,13 +1349,11 @@ out()
   HBH_SET_M(lochbhmptr);
 #endif
 
-  uip_ext_len += HBHO_TOTAL_LEN;
-  uip_len += HBHO_TOTAL_LEN;
+  uipbuf_add_ext_hdr(HBHO_TOTAL_LEN);
 
   /* Update the proto and length field in the v6 header */
   UIP_IP_BUF->proto = UIP_PROTO_HBHO;
-  UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
-  UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
+  uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
   PRINTF("ROLL TM: Multicast Out, HBHO: T=%u, L=%u, M=%u, S=0x%02x%02x\n",
          lochbhmptr->type, lochbhmptr->len, HBH_GET_M(lochbhmptr),
@@ -1383,7 +1375,7 @@ out()
 
 drop:
   uip_slen = 0;
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t

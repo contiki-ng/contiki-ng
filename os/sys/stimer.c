@@ -77,7 +77,8 @@ stimer_set(struct stimer *t, unsigned long interval)
  * given to the stimer_set() function. The start point of the interval
  * is the exact time that the timer last expired. Therefore, this
  * function will cause the timer to be stable over time, unlike the
- * stimer_restart() function.
+ * stimer_restart() function. If this is executed before the
+ * timer expired, this function has no effect.
  *
  * \param t A pointer to the timer.
  *
@@ -86,7 +87,9 @@ stimer_set(struct stimer *t, unsigned long interval)
 void
 stimer_reset(struct stimer *t)
 {
-  t->start += t->interval;
+  if(stimer_expired(t)) {
+    t->start += t->interval;
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**

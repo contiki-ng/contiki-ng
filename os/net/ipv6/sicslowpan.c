@@ -121,32 +121,10 @@
 #define SICSLOWPAN_UDP_BUF(buf)  ((struct uip_udp_hdr *)&buf[UIP_IPH_LEN])
 #define SICSLOWPAN_IPPAYLOAD_BUF(buf) (&buf[UIP_IPH_LEN])
 
-
-#define UIP_IP_BUF          ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-#define UIP_UDP_BUF(p)          ((struct uip_udp_hdr *)&uip_buf[UIP_LLIPH_LEN + p])
-#define UIP_TCP_BUF          ((struct uip_tcp_hdr *)&uip_buf[UIP_LLIPH_LEN])
-#define UIP_ICMP_BUF          ((struct uip_icmp_hdr *)&uip_buf[UIP_LLIPH_LEN])
-#define UIP_IPPAYLOAD_BUF(pos)          (&uip_buf[UIP_LLIPH_LEN + pos])
+#define UIP_IPPAYLOAD_BUF_POS(pos)         (&uip_buf[UIP_IPH_LEN + (pos)])
+#define UIP_UDP_BUF_POS(pos)               ((struct uip_udp_hdr *)UIP_IPPAYLOAD_BUF_POS(pos))
 
 /** @} */
-
-
-/** \brief Maximum available size for frame headers,
-           link layer security-related overhead, as well as
-           6LoWPAN payload. */
-#ifdef SICSLOWPAN_CONF_MAC_MAX_PAYLOAD
-#define MAC_MAX_PAYLOAD SICSLOWPAN_CONF_MAC_MAX_PAYLOAD
-#else /* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD */
-#define MAC_MAX_PAYLOAD (127 - 2)
-#endif /* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD */
-
-/** \brief Maximum size of a frame header. This value is
- * used in case framer returns an error */
-#ifdef SICSLOWPAN_CONF_MAC_MAX_HEADER
-#define MAC_MAX_HEADER SICSLOWPAN_CONF_MAC_MAX_HEADER
-#else /* SICSLOWPAN_CONF_MAC_MAX_HEADER */
-#define MAC_MAX_HEADER 21
-#endif /* SICSLOWPAN_CONF_MAC_MAX_HEADER */
 
 /* set this to zero if not compressing EXT_HDR - for backwards compatibility */
 #ifdef SICSLOWPAN_CONF_COMPRESS_EXT_HDR
@@ -250,7 +228,7 @@ static uint16_t my_tag;
 #define SICSLOWPAN_FRAGMENT_SIZE SICSLOWPAN_CONF_FRAGMENT_SIZE
 #else
 /* The default fragment size (110 bytes for 127-2 bytes frames) */
-#define SICSLOWPAN_FRAGMENT_SIZE (MAC_MAX_PAYLOAD - 15)
+#define SICSLOWPAN_FRAGMENT_SIZE (127 - 2 - 15)
 #endif
 
 /* Assuming that the worst growth for uncompression is 38 bytes */
@@ -466,9 +444,9 @@ set_packet_attrs(void)
 
   /* assign values to the channel attribute (port or type + code) */
   if(UIP_IP_BUF->proto == UIP_PROTO_UDP) {
-    c = UIP_UDP_BUF(0)->srcport;
-    if(UIP_UDP_BUF(0)->destport < c) {
-      c = UIP_UDP_BUF(0)->destport;
+    c = UIP_UDP_BUF_POS(0)->srcport;
+    if(UIP_UDP_BUF_POS(0)->destport < c) {
+      c = UIP_UDP_BUF_POS(0)->destport;
     }
   } else if(UIP_IP_BUF->proto == UIP_PROTO_TCP) {
     c = UIP_TCP_BUF->srcport;
@@ -919,7 +897,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
       /* Handle the header here! */
       {
         struct uip_ext_hdr *ext_hdr =
-          (struct uip_ext_hdr *) UIP_IPPAYLOAD_BUF(ext_hdr_len);
+          (struct uip_ext_hdr *) UIP_IPPAYLOAD_BUF_POS(ext_hdr_len);
         int len;
         proto = proto == -1 ? SICSLOWPAN_NHC_ETX_HDR_DESTO : proto;
         /* Len is defined to be in octets from the length byte */
@@ -958,7 +936,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
     case UIP_PROTO_UDP:
       /* allocate a byte for the next header posision as UDP has no next */
       hc06_ptr++;
-      udp_buf = UIP_UDP_BUF(ext_hdr_len);
+      udp_buf = UIP_UDP_BUF_POS(ext_hdr_len);
       LOG_DBG("compression: inlined UDP ports on send side: %x, %x\n",
              UIP_HTONS(udp_buf->srcport), UIP_HTONS(udp_buf->destport));
       /* Mask out the last 4 bits can be used as a mask */
@@ -1548,8 +1526,6 @@ fragment_copy_payload_and_send(uint16_t uip_offset, linkaddr_t *dest) {
 static uint8_t
 output(const linkaddr_t *localdest)
 {
-  int framer_hdrlen;
-  int max_payload;
   int frag_needed;
 
   /* The MAC address of the destination of the packet */
@@ -1588,13 +1564,23 @@ output(const linkaddr_t *localdest)
 
 /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC */
   packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
-  framer_hdrlen = NETSTACK_FRAMER.length();
-  if(framer_hdrlen < 0) {
-   /* Framing failed, we assume the maximum header length */
-   framer_hdrlen = MAC_MAX_HEADER;
-  }
+#if LLSEC802154_USES_AUX_HEADER
+  /* copy LLSEC level */
+  packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
+    uipbuf_get_attr(UIPBUF_ATTR_LLSEC_LEVEL));
+#if LLSEC802154_USES_EXPLICIT_KEYS
+  packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX,
+    uipbuf_get_attr(UIPBUF_ATTR_LLSEC_KEY_ID));
+#endif /* LLSEC802154_USES_EXPLICIT_KEYS */
+#endif /*  LLSEC802154_USES_AUX_HEADER */
 
-  mac_max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
+  mac_max_payload = NETSTACK_MAC.max_payload();
+
+  if(mac_max_payload <= 0) {
+  /* Framing failed, drop packet */
+    LOG_WARN("output: failed to calculate payload size - dropping packet\n");
+    return 0;
+  }
 
   /* Try to compress the headers */
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
@@ -1615,22 +1601,17 @@ output(const linkaddr_t *localdest)
   }
 #endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
 
-  /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC.
-   * We calculate it here only to make a better decision of whether the outgoing packet
-   * needs to be fragmented or not. */
-  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
-  framer_hdrlen = NETSTACK_FRAMER.length();
-  if(framer_hdrlen < 0) {
-    /* Framing failed, we assume the maximum header length */
-    framer_hdrlen = MAC_MAX_HEADER;
-  }
+  /* Use the mac_max_payload to understand what is the max payload in a MAC
+   * packet. We calculate it here only to make a better decision of whether
+   * the outgoing packet needs to be fragmented or not. */
 
-  max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
-  frag_needed = (int)uip_len - (int)uncomp_hdr_len + (int)packetbuf_hdr_len > max_payload;
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
+
+  frag_needed = (int)uip_len - (int)uncomp_hdr_len + (int)packetbuf_hdr_len > mac_max_payload;
   LOG_INFO("output: header len %d -> %d, total len %d -> %d, MAC max payload %d, frag_needed %d\n",
             uncomp_hdr_len, packetbuf_hdr_len,
             uip_len, uip_len - uncomp_hdr_len + packetbuf_hdr_len,
-            max_payload, frag_needed);
+            mac_max_payload, frag_needed);
 
   if(frag_needed) {
 #if SICSLOWPAN_CONF_FRAG
@@ -1650,11 +1631,11 @@ output(const linkaddr_t *localdest)
      /* Total IPv6 payload */
     int total_payload = (uip_len - uncomp_hdr_len);
     /* IPv6 payload that goes to first fragment */
-    int frag1_payload = (max_payload - packetbuf_hdr_len - SICSLOWPAN_FRAG1_HDR_LEN) & 0xfffffff8;
+    int frag1_payload = (mac_max_payload - packetbuf_hdr_len - SICSLOWPAN_FRAG1_HDR_LEN) & 0xfffffff8;
     /* max IPv6 payload in each FRAGN. Must be multiple of 8 bytes */
-    int fragn_max_payload = (max_payload - SICSLOWPAN_FRAGN_HDR_LEN) & 0xfffffff8;
+    int fragn_max_payload = (mac_max_payload - SICSLOWPAN_FRAGN_HDR_LEN) & 0xfffffff8;
     /* max IPv6 payload in the last fragment. Needs not be multiple of 8 bytes */
-    int last_fragn_max_payload = max_payload - SICSLOWPAN_FRAGN_HDR_LEN;
+    int last_fragn_max_payload = mac_max_payload - SICSLOWPAN_FRAGN_HDR_LEN;
     /* sum of all IPv6 payload that goes to non-first and non-last fragments */
     int middle_fragn_total_payload = MAX(total_payload - frag1_payload - last_fragn_max_payload, 0);
     /* Ceiling of: 2 + middle_fragn_total_payload / fragn_max_payload */
@@ -1806,6 +1787,9 @@ input(void)
     return;
   }
 
+  /* Clear uipbuf and set default attributes */
+  uipbuf_clear();
+
   /* This is default uip_buf since we assume that this is not fragmented */
   buffer = (uint8_t *)UIP_IP_BUF;
 
@@ -1840,7 +1824,6 @@ input(void)
       }
 
       buffer = frag_info[frag_context].first_frag;
-
       break;
     case SICSLOWPAN_DISPATCH_FRAGN:
       /*
@@ -1936,12 +1919,12 @@ input(void)
 
   /* Sanity-check size of incoming packet to avoid buffer overflow */
   {
-    int req_size = UIP_LLH_LEN + uncomp_hdr_len + (uint16_t)(frag_offset << 3)
+    int req_size = uncomp_hdr_len + (uint16_t)(frag_offset << 3)
         + packetbuf_payload_len;
     if(req_size > sizeof(uip_buf)) {
       LOG_ERR(
-          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d+%d=%d (current size: %u)\n",
-          UIP_LLH_LEN, uncomp_hdr_len, (uint16_t)(frag_offset << 3),
+          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          uncomp_hdr_len, (uint16_t)(frag_offset << 3),
           packetbuf_payload_len, req_size, (unsigned)sizeof(uip_buf));
       return;
     }
@@ -2004,6 +1987,19 @@ input(void)
       callback->input_callback();
     }
 
+#if LLSEC802154_USES_AUX_HEADER
+    /*
+     * Assuming that the last packet in packetbuf is containing
+     *  the LLSEC state so that it can be copied to uipbuf.
+     */
+    uipbuf_set_attr(UIPBUF_ATTR_LLSEC_LEVEL,
+      packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL));
+#if LLSEC802154_USES_EXPLICIT_KEYS
+    uipbuf_set_attr(UIPBUF_ATTR_LLSEC_KEY_ID,
+      packetbuf_attr(PACKETBUF_ATTR_KEY_INDEX));
+#endif /* LLSEC802154_USES_EXPLICIT_KEYS */
+#endif /*  LLSEC802154_USES_AUX_HEADER */
+
     tcpip_input();
 #if SICSLOWPAN_CONF_FRAG
   }
@@ -2061,11 +2057,6 @@ sicslowpan_init(void)
 #endif /* SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS > 1 */
 
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPHC */
-
-  /* We use the queuebuf module if fragmentation is enabled */
-#if SICSLOWPAN_CONF_FRAG
-  queuebuf_init();
-#endif
 }
 /*--------------------------------------------------------------------*/
 int

@@ -33,20 +33,18 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC26X2R1_LAUNCHXL
-#define BOARD_STRING    "TI CC26x2R1 LaunchPad"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "CC26X2R1_LAUNCHXL.h"
 
-#define Board_initGeneral()     CC26X2R1_LAUNCHXL_initGeneral()
+#define Board_CC26X2R1_LAUNCHXL
+#define BOARD_STRING            "TI CC26x2R1 LaunchPad"
 
+#define Board_initGeneral()      CC26X2R1_LAUNCHXL_initGeneral()
 #define Board_shutDownExtFlash() CC26X2R1_LAUNCHXL_shutDownExtFlash()
-
-#define Board_wakeUpExtFlash() CC26X2R1_LAUNCHXL_wakeUpExtFlash()
+#define Board_wakeUpExtFlash()   CC26X2R1_LAUNCHXL_wakeUpExtFlash()
 
 /* These #defines allow us to reuse TI-RTOS across other device families */
 

@@ -30,8 +30,10 @@
  *
  */
 
- /* Dummy watchdog routines for the Raven 1284p */
+ /* Dummy watchdog routines for Cooja motes */
 #include "dev/watchdog.h"
+#include "lib/simEnvChange.h"
+#include "sys/cooja_mt.h"
 
 /*---------------------------------------------------------------------------*/
 void
@@ -47,6 +49,9 @@ watchdog_start(void)
 void
 watchdog_periodic(void)
 {
+  /* Yield and give control back to the simulator scheduler */
+  simProcessRunValue = 1;
+  cooja_mt_yield();
 }
 /*---------------------------------------------------------------------------*/
 void

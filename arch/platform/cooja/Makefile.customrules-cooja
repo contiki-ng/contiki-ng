@@ -10,11 +10,11 @@ CUSTOM_RULE_LINK=1
 
 REDEF_PRINTF=1 # Redefine functions to enable printf()s inside Cooja
 
-# NB: Assumes ARCHIVE was not overridden and is in $(OBJECTDIR)
+# NB: Assumes ARCHIVE was not overridden and is in $(BUILD_DIR_BOARD)
 $(ARCHIVE): $(CONTIKI_OBJECTFILES) | $(OBJECTDIR)
 	$(AR_COMMAND_1) $^ $(AR_COMMAND_2)
 
-# NB: Assumes JNILIB was not overridden and is in $(OBJECTDIR)
+# NB: Assumes JNILIB was not overridden and is in $(BUILD_DIR_BOARD)
 $(JNILIB): $(CONTIKI_APP_OBJ) $(MAIN_OBJ) $(PROJECT_OBJECTFILES) $(ARCHIVE) | $(OBJECTDIR)
 
 ifdef REDEF_PRINTF

@@ -51,15 +51,6 @@
 #define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
-#define BUSYWAIT_UNTIL(max_time) \
-  do { \
-    rtimer_clock_t t0; \
-    t0 = RTIMER_NOW(); \
-    while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time))) { \
-      watchdog_periodic(); \
-    } \
-  } while(0)
-/*---------------------------------------------------------------------------*/
 #define DHT22_PORT_BASE          GPIO_PORT_TO_BASE(DHT22_PORT)
 #define DHT22_PIN_MASK           GPIO_PIN_MASK(DHT22_PIN)
 /*---------------------------------------------------------------------------*/
@@ -80,12 +71,12 @@ dht22_read(void)
     /* Exit low power mode and initialize variables */
     GPIO_SET_OUTPUT(DHT22_PORT_BASE, DHT22_PIN_MASK);
     GPIO_SET_PIN(DHT22_PORT_BASE, DHT22_PIN_MASK);
-    BUSYWAIT_UNTIL(DHT22_AWAKE_TIME);
+    RTIMER_BUSYWAIT(DHT22_AWAKE_TIME);
     memset(dht22_data, 0, DHT22_BUFFER);
 
     /* Initialization sequence */
     GPIO_CLR_PIN(DHT22_PORT_BASE, DHT22_PIN_MASK);
-    BUSYWAIT_UNTIL(DHT22_START_TIME);
+    RTIMER_BUSYWAIT(DHT22_START_TIME);
     GPIO_SET_PIN(DHT22_PORT_BASE, DHT22_PIN_MASK);
     clock_delay_usec(DHT22_READY_TIME);
 

@@ -55,8 +55,6 @@
 static struct uip_udp_conn *sink_conn;
 static uint16_t count;
 
-#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 #if !NETSTACK_CONF_WITH_IPV6 || !UIP_CONF_ROUTER || !UIP_IPV6_MULTICAST || !UIP_CONF_IPV6_RPL
 #error "This example can not work with the current contiki configuration"
 #error "Check the values of: NETSTACK_CONF_WITH_IPV6, UIP_CONF_ROUTER, UIP_CONF_IPV6_RPL"
@@ -82,9 +80,10 @@ join_mcast_group(void)
 {
   uip_ipaddr_t addr;
   uip_ds6_maddr_t *rv;
+  const uip_ipaddr_t *default_prefix = uip_ds6_default_prefix();
 
   /* First, set our v6 global */
-  uip_ip6addr(&addr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  uip_ip6addr_copy(&addr, default_prefix);
   uip_ds6_set_addr_iid(&addr, &uip_lladdr);
   uip_ds6_addr_add(&addr, 0, ADDR_AUTOCONF);
 

@@ -1,0 +1,7 @@
+TI_XXWARE_PATH = lib/cc13xxware
+
+CONTIKI_CPU_SOURCEFILES += smartrf-settings.c prop-mode.c prop-mode-tx-power.c cc13xx-50kbps-tsch.c
+
+CFLAGS += -DCPU_FAMILY_CC13X0=1 -DCPU_FAMILY_CC13XX=1
+
+include $(CONTIKI_CPU)/Makefile.cc26x0-cc13x0

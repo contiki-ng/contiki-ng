@@ -43,8 +43,6 @@
 #include "dev/slip.h"
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-/*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "SLIP"
@@ -63,34 +61,34 @@ request_prefix(void)
   uip_buf[1] = 'P';
   uip_len = 2;
   slip_write(uip_buf, uip_len);
-  uip_clear_buf();
+  uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
 static void
 slip_input_callback(void)
 {
   LOG_DBG("SIN: %u\n", uip_len);
-  if(uip_buf[UIP_LLH_LEN] == '!') {
+  if(uip_buf[0] == '!') {
     LOG_INFO("Got configuration message of type %c\n",
-             uip_buf[UIP_LLH_LEN + 1]);
-    if(uip_buf[UIP_LLH_LEN + 1] == 'P') {
+             uip_buf[1]);
+    if(uip_buf[1] == 'P') {
       uip_ipaddr_t prefix;
       /* Here we set a prefix !!! */
       memset(&prefix, 0, 16);
-      memcpy(&prefix, &uip_buf[UIP_LLH_LEN + 2], 8);
+      memcpy(&prefix, &uip_buf[2], 8);
 
-      uip_clear_buf();
+      uipbuf_clear();
 
       LOG_INFO("Setting prefix ");
       LOG_INFO_6ADDR(&prefix);
       LOG_INFO_("\n");
       set_prefix_64(&prefix);
     }
-    uip_clear_buf();
+    uipbuf_clear();
 
-  } else if(uip_buf[UIP_LLH_LEN] == '?') {
-    LOG_INFO("Got request message of type %c\n", uip_buf[UIP_LLH_LEN + 1]);
-    if(uip_buf[UIP_LLH_LEN + 1] == 'M') {
+  } else if(uip_buf[0] == '?') {
+    LOG_INFO("Got request message of type %c\n", uip_buf[1]);
+    if(uip_buf[1] == 'M') {
       char *hexchar = "0123456789abcdef";
       int j;
       /* this is just a test so far... just to see if it works */
@@ -102,7 +100,7 @@ slip_input_callback(void)
       uip_len = 18;
       slip_write(uip_buf, uip_len);
     }
-    uip_clear_buf();
+    uipbuf_clear();
   } else {
     /* Save the last sender received over SLIP to avoid bouncing the
        packet back if no route is found */

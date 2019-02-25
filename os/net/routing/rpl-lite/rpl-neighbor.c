@@ -181,9 +181,9 @@ rpl_neighbor_count(void)
 static uip_ds6_nbr_t *
 rpl_get_ds6_nbr(rpl_nbr_t *nbr)
 {
-  const linkaddr_t *lladdr = rpl_neighbor_get_lladdr(nbr);
+  const uip_lladdr_t *lladdr = (const uip_lladdr_t *)rpl_neighbor_get_lladdr(nbr);
   if(lladdr != NULL) {
-    return nbr_table_get_from_lladdr(ds6_neighbors, lladdr);
+    return uip_ds6_nbr_ll_lookup(lladdr);
   } else {
     return NULL;
   }

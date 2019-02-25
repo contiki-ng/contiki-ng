@@ -1,4 +1,4 @@
-MOTELIST_ZOLERTIA = orion
+MOTELIST_ZOLERTIA := Orion
 MODULES += arch/dev/enc28j60
 CC2538_ENC28J60_ARCH ?= gpio
 ifeq ($(WITH_IP64),1)

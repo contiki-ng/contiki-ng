@@ -108,7 +108,7 @@ uip_nameserver_update(const uip_ipaddr_t *nameserver, uint32_t lifetime)
        *          the the eldest ones */
     }
   }
-  
+
   if(e == NULL) {
     if((e = memb_alloc(&dnsmemb)) != NULL) {
       list_add(dns, e);
@@ -221,11 +221,7 @@ uip_nameserver_count(void)
   }
   return list_length(dns);
 #else /* UIP_NAMESERVER_POOL_SIZE > 1 */
-#if NETSTACK_CONF_WITH_IPV6
   if(uip_is_addr_unspecified(&serveraddr)) {
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  if(uip_ipaddr_cmp(&serveraddr, &uip_all_zeroes_addr)) {
-#endif /* NETSTACK_CONF_WITH_IPV6 */
     return 0;
   } else {
     return 1;

@@ -55,19 +55,67 @@
 #include "net/ipv6/uip-nd6.h"
 #include "net/routing/routing.h"
 
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+#include "lib/memb.h"
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6 Nbr"
 #define LOG_LEVEL LOG_LEVEL_IPV6
 
-NBR_TABLE_GLOBAL(uip_ds6_nbr_t, ds6_neighbors);
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+/**
+ * Add nbr to the list in nbr_entry. In other words, this function associates an
+ * IPv6 address in nbr with a link-layer address in nbr_entry.
+ * \param nbr the neighbor cache entry for an IPv6 address
+ * \param nbr_entry the nbr_table entry for an link-layer address
+ */
+static void add_uip_ds6_nbr_to_nbr_entry(uip_ds6_nbr_t *nbr,
+                                         uip_ds6_nbr_entry_t *nbr_entry);
+
+/**
+ * Remove nbr from the list of the corresponding nbr_entry
+ * \param nbr a neighbor cache entry (nbr) to be removed
+ */
+static void remove_uip_ds6_nbr_from_nbr_entry(uip_ds6_nbr_t *nbr);
+
+/**
+ * Remove nbr_etnry from nbr_table
+ * \param nbr_entry a nbr_table entry (nbr_entry) to be removed
+ */
+static void remove_nbr_entry(uip_ds6_nbr_entry_t *nbr_entry);
+
+/**
+ * Free memory for a specified neighbor cache entry
+ * \param nbr a neighbor cache entry to be freed
+ */
+static void free_uip_ds6_nbr(uip_ds6_nbr_t *nbr);
+
+/**
+ * Callback function called when a nbr_table entry is removed
+ * \param nbr_entry a nbr_entry to be removed
+ */
+static void callback_nbr_entry_removal(uip_ds6_nbr_entry_t *nbr_entry);
+
+NBR_TABLE(uip_ds6_nbr_entry_t, uip_ds6_nbr_entries);
+MEMB(uip_ds6_nbr_memb, uip_ds6_nbr_t, UIP_DS6_NBR_MAX_NEIGHBOR_CACHES);
+#else
+NBR_TABLE(uip_ds6_nbr_t, ds6_neighbors);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 
 /*---------------------------------------------------------------------------*/
 void
 uip_ds6_neighbors_init(void)
 {
   link_stats_init();
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  memb_init(&uip_ds6_nbr_memb);
+  nbr_table_register(uip_ds6_nbr_entries,
+                     (nbr_table_callback *)callback_nbr_entry_removal);
+#else
   nbr_table_register(ds6_neighbors, (nbr_table_callback *)uip_ds6_nbr_rm);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
@@ -75,8 +123,63 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
                 uint8_t isrouter, uint8_t state, nbr_table_reason_t reason,
                 void *data)
 {
-  uip_ds6_nbr_t *nbr = nbr_table_add_lladdr(ds6_neighbors, (linkaddr_t*)lladdr
-                                            , reason, data);
+  uip_ds6_nbr_t *nbr;
+
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  uip_ds6_nbr_entry_t *nbr_entry;
+
+  assert(uip_ds6_nbr_lookup(ipaddr) == NULL);
+  if(uip_ds6_nbr_lookup(ipaddr)) {
+    LOG_ERR("%s: uip_ds6_nbr for ", __func__);
+    LOG_ERR_6ADDR(ipaddr);
+    LOG_ERR_("has already existed\n");
+    return NULL;
+  }
+
+  /* firstly, allocate memory for a new nbr cache entry */
+  if((nbr = (uip_ds6_nbr_t *)memb_alloc(&uip_ds6_nbr_memb)) == NULL) {
+    LOG_ERR("%s: cannot allocate a new uip_ds6_nbr\n", __func__);
+    return NULL;
+  }
+
+  /* secondly, get or allocate nbr_entry for the link-layer address */
+  nbr_entry = nbr_table_get_from_lladdr(uip_ds6_nbr_entries,
+                                        (const linkaddr_t *)lladdr);
+  if(nbr_entry == NULL) {
+    if((nbr_entry =
+        nbr_table_add_lladdr(uip_ds6_nbr_entries,
+                             (linkaddr_t*)lladdr, reason, data)) == NULL) {
+      LOG_ERR("%s: cannot allocate a new uip_ds6_nbr_entry\n", __func__);
+      /* return from this function later */
+    } else {
+      LIST_STRUCT_INIT(nbr_entry, uip_ds6_nbrs);
+    }
+  }
+
+  /* free nbr and return if nbr_entry is not available */
+  if((nbr_entry == NULL) ||
+     (list_length(nbr_entry->uip_ds6_nbrs) == UIP_DS6_NBR_MAX_6ADDRS_PER_NBR)) {
+    if(list_length(nbr_entry->uip_ds6_nbrs) == UIP_DS6_NBR_MAX_6ADDRS_PER_NBR) {
+      /*
+       * it's already had the maximum number of IPv6 addresses; cannot
+       * add another.
+       */
+      LOG_ERR("%s: no room in nbr_entry for ", __func__);
+      LOG_ERR_LLADDR((const linkaddr_t *)lladdr);
+      LOG_ERR_("\n");
+    }
+    /* free the newly allocated memory in this function call */
+    memb_free(&uip_ds6_nbr_memb, nbr);
+    return NULL;
+  } else {
+    /* everything is fine; nbr is ready to be used */
+    /* it has room to add another IPv6 address */
+    add_uip_ds6_nbr_to_nbr_entry(nbr, nbr_entry);
+  }
+#else
+  nbr = nbr_table_add_lladdr(ds6_neighbors, (linkaddr_t*)lladdr, reason, data);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
+
   if(nbr) {
     uip_ipaddr_copy(&nbr->ipaddr, ipaddr);
 #if UIP_ND6_SEND_RA || !UIP_CONF_ROUTER
@@ -113,10 +216,91 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
   }
 }
 
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+/*---------------------------------------------------------------------------*/
+static void
+add_uip_ds6_nbr_to_nbr_entry(uip_ds6_nbr_t *nbr,
+                               uip_ds6_nbr_entry_t *nbr_entry)
+{
+  LOG_DBG("%s: add nbr(%p) to nbr_entry (%p)\n",
+          __func__, nbr, nbr_entry);
+  nbr->nbr_entry = nbr_entry;
+  list_add(nbr_entry->uip_ds6_nbrs, nbr);
+}
+/*---------------------------------------------------------------------------*/
+static void
+remove_uip_ds6_nbr_from_nbr_entry(uip_ds6_nbr_t *nbr)
+{
+  if(nbr == NULL) {
+    return;
+  }
+  LOG_DBG("%s: remove nbr(%p) from nbr_entry (%p)\n",
+          __func__, nbr, nbr->nbr_entry);
+  list_remove(nbr->nbr_entry->uip_ds6_nbrs, nbr);
+}
+/*---------------------------------------------------------------------------*/
+static void
+remove_nbr_entry(uip_ds6_nbr_entry_t *nbr_entry)
+{
+  if(nbr_entry == NULL) {
+    return;
+  }
+  LOG_DBG("%s: remove nbr_entry (%p) from nbr_table\n",
+          __func__, nbr_entry);
+  (void)nbr_table_remove(uip_ds6_nbr_entries, nbr_entry);
+}
+/*---------------------------------------------------------------------------*/
+static void
+free_uip_ds6_nbr(uip_ds6_nbr_t *nbr)
+{
+  if(nbr == NULL) {
+    return;
+  }
+#if UIP_CONF_IPV6_QUEUE_PKT
+  uip_packetqueue_free(&nbr->packethandle);
+#endif /* UIP_CONF_IPV6_QUEUE_PKT */
+  NETSTACK_ROUTING.neighbor_state_changed(nbr);
+  assert(nbr->nbr_entry != NULL);
+  if(nbr->nbr_entry == NULL) {
+    LOG_ERR("%s: unexpected error nbr->nbr_entry is NULL\n", __func__);
+  } else {
+    remove_uip_ds6_nbr_from_nbr_entry(nbr);
+    if(list_length(nbr->nbr_entry->uip_ds6_nbrs) == 0) {
+      remove_nbr_entry(nbr->nbr_entry);
+    }
+  }
+  LOG_DBG("%s: free memory for nbr(%p)\n", __func__, nbr);
+  memb_free(&uip_ds6_nbr_memb, nbr);
+}
+/*---------------------------------------------------------------------------*/
+static void
+callback_nbr_entry_removal(uip_ds6_nbr_entry_t *nbr_entry)
+{
+  uip_ds6_nbr_t *nbr;
+  uip_ds6_nbr_t *next_nbr;
+  if(nbr_entry == NULL) {
+    return;
+  }
+  for(nbr = (uip_ds6_nbr_t *)list_head(nbr_entry->uip_ds6_nbrs);
+      nbr != NULL;
+      nbr = next_nbr) {
+    next_nbr = (uip_ds6_nbr_t *)list_item_next(nbr);
+    free_uip_ds6_nbr(nbr);
+  }
+}
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 /*---------------------------------------------------------------------------*/
 int
 uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
 {
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  if(nbr == NULL) {
+    return 0;
+  } else {
+    free_uip_ds6_nbr(nbr);
+    return 1;
+  }
+#else /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
   if(nbr != NULL) {
 #if UIP_CONF_IPV6_QUEUE_PKT
     uip_packetqueue_free(&nbr->packethandle);
@@ -125,18 +309,51 @@ uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
     return nbr_table_remove(ds6_neighbors, nbr);
   }
   return 0;
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 }
 
 /*---------------------------------------------------------------------------*/
 int
 uip_ds6_nbr_update_ll(uip_ds6_nbr_t **nbr_pp, const uip_lladdr_t *new_ll_addr)
 {
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  uip_ds6_nbr_entry_t *nbr_entry;
+  uip_ds6_nbr_t *nbr;
+#else
   uip_ds6_nbr_t nbr_backup;
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 
   if(nbr_pp == NULL || new_ll_addr == NULL) {
     LOG_ERR("%s: invalid argument\n", __func__);
     return -1;
   }
+
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+
+  if((nbr_entry =
+      nbr_table_get_from_lladdr(uip_ds6_nbr_entries,
+                                (const linkaddr_t *)new_ll_addr)) == NULL) {
+    if((nbr_entry =
+        nbr_table_add_lladdr(uip_ds6_nbr_entries,
+                             (const linkaddr_t*)new_ll_addr,
+                             NBR_TABLE_REASON_IPV6_ND, NULL)) == NULL) {
+      LOG_ERR("%s: cannot allocate a nbr_entry for", __func__);
+      LOG_ERR_LLADDR((const linkaddr_t *)new_ll_addr);
+      return -1;
+    } else {
+      LIST_STRUCT_INIT(nbr_entry, uip_ds6_nbrs);
+    }
+  }
+
+  nbr = *nbr_pp;
+
+  remove_uip_ds6_nbr_from_nbr_entry(nbr);
+  if(list_length(nbr->nbr_entry->uip_ds6_nbrs) == 0) {
+    remove_nbr_entry(nbr->nbr_entry);
+  }
+  add_uip_ds6_nbr_to_nbr_entry(nbr, nbr_entry);
+
+#else /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 
   /* make sure new_ll_addr is not used in some other nbr */
   if(uip_ds6_nbr_ll_lookup(new_ll_addr) != NULL) {
@@ -159,6 +376,7 @@ uip_ds6_nbr_update_ll(uip_ds6_nbr_t **nbr_pp, const uip_lladdr_t *new_ll_addr)
     return -1;
   }
   memcpy(*nbr_pp, &nbr_backup, sizeof(uip_ds6_nbr_t));
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 
   return 0;
 }
@@ -173,46 +391,88 @@ uip_ds6_nbr_get_ipaddr(const uip_ds6_nbr_t *nbr)
 const uip_lladdr_t *
 uip_ds6_nbr_get_ll(const uip_ds6_nbr_t *nbr)
 {
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  if(nbr == NULL) {
+    return NULL;
+  }
+  return (const uip_lladdr_t *)nbr_table_get_lladdr(uip_ds6_nbr_entries,
+                                                    nbr->nbr_entry);
+#else
   return (const uip_lladdr_t *)nbr_table_get_lladdr(ds6_neighbors, nbr);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 }
 /*---------------------------------------------------------------------------*/
 int
 uip_ds6_nbr_num(void)
 {
-  uip_ds6_nbr_t *nbr;
-  int num;
+  int num = 0;
 
-  num = 0;
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  uip_ds6_nbr_entry_t *nbr_entry;
+  for(nbr_entry = nbr_table_head(uip_ds6_nbr_entries);
+      nbr_entry != NULL;
+      nbr_entry = nbr_table_next(uip_ds6_nbr_entries, nbr_entry)) {
+    num += list_length(nbr_entry->uip_ds6_nbrs);
+  }
+#else
+  uip_ds6_nbr_t *nbr;
   for(nbr = nbr_table_head(ds6_neighbors);
       nbr != NULL;
       nbr = nbr_table_next(ds6_neighbors, nbr)) {
     num++;
   }
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
   return num;
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
 uip_ds6_nbr_head(void)
 {
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  uip_ds6_nbr_entry_t *nbr_entry;
+  if((nbr_entry = nbr_table_head(uip_ds6_nbr_entries)) == NULL) {
+    return NULL;
+  }
+  assert(list_head(nbr_entry->uip_ds6_nbrs) != NULL);
+  return (uip_ds6_nbr_t *)list_head(nbr_entry->uip_ds6_nbrs);
+#else
   return nbr_table_head(ds6_neighbors);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
 uip_ds6_nbr_next(uip_ds6_nbr_t *nbr)
 {
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  uip_ds6_nbr_entry_t *nbr_entry;
+  if(nbr == NULL) {
+    return NULL;
+  }
+  if(list_item_next(nbr) != NULL) {
+    return list_item_next(nbr);
+  }
+  nbr_entry = nbr_table_next(uip_ds6_nbr_entries, nbr->nbr_entry);
+  if(nbr_entry == NULL) {
+    return NULL;
+  } else {
+    assert(list_head(nbr_entry->uip_ds6_nbrs) != NULL);
+    return (uip_ds6_nbr_t *)list_head(nbr_entry->uip_ds6_nbrs);
+  }
+#else
   return nbr_table_next(ds6_neighbors, nbr);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
 uip_ds6_nbr_lookup(const uip_ipaddr_t *ipaddr)
 {
-  uip_ds6_nbr_t *nbr = nbr_table_head(ds6_neighbors);
-  if(ipaddr != NULL) {
-    while(nbr != NULL) {
-      if(uip_ipaddr_cmp(&nbr->ipaddr, ipaddr)) {
-        return nbr;
-      }
-      nbr = nbr_table_next(ds6_neighbors, nbr);
+  uip_ds6_nbr_t *nbr;
+  if(ipaddr == NULL) {
+    return NULL;
+  }
+  for(nbr = uip_ds6_nbr_head(); nbr != NULL; nbr = uip_ds6_nbr_next(nbr)) {
+    if(uip_ipaddr_cmp(&nbr->ipaddr, ipaddr)) {
+      return nbr;
     }
   }
   return NULL;
@@ -221,7 +481,23 @@ uip_ds6_nbr_lookup(const uip_ipaddr_t *ipaddr)
 uip_ds6_nbr_t *
 uip_ds6_nbr_ll_lookup(const uip_lladdr_t *lladdr)
 {
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+  uip_ds6_nbr_entry_t *nbr_entry;
+  /*
+   * we cannot determine which entry should return by lladdr alone;
+   * return the first entry associated with lladdr.
+   */
+  nbr_entry =
+    (uip_ds6_nbr_entry_t *)nbr_table_get_from_lladdr(uip_ds6_nbr_entries,
+                                                     (linkaddr_t*)lladdr);
+  if(nbr_entry == NULL) {
+    return NULL;
+  }
+  assert(list_head(nbr_entry->uip_ds6_nbrs) != NULL);
+  return (uip_ds6_nbr_t *)list_head(nbr_entry->uip_ds6_nbrs);
+#else
   return nbr_table_get_from_lladdr(ds6_neighbors, (linkaddr_t*)lladdr);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -239,6 +515,20 @@ uip_ds6_nbr_lladdr_from_ipaddr(const uip_ipaddr_t *ipaddr)
   uip_ds6_nbr_t *nbr = uip_ds6_nbr_lookup(ipaddr);
   return nbr ? uip_ds6_nbr_get_ll(nbr) : NULL;
 }
+#if UIP_DS6_LL_NUD
+/*---------------------------------------------------------------------------*/
+static void
+update_nbr_reachable_state_by_ack(uip_ds6_nbr_t *nbr, const linkaddr_t *lladdr)
+{
+  if(nbr != NULL && nbr->state != NBR_INCOMPLETE) {
+    nbr->state = NBR_REACHABLE;
+    stimer_set(&nbr->reachable, UIP_ND6_REACHABLE_TIME / 1000);
+    LOG_INFO("received a link layer ACK : ");
+    LOG_INFO_LLADDR(lladdr);
+    LOG_INFO_(" is reachable.\n");
+  }
+}
+#endif /* UIP_DS6_LL_NUD */
 /*---------------------------------------------------------------------------*/
 void
 uip_ds6_link_callback(int status, int numtx)
@@ -266,14 +556,22 @@ uip_ds6_link_callback(int status, int numtx)
    * acknowledges link packets. */
   if(status == MAC_TX_OK) {
     uip_ds6_nbr_t *nbr;
-    nbr = uip_ds6_nbr_ll_lookup((uip_lladdr_t *)dest);
-    if(nbr != NULL && nbr->state != NBR_INCOMPLETE) {
-      nbr->state = NBR_REACHABLE;
-      stimer_set(&nbr->reachable, UIP_ND6_REACHABLE_TIME / 1000);
-      LOG_INFO("received a link layer ACK : ");
-      LOG_INFO_LLADDR((uip_lladdr_t *)dest);
-      LOG_INFO_(" is reachable.\n");
+#if UIP_DS6_NBR_MULTI_IPV6_ADDRS
+    uip_ds6_nbr_entry_t *nbr_entry;
+    if((nbr_entry =
+        (uip_ds6_nbr_entry_t *)nbr_table_get_from_lladdr(uip_ds6_nbr_entries,
+                                                         dest)) == NULL) {
+      return;
     }
+    for(nbr = (uip_ds6_nbr_t *)list_head(nbr_entry->uip_ds6_nbrs);
+        nbr != NULL;
+        nbr = (uip_ds6_nbr_t *)list_item_next(nbr)) {
+      update_nbr_reachable_state_by_ack(nbr, dest);
+    }
+#else /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
+    nbr = uip_ds6_nbr_ll_lookup((uip_lladdr_t *)dest);
+    update_nbr_reachable_state_by_ack(nbr, dest);
+#endif /* UIP_DS6_NBR_MULTI_IPV6_ADDRS */
   }
 #endif /* UIP_DS6_LL_NUD */
 }
@@ -283,7 +581,7 @@ uip_ds6_link_callback(int status, int numtx)
 void
 uip_ds6_neighbor_periodic(void)
 {
-  uip_ds6_nbr_t *nbr = nbr_table_head(ds6_neighbors);
+  uip_ds6_nbr_t *nbr = uip_ds6_nbr_head();
   while(nbr != NULL) {
     switch(nbr->state) {
     case NBR_REACHABLE:
@@ -354,7 +652,7 @@ uip_ds6_neighbor_periodic(void)
     default:
       break;
     }
-    nbr = nbr_table_next(ds6_neighbors, nbr);
+    nbr = uip_ds6_nbr_next(nbr);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -373,7 +671,7 @@ uip_ds6_nbr_refresh_reachable_state(const uip_ipaddr_t *ipaddr)
 uip_ds6_nbr_t *
 uip_ds6_get_least_lifetime_neighbor(void)
 {
-  uip_ds6_nbr_t *nbr = nbr_table_head(ds6_neighbors);
+  uip_ds6_nbr_t *nbr = uip_ds6_nbr_head();
   uip_ds6_nbr_t *nbr_expiring = NULL;
   while(nbr != NULL) {
     if(nbr_expiring != NULL) {
@@ -384,7 +682,7 @@ uip_ds6_get_least_lifetime_neighbor(void)
     } else {
       nbr_expiring = nbr;
     }
-    nbr = nbr_table_next(ds6_neighbors, nbr);
+    nbr = uip_ds6_nbr_next(nbr);
   }
   return nbr_expiring;
 }

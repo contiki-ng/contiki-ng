@@ -49,10 +49,25 @@
 #define LOG_MODULE "CSMA"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
+
+static void
+init_sec(void)
+{
+#if LLSEC802154_USES_AUX_HEADER
+  if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) ==
+     PACKETBUF_ATTR_SECURITY_LEVEL_DEFAULT) {
+    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
+                       CSMA_LLSEC_SECURITY_LEVEL);
+  }
+#endif
+}
 /*---------------------------------------------------------------------------*/
 static void
 send_packet(mac_callback_t sent, void *ptr)
 {
+
+  init_sec();
+
   csma_output_packet(sent, ptr);
 }
 /*---------------------------------------------------------------------------*/
@@ -60,22 +75,20 @@ static void
 input_packet(void)
 {
 #if CSMA_SEND_SOFT_ACK
-  int original_datalen;
-  uint8_t *original_dataptr;
-
-  original_datalen = packetbuf_datalen();
-  original_dataptr = packetbuf_dataptr();
+  uint8_t ackdata[CSMA_ACK_LEN];
 #endif
 
   if(packetbuf_datalen() == CSMA_ACK_LEN) {
     /* Ignore ack packets */
     LOG_DBG("ignored ack\n");
-  } else if(NETSTACK_FRAMER.parse() < 0) {
+  } else if(csma_security_parse_frame() < 0) {
     LOG_ERR("failed to parse %u\n", packetbuf_datalen());
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
             !packetbuf_holds_broadcast()) {
     LOG_WARN("not for us\n");
+  } else if(linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER), &linkaddr_node_addr)) {
+    LOG_WARN("frame from ourselves\n");
   } else {
     int duplicate = 0;
 
@@ -91,20 +104,11 @@ input_packet(void)
     }
 
 #if CSMA_SEND_SOFT_ACK
-    {
-      frame802154_t info154;
-      frame802154_parse(original_dataptr, original_datalen, &info154);
-      if(info154.fcf.frame_type == FRAME802154_DATAFRAME &&
-         info154.fcf.ack_required != 0 &&
-         linkaddr_cmp((linkaddr_t *)&info154.dest_addr,
-                      &linkaddr_node_addr)) {
-        uint8_t ackdata[CSMA_ACK_LEN] = {0, 0, 0};
-
-        ackdata[0] = FRAME802154_ACKFRAME;
-        ackdata[1] = 0;
-        ackdata[2] = info154.seq;
-        NETSTACK_RADIO.send(ackdata, CSMA_ACK_LEN);
-      }
+    if(packetbuf_attr(PACKETBUF_ATTR_MAC_ACK)) {
+      ackdata[0] = FRAME802154_ACKFRAME;
+      ackdata[1] = 0;
+      ackdata[2] = ((uint8_t *)packetbuf_hdrptr())[2];
+      NETSTACK_RADIO.send(ackdata, CSMA_ACK_LEN);
     }
 #endif /* CSMA_SEND_SOFT_ACK */
     if(!duplicate) {
@@ -131,8 +135,32 @@ off(void)
 static void
 init(void)
 {
+
+#if LLSEC802154_USES_AUX_HEADER
+#ifdef CSMA_LLSEC_DEFAULT_KEY0
+  uint8_t key[16] = CSMA_LLSEC_DEFAULT_KEY0;
+  csma_security_set_key(0, key);
+#endif
+#endif /* LLSEC802154_USES_AUX_HEADER */
   csma_output_init();
   on();
+}
+/*---------------------------------------------------------------------------*/
+static int
+max_payload(void)
+{
+  int framer_hdrlen;
+
+  init_sec();
+
+  framer_hdrlen = NETSTACK_FRAMER.length();
+
+  if(framer_hdrlen < 0) {
+    /* Framing failed, we assume the maximum header length */
+    framer_hdrlen = CSMA_MAC_MAX_HEADER;
+  }
+
+  return CSMA_MAC_LEN - framer_hdrlen;
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver csma_driver = {
@@ -141,6 +169,7 @@ const struct mac_driver csma_driver = {
   send_packet,
   input_packet,
   on,
-  off
+  off,
+  max_payload,
 };
 /*---------------------------------------------------------------------------*/

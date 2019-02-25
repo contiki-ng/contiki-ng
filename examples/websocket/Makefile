@@ -3,6 +3,6 @@ all: $(CONTIKI_PROJECT)
 CONTIKI=../..
 MODULES += os/net/app-layer/http-socket
 
-PLATFORMS_EXCLUDE = sky
+PLATFORMS_EXCLUDE = sky z1
 
 include $(CONTIKI)/Makefile.include

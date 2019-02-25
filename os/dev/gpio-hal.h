@@ -189,7 +189,7 @@ void gpio_hal_event_handler(gpio_hal_pin_mask_t pins);
  * \param pin The pin
  * \return The corresponding mask
  */
-#define gpio_hal_pin_to_mask(pin) (1 << (pin))
+#define gpio_hal_pin_to_mask(pin) ((gpio_hal_pin_mask_t)1 << (pin))
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

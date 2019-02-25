@@ -44,7 +44,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_ieee_802_15_4.h)
+#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_multi_protocol.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_mce_ieee_802_15_4.h)
 
 #include <ti/drivers/rf/RF.h>
@@ -55,7 +55,7 @@
 RF_Mode rf_ieee_mode =
 {
   .rfMode = RF_MODE_AUTO,
-  .cpePatchFxn = &rf_patch_cpe_ieee_802_15_4,
+  .cpePatchFxn = &rf_patch_cpe_multi_protocol,
   .mcePatchFxn = &rf_patch_mce_ieee_802_15_4,
   .rfePatchFxn = 0,
 };
@@ -104,8 +104,8 @@ rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
   .condition.nSkip = 0x0,
   .mode = 0x01,
   .loDivider = 0x00,
-  .config.frontEndMode = 0x0,
-  .config.biasMode = 0x0,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
   .txPower = DEFAULT_TX_POWER,

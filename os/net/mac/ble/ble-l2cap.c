@@ -505,6 +505,12 @@ off(void)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+max_payload(void)
+{
+  return BLE_L2CAP_NODE_MTU;
+}
+/*---------------------------------------------------------------------------*/
 const struct mac_driver ble_l2cap_driver = {
   "ble-l2cap",
   init,
@@ -512,6 +518,7 @@ const struct mac_driver ble_l2cap_driver = {
   input,
   on,
   off,
+  max_payload,
 };
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(ble_l2cap_tx_process, ev, data)

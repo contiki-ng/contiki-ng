@@ -221,6 +221,18 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
+ * \name CC2538 TSCH configuration
+ *
+ * @{
+ */
+#define RADIO_PHY_OVERHEAD        CC2538_PHY_OVERHEAD
+#define RADIO_BYTE_AIR_TIME       CC2538_BYTE_AIR_TIME
+#define RADIO_DELAY_BEFORE_TX     CC2538_DELAY_BEFORE_TX
+#define RADIO_DELAY_BEFORE_RX     CC2538_DELAY_BEFORE_RX
+#define RADIO_DELAY_BEFORE_DETECT CC2538_DELAY_BEFORE_DETECT
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
  * \name Device string used on startup
  * @{
  */

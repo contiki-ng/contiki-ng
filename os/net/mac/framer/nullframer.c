@@ -87,6 +87,7 @@ parse(void)
     }
     packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (linkaddr_t *)&frame.src_addr);
     packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, frame.seq);
+    packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, frame.fcf.ack_required);
     return 0;
   }
 #endif

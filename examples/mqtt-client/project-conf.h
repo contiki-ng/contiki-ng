@@ -52,7 +52,9 @@
  * devices, set your Org ID here and then make sure you set the correct token
  * through MQTT_CLIENT_CONF_AUTH_TOKEN.
  */
+#ifndef MQTT_CLIENT_CONF_ORG_ID
 #define MQTT_CLIENT_CONF_ORG_ID "quickstart"
+#endif
 
 /*
  * The MQTT username.

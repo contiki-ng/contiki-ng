@@ -33,14 +33,14 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC1350DK_7XD
-#define BOARD_STRING    "TI SmartRF06EB + CC13x0 EM"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "CC1350DK_7XD.h"
+
+#define Board_CC1350DK_7XD
+#define BOARD_STRING            "TI SmartRF06EB + CC13x0 EM"
 
 #define Board_initGeneral()      CC1350DK_7XD_initGeneral()
 #define Board_shutDownExtFlash() CC1350DK_7XD_shutDownExtFlash()
