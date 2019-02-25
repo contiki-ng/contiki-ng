@@ -1924,9 +1924,13 @@ input(void)
         + packetbuf_payload_len;
     if(req_size > sizeof(uip_buf)) {
       LOG_ERR(
-          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          "input: packet and fragment context %u dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          frag_context,
           uncomp_hdr_len, (uint16_t)(frag_offset << 3),
           packetbuf_payload_len, req_size, (unsigned)sizeof(uip_buf));
+      /* Discard all fragments for this contex, as reassembling this particular fragment would
+       * cause an overflow in uipbuf */
+      clear_fragments(frag_context);
       return;
     }
   }
