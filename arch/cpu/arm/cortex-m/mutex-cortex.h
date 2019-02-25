@@ -49,18 +49,26 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "atomic-cortex.h"
 /*---------------------------------------------------------------------------*/
-/*
- * mutex_t for cortex is uint8_t (see below). That's why we can just
- * use atomic_cortex_cas_uint8 for mutex_try_lock. Note that mutex_t
- * may NOT be uint8_t in other platforms.
- */
-#define mutex_try_lock(m) atomic_cortex_cas_uint8((m),0,1)
+#define mutex_try_lock(m) mutex_cortex_try_lock(m)
 #define mutex_unlock(m)   mutex_cortex_unlock(m)
 /*---------------------------------------------------------------------------*/
 #define MUTEX_CONF_HAS_MUTEX_T 1
 typedef uint8_t mutex_t;
+/*---------------------------------------------------------------------------*/
+static inline bool
+mutex_cortex_try_lock(volatile mutex_t *mutex)
+{
+  int status = 1;
+
+  if(__LDREXB(mutex) == 0) {
+    status = __STREXB(1, mutex);
+  }
+
+  __DMB();
+
+  return status == 0 ? true : false;
+}
 /*---------------------------------------------------------------------------*/
 static inline void
 mutex_cortex_unlock(volatile mutex_t *mutex)
