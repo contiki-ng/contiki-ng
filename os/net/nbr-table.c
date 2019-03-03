@@ -354,6 +354,10 @@ nbr_table_add_lladdr(nbr_table_t *table, const linkaddr_t *lladdr, nbr_table_rea
   nbr_table_item_t *item;
   nbr_table_key_t *key;
 
+  if(table == NULL) {
+    return NULL;
+  }
+
   /* Allow lladdr-free insertion, useful e.g. for IPv6 ND.
    * Only one such entry is possible at a time, indexed by linkaddr_null. */
   if(lladdr == NULL) {
