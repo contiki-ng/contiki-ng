@@ -45,7 +45,7 @@
  * \brief 15ms TSCH timeslot timings, required for cc2420 platforms as
  * they are unable to keep up with the defulat 10ms timeslots.
  */
-const uint16_t tsch_timeslot_timing_us_15000[tsch_ts_elements_count] = {
+const tsch_timeslot_timing_usec tsch_timeslot_timing_us_15000= {
   1800, /* CCAOffset */
    128, /* CCA */
   4000, /* TxOffset */
