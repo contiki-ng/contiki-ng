@@ -94,7 +94,7 @@ static const char rf_cfg_descriptor[] = "802.15.4g 863-870MHz MR-FSK mode #1";
                                                   )
 
 /* TSCH timeslot timing (mircoseconds) */
-static const uint16_t cc1200_50kbps_tsch_timing[tsch_ts_elements_count] = {
+static const tsch_timeslot_timing_usec cc1200_50kbps_tsch_timing = {
   CC1200_TSCH_DEFAULT_TS_CCA_OFFSET,
   CC1200_TSCH_DEFAULT_TS_CCA,
   CC1200_TSCH_DEFAULT_TS_TX_OFFSET,

@@ -295,6 +295,7 @@ radio_delay_before_detect(void) {
 uint16_t *
 radio_tsch_timeslot_timing(void) {
   uint16_t *ret;
+  /* Get and return pointer to TSCH timings in usec */
   NETSTACK_RADIO.get_object(RADIO_CONST_TSCH_TIMING, &ret, sizeof(ret));
   return ret;
 }
