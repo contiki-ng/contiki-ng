@@ -136,11 +136,11 @@ ifneq (${wildcard $(JLINK_EXE)},)
 
   endef
 
-%.upload: %.bin
+%.upload: $(OUT_BIN)
 	$(TRACE_UPLOAD)
 	$(Q)${call jlink_upload,$<,$(JLINK_SN)}
 
-%.upload-all: %.bin
+%.upload-all: $(OUT_BIN)
 	$(TRACE_UPLOAD)
 	${foreach sn,$(_JLINK_SN_LIST),$(Q)${call jlink_upload,$<,$(sn)}$(NL)}
 
