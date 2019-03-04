@@ -39,7 +39,7 @@
 
 /*---------------------------------------------------------------------------*/
 bool
-atomic_generic_cas_uint8(volatile uint8_t *target, uint8_t old_val, uint8_t new_val)
+atomic_generic_cas_uint8(uint8_t *target, uint8_t old_val, uint8_t new_val)
 {
   bool ret = false;
   int_master_status_t status = critical_enter();

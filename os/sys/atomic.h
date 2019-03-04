@@ -77,7 +77,7 @@
  * target. If the store operation succeeds, it returns true.
  * Otherwise, it just returns false without storing.
  */
-bool atomic_generic_cas_uint8(volatile uint8_t *target, uint8_t old_val, uint8_t new_val);
+bool atomic_generic_cas_uint8(uint8_t *target, uint8_t old_val, uint8_t new_val);
 
 #endif /* ATOMIC_H_ */
 /**
