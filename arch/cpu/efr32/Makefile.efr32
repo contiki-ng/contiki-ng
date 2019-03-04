@@ -69,7 +69,8 @@ LIBRAIL := $(GECKO_SDK_PLATFORM)/radio/rail_lib/autogen/librail_release/librail_
 
 TARGET_LIBS := $(LIBRAIL)
 
-LINKERSCRIPT := $(GECKO_SDK_PLATFORM)/Device/SiliconLabs/$(EFR32_MCU)/Source/GCC/$(EFR32_MCU_LOWER).ld
+LDSCRIPT := $(GECKO_SDK_PLATFORM)/Device/SiliconLabs/$(EFR32_MCU)/Source/GCC/$(EFR32_MCU_LOWER).ld
+
 
 TARGET_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(START_SOURCEFILES)}}
 
@@ -83,7 +84,6 @@ CFLAGS += -D$(PART_NUMBER) \
 
 LDFLAGS += -L $(CONTIKI_CPU) \
            -Wl,--start-group \
-           -T $(LINKERSCRIPT) \
            -nostartfiles \
            $(CFLAGS)
 
