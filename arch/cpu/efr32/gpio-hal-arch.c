@@ -38,7 +38,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #define LOG_MODULE "GPIO HAL"
-#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 
 void
@@ -205,4 +205,3 @@ void gpio_hal_arch_port_write_pins(gpio_hal_port_t port,
 {
   GPIO_PortOutSetVal(port, value, pins);
 }
-
