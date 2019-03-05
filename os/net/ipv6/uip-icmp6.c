@@ -162,6 +162,13 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param)
     return;
   }
 
+  /* the source should not be unspecified nor multicast */
+  if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr) ||
+     uip_is_addr_mcast(&UIP_IP_BUF->srcipaddr)) {
+    uipbuf_clear();
+    return;
+  }
+
   /* Remove all extension headers related to the routing protocol in place.
    * Keep all other extension headers, so as to match original packet. */
   if(NETSTACK_ROUTING.ext_header_remove() == 0) {
@@ -186,13 +193,6 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param)
   UIP_IP_BUF->flow = 0;
   UIP_IP_BUF->proto = UIP_PROTO_ICMP6;
   UIP_IP_BUF->ttl = uip_ds6_if.cur_hop_limit;
-
-  /* the source should not be unspecified nor multicast, the check for
-     multicast is done in uip_process */
-  if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)){
-    uipbuf_clear();
-    return;
-  }
 
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &UIP_IP_BUF->srcipaddr);
 
