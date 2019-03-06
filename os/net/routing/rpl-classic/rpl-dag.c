@@ -105,15 +105,16 @@ rpl_print_neighbor_list(void)
         default_instance->mop, default_instance->of->ocp, curr_rank, curr_dio_interval, uip_ds6_nbr_num());
     while(p != NULL) {
       const struct link_stats *stats = rpl_get_parent_link_stats(p);
+      uip_ipaddr_t *parent_addr = rpl_parent_get_ipaddr(p);
       printf("RPL: nbr %3u %5u, %5u => %5u -- %2u %c%c (last tx %u min ago)\n",
-          rpl_parent_get_ipaddr(p)->u8[15],
+          parent_addr != NULL ? parent_addr->u8[15] : 0x0,
           p->rank,
           rpl_get_parent_link_metric(p),
           rpl_rank_via_parent(p),
           stats != NULL ? stats->freshness : 0,
           link_stats_is_fresh(stats) ? 'f' : ' ',
           p == default_instance->current_dag->preferred_parent ? 'p' : ' ',
-          (unsigned)((clock_now - stats->last_tx_time) / (60 * CLOCK_SECOND))
+          stats != NULL ? (unsigned)((clock_now - stats->last_tx_time) / (60 * CLOCK_SECOND)) : -1u
       );
       p = nbr_table_next(rpl_parents, p);
     }
@@ -196,6 +197,9 @@ uip_ipaddr_t *
 rpl_parent_get_ipaddr(rpl_parent_t *p)
 {
   const linkaddr_t *lladdr = rpl_get_parent_lladdr(p);
+  if(lladdr == NULL) {
+    return NULL;
+  }
   return uip_ds6_nbr_ipaddr_from_lladdr((uip_lladdr_t *)lladdr);
 }
 /*---------------------------------------------------------------------------*/
