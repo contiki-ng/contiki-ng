@@ -1103,6 +1103,13 @@ uip_process(uint8_t flag)
 
   /* Start of IP input header processing code. */
 
+  /* First check that we have received a full IPv6 header. */
+  if(uip_len < UIP_IPH_LEN) {
+    UIP_STAT(++uip_stat.ip.drop);
+    LOG_WARN("incomplete IPv6 header received (%d bytes)\n", (int)uip_len);
+    goto drop;
+  }
+
   /* Check validity of the IP header. */
   if((UIP_IP_BUF->vtc & 0xf0) != 0x60)  { /* IP version and header length. */
     UIP_STAT(++uip_stat.ip.drop);
@@ -1110,30 +1117,37 @@ uip_process(uint8_t flag)
     LOG_ERR("invalid version\n");
     goto drop;
   }
+
   /*
    * Check the size of the packet. If the size reported to us in
    * uip_len is smaller the size reported in the IP header, we assume
-   * that the packet has been corrupted in transit. If the size of
-   * uip_len is larger than the size reported in the IP packet header,
-   * the packet has been padded and we set uip_len to the correct
-   * value..
+   * that the packet has been corrupted in transit.
+   *
+   * If the size of uip_len is larger than the size reported in the IP
+   * packet header, the packet has been padded, and we set uip_len to
+   * the correct value.
    */
-
-  if(uipbuf_get_len_field(UIP_IP_BUF) <= uip_len) {
-    uip_len = uipbuf_get_len_field(UIP_IP_BUF) + UIP_IPH_LEN;
-    /*
-     * The length reported in the IPv6 header is the
-     * length of the payload that follows the
-     * header. However, uIP uses the uip_len variable
-     * for holding the size of the entire packet,
-     * including the IP header. For IPv4 this is not a
-     * problem as the length field in the IPv4 header
-     * contains the length of the entire packet. But
-     * for IPv6 we need to add the size of the IPv6
-     * header (40 bytes).
-     */
-  } else {
+  if(uip_len < uipbuf_get_len_field(UIP_IP_BUF)) {
+    UIP_STAT(++uip_stat.ip.drop);
     LOG_ERR("packet shorter than reported in IP header\n");
+    goto drop;
+  }
+
+  /*
+   * The length reported in the IPv6 header is the length of the
+   * payload that follows the header. However, uIP uses the uip_len
+   * variable for holding the size of the entire packet, including the
+   * IP header. For IPv4 this is not a problem as the length field in
+   * the IPv4 header contains the length of the entire packet. But for
+   * IPv6 we need to add the size of the IPv6 header (40 bytes).
+   */
+  uip_len = uipbuf_get_len_field(UIP_IP_BUF) + UIP_IPH_LEN;
+
+  /* Check that the packet length is acceptable given our IP buffer size. */
+  if(uip_len > sizeof(uip_buf)) {
+    UIP_STAT(++uip_stat.ip.drop);
+    LOG_WARN("dropping packet with length %d > %d\n",
+	     (int)uip_len, (int)sizeof(uip_buf));
     goto drop;
   }
 
