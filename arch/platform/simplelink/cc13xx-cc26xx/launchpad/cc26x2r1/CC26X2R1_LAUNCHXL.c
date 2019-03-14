@@ -35,7 +35,6 @@
  *  This file is responsible for setting up the board specific items for the
  *  CC26X2R1_LAUNCHXL board.
  */
-#include "contiki.h"
 
 #include <stdbool.h>
 #include <stddef.h>

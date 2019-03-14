@@ -33,14 +33,14 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC1350_LAUNCHXL
-#define BOARD_STRING    "TI CC1350 LaunchPad"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "CC1350_LAUNCHXL.h"
+
+#define Board_CC1350_LAUNCHXL
+#define BOARD_STRING            "TI CC1350 LaunchPad"
 
 #define Board_initGeneral()      CC1350_LAUNCHXL_initGeneral()
 #define Board_shutDownExtFlash() CC1350_LAUNCHXL_shutDownExtFlash()
