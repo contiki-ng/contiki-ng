@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, RISE SICS AB
+ * Copyright (c) 2019, RISE AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,44 +27,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * \addtogroup efr32tb
- * @{
- *
- * \file
- *  Configuration for the efr32tb platform
- */
-#ifndef CONTIKI_CONF_H_
-#define CONTIKI_CONF_H_
 
-#include <stdint.h>
-#include <inttypes.h>
-/*---------------------------------------------------------------------------*/
-/* Include project specific configuration */
-#ifdef PROJECT_CONF_PATH
-#include PROJECT_CONF_PATH
-#endif /* PROJECT_CONF_PATH */
-/*---------------------------------------------------------------------------*/
-#include "efr32-def.h"
-/*---------------------------------------------------------------------------*/
-/* Disable the stack check library for now */
-#define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
-/*---------------------------------------------------------------------------*/
 /**
- * \name Button configurations
- *
+ * \addtogroup efr32
  * @{
  */
 
-/* Notify various examples that we have Buttons */
-#define PLATFORM_SUPPORTS_BUTTON_HAL 1
+#ifndef EFR32_CM4_H_
+#define EFR32_CM4_H_
 
-/** @} */
-/*---------------------------------------------------------------------------*/
-/* Board specific configuration */
-#include "board.h"
-/*---------------------------------------------------------------------------*/
-/* Include CPU-related configuration */
-#include "efr32-conf.h"
-/*---------------------------------------------------------------------------*/
-#endif /* CONTIKI_CONF_H_ */
+#include "em_device.h"
+
+/* Cortex-M4 processor and core peripherals */
+#include "core_cm4.h"
+
+#endif /* EFR32_CM4_H_ */
+
+/**
+ * @}
+ */

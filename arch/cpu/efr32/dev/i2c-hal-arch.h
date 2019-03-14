@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
- * Copyright (c) 2018, RISE SICS
+ * Copyright (c) 2017, Yanzi Networks, 2018, RISE SICS
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,20 +28,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-#ifndef BMP_280_SENSOR_H_
-#define BMP_280_SENSOR_H_
-/*---------------------------------------------------------------------------*/
-#include "lib/sensors.h"
-/*---------------------------------------------------------------------------*/
-#define BMP_280_SENSOR_TYPE_TEMP    1
-#define BMP_280_SENSOR_TYPE_PRESS   2
-/*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor bmp_280_sensor;
-/*---------------------------------------------------------------------------*/
-#endif /* BMP_280_SENSOR_H_ */
-/*---------------------------------------------------------------------------*/
+
+#ifndef I2C_HAL_ARCH_H_
+#define I2C_HAL_ARCH_H_
+
+#include "em_i2c.h"
+
 /**
- * @}
- * @}
+ * see EFR32MG1 datasheet for allowed I2C locations
+ * see efr32mg1p_i2c.h for possible values
  */
+
+typedef struct {
+  uint32_t sda_loc;
+  uint32_t scl_loc;
+  I2C_TypeDef *I2Cx;
+} i2c_hal_bus_config_t;
+
+#define I2C_HAL_CONF_ARCH_CONFIG_TYPE i2c_hal_bus_config_t
+
+#endif /* I2C_HAL_ARCH_H_ */

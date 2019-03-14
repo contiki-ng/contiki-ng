@@ -47,7 +47,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "board"
+#define LOG_MODULE "bmp280"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 
@@ -83,20 +83,19 @@ value(int type)
   int32_t temp = 0;
   uint32_t pressure = 0;
 
-  bmp_get_temperature_pressure(&temp, &pressure);
-
   /* Here we need a mechanism to tell the caller that we failed - API is
      somewhat broken as any int value can be a valid value */
   if((type != BMP_280_SENSOR_TYPE_TEMP) && type != BMP_280_SENSOR_TYPE_PRESS) {
     return 0;
   } else {
+    bmp_get_temperature_pressure(&temp, &pressure);
     if(type == BMP_280_SENSOR_TYPE_TEMP) {
       rv = (int)temp;
     } else if(type == BMP_280_SENSOR_TYPE_PRESS) {
       rv = (int)pressure;
     }
+    return rv;
   }
-  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**

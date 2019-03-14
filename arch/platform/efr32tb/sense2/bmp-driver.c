@@ -54,8 +54,9 @@ uint32_t bmp_init(uint8_t *deviceId)
   /* The device needs 2 ms startup time */
   clock_delay_usec(2000);
 
-  if(i2c_acquire(&bmp_sens) > 0) {
-    return 1;
+  if(i2c_acquire(&bmp_sens) != I2C_BUS_STATUS_OK) {
+    LOG_WARN("failed to acquire I2C\n");
+    return BMP_ERROR_I2C_TRANSACTION_FAILED;
   }
 
   /* Read device ID to determine if we have a BMP280 connected */
@@ -64,6 +65,7 @@ uint32_t bmp_init(uint8_t *deviceId)
   LOG_INFO("REG_ID: %d\n", bmpDeviceId);
 
   if(bmpDeviceId != BMP_DEVICE_ID_BMP280) {
+    LOG_WARN("device id mismatch: %u != %u\n", bmpDeviceId, BMP_DEVICE_ID_BMP280);
     return BMP_ERROR_DEVICE_ID_MISMATCH;
   }
 
@@ -94,8 +96,8 @@ uint32_t bmp_init(uint8_t *deviceId)
 
   *deviceId = bmpDeviceId;
 
-  if(i2c_release(&bmp_sens) > 0) {
-    return 1;
+  if(i2c_release(&bmp_sens) != I2C_BUS_STATUS_OK) {
+    return BMP_ERROR_I2C_TRANSACTION_FAILED;
   }
 
   return BMP_OK;

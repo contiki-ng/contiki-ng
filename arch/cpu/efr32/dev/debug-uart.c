@@ -35,7 +35,7 @@
 #include <em_cmu.h>
 #include <em_gpio.h>
 #include "lib/dbg-io/dbg.h"
-#include "debug-uart.h"
+#include "dev/debug-uart.h"
 #include <stdbool.h>
 #include <stdio.h>
 

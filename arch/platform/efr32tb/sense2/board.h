@@ -34,37 +34,16 @@
 #define PLATFORM_HAS_LEDS     1
 #define PLATFORM_HAS_BUTTON   1
 #define PLATFORM_HAS_RADIO    1
-#define PLATFORM_HAS_SENSORS  0
 
-#define LEDS_CONF_RED    1
-#define LEDS_CONF_GREEN  2
-#define LEDS_CONF_COUNT  2
+#define BOARD_HAS_SENSORS     1
+
+#define LEDS_CONF_RED         1
+#define LEDS_CONF_GREEN       2
+#define LEDS_CONF_COUNT       2
 
 #define GPIO_HAL_CONF_PIN_COUNT 16
 #define GPIO_EFR32_CONFIG {}
-
-/*
- * Override button symbols from dev/button-sensor.h, for the examples that
- * include it
- */
-#define button_sensor button_left_sensor
-#define button_sensor2 button_right_sensor
-
 /*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR "Button"
-/*---------------------------------------------------------------------------*/
-#define BUTTON_SENSOR_VALUE_STATE    0
-#define BUTTON_SENSOR_VALUE_DURATION 1
-
-#define BUTTON_SENSOR_VALUE_RELEASED 0
-#define BUTTON_SENSOR_VALUE_PRESSED  1
-
-/*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor button_left_sensor;
-extern const struct sensors_sensor button_right_sensor;
-
-/*---------------------------------------------------------------------------*/
-
 #define BSP_SERIAL_APP_CTS_PIN                (2)
 #define BSP_SERIAL_APP_CTS_PORT               (gpioPortA)
 #define BSP_SERIAL_APP_CTS_LOC                (30)
@@ -162,8 +141,5 @@ extern const struct sensors_sensor button_right_sensor;
 #define EXTI_IMU_INT              12
 #define EXTI_UV_ALS_INT           11
 #define EXTI_HALL_OUT1            10
-
-
-uint32_t board_imu_enable(int enable);
 
 #endif /* BOARD_H_ */

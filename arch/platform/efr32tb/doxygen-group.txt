@@ -1,0 +1,4 @@
+/**
+ * \defgroup efr32tb SiliconLabs Thunderboard Sense 2 Development Kit
+ * \ingroup platform
+ */

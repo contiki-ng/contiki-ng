@@ -36,14 +36,9 @@ INC_PATHS += ${addprefix radio/rail_lib/,chip/efr32/efr32xg1x}
 
 EXTERNALDIRS += $(addprefix $(GECKO_SDK_PLATFORM)/,$(INC_PATHS))
 
-EFR32MG    := clock.c \
-              int-master.c \
-              rtimer-arch.c \
-              debug-uart.c \
-              watchdog.c \
-              efr32-radio.c \
-              i2c-arch.c \
-              gpio-hal-arch.c
+CONTIKI_CPU_SOURCEFILES += clock.c int-master.c rtimer-arch.c watchdog.c
+CONTIKI_CPU_SOURCEFILES += i2c-hal-arch.c gpio-hal-arch.c debug-uart.c efr32-radio.c
+
 EMDRV      := dmadrv.c
 EMLIB_ALL  := ${notdir ${wildcard $(GECKO_SDK_PLATFORM)/emlib/src/*.c}}
 
@@ -52,20 +47,13 @@ EMLIB      := ${filter-out em_int.c em_mpu.c ,$(EMLIB_ALL)}
 
 RAILFILES  := pa_conversions_efr32.c
 
-MODULES += os/lib/dbg-io
+CPU_START_SOURCEFILES := startup_$(EFR32_MCU_LOWER).c \
+                         system_$(EFR32_MCU_LOWER).c
 
-START_SOURCEFILES := startup_$(EFR32_MCU_LOWER).c \
-                     system_$(EFR32_MCU_LOWER).c
-
-CONTIKI_SOURCEFILES += $(EFR32MG) \
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) \
                        $(EMLIB) \
                        $(EMDRV) \
-                       $(SYSAPPS) \
-                       $(TARGETLIBS) \
-                       $(RAILFILES) \
-                       $(START_SOURCEFILES)
-
-# LIBRAIL := $(GECKO_SDK_PATH)/$(GECKO_SDK_VERSION)/protocol/flex_2.1/connect/plugins/libraries/phy-rail-$(EFR32_FAMILY)-rtos-library-gcc.a
+                       $(RAILFILES)
 
 LIBRAIL := $(GECKO_SDK_PLATFORM)/radio/rail_lib/autogen/librail_release/librail_multiprotocol_$(EFR32_FAMILY)_gcc_release.a
 
@@ -73,14 +61,10 @@ TARGET_LIBS := $(LIBRAIL)
 
 LDSCRIPT := $(GECKO_SDK_PLATFORM)/Device/SiliconLabs/$(EFR32_MCU)/Source/GCC/$(EFR32_MCU_LOWER).ld
 
-
-TARGET_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(START_SOURCEFILES)}}
-
 CFLAGS += -D$(PART_NUMBER) \
           -D$(EFR32_MCU) \
           -D__START=main \
           -D__STARTUP_CLEAR_BSS \
-          -DCMSIS_DEV_HDR=\"em_device.h\" \
           -Dsvcall_handler=SVC_Handler \
           -Dpendsv_handler=PendSV_Handler
 
@@ -89,76 +73,4 @@ LDFLAGS += -L $(CONTIKI_CPU) \
            -nostartfiles \
            $(CFLAGS)
 
-include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4
-
-ifeq ($(V),1)
-  TRACE_UPLOAD =
-else
-  TRACE_UPLOAD = @echo "  UPLOAD   " $<
-endif
-
-# Flashing
-
-ifeq ($(HOST_OS),Darwin)
- JLINK_PATH ?= /Applications/SEGGER/JLink
-else
- JLINK_PATH ?= /opt/SEGGER/JLink
-endif
-JLINK_EXE = $(JLINK_PATH)/JLinkExe
-
-ifneq (${wildcard $(JLINK_EXE)},)
-
-  _JLINK_SN_LIST = ${shell echo "ShowEmuList\nqc" | $(JLINK_EXE) \
-                           | sed -ne '/Serial number: / s/.*Serial number: \([0-9]*\).*/\1/p'}
-
-  define jlink_upload_v
-    echo "RSetType 5\nr\nconnect\nr\nloadbin "$(1)" 0\nqc" \
-        | $(JLINK_EXE) -AutoConnect 1 -ExitOnError 1 \
-                       -Device $(EFR32_JLINK_MCU) -If SWD -Speed auto \
-                       ${if ${strip $(2)},-SelectEmuBySN $(2),}
-  endef
-
-  ifeq ($(V),1)
-    jlink_upload = ${call jlink_upload_v,$(1),$(2)}
-  else
-    define jlink_upload
-      ${call jlink_upload_v,$(1),$(2)} > /dev/null; \
-      ${if $(2),\
-        if [ $$? -eq 0 ]; then \
-          echo "            $(2): OK"; \
-        else \
-          echo "            $(2): FAILED"; \
-        fi \
-      ,}
-    endef
-  endif
-
-  define NL
-
-
-  endef
-
-%.upload: $(OUT_BIN)
-	$(TRACE_UPLOAD)
-	$(Q)${call jlink_upload,$<,$(JLINK_SN)}
-
-%.upload-all: $(OUT_BIN)
-	$(TRACE_UPLOAD)
-	${foreach sn,$(_JLINK_SN_LIST),$(Q)${call jlink_upload,$<,$(sn)}$(NL)}
-
-jlink-list:
-	@echo "ShowEmuList\nqc" | $(JLINK_EXE) | grep 'Serial number:'
-
-else
-jlink-not-found-msg:
-	@echo " |"
-	@echo " | Error: JLinkExe not found."
-	@echo " | Please install J-Link Software Pack and add 'JLINK_PATH=/path/to/JLink/'"
-	@echo " | with JLinkExe's directory to make's command line or export it in the shell."
-	@echo " |"
-
-%.upload %.upload-all: jlink-not-found-msg
-	@false
-jlink-list: jlink-not-found-msg
-	@false
-endif
+include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4

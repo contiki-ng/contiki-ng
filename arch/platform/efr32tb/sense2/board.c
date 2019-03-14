@@ -66,18 +66,6 @@ board_init(void)
   gpio_hal_arch_pin_set_output(VCOM_ENABLE_PORT,  VCOM_ENABLE_PIN);
   gpio_hal_arch_set_pin(VCOM_ENABLE_PORT, VCOM_ENABLE_PIN);
 
-  /* SENSORS_ACTIVATE(button_left_sensor); */
-  /* SENSORS_ACTIVATE(button_right_sensor); */
-
-  /* setup button interrupts  */
-
-  /* GPIOINT_CallbackRegister(EXTI_BUTTON0, gpioInterruptHandler); */
-  /* GPIOINT_CallbackRegister(EXTI_BUTTON1, gpioInterruptHandler); */
-
-  button_hal_init();
-
-  SENSORS_ACTIVATE(bmp_280_sensor);
-
   rgbleds_init();
 }
 /*---------------------------------------------------------------------------*/
