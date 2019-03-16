@@ -88,6 +88,10 @@ frequency hopping for enhanced reliability.
 #define TSCH_CALLBACK_KA_SENT tsch_rpl_callback_ka_sent
 #endif /* TSCH_CALLBACK_KA_SENT */
 
+#ifndef TSCH_RPL_CHECK_DODAG_JOINED
+#define TSCH_RPL_CHECK_DODAG_JOINED tsch_rpl_check_dodag_joined
+#endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+
 #endif /* UIP_CONF_IPV6_RPL */
 
 #if BUILD_WITH_ORCHESTRA
@@ -115,6 +119,11 @@ void TSCH_CALLBACK_LEAVING_NETWORK();
 /* Called by TSCH after sending a keep-alive */
 #ifdef TSCH_CALLBACK_KA_SENT
 void TSCH_CALLBACK_KA_SENT();
+#endif
+
+/* Called by TSCH before sending a EB */
+#ifdef TSCH_RPL_CHECK_DODAG_JOINED
+int TSCH_RPL_CHECK_DODAG_JOINED();
 #endif
 
 /* Called by TSCH form interrupt after receiving a frame, enabled upper-layer to decide
@@ -158,9 +167,9 @@ extern uint8_t tsch_current_channel;
 extern uint8_t tsch_hopping_sequence[TSCH_HOPPING_SEQUENCE_MAX_LEN];
 extern struct tsch_asn_divisor_t tsch_hopping_sequence_length;
 /* TSCH timeslot timing (in micro-second) */
-extern uint16_t tsch_timing_us[tsch_ts_elements_count];
+extern tsch_timeslot_timing_usec tsch_timing_us;
 /* TSCH timeslot timing (in rtimer ticks) */
-extern rtimer_clock_t tsch_timing[tsch_ts_elements_count];
+extern tsch_timeslot_timing_ticks tsch_timing;
 /* Statistics on the current session */
 extern unsigned long tx_count;
 extern unsigned long rx_count;
@@ -168,7 +177,7 @@ extern unsigned long sync_count;
 extern int32_t min_drift_seen;
 extern int32_t max_drift_seen;
 /* The TSCH standard 10ms timeslot timing */
-extern const uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count];
+extern const tsch_timeslot_timing_usec tsch_timeslot_timing_us_10000;
 
 /* TSCH processes */
 PROCESS_NAME(tsch_process);

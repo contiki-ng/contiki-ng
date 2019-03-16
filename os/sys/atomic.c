@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2016, Yasuyuki Tanaka
+ * Copyright (c) 2019, Toshiba Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,57 +29,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <contiki.h>
-#include <net/mac/tsch/tsch.h>
-#include <net/ipv6/uip.h>
-#include <net/ipv6/uip-ds6.h>
-#include <serial-shell.h>
+/**
+ * \addtogroup atomic
+ * @{
+ */
 
-#include <stdio.h>
+#include "atomic.h"
+#include <sys/critical.h>
 
-PROCESS(node_process, "Node");
-AUTOSTART_PROCESSES(&node_process);
-
-PROCESS_THREAD(node_process, ev, data)
+/*---------------------------------------------------------------------------*/
+bool
+atomic_generic_cas_uint8(uint8_t *target, uint8_t old_val, uint8_t new_val)
 {
-  static struct etimer et;
-#if WITH_ULA
-  static uip_ipaddr_t ipaddr;
-  const uip_ipaddr_t *default_prefix;
-#endif /* WITH_ULA */
-
-#if WITH_TSCH
-  static linkaddr_t coordinator_addr =  {{0x00, 0x01, 0x00, 0x01,
-                                          0x00, 0x01, 0x00, 0x01}};
-#endif /* WITH_TSCH */
-
-  PROCESS_BEGIN();
-
-#if WITH_TSCH
-  if(linkaddr_cmp(&coordinator_addr, &linkaddr_node_addr)) {
-    tsch_set_coordinator(1);
+  bool ret = false;
+  int_master_status_t status = critical_enter();
+  if(*target == old_val) {
+    *target = new_val;
+    ret = true;
   }
-#endif /* WITH_TSCH */
-
-#if WITH_ULA
-  default_prefix = uip_ds6_default_prefix();
-  uip_ip6addr_copy(&ipaddr, default_prefix);
-  uip_ds6_prefix_add(&ipaddr, UIP_DEFAULT_PREFIX_LEN, 0, 0, 0, 0);
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-#endif /* WITH_ULA */
-
-  serial_shell_init();
-
-  etimer_set(&et, CLOCK_SECOND);
-  while(1) {
-    /*
-     * keep doing something so that simulation runs until its timeout
-     */
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    printf(".\n");
-    etimer_reset(&et);
-  }
-
-  PROCESS_END();
+  critical_exit(status);
+  return ret;
 }
+/** @} */

@@ -136,5 +136,13 @@ tsch_rpl_callback_parent_switch(rpl_parent_t *old, rpl_parent_t *new)
         rpl_parent_get_ipaddr(new)));
   }
 }
+/*---------------------------------------------------------------------------*/
+/* Check RPL has joined DODAG.
+ * To use, set #define TSCH_RPL_CHECK_DODAG_JOINED tsch_rpl_check_dodag_joined */
+int
+tsch_rpl_check_dodag_joined(void)
+{
+  return NETSTACK_ROUTING.node_has_joined();
+}
 #endif /* UIP_CONF_IPV6_RPL */
 /** @} */
