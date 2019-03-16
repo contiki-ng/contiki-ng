@@ -79,6 +79,7 @@ struct ccm_star_driver {
       int forward);
 };
 
+extern const struct ccm_star_driver ccm_star_driver;
 extern const struct ccm_star_driver CCM_STAR;
 
 #endif /* CCM_STAR_H_ */
