@@ -72,6 +72,14 @@ int ringbufindex_put(struct ringbufindex *r);
 int ringbufindex_peek_put(const struct ringbufindex *r);
 
 /**
+ * \brief Do "peek_put" and "put" atomically.
+ * \param r Pointer to ringbufindex
+ * \retval >= 0 The index just added to the queue.
+ * \retval -1 Failure; the ring buffer is full
+ */
+int ringbufindex_atomic_put(struct ringbufindex *r);
+
+/**
  * \brief Remove the first element and return its index
  * \param r Pinter to ringbufindex
  * \retval >= 0 The index of the first element
@@ -87,6 +95,14 @@ int ringbufindex_get(struct ringbufindex *r);
  * \retval -1 No element in the ring buffer
  */
 int ringbufindex_peek_get(const struct ringbufindex *r);
+
+/**
+ * \brief Do "get" atomically
+ * \param r Pointer to ringbufindex
+ * \retval >= 0 The index just got from the queue.
+ * \retval -1 No element in the ring buffer.
+ */
+int ringbufindex_atomic_get(struct ringbufindex *r);
 
 /**
  * \brief Return the ring buffer size
