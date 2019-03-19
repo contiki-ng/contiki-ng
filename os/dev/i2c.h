@@ -44,18 +44,17 @@
  *     Header file for the I2C HAL
  */
 /*---------------------------------------------------------------------------*/
-
 #ifndef I2C_H_
 #define I2C_H_
-
-#include "contiki-conf.h"
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
 #include <stdint.h>
 #include <stdbool.h>
-
-#ifdef PLATFORM_HAS_I2C_ARCH
-#include "i2c-arch.h"
-#endif
-
+/*---------------------------------------------------------------------------*/
+/* Include Arch-Specific conf */
+#ifdef I2C_HAL_CONF_ARCH_HDR_PATH
+#include I2C_HAL_CONF_ARCH_HDR_PATH
+#endif /* I2C_HAL_CONF_ARCH_HDR_PATH */
 /*---------------------------------------------------------------------------*/
 /**
  * \brief I2C return codes
@@ -85,9 +84,9 @@ typedef struct i2c_device i2c_device_t;
 typedef struct {
   i2c_device_t *lock_device;
   volatile uint8_t lock; /* for locking the bus */
-#ifdef PLATFORM_HAS_I2C_ARCH
-  i2c_bus_config_t config;
-#endif
+#ifdef I2C_HAL_CONF_ARCH_CONFIG_TYPE
+  I2C_HAL_CONF_ARCH_CONFIG_TYPE config;
+#endif /* I2C_HAL_CONF_ARCH_CONFIG_TYPE */
 } i2c_bus_t;
 
 /**
