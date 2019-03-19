@@ -33,12 +33,12 @@
 #include "em_cmu.h"
 #include "em_timer.h"
 #include "lib/sensors.h"
-#include "dev/i2c.h"
+#include "dev/i2c-hal.h"
+#include "dev/gpio-hal.h"
+#include "dev/button-hal.h"
 #include "button-sensor.h"
 #include "bmp-280-sensor.h"
 #include "rgbleds.h"
-#include "dev/gpio-hal.h"
-#include "dev/button-hal.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -50,12 +50,15 @@
 #define VCOM_ENABLE_PORT gpioPortA
 #define VCOM_ENABLE_PIN  5
 
-i2c_bus_t i2c1_bus = {.lock_device = NULL,
-                      .lock = 0,
-                      .config = {.I2Cx = I2C1,
-                                 .sda_loc = _I2C_ROUTELOC0_SDALOC_LOC17,
-                                 .scl_loc = _I2C_ROUTELOC0_SCLLOC_LOC17},
-                    };
+i2c_hal_bus_t i2c1_bus = {
+  .lock_device = NULL,
+  .lock = 0,
+  .config = {
+    .I2Cx = I2C1,
+    .sda_loc = _I2C_ROUTELOC0_SDALOC_LOC17,
+    .scl_loc = _I2C_ROUTELOC0_SCLLOC_LOC17
+  },
+};
 
 /*---------------------------------------------------------------------------*/
 void
