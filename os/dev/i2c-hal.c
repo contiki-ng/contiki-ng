@@ -29,14 +29,14 @@
  *
  */
 
-#include "dev/i2c.h"
+#include "dev/i2c-hal.h"
 #include "sys/cc.h"
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 bool
-i2c_has_bus(const i2c_device_t *dev)
+i2c_hal_has_bus(const i2c_hal_device_t *dev)
 {
   if(dev == NULL || dev->bus == NULL) {
     return 0;
@@ -44,27 +44,27 @@ i2c_has_bus(const i2c_device_t *dev)
   return dev->bus->lock != 0 && dev->bus->lock_device == dev;
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_acquire(i2c_device_t *dev)
+i2c_hal_status_t
+i2c_hal_acquire(i2c_hal_device_t *dev)
 {
-  i2c_status_t status;
+  i2c_hal_status_t status;
   if(dev == NULL || dev->bus == NULL) {
-    return I2C_BUS_STATUS_EINVAL;
+    return I2C_HAL_STATUS_EINVAL;
   }
 
   /* If the bus is already ours - things are ok */
   if(dev->bus->lock_device == dev && dev->bus->lock == 1) {
-    return I2C_BUS_STATUS_OK;
+    return I2C_HAL_STATUS_OK;
   }
 
   if(++dev->bus->lock == 1) {
     dev->bus->lock_device = dev;
 
     /* lock the bus */
-    status = i2c_arch_lock(dev);
-    if(status == I2C_BUS_STATUS_OK) {
+    status = i2c_hal_arch_lock(dev);
+    if(status == I2C_HAL_STATUS_OK) {
       /* Bus has been locked */
-      return I2C_BUS_STATUS_OK;
+      return I2C_HAL_STATUS_OK;
     }
 
     dev->bus->lock_device = NULL;
@@ -74,132 +74,132 @@ i2c_acquire(i2c_device_t *dev)
 
   /* problem... unlock */
   dev->bus->lock--;
-  return I2C_BUS_STATUS_BUS_LOCKED;
+  return I2C_HAL_STATUS_BUS_LOCKED;
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_release(i2c_device_t *dev)
+i2c_hal_status_t
+i2c_hal_release(i2c_hal_device_t *dev)
 {
-  if(!i2c_has_bus(dev)) {
+  if(!i2c_hal_has_bus(dev)) {
     /* The device does not own the bus */
-    return I2C_BUS_STATUS_EINVAL;
+    return I2C_HAL_STATUS_EINVAL;
   }
 
   /* unlock the bus */
   dev->bus->lock_device = NULL;
   if(--dev->bus->lock == 0) {
-    return i2c_arch_unlock(dev);
+    return i2c_hal_arch_unlock(dev);
   }
-  return I2C_BUS_STATUS_EINVAL;
+  return I2C_HAL_STATUS_EINVAL;
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_restart_timeout(i2c_device_t *dev)
+i2c_hal_status_t
+i2c_hal_restart_timeout(i2c_hal_device_t *dev)
 {
-  if(!i2c_has_bus(dev)) {
-    return I2C_BUS_STATUS_EINVAL;
+  if(!i2c_hal_has_bus(dev)) {
+    return I2C_HAL_STATUS_EINVAL;
   }
-  return i2c_arch_restart_timeout(dev);
+  return i2c_hal_arch_restart_timeout(dev);
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_write_byte(i2c_device_t *dev, uint8_t data)
+i2c_hal_status_t
+i2c_hal_write_byte(i2c_hal_device_t *dev, uint8_t data)
 {
-  if(!i2c_has_bus(dev)) {
-    return I2C_BUS_STATUS_BUS_LOCKED;
+  if(!i2c_hal_has_bus(dev)) {
+    return I2C_HAL_STATUS_BUS_LOCKED;
   }
-  return i2c_arch_write(dev, &data, 1);
+  return i2c_hal_arch_write(dev, &data, 1);
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_write(i2c_device_t *dev, const uint8_t *data, int size)
+i2c_hal_status_t
+i2c_hal_write(i2c_hal_device_t *dev, const uint8_t *data, int size)
 {
-  if(!i2c_has_bus(dev)) {
-    return I2C_BUS_STATUS_BUS_LOCKED;
+  if(!i2c_hal_has_bus(dev)) {
+    return I2C_HAL_STATUS_BUS_LOCKED;
   }
-  return i2c_arch_write(dev, data, size);
+  return i2c_hal_arch_write(dev, data, size);
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_read_byte(i2c_device_t *dev, uint8_t *data)
+i2c_hal_status_t
+i2c_hal_read_byte(i2c_hal_device_t *dev, uint8_t *data)
 {
-  if(!i2c_has_bus(dev)) {
-    return I2C_BUS_STATUS_BUS_LOCKED;
+  if(!i2c_hal_has_bus(dev)) {
+    return I2C_HAL_STATUS_BUS_LOCKED;
   }
-  return i2c_arch_read(dev, data, 1);
+  return i2c_hal_arch_read(dev, data, 1);
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_read(i2c_device_t *dev, uint8_t *data, int size)
+i2c_hal_status_t
+i2c_hal_read(i2c_hal_device_t *dev, uint8_t *data, int size)
 {
-  if(!i2c_has_bus(dev)) {
-    return I2C_BUS_STATUS_BUS_LOCKED;
+  if(!i2c_hal_has_bus(dev)) {
+    return I2C_HAL_STATUS_BUS_LOCKED;
   }
-  return i2c_arch_read(dev, data, size);
+  return i2c_hal_arch_read(dev, data, size);
 }
 /*---------------------------------------------------------------------------*/
 /* Read a register - e.g. first write a data byte to select register to read from, then read */
-i2c_status_t
-i2c_read_register(i2c_device_t *dev, uint8_t reg, uint8_t *data, int size)
+i2c_hal_status_t
+i2c_hal_read_register(i2c_hal_device_t *dev, uint8_t reg, uint8_t *data, int size)
 {
   uint8_t status;
   /* write the register first */
-  status = i2c_write_byte(dev, reg);
-  if(status != I2C_BUS_STATUS_OK) {
+  status = i2c_hal_write_byte(dev, reg);
+  if(status != I2C_HAL_STATUS_OK) {
     return status;
   }
   /* then read the value */
-  status = i2c_read(dev, data, size);
-  if(status != I2C_BUS_STATUS_OK) {
+  status = i2c_hal_read(dev, data, size);
+  if(status != I2C_HAL_STATUS_OK) {
     return status;
   }
-  return i2c_arch_stop(dev);
+  return i2c_hal_arch_stop(dev);
 }
 /*---------------------------------------------------------------------------*/
 /* Write a register - e.g. first write a data byte to select register to write to, then write */
-i2c_status_t
-i2c_write_register(i2c_device_t *dev, uint8_t reg, uint8_t data)
+i2c_hal_status_t
+i2c_hal_write_register(i2c_hal_device_t *dev, uint8_t reg, uint8_t data)
 {
   uint8_t buffer[2];
-  i2c_status_t status;
+  i2c_hal_status_t status;
 
   /* write the register first */
   buffer[0] = reg;
   buffer[1] = data;
 
-  status = i2c_write(dev, buffer, 2);
-  if(status != I2C_BUS_STATUS_OK) {
+  status = i2c_hal_write(dev, buffer, 2);
+  if(status != I2C_HAL_STATUS_OK) {
     return status;
   }
 
-  return i2c_arch_stop(dev);
+  return i2c_hal_arch_stop(dev);
 }
 /*---------------------------------------------------------------------------*/
 /* Write a register - e.g. first write a data byte to select register to write to, then write */
-i2c_status_t
-i2c_write_register_buf(i2c_device_t *dev, uint8_t reg, const uint8_t *data, int size)
+i2c_hal_status_t
+i2c_hal_write_register_buf(i2c_hal_device_t *dev, uint8_t reg, const uint8_t *data, int size)
 {
   uint8_t buffer[size + 1];
-  i2c_status_t status;
+  i2c_hal_status_t status;
 
   /* write the register first */
   buffer[0] = reg;
   memcpy(&buffer[1], data, size);
 
-  status = i2c_write(dev, buffer, size + 1);
-  if(status != I2C_BUS_STATUS_OK) {
+  status = i2c_hal_write(dev, buffer, size + 1);
+  if(status != I2C_HAL_STATUS_OK) {
     return status;
   }
 
-  return i2c_arch_stop(dev);
+  return i2c_hal_arch_stop(dev);
 }
 /*---------------------------------------------------------------------------*/
-i2c_status_t
-i2c_stop(i2c_device_t *dev)
+i2c_hal_status_t
+i2c_hal_stop(i2c_hal_device_t *dev)
 {
-  if(!i2c_has_bus(dev)) {
-    return I2C_BUS_STATUS_BUS_LOCKED;
+  if(!i2c_hal_has_bus(dev)) {
+    return I2C_HAL_STATUS_BUS_LOCKED;
   }
-  return i2c_arch_stop(dev);
+  return i2c_hal_arch_stop(dev);
 }
 /*---------------------------------------------------------------------------*/

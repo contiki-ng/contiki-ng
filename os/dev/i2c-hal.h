@@ -44,8 +44,8 @@
  *     Header file for the I2C HAL
  */
 /*---------------------------------------------------------------------------*/
-#ifndef I2C_H_
-#define I2C_H_
+#ifndef I2C_HAL_H_
+#define I2C_HAL_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include <stdint.h>
@@ -62,32 +62,31 @@
  * @{
  */
 typedef enum {
-  I2C_BUS_STATUS_OK,
-  I2C_BUS_STATUS_TIMEOUT,
-  I2C_BUS_STATUS_EINVAL,
-  I2C_BUS_STATUS_ADDRESS_NACK,
-  I2C_BUS_STATUS_DATA_NACK,
-  I2C_BUS_STATUS_BUS_LOCKED,
-  I2C_BUS_STATUS_BUS_NOT_OWNED
-} i2c_status_t;
+  I2C_HAL_STATUS_OK,
+  I2C_HAL_STATUS_TIMEOUT,
+  I2C_HAL_STATUS_EINVAL,
+  I2C_HAL_STATUS_ADDRESS_NACK,
+  I2C_HAL_STATUS_DATA_NACK,
+  I2C_HAL_STATUS_BUS_LOCKED,
+  I2C_HAL_STATUS_BUS_NOT_OWNED
+} i2c_hal_status_t;
 /** @} */
 /*---------------------------------------------------------------------------*/
 
 
-
-#define I2C_NORMAL_BUS_SPEED  100000  /* 100KHz I2C */
-#define I2C_FAST_BUS_SPEED    400000  /* 400KHz I2C */
+#define I2C_HAL_NORMAL_BUS_SPEED  100000  /* 100KHz I2C */
+#define I2C_HAL_FAST_BUS_SPEED    400000  /* 400KHz I2C */
 
 /*---------------------------------------------------------------------------*/
-typedef struct i2c_device i2c_device_t;
+typedef struct i2c_hal_device i2c_hal_device_t;
 
 typedef struct {
-  i2c_device_t *lock_device;
+  i2c_hal_device_t *lock_device;
   volatile uint8_t lock; /* for locking the bus */
 #ifdef I2C_HAL_CONF_ARCH_CONFIG_TYPE
   I2C_HAL_CONF_ARCH_CONFIG_TYPE config;
 #endif /* I2C_HAL_CONF_ARCH_CONFIG_TYPE */
-} i2c_bus_t;
+} i2c_hal_bus_t;
 
 /**
  * \brief I2C Device Configuration
@@ -97,8 +96,8 @@ typedef struct {
  * @{
  */
 
-struct i2c_device {
-  i2c_bus_t *bus;
+struct i2c_hal_device {
+  i2c_hal_bus_t *bus;
   uint32_t speed;
   uint16_t timeout; /* timeout in milliseconds for this device */
   uint8_t address;  /* 8 bit I2C address */
@@ -117,7 +116,7 @@ struct i2c_device {
  * \return I2C return code
  */
 
-i2c_status_t i2c_acquire(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_acquire(i2c_hal_device_t *dev);
 
 /**
  * \brief Closes and then unlocks an I2C controller
@@ -129,17 +128,17 @@ i2c_status_t i2c_acquire(i2c_device_t *dev);
  * This should work only if the device has already aquired the I2C
  * controller.
  */
-i2c_status_t i2c_release(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_release(i2c_hal_device_t *dev);
 
 /**
  * \brief Checks if a device has locked an I2C controller
  * \param dev An I2C device state which defines the controller.
  * \return true if the device has the lock, false otherwise.
  */
-bool i2c_has_bus(const i2c_device_t *dev);
+bool i2c_hal_has_bus(const i2c_hal_device_t *dev);
 
 
-i2c_status_t i2c_restart_timeout(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_restart_timeout(i2c_hal_device_t *dev);
 
 /**
  * \brief Writes a single byte to an I2C device
@@ -149,7 +148,7 @@ i2c_status_t i2c_restart_timeout(i2c_device_t *dev);
  *
  * It will work only if the device has already locked the I2C controller.
  */
-i2c_status_t i2c_write_byte(i2c_device_t *dev, uint8_t data);
+i2c_hal_status_t i2c_hal_write_byte(i2c_hal_device_t *dev, uint8_t data);
 
 /**
  * \brief Reads a single byte from an I2C device
@@ -159,7 +158,7 @@ i2c_status_t i2c_write_byte(i2c_device_t *dev, uint8_t data);
  *
  * It should work only if the device has already locked the I2C controller.
  */
-i2c_status_t i2c_read_byte(i2c_device_t *dev, uint8_t *data);
+i2c_hal_status_t i2c_hal_read_byte(i2c_hal_device_t *dev, uint8_t *data);
 
 /**
  * \brief Writes a buffer to an I2C device
@@ -170,7 +169,8 @@ i2c_status_t i2c_read_byte(i2c_device_t *dev, uint8_t *data);
  *
  * It should work only if the device has already locked the I2C controller.
  */
-i2c_status_t i2c_write(i2c_device_t *dev, const uint8_t *data, int size);
+i2c_hal_status_t i2c_hal_write(i2c_hal_device_t *dev, const uint8_t *data,
+                               int size);
 
 /**
  * \brief Reads a buffer from an I2C device
@@ -181,7 +181,7 @@ i2c_status_t i2c_write(i2c_device_t *dev, const uint8_t *data, int size);
  *
  * It should work only if the device has already locked the I2C controller.
  */
-i2c_status_t i2c_read(i2c_device_t *dev, uint8_t *data, int size);
+i2c_hal_status_t i2c_hal_read(i2c_hal_device_t *dev, uint8_t *data, int size);
 
 /**
  * \brief Sends an explicit stop signal to an I2C device
@@ -190,7 +190,7 @@ i2c_status_t i2c_read(i2c_device_t *dev, uint8_t *data, int size);
  *
  * It should work only if the device has already locked the I2C controller.
  */
-i2c_status_t i2c_stop(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_stop(i2c_hal_device_t *dev);
 
 /**
  * \brief Writes a byte to a register.
@@ -201,7 +201,8 @@ i2c_status_t i2c_stop(i2c_device_t *dev);
  *
  * It should work only if the device has already locked the SPI controller.
  */
-i2c_status_t i2c_write_register(i2c_device_t *dev, uint8_t reg, uint8_t value);
+i2c_hal_status_t i2c_hal_write_register(i2c_hal_device_t *dev, uint8_t reg,
+                                        uint8_t value);
 
 /**
  * \brief Writes a buffer to a register over I2C
@@ -213,8 +214,8 @@ i2c_status_t i2c_write_register(i2c_device_t *dev, uint8_t reg, uint8_t value);
  *
  * It should work only if the device has already locked the SPI controller.
  */
-i2c_status_t i2c_write_register_buf(i2c_device_t *dev, uint8_t reg,
-                                   const uint8_t *data, int size);
+i2c_hal_status_t i2c_hal_write_register_buf(i2c_hal_device_t *dev, uint8_t reg,
+                                            const uint8_t *data, int size);
 /**
  * \brief Reads a buffer of bytes from a register of an I2C device
  * \param dev An I2C device configuration.
@@ -225,8 +226,8 @@ i2c_status_t i2c_write_register_buf(i2c_device_t *dev, uint8_t reg,
  *
  * It should work only if the device has already locked the I2C controller.
  */
-i2c_status_t i2c_read_register(i2c_device_t *dev, uint8_t reg,
-                              uint8_t *data, int size);
+i2c_hal_status_t i2c_hal_read_register(i2c_hal_device_t *dev, uint8_t reg,
+                                       uint8_t *data, int size);
 
 
 /*---------------------------------------------------------------------------*/
@@ -238,7 +239,7 @@ i2c_status_t i2c_read_register(i2c_device_t *dev, uint8_t reg,
  * \return I2C return code
  *
  */
-i2c_status_t i2c_arch_lock(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_arch_lock(i2c_hal_device_t *dev);
 
 /**
  * \brief Unlocks I2C controller (if dev has the lock)
@@ -246,7 +247,7 @@ i2c_status_t i2c_arch_lock(i2c_device_t *dev);
  * \return I2C return code
  *
  */
-i2c_status_t i2c_arch_unlock(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_arch_unlock(i2c_hal_device_t *dev);
 
 /**
  * \brief restart the timeout for a long-lasting I2C transaction.
@@ -254,7 +255,7 @@ i2c_status_t i2c_arch_unlock(i2c_device_t *dev);
  * \return I2C return code
  *
  */
-i2c_status_t i2c_arch_restart_timeout(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_arch_restart_timeout(i2c_hal_device_t *dev);
 
 /**
  * \brief Read data from a specified I2C device.
@@ -263,7 +264,9 @@ i2c_status_t i2c_arch_restart_timeout(i2c_device_t *dev);
  * \param len The number of bytes to read.
  * \return I2C return code
  */
-i2c_status_t i2c_arch_read(i2c_device_t *dev, uint8_t *data, int len);
+i2c_hal_status_t i2c_hal_arch_read(i2c_hal_device_t *dev, uint8_t *data,
+                                   int len);
+
 /**
  * \brief Write data to a specified I2C device.
  * \param dev An I2C device.
@@ -272,7 +275,8 @@ i2c_status_t i2c_arch_read(i2c_device_t *dev, uint8_t *data, int len);
  * \return I2C return code
  *
  */
-i2c_status_t i2c_arch_write(i2c_device_t *dev, const uint8_t *data, int len);
+i2c_hal_status_t i2c_hal_arch_write(i2c_hal_device_t *dev, const uint8_t *data,
+                                    int len);
 
 /**
  * \brief Sends an explicit stop signal to an I2C device.
@@ -281,9 +285,9 @@ i2c_status_t i2c_arch_write(i2c_device_t *dev, const uint8_t *data, int len);
  *
  * It should work only if the device has already locked the I2C controller.
  */
-i2c_status_t i2c_arch_stop(i2c_device_t *dev);
+i2c_hal_status_t i2c_hal_arch_stop(i2c_hal_device_t *dev);
 
-#endif /* I2C_H_ */
+#endif /* I2C_HAL_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}
