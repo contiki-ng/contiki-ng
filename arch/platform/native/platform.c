@@ -160,13 +160,21 @@ stdin_set_fd(fd_set *rset, fd_set *wset)
   FD_SET(STDIN_FILENO, rset);
   return 1;
 }
+
+static int (*input_handler)(unsigned char c);
+
+void native_uart_set_input(int (*input)(unsigned char c)) {
+  input_handler = input;
+}
+
+
 static void
 stdin_handle_fd(fd_set *rset, fd_set *wset)
 {
   char c;
   if(FD_ISSET(STDIN_FILENO, rset)) {
     if(read(STDIN_FILENO, &c, 1) > 0) {
-      serial_line_input_byte(c);
+      input_handler(c);
     }
   }
 }
@@ -255,6 +263,11 @@ platform_init_stage_two()
 {
   set_lladdr();
   serial_line_init();
+
+  if (NULL == input_handler) {
+    native_uart_set_input(serial_line_input_byte);
+  }
+
 }
 /*---------------------------------------------------------------------------*/
 void
