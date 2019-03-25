@@ -306,16 +306,25 @@ static int
 store_fragment(uint8_t index, uint8_t offset)
 {
   int i;
+  int len;
+
+  len = packetbuf_datalen() - packetbuf_hdr_len;
+
+  if(len < 0 || len > SICSLOWPAN_FRAGMENT_SIZE) {
+    /* Unacceptable fragment size. */
+    return -1;
+  }
+
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     if(frag_buf[i].len == 0) {
-      /* copy over the data from packetbuf into the fragment buffer and store offset and len */
+      /* copy over the data from packetbuf into the fragment buffer,
+         and store offset and len */
       frag_buf[i].offset = offset; /* frag offset */
-      frag_buf[i].len = packetbuf_datalen() - packetbuf_hdr_len;
+      frag_buf[i].len = len;
       frag_buf[i].index = index;
-      memcpy(frag_buf[i].data, packetbuf_ptr + packetbuf_hdr_len,
-             packetbuf_datalen() - packetbuf_hdr_len);
+      memcpy(frag_buf[i].data, packetbuf_ptr + packetbuf_hdr_len, len);
       /* return the length of the stored fragment */
-      return frag_buf[i].len;
+      return len;
     }
   }
   /* failed */
@@ -396,7 +405,7 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
 /*---------------------------------------------------------------------------*/
 /* Copy all the fragments that are associated with a specific context
    into uip */
-static void
+static bool
 copy_frags2uip(int context)
 {
   int i;
@@ -407,12 +416,19 @@ copy_frags2uip(int context)
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     /* And also copy all matching fragments */
     if(frag_buf[i].len > 0 && frag_buf[i].index == context) {
+      if((frag_buf[i].offset << 3) + frag_buf[i].len > sizeof(uip_buf)) {
+        LOG_WARN("input: unable to copy fragments to the uIP buffer\n");
+        clear_fragments(context);
+        return false;
+      }
       memcpy((uint8_t *)UIP_IP_BUF + (uint16_t)(frag_buf[i].offset << 3),
              (uint8_t *)frag_buf[i].data, frag_buf[i].len);
     }
   }
   /* deallocate all the fragments for this context */
   clear_fragments(context);
+
+  return true;
 }
 #endif /* SICSLOWPAN_CONF_FRAG */
 
@@ -1955,7 +1971,9 @@ input(void)
     if(last_fragment != 0) {
       frag_info[frag_context].reassembled_len = frag_size;
       /* copy to uip */
-      copy_frags2uip(frag_context);
+      if(!copy_frags2uip(frag_context)) {
+        return;
+      }
     }
   }
 
