@@ -231,6 +231,11 @@ static uint16_t my_tag;
 #define SICSLOWPAN_FRAGMENT_SIZE (127 - 2 - 15)
 #endif
 
+/* Check the selected fragment size, since we use 8-bit integers to handle it. */
+#if SICSLOWPAN_FRAGMENT_SIZE > 255
+#error Too large SICSLOWPAN_FRAGMENT_SIZE set.
+#endif
+
 /* Assuming that the worst growth for uncompression is 38 bytes */
 #define SICSLOWPAN_FIRST_FRAGMENT_SIZE (SICSLOWPAN_FRAGMENT_SIZE + 38)
 
