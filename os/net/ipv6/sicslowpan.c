@@ -1254,6 +1254,10 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
     exthdr->len = (2 + len) / 8 - 1;
     exthdr->next = next;
     last_nextheader = &exthdr->next;
+    if(ip_len == 0 && (uint8_t *)exthdr - uip_buf + 2 + len > sizeof(uip_buf)) {
+      LOG_DBG("uncompression: ext header points beyond uip buffer boundary\n");
+      return;
+    }
     memcpy((uint8_t*)exthdr + 2, hc06_ptr, len);
     hc06_ptr += len;
     uncomp_hdr_len += (exthdr->len + 1) * 8;
