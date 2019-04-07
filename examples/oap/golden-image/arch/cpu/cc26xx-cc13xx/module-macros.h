@@ -52,8 +52,7 @@
  * Max area available for the main firmware on internal flash, including
  * metadata
  */
-#define OTA_CONF_MAIN_FW_MAX_LEN (INTERNAL_FLASH_LENGTH - FLASH_FW_LENGTH - \
-                                  CCFG_LENGTH)
+#define OTA_CONF_MAIN_FW_MAX_LEN (FLASH_FW_LENGTH + OTA_METADATA_LEN)
 
 /*
  * Start address of main firmware on internal flash
