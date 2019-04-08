@@ -307,6 +307,9 @@ new_interval(struct trickle_timer *tt)
 void
 trickle_timer_consistency(struct trickle_timer *tt)
 {
+  if (tt->i_cur == TRICKLE_TIMER_IS_STOPPED) {
+    return;
+  }
   if(tt->c < 0xFF) {
     tt->c++;
   }
@@ -316,6 +319,9 @@ trickle_timer_consistency(struct trickle_timer *tt)
 void
 trickle_timer_inconsistency(struct trickle_timer *tt)
 {
+  if (tt->i_cur == TRICKLE_TIMER_IS_STOPPED) {
+    return;
+  }
   /* "If I is equal to Imin when Trickle hears an "inconsistent" transmission,
    * Trickle does nothing." */
   if(tt->i_cur != tt->i_min) {
@@ -366,6 +372,8 @@ trickle_timer_config(struct trickle_timer *tt, clock_time_t i_min,
   tt->i_max = i_max;
   tt->i_max_abs = i_min << i_max;
   tt->k = k;
+  tt->i_cur = TRICKLE_TIMER_IS_STOPPED;
+  tt->cb = NULL;
 
   PRINTF("trickle_timer config: Imin=%lu, Imax=%u, k=%u\n",
          (unsigned long)tt->i_min, tt->i_max, tt->k);
