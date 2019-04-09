@@ -81,7 +81,7 @@ static void double_interval(void *ptr);
 static uint32_t
 wide_rand(void)
 {
-  return ((uint32_t)random_rand() << 16 | random_rand());
+  return (uint32_t)random_rand() << 16 | random_rand();
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -98,7 +98,7 @@ static uint8_t
 max_imax(clock_time_t value)
 {
   uint8_t zeros = 0;
-#if (TRICKLE_TIMER_MAX_IMAX_WIDTH==TRICKLE_TIMER_MAX_IMAX_GENERIC)
+#if (TRICKLE_TIMER_MAX_IMAX_WIDTH == TRICKLE_TIMER_MAX_IMAX_GENERIC)
   uint8_t i;
   clock_time_t mask = 0xFFFF;
 
@@ -111,7 +111,7 @@ max_imax(clock_time_t value)
     }
   }
 
-#elif (TRICKLE_TIMER_MAX_IMAX_WIDTH==TRICKLE_TIMER_MAX_IMAX_16_BIT)
+#elif (TRICKLE_TIMER_MAX_IMAX_WIDTH == TRICKLE_TIMER_MAX_IMAX_16_BIT)
   if((value & 0xFF00) == 0) {
     zeros += 8;
     value <<= 8;
@@ -127,7 +127,7 @@ max_imax(clock_time_t value)
   if((value & 0x8000) == 0) {
     zeros++;
   }
-#elif (TRICKLE_TIMER_MAX_IMAX_WIDTH==TRICKLE_TIMER_MAX_IMAX_32_BIT)
+#elif (TRICKLE_TIMER_MAX_IMAX_WIDTH == TRICKLE_TIMER_MAX_IMAX_32_BIT)
   if((value & 0xFFFF0000) == 0) {
     zeros += 16;
     value <<= 16;
@@ -307,7 +307,7 @@ new_interval(struct trickle_timer *tt)
 void
 trickle_timer_consistency(struct trickle_timer *tt)
 {
-  if (tt->i_cur == TRICKLE_TIMER_IS_STOPPED) {
+  if(tt->i_cur == TRICKLE_TIMER_IS_STOPPED) {
     return;
   }
   if(tt->c < 0xFF) {
@@ -319,7 +319,7 @@ trickle_timer_consistency(struct trickle_timer *tt)
 void
 trickle_timer_inconsistency(struct trickle_timer *tt)
 {
-  if (tt->i_cur == TRICKLE_TIMER_IS_STOPPED) {
+  if(tt->i_cur == TRICKLE_TIMER_IS_STOPPED) {
     return;
   }
   /* "If I is equal to Imin when Trickle hears an "inconsistent" transmission,
