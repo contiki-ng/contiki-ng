@@ -535,7 +535,7 @@ tsch_disassociate(void)
 {
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
-    process_post(&tsch_process, PROCESS_EVENT_POLL, NULL);
+    process_poll(&tsch_process);
   }
 }
 /*---------------------------------------------------------------------------*/
