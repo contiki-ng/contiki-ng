@@ -49,6 +49,11 @@
 #include "coap-timer.h"
 #include "coap-constants.h"
 
+
+#ifndef COAP_MAX_RETRANSMIT
+#define COAP_MAX_RETRANSMIT                  4
+#endif
+
 /*
  * Modulo mask (thus +1) for a random number to get the tick number for the random
  * retransmission time between COAP_RESPONSE_TIMEOUT and COAP_RESPONSE_TIMEOUT*COAP_RESPONSE_RANDOM_FACTOR.
