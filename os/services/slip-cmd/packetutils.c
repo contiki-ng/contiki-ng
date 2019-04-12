@@ -92,14 +92,19 @@ packetutils_deserialize_atts(const uint8_t *data, int size)
     return -1;
   }
   for(i = 0; i < cnt; i++) {
-    if(data[pos] >= PACKETBUF_NUM_ATTRS) {
+    if(data[pos] >= PACKETBUF_ATTR_MAX || data[pos] == PACKETBUF_ATTR_NONE) {
       /* illegal attribute identifier */
       LOG_ERR(" *** unknown attribute %u\n", data[pos]);
       return -1;
+    } else if(data[pos] >= PACKETBUF_ADDR_FIRST) {
+      /* no serialized attribute */
+      LOG_DBG(" packetbuf has no attribute data\n");
+      return 0;
+    } else {
+      LOG_DBG(" %2d=%d\n", data[pos], (data[pos + 1] << 8) | data[pos + 2]);
+      packetbuf_set_attr(data[pos], (data[pos + 1] << 8) | data[pos + 2]);
+      pos += 3;
     }
-    LOG_DBG(" %2d=%d\n", data[pos], (data[pos + 1] << 8) | data[pos + 2]);
-    packetbuf_set_attr(data[pos], (data[pos + 1] << 8) | data[pos + 2]);
-    pos += 3;
   }
   return pos;
 }
@@ -158,23 +163,26 @@ packetutils_deserialize_addrs(const uint8_t *data, int size)
     return -1;
   }
   for(i = 0; i < cnt; i++) {
-    if(data[pos] < PACKETBUF_ADDR_FIRST ||
-       data[pos] > PACKETBUF_ADDR_FIRST + PACKETBUF_NUM_ADDRS) {
+    if(data[pos] >= PACKETBUF_ATTR_MAX || data[pos] == PACKETBUF_ATTR_NONE) {
       /* illegal attribute identifier */
       LOG_ERR(" *** unknown attribute %u\n", data[pos]);
       return -1;
-    }
-    LOG_DBG(" %2d=", data[pos]);
-    for(j = 0; j < LINKADDR_SIZE; j++) {
-      if(j > 0 && j % 2 == 0)
-        LOG_DBG_(".");
-      addr.u8[j] = data[pos + 1 + j];
-      LOG_DBG_("%02x", addr.u8[j]);
-    }
-    LOG_DBG_("\n");
+    } else if(data[pos] < PACKETBUF_ADDR_FIRST) {
+      LOG_DBG(" packetbuf has no serialized address data\n");
+      return 0;
+    } else {
+      LOG_DBG(" %2d=", data[pos]);
+      for(j = 0; j < LINKADDR_SIZE; j++) {
+        if(j > 0 && j % 2 == 0)
+          LOG_DBG_(".");
+        addr.u8[j] = data[pos + 1 + j];
+        LOG_DBG_("%02x", addr.u8[j]);
+      }
+      LOG_DBG_("\n");
 
-    packetbuf_set_addr(data[pos], &addr);
-    pos += (1 + LINKADDR_SIZE);
+      packetbuf_set_addr(data[pos], &addr);
+      pos += (1 + LINKADDR_SIZE);
+    }
   }
   return pos;
 }
