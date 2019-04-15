@@ -1,3 +1,6 @@
+HEAPSIZE := 8192
+STACKSIZE := 8192
+
 ifndef NRF52_SDK_ROOT
   $(error NRF52_SDK_ROOT not defined! You must specify where nRF52 SDK resides!)
 endif
@@ -22,12 +25,14 @@ endif
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
   ifeq ($(NRF52_SOFTDEVICE),)
-    NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name s132_nrf52*_softdevice.hex | head -n 1)
+    NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name s140_nrf52*_softdevice.hex | head -n 1)
   endif
   $(info SoftDevice: $(NRF52_SOFTDEVICE))
-  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
+  #LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840_xxaa.ld
 else
-  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52.ld
+  #LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52.ld
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840_xxaa.ld
 endif
 
 OUTPUT_FILENAME := $(CONTIKI_PROJECT)
@@ -51,17 +56,19 @@ endif
 remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-out $(firstword $1),$1))))
 
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS += . dev ble #compat
+CONTIKI_CPU_DIRS += . dev ble ieee802154 #compat
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c
-CONTIKI_CPU_SOURCEFILES += int-master.c
+CONTIKI_CPU_SOURCEFILES += int-master.c nrf802154.c
 
-ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
-endif
+#ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
+#CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
+#endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
+
+include $(ARCH_PATH)/cpu/nrf52840/third_party/NordicSemiconductor/Makefile
 
 # Source files common to all targets
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
@@ -71,8 +78,6 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   $(NRF52_SDK_ROOT)/components/libraries/util/nrf_assert.c \
   $(NRF52_SDK_ROOT)/components/libraries/queue/nrf_queue.c \
   $(NRF52_SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
-  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c \
-  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c \
   $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/ble_6lowpan.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power_clock.c \
@@ -87,7 +92,10 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   $(NRF52_SDK_ROOT)/modules/nrfx/mdk/system_nrf52.c \
   $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_rng.c \
-  # $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
+  $(NRF52_SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
+#  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
+#  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c \
+#  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c \
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
@@ -98,7 +106,7 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/libraries/fifo/app_fifo.c \
 endif
 
 #assembly files common to all targets
-ASM_SOURCE_FILES = $(NRF52_SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52.S
+ASM_SOURCE_FILES = $(NRF52_SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S
 
 # Include folders common to all targets
 INC_PATHS += modules/nrfx
@@ -117,7 +125,7 @@ INC_PATHS += components/libraries/strerror
 INC_PATHS += components/libraries/delay
 INC_PATHS += components/libraries/util
 INC_PATHS += components/boards
-INC_PATHS += components/softdevice/s132/headers
+INC_PATHS += components/softdevice/s140/headers
 INC_PATHS += integration/nrfx
 INC_PATHS += integration/nrfx/legacy
 INC_PATHS += components/libraries/queue
@@ -131,8 +139,8 @@ INC_PATHS += components/libraries/log/src
 INC_PATHS += config/nrf52840/config
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-INC_PATHS += components/softdevice/s132/headers
-INC_PATHS += components/softdevice/s132/headers/nrf52
+INC_PATHS += components/softdevice/s140/headers
+INC_PATHS += components/softdevice/s140/headers/nrf52
 INC_PATHS += components/softdevice/common
 INC_PATHS += components/ble/common
 INC_PATHS += components/iot/common
@@ -144,18 +152,26 @@ endif
 
 EXTERNALDIRS += $(addprefix $(NRF52_SDK_ROOT)/, $(INC_PATHS))
 
+$(info INCLUDE: $(EXTERNALDIRS))
+
 # Sorting removes duplicates
 BUILD_DIRECTORIES := $(sort $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY))
+
+CFLAGS += -D__HEAP_SIZE=$(HEAPSIZE)
+CFLAGS += -D__STACK_SIZE=$(STACKSIZE)
+CFLAGS += -DRAAL_SINGLE_PHY -DNRF_802154_USE_RAW_API=0 -DNRF_802154_CLOCK_LFCLK_SOURCE=CLOCK_LFCLKSRC_SRC_Synth
+CFLAGS += -DTIMER_ENABLED=1
 
 #flags common to all targets
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 CFLAGS += -DSOFTDEVICE_PRESENT
-CFLAGS += -DS132
+CFLAGS += -DS140
+CFLAGS += -DNRF_SDH_SOC_ENABLED=1
 endif
 
 CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DBOARD_$(shell echo $(NRF52_DK_REVISION) | tr a-z A-Z)
-CFLAGS += -D__HEAP_SIZE=512
+#CFLAGS += -D__HEAP_SIZE=512
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DBLE_STACK_SUPPORT_REQD
@@ -177,7 +193,7 @@ LDFLAGS += --specs=nano.specs -lc -lnosys
 # Assembler flags
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 ASMFLAGS += -DSOFTDEVICE_PRESENT
-ASMFLAGS += -DS132
+ASMFLAGS += -DS140
 endif
 ASMFLAGS += -x assembler-with-cpp
 ASMFLAGS += -DSWI_DISABLE0

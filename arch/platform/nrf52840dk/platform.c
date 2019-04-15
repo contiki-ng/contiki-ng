@@ -102,7 +102,8 @@ board_init(void)
 {
 #ifdef SOFTDEVICE_PRESENT
   /* Initialize the SoftDevice handler module */
-  SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, NULL);
+  //SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, NULL);
+  nrf_sdh_enable_request();
 #endif
 #ifdef PLATFORM_HAS_BUTTON
   if (!nrfx_gpiote_is_init()) {

@@ -34,10 +34,15 @@
 /*---------------------------------------------------------------------------*/
 #include "cm4/cm4-def.h"
 /*---------------------------------------------------------------------------*/
-#if !NETSTACK_CONF_WITH_IPV6
+//#if !NETSTACK_CONF_WITH_IPV6
 /* we only support IPv6 */
-#error "Only IPv6 stack is supported!"
+//#error "Only IPv6 stack is supported!"
+//#endif
+
+#ifndef NETSTACK_CONF_RADIO
+#define NETSTACK_CONF_RADIO         nrf52840_driver
 #endif
+
 /*---------------------------------------------------------------------------*/
 #define RTIMER_ARCH_SECOND 62500
 /*---------------------------------------------------------------------------*/
