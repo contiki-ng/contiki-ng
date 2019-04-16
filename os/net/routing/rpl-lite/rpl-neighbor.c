@@ -196,9 +196,12 @@ remove_neighbor(rpl_nbr_t *nbr)
   /* Make sure we don't point to a removed neighbor. Note that we do not need
   to worry about preferred_parent here, as it is locked in the the table
   and will never be removed by external modules. */
+#if RPL_WITH_PROBING
   if(nbr == curr_instance.dag.urgent_probing_target) {
     curr_instance.dag.urgent_probing_target = NULL;
   }
+#endif
+
   if(nbr == curr_instance.dag.unicast_dio_target) {
     curr_instance.dag.unicast_dio_target = NULL;
   }
