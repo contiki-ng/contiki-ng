@@ -152,17 +152,28 @@ echo_request_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
+uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param)
+{
   /* check if originating packet is not an ICMP error */
   uint16_t shift;
+
   if(uip_last_proto == UIP_PROTO_ICMP6 && UIP_ICMP_BUF->type < 128) {
+    uipbuf_clear();
+    return;
+  }
+
+  /* the source should not be unspecified nor multicast */
+  if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr) ||
+     uip_is_addr_mcast(&UIP_IP_BUF->srcipaddr)) {
     uipbuf_clear();
     return;
   }
 
   /* Remove all extension headers related to the routing protocol in place.
    * Keep all other extension headers, so as to match original packet. */
-  NETSTACK_ROUTING.ext_header_remove();
+  if(NETSTACK_ROUTING.ext_header_remove() == 0) {
+    LOG_WARN("Unable to remove ext header before sending ICMPv6 ERROR message\n");
+  }
 
   /* remember data of original packet before shifting */
   uip_ipaddr_copy(&tmp_ipaddr, &UIP_IP_BUF->destipaddr);
@@ -174,6 +185,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   shift = UIP_IPH_LEN + UIP_ICMPH_LEN + UIP_ICMP6_ERROR_LEN;
   uip_len += shift;
   uip_len = MIN(uip_len, UIP_LINK_MTU);
+  uip_ext_len = 0;
   memmove(uip_buf + shift, (void *)UIP_IP_BUF, uip_len - shift);
 
   UIP_IP_BUF->vtc = 0x60;
@@ -181,13 +193,6 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   UIP_IP_BUF->flow = 0;
   UIP_IP_BUF->proto = UIP_PROTO_ICMP6;
   UIP_IP_BUF->ttl = uip_ds6_if.cur_hop_limit;
-
-  /* the source should not be unspecified nor multicast, the check for
-     multicast is done in uip_process */
-  if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)){
-    uipbuf_clear();
-    return;
-  }
 
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &UIP_IP_BUF->srcipaddr);
 

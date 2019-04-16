@@ -119,7 +119,7 @@ uint8_t uip_ext_bitmap = 0;
 /**
  * \brief Total length of all IPv6 extension headers
  */
-uint8_t uip_ext_len = 0;
+uint16_t uip_ext_len = 0;
 /** \brief The final protocol after IPv6 extension headers:
   * UIP_PROTO_TCP, UIP_PROTO_UDP or UIP_PROTO_ICMP6 */
 uint8_t uip_last_proto = 0;
@@ -489,7 +489,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 }
 #endif /* UIP_TCP && UIP_ACTIVE_OPEN */
 /*---------------------------------------------------------------------------*/
-void
+bool
 uip_remove_ext_hdr(void)
 {
   /* Remove ext header before TCP/UDP processing. */
@@ -499,7 +499,7 @@ uip_remove_ext_hdr(void)
     if(uip_len < UIP_IPH_LEN + uip_ext_len) {
       LOG_ERR("uip_len too short compared to ext len\n");
       uipbuf_clear();
-      return;
+      return false;
     }
 
     /* Set proto */
@@ -509,9 +509,12 @@ uip_remove_ext_hdr(void)
 	    uip_len - UIP_IPH_LEN - uip_ext_len);
 
     /* Update the IP length. */
-    uipbuf_add_ext_hdr(-uip_ext_len);
+    if(uipbuf_add_ext_hdr(-uip_ext_len) == false) {
+      return false;
+    }
     uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
   }
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
@@ -833,7 +836,7 @@ ext_hdr_options_process(uint8_t *ext_buf)
     uint16_t opt_len = opt_hdr->len + 2;
 
     if(opt_offset + opt_len > ext_hdr_len) {
-      LOG_ERR("RPL Option too long: Dropping Packet\n");
+      LOG_ERR("Extension header option too long: dropping packet\n");
       uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_OPTION,
           (ext_buf + opt_offset) - uip_buf);
       return 2;
