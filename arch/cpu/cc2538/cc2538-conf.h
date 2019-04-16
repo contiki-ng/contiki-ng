@@ -263,6 +263,11 @@
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc2538_rf_driver
 #endif
+
+/**
+ * \brief Maximum packet size
+ */
+#define cc2538_rf_driver_max_payload_len       125
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
