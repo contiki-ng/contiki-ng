@@ -767,9 +767,11 @@ init(void)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  int len = MIN(payload_len, TX_BUF_PAYLOAD_LEN);
+  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
 
-  memcpy(&tx_buf[TX_BUF_HDR_LEN], payload, len);
+  memcpy(&tx_buf[TX_BUF_HDR_LEN], payload, payload_len);
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -784,7 +786,7 @@ transmit(unsigned short transmit_len)
   rtimer_clock_t t0;
   volatile rfc_CMD_IEEE_TX_t cmd;
 
-  if(transmit_len > ieee_mode_driver_max_payload_len) {
+  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
     PRINTF("transmit: too long\n");
     return RADIO_TX_ERR;
   }
