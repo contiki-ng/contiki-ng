@@ -320,10 +320,11 @@ calculate_lqi(int8_t rssi)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  const size_t len = MIN((size_t)payload_len,
-                         (size_t)TX_BUF_PAYLOAD_LEN);
+  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
 
-  memcpy(prop_radio.tx_buf + TX_BUF_HDR_LEN, payload, len);
+  memcpy(prop_radio.tx_buf + TX_BUF_HDR_LEN, payload, payload_len);
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -331,6 +332,11 @@ static int
 transmit(unsigned short transmit_len)
 {
   rf_result_t res;
+
+  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    LOG_ERR("Too long\n");
+    return RADIO_TX_ERR;
+  }
 
   if(tx_is_active()) {
     LOG_ERR("A transmission is already active\n");
