@@ -268,9 +268,6 @@ pm_get_voltage(uint16_t *state)
 
       *state = (uint16_t)(result*100);
 
-      /* Delay required for the command to finish */
-      //clock_delay_usec(3000);
-
       PM_ENABLE_LINE_CLR;
       return PM_SUCCESS;
     }
