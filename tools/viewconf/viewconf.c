@@ -88,6 +88,8 @@
 ##### "NBR_TABLE_CONF_MAX_NEIGHBORS": __________ -> NBR_TABLE_MAX_NEIGHBORS
 #endif
 
+##### "NETSTACK_RADIO_MAX_PAYLOAD_LEN": ________ == NETSTACK_RADIO_MAX_PAYLOAD_LEN
+
 ##### "NETSTACK_MAX_ROUTE_ENTRIES": ____________ == NETSTACK_MAX_ROUTE_ENTRIES
 ##### "UIP_CONF_BUFFER_SIZE": __________________ == UIP_CONF_BUFFER_SIZE
 ##### "UIP_CONF_UDP": __________________________ == UIP_CONF_UDP
