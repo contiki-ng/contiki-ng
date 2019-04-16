@@ -65,8 +65,9 @@
 /* Path to CMSIS header */
 #define CMSIS_CONF_HEADER_PATH               "cc2538_cm3.h"
 
-/* Path to headers with implementation of mutexes and memory barriers */
+/* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
+#define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
 
 #define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"

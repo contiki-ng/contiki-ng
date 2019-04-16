@@ -61,7 +61,7 @@
  * (TxOffset - (RxWait / 2)) instead
  */
 
-const uint16_t tsch_timeslot_timing_us_10000[tsch_ts_elements_count] = {
+const tsch_timeslot_timing_usec tsch_timeslot_timing_us_10000 = {
    1800, /* CCAOffset */
     128, /* CCA */
    2120, /* TxOffset */
