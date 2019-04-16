@@ -679,6 +679,11 @@ transmit(unsigned short transmit_len)
   /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
   uint16_t total_length;
 
+  if(transmit_len > prop_mode_driver_max_payload_len) {
+    PRINTF("transmit: too long\n");
+    return RADIO_TX_ERR;
+  }
+
   if(!rf_is_on()) {
     was_off = 1;
     if(on() != RF_CORE_CMD_OK) {

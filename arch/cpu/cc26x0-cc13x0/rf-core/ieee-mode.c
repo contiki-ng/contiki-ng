@@ -784,6 +784,11 @@ transmit(unsigned short transmit_len)
   rtimer_clock_t t0;
   volatile rfc_CMD_IEEE_TX_t cmd;
 
+  if(transmit_len > ieee_mode_driver_max_payload_len) {
+    PRINTF("transmit: too long\n");
+    return RADIO_TX_ERR;
+  }
+
   if(!rf_is_on()) {
     was_off = 1;
     if(on() != RF_CORE_CMD_OK) {
