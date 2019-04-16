@@ -30,7 +30,7 @@
 /*---------------------------------------------------------------------------*/
 /**
  * \file
- *         An example showing how to get VBAT Voltage functionality on 
+ *         An example showing how to get VBAT Voltage functionality on
  *         RE-Mote Platform
  * \author
  *         Erik Bellido <ebellido@zolertia.com>
@@ -44,7 +44,7 @@
 #include "sys/etimer.h"
 /*---------------------------------------------------------------------------*/
 
-//#define freq I2C_SCL_NORMAL_BUS_SPEED
+/*#define freq I2C_SCL_NORMAL_BUS_SPEED */
 static struct etimer et;
 
 /* RE-Mote revision B, low-power PIC version */
@@ -68,10 +68,9 @@ PROCESS_THREAD(test_VBAT_process, ev, data)
 
   PROCESS_BEGIN();
 
-  if(pm_enable() !=	PM_SUCCESS) {
+  if(pm_enable() != PM_SUCCESS) {
     printf("PM Failed \n");
-  }
-  else if(pm_enable() == PM_SUCCESS){
+  } else if(pm_enable() == PM_SUCCESS) {
     printf("Process PM started\n");
   }
 
@@ -80,10 +79,10 @@ PROCESS_THREAD(test_VBAT_process, ev, data)
   }
   printf("PM: firmware version 0x%02X OK\n", aux);
 
-  while(1){
+  while(1) {
 
     etimer_set(&et, CLOCK_SECOND);
-    
+
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     /*-------------------voltage VBAT --------------*/

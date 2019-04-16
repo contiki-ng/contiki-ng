@@ -62,7 +62,7 @@
 #define PM_ENABLE_AS_OUTPUT      GPIO_SET_OUTPUT(PM_ENABLE_PORT_BASE, \
                                                  PM_ENABLE_PIN_MASK)
 #define PM_ENABLE_LINE_CMD       PM_ENABLE_LINE_SET; \
-                                 clock_delay_usec(100);
+  clock_delay_usec(100);
 
 /* -------------------------------------------------------------------------- */
 #define PM_NUMBITS(X)            (1 << ((X)-1))
@@ -215,7 +215,7 @@ pm_get_num_cycles(void)
   }
   PM_ENABLE_LINE_CLR;
   PRINTF("PM: Sleep cycles: 0x%02x%02x%02x%02x\n", lbuf[0], lbuf[1], lbuf[2],
-                                                   lbuf[3]);
+         lbuf[3]);
   return retval;
 }
 /* -------------------------------------------------------------------------- */
@@ -263,10 +263,10 @@ pm_get_voltage(uint16_t *state)
       *state += lbuf[1];
 
       /* Compensation */
-      result =  *state - PM_VBAT_OFF;
+      result = *state - PM_VBAT_OFF;
       result /= PM_VBAT_MULT;
 
-      *state = (uint16_t)(result*100);
+      *state = (uint16_t)(result * 100);
 
       PM_ENABLE_LINE_CLR;
       return PM_SUCCESS;
