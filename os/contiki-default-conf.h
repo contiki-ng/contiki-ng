@@ -197,14 +197,6 @@
 #define SICSLOWPAN_CONF_FRAG 1
 #endif /* SICSLOWPAN_CONF_FRAG */
 
-/* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD is the maximum available size for
-   frame headers, link layer security-related overhead,  as well as
-   6LoWPAN payload. By default, SICSLOWPAN_CONF_MAC_MAX_PAYLOAD is
-   127 bytes (MTU of 802.15.4) - 2 bytes (Footer of 802.15.4). */
-#ifndef SICSLOWPAN_CONF_MAC_MAX_PAYLOAD
-#define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD (127 - 2)
-#endif /* SICSLOWPAN_CONF_MAC_MAX_PAYLOAD */
-
 /* SICSLOWPAN_CONF_COMPRESSION specifies what 6lowpan compression
    mechanism to be used. 6lowpan hc06 is the default in Contiki. */
 #ifndef SICSLOWPAN_CONF_COMPRESSION
