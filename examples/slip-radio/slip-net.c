@@ -33,6 +33,7 @@
 #include "net/packetbuf.h"
 #include "dev/slip.h"
 #include "os/sys/log.h"
+#include "os/services/slip-cmd/packetutils.h"
 
 #include <stdio.h>
 
@@ -52,11 +53,21 @@ slipnet_init(void)
 static void
 slipnet_input(void)
 {
-  int i;
-  /* radio should be configured for filtering so this should be simple */
-  /* this should be sent over SLIP! */
-  /* so just copy into uip-but and send!!! */
-  /* Format: !R<data> ? */
+  int i, size;
+  uint8_t buf[3 * PACKETBUF_NUM_ATTRS
+              + (LINKADDR_SIZE + 1) * PACKETBUF_NUM_ADDRS + PACKETBUF_SIZE];
+  linkaddr_t dest_addr, src_addr;
+  uint16_t rssi;
+
+  /* packetbuf setup */
+  rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
+  linkaddr_copy(&src_addr, packetbuf_addr(PACKETBUF_ADDR_SENDER));
+  linkaddr_copy(&dest_addr, packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+  packetbuf_attr_clear();
+  packetbuf_set_attr(PACKETBUF_ATTR_RSSI, rssi);
+  packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &src_addr);
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest_addr);
+
   uip_len = packetbuf_datalen();
   i = packetbuf_copyto(uip_buf);
 
@@ -73,7 +84,22 @@ slipnet_input(void)
   }
   LOG_DBG_("\n");
 
-  slip_write(uip_buf, uip_len);
+  /* here we send the data over SLIP to the native-BR */
+  size = packetutils_serialize_atts(&buf[0], sizeof(buf));
+  if(size < 0 || size + packetbuf_totlen() > sizeof(buf)) {
+    LOG_ERR("br-rdc: send failed, too large header\n");
+    return;
+  }
+  size += packetutils_serialize_addrs(&buf[size], sizeof(buf)-size);
+  if(size < 0 || size + packetbuf_totlen() > sizeof(buf)) {
+    LOG_ERR("br-rdc: send failed, too large header\n");
+    return;
+  } else {
+    /* Copy packet data */
+    memcpy(&buf[size], uip_buf, uip_len);
+
+    slip_write(buf, uip_len + size);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
