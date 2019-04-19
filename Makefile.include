@@ -227,7 +227,7 @@ else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
   MODULES += os/net/routing/nullrouting
 endif
 
-MODULEDIRS = $(MODULES_REL) ${wildcard ${addprefix $(CONTIKI)/, $(MODULES)}}
+MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
 UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
 MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
 CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
