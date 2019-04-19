@@ -240,7 +240,7 @@ include $(MODULES_INCLUDES)
 include $(MODULES_INCLUDES)
 
 # C-include module-specific macros using -imacros
-MODULES_IMACROS = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/module-macros.h}}
+MODULES_IMACROS = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/module-macros.h}}
 ifneq ($(MODULES_IMACROS),)
   CFLAGS += ${foreach d, $(MODULES_IMACROS), -imacros $(d)}
 endif
