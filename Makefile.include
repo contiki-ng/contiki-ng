@@ -233,11 +233,18 @@ MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), ${subst ${d}/,,${wildcard $(d)/
 CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 
 # Include module-specific makefiles
-MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
-include $(MODULES_INCLUDES)
+MODULES_INCLUDES = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/Makefile.${notdir $(d)}}}
+
+### Perform an immediate expansion of MODULES_INCLUDES and store it in a
+### variable. This will allow us to subsequently filter-out module Makefiles
+### that were included in the first pass, such that we don't end up including
+### them twice.
+MODULES_INCLUDED_FIRST_PASS := $(MODULES_INCLUDES)
+include $(MODULES_INCLUDED_FIRST_PASS)
+
 # Iterate once more: include the modules added from the previous include.
 # Only works with one level of nested module inclusion.
-include $(MODULES_INCLUDES)
+include $(filter-out $(MODULES_INCLUDED_FIRST_PASS),$(MODULES_INCLUDES))
 
 # C-include module-specific macros using -imacros
 MODULES_IMACROS = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/module-macros.h}}
