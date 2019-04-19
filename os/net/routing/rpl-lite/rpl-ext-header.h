@@ -80,8 +80,10 @@ int rpl_ext_header_update(void);
 
 /**
  * Removes all RPL extension headers.
+ *
+ * \return true in case of success, false otherwise
 */
-void rpl_ext_header_remove(void);
+bool rpl_ext_header_remove(void);
 
  /** @} */
 
