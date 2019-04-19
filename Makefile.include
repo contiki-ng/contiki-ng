@@ -229,7 +229,7 @@ endif
 
 MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
 UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
-MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
+MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), ${subst ${d}/,,${wildcard $(d)/*.c}}}
 CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 
 # Include module-specific makefiles
