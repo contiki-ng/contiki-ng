@@ -11,7 +11,7 @@
  * @{
  *
  * @file
- * @brief       Implementation of the radio driver for nRF52 radios
+ * @brief       Implementation of the 802154 radio driver for nRF52 radios
  *
  * @author      Carlo Vallati <carlo.vallati@unipi.it>
  * @}
@@ -43,11 +43,17 @@
 static volatile bool m_tx_in_progress;
 static volatile bool m_tx_done;
 static volatile bool m_rx_done;
+static volatile bool m_cca_status;
+static volatile bool m_cca_completed;
+static volatile bool tx_on_cca;
+
+uint8_t last_lqi;
 
 #define NRF52_CSMA_ENABLED 0
 #define NRF52_AUTOACK_ENABLED 1
 
 #define NRF52_MAX_TX_TIME RTIMER_SECOND / 2500
+#define NRF52_MAX_CCA_TIME RTIMER_SECOND / 2500
 
 #define MAX_MESSAGE_SIZE 125 // Max message size that can be handled by the driver
 #define CHANNEL 26
@@ -72,6 +78,7 @@ static int nrf52_init()
 	m_tx_in_progress = false;
 	m_tx_done = false;
 	m_rx_done = false;
+	tx_on_cca = false;
 
 	nrf_802154_pan_id_set(&p_pan_id);
 
@@ -102,11 +109,11 @@ set_value(radio_param_t param, radio_value_t value)
   switch(param) {
   case RADIO_PARAM_POWER_MODE:
     if(value == RADIO_POWER_MODE_ON) {
-      // TODO TURN RADIO ON?
+      nrf_802154_receive();
       return RADIO_RESULT_OK;
     }
     if(value == RADIO_POWER_MODE_OFF) {
-      // TODO TURN RADIO OFF?
+      nrf_802154_sleep();
       return RADIO_RESULT_OK;
     }
     if(value == RADIO_POWER_MODE_CARRIER_ON ||
@@ -119,22 +126,24 @@ set_value(radio_param_t param, radio_value_t value)
     if(value < 11 || value > 26) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-    //cc2420_set_channel(value); // TODO
+    nrf_802154_channel_set(value);
+
     return RADIO_RESULT_OK;
   case RADIO_PARAM_RX_MODE:
-	  // TODO
+	  // TODO ??
     return RADIO_RESULT_OK;
   case RADIO_PARAM_TX_MODE:
-    if(value & ~(RADIO_TX_MODE_SEND_ON_CCA)) {
+    if(tx_on_cca) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-    // set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0); // TODO
+    tx_on_cca = true;
     return RADIO_RESULT_OK;
   case RADIO_PARAM_TXPOWER:
     if(value < OUTPUT_POWER_MIN || value > OUTPUT_POWER_MAX) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-    // TODO
+
+    nrf_802154_tx_power_set(value);
 
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CCA_THRESHOLD:
@@ -158,16 +167,16 @@ get_value(radio_param_t param, radio_value_t *value)
 	*value = RADIO_POWER_MODE_CARRIER_ON; // TODO
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CHANNEL:
-    *value = 0;
+    *value = nrf_802154_channel_get();
     return RADIO_RESULT_OK;
   case RADIO_PARAM_RX_MODE:
-    *value = 0;
+    *value = 0; // TODO ??
     return RADIO_RESULT_OK;
   case RADIO_PARAM_TX_MODE:
-    *value = 0;
+    *value = 0; // TODO ??
     return RADIO_RESULT_OK;
   case RADIO_PARAM_TXPOWER:
-    *value = 0;
+    *value = nrf_802154_tx_power_get();
 
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CCA_THRESHOLD:
@@ -179,11 +188,11 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
   case RADIO_PARAM_LAST_RSSI:
     /* RSSI of the last packet received */
-    *value = 0; // TODO SET RSSI VALUE
+    *value = nrf_802154_rssi_last_get();
     return RADIO_RESULT_OK;
   case RADIO_PARAM_LAST_LINK_QUALITY:
     /* LQI of the last packet received */
-    *value = 0; // TODO SET LQI VALUE
+    *value = last_lqi;
     return RADIO_RESULT_OK;
   case RADIO_CONST_CHANNEL_MIN:
     *value = 11;
@@ -252,18 +261,29 @@ static int nrf52_send(const void *payload, unsigned short payload_len)
 
 static int nrf52_cca(void){
 	PRINTF("[nrf802154] CCA\n");
+
+	m_cca_status = false;
+	m_cca_completed = false;
+
+	nrf_802154_cca();
+
+	RTIMER_BUSYWAIT_UNTIL(m_cca_completed, NRF52_MAX_CCA_TIME);
+
 	return 0;
 }
 
 static int nrf52_receiving_packet(void){
 
 	PRINTF("[nrf802154] Receiving\n");
-	// TODO solve this issue (always not receiving)
-	return false;
+
+	nrf_radio_state_t state = nrf_radio_state_get();
+
+	return state == RADIO_STATE_STATE_Rx;
 }
 
 static int nrf52_pending_packet(void){
 	PRINTF("[nrf802154] Pending packet\n");
+
 	return m_rx_done;
 }
 
@@ -276,7 +296,7 @@ static int nrf52_off(void){
 
 static int nrf52_on(void){
 	PRINTF("[nrf802154] On\n");
-    //nrf_802154_init();
+
 	return 0;
 }
 
@@ -337,6 +357,7 @@ void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t le
 	PRINTF("[nrf802154] TX Done\n");
 
     m_tx_done = true;
+    last_lqi = lqi;
 
     if (p_ack != NULL)
     {
@@ -353,8 +374,16 @@ void nrf_802154_transmit_failed(const uint8_t       * p_frame,
 
 	m_tx_done = true;
 
-    /*if (p_frame != NULL)
+    if (p_frame != NULL)
     {
         nrf_802154_buffer_free(p_frame);
-    }*/
+    }
 }
+
+// CCA Result
+
+void nrf_802154_cca_done(bool channel_free){
+	m_cca_status = channel_free;
+	m_cca_completed = true;
+}
+
