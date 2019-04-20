@@ -24,7 +24,8 @@
       <identifier>mtype816</identifier>
       <description>Root/sender</description>
       <source>[CONTIKI_DIR]/examples/multicast/root.c</source>
-      <commands>make -j root.cooja TARGET=cooja</commands>
+      <commands>make TARGET=cooja clean
+make -j root.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
