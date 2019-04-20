@@ -43,6 +43,14 @@
 #define NETSTACK_CONF_RADIO         nrf52840_driver
 #endif
 
+#ifndef NRF52480_CONF_AUTOACK
+#define NRF52480_CONF_AUTOACK  1
+#endif
+
+#ifndef NRF52480_CONF_CHANNEL
+#define NRF52480_CONF_CHANNEL  26
+#endif
+
 /*---------------------------------------------------------------------------*/
 #define RTIMER_ARCH_SECOND 62500
 /*---------------------------------------------------------------------------*/

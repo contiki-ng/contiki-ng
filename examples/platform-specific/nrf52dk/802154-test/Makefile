@@ -1,9 +1,9 @@
-CONTIKI_PROJECT = nullnet-broadcast
+CONTIKI_PROJECT = nullnet-broadcast nullnet-unicast
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../../../..
 
-PLATFORMS_ONLY = nrf52840dk
+PLATFORMS_ONLY = nrf52840dk sky
 
 NRF52_WITHOUT_SOFTDEVICE=1
 

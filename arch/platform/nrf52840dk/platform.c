@@ -140,6 +140,19 @@ platform_init_stage_two(void)
   ble_stack_init();
   ble_advertising_init(DEVICE_NAME);
 #endif
+
+  /*
+#ifndef IEEE_ADDR_CONF_ADDRESS
+#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
+#endif
+
+  linkaddr_t linkaddr = IEEE_ADDR_CONF_ADDRESS;
+
+  memcpy(linkaddr_node_addr.u8, &linkaddr, LINKADDR_SIZE);
+  */
+  // TODO set link addr for IEEE 802.15.4
+
+  process_start(&sensors_process, NULL);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -152,8 +165,6 @@ platform_init_stage_three(void)
   linkaddr_set_node_addr(&linkaddr);
   process_start(&ble_iface_observer, NULL);
 #endif
-
-  process_start(&sensors_process, NULL);
 
 #ifdef SOFTDEVICE_PRESENT
   ble_advertising_start();
