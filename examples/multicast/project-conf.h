@@ -45,11 +45,13 @@
 
 /* Change this to switch engines. Engine codes in uip-mcast6-engines.h */
 #ifndef UIP_MCAST6_CONF_ENGINE
-#define UIP_MCAST6_CONF_ENGINE UIP_MCAST6_ENGINE_ROLL_TM
+#define UIP_MCAST6_CONF_ENGINE UIP_MCAST6_ENGINE_MPL
 #endif
 
 /* For Imin: Use 16 over CSMA, 64 over Contiki MAC */
 #define ROLL_TM_CONF_IMIN_1         64
+#define MPL_CONF_DATA_MESSAGE_IMIN  64
+#define MPL_CONF_CONTROL_MESSAGE_IMIN  64
 
 #define UIP_MCAST6_ROUTE_CONF_ROUTES 1
 
