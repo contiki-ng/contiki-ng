@@ -63,6 +63,7 @@ static const sixtop_sf_t test_sf = {
   0,
   NULL,
   input,
+  NULL,
   NULL
 };
 

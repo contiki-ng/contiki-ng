@@ -289,6 +289,14 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
     /* invalid transition */
     LOG_ERR("6P-trans: invalid transition, from %u to %u, on trans %p\n",
             trans->state, new_state, trans);
+    /* inform the corresponding SF */
+    assert(trans->sf != NULL);
+    if(trans->sf->error != NULL) {
+      trans->sf->error(SIXP_ERROR_INVALID_TRANS_STATE_TRANSITION,
+                sixp_trans_get_cmd(trans),
+                sixp_trans_get_seqno(trans),
+                sixp_trans_get_peer_addr(trans));
+    }
     ret_val = -1;
   } else {
     /* trans == NULL */
