@@ -138,6 +138,14 @@ sixp_trans_t *sixp_trans_alloc(const sixp_pkt_t *pkt,
                                const linkaddr_t *peer_addr);
 
 /**
+ * \brief Free a transaction
+ * \param trans The pointer to a transaction to be freed
+ * \note This function is for internal use only, which is NOT expected
+ * to be called by a scheduling function, for instance.
+ */
+void sixp_trans_free(sixp_trans_t *trans);
+
+/**
  * \brief Find a transaction
  * \param peer_addr The peer address
  * \return The pointer to a transaction; NULL on failure

@@ -73,7 +73,6 @@ typedef struct sixp_trans {
 static void handle_trans_timeout(void *ptr);
 static void process_trans(void *ptr);
 static void schedule_trans_process(sixp_trans_t *trans);
-static void free_trans(sixp_trans_t *trans);
 static sixp_trans_mode_t determine_trans_mode(const sixp_pkt_t *req);
 
 MEMB(trans_memb, sixp_trans_t, SIXTOP_MAX_TRANSACTIONS);
@@ -124,7 +123,7 @@ process_trans(void *ptr)
     LOG_INFO("6P-trans: trans [peer_addr:");
     LOG_INFO_LLADDR((const linkaddr_t *)&trans->peer_addr);
     LOG_INFO_(", seqno:%u] is going to be freed\n", trans->seqno);
-    free_trans(trans);
+    sixp_trans_free(trans);
     return;
   }
 
@@ -163,8 +162,8 @@ schedule_trans_process(sixp_trans_t *trans)
   ctimer_set(&trans->timer, 0, process_trans, trans); /* expires immediately */
 }
 /*---------------------------------------------------------------------------*/
-static void
-free_trans(sixp_trans_t *trans)
+void
+sixp_trans_free(sixp_trans_t *trans)
 {
   assert(trans != NULL);
   if(trans == NULL) {
@@ -427,7 +426,7 @@ sixp_trans_init(void)
       trans != NULL; trans = next_trans) {
     next_trans = trans->next;
     ctimer_stop(&trans->timer);
-    free_trans(trans);
+    sixp_trans_free(trans);
   }
 
   list_init(trans_list);
