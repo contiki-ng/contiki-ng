@@ -123,7 +123,9 @@
 
 static int8_t rssi_threshold = PROP_MODE_RSSI_THRESHOLD;
 /*---------------------------------------------------------------------------*/
+#if MAC_CONF_WITH_TSCH
 static volatile uint8_t is_receiving_packet;
+#endif
 /*---------------------------------------------------------------------------*/
 static int on(void);
 static int off(void);
@@ -819,8 +821,10 @@ read_frame(void *buf, unsigned short buf_len)
   while(entry->status == DATA_ENTRY_STATUS_BUSY
       && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (RTIMER_SECOND / 50)));
 
+#if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */
   is_receiving_packet = 0;
+#endif
 
   if(entry->status != DATA_ENTRY_STATUS_FINISHED) {
     /* No available data */
@@ -934,6 +938,14 @@ receiving_packet(void)
     return 0;
   }
 
+#if MAC_CONF_WITH_TSCH
+  /*
+   * Under TSCH operation, we rely on "hints" from the MDMSOFT interrupt
+   * flag. This flag is set by the radio upon sync word detection, but it is
+   * not cleared automatically by hardware. We store state in a variable after
+   * first call. The assumption is that the TSCH code will keep calling us
+   * until frame reception has completed, at which point we can clear MDMSOFT.
+   */
   if(!is_receiving_packet) {
     /* Look for the modem synchronization word detection interrupt flag.
      * This flag is raised when the synchronization word is received.
@@ -951,6 +963,34 @@ receiving_packet(void)
   }
 
   return is_receiving_packet;
+#else
+  /*
+   * Under CSMA operation, there is no immediately straightforward logic as to
+   * when it's OK to clear the MDMSOFT interrupt flag:
+   *
+   *   - We cannot re-use the same logic as above, since CSMA may bail out of
+   *     frame TX immediately after a single call this function here. In this
+   *     scenario, is_receiving_packet would remain equal to one and we would
+   *     therefore erroneously signal ongoing RX in subsequent calls to this
+   *     function here, even _after_ reception has completed.
+   *   - We can neither clear inside read_frame() nor inside the RX frame
+   *     interrupt handler (remember, we are not in poll mode under CSMA),
+   *     since we risk clearing MDMSOFT after we have seen a sync word for the
+   *     _next_ frame. If this happens, this function here would incorrectly
+   *     return 0 during RX of this next frame.
+   *
+   * So to avoid a very convoluted logic of how to handle MDMSOFT, we simply
+   * perform a clear channel assessment here: We interpret channel activity
+   * as frame reception.
+   */
+
+  if(channel_clear() == RF_CORE_CCA_CLEAR) {
+    return 0;
+  }
+
+  return 1;
+
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static int
