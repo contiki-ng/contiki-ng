@@ -212,19 +212,28 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
   /* enforce state transition rules  */
   if(trans != NULL &&
      (new_state == SIXP_TRANS_STATE_TERMINATING ||
-      (new_state == SIXP_TRANS_STATE_REQUEST_SENT &&
+      (new_state == SIXP_TRANS_STATE_REQUEST_SENDING &&
        trans->state == SIXP_TRANS_STATE_INIT) ||
+      (new_state == SIXP_TRANS_STATE_REQUEST_SENT &&
+       trans->state == SIXP_TRANS_STATE_REQUEST_SENDING) ||
       (new_state == SIXP_TRANS_STATE_REQUEST_RECEIVED &&
        trans->state == SIXP_TRANS_STATE_INIT) ||
-      (new_state == SIXP_TRANS_STATE_RESPONSE_SENT &&
+      (new_state == SIXP_TRANS_STATE_RESPONSE_SENDING &&
        trans->state == SIXP_TRANS_STATE_REQUEST_RECEIVED) ||
+      (new_state == SIXP_TRANS_STATE_RESPONSE_SENT &&
+       trans->state == SIXP_TRANS_STATE_RESPONSE_SENDING) ||
       (new_state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
-       trans->state == SIXP_TRANS_STATE_REQUEST_SENT) ||
+       (trans->state == SIXP_TRANS_STATE_REQUEST_SENDING ||
+        trans->state == SIXP_TRANS_STATE_REQUEST_SENT)) ||
       (new_state == SIXP_TRANS_STATE_CONFIRMATION_RECEIVED &&
-       trans->state == SIXP_TRANS_STATE_RESPONSE_SENT &&
+       (trans->state == SIXP_TRANS_STATE_RESPONSE_SENT ||
+        trans->state == SIXP_TRANS_STATE_RESPONSE_SENDING) &&
+       trans->mode == SIXP_TRANS_MODE_3_STEP) ||
+      (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENDING &&
+       trans->state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
        trans->mode == SIXP_TRANS_MODE_3_STEP) ||
       (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENT &&
-       trans->state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
+       trans->state == SIXP_TRANS_STATE_CONFIRMATION_SENDING &&
        trans->mode == SIXP_TRANS_MODE_3_STEP))) {
       LOG_INFO("6P-trans: trans %p state changes from %u to %u\n",
                trans, trans->state, new_state);

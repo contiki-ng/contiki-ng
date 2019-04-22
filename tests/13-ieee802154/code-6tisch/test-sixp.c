@@ -388,6 +388,8 @@ UNIT_TEST(test_output_response_4)
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
   UNIT_TEST_ASSERT(
+    sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENDING) == 0);
+  UNIT_TEST_ASSERT(
     sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENT) == 0);
   UNIT_TEST_ASSERT(
     sixp_trans_transit_state(trans, SIXP_TRANS_STATE_RESPONSE_RECEIVED) == 0);
@@ -465,6 +467,8 @@ UNIT_TEST(test_output_confirmation_3)
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
   UNIT_TEST_ASSERT(
+    sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENDING) == 0);
+  UNIT_TEST_ASSERT(
     sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENT) == 0);
   UNIT_TEST_ASSERT(
     sixp_trans_transit_state(trans, SIXP_TRANS_STATE_RESPONSE_RECEIVED) == 0);
@@ -497,9 +501,14 @@ UNIT_TEST(test_output_confirmation_4)
                                    &pkt) == 0);
   UNIT_TEST_ASSERT((trans = sixp_trans_alloc(&pkt, &peer_addr)) != NULL);
   UNIT_TEST_ASSERT(
+    sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENDING) == 0);
+  UNIT_TEST_ASSERT(
     sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENT) == 0);
   UNIT_TEST_ASSERT(
     sixp_trans_transit_state(trans, SIXP_TRANS_STATE_RESPONSE_RECEIVED) == 0);
+  UNIT_TEST_ASSERT(
+    sixp_trans_transit_state(trans,
+                             SIXP_TRANS_STATE_CONFIRMATION_SENDING) == 0);
   UNIT_TEST_ASSERT(
     sixp_trans_transit_state(trans,
                              SIXP_TRANS_STATE_CONFIRMATION_SENT) == 0);
@@ -665,6 +674,9 @@ UNIT_TEST(test_detect_seqno_error_2)
   UNIT_TEST_ASSERT(p[3] == 0);
 
   UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
+                                            SIXP_TRANS_STATE_RESPONSE_SENDING)
+                   == 0);
   UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
                                             SIXP_TRANS_STATE_RESPONSE_SENT)
                    == 0);
