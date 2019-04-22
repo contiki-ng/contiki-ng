@@ -52,9 +52,8 @@
 #define LOG_LEVEL LOG_LEVEL_6TOP
 
 static void mac_callback(void *ptr, int status, int transmissions);
-static int send_back_error(sixp_pkt_type_t type, sixp_pkt_code_t code,
-                           uint8_t sfid, uint8_t seqno,
-                           const linkaddr_t *dest_addr);
+static int send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
+                           const sixp_pkt_t *pkt, const linkaddr_t *dest_addr);
 /*---------------------------------------------------------------------------*/
 static void
 mac_callback(void *ptr, int status, int transmissions)
@@ -117,18 +116,33 @@ mac_callback(void *ptr, int status, int transmissions)
 }
 /*---------------------------------------------------------------------------*/
 static int
-send_back_error(sixp_pkt_type_t type, sixp_pkt_code_t code,
-                uint8_t sfid, uint8_t seqno,
-                const linkaddr_t *dest_addr)
+send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
+                const sixp_pkt_t *pkt, const linkaddr_t *dest_addr)
 {
+  sixp_nbr_t *nbr;
+  uint8_t seqno;
+  assert(pkt != NULL);
+  assert(dest_addr != NULL);
+
+  if(rc == SIXP_PKT_RC_ERR_SEQNUM) {
+    if((nbr = sixp_nbr_find(dest_addr)) == NULL) {
+      seqno = 0;
+    } else {
+      seqno = sixp_nbr_get_next_seqno(nbr);
+    }
+  } else {
+    seqno = pkt->seqno;
+  }
+
   /* create a 6P packet within packetbuf */
-  if(sixp_pkt_create(type, code, sfid, seqno, NULL, 0, NULL) < 0) {
-    LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n",
-            code.value);
+  if(sixp_pkt_create(type,(sixp_pkt_code_t)(uint8_t)rc, pkt->sfid, seqno,
+                     NULL, 0, NULL) < 0) {
+    LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n", rc);
     return -1;
   }
   /* we don't care about how the transmission goes; no need to set callback */
   sixtop_output(dest_addr, NULL, NULL);
+
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -150,10 +164,8 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
   if(sixp_pkt_parse(buf, len, &pkt) < 0) {
     if(pkt.version != SIXP_PKT_VERSION) {
       LOG_ERR("6P: sixp_input() unsupported version %u\n", pkt.version);
-      if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_VERSION,
-                         pkt.sfid, pkt.seqno,
-                         src_addr) < 0) {
+      if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_VERSION,
+                         (const sixp_pkt_t *)&pkt, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to send RC_ERR_VERSION\n");
         return;
       }
@@ -177,9 +189,8 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
      * XXX: what if the incoming packet is a response? confirmation should be
      * sent back?
      */
-    if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                       (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_SFID,
-                       pkt.sfid, pkt.seqno, src_addr) < 0) {
+    if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_SFID,
+                       (const sixp_pkt_t *)&pkt, src_addr) < 0) {
       LOG_ERR("6P: sixp_input() fails to return an error response\n");
     };
     return;
@@ -194,9 +205,8 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
       LOG_ERR("6P: sixp_input() fails because another request [peer_addr:");
       LOG_ERR_LLADDR((const linkaddr_t *)src_addr);
       LOG_ERR_(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
-      if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_BUSY,
-                         pkt.sfid, pkt.seqno, src_addr) < 0) {
+      if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_BUSY,
+                         (const sixp_pkt_t *)&pkt, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to return an error response");
       }
       return;
@@ -210,9 +220,8 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
 
     if((trans = sixp_trans_alloc(&pkt, src_addr)) == NULL) {
       LOG_ERR("6P: sixp_input() fails because of lack of memory\n");
-      if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_BUSY,
-                         pkt.sfid, pkt.seqno, src_addr) < 0) {
+      if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_BUSY,
+                         (const sixp_pkt_t *)&pkt, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to return an error response\n");
       }
       return;
@@ -230,11 +239,8 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
                                  SIXP_TRANS_STATE_REQUEST_RECEIVED);
 
       }
-      if(send_back_error(SIXP_PKT_TYPE_RESPONSE,
-                         (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_ERR_SEQNUM,
-                         pkt.sfid,
-                         nbr == NULL ? 0 : sixp_nbr_get_next_seqno(nbr),
-                         src_addr) < 0) {
+      if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_SEQNUM,
+                         (const sixp_pkt_t *)&pkt, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to return an error response\n");
       }
       return;
