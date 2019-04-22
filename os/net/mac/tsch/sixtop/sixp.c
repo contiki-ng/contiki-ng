@@ -393,6 +393,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
       return -1;
     } else {
       /* ready for proceed */
+      LOG_DBG("6P: sixp_output() allocates trans:%p\n", trans);
     }
   }
 
