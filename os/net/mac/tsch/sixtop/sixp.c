@@ -67,6 +67,13 @@ mac_callback(void *ptr, int status, int transmissions)
     return;
   } else if(sixp_trans_get_state(trans) == SIXP_TRANS_STATE_WAIT_FREE) {
     /* the transaction has been invalidated; free it now */
+    const sixtop_sf_t *sf = sixp_trans_get_sf(trans);
+    if(sf != NULL && sf->error != NULL) {
+      sf->error(SIXP_ERROR_TX_AFTER_TRANSACTION_TERMINATION,
+                sixp_trans_get_cmd(trans),
+                sixp_trans_get_seqno(trans),
+                sixp_trans_get_peer_addr(trans));
+    }
     sixp_trans_free(trans);
     return;
   }
@@ -236,6 +243,10 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_SEQNUM,
                          (const sixp_pkt_t *)&pkt, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to return an error response\n");
+      }
+      if(sf != NULL && sf->error != NULL) {
+        sf->error(SIXP_ERROR_SCHEDULE_INCONSISTENCY,
+                  (sixp_pkt_cmd_t)pkt.code.value, pkt.seqno, src_addr);
       }
       return;
     }

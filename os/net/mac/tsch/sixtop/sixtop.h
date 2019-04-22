@@ -73,6 +73,31 @@ typedef void (* sixtop_sf_input)(sixp_pkt_type_t type,
  */
 typedef void (* sixtop_sf_timeout)(sixp_pkt_cmd_t cmd,
                                    const linkaddr_t *peer_addr);
+
+/**
+ * \brief 6P internal error code, which SF is informed of through its
+ * sixtop_sf_error handler
+ */
+typedef enum {
+  SIXP_ERROR_SCHEDULE_INCONSISTENCY,
+  SIXP_ERROR_TX_AFTER_TRANSACTION_TERMINATION,
+  SIXP_ERROR_INVALID_TRANS_STATE_TRANSITION,
+  SIXP_ERROR_UNDEFINED
+} sixp_error_t;
+
+/**
+ * \brief Error Handler of Scheduling Function
+ * \param err Error occurred in a 6P transaction
+ * \param cmd Command of the 6P transaction
+ * \param seqno SeqNum of the 6P transaction
+ * \param peer_addr MAC address of the 6P transaction
+ * \details The error handler is called when an error occurs in 6P
+ */
+typedef void (* sixtop_sf_error)(sixp_error_t err,
+                                 sixp_pkt_cmd_t cmd,
+                                 uint8_t seqno,
+                                 const linkaddr_t *peer_addr);
+
 /**
  * /brief Scheduling Function Driver
  */
@@ -82,6 +107,7 @@ typedef struct {
   void (*init)(void);            /**< Init Function */
   sixtop_sf_input input;         /**< Input Handler */
   sixtop_sf_timeout timeout;     /**< Transaction Timeout Handler */
+  sixtop_sf_error error;         /**< Internal Error Handler */
 } sixtop_sf_t;
 /**
  * \var sixtop_sf_t::sfid

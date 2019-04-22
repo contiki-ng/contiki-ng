@@ -64,7 +64,8 @@ static const sixtop_sf_t test_sf = {
   TEST_SF_TIMEOUT_VALUE,
   NULL,
   NULL,
-  timeout_handler
+  timeout_handler,
+  NULL
 };
 
 static void
