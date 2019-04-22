@@ -86,7 +86,9 @@ mac_callback(void *ptr, int status, int transmissions)
       default:
         LOG_ERR("6P: mac_callback() fails because of an unexpected state (%u)\n",
                 current_state);
-        return;
+        /* don't change the state */
+        new_state = current_state;
+        break;
     }
   } else {
     /*
