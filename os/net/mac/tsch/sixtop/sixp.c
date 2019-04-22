@@ -161,10 +161,10 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
       if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_VERSION,
                          (const sixp_pkt_t *)&pkt, src_addr) < 0) {
         LOG_ERR("6P: sixp_input() fails to send RC_ERR_VERSION\n");
-        return;
       }
+    } else {
+      LOG_ERR("6P: sixp_input() fails because of a malformed 6P packet\n");
     }
-    LOG_ERR("6P: sixp_input() fails because of a malformed 6P packet\n");
     return;
   }
 
