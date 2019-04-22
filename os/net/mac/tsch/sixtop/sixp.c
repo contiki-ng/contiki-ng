@@ -119,23 +119,11 @@ static int
 send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
                 const sixp_pkt_t *pkt, const linkaddr_t *dest_addr)
 {
-  sixp_nbr_t *nbr;
-  uint8_t seqno;
   assert(pkt != NULL);
   assert(dest_addr != NULL);
 
-  if(rc == SIXP_PKT_RC_ERR_SEQNUM) {
-    if((nbr = sixp_nbr_find(dest_addr)) == NULL) {
-      seqno = 0;
-    } else {
-      seqno = sixp_nbr_get_next_seqno(nbr);
-    }
-  } else {
-    seqno = pkt->seqno;
-  }
-
   /* create a 6P packet within packetbuf */
-  if(sixp_pkt_create(type,(sixp_pkt_code_t)(uint8_t)rc, pkt->sfid, seqno,
+  if(sixp_pkt_create(type,(sixp_pkt_code_t)(uint8_t)rc, pkt->sfid, pkt->seqno,
                      NULL, 0, NULL) < 0) {
     LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n", rc);
     return -1;

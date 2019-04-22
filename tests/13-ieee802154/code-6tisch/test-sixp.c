@@ -620,7 +620,7 @@ UNIT_TEST(test_detect_seqno_error_1)
   UNIT_TEST_ASSERT(p[0] == ((SIXP_PKT_TYPE_RESPONSE << 4) | SIXP_PKT_VERSION));
   UNIT_TEST_ASSERT(p[1] == SIXP_PKT_RC_ERR_SEQNUM);
   UNIT_TEST_ASSERT(p[2] == TEST_SF_SFID);
-  UNIT_TEST_ASSERT(p[3] == 0); /* we don't have a relevant nbr; 0 is returned */
+  UNIT_TEST_ASSERT(p[3] == 10);
 
   UNIT_TEST_END();
 }
@@ -662,7 +662,7 @@ UNIT_TEST(test_detect_seqno_error_2)
   UNIT_TEST_ASSERT(p[0] == ((SIXP_PKT_TYPE_RESPONSE << 4) | SIXP_PKT_VERSION));
   UNIT_TEST_ASSERT(p[1] == SIXP_PKT_RC_ERR_SEQNUM);
   UNIT_TEST_ASSERT(p[2] == TEST_SF_SFID);
-  UNIT_TEST_ASSERT(p[3] == 3);
+  UNIT_TEST_ASSERT(p[3] == 0);
 
   UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
   UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
