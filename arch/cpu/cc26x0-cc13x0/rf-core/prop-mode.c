@@ -645,9 +645,6 @@ init(void)
     return RF_CORE_CMD_ERROR;
   }
 
-  /* Enable the "sync word seen" interrupt */
-  ti_lib_rfc_hw_int_enable(RFC_DBELL_RFHWIEN_MDMSOFT);
-
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
   rf_core_primary_mode_register(&mode_prop);
