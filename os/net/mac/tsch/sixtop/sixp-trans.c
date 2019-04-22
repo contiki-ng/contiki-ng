@@ -260,7 +260,7 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
       ret_val = 0;
   } else if (trans != NULL){
     /* invalid transition */
-    LOG_ERR("6P-trans: invalid transaction, from %u to %u, on trans %p\n",
+    LOG_ERR("6P-trans: invalid transition, from %u to %u, on trans %p\n",
             trans->state, new_state, trans);
     ret_val = -1;
   } else {
