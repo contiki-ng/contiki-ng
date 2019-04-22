@@ -80,6 +80,13 @@ int sixp_trans_transit_state(sixp_trans_t *trans,
                              sixp_trans_state_t new_state);
 
 /**
+ * \brief Return the scheduling function associated with a specified transaction
+ * \param trans The pointer to  a transaction
+ * \return Pointer to a scheduling function (sixp_sf_t)
+ */
+const sixtop_sf_t *sixp_trans_get_sf(sixp_trans_t *trans);
+
+/**
  * \brief Return the command associated with a specified transaction
  * \param trans The pointer to  a transaction
  * \return Command identifier; SIXP_PKT_CMD_UNAVAILABLE on failure
@@ -109,6 +116,13 @@ int16_t sixp_trans_get_seqno(sixp_trans_t *trans);
 sixp_trans_mode_t sixp_trans_get_mode(sixp_trans_t *trans);
 
 /**
+ * \brief Return the peer addr of a specified transaction
+ * \param trans The pointer to a transaction
+ * \return The pointer to the peer addr
+ */
+const linkaddr_t *sixp_trans_get_peer_addr(sixp_trans_t *trans);
+
+/**
  * \brief Invoke the output callback of a specified transaction
  * \param trans The pointer to a transaction
  * \param status An output result value
@@ -136,6 +150,12 @@ void sixp_trans_set_callback(sixp_trans_t *trans,
  */
 sixp_trans_t *sixp_trans_alloc(const sixp_pkt_t *pkt,
                                const linkaddr_t *peer_addr);
+
+/**
+ * \brief Helper function to terminate a transaction
+ * \param trans The pointer to a transaction to terminate
+ */
+void sixp_trans_terminate(sixp_trans_t *trans);
 
 /**
  * \brief Free a transaction
