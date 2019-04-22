@@ -70,13 +70,13 @@ mac_callback(void *ptr, int status, int transmissions)
   current_state = sixp_trans_get_state(trans);
   if(status == MAC_TX_OK) {
     switch(current_state) {
-      case SIXP_TRANS_STATE_INIT:
+      case SIXP_TRANS_STATE_REQUEST_SENDING:
         new_state = SIXP_TRANS_STATE_REQUEST_SENT;
         break;
-      case SIXP_TRANS_STATE_REQUEST_RECEIVED:
+      case SIXP_TRANS_STATE_RESPONSE_SENDING:
         new_state = SIXP_TRANS_STATE_RESPONSE_SENT;
         break;
-      case SIXP_TRANS_STATE_RESPONSE_RECEIVED:
+      case SIXP_TRANS_STATE_CONFIRMATION_SENDING:
         new_state = SIXP_TRANS_STATE_CONFIRMATION_SENT;
         break;
       default:
@@ -91,7 +91,7 @@ mac_callback(void *ptr, int status, int transmissions)
      * confirmation, the same transaction will be used for retransmission as
      * long as it doesn't have timeout.
      */
-    if(current_state == SIXP_TRANS_STATE_INIT) {
+    if(current_state == SIXP_TRANS_STATE_REQUEST_SENDING) {
       /* request case */
       new_state = SIXP_TRANS_STATE_TERMINATING;
     } else {
@@ -275,6 +275,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
     LOG_ERR("6P: maybe a duplicate packet to trans:%p\n", trans);
   } else if(sf->input != NULL) {
     sf->input(pkt.type, pkt.code, pkt.body, pkt.body_len, src_addr);
+  } else {
   }
 
   return;
@@ -399,7 +400,21 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
 
   assert(trans != NULL);
   sixp_trans_set_callback(trans, func, arg, arg_len);
-  sixtop_output(dest_addr, mac_callback, trans);
+  if(sixtop_output(dest_addr, mac_callback, trans) == 0) {
+    /* sixtop_output() call ends without an error */
+    sixp_trans_state_t state = sixp_trans_get_state(trans);
+    if(state == SIXP_TRANS_STATE_INIT) {
+      sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENDING);
+    } else if(state == SIXP_TRANS_STATE_REQUEST_RECEIVED) {
+      sixp_trans_transit_state(trans, SIXP_TRANS_STATE_RESPONSE_SENDING);
+    } else if(state == SIXP_TRANS_STATE_RESPONSE_RECEIVED) {
+      sixp_trans_transit_state(trans, SIXP_TRANS_STATE_CONFIRMATION_SENDING);
+    } else {
+      /* shouldn't come here */
+      LOG_ERR("6P: sixp_output() is called trans:%p whose state is %u\n",
+              trans, state);
+    }
+  }
 
   return 0;
 }
