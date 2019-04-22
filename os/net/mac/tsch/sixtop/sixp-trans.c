@@ -206,68 +206,69 @@ int
 sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
 {
   sixp_nbr_t *nbr;
+  int ret_val;
 
   assert(trans != NULL);
-  if(trans == NULL) {
-    LOG_ERR("6top: invalid argument, trans is NULL\n");
-    return -1;
-  }
-
   /* enforce state transition rules  */
-  if(new_state == SIXP_TRANS_STATE_TERMINATING ||
-     (new_state == SIXP_TRANS_STATE_REQUEST_SENT &&
-      trans->state == SIXP_TRANS_STATE_INIT) ||
-     (new_state == SIXP_TRANS_STATE_REQUEST_RECEIVED &&
-      trans->state == SIXP_TRANS_STATE_INIT) ||
-     (new_state == SIXP_TRANS_STATE_RESPONSE_SENT &&
-      trans->state == SIXP_TRANS_STATE_REQUEST_RECEIVED) ||
-     (new_state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
-      trans->state == SIXP_TRANS_STATE_REQUEST_SENT) ||
-     (new_state == SIXP_TRANS_STATE_CONFIRMATION_RECEIVED &&
-      trans->state == SIXP_TRANS_STATE_RESPONSE_SENT &&
-      trans->mode == SIXP_TRANS_MODE_3_STEP) ||
-     (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENT &&
-      trans->state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
-      trans->mode == SIXP_TRANS_MODE_3_STEP)) {
-    LOG_INFO("6P-trans: trans %p state changes from %u to %u\n",
-             trans, trans->state, new_state);
+  if(trans != NULL &&
+     (new_state == SIXP_TRANS_STATE_TERMINATING ||
+      (new_state == SIXP_TRANS_STATE_REQUEST_SENT &&
+       trans->state == SIXP_TRANS_STATE_INIT) ||
+      (new_state == SIXP_TRANS_STATE_REQUEST_RECEIVED &&
+       trans->state == SIXP_TRANS_STATE_INIT) ||
+      (new_state == SIXP_TRANS_STATE_RESPONSE_SENT &&
+       trans->state == SIXP_TRANS_STATE_REQUEST_RECEIVED) ||
+      (new_state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
+       trans->state == SIXP_TRANS_STATE_REQUEST_SENT) ||
+      (new_state == SIXP_TRANS_STATE_CONFIRMATION_RECEIVED &&
+       trans->state == SIXP_TRANS_STATE_RESPONSE_SENT &&
+       trans->mode == SIXP_TRANS_MODE_3_STEP) ||
+      (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENT &&
+       trans->state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
+       trans->mode == SIXP_TRANS_MODE_3_STEP))) {
+      LOG_INFO("6P-trans: trans %p state changes from %u to %u\n",
+               trans, trans->state, new_state);
 
-    if(new_state == SIXP_TRANS_STATE_REQUEST_SENT) {
-      /*
-       * that is, the request is acknowledged by the peer; increment
-       * next_seqno
-       */
-      if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
-        LOG_ERR("6top: cannot increment next_seqno\n");
-      } else {
-        if(trans->cmd == SIXP_PKT_CMD_CLEAR) {
-          /* next_seqno must have been reset to 0 already. */
-          assert(sixp_nbr_get_next_seqno(nbr) == 0);
+      if(new_state == SIXP_TRANS_STATE_REQUEST_SENT) {
+        /*
+         * that is, the request is acknowledged by the peer; increment
+         * next_seqno
+         */
+        if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
+          LOG_ERR("6top: cannot increment next_seqno\n");
         } else {
+          if(trans->cmd == SIXP_PKT_CMD_CLEAR) {
+            /* next_seqno must have been reset to 0 already. */
+            assert(sixp_nbr_get_next_seqno(nbr) == 0);
+          } else {
+            sixp_nbr_increment_next_seqno(nbr);
+          }
+        }
+      } else if(new_state == SIXP_TRANS_STATE_RESPONSE_SENT) {
+        if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
+          LOG_ERR("6top: cannot update next_seqno\n");
+        } else {
+          /* override next_seqno with the received one unless it's zero */
+          if(trans->seqno != 0) {
+            sixp_nbr_set_next_seqno(nbr, trans->seqno);
+          }
           sixp_nbr_increment_next_seqno(nbr);
         }
       }
-    } else if(new_state == SIXP_TRANS_STATE_RESPONSE_SENT) {
-      if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
-        LOG_ERR("6top: cannot update next_seqno\n");
-      } else {
-        /* override next_seqno with the received one unless it's zero */
-        if(trans->seqno != 0) {
-          sixp_nbr_set_next_seqno(nbr, trans->seqno);
-        }
-        sixp_nbr_increment_next_seqno(nbr);
-      }
-    }
-
-    trans->state = new_state;
-    schedule_trans_process(trans);
-    return 0;
+      trans->state = new_state;
+      schedule_trans_process(trans);
+      ret_val = 0;
+  } else if (trans != NULL){
+    /* invalid transition */
+    LOG_ERR("6P-trans: invalid transaction, from %u to %u, on trans %p\n",
+            trans->state, new_state, trans);
+    ret_val = -1;
+  } else {
+    /* trans == NULL */
+    LOG_ERR("6top: invalid argument, trans is NULL\n");
+    ret_val = -1;
   }
-
-  /* invalid transition */
-  LOG_ERR("6P-trans: invalid transaction, from %u to %u, detected on trans %p\n",
-          trans->state, new_state, trans);
-  return -1;
+  return ret_val;
 }
 /*---------------------------------------------------------------------------*/
 sixp_pkt_cmd_t
