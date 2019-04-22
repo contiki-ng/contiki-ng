@@ -65,6 +65,10 @@ mac_callback(void *ptr, int status, int transmissions)
   if(trans == NULL) {
     LOG_ERR("6P: mac_callback() fails because trans is NULL\n");
     return;
+  } else if(sixp_trans_get_state(trans) == SIXP_TRANS_STATE_WAIT_FREE) {
+    /* the transaction has been invalidated; free it now */
+    sixp_trans_free(trans);
+    return;
   }
 
   current_state = sixp_trans_get_state(trans);
