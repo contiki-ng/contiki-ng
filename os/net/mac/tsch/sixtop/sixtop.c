@@ -121,7 +121,7 @@ sixtop_find_sf(uint8_t sfid)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
-void
+int
 sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
 {
   uint8_t *p;
@@ -134,13 +134,13 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
     if(callback != NULL) {
       callback(arg, MAC_TX_ERR_FATAL, 0);
     }
-    return;
+    return -1;
   }
 
   /* prepend 6top Sub-IE ID */
   if(packetbuf_hdralloc(1) != 1) {
     LOG_ERR("6top: sixtop_output() fails because of no room for Sub-IE ID\n");
-    return;
+    return -1;
   }
   p = packetbuf_hdrptr();
   p[0] = SIXTOP_SUBIE_ID;
@@ -159,7 +159,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
     if(callback != NULL) {
       callback(arg, MAC_TX_ERR_FATAL, 0);
     }
-    return;
+    return -1;
   }
 
 #if SIXP_WITH_PAYLOAD_TERMINATION_IE
@@ -171,7 +171,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
         &ies)) < 0) {
     LOG_ERR("6top: sixtop_output() fails because of Payload Termination IE\n");
     callback(arg, MAC_TX_ERR_FATAL, 0);
-    return;
+    return -1;
   }
   packetbuf_set_datalen(packetbuf_datalen() + len);
 #endif /* SIXP_WITH_PAYLOAD_TERMINATION_IE */
@@ -184,7 +184,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
                                                      &ies) < 0) {
     LOG_ERR("6top: sixtop_output() fails because of Header Termination 1 IE\n");
     callback(arg, MAC_TX_ERR_FATAL, 0);
-    return;
+    return -1;
   }
 
   /* specify with PACKETBUF_ATTR_METADATA that packetbuf has IEs */
@@ -197,6 +197,7 @@ sixtop_output(const linkaddr_t *dest_addr, mac_callback_t callback, void *arg)
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
 
   NETSTACK_MAC.send(callback, arg);
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 void

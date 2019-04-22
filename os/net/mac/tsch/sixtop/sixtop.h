@@ -116,8 +116,9 @@ const sixtop_sf_t *sixtop_find_sf(uint8_t sfid);
  * \param dest_addr Destination address of the outgoing packet
  * \param callback MAC callback function to get a TX result
  * \param arg The pointer to an argument which is returned with the MAC callback
+ * \return 0 on success, -1 on failure
  */
-void sixtop_output(const linkaddr_t *dest_addr,
+int sixtop_output(const linkaddr_t *dest_addr,
                    mac_callback_t callback, void *arg);
 
 /**
