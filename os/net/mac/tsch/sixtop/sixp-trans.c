@@ -279,6 +279,17 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
   return ret_val;
 }
 /*---------------------------------------------------------------------------*/
+const sixtop_sf_t *
+sixp_trans_get_sf(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return NULL;
+  } else {
+    return trans->sf;
+  }
+}
+/*---------------------------------------------------------------------------*/
 sixp_pkt_cmd_t
 sixp_trans_get_cmd(sixp_trans_t *trans)
 {
@@ -319,6 +330,17 @@ sixp_trans_get_mode(sixp_trans_t *trans)
     return SIXP_TRANS_STATE_UNAVAILABLE;
   }
   return trans->mode;
+}
+/*---------------------------------------------------------------------------*/
+const linkaddr_t *
+sixp_trans_get_peer_addr(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return NULL;
+  } else {
+    return (const linkaddr_t *)&trans->peer_addr;
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -414,6 +436,17 @@ sixp_trans_find(const linkaddr_t *peer_addr)
   }
 
   return NULL;
+}
+/*---------------------------------------------------------------------------*/
+void
+sixp_trans_terminate(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return;
+  } else {
+    sixp_trans_transit_state(trans, SIXP_TRANS_STATE_TERMINATING);
+  }
 }
 /*---------------------------------------------------------------------------*/
 int
