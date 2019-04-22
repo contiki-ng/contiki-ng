@@ -40,7 +40,9 @@
 
 #define TEST_MAC_MAX_PAYLOAD_LEN 100
 
-static uint8_t send_is_called;
+static uint8_t mac_send_is_called;
+static mac_callback_t mac_sent_callback;
+static void *mac_sent_callback_arg;
 
 void
 test_print_report(const unit_test_t *utp)
@@ -60,19 +62,31 @@ test_print_report(const unit_test_t *utp)
 uint8_t
 test_mac_send_function_is_called(void)
 {
-  return send_is_called;
+  return mac_send_is_called;
+}
+
+void
+test_mac_invoke_sent_callback(int status, int num_tx)
+{
+  if(mac_sent_callback != NULL) {
+    mac_sent_callback(mac_sent_callback_arg, status, num_tx);
+  }
 }
 
 static void
 init(void)
 {
-  send_is_called = 0;
+  mac_send_is_called = 0;
+  mac_sent_callback = NULL;
+  mac_sent_callback_arg = NULL;
 }
 
 static void
 send(mac_callback_t sent_callback, void *ptr)
 {
-  send_is_called = 1;
+  mac_send_is_called = 1;
+  mac_sent_callback = sent_callback;
+  mac_sent_callback_arg = ptr;
 }
 
 static void
