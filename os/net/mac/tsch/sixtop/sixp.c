@@ -123,7 +123,7 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
   assert(dest_addr != NULL);
 
   /* create a 6P packet within packetbuf */
-  if(sixp_pkt_create(type,(sixp_pkt_code_t)(uint8_t)rc, pkt->sfid, pkt->seqno,
+  if(sixp_pkt_create(type, (sixp_pkt_code_t)(uint8_t)rc, pkt->sfid, pkt->seqno,
                      NULL, 0, NULL) < 0) {
     LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n", rc);
     return -1;
