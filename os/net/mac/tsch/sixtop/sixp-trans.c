@@ -170,8 +170,27 @@ sixp_trans_free(sixp_trans_t *trans)
     return;
   }
 
-  list_remove(trans_list, trans);
-  memb_free(&trans_memb, trans);
+  if (trans->state == SIXP_TRANS_STATE_WAIT_FREE) {
+    trans->state = SIXP_TRANS_STATE_UNAVAILABLE;
+  } else {
+    /* stop the timer that may still be running */
+    ctimer_stop(&trans->timer);
+    /*
+     * remove this trans from the list so that a new trans can be
+     * started with the same peer
+     */
+    list_remove(trans_list, trans);
+  }
+
+  if(trans->state == SIXP_TRANS_STATE_REQUEST_SENDING ||
+     trans->state == SIXP_TRANS_STATE_RESPONSE_SENDING ||
+     trans->state == SIXP_TRANS_STATE_CONFIRMATION_SENDING) {
+    /* memory is freed later, when mac_callback in sixp.c is called */
+    trans->state = SIXP_TRANS_STATE_WAIT_FREE;
+  } else {
+    memset(trans, 0, sizeof(sixp_trans_t));
+    memb_free(&trans_memb, trans);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static sixp_trans_mode_t
