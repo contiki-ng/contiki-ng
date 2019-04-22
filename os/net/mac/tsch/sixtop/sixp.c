@@ -272,12 +272,8 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
   }
   if(ret < 0) {
     LOG_ERR("6P: sixp_input() fails because of state transition failure\n");
-    LOG_ERR("6P: something wrong; we're terminating the trans %p\n", trans);
-    (void)sixp_trans_transit_state(trans, SIXP_TRANS_STATE_TERMINATING);
-    return;
-  }
-
-  if(sf->input != NULL) {
+    LOG_ERR("6P: maybe a duplicate packet to trans:%p\n", trans);
+  } else if(sf->input != NULL) {
     sf->input(pkt.type, pkt.code, pkt.body, pkt.body_len, src_addr);
   }
 
