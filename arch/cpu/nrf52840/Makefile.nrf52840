@@ -179,6 +179,8 @@ CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -DENABLE_DEBUG_ASSERT=1
 
+CFLAGS += -DNRF_802154_CSMA_CA_ENABLED=0
+
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(CONTIKI_NG_PROJECT_MAP)
 LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH)

@@ -46,6 +46,7 @@ static volatile bool m_rx_done;
 static volatile bool m_cca_status;
 static volatile bool m_cca_completed;
 static volatile bool tx_on_cca;
+static volatile bool tx_ok;
 
 uint8_t last_lqi;
 
@@ -61,7 +62,7 @@ uint8_t last_lqi;
 
 static uint8_t m_message[MAX_MESSAGE_SIZE];
 
-const uint8_t p_pan_id = IEEE802154_PANID;
+const uint8_t p_pan_id[] = { 0xab, 0xcd }; // TODO fix this get from marcro
 
 #ifndef IEEE_ADDR_CONF_ADDRESS
 #define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
@@ -79,10 +80,11 @@ static int nrf52_init()
 	m_tx_done = false;
 	m_rx_done = false;
 	tx_on_cca = false;
+	tx_ok = false;
 
-	nrf_802154_pan_id_set(&p_pan_id);
+	nrf_802154_pan_id_set(p_pan_id);
 
-	nrf_802154_extended_address_set(&ieee_addr_hc);
+	nrf_802154_extended_address_set(ieee_addr_hc);
 
     nrf_802154_channel_set(CHANNEL);
 
@@ -243,11 +245,17 @@ static int nrf52_transmit(unsigned short len){
         if(m_tx_in_progress){
         	RTIMER_BUSYWAIT_UNTIL(m_tx_done, NRF52_MAX_TX_TIME);
 
-        	return RADIO_TX_OK;
+        	if(tx_ok){
+        		return RADIO_TX_OK;
+        		PRINTF("[nrf802154] TX OK\n");
+        	} else {
+        		PRINTF("[nrf802154] TX NOACK\n");
+        		return RADIO_TX_NOACK;
+        	}
         }
 
     }
-
+    PRINTF("[nrf802154] TX COLLISION\n");
 	return RADIO_TX_COLLISION;
 }
 
@@ -262,12 +270,14 @@ static int nrf52_send(const void *payload, unsigned short payload_len)
 static int nrf52_cca(void){
 	PRINTF("[nrf802154] CCA\n");
 
-	m_cca_status = false;
+	/*m_cca_status = false;
 	m_cca_completed = false;
 
 	nrf_802154_cca();
 
-	RTIMER_BUSYWAIT_UNTIL(m_cca_completed, NRF52_MAX_CCA_TIME);
+	RTIMER_BUSYWAIT_UNTIL(m_cca_completed, NRF52_MAX_CCA_TIME);*/
+
+	// TODO Check
 
 	return 0;
 }
@@ -276,13 +286,14 @@ static int nrf52_receiving_packet(void){
 
 	PRINTF("[nrf802154] Receiving\n");
 
-	nrf_radio_state_t state = nrf_radio_state_get();
+	//nrf_radio_state_t state = nrf_radio_state_get();
 
-	return state == RADIO_STATE_STATE_Rx;
+	//return state == RADIO_STATE_STATE_Rx;
+	return false;
 }
 
 static int nrf52_pending_packet(void){
-	PRINTF("[nrf802154] Pending packet\n");
+	//PRINTF("[nrf802154] Pending packet\n");
 
 	return m_rx_done;
 }
@@ -322,7 +333,7 @@ const struct radio_driver nrf52840_driver =
     NULL
 };
 
-// CALLBACKS from NSD
+// CALLBACKS from NSD DO NOT PRINT HERE!!!
 
 void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi)
 {
@@ -354,10 +365,12 @@ exit:
 void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t length, int8_t power, uint8_t lqi)
 {
 
-	PRINTF("[nrf802154] TX Done\n");
+	//PRINTF("[nrf802154] TX Done\n");
 
     m_tx_done = true;
     last_lqi = lqi;
+
+    tx_ok = true;
 
     if (p_ack != NULL)
     {
@@ -370,14 +383,14 @@ void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t le
 void nrf_802154_transmit_failed(const uint8_t       * p_frame,
                                        nrf_802154_tx_error_t error){
 
-	PRINTF("[nrf802154] TX Failed\n");
+	tx_ok = false;
 
 	m_tx_done = true;
 
-    if (p_frame != NULL)
+    /*if (p_frame != NULL)
     {
         nrf_802154_buffer_free(p_frame);
-    }
+    }*/
 }
 
 // CCA Result
