@@ -95,23 +95,20 @@ tsch_rpl_callback_new_dio_interval(clock_time_t dio_interval)
 {
   /* Transmit EBs only if we have a valid rank as per 6TiSCH minimal */
   rpl_dag_t *dag;
-  rpl_rank_t root_rank;
   rpl_rank_t dag_rank;
 #if ROUTING_CONF_RPL_LITE
   dag = &curr_instance.dag;
-  root_rank = ROOT_RANK;
   dag_rank = DAG_RANK(dag->rank);
 #else
   rpl_instance_t *instance;
   dag = rpl_get_any_dag();
   instance = dag != NULL ? dag->instance : NULL;
-  root_rank = ROOT_RANK(instance);
   dag_rank = DAG_RANK(dag->rank, instance);
 #endif
 
   if(dag != NULL && dag->rank != RPL_INFINITE_RANK) {
     /* If we are root set TSCH as coordinator */
-    if(dag->rank == root_rank) {
+    if(dag->rank == 1) {
       tsch_set_coordinator(1);
     }
     /* Set EB period */
