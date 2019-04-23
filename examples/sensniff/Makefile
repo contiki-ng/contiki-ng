@@ -10,6 +10,9 @@ include $(CONTIKI)/Makefile.identify-target
 
 all: $(CONTIKI_PROJECT)
 
+# Disable all networking layer 3 upwards 
+MAKE_NET=MAKE_NET_NULLNET
+
 # use a custom MAC driver: sensniff_mac_driver
 MAKE_MAC = MAKE_MAC_OTHER
 include $(CONTIKI)/Makefile.include
