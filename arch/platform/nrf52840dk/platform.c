@@ -141,15 +141,15 @@ platform_init_stage_two(void)
   ble_advertising_init(DEVICE_NAME);
 #endif
 
-  /*
+
 #ifndef IEEE_ADDR_CONF_ADDRESS
-#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
+#define IEEE_ADDR_CONF_ADDRESS { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 #endif
 
   linkaddr_t linkaddr = IEEE_ADDR_CONF_ADDRESS;
 
   memcpy(linkaddr_node_addr.u8, &linkaddr, LINKADDR_SIZE);
-  */
+
   // TODO set link addr for IEEE 802.15.4
 
   process_start(&sensors_process, NULL);

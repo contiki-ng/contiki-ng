@@ -62,10 +62,10 @@ uint8_t last_lqi;
 
 static uint8_t m_message[MAX_MESSAGE_SIZE];
 
-const uint8_t p_pan_id[] = { 0xab, 0xcd }; // TODO fix this get from marcro
+const uint8_t p_pan_id[] = { 0xcd,  0xab }; // TODO fix this get from marcro
 
 #ifndef IEEE_ADDR_CONF_ADDRESS
-#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
+#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }
 #endif
 
 static int nrf52_init()
@@ -73,6 +73,7 @@ static int nrf52_init()
 	PRINTF("[nrf802154] Radio INIT\n");
 
 	uint8_t ieee_addr_hc[8] = IEEE_ADDR_CONF_ADDRESS;
+	uint8_t short_address[]    = {0x00, 0x01};
 
 	nrf_802154_init();
 
@@ -86,13 +87,17 @@ static int nrf52_init()
 
 	nrf_802154_extended_address_set(ieee_addr_hc);
 
-    nrf_802154_channel_set(CHANNEL);
+   nrf_802154_short_address_set(short_address);
 
-    nrf_802154_tx_power_set(POWER);
+   nrf_802154_channel_set(CHANNEL);
 
-    nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED);
+   nrf_802154_tx_power_set(POWER);
 
-    return 0;
+   nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED);
+
+   nrf_802154_receive();
+
+   return 0;
 }
 
 static int nrf52_recv( void *buf, unsigned short bufsize)
@@ -229,7 +234,7 @@ static int nrf52_transmit(unsigned short len){
 
 	PRINTF("[nrf802154] Transmit %u\n", len);
 
-    //nrf_802154_receive(); // Do I need this?
+    nrf_802154_receive(); // Do I need this?
 
     if (m_tx_done)
     {
@@ -337,6 +342,9 @@ const struct radio_driver nrf52840_driver =
 
 void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi)
 {
+	PRINTF("RECEV\n");
+
+	// TODO Unicast not working (address not set at layer 2)
 
 	m_rx_done = true;
 
