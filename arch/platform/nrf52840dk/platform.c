@@ -46,6 +46,8 @@
 #include "ble/ble-mac.h"
 #endif
 
+#include "ieee802154/ieee-addr.h"
+
 #include "contiki-net.h"
 #include "leds.h"
 #include "lib/sensors.h"
@@ -141,16 +143,7 @@ platform_init_stage_two(void)
   ble_advertising_init(DEVICE_NAME);
 #endif
 
-
-#ifndef IEEE_ADDR_CONF_ADDRESS
-#define IEEE_ADDR_CONF_ADDRESS { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
-#endif
-
-  linkaddr_t linkaddr = IEEE_ADDR_CONF_ADDRESS;
-
-  memcpy(linkaddr_node_addr.u8, &linkaddr, LINKADDR_SIZE);
-
-  // TODO set link addr for IEEE 802.15.4
+  ieee_addr_init(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
   process_start(&sensors_process, NULL);
 }

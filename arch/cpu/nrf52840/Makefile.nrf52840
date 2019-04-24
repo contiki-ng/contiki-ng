@@ -60,7 +60,7 @@ CONTIKI_CPU_DIRS += . dev ble ieee802154 #compat
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c
-CONTIKI_CPU_SOURCEFILES += int-master.c nrf802154.c
+CONTIKI_CPU_SOURCEFILES += int-master.c nrf802154.c ieee-addr.c
 
 #ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 #CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
@@ -156,6 +156,11 @@ $(info INCLUDE: $(EXTERNALDIRS))
 
 # Sorting removes duplicates
 BUILD_DIRECTORIES := $(sort $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY))
+
+### If the user-specified a Node ID, pass a define
+ifdef NODEID
+  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+endif
 
 CFLAGS += -D__HEAP_SIZE=$(HEAPSIZE)
 CFLAGS += -D__STACK_SIZE=$(STACKSIZE)

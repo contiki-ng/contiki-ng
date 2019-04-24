@@ -40,6 +40,8 @@
 #include <nrf.h>
 #include <nrf_802154.h>
 
+#include "ieee802154/ieee-addr.h"
+
 static volatile bool m_tx_in_progress;
 static volatile bool m_tx_done;
 static volatile bool m_rx_done;
@@ -48,7 +50,15 @@ static volatile bool m_cca_completed;
 static volatile bool tx_on_cca;
 static volatile bool tx_ok;
 
+#define MAX_MESSAGE_SIZE 125 // Max message size that can be handled by the driver
+#define CHANNEL 26
+#define POWER 0
+
 uint8_t last_lqi;
+static uint8_t m_message[MAX_MESSAGE_SIZE];
+uint8_t len;
+
+PROCESS(nrf52_process, "CC2420 driver");
 
 #define NRF52_CSMA_ENABLED 0
 #define NRF52_AUTOACK_ENABLED 1
@@ -56,58 +66,44 @@ uint8_t last_lqi;
 #define NRF52_MAX_TX_TIME RTIMER_SECOND / 2500
 #define NRF52_MAX_CCA_TIME RTIMER_SECOND / 2500
 
-#define MAX_MESSAGE_SIZE 125 // Max message size that can be handled by the driver
-#define CHANNEL 26
-#define POWER 0
-
-static uint8_t m_message[MAX_MESSAGE_SIZE];
-
-const uint8_t p_pan_id[] = { 0xcd,  0xab }; // TODO fix this get from marcro
-
-#ifndef IEEE_ADDR_CONF_ADDRESS
-#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }
-#endif
-
 static int nrf52_init()
 {
 	PRINTF("[nrf802154] Radio INIT\n");
 
-	uint8_t ieee_addr_hc[8] = IEEE_ADDR_CONF_ADDRESS;
-	uint8_t short_address[]    = {0x00, 0x01};
+	linkaddr_t linkaddr_node_addr;
+	uint8_t p_pan_id[2];
+	//uint8_t short_address[]    = {0x00, 0x01};
+
+	// Take care of endianess for pan-id and ext address
+	ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
+	pan_id_le(p_pan_id, IEEE802154_PANID);
 
 	nrf_802154_init();
 
 	m_tx_in_progress = false;
-	m_tx_done = false;
+	m_tx_done = true;
 	m_rx_done = false;
 	tx_on_cca = false;
 	tx_ok = false;
 
+	// Set pan-id and address
 	nrf_802154_pan_id_set(p_pan_id);
+	nrf_802154_extended_address_set(linkaddr_node_addr.u8);
+    //nrf_802154_short_address_set(short_address); // SHORT ADDRESS NOT MANDATORY
 
-	nrf_802154_extended_address_set(ieee_addr_hc);
+    // Set params
+    nrf_802154_channel_set(CHANNEL);
+    nrf_802154_tx_power_set(POWER);
+    nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED);
 
-   nrf_802154_short_address_set(short_address);
+    // Initial status receive
+    nrf_802154_receive();
 
-   nrf_802154_channel_set(CHANNEL);
-
-   nrf_802154_tx_power_set(POWER);
-
-   nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED);
-
-   nrf_802154_receive();
+    // Trigger RX process
+    process_start(&nrf52_process, NULL);
 
    return 0;
 }
-
-static int nrf52_recv( void *buf, unsigned short bufsize)
-{
-	PRINTF("[nrf802154] Recv\n");
-
-
-    return 0;
-}
-
 
 static radio_result_t
 set_value(radio_param_t param, radio_value_t value)
@@ -149,9 +145,7 @@ set_value(radio_param_t param, radio_value_t value)
     if(value < OUTPUT_POWER_MIN || value > OUTPUT_POWER_MAX) {
       return RADIO_RESULT_INVALID_VALUE;
     }
-
     nrf_802154_tx_power_set(value);
-
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CCA_THRESHOLD:
     // cc2420_set_cca_threshold(value - RSSI_OFFSET); // TODO
@@ -218,6 +212,21 @@ get_value(radio_param_t param, radio_value_t *value)
   }
 }
 
+static int nrf52_cca(void){
+	PRINTF("[nrf802154] CCA\n");
+
+	m_cca_status = false;
+	m_cca_completed = false;
+
+	nrf_802154_cca();
+
+	RTIMER_BUSYWAIT_UNTIL(m_cca_completed, NRF52_MAX_CCA_TIME);
+
+	PRINTF("[nrf802154] RESULT %u %u\n", m_cca_completed , m_cca_status);
+
+	return m_cca_completed && m_cca_status;
+	//return true; // TODO CCA Does not work
+}
 
 static int nrf52_prepare(const void *payload, unsigned short payload_len){
 	PRINTF("[nrf802154] Prepare %u\n", payload_len);
@@ -234,33 +243,32 @@ static int nrf52_transmit(unsigned short len){
 
 	PRINTF("[nrf802154] Transmit %u\n", len);
 
-    nrf_802154_receive(); // Do I need this?
+	if(tx_on_cca){ // If needed perform CCA
+		if(!nrf52_cca()){
+			m_tx_in_progress = false;
+			return RADIO_TX_COLLISION;
+		}
+	}
 
-    if (m_tx_done)
-    {
-         m_tx_in_progress = false;
-         m_tx_done        = false;
-    }
+	m_tx_in_progress = nrf_802154_transmit(m_message, len, false);
 
-    if (!m_tx_in_progress)
-    {
-    	// TODO mangace CCA
-        m_tx_in_progress = nrf_802154_transmit(m_message, len, false);
+	if(m_tx_in_progress){
+		RTIMER_BUSYWAIT_UNTIL(m_tx_done, NRF52_MAX_TX_TIME);
 
-        if(m_tx_in_progress){
-        	RTIMER_BUSYWAIT_UNTIL(m_tx_done, NRF52_MAX_TX_TIME);
+		if(tx_ok){
+			m_tx_in_progress = false;
+			PRINTF("[nrf802154] TX OK\n");
+			return RADIO_TX_OK;
+		} else {
+			PRINTF("[nrf802154] TX NOACK\n");
+			m_tx_in_progress = false;
+			return RADIO_TX_NOACK;
+		}
+	}
 
-        	if(tx_ok){
-        		return RADIO_TX_OK;
-        		PRINTF("[nrf802154] TX OK\n");
-        	} else {
-        		PRINTF("[nrf802154] TX NOACK\n");
-        		return RADIO_TX_NOACK;
-        	}
-        }
 
-    }
     PRINTF("[nrf802154] TX COLLISION\n");
+    m_tx_in_progress = false;
 	return RADIO_TX_COLLISION;
 }
 
@@ -271,49 +279,46 @@ static int nrf52_send(const void *payload, unsigned short payload_len)
     return nrf52_transmit(payload_len);
 }
 
-
-static int nrf52_cca(void){
-	PRINTF("[nrf802154] CCA\n");
-
-	/*m_cca_status = false;
-	m_cca_completed = false;
-
-	nrf_802154_cca();
-
-	RTIMER_BUSYWAIT_UNTIL(m_cca_completed, NRF52_MAX_CCA_TIME);*/
-
-	// TODO Check
-
-	return 0;
-}
-
 static int nrf52_receiving_packet(void){
 
-	PRINTF("[nrf802154] Receiving\n");
+	nrf_radio_state_t state = nrf_radio_state_get();
 
-	//nrf_radio_state_t state = nrf_radio_state_get();
+	return state == NRF_RADIO_STATE_RX_RU;
 
-	//return state == RADIO_STATE_STATE_Rx;
-	return false;
 }
 
 static int nrf52_pending_packet(void){
-	//PRINTF("[nrf802154] Pending packet\n");
-
+	//PRINTF("pending %u\n", m_rx_done);
 	return m_rx_done;
 }
 
 static int nrf52_off(void){
 	PRINTF("[nrf802154] Off\n");
+
     nrf_802154_sleep();
     nrf_802154_deinit();
-	return 0;
+
+    return 0;
 }
 
 static int nrf52_on(void){
 	PRINTF("[nrf802154] On\n");
 
+	nrf_802154_receive();
+
 	return 0;
+}
+
+static int
+nrf52_read(void *buf, unsigned short bufsize)
+{
+	PRINTF("[nrf802154] Read\n");
+
+	memcpy((void *)buf, (const void *) m_message, len);
+
+	m_rx_done = false;
+
+	return len;
 }
 
 
@@ -326,7 +331,7 @@ const struct radio_driver nrf52840_driver =
     nrf52_prepare, /* Prepare the radio with a packet to be sent. */
 	nrf52_transmit, /* Send the packet that has previously been prepared. */
 	nrf52_send, /* Prepare & transmit a packet. */
-	nrf52_recv, /* Read a received packet into a buffer. */
+	nrf52_read, /* Upper layer read from buffer (used for ACKs) */
 	nrf52_cca, /*Perform a Clear-Channel Assessment (CCA) to find out if there is a packet in the air or not. */
 	nrf52_receiving_packet, /* Check if the radio driver is currently receiving a packet. */
 	nrf52_pending_packet, /* Check if the radio driver has just received a packet. */
@@ -338,33 +343,51 @@ const struct radio_driver nrf52840_driver =
     NULL
 };
 
-// CALLBACKS from NSD DO NOT PRINT HERE!!!
+// RX Process
+PROCESS_THREAD(nrf52_process, ev, data)
+{
+  PROCESS_BEGIN();
 
+  PRINTF("nrf52_process: started\n");
+
+  while(1) {
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+
+    packetbuf_clear();
+
+    memcpy(packetbuf_dataptr(), m_message, len);
+
+    packetbuf_set_datalen(len);
+
+    NETSTACK_MAC.input();
+
+    m_rx_done = false;
+
+  }
+
+  PROCESS_END();
+}
+
+// CALLBACKS from NSD
+
+// RX
 void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi)
 {
-	PRINTF("RECEV\n");
-
-	// TODO Unicast not working (address not set at layer 2)
-
-	m_rx_done = true;
-
     if (length > MAX_MESSAGE_SIZE)
     {
         goto exit;
     }
 
-    packetbuf_clear();
+    memcpy(m_message, p_data, length);
+    len = length;
+    last_lqi = lqi;
 
-    memcpy(packetbuf_dataptr(), p_data, length);
+    m_rx_done = true;
 
-    packetbuf_set_datalen(length);
-
-    NETSTACK_MAC.input();
+    process_poll(&nrf52_process);
 
 exit:
     nrf_802154_buffer_free(p_data);
-
-    m_rx_done = false;
 
     return;
 }
@@ -373,8 +396,6 @@ exit:
 void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t length, int8_t power, uint8_t lqi)
 {
 
-	//PRINTF("[nrf802154] TX Done\n");
-
     m_tx_done = true;
     last_lqi = lqi;
 
@@ -382,6 +403,11 @@ void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t le
 
     if (p_ack != NULL)
     {
+    	m_rx_done = true;
+
+        memcpy(m_message, p_ack, length);
+        len = length;
+
         nrf_802154_buffer_free(p_ack);
     }
 
@@ -395,10 +421,6 @@ void nrf_802154_transmit_failed(const uint8_t       * p_frame,
 
 	m_tx_done = true;
 
-    /*if (p_frame != NULL)
-    {
-        nrf_802154_buffer_free(p_frame);
-    }*/
 }
 
 // CCA Result
