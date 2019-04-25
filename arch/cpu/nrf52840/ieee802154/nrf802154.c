@@ -49,6 +49,7 @@ static volatile bool m_cca_status;
 static volatile bool m_cca_completed;
 static volatile bool tx_on_cca;
 static volatile bool tx_ok;
+static volatile bool polling_enabled;
 
 #define MAX_MESSAGE_SIZE 125 // Max message size that can be handled by the driver
 #define CHANNEL 26
@@ -61,7 +62,7 @@ uint8_t len;
 PROCESS(nrf52_process, "CC2420 driver");
 
 #define NRF52_CSMA_ENABLED 0
-#define NRF52_AUTOACK_ENABLED 1
+#define NRF52_AUTOACK_ENABLED 0
 
 #define NRF52_MAX_TX_TIME RTIMER_SECOND / 2500
 #define NRF52_MAX_CCA_TIME RTIMER_SECOND / 2500
@@ -86,6 +87,8 @@ static int nrf52_init()
 	tx_on_cca = false;
 	tx_ok = false;
 
+	polling_enabled = false;
+
 	// Set pan-id and address
 	nrf_802154_pan_id_set(p_pan_id);
 	nrf_802154_extended_address_set(linkaddr_node_addr.u8);
@@ -94,7 +97,7 @@ static int nrf52_init()
     // Set params
     nrf_802154_channel_set(CHANNEL);
     nrf_802154_tx_power_set(POWER);
-    nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED);
+    nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED); // TODO Check autoack GO WIRESHARK
 
     // Initial status receive
     nrf_802154_receive();
@@ -121,7 +124,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
     if(value == RADIO_POWER_MODE_CARRIER_ON ||
        value == RADIO_POWER_MODE_CARRIER_OFF) {
-      //set_test_mode((value == RADIO_POWER_MODE_CARRIER_ON), 0); // TODO
+      //set_test_mode((value == RADIO_POWER_MODE_CARRIER_ON), 0); // TODO take a look at NRF_RADIO_CCA_MODE_CARRIER
       return RADIO_RESULT_OK;
     }
     return RADIO_RESULT_INVALID_VALUE;
@@ -133,14 +136,21 @@ set_value(radio_param_t param, radio_value_t value)
 
     return RADIO_RESULT_OK;
   case RADIO_PARAM_RX_MODE:
-	  // TODO ??
-    return RADIO_RESULT_OK;
+	    if(value & ~(RADIO_RX_MODE_ADDRESS_FILTER |
+	        RADIO_RX_MODE_AUTOACK | RADIO_RX_MODE_POLL_MODE)) {
+	      return RADIO_RESULT_INVALID_VALUE;
+	    }
+	    nrf_802154_promiscuous_set((value & RADIO_RX_MODE_ADDRESS_FILTER) != 0);
+	    nrf_802154_auto_ack_set((value & RADIO_RX_MODE_AUTOACK) != 0);
+	    polling_enabled = ((value & RADIO_RX_MODE_POLL_MODE) != 0);
+	    return RADIO_RESULT_OK;
   case RADIO_PARAM_TX_MODE:
-    if(tx_on_cca) {
-      return RADIO_RESULT_INVALID_VALUE;
-    }
-    tx_on_cca = true;
-    return RADIO_RESULT_OK;
+
+	    if(value & ~(RADIO_TX_MODE_SEND_ON_CCA)) {
+	      return RADIO_RESULT_INVALID_VALUE;
+	    }
+	    tx_on_cca = ((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
+	    return RADIO_RESULT_OK;
   case RADIO_PARAM_TXPOWER:
     if(value < OUTPUT_POWER_MIN || value > OUTPUT_POWER_MAX) {
       return RADIO_RESULT_INVALID_VALUE;
@@ -148,7 +158,7 @@ set_value(radio_param_t param, radio_value_t value)
     nrf_802154_tx_power_set(value);
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CCA_THRESHOLD:
-    // cc2420_set_cca_threshold(value - RSSI_OFFSET); // TODO
+    // cc2420_set_cca_threshold(value - RSSI_OFFSET); // TODO use nrf_802154_cca_cfg_set
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
@@ -171,21 +181,35 @@ get_value(radio_param_t param, radio_value_t *value)
     *value = nrf_802154_channel_get();
     return RADIO_RESULT_OK;
   case RADIO_PARAM_RX_MODE:
-    *value = 0; // TODO ??
+    *value = 0;
+    if(nrf_802154_promiscuous_get()) {
+      *value |= RADIO_RX_MODE_ADDRESS_FILTER;
+    }
+    if(nrf_802154_auto_ack_get()) {
+      *value |= RADIO_RX_MODE_AUTOACK;
+    }
+    if(polling_enabled) {
+      *value |= RADIO_RX_MODE_POLL_MODE;
+    }
+
     return RADIO_RESULT_OK;
   case RADIO_PARAM_TX_MODE:
-    *value = 0; // TODO ??
+	    *value = 0;
+	    if(tx_on_cca) {
+	      *value |= RADIO_TX_MODE_SEND_ON_CCA;
+	    }
+	    return RADIO_RESULT_OK;
     return RADIO_RESULT_OK;
   case RADIO_PARAM_TXPOWER:
     *value = nrf_802154_tx_power_get();
-
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CCA_THRESHOLD:
     *value = 0; // TODO
     return RADIO_RESULT_OK;
   case RADIO_PARAM_RSSI:
     /* Return the RSSI value in dBm */
-    *value = 0; // TODO
+	 // nrf_802154_rssi_measure(); TODO check
+    *value = nrf_802154_rssi_last_get();
     return RADIO_RESULT_OK;
   case RADIO_PARAM_LAST_RSSI:
     /* RSSI of the last packet received */
@@ -351,17 +375,18 @@ PROCESS_THREAD(nrf52_process, ev, data)
   PRINTF("nrf52_process: started\n");
 
   while(1) {
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+    PROCESS_YIELD_UNTIL(!polling_enabled && ev == PROCESS_EVENT_POLL);
 
     packetbuf_clear();
 
-    memcpy(packetbuf_dataptr(), m_message, len);
+    //memcpy(packetbuf_dataptr(), m_message, len);
+    nrf52_read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
     packetbuf_set_datalen(len);
 
     NETSTACK_MAC.input();
 
-    m_rx_done = false;
+    //m_rx_done = false;
 
   }
 
