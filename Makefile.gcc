@@ -1,0 +1,27 @@
+# -*- makefile -*-
+#
+# GCC specific definitions and actions
+#
+
+GCC_MAJOR_VERSION := $(shell $(CC) -v 2>&1 | grep "gcc version" | cut -b 13)
+GCC_MINOR_VERSION := $(shell $(CC) -v 2>&1 | grep "gcc version" | cut -b 15)
+
+# Warn if using version 6.3.x of arm-none-eabi-gcc
+ifeq ("$(CC)","arm-none-eabi-gcc")
+  ifeq (6,$(GCC_MAJOR_VERSION))
+    ifeq (3,$(GCC_MINOR_VERSION))
+      $(warning Warning: you're using a version of $(CC) that may create broken Contiki-NG executables.)
+      $(warning We recommend to upgrade or downgrade your toolchain.)
+    endif
+  endif
+endif
+
+# Warn if using 4.6.x or older msp430-gcc
+ifeq ("$(CC)","msp430-gcc")
+  ifeq ($(shell test $(GCC_MAJOR_VERSION) -lt 5; echo $$?),0)
+    ifeq ($(shell test $(GCC_MINOR_VERSION) -lt 7; echo $$?),0)
+      $(warning Warning: you're using an old version of $(CC).)
+      $(warning Upgrade to 4.7.x is recommended for extended memory support and bugfixes.)
+    endif
+  endif
+endif
