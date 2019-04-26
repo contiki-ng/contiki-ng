@@ -24,7 +24,7 @@ CFLAGS += -DDATE="\"`date +"%02u %02d %02m %02y %02H %02M %02S"`\""
 
 ### Configure the build for the board and pull in board-specific sources
 CONTIKI_TARGET_DIRS += . dev
-CONTIKI_TARGET_DIRS += . $(BOARD)
+CONTIKI_TARGET_DIRS += $(BOARD)
 PLATFORM_ROOT_DIR = $(ARCH_PATH)/platform/$(TARGET)
 
 ### Include the board dir if one exists
@@ -86,5 +86,5 @@ zoul-motes:
 	@echo $(MOTES)
 
 ### For the login etc targets
-BAUDRATE = 115200
+BAUDRATE ?= 115200
 PORT = $(USBDEVPREFIX)$(firstword $(MOTES))

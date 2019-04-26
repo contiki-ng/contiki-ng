@@ -31,7 +31,10 @@
  */
 
  /**
-  * \addtogroup node-id
+  * \addtogroup sys
+  * @{
+  *
+  * \defgroup node-id Node ID management
   * @{
   *
   * \file
@@ -51,5 +54,7 @@ extern uint16_t node_id;
 void node_id_init(void);
 
 #endif /* NODE_ID_H_ */
- /** @} */
- 
+/**
+ * @}
+ * @}
+ */

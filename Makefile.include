@@ -283,7 +283,7 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
 CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
 SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) ${dir $(target_makefile)}
+             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS)
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
@@ -468,6 +468,9 @@ endif
 ifeq ($(findstring $(TARGET),native cooja),)
   include $(CONTIKI)/Makefile.embedded
 endif
+
+### Include Makefile.gcc for GCC specific definitions and actions
+include $(CONTIKI)/Makefile.gcc
 
 # Don't treat $(BUILD_DIR_BOARD)/%.$(TARGET) and $(TARGET) as intermediate
 # files because for many platforms they are in fact the primary target.

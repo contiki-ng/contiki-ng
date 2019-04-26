@@ -28,7 +28,7 @@
  *
  * This file is part of the Contiki operating system.
  *
- * \ingroup net-layer
+ * \ingroup routing
  * \addtogroup rpl-lite
  RPL-lite is a lightweight implementation of RPL tailored for reliability.
  Supports only non-storing mode, one instance and one DAG.
