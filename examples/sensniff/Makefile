@@ -15,7 +15,6 @@ MAKE_NET=MAKE_NET_NULLNET
 
 # use a custom MAC driver: sensniff_mac_driver
 MAKE_MAC = MAKE_MAC_OTHER
-include $(CONTIKI)/Makefile.include
 
 PYTHON ?= python
 SENSNIFF = $(CONTIKI)/tools/sensniff/sensniff.py
@@ -29,6 +28,8 @@ SENSNIFF_FLAGS += -b $(BAUDRATE)
 ifneq ($(PORT),)
   SENSNIFF_FLAGS += -d $(PORT)
 endif
+
+include $(CONTIKI)/Makefile.include
 
 sniff:
 ifeq ($(wildcard $(SENSNIFF)), )
