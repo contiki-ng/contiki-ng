@@ -29,6 +29,13 @@
  * This file is part of the Contiki operating system.
  *
  */
+/**
+ * \addtogroup link-layer
+ * @{
+ *
+ * \defgroup csma Implementation of the 802.15.4 standard CSMA protocol
+ * @{
+*/
 
 /**
  * \file
@@ -87,3 +94,7 @@ int csma_security_set_key(uint8_t index, const uint8_t *key);
 
 
 #endif /* CSMA_H_ */
+/**
+ * @}
+ * @}
+ */
