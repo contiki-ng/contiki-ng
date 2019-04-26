@@ -97,4 +97,4 @@ else
 endif
 
 ### For the login etc targets
-BAUDRATE = 115200
+BAUDRATE ?= 115200
