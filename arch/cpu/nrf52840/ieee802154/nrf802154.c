@@ -62,7 +62,7 @@ uint8_t len;
 PROCESS(nrf52_process, "CC2420 driver");
 
 #define NRF52_CSMA_ENABLED 0
-#define NRF52_AUTOACK_ENABLED 0
+#define NRF52_AUTOACK_ENABLED 1
 
 #define NRF52_MAX_TX_TIME RTIMER_SECOND / 2500
 #define NRF52_MAX_CCA_TIME RTIMER_SECOND / 2500
@@ -404,7 +404,7 @@ void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t
     }
 
     memcpy(m_message, p_data, length);
-    len = length;
+    len = length - 2;
     last_lqi = lqi;
 
     m_rx_done = true;
@@ -431,7 +431,7 @@ void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t le
     	m_rx_done = true;
 
         memcpy(m_message, p_ack, length);
-        len = length;
+        len = length - 2;
 
         nrf_802154_buffer_free(p_ack);
     }
