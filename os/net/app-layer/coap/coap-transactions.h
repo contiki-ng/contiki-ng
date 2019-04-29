@@ -48,7 +48,7 @@
 #include "coap-engine.h"
 #include "coap-timer.h"
 #include "coap-constants.h"
-
+#include <stdint.h>
 
 #ifndef COAP_MAX_RETRANSMIT
 #define COAP_MAX_RETRANSMIT                  4
