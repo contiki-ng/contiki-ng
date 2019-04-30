@@ -138,28 +138,28 @@ platform_init_stage_two(void)
 #endif
 #endif
 
-#ifdef SOFTDEVICE_PRESENT
+#if defined(SOFTDEVICE_PRESENT) && NETSTACK_CONF_WITH_IPV6 && WITH_BLE
   ble_stack_init();
   ble_advertising_init(DEVICE_NAME);
-#endif
+
+#else
 
   ieee_addr_init(linkaddr_node_addr.u8, LINKADDR_SIZE);
 
   process_start(&sensors_process, NULL);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_three(void)
 {
-#if defined(SOFTDEVICE_PRESENT) && NETSTACK_CONF_WITH_IPV6
+#if defined(SOFTDEVICE_PRESENT) && NETSTACK_CONF_WITH_IPV6 && WITH_BLE
   linkaddr_t linkaddr;
   ble_get_mac(linkaddr.u8);
   /* Set link layer address */
   linkaddr_set_node_addr(&linkaddr);
   process_start(&ble_iface_observer, NULL);
-#endif
 
-#ifdef SOFTDEVICE_PRESENT
   ble_advertising_start();
   LOG_INFO("Advertising name [%s]\n", DEVICE_NAME);
 #endif

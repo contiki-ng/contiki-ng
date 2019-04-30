@@ -5,6 +5,12 @@ endif
 ### Include the board-specific makefile
 PLATFORM_ROOT_DIR = $(ARCH_PATH)/platform/$(TARGET)
 
+WERROR=0
+
+ifndef NRF52_WITHOUT_SOFTDEVICE
+  NRF52_WITHOUT_SOFTDEVICE=1
+endif
+
 CONTIKI_TARGET_DIRS += . dev config
 CONTIKI_SOURCEFILES += platform.c leds-arch.c nrf52840dk-sensors.c button-sensor.c temperature-sensor.c
 

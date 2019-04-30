@@ -58,9 +58,10 @@
  * @{
  */
 
-/* Select the BLE mac driver */
+/* Select the BLE mac driver by default */
 #if MAC_CONF_WITH_OTHER
 #define NETSTACK_CONF_MAC     ble_ipsp_mac_driver
+#define WITH_BLE=1
 #endif
 
 /* 6LoWPAN */
@@ -101,8 +102,17 @@
 /*---------------------------------------------------------------------------*/
 
 /* ND and Routing */
-#define UIP_CONF_ROUTER                      1 /**< BLE master role, which allows for routing, isn't supported. */ // TODO ENABLED FOR 802154
+#if WITH_BLE
+
+#define UIP_CONF_ROUTER                      0 /**< BLE master role, which allows for routing, isn't supported. */
 #define UIP_CONF_ND6_SEND_NS                 1
+
+#else
+
+#define UIP_CONF_ROUTER                      1
+#define UIP_CONF_ND6_SEND_NS                 1
+
+#endif
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 

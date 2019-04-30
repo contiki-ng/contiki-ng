@@ -17,7 +17,6 @@
  * @}
  */
 
-// TODO Check values!
 #define OUTPUT_POWER_MAX   0
 #define OUTPUT_POWER_MIN -25
 
@@ -33,8 +32,8 @@
 #include "net/netstack.h"
 
 #define DEBUG 0
-#include "net/net-debug.h"
 
+#include "net/net-debug.h"
 #include "lib/assert.h"
 
 #include <nrf.h>
@@ -125,7 +124,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
     if(value == RADIO_POWER_MODE_CARRIER_ON ||
        value == RADIO_POWER_MODE_CARRIER_OFF) {
-      //set_test_mode((value == RADIO_POWER_MODE_CARRIER_ON), 0); // TODO take a look at NRF_RADIO_CCA_MODE_CARRIER
+      // TODO
       return RADIO_RESULT_OK;
     }
     return RADIO_RESULT_INVALID_VALUE;
@@ -240,16 +239,15 @@ get_value(radio_param_t param, radio_value_t *value)
 static radio_result_t
 get_object(radio_param_t param, void *dest, size_t size)
 {
-  uint8_t *target;
-  linkaddr_t linkaddr_node_addr;
-  int i;
+  //uint8_t *target;
+  //int i;
 
   if(param == RADIO_PARAM_64BIT_ADDR) {
     if(size != 8 || !dest) {
       return RADIO_RESULT_INVALID_VALUE;
     }
 
-    target = dest;
+    //target = dest;
 
     /*for(i = 0; i < 8; i++) {
       target[i] = ((uint32_t *)RFCORE_FFSM_EXT_ADDR0)[7 - i] & 0xFF;
@@ -282,7 +280,7 @@ get_object(radio_param_t param, void *dest, size_t size)
 static radio_result_t
 set_object(radio_param_t param, const void *src, size_t size)
 {
-  int i;
+  //int i;
 
   if(param == RADIO_PARAM_64BIT_ADDR) {
     if(size != 8 || !src) {
