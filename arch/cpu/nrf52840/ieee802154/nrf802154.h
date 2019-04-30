@@ -5,15 +5,17 @@
 
 extern const struct radio_driver nrf52840_driver;
 
-// TODO TSCH
+// TSCH DEFINES
+/* 1 len byte, 2 bytes CRC */
+#define RADIO_PHY_OVERHEAD         3
+/* 250kbps data rate. One byte = 32us */
+#define RADIO_BYTE_AIR_TIME       32
 /* Delay between GO signal and SFD */
-#define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME))
+#define NRF52_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME + 40))
 /* Delay between GO signal and start listening.
  * This value is so small because the radio is constantly on within each timeslot. */
-#define RADIO_DELAY_BEFORE_RX ((unsigned)US_TO_RTIMERTICKS(15))
+#define NRF52_DELAY_BEFORE_RX ((unsigned)US_TO_RTIMERTICKS(40))
 /* Delay between the SFD finishes arriving and it is detected in software. */
-#define RADIO_DELAY_BEFORE_DETECT ((unsigned)US_TO_RTIMERTICKS(352))
-
-// CHECK RTIMERTICS_TO_US and US_TO_RTIMERTICKS
+#define NRF52_DELAY_BEFORE_DETECT ((unsigned)US_TO_RTIMERTICKS(40))
 
 #endif /* NRF52_H_ */

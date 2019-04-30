@@ -47,10 +47,17 @@
 #define NRF52DK_DEF_H_
 
 #include "boards.h"
+#include "nrf802154.h"
 
 #define PLATFORM_HAS_BATTERY                    0
 #define PLATFORM_HAS_RADIO                      0
 #define PLATFORM_HAS_TEMPERATURE                1
+
+#define RADIO_PHY_HEADER_LEN   5
+
+#define RADIO_DELAY_BEFORE_TX     NRF52_DELAY_BEFORE_TX
+#define RADIO_DELAY_BEFORE_RX     NRF52_DELAY_BEFORE_RX
+#define RADIO_DELAY_BEFORE_DETECT NRF52_DELAY_BEFORE_DETECT
 
 /**
  * \name Leds configurations
@@ -104,9 +111,9 @@
 
 /**
  * \brief nRF52 timer instance to be used for Contiki rtimer driver.
- * \note Timer 0 is used by the SoftDevice.
+ * \note Timer 0 is used by the SoftDevice, Timer 2 is used by 802154 driver.
  */
-#define PLATFORM_TIMER_INSTANCE_ID   1
+#define PLATFORM_TIMER_INSTANCE_ID   2
 
 /** @} */
 /*---------------------------------------------------------------------------*/

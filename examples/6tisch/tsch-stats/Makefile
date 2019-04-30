@@ -16,6 +16,10 @@ MAKE_WITH_PERIODIC_ROUTES_PRINT ?= 0
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/services/shell
 
+NRF52_WITHOUT_SOFTDEVICE=1
+
+WERROR=0
+
 ifeq ($(MAKE_WITH_ORCHESTRA),1)
 MODULES += os/services/orchestra
 endif

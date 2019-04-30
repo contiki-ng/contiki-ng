@@ -32,7 +32,7 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #include "net/net-debug.h"
 
 #include "lib/assert.h"
@@ -41,6 +41,8 @@
 #include <nrf_802154.h>
 
 #include "ieee802154/ieee-addr.h"
+
+#include "net/mac/tsch/tsch.h"
 
 static volatile bool m_tx_in_progress;
 static volatile bool m_tx_done;
@@ -56,16 +58,17 @@ static volatile bool polling_enabled;
 #define POWER 0
 
 uint8_t last_lqi;
+uint32_t  last_time;
 static uint8_t m_message[MAX_MESSAGE_SIZE];
 uint8_t len;
 
-PROCESS(nrf52_process, "CC2420 driver");
+PROCESS(nrf52_process, "NRF52 driver");
 
 #define NRF52_CSMA_ENABLED 0
 #define NRF52_AUTOACK_ENABLED 1
 
-#define NRF52_MAX_TX_TIME RTIMER_SECOND / 2500
-#define NRF52_MAX_CCA_TIME RTIMER_SECOND / 2500
+#define NRF52_MAX_TX_TIME RTIMER_SECOND / 25
+#define NRF52_MAX_CCA_TIME RTIMER_SECOND / 25
 
 static int nrf52_init()
 {
@@ -73,7 +76,6 @@ static int nrf52_init()
 
 	linkaddr_t linkaddr_node_addr;
 	uint8_t p_pan_id[2];
-	//uint8_t short_address[]    = {0x00, 0x01};
 
 	// Take care of endianess for pan-id and ext address
 	ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
@@ -92,12 +94,11 @@ static int nrf52_init()
 	// Set pan-id and address
 	nrf_802154_pan_id_set(p_pan_id);
 	nrf_802154_extended_address_set(linkaddr_node_addr.u8);
-    //nrf_802154_short_address_set(short_address); // SHORT ADDRESS NOT MANDATORY
 
     // Set params
     nrf_802154_channel_set(CHANNEL);
     nrf_802154_tx_power_set(POWER);
-    nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED); // TODO Check autoack GO WIRESHARK
+    nrf_802154_auto_ack_set(NRF52_AUTOACK_ENABLED);
 
     // Initial status receive
     nrf_802154_receive();
@@ -236,6 +237,67 @@ get_value(radio_param_t param, radio_value_t *value)
   }
 }
 
+static radio_result_t
+get_object(radio_param_t param, void *dest, size_t size)
+{
+  uint8_t *target;
+  linkaddr_t linkaddr_node_addr;
+  int i;
+
+  if(param == RADIO_PARAM_64BIT_ADDR) {
+    if(size != 8 || !dest) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+
+    target = dest;
+
+    /*for(i = 0; i < 8; i++) {
+      target[i] = ((uint32_t *)RFCORE_FFSM_EXT_ADDR0)[7 - i] & 0xFF;
+    }*/ // TODO
+
+    return RADIO_RESULT_OK;
+  }
+
+  if(param == RADIO_PARAM_LAST_PACKET_TIMESTAMP) {
+    if(size != sizeof(rtimer_clock_t) || !dest) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    *(rtimer_clock_t *)dest = last_time;
+    return RADIO_RESULT_OK;
+  }
+
+#if MAC_CONF_WITH_TSCH
+  if(param == RADIO_CONST_TSCH_TIMING) {
+    if(size != sizeof(uint16_t *) || !dest) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    *(const uint16_t **)dest = tsch_timeslot_timing_us_10000;
+    return RADIO_RESULT_OK;
+  }
+#endif /* MAC_CONF_WITH_TSCH */
+
+  return RADIO_RESULT_NOT_SUPPORTED;
+}
+/*---------------------------------------------------------------------------*/
+static radio_result_t
+set_object(radio_param_t param, const void *src, size_t size)
+{
+  int i;
+
+  if(param == RADIO_PARAM_64BIT_ADDR) {
+    if(size != 8 || !src) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+
+    /*for(i = 0; i < 8; i++) {
+      ((uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = ((uint8_t *)src)[7 - i];
+    }*/ // TODO
+
+    return RADIO_RESULT_OK;
+  }
+  return RADIO_RESULT_NOT_SUPPORTED;
+}
+
 static int nrf52_cca(void){
 	PRINTF("[nrf802154] CCA\n");
 
@@ -249,7 +311,6 @@ static int nrf52_cca(void){
 	PRINTF("[nrf802154] RESULT %u %u\n", m_cca_completed , m_cca_status);
 
 	return m_cca_completed && m_cca_status;
-	//return true; // TODO CCA Does not work
 }
 
 static int nrf52_prepare(const void *payload, unsigned short payload_len){
@@ -284,7 +345,7 @@ static int nrf52_transmit(unsigned short len){
 			PRINTF("[nrf802154] TX OK\n");
 			return RADIO_TX_OK;
 		} else {
-			PRINTF("[nrf802154] TX NOACK\n");
+			PRINTF("[nrf802154] TX FAILED\n");
 			m_tx_in_progress = false;
 			return RADIO_TX_NOACK;
 		}
@@ -317,16 +378,13 @@ static int nrf52_pending_packet(void){
 }
 
 static int nrf52_off(void){
-	PRINTF("[nrf802154] Off\n");
 
     nrf_802154_sleep();
-    nrf_802154_deinit();
 
     return 0;
 }
 
 static int nrf52_on(void){
-	PRINTF("[nrf802154] On\n");
 
 	nrf_802154_receive();
 
@@ -336,7 +394,6 @@ static int nrf52_on(void){
 static int
 nrf52_read(void *buf, unsigned short bufsize)
 {
-	PRINTF("[nrf802154] Read\n");
 
 	memcpy((void *)buf, (const void *) m_message, len);
 
@@ -363,8 +420,8 @@ const struct radio_driver nrf52840_driver =
     nrf52_off, /* turn off */
     get_value,
     set_value,
-    NULL,
-    NULL
+    get_object,
+    set_object
 };
 
 // RX Process
@@ -377,16 +434,16 @@ PROCESS_THREAD(nrf52_process, ev, data)
   while(1) {
     PROCESS_YIELD_UNTIL(!polling_enabled && ev == PROCESS_EVENT_POLL);
 
+    if(m_rx_done == false)
+    	continue;
+
     packetbuf_clear();
 
-    //memcpy(packetbuf_dataptr(), m_message, len);
     nrf52_read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
     packetbuf_set_datalen(len);
 
     NETSTACK_MAC.input();
-
-    //m_rx_done = false;
 
   }
 
@@ -398,7 +455,7 @@ PROCESS_THREAD(nrf52_process, ev, data)
 // RX
 void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi)
 {
-    if (length > MAX_MESSAGE_SIZE)
+    if (length > MAX_MESSAGE_SIZE || m_rx_done == true )
     {
         goto exit;
     }
@@ -406,6 +463,7 @@ void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t
     memcpy(m_message, p_data, length);
     len = length - 2;
     last_lqi = lqi;
+    last_time = RTIMER_NOW();
 
     m_rx_done = true;
 

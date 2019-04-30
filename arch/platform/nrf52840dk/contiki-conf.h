@@ -101,7 +101,7 @@
 /*---------------------------------------------------------------------------*/
 
 /* ND and Routing */
-#define UIP_CONF_ROUTER                      0 /**< BLE master role, which allows for routing, isn't supported. */
+#define UIP_CONF_ROUTER                      1 /**< BLE master role, which allows for routing, isn't supported. */ // TODO ENABLED FOR 802154
 #define UIP_CONF_ND6_SEND_NS                 1
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */

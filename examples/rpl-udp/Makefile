@@ -1,5 +1,11 @@
 CONTIKI_PROJECT = udp-client udp-server
 all: $(CONTIKI_PROJECT)
 
+NRF52_WITHOUT_SOFTDEVICE=1
+
+MAKE_MAC = MAKE_MAC_CSMA
+
+WERROR=0
+
 CONTIKI=../..
 include $(CONTIKI)/Makefile.include
