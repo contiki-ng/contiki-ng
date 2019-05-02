@@ -111,9 +111,16 @@
 
 /**
  * \brief nRF52 timer instance to be used for Contiki rtimer driver.
- * \note Timer 0 is used by the SoftDevice, Timer 2 is used by 802154 driver.
+ * \note Timer 0 is used by the SoftDevice, Timer 1 is used by 802154 driver.
  */
 #define PLATFORM_TIMER_INSTANCE_ID   2
+
+/**
+ * \brief nRF52 timer instance to be used for 802154 driver.
+ * \note Timer 0 is used by the SoftDevice, Timer 2 is used by rtimer.
+ */
+#define PLATFORM_TIMER_RADIO_INSTANCE_ID   1
+
 
 /** @} */
 /*---------------------------------------------------------------------------*/

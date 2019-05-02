@@ -46,6 +46,7 @@
 #include "contiki.h"
 
 static const nrfx_timer_t timer = NRFX_TIMER_INSTANCE(PLATFORM_TIMER_INSTANCE_ID); /**< Timer instance used for rtimer */
+static const nrfx_timer_t timer_radio = NRFX_TIMER_INSTANCE(PLATFORM_TIMER_RADIO_INSTANCE_ID); /**< Timer instance used for radio */
 
 /**
  * \brief Handler for timer events.
@@ -107,6 +108,18 @@ rtimer_arch_now()
   return nrfx_timer_capture(&timer, NRF_TIMER_CC_CHANNEL0);
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Returns the current real-time clock time for the radio timer
+ * \return The current rtimer time in ticks
+ *
+ */
+rtimer_clock_t
+rtimer_arch_now_radio()
+{
+  return nrfx_timer_capture(&timer_radio, NRF_TIMER_CC_CHANNEL0);
+}
+/*---------------------------------------------------------------------------*/
+
 /**
  * @}
  */
