@@ -36,6 +36,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "sys/cc.h"
 #include "sys/clock.h"
 #include "sys/etimer.h"
 /*---------------------------------------------------------------------------*/
@@ -48,7 +49,8 @@
 /*---------------------------------------------------------------------------*/
 static ClockP_Struct wakeup_clk;
 /*---------------------------------------------------------------------------*/
-#define H_WAKEUP_CLK   (ClockP_handle(&wakeup_clk))
+#define H_WAKEUP_CLK    (ClockP_handle(&wakeup_clk))
+#define NO_TIMEOUT      (~(uint32_t)0)
 /*---------------------------------------------------------------------------*/
 static void
 wakeup_fxn(uintptr_t arg)
@@ -61,47 +63,14 @@ wakeup_fxn(uintptr_t arg)
 }
 /*---------------------------------------------------------------------------*/
 static inline uint32_t
-get_timeout(uint64_t time_to_etimer)
-{
-  uint32_t systemTickPeriod;
-  uint32_t etimer_timeout;
-  uint32_t watchdog_timeout;
-
-  systemTickPeriod = ClockP_getSystemTickPeriod();
-
-  /* Convert from clock ticks to system ticks */
-  etimer_timeout = (uint32_t)((1000 * 1000 * time_to_etimer) / CLOCK_SECOND / systemTickPeriod);
-
-  /*
-   * If the Watchdog is enabled, we must take extra care to wakeup before the
-   * Watchdog times out if the next timeout is before the next etimer timeout.
-   * This is because the Watchdog pauses only if the device enters standy. If
-   * the device enters idle, the Wathddog still runs, and hence the wathcdog
-   * will timeout if the next etimer timeout is longer than the watchdog
-   * timeout.
-   */
-#if (WATCHDOG_DISABLE == 0)
-  /* Convert from watchdog ticks to system ticks */
-  watchdog_timeout = watchdog_arch_next_timeout() / systemTickPeriod;
-  if((watchdog_timeout != 0) && (watchdog_timeout < etimer_timeout)) {
-    return watchdog_timeout;
-  }
-#endif
-
-  return etimer_timeout;
-}
-/*---------------------------------------------------------------------------*/
-bool
-clock_arch_set_wakeup(void)
+get_etimer_timeout(void)
 {
   clock_time_t now;
   clock_time_t next_etimer;
   uint64_t time_to_etimer;
-  uint32_t timeout;
+  uint32_t systemTickPeriod;
 
-  if(ClockP_isActive(H_WAKEUP_CLK)) {
-    ClockP_stop(H_WAKEUP_CLK);
-  }
+  systemTickPeriod = ClockP_getSystemTickPeriod();
 
   if(etimer_pending()) {
     now = clock_time();
@@ -109,16 +78,66 @@ clock_arch_set_wakeup(void)
 
     if(!CLOCK_LT(now, next_etimer)) {
       etimer_request_poll();
-      return false;
+      /* etimer already expired, return 0 */
+      return 0;
 
     } else {
       time_to_etimer = (uint64_t)(next_etimer - now);
-      timeout = get_timeout(time_to_etimer);
-      ClockP_setTimeout(H_WAKEUP_CLK, timeout);
-      ClockP_start(H_WAKEUP_CLK);
+      /* Convert from clock ticks to system ticks */
+      return (uint32_t)((1000 * 1000 * time_to_etimer) / CLOCK_SECOND / systemTickPeriod);
     }
+  } else {
+    /* No expiration */
+    return NO_TIMEOUT;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static inline uint32_t
+get_watchdog_timeout(void)
+{
+#if (WATCHDOG_DISABLE == 0)
+  uint32_t systemTickPeriod;
+
+  systemTickPeriod = ClockP_getSystemTickPeriod();
+
+  /* Convert from watchdog ticks to system ticks */
+  return watchdog_arch_next_timeout() / systemTickPeriod;
+
+#else
+  return NO_TIMEOUT;
+#endif
+}
+/*---------------------------------------------------------------------------*/
+bool
+clock_arch_set_wakeup(void)
+{
+    /*
+   * If the Watchdog is enabled, we must take extra care to wakeup before the
+   * Watchdog times out if the next timeout is before the next etimer timeout.
+   * This is because the Watchdog pauses only if the device enters standy. If
+   * the device enters idle, the Wathddog still runs, and hence the wathcdog
+   * will timeout if the next etimer timeout is longer than the watchdog
+   * timeout.
+   */
+
+  uint32_t etimer_timeout;
+  uint32_t watchdog_timeout;
+  uint32_t timeout;
+
+  if(ClockP_isActive(H_WAKEUP_CLK)) {
+    ClockP_stop(H_WAKEUP_CLK);
   }
 
+  etimer_timeout = get_etimer_timeout();
+  watchdog_timeout = get_watchdog_timeout();
+
+  timeout = MIN(etimer_timeout, watchdog_timeout);
+  if(timeout == NO_TIMEOUT) {
+    return false;
+  }
+
+  ClockP_setTimeout(H_WAKEUP_CLK, timeout);
+  ClockP_start(H_WAKEUP_CLK);
   return true;
 }
 /*---------------------------------------------------------------------------*/
