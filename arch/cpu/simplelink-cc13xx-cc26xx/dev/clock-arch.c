@@ -28,98 +28,137 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc13xx-cc26xx-cpu
+ * \addtogroup cc13xx-cc26xx-clock
  * @{
  *
- * \defgroup cc13xx-cc26xx-clock CC13xx/CC26xx clock library
- *
- * @{
  * \file
  *        Implementation of the clock libary for CC13xx/CC26xx.
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "sys/clock.h"
 #include "sys/etimer.h"
 /*---------------------------------------------------------------------------*/
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/aon_rtc.h)
-#include DeviceFamily_constructPath(driverlib/cpu.h)
-#include DeviceFamily_constructPath(driverlib/interrupt.h)
-#include DeviceFamily_constructPath(driverlib/prcm.h)
-#include DeviceFamily_constructPath(driverlib/timer.h)
-
 #include <ti/drivers/dpl/ClockP.h>
-#include <ti/drivers/dpl/HwiP.h>
-#include <ti/drivers/power/PowerCC26XX.h>
 /*---------------------------------------------------------------------------*/
-static volatile clock_time_t count;
-static ClockP_Struct etimer_clock;
+#include "watchdog-arch.h"
+/*---------------------------------------------------------------------------*/
+#include <stdbool.h>
+#include <stdint.h>
+/*---------------------------------------------------------------------------*/
+static ClockP_Struct wakeup_clk;
+/*---------------------------------------------------------------------------*/
+#define H_WAKEUP_CLK   (ClockP_handle(&wakeup_clk))
 /*---------------------------------------------------------------------------*/
 static void
-clock_update_cb(void)
+wakeup_fxn(uintptr_t arg)
 {
-  const uintptr_t key = HwiP_disable();
-  count += 1;
-  HwiP_restore(key);
+  (void)arg;
 
-  /* Notify the etimer system. */
   if(etimer_pending()) {
     etimer_request_poll();
   }
 }
 /*---------------------------------------------------------------------------*/
-static inline clock_time_t
-get_count(void)
+static inline uint32_t
+get_timeout(uint64_t time_to_etimer)
 {
-  clock_time_t count_read;
+  uint32_t systemTickPeriod;
+  uint32_t etimer_timeout;
+  uint32_t watchdog_timeout;
 
-  const uintptr_t key = HwiP_disable();
-  count_read = count;
-  HwiP_restore(key);
+  systemTickPeriod = ClockP_getSystemTickPeriod();
 
-  return count_read;
+  /* Convert from clock ticks to system ticks */
+  etimer_timeout = (uint32_t)((1000 * 1000 * time_to_etimer) / CLOCK_SECOND / systemTickPeriod);
+
+  /*
+   * If the Watchdog is enabled, we must take extra care to wakeup before the
+   * Watchdog times out if the next timeout is before the next etimer timeout.
+   * This is because the Watchdog pauses only if the device enters standy. If
+   * the device enters idle, the Wathddog still runs, and hence the wathcdog
+   * will timeout if the next etimer timeout is longer than the watchdog
+   * timeout.
+   */
+#if (WATCHDOG_DISABLE == 0)
+  /* Convert from watchdog ticks to system ticks */
+  watchdog_timeout = watchdog_arch_next_timeout() / systemTickPeriod;
+  if((watchdog_timeout != 0) && (watchdog_timeout < etimer_timeout)) {
+    return watchdog_timeout;
+  }
+#endif
+
+  return etimer_timeout;
+}
+/*---------------------------------------------------------------------------*/
+bool
+clock_arch_set_wakeup(void)
+{
+  clock_time_t now;
+  clock_time_t next_etimer;
+  uint64_t time_to_etimer;
+  uint32_t timeout;
+
+  if(ClockP_isActive(H_WAKEUP_CLK)) {
+    ClockP_stop(H_WAKEUP_CLK);
+  }
+
+  if(etimer_pending()) {
+    now = clock_time();
+    next_etimer = etimer_next_expiration_time();
+
+    if(!CLOCK_LT(now, next_etimer)) {
+      etimer_request_poll();
+      return false;
+
+    } else {
+      time_to_etimer = (uint64_t)(next_etimer - now);
+      timeout = get_timeout(time_to_etimer);
+      ClockP_setTimeout(H_WAKEUP_CLK, timeout);
+      ClockP_start(H_WAKEUP_CLK);
+    }
+  }
+
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 void
 clock_init(void)
 {
-  /* ClockP_getSystemTickPeriod() returns ticks per us. */
-  const uint32_t clockp_ticks_second =
-    (uint32_t)(1000 * 1000) / (CLOCK_SECOND) / ClockP_getSystemTickPeriod();
+  ClockP_Params clk_params;
 
-  count = 0;
+  ClockP_Params_init(&clk_params);
+  clk_params.startFlag = false;
+  clk_params.period = 0;
 
-  ClockP_Params params;
-  ClockP_Params_init(&params);
-
-  params.period = clockp_ticks_second;
-  params.startFlag = true;
-
-  ClockP_construct(&etimer_clock, (ClockP_Fxn)clock_update_cb,
-                   clockp_ticks_second, &params);
+  ClockP_construct(&wakeup_clk, wakeup_fxn, 0, &clk_params);
 }
 /*---------------------------------------------------------------------------*/
 clock_time_t
 clock_time(void)
 {
-  return get_count();
+  uint64_t usec;
+
+  usec = (uint64_t)(ClockP_getSystemTicks() * ClockP_getSystemTickPeriod());
+  return (clock_time_t)((usec * CLOCK_SECOND) / (1000 * 1000));
 }
 /*---------------------------------------------------------------------------*/
 unsigned long
 clock_seconds(void)
 {
-  return (unsigned long)get_count() / CLOCK_SECOND;
+  uint32_t usec;
+
+  usec = ClockP_getSystemTicks() * ClockP_getSystemTickPeriod();
+  return (unsigned long)(usec / (1000 * 1000));
 }
 /*---------------------------------------------------------------------------*/
 void
 clock_wait(clock_time_t i)
 {
-  clock_time_t start;
+  uint32_t usec;
 
-  start = clock_time();
-  while(clock_time() - start < i);
+  usec = (uint32_t)((1000 * 1000 * i) / CLOCK_SECOND);
+  clock_delay_usec(usec);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -139,6 +178,5 @@ clock_delay(unsigned int i)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  */
