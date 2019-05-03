@@ -418,6 +418,11 @@ copy_frags2uip(int context)
   /* Copy from the fragment context info buffer first */
   memcpy((uint8_t *)UIP_IP_BUF, (uint8_t *)frag_info[context].first_frag,
          frag_info[context].first_frag_len);
+
+  /* Ensure that no previous data is used for reassembly in case of missing fragments. */
+  memset((uint8_t *)UIP_IP_BUF + frag_info[context].first_frag_len, 0,
+         frag_info[context].len - frag_info[context].first_frag_len);
+
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     /* And also copy all matching fragments */
     if(frag_buf[i].len > 0 && frag_buf[i].index == context) {
