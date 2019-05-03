@@ -48,16 +48,12 @@ rtimer_clock_t rtimer_arch_now_radio(void);
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
-/*
- * HW oscillator frequency is 32 kHz, not 64 kHz. And, RTIMER_NOW() never
- * returns an odd value; US_TO_RTIMERTICKS always rounds to the nearest
- * even number.
- */
+
 #define US_TO_RTIMERTICKS(us)   ( \
   (((us) >= 0) \
-    ? (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2) + 500000) / 1000000L) \
-    : (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2) - 500000) / 1000000L) \
-  ) * 2)
+    ? (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2 ) + 500000) / 1000000L) \
+    : (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2 ) - 500000) / 1000000L) \
+  ) )
 
 #define RTIMERTICKS_TO_US(rt)   ( \
   ((rt) >= 0) \
@@ -65,10 +61,6 @@ rtimer_clock_t rtimer_arch_now_radio(void);
     : (((int32_t)(rt) * 1000000L - (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND) \
   )
 
-/*
- * A 64-bit version because the 32-bit one cannot handle T >= 4295 ticks.
- * Intended only for positive values of T.
- */
 #define RTIMERTICKS_TO_US_64(rt)  ( \
   (uint32_t)( \
     ((uint64_t)(rt) * 1000000 + (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND \

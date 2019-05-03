@@ -214,7 +214,6 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
           RTIMER_BUSYWAIT_UNTIL(NETSTACK_RADIO.pending_packet(), CSMA_ACK_WAIT_TIME);
 
           ret = MAC_TX_NOACK;
-
           if(NETSTACK_RADIO.receiving_packet() ||
              NETSTACK_RADIO.pending_packet() ||
              NETSTACK_RADIO.channel_clear() == 0) {

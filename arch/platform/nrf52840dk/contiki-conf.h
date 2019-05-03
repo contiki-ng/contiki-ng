@@ -61,14 +61,18 @@
 /* Select the BLE mac driver by default */
 #if MAC_CONF_WITH_OTHER
 #define NETSTACK_CONF_MAC     ble_ipsp_mac_driver
-#define WITH_BLE=1
+#define WITH_BLE 1
+#endif
+
+#if MAC_CONF_WITH_CSMA || MAC_CONF_WITH_TSCH
+#define WITH_BLE 0
 #endif
 
 /* 6LoWPAN */
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD         1280
 
 #ifndef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG                    0     /**< We don't use 6LoWPAN fragmentation as IPSP takes care of that for us.*/
+#define SICSLOWPAN_CONF_FRAG                    0
 #endif
 
 #define SICSLOWPAN_FRAMER_HDRLEN                0     /**< Use fixed header len rather than framer.length() function */
@@ -86,7 +90,7 @@
  * @{
  */
 #ifndef DEVICE_NAME
-#define DEVICE_NAME "Contiki nRF52dk"  /**< Device name used in BLE undirected advertisement. */
+#define DEVICE_NAME "Contiki nRF52840dk"  /**< Device name used in BLE undirected advertisement. */
 #endif
 /**
  * @}
