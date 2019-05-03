@@ -666,6 +666,10 @@ cc2420_transmit(unsigned short payload_len)
 {
   int i;
 
+  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
+
   GET_LOCK();
 
   /* The TX FIFO can only hold one packet. Make sure to not overrun
@@ -731,6 +735,10 @@ static int
 cc2420_prepare(const void *payload, unsigned short payload_len)
 {
   uint8_t total_len;
+
+  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
 
   GET_LOCK();
 

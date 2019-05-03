@@ -661,9 +661,11 @@ init(void)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  int len = MIN(payload_len, TX_BUF_PAYLOAD_LEN);
+  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
 
-  memcpy(&tx_buf[TX_BUF_HDR_LEN], payload, len);
+  memcpy(&tx_buf[TX_BUF_HDR_LEN], payload, payload_len);
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -677,6 +679,11 @@ transmit(unsigned short transmit_len)
 
   /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
   uint16_t total_length;
+
+  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    PRINTF("transmit: too long\n");
+    return RADIO_TX_ERR;
+  }
 
   if(!rf_is_on()) {
     was_off = 1;
