@@ -2,6 +2,12 @@ HEAPSIZE := 8192
 STACKSIZE := 8192
 
 ifndef NRF52_SDK_ROOT
+  ifeq ($(wildcard $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/),"")
+    $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip $(CONTIKI_CPU)/third_party/)
+    $(shell unzip nRF5_SDK_15.2.0_9412b96.zip)
+  else
+    NRF52_SDK_ROOT=$(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/ 
+  endif
   $(error NRF52_SDK_ROOT not defined! You must specify where nRF52 SDK resides!)
 endif
 
@@ -62,9 +68,9 @@ CONTIKI_CPU_DIRS += . dev ble ieee802154 #compat
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c
 CONTIKI_CPU_SOURCEFILES += int-master.c nrf802154.c ieee-addr.c
 
-#ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-#CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
-#endif
+ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
+CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
+endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
