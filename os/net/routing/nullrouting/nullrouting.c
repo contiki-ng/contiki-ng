@@ -30,7 +30,7 @@
  */
 
 /**
- * \addtogroup null-routing
+ * \addtogroup routing
  * @{
  *
  * \file

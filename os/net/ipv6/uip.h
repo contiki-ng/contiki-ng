@@ -1775,6 +1775,7 @@ struct uip_udp_hdr {
 #define UIP_EXT_HDR_OPT_PAD1  0
 #define UIP_EXT_HDR_OPT_PADN  1
 #define UIP_EXT_HDR_OPT_RPL   0x63
+#define UIP_EXT_HDR_OPT_MPL   0x6D
 
 /** @} */
 

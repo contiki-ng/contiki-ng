@@ -101,9 +101,11 @@ rpl_link_callback(const linkaddr_t *addr, int status, int numtx)
     if(nbr != NULL) {
       /* If this is the neighbor we were probing urgently, mark urgent
       probing as done */
+#if RPL_WITH_PROBING
       if(curr_instance.dag.urgent_probing_target == nbr) {
         curr_instance.dag.urgent_probing_target = NULL;
       }
+#endif
       /* Link stats were updated, and we need to update our internal state.
       Updating from here is unsafe; postpone */
       LOG_INFO("packet sent to ");
