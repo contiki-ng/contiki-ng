@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = coap-client
 CONTIKI=../../../../..
 
-PLATFORMS_ONLY = nrf52dk
+PLATFORMS_ONLY = nrf52dk 
 
 ifeq ($(SERVER_IPV6_EP),)
 $(warning Please define SERVER_IPV6_EP=<full-coap-IPv6-URI>)

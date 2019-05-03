@@ -3,8 +3,7 @@ STACKSIZE := 8192
 
 ifndef NRF52_SDK_ROOT
   ifeq ($(wildcard $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/),)
-    $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip -O $(CONTIKI_CPU)/third_party/)
-    $(shell unzip $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96.zip)
+    $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip -P $(CONTIKI_CPU)/third_party/ && unzip $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96.zip -d $(CONTIKI_CPU)/third_party/)
   else
     NRF52_SDK_ROOT=$(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/ 
   endif
@@ -73,8 +72,6 @@ CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
-
-include $(ARCH_PATH)/cpu/nrf52840/third_party/NordicSemiconductor/Makefile
 
 CFLAGS += -DRAAL_SINGLE_PHY
 
