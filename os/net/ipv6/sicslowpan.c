@@ -1759,11 +1759,17 @@ output(const linkaddr_t *localdest)
     return 0;
 #endif /* SICSLOWPAN_CONF_FRAG */
   } else {
-
     /*
      * The packet does not need to be fragmented
      * copy "payload" and send
      */
+
+   if(uip_len < uncomp_hdr_len) {
+     LOG_ERR("output: uip_len is smaller than uncomp_hdr_len (%d < %d)",
+             (int)uip_len, (int)uncomp_hdr_len);
+     return 0;
+    }
+
     memcpy(packetbuf_ptr + packetbuf_hdr_len, (uint8_t *)UIP_IP_BUF + uncomp_hdr_len,
            uip_len - uncomp_hdr_len);
     packetbuf_set_datalen(uip_len - uncomp_hdr_len + packetbuf_hdr_len);
