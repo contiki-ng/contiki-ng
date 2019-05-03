@@ -22,7 +22,7 @@ endif
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
   ifeq ($(NRF52_SOFTDEVICE),)
-    NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name s132_nrf52*_softdevice.hex | head -n 1)
+    NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name *iot*_softdevice.hex | head -n 1)
   endif
   $(info SoftDevice: $(NRF52_SOFTDEVICE))
   LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
@@ -63,34 +63,21 @@ endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
-# Source files common to all targets
-C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
-  $(NRF52_SDK_ROOT)/components/libraries/util/app_error.c \
-  $(NRF52_SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
-  $(NRF52_SDK_ROOT)/components/libraries/util/app_error_weak.c \
-  $(NRF52_SDK_ROOT)/components/libraries/util/nrf_assert.c \
-  $(NRF52_SDK_ROOT)/components/libraries/queue/nrf_queue.c \
-  $(NRF52_SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
-  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c \
-  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c \
-  $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/ble_6lowpan.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power_clock.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_rtc.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_timer.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_wdt.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_rng.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/drivers/src/nrfx_wdt.c \
-  $(NRF52_SDK_ROOT)/modules/nrfx/mdk/system_nrf52.c \
-  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
-  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_rng.c \
-  # $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
+#source common to all targets
+C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/drivers_nrf/common/nrf_drv_common.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/rtc/nrf_drv_rtc.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/clock/nrf_drv_clock.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/timer/nrf_drv_timer.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/wdt/nrf_drv_wdt.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/rng/nrf_drv_rng.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/delay/nrf_delay.c \
+                  $(NRF52_SDK_ROOT)/components/drivers_nrf/uart/nrf_drv_uart.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/util/app_error.c \
+                  $(NRF52_SDK_ROOT)/components/toolchain/system_nrf52.c
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
+C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
                   $(NRF52_SDK_ROOT)/components/ble/common/ble_advdata.c
 else
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/libraries/fifo/app_fifo.c \
@@ -98,45 +85,34 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/libraries/fifo/app_fifo.c \
 endif
 
 #assembly files common to all targets
-ASM_SOURCE_FILES = $(NRF52_SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52.S
+ASM_SOURCE_FILES  = $(NRF52_SDK_ROOT)/components/toolchain/gcc/gcc_startup_nrf52.s
 
-# Include folders common to all targets
-INC_PATHS += modules/nrfx
-INC_PATHS += modules/nrfx/mdk
-INC_PATHS += modules/nrfx/hal
-INC_PATHS += modules/nrfx/drivers
-INC_PATHS += modules/nrfx/drivers/include
-INC_PATHS += components
-INC_PATHS += components/libraries/experimental_memobj
-INC_PATHS += components/libraries/experimental_section_vars
-INC_PATHS += components/libraries/balloc
-#INC_PATHS += components/libraries/experimental_log
-#INC_PATHS += components/libraries/experimental_log/src
-INC_PATHS += components/libraries/bsp
-INC_PATHS += components/libraries/strerror
-INC_PATHS += components/libraries/delay
+#includes common to all targets
+INC_PATHS += components/drivers_nrf/gpiote
+INC_PATHS += components/drivers_nrf/hal
+INC_PATHS += components/drivers_nrf/config
+INC_PATHS += components/drivers_nrf/delay
+INC_PATHS += components/drivers_nrf/uart
+INC_PATHS += components/drivers_nrf/common
+INC_PATHS += components/drivers_nrf/rtc
+INC_PATHS += components/drivers_nrf/wdt
+INC_PATHS += components/drivers_nrf/rng
+INC_PATHS += components/drivers_nrf/clock
+INC_PATHS += components/drivers_nrf/timer
 INC_PATHS += components/libraries/util
-INC_PATHS += components/boards
-INC_PATHS += components/softdevice/s132/headers
-INC_PATHS += integration/nrfx
-INC_PATHS += integration/nrfx/legacy
-INC_PATHS += components/libraries/queue
-INC_PATHS += components/iot/ble_6lowpan
-INC_PATHS += components/ble/ble_services/ble_ipsp/
-INC_PATHS += components/iot/common
-INC_PATHS += components/iot/context_manager
-INC_PATHS += components/libraries/mem_manager
-INC_PATHS += components/libraries/log
-INC_PATHS += components/libraries/log/src
-INC_PATHS += config/nrf52832/config
+INC_PATHS += components/libraries/timer
+INC_PATHS += components/device
+INC_PATHS += components/toolchain/gcc
+INC_PATHS += components/toolchain
+INC_PATHS += examples/bsp
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
-INC_PATHS += components/softdevice/s132/headers
-INC_PATHS += components/softdevice/s132/headers/nrf52
-INC_PATHS += components/softdevice/common
+INC_PATHS += components/softdevice/s1xx_iot/headers
+INC_PATHS += components/softdevice/s1xx_iot/headers/nrf52
+INC_PATHS += components/softdevice/common/softdevice_handler
 INC_PATHS += components/ble/common
 INC_PATHS += components/iot/common
-INC_PATHS += components/ble/ble_services/ble_ipsp
+INC_PATHS += components/iot/ble_ipsp
 else
 INC_PATHS += components/drivers_nrf/nrf_soc_nosd
 INC_PATHS += components/libraries/fifo
@@ -153,7 +129,7 @@ CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -DS132
 endif
 
-CFLAGS += -DNRF52832_XXAA
+CFLAGS += -DNRF52
 CFLAGS += -DBOARD_$(shell echo $(NRF52_DK_REVISION) | tr a-z A-Z)
 CFLAGS += -D__HEAP_SIZE=512
 CFLAGS += -DSWI_DISABLE0
@@ -165,9 +141,6 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(CONTIKI_NG_PROJECT_MAP)
 LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH)
-#zhitao's
-LDFLAGS += -L $(NRF52_SDK_ROOT)/modules/nrfx/mdk
-
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker to dump unused sections
 LDFLAGS += -Wl,--gc-sections
@@ -181,7 +154,7 @@ ASMFLAGS += -DS132
 endif
 ASMFLAGS += -x assembler-with-cpp
 ASMFLAGS += -DSWI_DISABLE0
-ASMFLAGS += -DNRF52832_XXAA
+ASMFLAGS += -DNRF52
 ASMFLAGS += -DBOARD_$(shell echo $(NRF52_DK_REVISION) | tr a-z A-Z)
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
@@ -192,7 +165,7 @@ C_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(C_SOURCE_FILE_NAMES:.c=.o) )
 
 ASM_SOURCE_FILE_NAMES = $(notdir $(ASM_SOURCE_FILES))
 ASM_PATHS = $(call remduplicates, $(dir $(ASM_SOURCE_FILES) ))
-ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.S=.o) )
+ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
 
 vpath %.c $(C_PATHS)
 vpath %.s $(ASM_PATHS)
@@ -201,16 +174,14 @@ OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
 NRFLIB = $(BUILD_DIR_BOARD)/nrf52832.a
 
-# TARGET_LIBS = $(NRFLIB) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
-#zhitao's
-TARGET_LIBS = $(NRFLIB)
+TARGET_LIBS = $(NRFLIB) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
 $(NRFLIB): $(OBJECTS)
 	$(TRACE_AR)
 	$(Q)$(AR) $(AROPTS) $@ $^
 
 # Assemble files
-$(OBJECT_DIRECTORY)/%.o: %.S
+$(OBJECT_DIRECTORY)/%.o: %.s
 	$(TRACE_CC)
 	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
 

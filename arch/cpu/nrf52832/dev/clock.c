@@ -47,7 +47,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "nrf.h"
-#include "sdk_config.h"
+#include "nrf_drv_config.h"
 #include "nrf_drv_rtc.h"
 #include "nrf_drv_clock.h"
 #include "nrf_delay.h"
@@ -80,9 +80,10 @@ rtc_handler(nrf_drv_rtc_int_type_t int_type)
 static void
 lfclk_config(void)
 {
-  ret_code_t err_code = nrf_drv_clock_init();
+  ret_code_t err_code = nrf_drv_clock_init(NULL);
   APP_ERROR_CHECK(err_code);
-  nrf_drv_clock_lfclk_request(NULL);
+
+  nrf_drv_clock_lfclk_request();
 }
 #endif
 
@@ -95,12 +96,7 @@ rtc_config(void)
   uint32_t err_code;
 
   //Initialize RTC instance
-  nrf_drv_rtc_config_t config = NRF_DRV_RTC_DEFAULT_CONFIG;
-  config.prescaler = 255;
-  config.interrupt_priority = 6;
-  config.reliable = 0;
-
-  err_code = nrf_drv_rtc_init(&rtc, &config, rtc_handler);
+  err_code = nrf_drv_rtc_init(&rtc, NULL, rtc_handler);
   APP_ERROR_CHECK(err_code);
 
   //Enable tick event & interrupt

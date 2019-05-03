@@ -39,11 +39,11 @@
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  */
-#include <nrfx_wdt.h>
+#include <nrf_drv_wdt.h>
 #include "app_error.h"
 #include "contiki.h"
 
-static nrfx_wdt_channel_id wdt_channel_id;
+static nrf_drv_wdt_channel_id wdt_channel_id;
 static uint8_t wdt_initialized = 0;
 
 /**
@@ -59,10 +59,9 @@ void
 watchdog_init(void)
 {
   ret_code_t err_code;
-  nrfx_wdt_config_t config = NRFX_WDT_DEAFULT_CONFIG; // typo in SDK
-  err_code = nrfx_wdt_init(&config, &wdt_event_handler);
+  err_code = nrf_drv_wdt_init(NULL, &wdt_event_handler);
   APP_ERROR_CHECK(err_code);
-  err_code = nrfx_wdt_channel_alloc(&wdt_channel_id);
+  err_code = nrf_drv_wdt_channel_alloc(&wdt_channel_id);
   APP_ERROR_CHECK(err_code);
   wdt_initialized = 1;
 }
@@ -71,7 +70,7 @@ void
 watchdog_start(void)
 {
   if(wdt_initialized) {
-    nrfx_wdt_enable();
+    nrf_drv_wdt_enable();
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -79,7 +78,7 @@ void
 watchdog_periodic(void)
 {
   if(wdt_initialized) {
-    nrfx_wdt_channel_feed(wdt_channel_id);
+    nrf_drv_wdt_channel_feed(wdt_channel_id);
   }
 }
 /*---------------------------------------------------------------------------*/

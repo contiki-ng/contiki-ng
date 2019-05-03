@@ -38,10 +38,10 @@
 #include "nordic_common.h"
 #include "contiki.h"
 
-#include "sdk_config.h"
-#include "nrfx_gpiote.h"
+#include "nrf_drv_config.h"
+#include "nrf_drv_gpiote.h"
 #ifdef SOFTDEVICE_PRESENT
-#include "nrf_sdh.h"
+#include "softdevice_handler.h"
 #include "ble/ble-core.h"
 #include "ble/ble-mac.h"
 #endif
@@ -105,8 +105,8 @@ board_init(void)
   SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, NULL);
 #endif
 #ifdef PLATFORM_HAS_BUTTON
-  if (!nrfx_gpiote_is_init()) {
-    nrfx_gpiote_init();
+  if (!nrf_drv_gpiote_is_init()) {
+    nrf_drv_gpiote_init();
   }
 #endif
 }
@@ -124,8 +124,7 @@ platform_init_stage_two(void)
   // Seed value is ignored since hardware RNG is used.
   random_init(0);
 
-#if UART0_ENABLED==1
-/* #if NRFX_UART0_ENABLED==1 */
+#ifdef UART0_ENABLED
   uart0_init();
 #if SLIP_ARCH_CONF_ENABLE
   #error Platform does not support SLIP
