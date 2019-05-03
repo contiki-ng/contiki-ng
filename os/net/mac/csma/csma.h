@@ -29,6 +29,13 @@
  * This file is part of the Contiki operating system.
  *
  */
+/**
+ * \addtogroup link-layer
+ * @{
+ *
+ * \defgroup csma Implementation of the 802.15.4 standard CSMA protocol
+ * @{
+*/
 
 /**
  * \file
@@ -43,6 +50,8 @@
 
 #include "contiki.h"
 #include "net/mac/mac.h"
+#include "net/packetbuf.h"
+#include "net/netstack.h"
 #include "dev/radio.h"
 
 #ifdef CSMA_CONF_SEND_SOFT_ACK
@@ -69,7 +78,7 @@
 #ifdef  CSMA_MAC_CONF_LEN
 #define CSMA_MAC_LEN CSMA_MAC_CONF_LEN
 #else
-#define CSMA_MAC_LEN 127 - 2
+#define CSMA_MAC_LEN MIN(NETSTACK_RADIO_MAX_PAYLOAD_LEN, PACKETBUF_SIZE)
 #endif
 
 /* just a default - with LLSEC, etc */
@@ -87,3 +96,7 @@ int csma_security_set_key(uint8_t index, const uint8_t *key);
 
 
 #endif /* CSMA_H_ */
+/**
+ * @}
+ * @}
+ */

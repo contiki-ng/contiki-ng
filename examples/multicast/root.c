@@ -96,11 +96,19 @@ prepare_mcast(void)
 {
   uip_ipaddr_t ipaddr;
 
+#if UIP_MCAST6_CONF_ENGINE == UIP_MCAST6_ENGINE_MPL
+/*
+ * MPL defines a well-known MPL domain, MPL_ALL_FORWARDERS, which
+ *  MPL nodes are automatically members of. Send to that domain.
+ */
+  uip_ip6addr(&ipaddr, 0xFF03,0,0,0,0,0,0,0xFC);
+#else
   /*
    * IPHC will use stateless multicast compression for this destination
    * (M=1, DAC=0), with 32 inline bits (1E 89 AB CD)
    */
   uip_ip6addr(&ipaddr, 0xFF1E,0,0,0,0,0,0x89,0xABCD);
+#endif
   mcast_conn = udp_new(&ipaddr, UIP_HTONS(MCAST_SINK_UDP_PORT), NULL);
 }
 /*---------------------------------------------------------------------------*/

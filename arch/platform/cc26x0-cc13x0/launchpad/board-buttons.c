@@ -30,7 +30,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup launchpad-cc26xx-peripherals
+ * \addtogroup launchpad-peripherals
  * @{
  *
  * \file
