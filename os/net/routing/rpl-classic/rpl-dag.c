@@ -1402,7 +1402,7 @@ rpl_process_parent_event(rpl_instance_t *instance, rpl_parent_t *p)
     rpl_remove_routes_by_nexthop(rpl_parent_get_ipaddr(p), p->dag);
   }
 
-  if(!acceptable_rank(p->dag, p->rank)) {
+  if(!acceptable_rank(p->dag, rpl_rank_via_parent(p))) {
     /* The candidate parent is no longer valid: the rank increase resulting
        from the choice of it as a parent would be too high. */
     LOG_WARN("Unacceptable rank %u (Current min %u, MaxRankInc %u)\n", (unsigned)p->rank,
