@@ -63,9 +63,6 @@
 #define NETSTACK_CONF_MAC     ble_ipsp_mac_driver
 #endif
 
-/* 6LoWPAN */
-#define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD         1280
-
 #ifndef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG                    0     /**< We don't use 6LoWPAN fragmentation as IPSP takes care of that for us.*/
 #endif

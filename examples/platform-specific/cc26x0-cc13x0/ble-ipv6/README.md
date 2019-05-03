@@ -54,7 +54,6 @@ To enable IPv6 over BLE, the project conf needs to contain:
 #define RTIMER_CONF_MULTIPLE_ACCESS       1
 
 /* 6LoWPAN settings */
-#define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD       1280
 #define SICSLOWPAN_CONF_COMPRESSION           SICSLOWPAN_COMPRESSION_HC06
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD   0  /* always use compression */
 #define SICSLOWPAN_CONF_FRAG                    0

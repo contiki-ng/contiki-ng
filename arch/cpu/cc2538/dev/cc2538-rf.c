@@ -600,6 +600,10 @@ prepare(const void *payload, unsigned short payload_len)
 {
   uint8_t i;
 
+  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
+
   LOG_INFO("Prepare 0x%02x bytes\n", payload_len + CHECKSUM_LEN);
 
   /*
@@ -660,6 +664,10 @@ transmit(unsigned short transmit_len)
   uint8_t was_off = 0;
 
   LOG_INFO("Transmit\n");
+
+  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
 
   if(!(rf_flags & RX_ACTIVE)) {
     t0 = RTIMER_NOW();
