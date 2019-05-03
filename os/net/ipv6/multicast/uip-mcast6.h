@@ -65,6 +65,7 @@
 #include "net/ipv6/multicast/smrf.h"
 #include "net/ipv6/multicast/esmrf.h"
 #include "net/ipv6/multicast/roll-tm.h"
+#include "net/ipv6/multicast/mpl.h"
 
 #include <string.h>
 /*---------------------------------------------------------------------------*/
@@ -164,6 +165,10 @@ struct uip_mcast6_driver {
 #elif UIP_MCAST6_ENGINE == UIP_MCAST6_ENGINE_ESMRF
 #define RPL_WITH_MULTICAST     1
 #define UIP_MCAST6             esmrf_driver
+
+#elif UIP_MCAST6_ENGINE == UIP_MCAST6_ENGINE_MPL
+#define RPL_WITH_MULTICAST     0
+#define UIP_MCAST6             mpl_driver
 
 #else
 #error "Multicast Enabled with an Unknown Engine."
