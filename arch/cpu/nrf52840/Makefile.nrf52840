@@ -2,13 +2,13 @@ HEAPSIZE := 8192
 STACKSIZE := 8192
 
 ifndef NRF52_SDK_ROOT
-  ifeq ($(wildcard $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/),"")
-    $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip $(CONTIKI_CPU)/third_party/)
-    $(shell unzip nRF5_SDK_15.2.0_9412b96.zip)
+  ifeq ($(wildcard $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/),)
+    $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip -O $(CONTIKI_CPU)/third_party/)
+    $(shell unzip $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96.zip)
   else
     NRF52_SDK_ROOT=$(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/ 
   endif
-  $(error NRF52_SDK_ROOT not defined! You must specify where nRF52 SDK resides!)
+  #$(error NRF52_SDK_ROOT not defined! You must specify where nRF52 SDK resides!)
 endif
 
 ifneq ($(filter %.flash erase,$(MAKECMDGOALS)),)
@@ -75,6 +75,58 @@ endif
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
 include $(ARCH_PATH)/cpu/nrf52840/third_party/NordicSemiconductor/Makefile
+
+CFLAGS += -DRAAL_SINGLE_PHY
+
+NRF52_RADIO_ROOT=$(ARCH_PATH)/cpu/nrf52840/third_party/NordicSemiconductor
+
+C_SOURCE_FILES += $(NRF52_RADIO_ROOT)/src/nrf_802154.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_ack_pending_bit.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_core.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_core_hooks.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_critical_section.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_debug.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_pib.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_revision.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_rssi.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_rx_buffer.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_timer_coord.c \
+    $(NRF52_RADIO_ROOT)/src/fem/nrf_fem_control.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/nrf_802154_csma_ca.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/nrf_802154_delayed_trx.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/nrf_802154_filter.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/nrf_802154_frame_parser.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/nrf_802154_precise_ack_timeout.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/ack_generator/nrf_802154_ack_data.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/ack_generator/nrf_802154_ack_generator.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/ack_generator/nrf_802154_enh_ack_generator.c \
+    $(NRF52_RADIO_ROOT)/src/mac_features/ack_generator/nrf_802154_imm_ack_generator.c \
+    $(NRF52_RADIO_ROOT)/src/rsch/nrf_802154_rsch.c \
+    $(NRF52_RADIO_ROOT)/src/rsch/nrf_802154_rsch_crit_sect.c \
+    $(NRF52_RADIO_ROOT)/src/timer_scheduler/nrf_802154_timer_sched.c \
+    $(NRF52_RADIO_ROOT)/src/platform/lp_timer/nrf_802154_lp_timer_nodrv.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_notification_direct.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_priority_drop_direct.c \
+    $(NRF52_RADIO_ROOT)/src/nrf_802154_request_direct.c \
+    $(NRF52_RADIO_ROOT)/src/platform/temperature/nrf_802154_temperature_none.c \
+    $(NRF52_RADIO_ROOT)/src/platform/hp_timer/nrf_802154_hp_timer.c \
+    $(NRF52_RADIO_ROOT)/src/platform/clock/nrf_802154_clock_sdk.c \
+    $(NRF52_RADIO_ROOT)/src/rsch/raal/single_phy/single_phy.c 
+
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/fem
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/mac_features
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/platform/clock
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/platform/lp_timer
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/platform/hp_timer
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/platform/temperature
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/rsch
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/timer_scheduler
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/external/hal
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/hal
+INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/rsch/raal
+
+EXTERNALDIRS += $(INC_PATHS_RADIO)
 
 # Source files common to all targets
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
