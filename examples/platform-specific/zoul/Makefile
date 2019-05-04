@@ -4,7 +4,7 @@ CONTIKI_PROJECT += test-grove-light-sensor test-grove-loudness-sensor
 CONTIKI_PROJECT += test-weather-meter test-grove-gyro test-lcd test-iaq
 CONTIKI_PROJECT += test-pm10-sensor test-vac-sensor test-aac-sensor
 CONTIKI_PROJECT += test-zonik test-dht22 test-ac-dimmer
-CONTIKI_PROJECT += test-bme280
+CONTIKI_PROJECT += test-bme280 test-vbat
 
 CONTIKI_TARGET_SOURCEFILES += tsl256x.c sht25.c bmpx8x.c motion-sensor.c
 CONTIKI_TARGET_SOURCEFILES += adc-sensors.c weather-meter.c grove-gyro.c
