@@ -75,8 +75,8 @@ static int nrf52_init()
 {
 	PRINTF("[nrf802154] Radio INIT\n");
 
-	linkaddr_t linkaddr_node_addr;
 	uint8_t p_pan_id[2];
+	linkaddr_t linkaddr_node_addr;
 
 	// Take care of endianess for pan-id and ext address
 	ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
@@ -113,7 +113,7 @@ static int nrf52_init()
 static radio_result_t
 set_value(radio_param_t param, radio_value_t value)
 {
-
+	nrf_802154_cca_cfg_t cca_cfg;
 	switch(param) {
 	case RADIO_PARAM_POWER_MODE:
 		if(value == RADIO_POWER_MODE_ON) {
@@ -124,11 +124,7 @@ set_value(radio_param_t param, radio_value_t value)
 			nrf_802154_sleep();
 			return RADIO_RESULT_OK;
 		}
-		if(value == RADIO_POWER_MODE_CARRIER_ON ||
-				value == RADIO_POWER_MODE_CARRIER_OFF) {
-			// TODO
-			return RADIO_RESULT_OK;
-		}
+
 		return RADIO_RESULT_INVALID_VALUE;
 	case RADIO_PARAM_CHANNEL:
 		if(value < 11 || value > 26) {
@@ -160,7 +156,14 @@ set_value(radio_param_t param, radio_value_t value)
 		nrf_802154_tx_power_set(value);
 		return RADIO_RESULT_OK;
 	case RADIO_PARAM_CCA_THRESHOLD:
-		// cc2420_set_cca_threshold(value - RSSI_OFFSET); // TODO use nrf_802154_cca_cfg_set
+
+		cca_cfg.mode = NRF_RADIO_CCA_MODE_CARRIER_AND_ED;
+		cca_cfg.ed_threshold = (uint8_t) value;
+		cca_cfg.corr_threshold = 0;
+		cca_cfg.corr_limit = 0;
+
+		nrf_802154_cca_cfg_set(&cca_cfg);
+
 		return RADIO_RESULT_OK;
 	default:
 		return RADIO_RESULT_NOT_SUPPORTED;
@@ -171,13 +174,17 @@ set_value(radio_param_t param, radio_value_t value)
 static radio_result_t
 get_value(radio_param_t param, radio_value_t *value)
 {
+	nrf_802154_cca_cfg_t cca_cfg;
 
 	if(!value) {
 		return RADIO_RESULT_INVALID_VALUE;
 	}
 	switch(param) {
 	case RADIO_PARAM_POWER_MODE:
-		*value = RADIO_POWER_MODE_CARRIER_ON; // TODO
+		if(nrf_802154_state_get() == NRF_802154_STATE_SLEEP)
+			*value = RADIO_POWER_MODE_CARRIER_OFF;
+		else
+			*value = RADIO_POWER_MODE_CARRIER_ON;
 		return RADIO_RESULT_OK;
 	case RADIO_PARAM_CHANNEL:
 		*value = nrf_802154_channel_get();
@@ -206,11 +213,13 @@ get_value(radio_param_t param, radio_value_t *value)
 		*value = nrf_802154_tx_power_get();
 		return RADIO_RESULT_OK;
 	case RADIO_PARAM_CCA_THRESHOLD:
-		*value = 0; // TODO
+
+		nrf_802154_cca_cfg_get(&cca_cfg);
+
+		*value = cca_cfg.ed_threshold;
 		return RADIO_RESULT_OK;
 	case RADIO_PARAM_RSSI:
 		/* Return the RSSI value in dBm */
-		// nrf_802154_rssi_measure(); TODO check
 		*value = nrf_802154_rssi_last_get();
 		return RADIO_RESULT_OK;
 	case RADIO_PARAM_LAST_RSSI:
@@ -241,22 +250,16 @@ get_value(radio_param_t param, radio_value_t *value)
 static radio_result_t
 get_object(radio_param_t param, void *dest, size_t size)
 {
-	//uint8_t *target;
-	//int i;
 
-	if(param == RADIO_PARAM_64BIT_ADDR) {
+	/*if(param == RADIO_PARAM_64BIT_ADDR) {
 		if(size != 8 || !dest) {
 			return RADIO_RESULT_INVALID_VALUE;
 		}
 
-		//target = dest;
-
-		/*for(i = 0; i < 8; i++) {
-      target[i] = ((uint32_t *)RFCORE_FFSM_EXT_ADDR0)[7 - i] & 0xFF;
-    }*/ // TODO
+		memcpy(dest, addr.u8, LINKADDR_SIZE);
 
 		return RADIO_RESULT_OK;
-	}
+	}*/
 
 	if(param == RADIO_PARAM_LAST_PACKET_TIMESTAMP) {
 		if(size != sizeof(rtimer_clock_t) || !dest) {
@@ -452,7 +455,7 @@ PROCESS_THREAD(nrf52_process, ev, data)
 // CALLBACKS from NSD
 
 // RX
-void nrf_802154_received_timestamp(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi, uint32_t timestamp)
+void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi)
 {
 	uint32_t frame_symbols;
 

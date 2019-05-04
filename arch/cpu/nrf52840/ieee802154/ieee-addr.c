@@ -63,7 +63,6 @@ pan_id_le(uint8_t* dst, uint16_t pan){
 	return 0;
 }
 
-
 int
 ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
 {

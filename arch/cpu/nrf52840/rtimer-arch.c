@@ -120,6 +120,20 @@ rtimer_arch_now_radio()
 }
 /*---------------------------------------------------------------------------*/
 
+uint32_t us_to_ticks(uint32_t us){
+	return nrfx_timer_us_to_ticks(&timer, us);
+}
+
+uint32_t ticks_to_us(uint32_t ticks){
+	uint32_t freq = (uint32_t)nrf_timer_frequency_get(timer.p_reg);
+	return ((ticks << freq) / 16UL);
+}
+
+uint64_t ticks_to_us64(uint32_t ticks){
+	uint64_t freq = (uint64_t)nrf_timer_frequency_get(timer.p_reg);
+	return ((ticks << freq) / 16UL);
+}
+
 /**
  * @}
  */
