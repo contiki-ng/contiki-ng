@@ -45,7 +45,7 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
+gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
   uint8_t port, pin_num, pin_mask;
   uint32_t port_base;
@@ -94,7 +94,7 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_cfg_t
-gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_pin_cfg_get(gpio_hal_pin_t pin)
 {
   uint8_t port, pin_num, pin_mask;
   uint32_t port_base;
@@ -145,17 +145,17 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_write_pin(gpio_hal_pin_t pin, uint8_t value)
+gpio_hal_arch_no_port_write_pin(gpio_hal_pin_t pin, uint8_t value)
 {
   if(value == 1) {
-    gpio_hal_arch_set_pin(pin);
+    gpio_hal_arch_set_pin(GPIO_HAL_NULL_PORT, pin);
     return;
   }
-  gpio_hal_arch_clear_pin(pin);
+  gpio_hal_arch_clear_pin(GPIO_HAL_NULL_PORT, pin);
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_set_pins(gpio_hal_pin_mask_t pins)
+gpio_hal_arch_no_port_set_pins(gpio_hal_pin_mask_t pins)
 {
   GPIO_SET_PIN(GPIO_A_BASE, pins & 0xFF);
   GPIO_SET_PIN(GPIO_B_BASE, (pins >> 8) & 0xFF);
@@ -164,7 +164,7 @@ gpio_hal_arch_set_pins(gpio_hal_pin_mask_t pins)
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_clear_pins(gpio_hal_pin_mask_t pins)
+gpio_hal_arch_no_port_clear_pins(gpio_hal_pin_mask_t pins)
 {
   GPIO_CLR_PIN(GPIO_A_BASE, pins & 0xFF);
   GPIO_CLR_PIN(GPIO_B_BASE, (pins >> 8) & 0xFF);
@@ -173,7 +173,7 @@ gpio_hal_arch_clear_pins(gpio_hal_pin_mask_t pins)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_mask_t
-gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
+gpio_hal_arch_no_port_read_pins(gpio_hal_pin_mask_t pins)
 {
   gpio_hal_pin_mask_t rv = 0;
 
@@ -186,7 +186,8 @@ gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_write_pins(gpio_hal_pin_mask_t pins, gpio_hal_pin_mask_t value)
+gpio_hal_arch_no_port_write_pins(gpio_hal_pin_mask_t pins,
+                                 gpio_hal_pin_mask_t value)
 {
   GPIO_WRITE_PIN(GPIO_A_BASE, pins & 0xFF, value & 0xFF);
   GPIO_WRITE_PIN(GPIO_B_BASE, (pins >> 8) & 0xFF, (value >> 8) & 0xFF);
