@@ -74,14 +74,14 @@ config(int type, int enable)
     return init();
 
   case SENSORS_ACTIVE:
-    gpio_hal_arch_pin_set_output(Board_ALS_PWR);
-    gpio_hal_arch_pin_set_input(Board_ALS_OUT);
+    PINCC26XX_setOutputEnable(Board_ALS_PWR, true);
+    PINCC26XX_setOutputEnable(Board_ALS_OUT, false);
 
     if(enable) {
-      gpio_hal_arch_set_pin(Board_ALS_PWR);
+      PINCC26XX_setOutputValue(Board_ALS_PWR, 1);
       clock_delay_usec(2000);
     } else {
-      gpio_hal_arch_clear_pin(Board_ALS_PWR);
+      PINCC26XX_setOutputValue(Board_ALS_PWR, 0);
     }
     break;
 
