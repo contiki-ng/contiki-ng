@@ -120,6 +120,8 @@ rtimer_arch_now_radio()
 }
 /*---------------------------------------------------------------------------*/
 
+/* Time conversion functions */
+
 uint32_t us_to_ticks(uint32_t us){
 	return nrfx_timer_us_to_ticks(&timer, us);
 }

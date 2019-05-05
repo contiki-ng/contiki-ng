@@ -55,9 +55,9 @@
  * @{
  *
  * \file
- *        Header file for the CC13xx/CC26xx IEEE address driver.
+ *        Header file for the IEEE addresses driver for nRF52 radios
  * \author
- *        Carlo Vallati XXX
+ *        Carlo Vallati <carlo.vallati@unipi.it>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef IEEE_ADDR_H_
@@ -66,22 +66,25 @@
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \brief      Copy the device's IEEE address to a destination buffer.
+ * \brief      Copy the device's IEEE address from a source buffer to a destination buffer.
  * \param dst  A pointer to the destination area where the IEEE address is to
+ *             be written.
+ * \param src  A pointer to the source area where the IEEE address is to
  *             be written.
  * \param len  The number of bytes to write to destination area
  * \return  0 : Returned successfully
  *         -1 : Returned with error
  *
- * This function will copy \p len bytes in LSB and it will invert byte order
- * in the process. The factory address on devices is normally little-endian,
- * therefore you should expect dst to store the address in a big-endian order.
+ * This function will invert byte order in the process.
+ * The address will be set in little-endian as required by nrf_802154.
  */
-int ieee_addr_cpy_to(uint8_t *dst, uint8_t len);
+int ieee_addr_cpy_to(uint8_t *dst, uint8_t *src, uint8_t len);
 
-/* Initialize the structure with the address TODO */
+/* Initialize the structure with the default address scheme + NODEID at the LSB */
 
 int ieee_addr_init(uint8_t *dst, uint8_t len);
+
+/* Set PAN ID in little-endian as required by nrf_802154 */
 
 int pan_id_le(uint8_t* dst, uint16_t pan);
 /*---------------------------------------------------------------------------*/

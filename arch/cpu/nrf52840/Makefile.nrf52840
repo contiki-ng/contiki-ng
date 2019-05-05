@@ -2,12 +2,12 @@ HEAPSIZE := 8192
 STACKSIZE := 8192
 
 ifndef NRF52_SDK_ROOT
-  ifeq ($(wildcard $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/),)
-    $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip -P $(CONTIKI_CPU)/third_party/ && unzip $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96.zip -d $(CONTIKI_CPU)/third_party/)
-  else
-    NRF52_SDK_ROOT=$(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/ 
-  endif
-  #$(error NRF52_SDK_ROOT not defined! You must specify where nRF52 SDK resides!)
+  #ifeq ($(wildcard $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/),)
+  #  $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip -P $(CONTIKI_CPU)/third_party/ && unzip $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96.zip -d $(CONTIKI_CPU)/third_party/)
+  #else
+  #  NRF52_SDK_ROOT=$(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/ 
+  #endif
+  $(error NRF52_SDK_ROOT not defined! You must specify where nRF52 SDK resides!)
 endif
 
 ifneq ($(filter %.flash erase,$(MAKECMDGOALS)),)

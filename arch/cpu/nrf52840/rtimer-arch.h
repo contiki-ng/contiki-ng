@@ -50,24 +50,11 @@ rtimer_clock_t rtimer_arch_now_radio(void);
 /*---------------------------------------------------------------------------*/
 
 #define US_TO_RTIMERTICKS(us) us_to_ticks(us)
-/*( \
-  (((us) >= 0) \
-    ? (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2 ) + 500000) / 1000000L) \
-    : (((int32_t)(us) * (RTIMER_ARCH_SECOND / 2 ) - 500000) / 1000000L) \
-  ) )*/
 
 #define RTIMERTICKS_TO_US(rt) ticks_to_us(rt)
-/*( \
-  ((rt) >= 0) \
-    ? (((int32_t)(rt) * 1000000L + (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND) \
-    : (((int32_t)(rt) * 1000000L - (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND) \
-  )*/
 
 #define RTIMERTICKS_TO_US_64(rt) ticks_to_us64(rt)
-/*( \
-  (uint32_t)( \
-    ((uint64_t)(rt) * 1000000 + (RTIMER_ARCH_SECOND / 2)) / RTIMER_ARCH_SECOND \
-  ))*/
+
 /*---------------------------------------------------------------------------*/
 
 uint64_t ticks_to_us64(uint32_t ticks);

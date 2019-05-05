@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
- * All rights reserved.
+  * Copyright (C) 2019 University of Pisa
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,31 +9,31 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
 /**
- * \addtogroup cc13xx-cc26xx-rf-ieee-addr
+ * @ingroup     drivers_nrf52_802154
  * @{
  *
- * \file
- *        Implementation of the CC13xx/CC26xx IEEE addresses driver.
- * \author
- *        Carlo Vallati XXX
+ * @file
+ * @brief       Implementation of the IEEE addresses driver for nRF52 radios
+ *
+ * @author      Carlo Vallati <carlo.vallati@unipi.it>
+ * @}
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -64,28 +63,15 @@ pan_id_le(uint8_t* dst, uint16_t pan){
 }
 
 int
-ieee_addr_cpy_to(uint8_t *dst, uint8_t len)
+ieee_addr_cpy_to(uint8_t *dst, uint8_t *src, uint8_t len)
 {
-  if(len > LINKADDR_SIZE) {
-    return -1;
-  }
-
-    uint8_t ieee_addr_hc[LINKADDR_SIZE] = IEEE_ADDR_ADDRESS;
-
-    // Add node id
-
-#ifdef IEEE_ADDR_NODE_ID
-    ieee_addr_hc[len - 1] = (IEEE_ADDR_NODE_ID >> 0) & 0xFF;
-    ieee_addr_hc[len - 2] = (IEEE_ADDR_NODE_ID >> 8) & 0xFF;
-#endif
-
     int i;
 
     /*
      * Invert byte order.
      */
     for(i = 0; i < len; i++) {
-      dst[i] = ieee_addr_hc[len - 1 - i];
+      dst[i] = src[len - 1 - i];
 
   }
 

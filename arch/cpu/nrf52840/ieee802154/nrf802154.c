@@ -1,9 +1,29 @@
 /*
  * Copyright (C) 2019 University of Pisa
  *
- * This file is subject to the terms and conditions of the GNU Lesser
- * General Public License v2.1. See the file LICENSE in the top level
- * directory for more details.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
 
 /**
@@ -61,8 +81,11 @@ uint32_t  last_time;
 static uint8_t m_message[MAX_MESSAGE_SIZE];
 uint8_t len;
 
-PROCESS(nrf52_process, "NRF52 driver");
+linkaddr_t addr; // Current extended address
 
+PROCESS(nrf52_process, "NRF52 driver"); // RX process
+
+// Default values
 #define CHANNEL 26
 #define POWER 0
 #define NRF52_CSMA_ENABLED 0
@@ -79,7 +102,8 @@ static int nrf52_init()
 	linkaddr_t linkaddr_node_addr;
 
 	// Take care of endianess for pan-id and ext address
-	ieee_addr_cpy_to(linkaddr_node_addr.u8, LINKADDR_SIZE);
+	ieee_addr_init(addr.u8, LINKADDR_SIZE);
+	ieee_addr_cpy_to(linkaddr_node_addr.u8, addr.u8, LINKADDR_SIZE);
 	pan_id_le(p_pan_id, IEEE802154_PANID);
 
 	nrf_802154_init();
@@ -251,15 +275,15 @@ static radio_result_t
 get_object(radio_param_t param, void *dest, size_t size)
 {
 
-	/*if(param == RADIO_PARAM_64BIT_ADDR) {
-		if(size != 8 || !dest) {
+	if(param == RADIO_PARAM_64BIT_ADDR) {
+		if(size != LINKADDR_SIZE || !dest) {
 			return RADIO_RESULT_INVALID_VALUE;
 		}
 
 		memcpy(dest, addr.u8, LINKADDR_SIZE);
 
 		return RADIO_RESULT_OK;
-	}*/
+	}
 
 	if(param == RADIO_PARAM_LAST_PACKET_TIMESTAMP) {
 		if(size != sizeof(rtimer_clock_t) || !dest) {
@@ -285,16 +309,20 @@ get_object(radio_param_t param, void *dest, size_t size)
 static radio_result_t
 set_object(radio_param_t param, const void *src, size_t size)
 {
-	//int i;
+	linkaddr_t linkaddr_node_addr;
 
 	if(param == RADIO_PARAM_64BIT_ADDR) {
-		if(size != 8 || !src) {
+		if(size != LINKADDR_SIZE || !src) {
 			return RADIO_RESULT_INVALID_VALUE;
 		}
 
-		/*for(i = 0; i < 8; i++) {
-      ((uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = ((uint8_t *)src)[7 - i];
-    }*/ // TODO
+		memcpy(&addr, src ,LINKADDR_SIZE);
+
+		// Take care of endianess for the ext address
+		ieee_addr_cpy_to(linkaddr_node_addr.u8, addr.u8, LINKADDR_SIZE);
+
+		nrf_802154_extended_address_set(linkaddr_node_addr.u8);
+
 
 		return RADIO_RESULT_OK;
 	}
@@ -452,12 +480,13 @@ PROCESS_THREAD(nrf52_process, ev, data)
 	PROCESS_END();
 }
 
-// CALLBACKS from NSD
+/********         CALLBACKS from NSD          ********/
 
 // RX
 void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi)
 {
 	uint32_t frame_symbols;
+	uint32_t t = RTIMER_NOW();
 
 	if (length > MAX_MESSAGE_SIZE || m_rx_done == 1 )
 	{
@@ -465,11 +494,8 @@ void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t
 	}
 
 	frame_symbols = PHY_SHR_SYMBOLS	;
-
 	frame_symbols += (PHR_SIZE + length) * PHY_SYMBOLS_PER_OCTET;
-
-	last_time = RTIMER_NOW() - US_TO_RTIMERTICKS(frame_symbols * PHY_US_PER_SYMBOL);
-
+	last_time = t - US_TO_RTIMERTICKS(frame_symbols * PHY_US_PER_SYMBOL);
 
 	memcpy(m_message, p_data, length);
 	len = length - 2;
@@ -507,7 +533,7 @@ void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t le
 }
 
 // TX FAILED
-void nrf_802154_transmit_failed(const uint8_t       * p_frame,
+void nrf_802154_transmit_failed(const uint8_t * p_frame,
 		nrf_802154_tx_error_t error){
 
 	tx_ok = 0;
@@ -517,7 +543,6 @@ void nrf_802154_transmit_failed(const uint8_t       * p_frame,
 }
 
 // CCA Result
-
 void nrf_802154_cca_done(bool channel_free){
 	m_cca_status = channel_free;
 	m_cca_completed = 1;
