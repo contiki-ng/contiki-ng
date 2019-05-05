@@ -66,6 +66,7 @@
 #include "nrf_802154_const.h"
 
 static volatile bool m_tx_in_progress;
+static volatile bool m_rx_in_progress;
 static volatile bool m_tx_done;
 static volatile bool m_rx_done;
 static volatile bool m_cca_status;
@@ -109,6 +110,7 @@ static int nrf52_init()
 	nrf_802154_init();
 
 	m_tx_in_progress = 0;
+	m_rx_in_progress = 0;
 	m_tx_done = 1;
 	m_rx_done = 0;
 	tx_on_cca = 0;
@@ -397,9 +399,7 @@ static int nrf52_send(const void *payload, unsigned short payload_len)
 
 static int nrf52_receiving_packet(void){
 
-	nrf_radio_state_t state = nrf_radio_state_get();
-
-	return state == NRF_RADIO_STATE_RX_RU;
+	return m_rx_in_progress;
 
 }
 
@@ -485,23 +485,17 @@ PROCESS_THREAD(nrf52_process, ev, data)
 // RX
 void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, uint8_t lqi)
 {
-	uint32_t frame_symbols;
-	uint32_t t = RTIMER_NOW();
-
 	if (length > MAX_MESSAGE_SIZE || m_rx_done == 1 )
 	{
 		goto exit;
 	}
-
-	frame_symbols = PHY_SHR_SYMBOLS	;
-	frame_symbols += (PHR_SIZE + length) * PHY_SYMBOLS_PER_OCTET;
-	last_time = t - US_TO_RTIMERTICKS(frame_symbols * PHY_US_PER_SYMBOL);
 
 	memcpy(m_message, p_data, length);
 	len = length - 2;
 	last_lqi = lqi;
 
 	m_rx_done = 1;
+	m_rx_in_progress = 0;
 
 	process_poll(&nrf52_process);
 
@@ -523,6 +517,7 @@ void nrf_802154_transmitted(const uint8_t * p_frame, uint8_t * p_ack, uint8_t le
 	if (p_ack != NULL)
 	{
 		m_rx_done = 1;
+		m_rx_in_progress = 0;
 
 		memcpy(m_message, p_ack, length);
 		len = length - 2;
@@ -548,4 +543,12 @@ void nrf_802154_cca_done(bool channel_free){
 	m_cca_completed = 1;
 }
 
+// RX Started
+void nrf_802154_rx_started(void){
+	m_rx_in_progress = 1;
+	last_time = RTIMER_NOW();
+}
 
+void nrf_802154_receive_failed(nrf_802154_rx_error_t error){
+	m_rx_in_progress = 0;
+}
