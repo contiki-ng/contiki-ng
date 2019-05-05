@@ -71,7 +71,7 @@ spi_select(const spi_device_t *dev)
     return SPI_DEV_STATUS_BUS_NOT_OWNED;
   }
 
-  gpio_hal_arch_clear_pin(dev->pin_spi_cs);
+  gpio_hal_arch_clear_pin(SPI_DEVICE_PORT(cs, dev), dev->pin_spi_cs);
 
   return SPI_DEV_STATUS_OK;
 }
@@ -79,7 +79,7 @@ spi_select(const spi_device_t *dev)
 spi_status_t
 spi_deselect(const spi_device_t *dev)
 {
-  gpio_hal_arch_set_pin(dev->pin_spi_cs);
+  gpio_hal_arch_set_pin(SPI_DEVICE_PORT(cs, dev), dev->pin_spi_cs);
 
   return SPI_DEV_STATUS_OK;
 }

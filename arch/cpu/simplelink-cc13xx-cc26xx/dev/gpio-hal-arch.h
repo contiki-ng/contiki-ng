@@ -53,20 +53,20 @@
 
 #include <ti/drivers/pin/PINCC26XX.h>
 /*---------------------------------------------------------------------------*/
-#define gpio_hal_arch_pin_set_input(p)        PINCC26XX_setOutputEnable(p, false)
-#define gpio_hal_arch_pin_set_output(p)       PINCC26XX_setOutputEnable(p, true)
+#define gpio_hal_arch_pin_set_input(port, pin)  PINCC26XX_setOutputEnable(pin, false)
+#define gpio_hal_arch_pin_set_output(port, pin) PINCC26XX_setOutputEnable(pin, true)
 
-#define gpio_hal_arch_set_pin(p)              PINCC26XX_setOutputValue(p, 1)
-#define gpio_hal_arch_clear_pin(p)            PINCC26XX_setOutputValue(p, 0)
-#define gpio_hal_arch_toggle_pin(p)           PINCC26XX_setOutputValue(p, \
-                                                PINCC26XX_getOutputValue(p) \
+#define gpio_hal_arch_set_pin(port, pin)        PINCC26XX_setOutputValue(pin, 1)
+#define gpio_hal_arch_clear_pin(port, pin)      PINCC26XX_setOutputValue(pin, 0)
+#define gpio_hal_arch_toggle_pin(port, pin)     PINCC26XX_setOutputValue(pin, \
+                                                  PINCC26XX_getOutputValue(pin) \
                                                   ? 0 : 1)
-#define gpio_hal_arch_write_pin(p, v)         PINCC26XX_setOutputValue(p, v)
+#define gpio_hal_arch_write_pin(port, pin, v)   PINCC26XX_setOutputValue(pin, v)
 
-#define gpio_hal_arch_set_pins(p)             GPIO_setMultiDio(p)
-#define gpio_hal_arch_clear_pins(p)           GPIO_clearMultiDio(p)
-#define gpio_hal_arch_toggle_pins(p)          GPIO_toggleMultiDio(p)
-#define gpio_hal_arch_write_pins(p, v)        GPIO_writeMultiDio(p, v)
+#define gpio_hal_arch_set_pins(port, pin)       GPIO_setMultiDio(pin)
+#define gpio_hal_arch_clear_pins(port, pin)     GPIO_clearMultiDio(pin)
+#define gpio_hal_arch_toggle_pins(port, pin)    GPIO_toggleMultiDio(pin)
+#define gpio_hal_arch_write_pins(port, pin, v)  GPIO_writeMultiDio(pin, v)
 /*---------------------------------------------------------------------------*/
 #endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/

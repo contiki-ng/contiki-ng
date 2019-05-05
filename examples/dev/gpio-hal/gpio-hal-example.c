@@ -40,6 +40,15 @@
 /*---------------------------------------------------------------------------*/
 extern gpio_hal_pin_t out_pin1, out_pin2, out_pin3;
 extern gpio_hal_pin_t btn_pin;
+
+#if GPIO_HAL_PORT_PIN_NUMBERING
+extern gpio_hal_port_t out_port1, out_port2_3;
+extern gpio_hal_port_t btn_port;
+#else
+#define out_port1   GPIO_HAL_NULL_PORT
+#define out_port2_3 GPIO_HAL_NULL_PORT
+#define btn_port    GPIO_HAL_NULL_PORT
+#endif
 /*---------------------------------------------------------------------------*/
 static struct etimer et;
 static uint8_t counter;
@@ -69,70 +78,70 @@ PROCESS_THREAD(gpio_hal_example, ev, data)
     if(ev == PROCESS_EVENT_TIMER && data == &et) {
       if((counter & 7) == 0) {
         /* Set output and test write, high */
-        gpio_hal_arch_pin_set_output(out_pin1);
-        gpio_hal_arch_pin_set_output(out_pin2);
-        gpio_hal_arch_pin_set_output(out_pin3);
+        gpio_hal_arch_pin_set_output(out_port1, out_pin1);
+        gpio_hal_arch_pin_set_output(out_port2_3, out_pin2);
+        gpio_hal_arch_pin_set_output(out_port2_3, out_pin3);
 
-        gpio_hal_arch_write_pin(out_pin1, 1);
-        gpio_hal_arch_write_pins(
+        gpio_hal_arch_write_pin(out_port1, out_pin1, 1);
+        gpio_hal_arch_write_pins(out_port2_3,
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3),
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3));
       } else if((counter & 7) == 1) {
         /* Test write, low */
-        gpio_hal_arch_write_pin(out_pin1, 0);
-        gpio_hal_arch_write_pins(
+        gpio_hal_arch_write_pin(out_port1, out_pin1, 0);
+        gpio_hal_arch_write_pins(out_port2_3,
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3), 0);
       } else if((counter & 7) == 2) {
         /* Test set */
-        gpio_hal_arch_set_pin(out_pin1);
-        gpio_hal_arch_set_pins(
+        gpio_hal_arch_set_pin(out_port1, out_pin1);
+        gpio_hal_arch_set_pins(out_port2_3,
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3));
       } else if((counter & 7) == 3) {
         /* Test clear */
-        gpio_hal_arch_clear_pin(out_pin1);
-        gpio_hal_arch_clear_pins(
+        gpio_hal_arch_clear_pin(out_port1, out_pin1);
+        gpio_hal_arch_clear_pins(out_port2_3,
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3));
       } else if((counter & 7) == 4) {
         /* Test toggle (should go high) */
-        gpio_hal_arch_toggle_pin(out_pin1);
-        gpio_hal_arch_toggle_pins(
+        gpio_hal_arch_toggle_pin(out_port1, out_pin1);
+        gpio_hal_arch_toggle_pins(out_port2_3,
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3));
       } else if((counter & 7) == 5) {
         /* Test toggle (should go low) */
-        gpio_hal_arch_toggle_pin(out_pin1);
-        gpio_hal_arch_toggle_pins(
+        gpio_hal_arch_toggle_pin(out_port1, out_pin1);
+        gpio_hal_arch_toggle_pins(out_port2_3,
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3));
       } else if((counter & 7) == 6) {
         /* Set to input and then set. Should stay off */
-        gpio_hal_arch_pin_set_input(out_pin1);
-        gpio_hal_arch_pin_set_input(out_pin2);
-        gpio_hal_arch_pin_set_input(out_pin3);
-        gpio_hal_arch_set_pin(out_pin1);
-        gpio_hal_arch_set_pins(
+        gpio_hal_arch_pin_set_input(out_port1, out_pin1);
+        gpio_hal_arch_pin_set_input(out_port2_3, out_pin2);
+        gpio_hal_arch_pin_set_input(out_port2_3, out_pin3);
+        gpio_hal_arch_set_pin(out_port1, out_pin1);
+        gpio_hal_arch_set_pins(out_port2_3,
           gpio_hal_pin_to_mask(out_pin2) | gpio_hal_pin_to_mask(out_pin3));
       } else if((counter & 7) == 7) {
         /* Toggle button interrupt */
         gpio_hal_pin_cfg_t interrupt;
 
-        interrupt = gpio_hal_arch_pin_cfg_get(btn_pin) &
+        interrupt = gpio_hal_arch_pin_cfg_get(btn_port, btn_pin) &
           GPIO_HAL_PIN_CFG_INT_ENABLE;
 
         if(interrupt == 0) {
           printf("Enabling button interrupt\n");
-          gpio_hal_arch_interrupt_enable(btn_pin);
+          gpio_hal_arch_interrupt_enable(btn_port, btn_pin);
         } else {
           printf("Disabling button interrupt\n");
-          gpio_hal_arch_interrupt_disable(btn_pin);
+          gpio_hal_arch_interrupt_disable(btn_port, btn_pin);
         }
       }
 
       /* Test read */
       printf("%u: Pins are 1-%u, 2=%u, 3=%u, mask=" PIN_MASK_FMT "\n",
              counter & 7,
-             gpio_hal_arch_read_pin(out_pin1),
-             gpio_hal_arch_read_pin(out_pin2),
-             gpio_hal_arch_read_pin(out_pin3),
-             gpio_hal_arch_read_pins(gpio_hal_pin_to_mask(out_pin1) |
+             gpio_hal_arch_read_pin(out_port1, out_pin1),
+             gpio_hal_arch_read_pin(out_port2_3, out_pin2),
+             gpio_hal_arch_read_pin(out_port2_3, out_pin3),
+             gpio_hal_arch_read_pins(out_port2_3,
                                      gpio_hal_pin_to_mask(out_pin2) |
                                      gpio_hal_pin_to_mask(out_pin3)));
 

@@ -100,6 +100,12 @@
 #define VERIFY_PART_OK               1
 /*---------------------------------------------------------------------------*/
 static const spi_device_t flash_spi_configuration_default = {
+#if GPIO_HAL_PORT_PIN_NUMBERING
+  .port_spi_sck = EXT_FLASH_SPI_PORT_SCK,
+  .port_spi_miso = EXT_FLASH_SPI_PORT_MISO,
+  .port_spi_mosi = EXT_FLASH_SPI_PORT_MOSI,
+  .port_spi_cs = EXT_FLASH_SPI_PORT_CS,
+#endif
   .spi_controller = EXT_FLASH_SPI_CONTROLLER,
   .pin_spi_sck = EXT_FLASH_SPI_PIN_SCK,
   .pin_spi_miso = EXT_FLASH_SPI_PIN_MISO,
