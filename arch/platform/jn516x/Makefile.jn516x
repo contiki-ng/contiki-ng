@@ -30,6 +30,12 @@ else
   FLASH_PROGRAMMER ?= $(CONTIKI)/tools/jn516x/JennicModuleProgrammer
 endif
 
+ifeq (,$(wildcard $(SDK_BASE_DIR)/*))
+    $(warning $(SDK_BASE_DIR) does not exist or is empty)
+    $(warning Review the value of SDK_BASE_DIR)
+    $(error Impossible to build for the jn516x platform)
+endif
+
 ###############################################################################
 # Include NXP makefiles
 include $(SDK_BASE_DIR)/Chip/Common/Build/config.mk
