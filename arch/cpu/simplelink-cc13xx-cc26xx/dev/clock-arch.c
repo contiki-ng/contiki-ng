@@ -33,6 +33,12 @@
  *
  * \file
  *        Implementation of the clock libary for CC13xx/CC26xx.
+ *
+ *        The periodic polling of etimer is implemented using SysTick. Since
+ *        SysTick is paused when the system clock stopped, that is when the
+ *        device enters some low-power mode, a wakeup clock is armed with the
+ *        next etimer expiration time OR watchdog timeout everytime the device
+ *        enters some low-power mode.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -40,6 +46,10 @@
 #include "sys/clock.h"
 #include "sys/etimer.h"
 /*---------------------------------------------------------------------------*/
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/aon_rtc.h)
+#include DeviceFamily_constructPath(driverlib/systick.h)
+
 #include <ti/drivers/dpl/ClockP.h>
 /*---------------------------------------------------------------------------*/
 #include "watchdog-arch.h"
@@ -50,27 +60,50 @@
 static ClockP_Struct wakeup_clk;
 /*---------------------------------------------------------------------------*/
 #define H_WAKEUP_CLK    (ClockP_handle(&wakeup_clk))
+
 #define NO_TIMEOUT      (~(uint32_t)0)
+
+#define CLOCK_TO_SYSTEM(t) \
+    (uint32_t)(((uint64_t)(t) * 1000 * 1000) / (CLOCK_SECOND * ClockP_getSystemTickPeriod()))
+#define SYSTEM_TO_CLOCK(t) \
+    (clock_time_t)(((uint64_t)(t) * CLOCK_SECOND * ClockP_getSystemTickPeriod()) / (1000 * 1000))
+
+#define RTC_SUBSEC_FRAC  ((uint64_t)1 << 32)  /* Important to cast to 64-bit */
+/*---------------------------------------------------------------------------*/
+static void
+check_etimer(void)
+{
+  clock_time_t now;
+  clock_time_t next_etimer;
+
+  if(etimer_pending()) {
+    now = clock_time();
+    next_etimer = etimer_next_expiration_time();
+
+    if(!CLOCK_LT(now, next_etimer)) {
+      etimer_request_poll();
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+systick_fxn(void)
+{
+  check_etimer();
+}
 /*---------------------------------------------------------------------------*/
 static void
 wakeup_fxn(uintptr_t arg)
 {
   (void)arg;
-
-  if(etimer_pending()) {
-    etimer_request_poll();
-  }
+  check_etimer();
 }
 /*---------------------------------------------------------------------------*/
-static inline uint32_t
+static uint32_t
 get_etimer_timeout(void)
 {
   clock_time_t now;
   clock_time_t next_etimer;
-  uint64_t time_to_etimer;
-  uint32_t systemTickPeriod;
-
-  systemTickPeriod = ClockP_getSystemTickPeriod();
 
   if(etimer_pending()) {
     now = clock_time();
@@ -82,9 +115,8 @@ get_etimer_timeout(void)
       return 0;
 
     } else {
-      time_to_etimer = (uint64_t)(next_etimer - now);
       /* Convert from clock ticks to system ticks */
-      return (uint32_t)((1000 * 1000 * time_to_etimer) / CLOCK_SECOND / systemTickPeriod);
+      return CLOCK_TO_SYSTEM(next_etimer - now);
     }
   } else {
     /* No expiration */
@@ -92,83 +124,99 @@ get_etimer_timeout(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-static inline uint32_t
+static uint32_t
 get_watchdog_timeout(void)
 {
 #if (WATCHDOG_DISABLE == 0)
-  uint32_t systemTickPeriod;
-
-  systemTickPeriod = ClockP_getSystemTickPeriod();
-
   /* Convert from watchdog ticks to system ticks */
-  return watchdog_arch_next_timeout() / systemTickPeriod;
+  return watchdog_arch_next_timeout() / ClockP_getSystemTickPeriod();
 
 #else
+  /* No expiration */
   return NO_TIMEOUT;
 #endif
 }
 /*---------------------------------------------------------------------------*/
 bool
-clock_arch_set_wakeup(void)
+clock_arch_enter_idle(void)
 {
-    /*
+  /*
    * If the Watchdog is enabled, we must take extra care to wakeup before the
-   * Watchdog times out if the next timeout is before the next etimer timeout.
-   * This is because the Watchdog pauses only if the device enters standy. If
-   * the device enters idle, the Wathddog still runs, and hence the wathcdog
-   * will timeout if the next etimer timeout is longer than the watchdog
-   * timeout.
+   * Watchdog times out if the next watchdog timeout is before the next etimer
+   * timeout. This is because the Watchdog only pauses if the device enters
+   * standby. If the device enters idle, the Watchdog still runs and hence the
+   * watchdog will timeout if the next etimer timeout is longer than the
+   * watchdog timeout.
    */
 
   uint32_t etimer_timeout;
   uint32_t watchdog_timeout;
   uint32_t timeout;
 
-  if(ClockP_isActive(H_WAKEUP_CLK)) {
-    ClockP_stop(H_WAKEUP_CLK);
-  }
-
   etimer_timeout = get_etimer_timeout();
   watchdog_timeout = get_watchdog_timeout();
 
   timeout = MIN(etimer_timeout, watchdog_timeout);
-  if(timeout == NO_TIMEOUT) {
+  if(timeout == 0) {
+    /* We are not going to sleep, and hence we don't arm the wakeup clock. */
     return false;
   }
+  if(timeout == NO_TIMEOUT) {
+    /* We are going to some low-power mode without arming the wakeup clock. */
+    return true;
+  }
 
+  /*
+   * We are going to some low-power mode. Arm the wakeup clock with the
+   * calculated.
+   */
   ClockP_setTimeout(H_WAKEUP_CLK, timeout);
   ClockP_start(H_WAKEUP_CLK);
   return true;
 }
 /*---------------------------------------------------------------------------*/
 void
+clock_arch_exit_idle(void)
+{
+  ClockP_stop(H_WAKEUP_CLK);
+}
+/*---------------------------------------------------------------------------*/
+void
 clock_init(void)
 {
   ClockP_Params clk_params;
+  ClockP_FreqHz freq;
 
   ClockP_Params_init(&clk_params);
   clk_params.startFlag = false;
   clk_params.period = 0;
-
   ClockP_construct(&wakeup_clk, wakeup_fxn, 0, &clk_params);
+
+  ClockP_getCpuFreq(&freq);
+
+  SysTickPeriodSet(freq.lo / CLOCK_SECOND);
+  SysTickIntRegister(systick_fxn);
+  SysTickIntEnable();
+  SysTickEnable();
 }
 /*---------------------------------------------------------------------------*/
 clock_time_t
 clock_time(void)
 {
-  uint64_t usec;
-
-  usec = (uint64_t)(ClockP_getSystemTicks() * ClockP_getSystemTickPeriod());
-  return (clock_time_t)((usec * CLOCK_SECOND) / (1000 * 1000));
+  /*
+   * RTC counter is in a 64-bits format (SEC[31:0].SUBSEC[31:0]), where SUBSEC
+   * is represented in fractions of a second (VALUE/2^32).
+   */
+  uint64_t now = AONRTCCurrent64BitValueGet();
+  clock_time_t ticks = (clock_time_t)(now / (RTC_SUBSEC_FRAC / CLOCK_SECOND));
+  return ticks;
 }
 /*---------------------------------------------------------------------------*/
 unsigned long
 clock_seconds(void)
 {
-  uint32_t usec;
-
-  usec = ClockP_getSystemTicks() * ClockP_getSystemTickPeriod();
-  return (unsigned long)(usec / (1000 * 1000));
+  unsigned long sec = (unsigned long)AONRTCSecGet();
+  return sec;
 }
 /*---------------------------------------------------------------------------*/
 void

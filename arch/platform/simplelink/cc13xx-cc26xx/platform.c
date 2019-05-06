@@ -274,7 +274,7 @@ platform_idle(void)
    * Arm the wakeup clock. If it returns false, some timers already expired
    * and we shouldn't go to low-power yet.
    */
-  if(clock_arch_set_wakeup()) {
+  if(clock_arch_enter_idle()) {
     /* Drop to some low power mode */
     Power_idleFunc();
     /*
@@ -283,6 +283,7 @@ platform_idle(void)
      * clock_arch_set_wakeup() for why this might be the case.
      */
     watchdog_periodic();
+    clock_arch_exit_idle();
   }
 }
 /*---------------------------------------------------------------------------*/

@@ -54,7 +54,9 @@
 #define WATCHDOG_DIV_RATIO       32    /* Watchdog division ratio */
 #define WATCHDOG_TIMEOUT_MARGIN  1500  /* 1ms margin in Watchdog ticks */
 /*---------------------------------------------------------------------------*/
+#if (WATCHDOG_DISABLE == 0)
 static Watchdog_Handle wdt_handle;
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief  Initialises the Watchdog module.

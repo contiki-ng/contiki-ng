@@ -45,13 +45,16 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 /**
- * \brief   Arm the wakeup clock to the smallest sleep time possible. Sleep
- *          time is determined by the next etimer expiration and Watchdog
- *          timeout. There could possibly be no wakeup time, which would
- *          result in the wakeup clock not being armed at all.
- * \return  false if wakeup clock already expired; else, true.
+ * \brief   Prepare to enter some low-power mode. Return value indicates if we
+ *          are ready or not to enter some low-power mode.
+ * \return  true if ready; else false.
  */
-bool clock_arch_set_wakeup(void);
+bool clock_arch_enter_idle(void);
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief   Cleanup after returning from low-power mode.
+ */
+void clock_arch_exit_idle(void);
 /*---------------------------------------------------------------------------*/
 #endif /* CLOCK_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
