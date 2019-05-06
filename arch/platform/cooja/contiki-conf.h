@@ -70,18 +70,16 @@
 #define CSMA_CONF_ACK_WAIT_TIME                RTIMER_SECOND / 500
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME 0
 
+#endif /* NETSTACK_CONF_H */
+
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
 
-#endif /* NETSTACK_CONF_H */
+#define cooja_radio_driver_max_payload_len 125
 
 /* Default network config */
 #if NETSTACK_CONF_WITH_IPV6
 
-
-
-/* Radio setup */
-#define NETSTACK_CONF_RADIO cooja_radio_driver
 
 /* configure network size and density */
 #ifndef NETSTACK_MAX_ROUTE_ENTRIES
@@ -142,8 +140,6 @@ typedef unsigned long clock_time_t;
 #endif /* MAC_CONF_WITH_TSCH */
 
 #define CFS_CONF_OFFSET_TYPE	long
-
-#define NETSTACK_RADIO_MAX_PAYLOAD_LEN 125
 
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
 

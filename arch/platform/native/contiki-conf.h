@@ -76,6 +76,9 @@ typedef unsigned int uip_stats_t;
 #define NETSTACK_CONF_RADIO   nullradio_driver
 #endif /* NETSTACK_CONF_RADIO */
 
+/* for nullradio, allow unlimited packet size */
+#define nullradio_driver_max_payload_len ((unsigned short)-1)
+
 #define NETSTACK_CONF_LINUXRADIO_DEV "wpan0"
 
 /* configure network size and density */

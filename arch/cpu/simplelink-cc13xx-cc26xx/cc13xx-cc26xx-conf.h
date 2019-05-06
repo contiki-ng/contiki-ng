@@ -62,15 +62,6 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /**
- * \name GPIO HAL configuration.
- *
- * @{
- */
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE        0
-#define GPIO_HAL_CONF_ARCH_HDR_PATH         "dev/gpio-hal-arch.h"
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name Watchdog Configuration.
  *
  * @{
@@ -243,6 +234,9 @@
 #else
 #error "Unsupported Device Line defined"
 #endif /* Unsupported device line */
+
+#define prop_mode_driver_max_payload_len      125
+#define ieee_mode_driver_max_payload_len      125
 
 /** @} */
 /*---------------------------------------------------------------------------*/
