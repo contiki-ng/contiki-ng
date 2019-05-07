@@ -44,6 +44,7 @@
 
 extern const struct radio_driver nrf52840_driver;
 
+#define RADIO_PHY_OVERHEAD     3
 #define RADIO_PHY_HEADER_LEN   5
 /* 250kbps data rate. One byte = 32us */
 #define RADIO_BYTE_AIR_TIME       32
