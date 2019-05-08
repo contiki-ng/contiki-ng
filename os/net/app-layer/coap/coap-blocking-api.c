@@ -108,6 +108,7 @@ PT_THREAD(coap_blocking_request
       if(!state->response) {
         LOG_WARN("Server not responding\n");
         state->status = COAP_REQUEST_STATUS_TIMEOUT;
+        request_callback(NULL); /* Call the callback with NULL to signal timeout */
         PT_EXIT(&blocking_state->pt);
       }
 
