@@ -88,7 +88,7 @@ int packetutils_deserialize_atts(const uint8_t *data, int size);
  */
 int packetutils_serialize_addrs(uint8_t *data, int size);
 /**
- * Package the all packetbuf_addr data.
+ * Unpackage the all packetbuf_addr data.
  *
  * Caveat,
  *   This function overwrites global variable `packetbuf`
