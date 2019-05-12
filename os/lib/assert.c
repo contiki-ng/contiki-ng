@@ -27,6 +27,7 @@
  * SUCH DAMAGE. 
  *
  */
+#include "lib/assert.h"
 
 #include <stdio.h>
 
@@ -34,8 +35,8 @@ void
 _xassert(const char *file, int lineno)
 {
   printf("Assertion failed: file %s, line %d.\n", file, lineno);
-  /*
-   * loop for a while;
-   * call _reset_vector__();
-   */
+
+#if !ASSERT_RETURNS
+  while(1);
+#endif
 }
