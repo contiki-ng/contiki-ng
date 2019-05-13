@@ -48,6 +48,8 @@
 
 #define COOJA 1
 
+#define ASSERT_CONF_RETURNS  1
+
 #define LEDS_CONF_LEGACY_API 1
 
 #ifndef EEPROM_CONF_SIZE
