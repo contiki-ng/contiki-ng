@@ -416,16 +416,16 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTE(conn, conn->connect_vhdr_flags);
   PT_MQTT_WRITE_BYTE(conn, (conn->keep_alive >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->keep_alive & 0x00FF));
-  PT_MQTT_WRITE_BYTE(conn, conn->client_id.length << 8);
+  PT_MQTT_WRITE_BYTE(conn, conn->client_id.length >> 8);
   PT_MQTT_WRITE_BYTE(conn, conn->client_id.length & 0x00FF);
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->client_id.string,
                       conn->client_id.length);
   if(conn->connect_vhdr_flags & MQTT_VHDR_WILL_FLAG) {
-    PT_MQTT_WRITE_BYTE(conn, conn->will.topic.length << 8);
+    PT_MQTT_WRITE_BYTE(conn, conn->will.topic.length >> 8);
     PT_MQTT_WRITE_BYTE(conn, conn->will.topic.length & 0x00FF);
     PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->will.topic.string,
                         conn->will.topic.length);
-    PT_MQTT_WRITE_BYTE(conn, conn->will.message.length << 8);
+    PT_MQTT_WRITE_BYTE(conn, conn->will.message.length >> 8);
     PT_MQTT_WRITE_BYTE(conn, conn->will.message.length & 0x00FF);
     PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->will.message.string,
                         conn->will.message.length);
@@ -436,14 +436,14 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
         conn->will.message.length);
   }
   if(conn->connect_vhdr_flags & MQTT_VHDR_USERNAME_FLAG) {
-    PT_MQTT_WRITE_BYTE(conn, conn->credentials.username.length << 8);
+    PT_MQTT_WRITE_BYTE(conn, conn->credentials.username.length >> 8);
     PT_MQTT_WRITE_BYTE(conn, conn->credentials.username.length & 0x00FF);
     PT_MQTT_WRITE_BYTES(conn,
                         (uint8_t *)conn->credentials.username.string,
                         conn->credentials.username.length);
   }
   if(conn->connect_vhdr_flags & MQTT_VHDR_PASSWORD_FLAG) {
-    PT_MQTT_WRITE_BYTE(conn, conn->credentials.password.length << 8);
+    PT_MQTT_WRITE_BYTE(conn, conn->credentials.password.length >> 8);
     PT_MQTT_WRITE_BYTE(conn, conn->credentials.password.length & 0x00FF);
     PT_MQTT_WRITE_BYTES(conn,
                         (uint8_t *)conn->credentials.password.string,
@@ -534,7 +534,7 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
                       conn->out_packet.remaining_length_enc,
                       conn->out_packet.remaining_length_enc_bytes);
   /* Write Variable Header */
-  PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid << 8));
+  PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
   /* Write Payload */
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.topic_length >> 8));
@@ -596,7 +596,7 @@ PT_THREAD(unsubscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->out_packet.remaining_length_enc,
                       conn->out_packet.remaining_length_enc_bytes);
   /* Write Variable Header */
-  PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid << 8));
+  PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
   /* Write Payload */
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.topic_length >> 8));
@@ -669,7 +669,7 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->out_packet.topic,
                       conn->out_packet.topic_length);
   if(conn->out_packet.qos > MQTT_QOS_LEVEL_0) {
-    PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid << 8));
+    PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
     PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
   }
   /* Write Payload */
@@ -772,7 +772,7 @@ handle_connack(struct mqtt_connection *conn)
 static void
 handle_pingresp(struct mqtt_connection *conn)
 {
-  DBG("MQTT - Got RINGRESP\n");
+  DBG("MQTT - Got PINGRESP\n");
 }
 /*---------------------------------------------------------------------------*/
 static void

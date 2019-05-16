@@ -38,7 +38,7 @@
 /**
  * \file
  *    Header file for ICMPv6 message and error handing (RFC 4443)
- * \author Julien Abeille <jabeille@cisco.com> 
+ * \author Julien Abeille <jabeille@cisco.com>
  * \author Mathilde Durvy <mdurvy@cisco.com>
  */
 
@@ -52,8 +52,8 @@
 /** @{ */
 #define ICMP6_DST_UNREACH                 1	/**< dest unreachable */
 #define ICMP6_PACKET_TOO_BIG	            2	/**< packet too big */
-#define ICMP6_TIME_EXCEEDED	            3	/**< time exceeded */
-#define ICMP6_PARAM_PROB	               4	/**< ip6 header bad */
+#define ICMP6_TIME_EXCEEDED	              3	/**< time exceeded */
+#define ICMP6_PARAM_PROB	                4	/**< ip6 header bad */
 #define ICMP6_ECHO_REQUEST              128  /**< Echo request */
 #define ICMP6_ECHO_REPLY                129  /**< Echo reply */
 
@@ -64,6 +64,7 @@
 #define ICMP6_REDIRECT                  137  /**< Redirect */
 
 #define ICMP6_RPL                       155  /**< RPL */
+#define ICMP6_MPL                       159  /**< MPL */
 #define ICMP6_PRIV_EXP_100              100  /**< Private Experimentation */
 #define ICMP6_PRIV_EXP_101              101  /**< Private Experimentation */
 #define ICMP6_PRIV_EXP_200              200  /**< Private Experimentation */
@@ -76,10 +77,10 @@
 /** \name ICMPv6 Destination Unreachable message codes*/
 /** @{ */
 #define ICMP6_DST_UNREACH_NOROUTE         0 /**< no route to destination */
-#define ICMP6_DST_UNREACH_ADMIN	         1 /**< administratively prohibited */
+#define ICMP6_DST_UNREACH_ADMIN	          1 /**< administratively prohibited */
 #define ICMP6_DST_UNREACH_NOTNEIGHBOR     2 /**< not a neighbor(obsolete) */
 #define ICMP6_DST_UNREACH_BEYONDSCOPE     2 /**< beyond scope of source address */
-#define ICMP6_DST_UNREACH_ADDR	         3 /**< address unreachable */
+#define ICMP6_DST_UNREACH_ADDR	          3 /**< address unreachable */
 #define ICMP6_DST_UNREACH_NOPORT          4 /**< port unreachable */
 /** @} */
 
@@ -116,7 +117,7 @@ typedef struct uip_icmp6_error{
  * \param param 32 bit parameter of the error message, semantic depends on error
  */
 void
-uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param); 
+uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param);
 
 /**
  * \brief Send an icmpv6 message

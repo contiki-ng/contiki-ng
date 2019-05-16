@@ -54,6 +54,7 @@
 #include "coap-endpoint.h"
 #include "coap-callback-api.h"
 #include "lwm2m-security.h"
+#include "lib/list.h"
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
@@ -76,17 +77,10 @@
 #define LWM2M_DEFAULT_CLIENT_LIFETIME 30 /* sec */
 #endif
 
-#define MAX_RD_UPDATE_WAIT 5000
-
 #define REMOTE_PORT        UIP_HTONS(COAP_DEFAULT_PORT)
 #define BS_REMOTE_PORT     UIP_HTONS(5685)
 
 #define STATE_MACHINE_UPDATE_INTERVAL 500
-
-static struct lwm2m_session_info session_info;
-static coap_callback_request_state_t rd_request_state;
-
-static coap_message_t request[1];      /* This way the message can be treated as pointer as usual. */
 
 /* The states for the RD client state machine */
 /* When node is unregistered it ends up in UNREGISTERED
@@ -114,38 +108,32 @@ static coap_message_t request[1];      /* This way the message can be treated as
 #define FLAG_RD_DATA_UPDATE_TRIGGERED 0x02
 #define FLAG_RD_DATA_UPDATE_ON_DIRTY  0x10
 
-static uint8_t rd_state = 0;
-static uint8_t rd_flags = FLAG_RD_DATA_UPDATE_ON_DIRTY;
-static uint64_t wait_until_network_check = 0;
-static uint64_t last_update;
+LIST(session_info_list);
 
+/* Shared by all sessions, used by only one at a time in the FSM */
 static char query_data[64]; /* allocate some data for queries and updates */
 static uint8_t rd_data[128]; /* allocate some data for the RD */
 
-static uint32_t rd_block1;
-static uint8_t rd_more;
-static coap_timer_t rd_timer;
-static void (*rd_callback)(coap_callback_request_state_t *callback_state);
-
-static coap_timer_t block1_timer;
+static coap_timer_t rd_timer; /* Timer to tick the FSM periodically */
+static char default_ep[20];
 
 #if LWM2M_QUEUE_MODE_ENABLED
-static coap_timer_t queue_mode_client_awake_timer; /* Timer to control the client's 
-                                                * awake time 
-                                                */
-static uint8_t queue_mode_client_awake; /* 1 - client is awake, 
-                                     * 0 - client is sleeping 
-                                     */
+static coap_timer_t queue_mode_client_awake_timer; /* Timer to control the client's
+                                                    * awake time
+                                                    */
+static uint8_t queue_mode_client_awake; /* 1 - client is awake,
+                                         * 0 - client is sleeping
+                                         */
 static uint16_t queue_mode_client_awake_time; /* The time to be awake */
 /* Callback for the client awake timer */
-static void queue_mode_awake_timer_callback(coap_timer_t *timer); 
+static void queue_mode_awake_timer_callback(coap_timer_t *timer);
 #endif
 
 static void check_periodic_observations();
 static void update_callback(coap_callback_request_state_t *callback_state);
-
+/*---------------------------------------------------------------------------*/
 static int
-set_rd_data(coap_message_t *request)
+set_rd_data(lwm2m_session_info_t *session_info)
 {
   lwm2m_buffer_t outbuf;
 
@@ -155,31 +143,31 @@ set_rd_data(coap_message_t *request)
   outbuf.len = 0;
 
   /* this will also set the request payload */
-  rd_more = lwm2m_engine_set_rd_data(&outbuf, 0);
-  coap_set_payload(request, rd_data, outbuf.len);
+  session_info->rd_more = lwm2m_engine_set_rd_data(&outbuf, 0);
+  coap_set_payload(session_info->request, rd_data, outbuf.len);
 
-  if(rd_more) {
+  if(session_info->rd_more) {
     /* set the first block here */
     LOG_DBG("Setting block1 in request\n");
-    coap_set_header_block1(request, 0, 1, sizeof(rd_data));
+    coap_set_header_block1(session_info->request, 0, 1, sizeof(rd_data));
   }
   return outbuf.len;
 }
 /*---------------------------------------------------------------------------*/
 static void
-prepare_update(coap_message_t *request, int triggered)
+prepare_update(lwm2m_session_info_t *session_info, int triggered)
 {
-  coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-  coap_set_header_uri_path(request, session_info.assigned_ep);
+  coap_init_message(session_info->request, COAP_TYPE_CON, COAP_POST, 0);
+  coap_set_header_uri_path(session_info->request, session_info->assigned_ep);
 
-  snprintf(query_data, sizeof(query_data) - 1, "?lt=%d&b=%s", session_info.lifetime, session_info.binding);
-  LOG_DBG("UPDATE:%s %s\n", session_info.assigned_ep, query_data);
-  coap_set_header_uri_query(request, query_data);
+  snprintf(query_data, sizeof(query_data) - 1, "?lt=%d&b=%s", session_info->lifetime, session_info->binding);
+  LOG_DBG("UPDATE:%s %s\n", session_info->assigned_ep, query_data);
+  coap_set_header_uri_query(session_info->request, query_data);
 
-  if((triggered || rd_flags & FLAG_RD_DATA_UPDATE_ON_DIRTY) && (rd_flags & FLAG_RD_DATA_DIRTY)) {
-    rd_flags &= ~FLAG_RD_DATA_DIRTY;
-    set_rd_data(request);
-    rd_callback = update_callback;
+  if((triggered || session_info->rd_flags & FLAG_RD_DATA_UPDATE_ON_DIRTY) && (session_info->rd_flags & FLAG_RD_DATA_DIRTY)) {
+    session_info->rd_flags &= ~FLAG_RD_DATA_DIRTY;
+    set_rd_data(session_info);
+    session_info->rd_callback = update_callback;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -198,164 +186,152 @@ has_network_access(void)
 }
 /*---------------------------------------------------------------------------*/
 int
-lwm2m_rd_client_is_registered(void)
+lwm2m_rd_client_is_registered(lwm2m_session_info_t *session_info)
 {
-  return rd_state == REGISTRATION_DONE || rd_state == UPDATE_SENT;
-}
-/*---------------------------------------------------------------------------*/
-void
-lwm2m_rd_client_use_bootstrap_server(int use)
-{
-  session_info.use_bootstrap = use != 0;
-  if(session_info.use_bootstrap) {
-    rd_state = INIT;
-  }
+  return session_info->rd_state == REGISTRATION_DONE || session_info->rd_state == UPDATE_SENT;
 }
 /*---------------------------------------------------------------------------*/
 /* will take another argument when we support multiple sessions */
 void
-lwm2m_rd_client_set_session_callback(session_callback_t cb)
+lwm2m_rd_client_set_session_callback(lwm2m_session_info_t *session_info, session_callback_t cb)
 {
-  session_info.callback = cb;
+  session_info->callback = cb;
 }
 /*---------------------------------------------------------------------------*/
 static void
-perform_session_callback(int state)
+perform_session_callback(lwm2m_session_info_t *session_info, int state)
 {
-  if(session_info.callback != NULL) {
+  if(session_info->callback != NULL) {
     LOG_DBG("Performing session callback: %d cb:%p\n",
-            state, session_info.callback);
-    session_info.callback(&session_info, state);
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-lwm2m_rd_client_use_registration_server(int use)
-{
-  session_info.use_registration = use != 0;
-  if(session_info.use_registration) {
-    rd_state = INIT;
+            state, session_info->callback);
+    session_info->callback(session_info, state);
   }
 }
 /*---------------------------------------------------------------------------*/
 uint16_t
-lwm2m_rd_client_get_lifetime(void)
+lwm2m_rd_client_get_lifetime(lwm2m_session_info_t *session_info)
 {
-  return session_info.lifetime;
+  return session_info->lifetime;
 }
 /*---------------------------------------------------------------------------*/
 void
-lwm2m_rd_client_set_lifetime(uint16_t lifetime)
+lwm2m_rd_client_set_lifetime(lwm2m_session_info_t *session_info, uint16_t lifetime)
 {
   if(lifetime > 0) {
-    session_info.lifetime = lifetime;
+    session_info->lifetime = lifetime;
   } else {
-    session_info.lifetime = LWM2M_DEFAULT_CLIENT_LIFETIME;
+    session_info->lifetime = LWM2M_DEFAULT_CLIENT_LIFETIME;
   }
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_set_endpoint_name(lwm2m_session_info_t *session_info, const char *endpoint)
+{
+  if(endpoint != NULL) {
+    session_info->ep = endpoint;
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+lwm2m_rd_client_set_default_endpoint_name(const char *endpoint)
+{
+  strncpy(default_ep, endpoint, sizeof(default_ep) - 1);
+  default_ep[sizeof(default_ep) - 1] = '\0';
 }
 /*---------------------------------------------------------------------------*/
 void
 lwm2m_rd_client_set_update_rd(void)
 {
-  rd_flags |= FLAG_RD_DATA_DIRTY;
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)list_head(session_info_list);
+  while(session_info != NULL) {
+    session_info->rd_flags |= FLAG_RD_DATA_DIRTY;
+    session_info = session_info->next;
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
-lwm2m_rd_client_set_automatic_update(int update)
+lwm2m_rd_client_set_automatic_update(lwm2m_session_info_t *session_info, int update)
 {
-  rd_flags = (rd_flags & ~FLAG_RD_DATA_UPDATE_ON_DIRTY) |
+  session_info->rd_flags = (session_info->rd_flags & ~FLAG_RD_DATA_UPDATE_ON_DIRTY) |
     (update != 0 ? FLAG_RD_DATA_UPDATE_ON_DIRTY : 0);
 }
 /*---------------------------------------------------------------------------*/
 void
-lwm2m_rd_client_register_with_server(const coap_endpoint_t *server)
+lwm2m_rd_client_register_with_server(lwm2m_session_info_t *session_info,
+                                     const coap_endpoint_t *server,
+                                     lwm2m_rd_client_server_type_t server_type)
 {
-  coap_endpoint_copy(&session_info.server_ep, server);
-  session_info.has_registration_server_info = 1;
-  session_info.registered = 0;
-  if(session_info.use_registration) {
-    rd_state = INIT;
+  if(session_info->ep == NULL) {
+    session_info->ep = default_ep;
   }
-}
-/*---------------------------------------------------------------------------*/
-static int
-update_registration_server(void)
-{
-  if(session_info.has_registration_server_info) {
-    return 1;
+  /* default binding U = UDP, UQ = UDP Q-mode*/
+#if LWM2M_QUEUE_MODE_CONF_ENABLED
+  session_info->binding = "UQ";
+  /* Enough margin to ensure that the client is not unregistered (we
+   * do not know the time it can stay awake)
+   */
+  session_info->lifetime = (LWM2M_QUEUE_MODE_DEFAULT_CLIENT_SLEEP_TIME / 1000) * 2;
+#else
+  session_info->binding = "U";
+  if(session_info->lifetime == 0) {
+    session_info->lifetime = LWM2M_DEFAULT_CLIENT_LIFETIME;
+  }
+#endif /* LWM2M_QUEUE_MODE_CONF_ENABLED */
+
+  session_info->rd_flags = FLAG_RD_DATA_UPDATE_ON_DIRTY;
+  session_info->has_bs_server_info = 0;
+  session_info->has_registration_server_info = 0;
+  session_info->wait_until_network_check = 0;
+  session_info->last_update = 0;
+  session_info->last_rd_progress = 0;
+  session_info->bootstrapped = 0;
+  session_info->rd_state = INIT;
+
+  if(server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER) {
+    coap_endpoint_copy(&session_info->bs_server_ep, server);
+    session_info->has_bs_server_info = 1;
+    session_info->use_server_type = LWM2M_RD_CLIENT_BOOTSTRAP_SERVER;
+  } else {
+    coap_endpoint_copy(&session_info->server_ep, server);
+    session_info->use_server_type = LWM2M_RD_CLIENT_LWM2M_SERVER;
+    session_info->has_registration_server_info = 1;
   }
 
-#if UIP_CONF_IPV6_RPL
-  {
-    rpl_dag_t *dag;
-
-    /* Use the DAG id as server address if no other has been specified */
-    dag = rpl_get_any_dag();
-    if(dag != NULL) {
-      /* create coap-endpoint? */
-      /* uip_ipaddr_copy(&server_ipaddr, &dag->dag_id); */
-      /* server_port = REMOTE_PORT; */
-      return 1;
-    }
-  }
-#endif /* UIP_CONF_IPV6_RPL */
-
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-void
-lwm2m_rd_client_register_with_bootstrap_server(const coap_endpoint_t *server)
-{
-  coap_endpoint_copy(&session_info.bs_server_ep, server);
-  session_info.has_bs_server_info = 1;
-  session_info.bootstrapped = 0;
-  session_info.registered = 0;
-  if(session_info.use_bootstrap) {
-    rd_state = INIT;
-  }
+  list_add(session_info_list, session_info); /* Add to the list of sessions */
 }
 /*---------------------------------------------------------------------------*/
 int
-lwm2m_rd_client_deregister(void)
+lwm2m_rd_client_deregister(lwm2m_session_info_t *session_info)
 {
-  if(lwm2m_rd_client_is_registered()) {
-    rd_state = DEREGISTER;
+  if(lwm2m_rd_client_is_registered(session_info)) {
+    session_info->rd_state = DEREGISTER;
     return 1;
   }
   /* Not registered */
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-void
-lwm2m_rd_client_update_triggered(void)
+static lwm2m_session_info_t *
+get_session_info_from_server_ep(const coap_endpoint_t *server_ep)
 {
-  rd_flags |= FLAG_RD_DATA_UPDATE_TRIGGERED;
-  /* Here we need to do an CoAP timer poll - to get a quick request transmission! */
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)list_head(session_info_list);
+  while(session_info != NULL) {
+    if(coap_endpoint_cmp(&session_info->server_ep, server_ep)) {
+      return session_info;
+    }
+    session_info = session_info->next;
+  }
+  return NULL;
 }
 /*---------------------------------------------------------------------------*/
-static int
-update_bootstrap_server(void)
+void
+lwm2m_rd_client_update_triggered(const coap_endpoint_t *server_ep)
 {
-  if(session_info.has_bs_server_info) {
-    return 1;
+  lwm2m_session_info_t *session_info = get_session_info_from_server_ep(server_ep);
+  if(session_info) {
+    session_info->rd_flags |= FLAG_RD_DATA_UPDATE_TRIGGERED;
   }
-
-#if UIP_CONF_IPV6_RPL
-  {
-    rpl_dag_t *dag;
-
-    /* Use the DAG id as server address if no other has been specified */
-    dag = rpl_get_any_dag();
-    if(dag != NULL) {
-      /* create coap endpoint */
-      /* uip_ipaddr_copy(&bs_server_ipaddr, &dag->dag_id); */
-      /* bs_server_port = REMOTE_PORT; */
-      return 1;
-    }
-  }
-#endif /* UIP_CONF_IPV6_RPL */
-
-  return 0;
+  /* Here we need to do an CoAP timer poll - to get a quick request transmission! */
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -373,29 +349,32 @@ bootstrap_callback(coap_callback_request_state_t *callback_state)
 {
   coap_request_state_t *state = &callback_state->state;
   LOG_DBG("Bootstrap callback Response: %d, ", state->response != NULL);
+
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)state->user_data;
+
   if(state->status == COAP_REQUEST_STATUS_RESPONSE) {
     if(CHANGED_2_04 == state->response->code) {
       LOG_DBG_("Considered done!\n");
-      rd_state = BOOTSTRAP_DONE;
+      session_info->rd_state = BOOTSTRAP_DONE;
       return;
     }
     /* Possible error response codes are 4.00 Bad request & 4.15 Unsupported content format */
     LOG_DBG_("Failed with code %d. Retrying\n", state->response->code);
     /* TODO Application callback? */
-    rd_state = INIT;
-  } else if(state->status == COAP_REQUEST_STATUS_TIMEOUT) { 
+    session_info->rd_state = INIT;
+  } else if(state->status == COAP_REQUEST_STATUS_TIMEOUT) {
     LOG_DBG_("Server not responding! Retry?");
-    rd_state = DO_BOOTSTRAP;
+    session_info->rd_state = DO_BOOTSTRAP;
   } else if(state->status == COAP_REQUEST_STATUS_FINISHED) {
     LOG_DBG_("Request finished. Ignore\n");
   } else {
     LOG_DBG_("Unexpected error! Retry?");
-    rd_state = DO_BOOTSTRAP;
+    session_info->rd_state = DO_BOOTSTRAP;
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
-produce_more_rd(void)
+produce_more_rd(lwm2m_session_info_t *session_info)
 {
   lwm2m_buffer_t outbuf;
 
@@ -406,23 +385,23 @@ produce_more_rd(void)
   outbuf.size = sizeof(rd_data);
   outbuf.len = 0;
 
-  rd_block1++;
+  session_info->rd_block1++;
 
   /* this will also set the request payload */
-  rd_more = lwm2m_engine_set_rd_data(&outbuf, rd_block1);
-  coap_set_payload(request, rd_data, outbuf.len);
+  session_info->rd_more = lwm2m_engine_set_rd_data(&outbuf, session_info->rd_block1);
+  coap_set_payload(session_info->request, rd_data, outbuf.len);
 
   LOG_DBG("Setting block1 in request - block: %d more: %d\n",
-          (int)rd_block1, (int)rd_more);
-  coap_set_header_block1(request, rd_block1, rd_more, sizeof(rd_data));
+          (int)session_info->rd_block1, (int)session_info->rd_more);
+  coap_set_header_block1(session_info->request, session_info->rd_block1, session_info->rd_more, sizeof(rd_data));
 
-  coap_send_request(&rd_request_state, &session_info.server_ep, request, rd_callback);
+  coap_send_request(&session_info->rd_request_state, &session_info->server_ep, session_info->request, session_info->rd_callback);
 }
 /*---------------------------------------------------------------------------*/
 static void
 block1_rd_callback(coap_timer_t *timer)
 {
-  produce_more_rd();
+  produce_more_rd((lwm2m_session_info_t *)timer->user_data);
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -433,20 +412,24 @@ registration_callback(coap_callback_request_state_t *callback_state)
 {
   coap_request_state_t *state = &callback_state->state;
   LOG_DBG("Registration callback. Status: %d. Response: %d, ", state->status, state->response != NULL);
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)state->user_data;
+
   if(state->status == COAP_REQUEST_STATUS_RESPONSE) {
     /* check state and possibly set registration to done */
     /* If we get a continue - we need to call the rd generator one more time */
+
     if(CONTINUE_2_31 == state->response->code) {
       /* We assume that size never change?! */
-      coap_get_header_block1(state->response, &rd_block1, NULL, NULL, NULL);
-      coap_timer_set_callback(&block1_timer, block1_rd_callback);
-      coap_timer_set(&block1_timer, 1); /* delay 1 ms */
+      coap_get_header_block1(state->response, &session_info->rd_block1, NULL, NULL, NULL);
+      coap_timer_set_user_data(&session_info->block1_timer, (void *)session_info);
+      coap_timer_set_callback(&session_info->block1_timer, block1_rd_callback);
+      coap_timer_set(&session_info->block1_timer, 1); /* delay 1 ms */
       LOG_DBG_("Continue\n");
     } else if(CREATED_2_01 == state->response->code) {
       if(state->response->location_path_len < LWM2M_RD_CLIENT_ASSIGNED_ENDPOINT_MAX_LEN) {
-        memcpy(session_info.assigned_ep, state->response->location_path,
+        memcpy(session_info->assigned_ep, state->response->location_path,
                state->response->location_path_len);
-        session_info.assigned_ep[state->response->location_path_len] = 0;
+        session_info->assigned_ep[state->response->location_path_len] = 0;
         /* if we decide to not pass the lt-argument on registration, we should force an initial "update" to register lifetime with server */
 #if LWM2M_QUEUE_MODE_ENABLED
 #if LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION
@@ -454,14 +437,14 @@ registration_callback(coap_callback_request_state_t *callback_state)
           lwm2m_queue_mode_set_first_request();
         }
 #endif
-        lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/
+        lwm2m_rd_client_fsm_execute_queue_mode_awake(session_info); /* Avoid 500 ms delay and move directly to the state*/
 #else
-        rd_state = REGISTRATION_DONE;
+        session_info->rd_state = REGISTRATION_DONE;
 #endif
         /* remember the last reg time */
-        last_update = coap_timer_uptime();
-        LOG_DBG_("Done (assigned EP='%s')!\n", session_info.assigned_ep);
-        perform_session_callback(LWM2M_RD_CLIENT_REGISTERED);
+        session_info->last_update = coap_timer_uptime();
+        LOG_DBG_("Done (assigned EP='%s')!\n", session_info->assigned_ep);
+        perform_session_callback(session_info, LWM2M_RD_CLIENT_REGISTERED);
         return;
       }
 
@@ -474,15 +457,15 @@ registration_callback(coap_callback_request_state_t *callback_state)
       LOG_DBG_("failed with code %d. Re-init network\n", state->response->code);
     }
     /* TODO Application callback? */
-    rd_state = INIT;
+    session_info->rd_state = INIT;
   } else if(state->status == COAP_REQUEST_STATUS_TIMEOUT) {
     LOG_DBG_("Server not responding, trying to reconnect\n");
-    rd_state = INIT;
-  } else if(state->status == COAP_REQUEST_STATUS_FINISHED){
+    session_info->rd_state = INIT;
+  } else if(state->status == COAP_REQUEST_STATUS_FINISHED) {
     LOG_DBG_("Request finished. Ignore\n");
   } else {
     LOG_DBG_("Unexpected error, trying to reconnect\n");
-    rd_state = INIT;
+    session_info->rd_state = INIT;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -495,18 +478,20 @@ update_callback(coap_callback_request_state_t *callback_state)
   coap_request_state_t *state = &callback_state->state;
   LOG_DBG("Update callback. Status: %d. Response: %d, ", state->status, state->response != NULL);
 
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)state->user_data;
+
   if(state->status == COAP_REQUEST_STATUS_RESPONSE) {
     /* If we get a continue - we need to call the rd generator one more time */
     if(CONTINUE_2_31 == state->response->code) {
       /* We assume that size never change?! */
       LOG_DBG_("Continue\n");
-      coap_get_header_block1(state->response, &rd_block1, NULL, NULL, NULL);
-      coap_timer_set_callback(&block1_timer, block1_rd_callback);
-      coap_timer_set(&block1_timer, 1); /* delay 1 ms */
+      coap_get_header_block1(state->response, &session_info->rd_block1, NULL, NULL, NULL);
+      coap_timer_set_callback(&session_info->block1_timer, block1_rd_callback);
+      coap_timer_set(&session_info->block1_timer, 1); /* delay 1 ms */
     } else if(CHANGED_2_04 == state->response->code) {
       LOG_DBG_("Done!\n");
       /* remember the last reg time */
-      last_update = coap_timer_uptime();
+      session_info->last_update = coap_timer_uptime();
 #if LWM2M_QUEUE_MODE_ENABLED
       /* If it has been waked up by a notification, send the stored notifications in queue */
       if(lwm2m_queue_mode_is_waked_up_by_notification()) {
@@ -519,25 +504,26 @@ update_callback(coap_callback_request_state_t *callback_state)
         lwm2m_queue_mode_set_first_request();
       }
 #endif /* LWM2M_QUEUE_MODE_INCLUDE_DYNAMIC_ADAPTATION */
-      lwm2m_rd_client_fsm_execute_queue_mode_awake(); /* Avoid 500 ms delay and move directly to the state*/
+      lwm2m_rd_client_fsm_execute_queue_mode_awake(session_info); /* Avoid 500 ms delay and move directly to the state*/
 #else
-      rd_state = REGISTRATION_DONE;
-      rd_flags &= ~FLAG_RD_DATA_UPDATE_TRIGGERED;
-#endif /* LWM2M_QUEUE_MODE_ENABLED */
+
+      session_info->rd_state = REGISTRATION_DONE;
+      session_info->rd_flags &= ~FLAG_RD_DATA_UPDATE_TRIGGERED;
+#endif /* LWM2M_QUEUE_MODE_DEFAULT_CLIENT_SLEEP_TIME */
     } else {
       /* Possible error response codes are 4.00 Bad request & 4.04 Not Found */
       LOG_DBG_("Failed with code %d. Retrying registration\n",
                state->response->code);
-      rd_state = DO_REGISTRATION;
+      session_info->rd_state = DO_REGISTRATION;
     }
   } else if(state->status == COAP_REQUEST_STATUS_TIMEOUT) {
     LOG_DBG_("Server not responding, trying to reconnect\n");
-    rd_state = INIT;
-  } else if(state->status == COAP_REQUEST_STATUS_FINISHED){
+    session_info->rd_state = INIT;
+  } else if(state->status == COAP_REQUEST_STATUS_FINISHED) {
     LOG_DBG_("Request finished. Ignore\n");
   } else {
     LOG_DBG_("Unexpected error, trying to reconnect\n");
-    rd_state = INIT;
+    session_info->rd_state = INIT;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -549,18 +535,48 @@ deregister_callback(coap_callback_request_state_t *callback_state)
           state->status,
           state->response != NULL ? state->response->code : 0);
 
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)state->user_data;
+
   if(state->status == COAP_REQUEST_STATUS_RESPONSE && (DELETED_2_02 == state->response->code)) {
     LOG_DBG("Deregistration success\n");
-    rd_state = DEREGISTERED;
-    perform_session_callback(LWM2M_RD_CLIENT_DEREGISTERED);
+    session_info->rd_state = DEREGISTERED;
+    perform_session_callback(session_info, LWM2M_RD_CLIENT_DEREGISTERED);
   } else {
     LOG_DBG("Deregistration failed\n");
-    if(rd_state == DEREGISTER_SENT) {
-      rd_state = DEREGISTER_FAILED;
-      perform_session_callback(LWM2M_RD_CLIENT_DEREGISTER_FAILED);
+    if(session_info->rd_state == DEREGISTER_SENT) {
+      session_info->rd_state = DEREGISTER_FAILED;
+      perform_session_callback(session_info, LWM2M_RD_CLIENT_DEREGISTER_FAILED);
     }
   }
 }
+/*---------------------------------------------------------------------------*/
+#if LWM2M_QUEUE_MODE_ENABLED
+static int
+all_sessions_in_queue_mode_state(void)
+{
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)list_head(session_info_list);
+  while(session_info != NULL) {
+    if(((session_info->rd_state & 0xF) != 0xE)) {
+      return 0;
+    }
+    session_info = session_info->next;
+  }
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static int
+all_sessions_in_queue_mode_awake(void)
+{
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)list_head(session_info_list);
+  while(session_info != NULL) {
+    if(session_info->rd_state != QUEUE_MODE_AWAKE) {
+      return 0;
+    }
+    session_info = session_info->next;
+  }
+  return 1;
+}
+#endif /* LWM2M_QUEUE_MODE_ENABLED */
 /*---------------------------------------------------------------------------*/
 /* CoAP timer callback */
 static void
@@ -571,7 +587,7 @@ periodic_process(coap_timer_t *timer)
   /* reschedule the CoAP timer */
 #if LWM2M_QUEUE_MODE_ENABLED
   /* In Queue Mode, the machine is not executed periodically, but with the awake/sleeping times */
-  if(!((rd_state & 0xF) == 0xE)) {
+  if(!all_sessions_in_queue_mode_state()) {
     coap_timer_reset(&rd_timer, STATE_MACHINE_UPDATE_INTERVAL);
   }
 #else
@@ -580,233 +596,243 @@ periodic_process(coap_timer_t *timer)
 
   now = coap_timer_uptime();
 
-  LOG_DBG("RD Client - state: %d, ms: %lu\n", rd_state,
-          (unsigned long)coap_timer_uptime());
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)list_head(session_info_list);
+  while(session_info != NULL) {
 
-  switch(rd_state) {
-  case INIT:
-    LOG_DBG("RD Client started with endpoint '%s' and client lifetime %d\n", session_info.ep, session_info.lifetime);
-    rd_state = WAIT_NETWORK;
-    break;
-  case WAIT_NETWORK:
-    if(now > wait_until_network_check) {
-      /* check each 10 seconds before next check */
-      LOG_DBG("Checking for network... %lu\n",
-              (unsigned long)wait_until_network_check);
-      wait_until_network_check = now + 10000;
-      if(has_network_access()) {
-        /* Either do bootstrap then registration */
-        if(session_info.use_bootstrap) {
-          rd_state = DO_BOOTSTRAP;
-        } else {
-          rd_state = DO_REGISTRATION;
-        }
-      }
-      /* Otherwise wait until for a network to join */
-    }
-    break;
-  case DO_BOOTSTRAP:
-    if(session_info.use_bootstrap && session_info.bootstrapped == 0) {
-      if(update_bootstrap_server()) {
-        /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-        coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-        coap_set_header_uri_path(request, "/bs");
+    LOG_DBG("RD Client with assigned ep: %s - state: %d, ms: %lu\n", session_info->assigned_ep, session_info->rd_state,
+            (unsigned long)coap_timer_uptime());
 
-        snprintf(query_data, sizeof(query_data) - 1, "?ep=%s", session_info.ep);
-        coap_set_header_uri_query(request, query_data);
-        LOG_INFO("Registering ID with bootstrap server [");
-        LOG_INFO_COAP_EP(&session_info.bs_server_ep);
-        LOG_INFO_("] as '%s'\n", query_data);
-
-        if(coap_send_request(&rd_request_state, &session_info.bs_server_ep,
-                          request, bootstrap_callback)) {
-          rd_state = BOOTSTRAP_SENT;
-        }
-      }
-    }
-    break;
-  case BOOTSTRAP_SENT:
-    /* Just wait for bootstrap to be done...  */
-    break;
-  case BOOTSTRAP_DONE:
-    /* check that we should still use bootstrap */
-    if(session_info.use_bootstrap) {
-      lwm2m_security_server_t *security;
-      LOG_DBG("*** Bootstrap - checking for server info...\n");
-      /* get the security object - ignore bootstrap servers */
-      for(security = lwm2m_security_get_first();
-          security != NULL;
-          security = lwm2m_security_get_next(security)) {
-        if(security->bootstrap == 0) {
-          break;
-        }
-      }
-
-      if(security != NULL) {
-        /* get the server URI */
-        if(security->server_uri_len > 0) {
-          uint8_t secure = 0;
-
-          LOG_DBG("**** Found security instance using: ");
-          LOG_DBG_COAP_STRING((const char *)security->server_uri,
-                              security->server_uri_len);
-          LOG_DBG_(" (len %d) \n", security->server_uri_len);
-          /* TODO Should verify it is a URI */
-          /* Check if secure */
-          secure = strncmp((const char *)security->server_uri,
-                           "coaps:", 6) == 0;
-
-          if(!coap_endpoint_parse((const char *)security->server_uri,
-                                  security->server_uri_len,
-                                  &session_info.server_ep)) {
-            LOG_DBG("Failed to parse server URI!\n");
+    switch(session_info->rd_state) {
+    case INIT:
+      LOG_DBG("RD Client started with endpoint '%s' and client lifetime %d\n", session_info->ep, session_info->lifetime);
+      session_info->rd_state = WAIT_NETWORK;
+      break;
+    case WAIT_NETWORK:
+      if(now > session_info->wait_until_network_check) {
+        /* check each 10 seconds before next check */
+        LOG_DBG("Checking for network... %lu\n",
+                (unsigned long)session_info->wait_until_network_check);
+        session_info->wait_until_network_check = now + 10000;
+        if(has_network_access()) {
+          /* Either do bootstrap then registration */
+          if(session_info->use_server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER) {
+            session_info->rd_state = DO_BOOTSTRAP;
           } else {
-            LOG_DBG("Server address:");
-            LOG_DBG_COAP_EP(&session_info.server_ep);
-            LOG_DBG_("\n");
-            if(secure) {
-              LOG_DBG("Secure CoAP requested but not supported - can not bootstrap\n");
-            } else {
-              lwm2m_rd_client_register_with_server(&session_info.server_ep);
-              session_info.bootstrapped++;
-            }
+            session_info->rd_state = DO_REGISTRATION;
           }
-        } else {
-          LOG_DBG("** failed to parse URI ");
-          LOG_DBG_COAP_STRING((const char *)security->server_uri,
-                              security->server_uri_len);
-          LOG_DBG_("\n");
+        }
+        /* Otherwise wait until for a network to join */
+      }
+      break;
+    case DO_BOOTSTRAP:
+      if(session_info->use_server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER &&
+         session_info->bootstrapped == 0 &&
+         session_info->has_bs_server_info) {
+
+        /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
+        coap_init_message(session_info->request, COAP_TYPE_CON, COAP_POST, 0);
+        coap_set_header_uri_path(session_info->request, "/bs");
+
+        snprintf(query_data, sizeof(query_data) - 1, "?ep=%s", session_info->ep);
+        coap_set_header_uri_query(session_info->request, query_data);
+        LOG_INFO("Registering ID with bootstrap server [");
+        LOG_INFO_COAP_EP(&session_info->bs_server_ep);
+        LOG_INFO_("] as '%s'\n", query_data);
+        /* Add session info as user data to use it in the callbacks */
+        session_info->rd_request_state.state.user_data = (void *)session_info;
+        if(coap_send_request(&session_info->rd_request_state, &session_info->bs_server_ep,
+                             session_info->request, bootstrap_callback)) {
+          session_info->rd_state = BOOTSTRAP_SENT;
         }
       }
+      break;
+    case BOOTSTRAP_SENT:
+      /* Just wait for bootstrap to be done...  */
+      break;
+    case BOOTSTRAP_DONE:
+      /* check that we should still use bootstrap */
+      if(session_info->use_server_type == LWM2M_RD_CLIENT_BOOTSTRAP_SERVER) {
+        lwm2m_security_server_t *security;
+        LOG_DBG("*** Bootstrap - checking for server info...\n");
+        /* get the security object - ignore bootstrap servers */
+        for(security = lwm2m_security_get_first();
+            security != NULL;
+            security = lwm2m_security_get_next(security)) {
+          if(security->bootstrap == 0) {
+            break;
+          }
+        }
 
-      /* if we did not register above - then fail this and restart... */
-      if(session_info.bootstrapped == 0) {
-        /* Not ready. Lets retry with the bootstrap server again */
-        rd_state = DO_BOOTSTRAP;
-      } else {
-        rd_state = DO_REGISTRATION;
+        if(security != NULL) {
+          /* get the server URI */
+          if(security->server_uri_len > 0) {
+            uint8_t secure = 0;
+
+            LOG_DBG("**** Found security instance using: ");
+            LOG_DBG_COAP_STRING((const char *)security->server_uri,
+                                security->server_uri_len);
+            LOG_DBG_(" (len %d) \n", security->server_uri_len);
+            /* TODO Should verify it is a URI */
+            /* Check if secure */
+            secure = strncmp((const char *)security->server_uri,
+                             "coaps:", 6) == 0;
+
+            if(!coap_endpoint_parse((const char *)security->server_uri,
+                                    security->server_uri_len,
+                                    &session_info->server_ep)) {
+              LOG_DBG("Failed to parse server URI!\n");
+            } else {
+              LOG_DBG("Server address:");
+              LOG_DBG_COAP_EP(&session_info->server_ep);
+              LOG_DBG_("\n");
+              if(secure) {
+                LOG_DBG("Secure CoAP requested but not supported - can not bootstrap\n");
+              } else {
+                lwm2m_rd_client_register_with_server(session_info, &session_info->server_ep, LWM2M_RD_CLIENT_LWM2M_SERVER);
+                session_info->bootstrapped++;
+              }
+            }
+          } else {
+            LOG_DBG("** failed to parse URI ");
+            LOG_DBG_COAP_STRING((const char *)security->server_uri,
+                                security->server_uri_len);
+            LOG_DBG_("\n");
+          }
+        }
+
+        /* if we did not register above - then fail this and restart... */
+        if(session_info->bootstrapped == 0) {
+          /* Not ready. Lets retry with the bootstrap server again */
+          session_info->rd_state = DO_BOOTSTRAP;
+        } else {
+          session_info->rd_state = DO_REGISTRATION;
+        }
       }
-    }
-    break;
-  case DO_REGISTRATION:
-    if(!coap_endpoint_is_connected(&session_info.server_ep)) {
-      /* Not connected... wait a bit... and retry connection */
-      coap_endpoint_connect(&session_info.server_ep);
-      LOG_DBG("Wait until connected... \n");
-      return;
-    }
-    if(session_info.use_registration && !session_info.registered &&
-       update_registration_server()) {
-      int len;
-
-      /* prepare request, TID was set by COAP_BLOCKING_REQUEST() */
-      coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-      coap_set_header_uri_path(request, "/rd");
-
-      snprintf(query_data, sizeof(query_data) - 1, "?ep=%s&lt=%d&b=%s", session_info.ep, session_info.lifetime, session_info.binding);
-      coap_set_header_uri_query(request, query_data);
-
-      len = set_rd_data(request);
-      rd_callback = registration_callback;
-
-      LOG_INFO("Registering with [");
-      LOG_INFO_COAP_EP(&session_info.server_ep);
-      LOG_INFO_("] lwm2m endpoint '%s': '", query_data);
-      if(len) {
-        LOG_INFO_COAP_STRING((const char *)rd_data, len);
+      break;
+    case DO_REGISTRATION:
+      if(!coap_endpoint_is_connected(&session_info->server_ep)) {
+        /* Not connected... wait a bit... and retry connection */
+        coap_endpoint_connect(&session_info->server_ep);
+        LOG_DBG("Wait until connected... \n");
+        return;
       }
-      LOG_INFO_("' More:%d\n", rd_more);
 
-      if(coap_send_request(&rd_request_state, &session_info.server_ep,
-                        request, registration_callback)){
-        rd_state = REGISTRATION_SENT;
+      if(session_info->use_server_type == LWM2M_RD_CLIENT_LWM2M_SERVER &&
+         !lwm2m_rd_client_is_registered(session_info) &&
+         session_info->has_registration_server_info) {
+        int len;
+
+        /* prepare request, TID was set by COAP_BLOCKING_REQUEST() */
+        coap_init_message(session_info->request, COAP_TYPE_CON, COAP_POST, 0);
+        coap_set_header_uri_path(session_info->request, "/rd");
+
+        snprintf(query_data, sizeof(query_data) - 1, "?ep=%s&lt=%d&b=%s", session_info->ep, session_info->lifetime, session_info->binding);
+        coap_set_header_uri_query(session_info->request, query_data);
+
+        len = set_rd_data(session_info);
+        session_info->rd_callback = registration_callback;
+
+        LOG_INFO("Registering with [");
+        LOG_INFO_COAP_EP(&session_info->server_ep);
+        LOG_INFO_("] lwm2m endpoint '%s': '", query_data);
+        if(len) {
+          LOG_INFO_COAP_STRING((const char *)rd_data, len);
+        }
+        LOG_INFO_("' More:%d\n", session_info->rd_more);
+
+        /* Add session info as user data to use it in the callbacks */
+        session_info->rd_request_state.state.user_data = (void *)session_info;
+        if(coap_send_request(&session_info->rd_request_state, &session_info->server_ep,
+                             session_info->request, registration_callback)) {
+
+          session_info->rd_state = REGISTRATION_SENT;
+        }
+        session_info->last_rd_progress = coap_timer_uptime();
       }
-    }
-    break;
-  case REGISTRATION_SENT:
-    /* just wait until the callback kicks us to the next state... */
-    break;
-  case REGISTRATION_DONE:
-    /* All is done! */
+      break;
+    case REGISTRATION_SENT:
+      /* just wait until the callback kicks us to the next state... */
+      break;
+    case REGISTRATION_DONE:
+      /* All is done! */
 
-    check_periodic_observations(); /* TODO: manage periodic observations */
+      check_periodic_observations(); /* TODO: manage periodic observations */
 
-    /* check if it is time for the next update */
-    if((rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED) ||
-       ((uint32_t)session_info.lifetime * 500) <= now - last_update) {
-      /* triggered or time to send an update to the server, at half-time! sec vs ms */
-      prepare_update(request, rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
-      if(coap_send_request(&rd_request_state, &session_info.server_ep, request,
-                        update_callback)) {
-        rd_state = UPDATE_SENT;
+      /* check if it is time for the next update */
+      if((session_info->rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED) ||
+         ((uint32_t)session_info->lifetime * 500) <= now - session_info->last_update) {
+        /* triggered or time to send an update to the server, at half-time! sec vs ms */
+        prepare_update(session_info, session_info->rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
+
+        /* Add session info as user data to use it in the callbacks */
+        session_info->rd_request_state.state.user_data = (void *)session_info;
+        if(coap_send_request(&session_info->rd_request_state, &session_info->server_ep, session_info->request,
+                             update_callback)) {
+          session_info->rd_state = UPDATE_SENT;
+        }
+        session_info->last_rd_progress = coap_timer_uptime();
       }
-    }
-    break;
+      break;
+
 #if LWM2M_QUEUE_MODE_ENABLED
-  case QUEUE_MODE_AWAKE:
-    LOG_DBG("Queue Mode: Client is AWAKE at %lu\n", (unsigned long)coap_timer_uptime());
-    queue_mode_client_awake = 1;
-    queue_mode_client_awake_time = lwm2m_queue_mode_get_awake_time();
-    coap_timer_set(&queue_mode_client_awake_timer, queue_mode_client_awake_time);
-    break;
-  case QUEUE_MODE_SEND_UPDATE:
-/* Define this macro to make the necessary actions for waking up, 
- * depending on the platform 
- */
+    case QUEUE_MODE_AWAKE:
+      LOG_DBG("Queue Mode: Client is AWAKE at %lu\n", (unsigned long)coap_timer_uptime());
+      if((queue_mode_client_awake = all_sessions_in_queue_mode_awake())) {
+        queue_mode_client_awake_time = lwm2m_queue_mode_get_awake_time();
+        coap_timer_set(&queue_mode_client_awake_timer, queue_mode_client_awake_time);
+      }
+      break;
+    case QUEUE_MODE_SEND_UPDATE:
+      /* Define this macro to make the necessary actions for waking up,
+       * depending on the platform
+       */
 #ifdef LWM2M_QUEUE_MODE_WAKE_UP
-    LWM2M_QUEUE_MODE_WAKE_UP();
+      LWM2M_QUEUE_MODE_WAKE_UP();
 #endif /* LWM2M_QUEUE_MODE_WAKE_UP */
-    prepare_update(request, rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
-    if(coap_send_request(&rd_request_state, &session_info.server_ep, request,
-                      update_callback)) {
-      rd_state = UPDATE_SENT;
-    }
-    break;
+      prepare_update(session_info, session_info->rd_flags & FLAG_RD_DATA_UPDATE_TRIGGERED);
+      /* Add session info as user data to use it in the callbacks */
+      session_info->rd_request_state.state.user_data = (void *)session_info;
+      if(coap_send_request(&session_info->rd_request_state, &session_info->server_ep, session_info->request,
+                           update_callback)) {
+        session_info->rd_state = UPDATE_SENT;
+      }
+      session_info->last_rd_progress = coap_timer_uptime();
+      break;
 #endif /* LWM2M_QUEUE_MODE_ENABLED */
 
-  case UPDATE_SENT:
-    /* just wait until the callback kicks us to the next state... */
-    break;
-  case DEREGISTER:
-    LOG_INFO("DEREGISTER %s\n", session_info.assigned_ep);
-    coap_init_message(request, COAP_TYPE_CON, COAP_DELETE, 0);
-    coap_set_header_uri_path(request, session_info.assigned_ep);
-    if(coap_send_request(&rd_request_state, &session_info.server_ep, request,
-                      deregister_callback)) {
-      rd_state = DEREGISTER_SENT;
-    }
-    break;
-  case DEREGISTER_SENT:
-    break;
-  case DEREGISTER_FAILED:
-    break;
-  case DEREGISTERED:
-    break;
+    case UPDATE_SENT:
+      /* just wait until the callback kicks us to the next state... */
+      break;
+    case DEREGISTER:
+      LOG_INFO("DEREGISTER %s\n", session_info->assigned_ep);
+      coap_init_message(session_info->request, COAP_TYPE_CON, COAP_DELETE, 0);
+      coap_set_header_uri_path(session_info->request, session_info->assigned_ep);
 
-  default:
-    LOG_WARN("Unhandled state: %d\n", rd_state);
+      /* Add session info as user data to use it in the callbacks */
+      session_info->rd_request_state.state.user_data = (void *)session_info;
+      if(coap_send_request(&session_info->rd_request_state, &session_info->server_ep, session_info->request,
+                           deregister_callback)) {
+        session_info->rd_state = DEREGISTER_SENT;
+      }
+      break;
+    case DEREGISTER_SENT:
+      break;
+    case DEREGISTER_FAILED:
+      break;
+    case DEREGISTERED:
+      break;
+
+    default:
+      LOG_WARN("Unhandled state: %d\n", session_info->rd_state);
+    }
+    session_info = session_info->next;
   }
 }
 /*---------------------------------------------------------------------------*/
 void
 lwm2m_rd_client_init(const char *ep)
 {
-  session_info.ep = ep;
-  /* default binding U = UDP, UQ = UDP Q-mode*/
-#if LWM2M_QUEUE_MODE_ENABLED
-  session_info.binding = "UQ";
-  /* Enough margin to ensure that the client is not unregistered (we
-   * do not know the time it can stay awake)
-   */
-  session_info.lifetime = (LWM2M_QUEUE_MODE_DEFAULT_CLIENT_SLEEP_TIME / 1000) * 2; 
-#else
-  session_info.binding = "U";
-  if(session_info.lifetime == 0) {
-    session_info.lifetime = LWM2M_DEFAULT_CLIENT_LIFETIME;
-  }
-#endif
-
-  rd_state = INIT;
+  lwm2m_rd_client_set_default_endpoint_name(ep);
 
   /* call the RD client periodically */
   coap_timer_set_callback(&rd_timer, periodic_process);
@@ -823,7 +849,7 @@ check_periodic_observations(void)
 }
 /*---------------------------------------------------------------------------*/
 /*
-   *Queue Mode Support
+ * Queue Mode Support
  */
 #if LWM2M_QUEUE_MODE_ENABLED
 /*---------------------------------------------------------------------------*/
@@ -846,27 +872,31 @@ queue_mode_awake_timer_callback(coap_timer_t *timer)
   LOG_DBG("Queue Mode: Client is SLEEPING at %lu\n", (unsigned long)coap_timer_uptime());
   queue_mode_client_awake = 0;
 
-/* Define this macro to enter sleep mode depending on the platform */
+  lwm2m_session_info_t *session_info = (lwm2m_session_info_t *)list_head(session_info_list);
+  while(session_info != NULL) {
+    session_info->rd_state = QUEUE_MODE_SEND_UPDATE;
+    session_info = session_info->next;
+  }
+  coap_timer_set(&rd_timer, lwm2m_queue_mode_get_sleep_time());
+  /* Define this macro to enter sleep mode depending on the platform */
 #ifdef LWM2M_QUEUE_MODE_SLEEP_MS
   LWM2M_QUEUE_MODE_SLEEP_MS(lwm2m_queue_mode_get_sleep_time());
 #endif /* LWM2M_QUEUE_MODE_SLEEP_MS */
-  rd_state = QUEUE_MODE_SEND_UPDATE;
-  coap_timer_set(&rd_timer, lwm2m_queue_mode_get_sleep_time());
 }
 /*---------------------------------------------------------------------------*/
 void
-lwm2m_rd_client_fsm_execute_queue_mode_awake()
+lwm2m_rd_client_fsm_execute_queue_mode_awake(lwm2m_session_info_t *session_info)
 {
   coap_timer_stop(&rd_timer);
-  rd_state = QUEUE_MODE_AWAKE;
+  session_info->rd_state = QUEUE_MODE_AWAKE;
   periodic_process(&rd_timer);
 }
 /*---------------------------------------------------------------------------*/
 void
-lwm2m_rd_client_fsm_execute_queue_mode_update()
+lwm2m_rd_client_fsm_execute_queue_mode_update(lwm2m_session_info_t *session_info)
 {
   coap_timer_stop(&rd_timer);
-  rd_state = QUEUE_MODE_SEND_UPDATE;
+  session_info->rd_state = QUEUE_MODE_SEND_UPDATE;
   periodic_process(&rd_timer);
 }
 /*---------------------------------------------------------------------------*/

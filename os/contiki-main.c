@@ -48,6 +48,7 @@
 #include "sys/stack-check.h"
 #include "dev/watchdog.h"
 
+#include "net/queuebuf.h"
 #include "net/app-layer/coap/coap-engine.h"
 #include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
@@ -89,6 +90,9 @@ main(void)
 
   platform_init_stage_two();
 
+#if QUEUEBUF_ENABLED
+  queuebuf_init();
+#endif /* QUEUEBUF_ENABLED */
   netstack_init();
   node_id_init();
 

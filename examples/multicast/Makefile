@@ -3,8 +3,8 @@ all: $(CONTIKI_PROJECT)
 
 # nrf52dk only supports slave mode, i.e., with no routing
 PLATFORMS_EXCLUDE = nrf52dk
-# does not fit sky motes
-PLATFORMS_EXCLUDE += sky
+# does not fit on sky and z1 motes
+PLATFORMS_EXCLUDE += sky z1
 
 CONTIKI = ../..
 

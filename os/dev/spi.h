@@ -92,10 +92,18 @@ typedef enum {
  *
  * This is a structure to an architecture-independent SPI configuration.
  *
+ * \note Do not access the port_spi_foo members directly. Access them by using
+ * the SPI_DEVICE_PORT() macro instead
  * @{
  */
 
 typedef struct spi_device {
+#if GPIO_HAL_PORT_PIN_NUMBERING
+  gpio_hal_port_t port_spi_sck;       /* SPI SCK port */
+  gpio_hal_port_t port_spi_miso;      /* SPI MISO port */
+  gpio_hal_port_t port_spi_mosi;      /* SPI MOSI port */
+  gpio_hal_port_t port_spi_cs;        /* SPI Chip Select port */
+#endif
   gpio_hal_pin_t pin_spi_sck;       /* SPI SCK pin */
   gpio_hal_pin_t pin_spi_miso;      /* SPI MISO  pin */
   gpio_hal_pin_t pin_spi_mosi;      /* SPI MOSI pin */
@@ -106,6 +114,22 @@ typedef struct spi_device {
   uint8_t spi_controller;           /* ID of SPI controller to use */
 } spi_device_t;
 /** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Retrieve the SPI device's port number if applicable
+ * \param member Retrieve struct member port_spi_member (e.g. port_spi_miso)
+ * \param device A pointer the a variable of type spi_device_t
+ *
+ * The same macro is used for all four port_spi_foo members of the struct. So
+ * to retrieve port_spi_cs, use SPI_DEVICE_PORT(cs, device). Replace cs with
+ * mosi to retrieve port_spi_mosi.
+ *
+ */
+#if GPIO_HAL_PORT_PIN_NUMBERING
+#define SPI_DEVICE_PORT(member, device) (device)->port_spi_##member
+#else
+#define SPI_DEVICE_PORT(member, device) GPIO_HAL_NULL_PORT
+#endif
 /*---------------------------------------------------------------------------*/
 /* These are architecture-independent functions to be used by SPI devices.   */
 /*---------------------------------------------------------------------------*/

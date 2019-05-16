@@ -11,7 +11,7 @@ CFLAGS += -gstabs+
 .SUFFIXES:
 
 ### Define the CPU directory
-CONTIKI_CPU=$(CONTIKI)/arch/cpu/msp430
+CONTIKI_CPU=$(ARCH_PATH)/cpu/msp430
 
 ### Define the source files we have in the MSP430 port
 

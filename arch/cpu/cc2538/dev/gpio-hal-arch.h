@@ -58,31 +58,31 @@
 /*---------------------------------------------------------------------------*/
 #define gpio_hal_arch_init() do { /* Do nothing */ } while(0)
 
-#define gpio_hal_arch_interrupt_enable(p) do { \
+#define gpio_hal_arch_interrupt_enable(port, p) do { \
   GPIO_ENABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
   NVIC_EnableIRQ(PIN_TO_PORT(p)); \
 } while(0);
 
-#define gpio_hal_arch_interrupt_disable(p) \
+#define gpio_hal_arch_interrupt_disable(port, p) \
   GPIO_DISABLE_INTERRUPT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
 
-#define gpio_hal_arch_pin_set_input(p) do { \
+#define gpio_hal_arch_pin_set_input(port, p) do { \
   GPIO_SOFTWARE_CONTROL(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
   GPIO_SET_INPUT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
 } while(0);
 
-#define gpio_hal_arch_pin_set_output(p) do { \
+#define gpio_hal_arch_pin_set_output(port, p) do { \
   GPIO_SOFTWARE_CONTROL(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
   GPIO_SET_OUTPUT(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)); \
 } while(0);
 
-#define gpio_hal_arch_set_pin(p) \
+#define gpio_hal_arch_set_pin(port, p) \
   GPIO_SET_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
 
-#define gpio_hal_arch_clear_pin(p) \
+#define gpio_hal_arch_clear_pin(port, p) \
   GPIO_CLR_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8))
 
-#define gpio_hal_arch_read_pin(p) \
+#define gpio_hal_arch_read_pin(port, p) \
   (GPIO_READ_PIN(PIN_TO_PORT_BASE(p), GPIO_PIN_MASK((p) % 8)) == 0 ? 0 : 1)
 /*---------------------------------------------------------------------------*/
 #endif /* GPIO_HAL_ARCH_H_ */

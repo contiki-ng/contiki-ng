@@ -41,13 +41,13 @@ JNILIB = $(BUILD_DIR_BOARD)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).o
 
 ### COOJA platform sources
-COOJA = $(CONTIKI)/arch/platform/$(TARGET)
+COOJA = $(ARCH_PATH)/platform/$(TARGET)
 CONTIKI_TARGET_DIRS = . dev lib sys cfs net
 
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
 vpath %.c $(COOJA_SOURCEDIRS)
 
-COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c slip.c watchdog.c
+COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c slip.c watchdog.c int-master.c
 
 COOJA_INTFS	= beep.c button-sensor.c ip.c leds-arch.c moteid.c \
 		    pir-sensor.c rs232.c vib-sensor.c \
@@ -67,7 +67,7 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 CLEAN += COOJA.log
 
 ### Define the CPU directory
-CONTIKI_CPU=$(CONTIKI)/arch/cpu/x86
+CONTIKI_CPU=$(ARCH_PATH)/cpu/x86
 
 ### Compiler arguments
 #CC = gcc

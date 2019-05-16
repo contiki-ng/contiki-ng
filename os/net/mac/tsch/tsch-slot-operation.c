@@ -52,6 +52,7 @@
 #include "net/queuebuf.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
+#include "sys/critical.h"
 
 #include "sys/log.h"
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
@@ -126,9 +127,10 @@ struct tsch_packet *dequeued_array[TSCH_DEQUEUED_ARRAY_SIZE];
 struct ringbufindex input_ringbuf;
 struct input_packet input_array[TSCH_MAX_INCOMING_PACKETS];
 
+/* Updates and reads of the next two variables must be atomic (i.e. both together) */
 /* Last time we received Sync-IE (ACK or data packet from a time source) */
 static struct tsch_asn_t last_sync_asn;
-clock_time_t last_sync_time; /* Same info, in clock_time_t units */
+clock_time_t tsch_last_sync_time; /* Same info, in clock_time_t units */
 
 /* A global lock for manipulating data structures safely from outside of interrupt */
 static volatile int tsch_locked = 0;
@@ -345,6 +347,33 @@ get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **
   }
 
   return p;
+}
+/*---------------------------------------------------------------------------*/
+uint64_t
+tsch_get_network_uptime_ticks(void)
+{
+  uint64_t uptime_asn;
+  uint64_t uptime_ticks;
+  int_master_status_t status;
+
+  if(!tsch_is_associated) {
+    /* not associated, network uptime is not known */
+    return (uint64_t)-1;
+  }
+
+  status = critical_enter();
+
+  uptime_asn = last_sync_asn.ls4b + ((uint64_t)last_sync_asn.ms1b << 32);
+  /* first calculate the at the uptime at the last sync in rtimer ticks */
+  uptime_ticks = uptime_asn * tsch_timing[tsch_ts_timeslot_length];
+  /* then convert to clock ticks (assume that CLOCK_SECOND divides RTIMER_ARCH_SECOND) */
+  uptime_ticks /= (RTIMER_ARCH_SECOND / CLOCK_SECOND);
+  /* then add the ticks passed since the last timesync */
+  uptime_ticks += (clock_time() - tsch_last_sync_time);
+
+  critical_exit(status);
+
+  return uptime_ticks;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -623,7 +652,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   tsch_timesync_update(current_neighbor, since_last_timesync, drift_correction);
                   /* Keep track of sync time */
                   last_sync_asn = tsch_current_asn;
-                  last_sync_time = clock_time();
+                  tsch_last_sync_time = clock_time();
                   tsch_schedule_keepalive();
                 }
                 mac_tx_status = MAC_TX_OK;
@@ -820,8 +849,12 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 #endif /* LLSEC802154_ENABLED */
 
         if(frame_valid) {
-          if(linkaddr_cmp(&destination_address, &linkaddr_node_addr)
-             || linkaddr_cmp(&destination_address, &linkaddr_null)) {
+          /* Check that frome is for us or broadcast, AND that it is not from
+           * ourselves. This is for consistency with CSMA and to avoid adding
+           * ourselves to neighbor tables in case frames are being replayed. */
+          if((linkaddr_cmp(&destination_address, &linkaddr_node_addr)
+               || linkaddr_cmp(&destination_address, &linkaddr_null))
+             && !linkaddr_cmp(&source_address, &linkaddr_node_addr)) {
             int do_nack = 0;
             rx_count++;
             estimated_drift = RTIMER_CLOCK_DIFF(expected_rx_time, rx_start_time);
@@ -882,7 +915,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               int32_t since_last_timesync = TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn);
               /* Keep track of last sync time */
               last_sync_asn = tsch_current_asn;
-              last_sync_time = clock_time();
+              tsch_last_sync_time = clock_time();
               /* Save estimated drift */
               drift_correction = -estimated_drift;
               is_drift_correction_used = 1;
@@ -1014,6 +1047,13 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
 
     /* End of slot operation, schedule next slot or resynchronize */
 
+    if(tsch_is_coordinator) {
+      /* Update the `last_sync_*` variables to avoid large errors
+       * in the application-level time synchronization */
+      last_sync_asn = tsch_current_asn;
+      tsch_last_sync_time = clock_time();
+    }
+
     /* Do we need to resynchronize? i.e., wait for EB again */
     if(!tsch_is_coordinator && (TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn) >
         (100 * TSCH_CLOCK_TO_SLOTS(TSCH_DESYNC_THRESHOLD / 100, tsch_timing[tsch_ts_timeslot_length])))) {
@@ -1043,7 +1083,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
 
         /* A burst link was scheduled. Replay the current link at the
         next time offset */
-        if(burst_link_scheduled) {
+        if(burst_link_scheduled && current_link != NULL) {
           timeslot_diff = 1;
           backup_link = NULL;
           /* Keep track of the number of repetitions */
@@ -1115,10 +1155,14 @@ void
 tsch_slot_operation_sync(rtimer_clock_t next_slot_start,
     struct tsch_asn_t *next_slot_asn)
 {
+  int_master_status_t status;
+
   current_slot_start = next_slot_start;
   tsch_current_asn = *next_slot_asn;
+  status = critical_enter();
   last_sync_asn = tsch_current_asn;
-  last_sync_time = clock_time();
+  tsch_last_sync_time = clock_time();
+  critical_exit(status);
   current_link = NULL;
 }
 /*---------------------------------------------------------------------------*/

@@ -33,14 +33,14 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC1350STK
-#define BOARD_STRING    "TI CC1350 SensorTag"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "CC1350STK.h"
+
+#define Board_CC1350STK
+#define BOARD_STRING            "TI CC1350 SensorTag"
 
 #define Board_initGeneral()      CC1350STK_initGeneral()
 #define Board_shutDownExtFlash() CC1350STK_shutDownExtFlash()

@@ -42,7 +42,7 @@
 #include "dev/radio.h"
 #include "dev/cooja-radio.h"
 
-#define COOJA_RADIO_BUFSIZE PACKETBUF_SIZE
+#define COOJA_RADIO_BUFSIZE cooja_radio_driver_max_payload_len
 #define CCA_SS_THRESHOLD -95
 
 const struct simInterface radio_interface;
@@ -246,6 +246,9 @@ radio_send(const void *payload, unsigned short payload_len)
 static int
 prepare_packet(const void *data, unsigned short len)
 {
+  if(len > COOJA_RADIO_BUFSIZE) {
+    return RADIO_TX_ERR;
+  }
   pending_data = data;
   return 0;
 }

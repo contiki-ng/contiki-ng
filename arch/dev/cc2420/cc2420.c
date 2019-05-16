@@ -114,6 +114,7 @@ PROCESS(cc2420_process, "CC2420 driver");
 #define CORR_THR(n) (((n) & 0x1f) << 6)
 #define FIFOP_THR(n) ((n) & 0x7f)
 #define RXBPF_LOCUR (1 << 13);
+#define TX_MODE (3 << 2)
 
 int cc2420_on(void);
 int cc2420_off(void);
@@ -134,6 +135,8 @@ static void set_frame_filtering(uint8_t enable);
 static void set_poll_mode(uint8_t enable);
 static void set_send_on_cca(uint8_t enable);
 static void set_auto_ack(uint8_t enable);
+
+static void set_test_mode(uint8_t enable, uint8_t modulated);
 
 signed char cc2420_last_rssi;
 uint8_t cc2420_last_correlation;
@@ -156,7 +159,11 @@ get_value(radio_param_t param, radio_value_t *value)
   }
   switch(param) {
   case RADIO_PARAM_POWER_MODE:
-    *value = receive_on ? RADIO_POWER_MODE_ON : RADIO_POWER_MODE_OFF;
+    if((getreg(CC2420_MDMCTRL1) & TX_MODE) & 0x08) {
+      *value = RADIO_POWER_MODE_CARRIER_ON;
+    } else {
+      *value = receive_on ? RADIO_POWER_MODE_ON : RADIO_POWER_MODE_OFF;
+    }
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CHANNEL:
     *value = cc2420_get_channel();
@@ -235,6 +242,11 @@ set_value(radio_param_t param, radio_value_t value)
     }
     if(value == RADIO_POWER_MODE_OFF) {
       cc2420_off();
+      return RADIO_RESULT_OK;
+    }
+    if(value == RADIO_POWER_MODE_CARRIER_ON ||
+       value == RADIO_POWER_MODE_CARRIER_OFF) {
+      set_test_mode((value == RADIO_POWER_MODE_CARRIER_ON), 0);
       return RADIO_RESULT_OK;
     }
     return RADIO_RESULT_INVALID_VALUE;
@@ -654,6 +666,10 @@ cc2420_transmit(unsigned short payload_len)
 {
   int i;
 
+  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
+
   GET_LOCK();
 
   /* The TX FIFO can only hold one packet. Make sure to not overrun
@@ -719,6 +735,10 @@ static int
 cc2420_prepare(const void *payload, unsigned short payload_len)
 {
   uint8_t total_len;
+
+  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
 
   GET_LOCK();
 
@@ -1118,5 +1138,47 @@ static void
 set_send_on_cca(uint8_t enable)
 {
   send_on_cca = enable;
+}
+/*---------------------------------------------------------------------------*/
+/* Enable or disable radio test mode emmiting modulated or unmodulated
+ * (carrier) signal. See datasheet page 55.
+ */
+static uint16_t prev_MDMCTRL1, prev_DACTST;
+static uint8_t was_on;
+
+static void
+set_test_mode(uint8_t enable, uint8_t modulated)
+{
+  radio_value_t mode;
+  get_value(RADIO_PARAM_POWER_MODE, &mode);
+
+  if(enable) {
+    if(mode == RADIO_POWER_MODE_CARRIER_ON) {
+      return;
+    }
+    was_on = (mode == RADIO_POWER_MODE_ON);
+    off();
+    prev_MDMCTRL1 = getreg(CC2420_MDMCTRL1);
+    setreg(CC2420_MDMCTRL1, 0x050C);
+    if(!modulated) {
+      prev_DACTST = getreg(CC2420_DACTST);
+      setreg(CC2420_DACTST, 0x1800);
+    }
+    /* actually starts the test mode */
+    strobe(CC2420_STXON);
+  } else {
+    if(mode != RADIO_POWER_MODE_CARRIER_ON) {
+      return;
+    }
+    strobe(CC2420_SRFOFF);
+    if(!modulated) {
+      setreg(CC2420_DACTST, prev_DACTST);
+    }
+    setreg(CC2420_MDMCTRL1, prev_MDMCTRL1);
+    /* actually stops the carrier */
+    if(was_on) {
+      on();
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/

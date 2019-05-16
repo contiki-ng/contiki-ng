@@ -52,7 +52,7 @@ static uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
 #endif
 /*---------------------------------------------------------------------------*/
 /* Must be at least one byte larger than UIP_BUFSIZE! */
-#define RX_BUFSIZE (UIP_BUFSIZE - UIP_LLH_LEN + 16)
+#define RX_BUFSIZE (UIP_BUFSIZE + 16)
 /*---------------------------------------------------------------------------*/
 enum {
   STATE_TWOPACKETS = 0, /* We have 2 packets and drop incoming data. */
@@ -87,7 +87,7 @@ slip_set_input_callback(void (*c)(void))
 void
 slip_send(void)
 {
-  slip_write(&uip_buf[UIP_LLH_LEN], uip_len);
+  slip_write(uip_buf, uip_len);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -252,8 +252,7 @@ PROCESS_THREAD(slip_process, ev, data)
     slip_active = 1;
 
     /* Move packet from rxbuf to buffer provided by uIP. */
-    uip_len = slip_poll_handler(&uip_buf[UIP_LLH_LEN],
-                                UIP_BUFSIZE - UIP_LLH_LEN);
+    uip_len = slip_poll_handler(uip_buf, UIP_BUFSIZE);
 
     if(uip_len > 0) {
       if(input_callback) {

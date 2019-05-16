@@ -37,7 +37,7 @@
  *         Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
-/** \addtogroup apps
+/** \addtogroup shell
  * @{ */
 
 #ifndef _SHELL_COMMANDS_H_

@@ -29,6 +29,13 @@
  * This file is part of the Contiki operating system.
  *
  */
+/**
+ * \addtogroup net-layer
+ * @{
+ *
+ * \defgroup routing An API for routing
+ * @{
+*/
 
 /**
  * \file
@@ -57,7 +64,7 @@ struct routing_driver {
   /**
    * Set the prefix, for nodes that will operate as root
    *
-   * \param prefix The prefix. If NULL, UIP_DS6_DEFAULT_PREFIX is used instead
+   * \param prefix The prefix. If NULL, uip_ds6_default_prefix() is used instead
    * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
   */
   void (* root_set_prefix)(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
@@ -119,8 +126,10 @@ struct routing_driver {
   void (* local_repair)(const char *str);
   /**
    * Removes all extension headers that pertain to the routing protocol.
+   *
+   * \return true in case of success, false otherwise
   */
-  void (* ext_header_remove)(void);
+  bool (* ext_header_remove)(void);
   /**
    * Adds/updates routing protocol extension headers to current uIP packet.
    *
@@ -131,12 +140,13 @@ struct routing_driver {
   * Process and update the routing protocol hob-by-hop
   * extention headers of the current uIP packet.
   *
-  * \param uip_ext_opt_offset The offset within the uIP packet where
-  * extension headers start
+  * \param ext_buf A pointer to the ext header buffer
+  * \param opt_offset The offset within the extension header where
+  * the option starts
   * \return 1 in case the packet is valid and to be processed further,
   * 0 in case the packet must be dropped.
   */
-  int (* ext_header_hbh_update)(int uip_ext_opt_offset);
+  int (* ext_header_hbh_update)(uint8_t *ext_buf, int opt_offset);
   /**
   * Process and update SRH in-place,
   * i.e. internal address swapping as per RFC6554
@@ -175,3 +185,7 @@ struct routing_driver {
 };
 
 #endif /* ROUTING_H_ */
+/**
+ * @}
+ * @}
+ */

@@ -25,9 +25,9 @@ ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
     NRF52_SOFTDEVICE := $(shell find $(NRF52_SDK_ROOT) -name *iot*_softdevice.hex | head -n 1)
   endif
   $(info SoftDevice: $(NRF52_SOFTDEVICE))
-  LDSCRIPT := $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
 else
-  LDSCRIPT := $(CONTIKI_CPU)/ld/nrf52.ld
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52.ld
 endif
 
 OUTPUT_FILENAME := $(CONTIKI_PROJECT)
@@ -185,10 +185,12 @@ $(OBJECT_DIRECTORY)/%.o: %.s
 	$(TRACE_CC)
 	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
 
-%.jlink:
-	sed -e 's/#OUTPUT_FILENAME#/$*.hex/' $(CONTIKI_CPU)/flash.jlink > $@
+include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4
 
-%.flash: %.hex %.jlink
+%.jlink: $(OUT_HEX)
+	sed -e 's,#OUTPUT_FILENAME#,$<,' $(CONTIKI_CPU)/flash.jlink > $@
+
+%.flash: %.jlink
 	@echo Flashing: $^
 	$(JLINK) $(JLINK_OPTS) -CommanderScript $*.jlink
 
@@ -203,5 +205,3 @@ erase:
 	$(JLINK) $(JLINK_OPTS) -CommanderScript $(CONTIKI_CPU)/erase.jlink
 
 .PHONY: softdevice.jlink
-
-include $(CONTIKI)/arch/cpu/arm/cortex-m/cm4/Makefile.cm4

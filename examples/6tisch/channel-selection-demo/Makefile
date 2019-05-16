@@ -3,8 +3,8 @@ all: $(CONTIKI_PROJECT)
 
 CONTIKI=../../..
 
-PLATFORMS_EXCLUDE = sky nrf52dk native
-BOARDS_EXCLUDE = srf06/cc13xx launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350
+PLATFORMS_EXCLUDE = sky z1 nrf52dk native
+BOARDS_EXCLUDE = srf06/cc13x0 launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350
 
 # The channel selection library
 MODULES += os/services/tsch-cs

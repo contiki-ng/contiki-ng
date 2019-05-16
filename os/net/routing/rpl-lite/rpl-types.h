@@ -198,7 +198,6 @@ struct rpl_dag {
   uint8_t dio_counter; /* internal trickle timer state: redundancy counter */
   uint8_t dao_last_seqno; /* the node's last sent DAO seqno */
   uint8_t dao_last_acked_seqno; /* the last seqno we got an ACK for */
-  uint8_t dao_curr_seqno; /* the node's current DAO seqno (sent or to be sent) */
   uint8_t dao_transmissions; /* the number of transmissions for the current DAO */
   enum rpl_dag_state state;
 

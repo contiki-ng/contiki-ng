@@ -3,7 +3,7 @@
 
 CC13x2_CC26x2_PRE_RTM ?= 1
 
-# Core SDK is placed as a submodule under arch/cpu/cc13xx-cc26xx/lib.
+# Core SDK is placed as a submodule under arch/cpu/simplelink-cc13xx-cc26xx/lib.
 # Do a sanity check that Core SDK submodule has been initialized.
 ifndef CORE_SDK
  CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
@@ -120,7 +120,7 @@ LDFLAGS += -nostartfiles
 LDFLAGS += -static
 
 # Linker script
-LDSCRIPT := $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
+LDSCRIPT ?= $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 
 # Globally linked libraries
 TARGET_LIBFILES += -lc -lgcc -lnosys -lm

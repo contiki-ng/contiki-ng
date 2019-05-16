@@ -62,22 +62,24 @@
 
 #define UIP_IPUDPH_LEN (UIP_UDPH_LEN + UIP_IPH_LEN)   /* Size of IP + UDP header */
 #define UIP_IPTCPH_LEN (UIP_TCPH_LEN + UIP_IPH_LEN)   /* Size of IP + TCP header */
-#define UIP_TCPIP_HLEN UIP_IPTCPH_LEN
-#define UIP_IPICMPH_LEN (UIP_IPH_LEN + UIP_ICMPH_LEN) /* Size of ICMP + IP header */
-#define UIP_LLIPH_LEN (UIP_LLH_LEN + UIP_IPH_LEN)     /* Size of L2 + IP header */
-#if NETSTACK_CONF_WITH_IPV6
-/**
- * The sums below are quite used in ND. When used for uip_buf, we
- * include link layer length when used for uip_len, we do not, hence
- * we need values with and without LLH_LEN we do not use capital
- * letters as these values are variable
- */
-#define uip_l2_l3_hdr_len (UIP_LLH_LEN + UIP_IPH_LEN + uip_ext_len)
-#define uip_l2_l3_icmp_hdr_len (UIP_LLH_LEN + UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
-#define uip_l3_hdr_len (UIP_IPH_LEN + uip_ext_len)
-#define uip_l3_icmp_hdr_len (UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
-#endif /*NETSTACK_CONF_WITH_IPV6*/
 
+#define uip_l3_icmp_hdr_len (UIP_IPH_LEN + uip_ext_len + UIP_ICMPH_LEN)
+
+/**
+ * Direct access to IPv6 header
+ */
+#define UIP_IP_BUF                             ((struct uip_ip_hdr *)uip_buf)
+#define UIP_IP_PAYLOAD(ext)                        ((unsigned char *)uip_buf + UIP_IPH_LEN + (ext))
+
+/**
+ * Direct access to ICMP, UDP, and TCP headers and payload, with implicit ext header offset (global uip_ext_len)
+ */
+#define UIP_ICMP_BUF                         ((struct uip_icmp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
+#define UIP_ICMP_PAYLOAD                           ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_ICMPH_LEN)
+#define UIP_UDP_BUF                           ((struct uip_udp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
+#define UIP_UDP_PAYLOAD                            ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_UDPH_LEN)
+#define UIP_TCP_BUF                           ((struct uip_tcp_hdr *)UIP_IP_PAYLOAD(uip_ext_len))
+#define UIP_TCP_PAYLOAD                            ((unsigned char *)UIP_IP_PAYLOAD(uip_ext_len) + UIP_TCPH_LEN)
 
 #include "net/ipv6/uipopt.h"
 #include "net/ipv6/uipbuf.h"
@@ -100,12 +102,7 @@ typedef union uip_ip6addr_t {
   uint16_t u16[8];
 } uip_ip6addr_t;
 
-#if NETSTACK_CONF_WITH_IPV6
 typedef uip_ip6addr_t uip_ipaddr_t;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-typedef uip_ip4addr_t uip_ipaddr_t;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
 
 /*---------------------------------------------------------------------------*/
 #define UIP_802154_SHORTADDR_LEN 2
@@ -1048,11 +1045,7 @@ struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport);
                                        (addr1)->u16[1] == (addr2)->u16[1])
 #define uip_ip6addr_cmp(addr1, addr2) (memcmp(addr1, addr2, sizeof(uip_ip6addr_t)) == 0)
 
-#if NETSTACK_CONF_WITH_IPV6
 #define uip_ipaddr_cmp(addr1, addr2) uip_ip6addr_cmp(addr1, addr2)
-#else /* NETSTACK_CONF_WITH_IPV6 */
-#define uip_ipaddr_cmp(addr1, addr2) uip_ip4addr_cmp(addr1, addr2)
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 /**
  * Compare two IP addresses with netmasks
@@ -1307,31 +1300,16 @@ extern uint16_t uip_len;
 /**
  * The length of the extension headers
  */
-extern uint8_t uip_ext_len;
+extern uint16_t uip_ext_len;
+
+/** The final protocol after IPv6 extension headers:
+  * UIP_PROTO_TCP, UIP_PROTO_UDP or UIP_PROTO_ICMP6 */
+extern uint8_t uip_last_proto;
 /** @} */
 
 #if UIP_URGDATA > 0
 extern uint16_t uip_urglen, uip_surglen;
 #endif /* UIP_URGDATA > 0 */
-
-/*
- * Clear uIP buffer
- *
- * This function clears the uIP buffer by reseting the uip_len and
- * uip_ext_len pointers.
- */
-#if NETSTACK_CONF_WITH_IPV6
-#define uip_clear_buf() { \
-  uip_len = 0; \
-  uip_ext_len = 0; \
-  uipbuf_clear_attr();\
-}
-#else /*NETSTACK_CONF_WITH_IPV6*/
-#define uip_clear_buf() { \
-  uip_len = 0; \
-  uipbuf_clear_attr();\
-}
-#endif /*NETSTACK_CONF_WITH_IPV6*/
 
 /**
  * Representation of a uIP TCP connection.
@@ -1494,13 +1472,11 @@ struct uip_stats {
                                checksum. */
   } udp;                  /**< UDP statistics. */
 #endif /* UIP_UDP */
-#if NETSTACK_CONF_WITH_IPV6
   struct {
     uip_stats_t drop;     /**< Number of dropped ND6 packets. */
     uip_stats_t recv;     /**< Number of recived ND6 packets */
     uip_stats_t sent;     /**< Number of sent ND6 packets */
   } nd6;
-#endif /*NETSTACK_CONF_WITH_IPV6*/
 };
 
 
@@ -1619,113 +1595,14 @@ void uip_process(uint8_t flag);
 
 #define UIP_STOPPED      16
 
-/* The TCP and IP headers. */
-struct uip_tcpip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
-  /* IPv6 header. */
-  uint8_t vtc,
-    tcflow;
-  uint16_t flow;
-  uint8_t len[2];
-  uint8_t proto, ttl;
-  uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IPv4 header. */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
-  /* TCP header. */
-  uint16_t srcport,
-    destport;
-  uint8_t seqno[4],
-    ackno[4],
-    tcpoffset,
-    flags,
-    wnd[2];
-  uint16_t tcpchksum;
-  uint8_t urgp[2];
-  uint8_t optdata[4];
-};
-
-/* The ICMP and IP headers. */
-struct uip_icmpip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
-  /* IPv6 header. */
-  uint8_t vtc,
-    tcf;
-  uint16_t flow;
-  uint8_t len[2];
-  uint8_t proto, ttl;
-  uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IPv4 header. */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
-  /* ICMP header. */
-  uint8_t type, icode;
-  uint16_t icmpchksum;
-#if !NETSTACK_CONF_WITH_IPV6
-  uint16_t id, seqno;
-  uint8_t payload[1];
-#endif /* !NETSTACK_CONF_WITH_IPV6 */
-};
-
-
-/* The UDP and IP headers. */
-struct uip_udpip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
-  /* IPv6 header. */
-  uint8_t vtc,
-    tcf;
-  uint16_t flow;
-  uint8_t len[2];
-  uint8_t proto, ttl;
-  uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IP header. */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
-  /* UDP header. */
-  uint16_t srcport,
-    destport;
-  uint16_t udplen;
-  uint16_t udpchksum;
-};
-
 /*
  * In IPv6 the length of the L3 headers before the transport header is
  * not fixed, due to the possibility to include extension option headers
  * after the IP header. hence we split here L3 and L4 headers
  */
 /* The IP header */
+
 struct uip_ip_hdr {
-#if NETSTACK_CONF_WITH_IPV6
   /* IPV6 header */
   uint8_t vtc;
   uint8_t tcflow;
@@ -1733,18 +1610,6 @@ struct uip_ip_hdr {
   uint8_t len[2];
   uint8_t proto, ttl;
   uip_ip6addr_t srcipaddr, destipaddr;
-#else /* NETSTACK_CONF_WITH_IPV6 */
-  /* IPV4 header */
-  uint8_t vhl,
-    tos,
-    len[2],
-    ipid[2],
-    ipoffset[2],
-    ttl,
-    proto;
-  uint16_t ipchksum;
-  uip_ipaddr_t srcipaddr, destipaddr;
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 };
 
 
@@ -1860,9 +1725,6 @@ struct uip_tcp_hdr {
 struct uip_icmp_hdr {
   uint8_t type, icode;
   uint16_t icmpchksum;
-#if !NETSTACK_CONF_WITH_IPV6
-  uint16_t id, seqno;
-#endif /* !NETSTACK_CONF_WITH_IPV6 */
 };
 
 
@@ -1889,8 +1751,7 @@ struct uip_udp_hdr {
  *
  * \hideinitializer
  */
-#define UIP_APPDATA_SIZE (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN)
-#define UIP_APPDATA_PTR (void *)&uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN]
+#define UIP_APPDATA_SIZE (UIP_BUFSIZE - UIP_IPTCPH_LEN)
 
 #define UIP_PROTO_ICMP  1
 #define UIP_PROTO_TCP   6
@@ -1898,7 +1759,6 @@ struct uip_udp_hdr {
 #define UIP_PROTO_ICMP6 58
 
 
-#if NETSTACK_CONF_WITH_IPV6
 /** @{ */
 /** \brief  extension headers types */
 #define UIP_PROTO_HBHO        0
@@ -1908,13 +1768,14 @@ struct uip_udp_hdr {
 #define UIP_PROTO_NONE        59
 /** @} */
 
-#define uip_is_proto_ext_hdr(proto) (proto == UIP_PROTO_HBHO || proto == UIP_PROTO_DESTO || proto == UIP_PROTO_ROUTING || proto == UIP_PROTO_FRAG || proto == UIP_PROTO_NONE)
+#define uip_is_proto_ext_hdr(proto) ((proto) != UIP_PROTO_TCP && (proto) != UIP_PROTO_UDP && (proto) != UIP_PROTO_ICMP6)
 
 /** @{ */
 /** \brief  Destination and Hop By Hop extension headers option types */
 #define UIP_EXT_HDR_OPT_PAD1  0
 #define UIP_EXT_HDR_OPT_PADN  1
 #define UIP_EXT_HDR_OPT_RPL   0x63
+#define UIP_EXT_HDR_OPT_MPL   0x6D
 
 /** @} */
 
@@ -1937,9 +1798,6 @@ struct uip_udp_hdr {
 /** @} */
 
 
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
-
 #if UIP_FIXEDADDR
 extern const uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
 #else /* UIP_FIXEDADDR */
@@ -1954,10 +1812,6 @@ extern const uip_lladdr_t uip_lladdr;
 extern uip_lladdr_t uip_lladdr;
 #endif
 
-
-
-
-#if NETSTACK_CONF_WITH_IPV6
 /** Length of the link local prefix */
 #define UIP_LLPREF_LEN     10
 
@@ -2174,8 +2028,6 @@ extern uip_lladdr_t uip_lladdr;
    (((a)->u8[14])  == ((b)->u8[14])) &&                 \
    (((a)->u8[15])  == ((b)->u8[15])))
 
-#endif /*NETSTACK_CONF_WITH_IPV6*/
-
 /**
  * A non-error message that indicates that a packet should be
  * processed locally.
@@ -2288,6 +2140,13 @@ uint16_t uip_udpchksum(void);
  */
 uint16_t uip_icmp6chksum(void);
 
+/**
+ * Removes all IPv6 extension headers from uip_buf, updates length fields
+ * (uip_len and uip_ext_len)
+ *
+ * \return true upon success, false otherwise.
+ */
+bool uip_remove_ext_hdr(void);
 
 #endif /* UIP_H_ */
 

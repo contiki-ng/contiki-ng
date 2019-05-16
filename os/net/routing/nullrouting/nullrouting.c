@@ -30,7 +30,7 @@
  */
 
 /**
- * \addtogroup null-routing
+ * \addtogroup routing
  * @{
  *
  * \file
@@ -103,11 +103,13 @@ local_repair(const char *str)
 {
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 ext_header_remove(void)
 {
 #if NETSTACK_CONF_WITH_IPV6
-  uip_ext_len = 0;
+  return uip_remove_ext_hdr();
+#else
+  return true;
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 }
 /*---------------------------------------------------------------------------*/
@@ -118,7 +120,7 @@ ext_header_update(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
-ext_header_hbh_update(int uip_ext_opt_offset)
+ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
 {
   return 1;
 }

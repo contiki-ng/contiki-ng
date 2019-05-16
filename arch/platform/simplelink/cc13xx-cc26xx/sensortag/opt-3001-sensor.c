@@ -303,9 +303,13 @@ value(int type)
 
   result_value = SWAP16(result_value);
 
-  uint32_t e = (result_value & 0x0FFF) >> 0;
-  uint32_t m = (result_value & 0xF000) >> 12;
-  uint32_t converted = m * 100 * (1 << e);
+  /* formula for computing lux: lux = 0.01 * 2^e * m
+   * scale up by 100 to avoid floating point, then require
+   * users to scale down by same.
+   */
+  uint32_t m = (result_value & 0x0FFF) >> 0;
+  uint32_t e = (result_value & 0xF000) >> 12;
+  uint32_t converted = m * (1 << e);
 
   PRINTF("OPT: %04X            r=%d (centilux)\n", result_value,
          (int)(converted));

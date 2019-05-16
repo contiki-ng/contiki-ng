@@ -244,10 +244,48 @@ tsch_reset(void)
 /* TSCH keep-alive functions */
 
 /*---------------------------------------------------------------------------*/
+/* Resynchronize to last_eb_nbr.
+ * Return non-zero if this function schedules the next keepalive.
+ * Return zero otherwise.
+ */
+static int
+resynchronize(const linkaddr_t *original_time_source_addr)
+{
+  const struct tsch_neighbor *current_time_source = tsch_queue_get_time_source();
+  if(current_time_source && !linkaddr_cmp(&current_time_source->addr, original_time_source_addr)) {
+    /* Time source has already been changed (e.g. by RPL). Let's see if it works. */
+    LOG_INFO("time source has been changed to ");
+    LOG_INFO_LLADDR(&current_time_source->addr);
+    LOG_INFO_("\n");
+    return 0;
+  }
+  /* Switch time source to the last neighbor we received an EB from */
+  if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
+    LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
+    if(sync_count == 0) {
+      /* We got no synchronization at all in this session, leave the network */
+      tsch_disassociate();
+    }
+    return 0;
+  } else {
+    LOG_WARN("re-synchronizing on ");
+    LOG_WARN_LLADDR(&last_eb_nbr_addr);
+    LOG_WARN_("\n");
+    /* We simply pick the last neighbor we receiver sync information from */
+    tsch_queue_update_time_source(&last_eb_nbr_addr);
+    tsch_join_priority = last_eb_nbr_jp + 1;
+    /* Try to get in sync ASAP */
+    tsch_schedule_keepalive_immediately();
+    return 1;
+  }
+}
+
+/*---------------------------------------------------------------------------*/
 /* Tx callback for keepalive messages */
 static void
 keepalive_packet_sent(void *ptr, int status, int transmissions)
 {
+  int schedule_next_keepalive = 1;
   /* Update neighbor link statistics */
   link_stats_packet_sent(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), status, transmissions);
   /* Call RPL callback if RPL is enabled */
@@ -258,28 +296,14 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
   LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
   LOG_INFO_(", st %d-%d\n", status, transmissions);
 
-  /* We got no ack, try to recover by switching to the last neighbor we received an EB from */
+  /* We got no ack, try to resynchronize */
   if(status == MAC_TX_NOACK) {
-    if(linkaddr_cmp(&last_eb_nbr_addr, &linkaddr_null)) {
-      LOG_WARN("not able to re-synchronize, received no EB from other neighbors\n");
-      if(sync_count == 0) {
-        /* We got no synchronization at all in this session, leave the network */
-        tsch_disassociate();
-      }
-    } else {
-      LOG_WARN("re-synchronizing on ");
-      LOG_WARN_LLADDR(&last_eb_nbr_addr);
-      LOG_WARN_("\n");
-      /* We simply pick the last neighbor we receiver sync information from */
-      tsch_queue_update_time_source(&last_eb_nbr_addr);
-      tsch_join_priority = last_eb_nbr_jp + 1;
-      /* Try to get in sync ASAP */
-      tsch_schedule_keepalive_immediately();
-      return;
-    }
+    schedule_next_keepalive = !resynchronize(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
   }
 
-  tsch_schedule_keepalive();
+  if(schedule_next_keepalive) {
+    tsch_schedule_keepalive();
+  }
 }
 /*---------------------------------------------------------------------------*/
 /* Prepare and send a keepalive message */
@@ -511,7 +535,7 @@ tsch_disassociate(void)
 {
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
-    process_post(&tsch_process, PROCESS_EVENT_POLL, NULL);
+    process_poll(&tsch_process);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -837,7 +861,12 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
   while(1) {
     unsigned long delay;
 
-    if(tsch_is_associated && tsch_current_eb_period > 0) {
+    if(tsch_is_associated && tsch_current_eb_period > 0
+#ifdef TSCH_RPL_CHECK_DODAG_JOINED
+      /* Implementation section 6.3 of RFC 8180 */
+      && TSCH_RPL_CHECK_DODAG_JOINED()
+#endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+        ) {
       /* Enqueue EB only if there isn't already one in queue */
       if(tsch_queue_packet_count(&tsch_eb_address) == 0) {
         uint8_t hdr_len = 0;
@@ -948,8 +977,7 @@ tsch_init(void)
     return;
   }
 
-  /* Init the queuebuf and TSCH sub-modules */
-  queuebuf_init();
+  /* Init TSCH sub-modules */
   tsch_reset();
   tsch_queue_init();
   tsch_schedule_init();
@@ -1128,13 +1156,21 @@ turn_off(void)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+static int
+max_payload(void)
+{
+  /* Setup security... before. */
+  return TSCH_PACKET_MAX_LEN -  NETSTACK_FRAMER.length();
+}
+/*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {
   "TSCH",
   tsch_init,
   send_packet,
   packet_input,
   turn_on,
-  turn_off
+  turn_off,
+  max_payload,
 };
 /*---------------------------------------------------------------------------*/
 /** @} */

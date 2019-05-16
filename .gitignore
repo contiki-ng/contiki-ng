@@ -36,7 +36,7 @@ COOJA.testlog
 *.simplelink
 *.sky
 *.firmware
-*.srf06-cc26xx
+*.cc26x0-cc13x0
 *.zoul
 
 # do not ignore platform makefiles
@@ -47,7 +47,7 @@ COOJA.testlog
 !Makefile.nrf52dk
 !Makefile.openmote-cc2538
 !Makefile.sky
-!Makefile.srf06-cc26xx
+!Makefile.cc26x0-cc13x0
 !Makefile.zoul
 
 # other nRF52 build artifacts

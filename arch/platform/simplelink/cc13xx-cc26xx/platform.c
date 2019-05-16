@@ -48,6 +48,7 @@
 #include "dev/gpio-hal.h"
 #include "dev/serial-line.h"
 #include "dev/leds.h"
+#include "dev/watchdog.h"
 #include "net/mac/framer/frame802154.h"
 #include "lib/random.h"
 #include "lib/sensors.h"
@@ -71,6 +72,7 @@
 #include <ti/drivers/UART.h>
 /*---------------------------------------------------------------------------*/
 #include "board-peripherals.h"
+#include "clock-arch.h"
 #include "uart0-arch.h"
 #include "trng-arch.h"
 /*---------------------------------------------------------------------------*/
@@ -250,9 +252,9 @@ platform_init_stage_three(void)
   LOG_INFO("RF: Channel %d", chan);
 
   if(NETSTACK_RADIO.get_value(RADIO_PARAM_PAN_ID, &pan) == RADIO_RESULT_OK) {
-    LOG_INFO(", PANID 0x%04X", pan);
+    LOG_INFO_(", PANID 0x%04X", pan);
   }
-  LOG_INFO("\n");
+  LOG_INFO_("\n");
 
   LOG_INFO("Node ID: %d\n", node_id);
 
@@ -266,8 +268,23 @@ platform_init_stage_three(void)
 void
 platform_idle(void)
 {
-  /* Drop to some low power mode */
-  Power_idleFunc();
+  /* Clear the Watchdog before we potentially go to some low power mode */
+  watchdog_periodic();
+  /*
+   * Arm the wakeup clock. If it returns false, some timers already expired
+   * and we shouldn't go to low-power yet.
+   */
+  if(clock_arch_enter_idle()) {
+    /* Drop to some low power mode */
+    Power_idleFunc();
+    /*
+     * Clear the Watchdog immediately after wakeup, as the wakeup reason could
+     * be to clear the watchdog. See the implementation of
+     * clock_arch_set_wakeup() for why this might be the case.
+     */
+    watchdog_periodic();
+    clock_arch_exit_idle();
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**

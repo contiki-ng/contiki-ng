@@ -122,26 +122,6 @@
  */
 
 /**
- * The link level header length.
- *
- * This is the offset into the uip_buf where the IP header can be
- * found. For Ethernet, this should be set to 14. For SLIP, this
- * should be set to 0.
- *
- * \note we probably won't use this constant for other link layers than
- * ethernet as they have variable header length (this is due to variable
- * number and type of address fields and to optional security features)
- * E.g.: 802.15.4 -> 2 + (1/2*4/8) + 0/5/6/10/14
- *       802.11 -> 4 + (6*3/4) + 2
- * \hideinitializer
- */
-#ifdef UIP_CONF_LLH_LEN
-#define UIP_LLH_LEN (UIP_CONF_LLH_LEN)
-#else /* UIP_LLH_LEN */
-#define UIP_LLH_LEN     0
-#endif /* UIP_CONF_LLH_LEN */
-
-/**
  * The size of the uIP packet buffer.
  *
  * The uIP packet buffer should not be smaller than 60 bytes, and does
@@ -151,11 +131,10 @@
  * \hideinitializer
  */
 #ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_BUFSIZE (UIP_LINK_MTU + UIP_LLH_LEN)
+#define UIP_BUFSIZE (UIP_LINK_MTU)
 #else /* UIP_CONF_BUFFER_SIZE */
 #define UIP_BUFSIZE (UIP_CONF_BUFFER_SIZE)
 #endif /* UIP_CONF_BUFFER_SIZE */
-
 
 /**
  * Determines if statistics support should be compiled in.
@@ -247,11 +226,6 @@ void uip_log(char *msg);
 
 /** The maximum transmission unit at the IP Layer*/
 #define UIP_LINK_MTU 1280
-
-#ifndef NETSTACK_CONF_WITH_IPV6
-/** Do we use IPv6 or not (default: no) */
-#define NETSTACK_CONF_WITH_IPV6                 0
-#endif
 
 #ifndef UIP_CONF_IPV6_QUEUE_PKT
 /** Do we do per %neighbor queuing during address resolution (default: no) */
@@ -440,15 +414,15 @@ void uip_log(char *msg);
  * The TCP maximum segment size.
  *
  * This is should not be to set to more than
- * UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN.
+ * UIP_BUFSIZE - UIP_IPTCPH_LEN.
  */
 #ifdef UIP_CONF_TCP_MSS
-#if UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN)
+#if UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_IPTCPH_LEN)
 #error UIP_CONF_TCP_MSS is too large for the current UIP_BUFSIZE
-#endif /* UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN) */
+#endif /* UIP_CONF_TCP_MSS > (UIP_BUFSIZE - UIP_IPTCPH_LEN) */
 #define UIP_TCP_MSS     (UIP_CONF_TCP_MSS)
 #else /* UIP_CONF_TCP_MSS */
-#define UIP_TCP_MSS     (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN)
+#define UIP_TCP_MSS     (UIP_BUFSIZE - UIP_IPTCPH_LEN)
 #endif /* UIP_CONF_TCP_MSS */
 
 /**

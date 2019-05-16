@@ -45,6 +45,7 @@
 #include "contiki-net.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 #include "net/routing/routing.h"
 #include "dev/leds.h"
 #include "ip64/ip64.h"
@@ -142,9 +143,9 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 #endif
   ADD("Neighbors<pre>");
 
-  for(nbr = nbr_table_head(ds6_neighbors);
+  for(nbr = uip_ds6_nbr_head();
       nbr != NULL;
-      nbr = nbr_table_next(ds6_neighbors, nbr)) {
+      nbr = uip_ds6_nbr_next(nbr)) {
 
 #if WEBSERVER_CONF_NEIGHBOR_STATUS
 #if BUF_USES_STACK

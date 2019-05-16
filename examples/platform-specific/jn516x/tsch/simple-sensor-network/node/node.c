@@ -50,8 +50,6 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
 
-#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 #define INTERVAL    (10)
 #define BLINK_TIME  (CLOCK_SECOND/4)
 

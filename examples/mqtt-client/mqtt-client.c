@@ -572,7 +572,7 @@ connect_to_broker(void)
 {
   /* Connect to MQTT server */
   mqtt_connect(&conn, conf.broker_ip, conf.broker_port,
-               conf.pub_interval * 3);
+               (conf.pub_interval * 3) / CLOCK_SECOND);
 
   state = STATE_CONNECTING;
 }

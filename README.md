@@ -1,3 +1,5 @@
+<img src="https://github.com/contiki-ng/contiki-ng.github.io/blob/master/images/logo/Contiki_logo_2RGB.png" alt="Logo" width="256">
+
 # Contiki-NG: The OS for Next Generation IoT Devices
 
 [![Build Status](https://travis-ci.org/contiki-ng/contiki-ng.svg?branch=master)](https://travis-ci.org/contiki-ng/contiki-ng/branches)
@@ -8,7 +10,7 @@
 
 Contiki-NG is an open-source, cross-platform operating system for Next-Generation IoT devices. It focuses on dependable (secure and reliable) low-power communication and standard protocols, such as IPv6/6LoWPAN, 6TiSCH, RPL, and CoAP. Contiki-NG comes with extensive documentation, tutorials, a roadmap, release cycle, and well-defined development flow for smooth integration of community contributions.
 
-Unless excplicitly stated otherwise, Contiki-NG sources are distributed under
+Unless explicitly stated otherwise, Contiki-NG sources are distributed under
 the terms of the [3-clause BSD license](LICENSE.md). This license gives
 everyone the right to use and distribute the code, either in binary or
 source code format, as long as the copyright license is retained in

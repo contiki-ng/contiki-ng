@@ -217,6 +217,9 @@ rat_overflow_cb(void *arg)
 static void
 init_rf_params(void)
 {
+  cmd_radio_setup.config.frontEndMode = RF_2_4_GHZ_FRONT_END_MODE;
+  cmd_radio_setup.config.biasMode = RF_2_4_GHZ_BIAS_MODE;
+
   data_queue_t *rx_q = data_queue_init(sizeof(lensz_t));
 
   cmd_rx.pRxQ = rx_q;
@@ -399,10 +402,10 @@ init(void)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  const size_t len = MIN((size_t)payload_len,
-                         (size_t)TX_BUF_SIZE);
-
-  memcpy(ieee_radio.tx_buf, payload, len);
+  if(payload_len > TX_BUF_SIZE || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
+  memcpy(ieee_radio.tx_buf, payload, payload_len);
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -410,6 +413,11 @@ static int
 transmit(unsigned short transmit_len)
 {
   rf_result_t res;
+
+  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    LOG_ERR("Too long\n");
+    return RADIO_TX_ERR;
+  }
 
   if(ieee_radio.send_on_cca && channel_clear() != 1) {
     LOG_WARN("Channel is not clear for transmission\n");
@@ -550,32 +558,42 @@ read(void *buf, unsigned short buf_len)
 static rf_result_t
 cca_request(cmd_cca_req_t *cmd_cca_req)
 {
+  RF_Stat stat = RF_StatRadioInactiveError;
   rf_result_t res;
+  bool stop_rx = false;
 
-  const bool rx_is_idle = !rx_is_active();
+  /* RX is required to be running in order to do a CCA request */
+  if(!rx_is_active()) {
+    /* If RX is not pending, i.e. soon to be running, schedule the RX command */
+    if(cmd_rx.status != PENDING) {
+      res = netstack_sched_rx(false);
+      if(res != RF_RESULT_OK) {
+        LOG_ERR("CCA request failed to schedule RX\n");
+        return res;
+      }
 
-  if(rx_is_idle) {
-    res = netstack_sched_rx(false);
-    if(res != RF_RESULT_OK) {
+      /* We only stop RX if we had to schedule it */
+      stop_rx = true;
+    }
+
+    /* Make sure RX is running before we continue, unless we timeout and fail */
+    RTIMER_BUSYWAIT_UNTIL(!rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
+
+    if(!rx_is_active()) {
+      LOG_ERR("CCA request failed to turn on RX, RX status=0x%04X\n", cmd_rx.status);
       return RF_RESULT_ERROR;
     }
   }
 
-  const rtimer_clock_t t0 = RTIMER_NOW();
-  while((cmd_rx.status != ACTIVE) &&
-        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_ENTER_RX_WAIT)) ;
+  /* Perform the CCA request */
+  stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)cmd_cca_req);
 
-  RF_Stat stat = RF_StatRadioInactiveError;
-  if(rx_is_active()) {
-    stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)&cmd_cca_req);
-  }
-
-  if(rx_is_idle) {
+  if(stop_rx) {
     netstack_stop_rx();
   }
 
   if(stat != RF_StatCmdDoneSuccess) {
-    LOG_ERR("CCA request failed, stat=0x%02X\n", stat);
+    LOG_ERR("CCA request command failed, stat=0x%02X\n", stat);
     return RF_RESULT_ERROR;
   }
 

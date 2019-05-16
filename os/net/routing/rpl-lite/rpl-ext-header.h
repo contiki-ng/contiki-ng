@@ -63,12 +63,13 @@ int rpl_ext_header_srh_update(void);
 * Process and update the RPL hop-by-hop extension headers of
 * the current uIP packet.
 *
-* \param uip_ext_opt_offset The offset within the uIP packet where
-* extension headers start
+* \param ext_buf A pointer to the ext header buffer
+* \param opt_offset The offset within the extension header where
+* the option starts
 * \return 1 in case the packet is valid and to be processed further,
 * 0 in case the packet must be dropped.
 */
-int rpl_ext_header_hbh_update(int uip_ext_opt_offset);
+int rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset);
 
 /**
  * Adds/updates all RPL extension headers to current uIP packet.
@@ -79,8 +80,10 @@ int rpl_ext_header_update(void);
 
 /**
  * Removes all RPL extension headers.
+ *
+ * \return true in case of success, false otherwise
 */
-void rpl_ext_header_remove(void);
+bool rpl_ext_header_remove(void);
 
  /** @} */
 

@@ -350,6 +350,10 @@ transmit(unsigned short payload_len)
   if(tx_in_progress) {
     return RADIO_TX_COLLISION;
   }
+  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
+
   tx_in_progress = 1;
 
   /* Energest */
@@ -416,7 +420,7 @@ prepare(const void *payload, unsigned short payload_len)
   if(tx_in_progress) {
     return 1;
   }
-  if(payload_len > 127 || payload == NULL) {
+  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN || payload == NULL) {
     return 1;
   }
 #if MICROMAC_RADIO_MAC

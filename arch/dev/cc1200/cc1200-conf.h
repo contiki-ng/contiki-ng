@@ -70,8 +70,10 @@
 #ifdef CC1200_CONF_MAX_PAYLOAD_LEN
 #define CC1200_MAX_PAYLOAD_LEN           CC1200_CONF_MAX_PAYLOAD_LEN
 #else
-#define CC1200_MAX_PAYLOAD_LEN           127
+#define CC1200_MAX_PAYLOAD_LEN           125
 #endif
+
+#define cc1200_driver_max_payload_len    CC1200_MAX_PAYLOAD_LEN
 /*---------------------------------------------------------------------------*/
 /*
  * The RX watchdog is used to check whether the radio is in RX mode at regular

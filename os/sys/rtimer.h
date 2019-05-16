@@ -189,14 +189,14 @@ void rtimer_arch_schedule(rtimer_clock_t t);
 #endif /* RTIMER_CONF_GUARD_TIME */
 
 /** \brief Busy-wait until a condition. Start time is t0, max wait time is max_time */
+#ifndef RTIMER_BUSYWAIT_UNTIL_ABS
 #define RTIMER_BUSYWAIT_UNTIL_ABS(cond, t0, max_time) \
   ({                                                                \
     bool c;                                                         \
-    while(!(c = cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (max_time))) { \
-      watchdog_periodic();                                          \
-    }                                                               \
+    while(!(c = cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), (t0) + (max_time))); \
     c;                                                              \
   })
+#endif /* RTIMER_BUSYWAIT_UNTIL_ABS */
 
 /** \brief Busy-wait until a condition for at most max_time */
 #define RTIMER_BUSYWAIT_UNTIL(cond, max_time)       \

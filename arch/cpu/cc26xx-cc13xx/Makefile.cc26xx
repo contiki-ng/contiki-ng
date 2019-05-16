@@ -1,5 +1,0 @@
-TI_XXWARE_PATH = lib/cc26xxware
-
-CFLAGS += -DCPU_FAMILY_CC26X0=1 -DCPU_FAMILY_CC26XX=1
-
-include $(CONTIKI_CPU)/Makefile.cc26xx-cc13xx

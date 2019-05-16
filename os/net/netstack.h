@@ -44,7 +44,7 @@
 #include "contiki.h"
 
 /* Routing protocol configuration. The Routing protocol is configured through the Makefile,
-   via the flag MAC_ROUTING */
+   via the flag MAKE_ROUTING */
 #ifdef NETSTACK_CONF_ROUTING
 #define NETSTACK_ROUTING NETSTACK_CONF_ROUTING
 #else /* NETSTACK_CONF_ROUTING */
@@ -60,7 +60,7 @@
 #endif /* NETSTACK_CONF_ROUTING */
 
 /* Network layer configuration. The NET layer is configured through the Makefile,
-   via the flag MAC_NET */
+   via the flag MAKE_NET */
 #ifdef NETSTACK_CONF_NETWORK
 #define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
 #else /* NETSTACK_CONF_NETWORK */
@@ -96,6 +96,8 @@
 #define NETSTACK_RADIO NETSTACK_CONF_RADIO
 #else /* NETSTACK_CONF_RADIO */
 #define NETSTACK_RADIO   nullradio_driver
+/* for nullradio, allow unlimited packet size */
+#define nullradio_driver_max_payload_len ((unsigned short)-1)
 #endif /* NETSTACK_CONF_RADIO */
 
 /* Framer selection. The framer is used by the MAC implementation
@@ -105,6 +107,12 @@
 #else /* NETSTACK_CONF_FRAMER */
 #define NETSTACK_FRAMER   framer_802154
 #endif /* NETSTACK_CONF_FRAMER */
+
+/* Maximal packet length. Each radio driver should define this.
+   When Contiki-NG is compiled for a specific platform (radio), that value is used. */
+#define NETSTACK_RADIO_MAX_PAYLOAD_LEN_XX(radio) radio##_max_payload_len
+#define NETSTACK_RADIO_MAX_PAYLOAD_LEN_X(radio) NETSTACK_RADIO_MAX_PAYLOAD_LEN_XX(radio)
+#define NETSTACK_RADIO_MAX_PAYLOAD_LEN NETSTACK_RADIO_MAX_PAYLOAD_LEN_X(NETSTACK_RADIO)
 
 #include "net/mac/mac.h"
 #include "net/mac/framer/framer.h"

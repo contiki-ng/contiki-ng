@@ -125,9 +125,15 @@
 #define CMSIS_CONF_HEADER_PATH              "cc13x2-cc26x2-cm4.h"
 #endif
 /*---------------------------------------------------------------------------*/
-/* Path to headers with implementation of mutexes and memory barriers */
+/* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
+#define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
+/*---------------------------------------------------------------------------*/
+/* GPIO HAL configuration */
+#define GPIO_HAL_CONF_ARCH_HDR_PATH         "dev/gpio-hal-arch.h"
+#define GPIO_HAL_CONF_ARCH_SW_TOGGLE        0
+#define GPIO_HAL_CONF_PORT_PIN_NUMBERING    0
 /*---------------------------------------------------------------------------*/
 #endif /* CC13XX_CC26XX_DEF_H_ */
 /*---------------------------------------------------------------------------*/

@@ -29,14 +29,16 @@
  */
 
 /**
-* \addtogroup deployment
-* @{
-*
-* \file
-     Per-deployment MAC <-> nodeid mapping
-* \author Simon Duquennoy <simon.duquennoy@ri.se>
-*
-*/
+ * \addtogroup lib
+ * @{
+ *
+ * \defgroup deployment A module to handle Node IDs and MAC addresses in deployments
+ * @{
+ *
+ * \file
+ *   Per-deployment MAC <-> nodeid mapping
+ * \author Simon Duquennoy <simon.duquennoy@ri.se>
+ */
 
 #ifndef DEPLOYMENT_H_
 #define DEPLOYMENT_H_
@@ -123,4 +125,7 @@ void deployment_iid_from_id(uip_ipaddr_t *ipaddr, uint16_t id);
 uint16_t deployment_id_from_index(uint16_t index);
 
 #endif /* DEPLOYMENT_H_ */
-/** @} */
+/**
+ * @}
+ * @}
+ */

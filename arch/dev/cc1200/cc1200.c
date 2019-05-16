@@ -1449,6 +1449,7 @@ get_object(radio_param_t param, void *dest, size_t size)
     if(size != sizeof(uint16_t *) || !dest) {
       return RADIO_RESULT_INVALID_VALUE;
     }
+    /* Assigned value: a pointer to the TSCH timing in usec */
     *(const uint16_t **)dest = CC1200_RF_CFG.tsch_timing;
     return RADIO_RESULT_OK;
   }

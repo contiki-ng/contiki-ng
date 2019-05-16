@@ -23,7 +23,7 @@ Supported Hardware (tested or known to work)
 * cc2538dk
 * openmote-cc2538
 * zoul
-* TI srf06-cc26xx
+* TI cc26x0-cc13x0
     - sensortag
     - launchpad
 
