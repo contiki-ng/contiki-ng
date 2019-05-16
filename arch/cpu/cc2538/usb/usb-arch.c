@@ -1114,13 +1114,8 @@ ep_tx(uint8_t ep_hw)
     len -= copy;
     ep->buffer->left -= copy;
 
-    /*
-     * Delay somewhat if the previous packet has not yet left the IN FIFO,
-     * making sure the dog doesn't bark while we're waiting
-     */
-    while(REG(USB_CSIL) & USB_CSIL_INPKT_RDY) {
-      watchdog_periodic();
-    }
+    /* Delay somewhat if the previous packet has not yet left the IN FIFO */
+    while(REG(USB_CSIL) & USB_CSIL_INPKT_RDY);
 
     write_hw_buffer(EP_INDEX(ep_hw), ep->buffer->data, copy);
     ep->buffer->data += copy;
