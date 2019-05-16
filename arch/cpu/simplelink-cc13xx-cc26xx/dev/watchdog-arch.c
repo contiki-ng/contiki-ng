@@ -28,19 +28,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
  /**
- * \addtogroup cc13xx-cc26xx-cpu
- * @{
- *
- * \defgroup cc13xx-cc26xx-watchdog CC13xx/CC26xx watchdog timer driver
- *
- * Driver for the CC13xx/CC26xx Watchdog Timer
- *
- * This file is not called watchdog.c because the filename is in use by
- * TI CC26xxware/CC13xxware
+ * \addtogroup cc13xx-cc26xx-watchdog
  * @{
  *
  * \file
- * Implementation of the CC13xx/CC26xx watchdog driver.
+ *        Implementation of the CC13xx/CC26xx watchdog driver.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -49,14 +41,22 @@
 #include <Board.h>
 
 #include <ti/drivers/Watchdog.h>
+#include <ti/drivers/dpl/ClockP.h>
+
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/watchdog.h)
+/*---------------------------------------------------------------------------*/
+#include "watchdog-arch.h"
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-#define WATCHDOG_DISABLE    WATCHDOG_CONF_DISABLE
-#define WATCHDOG_TIMER_TOP  WATCHDOG_CONF_TIMER_TOP
+#define WATCHDOG_DIV_RATIO       32    /* Watchdog division ratio */
+#define WATCHDOG_TIMEOUT_MARGIN  1500  /* 1ms margin in Watchdog ticks */
 /*---------------------------------------------------------------------------*/
+#if (WATCHDOG_DISABLE == 0)
 static Watchdog_Handle wdt_handle;
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief  Initialises the Watchdog module.
@@ -67,10 +67,7 @@ static Watchdog_Handle wdt_handle;
 void
 watchdog_init(void)
 {
-  if(WATCHDOG_DISABLE) {
-    return;
-  }
-
+#if (WATCHDOG_DISABLE == 0)
   Watchdog_init();
 
   Watchdog_Params wdt_params;
@@ -80,6 +77,32 @@ watchdog_init(void)
   wdt_params.debugStallMode = Watchdog_DEBUG_STALL_ON;
 
   wdt_handle = Watchdog_open(Board_WATCHDOG0, &wdt_params);
+#endif
+}
+/*---------------------------------------------------------------------------*/
+uint32_t
+watchdog_arch_next_timeout(void)
+{
+  if(!WatchdogRunning()) {
+    return 0;
+  }
+
+  ClockP_FreqHz freq;
+  ClockP_getCpuFreq(&freq);
+  uint64_t value = (uint64_t)WatchdogValueGet();
+  uint32_t timeout = (uint32_t)((value * 1000 * 1000 * WATCHDOG_DIV_RATIO) / freq.lo);
+
+  /*
+   * A margin should be applied to the timeout to ensure there is enough time
+   * to enter low-power mode, wakeup, and clear the Watchdog timer before it
+   * times out. If the timeout is equals to or less than the margin, simply
+   * return the lowest possible timeout.
+   */
+  if(timeout <= WATCHDOG_TIMEOUT_MARGIN) {
+    return 1;
+  } else {
+    return timeout - WATCHDOG_TIMEOUT_MARGIN;
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -88,11 +111,9 @@ watchdog_init(void)
 void
 watchdog_start(void)
 {
-  if(WATCHDOG_DISABLE) {
-    return;
-  }
-
+#if (WATCHDOG_DISABLE == 0)
   watchdog_periodic();
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -101,11 +122,10 @@ watchdog_start(void)
 void
 watchdog_periodic(void)
 {
-  if(WATCHDOG_DISABLE) {
-    return;
-  }
-
-  Watchdog_setReload(wdt_handle, WATCHDOG_TIMER_TOP);
+#if (WATCHDOG_DISABLE == 0)
+  uint32_t timeout_ticks = Watchdog_convertMsToTicks(wdt_handle, WATCHDOG_TIMEOUT_MS);
+  Watchdog_setReload(wdt_handle, timeout_ticks);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -115,11 +135,9 @@ watchdog_periodic(void)
 void
 watchdog_stop(void)
 {
-  if(WATCHDOG_DISABLE) {
-    return;
-  }
-
+#if (WATCHDOG_DISABLE == 0)
   Watchdog_clear(wdt_handle);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -128,17 +146,14 @@ watchdog_stop(void)
 void
 watchdog_reboot(void)
 {
-  if(WATCHDOG_DISABLE) {
-    return;
-  }
-
+#if (WATCHDOG_DISABLE == 0)
   watchdog_start();
 
   /* Busy loop until watchdog times out */
   for (;;) { /* hang */ }
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  */

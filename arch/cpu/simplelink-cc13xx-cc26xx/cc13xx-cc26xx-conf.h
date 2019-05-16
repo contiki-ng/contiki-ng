@@ -70,8 +70,8 @@
 #define WATCHDOG_CONF_DISABLE               0
 #endif
 
-#ifndef WATCHDOG_CONF_TIMER_TOP
-#define WATCHDOG_CONF_TIMER_TOP             0xFFFFF
+#ifndef WATCHDOG_CONF_TIMEOUT_MS
+#define WATCHDOG_CONF_TIMEOUT_MS            1000
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/

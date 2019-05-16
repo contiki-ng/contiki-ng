@@ -728,8 +728,6 @@ transmit(unsigned short transmit_len)
     /* If we enter here, TX actually started */
     ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
 
-    watchdog_periodic();
-
     /* Idle away while the command is running */
     while((cmd_tx_adv->status & RF_CORE_RADIO_OP_MASKED_STATUS)
           == RF_CORE_RADIO_OP_MASKED_STATUS_RUNNING) {
