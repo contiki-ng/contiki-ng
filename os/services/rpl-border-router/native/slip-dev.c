@@ -330,14 +330,21 @@ write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
 {
   int n=0;
   int i;
+  int write_status;
 
   if(inter_octet_delay == 0) {
     return write(fd, buf, count);
-  }
-  else{
+  } else{
     for(i=0; i<count; i++){
-      n+= write(fd, buf + i, 1);
-      usleep(inter_octet_delay);
+      write_status = write(fd, buf + i, 1);
+      if(write_status == -1 && errno != EAGAIN) {
+        err(1, "slip_flushbuf write failed");
+      } else if ((write_status == -1 && errno==EAGAIN)||write_status==0){
+        return 0;
+      } else {
+        n+= write_status;
+        usleep(inter_octet_delay);
+      } 
     }
     return n;
   }
