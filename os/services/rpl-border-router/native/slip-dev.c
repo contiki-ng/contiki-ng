@@ -70,6 +70,12 @@ extern speed_t slip_config_b_rate;
 #define SEND_DELAY 0
 #endif
 
+#ifdef SLIP_DEV_CONF_OCTET_DELAY
+#define OCTET_DELAY SLIP_DEV_CONF_OCTET_DELAY
+#else
+#define OCTET_DELAY 0
+#endif
+
 int devopen(const char *dev, int flags);
 
 static FILE *inslip;
@@ -316,7 +322,29 @@ slip_empty()
   return slip_packet_end == 0;
 }
 /*---------------------------------------------------------------------------*/
+<<<<<<< HEAD
 void
+=======
+static ssize_t
+write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
+{
+  int n=0;
+  int i;
+
+  if(inter_octet_delay == 0) {
+    return write(fd, buf, count);
+  }
+  else{
+    for(i=0; i<count; i++){
+      n+= write(fd, buf + i, 1);
+      usleep(inter_octet_delay);
+    }
+    return n;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+>>>>>>> f99626ba0... test-slip: write slowly function added
 slip_flushbuf(int fd)
 {
   int n;
@@ -325,7 +353,7 @@ slip_flushbuf(int fd)
     return;
   }
 
-  n = write(fd, slip_buf + slip_begin, slip_packet_end - slip_begin);
+  n = write_slowly(fd, slip_buf + slip_begin, slip_packet_end - slip_begin, OCTET_DELAY);
 
   if(n == -1 && errno != EAGAIN) {
     err(1, "slip_flushbuf write failed");
