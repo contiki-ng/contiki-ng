@@ -357,7 +357,7 @@ slip_flushbuf(int fd)
 
   if(n == -1 && errno != EAGAIN) {
     err(1, "slip_flushbuf write failed");
-  } else if(n == -1) {
+  } else if((n == -1 && errno==EAGAIN)||n==0) {
     PROGRESS("Q");		/* Outqueue is full! */
   } else {
     slip_begin += n;
