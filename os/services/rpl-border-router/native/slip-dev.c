@@ -338,7 +338,7 @@ write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
     for(i=0; i<count; i++){
       write_status = write(fd, buf + i, 1);
       if(write_status == -1 && errno != EAGAIN) {
-        err(1, "slip_flushbuf write failed");
+        return write_status;
       } else if ((write_status == -1 && errno==EAGAIN)||write_status==0){
         PROGRESS("Q");		/* Outqueue is full! */
         return n;
