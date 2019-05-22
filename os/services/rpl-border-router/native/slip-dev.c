@@ -328,20 +328,18 @@ void
 static ssize_t
 write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
 {
-  int n = 0;
-  int i;
-  int write_status;
-
   if(inter_octet_delay == 0) {
     return write(fd, buf, count);
   } else {
-    for(i = 0; i < count; i++) {
-      write_status = write(fd, buf + i, 1);
+    int n = 0;
+    int write_status;
+    while(n < count) {
+      write_status = write(fd, buf + n, 1);
       if(write_status == -1 && errno != EAGAIN) {
         return write_status;
       } else if((write_status == -1 && errno == EAGAIN) || write_status == 0) {
-        PROGRESS("Q");		/* Outqueue is full! */
-        return n;
+        usleep(10000);
+        continue;
       } else {
         n += write_status;
         usleep(inter_octet_delay);
