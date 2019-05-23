@@ -314,7 +314,6 @@ send_packet(mac_callback_t sent, void *ptr)
     for(i = 0; i < BLE_MAC_MAX_INTERFACE_NUM; i++) {
       if(interfaces[i].handle.cid != 0 && interfaces[i].handle.conn_handle != 0) {
         ret = send_to_peer(&interfaces[i].handle);
-        watchdog_periodic();
       }
     }
   } else if((handle = find_handle(dest)) != NULL) {
@@ -326,7 +325,6 @@ send_packet(mac_callback_t sent, void *ptr)
   if(ret) {
     busy_tx = 1;
     while(busy_tx) {
-      watchdog_periodic();
       sd_app_evt_wait();
     }
     mac_call_sent_callback(sent, ptr, MAC_TX_OK, 1);
