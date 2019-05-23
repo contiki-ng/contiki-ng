@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Scanimetrics - http://www.scanimetrics.com
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,19 +27,38 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-clock CC13xx/CC26xx clock implementation
+ *
+ * @{
+ *
+ * \file
+ *        Header file for the  CC13xx/CC26xx clock implementation.
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef _CC_GCC_H_
-#define _CC_GCC_H_
-#ifdef __GNUC__
-
-#ifndef CC_CONF_INLINE
-/* use __inline__ in case "inline" is not available for any reason */
-#define CC_CONF_INLINE __inline__
-#endif
-
-#define CC_CONF_ALIGN(n) __attribute__((__aligned__(n)))
-
-#define CC_CONF_NORETURN __attribute__((__noreturn__))
-
-#endif /* __GNUC__ */
-#endif /* _CC_GCC_H_ */
+#ifndef CLOCK_ARCH_H_
+#define CLOCK_ARCH_H_
+/*---------------------------------------------------------------------------*/
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief   Prepare to enter some low-power mode. Return value indicates if we
+ *          are ready or not to enter some low-power mode.
+ * \return  true if ready; else false.
+ */
+bool clock_arch_enter_idle(void);
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief   Cleanup after returning from low-power mode.
+ */
+void clock_arch_exit_idle(void);
+/*---------------------------------------------------------------------------*/
+#endif /* CLOCK_ARCH_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

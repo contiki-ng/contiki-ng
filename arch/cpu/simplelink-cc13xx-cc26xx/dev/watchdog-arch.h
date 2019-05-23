@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Scanimetrics - http://www.scanimetrics.com
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,19 +27,36 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ /**
+ * \addtogroup cc13xx-cc26xx-cpu
+ * @{
+ *
+ * \defgroup cc13xx-cc26xx-watchdog CC13xx/CC26xx watchdog timer driver.
+ *
+ * @{
+ *
+ * \file
+ *        Header file of the CC13xx/CC26xx watchdog driver.
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef _CC_GCC_H_
-#define _CC_GCC_H_
-#ifdef __GNUC__
-
-#ifndef CC_CONF_INLINE
-/* use __inline__ in case "inline" is not available for any reason */
-#define CC_CONF_INLINE __inline__
-#endif
-
-#define CC_CONF_ALIGN(n) __attribute__((__aligned__(n)))
-
-#define CC_CONF_NORETURN __attribute__((__noreturn__))
-
-#endif /* __GNUC__ */
-#endif /* _CC_GCC_H_ */
+#ifndef WATCHDOG_ARCH_H_
+#define WATCHDOG_ARCH_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+/*---------------------------------------------------------------------------*/
+#define WATCHDOG_DISABLE     WATCHDOG_CONF_DISABLE
+#define WATCHDOG_TIMEOUT_MS  WATCHDOG_CONF_TIMEOUT_MS
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief   Return the next expiration time for the Watchdog.
+ * \return  Non-zero value of the next expiration time in Watchdog ticks. If
+ *          the Watchdog is not running, this returns 0.
+ */
+uint32_t watchdog_arch_next_timeout(void);
+/*---------------------------------------------------------------------------*/
+#endif /* WATCHDOG_ARCH_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

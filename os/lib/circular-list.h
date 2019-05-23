@@ -48,6 +48,8 @@
  * update the list's head and item order. If you call one of these functions
  * as part of a list traversal, it is advised to stop / restart traversing
  * after the respective function returns.
+ *
+ * This library is not safe to be used within an interrupt context.
  * @{
  */
 /*---------------------------------------------------------------------------*/
