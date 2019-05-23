@@ -338,8 +338,7 @@ write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
       if(write_status == -1 && errno != EAGAIN) {
         return write_status;
       } else if((write_status == -1 && errno == EAGAIN) || write_status == 0) {
-        usleep(10000);
-        continue;
+        return n;
       } else {
         n += write_status;
         usleep(inter_octet_delay);
