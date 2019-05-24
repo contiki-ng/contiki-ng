@@ -586,7 +586,7 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
   }
 
   /* Perform the CCA request */
-  stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)&cmd_cca_req);
+  stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)cmd_cca_req);
 
   if(stop_rx) {
     netstack_stop_rx();

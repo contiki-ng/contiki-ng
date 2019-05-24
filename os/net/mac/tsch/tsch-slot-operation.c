@@ -1083,7 +1083,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
 
         /* A burst link was scheduled. Replay the current link at the
         next time offset */
-        if(burst_link_scheduled) {
+        if(burst_link_scheduled && current_link != NULL) {
           timeslot_diff = 1;
           backup_link = NULL;
           /* Keep track of the number of repetitions */
