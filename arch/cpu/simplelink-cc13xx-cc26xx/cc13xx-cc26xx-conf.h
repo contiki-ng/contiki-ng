@@ -91,15 +91,19 @@
 #endif
 
 /*
- * Configure TX power to either default PA or High PA, defaults to
- * default PA.
+ * Configure the TX power for the netstack, specified in dBm. Defaults to
+ * +5 dBm.
  */
-#ifndef RF_CONF_TXPOWER_HIGH_PA
-#define RF_CONF_TXPOWER_HIGH_PA         0
+#ifndef RF_CONF_TXPOWER_DBM
+#define RF_CONF_TXPOWER_DBM             5
 #endif
 
-#if (RF_CONF_TXPOWER_HIGH_PA) && !(SUPPORTS_HIGH_PA)
-#error "Device does not support High PA"
+/*
+ * Configure the TX power for the BLE beacon, specified in dBm.
+ * Defaults to +5 dBm.
+ */
+#ifndef RF_CONF_BLE_TXPOWER_DBM
+#define RF_CONF_BLE_TXPOWER_DBM         5
 #endif
 
 /*
