@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,8 +82,6 @@ const ADCBufCC26XX_HWAttrs adcBufCC26xxHWAttrs[CC1310_LAUNCHXL_ADCBUFCOUNT] = {
         .intPriority       = ~0,
         .swiPriority       = 0,
         .adcChannelLut     = ADCBufCC26XX_adcChannelLut,
-        .gpTimerUnit       = CC1310_LAUNCHXL_GPTIMER0A,
-        .gptDMAChannelMask = 1 << UDMA_CHAN_TIMER0_A,
     }
 };
 
@@ -248,6 +246,170 @@ const CryptoCC26XX_Config CryptoCC26XX_config[CC1310_LAUNCHXL_CRYPTOCOUNT] = {
 };
 
 /*
+ *  =============================== AESCCM ===============================
+ */
+#include <ti/drivers/AESCCM.h>
+#include <ti/drivers/aesccm/AESCCMCC26XX.h>
+
+AESCCMCC26XX_Object aesccmCC26XXObjects[CC1310_LAUNCHXL_AESCCMCOUNT];
+
+const AESCCMCC26XX_HWAttrs aesccmCC26XXHWAttrs[CC1310_LAUNCHXL_AESCCMCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCCM_Config AESCCM_config[CC1310_LAUNCHXL_AESCCMCOUNT] = {
+    {
+         .object  = &aesccmCC26XXObjects[CC1310_LAUNCHXL_AESCCM0],
+         .hwAttrs = &aesccmCC26XXHWAttrs[CC1310_LAUNCHXL_AESCCM0]
+    },
+};
+
+const uint_least8_t AESCCM_count = CC1310_LAUNCHXL_AESCCMCOUNT;
+
+
+/*
+ *  =============================== AESGCM ===============================
+ */
+#include <ti/drivers/AESGCM.h>
+#include <ti/drivers/aesgcm/AESGCMCC26XX.h>
+
+AESGCMCC26XX_Object aesgcmCC26XXObjects[CC1310_LAUNCHXL_AESGCMCOUNT];
+
+const AESGCMCC26XX_HWAttrs aesgcmCC26XXHWAttrs[CC1310_LAUNCHXL_AESGCMCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESGCM_Config AESGCM_config[CC1310_LAUNCHXL_AESGCMCOUNT] = {
+    {
+         .object  = &aesgcmCC26XXObjects[CC1310_LAUNCHXL_AESGCM0],
+         .hwAttrs = &aesgcmCC26XXHWAttrs[CC1310_LAUNCHXL_AESGCM0]
+    },
+};
+
+const uint_least8_t AESGCM_count = CC1310_LAUNCHXL_AESGCMCOUNT;
+
+/*
+ *  =============================== AESCBC ===============================
+ */
+#include <ti/drivers/AESCBC.h>
+#include <ti/drivers/aescbc/AESCBCCC26XX.h>
+
+AESCBCCC26XX_Object aescbcCC26XXObjects[CC1310_LAUNCHXL_AESCBCCOUNT];
+
+const AESCBCCC26XX_HWAttrs aescbcCC26XXHWAttrs[CC1310_LAUNCHXL_AESCBCCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCBC_Config AESCBC_config[CC1310_LAUNCHXL_AESCBCCOUNT] = {
+    {
+         .object  = &aescbcCC26XXObjects[CC1310_LAUNCHXL_AESCBC0],
+         .hwAttrs = &aescbcCC26XXHWAttrs[CC1310_LAUNCHXL_AESCBC0]
+    },
+};
+
+const uint_least8_t AESCBC_count = CC1310_LAUNCHXL_AESCBCCOUNT;
+
+/*
+ *  =============================== AESCTR ===============================
+ */
+#include <ti/drivers/AESCTR.h>
+#include <ti/drivers/aesctr/AESCTRCC26XX.h>
+
+AESCTRCC26XX_Object aesctrCC26XXObjects[CC1310_LAUNCHXL_AESCTRCOUNT];
+
+const AESCTRCC26XX_HWAttrs aesctrCC26XXHWAttrs[CC1310_LAUNCHXL_AESCTRCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCTR_Config AESCTR_config[CC1310_LAUNCHXL_AESCTRCOUNT] = {
+    {
+         .object  = &aesctrCC26XXObjects[CC1310_LAUNCHXL_AESCTR0],
+         .hwAttrs = &aesctrCC26XXHWAttrs[CC1310_LAUNCHXL_AESCTR0]
+    },
+};
+
+const uint_least8_t AESCTR_count = CC1310_LAUNCHXL_AESCTRCOUNT;
+
+/*
+ *  =============================== AESECB ===============================
+ */
+#include <ti/drivers/AESECB.h>
+#include <ti/drivers/aesecb/AESECBCC26XX.h>
+
+AESECBCC26XX_Object aesecbCC26XXObjects[CC1310_LAUNCHXL_AESECBCOUNT];
+
+const AESECBCC26XX_HWAttrs aesecbCC26XXHWAttrs[CC1310_LAUNCHXL_AESECBCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESECB_Config AESECB_config[CC1310_LAUNCHXL_AESECBCOUNT] = {
+    {
+         .object  = &aesecbCC26XXObjects[CC1310_LAUNCHXL_AESECB0],
+         .hwAttrs = &aesecbCC26XXHWAttrs[CC1310_LAUNCHXL_AESECB0]
+    },
+};
+
+const uint_least8_t AESECB_count = CC1310_LAUNCHXL_AESECBCOUNT;
+
+/*
+ *  =============================== AESCTRDRBG ===============================
+ */
+#include <ti/drivers/AESCTRDRBG.h>
+#include <ti/drivers/aesctrdrbg/AESCTRDRBGXX.h>
+
+AESCTRDRBGXX_Object aesctrdrbgXXObjects[CC1310_LAUNCHXL_AESCTRDRBGCOUNT];
+
+const AESCTRDRBGXX_HWAttrs aesctrdrbgXXHWAttrs[CC1310_LAUNCHXL_AESCTRDRBGCOUNT] = {
+    {
+        .aesctrIndex       = CC1310_LAUNCHXL_AESCTR0,
+    }
+};
+
+const AESCTRDRBG_Config AESCTRDRBG_config[CC1310_LAUNCHXL_AESCTRDRBGCOUNT] = {
+    {
+         .object  = &aesctrdrbgXXObjects[CC1310_LAUNCHXL_AESCTRDRBG0],
+         .hwAttrs = &aesctrdrbgXXHWAttrs[CC1310_LAUNCHXL_AESCTRDRBG0]
+    },
+};
+
+const uint_least8_t AESCTRDRBG_count = CC1310_LAUNCHXL_AESCTRDRBGCOUNT;
+
+/*
+ *  =============================== TRNG ===============================
+ */
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/trng/TRNGCC26XX.h>
+
+TRNGCC26XX_Object trngCC26XXObjects[CC1310_LAUNCHXL_TRNGCOUNT];
+
+const TRNGCC26XX_HWAttrs trngCC26X2HWAttrs[CC1310_LAUNCHXL_TRNGCOUNT] = {
+    {
+        .intPriority       = ~0,
+        .swiPriority       = 0,
+        .samplesPerCycle   = 240000,
+    }
+};
+
+const TRNG_Config TRNG_config[CC1310_LAUNCHXL_TRNGCOUNT] = {
+    {
+         .object  = &trngCC26XXObjects[CC1310_LAUNCHXL_TRNG0],
+         .hwAttrs = &trngCC26X2HWAttrs[CC1310_LAUNCHXL_TRNG0]
+    },
+};
+
+const uint_least8_t TRNG_count = CC1310_LAUNCHXL_TRNGCOUNT;
+
+/*
  *  =============================== GPIO ===============================
  */
 #include <ti/drivers/GPIO.h>
@@ -371,6 +533,34 @@ const uint_least8_t I2C_count = CC1310_LAUNCHXL_I2CCOUNT;
 #endif /* TI_I2C_CONF_ENABLE */
 
 /*
+ *  =============================== I2S ===============================
+*/
+#include <ti/drivers/I2S.h>
+#include <ti/drivers/i2s/I2SCC26XX.h>
+
+I2SCC26XX_Object i2sCC26XXObjects[CC1310_LAUNCHXL_I2SCOUNT];
+
+const I2SCC26XX_HWAttrs i2sCC26XXHWAttrs[CC1310_LAUNCHXL_I2SCOUNT] = {
+    {
+        .pinSD1      =  CC1310_LAUNCHXL_I2S_ADI,
+        .pinSD0      =  CC1310_LAUNCHXL_I2S_ADO,
+        .pinSCK      =  CC1310_LAUNCHXL_I2S_BCLK,
+        .pinMCLK     =  CC1310_LAUNCHXL_I2S_MCLK,
+        .pinWS       =  CC1310_LAUNCHXL_I2S_WCLK,
+        .intPriority = ~0,
+    }
+};
+
+const I2S_Config I2S_config[CC1310_LAUNCHXL_I2SCOUNT] = {
+    {
+        .object      = &i2sCC26XXObjects[CC1310_LAUNCHXL_I2S0],
+        .hwAttrs     = &i2sCC26XXHWAttrs[CC1310_LAUNCHXL_I2S0]
+    },
+};
+
+const uint_least8_t I2S_count = CC1310_LAUNCHXL_I2SCOUNT;
+
+/*
  *  =============================== NVS ===============================
  */
 #include <ti/drivers/NVS.h>
@@ -458,6 +648,7 @@ const NVSSPI25X_HWAttrs nvsSPI25XHWAttrs[1] = {
         .spiIndex = 0,
         .spiBitRate = 4000000,
         .spiCsnGpioIndex = CC1310_LAUNCHXL_GPIO_SPI_FLASH_CS,
+        .statusPollDelayUs = 100,
     },
 };
 
@@ -498,8 +689,8 @@ const PIN_Config BoardGpioInitTable[] = {
     CC1310_LAUNCHXL_PIN_BTN1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,          /* Button is active low       */
     CC1310_LAUNCHXL_PIN_BTN2 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,          /* Button is active low       */
     CC1310_LAUNCHXL_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,  /* External flash chip select */
-    CC1310_LAUNCHXL_UART_RX | PIN_INPUT_EN | PIN_PULLUP,                                                /* UART RX via debugger back channel */
-    CC1310_LAUNCHXL_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                        /* UART TX via debugger back channel */
+    CC1310_LAUNCHXL_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                              /* UART RX via debugger back channel */
+    CC1310_LAUNCHXL_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL,                         /* UART TX via debugger back channel */
     CC1310_LAUNCHXL_SPI0_MOSI | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master out - slave in */
     CC1310_LAUNCHXL_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master in - slave out */
     CC1310_LAUNCHXL_SPI0_CLK | PIN_INPUT_EN | PIN_PULLDOWN,                                             /* SPI clock */
@@ -568,7 +759,7 @@ const uint_least8_t PWM_count = CC1310_LAUNCHXL_PWMCOUNT;
 const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
     .hwiPriority        = ~0,       /* Lowest HWI priority */
     .swiPriority        = 0,        /* Lowest SWI priority */
-    .xoscHfAlwaysNeeded = true,     /* Keep XOSC dependency while in stanby */
+    .xoscHfAlwaysNeeded = true,     /* Keep XOSC dependency while in standby */
     .globalCallback     = NULL,     /* No board specific callback */
     .globalEventMask    = 0         /* No events subscribed to */
 };
@@ -678,29 +869,6 @@ const SPI_Config SPI_config[CC1310_LAUNCHXL_SPICOUNT] = {
 const uint_least8_t SPI_count = CC1310_LAUNCHXL_SPICOUNT;
 
 #endif /* TI_SPI_CONF_ENABLE */
-
-
-/*
- *  =============================== TRNG ===============================
- */
-#include <ti/drivers/TRNG.h>
-#include <ti/drivers/trng/TRNGCC26X0.h>
-
-TRNGCC26X0_Object trngCC26X0Object[CC1310_LAUNCHXL_TRNGCOUNT];
-
-const TRNGCC26X0_HWAttrs trngCC26X0HWAttrs[CC1310_LAUNCHXL_TRNGCOUNT] = {
-    {
-         .swiPriority = 0,
-         .intPriority = ~0,
-    }
-};
-
-const TRNG_Config TRNG_config[] = {
-    { &trngCC26X0Object[0], &trngCC26X0HWAttrs[0] },
-};
-
-const uint8_t TRNG_count = CC1310_LAUNCHXL_TRNGCOUNT;
-
 
 /*
  *  =============================== UART ===============================
@@ -817,4 +985,12 @@ void CC1310_LAUNCHXL_initGeneral(void)
 
     /* Perform board-specific initialization */
     Board_initHook();
+}
+
+/*
+ *  ======== Board_init ========
+ */
+void Board_init(void)
+{
+    CC1310_LAUNCHXL_initGeneral();
 }
