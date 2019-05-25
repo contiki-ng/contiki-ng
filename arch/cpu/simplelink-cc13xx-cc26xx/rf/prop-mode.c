@@ -122,6 +122,24 @@ typedef enum {
 #define DOT_4G_PHR_DW_BIT       0
 #endif
 /*---------------------------------------------------------------------------*/
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the CRC.
+ *
+ * Unlike typical 2.4GHz radio drivers, this driver supports the .15.4g
+ * 32-bit CRC option.
+ *
+ * This radio hardware is perfectly happy to transmit frames longer than 127
+ * bytes, which is why it's OK to end up transmitting 125 payload bytes plus
+ * a 4-byte CRC.
+ *
+ * In the future we can change this to support transmission of long frames,
+ * for example as per .15.4g. the size of the TX and RX buffers would need
+ * adjusted accordingly.
+ */
+#define MAX_PAYLOAD_LEN 125
+/*---------------------------------------------------------------------------*/
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 
@@ -333,7 +351,7 @@ calculate_lqi(int8_t rssi)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
 
@@ -346,7 +364,7 @@ transmit(unsigned short transmit_len)
 {
   rf_result_t res;
 
-  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(transmit_len > MAX_PAYLOAD_LEN) {
     LOG_ERR("Too long\n");
     return RADIO_TX_ERR;
   }
@@ -618,6 +636,10 @@ get_value(radio_param_t param, radio_value_t *value)
 
   case RADIO_CONST_TXPOWER_MAX:
     *value = (radio_value_t)tx_power_max(rf_tx_power_table, rf_tx_power_table_size);
+    return RADIO_RESULT_OK;
+
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
     return RADIO_RESULT_OK;
 
   default:
