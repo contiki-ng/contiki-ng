@@ -108,12 +108,6 @@
 #define NETSTACK_FRAMER   framer_802154
 #endif /* NETSTACK_CONF_FRAMER */
 
-/* Maximal packet length. Each radio driver should define this.
-   When Contiki-NG is compiled for a specific platform (radio), that value is used. */
-#define NETSTACK_RADIO_MAX_PAYLOAD_LEN_XX(radio) radio##_max_payload_len
-#define NETSTACK_RADIO_MAX_PAYLOAD_LEN_X(radio) NETSTACK_RADIO_MAX_PAYLOAD_LEN_XX(radio)
-#define NETSTACK_RADIO_MAX_PAYLOAD_LEN NETSTACK_RADIO_MAX_PAYLOAD_LEN_X(NETSTACK_RADIO)
-
 #include "net/mac/mac.h"
 #include "net/mac/framer/framer.h"
 #include "dev/radio.h"
