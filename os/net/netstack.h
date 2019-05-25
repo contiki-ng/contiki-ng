@@ -96,8 +96,6 @@
 #define NETSTACK_RADIO NETSTACK_CONF_RADIO
 #else /* NETSTACK_CONF_RADIO */
 #define NETSTACK_RADIO   nullradio_driver
-/* for nullradio, allow unlimited packet size */
-#define nullradio_driver_max_payload_len ((unsigned short)-1)
 #endif /* NETSTACK_CONF_RADIO */
 
 /* Framer selection. The framer is used by the MAC implementation
