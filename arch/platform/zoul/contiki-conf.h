@@ -113,18 +113,22 @@ uint16_t *radio_tsch_timeslot_timing(void);
  *
  * @{
  */
-/* Configure CSMA for when it's selected */
+#ifndef ZOUL_CONF_USE_CC1200_RADIO
+#define ZOUL_CONF_USE_CC1200_RADIO 0
+#endif
 
-#if CC1200_CONF_SUBGHZ_50KBPS_MODE
-#define NETSTACK_CONF_RADIO                                 cc1200_driver
-#define CC1200_CONF_RF_CFG                                  cc1200_802154g_863_870_fsk_50kbps
-#define ANTENNA_SW_SELECT_DEF_CONF                          ANTENNA_SW_SELECT_SUBGHZ
-#define CC1200_CONF_USE_GPIO2                               0
-#define CC1200_CONF_USE_RX_WATCHDOG                         0
+#if ZOUL_CONF_USE_CC1200_RADIO
+#define NETSTACK_CONF_RADIO                           cc1200_driver
+#define ANTENNA_SW_SELECT_DEF_CONF                    ANTENNA_SW_SELECT_SUBGHZ
+#define CC1200_CONF_USE_GPIO2                         0
+#define CC1200_CONF_USE_RX_WATCHDOG                   0
 
-#define CSMA_CONF_ACK_WAIT_TIME                          (RTIMER_SECOND / 200)
-#define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME           (RTIMER_SECOND / 1500)
+#define CSMA_CONF_ACK_WAIT_TIME                       (RTIMER_SECOND / 200)
+#define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME        (RTIMER_SECOND / 1500)
 
+#ifndef CC1200_CONF_RF_CFG
+#define CC1200_CONF_RF_CFG                   cc1200_802154g_863_870_fsk_50kbps
+#endif
 #endif
 
 /* This can be overriden to use the cc1200_driver instead */
