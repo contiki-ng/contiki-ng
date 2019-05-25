@@ -74,13 +74,6 @@
 
 #define CSMA_ACK_LEN 3
 
-/* Default MAC len for 802.15.4 classic */
-#ifdef  CSMA_MAC_CONF_LEN
-#define CSMA_MAC_LEN CSMA_MAC_CONF_LEN
-#else
-#define CSMA_MAC_LEN MIN(NETSTACK_RADIO_MAX_PAYLOAD_LEN, PACKETBUF_SIZE)
-#endif
-
 /* just a default - with LLSEC, etc */
 #define CSMA_MAC_MAX_HEADER 21
 

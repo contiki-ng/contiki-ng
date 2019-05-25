@@ -150,17 +150,26 @@ static int
 max_payload(void)
 {
   int framer_hdrlen;
+  radio_value_t max_radio_payload_len;
+  radio_result_t res;
 
   init_sec();
 
   framer_hdrlen = NETSTACK_FRAMER.length();
+
+  res = NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN,
+                                 &max_radio_payload_len);
+
+  if(res == RADIO_RESULT_NOT_SUPPORTED) {
+    LOG_ERR("Failed to retrieve max radio driver payload length\n");
+  }
 
   if(framer_hdrlen < 0) {
     /* Framing failed, we assume the maximum header length */
     framer_hdrlen = CSMA_MAC_MAX_HEADER;
   }
 
-  return CSMA_MAC_LEN - framer_hdrlen;
+  return MIN(max_radio_payload_len, PACKETBUF_SIZE) - framer_hdrlen;
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver csma_driver = {
