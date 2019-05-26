@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2019, Carlo Vallati - http://www.unipi.it
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,29 +29,45 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF52840_DEF_H_
-#define NRF52840_DEF_H_
+/**
+ * \addtogroup NRF52
+ * @{
+ *
+ * \defgroup nrf52-gpio-hal NRF52 GPIO HAL implementation
+ *
+ * @{
+ *
+ * \file
+ *     Header file for the NRF52 GPIO HAL functions
+ *
+ * \note
+ *     Do not include this header directly
+ */
 /*---------------------------------------------------------------------------*/
-#include "cm4/cm4-def.h"
+#ifndef GPIO_HAL_ARCH_H_
+#define GPIO_HAL_ARCH_H_
 /*---------------------------------------------------------------------------*/
-
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO         nrf52840_driver
-#endif
-
-#ifndef NRF52480_CONF_AUTOACK
-#define NRF52480_CONF_AUTOACK  1
-#endif
-
-#ifndef NRF52480_CONF_CHANNEL
-#define NRF52480_CONF_CHANNEL  26
-#endif
-
-#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE		 0
+#include "nrf_drv_gpiote.h"
+#include "nrf_gpio.h"
 
 /*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 62500
+#define gpio_hal_arch_init()               do { /* Do nothing */ } while(0)
+
+#define gpio_hal_arch_interrupt_enable(p)  nrf_drv_gpiote_in_event_enable(p, true)
+#define gpio_hal_arch_interrupt_disable(p) nrf_drv_gpiote_in_event_disable(p)
+
+#define gpio_hal_arch_pin_set_input(p)     nrf_gpio_cfg_input(p, NRF_GPIO_PIN_PULLUP);
+#define gpio_hal_arch_pin_set_output(p)    nrf_gpio_cfg_output(p)
+
+#define gpio_hal_arch_set_pin(p)           nrf_gpio_pin_set(p)
+#define gpio_hal_arch_clear_pin(p)         nrf_gpio_pin_clear(p)
+#define gpio_hal_arch_write_pin(p, v)      nrf_gpio_pin_write(p, v)
+#define gpio_hal_arch_read_pin(p)		   nrf_gpio_pin_read(p)
+#define gpio_hal_arch_toggle_pin(p)        nrf_gpio_pin_toggle(p)
+
+#endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
-#endif /* NRF52840_DEF_H_ */
-/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

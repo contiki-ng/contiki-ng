@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2019, Carlo Vallati - http://www.unipi.it
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,29 +29,38 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF52840_DEF_H_
-#define NRF52840_DEF_H_
+/**
+ * \addtogroup NRF52
+ * @{
+ *
+ * \defgroup nrf52-buttons NRF52 Buttons
+ *
+ * Generic module controlling buttons on the NRF52
+ * @{
+ *
+ * \file
+ * Defines NRF52 buttons for use with the button HAL
+ */
 /*---------------------------------------------------------------------------*/
-#include "cm4/cm4-def.h"
+#include "contiki.h"
+#include "dev/button-hal.h"
 /*---------------------------------------------------------------------------*/
-
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO         nrf52840_driver
-#endif
-
-#ifndef NRF52480_CONF_AUTOACK
-#define NRF52480_CONF_AUTOACK  1
-#endif
-
-#ifndef NRF52480_CONF_CHANNEL
-#define NRF52480_CONF_CHANNEL  26
-#endif
-
-#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE		 0
-
+BUTTON_HAL_BUTTON(key_1, "Key 1", \
+				  BSP_BUTTON_0, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_ZERO, true);
+BUTTON_HAL_BUTTON(key_2, "Key 2", \
+				  BSP_BUTTON_1, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_ONE, true);
+BUTTON_HAL_BUTTON(key_3, "Key 3", \
+				  BSP_BUTTON_2, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_TWO, true);
+BUTTON_HAL_BUTTON(key_4, "Key 4", \
+				  BSP_BUTTON_3, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_THREE, true);
 /*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 62500
+BUTTON_HAL_BUTTONS(&key_1, &key_2, &key_3, &key_4);
 /*---------------------------------------------------------------------------*/
-#endif /* NRF52840_DEF_H_ */
-/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

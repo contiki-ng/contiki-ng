@@ -55,6 +55,11 @@
 #include "dev/serial-line.h"
 #include "dev/uart0.h"
 #include "dev/lpm.h"
+
+#include "dev/button-hal.h"
+
+#include "pca10056.h"
+
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -148,6 +153,9 @@ platform_init_stage_two(void)
 
   process_start(&sensors_process, NULL);
 #endif
+
+  button_hal_init();
+
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -163,6 +171,7 @@ platform_init_stage_three(void)
   ble_advertising_start();
   LOG_INFO("Advertising name [%s]\n", DEVICE_NAME);
 #endif
+
 }
 /*---------------------------------------------------------------------------*/
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Nordic Semiconductor
+ * Copyright (c) 2019, University of Pisa
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,36 +39,37 @@
  * @{
  *
  * \file
- *         Architecture specific LED driver implementation for nRF52 DK.
+ *         Architecture specific LED driver implementation for nRF52 DK using GPIO.
  * \author
- *         Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *         Carlo Vallati <carlo.vallati@unipi.it>
  */
-#include "boards.h"
 #include "contiki.h"
 #include "dev/leds.h"
+#include "dev/gpio-hal.h"
+#include "dev/gpio-hal-arch.h"
 
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
-{
-  LEDS_CONFIGURE(LEDS_MASK);
-  LEDS_OFF(LEDS_MASK);
-}
-/*---------------------------------------------------------------------------*/
-leds_mask_t
-leds_arch_get(void)
-{
-  return (leds_mask_t)(LED_IS_ON(LEDS_MASK) >> LED_START);
-}
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_set(leds_mask_t leds)
-{
-  unsigned int mask = (unsigned int)leds << LED_START;
-  LEDS_OFF(LEDS_MASK);
-  LEDS_ON(mask);
-}
-/*---------------------------------------------------------------------------*/
+#include <stdbool.h>
+
+#include "pca10056.h"
+
+const leds_t leds_arch_leds[] = {
+  {
+    .pin = LED_1,
+    .negative_logic = true
+  },
+  {
+    .pin = LED_2,
+    .negative_logic = true
+  },
+  {
+    .pin = LED_3,
+    .negative_logic = true
+  },
+  {
+    .pin = LED_4,
+    .negative_logic = true
+  },
+};
 
 /**
  * @}

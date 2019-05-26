@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2019, Carlo Vallati - http://www.unipi.it
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,29 +29,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF52840_DEF_H_
-#define NRF52840_DEF_H_
+#include "contiki.h"
+#include "dev/gpio-hal.h"
 /*---------------------------------------------------------------------------*/
-#include "cm4/cm4-def.h"
+gpio_hal_pin_t out_pin1 = LED_1;
+gpio_hal_pin_t out_pin2 = LED_2;
+gpio_hal_pin_t out_pin3 = LED_3;
 /*---------------------------------------------------------------------------*/
-
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO         nrf52840_driver
-#endif
-
-#ifndef NRF52480_CONF_AUTOACK
-#define NRF52480_CONF_AUTOACK  1
-#endif
-
-#ifndef NRF52480_CONF_CHANNEL
-#define NRF52480_CONF_CHANNEL  26
-#endif
-
-#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE		 0
-
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 62500
-/*---------------------------------------------------------------------------*/
-#endif /* NRF52840_DEF_H_ */
+gpio_hal_pin_t btn_pin = BSP_BUTTON_0;
 /*---------------------------------------------------------------------------*/

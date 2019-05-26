@@ -12,7 +12,7 @@ ifndef NRF52_WITHOUT_SOFTDEVICE
 endif
 
 CONTIKI_TARGET_DIRS += . dev config
-CONTIKI_SOURCEFILES += platform.c leds-arch.c nrf52840dk-sensors.c button-sensor.c temperature-sensor.c
+CONTIKI_SOURCEFILES += platform.c leds-arch.c nrf52840dk-sensors.c temperature-sensor.c board-buttons.c
 
 ifeq ($(NRF52_USE_RTT),1)
 ### Suppress the existing debug I/O in os/lib

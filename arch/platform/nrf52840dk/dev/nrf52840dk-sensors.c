@@ -48,14 +48,9 @@
 #include <string.h>
 #include "contiki.h"
 #include "lib/sensors.h"
-#include "dev/button-sensor.h"
 #include "dev/temperature-sensor.h"
 /*---------------------------------------------------------------------------*/
 SENSORS(
-    &button_1,
-    &button_2,
-    &button_3,
-    &button_4,
     &temperature_sensor
 );
 /*---------------------------------------------------------------------------*/
