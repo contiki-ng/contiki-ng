@@ -92,18 +92,18 @@
 
 /*
  * Configure the TX power for the netstack, specified in dBm. Defaults to
- * +5 dBm.
+ * maximum available TX power setting for the specific PHY.
  */
 #ifndef RF_CONF_TXPOWER_DBM
-#define RF_CONF_TXPOWER_DBM             5
+#define RF_CONF_TXPOWER_DBM             RF_TXPOWER_MAX_DBM
 #endif
 
 /*
  * Configure the TX power for the BLE beacon, specified in dBm.
- * Defaults to +5 dBm.
+ * Defaults to maximum available TX power setting for the specific PHY.
  */
 #ifndef RF_CONF_BLE_TXPOWER_DBM
-#define RF_CONF_BLE_TXPOWER_DBM         5
+#define RF_CONF_BLE_TXPOWER_DBM         RF_TXPOWER_MAX_DBM
 #endif
 
 /*
