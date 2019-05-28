@@ -91,7 +91,6 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350_LAUNCHXL_PIN_BTN1              IOID_13
 #define CC1350_LAUNCHXL_PIN_BTN2              IOID_14
 
-
 /* GPIO */
 #define CC1350_LAUNCHXL_GPIO_LED_ON           1
 #define CC1350_LAUNCHXL_GPIO_LED_OFF          0
