@@ -170,7 +170,7 @@ uint32_t rf_prop_overrides_tx_20[] CC_ALIGN(4) =
 /* CMD_PROP_RADIO_DIV_SETUP: Proprietary Mode Radio Setup Command for All Frequency Bands */
 rfc_CMD_PROP_RADIO_DIV_SETUP_PA_t rf_cmd_prop_radio_div_setup =
 {
-  .commandNo = CMD_PROP_RADIO_DIV_SETUP_PA,
+  .commandNo = 0x3807,
   .status = IDLE,
   .pNextOp = 0,
   .startTime = 0x00000000,

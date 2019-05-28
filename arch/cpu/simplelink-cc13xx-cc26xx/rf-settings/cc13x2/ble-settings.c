@@ -228,7 +228,7 @@ uint32_t rf_ble_overrides_tx_20[] =
 /* CMD_BLE5_RADIO_SETUP_PA: Bluetooth 5 Radio Setup Command for all PHYs */
 rfc_CMD_BLE5_RADIO_SETUP_PA_t rf_ble_cmd_radio_setup =
 {
-  .commandNo = CMD_BLE5_RADIO_SETUP_PA,
+  .commandNo = 0x1820,
   .status = IDLE,
   .pNextOp = 0,
   .startTime = 0x00000000,

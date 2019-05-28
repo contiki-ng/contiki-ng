@@ -150,7 +150,7 @@ uint32_t rf_ieee_overrides_tx_20[] CC_ALIGN(4) =
 /* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
 rfc_CMD_RADIO_SETUP_PA_t rf_cmd_ieee_radio_setup =
 {
-  .commandNo = CMD_RADIO_SETUP_PA,
+  .commandNo = 0x0802,
   .status = IDLE,
   .pNextOp = 0,
   .startTime = 0x00000000,
