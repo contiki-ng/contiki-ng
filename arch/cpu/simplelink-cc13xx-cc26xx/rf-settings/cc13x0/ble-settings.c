@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,42 +62,57 @@ RF_Mode rf_ble_mode =
   .rfePatchFxn = &rf_patch_rfe_ble,
 };
 /*---------------------------------------------------------------------------*/
-/*
- * CMD_RADIO_SETUP must be configured with default TX power value
- * in the .txPower field.
- */
-#define DEFAULT_TX_POWER    0x5F3C /* 5 dBm */
-/*---------------------------------------------------------------------------*/
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ble_overrides[] CC_ALIGN(4) =
 {
-                                     /* override_use_patch_ble_1mbps.xml */
-  MCE_RFE_OVERRIDE(0,0,0,1,0,0),     /* PHY: Use MCE ROM, RFE RAM patch */
-                                     /* override_synth_ble_1mbps.xml */
-  HW_REG_OVERRIDE(0x4038,0x0034),    /* Synth: Set recommended RTRIM to 4 */
-  (uint32_t)0x000784A3,              /* Synth: Set Fref to 3.43 MHz */
-  HW_REG_OVERRIDE(0x4020,0x7F00),    /* Synth: Configure fine calibration setting */
-  HW_REG_OVERRIDE(0x4064,0x0040),    /* Synth: Configure fine calibration setting */
-  (uint32_t)0xB1070503,              /* Synth: Configure fine calibration setting */
-  (uint32_t)0x05330523,              /* Synth: Configure fine calibration setting */
-  (uint32_t)0xA47E0583,              /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0xEAE00603,              /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0x00010623,              /* Synth: Set loop bandwidth after lock to 80 kHz */
-  HW32_ARRAY_OVERRIDE(0x405C,1),     /* Synth: Configure PLL bias */
-  (uint32_t)0x18000000,              /* Synth: Configure PLL bias */
-                                     /* Synth: Configure VCO LDO */
-  ADI_REG_OVERRIDE(1,4,0x9F),        /* (in ADI1, set VCOLDOCFG=0x9F to use voltage input reference) */
-  ADI_HALFREG_OVERRIDE(1,7,0x4,0x4), /* Synth: Configure synth LDO (in ADI1, set SLDOCTL0.COMP_CAP=1) */
-                                     /* override_phy_ble_1mbps.xml */
-  (uint32_t)0x013800C3,              /* Tx: Configure symbol shape for BLE frequency deviation requirements */
-  HW_REG_OVERRIDE(0x6088, 0x0045),   /* Rx: Configure AGC reference level */
-  HW_REG_OVERRIDE(0x6084, 0x05FD),   /* Rx: Configure AGC gain level */
-  (uint32_t)0x00038883,              /* Rx: Configure LNA bias current trim offset */
-                                     /* override_frontend_xd.xml */
-  (uint32_t)0x00F388A3,              /* Rx: Set RSSI offset to adjust reported RSSI by +13 dB */
-                                     /* TX power override */
-  ADI_REG_OVERRIDE(0,12,0xF8),       /* Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8) */
-  (uint32_t)0xFFFFFFFF,
+  // override_use_patch_ble_1mbps.xml
+  // PHY: Use MCE ROM, RFE RAM patch
+  MCE_RFE_OVERRIDE(0,0,0,1,0,0),
+  // override_synth_ble_1mbps.xml
+  // Synth: Set recommended RTRIM to 4
+  HW_REG_OVERRIDE(0x4038,0x0034),
+  // Synth: Set Fref to 3.43 MHz
+  (uint32_t)0x000784A3,
+  // Synth: Configure fine calibration setting
+  HW_REG_OVERRIDE(0x4020,0x7F00),
+  // Synth: Configure fine calibration setting
+  HW_REG_OVERRIDE(0x4064,0x0040),
+  // Synth: Configure fine calibration setting
+  (uint32_t)0xB1070503,
+  // Synth: Configure fine calibration setting
+  (uint32_t)0x05330523,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xA47E0583,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xEAE00603,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0x00010623,
+  // Synth: Configure PLL bias
+  HW32_ARRAY_OVERRIDE(0x405C,1),
+  // Synth: Configure PLL bias
+  (uint32_t)0x18000000,
+  // Synth: Configure VCO LDO (in ADI1, set VCOLDOCFG=0x9F to use voltage input reference)
+  ADI_REG_OVERRIDE(1,4,0x9F),
+  // Synth: Configure synth LDO (in ADI1, set SLDOCTL0.COMP_CAP=1)
+  ADI_HALFREG_OVERRIDE(1,7,0x4,0x4),
+  // override_phy_ble_1mbps.xml
+  // Tx: Configure symbol shape for BLE frequency deviation requirements
+  (uint32_t)0x013800C3,
+  // Rx: Configure AGC reference level
+  HW_REG_OVERRIDE(0x6088, 0x0045),
+  // Rx: Configure AGC gain level
+  HW_REG_OVERRIDE(0x6084, 0x05FD),
+  // Rx: Configure LNA bias current trim offset
+  (uint32_t)0x00038883,
+  // override_frontend_xd.xml
+  // Rx: Set RSSI offset to adjust reported RSSI by +13 dB
+  (uint32_t)0x00F388A3,
+#if RF_TXPOWER_BOOST_MODE
+  // TX power override
+  // Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8)
+  ADI_REG_OVERRIDE(0,12,0xF8),
+#endif
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
@@ -119,7 +134,7 @@ rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radio_setup =
   .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = DEFAULT_TX_POWER,
+  .txPower = 0x5F3C, /* set by driver */
   .pRegOverride = rf_ble_overrides,
 };
 /*---------------------------------------------------------------------------*/
