@@ -206,7 +206,7 @@ typedef enum CC1350STK_ADCBufName {
 } CC1350STK_ADCBufName;
 
 /*!
- *  @def    CC1350STK_ADCBuf0SourceName
+ *  @def    CC1350STK_ADCBuf0ChannelName
  *  @brief  Enum of ADCBuf channels
  */
 typedef enum CC1350STK_ADCBuf0ChannelName {
