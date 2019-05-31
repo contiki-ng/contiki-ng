@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018, Texas Instruments Incorporated
+ * Copyright (c) 2016-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,8 +75,6 @@ const ADCBufCC26XX_HWAttrs adcBufCC26xxHWAttrs[CC1350DK_7XD_ADCBUFCOUNT] = {
         .intPriority       = ~0,
         .swiPriority       = 0,
         .adcChannelLut     = ADCBufCC26XX_adcChannelLut,
-        .gpTimerUnit       = CC1350DK_7XD_GPTIMER0A,
-        .gptDMAChannelMask = 1 << UDMA_CHAN_TIMER0_A,
     }
 };
 
@@ -170,6 +168,170 @@ const CryptoCC26XX_Config CryptoCC26XX_config[CC1350DK_7XD_CRYPTOCOUNT] = {
 };
 
 /*
+ *  =============================== AESCCM ===============================
+ */
+#include <ti/drivers/AESCCM.h>
+#include <ti/drivers/aesccm/AESCCMCC26XX.h>
+
+AESCCMCC26XX_Object aesccmCC26XXObjects[CC1350DK_7XD_AESCCMCOUNT];
+
+const AESCCMCC26XX_HWAttrs aesccmCC26XXHWAttrs[CC1350DK_7XD_AESCCMCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCCM_Config AESCCM_config[CC1350DK_7XD_AESCCMCOUNT] = {
+    {
+         .object  = &aesccmCC26XXObjects[CC1350DK_7XD_AESCCM0],
+         .hwAttrs = &aesccmCC26XXHWAttrs[CC1350DK_7XD_AESCCM0]
+    },
+};
+
+const uint_least8_t AESCCM_count = CC1350DK_7XD_AESCCMCOUNT;
+
+
+/*
+ *  =============================== AESGCM ===============================
+ */
+#include <ti/drivers/AESGCM.h>
+#include <ti/drivers/aesgcm/AESGCMCC26XX.h>
+
+AESGCMCC26XX_Object aesgcmCC26XXObjects[CC1350DK_7XD_AESGCMCOUNT];
+
+const AESGCMCC26XX_HWAttrs aesgcmCC26XXHWAttrs[CC1350DK_7XD_AESGCMCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESGCM_Config AESGCM_config[CC1350DK_7XD_AESGCMCOUNT] = {
+    {
+         .object  = &aesgcmCC26XXObjects[CC1350DK_7XD_AESGCM0],
+         .hwAttrs = &aesgcmCC26XXHWAttrs[CC1350DK_7XD_AESGCM0]
+    },
+};
+
+const uint_least8_t AESGCM_count = CC1350DK_7XD_AESGCMCOUNT;
+
+/*
+ *  =============================== AESCBC ===============================
+ */
+#include <ti/drivers/AESCBC.h>
+#include <ti/drivers/aescbc/AESCBCCC26XX.h>
+
+AESCBCCC26XX_Object aescbcCC26XXObjects[CC1350DK_7XD_AESCBCCOUNT];
+
+const AESCBCCC26XX_HWAttrs aescbcCC26XXHWAttrs[CC1350DK_7XD_AESCBCCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCBC_Config AESCBC_config[CC1350DK_7XD_AESCBCCOUNT] = {
+    {
+         .object  = &aescbcCC26XXObjects[CC1350DK_7XD_AESCBC0],
+         .hwAttrs = &aescbcCC26XXHWAttrs[CC1350DK_7XD_AESCBC0]
+    },
+};
+
+const uint_least8_t AESCBC_count = CC1350DK_7XD_AESCBCCOUNT;
+
+/*
+ *  =============================== AESCTR ===============================
+ */
+#include <ti/drivers/AESCTR.h>
+#include <ti/drivers/aesctr/AESCTRCC26XX.h>
+
+AESCTRCC26XX_Object aesctrCC26XXObjects[CC1350DK_7XD_AESCTRCOUNT];
+
+const AESCTRCC26XX_HWAttrs aesctrCC26XXHWAttrs[CC1350DK_7XD_AESCTRCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCTR_Config AESCTR_config[CC1350DK_7XD_AESCTRCOUNT] = {
+    {
+         .object  = &aesctrCC26XXObjects[CC1350DK_7XD_AESCTR0],
+         .hwAttrs = &aesctrCC26XXHWAttrs[CC1350DK_7XD_AESCTR0]
+    },
+};
+
+const uint_least8_t AESCTR_count = CC1350DK_7XD_AESCTRCOUNT;
+
+/*
+ *  =============================== AESECB ===============================
+ */
+#include <ti/drivers/AESECB.h>
+#include <ti/drivers/aesecb/AESECBCC26XX.h>
+
+AESECBCC26XX_Object aesecbCC26XXObjects[CC1350DK_7XD_AESECBCOUNT];
+
+const AESECBCC26XX_HWAttrs aesecbCC26XXHWAttrs[CC1350DK_7XD_AESECBCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESECB_Config AESECB_config[CC1350DK_7XD_AESECBCOUNT] = {
+    {
+         .object  = &aesecbCC26XXObjects[CC1350DK_7XD_AESECB0],
+         .hwAttrs = &aesecbCC26XXHWAttrs[CC1350DK_7XD_AESECB0]
+    },
+};
+
+const uint_least8_t AESECB_count = CC1350DK_7XD_AESECBCOUNT;
+
+/*
+ *  =============================== AESCTRDRBG ===============================
+ */
+#include <ti/drivers/AESCTRDRBG.h>
+#include <ti/drivers/aesctrdrbg/AESCTRDRBGXX.h>
+
+AESCTRDRBGXX_Object aesctrdrbgXXObjects[CC1350DK_7XD_AESCTRDRBGCOUNT];
+
+const AESCTRDRBGXX_HWAttrs aesctrdrbgXXHWAttrs[CC1350DK_7XD_AESCTRDRBGCOUNT] = {
+    {
+        .aesctrIndex       = CC1350DK_7XD_AESCTR0,
+    }
+};
+
+const AESCTRDRBG_Config AESCTRDRBG_config[CC1350DK_7XD_AESCTRDRBGCOUNT] = {
+    {
+         .object  = &aesctrdrbgXXObjects[CC1350DK_7XD_AESCTRDRBG0],
+         .hwAttrs = &aesctrdrbgXXHWAttrs[CC1350DK_7XD_AESCTRDRBG0]
+    },
+};
+
+const uint_least8_t AESCTRDRBG_count = CC1350DK_7XD_AESCTRDRBGCOUNT;
+
+/*
+ *  =============================== TRNG ===============================
+ */
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/trng/TRNGCC26XX.h>
+
+TRNGCC26XX_Object trngCC26XXObjects[CC1350DK_7XD_TRNGCOUNT];
+
+const TRNGCC26XX_HWAttrs trngCC26X2HWAttrs[CC1350DK_7XD_TRNGCOUNT] = {
+    {
+        .intPriority       = ~0,
+        .swiPriority       = 0,
+        .samplesPerCycle   = 240000,
+    }
+};
+
+const TRNG_Config TRNG_config[CC1350DK_7XD_TRNGCOUNT] = {
+    {
+         .object  = &trngCC26XXObjects[CC1350DK_7XD_TRNG0],
+         .hwAttrs = &trngCC26X2HWAttrs[CC1350DK_7XD_TRNG0]
+    },
+};
+
+const uint_least8_t TRNG_count = CC1350DK_7XD_TRNGCOUNT;
+
+/*
  *  =============================== GPIO ===============================
  */
 #include <ti/drivers/GPIO.h>
@@ -210,7 +372,7 @@ GPIO_PinConfig gpioPinConfigs[] = {
 /*
  * Array of callback function pointers
  * NOTE: The order of the pin configurations must coincide with what was
- *       defined in CC2650_LAUNCH.h
+ *       defined in CC1350DK_7XD.h
  * NOTE: Pins not used for interrupts can be omitted from callbacks array to
  *       reduce memory usage (if placed at end of gpioPinConfigs array).
  */
@@ -296,6 +458,34 @@ const I2C_Config I2C_config[CC1350DK_7XD_I2CCOUNT] = {
 const uint_least8_t I2C_count = CC1350DK_7XD_I2CCOUNT;
 
 #endif /* TI_I2C_CONF_ENABLE */
+
+/*
+ *  =============================== I2S ===============================
+*/
+#include <ti/drivers/I2S.h>
+#include <ti/drivers/i2s/I2SCC26XX.h>
+
+I2SCC26XX_Object i2sCC26XXObjects[CC1350DK_7XD_I2SCOUNT];
+
+const I2SCC26XX_HWAttrs i2sCC26XXHWAttrs[CC1350DK_7XD_I2SCOUNT] = {
+    {
+        .pinSD1      =  CC1350DK_7XD_I2S_ADI,
+        .pinSD0      =  CC1350DK_7XD_I2S_ADO,
+        .pinSCK      =  CC1350DK_7XD_I2S_BCLK,
+        .pinMCLK     =  CC1350DK_7XD_I2S_MCLK,
+        .pinWS       =  CC1350DK_7XD_I2S_WCLK,
+        .intPriority = ~0,
+    }
+};
+
+const I2S_Config I2S_config[CC1350DK_7XD_I2SCOUNT] = {
+    {
+        .object      = &i2sCC26XXObjects[CC1350DK_7XD_I2S0],
+        .hwAttrs     = &i2sCC26XXHWAttrs[CC1350DK_7XD_I2S0]
+    },
+};
+
+const uint_least8_t I2S_count = CC1350DK_7XD_I2SCOUNT;
 
 /*
  *  =============================== NVS ===============================
@@ -393,7 +583,7 @@ const PIN_Config BoardGpioInitTable[] = {
     CC1350DK_7XD_PIN_KEY_DOWN | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,      /* Button is active low */
     CC1350DK_7XD_PIN_KEY_LEFT | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,      /* Button is active low */
     CC1350DK_7XD_PIN_KEY_UP | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,        /* Button is active low */
-    CC1350DK_7XD_SDCARD_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,     /* External flash chip select */
+    CC1350DK_7XD_SPI_SDCARD_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,     /* External flash chip select */
     CC1350DK_7XD_ACC_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,        /* External flash chip select */
     CC1350DK_7XD_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                              /* UART RX via debugger back channel */
     CC1350DK_7XD_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                        /* UART TX via debugger back channel */
@@ -487,7 +677,7 @@ SDSPI_Object sdspiObjects[CC1350DK_7XD_SDCOUNT];
 const SDSPI_HWAttrs sdspiHWAttrs[CC1350DK_7XD_SDCOUNT] = {
     {
         .spiIndex = CC1350DK_7XD_SPI0,
-        .spiCsGpioIndex = CC1350DK_7XD_SDCARD_CS
+        .spiCsGpioIndex = CC1350DK_7XD_SDSPI_CS
     }
 };
 
@@ -575,29 +765,6 @@ const SPI_Config SPI_config[CC1350DK_7XD_SPICOUNT] = {
 const uint_least8_t SPI_count = CC1350DK_7XD_SPICOUNT;
 
 #endif /* TI_SPI_CONF_ENABLE */
-
-
-/*
- *  =============================== TRNG ===============================
- */
-#include <ti/drivers/TRNG.h>
-#include <ti/drivers/trng/TRNGCC26X0.h>
-
-TRNGCC26X0_Object trngCC26X0Object[CC1350DK_7XD_TRNGCOUNT];
-
-const TRNGCC26X0_HWAttrs trngCC26X0HWAttrs[CC1350DK_7XD_TRNGCOUNT] = {
-    {
-         .swiPriority = 0,
-         .intPriority = ~0,
-    }
-};
-
-const TRNG_Config TRNG_config[] = {
-    { &trngCC26X0Object[0], &trngCC26X0HWAttrs[0] },
-};
-
-const uint8_t TRNG_count = CC1350DK_7XD_TRNGCOUNT;
-
 
 /*
  *  =============================== UART ===============================
@@ -716,4 +883,12 @@ void CC1350DK_7XD_initGeneral(void)
 
     /* Perform board-specific initialization */
     Board_initHook();
+}
+
+/*
+ *  ======== Board_init ========
+ */
+void Board_init(void)
+{
+    CC1350DK_7XD_initGeneral();
 }

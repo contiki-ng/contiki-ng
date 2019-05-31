@@ -61,39 +61,52 @@ RF_Mode rf_ble_mode =
   .rfePatchFxn = &rf_patch_rfe_ble,
 };
 /*---------------------------------------------------------------------------*/
-/*
- * CMD_RADIO_SETUP must be configured with default TX power value
- * in the .txPower field.
- */
-#define DEFAULT_TX_POWER    0x9330 /* 5 dBm */
-/*---------------------------------------------------------------------------*/
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ble_overrides[] CC_ALIGN(4) =
 {
-                                   /* override_use_patch_ble_1mbps.xml */
-  MCE_RFE_OVERRIDE(0,0,0,1,0,0),   /* PHY: Use MCE ROM, RFE RAM patch */
-                                   /* override_synth_ble_1mbps.xml */
-  HW_REG_OVERRIDE(0x4038,0x0035),  /* Synth: Set recommended RTRIM to 5 */
-  (uint32_t)0x000784A3,            /* Synth: Set Fref to 3.43 MHz */
-  (uint32_t)0xA47E0583,            /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0xEAE00603,            /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0x00010623,            /* Synth: Set loop bandwidth after lock to 80 kHz */
-  HW32_ARRAY_OVERRIDE(0x405C,1),   /* Synth: Configure PLL bias */
-  (uint32_t)0x1801F800,            /* Synth: Configure PLL bias */
-  HW32_ARRAY_OVERRIDE(0x402C,1),   /* Synth: Configure PLL latency */
-  (uint32_t)0x00608402,            /* Synth: Configure PLL latency */
-  (uint32_t)0x02010403,            /* Synth: Use 24 MHz XOSC as synth clock, enable extra PLL filtering */
-  HW32_ARRAY_OVERRIDE(0x4034,1),   /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x177F0408,            /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x38000463,            /* Synth: Configure extra PLL filtering */
-                                   /* override_phy_ble_1mbps.xml */
-  (uint32_t)0x013800C3,            /* Tx: Configure symbol shape for BLE frequency deviation requirements */
-  HW_REG_OVERRIDE(0x6088, 0x0045), /* Rx: Configure AGC reference level */
-                                   /* Tx: Configure pilot tone length to ensure stable frequency */
-  HW_REG_OVERRIDE(0x52AC, 0x0360), /* before start of packet */
-  (uint32_t)0x01AD02A3,            /* Tx: Compensate timing offset to match new pilot tone setting */
-  (uint32_t)0x01680263,            /* Tx: Compensate timing offset to match new pilot tone setting */
-  (uint32_t)0xFFFFFFFF,
+  // override_use_patch_ble_1mbps.xml
+  // PHY: Use MCE ROM, RFE RAM patch
+  MCE_RFE_OVERRIDE(0,0,0,1,0,0),
+  // override_synth_ble_1mbps.xml
+  // Synth: Set recommended RTRIM to 5
+  HW_REG_OVERRIDE(0x4038,0x0035),
+  // Synth: Set Fref to 3.43 MHz
+  (uint32_t)0x000784A3,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xA47E0583,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xEAE00603,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0x00010623,
+  // Synth: Configure PLL bias
+  HW32_ARRAY_OVERRIDE(0x405C,1),
+  // Synth: Configure PLL bias
+  (uint32_t)0x1801F800,
+  // Synth: Configure PLL latency
+  HW32_ARRAY_OVERRIDE(0x402C,1),
+  // Synth: Configure PLL latency
+  (uint32_t)0x00608402,
+  // Synth: Use 24 MHz XOSC as synth clock, enable extra PLL filtering
+  (uint32_t)0x02010403,
+  // Synth: Configure extra PLL filtering
+  HW32_ARRAY_OVERRIDE(0x4034,1),
+  // Synth: Configure extra PLL filtering
+  (uint32_t)0x177F0408,
+  // Synth: Configure extra PLL filtering
+  (uint32_t)0x38000463,
+  // override_phy_ble_1mbps.xml
+  // Tx: Configure symbol shape for BLE frequency deviation requirements
+  (uint32_t)0x013800C3,
+  // Rx: Configure AGC reference level
+  HW_REG_OVERRIDE(0x6088, 0x0045),
+  // Tx: Configure pilot tone length to ensure stable frequency before start of packet
+  HW_REG_OVERRIDE(0x52AC, 0x0360),
+  // Tx: Compensate timing offset to match new pilot tone setting
+  (uint32_t)0x01AD02A3,
+  // Tx: Compensate timing offset to match new pilot tone setting
+  (uint32_t)0x01680263,
+  // override_frontend_id.xml
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
@@ -115,7 +128,7 @@ rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radio_setup =
   .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = DEFAULT_TX_POWER,
+  .txPower = 0x9330, /* set by driver */
   .pRegOverride = rf_ble_overrides,
 };
 /*---------------------------------------------------------------------------*/

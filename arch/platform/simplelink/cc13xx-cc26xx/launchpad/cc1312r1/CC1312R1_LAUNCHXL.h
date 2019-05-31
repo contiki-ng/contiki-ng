@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,6 +98,13 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1312R1_LAUNCHXL_I2C0_SCL0             IOID_4
 #define CC1312R1_LAUNCHXL_I2C0_SDA0             IOID_5
 
+/* I2S */
+#define CC1312R1_LAUNCHXL_I2S_ADO               IOID_25
+#define CC1312R1_LAUNCHXL_I2S_ADI               IOID_26
+#define CC1312R1_LAUNCHXL_I2S_BCLK              IOID_27
+#define CC1312R1_LAUNCHXL_I2S_MCLK              PIN_UNASSIGNED
+#define CC1312R1_LAUNCHXL_I2S_WCLK              IOID_28
+
 /* LEDs */
 #define CC1312R1_LAUNCHXL_PIN_LED_ON            1
 #define CC1312R1_LAUNCHXL_PIN_LED_OFF           0
@@ -123,7 +130,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1312R1_LAUNCHXL_SPI0_MISO             IOID_8          /* RF1.20 */
 #define CC1312R1_LAUNCHXL_SPI0_MOSI             IOID_9          /* RF1.18 */
 #define CC1312R1_LAUNCHXL_SPI0_CLK              IOID_10         /* RF1.16 */
-#define CC1312R1_LAUNCHXL_SPI0_CSN              PIN_UNASSIGNED
+#define CC1312R1_LAUNCHXL_SPI0_CSN              IOID_11
 #define CC1312R1_LAUNCHXL_SPI1_MISO             PIN_UNASSIGNED
 #define CC1312R1_LAUNCHXL_SPI1_MOSI             PIN_UNASSIGNED
 #define CC1312R1_LAUNCHXL_SPI1_CLK              PIN_UNASSIGNED
@@ -256,6 +263,36 @@ typedef enum CC1312R1_LAUNCHXL_AESCCMName {
 } CC1312R1_LAUNCHXL_AESCCMName;
 
 /*!
+ *  @def    CC1312R1_LAUNCHXL_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC1312R1_LAUNCHXL_AESGCMName {
+    CC1312R1_LAUNCHXL_AESGCM0 = 0,
+
+    CC1312R1_LAUNCHXL_AESGCMCOUNT
+} CC1312R1_LAUNCHXL_AESGCMName;
+
+/*!
+ *  @def    CC1312R1_LAUNCHXL_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC1312R1_LAUNCHXL_AESCBCName {
+    CC1312R1_LAUNCHXL_AESCBC0 = 0,
+
+    CC1312R1_LAUNCHXL_AESCBCCOUNT
+} CC1312R1_LAUNCHXL_AESCBCName;
+
+/*!
+ *  @def    CC1312R1_LAUNCHXL_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC1312R1_LAUNCHXL_AESCTRName {
+    CC1312R1_LAUNCHXL_AESCTR0 = 0,
+
+    CC1312R1_LAUNCHXL_AESCTRCOUNT
+} CC1312R1_LAUNCHXL_AESCTRName;
+
+/*!
  *  @def    CC1312R1_LAUNCHXL_AESECBName
  *  @brief  Enum of AESECB names
  */
@@ -266,6 +303,16 @@ typedef enum CC1312R1_LAUNCHXL_AESECBName {
 } CC1312R1_LAUNCHXL_AESECBName;
 
 /*!
+ *  @def    CC1312R1_LAUNCHXL_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC1312R1_LAUNCHXL_AESCTRDRBGName {
+    CC1312R1_LAUNCHXL_AESCTRDRBG0 = 0,
+
+    CC1312R1_LAUNCHXL_AESCTRDRBGCOUNT
+} CC1312R1_LAUNCHXL_AESCTRDRBGName;
+
+/*!
  *  @def    CC1312R1_LAUNCHXL_SHA2Name
  *  @brief  Enum of SHA2 names
  */
@@ -274,6 +321,16 @@ typedef enum CC1312R1_LAUNCHXL_SHA2Name {
 
     CC1312R1_LAUNCHXL_SHA2COUNT
 } CC1312R1_LAUNCHXL_SHA2Name;
+
+/*!
+ *  @def    CC1312R1_LAUNCHXL_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC1312R1_LAUNCHXL_TRNGName {
+    CC1312R1_LAUNCHXL_TRNG0 = 0,
+
+    CC1312R1_LAUNCHXL_TRNGCOUNT
+} CC1312R1_LAUNCHXL_TRNGName;
 
 /*!
  *  @def    CC1312R1_LAUNCHXL_GPIOName
@@ -334,6 +391,16 @@ typedef enum CC1312R1_LAUNCHXL_I2CName {
 } CC1312R1_LAUNCHXL_I2CName;
 
 /*!
+ *  @def    CC1312R1_LAUNCHXL_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC1312R1_LAUNCHXL_I2SName {
+    CC1312R1_LAUNCHXL_I2S0 = 0,
+
+    CC1312R1_LAUNCHXL_I2SCOUNT
+} CC1312R1_LAUNCHXL_I2SName;
+
+/*!
  *  @def    CC1312R1_LAUNCHXL_NVSName
  *  @brief  Enum of NVS names
  */
@@ -391,22 +458,15 @@ typedef enum CC1312R1_LAUNCHXL_SPIName {
 } CC1312R1_LAUNCHXL_SPIName;
 
 /*!
- *  @def    CC1312R1_LAUNCHXL_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC1312R1_LAUNCHXL_TRNGName {
-    CC1312R1_LAUNCHXL_TRNG0 = 0,
-
-    CC1312R1_LAUNCHXL_TRNGCOUNT
-} CC1312R1_LAUNCHXL_TRNGName;
-
-/*!
  *  @def    CC1312R1_LAUNCHXL_UARTName
  *  @brief  Enum of UARTs
  */
 typedef enum CC1312R1_LAUNCHXL_UARTName {
 #if TI_UART_CONF_UART0_ENABLE
     CC1312R1_LAUNCHXL_UART0 = 0,
+#endif
+#if TI_UART_CONF_UART1_ENABLE
+    CC1312R1_LAUNCHXL_UART1,
 #endif
 
     CC1312R1_LAUNCHXL_UARTCOUNT
