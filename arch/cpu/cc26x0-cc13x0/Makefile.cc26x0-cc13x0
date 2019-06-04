@@ -34,6 +34,12 @@ endif
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev rf-core rf-core/api rf-core/ble-hal $(TI_XXWARE_STARTUP_DIR)
 
+ifdef CC1310_LRM
+CONTIKI_CPU_DIRS += rf-core/lrm
+else
+CONTIKI_CPU_DIRS += rf-core/gfsk
+endif
+
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c soc-rtc.c uart.c
 CONTIKI_CPU_SOURCEFILES += contiki-watchdog.c aux-ctrl.c

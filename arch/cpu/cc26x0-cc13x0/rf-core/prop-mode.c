@@ -67,18 +67,19 @@
 #include "driverlib/rf_prop_mailbox.h"
 #include "driverlib/rf_prop_cmd.h"
 /*---------------------------------------------------------------------------*/
-/* CC13xxware patches */
-#include "rf_patches/rf_patch_cpe_genfsk.h"
-#include "rf_patches/rf_patch_rfe_genfsk.h"
+
 /*---------------------------------------------------------------------------*/
-#include "rf-core/smartrf-settings.h"
+/* RF patches defined in smartrf settings */
+#include "smartrf_fxn.h"
+#include "smartrf-settings.h"
+/*---------------------------------------------------------------------------*/
+
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -381,6 +382,8 @@ set_tx_power(radio_value_t power)
     }
   }
 }
+
+
 /*---------------------------------------------------------------------------*/
 static int
 prop_div_radio_setup(void)
@@ -396,11 +399,14 @@ prop_div_radio_setup(void)
   /* Update to the correct TX power setting */
   smartrf_settings_cmd_prop_radio_div_setup.txPower = tx_power_current->tx_power;
 
+
   /* Adjust RF Front End and Bias based on the board */
   smartrf_settings_cmd_prop_radio_div_setup.config.frontEndMode =
     RF_CORE_PROP_FRONT_END_MODE;
   smartrf_settings_cmd_prop_radio_div_setup.config.biasMode =
     RF_CORE_PROP_BIAS_MODE;
+
+
 
   /* Send Radio setup to RF Core */
   if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
@@ -457,7 +463,6 @@ rf_cmd_prop_rx()
            cmd_status, cmd_rx_adv->status);
     return RF_CORE_CMD_ERROR;
   }
-
   return ret;
 }
 /*---------------------------------------------------------------------------*/
@@ -812,7 +817,6 @@ release_data_entry(void)
   critical_exit(interrupt_status);
 
 }
-/*---------------------------------------------------------------------------*/
 static int
 read_frame(void *buf, unsigned short buf_len)
 {
@@ -845,7 +849,7 @@ read_frame(void *buf, unsigned short buf_len)
   len = (*(uint16_t *)data_ptr);
 
   if(len <= RX_BUF_METADATA_SIZE) {
-    PRINTF("RF: too short!");
+
 
     release_data_entry();
     return 0;
@@ -1057,10 +1061,17 @@ on(void)
     rf_core_set_modesel();
 
     /* Apply patches to radio core */
-    rf_patch_cpe_genfsk();
+    if (RF_prop.cpePatchFxn != 0)
+        RF_prop.cpePatchFxn( );
+
+    if (RF_prop.mcePatchFxn != 0)
+        RF_prop.mcePatchFxn( );
+
     while(!HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG));
     HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
-    rf_patch_rfe_genfsk();
+
+    if (RF_prop.rfePatchFxn != 0)
+        RF_prop.rfePatchFxn( );
 
     /* Initialize bus request */
     HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;

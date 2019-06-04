@@ -30,11 +30,17 @@
 /*---------------------------------------------------------------------------*/
 #ifndef SMARTRF_SETTINGS_H_
 #define SMARTRF_SETTINGS_H_
+
 /*---------------------------------------------------------------------------*/
 #include "driverlib/rf_mailbox.h"
 #include "driverlib/rf_common_cmd.h"
 #include "driverlib/rf_prop_cmd.h"
 /*---------------------------------------------------------------------------*/
+#include "smartrf_fxn.h"
+
+// RF Core API commands
+extern RF_Mode RF_prop;
+
 extern rfc_CMD_PROP_RADIO_DIV_SETUP_t smartrf_settings_cmd_prop_radio_div_setup;
 extern rfc_CMD_FS_t smartrf_settings_cmd_fs;
 extern rfc_CMD_PROP_TX_ADV_t smartrf_settings_cmd_prop_tx_adv;

@@ -75,6 +75,22 @@
 #else
 #define RSSI_OFFSET SMARTRF_SETTINGS_RSSI_OFFSET_779_930
 #endif
+
+#include "rf_patches/rf_patch_cpe_genfsk.h"
+#include "rf_patches/rf_patch_rfe_genfsk.h"
+
+#include "smartrf_fxn.h"
+// TI-RTOS RF Mode Object
+RF_Mode RF_prop =
+{
+    .rfMode = RF_MODE_PROPRIETARY_SUB_1,
+    .cpePatchFxn = &rf_patch_cpe_genfsk,
+    .mcePatchFxn = (void *) NULL,
+    .rfePatchFxn = &rf_patch_rfe_genfsk
+};
+
+
+
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_PROP_RADIO_DIV_SETUP */
 static uint32_t overrides[] =
