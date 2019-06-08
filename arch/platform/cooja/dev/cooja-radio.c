@@ -47,7 +47,11 @@
  * transmission or will deliver to the MAC layer after reception. Includes
  * the MAC header and payload, but not the FCS.
  */
+#ifdef COOJA_RADIO_CONF_BUFSIZE
+#define COOJA_RADIO_BUFSIZE COOJA_RADIO_CONF_BUFSIZE
+#else
 #define COOJA_RADIO_BUFSIZE 125
+#endif
 
 #define CCA_SS_THRESHOLD -95
 
