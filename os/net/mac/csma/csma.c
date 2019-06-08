@@ -135,6 +135,13 @@ off(void)
 static void
 init(void)
 {
+  radio_value_t radio_max_payload_len;
+
+  /* Check that the radio can correctly report its max supported payload */
+  if(NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN, &radio_max_payload_len) != RADIO_RESULT_OK) {
+    LOG_ERR("! radio does not support getting RADIO_CONST_MAX_PAYLOAD_LEN. Abort init.\n");
+    return;
+  }
 
 #if LLSEC802154_USES_AUX_HEADER
 #ifdef CSMA_LLSEC_DEFAULT_KEY0
