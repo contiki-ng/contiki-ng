@@ -1161,8 +1161,18 @@ turn_off(void)
 static int
 max_payload(void)
 {
+  radio_value_t max_radio_payload_len;
+  radio_result_t res;
+
+  res = NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN,
+                                 &max_radio_payload_len);
+
+  if(res == RADIO_RESULT_NOT_SUPPORTED) {
+    LOG_ERR("Failed to retrieve max radio driver payload length\n");
+  }
+
   /* Setup security... before. */
-  return TSCH_PACKET_MAX_LEN -  NETSTACK_FRAMER.length();
+  return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN) -  NETSTACK_FRAMER.length();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {
