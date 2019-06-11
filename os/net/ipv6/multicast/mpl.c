@@ -77,6 +77,10 @@
 #if MPL_SEED_ID_TYPE == 2 && MPL_SEED_ID_H > 0x00
 #warning MPL Seed ID upper 64 bits set yet not used due to Seed ID type setting
 #endif
+/* Check a forwarding strategy is enabled */
+#if !MPL_PROACTIVE_FORWARDING && !MPL_REACTIVE_FORWARDING
+#error "No forwarding strategy is enabled."
+#endif
 /*---------------------------------------------------------------------------*/
 /* Data Representation */
 /*---------------------------------------------------------------------------*/
@@ -330,6 +334,7 @@ struct mpl_hbho_s3 {
  * Seed ID length being sent, so all the different representations it can take
  * are shown here.
  */
+#if MPL_REACTIVE_FORWARDING
 struct seed_info {
   uint8_t min_seqno;
   uint8_t bm_len_S; /* First 6 bits bm-len, last 2 S */
@@ -381,6 +386,7 @@ struct seed_info_s3 {
  * l: Length value (0-63) that the length bits should be set to
  */
 #define SEED_INFO_SET_LEN(h, l) ((h)->bm_len_S |= (l << 2))
+#endif
 /*---------------------------------------------------------------------------*/
 /* Maintain Stats */
 /*---------------------------------------------------------------------------*/
@@ -412,7 +418,9 @@ static struct mpl_hbho *lochbhmptr;  /* HBH Header Pointer */
 static struct mpl_seed *locssptr;  /* Seed Set Pointer */
 static struct mpl_msg *locmmptr;  /* MPL Message Pointer */
 static struct mpl_domain *locdsptr;  /* Domain set pointer */
+#if MPL_REACTIVE_FORWARDING
 static struct seed_info *locsiptr;  /* Seed Info Pointer */
+#endif
 /*---------------------------------------------------------------------------*/
 /* uIPv6 Pointers */
 /*---------------------------------------------------------------------------*/
@@ -463,8 +471,10 @@ extern uint16_t uip_slen;
 /*---------------------------------------------------------------------------*/
 /* Local function prototypes */
 /*---------------------------------------------------------------------------*/
+#if MPL_REACTIVE_FORWARDING
 static void icmp_in(void);
 UIP_ICMP6_HANDLER(mpl_icmp_handler, ICMP6_MPL, 0, icmp_in);
+#endif
 
 static struct mpl_msg *
 buffer_allocate(void)
@@ -483,6 +493,7 @@ buffer_free(struct mpl_msg *msg)
   if(trickle_timer_is_running(&msg->tt)) {
     trickle_timer_stop(&msg->tt);
   }
+  list_remove(msg->seed->min_seq, msg);
   MSG_SET_CLEAR_USED(msg);
 }
 static struct mpl_msg *
@@ -753,6 +764,7 @@ update_seed_id(void)
   LOG_DBG_SEED(local_seed_id);
   LOG_DBG_(" with S=%u\n", local_seed_id.s);
 }
+#if MPL_REACTIVE_FORWARDING
 void
 icmp_out(struct mpl_domain *dom)
 {
@@ -891,6 +903,7 @@ icmp_out(struct mpl_domain *dom)
   MPL_STATS_ADD(icmp_out);
   return;
 }
+#endif
 static void
 data_message_expiration(void *ptr, uint8_t suppress)
 {
@@ -899,6 +912,10 @@ data_message_expiration(void *ptr, uint8_t suppress)
   if(locmmptr->e > MPL_DATA_MESSAGE_TIMER_EXPIRATIONS) {
     /* Terminate the trickle timer here if we've already expired enough times */
     trickle_timer_stop(&locmmptr->tt);
+    #if !MPL_REACTIVE_FORWARDING
+    LOG_DBG("Message not needed anymore. Freeing...\n");
+    buffer_free(locmmptr);
+    #endif
     return;
   }
   if(suppress == TRICKLE_TIMER_TX_OK) { /* Only transmit if not suppressed */
@@ -978,6 +995,7 @@ data_message_expiration(void *ptr, uint8_t suppress)
 
   locmmptr->e++;
 }
+#if MPL_REACTIVE_FORWARDING
 static void
 control_message_expiration(void *ptr, uint8_t suppress)
 {
@@ -994,6 +1012,7 @@ control_message_expiration(void *ptr, uint8_t suppress)
   }
   locdsptr->e++;
 }
+#endif
 static void
 mpl_maddr_check(void)
 {
@@ -1049,6 +1068,7 @@ lifetime_timer_expiration(void *ptr)
   mpl_maddr_check();
   ctimer_reset(&lifetime_timer);
 }
+#if MPL_REACTIVE_FORWARDING
 static void
 icmp_in(void)
 {
@@ -1377,6 +1397,7 @@ discard:
   uipbuf_clear();
   return;
 }
+#endif
 static uint8_t
 accept(uint8_t in)
 {
@@ -1602,7 +1623,7 @@ accept(uint8_t in)
   locssptr->lifetime = MPL_SEED_SET_ENTRY_LIFETIME;
 
   /* Start the control message timer if needed */
-#if MPL_CONTROL_MESSAGE_TIMER_EXPIRATIONS > 0
+#if MPL_REACTIVE_FORWARDING && MPL_CONTROL_MESSAGE_TIMER_EXPIRATIONS > 0
   if(!trickle_timer_is_running(&locdsptr->tt)) {
     mpl_control_trickle_timer_start(locdsptr);
   } else {
@@ -1763,8 +1784,10 @@ init(void)
   memset(seed_set, 0, sizeof(struct mpl_seed) * MPL_SEED_SET_SIZE);
   memset(buffered_message_set, 0, sizeof(struct mpl_msg) * MPL_BUFFERED_MESSAGE_SET_SIZE);
 
+#if MPL_REACTIVE_FORWARDING
   /* Register the ICMPv6 input handler */
   uip_icmp6_register_input_handler(&mpl_icmp_handler);
+#endif
 
   update_seed_id();
 
