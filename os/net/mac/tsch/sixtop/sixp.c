@@ -263,6 +263,13 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
               seqno != pkt.seqno) {
       LOG_ERR("6P: sixp_input() fails because of invalid seqno [seqno:%u, %u]\n",
               seqno, pkt.seqno);
+      /*
+       * Figure 31 of RFC 8480 implies there is a chance to receive a
+       * 6P Response having RC_ERR_SEQNUM and SeqNum of 0. But, it
+       * shouldn't happen according to the definition of SeqNum
+       * described Section 3.2.2 of RFC 8480. We discard such a 6P
+       * Response silently without taking any action.
+       */
       return;
     }
   }
