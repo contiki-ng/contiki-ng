@@ -275,11 +275,12 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
       } else if(new_state == SIXP_TRANS_STATE_RESPONSE_SENT) {
         if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
           LOG_ERR("6top: cannot update next_seqno\n");
+        } else if(trans->cmd == SIXP_PKT_CMD_CLEAR) {
+          /* next_seqno must have been reset to 0 already; keep it */
+          assert(sixp_nbr_get_next_seqno(nbr) == 0);
         } else {
-          /* override next_seqno with the received one unless it's zero */
-          if(trans->seqno != 0) {
-            sixp_nbr_set_next_seqno(nbr, trans->seqno);
-          }
+          /* override next_seqno with the one in the request */
+          sixp_nbr_set_next_seqno(nbr, trans->seqno);
           sixp_nbr_increment_next_seqno(nbr);
         }
       }
