@@ -51,6 +51,11 @@
 static linkaddr_t peer_addr;
 static uint8_t test_sf_input_is_called = 0;
 
+#define YIELD_CPU_FOR_TIMER_TASKS(et) do {              \
+    etimer_set(&et, CLOCK_SECOND);                      \
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));      \
+} while(0)
+
 static void
 input(sixp_pkt_type_t type,sixp_pkt_code_t code, const uint8_t *body,
       uint16_t body_len, const linkaddr_t *peer_addr)
@@ -686,6 +691,497 @@ UNIT_TEST(test_detect_seqno_error_2)
   UNIT_TEST_END();
 }
 
+UNIT_TEST_REGISTER(test_next_seqno_on_initiator_after_initial_success_trans_1,
+                   "test next_seqno on initiator after "
+                   "an initial transaction of success [first half]");
+UNIT_TEST(test_next_seqno_on_initiator_after_initial_success_trans_1)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  const uint8_t cell_options = 0;
+  const uint16_t num_cells = 0;
+  const sixp_pkt_rc_t return_code = SIXP_PKT_RC_SUCCESS;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /* we don't have a nbr to the peer at the beginning */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+
+  /* send a COUNT request to the peer */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+  UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                               TEST_SF_SFID,
+                               &cell_options, sizeof(cell_options),
+                               &peer_addr, NULL, NULL, 0) == 0);
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) != NULL);
+  test_mac_invoke_sent_callback(MAC_TX_OK, 1);
+
+  /*
+   * inject a SUCCESS response to the initiator to complete the
+   * transaction
+   */
+  packetbuf_clear();
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_RESPONSE,
+                                   (sixp_pkt_code_t)(uint8_t)return_code,
+                                   TEST_SF_SFID, seqno_of_initial_trans,
+                                   (const uint8_t *)&num_cells,
+                                   sizeof(num_cells), NULL) == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_initiator_after_initial_success_trans_2,
+                   "test next_seqno on initiator after "
+                   "an initial transaction of success [second half]");
+UNIT_TEST(test_next_seqno_on_initiator_after_initial_success_trans_2)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  uint8_t next_seqno;
+  sixp_nbr_t *nbr;
+
+  UNIT_TEST_BEGIN();
+  /*
+   * test_next_seqno_on_initiator_after_initial_success_trans_1() is
+   * expected to be called just before this function; we are just
+   * after having a transaction complete with the peer.
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+
+  /*
+   * initiator should keep the nbr for the peer after the transaction
+   * completes
+   */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_find(&peer_addr)) != NULL);
+
+  /* next_seqno should be one */
+  next_seqno = sixp_nbr_get_next_seqno(nbr);
+  printf("next_seqno: %u (expected to be 1)\n", next_seqno);
+  UNIT_TEST_ASSERT(next_seqno == (seqno_of_initial_trans + 1));
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_initiator_after_initial_err_trans_1,
+                   "test next_seqno on initiator after "
+                   "an initial transaction of RC_ERR [first half]");
+UNIT_TEST(test_next_seqno_on_initiator_after_initial_err_trans_1)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  const uint8_t cell_options = 0;
+  const sixp_pkt_rc_t return_code = SIXP_PKT_RC_ERR;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /* we don't have a nbr to the peer at the beginning */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+
+  /* send a COUNT request to the peer */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+  UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_REQUEST,
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                               TEST_SF_SFID,
+                               &cell_options, sizeof(cell_options),
+                               &peer_addr, NULL, NULL, 0) == 0);
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) != NULL);
+  test_mac_invoke_sent_callback(MAC_TX_OK, 1);
+
+  /*
+   * inject an ERR response to the initiator to complete the
+   * transaction
+   */
+  packetbuf_clear();
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_RESPONSE,
+                                   (sixp_pkt_code_t)(uint8_t)return_code,
+                                   TEST_SF_SFID, seqno_of_initial_trans,
+                                   NULL, 0, NULL) == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_initiator_after_initial_err_trans_2,
+                   "test next_seqno on initiator after "
+                   "an initial transaction of RC_ERR [second half]");
+UNIT_TEST(test_next_seqno_on_initiator_after_initial_err_trans_2)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  uint8_t next_seqno;
+  sixp_nbr_t *nbr;
+
+  UNIT_TEST_BEGIN();
+  /*
+   * test_next_seqno_on_initiator_after_initial_err_trans_1() is
+   * expected to be called just before this function; we are just
+   * after having a transaction complete with the peer.
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+
+  /*
+   * initiator should keep the nbr for the peer after the transaction
+   * completes
+   */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_find(&peer_addr)) != NULL);
+
+  /* next_seqno should be one */
+  next_seqno = sixp_nbr_get_next_seqno(nbr);
+  printf("next_seqno: %u (expected to be 1)\n", next_seqno);
+  UNIT_TEST_ASSERT(next_seqno == (seqno_of_initial_trans + 1));
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_success_trans_1,
+                   "test next_seqno on responder after "
+                   "an initial transaction of success [first half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_success_trans_1)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  const uint8_t request_body[3];
+  const uint16_t num_cells = 0;
+  const sixp_pkt_rc_t return_code = SIXP_PKT_RC_SUCCESS;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /* we don't have a nbr to the peer at the beginning */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+
+  /* inject a COUNT request */
+  packetbuf_clear();
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                   TEST_SF_SFID, seqno_of_initial_trans,
+                                   request_body, sizeof(request_body),
+                                   NULL) == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+
+  /* return a SUCCESS response to the peer */
+  UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_RESPONSE,
+                               (sixp_pkt_code_t)(uint8_t)return_code,
+                               TEST_SF_SFID,
+                               (const uint8_t *)&num_cells, sizeof(num_cells),
+                               &peer_addr, NULL, NULL, 0) == 0);
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) != NULL);
+  test_mac_invoke_sent_callback(MAC_TX_OK, 1);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_success_trans_2,
+                   "test next_seqno on responder after "
+                   "an initial transaction of success [second half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_success_trans_2)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  uint8_t next_seqno;
+  sixp_nbr_t *nbr;
+
+  UNIT_TEST_BEGIN();
+  /*
+   * test_next_seqno_on_responder_after_initial_success_trans_1() is
+   * expected to be called just before this function; we are just
+   * after having a transaction complete with the peer.
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+
+  /*
+   * responder should keep the nbr for the peer after the transaction
+   * completes
+   */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_find(&peer_addr)) != NULL);
+
+  /* next_seqno should be one */
+  next_seqno = sixp_nbr_get_next_seqno(nbr);
+  printf("next_seqno: %u (expected to be 1)\n", next_seqno);
+  UNIT_TEST_ASSERT(next_seqno == (seqno_of_initial_trans + 1));
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_err_trans_1,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR [first half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_err_trans_1)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  const uint8_t request_body[3];
+  const uint16_t num_cells = 0;
+  const sixp_pkt_rc_t return_code = SIXP_PKT_RC_ERR;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /* we don't have a nbr to the peer at the beginning */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+
+  /* inject a COUNT request */
+  packetbuf_clear();
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                   TEST_SF_SFID, seqno_of_initial_trans,
+                                   request_body, sizeof(request_body),
+                                   NULL) == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+
+  /* return an ERR response to the peer */
+  UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_RESPONSE,
+                               (sixp_pkt_code_t)(uint8_t)return_code,
+                               TEST_SF_SFID,
+                               (const uint8_t *)&num_cells, sizeof(num_cells),
+                               &peer_addr, NULL, NULL, 0) == 0);
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) != NULL);
+  test_mac_invoke_sent_callback(MAC_TX_OK, 1);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_err_trans_2,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR [second half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_err_trans_2)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  uint8_t next_seqno;
+  sixp_nbr_t *nbr;
+
+  UNIT_TEST_BEGIN();
+  /*
+   * test_next_seqno_on_responder_after_initial_err_trans_1() is
+   * expected to be called just before this function; we are just
+   * after having a transaction complete with the peer.
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+
+  /*
+   * responder should keep the nbr for the peer after the transaction
+   * completes
+   */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_find(&peer_addr)) != NULL);
+
+  /* next_seqno should be one */
+  next_seqno = sixp_nbr_get_next_seqno(nbr);
+printf("next_seqno: %u (expected to be 1)\n", next_seqno);
+  UNIT_TEST_ASSERT(next_seqno == (seqno_of_initial_trans) + 1);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_err_sfid_trans_1,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR_SFID [first half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_err_sfid_trans_1)
+{
+  const uint8_t sfid = TEST_SF_SFID + 1;  /* invalid SFID */
+  const uint8_t seqno_of_initial_trans = 0;
+  const uint8_t request_body[3];
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /* we don't have a nbr to the peer at the beginning */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+
+  /* inject a COUNT request */
+  packetbuf_clear();
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                   sfid, seqno_of_initial_trans,
+                                   request_body, sizeof(request_body),
+                                   NULL) == 0);
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+
+  /* RC_ERR_SFID is sent automatically by 6P layer */
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 1);
+  /*
+   * when 6P performs auto-reply with RC_ERR_SFID, it doesn't generate
+   * a trans to manage
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+  test_mac_invoke_sent_callback(MAC_TX_OK, 1);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_err_sfid_trans_2,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR_SFID [second half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_err_sfid_trans_2)
+{
+  UNIT_TEST_BEGIN();
+  /*
+   * test_next_seqno_on_responder_after_initial_err_sfid_trans_1() is
+   * expected to be called just before this function; we are just
+   * after having a transaction complete with the peer.
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+
+  /*
+   * responder shouldn't have a nbr for the peer after the transaction
+   * completes
+   */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_seqnum0_trans_1,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR_SEQNUM [first half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_seqnum0_trans_1)
+{
+  const uint8_t seqno_in_existing_nbr = 1;
+  const uint8_t seqno_of_initial_trans = 0;
+  const uint8_t request_body[3];
+  sixp_nbr_t *nbr;
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /* we don't have a nbr to the peer at the beginning */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+  /* create a nbr and set next_seqno to 1 */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_increment_next_seqno(nbr) == 0);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == seqno_in_existing_nbr);
+
+  /* inject a COUNT request (SeqNum=0) */
+  packetbuf_clear();
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                   TEST_SF_SFID, seqno_of_initial_trans,
+                                   request_body, sizeof(request_body),
+                                   NULL) == 0);
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+
+  /* RC_ERR_SEQNUM is sent automatically by 6P layer */
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 1);
+  /*
+   * even when 6P performs auto-reply, if its return code is
+   * RC_ERR_SFID, 6P layer creates a trans for the erroneous
+   * transaction
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) != NULL);
+  test_mac_invoke_sent_callback(MAC_TX_OK, 1);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_seqnum0_trans_2,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR_SEQNUM [second half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_seqnum0_trans_2)
+{
+  const uint8_t seqno_of_initial_trans = 0;
+  uint8_t next_seqno;
+  sixp_nbr_t *nbr;
+
+  UNIT_TEST_BEGIN();
+  /*
+   * test_next_seqno_on_responder_after_initial_seqnum1_trans_1()
+   * is expected to be called just before this function; we are just
+   * after having a transaction complete with the peer.
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+
+  /*
+   * in this case, responding with ERR_RC_SEQNUM, responder should
+   * have a nbr for the peer after the transaction completes, which
+   * has the right next_seqno
+   */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_find(&peer_addr)) != NULL);
+
+  /*
+   * since the initial request has SeqNum=0, next_seqno should remain
+   * 1
+   */
+  next_seqno = sixp_nbr_get_next_seqno(nbr);
+  printf("next_seqno: %u (expected to be 1)\n", next_seqno);
+  UNIT_TEST_ASSERT(next_seqno == (seqno_of_initial_trans + 1));
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_seqnum1_trans_1,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR_SEQNUM [first half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_seqnum1_trans_1)
+{
+  const uint8_t seqno_of_initial_trans = 1;
+  const uint8_t request_body[3];
+
+  UNIT_TEST_BEGIN();
+
+  test_setup();
+
+  /* we don't have a nbr to the peer at the beginning */
+  UNIT_TEST_ASSERT(sixp_nbr_find(&peer_addr) == NULL);
+
+  /* inject a COUNT request (SeqNum=1) */
+  packetbuf_clear();
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_COUNT,
+                                   TEST_SF_SFID, seqno_of_initial_trans,
+                                   request_body, sizeof(request_body),
+                                   NULL) == 0);
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+
+  /* RC_ERR_SEQNUM is sent automatically by 6P layer */
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 1);
+  /*
+   * even when 6P performs auto-reply, if its return code is
+   * RC_ERR_SFID, 6P layer creates a trans for the erroneous
+   * transaction
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) != NULL);
+  test_mac_invoke_sent_callback(MAC_TX_OK, 1);
+
+  UNIT_TEST_END();
+}
+
+UNIT_TEST_REGISTER(test_next_seqno_on_responder_after_initial_seqnum1_trans_2,
+                   "test next_seqno on responder after "
+                   "an initial transaction of RC_ERR_SEQNUM [second half]");
+UNIT_TEST(test_next_seqno_on_responder_after_initial_seqnum1_trans_2)
+{
+  const uint8_t seqno_of_initial_trans = 1;
+  uint8_t next_seqno;
+  sixp_nbr_t *nbr;
+
+  UNIT_TEST_BEGIN();
+  /*
+   * test_next_seqno_on_responder_after_initial_seqnum1_trans_1()
+   * is expected to be called just before this function; we are just
+   * after having a transaction complete with the peer.
+   */
+  UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
+
+  /*
+   * in this case, responding with ERR_RC_SEQNUM, responder should
+   * have a nbr for the peer after the transaction completes, which
+   * has the right next_seqno
+   */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_find(&peer_addr)) != NULL);
+
+  /* since the initial request has SeqNum=1, next_seqno should be 2 */
+  next_seqno = sixp_nbr_get_next_seqno(nbr);
+  printf("next_seqno: %u (expected to be 2)\n", sixp_nbr_get_next_seqno(nbr));
+  UNIT_TEST_ASSERT(next_seqno == (seqno_of_initial_trans + 1));
+
+  UNIT_TEST_END();
+}
+
 UNIT_TEST_REGISTER(test_invalid_version,
                    "test invalid version");
 UNIT_TEST(test_invalid_version)
@@ -766,6 +1262,34 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(test_next_seqno_reset_by_clear_request_2);
   UNIT_TEST_RUN(test_detect_seqno_error_1);
   UNIT_TEST_RUN(test_detect_seqno_error_2);
+
+  UNIT_TEST_RUN(test_next_seqno_on_initiator_after_initial_success_trans_1);
+  YIELD_CPU_FOR_TIMER_TASKS(et);
+  UNIT_TEST_RUN(test_next_seqno_on_initiator_after_initial_success_trans_2);
+
+  UNIT_TEST_RUN(test_next_seqno_on_initiator_after_initial_err_trans_1);
+  YIELD_CPU_FOR_TIMER_TASKS(et);
+  UNIT_TEST_RUN(test_next_seqno_on_initiator_after_initial_err_trans_2);
+
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_success_trans_1);
+  YIELD_CPU_FOR_TIMER_TASKS(et);
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_success_trans_2);
+
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_err_trans_1);
+  YIELD_CPU_FOR_TIMER_TASKS(et);
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_err_trans_2);
+
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_err_sfid_trans_1);
+  YIELD_CPU_FOR_TIMER_TASKS(et);
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_err_sfid_trans_2);
+
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_seqnum0_trans_1);
+  YIELD_CPU_FOR_TIMER_TASKS(et);
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_seqnum0_trans_2);
+
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_seqnum1_trans_1);
+  YIELD_CPU_FOR_TIMER_TASKS(et);
+  UNIT_TEST_RUN(test_next_seqno_on_responder_after_initial_seqnum1_trans_2);
 
   UNIT_TEST_RUN(test_invalid_version);
 
