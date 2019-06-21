@@ -681,12 +681,13 @@ UNIT_TEST(test_detect_seqno_error_2)
 
   UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
   UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
-                                            SIXP_TRANS_STATE_RESPONSE_SENDING)
-                   == 0);
-  UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
                                             SIXP_TRANS_STATE_RESPONSE_SENT)
                    == 0);
-  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 4);
+  /*
+   * next_seqno should be 1, the next value of 0, which is of the
+   * received request
+   */
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 1);
 
   UNIT_TEST_END();
 }

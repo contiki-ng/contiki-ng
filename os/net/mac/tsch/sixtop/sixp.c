@@ -136,14 +136,32 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
   assert(pkt != NULL);
   assert(dest_addr != NULL);
 
-  /* create a 6P packet within packetbuf */
-  if(sixp_pkt_create(type, (sixp_pkt_code_t)(uint8_t)rc, pkt->sfid, pkt->seqno,
-                     NULL, 0, NULL) < 0) {
-    LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n", rc);
-    return -1;
+  if((rc == SIXP_PKT_RC_ERR_VERSION) ||
+     (rc == SIXP_PKT_RC_ERR_SFID) ||
+     (rc == SIXP_PKT_RC_ERR_BUSY)) {
+    /* create a 6P packet within packetbuf */
+    if(sixp_pkt_create(type, (sixp_pkt_code_t)(uint8_t)rc,
+                       pkt->sfid, pkt->seqno, NULL, 0, NULL) < 0) {
+      LOG_ERR("6P: failed to create a 6P packet to return an error [rc:%u]\n",
+              rc);
+      return -1;
+    }
+    /*
+     * for RC_ERR_VERSION and RC_ERR_SFID, we don't care about how the
+     * transmission goes for unsupported packets; no need to set
+     * callback.  for RC_ERR_BUSY, we cannot allocate another
+     * transaction. so we call sixtop_output() directly
+     */
+    sixtop_output(dest_addr, NULL, NULL);
+  } else {
+    /*
+     * 6P creates a transaction to send an error other than listed
+     * above. we use sixp_output to make 'nbr' have a correct
+     * next_seqno.
+     */
+    sixp_output(type, (sixp_pkt_code_t)(uint8_t)rc, pkt->sfid,
+                NULL, 0, dest_addr, NULL, NULL, 0);
   }
-  /* we don't care about how the transmission goes; no need to set callback */
-  sixtop_output(dest_addr, NULL, NULL);
 
   return 0;
 }
@@ -314,7 +332,6 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
 {
   sixp_trans_t *trans;
   sixp_nbr_t *nbr;
-  sixp_pkt_cmd_t cmd;
   int16_t seqno;
   sixp_pkt_t pkt;
 
@@ -367,13 +384,16 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
   nbr = sixp_nbr_find(dest_addr);
 
   /*
-   * Make sure we have a nbr for the peer if the packet is a response with
-   * success so that we can manage the schedule generation.
+   * Make sure we have a nbr for the peer if the packet is a response
+   * with success so that we can manage the schedule generation unless
+   * the request is CLEAR or in an unsupported format, in such a case
+   * we're going to return RC_ERR_VERSION or RC_ERR_SFID.
    */
   if(nbr == NULL &&
-     type == SIXP_PKT_TYPE_RESPONSE && code.value == SIXP_PKT_RC_SUCCESS &&
-     ((cmd = sixp_trans_get_cmd(trans)) == SIXP_PKT_CMD_ADD ||
-      cmd == SIXP_PKT_CMD_DELETE) &&
+     type == SIXP_PKT_TYPE_RESPONSE &&
+     sixp_trans_get_cmd(trans) != SIXP_PKT_CMD_CLEAR &&
+     code.value != SIXP_PKT_RC_ERR_VERSION &&
+     code.value != SIXP_PKT_RC_ERR_SFID &&
      (nbr = sixp_nbr_alloc(dest_addr)) == NULL) {
     LOG_ERR("6P: sixp_output() fails because of no memory for another nbr\n");
     return -1;
