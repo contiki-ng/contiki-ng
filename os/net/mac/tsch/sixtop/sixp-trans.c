@@ -227,6 +227,7 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
   int ret_val;
 
   assert(trans != NULL);
+  assert(new_state != SIXP_TRANS_STATE_UNAVAILABLE);
   /* enforce state transition rules  */
   if(trans != NULL &&
      (new_state == SIXP_TRANS_STATE_TERMINATING ||

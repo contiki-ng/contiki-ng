@@ -79,6 +79,7 @@ mac_callback(void *ptr, int status, int transmissions)
   }
 
   current_state = sixp_trans_get_state(trans);
+  new_state = SIXP_TRANS_STATE_UNAVAILABLE;
   if(status == MAC_TX_OK) {
     switch(current_state) {
       case SIXP_TRANS_STATE_REQUEST_SENDING:
