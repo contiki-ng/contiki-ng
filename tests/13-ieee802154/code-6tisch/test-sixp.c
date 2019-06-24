@@ -138,25 +138,36 @@ UNIT_TEST_REGISTER(test_input_busy,
                    "sixp_input(busy)");
 UNIT_TEST(test_input_busy)
 {
+  sixp_nbr_t *nbr;
   uint8_t *p;
   uint8_t seqno = 10;
+  uint16_t metadata = 0;
   uint32_t body;
 
   UNIT_TEST_BEGIN();
   test_setup();
 
   /* send a request to the peer first */
+  /* initial seqnum is set to 10 */
+  UNIT_TEST_ASSERT((nbr = sixp_nbr_alloc(&peer_addr)) != NULL);
+  UNIT_TEST_ASSERT(sixp_nbr_set_next_seqno(nbr, seqno) == 0);
+
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
   UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) == NULL);
   UNIT_TEST_ASSERT(sixp_output(SIXP_PKT_TYPE_REQUEST,
-                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_CLEAR,
-                               TEST_SF_SFID, NULL, 0, &peer_addr,
-                               NULL, NULL, 0) == 0);
+                               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_SIGNAL,
+                               TEST_SF_SFID,
+                               (const uint8_t*)&metadata, sizeof(metadata),
+                               &peer_addr, NULL, NULL, 0) == 0);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 1);
   UNIT_TEST_ASSERT(sixp_trans_find(&peer_addr) != NULL);
 
   test_mac_driver.init(); /* clear test_mac_send_is_called status */
 
+  /*
+   * when received a request having non-zero SeqNum, we will send back
+   * ERR_RC_BUSY
+   */
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
@@ -191,6 +202,51 @@ UNIT_TEST(test_input_busy)
   UNIT_TEST_ASSERT(p[10] == 0xf8);
 
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 1);
+
+  /*
+   * in case a received request having SeqNum of zero, we think the
+   * peer had power-cycle, we will send back ERR_RC_SEQNUM.
+   */
+  test_mac_driver.init();
+  packetbuf_clear();
+  memset(&body, 0, sizeof(body));
+  UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
+                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
+                                   TEST_SF_SFID,
+                                   0, /* SeqNum = 0*/
+                                   (const uint8_t *)&body, sizeof(body),
+                                   NULL) == 0);
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
+  UNIT_TEST_ASSERT(test_sf_input_is_called == 0);
+  sixp_input(packetbuf_hdrptr(), packetbuf_totlen(), &peer_addr);
+  UNIT_TEST_ASSERT(test_sf_input_is_called == 0);
+
+  p = packetbuf_hdrptr();
+
+  /* length */
+  UNIT_TEST_ASSERT(packetbuf_totlen() == 11);
+
+  /* Termination 1 IE */
+  UNIT_TEST_ASSERT(p[0] == 0x00);
+  UNIT_TEST_ASSERT(p[1] == 0x3f);
+
+  /* IETF IE */
+  UNIT_TEST_ASSERT(p[2] == 0x05);
+  UNIT_TEST_ASSERT(p[3] == 0xa8);
+
+  /* 6top IE */
+  UNIT_TEST_ASSERT(p[4] == 0xc9);
+  UNIT_TEST_ASSERT(p[5] == 0x10);
+  UNIT_TEST_ASSERT(p[6] == SIXP_PKT_RC_ERR_SEQNUM);
+  UNIT_TEST_ASSERT(p[7] == TEST_SF_SFID);
+  UNIT_TEST_ASSERT(p[8] == 0);
+
+  /* Payload Termination IE */
+  UNIT_TEST_ASSERT(p[9] == 0x00);
+  UNIT_TEST_ASSERT(p[10] == 0xf8);
+
+  UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 1);
+
   UNIT_TEST_END();
 }
 

@@ -54,6 +54,9 @@
 static void mac_callback(void *ptr, int status, int transmissions);
 static int send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
                            const sixp_pkt_t *pkt, const linkaddr_t *dest_addr);
+static void handle_schedule_inconsistency(const sixtop_sf_t *sf,
+                                          const sixp_pkt_t *recved_pkt,
+                                          const linkaddr_t *peer_addr);
 /*---------------------------------------------------------------------------*/
 static void
 mac_callback(void *ptr, int status, int transmissions)
@@ -133,12 +136,17 @@ static int
 send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
                 const sixp_pkt_t *pkt, const linkaddr_t *dest_addr)
 {
+  sixp_trans_t *trans;
+
   assert(pkt != NULL);
   assert(dest_addr != NULL);
 
   if((rc == SIXP_PKT_RC_ERR_VERSION) ||
      (rc == SIXP_PKT_RC_ERR_SFID) ||
-     (rc == SIXP_PKT_RC_ERR_BUSY)) {
+     (rc == SIXP_PKT_RC_ERR_BUSY) ||
+     (rc == SIXP_PKT_RC_ERR_SEQNUM &&
+      (trans = sixp_trans_find(dest_addr)) != NULL &&
+      sixp_trans_get_state(trans) != SIXP_TRANS_STATE_REQUEST_RECEIVED)) {
     /* create a 6P packet within packetbuf */
     if(sixp_pkt_create(type, (sixp_pkt_code_t)(uint8_t)rc,
                        pkt->sfid, pkt->seqno, NULL, 0, NULL) < 0) {
@@ -149,8 +157,14 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
     /*
      * for RC_ERR_VERSION and RC_ERR_SFID, we don't care about how the
      * transmission goes for unsupported packets; no need to set
-     * callback.  for RC_ERR_BUSY, we cannot allocate another
-     * transaction. so we call sixtop_output() directly
+     * callback.
+     *
+     * for RC_ERR_BUSY, we cannot allocate another transaction. so we call
+     * sixtop_output() directly
+     *
+     * when we're going to send RC_ERR_SEQNUM to a peer to whom we
+     * have a transaction under way, we call sixtop_output() directly
+     * to prevent allocating another transaction
      */
     sixtop_output(dest_addr, NULL, NULL);
   } else {
@@ -164,6 +178,25 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
   }
 
   return 0;
+}
+/*---------------------------------------------------------------------------*/
+static void
+handle_schedule_inconsistency(const sixtop_sf_t *sf,
+                              const sixp_pkt_t *recved_pkt,
+                              const linkaddr_t *peer_addr)
+{
+  assert(recved_pkt != NULL);
+  assert(peer_addr != NULL);
+
+  if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_SEQNUM,
+                     recved_pkt, peer_addr) < 0) {
+    LOG_ERR("6P: sixp_input() fails to return an error response\n");
+  }
+  if(sf != NULL && sf->error != NULL) {
+    sf->error(SIXP_ERROR_SCHEDULE_INCONSISTENCY,
+              (sixp_pkt_cmd_t)recved_pkt->code.value, recved_pkt->seqno,
+              peer_addr);
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -221,15 +254,27 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
 
   if(pkt.type == SIXP_PKT_TYPE_REQUEST) {
     if(trans != NULL) {
-      /* Error: not supposed to have another transaction with the peer. */
-      LOG_ERR("6P: sixp_input() fails because another request [peer_addr:");
-      LOG_ERR_LLADDR((const linkaddr_t *)src_addr);
-      LOG_ERR_(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
-      if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_BUSY,
-                         (const sixp_pkt_t *)&pkt, src_addr) < 0) {
-        LOG_ERR("6P: sixp_input() fails to return an error response");
+      if(pkt.code.cmd != SIXP_PKT_CMD_CLEAR &&
+         ((pkt.seqno == 0 && sixp_trans_get_seqno(trans) != 0) ||
+          (pkt.seqno != 0 && sixp_trans_get_seqno(trans) == 0))) {
+        /*
+         * seems the peer had power-cycle; we're going to send back
+         * RC_ERR_SEQNUM. in this case, we don't want to allocate
+         * another transaction for this new request.
+         */
+        handle_schedule_inconsistency(sf, (const sixp_pkt_t *)&pkt, src_addr);
+        return;
+      } else {
+        /* Error: not supposed to have another transaction with the peer. */
+        LOG_ERR("6P: sixp_input() fails because another request [peer_addr:");
+        LOG_ERR_LLADDR((const linkaddr_t *)src_addr);
+        LOG_ERR_(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
+        if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_BUSY,
+                           (const sixp_pkt_t *)&pkt, src_addr) < 0) {
+          LOG_ERR("6P: sixp_input() fails to return an error response");
+        }
+        return;
       }
-      return;
     }
 
     if((pkt.code.cmd == SIXP_PKT_CMD_CLEAR) &&
@@ -257,15 +302,7 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
       if(trans != NULL) {
         sixp_trans_transit_state(trans,
                                  SIXP_TRANS_STATE_REQUEST_RECEIVED);
-
-      }
-      if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_SEQNUM,
-                         (const sixp_pkt_t *)&pkt, src_addr) < 0) {
-        LOG_ERR("6P: sixp_input() fails to return an error response\n");
-      }
-      if(sf != NULL && sf->error != NULL) {
-        sf->error(SIXP_ERROR_SCHEDULE_INCONSISTENCY,
-                  (sixp_pkt_cmd_t)pkt.code.value, pkt.seqno, src_addr);
+        handle_schedule_inconsistency(sf, (const sixp_pkt_t *)&pkt, src_addr);
       }
       return;
     }
