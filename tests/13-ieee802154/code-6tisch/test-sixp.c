@@ -90,6 +90,7 @@ UNIT_TEST_REGISTER(test_input_no_sf,
                    "sixp_input(no_sf)");
 UNIT_TEST(test_input_no_sf)
 {
+  uint8_t seqno = 10;
   uint32_t body;
   uint8_t *p;
 
@@ -99,7 +100,7 @@ UNIT_TEST(test_input_no_sf)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   UNKNOWN_SF_SFID, 10,
+                                   UNKNOWN_SF_SFID, seqno,
                                    (const uint8_t *)&body, sizeof(body),
                                    NULL) == 0);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
@@ -121,9 +122,9 @@ UNIT_TEST(test_input_no_sf)
   /* 6top IE */
   UNIT_TEST_ASSERT(p[4] == 0xc9);
   UNIT_TEST_ASSERT(p[5] == 0x10);
-  UNIT_TEST_ASSERT(p[6] == 0x05);
+  UNIT_TEST_ASSERT(p[6] == SIXP_PKT_RC_ERR_SFID);
   UNIT_TEST_ASSERT(p[7] == UNKNOWN_SF_SFID);
-  UNIT_TEST_ASSERT(p[8] == 0x0a);
+  UNIT_TEST_ASSERT(p[8] == seqno);
 
   /* Payload Termination IE */
   UNIT_TEST_ASSERT(p[9] == 0x00);
@@ -138,6 +139,7 @@ UNIT_TEST_REGISTER(test_input_busy,
 UNIT_TEST(test_input_busy)
 {
   uint8_t *p;
+  uint8_t seqno = 10;
   uint32_t body;
 
   UNIT_TEST_BEGIN();
@@ -158,7 +160,7 @@ UNIT_TEST(test_input_busy)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10,
+                                   TEST_SF_SFID, seqno,
                                    (const uint8_t *)&body, sizeof(body),
                                    NULL) == 0);
   UNIT_TEST_ASSERT(test_mac_send_function_is_called() == 0);
@@ -180,9 +182,9 @@ UNIT_TEST(test_input_busy)
   /* 6top IE */
   UNIT_TEST_ASSERT(p[4] == 0xc9);
   UNIT_TEST_ASSERT(p[5] == 0x10);
-  UNIT_TEST_ASSERT(p[6] == 0x08);
+  UNIT_TEST_ASSERT(p[6] == SIXP_PKT_RC_ERR_BUSY);
   UNIT_TEST_ASSERT(p[7] == TEST_SF_SFID);
-  UNIT_TEST_ASSERT(p[8] == 0x0a);
+  UNIT_TEST_ASSERT(p[8] == seqno);
 
   /* Payload Termination IE */
   UNIT_TEST_ASSERT(p[9] == 0x00);
@@ -196,6 +198,7 @@ UNIT_TEST_REGISTER(test_input_no_memory,
                    "sixp_input(no_memory)");
 UNIT_TEST(test_input_no_memory)
 {
+  uint8_t seqno = 10;
   uint32_t body;
   sixp_pkt_t pkt;
   uint8_t *p;
@@ -207,7 +210,7 @@ UNIT_TEST(test_input_no_memory)
   memset(&body, 0, sizeof(body));
   UNIT_TEST_ASSERT(sixp_pkt_create(SIXP_PKT_TYPE_REQUEST,
                                    (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
-                                   TEST_SF_SFID, 10,
+                                   TEST_SF_SFID, seqno,
                                    (const uint8_t *)&body, sizeof(body),
                                    &pkt) == 0);
   memset(&addr, 0, sizeof(addr));
@@ -238,9 +241,9 @@ UNIT_TEST(test_input_no_memory)
   /* 6top IE */
   UNIT_TEST_ASSERT(p[4] == 0xc9);
   UNIT_TEST_ASSERT(p[5] == 0x10);
-  UNIT_TEST_ASSERT(p[6] == 0x08);
+  UNIT_TEST_ASSERT(p[6] == SIXP_PKT_RC_ERR_BUSY);
   UNIT_TEST_ASSERT(p[7] == TEST_SF_SFID);
-  UNIT_TEST_ASSERT(p[8] == 0x0a);
+  UNIT_TEST_ASSERT(p[8] == seqno);
 
   /* Payload Termination IE */
   UNIT_TEST_ASSERT(p[9] == 0x00);
