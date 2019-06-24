@@ -269,6 +269,15 @@ sixp_input(const uint8_t *buf, uint16_t len, const linkaddr_t *src_addr)
         LOG_ERR("6P: sixp_input() fails because another request [peer_addr:");
         LOG_ERR_LLADDR((const linkaddr_t *)src_addr);
         LOG_ERR_(" seqno:%u] is in process\n", sixp_trans_get_seqno(trans));
+        /*
+         * Although RFC 8480 says in Section 3.4.3 that we MUST send
+         * RC_RESET back in this case, we use RC_ERR_BUSY
+         * instead. RC_RESET requires the peer to revert SeqNum update
+         * by the corresponding transaction, which may cause
+         * unnecessary SeqNum disagreement. This also would make the
+         * implementation complex. At this moment, no benefit is seen
+         * in using RC_RESET over RC_ERR_BUSY.
+         */
         if(send_back_error(SIXP_PKT_TYPE_RESPONSE, SIXP_PKT_RC_ERR_BUSY,
                            (const sixp_pkt_t *)&pkt, src_addr) < 0) {
           LOG_ERR("6P: sixp_input() fails to return an error response");
