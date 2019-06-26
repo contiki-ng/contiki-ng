@@ -497,12 +497,14 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       is_broadcast = current_neighbor->is_broadcast;
       /* Unicast. More packets in queue for the neighbor? */
       burst_link_requested = 0;
+#if TSCH_PENDING_BIT_ENABLED
       if(!is_broadcast
              && tsch_current_burst_count + 1 < TSCH_BURST_MAX_LEN
              && tsch_queue_packet_count(&current_neighbor->addr) > 1) {
         burst_link_requested = 1;
         tsch_packet_set_frame_pending(packet, packet_len);
       }
+#endif /* TSCH_PENDING_BIT_ENABLED */
       /* read seqno from payload */
       seqno = ((uint8_t *)(packet))[2];
       /* if this is an EB, then update its Sync-IE */
@@ -904,8 +906,10 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
                 NETSTACK_RADIO.transmit(ack_len);
                 tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
 
+#if TSCH_PENDING_BIT_ENABLED
                 /* Schedule a burst link iff the frame pending bit was set */
                 burst_link_scheduled = tsch_packet_get_frame_pending(current_input->payload, current_input->len);
+#endif /* TSCH_PENDING_BIT_ENABLED */
               }
             }
 

@@ -362,6 +362,15 @@
 #define TSCH_WITH_LINK_SELECTOR (BUILD_WITH_ORCHESTRA)
 #endif /* TSCH_CONF_WITH_LINK_SELECTOR */
 
+/* Having the pending bit on in frame, following frames to the same
+ * destination can be transmitted consecutively over unscheduled
+ * links. This enables bursty TX. (default enabled) */
+#ifdef TSCH_CONF_PENDING_BIT_ENABLED
+#define TSCH_PENDING_BIT_ENABLED TSCH_CONF_PENDING_BIT_ENABLED
+#else
+#define TSCH_PENDING_BIT_ENABLED 1
+#endif
+
 /******** Configuration: CSMA *******/
 
 /* TSCH CSMA-CA parameters, see IEEE 802.15.4e-2012 */
