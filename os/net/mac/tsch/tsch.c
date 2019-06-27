@@ -492,6 +492,8 @@ tsch_tx_process_pending(void)
     struct tsch_packet *p = dequeued_array[dequeued_index];
     /* Put packet into packetbuf for packet_sent callback */
     queuebuf_to_packetbuf(p->qb);
+    packetbuf_set_attr(PACKETBUF_ATTR_TSCH_SLOTFRAME, p->last_tx_slotframe);
+    packetbuf_set_attr(PACKETBUF_ATTR_TSCH_TIMESLOT, p->last_tx_timeslot);
     LOG_INFO("packet sent to ");
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     LOG_INFO_(", seqno %u, status %d, tx %d\n",

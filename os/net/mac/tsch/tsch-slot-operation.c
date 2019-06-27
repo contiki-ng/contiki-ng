@@ -679,6 +679,8 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
 
     tsch_radio_off(TSCH_RADIO_CMD_OFF_END_OF_TIMESLOT);
 
+    current_packet->last_tx_slotframe = current_link->slotframe_handle;
+    current_packet->last_tx_timeslot = current_link->timeslot;
     current_packet->transmissions++;
     current_packet->ret = mac_tx_status;
 

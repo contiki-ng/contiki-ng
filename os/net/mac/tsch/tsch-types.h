@@ -98,6 +98,8 @@ struct tsch_packet {
   struct queuebuf *qb;  /* pointer to the queuebuf to be sent */
   mac_callback_t sent; /* callback for this packet */
   void *ptr; /* MAC callback parameter */
+  uint16_t last_tx_slotframe; /* slotframe handle of the last transmission performed */
+  uint16_t last_tx_timeslot; /* timeslot of the last transmission performed */
   uint8_t transmissions; /* #transmissions performed for this packet */
   uint8_t max_transmissions; /* maximal number of Tx before dropping the packet */
   uint8_t ret; /* status -- MAC return code */
