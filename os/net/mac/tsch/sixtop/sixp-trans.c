@@ -478,6 +478,26 @@ sixp_trans_terminate(sixp_trans_t *trans)
   }
 }
 /*---------------------------------------------------------------------------*/
+void
+sixp_trans_abort(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return;
+  } else {
+    LOG_INFO("6P-trans: trans [peer_addr:");
+    LOG_INFO_LLADDR((const linkaddr_t *)&trans->peer_addr);
+    LOG_INFO_(", seqno:%u] is going to be aborted\n", trans->seqno);
+    sixp_trans_terminate(trans);
+    sixp_trans_invoke_callback(trans, SIXP_OUTPUT_STATUS_ABORTED);
+    /* process_trans() should be scheduled, which we will be stop */
+    assert(ctimer_expired(&trans->timer) == 0);
+    ctimer_stop(&trans->timer);
+    /* call process_trans() directly*/
+    process_trans((void *)trans);
+  }
+}
+/*---------------------------------------------------------------------------*/
 int
 sixp_trans_init(void)
 {

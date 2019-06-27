@@ -159,6 +159,12 @@ sixp_trans_t *sixp_trans_alloc(const sixp_pkt_t *pkt,
 void sixp_trans_terminate(sixp_trans_t *trans);
 
 /**
+ * \brief Helper function to abort a transaction immediately
+ * \param trans The pointer to a transaction to terminate
+ */
+void sixp_trans_abort(sixp_trans_t *trans);
+
+/**
  * \brief Free a transaction
  * \param trans The pointer to a transaction to be freed
  * \note This function is for internal use only, which is NOT expected
