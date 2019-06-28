@@ -66,27 +66,24 @@
 #include "prop-settings.h"
 /*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
+
+/*
+ * CC1310 only supports RF_MODE_PROPRIETARY_SUB_1, and hence we need to
+ * separate the rfMode setting between CC1310 and CC1350*.
+ */
 #if defined(DEVICE_CC1310)
-RF_Mode rf_prop_mode =
-{
-  /*
-   * CC1310 only supports RF_MODE_PROPRIETARY_SUB_1, and hence we need to
-   * separate the rfMode setting between CC1310 and CC1350*.
-   */
-  .rfMode = RF_MODE_PROPRIETARY_SUB_1,
-  .cpePatchFxn = &rf_patch_cpe_genfsk,
-  .mcePatchFxn = 0,
-  .rfePatchFxn = &rf_patch_rfe_genfsk,
-};
+#define RF_PROP_MODE  RF_MODE_PROPRIETARY_SUB_1
 #else
+#define RF_PROP_MODE  RF_MODE_MULTIPLE
+#endif
+
 RF_Mode rf_prop_mode =
 {
-  .rfMode = RF_MODE_MULTIPLE,
+  .rfMode = RF_PROP_MODE,
   .cpePatchFxn = &rf_patch_cpe_genfsk,
   .mcePatchFxn = 0,
   .rfePatchFxn = &rf_patch_rfe_genfsk,
 };
-#endif
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_PROP_RADIO_DIV_SETUP */
 uint32_t rf_prop_overrides[] CC_ALIGN(4) =
