@@ -176,7 +176,9 @@ send_back_error(sixp_pkt_type_t type, sixp_pkt_rc_t rc,
     sixp_output(type, (sixp_pkt_code_t)(uint8_t)rc, pkt->sfid,
                 NULL, 0, dest_addr, NULL, NULL, 0);
   }
-
+  LOG_ERR("6P: send an error code %u to ", rc);
+  LOG_ERR_LLADDR(dest_addr);
+  LOG_ERR_("\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/
