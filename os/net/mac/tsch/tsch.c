@@ -1088,7 +1088,7 @@ send_packet(mac_callback_t sent, void *ptr)
       LOG_INFO("send packet to ");
       LOG_INFO_LLADDR(addr);
       LOG_INFO_(" with seqno %u, queue %u %u, len %u %u\n",
-             tsch_packet_seqno,
+             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
              tsch_queue_packet_count(addr), tsch_queue_global_packet_count(),
              p->header_len, queuebuf_datalen(p->qb));
     }

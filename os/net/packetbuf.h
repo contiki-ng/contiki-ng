@@ -227,6 +227,7 @@ enum {
 #if MAC_CONF_WITH_TSCH
   PACKETBUF_ATTR_TSCH_SLOTFRAME,
   PACKETBUF_ATTR_TSCH_TIMESLOT,
+  PACKETBUF_ATTR_PRIORITY,
 #endif /* MAC_CONF_WITH_TSCH */
 
   /* Scope 1 attributes: used between two neighbors only. */
