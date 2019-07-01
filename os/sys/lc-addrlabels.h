@@ -73,7 +73,11 @@ typedef void * lc_t;
   } while(0)
 
 #define LC_SET(s)                               \
-  do { ({ __label__ resume; resume: (s) = &&resume; }); }while(0)
+  do {                                          \
+    __label__ resume;                           \
+  resume:                                       \
+    (s) = &&resume;                             \
+  } while(0)
 
 #define LC_END(s)
 
