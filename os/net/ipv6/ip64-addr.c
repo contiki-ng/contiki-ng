@@ -34,9 +34,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#define printf(...)
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "IPv6"
+#define LOG_LEVEL LOG_LEVEL_NONE
 
-static uip_ip6addr_t ip64_prefix = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 0, 0, 0}};
+static uip_ip6addr_t ip64_prefix = {{ 0, 0x64, 0xff, 0x9b, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 static uint8_t ip64_prefix_len = 96;
 
 /*---------------------------------------------------------------------------*/
@@ -65,9 +68,11 @@ ip64_addr_4to6(const uip_ip4addr_t *ipv4addr,
   ipv6addr->u8[13] = ipv4addr->u8[1];
   ipv6addr->u8[14] = ipv4addr->u8[2];
   ipv6addr->u8[15] = ipv4addr->u8[3];
-  printf("ip64_addr_4to6: IPv6-encoded IPv4 address %d.%d.%d.%d\n",
-	 ipv4addr->u8[0], ipv4addr->u8[1],
-	 ipv4addr->u8[2], ipv4addr->u8[3]);
+  LOG_DBG("ip64_addr_4to6: IPv6-encoded IPv4 address %d.%d.%d.%d => ",
+          ipv4addr->u8[0], ipv4addr->u8[1],
+          ipv4addr->u8[2], ipv4addr->u8[3]);
+  LOG_DBG_6ADDR(ipv6addr);
+  LOG_DBG("\n");
 
   /* Conversion succeeded, we return non-zero. */
   return 1;
@@ -87,9 +92,11 @@ ip64_addr_6to4(const uip_ip6addr_t *ipv6addr,
     ipv4addr->u8[2] = ipv6addr->u8[14];
     ipv4addr->u8[3] = ipv6addr->u8[15];
 
-    printf("ip64_addr_6to4: IPv6-encoded IPv4 address %d.%d.%d.%d\n",
-	   ipv4addr->u8[0], ipv4addr->u8[1],
-	   ipv4addr->u8[2], ipv4addr->u8[3]);
+    LOG_DBG("ip64_addr_6to4: IPv6-encoded IPv4 address %d.%d.%d.%d <=",
+            ipv4addr->u8[0], ipv4addr->u8[1],
+            ipv4addr->u8[2], ipv4addr->u8[3]);
+    LOG_DBG_6ADDR(ipv6addr);
+    LOG_DBG("\n");
 
     /* Conversion succeeded, we return non-zero. */
     return 1;

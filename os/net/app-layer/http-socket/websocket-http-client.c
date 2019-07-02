@@ -41,7 +41,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Websocket"
-#define LOG_LEVEL LOG_LEVEL_IPV6
+#define LOG_LEVEL LOG_LEVEL_DBG
 
 enum {
   STATE_WAITING_FOR_HEADER,
