@@ -238,10 +238,6 @@
 #else
 #error "Unsupported Device Line defined"
 #endif /* Unsupported device line */
-
-#define prop_mode_driver_max_payload_len      125
-#define ieee_mode_driver_max_payload_len      125
-
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

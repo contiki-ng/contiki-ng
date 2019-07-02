@@ -104,14 +104,6 @@
 #ifndef AES_128_CONF
 #define AES_128_CONF cc26xx_aes_128_driver
 #endif /* AES_128_CONF */
-
-/* This is fixed */
-#define ieee_mode_driver_max_payload_len      125
-/* This maybe changed in the future, with software upgrade */
-#define prop_mode_driver_max_payload_len      125
-/* This is not used, but needs to be defined in order to compile */
-#define ble_cc2650_driver_max_payload_len    125
-
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
