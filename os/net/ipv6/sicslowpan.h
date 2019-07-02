@@ -66,6 +66,8 @@
 
 /**
  * \name 6lowpan compressions
+ * \note These are assumed to be in order - so that no compression is 0, then more and more
+ *  compressed version follow. E.g. they can be used for comparing: if x > COMPRESSION_IPV6 ...
  * @{
  */
 #define SICSLOWPAN_COMPRESSION_IPV6        0 /* No compression */

@@ -1397,7 +1397,7 @@ digest_6lorh_hdr(void)
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * \endverbatim
  */
- #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
 static void
 compress_hdr_ipv6(linkaddr_t *link_destaddr)
 {
@@ -1875,13 +1875,11 @@ input(void)
   }
 
   /* Process next dispatch and headers */
-#if SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6
-  if((PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
+  if(SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6 &&
+     (PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
     LOG_DBG("uncompression: IPHC dispatch\n");
     uncompress_hdr_iphc(buffer, frag_size);
-  } else
-#endif /* SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6 */
-    if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
+  } else if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
     LOG_DBG("uncompression: IPV6 dispatch\n");
     packetbuf_hdr_len += SICSLOWPAN_IPV6_HDR_LEN;
 
