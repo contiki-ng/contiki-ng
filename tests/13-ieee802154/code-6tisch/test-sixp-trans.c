@@ -1218,9 +1218,9 @@ UNIT_TEST(test_next_seqno_increment_on_request_sent)
                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
                                TEST_SF_SFID, NULL, 0, &peer_addr,
                                NULL, NULL, 0) == 0);
-  /* next_seqno must not be changed by sixp_output() */
+  /* next_seqno should be updated by sixp_output() */
   UNIT_TEST_ASSERT((trans = sixp_trans_find(&peer_addr)) != NULL);
-  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 10);
+  UNIT_TEST_ASSERT(sixp_nbr_get_next_seqno(nbr) == 11);
   UNIT_TEST_ASSERT(sixp_trans_transit_state(trans,
                                             SIXP_TRANS_STATE_REQUEST_SENT)
                    == 0);

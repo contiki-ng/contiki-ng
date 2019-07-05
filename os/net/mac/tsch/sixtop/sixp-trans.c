@@ -258,20 +258,7 @@ sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
                trans, trans->state, new_state);
 
       if(new_state == SIXP_TRANS_STATE_REQUEST_SENT) {
-        /*
-         * that is, the request is acknowledged by the peer; increment
-         * next_seqno
-         */
-        if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
-          LOG_ERR("6top: cannot increment next_seqno\n");
-        } else {
-          if(trans->cmd == SIXP_PKT_CMD_CLEAR) {
-            /* next_seqno must have been reset to 0 already. */
-            assert(sixp_nbr_get_next_seqno(nbr) == 0);
-          } else {
-            sixp_nbr_increment_next_seqno(nbr);
-          }
-        }
+        /* next_seqno should have been updated in sixp_output() */
       } else if(new_state == SIXP_TRANS_STATE_RESPONSE_SENT) {
         if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
           LOG_ERR("6top: cannot update next_seqno\n");
