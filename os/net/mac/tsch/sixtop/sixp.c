@@ -518,6 +518,11 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
       LOG_ERR("6P: sixp_output() is called trans:%p whose state is %u\n",
               trans, state);
     }
+  } else {
+    if(type == SIXP_PKT_TYPE_REQUEST) {
+      /* abort the transaction now */
+      sixp_trans_abort(trans);
+    }
   }
 
   return 0;
