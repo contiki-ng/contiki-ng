@@ -458,10 +458,6 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
       LOG_ERR("6P: sixp_output() fails to get the next sequence number\n");
       return -1;
     }
-    if(code.cmd == SIXP_PKT_CMD_CLEAR) {
-      LOG_INFO("6P: sixp_output() reset nbr's next_seqno by CLEAR Request\n");
-      sixp_nbr_reset_next_seqno(nbr);
-    }
   } else {
     assert(trans != NULL);
     if((seqno = sixp_trans_get_seqno(trans)) < 0) {
@@ -497,6 +493,21 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
     /* sixtop_output() call ends without an error */
     sixp_trans_state_t state = sixp_trans_get_state(trans);
     if(state == SIXP_TRANS_STATE_INIT) {
+      /*
+       * increment/update next_seqno immediately to prevent the next
+       * request from having the same seqno, although RFC8480
+       * describes a different way to manage seqno. If the next
+       * request has the same seqno as the previous request, a delayed
+       * response, which is for the previous transaction, may be
+       * handled mistakenly for the next request when the previous
+       * transaction is expired.
+       */
+      if(code.cmd == SIXP_PKT_CMD_CLEAR) {
+        LOG_INFO("6P: sixp_output() reset nbr's next_seqno by CLEAR Request\n");
+        sixp_nbr_reset_next_seqno(nbr);
+      } else {
+        sixp_nbr_increment_next_seqno(nbr);
+      }
       sixp_trans_transit_state(trans, SIXP_TRANS_STATE_REQUEST_SENDING);
     } else if(state == SIXP_TRANS_STATE_REQUEST_RECEIVED) {
       sixp_trans_transit_state(trans, SIXP_TRANS_STATE_RESPONSE_SENDING);
