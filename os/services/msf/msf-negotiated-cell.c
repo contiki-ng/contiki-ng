@@ -249,12 +249,14 @@ update_num_required_upward_cells(void)
           "NumCellsUsed: %u, NumRequiredUpwardCells: %u",
           num_cells_elapse, num_cells_used, num_required_upward_cells);
   if(num_cells_used > MSF_LIM_NUM_CELLS_USED_HIGH &&
-     num_negotiated_tx_cells < MSF_MAX_NUM_NEGOTIATED_TX_CELLS) {
+     num_negotiated_tx_cells < MSF_MAX_NUM_NEGOTIATED_TX_CELLS &&
+     num_required_upward_cells != (num_negotiated_tx_cells + 1)) {
     num_required_upward_cells = num_negotiated_tx_cells + 1;
     LOG_DBG_(" -> %u; ", num_required_upward_cells);
     LOG_DBG_("going to add another negotiated TX cell\n");
   } else if(num_cells_used < MSF_LIM_NUM_CELLS_USED_LOW &&
-            num_negotiated_tx_cells > 1) {
+            num_negotiated_tx_cells > 1 &&
+            num_required_upward_cells != (num_negotiated_tx_cells - 1)) {
     num_required_upward_cells = num_negotiated_tx_cells - 1;
     LOG_DBG_(" -> %u; ", num_required_upward_cells);
     LOG_DBG_("going to delete a negotiated TX cell\n");
@@ -1650,7 +1652,7 @@ static void
 clear_recv_response(const linkaddr_t *peer_addr)
 {
   /* nothing to do */
-  LOG_DBG("CLAER transaction completes successfully\n");
+  LOG_DBG("CLEAR transaction completes successfully\n");
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -1663,9 +1665,9 @@ clear_callback_sent(void *arg, uint16_t arg_len, const linkaddr_t *dest_addr,
    * for a response
    */
   if(status == SIXP_OUTPUT_STATUS_SUCCESS) {
-    LOG_DBG("CLAER transaction completes successfully\n");
+    LOG_DBG("CLEAR transaction completes successfully\n");
   } else {
-    LOG_ERR("CLAER transaction ends with an error\n");
+    LOG_ERR("CLEAR transaction ends with an error\n");
   }
   msf_negotiated_cell_remove_all(dest_addr);
 }
@@ -1814,7 +1816,12 @@ msf_negotiated_cell_set_parent(const linkaddr_t *new_parent)
               num_required_upward_cells,
               num_required_upward_cells == 1 ? " " : "s ");
       LOG_DBG_("with the new parent\n");
-      add_send_request(MSF_NEGOTIATED_TX_CELL);
+      if(sixp_trans_find(new_parent) == NULL) {
+        add_send_request(MSF_NEGOTIATED_TX_CELL);
+      } else {
+        /* we may have a transaction with the new parent */
+        set_random_wait_to_next_request();
+      }
     }
   } else {
     /* reset the counter of required negotiated TX cells */
@@ -1943,6 +1950,7 @@ msf_negotiated_cell_remove_all(const linkaddr_t *peer_addr)
 const sixtop_sf_t msf = {
   MSF_SFID,
   (((2 << (TSCH_MAC_MAX_BE - 1)) - 1) *
+   TSCH_MAC_MAX_FRAME_RETRIES *
    MSF_SLOTFRAME_LENGTH * MSF_SLOT_LENGTH_MS / 1000 * CLOCK_SECOND),
   init,
   input_handler,
