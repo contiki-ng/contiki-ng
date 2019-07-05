@@ -62,6 +62,10 @@
 #include "net/mac/tsch/sixtop/sixtop.h"
 #endif
 
+#if BUILD_WITH_MSF
+#include "services/msf/msf.h"
+#endif /* BUILD_WITH_MSF */
+
 #if FRAME802154_VERSION < FRAME802154_IEEE802154_2015
 #error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154_2015
 #endif
@@ -169,6 +173,9 @@ tsch_set_coordinator(int enable)
 {
   if(tsch_is_coordinator != enable) {
     tsch_is_associated = 0;
+#if BUILD_WITH_MSF
+    msf_deactivate();
+#endif /* BUILD_WITH_MSF */
   }
   tsch_is_coordinator = enable;
   tsch_set_eb_period(TSCH_EB_PERIOD);
@@ -500,6 +507,10 @@ tsch_tx_process_pending(void)
       packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), p->ret, p->transmissions);
     /* Call packet_sent callback */
     mac_call_sent_callback(p->sent, p->ptr, p->ret, p->transmissions);
+#if BUILD_WITH_MSF
+    msf_callback_packet_sent(p->ret, p->transmissions,
+                             packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+#endif /* BUILD_WITH_MSF */
     /* Free packet queuebuf */
     tsch_queue_free_packet(p);
     /* Free all unused neighbors */
@@ -520,6 +531,9 @@ tsch_start_coordinator(void)
 #if TSCH_SCHEDULE_WITH_6TISCH_MINIMAL
   tsch_schedule_create_minimal();
 #endif
+#if BUILD_WITH_MSF
+  msf_activate();
+#endif /* BUILD_WITH_MSF */
 
   tsch_is_associated = 1;
   tsch_join_priority = 0;

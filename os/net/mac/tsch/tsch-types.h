@@ -119,6 +119,10 @@ struct tsch_neighbor {
   uint8_t last_backoff_window; /* Last CSMA backoff window */
   uint8_t tx_links_count; /* How many links do we have to this neighbor? */
   uint8_t dedicated_tx_links_count; /* How many dedicated links do we have to this neighbor? */
+#if BUILD_WITH_MSF
+  struct tsch_link *autonomous_tx_cell;
+  struct tsch_link *negotiated_tx_cell;
+#endif /* BUILD_WITH_MSF */
   /* Array for the ringbuf. Contains pointers to packets.
    * Its size must be a power of two to allow for atomic put */
   struct tsch_packet *tx_array[TSCH_QUEUE_NUM_PER_NEIGHBOR];
