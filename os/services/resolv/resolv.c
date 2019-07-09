@@ -63,10 +63,10 @@
  */
 
 #include "net/ipv6/tcpip.h"
-#include "net/ipv6/resolv.h"
 #include "net/ipv6/uip-udp-packet.h"
 #include "net/ipv6/uip-nameserver.h"
 #include "lib/random.h"
+#include "resolv.h"
 
 #if UIP_UDP
 

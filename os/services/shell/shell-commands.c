@@ -52,7 +52,9 @@
 #include "net/ipv6/uiplib.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/uip-ds6.h"
-#include "net/ipv6/resolv.h"
+#if BUILD_WITH_RESOLV
+#include "resolv.h"
+#endif /* BUILD_WITH_RESOLV */
 #if BUILD_WITH_HTTP_SOCKET
 #include "http-socket.h"
 #endif /* BUILD_WITH_HTTP_SOCKET */
@@ -683,6 +685,7 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+#if BUILD_WITH_RESOLV
 static
 PT_THREAD(cmd_resolv(struct pt *pt, shell_output_func output, char *args))
 {
@@ -725,7 +728,7 @@ PT_THREAD(cmd_resolv(struct pt *pt, shell_output_func output, char *args))
   }
   PT_END(pt);
 }
-
+#endif /* BUILD_WITH_RESOLV */
 /*---------------------------------------------------------------------------*/
 #if BUILD_WITH_HTTP_SOCKET
 static struct http_socket s;
@@ -983,7 +986,9 @@ const struct shell_command_t builtin_shell_commands[] = {
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
+#if BUILD_WITH_RESOLV
   { "nslookup",             cmd_resolv,               "'> nslookup': Lookup IPv6 address of host" },
+#endif /* BUILD_WITH_RESOLV */
 #if BUILD_WITH_HTTP_SOCKET
   { "wget",                 cmd_wget,                 "'> wget url': get content of URL (only http)." },
 #endif /* BUILD_WITH_HTTP_SOCKET */
