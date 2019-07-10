@@ -39,7 +39,21 @@
 #define LOG_MODULE "IPv6"
 #define LOG_LEVEL LOG_LEVEL_NONE
 
+/*
+ * By defult we do use the well-known-prefix for the IP64 address prefix, see
+ * RFC6052, https://tools.ietf.org/html/rfc6052#section-2.1 .
+ * To make use of ::ffff:<IPv4> define IP64_NAT64_USE_WELL_KNOWN_PREFIX to zero.
+ */
+#ifndef IP64_NAT64_USE_WELL_KNOWN_PREFIX
+#define IP64_NAT64_USE_WELL_KNOWN_PREFIX 1
+#endif /* IP64_NAT64_USE_WELL_KNOWN_PREFIX */
+
+#if IP64_NAT64_USE_WELL_KNOWN_PREFIX
 static uip_ip6addr_t ip64_prefix = {{ 0, 0x64, 0xff, 0x9b, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+#else
+static uip_ip6addr_t ip64_prefix = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 0, 0, 0}};
+#endif /*  IP64_NAT64_USE_WELL_KNOWN_PREFIX */
+
 static uint8_t ip64_prefix_len = 96;
 
 /*---------------------------------------------------------------------------*/
