@@ -63,6 +63,7 @@
 #ifndef MEMB_H_
 #define MEMB_H_
 
+#include <stdbool.h>
 #include "sys/cc.h"
 
 /**
@@ -87,16 +88,16 @@ MEMB(connections, struct connection, 16);
  *
  */
 #define MEMB(name, structure, num) \
-        static char CC_CONCAT(name,_memb_count)[num]; \
+        static bool CC_CONCAT(name,_memb_used)[num]; \
         static structure CC_CONCAT(name,_memb_mem)[num]; \
         static struct memb name = {sizeof(structure), num, \
-                                          CC_CONCAT(name,_memb_count), \
+                                          CC_CONCAT(name,_memb_used), \
                                           (void *)CC_CONCAT(name,_memb_mem)}
 
 struct memb {
   unsigned short size;
   unsigned short num;
-  char *count;
+  bool *used;
   void *mem;
 };
 
@@ -122,11 +123,10 @@ void *memb_alloc(struct memb *m);
  *
  * \param ptr A pointer to the memory block that is to be deallocated.
  *
- * \return The new reference count for the memory block (should be 0
- * if successfully deallocated) or -1 if the pointer "ptr" did not
- * point to a legal memory block.
+ * \return error code, should be 0 if successfully deallocated or -1 if the
+ * pointer "ptr" did not point to a legal memory block.
  */
-char  memb_free(struct memb *m, void *ptr);
+int  memb_free(struct memb *m, void *ptr);
 
 int memb_inmemb(struct memb *m, void *ptr);
 
