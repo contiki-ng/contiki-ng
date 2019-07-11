@@ -51,7 +51,7 @@
 void
 memb_init(struct memb *m)
 {
-  memset(m->count, 0, m->num);
+  memset(m->used, 0, m->num);
   memset(m->mem, 0, m->size * m->num);
 }
 /*---------------------------------------------------------------------------*/
@@ -61,11 +61,10 @@ memb_alloc(struct memb *m)
   int i;
 
   for(i = 0; i < m->num; ++i) {
-    if(m->count[i] == 0) {
-      /* If this block was unused, we increase the reference count to
-	 indicate that it now is used and return a pointer to the
-	 memory block. */
-      ++(m->count[i]);
+    if(m->used[i] == false) {
+      /* If this block was unused, we set the used flag on
+	 and return a pointer to the memory block. */
+      m->used[i] = true;
       return (void *)((char *)m->mem + (i * m->size));
     }
   }
@@ -75,7 +74,7 @@ memb_alloc(struct memb *m)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
-char
+int
 memb_free(struct memb *m, void *ptr)
 {
   int i;
@@ -85,15 +84,13 @@ memb_free(struct memb *m, void *ptr)
      which the pointer "ptr" points to. */
   ptr2 = (char *)m->mem;
   for(i = 0; i < m->num; ++i) {
-    
     if(ptr2 == (char *)ptr) {
-      /* We've found to block to which "ptr" points so we decrease the
-	 reference count and return the new value of it. */
-      if(m->count[i] > 0) {
-	/* Make sure that we don't deallocate free memory. */
-	--(m->count[i]);
-      }
-      return m->count[i];
+      /* We've found the block to which "ptr" points, so we check the allocation
+         status to detect the double-free error and free the block. */
+      if (m->used[i] == false)
+        return -1;
+      m->used[i] = false;
+      return 0;
     }
     ptr2 += m->size;
   }
@@ -114,7 +111,7 @@ memb_numfree(struct memb *m)
   int num_free = 0;
 
   for(i = 0; i < m->num; ++i) {
-    if(m->count[i] == 0) {
+    if(m->used[i] == false) {
       ++num_free;
     }
   }
