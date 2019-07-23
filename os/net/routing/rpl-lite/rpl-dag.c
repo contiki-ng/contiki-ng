@@ -540,7 +540,8 @@ init_dag_from_dio(rpl_dio_t *dio)
   curr_instance.dag.preference = dio->preference;
   curr_instance.dag.grounded = dio->grounded;
   curr_instance.dag.version = dio->version;
-  curr_instance.dag.dio_intcurrent = dio->dag_intmin;
+  /* dio_intcurrent will be reset by rpl_timers_dio_reset() */
+  curr_instance.dag.dio_intcurrent = 0;
 
   return 1;
 }
@@ -738,7 +739,8 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
   curr_instance.dag.version = version;
   curr_instance.dag.rank = ROOT_RANK;
   curr_instance.dag.lifetime = RPL_LIFETIME(RPL_INFINITE_LIFETIME);
-  curr_instance.dag.dio_intcurrent = RPL_DIO_INTERVAL_MIN;
+  /* dio_intcurrent will be reset by rpl_timers_dio_reset() */
+  curr_instance.dag.dio_intcurrent = 0;
   curr_instance.dag.state = DAG_REACHABLE;
 
   rpl_timers_dio_reset("Init root");
