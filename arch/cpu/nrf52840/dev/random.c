@@ -45,10 +45,16 @@
  *
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *         Carlo Vallati <carlo.vallati@unipi.it>
  */
 #include <stddef.h>
 #include <nrfx_rng.h>
 #include "app_error.h"
+
+#if defined(SOFTDEVICE_PRESENT) && SOFTDEVICE_PRESENT
+#include "nrf_drv_rng.h"
+#else
+#include <nrfx_rng.h>
 
 static unsigned short val;
 
@@ -59,6 +65,9 @@ nrfx_rng_evt_handler(uint8_t rng_data)
   val = rng_data; // FIXME need two bytes to pack a short;
   nrfx_rng_stop();
 }
+
+#endif
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Generates a new random number using the nRF52 RNG.
@@ -67,21 +76,25 @@ nrfx_rng_evt_handler(uint8_t rng_data)
 unsigned short
 random_rand(void)
 {
-  /* unsigned short value = 42; */
-  /* uint8_t available; */
-  /* ret_code_t err_code; */
+#if defined(SOFTDEVICE_PRESENT) && SOFTDEVICE_PRESENT
+  unsigned short value = 42;
+  uint8_t available;
+  ret_code_t err_code;
 
-  /* do { */
-  /*   nrf_drv_rng_bytes_available(&available); */
-  /* } while (available < sizeof(value)); */
+  do {
+     nrf_drv_rng_bytes_available(&available);
+  } while (available < sizeof(value));
 
-  /* err_code = nrf_drv_rng_rand((uint8_t *)&value, sizeof(value)); */
-  /* APP_ERROR_CHECK(err_code); */
+  err_code = nrf_drv_rng_rand((uint8_t *)&value, sizeof(value));
+  APP_ERROR_CHECK(err_code);
 
+  return value;
+#else
   /* return value; */
   nrfx_rng_start();
   
   return val;
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -93,9 +106,16 @@ void
 random_init(unsigned short seed)
 {
   (void)seed;
+#if defined(SOFTDEVICE_PRESENT) && SOFTDEVICE_PRESENT
+  nrfx_rng_config_t config = NRFX_RNG_DEFAULT_CONFIG;
+  ret_code_t err_code = nrf_drv_rng_init(&config);
+  APP_ERROR_CHECK(err_code);
+#else
   nrfx_rng_config_t config = NRFX_RNG_DEFAULT_CONFIG;
   ret_code_t err_code = nrfx_rng_init(&config, nrfx_rng_evt_handler);
   APP_ERROR_CHECK(err_code);
+#endif
+
 }
 /**
  * @}

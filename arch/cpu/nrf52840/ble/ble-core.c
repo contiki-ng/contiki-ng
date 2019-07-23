@@ -35,6 +35,7 @@
  *         Basic BLE functions.
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *         Carlo Vallati <carlo.vallati@unipi.it>
  *
  */
 #include <stdbool.h>
@@ -46,12 +47,16 @@
 #include "ble_advdata.h"
 #include "ble_srv_common.h"
 #include "ble_ipsp.h"
-#include "softdevice_handler.h"
 #include "app_error.h"
 #include "iot_defines.h"
 #include "ble-core.h"
 
-#define DEBUG 0
+#include "nrf_soc.h"
+#include "nrf_sdh.h"
+#include "nrf_sdh_ble.h"
+#include "iot_common.h"
+
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -59,14 +64,38 @@
 #define PRINTF(...)
 #endif
 
+#define APP_IPSP_TAG                        35                                                      /**< Identifier for L2CAP configuration with the softdevice. */
+
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 1
+#define APP_IPSP_ACCEPTOR_PRIO              1                                                       /**< Priority with the SDH on receiving events from the softdevice. */
 #define APP_ADV_TIMEOUT                 0                                  /**< Time for which the device must be advertising in non-connectable mode (in seconds). 0 disables timeout. */
 #define APP_ADV_ADV_INTERVAL            MSEC_TO_UNITS(333, UNIT_0_625_MS)  /**< The advertising interval. This value can vary between 100ms to 10.24s). */
 
 static ble_gap_adv_params_t m_adv_params; /**< Parameters to be passed to the stack when starting advertising. */
 
+static uint8_t              m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded advertising set. */
+static uint8_t              m_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET;                          /**< Advertising handle used to identify an advertising set. */
+
+
+/**@brief Struct that contains pointers to the encoded advertising data. */
+static ble_gap_adv_data_t m_adv_data =
+{
+    .adv_data =
+    {
+        .p_data = m_enc_advdata,
+        .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
+    },
+    .scan_rsp_data =
+    {
+        .p_data = NULL,
+        .len    = 0
+
+    }
+};
+
+
 static void
-ble_evt_dispatch(ble_evt_t * p_ble_evt);
+ble_evt_dispatch(ble_evt_t const * p_ble_evt, void * p_context);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialize and enable the BLE stack.
@@ -75,30 +104,103 @@ void
 ble_stack_init(void)
 {
   uint32_t err_code;
+  uint32_t     ram_start = 0;
+  ble_cfg_t    ble_cfg;
 
   // Enable BLE stack.
-  ble_enable_params_t ble_enable_params;
-  memset(&ble_enable_params, 0, sizeof(ble_enable_params));
-  ble_enable_params.gatts_enable_params.attr_tab_size =
-  BLE_GATTS_ATTR_TAB_SIZE_DEFAULT;
-  ble_enable_params.gatts_enable_params.service_changed =
-  IS_SRVC_CHANGED_CHARACT_PRESENT;
-  err_code = sd_ble_enable(&ble_enable_params);
-  APP_ERROR_CHECK(err_code);
+  nrf_sdh_enable_request();
 
-  // Register with the SoftDevice handler module for BLE events.
-  err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
+  // Fetch the start address of the application RAM.
+  err_code = nrf_sdh_ble_app_ram_start_get(&ram_start);
+
+  if (err_code == NRF_SUCCESS)
+  {
+      // Configure the maximum number of connections.
+      memset(&ble_cfg, 0, sizeof(ble_cfg));
+      ble_cfg.gap_cfg.role_count_cfg.periph_role_count  = BLE_IPSP_MAX_CHANNELS;
+      ble_cfg.gap_cfg.role_count_cfg.central_role_count = 0;
+      ble_cfg.gap_cfg.role_count_cfg.central_sec_count  = 0;
+      err_code = sd_ble_cfg_set(BLE_GAP_CFG_ROLE_COUNT, &ble_cfg, ram_start);
+  }
+
+  if (err_code == NRF_SUCCESS)
+  {
+      memset(&ble_cfg, 0, sizeof(ble_cfg));
+
+      // Configure total number of connections.
+      ble_cfg.conn_cfg.conn_cfg_tag                     = APP_IPSP_TAG;
+      ble_cfg.conn_cfg.params.gap_conn_cfg.conn_count   = BLE_IPSP_MAX_CHANNELS;
+      ble_cfg.conn_cfg.params.gap_conn_cfg.event_length = BLE_GAP_EVENT_LENGTH_DEFAULT;
+      err_code = sd_ble_cfg_set(BLE_CONN_CFG_GAP, &ble_cfg, ram_start);
+
+  }
+
+  if (err_code ==  NRF_SUCCESS)
+  {
+      memset(&ble_cfg, 0, sizeof(ble_cfg));
+
+       // Configure the number of custom UUIDS.
+      ble_cfg.common_cfg.vs_uuid_cfg.vs_uuid_count = 0;
+      err_code = sd_ble_cfg_set(BLE_COMMON_CFG_VS_UUID, &ble_cfg, ram_start);
+  }
+
+  if (err_code == NRF_SUCCESS)
+  {
+      memset(&ble_cfg, 0, sizeof(ble_cfg));
+
+      // Set L2CAP channel configuration
+
+      // @note The TX MPS and RX MPS of initiator and acceptor are not symmetrically set.
+      // This will result in effective MPS of 50 in reach direction when using the initiator and
+      // acceptor example against each other. In the IPSP, the TX MPS is set to a higher value
+      // as Linux which is the border router for 6LoWPAN examples uses default RX MPS of 230
+      // bytes. Setting TX MPS of 212 in place of 50 results in better credit and hence bandwidth
+      // utilization.
+      ble_cfg.conn_cfg.conn_cfg_tag                        = APP_IPSP_TAG;
+      ble_cfg.conn_cfg.params.l2cap_conn_cfg.rx_mps        = BLE_IPSP_RX_MPS;
+      ble_cfg.conn_cfg.params.l2cap_conn_cfg.rx_queue_size = BLE_IPSP_RX_BUFFER_COUNT;
+      ble_cfg.conn_cfg.params.l2cap_conn_cfg.tx_mps        = BLE_IPSP_TX_MPS;
+      ble_cfg.conn_cfg.params.l2cap_conn_cfg.tx_queue_size = 1;
+      ble_cfg.conn_cfg.params.l2cap_conn_cfg.ch_count      = 1; // One L2CAP channel per link.
+      err_code = sd_ble_cfg_set(BLE_CONN_CFG_L2CAP, &ble_cfg, ram_start);
+  }
+
+  if (err_code == NRF_SUCCESS)
+  {
+      memset(&ble_cfg, 0, sizeof(ble_cfg));
+
+      // Set the ATT table size.
+      ble_cfg.gatts_cfg.attr_tab_size.attr_tab_size = 256;
+      err_code = sd_ble_cfg_set(BLE_GATTS_CFG_ATTR_TAB_SIZE, &ble_cfg, ram_start);
+  }
+
+
+  if (err_code ==  NRF_SUCCESS)
+  {
+      err_code = nrf_sdh_ble_enable(&ram_start);
+  }
+
+  if (err_code ==  NRF_SUCCESS)
+  {
+	  NRF_SDH_BLE_OBSERVER(m_ble_evt_observer, APP_IPSP_ACCEPTOR_PRIO, ble_evt_dispatch, NULL);
+  }
+
   APP_ERROR_CHECK(err_code);
 
   // Setup address
   ble_gap_addr_t ble_addr;
-  err_code = sd_ble_gap_address_get(&ble_addr);
+  err_code = sd_ble_gap_addr_get(&ble_addr);
   APP_ERROR_CHECK(err_code);
 
-  ble_addr.addr[5] = 0x00;
+  /*ble_addr.addr[5]   = 0x00;
+  ble_addr.addr[4]   = 0x11;
+  ble_addr.addr[3]   = 0x22;
+  ble_addr.addr[2]   = 0x33;
+  ble_addr.addr[1]   = 0x44;
+  ble_addr.addr[0]   = 0x55;*/
   ble_addr.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC;
 
-  err_code = sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &ble_addr);
+  err_code = sd_ble_gap_addr_set(&ble_addr);
   APP_ERROR_CHECK(err_code);
 }
 /*---------------------------------------------------------------------------*/
@@ -112,7 +214,7 @@ ble_get_mac(uint8_t addr[8])
   uint32_t err_code;
   ble_gap_addr_t ble_addr;
 
-  err_code = sd_ble_gap_address_get(&ble_addr);
+  err_code = sd_ble_gap_addr_get(&ble_addr);
   APP_ERROR_CHECK(err_code);
 
   IPV6_EUI64_CREATE_FROM_EUI48(addr, ble_addr.addr, ble_addr.addr_type);
@@ -146,17 +248,21 @@ ble_advertising_init(const char *name)
   advdata.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
   advdata.uuids_complete.p_uuids = adv_uuids;
 
-  err_code = ble_advdata_set(&advdata, NULL);
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
   APP_ERROR_CHECK(err_code);
 
   // Initialize advertising parameters (used when starting advertising).
   memset(&m_adv_params, 0, sizeof(m_adv_params));
 
-  m_adv_params.type = BLE_GAP_ADV_TYPE_ADV_IND;
-  m_adv_params.p_peer_addr = NULL; // Undirected advertisement.
-  m_adv_params.fp = BLE_GAP_ADV_FP_ANY;
-  m_adv_params.interval = APP_ADV_ADV_INTERVAL;
-  m_adv_params.timeout = APP_ADV_TIMEOUT;
+  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED;
+  m_adv_params.p_peer_addr     = NULL;                                              // Undirected advertisement.
+  m_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
+  m_adv_params.interval        = APP_ADV_ADV_INTERVAL;
+  m_adv_params.duration        = APP_ADV_TIMEOUT;
+
+  err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
+  APP_ERROR_CHECK(err_code);
+
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -167,7 +273,7 @@ ble_advertising_start(void)
 {
   uint32_t err_code;
 
-  err_code = sd_ble_gap_adv_start(&m_adv_params);
+  err_code = sd_ble_gap_adv_start(m_adv_handle, APP_IPSP_TAG);
   APP_ERROR_CHECK(err_code);
 
   PRINTF("ble-core: advertising started\n");
@@ -193,7 +299,7 @@ ble_gap_addr_print(const ble_gap_addr_t *addr)
  * \param[in]   p_ble_evt   Bluetooth stack event.
  */
 static void
-on_ble_evt(ble_evt_t *p_ble_evt)
+on_ble_evt(ble_evt_t const *p_ble_evt)
 {
   switch(p_ble_evt->header.evt_id) {
     case BLE_GAP_EVT_CONNECTED:
@@ -219,7 +325,7 @@ on_ble_evt(ble_evt_t *p_ble_evt)
  * \param[in]   p_ble_evt   Bluetooth stack event.
  */
 static void
-ble_evt_dispatch(ble_evt_t *p_ble_evt)
+ble_evt_dispatch(ble_evt_t const *p_ble_evt, void * p_context)
 {
   ble_ipsp_evt_handler(p_ble_evt);
   on_ble_evt(p_ble_evt);

@@ -35,8 +35,10 @@
 #include "cm4/cm4-def.h"
 /*---------------------------------------------------------------------------*/
 
+#if !WITH_BLE
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         nrf52840_driver
+#endif
 #endif
 
 #ifndef NRF52480_CONF_AUTOACK

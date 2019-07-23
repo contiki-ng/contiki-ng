@@ -679,7 +679,7 @@ tcpip_ipv6_output(void)
 
 #if UIP_ND6_AUTOFILL_NBR_CACHE
   if(nbr == NULL) {
-    /* Neighbor not found in cache? Derive its link-layer address from it's
+    /*  Neighbor not found in cache? Derive its link-layer address from it's
     link-local IPv6, assuming it used autoconfiguration. This is not
     standard-compliant but this is a convenient way to keep the
     neighbor cache out of the way in cases ND is not used */
@@ -695,7 +695,7 @@ tcpip_ipv6_output(void)
       goto exit;
     }
    }
-#endif /* UIP_ND6_AUTOFILL_NBR_CACHE */
+#endif /* UIP_ND6_AUTOFILL_NBR_CACHE */ 
 
   if(nbr == NULL) {
     if(send_nd6_ns(nexthop)) {

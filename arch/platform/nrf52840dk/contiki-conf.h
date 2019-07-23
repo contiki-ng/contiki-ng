@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Nordic Semiconductor
+ * Copyright (c) 2019, University of Pisa
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,10 @@
  * @{
  *
  * \file
- *  Contiki configuration for the nRF52 DK
+ *  Contiki configuration for the nRF52840 DK
+ *
+ *  Carlo Vallati <carlo.vallati@unipi.it>
+ *
  */
 #ifndef CONTIKI_CONF_H
 #define CONTIKI_CONF_H
@@ -58,14 +61,9 @@
  * @{
  */
 
-/* Select the BLE mac driver by default */
-#if MAC_CONF_WITH_OTHER
+/* Select the BLE mac driver */
+#if WITH_BLE
 #define NETSTACK_CONF_MAC     ble_ipsp_mac_driver
-#define WITH_BLE 1
-#endif
-
-#if MAC_CONF_WITH_CSMA || MAC_CONF_WITH_TSCH
-#define WITH_BLE 0
 #endif
 
 /* 6LoWPAN */
@@ -110,6 +108,11 @@
 
 #define UIP_CONF_ROUTER                      0 /**< BLE master role, which allows for routing, isn't supported. */
 #define UIP_CONF_ND6_SEND_NS                 1
+#define UIP_CONF_ND6_SEND_NA				 1
+#define UIP_CONF_ND6_SEND_RA				 1
+//#define UIP_CONF_LL_802154 					 0
+//#define UIP_CONF_ND6_AUTOFILL_NBR_CACHE		 0
+
 
 #else
 

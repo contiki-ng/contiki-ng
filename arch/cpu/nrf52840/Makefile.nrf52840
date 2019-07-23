@@ -1,6 +1,20 @@
 HEAPSIZE := 8192
 STACKSIZE := 8192
 
+ifndef WITH_BLE
+  WITH_BLE=0
+endif
+
+ifneq ($(WITH_BLE),0)
+  # custom MAC: ble_ipsp_mac_driver
+  MAKE_MAC ?= MAKE_MAC_OTHER
+  NRF52_WITHOUT_SOFTDEVICE=0
+  CFLAGS += -DWITH_BLE=1
+else
+  NRF52_WITHOUT_SOFTDEVICE=1
+  CFLAGS += -DWITH_BLE=0
+endif
+
 ifndef NRF52_SDK_ROOT
   #ifeq ($(wildcard $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96/),)
   #  $(shell wget https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.2.0_9412b96.zip -P $(CONTIKI_CPU)/third_party/ && unzip $(CONTIKI_CPU)/third_party/nRF5_SDK_15.2.0_9412b96.zip -d $(CONTIKI_CPU)/third_party/)
@@ -19,9 +33,6 @@ ifeq ($(NRF52_JLINK_PATH),)
 endif
 endif
 
-# custom MAC: ble_ipsp_mac_driver
-# MAKE_MAC ?= MAKE_MAC_OTHER
-
 $(info SDK: $(NRF52_SDK_ROOT))
 
 ifeq ($(NRF52_DK_REVISION),)
@@ -34,7 +45,7 @@ ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
   endif
   $(info SoftDevice: $(NRF52_SOFTDEVICE))
   #LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52-$(NRF52_DK_REVISION)-sd.ld
-  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840_xxaa.ld
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840_xxaa_sd.ld
 else
   #LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52.ld
   LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840_xxaa.ld
@@ -61,17 +72,24 @@ endif
 remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-out $(firstword $1),$1))))
 
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS += . dev ble ieee802154 #compat
+CONTIKI_CPU_DIRS += . dev ble #compat
+
+ifeq ($(NRF52_WITHOUT_SOFTDEVICE),1)
+CONTIKI_CPU_DIRS += ieee802154 #compat
+CONTIKI_CPU_SOURCEFILES += nrf802154.c ieee-addr.c
+endif
 
 ### CPU-dependent source files
-CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c gpio-hal-arch.c board-buttons.c
-CONTIKI_CPU_SOURCEFILES += int-master.c nrf802154.c ieee-addr.c
+CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c gpio-hal-arch.c board-buttons.c int-master.c
+
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 CONTIKI_CPU_SOURCEFILES += ble-core.c ble-mac.c
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
+
+ifeq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 
 CFLAGS += -DRAAL_SINGLE_PHY
 
@@ -125,6 +143,8 @@ INC_PATHS_RADIO += $(NRF52_RADIO_ROOT)/src/rsch/raal
 
 EXTERNALDIRS += $(INC_PATHS_RADIO)
 
+endif
+
 # Source files common to all targets
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   $(NRF52_SDK_ROOT)/components/libraries/util/app_error.c \
@@ -148,13 +168,22 @@ C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/boards/boards.c \
   $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_rng.c \
   $(NRF52_SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
-#  $(NRF52_SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
-#  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c \
-#  $(NRF52_SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c \
+
 
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
-                  $(NRF52_SDK_ROOT)/components/ble/common/ble_advdata.c
+                  $(NRF52_SDK_ROOT)/components/ble/common/ble_advdata.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
+                  $(NRF52_SDK_ROOT)/components/ble/ble_services/ble_ipsp/ble_ipsp.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/util/app_util_platform.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/memobj/nrf_memobj.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/atomic/nrf_atomic.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/queue/nrf_queue.c \
+                  $(NRF52_SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
+                  $(NRF52_SDK_ROOT)/external/fprintf/nrf_fprintf.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/ringbuf/nrf_ringbuf.c \
+                  $(NRF52_SDK_ROOT)/components/libraries/balloc/nrf_balloc.c
 else
 C_SOURCE_FILES += $(NRF52_SDK_ROOT)/components/libraries/fifo/app_fifo.c \
                   $(NRF52_SDK_ROOT)/components/libraries/util/app_util_platform.c
@@ -200,6 +229,16 @@ INC_PATHS += components/softdevice/common
 INC_PATHS += components/ble/common
 INC_PATHS += components/iot/common
 INC_PATHS += components/ble/ble_services/ble_ipsp
+INC_PATHS += components/libraries/experimental_section_vars
+INC_PATHS += components/libraries/memobj
+INC_PATHS += components/libraries/atomic
+INC_PATHS += components/softdevice/common
+INC_PATHS += components/libraries/queue
+INC_PATHS += components/libraries/log/src
+INC_PATHS += external/fprintf
+INC_PATHS += components/libraries/ringbuf
+INC_PATHS += components/libraries/balloc
+INC_PATHS += components/libraries/uart
 else
 INC_PATHS += components/drivers_nrf/nrf_soc_nosd
 INC_PATHS += components/libraries/fifo
@@ -219,20 +258,27 @@ endif
 
 CFLAGS += -D__HEAP_SIZE=$(HEAPSIZE)
 CFLAGS += -D__STACK_SIZE=$(STACKSIZE)
-CFLAGS += -DRAAL_SINGLE_PHY -DNRF_802154_USE_RAW_API=0 -DNRF_802154_CLOCK_LFCLK_SOURCE=CLOCK_LFCLKSRC_SRC_Synth
-CFLAGS += -DNRFX_TIMER_ENABLED=1
-CFLAGS += -DNRFX_TIMER1_ENABLED=1
 
 #flags common to all targets
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 CFLAGS += -DSOFTDEVICE_PRESENT
+CFLAGS += -DBOARD_PCA10056
 CFLAGS += -DS140
 CFLAGS += -DNRF_SDH_SOC_ENABLED=1
+
+else 
+
+CFLAGS += -DRAAL_SINGLE_PHY -DNRF_802154_USE_RAW_API=0 -DNRF_802154_CLOCK_LFCLK_SOURCE=CLOCK_LFCLKSRC_SRC_Synth
+CFLAGS += -DNRFX_TIMER_ENABLED=1
+CFLAGS += -DNRFX_TIMER1_ENABLED=1
+CFLAGS += -DNRF_802154_CSMA_CA_ENABLED=0
+
 endif
+
 
 CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DBOARD_$(shell echo $(NRF52_DK_REVISION) | tr a-z A-Z)
-#CFLAGS += -D__HEAP_SIZE=512
+
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DBLE_STACK_SUPPORT_REQD
@@ -240,9 +286,6 @@ CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -DENABLE_DEBUG_ASSERT=1
 
-# TODO SET FROM MACRO
-CFLAGS += -DNRF_802154_CSMA_CA_ENABLED=0
-#CFLAGS += -DNRF_802154_USE_RAW_API=0
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(CONTIKI_NG_PROJECT_MAP)
@@ -261,6 +304,7 @@ ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
 ASMFLAGS += -DSOFTDEVICE_PRESENT
 ASMFLAGS += -DS140
 endif
+
 ASMFLAGS += -x assembler-with-cpp
 ASMFLAGS += -DSWI_DISABLE0
 ASMFLAGS += -DNRF52840_XXAA

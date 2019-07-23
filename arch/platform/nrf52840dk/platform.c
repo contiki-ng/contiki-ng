@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Nordic Semiconductor
+ * Copyright (c) 2019, University of Pisa
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,9 @@
 /**
  * \addtogroup nrf52840dk nRF52 Development Kit
  * @{
+ *
+ * Carlo Vallati <carlo.vallati@unipi.it>
+ *
  */
 #include <stdio.h>
 #include <stdint.h>
@@ -40,6 +43,7 @@
 
 #include "sdk_config.h"
 #include "nrfx_gpiote.h"
+
 #ifdef SOFTDEVICE_PRESENT
 #include "nrf_sdh.h"
 #include "ble/ble-core.h"
@@ -63,10 +67,10 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "NRF52DK"
+#define LOG_MODULE "NRF52840DK"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
-#if defined(SOFTDEVICE_PRESENT) && PLATFORM_INDICATE_BLE_STATE
+#if defined(SOFTDEVICE_PRESENT) && WITH_BLE && PLATFORM_INDICATE_BLE_STATE
 PROCESS(ble_iface_observer, "BLE interface observer");
 
 /**
@@ -107,11 +111,7 @@ PROCESS_THREAD(ble_iface_observer, ev, data)
 static void
 board_init(void)
 {
-#ifdef SOFTDEVICE_PRESENT
-  /* Initialize the SoftDevice handler module */
-  //SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, NULL);
-  nrf_sdh_enable_request();
-#endif
+
 #ifdef PLATFORM_HAS_BUTTON
   if (!nrfx_gpiote_is_init()) {
     nrfx_gpiote_init();
@@ -122,6 +122,12 @@ board_init(void)
 void
 platform_init_stage_one(void)
 {
+#ifdef SOFTDEVICE_PRESENT
+  /* Initialize the SoftDevice handler module */
+
+  nrf_sdh_enable_request();
+#endif
+
   board_init();
   leds_init();
 }
@@ -143,9 +149,14 @@ platform_init_stage_two(void)
 #endif
 #endif
 
-#if defined(SOFTDEVICE_PRESENT) && NETSTACK_CONF_WITH_IPV6 && WITH_BLE
+#if defined(SOFTDEVICE_PRESENT) && WITH_BLE
+
   ble_stack_init();
-  ble_advertising_init(DEVICE_NAME);
+
+  linkaddr_t linkaddr;
+  ble_get_mac(linkaddr.u8);
+  /* Set link layer address */
+  linkaddr_set_node_addr(&linkaddr);
 
 #else
 
@@ -154,6 +165,7 @@ platform_init_stage_two(void)
   process_start(&sensors_process, NULL);
 #endif
 
+
   button_hal_init();
 
 }
@@ -161,14 +173,14 @@ platform_init_stage_two(void)
 void
 platform_init_stage_three(void)
 {
-#if defined(SOFTDEVICE_PRESENT) && NETSTACK_CONF_WITH_IPV6 && WITH_BLE
-  linkaddr_t linkaddr;
-  ble_get_mac(linkaddr.u8);
-  /* Set link layer address */
-  linkaddr_set_node_addr(&linkaddr);
+#if defined(SOFTDEVICE_PRESENT) && WITH_BLE
+
+  ble_advertising_init(DEVICE_NAME);
+
   process_start(&ble_iface_observer, NULL);
 
   ble_advertising_start();
+
   LOG_INFO("Advertising name [%s]\n", DEVICE_NAME);
 #endif
 
@@ -180,6 +192,8 @@ platform_idle()
   lpm_drop();
 }
 /*---------------------------------------------------------------------------*/
+
+
 /**
  * @}
  */

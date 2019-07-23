@@ -41,13 +41,17 @@
  *         Platform features configuration.
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *         Carlo Vallati <carlo.vallati@unipi.it>
  *
  */
 #ifndef NRF52DK_DEF_H_
 #define NRF52DK_DEF_H_
 
 #include "boards.h"
+
+#if !WITH_BLE
 #include "nrf802154.h"
+#endif
 
 #define PLATFORM_HAS_BATTERY                    0
 #define PLATFORM_HAS_RADIO                      0

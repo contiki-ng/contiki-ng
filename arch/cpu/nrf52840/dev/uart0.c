@@ -38,20 +38,24 @@
  *         Contiki compatible UART driver.
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *         Carlo Vallati <carlo.vallati@unipi.it>
  */
+
+
 #include <stdlib.h>
 #include "nrf.h"
 #include "sdk_config.h"
 #include "nrfx_uart.h"
 #include "app_util_platform.h"
 #include "app_error.h"
+#include "dev/lpm.h"
 
 #include "contiki.h"
 #include "dev/uart0.h"
 #include "dev/watchdog.h"
 #include "lib/ringbuf.h"
 
-#define TXBUFSIZE 128
+#define TXBUFSIZE 64
 static uint8_t rx_buffer[1];
 
 static int (*uart0_input_handler)(unsigned char c);
@@ -60,6 +64,7 @@ static struct ringbuf txbuf;
 static uint8_t txbuf_data[TXBUFSIZE];
 
 static nrfx_uart_t uart_inst = NRFX_UART_INSTANCE(0);
+
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -71,12 +76,16 @@ uart_event_handler(const nrfx_uart_event_t * p_event, void * p_context)
     }
     (void)nrfx_uart_rx(&uart_inst, rx_buffer, 1);
   } else if (p_event->type == NRFX_UART_EVT_TX_DONE) {
-    if (ringbuf_elements(&txbuf) > 0) {
-      uint8_t c = ringbuf_get(&txbuf);
-      nrfx_uart_tx(&uart_inst, &c, 1);
-    }
+
+	    if (ringbuf_elements(&txbuf) > 0) {
+	      uint8_t c = ringbuf_get(&txbuf);
+	      ret_code_t err_code = nrfx_uart_tx(&uart_inst, &c, 1);
+	      APP_ERROR_CHECK(err_code);
+	    }
   }
 }
+
+
 /*---------------------------------------------------------------------------*/
 void
 uart0_set_input(int (*input)(unsigned char c))
@@ -89,7 +98,7 @@ uart0_writeb(unsigned char c)
 {
   if (nrfx_uart_tx(&uart_inst, &c, 1) == NRF_ERROR_BUSY) {
     while (ringbuf_put(&txbuf, c) == 0) {
-      __WFE();
+    	lpm_drop();
     }
   }
 }
@@ -101,11 +110,17 @@ uart0_writeb(unsigned char c)
 void
 uart0_init(unsigned long ubr)
 {
+
   nrfx_uart_config_t config = NRFX_UART_DEFAULT_CONFIG;
   config.pseltxd = 6;
   config.pselrxd = 8;
   config.pselcts = 7;
   config.pselrts = 5;
+  config.p_context=NULL;
+  config.hwfc= NRF_UART_HWFC_ENABLED;
+  config.parity= false;
+  config.interrupt_priority= NRFX_UART_DEFAULT_CONFIG_IRQ_PRIORITY;
+
   ret_code_t retcode = nrfx_uart_init(&uart_inst, &config, uart_event_handler);
   APP_ERROR_CHECK(retcode);
   if(retcode != NRFX_SUCCESS) {
@@ -114,8 +129,6 @@ uart0_init(unsigned long ubr)
 
   ringbuf_init(&txbuf, txbuf_data, sizeof(txbuf_data));
 
-  /* nrfx_uart_rx_enable(&uart_inst); */
-  /* nrfx_uart_rx(&uart_inst, rx_buffer, 1); */
 }
 /**
  * @}

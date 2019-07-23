@@ -52,6 +52,7 @@
 #include "nrf_drv_clock.h"
 #include "nrf_delay.h"
 #include "app_error.h"
+#include "dev/lpm.h"
 #include "contiki.h"
 
 /*---------------------------------------------------------------------------*/
@@ -147,7 +148,7 @@ clock_wait(clock_time_t i)
   clock_time_t start;
   start = clock_time();
   while (clock_time() - start < (clock_time_t)i) {
-    __WFE();
+	  lpm_drop();
   }
 }
 /*---------------------------------------------------------------------------*/
