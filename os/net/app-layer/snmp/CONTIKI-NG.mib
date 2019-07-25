@@ -1,0 +1,36 @@
+CONTIKI-NG-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the Contiki-NG enterprise MIB tree 
+--
+
+IMPORTS
+	MODULE-IDENTITY, enterprises FROM SNMPv2-SMI
+;
+
+contikiNG MODULE-IDENTITY
+    LAST-UPDATED "201907250000Z"
+    ORGANIZATION "http://contiki-ng.org"
+    CONTACT-INFO    
+	 "gitter: https://gitter.im/contiki-ng"
+    DESCRIPTION
+	 "Top-level infrastructure of the Contiki-NG enterprise MIB tree"
+    REVISION     "201907250000Z"
+    DESCRIPTION
+	"First version"
+    ::= { enterprises 2 }
+
+--
+-- Top-level structure
+--
+contikiNGModules OBJECT IDENTIFIER ::= { contikiNG 1 }
+
+--
+-- Conformance-related definitions
+--
+
+-- contikiNGConformance          OBJECT IDENTIFIER ::= { contikiNG 10 }
+-- contikiNGCompliances          OBJECT IDENTIFIER ::= { contikiNGConformance 1}
+-- contikiNGGroups               OBJECT IDENTIFIER ::= { contikiNGConformance 2}
+
+END

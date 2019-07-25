@@ -1,0 +1,95 @@
+CONTIKI-NG-ENERGEST-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the Contiki-NG project enterprise MIB tree 
+--
+
+IMPORTS
+	MODULE-IDENTITY, OBJECT-TYPE,
+	Counter64 						FROM SNMPv2-SMI
+	TruthValue 						FROM SNMPv2-TC
+	contikiNGModules 				FROM CONTIKI-NG-MIB 
+;
+
+energestModule MODULE-IDENTITY
+    LAST-UPDATED "201907250000Z"
+    ORGANIZATION "http://contiki-ng.org"
+    CONTACT-INFO    
+	 "gitter: https://gitter.im/contiki-ng"
+    DESCRIPTION
+	 "Contiki-NG energest module
+	  https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Energest "
+    REVISION     "201907250000Z"
+    DESCRIPTION
+	 "First version"
+    ::= { contikiNGModules 1 }
+
+--
+-- Top-level structure
+--
+
+--
+-- Conformance-related definitions
+--
+
+--
+-- Energest Module information 
+--
+
+energestEnabled OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+     "Indicates if the energest module is enabled"
+    ::= { energestModule 1 }
+
+energestActive OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+     "Counts the time while the Energest Module is active"
+    ::= { energestModule 2 }
+
+energestCPUActive OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+     "Counts the time while the CPU is active"
+    ::= { energestModule 3 }
+
+energestCPULPM OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+     "Counts the time while the CPU is in low power mode" 
+    ::= { energestModule 4 }
+
+energestCPUDeepLPM OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+     "Counts the time while the CPU is in deep low power mode" 
+    ::= { energestModule 5 }
+
+energestRadioTransmit OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+     "Counts the time while the radio is transmitting" 
+    ::= { energestModule 6 }
+
+energestRadioListen OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+     "Counts the time while the radio is listening" 
+    ::= { energestModule 7 }
+
+END
