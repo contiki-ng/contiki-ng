@@ -19,18 +19,17 @@
 #include "snmp_mib.h"
 #include "snmp_utils.h"
 
-#include "sys/log.h"
 #define LOG_MODULE "SNMP [mib]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
 static const snmp_oid_t snmp_mib_system_oid = { { 1, 3, 6, 1, 2, 1, 1 }, 7, 8 };
 static const snmp_oid_t snmp_mib_host_oid = { { 1, 3, 6, 1, 2, 1, 25, 1 }, 8, 9 };
 
-/* Create a data buffer for the value depending on the type:
- *
- * - strings and oids are assumed to be static or have the maximum allowed length
- * - integers are assumed to be dynamic and don't have more than 32 bits
- */
+#define CONTIKI_NG_IANA 10
+static const snmp_oid_t snmp_mib_contiki_ng_oid = { { 1, 3, 6, 1, 4, 1, CONTIKI_NG_IANA }, 7, 8 };
+static const snmp_oid_t snmp_mib_contiki_ng_modules_oid = { { 1, 3, 6, 1, 4, 1, CONTIKI_NG_IANA, 1 }, 8, 9 };
+static const snmp_oid_t snmp_mib_energest_module_oid = { { 1, 3, 6, 1, 4, 1, CONTIKI_NG_IANA, 1, 1 }, 9, 10 };
+
 static int
 data_alloc(snmp_data_t *data, int type)
 {
@@ -38,19 +37,16 @@ data_alloc(snmp_data_t *data, int type)
   case BER_TYPE_INTEGER:
     data->max_length = sizeof(int) + 2;
     data->encoded_length = 0;
-    /* data->buffer = allocate(data->max_length); */
     break;
 
   case BER_TYPE_OCTET_STRING:
     data->max_length = 4;
     data->encoded_length = 0;
-    /* data->buffer = allocate(data->max_length); */
     break;
 
   case BER_TYPE_OID:
     data->max_length = MAX_NR_SUBIDS * 5 + 4;
     data->encoded_length = 0;
-    /* data->buffer = allocate(data->max_length); */
     break;
 
   case BER_TYPE_COUNTER:
@@ -58,14 +54,9 @@ data_alloc(snmp_data_t *data, int type)
   case BER_TYPE_TIME_TICKS:
     data->max_length = sizeof(unsigned int) + 3;
     data->encoded_length = 0;
-    /* data->buffer = allocate(data->max_length); */
     break;
 
   default:
-    return -1;
-  }
-
-  if(!data->buffer) {
     return -1;
   }
 
@@ -149,6 +140,32 @@ encode_byte_array(snmp_data_t *data, const char *string, size_t len)
   return 0;
 }
 static int
+encode_integer(snmp_data_t *data, int integer_value)
+{
+  unsigned char *buffer;
+  int length;
+
+  buffer = data->buffer;
+  if(integer_value < -8388608 || integer_value > 8388607) {
+    length = 4;
+  } else if(integer_value < -32768 || integer_value > 32767) {
+    length = 3;
+  } else if(integer_value < -128 || integer_value > 127) {
+    length = 2;
+  } else {
+    length = 1;
+  }
+
+  *buffer++ = BER_TYPE_INTEGER;
+  *buffer++ = length;
+  while(length--)
+    *buffer++ = ((unsigned int)integer_value >> (8 * length)) & 0xFF;
+
+  data->encoded_length = buffer - data->buffer;
+
+  return 0;
+}
+static int
 encode_string(snmp_data_t *data, const char *string)
 {
   if(!string) {
@@ -171,7 +188,7 @@ data_set(snmp_data_t *data, int type, const void *arg)
 
   switch(type) {
   case BER_TYPE_INTEGER:
-  /* return encode_integer(data, (intptr_t)arg); */
+    return encode_integer(data, (intptr_t)arg);
 
   case BER_TYPE_OCTET_STRING:
     return encode_string(data, (const char *)arg);
@@ -431,6 +448,49 @@ snmp_mib_build()
     return -1;
   }
 
+  /*
+   * The host MIB: additional host info (CONTIKI-NG-ENERGEST-MIB.mib)
+   */
+#if ENERGEST_CONF_ON
+  energest_flush();
+  if((mib_build_entry(&snmp_mib_energest_module_oid, 1, 0, BER_TYPE_INTEGER,
+                      (const void *)(int)(1)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 2, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)(ENERGEST_GET_TOTAL_TIME() / ENERGEST_SECOND))) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 3, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_CPU) / ENERGEST_SECOND))) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 4, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 5, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 6, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)((ENERGEST_GET_TOTAL_TIME()
+                                                                        - energest_type_time(ENERGEST_TYPE_TRANSMIT)
+                                                                        - energest_type_time(ENERGEST_TYPE_LISTEN)) / ENERGEST_SECOND))) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 7, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)((energest_type_time(ENERGEST_TYPE_LISTEN)
+                                                                        + energest_type_time(ENERGEST_TYPE_TRANSMIT)) / ENERGEST_SECOND))) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 8, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LISTEN) / ENERGEST_SECOND))) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 9, 0, BER_TYPE_COUNTER,
+                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_TRANSMIT) / ENERGEST_SECOND))) == -1)) {
+    return -1;
+  }
+#else /* ENERGEST_CONF_ON */
+  if((mib_build_entry(&snmp_mib_energest_module_oid, 1, 0, BER_TYPE_INTEGER, (const void *)(int)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 2, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 3, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 4, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 5, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 6, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 7, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 8, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (mib_build_entry(&snmp_mib_energest_module_oid, 9, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)) {
+    return -1;
+  }
+
+#endif /* ENERGEST_CONF_ON */
+
   return 0;
 }
 int
@@ -447,6 +507,36 @@ snmp_mib_update()
   if(mib_update_entry(&snmp_mib_host_oid, 1, 0, &pos, BER_TYPE_TIME_TICKS, (const void *)(unsigned long)(clock_seconds() * 100)) == -1) {
     return -1;
   }
+
+  /*
+   * The host MIB: additional host info (CONTIKI-NG-ENERGEST-MIB.mib)
+   */
+#if ENERGEST_CONF_ON
+  energest_flush();
+  if((mib_update_entry(&snmp_mib_energest_module_oid, 1, 0, &pos, BER_TYPE_INTEGER,
+                       (const void *)(int)(1)) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 2, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)(ENERGEST_GET_TOTAL_TIME() / ENERGEST_SECOND))) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 3, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_CPU) / ENERGEST_SECOND))) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 4, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 5, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 6, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)((ENERGEST_GET_TOTAL_TIME()
+                                                                         - energest_type_time(ENERGEST_TYPE_TRANSMIT)
+                                                                         - energest_type_time(ENERGEST_TYPE_LISTEN)) / ENERGEST_SECOND))) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 7, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)((energest_type_time(ENERGEST_TYPE_LISTEN)
+                                                                         + energest_type_time(ENERGEST_TYPE_TRANSMIT)) / ENERGEST_SECOND))) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 8, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LISTEN) / ENERGEST_SECOND))) == -1)
+     || (mib_update_entry(&snmp_mib_energest_module_oid, 9, 0, &pos, BER_TYPE_COUNTER,
+                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_TRANSMIT) / ENERGEST_SECOND))) == -1)) {
+    return -1;
+  }
+#endif /* ENERGEST_CONF_ON */
 
   return 0;
 }

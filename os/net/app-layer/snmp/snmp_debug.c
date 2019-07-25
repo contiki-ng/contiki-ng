@@ -14,12 +14,11 @@
 
 #include "snmp_debug.h"
 
-#ifdef SNMP_DEBUG
+#if SNMP_DEBUG
 
 #include "snmp_asn1.h"
 #include "snmp_utils.h"
 
-#include "sys/log.h"
 #define LOG_MODULE "SNMP [debug]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 

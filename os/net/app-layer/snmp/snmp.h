@@ -19,7 +19,10 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-/* #define SNMP_DEBUG (1) */
+#include "sys/log.h"
+#include "sys/energest.h"
+
+#include "snmp_conf.h"
 
 #include <stddef.h> /* for size_t */
 

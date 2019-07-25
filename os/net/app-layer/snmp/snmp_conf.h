@@ -17,3 +17,11 @@
 #else
 #define SNMP_COMMUNITY "public"
 #endif
+
+#ifdef SNMP_CONF_DEBUG
+#define SNMP_DEBUG SNMP_CONF_DEBUG
+#elif LOG_CONF_LEVEL_SNMP == LOG_LEVEL_DBG
+#define SNMP_DEBUG (1)
+#else
+#define SNMP_DEBUG (1)
+#endif

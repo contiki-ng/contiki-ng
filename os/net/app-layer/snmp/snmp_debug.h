@@ -16,7 +16,7 @@
 
 #include "snmp.h"
 
-#ifdef SNMP_DEBUG
+#if SNMP_DEBUG
 
 void snmp_debug_dump_response(const response_t *response);
 

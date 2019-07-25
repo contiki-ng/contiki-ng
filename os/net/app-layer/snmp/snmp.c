@@ -15,7 +15,6 @@
  * See COPYING for GPL licensing information.
  */
 
-#include "snmp_conf.h"
 #include "snmp.h"
 #include "snmp_mib.h"
 #include "snmp_asn1.h"
@@ -25,7 +24,6 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "sys/log.h"
 #define LOG_MODULE "SNMP"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 

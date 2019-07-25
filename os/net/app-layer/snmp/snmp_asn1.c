@@ -23,7 +23,6 @@
 #include "snmp_debug.h"
 #endif /* SNMP_DEBUG */
 
-#include "sys/log.h"
 #define LOG_MODULE "SNMP [asn1]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
