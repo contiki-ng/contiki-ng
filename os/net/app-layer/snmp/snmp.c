@@ -27,12 +27,14 @@
 #define LOG_MODULE "SNMP"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
+/*---------------------------------------------------------------------------*/
 #define SNMP_VERSION_1_ERROR(resp, code, index) { \
     (resp)->error_status = code; \
     (resp)->error_index = index; \
     return 0; \
 }
-
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 #define SNMP_VERSION_2_ERROR(resp, req, index, err) { \
     size_t len = (resp)->value_list_length; \
     memcpy(&(resp)->value_list[len].oid, &(req)->oid_list[index], \
@@ -41,23 +43,28 @@
     (resp)->value_list_length++; \
     continue; \
 }
-
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 #define SNMP_GET_ERROR(resp, req, index, code, err, msg) { \
     if((req)->version == SNMP_VERSION_1) { \
       SNMP_VERSION_1_ERROR((resp), (code), (index)); } \
  \
-    if((resp)->value_list_length < MAX_NR_VALUES) { \
+    if((resp)->value_list_length < SNMP_MAX_NR_VALUES) { \
       SNMP_VERSION_2_ERROR((resp), (req), (index), err); } \
  \
     LOG_ERR("%s", msg); \
     return -1; \
 }
+/*---------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------*/
 static const snmp_data_t snmp_no_such_object = { { '\x80', '\x00' }, 2, 2 };
 static const snmp_data_t snmp_no_such_instance = { { '\x81', '\x00' }, 2, 2 };
 static const snmp_data_t snmp_end_of_mib_view = { { '\x82', '\x00' }, 2, 2 };
 static struct uip_udp_conn *snmp_udp_conn = NULL;
+/*---------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------*/
 static int
 snmnp_get_handle(request_t *request, response_t *response, snmp_client_t *UNUSED(client))
 {
@@ -72,12 +79,12 @@ snmnp_get_handle(request_t *request, response_t *response, snmp_client_t *UNUSED
    */
   for(i = 0; i < request->oid_list_length; i++) {
     pos = 0;
-    value = mib_find(&request->oid_list[i], &pos);
+    value = snmp_mib_find(&request->oid_list[i], &pos);
     if(!value) {
       SNMP_GET_ERROR(response, request, i, SNMP_STATUS_NO_SUCH_NAME, snmp_no_such_object, msg);
     }
 
-    if(pos >= g_mib_length) {
+    if(pos < 0) {
       SNMP_GET_ERROR(response, request, i, SNMP_STATUS_NO_SUCH_NAME, snmp_no_such_object, msg);
     }
 
@@ -89,18 +96,20 @@ snmnp_get_handle(request_t *request, response_t *response, snmp_client_t *UNUSED
       SNMP_GET_ERROR(response, request, i, SNMP_STATUS_NO_SUCH_NAME, snmp_no_such_object, msg);
     }
 
-    if(response->value_list_length < MAX_NR_VALUES) {
+    if(response->value_list_length < SNMP_MAX_NR_VALUES) {
       memcpy(&response->value_list[response->value_list_length], value, sizeof(*value));
       response->value_list_length++;
       continue;
     }
 
     LOG_ERR("%s", msg);
-    return -1;
+    break;
   }
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 static int
 snmnp_getnext_handle(request_t *request, response_t *response, snmp_client_t *UNUSED(client))
 {
@@ -119,29 +128,33 @@ snmnp_getnext_handle(request_t *request, response_t *response, snmp_client_t *UN
       SNMP_GET_ERROR(response, request, i, SNMP_STATUS_NO_SUCH_NAME, snmp_end_of_mib_view, msg);
     }
 
-    if(response->value_list_length < MAX_NR_VALUES) {
+    if(response->value_list_length < SNMP_MAX_NR_VALUES) {
       memcpy(&response->value_list[response->value_list_length], value, sizeof(*value));
       response->value_list_length++;
       continue;
     }
 
     LOG_ERR("%s", msg);
-    return -1;
+    break;
   }
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 static int
 snmp_set_handle(request_t *request, response_t *response, snmp_client_t *UNUSED(client))
 {
   SNMP_VERSION_1_ERROR(response, (request->version == SNMP_VERSION_1)
                        ? SNMP_STATUS_NO_SUCH_NAME : SNMP_STATUS_NO_ACCESS, 0);
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 static int
 snmnp_getbulk_handle(request_t *request, response_t *response, snmp_client_t *UNUSED(client))
 {
   size_t i, j;
-  snmp_oid_t oid_list[MAX_NR_OIDS];
+  snmp_oid_t oid_list[SNMP_MAX_NR_OIDS];
   snmp_value_t *value;
   const char *msg = "Failed handling SNMP GETBULK: value list overflow\n";
 
@@ -159,14 +172,14 @@ snmnp_getbulk_handle(request_t *request, response_t *response, snmp_client_t *UN
       SNMP_GET_ERROR(response, request, i, SNMP_STATUS_NO_SUCH_NAME, snmp_end_of_mib_view, msg);
     }
 
-    if(response->value_list_length < MAX_NR_VALUES) {
+    if(response->value_list_length < SNMP_MAX_NR_VALUES) {
       memcpy(&response->value_list[response->value_list_length], value, sizeof(*value));
       response->value_list_length++;
       continue;
     }
 
     LOG_ERR("%s", msg);
-    return -1;
+    break;
   }
 
   /*
@@ -188,7 +201,7 @@ snmnp_getbulk_handle(request_t *request, response_t *response, snmp_client_t *UN
         SNMP_GET_ERROR(response, request, i, SNMP_STATUS_NO_SUCH_NAME, snmp_end_of_mib_view, msg);
       }
 
-      if(response->value_list_length < MAX_NR_VALUES) {
+      if(response->value_list_length < SNMP_MAX_NR_VALUES) {
         memcpy(&response->value_list[response->value_list_length], value, sizeof(*value));
         response->value_list_length++;
         memcpy(&oid_list[i], &value->oid, sizeof(value->oid));
@@ -197,7 +210,7 @@ snmnp_getbulk_handle(request_t *request, response_t *response, snmp_client_t *UN
       }
 
       LOG_ERR("%s", msg);
-      return -1;
+      break;
     }
 
     if(found_repeater == 0) {
@@ -207,17 +220,23 @@ snmnp_getbulk_handle(request_t *request, response_t *response, snmp_client_t *UN
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 static int
 snmp_handler(snmp_client_t *client)
 {
   static response_t snmp_response;
   static request_t snmp_request;
 
-  /* Setup request and response (other code only changes non-defaults) */
+  /*
+   * Setup request and response (other code only changes non-defaults)
+   */
   memset(&snmp_request, 0, sizeof(snmp_request));
   memset(&snmp_response, 0, sizeof(snmp_response));
 
-  /* Decode the request (only checks for syntax of the packet) */
+  /*
+   * Decode the request (only checks for syntax of the packet)
+   */
   if(snmp_asn1_decode_request(&snmp_request, client) == -1) {
     return -1;
   }
@@ -231,9 +250,11 @@ snmp_handler(snmp_client_t *client)
       snmp_response.error_status = (snmp_request.version == SNMP_VERSION_2C) ? SNMP_STATUS_NO_ACCESS : SNMP_STATUS_GEN_ERR;
       snmp_response.error_index = 0;
 
-      /* Encode the request (depending on error status and encode flags) */
+      /*
+       * Encode the request (depending on error status and encode flags)
+       */
       if(snmp_asn1_encode_response(&snmp_request, &snmp_response, client) == -1) {
-        LOG_INFO("Error encoding request error for invalid %s community\n", snmp_request.community);
+        LOG_ERR("Error encoding request error for invalid %s community\n", snmp_request.community);
         return -1;
       }
       LOG_INFO("Request for %s is invalid\n", snmp_request.community);
@@ -241,60 +262,65 @@ snmp_handler(snmp_client_t *client)
     }
   }
 
-  /* / * Now handle the SNMP requests depending on their type * / */
+  /*
+   * Now handle the SNMP requests depending on their type
+   */
   switch(snmp_request.type) {
   case BER_TYPE_SNMP_GET:
     if(snmnp_get_handle(&snmp_request, &snmp_response, client) == -1) {
-      LOG_INFO("Error while handling get request\n");
+      LOG_ERR("Error while handling get request\n");
       return -1;
     }
     break;
 
   case BER_TYPE_SNMP_GETNEXT:
     if(snmnp_getnext_handle(&snmp_request, &snmp_response, client) == -1) {
-      LOG_INFO("Error while handling get next request\n");
+      LOG_ERR("Error while handling get next request\n");
       return -1;
     }
     break;
 
   case BER_TYPE_SNMP_SET:
     if(snmp_set_handle(&snmp_request, &snmp_response, client) == -1) {
-      LOG_INFO("Error while handling set request\n");
+      LOG_ERR("Error while handling set request\n");
       return -1;
     }
     break;
 
   case BER_TYPE_SNMP_GETBULK:
     if(snmnp_getbulk_handle(&snmp_request, &snmp_response, client) == -1) {
-      LOG_INFO("Error while handling get bulk request\n");
+      LOG_ERR("Error while handling get bulk request\n");
       return -1;
     }
     break;
 
   default:
-    LOG_INFO("UNHANDLED REQUEST TYPE %d\n", snmp_request.type);
+    LOG_ERR("UNHANDLED REQUEST TYPE %d\n", snmp_request.type);
     client->size = 0;
     return 0;
   }
 
-  /* Encode the request (depending on error status and encode flags) */
+  /*
+   * Encode the request (depending on error status and encode flags)
+   */
   if(snmp_asn1_encode_response(&snmp_request, &snmp_response, client) == -1) {
-    LOG_INFO("Error while encoding response\n");
+    LOG_ERR("Error while encoding response\n");
     return -1;
   }
 
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 static void
 snmp_process_data(void)
 {
   static snmp_client_t snmp_client;
 
-  LOG_INFO("receiving UDP datagram from [");
-  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_INFO_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
-  LOG_INFO_(" Length: %u\n", uip_datalen());
+  LOG_DBG("receiving UDP datagram from [");
+  LOG_DBG_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_DBG_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
+  LOG_DBG_(" Length: %u\n", uip_datalen());
 
   memcpy(snmp_client.packet, uip_appdata, uip_datalen());
   snmp_client.size = uip_datalen();
@@ -303,9 +329,9 @@ snmp_process_data(void)
    * Handle the request
    */
   if(snmp_handler(&snmp_client) == -1) {
-    LOG_INFO("Error while handling the request\n");
+    LOG_DBG("Error while handling the request\n");
   } else {
-    LOG_INFO("Sending response\n");
+    LOG_DBG("Sending response\n");
     /*
      * Send the response
      */
@@ -314,7 +340,6 @@ snmp_process_data(void)
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-#define SNMP_PORT 161
 #define SNMP_SERVER_PORT UIP_HTONS(SNMP_PORT)
 PROCESS(snmp_process, "SNMP Process");
 PROCESS(snmp_mib_process, "SNMP MIB Process");
@@ -335,13 +360,13 @@ PROCESS_THREAD(snmp_mib_process, ev, data)
 {
   static struct etimer snmp_mib_process_et;
   PROCESS_BEGIN();
-  etimer_set(&snmp_mib_process_et, CLOCK_SECOND * 5);
+  etimer_set(&snmp_mib_process_et, CLOCK_SECOND * SNMP_MIB_UPDATER_INTERVAL);
   while(1) {
     PROCESS_WAIT_EVENT(); /* Same thing as PROCESS_YIELD */
     if(etimer_expired(&snmp_mib_process_et)) {
-      LOG_INFO("Updating MIB\n");
+      LOG_DBG("Updating MIB\n");
       if(snmp_mib_update() == -1) {
-        LOG_INFO("Error while updating MIB\n");
+        LOG_ERR("Error while updating MIB\n");
       }
       etimer_restart(&snmp_mib_process_et);
     }
@@ -358,7 +383,7 @@ PROCESS_THREAD(snmp_process, ev, data)
   /* new connection with remote host */
   snmp_udp_conn = udp_new(NULL, 0, NULL);
   udp_bind(snmp_udp_conn, SNMP_SERVER_PORT);
-  LOG_INFO("Listening on port %u\n", uip_ntohs(snmp_udp_conn->lport));
+  LOG_DBG("Listening on port %u\n", uip_ntohs(snmp_udp_conn->lport));
 
   while(1) {
     PROCESS_YIELD();

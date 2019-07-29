@@ -18,3 +18,4 @@
 
 int snmp_oid_cmp(const snmp_oid_t *oid1, const snmp_oid_t *oid2);
 char *snmp_oid_ntoa(const snmp_oid_t *oid);
+snmp_oid_t *snmp_oid_aton(const char *str);

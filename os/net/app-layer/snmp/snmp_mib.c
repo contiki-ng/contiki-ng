@@ -1,4 +1,5 @@
-/*
+/* SNMP protocol
+ *
  * Copyright (C) 2008-2010  Robert Ernst <robert.ernst@linux-solutions.at>
  * Copyright (C) 2011       Javier Palacios <javiplx@gmail.com>
  * Copyright (C) 2019       Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
@@ -22,6 +23,9 @@
 #define LOG_MODULE "SNMP [mib]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
+snmp_value_t g_mib[SNMP_MAX_MIB_SIZE];
+size_t g_mib_length = 0;
+
 static const snmp_oid_t snmp_mib_system_oid = { { 1, 3, 6, 1, 2, 1, 1 }, 7, 8 };
 static const snmp_oid_t snmp_mib_host_oid = { { 1, 3, 6, 1, 2, 1, 25, 1 }, 8, 9 };
 
@@ -31,7 +35,7 @@ static const snmp_oid_t snmp_mib_contiki_ng_modules_oid = { { 1, 3, 6, 1, 4, 1, 
 static const snmp_oid_t snmp_mib_energest_module_oid = { { 1, 3, 6, 1, 4, 1, CONTIKI_NG_IANA, 1, 1 }, 9, 10 };
 
 static int
-data_alloc(snmp_data_t *data, int type)
+snmp_mib_data_alloc(snmp_data_t *data, int type)
 {
   switch(type) {
   case BER_TYPE_INTEGER:
@@ -45,7 +49,7 @@ data_alloc(snmp_data_t *data, int type)
     break;
 
   case BER_TYPE_OID:
-    data->max_length = MAX_NR_SUBIDS * 5 + 4;
+    data->max_length = SNMP_MAX_NR_SUBIDS * 5 + 4;
     data->encoded_length = 0;
     break;
 
@@ -67,113 +71,6 @@ data_alloc(snmp_data_t *data, int type)
 
   return 0;
 }
-static int
-encode_unsigned(snmp_data_t *data, int type, unsigned int ticks_value)
-{
-  unsigned char *buffer;
-  int length;
-
-  buffer = data->buffer;
-  if(ticks_value & 0xFF000000) {
-    length = 4;
-  } else if(ticks_value & 0x00FF0000) {
-    length = 3;
-  } else if(ticks_value & 0x0000FF00) {
-    length = 2;
-  } else {
-    length = 1;
-  }
-
-  /* check if the integer could be interpreted negative during a signed decode and prepend a zero-byte if necessary */
-  if((ticks_value >> (8 * (length - 1))) & 0x80) {
-    length++;
-  }
-
-  *buffer++ = type;
-  *buffer++ = length;
-  while(length--)
-    *buffer++ = (ticks_value >> (8 * length)) & 0xFF;
-
-  data->encoded_length = buffer - data->buffer;
-
-  return 0;
-}
-static int
-encode_byte_array(snmp_data_t *data, const char *string, size_t len)
-{
-  unsigned char *buffer;
-
-  if(!string) {
-    return 2;
-  }
-
-  /* if ((len + 4) > data->max_length) { */
-  /*	data->max_length = len + 4; */
-  /*	data->buffer = realloc(data->buffer, data->max_length); */
-  /*	if (!data->buffer) */
-  /*		return 2; */
-  /* } */
-
-  if(len > 0xFFFF) {
-    LOG_INFO("Failed encoding: OCTET STRING overflow\n");
-    return -1;
-  }
-
-  buffer = data->buffer;
-  *buffer++ = BER_TYPE_OCTET_STRING;
-  if(len > 255) {
-    *buffer++ = 0x82;
-    *buffer++ = (len >> 8) & 0xFF;
-    *buffer++ = len & 0xFF;
-  } else if(len > 127) {
-    *buffer++ = 0x81;
-    *buffer++ = len & 0xFF;
-  } else {
-    *buffer++ = len & 0x7F;
-  }
-
-  while(len--)
-    *buffer++ = *string++;
-
-  data->encoded_length = buffer - data->buffer;
-
-  return 0;
-}
-static int
-encode_integer(snmp_data_t *data, int integer_value)
-{
-  unsigned char *buffer;
-  int length;
-
-  buffer = data->buffer;
-  if(integer_value < -8388608 || integer_value > 8388607) {
-    length = 4;
-  } else if(integer_value < -32768 || integer_value > 32767) {
-    length = 3;
-  } else if(integer_value < -128 || integer_value > 127) {
-    length = 2;
-  } else {
-    length = 1;
-  }
-
-  *buffer++ = BER_TYPE_INTEGER;
-  *buffer++ = length;
-  while(length--)
-    *buffer++ = ((unsigned int)integer_value >> (8 * length)) & 0xFF;
-
-  data->encoded_length = buffer - data->buffer;
-
-  return 0;
-}
-static int
-encode_string(snmp_data_t *data, const char *string)
-{
-  if(!string) {
-    return 2;
-  }
-
-  return encode_byte_array(data, string, strlen(string));
-}
 /*
  * Set data buffer to its new value, depending on the type.
  *
@@ -181,25 +78,25 @@ encode_string(snmp_data_t *data, const char *string)
  *       value when the MIB was built.
  */
 static int
-data_set(snmp_data_t *data, int type, const void *arg)
+snmp_mib_data_set(snmp_data_t *data, int type, const void *arg)
 {
   /* Make sure to always initialize the buffer, in case of error below. */
   memset(data->buffer, 0, data->max_length);
 
   switch(type) {
   case BER_TYPE_INTEGER:
-    return encode_integer(data, (intptr_t)arg);
+    return snmp_asn1_encode_integer(data, (intptr_t)arg);
 
   case BER_TYPE_OCTET_STRING:
-    return encode_string(data, (const char *)arg);
+    return snmp_asn1_encode_string(data, (const char *)arg);
 
   case BER_TYPE_OID:
-  /* return encode_oid(data, oid_aton((const char *)arg)); */
+    return snmp_asn1_encode_oid(data, snmp_oid_aton((const char *)arg));
 
   case BER_TYPE_COUNTER:
   case BER_TYPE_GAUGE:
   case BER_TYPE_TIME_TICKS:
-    return encode_unsigned(data, type, (uintptr_t)arg);
+    return snmp_asn1_encode_unsigned(data, type, (uintptr_t)arg);
 
   default:
     break;    /* Fall through */
@@ -208,16 +105,16 @@ data_set(snmp_data_t *data, int type, const void *arg)
   return 1;
 }
 static int
-mib_data_set(const snmp_oid_t *oid, snmp_data_t *data, int column, int row, int type, const void *arg)
+snmp_mib_mib_data_set(const snmp_oid_t *oid, snmp_data_t *data, int column, int row, int type, const void *arg)
 {
   int ret;
 
-  ret = data_set(data, type, arg);
+  ret = snmp_mib_data_set(data, type, arg);
   if(ret) {
     if(ret == 1) {
-      LOG_INFO("%s '%s.%d.%d': unsupported type %d\n", "Failed assigning value to OID", snmp_oid_ntoa(oid), column, row, type);
+      LOG_ERR("%s '%s.%d.%d': unsupported type %d\n", "Failed assigning value to OID", snmp_oid_ntoa(oid), column, row, type);
     } else if(ret == 2) {
-      LOG_INFO("%s '%s.%d.%d': invalid default value\n", "Failed assigning value to OID", snmp_oid_ntoa(oid), column, row);
+      LOG_ERR("%s '%s.%d.%d': invalid default value\n", "Failed assigning value to OID", snmp_oid_ntoa(oid), column, row);
     }
 
     return -1;
@@ -225,125 +122,19 @@ mib_data_set(const snmp_oid_t *oid, snmp_data_t *data, int column, int row, int 
 
   return 0;
 }
-/*
- * Calculate the encoded length of the created OID (note: first the length
- * of the subid list, then the length of the length/type header!)
- */
-static int
-encode_oid_len(snmp_oid_t *oid)
-{
-  uint32_t len = 1;
-  size_t i;
-
-  for(i = 2; i < oid->subid_list_length; i++) {
-    if(oid->subid_list[i] >= (1 << 28)) {
-      len += 5;
-    } else if(oid->subid_list[i] >= (1 << 21)) {
-      len += 4;
-    } else if(oid->subid_list[i] >= (1 << 14)) {
-      len += 3;
-    } else if(oid->subid_list[i] >= (1 << 7)) {
-      len += 2;
-    } else {
-      len += 1;
-    }
-  }
-
-  if(len > 0xFFFF) {
-    LOG_INFO("Failed encoding '%s': OID overflow\n", snmp_oid_ntoa(oid));
-    oid->encoded_length = -1;
-    return -1;
-  }
-
-  if(len > 0xFF) {
-    len += 4;
-  } else if(len > 0x7F) {
-    len += 3;
-  } else {
-    len += 2;
-  }
-
-  oid->encoded_length = (short)len;
-
-  return 0;
-}
-/* static int encode_oid(snmp_data_t *data, const snmp_oid_t *oid) */
-/* { */
-/*	size_t i, len = 1; */
-/*	unsigned char *buffer = data->buffer; */
-/*  */
-/*	if (!oid) */
-/*		return 2; */
-/*  */
-/*	for (i = 2; i < oid->subid_list_length; i++) { */
-/*		if (oid->subid_list[i] >= (1 << 28)) */
-/*			len += 5; */
-/*		else if (oid->subid_list[i] >= (1 << 21)) */
-/*			len += 4; */
-/*		else if (oid->subid_list[i] >= (1 << 14)) */
-/*			len += 3; */
-/*		else if (oid->subid_list[i] >= (1 << 7)) */
-/*			len += 2; */
-/*		else */
-/*			len += 1; */
-/*	} */
-/*  */
-/*	if (len > 0xFFFF) { */
-/*		LOG_INFO("Failed encoding '%s': OID overflow\n", snmp_oid_ntoa(oid)); */
-/*		return -1; */
-/*	} */
-/*  */
-/*	*buffer++ = BER_TYPE_OID; */
-/*	if (len > 0xFF) { */
-/*		*buffer++ = 0x82; */
-/*		*buffer++ = (len >> 8) & 0xFF; */
-/*		*buffer++ = len & 0xFF; */
-/*	} else if (len > 0x7F) { */
-/*		*buffer++ = 0x81; */
-/*		*buffer++ = len & 0xFF; */
-/*	} else { */
-/*		*buffer++ = len & 0x7F; */
-/*	} */
-/*  */
-/*	*buffer++ = oid->subid_list[0] * 40 + oid->subid_list[1]; */
-/*	for (i = 2; i < oid->subid_list_length; i++) { */
-/*		if (oid->subid_list[i] >= (1 << 28)) */
-/*			len = 5; */
-/*		else if (oid->subid_list[i] >= (1 << 21)) */
-/*			len = 4; */
-/*		else if (oid->subid_list[i] >= (1 << 14)) */
-/*			len = 3; */
-/*		else if (oid->subid_list[i] >= (1 << 7)) */
-/*			len = 2; */
-/*		else */
-/*			len = 1; */
-/*  */
-/*		while (len--) { */
-/*			if (len) */
-/*				*buffer++ = ((oid->subid_list[i] >> (7 * len)) & 0x7F) | 0x80; */
-/*			else */
-/*				*buffer++ = (oid->subid_list[i] >> (7 * len)) & 0x7F; */
-/*		} */
-/*	} */
-/*  */
-/*	data->encoded_length = buffer - data->buffer; */
-/*  */
-/*	return 0; */
-/* } */
-
 /* Create OID from the given prefix, column, and row */
 static int
-oid_build(snmp_oid_t *oid, const snmp_oid_t *prefix, int column, int row)
+snmp_mib_oid_build(snmp_oid_t *oid, const snmp_oid_t *prefix, int column, int row)
 {
   memcpy(oid, prefix, sizeof(*oid));
 
-  if(oid->subid_list_length >= MAX_NR_SUBIDS) {
+  if(oid->subid_list_length >= SNMP_MAX_NR_SUBIDS) {
     return -1;
   }
 
   oid->subid_list[oid->subid_list_length++] = column;
 
-  if(oid->subid_list_length >= MAX_NR_SUBIDS) {
+  if(oid->subid_list_length >= SNMP_MAX_NR_SUBIDS) {
     return -1;
   }
 
@@ -352,15 +143,15 @@ oid_build(snmp_oid_t *oid, const snmp_oid_t *prefix, int column, int row)
   return 0;
 }
 static snmp_value_t *
-mib_alloc_entry(const snmp_oid_t *prefix, int column, int row, int type)
+snmp_mib_alloc_entry(const snmp_oid_t *prefix, int column, int row, int type)
 {
   int ret;
   snmp_value_t *value;
   const char *msg = "Failed creating MIB entry";
 
   /* Create a new entry in the MIB table */
-  if(g_mib_length >= MAX_NR_VALUES) {
-    LOG_INFO("%s '%s.%d.%d': table overflow\n", msg, snmp_oid_ntoa(prefix), column, row);
+  if(g_mib_length >= SNMP_MAX_MIB_SIZE) {
+    LOG_ERR("%s '%s.%d.%d': table overflow\n", msg, snmp_oid_ntoa(prefix), column, row);
     return NULL;
   }
 
@@ -368,23 +159,23 @@ mib_alloc_entry(const snmp_oid_t *prefix, int column, int row, int type)
   memcpy(&value->oid, prefix, sizeof(value->oid));
 
   /* Create the OID from the prefix, the column and the row */
-  if(oid_build(&value->oid, prefix, column, row)) {
-    LOG_INFO("%s '%s.%d.%d': oid overflow\n", msg, snmp_oid_ntoa(prefix), column, row);
+  if(snmp_mib_oid_build(&value->oid, prefix, column, row)) {
+    LOG_ERR("%s '%s.%d.%d': oid overflow\n", msg, snmp_oid_ntoa(prefix), column, row);
     return NULL;
   }
 
-  ret = encode_oid_len(&value->oid);
-  ret += data_alloc(&value->data, type);
+  ret = snmp_asn1_encode_oid_len(&value->oid);
+  ret += snmp_mib_data_alloc(&value->data, type);
   if(ret) {
-    LOG_INFO("%s '%s.%d.%d': unsupported type %d\n", msg,
-             snmp_oid_ntoa(&value->oid), column, row, type);
+    LOG_ERR("%s '%s.%d.%d': unsupported type %d\n", msg,
+            snmp_oid_ntoa(&value->oid), column, row, type);
     return NULL;
   }
 
   return value;
 }
 static snmp_value_t *
-mib_value_find(const snmp_oid_t *prefix, int column, int row, size_t *pos)
+snmp_mib_value_find(const snmp_oid_t *prefix, int column, int row, size_t *pos)
 {
   snmp_oid_t oid;
   snmp_value_t *value;
@@ -393,42 +184,43 @@ mib_value_find(const snmp_oid_t *prefix, int column, int row, size_t *pos)
   memcpy(&oid, prefix, sizeof(oid));
 
   /* Create the OID from the prefix, the column and the row */
-  if(oid_build(&oid, prefix, column, row)) {
-    LOG_INFO("%s '%s.%d.%d': OID overflow\n", msg, snmp_oid_ntoa(prefix), column, row);
+  if(snmp_mib_oid_build(&oid, prefix, column, row)) {
+    LOG_ERR("%s '%s.%d.%d': OID overflow\n", msg, snmp_oid_ntoa(prefix), column, row);
     return NULL;
   }
 
   /* Search the MIB for the given OID beginning at the given position */
-  value = mib_find(&oid, pos);
+  value = snmp_mib_find(&oid, pos);
   if(!value) {
-    LOG_INFO("%s '%s.%d.%d': OID not found\n", msg, snmp_oid_ntoa(prefix), column, row);
+    LOG_ERR("%s '%s.%d.%d': OID not found\n", msg, snmp_oid_ntoa(prefix), column, row);
+    return NULL;
   }
 
   return value;
 }
 static int
-mib_build_entry(const snmp_oid_t *prefix, int column, int row, int type, const void *arg)
+snmp_mib_build_entry(const snmp_oid_t *prefix, int column, int row, int type, const void *arg)
 {
   snmp_value_t *value;
 
-  value = mib_alloc_entry(prefix, column, row, type);
+  value = snmp_mib_alloc_entry(prefix, column, row, type);
   if(!value) {
     return -1;
   }
 
-  return mib_data_set(&value->oid, &value->data, column, row, type, arg);
+  return snmp_mib_mib_data_set(&value->oid, &value->data, column, row, type, arg);
 }
 static int
-mib_update_entry(const snmp_oid_t *prefix, int column, int row, size_t *pos, int type, const void *arg)
+snmp_mib_update_entry(const snmp_oid_t *prefix, int column, int row, size_t *pos, int type, const void *arg)
 {
   snmp_value_t *value;
 
-  value = mib_value_find(prefix, column, row, pos);
+  value = snmp_mib_value_find(prefix, column, row, pos);
   if(!value) {
     return -1;
   }
 
-  return mib_data_set(prefix, &value->data, column, row, type, arg);
+  return snmp_mib_mib_data_set(prefix, &value->data, column, row, type, arg);
 }
 int
 snmp_mib_build()
@@ -437,14 +229,14 @@ snmp_mib_build()
   /*
    * The system MIB: basic info about the host (SNMPv2-MIB.txt)
    */
-  if(mib_build_entry(&snmp_mib_system_oid, 1, 0, BER_TYPE_OCTET_STRING, (char *)CONTIKI_VERSION_STRING) == -1) {
+  if(snmp_mib_build_entry(&snmp_mib_system_oid, 1, 0, BER_TYPE_OCTET_STRING, (char *)CONTIKI_VERSION_STRING) == -1) {
     return -1;
   }
 
   /*
    * The host MIB: additional host info (HOST-RESOURCES-MIB.txt)
    */
-  if(mib_build_entry(&snmp_mib_host_oid, 1, 0, BER_TYPE_TIME_TICKS, (const void *)(unsigned long)(clock_seconds() * 100)) == -1) {
+  if(snmp_mib_build_entry(&snmp_mib_host_oid, 1, 0, BER_TYPE_TIME_TICKS, (const void *)(unsigned long)(clock_seconds() * 100)) == -1) {
     return -1;
   }
 
@@ -453,39 +245,39 @@ snmp_mib_build()
    */
 #if ENERGEST_CONF_ON
   energest_flush();
-  if((mib_build_entry(&snmp_mib_energest_module_oid, 1, 0, BER_TYPE_INTEGER,
-                      (const void *)(int)(1)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 2, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)(ENERGEST_GET_TOTAL_TIME() / ENERGEST_SECOND))) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 3, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_CPU) / ENERGEST_SECOND))) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 4, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 5, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 6, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)((ENERGEST_GET_TOTAL_TIME()
-                                                                        - energest_type_time(ENERGEST_TYPE_TRANSMIT)
-                                                                        - energest_type_time(ENERGEST_TYPE_LISTEN)) / ENERGEST_SECOND))) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 7, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)((energest_type_time(ENERGEST_TYPE_LISTEN)
-                                                                        + energest_type_time(ENERGEST_TYPE_TRANSMIT)) / ENERGEST_SECOND))) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 8, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LISTEN) / ENERGEST_SECOND))) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 9, 0, BER_TYPE_COUNTER,
-                         (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_TRANSMIT) / ENERGEST_SECOND))) == -1)) {
+  if((snmp_mib_build_entry(&snmp_mib_energest_module_oid, 1, 0, BER_TYPE_INTEGER,
+                           (const void *)(int)(1)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 2, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)(ENERGEST_GET_TOTAL_TIME() / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 3, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_CPU) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 4, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 5, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 6, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)((ENERGEST_GET_TOTAL_TIME()
+                                                                             - energest_type_time(ENERGEST_TYPE_TRANSMIT)
+                                                                             - energest_type_time(ENERGEST_TYPE_LISTEN)) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 7, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)((energest_type_time(ENERGEST_TYPE_LISTEN)
+                                                                             + energest_type_time(ENERGEST_TYPE_TRANSMIT)) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 8, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LISTEN) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 9, 0, BER_TYPE_COUNTER,
+                              (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_TRANSMIT) / ENERGEST_SECOND))) == -1)) {
     return -1;
   }
 #else /* ENERGEST_CONF_ON */
-  if((mib_build_entry(&snmp_mib_energest_module_oid, 1, 0, BER_TYPE_INTEGER, (const void *)(int)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 2, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 3, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 4, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 5, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 6, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 7, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 8, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
-     || (mib_build_entry(&snmp_mib_energest_module_oid, 9, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)) {
+  if((snmp_mib_build_entry(&snmp_mib_energest_module_oid, 1, 0, BER_TYPE_INTEGER, (const void *)(int)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 2, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 3, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 4, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 5, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 6, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 7, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 8, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)
+     || (snmp_mib_build_entry(&snmp_mib_energest_module_oid, 9, 0, BER_TYPE_COUNTER, (const void *)(unsigned long)(0)) == -1)) {
     return -1;
   }
 
@@ -504,7 +296,7 @@ snmp_mib_update()
   /*
    * The host MIB: additional host info (HOST-RESOURCES-MIB.txt)
    */
-  if(mib_update_entry(&snmp_mib_host_oid, 1, 0, &pos, BER_TYPE_TIME_TICKS, (const void *)(unsigned long)(clock_seconds() * 100)) == -1) {
+  if(snmp_mib_update_entry(&snmp_mib_host_oid, 1, 0, &pos, BER_TYPE_TIME_TICKS, (const void *)(unsigned long)(clock_seconds() * 100)) == -1) {
     return -1;
   }
 
@@ -513,27 +305,27 @@ snmp_mib_update()
    */
 #if ENERGEST_CONF_ON
   energest_flush();
-  if((mib_update_entry(&snmp_mib_energest_module_oid, 1, 0, &pos, BER_TYPE_INTEGER,
-                       (const void *)(int)(1)) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 2, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)(ENERGEST_GET_TOTAL_TIME() / ENERGEST_SECOND))) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 3, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_CPU) / ENERGEST_SECOND))) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 4, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 5, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 6, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)((ENERGEST_GET_TOTAL_TIME()
-                                                                         - energest_type_time(ENERGEST_TYPE_TRANSMIT)
-                                                                         - energest_type_time(ENERGEST_TYPE_LISTEN)) / ENERGEST_SECOND))) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 7, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)((energest_type_time(ENERGEST_TYPE_LISTEN)
-                                                                         + energest_type_time(ENERGEST_TYPE_TRANSMIT)) / ENERGEST_SECOND))) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 8, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LISTEN) / ENERGEST_SECOND))) == -1)
-     || (mib_update_entry(&snmp_mib_energest_module_oid, 9, 0, &pos, BER_TYPE_COUNTER,
-                          (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_TRANSMIT) / ENERGEST_SECOND))) == -1)) {
+  if((snmp_mib_update_entry(&snmp_mib_energest_module_oid, 1, 0, &pos, BER_TYPE_INTEGER,
+                            (const void *)(int)(1)) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 2, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)(ENERGEST_GET_TOTAL_TIME() / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 3, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_CPU) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 4, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 5, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LPM) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 6, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)((ENERGEST_GET_TOTAL_TIME()
+                                                                              - energest_type_time(ENERGEST_TYPE_TRANSMIT)
+                                                                              - energest_type_time(ENERGEST_TYPE_LISTEN)) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 7, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)((energest_type_time(ENERGEST_TYPE_LISTEN)
+                                                                              + energest_type_time(ENERGEST_TYPE_TRANSMIT)) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 8, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_LISTEN) / ENERGEST_SECOND))) == -1)
+     || (snmp_mib_update_entry(&snmp_mib_energest_module_oid, 9, 0, &pos, BER_TYPE_COUNTER,
+                               (const void *)(unsigned long)((unsigned long)(energest_type_time(ENERGEST_TYPE_TRANSMIT) / ENERGEST_SECOND))) == -1)) {
     return -1;
   }
 #endif /* ENERGEST_CONF_ON */
@@ -542,7 +334,7 @@ snmp_mib_update()
 }
 /* Find the OID in the MIB that is exactly the given one or a subid */
 snmp_value_t *
-mib_find(const snmp_oid_t *oid, size_t *pos)
+snmp_mib_find(const snmp_oid_t *oid, size_t *pos)
 {
   while(*pos < g_mib_length) {
     snmp_value_t *curr = &g_mib[*pos];
@@ -555,6 +347,7 @@ mib_find(const snmp_oid_t *oid, size_t *pos)
     *pos = *pos + 1;
   }
 
+  *pos = -1;
   return NULL;
 }
 /* Find the OID in the MIB that is the one after the given one */

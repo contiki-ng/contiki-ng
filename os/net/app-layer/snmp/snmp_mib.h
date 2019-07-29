@@ -14,9 +14,14 @@
  * See COPYING for GPL licensing information.
  */
 
+#ifndef SNMP_MIB_H_
+#define SNMP_MIB_H_
+
 #include "snmp.h"
 
 int snmp_mib_build();
 int snmp_mib_update();
-snmp_value_t *mib_find(const snmp_oid_t *oid, size_t *pos);
+snmp_value_t *snmp_mib_find(const snmp_oid_t *oid, size_t *pos);
 snmp_value_t *snmp_mib_findnext(const snmp_oid_t *oid);
+
+#endif /* SNMP_MIB_H_ */

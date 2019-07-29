@@ -1,4 +1,4 @@
-/* Utility functions
+/* SNMP protocol
  *
  * Copyright (C) 2008-2010  Robert Ernst <robert.ernst@linux-solutions.at>
  * Copyright (C) 2019       Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
@@ -17,6 +17,7 @@
 #include "snmp_utils.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 int
 snmp_oid_cmp(const snmp_oid_t *oid1, const snmp_oid_t *oid2)
@@ -24,7 +25,7 @@ snmp_oid_cmp(const snmp_oid_t *oid1, const snmp_oid_t *oid2)
   int subid1, subid2;
   size_t i;
 
-  for(i = 0; i < MAX_NR_OIDS; i++) {
+  for(i = 0; i < SNMP_MAX_NR_OIDS; i++) {
     subid1 = (oid1->subid_list_length > i) ? (int)oid1->subid_list[i] : -1;
     subid2 = (oid2->subid_list_length > i) ? (int)oid2->subid_list[i] : -1;
 
@@ -45,7 +46,7 @@ char *
 snmp_oid_ntoa(const snmp_oid_t *oid)
 {
   size_t i, len = 0;
-  static char snmp_oid_ntoa_buf[MAX_NR_SUBIDS * 10 + 2];
+  static char snmp_oid_ntoa_buf[SNMP_MAX_NR_SUBIDS * 10 + 2];
 
   snmp_oid_ntoa_buf[0] = '\0';
   for(i = 0; i < oid->subid_list_length; i++) {
@@ -56,4 +57,38 @@ snmp_oid_ntoa(const snmp_oid_t *oid)
   }
 
   return snmp_oid_ntoa_buf;
+}
+snmp_oid_t *
+snmp_oid_aton(const char *str)
+{
+  static snmp_oid_t oid;
+  char *ptr = (char *)str;
+
+  if(!str) {
+    return NULL;
+  }
+
+  oid.subid_list_length = 0;
+  while(*ptr != 0) {
+    if(oid.subid_list_length >= SNMP_MAX_NR_SUBIDS) {
+      return NULL;
+    }
+
+    if(*ptr != '.') {
+      return NULL;
+    }
+
+    ptr++;
+    if(*ptr == 0) {
+      return NULL;
+    }
+
+    oid.subid_list[oid.subid_list_length++] = strtoul(ptr, &ptr, 0);
+  }
+
+  if(oid.subid_list_length < 2 || (oid.subid_list[0] * 40 + oid.subid_list[1]) > 0xFF) {
+    return NULL;
+  }
+
+  return &oid;
 }

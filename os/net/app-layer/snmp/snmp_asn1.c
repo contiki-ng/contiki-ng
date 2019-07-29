@@ -26,19 +26,24 @@
 #define LOG_MODULE "SNMP [asn1]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
+/*---------------------------------------------------------------------------*/
 static const snmp_data_t snmp_null = { { '\x05', '\x00' }, 2, 2 };
+/*---------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------*/
 int
 snmp_asn1_decode_len(const unsigned char *packet, size_t size, size_t *pos, int *type, size_t *len)
 {
   size_t length_of_len;
 
   if(*pos >= size) {
-    LOG_INFO("underflow for element type\n");
+    LOG_ERR("underflow for element type\n");
     return -1;
   }
 
-  /* Fetch the ASN.1 element type (only subset of universal tags supported) */
+  /*
+   * Fetch the ASN.1 element type (only subset of universal tags supported)
+   */
   switch(packet[*pos]) {
   case BER_TYPE_BOOLEAN:
   case BER_TYPE_INTEGER:
@@ -65,23 +70,25 @@ snmp_asn1_decode_len(const unsigned char *packet, size_t size, size_t *pos, int 
     break;
 
   default:
-    LOG_INFO("unsupported element type %02X\n", packet[*pos]);
+    LOG_ERR("unsupported element type %02X\n", packet[*pos]);
     return -1;
   }
 
   if(*pos >= size) {
-    LOG_INFO("underflow for element length\n");
+    LOG_ERR("underflow for element length\n");
     return -1;
   }
 
-  /* Fetch the ASN.1 element length (only lengths up to 16 bit supported) */
+  /*
+   * Fetch the ASN.1 element length (only lengths up to 16 bit supported)
+   */
   if(!(packet[*pos] & 0x80)) {
     *len = packet[*pos];
     *pos = *pos + 1;
   } else {
     length_of_len = packet[*pos] & 0x7F;
     if(length_of_len > 2) {
-      LOG_INFO("overflow for element length\n");
+      LOG_ERR("overflow for element length\n");
       return -1;
     }
 
@@ -89,7 +96,7 @@ snmp_asn1_decode_len(const unsigned char *packet, size_t size, size_t *pos, int 
     *len = 0;
     while(length_of_len--) {
       if(*pos >= size) {
-        LOG_INFO("underflow for element length\n");
+        LOG_ERR("underflow for element length\n");
         return -1;
       }
 
@@ -100,14 +107,18 @@ snmp_asn1_decode_len(const unsigned char *packet, size_t size, size_t *pos, int 
 
   return 0;
 }
-/* Fetch the value as unsigned integer (copy sign bit into all bytes first) */
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*
+ * Fetch the value as unsigned integer (copy sign bit into all bytes first)
+ */
 int
 snmp_asn1_decode_int(const unsigned char *packet, size_t size, size_t *pos, size_t len, int *value)
 {
   unsigned int tmp;
 
   if(*pos >= (size - len + 1)) {
-    LOG_INFO("underflow for integer\n");
+    LOG_ERR("underflow for integer\n");
     return -1;
   }
 
@@ -120,12 +131,16 @@ snmp_asn1_decode_int(const unsigned char *packet, size_t size, size_t *pos, size
 
   return 0;
 }
-/* Fetch the value as unsigned integer (copy sign bit into all bytes first) */
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*
+ * Fetch the value as unsigned integer (copy sign bit into all bytes first)
+ */
 int
 snmp_asn1_decode_cnt(const unsigned char *packet, size_t size, size_t *pos, size_t len, uint32_t *value)
 {
   if(*pos >= (size - len + 1)) {
-    LOG_INFO("underflow for unsigned\n");
+    LOG_ERR("underflow for unsigned\n");
     return -1;
   }
 
@@ -137,12 +152,16 @@ snmp_asn1_decode_cnt(const unsigned char *packet, size_t size, size_t *pos, size
 
   return 0;
 }
-/* Fetch the value as C string (user must have made sure the length is ok) */
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*
+ * Fetch the value as C string (user must have made sure the length is ok)
+ */
 int
-decode_str(const unsigned char *packet, size_t size, size_t *pos, size_t len, char *str, size_t str_len)
+snmp_asn1_decode_str(const unsigned char *packet, size_t size, size_t *pos, size_t len, char *str, size_t str_len)
 {
   if(*pos >= (size - len + 1)) {
-    LOG_INFO("underflow for string\n");
+    LOG_ERR("underflow for string\n");
     return -1;
   }
 
@@ -151,12 +170,16 @@ decode_str(const unsigned char *packet, size_t size, size_t *pos, size_t len, ch
 
   return 0;
 }
-/* Fetch the value as C string (user must have made sure the length is ok) */
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*
+ * Fetch the value as C string (user must have made sure the length is ok)
+ */
 int
 snmp_asn1_decode_oid(const unsigned char *packet, size_t size, size_t *pos, size_t len, snmp_oid_t *value)
 {
   if(*pos >= (size - len + 1)) {
-    LOG_INFO("underflow for oid\n");
+    LOG_ERR("underflow for oid\n");
     return -1;
   }
 
@@ -176,12 +199,12 @@ snmp_asn1_decode_oid(const unsigned char *packet, size_t size, size_t *pos, size
 
   value->subid_list_length = 0;
   if(!len) {
-    LOG_INFO("underflow for OID startbyte\n");
+    LOG_ERR("underflow for OID startbyte\n");
     return -1;
   }
 
   if(packet[*pos] & 0x80) {
-    LOG_INFO("unsupported OID startbyte %02X\n", packet[*pos]);
+    LOG_ERR("unsupported OID startbyte %02X\n", packet[*pos]);
     return -1;
   }
 
@@ -191,8 +214,8 @@ snmp_asn1_decode_oid(const unsigned char *packet, size_t size, size_t *pos, size
   len--;
 
   while(len) {
-    if(value->subid_list_length >= MAX_NR_SUBIDS) {
-      LOG_INFO("overflow for OID byte\n");
+    if(value->subid_list_length >= SNMP_MAX_NR_SUBIDS) {
+      LOG_ERR("overflow for OID byte\n");
       return -1;
     }
 
@@ -202,7 +225,7 @@ snmp_asn1_decode_oid(const unsigned char *packet, size_t size, size_t *pos, size
         = (value->subid_list[value->subid_list_length] << 7) + (packet[*pos] & 0x7F);
       if(packet[*pos] & 0x80) {
         if(!len) {
-          LOG_INFO("underflow for OID byte\n");
+          LOG_ERR("underflow for OID byte\n");
           return -1;
         }
         *pos = *pos + 1;
@@ -216,12 +239,16 @@ snmp_asn1_decode_oid(const unsigned char *packet, size_t size, size_t *pos, size
 
   return 0;
 }
-/* Fetch the value as pointer (user must make sure not to overwrite packet) */
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*
+ * Fetch the value as pointer (user must make sure not to overwrite packet)
+ */
 int
-decode_ptr(const unsigned char UNUSED(*packet), size_t size, size_t *pos, int len)
+snmp_asn1_decode_ptr(const unsigned char UNUSED(*packet), size_t size, size_t *pos, int len)
 {
   if(*pos >= (size - len + 1)) {
-    LOG_INFO("underflow for ptr\n");
+    LOG_ERR("underflow for ptr\n");
     return -1;
   }
 
@@ -229,196 +256,228 @@ decode_ptr(const unsigned char UNUSED(*packet), size_t size, size_t *pos, int le
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
 snmp_asn1_decode_request(request_t *request, snmp_client_t *client)
 {
   int type;
   size_t pos = 0, len = 0;
 
-  /* The SNMP message is enclosed in a sequence */
+  /*
+   * The SNMP message is enclosed in a sequence
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP header\n");
+    LOG_ERR("Error while deconding the the SNMP header\n");
     return -1;
   }
 
   if(type != BER_TYPE_SEQUENCE || len != (client->size - pos)) {
-    LOG_INFO("%s type %02X length %zu\n", "Unexpected SNMP header", type, len);
+    LOG_ERR("%s type %02X length %zu\n", "Unexpected SNMP header", type, len);
     return -1;
   }
 
-  /* The first element of the sequence is the version */
+  /*
+   * The first element of the sequence is the version
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP version\n");
+    LOG_ERR("Error while deconding the the SNMP version\n");
     return -1;
   }
 
   if(type != BER_TYPE_INTEGER || len != 1) {
-    LOG_INFO("Unexpected %s type %02X length %zu\n", "SNMP version", type, len);
+    LOG_ERR("Unexpected %s type %02X length %zu\n", "SNMP version", type, len);
     return -1;
   }
 
   if(snmp_asn1_decode_int(client->packet, client->size, &pos, len, &request->version) == -1) {
-    LOG_INFO("Error while deconding the the SNMP version\n");
+    LOG_ERR("Error while deconding the the SNMP version\n");
     return -1;
   }
 
   if(request->version != SNMP_VERSION_1 && request->version != SNMP_VERSION_2C) {
-    LOG_INFO("Unsupported %s %d\n", "SNMP version", request->version);
+    LOG_ERR("Unsupported %s %d\n", "SNMP version", request->version);
     return -1;
   }
 
-  /* The second element of the sequence is the community string */
+  /*
+   * The second element of the sequence is the community string
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP community\n");
+    LOG_ERR("Error while deconding the the SNMP community\n");
     return -1;
   }
 
   if(type != BER_TYPE_OCTET_STRING || len >= sizeof(request->community)) {
-    LOG_INFO("Unexpected %s type %02X length %zu\n", "SNMP community", type, len);
+    LOG_ERR("Unexpected %s type %02X length %zu\n", "SNMP community", type, len);
     return -1;
   }
 
-  if(decode_str(client->packet, client->size, &pos, len, request->community, sizeof(request->community)) == -1) {
-    LOG_INFO("Error while deconding the the SNMP community\n");
+  if(snmp_asn1_decode_str(client->packet, client->size, &pos, len, request->community, sizeof(request->community)) == -1) {
+    LOG_ERR("Error while deconding the the SNMP community\n");
     return -1;
   }
 
   if(strlen(request->community) < 1) {
-    LOG_INFO("unsupported %s '%s'\n", "SNMP community", request->community);
+    LOG_ERR("unsupported %s '%s'\n", "SNMP community", request->community);
     return -1;
   }
 
-  /* The third element of the sequence is the SNMP request */
+  /*
+   * The third element of the sequence is the SNMP request
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP request\n");
+    LOG_ERR("Error while deconding the the SNMP request\n");
     return -1;
   }
 
   if(len != (client->size - pos)) {
-    LOG_INFO("%s type type %02X length %zu\n", "Unexpected SNMP request", type, len);
+    LOG_ERR("%s type type %02X length %zu\n", "Unexpected SNMP request", type, len);
     return -1;
   }
   request->type = type;
 
-  /* The first element of the SNMP request is the request ID */
+  /*
+   * The first element of the SNMP request is the request ID
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP request ID\n");
+    LOG_ERR("Error while deconding the the SNMP request ID\n");
     return -1;
   }
 
   if(type != BER_TYPE_INTEGER || len < 1) {
-    LOG_INFO("%s id type %02X length %zu\n", "Unexpected SNMP request", type, len);
+    LOG_ERR("%s id type %02X length %zu\n", "Unexpected SNMP request", type, len);
     return -1;
   }
 
   if(snmp_asn1_decode_int(client->packet, client->size, &pos, len, &request->id) == -1) {
-    LOG_INFO("Error while deconding the the SNMP request ID\n");
+    LOG_ERR("Error while deconding the the SNMP request ID\n");
     return -1;
   }
 
-  /* The second element of the SNMP request is the error state / non repeaters (0..2147483647) */
+  /*
+   * The second element of the SNMP request is the error state / non repeaters (0..2147483647)
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP error\n");
+    LOG_ERR("Error while deconding the the SNMP error\n");
     return -1;
   }
 
   if(type != BER_TYPE_INTEGER || len < 1) {
-    LOG_INFO("%s state type %02X length %zu\n", "Unexpected SNMP error", type, len);
+    LOG_ERR("%s state type %02X length %zu\n", "Unexpected SNMP error", type, len);
     return -1;
   }
 
   if(snmp_asn1_decode_cnt(client->packet, client->size, &pos, len, &request->non_repeaters) == -1) {
-    LOG_INFO("Error while deconding the the SNMP error\n");
+    LOG_ERR("Error while deconding the the SNMP error\n");
     return -1;
   }
 
-  /* The third element of the SNMP request is the error index / max repetitions (0..2147483647) */
+  /*
+   * The third element of the SNMP request is the error index / max repetitions (0..2147483647)
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP error\n");
+    LOG_ERR("Error while deconding the the SNMP error\n");
     return -1;
   }
 
   if(type != BER_TYPE_INTEGER || len < 1) {
-    LOG_INFO("%s index type %02X length %zu\n", "Unexpected SNMP error", type, len);
+    LOG_ERR("%s index type %02X length %zu\n", "Unexpected SNMP error", type, len);
     return -1;
   }
 
   if(snmp_asn1_decode_cnt(client->packet, client->size, &pos, len, &request->max_repetitions) == -1) {
-    LOG_INFO("Error while deconding the the SNMP error\n");
+    LOG_ERR("Error while deconding the the SNMP error\n");
     return -1;
   }
 
-  /* The fourth element of the SNMP request are the variable bindings */
+  /*
+   * The fourth element of the SNMP request are the variable bindings
+   */
   if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-    LOG_INFO("Error while deconding the the SNMP varbindings\n");
+    LOG_ERR("Error while deconding the the SNMP varbindings\n");
     return -1;
   }
 
   if(type != BER_TYPE_SEQUENCE || len != (client->size - pos)) {
-    LOG_INFO("%s type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
+    LOG_ERR("%s type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
     return -1;
   }
 
-  /* Loop through the variable bindings */
+  /*
+   * Loop through the variable bindings
+   */
   request->oid_list_length = 0;
   while(pos < client->size) {
-    /* If there is not enough room in the OID list, bail out now */
-    if(request->oid_list_length >= MAX_NR_OIDS) {
-      LOG_INFO("Overflow in OID list\n");
+    /*
+     * If there is not enough room in the OID list, bail out now
+     */
+    if(request->oid_list_length >= SNMP_MAX_NR_OIDS) {
+      LOG_ERR("Overflow in OID list\n");
       return -1;
     }
 
-    /* Each variable binding is a sequence describing the variable */
+    /*
+     * Each variable binding is a sequence describing the variable
+     */
     if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-      LOG_INFO("Error while deconding the the SNMP varbindings\n");
+      LOG_ERR("Error while deconding the the SNMP varbindings\n");
       return -1;
     }
 
     if(type != BER_TYPE_SEQUENCE || len < 1) {
-      LOG_INFO("%s type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
+      LOG_ERR("%s type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
       return -1;
     }
 
-    /* The first element of the variable binding is the OID */
+    /*
+     * The first element of the variable binding is the OID
+     */
     if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-      LOG_INFO("Error while deconding the the SNMP varbindings\n");
+      LOG_ERR("Error while deconding the the SNMP varbindings\n");
       return -1;
     }
 
     if(type != BER_TYPE_OID || len < 1) {
-      LOG_INFO("%s OID type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
+      LOG_ERR("%s OID type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
       return -1;
     }
 
     if(snmp_asn1_decode_oid(client->packet, client->size, &pos, len, &request->oid_list[request->oid_list_length]) == -1) {
-      LOG_INFO("Error while deconding the the SNMP varbindings\n");
+      LOG_ERR("Error while deconding the the SNMP varbindings\n");
       return -1;
     }
 
-    /* The second element of the variable binding is the new type and value */
+    /*
+     * The second element of the variable binding is the new type and value
+     */
     if(snmp_asn1_decode_len(client->packet, client->size, &pos, &type, &len) == -1) {
-      LOG_INFO("Error while deconding the the SNMP varbindings\n");
+      LOG_ERR("Error while deconding the the SNMP varbindings\n");
       return -1;
     }
 
     if((type == BER_TYPE_NULL && len) || (type != BER_TYPE_NULL && !len)) {
-      LOG_INFO("%s value type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
+      LOG_ERR("%s value type %02X length %zu\n", "Unexpected SNMP varbindings", type, len);
       return -1;
     }
 
-    if(decode_ptr(client->packet, client->size, &pos, len) == -1) {
-      LOG_INFO("Error while deconding the the SNMP varbindings\n");
+    if(snmp_asn1_decode_ptr(client->packet, client->size, &pos, len) == -1) {
+      LOG_ERR("Error while deconding the the SNMP varbindings\n");
       return -1;
     }
 
-    /* Now the OID list has one more entry */
+    /*
+     * Now the OID list has one more entry
+     */
     request->oid_list_length++;
   }
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 size_t
-get_intlen(int val)
+snmp_asn1_get_intlen(int val)
 {
   if(val < -8388608 || val > 8388607) {
     return 6;
@@ -432,13 +491,15 @@ get_intlen(int val)
 
   return 3;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 size_t
-get_strlen(const char *str)
+snmp_asn1_get_strlen(const char *str)
 {
   size_t len = strlen(str);
 
   if(len > 0xFFFF) {
-    return MAX_PACKET_SIZE;
+    return SNMP_MAX_PACKET_SIZE;
   }
   if(len > 0xFF) {
     return len + 4;
@@ -449,11 +510,13 @@ get_strlen(const char *str)
 
   return len + 2;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 size_t
-get_hdrlen(size_t len)
+snmp_asn1_get_hdrlen(size_t len)
 {
   if(len > 0xFFFF) {
-    return MAX_PACKET_SIZE;
+    return SNMP_MAX_PACKET_SIZE;
   }
   if(len > 0xFF) {
     return 4;
@@ -464,8 +527,10 @@ get_hdrlen(size_t len)
 
   return 2;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
-encode_snmp_integer(unsigned char *buf, int val)
+snmp_asn1_encode_snmp_integer(unsigned char *buf, int val)
 {
   size_t len;
 
@@ -486,8 +551,10 @@ encode_snmp_integer(unsigned char *buf, int val)
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
-encode_snmp_string(unsigned char *buf, const char *str)
+snmp_asn1_encode_snmp_string(unsigned char *buf, const char *str)
 {
   size_t len;
 
@@ -511,8 +578,10 @@ encode_snmp_string(unsigned char *buf, const char *str)
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
-encode_snmp_sequence_header(unsigned char *buf, size_t len, int type)
+snmp_asn1_encode_snmp_sequence_header(unsigned char *buf, size_t len, int type)
 {
   if(len > 0xFFFF) {
     return -1;
@@ -532,8 +601,10 @@ encode_snmp_sequence_header(unsigned char *buf, size_t len, int type)
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
-encode_snmp_oid(unsigned char *buf, const snmp_oid_t *oid)
+snmp_asn1_encode_snmp_oid(unsigned char *buf, const snmp_oid_t *oid)
 {
   size_t i, len;
 
@@ -594,12 +665,16 @@ encode_snmp_oid(unsigned char *buf, const snmp_oid_t *oid)
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
-snmp_log_encoding_error(const char *what, const char *why)
+snmp_asn1_log_encoding_error(const char *what, const char *why)
 {
   LOG_ERR("Failed encoding %s: %s\n", what, why);
   return -1;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
 snmp_ans1_encode_varbind(unsigned char *buf, size_t *pos, const snmp_value_t *value)
 {
@@ -608,7 +683,7 @@ snmp_ans1_encode_varbind(unsigned char *buf, size_t *pos, const snmp_value_t *va
   /* The value of the variable binding (NULL for error responses) */
   len = value->data.encoded_length;
   if(*pos < len) {
-    return snmp_log_encoding_error(snmp_oid_ntoa(&value->oid), "DATA overflow");
+    return snmp_asn1_log_encoding_error(snmp_oid_ntoa(&value->oid), "DATA overflow");
   }
 
   memcpy(&buf[*pos - len], value->data.buffer, len);
@@ -617,23 +692,25 @@ snmp_ans1_encode_varbind(unsigned char *buf, size_t *pos, const snmp_value_t *va
   /* The OID of the variable binding */
   len = value->oid.encoded_length;
   if(*pos < len) {
-    return snmp_log_encoding_error(snmp_oid_ntoa(&value->oid), "OID overflow");
+    return snmp_asn1_log_encoding_error(snmp_oid_ntoa(&value->oid), "OID overflow");
   }
 
-  encode_snmp_oid(&buf[*pos - len], &value->oid);
+  snmp_asn1_encode_snmp_oid(&buf[*pos - len], &value->oid);
   *pos = *pos - len;
 
   /* The sequence header (type and length) of the variable binding */
-  len = get_hdrlen(value->oid.encoded_length + value->data.encoded_length);
+  len = snmp_asn1_get_hdrlen(value->oid.encoded_length + value->data.encoded_length);
   if(*pos < len) {
-    return snmp_log_encoding_error(snmp_oid_ntoa(&value->oid), "VARBIND overflow");
+    return snmp_asn1_log_encoding_error(snmp_oid_ntoa(&value->oid), "VARBIND overflow");
   }
 
-  encode_snmp_sequence_header(&buf[*pos - len], value->oid.encoded_length + value->data.encoded_length, BER_TYPE_SEQUENCE);
+  snmp_asn1_encode_snmp_sequence_header(&buf[*pos - len], value->oid.encoded_length + value->data.encoded_length, BER_TYPE_SEQUENCE);
   *pos = *pos - len;
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 int
 snmp_asn1_encode_response(request_t *request, response_t *response, snmp_client_t *client)
 {
@@ -643,8 +720,8 @@ snmp_asn1_encode_response(request_t *request, response_t *response, snmp_client_
    * omit any varbind values (replace them with NULL values)
    */
   if(response->error_status != SNMP_STATUS_OK) {
-    if(request->oid_list_length > MAX_NR_VALUES) {
-      return snmp_log_encoding_error("SNMP response", "value list overflow");
+    if(request->oid_list_length > SNMP_MAX_NR_VALUES) {
+      return snmp_asn1_log_encoding_error("SNMP response", "value list overflow");
     }
 
     for(i = 0; i < request->oid_list_length; i++) {
@@ -654,85 +731,88 @@ snmp_asn1_encode_response(request_t *request, response_t *response, snmp_client_
     response->value_list_length = request->oid_list_length;
   }
 
-  /* Dump the response for debugging purposes */
+  /*
+   * Dump the response for debugging purposes
+   */
 #ifdef SNMP_DEBUG
   snmp_debug_dump_response(response);
 #endif
 
-  /* To make the code more compact and save processing time, we are encoding the
+  /*
+   * To make the code more compact and save processing time, we are encoding the
    * data beginning at the last byte of the buffer backwards. Thus, the encoded
    * packet will not be positioned at offset 0..(size-1) of the client's packet
    * buffer, but at offset (bufsize-size..bufsize-1)!
    */
-  pos = MAX_PACKET_SIZE;
+  pos = SNMP_MAX_PACKET_SIZE;
   for(i = response->value_list_length; i > 0; i--) {
     if(snmp_ans1_encode_varbind(client->packet, &pos, &response->value_list[i - 1]) == -1) {
       return -1;
     }
   }
 
-  len = get_hdrlen(MAX_PACKET_SIZE - pos);
+  len = snmp_asn1_get_hdrlen(SNMP_MAX_PACKET_SIZE - pos);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "VARBINDS overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "VARBINDS overflow");
   }
 
-  encode_snmp_sequence_header(&client->packet[pos - len], MAX_PACKET_SIZE - pos, BER_TYPE_SEQUENCE);
+  snmp_asn1_encode_snmp_sequence_header(&client->packet[pos - len], SNMP_MAX_PACKET_SIZE - pos, BER_TYPE_SEQUENCE);
   pos = pos - len;
 
-  len = get_intlen(response->error_index);
+  len = snmp_asn1_get_intlen(response->error_index);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "ERROR INDEX overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "ERROR INDEX overflow");
   }
 
-  encode_snmp_integer(&client->packet[pos - len], response->error_index);
+  snmp_asn1_encode_snmp_integer(&client->packet[pos - len], response->error_index);
   pos = pos - len;
 
-  len = get_intlen(response->error_status);
+  len = snmp_asn1_get_intlen(response->error_status);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "ERROR STATUS overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "ERROR STATUS overflow");
   }
 
-  encode_snmp_integer(&client->packet[pos - len], response->error_status);
+  snmp_asn1_encode_snmp_integer(&client->packet[pos - len], response->error_status);
   pos = pos - len;
 
-  len = get_intlen(request->id);
+  len = snmp_asn1_get_intlen(request->id);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "ID overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "ID overflow");
   }
 
-  encode_snmp_integer(&client->packet[pos - len], request->id);
+  snmp_asn1_encode_snmp_integer(&client->packet[pos - len], request->id);
   pos = pos - len;
 
-  len = get_hdrlen(MAX_PACKET_SIZE - pos);
+  len = snmp_asn1_get_hdrlen(SNMP_MAX_PACKET_SIZE - pos);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "PDU overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "PDU overflow");
   }
 
-  encode_snmp_sequence_header(&client->packet[pos - len], MAX_PACKET_SIZE - pos, BER_TYPE_SNMP_RESPONSE);
+  snmp_asn1_encode_snmp_sequence_header(&client->packet[pos - len], SNMP_MAX_PACKET_SIZE - pos, BER_TYPE_SNMP_RESPONSE);
   pos = pos - len;
 
-  len = get_strlen(request->community);
+  len = snmp_asn1_get_strlen(request->community);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "COMMUNITY overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "COMMUNITY overflow");
   }
 
-  encode_snmp_string(&client->packet[pos - len], request->community);
+  snmp_asn1_encode_snmp_string(&client->packet[pos - len], request->community);
   pos = pos - len;
 
-  len = get_intlen(request->version);
+  len = snmp_asn1_get_intlen(request->version);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "VERSION overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "VERSION overflow");
   }
 
-  encode_snmp_integer(&client->packet[pos - len], request->version);
+  snmp_asn1_encode_snmp_integer(&client->packet[pos - len], request->version);
   pos = pos - len;
 
-  len = get_hdrlen(MAX_PACKET_SIZE - pos);
+  len = snmp_asn1_get_hdrlen(SNMP_MAX_PACKET_SIZE - pos);
   if(pos < len) {
-    return snmp_log_encoding_error("SNMP response", "RESPONSE overflow");
+    return snmp_asn1_log_encoding_error("SNMP response", "RESPONSE overflow");
   }
 
-  encode_snmp_sequence_header(&client->packet[pos - len], MAX_PACKET_SIZE - pos, BER_TYPE_SEQUENCE);
+  snmp_asn1_encode_snmp_sequence_header(&client->packet[pos - len], SNMP_MAX_PACKET_SIZE - pos, BER_TYPE_SEQUENCE);
   pos = pos - len;
 
   /*
@@ -741,9 +821,232 @@ snmp_asn1_encode_response(request_t *request, response_t *response, snmp_client_
    * and set up the packet size.
    */
   if(pos > 0) {
-    memmove(&client->packet[0], &client->packet[pos], MAX_PACKET_SIZE - pos);
+    memmove(&client->packet[0], &client->packet[pos], SNMP_MAX_PACKET_SIZE - pos);
   }
-  client->size = MAX_PACKET_SIZE - pos;
+  client->size = SNMP_MAX_PACKET_SIZE - pos;
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/*
+ * Calculate the encoded length of the created OID (note: first the length
+ * of the subid list, then the length of the length/type header!)
+ */
+int
+snmp_asn1_encode_oid_len(snmp_oid_t *oid)
+{
+  uint32_t len = 1;
+  size_t i;
+
+  for(i = 2; i < oid->subid_list_length; i++) {
+    if(oid->subid_list[i] >= (1 << 28)) {
+      len += 5;
+    } else if(oid->subid_list[i] >= (1 << 21)) {
+      len += 4;
+    } else if(oid->subid_list[i] >= (1 << 14)) {
+      len += 3;
+    } else if(oid->subid_list[i] >= (1 << 7)) {
+      len += 2;
+    } else {
+      len += 1;
+    }
+  }
+
+  if(len > 0xFFFF) {
+    LOG_ERR("Failed encoding '%s': OID overflow\n", snmp_oid_ntoa(oid));
+    oid->encoded_length = -1;
+    return -1;
+  }
+
+  if(len > 0xFF) {
+    len += 4;
+  } else if(len > 0x7F) {
+    len += 3;
+  } else {
+    len += 2;
+  }
+
+  oid->encoded_length = (short)len;
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+int
+snmp_asn1_encode_unsigned(snmp_data_t *data, int type, unsigned int ticks_value)
+{
+  unsigned char *buffer;
+  int length;
+
+  buffer = data->buffer;
+  if(ticks_value & 0xFF000000) {
+    length = 4;
+  } else if(ticks_value & 0x00FF0000) {
+    length = 3;
+  } else if(ticks_value & 0x0000FF00) {
+    length = 2;
+  } else {
+    length = 1;
+  }
+
+  /* check if the integer could be interpreted negative during a signed decode and prepend a zero-byte if necessary */
+  if((ticks_value >> (8 * (length - 1))) & 0x80) {
+    length++;
+  }
+
+  *buffer++ = type;
+  *buffer++ = length;
+  while(length--)
+    *buffer++ = (ticks_value >> (8 * length)) & 0xFF;
+
+  data->encoded_length = buffer - data->buffer;
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+int
+snmp_asn1_encode_byte_array(snmp_data_t *data, const char *string, size_t len)
+{
+  unsigned char *buffer;
+
+  if(!string) {
+    return 2;
+  }
+
+  if(len > 0xFFFF) {
+    LOG_ERR("Failed encoding: OCTET STRING overflow\n");
+    return -1;
+  }
+
+  buffer = data->buffer;
+  *buffer++ = BER_TYPE_OCTET_STRING;
+  if(len > 255) {
+    *buffer++ = 0x82;
+    *buffer++ = (len >> 8) & 0xFF;
+    *buffer++ = len & 0xFF;
+  } else if(len > 127) {
+    *buffer++ = 0x81;
+    *buffer++ = len & 0xFF;
+  } else {
+    *buffer++ = len & 0x7F;
+  }
+
+  while(len--)
+    *buffer++ = *string++;
+
+  data->encoded_length = buffer - data->buffer;
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+int
+snmp_asn1_encode_integer(snmp_data_t *data, int integer_value)
+{
+  unsigned char *buffer;
+  int length;
+
+  buffer = data->buffer;
+  if(integer_value < -8388608 || integer_value > 8388607) {
+    length = 4;
+  } else if(integer_value < -32768 || integer_value > 32767) {
+    length = 3;
+  } else if(integer_value < -128 || integer_value > 127) {
+    length = 2;
+  } else {
+    length = 1;
+  }
+
+  *buffer++ = BER_TYPE_INTEGER;
+  *buffer++ = length;
+  while(length--)
+    *buffer++ = ((unsigned int)integer_value >> (8 * length)) & 0xFF;
+
+  data->encoded_length = buffer - data->buffer;
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+int
+snmp_asn1_encode_string(snmp_data_t *data, const char *string)
+{
+  if(!string) {
+    return 2;
+  }
+
+  return snmp_asn1_encode_byte_array(data, string, strlen(string));
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+int
+snmp_asn1_encode_oid(snmp_data_t *data, const snmp_oid_t *oid)
+{
+  size_t i, len = 1;
+  unsigned char *buffer = data->buffer;
+
+  if(!oid) {
+    return 2;
+  }
+
+  for(i = 2; i < oid->subid_list_length; i++) {
+    if(oid->subid_list[i] >= (1 << 28)) {
+      len += 5;
+    } else if(oid->subid_list[i] >= (1 << 21)) {
+      len += 4;
+    } else if(oid->subid_list[i] >= (1 << 14)) {
+      len += 3;
+    } else if(oid->subid_list[i] >= (1 << 7)) {
+      len += 2;
+    } else {
+      len += 1;
+    }
+  }
+
+  if(len > 0xFFFF) {
+    LOG_ERR("Failed encoding '%s': OID overflow\n", snmp_oid_ntoa(oid));
+    return -1;
+  }
+
+  *buffer++ = BER_TYPE_OID;
+  if(len > 0xFF) {
+    *buffer++ = 0x82;
+    *buffer++ = (len >> 8) & 0xFF;
+    *buffer++ = len & 0xFF;
+  } else if(len > 0x7F) {
+    *buffer++ = 0x81;
+    *buffer++ = len & 0xFF;
+  } else {
+    *buffer++ = len & 0x7F;
+  }
+
+  *buffer++ = oid->subid_list[0] * 40 + oid->subid_list[1];
+  for(i = 2; i < oid->subid_list_length; i++) {
+    if(oid->subid_list[i] >= (1 << 28)) {
+      len = 5;
+    } else if(oid->subid_list[i] >= (1 << 21)) {
+      len = 4;
+    } else if(oid->subid_list[i] >= (1 << 14)) {
+      len = 3;
+    } else if(oid->subid_list[i] >= (1 << 7)) {
+      len = 2;
+    } else {
+      len = 1;
+    }
+
+    while(len--) {
+      if(len) {
+        *buffer++ = ((oid->subid_list[i] >> (7 * len)) & 0x7F) | 0x80;
+      } else {
+        *buffer++ = (oid->subid_list[i] >> (7 * len)) & 0x7F;
+      }
+    }
+  }
+
+  data->encoded_length = buffer - data->buffer;
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/

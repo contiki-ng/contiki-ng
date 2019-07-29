@@ -1,4 +1,5 @@
-/*
+/* SNMP protocol
+ *
  * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  * This file may be distributed and/or modified under the terms of the
@@ -43,5 +44,12 @@ int snmp_asn1_decode_len(const unsigned char *packet, size_t size, size_t *pos, 
 int snmp_asn1_decode_int(const unsigned char *packet, size_t size, size_t *pos, size_t len, int *value);
 int snmp_asn1_decode_oid(const unsigned char *packet, size_t size, size_t *pos, size_t len, snmp_oid_t *value);
 int snmp_asn1_decode_cnt(const unsigned char *packet, size_t size, size_t *pos, size_t len, uint32_t *value);
+
+int snmp_asn1_encode_oid_len(snmp_oid_t *oid);
+int snmp_asn1_encode_unsigned(snmp_data_t *data, int type, unsigned int ticks_value);
+int snmp_asn1_encode_byte_array(snmp_data_t *data, const char *string, size_t len);
+int snmp_asn1_encode_integer(snmp_data_t *data, int integer_value);
+int snmp_asn1_encode_string(snmp_data_t *data, const char *string);
+int snmp_asn1_encode_oid(snmp_data_t *data, const snmp_oid_t *oid);
 
 #endif /* ASN1_H_ */

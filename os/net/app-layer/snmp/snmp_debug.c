@@ -1,4 +1,5 @@
-/*
+/* SNMP protocol
+ *
  * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  * This file may be distributed and/or modified under the terms of the
@@ -95,13 +96,13 @@ void
 snmp_debug_dump_response(const response_t *response)
 {
   size_t i;
-  static char snmp_buf[MAX_PACKET_SIZE];
+  static char snmp_buf[SNMP_MAX_PACKET_SIZE];
 
   LOG_INFO("response: status=%d, index=%d, nr_entries=%zu\n",
            response->error_status, response->error_index, response->value_list_length);
   for(i = 0; i < response->value_list_length; i++) {
-    if(snmp_debug_element_as_string(&response->value_list[i].data, snmp_buf, MAX_PACKET_SIZE) == -1) {
-      strncpy(snmp_buf, "?", MAX_PACKET_SIZE);
+    if(snmp_debug_element_as_string(&response->value_list[i].data, snmp_buf, SNMP_MAX_PACKET_SIZE) == -1) {
+      strncpy(snmp_buf, "?", SNMP_MAX_PACKET_SIZE);
     }
 
     LOG_INFO("response: entry[%zu]='%s','%s'\n", i, snmp_oid_ntoa(&response->value_list[i].oid), snmp_buf);

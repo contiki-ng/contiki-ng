@@ -1,6 +1,7 @@
 /* Global variables
  *
  * Copyright (C) 2008-2010  Robert Ernst <robert.ernst@linux-solutions.at>
+ * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  * This file may be distributed and/or modified under the terms of the
  * GNU General Public License version 2 as published by the Free Software
@@ -15,5 +16,3 @@
 
 #include "snmp.h"
 
-snmp_value_t g_mib[MAX_NR_VALUES];
-size_t g_mib_length = 0;
