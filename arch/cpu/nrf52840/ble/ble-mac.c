@@ -55,7 +55,7 @@
 
 #include "dev/watchdog.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -74,12 +74,27 @@ process_event_t ble_event_interface_deleted; /**< This event is broadcast when B
 /*---------------------------------------------------------------------------*/
 PROCESS(ble_ipsp_process, "BLE IPSP process");
 
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief A structure that binds IPSP connection with a peer address.
  */
+
 typedef struct {
-  eui64_t peer_addr;
+	uint8_t identifier[6];
+} eui48_t;
+
+inline void EUI48_FLIP(uint8_t* eui1, const uint8_t* eui2 )  {
+			 eui1[0] = eui2[5];
+             eui1[1] = eui2[4];
+             eui1[2] = eui2[3];
+             eui1[3] = eui2[2];
+             eui1[4] = eui2[1];
+             eui1[5] = eui2[0];
+}
+
+typedef struct {
+  eui48_t peer_addr;
   ble_ipsp_handle_t handle;
 } ble_mac_interface_t;
 
@@ -89,7 +104,7 @@ static volatile int busy_tx; /**< Flag is set to 1 when the driver is busy trans
 static volatile int busy_rx; /**< Flag is set to 1 when there is a received packet pending. */
 
 struct {
-  eui64_t src;
+  eui48_t src;
   uint8_t payload[PACKETBUF_SIZE];
   uint16_t len;
   int8_t rssi;
@@ -110,9 +125,7 @@ static ble_mac_interface_t *
 ble_mac_interface_lookup(ble_ipsp_handle_t const *handle)
 {
   int i;
-  //PRINTF("LOOKUP cid %u ch %u\n",  handle->cid, handle->conn_handle );
   for(i = 0; i < BLE_MAC_MAX_INTERFACE_NUM; i++) {
-	  //PRINTF("cid %u ch %u\n",  interfaces[i].handle.cid, interfaces[i].handle.conn_handle );
     if(interfaces[i].handle.conn_handle == handle->conn_handle &&
         interfaces[i].handle.cid == handle->cid) {
       return &interfaces[i];
@@ -126,20 +139,21 @@ ble_mac_interface_lookup(ble_ipsp_handle_t const *handle)
  *
  * This function binds IPSP connection with peer address.
  *
- * \param peer a pointer to eui64 address
+ * \param peer a pointer to eui48 address
  * \param handle a pointer to IPSP handle
  *
  * \retval a pointer to an interface structure on success
  * \retval NULL if interface table is full
  */
 static ble_mac_interface_t *
-ble_mac_interface_add(eui64_t *peer, ble_ipsp_handle_t const *handle)
+ble_mac_interface_add(eui48_t *peer, ble_ipsp_handle_t const *handle)
 {
   int i;
   for(i = 0; i < BLE_MAC_MAX_INTERFACE_NUM; i++) {
     if(interfaces[i].handle.conn_handle == 0 && interfaces[i].handle.cid == 0) {
       memcpy(&interfaces[i].handle, handle, sizeof(ble_ipsp_handle_t));
-      memcpy(&interfaces[i].peer_addr, peer, sizeof(eui64_t));
+      memcpy(&interfaces[i].peer_addr, peer, sizeof(eui48_t));
+
       process_post(PROCESS_BROADCAST, ble_event_interface_added, NULL);
       return &interfaces[i];
     }
@@ -173,26 +187,15 @@ ble_mac_ipsp_evt_handler_irq(ble_ipsp_handle_t const *p_handle, ble_ipsp_evt_t c
 {
   uint32_t retval = NRF_SUCCESS;
   uint8_t ch_index;
+  eui48_t peer_addr;
 
   ble_mac_interface_t *p_instance = NULL;
   p_instance = ble_mac_interface_lookup(p_handle);
 
-  /*if(p_handle) {
-    PRINTF("ble-mac: IPSP event [handle:%d CID 0x%04X]\n", p_handle->conn_handle, p_handle->cid);
-  }*/
-
   switch(p_evt->evt_id) {
     case BLE_IPSP_EVT_CHANNEL_CONNECTED: {
-      eui64_t peer_addr;
 
-      IPV6_EUI64_CREATE_FROM_EUI48(
-          peer_addr.identifier,
-          p_evt->p_evt_param->p_peer->addr,
-          p_evt->p_evt_param->p_peer->addr_type);
-
-      //PRINTF("%d\n", p_evt->p_evt_param->p_peer->addr_type);
-
-  	  PRINTF("CONN %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", peer_addr.identifier[0],peer_addr.identifier[1],peer_addr.identifier[2],peer_addr.identifier[3],peer_addr.identifier[4],peer_addr.identifier[5], peer_addr.identifier[6], peer_addr.identifier[7]);
+      memcpy(&peer_addr, p_evt->p_evt_param->p_peer->addr, sizeof(eui48_t) );
 
       p_instance = ble_mac_interface_add(&peer_addr, p_handle);
 
@@ -217,24 +220,27 @@ ble_mac_ipsp_evt_handler_irq(ble_ipsp_handle_t const *p_handle, ble_ipsp_evt_t c
     case BLE_IPSP_EVT_CHANNEL_DATA_RX: {
       PRINTF("ble-mac: data received len %u\n", p_evt->p_evt_param->p_l2cap_evt->params.rx.sdu_len);
 
+      const uint16_t received_sdu_length = MIN(p_evt->p_evt_param->p_l2cap_evt->params.rx.sdu_buf.len,
+                                                           p_evt->p_evt_param->p_l2cap_evt->params.rx.sdu_len);
+
       if(p_instance != NULL) {
         if(busy_rx) {
           PRINTF("ble-mac: packet dropped as input buffer is busy\n");
           break;
         }
 
-        if(p_evt->p_evt_param->p_l2cap_evt->params.rx.sdu_len > PACKETBUF_SIZE) {
+        if(received_sdu_length > PACKETBUF_SIZE) {
           PRINTF("ble-mac: packet buffer is too small!\n");
           break;
         }
 
         busy_rx = 1;
 
-        //PRINTF("RECV %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", p_instance->peer_addr.identifier[0],p_instance->peer_addr.identifier[1],p_instance->peer_addr.identifier[2],p_instance->peer_addr.identifier[3],p_instance->peer_addr.identifier[4],p_instance->peer_addr.identifier[5], p_instance->peer_addr.identifier[6], p_instance->peer_addr.identifier[7]);
-
-        input_packet.len = p_evt->p_evt_param->p_l2cap_evt->params.rx.sdu_len;
+        input_packet.len = received_sdu_length;
         memcpy(input_packet.payload, p_evt->p_evt_param->p_l2cap_evt->params.rx.sdu_buf.p_data, input_packet.len);
-        memcpy(input_packet.src.identifier, p_instance->peer_addr.identifier, sizeof(eui64_t));
+
+        EUI48_FLIP(input_packet.src.identifier,p_instance->peer_addr.identifier);
+
         sd_ble_gap_rssi_get(p_handle->conn_handle, &input_packet.rssi, &ch_index);
 
         process_poll(&ble_ipsp_process);
@@ -277,7 +283,7 @@ PROCESS_THREAD(ble_ipsp_process, ev, data)
 /**
  * \brief Lookup IPSP handle by peer address.
  *
- * \param addr a pointer to eui64 address.
+ * \param addr a pointer to eui48 address.
  * \retval a pointer to IPSP handle on success
  * \retval NULL if an IPSP handle for given address haven't been found
  */
@@ -285,10 +291,10 @@ static ble_ipsp_handle_t *
 find_handle(const linkaddr_t *addr)
 {
   int i;
+  linkaddr_t ll;
   for(i = 0; i < BLE_MAC_MAX_INTERFACE_NUM; i++) {
-	PRINTF("FIN %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", interfaces[i].peer_addr.identifier[0],interfaces[i].peer_addr.identifier[1],interfaces[i].peer_addr.identifier[2],interfaces[i].peer_addr.identifier[3],interfaces[i].peer_addr.identifier[4],interfaces[i].peer_addr.identifier[5], interfaces[i].peer_addr.identifier[6], interfaces[i].peer_addr.identifier[7]);
-	PRINTF("   \n");
-    if(linkaddr_cmp((const linkaddr_t *)&interfaces[i].peer_addr, addr)) {
+	EUI48_FLIP((uint8_t*)ll.u8,interfaces[i].peer_addr.identifier);
+    if(linkaddr_cmp((const linkaddr_t *)&ll, addr)) {
       return &interfaces[i].handle;
     }
   }
@@ -321,12 +327,8 @@ send_packet(mac_callback_t sent, void *ptr)
 
   dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
-  PRINTF("DST %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", dest->u8[0],dest->u8[1],dest->u8[2],dest->u8[3],dest->u8[4],dest->u8[5], dest->u8[6], dest->u8[7]);
-
   if(linkaddr_cmp(dest, &linkaddr_null)) {
-	  PRINTF("NULL\n");
     for(i = 0; i < BLE_MAC_MAX_INTERFACE_NUM; i++) {
-    	PRINTF("LOOP %d %d\n", interfaces[i].handle.cid, interfaces[i].handle.conn_handle );
       if(interfaces[i].handle.cid != 0 || interfaces[i].handle.conn_handle != 0) {
         ret = send_to_peer(&interfaces[i].handle);
         watchdog_periodic();
@@ -335,7 +337,7 @@ send_packet(mac_callback_t sent, void *ptr)
   } else if((handle = find_handle(dest)) != NULL) {
     ret = send_to_peer(handle);
   } else {
-    PRINTF("ble-mac: no connection found for peer\n");
+    printf("ble-mac: no connection found for peer\n");
   }
 
   if(ret) {

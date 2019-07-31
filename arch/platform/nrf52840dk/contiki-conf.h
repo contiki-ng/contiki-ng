@@ -69,17 +69,17 @@
 /* 6LoWPAN */
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD         1280
 
-#ifndef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG                    0
-#endif
+//#ifndef SICSLOWPAN_CONF_FRAG
+//#define SICSLOWPAN_CONF_FRAG                    0
+//#endif
 
-#define SICSLOWPAN_FRAMER_HDRLEN                0     /**< Use fixed header len rather than framer.length() function */
+//#define SICSLOWPAN_FRAMER_HDRLEN                0     /**< Use fixed header len rather than framer.length() function */
 
 /* Packet buffer */
 #define PACKETBUF_CONF_SIZE                     1280  /**< Required IPv6 MTU size */
 
 /* Queuebuf */
-#define QUEUEBUF_CONF_ENABLED                   0
+#define QUEUEBUF_CONF_ENABLED                   1
 
 /** @} */
 
@@ -109,10 +109,10 @@
 #define UIP_CONF_ROUTER                      0 /**< BLE master role, which allows for routing, isn't supported. */
 #define UIP_CONF_ND6_SEND_NS                 1
 #define UIP_CONF_ND6_SEND_NA				 1
-#define UIP_CONF_ND6_SEND_RA				 1
-//#define UIP_CONF_LL_802154 					 0
-//#define UIP_CONF_ND6_AUTOFILL_NBR_CACHE		 0
+#define UIP_CONF_ND6_SEND_RA				 0
 
+#define UIP_CONF_LL_802154 					 0
+#define LINKADDR_CONF_SIZE 					 6
 
 #else
 
