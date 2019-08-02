@@ -48,11 +48,17 @@
 #include "shell.h"
 #include "serial-shell.h"
 
+#ifndef SERIAL_SHELL_OUTPUT_CONF
+#define SERIAL_SHELL_OUTPUT     serial_shell_output
+#else
+#define SERIAL_SHELL_OUTPUT     SERIAL_SHELL_OUTPUT_CONF
+#endif
+
 /*---------------------------------------------------------------------------*/
 PROCESS(serial_shell_process, "Contiki serial shell");
 
 /*---------------------------------------------------------------------------*/
-static void
+void
 serial_shell_output(const char *str) {
   printf("%s", str);
 }
@@ -66,7 +72,7 @@ PROCESS_THREAD(serial_shell_process, ev, data)
   while(1) {
     static struct pt shell_input_pt;
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
-    PROCESS_PT_SPAWN(&shell_input_pt, shell_input(&shell_input_pt, serial_shell_output, data));
+    PROCESS_PT_SPAWN(&shell_input_pt, shell_input(&shell_input_pt, SERIAL_SHELL_OUTPUT, data));
   }
 
   PROCESS_END();
