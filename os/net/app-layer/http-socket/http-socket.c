@@ -30,6 +30,7 @@
  */
 #include "contiki-net.h"
 #include "ipv6/ip64-addr.h"
+#include "resolv.h"
 #include "http-socket.h"
 
 #include <ctype.h>

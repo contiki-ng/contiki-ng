@@ -28,44 +28,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/*
- * Parameter summary
- * Address: 0
- * Address0: 0xAA
- * Address1: 0xBB
- * Frequency: 915.00000 MHz
- * Data Format: Serial mode disable
- * Deviation: 25.000 kHz
- * pktLen: 30
- * 802.15.4g Mode: 0
- * Select bit order to transmit PSDU octets:: 1
- * Packet Length Config: Variable
- * Max Packet Length: 255
- * Packet Length: 20
- * Packet Data: 255
- * RX Filter BW: 98.0 kHz
- * Symbol Rate: 50.00000 kBaud
- * Sync Word Length: 24 Bits
- * For Default PA:
- *      Enable high output power PA: false
- *      TX Power: 13.5 dBm (requires define CCFG_FORCE_VDDR_HH = 1 in ccfg.c,
- *                          see CC13xx/CC26xx Technical Reference Manual)
- * For High PA:
- *      Enable high output power PA: true
- *      TX Power: 20 dBm (requires define CCFG_FORCE_VDDR_HH = 0 in ccfg.c,
- *                        see CC13xx/CC26xx Technical Reference Manual)
- * Whitening: Dynamically IEEE 802.15.4g compatible whitener and 16/32-bit CRC
- */
-/*---------------------------------------------------------------------------*/
 #include "sys/cc.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_prop_cmd.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_prop.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_rfe_genfsk.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_mce_genfsk.h)
+#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_multi_protocol.h)
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
@@ -75,193 +44,37 @@
 RF_Mode rf_prop_mode =
 {
   .rfMode = RF_MODE_AUTO,
-  .cpePatchFxn = &rf_patch_cpe_prop,
-  .mcePatchFxn = &rf_patch_mce_genfsk,
-  .rfePatchFxn = &rf_patch_rfe_genfsk,
+  .cpePatchFxn = &rf_patch_cpe_multi_protocol,
+  .mcePatchFxn = 0,
+  .rfePatchFxn = 0,
 };
 /*---------------------------------------------------------------------------*/
 #if defined(DEVICE_CC1312R) || defined(DEVICE_CC1352R)
-/*
- * CMD_PROP_RADIO_DIV_SETUP must be configured with default TX power value
- * in the .txPower field. This depends on whether RF_CONF_TXPOWER_BOOST_MODE
- * is configured or not.
- */
-#if RF_CONF_TXPOWER_BOOST_MODE
-#define DEFAULT_TX_POWER    0x9F3F /* 14 dBm */
-#else
-#define DEFAULT_TX_POWER    0xCC14 /* 12.5 dBm (rounded up to 13 dBm) */
-#endif
 
-/*---------------------------------------------------------------------------*/
 /* Overrides for CMD_PROP_RADIO_DIV_SETUP */
 uint32_t rf_prop_overrides[] CC_ALIGN(4) =
 {
-                                      /* override_use_patch_prop_genfsk.xml */
-  MCE_RFE_OVERRIDE(1,0,0,1,0,0),      /* PHY: Use MCE RAM patch, RFE RAM patch */
-                                      /* override_synth_prop_863_930_div5.xml */
-  (uint32_t)0x02400403,               /* Synth: Use 48 MHz crystal as synth clock, enable extra PLL filtering */
-  (uint32_t)0x00068793,               /* Synth: Set minimum RTRIM to 6 */
-  (uint32_t)0x001C8473,               /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x00088433,               /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x000684A3,               /* Synth: Set Fref to 4 MHz */
-  HW32_ARRAY_OVERRIDE(0x4004,1),      /* Synth: Configure faster calibration */
-  (uint32_t)0x180C0618,               /* Synth: Configure faster calibration */
-  (uint32_t)0xC00401A1,               /* Synth: Configure faster calibration */
-  (uint32_t)0x00010101,               /* Synth: Configure faster calibration */
-  (uint32_t)0xC0040141,               /* Synth: Configure faster calibration */
-  (uint32_t)0x00214AD3,               /* Synth: Configure faster calibration */
-                                      /* Synth: Decrease synth programming time-out by 90 us from default */
-  (uint32_t)0x02980243,               /* (0x0298 RAT ticks = 166 us) */
-  (uint32_t)0x0A480583,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-  (uint32_t)0x7AB80603,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-  (uint32_t)0x00000623,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-                                      /* override_phy_tx_pa_ramp_genfsk_hpa.xml */
-  ADI_HALFREG_OVERRIDE(0,16,0x8,0x8), /* Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[3]=1) */
-  ADI_HALFREG_OVERRIDE(0,17,0x1,0x1), /* Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[4]=1) */
-                                      /* override_phy_rx_frontend_genfsk.xml */
-  HW_REG_OVERRIDE(0x609C,0x001A),     /* Rx: Set AGC reference level to 0x1A (default: 0x2E) */
-  (uint32_t)0x00018883,               /* Rx: Set LNA bias current offset to adjust +1 (default: 0) */
-  (uint32_t)0x000288A3,               /* Rx: Set RSSI offset to adjust reported RSSI by -2 dB (default: 0) */
-                                      /* override_phy_rx_aaf_bw_0xd.xml */
-                                      /* Rx: Set anti-aliasing filter bandwidth to 0xD */
-  ADI_HALFREG_OVERRIDE(0,61,0xF,0xD), /* (in ADI0, set IFAMPCTL3[7:4]=0xD) */
-#if RF_CONF_TXPOWER_BOOST_MODE
-                                      /* TX power override */
-                                      /* DC/DC regulator: In Tx with 14 dBm PA setting, */
-                                      /* use DCDCCTL5[3:0]=0xF (DITHER_EN=1 and IPEAK=7). */
-  (uint32_t)0xFFFC08C3,               /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-                                      /* Tx: Set PA trim to max to maximize its output power */
-  ADI_REG_OVERRIDE(0,12,0xF8),        /* (in ADI0, set PACTL0=0xF8) */
-#else
-                                      /* TX power override */
-                                      /* DC/DC regulator: */
-                                      /* In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0xFCFC08C3,               /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
+  // override_prop_common.xml
+  // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0x7 (DITHER_EN=0 and IPEAK=7).
+  (uint32_t)0x00F788D3,
+  // override_tc106.xml
+  // Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[4:3]=0x3)
+  ADI_2HALFREG_OVERRIDE(0,16,0x8,0x8,17,0x1,0x1),
+  // Rx: Set AGC reference level to 0x1A (default: 0x2E)
+  HW_REG_OVERRIDE(0x609C,0x001A),
+  // Rx: Set RSSI offset to adjust reported RSSI by -1 dB (default: -2), trimmed for external bias and differential configuration
+  (uint32_t)0x000188A3,
+  // Rx: Set anti-aliasing filter bandwidth to 0xD (in ADI0, set IFAMPCTL3[7:4]=0xD)
+  ADI_HALFREG_OVERRIDE(0,61,0xF,0xD),
+  // Tx: Set wait time before turning off ramp to 0x1A (default: 0x1F)
+  HW_REG_OVERRIDE(0x6028,0x001A),
+#if RF_TXPOWER_BOOST_MODE
+  // TX power override
+  // Tx: Set PA trim to max to maximize its output power (in ADI0, set PACTL0=0xF8)
+  ADI_REG_OVERRIDE(0,12,0xF8),
 #endif
   (uint32_t)0xFFFFFFFF,
 };
-
-#endif /* defined(DEVICE_CC1312R) || defined(DEVICE_CC1352R) */
-/*---------------------------------------------------------------------------*/
-#if defined(DEVICE_CC1352P)
-
-#if RF_CONF_TXPOWER_HIGH_PA
-/*
- * CMD_PROP_RADIO_DIV_SETUP must be configured with default TX power value
- * in the .txPower field. For High PA, this must be 0xFFFF.
- */
-#define DEFAULT_TX_POWER    0xFFFF /* High PA */
-
-/*---------------------------------------------------------------------------*/
-/* Overrides for CMD_PROP_RADIO_DIV_SETUP with high PA */
-uint32_t rf_prop_overrides[] CC_ALIGN(4) =
-{
-                                        /* override_use_patch_prop_genfsk.xml */
-    MCE_RFE_OVERRIDE(1,0,0,1,0,0),      /* PHY: Use MCE RAM patch, RFE RAM patch */
-                                        /* override_synth_prop_863_930_div5.xml */
-    (uint32_t)0x02400403,               /* Synth: Use 48 MHz crystal as synth clock, enable extra PLL filtering */
-    (uint32_t)0x00068793,               /* Synth: Set minimum RTRIM to 6 */
-    (uint32_t)0x001C8473,               /* Synth: Configure extra PLL filtering */
-    (uint32_t)0x00088433,               /* Synth: Configure extra PLL filtering */
-    (uint32_t)0x000684A3,               /* Synth: Set Fref to 4 MHz */
-    HW32_ARRAY_OVERRIDE(0x4004,1),      /* Synth: Configure faster calibration */
-    (uint32_t)0x180C0618,               /* Synth: Configure faster calibration */
-    (uint32_t)0xC00401A1,               /* Synth: Configure faster calibration */
-    (uint32_t)0x00010101,               /* Synth: Configure faster calibration */
-    (uint32_t)0xC0040141,               /* Synth: Configure faster calibration */
-    (uint32_t)0x00214AD3,               /* Synth: Configure faster calibration */
-                                        /* Synth: Decrease synth programming time-out by 90 us */
-    (uint32_t)0x02980243,               /* from default (0x0298 RAT ticks = 166 us) */
-    (uint32_t)0x0A480583,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-    (uint32_t)0x7AB80603,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-    (uint32_t)0x00000623,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-                                        /* override_phy_tx_pa_ramp_genfsk_hpa.xml */
-                                        /* Tx: Configure PA ramping, set wait time before turning off */
-    HW_REG_OVERRIDE(0x6028,0x002F),     /* (0x2F ticks of 16/24 us = 31.3 us). */
-    ADI_HALFREG_OVERRIDE(0,16,0x8,0x8), /* Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[3]=1) */
-    ADI_HALFREG_OVERRIDE(0,17,0x1,0x1), /* Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[4]=1) */
-                                        /* override_phy_rx_frontend_genfsk.xml */
-    HW_REG_OVERRIDE(0x609C,0x001A),     /* Rx: Set AGC reference level to 0x1A (default: 0x2E) */
-    (uint32_t)0x00018883,               /* Rx: Set LNA bias current offset to adjust +1 (default: 0) */
-    (uint32_t)0x000288A3,               /* Rx: Set RSSI offset to adjust reported RSSI by -2 dB (default: 0) */
-                                        /* override_phy_rx_aaf_bw_0xd.xml */
-                                        /* Rx: Set anti-aliasing filter bandwidth to 0xD */
-    ADI_HALFREG_OVERRIDE(0,61,0xF,0xD), /* (in ADI0, set IFAMPCTL3[7:4]=0xD) */
-                                        /* TX power override */
-                                        /* DC/DC regulator: */
-                                        /* In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-    (uint32_t)0xFCFC08C3,               /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-    (uint32_t)0x82A86C2B,               /* txHighPA=0x20AA1B */
-    (uint32_t)0xFFFFFFFF,
-};
-
-#else
-/*---------------------------------------------------------------------------*/
-/*
- * CMD_PROP_RADIO_DIV_SETUP must be configured with default TX power value
- * in the .txPower field. This depends on whether RF_CONF_TXPOWER_BOOST_MODE
- * is configured or not.
- */
-#if RF_CONF_TXPOWER_BOOST_MODE
-#define DEFAULT_TX_POWER    0x013F /* 13.5 dBm (rounded up to 14 dBm) */
-#else
-#define DEFAULT_TX_POWER    0x803F /* 12 dBm */
-#endif
-
-/*---------------------------------------------------------------------------*/
-/* Overrides for CMD_PROP_RADIO_DIV_SETUP with defualt PA */
-uint32_t rf_prop_overrides[] CC_ALIGN(4) =
-{
-                                      /* override_use_patch_prop_genfsk.xml */
-  MCE_RFE_OVERRIDE(1,0,0,1,0,0),      /* PHY: Use MCE RAM patch, RFE RAM patch */
-                                      /* override_synth_prop_863_930_div5.xml */
-  (uint32_t)0x02400403,               /* Synth: Use 48 MHz crystal as synth clock, enable extra PLL filtering */
-  (uint32_t)0x00068793,               /* Synth: Set minimum RTRIM to 6 */
-  (uint32_t)0x001C8473,               /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x00088433,               /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x000684A3,               /* Synth: Set Fref to 4 MHz */
-  HW32_ARRAY_OVERRIDE(0x4004,1),      /* Synth: Configure faster calibration */
-  (uint32_t)0x180C0618,               /* Synth: Configure faster calibration */
-  (uint32_t)0xC00401A1,               /* Synth: Configure faster calibration */
-  (uint32_t)0x00010101,               /* Synth: Configure faster calibration */
-  (uint32_t)0xC0040141,               /* Synth: Configure faster calibration */
-  (uint32_t)0x00214AD3,               /* Synth: Configure faster calibration */
-                                      /* Synth: Decrease synth programming time-out by 90 us from default */
-  (uint32_t)0x02980243,               /* (0x0298 RAT ticks = 166 us) */
-  (uint32_t)0x0A480583,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-  (uint32_t)0x7AB80603,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-  (uint32_t)0x00000623,               /* Synth: Set loop bandwidth after lock to 20 kHz */
-                                      /* override_phy_tx_pa_ramp_genfsk_hpa.xml */
-                                      /* Tx: Configure PA ramping, set wait time before turning off */
-  HW_REG_OVERRIDE(0x6028,0x002F),     /* (0x2F ticks of 16/24 us = 31.3 us). */
-  ADI_HALFREG_OVERRIDE(0,16,0x8,0x8), /* Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[3]=1) */
-  ADI_HALFREG_OVERRIDE(0,17,0x1,0x1), /* Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[4]=1) */
-                                      /* override_phy_rx_frontend_genfsk.xml */
-  HW_REG_OVERRIDE(0x609C,0x001A),     /* Rx: Set AGC reference level to 0x1A (default: 0x2E) */
-  (uint32_t)0x00018883,               /* Rx: Set LNA bias current offset to adjust +1 (default: 0) */
-  (uint32_t)0x000288A3,               /* Rx: Set RSSI offset to adjust reported RSSI by -2 dB (default: 0) */
-                                      /* override_phy_rx_aaf_bw_0xd.xml */
-                                      /* Rx: Set anti-aliasing filter bandwidth to 0xD */
-  ADI_HALFREG_OVERRIDE(0,61,0xF,0xD), /* (in ADI0, set IFAMPCTL3[7:4]=0xD) */
-#if RF_CONF_TXPOWER_BOOST_MODE
-                                      /* TX power override */
-                                      /* DC/DC regulator: In Tx with 14 dBm PA setting, */
-                                      /* use DCDCCTL5[3:0]=0xF (DITHER_EN=1 and IPEAK=7). */
-  (uint32_t)0xFFFC08C3,               /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-                                      /* Tx: Set PA trim to max to maximize its output power */
-  ADI_REG_OVERRIDE(0,12,0xF8),        /* (in ADI0, set PACTL0=0xF8) */
-#else
-                                        /* TX power override */
-                                      /* DC/DC regulator: */
-                                      /* In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0xFCFC08C3,               /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-#endif
-  (uint32_t)0xFFFFFFFF,
-};
-
-#endif /* RF_CONF_TXPOWER_HIGH_PA */
-
-#endif /* defined(DEVICE_CC1352P) */
 /*---------------------------------------------------------------------------*/
 /* CMD_PROP_RADIO_DIV_SETUP: Proprietary Mode Radio Setup Command for All Frequency Bands */
 rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
@@ -294,12 +107,107 @@ rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup =
   .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = DEFAULT_TX_POWER,
+  .txPower = 0xCC14, /* set by driver */
   .pRegOverride = rf_prop_overrides,
   .centerFreq = 0x0393, /* set by driver */
   .intFreq = 0x8000, /* set by driver */
   .loDivider = 0x05, /* set by driver */
 };
+
+#endif /* defined(DEVICE_CC1312R) || defined(DEVICE_CC1352R) */
+/*---------------------------------------------------------------------------*/
+#if defined(DEVICE_CC1352P)
+
+/* Overrides for CMD_PROP_RADIO_DIV_SETUP with high PA */
+uint32_t rf_prop_overrides[] CC_ALIGN(4) =
+{
+  // override_tc706.xml
+  // Tx: Configure PA ramp time, PACTL2.RC=0x3 (in ADI0, set PACTL2[4:3]=0x3)
+  ADI_2HALFREG_OVERRIDE(0,16,0x8,0x8,17,0x1,0x1),
+  // Rx: Set AGC reference level to 0x1A (default: 0x2E)
+  HW_REG_OVERRIDE(0x609C,0x001A),
+  // Rx: Set RSSI offset to adjust reported RSSI by -1 dB (default: -2), trimmed for external bias and differential configuration
+  (uint32_t)0x000188A3,
+  // Rx: Set anti-aliasing filter bandwidth to 0xD (in ADI0, set IFAMPCTL3[7:4]=0xD)
+  ADI_HALFREG_OVERRIDE(0,61,0xF,0xD),
+  // override_prop_common.xml
+  // DC/DC regulator: In Tx with 14 dBm PA setting, use DCDCCTL5[3:0]=0xF (DITHER_EN=1 and IPEAK=7). In Rx, use default settings.
+  (uint32_t)0x00F788D3,
+#if RF_TXPOWER_BOOST_MODE
+  // TX power override
+  // Tx: Set PA trim to max to maximize its output power (in ADI0, set PACTL0=0xF8)
+  ADI_REG_OVERRIDE(0,12,0xF8),
+#endif
+  (uint32_t)0xFFFFFFFF,
+};
+/*---------------------------------------------------------------------------*/
+/* Overrides for CMD_PROP_RADIO_DIV_SETUP with defualt PA */
+uint32_t rf_prop_overrides_tx_std[] CC_ALIGN(4) =
+{
+  // The TX Power element should always be the first in the list
+  TX_STD_POWER_OVERRIDE(0xB224),
+  // The ANADIV radio parameter based on the LO divider (0) and front-end (0) settings
+  (uint32_t)0x11310703,
+  // override_phy_tx_pa_ramp_genfsk_std.xml
+  // Tx: Configure PA ramping, set wait time before turning off (0x1A ticks of 16/24 us = 17.3 us).
+  HW_REG_OVERRIDE(0x6028,0x001A),
+  (uint32_t)0xFFFFFFFF
+};
+/*---------------------------------------------------------------------------*/
+/* Overrides for CMD_PROP_RADIO_DIV_SETUP with defualt PA */
+uint32_t rf_prop_overrides_tx_20[] CC_ALIGN(4) =
+{
+  // The TX Power element should always be the first in the list
+  TX20_POWER_OVERRIDE(0x001B8ED2),
+  // The ANADIV radio parameter based on the LO divider (0) and front-end (0) settings
+  (uint32_t)0x11C10703,
+  // override_phy_tx_pa_ramp_genfsk_hpa.xml
+  // Tx: Configure PA ramping, set wait time before turning off (0x1F ticks of 16/24 us = 20.3 us).
+  HW_REG_OVERRIDE(0x6028,0x001F),
+  (uint32_t)0xFFFFFFFF
+};
+/*---------------------------------------------------------------------------*/
+/* CMD_PROP_RADIO_DIV_SETUP: Proprietary Mode Radio Setup Command for All Frequency Bands */
+rfc_CMD_PROP_RADIO_DIV_SETUP_PA_t rf_cmd_prop_radio_div_setup =
+{
+  .commandNo = 0x3807,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .modulation.modType = 0x1,
+  .modulation.deviation = 0x64,
+  .modulation.deviationStepSz = 0x0,
+  .symbolRate.preScale = 0xF,
+  .symbolRate.rateWord = 0x8000,
+  .symbolRate.decimMode = 0x0,
+  .rxBw = 0x52,
+  .preamConf.nPreamBytes = 0x7,
+  .preamConf.preamMode = 0x0,
+  .formatConf.nSwBits = 0x18,
+  .formatConf.bBitReversal = 0x0,
+  .formatConf.bMsbFirst = 0x1,
+  .formatConf.fecMode = 0x0,
+  .formatConf.whitenMode = 0x7,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
+  .config.analogCfgMode = 0x0,
+  .config.bNoFsPowerUp = 0x0,
+  .txPower = 0xB224, /* set by driver */
+  .pRegOverride = rf_prop_overrides,
+  .centerFreq = 0x0393, /* set by driver */
+  .intFreq = 0x8000, /* set by driver */
+  .loDivider = 0x05, /* set by driver */
+  .pRegOverrideTxStd = rf_prop_overrides_tx_std,
+  .pRegOverrideTx20 = rf_prop_overrides_tx_20,
+};
+
+#endif /* defined(DEVICE_CC1352P) */
 /*---------------------------------------------------------------------------*/
 /* CMD_FS: Frequency Synthesizer Programming Command */
 rfc_CMD_FS_t rf_cmd_prop_fs =

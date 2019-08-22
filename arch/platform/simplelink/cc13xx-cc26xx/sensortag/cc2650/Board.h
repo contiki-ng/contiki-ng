@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,31 +33,58 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC2650STK
-#define BOARD_STRING    "TI CC2650 SensorTag"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <ti/drivers/Board.h>
 #include "CC2650STK.h"
 
-#define Board_initGeneral()      CC2650STK_initGeneral()
+#define Board_CC2650STK
+#define BOARD_STRING            "TI CC2650 SensorTag"
+
+#define Board_initGeneral()      Board_init()  /* deprecated */
 #define Board_shutDownExtFlash() CC2650STK_shutDownExtFlash()
 #define Board_wakeUpExtFlash()   CC2650STK_wakeUpExtFlash()
 
 /* These #defines allow us to reuse TI-RTOS across other device families */
+#define Board_ADC0              CC2650STK_ADC0
+#define Board_ADC1              CC2650STK_ADC1
 
-#define Board_BUZZER            CC2650STK_BUZZER
-#define Board_BUZZER_ON         CC2650STK_LED_ON
-#define Board_BUZZER_OFF        CC2650STK_LED_OFF
+#define Board_ADCBUF0           CC2650STK_ADCBUF0
+#define Board_ADCBUF0CHANNEL0   CC2650STK_ADCBUF0CHANNEL0
+#define Board_ADCBUF0CHANNEL1   CC2650STK_ADCBUF0CHANNEL1
 
 #define Board_CRYPTO0           CC2650STK_CRYPTO0
+#define Board_AESCCM0           CC2650STK_AESCCM0
+#define Board_AESGCM0           CC2650STK_AESGCM0
+#define Board_AESCBC0           CC2650STK_AESCBC0
+#define Board_AESCTR0           CC2650STK_AESCTR0
+#define Board_AESECB0           CC2650STK_AESECB0
+#define Board_AESCTRDRBG0       CC2650STK_AESCTRDRBG0
+#define Board_TRNG0             CC2650STK_TRNG0
+
+#define Board_DIO16_TDO         CC2650STK_DIO16_TDO
+#define Board_DIO17_TDI         CC2650STK_DIO17_TDI
+#define Board_DIO22             CC2650STK_DIO22
+
+#define Board_DIO23_ANALOG      CC2650STK_DIO23_ANALOG
+#define Board_DIO24_ANALOG      CC2650STK_DIO24_ANALOG
+#define Board_DIO25_ANALOG      CC2650STK_DIO25_ANALOG
+#define Board_DIO26_ANALOG      CC2650STK_DIO26_ANALOG
+#define Board_DIO27_ANALOG      CC2650STK_DIO27_ANALOG
+#define Board_DIO28_ANALOG      CC2650STK_DIO28_ANALOG
+#define Board_DIO29_ANALOG      CC2650STK_DIO29_ANALOG
+#define Board_DIO30_ANALOG      CC2650STK_DIO30_ANALOG
 
 #define Board_GPIO_BUTTON0      CC2650STK_GPIO_S1
 #define Board_GPIO_BUTTON1      CC2650STK_GPIO_S2
-#define Board_GPIO_LED0         CC2650STK_GPIO_LED0
-#define Board_GPIO_LED1         CC2650STK_GPIO_LED0
+#define Board_GPIO_BTN1         CC2650STK_GPIO_S1
+#define Board_GPIO_BTN2         CC2650STK_GPIO_S2
+#define Board_GPIO_LED0         CC2650STK_GPIO_LED_RED
+#define Board_GPIO_LED1         CC2650STK_GPIO_LED_GREEN
+#define Board_GPIO_RLED         CC2650STK_GPIO_LED_RED
+#define Board_GPIO_GLED         CC2650STK_GPIO_LED_GREEN
 #define Board_GPIO_LED_ON       CC2650STK_GPIO_LED_ON
 #define Board_GPIO_LED_OFF      CC2650STK_GPIO_LED_OFF
 
@@ -70,14 +97,28 @@ extern "C" {
 #define Board_GPTIMER3A         CC2650STK_GPTIMER3A
 #define Board_GPTIMER3B         CC2650STK_GPTIMER3B
 
+#define Board_NVSINTERNAL       CC2650STK_NVSCC26XX0
+#define Board_NVSEXTERNAL       CC2650STK_NVSSPI25X0
+
 #define Board_I2C0              CC2650STK_I2C0
-#define Board_I2C0_SDA1         CC2650STK_I2C0_SDA1
-#define Board_I2C0_SCL1         CC2650STK_I2C0_SCL1
-#define Board_I2C_TMP           CC2650STK_I2C0
+
+#define Board_PIN_BUTTON0       CC2650STK_PIN_BTN1
+#define Board_PIN_BUTTON1       CC2650STK_PIN_BTN2
+#define Board_PIN_BTN1          CC2650STK_PIN_BTN1
+#define Board_PIN_BTN2          CC2650STK_PIN_BTN2
+#define Board_PIN_LED0          CC2650STK_PIN_RLED
+#define Board_PIN_LED1          CC2650STK_PIN_GLED
+#define Board_PIN_LED2          CC2650STK_PIN_RLED
+#define Board_PIN_RLED          CC2650STK_PIN_RLED
+#define Board_PIN_GLED          CC2650STK_PIN_GLED
 
 #define Board_KEY_LEFT          CC2650STK_KEY_LEFT
 #define Board_KEY_RIGHT         CC2650STK_KEY_RIGHT
 #define Board_RELAY             CC2650STK_RELAY
+
+#define Board_BUZZER            CC2650STK_BUZZER
+#define Board_BUZZER_ON         CC2650STK_LED_ON
+#define Board_BUZZER_OFF        CC2650STK_LED_OFF
 
 #define Board_MIC_POWER         CC2650STK_MIC_POWER
 #define Board_MIC_POWER_OM      CC2650STK_MIC_POWER_ON
@@ -90,18 +131,12 @@ extern "C" {
 
 #define Board_TMP_RDY           CC2650STK_TMP_RDY
 
-#define Board_NVSINTERNAL       CC2650STK_NVSCC26XX0
-#define Board_NVSEXTERNAL       CC2650STK_NVSSPI25X0
-
-#define Board_PDM0              CC2650STK_PDM0
-
-#define Board_PIN_BUTTON0       CC2650STK_KEY_LEFT
-#define Board_PIN_BUTTON1       CC2650STK_KEY_RIGHT
-#define Board_PIN_BTN1          CC2650STK_KEY_LEFT
-#define Board_PIN_BTN2          CC2650STK_KEY_RIGHT
-#define Board_PIN_LED0          CC2650STK_PIN_LED0
-#define Board_PIN_LED1          CC2650STK_PIN_LED1
-#define Board_PIN_LED2          CC2650STK_PIN_LED1
+#define Board_I2S0              CC2650STK_I2S0
+#define Board_I2S_ADO           CC2650STK_I2S_ADO
+#define Board_I2S_ADI           CC2650STK_I2S_ADI
+#define Board_I2S_BCLK          CC2650STK_I2S_BCLK
+#define Board_I2S_MCLK          CC2650STK_I2S_MCLK
+#define Board_I2S_WCLK          CC2650STK_I2S_WCLK
 
 #define Board_PWM0              CC2650STK_PWM0
 #define Board_PWM1              CC2650STK_PWM0
@@ -123,8 +158,8 @@ extern "C" {
 #define Board_SPI1_CLK          CC2650STK_SPI1_CLK
 #define Board_SPI1_CSN          CC2650STK_SPI1_CSN
 #define Board_SPI_FLASH_CS      CC2650STK_SPI_FLASH_CS
-#define Board_FLASH_CS_ON       CC2650STK_FLASH_CS_ON
-#define Board_FLASH_CS_OFF      CC2650STK_FLASH_CS_OFF
+#define Board_FLASH_CS_ON       (0)
+#define Board_FLASH_CS_OFF      (1)
 
 #define Board_UART0             CC2650STK_UART0
 

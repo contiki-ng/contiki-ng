@@ -106,6 +106,16 @@
 #endif /* CC_CONF_INLINE */
 
 /**
+ * Configure if the C compiler supports functions that are not meant to return
+ * e.g. with __attribute__((__noreturn__))
+ */
+#ifdef CC_CONF_NORETURN
+#define CC_NORETURN CC_CONF_NORETURN
+#else
+#define CC_NORETURN
+#endif /* CC_CONF_NORETURN */
+
+/**
  * Configure if the C compiler supports the assignment of struct value.
  */
 #ifdef CC_CONF_ASSIGN_AGGREGATE

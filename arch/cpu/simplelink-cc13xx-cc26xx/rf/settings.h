@@ -89,15 +89,15 @@
 #define ble_mode                rf_ble_mode
 #define ble_cmd_radio_setup     rf_ble_cmd_radio_setup
 #define ble_adv_par             rf_ble_adv_par
-#define ble_cmd_beacon          rf_ble_cmd_ble_adv_nc
+#define ble_cmd_adv_nc          rf_ble_cmd_ble_adv_nc
 
 /* CC13x2/CC26x2 devices */
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
 
 #define ble_mode                rf_ble_mode
-#define ble_cmd_radio_setup     rf_ble_cmd_radio_setup
+#define ble_cmd_radio_setup     rf_ble_cmd_ble5_radio_setup
 #define ble_adv_par             rf_ble_adv_par
-#define ble_cmd_beacon          rf_ble_cmd_ble_adv_nc
+#define ble_cmd_adv_nc          rf_ble_cmd_ble5_adv_nc
 
 #endif /* DeviceFamily_PARENT */
 

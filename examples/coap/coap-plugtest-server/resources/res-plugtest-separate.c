@@ -57,7 +57,7 @@ PERIODIC_RESOURCE(res_plugtest_separate,
                   NULL,
                   NULL,
                   NULL,
-                  3 * CLOCK_SECOND,
+                  3000,
                   res_resume_handler);
 
 /* A structure to store the required information */

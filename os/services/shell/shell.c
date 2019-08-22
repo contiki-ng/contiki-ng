@@ -38,10 +38,7 @@
  */
 
 /**
- * \addtogroup shell Shell
- The shell enables to inspect and manage the network layer and provides
- other system functionalities
- * \ingroup lib
+ * \addtogroup shell
  * @{
  */
 
@@ -52,6 +49,7 @@
 #include "net/ipv6/ip64-addr.h"
 #include "net/ipv6/uiplib.h"
 
+#if NETSTACK_CONF_WITH_IPV6
 /*---------------------------------------------------------------------------*/
 void
 shell_output_6addr(shell_output_func output, const uip_ipaddr_t *ipaddr)
@@ -60,6 +58,7 @@ shell_output_6addr(shell_output_func output, const uip_ipaddr_t *ipaddr)
   uiplib_ipaddr_snprint(buf, sizeof(buf), ipaddr);
   SHELL_OUTPUT(output, "%s", buf);
 }
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 /*---------------------------------------------------------------------------*/
 void
 shell_output_lladdr(shell_output_func output, const linkaddr_t *lladdr)

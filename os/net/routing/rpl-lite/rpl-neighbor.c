@@ -196,9 +196,12 @@ remove_neighbor(rpl_nbr_t *nbr)
   /* Make sure we don't point to a removed neighbor. Note that we do not need
   to worry about preferred_parent here, as it is locked in the the table
   and will never be removed by external modules. */
+#if RPL_WITH_PROBING
   if(nbr == curr_instance.dag.urgent_probing_target) {
     curr_instance.dag.urgent_probing_target = NULL;
   }
+#endif
+
   if(nbr == curr_instance.dag.unicast_dio_target) {
     curr_instance.dag.unicast_dio_target = NULL;
   }
@@ -357,8 +360,9 @@ best_parent(int fresh_only)
   /* Search for the best parent according to the OF */
   for(nbr = nbr_table_head(rpl_neighbors); nbr != NULL; nbr = nbr_table_next(rpl_neighbors, nbr)) {
 
-    if(!acceptable_rank(nbr->rank) || !curr_instance.of->nbr_is_acceptable_parent(nbr)) {
-      /* Exclude neighbors with a rank that is not acceptable) */
+    if(!acceptable_rank(rpl_neighbor_rank_via_nbr(nbr))
+      || !curr_instance.of->nbr_is_acceptable_parent(nbr)) {
+      /* Exclude neighbors with a rank that is not acceptable */
       continue;
     }
 

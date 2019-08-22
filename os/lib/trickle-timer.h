@@ -65,6 +65,7 @@
  * 'consistent' or 'inconsistent' message and when an 'external event' occurs
  * (in this context, those terms have the exact same meaning as in the RFC).
  *
+ * It is \e not safe to manipulate trickle timers within an interrupt context.
  * @{
  */
 

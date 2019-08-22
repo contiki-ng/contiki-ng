@@ -579,7 +579,7 @@ rpl_icmp6_dao_output(uint8_t lifetime)
 #endif /* RPL_WITH_DAO_ACK */
   ++pos;
   buffer[pos++] = 0; /* reserved */
-  buffer[pos++] = curr_instance.dag.dao_curr_seqno;
+  buffer[pos++] = curr_instance.dag.dao_last_seqno;
 
   /* create target subopt */
   prefixlen = sizeof(*prefix) * CHAR_BIT;
@@ -606,7 +606,7 @@ rpl_icmp6_dao_output(uint8_t lifetime)
 
   LOG_INFO("sending a %sDAO seqno %u, tx count %u, lifetime %u, prefix ",
          lifetime == 0 ? "No-path " : "",
-         curr_instance.dag.dao_curr_seqno, curr_instance.dag.dao_transmissions, lifetime);
+         curr_instance.dag.dao_last_seqno, curr_instance.dag.dao_transmissions, lifetime);
   LOG_INFO_6ADDR(prefix);
   LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&curr_instance.dag.dag_id);
@@ -640,7 +640,7 @@ dao_ack_input(void)
 
   LOG_INFO("received a DAO-%s with seqno %d (%d %d) and status %d from ",
          status < RPL_DAO_ACK_UNABLE_TO_ACCEPT ? "ACK" : "NACK", sequence,
-         curr_instance.dag.dao_curr_seqno, curr_instance.dag.dao_curr_seqno, status);
+         curr_instance.dag.dao_last_seqno, curr_instance.dag.dao_last_seqno, status);
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 

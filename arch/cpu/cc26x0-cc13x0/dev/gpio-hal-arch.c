@@ -46,7 +46,7 @@
 #define CONFIG_MASK (IOC_IOPULL_M | IOC_INT_M | IOC_IOMODE_OPEN_SRC_INV)
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
+gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
   uint32_t config;
   gpio_hal_pin_cfg_t tmp;
@@ -86,7 +86,7 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_cfg_t
-gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_pin_cfg_get(gpio_hal_pin_t pin)
 {
   gpio_hal_pin_cfg_t cfg;
   uint32_t tmp;
@@ -129,7 +129,7 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_mask_t
-gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
+gpio_hal_arch_no_port_read_pins(gpio_hal_pin_mask_t pins)
 {
   gpio_hal_pin_mask_t oe_pins;
 
@@ -143,7 +143,7 @@ gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-gpio_hal_arch_read_pin(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_read_pin(gpio_hal_pin_t pin)
 {
   if(ti_lib_gpio_get_output_enable_dio(pin)) {
     return (HWREG(GPIO_BASE + GPIO_O_DOUT31_0) >> pin) & 1;

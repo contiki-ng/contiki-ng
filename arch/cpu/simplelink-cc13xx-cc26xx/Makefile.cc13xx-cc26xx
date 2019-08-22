@@ -34,13 +34,8 @@ endif
 # Also note that the devices name is cc13x2_cc26x2 for all CC13x2/CC26x2
 # devices, while the library name is individual for each device family.
 ifeq ($(SUBFAMILY),cc13x2-cc26x2)
- ifeq ($(CC13x2_CC26x2_PRE_RTM),1)
-  SDK_DEVICES_NAME := cc13x2_cc26x2_v1
-  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v1
- else
-  SDK_DEVICES_NAME := cc13x2_cc26x2_v2
-  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)_v2
- endif
+  SDK_DEVICES_NAME := cc13x2_cc26x2
+  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
 # CC13x0/CC26x0 does not have this, with both its devices name and library
 # name the same as its own device family name.
 else

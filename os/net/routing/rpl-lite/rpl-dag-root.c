@@ -76,13 +76,16 @@ static void
 set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 {
   static uip_ipaddr_t root_ipaddr;
+  const uip_ipaddr_t *default_prefix;
   int i;
   uint8_t state;
+
+  default_prefix = uip_ds6_default_prefix();
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
   if(prefix == NULL) {
-    uip_ip6addr(&root_ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+    uip_ip6addr_copy(&root_ipaddr, default_prefix);
   } else {
     memcpy(&root_ipaddr, prefix, 8);
   }

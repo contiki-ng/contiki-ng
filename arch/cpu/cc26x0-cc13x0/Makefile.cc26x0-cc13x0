@@ -44,6 +44,7 @@ CONTIKI_CPU_SOURCEFILES += rf-core.c rf-ble.c ieee-mode.c
 CONTIKI_CPU_SOURCEFILES += ble-cc2650.c ble-hal-cc26xx.c ble-addr.c rf-ble-cmd.c
 CONTIKI_CPU_SOURCEFILES += random.c soc-trng.c int-master.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c
+CONTIKI_CPU_SOURCEFILES += cc26xx-aes.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
@@ -96,4 +97,4 @@ else
 endif
 
 ### For the login etc targets
-BAUDRATE = 115200
+BAUDRATE ?= 115200

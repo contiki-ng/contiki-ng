@@ -479,13 +479,14 @@ handle_probing_timer(void *ptr)
   /* Perform probing */
   if(target_ipaddr != NULL) {
     const struct link_stats *stats = rpl_get_parent_link_stats(probing_target);
-    (void)stats;
+    const linkaddr_t *lladdr = rpl_get_parent_lladdr(probing_target);
     LOG_INFO("probing %u %s last tx %u min ago\n",
-        rpl_get_parent_lladdr(probing_target)->u8[7],
-        instance->urgent_probing_target != NULL ? "(urgent)" : "",
-        probing_target != NULL ?
-        (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
-        );
+          lladdr != NULL ? lladdr->u8[7] : 0x0,
+          instance->urgent_probing_target != NULL ? "(urgent)" : "",
+          probing_target != NULL && stats != NULL ?
+           (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
+      );
+
     /* Send probe, e.g. unicast DIO or DIS */
     RPL_PROBING_SEND_FUNC(instance, target_ipaddr);
   }

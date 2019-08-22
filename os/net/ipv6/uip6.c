@@ -119,7 +119,7 @@ uint8_t uip_ext_bitmap = 0;
 /**
  * \brief Total length of all IPv6 extension headers
  */
-uint8_t uip_ext_len = 0;
+uint16_t uip_ext_len = 0;
 /** \brief The final protocol after IPv6 extension headers:
   * UIP_PROTO_TCP, UIP_PROTO_UDP or UIP_PROTO_ICMP6 */
 uint8_t uip_last_proto = 0;
@@ -489,7 +489,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 }
 #endif /* UIP_TCP && UIP_ACTIVE_OPEN */
 /*---------------------------------------------------------------------------*/
-void
+bool
 uip_remove_ext_hdr(void)
 {
   /* Remove ext header before TCP/UDP processing. */
@@ -499,7 +499,7 @@ uip_remove_ext_hdr(void)
     if(uip_len < UIP_IPH_LEN + uip_ext_len) {
       LOG_ERR("uip_len too short compared to ext len\n");
       uipbuf_clear();
-      return;
+      return false;
     }
 
     /* Set proto */
@@ -509,9 +509,12 @@ uip_remove_ext_hdr(void)
 	    uip_len - UIP_IPH_LEN - uip_ext_len);
 
     /* Update the IP length. */
-    uipbuf_add_ext_hdr(-uip_ext_len);
+    if(uipbuf_add_ext_hdr(-uip_ext_len) == false) {
+      return false;
+    }
     uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
   }
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
@@ -824,16 +827,16 @@ ext_hdr_options_process(uint8_t *ext_buf)
    * 8 bytes, excluding the first 8 bytes
    * length field in an option : the length of data in the option
    */
-  uint8_t opt_offset = 2; /* 2 first bytes in ext header */
+  uint16_t opt_offset = 2; /* 2 first bytes in ext header */
   struct uip_hbho_hdr *ext_hdr = (struct uip_hbho_hdr *)ext_buf;
-  uint8_t ext_hdr_len = (ext_hdr->len << 3) + 8;
+  uint16_t ext_hdr_len = (ext_hdr->len << 3) + 8;
 
   while(opt_offset + 2 <= ext_hdr_len) { /* + 2 for opt header */
     struct uip_ext_hdr_opt *opt_hdr = (struct uip_ext_hdr_opt *)(ext_buf + opt_offset);
-    uint8_t opt_len = opt_hdr->len + 2;
+    uint16_t opt_len = opt_hdr->len + 2;
 
     if(opt_offset + opt_len > ext_hdr_len) {
-      LOG_ERR("RPL Option too long: Dropping Packet\n");
+      LOG_ERR("Extension header option too long: dropping packet\n");
       uip_icmp6_error_output(ICMP6_PARAM_PROB, ICMP6_PARAMPROB_OPTION,
           (ext_buf + opt_offset) - uip_buf);
       return 2;
@@ -869,6 +872,16 @@ ext_hdr_options_process(uint8_t *ext_buf)
       }
       opt_offset += opt_len;
       break;
+#if UIP_MCAST6_ENGINE == UIP_MCAST6_ENGINE_MPL
+    case UIP_EXT_HDR_OPT_MPL:
+      /* MPL (RFC7731) Introduces the 0x6D hop by hop option. Hosts that do not
+      *  recognise the option should drop the packet. Since we want to keep the packet,
+      *  we want to process the option and not revert to the default case.
+      */
+      LOG_DBG("Processing MPL option\n");
+      opt_offset += opt_len + opt_len;
+      break;
+#endif
     default:
       /*
        * check the two highest order bits of the option
@@ -1103,6 +1116,13 @@ uip_process(uint8_t flag)
 
   /* Start of IP input header processing code. */
 
+  /* First check that we have received a full IPv6 header. */
+  if(uip_len < UIP_IPH_LEN) {
+    UIP_STAT(++uip_stat.ip.drop);
+    LOG_WARN("incomplete IPv6 header received (%d bytes)\n", (int)uip_len);
+    goto drop;
+  }
+
   /* Check validity of the IP header. */
   if((UIP_IP_BUF->vtc & 0xf0) != 0x60)  { /* IP version and header length. */
     UIP_STAT(++uip_stat.ip.drop);
@@ -1110,30 +1130,37 @@ uip_process(uint8_t flag)
     LOG_ERR("invalid version\n");
     goto drop;
   }
+
   /*
    * Check the size of the packet. If the size reported to us in
    * uip_len is smaller the size reported in the IP header, we assume
-   * that the packet has been corrupted in transit. If the size of
-   * uip_len is larger than the size reported in the IP packet header,
-   * the packet has been padded and we set uip_len to the correct
-   * value..
+   * that the packet has been corrupted in transit.
+   *
+   * If the size of uip_len is larger than the size reported in the IP
+   * packet header, the packet has been padded, and we set uip_len to
+   * the correct value.
    */
-
-  if(uipbuf_get_len_field(UIP_IP_BUF) <= uip_len) {
-    uip_len = uipbuf_get_len_field(UIP_IP_BUF) + UIP_IPH_LEN;
-    /*
-     * The length reported in the IPv6 header is the
-     * length of the payload that follows the
-     * header. However, uIP uses the uip_len variable
-     * for holding the size of the entire packet,
-     * including the IP header. For IPv4 this is not a
-     * problem as the length field in the IPv4 header
-     * contains the length of the entire packet. But
-     * for IPv6 we need to add the size of the IPv6
-     * header (40 bytes).
-     */
-  } else {
+  if(uip_len < uipbuf_get_len_field(UIP_IP_BUF)) {
+    UIP_STAT(++uip_stat.ip.drop);
     LOG_ERR("packet shorter than reported in IP header\n");
+    goto drop;
+  }
+
+  /*
+   * The length reported in the IPv6 header is the length of the
+   * payload that follows the header. However, uIP uses the uip_len
+   * variable for holding the size of the entire packet, including the
+   * IP header. For IPv4 this is not a problem as the length field in
+   * the IPv4 header contains the length of the entire packet. But for
+   * IPv6 we need to add the size of the IPv6 header (40 bytes).
+   */
+  uip_len = uipbuf_get_len_field(UIP_IP_BUF) + UIP_IPH_LEN;
+
+  /* Check that the packet length is acceptable given our IP buffer size. */
+  if(uip_len > sizeof(uip_buf)) {
+    UIP_STAT(++uip_stat.ip.drop);
+    LOG_WARN("dropping packet with length %d > %d\n",
+	     (int)uip_len, (int)sizeof(uip_buf));
     goto drop;
   }
 

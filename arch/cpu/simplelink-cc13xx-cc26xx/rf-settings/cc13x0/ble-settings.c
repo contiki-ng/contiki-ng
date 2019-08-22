@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@
 /* TI-RTOS RF Mode Object */
 RF_Mode rf_ble_mode =
 {
-  .rfMode = RF_MODE_BLE,
+  .rfMode = RF_MODE_MULTIPLE,
   .cpePatchFxn = &rf_patch_cpe_ble,
   .mcePatchFxn = 0,
   .rfePatchFxn = &rf_patch_rfe_ble,
@@ -65,33 +65,54 @@ RF_Mode rf_ble_mode =
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ble_overrides[] CC_ALIGN(4) =
 {
-                                     /* override_use_patch_ble_1mbps.xml */
-  MCE_RFE_OVERRIDE(0,0,0,1,0,0),     /* PHY: Use MCE ROM, RFE RAM patch */
-                                     /* override_synth_ble_1mbps.xml */
-  HW_REG_OVERRIDE(0x4038,0x0034),    /* Synth: Set recommended RTRIM to 4 */
-  (uint32_t)0x000784A3,              /* Synth: Set Fref to 3.43 MHz */
-  HW_REG_OVERRIDE(0x4020,0x7F00),    /* Synth: Configure fine calibration setting */
-  HW_REG_OVERRIDE(0x4064,0x0040),    /* Synth: Configure fine calibration setting */
-  (uint32_t)0xB1070503,              /* Synth: Configure fine calibration setting */
-  (uint32_t)0x05330523,              /* Synth: Configure fine calibration setting */
-  (uint32_t)0xA47E0583,              /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0xEAE00603,              /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0x00010623,              /* Synth: Set loop bandwidth after lock to 80 kHz */
-  HW32_ARRAY_OVERRIDE(0x405C,1),     /* Synth: Configure PLL bias */
-  (uint32_t)0x18000000,              /* Synth: Configure PLL bias */
-                                     /* Synth: Configure VCO LDO */
-  ADI_REG_OVERRIDE(1,4,0x9F),        /* (in ADI1, set VCOLDOCFG=0x9F to use voltage input reference) */
-  ADI_HALFREG_OVERRIDE(1,7,0x4,0x4), /* Synth: Configure synth LDO (in ADI1, set SLDOCTL0.COMP_CAP=1) */
-                                     /* override_phy_ble_1mbps.xml */
-  (uint32_t)0x013800C3,              /* Tx: Configure symbol shape for BLE frequency deviation requirements */
-  HW_REG_OVERRIDE(0x6088, 0x0045),   /* Rx: Configure AGC reference level */
-  HW_REG_OVERRIDE(0x6084, 0x05FD),   /* Rx: Configure AGC gain level */
-  (uint32_t)0x00038883,              /* Rx: Configure LNA bias current trim offset */
-                                     /* override_frontend_xd.xml */
-  (uint32_t)0x00F388A3,              /* Rx: Set RSSI offset to adjust reported RSSI by +13 dB */
-                                     /* TX power override */
-  ADI_REG_OVERRIDE(0,12,0xF8),       /* Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8) */
-  (uint32_t)0xFFFFFFFF,
+  // override_use_patch_ble_1mbps.xml
+  // PHY: Use MCE ROM, RFE RAM patch
+  MCE_RFE_OVERRIDE(0,0,0,1,0,0),
+  // override_synth_ble_1mbps.xml
+  // Synth: Set recommended RTRIM to 4
+  HW_REG_OVERRIDE(0x4038,0x0034),
+  // Synth: Set Fref to 3.43 MHz
+  (uint32_t)0x000784A3,
+  // Synth: Configure fine calibration setting
+  HW_REG_OVERRIDE(0x4020,0x7F00),
+  // Synth: Configure fine calibration setting
+  HW_REG_OVERRIDE(0x4064,0x0040),
+  // Synth: Configure fine calibration setting
+  (uint32_t)0xB1070503,
+  // Synth: Configure fine calibration setting
+  (uint32_t)0x05330523,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xA47E0583,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xEAE00603,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0x00010623,
+  // Synth: Configure PLL bias
+  HW32_ARRAY_OVERRIDE(0x405C,1),
+  // Synth: Configure PLL bias
+  (uint32_t)0x18000000,
+  // Synth: Configure VCO LDO (in ADI1, set VCOLDOCFG=0x9F to use voltage input reference)
+  ADI_REG_OVERRIDE(1,4,0x9F),
+  // Synth: Configure synth LDO (in ADI1, set SLDOCTL0.COMP_CAP=1)
+  ADI_HALFREG_OVERRIDE(1,7,0x4,0x4),
+  // override_phy_ble_1mbps.xml
+  // Tx: Configure symbol shape for BLE frequency deviation requirements
+  (uint32_t)0x013800C3,
+  // Rx: Configure AGC reference level
+  HW_REG_OVERRIDE(0x6088, 0x0045),
+  // Rx: Configure AGC gain level
+  HW_REG_OVERRIDE(0x6084, 0x05FD),
+  // Rx: Configure LNA bias current trim offset
+  (uint32_t)0x00038883,
+  // override_frontend_xd.xml
+  // Rx: Set RSSI offset to adjust reported RSSI by +13 dB
+  (uint32_t)0x00F388A3,
+#if RF_TXPOWER_BOOST_MODE
+  // TX power override
+  // Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8)
+  ADI_REG_OVERRIDE(0,12,0xF8),
+#endif
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
@@ -109,44 +130,12 @@ rfc_CMD_RADIO_SETUP_t rf_ble_cmd_radio_setup =
   .condition.nSkip = 0x0,
   .mode = 0x00,
   .loDivider = 0x00,
-  .config.frontEndMode = 0x0,
-  .config.biasMode = 0x0,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = 0x3D3F,
+  .txPower = 0x5F3C, /* set by driver */
   .pRegOverride = rf_ble_overrides,
-};
-/*---------------------------------------------------------------------------*/
-/* Structure for CMD_BLE_ADV_NC.pParams */
-rfc_bleAdvPar_t rf_ble_adv_par =
-{
-  .pRxQ = 0,
-  .rxConfig.bAutoFlushIgnored = 0x0,
-  .rxConfig.bAutoFlushCrcErr = 0x0,
-  .rxConfig.bAutoFlushEmpty = 0x0,
-  .rxConfig.bIncludeLenByte = 0x0,
-  .rxConfig.bIncludeCrc = 0x0,
-  .rxConfig.bAppendRssi = 0x0,
-  .rxConfig.bAppendStatus = 0x0,
-  .rxConfig.bAppendTimestamp = 0x0,
-  .advConfig.advFilterPolicy = 0x0,
-  .advConfig.deviceAddrType = 0x0,
-  .advConfig.peerAddrType = 0x0,
-  .advConfig.bStrictLenFilter = 0x0,
-  .advConfig.rpaMode = 0x0,
-  .advLen = 0x18,
-  .scanRspLen = 0x00,
-  .pAdvData = 0,
-  .pScanRspData = 0,
-  .pDeviceAddress = 0,
-  .pWhiteList = 0,
-  .__dummy0 = 0x0000,
-  .__dummy1 = 0x00,
-  .endTrigger.triggerType = TRIG_NEVER,
-  .endTrigger.bEnaCmd = 0x0,
-  .endTrigger.triggerNo = 0x0,
-  .endTrigger.pastTrig = 0x0,
-  .endTime = 0x00000000,
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_BLE_ADV_NC: BLE Non-Connectable Advertiser Command */
@@ -159,13 +148,13 @@ rfc_CMD_BLE_ADV_NC_t rf_ble_cmd_ble_adv_nc =
   .startTrigger.triggerType = TRIG_NOW,
   .startTrigger.bEnaCmd = 0x0,
   .startTrigger.triggerNo = 0x0,
-  .startTrigger.pastTrig = 0x0,
-  .condition.rule = COND_NEVER,
+  .startTrigger.pastTrig = 0x1,
+  .condition.rule = 0x0, /* set by driver */
   .condition.nSkip = 0x0,
-  .channel = 0x8C,
-  .whitening.init = 0x51,
+  .channel = 0x00, /* set by driver */
+  .whitening.init = 0x00, /* set by driver */
   .whitening.bOverride = 0x1,
-  .pParams = &rf_ble_adv_par,
-  .pOutput = 0,
+  .pParams = 0x00000000, /* set by driver */
+  .pOutput = 0x00000000, /* set by driver */
 };
 /*---------------------------------------------------------------------------*/

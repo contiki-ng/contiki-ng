@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018, Texas Instruments Incorporated
+ * Copyright (c) 2016-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,179 @@
 #include "CC2650STK.h"
 
 /*
+ *  =============================== ADCBuf ===============================
+ */
+#include <ti/drivers/ADCBuf.h>
+#include <ti/drivers/adcbuf/ADCBufCC26XX.h>
+
+ADCBufCC26XX_Object adcBufCC26XXobjects[CC2650STK_ADCBUFCOUNT];
+
+/*
+ *  This table converts a virtual adc channel into a dio and internal analogue
+ *  input signal. This table is necessary for the functioning of the adcBuf
+ *  driver. Comment out unused entries to save flash. Dio and internal signal
+ *  pairs are hardwired. Do not remap them in the table. You may reorder entire
+ *  entries. The mapping of dio and internal signals is package dependent.
+ */
+const ADCBufCC26XX_AdcChannelLutEntry ADCBufCC26XX_adcChannelLut[CC2650STK_ADCBUF0CHANNELCOUNT] = {
+    {CC2650STK_DIO23_ANALOG, ADC_COMPB_IN_AUXIO7},
+    {CC2650STK_DIO24_ANALOG, ADC_COMPB_IN_AUXIO6},
+    {CC2650STK_DIO25_ANALOG, ADC_COMPB_IN_AUXIO5},
+    {CC2650STK_DIO26_ANALOG, ADC_COMPB_IN_AUXIO4},
+    {CC2650STK_DIO27_ANALOG, ADC_COMPB_IN_AUXIO3},
+    {CC2650STK_DIO28_ANALOG, ADC_COMPB_IN_AUXIO2},
+    {CC2650STK_DIO29_ANALOG, ADC_COMPB_IN_AUXIO1},
+    {CC2650STK_DIO30_ANALOG, ADC_COMPB_IN_AUXIO0},
+    {PIN_UNASSIGNED, ADC_COMPB_IN_VDDS},
+    {PIN_UNASSIGNED, ADC_COMPB_IN_DCOUPL},
+    {PIN_UNASSIGNED, ADC_COMPB_IN_VSS},
+};
+
+const ADCBufCC26XX_HWAttrs adcBufCC26XXHWAttrs[CC2650STK_ADCBUFCOUNT] = {
+    {
+        .intPriority       = ~0,
+        .swiPriority       = 0,
+        .adcChannelLut     = ADCBufCC26XX_adcChannelLut,
+    }
+};
+
+const ADCBuf_Config ADCBuf_config[CC2650STK_ADCBUFCOUNT] = {
+    {
+        &ADCBufCC26XX_fxnTable,
+        &adcBufCC26XXobjects[CC2650STK_ADCBUF0],
+        &adcBufCC26XXHWAttrs[CC2650STK_ADCBUF0]
+    },
+};
+
+const uint_least8_t ADCBuf_count = CC2650STK_ADCBUFCOUNT;
+
+/*
+ *  =============================== ADC ===============================
+ */
+#include <ti/drivers/ADC.h>
+#include <ti/drivers/adc/ADCCC26XX.h>
+
+ADCCC26XX_Object adcCC26xxObjects[CC2650STK_ADCCOUNT];
+
+const ADCCC26XX_HWAttrs adcCC26xxHWAttrs[CC2650STK_ADCCOUNT] = {
+    {
+        .adcDIO              = CC2650STK_DIO23_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO7,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = CC2650STK_DIO24_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO6,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = CC2650STK_DIO25_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO5,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = CC2650STK_DIO26_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO4,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = CC2650STK_DIO27_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO3,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = CC2650STK_DIO28_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO2,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = CC2650STK_DIO29_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO1,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = CC2650STK_DIO30_ANALOG,
+        .adcCompBInput       = ADC_COMPB_IN_AUXIO0,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_10P9_MS,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = PIN_UNASSIGNED,
+        .adcCompBInput       = ADC_COMPB_IN_DCOUPL,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = PIN_UNASSIGNED,
+        .adcCompBInput       = ADC_COMPB_IN_VSS,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    },
+    {
+        .adcDIO              = PIN_UNASSIGNED,
+        .adcCompBInput       = ADC_COMPB_IN_VDDS,
+        .refSource           = ADCCC26XX_FIXED_REFERENCE,
+        .samplingDuration    = ADCCC26XX_SAMPLING_DURATION_2P7_US,
+        .inputScalingEnabled = true,
+        .triggerSource       = ADCCC26XX_TRIGGER_MANUAL,
+        .returnAdjustedVal   = false
+    }
+};
+
+const ADC_Config ADC_config[CC2650STK_ADCCOUNT] = {
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC0], &adcCC26xxHWAttrs[CC2650STK_ADC0]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC1], &adcCC26xxHWAttrs[CC2650STK_ADC1]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC2], &adcCC26xxHWAttrs[CC2650STK_ADC2]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC3], &adcCC26xxHWAttrs[CC2650STK_ADC3]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC4], &adcCC26xxHWAttrs[CC2650STK_ADC4]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC5], &adcCC26xxHWAttrs[CC2650STK_ADC5]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC6], &adcCC26xxHWAttrs[CC2650STK_ADC6]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADC7], &adcCC26xxHWAttrs[CC2650STK_ADC7]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADCDCOUPL], &adcCC26xxHWAttrs[CC2650STK_ADCDCOUPL]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADCVSS], &adcCC26xxHWAttrs[CC2650STK_ADCVSS]},
+    {&ADCCC26XX_fxnTable, &adcCC26xxObjects[CC2650STK_ADCVDDS], &adcCC26xxHWAttrs[CC2650STK_ADCVDDS]},
+};
+
+const uint_least8_t ADC_count = CC2650STK_ADCCOUNT;
+
+/*
  *  =============================== Crypto ===============================
  */
 #include <ti/drivers/crypto/CryptoCC26XX.h>
@@ -73,6 +246,170 @@ const CryptoCC26XX_Config CryptoCC26XX_config[CC2650STK_CRYPTOCOUNT] = {
          .hwAttrs = &cryptoCC26XXHWAttrs[CC2650STK_CRYPTO0]
     }
 };
+
+/*
+ *  =============================== AESCCM ===============================
+ */
+#include <ti/drivers/AESCCM.h>
+#include <ti/drivers/aesccm/AESCCMCC26XX.h>
+
+AESCCMCC26XX_Object aesccmCC26XXObjects[CC2650STK_AESCCMCOUNT];
+
+const AESCCMCC26XX_HWAttrs aesccmCC26XXHWAttrs[CC2650STK_AESCCMCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCCM_Config AESCCM_config[CC2650STK_AESCCMCOUNT] = {
+    {
+         .object  = &aesccmCC26XXObjects[CC2650STK_AESCCM0],
+         .hwAttrs = &aesccmCC26XXHWAttrs[CC2650STK_AESCCM0]
+    },
+};
+
+const uint_least8_t AESCCM_count = CC2650STK_AESCCMCOUNT;
+
+
+/*
+ *  =============================== AESGCM ===============================
+ */
+#include <ti/drivers/AESGCM.h>
+#include <ti/drivers/aesgcm/AESGCMCC26XX.h>
+
+AESGCMCC26XX_Object aesgcmCC26XXObjects[CC2650STK_AESGCMCOUNT];
+
+const AESGCMCC26XX_HWAttrs aesgcmCC26XXHWAttrs[CC2650STK_AESGCMCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESGCM_Config AESGCM_config[CC2650STK_AESGCMCOUNT] = {
+    {
+         .object  = &aesgcmCC26XXObjects[CC2650STK_AESGCM0],
+         .hwAttrs = &aesgcmCC26XXHWAttrs[CC2650STK_AESGCM0]
+    },
+};
+
+const uint_least8_t AESGCM_count = CC2650STK_AESGCMCOUNT;
+
+/*
+ *  =============================== AESCBC ===============================
+ */
+#include <ti/drivers/AESCBC.h>
+#include <ti/drivers/aescbc/AESCBCCC26XX.h>
+
+AESCBCCC26XX_Object aescbcCC26XXObjects[CC2650STK_AESCBCCOUNT];
+
+const AESCBCCC26XX_HWAttrs aescbcCC26XXHWAttrs[CC2650STK_AESCBCCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCBC_Config AESCBC_config[CC2650STK_AESCBCCOUNT] = {
+    {
+         .object  = &aescbcCC26XXObjects[CC2650STK_AESCBC0],
+         .hwAttrs = &aescbcCC26XXHWAttrs[CC2650STK_AESCBC0]
+    },
+};
+
+const uint_least8_t AESCBC_count = CC2650STK_AESCBCCOUNT;
+
+/*
+ *  =============================== AESCTR ===============================
+ */
+#include <ti/drivers/AESCTR.h>
+#include <ti/drivers/aesctr/AESCTRCC26XX.h>
+
+AESCTRCC26XX_Object aesctrCC26XXObjects[CC2650STK_AESCTRCOUNT];
+
+const AESCTRCC26XX_HWAttrs aesctrCC26XXHWAttrs[CC2650STK_AESCTRCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCTR_Config AESCTR_config[CC2650STK_AESCTRCOUNT] = {
+    {
+         .object  = &aesctrCC26XXObjects[CC2650STK_AESCTR0],
+         .hwAttrs = &aesctrCC26XXHWAttrs[CC2650STK_AESCTR0]
+    },
+};
+
+const uint_least8_t AESCTR_count = CC2650STK_AESCTRCOUNT;
+
+/*
+ *  =============================== AESECB ===============================
+ */
+#include <ti/drivers/AESECB.h>
+#include <ti/drivers/aesecb/AESECBCC26XX.h>
+
+AESECBCC26XX_Object aesecbCC26XXObjects[CC2650STK_AESECBCOUNT];
+
+const AESECBCC26XX_HWAttrs aesecbCC26XXHWAttrs[CC2650STK_AESECBCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESECB_Config AESECB_config[CC2650STK_AESECBCOUNT] = {
+    {
+         .object  = &aesecbCC26XXObjects[CC2650STK_AESECB0],
+         .hwAttrs = &aesecbCC26XXHWAttrs[CC2650STK_AESECB0]
+    },
+};
+
+const uint_least8_t AESECB_count = CC2650STK_AESECBCOUNT;
+
+/*
+ *  =============================== AESCTRDRBG ===============================
+ */
+#include <ti/drivers/AESCTRDRBG.h>
+#include <ti/drivers/aesctrdrbg/AESCTRDRBGXX.h>
+
+AESCTRDRBGXX_Object aesctrdrbgXXObjects[CC2650STK_AESCTRDRBGCOUNT];
+
+const AESCTRDRBGXX_HWAttrs aesctrdrbgXXHWAttrs[CC2650STK_AESCTRDRBGCOUNT] = {
+    {
+        .aesctrIndex       = CC2650STK_AESCTR0,
+    }
+};
+
+const AESCTRDRBG_Config AESCTRDRBG_config[CC2650STK_AESCTRDRBGCOUNT] = {
+    {
+         .object  = &aesctrdrbgXXObjects[CC2650STK_AESCTRDRBG0],
+         .hwAttrs = &aesctrdrbgXXHWAttrs[CC2650STK_AESCTRDRBG0]
+    },
+};
+
+const uint_least8_t AESCTRDRBG_count = CC2650STK_AESCTRDRBGCOUNT;
+
+/*
+ *  =============================== TRNG ===============================
+ */
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/trng/TRNGCC26XX.h>
+
+TRNGCC26XX_Object trngCC26XXObjects[CC2650STK_TRNGCOUNT];
+
+const TRNGCC26XX_HWAttrs trngCC26X2HWAttrs[CC2650STK_TRNGCOUNT] = {
+    {
+        .intPriority       = ~0,
+        .swiPriority       = 0,
+        .samplesPerCycle   = 240000,
+    }
+};
+
+const TRNG_Config TRNG_config[CC2650STK_TRNGCOUNT] = {
+    {
+         .object  = &trngCC26XXObjects[CC2650STK_TRNG0],
+         .hwAttrs = &trngCC26X2HWAttrs[CC2650STK_TRNG0]
+    },
+};
+
+const uint_least8_t TRNG_count = CC2650STK_TRNGCOUNT;
 
 /*
  *  =============================== GPIO ===============================
@@ -189,6 +526,34 @@ const uint_least8_t I2C_count = CC2650STK_I2CCOUNT;
 #endif /* TI_I2C_CONF_ENABLE */
 
 /*
+ *  =============================== I2S ===============================
+*/
+#include <ti/drivers/I2S.h>
+#include <ti/drivers/i2s/I2SCC26XX.h>
+
+I2SCC26XX_Object i2sCC26XXObjects[CC2650STK_I2SCOUNT];
+
+const I2SCC26XX_HWAttrs i2sCC26XXHWAttrs[CC2650STK_I2SCOUNT] = {
+    {
+        .pinSD1      =  CC2650STK_I2S_ADI,
+        .pinSD0      =  CC2650STK_I2S_ADO,
+        .pinSCK      =  CC2650STK_I2S_BCLK,
+        .pinMCLK     =  CC2650STK_I2S_MCLK,
+        .pinWS       =  CC2650STK_I2S_WCLK,
+        .intPriority = ~0,
+    }
+};
+
+const I2S_Config I2S_config[CC2650STK_I2SCOUNT] = {
+    {
+        .object      = &i2sCC26XXObjects[CC2650STK_I2S0],
+        .hwAttrs     = &i2sCC26XXHWAttrs[CC2650STK_I2S0]
+    },
+};
+
+const uint_least8_t I2S_count = CC2650STK_I2SCOUNT;
+
+/*
  *  =============================== NVS ===============================
  */
 #include <ti/drivers/NVS.h>
@@ -240,9 +605,10 @@ static char flashBuf[REGIONSIZE];
 
 #endif
 
+/* Allocate objects for NVS Internal Regions */
 NVSCC26XX_Object nvsCC26xxObjects[1];
 
-/* Hardware attributes for NVS */
+/* Hardware attributes for NVS Internal Regions */
 const NVSCC26XX_HWAttrs nvsCC26xxHWAttrs[1] = {
     {
         .regionBase = (void *)flashBuf,
@@ -260,10 +626,10 @@ const NVSCC26XX_HWAttrs nvsCC26xxHWAttrs[1] = {
 
 static uint8_t verifyBuf[VERIFYBUFSIZE];
 
-/* Allocate objects for NVS and NVS SPI */
+/* Allocate objects for NVS External Regions */
 NVSSPI25X_Object nvsSPI25XObjects[1];
 
-/* Hardware attributes for NVS SPI */
+/* Hardware attributes for NVS External Regions */
 const NVSSPI25X_HWAttrs nvsSPI25XHWAttrs[1] = {
     {
         .regionBaseOffset = 0,
@@ -275,6 +641,7 @@ const NVSSPI25X_HWAttrs nvsSPI25XHWAttrs[1] = {
         .spiIndex = 0,
         .spiBitRate = 4000000,
         .spiCsnGpioIndex = CC2650STK_GPIO_SPI_FLASH_CS,
+        .statusPollDelayUs = 100,
     },
 };
 
@@ -303,49 +670,6 @@ const uint_least8_t NVS_count = CC2650STK_NVSCOUNT;
 #endif /* TI_NVS_CONF_ENABLE */
 
 /*
- *  =============================== PDM ===============================
-*/
-#include <ti/drivers/pdm/PDMCC26XX.h>
-#include <ti/drivers/pdm/PDMCC26XX_util.h>
-
-PDMCC26XX_Object        pdmCC26XXObjects[CC2650STK_PDMCOUNT];
-PDMCC26XX_I2S_Object    pdmCC26XXI2SObjects[CC2650STK_PDMCOUNT];
-
-const PDMCC26XX_HWAttrs pdmCC26XXHWAttrs[CC2650STK_PDMCOUNT] = {
-    {
-        .micPower     = CC2650STK_MIC_POWER,
-        .taskPriority = 2
-    }
-};
-
-const PDMCC26XX_Config PDMCC26XX_config[CC2650STK_PDMCOUNT] = {
-    {
-        .object  = &pdmCC26XXObjects[CC2650STK_PDM0],
-        .hwAttrs = &pdmCC26XXHWAttrs[CC2650STK_PDM0]
-    }
-};
-
-const PDMCC26XX_I2S_HWAttrs pdmC26XXI2SHWAttrs[CC2650STK_PDMCOUNT] = {
-    {
-        .baseAddr       = I2S0_BASE,
-        .intNum         = INT_I2S_IRQ,
-        .powerMngrId    = PowerCC26XX_PERIPH_I2S,
-        .intPriority    = ~0,
-        .mclkPin        = PIN_UNASSIGNED,
-        .bclkPin        = CC2650STK_AUDIO_CLK,
-        .wclkPin        = PIN_UNASSIGNED,
-        .ad0Pin         = CC2650STK_AUDIO_DI,
-    }
-};
-
-const PDMCC26XX_I2S_Config PDMCC26XX_I2S_config[CC2650STK_PDMCOUNT] = {
-    {
-        .object  = &pdmCC26XXI2SObjects[CC2650STK_PDM0],
-        .hwAttrs = &pdmC26XXI2SHWAttrs[CC2650STK_PDM0]
-    }
-};
-
-/*
  *  =============================== PIN ===============================
  */
 #include <ti/drivers/PIN.h>
@@ -353,31 +677,22 @@ const PDMCC26XX_I2S_Config PDMCC26XX_I2S_config[CC2650STK_PDMCOUNT] = {
 
 const PIN_Config BoardGpioInitTable[] = {
 
-    CC2650STK_PIN_LED1 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,           /* LED initially off */
-    CC2650STK_KEY_LEFT | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,          /* Button is active low */
-    CC2650STK_KEY_RIGHT | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,         /* Button is active low */
+    CC2650STK_PIN_RLED | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,           /* LED initially off */
+    CC2650STK_PIN_GLED | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,           /* LED initially off */
+    CC2650STK_PIN_BTN1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,          /* Button is active low */
+    CC2650STK_PIN_BTN2 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,         /* Button is active low */
+    CC2650STK_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,  /* External flash chip select */
+    CC2650STK_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                        /* DevPack */
+    CC2650STK_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                              /* DevPack */
+    CC2650STK_SPI0_MOSI | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master out - slave in */
+    CC2650STK_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master in - slave out */
+    CC2650STK_SPI0_CLK | PIN_INPUT_EN | PIN_PULLDOWN,                                             /* SPI clock */
     CC2650STK_RELAY | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,           /* Relay is active high */
     CC2650STK_MPU_INT | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_NEGEDGE | PIN_HYSTERESIS,           /* MPU_INT is active low */
     CC2650STK_TMP_RDY | PIN_INPUT_EN | PIN_PULLUP | PIN_HYSTERESIS,                               /* TMP_RDY is active high */
     CC2650STK_BUZZER | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,         /* Buzzer initially off */
     CC2650STK_MPU_POWER | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX,     /* MPU initially on */
     CC2650STK_MIC_POWER | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MIN,      /* MIC initially off */
-    CC2650STK_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,  /* External flash chip select */
-    CC2650STK_SPI_DEVPK_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MIN,   /* DevPack chip select */
-    CC2650STK_AUDIO_DI | PIN_INPUT_EN | PIN_PULLDOWN,                                             /* Audio DI */
-    CC2650STK_AUDIODO | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,       /* Audio data out */
-    CC2650STK_AUDIO_CLK | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* DevPack */
-    CC2650STK_DP2 | PIN_INPUT_EN | PIN_PULLDOWN,                                                  /* DevPack */
-    CC2650STK_DP1 | PIN_INPUT_EN | PIN_PULLDOWN,                                                  /* DevPack */
-    CC2650STK_DP0 | PIN_INPUT_EN | PIN_PULLDOWN,                                                  /* DevPack */
-    CC2650STK_DP3 | PIN_INPUT_EN | PIN_PULLDOWN,                                                  /* DevPack */
-    CC2650STK_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                        /* DevPack */
-    CC2650STK_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                              /* DevPack */
-    CC2650STK_DEVPK_ID | PIN_INPUT_EN | PIN_NOPULL,                                               /* Device pack ID - external PU */
-    CC2650STK_SPI0_MOSI | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master out - slave in */
-    CC2650STK_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,                                            /* SPI master in - slave out */
-    CC2650STK_SPI0_CLK | PIN_INPUT_EN | PIN_PULLDOWN,                                             /* SPI clock */
-
     PIN_TERMINATE
 };
 
@@ -389,6 +704,9 @@ const PINCC26XX_HWAttrs PINCC26XX_hwAttrs = {
 /*
  *  =============================== Power ===============================
  */
+#include <ti/drivers/Power.h>
+#include <ti/drivers/power/PowerCC26XX.h>
+
 const PowerCC26XX_Config PowerCC26XX_config = {
     .policyInitFxn      = NULL,
     .policyFxn          = &PowerCC26XX_standbyPolicy,
@@ -454,6 +772,11 @@ const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
 
 SPICC26XXDMA_Object spiCC26XXDMAObjects[CC2650STK_SPICOUNT];
 
+/*
+ * NOTE: The SPI instances below can be used by the SD driver to communicate
+ * with a SD card via SPI.  The 'defaultTxBufValue' fields below are set to 0xFF
+ * to satisfy the SDSPI driver requirement.
+ */
 const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC2650STK_SPICOUNT] = {
 #if TI_SPI_CONF_SPI0_ENABLE
     {
@@ -462,7 +785,7 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC2650STK_SPICOUNT] = {
         .intPriority        = ~0,
         .swiPriority        = 0,
         .powerMngrId        = PowerCC26XX_PERIPH_SSI0,
-        .defaultTxBufValue  = 0,
+        .defaultTxBufValue  = 0xFF,
         .rxChannelBitMask   = 1<<UDMA_CHAN_SSI0_RX,
         .txChannelBitMask   = 1<<UDMA_CHAN_SSI0_TX,
         .mosiPin            = CC2650STK_SPI0_MOSI,
@@ -479,7 +802,7 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC2650STK_SPICOUNT] = {
         .intPriority        = ~0,
         .swiPriority        = 0,
         .powerMngrId        = PowerCC26XX_PERIPH_SSI1,
-        .defaultTxBufValue  = 0,
+        .defaultTxBufValue  = 0xFF,
         .rxChannelBitMask   = 1<<UDMA_CHAN_SSI1_RX,
         .txChannelBitMask   = 1<<UDMA_CHAN_SSI1_TX,
         .mosiPin            = CC2650STK_SPI1_MOSI,
@@ -511,29 +834,6 @@ const SPI_Config SPI_config[CC2650STK_SPICOUNT] = {
 const uint_least8_t SPI_count = CC2650STK_SPICOUNT;
 
 #endif /* TI_SPI_CONF_ENABLE */
-
-
-/*
- *  =============================== TRNG ===============================
- */
-#include <ti/drivers/TRNG.h>
-#include <ti/drivers/trng/TRNGCC26X0.h>
-
-TRNGCC26X0_Object trngCC26X0Object[CC2650STK_TRNGCOUNT];
-
-const TRNGCC26X0_HWAttrs trngCC26X0HWAttrs[CC2650STK_TRNGCOUNT] = {
-    {
-         .swiPriority = 0,
-         .intPriority = ~0,
-    }
-};
-
-const TRNG_Config TRNG_config[] = {
-    { &trngCC26X0Object[0], &trngCC26X0HWAttrs[0] },
-};
-
-const uint8_t TRNG_count = CC2650STK_TRNGCOUNT;
-
 
 /*
  *  =============================== UART ===============================
@@ -643,11 +943,19 @@ void CC2650STK_initGeneral(void)
 {
     Power_init();
 
-    if ( PIN_init(BoardGpioInitTable) != PIN_SUCCESS) {
+    if (PIN_init(BoardGpioInitTable) != PIN_SUCCESS) {
         /* Error with PIN_init */
         while (1);
     }
 
     /* Perform board-specific initialization */
     Board_initHook();
+}
+
+/*
+ *  ======== Board_init ========
+ */
+void Board_init(void)
+{
+    CC2650STK_initGeneral();
 }

@@ -79,6 +79,11 @@ client_chunk_handler(coap_message_t *response)
 {
   const uint8_t *chunk;
 
+  if(response == NULL) {
+    puts("Request timed out");
+    return;
+  }
+
   int len = coap_get_payload(response, &chunk);
 
   printf("|%.*s", len, (char *)chunk);

@@ -50,25 +50,25 @@
  */
 tx_power_table_t rf_prop_tx_power_table_cc1310[] =
 {
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  4) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 1, 0,  0) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  8) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 2, 1, 0,  8) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0, 10) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0, 12) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0, 12) },
-  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0, 14) },
-  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0, 16) },
-  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 18) },
-  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 3, 0, 22) },
-  {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(19, 3, 0, 28) },
-  {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 0, 40) },
-  {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 92) },
-  /* The original PA value (12.5 dBm) have been rounded to an integer value. */
-  {  13, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 0, 83) },
+  {-10, RF_TxPowerTable_DEFAULT_PA_ENTRY(0, 3, 0, 4) },
+  {0, RF_TxPowerTable_DEFAULT_PA_ENTRY(1, 1, 0, 0) },
+  {1, RF_TxPowerTable_DEFAULT_PA_ENTRY(3, 3, 0, 8) },
+  {2, RF_TxPowerTable_DEFAULT_PA_ENTRY(2, 1, 0, 8) },
+  {3, RF_TxPowerTable_DEFAULT_PA_ENTRY(4, 3, 0, 10) },
+  {4, RF_TxPowerTable_DEFAULT_PA_ENTRY(5, 3, 0, 12) },
+  {5, RF_TxPowerTable_DEFAULT_PA_ENTRY(6, 3, 0, 12) },
+  {6, RF_TxPowerTable_DEFAULT_PA_ENTRY(7, 3, 0, 14) },
+  {7, RF_TxPowerTable_DEFAULT_PA_ENTRY(9, 3, 0, 16) },
+  {8, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 18) },
+  {9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 3, 0, 22) },
+  {10, RF_TxPowerTable_DEFAULT_PA_ENTRY(19, 3, 0, 28) },
+  {11, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 0, 40) },
+  {12, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 92) },
+  // The original PA value (12.5 dBm) has been rounded to an integer value.
+  {13, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 0, 83) },
 #if RF_CONF_TXPOWER_BOOST_MODE
-  /* This setting requires RF_CONF_TXPOWER_BOOST_MODE = 1. */
-  {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 83) },
+  // This setting requires CCFG_FORCE_VDDR_HH = 1.
+  {14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 83) },
 #endif
   RF_TxPowerTable_TERMINATION_ENTRY
 };
@@ -82,23 +82,23 @@ tx_power_table_t rf_prop_tx_power_table_cc1310[] =
  */
 tx_power_table_t rf_prop_tx_power_table_cc1350[] =
 {
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,  2) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  9) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0, 11) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0, 12) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0, 14) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 1, 0, 12) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 0, 16) },
-  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0, 18) },
-  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 21) },
-  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 0, 25) },
-  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 3, 0, 32) },
-  {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 3, 0, 44) },
-  {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY(37, 3, 0, 72) },
-  {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(43, 0, 0, 94) },
-#if RF_CONF_TXPOWER_BOOST_MODE
-  /* This setting requires RF_CONF_TXPOWER_BOOST_MODE = 1. */
-  {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 85) },
+  {-10, RF_TxPowerTable_DEFAULT_PA_ENTRY(0, 3, 0, 2) },
+  {0, RF_TxPowerTable_DEFAULT_PA_ENTRY(3, 3, 0, 9) },
+  {1, RF_TxPowerTable_DEFAULT_PA_ENTRY(4, 3, 0, 11) },
+  {2, RF_TxPowerTable_DEFAULT_PA_ENTRY(5, 3, 0, 12) },
+  {3, RF_TxPowerTable_DEFAULT_PA_ENTRY(6, 3, 0, 14) },
+  {4, RF_TxPowerTable_DEFAULT_PA_ENTRY(4, 1, 0, 12) },
+  {5, RF_TxPowerTable_DEFAULT_PA_ENTRY(8, 3, 0, 16) },
+  {6, RF_TxPowerTable_DEFAULT_PA_ENTRY(9, 3, 0, 18) },
+  {7, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 21) },
+  {8, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 0, 25) },
+  {9, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 3, 0, 32) },
+  {10, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 3, 0, 44) },
+  {11, RF_TxPowerTable_DEFAULT_PA_ENTRY(37, 3, 0, 72) },
+  {12, RF_TxPowerTable_DEFAULT_PA_ENTRY(43, 0, 0, 94) },
+#if RF_TXPOWER_BOOST_MODE
+  // This setting requires CCFG_FORCE_VDDR_HH = 1.
+  {14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 85) },
 #endif
   RF_TxPowerTable_TERMINATION_ENTRY
 };
@@ -112,25 +112,25 @@ tx_power_table_t rf_prop_tx_power_table_cc1350[] =
  */
 tx_power_table_t rf_prop_tx_power_table_cc1350_4[] =
 {
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY( 0, 3, 0,   2) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 3, 0,   7) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY( 1, 3, 0,   9) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY( 2, 3, 0,  11) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY( 2, 3, 0,  12) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY( 3, 3, 0,  16) },
-  {   6, RF_TxPowerTable_DEFAULT_PA_ENTRY( 4, 3, 0,  18) },
-  {   7, RF_TxPowerTable_DEFAULT_PA_ENTRY( 5, 3, 0,  21) },
-  {   8, RF_TxPowerTable_DEFAULT_PA_ENTRY( 6, 3, 0,  23) },
-  {   9, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 3, 0,  28) },
-  {  10, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0,  35) },
-  {  11, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 1, 0,  39) },
-  {  12, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0,  60) },
-  {  13, RF_TxPowerTable_DEFAULT_PA_ENTRY(15, 0, 0, 108) },
-  /* The original PA value (13.7 dBm) have been rounded to an integer value. */
-  {  14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 0,  92) },
+  {-10, RF_TxPowerTable_DEFAULT_PA_ENTRY(0, 3, 0, 2) },
+  {0, RF_TxPowerTable_DEFAULT_PA_ENTRY(1, 3, 0, 7) },
+  {2, RF_TxPowerTable_DEFAULT_PA_ENTRY(1, 3, 0, 9) },
+  {3, RF_TxPowerTable_DEFAULT_PA_ENTRY(2, 3, 0, 11) },
+  {4, RF_TxPowerTable_DEFAULT_PA_ENTRY(2, 3, 0, 12) },
+  {5, RF_TxPowerTable_DEFAULT_PA_ENTRY(3, 3, 0, 16) },
+  {6, RF_TxPowerTable_DEFAULT_PA_ENTRY(4, 3, 0, 18) },
+  {7, RF_TxPowerTable_DEFAULT_PA_ENTRY(5, 3, 0, 21) },
+  {8, RF_TxPowerTable_DEFAULT_PA_ENTRY(6, 3, 0, 23) },
+  {9, RF_TxPowerTable_DEFAULT_PA_ENTRY(8, 3, 0, 28) },
+  {10, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0, 35) },
+  {11, RF_TxPowerTable_DEFAULT_PA_ENTRY(8, 1, 0, 39) },
+  {12, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0, 60) },
+  {13, RF_TxPowerTable_DEFAULT_PA_ENTRY(15, 0, 0, 108) },
+  // The original PA value (13.7 dBm) has been rounded to an integer value.
+  {14, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 0, 92) },
 #if RF_CONF_TXPOWER_BOOST_MODE
-  /* This setting requires RF_CONF_TXPOWER_BOOST_MODE = 1. */
-  {  15, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1,  72) },
+  // This setting requires CCFG_FORCE_VDDR_HH = 1.
+  {15, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 72) },
 #endif
   RF_TxPowerTable_TERMINATION_ENTRY
 };

@@ -16,6 +16,7 @@ BOARDS = $(foreach BOARD, $(BOARD_PLATFORMS), \
 BOARD_PATH := $(FAMILY_PATH)/$(BOARD)
 include $(BOARD_PATH)/Makefile.$(notdir $(BOARD))
 
+DEVICE_LC        := $(shell echo "$(DEVICE)" | tr A-Z a-z)
 DEVICE_FAMILY_LC := $(shell echo "$(DEVICE_FAMILY)" | tr A-Z a-z)
 
 # Add to the source dirs

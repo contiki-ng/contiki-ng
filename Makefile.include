@@ -39,7 +39,11 @@ endif
 
 BUILD_DIR = build
 BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)
-BUILD_DIR_BOARD = $(BUILD_DIR_TARGET)/$(BOARD)/$(BUILD_DIR_CONFIG)
+BUILD_DIR_TARGET_BOARD = $(BUILD_DIR_TARGET)/$(BOARD)
+# If BOARD was empty, make sure we don't end up with a sequence of slashes
+BUILD_DIR_FULL = $(BUILD_DIR_TARGET_BOARD:/=)/$(BUILD_DIR_CONFIG)
+# Ditto if BUILD_DIR_CONFIG was empty
+BUILD_DIR_BOARD = $(BUILD_DIR_FULL:/=)
 OBJECTDIR = $(BUILD_DIR_BOARD)/obj
 
 CONTIKI_NG_TARGET_LIB = $(BUILD_DIR_BOARD)/contiki-ng-$(TARGET).a
@@ -65,7 +69,7 @@ ifneq ("$(wildcard project-conf.h)","")
 CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
 endif
 
-MODULES += os os/net os/net/mac os/net/mac/framer os/net/routing os/storage
+MODULES += os/net os/net/mac os/net/mac/framer os/net/routing os/storage
 
 define oname
 ${patsubst %.c,%.o, \
@@ -223,20 +227,27 @@ else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
   MODULES += os/net/routing/nullrouting
 endif
 
-MODULEDIRS = $(MODULES_REL) ${wildcard ${addprefix $(CONTIKI)/, $(MODULES)}}
+MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
 UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
-MODULES_SOURCES = ${foreach d, $(MODULEDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
+MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), ${subst ${d}/,,${wildcard $(d)/*.c}}}
 CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 
 # Include module-specific makefiles
-MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
-include $(MODULES_INCLUDES)
+MODULES_INCLUDES = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/Makefile.${notdir $(d)}}}
+
+### Perform an immediate expansion of MODULES_INCLUDES and store it in a
+### variable. This will allow us to subsequently filter-out module Makefiles
+### that were included in the first pass, such that we don't end up including
+### them twice.
+MODULES_INCLUDED_FIRST_PASS := $(MODULES_INCLUDES)
+include $(MODULES_INCLUDED_FIRST_PASS)
+
 # Iterate once more: include the modules added from the previous include.
 # Only works with one level of nested module inclusion.
-include $(MODULES_INCLUDES)
+include $(filter-out $(MODULES_INCLUDED_FIRST_PASS),$(MODULES_INCLUDES))
 
 # C-include module-specific macros using -imacros
-MODULES_IMACROS = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/module-macros.h}}
+MODULES_IMACROS = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/module-macros.h}}
 ifneq ($(MODULES_IMACROS),)
   CFLAGS += ${foreach d, $(MODULES_IMACROS), -imacros $(d)}
 endif
@@ -279,7 +290,7 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
 CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
 SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS) ${dir $(target_makefile)}
+             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS)
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
@@ -465,6 +476,9 @@ ifeq ($(findstring $(TARGET),native cooja),)
   include $(CONTIKI)/Makefile.embedded
 endif
 
+### Include Makefile.gcc for GCC specific definitions and actions
+include $(CONTIKI)/Makefile.gcc
+
 # Don't treat $(BUILD_DIR_BOARD)/%.$(TARGET) and $(TARGET) as intermediate
 # files because for many platforms they are in fact the primary target.
 .PRECIOUS: $(BUILD_DIR_BOARD)/%.$(TARGET) %.$(TARGET)
@@ -477,6 +491,8 @@ endif
 ifeq ($(PLATFORM_ACTION),skip)
 # Skip this target.
 $(CONTIKI_PROJECT):
+	@echo "Skipping $@: not for the '$(TARGET)/$(BOARD)' platform!"
+%.$(TARGET):
 	@echo "Skipping $@: not for the '$(TARGET)/$(BOARD)' platform!"
 else
 # Build this target.

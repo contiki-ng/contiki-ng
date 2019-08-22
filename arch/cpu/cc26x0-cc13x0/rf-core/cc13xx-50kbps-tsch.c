@@ -57,7 +57,7 @@
 #define CC13XX_TSCH_DEFAULT_TS_TIMESLOT_LENGTH  40000
 
 /* TSCH timeslot timing (microseconds) */
-const uint16_t tsch_timing_cc13xx_50kbps[tsch_ts_elements_count] = {
+const tsch_timeslot_timing_usec tsch_timing_cc13xx_50kbps = {
   CC13XX_TSCH_DEFAULT_TS_CCA_OFFSET,
   CC13XX_TSCH_DEFAULT_TS_CCA,
   CC13XX_TSCH_DEFAULT_TS_TX_OFFSET,

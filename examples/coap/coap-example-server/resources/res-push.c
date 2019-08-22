@@ -50,7 +50,7 @@ PERIODIC_RESOURCE(res_push,
                   NULL,
                   NULL,
                   NULL,
-                  5 * CLOCK_SECOND,
+                  5000,
                   res_periodic_handler);
 
 /*

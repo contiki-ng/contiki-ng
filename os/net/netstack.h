@@ -44,7 +44,7 @@
 #include "contiki.h"
 
 /* Routing protocol configuration. The Routing protocol is configured through the Makefile,
-   via the flag MAC_ROUTING */
+   via the flag MAKE_ROUTING */
 #ifdef NETSTACK_CONF_ROUTING
 #define NETSTACK_ROUTING NETSTACK_CONF_ROUTING
 #else /* NETSTACK_CONF_ROUTING */
@@ -60,7 +60,7 @@
 #endif /* NETSTACK_CONF_ROUTING */
 
 /* Network layer configuration. The NET layer is configured through the Makefile,
-   via the flag MAC_NET */
+   via the flag MAKE_NET */
 #ifdef NETSTACK_CONF_NETWORK
 #define NETSTACK_NETWORK NETSTACK_CONF_NETWORK
 #else /* NETSTACK_CONF_NETWORK */

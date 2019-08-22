@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
  */
 
 /*
- *  ======== CC2650_LAUNCHXL_fxns.c ========
+ *  =================== CC2650_LAUNCHXL_fxns.c ============================
  *  This file contains the board-specific initialization functions.
  */
 
@@ -45,7 +45,10 @@
 
 #include <ti/drivers/pin/PINCC26XX.h>
 
+#include <ti/drivers/Board.h>
+
 #include "Board.h"
+
 
 /*
  *  ======== CC2650_LAUNCHXL_sendExtFlashByte ========

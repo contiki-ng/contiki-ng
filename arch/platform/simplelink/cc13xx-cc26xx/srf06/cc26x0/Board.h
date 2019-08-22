@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,16 +33,17 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC2650DK_7ID
-#define BOARD_STRING    "TI SmartRF06EB + CC26x0 EM"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <ti/drivers/Board.h>
 #include "CC2650DK_7ID.h"
 
-#define Board_initGeneral()      CC2650DK_7ID_initGeneral()
+#define Board_CC2650DK_7ID
+#define BOARD_STRING            "TI SmartRF06EB + CC26x0 EM"
+
+#define Board_initGeneral()      Board_init()  /* deprecated */
 #define Board_shutDownExtFlash() CC2650DK_7ID_shutDownExtFlash()
 #define Board_wakeUpExtFlash()   CC2650DK_7ID_wakeUpExtFlash()
 
@@ -58,6 +59,13 @@ extern "C" {
 #define Board_ADCBUF0CHANNEL1   CC2650DK_7ID_ADCBUF0CHANNELADCALS
 
 #define Board_CRYPTO0           CC2650DK_7ID_CRYPTO0
+#define Board_AESCCM0           CC2650DK_7ID_AESCCM0
+#define Board_AESGCM0           CC2650DK_7ID_AESGCM0
+#define Board_AESCBC0           CC2650DK_7ID_AESCBC0
+#define Board_AESCTR0           CC2650DK_7ID_AESCTR0
+#define Board_AESECB0           CC2650DK_7ID_AESECB0
+#define Board_AESCTRDRBG0       CC2650DK_7ID_AESCTRDRBG0
+#define Board_TRNG0             CC2650DK_7ID_TRNG0
 
 #define Board_DIO0              CC2650DK_7ID_DIO0
 #define Board_DIO1_RFSW         CC2650DK_7ID_DIO1_RFSW
@@ -99,6 +107,13 @@ extern "C" {
 #define Board_GPTIMER3B         CC2650DK_7ID_GPTIMER3B
 
 #define Board_I2C0              CC2650DK_7ID_I2C0
+
+#define Board_I2S0              CC2650DK_7ID_I2S0
+#define Board_I2S_ADO           CC2650DK_7ID_I2S_ADO
+#define Board_I2S_ADI           CC2650DK_7ID_I2S_ADI
+#define Board_I2S_BCLK          CC2650DK_7ID_I2S_BCLK
+#define Board_I2S_MCLK          CC2650DK_7ID_I2S_MCLK
+#define Board_I2S_WCLK          CC2650DK_7ID_I2S_WCLK
 
 #define Board_NVSINTERNAL       CC2650DK_7ID_NVSCC26XX0
 

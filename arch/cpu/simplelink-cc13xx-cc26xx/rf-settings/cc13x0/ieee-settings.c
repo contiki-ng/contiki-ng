@@ -57,17 +57,11 @@
 /* TI-RTOS RF Mode Object */
 RF_Mode rf_ieee_mode =
 {
-  .rfMode = RF_MODE_IEEE_15_4,
+  .rfMode = RF_MODE_MULTIPLE,
   .cpePatchFxn = 0,
   .mcePatchFxn = 0,
   .rfePatchFxn = 0,
 };
-/*---------------------------------------------------------------------------*/
-/*
- * CMD_RADIO_SETUP must be configured with default TX power value
- * in the .txPower field.
- */
-#define DEFAULT_TX_POWER    0x9330 /* 5 dBm */
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
@@ -93,6 +87,11 @@ uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
   (uint32_t)0x000288A3,           /* Rx: Set RSSI offset to adjust reported RSSI by -2 dB */
   (uint32_t)0x000F8883,           /* Rx: Configure LNA bias current trim offset */
   HW_REG_OVERRIDE(0x50DC,0x002B), /* Rx: Adjust AGC DC filter */
+#if RF_TXPOWER_BOOST_MODE
+  // TX power override
+  // Tx: Set PA trim to max (in ADI0, set PACTL0=0xF8)
+  ADI_REG_OVERRIDE(0,12,0xF8),
+#endif
   (uint32_t)0xFFFFFFFF,
 };
 /*---------------------------------------------------------------------------*/
@@ -110,11 +109,11 @@ rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
   .condition.rule = COND_NEVER,
   .condition.nSkip = 0x0,
   .mode = 0x01,
-  .config.frontEndMode = 0x0,
-  .config.biasMode = 0x0,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = DEFAULT_TX_POWER, /* 5 dBm default */
+  .txPower = 0x9330, /* set by driver */
   .pRegOverride = rf_ieee_overrides,
 };
 /*---------------------------------------------------------------------------*/

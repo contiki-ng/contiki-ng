@@ -75,14 +75,16 @@ tcpip_handler(void)
   return;
 }
 /*---------------------------------------------------------------------------*/
+#if UIP_MCAST6_CONF_ENGINE != UIP_MCAST6_ENGINE_MPL
 static uip_ds6_maddr_t *
 join_mcast_group(void)
 {
   uip_ipaddr_t addr;
   uip_ds6_maddr_t *rv;
+  const uip_ipaddr_t *default_prefix = uip_ds6_default_prefix();
 
   /* First, set our v6 global */
-  uip_ip6addr(&addr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  uip_ip6addr_copy(&addr, default_prefix);
   uip_ds6_set_addr_iid(&addr, &uip_lladdr);
   uip_ds6_addr_add(&addr, 0, ADDR_AUTOCONF);
 
@@ -100,6 +102,7 @@ join_mcast_group(void)
   }
   return rv;
 }
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(mcast_sink_process, ev, data)
 {
@@ -107,10 +110,16 @@ PROCESS_THREAD(mcast_sink_process, ev, data)
 
   PRINTF("Multicast Engine: '%s'\n", UIP_MCAST6.name);
 
+  /*
+   * MPL nodes are automatically configured to subscribe to the ALL_MPL_FORWARDERS
+   *  well-known address, so this isn't needed.
+   */
+#if UIP_MCAST6_CONF_ENGINE != UIP_MCAST6_ENGINE_MPL
   if(join_mcast_group() == NULL) {
     PRINTF("Failed to join multicast group\n");
     PROCESS_EXIT();
   }
+#endif
 
   count = 0;
 

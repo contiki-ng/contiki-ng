@@ -38,6 +38,8 @@
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
 
+#define TEST_MAC_MAX_PAYLOAD_LEN 100
+
 static uint8_t send_is_called;
 
 void
@@ -73,11 +75,36 @@ send(mac_callback_t sent_callback, void *ptr)
   send_is_called = 1;
 }
 
+static void
+input(void)
+{
+  /* do nothing */
+}
+
+static int
+on(void)
+{
+  return 1; /* always on */
+}
+
+static int
+off(void)
+{
+  return 0; /* never be turned off */
+}
+
+static int
+max_payload(void)
+{
+  return TEST_MAC_MAX_PAYLOAD_LEN;
+}
+
 const struct mac_driver test_mac_driver = {
   "Test MAC",
   init,
   send,
-  NULL,
-  NULL,
-  NULL
+  input,
+  on,
+  off,
+  max_payload,
 };

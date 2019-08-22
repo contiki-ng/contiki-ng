@@ -53,43 +53,54 @@
 /* TI-RTOS RF Mode Object */
 RF_Mode rf_ieee_mode =
 {
-  .rfMode = RF_MODE_IEEE_15_4,
+  .rfMode = RF_MODE_MULTIPLE,
   .cpePatchFxn = &rf_patch_cpe_ieee,
   .mcePatchFxn = 0,
   .rfePatchFxn = 0,
-};
-/*---------------------------------------------------------------------------*/
-/*
- * CMD_RADIO_SETUP must be configured with default TX power value
- * in the .txPower field.
- */
-#define DEFAULT_TX_POWER    0x9330 /* 5 dBm */
-/*---------------------------------------------------------------------------*/
+};/*---------------------------------------------------------------------------*/
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
 {
-                                  /* override_synth_ieee_15_4.xml */
-  HW_REG_OVERRIDE(0x4038,0x0035), /* Synth: Set recommended RTRIM to 5 */
-  (uint32_t)0x000784A3,           /* Synth: Set Fref to 3.43 MHz */
-  (uint32_t)0xA47E0583,           /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0xEAE00603,           /* Synth: Set loop bandwidth after lock to 80 kHz */
-  (uint32_t)0x00010623,           /* Synth: Set loop bandwidth after lock to 80 kHz */
-  HW32_ARRAY_OVERRIDE(0x405C,1),  /* Synth: Configure PLL bias */
-  (uint32_t)0x1801F800,           /* Synth: Configure PLL bias */
-  HW32_ARRAY_OVERRIDE(0x402C,1),  /* Synth: Configure PLL latency */
-  (uint32_t)0x00608402,           /* Synth: Configure PLL latency */
-  (uint32_t)0x02010403,           /* Synth: Use 24 MHz XOSC as synth clock, enable extra PLL filtering */
-  HW32_ARRAY_OVERRIDE(0x4034,1),  /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x177F0408,           /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x38000463,           /* Synth: Configure extra PLL filtering */
-                                  /* override_phy_ieee_15_4.xml */
-  (uint32_t)0x05000243,           /* Synth: Increase synth programming timeout */
-  (uint32_t)0x002082C3,           /* Rx: Adjust Rx FIFO threshold to avoid overflow */
-                                  /* override_frontend_id.xml */
-  (uint32_t)0x000288A3,           /* Rx: Set RSSI offset to adjust reported RSSI by -2 dB */
-  (uint32_t)0x000F8883,           /* Rx: Configure LNA bias current trim offset */
-  HW_REG_OVERRIDE(0x50DC,0x002B), /* Rx: Adjust AGC DC filter */
-  (uint32_t)0xFFFFFFFF,
+  // override_synth_ieee_15_4.xml
+  // Synth: Set recommended RTRIM to 5
+  HW_REG_OVERRIDE(0x4038,0x0035),
+  // Synth: Set Fref to 3.43 MHz
+  (uint32_t)0x000784A3,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xA47E0583,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0xEAE00603,
+  // Synth: Set loop bandwidth after lock to 80 kHz
+  (uint32_t)0x00010623,
+  // Synth: Configure PLL bias
+  HW32_ARRAY_OVERRIDE(0x405C,1),
+  // Synth: Configure PLL bias
+  (uint32_t)0x1801F800,
+  // Synth: Configure PLL latency
+  HW32_ARRAY_OVERRIDE(0x402C,1),
+  // Synth: Configure PLL latency
+  (uint32_t)0x00608402,
+  // Synth: Use 24 MHz XOSC as synth clock, enable extra PLL filtering
+  (uint32_t)0x02010403,
+  // Synth: Configure extra PLL filtering
+  HW32_ARRAY_OVERRIDE(0x4034,1),
+  // Synth: Configure extra PLL filtering
+  (uint32_t)0x177F0408,
+  // Synth: Configure extra PLL filtering
+  (uint32_t)0x38000463,
+  // override_phy_ieee_15_4.xml
+  // Synth: Increase synth programming timeout
+  (uint32_t)0x05000243,
+  // Rx: Adjust Rx FIFO threshold to avoid overflow
+  (uint32_t)0x002082C3,
+  // override_frontend_id.xml
+  // Rx: Set RSSI offset to adjust reported RSSI by -2 dB
+  (uint32_t)0x000288A3,
+  // Rx: Configure LNA bias current trim offset
+  (uint32_t)0x000F8883,
+  // Rx: Adjust AGC DC filter
+  HW_REG_OVERRIDE(0x50DC,0x002B),
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
@@ -107,11 +118,11 @@ rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
   .condition.nSkip = 0x0,
   .mode = 0x01,
   .__dummy0 = 0x00,
-  .config.frontEndMode = 0x0,
-  .config.biasMode = 0x0,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = DEFAULT_TX_POWER, /* 5 dBm default */
+  .txPower = 0x9330, /* set by driver */
   .pRegOverride = rf_ieee_overrides,
 };
 /*---------------------------------------------------------------------------*/

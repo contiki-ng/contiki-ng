@@ -29,6 +29,13 @@
  * This file is part of the Contiki operating system.
  *
  */
+/**
+ * \addtogroup net-layer
+ * @{
+ *
+ * \defgroup routing An API for routing
+ * @{
+*/
 
 /**
  * \file
@@ -57,7 +64,7 @@ struct routing_driver {
   /**
    * Set the prefix, for nodes that will operate as root
    *
-   * \param prefix The prefix. If NULL, UIP_DS6_DEFAULT_PREFIX is used instead
+   * \param prefix The prefix. If NULL, uip_ds6_default_prefix() is used instead
    * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
   */
   void (* root_set_prefix)(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
@@ -119,8 +126,10 @@ struct routing_driver {
   void (* local_repair)(const char *str);
   /**
    * Removes all extension headers that pertain to the routing protocol.
+   *
+   * \return true in case of success, false otherwise
   */
-  void (* ext_header_remove)(void);
+  bool (* ext_header_remove)(void);
   /**
    * Adds/updates routing protocol extension headers to current uIP packet.
    *
@@ -176,3 +185,7 @@ struct routing_driver {
 };
 
 #endif /* ROUTING_H_ */
+/**
+ * @}
+ * @}
+ */

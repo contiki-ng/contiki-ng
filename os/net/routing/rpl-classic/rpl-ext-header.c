@@ -515,38 +515,60 @@ insert_hbh_header(const rpl_instance_t *instance)
   return update_hbh_header();
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 rpl_ext_header_remove(void)
 {
   uint8_t *prev_proto_ptr;
   uint8_t protocol;
-  uint8_t ext_len;
+  uint16_t ext_len;
   uint8_t *next_header;
   struct uip_ext_hdr *ext_ptr;
   struct uip_ext_hdr_opt *opt_ptr;
 
   next_header = uipbuf_get_next_header(uip_buf, uip_len, &protocol, true);
+  if(next_header == NULL) {
+    return true;
+  }
   ext_ptr = (struct uip_ext_hdr *)next_header;
   prev_proto_ptr = &UIP_IP_BUF->proto;
-  while(next_header != NULL && uip_is_proto_ext_hdr(protocol)) {
+
+  while(uip_is_proto_ext_hdr(protocol)) {
     opt_ptr = (struct uip_ext_hdr_opt *)(next_header + 2);
-    if(protocol == UIP_PROTO_ROUTING || (protocol == UIP_PROTO_HBHO && opt_ptr->type == UIP_EXT_HDR_OPT_RPL)) {
+    if(protocol == UIP_PROTO_ROUTING ||
+       (protocol == UIP_PROTO_HBHO && opt_ptr->type == UIP_EXT_HDR_OPT_RPL)) {
       /* Remove ext header */
       *prev_proto_ptr = ext_ptr->next;
       ext_len = ext_ptr->len * 8 + 8;
-      uipbuf_add_ext_hdr(-ext_len);
-      /* Update length field and rest of packer to the "left" */
+      if(uipbuf_add_ext_hdr(-ext_len) == false) {
+        return false;
+      }
+
+      /* Update length field and rest of packet to the "left" */
       uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
-      memmove(next_header, next_header + ext_len, uip_len - (next_header - uip_buf));
+      if(uip_len <= next_header - uip_buf) {
+        /* No more data to move. */
+        return false;
+      }
+      memmove(next_header, next_header + ext_len,
+              uip_len - (next_header - uip_buf));
+
       /* Update loop variables */
       protocol = *prev_proto_ptr;
     } else {
       /* move to the ext hdr */
-      next_header = uipbuf_get_next_header(next_header, uip_len - (next_header - uip_buf), &protocol, false);
+      next_header = uipbuf_get_next_header(next_header,
+                                           uip_len - (next_header - uip_buf),
+                                           &protocol, false);
+      if(next_header == NULL) {
+        /* Processing finished. */
+        break;
+      }
       ext_ptr = (struct uip_ext_hdr *)next_header;
       prev_proto_ptr = &ext_ptr->next;
     }
   }
+
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 int

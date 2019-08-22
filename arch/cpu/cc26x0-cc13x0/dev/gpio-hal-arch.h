@@ -54,21 +54,21 @@
 /*---------------------------------------------------------------------------*/
 #define gpio_hal_arch_init()               do { /* Do nothing */ } while(0)
 
-#define gpio_hal_arch_interrupt_enable(p)  interrupt_enable(p)
+#define gpio_hal_arch_interrupt_enable(port, pin)  interrupt_enable(pin)
+#define gpio_hal_arch_interrupt_disable(port, pin) ti_lib_ioc_int_disable(pin)
 
-#define gpio_hal_arch_interrupt_disable(p) ti_lib_ioc_int_disable(p)
-#define gpio_hal_arch_pin_set_input(p)     ti_lib_ioc_pin_type_gpio_input(p)
-#define gpio_hal_arch_pin_set_output(p)    ti_lib_ioc_pin_type_gpio_output(p)
+#define gpio_hal_arch_pin_set_input(port, pin)     ti_lib_ioc_pin_type_gpio_input(pin)
+#define gpio_hal_arch_pin_set_output(port, pin)    ti_lib_ioc_pin_type_gpio_output(pin)
 
-#define gpio_hal_arch_set_pin(p)           ti_lib_gpio_set_dio(p)
-#define gpio_hal_arch_clear_pin(p)         ti_lib_gpio_clear_dio(p)
-#define gpio_hal_arch_toggle_pin(p)        ti_lib_gpio_toggle_dio(p)
-#define gpio_hal_arch_write_pin(p, v)      ti_lib_gpio_write_dio(p, v)
+#define gpio_hal_arch_set_pin(port, pin)           ti_lib_gpio_set_dio(pin)
+#define gpio_hal_arch_clear_pin(port, pin)         ti_lib_gpio_clear_dio(pin)
+#define gpio_hal_arch_toggle_pin(port, pin)        ti_lib_gpio_toggle_dio(pin)
+#define gpio_hal_arch_write_pin(port, pin, v)      ti_lib_gpio_write_dio(pin, v)
 
-#define gpio_hal_arch_set_pins(p)          ti_lib_gpio_set_multi_dio(p)
-#define gpio_hal_arch_clear_pins(p)        ti_lib_gpio_clear_multi_dio(p)
-#define gpio_hal_arch_toggle_pins(p)       ti_lib_gpio_toggle_multi_dio(p)
-#define gpio_hal_arch_write_pins(p, v)     ti_lib_gpio_write_multi_dio(p, v)
+#define gpio_hal_arch_set_pins(port, pin)          ti_lib_gpio_set_multi_dio(pin)
+#define gpio_hal_arch_clear_pins(port, pin)        ti_lib_gpio_clear_multi_dio(pin)
+#define gpio_hal_arch_toggle_pins(port, pin)       ti_lib_gpio_toggle_multi_dio(pin)
+#define gpio_hal_arch_write_pins(port, pin, v)     ti_lib_gpio_write_multi_dio(pin, v)
 /*---------------------------------------------------------------------------*/
 static inline void
 interrupt_enable(gpio_hal_pin_t pin)

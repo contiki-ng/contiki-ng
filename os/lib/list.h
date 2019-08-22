@@ -60,6 +60,7 @@
  * list with list_remove(). The head and tail of a list can be
  * extracted using list_head() and list_tail(), respectively.
  *
+ * This library is not safe to be used within an interrupt context.
  * @{
  */
 

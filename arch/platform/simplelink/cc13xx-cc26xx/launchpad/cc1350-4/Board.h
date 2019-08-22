@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,16 +33,17 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC1350_LAUNCHXL_433
-#define BOARD_STRING    "TI CC1350-433 LaunchPad"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <ti/drivers/Board.h>
 #include "CC1350_LAUNCHXL_433.h"
 
-#define Board_initGeneral()      CC1350_LAUNCHXL_433_initGeneral()
+#define Board_CC1350_LAUNCHXL_433
+#define BOARD_STRING            "TI CC1350-433 LaunchPad"
+
+#define Board_initGeneral()      Board_init()  /* deprecated */
 #define Board_shutDownExtFlash() CC1350_LAUNCHXL_433_shutDownExtFlash()
 #define Board_wakeUpExtFlash()   CC1350_LAUNCHXL_433_wakeUpExtFlash()
 
@@ -56,6 +57,13 @@ extern "C" {
 #define Board_ADCBUF0CHANNEL1   CC1350_LAUNCHXL_433_ADCBUF0CHANNEL1
 
 #define Board_CRYPTO0           CC1350_LAUNCHXL_433_CRYPTO0
+#define Board_AESCCM0           CC1350_LAUNCHXL_433_AESCCM0
+#define Board_AESGCM0           CC1350_LAUNCHXL_433_AESGCM0
+#define Board_AESCBC0           CC1350_LAUNCHXL_433_AESCBC0
+#define Board_AESCTR0           CC1350_LAUNCHXL_433_AESCTR0
+#define Board_AESECB0           CC1350_LAUNCHXL_433_AESECB0
+#define Board_AESCTRDRBG0       CC1350_LAUNCHXL_433_AESCTRDRBG0
+#define Board_TRNG0             CC1350_LAUNCHXL_433_TRNG0
 
 #define Board_DIO0              CC1350_LAUNCHXL_433_DIO0
 #define Board_DIO1_RFSW         CC1350_LAUNCHXL_433_DIO1_RF_SUB1GHZ
@@ -109,6 +117,13 @@ extern "C" {
 #define Board_I2C0              CC1350_LAUNCHXL_433_I2C0
 #define Board_I2C_TMP           CC1350_LAUNCHXL_433_I2C0
 
+#define Board_I2S0              CC1350_LAUNCHXL_433_I2S0
+#define Board_I2S_ADO           CC1350_LAUNCHXL_433_I2S_ADO
+#define Board_I2S_ADI           CC1350_LAUNCHXL_433_I2S_ADI
+#define Board_I2S_BCLK          CC1350_LAUNCHXL_433_I2S_BCLK
+#define Board_I2S_MCLK          CC1350_LAUNCHXL_433_I2S_MCLK
+#define Board_I2S_WCLK          CC1350_LAUNCHXL_433_I2S_WCLK
+
 #define Board_PIN_BUTTON0       CC1350_LAUNCHXL_433_PIN_BTN1
 #define Board_PIN_BUTTON1       CC1350_LAUNCHXL_433_PIN_BTN2
 #define Board_PIN_BTN1          CC1350_LAUNCHXL_433_PIN_BTN1
@@ -152,10 +167,6 @@ extern "C" {
 #define Board_UART0             CC1350_LAUNCHXL_433_UART0
 
 #define Board_WATCHDOG0         CC1350_LAUNCHXL_433_WATCHDOG0
-
-/* Board specific I2C addresses */
-#define Board_TMP_ADDR          (0x40)
-#define Board_SENSORS_BP_TMP_ADDR Board_TMP_ADDR
 
 #ifdef __cplusplus
 }

@@ -60,7 +60,7 @@ PROCESS_THREAD(node_process, ev, data)
 
   is_coordinator = 0;
 
-#if CONTIKI_TARGET_COOJA
+#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1
   is_coordinator = (node_id == 1);
 #endif
 

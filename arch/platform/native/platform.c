@@ -160,13 +160,21 @@ stdin_set_fd(fd_set *rset, fd_set *wset)
   FD_SET(STDIN_FILENO, rset);
   return 1;
 }
+
+static int (*input_handler)(unsigned char c);
+
+void native_uart_set_input(int (*input)(unsigned char c)) {
+  input_handler = input;
+}
+
+
 static void
 stdin_handle_fd(fd_set *rset, fd_set *wset)
 {
   char c;
   if(FD_ISSET(STDIN_FILENO, rset)) {
     if(read(STDIN_FILENO, &c, 1) > 0) {
-      serial_line_input_byte(c);
+      input_handler(c);
     }
   }
 }
@@ -196,16 +204,13 @@ set_lladdr(void)
 static void
 set_global_address(void)
 {
-  static uip_ipaddr_t ipaddr;
-  static uip_ipaddr_t *prefix = NULL;
+  uip_ipaddr_t ipaddr;
+  const uip_ipaddr_t *default_prefix = uip_ds6_default_prefix();
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
-  if(prefix == NULL) {
-    uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-  } else {
-    memcpy(&ipaddr, prefix, 8);
-  }
+  uip_ip6addr_copy(&ipaddr, default_prefix);
+
   /* Assumes that the uip_lladdr is set */
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
@@ -215,7 +220,8 @@ set_global_address(void)
   LOG_INFO_("\n");
 
   /* set the PREFIX::1 address to the IF */
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
+  uip_ip6addr_copy(&ipaddr, default_prefix);
+  ipaddr.u8[15] = 1;
   uip_ds6_defrt_add(&ipaddr, 0);
 }
 #endif
@@ -257,6 +263,11 @@ platform_init_stage_two()
 {
   set_lladdr();
   serial_line_init();
+
+  if (NULL == input_handler) {
+    native_uart_set_input(serial_line_input_byte);
+  }
+
 }
 /*---------------------------------------------------------------------------*/
 void

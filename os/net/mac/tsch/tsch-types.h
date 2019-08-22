@@ -142,6 +142,12 @@ enum tsch_timeslot_timing_elements {
   tsch_ts_elements_count, /* Not a timing element */
 };
 
+/** \brief TSCH timeslot timing elements in rtimer ticks */
+typedef rtimer_clock_t tsch_timeslot_timing_ticks[tsch_ts_elements_count];
+
+/** \brief TSCH timeslot timing elements in micro-seconds */
+typedef uint16_t tsch_timeslot_timing_usec[tsch_ts_elements_count];
+
 /** \brief Stores data about an incoming packet */
 struct input_packet {
   uint8_t payload[TSCH_PACKET_MAX_LEN]; /* Packet payload */

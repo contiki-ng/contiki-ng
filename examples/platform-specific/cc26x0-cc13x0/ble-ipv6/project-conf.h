@@ -53,7 +53,6 @@
 #define BLE_CONF_ADV_INTERVAL         25
 
 /*/ * 6LoWPAN settings * / */
-#define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD       1280
 #define SICSLOWPAN_CONF_COMPRESSION           SICSLOWPAN_COMPRESSION_6LORH
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD   0  /* always use compression */
 #define SICSLOWPAN_CONF_FRAG                    0

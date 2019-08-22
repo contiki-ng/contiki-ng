@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,10 @@
 #include <ti/drivers/rf/RF.h>
 #include <ti/drivers/pin/PINCC26XX.h>
 
+#include <ti/drivers/Board.h>
+
 #include "Board.h"
+
 
 /*
  *  ======== CC1352P1_LAUNCHXL_sendExtFlashByte ========
@@ -170,7 +173,7 @@ void initAntennaSwitch()
 }
 
 /*
- * ======== rfDriverCallback ========
+ * ======== CC1352P1_LAUNCHXL_rfDriverCallback ========
  * Sets up the antenna switch depending on the current PHY configuration.
  * Truth table:
  *
@@ -183,6 +186,10 @@ void initAntennaSwitch()
  */
 void rfDriverCallback(RF_Handle client, RF_GlobalEvent events, void *arg)
 {
+    /* Local variable. */
+    bool    sub1GHz   = false;
+    uint8_t loDivider = 0;
+
     /* Switch off all paths first. Needs to be done anyway in every sub-case below. */
     PINCC26XX_setOutputValue(Board_RF_24GHZ, 0);
     PINCC26XX_setOutputValue(Board_RF_HIGH_PA, 0);
@@ -195,15 +202,36 @@ void rfDriverCallback(RF_Handle client, RF_GlobalEvent events, void *arg)
         /* Decode the generic argument as a setup command. */
         RF_RadioSetup* setupCommand = (RF_RadioSetup*)arg;
 
-        if (setupCommand->common.commandNo == CMD_PROP_RADIO_DIV_SETUP) {
+        switch (setupCommand->common.commandNo) {
+            case (CMD_RADIO_SETUP):
+            case (CMD_BLE5_RADIO_SETUP):
+                    loDivider = RF_LODIVIDER_MASK & setupCommand->common.loDivider;
+
+                    /* Sub-1GHz front-end. */
+                    if (loDivider != 0) {
+                        sub1GHz = true;
+                    }
+                    break;
+            case (CMD_PROP_RADIO_DIV_SETUP):
+                    loDivider = RF_LODIVIDER_MASK & setupCommand->prop_div.loDivider;
+
+                    /* Sub-1GHz front-end. */
+                    if (loDivider != 0) {
+                        sub1GHz = true;
+                    }
+                    break;
+            default:break;
+        }
+
+        if (sub1GHz) {
             /* Sub-1 GHz */
             if (paType == RF_TxPowerTable_HighPA) {
                 /* PA enable --> HIGH PA
                  * LNA enable --> Sub-1 GHz
                  */
                 PINCC26XX_setMux(antennaPins, Board_RF_24GHZ, PINCC26XX_MUX_GPIO);
-                // Note: RFC_GPO3 is a work-around because the RFC_GPO1 (PA enable signal) is sometimes not
-                //       de-asserted on CC1352 Rev A.
+                /* Note: RFC_GPO3 is a work-around because the RFC_GPO1 (PA enable signal) is sometimes not
+                         de-asserted on CC1352 Rev A. */
                 PINCC26XX_setMux(antennaPins, Board_RF_HIGH_PA, PINCC26XX_MUX_RFC_GPO3);
                 PINCC26XX_setMux(antennaPins, Board_RF_SUB1GHZ, PINCC26XX_MUX_RFC_GPO0);
             } else {
@@ -221,8 +249,8 @@ void rfDriverCallback(RF_Handle client, RF_GlobalEvent events, void *arg)
                  * LNA enable --> 2.4 GHz
                  */
                 PINCC26XX_setMux(antennaPins, Board_RF_24GHZ, PINCC26XX_MUX_RFC_GPO0);
-                // Note: RFC_GPO3 is a work-around because the RFC_GPO1 (PA enable signal) is sometimes not
-                //       de-asserted on CC1352 Rev A.
+                /* Note: RFC_GPO3 is a work-around because the RFC_GPO1 (PA enable signal) is sometimes not
+                         de-asserted on CC1352 Rev A. */
                 PINCC26XX_setMux(antennaPins, Board_RF_HIGH_PA, PINCC26XX_MUX_RFC_GPO3);
                 PINCC26XX_setMux(antennaPins, Board_RF_SUB1GHZ, PINCC26XX_MUX_GPIO);
             } else {

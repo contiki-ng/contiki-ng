@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650_LAUNCHXL
 
 /* Mapping of pins to board signals using general board aliases
- *      <board signal alias>                  <pin mapping>
+ *      <board signal alias>        <pin mapping>   <comments>
  */
 
 /* Analog Capable DIOs */
@@ -78,7 +78,7 @@ extern const PIN_Config BoardGpioInitTable[];
 
 /* Digital IOs */
 #define CC2650_LAUNCHXL_DIO0                  IOID_0
-#define CC2650_LAUNCHXL_DIO1_RFSW             IOID_1
+#define CC2650_LAUNCHXL_DIO1                  IOID_1
 #define CC2650_LAUNCHXL_DIO12                 IOID_12
 #define CC2650_LAUNCHXL_DIO15                 IOID_15
 #define CC2650_LAUNCHXL_DIO16_TDO             IOID_16
@@ -97,6 +97,13 @@ extern const PIN_Config BoardGpioInitTable[];
 /* I2C */
 #define CC2650_LAUNCHXL_I2C0_SCL0             IOID_4
 #define CC2650_LAUNCHXL_I2C0_SDA0             IOID_5
+
+/* I2S */
+#define CC2650_LAUNCHXL_I2S_ADO               IOID_25
+#define CC2650_LAUNCHXL_I2S_ADI               IOID_26
+#define CC2650_LAUNCHXL_I2S_BCLK              IOID_27
+#define CC2650_LAUNCHXL_I2S_MCLK              PIN_UNASSIGNED
+#define CC2650_LAUNCHXL_I2S_WCLK              IOID_28
 
 /* LEDs */
 #define CC2650_LAUNCHXL_PIN_LED_ON            1
@@ -123,7 +130,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650_LAUNCHXL_SPI0_MISO             IOID_8          /* RF1.20 */
 #define CC2650_LAUNCHXL_SPI0_MOSI             IOID_9          /* RF1.18 */
 #define CC2650_LAUNCHXL_SPI0_CLK              IOID_10         /* RF1.16 */
-#define CC2650_LAUNCHXL_SPI0_CSN              PIN_UNASSIGNED
+#define CC2650_LAUNCHXL_SPI0_CSN              IOID_11
 #define CC2650_LAUNCHXL_SPI1_MISO             PIN_UNASSIGNED
 #define CC2650_LAUNCHXL_SPI1_MOSI             PIN_UNASSIGNED
 #define CC2650_LAUNCHXL_SPI1_CLK              PIN_UNASSIGNED
@@ -158,7 +165,7 @@ void CC2650_LAUNCHXL_wakeUpExtFlash(void);
 
 /*!
  *  @def    CC2650_LAUNCHXL_ADCBufName
- *  @brief  Enum of ADCs
+ *  @brief  Enum of ADCBufs
  */
 typedef enum CC2650_LAUNCHXL_ADCBufName {
     CC2650_LAUNCHXL_ADCBUF0 = 0,
@@ -215,6 +222,76 @@ typedef enum CC2650_LAUNCHXL_CryptoName {
 
     CC2650_LAUNCHXL_CRYPTOCOUNT
 } CC2650_LAUNCHXL_CryptoName;
+
+/*!
+ *  @def    CC2650_LAUNCHXL_AESCCMName
+ *  @brief  Enum of AESCCM names
+ */
+typedef enum CC2650_LAUNCHXL_AESCCMName {
+    CC2650_LAUNCHXL_AESCCM0 = 0,
+
+    CC2650_LAUNCHXL_AESCCMCOUNT
+} CC2650_LAUNCHXL_AESCCMName;
+
+/*!
+ *  @def    CC2650_LAUNCHXL_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC2650_LAUNCHXL_AESGCMName {
+    CC2650_LAUNCHXL_AESGCM0 = 0,
+
+    CC2650_LAUNCHXL_AESGCMCOUNT
+} CC2650_LAUNCHXL_AESGCMName;
+
+/*!
+ *  @def    CC2650_LAUNCHXL_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC2650_LAUNCHXL_AESCBCName {
+    CC2650_LAUNCHXL_AESCBC0 = 0,
+
+    CC2650_LAUNCHXL_AESCBCCOUNT
+} CC2650_LAUNCHXL_AESCBCName;
+
+/*!
+ *  @def    CC2650_LAUNCHXL_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC2650_LAUNCHXL_AESCTRName {
+    CC2650_LAUNCHXL_AESCTR0 = 0,
+
+    CC2650_LAUNCHXL_AESCTRCOUNT
+} CC2650_LAUNCHXL_AESCTRName;
+
+/*!
+ *  @def    CC2650_LAUNCHXL_AESECBName
+ *  @brief  Enum of AESECB names
+ */
+typedef enum CC2650_LAUNCHXL_AESECBName {
+    CC2650_LAUNCHXL_AESECB0 = 0,
+
+    CC2650_LAUNCHXL_AESECBCOUNT
+} CC2650_LAUNCHXL_AESECBName;
+
+/*!
+ *  @def    CC2650_LAUNCHXL_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC2650_LAUNCHXL_AESCTRDRBGName {
+    CC2650_LAUNCHXL_AESCTRDRBG0 = 0,
+
+    CC2650_LAUNCHXL_AESCTRDRBGCOUNT
+} CC2650_LAUNCHXL_AESCTRDRBGName;
+
+/*!
+ *  @def    CC2650_LAUNCHXL_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC2650_LAUNCHXL_TRNGName {
+    CC2650_LAUNCHXL_TRNG0 = 0,
+
+    CC2650_LAUNCHXL_TRNGCOUNT
+} CC2650_LAUNCHXL_TRNGName;
 
 /*!
  *  @def    CC2650_LAUNCHXL_GPIOName
@@ -275,6 +352,16 @@ typedef enum CC2650_LAUNCHXL_I2CName {
 } CC2650_LAUNCHXL_I2CName;
 
 /*!
+ *  @def    CC2650_LAUNCHXL_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC2650_LAUNCHXL_I2SName {
+    CC2650_LAUNCHXL_I2S0 = 0,
+
+    CC2650_LAUNCHXL_I2SCOUNT
+} CC2650_LAUNCHXL_I2SName;
+
+/*!
  *  @def    CC2650_LAUNCHXL_NVSName
  *  @brief  Enum of NVS names
  */
@@ -330,16 +417,6 @@ typedef enum CC2650_LAUNCHXL_SPIName {
 
     CC2650_LAUNCHXL_SPICOUNT
 } CC2650_LAUNCHXL_SPIName;
-
-/*!
- *  @def    CC2650_LAUNCHXL_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC2650_LAUNCHXL_TRNGName {
-    CC2650_LAUNCHXL_TRNG0 = 0,
-
-    CC2650_LAUNCHXL_TRNGCOUNT
-} CC2650_LAUNCHXL_TRNGName;
 
 /*!
  *  @def    CC2650_LAUNCHXL_UARTName

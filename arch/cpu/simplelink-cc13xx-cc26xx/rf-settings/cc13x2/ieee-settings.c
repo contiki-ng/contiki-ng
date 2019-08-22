@@ -51,8 +51,7 @@
 #include DeviceFamily_constructPath(driverlib/rf_mailbox.h)
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_ieee_802_15_4.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_mce_ieee_802_15_4.h)
+#include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_multi_protocol.h)
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
@@ -62,108 +61,23 @@
 RF_Mode rf_ieee_mode =
 {
   .rfMode = RF_MODE_AUTO,
-  .cpePatchFxn = &rf_patch_cpe_ieee_802_15_4,
-  .mcePatchFxn = &rf_patch_mce_ieee_802_15_4,
+  .cpePatchFxn = &rf_patch_cpe_multi_protocol,
+  .mcePatchFxn = 0,
   .rfePatchFxn = 0,
 };
 /*---------------------------------------------------------------------------*/
 #if defined(DEVICE_CC1352R)
-/*
- * CMD_RADIO_SETUP must be configured with default TX power value
- * in the .txPower field.
- */
-#define DEFAULT_TX_POWER    0x941E /* 5 dBm */
-/*---------------------------------------------------------------------------*/
+
 /* Overrides for CMD_RADIO_SETUP */
 uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
 {
-                                  /* override_ieee_802_15_4.xml */
-  MCE_RFE_OVERRIDE(1,0,0,0,1,0),  /* PHY: Use MCE RAM patch, RFE ROM bank 1 */
-  (uint32_t)0x02400403,           /* Synth: Use 48 MHz crystal, enable extra PLL filtering */
-  (uint32_t)0x001C8473,           /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x00088433,           /* Synth: Configure synth hardware */
-  (uint32_t)0x00038793,           /* Synth: Set minimum RTRIM to 3 */
-  HW32_ARRAY_OVERRIDE(0x4004,1),  /* Synth: Configure faster calibration */
-  (uint32_t)0x1C0C0618,           /* Synth: Configure faster calibration */
-  (uint32_t)0xC00401A1,           /* Synth: Configure faster calibration */
-  (uint32_t)0x00010101,           /* Synth: Configure faster calibration */
-  (uint32_t)0xC0040141,           /* Synth: Configure faster calibration */
-  (uint32_t)0x00214AD3,           /* Synth: Configure faster calibration */
-  (uint32_t)0x02980243,           /* Synth: Decrease synth programming time-out (0x0298 RAT ticks = 166 us) */
-                                  /* DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0xFCFC08C3,           /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0x000F8883,           /* Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0) */
-  (uint32_t)0xFFFFFFFF,
+  // override_ieee_802_15_4.xml
+  // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0x3 (DITHER_EN=0 and IPEAK=3).
+  (uint32_t)0x00F388D3,
+  // Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0)
+  (uint32_t)0x000F8883,
+  (uint32_t)0xFFFFFFFF
 };
-
-#endif /* defined(DEVICE_CC1352R) */
-/*---------------------------------------------------------------------------*/
-#if defined(DEVICE_CC1352P)
-
-#if RF_CONF_TXPOWER_HIGH_PA
-/*
- * CMD_PROP_RADIO_DIV_SETUP must be configured with default TX power value
- * in the .txPower field. For High PA, this must be 0xFFFF.
- */
-#define DEFAULT_TX_POWER    0xFFFF /* High PA */
-/*---------------------------------------------------------------------------*/
-/* Overrides for CMD_RADIO_SETUP with high PA */
-uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
-{
-                                  /* override_ieee_802_15_4.xml */
-  MCE_RFE_OVERRIDE(1,0,0,0,1,0),  /* PHY: Use MCE RAM patch, RFE ROM bank 1 */
-  (uint32_t)0x02400403,           /* Synth: Use 48 MHz crystal, enable extra PLL filtering */
-  (uint32_t)0x001C8473,           /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x00088433,           /* Synth: Configure synth hardware */
-  (uint32_t)0x00038793,           /* Synth: Set minimum RTRIM to 3 */
-  HW32_ARRAY_OVERRIDE(0x4004,1),  /* Synth: Configure faster calibration */
-  (uint32_t)0x1C0C0618,           /* Synth: Configure faster calibration */
-  (uint32_t)0xC00401A1,           /* Synth: Configure faster calibration */
-  (uint32_t)0x00010101,           /* Synth: Configure faster calibration */
-  (uint32_t)0xC0040141,           /* Synth: Configure faster calibration */
-  (uint32_t)0x00214AD3,           /* Synth: Configure faster calibration */
-  (uint32_t)0x02980243,           /* Synth: Decrease synth programming time-out (0x0298 RAT ticks = 166 us) */
-                                  /* DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0xFCFC08C3,           /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0x000F8883,           /* Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0) */
-                                  /* override_frontend_xd.xml */
-                                  /* TX power override */
-  (uint32_t)0xFD6EE02B,           /* txHighPA=0x3F5BB8 */
-  (uint32_t)0xFFFFFFFF,
-};
-/*---------------------------------------------------------------------------*/
-#else
-/*
- * CMD_RADIO_SETUP must be configured with default TX power value
- * in the .txPower field.
- */
-#define DEFAULT_TX_POWER    0x941E /* 5 dBm */
-/*---------------------------------------------------------------------------*/
-/* Overrides for CMD_RADIO_SETUP with default PA */
-uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
-{
-                                  /* override_ieee_802_15_4.xml */
-  MCE_RFE_OVERRIDE(1,0,0,0,1,0),  /* PHY: Use MCE RAM patch, RFE ROM bank 1 */
-  (uint32_t)0x02400403,           /* Synth: Use 48 MHz crystal, enable extra PLL filtering */
-  (uint32_t)0x001C8473,           /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x00088433,           /* Synth: Configure synth hardware */
-  (uint32_t)0x00038793,           /* Synth: Set minimum RTRIM to 3 */
-  HW32_ARRAY_OVERRIDE(0x4004,1),  /* Synth: Configure faster calibration */
-  (uint32_t)0x1C0C0618,           /* Synth: Configure faster calibration */
-  (uint32_t)0xC00401A1,           /* Synth: Configure faster calibration */
-  (uint32_t)0x00010101,           /* Synth: Configure faster calibration */
-  (uint32_t)0xC0040141,           /* Synth: Configure faster calibration */
-  (uint32_t)0x00214AD3,           /* Synth: Configure faster calibration */
-  (uint32_t)0x02980243,           /* Synth: Decrease synth programming time-out (0x0298 RAT ticks = 166 us) */
-                                  /* DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0xFCFC08C3,           /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0x000F8883,           /* Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0) */
-  (uint32_t)0xFFFFFFFF,
-};
-
-#endif /* RF_CONF_TXPOWER_HIGH_PA */
-
-#endif /* defined(DEVICE_CC1352P) */
 /*---------------------------------------------------------------------------*/
 /* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
 rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
@@ -180,13 +94,85 @@ rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup =
   .condition.nSkip = 0x0,
   .mode = 0x01,
   .loDivider = 0x00,
-  .config.frontEndMode = 0x0,
-  .config.biasMode = 0x0,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = DEFAULT_TX_POWER, /* 5 dBm default */
+  .txPower = 0x7217, /* set by driver */
   .pRegOverride = rf_ieee_overrides,
 };
+
+#endif /* defined(DEVICE_CC1352R) */
+/*---------------------------------------------------------------------------*/
+#if defined(DEVICE_CC1352P)
+
+/* Overrides for CMD_RADIO_SETUP_PA */
+uint32_t rf_ieee_overrides[] CC_ALIGN(4) =
+{
+  // override_ieee_802_15_4.xml
+  // Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0)
+  (uint32_t)0x000F8883,
+  // Tx: Set DCDC settings IPEAK=3, dither = off
+  (uint32_t)0x00F388D3,
+  (uint32_t)0xFFFFFFFF
+};
+
+/* Overrides for CMD_RADIO_SETUP_PA */
+uint32_t rf_ieee_overrides_tx_std[] CC_ALIGN(4) =
+{
+  // The TX Power element should always be the first in the list
+  TX_STD_POWER_OVERRIDE(0x7217),
+  // The ANADIV radio parameter based on the LO divider (0) and front-end (0) settings
+  (uint32_t)0x05320703,
+  // override_txstd_settings.xml
+  // Bluetooth 5: Set RTIM offset to default for standard PA
+  (uint32_t)0x00008783,
+  // Bluetooth 5: Set synth mux to default value for standard PA
+  (uint32_t)0x050206C3,
+  (uint32_t)0xFFFFFFFF
+};
+
+/* Overrides for CMD_RADIO_SETUP_PA */
+uint32_t rf_ieee_overrides_tx_20[] CC_ALIGN(4) =
+{
+  // The TX Power element should always be the first in the list
+  TX20_POWER_OVERRIDE(0x003F75F5),
+  // The ANADIV radio parameter based on the LO divider (0) and front-end (0) settings
+  (uint32_t)0x01C20703,
+  // override_tx20_settings.xml
+  // Bluetooth 5: Set RTIM offset to 3 for high power PA
+  (uint32_t)0x00038783,
+  // Bluetooth 5: Set synth mux for high power PA
+  (uint32_t)0x010206C3,
+  (uint32_t)0xFFFFFFFF
+};
+/*---------------------------------------------------------------------------*/
+/* CMD_RADIO_SETUP: Radio Setup Command for Pre-Defined Schemes */
+rfc_CMD_RADIO_SETUP_PA_t rf_cmd_ieee_radio_setup =
+{
+  .commandNo = 0x0802,
+  .status = IDLE,
+  .pNextOp = 0,
+  .startTime = 0x00000000,
+  .startTrigger.triggerType = TRIG_NOW,
+  .startTrigger.bEnaCmd = 0x0,
+  .startTrigger.triggerNo = 0x0,
+  .startTrigger.pastTrig = 0x0,
+  .condition.rule = COND_NEVER,
+  .condition.nSkip = 0x0,
+  .mode = 0x01,
+  .loDivider = 0x00,
+  .config.frontEndMode = 0x0, /* set by driver */
+  .config.biasMode = 0x0, /* set by driver */
+  .config.analogCfgMode = 0x0,
+  .config.bNoFsPowerUp = 0x0,
+  .txPower = 0x7217, /* set by driver */
+  .pRegOverride = rf_ieee_overrides,
+  .pRegOverrideTxStd = rf_ieee_overrides_tx_std,
+  .pRegOverrideTx20 = rf_ieee_overrides_tx_20,
+};
+
+#endif /* defined(DEVICE_CC1352P) */
 /*---------------------------------------------------------------------------*/
 /* CMD_FS: Frequency Synthesizer Programming Command */
 rfc_CMD_FS_t rf_cmd_ieee_fs =

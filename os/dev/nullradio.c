@@ -1,6 +1,10 @@
 #include "dev/nullradio.h"
-
-
+/*---------------------------------------------------------------------------*/
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * "transmission".
+ */
+#define MAX_PAYLOAD_LEN ((unsigned short) - 1)
 /*---------------------------------------------------------------------------*/
 static int
 init(void)
@@ -66,7 +70,17 @@ off(void)
 static radio_result_t
 get_value(radio_param_t param, radio_value_t *value)
 {
-  return RADIO_RESULT_NOT_SUPPORTED;
+  if(!value) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+
+  switch(param) {
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
+    return RADIO_RESULT_OK;
+  default:
+    return RADIO_RESULT_NOT_SUPPORTED;
+  }
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t

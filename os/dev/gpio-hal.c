@@ -57,6 +57,24 @@ gpio_hal_register_handler(gpio_hal_event_handler_t *handler)
   list_add(handlers, handler);
 }
 /*---------------------------------------------------------------------------*/
+#if GPIO_HAL_PORT_PIN_NUMBERING
+/*---------------------------------------------------------------------------*/
+void
+gpio_hal_event_handler(gpio_hal_port_t port, gpio_hal_pin_mask_t pins)
+{
+  gpio_hal_event_handler_t *this;
+
+  for(this = list_head(handlers); this != NULL; this = this->next) {
+    if((port == this->port) && (pins & this->pin_mask)) {
+      if(this->handler != NULL) {
+        this->handler(port, pins & this->pin_mask);
+      }
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+#else
+/*---------------------------------------------------------------------------*/
 void
 gpio_hal_event_handler(gpio_hal_pin_mask_t pins)
 {
@@ -71,6 +89,8 @@ gpio_hal_event_handler(gpio_hal_pin_mask_t pins)
   }
 }
 /*---------------------------------------------------------------------------*/
+#endif /* GPIO_HAL_PORT_PIN_NUMBERING */
+/*---------------------------------------------------------------------------*/
 void
 gpio_hal_init()
 {
@@ -81,20 +101,35 @@ gpio_hal_init()
 #if GPIO_HAL_ARCH_SW_TOGGLE
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_toggle_pin(gpio_hal_pin_t pin)
+gpio_hal_arch_port_toggle_pin(gpio_hal_port_t port, gpio_hal_pin_t pin)
+{
+  gpio_hal_arch_write_pin(port, pin, gpio_hal_arch_read_pin(port, pin) ^ 1);
+}
+/*---------------------------------------------------------------------------*/
+void
+gpio_hal_arch_port_toggle_pins(gpio_hal_port_t port, gpio_hal_pin_mask_t pins)
+{
+  gpio_hal_arch_write_pins(port, pins, ~gpio_hal_arch_read_pins(port, pins));
+}
+/*---------------------------------------------------------------------------*/
+void
+gpio_hal_arch_no_port_toggle_pin(gpio_hal_pin_t pin)
 {
   if(pin >= GPIO_HAL_PIN_COUNT) {
     LOG_ERR("Pin %u out of bounds\n", pin);
     return;
   }
 
-  gpio_hal_arch_write_pin(pin, gpio_hal_arch_read_pin(pin) ^ 1);
+  gpio_hal_arch_write_pin(GPIO_HAL_NULL_PORT, pin,
+                          gpio_hal_arch_read_pin(GPIO_HAL_NULL_PORT, pin) ^ 1);
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_toggle_pins(gpio_hal_pin_mask_t pins)
+gpio_hal_arch_no_port_toggle_pins(gpio_hal_pin_mask_t pins)
 {
-  gpio_hal_arch_write_pins(pins, ~gpio_hal_arch_read_pins(pins));
+  gpio_hal_arch_write_pins(GPIO_HAL_NULL_PORT, pins,
+                           ~gpio_hal_arch_read_pins(GPIO_HAL_NULL_PORT,
+                                                    pins));
 }
 /*---------------------------------------------------------------------------*/
 #endif /* GPIO_HAL_ARCH_SW_TOGGLE */

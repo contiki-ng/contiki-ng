@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,8 @@
 
 #include <ti/drivers/rf/RF.h>
 #include <ti/drivers/pin/PINCC26XX.h>
+
+#include <ti/drivers/Board.h>
 
 #include "Board.h"
 
@@ -166,21 +168,52 @@ void Board_initHook()
 
 /*
  * ======== CC1350_LAUNCHXL_433_rfDriverCallback ========
- * This is an implementation for the CC1350 launchpad which uses a
+ * This is an implementation for the CC1350 LaunchPad which uses a
  * single signal for antenna switching.
  */
 void rfDriverCallback(RF_Handle client, RF_GlobalEvent events, void *arg)
 {
+    /* Decode input arguments. */
     (void)client;
     RF_RadioSetup* setupCommand = (RF_RadioSetup*)arg;
+
+    /* Local variable. */
+    bool    sub1GHz   = false;
+    uint8_t loDivider = 0;
 
     if (events & RF_GlobalEventRadioSetup) {
         /* Power up the antenna switch */
         PINCC26XX_setOutputValue(Board_RF_POWER, 1);
 
-        if (setupCommand->common.commandNo == CMD_PROP_RADIO_DIV_SETUP) {
-            /* Sub-1 GHz, requires antenna switch high */
+        /* Decision about the frequency band shall be made based on the
+           loDivider field. */
+        switch (setupCommand->common.commandNo) {
+            case (CMD_RADIO_SETUP):
+            case (CMD_BLE5_RADIO_SETUP):
+                    loDivider = RF_LODIVIDER_MASK & setupCommand->common.loDivider;
+
+                    /* Sub-1 GHz, requires antenna switch high. */
+                    if ((loDivider != 0) && (loDivider != 2)) {
+                            sub1GHz = true;
+                    }
+                    break;
+            case (CMD_PROP_RADIO_DIV_SETUP):
+                    loDivider = RF_LODIVIDER_MASK & setupCommand->prop_div.loDivider;
+
+                    /* Sub-1 GHz, requires antenna switch high. */
+                    if ((loDivider != 0) && (loDivider != 2)) {
+                            sub1GHz = true;
+                    }
+                    break;
+            default:break;
+        }
+
+        /* Select the correct antenna. */
+        if (sub1GHz) {
             PINCC26XX_setOutputValue(Board_RF_SUB1GHZ, 1);
+        }
+        else {
+            PINCC26XX_setOutputValue(Board_RF_SUB1GHZ, 0);
         }
     }
     else if (events & RF_GlobalEventRadioPowerDown) {

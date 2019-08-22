@@ -185,12 +185,48 @@ enum {
   /* The maximum transmission power in dBm. */
   RADIO_CONST_TXPOWER_MAX,
 
+  /* A pointer to TSCH timings in micro-seconds (tsch_timeslot_timing_usec *) */
   RADIO_CONST_TSCH_TIMING,
+
+  /* The physical layer header+footer overhead in bytes, after SFD.
+   * On IEEE 802.15.4 at 2.4 GHz: 1 byte for len + 2 for CRC => 3 */
   RADIO_CONST_PHY_OVERHEAD,
+
+  /* The air time of one byte in usec, e.g. 32 for IEEE 802.15.4 at 2.4 GHz */
   RADIO_CONST_BYTE_AIR_TIME,
+
+  /* The delay in usec between a call to the radio API's transmit function and
+   * the end of SFD transmission */
   RADIO_CONST_DELAY_BEFORE_TX,
+
+  /* The delay in usec between turning on the radio and it being actually
+   * listening (able to hear a preamble) */
   RADIO_CONST_DELAY_BEFORE_RX,
+
+  /* The delay in usec between the end of SFD reception for an incoming frame
+   * and the radio API starting to return receiving_packet() != 0 */
   RADIO_CONST_DELAY_BEFORE_DETECT,
+
+  /*
+   * The maximum payload the radio driver is able to handle.
+   *
+   * This includes the MAC header and MAC payload, but not any tail bytes
+   * added automatically by the radio. For example, in the typical case of
+   * .15.4 operation at 2.4GHz, this will be 125 bytes (127 bytes minus the
+   * FCS / CRC16).
+   *
+   * This is the maximum number of bytes that:
+   *   - The MAC layer will ask the radio driver to transmit.
+   *     This corresponds to the payload_len argument of the prepare() and
+   *     send() and the transmit_len argument of transmit().
+   *   - The radio driver will deliver to the MAC layer after frame reception.
+   *     The buf_len of the read function will typically be greater than or
+   *     equal to this value.
+   *
+   * Supporting this constant in the radio driver's get_value function is
+   * mandatory.
+   */
+  RADIO_CONST_MAX_PAYLOAD_LEN,
 };
 
 /* Radio power modes */

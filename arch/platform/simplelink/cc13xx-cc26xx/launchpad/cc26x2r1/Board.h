@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,20 +33,19 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
-#define Board_CC26X2R1_LAUNCHXL
-#define BOARD_STRING    "TI CC26x2R1 LaunchPad"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <ti/drivers/Board.h>
 #include "CC26X2R1_LAUNCHXL.h"
 
-#define Board_initGeneral()     CC26X2R1_LAUNCHXL_initGeneral()
+#define Board_CC26X2R1_LAUNCHXL
+#define BOARD_STRING            "TI CC26x2R1 LaunchPad"
 
+#define Board_initGeneral()      Board_init()  /* deprecated */
 #define Board_shutDownExtFlash() CC26X2R1_LAUNCHXL_shutDownExtFlash()
-
-#define Board_wakeUpExtFlash() CC26X2R1_LAUNCHXL_wakeUpExtFlash()
+#define Board_wakeUpExtFlash()   CC26X2R1_LAUNCHXL_wakeUpExtFlash()
 
 /* These #defines allow us to reuse TI-RTOS across other device families */
 
@@ -61,8 +60,13 @@ extern "C" {
 #define Board_ECDSA0            CC26X2R1_LAUNCHXL_ECDSA0
 #define Board_ECJPAKE0          CC26X2R1_LAUNCHXL_ECJPAKE0
 #define Board_AESCCM0           CC26X2R1_LAUNCHXL_AESCCM0
+#define Board_AESGCM0           CC26X2R1_LAUNCHXL_AESGCM0
+#define Board_AESCBC0           CC26X2R1_LAUNCHXL_AESCBC0
+#define Board_AESCTR0           CC26X2R1_LAUNCHXL_AESCTR0
 #define Board_AESECB0           CC26X2R1_LAUNCHXL_AESECB0
+#define Board_AESCTRDRBG0       CC26X2R1_LAUNCHXL_AESCTRDRBG0
 #define Board_SHA20             CC26X2R1_LAUNCHXL_SHA20
+#define Board_TRNG0             CC26X2R1_LAUNCHXL_TRNG0
 
 #define Board_DIO0              CC26X2R1_LAUNCHXL_DIO0
 #define Board_DIO1_RFSW         CC26X2R1_LAUNCHXL_DIO1_RFSW
@@ -106,6 +110,12 @@ extern "C" {
 #define Board_I2C0              CC26X2R1_LAUNCHXL_I2C0
 #define Board_I2C_TMP           Board_I2C0
 
+#define Board_I2S0              CC26X2R1_LAUNCHXL_I2S0
+#define Board_I2S_ADO           CC26X2R1_LAUNCHXL_I2S_ADO
+#define Board_I2S_ADI           CC26X2R1_LAUNCHXL_I2S_ADI
+#define Board_I2S_BCLK          CC26X2R1_LAUNCHXL_I2S_BCLK
+#define Board_I2S_MCLK          CC26X2R1_LAUNCHXL_I2S_MCLK
+#define Board_I2S_WCLK          CC26X2R1_LAUNCHXL_I2S_WCLK
 #define Board_NVSINTERNAL       CC26X2R1_LAUNCHXL_NVSCC26XX0
 #define Board_NVSEXTERNAL       CC26X2R1_LAUNCHXL_NVSSPI25X0
 
@@ -153,10 +163,6 @@ extern "C" {
 #define Board_UART1             CC26X2R1_LAUNCHXL_UART1
 
 #define Board_WATCHDOG0         CC26X2R1_LAUNCHXL_WATCHDOG0
-
-/* Board specific I2C addresses */
-#define Board_TMP_ADDR          (0x40)
-#define Board_SENSORS_BP_TMP_ADDR Board_TMP_ADDR
 
 #ifdef __cplusplus
 }

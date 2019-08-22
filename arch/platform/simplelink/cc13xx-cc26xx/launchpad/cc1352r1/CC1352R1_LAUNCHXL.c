@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,6 @@
  *  This file is responsible for setting up the board specific items for the
  *  CC1352R1_LAUNCHXL board.
  */
-
-#include "contiki.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -224,7 +222,6 @@ ECDHCC26X2_Object ecdhCC26X2Objects[CC1352R1_LAUNCHXL_ECDHCOUNT];
 const ECDHCC26X2_HWAttrs ecdhCC26X2HWAttrs[CC1352R1_LAUNCHXL_ECDHCOUNT] = {
     {
         .intPriority       = ~0,
-        .swiPriority       = 0,
     }
 };
 
@@ -248,7 +245,6 @@ ECDSACC26X2_Object ecdsaCC26X2Objects[CC1352R1_LAUNCHXL_ECDSACOUNT];
 const ECDSACC26X2_HWAttrs ecdsaCC26X2HWAttrs[CC1352R1_LAUNCHXL_ECDSACOUNT] = {
     {
         .intPriority       = ~0,
-        .swiPriority       = 0,
     }
 };
 
@@ -272,7 +268,6 @@ ECJPAKECC26X2_Object ecjpakeCC26X2Objects[CC1352R1_LAUNCHXL_ECJPAKECOUNT];
 const ECJPAKECC26X2_HWAttrs ecjpakeCC26X2HWAttrs[CC1352R1_LAUNCHXL_ECJPAKECOUNT] = {
     {
         .intPriority       = ~0,
-        .swiPriority       = 0,
     }
 };
 
@@ -297,7 +292,6 @@ SHA2CC26X2_Object sha2CC26X2Objects[CC1352R1_LAUNCHXL_SHA2COUNT];
 const SHA2CC26X2_HWAttrs sha2CC26X2HWAttrs[CC1352R1_LAUNCHXL_SHA2COUNT] = {
     {
         .intPriority       = ~0,
-        .swiPriority       = 0,
     }
 };
 
@@ -321,7 +315,6 @@ AESCCMCC26XX_Object aesccmCC26XXObjects[CC1352R1_LAUNCHXL_AESCCMCOUNT];
 const AESCCMCC26XX_HWAttrs aesccmCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESCCMCOUNT] = {
     {
         .intPriority       = ~0,
-        .swiPriority       = 0,
     }
 };
 
@@ -335,6 +328,75 @@ const AESCCM_Config AESCCM_config[CC1352R1_LAUNCHXL_AESCCMCOUNT] = {
 const uint_least8_t AESCCM_count = CC1352R1_LAUNCHXL_AESCCMCOUNT;
 
 /*
+ *  =============================== AESGCM ===============================
+ */
+#include <ti/drivers/AESGCM.h>
+#include <ti/drivers/aesgcm/AESGCMCC26XX.h>
+
+AESGCMCC26XX_Object aesgcmCC26XXObjects[CC1352R1_LAUNCHXL_AESGCMCOUNT];
+
+const AESGCMCC26XX_HWAttrs aesgcmCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESGCMCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESGCM_Config AESGCM_config[CC1352R1_LAUNCHXL_AESGCMCOUNT] = {
+    {
+         .object  = &aesgcmCC26XXObjects[CC1352R1_LAUNCHXL_AESGCM0],
+         .hwAttrs = &aesgcmCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESGCM0]
+    },
+};
+
+const uint_least8_t AESGCM_count = CC1352R1_LAUNCHXL_AESGCMCOUNT;
+
+/*
+ *  =============================== AESCBC ===============================
+ */
+#include <ti/drivers/AESCBC.h>
+#include <ti/drivers/aescbc/AESCBCCC26XX.h>
+
+AESCBCCC26XX_Object aescbcCC26XXObjects[CC1352R1_LAUNCHXL_AESCBCCOUNT];
+
+const AESCBCCC26XX_HWAttrs aescbcCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESCBCCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCBC_Config AESCBC_config[CC1352R1_LAUNCHXL_AESCBCCOUNT] = {
+    {
+         .object  = &aescbcCC26XXObjects[CC1352R1_LAUNCHXL_AESCBC0],
+         .hwAttrs = &aescbcCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESCBC0]
+    },
+};
+
+const uint_least8_t AESCBC_count = CC1352R1_LAUNCHXL_AESCBCCOUNT;
+
+/*
+ *  =============================== AESCTR ===============================
+ */
+#include <ti/drivers/AESCTR.h>
+#include <ti/drivers/aesctr/AESCTRCC26XX.h>
+
+AESCTRCC26XX_Object aesctrCC26XXObjects[CC1352R1_LAUNCHXL_AESCTRCOUNT];
+
+const AESCTRCC26XX_HWAttrs aesctrCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESCTRCOUNT] = {
+    {
+        .intPriority       = ~0,
+    }
+};
+
+const AESCTR_Config AESCTR_config[CC1352R1_LAUNCHXL_AESCTRCOUNT] = {
+    {
+         .object  = &aesctrCC26XXObjects[CC1352R1_LAUNCHXL_AESCTR0],
+         .hwAttrs = &aesctrCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESCTR0]
+    },
+};
+
+const uint_least8_t AESCTR_count = CC1352R1_LAUNCHXL_AESCTRCOUNT;
+
+/*
  *  =============================== AESECB ===============================
  */
 #include <ti/drivers/AESECB.h>
@@ -345,7 +407,6 @@ AESECBCC26XX_Object aesecbCC26XXObjects[CC1352R1_LAUNCHXL_AESECBCOUNT];
 const AESECBCC26XX_HWAttrs aesecbCC26XXHWAttrs[CC1352R1_LAUNCHXL_AESECBCOUNT] = {
     {
         .intPriority       = ~0,
-        .swiPriority       = 0,
     }
 };
 
@@ -357,6 +418,54 @@ const AESECB_Config AESECB_config[CC1352R1_LAUNCHXL_AESECBCOUNT] = {
 };
 
 const uint_least8_t AESECB_count = CC1352R1_LAUNCHXL_AESECBCOUNT;
+
+/*
+ *  =============================== AESCTRDRBG ===============================
+ */
+#include <ti/drivers/AESCTRDRBG.h>
+#include <ti/drivers/aesctrdrbg/AESCTRDRBGXX.h>
+
+AESCTRDRBGXX_Object aesctrdrbgXXObjects[CC1352R1_LAUNCHXL_AESCTRDRBGCOUNT];
+
+const AESCTRDRBGXX_HWAttrs aesctrdrbgXXHWAttrs[CC1352R1_LAUNCHXL_AESCTRDRBGCOUNT] = {
+    {
+        .aesctrIndex       = CC1352R1_LAUNCHXL_AESCTR0,
+    }
+};
+
+const AESCTRDRBG_Config AESCTRDRBG_config[CC1352R1_LAUNCHXL_AESCTRDRBGCOUNT] = {
+    {
+         .object  = &aesctrdrbgXXObjects[CC1352R1_LAUNCHXL_AESCTRDRBG0],
+         .hwAttrs = &aesctrdrbgXXHWAttrs[CC1352R1_LAUNCHXL_AESCTRDRBG0]
+    },
+};
+
+const uint_least8_t AESCTRDRBG_count = CC1352R1_LAUNCHXL_AESCTRDRBGCOUNT;
+
+/*
+ *  =============================== TRNG ===============================
+ */
+#include <ti/drivers/TRNG.h>
+#include <ti/drivers/trng/TRNGCC26XX.h>
+
+TRNGCC26XX_Object trngCC26XXObjects[CC1352R1_LAUNCHXL_TRNGCOUNT];
+
+const TRNGCC26XX_HWAttrs trngCC26X2HWAttrs[CC1352R1_LAUNCHXL_TRNGCOUNT] = {
+    {
+        .intPriority       = ~0,
+        .swiPriority       = 0,
+        .samplesPerCycle   = 240000,
+    }
+};
+
+const TRNG_Config TRNG_config[CC1352R1_LAUNCHXL_TRNGCOUNT] = {
+    {
+         .object  = &trngCC26XXObjects[CC1352R1_LAUNCHXL_TRNG0],
+         .hwAttrs = &trngCC26X2HWAttrs[CC1352R1_LAUNCHXL_TRNG0]
+    },
+};
+
+const uint_least8_t TRNG_count = CC1352R1_LAUNCHXL_TRNGCOUNT;
 
 /*
  *  =============================== GPIO ===============================
@@ -482,6 +591,34 @@ const uint_least8_t I2C_count = CC1352R1_LAUNCHXL_I2CCOUNT;
 #endif /* TI_I2C_CONF_ENABLE */
 
 /*
+ *  =============================== I2S ===============================
+*/
+#include <ti/drivers/I2S.h>
+#include <ti/drivers/i2s/I2SCC26XX.h>
+
+I2SCC26XX_Object i2sCC26XXObjects[CC1352R1_LAUNCHXL_I2SCOUNT];
+
+const I2SCC26XX_HWAttrs i2sCC26XXHWAttrs[CC1352R1_LAUNCHXL_I2SCOUNT] = {
+    {
+        .pinSD1      =  CC1352R1_LAUNCHXL_I2S_ADI,
+        .pinSD0      =  CC1352R1_LAUNCHXL_I2S_ADO,
+        .pinSCK      =  CC1352R1_LAUNCHXL_I2S_BCLK,
+        .pinMCLK     =  CC1352R1_LAUNCHXL_I2S_MCLK,
+        .pinWS       =  CC1352R1_LAUNCHXL_I2S_WCLK,
+        .intPriority = ~0,
+    }
+};
+
+const I2S_Config I2S_config[CC1352R1_LAUNCHXL_I2SCOUNT] = {
+    {
+        .object      = &i2sCC26XXObjects[CC1352R1_LAUNCHXL_I2S0],
+        .hwAttrs     = &i2sCC26XXHWAttrs[CC1352R1_LAUNCHXL_I2S0]
+    },
+};
+
+const uint_least8_t I2S_count = CC1352R1_LAUNCHXL_I2SCOUNT;
+
+/*
  *  =============================== NVS ===============================
  */
 #include <ti/drivers/NVS.h>
@@ -569,6 +706,7 @@ const NVSSPI25X_HWAttrs nvsSPI25XHWAttrs[1] = {
         .spiIndex = 0,
         .spiBitRate = 4000000,
         .spiCsnGpioIndex = CC1352R1_LAUNCHXL_GPIO_SPI_FLASH_CS,
+        .statusPollDelayUs = 100,
     },
 };
 
@@ -609,12 +747,11 @@ const PIN_Config BoardGpioInitTable[] = {
     CC1352R1_LAUNCHXL_PIN_BTN1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,             /* Button is active low */
     CC1352R1_LAUNCHXL_PIN_BTN2 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,             /* Button is active low */
     CC1352R1_LAUNCHXL_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,     /* External flash chip select */
-    CC1352R1_LAUNCHXL_UART0_RX | PIN_INPUT_EN | PIN_PULLUP,                                                  /* UART RX via debugger back channel */
-    CC1352R1_LAUNCHXL_UART0_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                          /* UART TX via debugger back channel */
+    CC1352R1_LAUNCHXL_UART0_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                                /* UART RX via debugger back channel */
+    CC1352R1_LAUNCHXL_UART0_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL,                           /* UART TX via debugger back channel */
     CC1352R1_LAUNCHXL_SPI0_MOSI | PIN_INPUT_EN | PIN_PULLDOWN,                                               /* SPI master out - slave in */
     CC1352R1_LAUNCHXL_SPI0_MISO | PIN_INPUT_EN | PIN_PULLDOWN,                                               /* SPI master in - slave out */
     CC1352R1_LAUNCHXL_SPI0_CLK | PIN_INPUT_EN | PIN_PULLDOWN,                                                /* SPI clock */
-    CC1352R1_LAUNCHXL_DIO30_RF_SUB1GHZ | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,  /* RF SW Switch defaults to 2.4GHz path */
     PIN_TERMINATE
 };
 
@@ -676,25 +813,12 @@ const uint_least8_t PWM_count = CC1352R1_LAUNCHXL_PWMCOUNT;
  */
 #include <ti/drivers/rf/RF.h>
 
-/*
- *  Board-specific callback function to set the correct antenna path.
- *
- *  This function is called by the RF driver on global driver events.
- *  It contains a default implementation to set the correct antenna path.
- *  This function is defined in the file CC1352R1_LAUNCHXL_fxns.c
- */
-extern void rfDriverCallback(RF_Handle client, RF_GlobalEvent events, void *arg);
-
 const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
     .hwiPriority        = ~0,     /* Lowest HWI priority */
     .swiPriority        = 0,      /* Lowest SWI priority */
-    .xoscHfAlwaysNeeded = true,   /* Keep XOSC dependency while in stanby */
-
-    /* Register the board specific callback */
-    .globalCallback     = &rfDriverCallback,
-
-    /* Subscribe the callback to both events */
-    .globalEventMask    = RF_GlobalEventRadioSetup | RF_GlobalEventRadioPowerDown
+    .xoscHfAlwaysNeeded = true,   /* Keep XOSC dependency while in standby */
+    .globalCallback     = NULL,   /* No board specific callback */
+    .globalEventMask    = 0       /* No events subscribed to */
 };
 
 /*
@@ -734,18 +858,18 @@ const uint_least8_t SD_count = CC1352R1_LAUNCHXL_SDCOUNT;
  *  =============================== SPI DMA ===============================
  */
 #include <ti/drivers/SPI.h>
-#include <ti/drivers/spi/SPICC26XXDMA.h>
+#include <ti/drivers/spi/SPICC26X2DMA.h>
 
 #if TI_SPI_CONF_ENABLE
 
-SPICC26XXDMA_Object spiCC26XXDMAObjects[CC1352R1_LAUNCHXL_SPICOUNT];
+SPICC26X2DMA_Object spiCC26X2DMAObjects[CC1352R1_LAUNCHXL_SPICOUNT];
 
 /*
  * NOTE: The SPI instances below can be used by the SD driver to communicate
  * with a SD card via SPI.  The 'defaultTxBufValue' fields below are set to 0xFF
  * to satisfy the SDSPI driver requirement.
  */
-const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC1352R1_LAUNCHXL_SPICOUNT] = {
+const SPICC26X2DMA_HWAttrs spiCC26X2DMAHWAttrs[CC1352R1_LAUNCHXL_SPICOUNT] = {
 #if TI_SPI_CONF_SPI0_ENABLE
     {
         .baseAddr           = SSI0_BASE,
@@ -785,16 +909,16 @@ const SPICC26XXDMA_HWAttrsV1 spiCC26XXDMAHWAttrs[CC1352R1_LAUNCHXL_SPICOUNT] = {
 const SPI_Config SPI_config[CC1352R1_LAUNCHXL_SPICOUNT] = {
 #if TI_SPI_CONF_SPI0_ENABLE
     {
-         .fxnTablePtr = &SPICC26XXDMA_fxnTable,
-         .object      = &spiCC26XXDMAObjects[CC1352R1_LAUNCHXL_SPI0],
-         .hwAttrs     = &spiCC26XXDMAHWAttrs[CC1352R1_LAUNCHXL_SPI0]
+         .fxnTablePtr = &SPICC26X2DMA_fxnTable,
+         .object      = &spiCC26X2DMAObjects[CC1352R1_LAUNCHXL_SPI0],
+         .hwAttrs     = &spiCC26X2DMAHWAttrs[CC1352R1_LAUNCHXL_SPI0]
     },
 #endif
 #if TI_SPI_CONF_SPI1_ENABLE
     {
-         .fxnTablePtr = &SPICC26XXDMA_fxnTable,
-         .object      = &spiCC26XXDMAObjects[CC1352R1_LAUNCHXL_SPI1],
-         .hwAttrs     = &spiCC26XXDMAHWAttrs[CC1352R1_LAUNCHXL_SPI1]
+         .fxnTablePtr = &SPICC26X2DMA_fxnTable,
+         .object      = &spiCC26X2DMAObjects[CC1352R1_LAUNCHXL_SPI1],
+         .hwAttrs     = &spiCC26X2DMAHWAttrs[CC1352R1_LAUNCHXL_SPI1]
     },
 #endif
 };
@@ -802,29 +926,6 @@ const SPI_Config SPI_config[CC1352R1_LAUNCHXL_SPICOUNT] = {
 const uint_least8_t SPI_count = CC1352R1_LAUNCHXL_SPICOUNT;
 
 #endif /* TI_SPI_CONF_ENABLE */
-
-
-/*
- *  =============================== TRNG ===============================
- */
-#include <ti/drivers/TRNG.h>
-#include <ti/drivers/trng/TRNGCC26X2.h>
-
-TRNGCC26X2_Object trngCC26X2Object[CC1352R1_LAUNCHXL_TRNGCOUNT];
-
-const TRNGCC26X2_HWAttrs trngCC26X2HWAttrs[CC1352R1_LAUNCHXL_TRNGCOUNT] = {
-    {
-         .swiPriority = 0,
-         .intPriority = ~0,
-    }
-};
-
-const TRNG_Config TRNG_config[] = {
-    { &trngCC26X2Object[0], &trngCC26X2HWAttrs[0] },
-};
-
-const uint8_t TRNG_count = CC1352R1_LAUNCHXL_TRNGCOUNT;
-
 
 /*
  *  =============================== UART ===============================
@@ -968,4 +1069,12 @@ void CC1352R1_LAUNCHXL_initGeneral(void)
 
     /* Perform board-specific initialization */
     Board_initHook();
+}
+
+/*
+ *  ======== Board_init ========
+ */
+void Board_init(void)
+{
+    CC1352R1_LAUNCHXL_initGeneral();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,9 +51,6 @@ extern rfc_CMD_FS_t          rf_cmd_ieee_fs;
 extern rfc_CMD_IEEE_TX_t     rf_cmd_ieee_tx;
 extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
 extern rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack;
-/*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t              rf_ieee_overrides[];
 /*---------------------------------------------------------------------------*/
 #endif /* IEEE_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

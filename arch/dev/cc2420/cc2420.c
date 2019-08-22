@@ -103,6 +103,13 @@ volatile uint16_t cc2420_sfd_start_time;
 volatile uint16_t cc2420_sfd_end_time;
 
 static volatile uint16_t last_packet_timestamp;
+
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the FCS.
+ */
+#define MAX_PAYLOAD_LEN (127 - CHECKSUM_LEN)
 /*---------------------------------------------------------------------------*/
 PROCESS(cc2420_process, "CC2420 driver");
 /*---------------------------------------------------------------------------*/
@@ -223,6 +230,9 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
   case RADIO_CONST_TXPOWER_MAX:
     *value = OUTPUT_POWER_MAX;
+    return RADIO_RESULT_OK;
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
@@ -666,6 +676,10 @@ cc2420_transmit(unsigned short payload_len)
 {
   int i;
 
+  if(payload_len > MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
+
   GET_LOCK();
 
   /* The TX FIFO can only hold one packet. Make sure to not overrun
@@ -731,6 +745,10 @@ static int
 cc2420_prepare(const void *payload, unsigned short payload_len)
 {
   uint8_t total_len;
+
+  if(payload_len > MAX_PAYLOAD_LEN) {
+    return RADIO_TX_ERR;
+  }
 
   GET_LOCK();
 

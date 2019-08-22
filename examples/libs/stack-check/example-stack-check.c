@@ -42,6 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <alloca.h>
+#include <inttypes.h>
 /*---------------------------------------------------------------------------*/
 PROCESS(example_process, "Stack check example");
 AUTOSTART_PROCESSES(&example_process);
@@ -49,7 +50,7 @@ AUTOSTART_PROCESSES(&example_process);
 static void
 nested_function(void)
 {
-  printf("stack usage: %u permitted: %u\n",
+  printf("stack usage: %" PRId32 " permitted: %" PRId32 "\n",
          stack_check_get_usage(), stack_check_get_reserved_size());
 }
 /*---------------------------------------------------------------------------*/

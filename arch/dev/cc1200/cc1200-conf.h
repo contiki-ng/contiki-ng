@@ -70,7 +70,7 @@
 #ifdef CC1200_CONF_MAX_PAYLOAD_LEN
 #define CC1200_MAX_PAYLOAD_LEN           CC1200_CONF_MAX_PAYLOAD_LEN
 #else
-#define CC1200_MAX_PAYLOAD_LEN           127
+#define CC1200_MAX_PAYLOAD_LEN           125
 #endif
 /*---------------------------------------------------------------------------*/
 /*

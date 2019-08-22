@@ -62,6 +62,12 @@ extern button_hal_button_t *button_hal_buttons[];
 /* Common handler for all handler events, and register it with the GPIO HAL */
 static gpio_hal_event_handler_t button_event_handler;
 /*---------------------------------------------------------------------------*/
+#if GPIO_HAL_PORT_PIN_NUMBERING
+#define BTN_PORT(b) (b)->port
+#else
+#define BTN_PORT(b) GPIO_HAL_NULL_PORT
+#endif
+/*---------------------------------------------------------------------------*/
 static void
 duration_exceeded_callback(void *btn)
 {
@@ -121,7 +127,11 @@ debounce_handler(void *btn)
 }
 /*---------------------------------------------------------------------------*/
 static void
-press_release_handler(gpio_hal_pin_mask_t pin_mask)
+press_release_handler(
+#if GPIO_HAL_PORT_PIN_NUMBERING
+                      gpio_hal_port_t port,
+#endif
+                      gpio_hal_pin_mask_t pin_mask)
 {
   pmask |= pin_mask;
   process_poll(&button_hal_process);
@@ -154,7 +164,7 @@ button_hal_get_by_index(uint8_t index)
 uint8_t
 button_hal_get_state(button_hal_button_t *button)
 {
-  uint8_t pin_state = gpio_hal_arch_read_pin(button->pin);
+  uint8_t pin_state = gpio_hal_arch_read_pin(BTN_PORT(button), button->pin);
 
   if((pin_state == 0 && button->negative_logic == true) ||
      (pin_state == 1 && button->negative_logic == false)) {
@@ -180,9 +190,9 @@ button_hal_init()
   for(button = button_hal_buttons; *button != NULL; button++) {
     cfg = GPIO_HAL_PIN_CFG_EDGE_BOTH | GPIO_HAL_PIN_CFG_INT_ENABLE |
       (*button)->pull;
-    gpio_hal_arch_pin_set_input((*button)->pin);
-    gpio_hal_arch_pin_cfg_set((*button)->pin, cfg);
-    gpio_hal_arch_interrupt_enable((*button)->pin);
+    gpio_hal_arch_pin_set_input(BTN_PORT(*button), (*button)->pin);
+    gpio_hal_arch_pin_cfg_set(BTN_PORT(*button), (*button)->pin, cfg);
+    gpio_hal_arch_interrupt_enable(BTN_PORT(*button), (*button)->pin);
     button_event_handler.pin_mask |= gpio_hal_pin_to_mask((*button)->pin);
   }
 

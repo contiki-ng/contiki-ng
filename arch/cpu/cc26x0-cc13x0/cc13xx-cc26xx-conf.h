@@ -100,8 +100,10 @@
 #define CSMA_CONF_SEND_SOFT_ACK              0
 #endif /* CC13XX_CONF_PROP_MODE */
 
-#define NETSTACK_RADIO_MAX_PAYLOAD_LEN        125
-
+/* Platform-specific (H/W) AES implementation */
+#ifndef AES_128_CONF
+#define AES_128_CONF cc26xx_aes_128_driver
+#endif /* AES_128_CONF */
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

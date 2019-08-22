@@ -1300,7 +1300,7 @@ extern uint16_t uip_len;
 /**
  * The length of the extension headers
  */
-extern uint8_t uip_ext_len;
+extern uint16_t uip_ext_len;
 
 /** The final protocol after IPv6 extension headers:
   * UIP_PROTO_TCP, UIP_PROTO_UDP or UIP_PROTO_ICMP6 */
@@ -1775,6 +1775,7 @@ struct uip_udp_hdr {
 #define UIP_EXT_HDR_OPT_PAD1  0
 #define UIP_EXT_HDR_OPT_PADN  1
 #define UIP_EXT_HDR_OPT_RPL   0x63
+#define UIP_EXT_HDR_OPT_MPL   0x6D
 
 /** @} */
 
@@ -2142,8 +2143,10 @@ uint16_t uip_icmp6chksum(void);
 /**
  * Removes all IPv6 extension headers from uip_buf, updates length fields
  * (uip_len and uip_ext_len)
+ *
+ * \return true upon success, false otherwise.
  */
-void uip_remove_ext_hdr(void);
+bool uip_remove_ext_hdr(void);
 
 #endif /* UIP_H_ */
 

@@ -62,15 +62,6 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /**
- * \name GPIO HAL configuration.
- *
- * @{
- */
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE        0
-#define GPIO_HAL_CONF_ARCH_HDR_PATH         "dev/gpio-hal-arch.h"
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name Watchdog Configuration.
  *
  * @{
@@ -79,8 +70,8 @@
 #define WATCHDOG_CONF_DISABLE               0
 #endif
 
-#ifndef WATCHDOG_CONF_TIMER_TOP
-#define WATCHDOG_CONF_TIMER_TOP             0xFFFFF
+#ifndef WATCHDOG_CONF_TIMEOUT_MS
+#define WATCHDOG_CONF_TIMEOUT_MS            1000
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -100,15 +91,19 @@
 #endif
 
 /*
- * Configure TX power to either default PA or High PA, defaults to
- * default PA.
+ * Configure the TX power for the netstack, specified in dBm. Defaults to
+ * maximum available TX power setting for the specific PHY.
  */
-#ifndef RF_CONF_TXPOWER_HIGH_PA
-#define RF_CONF_TXPOWER_HIGH_PA         0
+#ifndef RF_CONF_TXPOWER_DBM
+#define RF_CONF_TXPOWER_DBM             RF_TXPOWER_MAX_DBM
 #endif
 
-#if (RF_CONF_TXPOWER_HIGH_PA) && !(SUPPORTS_HIGH_PA)
-#error "Device does not support High PA"
+/*
+ * Configure the TX power for the BLE beacon, specified in dBm.
+ * Defaults to maximum available TX power setting for the specific PHY.
+ */
+#ifndef RF_CONF_BLE_TXPOWER_DBM
+#define RF_CONF_BLE_TXPOWER_DBM         RF_TXPOWER_MAX_DBM
 #endif
 
 /*
@@ -132,6 +127,32 @@
 
 #define RF_MODE                      RF_CONF_MODE
 #endif /* RF_CONF_MODE */
+
+/* Sub-1 GHz path front-end mode configuration */
+#ifdef RF_SUB_1_GHZ_CONF_FRONT_END_MODE
+#define RF_SUB_1_GHZ_FRONT_END_MODE     RF_SUB_1_GHZ_CONF_FRONT_END_MODE
+#else
+#define RF_SUB_1_GHZ_FRONT_END_MODE     RF_FRONT_END_MODE_DIFFERENTIAL
+#endif
+
+#ifdef RF_SUB_1_GHZ_CONF_BIAS_MODE
+#define RF_SUB_1_GHZ_BIAS_MODE          RF_SUB_1_GHZ_CONF_BIAS_MODE
+#else
+#define RF_SUB_1_GHZ_BIAS_MODE          RF_BIAS_MODE_INTERNAL
+#endif
+
+/* 2.4 GHz path front-end mode configuration */
+#ifdef RF_2_4_GHZ_CONF_FRONT_END_MODE
+#define RF_2_4_GHZ_FRONT_END_MODE       RF_2_4_GHZ_CONF_FRONT_END_MODE
+#else
+#define RF_2_4_GHZ_FRONT_END_MODE       RF_FRONT_END_MODE_DIFFERENTIAL
+#endif
+
+#ifdef RF_2_4_GHZ_CONF_BIAS_MODE
+#define RF_2_4_GHZ_BIAS_MODE            RF_2_4_GHZ_CONF_BIAS_MODE
+#else
+#define RF_2_4_GHZ_BIAS_MODE            RF_BIAS_MODE_INTERNAL
+#endif
 
 /* Number of RX buffers. */
 #ifndef RF_CONF_RX_BUF_CNT
@@ -217,7 +238,6 @@
 #else
 #error "Unsupported Device Line defined"
 #endif /* Unsupported device line */
-
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

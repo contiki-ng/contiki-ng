@@ -1,4 +1,4 @@
-TIMEOUT(20000, log.testFailed());
+TIMEOUT(25000, log.testFailed());
 
 dst_lla = "fe80::202:2:2:2";
 dst_mac = "0002.0002.0002.0002";
@@ -15,7 +15,7 @@ while(1) {
     step += 1;
   }
 
-  if(step == 2 && time > 15000000) {
+  if(step == 2 && time > 20000000) {
     write(sim.getMoteWithID(1), "ping " + dst_lla);
     step += 1;
   }

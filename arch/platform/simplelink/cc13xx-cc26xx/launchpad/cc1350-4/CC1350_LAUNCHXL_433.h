@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -100,6 +100,12 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350_LAUNCHXL_433_I2C0_SCL0             IOID_4
 #define CC1350_LAUNCHXL_433_I2C0_SDA0             IOID_5
 
+/* I2S */
+#define CC1350_LAUNCHXL_433_I2S_ADO               IOID_25
+#define CC1350_LAUNCHXL_433_I2S_ADI               IOID_26
+#define CC1350_LAUNCHXL_433_I2S_BCLK              IOID_27
+#define CC1350_LAUNCHXL_433_I2S_MCLK              PIN_UNASSIGNED
+#define CC1350_LAUNCHXL_433_I2S_WCLK              IOID_28
 
 /* LEDs */
 #define CC1350_LAUNCHXL_433_PIN_LED_ON            1
@@ -126,7 +132,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350_LAUNCHXL_433_SPI0_MISO             IOID_8          /* RF1.20 */
 #define CC1350_LAUNCHXL_433_SPI0_MOSI             IOID_9          /* RF1.18 */
 #define CC1350_LAUNCHXL_433_SPI0_CLK              IOID_10         /* RF1.16 */
-#define CC1350_LAUNCHXL_433_SPI0_CSN              PIN_UNASSIGNED
+#define CC1350_LAUNCHXL_433_SPI0_CSN              IOID_11
 #define CC1350_LAUNCHXL_433_SPI1_MISO             PIN_UNASSIGNED
 #define CC1350_LAUNCHXL_433_SPI1_MOSI             PIN_UNASSIGNED
 #define CC1350_LAUNCHXL_433_SPI1_CLK              PIN_UNASSIGNED
@@ -220,6 +226,76 @@ typedef enum CC1350_LAUNCHXL_433_CryptoName {
 } CC1350_LAUNCHXL_433_CryptoName;
 
 /*!
+ *  @def    CC1350_LAUNCHXL_433_AESCCMName
+ *  @brief  Enum of AESCCM names
+ */
+typedef enum CC1350_LAUNCHXL_433_AESCCMName {
+    CC1350_LAUNCHXL_433_AESCCM0 = 0,
+
+    CC1350_LAUNCHXL_433_AESCCMCOUNT
+} CC1350_LAUNCHXL_433_AESCCMName;
+
+/*!
+ *  @def    CC1350_LAUNCHXL_433_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC1350_LAUNCHXL_433_AESGCMName {
+    CC1350_LAUNCHXL_433_AESGCM0 = 0,
+
+    CC1350_LAUNCHXL_433_AESGCMCOUNT
+} CC1350_LAUNCHXL_433_AESGCMName;
+
+/*!
+ *  @def    CC1350_LAUNCHXL_433_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC1350_LAUNCHXL_433_AESCBCName {
+    CC1350_LAUNCHXL_433_AESCBC0 = 0,
+
+    CC1350_LAUNCHXL_433_AESCBCCOUNT
+} CC1350_LAUNCHXL_433_AESCBCName;
+
+/*!
+ *  @def    CC1350_LAUNCHXL_433_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC1350_LAUNCHXL_433_AESCTRName {
+    CC1350_LAUNCHXL_433_AESCTR0 = 0,
+
+    CC1350_LAUNCHXL_433_AESCTRCOUNT
+} CC1350_LAUNCHXL_433_AESCTRName;
+
+/*!
+ *  @def    CC1350_LAUNCHXL_433_AESECBName
+ *  @brief  Enum of AESECB names
+ */
+typedef enum CC1350_LAUNCHXL_433_AESECBName {
+    CC1350_LAUNCHXL_433_AESECB0 = 0,
+
+    CC1350_LAUNCHXL_433_AESECBCOUNT
+} CC1350_LAUNCHXL_433_AESECBName;
+
+/*!
+ *  @def    CC1350_LAUNCHXL_433_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC1350_LAUNCHXL_433_AESCTRDRBGName {
+    CC1350_LAUNCHXL_433_AESCTRDRBG0 = 0,
+
+    CC1350_LAUNCHXL_433_AESCTRDRBGCOUNT
+} CC1350_LAUNCHXL_433_AESCTRDRBGName;
+
+/*!
+ *  @def    CC1350_LAUNCHXL_433_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC1350_LAUNCHXL_433_TRNGName {
+    CC1350_LAUNCHXL_433_TRNG0 = 0,
+
+    CC1350_LAUNCHXL_433_TRNGCOUNT
+} CC1350_LAUNCHXL_433_TRNGName;
+
+/*!
  *  @def    CC1350_LAUNCHXL_433_GPIOName
  *  @brief  Enum of GPIO names
  */
@@ -276,6 +352,16 @@ typedef enum CC1350_LAUNCHXL_433_I2CName {
 } CC1350_LAUNCHXL_433_I2CName;
 
 /*!
+ *  @def    CC1350_LAUNCHXL_433_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC1350_LAUNCHXL_433_I2SName {
+    CC1350_LAUNCHXL_433_I2S0 = 0,
+
+    CC1350_LAUNCHXL_433_I2SCOUNT
+} CC1350_LAUNCHXL_433_I2SName;
+
+/*!
  *  @def    CC1350_LAUNCHXL_433_NVSName
  *  @brief  Enum of NVS names
  */
@@ -327,16 +413,6 @@ typedef enum CC1350_LAUNCHXL_433_SPIName {
 
     CC1350_LAUNCHXL_433_SPICOUNT
 } CC1350_LAUNCHXL_433_SPIName;
-
-/*!
- *  @def    CC1350_LAUNCHXL_433_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC1350_LAUNCHXL_433_TRNGName {
-    CC1350_LAUNCHXL_433_TRNG0 = 0,
-
-    CC1350_LAUNCHXL_433_TRNGCOUNT
-} CC1350_LAUNCHXL_433_TRNGName;
 
 /*!
  *  @def    CC1350_LAUNCHXL_433_UARTName
