@@ -32,6 +32,7 @@ COOJA.testlog
 *.jn516x
 *.native
 *.nrf52dk
+*.nrf52840dk
 *.openmote-cc2538
 *.simplelink
 *.sky
