@@ -93,9 +93,76 @@ static ble_gap_adv_data_t m_adv_data =
     }
 };
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Start BLE advertising.
+ */
+void
+ble_advertising_start(void)
+{
+  uint32_t err_code;
 
+  err_code = sd_ble_gap_adv_start(m_adv_handle, APP_IPSP_TAG);
+  APP_ERROR_CHECK(err_code);
+
+  PRINTF("ble-core: advertising started\n");
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Print GAP address.
+ * \param addr a pointer to address
+ */
+void
+ble_gap_addr_print(const ble_gap_addr_t *addr)
+{
+  unsigned int i;
+  for(i = 0; i < sizeof(addr->addr); i++) {
+    if(i > 0) {
+      PRINTF(":");
+    }PRINTF("%02x", addr->addr[i]);
+  }PRINTF(" (%d)", addr->addr_type);
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Function for handling the Application's BLE Stack events.
+ * \param[in]   p_ble_evt   Bluetooth stack event.
+ */
 static void
-ble_evt_dispatch(ble_evt_t const * p_ble_evt, void * p_context);
+on_ble_evt(ble_evt_t const *p_ble_evt)
+{
+  switch(p_ble_evt->header.evt_id) {
+    case BLE_GAP_EVT_CONNECTED:
+      PRINTF("ble-core: connected [handle:%d, peer: ", p_ble_evt->evt.gap_evt.conn_handle);
+      ble_gap_addr_print(&(p_ble_evt->evt.gap_evt.params.connected.peer_addr));
+      PRINTF("]\n");
+      sd_ble_gap_rssi_start(p_ble_evt->evt.gap_evt.conn_handle,
+                            BLE_GAP_RSSI_THRESHOLD_INVALID,
+                            0);
+      break;
+
+    case BLE_GAP_EVT_DISCONNECTED:
+      PRINTF("ble-core: disconnected [handle:%d]\n", p_ble_evt->evt.gap_evt.conn_handle);
+      ble_advertising_start();
+      break;
+    default:
+      break;
+  }
+}
+
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief SoftDevice BLE event callback.
+ * \param[in]   p_ble_evt   Bluetooth stack event.
+ * \param[in]   p_context   Context pointer.
+ */
+static void
+ble_evt_dispatch(ble_evt_t const *p_ble_evt, void * p_context)
+{
+  ble_ipsp_evt_handler(p_ble_evt);
+  on_ble_evt(p_ble_evt);
+}
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialize and enable the BLE stack.
@@ -263,72 +330,6 @@ ble_advertising_init(const char *name)
   err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
   APP_ERROR_CHECK(err_code);
 
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Start BLE advertising.
- */
-void
-ble_advertising_start(void)
-{
-  uint32_t err_code;
-
-  err_code = sd_ble_gap_adv_start(m_adv_handle, APP_IPSP_TAG);
-  APP_ERROR_CHECK(err_code);
-
-  PRINTF("ble-core: advertising started\n");
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Print GAP address.
- * \param addr a pointer to address
- */
-void
-ble_gap_addr_print(const ble_gap_addr_t *addr)
-{
-  unsigned int i;
-  for(i = 0; i < sizeof(addr->addr); i++) {
-    if(i > 0) {
-      PRINTF(":");
-    }PRINTF("%02x", addr->addr[i]);
-  }PRINTF(" (%d)", addr->addr_type);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Function for handling the Application's BLE Stack events.
- * \param[in]   p_ble_evt   Bluetooth stack event.
- */
-static void
-on_ble_evt(ble_evt_t const *p_ble_evt)
-{
-  switch(p_ble_evt->header.evt_id) {
-    case BLE_GAP_EVT_CONNECTED:
-      PRINTF("ble-core: connected [handle:%d, peer: ", p_ble_evt->evt.gap_evt.conn_handle);
-      ble_gap_addr_print(&(p_ble_evt->evt.gap_evt.params.connected.peer_addr));
-      PRINTF("]\n");
-      sd_ble_gap_rssi_start(p_ble_evt->evt.gap_evt.conn_handle,
-                            BLE_GAP_RSSI_THRESHOLD_INVALID,
-                            0);
-      break;
-
-    case BLE_GAP_EVT_DISCONNECTED:
-      PRINTF("ble-core: disconnected [handle:%d]\n", p_ble_evt->evt.gap_evt.conn_handle);
-      ble_advertising_start();
-      break;
-    default:
-      break;
-  }
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief SoftDevice BLE event callback.
- * \param[in]   p_ble_evt   Bluetooth stack event.
- */
-static void
-ble_evt_dispatch(ble_evt_t const *p_ble_evt, void * p_context)
-{
-  ble_ipsp_evt_handler(p_ble_evt);
-  on_ble_evt(p_ble_evt);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
