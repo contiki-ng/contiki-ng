@@ -61,7 +61,7 @@ gpio_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
+gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
   gpio_hal_pin_cfg_t tmp;
   uint32_t err_code;
@@ -116,7 +116,7 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_cfg_t
-gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_pin_cfg_get(gpio_hal_pin_t pin)
 {
   if(nrfx_gpiote_in_is_set(pin))
 	  return cfgs[pin];
@@ -126,14 +126,14 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_mask_t
-gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
+gpio_hal_arch_no_port_read_pins(gpio_hal_pin_mask_t pins)
 {
   gpio_hal_pin_mask_t oe_pins = 0;
   uint32_t i;
 
   for( i=0; i < GPIO_HAL_PIN_COUNT; i++ ){
 	  uint32_t p = gpio_hal_pin_to_mask(i);
-	  if((p & pins) && gpio_hal_arch_read_pin(i)){
+	  if((p & pins) && nrf_gpio_pin_read(i)){
 		  oe_pins &= p;
 	  }
   }
@@ -141,48 +141,48 @@ gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
   return oe_pins;
 }
 /*---------------------------------------------------------------------------*/
-void gpio_hal_arch_write_pins(gpio_hal_pin_mask_t pins,
+void gpio_hal_arch_no_port_write_pins(gpio_hal_pin_mask_t pins,
                               gpio_hal_pin_mask_t value){
   uint32_t i;
 
   for( i=0; i < GPIO_HAL_PIN_COUNT; i++ ){
 	  uint32_t p = gpio_hal_pin_to_mask(i);
 	  if(p & pins){
-		  gpio_hal_arch_write_pin(i,(p & value));
+		  nrf_gpio_pin_write(i,(p & value));
 	  }
   }
 }
 /*---------------------------------------------------------------------------*/
-void gpio_hal_arch_toggle_pins(gpio_hal_pin_mask_t pins){
+void gpio_hal_arch_no_port_toggle_pins(gpio_hal_pin_mask_t pins){
   uint32_t i;
 
   for( i=0; i < GPIO_HAL_PIN_COUNT; i++ ){
 	  uint32_t p = gpio_hal_pin_to_mask(i);
 	  if(p & pins){
-		  gpio_hal_arch_toggle_pin(i);
+		  nrf_gpio_pin_toggle(i);
 	  }
   }
 }
 /*---------------------------------------------------------------------------*/
-void gpio_hal_arch_clear_pins(gpio_hal_pin_mask_t pins){
+void gpio_hal_arch_no_port_clear_pins(gpio_hal_pin_mask_t pins){
   uint32_t i;
 
   for( i=0; i < GPIO_HAL_PIN_COUNT; i++ ){
 	  uint32_t p = gpio_hal_pin_to_mask(i);
 	  if(p & pins){
-		  gpio_hal_arch_clear_pin(i);
+		  nrf_gpio_pin_clear(i);
 	  }
   }
 }
 /*---------------------------------------------------------------------------*/
-void gpio_hal_arch_set_pins(gpio_hal_pin_mask_t pins){
+void gpio_hal_arch_no_port_set_pins(gpio_hal_pin_mask_t pins){
 
   uint32_t i;
 
   for( i=0; i < GPIO_HAL_PIN_COUNT; i++ ){
 	  uint32_t p = gpio_hal_pin_to_mask(i);
 	  if(p & pins){
-		  gpio_hal_arch_set_pin(i);
+		  nrf_gpio_pin_set(i);
 	  }
   }
 }

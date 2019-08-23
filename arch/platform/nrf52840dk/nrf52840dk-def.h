@@ -99,6 +99,7 @@
  */
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON      1
+#define GPIO_HAL_CONF_PORT_PIN_NUMBERING     0
 
 #define PLATFORM_SUPPORTS_BUTTON_HAL 		 1
 

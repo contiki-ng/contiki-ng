@@ -268,6 +268,9 @@ get_value(radio_param_t param, radio_value_t *value)
 	case RADIO_CONST_TXPOWER_MAX:
 		*value = OUTPUT_POWER_MAX;
 		return RADIO_RESULT_OK;
+	case RADIO_CONST_MAX_PAYLOAD_LEN:
+	    *value = (radio_value_t)MAX_MESSAGE_SIZE;
+	    return RADIO_RESULT_OK;
 	default:
 		return RADIO_RESULT_NOT_SUPPORTED;
 	}

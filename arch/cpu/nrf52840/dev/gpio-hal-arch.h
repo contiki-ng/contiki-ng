@@ -53,17 +53,17 @@
 /*---------------------------------------------------------------------------*/
 #define gpio_hal_arch_init()               do { /* Do nothing */ } while(0)
 
-#define gpio_hal_arch_interrupt_enable(p)  nrf_drv_gpiote_in_event_enable(p, true)
-#define gpio_hal_arch_interrupt_disable(p) nrf_drv_gpiote_in_event_disable(p)
+#define gpio_hal_arch_interrupt_enable(port, pin)  nrf_drv_gpiote_in_event_enable(pin, true)
+#define gpio_hal_arch_interrupt_disable(port, pin) nrf_drv_gpiote_in_event_disable(pin)
 
-#define gpio_hal_arch_pin_set_input(p)     nrf_gpio_cfg_input(p, NRF_GPIO_PIN_PULLUP);
-#define gpio_hal_arch_pin_set_output(p)    nrf_gpio_cfg_output(p)
+#define gpio_hal_arch_pin_set_input(port, pin)     nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_PULLUP);
+#define gpio_hal_arch_pin_set_output(port, pin)    nrf_gpio_cfg_output(pin)
 
-#define gpio_hal_arch_set_pin(p)           nrf_gpio_pin_set(p)
-#define gpio_hal_arch_clear_pin(p)         nrf_gpio_pin_clear(p)
-#define gpio_hal_arch_write_pin(p, v)      nrf_gpio_pin_write(p, v)
-#define gpio_hal_arch_read_pin(p)		   nrf_gpio_pin_read(p)
-#define gpio_hal_arch_toggle_pin(p)        nrf_gpio_pin_toggle(p)
+#define gpio_hal_arch_set_pin(port, pin)           nrf_gpio_pin_set(pin)
+#define gpio_hal_arch_clear_pin(port, pin)         nrf_gpio_pin_clear(pin)
+#define gpio_hal_arch_write_pin(port, pin, v)      nrf_gpio_pin_write(pin, v)
+#define gpio_hal_arch_read_pin(port, pin)  		   nrf_gpio_pin_read(pin)
+#define gpio_hal_arch_toggle_pin(port, pin)        nrf_gpio_pin_toggle(pin)
 
 #endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
