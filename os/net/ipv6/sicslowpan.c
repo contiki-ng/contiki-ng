@@ -1397,7 +1397,7 @@ digest_6lorh_hdr(void)
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * \endverbatim
  */
- #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
+#if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
 static void
 compress_hdr_ipv6(linkaddr_t *link_destaddr)
 {
@@ -1875,7 +1875,8 @@ input(void)
   }
 
   /* Process next dispatch and headers */
-  if((PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
+  if(SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6 &&
+     (PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
     LOG_DBG("uncompression: IPHC dispatch\n");
     uncompress_hdr_iphc(buffer, frag_size);
   } else if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
@@ -1889,7 +1890,7 @@ input(void)
     packetbuf_hdr_len += UIP_IPH_LEN;
     uncomp_hdr_len += UIP_IPH_LEN;
   } else {
-    LOG_ERR("uncompression: unknown dispatch: 0x%02x\n",
+    LOG_ERR("uncompression: unknown dispatch: 0x%02x, or IPHC disabled\n",
              PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK);
     return;
   }

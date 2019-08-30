@@ -77,8 +77,6 @@
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
 
-#define cooja_radio_driver_max_payload_len 125
-
 /* Default network config */
 #if NETSTACK_CONF_WITH_IPV6
 

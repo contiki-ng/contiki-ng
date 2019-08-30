@@ -42,7 +42,17 @@
 #include "dev/radio.h"
 #include "dev/cooja-radio.h"
 
-#define COOJA_RADIO_BUFSIZE cooja_radio_driver_max_payload_len
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the FCS.
+ */
+#ifdef COOJA_RADIO_CONF_BUFSIZE
+#define COOJA_RADIO_BUFSIZE COOJA_RADIO_CONF_BUFSIZE
+#else
+#define COOJA_RADIO_BUFSIZE 125
+#endif
+
 #define CCA_SS_THRESHOLD -95
 
 const struct simInterface radio_interface;
@@ -336,6 +346,9 @@ get_value(radio_param_t param, radio_value_t *value)
   case RADIO_PARAM_RSSI:
     /* return a fixed value depending on the channel */
     *value = -90 + simRadioChannel - 11;
+    return RADIO_RESULT_OK;
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)COOJA_RADIO_BUFSIZE;
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;

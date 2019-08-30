@@ -27,8 +27,15 @@ callback(struct http_socket *s, void *ptr,
   } else if(e == HTTP_SOCKET_CLOSED) {
     printf("HTTP socket closed, %d bytes received\n", bytes_received);
   } else if(e == HTTP_SOCKET_DATA) {
+    int i;
     bytes_received += datalen;
-    printf("HTTP socket received %d bytes of data\n", datalen);
+    printf("HTTP socket received %d bytes of data expects:%d\n", datalen,
+           (int) s->header.content_length);
+    printf("------------------------\n");
+    for(i = 0; i < datalen; i++) {
+      printf("%c", data[i]);
+    }
+    printf("\n------------------------\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -48,7 +55,7 @@ PROCESS_THREAD(http_example_process, ev, data)
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
   http_socket_init(&s);
-  http_socket_get(&s, "http://www.contiki-os.org/", 0, 0,
+  http_socket_get(&s, "http://www.contiki-ng.org", 0, 0,
                   callback, NULL);
 
   etimer_set(&et, CLOCK_SECOND);

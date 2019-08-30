@@ -81,6 +81,13 @@
 
 #define CHECKSUM_LEN 2
 
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the FCS.
+ */
+#define MAX_PAYLOAD_LEN (127 - CHECKSUM_LEN)
+
 /* Max packet duration: 5 + 127 + 2 bytes, 32us per byte */
 #define MAX_PACKET_DURATION US_TO_RTIMERTICKS((127 + 2) * 32 + RADIO_DELAY_BEFORE_TX)
 /* Max ACK duration: 5 + 3 + 2 bytes */
@@ -350,7 +357,7 @@ transmit(unsigned short payload_len)
   if(tx_in_progress) {
     return RADIO_TX_COLLISION;
   }
-  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
 
@@ -420,7 +427,7 @@ prepare(const void *payload, unsigned short payload_len)
   if(tx_in_progress) {
     return 1;
   }
-  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN || payload == NULL) {
+  if(payload_len > MAX_PAYLOAD_LEN || payload == NULL) {
     return 1;
   }
 #if MICROMAC_RADIO_MAC
@@ -977,6 +984,9 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
   case RADIO_CONST_TXPOWER_MAX:
     *value = OUTPUT_POWER_MAX;
+    return RADIO_RESULT_OK;
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
