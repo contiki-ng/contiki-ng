@@ -868,7 +868,7 @@ fprintf(stderr,"    -v3         Printable strings and SLIP packet notifications\
 fprintf(stderr,"    -v4         All printable characters as they are received\n");
 fprintf(stderr,"    -v5         All SLIP packets in hex\n");
 #ifndef __APPLE__
-fprintf(stderr,"    -v          Equivalent to -v3\n");
+fprintf(stderr,"    -v          Equivalent to -v2\n");
 #endif
 fprintf(stderr," -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
 fprintf(stderr,"                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
