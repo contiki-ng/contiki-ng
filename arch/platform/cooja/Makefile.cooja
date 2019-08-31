@@ -54,7 +54,7 @@ COOJA_INTFS	= beep.c button-sensor.c ip.c leds-arch.c moteid.c \
 		    clock.c cooja-log.c cfs-cooja.c cooja-radio.c \
 			eeprom.c slip-arch.c
 
-COOJA_CORE = random.c sensors.c leds.c
+COOJA_CORE = random.c sensors.c leds.c gpio-hal-arch.c
 
 # (COOJA_SOURCEFILES contains additional sources set from simulator)
 CONTIKI_TARGET_SOURCEFILES = \

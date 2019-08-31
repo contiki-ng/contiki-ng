@@ -143,4 +143,11 @@ typedef unsigned long clock_time_t;
 
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
 
+/*---------------------------------------------------------------------------*/
+/* Support for the new GPIO HAL */
+#define GPIO_HAL_CONF_ARCH_HDR_PATH      "dev/gpio-hal-arch.h"
+#define GPIO_HAL_CONF_ARCH_SW_TOGGLE     1
+#define GPIO_HAL_CONF_PORT_PIN_NUMBERING 0
+#define GPIO_HAL_CONF_PIN_COUNT          4
+/*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
