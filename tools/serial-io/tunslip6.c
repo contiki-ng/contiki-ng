@@ -64,7 +64,7 @@
 #endif
 speed_t b_rate = BAUDRATE;
 
-int verbose = 1;
+int verbose = 2;
 const char *ipaddr;
 const char *netmask;
 int slipfd = 0;
@@ -862,8 +862,8 @@ fprintf(stderr," -v level       Verbosity level\n");
 fprintf(stderr," -v[level]      Verbosity level\n");
 #endif
 fprintf(stderr,"    -v0         No messages\n");
-fprintf(stderr,"    -v1         Encapsulated SLIP debug messages (default)\n");
-fprintf(stderr,"    -v2         Printable strings after they are received\n");
+fprintf(stderr,"    -v1         Encapsulated SLIP debug messages\n");
+fprintf(stderr,"    -v2         Printable strings after they are received (default)\n");
 fprintf(stderr,"    -v3         Printable strings and SLIP packet notifications\n");
 fprintf(stderr,"    -v4         All printable characters as they are received\n");
 fprintf(stderr,"    -v5         All SLIP packets in hex\n");
