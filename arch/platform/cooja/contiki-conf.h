@@ -149,5 +149,13 @@ typedef unsigned long clock_time_t;
 #define GPIO_HAL_CONF_ARCH_SW_TOGGLE     1
 #define GPIO_HAL_CONF_PORT_PIN_NUMBERING 0
 #define GPIO_HAL_CONF_PIN_COUNT          4
+
+/* Virtual LED pins 0, 1, 2 (Green, Red, Yellow) */
+#define COOJA_LED_GREEN_PIN              0
+#define COOJA_LED_RED_PIN                1
+#define COOJA_LED_YELLOW_PIN             2
+
+/* Virtual button on pin 3 */
+#define COOJA_BTN_PIN                    3
 /*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
