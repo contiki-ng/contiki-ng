@@ -130,7 +130,9 @@ long referenceVar;
  */
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
-
+/*---------------------------------------------------------------------------*/
+/* Needed since the new LEDs API does not provide this prototype */
+void leds_arch_init(void);
 /*---------------------------------------------------------------------------*/
 static void
 rtimer_thread_loop(void *data)
@@ -169,6 +171,7 @@ void
 platform_init_stage_one()
 {
   gpio_hal_init();
+  leds_arch_init();
   return;
 }
 /*---------------------------------------------------------------------------*/

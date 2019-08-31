@@ -50,8 +50,6 @@
 
 #define ASSERT_CONF_RETURNS  1
 
-#define LEDS_CONF_LEGACY_API 1
-
 #ifndef EEPROM_CONF_SIZE
 #define EEPROM_CONF_SIZE				1024
 #endif
@@ -157,5 +155,11 @@ typedef unsigned long clock_time_t;
 
 /* Virtual button on pin 3 */
 #define COOJA_BTN_PIN                    3
+/*---------------------------------------------------------------------------*/
+/* Virtual LED colors */
+#define LEDS_CONF_COUNT                  3
+#define LEDS_CONF_GREEEN                 1
+#define LEDS_CONF_RED                    2
+#define LEDS_CONF_YELLOW                 4
 /*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
