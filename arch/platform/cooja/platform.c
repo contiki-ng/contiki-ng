@@ -65,6 +65,8 @@
 #include "dev/pir-sensor.h"
 #include "dev/vib-sensor.h"
 #include "dev/moteid.h"
+#include "dev/button-hal.h"
+#include "dev/gpio-hal.h"
 
 #include "sys/node-id.h"
 #include "services/rpl-border-router/rpl-border-router.h"
@@ -166,6 +168,7 @@ set_lladdr(void)
 void
 platform_init_stage_one()
 {
+  gpio_hal_init();
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -173,6 +176,7 @@ void
 platform_init_stage_two()
 {
   set_lladdr();
+  button_hal_init();
 }
 /*---------------------------------------------------------------------------*/
 void
