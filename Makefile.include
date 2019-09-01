@@ -92,7 +92,8 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 ### Include target makefile (TODO Unsafe?)
 
-target_makefile := $(wildcard $(ARCH_PATH)/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
+target_makefile := $(wildcard $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.$(TARGET) \
+                   $(foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)))
 
 # Check if the target makefile exists, and create the object directory if necessary.
 ifeq ($(strip $(target_makefile)),)
@@ -290,10 +291,9 @@ CONTIKI_TARGET_DIRS_CONCAT = ${addprefix ${dir $(target_makefile)}, \
                                $(CONTIKI_TARGET_DIRS)}
 CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
-CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
-SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS)
+SOURCEDIRS += . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
+              $(CONTIKI_CPU_DIRS_CONCAT) $(MODULEDIRS) $(EXTERNALDIRS)
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
@@ -343,13 +343,13 @@ clean:
 	@echo Target $(TARGET) cleaned
 
 distclean:
-	@for TARG in `ls $(ARCH_PATH)/platform $(TARGETDIRS)`; do \
+	@for TARG in `ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)`; do \
 		echo Running: $(MAKE) TARGET=$$TARG clean; \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 	-$(Q)rm -rf $(BUILD_DIR)
 
--include $(ARCH_PATH)/platform/$(TARGET)/Makefile.customrules-$(TARGET)
+-include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.customrules-$(TARGET)
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
@@ -431,7 +431,7 @@ endif
 include $(CONTIKI)/Makefile.help
 
 targets:
-	@ls $(ARCH_PATH)/platform $(TARGETDIRS)
+	@ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)
 
 boards:
 ifdef BOARD
@@ -453,7 +453,7 @@ savedefines:
 	@echo "saving Makefile.$(TARGET).defines"
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
-VIEWCONF = $(CONTIKI)/tools/viewconf/viewconf.c
+VIEWCONF = $(CONTIKI_NG_TOOLS_DIR)/viewconf/viewconf.c
 viewconf:
 	@echo "----------------- Make variables: --------------"
 	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
