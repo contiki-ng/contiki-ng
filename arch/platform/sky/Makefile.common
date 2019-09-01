@@ -162,12 +162,6 @@ else
 	@echo "Use the \"ipconfig\" command to find out the IP addresses of the local interfaces"
 endif
 
-linslip: $(CONTIKI)/tools/tunslip
-	$(CONTIKI)/tools/tunslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) 172.16.0.0 255.255.0.0
-
-$(CONTIKI)/tools/tunslip:
-	(cd $(CONTIKI)/tools; $(MAKE) tunslip)
-
 ifdef MOTE
   PORT = $(USBDEVPREFIX)$(word $(MOTE), $(CMOTES))
 else
