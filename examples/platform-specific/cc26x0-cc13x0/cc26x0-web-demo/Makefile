@@ -13,9 +13,9 @@ ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
 PROJECT_SOURCEFILES += cetic-6lbr-client.c
 endif
 
-# REST Engine shall use Erbium CoAP implementation
-MODULES += os/net/app-layer/mqtt
-MODULES += os/net/app-layer/coap
-
 CONTIKI=../../../..
+
+include $(CONTIKI)/Makefile.dir-variables
+MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/mqtt $(CONTIKI_NG_APP_LAYER_DIR)/coap
+
 include $(CONTIKI)/Makefile.include

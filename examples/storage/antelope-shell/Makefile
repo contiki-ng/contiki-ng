@@ -1,6 +1,8 @@
 CONTIKI = ../../..
 
-MODULES += os/storage/antelope os/services/unit-test
+include $(CONTIKI)/Makefile.dir-variables
+
+MODULES += $(CONTIKI_NG_STORAGE_DIR)/antelope $(CONTIKI_NG_SERVICES_DIR)/unit-test
 
 # does not fit on Sky
 PLATFORMS_ONLY= cc2538dk zoul
