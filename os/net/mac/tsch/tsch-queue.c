@@ -233,6 +233,16 @@ tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
   struct tsch_neighbor *n = NULL;
   int16_t put_index = -1;
   struct tsch_packet *p = NULL;
+
+#ifdef TSCH_CALLBACK_PACKET_READY
+  /* The scheduler provides a callback which sets the timeslot and other attributes */
+  if(TSCH_CALLBACK_PACKET_READY() < 0) {
+    /* No scheduled slots for the packet available; drop it early to save queue space. */
+    LOG_DBG("tsch_queue_add_packet(): rejected by the scheduler\n");
+    return NULL;
+  }
+#endif
+
   if(!tsch_is_locked()) {
     n = tsch_queue_add_nbr(addr);
     if(n != NULL) {
@@ -241,9 +251,6 @@ tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
         p = memb_alloc(&packet_memb);
         if(p != NULL) {
           /* Enqueue packet */
-#ifdef TSCH_CALLBACK_PACKET_READY
-          TSCH_CALLBACK_PACKET_READY();
-#endif
           p->qb = queuebuf_new_from_packetbuf();
           if(p->qb != NULL) {
             p->sent = sent;
