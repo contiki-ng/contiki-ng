@@ -455,8 +455,9 @@ static void
 output_fallback(void)
 {
 #ifdef UIP_FALLBACK_INTERFACE
+  uip_last_proto = *((uint8_t *)UIP_IP_BUF + 40);
   LOG_INFO("fallback: removing ext hdrs & setting proto %d %d\n",
-         uip_ext_len, *((uint8_t *)UIP_IP_BUF + 40));
+         uip_ext_len, uip_last_proto);
   uip_remove_ext_hdr();
   /* Inform the other end that the destination is not reachable. If it's
    * not informed routes might get lost unexpectedly until there's a need
