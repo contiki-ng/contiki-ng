@@ -58,6 +58,8 @@ static int32_t compensated_ticks;
 static uint8_t timesync_entry_count;
 /* Since last learning of the  drift; may be more than time since last timesync */
 static uint32_t asn_since_last_learning;
+/* The last neighbor used for timesync */
+struct tsch_neighbor *last_timesource_neighbor;
 
 /* Units in which drift is stored: ppm * 256 */
 #define TSCH_DRIFT_UNIT (1000L * 1000 * 256)
@@ -123,11 +125,8 @@ tsch_timesync_update(struct tsch_neighbor *n, uint16_t time_delta_asn, int32_t d
    * or the timedelta is not too small, as smaller timedelta
    * means proportionally larger measurement error. */
   if(last_timesource_neighbor != n) {
+    tsch_adaptive_timesync_reset();
     last_timesource_neighbor = n;
-    drift_ppm = 0;
-    timesync_entry_count = 0;
-    compensated_ticks = 0;
-    asn_since_last_learning = 0;
   } else {
     asn_since_last_learning += time_delta_asn;
     if(asn_since_last_learning >= 4 * TSCH_SLOTS_PER_SECOND) {
@@ -193,6 +192,16 @@ tsch_timesync_adaptive_compensate(rtimer_clock_t time_delta_ticks)
   return result;
 }
 /*---------------------------------------------------------------------------*/
+void
+tsch_adaptive_timesync_reset(void)
+{
+  last_timesource_neighbor = NULL;
+  drift_ppm = 0;
+  timesync_entry_count = 0;
+  compensated_ticks = 0;
+  asn_since_last_learning = 0;
+}
+/*---------------------------------------------------------------------------*/
 #else /* TSCH_ADAPTIVE_TIMESYNC */
 /*---------------------------------------------------------------------------*/
 void
@@ -204,6 +213,10 @@ int32_t
 tsch_timesync_adaptive_compensate(rtimer_clock_t delta_ticks)
 {
   return 0;
+}
+void
+tsch_adaptive_timesync_reset(void)
+{
 }
 /*---------------------------------------------------------------------------*/
 #endif /* TSCH_ADAPTIVE_TIMESYNC */
