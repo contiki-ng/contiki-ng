@@ -40,7 +40,6 @@
 /*---------------------------------------------------------------------------*/
 /* For very sleepy operation */
 #define RF_BLE_CONF_ENABLED                   0
-#define UIP_DS6_CONF_PERIOD        CLOCK_SECOND
 #define UIP_CONF_TCP                          0
 #define RPL_CONF_LEAF_ONLY                    1
 
