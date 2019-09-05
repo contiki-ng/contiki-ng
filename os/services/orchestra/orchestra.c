@@ -115,7 +115,7 @@ orchestra_callback_packet_ready(void)
 {
   int i;
   /* By default, use any slotframe, any timeslot */
-  uint16_t slotframe = 9;
+  uint16_t slotframe = 0xffff;
   uint16_t timeslot = 0xffff;
   int matched_rule = -1;
 
