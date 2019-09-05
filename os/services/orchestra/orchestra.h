@@ -48,6 +48,7 @@ struct orchestra_rule {
   int  (* select_packet)(uint16_t *slotframe, uint16_t *timeslot);
   void (* child_added)(const linkaddr_t *addr);
   void (* child_removed)(const linkaddr_t *addr);
+  const char *name;
 };
 
 struct orchestra_rule eb_per_time_source;
