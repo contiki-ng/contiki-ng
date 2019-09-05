@@ -605,10 +605,11 @@ const PINCC26XX_HWAttrs PINCC26XX_hwAttrs = {
  */
 #include <ti/drivers/Power.h>
 #include <ti/drivers/power/PowerCC26XX.h>
+#include "clock-arch.h"
 
 const PowerCC26XX_Config PowerCC26XX_config = {
     .policyInitFxn      = NULL,
-    .policyFxn          = &PowerCC26XX_standbyPolicy,
+    .policyFxn          = &clock_arch_standby_policy,
     .calibrateFxn       = &PowerCC26XX_calibrate,
     .enablePolicy       = true,
     .calibrateRCOSC_LF  = true,
