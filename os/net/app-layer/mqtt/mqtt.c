@@ -116,7 +116,35 @@ typedef enum {
   MQTT_VHDR_CONN_REJECTED_UNAUTHORIZED,
 } mqtt_vhdr_connack_fields_t;
 /*---------------------------------------------------------------------------*/
-#define MQTT_CONNECT_VHDR_FLAGS_SIZE 12
+#if MQTT_31
+/* Len MSB(0)
+ * Len LSB(6)
+ * 'M'
+ * 'Q'
+ * 'I'
+ * 's'
+ * 'd'
+ * 'p'
+ * Protocol Level (3)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
+ */
+#define MQTT_CONNECT_VHDR_SIZE 12
+#else
+/* Len MSB(0)
+ * Len LSB(4)
+ * 'M'
+ * 'Q'
+ * 'T'
+ * 'T'
+ * Protocol Level (4)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
+ */
+#define MQTT_CONNECT_VHDR_SIZE 10
+#endif
 
 #define MQTT_STRING_LEN_SIZE 2
 #define MQTT_MID_SIZE 2
@@ -389,7 +417,7 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   /* Set up FHDR */
   conn->out_packet.fhdr = MQTT_FHDR_MSG_TYPE_CONNECT;
   conn->out_packet.remaining_length = 0;
-  conn->out_packet.remaining_length += MQTT_CONNECT_VHDR_FLAGS_SIZE;
+  conn->out_packet.remaining_length += MQTT_CONNECT_VHDR_SIZE;
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->client_id);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->credentials.username);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->credentials.password);
@@ -410,8 +438,8 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
                       conn->out_packet.remaining_length_enc,
                       conn->out_packet.remaining_length_enc_bytes);
   PT_MQTT_WRITE_BYTE(conn, 0);
-  PT_MQTT_WRITE_BYTE(conn, 6);
-  PT_MQTT_WRITE_BYTES(conn, (uint8_t *)MQTT_PROTOCOL_NAME, 6);
+  PT_MQTT_WRITE_BYTE(conn, strlen(MQTT_PROTOCOL_NAME));
+  PT_MQTT_WRITE_BYTES(conn, (uint8_t *)MQTT_PROTOCOL_NAME, strlen(MQTT_PROTOCOL_NAME));
   PT_MQTT_WRITE_BYTE(conn, MQTT_PROTOCOL_VERSION);
   PT_MQTT_WRITE_BYTE(conn, conn->connect_vhdr_flags);
   PT_MQTT_WRITE_BYTE(conn, (conn->keep_alive >> 8));

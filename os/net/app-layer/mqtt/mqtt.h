@@ -101,6 +101,24 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 /* Protocol constants */
+#define MQTT_PROTOCOL_VERSION_3_1    3
+#define MQTT_PROTOCOL_VERSION_3_1_1  4
+#define MQTT_PROTOCOL_VERSION_5      5
+
+#ifdef MQTT_CONF_VERSION
+#define MQTT_PROTOCOL_VERSION MQTT_CONF_VERSION
+#else
+#define MQTT_PROTOCOL_VERSION MQTT_PROTOCOL_VERSION_3_1
+#endif
+
+#if MQTT_PROTOCOL_VERSION==MQTT_PROTOCOL_VERSION_5
+#define MQTT_5 1
+#elif MQTT_PROTOCOL_VERSION==MQTT_PROTOCOL_VERSION_3_1_1
+#define MQTT_311 1
+#elif MQTT_PROTOCOL_VERSION==MQTT_PROTOCOL_VERSION_3_1
+#define MQTT_31 1
+#endif
+
 #define MQTT_CLIENT_ID_MAX_LEN 23
 
 /* Size of the underlying TCP buffers */
@@ -113,8 +131,12 @@
 
 #define MQTT_FHDR_SIZE 1
 #define MQTT_MAX_REMAINING_LENGTH_BYTES 4
-#define MQTT_PROTOCOL_VERSION 3
+#if MQTT_31
 #define MQTT_PROTOCOL_NAME "MQIsdp"
+#else
+#define MQTT_PROTOCOL_NAME "MQTT"
+#endif
+
 #define MQTT_TOPIC_MAX_LENGTH 128
 /*---------------------------------------------------------------------------*/
 /*
