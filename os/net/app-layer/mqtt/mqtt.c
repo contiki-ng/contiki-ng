@@ -114,7 +114,13 @@ typedef enum {
   MQTT_VHDR_CONN_REJECTED_UNAVAILABLE,
   MQTT_VHDR_CONN_REJECTED_BAD_USER_PASS,
   MQTT_VHDR_CONN_REJECTED_UNAUTHORIZED,
-} mqtt_vhdr_connack_fields_t;
+} mqtt_vhdr_connack_ret_code_t;
+
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+typedef enum {
+  MQTT_VHDR_CONNACK_SESSION_PRESENT = 0x1
+} mqtt_vhdr_connack_flags_t;
+#endif
 /*---------------------------------------------------------------------------*/
 #if MQTT_31
 /* Len MSB(0)
@@ -788,6 +794,10 @@ handle_connack(struct mqtt_connection *conn)
   }
 
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
+
+  #if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+    conn->session_present = conn->in_packet.payload[0] & MQTT_VHDR_CONNACK_SESSION_PRESENT;
+  #endif
 
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
              keep_alive_callback, conn);

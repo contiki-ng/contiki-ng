@@ -358,6 +358,10 @@ struct mqtt_connection {
   uint8_t connect_vhdr_flags;
   uint8_t auto_reconnect;
 
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+  uint8_t session_present;
+#endif
+
   uint16_t keep_alive;
   struct ctimer keep_alive_timer;
   uint8_t waiting_for_pingresp;
