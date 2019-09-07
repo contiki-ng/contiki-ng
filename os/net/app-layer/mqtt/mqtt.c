@@ -1323,7 +1323,7 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
  */
 mqtt_status_t
 mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
-             uint16_t keep_alive)
+             uint16_t keep_alive, uint8_t clean_session)
 {
   uip_ip6addr_t ip6addr;
   uip_ipaddr_t *ipaddr;
@@ -1339,7 +1339,10 @@ mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
   conn->server_port = port;
   conn->out_buffer_ptr = conn->out_buffer;
   conn->out_packet.qos_state = MQTT_QOS_STATE_NO_ACK;
-  conn->connect_vhdr_flags |= MQTT_VHDR_CLEAN_SESSION_FLAG;
+
+  if(clean_session) {
+	  conn->connect_vhdr_flags |= MQTT_VHDR_CLEAN_SESSION_FLAG;
+  }
 
   /* convert the string IPv6 address to a numeric IPv6 address */
   if(uiplib_ip6addrconv(host, &ip6addr) == 0) {

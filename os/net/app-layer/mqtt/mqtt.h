@@ -139,6 +139,11 @@ typedef enum {
   MQTT_RETAIN_ON,
 } mqtt_retain_t;
 
+typedef enum {
+  MQTT_CLEAN_SESSION_OFF,
+  MQTT_CLEAN_SESSION_ON,
+} mqtt_clean_session_t;
+
 /**
  * \brief MQTT engine events
  */
@@ -389,6 +394,8 @@ mqtt_status_t mqtt_register(struct mqtt_connection *conn,
  * \param keep_alive Keep alive timer in seconds. Used by broker to handle
  *        client disc. Defines the maximum time interval between two messages
  *        from the client. Shall be min 1.5 x report interval.
+ * \param clean_session Request a new session and discard pending messages with
+ *        QoS > 0, as well as client subscriptions
  * \return MQTT_STATUS_OK or an error status
  *
  * This function connects to a MQTT broker.
@@ -396,7 +403,8 @@ mqtt_status_t mqtt_register(struct mqtt_connection *conn,
 mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
                            char *host,
                            uint16_t port,
-                           uint16_t keep_alive);
+                           uint16_t keep_alive,
+                           uint8_t clean_session);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Disconnects from a MQTT broker.

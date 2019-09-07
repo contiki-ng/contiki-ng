@@ -699,7 +699,8 @@ connect_to_broker(void)
   /* Connect to MQTT server */
   mqtt_status_t conn_attempt_result = mqtt_connect(&conn, conf->broker_ip,
                                                    conf->broker_port,
-                                                   conf->pub_interval * 3);
+                                                   conf->pub_interval * 3,
+                                                   MQTT_CLEAN_SESSION_ON);
 
   if(conn_attempt_result == MQTT_STATUS_OK) {
     state = MQTT_CLIENT_STATE_CONNECTING;
