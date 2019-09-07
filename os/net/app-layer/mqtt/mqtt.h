@@ -138,6 +138,16 @@
 #endif
 
 #define MQTT_TOPIC_MAX_LENGTH 128
+
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+#ifdef MQTT_CONF_SUPPORTS_EMPTY_CLIENT_ID
+#define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID MQTT_CONF_SUPPORTS_EMPTY_CLIENT_ID
+#else
+#define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
+#endif
+#else
+#define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
+#endif
 /*---------------------------------------------------------------------------*/
 /*
  * Debug configuration, this is similar but not exactly like the Debugging

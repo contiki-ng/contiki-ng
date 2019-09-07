@@ -1323,9 +1323,11 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
               char *client_id, mqtt_event_callback_t event_callback,
               uint16_t max_segment_size)
 {
+  #if MQTT_31 || !MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID
   if(strlen(client_id) < 1) {
     return MQTT_STATUS_INVALID_ARGS_ERROR;
   }
+  #endif
 
   /* Set defaults - Set all to zero to begin with */
   memset(conn, 0, sizeof(struct mqtt_connection));
@@ -1368,7 +1370,8 @@ mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
   conn->out_buffer_ptr = conn->out_buffer;
   conn->out_packet.qos_state = MQTT_QOS_STATE_NO_ACK;
 
-  if(clean_session) {
+  // If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession to 1
+  if(clean_session || (conn->client_id.length == 0)) {
 	  conn->connect_vhdr_flags |= MQTT_VHDR_CLEAN_SESSION_FLAG;
   }
 
