@@ -693,6 +693,11 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
     PT_EXIT(pt);
   }
 
+  // The DUP flag MUST be set to 0 for all QoS 0 messages
+  if(conn->out_packet.qos == MQTT_QOS_LEVEL_0) {
+    conn->out_packet.fhdr &= ~MQTT_FHDR_DUP_FLAG;
+  }
+
   /* Write Fixed Header */
   PT_MQTT_WRITE_BYTE(conn, conn->out_packet.fhdr);
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->out_packet.remaining_length_enc,
@@ -706,6 +711,7 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
     PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
     PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
   }
+
   /* Write Payload */
   PT_MQTT_WRITE_BYTES(conn,
                       conn->out_packet.payload,
