@@ -305,7 +305,17 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     break;
   }
   case MQTT_EVENT_SUBACK: {
-    DBG("APP - Application is subscribed to topic successfully\n");
+    #if MQTT_311
+    mqtt_suback_event_t *suback_event = (mqtt_suback_event_t*) data;
+
+    if(suback_event->success) {
+      DBG("APP - Application is subscribed to topic successfully\n");
+    } else {
+      DBG("APP - Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
+    }
+    #else
+      DBG("APP - Application is subscribed to topic successfully\n");
+    #endif
     break;
   }
   case MQTT_EVENT_UNSUBACK: {

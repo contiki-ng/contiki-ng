@@ -122,6 +122,15 @@ typedef enum {
 } mqtt_vhdr_connack_flags_t;
 #endif
 /*---------------------------------------------------------------------------*/
+#if MQTT_311
+typedef enum {
+  MQTT_SUBACK_RET_QOS_0 = 0x00,
+  MQTT_SUBACK_RET_QOS_1 = 0x01,
+  MQTT_SUBACK_RET_QOS_2 = 0x02,
+  MQTT_SUBACK_RET_FAIL  = 0x08,
+} mqtt_suback_ret_code_t;
+#endif
+/*---------------------------------------------------------------------------*/
 #if MQTT_31
 /* Len MSB(0)
  * Len LSB(6)
@@ -822,7 +831,7 @@ handle_pingresp(struct mqtt_connection *conn)
 static void
 handle_suback(struct mqtt_connection *conn)
 {
-  struct mqtt_suback_event suback_event;
+  mqtt_suback_event_t suback_event;
 
   DBG("MQTT - Got SUBACK\n");
 
@@ -836,8 +845,32 @@ handle_suback(struct mqtt_connection *conn)
 
   suback_event.mid = (conn->in_packet.payload[0] << 8) |
     (conn->in_packet.payload[1]);
-  suback_event.qos_level = conn->in_packet.payload[2];
   conn->in_packet.mid = suback_event.mid;
+
+#if MQTT_311
+  suback_event.success = 0;
+
+  switch(conn->in_packet.payload[2]) {
+    case MQTT_SUBACK_RET_FAIL:
+      PRINTF("MQTT - Error, SUBSCRIBE failed with SUBACK return code '%x'", conn->in_packet.payload[2]);
+      break;
+
+    case MQTT_SUBACK_RET_QOS_0:
+    case MQTT_SUBACK_RET_QOS_1:
+    case MQTT_SUBACK_RET_QOS_2:
+      suback_event.qos_level = conn->in_packet.payload[2] & 0x03;
+      suback_event.success = 1;
+      break;
+
+    default:
+      PRINTF("MQTT - Error, Unrecognised SUBACK return code '%x'", conn->in_packet.payload[2]);
+      break;
+    }
+
+  suback_event.return_code = conn->in_packet.payload[2];
+#else
+  suback_event.qos_level = conn->in_packet.payload[2];
+#endif
 
   if(conn->in_packet.mid != conn->out_packet.mid) {
     DBG("MQTT - Warning, got SUBACK with none matching MID. Currently there is"

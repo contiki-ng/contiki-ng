@@ -254,10 +254,14 @@ struct mqtt_string {
  *
  * This could be part of a union of event data structures.
  */
-struct mqtt_suback_event {
+typedef struct {
   uint16_t mid;
   mqtt_qos_level_t qos_level;
-};
+#if MQTT_311
+  uint8_t return_code;
+  uint8_t success;
+#endif
+} mqtt_suback_event_t;
 
 /* This is the MQTT message that is exposed to the end user. */
 struct mqtt_message {
