@@ -116,11 +116,10 @@ typedef enum {
   MQTT_VHDR_CONN_REJECTED_UNAUTHORIZED,
 } mqtt_vhdr_connack_ret_code_t;
 
-#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
 typedef enum {
   MQTT_VHDR_CONNACK_SESSION_PRESENT = 0x1
 } mqtt_vhdr_connack_flags_t;
-#endif
+
 /*---------------------------------------------------------------------------*/
 #if MQTT_311
 typedef enum {
@@ -702,7 +701,7 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
     PT_EXIT(pt);
   }
 
-  // The DUP flag MUST be set to 0 for all QoS 0 messages
+  /* The DUP flag MUST be set to 0 for all QoS 0 messages */
   if(conn->out_packet.qos == MQTT_QOS_LEVEL_0) {
     conn->out_packet.fhdr &= ~MQTT_FHDR_DUP_FLAG;
   }
@@ -810,9 +809,9 @@ handle_connack(struct mqtt_connection *conn)
 
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
 
-  #if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
-    conn->session_present = conn->in_packet.payload[0] & MQTT_VHDR_CONNACK_SESSION_PRESENT;
-  #endif
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+  conn->session_present = conn->in_packet.payload[0] & MQTT_VHDR_CONNACK_SESSION_PRESENT;
+#endif
 
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
              keep_alive_callback, conn);
@@ -851,21 +850,21 @@ handle_suback(struct mqtt_connection *conn)
   suback_event.success = 0;
 
   switch(conn->in_packet.payload[2]) {
-    case MQTT_SUBACK_RET_FAIL:
-      PRINTF("MQTT - Error, SUBSCRIBE failed with SUBACK return code '%x'", conn->in_packet.payload[2]);
-      break;
+  case MQTT_SUBACK_RET_FAIL:
+    PRINTF("MQTT - Error, SUBSCRIBE failed with SUBACK return code '%x'", conn->in_packet.payload[2]);
+    break;
 
-    case MQTT_SUBACK_RET_QOS_0:
-    case MQTT_SUBACK_RET_QOS_1:
-    case MQTT_SUBACK_RET_QOS_2:
-      suback_event.qos_level = conn->in_packet.payload[2] & 0x03;
-      suback_event.success = 1;
-      break;
+  case MQTT_SUBACK_RET_QOS_0:
+  case MQTT_SUBACK_RET_QOS_1:
+  case MQTT_SUBACK_RET_QOS_2:
+    suback_event.qos_level = conn->in_packet.payload[2] & 0x03;
+    suback_event.success = 1;
+    break;
 
-    default:
-      PRINTF("MQTT - Error, Unrecognised SUBACK return code '%x'", conn->in_packet.payload[2]);
-      break;
-    }
+  default:
+    PRINTF("MQTT - Error, Unrecognised SUBACK return code '%x'", conn->in_packet.payload[2]);
+    break;
+  }
 
   suback_event.return_code = conn->in_packet.payload[2];
 #else
@@ -1372,11 +1371,11 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
               char *client_id, mqtt_event_callback_t event_callback,
               uint16_t max_segment_size)
 {
-  #if MQTT_31 || !MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID
+#if MQTT_31 || !MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID
   if(strlen(client_id) < 1) {
     return MQTT_STATUS_INVALID_ARGS_ERROR;
   }
-  #endif
+#endif
 
   /* Set defaults - Set all to zero to begin with */
   memset(conn, 0, sizeof(struct mqtt_connection));
@@ -1419,9 +1418,9 @@ mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
   conn->out_buffer_ptr = conn->out_buffer;
   conn->out_packet.qos_state = MQTT_QOS_STATE_NO_ACK;
 
-  // If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession to 1
+  /* If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession to 1 */
   if(clean_session || (conn->client_id.length == 0)) {
-	  conn->connect_vhdr_flags |= MQTT_VHDR_CLEAN_SESSION_FLAG;
+    conn->connect_vhdr_flags |= MQTT_VHDR_CLEAN_SESSION_FLAG;
   }
 
   /* convert the string IPv6 address to a numeric IPv6 address */
