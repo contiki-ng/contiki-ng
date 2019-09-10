@@ -795,6 +795,8 @@ PT_THREAD(pingreq_pt(struct pt *pt, struct mqtt_connection *conn))
 static void
 handle_connack(struct mqtt_connection *conn)
 {
+  mqtt_connack_event_t connack_event;
+
   DBG("MQTT - Got CONNACK\n");
 
   if(conn->in_packet.payload[1] != 0) {
@@ -810,7 +812,7 @@ handle_connack(struct mqtt_connection *conn)
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
 
 #if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
-  conn->session_present = conn->in_packet.payload[0] & MQTT_VHDR_CONNACK_SESSION_PRESENT;
+  connack_event.session_present = conn->in_packet.payload[0] & MQTT_VHDR_CONNACK_SESSION_PRESENT;
 #endif
 
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
@@ -818,7 +820,7 @@ handle_connack(struct mqtt_connection *conn)
 
   /* Always reset packet before callback since it might be used directly */
   conn->state = MQTT_CONN_STATE_CONNECTED_TO_BROKER;
-  call_event(conn, MQTT_EVENT_CONNECTED, NULL);
+  call_event(conn, MQTT_EVENT_CONNECTED, &connack_event);
 }
 /*---------------------------------------------------------------------------*/
 static void

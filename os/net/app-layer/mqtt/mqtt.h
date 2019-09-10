@@ -263,6 +263,10 @@ typedef struct {
 #endif
 } mqtt_suback_event_t;
 
+typedef struct {
+  uint8_t session_present;
+} mqtt_connack_event_t;
+
 /* This is the MQTT message that is exposed to the end user. */
 struct mqtt_message {
   uint32_t mid;
@@ -361,10 +365,6 @@ struct mqtt_connection {
 
   uint8_t connect_vhdr_flags;
   uint8_t auto_reconnect;
-
-#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
-  uint8_t session_present;
-#endif
 
   uint16_t keep_alive;
   struct ctimer keep_alive_timer;
