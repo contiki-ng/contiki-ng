@@ -38,6 +38,7 @@ COOJA.testlog
 *.firmware
 *.cc26x0-cc13x0
 *.zoul
+*.vesna
 
 # do not ignore platform makefiles
 !Makefile.cc2538dk
@@ -49,6 +50,7 @@ COOJA.testlog
 !Makefile.sky
 !Makefile.cc26x0-cc13x0
 !Makefile.zoul
+!Makefile.vesna
 
 # other nRF52 build artifacts
 *.jlink
@@ -67,3 +69,6 @@ tests/18-coap-lwm2m/leshan-server-demo*.jar
 # x86 UEFI files
 cpu/x86/uefi/Makefile.uefi
 cpu/x86/uefi/edk2
+
+# editors
+.vscode/

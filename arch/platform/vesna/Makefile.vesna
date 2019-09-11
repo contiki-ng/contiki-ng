@@ -1,0 +1,186 @@
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+# Check if VSNDRIVERS points to vesna-drivers
+VSNDRIVERS ?= $(CONTIKI)/arch/platform/vesna/vesna-drivers
+ifneq (${shell test -d $(VSNDRIVERS); echo $$?},0)
+  ${error VSNDRIVERS (vesna-drivers) directory not found!}
+endif
+
+VSNDRIVERS_DIRS_RELATIVE = \
+	VESNALib \
+	VESNALib/inc \
+	VESNALib/src \
+	FWLib/inc \
+	FWLib/src \
+	CMSIS/src \
+	External/FatFS/inc \
+	External/FatFS/src
+
+VSNDRIVERS_DIRS = ${addprefix $(VSNDRIVERS)/, $(VSNDRIVERS_DIRS_RELATIVE)}
+
+### syscalls.c and stm32f10x_it.c need to be excluded.
+### syscalls.c will be precompiled into *.o,
+### while stm32f10x_it.c is replaced with contiki-interrupts.c
+VSNDRIVERS_SOURCEFILES = ${filter-out \
+	syscalls.c stm32f10x_it.c, \
+	${notdir ${foreach dir, $(VSNDRIVERS_DIRS), ${wildcard $(dir)/*.c}}} \
+}
+
+EXTERNALDIRS += $(VSNDRIVERS_DIRS)
+
+ifeq ($(V),1)
+  TRACE_SREC_CAT =
+else
+  TRACE_SREC_CAT = @echo "  SREC_CAT " $< "-->" $@
+endif
+
+
+PREFIX ?= arm-none-eabi
+
+CC			= $(PREFIX)-gcc
+CPP			= $(PREFIX)-cpp
+LD			= $(PREFIX)-gcc 
+AR			= $(PREFIX)-ar
+AS			= $(PREFIX)-as
+OBJCOPY		= $(PREFIX)-objcopy
+OBJDUMP		= $(PREFIX)-objdump
+NM			= $(PREFIX)-nm
+SIZE		= $(PREFIX)-size
+STRIP		= $(PREFIX)-strip
+GDB			= $(PREFIX)-gdb
+SREC_CAT	= srec_cat
+
+
+TARGET_START_SOURCEFILES = contiki-interrupts.c startup_stm32f10x_hd.s syscalls.c
+TARGET_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(TARGET_START_SOURCEFILES)}}
+#TARGET_STARTFILES := ${addprefix $(OBJECTDIR)/, contiki-interrupts.o startup.o syscalls.o}
+
+
+CONTIKI_TARGET_DIRS += . cpu dev
+
+CONTIKI_TARGET_SOURCEFILES += platform.c vsndriversconf.c int-master.c
+CONTIKI_TARGET_SOURCEFILES += clock.c rtimer-arch.c uart1.c watchdog.c node-id.c slip-arch.c
+
+CONTIKI_SOURCEFILES += $(TARGET_START_SOURCEFILES) $(VSNDRIVERS_SOURCEFILES) $(CONTIKI_TARGET_SOURCEFILES)
+
+# Linker script
+LDSCRIPT ?= STM32_512K_64K_FLASH.ld
+
+# Flags for processor architecture
+ARCH_FLAGS += -mcpu=cortex-m3 -mthumb -mlittle-endian -mabi=aapcs
+
+
+CFLAGS += $(ARCH_FLAGS)
+CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
+CFLAGS += -fshort-enums -fno-builtin # -fomit-frame-pointer
+CFLAGS += -Wall -Wwrite-strings -Wshadow -Werror=implicit-function-declaration
+CFLAGS += -std=gnu99
+
+### Are we building with code size optimisations?
+SMALL ?= 0
+ifeq ($(SMALL),1)
+  CFLAGS += -Os
+else
+  CFLAGS += -ggdb3
+endif
+
+ifdef NODEID
+CFLAGS += -DNODEID=$(NODEID)
+endif
+
+# Compile with AT86RF2xx radio support/drivers
+ifdef AT86RF2XX_BOARD
+AT86RF2XX_BOARD_UPPER = $(shell echo "$(AT86RF2XX_BOARD)" | tr [a-z] [A-Z] | tr [.\ ] _)
+CONTIKI_TARGET_DIRS += dev/at86rf2xx 
+CONTIKI_TARGET_SOURCEFILES += rf2xx.c rf2xx_hal.c rf2xx_tsch.c
+CFLAGS += -DAT86RF2XX
+CFLAGS += -DAT86RF2XX_BOARD_$(AT86RF2XX_BOARD_UPPER)
+CFLAGS += -DAT86RF2XX_BOARD_STRING=\"$(AT86RF2XX_BOARD_UPPER)\"
+endif
+
+# (Workaround) Avoid compile warnings from vesna-drivers
+#CFLAGS += -DVSNCCRADIO_868=1
+#CFLAGS += -DCC_RADIO_ON_RADIO_CONNECTOR=0
+#CFLAGS += -DCC_RADIO_ON_EXPANSION_CONNECTOR=0
+
+
+# Not really sure why is this for and if it is usefull for vesna-drivers.
+MAKE_WITH_LIB_DBG_IO ?= 0
+
+ifeq ($(MAKE_WITH_LIB_DBG_IO),1)
+  MODULES += os/lib/dbg-io
+endif
+
+### Build syscalls for newlib
+#MODULES += os/lib/newlib
+
+
+LDFLAGS += $(ARCH_FLAGS) -nostartfiles
+LDFLAGS += -L$(VSNDRIVERS)/VESNALib -T$(LDSCRIPT)
+
+LDFLAGS += -Wl,--gc-sections,-Map=$(CONTIKI_NG_PROJECT_MAP),-cref,-u,Reset_Handler 
+LDFLAGS += -Wl,--entry=Reset_Handler
+
+#LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
+#LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),--cref,--no-warn-mismatch
+
+TARGET_LIBFILES += -lm
+
+OBJCOPY_FLAGS += --gap-fill 0xff
+OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
+
+
+
+%.stlink: %.$(TARGET)
+	$(Q)openocd \
+		-f interface/stlink-v2.cfg \
+		-f target/stm32f1x.cfg \
+		-c "adapter_khz 1000" \
+		-c "init" \
+		-c "reset halt" \
+		-c "poll" \
+		-c "flash write_image erase $*.$(TARGET) 0 elf" \
+		-c "verify_image $*.$(TARGET) 0 elf" \
+		-c "reset run" \
+		-c "shutdown"
+
+
+%.debug.stlink: %.$(TARGET)
+	$(Q)openocd \
+		-f interface/stlink-v2.cfg \
+		-f target/stm32f1x.cfg \
+		-c "adapter_khz 1000"
+
+
+%.olimex: %.$(TARGET)
+	$(Q)openocd \
+		-f interface/ftdi/olimex-arm-usb-ocd.cfg \
+		-f target/stm32f1x.cfg \
+		-c "init" \
+		-c "reset halt" \
+		-c "poll" \
+		-c "flash write_image erase $*.$(TARGET) 0 elf" \
+		-c "verify_image $*.$(TARGET) 0 elf" \
+		-c "reset run" \
+		-c "shutdown"
+
+
+%.debug %.debug.olimex: %.$(TARGET)
+	$(Q)openocd \
+		-s $(ARCH_PATH)/platform/$(TARGET)/OpenOCD/ \
+		-f snc_olimex_gdb.cfg
+
+
+%.gdb: %.$(TARGET)
+	$(Q)gdb-multiarch \
+		--eval-command="target extended-remote :3333" \
+		$*.$(TARGET)
+
+
+DEVICE ?= ttyUSB0
+BUADRATE ?= 115200
+
+serial:
+	$(Q)picocom --echo -b 115200 --imap lfcrlf --omap crlf /dev/$(DEVICE)
