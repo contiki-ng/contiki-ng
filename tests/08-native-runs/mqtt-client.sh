@@ -4,13 +4,23 @@ source ../utils.sh
 # Contiki directory
 CONTIKI=$1
 
+# 3_1, 3_1_1, or 5
+# default: 3_1
+MQTT_VERSION=${MQTT_VERSION=3_1}
+
 # Example code directory
 CODE_DIR=$CONTIKI/examples/mqtt-client/
 CODE=mqtt-client
 
-CLIENT_LOG=$CODE.log
-CLIENT_TESTLOG=$CODE.testlog
-CLIENT_ERR=$CODE.err
+TEST_NAME=$CODE-$MQTT_VERSION
+if [ -n "$VALGRIND_CMD" ]
+then
+  TEST_NAME+="-valgrind"
+fi
+
+CLIENT_LOG=$TEST_NAME.log
+CLIENT_TESTLOG=$TEST_NAME.testlog
+CLIENT_ERR=$TEST_NAME.err
 MOSQ_SUB_LOG=mosquitto_sub.log
 MOSQ_SUB_ERR=mosquitto_sub.err
 
@@ -29,9 +39,9 @@ sleep 2
 # Starting Contiki-NG native node
 echo "Starting native node"
 make -C $CODE_DIR -B TARGET=native \
-  DEFINES=MQTT_CLIENT_CONF_ORG_ID=\\\"travis-test\\\",MQTT_CLIENT_CONF_LOG_LEVEL=LOG_LEVEL_DBG \
+  DEFINES=MQTT_CLIENT_CONF_ORG_ID=\\\"travis-test\\\",MQTT_CLIENT_CONF_LOG_LEVEL=LOG_LEVEL_DBG,MQTT_CONF_VERSION=MQTT_PROTOCOL_VERSION_$MQTT_VERSION \
   > make.log 2> make.err
-sudo $CODE_DIR/$CODE.native > $CLIENT_LOG 2> $CLIENT_ERR &
+sudo $VALGRIND_CMD $CODE_DIR/$CODE.native > $CLIENT_LOG 2> $CLIENT_ERR &
 CPID=$!
 
 # The mqtt-client will publish every 30 secs. Wait for 45
@@ -42,7 +52,9 @@ mosquitto_pub -m "1" -t iot-2/cmd/leds/fmt/json
 
 echo "Closing native node"
 sleep 2
-kill_bg $CPID
+# If we're running Valgrind, we want it to dump the final report, so we don't SIGKILL it
+kill_bg $CPID SIGTERM
+sleep 1
 
 echo "Stopping mosquitto daemon"
 kill_bg $MOSQID
@@ -53,11 +65,13 @@ kill_bg $MSUBID
 # Success criteria:
 # * mosquitto_sub output not empty
 # * mqtt-client.native output contains "MQTT SUB"
+# * Valgrind off or 0 errors reported
 SUB_RCV=`grep "MQTT SUB" $CLIENT_LOG`
-if [ -s "$MOSQ_SUB_LOG" -a -n "$SUB_RCV" ]
+VALGRIND_NO_ERR=`grep "ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)" $CLIENT_ERR`
+if [ -s "$MOSQ_SUB_LOG" -a -n "$SUB_RCV" ] && [ -z "$VALGRIND_CMD" -o -n "$VALGRIND_NO_ERR" ]
 then
-  cp $CLIENT_LOG $CODE.testlog
-  printf "%-32s TEST OK\n" "$CODE" | tee $CODE.testlog;
+  cp $CLIENT_LOG $CLIENT_TESTLOG
+  printf "%-32s TEST OK\n" "$TEST_NAME" | tee $CLIENT_TESTLOG;
 else
   echo "==== make.log ====" ; cat make.log;
   echo "==== make.err ====" ; cat make.err;
@@ -66,7 +80,7 @@ else
   echo "==== $MOSQ_SUB_LOG ====" ; cat $MOSQ_SUB_LOG;
   echo "==== $MOSQ_SUB_ERR ====" ; cat $MOSQ_SUB_ERR;
 
-  printf "%-32s TEST FAIL\n" "$CODE" | tee $CODE.testlog;
+  printf "%-32s TEST FAIL\n" "$TEST_NAME" | tee $CLIENT_TESTLOG;
 fi
 
 rm make.log
