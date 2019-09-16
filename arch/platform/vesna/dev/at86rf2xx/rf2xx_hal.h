@@ -123,15 +123,16 @@
 	#define EXTI_IRQ_PIN		(GPIO_PinSource3)
 	#define EXTI_IRQ_CHANNEL	(EXTI3_IRQn)
 
-	// Chip select pins for CC101 radio
-	#define CC1101_CSN_PIN      (GPIO_Pin_9)
-	#define CC1101_CSN_PORT     (GPIOB)
-
-
 #else
 	#warning "No predefined board was selected!"
 	#error "No pins have been defined for AT86RF2xx radio!"
 #endif
+
+
+// TODO: Separate CC and Atmel radio configs
+// Chip select pins for CC101 radio
+#define CC1101_CSN_PIN      (GPIO_Pin_9)
+#define CC1101_CSN_PORT     (GPIOB)
 
 typedef union {
 	struct {
