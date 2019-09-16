@@ -221,6 +221,11 @@ typedef enum {
 
   /* Expand for QoS 2 */
 } mqtt_qos_state_t;
+
+typedef enum {
+  MQTT_PUBLISH_OK,
+  MQTT_PUBLISH_ERR,
+} mqtt_pub_status_t;
 /*---------------------------------------------------------------------------*/
 /*
  * This is the state of the connection itself.

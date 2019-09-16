@@ -911,11 +911,19 @@ handle_puback(struct mqtt_connection *conn)
   call_event(conn, MQTT_EVENT_PUBACK, &conn->in_packet.mid);
 }
 /*---------------------------------------------------------------------------*/
-static void
+static mqtt_pub_status_t
 handle_publish(struct mqtt_connection *conn)
 {
   DBG("MQTT - Got PUBLISH, called once per manageable chunk of message.\n");
   DBG("MQTT - Handling publish on topic '%s'\n", conn->in_publish_msg.topic);
+
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+  if(strlen(conn->in_publish_msg.topic) < conn->in_packet.topic_len) {
+    DBG("NULL detected in received PUBLISH topic\n");
+    mqtt_disconnect(conn);
+    return MQTT_PUBLISH_ERR;
+  }
+#endif
 
   DBG("MQTT - This chunk is %i bytes\n", conn->in_packet.payload_pos);
 
@@ -938,6 +946,8 @@ handle_publish(struct mqtt_connection *conn)
     DBG("MQTT - (handle_publish) resetting packet.\n");
     reset_packet(&conn->in_packet);
   }
+
+  return MQTT_PUBLISH_OK;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -1006,6 +1016,7 @@ tcp_input(struct tcp_socket *s,
   uint32_t pos = 0;
   uint32_t copy_bytes = 0;
   uint8_t byte;
+  mqtt_pub_status_t pub_status;
 
   if(input_data_len == 0) {
     return 0;
@@ -1113,10 +1124,14 @@ tcp_input(struct tcp_socket *s,
       conn->in_publish_msg.payload_chunk_length = MQTT_INPUT_BUFF_SIZE;
       conn->in_publish_msg.payload_left -= MQTT_INPUT_BUFF_SIZE;
 
-      handle_publish(conn);
+      pub_status = handle_publish(conn);
 
       conn->in_publish_msg.payload_chunk = conn->in_packet.payload;
       conn->in_packet.payload_pos = 0;
+
+      if(pub_status != MQTT_PUBLISH_OK) {
+        return 0;
+      }
     }
 
     if(pos >= input_data_len &&
@@ -1143,7 +1158,7 @@ tcp_input(struct tcp_socket *s,
     conn->in_publish_msg.payload_chunk = conn->in_packet.payload;
     conn->in_publish_msg.payload_chunk_length = conn->in_packet.payload_pos;
     conn->in_publish_msg.payload_left = 0;
-    handle_publish(conn);
+    (void) handle_publish(conn);
     break;
   case MQTT_FHDR_MSG_TYPE_PUBACK:
     handle_puback(conn);
