@@ -10,6 +10,9 @@
 #include "vsnusart.h"
 #include "vsntime.h"
 
+#include "lib/crc16.h"
+#include "vesna-def.h"
+
 #include "contiki.h"
 #include "dev/uart1.h"
 #include "dev/serial-line.h"
@@ -77,10 +80,10 @@ platform_init_stage_two(void)
 
 #endif // UART1_ENABLED
 
-	node_id_init(); // node_id_init is triggered twice. Here and between stage 2 & 3.
+	uint16_t uuid = crc16_data(STM32F1_UUID.u8, sizeof(STM32F1_UUID.u8), 0);
 
 	// We define unique 64-bit address to represent this device.
-	const uint8_t extAddr[8] = { 0, 0x12, 0x4B, 0, 0, 0x06, (node_id & 0xFF), (node_id >> 8) };
+	const uint8_t extAddr[8] = { 0, 0x12, 0x4B, 0, 0, 0x06, (uuid & 0xFF), (uuid >> 8) };
 
 	// populate linkaddr_node_addr. Maintain endianess;
 	// This sets MAC address

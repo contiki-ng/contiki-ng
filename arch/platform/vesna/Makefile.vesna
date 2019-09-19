@@ -61,7 +61,7 @@ TARGET_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(TARGET_START_SOURC
 CONTIKI_TARGET_DIRS += . cpu dev
 
 CONTIKI_TARGET_SOURCEFILES += platform.c vsndriversconf.c int-master.c
-CONTIKI_TARGET_SOURCEFILES += clock.c rtimer-arch.c uart1.c watchdog.c node-id.c slip-arch.c
+CONTIKI_TARGET_SOURCEFILES += clock.c rtimer-arch.c uart1.c watchdog.c slip-arch.c
 
 CONTIKI_SOURCEFILES += $(TARGET_START_SOURCEFILES) $(VSNDRIVERS_SOURCEFILES) $(CONTIKI_TARGET_SOURCEFILES)
 
