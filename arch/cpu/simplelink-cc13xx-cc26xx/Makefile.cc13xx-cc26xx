@@ -142,3 +142,29 @@ $(OBJECTDIR)/ccfg-conf.o: ccfg-conf.c FORCE | $(OBJECTDIR)
 
 # Include the Sub-family Makefile specific for the specified device
 include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)
+
+################################################################################
+### For the .upload make target
+PYTHON = python
+BSL_FLAGS += -e -w -v
+
+ifdef PORT
+  BSL_FLAGS += -p $(PORT)
+endif
+
+BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
+
+ifeq ($(BOARD_SUPPORTS_BSL),1)
+%.upload: $(OUT_BIN)
+ifeq ($(wildcard $(BSL)), )
+	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
+else
+	$(PYTHON) $(BSL) $(BSL_FLAGS) $<
+endif
+else
+%.upload:
+	@echo "This board cannot be programmed through the ROM bootloader and therefore does not support the .upload target."
+endif
+
+### For the login etc targets
+BAUDRATE ?= 115200
