@@ -48,6 +48,8 @@
 
 #define COOJA 1
 
+#define ASSERT_CONF_RETURNS  1
+
 #define LEDS_CONF_LEGACY_API 1
 
 #ifndef EEPROM_CONF_SIZE
@@ -74,8 +76,6 @@
 
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
-
-#define cooja_radio_driver_max_payload_len 125
 
 /* Default network config */
 #if NETSTACK_CONF_WITH_IPV6

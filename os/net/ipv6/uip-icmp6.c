@@ -283,7 +283,7 @@ echo_reply_input(void)
         n = list_item_next(n)) {
       if(n->callback != NULL) {
         n->callback(&sender, ttl,
-                    (uint8_t *)&UIP_ICMP_BUF[sizeof(struct uip_icmp_hdr)],
+                    (uint8_t *)UIP_ICMP_PAYLOAD,
                     uip_len - sizeof(struct uip_icmp_hdr) - UIP_IPH_LEN);
       }
     }

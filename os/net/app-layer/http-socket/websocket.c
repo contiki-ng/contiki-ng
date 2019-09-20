@@ -34,7 +34,7 @@
 #include <string.h>
 
 #include "contiki-net.h"
-
+#include "resolv.h"
 #include "websocket.h"
 
 /* Log configuration */

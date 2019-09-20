@@ -31,7 +31,7 @@
 
 #include "websocket-http-client.h"
 #include "net/ipv6/uiplib.h"
-#include "net/ipv6/resolv.h"
+#include "resolv.h"
 
 #include "ipv6/ip64-addr.h"
 
@@ -41,7 +41,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Websocket"
-#define LOG_LEVEL LOG_LEVEL_IPV6
+#define LOG_LEVEL LOG_LEVEL_NONE
 
 enum {
   STATE_WAITING_FOR_HEADER,

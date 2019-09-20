@@ -47,8 +47,6 @@
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ble_cmd.h)
 #include DeviceFamily_constructPath(rf_patches/rf_patch_cpe_multi_protocol.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_rfe_bt5.h)
-#include DeviceFamily_constructPath(rf_patches/rf_patch_mce_bt5.h)
 
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
@@ -59,72 +57,58 @@ RF_Mode rf_ble_mode =
 {
   .rfMode = RF_MODE_AUTO,
   .cpePatchFxn = &rf_patch_cpe_multi_protocol,
-  .mcePatchFxn = &rf_patch_mce_bt5,
-  .rfePatchFxn = &rf_patch_rfe_bt5,
+  .mcePatchFxn = 0,
+  .rfePatchFxn = 0,
 };
-/*---------------------------------------------------------------------------*/
-/*
- * CMD_RADIO_SETUP must be configured with default TX power value
- * in the .txPower field.
- */
-#define DEFAULT_TX_POWER    0x941E /* 5 dBm */
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_BLE5_RADIO_SETUP */
 uint32_t rf_ble_overrides_common[] CC_ALIGN(4) =
 {
-                                 /* override_ble5_setup_override_common.xml */
-  (uint32_t)0x02400403,          /* Synth: Use 48 MHz crystal, enable extra PLL filtering */
-  (uint32_t)0x001C8473,          /* Synth: Configure extra PLL filtering */
-  (uint32_t)0x00088433,          /* Synth: Configure synth hardware */
-  (uint32_t)0x00038793,          /* Synth: Set minimum RTRIM to 3 */
-  HW32_ARRAY_OVERRIDE(0x4004,1), /* Synth: Configure faster calibration */
-  (uint32_t)0x1C0C0618,          /* Synth: Configure faster calibration */
-  (uint32_t)0xC00401A1,          /* Synth: Configure faster calibration */
-  (uint32_t)0x00010101,          /* Synth: Configure faster calibration */
-  (uint32_t)0xC0040141,          /* Synth: Configure faster calibration */
-  (uint32_t)0x00214AD3,          /* Synth: Configure faster calibration */
-  (uint32_t)0x02980243,          /* Synth: Decrease synth programming time-out (0x0298 RAT ticks = 166 us) */
-                                 /* DC/DC regulator: */
-                                 /* In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0xFCFC08C3,          /* In Rx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). */
-  (uint32_t)0x00038883,          /* Rx: Set LNA bias current offset to adjust +3 (default: 0) */
-  (uint32_t)0x000288A3,          /* Rx: Set RSSI offset to adjust reported RSSI by -2 dB (default: 0) */
-  (uint32_t)0x01080263,          /* Bluetooth 5: Compensate for reduced pilot tone length */
-  (uint32_t)0x08E90AA3,          /* Bluetooth 5: Compensate for reduced pilot tone length */
-  (uint32_t)0x00068BA3,          /* Bluetooth 5: Compensate for reduced pilot tone length */
-                                 /* Bluetooth 5: Set correct total clock accuracy for received AuxPtr */
-  (uint32_t)0x0E490C83,          /* assuming local sleep clock of 50 ppm */
-  (uint32_t)0xFFFFFFFF,
+  // override_ble5_setup_override_common.xml
+  // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0x3 (DITHER_EN=0 and IPEAK=3).
+  (uint32_t)0x00F388D3,
+  // Bluetooth 5: Set pilot tone length to 20 us Common
+  HW_REG_OVERRIDE(0x6024,0x2E20),
+  // Bluetooth 5: Compensate for reduced pilot tone length
+  (uint32_t)0x01280263,
+  // Bluetooth 5: Default to no CTE.
+  HW_REG_OVERRIDE(0x5328,0x0000),
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_BLE5_RADIO_SETUP */
 uint32_t rf_ble_overrides_1mbps[] CC_ALIGN(4) =
 {
-                                  /* override_ble5_setup_override_1mbps.xml */
-  MCE_RFE_OVERRIDE(1,0,0,1,0,0),  /* PHY: Use MCE RAM patch (mode 0), RFE RAM patch (mode 0) */
-  HW_REG_OVERRIDE(0x5320,0x0240), /* Bluetooth 5: Reduce pilot tone length */
-  (uint32_t)0x013302A3,           /* Bluetooth 5: Compensate for reduced pilot tone length */
-  (uint32_t)0xFFFFFFFF,
+  // override_ble5_setup_override_1mbps.xml
+  // Bluetooth 5: Set pilot tone length to 20 us
+  HW_REG_OVERRIDE(0x5320,0x03C0),
+  // Bluetooth 5: Compensate syncTimeadjust
+  (uint32_t)0x015302A3,
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_BLE5_RADIO_SETUP */
 uint32_t rf_ble_overrides_2mbps[] CC_ALIGN(4) =
 {
-                                  /* override_ble5_setup_override_2mbps.xml */
-  MCE_RFE_OVERRIDE(1,0,2,1,0,2),  /* PHY: Use MCE RAM patch (mode 2), RFE RAM patch (mode 2) */
-  HW_REG_OVERRIDE(0x5320,0x0240), /* Bluetooth 5: Reduce pilot tone length */
-  (uint32_t)0x00D102A3,           /* Bluetooth 5: Compensate for reduced pilot tone length */
-  (uint32_t)0xFFFFFFFF,
+  // override_ble5_setup_override_2mbps.xml
+  // Bluetooth 5: Set pilot tone length to 20 us
+  HW_REG_OVERRIDE(0x5320,0x03C0),
+  // Bluetooth 5: Compensate syncTimeAdjust
+  (uint32_t)0x00F102A3,
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_BLE5_RADIO_SETUP */
 uint32_t rf_ble_overrides_coded[] CC_ALIGN(4) =
 {
-                                  /* override_ble5_setup_override_coded.xml */
-  MCE_RFE_OVERRIDE(1,0,1,1,0,1),  /* PHY: Use MCE RAM patch (mode 1), RFE RAM patch (mode 1) */
-  HW_REG_OVERRIDE(0x5320,0x0240), /* Bluetooth 5: Reduce pilot tone length */
-  (uint32_t)0x078902A3,           /* Bluetooth 5: Compensate for reduced pilot tone length */
-  (uint32_t)0xFFFFFFFF,
+  // override_ble5_setup_override_coded.xml
+  // Bluetooth 5: Set pilot tone length to 20 us
+  HW_REG_OVERRIDE(0x5320,0x03C0),
+  // Bluetooth 5: Compensate syncTimeadjust
+  (uint32_t)0x07A902A3,
+  // Rx: Set AGC reference level to 0x1B (default: 0x2E)
+  HW_REG_OVERRIDE(0x609C,0x001B),
+  (uint32_t)0xFFFFFFFF
 };
 /*---------------------------------------------------------------------------*/
 /* CMD_BLE5_RADIO_SETUP: Bluetooth 5 Radio Setup Command for all PHYs */
@@ -147,7 +131,7 @@ rfc_CMD_BLE5_RADIO_SETUP_t rf_ble_cmd_radio_setup =
   .config.biasMode = 0x0, /* set by driver */
   .config.analogCfgMode = 0x0,
   .config.bNoFsPowerUp = 0x0,
-  .txPower = DEFAULT_TX_POWER,
+  .txPower = 0x7217, /* set by driver */
   .pRegOverrideCommon = rf_ble_overrides_common,
   .pRegOverride1Mbps = rf_ble_overrides_1mbps,
   .pRegOverride2Mbps = rf_ble_overrides_2mbps,

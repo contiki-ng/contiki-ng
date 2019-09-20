@@ -42,33 +42,6 @@
 #include "rf/tx-power.h"
 /*---------------------------------------------------------------------------*/
 /*
- * TX Power table for CC1312R
- * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
- * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
- * See the Technical Reference Manual for further details about the "txPower" Command field.
- * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
- */
-tx_power_table_t rf_ieee_tx_power_table_cc1312r[] =
-{
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  3) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  3) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 2, 0,  6) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 2, 0,  8) },
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0, 11) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 2, 0,  5) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 1, 0, 16) },
-  {  -5, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0, 17) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 1, 0, 20) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 26) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 1, 0, 28) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 0, 0, 34) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 0, 0, 42) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 0, 0, 54) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(30, 0, 0, 74) },
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-/*---------------------------------------------------------------------------*/
-/*
  * TX Power table for CC1352R
  * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
  * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
@@ -77,75 +50,47 @@ tx_power_table_t rf_ieee_tx_power_table_cc1312r[] =
  */
 tx_power_table_t rf_ieee_tx_power_table_cc1352r[] =
 {
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  3) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  3) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 2, 0,  6) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 2, 0,  8) },
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0, 11) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 2, 0,  5) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 1, 0, 16) },
-  {  -5, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0, 17) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 1, 0, 20) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 26) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 1, 0, 28) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 0, 0, 34) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 0, 0, 42) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 0, 0, 54) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(30, 0, 0, 74) },
+  {-20, RF_TxPowerTable_DEFAULT_PA_ENTRY(6, 3, 0, 2) },
+  {-15, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 3, 0, 3) },
+  {-10, RF_TxPowerTable_DEFAULT_PA_ENTRY(15, 3, 0, 5) },
+  {-5, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 3, 0, 9) },
+  {0, RF_TxPowerTable_DEFAULT_PA_ENTRY(19, 1, 0, 20) },
+  {1, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 1, 0, 20) },
+  {2, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 25) },
+  {3, RF_TxPowerTable_DEFAULT_PA_ENTRY(29, 1, 0, 28) },
+  {4, RF_TxPowerTable_DEFAULT_PA_ENTRY(35, 1, 0, 39) },
+  {5, RF_TxPowerTable_DEFAULT_PA_ENTRY(23, 0, 0, 57) },
   RF_TxPowerTable_TERMINATION_ENTRY
 };
 /*---------------------------------------------------------------------------*/
 /*
- * TX Power table for CC1352P with default PA
- * The RF_TxPowerTable_DEFAULT_PA_ENTRY macro is defined in RF.h and requires the following arguments:
+ * TX Power table
+ * The RF_TxPowerTable_DEFAULT_PA_ENTRY and RF_TxPowerTable_HIGH_PA_ENTRY macro is defined in RF.h.
+ * The following arguments are required:
  * RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost coefficient)
- * See the Technical Reference Manual for further details about the "txPower" Command field.
- * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
- */
-tx_power_table_t rf_ieee_tx_power_table_cc1352p_dpa[] =
-{
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  3) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  3) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 2, 0,  6) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 2, 0,  8) },
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0, 11) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 2, 0,  5) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 1, 0, 16) },
-  {  -5, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0, 17) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 1, 0, 20) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 26) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 1, 0, 28) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 0, 0, 34) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 0, 0, 42) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 0, 0, 54) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(30, 0, 0, 74) },
-  RF_TxPowerTable_TERMINATION_ENTRY
-};
-/*---------------------------------------------------------------------------*/
-/*
- * TX Power table for CC1352P with high PA
- * The RF_TxPowerTable_HIGH_PA_ENTRY macro is defined in RF.h and requires the following arguments:
  * RF_TxPowerTable_HIGH_PA_ENTRY(bias, ibboost, boost, coefficient, ldoTrim)
  * See the Technical Reference Manual for further details about the "txPower" Command field.
  * The PA settings require the CCFG_FORCE_VDDR_HH = 0 unless stated otherwise.
  */
-tx_power_table_t rf_ieee_tx_power_table_cc1352p_hpa[] =
+tx_power_table_t rf_ieee_tx_power_table_cc1352p[] =
 {
-  {  0, RF_TxPowerTable_HIGH_PA_ENTRY(29, 0, 1, 17,  1) },
-  {  3, RF_TxPowerTable_HIGH_PA_ENTRY(39, 0, 1, 20,  1) },
-  {  6, RF_TxPowerTable_HIGH_PA_ENTRY(46, 0, 1, 26,  7) },
-  {  9, RF_TxPowerTable_HIGH_PA_ENTRY(40, 0, 1, 39, 41) },
-  { 10, RF_TxPowerTable_HIGH_PA_ENTRY(23, 2, 1, 65,  5) },
-  { 11, RF_TxPowerTable_HIGH_PA_ENTRY(24, 2, 1, 29,  7) },
-  { 12, RF_TxPowerTable_HIGH_PA_ENTRY(19, 2, 1, 16, 25) },
-  { 13, RF_TxPowerTable_HIGH_PA_ENTRY(27, 2, 1, 19, 13) },
-  { 14, RF_TxPowerTable_HIGH_PA_ENTRY(24, 2, 1, 19, 27) },
-  { 15, RF_TxPowerTable_HIGH_PA_ENTRY(23, 2, 1, 20, 39) },
-  { 16, RF_TxPowerTable_HIGH_PA_ENTRY(34, 2, 1, 26, 23) },
-  { 17, RF_TxPowerTable_HIGH_PA_ENTRY(38, 2, 1, 33, 25) },
-  { 18, RF_TxPowerTable_HIGH_PA_ENTRY(30, 2, 1, 37, 53) },
-  { 19, RF_TxPowerTable_HIGH_PA_ENTRY(36, 2, 1, 57, 59) },
-  { 20, RF_TxPowerTable_HIGH_PA_ENTRY(56, 2, 1, 45, 63) },
+  {-20, RF_TxPowerTable_DEFAULT_PA_ENTRY(6, 3, 0, 2) },
+  {-15, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 3, 0, 3) },
+  {-10, RF_TxPowerTable_DEFAULT_PA_ENTRY(15, 3, 0, 5) },
+  {-5, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 3, 0, 9) },
+  {0, RF_TxPowerTable_DEFAULT_PA_ENTRY(19, 1, 0, 20) },
+  {1, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 1, 0, 20) },
+  {2, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 25) },
+  {3, RF_TxPowerTable_DEFAULT_PA_ENTRY(29, 1, 0, 28) },
+  {4, RF_TxPowerTable_DEFAULT_PA_ENTRY(35, 1, 0, 39) },
+  {5, RF_TxPowerTable_DEFAULT_PA_ENTRY(23, 0, 0, 57) },
+  {14, RF_TxPowerTable_HIGH_PA_ENTRY(22, 3, 1, 19, 27) },
+  {15, RF_TxPowerTable_HIGH_PA_ENTRY(26, 3, 1, 23, 27) },
+  {16, RF_TxPowerTable_HIGH_PA_ENTRY(30, 3, 1, 28, 27) },
+  {17, RF_TxPowerTable_HIGH_PA_ENTRY(37, 3, 1, 39, 27) },
+  {18, RF_TxPowerTable_HIGH_PA_ENTRY(32, 3, 1, 35, 48) },
+  {19, RF_TxPowerTable_HIGH_PA_ENTRY(34, 3, 1, 48, 63) },
+  {20, RF_TxPowerTable_HIGH_PA_ENTRY(53, 3, 1, 58, 63) },
   RF_TxPowerTable_TERMINATION_ENTRY
 };
 /*---------------------------------------------------------------------------*/
@@ -158,18 +103,11 @@ tx_power_table_t rf_ieee_ztx_power_table_empty[] =
 #if (RF_MODE == RF_MODE_2_4_GHZ)
 /*---------------------------------------------------------------------------*/
 /* TX power table, based on which board is used. */
-#if defined(DEVICE_CC1312R)
-#define TX_POWER_TABLE  rf_ieee_tx_power_table_cc1312r
-
-#elif defined(DEVICE_CC1352R)
+#if defined(DEVICE_CC1352R)
 #define TX_POWER_TABLE  rf_ieee_tx_power_table_cc1352r
 
 #elif defined(DEVICE_CC1352P)
-#if RF_TXPOWER_HIGH_PA
-#define TX_POWER_TABLE  rf_ieee_tx_power_table_cc1352p_hpa
-#else
-#define TX_POWER_TABLE  rf_ieee_tx_power_table_cc1352p_dpa
-#endif
+#define TX_POWER_TABLE  rf_ieee_tx_power_table_cc1352p
 
 #else
 #define TX_POWER_TABLE  rf_ieee_tx_power_table_empty

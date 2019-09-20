@@ -206,6 +206,27 @@ enum {
   /* The delay in usec between the end of SFD reception for an incoming frame
    * and the radio API starting to return receiving_packet() != 0 */
   RADIO_CONST_DELAY_BEFORE_DETECT,
+
+  /*
+   * The maximum payload the radio driver is able to handle.
+   *
+   * This includes the MAC header and MAC payload, but not any tail bytes
+   * added automatically by the radio. For example, in the typical case of
+   * .15.4 operation at 2.4GHz, this will be 125 bytes (127 bytes minus the
+   * FCS / CRC16).
+   *
+   * This is the maximum number of bytes that:
+   *   - The MAC layer will ask the radio driver to transmit.
+   *     This corresponds to the payload_len argument of the prepare() and
+   *     send() and the transmit_len argument of transmit().
+   *   - The radio driver will deliver to the MAC layer after frame reception.
+   *     The buf_len of the read function will typically be greater than or
+   *     equal to this value.
+   *
+   * Supporting this constant in the radio driver's get_value function is
+   * mandatory.
+   */
+  RADIO_CONST_MAX_PAYLOAD_LEN,
 };
 
 /* Radio power modes */

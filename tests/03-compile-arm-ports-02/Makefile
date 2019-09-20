@@ -20,8 +20,9 @@ lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
 lwm2m-ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1 \
 lwm2m-ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 hello-world/zoul \
+hello-world/zoul:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1 \
 sensniff/zoul \
-sensniff/zoul:ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
+sensniff/zoul:DEFINES=ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
 storage/cfs-coffee/zoul \
 storage/antelope-shell/zoul \
 6tisch/simple-node/zoul \
