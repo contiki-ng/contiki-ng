@@ -51,6 +51,7 @@
 #include DeviceFamily_constructPath(driverlib/systick.h)
 
 #include <ti/drivers/dpl/ClockP.h>
+#include <ti/drivers/power/PowerCC26XX.h>
 /*---------------------------------------------------------------------------*/
 #include "watchdog-arch.h"
 /*---------------------------------------------------------------------------*/
@@ -161,17 +162,15 @@ clock_arch_enter_idle(void)
     /* We are not going to sleep, and hence we don't arm the wakeup clock. */
     return false;
   }
-  if(timeout == NO_TIMEOUT) {
-    /* We are going to some low-power mode without arming the wakeup clock. */
-    return true;
+
+  /* We are dropping to some low-power mode */
+
+  /* Arm the wakeup clock with the calculated timeout if there is any */
+  if(timeout != NO_TIMEOUT) {
+    ClockP_setTimeout(H_WAKEUP_CLK, timeout);
+    ClockP_start(H_WAKEUP_CLK);
   }
 
-  /*
-   * We are going to some low-power mode. Arm the wakeup clock with the
-   * calculated.
-   */
-  ClockP_setTimeout(H_WAKEUP_CLK, timeout);
-  ClockP_start(H_WAKEUP_CLK);
   return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -179,6 +178,22 @@ void
 clock_arch_exit_idle(void)
 {
   ClockP_stop(H_WAKEUP_CLK);
+}
+/*---------------------------------------------------------------------------*/
+void
+clock_arch_standby_policy(void)
+{
+  /*
+   * XXX: Workaround for an observed issue where if SysTick interrupt is not
+   * disabled when entering/leaving some low-power mode may in very rare
+   * occasions clobber the CPU and cause a crash.
+   */
+  SysTickIntDisable();
+
+  /* Drop to some low-power mode */
+  PowerCC26XX_standbyPolicy();
+
+  SysTickIntEnable();
 }
 /*---------------------------------------------------------------------------*/
 void

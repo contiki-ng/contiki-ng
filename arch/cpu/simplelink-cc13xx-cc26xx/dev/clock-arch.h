@@ -56,6 +56,11 @@ bool clock_arch_enter_idle(void);
  */
 void clock_arch_exit_idle(void);
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief   Called by the Power driver when dropping to some low-power state.
+ */
+void clock_arch_standby_policy(void);
+/*---------------------------------------------------------------------------*/
 #endif /* CLOCK_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
 /**
