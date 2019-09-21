@@ -45,6 +45,7 @@
 #include "net/routing/rpl-lite/rpl.h"
 #elif ROUTING_CONF_RPL_CLASSIC
 #include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-private.h"
 #endif
 
 #define DEBUG DEBUG_PRINT
@@ -109,18 +110,20 @@ orchestra_callback_child_removed(const linkaddr_t *addr)
   }
 }
 /*---------------------------------------------------------------------------*/
-void
+int
 orchestra_callback_packet_ready(void)
 {
   int i;
   /* By default, use any slotframe, any timeslot */
-  uint16_t slotframe = 9;
+  uint16_t slotframe = 0xffff;
   uint16_t timeslot = 0xffff;
+  int matched_rule = -1;
 
   /* Loop over all rules until finding one able to handle the packet */
   for(i = 0; i < NUM_RULES; i++) {
     if(all_rules[i]->select_packet != NULL) {
       if(all_rules[i]->select_packet(&slotframe, &timeslot)) {
+        matched_rule = i;
         break;
       }
     }
@@ -130,6 +133,8 @@ orchestra_callback_packet_ready(void)
   packetbuf_set_attr(PACKETBUF_ATTR_TSCH_SLOTFRAME, slotframe);
   packetbuf_set_attr(PACKETBUF_ATTR_TSCH_TIMESLOT, timeslot);
 #endif
+
+  return matched_rule;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -161,8 +166,8 @@ orchestra_init(void)
   linkaddr_copy(&orchestra_parent_linkaddr, &linkaddr_null);
   /* Initialize all Orchestra rules */
   for(i = 0; i < NUM_RULES; i++) {
+    PRINTF("Orchestra: initializing rule %s (%u)\n", all_rules[i]->name, i);
     if(all_rules[i]->init != NULL) {
-      PRINTF("Orchestra: initializing rule %u\n", i);
       all_rules[i]->init(i);
     }
   }

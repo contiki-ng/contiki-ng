@@ -341,5 +341,12 @@ int rpl_has_joined(void);
  */
 int rpl_has_downward_route(void);
 
+/**
+ * Tells whether the protocol is in leaf mode
+ *
+ * \retval 1 if the protocol is in leaf mode, 0 if not.
+ */
+uint8_t rpl_is_in_leaf_mode(void);
+
 /*---------------------------------------------------------------------------*/
 #endif /* RPL_H */
