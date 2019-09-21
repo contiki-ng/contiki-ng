@@ -1334,6 +1334,10 @@ get_value(radio_param_t param, radio_value_t *value)
       *value = (radio_value_t)CC1200_RF_CFG.delay_before_detect;
       return RADIO_RESULT_OK;
 
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)CC1200_MAX_PAYLOAD_LEN;
+    return RADIO_RESULT_OK;
+
   default:
 
     return RADIO_RESULT_NOT_SUPPORTED;

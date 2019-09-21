@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,9 +78,6 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1352R1_LAUNCHXL_DIO28_ANALOG          IOID_28
 #define CC1352R1_LAUNCHXL_DIO29_ANALOG          IOID_29
 
-/* Antenna switch */
-#define CC1352R1_LAUNCHXL_DIO30_RF_SUB1GHZ      IOID_30
-
 /* Digital IOs */
 #define CC1352R1_LAUNCHXL_DIO12                 IOID_12
 #define CC1352R1_LAUNCHXL_DIO15                 IOID_15
@@ -88,6 +85,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1352R1_LAUNCHXL_DIO17_TDI             IOID_17
 #define CC1352R1_LAUNCHXL_DIO21                 IOID_21
 #define CC1352R1_LAUNCHXL_DIO22                 IOID_22
+#define CC1352R1_LAUNCHXL_DIO30                 IOID_30
 
 /* Discrete Inputs */
 #define CC1352R1_LAUNCHXL_PIN_BTN1              IOID_15
@@ -101,6 +99,12 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1352R1_LAUNCHXL_I2C0_SCL0             IOID_4
 #define CC1352R1_LAUNCHXL_I2C0_SDA0             IOID_5
 
+/* I2S */
+#define CC1352R1_LAUNCHXL_I2S_ADO               IOID_25
+#define CC1352R1_LAUNCHXL_I2S_ADI               IOID_26
+#define CC1352R1_LAUNCHXL_I2S_BCLK              IOID_27
+#define CC1352R1_LAUNCHXL_I2S_MCLK              PIN_UNASSIGNED
+#define CC1352R1_LAUNCHXL_I2S_WCLK              IOID_28
 
 /* LEDs */
 #define CC1352R1_LAUNCHXL_PIN_LED_ON            1
@@ -127,7 +131,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1352R1_LAUNCHXL_SPI0_MISO             IOID_8          /* RF1.20 */
 #define CC1352R1_LAUNCHXL_SPI0_MOSI             IOID_9          /* RF1.18 */
 #define CC1352R1_LAUNCHXL_SPI0_CLK              IOID_10         /* RF1.16 */
-#define CC1352R1_LAUNCHXL_SPI0_CSN              PIN_UNASSIGNED
+#define CC1352R1_LAUNCHXL_SPI0_CSN              IOID_11
 #define CC1352R1_LAUNCHXL_SPI1_MISO             PIN_UNASSIGNED
 #define CC1352R1_LAUNCHXL_SPI1_MOSI             PIN_UNASSIGNED
 #define CC1352R1_LAUNCHXL_SPI1_CLK              PIN_UNASSIGNED
@@ -260,6 +264,36 @@ typedef enum CC1352R1_LAUNCHXL_AESCCMName {
 } CC1352R1_LAUNCHXL_AESCCMName;
 
 /*!
+ *  @def    CC1352R1_LAUNCHXL_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC1352R1_LAUNCHXL_AESGCMName {
+    CC1352R1_LAUNCHXL_AESGCM0 = 0,
+
+    CC1352R1_LAUNCHXL_AESGCMCOUNT
+} CC1352R1_LAUNCHXL_AESGCMName;
+
+/*!
+ *  @def    CC1352R1_LAUNCHXL_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC1352R1_LAUNCHXL_AESCBCName {
+    CC1352R1_LAUNCHXL_AESCBC0 = 0,
+
+    CC1352R1_LAUNCHXL_AESCBCCOUNT
+} CC1352R1_LAUNCHXL_AESCBCName;
+
+/*!
+ *  @def    CC1352R1_LAUNCHXL_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC1352R1_LAUNCHXL_AESCTRName {
+    CC1352R1_LAUNCHXL_AESCTR0 = 0,
+
+    CC1352R1_LAUNCHXL_AESCTRCOUNT
+} CC1352R1_LAUNCHXL_AESCTRName;
+
+/*!
  *  @def    CC1352R1_LAUNCHXL_AESECBName
  *  @brief  Enum of AESECB names
  */
@@ -270,6 +304,16 @@ typedef enum CC1352R1_LAUNCHXL_AESECBName {
 } CC1352R1_LAUNCHXL_AESECBName;
 
 /*!
+ *  @def    CC1352R1_LAUNCHXL_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC1352R1_LAUNCHXL_AESCTRDRBGName {
+    CC1352R1_LAUNCHXL_AESCTRDRBG0 = 0,
+
+    CC1352R1_LAUNCHXL_AESCTRDRBGCOUNT
+} CC1352R1_LAUNCHXL_AESCTRDRBGName;
+
+/*!
  *  @def    CC1352R1_LAUNCHXL_SHA2Name
  *  @brief  Enum of SHA2 names
  */
@@ -278,6 +322,16 @@ typedef enum CC1352R1_LAUNCHXL_SHA2Name {
 
     CC1352R1_LAUNCHXL_SHA2COUNT
 } CC1352R1_LAUNCHXL_SHA2Name;
+
+/*!
+ *  @def    CC1352R1_LAUNCHXL_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC1352R1_LAUNCHXL_TRNGName {
+    CC1352R1_LAUNCHXL_TRNG0 = 0,
+
+    CC1352R1_LAUNCHXL_TRNGCOUNT
+} CC1352R1_LAUNCHXL_TRNGName;
 
 /*!
  *  @def    CC1352R1_LAUNCHXL_GPIOName
@@ -338,6 +392,26 @@ typedef enum CC1352R1_LAUNCHXL_I2CName {
 } CC1352R1_LAUNCHXL_I2CName;
 
 /*!
+ *  @def    CC1352R1_LAUNCHXL_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC1352R1_LAUNCHXL_I2SName {
+    CC1352R1_LAUNCHXL_I2S0 = 0,
+
+    CC1352R1_LAUNCHXL_I2SCOUNT
+} CC1352R1_LAUNCHXL_I2SName;
+
+/*!
+ *  @def    CC1352R1_LAUNCHXL_PDMName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC1352R1_LAUNCHXL_PDMCOUNT {
+    CC1352R1_LAUNCHXL_PDM0 = 0,
+
+    CC1352R1_LAUNCHXL_PDMCOUNT
+} CC1352R1_LAUNCHXL_PDMName;
+
+/*!
  *  @def    CC1352R1_LAUNCHXL_NVSName
  *  @brief  Enum of NVS names
  */
@@ -393,16 +467,6 @@ typedef enum CC1352R1_LAUNCHXL_SPIName {
 
     CC1352R1_LAUNCHXL_SPICOUNT
 } CC1352R1_LAUNCHXL_SPIName;
-
-/*!
- *  @def    CC1352R1_LAUNCHXL_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC1352R1_LAUNCHXL_TRNGName {
-    CC1352R1_LAUNCHXL_TRNG0 = 0,
-
-    CC1352R1_LAUNCHXL_TRNGCOUNT
-} CC1352R1_LAUNCHXL_TRNGName;
 
 /*!
  *  @def    CC1352R1_LAUNCHXL_UARTName

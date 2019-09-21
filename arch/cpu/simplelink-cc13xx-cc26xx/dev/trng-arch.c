@@ -41,18 +41,10 @@
 
 #include "trng-arch.h"
 /*---------------------------------------------------------------------------*/
+#include <Board.h>
+
 #include <ti/drivers/TRNG.h>
 #include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.h>
-/*---------------------------------------------------------------------------*/
-/*
- * Very dirty workaround because the pre-compiled TI drivers library for
- * CC13x0/CC26x0 is missing the CryptoKey object file. This can be removed
- * when the pre-compiled library includes the missing object file.
- */
-#include <ti/devices/DeviceFamily.h>
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
-#include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintextCC26XX.c>
-#endif
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdbool.h>
@@ -71,7 +63,7 @@ trng_rand(uint8_t *entropy_buf, size_t entropy_len, uint32_t timeout_us)
     trng_params.timeout = timeout_us;
   }
 
-  trng_handle = TRNG_open(0, &trng_params);
+  trng_handle = TRNG_open(Board_TRNG0, &trng_params);
   if(!trng_handle) {
     return false;
   }

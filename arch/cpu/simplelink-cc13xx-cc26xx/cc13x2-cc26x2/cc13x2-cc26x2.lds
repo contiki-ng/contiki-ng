@@ -87,8 +87,13 @@ SECTIONS {
     DMA_GPT0A_PRI_CTEA = (UDMACC26XX_CONFIG_BASE + 0x90);
     DMA_SPI1_RX_CTEA   = (UDMACC26XX_CONFIG_BASE + 0x100);
     DMA_SPI1_TX_CTEA   = (UDMACC26XX_CONFIG_BASE + 0x110);
-    DMA_ADC_ALT_CTEA   = (UDMACC26XX_CONFIG_BASE + 0x270);
-    DMA_GPT0A_ALT_CTEA = (UDMACC26XX_CONFIG_BASE + 0x290);
+
+    DMA_SPI0_RX_ALT_CTEA = (UDMACC26XX_CONFIG_BASE + 0x230);
+    DMA_SPI0_TX_ALT_CTEA = (UDMACC26XX_CONFIG_BASE + 0x240);
+    DMA_ADC_ALT_CTEA     = (UDMACC26XX_CONFIG_BASE + 0x270);
+    DMA_GPT0A_ALT_CTEA   = (UDMACC26XX_CONFIG_BASE + 0x290);
+    DMA_SPI1_RX_ALT_CTEA = (UDMACC26XX_CONFIG_BASE + 0x300);
+    DMA_SPI1_TX_ALT_CTEA = (UDMACC26XX_CONFIG_BASE + 0x310);
 
     /*
      * Allocate SPI0, SPI1, ADC, and GPTimer0 DMA descriptors at absolute addresses.
@@ -124,6 +129,16 @@ SECTIONS {
         *(.dmaSpi1TxControlTableEntry)
     } > REGION_DATA
 
+    UDMACC26XX_dmaSpi0RxAltControlTableEntry_is_placed = 0;
+    .dmaSpi0RxAltControlTableEntry DMA_SPI0_RX_ALT_CTEA (NOLOAD) : AT (DMA_SPI0_RX_ALT_CTEA) {
+        *(.dmaSpi0RxAltControlTableEntry)
+    } > REGION_DATA
+
+    UDMACC26XX_dmaSpi0TxAltControlTableEntry_is_placed = 0;
+    .dmaSpi0TxAltControlTableEntry DMA_SPI0_TX_ALT_CTEA (NOLOAD) : AT (DMA_SPI0_TX_ALT_CTEA) {
+        *(.dmaSpi0TxAltControlTableEntry)
+    } > REGION_DATA
+
     UDMACC26XX_dmaADCAltControlTableEntry_is_placed = 0;
     .dmaADCAltControlTableEntry DMA_ADC_ALT_CTEA (NOLOAD) : AT (DMA_ADC_ALT_CTEA) {
         *(.dmaADCAltControlTableEntry)
@@ -132,6 +147,16 @@ SECTIONS {
     UDMACC26XX_dmaGPT0AAltControlTableEntry_is_placed = 0;
     .dmaGPT0AAltControlTableEntry DMA_GPT0A_ALT_CTEA (NOLOAD) : AT (DMA_GPT0A_ALT_CTEA) {
         *(.dmaGPT0AAltControlTableEntry)
+    } > REGION_DATA
+
+    UDMACC26XX_dmaSpi1RxAltControlTableEntry_is_placed = 0;
+    .dmaSpi1RxAltControlTableEntry DMA_SPI1_RX_ALT_CTEA (NOLOAD) : AT (DMA_SPI1_RX_ALT_CTEA) {
+        *(.dmaSpi1RxAltControlTableEntry)
+    } > REGION_DATA
+
+    UDMACC26XX_dmaSpi1TxAltControlTableEntry_is_placed = 0;
+    .dmaSpi1TxAltControlTableEntry DMA_SPI1_TX_ALT_CTEA (NOLOAD) : AT (DMA_SPI1_TX_ALT_CTEA) {
+        *(.dmaSpi1TxAltControlTableEntry)
     } > REGION_DATA
 
     .text : {

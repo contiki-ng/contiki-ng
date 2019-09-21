@@ -156,6 +156,24 @@ static rfc_propRxOutput_t rx_stats;
 #define DOT_4G_PHR_DW_BIT 0
 #endif
 /*---------------------------------------------------------------------------*/
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the CRC.
+ *
+ * Unlike typical 2.4GHz radio drivers, this driver supports the .15.4g
+ * 32-bit CRC option.
+ *
+ * This radio hardware is perfectly happy to transmit frames longer than 127
+ * bytes, which is why it's OK to end up transmitting 125 payload bytes plus
+ * a 4-byte CRC.
+ *
+ * In the future we can change this to support transmission of long frames,
+ * for example as per .15.4g. the size of the TX and RX buffers would need
+ * adjusted accordingly.
+ */
+#define MAX_PAYLOAD_LEN 125
+/*---------------------------------------------------------------------------*/
 /* TX power table for the 431-527MHz band */
 #ifdef PROP_MODE_CONF_TX_POWER_431_527
 #define PROP_MODE_TX_POWER_431_527 PROP_MODE_CONF_TX_POWER_431_527
@@ -217,7 +235,7 @@ static const prop_mode_tx_power_config_t *tx_power_current = &TX_POWER_DRIVER[1]
 #define ALIGN_TO_4(size)	(((size) + 3) & ~3)
 
 #define RX_BUF_SIZE ALIGN_TO_4(RX_BUF_DATA_OFFSET          \
-      + NETSTACK_RADIO_MAX_PAYLOAD_LEN   \
+      + MAX_PAYLOAD_LEN \
       + RX_BUF_METADATA_SIZE)
 
 /*
@@ -661,7 +679,7 @@ init(void)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
 
@@ -680,7 +698,7 @@ transmit(unsigned short transmit_len)
   /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
   uint16_t total_length;
 
-  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(transmit_len > MAX_PAYLOAD_LEN) {
     PRINTF("transmit: too long\n");
     return RADIO_TX_ERR;
   }
@@ -1233,6 +1251,9 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
   case RADIO_CONST_DELAY_BEFORE_DETECT:
     *value = (radio_value_t)RADIO_DELAY_BEFORE_DETECT;
+    return RADIO_RESULT_OK;
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;

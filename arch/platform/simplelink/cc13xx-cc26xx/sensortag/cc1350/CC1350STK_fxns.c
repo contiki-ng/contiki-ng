@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,10 @@
 #include DeviceFamily_constructPath(driverlib/ioc.h)
 #include DeviceFamily_constructPath(driverlib/cpu.h)
 
+#include <ti/drivers/Board.h>
+
 #include "Board.h"
+
 
 /*
  *  ======== CC1350STK_sendExtFlashByte ========

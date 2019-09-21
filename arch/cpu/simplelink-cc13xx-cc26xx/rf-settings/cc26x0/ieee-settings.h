@@ -51,8 +51,5 @@ extern rfc_CMD_IEEE_TX_t     rf_cmd_ieee_tx;
 extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
 extern rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack;
 /*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t              rf_ieee_overrides[];
-/*---------------------------------------------------------------------------*/
 #endif /* IEEE_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

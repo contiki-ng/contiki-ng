@@ -71,15 +71,6 @@
 #define LOG_MODULE "TSCH"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
-/* Use to collect link statistics even on Keep-Alive, even though they were
- * not sent from an upper layer and don't have a valid packet_sent callback */
-#ifndef TSCH_LINK_NEIGHBOR_CALLBACK
-#if NETSTACK_CONF_WITH_IPV6
-void uip_ds6_link_neighbor_callback(int status, int numtx);
-#define TSCH_LINK_NEIGHBOR_CALLBACK(dest, status, num) uip_ds6_link_neighbor_callback(status, num)
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-#endif /* TSCH_LINK_NEIGHBOR_CALLBACK */
-
 /* The address of the last node we received an EB from (other than our time source).
  * Used for recovery */
 static linkaddr_t last_eb_nbr_addr;
@@ -535,6 +526,7 @@ tsch_disassociate(void)
 {
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
+    tsch_adaptive_timesync_reset();
     process_poll(&tsch_process);
   }
 }
@@ -856,7 +848,7 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
 
   /* Set an initial delay except for coordinator, which should send an EB asap */
   if(!tsch_is_coordinator) {
-    etimer_set(&eb_timer, random_rand() % TSCH_EB_PERIOD);
+    etimer_set(&eb_timer, TSCH_EB_PERIOD ? random_rand() % TSCH_EB_PERIOD : 0);
     PROCESS_WAIT_UNTIL(etimer_expired(&eb_timer));
   }
 
@@ -868,6 +860,8 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
       /* Implementation section 6.3 of RFC 8180 */
       && TSCH_RPL_CHECK_DODAG_JOINED()
 #endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+      /* don't send when in leaf mode */
+      && !NETSTACK_ROUTING.is_in_leaf_mode()
         ) {
       /* Enqueue EB only if there isn't already one in queue */
       if(tsch_queue_packet_count(&tsch_eb_address) == 0) {
@@ -928,11 +922,19 @@ tsch_init(void)
 {
   radio_value_t radio_rx_mode;
   radio_value_t radio_tx_mode;
+  radio_value_t radio_max_payload_len;
+
   rtimer_clock_t t;
 
   /* Check that the platform provides a TSCH timeslot timing template */
   if(TSCH_DEFAULT_TIMESLOT_TIMING == NULL) {
     LOG_ERR("! platform does not provide a timeslot timing template.\n");
+    return;
+  }
+
+  /* Check that the radio can correctly report its max supported payload */
+  if(NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN, &radio_max_payload_len) != RADIO_RESULT_OK) {
+    LOG_ERR("! radio does not support getting RADIO_CONST_MAX_PAYLOAD_LEN. Abort init.\n");
     return;
   }
 
@@ -1161,8 +1163,19 @@ turn_off(void)
 static int
 max_payload(void)
 {
+  radio_value_t max_radio_payload_len;
+  radio_result_t res;
+
+  res = NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN,
+                                 &max_radio_payload_len);
+
+  if(res == RADIO_RESULT_NOT_SUPPORTED) {
+    LOG_ERR("Failed to retrieve max radio driver payload length\n");
+    return 0;
+  }
+
   /* Setup security... before. */
-  return TSCH_PACKET_MAX_LEN -  NETSTACK_FRAMER.length();
+  return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN) -  NETSTACK_FRAMER.length();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {

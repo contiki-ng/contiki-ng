@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 /** ============================================================================
  *  @file       CC2650STK.h
  *
- *  @brief      CC2650STK Board Specific header file.
+ *  @brief      CC2650 SensorTag Board Specific header file.
  *
  *  The CC2650STK header file should be included in an application as
  *  follows:
@@ -62,15 +62,23 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650STK
 
 /* Mapping of pins to board signals using general board aliases
- *      <board signal alias>            <pin mapping>
+ *      <board signal alias>        <pin mapping>   <comments>
  */
+
+/* Analog Capable DIOs */
+#define CC2650STK_DIO23_ANALOG          IOID_23
+#define CC2650STK_DIO24_ANALOG          IOID_24
+#define CC2650STK_DIO25_ANALOG          IOID_25
+#define CC2650STK_DIO26_ANALOG          IOID_26
+#define CC2650STK_DIO27_ANALOG          IOID_27
+#define CC2650STK_DIO28_ANALOG          IOID_28
+#define CC2650STK_DIO29_ANALOG          IOID_29
+#define CC2650STK_DIO30_ANALOG          IOID_30
 
 /* Audio */
 #define CC2650STK_MIC_POWER             IOID_13
 #define CC2650STK_MIC_POWER_ON          1
 #define CC2650STK_MIC_POWER_OFF         0
-#define CC2650STK_AUDIO_DI              IOID_2
-#define CC2650STK_AUDIO_CLK             IOID_11
 
 /* Buzzer */
 #define CC2650STK_BUZZER                IOID_21
@@ -78,27 +86,26 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650STK_BUZZER_OFF            0
 
 /* DevPack */
-#define CC2650STK_AUDIOFS_TDO           IOID_16
-#define CC2650STK_AUDIODO               IOID_22
-#define CC2650STK_DP2                   IOID_23
-#define CC2650STK_DP1                   IOID_24
 #define CC2650STK_DP0                   IOID_25
+#define CC2650STK_DP1                   IOID_24
+#define CC2650STK_DP2                   IOID_23
 #define CC2650STK_DP3                   IOID_27
 #define CC2650STK_DP4_UARTRX            IOID_28
 #define CC2650STK_DP5_UARTTX            IOID_29
-#define CC2650STK_DEVPK_ID              IOID_30
-#define CC2650STK_SPI_DEVPK_CS          IOID_20
-
-/* Discrete Outputs */
-#define CC2650STK_PIN_LED0              IOID_10
-#define CC2650STK_PIN_LED1              IOID_15
-#define CC2650STK_LED_ON                1
-#define CC2650STK_LED_OFF               0
-
+#define CC2650STK_DP6_ADO               IOID_22
+#define CC2650STK_DP7_BCLK              IOID_3
+#define CC2650STK_DP8_TDI               IOID_17
+#define CC2650STK_DP9_MISO              IOID_18
+#define CC2650STK_DP10_MOSI             IOID_19
+#define CC2650STK_DP11_CSN              IOID_20
+#define CC2650STK_DP12_WCLK             IOID_16
+#define CC2650STK_DP_ID                 IOID_30
 
 /* Discrete Inputs */
-#define CC2650STK_KEY_LEFT              IOID_0
-#define CC2650STK_KEY_RIGHT             IOID_4
+#define CC2650STK_PIN_BTN1              IOID_4
+#define CC2650STK_PIN_BTN2              IOID_0
+#define CC2650STK_KEY_LEFT              CC2650STK_PIN_BTN2
+#define CC2650STK_KEY_RIGHT             CC2650STK_PIN_BTN1
 #define CC2650STK_RELAY                 IOID_3
 
 /* GPIO */
@@ -106,10 +113,23 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650STK_GPIO_LED_OFF          0
 
 /* I2C */
-#define CC2650STK_I2C0_SDA0             IOID_5
 #define CC2650STK_I2C0_SCL0             IOID_6
-#define CC2650STK_I2C0_SDA1             IOID_8
+#define CC2650STK_I2C0_SDA0             IOID_5
 #define CC2650STK_I2C0_SCL1             IOID_9
+#define CC2650STK_I2C0_SDA1             IOID_8
+
+/* I2S */
+#define CC2650STK_I2S_ADO               IOID_22
+#define CC2650STK_I2S_ADI               IOID_2
+#define CC2650STK_I2S_BCLK              IOID_3
+#define CC2650STK_I2S_MCLK              PIN_UNASSIGNED
+#define CC2650STK_I2S_WCLK              IOID_16
+
+/* LEDs */
+#define CC2650STK_PIN_LED_ON            1
+#define CC2650STK_PIN_LED_OFF           0
+#define CC2650STK_PIN_RLED              IOID_10
+#define CC2650STK_PIN_GLED              IOID_15
 
 /* LED-Audio DevPack */
 #define CC2650STK_DEVPK_LIGHT_BLUE      IOID_23
@@ -123,8 +143,8 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650STK_MPU_POWER_OFF         0
 
 /* PWM */
-#define CC2650STK_PWMPIN0               CC2650STK_PIN_LED1
-#define CC2650STK_PWMPIN1               CC2650STK_PIN_LED1
+#define CC2650STK_PWMPIN0               CC2650STK_PIN_RLED
+#define CC2650STK_PWMPIN1               CC2650STK_PIN_GLED
 #define CC2650STK_PWMPIN2               PIN_UNASSIGNED
 #define CC2650STK_PWMPIN3               PIN_UNASSIGNED
 #define CC2650STK_PWMPIN4               PIN_UNASSIGNED
@@ -145,7 +165,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650STK_SPI0_MISO             IOID_18
 #define CC2650STK_SPI0_MOSI             IOID_19
 #define CC2650STK_SPI0_CLK              IOID_17
-#define CC2650STK_SPI0_CSN              PIN_UNASSIGNED
+#define CC2650STK_SPI0_CSN              IOID_20
 #define CC2650STK_SPI1_MISO             PIN_UNASSIGNED
 #define CC2650STK_SPI1_MOSI             PIN_UNASSIGNED
 #define CC2650STK_SPI1_CLK              PIN_UNASSIGNED
@@ -177,6 +197,56 @@ void CC2650STK_shutDownExtFlash(void);
 void CC2650STK_wakeUpExtFlash(void);
 
 /*!
+ *  @def    CC2650STK_ADCBufName
+ *  @brief  Enum of ADCBufs
+ */
+typedef enum CC2650STK_ADCBufName {
+    CC2650STK_ADCBUF0 = 0,
+
+    CC2650STK_ADCBUFCOUNT
+} CC2650STK_ADCBufName;
+
+/*!
+ *  @def    CC2650STK_ADCBuf0ChannelName
+ *  @brief  Enum of ADCBuf channels
+ */
+typedef enum CC2650STK_ADCBuf0ChannelName {
+    CC2650STK_ADCBUF0CHANNEL0 = 0,
+    CC2650STK_ADCBUF0CHANNEL1,
+    CC2650STK_ADCBUF0CHANNEL2,
+    CC2650STK_ADCBUF0CHANNEL3,
+    CC2650STK_ADCBUF0CHANNEL4,
+    CC2650STK_ADCBUF0CHANNEL5,
+    CC2650STK_ADCBUF0CHANNEL6,
+    CC2650STK_ADCBUF0CHANNEL7,
+    CC2650STK_ADCBUF0CHANNELVDDS,
+    CC2650STK_ADCBUF0CHANNELDCOUPL,
+    CC2650STK_ADCBUF0CHANNELVSS,
+
+    CC2650STK_ADCBUF0CHANNELCOUNT
+} CC2650STK_ADCBuf0ChannelName;
+
+/*!
+ *  @def    CC2650STK_ADCName
+ *  @brief  Enum of ADCs
+ */
+typedef enum CC2650STK_ADCName {
+    CC2650STK_ADC0 = 0,
+    CC2650STK_ADC1,
+    CC2650STK_ADC2,
+    CC2650STK_ADC3,
+    CC2650STK_ADC4,
+    CC2650STK_ADC5,
+    CC2650STK_ADC6,
+    CC2650STK_ADC7,
+    CC2650STK_ADCDCOUPL,
+    CC2650STK_ADCVSS,
+    CC2650STK_ADCVDDS,
+
+    CC2650STK_ADCCOUNT
+} CC2650STK_ADCName;
+
+/*!
  *  @def    CC2650STK_CryptoName
  *  @brief  Enum of Crypto names
  */
@@ -185,6 +255,76 @@ typedef enum CC2650STK_CryptoName {
 
     CC2650STK_CRYPTOCOUNT
 } CC2650STK_CryptoName;
+
+/*!
+ *  @def    CC2650STK_AESCCMName
+ *  @brief  Enum of AESCCM names
+ */
+typedef enum CC2650STK_AESCCMName {
+    CC2650STK_AESCCM0 = 0,
+
+    CC2650STK_AESCCMCOUNT
+} CC2650STK_AESCCMName;
+
+/*!
+ *  @def    CC2650STK_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC2650STK_AESGCMName {
+    CC2650STK_AESGCM0 = 0,
+
+    CC2650STK_AESGCMCOUNT
+} CC2650STK_AESGCMName;
+
+/*!
+ *  @def    CC2650STK_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC2650STK_AESCBCName {
+    CC2650STK_AESCBC0 = 0,
+
+    CC2650STK_AESCBCCOUNT
+} CC2650STK_AESCBCName;
+
+/*!
+ *  @def    CC2650STK_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC2650STK_AESCTRName {
+    CC2650STK_AESCTR0 = 0,
+
+    CC2650STK_AESCTRCOUNT
+} CC2650STK_AESCTRName;
+
+/*!
+ *  @def    CC2650STK_AESECBName
+ *  @brief  Enum of AESECB names
+ */
+typedef enum CC2650STK_AESECBName {
+    CC2650STK_AESECB0 = 0,
+
+    CC2650STK_AESECBCOUNT
+} CC2650STK_AESECBName;
+
+/*!
+ *  @def    CC2650STK_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC2650STK_AESCTRDRBGName {
+    CC2650STK_AESCTRDRBG0 = 0,
+
+    CC2650STK_AESCTRDRBGCOUNT
+} CC2650STK_AESCTRDRBGName;
+
+/*!
+ *  @def    CC2650STK_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC2650STK_TRNGName {
+    CC2650STK_TRNG0 = 0,
+
+    CC2650STK_TRNGCOUNT
+} CC2650STK_TRNGName;
 
 /*!
  *  @def    CC2650STK_GPIOName
@@ -201,7 +341,7 @@ typedef enum CC2650STK_GPIOName {
 
 /*!
  *  @def    CC2650STK_GPTimerName
- *  @brief  Enum of GPTimers parts
+ *  @brief  Enum of GPTimer parts
  */
 typedef enum CC2650STK_GPTimerName {
     CC2650STK_GPTIMER0A = 0,
@@ -242,6 +382,16 @@ typedef enum CC2650STK_I2CName {
 } CC2650STK_I2CName;
 
 /*!
+ *  @def    CC2650STK_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC2650STK_I2SName {
+    CC2650STK_I2S0 = 0,
+
+    CC2650STK_I2SCOUNT
+} CC2650STK_I2SName;
+
+/*!
  *  @def    CC2650STK_NVSName
  *  @brief  Enum of NVS names
  */
@@ -255,16 +405,6 @@ typedef enum CC2650STK_NVSName {
 
     CC2650STK_NVSCOUNT
 } CC2650STK_NVSName;
-
-/*!
- *  @def    CC2650STK_PDMName
- *  @brief  Enum of PDM names
- */
-typedef enum CC2650STK_PDMName {
-    CC2650STK_PDM0 = 0,
-
-    CC2650STK_PDMCOUNT
-} CC2650STK_PDMName;
 
 /*!
  *  @def    CC2650STK_PWMName
@@ -297,16 +437,6 @@ typedef enum CC2650STK_SPIName {
 
     CC2650STK_SPICOUNT
 } CC2650STK_SPIName;
-
-/*!
- *  @def    CC2650STK_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC2650STK_TRNGName {
-    CC2650STK_TRNG0 = 0,
-
-    CC2650STK_TRNGCOUNT
-} CC2650STK_TRNGName;
 
 /*!
  *  @def    CC2650STK_UARTName
