@@ -114,9 +114,51 @@ typedef enum {
   MQTT_VHDR_CONN_REJECTED_UNAVAILABLE,
   MQTT_VHDR_CONN_REJECTED_BAD_USER_PASS,
   MQTT_VHDR_CONN_REJECTED_UNAUTHORIZED,
-} mqtt_vhdr_connack_fields_t;
+} mqtt_vhdr_connack_ret_code_t;
+
+typedef enum {
+  MQTT_VHDR_CONNACK_SESSION_PRESENT = 0x1
+} mqtt_vhdr_connack_flags_t;
+
 /*---------------------------------------------------------------------------*/
-#define MQTT_CONNECT_VHDR_FLAGS_SIZE 12
+#if MQTT_311
+typedef enum {
+  MQTT_SUBACK_RET_QOS_0 = 0x00,
+  MQTT_SUBACK_RET_QOS_1 = 0x01,
+  MQTT_SUBACK_RET_QOS_2 = 0x02,
+  MQTT_SUBACK_RET_FAIL  = 0x08,
+} mqtt_suback_ret_code_t;
+#endif
+/*---------------------------------------------------------------------------*/
+#if MQTT_31
+/* Len MSB(0)
+ * Len LSB(6)
+ * 'M'
+ * 'Q'
+ * 'I'
+ * 's'
+ * 'd'
+ * 'p'
+ * Protocol Level (3)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
+ */
+#define MQTT_CONNECT_VHDR_SIZE 12
+#else
+/* Len MSB(0)
+ * Len LSB(4)
+ * 'M'
+ * 'Q'
+ * 'T'
+ * 'T'
+ * Protocol Level (4)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
+ */
+#define MQTT_CONNECT_VHDR_SIZE 10
+#endif
 
 #define MQTT_STRING_LEN_SIZE 2
 #define MQTT_MID_SIZE 2
@@ -389,7 +431,7 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   /* Set up FHDR */
   conn->out_packet.fhdr = MQTT_FHDR_MSG_TYPE_CONNECT;
   conn->out_packet.remaining_length = 0;
-  conn->out_packet.remaining_length += MQTT_CONNECT_VHDR_FLAGS_SIZE;
+  conn->out_packet.remaining_length += MQTT_CONNECT_VHDR_SIZE;
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->client_id);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->credentials.username);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->credentials.password);
@@ -410,8 +452,8 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
                       conn->out_packet.remaining_length_enc,
                       conn->out_packet.remaining_length_enc_bytes);
   PT_MQTT_WRITE_BYTE(conn, 0);
-  PT_MQTT_WRITE_BYTE(conn, 6);
-  PT_MQTT_WRITE_BYTES(conn, (uint8_t *)MQTT_PROTOCOL_NAME, 6);
+  PT_MQTT_WRITE_BYTE(conn, strlen(MQTT_PROTOCOL_NAME));
+  PT_MQTT_WRITE_BYTES(conn, (uint8_t *)MQTT_PROTOCOL_NAME, strlen(MQTT_PROTOCOL_NAME));
   PT_MQTT_WRITE_BYTE(conn, MQTT_PROTOCOL_VERSION);
   PT_MQTT_WRITE_BYTE(conn, conn->connect_vhdr_flags);
   PT_MQTT_WRITE_BYTE(conn, (conn->keep_alive >> 8));
@@ -659,6 +701,11 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
     PT_EXIT(pt);
   }
 
+  /* The DUP flag MUST be set to 0 for all QoS 0 messages */
+  if(conn->out_packet.qos == MQTT_QOS_LEVEL_0) {
+    conn->out_packet.fhdr &= ~MQTT_FHDR_DUP_FLAG;
+  }
+
   /* Write Fixed Header */
   PT_MQTT_WRITE_BYTE(conn, conn->out_packet.fhdr);
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->out_packet.remaining_length_enc,
@@ -672,6 +719,7 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
     PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
     PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
   }
+
   /* Write Payload */
   PT_MQTT_WRITE_BYTES(conn,
                       conn->out_packet.payload,
@@ -747,6 +795,8 @@ PT_THREAD(pingreq_pt(struct pt *pt, struct mqtt_connection *conn))
 static void
 handle_connack(struct mqtt_connection *conn)
 {
+  mqtt_connack_event_t connack_event;
+
   DBG("MQTT - Got CONNACK\n");
 
   if(conn->in_packet.payload[1] != 0) {
@@ -761,12 +811,16 @@ handle_connack(struct mqtt_connection *conn)
 
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
 
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+  connack_event.session_present = conn->in_packet.payload[0] & MQTT_VHDR_CONNACK_SESSION_PRESENT;
+#endif
+
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
              keep_alive_callback, conn);
 
   /* Always reset packet before callback since it might be used directly */
   conn->state = MQTT_CONN_STATE_CONNECTED_TO_BROKER;
-  call_event(conn, MQTT_EVENT_CONNECTED, NULL);
+  call_event(conn, MQTT_EVENT_CONNECTED, &connack_event);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -778,7 +832,7 @@ handle_pingresp(struct mqtt_connection *conn)
 static void
 handle_suback(struct mqtt_connection *conn)
 {
-  struct mqtt_suback_event suback_event;
+  mqtt_suback_event_t suback_event;
 
   DBG("MQTT - Got SUBACK\n");
 
@@ -792,8 +846,32 @@ handle_suback(struct mqtt_connection *conn)
 
   suback_event.mid = (conn->in_packet.payload[0] << 8) |
     (conn->in_packet.payload[1]);
-  suback_event.qos_level = conn->in_packet.payload[2];
   conn->in_packet.mid = suback_event.mid;
+
+#if MQTT_311
+  suback_event.success = 0;
+
+  switch(conn->in_packet.payload[2]) {
+  case MQTT_SUBACK_RET_FAIL:
+    PRINTF("MQTT - Error, SUBSCRIBE failed with SUBACK return code '%x'", conn->in_packet.payload[2]);
+    break;
+
+  case MQTT_SUBACK_RET_QOS_0:
+  case MQTT_SUBACK_RET_QOS_1:
+  case MQTT_SUBACK_RET_QOS_2:
+    suback_event.qos_level = conn->in_packet.payload[2] & 0x03;
+    suback_event.success = 1;
+    break;
+
+  default:
+    PRINTF("MQTT - Error, Unrecognised SUBACK return code '%x'", conn->in_packet.payload[2]);
+    break;
+  }
+
+  suback_event.return_code = conn->in_packet.payload[2];
+#else
+  suback_event.qos_level = conn->in_packet.payload[2];
+#endif
 
   if(conn->in_packet.mid != conn->out_packet.mid) {
     DBG("MQTT - Warning, got SUBACK with none matching MID. Currently there is"
@@ -833,11 +911,19 @@ handle_puback(struct mqtt_connection *conn)
   call_event(conn, MQTT_EVENT_PUBACK, &conn->in_packet.mid);
 }
 /*---------------------------------------------------------------------------*/
-static void
+static mqtt_pub_status_t
 handle_publish(struct mqtt_connection *conn)
 {
   DBG("MQTT - Got PUBLISH, called once per manageable chunk of message.\n");
   DBG("MQTT - Handling publish on topic '%s'\n", conn->in_publish_msg.topic);
+
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+  if(strlen(conn->in_publish_msg.topic) < conn->in_packet.topic_len) {
+    DBG("NULL detected in received PUBLISH topic\n");
+    mqtt_disconnect(conn);
+    return MQTT_PUBLISH_ERR;
+  }
+#endif
 
   DBG("MQTT - This chunk is %i bytes\n", conn->in_packet.payload_pos);
 
@@ -860,6 +946,8 @@ handle_publish(struct mqtt_connection *conn)
     DBG("MQTT - (handle_publish) resetting packet.\n");
     reset_packet(&conn->in_packet);
   }
+
+  return MQTT_PUBLISH_OK;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -928,6 +1016,7 @@ tcp_input(struct tcp_socket *s,
   uint32_t pos = 0;
   uint32_t copy_bytes = 0;
   uint8_t byte;
+  mqtt_pub_status_t pub_status;
 
   if(input_data_len == 0) {
     return 0;
@@ -1035,10 +1124,14 @@ tcp_input(struct tcp_socket *s,
       conn->in_publish_msg.payload_chunk_length = MQTT_INPUT_BUFF_SIZE;
       conn->in_publish_msg.payload_left -= MQTT_INPUT_BUFF_SIZE;
 
-      handle_publish(conn);
+      pub_status = handle_publish(conn);
 
       conn->in_publish_msg.payload_chunk = conn->in_packet.payload;
       conn->in_packet.payload_pos = 0;
+
+      if(pub_status != MQTT_PUBLISH_OK) {
+        return 0;
+      }
     }
 
     if(pos >= input_data_len &&
@@ -1065,7 +1158,7 @@ tcp_input(struct tcp_socket *s,
     conn->in_publish_msg.payload_chunk = conn->in_packet.payload;
     conn->in_publish_msg.payload_chunk_length = conn->in_packet.payload_pos;
     conn->in_publish_msg.payload_left = 0;
-    handle_publish(conn);
+    (void) handle_publish(conn);
     break;
   case MQTT_FHDR_MSG_TYPE_PUBACK:
     handle_puback(conn);
@@ -1295,9 +1388,11 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
               char *client_id, mqtt_event_callback_t event_callback,
               uint16_t max_segment_size)
 {
+#if MQTT_31 || !MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID
   if(strlen(client_id) < 1) {
     return MQTT_STATUS_INVALID_ARGS_ERROR;
   }
+#endif
 
   /* Set defaults - Set all to zero to begin with */
   memset(conn, 0, sizeof(struct mqtt_connection));
@@ -1323,7 +1418,7 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
  */
 mqtt_status_t
 mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
-             uint16_t keep_alive)
+             uint16_t keep_alive, uint8_t clean_session)
 {
   uip_ip6addr_t ip6addr;
   uip_ipaddr_t *ipaddr;
@@ -1339,7 +1434,11 @@ mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
   conn->server_port = port;
   conn->out_buffer_ptr = conn->out_buffer;
   conn->out_packet.qos_state = MQTT_QOS_STATE_NO_ACK;
-  conn->connect_vhdr_flags |= MQTT_VHDR_CLEAN_SESSION_FLAG;
+
+  /* If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession to 1 */
+  if(clean_session || (conn->client_id.length == 0)) {
+    conn->connect_vhdr_flags |= MQTT_VHDR_CLEAN_SESSION_FLAG;
+  }
 
   /* convert the string IPv6 address to a numeric IPv6 address */
   if(uiplib_ip6addrconv(host, &ip6addr) == 0) {
