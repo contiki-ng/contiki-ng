@@ -123,7 +123,7 @@ mmc_arch_spi_xfer(uint8_t dev, const void *tx_buf, size_t tx_cnt,
       SPIX_BUF(USD_SPI_INSTANCE) = *tx_buf_u8++;
       tx_cnt--;
     } else {
-      SPIX_BUF(USD_SPI_INSTANCE) = 0;
+      SPIX_BUF(USD_SPI_INSTANCE) = 0xff;
     }
     SPIX_WAITFOREOTx(USD_SPI_INSTANCE);
     SPIX_WAITFOREORx(USD_SPI_INSTANCE);
