@@ -143,9 +143,6 @@ static int32_t drift_correction = 0;
 /* Is drift correction used? (Can be true even if drift_correction == 0) */
 static uint8_t is_drift_correction_used;
 
-/* The neighbor last used as our time source */
-struct tsch_neighbor *last_timesource_neighbor = NULL;
-
 /* Used from tsch_slot_operation and sub-protothreads */
 static rtimer_clock_t volatile current_slot_start;
 
@@ -480,8 +477,8 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       static uint8_t packet_len;
       /* packet seqno */
       static uint8_t seqno;
-      /* is this a broadcast packet? (wait for ack?) */
-      static uint8_t is_broadcast;
+      /* wait for ack? */
+      static uint8_t do_wait_for_ack;
       static rtimer_clock_t tx_start_time;
       /* Did we set the frame pending bit to request an extra burst link? */
       static int burst_link_requested;
@@ -493,11 +490,11 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       /* get payload */
       packet = queuebuf_dataptr(current_packet->qb);
       packet_len = queuebuf_datalen(current_packet->qb);
-      /* is this a broadcast packet? (wait for ack?) */
-      is_broadcast = current_neighbor->is_broadcast;
+      /* if is this a broadcast packet, don't wait for ack */
+      do_wait_for_ack = !current_neighbor->is_broadcast;
       /* Unicast. More packets in queue for the neighbor? */
       burst_link_requested = 0;
-      if(!is_broadcast
+      if(do_wait_for_ack
              && tsch_current_burst_count + 1 < TSCH_BURST_MAX_LEN
              && tsch_queue_packet_count(&current_neighbor->addr) > 1) {
         burst_link_requested = 1;
@@ -562,7 +559,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
 
           if(mac_tx_status == RADIO_TX_OK) {
-            if(!is_broadcast) {
+            if(do_wait_for_ack) {
               uint8_t ackbuf[TSCH_PACKET_MAX_LEN];
               int ack_len;
               rtimer_clock_t ack_start_time;
@@ -1062,7 +1059,6 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
                 "! leaving the network, last sync %u",
                           (unsigned)TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn));
       );
-      last_timesource_neighbor = NULL;
       tsch_disassociate();
     } else {
       /* backup of drift correction for printing debug messages */
