@@ -1,1 +1,0 @@
-include ../Makefile.script-test
