@@ -11,6 +11,8 @@ ifndef CONTIKI
   $(error CONTIKI not defined!)
 endif
 
+COOJA_DIR = $(CONTIKI_NG_TOOLS_DIR)/cooja
+
 ### Assuming simulator quickstart if no JNI library name set from Cooja
 ifndef LIBNAME
 QUICKSTART=1
@@ -20,15 +22,15 @@ endif
 ifdef QUICKSTART
 
 # Create COOJA JAR rule
-$(CONTIKI)/tools/cooja/dist/cooja.jar:
+$(COOJA_DIR)/dist/cooja.jar:
 	@echo "Creating COOJA Java archive..."
-	(cd $(CONTIKI)/tools/cooja && ant jar)
+	(cd $(COOJA_DIR) && ant jar)
 
 # Quickstart rule
 ifneq ($(MAKECMDGOALS),clean)
 .PHONY: $(MAKECMDGOALS)
 .PRECIOUS: $(MAKECMDGOALS)
-$(MAKECMDGOALS): $(CONTIKI)/tools/cooja/dist/cooja.jar
+$(MAKECMDGOALS): $(COOJA_DIR)/dist/cooja.jar
 	 java -mx512m -jar $< -quickstart='$(firstword $(MAKECMDGOALS))' -contiki='$(CONTIKI)'
 endif
 
@@ -41,7 +43,6 @@ JNILIB = $(BUILD_DIR_BOARD)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).o
 
 ### COOJA platform sources
-COOJA = $(ARCH_PATH)/platform/$(TARGET)
 CONTIKI_TARGET_DIRS = . dev lib sys cfs net
 
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
@@ -65,9 +66,6 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 .SUFFIXES:
 
 CLEAN += COOJA.log
-
-### Define the CPU directory
-CONTIKI_CPU=$(ARCH_PATH)/cpu/x86
 
 ### Compiler arguments
 #CC = gcc

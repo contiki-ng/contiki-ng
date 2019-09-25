@@ -1,0 +1,67 @@
+### This Makefile creates variables for all Contiki-NG directory locations
+### Instead of storing them in the top-level Makefile.include, we store them
+### in this separate Makefile here, which is included by Makefile.include
+### This allows examples that wish to specify additional MODULES to include
+### this Makefile and append to MODULES using the path variables defined here
+
+# Variables for the various directories under os/
+# Those are sometimes used relative to the top-level dir in which case we don't
+# need to prepend $(CONTIKI), as well as relative to the example dir, in which
+# case we do. So we define the variables to suit the former case and we will
+# prepend $(CONTIKI) explicitly where needed.
+CONTIKI_NG_OS_DIR = os
+CONTIKI_NG_SYS_DIR = $(CONTIKI_NG_OS_DIR)/sys
+CONTIKI_NG_NET_DIR = $(CONTIKI_NG_OS_DIR)/net
+CONTIKI_NG_MAC_DIR = $(CONTIKI_NG_NET_DIR)/mac
+CONTIKI_NG_ROUTING_DIR = $(CONTIKI_NG_NET_DIR)/routing
+CONTIKI_NG_APP_LAYER_DIR = $(CONTIKI_NG_NET_DIR)/app-layer
+CONTIKI_NG_SECURITY_DIR = $(CONTIKI_NG_NET_DIR)/security
+CONTIKI_NG_DEV_DIR = $(CONTIKI_NG_OS_DIR)/dev
+CONTIKI_NG_LIB_DIR = $(CONTIKI_NG_OS_DIR)/lib
+CONTIKI_NG_SERVICES_DIR = $(CONTIKI_NG_OS_DIR)/services
+CONTIKI_NG_STORAGE_DIR = $(CONTIKI_NG_OS_DIR)/storage
+
+# Variables for directories under arch
+#
+# We maintain backwards compatibility with ARCH_PATH, which allows us to
+# relocate arch/cpu and arch/platform to an out-of-tree location without
+# relocating arch/dev.
+#
+# $(CONTIKI_NG_RELOC_CPU_DIR) and $(CONTIKI_NG_RELOC_PLATFORM_DIR) will always
+# hold the path of the respective dir, relative to the example dir
+#
+# If ARCH_PATH is _not_ specified, then the cpu/ & platform/ path relative to
+# the top-level dir is simply expressed as $(CONTIKI_NG_ARCH_CPU_DIR). This
+# allows us to use this variable to append to $(MODULES)
+#
+# If however ARCH_PATH _is_ specified then paths relative to the top-level
+# cannot be expressed since they are always assumed to be under $(CONTIKI)
+# while $(ARCH_PATH) is outside it. This means that directories under a
+# relocated cpu/ and/or platform/ dir cannot be used as MODULES. This reflects
+# old behaviour
+ARCH_PATH ?= $(CONTIKI)/arch
+
+# Potentially relocated CPU/Platform dirs, relative to the example dir
+CONTIKI_NG_RELOC_CPU_DIR = $(ARCH_PATH)/cpu
+CONTIKI_NG_RELOC_PLATFORM_DIR = $(ARCH_PATH)/platform
+
+# A variable representing the location of the non-relocated arch/ dir.
+# Used to construct variables for:
+#   * everything under arch/dev and arch/cpu/arm
+#   * non-relocated arch/cpu and arch/platform
+CONTIKI_NG_ARCH_DIR = arch
+CONTIKI_NG_ARCH_CPU_DIR = $(CONTIKI_NG_ARCH_DIR)/cpu
+CONTIKI_NG_ARCH_PLATFORM_DIR = $(CONTIKI_NG_ARCH_DIR)/platform
+
+# Arm-related dirs relative to the top-level dir
+CONTIKI_NG_ARM_DIR = $(CONTIKI_NG_ARCH_CPU_DIR)/arm
+CONTIKI_NG_CORTEX_DIR = $(CONTIKI_NG_ARM_DIR)/cortex-m
+CONTIKI_NG_CM3_DIR = $(CONTIKI_NG_CORTEX_DIR)/cm3
+CONTIKI_NG_CM4_DIR = $(CONTIKI_NG_CORTEX_DIR)/cm4
+
+# arch/dev is used exclusively as a MODULE so we do not prepend $(CONTIKI)
+CONTIKI_NG_DRIVERS_DIR = $(CONTIKI_NG_ARCH_DIR)/dev
+
+# tools/ is used exclusively to invoke commands therein and is always used in
+# conjunction with $(CONTIKI)
+CONTIKI_NG_TOOLS_DIR = $(CONTIKI)/tools

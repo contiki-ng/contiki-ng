@@ -31,8 +31,7 @@ endif
 
 CFLAGS += -g
 
-include $(ARCH_PATH)/cpu/msp430/Makefile.msp430
-
+include $(CONTIKI_NG_RELOC_CPU_DIR)/msp430/Makefile.msp430
 
 NUMPAR=20
 IHEXFILE=tmpimage.ihex
@@ -40,9 +39,9 @@ IHEXFILE=tmpimage.ihex
 ifeq ($(HOST_OS),Darwin)
   ifndef MOTELIST
       USBDEVPREFIX=
-      SERIALDUMP = $(CONTIKI)/tools/sky/serialdump-linux
-      MOTELIST = $(CONTIKI)/tools/zolertia/motelist-zolertia-macos
-      BSL = $(CONTIKI)/tools/zolertia/z1-bsl-nopic --z1
+      SERIALDUMP = $(CONTIKI_NG_TOOLS_DIR)/sky/serialdump-linux
+      MOTELIST = $(CONTIKI_NG_TOOLS_DIR)/zolertia/motelist-zolertia-macos
+      BSL = $(CONTIKI_NG_TOOLS_DIR)/zolertia/z1-bsl-nopic --z1
       BSL_FILETYPE = -I
       MOTES = $(shell $(MOTELIST) -b z1 -c 2>&- | \
               cut -f 2 -d ,)
@@ -59,9 +58,9 @@ else
   # If we are not running under Mac, we assume Linux
     ifndef MOTELIST
       USBDEVPREFIX=
-      SERIALDUMP = $(CONTIKI)/tools/sky/serialdump-linux
-      MOTELIST = $(CONTIKI)/tools/zolertia/motelist-zolertia
-      BSL = $(CONTIKI)/tools/zolertia/z1-bsl-nopic --z1
+      SERIALDUMP = $(CONTIKI_NG_TOOLS_DIR)/sky/serialdump-linux
+      MOTELIST = $(CONTIKI_NG_TOOLS_DIR)/zolertia/motelist-zolertia
+      BSL = $(CONTIKI_NG_TOOLS_DIR)/zolertia/z1-bsl-nopic --z1
       BSL_FILETYPE = -I
       MOTES = $(shell $(MOTELIST) -b z1 -c 2>&- | \
               cut -f 2 -d , | \
@@ -120,23 +119,17 @@ z1-r.%:
 	$(BSL) -c $(subst -,/,$*) -r
 
 sizeplot:
-	msp430-size $(OBJECTDIR)/*.o | $(CONTIKI)/tools/sky/check-size > size-data
+	msp430-size $(OBJECTDIR)/*.o | $(CONTIKI_NG_TOOLS_DIR)/sky/check-size > size-data
 	gnuplot $(CONTIKI)/tools/sky/plot-size
 	gv size.pdf
 
 winslip:
 ifdef INTERFACE
-	$(CONTIKI)/tools/wpcapslip/wpcapslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) $(INTERFACE) 172.16.0.0 255.255.0.0
+	$(CONTIKI_NG_TOOLS_DIR)/wpcapslip/wpcapslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) $(INTERFACE) 172.16.0.0 255.255.0.0
 else
 	@echo "Usage: \"$(MAKE) $@ INTERFACE=<the IP address of a local network interface>\""
 	@echo "Use the \"ipconfig\" command to find out the IP addresses of the local interfaces"
 endif
-
-linslip: $(CONTIKI)/tools/tunslip
-	$(CONTIKI)/tools/tunslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) 172.16.0.0 255.255.0.0
-
-$(CONTIKI)/tools/tunslip:
-	(cd $(CONTIKI)/tools; $(MAKE) tunslip)
 
 ifdef MOTE
   PORT = $(USBDEVPREFIX)$(word $(MOTE), $(CMOTES))

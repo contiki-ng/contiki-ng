@@ -14,10 +14,10 @@ CONTIKI_TARGET_SOURCEFILES += board-buttons.c als-sensor.c
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Define the CPU directory
-CONTIKI_CPU=$(ARCH_PATH)/cpu/cc2538
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += os/storage/cfs
+MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
 PYTHON = python
 BSL_FLAGS += -e -w -v
@@ -26,7 +26,7 @@ ifdef PORT
   BSL_FLAGS += -p $(PORT)
 endif
 
-BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
+BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
 %.upload: $(OUT_BIN) $(OUT_ELF)
 ifeq ($(wildcard $(BSL)), )

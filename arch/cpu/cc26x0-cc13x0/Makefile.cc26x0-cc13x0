@@ -1,4 +1,4 @@
-CPU_ABS_PATH       = arch/cpu/cc26x0-cc13x0
+CPU_ABS_PATH       = $(CONTIKI_NG_ARCH_CPU_DIR)/cc26x0-cc13x0
 TI_XXWARE = $(CONTIKI_CPU)/$(TI_XXWARE_PATH)
 
 ifeq (,$(wildcard $(TI_XXWARE)/*))
@@ -57,7 +57,7 @@ ifdef PORT
   BSL_FLAGS += -p $(PORT)
 endif
 
-BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
+BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
 FORCE:
@@ -82,7 +82,7 @@ STACK_SIZE = 0
 	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "[RAM]   used %6d, free %6d\n",s,f;}'
 	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "[Flash] used %6d, free %6d\n",s,f;}'
 
-include $(ARCH_PATH)/cpu/arm/cortex-m/cm3/Makefile.cm3
+include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3
 
 ifeq ($(BOARD_SUPPORTS_BSL),1)
 %.upload: $(OUT_BIN)
