@@ -52,10 +52,8 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 CPU_FAMILY = cc13xx-cc26xx
 
 # Define the CPU directory and pull in the correct CPU Makefile
-CONTIKI_CPU := $(realpath $(ARCH_PATH)/cpu/simplelink-$(CPU_FAMILY))
+CONTIKI_CPU := $(realpath $(CONTIKI_NG_RELOC_CPU_DIR)/simplelink-$(CPU_FAMILY))
 include $(CONTIKI_CPU)/Makefile.$(CPU_FAMILY)
-
-MODULES += os/net os/net/mac os/net/mac/framer
 
 ################################################################################
 # Display all supported Boards for the given SimpleLink Family

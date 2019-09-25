@@ -17,7 +17,7 @@ SIMPLELINK_FAMILIES := cc13xx-cc26xx
 
 # Given a SimpleLink family as argument, check if it has the Board file.
 # If so, return itself; else, return empty string.
-verify_family = $(shell [ -d $(CONTIKI)/arch/platform/simplelink/$(1)/$(BOARD) ] && echo $(1))
+verify_family = $(shell [ -d $(CONTIKI_NG_RELOC_PLATFORM_DIR)/simplelink/$(1)/$(BOARD) ] && echo $(1))
 
 # Test each supported SimpleLink family and see if it contains the specified Board.
 # Throw an error if it isn't found.
@@ -35,7 +35,7 @@ endif
 # Remove any excess whitespace.
 FAMILY := $(strip $(FAMILY))
 
-FAMILY_PATH := $(realpath $(CONTIKI)/arch/platform/simplelink/$(FAMILY))
+FAMILY_PATH := $(realpath $(CONTIKI_NG_RELOC_PLATFORM_DIR)/simplelink/$(FAMILY))
 CLEAN += *.simplelink
 
 # Include the Simplelink Family specific Makefile

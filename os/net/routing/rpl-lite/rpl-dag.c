@@ -446,10 +446,10 @@ process_dio_from_current_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
     return;
   }
 
-  /* Add neighbor to RPL neighbor table */
   nbr = rpl_neighbor_get_from_ipaddr(from);
   last_dtsn = nbr != NULL ? nbr->dtsn : RPL_LOLLIPOP_INIT;
 
+  /* Add neighbor to RPL neighbor table */
   if(!update_nbr_from_dio(from, dio)) {
     LOG_ERR("neighbor table full, dropping DIO\n");
     return;

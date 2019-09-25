@@ -351,7 +351,17 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     break;
   }
   case MQTT_EVENT_SUBACK: {
+#if MQTT_311
+    mqtt_suback_event_t *suback_event = (mqtt_suback_event_t *)data;
+
+    if(suback_event->success) {
+      LOG_DBG("Application is subscribed to topic successfully\n");
+    } else {
+      LOG_DBG("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
+    }
+#else
     LOG_DBG("Application is subscribed to topic successfully\n");
+#endif
     break;
   }
   case MQTT_EVENT_UNSUBACK: {
@@ -572,7 +582,8 @@ connect_to_broker(void)
 {
   /* Connect to MQTT server */
   mqtt_connect(&conn, conf.broker_ip, conf.broker_port,
-               (conf.pub_interval * 3) / CLOCK_SECOND);
+               (conf.pub_interval * 3) / CLOCK_SECOND,
+               MQTT_CLEAN_SESSION_ON);
 
   state = STATE_CONNECTING;
 }

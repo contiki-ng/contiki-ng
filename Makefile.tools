@@ -2,8 +2,7 @@
 # under the tools/ dir. For those dependencies, we use this makefile here to
 # recursively invoke the respective build under tools/.
 
-TOOLS_DIR = $(CONTIKI)/tools
-SERIAL_IO_TOOL_DIR = $(TOOLS_DIR)/serial-io
+SERIAL_IO_TOOL_DIR = $(CONTIKI_NG_TOOLS_DIR)/serial-io
 
 SERIAL_IO_TOOL_DEPS = $(addprefix $(SERIAL_IO_TOOL_DIR)/, tools-utils.c tools-utils.h)
 

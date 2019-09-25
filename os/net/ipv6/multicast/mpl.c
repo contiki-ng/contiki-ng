@@ -509,7 +509,7 @@ buffer_reclaim(void)
    * We've already worked out what this new value is.
    */
   if(largest != NULL) {
-    reclaim = list_pop(locssptr->min_seq);
+    reclaim = list_pop(largest->min_seq);
     largest->min_seqno = list_item_next(reclaim) == NULL ? reclaim->seq : ((struct mpl_msg *)list_item_next(reclaim))->seq;
     largest->count--;
     trickle_timer_stop(&reclaim->tt);
@@ -759,6 +759,7 @@ icmp_out(struct mpl_domain *dom)
   uint8_t vector[32];
   uint8_t vec_size;
   uint8_t vec_len;
+  uint8_t cur_seq;
   uint16_t payload_len;
   uip_ds6_addr_t *addr;
   size_t seed_info_len;
@@ -824,13 +825,22 @@ icmp_out(struct mpl_domain *dom)
       /* Populate the seed info message vector */
       memset(vector, 0, sizeof(vector));
       vec_len = 0;
-      locmmptr = list_head(locssptr->min_seq);
-      while(locmmptr != NULL) {
+      cur_seq = 0;
+      LOG_INFO("\nBuffer for seed: ");
+      LOG_INFO_SEED(locssptr->seed_id);
+      LOG_INFO_("\n");
+      for(locmmptr = list_head(locssptr->min_seq); locmmptr != NULL; locmmptr = list_item_next(locmmptr)) {
+        LOG_INFO("%d -- %x\n", locmmptr->seq, locmmptr->data[locmmptr->size - 1]);
+        cur_seq = SEQ_VAL_ADD(locssptr->min_seqno, vec_len);
         if(locmmptr->seq == SEQ_VAL_ADD(locssptr->min_seqno, vec_len)) {
           BIT_VECTOR_SET_BIT(vector, vec_len);
-          locmmptr = list_item_next(locmmptr);
+          vec_len++;
+        } else {
+          /* Insert enough zeros to get to the next message */
+          vec_len += locmmptr->seq - cur_seq;
+          BIT_VECTOR_SET_BIT(vector, vec_len);
+          vec_len++;
         }
-        vec_len++;
       }
 
       /* Convert vector length from bits to bytes */
