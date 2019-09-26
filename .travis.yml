@@ -73,6 +73,7 @@ env:
     - TEST_NAME='rpl-classic' BUILD_COOJA=true
     - TEST_NAME='tun-rpl-br' BUILD_COOJA=true
     - TEST_NAME='coap-lwm2m'
+    - TEST_NAME='script-base'
     - TEST_NAME='simulation-base' BUILD_COOJA=true
     - TEST_NAME='ieee802154' BUILD_COOJA=true
     - TEST_NAME='compile-nxp-ports'

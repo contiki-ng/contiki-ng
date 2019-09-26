@@ -46,8 +46,12 @@
 
 #include "lib/list.h"
 #include "lib/memb.h"
-
 #include <string.h>
+
+#include "sys/log.h"
+#define LOG_MODULE "IPv6"
+#define LOG_LEVEL LOG_LEVEL_NONE
+
 /** \brief Nameserver record */
 typedef struct uip_nameserver_record {
   struct uip_nameserver_record *next;
@@ -94,6 +98,11 @@ init(void)
 void
 uip_nameserver_update(const uip_ipaddr_t *nameserver, uint32_t lifetime)
 {
+  LOG_DBG("Nameserver update:");
+  LOG_DBG_6ADDR(nameserver);
+  LOG_DBG("\n");
+
+
 #if UIP_NAMESERVER_POOL_SIZE > 1
   register uip_nameserver_record *e;
 

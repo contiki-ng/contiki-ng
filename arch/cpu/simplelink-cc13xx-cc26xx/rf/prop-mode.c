@@ -98,7 +98,9 @@ typedef enum {
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
 #define DOT_4G_MAX_FRAME_LEN    2047
-#define DOT_4G_PHR_LEN          2
+#define DOT_4G_PHR_NUM_BYTES    2
+#define DOT_4G_LEN_OFFSET       0xFC
+#define DOT_4G_SYNCWORD         0x0055904E
 
 /* PHY HDR bits */
 #define DOT_4G_PHR_CRC16        0x10
@@ -119,6 +121,24 @@ typedef enum {
 #else
 #define DOT_4G_PHR_DW_BIT       0
 #endif
+/*---------------------------------------------------------------------------*/
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the CRC.
+ *
+ * Unlike typical 2.4GHz radio drivers, this driver supports the .15.4g
+ * 32-bit CRC option.
+ *
+ * This radio hardware is perfectly happy to transmit frames longer than 127
+ * bytes, which is why it's OK to end up transmitting 125 payload bytes plus
+ * a 4-byte CRC.
+ *
+ * In the future we can change this to support transmission of long frames,
+ * for example as per .15.4g. the size of the TX and RX buffers would need
+ * adjusted accordingly.
+ */
+#define MAX_PAYLOAD_LEN 125
 /*---------------------------------------------------------------------------*/
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
@@ -170,22 +190,28 @@ typedef struct {
 
 static prop_radio_t prop_radio;
 /*---------------------------------------------------------------------------*/
+/* Convenience macros for more succinct access of RF commands */
+#define cmd_radio_setup     rf_cmd_prop_radio_div_setup
+#define cmd_fs              rf_cmd_prop_fs
+#define cmd_tx              rf_cmd_prop_tx_adv
+#define cmd_rx              rf_cmd_prop_rx_adv
+
 /* Convenience macros for volatile access with the RF commands */
-#define cmd_radio_setup   (*(volatile rfc_CMD_PROP_RADIO_DIV_SETUP_t *)&rf_cmd_prop_radio_div_setup)
-#define cmd_fs            (*(volatile rfc_CMD_FS_t *)                  &rf_cmd_prop_fs)
-#define cmd_tx            (*(volatile rfc_CMD_PROP_TX_ADV_t *)         &rf_cmd_prop_tx_adv)
-#define cmd_rx            (*(volatile rfc_CMD_PROP_RX_ADV_t *)         &rf_cmd_prop_rx_adv)
+#define v_cmd_radio_setup   CC_ACCESS_NOW(rfc_CMD_PROP_RADIO_DIV_SETUP_t, rf_cmd_prop_radio_div_setup)
+#define v_cmd_fs            CC_ACCESS_NOW(rfc_CMD_FS_t,                   rf_cmd_prop_fs)
+#define v_cmd_tx            CC_ACCESS_NOW(rfc_CMD_PROP_TX_ADV_t,          rf_cmd_prop_tx_adv)
+#define v_cmd_rx            CC_ACCESS_NOW(rfc_CMD_PROP_RX_ADV_t,          rf_cmd_prop_rx_adv)
 /*---------------------------------------------------------------------------*/
 static inline bool
 tx_is_active(void)
 {
-  return cmd_tx.status == ACTIVE;
+  return v_cmd_tx.status == ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
 static inline bool
 rx_is_active(void)
 {
-  return cmd_rx.status == ACTIVE;
+  return v_cmd_rx.status == ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
 static int on(void);
@@ -199,10 +225,15 @@ init_rf_params(void)
   cmd_radio_setup.centerFreq = PROP_MODE_CENTER_FREQ;
   cmd_radio_setup.loDivider = PROP_MODE_LO_DIVIDER;
 
-  data_queue_t *data_queue = data_queue_init(sizeof(lensz_t));
+  cmd_tx.numHdrBits = DOT_4G_PHR_NUM_BYTES * 8;
+  cmd_tx.syncWord = DOT_4G_SYNCWORD;
 
-  cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx.lenOffset;
-  cmd_rx.pQueue = data_queue;
+  cmd_rx.syncWord0 = DOT_4G_SYNCWORD;
+  cmd_rx.syncWord1 = 0x00000000;
+  cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - DOT_4G_LEN_OFFSET;
+  cmd_rx.hdrConf.numHdrBits = DOT_4G_PHR_NUM_BYTES * 8;
+  cmd_rx.lenOffset = DOT_4G_LEN_OFFSET;
+  cmd_rx.pQueue = data_queue_init(sizeof(lensz_t));
   cmd_rx.pOutput = (uint8_t *)&prop_radio.rx_stats;
 }
 /*---------------------------------------------------------------------------*/
@@ -216,7 +247,7 @@ get_rssi(void)
  /* RX is required to be running in order to do a RSSI measurement */
   if(!rx_is_active()) {
     /* If RX is not pending, i.e. soon to be running, schedule the RX command */
-    if(cmd_rx.status != PENDING) {
+    if(v_cmd_rx.status != PENDING) {
       res = netstack_sched_rx(false);
       if(res != RF_RESULT_OK) {
         LOG_ERR("RSSI measurement failed to schedule RX\n");
@@ -231,7 +262,7 @@ get_rssi(void)
     RTIMER_BUSYWAIT_UNTIL(!rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
 
     if(!rx_is_active()) {
-      LOG_ERR("RSSI measurement failed to turn on RX, RX status=0x%04X\n", cmd_rx.status);
+      LOG_ERR("RSSI measurement failed to turn on RX, RX status=0x%04X\n", v_cmd_rx.status);
       return RF_RESULT_ERROR;
     }
   }
@@ -249,7 +280,7 @@ get_rssi(void)
 static uint8_t
 get_channel(void)
 {
-  uint32_t freq_khz = cmd_fs.frequency * 1000;
+  uint32_t freq_khz = v_cmd_fs.frequency * 1000;
 
   /*
    * For some channels, fractFreq * 1000 / 65536 will return 324.99xx.
@@ -257,7 +288,7 @@ get_channel(void)
    * function returning channel - 1 instead of channel. Thus, we do a quick
    * positive integer round up.
    */
-  freq_khz += (((cmd_fs.fractFreq * 1000) + 65535) / 65536);
+  freq_khz += (((v_cmd_fs.fractFreq * 1000) + 65535) / 65536);
 
   return (uint8_t)((freq_khz - DOT_15_4G_CHAN0_FREQ) / DOT_15_4G_FREQ_SPACING);
 }
@@ -285,8 +316,8 @@ set_channel(uint16_t channel)
   LOG_DBG("Set channel to %d, frequency 0x%04X.0x%04X (%lu)\n",
           (int)channel, freq, frac, new_freq);
 
-  cmd_fs.frequency = freq;
-  cmd_fs.fractFreq = frac;
+  v_cmd_fs.frequency = freq;
+  v_cmd_fs.fractFreq = frac;
 
   res = netstack_sched_fs();
 
@@ -320,7 +351,7 @@ calculate_lqi(int8_t rssi)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(payload_len > TX_BUF_PAYLOAD_LEN || payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
 
@@ -333,7 +364,7 @@ transmit(unsigned short transmit_len)
 {
   rf_result_t res;
 
-  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(transmit_len > MAX_PAYLOAD_LEN) {
     LOG_ERR("Too long\n");
     return RADIO_TX_ERR;
   }
@@ -358,8 +389,8 @@ transmit(unsigned short transmit_len)
 
   /* pktLen: Total number of bytes in the TX buffer, including the header if
    * one exists, but not including the CRC (which is not present in the buffer) */
-  cmd_tx.pktLen = transmit_len + DOT_4G_PHR_LEN;
-  cmd_tx.pPkt = prop_radio.tx_buf;
+  v_cmd_tx.pktLen = transmit_len + DOT_4G_PHR_NUM_BYTES;
+  v_cmd_tx.pPkt = prop_radio.tx_buf;
 
   res = netstack_sched_prop_tx();
 
@@ -607,6 +638,10 @@ get_value(radio_param_t param, radio_value_t *value)
     *value = (radio_value_t)tx_power_max(rf_tx_power_table, rf_tx_power_table_size);
     return RADIO_RESULT_OK;
 
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
+    return RADIO_RESULT_OK;
+
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
   }
@@ -673,6 +708,10 @@ set_object(radio_param_t param, const void *src, size_t size)
 static int
 init(void)
 {
+  RF_Params rf_params;
+  RF_TxPowerTable_Value tx_power_value;
+  RF_Stat rf_stat;
+
   if(prop_radio.rf_handle) {
     LOG_WARN("Radio is already initialized\n");
     return RF_RESULT_OK;
@@ -687,7 +726,6 @@ init(void)
   init_rf_params();
 
   /* Init RF params and specify non-default params */
-  RF_Params rf_params;
   RF_Params_init(&rf_params);
   rf_params.nInactivityTimeout = RF_CONF_INACTIVITY_TIMEOUT;
 
@@ -700,6 +738,18 @@ init(void)
   }
 
   set_channel(IEEE802154_DEFAULT_CHANNEL);
+
+  tx_power_value = RF_TxPowerTable_findValue(rf_tx_power_table, RF_TXPOWER_DBM);
+  if(tx_power_value.rawValue != RF_TxPowerTable_INVALID_VALUE) {
+    rf_stat = RF_setTxPower(prop_radio.rf_handle, tx_power_value);
+    if(rf_stat == RF_StatSuccess) {
+      LOG_INFO("TX power configured to %d dBm\n", RF_TXPOWER_DBM);
+    } else {
+      LOG_WARN("Setting TX power to %d dBm failed, stat=0x%02X", RF_TXPOWER_DBM, rf_stat);
+    }
+  } else {
+    LOG_WARN("Unable to find TX power %d dBm in the TX power table\n", RF_TXPOWER_DBM);
+  }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 

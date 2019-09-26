@@ -42,16 +42,17 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
-extern RF_Mode                        rf_prop_mode;
+extern RF_Mode                           rf_prop_mode;
 /*---------------------------------------------------------------------------*/
 /* RF Core API commands */
-extern rfc_CMD_PROP_RADIO_DIV_SETUP_t rf_cmd_prop_radio_div_setup;
-extern rfc_CMD_FS_t                   rf_cmd_prop_fs;
-extern rfc_CMD_PROP_TX_ADV_t          rf_cmd_prop_tx_adv;
-extern rfc_CMD_PROP_RX_ADV_t          rf_cmd_prop_rx_adv;
-/*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t                       rf_prop_overrides[];
+#if defined(DEVICE_CC1312R) || defined(DEVICE_CC1352R)
+extern rfc_CMD_PROP_RADIO_DIV_SETUP_t    rf_cmd_prop_radio_div_setup;
+#else
+extern rfc_CMD_PROP_RADIO_DIV_SETUP_PA_t rf_cmd_prop_radio_div_setup;
+#endif
+extern rfc_CMD_FS_t                      rf_cmd_prop_fs;
+extern rfc_CMD_PROP_TX_ADV_t             rf_cmd_prop_tx_adv;
+extern rfc_CMD_PROP_RX_ADV_t             rf_cmd_prop_rx_adv;
 /*---------------------------------------------------------------------------*/
 #endif /* PROP_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

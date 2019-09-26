@@ -103,13 +103,20 @@ extern const leds_t leds_arch_leds[];
 static const leds_t *leds_arch_leds = NULL;
 #endif
 /*---------------------------------------------------------------------------*/
+#if GPIO_HAL_PORT_PIN_NUMBERING
+#define LED_PORT(led) (led).port
+#else
+#define LED_PORT(led) GPIO_HAL_NULL_PORT
+#endif
+/*---------------------------------------------------------------------------*/
 void
 leds_init()
 {
   leds_num_t led;
 
   for(led = 0; led < LEDS_COUNT; led++) {
-    gpio_hal_arch_pin_set_output(leds_arch_leds[led].pin);
+    gpio_hal_arch_pin_set_output(LED_PORT(leds_arch_leds[led]),
+                                 leds_arch_leds[led].pin);
   }
   leds_off(LEDS_ALL);
 }
@@ -122,9 +129,11 @@ leds_single_on(leds_num_t led)
   }
 
   if(leds_arch_leds[led].negative_logic) {
-    gpio_hal_arch_clear_pin(leds_arch_leds[led].pin);
+    gpio_hal_arch_clear_pin(LED_PORT(leds_arch_leds[led]),
+                                     leds_arch_leds[led].pin);
   } else {
-    gpio_hal_arch_set_pin(leds_arch_leds[led].pin);
+    gpio_hal_arch_set_pin(LED_PORT(leds_arch_leds[led]),
+                          leds_arch_leds[led].pin);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -136,9 +145,11 @@ leds_single_off(leds_num_t led)
   }
 
   if(leds_arch_leds[led].negative_logic) {
-    gpio_hal_arch_set_pin(leds_arch_leds[led].pin);
+    gpio_hal_arch_set_pin(LED_PORT(leds_arch_leds[led]),
+                          leds_arch_leds[led].pin);
   } else {
-    gpio_hal_arch_clear_pin(leds_arch_leds[led].pin);
+    gpio_hal_arch_clear_pin(LED_PORT(leds_arch_leds[led]),
+                            leds_arch_leds[led].pin);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -149,7 +160,8 @@ leds_single_toggle(leds_num_t led)
     return;
   }
 
-  gpio_hal_arch_toggle_pin(leds_arch_leds[led].pin);
+  gpio_hal_arch_toggle_pin(LED_PORT(leds_arch_leds[led]),
+                           leds_arch_leds[led].pin);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -160,9 +172,11 @@ leds_on(leds_mask_t leds)
   for(led = 0; led < LEDS_COUNT; led++) {
     if((1 << led) & leds) {
       if(leds_arch_leds[led].negative_logic) {
-        gpio_hal_arch_clear_pin(leds_arch_leds[led].pin);
+        gpio_hal_arch_clear_pin(LED_PORT(leds_arch_leds[led]),
+                                leds_arch_leds[led].pin);
       } else {
-        gpio_hal_arch_set_pin(leds_arch_leds[led].pin);
+        gpio_hal_arch_set_pin(LED_PORT(leds_arch_leds[led]),
+                              leds_arch_leds[led].pin);
       }
     }
   }
@@ -176,9 +190,11 @@ leds_off(leds_mask_t leds)
   for(led = 0; led < LEDS_COUNT; led++) {
     if((1 << led) & leds) {
       if(leds_arch_leds[led].negative_logic) {
-        gpio_hal_arch_set_pin(leds_arch_leds[led].pin);
+        gpio_hal_arch_set_pin(LED_PORT(leds_arch_leds[led]),
+                              leds_arch_leds[led].pin);
       } else {
-        gpio_hal_arch_clear_pin(leds_arch_leds[led].pin);
+        gpio_hal_arch_clear_pin(LED_PORT(leds_arch_leds[led]),
+                                leds_arch_leds[led].pin);
       }
     }
   }
@@ -191,7 +207,8 @@ leds_toggle(leds_mask_t leds)
 
   for(led = 0; led < LEDS_COUNT; led++) {
     if((1 << led) & leds) {
-      gpio_hal_arch_toggle_pin(leds_arch_leds[led].pin);
+      gpio_hal_arch_toggle_pin(LED_PORT(leds_arch_leds[led]),
+                               leds_arch_leds[led].pin);
     }
   }
 }
@@ -211,7 +228,8 @@ leds_get()
   uint8_t pin_state;
 
   for(led = 0; led < LEDS_COUNT; led++) {
-    pin_state = gpio_hal_arch_read_pin(leds_arch_leds[led].pin);
+    pin_state = gpio_hal_arch_read_pin(LED_PORT(leds_arch_leds[led]),
+                                       leds_arch_leds[led].pin);
 
     if((leds_arch_leds[led].negative_logic == false && pin_state == 1) ||
        (leds_arch_leds[led].negative_logic == true && pin_state == 0)) {

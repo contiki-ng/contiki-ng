@@ -44,11 +44,6 @@
 
 #include "contiki.h"
 
-/***** External Variables *****/
-
-/** \brief The neighbor last used as our time source */
-extern struct tsch_neighbor *last_timesource_neighbor;
-
 /********** Functions *********/
 
 /**
@@ -71,6 +66,12 @@ int32_t tsch_timesync_adaptive_compensate(rtimer_clock_t delta_ticks);
  * \return The time drift in PPM
  */
 long int tsch_adaptive_timesync_get_drift_ppm(void);
+
+/**
+ * \brief Reset the status of the module
+ */
+void tsch_adaptive_timesync_reset(void);
+
 
 #endif /* __TSCH_ADAPTIVE_TIMESYNC_H__ */
 /** @} */

@@ -83,4 +83,5 @@ struct orchestra_rule default_common = {
   select_packet,
   NULL,
   NULL,
+  "default common",
 };

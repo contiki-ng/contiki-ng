@@ -147,7 +147,7 @@ gpio_hal_arch_init(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_interrupt_enable(gpio_hal_pin_t pin)
 {
   PIN_Config pin_cfg;
   PIN_Config irq_cfg;
@@ -160,7 +160,7 @@ gpio_hal_arch_interrupt_enable(gpio_hal_pin_t pin)
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_interrupt_disable(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_interrupt_disable(gpio_hal_pin_t pin)
 {
   PIN_add(pin_handle, PIN_getConfig(pin));
 
@@ -168,7 +168,7 @@ gpio_hal_arch_interrupt_disable(gpio_hal_pin_t pin)
 }
 /*---------------------------------------------------------------------------*/
 void
-gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
+gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
   PIN_add(pin_handle, PIN_getConfig(pin));
 
@@ -182,7 +182,7 @@ gpio_hal_arch_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_cfg_t
-gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_pin_cfg_get(gpio_hal_pin_t pin)
 {
   PIN_Config pin_cfg = PIN_getConfig(pin);
   gpio_hal_pin_cfg_t cfg = 0;
@@ -193,7 +193,7 @@ gpio_hal_arch_pin_cfg_get(gpio_hal_pin_t pin)
 }
 /*---------------------------------------------------------------------------*/
 gpio_hal_pin_mask_t
-gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
+gpio_hal_arch_no_port_read_pins(gpio_hal_pin_mask_t pins)
 {
   /* For pins configured as output we need to read DOUT31_0 */
   gpio_hal_pin_mask_t oe_pins = GPIO_getOutputEnableMultiDio(pins);
@@ -205,7 +205,7 @@ gpio_hal_arch_read_pins(gpio_hal_pin_mask_t pins)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-gpio_hal_arch_read_pin(gpio_hal_pin_t pin)
+gpio_hal_arch_no_port_read_pin(gpio_hal_pin_t pin)
 {
   return (GPIO_getOutputEnableDio(pin))
          ? PINCC26XX_getOutputValue(pin)

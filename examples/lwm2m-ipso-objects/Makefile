@@ -6,11 +6,13 @@ PLATFORMS_EXCLUDE = sky z1
 
 all: $(CONTIKI_PROJECT)
 
-MODULES += os/net/app-layer/coap
-MODULES += os/services/lwm2m
-MODULES += os/services/ipso-objects
-
 CONTIKI=../..
+
+include $(CONTIKI)/Makefile.dir-variables
+MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/coap
+MODULES += $(CONTIKI_NG_SERVICES_DIR)/lwm2m
+MODULES += $(CONTIKI_NG_SERVICES_DIR)/ipso-objects
+
 include $(CONTIKI)/Makefile.identify-target
 MODULES_REL += $(TARGET)
 

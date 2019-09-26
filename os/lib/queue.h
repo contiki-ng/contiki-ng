@@ -44,6 +44,8 @@
  * struct, the first field must be a pointer called \e next. This field will
  * be used by the library to maintain the queue. Application code must not
  * modify this field directly.
+ *
+ * This library is not safe to be used within an interrupt context.
  * @{
  */
 /*---------------------------------------------------------------------------*/

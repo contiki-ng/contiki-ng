@@ -52,6 +52,12 @@
 #include "net/ipv6/uiplib.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/uip-ds6.h"
+#if BUILD_WITH_RESOLV
+#include "resolv.h"
+#endif /* BUILD_WITH_RESOLV */
+#if BUILD_WITH_HTTP_SOCKET
+#include "http-socket.h"
+#endif /* BUILD_WITH_HTTP_SOCKET */
 #if MAC_CONF_WITH_TSCH
 #include "net/mac/tsch/tsch.h"
 #endif /* MAC_CONF_WITH_TSCH */
@@ -678,6 +684,108 @@ PT_THREAD(cmd_routes(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
+/*---------------------------------------------------------------------------*/
+#if BUILD_WITH_RESOLV
+static
+PT_THREAD(cmd_resolv(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+  static struct etimer timeout_timer;
+  static int count, ret;
+  char *next_args;
+  static uip_ipaddr_t *remote_addr = NULL;
+  SHELL_ARGS_INIT(args, next_args);
+
+  /* Get argument (remote hostname) */
+  SHELL_ARGS_NEXT(args, next_args);
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "Destination host is not specified\n");
+    PT_EXIT(pt);
+  } else {
+    ret = resolv_lookup(args, &remote_addr);
+    if(ret == RESOLV_STATUS_UNCACHED || ret == RESOLV_STATUS_RESOLVING) {
+      SHELL_OUTPUT(output, "Looking up IPv6 address for host: %s\n", args);
+      if(ret != RESOLV_STATUS_RESOLVING) {
+        resolv_query(args);
+      }
+      /* Poll 10 times for resolve results (5 seconds max)*/
+      for(count = 0; count < 10; count++) {
+        etimer_set(&timeout_timer, CLOCK_SECOND / 2);
+        PT_WAIT_UNTIL(pt, etimer_expired(&timeout_timer));
+        printf("resoliving again...\n");
+        if((ret = resolv_lookup(args, &remote_addr)) != RESOLV_STATUS_RESOLVING) {
+          break;
+        }
+      }
+    }
+    if(ret == RESOLV_STATUS_NOT_FOUND) {
+      SHELL_OUTPUT(output, "Did not find IPv6 address for host: %s\n", args);
+    } else if(ret == RESOLV_STATUS_CACHED) {
+      SHELL_OUTPUT(output, "Found IPv6 address for host: %s => ", args);
+      shell_output_6addr(output, remote_addr);
+      SHELL_OUTPUT(output, "\n");
+    }
+  }
+  PT_END(pt);
+}
+#endif /* BUILD_WITH_RESOLV */
+/*---------------------------------------------------------------------------*/
+#if BUILD_WITH_HTTP_SOCKET
+static struct http_socket s;
+static int bytes_received = 0;
+
+static void
+http_callback(struct http_socket *s, void *ptr,
+         http_socket_event_t e,
+         const uint8_t *data, uint16_t datalen)
+{
+  if(e == HTTP_SOCKET_ERR) {
+    printf("HTTP socket error\n");
+  } else if(e == HTTP_SOCKET_TIMEDOUT) {
+    printf("HTTP socket error: timed out\n");
+  } else if(e == HTTP_SOCKET_ABORTED) {
+    printf("HTTP socket error: aborted\n");
+  } else if(e == HTTP_SOCKET_HOSTNAME_NOT_FOUND) {
+    printf("HTTP socket error: hostname not found\n");
+  } else if(e == HTTP_SOCKET_CLOSED) {
+    printf("HTTP socket closed, %d bytes received\n", bytes_received);
+  } else if(e == HTTP_SOCKET_DATA) {
+    int i;
+    if(bytes_received == 0) {
+      printf("HTTP socket received data, total expects:%d\n", (int) s->header.content_length);
+    }
+
+    bytes_received += datalen;
+    for(i = 0; i < datalen; i++) {
+      printf("%c", data[i]);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(cmd_wget(struct pt *pt, shell_output_func output, char *args))
+{
+  PT_BEGIN(pt);
+  char *next_args;
+  SHELL_ARGS_INIT(args, next_args);
+
+  /* Get argument (remote hostname and url (http://host/url) */
+  SHELL_ARGS_NEXT(args, next_args);
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "URL is not specified\n");
+    PT_EXIT(pt);
+  } else {
+    bytes_received = 0;
+    SHELL_OUTPUT(output, "Fetching web page at %s\n", args);
+    http_socket_init(&s);
+    http_socket_get(&s, args, 0, 0,
+                    http_callback, NULL);
+  }
+
+  PT_END(pt);
+}
+#endif /* BUILD_WITH_HTTP_SOCKET */
+/*---------------------------------------------------------------------------*/
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 /*---------------------------------------------------------------------------*/
 static
@@ -878,6 +986,12 @@ const struct shell_command_t builtin_shell_commands[] = {
   { "ip-nbr",               cmd_ip_neighbors,         "'> ip-nbr': Shows all IPv6 neighbors" },
   { "ping",                 cmd_ping,                 "'> ping addr': Pings the IPv6 address 'addr'" },
   { "routes",               cmd_routes,               "'> routes': Shows the route entries" },
+#if BUILD_WITH_RESOLV
+  { "nslookup",             cmd_resolv,               "'> nslookup': Lookup IPv6 address of host" },
+#endif /* BUILD_WITH_RESOLV */
+#if BUILD_WITH_HTTP_SOCKET
+  { "wget",                 cmd_wget,                 "'> wget url': get content of URL (only http)." },
+#endif /* BUILD_WITH_HTTP_SOCKET */
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 #if UIP_CONF_IPV6_RPL
   { "rpl-set-root",         cmd_rpl_set_root,         "'> rpl-set-root 0/1 [prefix]': Sets node as root (1) or not (0). A /64 prefix can be optionally specified." },

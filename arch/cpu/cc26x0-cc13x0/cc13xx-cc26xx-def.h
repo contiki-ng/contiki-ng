@@ -137,10 +137,10 @@
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
-
-#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
 /*---------------------------------------------------------------------------*/
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE 0
+#define GPIO_HAL_CONF_ARCH_HDR_PATH          "dev/gpio-hal-arch.h"
+#define GPIO_HAL_CONF_ARCH_SW_TOGGLE         0
+#define GPIO_HAL_CONF_PORT_PIN_NUMBERING     0
 /*---------------------------------------------------------------------------*/
 #define SPI_CONF_CONTROLLER_COUNT    2
 /*---------------------------------------------------------------------------*/

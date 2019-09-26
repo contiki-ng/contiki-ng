@@ -50,21 +50,16 @@
  */
 tx_power_table_t rf_ble_tx_power_table_cc2652r[] =
 {
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  3) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  3) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY( 8, 2, 0,  6) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 2, 0,  8) },
-  { -10, RF_TxPowerTable_DEFAULT_PA_ENTRY(12, 2, 0, 11) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 2, 0,  5) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 1, 0, 16) },
-  {  -5, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 0, 17) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 1, 0, 20) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 26) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 1, 0, 28) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(13, 0, 0, 34) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(17, 0, 0, 42) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 0, 0, 54) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(30, 0, 0, 74) },
+  {-20, RF_TxPowerTable_DEFAULT_PA_ENTRY(6, 3, 0, 2) },
+  {-15, RF_TxPowerTable_DEFAULT_PA_ENTRY(10, 3, 0, 3) },
+  {-10, RF_TxPowerTable_DEFAULT_PA_ENTRY(15, 3, 0, 5) },
+  {-5, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 3, 0, 9) },
+  {0, RF_TxPowerTable_DEFAULT_PA_ENTRY(19, 1, 0, 20) },
+  {1, RF_TxPowerTable_DEFAULT_PA_ENTRY(22, 1, 0, 20) },
+  {2, RF_TxPowerTable_DEFAULT_PA_ENTRY(25, 1, 0, 25) },
+  {3, RF_TxPowerTable_DEFAULT_PA_ENTRY(29, 1, 0, 28) },
+  {4, RF_TxPowerTable_DEFAULT_PA_ENTRY(35, 1, 0, 39) },
+  {5, RF_TxPowerTable_DEFAULT_PA_ENTRY(23, 0, 0, 57) },
   RF_TxPowerTable_TERMINATION_ENTRY
 };
 /*---------------------------------------------------------------------------*/

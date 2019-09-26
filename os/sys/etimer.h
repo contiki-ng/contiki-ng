@@ -56,6 +56,7 @@
  * \sa \ref timer "Simple timer library"
  * \sa \ref clock "Clock library" (used by the timer library)
  *
+ * It is \e not safe to manipulate event timers within an interrupt context.
  * @{
  */
 
