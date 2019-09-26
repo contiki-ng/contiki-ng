@@ -415,6 +415,14 @@ copy_frags2uip(int context)
 {
   int i;
 
+  /* Check length fields before proceeding. */
+  if(frag_info[context].len < frag_info[context].first_frag_len ||
+     frag_info[context].len > sizeof(uip_buf)) {
+    LOG_WARN("input: invalid total size of fragments\n");
+    clear_fragments(context);
+    return false;
+  }
+
   /* Copy from the fragment context info buffer first */
   memcpy((uint8_t *)UIP_IP_BUF, (uint8_t *)frag_info[context].first_frag,
          frag_info[context].first_frag_len);
@@ -427,7 +435,7 @@ copy_frags2uip(int context)
     /* And also copy all matching fragments */
     if(frag_buf[i].len > 0 && frag_buf[i].index == context) {
       if((frag_buf[i].offset << 3) + frag_buf[i].len > sizeof(uip_buf)) {
-        LOG_WARN("input: unable to copy fragments to the uIP buffer\n");
+        LOG_WARN("input: invalid fragment offset\n");
         clear_fragments(context);
         return false;
       }
