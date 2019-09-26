@@ -11,11 +11,13 @@ CONTIKI_TARGET_SOURCEFILES += adc-sensors.c weather-meter.c grove-gyro.c
 CONTIKI_TARGET_SOURCEFILES += rgb-bl-lcd.c pm10-sensor.c iaq.c zonik.c relay.c
 CONTIKI_TARGET_SOURCEFILES += dht22.c servo.c ac-dimmer.c bme280-arch.c
 
-MODULES += arch/dev/bme280
-
 all: $(CONTIKI_PROJECT)
 
 PLATFORMS_ONLY = zoul
 
 CONTIKI = ../../..
+
+include $(CONTIKI)/Makefile.dir-variables
+MODULES += $(CONTIKI_NG_DRIVERS_DIR)/bme280
+
 include $(CONTIKI)/Makefile.include

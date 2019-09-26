@@ -28,5 +28,5 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 MAKE_MAC ?= MAKE_MAC_NULLMAC
 
 ### Define the CPU directory
-CONTIKI_CPU=$(ARCH_PATH)/cpu/native
-include $(ARCH_PATH)/cpu/native/Makefile.native
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/native
+include $(CONTIKI_CPU)/Makefile.native

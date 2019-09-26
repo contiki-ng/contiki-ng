@@ -11,7 +11,7 @@ endif
 
 ### Configure the build for the board and pull in board-specific sources
 CONTIKI_TARGET_DIRS += . dev
-PLATFORM_ROOT_DIR = $(ARCH_PATH)/platform/$(TARGET)
+PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
 
 ### Include
 CONTIKI_TARGET_SOURCEFILES += platform.c board.c
@@ -21,10 +21,10 @@ CONTIKI_TARGET_SOURCEFILES += antenna.c adxl346.c max44009.c sht21.c tps62730.c
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Define the CPU directory
-CONTIKI_CPU=$(ARCH_PATH)/cpu/cc2538
+CONTIKI_CPU=$(CONTIKI_NG_RELOC_CPU_DIR)/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += os/storage/cfs
+MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
 PYTHON = python
 BSL_FLAGS += -e --bootloader-invert-lines -w -v -b 450000
@@ -33,7 +33,7 @@ ifdef PORT
   BSL_FLAGS += -p $(PORT)
 endif
 
-BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
+BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
 %.upload: $(OUT_BIN) $(OUT_ELF)
 ifeq ($(wildcard $(BSL)), )
