@@ -423,6 +423,18 @@ get_root_ipaddr(uip_ipaddr_t *ipaddr)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+uint8_t
+rpl_is_in_leaf_mode(void)
+{
+  /*
+   * Confusingly, most of the RPL code uses the `rpl_mode` variable
+   * ony to check whether the node is in mesh or feather mode,
+   * and makes decision about the leaf status based on the preprocessor flag.
+   * For consistency, do the same here.
+   */
+  return RPL_LEAF_ONLY ? 1 : 0;
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver rpl_classic_driver = {
   "RPL Classic",
   init,
@@ -444,6 +456,7 @@ const struct routing_driver rpl_classic_driver = {
   rpl_link_callback,
   rpl_ipv6_neighbor_callback,
   drop_route,
+  rpl_is_in_leaf_mode,
 };
 /*---------------------------------------------------------------------------*/
 

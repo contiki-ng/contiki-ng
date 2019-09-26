@@ -231,6 +231,11 @@ static uint16_t my_tag;
 #define SICSLOWPAN_FRAGMENT_SIZE (127 - 2 - 15)
 #endif
 
+/* Check the selected fragment size, since we use 8-bit integers to handle it. */
+#if SICSLOWPAN_FRAGMENT_SIZE > 255
+#error Too large SICSLOWPAN_FRAGMENT_SIZE set.
+#endif
+
 /* Assuming that the worst growth for uncompression is 38 bytes */
 #define SICSLOWPAN_FIRST_FRAGMENT_SIZE (SICSLOWPAN_FRAGMENT_SIZE + 38)
 
@@ -306,16 +311,25 @@ static int
 store_fragment(uint8_t index, uint8_t offset)
 {
   int i;
+  int len;
+
+  len = packetbuf_datalen() - packetbuf_hdr_len;
+
+  if(len < 0 || len > SICSLOWPAN_FRAGMENT_SIZE) {
+    /* Unacceptable fragment size. */
+    return -1;
+  }
+
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     if(frag_buf[i].len == 0) {
-      /* copy over the data from packetbuf into the fragment buffer and store offset and len */
+      /* copy over the data from packetbuf into the fragment buffer,
+         and store offset and len */
       frag_buf[i].offset = offset; /* frag offset */
-      frag_buf[i].len = packetbuf_datalen() - packetbuf_hdr_len;
+      frag_buf[i].len = len;
       frag_buf[i].index = index;
-      memcpy(frag_buf[i].data, packetbuf_ptr + packetbuf_hdr_len,
-             packetbuf_datalen() - packetbuf_hdr_len);
+      memcpy(frag_buf[i].data, packetbuf_ptr + packetbuf_hdr_len, len);
       /* return the length of the stored fragment */
-      return frag_buf[i].len;
+      return len;
     }
   }
   /* failed */
@@ -396,23 +410,43 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
 /*---------------------------------------------------------------------------*/
 /* Copy all the fragments that are associated with a specific context
    into uip */
-static void
+static bool
 copy_frags2uip(int context)
 {
   int i;
 
+  /* Check length fields before proceeding. */
+  if(frag_info[context].len < frag_info[context].first_frag_len ||
+     frag_info[context].len > sizeof(uip_buf)) {
+    LOG_WARN("input: invalid total size of fragments\n");
+    clear_fragments(context);
+    return false;
+  }
+
   /* Copy from the fragment context info buffer first */
   memcpy((uint8_t *)UIP_IP_BUF, (uint8_t *)frag_info[context].first_frag,
          frag_info[context].first_frag_len);
+
+  /* Ensure that no previous data is used for reassembly in case of missing fragments. */
+  memset((uint8_t *)UIP_IP_BUF + frag_info[context].first_frag_len, 0,
+         frag_info[context].len - frag_info[context].first_frag_len);
+
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     /* And also copy all matching fragments */
     if(frag_buf[i].len > 0 && frag_buf[i].index == context) {
+      if((frag_buf[i].offset << 3) + frag_buf[i].len > sizeof(uip_buf)) {
+        LOG_WARN("input: invalid fragment offset\n");
+        clear_fragments(context);
+        return false;
+      }
       memcpy((uint8_t *)UIP_IP_BUF + (uint16_t)(frag_buf[i].offset << 3),
              (uint8_t *)frag_buf[i].data, frag_buf[i].len);
     }
   }
   /* deallocate all the fragments for this context */
   clear_fragments(context);
+
+  return true;
 }
 #endif /* SICSLOWPAN_CONF_FRAG */
 
@@ -1233,6 +1267,10 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
     exthdr->len = (2 + len) / 8 - 1;
     exthdr->next = next;
     last_nextheader = &exthdr->next;
+    if(ip_len == 0 && (uint8_t *)exthdr - uip_buf + 2 + len > sizeof(uip_buf)) {
+      LOG_DBG("uncompression: ext header points beyond uip buffer boundary\n");
+      return;
+    }
     memcpy((uint8_t*)exthdr + 2, hc06_ptr, len);
     hc06_ptr += len;
     uncomp_hdr_len += (exthdr->len + 1) * 8;
@@ -1729,11 +1767,17 @@ output(const linkaddr_t *localdest)
     return 0;
 #endif /* SICSLOWPAN_CONF_FRAG */
   } else {
-
     /*
      * The packet does not need to be fragmented
      * copy "payload" and send
      */
+
+   if(uip_len < uncomp_hdr_len) {
+     LOG_ERR("output: uip_len is smaller than uncomp_hdr_len (%d < %d)",
+             (int)uip_len, (int)uncomp_hdr_len);
+     return 0;
+    }
+
     memcpy(packetbuf_ptr + packetbuf_hdr_len, (uint8_t *)UIP_IP_BUF + uncomp_hdr_len,
            uip_len - uncomp_hdr_len);
     packetbuf_set_datalen(uip_len - uncomp_hdr_len + packetbuf_hdr_len);
@@ -1923,10 +1967,16 @@ input(void)
     int req_size = uncomp_hdr_len + (uint16_t)(frag_offset << 3)
         + packetbuf_payload_len;
     if(req_size > sizeof(uip_buf)) {
+#if SICSLOWPAN_CONF_FRAG
       LOG_ERR(
-          "input: packet dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          "input: packet and fragment context %u dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          frag_context,
           uncomp_hdr_len, (uint16_t)(frag_offset << 3),
           packetbuf_payload_len, req_size, (unsigned)sizeof(uip_buf));
+      /* Discard all fragments for this contex, as reassembling this particular fragment would
+       * cause an overflow in uipbuf */
+      clear_fragments(frag_context);
+#endif /* SICSLOWPAN_CONF_FRAG */
       return;
     }
   }
@@ -1951,7 +2001,9 @@ input(void)
     if(last_fragment != 0) {
       frag_info[frag_context].reassembled_len = frag_size;
       /* copy to uip */
-      copy_frags2uip(frag_context);
+      if(!copy_frags2uip(frag_context)) {
+        return;
+      }
     }
   }
 

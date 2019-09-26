@@ -25,4 +25,4 @@ $(OUT_ELF): $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES)
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFLAGS) -o $@
 
-include $(ARCH_PATH)/cpu/arm/Makefile.arm
+include $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/Makefile.arm

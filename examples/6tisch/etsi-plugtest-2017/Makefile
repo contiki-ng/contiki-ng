@@ -9,8 +9,11 @@ ifeq ($(MAKE_WITH_SECURITY),1)
 CFLAGS += -DWITH_SECURITY=1
 endif
 
-MODULES             += os/services/shell
-MODULES             += os/net/mac/tsch/sixtop
+CONTIKI              =../../..
+
+include $(CONTIKI)/Makefile.dir-variables
+MODULES             += $(CONTIKI_NG_SERVICES_DIR)/shell
+MODULES             += $(CONTIKI_NG_MAC_DIR)/tsch/sixtop
 PROJECT_SOURCEFILES += sf-plugtest.c
 CFLAGS              += -Wno-nonnull-compare
 
@@ -22,5 +25,4 @@ endif
 
 MAKE_MAC = MAKE_MAC_TSCH
 
-CONTIKI              =../../..
 include $(CONTIKI)/Makefile.include

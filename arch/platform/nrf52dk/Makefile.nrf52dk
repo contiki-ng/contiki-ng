@@ -3,7 +3,7 @@ ifndef CONTIKI
 endif
 
 ### Include the board-specific makefile
-PLATFORM_ROOT_DIR = $(ARCH_PATH)/platform/$(TARGET)
+PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
 
 CONTIKI_TARGET_DIRS += . dev config
 CONTIKI_SOURCEFILES += platform.c leds-arch.c nrf52dk-sensors.c button-sensor.c temperature-sensor.c
@@ -21,5 +21,5 @@ endif
 SMALL ?= 0
 
 ### Define the CPU directory and pull in the correct CPU makefile.
-CONTIKI_CPU=$(ARCH_PATH)/cpu/nrf52832
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/nrf52832
 include $(CONTIKI_CPU)/Makefile.nrf52832
