@@ -385,6 +385,9 @@ lpm_sleep(void)
 
   ti_lib_prcm_sleep();
 
+  /* Kick watchdog to ensure a full interval is available after sleep */
+  watchdog_periodic();
+
   ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
 }
 /*---------------------------------------------------------------------------*/
