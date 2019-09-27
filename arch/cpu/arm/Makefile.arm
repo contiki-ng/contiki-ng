@@ -40,7 +40,11 @@ SMALL ?= 1
 ifeq ($(SMALL),1)
   CFLAGS += -Os
 else
+ifeq ($(SMALL),0)
   CFLAGS += -O2
+else
+#no optimisation or defined somewhere else
+endif
 endif
 
 ### Use CMSIS from arch/cpu/arm/common
