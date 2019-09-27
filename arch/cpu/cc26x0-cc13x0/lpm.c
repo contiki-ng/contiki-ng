@@ -65,12 +65,15 @@ LIST(modules_list);
  * Don't consider standby mode if the next AON RTC event is scheduled to fire
  * in less than STANDBY_MIN_DURATION rtimer ticks
  */
-#define STANDBY_MIN_DURATION (RTIMER_SECOND / 100) /* 10.0 ms */
+#define STANDBY_MIN_DURATION  (RTIMER_SECOND / 100) /* 10.0 ms */
 
 /* Wake up this much time earlier before the next rtimer */
-#define SLEEP_GUARD_TIME (RTIMER_SECOND / 1000) /* 1.0 ms */
+#define SLEEP_GUARD_TIME      (RTIMER_SECOND / 1000) /* 1.0 ms */
 
+/* Maximum allowed sleep-time, must be shorter than watchdog timeout */
 #define MAX_SLEEP_TIME        RTIMER_SECOND
+
+/* Minimal safe sleep-time */
 #define MIN_SAFE_SCHEDULE     8u
 /*---------------------------------------------------------------------------*/
 /* Prototype of a function in clock.c. Called every time we come out of DS */
@@ -381,6 +384,9 @@ lpm_sleep(void)
   HWREG(NVIC_SYS_CTRL) &= ~(NVIC_SYS_CTRL_SLEEPDEEP);
 
   ti_lib_prcm_sleep();
+
+  /* Kick watchdog to ensure a full interval is available after sleep */
+  watchdog_periodic();
 
   ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
 }
