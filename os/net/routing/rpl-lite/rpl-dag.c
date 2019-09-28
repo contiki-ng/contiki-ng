@@ -111,7 +111,7 @@ rpl_dag_leave(void)
   /* Forget past link statistics */
   link_stats_reset();
 
-  /* Remove all neighbors and lnks */
+  /* Remove all neighbors, links and default route */
   rpl_neighbor_remove_all();
   uip_sr_free_all();
 
@@ -326,7 +326,7 @@ rpl_dag_update_state(void)
     }
 
     /* Parent switch */
-    if(curr_instance.dag.preferred_parent != old_parent) {
+    if(curr_instance.dag.unprocessed_parent_switch) {
       /* We just got a parent (was NULL), reset trickle timer to advertise this */
       if(old_parent == NULL) {
         curr_instance.dag.state = DAG_JOINED;
@@ -352,6 +352,9 @@ rpl_dag_update_state(void)
       if(LOG_INFO_ENABLED) {
         rpl_neighbor_print_list("Parent switch");
       }
+
+      /* Clear unprocessed_parent_switch now that we have processed it */
+      curr_instance.dag.unprocessed_parent_switch = false;
     }
   }
 

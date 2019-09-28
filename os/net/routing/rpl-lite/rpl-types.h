@@ -199,6 +199,7 @@ struct rpl_dag {
   uint8_t dao_last_seqno; /* the node's last sent DAO seqno */
   uint8_t dao_last_acked_seqno; /* the last seqno we got an ACK for */
   uint8_t dao_transmissions; /* the number of transmissions for the current DAO */
+  bool unprocessed_parent_switch;
   enum rpl_dag_state state;
 
   /* Timers */

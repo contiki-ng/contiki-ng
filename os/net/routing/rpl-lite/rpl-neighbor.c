@@ -317,10 +317,11 @@ rpl_neighbor_set_preferred_parent(rpl_nbr_t *nbr)
     uip_ds6_defrt_add(rpl_neighbor_get_ipaddr(nbr), 0);
 
     curr_instance.dag.preferred_parent = nbr;
+    curr_instance.dag.unprocessed_parent_switch = true;
   }
 }
 /*---------------------------------------------------------------------------*/
-/* Remove DAG neighbors with a rank that is at least the same as minimum_rank. */
+/* Remove all DAG neighbors */
 void
 rpl_neighbor_remove_all(void)
 {
@@ -328,14 +329,19 @@ rpl_neighbor_remove_all(void)
 
   LOG_INFO("removing all neighbors\n");
 
+  /* Unset preferred parent before we de-allocate it. This will set
+   * unprocessed_parent_switch which will make sure rpl_dag_update_state takes
+   * all actions necessary after losing the preferred parent */
+  rpl_neighbor_set_preferred_parent(NULL);
+
   nbr = nbr_table_head(rpl_neighbors);
   while(nbr != NULL) {
     remove_neighbor(nbr);
     nbr = nbr_table_next(rpl_neighbors, nbr);
   }
 
-  /* Update needed immediately so as to ensure preferred_parent becomes NULL,
-   * and no longer points to a de-allocated neighbor. */
+  /* Update needed immediately. As we have lost the preferred parent this will
+   * enter poisoining and set timers accordingly. */
   rpl_dag_update_state();
 }
 /*---------------------------------------------------------------------------*/
