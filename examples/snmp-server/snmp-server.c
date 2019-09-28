@@ -32,9 +32,6 @@
 #include "contiki.h"
 #include "snmp-api.h"
 
-#include <string.h>
-#include <strings.h>
-
 /*---------------------------------------------------------------------------*/
 PROCESS_NAME(snmp_server_process);
 AUTOSTART_PROCESSES(&snmp_server_process);
