@@ -55,7 +55,7 @@
 /*---------------------------------------------------------------------------*/
 extern rpl_of_t rpl_of0, rpl_mrhof;
 static rpl_of_t * const objective_functions[] = RPL_SUPPORTED_OFS;
-static int init_dag_from_dio(rpl_dio_t *dio);
+static int process_dio_init_dag(rpl_dio_t *dio);
 
 /*---------------------------------------------------------------------------*/
 /* Allocate instance table. */
@@ -552,7 +552,7 @@ init_dag_from_dio(rpl_dio_t *dio)
 }
 /*---------------------------------------------------------------------------*/
 static int
-process_dio_init_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
+process_dio_init_dag(rpl_dio_t *dio)
 {
 #ifdef RPL_VALIDATE_DIO_FUNC
   if(!RPL_VALIDATE_DIO_FUNC(dio)) {
@@ -601,7 +601,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
   if(!curr_instance.used && !rpl_dag_root_is_root()) {
     /* Attempt to init our DAG from this DIO */
-    if(!process_dio_init_dag(from, dio)) {
+    if(!process_dio_init_dag(dio)) {
       LOG_WARN("failed to init DAG\n");
       return;
     }
