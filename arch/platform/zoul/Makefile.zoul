@@ -25,7 +25,7 @@ CFLAGS += -DDATE="\"`date +"%02u %02d %02m %02y %02H %02M %02S"`\""
 ### Configure the build for the board and pull in board-specific sources
 CONTIKI_TARGET_DIRS += . dev
 CONTIKI_TARGET_DIRS += $(BOARD)
-PLATFORM_ROOT_DIR = $(ARCH_PATH)/platform/$(TARGET)
+PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
 
 ### Include the board dir if one exists
 -include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(BOARD)
@@ -39,14 +39,15 @@ CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Define the CPU directory
-CONTIKI_CPU=$(ARCH_PATH)/cpu/cc2538
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += arch/dev/cc1200 arch/dev/rgb-led os/storage/cfs
+MODULES += $(CONTIKI_NG_DRIVERS_DIR)/cc1200 $(CONTIKI_NG_DRIVERS_DIR)/rgb-led
+MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
-BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
+BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
-MOTES := $(shell python $(TOOLS_DIR)/motelist/motelist.py --omit-header \
+MOTES := $(shell python $(CONTIKI_NG_TOOLS_DIR)/motelist/motelist.py --omit-header \
                  | grep $(MOTELIST_ZOLERTIA) | cut -f1 -d " ")
 
 ### If PORT is defined, override to keep backward compatibility

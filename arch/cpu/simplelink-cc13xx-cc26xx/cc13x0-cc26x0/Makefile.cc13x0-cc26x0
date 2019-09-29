@@ -8,4 +8,4 @@ TARGET_LIBFILES += $(SDK_DRIVERS)/lib/drivers_$(SDK_LIB_NAME).am3g
 TARGET_LIBFILES += $(SDK_DEVICES)/driverlib/bin/gcc/driverlib.lib
 
 # CC13x0/CC26x0 is a Cortex-M3 architecture
-include $(ARCH_PATH)/cpu/arm/cortex-m/cm3/Makefile.cm3
+include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3
