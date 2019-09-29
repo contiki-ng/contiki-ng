@@ -127,6 +127,17 @@ guess_etx_from_rssi(const struct link_stats *stats)
 }
 #endif /* LINK_STATS_INIT_ETX_FROM_RSSI */
 /*---------------------------------------------------------------------------*/
+/* Both for initialization and reset */
+static void
+link_stats_entry_init(struct link_stats *stats)
+{
+#if LINK_STATS_INIT_ETX_FROM_RSSI
+  stats->etx = guess_etx_from_rssi(stats);
+#else /* LINK_STATS_INIT_ETX_FROM_RSSI */
+  stats->etx = ETX_DEFAULT * ETX_DIVISOR;
+#endif /* LINK_STATS_INIT_ETX_FROM_RSSI */
+}
+/*---------------------------------------------------------------------------*/
 /* Packet sent callback. Updates stats for transmissions to lladdr */
 void
 link_stats_packet_sent(const linkaddr_t *lladdr, int status, int numtx)
@@ -147,11 +158,7 @@ link_stats_packet_sent(const linkaddr_t *lladdr, int status, int numtx)
     /* Add the neighbor */
     stats = nbr_table_add_lladdr(link_stats, lladdr, NBR_TABLE_REASON_LINK_STATS, NULL);
     if(stats != NULL) {
-#if LINK_STATS_INIT_ETX_FROM_RSSI
-      stats->etx = guess_etx_from_rssi(stats);
-#else /* LINK_STATS_INIT_ETX_FROM_RSSI */
-      stats->etx = ETX_DEFAULT * ETX_DIVISOR;
-#endif /* LINK_STATS_INIT_ETX_FROM_RSSI */
+      link_stats_entry_init(stats);
     } else {
       return; /* No space left, return */
     }
@@ -220,11 +227,7 @@ link_stats_input_callback(const linkaddr_t *lladdr)
     if(stats != NULL) {
       /* Initialize */
       stats->rssi = packet_rssi;
-#if LINK_STATS_INIT_ETX_FROM_RSSI
-      stats->etx = guess_etx_from_rssi(stats);
-#else /* LINK_STATS_INIT_ETX_FROM_RSSI */
-      stats->etx = ETX_DEFAULT * ETX_DIVISOR;
-#endif /* LINK_STATS_INIT_ETX_FROM_RSSI */
+      link_stats_entry_init(stats);
 #if LINK_STATS_PACKET_COUNTERS
       stats->cnt_current.num_packets_rx = 1;
 #endif
@@ -290,7 +293,13 @@ link_stats_reset(void)
   struct link_stats *stats;
   stats = nbr_table_head(link_stats);
   while(stats != NULL) {
-    nbr_table_remove(link_stats, stats);
+    /* Reuse the previous RSSI for this reinitialization.
+     * This will work well if the reset is due to desynchronization:
+     * the RSSI after rejoining is expected to be similar.
+     * Less so if the reset is because of mobility or
+     * a change in the radio propagation environment.
+     */
+    link_stats_entry_init(stats);
     stats = nbr_table_next(link_stats, stats);
   }
 }
