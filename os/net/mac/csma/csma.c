@@ -179,7 +179,7 @@ max_payload(void)
 
   return MIN(max_radio_payload_len, PACKETBUF_SIZE)
     - framer_hdrlen
-    - LLSEC802154_MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL));
+    - LLSEC802154_PACKETBUF_MIC_LEN();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver csma_driver = {

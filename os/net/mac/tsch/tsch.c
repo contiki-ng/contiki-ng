@@ -1181,7 +1181,7 @@ max_payload(void)
   /* Setup security... before. */
   return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN)
     - framer_hdrlen
-    - LLSEC802154_MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL));
+    - LLSEC802154_PACKETBUF_MIC_LEN();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {
