@@ -205,8 +205,8 @@ void tsch_set_eb_period(uint32_t period);
 /**
  * Set the desynchronization timeout after which a node sends a unicasst
  * keep-alive (KA) to its time source. Set to 0 to stop sending KAs. The
- * actual timeout is a random number within
- * [timeout*0.9, timeout[
+ * actual timeout is a random number within [timeout*0.9, timeout[
+ * Can be called from an interrupt.
  *
  * \param timeout The timeout in Clock ticks.
  */
@@ -228,13 +228,12 @@ void tsch_set_coordinator(int enable);
 void tsch_set_pan_secured(int enable);
 /**
   * Schedule a keep-alive transmission within [timeout*0.9, timeout[
+  * Can be called from an interrupt.
   * @see tsch_set_ka_timeout
+  *
+  * \param immediate send immediately when 1, schedule using current timeout when 0
   */
-void tsch_schedule_keepalive(void);
-/**
-  * Schedule a keep-alive immediately
-  */
-void tsch_schedule_keepalive_immediately(void);
+void tsch_schedule_keepalive(int immediate);
 /**
   * Get the time, in clock ticks, since the TSCH network was started.
   *
