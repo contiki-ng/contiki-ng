@@ -118,7 +118,7 @@ int tsch_packet_get_frame_pending(uint8_t *buf, int buf_size);
  * \brief Set a packet attribute for the current eack. We not use standard
  * packetbuf for eacks because these are generated from interrupt context.
  * \param type The attribute identifier
- * \param type The attribute value
+ * \param val The attribute value
  */
 void tsch_packet_eackbuf_set_attr(uint8_t type, const packetbuf_attr_t val);
 /**
