@@ -32,7 +32,7 @@ coap/coap-example-client/native \
 coap/coap-example-server/native \
 coap/coap-plugtest-server/native \
 sensniff/z1 \
-snmp-server/native \
+snmp-server/sky \
 
 TOOLS=
 
