@@ -149,5 +149,6 @@
 ##### "LOG_CONF_LEVEL_FRAMER": _________________ == LOG_CONF_LEVEL_FRAMER
 ##### "LOG_CONF_LEVEL_6TOP": ___________________ == LOG_CONF_LEVEL_6TOP
 ##### "LOG_CONF_LEVEL_COAP": ___________________ == LOG_CONF_LEVEL_COAP
+##### "LOG_CONF_LEVEL_SNMP": ___________________ == LOG_CONF_LEVEL_SNMP
 ##### "LOG_CONF_LEVEL_LWM2M": __________________ == LOG_CONF_LEVEL_LWM2M
 ##### "LOG_CONF_LEVEL_MAIN": ___________________ == LOG_CONF_LEVEL_MAIN

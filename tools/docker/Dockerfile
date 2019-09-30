@@ -31,6 +31,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     unzip \
     valgrind \
     wget \
+    smitools \
+    snmp \
+    snmp-mibs-downloader \
     > /dev/null \
   && apt-get -qq clean
 
