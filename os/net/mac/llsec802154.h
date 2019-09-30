@@ -60,8 +60,6 @@
 #define LLSEC802154_ENABLED            0
 #endif /* LLSEC802154_CONF_ENABLED */
 
-#define LLSEC802154_MIC_LEN(sec_lvl)   (2 << (sec_lvl & 3))
-
 #ifdef LLSEC802154_CONF_USES_EXPLICIT_KEYS
 #define LLSEC802154_USES_EXPLICIT_KEYS LLSEC802154_CONF_USES_EXPLICIT_KEYS
 #else /* LLSEC802154_CONF_USES_EXPLICIT_KEYS */
@@ -87,6 +85,14 @@
 #define LLSEC802154_HTONS(n) (uint16_t)((((uint16_t) (n)) << 8) | (((uint16_t) (n)) >> 8))
 #define LLSEC802154_HTONL(n) (((uint32_t)UIP_HTONS(n) << 16) | UIP_HTONS((uint32_t)(n) >> 16))
 #endif /* UIP_CONF_BYTE_ORDER == UIP_LITTLE_ENDIAN */
+
+#define LLSEC802154_MIC_LEN(sec_lvl)   (2 << (sec_lvl & 3))
+
+#if LLSEC802154_USES_AUX_HEADER
+#define LLSEC802154_PACKETBUF_MIC_LEN() LLSEC802154_MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL))
+#else
+#define LLSEC802154_PACKETBUF_MIC_LEN() 0
+#endif
 
 #endif /* LLSEC802154_H_ */
 
