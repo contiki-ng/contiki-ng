@@ -35,14 +35,14 @@
  * \addtogroup cc2538-platforms
  * @{
  *
- * \defgroup openmote-cc2538 OpenMote-CC2538 platform
+ * \defgroup openmote OpenMote platform
  *
- * The OpenMote-CC2538 is based on the CC2538, the new platform by Texas Instruments
+ * The OpenMote platform is based on the CC2538, the new platform by Texas Instruments
  * based on an ARM Cortex-M3 core and a IEEE 802.15.4 radio.
  * @{
  *
  * \file
- * Main module for the OpenMote-CC2538 platform
+ * Main module for the OpenMote platform
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -75,7 +75,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "OpenMote CC2538"
+#define LOG_MODULE "OpenMote"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /**
