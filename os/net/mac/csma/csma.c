@@ -177,7 +177,9 @@ max_payload(void)
     framer_hdrlen = CSMA_MAC_MAX_HEADER;
   }
 
-  return MIN(max_radio_payload_len, PACKETBUF_SIZE) - framer_hdrlen;
+  return MIN(max_radio_payload_len, PACKETBUF_SIZE)
+    - framer_hdrlen
+    - LLSEC802154_PACKETBUF_MIC_LEN();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver csma_driver = {

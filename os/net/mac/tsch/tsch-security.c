@@ -271,4 +271,33 @@ tsch_security_parse_frame(const uint8_t *hdr, int hdrlen, int datalen,
     return 1;
   }
 }
+/*---------------------------------------------------------------------------*/
+void
+tsch_security_set_packetbuf_attr(uint8_t frame_type)
+{
+#if LLSEC802154_ENABLED
+  if(tsch_is_pan_secured) {
+    /* Set security level, key id and index */
+    switch(frame_type) {
+      case FRAME802154_ACKFRAME:
+        /* For ACKs, we set attriburtes via tsch_packet_eackbuf_set_attr, as classic
+         * interrupts can not be used from interrupt context. */
+        tsch_packet_eackbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, TSCH_SECURITY_KEY_SEC_LEVEL_ACK);
+        tsch_packet_eackbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, FRAME802154_1_BYTE_KEY_ID_MODE);
+        tsch_packet_eackbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, TSCH_SECURITY_KEY_INDEX_ACK);
+        break;
+      case FRAME802154_BEACONFRAME:
+        packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, TSCH_SECURITY_KEY_SEC_LEVEL_EB);
+        packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, FRAME802154_1_BYTE_KEY_ID_MODE);
+        packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, TSCH_SECURITY_KEY_INDEX_EB);
+        break;
+      default:
+        packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, TSCH_SECURITY_KEY_SEC_LEVEL_OTHER);
+        packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, FRAME802154_1_BYTE_KEY_ID_MODE);
+        packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, TSCH_SECURITY_KEY_INDEX_OTHER);
+        break;
+    }
+  }
+#endif /* LLSEC802154_ENABLED */
+}
 /** @} */
