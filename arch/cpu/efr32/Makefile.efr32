@@ -16,7 +16,7 @@ ifndef EFR32_JLINK_MCU
 endif
 
 ifndef GECKO_SDK_VERSION
-  GECKO_SDK_VERSION := v2.2
+  GECKO_SDK_VERSION := v2.4
 endif
 
 GECKO_SDK_PLATFORM := $(GECKO_SDK_PATH)/$(GECKO_SDK_VERSION)/platform
@@ -31,6 +31,8 @@ CONTIKI_CPU_DIRS = . dev
 INC_PATHS += ${addprefix Device/SiliconLabs/$(EFR32_MCU)/,Include Source Source/GCC}
 INC_PATHS += emlib/inc emlib/src emdrv/uartdrv/inc emdrv/uartdrv/src emdrv/uartdrv/config emdrv/common/inc emdrv/dmadrv/src emdrv/dmadrv/inc emdrv/dmadrv/config
 INC_PATHS += ${addprefix radio/rail_lib/,chip/efr32 chip/efr32/rf/common/cortex common protocol plugin/pa-conversions}
+# Include gen1 devices here - this needs to be configured in the future!
+INC_PATHS += ${addprefix radio/rail_lib/,chip/efr32/efr32xg1x}
 
 EXTERNALDIRS += $(addprefix $(GECKO_SDK_PLATFORM)/,$(INC_PATHS))
 
@@ -46,7 +48,7 @@ EMDRV      := dmadrv.c
 EMLIB_ALL  := ${notdir ${wildcard $(GECKO_SDK_PLATFORM)/emlib/src/*.c}}
 
 # Some library files are deprecated and should not be included
-EMLIB      := ${filter-out em_int.c,$(EMLIB_ALL)}
+EMLIB      := ${filter-out em_int.c em_mpu.c ,$(EMLIB_ALL)}
 
 RAILFILES  := pa_conversions_efr32.c
 
