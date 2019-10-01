@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, RISE SICS
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,89 +28,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*---------------------------------------------------------------------------*/
+#ifndef BMP_280_SENSOR_H_
+#define BMP_280_SENSOR_H_
+/*---------------------------------------------------------------------------*/
+#define BMP_280_SENSOR_TYPE_TEMP    1
+#define BMP_280_SENSOR_TYPE_PRESS   2
+/*---------------------------------------------------------------------------*/
+extern const struct sensors_sensor bmp_280_sensor;
+/*---------------------------------------------------------------------------*/
+#endif /* BMP_280_SENSOR_H_ */
+/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup srf06-peripherals
- * @{
- *
- * \file
- *        Driver for the SmartRF06 EB ALS sensor.
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ * @}
+ * @}
  */
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "dev/gpio-hal.h"
-#include "lib/sensors.h"
-#include "sys/timer.h"
-
-#include "als-sensor.h"
-/*---------------------------------------------------------------------------*/
-#include <Board.h>
-
-#include <ti/drivers/ADC.h>
-/*---------------------------------------------------------------------------*/
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-static ADC_Handle adc_handle;
-/*---------------------------------------------------------------------------*/
-static int
-init(void)
-{
-  ADC_Params adc_params;
-  ADC_Params_init(&adc_params);
-
-  adc_handle = ADC_open(Board_ADCALS, &adc_params);
-  if(adc_handle == NULL) {
-    return 0;
-  }
-
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static int
-config(int type, int enable)
-{
-  switch(type) {
-  case SENSORS_HW_INIT:
-    return init();
-
-  case SENSORS_ACTIVE:
-    gpio_hal_arch_pin_set_output(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    gpio_hal_arch_pin_set_input(GPIO_HAL_NULL_PORT, Board_ALS_OUT);
-
-    if(enable) {
-      gpio_hal_arch_set_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-      clock_delay_usec(2000);
-    } else {
-      gpio_hal_arch_clear_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    }
-    break;
-
-  default:
-    break;
-  }
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static int
-value(int type)
-{
-
-  uint16_t adc_value = 0;
-  int_fast16_t res = ADC_convert(adc_handle, &adc_value);
-  if(res != ADC_STATUS_SUCCESS) {
-    return -1;
-  }
-
-  return (int)adc_value;
-}
-/*---------------------------------------------------------------------------*/
-static int
-status(int type)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(als_sensor, ALS_SENSOR, value, config, status);
-/*---------------------------------------------------------------------------*/
-/** @} */

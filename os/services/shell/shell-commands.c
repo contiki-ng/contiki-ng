@@ -161,7 +161,7 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
     SHELL_OUTPUT(output, "Received ping reply from ");
     shell_output_6addr(output, &remote_addr);
     SHELL_OUTPUT(output, ", len %u, ttl %u, delay %lu ms\n",
-      curr_ping_datalen, curr_ping_ttl, (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
+                 curr_ping_datalen, curr_ping_ttl, (unsigned long) (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
   }
 
   PT_END(pt);

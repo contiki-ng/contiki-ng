@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -27,89 +28,55 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup srf06-peripherals
+ * \addtogroup EFR32
+ * @{
+ *
+ * \defgroup efr32-interrupts EFR32 master interrupt manipulation
+ *
+ * Master interrupt manipulation routines for the EFR32 CPU
+ *
  * @{
  *
  * \file
- *        Driver for the SmartRF06 EB ALS sensor.
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ * Master interrupt manipulation implementation for the EFR32
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio-hal.h"
-#include "lib/sensors.h"
-#include "sys/timer.h"
-
-#include "als-sensor.h"
+#include "sys/int-master.h"
+#include "em_core.h"
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#include <Board.h>
-
-#include <ti/drivers/ADC.h>
-/*---------------------------------------------------------------------------*/
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-static ADC_Handle adc_handle;
-/*---------------------------------------------------------------------------*/
-static int
-init(void)
+void
+int_master_enable(void)
 {
-  ADC_Params adc_params;
-  ADC_Params_init(&adc_params);
-
-  adc_handle = ADC_open(Board_ADCALS, &adc_params);
-  if(adc_handle == NULL) {
-    return 0;
-  }
-
-  return 1;
+  __enable_irq();
 }
 /*---------------------------------------------------------------------------*/
-static int
-config(int type, int enable)
+int_master_status_t
+int_master_read_and_disable(void)
 {
-  switch(type) {
-  case SENSORS_HW_INIT:
-    return init();
+  int_master_status_t primask = __get_PRIMASK();
 
-  case SENSORS_ACTIVE:
-    gpio_hal_arch_pin_set_output(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    gpio_hal_arch_pin_set_input(GPIO_HAL_NULL_PORT, Board_ALS_OUT);
+  __disable_irq();
 
-    if(enable) {
-      gpio_hal_arch_set_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-      clock_delay_usec(2000);
-    } else {
-      gpio_hal_arch_clear_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    }
-    break;
-
-  default:
-    break;
-  }
-  return 1;
+  return primask;
 }
 /*---------------------------------------------------------------------------*/
-static int
-value(int type)
+void
+int_master_status_set(int_master_status_t status)
 {
-
-  uint16_t adc_value = 0;
-  int_fast16_t res = ADC_convert(adc_handle, &adc_value);
-  if(res != ADC_STATUS_SUCCESS) {
-    return -1;
-  }
-
-  return (int)adc_value;
+  __set_PRIMASK(status);
 }
 /*---------------------------------------------------------------------------*/
-static int
-status(int type)
+bool
+int_master_is_enabled(void)
 {
-  return 1;
+  return __get_PRIMASK() ? false : true;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(als_sensor, ALS_SENSOR, value, config, status);
-/*---------------------------------------------------------------------------*/
-/** @} */
+/**
+ * @}
+ * @}
+ */

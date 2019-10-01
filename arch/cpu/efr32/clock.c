@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, RISE SICS AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -26,90 +27,86 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- * \addtogroup srf06-peripherals
- * @{
  *
- * \file
- *        Driver for the SmartRF06 EB ALS sensor.
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ * Author: Joakim Eriksson, joakim.eriksson@ri.se
+ *
+ * Minimal implementation of clock functions needed by Contiki-NG.
  */
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio-hal.h"
-#include "lib/sensors.h"
-#include "sys/timer.h"
-
-#include "als-sensor.h"
-/*---------------------------------------------------------------------------*/
-#include <Board.h>
-
-#include <ti/drivers/ADC.h>
-/*---------------------------------------------------------------------------*/
+#include "em_core.h"
+#include "rail.h"
 #include <stdint.h>
-/*---------------------------------------------------------------------------*/
-static ADC_Handle adc_handle;
-/*---------------------------------------------------------------------------*/
-static int
-init(void)
-{
-  ADC_Params adc_params;
-  ADC_Params_init(&adc_params);
 
-  adc_handle = ADC_open(Board_ADCALS, &adc_params);
-  if(adc_handle == NULL) {
-    return 0;
+void SysTick_Handler(void) __attribute__ ((interrupt));
+
+#if CLOCK_SECOND != 1000
+#error CLOCK_SECOND needs to be 1000
+#endif
+
+static volatile clock_time_t current_time;
+/*---------------------------------------------------------------------------*/
+void
+SysTick_Handler(void)
+{
+  /* Keep etimers triggering */
+  if(etimer_pending() && (etimer_next_expiration_time() <= clock_time())) {
+    etimer_request_poll();
   }
-
-  return 1;
 }
 /*---------------------------------------------------------------------------*/
-static int
-config(int type, int enable)
+void
+clock_init(void)
 {
-  switch(type) {
-  case SENSORS_HW_INIT:
-    return init();
-
-  case SENSORS_ACTIVE:
-    gpio_hal_arch_pin_set_output(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    gpio_hal_arch_pin_set_input(GPIO_HAL_NULL_PORT, Board_ALS_OUT);
-
-    if(enable) {
-      gpio_hal_arch_set_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-      clock_delay_usec(2000);
-    } else {
-      gpio_hal_arch_clear_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    }
-    break;
-
-  default:
-    break;
-  }
-  return 1;
+  /* keep etimers checked 100 times per second. */
+  SysTick_Config(SystemCoreClockGet() / 100);
 }
 /*---------------------------------------------------------------------------*/
-static int
-value(int type)
+clock_time_t
+clock_time(void)
 {
+  static uint32_t last_time;
+  uint64_t time;
+  uint32_t now;
 
-  uint16_t adc_value = 0;
-  int_fast16_t res = ADC_convert(adc_handle, &adc_value);
-  if(res != ADC_STATUS_SUCCESS) {
-    return -1;
-  }
-
-  return (int)adc_value;
+  CORE_ATOMIC_SECTION(
+    now = RAIL_GetTime();
+    current_time += now - last_time;
+    last_time = now;
+    time = current_time;
+  )
+  return time / 1000;
 }
 /*---------------------------------------------------------------------------*/
-static int
-status(int type)
+unsigned long
+clock_seconds(void)
 {
-  return 1;
+  return clock_time() / CLOCK_SECOND;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(als_sensor, ALS_SENSOR, value, config, status);
+/* ignored for now */
+void
+clock_set_seconds(unsigned long sec)
+{
+}
 /*---------------------------------------------------------------------------*/
-/** @} */
+void
+clock_wait(clock_time_t t)
+{
+  t = clock_time() + t;
+  while(clock_time() < t);
+}
+/*---------------------------------------------------------------------------*/
+void
+clock_delay_usec(uint16_t dt)
+{
+  uint32_t target;
+  target = RAIL_GetTime() + dt;
+  while(RAIL_GetTime() < target);
+}
+/*---------------------------------------------------------------------------*/
+void
+clock_delay(unsigned int delay)
+{
+  clock_delay_usec((uint16_t)delay);
+}
+/*---------------------------------------------------------------------------*/

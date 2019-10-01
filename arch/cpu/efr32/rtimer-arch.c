@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, RISE SICS AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -26,90 +27,67 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- * \addtogroup srf06-peripherals
- * @{
  *
- * \file
- *        Driver for the SmartRF06 EB ALS sensor.
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ * Author: Joakim Eriksson, joakim.eriksson@ri.se
+ *
+ * Minimal implementation of clock functions needed by Contiki-NG.
  */
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "dev/gpio-hal.h"
-#include "lib/sensors.h"
-#include "sys/timer.h"
 
-#include "als-sensor.h"
-/*---------------------------------------------------------------------------*/
-#include <Board.h>
+#include <em_device.h>
+#include <em_cmu.h>
+#include <em_timer.h>
+#include <em_core.h>
+#include "sys/energest.h"
+#include <stdio.h>
 
-#include <ti/drivers/ADC.h>
+#include "rtimer-arch.h"
 /*---------------------------------------------------------------------------*/
-#include <stdint.h>
+void TIMER0_IRQHandler(void) __attribute__((interrupt));
 /*---------------------------------------------------------------------------*/
-static ADC_Handle adc_handle;
-/*---------------------------------------------------------------------------*/
-static int
-init(void)
+void
+TIMER0_IRQHandler(void)
 {
-  ADC_Params adc_params;
-  ADC_Params_init(&adc_params);
-
-  adc_handle = ADC_open(Board_ADCALS, &adc_params);
-  if(adc_handle == NULL) {
-    return 0;
-  }
-
-  return 1;
+  rtimer_run_next();
+  TIMER_IntClear(TIMER0, TIMER_IF_CC0);
+  NVIC_ClearPendingIRQ(TIMER0_IRQn);
 }
 /*---------------------------------------------------------------------------*/
-static int
-config(int type, int enable)
+void
+rtimer_arch_init(void)
 {
-  switch(type) {
-  case SENSORS_HW_INIT:
-    return init();
+  CMU_ClockEnable(cmuClock_HFPER, true);
+  CMU_ClockEnable(cmuClock_TIMER0, true);
 
-  case SENSORS_ACTIVE:
-    gpio_hal_arch_pin_set_output(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    gpio_hal_arch_pin_set_input(GPIO_HAL_NULL_PORT, Board_ALS_OUT);
+  TIMER_IntClear(TIMER0, TIMER_IF_OF);
+  NVIC_ClearPendingIRQ(TIMER0_IRQn);
+  NVIC_SetPriority(TIMER0_IRQn, 0);
+  TIMER_IntEnable(TIMER0, TIMER_IF_CC0);
+  NVIC_EnableIRQ(TIMER0_IRQn);
 
-    if(enable) {
-      gpio_hal_arch_set_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-      clock_delay_usec(2000);
-    } else {
-      gpio_hal_arch_clear_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    }
-    break;
+  TIMER_Init_TypeDef init = TIMER_INIT_DEFAULT;
+  init.prescale = timerPrescale1024;
+  TIMER_Init(TIMER0, &init);
 
-  default:
-    break;
-  }
-  return 1;
+  TIMER_InitCC_TypeDef initCC0 = TIMER_INITCC_DEFAULT;
+  initCC0.mode = timerCCModeCompare;
+  TIMER_InitCC(TIMER0, 0, &initCC0);
 }
 /*---------------------------------------------------------------------------*/
-static int
-value(int type)
+rtimer_clock_t
+rtimer_arch_now(void)
 {
-
-  uint16_t adc_value = 0;
-  int_fast16_t res = ADC_convert(adc_handle, &adc_value);
-  if(res != ADC_STATUS_SUCCESS) {
-    return -1;
-  }
-
-  return (int)adc_value;
+  rtimer_clock_t now;
+  CORE_ATOMIC_SECTION(
+     now = TIMER_CounterGet(TIMER0);
+  )
+  return now;
 }
 /*---------------------------------------------------------------------------*/
-static int
-status(int type)
+void
+rtimer_arch_schedule(rtimer_clock_t t)
 {
-  return 1;
+  CORE_ATOMIC_SECTION(
+       TIMER_CompareSet(TIMER0, 0, t);
+  )
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(als_sensor, ALS_SENSOR, value, config, status);
-/*---------------------------------------------------------------------------*/
-/** @} */

@@ -1,0 +1,70 @@
+### Thunderboard Sense Makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+ifndef GECKO_SDK_PATH
+  ifneq (${wildcard $(CONTIKI)/../gecko_sdk_suite},)
+    GECKO_SDK_PATH := $(CONTIKI)/../gecko_sdk_suite
+  endif
+endif
+
+CLEAN += *.efr32tb *.elf *.bin *.lst *.hex
+
+# Do not warn for missing Gecko SDK when doing distclean
+ifneq ($(MAKECMDGOALS),clean)
+
+### If no board is specified the default option is the Sense2
+BOARD ?= sense2
+BOARDS = sense2
+
+ifeq ($(BOARD), sense2)
+  PART_NUMBER     := EFR32MG12P332F1024GL125
+  EFR32_MCU       := EFR32MG12P
+  EFR32_FAMILY    := efr32xg12
+  EFR32_JLINK_MCU := EFR32MG12PXXXF1024
+else ifeq ($(BOARD),)
+  ${error BOARD not specified, please specify an EFR32 board!}
+else
+  ${error Unknown board '$(BOARD)'! Please specify another board}
+endif
+
+ifeq ($(PART_NUMBER),)
+  ${error PART_NUMBER not found for BOARD $(BOARD)}
+endif
+
+OBJCOPY_FLAGS += -O binary --gap-fill 0xff
+
+CONTIKI_TARGET_DIRS += . dev $(BOARD)
+PLATFORM_ROOT_DIR = $(CONTIKI)/arch/platform/$(TARGET)
+
+### Include the board dir if one exists
+-include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(BOARD)
+
+### Include
+CONTIKI_TARGET_SOURCEFILES += platform.c
+CONTIKI_TARGET_SOURCEFILES += ${notdir ${wildcard $(PLATFORM_ROOT_DIR)/$(BOARD)/*.c}}
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+### Define the CPU directory
+CONTIKI_CPU=$(CONTIKI)/arch/cpu/efr32
+include $(CONTIKI_CPU)/Makefile.efr32
+
+### For the login etc targets
+
+ifeq ($(HOST_OS),Darwin)
+  MOTES := ${wildcard /dev/tty.usbmodem*}
+else
+  MOTES := ${wildcard /dev/ttyACM*}
+endif
+
+ifndef PORT
+  PORT = ${firstword $(MOTES)}
+endif
+
+motelist:
+	@echo $(MOTES)
+
+endif

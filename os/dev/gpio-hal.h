@@ -204,6 +204,12 @@ typedef struct gpio_hal_event_handler_s {
  */
 void gpio_hal_init(void);
 
+
+/**
+ * \brief Initialise the GPIO HAL ARCH
+ */
+void gpio_hal_arch_init(void);
+
 /**
  * \brief Register a function to be called whenever a pin triggers an event
  * \param handler The handler representation

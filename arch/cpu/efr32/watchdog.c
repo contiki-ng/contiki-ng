@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, RISE SICS AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -26,90 +27,65 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- * \addtogroup srf06-peripherals
- * @{
  *
- * \file
- *        Driver for the SmartRF06 EB ALS sensor.
- * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ * Author: Joakim Eriksson, joakim.eriksson@ri.se
+ *
+ * Implementation of watchdog.
  */
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio-hal.h"
-#include "lib/sensors.h"
-#include "sys/timer.h"
+#include "dev/watchdog.h"
+#include "em_wdog.h"
 
-#include "als-sensor.h"
-/*---------------------------------------------------------------------------*/
-#include <Board.h>
+/* Enabled by default */
+#ifndef WATCHDOG_CONF_ENABLE
+#define WATCHDOG_CONF_ENABLE 1
+#endif /* WATCHDOG_CONF_ENABLE */
 
-#include <ti/drivers/ADC.h>
+#if WATCHDOG_CONF_ENABLE
+#define CALL_IF_ENABLED(code) code
+#else /* WATCHDOG_CONF_ENABLE */
+#define CALL_IF_ENABLED(code)
+#endif /* WATCHDOG_CONF_ENABLE */
 /*---------------------------------------------------------------------------*/
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-static ADC_Handle adc_handle;
-/*---------------------------------------------------------------------------*/
-static int
-init(void)
+void
+watchdog_init(void)
 {
-  ADC_Params adc_params;
-  ADC_Params_init(&adc_params);
-
-  adc_handle = ADC_open(Board_ADCALS, &adc_params);
-  if(adc_handle == NULL) {
-    return 0;
-  }
-
-  return 1;
+#if WATCHDOG_CONF_ENABLE
+  WDOG_Init_TypeDef init = WDOG_INIT_DEFAULT;
+  /* set 16 seconds watchdog interval - default is 256 seconds */
+  init.perSel = wdogPeriod_16k;
+  WDOGn_Init(WDOG0, &init);
+#endif /* WATCHDOG_CONF_ENABLE */
 }
 /*---------------------------------------------------------------------------*/
-static int
-config(int type, int enable)
+void
+watchdog_start(void)
 {
-  switch(type) {
-  case SENSORS_HW_INIT:
-    return init();
-
-  case SENSORS_ACTIVE:
-    gpio_hal_arch_pin_set_output(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    gpio_hal_arch_pin_set_input(GPIO_HAL_NULL_PORT, Board_ALS_OUT);
-
-    if(enable) {
-      gpio_hal_arch_set_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-      clock_delay_usec(2000);
-    } else {
-      gpio_hal_arch_clear_pin(GPIO_HAL_NULL_PORT, Board_ALS_PWR);
-    }
-    break;
-
-  default:
-    break;
-  }
-  return 1;
+  CALL_IF_ENABLED(WDOGn_Enable(WDOG0, true));
 }
 /*---------------------------------------------------------------------------*/
-static int
-value(int type)
+void
+watchdog_periodic(void)
 {
-
-  uint16_t adc_value = 0;
-  int_fast16_t res = ADC_convert(adc_handle, &adc_value);
-  if(res != ADC_STATUS_SUCCESS) {
-    return -1;
-  }
-
-  return (int)adc_value;
+  CALL_IF_ENABLED(WDOGn_Feed(WDOG0));
 }
 /*---------------------------------------------------------------------------*/
-static int
-status(int type)
+void
+watchdog_stop(void)
 {
-  return 1;
+  CALL_IF_ENABLED(WDOGn_Enable(WDOG0, false));
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(als_sensor, ALS_SENSOR, value, config, status);
+void
+watchdog_reboot(void)
+{
+  WDOG_Init_TypeDef init = WDOG_INIT_DEFAULT;
+  init.perSel = wdogPeriod_9;
+
+  watchdog_stop();
+  WDOGn_Init(WDOG0, &init);
+  WDOGn_Enable(WDOG0, true);
+
+  while(1);
+}
 /*---------------------------------------------------------------------------*/
-/** @} */
