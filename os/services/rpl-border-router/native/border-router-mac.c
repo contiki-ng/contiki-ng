@@ -48,7 +48,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "BR-MAC"
-#define LOG_LEVEL LOG_LEVEL_NONE
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 #define MAX_CALLBACKS 16
 static int callback_pos;
@@ -115,15 +115,22 @@ send_packet(mac_callback_t sent, void *ptr)
 {
   int size;
   /* 3 bytes per packet attribute is required for serialization */
-  uint8_t buf[PACKETBUF_NUM_ATTRS * 3 + PACKETBUF_SIZE + 3];
+  uint8_t buf[PACKETBUF_NUM_ATTRS * 3 + PACKETBUF_NUM_ADDRS * LINKADDR_SIZE + PACKETBUF_SIZE + 3];
   uint8_t sid;
 
-  LOG_INFO("sending packet (%u bytes)\n", packetbuf_datalen());
+  packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);	
 
-  /* here we send the data over SLIP to the radio-chip */
+  // /* ack or not ? */	
+  packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);	
+
+  // /* Will make it send only DATA packets... for now */	
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
+
+  LOG_INFO("sending packet (%u bytes)\n", packetbuf_datalen());
   size = 0;
 #if SERIALIZE_ATTRIBUTES
   size = packetutils_serialize_atts(&buf[3], sizeof(buf) - 3);
+  size += packetutils_serialize_addrs(&buf[3 + size], sizeof(buf) - size - 3);
 #endif
   if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
     LOG_WARN("send failed, too large header\n");

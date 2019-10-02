@@ -33,6 +33,7 @@
 #include "net/packetbuf.h"
 #include "dev/slip.h"
 #include "os/sys/log.h"
+#include "packetutils.h"
 
 #include <stdio.h>
 
@@ -52,28 +53,20 @@ slipnet_init(void)
 static void
 slipnet_input(void)
 {
-  int i;
-  /* radio should be configured for filtering so this should be simple */
-  /* this should be sent over SLIP! */
-  /* so just copy into uip-but and send!!! */
-  /* Format: !R<data> ? */
-  uip_len = packetbuf_datalen();
-  i = packetbuf_copyto(uip_buf);
+  int size;
+  /* 3 bytes per packet attribute is required for serialization */
+  uint8_t buf[PACKETBUF_NUM_ATTRS * 3 + PACKETBUF_NUM_ADDRS * LINKADDR_SIZE + PACKETBUF_SIZE + 1];
+  size = 0;
+  size = packetutils_serialize_atts(&buf[1], sizeof(buf) - 1);
+  size += packetutils_serialize_addrs(&buf[1 + size], sizeof(buf) - size - 1);
 
-  LOG_DBG("Slipnet got input of len: %d, copied: %d\n",
-          packetbuf_datalen(), i);
+  buf[0] = packetbuf_hdrlen();
 
-  for(i = 0; i < uip_len; i++) {
-    LOG_DBG_("%02x", (unsigned char)uip_buf[i]);
-    if((i & 15) == 15) {
-      LOG_DBG_("\n");
-    } else if((i & 7) == 7) {
-      LOG_DBG_(" ");
-    }
-  }
-  LOG_DBG_("\n");
+  /* Copy packet data */
+  memcpy(&buf[1 + size], packetbuf_hdrptr(), packetbuf_totlen());
 
-  slip_write(uip_buf, uip_len);
+  slip_write(buf, packetbuf_totlen() + size + 1);
+
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
