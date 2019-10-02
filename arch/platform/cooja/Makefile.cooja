@@ -50,12 +50,12 @@ vpath %.c $(COOJA_SOURCEDIRS)
 
 COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c slip.c watchdog.c int-master.c
 
-COOJA_INTFS	= beep.c button-sensor.c ip.c leds-arch.c moteid.c \
+COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 		    pir-sensor.c rs232.c vib-sensor.c \
 		    clock.c cooja-log.c cfs-cooja.c cooja-radio.c \
 			eeprom.c slip-arch.c
 
-COOJA_CORE = random.c sensors.c leds.c
+COOJA_CORE = random.c sensors.c leds.c gpio-hal-arch.c buttons.c
 
 # (COOJA_SOURCEFILES contains additional sources set from simulator)
 CONTIKI_TARGET_SOURCEFILES = \

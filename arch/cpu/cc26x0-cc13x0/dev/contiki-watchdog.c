@@ -49,10 +49,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
+/* Watchdog timer interval, in milliseconds */
 #ifdef CONTIKI_WATCHDOG_CONF_TIMER_TOP
 #define CONTIKI_WATCHDOG_TIMER_TOP CONTIKI_WATCHDOG_CONF_TIMER_TOP
 #else
-#define CONTIKI_WATCHDOG_TIMER_TOP 0xFFFFF
+#define CONTIKI_WATCHDOG_TIMER_TOP 1100
 #endif
 
 #ifdef  CONTIKI_WATCHDOG_CONF_LOCK_CONFIG
@@ -60,6 +61,9 @@
 #else
 #define CONTIKI_WATCHDOG_LOCK_CONFIG 1
 #endif
+
+/* Convert timer interval from ms to ticks. Clock runs at 48 MHz / 32 */
+#define WATCHDOG_TIMER_TOP_TICK  ((48000 / 32) * CONTIKI_WATCHDOG_TIMER_TOP)
 
 #define LOCK_INTERRUPTS_DISABLED 0x01
 #define LOCK_REGISTERS_UNLOCKED  0x02
@@ -107,7 +111,7 @@ lock_config(uint32_t status)
 void
 watchdog_init(void)
 {
-  ti_lib_watchdog_reload_set(CONTIKI_WATCHDOG_TIMER_TOP);
+  ti_lib_watchdog_reload_set(WATCHDOG_TIMER_TOP_TICK);
   lock_config(LOCK_REGISTERS_UNLOCKED);
 }
 /*---------------------------------------------------------------------------*/
@@ -131,7 +135,7 @@ watchdog_start(void)
 void
 watchdog_periodic(void)
 {
-  ti_lib_watchdog_reload_set(CONTIKI_WATCHDOG_TIMER_TOP);
+  ti_lib_watchdog_reload_set(WATCHDOG_TIMER_TOP_TICK);
   ti_lib_watchdog_int_clear();
 }
 /*---------------------------------------------------------------------------*/

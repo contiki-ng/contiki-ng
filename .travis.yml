@@ -83,3 +83,4 @@ env:
     - TEST_NAME='ipv6' BUILD_COOJA=true
     - TEST_NAME='ipv6-nbr' BUILD_COOJA=true
     - TEST_NAME='out-of-tree-build'
+    - TEST_NAME='packet-parsing'
