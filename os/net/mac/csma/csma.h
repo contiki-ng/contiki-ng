@@ -87,6 +87,50 @@ int csma_security_parse_frame(void);
 /* key management for CSMA */
 int csma_security_set_key(uint8_t index, const uint8_t *key);
 
+/**
+ * Determines if statistics support should be compiled in.
+ */
+#ifndef CSMA_CONF_STATISTICS
+#define CSMA_STATISTICS  0
+#else /* UIP_CONF_STATISTICS */
+#define CSMA_STATISTICS (CSMA_CONF_STATISTICS)
+#endif /* UIP_CONF_STATISTICS */
+
+/**
+ * The CSMA statistics.
+ *
+ * This is the variable in which the uIP TCP/IP statistics are gathered.
+ */
+#if CSMA_STATISTICS == 1
+extern struct csma_stats csma_stat;
+#define CSMA_STAT(s) s
+#else
+#define CSMA_STAT(s)
+#endif /* CSMA_STATISTICS == 1 */
+
+/**
+ * The structure holding the TCP/IP statistics that are gathered if
+ * UIP_STATISTICS is set to 1.
+ *
+ */
+struct csma_stats {
+    struct {
+        uint32_t sent;
+        uint32_t retry;
+        uint32_t collisions;
+        uint32_t acked;
+        uint32_t not_acked;
+        uint32_t err;
+    } tx;
+    struct {
+        uint32_t recv;
+        uint32_t acked;
+        uint32_t duplicate;
+        uint32_t not_for_us;
+        uint32_t ignore_ack;
+        uint32_t err;
+    } rx;
+};
 
 #endif /* CSMA_H_ */
 /**

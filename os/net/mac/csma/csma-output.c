@@ -151,20 +151,6 @@ neighbor_queue_from_addr(const linkaddr_t *addr)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
-static clock_time_t
-backoff_period(void)
-{
-#if CONTIKI_TARGET_COOJA
-  /* Increase normal value by 20 to compensate for the coarse-grained
-  radio medium with Cooja motes */
-  return MAX(20 * CLOCK_SECOND / 3125, 1);
-#else /* CONTIKI_TARGET_COOJA */
-  /* Use the default in IEEE 802.15.4: aUnitBackoffPeriod which is
-   * 20 symbols i.e. 320 usec. That is, 1/3125 second. */
-  return MAX(CLOCK_SECOND / 3125, 1);
-#endif /* CONTIKI_TARGET_COOJA */
-}
-/*---------------------------------------------------------------------------*/
 static int
 send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
 {
@@ -281,7 +267,18 @@ schedule_transmission(struct neighbor_queue *n)
   backoff_exponent = MIN(n->collisions + CSMA_MIN_BE, CSMA_MAX_BE);
 
   /* Compute max delay as per IEEE 802.15.4: 2^BE-1 backoff periods  */
-  delay = ((1 << backoff_exponent) - 1) * backoff_period();
+#if CONTIKI_TARGET_COOJA
+  delay = MAX(((uint32_t)((1 << backoff_exponent) - 1) * 20 * CLOCK_SECOND) / 3125, 1);
+#elif (RF_MODE == RF_MODE_SUB_1_GHZ)
+  /* Use the default in IEEE 802.15.4: aUnitBackoffPeriod which is
+   * 20 symbols i.e. 320 usec. That is, 1/3125 second.
+   * NOTE: we are using 868 MHz at 50 Kbps -> 5 times slower -> 1/625 second*/
+  delay = MAX(((uint32_t)((1 << backoff_exponent) - 1) * CLOCK_SECOND) / 625, 1);
+#else
+  /* Use the default in IEEE 802.15.4: aUnitBackoffPeriod which is
+   * 20 symbols i.e. 320 usec. That is, 1/3125 second. */
+  delay = MAX(((uint32_t)((1 << backoff_exponent) - 1) * CLOCK_SECOND) / 3125, 1);
+#endif
   if(delay > 0) {
     /* Pick a time for next transmission */
     delay = random_rand() % delay;
@@ -346,6 +343,7 @@ static void
 rexmit(struct packet_queue *q, struct neighbor_queue *n)
 {
   schedule_transmission(n);
+  CSMA_STAT(++csma_stat.tx.retry);
   /* This is needed to correctly attribute energy that we spent
      transmitting this packet. */
   queuebuf_update_attr_from_packetbuf(q->buf);
@@ -422,17 +420,21 @@ packet_sent(struct neighbor_queue *n,
   switch(status) {
   case MAC_TX_OK:
     tx_ok(q, n, num_transmissions);
+    CSMA_STAT(++csma_stat.tx.sent);
     break;
   case MAC_TX_NOACK:
     noack(q, n, num_transmissions);
+    CSMA_STAT(++csma_stat.tx.not_acked);
     break;
   case MAC_TX_COLLISION:
     collision(q, n, num_transmissions);
+    CSMA_STAT(++csma_stat.tx.collisions);
     break;
   case MAC_TX_DEFERRED:
     break;
   default:
     tx_done(status, q, n);
+    CSMA_STAT(++csma_stat.tx.err);
     break;
   }
 }
@@ -537,3 +539,10 @@ csma_output_init(void)
   memb_init(&metadata_memb);
   memb_init(&neighbor_memb);
 }
+/*---------------------------------------------------------------------------*/
+bool
+csma_queue_is_empty(void)
+{
+  return list_length(neighbor_list) == 0;
+}
+/*---------------------------------------------------------------------------*/

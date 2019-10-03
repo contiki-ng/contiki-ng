@@ -47,5 +47,6 @@
 
 void csma_output_packet(mac_callback_t sent, void *ptr);
 void csma_output_init(void);
+bool csma_queue_is_empty(void);
 
 #endif /* CSMA_OUTPUT_H_ */

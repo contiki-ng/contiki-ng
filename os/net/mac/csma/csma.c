@@ -43,12 +43,18 @@
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
+#include "sys/ctimer.h"
 
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "CSMA"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
+static int csma_on;
+
+#if CSMA_STATISTICS == 1
+struct csma_stats csma_stat;
+#endif
 
 static void
 init_sec(void)
@@ -65,10 +71,16 @@ init_sec(void)
 static void
 send_packet(mac_callback_t sent, void *ptr)
 {
+  if(csma_on == 1){
 
-  init_sec();
+    init_sec();
 
-  csma_output_packet(sent, ptr);
+    csma_output_packet(sent, ptr);
+  }
+  else{
+    mac_call_sent_callback(sent, ptr, MAC_TX_ERR, 0);
+    LOG_DBG("Radio MAC is OFFCould not send packet, could not send packet\n");
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -81,15 +93,28 @@ input_packet(void)
   if(packetbuf_datalen() == CSMA_ACK_LEN) {
     /* Ignore ack packets */
     LOG_DBG("ignored ack\n");
+    CSMA_STAT(++csma_stat.rx.ignore_ack);
   } else if(csma_security_parse_frame() < 0) {
     LOG_ERR("failed to parse %u\n", packetbuf_datalen());
+    CSMA_STAT(++csma_stat.rx.err);
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
             !packetbuf_holds_broadcast()) {
     LOG_WARN("not for us\n");
+    CSMA_STAT(++csma_stat.rx.not_for_us);
   } else if(linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER), &linkaddr_node_addr)) {
     LOG_WARN("frame from ourselves\n");
   } else {
+#if CSMA_SEND_SOFT_ACK
+    if(packetbuf_attr(PACKETBUF_ATTR_MAC_ACK)) {
+      ackdata[0] = FRAME802154_ACKFRAME;
+      ackdata[1] = 0;
+      ackdata[2] = ((uint8_t *)packetbuf_hdrptr())[2];
+      NETSTACK_RADIO.send(ackdata, CSMA_ACK_LEN);
+      CSMA_STAT(++csma_stat.rx.acked);
+    }
+#endif /* CSMA_SEND_SOFT_ACK */
+
     int duplicate = 0;
 
     /* Check for duplicate packet. */
@@ -99,23 +124,17 @@ input_packet(void)
       LOG_WARN("drop duplicate link layer packet from ");
       LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
       LOG_WARN_(", seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+      CSMA_STAT(++csma_stat.rx.duplicate);
     } else {
       mac_sequence_register_seqno();
     }
 
-#if CSMA_SEND_SOFT_ACK
-    if(packetbuf_attr(PACKETBUF_ATTR_MAC_ACK)) {
-      ackdata[0] = FRAME802154_ACKFRAME;
-      ackdata[1] = 0;
-      ackdata[2] = ((uint8_t *)packetbuf_hdrptr())[2];
-      NETSTACK_RADIO.send(ackdata, CSMA_ACK_LEN);
-    }
-#endif /* CSMA_SEND_SOFT_ACK */
     if(!duplicate) {
       LOG_INFO("received packet from ");
       LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
       LOG_INFO_(", seqno %u, len %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO), packetbuf_datalen());
       NETSTACK_NETWORK.input();
+      CSMA_STAT(++csma_stat.rx.recv);
     }
   }
 }
@@ -123,13 +142,36 @@ input_packet(void)
 static int
 on(void)
 {
+  csma_on = 1;
+
   return NETSTACK_RADIO.on();
+}
+/*---------------------------------------------------------------------------*/
+static void
+maybe_defer_off(void *ptr)
+{
+  static struct ctimer ct;
+
+  /* Check whether to turn off the radio */
+  if(csma_queue_is_empty()) {
+    /* Attempt to power off radio */
+    (void)NETSTACK_RADIO.off();
+    LOG_INFO("Radio OFF\n");
+    csma_on = 0;
+    return;
+  }
+
+  /* Schedule a later time to attempt radio power off */
+  LOG_DBG("Radio Power Off deferred\n");
+  ctimer_set(&ct, CLOCK_SECOND / 25, maybe_defer_off, NULL);
 }
 /*---------------------------------------------------------------------------*/
 static int
 off(void)
 {
-  return NETSTACK_RADIO.off();
+  maybe_defer_off(NULL);
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
 static void
