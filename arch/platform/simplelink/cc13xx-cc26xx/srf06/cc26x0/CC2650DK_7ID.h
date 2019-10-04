@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650DK_7ID
 
 /* Mapping of pins to board signals using general board aliases
- *      <board signal alias>                  <pin mapping>
+ *      <board signal alias>        <pin mapping>   <comments>
  */
 
 /* Analog Capable DIOs */
@@ -101,6 +101,13 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650DK_7ID_I2C0_SCL0             PIN_UNASSIGNED
 #define CC2650DK_7ID_I2C0_SDA0             PIN_UNASSIGNED
 
+/* I2S */
+#define CC2650DK_7ID_I2S_ADO               PIN_UNASSIGNED
+#define CC2650DK_7ID_I2S_ADI               PIN_UNASSIGNED
+#define CC2650DK_7ID_I2S_BCLK              PIN_UNASSIGNED
+#define CC2650DK_7ID_I2S_MCLK              PIN_UNASSIGNED
+#define CC2650DK_7ID_I2S_WCLK              PIN_UNASSIGNED
+
 /* LEDs */
 #define CC2650DK_7ID_PIN_LED_ON            1
 #define CC2650DK_7ID_PIN_LED_OFF           0
@@ -112,8 +119,8 @@ extern const PIN_Config BoardGpioInitTable[];
 /* PWM Outputs */
 #define CC2650DK_7ID_PWMPIN0               CC2650DK_7ID_PIN_LED1
 #define CC2650DK_7ID_PWMPIN1               CC2650DK_7ID_PIN_LED2
-#define CC2650DK_7ID_PWMPIN2               PIN_UNASSIGNED
-#define CC2650DK_7ID_PWMPIN3               PIN_UNASSIGNED
+#define CC2650DK_7ID_PWMPIN2               CC2650DK_7ID_PIN_LED3
+#define CC2650DK_7ID_PWMPIN3               CC2650DK_7ID_PIN_LED4
 #define CC2650DK_7ID_PWMPIN4               PIN_UNASSIGNED
 #define CC2650DK_7ID_PWMPIN5               PIN_UNASSIGNED
 #define CC2650DK_7ID_PWMPIN6               PIN_UNASSIGNED
@@ -136,7 +143,9 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2650DK_7ID_UART_RTS              IOID_21
 
 /* SD Card */
-#define CC2650DK_7ID_SDCARD_CS             IOID_30
+#define CC2650DK_7ID_SPI_SDCARD_CS         IOID_30
+#define CC2650DK_7ID_SDCARD_CS_ON          0
+#define CC2650DK_7ID_SDCARD_CS_OFF         1
 
 /* Ambient Light Sensor */
 #define CC2650DK_7ID_ALS_OUT               IOID_23
@@ -169,7 +178,7 @@ void CC2650DK_7ID_wakeUpExtFlash(void);
 
 /*!
  *  @def    CC2650DK_7ID_ADCBufName
- *  @brief  Enum of ADCs
+ *  @brief  Enum of ADCBufs
  */
 typedef enum CC2650DK_7ID_ADCBufName {
     CC2650DK_7ID_ADCBUF0 = 0,
@@ -214,6 +223,76 @@ typedef enum CC2650DK_7ID_CryptoName {
 } CC2650DK_7ID_CryptoName;
 
 /*!
+ *  @def    CC2650DK_7ID_AESCCMName
+ *  @brief  Enum of AESCCM names
+ */
+typedef enum CC2650DK_7ID_AESCCMName {
+    CC2650DK_7ID_AESCCM0 = 0,
+
+    CC2650DK_7ID_AESCCMCOUNT
+} CC2650DK_7ID_AESCCMName;
+
+/*!
+ *  @def    CC2650DK_7ID_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC2650DK_7ID_AESGCMName {
+    CC2650DK_7ID_AESGCM0 = 0,
+
+    CC2650DK_7ID_AESGCMCOUNT
+} CC2650DK_7ID_AESGCMName;
+
+/*!
+ *  @def    CC2650DK_7ID_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC2650DK_7ID_AESCBCName {
+    CC2650DK_7ID_AESCBC0 = 0,
+
+    CC2650DK_7ID_AESCBCCOUNT
+} CC2650DK_7ID_AESCBCName;
+
+/*!
+ *  @def    CC2650DK_7ID_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC2650DK_7ID_AESCTRName {
+    CC2650DK_7ID_AESCTR0 = 0,
+
+    CC2650DK_7ID_AESCTRCOUNT
+} CC2650DK_7ID_AESCTRName;
+
+/*!
+ *  @def    CC2650DK_7ID_AESECBName
+ *  @brief  Enum of AESECB names
+ */
+typedef enum CC2650DK_7ID_AESECBName {
+    CC2650DK_7ID_AESECB0 = 0,
+
+    CC2650DK_7ID_AESECBCOUNT
+} CC2650DK_7ID_AESECBName;
+
+/*!
+ *  @def    CC2650DK_7ID_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC2650DK_7ID_AESCTRDRBGName {
+    CC2650DK_7ID_AESCTRDRBG0 = 0,
+
+    CC2650DK_7ID_AESCTRDRBGCOUNT
+} CC2650DK_7ID_AESCTRDRBGName;
+
+/*!
+ *  @def    CC2650DK_7ID_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC2650DK_7ID_TRNGName {
+    CC2650DK_7ID_TRNG0 = 0,
+
+    CC2650DK_7ID_TRNGCOUNT
+} CC2650DK_7ID_TRNGName;
+
+/*!
  *  @def    CC2650DK_7ID_GPIOName
  *  @brief  Enum of GPIO names
  */
@@ -229,7 +308,7 @@ typedef enum CC2650DK_7ID_GPIOName {
     CC2650DK_7ID_GPIO_LED2,
     CC2650DK_7ID_GPIO_LED3,
     CC2650DK_7ID_GPIO_LED4,
-    CC2650DK_7ID_GPIO_SDCARD_CS,
+    CC2650DK_7ID_SDSPI_CS,
     CC2650DK_7ID_GPIO_ACC_CS,
 
     CC2650DK_7ID_GPIOCOUNT
@@ -278,6 +357,16 @@ typedef enum CC2650DK_7ID_I2CName {
 } CC2650DK_7ID_I2CName;
 
 /*!
+ *  @def    CC2650DK_7ID_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC2650DK_7ID_I2SName {
+    CC2650DK_7ID_I2S0 = 0,
+
+    CC2650DK_7ID_I2SCOUNT
+} CC2650DK_7ID_I2SName;
+
+/*!
  *  @def    CC2650DK_7ID_NVSName
  *  @brief  Enum of NVS names
  */
@@ -315,16 +404,6 @@ typedef enum CC2650DK_7ID_SDName {
 
     CC2650DK_7ID_SDCOUNT
 } CC2650DK_7ID_SDName;
-
-/*!
- *  @def    CC2650DK_7ID_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC2650DK_7ID_TRNGName {
-    CC2650DK_7ID_TRNG0 = 0,
-
-    CC2650DK_7ID_TRNGCOUNT
-} CC2650DK_7ID_TRNGName;
 
 /*!
  *  @def    CC2650DK_7ID_SPIName

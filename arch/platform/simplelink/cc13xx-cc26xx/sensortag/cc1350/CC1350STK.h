@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 /** ============================================================================
  *  @file       CC1350STK.h
  *
- *  @brief      CC1350STK Board Specific header file.
+ *  @brief      CC1350 SensorTag Board Specific header file.
  *
  *  The CC1350STK header file should be included in an application as
  *  follows:
@@ -62,15 +62,23 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350STK
 
 /* Mapping of pins to board signals using general board aliases
- *      <board signal alias>            <pin mapping>
+ *      <board signal alias>        <pin mapping>   <comments>
  */
+
+/* Analog Capable DIOs */
+#define CC1350STK_DIO23_ANALOG          IOID_23
+#define CC1350STK_DIO24_ANALOG          IOID_24
+#define CC1350STK_DIO25_ANALOG          IOID_25
+#define CC1350STK_DIO26_ANALOG          IOID_26
+#define CC1350STK_DIO27_ANALOG          IOID_27
+#define CC1350STK_DIO28_ANALOG          IOID_28
+#define CC1350STK_DIO29_ANALOG          IOID_29
+#define CC1350STK_DIO30_ANALOG          IOID_30
 
 /* Audio */
 #define CC1350STK_MIC_POWER             IOID_13
 #define CC1350STK_MIC_POWER_ON          1
 #define CC1350STK_MIC_POWER_OFF         0
-#define CC1350STK_AUDIO_DI              IOID_2
-#define CC1350STK_AUDIO_CLK             IOID_3
 
 /* Buzzer */
 #define CC1350STK_BUZZER                IOID_21
@@ -78,26 +86,26 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350STK_BUZZER_OFF            0
 
 /* DevPack */
-#define CC1350STK_AUDIOFS_TDO           IOID_16
-#define CC1350STK_AUDIODO               IOID_22
-#define CC1350STK_DP2                   IOID_23
-#define CC1350STK_DP1                   IOID_24
 #define CC1350STK_DP0                   IOID_25
+#define CC1350STK_DP1                   IOID_24
+#define CC1350STK_DP2                   IOID_23
 #define CC1350STK_DP3                   IOID_27
 #define CC1350STK_DP4_UARTRX            IOID_28
 #define CC1350STK_DP5_UARTTX            IOID_29
-#define CC1350STK_DEVPK_ID              IOID_30
-#define CC1350STK_SPI_DEVPK_CS          IOID_20
-
-/* Discrete Outputs */
-#define CC1350STK_PIN_LED1              IOID_10
-#define CC1350STK_LED_ON                1
-#define CC1350STK_LED_OFF               0
-
+#define CC1350STK_DP6_ADO               IOID_22
+#define CC1350STK_DP7_BCLK              IOID_3
+#define CC1350STK_DP8_TDI               IOID_17
+#define CC1350STK_DP9_MISO              IOID_18
+#define CC1350STK_DP10_MOSI             IOID_19
+#define CC1350STK_DP11_CSN              IOID_20
+#define CC1350STK_DP12_WCLK             IOID_16
+#define CC1350STK_DP_ID                 IOID_30
 
 /* Discrete Inputs */
-#define CC1350STK_KEY_LEFT              IOID_15
-#define CC1350STK_KEY_RIGHT             IOID_4
+#define CC1350STK_PIN_BTN1              IOID_4
+#define CC1350STK_PIN_BTN2              IOID_15
+#define CC1350STK_KEY_LEFT              CC1350STK_PIN_BTN2
+#define CC1350STK_KEY_RIGHT             CC1350STK_PIN_BTN1
 #define CC1350STK_RELAY                 IOID_1
 
 /* GPIO */
@@ -105,10 +113,22 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350STK_GPIO_LED_OFF          0
 
 /* I2C */
-#define CC1350STK_I2C0_SDA0             IOID_5
 #define CC1350STK_I2C0_SCL0             IOID_6
-#define CC1350STK_I2C0_SDA1             IOID_8
+#define CC1350STK_I2C0_SDA0             IOID_5
 #define CC1350STK_I2C0_SCL1             IOID_9
+#define CC1350STK_I2C0_SDA1             IOID_8
+
+/* I2S */
+#define CC1350STK_I2S_ADO               IOID_22
+#define CC1350STK_I2S_ADI               IOID_2
+#define CC1350STK_I2S_BCLK              IOID_3
+#define CC1350STK_I2S_MCLK              PIN_UNASSIGNED
+#define CC1350STK_I2S_WCLK              IOID_16
+
+/* LEDs */
+#define CC1350STK_PIN_LED_ON            1
+#define CC1350STK_PIN_LED_OFF           0
+#define CC1350STK_PIN_RLED              IOID_10
 
 /* LED-Audio DevPack */
 #define CC1350STK_DEVPK_LIGHT_BLUE      IOID_23
@@ -121,9 +141,9 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350STK_MPU_POWER_ON          1
 #define CC1350STK_MPU_POWER_OFF         0
 
-/* PWM */
-#define CC1350STK_PWMPIN0               CC1350STK_PIN_LED1
-#define CC1350STK_PWMPIN1               CC1350STK_PIN_LED1
+/* PWM Outputs */
+#define CC1350STK_PWMPIN0               CC1350STK_PIN_RLED
+#define CC1350STK_PWMPIN1               PIN_UNASSIGNED
 #define CC1350STK_PWMPIN2               PIN_UNASSIGNED
 #define CC1350STK_PWMPIN3               PIN_UNASSIGNED
 #define CC1350STK_PWMPIN4               PIN_UNASSIGNED
@@ -144,7 +164,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350STK_SPI0_MISO             IOID_18
 #define CC1350STK_SPI0_MOSI             IOID_19
 #define CC1350STK_SPI0_CLK              IOID_17
-#define CC1350STK_SPI0_CSN              PIN_UNASSIGNED
+#define CC1350STK_SPI0_CSN              IOID_20
 #define CC1350STK_SPI1_MISO             PIN_UNASSIGNED
 #define CC1350STK_SPI1_MOSI             PIN_UNASSIGNED
 #define CC1350STK_SPI1_CLK              PIN_UNASSIGNED
@@ -176,6 +196,56 @@ void CC1350STK_shutDownExtFlash(void);
 void CC1350STK_wakeUpExtFlash(void);
 
 /*!
+ *  @def    CC1350STK_ADCBufName
+ *  @brief  Enum of ADCBufs
+ */
+typedef enum CC1350STK_ADCBufName {
+    CC1350STK_ADCBUF0 = 0,
+
+    CC1350STK_ADCBUFCOUNT
+} CC1350STK_ADCBufName;
+
+/*!
+ *  @def    CC1350STK_ADCBuf0ChannelName
+ *  @brief  Enum of ADCBuf channels
+ */
+typedef enum CC1350STK_ADCBuf0ChannelName {
+    CC1350STK_ADCBUF0CHANNEL0 = 0,
+    CC1350STK_ADCBUF0CHANNEL1,
+    CC1350STK_ADCBUF0CHANNEL2,
+    CC1350STK_ADCBUF0CHANNEL3,
+    CC1350STK_ADCBUF0CHANNEL4,
+    CC1350STK_ADCBUF0CHANNEL5,
+    CC1350STK_ADCBUF0CHANNEL6,
+    CC1350STK_ADCBUF0CHANNEL7,
+    CC1350STK_ADCBUF0CHANNELVDDS,
+    CC1350STK_ADCBUF0CHANNELDCOUPL,
+    CC1350STK_ADCBUF0CHANNELVSS,
+
+    CC1350STK_ADCBUF0CHANNELCOUNT
+} CC1350STK_ADCBuf0ChannelName;
+
+/*!
+ *  @def    CC1350STK_ADCName
+ *  @brief  Enum of ADCs
+ */
+typedef enum CC1350STK_ADCName {
+    CC1350STK_ADC0 = 0,
+    CC1350STK_ADC1,
+    CC1350STK_ADC2,
+    CC1350STK_ADC3,
+    CC1350STK_ADC4,
+    CC1350STK_ADC5,
+    CC1350STK_ADC6,
+    CC1350STK_ADC7,
+    CC1350STK_ADCDCOUPL,
+    CC1350STK_ADCVSS,
+    CC1350STK_ADCVDDS,
+
+    CC1350STK_ADCCOUNT
+} CC1350STK_ADCName;
+
+/*!
  *  @def    CC1350STK_CryptoName
  *  @brief  Enum of Crypto names
  */
@@ -184,6 +254,76 @@ typedef enum CC1350STK_CryptoName {
 
     CC1350STK_CRYPTOCOUNT
 } CC1350STK_CryptoName;
+
+/*!
+ *  @def    CC1350STK_AESCCMName
+ *  @brief  Enum of AESCCM names
+ */
+typedef enum CC1350STK_AESCCMName {
+    CC1350STK_AESCCM0 = 0,
+
+    CC1350STK_AESCCMCOUNT
+} CC1350STK_AESCCMName;
+
+/*!
+ *  @def    CC1350STK_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC1350STK_AESGCMName {
+    CC1350STK_AESGCM0 = 0,
+
+    CC1350STK_AESGCMCOUNT
+} CC1350STK_AESGCMName;
+
+/*!
+ *  @def    CC1350STK_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC1350STK_AESCBCName {
+    CC1350STK_AESCBC0 = 0,
+
+    CC1350STK_AESCBCCOUNT
+} CC1350STK_AESCBCName;
+
+/*!
+ *  @def    CC1350STK_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC1350STK_AESCTRName {
+    CC1350STK_AESCTR0 = 0,
+
+    CC1350STK_AESCTRCOUNT
+} CC1350STK_AESCTRName;
+
+/*!
+ *  @def    CC1350STK_AESECBName
+ *  @brief  Enum of AESECB names
+ */
+typedef enum CC1350STK_AESECBName {
+    CC1350STK_AESECB0 = 0,
+
+    CC1350STK_AESECBCOUNT
+} CC1350STK_AESECBName;
+
+/*!
+ *  @def    CC1350STK_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC1350STK_AESCTRDRBGName {
+    CC1350STK_AESCTRDRBG0 = 0,
+
+    CC1350STK_AESCTRDRBGCOUNT
+} CC1350STK_AESCTRDRBGName;
+
+/*!
+ *  @def    CC1350STK_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC1350STK_TRNGName {
+    CC1350STK_TRNG0 = 0,
+
+    CC1350STK_TRNGCOUNT
+} CC1350STK_TRNGName;
 
 /*!
  *  @def    CC1350STK_GPIOName
@@ -200,7 +340,7 @@ typedef enum CC1350STK_GPIOName {
 
 /*!
  *  @def    CC1350STK_GPTimerName
- *  @brief  Enum of GPTimers parts
+ *  @brief  Enum of GPTimer parts
  */
 typedef enum CC1350STK_GPTimerName {
     CC1350STK_GPTIMER0A = 0,
@@ -241,6 +381,16 @@ typedef enum CC1350STK_I2CName {
 } CC1350STK_I2CName;
 
 /*!
+ *  @def    CC1350STK_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC1350STK_I2SName {
+    CC1350STK_I2S0 = 0,
+
+    CC1350STK_I2SCOUNT
+} CC1350STK_I2SName;
+
+/*!
  *  @def    CC1350STK_NVSName
  *  @brief  Enum of NVS names
  */
@@ -254,16 +404,6 @@ typedef enum CC1350STK_NVSName {
 
     CC1350STK_NVSCOUNT
 } CC1350STK_NVSName;
-
-/*!
- *  @def    CC1350STK_PDMName
- *  @brief  Enum of PDM names
- */
-typedef enum CC1350STK_PDMName {
-    CC1350STK_PDM0 = 0,
-
-    CC1350STK_PDMCOUNT
-} CC1350STK_PDMName;
 
 /*!
  *  @def    CC1350STK_PWMName
@@ -296,16 +436,6 @@ typedef enum CC1350STK_SPIName {
 
     CC1350STK_SPICOUNT
 } CC1350STK_SPIName;
-
-/*!
- *  @def    CC1350STK_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC1350STK_TRNGName {
-    CC1350STK_TRNG0 = 0,
-
-    CC1350STK_TRNGCOUNT
-} CC1350STK_TRNGName;
 
 /*!
  *  @def    CC1350STK_UARTName

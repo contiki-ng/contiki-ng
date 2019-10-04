@@ -52,7 +52,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#define RF_TXPOWER_HIGH_PA      RF_CONF_TXPOWER_HIGH_PA
+#define RF_TXPOWER_DBM          RF_CONF_TXPOWER_DBM
+#define RF_BLE_TXPOWER_DBM      RF_CONF_BLE_TXPOWER_DBM
 #define RF_TXPOWER_BOOST_MODE   RF_CONF_TXPOWER_BOOST_MODE
 /*---------------------------------------------------------------------------*/
 typedef RF_TxPowerTable_Entry tx_power_table_t;

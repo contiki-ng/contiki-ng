@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -101,6 +101,13 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC26X2R1_LAUNCHXL_I2C0_SCL0             IOID_4
 #define CC26X2R1_LAUNCHXL_I2C0_SDA0             IOID_5
 
+/* I2S */
+#define CC26X2R1_LAUNCHXL_I2S_ADO               IOID_0
+#define CC26X2R1_LAUNCHXL_I2S_ADI               IOID_1
+#define CC26X2R1_LAUNCHXL_I2S_BCLK              IOID_30
+#define CC26X2R1_LAUNCHXL_I2S_MCLK              PIN_UNASSIGNED
+#define CC26X2R1_LAUNCHXL_I2S_WCLK              IOID_29
+
 /* LEDs */
 #define CC26X2R1_LAUNCHXL_PIN_LED_ON            1
 #define CC26X2R1_LAUNCHXL_PIN_LED_OFF           0
@@ -126,7 +133,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC26X2R1_LAUNCHXL_SPI0_MISO             IOID_8          /* RF1.20 */
 #define CC26X2R1_LAUNCHXL_SPI0_MOSI             IOID_9          /* RF1.18 */
 #define CC26X2R1_LAUNCHXL_SPI0_CLK              IOID_10         /* RF1.16 */
-#define CC26X2R1_LAUNCHXL_SPI0_CSN              PIN_UNASSIGNED
+#define CC26X2R1_LAUNCHXL_SPI0_CSN              IOID_11
 #define CC26X2R1_LAUNCHXL_SPI1_MISO             PIN_UNASSIGNED
 #define CC26X2R1_LAUNCHXL_SPI1_MOSI             PIN_UNASSIGNED
 #define CC26X2R1_LAUNCHXL_SPI1_CLK              PIN_UNASSIGNED
@@ -262,6 +269,36 @@ typedef enum CC26X2R1_LAUNCHXL_AESCCMName {
 } CC26X2R1_LAUNCHXL_AESCCMName;
 
 /*!
+ *  @def    CC26X2R1_LAUNCHXL_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC26X2R1_LAUNCHXL_AESGCMName {
+    CC26X2R1_LAUNCHXL_AESGCM0 = 0,
+
+    CC26X2R1_LAUNCHXL_AESGCMCOUNT
+} CC26X2R1_LAUNCHXL_AESGCMName;
+
+/*!
+ *  @def    CC26X2R1_LAUNCHXL_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC26X2R1_LAUNCHXL_AESCBCName {
+    CC26X2R1_LAUNCHXL_AESCBC0 = 0,
+
+    CC26X2R1_LAUNCHXL_AESCBCCOUNT
+} CC26X2R1_LAUNCHXL_AESCBCName;
+
+/*!
+ *  @def    CC26X2R1_LAUNCHXL_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC26X2R1_LAUNCHXL_AESCTRName {
+    CC26X2R1_LAUNCHXL_AESCTR0 = 0,
+
+    CC26X2R1_LAUNCHXL_AESCTRCOUNT
+} CC26X2R1_LAUNCHXL_AESCTRName;
+
+/*!
  *  @def    CC26X2R1_LAUNCHXL_AESECBName
  *  @brief  Enum of AESECB names
  */
@@ -272,6 +309,16 @@ typedef enum CC26X2R1_LAUNCHXL_AESECBName {
 } CC26X2R1_LAUNCHXL_AESECBName;
 
 /*!
+ *  @def    CC26X2R1_LAUNCHXL_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC26X2R1_LAUNCHXL_AESCTRDRBGName {
+    CC26X2R1_LAUNCHXL_AESCTRDRBG0 = 0,
+
+    CC26X2R1_LAUNCHXL_AESCTRDRBGCOUNT
+} CC26X2R1_LAUNCHXL_AESCTRDRBGName;
+
+/*!
  *  @def    CC26X2R1_LAUNCHXL_SHA2Name
  *  @brief  Enum of SHA2 names
  */
@@ -280,6 +327,16 @@ typedef enum CC26X2R1_LAUNCHXL_SHA2Name {
 
     CC26X2R1_LAUNCHXL_SHA2COUNT
 } CC26X2R1_LAUNCHXL_SHA2Name;
+
+/*!
+ *  @def    CC26X2R1_LAUNCHXL_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC26X2R1_LAUNCHXL_TRNGName {
+    CC26X2R1_LAUNCHXL_TRNG0 = 0,
+
+    CC26X2R1_LAUNCHXL_TRNGCOUNT
+} CC26X2R1_LAUNCHXL_TRNGName;
 
 /*!
  *  @def    CC26X2R1_LAUNCHXL_GPIOName
@@ -340,6 +397,16 @@ typedef enum CC26X2R1_LAUNCHXL_I2CName {
 } CC26X2R1_LAUNCHXL_I2CName;
 
 /*!
+ *  @def    CC26X2R1_LAUNCHXL_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC26X2R1_LAUNCHXL_I2SName {
+    CC26X2R1_LAUNCHXL_I2S0 = 0,
+
+    CC26X2R1_LAUNCHXL_I2SCOUNT
+} CC26X2R1_LAUNCHXL_I2SName;
+
+/*!
  *  @def    CC26X2R1_LAUNCHXL_NVSName
  *  @brief  Enum of NVS names
  */
@@ -395,16 +462,6 @@ typedef enum CC26X2R1_LAUNCHXL_SPIName {
 
     CC26X2R1_LAUNCHXL_SPICOUNT
 } CC26X2R1_LAUNCHXL_SPIName;
-
-/*!
- *  @def    CC26X2R1_LAUNCHXL_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC26X2R1_LAUNCHXL_TRNGName {
-    CC26X2R1_LAUNCHXL_TRNG0 = 0,
-
-    CC26X2R1_LAUNCHXL_TRNGCOUNT
-} CC26X2R1_LAUNCHXL_TRNGName;
 
 /*!
  *  @def    CC26X2R1_LAUNCHXL_UARTName

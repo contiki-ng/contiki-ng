@@ -29,12 +29,16 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     srecord \
     uml-utilities \
     unzip \
+    valgrind \
     wget \
+    smitools \
+    snmp \
+    snmp-mibs-downloader \
     > /dev/null \
   && apt-get -qq clean
 
 # Install coap-cli
-RUN npm -q install coap-cli -g \
+RUN npm -q install coap-cli@0.5.1 -g \
   && sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 # Install ARM toolchain

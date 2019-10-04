@@ -45,8 +45,5 @@ extern RF_Mode                rf_ble_mode;
 extern rfc_CMD_RADIO_SETUP_t  rf_ble_cmd_radio_setup;
 extern rfc_CMD_BLE_ADV_NC_t   rf_ble_cmd_ble_adv_nc;
 /*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t               rf_ble_overrides[];
-/*---------------------------------------------------------------------------*/
 #endif /* BLE_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

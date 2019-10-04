@@ -82,6 +82,7 @@ extern int curr_log_level_mac;
 extern int curr_log_level_framer;
 extern int curr_log_level_6top;
 extern int curr_log_level_coap;
+extern int curr_log_level_snmp;
 extern int curr_log_level_lwm2m;
 extern int curr_log_level_main;
 
@@ -96,6 +97,7 @@ extern struct log_module all_modules[];
 #define LOG_LEVEL_FRAMER                      MIN((LOG_CONF_LEVEL_FRAMER), curr_log_level_framer)
 #define LOG_LEVEL_6TOP                        MIN((LOG_CONF_LEVEL_6TOP), curr_log_level_6top)
 #define LOG_LEVEL_COAP                        MIN((LOG_CONF_LEVEL_COAP), curr_log_level_coap)
+#define LOG_LEVEL_SNMP                        MIN((LOG_CONF_LEVEL_SNMP), curr_log_level_snmp)
 #define LOG_LEVEL_LWM2M                       MIN((LOG_CONF_LEVEL_LWM2M), curr_log_level_lwm2m)
 #define LOG_LEVEL_MAIN                        MIN((LOG_CONF_LEVEL_MAIN), curr_log_level_main)
 

@@ -265,7 +265,7 @@ tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
     }
   }
   LOG_ERR("! add packet failed: %u %p %d %p %p\n", tsch_is_locked(), n, put_index, p, p ? p->qb : NULL);
-  return 0;
+  return NULL;
 }
 /*---------------------------------------------------------------------------*/
 /* Returns the number of packets currently in any TSCH queue */

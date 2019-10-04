@@ -44,6 +44,18 @@
 #ifndef RF_CORE_H_
 #define RF_CORE_H_
 /*---------------------------------------------------------------------------*/
+#include <ti/drivers/rf/RF.h>
+/*---------------------------------------------------------------------------*/
+/*
+ * \name  Abstract values to specify either the minimum or the maximum
+ *        available TX power setting in dBm.
+ *
+ * @{
+ */
+#define RF_TXPOWER_MIN_DBM     RF_TxPowerTable_MIN_DBM
+#define RF_TXPOWER_MAX_DBM     RF_TxPowerTable_MAX_DBM
+/** @} */
+/*---------------------------------------------------------------------------*/
 /**
  * \name  Different modes the RF can operate on, denoted by which frequency
  *        band said mode operates on. Currently supports the following modes:

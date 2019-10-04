@@ -42,17 +42,18 @@
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 /* TI-RTOS RF Mode Object */
-extern RF_Mode               rf_ieee_mode;
+extern RF_Mode                  rf_ieee_mode;
 /*---------------------------------------------------------------------------*/
 /* RF Core API commands */
-extern rfc_CMD_RADIO_SETUP_t rf_cmd_ieee_radio_setup;
-extern rfc_CMD_FS_t          rf_cmd_ieee_fs;
-extern rfc_CMD_IEEE_TX_t     rf_cmd_ieee_tx;
-extern rfc_CMD_IEEE_RX_t     rf_cmd_ieee_rx;
-extern rfc_CMD_IEEE_RX_ACK_t rf_cmd_ieee_rx_ack;
-/*---------------------------------------------------------------------------*/
-/* RF Core API Overrides */
-extern uint32_t              rf_ieee_overrides[];
+#if defined(DEVICE_CC1312R) || defined(DEVICE_CC1352R)
+extern rfc_CMD_RADIO_SETUP_t    rf_cmd_ieee_radio_setup;
+#else
+extern rfc_CMD_RADIO_SETUP_PA_t rf_cmd_ieee_radio_setup;
+#endif
+extern rfc_CMD_FS_t             rf_cmd_ieee_fs;
+extern rfc_CMD_IEEE_TX_t        rf_cmd_ieee_tx;
+extern rfc_CMD_IEEE_RX_t        rf_cmd_ieee_rx;
+extern rfc_CMD_IEEE_RX_ACK_t    rf_cmd_ieee_rx_ack;
 /*---------------------------------------------------------------------------*/
 #endif /* IEEE_SETTINGS_H_ */
 /*---------------------------------------------------------------------------*/

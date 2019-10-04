@@ -1,6 +1,6 @@
 # $Id: Makefile.msp430,v 1.35 2011/01/19 07:30:31 adamdunkels Exp $
 
-COOJA_PATH ?= $(CONTIKI)/tools/cooja
+COOJA_PATH ?= $(CONTIKI_NG_TOOLS_DIR)/cooja
 
 ifdef nodeid
 CFLAGS += -DNODEID=$(nodeid)
@@ -11,7 +11,7 @@ CFLAGS += -gstabs+
 .SUFFIXES:
 
 ### Define the CPU directory
-CONTIKI_CPU=$(ARCH_PATH)/cpu/msp430
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/msp430
 
 ### Define the source files we have in the MSP430 port
 
@@ -225,12 +225,3 @@ $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
 
 %.mspsim-maptable: %.$(TARGET)
 	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
-
-core-labels.o: core.${TARGET}
-	${CONTIKI}/tools/msp430-make-labels core.${TARGET} > core-labels.S
-	$(AS) -o $@ core-labels.S
-#	cp core-labels.o app/
-
-core-globals.o: core.${TARGET}
-	${CONTIKI}/tools/msp430-make-globals core.${TARGET} > core-globals.S
-	$(AS) -o $@ core-globals.S

@@ -50,8 +50,6 @@
 
 #define ASSERT_CONF_RETURNS  1
 
-#define LEDS_CONF_LEGACY_API 1
-
 #ifndef EEPROM_CONF_SIZE
 #define EEPROM_CONF_SIZE				1024
 #endif
@@ -76,8 +74,6 @@
 
 /* Radio setup */
 #define NETSTACK_CONF_RADIO cooja_radio_driver
-
-#define cooja_radio_driver_max_payload_len 125
 
 /* Default network config */
 #if NETSTACK_CONF_WITH_IPV6
@@ -145,4 +141,27 @@ typedef unsigned long clock_time_t;
 
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
 
+/*---------------------------------------------------------------------------*/
+/* Support for the new GPIO HAL */
+#define GPIO_HAL_CONF_ARCH_HDR_PATH      "dev/gpio-hal-arch.h"
+#define GPIO_HAL_CONF_ARCH_SW_TOGGLE     1
+#define GPIO_HAL_CONF_PORT_PIN_NUMBERING 0
+#define GPIO_HAL_CONF_PIN_COUNT          4
+
+/* Virtual LED pins 0, 1, 2 (Green, Red, Yellow) */
+#define COOJA_LED_GREEN_PIN              0
+#define COOJA_LED_RED_PIN                1
+#define COOJA_LED_YELLOW_PIN             2
+
+/* Virtual button on pin 3 */
+#define COOJA_BTN_PIN                    3
+
+#define BUTTON_HAL_CONF_DEBOUNCE_DURATION 0
+/*---------------------------------------------------------------------------*/
+/* Virtual LED colors */
+#define LEDS_CONF_COUNT                  3
+#define LEDS_CONF_GREEEN                 1
+#define LEDS_CONF_RED                    2
+#define LEDS_CONF_YELLOW                 4
+/*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */

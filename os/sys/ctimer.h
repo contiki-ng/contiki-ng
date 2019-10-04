@@ -49,6 +49,7 @@
  * The ctimer module provides a timer mechanism that calls a specified
  * C function when a ctimer expires.
  *
+ * It is \e not safe to manipulate callback timers within an interrupt context.
  */
 
 #ifndef CTIMER_H_
