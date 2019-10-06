@@ -835,6 +835,7 @@ static int
 read_frame(void *buf, unsigned short buf_len)
 {
   rfc_dataEntryGeneral_t *entry = (rfc_dataEntryGeneral_t *)rx_read_entry;
+  uint8_t *data_ptr;
   int len = 0;
   uint32_t rat_timestamp;
 
@@ -878,7 +879,7 @@ read_frame(void *buf, unsigned short buf_len)
    *   Payload + RSSI (1 byte) + Timestamp (4 bytes) + Status (1 byte)
    * This length includes all of those.
    */
-  uint8_t *data_ptr = &entry->data;
+  data_ptr = &entry->data;
   len = (*(uint16_t *)data_ptr);
 
   if(len <= RX_BUF_METADATA_SIZE) {
