@@ -45,7 +45,6 @@
 #include "net/netstack.h"
 #include "sys/energest.h"
 #include "sys/clock.h"
-#include "sys/critical.h"
 #include "sys/rtimer.h"
 #include "sys/cc.h"
 #include "lpm.h"
@@ -129,6 +128,8 @@ static volatile rfc_dataEntry_t *packet_being_received;
 /*---------------------------------------------------------------------------*/
 static int on(void);
 static int off(void);
+
+static bool rf_setup_is_completed = false;
 
 static rfc_propRxOutput_t rx_stats;
 /*---------------------------------------------------------------------------*/
@@ -263,13 +264,23 @@ volatile static uint8_t *rx_read_entry;
 static uint8_t tx_buf[TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN] CC_ALIGN(4);
 /*---------------------------------------------------------------------------*/
 static uint8_t
-rf_is_on(void)
+rx_is_on(void)
 {
   if(!rf_core_is_accessible()) {
     return 0;
   }
 
   return smartrf_settings_cmd_prop_rx_adv.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
+}
+/*---------------------------------------------------------------------------*/
+static uint8_t
+rf_is_on(void)
+{
+  if (!rf_core_is_accessible()) {
+    return 0;
+  }
+
+  return rf_setup_is_completed;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -502,7 +513,7 @@ rx_on_prop(void)
 {
   int ret;
 
-  if(rf_is_on()) {
+  if(rx_is_on()) {
     PRINTF("rx_on_prop: We were on. PD=%u, RX=0x%04x\n",
            rf_core_is_accessible(), smartrf_settings_cmd_prop_rx_adv.status);
     return RF_CORE_CMD_OK;
@@ -530,7 +541,7 @@ rx_off_prop(void)
 #endif /* MAC_CONF_WITH_TSCH */
 
   /* If we are off, do nothing */
-  if(!rf_is_on()) {
+  if(!rx_is_on()) {
     return RF_CORE_CMD_OK;
   }
 
@@ -543,7 +554,7 @@ rx_off_prop(void)
     /* Continue nonetheless */
   }
 
-  RTIMER_BUSYWAIT_UNTIL(!rf_is_on(), RF_CORE_TURN_OFF_TIMEOUT);
+  RTIMER_BUSYWAIT_UNTIL(!rx_is_on(), RF_CORE_TURN_OFF_TIMEOUT);
 
   if(smartrf_settings_cmd_prop_rx_adv.status == PROP_DONE_STOPPED ||
      smartrf_settings_cmd_prop_rx_adv.status == PROP_DONE_ABORT) {
@@ -816,7 +827,6 @@ release_data_entry(void)
 {
   rfc_dataEntryGeneral_t *entry = (rfc_dataEntryGeneral_t *)rx_read_entry;
   uint8_t *data_ptr = &entry->data;
-  int_master_status_t interrupt_status;
 
   /* Clear the length field (2 bytes) */
   data_ptr[0] = 0;
@@ -826,13 +836,10 @@ release_data_entry(void)
   entry->status = DATA_ENTRY_STATUS_PENDING;
   rx_read_entry = entry->pNextEntry;
 
-  interrupt_status = critical_enter();
-  if(rf_core_rx_is_full) {
-    rf_core_rx_is_full = false;
-    PRINTF("RXQ was full, re-enabling radio!\n");
+  if(!rx_is_on()) {
+    PRINTF("RX was off, re-enabling rx!\n");
     rx_on_prop();
   }
-  critical_exit(interrupt_status);
 
 }
 /*---------------------------------------------------------------------------*/
@@ -1170,7 +1177,7 @@ on(void)
       return RF_CORE_CMD_ERROR;
     }
   }
-
+  rf_setup_is_completed = true;
   return RF_CORE_CMD_OK;
 }
 /*---------------------------------------------------------------------------*/
@@ -1179,6 +1186,12 @@ off(void)
 {
   int i;
   rfc_dataEntry_t *entry;
+
+  if(!rf_is_on()) {
+    PRINTF("off: We were off. PD=%u, RX=0x%04x \n", rf_core_is_accessible(),
+           smartrf_settings_cmd_prop_rx_adv.status);
+    return RF_CORE_CMD_OK;
+  }
 
   /*
    * If we are in the middle of a BLE operation, we got called by ContikiMAC
@@ -1211,6 +1224,8 @@ off(void)
        entry->status = DATA_ENTRY_STATUS_PENDING;
     }
   }
+
+  rf_setup_is_completed = false;
 
   return RF_CORE_CMD_OK;
 }
