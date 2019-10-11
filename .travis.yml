@@ -1,6 +1,7 @@
 # Setup environment for Docker
 language: generic
 services: docker
+dist: trusty
 notifications:
   email: false
 
