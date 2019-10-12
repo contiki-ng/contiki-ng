@@ -1,10 +1,16 @@
-FROM 32bit/ubuntu:16.04
+FROM i386/ubuntu:18.04
 
 ENV DEBIAN_FRONTEND noninteractive
 
+# Set user for what comes next
+USER root
+
 # Tools
+RUN apt-get -qq update && \
+    apt-get -qq -y --no-install-recommends install gnupg > /dev/null
+
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-  echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  echo "deb http://download.mono-project.com/repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
@@ -13,18 +19,21 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     doxygen \
     gdb \
     git \
-    gksu \
     gtk-sharp2 \
     iputils-tracepath \
+    iputils-ping \
     libcanberra-gtk-module:i386 \
     libgtk2.0-0 \
     mono-complete \
     mosquitto \
     mosquitto-clients \
+    net-tools \
     npm \
+    openjdk-8-jdk \
     python-pip \
     python-serial \
     rlwrap \
+    sudo \
     screen \
     srecord \
     uml-utilities \
@@ -38,8 +47,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   && apt-get -qq clean
 
 # Install coap-cli
-RUN npm -q install coap-cli@0.5.1 -g \
-  && sudo ln -s /usr/bin/nodejs /usr/bin/node
+RUN npm -q install coap-cli@0.5.1 -g
 
 # Install ARM toolchain
 RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
@@ -105,6 +113,9 @@ WORKDIR                 ${HOME}
 # Create Cooja shortcut
 RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && \
   chmod +x ${HOME}/cooja
+
+# Make sure we're using Java 8 for Cooja
+RUN sudo update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-i386
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
