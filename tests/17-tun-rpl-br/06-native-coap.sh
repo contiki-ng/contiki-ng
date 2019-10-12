@@ -24,11 +24,11 @@ echo "Sending CoAP requests"
 rm -f $BASENAME.log
 for TARGET in .well-known/core test/push; do
   echo "Get $TARGET" | tee -a $BASENAME.log
-  coap get coap://[$IPADDR]/$TARGET 2>&1 | tee coap.log
+  coap-client -v6 -m get coap://[$IPADDR]/$TARGET 2>&1 | tee coap.log
   cat coap.log >> $BASENAME.log
   # Fetch coap status code (not $? because this is piped)
-  SUCCESS=`grep -c  '(2.05)' coap.log`
-  if [ $SUCCESS == 1 ]; then
+  SUCCESS=`grep -c '2.05' coap.log`
+  if [ $SUCCESS > 0 ]; then
     printf "> OK\n"
     OKCOUNT+=1
   else
@@ -48,6 +48,7 @@ else
   echo "==== make.err ====" ; cat make.err;
   echo "==== node.log ====" ; cat node.log;
   echo "==== node.err ====" ; cat node.err;
+  echo "==== coap.log ====" ; cat coap.log;
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
   printf "%-32s TEST FAIL  %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" | tee $BASENAME.testlog;
