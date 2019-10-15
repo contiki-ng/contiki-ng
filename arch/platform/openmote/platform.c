@@ -32,13 +32,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc2538-platforms
- * @{
- *
- * \defgroup openmote OpenMote platform
- *
- * The OpenMote platform is based on the CC2538, the new platform by Texas Instruments
- * based on an ARM Cortex-M3 core and a IEEE 802.15.4 radio.
+ * \addtogroup openmote-platform
  * @{
  *
  * \file
@@ -190,6 +184,5 @@ platform_idle()
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  */

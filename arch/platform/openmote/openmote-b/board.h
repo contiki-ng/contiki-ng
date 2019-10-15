@@ -32,7 +32,11 @@
  */
 /* -------------------------------------------------------------------------- */
 /**
- * \addtogroup openmote-b
+ * \addtogroup openmote-boards
+ * @{
+ *
+ * \defgroup openmote-b OpenMote-B
+ * OpenMote-B is a new board by OpenMote Technologies, released in 2018.
  * @{
  *
  * \file

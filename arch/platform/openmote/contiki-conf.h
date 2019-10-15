@@ -31,15 +31,10 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup openmote
+ * \addtogroup openmote-platform
  * @{
  *
- * \defgroup openmote-platforms OpenMote platform
- *
- * The OpenMote platform was designed at UC Berkeley in 2013 and
- * is comercialized by OpenMote Technologies since 2014. It is the first
- * commercial platform based on the powerful TI CC2538 SoC. It uses a
- * XBee form-factor to ease prototyping.
+ * \defgroup openmote-boards OpenMote boards
  * @{
  *
  * \file

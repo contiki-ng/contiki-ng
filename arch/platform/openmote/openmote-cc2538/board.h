@@ -32,7 +32,14 @@
  */
 /* -------------------------------------------------------------------------- */
 /**
- * \addtogroup openmote-cc2538
+ * \addtogroup openmote-boards
+ * @{
+ *
+ * \defgroup openmote-cc2538 OpenMote-CC2538
+ * The OpenMote-CC2538 board was designed at UC Berkeley in 2013 and
+ * is comercialized by OpenMote Technologies since 2014. It is the first
+ * commercial platform based on the powerful TI CC2538 SoC. It uses a
+ * XBee form-factor to ease prototyping.
  * @{
  *
  * \file
