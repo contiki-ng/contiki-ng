@@ -48,16 +48,12 @@
 #include "dev/gpio.h"
 #include "dev/antenna.h"
 /*---------------------------------------------------------------------------*/
-#define BSP_RADIO_BASE              GPIO_PORT_TO_BASE(GPIO_D_NUM)
-#define BSP_RADIO_INT               GPIO_PIN_MASK(5)
-#define BSP_RADIO_EXT               GPIO_PIN_MASK(4)
-/*---------------------------------------------------------------------------*/
 void
 antenna_init(void)
 {
   /* Configure the ANT1 and ANT2 GPIO as output */
-  GPIO_SET_OUTPUT(BSP_RADIO_BASE, BSP_RADIO_INT);
-  GPIO_SET_OUTPUT(BSP_RADIO_BASE, BSP_RADIO_EXT);
+  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT);
+  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT);
 
   /* Select external antenna by default. */
   antenna_external();
@@ -66,15 +62,15 @@ antenna_init(void)
 void
 antenna_external(void)
 {
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_INT, 0);
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_EXT, 1);
+  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT, 0);
+  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT, 1);
 }
 /*---------------------------------------------------------------------------*/
 void
 antenna_internal(void)
 {
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_EXT, 0);
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_INT, 1);
+  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT, 0);
+  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT, 1);
 }
 /*---------------------------------------------------------------------------*/
 /**

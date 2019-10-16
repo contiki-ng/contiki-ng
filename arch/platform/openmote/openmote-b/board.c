@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -27,22 +26,37 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the Contiki operating system.
+ *
+ */
+/*---------------------------------------------------------------------------*/
+/**
+ * \addtogroup openmote-b
+ * @{
+ *
+ * \file
+ *  Board-initialisation for the OpenMote-B platform
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio-hal.h"
+#include "dev/antenna.h"
+#include <stdint.h>
+#include <string.h>
 /*---------------------------------------------------------------------------*/
-/*
- * LEDs on the OpenMote-CC2538 are connected as follows:
- * - LED1 (Red)    -> PC4 (gpio_hal_pin_t 20)
- * - LED2 (Yellow) -> PC6 (gpio_hal_pin_t 22)
- * - LED3 (Green)  -> PC7 (gpio_hal_pin_t 23)
- * - LED4 (Orange) -> PC5
+static void
+configure_unused_pins(void)
+{
+  /* FIXME */
+}
+/*---------------------------------------------------------------------------*/
+void
+board_init()
+{
+  antenna_init();
+  configure_unused_pins();
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
  */
-gpio_hal_pin_t out_pin1 = 20;
-gpio_hal_pin_t out_pin2 = 22;
-gpio_hal_pin_t out_pin3 = 23;
-/*---------------------------------------------------------------------------*/
-/* Button pin: PC3 */
-gpio_hal_pin_t btn_pin = 19;
-/*---------------------------------------------------------------------------*/
