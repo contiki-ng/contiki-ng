@@ -322,9 +322,6 @@ slip_empty()
   return slip_packet_end == 0;
 }
 /*---------------------------------------------------------------------------*/
-<<<<<<< HEAD
-void
-=======
 static ssize_t
 write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
 {
@@ -349,7 +346,6 @@ write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
 }
 /*---------------------------------------------------------------------------*/
 static void
->>>>>>> f99626ba0... test-slip: write slowly function added
 slip_flushbuf(int fd)
 {
   int n;
