@@ -1,17 +1,19 @@
-# openmote-cc2538 platform makefile
-
-### Allow the OpenMote-CC2538 platform to support different CC2538 chip revisions
-ifeq ($(findstring REV_A1,$(BOARD_REVISION)),REV_A1)
-    CFLAGS+=-DCC2538_DEV_CONF=CC2538_DEV_CC2538SF23
-endif
+# openmote platform makefile
 
 ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
+### If no board is specified the default option is the openmote-cc2538
+BOARD ?= openmote-cc2538
+BOARDS = openmote-cc2538 openmote-b
+
 ### Configure the build for the board and pull in board-specific sources
-CONTIKI_TARGET_DIRS += . dev
+CONTIKI_TARGET_DIRS += . dev $(BOARD)
 PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
+
+### Include the board dir if one exists
+-include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(BOARD)
 
 ### Include
 CONTIKI_TARGET_SOURCEFILES += platform.c board.c
@@ -27,7 +29,7 @@ include $(CONTIKI_CPU)/Makefile.cc2538
 MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
 PYTHON = python
-BSL_FLAGS += -e --bootloader-invert-lines -w -v -b 450000
+BSL_FLAGS += -e -w -v -b 450000
 
 ifdef PORT
   BSL_FLAGS += -p $(PORT)

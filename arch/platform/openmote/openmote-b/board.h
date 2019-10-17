@@ -32,12 +32,16 @@
  */
 /* -------------------------------------------------------------------------- */
 /**
- * \addtogroup openmote-cc2538
+ * \addtogroup openmote-boards
+ * @{
+ *
+ * \defgroup openmote-b OpenMote-B
+ * OpenMote-B is a new board by OpenMote Technologies, released in 2018.
  * @{
  *
  * \file
  * This file provides connectivity information on LEDs, Buttons, UART and
- * other OpenMote-CC2538 peripherals.
+ * other OpenMote-B peripherals.
  *
  * This file can be used as the basis to configure other platforms using the
  * cc2538 SoC.
@@ -52,9 +56,23 @@
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 /*---------------------------------------------------------------------------*/
-/** \name OpenMote-CC2538 LED configuration
+/**
+ * \name Serial Boot Loader Backdoor configuration
  *
- * LEDs on the OpenMote-CC2538 are connected as follows:
+ * @{
+ */
+#ifndef FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN
+#define FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN 7 /**< Pin PA7 activates the boot loader */
+#endif
+
+#ifndef FLASH_CCA_CONF_BOOTLDR_BACKDOOR_ACTIVE_HIGH
+#define FLASH_CCA_CONF_BOOTLDR_BACKDOOR_ACTIVE_HIGH 0 /**< A logic low level activates the boot loader */
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
+/** \name OpenMote-B LED configuration
+ *
+ * LEDs on the OpenMote-B are connected as follows:
  * - LED1 (Red)    -> PC4
  * - LED2 (Yellow) -> PC6
  * - LED3 (Green)  -> PC7
@@ -82,50 +100,44 @@
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
  *
- * The USB pullup is driven by PC0
+ * The USB pullup is to be enabled by an external resistor, as it is not mapped
+ * to a GPIO.
+ * @{
  */
-#define USB_PULLUP_PORT          GPIO_C_NUM
-#define USB_PULLUP_PIN           0
+#ifdef USB_PULLUP_PORT
+#undef USB_PULLUP_PORT
+#endif
+#ifdef USB_PULLUP_PIN
+#undef USB_PULLUP_PIN
+#endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name UART configuration
  *
- * On the OpenMote, the UART is connected to the
+ * On the OpenMote-B, the UART is connected to the
  * following ports/pins
  * - RX:  PA0
  * - TX:  PA1
- * - CTS: PB0 (Can only be used with UART1)
- * - RTS: PD3 (Can only be used with UART1)
  *
- * We configure the port to use UART0. To use UART1, replace UART0_* with
- * UART1_* below.
+ * We configure the port to use UART0.
  * @{
  */
 #define UART0_RX_PORT            GPIO_A_NUM
 #define UART0_RX_PIN             0
 #define UART0_TX_PORT            GPIO_A_NUM
 #define UART0_TX_PIN             1
-
-#define UART1_RX_PORT            GPIO_B_NUM
-#define UART1_RX_PIN             0
-#define UART1_TX_PORT            GPIO_D_NUM
-#define UART1_TX_PIN             3
-#define UART1_CTS_PORT           (-1)
-#define UART1_CTS_PIN            (-1)
-#define UART1_RTS_PORT           (-1)
-#define UART1_RTS_PIN            (-1)
 /** @} */
 /*---------------------------------------------------------------------------*/
-/** \name OpenMote-CC2538 Button configuration
+/** \name OpenMote-B Button configuration
  *
- * Buttons on the OpenMote-CC2538 are connected as follows:
- * - BUTTON_USER -> PC3
+ * Buttons on the OpenMote-B are connected as follows:
+ * - BUTTON_USER -> PD5
  * @{
  */
-/** BUTTON_USER -> PC3 */
-#define BUTTON_USER_PORT       GPIO_C_NUM
-#define BUTTON_USER_PIN        3
-#define BUTTON_USER_VECTOR     GPIO_C_IRQn
+/** BUTTON_USER -> PD5 */
+#define BUTTON_USER_PORT       GPIO_D_NUM
+#define BUTTON_USER_PIN        5
+#define BUTTON_USER_VECTOR     GPIO_D_IRQn
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON    1
 #define PLATFORM_SUPPORTS_BUTTON_HAL 1
@@ -135,8 +147,6 @@
  * \name SPI (SSI0) configuration
  *
  * These values configure which CC2538 pins to use for the SPI (SSI0) lines.
- * The SSI0 is currently used to interface with the Ethernet driver (ENC28J60)
- * on the OpenBase board.
  * @{
  */
 #define SPI_CLK_PORT             GPIO_A_NUM
@@ -169,9 +179,19 @@
  * @{
  */
 #define I2C_SCL_PORT             GPIO_B_NUM
-#define I2C_SCL_PIN              3
+#define I2C_SCL_PIN              5
 #define I2C_SDA_PORT             GPIO_B_NUM
 #define I2C_SDA_PIN              4
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name OpenMote-B antenna switch configuration
+ *
+ * @{
+ */
+#define ANTENNA_BSP_RADIO_BASE   GPIO_PORT_TO_BASE(GPIO_D_NUM)
+#define ANTENNA_BSP_RADIO_INT    GPIO_PIN_MASK(3)
+#define ANTENNA_BSP_RADIO_EXT    GPIO_PIN_MASK(4)
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -190,11 +210,12 @@
  * \name Device string used on startup
  * @{
  */
-#define BOARD_STRING "OpenMote-CC2538"
+#define BOARD_STRING "OpenMote-B"
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_H_ */
 /*---------------------------------------------------------------------------*/
 /**
+ * @}
  * @}
  */
