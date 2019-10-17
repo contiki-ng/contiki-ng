@@ -13,10 +13,12 @@ MAKE_WITH_SECURITY ?= 0
 MAKE_WITH_PERIODIC_ROUTES_PRINT ?= 0
 
 MAKE_MAC = MAKE_MAC_TSCH
-MODULES += os/services/shell
+
+include $(CONTIKI)/Makefile.dir-variables
+MODULES += $(CONTIKI_NG_SERVICES_DIR)/shell
 
 ifeq ($(MAKE_WITH_ORCHESTRA),1)
-MODULES += os/services/orchestra
+MODULES += $(CONTIKI_NG_SERVICES_DIR)/orchestra
 endif
 
 ifeq ($(MAKE_WITH_SECURITY),1)

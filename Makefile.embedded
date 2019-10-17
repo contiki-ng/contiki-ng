@@ -38,7 +38,7 @@ login: $(SERIAL_DUMP_BIN)
 ###
 ### Targets using tools/motelist
 ###
-CONTIKI_NG_MOTELIST_DIR = $(TOOLS_DIR)/motelist
+CONTIKI_NG_MOTELIST_DIR = $(CONTIKI_NG_TOOLS_DIR)/motelist
 CONTIKI_NG_MOTELIST = python $(CONTIKI_NG_MOTELIST_DIR)/motelist.py
 
 .PHONY: motelist-all

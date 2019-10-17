@@ -526,6 +526,7 @@ tsch_disassociate(void)
 {
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
+    tsch_adaptive_timesync_reset();
     process_poll(&tsch_process);
   }
 }
@@ -847,7 +848,7 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
 
   /* Set an initial delay except for coordinator, which should send an EB asap */
   if(!tsch_is_coordinator) {
-    etimer_set(&eb_timer, random_rand() % TSCH_EB_PERIOD);
+    etimer_set(&eb_timer, TSCH_EB_PERIOD ? random_rand() % TSCH_EB_PERIOD : 0);
     PROCESS_WAIT_UNTIL(etimer_expired(&eb_timer));
   }
 
@@ -859,6 +860,8 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
       /* Implementation section 6.3 of RFC 8180 */
       && TSCH_RPL_CHECK_DODAG_JOINED()
 #endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+      /* don't send when in leaf mode */
+      && !NETSTACK_ROUTING.is_in_leaf_mode()
         ) {
       /* Enqueue EB only if there isn't already one in queue */
       if(tsch_queue_packet_count(&tsch_eb_address) == 0) {
@@ -1044,12 +1047,7 @@ send_packet(mac_callback_t sent, void *ptr)
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
 #if LLSEC802154_ENABLED
-  if(tsch_is_pan_secured) {
-    /* Set security level, key id and index */
-    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, TSCH_SECURITY_KEY_SEC_LEVEL_OTHER);
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, FRAME802154_1_BYTE_KEY_ID_MODE); /* Use 1-byte key index */
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, TSCH_SECURITY_KEY_INDEX_OTHER);
-  }
+  tsch_security_set_packetbuf_attr(FRAME802154_DATAFRAME);
 #endif /* LLSEC802154_ENABLED */
 
 #if !NETSTACK_CONF_BRIDGE_MODE
@@ -1160,6 +1158,7 @@ turn_off(void)
 static int
 max_payload(void)
 {
+  int framer_hdrlen;
   radio_value_t max_radio_payload_len;
   radio_result_t res;
 
@@ -1171,8 +1170,18 @@ max_payload(void)
     return 0;
   }
 
+  /* Set packetbuf security attributes */
+  tsch_security_set_packetbuf_attr(FRAME802154_DATAFRAME);
+
+  framer_hdrlen = NETSTACK_FRAMER.length();
+  if(framer_hdrlen < 0) {
+    return 0;
+  }
+
   /* Setup security... before. */
-  return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN) -  NETSTACK_FRAMER.length();
+  return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN)
+    - framer_hdrlen
+    - LLSEC802154_PACKETBUF_MIC_LEN();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {

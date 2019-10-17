@@ -835,9 +835,28 @@ static int
 read_frame(void *buf, unsigned short buf_len)
 {
   rfc_dataEntryGeneral_t *entry = (rfc_dataEntryGeneral_t *)rx_read_entry;
-  uint8_t *data_ptr = &entry->data;
+  uint8_t *data_ptr;
   int len = 0;
   uint32_t rat_timestamp;
+
+  int is_found = 0;
+  /* Go through all RX buffers and check their status */
+  do {
+    if(entry->status == DATA_ENTRY_STATUS_FINISHED
+        || entry->status == DATA_ENTRY_STATUS_BUSY) {
+      is_found = 1;
+      break;
+    }
+
+    entry = (rfc_dataEntryGeneral_t *)entry->pNextEntry;
+  } while(entry != (rfc_dataEntryGeneral_t *)rx_read_entry);
+
+  if(is_found == 0) {
+    /* No available data */
+    return 0;
+  }
+
+  rx_read_entry = (volatile uint8_t *)entry;
 
   /* wait for entry to become finished */
   rtimer_clock_t t0 = RTIMER_NOW();
@@ -860,6 +879,7 @@ read_frame(void *buf, unsigned short buf_len)
    *   Payload + RSSI (1 byte) + Timestamp (4 bytes) + Status (1 byte)
    * This length includes all of those.
    */
+  data_ptr = &entry->data;
   len = (*(uint16_t *)data_ptr);
 
   if(len <= RX_BUF_METADATA_SIZE) {

@@ -4,6 +4,10 @@ ifndef CONTIKI
   ${error CONTIKI not defined! You must specify where Contiki resides}
 endif
 
+### Include a helper Makefile that creates variables for all Contiki-NG path
+### locations.
+include $(CONTIKI)/Makefile.dir-variables
+
 # Enable Werror by default. To disable from command line, use make WERROR=0.
 # Setting this option is also important for tests on Cooja motes to check for warnings.
 WERROR ?= 1
@@ -62,14 +66,16 @@ ifeq ($(WERROR),1)
  LDFLAGS += $(LDFLAGS_WERROR)
 endif
 
-MODULES += os os/sys os/dev os/lib os/services
+MODULES += $(CONTIKI_NG_OS_DIR) $(CONTIKI_NG_ARCH_DIR)
+MODULES += $(CONTIKI_NG_SYS_DIR) $(CONTIKI_NG_LIB_DIR) $(CONTIKI_NG_DEV_DIR)
+MODULES += $(CONTIKI_NG_NET_DIR) $(CONTIKI_NG_ROUTING_DIR)
+MODULES += $(CONTIKI_NG_MAC_DIR) $(CONTIKI_NG_MAC_DIR)/framer
+MODULES += $(CONTIKI_NG_STORAGE_DIR) $(CONTIKI_NG_SERVICES_DIR)
 
 # Automatically include project-conf.h if found
 ifneq ("$(wildcard project-conf.h)","")
 CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
 endif
-
-MODULES += os/net os/net/mac os/net/mac/framer os/net/routing os/storage
 
 define oname
 ${patsubst %.c,%.o, \
@@ -86,10 +92,8 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 ### Include target makefile (TODO Unsafe?)
 
-# Configurable arch path
-ARCH_PATH ?= $(CONTIKI)/arch
-
-target_makefile := $(wildcard $(ARCH_PATH)/platform/$(TARGET)/Makefile.$(TARGET) ${foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)})
+target_makefile := $(wildcard $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.$(TARGET) \
+                   $(foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)))
 
 # Check if the target makefile exists, and create the object directory if necessary.
 ifeq ($(strip $(target_makefile)),)
@@ -154,22 +158,22 @@ MAKE_MAC_OTHER = 4
 MAKE_MAC ?= MAKE_MAC_CSMA
 
 ifeq ($(MAKE_MAC),MAKE_MAC_NULLMAC)
-  MODULES+=os/net/mac/nullmac
+  MODULES += $(CONTIKI_NG_MAC_DIR)/nullmac
   CFLAGS += -DMAC_CONF_WITH_NULLMAC=1
 endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_CSMA)
-  MODULES += os/net/mac/csma
+  MODULES += $(CONTIKI_NG_MAC_DIR)/csma
   CFLAGS += -DMAC_CONF_WITH_CSMA=1
 endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_TSCH)
-  MODULES += os/net/mac/tsch
+  MODULES += $(CONTIKI_NG_MAC_DIR)/tsch
   CFLAGS += -DMAC_CONF_WITH_TSCH=1
 endif
 
 ifeq ($(MAKE_MAC),MAKE_MAC_BLE)
-  MODULES += os/net/mac/ble
+  MODULES += $(CONTIKI_NG_MAC_DIR)/ble
   CFLAGS += -DMAC_CONF_WITH_BLE=1
 endif
 
@@ -188,12 +192,12 @@ MAKE_NET ?= MAKE_NET_IPV6
 
 ifeq ($(MAKE_NET),MAKE_NET_NULLNET)
   CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
-  MODULES += os/net/nullnet
+  MODULES += $(CONTIKI_NG_NET_DIR)/nullnet
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_IPV6)
   CFLAGS += -DNETSTACK_CONF_WITH_IPV6=1
-  MODULES += os/net/ipv6
+  MODULES += $(CONTIKI_NG_NET_DIR)/ipv6
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_OTHER)
@@ -201,7 +205,7 @@ ifeq ($(MAKE_NET),MAKE_NET_OTHER)
 endif
 
 ifeq ($(WITH_IP64),1)
-  MODULES += os/services/ip64
+  MODULES += $(CONTIKI_NG_SERVICES_DIR)/ip64
 endif
 
 # Configure Routing protocol
@@ -218,13 +222,13 @@ endif
 
 ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_CLASSIC)
   CFLAGS += -DROUTING_CONF_RPL_CLASSIC=1
-  MODULES += os/net/routing/rpl-classic
+  MODULES += $(CONTIKI_NG_ROUTING_DIR)/rpl-classic
 else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_RPL_LITE)
   CFLAGS += -DROUTING_CONF_RPL_LITE=1
-  MODULES += os/net/routing/rpl-lite
+  MODULES += $(CONTIKI_NG_ROUTING_DIR)/rpl-lite
 else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
   CFLAGS += -DROUTING_CONF_NULLROUTING=1
-  MODULES += os/net/routing/nullrouting
+  MODULES += $(CONTIKI_NG_ROUTING_DIR)/nullrouting
 endif
 
 MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
@@ -287,10 +291,9 @@ CONTIKI_TARGET_DIRS_CONCAT = ${addprefix ${dir $(target_makefile)}, \
                                $(CONTIKI_TARGET_DIRS)}
 CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
-CONTIKI_ARCH_DIRS    = ${addprefix $(CONTIKI)/, arch}
 
-SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) $(CONTIKI_ARCH_DIRS) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(MODULEDIRS) $(EXTERNALDIRS)
+SOURCEDIRS += . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
+              $(CONTIKI_CPU_DIRS_CONCAT) $(MODULEDIRS) $(EXTERNALDIRS)
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
@@ -340,13 +343,13 @@ clean:
 	@echo Target $(TARGET) cleaned
 
 distclean:
-	@for TARG in `ls $(ARCH_PATH)/platform $(TARGETDIRS)`; do \
+	@for TARG in `ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)`; do \
 		echo Running: $(MAKE) TARGET=$$TARG clean; \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 	-$(Q)rm -rf $(BUILD_DIR)
 
--include $(ARCH_PATH)/platform/$(TARGET)/Makefile.customrules-$(TARGET)
+-include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.customrules-$(TARGET)
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
@@ -428,7 +431,7 @@ endif
 include $(CONTIKI)/Makefile.help
 
 targets:
-	@ls $(ARCH_PATH)/platform $(TARGETDIRS)
+	@ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)
 
 boards:
 ifdef BOARD
@@ -450,7 +453,7 @@ savedefines:
 	@echo "saving Makefile.$(TARGET).defines"
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
-VIEWCONF = $(CONTIKI)/tools/viewconf/viewconf.c
+VIEWCONF = $(CONTIKI_NG_TOOLS_DIR)/viewconf/viewconf.c
 viewconf:
 	@echo "----------------- Make variables: --------------"
 	@echo "##### \"TARGET\": ________________________________ $(TARGET)"

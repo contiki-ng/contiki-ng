@@ -29,12 +29,16 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     srecord \
     uml-utilities \
     unzip \
+    valgrind \
     wget \
+    smitools \
+    snmp \
+    snmp-mibs-downloader \
     > /dev/null \
   && apt-get -qq clean
 
 # Install coap-cli
-RUN npm -q install coap-cli -g \
+RUN npm -q install coap-cli@0.5.1 -g \
   && sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 # Install ARM toolchain
@@ -118,9 +122,6 @@ ENV PATH="${HOME}/renode:${PATH}"
 
 # Working directory
 WORKDIR ${CONTIKI_NG}
-
-# Enable IPv6 -- must be done at runtime, hence added to .profile
-RUN echo "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null" >> ${HOME}/.profile
 
 # Start a bash
 CMD bash --login

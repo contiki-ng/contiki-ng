@@ -58,20 +58,27 @@ dev/rgb-led/zoul:BOARD=firefly-reva \
 dev/rgb-led/zoul:BOARD=firefly \
 dev/rgb-led/zoul:BOARD=orion \
 mqtt-client/zoul:BOARD=firefly \
-mqtt-client/openmote-cc2538 \
-storage/cfs-coffee/openmote-cc2538 \
-sensniff/openmote-cc2538 \
-hello-world/openmote-cc2538 \
-rpl-udp/openmote-cc2538 \
-dev/gpio-hal/openmote-cc2538 \
-dev/leds/openmote-cc2538 \
-rpl-border-router/openmote-cc2538 \
-libs/ipv6-hooks/openmote-cc2538 \
-libs/shell/openmote-cc2538 \
-libs/simple-energest/openmote-cc2538 \
-libs/deployment/openmote-cc2538 \
-6tisch/simple-node/openmote-cc2538 \
-6tisch/simple-node/openmote-cc2538:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
+mqtt-client/openmote:BOARD=openmote-cc2538 \
+mqtt-client/openmote:BOARD=openmote-b \
+storage/cfs-coffee/openmote:BOARD=openmote-cc2538 \
+storage/cfs-coffee/openmote:BOARD=openmote-b \
+sensniff/openmote \
+hello-world/openmote:BOARD=openmote-cc2538 \
+hello-world/openmote:BOARD=openmote-b \
+rpl-udp/openmote:BOARD=openmote-cc2538 \
+rpl-udp/openmote:BOARD=openmote-b \
+dev/gpio-hal/openmote:BOARD=openmote-cc2538 \
+dev/gpio-hal/openmote:BOARD=openmote-b \
+dev/leds/openmote:BOARD=openmote-cc2538 \
+dev/leds/openmote:BOARD=openmote-b \
+rpl-border-router/openmote:BOARD=openmote-cc2538 \
+rpl-border-router/openmote:BOARD=openmote-b \
+libs/ipv6-hooks/openmote \
+libs/shell/openmote \
+libs/simple-energest/openmote \
+libs/deployment/openmote \
+6tisch/simple-node/openmote \
+6tisch/simple-node/openmote:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
 
 TOOLS=
 

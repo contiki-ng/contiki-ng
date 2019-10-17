@@ -18,8 +18,7 @@ endif
 CONTIKI_TARGET_SOURCEFILES += $(ARCH) $(UIPDRIVERS)
 
 MCU=msp430f1611
-include $(ARCH_PATH)/cpu/msp430/Makefile.msp430
-
+include $(CONTIKI_NG_RELOC_CPU_DIR)/msp430/Makefile.msp430
 
 ifdef IAR
 LDFLAGSNO += -xm "$(IAR_PATH)/lib/dlib/dl430fn.r43" -f "$(IAR_PATH)/config/lnk430f1611.xcl"
@@ -31,17 +30,17 @@ NUMPAR=20
 # Check if we are running under Windows
 ifeq ($(HOST_OS),Windows)
   USBDEVPREFIX=/dev/com
-  SERIALDUMP = $(CONTIKI)/tools/sky/serialdump-windows
-  MOTELIST = $(CONTIKI)/tools/sky/motelist-windows
+  SERIALDUMP = $(CONTIKI_NG_TOOLS_DIR)/sky/serialdump-windows
+  MOTELIST = $(CONTIKI_NG_TOOLS_DIR)/sky/motelist-windows
   TMOTE_BSL_FILE = tmote-bsl
-  TMOTE_BSL=$(if $(wildcard $(CONTIKI)/tools/sky/$(TMOTE_BSL_FILE).exe),1,0)
+  TMOTE_BSL=$(if $(wildcard $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE).exe),1,0)
   ifeq ($(TMOTE_BSL), 1)
     NUMPAR = 1
-    BSL =  $(CONTIKI)/tools/sky/$(TMOTE_BSL_FILE)
+    BSL =  $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE)
     MOTES = $(shell $(MOTELIST) | grep COM | \
        cut -f 4 -d \  )
   else
-    BSL = $(CONTIKI)/tools/sky/msp430-bsl-windows --telosb
+    BSL = $(CONTIKI_NG_TOOLS_DIR)/sky/msp430-bsl-windows --telosb
     BSL_FILETYPE = -I
     MOTES = $(shell $(MOTELIST) | grep COM | \
        cut -f 4 -d \  | \
@@ -54,15 +53,15 @@ else
 ifeq ($(HOST_OS),Darwin)
   ifndef MOTELIST
     USBDEVPREFIX=
-    MOTELIST = $(CONTIKI)/tools/sky/motelist-macos
+    MOTELIST = $(CONTIKI_NG_TOOLS_DIR)/sky/motelist-macos
     TMOTE_BSL_FILE = tmote-bsl-linux
-    TMOTE_BSL=$(if $(wildcard $(CONTIKI)/tools/sky/$(TMOTE_BSL_FILE)),1,0)
+    TMOTE_BSL=$(if $(wildcard $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE)),1,0)
     ifeq ($(TMOTE_BSL), 1)
-      PATH := $(PATH):$(CONTIKI)/tools/sky
-      BSL =  $(CONTIKI)/tools/sky/$(TMOTE_BSL_FILE)
+      PATH := $(PATH):$(CONTIKI_NG_TOOLS_DIR)/sky
+      BSL =  $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE)
       NUMPAR = 1
     else
-      BSL = $(CONTIKI)/tools/sky/msp430-bsl-linux --telosb
+      BSL = $(CONTIKI_NG_TOOLS_DIR)/sky/msp430-bsl-linux --telosb
       BSL_FILETYPE = -I
     endif
     MOTES = $(shell $(MOTELIST) 2>&- | grep usbserial | \
@@ -74,15 +73,15 @@ else
   # Else we assume Linux
   ifndef MOTELIST
     USBDEVPREFIX=
-    MOTELIST = $(CONTIKI)/tools/sky/motelist-linux
+    MOTELIST = $(CONTIKI_NG_TOOLS_DIR)/sky/motelist-linux
     TMOTE_BSL_FILE = tmote-bsl-linux
-    TMOTE_BSL=$(if $(wildcard $(CONTIKI)/tools/sky/$(TMOTE_BSL_FILE)),1,0)
+    TMOTE_BSL=$(if $(wildcard $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE)),1,0)
     ifeq ($(TMOTE_BSL), 1)
-      PATH := $(PATH):$(CONTIKI)/tools/sky
-      BSL =  $(CONTIKI)/tools/sky/$(TMOTE_BSL_FILE)
+      PATH := $(PATH):$(CONTIKI_NG_TOOLS_DIR)/sky
+      BSL =  $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE)
       NUMPAR = 1
     else
-      BSL = $(CONTIKI)/tools/sky/msp430-bsl-linux --telosb
+      BSL = $(CONTIKI_NG_TOOLS_DIR)/sky/msp430-bsl-linux --telosb
       BSL_FILETYPE = -I
     endif
     ifdef MOTEIDS
@@ -150,23 +149,17 @@ sky-r.%:
 	$(BSL) -c $(subst _,/,$*) -r
 
 sizeplot:
-	msp430-size $(OBJECTDIR)/*.o | $(CONTIKI)/tools/sky/check-size > size-data
-	gnuplot $(CONTIKI)/tools/sky/plot-size
+	msp430-size $(OBJECTDIR)/*.o | $(CONTIKI_NG_TOOLS_DIR)/sky/check-size > size-data
+	gnuplot $(CONTIKI_NG_TOOLS_DIR)/sky/plot-size
 	gv size.pdf
 
 winslip:
 ifdef INTERFACE
-	$(CONTIKI)/tools/wpcapslip/wpcapslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) $(INTERFACE) 172.16.0.0 255.255.0.0
+	$(CONTIKI_NG_TOOLS_DIR)/wpcapslip/wpcapslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) $(INTERFACE) 172.16.0.0 255.255.0.0
 else
 	@echo "Usage: \"$(MAKE) $@ INTERFACE=<the IP address of a local network interface>\""
 	@echo "Use the \"ipconfig\" command to find out the IP addresses of the local interfaces"
 endif
-
-linslip: $(CONTIKI)/tools/tunslip
-	$(CONTIKI)/tools/tunslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) 172.16.0.0 255.255.0.0
-
-$(CONTIKI)/tools/tunslip:
-	(cd $(CONTIKI)/tools; $(MAKE) tunslip)
 
 ifdef MOTE
   PORT = $(USBDEVPREFIX)$(word $(MOTE), $(CMOTES))

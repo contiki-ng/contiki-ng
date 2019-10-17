@@ -76,9 +76,9 @@ acked(struct tcp_socket *s)
        outputbuf_lastsent */
 
     if(s->output_data_send_nxt > 0) {
-      memcpy(&s->output_data_ptr[0],
-             &s->output_data_ptr[s->output_data_send_nxt],
-             s->output_data_maxlen - s->output_data_send_nxt);
+      memmove(&s->output_data_ptr[0],
+              &s->output_data_ptr[s->output_data_send_nxt],
+              s->output_data_maxlen - s->output_data_send_nxt);
     }
     if(s->output_data_len < s->output_data_send_nxt) {
       PRINTF("tcp: acked assertion failed s->output_data_len (%d) < s->output_data_send_nxt (%d)\n",
@@ -350,7 +350,7 @@ tcp_socket_send(struct tcp_socket *s,
 
   len = MIN(datalen, s->output_data_maxlen - s->output_data_len);
 
-  memcpy(&s->output_data_ptr[s->output_data_len], data, len);
+  memmove(&s->output_data_ptr[s->output_data_len], data, len);
   s->output_data_len += len;
 
   if(s->output_senddata_len == 0) {

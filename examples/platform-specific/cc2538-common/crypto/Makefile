@@ -3,7 +3,7 @@ CONTIKI_PROJECT += sha256-test
 
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_ONLY = cc2538dk openmote-cc2538 zoul
+PLATFORMS_ONLY = cc2538dk openmote zoul
 
 CONTIKI = ../../../..
 include $(CONTIKI)/Makefile.include

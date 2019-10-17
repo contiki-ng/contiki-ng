@@ -65,6 +65,8 @@
 #include "dev/pir-sensor.h"
 #include "dev/vib-sensor.h"
 #include "dev/moteid.h"
+#include "dev/button-hal.h"
+#include "dev/gpio-hal.h"
 
 #include "sys/node-id.h"
 #include "services/rpl-border-router/rpl-border-router.h"
@@ -128,7 +130,9 @@ long referenceVar;
  */
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
-
+/*---------------------------------------------------------------------------*/
+/* Needed since the new LEDs API does not provide this prototype */
+void leds_arch_init(void);
 /*---------------------------------------------------------------------------*/
 static void
 rtimer_thread_loop(void *data)
@@ -166,6 +170,8 @@ set_lladdr(void)
 void
 platform_init_stage_one()
 {
+  gpio_hal_init();
+  leds_arch_init();
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -173,6 +179,7 @@ void
 platform_init_stage_two()
 {
   set_lladdr();
+  button_hal_init();
 }
 /*---------------------------------------------------------------------------*/
 void

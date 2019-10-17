@@ -2,10 +2,10 @@
 
 CONTIKI_TARGET_SOURCEFILES += contiki-z1-platform.c 
 
-include $(ARCH_PATH)/platform/z1/Makefile.common
+include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/z1/Makefile.common
 
 ifeq ($(ZOLERTIA_Z1SP),1)
-include $(ARCH_PATH)/platform/z1/Makefile.z1sp
+include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/z1/Makefile.z1sp
 endif
 
 MODULES += arch/dev/cc2420 os/storage/cfs

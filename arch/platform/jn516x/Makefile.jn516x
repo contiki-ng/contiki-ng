@@ -21,13 +21,15 @@ DISABLE_LTO ?= 1
 # can be set to SW or HW
 DEBUG ?= None
 
+JN516X_TOOLS_DIR = $(CONTIKI_NG_TOOLS_DIR)/jn516x
+
 ifeq ($(HOST_OS),Windows)
   SDK_BASE_DIR ?= C:/NXP/bstudio_nxp/sdk/JN-SW-4163
   FLASH_PROGRAMMER ?= ${SDK_BASE_DIR}/Tools/flashprogrammer/FlashCLI.exe
 else
   # Assume Linux
   SDK_BASE_DIR ?= /usr/jn516x-sdk/JN-SW-4163
-  FLASH_PROGRAMMER ?= $(CONTIKI)/tools/jn516x/JennicModuleProgrammer
+  FLASH_PROGRAMMER ?= $(JN516X_TOOLS_DIR)/JennicModuleProgrammer
 endif
 
 ifeq (,$(wildcard $(SDK_BASE_DIR)/*))
