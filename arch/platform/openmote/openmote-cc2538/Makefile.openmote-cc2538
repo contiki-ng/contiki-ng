@@ -1,0 +1,6 @@
+### Allow the OpenMote-CC2538 platform to support different CC2538 chip revisions
+ifeq ($(findstring REV_A1,$(BOARD_REVISION)),REV_A1)
+    CFLAGS += -DCC2538_DEV_CONF=CC2538_DEV_CC2538SF23
+endif
+
+BSL_FLAGS += --bootloader-invert-lines

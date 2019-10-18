@@ -1,0 +1,10 @@
+/**
+ * \defgroup openmote-platform Openmote-based platform
+ * The OpenMote platform is based on the CC2538 by Texas Instruments
+ * based on an ARM Cortex-M3 core and a IEEE 802.15.4 radio.
+ *
+ * The OpenMote platform was designed at UC Berkeley in 2013 and
+ * is comercialized by OpenMote Technologies since 2014. It is the first
+ * commercial platform based on the TI CC2538 SoC.
+ * \ingroup cc2538-platforms
+ */
