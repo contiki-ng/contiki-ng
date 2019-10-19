@@ -121,14 +121,43 @@ typedef enum {
 } mqtt_vhdr_connack_flags_t;
 
 /*---------------------------------------------------------------------------*/
-#if MQTT_311
 typedef enum {
   MQTT_SUBACK_RET_QOS_0 = 0x00,
   MQTT_SUBACK_RET_QOS_1 = 0x01,
   MQTT_SUBACK_RET_QOS_2 = 0x02,
   MQTT_SUBACK_RET_FAIL  = 0x08,
 } mqtt_suback_ret_code_t;
-#endif
+/*---------------------------------------------------------------------------*/
+/* MQTTv5.0 VHDR Properties */
+typedef enum {
+  MQTT_VHDR_PROP_PAYLOAD_FMT_IND    = 0x01,
+  MQTT_VHDR_PROP_MSG_EXP_INT        = 0x02,
+  MQTT_VHDR_PROP_CONTENT_TYPE       = 0x03,
+  MQTT_VHDR_PROP_RESP_TOPIC         = 0x08,
+  MQTT_VHDR_PROP_CORRELATION_DATA   = 0x09,
+  MQTT_VHDR_PROP_SUB_ID             = 0x0B,
+  MQTT_VHDR_PROP_SESS_EXP_INT       = 0x11,
+  MQTT_VHDR_PROP_ASSIGNED_CLIENT_ID = 0x12,
+  MQTT_VHDR_PROP_SERVER_KEEP_ALIVE  = 0x13,
+  MQTT_VHDR_PROP_AUTH_METHOD        = 0x15,
+  MQTT_VHDR_PROP_AUTH_DATA          = 0x16,
+  MQTT_VHDR_PROP_REQ_PROBLEM_INFO   = 0x17,
+  MQTT_VHDR_PROP_WILL_DELAY_INT     = 0x18,
+  MQTT_VHDR_PROP_REQ_RESP_INFO      = 0x19,
+  MQTT_VHDR_PROP_RESP_INFO          = 0x1A,
+  MQTT_VHDR_PROP_SERVER_REFERENCE   = 0x1C,
+  MQTT_VHDR_PROP_REASON_STRING      = 0x1F,
+  MQTT_VHDR_PROP_RECEIVE_MAX        = 0x21,
+  MQTT_VHDR_PROP_TOPIC_ALIAS_MAX    = 0x22,
+  MQTT_VHDR_PROP_TOPIC_ALIAS        = 0x23,
+  MQTT_VHDR_PROP_MAX_QOS            = 0x24,
+  MQTT_VHDR_PROP_RETAIN_AVAIL       = 0x25,
+  MQTT_VHDR_PROP_USER_PROP          = 0x26,
+  MQTT_VHDR_PROP_MAX_PKT_SZ         = 0x27,
+  MQTT_VHDR_PROP_WILD_SUB_AVAIL     = 0x28,
+  MQTT_VHDR_PROP_SUB_ID_AVAIL       = 0x29,
+  MQTT_VHDR_PROP_SHARED_SUB_AVAIL   = 0x2A,
+} mqtt_vhdr_prop_t;
 /*---------------------------------------------------------------------------*/
 #if MQTT_31
 /* Len MSB(0)
