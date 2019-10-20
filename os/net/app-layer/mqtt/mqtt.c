@@ -450,6 +450,48 @@ write_bytes(struct mqtt_connection *conn, uint8_t *data, uint16_t len)
   }
 }
 /*---------------------------------------------------------------------------*/
+static uint8_t
+decode_var_byte_int(const uint8_t *input_data_ptr,
+                    int input_data_len,
+                    uint32_t *input_pos,
+                    uint32_t *pkt_byte_count,
+                    uint16_t *dest
+                    )
+{
+  uint8_t read_bytes = 0;
+  uint8_t byte_in;
+  uint8_t multiplier = 1;
+  uint32_t input_pos_0 = 0;
+
+  if(input_pos == NULL) {
+    input_pos = &input_pos_0;
+  }
+
+  do {
+    if(*input_pos >= input_data_len) {
+      return 0;
+    }
+
+    byte_in = input_data_ptr[*input_pos];
+    (*input_pos)++;
+    if(pkt_byte_count) {
+    (*pkt_byte_count)++;
+    }
+    read_bytes++;
+    DBG("MQTT - Read Variable Byte Integer byte\n");
+
+    if(read_bytes > 4) {
+      DBG("Received more than 4 byte 'Variable Byte Integer'.");
+      return 0;
+    }
+
+    *dest += (byte_in & 127) * multiplier;
+    multiplier *= 128;
+  } while((byte_in & 128) != 0);
+
+  return read_bytes;
+}
+/*---------------------------------------------------------------------------*/
 static void
 encode_remaining_length(uint8_t *remaining_length,
                         uint8_t *remaining_length_bytes,
@@ -495,7 +537,6 @@ static void
 reset_packet(struct mqtt_in_packet *packet)
 {
   memset(packet, 0, sizeof(struct mqtt_in_packet));
-  packet->remaining_multiplier = 1;
 }
 /*---------------------------------------------------------------------------*/
 static
@@ -1092,8 +1133,8 @@ tcp_input(struct tcp_socket *s,
   struct mqtt_connection *conn = ptr;
   uint32_t pos = 0;
   uint32_t copy_bytes = 0;
-  uint8_t byte;
   mqtt_pub_status_t pub_status;
+  uint8_t remaining_length_bytes;
 
   if(input_data_len == 0) {
     return 0;
@@ -1119,26 +1160,15 @@ tcp_input(struct tcp_socket *s,
 
   /* Read the Remaining Length field, if we do not have it */
   if(!conn->in_packet.has_remaining_length) {
-    do {
-      if(pos >= input_data_len) {
-        return 0;
-      }
+    remaining_length_bytes =
+      decode_var_byte_int(input_data_ptr, input_data_len, &pos,
+                          &conn->in_packet.byte_counter,
+                          &conn->in_packet.remaining_length);
 
-      byte = input_data_ptr[pos++];
-      conn->in_packet.byte_counter++;
-      conn->in_packet.remaining_length_bytes++;
-      DBG("MQTT - Read Remaining Length byte\n");
-
-      if(conn->in_packet.byte_counter > 5) {
-        call_event(conn, MQTT_EVENT_ERROR, NULL);
-        DBG("Received more then 4 byte 'remaining lenght'.");
-        return 0;
-      }
-
-      conn->in_packet.remaining_length +=
-        (byte & 127) * conn->in_packet.remaining_multiplier;
-      conn->in_packet.remaining_multiplier *= 128;
-    } while((byte & 128) != 0);
+    if(remaining_length_bytes == 0) {
+      call_event(conn, MQTT_EVENT_ERROR, NULL);
+      return 0;
+    }
 
     DBG("MQTT - Finished reading remaining length byte\n");
     conn->in_packet.has_remaining_length = 1;
