@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Yasuyuki Tanaka
+ * Copyright (c) 2019, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _COMMON_H
-#define _COMMON_H
+/**
+ * \file
+ *         SAX implementation proposed in:
+ *         Ramakrishna, M. and J. Zobel, "Performance in Practice of
+ *         String Hashing Functions", DASFAA , 1997.
+ * \author
+ *         Yasuyuki Tanaka <yasuyuki.tanaka@inria.fr>
+ */
 
-#include "unit-test/unit-test.h"
+#include <stddef.h>
+#include <stdint.h>
 
-void test_print_report(const unit_test_t *utp);
-void test_mac_invoke_sent_callback(int status, int num_tx);
-uint8_t test_mac_send_function_is_called(void);
-extern const struct mac_driver test_mac_driver;
+/*---------------------------------------------------------------------------*/
+uint16_t
+sax(uint16_t table_size, const uint8_t *input_str, size_t str_len,
+    uint16_t h0, uint16_t left_shift_bits, uint16_t right_shift_bits)
+{
+  uint16_t h = h0;
 
-#endif /* !_COMMON_H */
+  for(int i = 0; i < str_len; i++) {
+    h ^= (h << left_shift_bits) + (h >> right_shift_bits) + input_str[i];
+  }
+
+  return h % table_size;
+}
+/*---------------------------------------------------------------------------*/

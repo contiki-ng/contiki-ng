@@ -64,6 +64,9 @@ frequency hopping for enhanced reliability.
 #if UIP_CONF_IPV6_RPL
 #include "net/mac/tsch/tsch-rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
+#if BUILD_WITH_MSF
+#include "services/msf/msf.h"
+#endif /* BUILD_WITH_MSF */
 
 
 /* Include Arch-Specific conf */

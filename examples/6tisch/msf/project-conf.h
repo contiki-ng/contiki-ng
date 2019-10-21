@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Yasuyuki Tanaka
+ * Copyright (c) 2019, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,21 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _COMMON_H
-#define _COMMON_H
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
-#include "unit-test/unit-test.h"
+#define SIXTOP_CONF_MAX_TRANSACTIONS 2
 
-void test_print_report(const unit_test_t *utp);
-void test_mac_invoke_sent_callback(int status, int num_tx);
-uint8_t test_mac_send_function_is_called(void);
-extern const struct mac_driver test_mac_driver;
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 101
+#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE TSCH_HOPPING_SEQUENCE_16_16
+#define TSCH_CONF_WITH_SIXTOP 1
+#define TSCH_CONF_BURST_MAX_LEN 0
 
-#endif /* !_COMMON_H */
+#define LOG_CONF_LEVEL_MAC LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_6TOP LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_RPL LOG_LEVEL_INFO
+
+#define APP_UDP_PORT 1000
+#define APP_SEND_INTERVAL (1 * CLOCK_SECOND)
+
+#endif /* PROJECT_CONF_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Yasuyuki Tanaka
+ * Copyright (c) 2019, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,32 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _COMMON_H
-#define _COMMON_H
+/**
+ * \file
+ *         MSF Autonomous Cell APIs
+ * \author
+ *         Yasuyuki Tanaka <yasuyuki.tanaka@inria.fr>
+ */
 
-#include "unit-test/unit-test.h"
+#ifndef MSF_AUTONOMOUS_CELL_H
+#define MSF_AUTONOMOUS_CELL_H
 
-void test_print_report(const unit_test_t *utp);
-void test_mac_invoke_sent_callback(int status, int num_tx);
-uint8_t test_mac_send_function_is_called(void);
-extern const struct mac_driver test_mac_driver;
+#include <stddef.h>
 
-#endif /* !_COMMON_H */
+#include <net/linkaddr.h>
+#include <net/mac/tsch/tsch.h>
+
+/**
+ * \brief Autonomous Cell Types
+ */
+typedef enum {
+  MSF_AUTONOMOUS_RX_CELL,
+  MSF_AUTONOMOUS_TX_CELL,
+} msf_autonomous_cell_type_t;
+
+struct tsch_link *msf_autonomous_cell_add(msf_autonomous_cell_type_t type,
+                                          const linkaddr_t *mac_addr);
+
+void msf_autonomous_cell_delete(struct tsch_link *autonomous_cell);
+
+#endif /* !MSF_AUTONOMOUS_CELL_H */

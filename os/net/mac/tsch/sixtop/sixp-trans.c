@@ -73,7 +73,6 @@ typedef struct sixp_trans {
 static void handle_trans_timeout(void *ptr);
 static void process_trans(void *ptr);
 static void schedule_trans_process(sixp_trans_t *trans);
-static void free_trans(sixp_trans_t *trans);
 static sixp_trans_mode_t determine_trans_mode(const sixp_pkt_t *req);
 
 MEMB(trans_memb, sixp_trans_t, SIXTOP_MAX_TRANSACTIONS);
@@ -124,7 +123,7 @@ process_trans(void *ptr)
     LOG_INFO("6P-trans: trans [peer_addr:");
     LOG_INFO_LLADDR((const linkaddr_t *)&trans->peer_addr);
     LOG_INFO_(", seqno:%u] is going to be freed\n", trans->seqno);
-    free_trans(trans);
+    sixp_trans_free(trans);
     return;
   }
 
@@ -163,16 +162,35 @@ schedule_trans_process(sixp_trans_t *trans)
   ctimer_set(&trans->timer, 0, process_trans, trans); /* expires immediately */
 }
 /*---------------------------------------------------------------------------*/
-static void
-free_trans(sixp_trans_t *trans)
+void
+sixp_trans_free(sixp_trans_t *trans)
 {
   assert(trans != NULL);
   if(trans == NULL) {
     return;
   }
 
-  list_remove(trans_list, trans);
-  memb_free(&trans_memb, trans);
+  if (trans->state == SIXP_TRANS_STATE_WAIT_FREE) {
+    trans->state = SIXP_TRANS_STATE_UNAVAILABLE;
+  } else {
+    /* stop the timer that may still be running */
+    ctimer_stop(&trans->timer);
+    /*
+     * remove this trans from the list so that a new trans can be
+     * started with the same peer
+     */
+    list_remove(trans_list, trans);
+  }
+
+  if(trans->state == SIXP_TRANS_STATE_REQUEST_SENDING ||
+     trans->state == SIXP_TRANS_STATE_RESPONSE_SENDING ||
+     trans->state == SIXP_TRANS_STATE_CONFIRMATION_SENDING) {
+    /* memory is freed later, when mac_callback in sixp.c is called */
+    trans->state = SIXP_TRANS_STATE_WAIT_FREE;
+  } else {
+    memset(trans, 0, sizeof(sixp_trans_t));
+    memb_free(&trans_memb, trans);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static sixp_trans_mode_t
@@ -206,68 +224,86 @@ int
 sixp_trans_transit_state(sixp_trans_t *trans, sixp_trans_state_t new_state)
 {
   sixp_nbr_t *nbr;
+  int ret_val;
 
   assert(trans != NULL);
-  if(trans == NULL) {
-    LOG_ERR("6top: invalid argument, trans is NULL\n");
-    return -1;
-  }
-
+  assert(new_state != SIXP_TRANS_STATE_UNAVAILABLE);
   /* enforce state transition rules  */
-  if(new_state == SIXP_TRANS_STATE_TERMINATING ||
-     (new_state == SIXP_TRANS_STATE_REQUEST_SENT &&
-      trans->state == SIXP_TRANS_STATE_INIT) ||
-     (new_state == SIXP_TRANS_STATE_REQUEST_RECEIVED &&
-      trans->state == SIXP_TRANS_STATE_INIT) ||
-     (new_state == SIXP_TRANS_STATE_RESPONSE_SENT &&
-      trans->state == SIXP_TRANS_STATE_REQUEST_RECEIVED) ||
-     (new_state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
-      trans->state == SIXP_TRANS_STATE_REQUEST_SENT) ||
-     (new_state == SIXP_TRANS_STATE_CONFIRMATION_RECEIVED &&
-      trans->state == SIXP_TRANS_STATE_RESPONSE_SENT &&
-      trans->mode == SIXP_TRANS_MODE_3_STEP) ||
-     (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENT &&
-      trans->state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
-      trans->mode == SIXP_TRANS_MODE_3_STEP)) {
-    LOG_INFO("6P-trans: trans %p state changes from %u to %u\n",
-             trans, trans->state, new_state);
+  if(trans != NULL &&
+     (new_state == SIXP_TRANS_STATE_TERMINATING ||
+      (new_state == SIXP_TRANS_STATE_REQUEST_SENDING &&
+       trans->state == SIXP_TRANS_STATE_INIT) ||
+      (new_state == SIXP_TRANS_STATE_REQUEST_SENT &&
+       trans->state == SIXP_TRANS_STATE_REQUEST_SENDING) ||
+      (new_state == SIXP_TRANS_STATE_REQUEST_RECEIVED &&
+       trans->state == SIXP_TRANS_STATE_INIT) ||
+      (new_state == SIXP_TRANS_STATE_RESPONSE_SENDING &&
+       trans->state == SIXP_TRANS_STATE_REQUEST_RECEIVED) ||
+      (new_state == SIXP_TRANS_STATE_RESPONSE_SENT &&
+       trans->state == SIXP_TRANS_STATE_RESPONSE_SENDING) ||
+      (new_state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
+       (trans->state == SIXP_TRANS_STATE_REQUEST_SENDING ||
+        trans->state == SIXP_TRANS_STATE_REQUEST_SENT)) ||
+      (new_state == SIXP_TRANS_STATE_CONFIRMATION_RECEIVED &&
+       (trans->state == SIXP_TRANS_STATE_RESPONSE_SENT ||
+        trans->state == SIXP_TRANS_STATE_RESPONSE_SENDING) &&
+       trans->mode == SIXP_TRANS_MODE_3_STEP) ||
+      (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENDING &&
+       trans->state == SIXP_TRANS_STATE_RESPONSE_RECEIVED &&
+       trans->mode == SIXP_TRANS_MODE_3_STEP) ||
+      (new_state == SIXP_TRANS_STATE_CONFIRMATION_SENT &&
+       trans->state == SIXP_TRANS_STATE_CONFIRMATION_SENDING &&
+       trans->mode == SIXP_TRANS_MODE_3_STEP))) {
+      LOG_INFO("6P-trans: trans %p state changes from %u to %u\n",
+               trans, trans->state, new_state);
 
-    if(new_state == SIXP_TRANS_STATE_REQUEST_SENT) {
-      /*
-       * that is, the request is acknowledged by the peer; increment
-       * next_seqno
-       */
-      if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
-        LOG_ERR("6top: cannot increment next_seqno\n");
-      } else {
-        if(trans->cmd == SIXP_PKT_CMD_CLEAR) {
-          /* next_seqno must have been reset to 0 already. */
+      if(new_state == SIXP_TRANS_STATE_REQUEST_SENT) {
+        /* next_seqno should have been updated in sixp_output() */
+      } else if(new_state == SIXP_TRANS_STATE_RESPONSE_SENT) {
+        if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
+          LOG_ERR("6top: cannot update next_seqno\n");
+        } else if(trans->cmd == SIXP_PKT_CMD_CLEAR) {
+          /* next_seqno must have been reset to 0 already; keep it */
           assert(sixp_nbr_get_next_seqno(nbr) == 0);
         } else {
+          /* override next_seqno with the one in the request */
+          sixp_nbr_set_next_seqno(nbr, trans->seqno);
           sixp_nbr_increment_next_seqno(nbr);
         }
       }
-    } else if(new_state == SIXP_TRANS_STATE_RESPONSE_SENT) {
-      if((nbr = sixp_nbr_find(&trans->peer_addr)) == NULL) {
-        LOG_ERR("6top: cannot update next_seqno\n");
-      } else {
-        /* override next_seqno with the received one unless it's zero */
-        if(trans->seqno != 0) {
-          sixp_nbr_set_next_seqno(nbr, trans->seqno);
-        }
-        sixp_nbr_increment_next_seqno(nbr);
-      }
+      trans->state = new_state;
+      schedule_trans_process(trans);
+      ret_val = 0;
+  } else if (trans != NULL){
+    /* invalid transition */
+    LOG_ERR("6P-trans: invalid transition, from %u to %u, on trans %p\n",
+            trans->state, new_state, trans);
+    /* inform the corresponding SF */
+    assert(trans->sf != NULL);
+    if(trans->sf->error != NULL) {
+      trans->sf->error(SIXP_ERROR_INVALID_TRANS_STATE_TRANSITION,
+                sixp_trans_get_cmd(trans),
+                sixp_trans_get_seqno(trans),
+                sixp_trans_get_peer_addr(trans));
     }
-
-    trans->state = new_state;
-    schedule_trans_process(trans);
-    return 0;
+    ret_val = -1;
+  } else {
+    /* trans == NULL */
+    LOG_ERR("6top: invalid argument, trans is NULL\n");
+    ret_val = -1;
   }
-
-  /* invalid transition */
-  LOG_ERR("6P-trans: invalid transaction, from %u to %u, detected on trans %p\n",
-          trans->state, new_state, trans);
-  return -1;
+  return ret_val;
+}
+/*---------------------------------------------------------------------------*/
+const sixtop_sf_t *
+sixp_trans_get_sf(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return NULL;
+  } else {
+    return trans->sf;
+  }
 }
 /*---------------------------------------------------------------------------*/
 sixp_pkt_cmd_t
@@ -310,6 +346,17 @@ sixp_trans_get_mode(sixp_trans_t *trans)
     return SIXP_TRANS_STATE_UNAVAILABLE;
   }
   return trans->mode;
+}
+/*---------------------------------------------------------------------------*/
+const linkaddr_t *
+sixp_trans_get_peer_addr(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return NULL;
+  } else {
+    return (const linkaddr_t *)&trans->peer_addr;
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -407,6 +454,37 @@ sixp_trans_find(const linkaddr_t *peer_addr)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+void
+sixp_trans_terminate(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return;
+  } else {
+    sixp_trans_transit_state(trans, SIXP_TRANS_STATE_TERMINATING);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+sixp_trans_abort(sixp_trans_t *trans)
+{
+  assert(trans != NULL);
+  if(trans == NULL) {
+    return;
+  } else {
+    LOG_INFO("6P-trans: trans [peer_addr:");
+    LOG_INFO_LLADDR((const linkaddr_t *)&trans->peer_addr);
+    LOG_INFO_(", seqno:%u] is going to be aborted\n", trans->seqno);
+    sixp_trans_terminate(trans);
+    sixp_trans_invoke_callback(trans, SIXP_OUTPUT_STATUS_ABORTED);
+    /* process_trans() should be scheduled, which we will be stop */
+    assert(ctimer_expired(&trans->timer) == 0);
+    ctimer_stop(&trans->timer);
+    /* call process_trans() directly*/
+    process_trans((void *)trans);
+  }
+}
+/*---------------------------------------------------------------------------*/
 int
 sixp_trans_init(void)
 {
@@ -417,7 +495,7 @@ sixp_trans_init(void)
       trans != NULL; trans = next_trans) {
     next_trans = trans->next;
     ctimer_stop(&trans->timer);
-    free_trans(trans);
+    sixp_trans_free(trans);
   }
 
   list_init(trans_list);

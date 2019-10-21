@@ -48,6 +48,11 @@
 #include "net/nbr-table.h"
 #include "net/ipv6/uiplib.h"
 
+#if BUILD_WITH_MSF
+/* This inclusion is for RPL_CALLBACK_PARENT_SWITCH */
+#include "services/msf/msf.h"
+#endif /* BUILD_WITH_MSF */
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "RPL"

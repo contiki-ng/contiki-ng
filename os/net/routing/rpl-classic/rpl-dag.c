@@ -61,6 +61,11 @@
 #include <limits.h>
 #include <string.h>
 
+#if BUILD_WITH_MSF
+/* This inclusion is for RPL_CALLBACK_PARENT_SWITCH */
+#include "services/msf/msf.h"
+#endif /* BUILD_WITH_MSF */
+
 #define LOG_MODULE "RPL"
 #define LOG_LEVEL LOG_LEVEL_RPL
 

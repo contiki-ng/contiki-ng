@@ -613,5 +613,6 @@ const sixtop_sf_t sf_simple_driver = {
   CLOCK_SECOND,
   NULL,
   input,
+  NULL,
   NULL
 };

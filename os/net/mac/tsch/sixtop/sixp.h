@@ -64,7 +64,8 @@
  */
 typedef enum {
   SIXP_OUTPUT_STATUS_SUCCESS, /**< SUCCESS */
-  SIXP_OUTPUT_STATUS_FAILURE  /**< FAILURE */
+  SIXP_OUTPUT_STATUS_FAILURE, /**< FAILURE */
+  SIXP_OUTPUT_STATUS_ABORTED  /**< ABORTED */
 } sixp_output_status_t;
 
 /**

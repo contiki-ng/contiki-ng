@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Yasuyuki Tanaka
+ * Copyright (c) 2019, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,23 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _COMMON_H
-#define _COMMON_H
+/**
+ * \file
+ *         MSF Negotiated Cell APIs
+ * \author
+ *         Yasuyuki Tanaka <yasuyuki.tanaka@inria.fr>
+ */
 
-#include "unit-test/unit-test.h"
+#ifndef MSF_NEGOTIATED_CELL_H
+#define MSF_NEGOTIATED_CELL_H
 
-void test_print_report(const unit_test_t *utp);
-void test_mac_invoke_sent_callback(int status, int num_tx);
-uint8_t test_mac_send_function_is_called(void);
-extern const struct mac_driver test_mac_driver;
+#include <net/linkaddr.h>
+#include <net/mac/tsch/tsch.h>
 
-#endif /* !_COMMON_H */
+void msf_negotiated_cell_update_num_cells_used(uint16_t count);
+void msf_negotiated_cell_update_num_tx(uint16_t slot_offset, uint16_t num_tx,
+                                       uint8_t mac_tx_status);
+void msf_negotiated_cell_set_parent(const linkaddr_t *new_parent);
+void msf_negotiated_cell_remove_all(const linkaddr_t *new_parent);
+
+#endif /* !MSF_NEGOTIATED_CELL_H */

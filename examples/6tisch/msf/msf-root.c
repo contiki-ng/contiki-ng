@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Yasuyuki Tanaka
+ * Copyright (c) 2019, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,32 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _COMMON_H
-#define _COMMON_H
+#include <contiki.h>
+#include <contiki-net.h>
 
-#include "unit-test/unit-test.h"
+#include "net/routing/routing.h"
+#include "net/mac/tsch/sixtop/sixtop.h"
+#include "services/msf/msf.h"
 
-void test_print_report(const unit_test_t *utp);
-void test_mac_invoke_sent_callback(int status, int num_tx);
-uint8_t test_mac_send_function_is_called(void);
-extern const struct mac_driver test_mac_driver;
+PROCESS(msf_root_process, "MSF root");
+AUTOSTART_PROCESSES(&msf_root_process);
 
-#endif /* !_COMMON_H */
+PROCESS_THREAD(msf_root_process, ev, data)
+{
+  static struct udp_socket s;
+  PROCESS_BEGIN();
+
+  if(udp_socket_register(&s, NULL, NULL) < 0 ||
+     udp_socket_bind(&s, APP_UDP_PORT) < 0) {
+    printf("CRITICAL ERROR: socket initialization failed\n");
+    /*
+     * we don't need to process received packets, but we need to have
+     * a socket so as to prevent sending back ICMP error packets
+     */
+  } else {
+    NETSTACK_ROUTING.root_start();
+    sixtop_add_sf(&msf);
+  }
+
+  PROCESS_END();
+}

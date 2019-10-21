@@ -47,13 +47,17 @@
 typedef enum {
   SIXP_TRANS_STATE_UNAVAILABLE = 0,
   SIXP_TRANS_STATE_INIT,
+  SIXP_TRANS_STATE_REQUEST_SENDING,
   SIXP_TRANS_STATE_REQUEST_SENT,
   SIXP_TRANS_STATE_REQUEST_RECEIVED,
+  SIXP_TRANS_STATE_RESPONSE_SENDING,
   SIXP_TRANS_STATE_RESPONSE_SENT,
   SIXP_TRANS_STATE_RESPONSE_RECEIVED,
+  SIXP_TRANS_STATE_CONFIRMATION_SENDING,
   SIXP_TRANS_STATE_CONFIRMATION_SENT,
   SIXP_TRANS_STATE_CONFIRMATION_RECEIVED,
   SIXP_TRANS_STATE_TERMINATING,
+  SIXP_TRANS_STATE_WAIT_FREE,
 } sixp_trans_state_t;
 
 /**
@@ -75,6 +79,13 @@ typedef struct sixp_trans sixp_trans_t;
  */
 int sixp_trans_transit_state(sixp_trans_t *trans,
                              sixp_trans_state_t new_state);
+
+/**
+ * \brief Return the scheduling function associated with a specified transaction
+ * \param trans The pointer to  a transaction
+ * \return Pointer to a scheduling function (sixp_sf_t)
+ */
+const sixtop_sf_t *sixp_trans_get_sf(sixp_trans_t *trans);
 
 /**
  * \brief Return the command associated with a specified transaction
@@ -106,6 +117,13 @@ int16_t sixp_trans_get_seqno(sixp_trans_t *trans);
 sixp_trans_mode_t sixp_trans_get_mode(sixp_trans_t *trans);
 
 /**
+ * \brief Return the peer addr of a specified transaction
+ * \param trans The pointer to a transaction
+ * \return The pointer to the peer addr
+ */
+const linkaddr_t *sixp_trans_get_peer_addr(sixp_trans_t *trans);
+
+/**
  * \brief Invoke the output callback of a specified transaction
  * \param trans The pointer to a transaction
  * \param status An output result value
@@ -133,6 +151,26 @@ void sixp_trans_set_callback(sixp_trans_t *trans,
  */
 sixp_trans_t *sixp_trans_alloc(const sixp_pkt_t *pkt,
                                const linkaddr_t *peer_addr);
+
+/**
+ * \brief Helper function to terminate a transaction
+ * \param trans The pointer to a transaction to terminate
+ */
+void sixp_trans_terminate(sixp_trans_t *trans);
+
+/**
+ * \brief Helper function to abort a transaction immediately
+ * \param trans The pointer to a transaction to terminate
+ */
+void sixp_trans_abort(sixp_trans_t *trans);
+
+/**
+ * \brief Free a transaction
+ * \param trans The pointer to a transaction to be freed
+ * \note This function is for internal use only, which is NOT expected
+ * to be called by a scheduling function, for instance.
+ */
+void sixp_trans_free(sixp_trans_t *trans);
 
 /**
  * \brief Find a transaction

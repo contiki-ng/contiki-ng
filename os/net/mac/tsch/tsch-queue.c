@@ -48,10 +48,12 @@
 */
 
 #include "contiki.h"
+#include "lib/assert.h"
 #include "lib/list.h"
 #include "lib/memb.h"
 #include "lib/random.h"
 #include "net/queuebuf.h"
+#include "net/mac/mac.h"
 #include "net/mac/tsch/tsch.h"
 #include <string.h>
 
@@ -236,30 +238,57 @@ tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
   if(!tsch_is_locked()) {
     n = tsch_queue_add_nbr(addr);
     if(n != NULL) {
-      put_index = ringbufindex_peek_put(&n->tx_ringbuf);
+      if(packetbuf_attr(PACKETBUF_ATTR_PRIORITY) &&
+         ringbufindex_empty(&n->tx_ringbuf) != 0 &&
+         (put_index = ringbufindex_peek_get(&n->tx_ringbuf)) != -1 &&
+         (p = n->tx_array[put_index]) != NULL &&
+         p->qb != NULL &&
+         p->transmissions == 0 &&
+         queuebuf_attr(p->qb, PACKETBUF_ATTR_PRIORITY) == 0) {
+        /*
+         * remove the first "normal" packet for the priority packet if
+         * the first one has not been sent in the air. we need its
+         * seqno and want to keep consistency in sequence numbers we
+         * use for transmitting frames.
+         */
+        LOG_INFO("remove a packet in the TX queue to ");
+        LOG_INFO_LLADDR(addr);
+        LOG_INFO_(" for a priority packet\n");
+        /* set the seqno of the packet to the priority packet */
+        (void)packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,
+                                 queuebuf_attr(p->qb,
+                                               PACKETBUF_ATTR_MAC_SEQNO));
+        /* giving MAX_TX_ERR with the callback to the upper layer */
+        mac_call_sent_callback(p->sent, p->ptr, MAC_TX_ERR, p->transmissions);
+        tsch_queue_free_packet(p);
+        p = NULL;
+        /* we're going to put the packet there */
+      } else {
+        put_index = ringbufindex_peek_put(&n->tx_ringbuf);
+      }
       if(put_index != -1) {
         p = memb_alloc(&packet_memb);
-        if(p != NULL) {
-          /* Enqueue packet */
+      }
+      if(p != NULL) {
+        /* Enqueue packet */
 #ifdef TSCH_CALLBACK_PACKET_READY
-          TSCH_CALLBACK_PACKET_READY();
+        TSCH_CALLBACK_PACKET_READY();
 #endif
-          p->qb = queuebuf_new_from_packetbuf();
-          if(p->qb != NULL) {
-            p->sent = sent;
-            p->ptr = ptr;
-            p->ret = MAC_TX_DEFERRED;
-            p->transmissions = 0;
-            p->max_transmissions = max_transmissions;
-            /* Add to ringbuf (actual add committed through atomic operation) */
-            n->tx_array[put_index] = p;
-            ringbufindex_put(&n->tx_ringbuf);
-            LOG_DBG("packet is added put_index %u, packet %p\n",
-                   put_index, p);
-            return p;
-          } else {
-            memb_free(&packet_memb, p);
-          }
+        p->qb = queuebuf_new_from_packetbuf();
+        if(p->qb != NULL) {
+          p->sent = sent;
+          p->ptr = ptr;
+          p->ret = MAC_TX_DEFERRED;
+          p->transmissions = 0;
+          p->max_transmissions = max_transmissions;
+          /* Add to ringbuf (actual add committed through atomic operation) */
+          n->tx_array[put_index] = p;
+          ringbufindex_put(&n->tx_ringbuf);
+          LOG_DBG("packet is added put_index %u, packet %p\n",
+                  put_index, p);
+          return p;
+        } else {
+          memb_free(&packet_memb, p);
         }
       }
     }
