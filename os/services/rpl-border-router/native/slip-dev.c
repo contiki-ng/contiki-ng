@@ -70,6 +70,7 @@ extern speed_t slip_config_b_rate;
 #define SEND_DELAY 0
 #endif
 
+/* octet delay setting of SLIP in microsecond */
 #ifdef SLIP_DEV_CONF_OCTET_DELAY
 #define OCTET_DELAY SLIP_DEV_CONF_OCTET_DELAY
 #else

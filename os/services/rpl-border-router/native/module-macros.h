@@ -35,8 +35,6 @@
 
 #define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
 
-/* octet delay setting of SLIP in microsecond */
-#define SLIP_DEV_CONF_OCTET_DELAY 1000
 
 #define SERIALIZE_ATTRIBUTES 1
 
