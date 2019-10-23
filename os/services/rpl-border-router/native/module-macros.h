@@ -35,7 +35,6 @@
 
 #define SLIP_DEV_CONF_SEND_DELAY (CLOCK_SECOND / 32)
 
-
 #define SERIALIZE_ATTRIBUTES 1
 
 #define CMD_CONF_OUTPUT border_router_cmd_output
