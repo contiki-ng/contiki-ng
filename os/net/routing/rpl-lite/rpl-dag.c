@@ -55,7 +55,7 @@
 /*---------------------------------------------------------------------------*/
 extern rpl_of_t rpl_of0, rpl_mrhof;
 static rpl_of_t * const objective_functions[] = RPL_SUPPORTED_OFS;
-static int init_dag_from_dio(rpl_dio_t *dio);
+static int process_dio_init_dag(rpl_dio_t *dio);
 
 /*---------------------------------------------------------------------------*/
 /* Allocate instance table. */
@@ -111,7 +111,7 @@ rpl_dag_leave(void)
   /* Forget past link statistics */
   link_stats_reset();
 
-  /* Remove all neighbors and lnks */
+  /* Remove all neighbors, links and default route */
   rpl_neighbor_remove_all();
   uip_sr_free_all();
 
@@ -229,7 +229,9 @@ global_repair_non_root(rpl_dio_t *dio)
     }
     /* Re-initialize configuration from DIO */
     rpl_timers_stop_dag_timers();
-    init_dag_from_dio(dio);
+    rpl_neighbor_set_preferred_parent(NULL);
+    /* This will both re-init the DAG and schedule required timers */
+    process_dio_init_dag(dio);
     rpl_local_repair("Global repair");
   }
 }
@@ -324,7 +326,7 @@ rpl_dag_update_state(void)
     }
 
     /* Parent switch */
-    if(curr_instance.dag.preferred_parent != old_parent) {
+    if(curr_instance.dag.unprocessed_parent_switch) {
       /* We just got a parent (was NULL), reset trickle timer to advertise this */
       if(old_parent == NULL) {
         curr_instance.dag.state = DAG_JOINED;
@@ -350,6 +352,9 @@ rpl_dag_update_state(void)
       if(LOG_INFO_ENABLED) {
         rpl_neighbor_print_list("Parent switch");
       }
+
+      /* Clear unprocessed_parent_switch now that we have processed it */
+      curr_instance.dag.unprocessed_parent_switch = false;
     }
   }
 
@@ -547,7 +552,7 @@ init_dag_from_dio(rpl_dio_t *dio)
 }
 /*---------------------------------------------------------------------------*/
 static int
-process_dio_init_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
+process_dio_init_dag(rpl_dio_t *dio)
 {
 #ifdef RPL_VALIDATE_DIO_FUNC
   if(!RPL_VALIDATE_DIO_FUNC(dio)) {
@@ -596,7 +601,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
   if(!curr_instance.used && !rpl_dag_root_is_root()) {
     /* Attempt to init our DAG from this DIO */
-    if(!process_dio_init_dag(from, dio)) {
+    if(!process_dio_init_dag(dio)) {
       LOG_WARN("failed to init DAG\n");
       return;
     }
