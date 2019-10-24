@@ -1,6 +1,7 @@
 # Setup environment for Docker
 language: generic
 services: docker
+dist: trusty
 notifications:
   email: false
 
@@ -49,7 +50,7 @@ before_install:
 
 # The test script for each build
 script:
-  - docker run --privileged -v $OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST_NAME";
+  - docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -v $OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST_NAME";
   # Check outcome of the test
   - $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST_NAME; exit $?;
 

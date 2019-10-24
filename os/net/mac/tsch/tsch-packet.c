@@ -74,11 +74,11 @@ static struct packetbuf_attr eackbuf_attrs[PACKETBUF_NUM_ATTRS];
 #define IEEE802154_FRAME_PENDING_BIT_OFFSET 4
 
 /*---------------------------------------------------------------------------*/
-static int
+void
 tsch_packet_eackbuf_set_attr(uint8_t type, const packetbuf_attr_t val)
 {
   eackbuf_attrs[type].val = val;
-  return 1;
+  return;
 }
 /*---------------------------------------------------------------------------*/
 /* Return the value of a specified attribute */
@@ -124,14 +124,7 @@ tsch_packet_create_eack(uint8_t *buf, uint16_t buf_len,
 #endif
 
 #if LLSEC802154_ENABLED
-  if(tsch_is_pan_secured) {
-    tsch_packet_eackbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
-                                 TSCH_SECURITY_KEY_SEC_LEVEL_ACK);
-    tsch_packet_eackbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE,
-                                 FRAME802154_1_BYTE_KEY_ID_MODE);
-    tsch_packet_eackbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX,
-                                 TSCH_SECURITY_KEY_INDEX_ACK);
-  }
+  tsch_security_set_packetbuf_attr(FRAME802154_ACKFRAME);
 #endif /* LLSEC802154_ENABLED */
 
   framer_802154_setup_params(tsch_packet_eackbuf_attr, 0, &params);
@@ -356,14 +349,7 @@ tsch_packet_create_eb(uint8_t *hdr_len, uint8_t *tsch_sync_ie_offset)
   packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &tsch_eb_address);
 
 #if LLSEC802154_ENABLED
-  if(tsch_is_pan_secured) {
-    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
-                       TSCH_SECURITY_KEY_SEC_LEVEL_EB);
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE,
-                       FRAME802154_1_BYTE_KEY_ID_MODE);
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX,
-                       TSCH_SECURITY_KEY_INDEX_EB);
-  }
+  tsch_security_set_packetbuf_attr(FRAME802154_BEACONFRAME);
 #endif /* LLSEC802154_ENABLED */
 
   if(NETSTACK_FRAMER.create() < 0) {

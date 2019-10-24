@@ -133,6 +133,15 @@ static clock_time_t tsch_current_eb_period;
 /* Current period for keepalive output */
 static clock_time_t tsch_current_ka_timeout;
 
+/* For scheduling keepalive messages  */
+enum tsch_keepalive_status {
+  KEEPALIVE_SCHEDULING_UNCHANGED,
+  KEEPALIVE_SCHEDULE_OR_STOP,
+  KEEPALIVE_SEND_IMMEDIATELY,
+};
+/* Should we send or schedule a keepalive? */
+static volatile enum tsch_keepalive_status keepalive_status;
+
 /* timer for sending keepalive messages */
 static struct ctimer keepalive_timer;
 
@@ -181,11 +190,7 @@ void
 tsch_set_ka_timeout(uint32_t timeout)
 {
   tsch_current_ka_timeout = timeout;
-  if(timeout == 0) {
-    ctimer_stop(&keepalive_timer);
-  } else {
-    tsch_schedule_keepalive();
-  }
+  tsch_schedule_keepalive(0);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -231,6 +236,7 @@ tsch_reset(void)
   }
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_set_eb_period(TSCH_EB_PERIOD);
+  keepalive_status = KEEPALIVE_SCHEDULING_UNCHANGED;
 }
 /* TSCH keep-alive functions */
 
@@ -266,7 +272,7 @@ resynchronize(const linkaddr_t *original_time_source_addr)
     tsch_queue_update_time_source(&last_eb_nbr_addr);
     tsch_join_priority = last_eb_nbr_jp + 1;
     /* Try to get in sync ASAP */
-    tsch_schedule_keepalive_immediately();
+    tsch_schedule_keepalive(1);
     return 1;
   }
 }
@@ -293,7 +299,7 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
   }
 
   if(schedule_next_keepalive) {
-    tsch_schedule_keepalive();
+    tsch_schedule_keepalive(0);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -301,6 +307,9 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
 static void
 keepalive_send(void *ptr)
 {
+  /* If not here from a timer callback, the timer must be stopped */
+  ctimer_stop(&keepalive_timer);
+
   if(tsch_is_associated) {
     struct tsch_neighbor *n = tsch_queue_get_time_source();
     if(n != NULL) {
@@ -317,25 +326,58 @@ keepalive_send(void *ptr)
   }
 }
 /*---------------------------------------------------------------------------*/
-/* Set ctimer to send a keepalive message after expiration of TSCH_KEEPALIVE_TIMEOUT */
 void
-tsch_schedule_keepalive(void)
+tsch_schedule_keepalive(int immediate)
 {
-  /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
-  if(!tsch_is_coordinator && tsch_is_associated && tsch_current_ka_timeout > 0) {
-    unsigned long delay = (tsch_current_ka_timeout - tsch_current_ka_timeout / 10)
-      + random_rand() % (tsch_current_ka_timeout / 10);
-    ctimer_set(&keepalive_timer, delay, keepalive_send, NULL);
+  if(immediate) {
+    /* send as soon as possible */
+    keepalive_status = KEEPALIVE_SEND_IMMEDIATELY;
+  } else if(keepalive_status != KEEPALIVE_SEND_IMMEDIATELY) {
+    /* send based on the tsch_current_ka_timeout */
+    keepalive_status = KEEPALIVE_SCHEDULE_OR_STOP;
   }
+  process_poll(&tsch_pending_events_process);
 }
 /*---------------------------------------------------------------------------*/
-/* Set ctimer to send a keepalive message immediately */
-void
-tsch_schedule_keepalive_immediately(void)
+static void
+tsch_keepalive_process_pending(void)
 {
-  /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
-  if(!tsch_is_coordinator && tsch_is_associated) {
-    ctimer_set(&keepalive_timer, 0, keepalive_send, NULL);
+  if(keepalive_status != KEEPALIVE_SCHEDULING_UNCHANGED) {
+    /* first, save and reset the old status */
+    enum tsch_keepalive_status scheduled_status = keepalive_status;
+    keepalive_status = KEEPALIVE_SCHEDULING_UNCHANGED;
+
+    if(!tsch_is_coordinator && tsch_is_associated) {
+      switch(scheduled_status) {
+      case KEEPALIVE_SEND_IMMEDIATELY:
+        /* always send, and as soon as possible (now) */
+        keepalive_send(NULL);
+        break;
+
+      case KEEPALIVE_SCHEDULE_OR_STOP:
+        if(tsch_current_ka_timeout > 0) {
+          /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
+          unsigned long delay;
+          if(tsch_current_ka_timeout >= 10) {
+            delay = (tsch_current_ka_timeout - tsch_current_ka_timeout / 10)
+                + random_rand() % (tsch_current_ka_timeout / 10);
+          } else {
+            delay = tsch_current_ka_timeout - 1;
+          }
+          ctimer_set(&keepalive_timer, delay, keepalive_send, NULL);
+        } else {
+          /* zero timeout set, stop sending keepalives */
+          ctimer_stop(&keepalive_timer);
+        }
+        break;
+
+      default:
+        break;
+      }
+    } else {
+      /* either coordinator or not associated */
+      ctimer_stop(&keepalive_timer);
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -678,7 +720,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
       max_drift_seen = 0;
 
       /* Start sending keep-alives now that tsch_is_associated is set */
-      tsch_schedule_keepalive();
+      tsch_schedule_keepalive(0);
 
 #ifdef TSCH_CALLBACK_JOINING_NETWORK
       TSCH_CALLBACK_JOINING_NETWORK();
@@ -907,6 +949,7 @@ PROCESS_THREAD(tsch_pending_events_process, ev, data)
     tsch_rx_process_pending();
     tsch_tx_process_pending();
     tsch_log_process_pending();
+    tsch_keepalive_process_pending();
 #ifdef TSCH_CALLBACK_SELECT_CHANNELS
     TSCH_CALLBACK_SELECT_CHANNELS();
 #endif
@@ -1047,12 +1090,7 @@ send_packet(mac_callback_t sent, void *ptr)
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
 #if LLSEC802154_ENABLED
-  if(tsch_is_pan_secured) {
-    /* Set security level, key id and index */
-    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, TSCH_SECURITY_KEY_SEC_LEVEL_OTHER);
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, FRAME802154_1_BYTE_KEY_ID_MODE); /* Use 1-byte key index */
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, TSCH_SECURITY_KEY_INDEX_OTHER);
-  }
+  tsch_security_set_packetbuf_attr(FRAME802154_DATAFRAME);
 #endif /* LLSEC802154_ENABLED */
 
 #if !NETSTACK_CONF_BRIDGE_MODE
@@ -1163,6 +1201,7 @@ turn_off(void)
 static int
 max_payload(void)
 {
+  int framer_hdrlen;
   radio_value_t max_radio_payload_len;
   radio_result_t res;
 
@@ -1174,8 +1213,18 @@ max_payload(void)
     return 0;
   }
 
+  /* Set packetbuf security attributes */
+  tsch_security_set_packetbuf_attr(FRAME802154_DATAFRAME);
+
+  framer_hdrlen = NETSTACK_FRAMER.length();
+  if(framer_hdrlen < 0) {
+    return 0;
+  }
+
   /* Setup security... before. */
-  return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN) -  NETSTACK_FRAMER.length();
+  return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN)
+    - framer_hdrlen
+    - LLSEC802154_PACKETBUF_MIC_LEN();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {

@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,20 +29,65 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "dev/gpio-hal.h"
-/*---------------------------------------------------------------------------*/
-/*
- * LEDs on the OpenMote-CC2538 are connected as follows:
- * - LED1 (Red)    -> PC4 (gpio_hal_pin_t 20)
- * - LED2 (Yellow) -> PC6 (gpio_hal_pin_t 22)
- * - LED3 (Green)  -> PC7 (gpio_hal_pin_t 23)
- * - LED4 (Orange) -> PC5
+
+/**
+ * \file
+ *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ * \author
+ *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
-gpio_hal_pin_t out_pin1 = 20;
-gpio_hal_pin_t out_pin2 = 22;
-gpio_hal_pin_t out_pin3 = 23;
+
+#include "contiki.h"
+
+#include "snmp-api.h"
+
+#include "snmp-message.h"
+#include "snmp-ber.h"
+#include "snmp-oid.h"
+
+static void
+snmp_api_replace_oid(snmp_varbind_t *varbind, uint32_t *oid)
+{
+  uint8_t i;
+
+  i = 0;
+  while(oid[i] != ((uint32_t)-1)) {
+    varbind->oid[i] = oid[i];
+    i++;
+  }
+  varbind->oid[i] = ((uint32_t)-1);
+}
 /*---------------------------------------------------------------------------*/
-/* Button pin: PC3 */
-gpio_hal_pin_t btn_pin = 19;
+void
+snmp_api_set_string(snmp_varbind_t *varbind, uint32_t *oid, char *string)
+{
+
+  snmp_api_replace_oid(varbind, oid);
+  varbind->value_type = BER_DATA_TYPE_OCTET_STRING;
+  varbind->value.string.string = string;
+  varbind->value.string.length = strlen(string);
+}
 /*---------------------------------------------------------------------------*/
+void
+snmp_api_set_time_ticks(snmp_varbind_t *varbind, uint32_t *oid, uint32_t integer)
+{
+
+  snmp_api_replace_oid(varbind, oid);
+  varbind->value_type = SNMP_DATA_TYPE_TIME_TICKS;
+  varbind->value.integer = integer;
+}
+/*---------------------------------------------------------------------------*/
+void
+snmp_api_set_oid(snmp_varbind_t *varbind, uint32_t *oid, uint32_t *ret_oid)
+{
+
+  snmp_api_replace_oid(varbind, oid);
+  varbind->value_type = BER_DATA_TYPE_OID;
+  varbind->value.oid = ret_oid;
+}
+/*---------------------------------------------------------------------------*/
+void
+snmp_api_add_resource(snmp_mib_resource_t *new_resource)
+{
+  return snmp_mib_add(new_resource);
+}

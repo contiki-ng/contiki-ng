@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Thingsquare, http://www.thingsquare.com/.
+ * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,52 +32,31 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup openmote-antenna
- * @{
- *
- * Driver for the OpenMote-CC2538 RF switch.
- * INT is the internal antenna (chip) configured through ANT1_SEL (V1)
- * EXT is the external antenna (connector) configured through ANT2_SEL (V2)
+ * \addtogroup openmote-b
  * @{
  *
  * \file
- * Driver implementation for the OpenMote-CC2538 antenna switch
+ *  Board-initialisation for the OpenMote-B platform
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/gpio.h"
 #include "dev/antenna.h"
+#include <stdint.h>
+#include <string.h>
 /*---------------------------------------------------------------------------*/
-#define BSP_RADIO_BASE              GPIO_PORT_TO_BASE(GPIO_D_NUM)
-#define BSP_RADIO_INT               GPIO_PIN_MASK(5)
-#define BSP_RADIO_EXT               GPIO_PIN_MASK(4)
-/*---------------------------------------------------------------------------*/
-void
-antenna_init(void)
+static void
+configure_unused_pins(void)
 {
-  /* Configure the ANT1 and ANT2 GPIO as output */
-  GPIO_SET_OUTPUT(BSP_RADIO_BASE, BSP_RADIO_INT);
-  GPIO_SET_OUTPUT(BSP_RADIO_BASE, BSP_RADIO_EXT);
-
-  /* Select external antenna by default. */
-  antenna_external();
+  /* FIXME */
 }
 /*---------------------------------------------------------------------------*/
 void
-antenna_external(void)
+board_init()
 {
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_INT, 0);
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_EXT, 1);
-}
-/*---------------------------------------------------------------------------*/
-void
-antenna_internal(void)
-{
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_EXT, 0);
-  GPIO_WRITE_PIN(BSP_RADIO_BASE, BSP_RADIO_INT, 1);
+  antenna_init();
+  configure_unused_pins();
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  */

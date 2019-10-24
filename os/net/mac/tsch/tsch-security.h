@@ -140,5 +140,11 @@ unsigned int tsch_security_parse_frame(const uint8_t *hdr, int hdrlen,
                                        const linkaddr_t *sender,
                                        struct tsch_asn_t *asn);
 
+/**
+ * \brief Set packetbuf (or eackbuf) attributes depending on a given frame type
+ * \param frame_type The frame type (FRAME802154_BEACONFRAME etc.)
+ */
+void tsch_security_set_packetbuf_attr(uint8_t frame_type);
+
 #endif /* __TSCH_SECURITY_H__ */
 /** @} */

@@ -650,7 +650,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   /* Keep track of sync time */
                   last_sync_asn = tsch_current_asn;
                   tsch_last_sync_time = clock_time();
-                  tsch_schedule_keepalive();
+                  tsch_schedule_keepalive(0);
                 }
                 mac_tx_status = MAC_TX_OK;
 
@@ -918,7 +918,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               is_drift_correction_used = 1;
               sync_count++;
               tsch_timesync_update(n, since_last_timesync, -estimated_drift);
-              tsch_schedule_keepalive();
+              tsch_schedule_keepalive(0);
             }
 
             /* Add current input to ringbuf */
