@@ -81,7 +81,8 @@
 #define ORCHESTRA_UNICAST_SENDER_BASED            0
 #endif /* ORCHESTRA_CONF_UNICAST_SENDER_BASED */
 
-/* The hash function used to assign timeslot to a given node (based on its link-layer address) */
+/* The hash function used to assign timeslot to a given node (based on its link-layer address).
+ * For rules with multiple channel offsets, it is also used to select the channel offset. */
 #ifdef ORCHESTRA_CONF_LINKADDR_HASH
 #define ORCHESTRA_LINKADDR_HASH                   ORCHESTRA_CONF_LINKADDR_HASH
 #else /* ORCHESTRA_CONF_LINKADDR_HASH */
@@ -101,5 +102,33 @@
 #else /* ORCHESTRA_CONF_COLLISION_FREE_HASH */
 #define ORCHESTRA_COLLISION_FREE_HASH             0 /* Set to 1 if ORCHESTRA_LINKADDR_HASH returns unique hashes */
 #endif /* ORCHESTRA_CONF_COLLISION_FREE_HASH */
+
+/* Channel offset for the EB rule, default 0 */
+#ifdef ORCHESTRA_CONF_EB_CHANNEL_OFFSET
+#define ORCHESTRA_EB_CHANNEL_OFFSET               ORCHESTRA_CONF_EB_CHANNEL_OFFSET
+#else
+#define ORCHESTRA_EB_CHANNEL_OFFSET               0
+#endif
+
+/* Channel offset for the default common rule, default 1 */
+#ifdef ORCHESTRA_CONF_DEFAULT_COMMON_CHANNEL_OFFSET
+#define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   ORCHESTRA_CONF_DEFAULT_COMMON_CHANNEL_OFFSET
+#else
+#define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   1
+#endif
+
+/* Min channel offset for the unicast rules; the default min/max range is [2, 255] */
+#ifdef ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET
+#define ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET       ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET
+#else
+#define ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET       2
+#endif
+
+/* Max channel offset for the unicast rules */
+#ifdef ORCHESTRA_CONF_UNICAST_MAX_CHANNEL_OFFSET
+#define ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET       ORCHESTRA_CONF_UNICAST_MAX_CHANNEL_OFFSET
+#else
+#define ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET       255
+#endif
 
 #endif /* __ORCHESTRA_CONF_H__ */

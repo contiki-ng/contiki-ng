@@ -45,7 +45,7 @@
 struct orchestra_rule {
   void (* init)(uint16_t slotframe_handle);
   void (* new_time_source)(const struct tsch_neighbor *old, const struct tsch_neighbor *new);
-  int  (* select_packet)(uint16_t *slotframe, uint16_t *timeslot);
+  int  (* select_packet)(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset);
   void (* child_added)(const linkaddr_t *addr);
   void (* child_removed)(const linkaddr_t *addr);
   const char *name;
