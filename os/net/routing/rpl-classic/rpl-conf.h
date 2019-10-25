@@ -91,17 +91,6 @@
 #define RPL_CONF_STATS 0
 #endif /* RPL_CONF_STATS */
 
-/* Set to 1 to drop packets when a forwarding loop is detected
- * on a packet that already had an error signaled, as per RFC6550 - 11.2.2.2.
- * Disabled by default for more reliability: even in the event of a loop,
- * packets get a chance to eventually find their way to the destination. */
-#ifdef RPL_CONF_LOOP_ERROR_DROP
-#define RPL_LOOP_ERROR_DROP RPL_CONF_LOOP_ERROR_DROP
-#else /* RPL_CONF_LOOP_ERROR_DROP */
-#define RPL_LOOP_ERROR_DROP 0
-#endif /* RPL_CONF_LOOP_ERROR_DROP */
-
-
 /*
  * The objective function (OF) used by a RPL root is configurable through
  * the RPL_CONF_OF_OCP parameter. This is defined as the objective code
