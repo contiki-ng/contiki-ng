@@ -180,7 +180,7 @@ static int
 max_payload()
 {
   init_sec();
-  return 127 - NETSTACK_FRAMER.length();
+  return RPL_BORDER_ROUTER_MAC_LEN - NETSTACK_FRAMER.length();
 }
 /*---------------------------------------------------------------------------*/
 static void

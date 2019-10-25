@@ -41,3 +41,10 @@
 
 /* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
 #define SELECT_CALLBACK 1
+
+/* Default MAC len for 802.15.4 classic */
+#ifdef  RPL_BORDER_ROUTER_MAC_CONF_LEN
+#define RPL_BORDER_ROUTER_MAC_LEN RPL_BORDER_ROUTER_MAC_CONF_LEN
+#else
+#define RPL_BORDER_ROUTER_MAC_LEN MIN(NETSTACK_RADIO_MAX_PAYLOAD_LEN, PACKETBUF_SIZE)
+#endif
