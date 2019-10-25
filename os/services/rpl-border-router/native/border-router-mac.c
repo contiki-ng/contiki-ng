@@ -179,26 +179,8 @@ off()
 static int
 max_payload()
 {
-  int framer_hdrlen;
-  radio_value_t max_radio_payload_len;
-  radio_result_t res;
-
   init_sec();
-  
-  res = NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN,
-                                 &max_radio_payload_len);
-
-  if(res == RADIO_RESULT_NOT_SUPPORTED) {
-    LOG_ERR("Failed to retrieve max radio driver payload length\n");
-    return 0;
-  }
-
-  framer_hdrlen = NETSTACK_FRAMER.length();
-  if(framer_hdrlen < 0) {
-    return 0;
-  }
-
-  return MIN(max_radio_payload_len, PACKETBUF_SIZE) - framer_hdrlen;
+  return RPL_BORDER_ROUTER_MAC_LEN - NETSTACK_FRAMER.length();
 }
 /*---------------------------------------------------------------------------*/
 static void

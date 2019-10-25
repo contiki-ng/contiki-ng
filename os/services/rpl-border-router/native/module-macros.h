@@ -41,3 +41,9 @@
 
 /* used by wpcap (see /cpu/native/net/wpcap-drv.c) */
 #define SELECT_CALLBACK 1
+
+#ifdef RPL_BORDER_ROUTER_CONF_MAC_LEN
+#define RPL_BORDER_ROUTER_MAC_LEN RPL_BORDER_ROUTER_CONF_MAC_LEN
+#else
+#define RPL_BORDER_ROUTER_MAC_LEN 127
+#endif
