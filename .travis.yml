@@ -7,30 +7,39 @@ notifications:
 
 # Environment setup before test script. Runs for each build
 before_install:
-  # Check if anything has changed within the docker directory
-  - DOCKER_CHANGED=`git diff --name-only $TRAVIS_COMMIT_RANGE -- tools/docker | wc -l`
-  # If Docker directory has not changed, pull image from Dockerhub. Else, build
-  # image from Dockerifle. This needs to be done for each job. Any build error
-  # will count as Travis test failure. In case this updates develop, push new
-  # image to Dockerhub (secure credentials only readable on bulids to
-  # contiki-ng/contiki-ng branches, not forks or PRs)
+  # Construct the correct container image tag corresponding to this branch/pull
+  - CONTIKER_TAG=`git log -1 --oneline -- tools/docker/ | cut -d" " -f1`
+  - DOCKER_IMG=$DOCKER_BASE_IMG:$CONTIKER_TAG
+  # Try to download the image from dockerhub. If it works, use it.
+  #
+  # If however it fails then we are most likely looking at a branch or pull
+  # that touched tools/docker. In this case, build the image.
+  #
+  # Any build error will count as Travis test failure.
+  #
+  # If the test was triggered by a branch update (e.g. a PR merge) then push
+  # the new image to dockerhub. This will only happen for builds against
+  # contiki-ng/contiki-ng, not for builds on forks.
+  - echo $DOCKER_IMG
   - >
-    if [ $DOCKER_CHANGED == 0 ]; then
-      echo "Docker image unchanged, pull from Dockerhub"
-      docker pull $DOCKER_IMG;
-    else
-      echo "Docker image changed, build from Dockerfile"
+    echo "Pulling image $DOCKER_IMG from dockerhub";
+    docker pull $DOCKER_IMG;
+    if [ $? != 0 ]; then
+      echo $CONTIKER_TAG "does not exist or pull failed";
+      echo "This is normal for PR builds and for builds on forks";
+      echo "Building from dockerfile";
       docker build tools/docker -t $DOCKER_IMG;
       if [ $? != 0 ]; then
         echo "Failed to build Docker image"
         exit 1
       fi
-      if [ $TRAVIS_SECURE_ENV_VARS == true ] && [ $TRAVIS_PULL_REQUEST == false ] && [ $TRAVIS_BRANCH == 'develop' ]; then
-        echo "This build is for an update of branch develop. Push image to Dockerhub"
+      if [ $TRAVIS_REPO_SLUG == contiki-ng/contiki-ng ] && [ $TRAVIS_PULL_REQUEST == false ]; then
+        echo "This is a branch build that updates the container. Push image to Dockerhub"
         echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
         docker push $DOCKER_IMG;
       fi
     fi
+
   # Build Cooja conditionally
   - if [ ${BUILD_COOJA:-false} = true ] ; then
       ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar ;
@@ -58,7 +67,7 @@ script:
 env:
   # Global environment variables, i.e., set for all builds
   global:
-    - DOCKER_IMG='contiker/contiki-ng'
+    - DOCKER_BASE_IMG='contiker/contiki-ng'
     - CNG_HOST_PATH=`pwd`
     - OUT_OF_TREE_TEST_PATH=$HOME/out-of-tree-tests
     - OUT_OF_TREE_TEST_VER=2869ae7
