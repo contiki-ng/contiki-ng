@@ -1011,10 +1011,25 @@ rpl_move_parent(rpl_dag_t *dag_src, rpl_dag_t *dag_dst, rpl_parent_t *parent)
   parent->dag = dag_dst;
 }
 /*---------------------------------------------------------------------------*/
+static rpl_dag_t *
+rpl_get_any_dag_with_parent(bool requires_parent)
+{
+  int i;
+
+  for(i = 0; i < RPL_MAX_INSTANCES; ++i) {
+    if(instance_table[i].used
+         && instance_table[i].current_dag->joined
+         && (!requires_parent || instance_table[i].current_dag->preferred_parent != NULL)) {
+      return instance_table[i].current_dag;
+    }
+  }
+  return NULL;
+}
+/*---------------------------------------------------------------------------*/
 int
 rpl_has_joined(void)
 {
-  return rpl_get_any_dag() != NULL;
+  return rpl_get_any_dag_with_parent(true) != NULL;
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -1054,14 +1069,7 @@ rpl_get_dag(const uip_ipaddr_t *addr)
 rpl_dag_t *
 rpl_get_any_dag(void)
 {
-  int i;
-
-  for(i = 0; i < RPL_MAX_INSTANCES; ++i) {
-    if(instance_table[i].used && instance_table[i].current_dag->joined) {
-      return instance_table[i].current_dag;
-    }
-  }
-  return NULL;
+  return rpl_get_any_dag_with_parent(false);
 }
 /*---------------------------------------------------------------------------*/
 rpl_instance_t *
