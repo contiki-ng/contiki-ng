@@ -637,6 +637,15 @@ state_machine(void)
     conn.auto_reconnect = 0;
     connect_attempt = 1;
 
+#if MQTT_5
+  register_prop(&conn,
+                MQTT_FHDR_MSG_TYPE_PUBLISH,
+                MQTT_VHDR_PROP_USER_PROP,
+                "Contiki", "v4.4");
+
+  list_all_props(&conn);
+#endif
+
     state = STATE_REGISTERED;
     LOG_DBG("Init\n");
     /* Continue */

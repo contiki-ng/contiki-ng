@@ -96,6 +96,8 @@
 #include "tcp-socket.h"
 #include "udp-socket.h"
 
+#include "lib/memb.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -148,6 +150,14 @@
 #else
 #define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
 #endif
+
+/* MQTTv5 */
+/* Max length of 1 property in bytes */
+#define MQTT_MAX_PROP_LENGTH     32
+/* Max number of bytes in Variable Byte Integer representation of
+ * total property length
+ */
+#define MQTT_MAX_PROP_LEN_BYTES   2
 /*---------------------------------------------------------------------------*/
 /*
  * Debug configuration, this is similar but not exactly like the Debugging
@@ -247,6 +257,55 @@ typedef enum {
   MQTT_CONN_STATE_SENDING_MQTT_DISCONNECT,
 } mqtt_conn_state_t;
 /*---------------------------------------------------------------------------*/
+typedef enum {
+  MQTT_FHDR_MSG_TYPE_CONNECT       = 0x10,
+  MQTT_FHDR_MSG_TYPE_CONNACK       = 0x20,
+  MQTT_FHDR_MSG_TYPE_PUBLISH       = 0x30,
+  MQTT_FHDR_MSG_TYPE_PUBACK        = 0x40,
+  MQTT_FHDR_MSG_TYPE_PUBREC        = 0x50,
+  MQTT_FHDR_MSG_TYPE_PUBREL        = 0x60,
+  MQTT_FHDR_MSG_TYPE_PUBCOMP       = 0x70,
+  MQTT_FHDR_MSG_TYPE_SUBSCRIBE     = 0x80,
+  MQTT_FHDR_MSG_TYPE_SUBACK        = 0x90,
+  MQTT_FHDR_MSG_TYPE_UNSUBSCRIBE   = 0xA0,
+  MQTT_FHDR_MSG_TYPE_UNSUBACK      = 0xB0,
+  MQTT_FHDR_MSG_TYPE_PINGREQ       = 0xC0,
+  MQTT_FHDR_MSG_TYPE_PINGRESP      = 0xD0,
+  MQTT_FHDR_MSG_TYPE_DISCONNECT    = 0xE0,
+} mqtt_msg_type_t;
+/*---------------------------------------------------------------------------*/
+/* MQTTv5.0 VHDR Properties */
+typedef enum {
+  MQTT_VHDR_PROP_ANY                = 0x00, // not in standard; for library use
+  MQTT_VHDR_PROP_PAYLOAD_FMT_IND    = 0x01,
+  MQTT_VHDR_PROP_MSG_EXP_INT        = 0x02,
+  MQTT_VHDR_PROP_CONTENT_TYPE       = 0x03,
+  MQTT_VHDR_PROP_RESP_TOPIC         = 0x08,
+  MQTT_VHDR_PROP_CORRELATION_DATA   = 0x09,
+  MQTT_VHDR_PROP_SUB_ID             = 0x0B,
+  MQTT_VHDR_PROP_SESS_EXP_INT       = 0x11,
+  MQTT_VHDR_PROP_ASSIGNED_CLIENT_ID = 0x12,
+  MQTT_VHDR_PROP_SERVER_KEEP_ALIVE  = 0x13,
+  MQTT_VHDR_PROP_AUTH_METHOD        = 0x15,
+  MQTT_VHDR_PROP_AUTH_DATA          = 0x16,
+  MQTT_VHDR_PROP_REQ_PROBLEM_INFO   = 0x17,
+  MQTT_VHDR_PROP_WILL_DELAY_INT     = 0x18,
+  MQTT_VHDR_PROP_REQ_RESP_INFO      = 0x19,
+  MQTT_VHDR_PROP_RESP_INFO          = 0x1A,
+  MQTT_VHDR_PROP_SERVER_REFERENCE   = 0x1C,
+  MQTT_VHDR_PROP_REASON_STRING      = 0x1F,
+  MQTT_VHDR_PROP_RECEIVE_MAX        = 0x21,
+  MQTT_VHDR_PROP_TOPIC_ALIAS_MAX    = 0x22,
+  MQTT_VHDR_PROP_TOPIC_ALIAS        = 0x23,
+  MQTT_VHDR_PROP_MAX_QOS            = 0x24,
+  MQTT_VHDR_PROP_RETAIN_AVAIL       = 0x25,
+  MQTT_VHDR_PROP_USER_PROP          = 0x26,
+  MQTT_VHDR_PROP_MAX_PKT_SZ         = 0x27,
+  MQTT_VHDR_PROP_WILD_SUB_AVAIL     = 0x28,
+  MQTT_VHDR_PROP_SUB_ID_AVAIL       = 0x29,
+  MQTT_VHDR_PROP_SHARED_SUB_AVAIL   = 0x2A,
+} mqtt_vhdr_prop_t;
+/*---------------------------------------------------------------------------*/
 struct mqtt_string {
   char *string;
   uint16_t length;
@@ -285,6 +344,35 @@ struct mqtt_message {
   uint16_t payload_left;
 };
 
+struct mqtt_prop_list_t {
+  /* Used by the list interface, must be first in the struct. */
+  struct mqtt_prop_list_t *next;
+
+  /* Message type */
+  mqtt_msg_type_t msg_type;
+  /* Total length of properties */
+  uint32_t properties_len;
+  uint8_t  properties_len_enc[MQTT_MAX_PROP_LEN_BYTES];
+  uint8_t  properties_len_enc_bytes;
+  LIST_STRUCT(props);
+};
+
+/* This struct represents output packet Properties (MQTTv5.0). */
+struct mqtt_out_property_t {
+  /* Used by the list interface, must be first in the struct. */
+  struct mqtt_out_property_t *next;
+
+  /* Property identifier (as an MQTT Variable Byte Integer)
+   * The maximum ID is currently 0x2A so 1 byte is sufficient
+   * (the range of 1 VBI byte is 0x00 - 0x7F)
+   */
+  mqtt_vhdr_prop_t id;
+  /* Property length */
+  uint32_t property_len;
+  /* Property value */
+  uint8_t val[MQTT_MAX_PROP_LENGTH];
+};
+
 /* This struct represents a packet received from the MQTT server. */
 struct mqtt_in_packet {
   /* Used by the list interface, must be first in the struct. */
@@ -313,6 +401,14 @@ struct mqtt_in_packet {
   uint16_t topic_pos;
   uint8_t topic_len_received;
   uint8_t topic_received;
+
+  /* Properties */
+#if MQTT_5
+  uint8_t  has_reason_code;
+  uint8_t  reason_code;
+  uint16_t property_len; /* Unencoded length of all properties */
+  LIST_STRUCT(props);
+#endif
 };
 
 /* This struct represents a packet sent to the MQTT server. */
@@ -405,6 +501,15 @@ struct mqtt_connection {
   uip_ipaddr_t server_ip;
   uint16_t server_port;
   struct tcp_socket socket;
+
+  /* A list of lists of properties
+   * Each member of the list contains a message type
+   * and a pointer to the list of properties for that
+   * message type
+   */
+#if MQTT_5
+  LIST_STRUCT(out_props);
+#endif
 };
 /* This is the API exposed to the user. */
 /*---------------------------------------------------------------------------*/
@@ -549,6 +654,9 @@ void mqtt_set_last_will(struct mqtt_connection *conn,
 
 #define mqtt_ready(conn) \
   (!(conn)->out_queue_full && mqtt_connected((conn)))
+/*---------------------------------------------------------------------------*/
+/* MQTTv5-specific functions */
+// TODO add function declarations here + Doxygen
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */
 /*---------------------------------------------------------------------------*/
