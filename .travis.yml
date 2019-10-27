@@ -37,6 +37,12 @@ before_install:
         echo "This is a branch build that updates the container. Push image to Dockerhub"
         echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
         docker push $DOCKER_IMG;
+        if [ $TRAVIS_BRANCH == develop ] || [ $TRAVIS_BRANCH == master ]; then
+          echo "This is a merge in branch $TRAVIS_BRANCH";
+          echo "Push also $DOCKER_BASE_IMG:$TRAVIS_BRANCH";
+          docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$TRAVIS_BRANCH;
+          docker push $DOCKER_BASE_IMG:$TRAVIS_BRANCH;
+        fi
       fi
     fi
 
