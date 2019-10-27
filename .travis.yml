@@ -20,7 +20,7 @@ before_install:
   # If the test was triggered by a branch update (e.g. a PR merge) then push
   # the new image to dockerhub. This will only happen for builds against
   # contiki-ng/contiki-ng, not for builds on forks.
-  - echo $DOCKER_IMG
+  - echo "Will use $DOCKER_IMG for this run"
   - >
     echo "Pulling image $DOCKER_IMG from dockerhub";
     docker pull $DOCKER_IMG;
