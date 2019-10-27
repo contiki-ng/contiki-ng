@@ -992,33 +992,31 @@ handle_suback(struct mqtt_connection *conn)
 
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
 
-  suback_event.mid = (conn->in_packet.payload[0] << 8) |
-    (conn->in_packet.payload[1]);
-  conn->in_packet.mid = suback_event.mid;
+  suback_event.mid = conn->in_packet.mid;
 
 #if MQTT_311
   suback_event.success = 0;
 
-  switch(conn->in_packet.payload[2]) {
+  switch(conn->in_packet.payload_start[0]) {
   case MQTT_SUBACK_RET_FAIL:
-    PRINTF("MQTT - Error, SUBSCRIBE failed with SUBACK return code '%x'", conn->in_packet.payload[2]);
+    PRINTF("MQTT - Error, SUBSCRIBE failed with SUBACK return code '%x'", conn->in_packet.payload_start[0]);
     break;
 
   case MQTT_SUBACK_RET_QOS_0:
   case MQTT_SUBACK_RET_QOS_1:
   case MQTT_SUBACK_RET_QOS_2:
-    suback_event.qos_level = conn->in_packet.payload[2] & 0x03;
+    suback_event.qos_level = conn->in_packet.payload_start[0] & 0x03;
     suback_event.success = 1;
     break;
 
   default:
-    PRINTF("MQTT - Error, Unrecognised SUBACK return code '%x'", conn->in_packet.payload[2]);
+    PRINTF("MQTT - Error, Unrecognised SUBACK return code '%x'", conn->in_packet.payload_start[0]);
     break;
   }
 
-  suback_event.return_code = conn->in_packet.payload[2];
+  suback_event.return_code = conn->in_packet.payload_start[0];
 #else
-  suback_event.qos_level = conn->in_packet.payload[2];
+  suback_event.qos_level = conn->in_packet.payload_start[0];
 #endif
 
   if(conn->in_packet.mid != conn->out_packet.mid) {
@@ -1036,8 +1034,6 @@ handle_unsuback(struct mqtt_connection *conn)
   DBG("MQTT - Got UNSUBACK\n");
 
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
-  conn->in_packet.mid = (conn->in_packet.payload[0] << 8) |
-    (conn->in_packet.payload[1]);
 
   if(conn->in_packet.mid != conn->out_packet.mid) {
     DBG("MQTT - Warning, got UNSUBACK with none matching MID. Currently there is"
@@ -1053,8 +1049,6 @@ handle_puback(struct mqtt_connection *conn)
   DBG("MQTT - Got PUBACK\n");
 
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
-  conn->in_packet.mid = (conn->in_packet.payload[0] << 8) |
-    (conn->in_packet.payload[1]);
 
   call_event(conn, MQTT_EVENT_PUBACK, &conn->in_packet.mid);
 }
@@ -1162,6 +1156,27 @@ handle_disconnect(struct mqtt_connection *conn)
 //  DBG("MQTT - (handle_disconnect) remaining_len %u\n", conn->remaining_length);
 }
 #endif
+/*---------------------------------------------------------------------------*/
+static void
+parse_vhdr(struct mqtt_connection *conn)
+{
+  conn->in_packet.payload_start = conn->in_packet.payload;
+
+  switch(conn->in_packet.fhdr & 0xF0) {
+  case MQTT_FHDR_MSG_TYPE_PUBACK:
+  case MQTT_FHDR_MSG_TYPE_SUBACK:
+  case MQTT_FHDR_MSG_TYPE_UNSUBACK:
+    conn->in_packet.mid = (conn->in_packet.payload[0] << 8) |
+        (conn->in_packet.payload[1]);
+    conn->in_packet.payload_start += 2;
+    break;
+
+  /* Other message types have a 0-length VHDR */
+  /* PUBLISH has a VHDR for QoS > 0, which is currently unsupported */
+  default:
+    break;
+  }
+}
 /*---------------------------------------------------------------------------*/
 static int
 tcp_input(struct tcp_socket *s,
@@ -1287,6 +1302,8 @@ tcp_input(struct tcp_socket *s,
       return 0;
     }
   }
+
+  parse_vhdr(conn);
 
   /* Debug information */
   DBG("\n");

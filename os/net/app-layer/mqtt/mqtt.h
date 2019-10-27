@@ -396,6 +396,9 @@ struct mqtt_in_packet {
   uint8_t payload_pos;
   uint8_t payload[MQTT_INPUT_BUFF_SIZE];
 
+  /* Start of MQTT payload (after VHDR) */
+  uint8_t *payload_start;
+
   /* Message specific data */
   uint16_t topic_len;
   uint16_t topic_pos;
