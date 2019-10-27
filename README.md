@@ -24,6 +24,7 @@ Find out more:
 * GitHub repository: https://github.com/contiki-ng/contiki-ng
 * Documentation: https://github.com/contiki-ng/contiki-ng/wiki
 * Web site: http://contiki-ng.org
+* Nightly testbed runs: https://contiki-ng.github.io/testbed
 
 Engage with the community:
 
