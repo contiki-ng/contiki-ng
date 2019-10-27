@@ -3,6 +3,7 @@ TOOLSDIR=../../tools
 
 EXAMPLES = \
 rpl-border-router/zoul \
+rpl-border-router/zoul:MAKE_MAC=MAKE_MAC_TSCH \
 platform-specific/cc2538-common/zoul \
 platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
