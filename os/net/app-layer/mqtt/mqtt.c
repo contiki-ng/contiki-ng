@@ -911,11 +911,23 @@ PT_THREAD(pingreq_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+static void
 handle_connack(struct mqtt_connection *conn)
 {
   mqtt_connack_event_t connack_event;
 
   DBG("MQTT - Got CONNACK\n");
+
+#if MQTT_PROTOCOL_VERSION <= MQTT_PROTOCOL_VERSION_3_1_1
+  if(conn->in_packet.remaining_length != 2) {
+    PRINTF("MQTT - CONNACK VHDR remaining length %i incorrect\n",
+           conn->in_packet.remaining_length);
+    call_event(conn,
+               MQTT_EVENT_ERROR,
+               NULL);
+    abort_connection(conn);
+    return;
+  }
 
   if(conn->in_packet.payload[1] != 0) {
     PRINTF("MQTT - Connection refused with Return Code %i\n",
@@ -926,11 +938,29 @@ handle_connack(struct mqtt_connection *conn)
     abort_connection(conn);
     return;
   }
+#endif
 
   conn->out_packet.qos_state = MQTT_QOS_STATE_GOT_ACK;
 
 #if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
   connack_event.session_present = conn->in_packet.payload[0] & MQTT_VHDR_CONNACK_SESSION_PRESENT;
+#endif
+
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_5
+  /* The CONNACK VHDR must contain:
+   * 0: Connect Acknowledge Flags
+   * 1: Connect Reason Code
+   * 2: Properties (whose Length field must be set even if no properties are present)
+   */
+  if(conn->in_packet.remaining_length < 3) {
+    PRINTF("MQTT - CONNACK VHDR remaining length %i incorrect\n",
+           conn->in_packet.remaining_length);
+    call_event(conn,
+               MQTT_EVENT_ERROR,
+               NULL);
+    abort_connection(conn);
+    return;
+  }
 #endif
 
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
