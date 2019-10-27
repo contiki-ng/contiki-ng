@@ -1154,6 +1154,15 @@ parse_publish_vhdr(struct mqtt_connection *conn,
   }
 }
 /*---------------------------------------------------------------------------*/
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_5
+static void
+handle_disconnect(struct mqtt_connection *conn)
+{
+  DBG("MQTT - (handle_disconnect) Got DISCONNECT.\n");
+//  DBG("MQTT - (handle_disconnect) remaining_len %u\n", conn->remaining_length);
+}
+#endif
+/*---------------------------------------------------------------------------*/
 static int
 tcp_input(struct tcp_socket *s,
           void *ptr,
@@ -1320,6 +1329,12 @@ tcp_input(struct tcp_socket *s,
     PRINTF("MQTT - Got unhandled MQTT Message Type '%i'",
            (conn->in_packet.fhdr & 0xF0));
     break;
+
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_5
+  case MQTT_FHDR_MSG_TYPE_DISCONNECT:
+    handle_disconnect(conn);
+    break;
+#endif
 
   default:
     /* All server-only message */
