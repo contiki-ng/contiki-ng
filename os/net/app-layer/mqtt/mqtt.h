@@ -272,6 +272,7 @@ typedef enum {
   MQTT_FHDR_MSG_TYPE_PINGREQ       = 0xC0,
   MQTT_FHDR_MSG_TYPE_PINGRESP      = 0xD0,
   MQTT_FHDR_MSG_TYPE_DISCONNECT    = 0xE0,
+  MQTT_FHDR_MSG_TYPE_AUTH          = 0xF0,
 } mqtt_msg_type_t;
 /*---------------------------------------------------------------------------*/
 /* MQTTv5.0 VHDR Properties */

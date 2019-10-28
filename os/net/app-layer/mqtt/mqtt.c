@@ -1162,6 +1162,7 @@ parse_vhdr(struct mqtt_connection *conn)
 {
   conn->in_packet.payload_start = conn->in_packet.payload;
 
+  /* Some message types include a packet identifier */
   switch(conn->in_packet.fhdr & 0xF0) {
   case MQTT_FHDR_MSG_TYPE_PUBACK:
   case MQTT_FHDR_MSG_TYPE_SUBACK:
@@ -1176,6 +1177,30 @@ parse_vhdr(struct mqtt_connection *conn)
   default:
     break;
   }
+
+#if MQTT_5
+  /* CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, DISCONNECT and AUTH have a single
+   * Reason Code as part of the Variable Header.
+   * SUBACK and UNSUBACK contain a list of one or more Reason Codes in the Payload.
+   */
+  switch(conn->in_packet.fhdr & 0xF0) {
+  case MQTT_FHDR_MSG_TYPE_CONNACK:
+  case MQTT_FHDR_MSG_TYPE_PUBACK:
+  case MQTT_FHDR_MSG_TYPE_PUBREC:
+  case MQTT_FHDR_MSG_TYPE_PUBREL:
+  case MQTT_FHDR_MSG_TYPE_PUBCOMP:
+  case MQTT_FHDR_MSG_TYPE_DISCONNECT:
+  case MQTT_FHDR_MSG_TYPE_AUTH:
+    conn->in_packet.reason_code = conn->in_packet.payload_start[0];
+    conn->in_packet.has_reason_code = 1;
+    conn->in_packet.payload_start += 1;
+    break;
+
+  default:
+    conn->in_packet.has_reason_code = 0;
+    break;
+  }
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -1312,6 +1337,19 @@ tcp_input(struct tcp_socket *s,
   /* What to return? */
   DBG("MQTT - total data was %i bytes of data. \n",
       (MQTT_FHDR_SIZE + conn->in_packet.remaining_length));
+
+#if MQTT_5
+  if(conn->in_packet.has_reason_code &&
+     conn->in_packet.reason_code >= MQTT_VHDR_RC_UNSPEC_ERR) {
+    PRINTF("MQTT - Reason Code indicated error %i\n",
+           conn->in_packet.reason_code);
+    call_event(conn,
+               MQTT_EVENT_ERROR,
+               NULL);
+    abort_connection(conn);
+    return 0;
+  }
+#endif
 
   /* Handle packet here. */
   switch(conn->in_packet.fhdr & 0xF0) {
