@@ -985,8 +985,15 @@ handle_suback(struct mqtt_connection *conn)
   DBG("MQTT - Got SUBACK\n");
 
   /* Only accept SUBACKS with X topic QoS response, assume 1 */
+#if MQTT_5
+  /* 1 byte is needed to encode the length of the property set */
+  if(conn->in_packet.remaining_length > MQTT_MID_SIZE +
+     MQTT_MAX_TOPICS_PER_SUBSCRIBE * MQTT_QOS_SIZE +
+     conn->in_packet.property_len + 1) {
+#else
   if(conn->in_packet.remaining_length > MQTT_MID_SIZE +
      MQTT_MAX_TOPICS_PER_SUBSCRIBE * MQTT_QOS_SIZE) {
+#endif
     DBG("MQTT - Error, SUBACK with > 1 topic, not supported.\n");
   }
 
