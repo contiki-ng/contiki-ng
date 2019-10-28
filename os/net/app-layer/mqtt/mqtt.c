@@ -872,7 +872,7 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
   struct mqtt_prop_list_t *prop_list;
   uint8_t found_props;
 
-  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
+  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_PUBLISH, &prop_list);
 #endif
 
   DBG("MQTT - Sending publish message! topic %s topic_length %i\n",
@@ -1193,6 +1193,43 @@ handle_publish(struct mqtt_connection *conn)
   return MQTT_PUBLISH_OK;
 }
 /*---------------------------------------------------------------------------*/
+#if MQTT_5
+static void
+parse_in_props(struct mqtt_connection *conn)
+{
+  uint8_t prop_len_bytes;
+
+  DBG("MQTT - Parsing input properties\n");
+
+  /* All but PINGREQ and PINGRESP may contain a set of properties in the VHDR */
+  if(((conn->in_packet.fhdr & 0xF0) == MQTT_FHDR_MSG_TYPE_PINGREQ) ||
+     ((conn->in_packet.fhdr & 0xF0) == MQTT_FHDR_MSG_TYPE_PINGRESP)) {
+    return;
+  }
+
+  DBG("MQTT - Getting length\n");
+
+  prop_len_bytes =
+        decode_var_byte_int(conn->in_packet.payload_start,
+                            conn->in_packet.remaining_length - (conn->in_packet.payload_start - conn->in_packet.payload),
+                            NULL, NULL, &conn->in_packet.property_len);
+
+  if(prop_len_bytes == 0) {
+    DBG("MQTT - Error decoding input properties (out of bounds)\n");
+    return;
+  }
+
+  DBG("MQTT - Received %i VBI property bytes\n", prop_len_bytes);
+  DBG("MQTT - Input properties length %i\n", conn->in_packet.property_len);
+
+  conn->in_packet.property_len += prop_len_bytes;
+  conn->in_packet.props_start = conn->in_packet.payload_start;
+  conn->in_packet.payload_start += prop_len_bytes;
+
+  conn->in_packet.has_props = 1;
+}
+#endif
+/*---------------------------------------------------------------------------*/
 static void
 parse_publish_vhdr(struct mqtt_connection *conn,
                    uint32_t *pos,
@@ -1226,7 +1263,7 @@ parse_publish_vhdr(struct mqtt_connection *conn,
      conn->in_packet.topic_received == 0) {
     copy_bytes = MIN(conn->in_packet.topic_len - conn->in_packet.topic_pos,
                      input_data_len - *pos);
-    DBG("MQTT - topic_pos: %i copy_bytes: %i", conn->in_packet.topic_pos,
+    DBG("MQTT - topic_pos: %i copy_bytes: %i\n", conn->in_packet.topic_pos,
         copy_bytes);
     memcpy(&conn->in_publish_msg.topic[conn->in_packet.topic_pos],
            &input_data_ptr[*pos],
@@ -1300,6 +1337,10 @@ parse_vhdr(struct mqtt_connection *conn)
   default:
     conn->in_packet.has_reason_code = 0;
     break;
+  }
+
+  if(!conn->in_packet.has_props) {
+    parse_in_props(conn);
   }
 #endif
 }
@@ -1413,6 +1454,16 @@ tcp_input(struct tcp_socket *s,
       conn->in_publish_msg.payload_chunk_length = MQTT_INPUT_BUFF_SIZE;
       conn->in_publish_msg.payload_left -= MQTT_INPUT_BUFF_SIZE;
 
+#if MQTT_5
+      if(!conn->in_packet.has_props) {
+        parse_in_props(conn);
+      }
+
+      if(conn->in_publish_msg.first_chunk) {
+        conn->in_publish_msg.payload_chunk_length -= conn->in_packet.property_len;
+      }
+#endif
+
       pub_status = handle_publish(conn);
 
       conn->in_publish_msg.payload_chunk = conn->in_packet.payload;
@@ -1462,6 +1513,13 @@ tcp_input(struct tcp_socket *s,
     conn->in_publish_msg.payload_chunk = conn->in_packet.payload;
     conn->in_publish_msg.payload_chunk_length = conn->in_packet.payload_pos;
     conn->in_publish_msg.payload_left = 0;
+
+    DBG("MQTT - First chunk? %i\n", conn->in_publish_msg.first_chunk);
+#if MQTT_5
+    if(conn->in_publish_msg.first_chunk) {
+      conn->in_publish_msg.payload_chunk_length -= conn->in_packet.property_len;
+    }
+#endif
     (void) handle_publish(conn);
     break;
   case MQTT_FHDR_MSG_TYPE_PUBACK:

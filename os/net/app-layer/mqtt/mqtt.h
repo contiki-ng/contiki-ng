@@ -410,8 +410,10 @@ struct mqtt_in_packet {
 #if MQTT_5
   uint8_t  has_reason_code;
   uint8_t  reason_code;
-  uint16_t property_len; /* Unencoded length of all properties */
-  LIST_STRUCT(props);
+
+  uint8_t  has_props; // the properties have been decoded
+  uint16_t property_len; // total length of properties including encoded length
+  uint8_t  *props_start; // pointer to first byte in first property
 #endif
 };
 
