@@ -39,8 +39,6 @@
 /* Five nines reliability paper used the config below */
 #define TSCH_CONF_KEEPALIVE_TIMEOUT (20 * CLOCK_SECOND)
 #define TSCH_CONF_MAX_KEEPALIVE_TIMEOUT (60 * CLOCK_SECOND)
-//#define TSCH_CONF_EB_PERIOD (16 * CLOCK_SECOND)
-//#define TSCH_CONF_MAX_EB_PERIOD (50 * CLOCK_SECOND)
 
 #endif
 #endif
