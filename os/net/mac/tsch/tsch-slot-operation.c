@@ -143,9 +143,6 @@ static int32_t drift_correction = 0;
 /* Is drift correction used? (Can be true even if drift_correction == 0) */
 static uint8_t is_drift_correction_used;
 
-/* The neighbor last used as our time source */
-struct tsch_neighbor *last_timesource_neighbor = NULL;
-
 /* Used from tsch_slot_operation and sub-protothreads */
 static rtimer_clock_t volatile current_slot_start;
 
@@ -241,10 +238,20 @@ tsch_release_lock(void)
 
 /* Return channel from ASN and channel offset */
 uint8_t
-tsch_calculate_channel(struct tsch_asn_t *asn, uint8_t channel_offset)
+tsch_calculate_channel(struct tsch_asn_t *asn, uint16_t channel_offset, struct tsch_packet *p)
 {
-  uint16_t index_of_0 = TSCH_ASN_MOD(*asn, tsch_hopping_sequence_length);
-  uint16_t index_of_offset = (index_of_0 + channel_offset) % tsch_hopping_sequence_length.val;
+  uint16_t index_of_0, index_of_offset;
+#if TSCH_WITH_LINK_SELECTOR
+  if(p != NULL) {
+    uint16_t packet_channel_offset = queuebuf_attr(p->qb, PACKETBUF_ATTR_TSCH_CHANNEL_OFFSET);
+    if(packet_channel_offset != 0xffff) {
+      /* The schedule specifies a channel offset for this one; use it */
+      channel_offset = packet_channel_offset;
+    }
+  }
+#endif
+  index_of_0 = TSCH_ASN_MOD(*asn, tsch_hopping_sequence_length);
+  index_of_offset = (index_of_0 + channel_offset) % tsch_hopping_sequence_length.val;
   return tsch_hopping_sequence[index_of_offset];
 }
 
@@ -480,8 +487,8 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       static uint8_t packet_len;
       /* packet seqno */
       static uint8_t seqno;
-      /* is this a broadcast packet? (wait for ack?) */
-      static uint8_t is_broadcast;
+      /* wait for ack? */
+      static uint8_t do_wait_for_ack;
       static rtimer_clock_t tx_start_time;
       /* Did we set the frame pending bit to request an extra burst link? */
       static int burst_link_requested;
@@ -493,11 +500,11 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       /* get payload */
       packet = queuebuf_dataptr(current_packet->qb);
       packet_len = queuebuf_datalen(current_packet->qb);
-      /* is this a broadcast packet? (wait for ack?) */
-      is_broadcast = current_neighbor->is_broadcast;
+      /* if is this a broadcast packet, don't wait for ack */
+      do_wait_for_ack = !current_neighbor->is_broadcast;
       /* Unicast. More packets in queue for the neighbor? */
       burst_link_requested = 0;
-      if(!is_broadcast
+      if(do_wait_for_ack
              && tsch_current_burst_count + 1 < TSCH_BURST_MAX_LEN
              && tsch_queue_packet_count(&current_neighbor->addr) > 1) {
         burst_link_requested = 1;
@@ -562,7 +569,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
 
           if(mac_tx_status == RADIO_TX_OK) {
-            if(!is_broadcast) {
+            if(do_wait_for_ack) {
               uint8_t ackbuf[TSCH_PACKET_MAX_LEN];
               int ack_len;
               rtimer_clock_t ack_start_time;
@@ -653,7 +660,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   /* Keep track of sync time */
                   last_sync_asn = tsch_current_asn;
                   tsch_last_sync_time = clock_time();
-                  tsch_schedule_keepalive();
+                  tsch_schedule_keepalive(0);
                 }
                 mac_tx_status = MAC_TX_OK;
 
@@ -921,7 +928,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               is_drift_correction_used = 1;
               sync_count++;
               tsch_timesync_update(n, since_last_timesync, -estimated_drift);
-              tsch_schedule_keepalive();
+              tsch_schedule_keepalive(0);
             }
 
             /* Add current input to ringbuf */
@@ -1017,7 +1024,8 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           burst_link_scheduled = 0;
         } else {
           /* Hop channel */
-          tsch_current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
+          tsch_current_channel = tsch_calculate_channel(&tsch_current_asn,
+              current_link->channel_offset, current_packet);
         }
         NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, tsch_current_channel);
         /* Turn the radio on already here if configured so; necessary for radios with slow startup */
@@ -1062,7 +1070,6 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
                 "! leaving the network, last sync %u",
                           (unsigned)TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn));
       );
-      last_timesource_neighbor = NULL;
       tsch_disassociate();
     } else {
       /* backup of drift correction for printing debug messages */

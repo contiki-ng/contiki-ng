@@ -11,7 +11,7 @@ BOARDS = srf06/cc26x0 srf06/cc13x0 launchpad/cc2640r2 launchpad/cc2650 launchpad
 CONTIKI_TARGET_DIRS += .
 
 ### Include the board-specific makefile
-PLATFORM_ROOT_DIR = $(ARCH_PATH)/platform/$(TARGET)
+PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
 -include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(notdir $(BOARD))
 
 CONTIKI_TARGET_SOURCEFILES += platform.c leds-arch.c
@@ -24,6 +24,6 @@ SMALL ?= 0
 
 ### Define the CPU directory and pull in the correct CPU makefile. This will
 ### be defined by one of the makefiles included above and it can be either
-### Makefile.cc26xx or Makefile.cc13xx
-CONTIKI_CPU=$(ARCH_PATH)/cpu/cc26x0-cc13x0
+### Makefile.cc26x0 or Makefile.cc13x0
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/cc26x0-cc13x0
 include $(CONTIKI_CPU)/Makefile.$(CPU_FAMILY)

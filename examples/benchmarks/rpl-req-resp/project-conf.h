@@ -29,7 +29,7 @@
 #define TSCH_CONF_RX_WAIT 1000
 #define ORCHESTRA_CONF_UNICAST_PERIOD 7
 
-#if CONFIG_OPTIMS == 2
+#if CONFIG_OPTIMS >= 2
 
 /* Five nines reliability paper used the config below */
 #define RPL_CONF_DIO_INTERVAL_MIN 14 /* 2^14 ms = 16.384 s */
@@ -39,10 +39,19 @@
 /* Five nines reliability paper used the config below */
 #define TSCH_CONF_KEEPALIVE_TIMEOUT (20 * CLOCK_SECOND)
 #define TSCH_CONF_MAX_KEEPALIVE_TIMEOUT (60 * CLOCK_SECOND)
-//#define TSCH_CONF_EB_PERIOD (16 * CLOCK_SECOND)
-//#define TSCH_CONF_MAX_EB_PERIOD (50 * CLOCK_SECOND)
 
-#endif
-#endif
+#endif /* CONFIG_OPTIMS >= 2 */
+
+#if CONFIG_OPTIMS < 3
+
+/* For optims1 and optims2, configure Orchestra unicast slotframe with only
+ * one choffset, for consistency with earlier version. Optims3 runs with the
+ * defaults, that is, with multiple choffsets on the unicast slotframe. */
+#define ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET 2
+#define ORCHESTRA_CONF_UNICAST_MAX_CHANNEL_OFFSET 2
+
+#endif /* CONFIG_OPTIMS >= 3 */
+
+#endif /* CONFIG_OPTIMS >= 1 */
 
 #endif /* PROJECT_CONF_H_ */

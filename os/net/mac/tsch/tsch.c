@@ -71,15 +71,6 @@
 #define LOG_MODULE "TSCH"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
-/* Use to collect link statistics even on Keep-Alive, even though they were
- * not sent from an upper layer and don't have a valid packet_sent callback */
-#ifndef TSCH_LINK_NEIGHBOR_CALLBACK
-#if NETSTACK_CONF_WITH_IPV6
-void uip_ds6_link_neighbor_callback(int status, int numtx);
-#define TSCH_LINK_NEIGHBOR_CALLBACK(dest, status, num) uip_ds6_link_neighbor_callback(status, num)
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-#endif /* TSCH_LINK_NEIGHBOR_CALLBACK */
-
 /* The address of the last node we received an EB from (other than our time source).
  * Used for recovery */
 static linkaddr_t last_eb_nbr_addr;
@@ -142,6 +133,15 @@ static clock_time_t tsch_current_eb_period;
 /* Current period for keepalive output */
 static clock_time_t tsch_current_ka_timeout;
 
+/* For scheduling keepalive messages  */
+enum tsch_keepalive_status {
+  KEEPALIVE_SCHEDULING_UNCHANGED,
+  KEEPALIVE_SCHEDULE_OR_STOP,
+  KEEPALIVE_SEND_IMMEDIATELY,
+};
+/* Should we send or schedule a keepalive? */
+static volatile enum tsch_keepalive_status keepalive_status;
+
 /* timer for sending keepalive messages */
 static struct ctimer keepalive_timer;
 
@@ -190,11 +190,7 @@ void
 tsch_set_ka_timeout(uint32_t timeout)
 {
   tsch_current_ka_timeout = timeout;
-  if(timeout == 0) {
-    ctimer_stop(&keepalive_timer);
-  } else {
-    tsch_schedule_keepalive();
-  }
+  tsch_schedule_keepalive(0);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -240,6 +236,7 @@ tsch_reset(void)
   }
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_set_eb_period(TSCH_EB_PERIOD);
+  keepalive_status = KEEPALIVE_SCHEDULING_UNCHANGED;
 }
 /* TSCH keep-alive functions */
 
@@ -275,7 +272,7 @@ resynchronize(const linkaddr_t *original_time_source_addr)
     tsch_queue_update_time_source(&last_eb_nbr_addr);
     tsch_join_priority = last_eb_nbr_jp + 1;
     /* Try to get in sync ASAP */
-    tsch_schedule_keepalive_immediately();
+    tsch_schedule_keepalive(1);
     return 1;
   }
 }
@@ -302,7 +299,7 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
   }
 
   if(schedule_next_keepalive) {
-    tsch_schedule_keepalive();
+    tsch_schedule_keepalive(0);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -310,6 +307,9 @@ keepalive_packet_sent(void *ptr, int status, int transmissions)
 static void
 keepalive_send(void *ptr)
 {
+  /* If not here from a timer callback, the timer must be stopped */
+  ctimer_stop(&keepalive_timer);
+
   if(tsch_is_associated) {
     struct tsch_neighbor *n = tsch_queue_get_time_source();
     if(n != NULL) {
@@ -326,25 +326,58 @@ keepalive_send(void *ptr)
   }
 }
 /*---------------------------------------------------------------------------*/
-/* Set ctimer to send a keepalive message after expiration of TSCH_KEEPALIVE_TIMEOUT */
 void
-tsch_schedule_keepalive(void)
+tsch_schedule_keepalive(int immediate)
 {
-  /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
-  if(!tsch_is_coordinator && tsch_is_associated && tsch_current_ka_timeout > 0) {
-    unsigned long delay = (tsch_current_ka_timeout - tsch_current_ka_timeout / 10)
-      + random_rand() % (tsch_current_ka_timeout / 10);
-    ctimer_set(&keepalive_timer, delay, keepalive_send, NULL);
+  if(immediate) {
+    /* send as soon as possible */
+    keepalive_status = KEEPALIVE_SEND_IMMEDIATELY;
+  } else if(keepalive_status != KEEPALIVE_SEND_IMMEDIATELY) {
+    /* send based on the tsch_current_ka_timeout */
+    keepalive_status = KEEPALIVE_SCHEDULE_OR_STOP;
   }
+  process_poll(&tsch_pending_events_process);
 }
 /*---------------------------------------------------------------------------*/
-/* Set ctimer to send a keepalive message immediately */
-void
-tsch_schedule_keepalive_immediately(void)
+static void
+tsch_keepalive_process_pending(void)
 {
-  /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
-  if(!tsch_is_coordinator && tsch_is_associated) {
-    ctimer_set(&keepalive_timer, 0, keepalive_send, NULL);
+  if(keepalive_status != KEEPALIVE_SCHEDULING_UNCHANGED) {
+    /* first, save and reset the old status */
+    enum tsch_keepalive_status scheduled_status = keepalive_status;
+    keepalive_status = KEEPALIVE_SCHEDULING_UNCHANGED;
+
+    if(!tsch_is_coordinator && tsch_is_associated) {
+      switch(scheduled_status) {
+      case KEEPALIVE_SEND_IMMEDIATELY:
+        /* always send, and as soon as possible (now) */
+        keepalive_send(NULL);
+        break;
+
+      case KEEPALIVE_SCHEDULE_OR_STOP:
+        if(tsch_current_ka_timeout > 0) {
+          /* Pick a delay in the range [tsch_current_ka_timeout*0.9, tsch_current_ka_timeout[ */
+          unsigned long delay;
+          if(tsch_current_ka_timeout >= 10) {
+            delay = (tsch_current_ka_timeout - tsch_current_ka_timeout / 10)
+                + random_rand() % (tsch_current_ka_timeout / 10);
+          } else {
+            delay = tsch_current_ka_timeout - 1;
+          }
+          ctimer_set(&keepalive_timer, delay, keepalive_send, NULL);
+        } else {
+          /* zero timeout set, stop sending keepalives */
+          ctimer_stop(&keepalive_timer);
+        }
+        break;
+
+      default:
+        break;
+      }
+    } else {
+      /* either coordinator or not associated */
+      ctimer_stop(&keepalive_timer);
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -535,6 +568,7 @@ tsch_disassociate(void)
 {
   if(tsch_is_associated == 1) {
     tsch_is_associated = 0;
+    tsch_adaptive_timesync_reset();
     process_poll(&tsch_process);
   }
 }
@@ -550,7 +584,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
 
   if(input_eb == NULL || tsch_packet_parse_eb(input_eb->payload, input_eb->len,
                                               &frame, &ies, &hdrlen, 0) == 0) {
-    LOG_ERR("! failed to parse EB (len %u)\n", input_eb->len);
+    LOG_DBG("! failed to parse EB (len %u)\n", input_eb->len);
     return 0;
   }
 
@@ -686,7 +720,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
       max_drift_seen = 0;
 
       /* Start sending keep-alives now that tsch_is_associated is set */
-      tsch_schedule_keepalive();
+      tsch_schedule_keepalive(0);
 
 #ifdef TSCH_CALLBACK_JOINING_NETWORK
       TSCH_CALLBACK_JOINING_NETWORK();
@@ -769,21 +803,23 @@ PT_THREAD(tsch_scan(struct pt *pt))
       /* Read packet */
       input_eb.len = NETSTACK_RADIO.read(input_eb.payload, TSCH_PACKET_MAX_LEN);
 
-      /* Save packet timestamp */
-      NETSTACK_RADIO.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t0, sizeof(rtimer_clock_t));
-      t1 = RTIMER_NOW();
+      if(input_eb.len > 0) {
+        /* Save packet timestamp */
+        NETSTACK_RADIO.get_object(RADIO_PARAM_LAST_PACKET_TIMESTAMP, &t0, sizeof(rtimer_clock_t));
+        t1 = RTIMER_NOW();
 
-      /* Parse EB and attempt to associate */
-      LOG_INFO("scan: received packet (%u bytes) on channel %u\n", input_eb.len, current_channel);
+        /* Parse EB and attempt to associate */
+        LOG_INFO("scan: received packet (%u bytes) on channel %u\n", input_eb.len, current_channel);
 
-      /* Sanity-check the timestamp */
-      if(ABS(RTIMER_CLOCK_DIFF(t0, t1)) < tsch_timing[tsch_ts_timeslot_length]) {
-        tsch_associate(&input_eb, t0);
-      } else {
-        LOG_WARN("scan: dropping packet, timestamp too far from current time %u %u\n",
-          (unsigned)t0,
-          (unsigned)t1
-      );
+        /* Sanity-check the timestamp */
+        if(ABS(RTIMER_CLOCK_DIFF(t0, t1)) < 2ul * RTIMER_SECOND) {
+          tsch_associate(&input_eb, t0);
+        } else {
+          LOG_WARN("scan: dropping packet, timestamp too far from current time %u %u\n",
+            (unsigned)t0,
+            (unsigned)t1
+        );
+        }
       }
     }
 
@@ -854,7 +890,7 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
 
   /* Set an initial delay except for coordinator, which should send an EB asap */
   if(!tsch_is_coordinator) {
-    etimer_set(&eb_timer, random_rand() % TSCH_EB_PERIOD);
+    etimer_set(&eb_timer, TSCH_EB_PERIOD ? random_rand() % TSCH_EB_PERIOD : 0);
     PROCESS_WAIT_UNTIL(etimer_expired(&eb_timer));
   }
 
@@ -866,6 +902,8 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
       /* Implementation section 6.3 of RFC 8180 */
       && TSCH_RPL_CHECK_DODAG_JOINED()
 #endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+      /* don't send when in leaf mode */
+      && !NETSTACK_ROUTING.is_in_leaf_mode()
         ) {
       /* Enqueue EB only if there isn't already one in queue */
       if(tsch_queue_packet_count(&tsch_eb_address) == 0) {
@@ -911,6 +949,7 @@ PROCESS_THREAD(tsch_pending_events_process, ev, data)
     tsch_rx_process_pending();
     tsch_tx_process_pending();
     tsch_log_process_pending();
+    tsch_keepalive_process_pending();
 #ifdef TSCH_CALLBACK_SELECT_CHANNELS
     TSCH_CALLBACK_SELECT_CHANNELS();
 #endif
@@ -926,11 +965,19 @@ tsch_init(void)
 {
   radio_value_t radio_rx_mode;
   radio_value_t radio_tx_mode;
+  radio_value_t radio_max_payload_len;
+
   rtimer_clock_t t;
 
   /* Check that the platform provides a TSCH timeslot timing template */
   if(TSCH_DEFAULT_TIMESLOT_TIMING == NULL) {
     LOG_ERR("! platform does not provide a timeslot timing template.\n");
+    return;
+  }
+
+  /* Check that the radio can correctly report its max supported payload */
+  if(NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN, &radio_max_payload_len) != RADIO_RESULT_OK) {
+    LOG_ERR("! radio does not support getting RADIO_CONST_MAX_PAYLOAD_LEN. Abort init.\n");
     return;
   }
 
@@ -1043,12 +1090,7 @@ send_packet(mac_callback_t sent, void *ptr)
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
 #if LLSEC802154_ENABLED
-  if(tsch_is_pan_secured) {
-    /* Set security level, key id and index */
-    packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, TSCH_SECURITY_KEY_SEC_LEVEL_OTHER);
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_ID_MODE, FRAME802154_1_BYTE_KEY_ID_MODE); /* Use 1-byte key index */
-    packetbuf_set_attr(PACKETBUF_ATTR_KEY_INDEX, TSCH_SECURITY_KEY_INDEX_OTHER);
-  }
+  tsch_security_set_packetbuf_attr(FRAME802154_DATAFRAME);
 #endif /* LLSEC802154_ENABLED */
 
 #if !NETSTACK_CONF_BRIDGE_MODE
@@ -1159,8 +1201,30 @@ turn_off(void)
 static int
 max_payload(void)
 {
+  int framer_hdrlen;
+  radio_value_t max_radio_payload_len;
+  radio_result_t res;
+
+  res = NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN,
+                                 &max_radio_payload_len);
+
+  if(res == RADIO_RESULT_NOT_SUPPORTED) {
+    LOG_ERR("Failed to retrieve max radio driver payload length\n");
+    return 0;
+  }
+
+  /* Set packetbuf security attributes */
+  tsch_security_set_packetbuf_attr(FRAME802154_DATAFRAME);
+
+  framer_hdrlen = NETSTACK_FRAMER.length();
+  if(framer_hdrlen < 0) {
+    return 0;
+  }
+
   /* Setup security... before. */
-  return TSCH_PACKET_MAX_LEN -  NETSTACK_FRAMER.length();
+  return MIN(max_radio_payload_len, TSCH_PACKET_MAX_LEN)
+    - framer_hdrlen
+    - LLSEC802154_PACKETBUF_MIC_LEN();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver tschmac_driver = {

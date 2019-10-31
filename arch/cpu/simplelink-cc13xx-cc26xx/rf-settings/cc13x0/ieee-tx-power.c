@@ -50,19 +50,29 @@
  */
 tx_power_table_t rf_ieee_tx_power_table_cc1350[] =
 {
-  { -21, RF_TxPowerTable_DEFAULT_PA_ENTRY( 7, 3, 0,  6) },
-  { -18, RF_TxPowerTable_DEFAULT_PA_ENTRY( 9, 3, 0,  6) },
-  { -15, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 0,  6) },
-  { -12, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 1, 0, 10) },
-  {  -9, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 1, 1, 12) },
-  {  -6, RF_TxPowerTable_DEFAULT_PA_ENTRY(18, 1, 1, 14) },
-  {  -3, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 1, 1, 18) },
-  {   0, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 1, 1, 24) },
-  {   1, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 0, 0, 33) },
-  {   2, RF_TxPowerTable_DEFAULT_PA_ENTRY(24, 0, 0, 39) },
-  {   3, RF_TxPowerTable_DEFAULT_PA_ENTRY(28, 0, 0, 45) },
-  {   4, RF_TxPowerTable_DEFAULT_PA_ENTRY(36, 0, 1, 73) },
-  {   5, RF_TxPowerTable_DEFAULT_PA_ENTRY(48, 0, 1, 73) },
+  {-21, RF_TxPowerTable_DEFAULT_PA_ENTRY(8, 3, 1, 6) },
+  {-18, RF_TxPowerTable_DEFAULT_PA_ENTRY(11, 3, 1, 6) },
+  {-15, RF_TxPowerTable_DEFAULT_PA_ENTRY(14, 3, 1, 10) },
+  {-12, RF_TxPowerTable_DEFAULT_PA_ENTRY(20, 3, 1, 12) },
+  {-9, RF_TxPowerTable_DEFAULT_PA_ENTRY(26, 3, 1, 14) },
+  {-6, RF_TxPowerTable_DEFAULT_PA_ENTRY(35, 3, 1, 18) },
+  {-3, RF_TxPowerTable_DEFAULT_PA_ENTRY(47, 3, 1, 22) },
+  {0, RF_TxPowerTable_DEFAULT_PA_ENTRY(29, 0, 1, 45) },
+  {1, RF_TxPowerTable_DEFAULT_PA_ENTRY(33, 0, 1, 49) },
+  {2, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 55) },
+  {3, RF_TxPowerTable_DEFAULT_PA_ENTRY(44, 0, 1, 63) },
+  {4, RF_TxPowerTable_DEFAULT_PA_ENTRY(52, 0, 1, 59) },
+  {5, RF_TxPowerTable_DEFAULT_PA_ENTRY(60, 0, 1, 47) },
+#if RF_TXPOWER_BOOST_MODE
+  // This setting requires CCFG_FORCE_VDDR_HH = 1.
+  {6, RF_TxPowerTable_DEFAULT_PA_ENTRY(38, 0, 1, 49) },
+  // This setting requires CCFG_FORCE_VDDR_HH = 1.
+  {7, RF_TxPowerTable_DEFAULT_PA_ENTRY(46, 0, 1, 59) },
+  // This setting requires CCFG_FORCE_VDDR_HH = 1.
+  {8, RF_TxPowerTable_DEFAULT_PA_ENTRY(55, 0, 1, 51) },
+  // This setting requires CCFG_FORCE_VDDR_HH = 1.
+  {9, RF_TxPowerTable_DEFAULT_PA_ENTRY(63, 0, 1, 30) },
+#endif
   RF_TxPowerTable_TERMINATION_ENTRY
 };
 /*---------------------------------------------------------------------------*/

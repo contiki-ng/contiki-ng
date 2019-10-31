@@ -13,7 +13,8 @@ PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 # REST Engine shall use Erbium CoAP implementation
-MODULES += os/net/app-layer/coap
+include $(CONTIKI)/Makefile.dir-variables
+MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/coap
 
 MAKE_ROUTING = MAKE_ROUTING_NULLROUTING
 

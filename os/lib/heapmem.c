@@ -58,6 +58,8 @@
 
 #include "heapmem.h"
 
+#include "sys/cc.h"
+
 /* The HEAPMEM_CONF_ARENA_SIZE parameter determines the size of the
    space that will be statically allocated in this module. */
 #ifdef HEAPMEM_CONF_ARENA_SIZE
@@ -143,7 +145,7 @@ typedef struct chunk {
 
 /* All allocated space is located within an "heap", which is statically
    allocated with a pre-configured size. */
-static char heap_base[HEAPMEM_ARENA_SIZE];
+static char heap_base[HEAPMEM_ARENA_SIZE] CC_ALIGN(HEAPMEM_ALIGNMENT);
 static size_t heap_usage;
 
 static chunk_t *first_chunk = (chunk_t *)heap_base;

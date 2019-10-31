@@ -148,6 +148,13 @@ static radio_result_t get_value(radio_param_t param, radio_value_t *value);
 #define OUTPUT_POWER_MIN    (output_power[OUTPUT_CONFIG_COUNT - 1].power)
 #define OUTPUT_POWER_MAX    (output_power[0].power)
 /*---------------------------------------------------------------------------*/
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the FCS.
+ */
+#define MAX_PAYLOAD_LEN (CC2538_RF_MAX_PACKET_LEN - CHECKSUM_LEN)
+/*---------------------------------------------------------------------------*/
 PROCESS(cc2538_rf_process, "cc2538 RF driver");
 /*---------------------------------------------------------------------------*/
 /**
@@ -600,7 +607,7 @@ prepare(const void *payload, unsigned short payload_len)
 {
   uint8_t i;
 
-  if(payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
 
@@ -665,7 +672,7 @@ transmit(unsigned short transmit_len)
 
   LOG_INFO("Transmit\n");
 
-  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(transmit_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
 
@@ -933,6 +940,9 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
   case RADIO_CONST_DELAY_BEFORE_DETECT:
     *value = (radio_value_t)CC2538_DELAY_BEFORE_DETECT;
+    return RADIO_RESULT_OK;
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;

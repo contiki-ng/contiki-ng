@@ -224,9 +224,6 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
     if(timeslot > (slotframe->size.val - 1)) {
       LOG_ERR("! add_link invalid timeslot: %u\n", timeslot);
       return NULL;
-    } else if(channel_offset > 15) {
-      LOG_ERR("! add_link invalid channel_offset: %u\n", channel_offset);
-      return NULL;
     }
 
     /* Start with removing the link currently installed at this timeslot (needed

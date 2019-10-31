@@ -101,6 +101,24 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 /* Protocol constants */
+#define MQTT_PROTOCOL_VERSION_3_1    3
+#define MQTT_PROTOCOL_VERSION_3_1_1  4
+#define MQTT_PROTOCOL_VERSION_5      5
+
+#ifdef MQTT_CONF_VERSION
+#define MQTT_PROTOCOL_VERSION MQTT_CONF_VERSION
+#else
+#define MQTT_PROTOCOL_VERSION MQTT_PROTOCOL_VERSION_3_1
+#endif
+
+#if MQTT_PROTOCOL_VERSION == MQTT_PROTOCOL_VERSION_5
+#define MQTT_5 1
+#elif MQTT_PROTOCOL_VERSION == MQTT_PROTOCOL_VERSION_3_1_1
+#define MQTT_311 1
+#elif MQTT_PROTOCOL_VERSION == MQTT_PROTOCOL_VERSION_3_1
+#define MQTT_31 1
+#endif
+
 #define MQTT_CLIENT_ID_MAX_LEN 23
 
 /* Size of the underlying TCP buffers */
@@ -113,9 +131,23 @@
 
 #define MQTT_FHDR_SIZE 1
 #define MQTT_MAX_REMAINING_LENGTH_BYTES 4
-#define MQTT_PROTOCOL_VERSION 3
+#if MQTT_31
 #define MQTT_PROTOCOL_NAME "MQIsdp"
+#else
+#define MQTT_PROTOCOL_NAME "MQTT"
+#endif
+
 #define MQTT_TOPIC_MAX_LENGTH 128
+
+#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
+#ifdef MQTT_CONF_SUPPORTS_EMPTY_CLIENT_ID
+#define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID MQTT_CONF_SUPPORTS_EMPTY_CLIENT_ID
+#else
+#define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
+#endif /* MQTT_CONF_SUPPORTS_EMPTY_CLIENT_ID */
+#else
+#define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
+#endif
 /*---------------------------------------------------------------------------*/
 /*
  * Debug configuration, this is similar but not exactly like the Debugging
@@ -138,6 +170,11 @@ typedef enum {
   MQTT_RETAIN_OFF,
   MQTT_RETAIN_ON,
 } mqtt_retain_t;
+
+typedef enum {
+  MQTT_CLEAN_SESSION_OFF,
+  MQTT_CLEAN_SESSION_ON,
+} mqtt_clean_session_t;
 
 /**
  * \brief MQTT engine events
@@ -184,6 +221,11 @@ typedef enum {
 
   /* Expand for QoS 2 */
 } mqtt_qos_state_t;
+
+typedef enum {
+  MQTT_PUBLISH_OK,
+  MQTT_PUBLISH_ERR,
+} mqtt_pub_status_t;
 /*---------------------------------------------------------------------------*/
 /*
  * This is the state of the connection itself.
@@ -217,10 +259,18 @@ struct mqtt_string {
  *
  * This could be part of a union of event data structures.
  */
-struct mqtt_suback_event {
+typedef struct {
   uint16_t mid;
   mqtt_qos_level_t qos_level;
-};
+#if MQTT_311
+  uint8_t return_code;
+  uint8_t success;
+#endif
+} mqtt_suback_event_t;
+
+typedef struct {
+  uint8_t session_present;
+} mqtt_connack_event_t;
 
 /* This is the MQTT message that is exposed to the end user. */
 struct mqtt_message {
@@ -389,6 +439,8 @@ mqtt_status_t mqtt_register(struct mqtt_connection *conn,
  * \param keep_alive Keep alive timer in seconds. Used by broker to handle
  *        client disc. Defines the maximum time interval between two messages
  *        from the client. Shall be min 1.5 x report interval.
+ * \param clean_session Request a new session and discard pending messages with
+ *        QoS > 0, as well as client subscriptions
  * \return MQTT_STATUS_OK or an error status
  *
  * This function connects to a MQTT broker.
@@ -396,7 +448,8 @@ mqtt_status_t mqtt_register(struct mqtt_connection *conn,
 mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
                            char *host,
                            uint16_t port,
-                           uint16_t keep_alive);
+                           uint16_t keep_alive,
+                           uint8_t clean_session);
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Disconnects from a MQTT broker.

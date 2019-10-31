@@ -152,6 +152,12 @@ drop_route(uip_ds6_route_t *route)
 {
 }
 /*---------------------------------------------------------------------------*/
+static uint8_t
+is_in_leaf_mode(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 const struct routing_driver nullrouting_driver = {
   "nullrouting",
   init,
@@ -173,6 +179,7 @@ const struct routing_driver nullrouting_driver = {
   link_callback,
   neighbor_state_changed,
   drop_route,
+  is_in_leaf_mode,
 };
 /*---------------------------------------------------------------------------*/
 

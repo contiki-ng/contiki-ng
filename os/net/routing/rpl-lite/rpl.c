@@ -264,6 +264,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_link_callback,
   neighbor_state_changed,
   drop_route,
+  rpl_get_leaf_only,
 };
 /*---------------------------------------------------------------------------*/
 

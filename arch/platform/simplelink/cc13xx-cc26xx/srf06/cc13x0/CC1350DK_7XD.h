@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350DK_7XD
 
 /* Mapping of pins to board signals using general board aliases
- *      <board signal alias>                  <pin mapping>
+ *      <board signal alias>        <pin mapping>   <comments>
  */
 
 /* Analog Capable DIOs */
@@ -101,6 +101,13 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350DK_7XD_I2C0_SCL0             PIN_UNASSIGNED
 #define CC1350DK_7XD_I2C0_SDA0             PIN_UNASSIGNED
 
+/* I2S */
+#define CC1350DK_7XD_I2S_ADO               PIN_UNASSIGNED
+#define CC1350DK_7XD_I2S_ADI               PIN_UNASSIGNED
+#define CC1350DK_7XD_I2S_BCLK              PIN_UNASSIGNED
+#define CC1350DK_7XD_I2S_MCLK              PIN_UNASSIGNED
+#define CC1350DK_7XD_I2S_WCLK              PIN_UNASSIGNED
+
 /* LEDs */
 #define CC1350DK_7XD_PIN_LED_ON            1
 #define CC1350DK_7XD_PIN_LED_OFF           0
@@ -112,8 +119,8 @@ extern const PIN_Config BoardGpioInitTable[];
 /* PWM Outputs */
 #define CC1350DK_7XD_PWMPIN0               CC1350DK_7XD_PIN_LED1
 #define CC1350DK_7XD_PWMPIN1               CC1350DK_7XD_PIN_LED2
-#define CC1350DK_7XD_PWMPIN2               PIN_UNASSIGNED
-#define CC1350DK_7XD_PWMPIN3               PIN_UNASSIGNED
+#define CC1350DK_7XD_PWMPIN2               CC1350DK_7XD_PIN_LED3
+#define CC1350DK_7XD_PWMPIN3               CC1350DK_7XD_PIN_LED4
 #define CC1350DK_7XD_PWMPIN4               PIN_UNASSIGNED
 #define CC1350DK_7XD_PWMPIN5               PIN_UNASSIGNED
 #define CC1350DK_7XD_PWMPIN6               PIN_UNASSIGNED
@@ -136,7 +143,9 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC1350DK_7XD_UART_RTS              IOID_21
 
 /* SD Card */
-#define CC1350DK_7XD_SDCARD_CS             IOID_30
+#define CC1350DK_7XD_SPI_SDCARD_CS         IOID_30
+#define CC1350DK_7XD_SDCARD_CS_ON          0
+#define CC1350DK_7XD_SDCARD_CS_OFF         1
 
 /* Ambient Light Sensor */
 #define CC1350DK_7XD_ALS_OUT               IOID_23
@@ -169,7 +178,7 @@ void CC1350DK_7XD_wakeUpExtFlash(void);
 
 /*!
  *  @def    CC1350DK_7XD_ADCBufName
- *  @brief  Enum of ADCs
+ *  @brief  Enum of ADCBufs
  */
 typedef enum CC1350DK_7XD_ADCBufName {
     CC1350DK_7XD_ADCBUF0 = 0,
@@ -214,6 +223,76 @@ typedef enum CC1350DK_7XD_CryptoName {
 } CC1350DK_7XD_CryptoName;
 
 /*!
+ *  @def    CC1350DK_7XD_AESCCMName
+ *  @brief  Enum of AESCCM names
+ */
+typedef enum CC1350DK_7XD_AESCCMName {
+    CC1350DK_7XD_AESCCM0 = 0,
+
+    CC1350DK_7XD_AESCCMCOUNT
+} CC1350DK_7XD_AESCCMName;
+
+/*!
+ *  @def    CC1350DK_7XD_AESGCMName
+ *  @brief  Enum of AESGCM names
+ */
+typedef enum CC1350DK_7XD_AESGCMName {
+    CC1350DK_7XD_AESGCM0 = 0,
+
+    CC1350DK_7XD_AESGCMCOUNT
+} CC1350DK_7XD_AESGCMName;
+
+/*!
+ *  @def    CC1350DK_7XD_AESCBCName
+ *  @brief  Enum of AESCBC names
+ */
+typedef enum CC1350DK_7XD_AESCBCName {
+    CC1350DK_7XD_AESCBC0 = 0,
+
+    CC1350DK_7XD_AESCBCCOUNT
+} CC1350DK_7XD_AESCBCName;
+
+/*!
+ *  @def    CC1350DK_7XD_AESCTRName
+ *  @brief  Enum of AESCTR names
+ */
+typedef enum CC1350DK_7XD_AESCTRName {
+    CC1350DK_7XD_AESCTR0 = 0,
+
+    CC1350DK_7XD_AESCTRCOUNT
+} CC1350DK_7XD_AESCTRName;
+
+/*!
+ *  @def    CC1350DK_7XD_AESECBName
+ *  @brief  Enum of AESECB names
+ */
+typedef enum CC1350DK_7XD_AESECBName {
+    CC1350DK_7XD_AESECB0 = 0,
+
+    CC1350DK_7XD_AESECBCOUNT
+} CC1350DK_7XD_AESECBName;
+
+/*!
+ *  @def    CC1350DK_7XD_AESCTRDRBGName
+ *  @brief  Enum of AESCTRDRBG names
+ */
+typedef enum CC1350DK_7XD_AESCTRDRBGName {
+    CC1350DK_7XD_AESCTRDRBG0 = 0,
+
+    CC1350DK_7XD_AESCTRDRBGCOUNT
+} CC1350DK_7XD_AESCTRDRBGName;
+
+/*!
+ *  @def    CC1350DK_7XD_TRNGName
+ *  @brief  Enum of TRNG names
+ */
+typedef enum CC1350DK_7XD_TRNGName {
+    CC1350DK_7XD_TRNG0 = 0,
+
+    CC1350DK_7XD_TRNGCOUNT
+} CC1350DK_7XD_TRNGName;
+
+/*!
  *  @def    CC1350DK_7XD_GPIOName
  *  @brief  Enum of GPIO names
  */
@@ -229,7 +308,7 @@ typedef enum CC1350DK_7XD_GPIOName {
     CC1350DK_7XD_GPIO_LED2,
     CC1350DK_7XD_GPIO_LED3,
     CC1350DK_7XD_GPIO_LED4,
-    CC1350DK_7XD_GPIO_SDCARD_CS,
+    CC1350DK_7XD_SDSPI_CS,
     CC1350DK_7XD_GPIO_ACC_CS,
 
     CC1350DK_7XD_GPIOCOUNT
@@ -276,6 +355,16 @@ typedef enum CC1350DK_7XD_I2CName {
 
     CC1350DK_7XD_I2CCOUNT
 } CC1350DK_7XD_I2CName;
+
+/*!
+ *  @def    CC1350DK_7XD_I2SName
+ *  @brief  Enum of I2S names
+ */
+typedef enum CC1350DK_7XD_I2SName {
+    CC1350DK_7XD_I2S0 = 0,
+
+    CC1350DK_7XD_I2SCOUNT
+} CC1350DK_7XD_I2SName;
 
 /*!
  *  @def    CC1350DK_7XD_NVSName
@@ -330,16 +419,6 @@ typedef enum CC1350DK_7XD_SPIName {
 
     CC1350DK_7XD_SPICOUNT
 } CC1350DK_7XD_SPIName;
-
-/*!
- *  @def    CC1350DK_7XD_TRNGName
- *  @brief  Enum of TRNGs
- */
-typedef enum CC1350DK_7XD_TRNGName {
-    CC1350DK_7XD_TRNG0 = 0,
-
-    CC1350DK_7XD_TRNGCOUNT
-} CC1350DK_7XD_TRNGName;
 
 /*!
  *  @def    CC1350DK_7XD_UARTName
