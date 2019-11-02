@@ -353,11 +353,11 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     if(msg_ptr->first_chunk) {
       msg_ptr->first_chunk = 0;
       LOG_DBG("Application received publish for topic '%s'. Payload "
-              "size is %i bytes.\n", msg_ptr->topic, msg_ptr->payload_length);
+              "size is %i bytes.\n", msg_ptr->topic, msg_ptr->payload_chunk_length);
     }
 
     pub_handler(msg_ptr->topic, strlen(msg_ptr->topic),
-                msg_ptr->payload_chunk, msg_ptr->payload_length);
+                msg_ptr->payload_chunk, msg_ptr->payload_chunk_length);
     break;
   }
   case MQTT_EVENT_SUBACK: {
