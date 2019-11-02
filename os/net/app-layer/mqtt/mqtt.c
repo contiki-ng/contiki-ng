@@ -538,12 +538,53 @@ find_prop_list(struct mqtt_connection *conn, mqtt_msg_type_t msg,
 
   return 0;
 }
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
+    struct mqtt_prop_list_t *prop_list))
+{
+  PT_BEGIN(pt);
+
+  struct mqtt_out_property_t *prop;
+
+  if(prop_list) {
+    DBG("MQTT - Writing %i property bytes\n", prop_list->properties_len + prop_list->properties_len_enc_bytes);
+    /* Write total length of properties */
+    PT_MQTT_WRITE_BYTES(conn,
+                        prop_list->properties_len_enc,
+                        prop_list->properties_len_enc_bytes);
+
+    prop = (struct mqtt_out_property_t *) list_head(prop_list->props);
+    do {
+      if(prop != NULL) {
+        DBG("MQTT - Property ID %i len %i\n", prop->id, prop->property_len);
+        PT_MQTT_WRITE_BYTE(conn, prop->id);
+        PT_MQTT_WRITE_BYTES(conn,
+                            prop->val,
+                            prop->property_len);
+      }
+      prop = (struct mqtt_out_property_t *) list_item_next(prop);
+    } while(prop != NULL);
+  } else {
+    /* Write Property Length */
+    PT_MQTT_WRITE_BYTE(conn, 0);
+  }
+
+  PT_END(pt);
+}
 #endif
 /*---------------------------------------------------------------------------*/
 static
 PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
 {
   PT_BEGIN(pt);
+
+#if MQTT_5
+  struct mqtt_prop_list_t *prop_list;
+  uint8_t found_props;
+
+  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
+#endif
 
   DBG("MQTT - Sending CONNECT message...\n");
 
@@ -556,6 +597,13 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->credentials.password);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->will.topic);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->will.message);
+
+#if MQTT_5
+  conn->out_packet.remaining_length +=
+      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
+                  : 1;
+#endif
+
   encode_remaining_length(conn->out_packet.remaining_length_enc,
                           &conn->out_packet.remaining_length_enc_bytes,
                           conn->out_packet.remaining_length);
@@ -577,6 +625,13 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTE(conn, conn->connect_vhdr_flags);
   PT_MQTT_WRITE_BYTE(conn, (conn->keep_alive >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->keep_alive & 0x00FF));
+
+#if MQTT_5
+  /* Write Properties */
+  write_out_props(pt, conn, prop_list);
+#endif
+
+  /* Write Payload */
   PT_MQTT_WRITE_BYTE(conn, conn->client_id.length >> 8);
   PT_MQTT_WRITE_BYTE(conn, conn->client_id.length & 0x00FF);
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->client_id.string,
@@ -668,6 +723,13 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
 {
   PT_BEGIN(pt);
 
+#if MQTT_5
+  struct mqtt_prop_list_t *prop_list;
+  uint8_t found_props;
+
+  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_SUBSCRIBE, &prop_list);
+#endif
+
   DBG("MQTT - Sending subscribe message! topic %s topic_length %i\n",
       conn->out_packet.topic,
       conn->out_packet.topic_length);
@@ -680,6 +742,13 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
     MQTT_STRING_LEN_SIZE +
     conn->out_packet.topic_length +
     MQTT_QOS_SIZE;
+
+#if MQTT_5
+  conn->out_packet.remaining_length +=
+      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
+                  : 1;
+#endif
+
   encode_remaining_length(conn->out_packet.remaining_length_enc,
                           &conn->out_packet.remaining_length_enc_bytes,
                           conn->out_packet.remaining_length);
@@ -697,6 +766,12 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   /* Write Variable Header */
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
+
+  #if MQTT_5
+  /* Write Properties */
+  write_out_props(pt, conn, prop_list);
+  #endif
+
   /* Write Payload */
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.topic_length >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.topic_length & 0x00FF));
@@ -793,6 +868,13 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
 {
   PT_BEGIN(pt);
 
+#if MQTT_5
+  struct mqtt_prop_list_t *prop_list;
+  uint8_t found_props;
+
+  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
+#endif
+
   DBG("MQTT - Sending publish message! topic %s topic_length %i\n",
       conn->out_packet.topic,
       conn->out_packet.topic_length);
@@ -811,6 +893,13 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
   if(conn->out_packet.qos > MQTT_QOS_LEVEL_0) {
     conn->out_packet.remaining_length += MQTT_MID_SIZE;
   }
+
+#if MQTT_5
+  conn->out_packet.remaining_length +=
+      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
+                  : 1;
+#endif
+
   encode_remaining_length(conn->out_packet.remaining_length_enc,
                           &conn->out_packet.remaining_length_enc_bytes,
                           conn->out_packet.remaining_length);
@@ -838,6 +927,11 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
     PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
     PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
   }
+
+#if MQTT_5
+  /* Write Properties */
+  write_out_props(pt, conn, prop_list);
+#endif
 
   /* Write Payload */
   PT_MQTT_WRITE_BYTES(conn,
