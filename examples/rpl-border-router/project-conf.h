@@ -43,13 +43,7 @@
 #define UIP_CONF_TCP 1
 #endif
 
-/*  This will fix the packet drop problem of Native Border Router.
- *  Packet drop exist between native and slip-radio because of high
- *  writing speed of native device. SLIP_DEV_CONF_OCTET_DELAY in
- *  microsecond will reduce the writing speed of native device using 
- *  usleep(). The result will reduce the packet drop between native 
- *  and slip-radio.
- */
+/* octet delay setting of SLIP in microsecond */
 #if CONTIKI_TARGET_NATIVE
 #define SLIP_DEV_CONF_OCTET_DELAY 0
 #endif

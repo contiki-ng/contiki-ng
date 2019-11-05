@@ -70,7 +70,12 @@ extern speed_t slip_config_b_rate;
 #define SEND_DELAY 0
 #endif
 
-/* octet delay setting of SLIP in microsecond */
+/*  Depending on the slip radio device, sometimes packet drop exist 
+ *  between native and slip-radio because of high writing speed of 
+ *  native device. SLIP_DEV_CONF_OCTET_DELAY in microsecond will 
+ *  reduce the writing speed of native device using usleep(). The 
+ *  result will reduce the packet drop between native and slip-radio.
+ */
 #ifdef SLIP_DEV_CONF_OCTET_DELAY
 #define OCTET_DELAY SLIP_DEV_CONF_OCTET_DELAY
 #else
