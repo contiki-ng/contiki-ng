@@ -606,7 +606,7 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TXPOWER:
-    res = rf_get_tx_power(prop_radio.rf_handle, rf_tx_power_table, (int8_t *)&value);
+    res = rf_get_tx_power(prop_radio.rf_handle, rf_tx_power_table, (int8_t *)value);
     return ((res == RF_RESULT_OK) &&
             (*value != RF_TxPowerTable_INVALID_DBM))
            ? RADIO_RESULT_OK
@@ -743,7 +743,7 @@ init(void)
   if(tx_power_value.rawValue != RF_TxPowerTable_INVALID_VALUE) {
     rf_stat = RF_setTxPower(prop_radio.rf_handle, tx_power_value);
     if(rf_stat == RF_StatSuccess) {
-      LOG_INFO("TX power configured to %d dBm\n", RF_TXPOWER_DBM);
+      LOG_INFO("TX power configured to %d dBm\n", RF_TxPowerTable_findPowerLevel(rf_tx_power_table, tx_power_value));
     } else {
       LOG_WARN("Setting TX power to %d dBm failed, stat=0x%02X", RF_TXPOWER_DBM, rf_stat);
     }
