@@ -70,10 +70,10 @@ extern speed_t slip_config_b_rate;
 #define SEND_DELAY 0
 #endif
 
-/*  Depending on the slip radio device, sometimes packet drop exist 
- *  between native and slip-radio because of high writing speed of 
- *  native device. SLIP_DEV_CONF_OCTET_DELAY in microsecond will 
- *  reduce the writing speed of native device using usleep(). The 
+/*  Depending on the slip radio device, sometimes packet drop exist
+ *  between native and slip-radio because of high writing speed of
+ *  native device. SLIP_DEV_CONF_OCTET_DELAY in microsecond will
+ *  reduce the writing speed of native device using usleep(). The
  *  result will reduce the packet drop between native and slip-radio.
  */
 #ifdef SLIP_DEV_CONF_OCTET_DELAY
@@ -345,7 +345,7 @@ write_slowly(int fd, const void *buf, size_t count, int inter_octet_delay)
       } else {
         n += write_status;
         usleep(inter_octet_delay);
-      } 
+      }
     }
     return n;
   }
