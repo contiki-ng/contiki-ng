@@ -617,7 +617,7 @@ net_downlink_slip_send(mac_callback_t sent_callback, void *ptr)
         *write_ptr = SLIP_ESC;
         write_ptr++;
         *write_ptr = SLIP_ESC_END;
-      } else if(packet_ptr[i] == SLIP_END) {
+      } else if(packet_ptr[i] == SLIP_ESC) {
         *write_ptr = SLIP_ESC;
         write_ptr++;
         *write_ptr = SLIP_ESC_ESC;
