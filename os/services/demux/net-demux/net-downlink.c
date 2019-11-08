@@ -475,18 +475,33 @@ serial_fd_handle(fd_set *rset, fd_set *wset)
 
   if(FD_ISSET(serial_fd, wset)) {
     int idx;
-    while((idx = ringbufindex_get(&serial_tx_ringbuf_index)) >= 0) {
+    int write_len;
+    while((idx = ringbufindex_peek_get(&serial_tx_ringbuf_index)) >= 0) {
       LOG_DBG("Writing %u bytes to SLIP (ringbufindex: %d)\n",
               serial_tx_ringbuf[idx].packet_len, idx);
-
-      if(write(serial_fd,
-               serial_tx_ringbuf[idx].packet_buf,
-               serial_tx_ringbuf[idx].packet_len) < 0) {
-        LOG_ERR("write() to the serial device failed: %s\n", strerror(errno));
-      } else if(config_min_interpacket_gap_ms > 0) {
-        (void)usleep(config_min_interpacket_gap_ms * 1000);
+      if((write_len = write(serial_fd,
+                            serial_tx_ringbuf[idx].packet_buf,
+                            serial_tx_ringbuf[idx].packet_len)) < 0) {
+        LOG_ERR("write() to the serial device failed (%s); will retry\n",
+                strerror(errno));
+      } else if(write_len == serial_tx_ringbuf[idx].packet_len) {
+        /* the whole data at idx is written successfully */
+        (void)ringbufindex_get(&serial_tx_ringbuf_index);
+        if(config_min_interpacket_gap_ms > 0) {
+          (void)usleep(config_min_interpacket_gap_ms * 1000);
+        } else {
+          /* do nothing */
+        }
       } else {
-        /* do nothing */
+        /*
+         * data at ids is partially written; the remaining will be
+         * processed later
+         */
+        assert(write_len < serial_tx_ringbuf[idx].packet_len);
+        memmove(serial_tx_ringbuf[idx].packet_buf,
+                serial_tx_ringbuf[idx].packet_buf + write_len,
+                serial_tx_ringbuf[idx].packet_len - write_len);
+        serial_tx_ringbuf[idx].packet_len -= write_len;
       }
     }
   }
