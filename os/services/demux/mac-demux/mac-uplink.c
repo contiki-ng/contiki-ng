@@ -60,7 +60,7 @@ input_callback(void)
    */
   if(uip_len > PACKETBUF_SIZE) {
     LOG_ERR("Drop a received packet; too big (%u bytes)\n", uip_len);
-    uip_len = 0;
+    uipbuf_clear();
   } else {
     /* move the contents in uip_buf to packetbuf */
     packetbuf_clear();

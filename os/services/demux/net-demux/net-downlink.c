@@ -478,8 +478,6 @@ serial_fd_handle(fd_set *rset, fd_set *wset)
     while((idx = ringbufindex_get(&serial_tx_ringbuf_index)) >= 0) {
       LOG_DBG("Writing %u bytes to SLIP (ringbufindex: %d)\n",
               serial_tx_ringbuf[idx].packet_len, idx);
-      for(int i = 0; i < serial_tx_ringbuf[idx].packet_len; i++) {
-      }
 
       if(write(serial_fd,
                serial_tx_ringbuf[idx].packet_buf,
