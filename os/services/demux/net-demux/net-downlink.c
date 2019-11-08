@@ -62,7 +62,8 @@
 #ifdef NET_DOWNLINK_CONF_SLIP_TX_BUF_NUM
 #define NET_DOWNLINK_SLIP_TX_BUF_NUM NET_DOWNLINK_CONF_SLIP_TX_BUF_NUM
 #else
-#define NET_DOWNLINK_SLIP_TX_BUF_NUM 8
+/* need PACKETBUF_SIZE * 10 to handle the IPv6 minimum MTU */
+#define NET_DOWNLINK_SLIP_TX_BUF_NUM 16
 #endif /* NET_DOWNLINK_CONF_SLIP_TX_BUF_NUM */
 
 #define DISABLE_FLOW_CONTROL false
@@ -71,7 +72,7 @@
 #define DEFAULT_SERIAL_TCP_REMOTE_HOST "localhost"
 #define INVALID_SERIAL_TCP_PORT NULL
 #define DEFAULT_SERIAL_DEVICE_PATH "/dev/ttyUSB0"
-#define DEFAULT_MIN_INTERPACKET_GAP_MS 0
+#define DEFAULT_MIN_INTERPACKET_GAP_MS 10
 
 #define INVALID_FD -1
 
@@ -101,9 +102,10 @@ static struct ringbufindex serial_tx_ringbuf_index;
 static struct {
   /*
    * packetbuf should be large enough to store a packet all the octets
-   * of which are escaped
+   * of which are escaped. Each packet is surrounded with SLIP_END,
+   * which consumes 2 octets in total.
    */
-  uint8_t packet_buf[((PACKETBUF_SIZE + 3) / 4 * 4) * 2];
+  uint8_t packet_buf[(PACKETBUF_SIZE * 2 + 3) / 4 * 4 + 2];
   uint16_t packet_len;
 } serial_tx_ringbuf[NET_DOWNLINK_SLIP_TX_BUF_NUM];
 
@@ -134,6 +136,7 @@ static int serial_open_tcp_connection(void);
 static int serial_open_device(void);
 static int serial_fd_set(fd_set *rset, fd_set *wset);
 static void serial_fd_handle(fd_set *rset, fd_set *wset);
+static void serial_clear_rxbuf(void);
 static void serial_handle_rx(void);
 
 void net_downlink_input(void);
@@ -476,7 +479,7 @@ serial_fd_handle(fd_set *rset, fd_set *wset)
   if(FD_ISSET(serial_fd, wset)) {
     int idx;
     int write_len;
-    while((idx = ringbufindex_peek_get(&serial_tx_ringbuf_index)) >= 0) {
+    if((idx = ringbufindex_peek_get(&serial_tx_ringbuf_index)) >= 0) {
       LOG_DBG("Writing %u bytes to SLIP (ringbufindex: %d)\n",
               serial_tx_ringbuf[idx].packet_len, idx);
       if((write_len = write(serial_fd,
@@ -486,6 +489,7 @@ serial_fd_handle(fd_set *rset, fd_set *wset)
                 strerror(errno));
       } else if(write_len == serial_tx_ringbuf[idx].packet_len) {
         /* the whole data at idx is written successfully */
+        serial_tx_ringbuf[idx].packet_len = 0;
         (void)ringbufindex_get(&serial_tx_ringbuf_index);
         if(config_min_interpacket_gap_ms > 0) {
           (void)usleep(config_min_interpacket_gap_ms * 1000);
@@ -508,11 +512,21 @@ serial_fd_handle(fd_set *rset, fd_set *wset)
 }
 /*---------------------------------------------------------------------------*/
 static void
+serial_clear_rxbuf(void)
+{
+  if(serial_rxbuf_len > 0) {
+    LOG_WARN("Drop a buffered rx packet (%u bytes)\n", serial_rxbuf_len);
+    serial_rxbuf_len = 0;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
 serial_handle_rx(void)
 {
   static enum {
     STATE_WAITING_FOR_DELIMITER,
     STATE_WAITING_FOR_FIRST_BYTE,
+    STATE_WAITING_FOR_SLIP_ESC_END,
     STATE_RECEIVING_PACKET,
     STATE_EXPECTING_PRINTABLE_BYTE,
   } state = STATE_WAITING_FOR_FIRST_BYTE;
@@ -535,19 +549,27 @@ serial_handle_rx(void)
       } else if(byte == '!' || byte == '?') {
         /* this seems a serial command, which is not supported; ignore it */
         state = STATE_WAITING_FOR_DELIMITER;
+      } else if (byte == SLIP_ESC) {
+        /*
+         * The first fragment of a full IPv6 packet may have 0x60, the
+         * same value as SLIP_END, in its first byte, which should be
+         * escaped with SLIP_ESC. If the following byte is
+         * SLIP_ESC_END, the receiving bytes is the first fragment of
+         * a full IPv6 packet. Otherwise, it is considered as garbage.
+         */
+        state = STATE_WAITING_FOR_SLIP_ESC_END;
       } else if(byte == SICSLOWPAN_DISPATCH_HC1 ||
                 ((byte & SICSLOWPAN_DISPATCH_IPHC_MASK) ==
                  SICSLOWPAN_DISPATCH_IPHC) ||
-                byte == SICSLOWPAN_DISPATCH_FRAG1 ||
-                byte == SICSLOWPAN_DISPATCH_FRAGN) {
-        /*
+                ((byte & SICSLOWPAN_DISPATCH_FRAG_MASK) ==
+                 SICSLOWPAN_DISPATCH_FRAG1) ||
+                ((byte & SICSLOWPAN_DISPATCH_FRAG_MASK) ==
+                 SICSLOWPAN_DISPATCH_FRAGN)) {
+         /*
          * this seems a compressed IPv6 packet (RFC 4944, RFC 6282);
          * save it into rxbuf
          */
-        if(serial_rxbuf_len > 0) {
-          LOG_WARN("Drop a buffered rx packet (%u bytes)\n", serial_rxbuf_len);
-          serial_rxbuf_len = 0;
-        }
+        serial_clear_rxbuf();
         serial_rxbuf[serial_rxbuf_len] = byte;
         serial_rxbuf_len++;
         state = STATE_RECEIVING_PACKET;
@@ -558,6 +580,18 @@ serial_handle_rx(void)
         /* if all the following octets are printable, take it a log message */
         printf("%s %c", hop_1_log_header, byte);
         state = STATE_EXPECTING_PRINTABLE_BYTE;
+      }
+    } else if(state == STATE_WAITING_FOR_SLIP_ESC_END) {
+      if(byte == SLIP_ESC_END) {
+        /* this byte should be the escaped dispatch value of FRAG1 */
+        serial_clear_rxbuf();
+        serial_rxbuf[0] = SLIP_ESC;
+        serial_rxbuf[1] = SLIP_ESC_END;
+        serial_rxbuf_len += 2;
+        state = STATE_RECEIVING_PACKET;
+      } else {
+        /* this is garbage; ignore it */
+        state = STATE_WAITING_FOR_DELIMITER;
       }
     } else if(state == STATE_RECEIVING_PACKET) {
       if(byte == SLIP_END) {
@@ -598,10 +632,14 @@ void
 net_downlink_slip_send(mac_callback_t sent_callback, void *ptr)
 {
   int idx;
+  int status;
+  int transmissions;
 
   if((idx = ringbufindex_peek_put(&serial_tx_ringbuf_index)) < 0 ||
      ringbufindex_put(&serial_tx_ringbuf_index) < 0) {
     LOG_ERR("No TX buffer for a new packet; drop it\n");
+    status = MAC_TX_ERR;
+    transmissions = 0;
   } else {
     uint8_t *packet_ptr = packetbuf_hdrptr();
     uint16_t packet_len = packetbuf_totlen();
@@ -630,6 +668,12 @@ net_downlink_slip_send(mac_callback_t sent_callback, void *ptr)
 
     serial_tx_ringbuf[idx].packet_len = (write_ptr -
                                          serial_tx_ringbuf[idx].packet_buf);
+    status = MAC_TX_OK;
+    transmissions = 1;
+  }
+
+  if(sent_callback) {
+    sent_callback(ptr, status, transmissions);
   }
 }
 /*---------------------------------------------------------------------------*/

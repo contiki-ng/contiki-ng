@@ -28,10 +28,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <contiki.h>
+
 #include <net/mac/mac.h>
 #include <net/packetbuf.h>
+#include <net/ipv6/sicslowpan.h>
 
 void net_downlink_slip_send(mac_callback_t sent_callback, void *ptr);
+
+/*
+ * MAX_PAYLOAD_LEN shouldn't be too large for 6LoWPAN
+ * fragmentation. The following definitions for
+ * SICSLOWPAN_FRAGMENT_SIZE are copied from sicslowpan.c.
+ */
+#ifdef SICSLOWPAN_CONF_FRAGMENT_SIZE
+#define SICSLOWPAN_FRAGMENT_SIZE SICSLOWPAN_CONF_FRAGMENT_SIZE
+#else
+#define SICSLOWPAN_FRAGMENT_SIZE (127 - 2 - 15)
+#endif
+#define MAC_DOWNLINK_MAX_PAYLOAD_LEN  \
+  (SICSLOWPAN_FRAGMENT_SIZE + SICSLOWPAN_FRAGN_HDR_LEN)
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -69,8 +85,7 @@ off(void)
 static int
 max_payload(void)
 {
-  /* need to return a certain value for sixlowpan, header compression */
-  return PACKETBUF_SIZE;
+  return MAC_DOWNLINK_MAX_PAYLOAD_LEN;
 }
 /*---------------------------------------------------------------------------*/
 
