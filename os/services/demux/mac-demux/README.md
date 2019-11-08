@@ -1,6 +1,6 @@
 # Introduction
 
-`net-demux` is meant to be used in a project for a radio board having
+`mac-demux` is meant to be used in a project for a radio board having
 a serial connection to a Linux host. This module demultiplexes output
 packets to its radio interface (IEEE 802.15.4) and a SLIP interface.
 
@@ -12,7 +12,7 @@ Add the following two lines into your project Makefile:
 MODULES += os/services/demux/mac-demux
 ```
 
-`NETWORK_CONF_NETWORK` and `NETSTACK_CONF_MAC` are automatically set
+`NETSTACK_CONF_NETWORK` and `NETSTACK_CONF_MAC` are automatically set
 by this module.
 
 In addition, you need to define `MAC_UPLINK_PEER_MAC_ADDR` in your

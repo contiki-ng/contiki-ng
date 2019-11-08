@@ -41,12 +41,11 @@ platform. **Standalone** means that a resulting executable
 dependency such as `slip-radio`.
 
 6LBR has two interfaces: tun and slip. Both connect to an IPv6 network
-having the same prefix, for instance, `fd00::/64`. While normal
+having the same prefix of `fd00::0/64`. While normal
 (uncompressed/bare) IPv6 packets are exchanges on the tun interface,
 IPv6 packets are compressed and could have extention headers for RPL
 over the slip interface. 6LBR is responsible for the
-compression/decompression and RPL-related extention header
-operations.
+compression/decompression and RPL-related extention header operations.
 
 ### First Hop 6LR (`6lr-with-slip`)
 
@@ -100,7 +99,7 @@ acting as a RPL router.
     +--+--+                ++----+-+      ++----++   ++------+---------+
        |                     |   |        |    |     |      |
   +----+---------------------+---+--------+----++----++   +-+------------------...
-  | IPv6 (e.g., fd00::/64)   |   |        |           |   | Ethernet, WiFi, or ...         
+  | IPv6 (fd00::/64)   |   |        |           |   | Ethernet, WiFi, or ...         
   | +--+---------------------+---+--------++          +   .
   | |              RPL/6LoWPAN             |          |   .
   | +--------------------------------------+          |   .

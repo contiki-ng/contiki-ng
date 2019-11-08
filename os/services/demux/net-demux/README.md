@@ -13,7 +13,7 @@ MAKE_MAC = MAKE_MAC_OTHER
 MODULES += os/services/demux/net-demux
 ```
 
-`NETWORK_CONF_NETWORK` and `NETSTACK_CONF_MAC` are automatically set
+`NETSTACK_CONF_NETWORK` and `NETSTACK_CONF_MAC` are automatically set
 by this module.
 
 In addition, you may want to specify a MAC address for the SLIP

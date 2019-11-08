@@ -1,5 +1,5 @@
 `demux` sevice provides an easy way to handle two network interfaces
-on a node. There are two modules avaialble:
+on a node. There are two modules available:
 
 * `demux/net-demux`
 * `demux/mac-demux`
