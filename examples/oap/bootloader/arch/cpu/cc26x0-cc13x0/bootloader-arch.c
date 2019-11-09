@@ -116,9 +116,9 @@ bootloader_arch_init()
    * latches in the first place. Before doing these things though, we should
    * allow software to first regain control of pins
    */
-  ti_lib_pwr_ctrl_io_freeze_disable();
+  ti_lib_aon_ioc_freeze_disable();
 
-  ti_lib_rom_int_enable(INT_AON_GPIO_EDGE);
+  ti_lib_int_enable(INT_AON_GPIO_EDGE);
   ti_lib_int_master_enable();
 
   soc_rtc_init();
