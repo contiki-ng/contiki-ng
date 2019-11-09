@@ -14,4 +14,7 @@ CONTIKI = ../../..
 
 MODULES_REL += arch/platform/$(TARGET)
 
+$(CONTIKI_PROJECT).hex: build/$(TARGET)/$(BOARD)/$(CONTIKI_PROJECT).hex
+	cp $< $@
+
 include $(CONTIKI)/Makefile.include

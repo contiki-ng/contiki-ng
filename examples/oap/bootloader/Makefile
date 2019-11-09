@@ -19,6 +19,9 @@ endif
 CONTIKI = ../../..
 -include $(CONTIKI)/Makefile.identify-target
 
+$(CONTIKI_PROJECT).hex: build/$(TARGET)/$(BOARD)/$(CONTIKI_PROJECT).hex
+	cp $< $@
+
 -include arch/platform/$(TARGET)/Makefile.$(TARGET)
 
 include $(CONTIKI)/Makefile.include
