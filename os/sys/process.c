@@ -175,6 +175,7 @@ static void
 call_process(struct process *p, process_event_t ev, process_data_t data)
 {
   int ret;
+  struct process *old_current = process_current;
 
 #if DEBUG
   if(p->state == PROCESS_STATE_CALLED) {
@@ -196,6 +197,8 @@ call_process(struct process *p, process_event_t ev, process_data_t data)
       p->state = PROCESS_STATE_RUNNING;
     }
   }
+
+  process_current = old_current;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -361,10 +364,7 @@ process_post(struct process *p, process_event_t ev, process_data_t data)
 void
 process_post_synch(struct process *p, process_event_t ev, process_data_t data)
 {
-  struct process *caller = process_current;
-
   call_process(p, ev, data);
-  process_current = caller;
 }
 /*---------------------------------------------------------------------------*/
 void
