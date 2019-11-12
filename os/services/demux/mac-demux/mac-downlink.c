@@ -43,8 +43,8 @@ static const struct mac_driver *netstack_mac = &tschmac_driver;
 
 #include <sys/log.h>
 
-#define LOG_MODULE "6LR-DOWN"
-#define LOG_LEVEL LOG_LEVEL_MAIN
+#define LOG_MODULE "demux-down"
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /*---------------------------------------------------------------------------*/
 void

@@ -36,8 +36,8 @@
 
 #include <sys/log.h>
 
-#define LOG_MODULE "6LR-DEMUX"
-#define LOG_LEVEL LOG_LEVEL_MAIN
+#define LOG_MODULE "demux"
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 /*---------------------------------------------------------------------------*/
 static void

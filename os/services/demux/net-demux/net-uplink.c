@@ -41,8 +41,8 @@
 
 #include <sys/log.h>
 
-#define LOG_MODULE "6LBR-UP"
-#define LOG_LEVEL LOG_LEVEL_MAIN
+#define LOG_MODULE "demux-up"
+#define LOG_LEVEL LOG_LEVEL_IPV6
 
 extern const struct network_driver tun6_net_driver;
 

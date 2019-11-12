@@ -39,8 +39,8 @@
 
 #include <sys/log.h>
 
-#define LOG_MODULE "6LBR-DEMUX"
-#define LOG_LEVEL LOG_LEVEL_MAIN
+#define LOG_MODULE "demux"
+#define LOG_LEVEL LOG_LEVEL_IPV6
 
 /*---------------------------------------------------------------------------*/
 static void

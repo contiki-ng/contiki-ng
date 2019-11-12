@@ -41,8 +41,8 @@
 
 #include <sys/log.h>
 
-#define LOG_MODULE "6LR-UP"
-#define LOG_LEVEL LOG_LEVEL_MAIN
+#define LOG_MODULE "demux-up"
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 #ifdef MAC_UPLINK_PEER_MAC_ADDR
 static const uint8_t peer_mac_addr[] = MAC_UPLINK_PEER_MAC_ADDR;
