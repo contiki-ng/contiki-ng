@@ -601,7 +601,7 @@ net_downlink_slip_send(mac_callback_t sent_callback, void *ptr)
 
   if((idx = ringbufindex_peek_put(&serial_tx_ringbuf_index)) < 0 ||
      ringbufindex_put(&serial_tx_ringbuf_index) < 0) {
-    LOG_ERR("No TX buffer for a new packet; drop it");
+    LOG_ERR("No TX buffer for a new packet; drop it\n");
   } else {
     uint8_t *packet_ptr = packetbuf_hdrptr();
     uint16_t packet_len = packetbuf_totlen();
