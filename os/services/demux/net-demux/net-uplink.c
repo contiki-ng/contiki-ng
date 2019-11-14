@@ -46,39 +46,14 @@
 
 extern const struct network_driver tun6_net_driver;
 
-static enum netstack_ip_action ip_input_callback(void);
-static enum netstack_ip_action ip_output_callback(const linkaddr_t *localdest);
-
 bool net_downlink_is_peer_linkaddr(const linkaddr_t *linkaddr);
 
-/*---------------------------------------------------------------------------*/
-static enum netstack_ip_action
-ip_input_callback(void)
-{
-  return NETSTACK_IP_PROCESS;
-}
-/*---------------------------------------------------------------------------*/
-static enum netstack_ip_action
-ip_output_callback(const linkaddr_t *localdest)
-{
-  /*
-   * do nothing but returning NETSTACK_IP_PROCESS so that the
-   * following process is executed.
-   */
-  return NETSTACK_IP_PROCESS;
-}
 /*---------------------------------------------------------------------------*/
 void
 net_uplink_init(void)
 {
-  static struct netstack_ip_packet_processor packet_processor = {
-    .process_input = ip_input_callback,
-    .process_output = ip_output_callback
-  };
-
   LOG_INFO("Initialize TUN for the uplink\n");
   tun6_net_driver.init();
-  netstack_ip_packet_processor_add(&packet_processor);
 }
 /*---------------------------------------------------------------------------*/
 void
