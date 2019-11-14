@@ -31,7 +31,7 @@
 #ifndef _NET_DOWNLINK_H_
 #define _NET_DOWNLINK_H_
 
-#include <net/linkaddr.h>
+#include "net/linkaddr.h"
 
 void net_downlink_init(void);
 void net_downlink_input(void);

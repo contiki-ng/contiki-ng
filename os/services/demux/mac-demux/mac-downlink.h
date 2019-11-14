@@ -31,8 +31,8 @@
 #ifndef _MAC_DOWNLINK_H_
 #define _MAC_DOWNLINK_H_
 
-#include <net/linkaddr.h>
-#include <net/mac/mac.h>
+#include "net/linkaddr.h"
+#include "net/mac/mac.h"
 
 void mac_downlink_init(void);
 void mac_downlink_send(mac_callback_t sent_callback, void *ptr);

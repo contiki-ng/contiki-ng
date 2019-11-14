@@ -28,16 +28,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <contiki.h>
+#include "contiki.h"
 
-#include <net/netstack.h>
-#include <net/ipv6/uip.h>
-#include <net/ipv6/uip-ds6.h>
-#include <net/ipv6/uip-ds6-route.h>
-#include <net/ipv6/uip-icmp6.h>
-#include <net/routing/routing.h>
+#include "net/netstack.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-ds6-route.h"
+#include "net/ipv6/uip-icmp6.h"
+#include "net/routing/routing.h"
 
-#include <sys/log.h>
+#include "sys/log.h"
 
 #ifndef BUILD_WITH_RPL_BORDER_ROUTER
 #error BUILD_WITH_RPL_BORDER_ROUTER required

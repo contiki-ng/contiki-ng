@@ -31,8 +31,8 @@
 #ifndef _MAC_UPLINK_H_
 #define _MAC_UPLINK_H_
 
-#include <net/linkaddr.h>
-#include <net/mac/mac.h>
+#include "net/linkaddr.h"
+#include "net/mac/mac.h"
 
 void mac_uplink_init(void);
 void mac_uplink_send(mac_callback_t sent_callback, void *ptr);

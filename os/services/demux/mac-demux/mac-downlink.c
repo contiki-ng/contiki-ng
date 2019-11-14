@@ -28,8 +28,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <net/mac/mac.h>
-#include <net/packetbuf.h>
+#include "net/mac/mac.h"
+#include "net/packetbuf.h"
 
 #if MAC_CONF_WITH_CSMA
 extern const struct mac_driver csma_driver;

@@ -33,13 +33,13 @@
  * the TUN I/F.
  */
 
-#include <contiki.h>
+#include "contiki.h"
 
-#include <net/netstack.h>
+#include "net/netstack.h"
 
 #include "net-downlink.h"
 
-#include <sys/log.h>
+#include "sys/log.h"
 
 #define LOG_MODULE "demux-up"
 #define LOG_LEVEL LOG_LEVEL_IPV6

@@ -7,7 +7,6 @@ MAKE_MAC = MAKE_MAC_OTHER
 
 MODULES += os/services/demux/net-demux
 MODULES += os/services/shell
-MODULES += os/services/slip-cmd
 MODULES += examples/rpl-border-router/webserver
 
 CFLAGS += -I..

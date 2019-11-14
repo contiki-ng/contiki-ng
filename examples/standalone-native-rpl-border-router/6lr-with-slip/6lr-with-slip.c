@@ -28,12 +28,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <contiki.h>
+#include "contiki.h"
 
-#include <net/ipv6/uip.h>
+#include "net/ipv6/uip.h"
 
 #if MAC_CONF_WITH_TSCH
-#include <net/mac/tsch/tsch.h>
+#include "net/mac/tsch/tsch.h"
 #endif /* MAC_CONF_WITH_TSCH */
 
 PROCESS(rpl_router_process, "RPL Router Process");

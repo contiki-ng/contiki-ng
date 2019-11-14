@@ -28,13 +28,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <net/mac/mac.h>
-#include <net/packetbuf.h>
+#include "net/mac/mac.h"
+#include "net/packetbuf.h"
 
 #include "mac-downlink.h"
 #include "mac-uplink.h"
 
-#include <sys/log.h>
+#include "sys/log.h"
 
 #define LOG_MODULE "demux"
 #define LOG_LEVEL LOG_LEVEL_MAC

@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <contiki.h>
+#include "contiki.h"
 
 PROCESS(rpl_router_process, "RPL Router Process");
 AUTOSTART_PROCESSES(&rpl_router_process);

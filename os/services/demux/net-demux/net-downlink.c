@@ -46,15 +46,17 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <contiki.h>
+#include "contiki.h"
 
-#include <lib/ringbufindex.h>
-#include <net/ipv6/uip.h>
-#include <net/ipv6/sicslowpan.h>
-#include <net/netstack.h>
-#include <net/packetbuf.h>
+#include "lib/ringbufindex.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/sicslowpan.h"
+#include "net/netstack.h"
+#include "net/packetbuf.h"
 
-#include <sys/log.h>
+#include "sys/log.h"
+
+#include "net-downlink.h"
 
 #define LOG_MODULE "demux-down"
 #define LOG_LEVEL LOG_LEVEL_IPV6
@@ -138,8 +140,6 @@ static int serial_fd_set(fd_set *rset, fd_set *wset);
 static void serial_fd_handle(fd_set *rset, fd_set *wset);
 static void serial_clear_rxbuf(void);
 static void serial_handle_rx(void);
-
-void net_downlink_input(void);
 
 /*---------------------------------------------------------------------------*/
 static void

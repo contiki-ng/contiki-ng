@@ -31,7 +31,7 @@
 #ifndef _NET_UPLINK_H_
 #define _NET_UPLINK_H_
 
-#include <net/linkaddr.h>
+#include "net/linkaddr.h"
 
 void net_uplink_init(void);
 void net_uplink_output(const linkaddr_t *localdest);

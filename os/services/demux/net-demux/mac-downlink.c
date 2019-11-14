@@ -28,11 +28,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <contiki.h>
+#include "contiki.h"
 
-#include <net/mac/mac.h>
-#include <net/packetbuf.h>
-#include <net/ipv6/sicslowpan.h>
+#include "net/mac/mac.h"
+#include "net/packetbuf.h"
+#include "net/ipv6/sicslowpan.h"
 
 void net_downlink_slip_send(mac_callback_t sent_callback, void *ptr);
 

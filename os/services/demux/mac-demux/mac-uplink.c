@@ -30,16 +30,16 @@
 
 /* The uplink is implemented with the SLIP I/F. */
 
-#include <contiki.h>
+#include "contiki.h"
 
-#include <net/linkaddr.h>
-#include <net/netstack.h>
-#include <net/packetbuf.h>
-#include <net/ipv6/sicslowpan.h>
+#include "net/linkaddr.h"
+#include "net/netstack.h"
+#include "net/packetbuf.h"
+#include "net/ipv6/sicslowpan.h"
 
-#include <dev/slip.h>
+#include "dev/slip.h"
 
-#include <sys/log.h>
+#include "sys/log.h"
 
 #define LOG_MODULE "demux-up"
 #define LOG_LEVEL LOG_LEVEL_MAC
