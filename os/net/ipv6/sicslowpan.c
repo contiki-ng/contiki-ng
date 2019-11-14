@@ -620,7 +620,7 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
   prefcount = prefcount == 15 ? 16 : prefcount;
   postcount = postcount == 15 ? 16 : postcount;
 
-  LOG_DBG("uncompression: address %d %d", prefcount, postcount);
+  LOG_DBG("uncompression: address %d %d ", prefcount, postcount);
 
   if(prefcount > 0) {
     memcpy(ipaddr, prefix, prefcount);

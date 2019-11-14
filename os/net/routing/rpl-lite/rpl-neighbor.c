@@ -117,7 +117,7 @@ rpl_neighbor_snprint(char *buf, int buflen, rpl_nbr_t *nbr)
   if(index >= buflen) {
     return index;
   }
-  if(stats->last_tx_time > 0) {
+  if(stats != NULL && stats->last_tx_time > 0) {
     index += snprintf(buf+index, buflen-index,
                               " (last tx %u min ago",
                               (unsigned)((clock_now - stats->last_tx_time) / (60 * CLOCK_SECOND)));
