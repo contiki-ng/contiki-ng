@@ -53,11 +53,8 @@ init(void)
 static void
 input(void)
 {
-  /*
-   * input handle could be called only for the downlink interface,
-   * from its MAC layer
-   */
-  net_downlink_input();
+  /* shouldn't be called */
+  LOG_ERR("net-demux.input() is UNEXPECTEDLY called.\n");
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t

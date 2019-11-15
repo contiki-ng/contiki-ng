@@ -50,10 +50,6 @@ static const uint8_t peer_mac_addr[] = MAC_UPLINK_PEER_MAC_ADDR;
 #error MAC_UPLINK_PEER_MAC_ADDR needs to be specified
 #endif /* MAC_UPLINK_PEER_MAC_ADDR */
 
-static uip_buf_t uip_backup_aligned_buf;
-static uint16_t uip_backup_len;
-#define uip_backup_buf (uip_backup_aligned_buf.u8)
-
 /*---------------------------------------------------------------------------*/
 static void
 input_callback(void)
@@ -100,19 +96,8 @@ mac_uplink_send(mac_callback_t sent_callback, void *ptr)
             packetbuf_totlen());
     sent_callback(ptr, MAC_TX_ERR_FATAL, 0);
   } else {
-    /* backup uip_buf so that slip can use uip_buf for its purpose */
-    memcpy(uip_backup_buf, uip_buf, uip_len);
-    uip_backup_len = uip_len;
-
-    uipbuf_clear();
-    memcpy(uip_buf, packetbuf_hdrptr(), packetbuf_totlen());
-    uip_len = packetbuf_totlen();
-    slip_send();
+    slip_write(packetbuf_hdrptr(), packetbuf_totlen());
     sent_callback(ptr, MAC_TX_OK, 1);
-
-    /* restore backuped uip_buf contents */
-    memcpy(uip_buf, uip_backup_buf, uip_backup_len);
-    uip_len = uip_backup_len;
   }
 }
 /*---------------------------------------------------------------------------*/

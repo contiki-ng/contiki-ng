@@ -10,6 +10,7 @@ The following simulations demonstrate how it works.
 * `tests/17-tun-rpl-br/11-standalone-native-6lbr-lite-csma.csc`
 * `tests/17-tun-rpl-br/12-standalone-native-6lbr-classic-tsch.csc`
 * `tests/17-tun-rpl-br/13-standalone-native-6lbr-classic-csma.csc`
+* `tests/17-tun-rpl-br/14-standalone-native-6lbr-lite-csma-frag.csc`
 
 # How to Use
 1. Flush a `6lr-with-slip` firmware to a radio board having a serial connection with a Linux host

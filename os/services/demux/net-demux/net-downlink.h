@@ -34,7 +34,6 @@
 #include "net/linkaddr.h"
 
 void net_downlink_init(void);
-void net_downlink_input(void);
 void net_downlink_output(const linkaddr_t *localdest);
 
 #endif /* !_NET_DOWNLINK_H_ */

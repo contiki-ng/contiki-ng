@@ -141,6 +141,8 @@ static void serial_fd_handle(fd_set *rset, fd_set *wset);
 static void serial_clear_rxbuf(void);
 static void serial_handle_rx(void);
 
+static void net_downlink_input(void);
+
 /*---------------------------------------------------------------------------*/
 static void
 print_usage_and_exit(int status)
@@ -551,7 +553,7 @@ serial_handle_rx(void)
         state = STATE_WAITING_FOR_DELIMITER;
       } else if (byte == SLIP_ESC) {
         /*
-         * The first fragment of a full IPv6 packet may have 0x60, the
+         * The first fragment of a full IPv6 packet may have 0xC0, the
          * same value as SLIP_END, in its first byte, which should be
          * escaped with SLIP_ESC. If the following byte is
          * SLIP_ESC_END, the receiving bytes is the first fragment of
@@ -599,7 +601,7 @@ serial_handle_rx(void)
         state = STATE_WAITING_FOR_FIRST_BYTE;
       } else if(serial_rxbuf_len == serial_rxbuf_size){
         LOG_WARN("Packet too big; drop rx packet\n");
-        serial_rxbuf_len = 0;
+        serial_clear_rxbuf();
         state = STATE_WAITING_FOR_DELIMITER;
       } else {
         assert(serial_rxbuf_len < serial_rxbuf_size);
@@ -635,8 +637,7 @@ net_downlink_slip_send(mac_callback_t sent_callback, void *ptr)
   int status;
   int transmissions;
 
-  if((idx = ringbufindex_peek_put(&serial_tx_ringbuf_index)) < 0 ||
-     ringbufindex_put(&serial_tx_ringbuf_index) < 0) {
+  if((idx = ringbufindex_peek_put(&serial_tx_ringbuf_index)) < 0) {
     LOG_ERR("No TX buffer for a new packet; drop it\n");
     status = MAC_TX_ERR;
     transmissions = 0;
@@ -668,8 +669,15 @@ net_downlink_slip_send(mac_callback_t sent_callback, void *ptr)
 
     serial_tx_ringbuf[idx].packet_len = (write_ptr -
                                          serial_tx_ringbuf[idx].packet_buf);
-    status = MAC_TX_OK;
-    transmissions = 1;
+
+    if(ringbufindex_put(&serial_tx_ringbuf_index) < 0) {
+      LOG_ERR("ringbufindex_put() failed for idx: %d\n", idx);
+      status = MAC_TX_ERR;
+      transmissions = 0;
+    } else {
+      status = MAC_TX_OK;
+      transmissions = 1;
+    }
   }
 
   if(sent_callback) {
@@ -677,7 +685,7 @@ net_downlink_slip_send(mac_callback_t sent_callback, void *ptr)
   }
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 net_downlink_input(void)
 {
   if(serial_fd == INVALID_FD) {
