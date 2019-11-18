@@ -89,7 +89,7 @@ mic(const uint8_t *nonce,
     uint8_t mic_len)
 {
   uint8_t x[AES_128_BLOCK_SIZE];
-  uint16_t pos;
+  uint32_t pos; /* 32-bits as can need to exceed m_len to reach end of loop */
   uint8_t i;
 
   set_iv(x, CCM_STAR_AUTH_FLAGS(a_len > 0, mic_len), nonce, m_len);
@@ -133,7 +133,7 @@ mic(const uint8_t *nonce,
 static void
 ctr(const uint8_t *nonce, uint8_t *m, uint16_t m_len)
 {
-  uint16_t pos;
+  uint32_t pos; /* 32-bits as can need to exceed m_len to reach end of loop */
   uint16_t counter;
 
   pos = 0;
