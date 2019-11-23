@@ -80,6 +80,14 @@ typedef unsigned char process_num_events_t;
  *             not be posted.
  */
 #define PROCESS_ERR_FULL      1
+/**
+ * \brief      Return value indicating that the event queue was locked.
+ *
+ *             This value is returned from process_post() to indicate
+ *             that the event queue was locked and that an event could
+ *             not be posted.
+ */
+#define PROCESS_ERR_LOCKED    2
 /* @} */
 
 #define PROCESS_NONE          NULL
@@ -361,6 +369,9 @@ void process_start(struct process *p, process_data_t data);
  *
  * \retval PROCESS_ERR_FULL The event queue was full and the event could
  * not be posted.
+ *
+ * \retval PROCESS_ERR_LOCKED The event queue was locked and the event
+ * could not be posted.
  */
 int process_post(struct process *p, process_event_t ev, process_data_t data);
 
