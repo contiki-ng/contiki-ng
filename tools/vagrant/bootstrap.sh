@@ -7,6 +7,7 @@ sudo apt install -y --no-install-recommends \
   libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386 \
   build-essential doxygen git wget unzip python-serial rlwrap npm \
   default-jdk ant srecord python-pip iputils-tracepath uncrustify \
+  mosquitto mosquitto-clients valgrind \
   python-magic linux-image-extra-virtual openjdk-8-jdk
 
 sudo apt-get clean
