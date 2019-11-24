@@ -7,7 +7,7 @@ sudo apt install -y --no-install-recommends \
   libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386 \
   build-essential doxygen git wget unzip python-serial rlwrap npm \
   default-jdk ant srecord python-pip iputils-tracepath uncrustify \
-  python-magic linux-image-extra-virtual
+  python-magic linux-image-extra-virtual openjdk-8-jdk
 
 sudo apt-get clean
 sudo python2 -m pip install intelhex sphinx_rtd_theme sphinx
@@ -48,8 +48,11 @@ echo "export NRF52_SDK_ROOT=/usr/nrf52-sdk" >> ${HOME}/.bashrc
 
 sudo usermod -aG dialout vagrant
 
+# Make sure we're using Java 8 for Cooja
+sudo update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-amd64
+
 # Environment variables
-echo "export JAVA_HOME=/usr/lib/jvm/default-java" >> ${HOME}/.bashrc
+echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64" >> ${HOME}/.bashrc
 echo "export CONTIKI_NG=${HOME}/contiki-ng" >> ${HOME}/.bashrc
 echo "export COOJA=${CONTIKI_NG}/tools/cooja" >> ${HOME}/.bashrc
 echo "export PATH=${HOME}:${PATH}" >> ${HOME}/.bashrc
