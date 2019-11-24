@@ -116,7 +116,7 @@ void ctimer_restart(struct ctimer *c);
  *
  */
 void ctimer_set(struct ctimer *c, clock_time_t t,
-		void (*f)(void *), void *ptr);
+                void (*f)(void *), void *ptr);
 
 /**
  * \brief      Set a callback timer.
@@ -132,7 +132,7 @@ void ctimer_set(struct ctimer *c, clock_time_t t,
  *
  */
 void ctimer_set_with_process(struct ctimer *c, clock_time_t t,
-		void (*f)(void *), void *ptr, struct process *p);
+                             void (*f)(void *), void *ptr, struct process *p);
 
 /**
  * \brief      Stop a pending callback timer.
