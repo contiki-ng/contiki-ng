@@ -146,7 +146,7 @@ exit_process(struct process *p, struct process *fromprocess)
      */
     for(q = process_list; q != NULL; q = q->next) {
       if(p != q) {
-	call_process(q, PROCESS_EVENT_EXITED, (process_data_t)p);
+        call_process(q, PROCESS_EVENT_EXITED, (process_data_t)p);
       }
     }
 
@@ -162,8 +162,8 @@ exit_process(struct process *p, struct process *fromprocess)
   } else {
     for(q = process_list; q != NULL; q = q->next) {
       if(q->next == p) {
-	q->next = p->next;
-	break;
+        q->next = p->next;
+        break;
       }
     }
   }
@@ -276,20 +276,20 @@ do_event(void)
     if(receiver == PROCESS_BROADCAST) {
       for(p = process_list; p != NULL; p = p->next) {
 
-	/* If we have been requested to poll a process, we do this in
-	   between processing the broadcast event. */
-	if(poll_requested) {
-	  do_poll();
-	}
-	call_process(p, ev, data);
+        /* If we have been requested to poll a process, we do this in
+           between processing the broadcast event. */
+        if(poll_requested) {
+          do_poll();
+        }
+        call_process(p, ev, data);
       }
     } else {
       /* This is not a broadcast event, so we deliver it to the
-	 specified process. */
+         specified process. */
       /* If the event was an INIT event, we should also update the
-	 state of the process. */
+         state of the process. */
       if(ev == PROCESS_EVENT_INIT) {
-	receiver->state = PROCESS_STATE_RUNNING;
+        receiver->state = PROCESS_STATE_RUNNING;
       }
 
       /* Make sure that the process actually is running. */
@@ -325,11 +325,11 @@ process_post(struct process *p, process_event_t ev, process_data_t data)
 
   if(PROCESS_CURRENT() == NULL) {
     PRINTF("process_post: NULL process posts event %d to process '%s', nevents %d\n",
-	   ev,PROCESS_NAME_STRING(p), nevents);
+           ev, PROCESS_NAME_STRING(p), nevents);
   } else {
     PRINTF("process_post: Process '%s' posts event %d to process '%s', nevents %d\n",
-	   PROCESS_NAME_STRING(PROCESS_CURRENT()), ev,
-	   p == PROCESS_BROADCAST? "<broadcast>": PROCESS_NAME_STRING(p), nevents);
+           PROCESS_NAME_STRING(PROCESS_CURRENT()), ev,
+           p == PROCESS_BROADCAST ? "<broadcast>" : PROCESS_NAME_STRING(p), nevents);
   }
 
   if(nevents == PROCESS_CONF_NUMEVENTS) {
