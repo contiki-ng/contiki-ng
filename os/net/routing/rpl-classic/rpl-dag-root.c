@@ -71,11 +71,12 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
   if(LOG_DBG_ENABLED) {
     uint8_t state;
 
-    LOG_DBG("IPv6 addresses: ");
+    LOG_DBG("IPv6 addresses: \n");
     for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
       state = uip_ds6_if.addr_list[i].state;
       if(uip_ds6_if.addr_list[i].isused &&
          (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+        LOG_DBG("   - ");
         LOG_DBG_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
         LOG_DBG_("\n");
       }
@@ -130,7 +131,7 @@ rpl_dag_root_start(void)
         rpl_remove_routes(dag);
       }
       if(dag->instance != NULL && dag->instance->def_route != NULL) {
-	      uip_ds6_defrt_rm(dag->instance->def_route);
+        uip_ds6_defrt_rm(dag->instance->def_route);
         dag->instance->def_route = NULL;
       }
 

@@ -250,6 +250,16 @@ static const uint8_t mqtt_client_extension_count = 0;
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
 /*---------------------------------------------------------------------------*/
+static bool
+have_connectivity(void)
+{
+  if(uip_ds6_get_global(ADDR_PREFERRED) == NULL ||
+     uip_ds6_defrt_choose() == NULL) {
+    return false;
+  }
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 static int
 ipaddr_sprintf(char *buf, uint8_t buf_len, const uip_ipaddr_t *addr)
 {
@@ -591,12 +601,12 @@ connect_to_broker(void)
 static void
 ping_parent(void)
 {
-  if(uip_ds6_get_global(ADDR_PREFERRED) == NULL) {
-    return;
+  if(have_connectivity()) {
+    uip_icmp6_send(uip_ds6_defrt_choose(), ICMP6_ECHO_REQUEST, 0,
+                   ECHO_REQ_PAYLOAD_LEN);
+  } else {
+    LOG_WARN("ping_parent() is called while we don't have connectivity\n");
   }
-
-  uip_icmp6_send(uip_ds6_defrt_choose(), ICMP6_ECHO_REQUEST, 0,
-                 ECHO_REQ_PAYLOAD_LEN);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -631,7 +641,7 @@ state_machine(void)
     LOG_DBG("Init\n");
     /* Continue */
   case STATE_REGISTERED:
-    if(uip_ds6_get_global(ADDR_PREFERRED) != NULL) {
+    if(have_connectivity()) {
       /* Registered and with a public IP. Connect */
       LOG_DBG("Registered. Connect attempt %u\n", connect_attempt);
       ping_parent();
