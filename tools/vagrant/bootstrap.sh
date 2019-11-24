@@ -8,6 +8,7 @@ sudo apt install -y --no-install-recommends \
   build-essential doxygen git wget unzip python-serial rlwrap npm \
   default-jdk ant srecord python-pip iputils-tracepath uncrustify \
   mosquitto mosquitto-clients valgrind \
+  smitools snmp snmp-mibs-downloader \
   python-magic linux-image-extra-virtual openjdk-8-jdk
 
 sudo apt-get clean
