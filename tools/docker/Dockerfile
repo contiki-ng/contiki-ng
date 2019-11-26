@@ -5,7 +5,6 @@ FROM i386/ubuntu:18.04 as minimal
 ENV DEBIAN_FRONTEND noninteractive
 ARG USER=user
 ARG UID=1000
-ARG GID=100
 
 # Update path with toolchains
 ENV PATH=${PATH}:/opt/bin
@@ -44,7 +43,7 @@ RUN apt-get -qq update && \
 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
-RUN useradd -m -s /bin/bash -N -u $UID $USER && \
+RUN useradd -m -s /bin/bash -u $UID $USER && \
     echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers && \
     chmod 0440 /etc/sudoers && \
     usermod -aG dialout $USER
