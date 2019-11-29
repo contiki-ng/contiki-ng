@@ -27,7 +27,7 @@ your `project-conf.h`.
    +-----------------------------------------------------+
    | NETSTACK_ROUTING (your choice)                      |
    +-----------------------------------------------------+
-   | NETSTACK_NETWORK: net_multiplexer_driver            |
+   | NETSTACK_NETWORK: net_demultiplexer_driver          |
    +-----------------------------------+-----------------+
    | net_downlink: SLIP                |                 |
    +-----------------------------------|                 |

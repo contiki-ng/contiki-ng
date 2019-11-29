@@ -575,6 +575,13 @@ serial_handle_rx(void)
         serial_rxbuf[serial_rxbuf_len] = byte;
         serial_rxbuf_len++;
         state = STATE_RECEIVING_PACKET;
+      } else if(byte == '\r') {
+        /*
+         * Debug output by cc2538 starts with '\r' when
+         * DBG_CONF_SLIP_MUX is enabled. See arch/cpu/cc2538/dbg.c.
+         */
+        printf("%s ", hop_1_log_header);
+        state = STATE_EXPECTING_PRINTABLE_BYTE;
       } else if(isprint(byte) == 0) {
         /* the first character is NOT printable; consider it as garbage */
         state = STATE_WAITING_FOR_DELIMITER;

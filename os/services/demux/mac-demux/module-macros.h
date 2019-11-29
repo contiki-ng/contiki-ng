@@ -30,3 +30,4 @@
 
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 #define NETSTACK_CONF_MAC mac_demultiplexer_driver
+#define SLIP_ARCH_CONF_ENABLED 1

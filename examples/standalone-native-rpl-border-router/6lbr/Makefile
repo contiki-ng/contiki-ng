@@ -13,7 +13,7 @@ CFLAGS += -I..
 PROJECT_SOURCEFILES += custom-shell.c
 
 connect-router: 6lbr.native
-ifndef $(MAC_ADDR_OF_DOWNLINK_PEER)
+ifndef MAC_ADDR_OF_DOWNLINK_PEER
 	@echo -n "$@ failed; "
 	@echo "MAC_ADDR_OF_DOWNLINK_PEER is missing"
 	@exit 1

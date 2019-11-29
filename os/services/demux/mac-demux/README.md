@@ -41,6 +41,6 @@ The MAC protocol to be used for the downlink can be specified by using
    | mac_downlink: CSMA or TSCH | mac_uplink: SLIP     |
    +----------------------------|----------------------+
    | NETSTACK_RADIO             | UART                 |
-   +----------------------------|----------------------+
+   +----------------------------+----------------------+
 
 ```
