@@ -38,6 +38,7 @@ COOJA.testlog
 *.firmware
 *.cc26x0-cc13x0
 *.zoul
+*.efr32tb
 
 # do not ignore platform makefiles
 !Makefile.cc2538dk

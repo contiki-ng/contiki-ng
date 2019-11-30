@@ -30,11 +30,11 @@
  */
 
 #include "contiki.h"
-#include <stdint.h>
-#include "dev/i2c.h"
+#include "dev/i2c-hal.h"
 #include "em_cmu.h"
 #include "em_i2c.h"
 #include "em_gpio.h"
+#include <stdint.h>
 
 #define DEBUG 0
 #if DEBUG
@@ -44,47 +44,47 @@
 #define PRINTF(...)
 #endif /* DEBUG */
 
-static uint8_t
+static i2c_hal_status_t
 decode_status(I2C_TransferReturn_TypeDef status)
 {
   switch(status) {
     case i2cTransferInProgress:
     case i2cTransferDone:
-      return I2C_BUS_STATUS_OK;
+      return I2C_HAL_STATUS_OK;
     case i2cTransferNack:
       /* i2cTransferNack means NACK for address or data */
-      return I2C_BUS_STATUS_DATA_NACK;
+      return I2C_HAL_STATUS_DATA_NACK;
     case i2cTransferBusErr:
     case i2cTransferArbLost:
     case i2cTransferUsageFault:
     case i2cTransferSwFault:
-      return I2C_BUS_STATUS_EINVAL;
+      return I2C_HAL_STATUS_EINVAL;
     default:
       /* should not reach here */
-      return I2C_BUS_STATUS_EINVAL;
+      return I2C_HAL_STATUS_EINVAL;
   }
 }
 /*---------------------------------------------------------------------------*/
 
 uint8_t
-i2c_arch_lock(i2c_device_t *dev)
+i2c_hal_arch_lock(i2c_hal_device_t *dev)
 {
-  i2c_bus_config_t *conf = &dev->bus->config;
+  i2c_hal_bus_config_t *conf = &dev->bus->config;
   uint32_t scl_port = 0, scl_pin = 0;
   uint32_t sda_port = 0, sda_pin = 0;
-  uint8_t was_locked;
+  bool was_locked;
 
-  was_locked = dev->bus->lock;
+  was_locked = dev->bus->lock != 0;
 
   if(dev->bus->lock && dev->bus->lock_device != dev) {
     PRINTF("I2C (%s): bus is locked\n", __func__);
-    return I2C_BUS_STATUS_BUS_LOCKED;
+    return I2C_HAL_STATUS_BUS_LOCKED;
   }
 
-  if(dev->speed != I2C_NORMAL_BUS_SPEED &&
-     dev->speed != I2C_FAST_BUS_SPEED) {
+  if(dev->speed != I2C_HAL_NORMAL_BUS_SPEED &&
+     dev->speed != I2C_HAL_FAST_BUS_SPEED) {
     PRINTF("I2C (%s): speed %" PRIu32 " is invalid\n", __func__, dev->speed);
-    return I2C_BUS_STATUS_EINVAL;
+    return I2C_HAL_STATUS_EINVAL;
   }
 
   dev->bus->lock = 1;
@@ -117,7 +117,7 @@ i2c_arch_lock(i2c_device_t *dev)
       dev->bus->lock = 0;
       dev->bus->lock_device = NULL;
     }
-    return I2C_BUS_STATUS_EINVAL;
+    return I2C_HAL_STATUS_EINVAL;
   }
 
   CMU_ClockEnable(cmuClock_GPIO, true);
@@ -143,12 +143,12 @@ i2c_arch_lock(i2c_device_t *dev)
   I2C_BusFreqSet(conf->I2Cx, 0, dev->speed, i2cClockHLRStandard);
   conf->I2Cx->CTRL |= I2C_CTRL_AUTOACK | I2C_CTRL_AUTOSN;
 
-  return I2C_BUS_STATUS_OK;
+  return I2C_HAL_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
 
 uint8_t
-i2c_arch_unlock(i2c_device_t *dev)
+i2c_hal_arch_unlock(i2c_hal_device_t *dev)
 {
   /* disable I2C controller */
   I2C_Enable(dev->bus->config.I2Cx, false);
@@ -159,20 +159,20 @@ i2c_arch_unlock(i2c_device_t *dev)
   dev->bus->lock = 0;
   dev->bus->lock_device = NULL;
 
-  return I2C_BUS_STATUS_OK;
+  return I2C_HAL_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
 
 uint8_t
-i2c_arch_restart_timeout(i2c_device_t *dev)
+i2c_hal_arch_restart_timeout(i2c_hal_device_t *dev)
 {
   /* TODO: implement timeout */
-  return I2C_BUS_STATUS_OK;
+  return I2C_HAL_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/
 
 uint8_t
-i2c_arch_read(i2c_device_t *dev, uint8_t *data, int len)
+i2c_hal_arch_read(i2c_hal_device_t *dev, uint8_t *data, int len)
 {
   I2C_TransferSeq_TypeDef i2cTransfer;
   I2C_TransferReturn_TypeDef ret;
@@ -203,13 +203,13 @@ i2c_arch_read(i2c_device_t *dev, uint8_t *data, int len)
     PRINTF("I2C (%s): RX error (%d)\n", __func__, ret);
     return decode_status(ret);
   } else {
-    return I2C_BUS_STATUS_OK;
+    return I2C_HAL_STATUS_OK;
   }
 }
 /*---------------------------------------------------------------------------*/
 
 uint8_t
-i2c_arch_write(i2c_device_t *dev, const uint8_t *data, int len)
+i2c_hal_arch_write(i2c_hal_device_t *dev, const uint8_t *data, int len)
 {
   I2C_TransferSeq_TypeDef i2cTransfer;
   I2C_TransferReturn_TypeDef ret;
@@ -222,7 +222,7 @@ i2c_arch_write(i2c_device_t *dev, const uint8_t *data, int len)
 
   if(dev->bus->config.I2Cx == NULL) {
     PRINTF("I2C: No I2C module configured\n");
-    return I2C_BUS_STATUS_EINVAL;
+    return I2C_HAL_STATUS_EINVAL;
   }
 
   /* I2C0 is hardoced as the EFR32MG has only one I2C controller */
@@ -245,14 +245,14 @@ i2c_arch_write(i2c_device_t *dev, const uint8_t *data, int len)
     PRINTF("I2C (%s): TX error (%d)\n", __func__, ret);
     return decode_status(ret);
   } else {
-    return I2C_BUS_STATUS_OK;
+    return I2C_HAL_STATUS_OK;
   }
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_arch_stop(i2c_device_t *dev)
+i2c_hal_arch_stop(i2c_hal_device_t *dev)
 {
   /* emlib driver doesn't allow for manual STOP conditions */
-  return I2C_BUS_STATUS_OK;
+  return I2C_HAL_STATUS_OK;
 }
 /*---------------------------------------------------------------------------*/

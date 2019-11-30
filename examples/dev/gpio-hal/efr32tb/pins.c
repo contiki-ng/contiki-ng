@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, RISE SICS AB
+ * Copyright (c) 2019, RISE SICS AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,51 +27,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include "em_device.h"
-#include "em_gpio.h"
-#include "em_cmu.h"
-#include "em_timer.h"
-#include "lib/sensors.h"
-#include "dev/i2c-hal.h"
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
 #include "dev/gpio-hal.h"
-#include "dev/button-hal.h"
-#include "button-sensor.h"
-#include "bmp-280-sensor.h"
-#include "rgbleds.h"
-
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "board"
-#define LOG_LEVEL LOG_LEVEL_MAIN
+gpio_hal_port_t out_port1 = BOARD_RGBLED_PWR_EN_PORT;
+gpio_hal_pin_t out_pin1 = BOARD_RGBLED_PWR_EN_PIN;
+gpio_hal_port_t out_port2_3 = BOARD_LED_PORT;
+gpio_hal_pin_t out_pin2 = BOARD_LED_RED_PIN;
+gpio_hal_pin_t out_pin3 = BOARD_LED_GREEN_PIN;
 /*---------------------------------------------------------------------------*/
-
-#define VCOM_ENABLE_PORT gpioPortA
-#define VCOM_ENABLE_PIN  5
-
-i2c_hal_bus_t i2c1_bus = {
-  .lock_device = NULL,
-  .lock = 0,
-  .config = {
-    .I2Cx = I2C1,
-    .sda_loc = _I2C_ROUTELOC0_SDALOC_LOC17,
-    .scl_loc = _I2C_ROUTELOC0_SCLLOC_LOC17
-  },
-};
-
-/*---------------------------------------------------------------------------*/
-void
-board_init(void)
-{
-  /* Route UART output to USB */
-  /* GPIO_PinModeSet(VCOM_ENABLE_PORT, VCOM_ENABLE_PIN, gpioModePushPull, 1); */
-  gpio_hal_arch_pin_set_output(VCOM_ENABLE_PORT,  VCOM_ENABLE_PIN);
-  gpio_hal_arch_set_pin(VCOM_ENABLE_PORT, VCOM_ENABLE_PIN);
-
-  rgbleds_init();
-}
-/*---------------------------------------------------------------------------*/
-/** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&bmp_280_sensor);
+gpio_hal_port_t btn_port = BOARD_BUTTON_LEFT_PORT;
+gpio_hal_pin_t btn_pin = BOARD_BUTTON_LEFT_PIN;
 /*---------------------------------------------------------------------------*/

@@ -29,8 +29,10 @@
  */
 
 #include "contiki.h"
+#include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "dev/serial-line.h"
+#include "dev/debug-uart.h"
 #include "lib/sensors.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
@@ -54,9 +56,6 @@
  * \brief Board specific initialisation
  */
 void board_init(void);
-
-void debug_uart_init(void);
-void debug_uart_set_input_handler(int (* handler)(unsigned char c));
 /*---------------------------------------------------------------------------*/
 static inline uint64_t
 swap_long(uint64_t val)
@@ -141,6 +140,13 @@ platform_init_stage_two()
   /* linkaddr configuration */
   memcpy(linkaddr_node_addr.u8, &uid_net_order, LINKADDR_SIZE);
 
+  debug_uart_set_input_handler(serial_line_input_byte);
+  serial_line_init();
+
+#if PLATFORM_HAS_BUTTON
+  button_hal_init();
+#endif
+
   leds_off(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
@@ -151,11 +157,11 @@ platform_init_stage_three()
 
   set_rf_params();
 
-  board_init();
+#if BOARD_HAS_SENSORS
   process_start(&sensors_process, NULL);
+#endif
 
-  debug_uart_set_input_handler(serial_line_input_byte);
-  serial_line_init();
+  board_init();
 }
 /*---------------------------------------------------------------------------*/
 void

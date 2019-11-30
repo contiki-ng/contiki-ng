@@ -27,69 +27,45 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+/**
+ * \addtogroup efr32tb
+ * @{
+ *
+ * \file
+ *  Configuration for the efr32tb platform
+ */
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
 
 #include <stdint.h>
 #include <inttypes.h>
-
+/*---------------------------------------------------------------------------*/
 /* Include project specific configuration */
 #ifdef PROJECT_CONF_PATH
 #include PROJECT_CONF_PATH
 #endif /* PROJECT_CONF_PATH */
-
+/*---------------------------------------------------------------------------*/
 #include "efr32-def.h"
-
-/* Board specific configuration */
-#include "board.h"
-
-#define GPIO_HAL_CONF_ARCH_SW_TOGGLE 0
-
+/*---------------------------------------------------------------------------*/
 /* Disable the stack check library for now */
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
-
 /*---------------------------------------------------------------------------*/
 /**
- * \name Compiler configuration and platform-specific type definitions
+ * \name Button configurations
  *
- * Those values are not meant to be modified by the user
  * @{
  */
 
-#define RTIMER_CONF_CLOCK_SIZE 2
-/* 38.4 MHz divided by 1024 */
-#define RTIMER_ARCH_SECOND  (38400000UL / 1024)
-
-
-/* Clock (time) comparison macro */
-#define CLOCK_LT(a, b)  ((int64_t)((a) - (b)) < 0)
-
-typedef uint64_t clock_time_t;
-typedef uint32_t uip_stats_t;
-
-#define CLOCK_CONF_SECOND   1000
+/* Notify various examples that we have Buttons */
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 
 /** @} */
-
 /*---------------------------------------------------------------------------*/
-/**
- * \name SPI configuration
- *
- */
-#ifndef PLATFORM_HAS_SPI_DEV_ARCH
-#define PLATFORM_HAS_SPI_DEV_ARCH               0
-#endif
-/*---------------------------------------------------------------------------*/
-/**
- * \name I2C configuration
- *
- */
-#ifndef PLATFORM_HAS_I2C_ARCH
-#define PLATFORM_HAS_I2C_ARCH                   0
-#endif
+/* Board specific configuration */
+#include "board.h"
 /*---------------------------------------------------------------------------*/
 /* Include CPU-related configuration */
 #include "efr32-conf.h"
 /*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
+/** @} */

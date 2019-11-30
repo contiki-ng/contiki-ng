@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "dev/i2c.h"
+#include "dev/i2c-hal.h"
 #include "sys/clock.h"
 #include "dev/bmp280/bmp280.h"
 #include "em_gpio.h"
@@ -20,11 +20,11 @@
 #error BMP_I2C_BUS must be set!
 #endif /* BMP_I2C_BUS */
 
-extern i2c_bus_t BMP_I2C_BUS;
+extern i2c_hal_bus_t BMP_I2C_BUS;
 
-static i2c_device_t bmp_sens = {
+static i2c_hal_device_t bmp_sens = {
   .bus = &BMP_I2C_BUS,
-  .speed = I2C_NORMAL_BUS_SPEED,
+  .speed = I2C_HAL_NORMAL_BUS_SPEED,
   .timeout = 1000,
   .address = 0x77 << 1
 };
@@ -54,16 +54,18 @@ uint32_t bmp_init(uint8_t *deviceId)
   /* The device needs 2 ms startup time */
   clock_delay_usec(2000);
 
-  if(i2c_acquire(&bmp_sens) > 0) {
-    return 1;
+  if(i2c_hal_acquire(&bmp_sens) != I2C_HAL_STATUS_OK) {
+    LOG_WARN("failed to acquire I2C\n");
+    return BMP_ERROR_I2C_TRANSACTION_FAILED;
   }
 
   /* Read device ID to determine if we have a BMP280 connected */
-  i2c_read_register(&bmp_sens, BMP_REG_ADDR_ID, &bmpDeviceId, 1);
+  i2c_hal_read_register(&bmp_sens, BMP_REG_ADDR_ID, &bmpDeviceId, 1);
 
   LOG_INFO("REG_ID: %d\n", bmpDeviceId);
 
   if(bmpDeviceId != BMP_DEVICE_ID_BMP280) {
+    LOG_WARN("device id mismatch: %u != %u\n", bmpDeviceId, BMP_DEVICE_ID_BMP280);
     return BMP_ERROR_DEVICE_ID_MISMATCH;
   }
 
@@ -94,8 +96,8 @@ uint32_t bmp_init(uint8_t *deviceId)
 
   *deviceId = bmpDeviceId;
 
-  if(i2c_release(&bmp_sens) > 0) {
-    return 1;
+  if(i2c_hal_release(&bmp_sens) != I2C_HAL_STATUS_OK) {
+    return BMP_ERROR_I2C_TRANSACTION_FAILED;
   }
 
   return BMP_OK;
@@ -123,7 +125,7 @@ uint32_t bmp_get_temperature_pressure(int32_t *temp, uint32_t *pressure)
   int32_t compTemp;
   uint32_t compPressure;
 
-  if(i2c_acquire(&bmp_sens) > 0) {
+  if(i2c_hal_acquire(&bmp_sens) > 0) {
     return 1;
   }
 
@@ -136,7 +138,7 @@ uint32_t bmp_get_temperature_pressure(int32_t *temp, uint32_t *pressure)
     result = bmp280_get_forced_uncomp_pressure_temperature(&uncompPressure, &uncompTemp);
   }
 
-  if(i2c_release(&bmp_sens) > 0) {
+  if(i2c_hal_release(&bmp_sens) > 0) {
     return 1;
   }
 
@@ -160,7 +162,7 @@ i2c_bus_write(uint8_t devAddr, uint8_t regAddr, uint8_t *regData, uint8_t count)
 {
   int ret;
   LOG_DBG("writing data to %x, %d\n", devAddr, regAddr);
-  ret = i2c_write_register_buf(&bmp_sens, regAddr, regData, count);
+  ret = i2c_hal_write_register_buf(&bmp_sens, regAddr, regData, count);
 
   if(ret != 0) {
     return BMP_ERROR_I2C_TRANSACTION_FAILED;
@@ -174,7 +176,7 @@ i2c_bus_read(uint8_t devAddr, uint8_t regAddr, uint8_t *regData, uint8_t count)
 {
   int ret;
   LOG_DBG("reading data from %x, %d\n", devAddr, regAddr);
-  ret = i2c_read_register(&bmp_sens, regAddr, regData, count);
+  ret = i2c_hal_read_register(&bmp_sens, regAddr, regData, count);
 
   if(ret != 0) {
     return BMP_ERROR_I2C_TRANSACTION_FAILED;
@@ -182,4 +184,3 @@ i2c_bus_read(uint8_t devAddr, uint8_t regAddr, uint8_t *regData, uint8_t count)
 
   return BMP_OK;
 }
-

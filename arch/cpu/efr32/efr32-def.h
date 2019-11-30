@@ -31,7 +31,39 @@
 
 #ifndef EFR32_DEF_H_
 #define EFR32_DEF_H_
+/*---------------------------------------------------------------------------*/
+#include <stdint.h>
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Macros and typedefs
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define RTIMER_CONF_CLOCK_SIZE 2
+/* 38.4 MHz divided by 1024 */
+#define RTIMER_ARCH_SECOND  (38400000UL / 1024)
 
+#define CLOCK_CONF_SECOND 1000
+
+/* Clock (time) comparison macro */
+#define CLOCK_LT(a, b)  ((int64_t)((a) - (b)) < 0)
+
+/* Platform typedefs */
+typedef uint64_t clock_time_t;
+typedef uint32_t uip_stats_t;
+/*---------------------------------------------------------------------------*/
+/* Path to CMSIS header */
+#define CMSIS_CONF_HEADER_PATH               "efr32-cm4.h"
+/* Path to headers with implementation of mutexes and memory barriers */
+#define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
+#define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
+/*---------------------------------------------------------------------------*/
+#define I2C_HAL_CONF_ARCH_HDR_PATH          "dev/i2c-hal-arch.h"
+/*---------------------------------------------------------------------------*/
+#define GPIO_HAL_CONF_ARCH_HDR_PATH         "em_gpio.h"
+#define GPIO_HAL_CONF_ARCH_SW_TOGGLE 0
+/*---------------------------------------------------------------------------*/
 /*
  * The stdio.h that ships with the arm-gcc toolchain does this:
  *

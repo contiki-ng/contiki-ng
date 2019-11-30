@@ -10,7 +10,7 @@ ifndef GECKO_SDK_PATH
   endif
 endif
 
-CLEAN += *.efr32tb *.elf *.bin *.lst *.hex
+CLEAN += *.efr32tb
 
 # Do not warn for missing Gecko SDK when doing distclean
 ifneq ($(MAKECMDGOALS),clean)
@@ -34,10 +34,8 @@ ifeq ($(PART_NUMBER),)
   ${error PART_NUMBER not found for BOARD $(BOARD)}
 endif
 
-OBJCOPY_FLAGS += -O binary --gap-fill 0xff
-
-CONTIKI_TARGET_DIRS += . dev $(BOARD)
-PLATFORM_ROOT_DIR = $(CONTIKI)/arch/platform/$(TARGET)
+CONTIKI_TARGET_DIRS += . $(BOARD)
+PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
 
 ### Include the board dir if one exists
 -include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(BOARD)
@@ -49,16 +47,12 @@ CONTIKI_TARGET_SOURCEFILES += ${notdir ${wildcard $(PLATFORM_ROOT_DIR)/$(BOARD)/
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Define the CPU directory
-CONTIKI_CPU=$(CONTIKI)/arch/cpu/efr32
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/efr32
 include $(CONTIKI_CPU)/Makefile.efr32
 
 ### For the login etc targets
 
-ifeq ($(HOST_OS),Darwin)
-  MOTES := ${wildcard /dev/tty.usbmodem*}
-else
-  MOTES := ${wildcard /dev/ttyACM*}
-endif
+MOTES := $(shell python $(CONTIKI_NG_TOOLS_DIR)/motelist/motelist.py -ob)
 
 ifndef PORT
   PORT = ${firstword $(MOTES)}
@@ -67,4 +61,76 @@ endif
 motelist:
 	@echo $(MOTES)
 
+### Flashing
+
+ifeq ($(V),1)
+  TRACE_UPLOAD =
+else
+  TRACE_UPLOAD = @echo "  UPLOAD   " $<
 endif
+
+ifeq ($(HOST_OS),Darwin)
+ JLINK_PATH ?= /Applications/SEGGER/JLink
+else
+ JLINK_PATH ?= /opt/SEGGER/JLink
+endif
+JLINK_EXE = $(JLINK_PATH)/JLinkExe
+
+ifneq (${wildcard $(JLINK_EXE)},)
+
+  _JLINK_SN_LIST = ${shell echo "ShowEmuList\nqc" | $(JLINK_EXE) \
+                           | sed -ne '/Serial number: / s/.*Serial number: \([0-9]*\).*/\1/p'}
+
+  define jlink_upload_v
+    echo "RSetType 5\nr\nconnect\nr\nloadbin "$(1)" 0\nqc" \
+        | $(JLINK_EXE) -AutoConnect 1 -ExitOnError 1 \
+                       -Device $(EFR32_JLINK_MCU) -If SWD -Speed auto \
+                       ${if ${strip $(2)},-SelectEmuBySN $(2),}
+  endef
+
+  ifeq ($(V),1)
+    jlink_upload = ${call jlink_upload_v,$(1),$(2)}
+  else
+    define jlink_upload
+      ${call jlink_upload_v,$(1),$(2)} > /dev/null; \
+      ${if $(2),\
+        if [ $$? -eq 0 ]; then \
+          echo "            $(2): OK"; \
+        else \
+          echo "            $(2): FAILED"; \
+        fi \
+      ,}
+    endef
+  endif
+
+  define NL
+
+
+  endef
+
+%.upload: $(OUT_BIN)
+	$(TRACE_UPLOAD)
+	$(Q)${call jlink_upload,$<,$(JLINK_SN)}
+
+%.upload-all: $(OUT_BIN)
+	$(TRACE_UPLOAD)
+	${foreach sn,$(_JLINK_SN_LIST),$(Q)${call jlink_upload,$<,$(sn)}$(NL)}
+
+jlink-list:
+	@echo "ShowEmuList\nqc" | $(JLINK_EXE) | grep 'Serial number:'
+
+else
+jlink-not-found-msg:
+	@echo " |"
+	@echo " | Error: JLinkExe not found."
+	@echo " | Please install J-Link Software Pack and add 'JLINK_PATH=/path/to/JLink/'"
+	@echo " | with JLinkExe's directory to make's command line or export it in the shell."
+	@echo " |"
+
+%.upload %.upload-all: jlink-not-found-msg
+	@false
+jlink-list: jlink-not-found-msg
+	@false
+endif
+
+endif # clean

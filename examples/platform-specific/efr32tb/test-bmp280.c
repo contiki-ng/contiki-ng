@@ -29,7 +29,7 @@
  */
 
 #include "contiki.h"
-#include "dev/button-sensor.h"
+#include "dev/button-hal.h"
 #include "bmp-280-sensor.h"
 #include "rgbleds.h"
 #include <stdbool.h>
@@ -58,12 +58,9 @@ PROCESS_THREAD(test_process, ev, data)
       temp = bmp_280_sensor.value(BMP_280_SENSOR_TYPE_TEMP);
       pressure = bmp_280_sensor.value(BMP_280_SENSOR_TYPE_PRESS);
 
-      //  bmp_get_temperature_pressure(&temp, &pressure);
-
-      LOG_INFO("Time: %6lu  Temp: %2"PRId32".%03"PRId32"  Pressure: %4"PRIu32".%03"PRIu32"  BLeft:%d\n",
+      LOG_INFO("Time: %6lu  Temp: %2"PRId32".%03"PRId32"  Pressure: %4"PRIu32".%03"PRIu32"\n",
                (unsigned long)clock_time(), (temp / 1000), (temp % 1000),
-               (pressure / 1000), (pressure % 1000),
-               button_left_sensor.value(0));
+               (pressure / 1000), (pressure % 1000));
 
       rgbleds_enable(enable++ & 0xf);
 
@@ -75,9 +72,20 @@ PROCESS_THREAD(test_process, ev, data)
     }
 
     if(ev == sensors_event) {
-      struct sensors_sensor *sensor;
-      sensor = data;
+      struct sensors_sensor *sensor = data;
       LOG_INFO("%s triggered!\n", sensor->type);
+    }
+
+    if(ev == button_hal_press_event) {
+      button_hal_button_t *btn = data;
+      LOG_INFO("%s pressed\n", BUTTON_HAL_GET_DESCRIPTION(btn));
+    } else if(ev == button_hal_release_event) {
+      button_hal_button_t *btn = data;
+      LOG_INFO("%s released\n", BUTTON_HAL_GET_DESCRIPTION(btn));
+    } else if(ev == button_hal_periodic_event) {
+      button_hal_button_t *btn = data;
+      LOG_INFO("%s still pressed, %u seconds\n",
+               BUTTON_HAL_GET_DESCRIPTION(btn), btn->press_duration_seconds);
     }
   }
 
