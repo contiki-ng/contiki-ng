@@ -111,7 +111,7 @@
  * PPM -8.544922 / 40000 = -0.000214
  */
 #define TSCH_CONF_BASE_DRIFT_PPM -214
-#else
+#else /* CPU_FAMILY_CC13XX */
 /* The drift compared to "true" 10ms slots.
  * Enable adaptive sync to enable compensation for this.
  * Slot length 10000 usec
@@ -122,8 +122,8 @@
  * TSCH_CONF_BASE_DRIFT_PPM -977
  */
 #define TSCH_CONF_BASE_DRIFT_PPM -977
-#endif
-#endif
+#endif /* CPU_FAMILY_CC13XX */
+#endif /* TSCH_CONF_BASE_DRIFT_PPM */
 
 /* 10 times per second */
 #ifndef TSCH_CONF_CHANNEL_SCAN_DURATION
