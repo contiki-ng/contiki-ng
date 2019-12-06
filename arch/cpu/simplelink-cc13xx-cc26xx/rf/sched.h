@@ -91,6 +91,7 @@ rf_result_t netstack_sched_ieee_tx(bool ack_request);
 rf_result_t netstack_sched_prop_tx(void);
 rf_result_t netstack_sched_rx(bool start);
 rf_result_t netstack_stop_rx(void);
+rf_result_t netstack_adjust_rat(int32_t diff);
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
