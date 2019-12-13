@@ -1538,7 +1538,7 @@ uip_process(uint8_t flag)
        (uip_udp_conn->rport == 0 ||
         UIP_UDP_BUF->srcport == uip_udp_conn->rport) &&
        (uip_is_addr_unspecified(&uip_udp_conn->ripaddr) ||
-        uip_ipaddr_cmp(&UIP_IP_BUF->srcipaddr, &uip_udp_conn->ripaddr))) {
+        uip_ipaddr_cmp(&UIP_IP_BUF->destipaddr, &uip_udp_conn->ripaddr))) {
       goto udp_found;
     }
   }
