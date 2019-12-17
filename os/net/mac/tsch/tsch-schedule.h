@@ -101,7 +101,8 @@ int tsch_schedule_remove_all_slotframes(void);
  * \return A pointer to the new link, NULL if failure
  */
 struct tsch_link *tsch_schedule_add_link(struct tsch_slotframe *slotframe,
-                                         uint8_t link_options, enum link_type link_type, const linkaddr_t *address,
+                                         uint8_t link_options, enum link_type link_type,
+                                         const linkaddr_t *address, const linkaddr_t *target_neighbor,
                                          uint16_t timeslot, uint16_t channel_offset);
 /**
 * \brief Looks for a link from a handle

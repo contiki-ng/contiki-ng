@@ -358,6 +358,29 @@ tsch_schedule_get_link_by_timeslot(struct tsch_slotframe *slotframe, uint16_t ti
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+static struct tsch_link *
+default_tsch_link_comparator(struct tsch_link *a, struct tsch_link *b)
+{
+  if(!(a->link_options & LINK_OPTION_TX)) {
+    /* None of the links are Tx: simply return the first link */
+    return a;
+  }
+
+  /* Two Tx links at the same slotframe; return the one with most packets to send */
+  if(!linkaddr_cmp(&a->addr, &b->addr)) {
+    struct tsch_neighbor *an = tsch_queue_get_nbr(&a->addr);
+    struct tsch_neighbor *bn = tsch_queue_get_nbr(&b->addr);
+    int a_packet_count = an ? ringbufindex_elements(&an->tx_ringbuf) : 0;
+    int b_packet_count = bn ? ringbufindex_elements(&bn->tx_ringbuf) : 0;
+    /* Compare the number of packets in the queue */
+    return a_packet_count >= b_packet_count ? a : b;
+  }
+
+  /* Same neighbor address; simply return the first link */
+  return a;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Returns the next active link after a given ASN, and a backup link (for the same ASN, with Rx flag) */
 struct tsch_link *
 tsch_schedule_get_next_active_link(struct tsch_asn_t *asn, uint16_t *time_offset,
@@ -391,8 +414,13 @@ tsch_schedule_get_next_active_link(struct tsch_asn_t *asn, uint16_t *time_offset
            * By standard: prioritize Tx links first, second by lowest handle */
           if((curr_best->link_options & LINK_OPTION_TX) == (l->link_options & LINK_OPTION_TX)) {
             /* Both or neither links have Tx, select the one with lowest handle */
-            if(l->slotframe_handle < curr_best->slotframe_handle) {
-              new_best = l;
+            if(l->slotframe_handle != curr_best->slotframe_handle) {
+              if(l->slotframe_handle < curr_best->slotframe_handle) {
+                new_best = l;
+              }
+            } else {
+              /* compare the link against the current best link and return the newly selected one */
+              new_best = TSCH_LINK_COMPARATOR(curr_best, l);
             }
           } else {
             /* Select the link that has the Tx option */
