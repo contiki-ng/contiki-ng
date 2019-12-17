@@ -228,7 +228,7 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
 
     /* Start with removing the link currently installed at this timeslot (needed
      * to keep neighbor state in sync with link options etc.) */
-    tsch_schedule_remove_link_by_timeslot(slotframe, timeslot);
+    tsch_schedule_remove_link_by_timeslot(slotframe, timeslot, channel_offset);
     if(!tsch_get_lock()) {
       LOG_ERR("! add_link memb_alloc couldn't take lock\n");
     } else {
@@ -313,7 +313,7 @@ tsch_schedule_remove_link(struct tsch_slotframe *slotframe, struct tsch_link *l)
 
       /* This was a tx link to this neighbor, update counters */
       if(link_options & LINK_OPTION_TX) {
-        struct tsch_neighbor *n = tsch_queue_add_nbr(&addr);
+        struct tsch_neighbor *n = tsch_queue_get_nbr(&addr);
         if(n != NULL) {
           n->tx_links_count--;
           if(!(link_options & LINK_OPTION_SHARED)) {
@@ -332,22 +332,24 @@ tsch_schedule_remove_link(struct tsch_slotframe *slotframe, struct tsch_link *l)
 /*---------------------------------------------------------------------------*/
 /* Removes a link from slotframe and timeslot. Return a 1 if success, 0 if failure */
 int
-tsch_schedule_remove_link_by_timeslot(struct tsch_slotframe *slotframe, uint16_t timeslot)
+tsch_schedule_remove_link_by_timeslot(struct tsch_slotframe *slotframe,
+                                      uint16_t timeslot, uint16_t channel_offset)
 {
-  return slotframe != NULL &&
-         tsch_schedule_remove_link(slotframe, tsch_schedule_get_link_by_timeslot(slotframe, timeslot));
+  return tsch_schedule_remove_link(slotframe,
+                                   tsch_schedule_get_link_by_timeslot(slotframe, timeslot, channel_offset));
 }
 /*---------------------------------------------------------------------------*/
 /* Looks within a slotframe for a link with a given timeslot */
 struct tsch_link *
-tsch_schedule_get_link_by_timeslot(struct tsch_slotframe *slotframe, uint16_t timeslot)
+tsch_schedule_get_link_by_timeslot(struct tsch_slotframe *slotframe,
+                                   uint16_t timeslot, uint16_t channel_offset)
 {
   if(!tsch_is_locked()) {
     if(slotframe != NULL) {
       struct tsch_link *l = list_head(slotframe->links_list);
       /* Loop over all items. Assume there is max one link per timeslot */
       while(l != NULL) {
-        if(l->timeslot == timeslot) {
+        if(l->timeslot == timeslot && l->channel_offset == channel_offset) {
           return l;
         }
         l = list_item_next(l);
