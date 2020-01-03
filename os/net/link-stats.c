@@ -144,6 +144,11 @@ link_stats_packet_sent(const linkaddr_t *lladdr, int status, int numtx)
 
   stats = nbr_table_get_from_lladdr(link_stats, lladdr);
   if(stats == NULL) {
+    /* If transmission failed, do not add the neighbor, as the neighbor might not exist anymore */
+    if(status != MAC_TX_OK) {
+      return;
+    }
+
     /* Add the neighbor */
     stats = nbr_table_add_lladdr(link_stats, lladdr, NBR_TABLE_REASON_LINK_STATS, NULL);
     if(stats != NULL) {
