@@ -79,8 +79,8 @@ set_key(const uint8_t *key)
 }
 /*---------------------------------------------------------------------------*/
 static void
-aead(const uint8_t *nonce, uint8_t *m, uint8_t m_len, const uint8_t *a,
-     uint8_t a_len, uint8_t *result, uint8_t mic_len, int forward)
+aead(const uint8_t *nonce, uint8_t *m, uint16_t m_len, const uint8_t *a,
+     uint16_t a_len, uint8_t *result, uint8_t mic_len, int forward)
 {
   uint16_t cdata_len;
   uint8_t crypto_enabled, ret;
@@ -102,6 +102,11 @@ aead(const uint8_t *nonce, uint8_t *m, uint8_t m_len, const uint8_t *a,
       PRINTF("%s: ccm_auth_encrypt_get_result() error %u\n", MODULE_NAME, ret);
     }
   } else {
+    if(m_len + mic_len > 0xffff) {
+      /* This implementation passes cdata_len as 16bit param to ccm_auth_* functions.
+       * Abort if m_len exceeds 0xffff - mic_len */
+      return;
+    }
     cdata_len = m_len + mic_len;
     ret = ccm_auth_decrypt_start(CCM_STAR_LEN_LEN, CC2538_AES_128_KEY_AREA,
                                  nonce, a, a_len, m, cdata_len, m, mic_len,
