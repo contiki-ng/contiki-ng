@@ -48,6 +48,8 @@
 /* The auth data can have a variable length, but this implementation supports
  * only the case of 0 < l(a) < (2^16 - 2^8) */
 #define MAX_A_LEN 0xfeff
+/* Valid values are 4, 6, 8, 10, 12, 14, and 16 octets */
+#define MIC_LEN_VALID(x) (x >= 4 && x <= 16 && x % 2 == 0)
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -157,7 +159,7 @@ aead(const uint8_t* nonce,
     uint8_t *result, uint8_t mic_len,
     int forward)
 {
-  if(a_len > MAX_A_LEN) {
+  if(a_len > MAX_A_LEN || !MIC_LEN_VALID(mic_len)) {
     return;
   }
 
