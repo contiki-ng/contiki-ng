@@ -161,7 +161,7 @@ function assert( )
 {
   if [ $TEST_OK -eq 0 ]; then
     # Test already failed, do not even read log file (may be from prev run)
-    report_skip "$NAME"
+    report_skip "$1"
     return
   else
     do_assert "$1" "$2" 1
