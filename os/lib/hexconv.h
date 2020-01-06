@@ -40,10 +40,10 @@
 #include <stdint.h>
 
 int hexconv_hexlify(const uint8_t *data, int data_len,
-		    char *text, int text_size);
+                    char *text, int text_size);
 
 int hexconv_unhexlify(const char *text, int text_len,
-		      uint8_t *buf, int buf_size);
+                      uint8_t *buf, int buf_size);
 
 void hexconv_print(const uint8_t *data, int data_len);
 
