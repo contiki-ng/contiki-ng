@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from binascii import *
