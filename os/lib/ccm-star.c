@@ -42,7 +42,7 @@
 #include "lib/aes-128.h"
 #include <string.h>
 
-/* As per RFC 3610. M == 2 (m_len is two bytes long) */
+/* As per RFC 3610. L == 2 (m_len is two bytes long). */
 #define CCM_STAR_AUTH_FLAGS(AUTH, MICLEN) (((AUTH) ? (1u << 6) : 0) | ((((MICLEN) - 2u) >> 1) << 3) | 1u)
 #define CCM_STAR_ENCRYPTION_FLAGS     1
 /* The auth data can have a variable length, but this implementation supports
