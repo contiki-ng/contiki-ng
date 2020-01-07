@@ -89,7 +89,7 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
         &tsch_broadcast_address, old_ts, ORCHESTRA_EB_CHANNEL_OFFSET);
     } else {
       /* Remove slot */
-      tsch_schedule_remove_link_by_timeslot(sf_eb, old_ts);
+      tsch_schedule_remove_link_by_timeslot(sf_eb, old_ts, ORCHESTRA_EB_CHANNEL_OFFSET);
     }
   }
   if(new_ts != 0xffff) {

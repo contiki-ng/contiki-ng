@@ -173,7 +173,8 @@ remove_links_to_schedule(const uint8_t *cell_list, uint16_t cell_list_len)
     }
 
     tsch_schedule_remove_link_by_timeslot(slotframe,
-                                          cell.timeslot_offset);
+                                          cell.timeslot_offset,
+                                          cell.channel_offset);
   }
 }
 
@@ -270,7 +271,8 @@ add_req_input(const uint8_t *body, uint16_t body_len, const linkaddr_t *peer_add
         i += sizeof(cell)) {
       read_cell(&cell_list[i], &cell);
       if(tsch_schedule_get_link_by_timeslot(slotframe,
-                                            cell.timeslot_offset) == NULL) {
+                                            cell.timeslot_offset,
+                                            cell.channel_offset) == NULL) {
         sixp_pkt_set_cell_list(SIXP_PKT_TYPE_RESPONSE,
                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
                                (uint8_t *)&cell, sizeof(cell),
@@ -338,7 +340,8 @@ delete_req_input(const uint8_t *body, uint16_t body_len,
     for(i = 0, removed_link = 0; i < cell_list_len; i += sizeof(cell)) {
       read_cell(&cell_list[i], &cell);
       if(tsch_schedule_get_link_by_timeslot(slotframe,
-                                            cell.timeslot_offset) != NULL) {
+                                            cell.timeslot_offset,
+                                            cell.channel_offset) != NULL) {
         sixp_pkt_set_cell_list(SIXP_PKT_TYPE_RESPONSE,
                                (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
                                (uint8_t *)&cell, sizeof(cell),
@@ -472,7 +475,7 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
     /* Randomly select a slot offset within TSCH_SCHEDULE_DEFAULT_LENGTH */
     random_slot = ((random_rand() & 0xFF)) % TSCH_SCHEDULE_DEFAULT_LENGTH;
 
-    if(tsch_schedule_get_link_by_timeslot(sf, random_slot) == NULL) {
+    if(tsch_schedule_get_link_by_timeslot(sf, random_slot, 0) == NULL) {
 
       /* To prevent repeated slots */
       for(i = 0; i < index; i++) {
@@ -560,7 +563,7 @@ sf_simple_remove_links(linkaddr_t *peer_addr)
   assert(peer_addr != NULL && sf != NULL);
 
   for(i = 0; i < TSCH_SCHEDULE_DEFAULT_LENGTH; i++) {
-    l = tsch_schedule_get_link_by_timeslot(sf, i);
+    l = tsch_schedule_get_link_by_timeslot(sf, i, 0);
 
     if(l) {
       /* Non-zero value indicates a scheduled link */

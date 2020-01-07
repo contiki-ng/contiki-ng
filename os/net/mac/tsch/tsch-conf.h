@@ -362,6 +362,13 @@
 #define TSCH_WITH_LINK_SELECTOR (BUILD_WITH_ORCHESTRA)
 #endif /* TSCH_CONF_WITH_LINK_SELECTOR */
 
+/* Configurable link comparator in case multiple links are scheduled at the same slot */
+#ifdef TSCH_CONF_LINK_COMPARATOR
+#define TSCH_LINK_COMPARATOR TSCH_CONF_LINK_COMPARATOR
+#else
+#define TSCH_LINK_COMPARATOR(a, b) default_tsch_link_comparator(a, b)
+#endif
+
 /******** Configuration: CSMA *******/
 
 /* TSCH CSMA-CA parameters, see IEEE 802.15.4e-2012 */
