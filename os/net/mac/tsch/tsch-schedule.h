@@ -98,11 +98,12 @@ int tsch_schedule_remove_all_slotframes(void);
  * \param address The link address of the intended destination. Use &tsch_broadcast_address for a slot towards any neighbor
  * \param timeslot The link timeslot within the slotframe
  * \param channel_offset The link channel offset
+ * \param do_remove Whether to remove an old link at this timeslot and channel offset
  * \return A pointer to the new link, NULL if failure
  */
 struct tsch_link *tsch_schedule_add_link(struct tsch_slotframe *slotframe,
                                          uint8_t link_options, enum link_type link_type, const linkaddr_t *address,
-                                         uint16_t timeslot, uint16_t channel_offset);
+                                         uint16_t timeslot, uint16_t channel_offset, uint8_t do_remove);
 /**
 * \brief Looks for a link from a handle
 * \param handle The target handle

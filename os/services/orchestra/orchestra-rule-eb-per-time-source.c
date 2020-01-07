@@ -86,7 +86,7 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
     if(old_ts == get_node_timeslot(&linkaddr_node_addr)) {
       /* This was the same timeslot as slot. Reset original link options */
       tsch_schedule_add_link(sf_eb, LINK_OPTION_TX, LINK_TYPE_ADVERTISING_ONLY,
-        &tsch_broadcast_address, old_ts, ORCHESTRA_EB_CHANNEL_OFFSET);
+        &tsch_broadcast_address, old_ts, ORCHESTRA_EB_CHANNEL_OFFSET, 1);
     } else {
       /* Remove slot */
       tsch_schedule_remove_link_by_timeslot(sf_eb, old_ts, ORCHESTRA_EB_CHANNEL_OFFSET);
@@ -100,7 +100,7 @@ new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new
     }
     /* Listen to the time source's EBs */
     tsch_schedule_add_link(sf_eb, link_options, LINK_TYPE_ADVERTISING_ONLY,
-      &tsch_broadcast_address, new_ts, ORCHESTRA_EB_CHANNEL_OFFSET);
+      &tsch_broadcast_address, new_ts, ORCHESTRA_EB_CHANNEL_OFFSET, 1);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -114,7 +114,7 @@ init(uint16_t sf_handle)
   tsch_schedule_add_link(sf_eb,
                          LINK_OPTION_TX,
                          LINK_TYPE_ADVERTISING_ONLY, &tsch_broadcast_address,
-                         get_node_timeslot(&linkaddr_node_addr), ORCHESTRA_EB_CHANNEL_OFFSET);
+                         get_node_timeslot(&linkaddr_node_addr), ORCHESTRA_EB_CHANNEL_OFFSET, 1);
 }
 /*---------------------------------------------------------------------------*/
 struct orchestra_rule eb_per_time_source = {
