@@ -66,8 +66,10 @@ static uint8_t racount;                                         /**< number of R
 static uint16_t rand_time;                                      /**< random time value for timers */
 #endif
 #else /* UIP_CONF_ROUTER */
+#if UIP_ND6_SEND_RS
 struct etimer uip_ds6_timer_rs;                                 /**< RS timer, to schedule RS sending */
 static uint8_t rscount;                                         /**< number of rs already sent */
+#endif /* UIP_ND6_SEND_RS */
 #endif /* UIP_CONF_ROUTER */
 
 /** \name "DS6" Data structures */
@@ -162,9 +164,11 @@ uip_ds6_init(void)
   stimer_set(&uip_ds6_timer_ra, 2);     /* wait to have a link local IP address */
 #endif /* UIP_ND6_SEND_RA */
 #else /* UIP_CONF_ROUTER */
+#if UIP_ND6_SEND_RS
   etimer_set(&uip_ds6_timer_rs,
              random_rand() % (UIP_ND6_MAX_RTR_SOLICITATION_DELAY *
                               CLOCK_SECOND));
+#endif /* UIP_ND6_SEND_RS */ 
 #endif /* UIP_CONF_ROUTER */
   etimer_set(&uip_ds6_timer_periodic, UIP_DS6_PERIOD);
 
@@ -728,6 +732,7 @@ uip_ds6_send_ra_periodic(void)
 
 #endif /* UIP_ND6_SEND_RA */
 #else /* UIP_CONF_ROUTER */
+#if UIP_ND6_SEND_RS
 /*---------------------------------------------------------------------------*/
 void
 uip_ds6_send_rs(void)
@@ -747,6 +752,7 @@ uip_ds6_send_rs(void)
   return;
 }
 
+#endif /* UIP_ND6_SEND_RS */
 #endif /* UIP_CONF_ROUTER */
 /*---------------------------------------------------------------------------*/
 uint32_t

@@ -259,7 +259,9 @@ extern struct etimer uip_ds6_timer_periodic;
 #if UIP_CONF_ROUTER
 extern uip_ds6_prefix_t uip_ds6_prefix_list[UIP_DS6_PREFIX_NB];
 #else /* UIP_CONF_ROUTER */
+#if UIP_ND6_SEND_RS
 extern struct etimer uip_ds6_timer_rs;
+#endif /* UIP_ND6_SEND_RS */
 #endif /* UIP_CONF_ROUTER */
 
 
@@ -372,8 +374,10 @@ void uip_ds6_send_ra_sollicited(void);
 void uip_ds6_send_ra_periodic(void);
 #endif /* UIP_ND6_SEND_RA */
 #else /* UIP_CONF_ROUTER */
+#if UIP_ND6_SEND_RS
 /** \brief Send periodic RS to find router */
 void uip_ds6_send_rs(void);
+#endif /* UIP_ND6_SEND_RS */
 #endif /* UIP_CONF_ROUTER */
 
 /** \brief Compute the reachable time based on base reachable time, see RFC 4861*/

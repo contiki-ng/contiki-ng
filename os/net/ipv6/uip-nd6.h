@@ -81,6 +81,11 @@
 
 /** \name RFC 4861 Router constants */
 /** @{ */
+#ifndef UIP_CONF_ND6_SEND_RS
+#define UIP_ND6_SEND_RS                     1   /* enable/disable RS sending */
+#else
+#define UIP_ND6_SEND_RS UIP_CONF_ND6_SEND_RS
+#endif
 #ifndef UIP_CONF_ND6_SEND_RA
 #define UIP_ND6_SEND_RA                     1   /* enable/disable RA sending */
 #else
@@ -401,6 +406,8 @@ void uip_nd6_ra_output(uip_ipaddr_t *dest);
 #endif /* UIP_ND6_SEND_RA */
 #endif /*UIP_CONF_ROUTER*/
 
+#if !UIP_CONF_ROUTER
+#if UIP_ND6_SEND_RS
 /**
  * \brief Send a Router Solicitation
  *
@@ -413,6 +420,8 @@ void uip_nd6_ra_output(uip_ipaddr_t *dest);
  * SHOULD be included otherwise
  */
 void uip_nd6_rs_output(void);
+#endif /* UIP_ND6_SEND_RS */
+#endif /*!UIP_CONF_ROUTER*/
 
 /**
  * \brief Initialise the uIP ND core

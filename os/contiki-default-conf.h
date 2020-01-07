@@ -130,6 +130,16 @@
 #endif /* UIP_CONF_TCP */
 #endif /* UIP_CONF_TCP_CONNS */
 
+/* UIP_CONF_ND6_SEND_RS enables standard IPv6 Router Solicitating.
+ * We enable it by default when IPv6 is used without RPL. */
+#ifndef UIP_CONF_ND6_SEND_RS
+#if (NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL)
+#define UIP_CONF_ND6_SEND_RS 1
+#else /* NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL */
+#define UIP_CONF_ND6_SEND_RS 0
+#endif /* NETSTACK_CONF_WITH_IPV6 && !UIP_CONF_IPV6_RPL */
+#endif /* UIP_CONF_ND6_SEND_RS */
+
 /* UIP_CONF_ND6_SEND_RA enables standard IPv6 Router Advertisement.
  * We enable it by default when IPv6 is used without RPL. */
 #ifndef UIP_CONF_ND6_SEND_RA
