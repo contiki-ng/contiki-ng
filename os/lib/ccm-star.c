@@ -49,7 +49,7 @@
  * only the case of 0 < l(a) < (2^16 - 2^8) */
 #define MAX_A_LEN 0xfeff
 /* Valid values are 4, 6, 8, 10, 12, 14, and 16 octets */
-#define MIC_LEN_VALID(x) (x >= 4 && x <= 16 && x % 2 == 0)
+#define MIC_LEN_VALID(x) ((x) >= 4 && (x) <= 16 && (x) % 2 == 0)
 
 /*---------------------------------------------------------------------------*/
 static void
