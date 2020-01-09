@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, SICS Swedish ICT.
+ * Copyright (c) 2016, SICS, Swedish ICT AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,95 +25,74 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
 
 /**
  * \file
- *         CCM* header implementation exploiting the JN516x
- *         cryptographic co-processor
+ *         A small util to convert between bytes and hex string
  * \author
- *         Simon Duquennoy <simonduq@sics.se>
+ *         Niclas Finne <nfi@sics.se>
  */
 
-#include "ccm-star.h"
-#include <AHI_AES.h>
-#include <string.h>
-
-static tsReg128 current_key;
-static int current_key_is_new = 1;
-
+#include "lib/hexconv.h"
+#include "sys/cc.h"
+#include <stdio.h>
 /*---------------------------------------------------------------------------*/
-static void
-aead(const uint8_t *nonce,
-     uint8_t *m, uint16_t m_len,
-     const uint8_t *a, uint16_t a_len,
-     uint8_t *result, uint8_t mic_len,
-     int forward)
+static CC_INLINE int
+fromhex(char c)
 {
-  tsReg128 nonce_aligned;
-  memcpy(&nonce_aligned, nonce, sizeof(nonce_aligned));
-  if(forward) {
-    bACI_CCMstar(
-      &current_key,
-      current_key_is_new,
-      XCV_REG_AES_SET_MODE_CCM,
-      mic_len,
-      a_len,
-      m_len,
-      &nonce_aligned,
-      (uint8_t *)a,
-      (uint8_t *)m,
-      (uint8_t *)m,
-      result,
-      NULL
-      );
-  } else {
-    bool_t auth;
-    bACI_CCMstar(
-      &current_key,
-      current_key_is_new,
-      XCV_REG_AES_SET_MODE_CCM_D,
-      mic_len,
-      a_len,
-      m_len,
-      &nonce_aligned,
-      (uint8_t *)a,
-      (uint8_t *)m,
-      (uint8_t *)m,
-      (uint8_t *)a + a_len + m_len,
-      &auth
-      );
-    /* To comply with the CCM_STAR interface, copy MIC to result in case of success */
-    if(result != NULL) {
-      if(auth) {
-        memcpy(result, a + a_len + m_len, mic_len);
-      } else {
-        /* Otherwise, corrupt the result */
-        memcpy(result, a + a_len + m_len, mic_len);
-        result[0]++;
-      }
+  if(c >= '0' && c <= '9') {
+    return c - '0';
+  }
+  if(c >= 'a' && c <= 'f') {
+    return c - 'a' + 10;
+  }
+  if(c >= 'A' && c <= 'F') {
+    return c - 'A' + 10;
+  }
+  return -1;
+}
+/*---------------------------------------------------------------------------*/
+int
+hexconv_hexlify(const uint8_t *data, int data_len, char *text, int text_size)
+{
+  static const char *HEX = "01234567890abcdef";
+  int i, p;
+
+  for(i = 0, p = 0; p + 1 < text_size && i < data_len; i++) {
+    text[p++] = HEX[(data[i] >> 4) & 0xf];
+    text[p++] = HEX[data[i] & 0xf];
+  }
+  return p;
+}
+/*---------------------------------------------------------------------------*/
+int
+hexconv_unhexlify(const char *text, int text_len, uint8_t *buf, int buf_size)
+{
+  int i, p, c1, c2;
+
+  if((text_len & 1) != 0) {
+    /* The string must be of an even length */
+    return -1;
+  }
+
+  for(i = 0, p = 0; p < buf_size && i + 1 < text_len; i += 2, p++) {
+    c1 = fromhex(text[i]);
+    c2 = fromhex(text[i + 1]);
+    if(c1 < 0 || c2 < 0) {
+      return -1;
     }
+    buf[p] = ((c1 << 4) & 0xf0) + (c2 & 0xf);
   }
-
-  current_key_is_new = 0;
+  return p;
 }
 /*---------------------------------------------------------------------------*/
-static void
-set_key(const uint8_t *key)
+void
+hexconv_print(const uint8_t *data, int data_len)
 {
-  if(memcmp(&current_key, key, sizeof(current_key)) == 0) {
-    current_key_is_new = 0;
-  } else {
-    memcpy(&current_key, key, sizeof(current_key));
-    current_key_is_new = 1;
+  int i;
+  for(i = 0; i < data_len; i++) {
+    printf("%02x", data[i]);
   }
 }
-/*---------------------------------------------------------------------------*/
-const struct ccm_star_driver ccm_star_driver_jn516x = {
-  set_key,
-  aead
-};
 /*---------------------------------------------------------------------------*/

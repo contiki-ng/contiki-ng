@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Hasso-Plattner-Institut.
+ * Copyright (c) 2016, SICS, Swedish ICT AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,58 +25,26 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
 
 /**
  * \file
- *         CCM* header file.
+ *         A small util to convert between bytes and hex string
  * \author
- *         Original: Konrad Krentz <konrad.krentz@gmail.com>
- *         Generified version: Justin King-Lacroix <justin.kinglacroix@gmail.com>
+ *         Niclas Finne <nfi@sics.se>
  */
-#ifndef CCM_STAR_H_
-#define CCM_STAR_H_
 
-#include "contiki.h"
+#ifndef HEXCONV_H_
+#define HEXCONV_H_
 
-#ifdef CCM_STAR_CONF
-#define CCM_STAR CCM_STAR_CONF
-#else /* CCM_STAR_CONF */
-#define CCM_STAR ccm_star_driver
-#endif /* CCM_STAR_CONF */
+#include <stdint.h>
 
-#define CCM_STAR_NONCE_LENGTH 13
+int hexconv_hexlify(const uint8_t *data, int data_len,
+                    char *text, int text_size);
 
-/**
- * Structure of CCM* drivers.
- */
-struct ccm_star_driver {
+int hexconv_unhexlify(const char *text, int text_len,
+                      uint8_t *buf, int buf_size);
 
-  /**
-   * \brief         Sets the key in use. Default implementation calls AES_128.set_key().
-   * \param key     The key to use.
-   */
-  void (* set_key)(const uint8_t* key);
+void hexconv_print(const uint8_t *data, int data_len);
 
-  /**
-   * \brief         Combines authentication and encryption.
-   * \param nonce   The nonce to use. CCM_STAR_NONCE_LENGTH bytes long.
-   * \param m       message to encrypt or decrypt. Up to 0xffff
-   * \param a       Additional authenticated data. Up to 0xfeff
-   * \param result  The generated MIC will be put here
-   * \param mic_len The size of the MIC to be generated. <= 16.
-   * \param forward != 0 if used in forward direction.
-   */
-  void (* aead)(const uint8_t* nonce,
-      uint8_t* m, uint16_t m_len,
-      const uint8_t* a, uint16_t a_len,
-      uint8_t *result, uint8_t mic_len,
-      int forward);
-};
-
-extern const struct ccm_star_driver CCM_STAR;
-
-#endif /* CCM_STAR_H_ */
+#endif /* HEXCONV_H_ */
