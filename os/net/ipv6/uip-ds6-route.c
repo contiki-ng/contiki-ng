@@ -516,7 +516,7 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
       /* If this was the only route using this neighbor, remove the
          neighbor from the table - this implicitly unlocks nexthop */
 #if LOG_WITH_ANNOTATE
-      uip_ipaddr_t *nexthop = uip_ds6_route_nexthop(route);
+      const uip_ipaddr_t *nexthop = uip_ds6_route_nexthop(route);
       if(nexthop != NULL) {
         LOG_ANNOTATE("#L %u 0\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
       }
