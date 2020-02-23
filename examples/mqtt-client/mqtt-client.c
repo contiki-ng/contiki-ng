@@ -647,7 +647,7 @@ state_machine(void)
 #endif
 
     state = STATE_REGISTERED;
-    LOG_DBG("Init\n");
+    LOG_DBG("Init MQTT version %d\n", MQTT_PROTOCOL_VERSION);
     /* Continue */
   case STATE_REGISTERED:
     if(have_connectivity()) {
