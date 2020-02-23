@@ -2017,6 +2017,85 @@ create_prop_list(struct mqtt_connection *conn, mqtt_msg_type_t msg,
   list_add(conn->out_props, *prop_list_out);
 }
 /*----------------------------------------------------------------------------*/
+void
+encode_prop_fixed_len_int(struct mqtt_out_property_t **prop_out,
+                          int val, uint8_t len)
+{
+  int8_t i;
+
+  DBG("MQTT - Creating %d-byte int property %i\n", len, val);
+
+  if(len > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return;
+  }
+
+  for(i = len - 1; i >= 0; i--) {
+    (*prop_out)->val[i] = val & 0x00FF;
+    val = val >> 8;
+  }
+
+  (*prop_out)->property_len = len;
+}
+
+void
+encode_prop_utf8(struct mqtt_out_property_t **prop_out,
+                 const char *str)
+{
+  int str_len;
+
+  DBG("MQTT - Encoding UTF-8 Property %s\n", str);
+  str_len = strlen(str);
+
+  /* 2 bytes are needed for each string to encode its length */
+  if((str_len + 2) > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return;
+  }
+
+  (*prop_out)->val[0] = str_len >> 8;
+  (*prop_out)->val[1] = str_len & 0x00FF;
+  memcpy((*prop_out)->val + 2, str, str_len);
+
+  (*prop_out)->property_len = str_len + 2;
+}
+
+void
+encode_prop_binary(struct mqtt_out_property_t **prop_out,
+                   const char *data, int data_len)
+{
+  int8_t i;
+
+  DBG("MQTT - Encoding Binary Data (%d bytes)\n", data_len);
+
+  if((data_len + 2) > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return;
+  }
+
+  (*prop_out)->val[0] = data_len >> 8;
+  (*prop_out)->val[1] = data_len & 0x00FF;
+  memcpy((*prop_out)->val + 2, data, data_len);
+
+  (*prop_out)->property_len = data_len + 2;
+}
+
+void
+encode_prop_var_byte_int(struct mqtt_out_property_t **prop_out,
+                         int val)
+{
+  uint8_t id_len;
+
+  DBG("MQTT - Encoding Variable Byte Integer %d\n", val);
+
+  encode_remaining_length(
+          (*prop_out)->val,
+          &id_len,
+          val);
+
+  (*prop_out)->property_len = id_len;
+}
+
 uint32_t
 encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
             va_list args)
@@ -2035,6 +2114,67 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
 
   /* Decode varargs and create encode property value for selected type */
   switch(prop_id) {
+  case MQTT_VHDR_PROP_PAYLOAD_FMT_IND:
+  case MQTT_VHDR_PROP_REQ_PROBLEM_INFO:
+  case MQTT_VHDR_PROP_REQ_RESP_INFO: {
+    int val;
+
+    val = va_arg(args, int);
+    encode_prop_fixed_len_int(prop_out, val, 1);
+
+    break;
+  }
+  case MQTT_VHDR_PROP_RECEIVE_MAX:
+  case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX: {
+    int val;
+
+    val = va_arg(args, int);
+    encode_prop_fixed_len_int(prop_out, val, 2);
+
+    break;
+  }
+  case MQTT_VHDR_PROP_MSG_EXP_INT:
+  case MQTT_VHDR_PROP_SESS_EXP_INT:
+  case MQTT_VHDR_PROP_WILL_DELAY_INT:
+  case MQTT_VHDR_PROP_MAX_PKT_SZ: {
+    int val;
+
+    val = va_arg(args, int);
+    encode_prop_fixed_len_int(prop_out, val, 4);
+
+    break;
+  }
+  case MQTT_VHDR_PROP_CONTENT_TYPE:
+  case MQTT_VHDR_PROP_RESP_TOPIC:
+  case MQTT_VHDR_PROP_AUTH_METHOD: {
+    const char *str;
+
+    str = va_arg(args, const char*);
+    encode_prop_utf8(prop_out, str);
+
+    break;
+  }
+  case MQTT_VHDR_PROP_CORRELATION_DATA:
+  case MQTT_VHDR_PROP_AUTH_DATA: {
+    const char *data;
+    int data_len;
+
+    data = va_arg(args, const char*);
+    data_len = va_arg(args, int);
+
+    encode_prop_binary(prop_out, data, data_len);
+
+    break;
+  }
+  case MQTT_VHDR_PROP_SUB_ID: {
+    int val;
+
+    val = va_arg(args, int);
+
+    encode_prop_var_byte_int(prop_out, val);
+
+    break;
+  }
   case MQTT_VHDR_PROP_USER_PROP: {
     const char *name;
     const char *value;
@@ -2087,6 +2227,8 @@ register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
 
   va_start(args, prop_id);
 
+  // TODO: check that the property is compatible with the message
+
   DBG("MQTT - Searching for prop list for msg %i\n", msg);
 
   /* Get property list for selected msg type */
@@ -2098,6 +2240,7 @@ register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
 
   if(!prop_list) {
     DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
+    va_end(args);
     return;
   }
 
@@ -2118,6 +2261,8 @@ register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
   } else {
     DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
   }
+
+  va_end(args);
 }
 /*----------------------------------------------------------------------------*/
 /* Prints all properties in the given property list (debug)
