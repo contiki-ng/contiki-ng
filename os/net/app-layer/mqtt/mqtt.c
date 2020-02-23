@@ -460,27 +460,27 @@ decode_var_byte_int(const uint8_t *input_data_ptr,
 }
 /*---------------------------------------------------------------------------*/
 static void
-encode_remaining_length(uint8_t *remaining_length,
-                        uint8_t *remaining_length_bytes,
-                        uint32_t length)
+encode_var_byte_int(uint8_t *vbi_out,
+                    uint8_t *vbi_bytes,
+                    uint32_t val)
 {
   uint8_t digit;
 
-  DBG("MQTT - Encoding length %lu\n", length);
+  DBG("MQTT - Encoding Variable Byte Integer %lu\n", val);
 
-  *remaining_length_bytes = 0;
+  *vbi_bytes = 0;
   do {
-    digit = length % 128;
-    length = length / 128;
-    if(length > 0) {
+    digit = val % 128;
+    val = val / 128;
+    if(val > 0) {
       digit = digit | 0x80;
     }
 
-    remaining_length[*remaining_length_bytes] = digit;
-    (*remaining_length_bytes)++;
-    DBG("MQTT - Encode len digit '%u' length '%lu'\n", digit, length);
-  } while(length > 0 && *remaining_length_bytes < 5);
-  DBG("MQTT - remaining_length_bytes %u\n", *remaining_length_bytes);
+    vbi_out[*vbi_bytes] = digit;
+    (*vbi_bytes)++;
+    DBG("MQTT - Encode VBI digit '%u' length '%lu'\n", digit, val);
+  } while(val > 0 && *vbi_bytes < 5);
+  DBG("MQTT - var_byte_int bytes %u\n", *vbi_bytes);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -604,9 +604,9 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
                   : 1;
 #endif
 
-  encode_remaining_length(conn->out_packet.remaining_length_enc,
-                          &conn->out_packet.remaining_length_enc_bytes,
-                          conn->out_packet.remaining_length);
+  encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                      &conn->out_packet.remaining_length_enc_bytes,
+                      conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -749,9 +749,9 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
                   : 1;
 #endif
 
-  encode_remaining_length(conn->out_packet.remaining_length_enc,
-                          &conn->out_packet.remaining_length_enc_bytes,
-                          conn->out_packet.remaining_length);
+  encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                      &conn->out_packet.remaining_length_enc_bytes,
+                      conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -818,9 +818,9 @@ PT_THREAD(unsubscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   conn->out_packet.remaining_length = MQTT_MID_SIZE +
     MQTT_STRING_LEN_SIZE +
     conn->out_packet.topic_length;
-  encode_remaining_length(conn->out_packet.remaining_length_enc,
-                          &conn->out_packet.remaining_length_enc_bytes,
-                          conn->out_packet.remaining_length);
+  encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                      &conn->out_packet.remaining_length_enc_bytes,
+                      conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -900,9 +900,9 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
                   : 1;
 #endif
 
-  encode_remaining_length(conn->out_packet.remaining_length_enc,
-                          &conn->out_packet.remaining_length_enc_bytes,
-                          conn->out_packet.remaining_length);
+  encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                      &conn->out_packet.remaining_length_enc_bytes,
+                      conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -2088,7 +2088,7 @@ encode_prop_var_byte_int(struct mqtt_out_property_t **prop_out,
 
   DBG("MQTT - Encoding Variable Byte Integer %d\n", val);
 
-  encode_remaining_length(
+  encode_var_byte_int(
           (*prop_out)->val,
           &id_len,
           val);
@@ -2253,7 +2253,7 @@ register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
     list_add(prop_list->props, prop);
     prop_list->properties_len += 1; /* Property ID */
     prop_list->properties_len += prop_len;
-    encode_remaining_length(
+    encode_var_byte_int(
         prop_list->properties_len_enc,
         &(prop_list->properties_len_enc_bytes),
         prop_list->properties_len);
