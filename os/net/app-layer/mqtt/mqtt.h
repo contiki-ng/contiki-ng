@@ -454,6 +454,9 @@ struct mqtt_will {
   struct mqtt_string topic;
   struct mqtt_string message;
   mqtt_qos_level_t qos;
+#if MQTT_5
+  LIST_STRUCT(properties);
+#endif
 };
 
 struct mqtt_credentials {
@@ -653,7 +656,12 @@ void mqtt_set_username_password(struct mqtt_connection *conn,
 void mqtt_set_last_will(struct mqtt_connection *conn,
                         char *topic,
                         char *message,
+#if MQTT_5
+                        mqtt_qos_level_t qos,
+                        struct mqtt_prop_list_t *will_props);
+#else
                         mqtt_qos_level_t qos);
+#endif
 
 #define mqtt_connected(conn) \
   ((conn)->state == MQTT_CONN_STATE_CONNECTED_TO_BROKER ? 1 : 0)

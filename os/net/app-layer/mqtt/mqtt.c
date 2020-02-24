@@ -567,6 +567,7 @@ PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
     } while(prop != NULL);
   } else {
     /* Write Property Length */
+    DBG("MQTT - No properties to write\n");
     PT_MQTT_WRITE_BYTE(conn, 0);
   }
 
@@ -581,7 +582,9 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
 
 #if MQTT_5
   struct mqtt_prop_list_t *prop_list;
+  struct mqtt_prop_list_t *will_props;
   uint8_t found_props;
+  will_props = (struct mqtt_prop_list_t *) list_head(conn->will.properties);
 
   found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
 #endif
@@ -599,9 +602,17 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->will.message);
 
 #if MQTT_5
+  /* For connect properties */
   conn->out_packet.remaining_length +=
       found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
                   : 1;
+
+  /* For will properties */
+  if(conn->connect_vhdr_flags & MQTT_VHDR_WILL_FLAG) {
+  conn->out_packet.remaining_length +=
+      will_props ? will_props->properties_len + will_props->properties_len_enc_bytes
+                              : 1;
+  }
 #endif
 
   encode_var_byte_int(conn->out_packet.remaining_length_enc,
@@ -636,7 +647,13 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTE(conn, conn->client_id.length & 0x00FF);
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->client_id.string,
                       conn->client_id.length);
+
   if(conn->connect_vhdr_flags & MQTT_VHDR_WILL_FLAG) {
+#if MQTT_5
+    /* Write Will Properties */
+    DBG("MQTT - Writing will properties\n");
+    write_out_props(pt, conn, will_props);
+#endif
     PT_MQTT_WRITE_BYTE(conn, conn->will.topic.length >> 8);
     PT_MQTT_WRITE_BYTE(conn, conn->will.topic.length & 0x00FF);
     PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->will.topic.string,
@@ -1782,6 +1799,7 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
   list_add(mqtt_conn_list, conn);
 #if MQTT_5
   LIST_STRUCT_INIT(conn, out_props);
+  LIST_STRUCT_INIT(&(conn->will), properties);
 #endif
 
   DBG("MQTT - Registered successfully\n");
@@ -1967,7 +1985,11 @@ mqtt_set_username_password(struct mqtt_connection *conn, char *username,
 /*----------------------------------------------------------------------------*/
 void
 mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
+#if MQTT_5
+                   mqtt_qos_level_t qos, struct mqtt_prop_list_t *will_props)
+#else
                    mqtt_qos_level_t qos)
+#endif
 {
   /* Set strings, NULL string will simply set length to zero */
   string_to_mqtt_string(&conn->will.topic, topic);
@@ -1980,6 +2002,9 @@ mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
     conn->connect_vhdr_flags |= MQTT_VHDR_WILL_FLAG |
       MQTT_VHDR_WILL_RETAIN_FLAG;
   }
+#if MQTT_5
+  conn->will.properties = (list_t) will_props;
+#endif
 }
 /*----------------------------------------------------------------------------*/
 /* MQTTv5-specific functions */
