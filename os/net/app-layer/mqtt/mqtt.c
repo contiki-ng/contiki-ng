@@ -1111,7 +1111,7 @@ tcp_input(struct tcp_socket *s,
     conn->in_packet.payload_pos += copy_bytes;
     pos += copy_bytes;
 
-    uint8_t i;
+    uint32_t i;
     DBG("MQTT - Copied bytes: \n");
     for(i = 0; i < copy_bytes; i++) {
       DBG("%02X ", conn->in_packet.payload[i]);
