@@ -166,6 +166,15 @@ coap_receive(const coap_endpoint_t *src,
     LOG_DBG_COAP_STRING((const char *)message->payload, message->payload_len);
     LOG_DBG_("\n");
 
+#ifdef WITH_DTLS
+    /* when using DTLS the payload can be overwritten by the respose */
+    static uint8_t payload_buffer[COAP_MAX_CHUNK_SIZE];
+    if(message->payload != NULL) {
+      memcpy(payload_buffer, message->payload, message->payload_len);
+      message->payload = payload_buffer;
+    }
+#endif /* WITH_DTLS */
+
     /* handle requests */
     if(message->code >= COAP_GET && message->code <= COAP_DELETE) {
 
@@ -329,7 +338,7 @@ coap_receive(const coap_endpoint_t *src,
             coap_message_t ack[1];
             /* ACK with empty code (0) */
             coap_init_message(ack, COAP_TYPE_ACK, 0, message->mid);
-            /* serializing into IPBUF: Only overwrites header parts that are already parsed into the response struct */
+            /* serializing into IPBUF: Overwrites parts that are already parsed into the response struct */
             coap_sendto(ep, coap_databuf(), coap_serialize_message(ack, coap_databuf()));
           }
 
