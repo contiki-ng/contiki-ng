@@ -90,7 +90,7 @@ typedef enum {
   MQTT_VHDR_WILL_QOS_LEVEL_2   = 0x10,
 
   MQTT_VHDR_WILL_FLAG          = 0x04,
-  MQTT_VHDR_CLEAN_SESSION_FLAG = 0x02,
+  MQTT_VHDR_CLEAN_SESSION_FLAG = 0x02, // called Clean Start in MQTTv5.0
 } mqtt_vhdr_conn_fields_t;
 /*---------------------------------------------------------------------------*/
 typedef enum {
@@ -2089,8 +2089,6 @@ void
 encode_prop_binary(struct mqtt_out_property_t **prop_out,
                    const char *data, int data_len)
 {
-  int8_t i;
-
   DBG("MQTT - Encoding Binary Data (%d bytes)\n", data_len);
 
   if((data_len + 2) > MQTT_MAX_PROP_LENGTH) {
