@@ -358,6 +358,9 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
 
     pub_handler(msg_ptr->topic, strlen(msg_ptr->topic),
                 msg_ptr->payload_chunk, msg_ptr->payload_chunk_length);
+#if MQTT_5
+    print_input_props(m);
+#endif
     break;
   }
   case MQTT_EVENT_SUBACK: {

@@ -412,8 +412,10 @@ struct mqtt_in_packet {
   uint8_t  reason_code;
 
   uint8_t  has_props; // the properties have been decoded
-  uint16_t property_len; // total length of properties including encoded length
+  uint8_t  properties_enc_len; // number of bytes used to encode property length
+  uint16_t properties_len; // length of properties excluding encoded length
   uint8_t  *props_start; // pointer to first byte in first property
+  uint8_t  *curr_props_pos; // pointer to property to parse next
 #endif
 };
 
@@ -671,6 +673,7 @@ void mqtt_set_last_will(struct mqtt_connection *conn,
 /*---------------------------------------------------------------------------*/
 /* MQTTv5-specific functions */
 // TODO add function declarations here + Doxygen
+void print_input_props(struct mqtt_connection *conn);
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */
 /*---------------------------------------------------------------------------*/
