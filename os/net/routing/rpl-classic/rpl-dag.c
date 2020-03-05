@@ -89,6 +89,7 @@ NBR_TABLE_GLOBAL(rpl_parent_t, rpl_parents);
 /* Allocate instance table. */
 rpl_instance_t instance_table[RPL_MAX_INSTANCES];
 rpl_instance_t *default_instance;
+int diff_rank=0;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -853,7 +854,10 @@ rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
   } else if(best_dag->rank != old_rank) {
     LOG_DBG("RPL: Preferred parent update, rank changed from %u to %u\n",
            (unsigned)old_rank, best_dag->rank);
-	   	rpl_reset_dio_timer(instance);
+	   diff_rank=best_dag->rank - old_rank;
+           if(diff_rank>instance->min_hoprankinc-1 || (diff_rank<0 && diff_rank<(-1*instance->min_hoprankinc)+1)){
+              rpl_reset_dio_timer(instance);
+              }
   }
   return best_dag;
 }
