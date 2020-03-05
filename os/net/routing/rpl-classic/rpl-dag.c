@@ -853,7 +853,7 @@ rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
   } else if(best_dag->rank != old_rank) {
     LOG_DBG("RPL: Preferred parent update, rank changed from %u to %u\n",
            (unsigned)old_rank, best_dag->rank);
-	   rpl_reset_dio_timer(instance);
+	   	rpl_reset_dio_timer(instance);
   }
   return best_dag;
 }
