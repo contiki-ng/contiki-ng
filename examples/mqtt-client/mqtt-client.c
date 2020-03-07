@@ -359,12 +359,15 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     pub_handler(msg_ptr->topic, strlen(msg_ptr->topic),
                 msg_ptr->payload_chunk, msg_ptr->payload_chunk_length);
 #if MQTT_5
+    /* Print any properties received along with the message */
     print_input_props(m);
 #endif
     break;
   }
   case MQTT_EVENT_SUBACK: {
-#if MQTT_311
+#if MQTT_31
+    LOG_DBG("Application is subscribed to topic successfully\n");
+#else
     mqtt_suback_event_t *suback_event = (mqtt_suback_event_t *)data;
 
     if(suback_event->success) {

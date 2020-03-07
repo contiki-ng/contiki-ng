@@ -322,7 +322,7 @@ struct mqtt_string {
 typedef struct {
   uint16_t mid;
   mqtt_qos_level_t qos_level;
-#if MQTT_311
+#if !MQTT_31
   uint8_t return_code;
   uint8_t success;
 #endif

@@ -1111,7 +1111,7 @@ handle_suback(struct mqtt_connection *conn)
 
   suback_event.mid = conn->in_packet.mid;
 
-#if MQTT_311
+#if !MQTT_31
   suback_event.success = 0;
 
   switch(conn->in_packet.payload_start[0]) {
