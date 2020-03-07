@@ -216,6 +216,10 @@ typedef struct mqtt_client_config {
 static char client_id[BUFFER_SIZE];
 static char pub_topic[BUFFER_SIZE];
 static char sub_topic[BUFFER_SIZE];
+/* MQTTv5 */
+#if MQTT_5
+static uint8_t PUB_TOPIC_ALIAS;
+#endif
 /*---------------------------------------------------------------------------*/
 /*
  * The main MQTT buffers.
@@ -408,6 +412,10 @@ construct_pub_topic(void)
     return 0;
   }
 
+#if MQTT_5
+  PUB_TOPIC_ALIAS = 1;
+#endif
+
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -527,6 +535,9 @@ publish(void)
   int remaining = APP_BUFFER_SIZE;
   int i;
   char def_rt_str[64];
+#if MQTT_5
+  uint8_t prop_err;
+#endif
 
   seq_nr_value++;
 
@@ -589,8 +600,24 @@ publish(void)
     return;
   }
 
+#if MQTT_5
+  /* Only send full topic name with the first PUBLISH
+   * Afterwards, only use topic alias
+   */
+  if(seq_nr_value == 1) {
+    mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF,
+                 PUB_TOPIC_ALIAS, MQTT_TOPIC_ALIAS_OFF);
+    prop_err = register_prop(&conn, MQTT_FHDR_MSG_TYPE_PUBLISH, MQTT_VHDR_PROP_TOPIC_ALIAS, PUB_TOPIC_ALIAS);
+  } else {
+    mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF,
+                 PUB_TOPIC_ALIAS, (mqtt_topic_alias_en_t)!prop_err);
+  }
+#else
   mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+#endif
 
   LOG_DBG("Publish!\n");
 }
@@ -646,10 +673,10 @@ state_machine(void)
     connect_attempt = 1;
 
 #if MQTT_5
-  register_prop(&conn,
-                MQTT_FHDR_MSG_TYPE_PUBLISH,
-                MQTT_VHDR_PROP_USER_PROP,
-                "Contiki", "v4.4");
+  (void)register_prop(&conn,
+                      MQTT_FHDR_MSG_TYPE_PUBLISH,
+                      MQTT_VHDR_PROP_USER_PROP,
+                      "Contiki", "v4.4");
 
   list_all_props(&conn);
 #endif

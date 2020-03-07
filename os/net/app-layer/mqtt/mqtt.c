@@ -200,7 +200,7 @@ MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
 /* Number of output properties that will be declared, regardless of
  * message type
  */
-#define MQTT_MAX_OUT_PROPS 1
+#define MQTT_MAX_OUT_PROPS 2
 MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
 #endif
 
@@ -1540,7 +1540,7 @@ print_input_props(struct mqtt_connection *conn)
         break;
       }
       default:
-        DBG("MQTT - Error, no such property '%i'", prop_id);
+        DBG("MQTT - Error, no such property '%i'\n", prop_id);
         return;
       }
 
@@ -2289,7 +2289,13 @@ mqtt_unsubscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic)
 mqtt_status_t
 mqtt_publish(struct mqtt_connection *conn, uint16_t *mid, char *topic,
              uint8_t *payload, uint32_t payload_size,
-             mqtt_qos_level_t qos_level, mqtt_retain_t retain)
+             mqtt_qos_level_t qos_level,
+#if MQTT_5
+             mqtt_retain_t retain,
+             uint8_t topic_alias, mqtt_topic_alias_en_t topic_alias_en)
+#else
+             mqtt_retain_t retain)
+#endif
 {
   if(conn->state != MQTT_CONN_STATE_CONNECTED_TO_BROKER) {
     return MQTT_STATUS_NOT_CONNECTED_ERROR;
@@ -2307,8 +2313,23 @@ mqtt_publish(struct mqtt_connection *conn, uint16_t *mid, char *topic,
 
   conn->out_packet.mid = INCREMENT_MID(conn);
   conn->out_packet.retain = retain;
+#if MQTT_5
+  if(topic_alias_en == MQTT_TOPIC_ALIAS_ON) {
+    conn->out_packet.topic = "";
+    conn->out_packet.topic_length = 0;
+    conn->out_packet.topic_alias = topic_alias;
+    if(topic_alias == 0) {
+      DBG("MQTT - Error, a topic alias of 0 is not permitted! It won't be sent.\n");
+    }
+  } else {
+    conn->out_packet.topic = topic;
+    conn->out_packet.topic_length = strlen(topic);
+    conn->out_packet.topic_alias = 0;
+  }
+#else
   conn->out_packet.topic = topic;
   conn->out_packet.topic_length = strlen(topic);
+#endif
   conn->out_packet.payload = payload;
   conn->out_packet.payload_size = payload_size;
   conn->out_packet.qos = qos_level;
@@ -2508,7 +2529,8 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
     break;
   }
   case MQTT_VHDR_PROP_RECEIVE_MAX:
-  case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX: {
+  case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX:
+  case MQTT_VHDR_PROP_TOPIC_ALIAS: {
     int val;
 
     val = va_arg(args, int);
@@ -2589,9 +2611,10 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
     break;
   }
   default:
-    DBG("MQTT - Error, no such property '%i'", prop_id);
+    DBG("MQTT - Error, no such property '%i'\n", prop_id);
+    *prop_out = NULL;
+    memb_free(&props_mem, *prop_out);
     return 0;
-    break;
   }
 
   DBG("MQTT - Property encoded length %i\n", (*prop_out)->property_len);
@@ -2599,7 +2622,7 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
   return (*prop_out)->property_len;
 }
 /*----------------------------------------------------------------------------*/
-void
+uint8_t
 register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
               mqtt_vhdr_prop_t prop_id, ...)
 {
@@ -2624,7 +2647,7 @@ register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
   if(!prop_list) {
     DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
     va_end(args);
-    return;
+    return 1;
   }
 
   DBG("MQTT - prop list %p msg %i nxt %p\n", prop_list, prop_list->msg_type, prop_list->next);
@@ -2643,9 +2666,12 @@ register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
     DBG("MQTT - New prop_list length %i\n", prop_list->properties_len);
   } else {
     DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
+    va_end(args);
+    return 1;
   }
 
   va_end(args);
+  return 0;
 }
 /*----------------------------------------------------------------------------*/
 /* Prints all properties in the given property list (debug)

@@ -158,6 +158,8 @@
  * total property length
  */
 #define MQTT_MAX_PROP_LEN_BYTES   2
+/* Max number of topic aliases (when receiving) */
+#define MQTT_MAX_NUM_TOPIC_ALIASES 1
 /*---------------------------------------------------------------------------*/
 /*
  * Debug configuration, this is similar but not exactly like the Debugging
@@ -319,6 +321,11 @@ typedef enum {
   MQTT_CAP_OFF,
   MQTT_CAP_ON,
 } mqtt_capability_t;
+
+typedef enum {
+  MQTT_TOPIC_ALIAS_OFF,
+  MQTT_TOPIC_ALIAS_ON,
+} mqtt_topic_alias_en_t;
 /*---------------------------------------------------------------------------*/
 struct mqtt_string {
   char *string;
@@ -446,6 +453,9 @@ struct mqtt_out_packet {
   mqtt_qos_level_t qos;
   mqtt_qos_state_t qos_state;
   mqtt_retain_t retain;
+#if MQTT_5
+  uint8_t topic_alias;
+#endif
 };
 /*---------------------------------------------------------------------------*/
 /**
@@ -640,7 +650,14 @@ mqtt_status_t mqtt_publish(struct mqtt_connection *conn,
                            uint8_t *payload,
                            uint32_t payload_size,
                            mqtt_qos_level_t qos_level,
+#if MQTT_5
+                           mqtt_retain_t retain,
+                           uint8_t topic_alias,
+                           mqtt_topic_alias_en_t topic_alias_en);
+#else
                            mqtt_retain_t retain);
+#endif
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Set the user name and password for a MQTT client.
