@@ -307,6 +307,19 @@ typedef enum {
   MQTT_VHDR_PROP_SHARED_SUB_AVAIL   = 0x2A,
 } mqtt_vhdr_prop_t;
 /*---------------------------------------------------------------------------*/
+/* MQTTv5.0 Binary Capabilities */
+typedef enum {
+  MQTT_CAP_RETAIN_AVAIL        = 0x00,
+  MQTT_CAP_WILD_SUB_AVAIL      = 0x01,
+  MQTT_CAP_SUB_ID_AVAIL        = 0x02,
+  MQTT_CAP_SHARED_SUB_AVAIL    = 0x04,
+} mqtt_srv_capability_t;
+
+typedef enum {
+  MQTT_CAP_OFF,
+  MQTT_CAP_ON,
+} mqtt_capability_t;
+/*---------------------------------------------------------------------------*/
 struct mqtt_string {
   char *string;
   uint16_t length;
@@ -513,13 +526,17 @@ struct mqtt_connection {
   uint16_t server_port;
   struct tcp_socket socket;
 
+#if MQTT_5
   /* A list of lists of properties
    * Each member of the list contains a message type
    * and a pointer to the list of properties for that
    * message type
    */
-#if MQTT_5
   LIST_STRUCT(out_props);
+
+  /* Server Capabilities */
+  /* Binary capabilities (default: enabled) */
+  uint8_t srv_feature_en;
 #endif
 };
 /* This is the API exposed to the user. */

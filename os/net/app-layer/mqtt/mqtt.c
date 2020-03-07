@@ -1072,6 +1072,7 @@ handle_connack(struct mqtt_connection *conn)
     abort_connection(conn);
     return;
   }
+  parse_connack_props(conn);
 #endif
 
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
@@ -1540,7 +1541,58 @@ print_input_props(struct mqtt_connection *conn)
       }
       default:
         DBG("MQTT - Error, no such property '%i'", prop_id);
-        return 0;
+        return;
+      }
+
+    prop_id = 0;
+    prop_len = get_next_in_prop(conn, &prop_id, data);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+parse_connack_props(struct mqtt_connection *conn)
+{
+  uint32_t prop_len;
+  mqtt_vhdr_prop_t prop_id;
+  uint8_t data[MQTT_MAX_PROP_LENGTH];
+  uint32_t val_int;
+
+  DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
+
+  prop_len = get_next_in_prop(conn, &prop_id, data);
+  while(prop_len) {
+    switch(prop_id) {
+      case MQTT_VHDR_PROP_RETAIN_AVAIL: {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_RETAIN_AVAIL;
+        }
+        break;
+      }
+      case MQTT_VHDR_PROP_WILD_SUB_AVAIL: {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_WILD_SUB_AVAIL;
+        }
+        break;
+      }
+      case MQTT_VHDR_PROP_SUB_ID_AVAIL: {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_SUB_ID_AVAIL;
+        }
+        break;
+      }
+      case MQTT_VHDR_PROP_SHARED_SUB_AVAIL:  {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_SHARED_SUB_AVAIL;
+        }
+        break;
+      }
+      default:
+        DBG("MQTT - Error, unexpected CONNACK property '%i'", prop_id);
+        return;
       }
 
     prop_id = 0;
@@ -2090,6 +2142,10 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
 
   /* Set defaults - Set all to zero to begin with */
   memset(conn, 0, sizeof(struct mqtt_connection));
+# if MQTT_5
+  /* Server capabilities have non-zero defaults */
+  conn->srv_feature_en = -1;
+# endif
   string_to_mqtt_string(&conn->client_id, client_id);
   conn->event_callback = event_callback;
   conn->app_process = app_process;

@@ -375,8 +375,10 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     } else {
       LOG_DBG("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
     }
-#else
-    LOG_DBG("Application is subscribed to topic successfully\n");
+#if MQTT_5
+    /* Print any properties received along with the message */
+    print_input_props(m);
+#endif
 #endif
     break;
   }
