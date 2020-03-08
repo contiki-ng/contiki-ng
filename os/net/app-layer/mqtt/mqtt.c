@@ -1674,7 +1674,8 @@ static void
 handle_disconnect(struct mqtt_connection *conn)
 {
   DBG("MQTT - (handle_disconnect) Got DISCONNECT.\n");
-//  DBG("MQTT - (handle_disconnect) remaining_len %u\n", conn->remaining_length);
+  call_event(conn, MQTT_EVENT_DISCONNECTED, NULL);
+  abort_connection(conn);
 }
 #endif
 /*---------------------------------------------------------------------------*/
