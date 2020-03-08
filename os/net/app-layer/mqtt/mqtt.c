@@ -596,6 +596,12 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   conn->out_packet.remaining_length = 0;
   conn->out_packet.remaining_length += MQTT_CONNECT_VHDR_SIZE;
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->client_id);
+#if (MQTT_PROTOCOL_VERSION > MQTT_PROTOCOL_VERSION_3_1) && MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID
+  /* Ensure we leave space for the 2 length bytes (which will encode 0) */
+  if(MQTT_STRING_LENGTH(&conn->client_id) == 0) {
+    conn->out_packet.remaining_length += 2;
+  }
+#endif
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->credentials.username);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->credentials.password);
   conn->out_packet.remaining_length += MQTT_STRING_LENGTH(&conn->will.topic);
