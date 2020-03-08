@@ -747,6 +747,7 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_BEGIN(pt);
 
 #if MQTT_5
+  uint8_t sub_options;
   struct mqtt_prop_list_t *prop_list;
   uint8_t found_props;
 
@@ -800,7 +801,12 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.topic_length & 0x00FF));
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->out_packet.topic,
                       conn->out_packet.topic_length);
+
+#if MQTT_5
+  PT_MQTT_WRITE_BYTE(conn, conn->out_packet.sub_options);
+#else
   PT_MQTT_WRITE_BYTE(conn, conn->out_packet.qos);
+#endif
 
   /* Send out buffer */
   send_out_buffer(conn);
@@ -2233,7 +2239,13 @@ mqtt_disconnect(struct mqtt_connection *conn)
 /*----------------------------------------------------------------------------*/
 mqtt_status_t
 mqtt_subscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic,
+#if MQTT_5
+               mqtt_qos_level_t qos_level,
+               mqtt_nl_en_t nl, mqtt_rap_en_t rap,
+               mqtt_retain_handling_t ret_handling)
+#else
                mqtt_qos_level_t qos_level)
+#endif
 {
   if(conn->state != MQTT_CONN_STATE_CONNECTED_TO_BROKER) {
     return MQTT_STATUS_NOT_CONNECTED_ERROR;
@@ -2252,12 +2264,21 @@ mqtt_subscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic,
   conn->out_packet.mid = INCREMENT_MID(conn);
   conn->out_packet.topic = topic;
   conn->out_packet.topic_length = strlen(topic);
-  conn->out_packet.qos = qos_level;
   conn->out_packet.qos_state = MQTT_QOS_STATE_NO_ACK;
 
   if(mid) {
     *mid = conn->out_packet.mid;
   }
+
+#if MQTT_5
+  conn->out_packet.sub_options  = 0x00;
+  conn->out_packet.sub_options |= qos_level    & MQTT_SUB_OPTION_QOS;
+  conn->out_packet.sub_options |= nl           & MQTT_SUB_OPTION_NL;
+  conn->out_packet.sub_options |= rap          & MQTT_SUB_OPTION_RAP;
+  conn->out_packet.sub_options |= ret_handling & MQTT_SUB_OPTION_RETAIN_HANDLING;
+#else
+  conn->out_packet.qos = qos_level;
+#endif
 
   process_post(&mqtt_process, mqtt_do_subscribe_event, conn);
   return MQTT_STATUS_OK;

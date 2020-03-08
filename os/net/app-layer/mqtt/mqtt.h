@@ -326,6 +326,29 @@ typedef enum {
   MQTT_TOPIC_ALIAS_OFF,
   MQTT_TOPIC_ALIAS_ON,
 } mqtt_topic_alias_en_t;
+
+typedef enum {
+  MQTT_SUB_OPTION_QOS             = 0x03,
+  MQTT_SUB_OPTION_NL              = 0x04,
+  MQTT_SUB_OPTION_RAP             = 0x08,
+  MQTT_SUB_OPTION_RETAIN_HANDLING = 0x30,
+} mqtt_sub_option_t;
+
+typedef enum {
+  MQTT_NL_OFF,
+  MQTT_NL_ON,
+} mqtt_nl_en_t;
+
+typedef enum {
+  MQTT_RAP_OFF,
+  MQTT_RAP_ON,
+} mqtt_rap_en_t;
+
+typedef enum {
+  MQTT_RET_H_SEND_ALL  = 0x00,
+  MQTT_RET_H_SEND_NEW  = 0x01,
+  MQTT_RET_H_SEND_NONE = 0x02,
+} mqtt_retain_handling_t;
 /*---------------------------------------------------------------------------*/
 struct mqtt_string {
   char *string;
@@ -455,6 +478,7 @@ struct mqtt_out_packet {
   mqtt_retain_t retain;
 #if MQTT_5
   uint8_t topic_alias;
+  uint8_t sub_options;
 #endif
 };
 /*---------------------------------------------------------------------------*/
@@ -613,7 +637,13 @@ void mqtt_disconnect(struct mqtt_connection *conn);
 mqtt_status_t mqtt_subscribe(struct mqtt_connection *conn,
                              uint16_t *mid,
                              char *topic,
+#if MQTT_5
+                             mqtt_qos_level_t qos_level,
+                             mqtt_nl_en_t nl, mqtt_rap_en_t rap,
+                             mqtt_retain_handling_t ret_handling);
+#else
                              mqtt_qos_level_t qos_level);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Unsubscribes from a MQTT topic.

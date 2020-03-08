@@ -519,7 +519,12 @@ subscribe(void)
   /* Publish MQTT topic in IBM quickstart format */
   mqtt_status_t status;
 
+#if MQTT_5
+  status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0,
+                          MQTT_NL_OFF, MQTT_RAP_OFF, MQTT_RET_H_SEND_ALL);
+#else
   status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
+#endif
 
   LOG_DBG("Subscribing!\n");
   if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
