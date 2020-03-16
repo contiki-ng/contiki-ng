@@ -1181,8 +1181,10 @@ turn_on(void)
     tsch_is_started = 1;
     /* Process tx/rx callback and log messages whenever polled */
     process_start(&tsch_pending_events_process, NULL);
-    /* periodically send TSCH EBs */
-    process_start(&tsch_send_eb_process, NULL);
+    if(TSCH_EB_PERIOD > 0) {
+      /* periodically send TSCH EBs */
+      process_start(&tsch_send_eb_process, NULL);
+    }
     /* try to associate to a network or start one if setup as coordinator */
     process_start(&tsch_process, NULL);
     LOG_INFO("starting as %s\n", tsch_is_coordinator ? "coordinator": "node");

@@ -198,6 +198,11 @@ void tsch_set_join_priority(uint8_t jp);
  * not be set to exceed TSCH_MAX_EB_PERIOD. Set to 0 to stop sending EBs.
  * Actual transmissions are jittered, spaced by a random number within
  * [period*0.75, period[
+ * If RPL is used, the period will be automatically reset by RPL
+ * equal to the DIO period whenever the DIO period changes.
+ * Hence, calling `tsch_set_eb_period(0)` is NOT sufficient to disable sending EB!
+ * To do that, either configure the node in RPL leaf mode, or
+ * use static config for TSCH (`define TSCH_CONF_EB_PERIOD 0`).
  *
  * \param period The period in Clock ticks.
  */

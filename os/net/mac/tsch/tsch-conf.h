@@ -71,14 +71,20 @@
 #define TSCH_DESYNC_THRESHOLD (2 * TSCH_MAX_KEEPALIVE_TIMEOUT)
 #endif
 
-/* Period between two consecutive EBs */
+/* The default period between two consecutive EBs (not taking into account any randomization).
+ * When TSCH_CONF_EB_PERIOD is set to 0, sending EBs is disabled completely; the EB process is not started.
+ * Otherwise, if RPL is used, TSCH_CONF_EB_PERIOD used only before joining the RPL network;
+ * afterwards, the EB period is set dynamically based on RPL DIO period, updated whenever
+ * the DIO period changes, and is upper bounded by TSCH_MAX_EB_PERIOD.
+ */
 #ifdef TSCH_CONF_EB_PERIOD
 #define TSCH_EB_PERIOD TSCH_CONF_EB_PERIOD
 #else
 #define TSCH_EB_PERIOD (16 * CLOCK_SECOND)
 #endif
 
-/* Max Period between two consecutive EBs */
+/* Max Period between two consecutive EBs.
+ * Has no effect when TSCH_EB_PERIOD is zero. */
 #ifdef TSCH_CONF_MAX_EB_PERIOD
 #define TSCH_MAX_EB_PERIOD TSCH_CONF_MAX_EB_PERIOD
 #else

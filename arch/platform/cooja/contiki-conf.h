@@ -128,15 +128,6 @@ typedef unsigned long clock_time_t;
 
 #define UIP_ARCH_IPCHKSUM        1
 
-#if MAC_CONF_WITH_TSCH
-/* A bug in cooja causes many EBs to be missed at scan. Increase EB
-   frequency to shorten the join process */
-#undef TSCH_CONF_EB_PERIOD
-#define TSCH_CONF_EB_PERIOD (4 * CLOCK_SECOND)
-#undef TSCH_CONF_MAX_EB_PERIOD
-#define TSCH_CONF_MAX_EB_PERIOD (4 * CLOCK_SECOND)
-#endif /* MAC_CONF_WITH_TSCH */
-
 #define CFS_CONF_OFFSET_TYPE	long
 
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
