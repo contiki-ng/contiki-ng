@@ -37,16 +37,21 @@
 
 const struct simInterface rs232_interface;
 
+#ifndef SERIAL_BUF_SIZE
 #define SERIAL_BUF_SIZE 2048
+#endif
 
 // COOJA variables
 char simSerialReceivingData[SERIAL_BUF_SIZE];
 int simSerialReceivingLength;
 char simSerialReceivingFlag;
 
+char simSerialSendData[SERIAL_BUF_SIZE];
+int simSerialSendLength;
+char simSerialSendFlag;
+
 static int (* input_handler)(unsigned char) = NULL;
 
-void simlog_char(char c);
 /*-----------------------------------------------------------------------------------*/
 void rs232_init(void) { }
 /*-----------------------------------------------------------------------------------*/
@@ -59,19 +64,34 @@ rs232_set_input(int (*f)(unsigned char))
 }
 /*-----------------------------------------------------------------------------------*/
 void rs232_send(char c) {
-  printf("%c", c);
+    if ( (simSerialSendLength) + 1 > SERIAL_BUF_SIZE) {
+      /* Dropping message due to buffer overflow */
+      return;
+    }
+
+    simSerialSendData[simSerialSendLength] = c;
+    simSerialSendLength += 1;
+    simSerialSendFlag = 1;
 }
 /*-----------------------------------------------------------------------------------*/
 void
 rs232_print(char *message)
 {
-  printf("%s", message);
+    unsigned len = strlen(message);
+    if ( (simSerialSendLength + len) > SERIAL_BUF_SIZE) {
+      /* Dropping message due to buffer overflow */
+      return;
+    }
+
+    memcpy(simSerialSendData + simSerialSendLength, message, len);
+    simSerialSendLength += len;
+    simSerialSendFlag = 1;
 }
 /*-----------------------------------------------------------------------------------*/
 void
 slip_arch_writeb(unsigned char c)
 {
-  simlog_char(c);
+    rs232_send(c);
 }
 /*-----------------------------------------------------------------------------------*/
 static void
