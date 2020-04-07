@@ -23,12 +23,12 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     iputils-tracepath \
     iputils-ping \
     libcanberra-gtk-module:i386 \
+    libcoap-1-0-bin \
     libgtk2.0-0 \
     mono-complete \
     mosquitto \
     mosquitto-clients \
     net-tools \
-    npm \
     openjdk-8-jdk \
     python-pip \
     python-serial \
@@ -45,9 +45,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     snmp-mibs-downloader \
     > /dev/null \
   && apt-get -qq clean
-
-# Install coap-cli
-RUN npm -q install coap-cli@0.5.1 -g
 
 # Install ARM toolchain
 RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
