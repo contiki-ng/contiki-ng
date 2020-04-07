@@ -1111,12 +1111,14 @@ tcp_input(struct tcp_socket *s,
     conn->in_packet.payload_pos += copy_bytes;
     pos += copy_bytes;
 
-    uint8_t i;
+#if DEBUG_MQTT == 1
+    uint32_t i;
     DBG("MQTT - Copied bytes: \n");
     for(i = 0; i < copy_bytes; i++) {
       DBG("%02X ", conn->in_packet.payload[i]);
     }
     DBG("\n");
+#endif
 
     /* Full buffer, shall only happen to PUBLISH messages. */
     if(MQTT_INPUT_BUFF_SIZE - conn->in_packet.payload_pos == 0) {
