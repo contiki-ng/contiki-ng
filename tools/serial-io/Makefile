@@ -4,7 +4,14 @@ DEPEND = tools-utils.h
 
 all: $(APPS)
 
-CFLAGS += -Wall -Werror -O2
+CFLAGS += -Wall -Werror
+
+ifeq ("(DEBUG)","")
+CFLAGS += -O2
+else
+CFLAGS += -O1 -g3
+endif
+
 
 $(APPS) : % : %.c $(LIB_SRCS) $(DEPEND)
 	$(CC) $(CFLAGS) $< $(LIB_SRCS) -o $@
