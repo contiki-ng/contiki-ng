@@ -93,9 +93,9 @@
  * of the guard time (one fourth of TSCH_DEFAULT_TS_RX_WAIT) */
 #define SYNC_IE_BOUND ((int32_t)US_TO_RTIMERTICKS(tsch_timing_us[tsch_ts_rx_wait] / 4))
 
-/* By default: check that rtimer runs at >=32kHz and use a guard time of 10us */
-#if RTIMER_SECOND < (32 * 1024)
-#error "TSCH: RTIMER_SECOND < (32 * 1024)"
+/* By default: check that rtimer runs at >=8 kHz and use a guard time of 10us */
+#if RTIMER_SECOND < (8 * 1024)
+#error "TSCH: RTIMER_SECOND < (8 * 1024)"
 #endif
 #if CONTIKI_TARGET_COOJA
 /* Use 0 usec guard time for Cooja Mote with a 1 MHz Rtimer*/

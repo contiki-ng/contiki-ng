@@ -444,7 +444,7 @@ eb_input(struct input_packet *current_input)
       int32_t asn_diff = TSCH_ASN_DIFF(current_input->rx_asn, eb_ies.ie_asn);
       if(asn_diff != 0) {
         /* We disagree with our time source's ASN -- leave the network */
-        LOG_WARN("! ASN drifted by %ld, leaving the network\n", asn_diff);
+        LOG_WARN("! ASN drifted by %ld, leaving the network\n", (long)asn_diff);
         tsch_disassociate();
       }
 
@@ -559,7 +559,7 @@ tsch_start_coordinator(void)
   tsch_join_priority = 0;
 
   LOG_INFO("starting as coordinator, PAN ID %x, asn-%x.%lx\n",
-      frame802154_get_pan_id(), tsch_current_asn.ms1b, tsch_current_asn.ls4b);
+      frame802154_get_pan_id(), tsch_current_asn.ms1b, (long)tsch_current_asn.ls4b);
 
   /* Start slot operation */
   tsch_slot_operation_sync(RTIMER_NOW(), &tsch_current_asn);
@@ -735,7 +735,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
              tsch_association_count,
              tsch_is_pan_secured,
              frame.src_pid,
-             tsch_current_asn.ms1b, tsch_current_asn.ls4b, tsch_join_priority,
+             tsch_current_asn.ms1b, (long)tsch_current_asn.ls4b, tsch_join_priority,
              ies.ie_tsch_timeslot_id,
              ies.ie_channel_hopping_sequence_id,
              ies.ie_tsch_slotframe_and_link.slotframe_size,
