@@ -35,7 +35,7 @@
  *
  * \defgroup csma Implementation of the 802.15.4 standard CSMA protocol
  * @{
-*/
+ */
 
 /**
  * \file
@@ -77,7 +77,6 @@
 /* just a default - with LLSEC, etc */
 #define CSMA_MAC_MAX_HEADER 21
 
-
 extern const struct mac_driver csma_driver;
 
 /* CSMA security framer functions */
@@ -92,9 +91,9 @@ int csma_security_set_key(uint8_t index, const uint8_t *key);
  */
 #ifndef CSMA_CONF_STATISTICS
 #define CSMA_STATISTICS  0
-#else /* UIP_CONF_STATISTICS */
+#else /* CSMA_CONF_STATISTICS */
 #define CSMA_STATISTICS (CSMA_CONF_STATISTICS)
-#endif /* UIP_CONF_STATISTICS */
+#endif /* CSMA_CONF_STATISTICS */
 
 /**
  * The CSMA statistics.
@@ -109,27 +108,27 @@ extern struct csma_stats csma_stat;
 #endif /* CSMA_STATISTICS == 1 */
 
 /**
- * The structure holding the TCP/IP statistics that are gathered if
- * UIP_STATISTICS is set to 1.
+ * The structure holding the CSMA-CA statistics that are gathered if
+ * CSMA_CONF_STATISTICS is set to 1.
  *
  */
 struct csma_stats {
-    struct {
-        uint32_t sent;
-        uint32_t retry;
-        uint32_t collisions;
-        uint32_t acked;
-        uint32_t not_acked;
-        uint32_t err;
-    } tx;
-    struct {
-        uint32_t recv;
-        uint32_t acked;
-        uint32_t duplicate;
-        uint32_t not_for_us;
-        uint32_t ignore_ack;
-        uint32_t err;
-    } rx;
+  struct {
+    uint32_t sent;
+    uint32_t retry;
+    uint32_t collisions;
+    uint32_t acked;
+    uint32_t not_acked;
+    uint32_t err;
+  } tx;
+  struct {
+    uint32_t recv;
+    uint32_t acked;
+    uint32_t duplicate;
+    uint32_t not_for_us;
+    uint32_t ignore_ack;
+    uint32_t err;
+  } rx;
 };
 
 #endif /* CSMA_H_ */
