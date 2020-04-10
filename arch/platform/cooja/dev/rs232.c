@@ -113,7 +113,8 @@ doInterfaceActionsBeforeTick(void)
     for (i=0; i < simSerialReceivingLength; i++) {
       serial_line_input_byte(simSerialReceivingData[i]);
     }
-    serial_line_input_byte(0x0a);
+    // intrude \n,  why this is here?
+    //serial_line_input_byte(0x0a);
   }
 
   simSerialReceivingLength = 0;
