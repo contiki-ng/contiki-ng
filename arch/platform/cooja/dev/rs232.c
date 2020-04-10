@@ -88,12 +88,6 @@ rs232_print(char *message)
     simSerialSendFlag = 1;
 }
 /*-----------------------------------------------------------------------------------*/
-void
-slip_arch_writeb(unsigned char c)
-{
-    rs232_send(c);
-}
-/*-----------------------------------------------------------------------------------*/
 static void
 doInterfaceActionsBeforeTick(void)
 {
