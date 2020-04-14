@@ -130,6 +130,54 @@ long referenceVar;
  */
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
+static char                 cooja_threads_ok = 1;
+static JNIEnv *             cooja_jni_env;
+static const char*          coffee_message = NULL;
+
+/*---------------------------------------------------------------------------*/
+// CoffeeCatch provide signal/exception handling under JNI
+
+#if defined(NDK_DEBUG)
+
+#include "lib/coffeecatch/coffeecatch.h"
+#include "lib/coffeecatch/coffeejni.h"
+
+
+#if ( NDK_DEBUG > 0)
+#define TICK_TRY()      coffee_dump();COFFEE_TRY()
+#define TICK_CATCH()    COFFEE_CATCH()
+#define TICK_END()      coffee_dump();COFFEE_END()
+#else
+#define TICK_TRY()      COFFEE_TRY()
+#define TICK_CATCH()    COFFEE_CATCH()
+#define TICK_END()      COFFEE_END()
+#endif
+
+#else //defined(NDK_DEBUG)
+#define TICK_TRY()      if (true)
+#define TICK_CATCH()    else
+#define TICK_END()
+#endif
+
+#if ( defined(NDK_DEBUG) && ( NDK_DEBUG > 0 ) )
+#define cprint(...) coffeecatch_print(__VA_ARGS__)
+#define cprintf(...) coffeecatch_printf(__VA_ARGS__)
+#define coffee_init()       coffeecatch_init()
+#define coffee_dump()       coffeecatch_dump()
+
+FILE*                       coffeecatch_log = NULL;
+void coffeecatch_dump();
+void coffeecatch_init();
+void coffeecatch_print(const char* s);
+void coffeecatch_printf(const char* fmt, ...);
+
+#else
+#define cprint(...)
+#define cprintf(...)
+#define coffee_init()
+#define coffee_dump()
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* Needed since the new LEDs API does not provide this prototype */
 void leds_arch_init(void);
@@ -140,7 +188,6 @@ rtimer_thread_loop(void *data)
   while(1)
   {
     rtimer_arch_check();
-
     /* Return to COOJA */
     cooja_mt_yield();
   }
@@ -216,6 +263,8 @@ platform_main_loop()
 static void
 process_run_thread_loop(void *data)
 {
+  cooja_threads_ok = 1;
+
   /* Yield once during bootup */
   simProcessRunValue = 1;
   cooja_mt_yield();
@@ -319,6 +368,12 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, 
 JNIEXPORT void JNICALL
 Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
 {
+#if defined(NDK_DEBUG)
+  cooja_jni_env = env;
+  coffee_init();
+  char was_ok = cooja_threads_ok;
+#endif
+
   simProcessRunValue = 0;
 
   /* Let all simulation interfaces act first */
@@ -329,15 +384,44 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
     etimer_request_poll();
   }
 
+#if defined(NDK_DEBUG)
+  if (cooja_threads_ok) {
+  cprintf("mote%d enter\n", simMoteID);
+
+  TICK_TRY(){
+
+  coffee_dump();
+  cprintf("mote%d go\n", simMoteID);
+#endif
+
   /* Let rtimers run.
    * Sets simProcessRunValue */
   cooja_mt_exec(&rtimer_thread);
 
+  if (cooja_threads_ok)
   if(simProcessRunValue == 0) {
     /* Rtimers done: Let Contiki handle a few events.
      * Sets simProcessRunValue */
     cooja_mt_exec(&process_run_thread);
   }
+
+#if defined(NDK_DEBUG)
+  } TICK_CATCH() {
+
+    cprintf("mote%d catched\n", simMoteID);
+    coffee_dump();
+
+    coffee_message = coffeecatch_get_message();
+    printf("break by %s\n", coffee_message);
+
+    cooja_threads_ok = 0;
+    LOG_PRINT("!!! cooja thread crashed\n");
+
+    //stops all alarm timer, to allow cooja stay in pause
+    coffeecatch_cancel_pending_alarm();
+  }
+  }//if (cooja_threads_ok)
+#endif
 
   /* Let all simulation interfaces act before returning to java */
   doActionsAfterTick();
@@ -348,6 +432,21 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
   /* Save nearest expiration time */
   simEtimerNextExpirationTime = etimer_next_expiration_time();
 
+#if defined(NDK_DEBUG)
+  if (!cooja_threads_ok) {
+    if (was_ok){
+      coffeecatch_throw_exception(env);
+      /*
+      jclass cls = (*env)->FindClass(env, "java/lang/RuntimeException");
+      (*env)->ThrowNew(env, cls, strdup("coffeecatch break\n") );
+      */
+    }
+  }
+
+  cprintf("mote%d out\n", simMoteID);
+  TICK_END();
+  cprintf("mote%d done\n", simMoteID);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -364,3 +463,33 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, job
 {
   referenceVar = (((long)&referenceVar) - ((long)addr));
 }
+
+
+
+/*---------------------------------------------------------------------------*/
+#if ( defined(NDK_DEBUG) && ( NDK_DEBUG > 0 ) )
+
+void coffeecatch_init(){
+    if(coffeecatch_log != NULL)
+        return;
+
+    char tmps[64];
+    snprintf(tmps, sizeof(tmps), "/home/user/workspace/%d.coffee.log", simMoteID);
+    coffeecatch_log = fopen(tmps, "w+");
+}
+
+void coffeecatch_print(const char* s){
+    fputs(s, coffeecatch_log);
+    fflush(coffeecatch_log);
+}
+
+void coffeecatch_printf(const char* fmt, ...){
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(coffeecatch_log, fmt, ap);
+    va_end(ap);
+    fflush(coffeecatch_log);
+}
+
+#endif
+
