@@ -314,6 +314,14 @@ else
 CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG\"
 endif
 
+
+### drop excluded objects
+
+ifneq ("$(SOURCE_EXCLUDE)","")
+CONTIKI_SOURCEFILES := $(filter-out $(SOURCE_EXCLUDE), $(CONTIKI_SOURCEFILES))
+PROJECT_SOURCEFILES := $(filter-out $(SOURCE_EXCLUDE), $(PROJECT_SOURCEFILES))
+endif
+
 ### Automatic dependency generation
 
 ifneq ($(MAKECMDGOALS),clean)
