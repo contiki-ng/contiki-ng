@@ -77,7 +77,7 @@ CFLAGS   += $(CFLAGSNO)
 
 
 # coffeecatch link with project, allow crash trace in JNI
-ifneq ("${WITH_COFFEE}",) 
+ifneq ("${WITH_COFFEE}","") 
 
 CONTIKI_TARGET_DIRS += lib/coffeecatch
 COOJA_BASE	+= coffeecatch.c coffeejni.c
@@ -85,7 +85,7 @@ COOJA_BASE	+= coffeecatch.c coffeejni.c
 CFLAGS   += -funwind-tables
 CFLAGS   += -DUSE_UNWIND -DSIG_ABORT_SIGSEGV=1
 
-ifeq ("${WITH_COFFEE}",2)
+ifeq ("${WITH_COFFEE}","2")
 # use NDK_DEBUG=2 for debug coffeecatch internals
 CFLAGS   += -DNDK_DEBUG=2
 else

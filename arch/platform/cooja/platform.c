@@ -131,13 +131,14 @@ long referenceVar;
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
 static char                 cooja_threads_ok = 1;
-static JNIEnv *             cooja_jni_env;
-static const char*          coffee_message = NULL;
 
 /*---------------------------------------------------------------------------*/
 // CoffeeCatch provide signal/exception handling under JNI
 
 #if defined(NDK_DEBUG)
+
+static JNIEnv *             cooja_jni_env;
+static const char*          coffee_message = NULL;
 
 #include "lib/coffeecatch/coffeecatch.h"
 #include "lib/coffeecatch/coffeejni.h"
