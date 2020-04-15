@@ -43,6 +43,7 @@
 #define UIP_DS6_H_
 
 #include "net/ipv6/uip.h"
+#include "net/ipv6/multicast/uip-mcast6.h"
 #include "sys/stimer.h"
 /* The size of uip_ds6_addr_t depends on UIP_ND6_DEF_MAXDADNS. Include uip-nd6.h to define it. */
 #include "net/ipv6/uip-nd6.h"
