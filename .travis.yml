@@ -46,11 +46,6 @@ before_install:
       fi
     fi
 
-  # Build Cooja conditionally
-  - if [ ${BUILD_COOJA:-false} = true ] ; then
-      ant -q -f $CNG_HOST_PATH/tools/cooja/build.xml jar ;
-    fi
-
   # Create a directory for out of tree tests and clone the test repo therein
   # The directory will need created unconditionally so we can always chgrp and
   # mount it, even if empty. Checkout a pre-defined version.
