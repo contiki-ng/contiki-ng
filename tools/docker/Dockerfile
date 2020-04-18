@@ -15,7 +15,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   apt-get -qq -y --no-install-recommends install \
     ant \
     build-essential \
-    default-jdk \
     doxygen \
     gdb \
     git \
@@ -100,7 +99,6 @@ RUN export uid=1000 gid=1000 && \
 USER user
 
 # Environment variables
-ENV JAVA_HOME           /usr/lib/jvm/default-java
 ENV HOME                /home/user
 ENV CONTIKI_NG          ${HOME}/contiki-ng
 ENV COOJA               ${CONTIKI_NG}/tools/cooja
@@ -113,6 +111,7 @@ RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOM
 
 # Make sure we're using Java 8 for Cooja
 RUN sudo update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-i386
+ENV JAVA_HOME           /usr/lib/jvm/java-8-openjdk-i386/
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
