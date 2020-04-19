@@ -97,10 +97,12 @@
 
 /* If RPL is enabled also enable the RPL NBR Policy */
 #if UIP_CONF_IPV6_RPL
-#if ROUTING_CONF_RPL_CLASSIC
+/* Both Classic and Lite use rpl_nbr_gc_get_worst */
 #ifndef NBR_TABLE_CONF_GC_GET_WORST
 #define NBR_TABLE_CONF_GC_GET_WORST            rpl_nbr_gc_get_worst
 #endif /* NBR_TABLE_CONF_GC_GET_WORST */
+#if ROUTING_CONF_RPL_CLASSIC
+/* Only Classic handles a max number of children */
 #ifndef NBR_TABLE_CONF_CAN_ACCEPT_NEW
 #define NBR_TABLE_CONF_CAN_ACCEPT_NEW          rpl_nbr_can_accept_new
 #endif /* NBR_TABLE_CONF_CAN_ACCEPT_NEW */
