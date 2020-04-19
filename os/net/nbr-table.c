@@ -40,9 +40,10 @@
 #include "lib/list.h"
 #include "net/nbr-table.h"
 
-#define DEBUG 0
+#define DEBUG DEBUG_NONE
+#include "net/ipv6/uip-debug.h"
+
 #if DEBUG
-#include <stdio.h>
 #include "sys/ctimer.h"
 static void handle_periodic_timer(void *ptr);
 static struct ctimer periodic_timer;
@@ -52,20 +53,6 @@ static void print_table();
 #else
 #define PRINTF(...)
 #endif
-
-/* This is the callback function that will be called when there is a
- *  nbr-policy active
- **/
-#ifdef NBR_TABLE_FIND_REMOVABLE
-const linkaddr_t *NBR_TABLE_FIND_REMOVABLE(nbr_table_reason_t reason, void *data);
-#endif /* NBR_TABLE_FIND_REMOVABLE */
-
-
-/* List of link-layer addresses of the neighbors, used as key in the tables */
-typedef struct nbr_table_key {
-  struct nbr_table_key *next;
-  linkaddr_t lladdr;
-} nbr_table_key_t;
 
 /* For each neighbor, a map of the tables that use the neighbor.
  * As we are using uint8_t, we have a maximum of 8 tables in the system */
@@ -83,6 +70,8 @@ static unsigned num_tables;
 MEMB(neighbor_addr_mem, nbr_table_key_t, NBR_TABLE_MAX_NEIGHBORS);
 LIST(nbr_table_keys);
 
+/*---------------------------------------------------------------------------*/
+static void remove_key(nbr_table_key_t *key, bool do_free);
 /*---------------------------------------------------------------------------*/
 /* Get a key from a neighbor index */
 static nbr_table_key_t *
@@ -179,101 +168,151 @@ nbr_set_bit(uint8_t *bitmap, nbr_table_t *table, nbr_table_item_t *item, int val
 }
 /*---------------------------------------------------------------------------*/
 static void
-remove_key(nbr_table_key_t *least_used_key)
+remove_key(nbr_table_key_t *key, bool do_free)
 {
   int i;
   for(i = 0; i < MAX_NUM_TABLES; i++) {
     if(all_tables[i] != NULL && all_tables[i]->callback != NULL) {
       /* Call table callback for each table that uses this item */
-      nbr_table_item_t *removed_item = item_from_key(all_tables[i], least_used_key);
+      nbr_table_item_t *removed_item = item_from_key(all_tables[i], key);
       if(nbr_get_bit(used_map, all_tables[i], removed_item) == 1) {
         all_tables[i]->callback(removed_item);
       }
     }
   }
-  /* Empty used map */
-  used_map[index_from_key(least_used_key)] = 0;
+  /* Empty used and locked map */
+  used_map[index_from_key(key)] = 0;
+  locked_map[index_from_key(key)] = 0;
   /* Remove neighbor from list */
-  list_remove(nbr_table_keys, least_used_key);
+  list_remove(nbr_table_keys, key);
+  if(do_free) {
+    /* Release the memory */
+    memb_free(&neighbor_addr_mem, key);
+  }
+}
+/*---------------------------------------------------------------------------*/
+int
+nbr_table_count_entries(void)
+{
+  int i;
+  int count = 0;
+  for(i = 0; i < NBR_TABLE_MAX_NEIGHBORS; i++) {
+    if(used_map[i] > 0) {
+      count++;
+    }
+  }
+  return count;
+}
+/*---------------------------------------------------------------------------*/
+static int
+used_count(const linkaddr_t *lladdr)
+{
+  int item_index = index_from_lladdr(lladdr);
+  int used_count = 0;
+  if(item_index != -1) {
+    int used = used_map[item_index];
+    /* Count how many tables are using this item */
+    while(used != 0) {
+      if((used & 1) == 1) {
+        used_count++;
+      }
+      used >>= 1;
+    }
+  }
+  return used_count;
+}
+/*---------------------------------------------------------------------------*/
+const linkaddr_t *
+nbr_table_gc_get_worst(const linkaddr_t *lladdr1, const linkaddr_t *lladdr2)
+{
+  return used_count(lladdr2) < used_count(lladdr1) ? lladdr2 : lladdr1;
+}
+/*---------------------------------------------------------------------------*/
+bool
+nbr_table_can_accept_new(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
+                         nbr_table_reason_t reason, void *data)
+{
+  /* Default behavior: if full, always replace worst entry. */
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+static const linkaddr_t *
+select_for_removal(const linkaddr_t *new, nbr_table_reason_t reason, void *data)
+{
+  nbr_table_key_t *k;
+  const linkaddr_t *worst_lladdr = NULL;
+
+  /* No more space, try to free a neighbor */
+  for(k = list_head(nbr_table_keys); k != NULL; k = list_item_next(k)) {
+    int item_index = index_from_key(k);
+    int locked = locked_map[item_index];
+    /* Never delete a locked item */
+    if(!locked) {
+      if(worst_lladdr == NULL) {
+        worst_lladdr = &k->lladdr;
+      } else {
+        worst_lladdr = NBR_TABLE_GC_GET_WORST(worst_lladdr, &k->lladdr);
+      }
+    }
+  }
+
+  /* Finally compare against current candidate for insertion */
+  if(worst_lladdr != NULL && NBR_TABLE_CAN_ACCEPT_NEW(new, worst_lladdr, reason, data)) {
+    return worst_lladdr;
+  } else {
+    return NULL;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static bool
+entry_is_allowed(nbr_table_t *table, const linkaddr_t *lladdr,
+                 nbr_table_reason_t reason, void *data,
+                 const linkaddr_t **to_be_removed_ptr)
+{
+  bool ret;
+  const linkaddr_t *to_be_removed = NULL;
+
+  if(nbr_table_get_from_lladdr(table, lladdr) != NULL) {
+    /* Already present in the given table */
+    ret = true;
+  } else {
+    if(index_from_lladdr(lladdr) != -1
+       || memb_numfree(&neighbor_addr_mem) > 0) {
+      /* lladdr already present globally, or there is space for a new lladdr,
+       * check if entry can be added */
+      ret = NBR_TABLE_CAN_ACCEPT_NEW(lladdr, NULL, reason, data);
+    } else {
+      ret = (to_be_removed = select_for_removal(lladdr, reason, data)) != NULL;
+    }
+  }
+  if(to_be_removed_ptr != NULL) {
+    *to_be_removed_ptr = to_be_removed;
+  }
+  return ret;
+}
+/*---------------------------------------------------------------------------*/
+bool
+nbr_table_entry_is_allowed(nbr_table_t *table, const linkaddr_t *lladdr,
+                           nbr_table_reason_t reason, void *data)
+{
+  return entry_is_allowed(table, lladdr, reason, data, NULL);
 }
 /*---------------------------------------------------------------------------*/
 static nbr_table_key_t *
-nbr_table_allocate(nbr_table_reason_t reason, void *data)
+nbr_table_allocate(nbr_table_reason_t reason, void *data, const linkaddr_t *to_be_removed_lladdr)
 {
-  nbr_table_key_t *key;
-  int least_used_count = 0;
-  nbr_table_key_t *least_used_key = NULL;
-
-  key = memb_alloc(&neighbor_addr_mem);
-  if(key != NULL) {
-    return key;
+  nbr_table_key_t *new = memb_alloc(&neighbor_addr_mem);
+  if(new != NULL) {
+    return new;
   } else {
-#ifdef NBR_TABLE_FIND_REMOVABLE
-    const linkaddr_t *lladdr;
-    lladdr = NBR_TABLE_FIND_REMOVABLE(reason, data);
-    if(lladdr == NULL) {
-      /* Nothing found that can be deleted - return NULL to indicate failure */
-      PRINTF("*** Not removing entry to allocate new\n");
+    if(to_be_removed_lladdr == NULL) {
+      /* No candidate for GC, allocation fails */
       return NULL;
     } else {
-      /* used least_used_key to indicate what is the least useful entry */
-      int index;
-      int locked = 0;
-      if((index = index_from_lladdr(lladdr)) != -1) {
-        least_used_key = key_from_index(index);
-        locked = locked_map[index];
-      }
-      /* Allow delete of locked item? */
-      if(least_used_key != NULL && locked) {
-        PRINTF("Deleting locked item!\n");
-        locked_map[index] = 0;
-      }
-    }
-#endif /* NBR_TABLE_FIND_REMOVABLE */
-
-    if(least_used_key == NULL) {
-      /* No more space, try to free a neighbor.
-       * The replacement policy is the following: remove neighbor that is:
-       * (1) not locked
-       * (2) used by fewest tables
-       * (3) oldest (the list is ordered by insertion time)
-       * */
-      /* Get item from first key */
-      key = list_head(nbr_table_keys);
-      while(key != NULL) {
-        int item_index = index_from_key(key);
-        int locked = locked_map[item_index];
-        /* Never delete a locked item */
-        if(!locked) {
-          int used = used_map[item_index];
-          int used_count = 0;
-          /* Count how many tables are using this item */
-          while(used != 0) {
-            if((used & 1) == 1) {
-              used_count++;
-            }
-          used >>= 1;
-          }
-          /* Find least used item */
-          if(least_used_key == NULL || used_count < least_used_count) {
-            least_used_key = key;
-            least_used_count = used_count;
-            if(used_count == 0) { /* We won't find any least used item */
-              break;
-            }
-          }
-        }
-        key = list_item_next(key);
-      }
-    }
-
-    if(least_used_key == NULL) {
-      /* We haven't found any unlocked item, allocation fails */
-      return NULL;
-    } else {
-      /* Reuse least used item */
-      remove_key(least_used_key);
-      return least_used_key;
+      nbr_table_key_t *to_be_removed = key_from_index(index_from_lladdr(to_be_removed_lladdr));
+      /* Reuse to_be_removed item's spot */
+      remove_key(to_be_removed, false);
+      return to_be_removed;
     }
   }
 }
@@ -353,6 +392,7 @@ nbr_table_add_lladdr(nbr_table_t *table, const linkaddr_t *lladdr, nbr_table_rea
   int index;
   nbr_table_item_t *item;
   nbr_table_key_t *key;
+  const linkaddr_t *to_be_removed;
 
   if(table == NULL) {
     return NULL;
@@ -364,11 +404,16 @@ nbr_table_add_lladdr(nbr_table_t *table, const linkaddr_t *lladdr, nbr_table_rea
     lladdr = &linkaddr_null;
   }
 
+  if(!entry_is_allowed(table, lladdr, reason, data, &to_be_removed)) {
+    return NULL;
+  }
+
   if((index = index_from_lladdr(lladdr)) == -1) {
      /* Neighbor not yet in table, let's try to allocate one */
-    key = nbr_table_allocate(reason, data);
+    key = nbr_table_allocate(reason, data, to_be_removed);
 
-    /* No space available for new entry */
+    /* No space available for new entry. Should never happen as entry_is_allowed
+     * already checks we can add. */
     if(key == NULL) {
       return NULL;
     }
@@ -441,6 +486,28 @@ nbr_table_get_lladdr(nbr_table_t *table, const void *item)
 {
   nbr_table_key_t *key = key_from_item(table, item);
   return key != NULL ? &key->lladdr : NULL;
+}
+/*---------------------------------------------------------------------------*/
+void
+nbr_table_clear(void)
+{
+  nbr_table_key_t *k;
+  /* Delete until nothing left */
+  while((k = list_head(nbr_table_keys))) {
+    remove_key(k, true);
+  }
+}
+/*---------------------------------------------------------------------------*/
+nbr_table_key_t *
+nbr_table_key_head(void)
+{
+  return list_head(nbr_table_keys);
+}
+/*---------------------------------------------------------------------------*/
+nbr_table_key_t *
+nbr_table_key_next(nbr_table_key_t *key)
+{
+  return list_item_next(key);
 }
 /*---------------------------------------------------------------------------*/
 #if DEBUG
