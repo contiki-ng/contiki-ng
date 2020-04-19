@@ -50,10 +50,9 @@ before_install:
   # The directory will need created unconditionally so we can always chgrp and
   # mount it, even if empty. Checkout a pre-defined version.
   - mkdir -p $OUT_OF_TREE_TEST_PATH
-  - if [ ${TEST_NAME} = "Out-of-tree builds" ] ; then
+  - if [ ${TEST_NAME} = "Builds" ] ; then
       git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH &&
-      cd $OUT_OF_TREE_TEST_PATH &&
-      git checkout $OUT_OF_TREE_TEST_VER ;
+      (cd $OUT_OF_TREE_TEST_PATH && git checkout $OUT_OF_TREE_TEST_VER)
     fi
   # Set permissions for Docker mount
   - sudo chgrp -hR 1000 $CNG_HOST_PATH $OUT_OF_TREE_TEST_PATH
@@ -81,8 +80,7 @@ env:
     - secure: 0nrV5yjpT2kE19Hlm7t619Qbmyjx/G7bSUI1c+U3kZbyuxnRlASjVcDN5uPBoimIfGiBRI0nRq690BogAJt4EKwbC1Dy8kC1XD8mRtQ2AIZ6PHaUoG9iS5sBhFBQK0XkB83bwh6omRn/04O0uuX74ooSWT7fDrWxi/y5+0ysXK6gRtOhdrJ3FU5OkNVewX8NeCdx3pOWhMOtXWdFkMIi1XRdDnvMM5/hHlHMkdXXtaZQX9UsK3Q3DSjPRLZjKRiOlcx9MIg2ebh9ITmd2Du2p2q/LKtoutJckvhbKQPWcZi/B+1ZTSff0FHBIg+EYxf6TeFuia7XSTWH7sr2CDCCtcvSR9bB5yW6jdmGfa8Af8I1TCBuqoSUo0Re50BZBZF7COleEh+IojbjXn2CIDMg5rT4Sh3qcMGvFn9OW1cz5h5UNSOk7EIAXXPcI7Aloxh2sBo4/DrvvbfIsKrvxV9Fx4bdyNtR7dZ7xsoOw6L0zttC3K9naf3VAOeBAyjBiRwm0tWxJC/buhTsKlYrthhyUrwLtYAFL4UHcazvz57hY/cEzR2X6F//9Hp7HFoNtn1E36doX3ZfeI22yxHMo9SYW7O69C45wbhJ29lAA9XXbYVyGBKFkY8C1NCZ0Xckt9H8/Ow5Sz8HmW/NNBJCn0Fsx+jezdGc4ED5naugNbLAyNg=
   # Each line in the 'matrix' triggers a separate Travis build
   matrix:
-    - TEST_NAME='Builds' TESTS='documentation compile-base compile-arm-ports compile-nxp-ports compile-tools'
+    - TEST_NAME='Builds' TESTS='documentation compile-base compile-arm-ports compile-nxp-ports compile-tools out-of-tree-build'
     - TEST_NAME='Cooja simulations' TESTS='rpl-lite rpl-classic simulation-base ipv6 ieee802154'
     - TEST_NAME='Cooja + script' TESTS='tun-rpl-br'
     - TEST_NAME='Script tests' TESTS='script-base native-runs ipv6-nbr coap-lwm2m packet-parsing'
-    - TEST_NAME='Out-of-tree builds' TESTS='out-of-tree-build'
