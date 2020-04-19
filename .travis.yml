@@ -81,8 +81,7 @@ env:
   # Each line in the 'matrix' triggers a separate Travis build
   matrix:
     # Arm builds
-    - TEST_NAME='compile-arm-ports-01'
-    - TEST_NAME='compile-arm-ports-02'
+    - TEST_NAME='compile-arm-ports'
     # All other builds
     - TEST_NAME='documentation compile-base compile-nxp-ports compile-tools'
     # Cooja simulations
