@@ -395,6 +395,11 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     LOG_DBG("Publishing complete.\n");
     break;
   }
+  case MQTT_EVENT_AUTH: {
+    LOG_DBG("Continuing auth.\n");
+    mqtt_auth_event_t *auth_event = (mqtt_auth_event_t *)data;
+    break;
+  }
   default:
     LOG_DBG("Application got a unhandled MQTT event: %i\n", event);
     break;
@@ -640,6 +645,18 @@ connect_to_broker(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
+send_auth(mqtt_auth_event_t *auth_data, mqtt_auth_type_t auth_type)
+{
+  /* Connect to MQTT server */
+  mqtt_auth(&conn, auth_data, auth_type);
+
+  // handle (re)auth state
+  if(state != STATE_CONNECTING) {
+    LOG_DBG("MQTT reauthenticating\n");
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
 ping_parent(void)
 {
   if(have_connectivity()) {
@@ -679,6 +696,7 @@ state_machine(void)
     connect_attempt = 1;
 
 #if MQTT_5
+  /* Every publish message sent will include this property */
   (void)register_prop(&conn,
                       MQTT_FHDR_MSG_TYPE_PUBLISH,
                       MQTT_VHDR_PROP_USER_PROP,

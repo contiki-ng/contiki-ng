@@ -206,6 +206,8 @@ typedef enum {
   MQTT_EVENT_CONNECTION_REFUSED_ERROR,
   MQTT_EVENT_DNS_ERROR,
   MQTT_EVENT_NOT_IMPLEMENTED_ERROR,
+
+  MQTT_EVENT_AUTH,
   /* Add more */
 } mqtt_event_t;
 
@@ -375,6 +377,21 @@ typedef struct {
   uint8_t session_present;
 } mqtt_connack_event_t;
 
+typedef struct {
+  uint16_t len;
+  uint8_t data[MQTT_MAX_PROP_LENGTH];
+} mqtt_bin_data_t;
+
+typedef struct {
+  mqtt_bin_data_t auth_method;
+  mqtt_bin_data_t auth_data;
+} mqtt_auth_event_t;
+
+typedef enum {
+  MQTT_AUTH_NORMAL,
+  MQTT_AUTH_RE_AUTH,
+} mqtt_auth_type_t;
+
 /* This is the MQTT message that is exposed to the end user. */
 struct mqtt_message {
   uint32_t mid;
@@ -479,6 +496,8 @@ struct mqtt_out_packet {
 #if MQTT_5
   uint8_t topic_alias;
   uint8_t sub_options;
+  /* Continue Auth or Re-auth */
+  uint8_t auth_reason_code;
 #endif
 };
 /*---------------------------------------------------------------------------*/
@@ -738,6 +757,8 @@ void mqtt_set_last_will(struct mqtt_connection *conn,
 /* MQTTv5-specific functions */
 // TODO add function declarations here + Doxygen
 void print_input_props(struct mqtt_connection *conn);
+uint8_t register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
+                      mqtt_vhdr_prop_t prop_id, ...);
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */
 /*---------------------------------------------------------------------------*/

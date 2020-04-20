@@ -257,6 +257,7 @@ static process_event_t mqtt_do_publish_event;
 static process_event_t mqtt_do_pingreq_event;
 static process_event_t mqtt_continue_send_event;
 static process_event_t mqtt_abort_now_event;
+static process_event_t mqtt_do_auth_event;
 process_event_t mqtt_update_event;
 
 /*
@@ -1034,6 +1035,47 @@ PT_THREAD(pingreq_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+static
+PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
+{
+  PT_BEGIN(pt);
+
+  struct mqtt_prop_list_t *prop_list;
+  uint8_t found_props;
+
+  conn->out_packet.remaining_length +=
+      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
+                  : 1;
+
+  encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                      &conn->out_packet.remaining_length_enc_bytes,
+                      conn->out_packet.remaining_length);
+
+  if(conn->out_packet.remaining_length_enc_bytes > 4) {
+    call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
+    PRINTF("MQTT - Error, remaining length > 4 bytes\n");
+    PT_EXIT(pt);
+  }
+
+  /* Write Fixed Header */
+  PT_MQTT_WRITE_BYTE(conn, conn->out_packet.fhdr);
+  PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->out_packet.remaining_length_enc,
+                      conn->out_packet.remaining_length_enc_bytes);
+
+  /* Write Variable Header */
+  PT_MQTT_WRITE_BYTE(conn, conn->out_packet.auth_reason_code);
+
+  /* Write Properties */
+  write_out_props(pt, conn, prop_list);
+
+  /* No Payload */
+  send_out_buffer(conn);
+
+  PT_WAIT_UNTIL(pt, conn->out_buffer_sent);
+
+  PT_END(pt);
+}
+/*---------------------------------------------------------------------------*/
 static void
 handle_connack(struct mqtt_connection *conn)
 {
@@ -1611,6 +1653,42 @@ parse_connack_props(struct mqtt_connection *conn)
     prop_len = get_next_in_prop(conn, &prop_id, data);
   }
 }
+/*---------------------------------------------------------------------------*/
+void
+parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event)
+{
+  uint32_t prop_len;
+  mqtt_vhdr_prop_t prop_id;
+  uint8_t data[MQTT_MAX_PROP_LENGTH];
+  uint32_t val_int;
+
+  DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
+
+  event->auth_data.len = 0;
+  event->auth_method.len = 0;
+
+  prop_len = get_next_in_prop(conn, &prop_id, data);
+  while(prop_len) {
+    switch(prop_id) {
+    case MQTT_VHDR_PROP_AUTH_DATA: {
+      event->auth_data.len = prop_len - 2; // 2 bytes are used to encode len
+      memcpy(event->auth_data.data, data, prop_len - 2);
+      break;
+    }
+    case MQTT_VHDR_PROP_AUTH_METHOD: {
+      event->auth_method.len = prop_len - 2; // 2 bytes are used to encode len
+      memcpy(event->auth_method.data, data, prop_len - 2);
+      break;
+    }
+    default:
+      DBG("MQTT - Unhandled AUTH property '%i'", prop_id);
+      return;
+    }
+
+    prop_id = 0;
+    prop_len = get_next_in_prop(conn, &prop_id, data);
+  }
+}
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -1669,7 +1747,7 @@ parse_publish_vhdr(struct mqtt_connection *conn,
   }
 }
 /*---------------------------------------------------------------------------*/
-#if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_5
+// MQTTv5 only
 static void
 handle_disconnect(struct mqtt_connection *conn)
 {
@@ -1677,7 +1755,32 @@ handle_disconnect(struct mqtt_connection *conn)
   call_event(conn, MQTT_EVENT_DISCONNECTED, NULL);
   abort_connection(conn);
 }
-#endif
+
+static void
+handle_auth(struct mqtt_connection *conn)
+{
+  mqtt_auth_event_t event;
+
+  DBG("MQTT - (handle_auth) Got AUTH.\n");
+
+  if(conn->in_packet.fhdr & 0x0F != 0x0) {
+    call_event(conn,
+               MQTT_EVENT_ERROR,
+               NULL);
+    abort_connection(conn);
+    return;
+  }
+
+  // AUTH messages from the server
+  if(conn->state == MQTT_CONN_STATE_CONNECTING_TO_BROKER &&
+      (!conn->in_packet.has_reason_code ||
+        conn->in_packet.reason_code != MQTT_VHDR_RC_CONTINUE_AUTH)) {
+    DBG("MQTT - (handle_auth) Not reauth - Reason Code 0x18 expected!\n");
+  }
+
+  parse_auth_props(conn, &event);
+  call_event(conn, MQTT_EVENT_AUTH, &event);
+}
 /*---------------------------------------------------------------------------*/
 static void
 parse_vhdr(struct mqtt_connection *conn)
@@ -1934,6 +2037,10 @@ tcp_input(struct tcp_socket *s,
   case MQTT_FHDR_MSG_TYPE_DISCONNECT:
     handle_disconnect(conn);
     break;
+
+  case MQTT_FHDR_MSG_TYPE_AUTH:
+    handle_auth(conn);
+    break;
 #endif
 
   default:
@@ -2107,6 +2214,17 @@ PROCESS_THREAD(mqtt_process, ev, data)
         }
       }
     }
+    if(ev == mqtt_do_auth_event) {
+      conn = data;
+      DBG("MQTT - Got mqtt_do_auth_event!\n");
+
+      if(conn->out_buffer_sent == 1) {
+        PT_INIT(&conn->out_proto_thread);
+        while(auth_pt(&conn->out_proto_thread, conn) < PT_EXITED) {
+          PT_MQTT_WAIT_SEND();
+        }
+      }
+    }
   }
   PROCESS_END();
 }
@@ -2130,6 +2248,7 @@ mqtt_init(void)
     mqtt_event_max = mqtt_abort_now_event;
 
     mqtt_continue_send_event = process_alloc_event();
+    mqtt_do_auth_event = process_alloc_event();
 
     list_init(mqtt_conn_list);
 #if MQTT_5
@@ -2414,6 +2533,44 @@ mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
 #if MQTT_5
   conn->will.properties = (list_t) will_props;
 #endif
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Send authentication data to broker.
+ *
+ * N.B. Non-blocking call.
+ */
+mqtt_status_t
+mqtt_auth(struct mqtt_connection *conn,
+          mqtt_auth_event_t *auth_payload,
+          mqtt_auth_type_t auth_type)
+{
+  DBG("MQTT - Call to mqtt_auth...\n");
+
+  // TODO: remove old property list
+  DBG("MQTT - Auth data len %i method len %i\n", auth_payload->auth_data.len,
+                                                 auth_payload->auth_method.len);
+
+  if(auth_payload->auth_method.len) {
+    (void)register_prop(&conn,
+                        MQTT_FHDR_MSG_TYPE_AUTH,
+                        MQTT_VHDR_PROP_AUTH_METHOD,
+                        &(auth_payload->auth_method));
+  }
+
+  if(auth_payload->auth_data.len) {
+    (void)register_prop(&conn,
+                        MQTT_FHDR_MSG_TYPE_AUTH,
+                        MQTT_VHDR_PROP_AUTH_DATA,
+                        &(auth_payload->auth_data));
+  }
+
+  conn->out_packet.fhdr = MQTT_FHDR_MSG_TYPE_AUTH;
+  conn->out_packet.remaining_length = 1; // for the auth reason code
+  conn->out_packet.auth_reason_code = MQTT_VHDR_RC_CONTINUE_AUTH + auth_type;
+
+  process_post(&mqtt_process, mqtt_do_auth_event, conn);
+  return MQTT_STATUS_OK;
 }
 /*----------------------------------------------------------------------------*/
 /* MQTTv5-specific functions */
