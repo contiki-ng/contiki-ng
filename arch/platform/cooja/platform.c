@@ -481,6 +481,11 @@ void coffeecatch_init(){
     snprintf(tmps, sizeof(tmps), "./%d.coffee.log", simMoteID);
     coffeecatch_log = fopen(tmps, "w+");
     fputs("coffee init\n", coffeecatch_log);
+
+    // use this to preallocate tread signal stack alternate, so that it will
+    //   not reallocates anymore.
+    coffeecatch_prepare();
+    fflush(coffeecatch_log);
 }
 
 void coffeecatch_print(const char* s){
