@@ -85,11 +85,22 @@ COOJA_BASE	+= coffeecatch.c coffeejni.c
 CFLAGS   += -funwind-tables
 CFLAGS   += -DUSE_UNWIND -DSIG_ABORT_SIGSEGV=1
 
-ifeq ("${WITH_COFFEE}","2")
-# use NDK_DEBUG=2 for debug coffeecatch internals
-CFLAGS   += -DNDK_DEBUG=2
-else
+ifeq ("${WITH_COFFEE}","0")
 CFLAGS   += -DNDK_DEBUG=0
+else ifeq ("${WITH_COFFEE}","1")
+CFLAGS   += -DNDK_DEBUG=0
+else
+$(info coffeecatch=${WITH_COFFEE}) 
+# use NDK_DEBUG=2 for debug coffeecatch internals with printout into mote ./%d.coffee.log
+# use NDK_DEBUG=6  for traceing coffeecatch internals
+# use NDK_DEBUG=-2 for log errors coffeecatch with printout into mote ./%d.coffee.log
+CFLAGS   += -DNDK_DEBUG=${WITH_COFFEE}
+endif
+
+ifeq ($(USE_LIBUNWIND),1)
+$(info "coffee use libunwind")
+CFLAGS   += -DUSE_LIBUNWIND=1 
+# LDFLAGS  += -Wl,-lunwind
 endif
 
 endif 

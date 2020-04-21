@@ -144,7 +144,7 @@ static const char*          coffee_message = NULL;
 #include "lib/coffeecatch/coffeejni.h"
 
 
-#if ( NDK_DEBUG > 0)
+#if ( NDK_DEBUG != 0)
 #define TICK_TRY()      coffee_dump();COFFEE_TRY()
 #define TICK_CATCH()    COFFEE_CATCH()
 #define TICK_END()      coffee_dump();COFFEE_END()
@@ -160,7 +160,7 @@ static const char*          coffee_message = NULL;
 #define TICK_END()
 #endif
 
-#if ( defined(NDK_DEBUG) && ( NDK_DEBUG > 0 ) )
+#if ( defined(NDK_DEBUG) && ( (NDK_DEBUG&3) > 0 ) )
 #define cprint(...) coffeecatch_print(__VA_ARGS__)
 #define cprintf(...) coffeecatch_printf(__VA_ARGS__)
 #define coffee_init()       coffeecatch_init()
@@ -237,6 +237,9 @@ platform_init_stage_three()
   eeprom_init();
   /* Start serial process */
   serial_line_init();
+#if defined(NDK_DEBUG)
+  puts("CoffeeCatch provided");
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -391,8 +394,8 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
 
   TICK_TRY(){
 
-  coffee_dump();
-  cprintf("mote%d go\n", simMoteID);
+  //coffee_dump();
+  //cprintf("mote%d go\n", simMoteID);
 #endif
 
   /* Let rtimers run.
@@ -444,7 +447,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
     }
   }
 
-  cprintf("mote%d out\n", simMoteID);
+  //cprintf("mote%d out\n", simMoteID);
   TICK_END();
   cprintf("mote%d done\n", simMoteID);
 #endif
@@ -468,15 +471,16 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, job
 
 
 /*---------------------------------------------------------------------------*/
-#if ( defined(NDK_DEBUG) && ( NDK_DEBUG > 0 ) )
+#if ( defined(NDK_DEBUG) && ( (NDK_DEBUG&3) > 0 ) )
 
 void coffeecatch_init(){
     if(coffeecatch_log != NULL)
         return;
 
     char tmps[64];
-    snprintf(tmps, sizeof(tmps), "/home/user/workspace/%d.coffee.log", simMoteID);
+    snprintf(tmps, sizeof(tmps), "./%d.coffee.log", simMoteID);
     coffeecatch_log = fopen(tmps, "w+");
+    fputs("coffee init\n", coffeecatch_log);
 }
 
 void coffeecatch_print(const char* s){
