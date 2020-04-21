@@ -95,7 +95,6 @@ tsch_queue_add_nbr(const linkaddr_t *addr)
         /* Initialize neighbor entry */
         memset(n, 0, sizeof(struct tsch_neighbor));
         ringbufindex_init(&n->tx_ringbuf, TSCH_QUEUE_NUM_PER_NEIGHBOR);
-        linkaddr_copy(&n->addr, addr);
         n->is_broadcast = linkaddr_cmp(addr, &tsch_eb_address)
           || linkaddr_cmp(addr, &tsch_broadcast_address);
         tsch_queue_backoff_reset(n);
@@ -132,6 +131,12 @@ tsch_queue_get_time_source(void)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+linkaddr_t *
+tsch_queue_get_nbr_address(const struct tsch_neighbor *n)
+{
+  return nbr_table_get_lladdr(tsch_neighbors, n);
+}
+/*---------------------------------------------------------------------------*/
 /* Update TSCH time source */
 int
 tsch_queue_update_time_source(const linkaddr_t *new_addr)
@@ -151,9 +156,9 @@ tsch_queue_update_time_source(const linkaddr_t *new_addr)
 
       if(new_time_src != old_time_src) {
         LOG_INFO("update time source: ");
-        LOG_INFO_LLADDR(old_time_src ? &old_time_src->addr : NULL);
+        LOG_INFO_LLADDR(tsch_queue_get_nbr_address(old_time_src));
         LOG_INFO_(" -> ");
-        LOG_INFO_LLADDR(new_time_src ? &new_time_src->addr : NULL);
+        LOG_INFO_LLADDR(tsch_queue_get_nbr_address(new_time_src));
         LOG_INFO_("\n");
 
         /* Update time source */
@@ -278,14 +283,10 @@ tsch_queue_global_packet_count(void)
 /*---------------------------------------------------------------------------*/
 /* Returns the number of packets currently in the queue */
 int
-tsch_queue_packet_count(const linkaddr_t *addr)
+tsch_queue_nbr_packet_count(const struct tsch_neighbor *n)
 {
-  struct tsch_neighbor *n = NULL;
-  if(!tsch_is_locked()) {
-    n = tsch_queue_add_nbr(addr);
-    if(n != NULL) {
-      return ringbufindex_elements(&n->tx_ringbuf);
-    }
+  if(n != NULL) {
+    return ringbufindex_elements(&n->tx_ringbuf);
   }
   return -1;
 }
@@ -509,7 +510,7 @@ tsch_queue_update_all_backoff_windows(const linkaddr_t *dest_addr)
     while(n != NULL) {
       if(n->backoff_window != 0 /* Is the queue in backoff state? */
          && ((n->tx_links_count == 0 && is_broadcast)
-             || (n->tx_links_count > 0 && linkaddr_cmp(dest_addr, &n->addr)))) {
+             || (n->tx_links_count > 0 && linkaddr_cmp(dest_addr, tsch_queue_get_nbr_address(n))))) {
         n->backoff_window--;
       }
       n = (struct tsch_neighbor *)nbr_table_next(tsch_neighbors, n);

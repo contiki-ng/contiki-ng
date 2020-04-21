@@ -107,7 +107,6 @@ struct tsch_packet {
 
 /** \brief TSCH neighbor information */
 struct tsch_neighbor {
-  linkaddr_t addr; /* MAC address of the neighbor */
   uint8_t is_broadcast; /* is this neighbor a virtual neighbor used for broadcast (of data packets or EBs) */
   uint8_t is_time_source; /* is this neighbor a time source? */
   uint8_t backoff_exponent; /* CSMA backoff exponent */

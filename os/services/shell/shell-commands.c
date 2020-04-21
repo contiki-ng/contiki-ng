@@ -602,7 +602,7 @@ PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
     SHELL_OUTPUT(output, "-- Join priority: %u\n", tsch_join_priority);
     SHELL_OUTPUT(output, "-- Time source: ");
     if(n != NULL) {
-      shell_output_lladdr(output, &n->addr);
+      shell_output_lladdr(output, tsch_queue_get_nbr_address(n));
       SHELL_OUTPUT(output, "\n");
     } else {
       SHELL_OUTPUT(output, "none\n");

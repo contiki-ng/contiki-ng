@@ -894,7 +894,7 @@ parse_args(shell_output_func output,
       SHELL_OUTPUT(output, "time source is not available\n");
       return -1;
     } else {
-      memcpy(&(subcmd_args->peer_addr), &(time_source->addr),
+      memcpy(&(subcmd_args->peer_addr), tsch_queue_get_nbr_address(time_source),
              sizeof(linkaddr_t));
     }
   }
