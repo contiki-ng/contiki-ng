@@ -85,7 +85,7 @@ tsch_log_process_pending(void)
       printf("[INFO: TSCH-LOG  ] {asn %02x.%08lx link %2u %3u %3u %2u %2u ch %2u} ",
              log->asn.ms1b, log->asn.ls4b,
              log->link->slotframe_handle, sf ? sf->size.val : 0,
-             log->burst_count, log->link->timeslot + log->burst_count, log->link->channel_offset,
+             log->burst_count, log->link->timeslot + log->burst_count, log->channel_offset,
              log->channel);
     }
     switch(log->type) {
@@ -138,6 +138,7 @@ tsch_log_prepare_add(void)
     log->link = current_link;
     log->burst_count = tsch_current_burst_count;
     log->channel = tsch_current_channel;
+    log->channel_offset = tsch_current_channel_offset;
     return log;
   } else {
     log_dropped++;
