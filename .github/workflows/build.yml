@@ -1,0 +1,108 @@
+# Main Contiki-NG CI workflow
+# Comprises a matrix-generated set of jobs that execute our CI test suite
+name: CI
+
+# Run the workflow on:
+#   * Any PR against master, develop or candidate release branch
+#   * Any push (or merge) on master and develop
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop, release-* ]
+
+# We use a single job with a matrix with elements corresponding to our tests
+# The job will be replicated as many times as there are elements in the matrix
+jobs:
+  Contiki-NG:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Common environment variables
+    env:
+        OUT_OF_TREE_TEST_PATH: out-of-tree-tests
+        OUT_OF_TREE_TEST_VER: 2869ae7
+        DOCKER_BASE_IMG: contiker/contiki-ng
+
+    # Allow all jobs in the strategy matrix to conclude even if one fails
+    continue-on-error: true
+
+    strategy:
+        fail-fast: false
+        matrix:
+            test: [Builds, Cooja Simulations, Cooja + Script, Scripts]
+
+    # Checks-out the contiki-ng $GITHUB_WORKSPACE, so your job can access it
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          fetch-depth: '50'
+          submodules: 'recursive'
+
+    # Construct the correct docker container image tag corresponding to this build
+    - name: Figure out correct docker image tag
+      run:
+        echo ::set-env name=DOCKER_IMG::$DOCKER_BASE_IMG:$(git log -1 --oneline -- tools/docker/ | cut -d" " -f1)
+
+    # Try to download the image from dockerhub. If it works, use it.
+    #
+    # If however it fails then we are most likely looking at a branch or pull
+    # that touched tools/docker. In this case, build the image.
+    #
+    # Any build error will count as a job failure.
+    #
+    # If the test was triggered by a branch update (e.g. a PR merge) then push
+    # the new image to dockerhub. This will only happen for builds against
+    # contiki-ng/contiki-ng, not for builds on forks.
+    - name: Try to download image from dockerhub
+      run: |
+        echo "Using $DOCKER_IMG for this run"
+        echo "Pulling image $DOCKER_IMG from dockerhub";
+        docker pull $DOCKER_IMG
+        # Flag a need to build in the next step
+        echo ::set-env name=DOCKER_NEED_BUILD::$?
+
+    - name: Build docker image if required
+      if: env.DOCKER_NEED_BUILD != '0'
+      run: |
+        echo $DOCKER_IMG "does not exist on dockerhub or pull failed
+        echo This is normal for PR builds and for builds on forks
+        echo Building from dockerfile
+        docker build tools/docker -t $DOCKER_IMG
+
+    # If i) the previous step built an image and ii) we are on the main
+    # contiki-ng repo and iii) this is a push (merge commit) to one of the
+    # branches of interest then push the image to dockerhub
+    - name: Push images to dockerhub
+      if: github.repository == 'contiki-ng/contiki-ng' && github.event == 'push'
+      run: |
+        # Extract the branch name from github.ref. For example, from
+        # 'refs/heads/master' we want to keep 'master'
+        echo ::set-env name=MERGE_BRANCH_REF::$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
+
+        echo This is a build for branch master and it updates the docker container
+        echo Push images to Dockerhub
+        echo Will push $DOCKER_IMG as well as $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
+        #echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
+        #docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
+        #docker push $DOCKER_IMG
+        #docker push $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
+
+    # Clone the repo used for out-of-tree builds if required
+    - name: Clone the repo used for out-of-tree builds if required
+      if: matrix.test == 'Builds'
+      run: |
+        mkdir -p $OUT_OF_TREE_TEST_PATH
+        git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH
+        cd $OUT_OF_TREE_TEST_PATH
+        git checkout $OUT_OF_TREE_TEST_VER
+
+    # Fire up the container and run corresponding tests
+    - name: Execute tests
+      run: |
+        'printf "\n\n>>>>> Running suite: $TEST_NAME ($TESTS) <<<<<\n"'
+        #for TEST in $TESTS; do printf "\n\n--- Running test $TEST:\n"; docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -v $OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST"; done
+        'printf "\n\n>>>>>> Checking all tests <<<<<\n"'
+        RET=0
+        #for TEST in $TESTS; do $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST || RET=1; done
+        #exit $RET
