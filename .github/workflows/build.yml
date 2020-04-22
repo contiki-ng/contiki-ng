@@ -74,6 +74,8 @@ jobs:
         echo "This is a branch build that updates the container. Push image to Dockerhub"
         echo ${{ github.repository }}
         echo ${{ github.event_name }}
+        echo ${{ github.event }}
+        echo ${{ github.event.action }}
         #echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
         #docker push $DOCKER_IMG;
 
