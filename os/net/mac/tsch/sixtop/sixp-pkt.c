@@ -968,6 +968,11 @@ sixp_pkt_parse(const uint8_t *buf, uint16_t len,
   pkt->sfid = buf[2];
   pkt->seqno = buf[3];
 
+  if(pkt->version != SIXP_PKT_VERSION) {
+    /* invalid version; stop parsing */
+    return -1;
+  }
+
   buf += 4;
   len -= 4;
 

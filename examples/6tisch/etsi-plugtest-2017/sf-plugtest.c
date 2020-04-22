@@ -999,5 +999,6 @@ const sixtop_sf_t sf_plugtest = {
   SF_PLUGTEST_TIMEOUT,
   init,
   input,
-  timeout
+  timeout,
+  NULL
 };

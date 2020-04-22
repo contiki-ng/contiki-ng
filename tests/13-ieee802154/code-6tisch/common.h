@@ -34,6 +34,7 @@
 #include "unit-test/unit-test.h"
 
 void test_print_report(const unit_test_t *utp);
+void test_mac_invoke_sent_callback(int status, int num_tx);
 uint8_t test_mac_send_function_is_called(void);
 extern const struct mac_driver test_mac_driver;
 
