@@ -51,7 +51,7 @@ jobs:
           echo ::set-env name=DOCKER_NEED_BUILD::$?
           
     - name: Build docker image if required
-      if: $DOCKER_NEED_BUILD != '0'
+      if: env.DOCKER_NEED_BUILD != '0'
       run: echo "Would build image"
           
 
