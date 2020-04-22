@@ -47,7 +47,9 @@ jobs:
       run: |
           echo "Using $DOCKER_IMG for this run"
           echo "Pulling image $DOCKER_IMG from dockerhub";
-          echo ::set-env name=DOCKER_NEED_BUILD::$(docker pull $DOCKER_IMG)
+          docker pull $DOCKER_IMG
+          echo $?
+          #echo ::set-env name=DOCKER_NEED_BUILD::``
           
     - name: Build docker image if required
       #if: $DOCKER_NEED_BUILD != 0
