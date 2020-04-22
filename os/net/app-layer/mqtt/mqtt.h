@@ -709,6 +709,21 @@ mqtt_status_t mqtt_publish(struct mqtt_connection *conn,
 
 /*---------------------------------------------------------------------------*/
 /**
+* \brief Send authentication message.
+* \param conn A pointer to the MQTT connection.
+* \param auth_payload A pointer to auth data.
+* \param auth_type The type of auth to send (continue authentication or
+*        re-authentication).
+* \return MQTT_STATUS_OK or some error status
+*
+* This function send an MQTT authentication message.
+*/
+mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
+                        mqtt_auth_event_t *auth_payload,
+                        mqtt_auth_type_t auth_type);
+
+/*---------------------------------------------------------------------------*/
+/**
  * \brief Set the user name and password for a MQTT client.
  * \param conn A pointer to the MQTT connection.
  * \param username A pointer to the user name.
