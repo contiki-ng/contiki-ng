@@ -88,8 +88,11 @@ else
 fi
 
 NUM_SUCCESS=0
+NUM_SKIPPED=0
 NUM_FAILED=0
 
+rm -f failed.log
+rm -f failed-full.log
 FAILED=
 
 for platform in $PLATFORMS
@@ -132,14 +135,23 @@ do
 
             # Build the goal
             $LOG_INFO "make -C \"$example_dir\" -j TARGET=$platform BOARD=$board $GOAL"
-            if make -C "$example_dir" -j TARGET=$platform BOARD=$board $GOAL 2>&1 >build.log
+            if make -C "$example_dir" -j TARGET=$platform BOARD=$board $GOAL >build.log 2>&1
             then
                 $LOG_INFO "..done"
                 $CAT_DEBUG build.log
-                NUM_SUCCESS=$(($NUM_SUCCESS + 1))
+                if [[ `grep Skipping build.log` ]]
+                then
+                    NUM_SKIPPED=$(($NUM_SKIPPED + 1))
+                else
+                    NUM_SUCCESS=$(($NUM_SUCCESS + 1))
+                fi
             else
                 $LOG_INFO "Failed to build $example_dir for $platform ($board)"
                 $CAT_DEBUG build.log
+                echo "TARGET=$platform BOARD=$board $example_dir" >> failed.log
+                echo "TARGET=$platform BOARD=$board $example_dir" >> failed-full.log
+                cat build.log >> failed-full.log
+                echo "=====================" >> failed-full.log
                 NUM_FAILED=$(($NUM_FAILED + 1))
                 FAILED="$FAILED; $example_dir for $platform ($board)"
             fi
@@ -153,7 +165,8 @@ done
 # If building, not cleaning, print so statistics
 if [[ "$GOAL" == "all" ]]
 then
-    $LOG_INFO "Number of examples skipped or built successfully: $NUM_SUCCESS"
+    $LOG_INFO "Number of examples built successfully: $NUM_SUCCESS"
+    $LOG_INFO "Number of examples skipped: $NUM_SKIPPED"
     $LOG_INFO "Number of examples that failed to build: $NUM_FAILED"
     $LOG_INFO "Failed examples: $FAILED"
 fi
