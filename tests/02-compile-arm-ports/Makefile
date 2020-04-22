@@ -12,11 +12,11 @@ dev/gpio-hal/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
 dev/gpio-hal/zoul:BOARD=orion \
 dev/leds/cc26x0-cc13x0:BOARD=srf06/cc13x0 \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
-dev/rgb-led/zoul:BOARD=remote-revb \
+dev/rgb-led/zoul:BOARD=remote-reva \
 hello-world/nrf52dk \
 hello-world/openmote:BOARD=openmote-b \
 hello-world/openmote:BOARD=openmote-cc2538 \
-hello-world/zoul:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1 \
+hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1 \
 hello-world/simplelink:BOARD=srf06/cc13x0 \
 hello-world/simplelink:BOARD=sensortag/cc1350 \
 hello-world/simplelink:BOARD=launchpad/cc1310 \
