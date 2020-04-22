@@ -137,6 +137,9 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 #define RETRY_FOREVER              0xFF
 #define RECONNECT_INTERVAL         (CLOCK_SECOND * 2)
 
+/*---------------------------------------------------------------------------*/
+/* Control whether or not to perform authentication (MQTTv5) */
+#define MQTT_5_AUTH_EN (MQTT_5 && 0)
 /*
  * Number of times to try reconnecting to the broker.
  * Can be a limited number (e.g. 3, 10 etc) or can be set to RETRY_FOREVER
@@ -395,11 +398,13 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     LOG_DBG("Publishing complete.\n");
     break;
   }
+#if MQTT_5_AUTH_EN
   case MQTT_EVENT_AUTH: {
     LOG_DBG("Continuing auth.\n");
     mqtt_auth_event_t *auth_event = (mqtt_auth_event_t *)data;
     break;
   }
+# endif
   default:
     LOG_DBG("Application got a unhandled MQTT event: %i\n", event);
     break;
@@ -547,7 +552,7 @@ publish(void)
   int i;
   char def_rt_str[64];
 #if MQTT_5
-  uint8_t prop_err;
+  uint8_t prop_err = 0;
 #endif
 
   seq_nr_value++;
@@ -644,6 +649,7 @@ connect_to_broker(void)
   state = STATE_CONNECTING;
 }
 /*---------------------------------------------------------------------------*/
+#if MQTT_5_AUTH_EN
 static void
 send_auth(mqtt_auth_event_t *auth_data, mqtt_auth_type_t auth_type)
 {
@@ -655,6 +661,7 @@ send_auth(mqtt_auth_event_t *auth_data, mqtt_auth_type_t auth_type)
     LOG_DBG("MQTT reauthenticating\n");
   }
 }
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 ping_parent(void)
