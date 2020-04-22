@@ -30,7 +30,7 @@
  */
 
 #include "contiki.h"
-#include "enc28j60.h"
+#include "dev/ethernet/enc28j60/enc28j60.h"
 #include <stdio.h>
 #include <string.h>
 

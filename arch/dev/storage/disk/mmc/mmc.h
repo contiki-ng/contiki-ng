@@ -44,7 +44,7 @@
 #define MMC_H_
 
 #include "contiki.h"
-#include "../disk.h"
+#include "dev/storage/disk/disk.h"
 
 #ifndef MMC_CONF_DEV_COUNT
 /** Number of SD/MMC devices. */

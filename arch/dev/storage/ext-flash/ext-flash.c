@@ -37,7 +37,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "ext-flash.h"
+#include "dev/storage/ext-flash/ext-flash.h"
 #include "dev/spi.h"
 #include "gpio-hal.h"
 #include "sys/log.h"

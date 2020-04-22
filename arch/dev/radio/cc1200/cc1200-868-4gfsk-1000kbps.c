@@ -32,8 +32,8 @@
  * This file is part of the Contiki operating system.
  */
 
-#include "cc1200-rf-cfg.h"
-#include "cc1200-const.h"
+#include "dev/radio/cc1200/cc1200-rf-cfg.h"
+#include "dev/radio/cc1200/cc1200-const.h"
 #include "net/mac/tsch/tsch.h"
 
 /*

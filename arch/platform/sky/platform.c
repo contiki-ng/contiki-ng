@@ -32,8 +32,8 @@
 #include <string.h>
 #include "contiki.h"
 #include "sys/energest.h"
-#include "cc2420.h"
-#include "dev/ds2411/ds2411.h"
+#include "dev/radio/cc2420/cc2420.h"
+#include "dev/etc/ds2411/ds2411.h"
 #include "dev/leds.h"
 #include "dev/serial-line.h"
 #include "dev/slip.h"

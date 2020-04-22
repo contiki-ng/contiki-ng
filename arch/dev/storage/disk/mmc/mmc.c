@@ -45,8 +45,8 @@
 #include "sys/clock.h"
 #include "sys/rtimer.h"
 #include "dev/watchdog.h"
-#include "mmc-arch.h"
-#include "mmc.h"
+#include "dev/storage/disk/mmc/mmc-arch.h"
+#include "dev/storage/disk/mmc/mmc.h"
 
 /* Data read/write block length */
 #define BLOCK_LEN       512

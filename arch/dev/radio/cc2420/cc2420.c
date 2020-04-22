@@ -40,8 +40,8 @@
 
 #include "dev/leds.h"
 #include "dev/spi-legacy.h"
-#include "cc2420.h"
-#include "cc2420_const.h"
+#include "dev/radio/cc2420/cc2420.h"
+#include "dev/radio/cc2420/cc2420_const.h"
 
 #include "net/packetbuf.h"
 #include "net/netstack.h"

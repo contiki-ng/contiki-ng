@@ -45,7 +45,7 @@
 #include "contiki.h"
 #include "dev/spi-legacy.h"
 #include "dev/radio.h"
-#include "cc2420_const.h"
+#include "dev/radio/cc2420/cc2420_const.h"
 #include "lib/aes-128.h"
 
 #define WITH_SEND_CCA 1
