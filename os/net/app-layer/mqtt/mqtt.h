@@ -96,8 +96,6 @@
 #include "tcp-socket.h"
 #include "udp-socket.h"
 
-#include "lib/memb.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -172,6 +170,15 @@
 #else
 #define DBG(...)
 #endif /* DEBUG */
+/*---------------------------------------------------------------------------*/
+/* MQTTv5 */
+/* Number of output message types that will have property lists attached */
+#define MQTT_MAX_OUT_PROP_LISTS 1
+
+/* Number of output properties that will be declared, regardless of
+ * message type
+ */
+#define MQTT_MAX_OUT_PROPS 2
 /*---------------------------------------------------------------------------*/
 extern process_event_t mqtt_update_event;
 
@@ -580,13 +587,6 @@ struct mqtt_connection {
   struct tcp_socket socket;
 
 #if MQTT_5
-  /* A list of lists of properties
-   * Each member of the list contains a message type
-   * and a pointer to the list of properties for that
-   * message type
-   */
-  LIST_STRUCT(out_props);
-
   /* Server Capabilities */
   /* Binary capabilities (default: enabled) */
   uint8_t srv_feature_en;
@@ -706,22 +706,6 @@ mqtt_status_t mqtt_publish(struct mqtt_connection *conn,
 #else
                            mqtt_retain_t retain);
 #endif
-
-/*---------------------------------------------------------------------------*/
-/**
-* \brief Send authentication message.
-* \param conn A pointer to the MQTT connection.
-* \param auth_payload A pointer to auth data.
-* \param auth_type The type of auth to send (continue authentication or
-*        re-authentication).
-* \return MQTT_STATUS_OK or some error status
-*
-* This function send an MQTT authentication message.
-*/
-mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
-                        mqtt_auth_event_t *auth_payload,
-                        mqtt_auth_type_t auth_type);
-
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Set the user name and password for a MQTT client.
@@ -769,11 +753,33 @@ void mqtt_set_last_will(struct mqtt_connection *conn,
 #define mqtt_ready(conn) \
   (!(conn)->out_queue_full && mqtt_connected((conn)))
 /*---------------------------------------------------------------------------*/
+void encode_var_byte_int(uint8_t *vbi_out,
+                         uint8_t *vbi_bytes,
+                         uint32_t val);
+/*---------------------------------------------------------------------------*/
 /* MQTTv5-specific functions */
-// TODO add function declarations here + Doxygen
 void print_input_props(struct mqtt_connection *conn);
 uint8_t register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
                       mqtt_vhdr_prop_t prop_id, ...);
+uint32_t
+encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
+            va_list args);
+
+/*---------------------------------------------------------------------------*/
+/**
+* \brief Send authentication message.
+* \param conn A pointer to the MQTT connection.
+* \param auth_payload A pointer to auth data.
+* \param auth_type The type of auth to send (continue authentication or
+*        re-authentication).
+* \return MQTT_STATUS_OK or some error status
+*
+* This function send an MQTT authentication message.
+*/
+mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
+                        mqtt_auth_event_t *auth_payload,
+                        mqtt_auth_type_t auth_type);
+
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */
 /*---------------------------------------------------------------------------*/

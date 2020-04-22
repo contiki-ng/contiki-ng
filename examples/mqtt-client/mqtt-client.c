@@ -45,6 +45,9 @@
 
 #include <string.h>
 #include <strings.h>
+#include <stdarg.h>
+
+#include "lib/memb.h"
 /*---------------------------------------------------------------------------*/
 #define LOG_MODULE "mqtt-client"
 #ifdef MQTT_CLIENT_CONF_LOG_LEVEL
@@ -219,10 +222,6 @@ typedef struct mqtt_client_config {
 static char client_id[BUFFER_SIZE];
 static char pub_topic[BUFFER_SIZE];
 static char sub_topic[BUFFER_SIZE];
-/* MQTTv5 */
-#if MQTT_5
-static uint8_t PUB_TOPIC_ALIAS;
-#endif
 /*---------------------------------------------------------------------------*/
 /*
  * The main MQTT buffers.
@@ -253,6 +252,14 @@ extern const uint8_t mqtt_client_extension_count;
 #else
 static const mqtt_client_extension_t *mqtt_client_extensions[] = { NULL };
 static const uint8_t mqtt_client_extension_count = 0;
+#endif
+/*---------------------------------------------------------------------------*/
+/* MQTTv5 */
+#if MQTT_5
+static uint8_t PUB_TOPIC_ALIAS;
+
+MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
+MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
 #endif
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
@@ -499,6 +506,13 @@ update_config(void)
    */
   etimer_set(&publish_periodic_timer, 0);
 
+#if MQTT_5
+  LIST_STRUCT_INIT(&(conn.will), properties);
+
+  memb_init(&props_mem);
+  memb_init(&prop_lists_mem);
+#endif
+
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -523,6 +537,97 @@ init_config()
 
   return 1;
 }
+/*
+ * Functions to manipulate property lists
+ */
+#if MQTT_5
+/* Creates a property list for the requested message type */
+void
+create_prop_list(struct mqtt_connection *conn, mqtt_msg_type_t msg,
+                 struct mqtt_prop_list_t **prop_list_out)
+{
+  DBG("MQTT - Creating Property List for message type %i\n", msg);
+
+  *prop_list_out = memb_alloc(&prop_lists_mem);
+
+  if(!(*prop_list_out)) {
+    DBG("MQTT - Error, allocated too many property lists (max %i)\n", MQTT_MAX_OUT_PROP_LISTS);
+    return;
+  }
+
+  DBG("MQTT - Allocated Property list for message type %i\n", msg);
+
+  (*prop_list_out)->msg_type = msg;
+
+  LIST_STRUCT_INIT(*prop_list_out, props);
+
+  DBG("MQTT - mem %p prop_list msg %i next %p\n", *prop_list_out, (*prop_list_out)->msg_type, (*prop_list_out)->next);
+
+  (*prop_list_out)->properties_len = 0;
+  (*prop_list_out)->properties_len_enc_bytes = 1; /* 1 byte needed for len = 0 */
+
+  /* A list of lists of properties
+   * Each member of the list contains a message type
+   * and a pointer to the list of properties for that
+   * message type
+   */
+//  list_add(conn->out_props, *prop_list_out);
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
+              mqtt_vhdr_prop_t prop_id, ...)
+{
+  struct mqtt_prop_list_t *prop_list;
+  struct mqtt_out_property_t *prop;
+  va_list args;
+  uint32_t prop_len;
+
+  va_start(args, prop_id);
+
+  // TODO: check that the property is compatible with the message
+
+  DBG("MQTT - Searching for prop list for msg %i\n", msg);
+
+  /* Get property list for selected msg type */
+//  if(!find_prop_list(conn, msg, &prop_list)) {
+    create_prop_list(conn, msg, &prop_list);
+//  } else {
+    DBG("MQTT - Found prop list at %p msg %i\n", prop_list, prop_list->msg_type);
+//  }
+
+  if(!prop_list) {
+    DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
+    va_end(args);
+    return 1;
+  }
+
+  DBG("MQTT - prop list %p msg %i nxt %p\n", prop_list, prop_list->msg_type, prop_list->next);
+
+  prop = (struct mqtt_out_property_t *)memb_alloc(&props_mem);
+  prop_len = encode_prop(&prop, prop_id, args);
+
+  if(prop) {
+    DBG("MQTT - Adding prop %p to prop_list %p\n", prop, prop_list);
+    list_add(prop_list->props, prop);
+    prop_list->properties_len += 1; /* Property ID */
+    prop_list->properties_len += prop_len;
+    encode_var_byte_int(
+        prop_list->properties_len_enc,
+        &(prop_list->properties_len_enc_bytes),
+        prop_list->properties_len);
+    DBG("MQTT - New prop_list length %i\n", prop_list->properties_len);
+  } else {
+    DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
+    memb_free(&props_mem, prop);
+    va_end(args);
+    return 1;
+  }
+
+  va_end(args);
+  return 0;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 subscribe(void)
@@ -703,13 +808,13 @@ state_machine(void)
     connect_attempt = 1;
 
 #if MQTT_5
-  /* Every publish message sent will include this property */
-  (void)register_prop(&conn,
-                      MQTT_FHDR_MSG_TYPE_PUBLISH,
-                      MQTT_VHDR_PROP_USER_PROP,
-                      "Contiki", "v4.4");
+    /* Every publish message sent will include this property */
+    (void)register_prop(&conn,
+                        MQTT_FHDR_MSG_TYPE_PUBLISH,
+                        MQTT_VHDR_PROP_USER_PROP,
+                        "Contiki", "v4.4");
 
-  list_all_props(&conn);
+//    list_all_props(&conn);
 #endif
 
     state = STATE_REGISTERED;

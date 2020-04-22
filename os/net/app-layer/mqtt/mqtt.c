@@ -192,18 +192,6 @@ typedef enum {
 #define MQTT_CONNECT_VHDR_SIZE 10
 #endif
 
-#if MQTT_5
-/* Number of output message types that will have property lists attached */
-#define MQTT_MAX_OUT_PROP_LISTS 1
-MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
-
-/* Number of output properties that will be declared, regardless of
- * message type
- */
-#define MQTT_MAX_OUT_PROPS 2
-MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
-#endif
-
 #define MQTT_STRING_LEN_SIZE 2
 #define MQTT_MID_SIZE 2
 #define MQTT_QOS_SIZE 1
@@ -406,7 +394,7 @@ write_bytes(struct mqtt_connection *conn, uint8_t *data, uint16_t len)
   conn->out_write_pos += write_bytes;
   conn->out_buffer_ptr += write_bytes;
 
-  DBG("MQTT - (write_bytes) len: %u write_pos: %lu\n", len,
+  DBG("MQTT - (write_bytes) len: %u write_pos: %i\n", len,
       conn->out_write_pos);
 
   if(len - conn->out_write_pos == 0) {
@@ -460,14 +448,14 @@ decode_var_byte_int(const uint8_t *input_data_ptr,
   return read_bytes;
 }
 /*---------------------------------------------------------------------------*/
-static void
+void
 encode_var_byte_int(uint8_t *vbi_out,
                     uint8_t *vbi_bytes,
                     uint32_t val)
 {
   uint8_t digit;
 
-  DBG("MQTT - Encoding Variable Byte Integer %lu\n", val);
+  DBG("MQTT - Encoding Variable Byte Integer %u\n", val);
 
   *vbi_bytes = 0;
   do {
@@ -479,7 +467,7 @@ encode_var_byte_int(uint8_t *vbi_out,
 
     vbi_out[*vbi_bytes] = digit;
     (*vbi_bytes)++;
-    DBG("MQTT - Encode VBI digit '%u' length '%lu'\n", digit, val);
+    DBG("MQTT - Encode VBI digit '%u' length '%i'\n", digit, val);
   } while(val > 0 && *vbi_bytes < 5);
   DBG("MQTT - var_byte_int bytes %u\n", *vbi_bytes);
 }
@@ -512,32 +500,454 @@ reset_packet(struct mqtt_in_packet *packet)
  * Searches the property list of the connection for a list matching
  * the message type
  */
-uint8_t
-find_prop_list(struct mqtt_connection *conn, mqtt_msg_type_t msg,
-               struct mqtt_prop_list_t **list_out)
+//uint8_t
+//find_prop_list(struct mqtt_connection *conn, mqtt_msg_type_t msg,
+//               struct mqtt_prop_list_t **list_out)
+//{
+//  struct mqtt_prop_list_t *prop_list;
+//
+//  prop_list = (struct mqtt_prop_list_t *) list_head(conn->out_props);
+//  (*list_out) = NULL;
+//
+//  do {
+//    DBG("prop_list %p\n", prop_list);
+//    if(prop_list != NULL) {
+//      DBG("prop_list %p; nxt %p; type %i\n", prop_list, prop_list->next, prop_list->msg_type);
+//
+//      if(prop_list->msg_type == msg) {
+//        DBG("Found property list type %i\n", prop_list->msg_type);
+//        (*list_out) = prop_list;
+//        return 1;
+//      }
+//    }
+//    prop_list = (struct mqtt_prop_list_t *) list_item_next(prop_list);
+//  } while(prop_list != NULL);
+//
+//  DBG("Couldn't find property list type %i\n", msg);
+//
+//  return 0;
+//}
+/*---------------------------------------------------------------------------*/
+static void
+decode_in_props(struct mqtt_connection *conn)
 {
-  struct mqtt_prop_list_t *prop_list;
+  uint8_t prop_len_bytes;
 
-  prop_list = (struct mqtt_prop_list_t *) list_head(conn->out_props);
-  (*list_out) = NULL;
+  DBG("MQTT - Parsing input properties\n");
 
-  do {
-    DBG("prop_list %p\n", prop_list);
-    if(prop_list != NULL) {
-      DBG("prop_list %p; nxt %p; type %i\n", prop_list, prop_list->next, prop_list->msg_type);
+  /* All but PINGREQ and PINGRESP may contain a set of properties in the VHDR */
+  if(((conn->in_packet.fhdr & 0xF0) == MQTT_FHDR_MSG_TYPE_PINGREQ) ||
+     ((conn->in_packet.fhdr & 0xF0) == MQTT_FHDR_MSG_TYPE_PINGRESP)) {
+    return;
+  }
 
-      if(prop_list->msg_type == msg) {
-        DBG("Found property list type %i\n", prop_list->msg_type);
-        (*list_out) = prop_list;
-        return 1;
-      }
+  DBG("MQTT - Getting length\n");
+
+  prop_len_bytes =
+        decode_var_byte_int(conn->in_packet.payload_start,
+                            conn->in_packet.remaining_length - (conn->in_packet.payload_start - conn->in_packet.payload),
+                            NULL, NULL, &conn->in_packet.properties_len);
+
+  if(prop_len_bytes == 0) {
+    DBG("MQTT - Error decoding input properties (out of bounds)\n");
+    return;
+  }
+
+  DBG("MQTT - Received %i VBI property bytes\n", prop_len_bytes);
+  DBG("MQTT - Input properties length %i\n", conn->in_packet.properties_len);
+
+  /* Total property length = number of bytes to encode length + length of
+   * properties themselves
+   */
+  conn->in_packet.properties_enc_len = prop_len_bytes;
+  /* Actual properties start after property length VBI */
+  conn->in_packet.props_start = conn->in_packet.payload_start + prop_len_bytes;
+  conn->in_packet.payload_start += prop_len_bytes;
+  conn->in_packet.curr_props_pos = conn->in_packet.props_start;
+
+  DBG("MQTT - First byte of first prop %i\n", *conn->in_packet.curr_props_pos);
+
+  conn->in_packet.has_props = 1;
+}
+/*---------------------------------------------------------------------------*/
+static uint32_t
+decode_prop_utf8(struct mqtt_connection *conn,
+                 uint8_t *buf_in,
+                 uint8_t *data)
+{
+  uint32_t len;
+
+  len = (buf_in[0] << 8) + buf_in[1];
+
+  DBG("MQTT - Decoding %d-char UTF8 string property\n", len);
+
+  /* Include NULL terminator in destination */
+  if((len + MQTT_STRING_LEN_SIZE + 1) > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return 0;
+  }
+
+  memcpy(data, buf_in, len + MQTT_STRING_LEN_SIZE);
+  data[len + MQTT_STRING_LEN_SIZE] = '\0';
+
+  /* Length of string + 2 bytes for length */
+  return len + MQTT_STRING_LEN_SIZE;
+}
+/*---------------------------------------------------------------------------*/
+static uint32_t
+decode_prop_fixed_len_int(struct mqtt_connection *conn,
+                          uint8_t *buf_in, int len,
+                          uint8_t *data)
+{
+  int8_t i;
+  uint32_t *data_out;
+
+  DBG("MQTT - Decoding %d-byte int property\n", len);
+
+  if(len > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return 0;
+  }
+
+  /* All integer input properties will be returned as uint32_t */
+  memset(data, 0, 4);
+
+  data_out = (uint32_t*)data;
+
+  for(i = 0; i < 4; i++) {
+    *data_out = *data_out << 8;
+
+    if(i < len) {
+      *data_out += buf_in[i];
     }
-    prop_list = (struct mqtt_prop_list_t *) list_item_next(prop_list);
-  } while(prop_list != NULL);
+  }
 
-  DBG("Couldn't find property list type %i\n", msg);
+  return len;
+}
+/*---------------------------------------------------------------------------*/
+static uint32_t
+decode_prop_vbi(struct mqtt_connection *conn,
+                uint8_t *buf_in,
+                uint8_t *data)
+{
+  uint8_t prop_len_bytes;
+
+  DBG("MQTT - Decoding Variable Byte Integer property\n");
+
+  /* All integer input properties will be returned as uint32_t */
+  memset(data, 0, 4);
+
+  prop_len_bytes =
+        decode_var_byte_int(buf_in, 4, NULL, NULL, (uint16_t*)data);
+
+  if(prop_len_bytes == 0) {
+    DBG("MQTT - Error decoding Variable Byte Integer\n");
+    return 0;
+  }
+
+  if(prop_len_bytes > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return 0;
+  }
+
+  return prop_len_bytes;
+}
+/*---------------------------------------------------------------------------*/
+static uint32_t
+decode_prop_binary_data(struct mqtt_connection *conn,
+                        uint8_t *buf_in,
+                        uint8_t *data)
+{
+  uint8_t data_len;
+
+  DBG("MQTT - Decoding Binary Data property\n");
+
+  data_len = (buf_in[0] << 8) + buf_in[1];
+
+  if(data_len == 0) {
+    DBG("MQTT - Error decoding Binary Data property length\n");
+    return 0;
+  }
+
+  if((data_len + 2) > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return 0;
+  }
+
+  memcpy(data, buf_in, data_len + 2);
+
+  return data_len + 2;
+}
+/*---------------------------------------------------------------------------*/
+static uint32_t
+decode_prop_utf8_pair(struct mqtt_connection *conn,
+                      uint8_t *buf_in,
+                      uint8_t *data)
+{
+  uint32_t len1;
+  uint32_t len2;
+  uint32_t total_len;
+
+  len1 = (buf_in[0] << 8) + buf_in[1];
+  len2 = (buf_in[len1 + MQTT_STRING_LEN_SIZE] << 8) + buf_in[len1 + MQTT_STRING_LEN_SIZE + 1];
+  total_len = len1 + len2;
+
+  DBG("MQTT - Decoding %d-char UTF8 string pair property (%i + %i)\n", total_len, len1, len2);
+
+  if((total_len + 2*MQTT_STRING_LEN_SIZE) > MQTT_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+    return 0;
+  }
+
+  memcpy(data, buf_in, total_len + 2*MQTT_STRING_LEN_SIZE);
+
+  /* Length of string + 2 bytes for length */
+  return total_len + 2*MQTT_STRING_LEN_SIZE;
+}
+/*---------------------------------------------------------------------------*/
+uint32_t
+parse_prop(struct mqtt_connection *conn,
+           mqtt_vhdr_prop_t prop_id, uint8_t *buf_in, uint8_t *data)
+{
+  switch(prop_id) {
+  case MQTT_VHDR_PROP_PAYLOAD_FMT_IND:
+  case MQTT_VHDR_PROP_REQ_PROBLEM_INFO:
+  case MQTT_VHDR_PROP_REQ_RESP_INFO:
+  case MQTT_VHDR_PROP_MAX_QOS:
+  case MQTT_VHDR_PROP_RETAIN_AVAIL:
+  case MQTT_VHDR_PROP_WILD_SUB_AVAIL:
+  case MQTT_VHDR_PROP_SUB_ID_AVAIL:
+  case MQTT_VHDR_PROP_SHARED_SUB_AVAIL: {
+    return decode_prop_fixed_len_int(conn, buf_in, 1, data);
+  }
+  case MQTT_VHDR_PROP_RECEIVE_MAX:
+  case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX:
+  case MQTT_VHDR_PROP_SERVER_KEEP_ALIVE: {
+    return decode_prop_fixed_len_int(conn, buf_in, 2, data);
+  }
+  case MQTT_VHDR_PROP_MSG_EXP_INT:
+  case MQTT_VHDR_PROP_SESS_EXP_INT:
+  case MQTT_VHDR_PROP_WILL_DELAY_INT:
+  case MQTT_VHDR_PROP_MAX_PKT_SZ: {
+    return decode_prop_fixed_len_int(conn, buf_in, 4, data);
+  }
+  case MQTT_VHDR_PROP_CONTENT_TYPE:
+  case MQTT_VHDR_PROP_RESP_TOPIC:
+  case MQTT_VHDR_PROP_AUTH_METHOD:
+  case MQTT_VHDR_PROP_ASSIGNED_CLIENT_ID:
+  case MQTT_VHDR_PROP_RESP_INFO:
+  case MQTT_VHDR_PROP_SERVER_REFERENCE:
+  case MQTT_VHDR_PROP_REASON_STRING: {
+    return decode_prop_utf8(conn, buf_in, data);
+  }
+  case MQTT_VHDR_PROP_CORRELATION_DATA:
+  case MQTT_VHDR_PROP_AUTH_DATA: {
+    return decode_prop_binary_data(conn, buf_in, data);
+  }
+  case MQTT_VHDR_PROP_SUB_ID: {
+    return decode_prop_vbi(conn, buf_in, data);
+  }
+  case MQTT_VHDR_PROP_USER_PROP: {
+    return decode_prop_utf8_pair(conn, buf_in, data);
+  }
+  default:
+    DBG("MQTT - Error, no such property '%i'", prop_id);
+    return 0;
+  }
 
   return 0;
+}
+/*---------------------------------------------------------------------------*/
+uint32_t
+get_next_in_prop(struct mqtt_connection *conn,
+                 mqtt_vhdr_prop_t *prop_id, uint8_t *data)
+{
+  uint32_t prop_len;
+  uint8_t prop_id_len_bytes;
+
+  if(!conn->in_packet.has_props) {
+    DBG("MQTT - Message has no input properties");
+    return 0;
+  }
+
+  DBG("MQTT - Curr prop pos %i; len %i; byte %i\n", (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
+      conn->in_packet.properties_len,
+      *conn->in_packet.curr_props_pos);
+
+  if((conn->in_packet.curr_props_pos - conn->in_packet.props_start)
+      >= conn->in_packet.properties_len) {
+    DBG("MQTT - Message has no more input properties\n");
+    return 0;
+  }
+
+  prop_id_len_bytes =
+        decode_var_byte_int(conn->in_packet.curr_props_pos,
+            conn->in_packet.properties_len - (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
+                            NULL, NULL, (uint16_t*)prop_id);
+
+  DBG("MQTT - Decoded property ID %i (encoded using %i bytes)\n", *prop_id, prop_id_len_bytes);
+
+  prop_len = parse_prop(conn, *prop_id, conn->in_packet.curr_props_pos+1, data);
+
+  DBG("MQTT - Decoded property len %i bytes\n", prop_len);
+
+  conn->in_packet.curr_props_pos += prop_id_len_bytes + prop_len;
+
+  return prop_len;
+}
+/*---------------------------------------------------------------------------*/
+void
+print_input_props(struct mqtt_connection *conn)
+{
+  uint32_t prop_len;
+  mqtt_vhdr_prop_t prop_id;
+  uint8_t data[MQTT_MAX_PROP_LENGTH];
+  uint32_t i;
+
+  DBG("MQTT - Printing all input properties\n");
+
+  prop_len = get_next_in_prop(conn, &prop_id, data);
+  while(prop_len) {
+    DBG("MQTT - Property ID %i, length %i\n", prop_id, prop_len);
+
+    switch(prop_id) {
+      case MQTT_VHDR_PROP_PAYLOAD_FMT_IND:
+      case MQTT_VHDR_PROP_REQ_PROBLEM_INFO:
+      case MQTT_VHDR_PROP_REQ_RESP_INFO:
+      case MQTT_VHDR_PROP_MSG_EXP_INT:
+      case MQTT_VHDR_PROP_SESS_EXP_INT:
+      case MQTT_VHDR_PROP_WILL_DELAY_INT:
+      case MQTT_VHDR_PROP_MAX_PKT_SZ:
+      case MQTT_VHDR_PROP_RECEIVE_MAX:
+      case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX:
+      case MQTT_VHDR_PROP_SUB_ID: {
+        DBG("MQTT - Decoded property value '%i'\n", (uint32_t)*data);
+        break;
+      }
+      case MQTT_VHDR_PROP_CONTENT_TYPE:
+      case MQTT_VHDR_PROP_RESP_TOPIC:
+      case MQTT_VHDR_PROP_AUTH_METHOD: {
+        DBG("MQTT - Decoded property value ");
+        DBG("(%i %i) %s", data[0], data[1], data + MQTT_STRING_LEN_SIZE);
+        DBG("\n");
+        break;
+      }
+      case MQTT_VHDR_PROP_CORRELATION_DATA:
+      case MQTT_VHDR_PROP_AUTH_DATA: {
+        DBG("MQTT - Decoded property value (%i %i) ", data[0], data[1]);
+        for(i = 2; i < prop_len; i++) {
+          DBG("%x ", data[i]);
+        }
+        DBG("\n");
+        break;
+      }
+      case MQTT_VHDR_PROP_USER_PROP: {
+        uint32_t len1;
+        uint32_t len2;
+
+        len1 = (data[0] << 8)+ data[1];
+        len2 = (data[len1 + MQTT_STRING_LEN_SIZE]<<8)+ data[len1 + MQTT_STRING_LEN_SIZE + 1];
+
+        DBG("MQTT - Decoded property value [(%i %i) %.*s, (%i %i) %.*s]",
+            data[0], data[1], len1, data + MQTT_STRING_LEN_SIZE,
+            data[len1 + MQTT_STRING_LEN_SIZE], data[len1 + MQTT_STRING_LEN_SIZE + 1], len2, data + len1 + 2*MQTT_STRING_LEN_SIZE);
+        DBG("\n");
+        break;
+      }
+      default:
+        DBG("MQTT - Error, no such property '%i'\n", prop_id);
+        return;
+      }
+
+    prop_id = 0;
+    prop_len = get_next_in_prop(conn, &prop_id, data);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+parse_connack_props(struct mqtt_connection *conn)
+{
+  uint32_t prop_len;
+  mqtt_vhdr_prop_t prop_id;
+  uint8_t data[MQTT_MAX_PROP_LENGTH];
+  uint32_t val_int;
+
+  DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
+
+  prop_len = get_next_in_prop(conn, &prop_id, data);
+  while(prop_len) {
+    switch(prop_id) {
+      case MQTT_VHDR_PROP_RETAIN_AVAIL: {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_RETAIN_AVAIL;
+        }
+        break;
+      }
+      case MQTT_VHDR_PROP_WILD_SUB_AVAIL: {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_WILD_SUB_AVAIL;
+        }
+        break;
+      }
+      case MQTT_VHDR_PROP_SUB_ID_AVAIL: {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_SUB_ID_AVAIL;
+        }
+        break;
+      }
+      case MQTT_VHDR_PROP_SHARED_SUB_AVAIL:  {
+        val_int = (uint32_t)*data;
+        if(val_int == 0) {
+          conn->srv_feature_en &= ~MQTT_CAP_SHARED_SUB_AVAIL;
+        }
+        break;
+      }
+      default:
+        DBG("MQTT - Error, unexpected CONNACK property '%i'", prop_id);
+        return;
+      }
+
+    prop_id = 0;
+    prop_len = get_next_in_prop(conn, &prop_id, data);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event)
+{
+  uint32_t prop_len;
+  mqtt_vhdr_prop_t prop_id;
+  uint8_t data[MQTT_MAX_PROP_LENGTH];
+
+  DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
+
+  event->auth_data.len = 0;
+  event->auth_method.len = 0;
+
+  prop_len = get_next_in_prop(conn, &prop_id, data);
+  while(prop_len) {
+    switch(prop_id) {
+    case MQTT_VHDR_PROP_AUTH_DATA: {
+      event->auth_data.len = prop_len - 2; // 2 bytes are used to encode len
+      memcpy(event->auth_data.data, data, prop_len - 2);
+      break;
+    }
+    case MQTT_VHDR_PROP_AUTH_METHOD: {
+      event->auth_method.len = prop_len - 2; // 2 bytes are used to encode len
+      memcpy(event->auth_method.data, data, prop_len - 2);
+      break;
+    }
+    default:
+      DBG("MQTT - Unhandled AUTH property '%i'", prop_id);
+      return;
+    }
+
+    prop_id = 0;
+    prop_len = get_next_in_prop(conn, &prop_id, data);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static
@@ -587,7 +997,9 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   uint8_t found_props;
   will_props = (struct mqtt_prop_list_t *) list_head(conn->will.properties);
 
-  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
+//  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
+  found_props = 0;
+  prop_list = NULL;
 #endif
 
   DBG("MQTT - Sending CONNECT message...\n");
@@ -748,11 +1160,12 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_BEGIN(pt);
 
 #if MQTT_5
-  uint8_t sub_options;
   struct mqtt_prop_list_t *prop_list;
   uint8_t found_props;
 
-  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_SUBSCRIBE, &prop_list);
+//  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_SUBSCRIBE, &prop_list);
+  found_props = 0;
+  prop_list = NULL;
 #endif
 
   DBG("MQTT - Sending subscribe message! topic %s topic_length %i\n",
@@ -902,7 +1315,9 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
   struct mqtt_prop_list_t *prop_list;
   uint8_t found_props;
 
-  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_PUBLISH, &prop_list);
+//  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_PUBLISH, &prop_list);
+  found_props = 0;
+  prop_list = NULL;
 #endif
 
   DBG("MQTT - Sending publish message! topic %s topic_length %i\n",
@@ -1035,6 +1450,7 @@ PT_THREAD(pingreq_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_END(pt);
 }
 /*---------------------------------------------------------------------------*/
+#if MQTT_5
 static
 PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
 {
@@ -1042,6 +1458,9 @@ PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
 
   struct mqtt_prop_list_t *prop_list;
   uint8_t found_props;
+
+  found_props = 0;
+  prop_list = NULL;
 
   conn->out_packet.remaining_length +=
       found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
@@ -1075,6 +1494,7 @@ PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
 
   PT_END(pt);
 }
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 handle_connack(struct mqtt_connection *conn)
@@ -1264,433 +1684,6 @@ handle_publish(struct mqtt_connection *conn)
   return MQTT_PUBLISH_OK;
 }
 /*---------------------------------------------------------------------------*/
-#if MQTT_5
-static void
-decode_in_props(struct mqtt_connection *conn)
-{
-  uint8_t prop_len_bytes;
-
-  DBG("MQTT - Parsing input properties\n");
-
-  /* All but PINGREQ and PINGRESP may contain a set of properties in the VHDR */
-  if(((conn->in_packet.fhdr & 0xF0) == MQTT_FHDR_MSG_TYPE_PINGREQ) ||
-     ((conn->in_packet.fhdr & 0xF0) == MQTT_FHDR_MSG_TYPE_PINGRESP)) {
-    return;
-  }
-
-  DBG("MQTT - Getting length\n");
-
-  prop_len_bytes =
-        decode_var_byte_int(conn->in_packet.payload_start,
-                            conn->in_packet.remaining_length - (conn->in_packet.payload_start - conn->in_packet.payload),
-                            NULL, NULL, &conn->in_packet.properties_len);
-
-  if(prop_len_bytes == 0) {
-    DBG("MQTT - Error decoding input properties (out of bounds)\n");
-    return;
-  }
-
-  DBG("MQTT - Received %i VBI property bytes\n", prop_len_bytes);
-  DBG("MQTT - Input properties length %i\n", conn->in_packet.properties_len);
-
-  /* Total property length = number of bytes to encode length + length of
-   * properties themselves
-   */
-  conn->in_packet.properties_enc_len = prop_len_bytes;
-  /* Actual properties start after property length VBI */
-  conn->in_packet.props_start = conn->in_packet.payload_start + prop_len_bytes;
-  conn->in_packet.payload_start += prop_len_bytes;
-  conn->in_packet.curr_props_pos = conn->in_packet.props_start;
-
-  DBG("MQTT - First byte of first prop %i\n", *conn->in_packet.curr_props_pos);
-
-  conn->in_packet.has_props = 1;
-}
-/*---------------------------------------------------------------------------*/
-static uint32_t
-decode_prop_utf8(struct mqtt_connection *conn,
-                 uint8_t *buf_in,
-                 uint8_t *data)
-{
-  uint32_t len;
-
-  len = (buf_in[0] << 8) + buf_in[1];
-
-  DBG("MQTT - Decoding %d-char UTF8 string property\n", len);
-
-  /* Include NULL terminator in destination */
-  if((len + MQTT_STRING_LEN_SIZE + 1) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
-    return 0;
-  }
-
-  memcpy(data, buf_in, len + MQTT_STRING_LEN_SIZE);
-  data[len + MQTT_STRING_LEN_SIZE] = '\0';
-
-  /* Length of string + 2 bytes for length */
-  return len + MQTT_STRING_LEN_SIZE;
-}
-/*---------------------------------------------------------------------------*/
-static uint32_t
-decode_prop_fixed_len_int(struct mqtt_connection *conn,
-                          uint8_t *buf_in, int len,
-                          uint8_t *data)
-{
-  int8_t i;
-  uint32_t *data_out;
-
-  DBG("MQTT - Decoding %d-byte int property\n", len);
-
-  if(len > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
-    return 0;
-  }
-
-  /* All integer input properties will be returned as uint32_t */
-  memset(data, 0, 4);
-
-  data_out = data;
-
-  for(i = 0; i < 4; i++) {
-    *data_out = *data_out << 8;
-
-    if(i < len) {
-      *data_out += buf_in[i];
-    }
-  }
-
-  return len;
-}
-/*---------------------------------------------------------------------------*/
-static uint32_t
-decode_prop_vbi(struct mqtt_connection *conn,
-                uint8_t *buf_in,
-                uint8_t *data)
-{
-  int8_t i;
-  uint8_t prop_len_bytes;
-
-  DBG("MQTT - Decoding Variable Byte Integer property\n");
-
-  /* All integer input properties will be returned as uint32_t */
-  memset(data, 0, 4);
-
-  prop_len_bytes =
-        decode_var_byte_int(buf_in, 4, NULL, NULL, data);
-
-  if(prop_len_bytes == 0) {
-    DBG("MQTT - Error decoding Variable Byte Integer\n");
-    return 0;
-  }
-
-  if(prop_len_bytes > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
-    return 0;
-  }
-
-  return prop_len_bytes;
-}
-/*---------------------------------------------------------------------------*/
-static uint32_t
-decode_prop_binary_data(struct mqtt_connection *conn,
-                        uint8_t *buf_in,
-                        uint8_t *data)
-{
-  int8_t i;
-  uint8_t data_len;
-
-  DBG("MQTT - Decoding Binary Data property\n");
-
-  data_len = (buf_in[0] << 8) + buf_in[1];
-
-  if(data_len == 0) {
-    DBG("MQTT - Error decoding Binary Data property length\n");
-    return 0;
-  }
-
-  if((data_len + 2) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
-    return 0;
-  }
-
-  memcpy(data, buf_in, data_len + 2);
-
-  return data_len + 2;
-}
-/*---------------------------------------------------------------------------*/
-static uint32_t
-decode_prop_utf8_pair(struct mqtt_connection *conn,
-                      uint8_t *buf_in,
-                      uint8_t *data)
-{
-  uint32_t len1;
-  uint32_t len2;
-  uint32_t total_len;
-
-  len1 = (buf_in[0] << 8) + buf_in[1];
-  len2 = (buf_in[len1 + MQTT_STRING_LEN_SIZE] << 8) + buf_in[len1 + MQTT_STRING_LEN_SIZE + 1];
-  total_len = len1 + len2;
-
-  DBG("MQTT - Decoding %d-char UTF8 string pair property (%i + %i)\n", total_len, len1, len2);
-
-  if((total_len + 2*MQTT_STRING_LEN_SIZE) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
-    return 0;
-  }
-
-  memcpy(data, buf_in, total_len + 2*MQTT_STRING_LEN_SIZE);
-
-  /* Length of string + 2 bytes for length */
-  return total_len + 2*MQTT_STRING_LEN_SIZE;
-}
-/*---------------------------------------------------------------------------*/
-uint32_t
-parse_prop(struct mqtt_connection *conn,
-           mqtt_vhdr_prop_t prop_id, uint8_t *buf_in, uint8_t *data)
-{
-  switch(prop_id) {
-  case MQTT_VHDR_PROP_PAYLOAD_FMT_IND:
-  case MQTT_VHDR_PROP_REQ_PROBLEM_INFO:
-  case MQTT_VHDR_PROP_REQ_RESP_INFO:
-  case MQTT_VHDR_PROP_MAX_QOS:
-  case MQTT_VHDR_PROP_RETAIN_AVAIL:
-  case MQTT_VHDR_PROP_WILD_SUB_AVAIL:
-  case MQTT_VHDR_PROP_SUB_ID_AVAIL:
-  case MQTT_VHDR_PROP_SHARED_SUB_AVAIL: {
-    return decode_prop_fixed_len_int(conn, buf_in, 1, data);
-  }
-  case MQTT_VHDR_PROP_RECEIVE_MAX:
-  case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX:
-  case MQTT_VHDR_PROP_SERVER_KEEP_ALIVE: {
-    return decode_prop_fixed_len_int(conn, buf_in, 2, data);
-  }
-  case MQTT_VHDR_PROP_MSG_EXP_INT:
-  case MQTT_VHDR_PROP_SESS_EXP_INT:
-  case MQTT_VHDR_PROP_WILL_DELAY_INT:
-  case MQTT_VHDR_PROP_MAX_PKT_SZ: {
-    return decode_prop_fixed_len_int(conn, buf_in, 4, data);
-  }
-  case MQTT_VHDR_PROP_CONTENT_TYPE:
-  case MQTT_VHDR_PROP_RESP_TOPIC:
-  case MQTT_VHDR_PROP_AUTH_METHOD:
-  case MQTT_VHDR_PROP_ASSIGNED_CLIENT_ID:
-  case MQTT_VHDR_PROP_RESP_INFO:
-  case MQTT_VHDR_PROP_SERVER_REFERENCE:
-  case MQTT_VHDR_PROP_REASON_STRING: {
-    return decode_prop_utf8(conn, buf_in, data);
-  }
-  case MQTT_VHDR_PROP_CORRELATION_DATA:
-  case MQTT_VHDR_PROP_AUTH_DATA: {
-    return decode_prop_binary_data(conn, buf_in, data);
-  }
-  case MQTT_VHDR_PROP_SUB_ID: {
-    return decode_prop_vbi(conn, buf_in, data);
-  }
-  case MQTT_VHDR_PROP_USER_PROP: {
-    return decode_prop_utf8_pair(conn, buf_in, data);
-  }
-  default:
-    DBG("MQTT - Error, no such property '%i'", prop_id);
-    return 0;
-  }
-
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-uint32_t
-get_next_in_prop(struct mqtt_connection *conn,
-                 mqtt_vhdr_prop_t *prop_id, uint8_t *data)
-{
-  uint32_t prop_len;
-  uint8_t prop_id_len_bytes;
-
-  if(!conn->in_packet.has_props) {
-    DBG("MQTT - Message has no input properties");
-    return 0;
-  }
-
-  DBG("MQTT - Curr prop pos %i; len %i; byte %i\n", (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
-      conn->in_packet.properties_len,
-      *conn->in_packet.curr_props_pos);
-
-  if((conn->in_packet.curr_props_pos - conn->in_packet.props_start)
-      >= conn->in_packet.properties_len) {
-    DBG("MQTT - Message has no more input properties\n");
-    return 0;
-  }
-
-  prop_id_len_bytes =
-        decode_var_byte_int(conn->in_packet.curr_props_pos,
-            conn->in_packet.properties_len - (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
-                            NULL, NULL, prop_id);
-
-  DBG("MQTT - Decoded property ID %i (encoded using %i bytes)\n", *prop_id, prop_id_len_bytes);
-
-  prop_len = parse_prop(conn, *prop_id, conn->in_packet.curr_props_pos+1, data);
-
-  DBG("MQTT - Decoded property len %i bytes\n", prop_len);
-
-  conn->in_packet.curr_props_pos += prop_id_len_bytes + prop_len;
-
-  return prop_len;
-}
-/*---------------------------------------------------------------------------*/
-void
-print_input_props(struct mqtt_connection *conn)
-{
-  uint32_t prop_len;
-  mqtt_vhdr_prop_t prop_id;
-  uint8_t data[MQTT_MAX_PROP_LENGTH];
-  uint32_t i;
-
-  DBG("MQTT - Printing all input properties\n");
-
-  prop_len = get_next_in_prop(conn, &prop_id, data);
-  while(prop_len) {
-    DBG("MQTT - Property ID %i, length %i\n", prop_id, prop_len);
-
-    switch(prop_id) {
-      case MQTT_VHDR_PROP_PAYLOAD_FMT_IND:
-      case MQTT_VHDR_PROP_REQ_PROBLEM_INFO:
-      case MQTT_VHDR_PROP_REQ_RESP_INFO:
-      case MQTT_VHDR_PROP_MSG_EXP_INT:
-      case MQTT_VHDR_PROP_SESS_EXP_INT:
-      case MQTT_VHDR_PROP_WILL_DELAY_INT:
-      case MQTT_VHDR_PROP_MAX_PKT_SZ:
-      case MQTT_VHDR_PROP_RECEIVE_MAX:
-      case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX:
-      case MQTT_VHDR_PROP_SUB_ID: {
-        DBG("MQTT - Decoded property value '%i'\n", (uint32_t)*data);
-        break;
-      }
-      case MQTT_VHDR_PROP_CONTENT_TYPE:
-      case MQTT_VHDR_PROP_RESP_TOPIC:
-      case MQTT_VHDR_PROP_AUTH_METHOD: {
-        DBG("MQTT - Decoded property value ");
-        DBG("(%i %i) %s", data[0], data[1], data + MQTT_STRING_LEN_SIZE);
-        DBG("\n");
-        break;
-      }
-      case MQTT_VHDR_PROP_CORRELATION_DATA:
-      case MQTT_VHDR_PROP_AUTH_DATA: {
-        DBG("MQTT - Decoded property value (%i %i) ", data[0], data[1]);
-        for(i = 2; i < prop_len; i++) {
-          DBG("%x ", data[i]);
-        }
-        DBG("\n");
-        break;
-      }
-      case MQTT_VHDR_PROP_USER_PROP: {
-        uint32_t len1;
-        uint32_t len2;
-
-        len1 = (data[0] << 8)+ data[1];
-        len2 = (data[len1 + MQTT_STRING_LEN_SIZE]<<8)+ data[len1 + MQTT_STRING_LEN_SIZE + 1];
-
-        DBG("MQTT - Decoded property value [(%i %i) %.*s, (%i %i) %.*s]",
-            data[0], data[1], len1, data + MQTT_STRING_LEN_SIZE,
-            data[len1 + MQTT_STRING_LEN_SIZE], data[len1 + MQTT_STRING_LEN_SIZE + 1], len2, data + len1 + 2*MQTT_STRING_LEN_SIZE);
-        DBG("\n");
-        break;
-      }
-      default:
-        DBG("MQTT - Error, no such property '%i'\n", prop_id);
-        return;
-      }
-
-    prop_id = 0;
-    prop_len = get_next_in_prop(conn, &prop_id, data);
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-parse_connack_props(struct mqtt_connection *conn)
-{
-  uint32_t prop_len;
-  mqtt_vhdr_prop_t prop_id;
-  uint8_t data[MQTT_MAX_PROP_LENGTH];
-  uint32_t val_int;
-
-  DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
-
-  prop_len = get_next_in_prop(conn, &prop_id, data);
-  while(prop_len) {
-    switch(prop_id) {
-      case MQTT_VHDR_PROP_RETAIN_AVAIL: {
-        val_int = (uint32_t)*data;
-        if(val_int == 0) {
-          conn->srv_feature_en &= ~MQTT_CAP_RETAIN_AVAIL;
-        }
-        break;
-      }
-      case MQTT_VHDR_PROP_WILD_SUB_AVAIL: {
-        val_int = (uint32_t)*data;
-        if(val_int == 0) {
-          conn->srv_feature_en &= ~MQTT_CAP_WILD_SUB_AVAIL;
-        }
-        break;
-      }
-      case MQTT_VHDR_PROP_SUB_ID_AVAIL: {
-        val_int = (uint32_t)*data;
-        if(val_int == 0) {
-          conn->srv_feature_en &= ~MQTT_CAP_SUB_ID_AVAIL;
-        }
-        break;
-      }
-      case MQTT_VHDR_PROP_SHARED_SUB_AVAIL:  {
-        val_int = (uint32_t)*data;
-        if(val_int == 0) {
-          conn->srv_feature_en &= ~MQTT_CAP_SHARED_SUB_AVAIL;
-        }
-        break;
-      }
-      default:
-        DBG("MQTT - Error, unexpected CONNACK property '%i'", prop_id);
-        return;
-      }
-
-    prop_id = 0;
-    prop_len = get_next_in_prop(conn, &prop_id, data);
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event)
-{
-  uint32_t prop_len;
-  mqtt_vhdr_prop_t prop_id;
-  uint8_t data[MQTT_MAX_PROP_LENGTH];
-  uint32_t val_int;
-
-  DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
-
-  event->auth_data.len = 0;
-  event->auth_method.len = 0;
-
-  prop_len = get_next_in_prop(conn, &prop_id, data);
-  while(prop_len) {
-    switch(prop_id) {
-    case MQTT_VHDR_PROP_AUTH_DATA: {
-      event->auth_data.len = prop_len - 2; // 2 bytes are used to encode len
-      memcpy(event->auth_data.data, data, prop_len - 2);
-      break;
-    }
-    case MQTT_VHDR_PROP_AUTH_METHOD: {
-      event->auth_method.len = prop_len - 2; // 2 bytes are used to encode len
-      memcpy(event->auth_method.data, data, prop_len - 2);
-      break;
-    }
-    default:
-      DBG("MQTT - Unhandled AUTH property '%i'", prop_id);
-      return;
-    }
-
-    prop_id = 0;
-    prop_len = get_next_in_prop(conn, &prop_id, data);
-  }
-}
-#endif
-/*---------------------------------------------------------------------------*/
 static void
 parse_publish_vhdr(struct mqtt_connection *conn,
                    uint32_t *pos,
@@ -1747,7 +1740,8 @@ parse_publish_vhdr(struct mqtt_connection *conn,
   }
 }
 /*---------------------------------------------------------------------------*/
-// MQTTv5 only
+/* MQTTv5 only */
+#if MQTT_5
 static void
 handle_disconnect(struct mqtt_connection *conn)
 {
@@ -1763,7 +1757,7 @@ handle_auth(struct mqtt_connection *conn)
 
   DBG("MQTT - (handle_auth) Got AUTH.\n");
 
-  if(conn->in_packet.fhdr & 0x0F != 0x0) {
+  if((conn->in_packet.fhdr & 0x0F) != 0x0) {
     call_event(conn,
                MQTT_EVENT_ERROR,
                NULL);
@@ -1781,6 +1775,7 @@ handle_auth(struct mqtt_connection *conn)
   parse_auth_props(conn, &event);
   call_event(conn, MQTT_EVENT_AUTH, &event);
 }
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 parse_vhdr(struct mqtt_connection *conn)
@@ -1918,7 +1913,7 @@ tcp_input(struct tcp_socket *s,
     /* Read in as much as we can into the packet payload */
     copy_bytes = MIN(input_data_len - pos,
                      MQTT_INPUT_BUFF_SIZE - conn->in_packet.payload_pos);
-    DBG("- Copied %lu payload bytes\n", copy_bytes);
+    DBG("- Copied %i payload bytes\n", copy_bytes);
     memcpy(&conn->in_packet.payload[conn->in_packet.payload_pos],
            &input_data_ptr[pos],
            copy_bytes);
@@ -2214,6 +2209,7 @@ PROCESS_THREAD(mqtt_process, ev, data)
         }
       }
     }
+#if MQTT_5
     if(ev == mqtt_do_auth_event) {
       conn = data;
       DBG("MQTT - Got mqtt_do_auth_event!\n");
@@ -2225,6 +2221,7 @@ PROCESS_THREAD(mqtt_process, ev, data)
         }
       }
     }
+#endif
   }
   PROCESS_END();
 }
@@ -2251,10 +2248,6 @@ mqtt_init(void)
     mqtt_do_auth_event = process_alloc_event();
 
     list_init(mqtt_conn_list);
-#if MQTT_5
-    memb_init(&props_mem);
-    memb_init(&prop_lists_mem);
-#endif
 
     process_start(&mqtt_process, NULL);
     inited = 1;
@@ -2289,10 +2282,6 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
   mqtt_init();
 
   list_add(mqtt_conn_list, conn);
-#if MQTT_5
-  LIST_STRUCT_INIT(conn, out_props);
-  LIST_STRUCT_INIT(&(conn->will), properties);
-#endif
 
   DBG("MQTT - Registered successfully\n");
 
@@ -2535,6 +2524,10 @@ mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
 #endif
 }
 /*---------------------------------------------------------------------------*/
+#if MQTT_5
+/*----------------------------------------------------------------------------*/
+/* MQTTv5-specific functions */
+/*----------------------------------------------------------------------------*/
 /*
  * Send authentication data to broker.
  *
@@ -2552,14 +2545,14 @@ mqtt_auth(struct mqtt_connection *conn,
                                                  auth_payload->auth_method.len);
 
   if(auth_payload->auth_method.len) {
-    (void)register_prop(&conn,
+    (void)register_prop(conn,
                         MQTT_FHDR_MSG_TYPE_AUTH,
                         MQTT_VHDR_PROP_AUTH_METHOD,
                         &(auth_payload->auth_method));
   }
 
   if(auth_payload->auth_data.len) {
-    (void)register_prop(&conn,
+    (void)register_prop(conn,
                         MQTT_FHDR_MSG_TYPE_AUTH,
                         MQTT_VHDR_PROP_AUTH_DATA,
                         &(auth_payload->auth_data));
@@ -2573,42 +2566,7 @@ mqtt_auth(struct mqtt_connection *conn,
   return MQTT_STATUS_OK;
 }
 /*----------------------------------------------------------------------------*/
-/* MQTTv5-specific functions */
-/*----------------------------------------------------------------------------*/
-# if MQTT_5
-/*
- * Functions to manipulate property lists
- */
-/*----------------------------------------------------------------------------*/
-/* Creates a property list for the requested message type */
-void
-create_prop_list(struct mqtt_connection *conn, mqtt_msg_type_t msg,
-                 struct mqtt_prop_list_t **prop_list_out)
-{
-  DBG("MQTT - Creating Property List for message type %i\n", msg);
-
-  *prop_list_out = memb_alloc(&prop_lists_mem);
-
-  if(!(*prop_list_out)) {
-    DBG("MQTT - Error, allocated too many property lists (max %i)\n", MQTT_MAX_OUT_PROP_LISTS);
-    return;
-  }
-
-  DBG("MQTT - Allocated Property list for message type %i\n", msg);
-
-  (*prop_list_out)->msg_type = msg;
-
-  LIST_STRUCT_INIT(*prop_list_out, props);
-
-  DBG("MQTT - mem %p prop_list msg %i next %p\n", *prop_list_out, (*prop_list_out)->msg_type, (*prop_list_out)->next);
-
-  (*prop_list_out)->properties_len = 0;
-  (*prop_list_out)->properties_len_enc_bytes = 1; /* 1 byte needed for len = 0 */
-
-  list_add(conn->out_props, *prop_list_out);
-}
-/*----------------------------------------------------------------------------*/
-void
+static void
 encode_prop_fixed_len_int(struct mqtt_out_property_t **prop_out,
                           int val, uint8_t len)
 {
@@ -2629,7 +2587,7 @@ encode_prop_fixed_len_int(struct mqtt_out_property_t **prop_out,
   (*prop_out)->property_len = len;
 }
 
-void
+static void
 encode_prop_utf8(struct mqtt_out_property_t **prop_out,
                  const char *str)
 {
@@ -2651,7 +2609,7 @@ encode_prop_utf8(struct mqtt_out_property_t **prop_out,
   (*prop_out)->property_len = str_len + 2;
 }
 
-void
+static void
 encode_prop_binary(struct mqtt_out_property_t **prop_out,
                    const char *data, int data_len)
 {
@@ -2669,7 +2627,7 @@ encode_prop_binary(struct mqtt_out_property_t **prop_out,
   (*prop_out)->property_len = data_len + 2;
 }
 
-void
+static void
 encode_prop_var_byte_int(struct mqtt_out_property_t **prop_out,
                          int val)
 {
@@ -2690,8 +2648,6 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
             va_list args)
 {
   DBG("MQTT - Creating property with ID %i\n", prop_id);
-
-  *prop_out = (struct mqtt_out_property_t *)memb_alloc(&props_mem);
 
   if(!(*prop_out)) {
     DBG("MQTT - Error, allocated too many properties (max %i)\n", MQTT_MAX_OUT_PROPS);
@@ -2798,146 +2754,12 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
   default:
     DBG("MQTT - Error, no such property '%i'\n", prop_id);
     *prop_out = NULL;
-    memb_free(&props_mem, *prop_out);
     return 0;
   }
 
   DBG("MQTT - Property encoded length %i\n", (*prop_out)->property_len);
 
   return (*prop_out)->property_len;
-}
-/*----------------------------------------------------------------------------*/
-uint8_t
-register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
-              mqtt_vhdr_prop_t prop_id, ...)
-{
-  struct mqtt_prop_list_t *prop_list;
-  struct mqtt_out_property_t *prop;
-  va_list args;
-  uint32_t prop_len;
-
-  va_start(args, prop_id);
-
-  // TODO: check that the property is compatible with the message
-
-  DBG("MQTT - Searching for prop list for msg %i\n", msg);
-
-  /* Get property list for selected msg type */
-  if(!find_prop_list(conn, msg, &prop_list)) {
-    create_prop_list(conn, msg, &prop_list);
-  } else {
-    DBG("MQTT - Found prop list at %p msg %i\n", prop_list, prop_list->msg_type);
-  }
-
-  if(!prop_list) {
-    DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
-    va_end(args);
-    return 1;
-  }
-
-  DBG("MQTT - prop list %p msg %i nxt %p\n", prop_list, prop_list->msg_type, prop_list->next);
-
-  prop_len = encode_prop(&prop, prop_id, args);
-
-  if(prop) {
-    DBG("MQTT - Adding prop %p to prop_list %p\n", prop, prop_list);
-    list_add(prop_list->props, prop);
-    prop_list->properties_len += 1; /* Property ID */
-    prop_list->properties_len += prop_len;
-    encode_var_byte_int(
-        prop_list->properties_len_enc,
-        &(prop_list->properties_len_enc_bytes),
-        prop_list->properties_len);
-    DBG("MQTT - New prop_list length %i\n", prop_list->properties_len);
-  } else {
-    DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
-    va_end(args);
-    return 1;
-  }
-
-  va_end(args);
-  return 0;
-}
-/*----------------------------------------------------------------------------*/
-/* Prints all properties in the given property list (debug)
- * If ID == MQTT_VHDR_PROP_ANY, prints all properties, otherwise it filters them
- * by property ID
- */
-void
-list_props_in_list(struct mqtt_prop_list_t *prop_list,  mqtt_vhdr_prop_t prop_id)
-{
-  struct mqtt_out_property_t *prop;
-
-  if(prop_list == NULL || prop_list->props == NULL) {
-    DBG("MQTT - Prop list empty\n");
-  } else {
-    prop = (struct mqtt_out_property_t *) list_head(prop_list->props);
-
-    do {
-      if(prop != NULL && (prop->id == prop_id || prop_id == MQTT_VHDR_PROP_ANY)) {
-        DBG("Property %p ID %i len %i\n", prop, prop->id, prop->property_len);
-      }
-      prop = (struct mqtt_out_property_t *) list_item_next(prop);
-    } while(prop != NULL);
-  }
-}
-/*----------------------------------------------------------------------------*/
-/* Prints all properties for a given message (debug) */
-void
-list_all_props(struct mqtt_connection *conn)
-{
-  struct mqtt_prop_list_t *prop_list;
-
-  DBG("MQTT - Listing all properties\n");
-
-  prop_list = (struct mqtt_prop_list_t *) list_head(conn->out_props);
-
-  do {
-    if(prop_list != NULL) {
-      DBG("Property list %p msg type %i\n", prop_list, prop_list->msg_type);
-      list_props_in_list(prop_list, MQTT_VHDR_PROP_ANY);
-    }
-    prop_list = (struct mqtt_prop_list_t *) list_item_next(prop_list);
-  } while(prop_list != NULL);
-}
-/*----------------------------------------------------------------------------*/
-/* Retrieves the property list for the requested message type and prints
- * all the properties in that list (debug)
- */
-void
-list_props_by_msg(struct mqtt_connection *conn, mqtt_msg_type_t msg)
-{
-  struct mqtt_prop_list_t *prop_list;
-
-  DBG("MQTT - Searching for prop list for msg %i\n", msg);
-
-  /* Get property list for selected msg type */
-  if(!find_prop_list(conn, msg, &prop_list)) {
-    DBG("MQTT - No prop list for msg %i\n", msg);
-  } else {
-    DBG("MQTT - Found prop list for msg %i\n", msg);
-    list_props_in_list(prop_list, MQTT_VHDR_PROP_ANY);
-  }
-}
-/*----------------------------------------------------------------------------*/
-/* Retrieves the property list for the requested message type and prints
- * the properties with the requested ID in that list (debug)
- */
-void
-list_props_by_msg_and_id(struct mqtt_connection *conn, mqtt_msg_type_t msg,
-                         mqtt_vhdr_prop_t prop_id)
-{
-  struct mqtt_prop_list_t *prop_list;
-
-  DBG("MQTT - Searching for prop list for msg %i\n", msg);
-
-  /* Get property list for selected msg type */
-  if(!find_prop_list(conn, msg, &prop_list)) {
-    DBG("MQTT - No prop list for msg %i\n", msg);
-  } else {
-    DBG("MQTT - Found prop list for msg %i\n", msg);
-    list_props_in_list(prop_list, prop_id);
-  }
 }
 #endif
 /*----------------------------------------------------------------------------*/
