@@ -37,6 +37,7 @@ COOJA.testlog
 *.sky
 *.firmware
 *.cc26x0-cc13x0
+*.z1
 *.zoul
 
 # do not ignore platform makefiles
@@ -63,7 +64,3 @@ summary
 tests/[0-9][0-9]-*/org/
 tests/18-coap-lwm2m/Californium.properties
 tests/18-coap-lwm2m/leshan-server-demo*.jar
-
-# x86 UEFI files
-cpu/x86/uefi/Makefile.uefi
-cpu/x86/uefi/edk2
