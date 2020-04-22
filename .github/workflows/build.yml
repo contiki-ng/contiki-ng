@@ -40,20 +40,8 @@ jobs:
 
     # Construct the correct docker container image tag corresponding to this branch/pull
     - name: Figure out correct docker image tag
-      run: 
+      run:
           echo ::set-env name=DOCKER_IMG::$DOCKER_BASE_IMG:$(git log -1 --oneline -- tools/docker/ | cut -d" " -f1)
-
-    - name: Try to download image from dockerhub
-      run: |
-          echo "Using $DOCKER_IMG for this run"
-          echo "Pulling image $DOCKER_IMG from dockerhub";
-          docker pull $DOCKER_IMG
-          echo ::set-env name=DOCKER_NEED_BUILD::$?
-          
-    - name: Build docker image if required
-      if: env.DOCKER_NEED_BUILD != '0'
-      run: echo "Would build image"
-          
 
     # Try to download the image from dockerhub. If it works, use it.
     #
@@ -65,6 +53,40 @@ jobs:
     # If the test was triggered by a branch update (e.g. a PR merge) then push
     # the new image to dockerhub. This will only happen for builds against
     # contiki-ng/contiki-ng, not for builds on forks.
+    - name: Try to download image from dockerhub
+      run: |
+          echo "Using $DOCKER_IMG for this run"
+          echo "Pulling image $DOCKER_IMG from dockerhub";
+          docker pull $DOCKER_IMG
+          echo ::set-env name=DOCKER_NEED_BUILD::$?
+
+    - name: Build docker image if required
+      if: env.DOCKER_NEED_BUILD != '0'
+      run: |
+          echo $DOCKER_IMG "does not exist or pull failed"
+          echo "This is normal for PR builds and for builds on forks"
+          echo "Building from dockerfile"
+          docker build tools/docker -t $DOCKER_IMG
+
+    - name: Push image to dockerhub
+      #if: github.repository == 'contiki-ng/contiki-ng' && github.even == 'pull_request'
+      run: |
+        echo "This is a branch build that updates the container. Push image to Dockerhub"
+        echo ${{ github.repository }}
+        echo ${{ github.event_name }}
+        #echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
+        #docker push $DOCKER_IMG;
+
+        #if [ $TRAVIS_REPO_SLUG == contiki-ng/contiki-ng ] && [ $TRAVIS_PULL_REQUEST == false ]; then
+
+    # If this was a merge on master or develop then push to dockerhub an
+    # additional tag
+    - name: Push additional tag to dockerhub for master/develop
+      run: |
+        echo "This is a merge in branch $TRAVIS_BRANCH";
+        echo "Push also $DOCKER_BASE_IMG:$TRAVIS_BRANCH";
+        docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$TRAVIS_BRANCH;
+        #docker push $DOCKER_BASE_IMG:$TRAVIS_BRANCH;
 
     # Clone the repo used for out-of-tree builds if required
     - name: Clone the repo used for out-of-tree builds if required
