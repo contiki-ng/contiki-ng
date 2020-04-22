@@ -1,0 +1,85 @@
+# Main Contiki-NG CO workflow
+# Comprises a matrix-generated set of jobs that execute our CI test suite
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ wip/gh-actions ]
+  pull_request:
+    branches: [ wip/gh-actions ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build", which is replicated
+  # as multiple jobs using strategy.matrix below
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    env:
+        OUT_OF_TREE_TEST_PATH: out-of-tree-tests
+        OUT_OF_TREE_TEST_VER: 2869ae7
+        DOCKER_BASE_IMG: contiker/contiki-ng
+
+    # Allow all jobs in the strategy matrix to conclude even if one fails
+    continue-on-error: true
+
+    strategy:
+        fail-fast: false
+        matrix:
+            test: [Builds]
+#            test: [Builds, Cooja Simulations, Cooja + Script, Scripts]
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      with:
+          fetch-depth: '50'
+
+    # Construct the correct docker container image tag corresponding to this branch/pull
+    - name: Figure out correct docker image tag
+      run: 
+          echo ::set-env name=DOCKER_IMG::$DOCKER_BASE_IMG:$(git log -1 --oneline -- tools/docker/ | cut -d" " -f1)
+
+    - name: Try to download image from dockerhub
+      run: |
+          echo "Using $DOCKER_IMG for this run"
+          echo "Pulling image $DOCKER_IMG from dockerhub";
+          echo ::set-env name=DOCKER_NEED_BUILD::$(docker pull $DOCKER_IMG)
+          
+    - name: Build docker image if required
+      #if: $DOCKER_NEED_BUILD != 0
+      run: echo "Would build image"
+          
+
+    # Try to download the image from dockerhub. If it works, use it.
+    #
+    # If however it fails then we are most likely looking at a branch or pull
+    # that touched tools/docker. In this case, build the image.
+    #
+    # Any build error will count as Travis test failure.
+    #
+    # If the test was triggered by a branch update (e.g. a PR merge) then push
+    # the new image to dockerhub. This will only happen for builds against
+    # contiki-ng/contiki-ng, not for builds on forks.
+
+    # Clone the repo used for out-of-tree builds if required
+    - name: Clone the repo used for out-of-tree builds if required
+      if: matrix.test == 'Builds'
+      run: |
+          mkdir -p $OUT_OF_TREE_TEST_PATH
+          git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH
+          cd $OUT_OF_TREE_TEST_PATH
+          git checkout $OUT_OF_TREE_TEST_VER
+
+    # Fire up the container and run corresponding tests
+    - name: Execute tests
+      run: |
+           'printf "\n\n>>>>> Running suite: $TEST_NAME ($TESTS) <<<<<\n"'
+           #for TEST in $TESTS; do printf "\n\n--- Running test $TEST:\n"; docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -v $OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST"; done
+           'printf "\n\n>>>>>> Checking all tests <<<<<\n"'
+           RET=0
+           #for TEST in $TESTS; do $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST || RET=1; done
+           #exit $RET
