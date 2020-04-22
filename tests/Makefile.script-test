@@ -5,7 +5,7 @@ CONTIKI=../..
 
 all: clean summary
 
-summary: cooja $(TESTLOGS)
+summary: $(TESTLOGS)
 	@cat *.testlog > summary
 	@echo "========== Summary =========="
 	@cat summary
@@ -16,8 +16,3 @@ summary: cooja $(TESTLOGS)
 
 clean:
 	@rm -f *.*log report summary
-
-cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
-
-$(CONTIKI)/tools/cooja/dist/cooja.jar:
-	(cd $(CONTIKI)/tools/cooja; ant jar)
