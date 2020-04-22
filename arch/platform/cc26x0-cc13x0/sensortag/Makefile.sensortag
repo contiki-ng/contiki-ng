@@ -9,4 +9,4 @@ BOARD_SOURCEFILES += hdc-1000-sensor.c mpu-9250-sensor.c xmem.c
 BOARD_SOURCEFILES += buzzer.c
 BOARD_SOURCEFILES += board.c board-i2c.c
 
-MODULES += arch/dev/ext-flash
+MODULES += $(CONTIKI_NG_DRIVERS_STORAGE_DIR)/ext-flash
