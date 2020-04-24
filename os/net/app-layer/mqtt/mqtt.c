@@ -893,7 +893,7 @@ parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event)
   DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
 
   event->auth_data.len = 0;
-  event->auth_method.len = 0;
+  event->auth_method.length = 0;
 
   prop_len = get_next_in_prop(conn, &prop_id, data);
   while(prop_len) {
@@ -904,8 +904,8 @@ parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event)
       break;
     }
     case MQTT_VHDR_PROP_AUTH_METHOD: {
-      event->auth_method.len = prop_len - 2; // 2 bytes are used to encode len
-      memcpy(event->auth_method.data, data, prop_len - 2);
+      event->auth_method.length = prop_len - 2; // 2 bytes are used to encode len
+      memcpy(event->auth_method.string, data, prop_len - 2);
       break;
     }
     default:
@@ -2528,29 +2528,10 @@ mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
  */
 mqtt_status_t
 mqtt_auth(struct mqtt_connection *conn,
-          mqtt_auth_event_t *auth_payload,
           mqtt_auth_type_t auth_type,
           struct mqtt_prop_list_t *prop_list)
 {
   DBG("MQTT - Call to mqtt_auth...\n");
-
-  // TODO: remove old property list
-  DBG("MQTT - Auth data len %i method len %i\n", auth_payload->auth_data.len,
-                                                 auth_payload->auth_method.len);
-  // TODO
-//  if(auth_payload->auth_method.len) {
-//    (void)register_prop(conn,
-//                        MQTT_FHDR_MSG_TYPE_AUTH,
-//                        MQTT_VHDR_PROP_AUTH_METHOD,
-//                        &(auth_payload->auth_method));
-//  }
-//
-//  if(auth_payload->auth_data.len) {
-//    (void)register_prop(conn,
-//                        MQTT_FHDR_MSG_TYPE_AUTH,
-//                        MQTT_VHDR_PROP_AUTH_DATA,
-//                        &(auth_payload->auth_data));
-//  }
 
   conn->out_packet.fhdr = MQTT_FHDR_MSG_TYPE_AUTH;
   conn->out_packet.remaining_length = 1; // for the auth reason code

@@ -794,7 +794,6 @@ send_auth(mqtt_auth_event_t *auth_data, mqtt_auth_type_t auth_type)
   /* Connect to MQTT server */
   mqtt_auth(&conn, auth_data, auth_type);
 
-  /* handle (re)auth state TODO??*/
   if(state != STATE_CONNECTING) {
     LOG_DBG("MQTT reauthenticating\n");
   }

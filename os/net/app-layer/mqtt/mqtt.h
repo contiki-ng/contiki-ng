@@ -392,7 +392,7 @@ typedef struct {
 } mqtt_bin_data_t;
 
 typedef struct {
-  mqtt_bin_data_t auth_method;
+  struct mqtt_string auth_method;
   mqtt_bin_data_t auth_data;
 } mqtt_auth_event_t;
 
@@ -791,7 +791,6 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
 * This function send an MQTT authentication message.
 */
 mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
-                        mqtt_auth_event_t *auth_payload,
                         mqtt_auth_type_t auth_type,
                         struct mqtt_prop_list_t *prop_list);
 
