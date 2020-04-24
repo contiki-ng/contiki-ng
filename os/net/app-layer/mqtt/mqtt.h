@@ -99,6 +99,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 /*---------------------------------------------------------------------------*/
 /* Protocol constants */
 #define MQTT_PROTOCOL_VERSION_3_1    3
