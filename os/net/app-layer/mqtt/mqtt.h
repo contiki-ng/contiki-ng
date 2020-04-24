@@ -413,11 +413,6 @@ struct mqtt_message {
 };
 
 struct mqtt_prop_list_t {
-  /* Used by the list interface, must be first in the struct. */
-  struct mqtt_prop_list_t *next;
-
-  /* Message type */
-  mqtt_msg_type_t msg_type;
   /* Total length of properties */
   uint32_t properties_len;
   uint8_t  properties_len_enc[MQTT_MAX_PROP_LEN_BYTES];
@@ -590,6 +585,7 @@ struct mqtt_connection {
   /* Server Capabilities */
   /* Binary capabilities (default: enabled) */
   uint8_t srv_feature_en;
+  struct mqtt_prop_list_t *out_props;
 #endif
 };
 /* This is the API exposed to the user. */
@@ -702,7 +698,8 @@ mqtt_status_t mqtt_publish(struct mqtt_connection *conn,
 #if MQTT_5
                            mqtt_retain_t retain,
                            uint8_t topic_alias,
-                           mqtt_topic_alias_en_t topic_alias_en);
+                           mqtt_topic_alias_en_t topic_alias_en,
+                           struct mqtt_prop_list_t *prop_list);
 #else
                            mqtt_retain_t retain);
 #endif
@@ -759,8 +756,7 @@ void encode_var_byte_int(uint8_t *vbi_out,
 /*---------------------------------------------------------------------------*/
 /* MQTTv5-specific functions */
 void print_input_props(struct mqtt_connection *conn);
-uint8_t register_prop(struct mqtt_connection *conn, mqtt_msg_type_t msg,
-                      mqtt_vhdr_prop_t prop_id, ...);
+
 uint32_t
 encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
             va_list args);

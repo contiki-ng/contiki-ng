@@ -846,7 +846,7 @@ print_input_props(struct mqtt_connection *conn)
         uint32_t len2;
 
         len1 = (data[0] << 8)+ data[1];
-        len2 = (data[len1 + MQTT_STRING_LEN_SIZE]<<8)+ data[len1 + MQTT_STRING_LEN_SIZE + 1];
+        len2 = (data[len1 + MQTT_STRING_LEN_SIZE] << 8)+ data[len1 + MQTT_STRING_LEN_SIZE + 1];
 
         DBG("MQTT - Decoded property value [(%i %i) %.*s, (%i %i) %.*s]",
             data[0], data[1], len1, data + MQTT_STRING_LEN_SIZE,
@@ -995,7 +995,8 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   struct mqtt_prop_list_t *prop_list;
   struct mqtt_prop_list_t *will_props;
   uint8_t found_props;
-  will_props = (struct mqtt_prop_list_t *) list_head(conn->will.properties);
+//  will_props = (struct mqtt_prop_list_t *) list_head(conn->will.properties);
+  will_props = NULL; // TODO
 
 //  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
   found_props = 0;
@@ -1058,7 +1059,7 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
 
 #if MQTT_5
   /* Write Properties */
-  write_out_props(pt, conn, prop_list);
+  write_out_props(pt, conn, conn->out_props);
 #endif
 
   /* Write Payload */
@@ -1207,7 +1208,7 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
 
   #if MQTT_5
   /* Write Properties */
-  write_out_props(pt, conn, prop_list);
+  write_out_props(pt, conn, conn->out_props);
   #endif
 
   /* Write Payload */
@@ -1312,12 +1313,12 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_BEGIN(pt);
 
 #if MQTT_5
-  struct mqtt_prop_list_t *prop_list;
-  uint8_t found_props;
+//  struct mqtt_prop_list_t *prop_list;
+//  uint8_t found_props;
 
 //  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_PUBLISH, &prop_list);
-  found_props = 0;
-  prop_list = NULL;
+//  found_props = 0;
+//  prop_list = NULL;
 #endif
 
   DBG("MQTT - Sending publish message! topic %s topic_length %i\n",
@@ -1341,8 +1342,8 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
 
 #if MQTT_5
   conn->out_packet.remaining_length +=
-      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
-                  : 1;
+      conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
+                      : 1;
 #endif
 
   encode_var_byte_int(conn->out_packet.remaining_length_enc,
@@ -1375,7 +1376,7 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
 
 #if MQTT_5
   /* Write Properties */
-  write_out_props(pt, conn, prop_list);
+  write_out_props(pt, conn, conn->out_props);
 #endif
 
   /* Write Payload */
@@ -1485,7 +1486,7 @@ PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTE(conn, conn->out_packet.auth_reason_code);
 
   /* Write Properties */
-  write_out_props(pt, conn, prop_list);
+  write_out_props(pt, conn, conn->out_props);
 
   /* No Payload */
   send_out_buffer(conn);
@@ -2221,6 +2222,8 @@ PROCESS_THREAD(mqtt_process, ev, data)
         }
       }
     }
+  // clear output properties; the next message sent should overwrite them
+  conn->out_props = NULL;
 #endif
   }
   PROCESS_END();
@@ -2428,7 +2431,8 @@ mqtt_publish(struct mqtt_connection *conn, uint16_t *mid, char *topic,
              mqtt_qos_level_t qos_level,
 #if MQTT_5
              mqtt_retain_t retain,
-             uint8_t topic_alias, mqtt_topic_alias_en_t topic_alias_en)
+             uint8_t topic_alias, mqtt_topic_alias_en_t topic_alias_en,
+             struct mqtt_prop_list_t *prop_list)
 #else
              mqtt_retain_t retain)
 #endif
@@ -2474,6 +2478,10 @@ mqtt_publish(struct mqtt_connection *conn, uint16_t *mid, char *topic,
   if(mid) {
     *mid = conn->out_packet.mid;
   }
+
+#if MQTT_5
+  conn->out_props = prop_list;
+#endif
 
   process_post(&mqtt_process, mqtt_do_publish_event, conn);
   return MQTT_STATUS_OK;
@@ -2543,20 +2551,20 @@ mqtt_auth(struct mqtt_connection *conn,
   // TODO: remove old property list
   DBG("MQTT - Auth data len %i method len %i\n", auth_payload->auth_data.len,
                                                  auth_payload->auth_method.len);
-
-  if(auth_payload->auth_method.len) {
-    (void)register_prop(conn,
-                        MQTT_FHDR_MSG_TYPE_AUTH,
-                        MQTT_VHDR_PROP_AUTH_METHOD,
-                        &(auth_payload->auth_method));
-  }
-
-  if(auth_payload->auth_data.len) {
-    (void)register_prop(conn,
-                        MQTT_FHDR_MSG_TYPE_AUTH,
-                        MQTT_VHDR_PROP_AUTH_DATA,
-                        &(auth_payload->auth_data));
-  }
+  // TODO
+//  if(auth_payload->auth_method.len) {
+//    (void)register_prop(conn,
+//                        MQTT_FHDR_MSG_TYPE_AUTH,
+//                        MQTT_VHDR_PROP_AUTH_METHOD,
+//                        &(auth_payload->auth_method));
+//  }
+//
+//  if(auth_payload->auth_data.len) {
+//    (void)register_prop(conn,
+//                        MQTT_FHDR_MSG_TYPE_AUTH,
+//                        MQTT_VHDR_PROP_AUTH_DATA,
+//                        &(auth_payload->auth_data));
+//  }
 
   conn->out_packet.fhdr = MQTT_FHDR_MSG_TYPE_AUTH;
   conn->out_packet.remaining_length = 1; // for the auth reason code
