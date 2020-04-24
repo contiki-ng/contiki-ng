@@ -988,13 +988,13 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   /* For connect properties */
   conn->out_packet.remaining_length +=
       conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
-                  : 1;
+                      : 1;
 
   /* For will properties */
   if(conn->connect_vhdr_flags & MQTT_VHDR_WILL_FLAG) {
   conn->out_packet.remaining_length +=
       will_props ? will_props->properties_len + will_props->properties_len_enc_bytes
-                              : 1;
+                 : 1;
   }
 #endif
 
@@ -1148,7 +1148,7 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
 #if MQTT_5
   conn->out_packet.remaining_length +=
       conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
-                  : 1;
+                      : 1;
 #endif
 
   encode_var_byte_int(conn->out_packet.remaining_length_enc,
@@ -1413,7 +1413,7 @@ PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
 
   conn->out_packet.remaining_length +=
       conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
-                  : 1;
+                      : 1;
 
   encode_var_byte_int(conn->out_packet.remaining_length_enc,
                       &conn->out_packet.remaining_length_enc_bytes,
