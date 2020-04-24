@@ -149,7 +149,16 @@
 #define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
 #endif
 
+/*---------------------------------------------------------------------------*/
 /* MQTTv5 */
+/* Number of output property lists */
+#define MQTT_MAX_OUT_PROP_LISTS 1
+
+/* Number of output properties that will be declared, regardless of
+ * message type
+ */
+#define MQTT_MAX_OUT_PROPS 2
+
 /* Max length of 1 property in bytes */
 #define MQTT_MAX_PROP_LENGTH     32
 /* Max number of bytes in Variable Byte Integer representation of
@@ -158,6 +167,8 @@
 #define MQTT_MAX_PROP_LEN_BYTES   2
 /* Max number of topic aliases (when receiving) */
 #define MQTT_MAX_NUM_TOPIC_ALIASES 1
+
+#define MQTT_PROP_LIST_NONE NULL
 /*---------------------------------------------------------------------------*/
 /*
  * Debug configuration, this is similar but not exactly like the Debugging
@@ -170,15 +181,6 @@
 #else
 #define DBG(...)
 #endif /* DEBUG */
-/*---------------------------------------------------------------------------*/
-/* MQTTv5 */
-/* Number of output message types that will have property lists attached */
-#define MQTT_MAX_OUT_PROP_LISTS 1
-
-/* Number of output properties that will be declared, regardless of
- * message type
- */
-#define MQTT_MAX_OUT_PROPS 2
 /*---------------------------------------------------------------------------*/
 extern process_event_t mqtt_update_event;
 
@@ -629,7 +631,12 @@ mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
                            char *host,
                            uint16_t port,
                            uint16_t keep_alive,
+#if MQTT_5
+                           uint8_t clean_session,
+                           struct mqtt_prop_list_t *prop_list);
+#else
                            uint8_t clean_session);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Disconnects from a MQTT broker.
@@ -637,7 +644,12 @@ mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
  *
  * This function disconnects from a MQTT broker.
  */
+#if MQTT_5
+void mqtt_disconnect(struct mqtt_connection *conn,
+                     struct mqtt_prop_list_t *prop_list);
+#else
 void mqtt_disconnect(struct mqtt_connection *conn);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Subscribes to a MQTT topic.
@@ -655,7 +667,8 @@ mqtt_status_t mqtt_subscribe(struct mqtt_connection *conn,
 #if MQTT_5
                              mqtt_qos_level_t qos_level,
                              mqtt_nl_en_t nl, mqtt_rap_en_t rap,
-                             mqtt_retain_handling_t ret_handling);
+                             mqtt_retain_handling_t ret_handling,
+                             struct mqtt_prop_list_t *prop_list);
 #else
                              mqtt_qos_level_t qos_level);
 #endif
@@ -671,7 +684,12 @@ mqtt_status_t mqtt_subscribe(struct mqtt_connection *conn,
  */
 mqtt_status_t mqtt_unsubscribe(struct mqtt_connection *conn,
                                uint16_t *mid,
+#if MQTT_5
+                               char *topic,
+                               struct mqtt_prop_list_t *prop_list);
+#else
                                char *topic);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Publish to a MQTT topic.
@@ -774,7 +792,8 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
 */
 mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
                         mqtt_auth_event_t *auth_payload,
-                        mqtt_auth_type_t auth_type);
+                        mqtt_auth_type_t auth_type,
+                        struct mqtt_prop_list_t *prop_list);
 
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */

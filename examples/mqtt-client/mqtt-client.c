@@ -591,6 +591,7 @@ print_props(struct mqtt_prop_list_t *prop_list,  mqtt_vhdr_prop_t prop_id)
 /*---------------------------------------------------------------------------*/
 uint8_t
 register_prop(struct mqtt_prop_list_t **prop_list,
+              struct mqtt_out_property_t **prop_out,
               mqtt_msg_type_t msg,
               mqtt_vhdr_prop_t prop_id, ...)
 {
@@ -599,6 +600,8 @@ register_prop(struct mqtt_prop_list_t **prop_list,
   uint32_t prop_len;
 
   va_start(args, prop_id);
+
+  prop_out = NULL;
 
   /* check that the property is compatible with the message? */
 
@@ -611,6 +614,14 @@ register_prop(struct mqtt_prop_list_t **prop_list,
   DBG("MQTT - prop list %p\n", prop_list);
 
   prop = (struct mqtt_out_property_t *)memb_alloc(&props_mem);
+
+  if(!prop) {
+    DBG("MQTT - Error, allocated too many properties (max %i)\n", MQTT_MAX_OUT_PROPS);
+    return 1;
+  }
+
+  DBG("MQTT - Allocated prop %p\n", prop);
+
   prop_len = encode_prop(&prop, prop_id, args);
 
   if(prop) {
@@ -630,6 +641,9 @@ register_prop(struct mqtt_prop_list_t **prop_list,
     return 1;
   }
 
+  if(prop_out) {
+    prop_out = &prop;
+  }
   va_end(args);
   return 0;
 }
@@ -643,7 +657,8 @@ subscribe(void)
 
 #if MQTT_5
   status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0,
-                          MQTT_NL_OFF, MQTT_RAP_OFF, MQTT_RET_H_SEND_ALL);
+                          MQTT_NL_OFF, MQTT_RAP_OFF, MQTT_RET_H_SEND_ALL,
+                          MQTT_PROP_LIST_NONE);
 #else
   status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
 #endif
@@ -663,7 +678,7 @@ publish(void)
   int i;
   char def_rt_str[64];
 #if MQTT_5
-  uint8_t prop_err = 0;
+  static uint8_t prop_err = 0;
 #endif
 
   seq_nr_value++;
@@ -738,6 +753,7 @@ publish(void)
                  publish_props);
 
     prop_err = register_prop(&publish_props,
+                             NULL,
                              MQTT_FHDR_MSG_TYPE_PUBLISH,
                              MQTT_VHDR_PROP_TOPIC_ALIAS,
                              PUB_TOPIC_ALIAS);
@@ -761,7 +777,12 @@ connect_to_broker(void)
   /* Connect to MQTT server */
   mqtt_connect(&conn, conf.broker_ip, conf.broker_port,
                (conf.pub_interval * 3) / CLOCK_SECOND,
+#if MQTT_5
+               MQTT_CLEAN_SESSION_ON,
+               MQTT_PROP_LIST_NONE);
+#else
                MQTT_CLEAN_SESSION_ON);
+#endif
 
   state = STATE_CONNECTING;
 }
@@ -825,9 +846,20 @@ state_machine(void)
     // TODO add remove prop function
     /* this will be sent with every publish packet */
     (void)register_prop(&publish_props,
+                        NULL,
                         MQTT_FHDR_MSG_TYPE_PUBLISH,
                         MQTT_VHDR_PROP_USER_PROP,
                         "Contiki", "v4.4");
+
+    struct mqtt_out_property_t *prop_out;
+
+    (void)register_prop(&publish_props,
+                        &prop_out,
+                        MQTT_FHDR_MSG_TYPE_PUBLISH,
+                        MQTT_VHDR_PROP_USER_PROP,
+                        "REMOVE THIS", "YES");
+
+//    LOG_DBG("Out prop %p\n", prop_out);
 
     print_props(publish_props, MQTT_VHDR_PROP_ANY);
 #endif
@@ -905,7 +937,11 @@ state_machine(void)
        RECONNECT_ATTEMPTS == RETRY_FOREVER) {
       /* Disconnect and backoff */
       clock_time_t interval;
+#if MQTT_5
+      mqtt_disconnect(&conn, MQTT_PROP_LIST_NONE);
+#else
       mqtt_disconnect(&conn);
+#endif
       connect_attempt++;
 
       interval = connect_attempt < 3 ? RECONNECT_INTERVAL << connect_attempt :

@@ -496,40 +496,8 @@ reset_packet(struct mqtt_in_packet *packet)
 }
 /*---------------------------------------------------------------------------*/
 # if MQTT_5
-/*
- * Searches the property list of the connection for a list matching
- * the message type
- */
-//uint8_t
-//find_prop_list(struct mqtt_connection *conn, mqtt_msg_type_t msg,
-//               struct mqtt_prop_list_t **list_out)
-//{
-//  struct mqtt_prop_list_t *prop_list;
-//
-//  prop_list = (struct mqtt_prop_list_t *) list_head(conn->out_props);
-//  (*list_out) = NULL;
-//
-//  do {
-//    DBG("prop_list %p\n", prop_list);
-//    if(prop_list != NULL) {
-//      DBG("prop_list %p; nxt %p; type %i\n", prop_list, prop_list->next, prop_list->msg_type);
-//
-//      if(prop_list->msg_type == msg) {
-//        DBG("Found property list type %i\n", prop_list->msg_type);
-//        (*list_out) = prop_list;
-//        return 1;
-//      }
-//    }
-//    prop_list = (struct mqtt_prop_list_t *) list_item_next(prop_list);
-//  } while(prop_list != NULL);
-//
-//  DBG("Couldn't find property list type %i\n", msg);
-//
-//  return 0;
-//}
-/*---------------------------------------------------------------------------*/
 static void
-decode_in_props(struct mqtt_connection *conn)
+decode_input_props(struct mqtt_connection *conn)
 {
   uint8_t prop_len_bytes;
 
@@ -992,15 +960,9 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_BEGIN(pt);
 
 #if MQTT_5
-  struct mqtt_prop_list_t *prop_list;
   struct mqtt_prop_list_t *will_props;
-  uint8_t found_props;
 //  will_props = (struct mqtt_prop_list_t *) list_head(conn->will.properties);
   will_props = NULL; // TODO
-
-//  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_CONNECT, &prop_list);
-  found_props = 0;
-  prop_list = NULL;
 #endif
 
   DBG("MQTT - Sending CONNECT message...\n");
@@ -1024,7 +986,7 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
 #if MQTT_5
   /* For connect properties */
   conn->out_packet.remaining_length +=
-      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
+      conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
                   : 1;
 
   /* For will properties */
@@ -1116,7 +1078,11 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   if(timer_expired(&conn->t)) {
     DBG("Timeout waiting for CONNACK\n");
     /* We stick to the letter of the spec here: Tear the connection down */
+#if MQTT_5
+    mqtt_disconnect(conn, MQTT_PROP_LIST_NONE);
+#else
     mqtt_disconnect(conn);
+#endif
   }
   reset_packet(&conn->in_packet);
 
@@ -1142,6 +1108,11 @@ PT_THREAD(disconnect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTE(conn, MQTT_FHDR_MSG_TYPE_DISCONNECT);
   PT_MQTT_WRITE_BYTE(conn, 0);
 
+#if MQTT_5
+/* Write Properties */
+  write_out_props(pt, conn, conn->out_props);
+#endif
+
   send_out_buffer(conn);
 
   /*
@@ -1160,15 +1131,6 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
 {
   PT_BEGIN(pt);
 
-#if MQTT_5
-  struct mqtt_prop_list_t *prop_list;
-  uint8_t found_props;
-
-//  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_SUBSCRIBE, &prop_list);
-  found_props = 0;
-  prop_list = NULL;
-#endif
-
   DBG("MQTT - Sending subscribe message! topic %s topic_length %i\n",
       conn->out_packet.topic,
       conn->out_packet.topic_length);
@@ -1184,7 +1146,7 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
 
 #if MQTT_5
   conn->out_packet.remaining_length +=
-      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
+      conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
                   : 1;
 #endif
 
@@ -1311,15 +1273,6 @@ static
 PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
 {
   PT_BEGIN(pt);
-
-#if MQTT_5
-//  struct mqtt_prop_list_t *prop_list;
-//  uint8_t found_props;
-
-//  found_props = find_prop_list(conn, MQTT_FHDR_MSG_TYPE_PUBLISH, &prop_list);
-//  found_props = 0;
-//  prop_list = NULL;
-#endif
 
   DBG("MQTT - Sending publish message! topic %s topic_length %i\n",
       conn->out_packet.topic,
@@ -1457,14 +1410,8 @@ PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
 {
   PT_BEGIN(pt);
 
-  struct mqtt_prop_list_t *prop_list;
-  uint8_t found_props;
-
-  found_props = 0;
-  prop_list = NULL;
-
   conn->out_packet.remaining_length +=
-      found_props ? (prop_list->properties_len + prop_list->properties_len_enc_bytes)
+      conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
                   : 1;
 
   encode_var_byte_int(conn->out_packet.remaining_length_enc,
@@ -1655,7 +1602,11 @@ handle_publish(struct mqtt_connection *conn)
 #if MQTT_PROTOCOL_VERSION >= MQTT_PROTOCOL_VERSION_3_1_1
   if(strlen(conn->in_publish_msg.topic) < conn->in_packet.topic_len) {
     DBG("NULL detected in received PUBLISH topic\n");
+#if MQTT_5
+    mqtt_disconnect(conn, MQTT_PROP_LIST_NONE);
+#else
     mqtt_disconnect(conn);
+#endif
     return MQTT_PUBLISH_ERR;
   }
 #endif
@@ -1823,7 +1774,7 @@ parse_vhdr(struct mqtt_connection *conn)
   }
 
   if(!conn->in_packet.has_props) {
-    decode_in_props(conn);
+    decode_input_props(conn);
   }
 #endif
 }
@@ -1939,7 +1890,7 @@ tcp_input(struct tcp_socket *s,
 
 #if MQTT_5
       if(!conn->in_packet.has_props) {
-        decode_in_props(conn);
+        decode_input_props(conn);
       }
 
       if(conn->in_publish_msg.first_chunk) {
@@ -2298,7 +2249,13 @@ mqtt_register(struct mqtt_connection *conn, struct process *app_process,
  */
 mqtt_status_t
 mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
-             uint16_t keep_alive, uint8_t clean_session)
+             uint16_t keep_alive,
+#if MQTT_5
+             uint8_t clean_session,
+             struct mqtt_prop_list_t *prop_list)
+#else
+             uint8_t clean_session)
+#endif
 {
   uip_ip6addr_t ip6addr;
   uip_ipaddr_t *ipaddr;
@@ -2332,19 +2289,32 @@ mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
    * connection will be initiated when the DNS lookup is finished, in the main
    * event loop.
    */
+#if MQTT_5
+  conn->out_props = prop_list;
+#endif
+
   process_post(&mqtt_process, mqtt_do_connect_tcp_event, conn);
 
   return MQTT_STATUS_OK;
 }
 /*----------------------------------------------------------------------------*/
 void
+#if MQTT_5
+mqtt_disconnect(struct mqtt_connection *conn,
+                struct mqtt_prop_list_t *prop_list)
+#else
 mqtt_disconnect(struct mqtt_connection *conn)
+#endif
 {
   if(conn->state != MQTT_CONN_STATE_CONNECTED_TO_BROKER) {
     return;
   }
 
   conn->state = MQTT_CONN_STATE_SENDING_MQTT_DISCONNECT;
+
+#if MQTT_5
+  conn->out_props = prop_list;
+#endif
 
   process_post(&mqtt_process, mqtt_do_disconnect_mqtt_event, conn);
 }
@@ -2354,7 +2324,8 @@ mqtt_subscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic,
 #if MQTT_5
                mqtt_qos_level_t qos_level,
                mqtt_nl_en_t nl, mqtt_rap_en_t rap,
-               mqtt_retain_handling_t ret_handling)
+               mqtt_retain_handling_t ret_handling,
+               struct mqtt_prop_list_t *prop_list)
 #else
                mqtt_qos_level_t qos_level)
 #endif
@@ -2392,12 +2363,22 @@ mqtt_subscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic,
   conn->out_packet.qos = qos_level;
 #endif
 
+#if MQTT_5
+  conn->out_props = prop_list;
+#endif
+
   process_post(&mqtt_process, mqtt_do_subscribe_event, conn);
   return MQTT_STATUS_OK;
 }
 /*----------------------------------------------------------------------------*/
 mqtt_status_t
-mqtt_unsubscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic)
+mqtt_unsubscribe(struct mqtt_connection *conn, uint16_t *mid,
+#if MQTT_5
+                 char *topic,
+                 struct mqtt_prop_list_t *prop_list)
+#else
+                 char *topic)
+#endif
 {
   if(conn->state != MQTT_CONN_STATE_CONNECTED_TO_BROKER) {
     return MQTT_STATUS_NOT_CONNECTED_ERROR;
@@ -2420,6 +2401,10 @@ mqtt_unsubscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic)
   if(mid) {
     *mid = conn->out_packet.mid;
   }
+
+#if MQTT_5
+  conn->out_props = prop_list;
+#endif
 
   process_post(&mqtt_process, mqtt_do_unsubscribe_event, conn);
   return MQTT_STATUS_OK;
@@ -2544,7 +2529,8 @@ mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
 mqtt_status_t
 mqtt_auth(struct mqtt_connection *conn,
           mqtt_auth_event_t *auth_payload,
-          mqtt_auth_type_t auth_type)
+          mqtt_auth_type_t auth_type,
+          struct mqtt_prop_list_t *prop_list)
 {
   DBG("MQTT - Call to mqtt_auth...\n");
 
@@ -2569,6 +2555,8 @@ mqtt_auth(struct mqtt_connection *conn,
   conn->out_packet.fhdr = MQTT_FHDR_MSG_TYPE_AUTH;
   conn->out_packet.remaining_length = 1; // for the auth reason code
   conn->out_packet.auth_reason_code = MQTT_VHDR_RC_CONTINUE_AUTH + auth_type;
+
+  conn->out_props = prop_list;
 
   process_post(&mqtt_process, mqtt_do_auth_event, conn);
   return MQTT_STATUS_OK;
@@ -2658,7 +2646,7 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
   DBG("MQTT - Creating property with ID %i\n", prop_id);
 
   if(!(*prop_out)) {
-    DBG("MQTT - Error, allocated too many properties (max %i)\n", MQTT_MAX_OUT_PROPS);
+    DBG("MQTT - Error, property target NULL!\n");
     return 0;
   }
 
