@@ -623,6 +623,7 @@ mqtt_status_t mqtt_register(struct mqtt_connection *conn,
  *        from the client. Shall be min 1.5 x report interval.
  * \param clean_session Request a new session and discard pending messages with
  *        QoS > 0, as well as client subscriptions
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or an error status
  *
  * This function connects to a MQTT broker.
@@ -641,6 +642,7 @@ mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
 /**
  * \brief Disconnects from a MQTT broker.
  * \param conn A pointer to the MQTT connection.
+ * \param prop_list Output properties (MQTTv5-only).
  *
  * This function disconnects from a MQTT broker.
  */
@@ -657,6 +659,10 @@ void mqtt_disconnect(struct mqtt_connection *conn);
  * \param mid A pointer to message ID.
  * \param topic A pointer to the topic to subscribe to.
  * \param qos_level Quality Of Service level to use. Currently supports 0, 1.
+ * \param nl No Local (MQTTv5-only).
+ * \param rap Retain As Published (MQTTv5-only).
+ * \param ret_handling Retain handling options (MQTTv5-only).
+ *
  * \return MQTT_STATUS_OK or some error status
  *
  * This function subscribes to a topic on a MQTT broker.
@@ -678,6 +684,7 @@ mqtt_status_t mqtt_subscribe(struct mqtt_connection *conn,
  * \param conn A pointer to the MQTT connection.
  * \param mid A pointer to message ID.
  * \param topic A pointer to the topic to unsubscribe from.
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or some error status
  *
  * This function unsubscribes from a topic on a MQTT broker.
@@ -703,6 +710,10 @@ mqtt_status_t mqtt_unsubscribe(struct mqtt_connection *conn,
  *        Client to a Server, the Server MUST store the Application Message
  *        and its QoS, so that it can be delivered to future subscribers whose
  *        subscriptions match its topic name
+ * \param topic_alias Topic alias to send (MQTTv5-only).
+ * \param topic_alias_en Control whether or not to discard topic and only send
+ *        topic alias s(MQTTv5-only).
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or some error status
  *
  * This function publishes to a topic on a MQTT broker.
@@ -741,6 +752,7 @@ void mqtt_set_username_password(struct mqtt_connection *conn,
  * \param topic A pointer to the Last Will topic.
  * \param message A pointer to the Last Will message (payload).
  * \param qos The desired QoS level.
+ * \param will_props Will message properties (MQTTv5-only).
  *
  * This function sets clients Last Will topic and message (payload).
  * If the Will Flag is set to 1 (using the function) this indicates that,
@@ -781,11 +793,11 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
 
 /*---------------------------------------------------------------------------*/
 /**
-* \brief Send authentication message.
+* \brief Send authentication message (MQTTv5-only).
 * \param conn A pointer to the MQTT connection.
-* \param auth_payload A pointer to auth data.
 * \param auth_type The type of auth to send (continue authentication or
 *        re-authentication).
+* \param prop_list Output properties.
 * \return MQTT_STATUS_OK or some error status
 *
 * This function send an MQTT authentication message.
