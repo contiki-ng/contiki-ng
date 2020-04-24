@@ -663,7 +663,7 @@ void mqtt_disconnect(struct mqtt_connection *conn);
  * \param nl No Local (MQTTv5-only).
  * \param rap Retain As Published (MQTTv5-only).
  * \param ret_handling Retain handling options (MQTTv5-only).
- *
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or some error status
  *
  * This function subscribes to a topic on a MQTT broker.
