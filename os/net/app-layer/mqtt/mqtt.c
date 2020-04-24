@@ -960,9 +960,10 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_BEGIN(pt);
 
 #if MQTT_5
-  struct mqtt_prop_list_t *will_props;
-//  will_props = (struct mqtt_prop_list_t *) list_head(conn->will.properties);
-  will_props = NULL; // TODO
+  struct mqtt_prop_list_t *will_props = MQTT_PROP_LIST_NONE;
+  if(conn->will.properties) {
+    will_props = (struct mqtt_prop_list_t *) list_head(conn->will.properties);
+  }
 #endif
 
   DBG("MQTT - Sending CONNECT message...\n");
