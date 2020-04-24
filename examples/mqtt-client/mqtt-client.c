@@ -141,8 +141,6 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 #define RECONNECT_INTERVAL         (CLOCK_SECOND * 2)
 
 /*---------------------------------------------------------------------------*/
-/* Control whether or not to perform authentication (MQTTv5) */
-#define MQTT_5_AUTH_EN             0
 /*
  * Number of times to try reconnecting to the broker.
  * Can be a limited number (e.g. 3, 10 etc) or can be set to RETRY_FOREVER
@@ -262,7 +260,14 @@ MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
 MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
 
 struct mqtt_prop_list_t *publish_props;
+
+/* Control whether or not to perform authentication (MQTTv5) */
+#define MQTT_5_AUTH_EN 0
+#if MQTT_5_AUTH_EN
+struct mqtt_prop_list_t *auth_props;
 #endif
+#endif
+
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
 /*---------------------------------------------------------------------------*/
@@ -543,6 +548,7 @@ init_config()
  * Functions to manipulate property lists
  */
 #if MQTT_5
+/*----------------------------------------------------------------------------*/
 /* Creates a property list for the requested message type */
 void
 create_prop_list(struct mqtt_prop_list_t **prop_list_out)
@@ -601,8 +607,6 @@ register_prop(struct mqtt_prop_list_t **prop_list,
 
   va_start(args, prop_id);
 
-  prop_out = NULL;
-
   /* check that the property is compatible with the message? */
 
   if(!prop_list) {
@@ -611,12 +615,14 @@ register_prop(struct mqtt_prop_list_t **prop_list,
     return 1;
   }
 
-  DBG("MQTT - prop list %p\n", prop_list);
+  DBG("MQTT - prop list %p\n", *prop_list);
+  DBG("MQTT - prop list->list %p\n", (*prop_list)->props);
 
   prop = (struct mqtt_out_property_t *)memb_alloc(&props_mem);
 
   if(!prop) {
     DBG("MQTT - Error, allocated too many properties (max %i)\n", MQTT_MAX_OUT_PROPS);
+    prop_out = NULL;
     return 1;
   }
 
@@ -625,7 +631,7 @@ register_prop(struct mqtt_prop_list_t **prop_list,
   prop_len = encode_prop(&prop, prop_id, args);
 
   if(prop) {
-    DBG("MQTT - Adding prop %p to prop_list %p\n", prop, prop_list);
+    DBG("MQTT - Adding prop %p to prop_list %p\n", prop, *prop_list);
     list_add((*prop_list)->props, prop);
     (*prop_list)->properties_len += 1; /* Property ID */
     (*prop_list)->properties_len += prop_len;
@@ -638,14 +644,71 @@ register_prop(struct mqtt_prop_list_t **prop_list,
     DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
     memb_free(&props_mem, prop);
     va_end(args);
+    prop_out = NULL;
     return 1;
   }
 
   if(prop_out) {
-    prop_out = &prop;
+    *prop_out = prop;
   }
   va_end(args);
   return 0;
+}
+/*----------------------------------------------------------------------------*/
+/* Remove one property from list and free its memory */
+void
+remove_prop(struct mqtt_prop_list_t **prop_list,
+            struct mqtt_out_property_t *prop)
+{
+  if(prop != NULL && prop_list != NULL && list_contains((*prop_list)->props, prop)) {
+    DBG("MQTT - Removing property %p from list %p\n", prop, *prop_list);
+
+    /* Remove from list */
+    list_remove((*prop_list)->props, prop);
+
+    /* Fix the property list length */
+    (*prop_list)->properties_len -= prop->property_len;
+    (*prop_list)->properties_len -= 1; /* Property ID */
+
+    encode_var_byte_int(
+        (*prop_list)->properties_len_enc,
+        &((*prop_list)->properties_len_enc_bytes),
+        (*prop_list)->properties_len);
+
+    /* Free memory */
+    memb_free(&props_mem, prop);
+  } else {
+    DBG("MQTT - Cannot remove property\n");
+  }
+}
+
+/* Remove & frees all properties in the list */
+void
+clear_prop_list(struct mqtt_prop_list_t **prop_list)
+{
+  struct mqtt_out_property_t *prop;
+
+  DBG("MQTT - Clearing Property List\n");
+
+  if(prop_list == NULL || list_length((*prop_list)->props) == 0) {
+    DBG("MQTT - Prop list empty\n");
+    return;
+  } else {
+    prop = (struct mqtt_out_property_t *) list_head((*prop_list)->props);
+
+    do {
+      if(prop != NULL) {
+        remove_prop(prop_list, prop);
+      }
+      prop = (struct mqtt_out_property_t *) list_head((*prop_list)->props);
+    } while(prop != NULL);
+  }
+
+  LIST_STRUCT_INIT(*prop_list, props);
+
+  if((*prop_list)->properties_len != 0 || (*prop_list)->properties_len_enc_bytes != 1) {
+    DBG("MQTT - Something went wrong when clearing property list!\n");
+  }
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -678,7 +741,7 @@ publish(void)
   int i;
   char def_rt_str[64];
 #if MQTT_5
-  static uint8_t prop_err = 0;
+  static uint8_t prop_err = 1;
 #endif
 
   seq_nr_value++;
@@ -789,10 +852,29 @@ connect_to_broker(void)
 /*---------------------------------------------------------------------------*/
 #if MQTT_5_AUTH_EN
 static void
-send_auth(mqtt_auth_event_t *auth_data, mqtt_auth_type_t auth_type)
+send_auth(mqtt_auth_event_t *auth_info, mqtt_auth_type_t auth_type)
 {
+  clear_prop_list(&auth_props);
+
+  if(auth_info->auth_method.length) {
+    (void)register_prop(&auth_props,
+                        NULL,
+                        MQTT_FHDR_MSG_TYPE_AUTH,
+                        MQTT_VHDR_PROP_AUTH_METHOD,
+                        auth_info->auth_method.string);
+  }
+
+  if(auth_info->auth_data.len) {
+    (void)register_prop(&auth_props,
+                        NULL,
+                        MQTT_FHDR_MSG_TYPE_AUTH,
+                        MQTT_VHDR_PROP_AUTH_DATA,
+                        auth_info->auth_data.data,
+                        auth_info->auth_data.len);
+  }
+
   /* Connect to MQTT server */
-  mqtt_auth(&conn, auth_data, auth_type);
+  mqtt_auth(&conn, auth_type, auth_props);
 
   if(state != STATE_CONNECTING) {
     LOG_DBG("MQTT reauthenticating\n");
@@ -842,23 +924,12 @@ state_machine(void)
 #if MQTT_5
     create_prop_list(&publish_props);
 
-    // TODO add remove prop function
     /* this will be sent with every publish packet */
     (void)register_prop(&publish_props,
                         NULL,
                         MQTT_FHDR_MSG_TYPE_PUBLISH,
                         MQTT_VHDR_PROP_USER_PROP,
-                        "Contiki", "v4.4");
-
-    struct mqtt_out_property_t *prop_out;
-
-    (void)register_prop(&publish_props,
-                        &prop_out,
-                        MQTT_FHDR_MSG_TYPE_PUBLISH,
-                        MQTT_VHDR_PROP_USER_PROP,
-                        "REMOVE THIS", "YES");
-
-//    LOG_DBG("Out prop %p\n", prop_out);
+                        "Contiki", "v4.5+");
 
     print_props(publish_props, MQTT_VHDR_PROP_ANY);
 #endif
