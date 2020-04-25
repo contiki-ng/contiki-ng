@@ -290,7 +290,7 @@ typedef enum {
 /*---------------------------------------------------------------------------*/
 /* MQTTv5.0 VHDR Properties */
 typedef enum {
-  MQTT_VHDR_PROP_ANY                = 0x00, // not in standard; for library use
+  MQTT_VHDR_PROP_ANY                = 0x00, /* not in standard; for library use */
   MQTT_VHDR_PROP_PAYLOAD_FMT_IND    = 0x01,
   MQTT_VHDR_PROP_MSG_EXP_INT        = 0x02,
   MQTT_VHDR_PROP_CONTENT_TYPE       = 0x03,
@@ -417,8 +417,8 @@ struct mqtt_message {
 struct mqtt_prop_list_t {
   /* Total length of properties */
   uint32_t properties_len;
-  uint8_t  properties_len_enc[MQTT_MAX_PROP_LEN_BYTES];
-  uint8_t  properties_len_enc_bytes;
+  uint8_t properties_len_enc[MQTT_MAX_PROP_LEN_BYTES];
+  uint8_t properties_len_enc_bytes;
   LIST_STRUCT(props);
 };
 
@@ -472,14 +472,14 @@ struct mqtt_in_packet {
 
   /* Properties */
 #if MQTT_5
-  uint8_t  has_reason_code;
-  uint8_t  reason_code;
+  uint8_t has_reason_code;
+  uint8_t reason_code;
 
-  uint8_t  has_props; // the properties have been decoded
-  uint8_t  properties_enc_len; // number of bytes used to encode property length
-  uint16_t properties_len; // length of properties excluding encoded length
-  uint8_t  *props_start; // pointer to first byte in first property
-  uint8_t  *curr_props_pos; // pointer to property to parse next
+  uint8_t has_props;  /* the properties have been decoded */
+  uint8_t properties_enc_len;  /* number of bytes used to encode property length */
+  uint16_t properties_len; /* length of properties excluding encoded length */
+  uint8_t *props_start;  /* pointer to first byte in first property */
+  uint8_t *curr_props_pos;  /* pointer to property to parse next */
 #endif
 };
 
@@ -793,15 +793,15 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
 
 /*---------------------------------------------------------------------------*/
 /**
-* \brief Send authentication message (MQTTv5-only).
-* \param conn A pointer to the MQTT connection.
-* \param auth_type The type of auth to send (continue authentication or
-*        re-authentication).
-* \param prop_list Output properties.
-* \return MQTT_STATUS_OK or some error status
-*
-* This function send an MQTT authentication message.
-*/
+ * \brief Send authentication message (MQTTv5-only).
+ * \param conn A pointer to the MQTT connection.
+ * \param auth_type The type of auth to send (continue authentication or
+ *        re-authentication).
+ * \param prop_list Output properties.
+ * \return MQTT_STATUS_OK or some error status
+ *
+ * This function send an MQTT authentication message.
+ */
 mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
                         mqtt_auth_type_t auth_type,
                         struct mqtt_prop_list_t *prop_list);

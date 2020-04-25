@@ -418,7 +418,7 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     mqtt_auth_event_t *auth_event = (mqtt_auth_event_t *)data;
     break;
   }
-# endif
+#endif
   default:
     LOG_DBG("Application got a unhandled MQTT event: %i\n", event);
     break;
@@ -577,20 +577,20 @@ create_prop_list(struct mqtt_prop_list_t **prop_list_out)
  * by property ID
  */
 void
-print_props(struct mqtt_prop_list_t *prop_list,  mqtt_vhdr_prop_t prop_id)
+print_props(struct mqtt_prop_list_t *prop_list, mqtt_vhdr_prop_t prop_id)
 {
   struct mqtt_out_property_t *prop;
 
   if(prop_list == NULL || prop_list->props == NULL) {
     DBG("MQTT - Prop list empty\n");
   } else {
-    prop = (struct mqtt_out_property_t *) list_head(prop_list->props);
+    prop = (struct mqtt_out_property_t *)list_head(prop_list->props);
 
     do {
       if(prop != NULL && (prop->id == prop_id || prop_id == MQTT_VHDR_PROP_ANY)) {
         DBG("Property %p ID %i len %i\n", prop, prop->id, prop->property_len);
       }
-      prop = (struct mqtt_out_property_t *) list_item_next(prop);
+      prop = (struct mqtt_out_property_t *)list_item_next(prop);
     } while(prop != NULL);
   }
 }
@@ -636,9 +636,9 @@ register_prop(struct mqtt_prop_list_t **prop_list,
     (*prop_list)->properties_len += 1; /* Property ID */
     (*prop_list)->properties_len += prop_len;
     encode_var_byte_int(
-        (*prop_list)->properties_len_enc,
-        &((*prop_list)->properties_len_enc_bytes),
-        (*prop_list)->properties_len);
+      (*prop_list)->properties_len_enc,
+      &((*prop_list)->properties_len_enc_bytes),
+      (*prop_list)->properties_len);
     DBG("MQTT - New prop_list length %i\n", (*prop_list)->properties_len);
   } else {
     DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
@@ -671,9 +671,9 @@ remove_prop(struct mqtt_prop_list_t **prop_list,
     (*prop_list)->properties_len -= 1; /* Property ID */
 
     encode_var_byte_int(
-        (*prop_list)->properties_len_enc,
-        &((*prop_list)->properties_len_enc_bytes),
-        (*prop_list)->properties_len);
+      (*prop_list)->properties_len_enc,
+      &((*prop_list)->properties_len_enc_bytes),
+      (*prop_list)->properties_len);
 
     /* Free memory */
     memb_free(&props_mem, prop);
@@ -681,7 +681,6 @@ remove_prop(struct mqtt_prop_list_t **prop_list,
     DBG("MQTT - Cannot remove property\n");
   }
 }
-
 /* Remove & frees all properties in the list */
 void
 clear_prop_list(struct mqtt_prop_list_t **prop_list)
@@ -694,13 +693,13 @@ clear_prop_list(struct mqtt_prop_list_t **prop_list)
     DBG("MQTT - Prop list empty\n");
     return;
   } else {
-    prop = (struct mqtt_out_property_t *) list_head((*prop_list)->props);
+    prop = (struct mqtt_out_property_t *)list_head((*prop_list)->props);
 
     do {
       if(prop != NULL) {
         remove_prop(prop_list, prop);
       }
-      prop = (struct mqtt_out_property_t *) list_head((*prop_list)->props);
+      prop = (struct mqtt_out_property_t *)list_head((*prop_list)->props);
     } while(prop != NULL);
   }
 
@@ -823,7 +822,7 @@ publish(void)
   } else {
     mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                  strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF,
-                 PUB_TOPIC_ALIAS, (mqtt_topic_alias_en_t)!prop_err,
+                 PUB_TOPIC_ALIAS, (mqtt_topic_alias_en_t) !prop_err,
                  publish_props);
   }
 #else
