@@ -100,7 +100,7 @@ typedef struct {
 void print_input_props(struct mqtt_connection *conn);
 
 uint32_t encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
-            va_list args);
+                     va_list args);
 
 void parse_connack_props(struct mqtt_connection *conn);
 
@@ -109,12 +109,12 @@ void parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event);
 void decode_input_props(struct mqtt_connection *conn);
 
 uint8_t register_prop(struct mqtt_prop_list_t **prop_list,
-              struct mqtt_out_property_t **prop_out,
+                      struct mqtt_out_property_t **prop_out,
 #if !MQTT_PROP_USE_MEMB
-              struct mqtt_out_property_t *prop,
+                      struct mqtt_out_property_t *prop,
 #endif
-              mqtt_msg_type_t msg,
-              mqtt_vhdr_prop_t prop_id, ...);
+                      mqtt_msg_type_t msg,
+                      mqtt_vhdr_prop_t prop_id, ...);
 
 void create_prop_list(struct mqtt_prop_list_t **prop_list_out);
 

@@ -43,7 +43,8 @@ MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
 #endif
 /*----------------------------------------------------------------------------*/
 void
-props_init() {
+props_init()
+{
 #if MQTT_PROP_USE_MEMB
   memb_init(&props_mem);
   memb_init(&prop_lists_mem);

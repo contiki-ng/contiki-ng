@@ -764,10 +764,10 @@ void encode_var_byte_int(uint8_t *vbi_out,
                          uint32_t val);
 /*---------------------------------------------------------------------------*/
 uint8_t decode_var_byte_int(const uint8_t *input_data_ptr,
-                    int input_data_len,
-                    uint32_t *input_pos,
-                    uint32_t *pkt_byte_count,
-                    uint16_t *dest);
+                            int input_data_len,
+                            uint32_t *input_pos,
+                            uint32_t *pkt_byte_count,
+                            uint16_t *dest);
 /*---------------------------------------------------------------------------*/
 #if MQTT_5
 /**
