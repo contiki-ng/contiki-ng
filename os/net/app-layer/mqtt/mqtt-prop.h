@@ -35,6 +35,15 @@
 
 #include <stdarg.h>
 /*---------------------------------------------------------------------------*/
+/* If not using memb, you must provide a pointer to
+ * statically-allocated memory to register_prop()
+ */
+#ifdef MQTT_CLIENT_CONF_PROP_USE_MEMB
+#define MQTT_PROP_USE_MEMB MQTT_CLIENT_CONF_PROP_USE_MEMB
+#else
+#define MQTT_PROP_USE_MEMB 1
+#endif
+/*---------------------------------------------------------------------------*/
 /* Number of output property lists */
 #define MQTT_MAX_OUT_PROP_LISTS 1
 
@@ -53,7 +62,6 @@
 #define MQTT_MAX_NUM_TOPIC_ALIASES 1
 
 #define MQTT_PROP_LIST_NONE NULL
-
 /*----------------------------------------------------------------------------*/
 struct mqtt_prop_list_t {
   /* Total length of properties */
@@ -88,9 +96,7 @@ typedef struct {
   struct mqtt_string auth_method;
   mqtt_bin_data_t auth_data;
 } mqtt_auth_event_t;
-
-/*---------------------------------------------------------------------------*/
-
+/*----------------------------------------------------------------------------*/
 void print_input_props(struct mqtt_connection *conn);
 
 uint32_t encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
@@ -104,12 +110,17 @@ void decode_input_props(struct mqtt_connection *conn);
 
 uint8_t register_prop(struct mqtt_prop_list_t **prop_list,
               struct mqtt_out_property_t **prop_out,
+#if !MQTT_PROP_USE_MEMB
+              struct mqtt_out_property_t *prop,
+#endif
               mqtt_msg_type_t msg,
               mqtt_vhdr_prop_t prop_id, ...);
 
 void create_prop_list(struct mqtt_prop_list_t **prop_list_out);
 
 void print_props(struct mqtt_prop_list_t *prop_list, mqtt_vhdr_prop_t prop_id);
+
+void props_init();
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_PROP_H_ */
 /*---------------------------------------------------------------------------*/

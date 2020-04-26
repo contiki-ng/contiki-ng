@@ -122,12 +122,6 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 #define MQTT_CLIENT_WITH_EXTENSIONS 0
 #endif
 /*---------------------------------------------------------------------------*/
-#ifdef MQTT_CLIENT_CONF_PROP_USE_MEMB
-#define MQTT_PROP_USE_MEMB MQTT_CLIENT_CONF_PROP_USE_MEMB
-#else
-#define MQTT_PROP_USE_MEMB 1
-#endif
-/*---------------------------------------------------------------------------*/
 /*
  * A timeout used when waiting for something to happen (e.g. to connect or to
  * disconnect)
@@ -267,11 +261,6 @@ struct mqtt_prop_list_t *publish_props;
 #define MQTT_5_AUTH_EN 0
 #if MQTT_5_AUTH_EN
 struct mqtt_prop_list_t *auth_props;
-#endif
-
-#if MQTT_PROP_USE_MEMB
-MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
-MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
 #endif
 #endif
 /*---------------------------------------------------------------------------*/
@@ -522,10 +511,7 @@ update_config(void)
 #if MQTT_5
   LIST_STRUCT_INIT(&(conn.will), properties);
 
-#if MQTT_PROP_USE_MEMB
-  memb_init(&props_mem);
-  memb_init(&prop_lists_mem);
-#endif
+  props_init();
 #endif
 
   return;

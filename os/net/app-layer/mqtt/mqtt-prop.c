@@ -36,6 +36,19 @@
 #include "mqtt-prop.h"
 
 #include <stdlib.h>
+/*---------------------------------------------------------------------------*/
+#if MQTT_PROP_USE_MEMB
+MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
+MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
+#endif
+/*----------------------------------------------------------------------------*/
+void
+props_init() {
+#if MQTT_PROP_USE_MEMB
+  memb_init(&props_mem);
+  memb_init(&prop_lists_mem);
+#endif
+}
 /*----------------------------------------------------------------------------*/
 static void
 encode_prop_fixed_len_int(struct mqtt_out_property_t **prop_out,
@@ -713,10 +726,15 @@ print_props(struct mqtt_prop_list_t *prop_list, mqtt_vhdr_prop_t prop_id)
 uint8_t
 register_prop(struct mqtt_prop_list_t **prop_list,
               struct mqtt_out_property_t **prop_out,
+#if !MQTT_PROP_USE_MEMB
+              struct mqtt_out_property_t *prop,
+#endif
               mqtt_msg_type_t msg,
               mqtt_vhdr_prop_t prop_id, ...)
 {
+#if MQTT_PROP_USE_MEMB
   struct mqtt_out_property_t *prop;
+#endif
   va_list args;
   uint32_t prop_len;
 
@@ -775,7 +793,7 @@ register_prop(struct mqtt_prop_list_t **prop_list,
 }
 /*----------------------------------------------------------------------------*/
 /* Remove one property from list and free its memory */
-void
+uint8_t
 remove_prop(struct mqtt_prop_list_t **prop_list,
             struct mqtt_out_property_t *prop)
 {
@@ -798,8 +816,10 @@ remove_prop(struct mqtt_prop_list_t **prop_list,
 #if MQTT_PROP_USE_MEMB
     memb_free(&props_mem, prop);
 #endif
+    return 0;
   } else {
     DBG("MQTT - Cannot remove property\n");
+    return 1;
   }
 }
 /* Remove & frees all properties in the list */
@@ -818,7 +838,7 @@ clear_prop_list(struct mqtt_prop_list_t **prop_list)
 
     do {
       if(prop != NULL) {
-        remove_prop(prop_list, prop);
+        (void)remove_prop(prop_list, prop);
       }
       prop = (struct mqtt_out_property_t *)list_head((*prop_list)->props);
     } while(prop != NULL);
