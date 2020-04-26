@@ -32,6 +32,7 @@
 #include "contiki.h"
 #include "net/routing/routing.h"
 #include "mqtt.h"
+#include "mqtt-prop.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/sicslowpan.h"
@@ -46,8 +47,6 @@
 #include <string.h>
 #include <strings.h>
 #include <stdarg.h>
-
-#include "lib/memb.h"
 /*---------------------------------------------------------------------------*/
 #define LOG_MODULE "mqtt-client"
 #ifdef MQTT_CLIENT_CONF_LOG_LEVEL
@@ -121,6 +120,12 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 #define MQTT_CLIENT_WITH_EXTENSIONS MQTT_CLIENT_CONF_WITH_EXTENSIONS
 #else
 #define MQTT_CLIENT_WITH_EXTENSIONS 0
+#endif
+/*---------------------------------------------------------------------------*/
+#ifdef MQTT_CLIENT_CONF_PROP_USE_MEMB
+#define MQTT_PROP_USE_MEMB MQTT_CLIENT_CONF_PROP_USE_MEMB
+#else
+#define MQTT_PROP_USE_MEMB 1
 #endif
 /*---------------------------------------------------------------------------*/
 /*
@@ -256,9 +261,6 @@ static const uint8_t mqtt_client_extension_count = 0;
 #if MQTT_5
 static uint8_t PUB_TOPIC_ALIAS;
 
-MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
-MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
-
 struct mqtt_prop_list_t *publish_props;
 
 /* Control whether or not to perform authentication (MQTTv5) */
@@ -266,8 +268,12 @@ struct mqtt_prop_list_t *publish_props;
 #if MQTT_5_AUTH_EN
 struct mqtt_prop_list_t *auth_props;
 #endif
-#endif
 
+#if MQTT_PROP_USE_MEMB
+MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
+MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
+#endif
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
 /*---------------------------------------------------------------------------*/
@@ -516,8 +522,10 @@ update_config(void)
 #if MQTT_5
   LIST_STRUCT_INIT(&(conn.will), properties);
 
+#if MQTT_PROP_USE_MEMB
   memb_init(&props_mem);
   memb_init(&prop_lists_mem);
+#endif
 #endif
 
   return;
@@ -544,172 +552,6 @@ init_config()
 
   return 1;
 }
-/*
- * Functions to manipulate property lists
- */
-#if MQTT_5
-/*----------------------------------------------------------------------------*/
-/* Creates a property list for the requested message type */
-void
-create_prop_list(struct mqtt_prop_list_t **prop_list_out)
-{
-  DBG("MQTT - Creating Property List\n");
-
-  *prop_list_out = memb_alloc(&prop_lists_mem);
-
-  if(!(*prop_list_out)) {
-    DBG("MQTT - Error, allocated too many property lists (max %i)\n", MQTT_MAX_OUT_PROP_LISTS);
-    return;
-  }
-
-  DBG("MQTT - Allocated Property list\n");
-
-  LIST_STRUCT_INIT(*prop_list_out, props);
-
-  DBG("MQTT - mem %p prop_list\n", *prop_list_out);
-
-  (*prop_list_out)->properties_len = 0;
-  (*prop_list_out)->properties_len_enc_bytes = 1; /* 1 byte needed for len = 0 */
-}
-/*----------------------------------------------------------------------------*/
-/* Prints all properties in the given property list (debug)
- * If ID == MQTT_VHDR_PROP_ANY, prints all properties, otherwise it filters them
- * by property ID
- */
-void
-print_props(struct mqtt_prop_list_t *prop_list, mqtt_vhdr_prop_t prop_id)
-{
-  struct mqtt_out_property_t *prop;
-
-  if(prop_list == NULL || prop_list->props == NULL) {
-    DBG("MQTT - Prop list empty\n");
-  } else {
-    prop = (struct mqtt_out_property_t *)list_head(prop_list->props);
-
-    do {
-      if(prop != NULL && (prop->id == prop_id || prop_id == MQTT_VHDR_PROP_ANY)) {
-        DBG("Property %p ID %i len %i\n", prop, prop->id, prop->property_len);
-      }
-      prop = (struct mqtt_out_property_t *)list_item_next(prop);
-    } while(prop != NULL);
-  }
-}
-/*---------------------------------------------------------------------------*/
-uint8_t
-register_prop(struct mqtt_prop_list_t **prop_list,
-              struct mqtt_out_property_t **prop_out,
-              mqtt_msg_type_t msg,
-              mqtt_vhdr_prop_t prop_id, ...)
-{
-  struct mqtt_out_property_t *prop;
-  va_list args;
-  uint32_t prop_len;
-
-  va_start(args, prop_id);
-
-  /* check that the property is compatible with the message? */
-
-  if(!prop_list) {
-    DBG("MQTT - Error encoding prop %i on msg %i; list NULL\n", prop_id, msg);
-    va_end(args);
-    return 1;
-  }
-
-  DBG("MQTT - prop list %p\n", *prop_list);
-  DBG("MQTT - prop list->list %p\n", (*prop_list)->props);
-
-  prop = (struct mqtt_out_property_t *)memb_alloc(&props_mem);
-
-  if(!prop) {
-    DBG("MQTT - Error, allocated too many properties (max %i)\n", MQTT_MAX_OUT_PROPS);
-    prop_out = NULL;
-    return 1;
-  }
-
-  DBG("MQTT - Allocated prop %p\n", prop);
-
-  prop_len = encode_prop(&prop, prop_id, args);
-
-  if(prop) {
-    DBG("MQTT - Adding prop %p to prop_list %p\n", prop, *prop_list);
-    list_add((*prop_list)->props, prop);
-    (*prop_list)->properties_len += 1; /* Property ID */
-    (*prop_list)->properties_len += prop_len;
-    encode_var_byte_int(
-      (*prop_list)->properties_len_enc,
-      &((*prop_list)->properties_len_enc_bytes),
-      (*prop_list)->properties_len);
-    DBG("MQTT - New prop_list length %i\n", (*prop_list)->properties_len);
-  } else {
-    DBG("MQTT - Error encoding prop %i on msg %i\n", prop_id, msg);
-    memb_free(&props_mem, prop);
-    va_end(args);
-    prop_out = NULL;
-    return 1;
-  }
-
-  if(prop_out) {
-    *prop_out = prop;
-  }
-  va_end(args);
-  return 0;
-}
-/*----------------------------------------------------------------------------*/
-/* Remove one property from list and free its memory */
-void
-remove_prop(struct mqtt_prop_list_t **prop_list,
-            struct mqtt_out_property_t *prop)
-{
-  if(prop != NULL && prop_list != NULL && list_contains((*prop_list)->props, prop)) {
-    DBG("MQTT - Removing property %p from list %p\n", prop, *prop_list);
-
-    /* Remove from list */
-    list_remove((*prop_list)->props, prop);
-
-    /* Fix the property list length */
-    (*prop_list)->properties_len -= prop->property_len;
-    (*prop_list)->properties_len -= 1; /* Property ID */
-
-    encode_var_byte_int(
-      (*prop_list)->properties_len_enc,
-      &((*prop_list)->properties_len_enc_bytes),
-      (*prop_list)->properties_len);
-
-    /* Free memory */
-    memb_free(&props_mem, prop);
-  } else {
-    DBG("MQTT - Cannot remove property\n");
-  }
-}
-/* Remove & frees all properties in the list */
-void
-clear_prop_list(struct mqtt_prop_list_t **prop_list)
-{
-  struct mqtt_out_property_t *prop;
-
-  DBG("MQTT - Clearing Property List\n");
-
-  if(prop_list == NULL || list_length((*prop_list)->props) == 0) {
-    DBG("MQTT - Prop list empty\n");
-    return;
-  } else {
-    prop = (struct mqtt_out_property_t *)list_head((*prop_list)->props);
-
-    do {
-      if(prop != NULL) {
-        remove_prop(prop_list, prop);
-      }
-      prop = (struct mqtt_out_property_t *)list_head((*prop_list)->props);
-    } while(prop != NULL);
-  }
-
-  LIST_STRUCT_INIT(*prop_list, props);
-
-  if((*prop_list)->properties_len != 0 || (*prop_list)->properties_len_enc_bytes != 1) {
-    DBG("MQTT - Something went wrong when clearing property list!\n");
-  }
-}
-#endif
 /*---------------------------------------------------------------------------*/
 static void
 subscribe(void)

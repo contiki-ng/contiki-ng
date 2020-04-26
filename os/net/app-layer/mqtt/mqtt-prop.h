@@ -1,0 +1,115 @@
+/*
+ * Copyright (c) 2020, Alexandru-Ioan Pop - https://alexandruioan.me
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*---------------------------------------------------------------------------*/
+#ifndef MQTT_PROP_H_
+#define MQTT_PROP_H_
+/*---------------------------------------------------------------------------*/
+#include "mqtt.h"
+
+#include <stdarg.h>
+/*---------------------------------------------------------------------------*/
+/* Number of output property lists */
+#define MQTT_MAX_OUT_PROP_LISTS 1
+
+/* Number of output properties that will be declared, regardless of
+ * message type
+ */
+#define MQTT_MAX_OUT_PROPS 2
+
+/* Max length of 1 property in bytes */
+#define MQTT_MAX_PROP_LENGTH     32
+/* Max number of bytes in Variable Byte Integer representation of
+ * total property length
+ */
+#define MQTT_MAX_PROP_LEN_BYTES   2
+/* Max number of topic aliases (when receiving) */
+#define MQTT_MAX_NUM_TOPIC_ALIASES 1
+
+#define MQTT_PROP_LIST_NONE NULL
+
+/*----------------------------------------------------------------------------*/
+struct mqtt_prop_list_t {
+  /* Total length of properties */
+  uint32_t properties_len;
+  uint8_t properties_len_enc[MQTT_MAX_PROP_LEN_BYTES];
+  uint8_t properties_len_enc_bytes;
+  LIST_STRUCT(props);
+};
+
+/* This struct represents output packet Properties (MQTTv5.0). */
+struct mqtt_out_property_t {
+  /* Used by the list interface, must be first in the struct. */
+  struct mqtt_out_property_t *next;
+
+  /* Property identifier (as an MQTT Variable Byte Integer)
+   * The maximum ID is currently 0x2A so 1 byte is sufficient
+   * (the range of 1 VBI byte is 0x00 - 0x7F)
+   */
+  mqtt_vhdr_prop_t id;
+  /* Property length */
+  uint32_t property_len;
+  /* Property value */
+  uint8_t val[MQTT_MAX_PROP_LENGTH];
+};
+
+typedef struct {
+  uint16_t len;
+  uint8_t data[MQTT_MAX_PROP_LENGTH];
+} mqtt_bin_data_t;
+
+typedef struct {
+  struct mqtt_string auth_method;
+  mqtt_bin_data_t auth_data;
+} mqtt_auth_event_t;
+
+/*---------------------------------------------------------------------------*/
+
+void print_input_props(struct mqtt_connection *conn);
+
+uint32_t encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
+            va_list args);
+
+void parse_connack_props(struct mqtt_connection *conn);
+
+void parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event);
+
+void decode_input_props(struct mqtt_connection *conn);
+
+uint8_t register_prop(struct mqtt_prop_list_t **prop_list,
+              struct mqtt_out_property_t **prop_out,
+              mqtt_msg_type_t msg,
+              mqtt_vhdr_prop_t prop_id, ...);
+
+void create_prop_list(struct mqtt_prop_list_t **prop_list_out);
+
+void print_props(struct mqtt_prop_list_t *prop_list, mqtt_vhdr_prop_t prop_id);
+/*---------------------------------------------------------------------------*/
+#endif /* MQTT_PROP_H_ */
+/*---------------------------------------------------------------------------*/

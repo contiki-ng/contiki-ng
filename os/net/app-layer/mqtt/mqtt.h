@@ -99,7 +99,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 /*---------------------------------------------------------------------------*/
 /* Protocol constants */
 #define MQTT_PROTOCOL_VERSION_3_1    3
@@ -150,26 +149,39 @@
 #define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
 #endif
 
-/*---------------------------------------------------------------------------*/
-/* MQTTv5 */
-/* Number of output property lists */
-#define MQTT_MAX_OUT_PROP_LISTS 1
-
-/* Number of output properties that will be declared, regardless of
- * message type
+#if MQTT_31
+/* Len MSB(0)
+ * Len LSB(6)
+ * 'M'
+ * 'Q'
+ * 'I'
+ * 's'
+ * 'd'
+ * 'p'
+ * Protocol Level (3)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
  */
-#define MQTT_MAX_OUT_PROPS 2
-
-/* Max length of 1 property in bytes */
-#define MQTT_MAX_PROP_LENGTH     32
-/* Max number of bytes in Variable Byte Integer representation of
- * total property length
+#define MQTT_CONNECT_VHDR_SIZE 12
+#else
+/* Len MSB(0)
+ * Len LSB(4)
+ * 'M'
+ * 'Q'
+ * 'T'
+ * 'T'
+ * Protocol Level (4)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
  */
-#define MQTT_MAX_PROP_LEN_BYTES   2
-/* Max number of topic aliases (when receiving) */
-#define MQTT_MAX_NUM_TOPIC_ALIASES 1
+#define MQTT_CONNECT_VHDR_SIZE 10
+#endif
 
-#define MQTT_PROP_LIST_NONE NULL
+#define MQTT_STRING_LEN_SIZE 2
+#define MQTT_MID_SIZE 2
+#define MQTT_QOS_SIZE 1
 /*---------------------------------------------------------------------------*/
 /*
  * Debug configuration, this is similar but not exactly like the Debugging
@@ -387,16 +399,6 @@ typedef struct {
   uint8_t session_present;
 } mqtt_connack_event_t;
 
-typedef struct {
-  uint16_t len;
-  uint8_t data[MQTT_MAX_PROP_LENGTH];
-} mqtt_bin_data_t;
-
-typedef struct {
-  struct mqtt_string auth_method;
-  mqtt_bin_data_t auth_data;
-} mqtt_auth_event_t;
-
 typedef enum {
   MQTT_AUTH_NORMAL,
   MQTT_AUTH_RE_AUTH,
@@ -413,30 +415,6 @@ struct mqtt_message {
   uint8_t first_chunk;
   uint16_t payload_length;
   uint16_t payload_left;
-};
-
-struct mqtt_prop_list_t {
-  /* Total length of properties */
-  uint32_t properties_len;
-  uint8_t properties_len_enc[MQTT_MAX_PROP_LEN_BYTES];
-  uint8_t properties_len_enc_bytes;
-  LIST_STRUCT(props);
-};
-
-/* This struct represents output packet Properties (MQTTv5.0). */
-struct mqtt_out_property_t {
-  /* Used by the list interface, must be first in the struct. */
-  struct mqtt_out_property_t *next;
-
-  /* Property identifier (as an MQTT Variable Byte Integer)
-   * The maximum ID is currently 0x2A so 1 byte is sufficient
-   * (the range of 1 VBI byte is 0x00 - 0x7F)
-   */
-  mqtt_vhdr_prop_t id;
-  /* Property length */
-  uint32_t property_len;
-  /* Property value */
-  uint8_t val[MQTT_MAX_PROP_LENGTH];
 };
 
 /* This struct represents a packet received from the MQTT server. */
@@ -785,14 +763,13 @@ void encode_var_byte_int(uint8_t *vbi_out,
                          uint8_t *vbi_bytes,
                          uint32_t val);
 /*---------------------------------------------------------------------------*/
-/* MQTTv5-specific functions */
-void print_input_props(struct mqtt_connection *conn);
-
-uint32_t
-encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
-            va_list args);
-
+uint8_t decode_var_byte_int(const uint8_t *input_data_ptr,
+                    int input_data_len,
+                    uint32_t *input_pos,
+                    uint32_t *pkt_byte_count,
+                    uint16_t *dest);
 /*---------------------------------------------------------------------------*/
+#if MQTT_5
 /**
  * \brief Send authentication message (MQTTv5-only).
  * \param conn A pointer to the MQTT connection.
@@ -806,7 +783,7 @@ encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
 mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
                         mqtt_auth_type_t auth_type,
                         struct mqtt_prop_list_t *prop_list);
-
+#endif
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */
 /*---------------------------------------------------------------------------*/
