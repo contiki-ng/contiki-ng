@@ -69,6 +69,8 @@
 #include "rf/data-queue.h"
 #include "rf/tx-power.h"
 #include "rf/settings.h"
+#include "rf/rat.h"
+#include "rf/radio-mode.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
@@ -152,20 +154,10 @@ static volatile uint8_t is_receiving_packet;
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
-/* RAT has 32-bit register, overflows once 18 minutes */
-#define RAT_RANGE  4294967296ull
-#define RAT_ONE_QUARTER       (RAT_RANGE / (uint32_t)4)
-#define RAT_THREE_QUARTERS    ((RAT_RANGE * (uint32_t)3) / (uint32_t)4)
-#define RAT_ONE_THIRD         (RAT_RANGE / (uint32_t)3)
-#define RAT_MAX_DRIFT_TICK    4
-#define RTIMER_TO_RAT(x)      (x * (RAT_SECOND / RTIMER_SECOND))
-#define RTIMER_SYNC_INTERVAL  (5 * RTIMER_SECOND)
-
-/*---------------------------------------------------------------------------*/
 /*
- * Offset of the end of SFD when compared to the radio HW-generated timestamp
+ * Offset of the end of SFD when compared to the radio HW-generated timestamp.
  */
-#define RAT_TIMESTAMP_OFFSET    US_TO_RTIMERTICKS(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME - 310)
+#define RAT_TIMESTAMP_OFFSET    USEC_TO_RAT(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME - 270)
 /*---------------------------------------------------------------------------*/
 /* TX buf configuration */
 #define TX_BUF_HDR_LEN          2
@@ -192,6 +184,21 @@ typedef uint16_t lensz_t;
 typedef rfc_propRxOutput_t rx_output_t;
 
 typedef struct {
+  /* RF driver */
+  RF_Handle rf_handle;
+
+  /* Are we currently in poll mode? */
+  bool poll_mode;
+
+  /* RAT Overflow Upkeep */
+  struct {
+    struct ctimer overflow_timer;
+    rtimer_clock_t last_overflow;
+    volatile uint32_t overflow_count;
+  } rat;
+
+  bool (* rx_is_active)(void);
+
   /* Outgoing frame buffer */
   uint8_t tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
 
@@ -206,8 +213,6 @@ typedef struct {
   uint8_t rf_is_on;
   /* Enable/disable CCA before sending */
   bool send_on_cca;
-  /* Are we currently in poll mode? */
-  bool poll_mode;
 
   /* Last RX operation stats */
   struct {
@@ -215,16 +220,6 @@ typedef struct {
     uint8_t corr_lqi;
     uint32_t timestamp;
   } last;
-
-  /* RAT Overflow Upkeep */
-  struct {
-    struct ctimer overflow_timer;
-    rtimer_clock_t last_overflow;
-    volatile uint32_t overflow_count;
-  } rat;
-
-  /* RF driver */
-  RF_Handle rf_handle;
 } prop_radio_t;
 
 static prop_radio_t prop_radio;
@@ -238,9 +233,9 @@ static prop_radio_t prop_radio;
 
 /* Convenience macros for volatile access with the RF commands */
 #define v_cmd_radio_setup   CC_ACCESS_NOW(rfc_CMD_PROP_RADIO_DIV_SETUP_t, rf_cmd_prop_radio_div_setup)
-#define v_cmd_fs            CC_ACCESS_NOW(rfc_CMD_FS_t, rf_cmd_prop_fs)
-#define v_cmd_tx            CC_ACCESS_NOW(rfc_CMD_PROP_TX_ADV_t, rf_cmd_prop_tx_adv)
-#define v_cmd_rx            CC_ACCESS_NOW(rfc_CMD_PROP_RX_ADV_t, rf_cmd_prop_rx_adv)
+#define v_cmd_fs            CC_ACCESS_NOW(rfc_CMD_FS_t,                   rf_cmd_prop_fs)
+#define v_cmd_tx            CC_ACCESS_NOW(rfc_CMD_PROP_TX_ADV_t,          rf_cmd_prop_tx_adv)
+#define v_cmd_rx            CC_ACCESS_NOW(rfc_CMD_PROP_RX_ADV_t,          rf_cmd_prop_rx_adv)
 /*---------------------------------------------------------------------------*/
 static inline bool
 tx_is_active(void)
@@ -254,22 +249,9 @@ rx_is_active(void)
   return v_cmd_rx.status == ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
-/* Forward declarations of local functions */
-static void check_rat_overflow(void);
-static uint32_t rat_to_timestamp(const uint32_t);
-/*---------------------------------------------------------------------------*/
 static int channel_clear(void);
 static int on(void);
 static int off(void);
-/*---------------------------------------------------------------------------*/
-static void
-rat_overflow_cb(void *arg)
-{
-  check_rat_overflow();
-  /* Check next time after a third of the RAT interval */
-  const clock_time_t one_third = (RAT_ONE_THIRD * CLOCK_SECOND) / RAT_SECOND;
-  ctimer_set(&prop_radio.rat.overflow_timer, one_third, rat_overflow_cb, NULL);
-}
 /*---------------------------------------------------------------------------*/
 static void
 init_rf_params(void)
@@ -363,6 +345,11 @@ set_channel(uint16_t channel)
     return RF_RESULT_OK;
   }
 
+  if(prop_radio.rf_is_on) {
+    /* Force RAT and RTC resync */
+    rf_restart_rat();
+  }
+
   const uint32_t new_freq = dot_15_4g_freq(channel);
   const uint16_t freq = (uint16_t)(new_freq / 1000);
   const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
@@ -408,61 +395,6 @@ set_send_on_cca(bool enable)
   prop_radio.send_on_cca = enable;
 }
 /*---------------------------------------------------------------------------*/
-static void
-check_rat_overflow(void)
-{
-  const bool was_off = !rx_is_active();
-
-  if(was_off) {
-    RF_runDirectCmd(prop_radio.rf_handle, CMD_NOP);
-  }
-
-  const uint32_t current_value = RF_getCurrentTime();
-
-  static bool initial_iteration = true;
-  static uint32_t last_value;
-
-  if(initial_iteration) {
-    /* First time checking overflow will only store the current value */
-    initial_iteration = false;
-  } else {
-    /* Overflow happens in the last quarter of the RAT range */
-    if((current_value + RAT_ONE_QUARTER) < last_value) {
-      /* Overflow detected */
-      prop_radio.rat.last_overflow = RTIMER_NOW();
-      prop_radio.rat.overflow_count += 1;
-    }
-  }
-
-  last_value = current_value;
-
-  if(was_off) {
-    RF_yield(prop_radio.rf_handle);
-  }
-}
-/*---------------------------------------------------------------------------*/
-static uint32_t
-rat_to_timestamp(const uint32_t rat_ticks)
-{
-  check_rat_overflow();
-
-  uint64_t adjusted_overflow_count = prop_radio.rat.overflow_count;
-
-  /* If the timestamp is in the 4th quarter and the last overflow was recently,
-   * assume that the timestamp refers to the time before the overflow */
-  if(rat_ticks > RAT_THREE_QUARTERS) {
-    const rtimer_clock_t one_quarter = (RAT_ONE_QUARTER * RTIMER_SECOND) / RAT_SECOND;
-    if(RTIMER_CLOCK_LT(RTIMER_NOW(), prop_radio.rat.last_overflow + one_quarter)) {
-      adjusted_overflow_count -= 1;
-    }
-  }
-
-  /* Add the overflowed time to the timestamp */
-  const uint64_t rat_ticks_adjusted = (uint64_t)rat_ticks + (uint64_t)RAT_RANGE * adjusted_overflow_count;
-
-  return RAT_TO_RTIMER(rat_ticks_adjusted);
-}
-/*---------------------------------------------------------------------------*/
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
@@ -489,7 +421,7 @@ transmit(unsigned short transmit_len)
     return RADIO_TX_ERR;
   }
 
-  if(prop_radio.send_on_cca && channel_clear() != 1) {
+  if(prop_radio.send_on_cca && !channel_clear()) {
     LOG_WARN("Channel is not clear for transmission\n");
     return RADIO_TX_COLLISION;
   }
@@ -512,7 +444,7 @@ transmit(unsigned short transmit_len)
   v_cmd_tx.pktLen = transmit_len + DOT_4G_PHR_NUM_BYTES;
   v_cmd_tx.pPkt = prop_radio.tx_buf;
 
-  res = netstack_sched_prop_tx();
+  res = netstack_sched_prop_tx(transmit_len);
 
   if(res != RF_RESULT_OK) {
     LOG_WARN("Channel is not clear for transmission\n");
@@ -548,7 +480,7 @@ read(void *buf, unsigned short buf_len)
 
   if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
-    return -1;
+    return 0;
   }
 
   /*
@@ -605,7 +537,7 @@ read(void *buf, unsigned short buf_len)
   memcpy(&rat_ticks, payload_ptr + payload_len + 1, 4);
 
   /* Correct timestamp so that it refers to the end of the SFD */
-  prop_radio.last.timestamp = rat_to_timestamp(rat_ticks) + RAT_TIMESTAMP_OFFSET;
+  prop_radio.last.timestamp = rat_to_timestamp(rat_ticks, RAT_TIMESTAMP_OFFSET);
 
   if(!prop_radio.poll_mode) {
     /* Not in poll mode: packetbuf should not be accessed in interrupt context. */
@@ -729,7 +661,7 @@ pending_packet(void)
     curr_entry = (data_entry_t *)curr_entry->pNextEntry;
   } while(curr_entry != read_entry);
 
-  if(num_pending > 0 && !sched_is_poll_mode) {
+  if(num_pending > 0 && !prop_radio.poll_mode) {
     process_poll(&rf_sched_process);
   }
 
@@ -958,6 +890,10 @@ init(void)
   RF_TxPowerTable_Value tx_power_value;
   RF_Stat rf_stat;
 
+  prop_radio.rx_is_active = rx_is_active;
+
+  radio_mode = (simplelink_radio_mode_t *)&prop_radio;
+
   if(prop_radio.rf_handle) {
     LOG_WARN("Radio is already initialized\n");
     return RF_RESULT_OK;
@@ -1000,9 +936,7 @@ init(void)
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
   /* Start RAT overflow upkeep */
-  check_rat_overflow();
-  const clock_time_t one_third = (RAT_ONE_THIRD * CLOCK_SECOND) / RAT_SECOND;
-  ctimer_set(&prop_radio.rat.overflow_timer, one_third, rat_overflow_cb, NULL);
+  rat_init();
 
   /* Start RF process */
   process_start(&rf_sched_process, NULL);

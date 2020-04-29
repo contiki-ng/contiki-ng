@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2020, Institute of Electronics and Computer Science (EDI)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,81 +31,53 @@
  * \addtogroup cc13xx-cc26xx-rf
  * @{
  *
- * \defgroup cc13xx-cc26xx-rf-sched RF Scheduler for CC13xx/CC26xx
+ * \defgroup cc13xx-cc26xx-rf-radio-mode Generic radio mode API
  *
  * @{
  *
  * \file
- *        Header file of the CC13xx/CC26xx RF scheduler.
+ *        Header file of the generic radio mode API.
  * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ *        Atis Elsts <atis.elsts@edi.lv>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef RF_SCHED_H_
-#define RF_SCHED_H_
+#ifndef RF_RADIO_MODE_H_
+#define RF_RADIO_MODE_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "sys/process.h"
+#include "sys/ctimer.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/drivers/rf/RF.h>
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-PROCESS_NAME(rf_sched_process);
-/*---------------------------------------------------------------------------*/
-typedef enum {
-  RF_RESULT_OK = 0,
-  RF_RESULT_ERROR,
-} rf_result_t;
-/*---------------------------------------------------------------------------*/
-typedef enum {
-    BLE_ADV_CHANNEL_37 = (1 << 0),
-    BLE_ADV_CHANNEL_38 = (1 << 1),
-    BLE_ADV_CHANNEL_39 = (1 << 2),
+/**
+ * \name Radio mode API
+ *
+ * @{
+ */
+typedef struct {
+  /* RF driver */
+  RF_Handle rf_handle;
 
-    BLE_ADV_CHANNEL_ALL = (BLE_ADV_CHANNEL_37 |
-                           BLE_ADV_CHANNEL_38 |
-                           BLE_ADV_CHANNEL_39),
-} ble_adv_channel_t;
-/*---------------------------------------------------------------------------*/
-/**
- * \name Common RF scheduler functionality.
- *
- * @{
- */
-rf_result_t rf_yield(void);
-rf_result_t rf_restart_rat(void);
-rf_result_t rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm);
-rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm);
+  /* Are we currently in poll mode? */
+  bool poll_mode;
+
+  /* RAT Overflow Upkeep */
+  struct {
+    struct ctimer overflow_timer;
+    rtimer_clock_t last_overflow;
+    volatile uint32_t overflow_count;
+  } rat;
+
+  bool (* rx_is_active)(void);
+
+} simplelink_radio_mode_t;
+
+extern simplelink_radio_mode_t *radio_mode;
 /** @} */
 /*---------------------------------------------------------------------------*/
-/**
- * \name Nestack Radio scheduler functionality.
- *
- * Either for Prop-mode or IEEE-mode Radio driver.
- *
- * @{
- */
-RF_Handle   netstack_open(RF_Params *params);
-rf_result_t netstack_sched_fs(void);
-rf_result_t netstack_sched_ieee_tx(uint16_t payload_length, bool ack_request);
-rf_result_t netstack_sched_prop_tx(uint16_t payload_length);
-rf_result_t netstack_sched_rx(bool start);
-rf_result_t netstack_stop_rx(void);
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name BLE Radio scheduler functionality.
- *
- * Only for the BLE Beacon Daemon.
- *
- * @{
- */
-RF_Handle   ble_open(RF_Params *params);
-rf_result_t ble_sched_beacons(uint8_t bm_adv_channel);
-/** @} */
-/*---------------------------------------------------------------------------*/
-#endif /* RF_SCHED_H_ */
+#endif /* RF_RADIO_MODE_H__ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

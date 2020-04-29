@@ -77,6 +77,8 @@
 #include "rf/sched.h"
 #include "rf/settings.h"
 #include "rf/tx-power.h"
+#include "rf/rat.h"
+#include "rf/radio-mode.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stddef.h>
@@ -97,17 +99,13 @@
 /* Timeout constants */
 
 /* How long to wait for the rx read entry to become ready */
-#define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
+#define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 200)
 
 /* How long to wait for RX to become active after scheduled */
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 /*---------------------------------------------------------------------------*/
-#define RAT_RANGE             (~(uint32_t)0)
-#define RAT_ONE_QUARTER       (RAT_RANGE / (uint32_t)4)
-#define RAT_THREE_QUARTERS    ((RAT_RANGE * (uint32_t)3) / (uint32_t)4)
-
-/* XXX: don't know what exactly is this, looks like the time to TX 3 octets */
-#define RAT_TIMESTAMP_OFFSET  -(USEC_TO_RAT(32 * 3) - 1) /* -95.75 usec */
+/* XXX: don't know what exactly is this */
+#define RAT_TIMESTAMP_OFFSET USEC_TO_RAT(-50)
 /*---------------------------------------------------------------------------*/
 #define STATUS_CORRELATION   0x3f  /* bits 0-5 */
 #define STATUS_REJECT_FRAME  0x40  /* bit 6 */
@@ -153,6 +151,21 @@ typedef rfc_CMD_IEEE_MOD_FILT_t cmd_mod_filt_t;
 typedef rfc_CMD_IEEE_CCA_REQ_t cmd_cca_req_t;
 
 typedef struct {
+  /* RF driver */
+  RF_Handle rf_handle;
+
+  /* Are we currently in poll mode? */
+  bool poll_mode;
+
+  /* RAT Overflow Upkeep */
+  struct {
+    struct ctimer overflow_timer;
+    rtimer_clock_t last_overflow;
+    volatile uint32_t overflow_count;
+  } rat;
+
+  bool (* rx_is_active)(void);
+
   /* Outgoing frame buffer */
   uint8_t tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
 
@@ -163,8 +176,6 @@ typedef struct {
   bool rf_is_on;
   /* Enable/disable CCA before sending */
   bool send_on_cca;
-  /* Are we currently in poll mode? */
-  bool poll_mode;
 
   /* Last RX operation stats */
   struct {
@@ -172,16 +183,6 @@ typedef struct {
     uint8_t corr_lqi;
     uint32_t timestamp;
   } last;
-
-  /* RAT Overflow Upkeep */
-  struct {
-    struct ctimer overflow_timer;
-    rtimer_clock_t last_overflow;
-    volatile uint32_t overflow_count;
-  } rat;
-
-  /* RF driver */
-  RF_Handle rf_handle;
 } ieee_radio_t;
 
 static ieee_radio_t ieee_radio;
@@ -209,10 +210,6 @@ rx_is_active(void)
   return v_cmd_rx.status == ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
-/* Forward declarations of local functions */
-static void check_rat_overflow(void);
-static uint32_t rat_to_timestamp(const uint32_t);
-/*---------------------------------------------------------------------------*/
 /* Forward declarations of Radio driver functions */
 static int init(void);
 static int prepare(const void *, unsigned short);
@@ -228,15 +225,6 @@ static radio_result_t get_value(radio_param_t, radio_value_t *);
 static radio_result_t set_value(radio_param_t, radio_value_t);
 static radio_result_t get_object(radio_param_t, void *, size_t);
 static radio_result_t set_object(radio_param_t, const void *, size_t);
-/*---------------------------------------------------------------------------*/
-static void
-rat_overflow_cb(void *arg)
-{
-  check_rat_overflow();
-  /* Check next time after half of the RAT interval */
-  const clock_time_t two_quarters = (2 * RAT_ONE_QUARTER * CLOCK_SECOND) / RAT_SECOND;
-  ctimer_set(&ieee_radio.rat.overflow_timer, two_quarters, rat_overflow_cb, NULL);
-}
 /*---------------------------------------------------------------------------*/
 static void
 init_rf_params(void)
@@ -301,6 +289,11 @@ set_channel(uint8_t channel)
     return true;
   }
 
+  if(ieee_radio.rf_is_on) {
+    /* Force RAT and RTC resync */
+    rf_restart_rat();
+  }
+
   v_cmd_rx.channel = channel;
 
   const uint32_t new_freq = dot_15_4g_freq(channel);
@@ -322,68 +315,15 @@ set_send_on_cca(bool enable)
   ieee_radio.send_on_cca = enable;
 }
 /*---------------------------------------------------------------------------*/
-static void
-check_rat_overflow(void)
-{
-  const bool was_off = !rx_is_active();
-
-  if(was_off) {
-    RF_runDirectCmd(ieee_radio.rf_handle, CMD_NOP);
-  }
-
-  const uint32_t current_value = RF_getCurrentTime();
-
-  static bool initial_iteration = true;
-  static uint32_t last_value;
-
-  if(initial_iteration) {
-    /* First time checking overflow will only store the current value */
-    initial_iteration = false;
-  } else {
-    /* Overflow happens in the last quarter of the RAT range */
-    if((current_value + RAT_ONE_QUARTER) < last_value) {
-      /* Overflow detected */
-      ieee_radio.rat.last_overflow = RTIMER_NOW();
-      ieee_radio.rat.overflow_count += 1;
-    }
-  }
-
-  last_value = current_value;
-
-  if(was_off) {
-    RF_yield(ieee_radio.rf_handle);
-  }
-}
-/*---------------------------------------------------------------------------*/
-static uint32_t
-rat_to_timestamp(const uint32_t rat_ticks)
-{
-  check_rat_overflow();
-
-  uint64_t adjusted_overflow_count = ieee_radio.rat.overflow_count;
-
-  /* If the timestamp is in the 4th quarter and the last overflow was recently,
-   * assume that the timestamp refers to the time before the overflow */
-  if(rat_ticks > RAT_THREE_QUARTERS) {
-    const rtimer_clock_t one_quarter = (RAT_ONE_QUARTER * RTIMER_SECOND) / RAT_SECOND;
-    if(RTIMER_CLOCK_LT(RTIMER_NOW(), ieee_radio.rat.last_overflow + one_quarter)) {
-      adjusted_overflow_count -= 1;
-    }
-  }
-
-  /* Add the overflowed time to the timestamp */
-  const uint64_t rat_ticks_adjusted = (uint64_t)rat_ticks + (uint64_t)RAT_RANGE * adjusted_overflow_count;
-
-  /* Correct timestamp so that it refers to the end of the SFD and convert to RTIMER */
-  return RAT_TO_RTIMER(rat_ticks_adjusted + RAT_TIMESTAMP_OFFSET);
-}
-/*---------------------------------------------------------------------------*/
 static int
 init(void)
 {
   RF_Params rf_params;
   RF_TxPowerTable_Value tx_power_value;
   RF_Stat rf_stat;
+
+  ieee_radio.rx_is_active = rx_is_active;
+  radio_mode = (simplelink_radio_mode_t *)&ieee_radio;
 
   if(ieee_radio.rf_handle) {
     LOG_WARN("Radio already initialized\n");
@@ -423,9 +363,7 @@ init(void)
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
   /* Start RAT overflow upkeep */
-  check_rat_overflow();
-  clock_time_t two_quarters = (2 * RAT_ONE_QUARTER * CLOCK_SECOND) / RAT_SECOND;
-  ctimer_set(&ieee_radio.rat.overflow_timer, two_quarters, rat_overflow_cb, NULL);
+  rat_init();
 
   /* Start RF process */
   process_start(&rf_sched_process, NULL);
@@ -462,7 +400,13 @@ transmit(unsigned short transmit_len)
    * Are we expecting ACK? The ACK Request flag is in the first Frame
    * Control Field byte, that is the first byte in the frame.
    */
-  const bool ack_request = (bool)(ieee_radio.tx_buf[FRAME_FCF_OFFSET] & FRAME_ACK_REQUEST);
+  bool ack_request;
+  if(!ieee_radio.poll_mode &&
+      (ieee_radio.tx_buf[FRAME_FCF_OFFSET] & FRAME_ACK_REQUEST)) {
+    ack_request = true;
+  } else {
+    ack_request = false;
+  }
   if(ack_request) {
     /* Yes, turn on chaining */
     v_cmd_tx.condition.rule = COND_STOP_ON_FALSE;
@@ -480,7 +424,7 @@ transmit(unsigned short transmit_len)
   v_cmd_tx.payloadLen = (uint8_t)transmit_len;
   v_cmd_tx.pPayload = ieee_radio.tx_buf;
 
-  res = netstack_sched_ieee_tx(ack_request);
+  res = netstack_sched_ieee_tx(transmit_len, ack_request);
 
   if(res != RF_RESULT_OK) {
     return RADIO_TX_ERR;
@@ -521,7 +465,7 @@ read(void *buf, unsigned short buf_len)
 
   if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
-    return -1;
+    return 0;
   }
 
   /*
@@ -575,7 +519,8 @@ read(void *buf, unsigned short buf_len)
   ieee_radio.last.corr_lqi = (uint8_t)(payload_ptr[payload_len + 3] & STATUS_CORRELATION);
   /* Timestamp stored FCS (2) + RSSI (1) + Status (1) bytes after payload. */
   const uint32_t rat_ticks = *(uint32_t *)(payload_ptr + payload_len + 4);
-  ieee_radio.last.timestamp = rat_to_timestamp(rat_ticks);
+  /* Correct timestamp so that it refers to the end of the SFD */
+  ieee_radio.last.timestamp = rat_to_timestamp(rat_ticks, RAT_TIMESTAMP_OFFSET);
 
   if(!ieee_radio.poll_mode) {
     /* Not in poll mode: packetbuf should not be accessed in interrupt context. */
@@ -647,8 +592,6 @@ static int
 channel_clear(void)
 {
   cmd_cca_req_t cmd_cca_req;
-  memset(&cmd_cca_req, 0x0, sizeof(cmd_cca_req_t));
-  cmd_cca_req.commandNo = CMD_IEEE_CCA_REQ;
 
   if(cca_request(&cmd_cca_req) != RF_RESULT_OK) {
     return 0;
@@ -662,8 +605,6 @@ static int
 receiving_packet(void)
 {
   cmd_cca_req_t cmd_cca_req;
-  memset(&cmd_cca_req, 0x0, sizeof(cmd_cca_req_t));
-  cmd_cca_req.commandNo = CMD_IEEE_CCA_REQ;
 
   if(cca_request(&cmd_cca_req) != RF_RESULT_OK) {
     return 0;
@@ -701,7 +642,7 @@ pending_packet(void)
     curr_entry = (data_entry_t *)curr_entry->pNextEntry;
   } while(curr_entry != read_entry);
 
-  if((num_pending > 0) && !ieee_radio.poll_mode) {
+  if(num_pending > 0 && !ieee_radio.poll_mode) {
     process_poll(&rf_sched_process);
   }
 

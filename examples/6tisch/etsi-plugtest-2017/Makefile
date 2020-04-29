@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = node
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_EXCLUDE = sky z1 nrf52dk native simplelink
+PLATFORMS_EXCLUDE = sky z1 nrf52dk native
 BOARDS_EXCLUDE = sensortag/cc2650 sensortag/cc1350
 
 MAKE_WITH_SECURITY   ?= 0 # force Security from command line

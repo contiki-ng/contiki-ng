@@ -109,9 +109,6 @@
 #error RAT_TO_RTIMER macro must be fixed!
 #endif
 
-/* The PHY header (preamble + SFD, 4+1 bytes) duration is equivalent to 10 symbols */
-#define RADIO_IEEE_802154_PHY_HEADER_DURATION_USEC 160
-
 /* Do not turn off TSCH within a timeslot: not enough time */
 #define TSCH_CONF_RADIO_ON_DURING_TIMESLOT 1
 
@@ -156,9 +153,9 @@
 #define TSCH_CONF_CHANNEL_SCAN_DURATION (CLOCK_SECOND / 10)
 #endif
 
-/* Increase this from the default 100 to improve TSCH association speed on this platform */
+/* Tweak to improve TSCH association speed on this platform */
 #ifndef TSCH_CONF_ASSOCIATION_POLL_FREQUENCY
-#define TSCH_CONF_ASSOCIATION_POLL_FREQUENCY 1000
+#define TSCH_CONF_ASSOCIATION_POLL_FREQUENCY 10
 #endif
 
 /* Slightly reduce the TSCH guard time (from 2200 usec to 1800 usec) to make sure
