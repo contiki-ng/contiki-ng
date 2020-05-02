@@ -199,6 +199,8 @@ extern process_event_t mqtt_update_event;
 
 /* Forward declaration */
 struct mqtt_connection;
+/* Only defined in MQTTv5 */
+struct mqtt_prop_list;
 
 typedef enum {
   MQTT_RETAIN_OFF,
@@ -769,7 +771,6 @@ uint8_t mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
                                  uint32_t *pkt_byte_count,
                                  uint16_t *dest);
 /*---------------------------------------------------------------------------*/
-#if MQTT_5
 /**
  * \brief Send authentication message (MQTTv5-only).
  * \param conn A pointer to the MQTT connection.
@@ -783,7 +784,6 @@ uint8_t mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
 mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
                         mqtt_auth_type_t auth_type,
                         struct mqtt_prop_list *prop_list);
-#endif
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */
 /*---------------------------------------------------------------------------*/
