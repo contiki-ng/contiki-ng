@@ -63,7 +63,7 @@
 
 #define MQTT_PROP_LIST_NONE NULL
 /*----------------------------------------------------------------------------*/
-struct mqtt_prop_list_t {
+struct mqtt_prop_list {
   /* Total length of properties */
   uint32_t properties_len;
   uint8_t properties_len_enc[MQTT_MAX_PROP_LEN_BYTES];
@@ -72,7 +72,7 @@ struct mqtt_prop_list_t {
 };
 
 /* This struct represents output packet Properties (MQTTv5.0). */
-struct mqtt_out_property_t {
+struct mqtt_out_property {
   /* Used by the list interface, must be first in the struct. */
   struct mqtt_out_property_t *next;
 
@@ -87,38 +87,38 @@ struct mqtt_out_property_t {
   uint8_t val[MQTT_MAX_PROP_LENGTH];
 };
 
-typedef struct {
+struct mqtt_bin_data {
   uint16_t len;
   uint8_t data[MQTT_MAX_PROP_LENGTH];
-} mqtt_bin_data_t;
+};
 
-typedef struct {
+struct mqtt_auth_event {
   struct mqtt_string auth_method;
-  mqtt_bin_data_t auth_data;
-} mqtt_auth_event_t;
+  struct mqtt_bin_data auth_data;
+};
 /*----------------------------------------------------------------------------*/
 void print_input_props(struct mqtt_connection *conn);
 
-uint32_t encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
+uint32_t encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
                      va_list args);
 
 void parse_connack_props(struct mqtt_connection *conn);
 
-void parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event);
+void parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *event);
 
 void decode_input_props(struct mqtt_connection *conn);
 
-uint8_t register_prop(struct mqtt_prop_list_t **prop_list,
-                      struct mqtt_out_property_t **prop_out,
+uint8_t register_prop(struct mqtt_prop_list **prop_list,
+                      struct mqtt_out_property **prop_out,
 #if !MQTT_PROP_USE_MEMB
-                      struct mqtt_out_property_t *prop,
+                      struct mqtt_out_property *prop,
 #endif
                       mqtt_msg_type_t msg,
                       mqtt_vhdr_prop_t prop_id, ...);
 
-void create_prop_list(struct mqtt_prop_list_t **prop_list_out);
+void create_prop_list(struct mqtt_prop_list **prop_list_out);
 
-void print_props(struct mqtt_prop_list_t *prop_list, mqtt_vhdr_prop_t prop_id);
+void print_props(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id);
 
 void props_init();
 /*---------------------------------------------------------------------------*/

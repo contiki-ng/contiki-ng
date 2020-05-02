@@ -255,12 +255,12 @@ static const uint8_t mqtt_client_extension_count = 0;
 #if MQTT_5
 static uint8_t PUB_TOPIC_ALIAS;
 
-struct mqtt_prop_list_t *publish_props;
+struct mqtt_prop_list *publish_props;
 
 /* Control whether or not to perform authentication (MQTTv5) */
 #define MQTT_5_AUTH_EN 0
 #if MQTT_5_AUTH_EN
-struct mqtt_prop_list_t *auth_props;
+mqtt_prop_list *auth_props;
 #endif
 #endif
 /*---------------------------------------------------------------------------*/
@@ -385,7 +385,7 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
 #if MQTT_31
     LOG_DBG("Application is subscribed to topic successfully\n");
 #else
-    mqtt_suback_event_t *suback_event = (mqtt_suback_event_t *)data;
+    struct mqtt_suback_event *suback_event = (struct mqtt_suback_event *)data;
 
     if(suback_event->success) {
       LOG_DBG("Application is subscribed to topic successfully\n");

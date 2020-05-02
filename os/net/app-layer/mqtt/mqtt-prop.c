@@ -38,8 +38,8 @@
 #include <stdlib.h>
 /*---------------------------------------------------------------------------*/
 #if MQTT_PROP_USE_MEMB
-MEMB(prop_lists_mem, struct mqtt_prop_list_t, MQTT_MAX_OUT_PROP_LISTS);
-MEMB(props_mem, struct mqtt_out_property_t, MQTT_MAX_OUT_PROPS);
+MEMB(prop_lists_mem, struct mqtt_prop_list, MQTT_MAX_OUT_PROP_LISTS);
+MEMB(props_mem, struct mqtt_out_property, MQTT_MAX_OUT_PROPS);
 #endif
 /*----------------------------------------------------------------------------*/
 void
@@ -52,7 +52,7 @@ props_init()
 }
 /*----------------------------------------------------------------------------*/
 static void
-encode_prop_fixed_len_int(struct mqtt_out_property_t **prop_out,
+encode_prop_fixed_len_int(struct mqtt_out_property **prop_out,
                           int val, uint8_t len)
 {
   int8_t i;
@@ -73,7 +73,7 @@ encode_prop_fixed_len_int(struct mqtt_out_property_t **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 static void
-encode_prop_utf8(struct mqtt_out_property_t **prop_out,
+encode_prop_utf8(struct mqtt_out_property **prop_out,
                  const char *str)
 {
   int str_len;
@@ -95,7 +95,7 @@ encode_prop_utf8(struct mqtt_out_property_t **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 static void
-encode_prop_binary(struct mqtt_out_property_t **prop_out,
+encode_prop_binary(struct mqtt_out_property **prop_out,
                    const char *data, int data_len)
 {
   DBG("MQTT - Encoding Binary Data (%d bytes)\n", data_len);
@@ -113,7 +113,7 @@ encode_prop_binary(struct mqtt_out_property_t **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 static void
-encode_prop_var_byte_int(struct mqtt_out_property_t **prop_out,
+encode_prop_var_byte_int(struct mqtt_out_property **prop_out,
                          int val)
 {
   uint8_t id_len;
@@ -129,7 +129,7 @@ encode_prop_var_byte_int(struct mqtt_out_property_t **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 uint32_t
-encode_prop(struct mqtt_out_property_t **prop_out, mqtt_vhdr_prop_t prop_id,
+encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
             va_list args)
 {
   DBG("MQTT - Creating property with ID %i\n", prop_id);
@@ -570,7 +570,7 @@ parse_connack_props(struct mqtt_connection *conn)
 }
 /*---------------------------------------------------------------------------*/
 void
-parse_auth_props(struct mqtt_connection *conn, mqtt_auth_event_t *event)
+parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *event)
 {
   uint32_t prop_len;
   mqtt_vhdr_prop_t prop_id;
@@ -678,7 +678,7 @@ print_input_props(struct mqtt_connection *conn)
 /*----------------------------------------------------------------------------*/
 /* Creates a property list for the requested message type */
 void
-create_prop_list(struct mqtt_prop_list_t **prop_list_out)
+create_prop_list(struct mqtt_prop_list **prop_list_out)
 {
   DBG("MQTT - Creating Property List\n");
 
@@ -706,35 +706,35 @@ create_prop_list(struct mqtt_prop_list_t **prop_list_out)
  * by property ID
  */
 void
-print_props(struct mqtt_prop_list_t *prop_list, mqtt_vhdr_prop_t prop_id)
+print_props(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id)
 {
-  struct mqtt_out_property_t *prop;
+  struct mqtt_out_property *prop;
 
   if(prop_list == NULL || prop_list->props == NULL) {
     DBG("MQTT - Prop list empty\n");
   } else {
-    prop = (struct mqtt_out_property_t *)list_head(prop_list->props);
+    prop = (struct mqtt_out_property *)list_head(prop_list->props);
 
     do {
       if(prop != NULL && (prop->id == prop_id || prop_id == MQTT_VHDR_PROP_ANY)) {
         DBG("Property %p ID %i len %i\n", prop, prop->id, prop->property_len);
       }
-      prop = (struct mqtt_out_property_t *)list_item_next(prop);
+      prop = (struct mqtt_out_property *)list_item_next(prop);
     } while(prop != NULL);
   }
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-register_prop(struct mqtt_prop_list_t **prop_list,
-              struct mqtt_out_property_t **prop_out,
+register_prop(struct mqtt_prop_list **prop_list,
+              struct mqtt_out_property **prop_out,
 #if !MQTT_PROP_USE_MEMB
-              struct mqtt_out_property_t *prop,
+              struct mqtt_out_property *prop,
 #endif
               mqtt_msg_type_t msg,
               mqtt_vhdr_prop_t prop_id, ...)
 {
 #if MQTT_PROP_USE_MEMB
-  struct mqtt_out_property_t *prop;
+  struct mqtt_out_property *prop;
 #endif
   va_list args;
   uint32_t prop_len;
@@ -753,7 +753,7 @@ register_prop(struct mqtt_prop_list_t **prop_list,
   DBG("MQTT - prop list->list %p\n", (*prop_list)->props);
 
 #if MQTT_PROP_USE_MEMB
-  prop = (struct mqtt_out_property_t *)memb_alloc(&props_mem);
+  prop = (struct mqtt_out_property *)memb_alloc(&props_mem);
 #endif
 
   if(!prop) {
@@ -795,8 +795,8 @@ register_prop(struct mqtt_prop_list_t **prop_list,
 /*----------------------------------------------------------------------------*/
 /* Remove one property from list and free its memory */
 uint8_t
-remove_prop(struct mqtt_prop_list_t **prop_list,
-            struct mqtt_out_property_t *prop)
+remove_prop(struct mqtt_prop_list **prop_list,
+            struct mqtt_out_property *prop)
 {
   if(prop != NULL && prop_list != NULL && list_contains((*prop_list)->props, prop)) {
     DBG("MQTT - Removing property %p from list %p\n", prop, *prop_list);
@@ -825,9 +825,9 @@ remove_prop(struct mqtt_prop_list_t **prop_list,
 }
 /* Remove & frees all properties in the list */
 void
-clear_prop_list(struct mqtt_prop_list_t **prop_list)
+clear_prop_list(struct mqtt_prop_list **prop_list)
 {
-  struct mqtt_out_property_t *prop;
+  struct mqtt_out_property *prop;
 
   DBG("MQTT - Clearing Property List\n");
 
@@ -835,13 +835,13 @@ clear_prop_list(struct mqtt_prop_list_t **prop_list)
     DBG("MQTT - Prop list empty\n");
     return;
   } else {
-    prop = (struct mqtt_out_property_t *)list_head((*prop_list)->props);
+    prop = (struct mqtt_out_property *)list_head((*prop_list)->props);
 
     do {
       if(prop != NULL) {
         (void)remove_prop(prop_list, prop);
       }
-      prop = (struct mqtt_out_property_t *)list_head((*prop_list)->props);
+      prop = (struct mqtt_out_property *)list_head((*prop_list)->props);
     } while(prop != NULL);
   }
 

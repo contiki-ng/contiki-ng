@@ -386,18 +386,18 @@ struct mqtt_string {
  *
  * This could be part of a union of event data structures.
  */
-typedef struct {
+struct mqtt_suback_event {
   uint16_t mid;
   mqtt_qos_level_t qos_level;
 #if !MQTT_31
   uint8_t return_code;
   uint8_t success;
 #endif
-} mqtt_suback_event_t;
+};
 
-typedef struct {
+struct mqtt_connack_event {
   uint8_t session_present;
-} mqtt_connack_event_t;
+};
 
 typedef enum {
   MQTT_AUTH_NORMAL,
@@ -566,7 +566,7 @@ struct mqtt_connection {
   /* Server Capabilities */
   /* Binary capabilities (default: enabled) */
   uint8_t srv_feature_en;
-  struct mqtt_prop_list_t *out_props;
+  struct mqtt_prop_list *out_props;
 #endif
 };
 /* This is the API exposed to the user. */
@@ -613,7 +613,7 @@ mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
                            uint16_t keep_alive,
 #if MQTT_5
                            uint8_t clean_session,
-                           struct mqtt_prop_list_t *prop_list);
+                           struct mqtt_prop_list *prop_list);
 #else
                            uint8_t clean_session);
 #endif
@@ -627,7 +627,7 @@ mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
  */
 #if MQTT_5
 void mqtt_disconnect(struct mqtt_connection *conn,
-                     struct mqtt_prop_list_t *prop_list);
+                     struct mqtt_prop_list *prop_list);
 #else
 void mqtt_disconnect(struct mqtt_connection *conn);
 #endif
@@ -653,7 +653,7 @@ mqtt_status_t mqtt_subscribe(struct mqtt_connection *conn,
                              mqtt_qos_level_t qos_level,
                              mqtt_nl_en_t nl, mqtt_rap_en_t rap,
                              mqtt_retain_handling_t ret_handling,
-                             struct mqtt_prop_list_t *prop_list);
+                             struct mqtt_prop_list *prop_list);
 #else
                              mqtt_qos_level_t qos_level);
 #endif
@@ -672,7 +672,7 @@ mqtt_status_t mqtt_unsubscribe(struct mqtt_connection *conn,
                                uint16_t *mid,
 #if MQTT_5
                                char *topic,
-                               struct mqtt_prop_list_t *prop_list);
+                               struct mqtt_prop_list *prop_list);
 #else
                                char *topic);
 #endif
@@ -707,7 +707,7 @@ mqtt_status_t mqtt_publish(struct mqtt_connection *conn,
                            mqtt_retain_t retain,
                            uint8_t topic_alias,
                            mqtt_topic_alias_en_t topic_alias_en,
-                           struct mqtt_prop_list_t *prop_list);
+                           struct mqtt_prop_list *prop_list);
 #else
                            mqtt_retain_t retain);
 #endif
@@ -748,7 +748,7 @@ void mqtt_set_last_will(struct mqtt_connection *conn,
                         char *message,
 #if MQTT_5
                         mqtt_qos_level_t qos,
-                        struct mqtt_prop_list_t *will_props);
+                        struct mqtt_prop_list *will_props);
 #else
                         mqtt_qos_level_t qos);
 #endif
@@ -782,7 +782,7 @@ uint8_t decode_var_byte_int(const uint8_t *input_data_ptr,
  */
 mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
                         mqtt_auth_type_t auth_type,
-                        struct mqtt_prop_list_t *prop_list);
+                        struct mqtt_prop_list *prop_list);
 #endif
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */

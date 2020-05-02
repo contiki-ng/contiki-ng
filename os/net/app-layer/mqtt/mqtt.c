@@ -464,11 +464,11 @@ reset_packet(struct mqtt_in_packet *packet)
 #if MQTT_5
 static
 PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
-                          struct mqtt_prop_list_t *prop_list))
+                          struct mqtt_prop_list *prop_list))
 {
   PT_BEGIN(pt);
 
-  struct mqtt_out_property_t *prop;
+  struct mqtt_out_property *prop;
 
   if(prop_list) {
     DBG("MQTT - Writing %i property bytes\n", prop_list->properties_len + prop_list->properties_len_enc_bytes);
@@ -477,7 +477,7 @@ PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
                         prop_list->properties_len_enc,
                         prop_list->properties_len_enc_bytes);
 
-    prop = (struct mqtt_out_property_t *)list_head(prop_list->props);
+    prop = (struct mqtt_out_property *)list_head(prop_list->props);
     do {
       if(prop != NULL) {
         DBG("MQTT - Property ID %i len %i\n", prop->id, prop->property_len);
@@ -486,7 +486,7 @@ PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
                             prop->val,
                             prop->property_len);
       }
-      prop = (struct mqtt_out_property_t *)list_item_next(prop);
+      prop = (struct mqtt_out_property *)list_item_next(prop);
     } while(prop != NULL);
   } else {
     /* Write Property Length */
@@ -504,9 +504,9 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_BEGIN(pt);
 
 #if MQTT_5
-  struct mqtt_prop_list_t *will_props = MQTT_PROP_LIST_NONE;
+  struct mqtt_prop_list *will_props = MQTT_PROP_LIST_NONE;
   if(conn->will.properties) {
-    will_props = (struct mqtt_prop_list_t *)list_head(conn->will.properties);
+    will_props = (struct mqtt_prop_list *)list_head(conn->will.properties);
   }
 #endif
 
@@ -992,7 +992,7 @@ PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
 static void
 handle_connack(struct mqtt_connection *conn)
 {
-  mqtt_connack_event_t connack_event;
+  struct mqtt_connack_event connack_event;
 
   DBG("MQTT - Got CONNACK\n");
 
@@ -1059,7 +1059,7 @@ handle_pingresp(struct mqtt_connection *conn)
 static void
 handle_suback(struct mqtt_connection *conn)
 {
-  mqtt_suback_event_t suback_event;
+  struct mqtt_suback_event suback_event;
 
   DBG("MQTT - Got SUBACK\n");
 
@@ -1250,7 +1250,7 @@ handle_disconnect(struct mqtt_connection *conn)
 static void
 handle_auth(struct mqtt_connection *conn)
 {
-  mqtt_auth_event_t event;
+  struct mqtt_auth_event event;
 
   DBG("MQTT - (handle_auth) Got AUTH.\n");
 
@@ -1797,7 +1797,7 @@ mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
              uint16_t keep_alive,
 #if MQTT_5
              uint8_t clean_session,
-             struct mqtt_prop_list_t *prop_list)
+             struct mqtt_prop_list *prop_list)
 #else
              uint8_t clean_session)
 #endif
@@ -1846,7 +1846,7 @@ mqtt_connect(struct mqtt_connection *conn, char *host, uint16_t port,
 void
 #if MQTT_5
 mqtt_disconnect(struct mqtt_connection *conn,
-                struct mqtt_prop_list_t *prop_list)
+                struct mqtt_prop_list *prop_list)
 #else
 mqtt_disconnect(struct mqtt_connection *conn)
 #endif
@@ -1870,7 +1870,7 @@ mqtt_subscribe(struct mqtt_connection *conn, uint16_t *mid, char *topic,
                mqtt_qos_level_t qos_level,
                mqtt_nl_en_t nl, mqtt_rap_en_t rap,
                mqtt_retain_handling_t ret_handling,
-               struct mqtt_prop_list_t *prop_list)
+               struct mqtt_prop_list *prop_list)
 #else
                mqtt_qos_level_t qos_level)
 #endif
@@ -1920,7 +1920,7 @@ mqtt_status_t
 mqtt_unsubscribe(struct mqtt_connection *conn, uint16_t *mid,
 #if MQTT_5
                  char *topic,
-                 struct mqtt_prop_list_t *prop_list)
+                 struct mqtt_prop_list *prop_list)
 #else
                  char *topic)
 #endif
@@ -1962,7 +1962,7 @@ mqtt_publish(struct mqtt_connection *conn, uint16_t *mid, char *topic,
 #if MQTT_5
              mqtt_retain_t retain,
              uint8_t topic_alias, mqtt_topic_alias_en_t topic_alias_en,
-             struct mqtt_prop_list_t *prop_list)
+             struct mqtt_prop_list *prop_list)
 #else
              mqtt_retain_t retain)
 #endif
@@ -2041,7 +2041,7 @@ mqtt_set_username_password(struct mqtt_connection *conn, char *username,
 void
 mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
 #if MQTT_5
-                   mqtt_qos_level_t qos, struct mqtt_prop_list_t *will_props)
+                   mqtt_qos_level_t qos, struct mqtt_prop_list *will_props)
 #else
                    mqtt_qos_level_t qos)
 #endif
@@ -2074,7 +2074,7 @@ mqtt_set_last_will(struct mqtt_connection *conn, char *topic, char *message,
 mqtt_status_t
 mqtt_auth(struct mqtt_connection *conn,
           mqtt_auth_type_t auth_type,
-          struct mqtt_prop_list_t *prop_list)
+          struct mqtt_prop_list *prop_list)
 {
   DBG("MQTT - Call to mqtt_auth...\n");
 
