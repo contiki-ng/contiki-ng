@@ -759,15 +759,15 @@ void mqtt_set_last_will(struct mqtt_connection *conn,
 #define mqtt_ready(conn) \
   (!(conn)->out_queue_full && mqtt_connected((conn)))
 /*---------------------------------------------------------------------------*/
-void encode_var_byte_int(uint8_t *vbi_out,
-                         uint8_t *vbi_bytes,
-                         uint32_t val);
+void mqtt_encode_var_byte_int(uint8_t *vbi_out,
+                              uint8_t *vbi_bytes,
+                              uint32_t val);
 /*---------------------------------------------------------------------------*/
-uint8_t decode_var_byte_int(const uint8_t *input_data_ptr,
-                            int input_data_len,
-                            uint32_t *input_pos,
-                            uint32_t *pkt_byte_count,
-                            uint16_t *dest);
+uint8_t mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
+                                 int input_data_len,
+                                 uint32_t *input_pos,
+                                 uint32_t *pkt_byte_count,
+                                 uint16_t *dest);
 /*---------------------------------------------------------------------------*/
 #if MQTT_5
 /**

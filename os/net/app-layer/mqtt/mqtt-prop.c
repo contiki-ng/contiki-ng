@@ -43,7 +43,7 @@ MEMB(props_mem, struct mqtt_out_property, MQTT_MAX_OUT_PROPS);
 #endif
 /*----------------------------------------------------------------------------*/
 void
-props_init()
+mqtt_props_init()
 {
 #if MQTT_PROP_USE_MEMB
   memb_init(&props_mem);
@@ -120,7 +120,7 @@ encode_prop_var_byte_int(struct mqtt_out_property **prop_out,
 
   DBG("MQTT - Encoding Variable Byte Integer %d\n", val);
 
-  encode_var_byte_int(
+  mqtt_encode_var_byte_int(
     (*prop_out)->val,
     &id_len,
     val);
@@ -129,8 +129,8 @@ encode_prop_var_byte_int(struct mqtt_out_property **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 uint32_t
-encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
-            va_list args)
+mqtt_encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
+                 va_list args)
 {
   DBG("MQTT - Creating property with ID %i\n", prop_id);
 
@@ -249,7 +249,7 @@ encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
 /*---------------------------------------------------------------------------*/
 #if MQTT_5
 void
-decode_input_props(struct mqtt_connection *conn)
+mqtt_decode_input_props(struct mqtt_connection *conn)
 {
   uint8_t prop_len_bytes;
 
@@ -264,9 +264,9 @@ decode_input_props(struct mqtt_connection *conn)
   DBG("MQTT - Getting length\n");
 
   prop_len_bytes =
-    decode_var_byte_int(conn->in_packet.payload_start,
-                        conn->in_packet.remaining_length - (conn->in_packet.payload_start - conn->in_packet.payload),
-                        NULL, NULL, &conn->in_packet.properties_len);
+    mqtt_decode_var_byte_int(conn->in_packet.payload_start,
+                             conn->in_packet.remaining_length - (conn->in_packet.payload_start - conn->in_packet.payload),
+                             NULL, NULL, &conn->in_packet.properties_len);
 
   if(prop_len_bytes == 0) {
     DBG("MQTT - Error decoding input properties (out of bounds)\n");
@@ -359,7 +359,7 @@ decode_prop_vbi(struct mqtt_connection *conn,
   memset(data, 0, 4);
 
   prop_len_bytes =
-    decode_var_byte_int(buf_in, 4, NULL, NULL, (uint16_t *)data);
+    mqtt_decode_var_byte_int(buf_in, 4, NULL, NULL, (uint16_t *)data);
 
   if(prop_len_bytes == 0) {
     DBG("MQTT - Error decoding Variable Byte Integer\n");
@@ -481,8 +481,8 @@ parse_prop(struct mqtt_connection *conn,
 /*---------------------------------------------------------------------------*/
 #if MQTT_5
 uint32_t
-get_next_in_prop(struct mqtt_connection *conn,
-                 mqtt_vhdr_prop_t *prop_id, uint8_t *data)
+mqtt_get_next_in_prop(struct mqtt_connection *conn,
+                      mqtt_vhdr_prop_t *prop_id, uint8_t *data)
 {
   uint32_t prop_len;
   uint8_t prop_id_len_bytes;
@@ -503,9 +503,9 @@ get_next_in_prop(struct mqtt_connection *conn,
   }
 
   prop_id_len_bytes =
-    decode_var_byte_int(conn->in_packet.curr_props_pos,
-                        conn->in_packet.properties_len - (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
-                        NULL, NULL, (uint16_t *)prop_id);
+    mqtt_decode_var_byte_int(conn->in_packet.curr_props_pos,
+                             conn->in_packet.properties_len - (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
+                             NULL, NULL, (uint16_t *)prop_id);
 
   DBG("MQTT - Decoded property ID %i (encoded using %i bytes)\n", *prop_id, prop_id_len_bytes);
 
@@ -519,7 +519,7 @@ get_next_in_prop(struct mqtt_connection *conn,
 }
 /*---------------------------------------------------------------------------*/
 void
-parse_connack_props(struct mqtt_connection *conn)
+mqtt_parse_connack_props(struct mqtt_connection *conn)
 {
   uint32_t prop_len;
   mqtt_vhdr_prop_t prop_id;
@@ -528,7 +528,7 @@ parse_connack_props(struct mqtt_connection *conn)
 
   DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
 
-  prop_len = get_next_in_prop(conn, &prop_id, data);
+  prop_len = mqtt_get_next_in_prop(conn, &prop_id, data);
   while(prop_len) {
     switch(prop_id) {
     case MQTT_VHDR_PROP_RETAIN_AVAIL: {
@@ -565,12 +565,12 @@ parse_connack_props(struct mqtt_connection *conn)
     }
 
     prop_id = 0;
-    prop_len = get_next_in_prop(conn, &prop_id, data);
+    prop_len = mqtt_get_next_in_prop(conn, &prop_id, data);
   }
 }
 /*---------------------------------------------------------------------------*/
 void
-parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *event)
+mqtt_parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *event)
 {
   uint32_t prop_len;
   mqtt_vhdr_prop_t prop_id;
@@ -581,7 +581,7 @@ parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *event)
   event->auth_data.len = 0;
   event->auth_method.length = 0;
 
-  prop_len = get_next_in_prop(conn, &prop_id, data);
+  prop_len = mqtt_get_next_in_prop(conn, &prop_id, data);
   while(prop_len) {
     switch(prop_id) {
     case MQTT_VHDR_PROP_AUTH_DATA: {
@@ -600,12 +600,12 @@ parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *event)
     }
 
     prop_id = 0;
-    prop_len = get_next_in_prop(conn, &prop_id, data);
+    prop_len = mqtt_get_next_in_prop(conn, &prop_id, data);
   }
 }
 /*---------------------------------------------------------------------------*/
 void
-print_input_props(struct mqtt_connection *conn)
+mqtt_print_input_props(struct mqtt_connection *conn)
 {
   uint32_t prop_len;
   mqtt_vhdr_prop_t prop_id;
@@ -614,7 +614,7 @@ print_input_props(struct mqtt_connection *conn)
 
   DBG("MQTT - Printing all input properties\n");
 
-  prop_len = get_next_in_prop(conn, &prop_id, data);
+  prop_len = mqtt_get_next_in_prop(conn, &prop_id, data);
   while(prop_len) {
     DBG("MQTT - Property ID %i, length %i\n", prop_id, prop_len);
 
@@ -669,7 +669,7 @@ print_input_props(struct mqtt_connection *conn)
     }
 
     prop_id = 0;
-    prop_len = get_next_in_prop(conn, &prop_id, data);
+    prop_len = mqtt_get_next_in_prop(conn, &prop_id, data);
   }
 }
 /*
@@ -678,7 +678,7 @@ print_input_props(struct mqtt_connection *conn)
 /*----------------------------------------------------------------------------*/
 /* Creates a property list for the requested message type */
 void
-create_prop_list(struct mqtt_prop_list **prop_list_out)
+mqtt_create_prop_list(struct mqtt_prop_list **prop_list_out)
 {
   DBG("MQTT - Creating Property List\n");
 
@@ -706,7 +706,7 @@ create_prop_list(struct mqtt_prop_list **prop_list_out)
  * by property ID
  */
 void
-print_props(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id)
+mqtt_print_props(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id)
 {
   struct mqtt_out_property *prop;
 
@@ -725,13 +725,13 @@ print_props(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-register_prop(struct mqtt_prop_list **prop_list,
-              struct mqtt_out_property **prop_out,
+mqtt_register_prop(struct mqtt_prop_list **prop_list,
+                   struct mqtt_out_property **prop_out,
 #if !MQTT_PROP_USE_MEMB
-              struct mqtt_out_property *prop,
+                   struct mqtt_out_property *prop,
 #endif
-              mqtt_msg_type_t msg,
-              mqtt_vhdr_prop_t prop_id, ...)
+                   mqtt_msg_type_t msg,
+                   mqtt_vhdr_prop_t prop_id, ...)
 {
 #if MQTT_PROP_USE_MEMB
   struct mqtt_out_property *prop;
@@ -764,14 +764,14 @@ register_prop(struct mqtt_prop_list **prop_list,
 
   DBG("MQTT - Allocated prop %p\n", prop);
 
-  prop_len = encode_prop(&prop, prop_id, args);
+  prop_len = mqtt_encode_prop(&prop, prop_id, args);
 
   if(prop) {
     DBG("MQTT - Adding prop %p to prop_list %p\n", prop, *prop_list);
     list_add((*prop_list)->props, prop);
     (*prop_list)->properties_len += 1; /* Property ID */
     (*prop_list)->properties_len += prop_len;
-    encode_var_byte_int(
+    mqtt_encode_var_byte_int(
       (*prop_list)->properties_len_enc,
       &((*prop_list)->properties_len_enc_bytes),
       (*prop_list)->properties_len);
@@ -795,8 +795,8 @@ register_prop(struct mqtt_prop_list **prop_list,
 /*----------------------------------------------------------------------------*/
 /* Remove one property from list and free its memory */
 uint8_t
-remove_prop(struct mqtt_prop_list **prop_list,
-            struct mqtt_out_property *prop)
+mqtt_remove_prop(struct mqtt_prop_list **prop_list,
+                 struct mqtt_out_property *prop)
 {
   if(prop != NULL && prop_list != NULL && list_contains((*prop_list)->props, prop)) {
     DBG("MQTT - Removing property %p from list %p\n", prop, *prop_list);
@@ -808,7 +808,7 @@ remove_prop(struct mqtt_prop_list **prop_list,
     (*prop_list)->properties_len -= prop->property_len;
     (*prop_list)->properties_len -= 1; /* Property ID */
 
-    encode_var_byte_int(
+    mqtt_encode_var_byte_int(
       (*prop_list)->properties_len_enc,
       &((*prop_list)->properties_len_enc_bytes),
       (*prop_list)->properties_len);
@@ -825,7 +825,7 @@ remove_prop(struct mqtt_prop_list **prop_list,
 }
 /* Remove & frees all properties in the list */
 void
-clear_prop_list(struct mqtt_prop_list **prop_list)
+mqtt_clear_prop_list(struct mqtt_prop_list **prop_list)
 {
   struct mqtt_out_property *prop;
 
@@ -839,7 +839,7 @@ clear_prop_list(struct mqtt_prop_list **prop_list)
 
     do {
       if(prop != NULL) {
-        (void)remove_prop(prop_list, prop);
+        (void)mqtt_remove_prop(prop_list, prop);
       }
       prop = (struct mqtt_out_property *)list_head((*prop_list)->props);
     } while(prop != NULL);

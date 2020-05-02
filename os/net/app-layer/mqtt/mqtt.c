@@ -374,11 +374,11 @@ write_bytes(struct mqtt_connection *conn, uint8_t *data, uint16_t len)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-decode_var_byte_int(const uint8_t *input_data_ptr,
-                    int input_data_len,
-                    uint32_t *input_pos,
-                    uint32_t *pkt_byte_count,
-                    uint16_t *dest)
+mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
+                         int input_data_len,
+                         uint32_t *input_pos,
+                         uint32_t *pkt_byte_count,
+                         uint16_t *dest)
 {
   uint8_t read_bytes = 0;
   uint8_t byte_in;
@@ -415,9 +415,9 @@ decode_var_byte_int(const uint8_t *input_data_ptr,
 }
 /*---------------------------------------------------------------------------*/
 void
-encode_var_byte_int(uint8_t *vbi_out,
-                    uint8_t *vbi_bytes,
-                    uint32_t val)
+mqtt_encode_var_byte_int(uint8_t *vbi_out,
+                         uint8_t *vbi_bytes,
+                         uint32_t val)
 {
   uint8_t digit;
 
@@ -542,9 +542,9 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   }
 #endif
 
-  encode_var_byte_int(conn->out_packet.remaining_length_enc,
-                      &conn->out_packet.remaining_length_enc_bytes,
-                      conn->out_packet.remaining_length);
+  mqtt_encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                           &conn->out_packet.remaining_length_enc_bytes,
+                           conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -695,9 +695,9 @@ PT_THREAD(subscribe_pt(struct pt *pt, struct mqtt_connection *conn))
     : 1;
 #endif
 
-  encode_var_byte_int(conn->out_packet.remaining_length_enc,
-                      &conn->out_packet.remaining_length_enc_bytes,
-                      conn->out_packet.remaining_length);
+  mqtt_encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                           &conn->out_packet.remaining_length_enc_bytes,
+                           conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -769,9 +769,9 @@ PT_THREAD(unsubscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   conn->out_packet.remaining_length = MQTT_MID_SIZE +
     MQTT_STRING_LEN_SIZE +
     conn->out_packet.topic_length;
-  encode_var_byte_int(conn->out_packet.remaining_length_enc,
-                      &conn->out_packet.remaining_length_enc_bytes,
-                      conn->out_packet.remaining_length);
+  mqtt_encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                           &conn->out_packet.remaining_length_enc_bytes,
+                           conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -844,9 +844,9 @@ PT_THREAD(publish_pt(struct pt *pt, struct mqtt_connection *conn))
     : 1;
 #endif
 
-  encode_var_byte_int(conn->out_packet.remaining_length_enc,
-                      &conn->out_packet.remaining_length_enc_bytes,
-                      conn->out_packet.remaining_length);
+  mqtt_encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                           &conn->out_packet.remaining_length_enc_bytes,
+                           conn->out_packet.remaining_length);
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
     PRINTF("MQTT - Error, remaining length > 4 bytes\n");
@@ -959,9 +959,9 @@ PT_THREAD(auth_pt(struct pt *pt, struct mqtt_connection *conn))
     conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
     : 1;
 
-  encode_var_byte_int(conn->out_packet.remaining_length_enc,
-                      &conn->out_packet.remaining_length_enc_bytes,
-                      conn->out_packet.remaining_length);
+  mqtt_encode_var_byte_int(conn->out_packet.remaining_length_enc,
+                           &conn->out_packet.remaining_length_enc_bytes,
+                           conn->out_packet.remaining_length);
 
   if(conn->out_packet.remaining_length_enc_bytes > 4) {
     call_event(conn, MQTT_EVENT_PROTOCOL_ERROR, NULL);
@@ -1039,7 +1039,7 @@ handle_connack(struct mqtt_connection *conn)
     abort_connection(conn);
     return;
   }
-  parse_connack_props(conn);
+  mqtt_parse_connack_props(conn);
 #endif
 
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
@@ -1269,7 +1269,7 @@ handle_auth(struct mqtt_connection *conn)
     DBG("MQTT - (handle_auth) Not reauth - Reason Code 0x18 expected!\n");
   }
 
-  parse_auth_props(conn, &event);
+  mqtt_parse_auth_props(conn, &event);
   call_event(conn, MQTT_EVENT_AUTH, &event);
 }
 #endif
@@ -1319,7 +1319,7 @@ parse_vhdr(struct mqtt_connection *conn)
   }
 
   if(!conn->in_packet.has_props) {
-    decode_input_props(conn);
+    mqtt_decode_input_props(conn);
   }
 #endif
 }
@@ -1361,9 +1361,9 @@ tcp_input(struct tcp_socket *s,
   /* Read the Remaining Length field, if we do not have it */
   if(!conn->in_packet.has_remaining_length) {
     remaining_length_bytes =
-      decode_var_byte_int(input_data_ptr, input_data_len, &pos,
-                          &conn->in_packet.byte_counter,
-                          &conn->in_packet.remaining_length);
+      mqtt_decode_var_byte_int(input_data_ptr, input_data_len, &pos,
+                               &conn->in_packet.byte_counter,
+                               &conn->in_packet.remaining_length);
 
     if(remaining_length_bytes == 0) {
       call_event(conn, MQTT_EVENT_ERROR, NULL);
@@ -1435,7 +1435,7 @@ tcp_input(struct tcp_socket *s,
 
 #if MQTT_5
       if(!conn->in_packet.has_props) {
-        decode_input_props(conn);
+        mqtt_decode_input_props(conn);
       }
 
       if(conn->in_publish_msg.first_chunk) {

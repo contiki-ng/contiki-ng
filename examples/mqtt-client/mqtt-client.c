@@ -377,7 +377,7 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
                 msg_ptr->payload_chunk, msg_ptr->payload_chunk_length);
 #if MQTT_5
     /* Print any properties received along with the message */
-    print_input_props(m);
+    mqtt_print_input_props(m);
 #endif
     break;
   }
@@ -394,7 +394,7 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     }
 #if MQTT_5
     /* Print any properties received along with the message */
-    print_input_props(m);
+    mqtt_print_input_props(m);
 #endif
 #endif
     break;
@@ -511,7 +511,7 @@ update_config(void)
 #if MQTT_5
   LIST_STRUCT_INIT(&(conn.will), properties);
 
-  props_init();
+  mqtt_props_init();
 #endif
 
   return;
@@ -642,11 +642,11 @@ publish(void)
                  PUB_TOPIC_ALIAS, MQTT_TOPIC_ALIAS_OFF,
                  publish_props);
 
-    prop_err = register_prop(&publish_props,
-                             NULL,
-                             MQTT_FHDR_MSG_TYPE_PUBLISH,
-                             MQTT_VHDR_PROP_TOPIC_ALIAS,
-                             PUB_TOPIC_ALIAS);
+    prop_err = mqtt_register_prop(&publish_props,
+                                  NULL,
+                                  MQTT_FHDR_MSG_TYPE_PUBLISH,
+                                  MQTT_VHDR_PROP_TOPIC_ALIAS,
+                                  PUB_TOPIC_ALIAS);
   } else {
     mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                  strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF,
@@ -684,20 +684,20 @@ send_auth(mqtt_auth_event_t *auth_info, mqtt_auth_type_t auth_type)
   clear_prop_list(&auth_props);
 
   if(auth_info->auth_method.length) {
-    (void)register_prop(&auth_props,
-                        NULL,
-                        MQTT_FHDR_MSG_TYPE_AUTH,
-                        MQTT_VHDR_PROP_AUTH_METHOD,
-                        auth_info->auth_method.string);
+    (void)mqtt_register_prop(&auth_props,
+                             NULL,
+                             MQTT_FHDR_MSG_TYPE_AUTH,
+                             MQTT_VHDR_PROP_AUTH_METHOD,
+                             auth_info->auth_method.string);
   }
 
   if(auth_info->auth_data.len) {
-    (void)register_prop(&auth_props,
-                        NULL,
-                        MQTT_FHDR_MSG_TYPE_AUTH,
-                        MQTT_VHDR_PROP_AUTH_DATA,
-                        auth_info->auth_data.data,
-                        auth_info->auth_data.len);
+    (void)mqtt_register_prop(&auth_props,
+                             NULL,
+                             MQTT_FHDR_MSG_TYPE_AUTH,
+                             MQTT_VHDR_PROP_AUTH_DATA,
+                             auth_info->auth_data.data,
+                             auth_info->auth_data.len);
   }
 
   /* Connect to MQTT server */
@@ -749,16 +749,16 @@ state_machine(void)
     connect_attempt = 1;
 
 #if MQTT_5
-    create_prop_list(&publish_props);
+    mqtt_create_prop_list(&publish_props);
 
     /* this will be sent with every publish packet */
-    (void)register_prop(&publish_props,
-                        NULL,
-                        MQTT_FHDR_MSG_TYPE_PUBLISH,
-                        MQTT_VHDR_PROP_USER_PROP,
-                        "Contiki", "v4.5+");
+    (void)mqtt_register_prop(&publish_props,
+                             NULL,
+                             MQTT_FHDR_MSG_TYPE_PUBLISH,
+                             MQTT_VHDR_PROP_USER_PROP,
+                             "Contiki", "v4.5+");
 
-    print_props(publish_props, MQTT_VHDR_PROP_ANY);
+    mqtt_print_props(publish_props, MQTT_VHDR_PROP_ANY);
 #endif
 
     state = STATE_REGISTERED;
