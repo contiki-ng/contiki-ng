@@ -15,7 +15,10 @@ NM       ?= nm
 OBJCOPY  ?= objcopy
 STRIP    ?= strip
 ifeq ($(WERROR),1)
-CFLAGSWERROR=-Werror
+CFLAGSWERROR +=-Werror 
+CFLAGSWERROR +=-Wno-error=unused-function -Wno-unused-function
+# printf( (char*)pfmt ) - here fmt is variable, may warns on modern compiler 
+#CFLAGSWERROR += -Wno-error=format-security -Wno-format-security
 endif
 CFLAGSNO = -Wall -g $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
