@@ -72,5 +72,7 @@ CLEAN += COOJA.log
 CFLAGSNO = $(EXTRA_CC_ARGS) -Wall -g -I/usr/local/include -DCLASSNAME=$(CLASSNAME)
 ifeq ($(WERROR),1)
 CFLAGSNO += -Werror
+CFLAGSNO += -Wno-error=unused-function -Wno-error=format-security
+CFLAGSNO += -Wno-unused-function -Wno-format-security
 endif
 CFLAGS   += $(CFLAGSNO)
