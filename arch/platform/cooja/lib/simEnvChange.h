@@ -32,6 +32,7 @@
 #define SIMENVCHANGE_H_
 
 #include "contiki.h"
+#include <stdint.h>
 
 /* Simulation interface structure */
 struct simInterface {
@@ -44,6 +45,20 @@ extern int simProcessRunValue;
 extern int simEtimerPending;
 extern clock_time_t simEtimerNextExpirationTime;
 extern clock_time_t simCurrentTime;
+
+// ContikiClock API extention
+
+// @brief inform about mote eTimer clock rate
+// @value <= 0 - ignore it, use cooja old behaviour
+extern int          simCLOCK_SECOND;
+
+// @brief requests cooja for poll resolution with specified Hz
+// @value <= 0 - ignore it, use cooja old behaviour
+extern int          simRtimerResolution_hz;
+
+// @brief provide timeout for RTIMER_BUSYWAIT_UNTIL_ABS
+extern int64_t      simRtimerWaitTime;
+
 
 // Variable that when set to != 0, stops the mote from falling asleep next tick
 extern char simDontFallAsleep;

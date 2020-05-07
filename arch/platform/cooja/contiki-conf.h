@@ -118,6 +118,24 @@ typedef unsigned long clock_time_t;
 /* Use 64-bit rtimer (default in Contiki-NG is 32) */
 #define RTIMER_CONF_CLOCK_SIZE 8
 
+//  RTIMER_CONF_ARCH_SECOND definition requests cooja to simulate polling
+//      with demanded rtimer step.
+//   This helps achieve RTIMER_BUSYWAIT_UNTIL_ABS accuracy and behaviour close
+//      to real platforms. This demanded for well TSCH simulation
+#ifndef RTIMER_CONF_ARCH_SECOND
+
+#if defined(MAC_CONF_WITH_TSCH)
+#define RTIMER_CONF_ARCH_SECOND                     10000
+#elif defined(NETSTACK_MAC)
+
+#   if (NETSTACK_MAC == tschmac_driver)
+#define RTIMER_CONF_ARCH_SECOND                     10000
+#   endif
+
+#endif
+
+#endif //RTIMER_CONF_ARCH_SECOND
+
 /* 1 len byte, 2 bytes CRC */
 #define RADIO_PHY_OVERHEAD         3
 /* 250kbps data rate. One byte = 32us */
