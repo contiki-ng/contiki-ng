@@ -58,7 +58,6 @@ int64_t        simRtimerWaitTime = 0;
 #ifdef RTIMER_CONF_ARCH_SECOND
 int            simRtimerResolution_hz = RTIMER_CONF_ARCH_SECOND;
 #else
-#error "no RTIMER_CONF_ARCH_SECOND"
 int            simRtimerResolution_hz = 0;
 #endif
 
