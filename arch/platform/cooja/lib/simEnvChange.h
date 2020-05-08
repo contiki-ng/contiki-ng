@@ -28,6 +28,11 @@
  *
  */
 
+/**
+ * \addtogroup cooja_platform COOJA platform
+ * @{
+ */
+
 #ifndef SIMENVCHANGE_H_
 #define SIMENVCHANGE_H_
 
@@ -46,18 +51,29 @@ extern int simEtimerPending;
 extern clock_time_t simEtimerNextExpirationTime;
 extern clock_time_t simCurrentTime;
 
-// ContikiClock API extention
+/**
+ * \defgroup ContikiClock_ext ContikiClock API extention
+ * @{
+ *
+ * extention for an ContikiClock interface for rtimer resolution control
+ */
 
-// @brief inform about mote eTimer clock rate
-// @value <= 0 - ignore it, use cooja old behaviour
+/* inform about mote eTimer clock rate
+ * @value <= 0 - ignore it, use cooja old behaviour
+ */
 extern int          simCLOCK_SECOND;
 
-// @brief requests cooja for poll resolution with specified Hz
-// @value <= 0 - ignore it, use cooja old behaviour
+/* requests cooja for poll resolution with specified Hz
+ * @value <= 0 - ignore it, use cooja old behaviour
+ */
 extern int          simRtimerResolution_hz;
 
-// @brief provide timeout for RTIMER_BUSYWAIT_UNTIL_ABS
+// provide timeout for RTIMER_BUSYWAIT_UNTIL_ABS
 extern int64_t      simRtimerWaitTime;
+
+/**
+ * @}
+ */
 
 
 // Variable that when set to != 0, stops the mote from falling asleep next tick
@@ -80,3 +96,6 @@ void doActionsBeforeTick();
 void doActionsAfterTick();
 
 #endif /* SIMENVCHANGE_H_ */
+/**
+ * @}
+ */

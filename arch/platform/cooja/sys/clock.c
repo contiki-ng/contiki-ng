@@ -31,7 +31,6 @@
 #include "contiki.h"
 #include "sys/clock.h"
 #include "lib/simEnvChange.h"
-#include <stdint.h>
 
 const struct simInterface clock_interface;
 
