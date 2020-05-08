@@ -12,7 +12,7 @@
 	url = https://github.com/g-oikonomou/sensniff.git
 [submodule "tools/cooja"]
 	path = tools/cooja
-	url = https://github.com/contiki-ng/cooja.git
+	url = https://github.com/alexrayne/cooja.git
 [submodule "os/net/security/tinydtls"]
 	path = os/net/security/tinydtls
 	url = https://github.com/contiki-ng/tinydtls.git
