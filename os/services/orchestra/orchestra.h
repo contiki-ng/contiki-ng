@@ -51,11 +51,11 @@ struct orchestra_rule {
   const char *name;
 };
 
-struct orchestra_rule eb_per_time_source;
-struct orchestra_rule unicast_per_neighbor_rpl_storing;
-struct orchestra_rule unicast_per_neighbor_rpl_ns;
-struct orchestra_rule unicast_per_neighbor_link_based;
-struct orchestra_rule default_common;
+extern struct orchestra_rule eb_per_time_source;
+extern struct orchestra_rule unicast_per_neighbor_rpl_storing;
+extern struct orchestra_rule unicast_per_neighbor_rpl_ns;
+extern struct orchestra_rule unicast_per_neighbor_link_based;
+extern struct orchestra_rule default_common;
 
 extern linkaddr_t orchestra_parent_linkaddr;
 extern int orchestra_parent_knows_us;
