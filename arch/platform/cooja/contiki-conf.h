@@ -121,22 +121,13 @@ typedef unsigned long clock_time_t;
 /*  RTIMER_CONF_ARCH_SECOND definition requests cooja to simulate polling
  *      with demanded rtimer step.
  *  This helps achieve RTIMER_BUSYWAIT_UNTIL_ABS accuracy and behaviour close
- *      to real platforms.
- *  This demanded for well TSCH simulation/
+ *      to real platforms. This demanded for precise TSCH simulation
+ * WARN: change default behaviour of COOJA sim was not apropriated, so you should
+ *      provide RTIMER_CONF_ARCH_SECOND explicitly, if need simulate this BUSYWAIT precise
  */
-#ifndef RTIMER_CONF_ARCH_SECOND
+//#define RTIMER_CONF_ARCH_SECOND                     10000
 
-#if defined(MAC_CONF_WITH_TSCH)
-#define RTIMER_CONF_ARCH_SECOND                     10000
-#elif defined(NETSTACK_MAC)
 
-#   if (NETSTACK_MAC == tschmac_driver)
-#define RTIMER_CONF_ARCH_SECOND                     10000
-#   endif
-
-#endif
-
-#endif //RTIMER_CONF_ARCH_SECOND
 
 /* 1 len byte, 2 bytes CRC */
 #define RADIO_PHY_OVERHEAD         3
