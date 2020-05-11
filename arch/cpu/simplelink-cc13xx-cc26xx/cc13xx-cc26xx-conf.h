@@ -161,7 +161,7 @@
 
 /* Size of each RX buffer in bytes. */
 #ifndef RF_CONF_RX_BUF_SIZE
-#define RF_CONF_RX_BUF_SIZE          144
+#define RF_CONF_RX_BUF_SIZE          146
 #endif
 
 /* Enable/disable BLE beacon. */
