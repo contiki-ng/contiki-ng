@@ -259,7 +259,7 @@ get_rssi(void)
     }
 
     /* Make sure RX is running before we continue, unless we timeout and fail */
-    RTIMER_BUSYWAIT_UNTIL(!rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
+    RTIMER_BUSYWAIT_UNTIL(rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
 
     if(!rx_is_active()) {
       LOG_ERR("RSSI measurement failed to turn on RX, RX status=0x%04X\n", v_cmd_rx.status);
