@@ -261,12 +261,12 @@ netstack_sched_fs(void)
    *
    * For Prop-mode, the synth is always manually calibrated with CMD_FS.
    */
-#if (RF_MODE == RF_CORE_MODE_2_4_GHZ)
+#if (RF_MODE == RF_MODE_2_4_GHZ)
   if(rx_key) {
     cmd_rx_restore(rx_key);
     return RF_RESULT_OK;
   }
-#endif /* RF_MODE == RF_CORE_MODE_2_4_GHZ */
+#endif /* RF_MODE == RF_MODE_2_4_GHZ */
 
   RF_EventMask events;
   bool synth_error = false;
