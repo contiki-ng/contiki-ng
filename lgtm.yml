@@ -1,0 +1,19 @@
+extraction:
+  cpp:
+    index:
+      build_command:
+      - "make -B TARGET=native -C examples/websocket/"
+      - "make -B TARGET=native -C examples/mqtt-client/"
+      - "make -B TARGET=native -C examples/mqtt-client/ DEFINES=MQTT_CONF_VERSION=MQTT_PROTOCOL_VERSION_5"
+      - "make -B TARGET=native -C examples/coap/coap-example-server/"
+      - "make -B TARGET=native -C examples/coap/coap-example-client/"
+      - "make -B TARGET=native -C examples/lwm2m-ipso-objects/"
+      - "make -B TARGET=native -C examples/multicast/"
+      - "make -B TARGET=native -C examples/rpl-border-router/"
+      - "make -B TARGET=native -C examples/snmp-server/"
+      - "make -B TARGET=native -C examples/libs/data-structures/"
+      - "make -B TARGET=native -C examples/libs/shell/"
+      - "make -B TARGET=native -C examples/libs/deployment/"
+      - "make -B TARGET=native -C examples/libs/trickle-library/"
+      - "make -B TARGET=native -C examples/libs/logging/"
+
