@@ -62,7 +62,7 @@ PROCESS_THREAD(sixp_node_process, ev, data)
       etimer_reset(&et);
     }
     peer = tsch_queue_get_time_source();
-    assert(test_sf_start((const linkaddr_t *)&peer->addr) == 0);
+    assert(test_sf_start(tsch_queue_get_nbr_address(peer)) == 0);
   }
 
   PROCESS_END();

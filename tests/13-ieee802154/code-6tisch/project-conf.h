@@ -37,7 +37,7 @@
 
 #define SIXP_CONF_WITH_PAYLOAD_TERMINATION_IE 1
 
-#define NBR_TABLE_CONF_MAX_NEIGHBORS         2
+#define NBR_TABLE_CONF_MAX_NEIGHBORS         4
 
 #define UNIT_TEST_PRINT_FUNCTION test_print_report
 
