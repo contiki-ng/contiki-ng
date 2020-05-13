@@ -89,6 +89,13 @@
 #define ORCHESTRA_LINKADDR_HASH(addr)             ((addr != NULL) ? (addr)->u8[LINKADDR_SIZE - 1] : -1)
 #endif /* ORCHESTRA_CONF_LINKADDR_HASH */
 
+/* The hash function used to assign timeslot for a pair of given nodes. */
+#ifdef ORCHESTRA_CONF_LINKADDR_HASH2
+#define ORCHESTRA_LINKADDR_HASH2                  ORCHESTRA_CONF_LINKADDR_HASH2
+#else /* ORCHESTRA_CONF_LINKADDR_HASH2 */
+#define ORCHESTRA_LINKADDR_HASH2(addr1, addr2)    ((addr1)->u8[LINKADDR_SIZE - 1] + 256 * (addr2)->u8[LINKADDR_SIZE - 1])
+#endif /* ORCHESTRA_CONF_LINKADDR_HASH2 */
+
 /* The maximum hash */
 #ifdef ORCHESTRA_CONF_MAX_HASH
 #define ORCHESTRA_MAX_HASH                        ORCHESTRA_CONF_MAX_HASH

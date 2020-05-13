@@ -222,7 +222,7 @@ add_cell(const linkaddr_t *peer_addr, const sf_plugtest_cell_t *cell,
 
   if((slotframe = tsch_schedule_get_slotframe_by_handle(0)) == NULL ||
      tsch_schedule_add_link(slotframe, link_options, LINK_TYPE_NORMAL,
-                            peer_addr, timeslot, channel_offset) == NULL) {
+                            peer_addr, timeslot, channel_offset, 1) == NULL) {
     LOG_ERR("cannot add a cell\n");
     return -1;
   }

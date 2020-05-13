@@ -686,7 +686,8 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
         tsch_schedule_add_link(sf,
             ies.ie_tsch_slotframe_and_link.links[i].link_options,
             LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
-            ies.ie_tsch_slotframe_and_link.links[i].timeslot, ies.ie_tsch_slotframe_and_link.links[i].channel_offset);
+            ies.ie_tsch_slotframe_and_link.links[i].timeslot,
+            ies.ie_tsch_slotframe_and_link.links[i].channel_offset, 1);
       }
     } else {
       LOG_ERR("! parse_eb: too many links in schedule (%u)\n", num_links);
