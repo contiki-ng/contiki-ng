@@ -3,7 +3,7 @@ all: $(CONTIKI_PROJECT)
 
 CONTIKI=../../..
 
-PLATFORMS_EXCLUDE = sky z1 nrf52dk native
+PLATFORMS_EXCLUDE = sky nrf52dk native
 
 # force Orchestra from command line
 MAKE_WITH_ORCHESTRA ?= 0

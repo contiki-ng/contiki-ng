@@ -2039,12 +2039,15 @@ uip_process(uint8_t flag)
     /* Check the URG flag. If this is set, the segment carries urgent
          data that we must pass to the application. */
     if((UIP_TCP_BUF->flags & TCP_URG) != 0) {
-#if UIP_URGDATA > 0
-      uip_urglen = (UIP_TCP_BUF->urgp[0] << 8) | UIP_TCP_BUF->urgp[1];
-      if(uip_urglen > uip_len) {
-        /* There is more urgent data in the next segment to come. */
-        uip_urglen = uip_len;
+      tmp16 = (UIP_TCP_BUF->urgp[0] << 8) | UIP_TCP_BUF->urgp[1];
+      if(tmp16 > uip_len) {
+        /* There is more urgent data in the next segment to come. 
+	     Cap the urgent data length at the segment length for
+	     further processing. */
+        tmp16 = uip_len;
       }
+#if UIP_URGDATA > 0
+      uip_urglen = tmp16;
       uip_add_rcv_nxt(uip_urglen);
       uip_len -= uip_urglen;
       uip_urgdata = uip_appdata;
@@ -2052,8 +2055,9 @@ uip_process(uint8_t flag)
     } else {
       uip_urglen = 0;
 #else /* UIP_URGDATA > 0 */
-      uip_appdata = ((char *)uip_appdata) + ((UIP_TCP_BUF->urgp[0] << 8) | UIP_TCP_BUF->urgp[1]);
-      uip_len -= (UIP_TCP_BUF->urgp[0] << 8) | UIP_TCP_BUF->urgp[1];
+      /* Ignore and discard any urgent data in this segment. */
+      uip_appdata = ((char *)uip_appdata) + tmp16;
+      uip_len -= tmp16;
 #endif /* UIP_URGDATA > 0 */
     }
 

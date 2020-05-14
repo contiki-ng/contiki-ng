@@ -327,18 +327,18 @@ rpl_dag_update_state(void)
 
     /* Parent switch */
     if(curr_instance.dag.unprocessed_parent_switch) {
-      /* We just got a parent (was NULL), reset trickle timer to advertise this */
-      if(old_parent == NULL) {
-        curr_instance.dag.state = DAG_JOINED;
-        rpl_timers_dio_reset("Got parent");
-        LOG_WARN("found parent: ");
-        LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
-        LOG_WARN_(", staying in DAG\n");
-        rpl_timers_unschedule_leaving();
-      }
 
-      /* Schedule a DAO */
       if(curr_instance.dag.preferred_parent != NULL) {
+        /* We just got a parent (was NULL), reset trickle timer to advertise this */
+        if(old_parent == NULL) {
+          curr_instance.dag.state = DAG_JOINED;
+          rpl_timers_dio_reset("Got parent");
+          LOG_WARN("found parent: ");
+          LOG_WARN_6ADDR(rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent));
+          LOG_WARN_(", staying in DAG\n");
+          rpl_timers_unschedule_leaving();
+        }
+        /* Schedule a DAO */
         rpl_timers_schedule_dao();
       } else {
         /* We have no more parent, schedule DIS to get a chance to hear updated state */

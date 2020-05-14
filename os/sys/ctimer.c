@@ -74,13 +74,13 @@ PROCESS_THREAD(ctimer_process, ev, data)
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_TIMER);
     for(c = list_head(ctimer_list); c != NULL; c = c->next) {
       if(&c->etimer == data) {
-	list_remove(ctimer_list, c);
-	PROCESS_CONTEXT_BEGIN(c->p);
-	if(c->f != NULL) {
-	  c->f(c->ptr);
-	}
-	PROCESS_CONTEXT_END(c->p);
-	break;
+        list_remove(ctimer_list, c);
+        PROCESS_CONTEXT_BEGIN(c->p);
+        if(c->f != NULL) {
+          c->f(c->ptr);
+        }
+        PROCESS_CONTEXT_END(c->p);
+        break;
       }
     }
   }
@@ -97,14 +97,14 @@ ctimer_init(void)
 /*---------------------------------------------------------------------------*/
 void
 ctimer_set(struct ctimer *c, clock_time_t t,
-	   void (*f)(void *), void *ptr)
+           void (*f)(void *), void *ptr)
 {
   ctimer_set_with_process(c, t, f, ptr, PROCESS_CURRENT());
 }
 /*---------------------------------------------------------------------------*/
 void
 ctimer_set_with_process(struct ctimer *c, clock_time_t t,
-	   void (*f)(void *), void *ptr, struct process *p)
+                        void (*f)(void *), void *ptr, struct process *p)
 {
   PRINTF("ctimer_set %p %lu\n", c, (unsigned long)t);
   c->p = p;

@@ -161,8 +161,9 @@ extern const linkaddr_t tsch_eb_address;
 extern struct tsch_asn_t tsch_current_asn;
 extern uint8_t tsch_join_priority;
 extern struct tsch_link *current_link;
-/* If we are inside a slot, this tells the current channel */
+/* If we are inside a slot, these tell the current channel and channel offset */
 extern uint8_t tsch_current_channel;
+extern uint8_t tsch_current_channel_offset;
 /* TSCH channel hopping sequence */
 extern uint8_t tsch_hopping_sequence[TSCH_HOPPING_SEQUENCE_MAX_LEN];
 extern struct tsch_asn_divisor_t tsch_hopping_sequence_length;
@@ -198,6 +199,11 @@ void tsch_set_join_priority(uint8_t jp);
  * not be set to exceed TSCH_MAX_EB_PERIOD. Set to 0 to stop sending EBs.
  * Actual transmissions are jittered, spaced by a random number within
  * [period*0.75, period[
+ * If RPL is used, the period will be automatically reset by RPL
+ * equal to the DIO period whenever the DIO period changes.
+ * Hence, calling `tsch_set_eb_period(0)` is NOT sufficient to disable sending EB!
+ * To do that, either configure the node in RPL leaf mode, or
+ * use static config for TSCH (`define TSCH_CONF_EB_PERIOD 0`).
  *
  * \param period The period in Clock ticks.
  */

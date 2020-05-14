@@ -98,7 +98,7 @@ handle_periodic_timer(void *ptr)
   /* handle DIS */
 #if RPL_DIS_SEND
   next_dis++;
-  if(dag == NULL && next_dis >= RPL_DIS_INTERVAL) {
+  if((dag == NULL || dag->instance->current_dag->rank == RPL_INFINITE_RANK) && next_dis >= RPL_DIS_INTERVAL) {
     next_dis = 0;
     dis_output(NULL);
   }

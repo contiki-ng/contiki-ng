@@ -1029,6 +1029,9 @@ rpl_get_any_dag_with_parent(bool requires_parent)
 int
 rpl_has_joined(void)
 {
+  if(rpl_dag_root_is_root()) {
+    return 1;
+  }
   return rpl_get_any_dag_with_parent(true) != NULL;
 }
 /*---------------------------------------------------------------------------*/

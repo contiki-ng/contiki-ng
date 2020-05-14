@@ -26,7 +26,7 @@
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/rpl-border-router/border-router.c</source>
       <commands>make TARGET=cooja clean
-make -j border-router.cooja TARGET=cooja MAKE_MAC=MAKE_MAC_TSCH</commands>
+make -j border-router.cooja TARGET=cooja MAKE_MAC=MAKE_MAC_TSCH DEFINES=TSCH_CONF_DEFAULT_HOPPING_SEQUENCE=TSCH_HOPPING_SEQUENCE_1_1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -52,7 +52,7 @@ make -j border-router.cooja TARGET=cooja MAKE_MAC=MAKE_MAC_TSCH</commands>
       <description>Cooja Mote Type #2</description>
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands>make TARGET=cooja clean
-make -j hello-world.cooja TARGET=cooja MAKE_MAC=MAKE_MAC_TSCH</commands>
+make -j hello-world.cooja TARGET=cooja MAKE_MAC=MAKE_MAC_TSCH DEFINES=TSCH_CONF_DEFAULT_HOPPING_SEQUENCE=TSCH_HOPPING_SEQUENCE_1_1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

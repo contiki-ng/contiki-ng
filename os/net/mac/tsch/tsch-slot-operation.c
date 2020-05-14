@@ -149,8 +149,9 @@ static rtimer_clock_t volatile current_slot_start;
 /* Are we currently inside a slot? */
 static volatile int tsch_in_slot_operation = 0;
 
-/* If we are inside a slot, this tells the current channel */
+/* If we are inside a slot, these tell the current channel and channel offset */
 uint8_t tsch_current_channel;
+uint8_t tsch_current_channel_offset;
 
 /* Info about the link, packet and neighbor of
  * the current (or next) slot */
@@ -236,20 +237,34 @@ tsch_release_lock(void)
 /*---------------------------------------------------------------------------*/
 /* Channel hopping utility functions */
 
-/* Return channel from ASN and channel offset */
-uint8_t
-tsch_calculate_channel(struct tsch_asn_t *asn, uint16_t channel_offset, struct tsch_packet *p)
+/* Return the channel offset to use for the current slot */
+static uint8_t
+tsch_get_channel_offset(struct tsch_link *link, struct tsch_packet *p)
 {
-  uint16_t index_of_0, index_of_offset;
 #if TSCH_WITH_LINK_SELECTOR
   if(p != NULL) {
     uint16_t packet_channel_offset = queuebuf_attr(p->qb, PACKETBUF_ATTR_TSCH_CHANNEL_OFFSET);
     if(packet_channel_offset != 0xffff) {
       /* The schedule specifies a channel offset for this one; use it */
-      channel_offset = packet_channel_offset;
+      return packet_channel_offset;
     }
   }
 #endif
+  return link->channel_offset;
+}
+
+/**
+ * Returns a 802.15.4 channel from an ASN and channel offset. Basically adds
+ * The offset to the ASN and performs a hopping sequence lookup.
+ *
+ * \param asn A given ASN
+ * \param channel_offset Given channel offset
+ * \return The resulting channel
+ */
+static uint8_t
+tsch_calculate_channel(struct tsch_asn_t *asn, uint16_t channel_offset)
+{
+  uint16_t index_of_0, index_of_offset;
   index_of_0 = TSCH_ASN_MOD(*asn, tsch_hopping_sequence_length);
   index_of_offset = (index_of_0 + channel_offset) % tsch_hopping_sequence_length.val;
   return tsch_hopping_sequence[index_of_offset];
@@ -1024,8 +1039,8 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           burst_link_scheduled = 0;
         } else {
           /* Hop channel */
-          tsch_current_channel = tsch_calculate_channel(&tsch_current_asn,
-              current_link->channel_offset, current_packet);
+          tsch_current_channel_offset = tsch_get_channel_offset(current_link, current_packet);
+          tsch_current_channel = tsch_calculate_channel(&tsch_current_asn, tsch_current_channel_offset);
         }
         NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, tsch_current_channel);
         /* Turn the radio on already here if configured so; necessary for radios with slow startup */
@@ -1151,6 +1166,8 @@ tsch_slot_operation_start(void)
     TSCH_ASN_INC(tsch_current_asn, timeslot_diff);
     /* Time to next wake up */
     time_to_next_active_slot = timeslot_diff * tsch_timing[tsch_ts_timeslot_length];
+    /* Compensate for the base drift */
+    time_to_next_active_slot += tsch_timesync_adaptive_compensate(time_to_next_active_slot);
     /* Update current slot start */
     prev_slot_start = current_slot_start;
     current_slot_start += time_to_next_active_slot;

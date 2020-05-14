@@ -123,6 +123,11 @@ rpl_ext_header_srh_update(void)
   /* Update SRH in-place */
   if(segments_left == 0) {
     /* We are the final destination, do nothing */
+  } else if(segments_left > path_len) {
+    /* Discard the packet because of a parameter problem. */
+    LOG_ERR("SRH with too many segments left (%u > %u)\n",
+            segments_left, path_len);
+    return 0;
   } else {
     uint8_t i = path_len - segments_left; /* The index of the next address to be visited */
     uint8_t *addr_ptr = ((uint8_t *)rh_header) + RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
