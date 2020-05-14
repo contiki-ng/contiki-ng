@@ -219,5 +219,11 @@ tsch_adaptive_timesync_reset(void)
 {
 }
 /*---------------------------------------------------------------------------*/
+long int
+tsch_adaptive_timesync_get_drift_ppm(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 #endif /* TSCH_ADAPTIVE_TIMESYNC */
 /** @} */

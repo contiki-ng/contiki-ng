@@ -63,16 +63,6 @@ extern int tsch_current_burst_count;
 /********** Functions *********/
 
 /**
- * Returns a 802.15.4 channel from an ASN and channel offset. Basically adds
- * The offset to the ASN and performs a hopping sequence lookup.
- *
- * \param asn A given ASN
- * \param channel_offset Link's channel offset
- * \param p Packet that can override the link's channel offset
- * \return The resulting channel
- */
-uint8_t tsch_calculate_channel(struct tsch_asn_t *asn, uint16_t channel_offset, struct tsch_packet *p);
-/**
  * Checks if the TSCH lock is set. Accesses to global structures outside of
  * interrupts must be done through the lock, unless the sturcutre has
  * atomic read/write
