@@ -5,6 +5,9 @@ dist: trusty
 notifications:
   email: false
 
+git:
+  depth: false
+
 # Environment setup before test script. Runs for each build
 before_install:
   # Construct the correct container image tag corresponding to this branch/pull
