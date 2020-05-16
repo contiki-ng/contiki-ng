@@ -38,8 +38,8 @@
 #include <stdlib.h>
 /*---------------------------------------------------------------------------*/
 #if MQTT_PROP_USE_MEMB
-MEMB(prop_lists_mem, struct mqtt_prop_list, MQTT_MAX_OUT_PROP_LISTS);
-MEMB(props_mem, struct mqtt_out_property, MQTT_MAX_OUT_PROPS);
+MEMB(prop_lists_mem, struct mqtt_prop_list, MQTT_PROP_MAX_OUT_PROP_LISTS);
+MEMB(props_mem, struct mqtt_prop_out_property, MQTT_PROP_MAX_OUT_PROPS);
 #endif
 /*----------------------------------------------------------------------------*/
 void
@@ -52,15 +52,15 @@ mqtt_props_init()
 }
 /*----------------------------------------------------------------------------*/
 static void
-encode_prop_fixed_len_int(struct mqtt_out_property **prop_out,
+encode_prop_fixed_len_int(struct mqtt_prop_out_property **prop_out,
                           int val, uint8_t len)
 {
   int8_t i;
 
   DBG("MQTT - Creating %d-byte int property %i\n", len, val);
 
-  if(len > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if(len > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return;
   }
 
@@ -73,7 +73,7 @@ encode_prop_fixed_len_int(struct mqtt_out_property **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 static void
-encode_prop_utf8(struct mqtt_out_property **prop_out,
+encode_prop_utf8(struct mqtt_prop_out_property **prop_out,
                  const char *str)
 {
   int str_len;
@@ -82,8 +82,8 @@ encode_prop_utf8(struct mqtt_out_property **prop_out,
   str_len = strlen(str);
 
   /* 2 bytes are needed for each string to encode its length */
-  if((str_len + 2) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if((str_len + 2) > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return;
   }
 
@@ -95,13 +95,13 @@ encode_prop_utf8(struct mqtt_out_property **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 static void
-encode_prop_binary(struct mqtt_out_property **prop_out,
+encode_prop_binary(struct mqtt_prop_out_property **prop_out,
                    const char *data, int data_len)
 {
   DBG("MQTT - Encoding Binary Data (%d bytes)\n", data_len);
 
-  if((data_len + 2) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if((data_len + 2) > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return;
   }
 
@@ -113,7 +113,7 @@ encode_prop_binary(struct mqtt_out_property **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 static void
-encode_prop_var_byte_int(struct mqtt_out_property **prop_out,
+encode_prop_var_byte_int(struct mqtt_prop_out_property **prop_out,
                          int val)
 {
   uint8_t id_len;
@@ -129,7 +129,7 @@ encode_prop_var_byte_int(struct mqtt_out_property **prop_out,
 }
 /*---------------------------------------------------------------------------*/
 uint32_t
-mqtt_encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
+mqtt_prop_encode(struct mqtt_prop_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
                  va_list args)
 {
   DBG("MQTT - Creating property with ID %i\n", prop_id);
@@ -221,8 +221,8 @@ mqtt_encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
     DBG("MQTT - Encoding User Property '%s: %s'\n", name, value);
 
     /* 2 bytes are needed for each string to encode its length */
-    if((name_len + val_len + 4) > MQTT_MAX_PROP_LENGTH) {
-      DBG("MQTT - Error, property '%i' too long (max %i bytes)", prop_id, MQTT_MAX_PROP_LENGTH);
+    if((name_len + val_len + 4) > MQTT_PROP_MAX_PROP_LENGTH) {
+      DBG("MQTT - Error, property '%i' too long (max %i bytes)", prop_id, MQTT_PROP_MAX_PROP_LENGTH);
       return 0;
     }
 
@@ -249,7 +249,7 @@ mqtt_encode_prop(struct mqtt_out_property **prop_out, mqtt_vhdr_prop_t prop_id,
 /*---------------------------------------------------------------------------*/
 #if MQTT_5
 void
-mqtt_decode_input_props(struct mqtt_connection *conn)
+mqtt_prop_decode_input_props(struct mqtt_connection *conn)
 {
   uint8_t prop_len_bytes;
 
@@ -303,8 +303,8 @@ decode_prop_utf8(struct mqtt_connection *conn,
   DBG("MQTT - Decoding %d-char UTF8 string property\n", len);
 
   /* Include NULL terminator in destination */
-  if((len + MQTT_STRING_LEN_SIZE + 1) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if((len + MQTT_STRING_LEN_SIZE + 1) > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return 0;
   }
 
@@ -325,8 +325,8 @@ decode_prop_fixed_len_int(struct mqtt_connection *conn,
 
   DBG("MQTT - Decoding %d-byte int property\n", len);
 
-  if(len > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if(len > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return 0;
   }
 
@@ -366,8 +366,8 @@ decode_prop_vbi(struct mqtt_connection *conn,
     return 0;
   }
 
-  if(prop_len_bytes > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if(prop_len_bytes > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return 0;
   }
 
@@ -390,8 +390,8 @@ decode_prop_binary_data(struct mqtt_connection *conn,
     return 0;
   }
 
-  if((data_len + 2) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if((data_len + 2) > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return 0;
   }
 
@@ -415,8 +415,8 @@ decode_prop_utf8_pair(struct mqtt_connection *conn,
 
   DBG("MQTT - Decoding %d-char UTF8 string pair property (%i + %i)\n", total_len, len1, len2);
 
-  if((total_len + 2 * MQTT_STRING_LEN_SIZE) > MQTT_MAX_PROP_LENGTH) {
-    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_MAX_PROP_LENGTH);
+  if((total_len + 2 * MQTT_STRING_LEN_SIZE) > MQTT_PROP_MAX_PROP_LENGTH) {
+    DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return 0;
   }
 
@@ -519,11 +519,11 @@ mqtt_get_next_in_prop(struct mqtt_connection *conn,
 }
 /*---------------------------------------------------------------------------*/
 void
-mqtt_parse_connack_props(struct mqtt_connection *conn)
+mqtt_prop_parse_connack_props(struct mqtt_connection *conn)
 {
   uint32_t prop_len;
   mqtt_vhdr_prop_t prop_id;
-  uint8_t data[MQTT_MAX_PROP_LENGTH];
+  uint8_t data[MQTT_PROP_MAX_PROP_LENGTH];
   uint32_t val_int;
 
   DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
@@ -570,11 +570,11 @@ mqtt_parse_connack_props(struct mqtt_connection *conn)
 }
 /*---------------------------------------------------------------------------*/
 void
-mqtt_parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *event)
+mqtt_prop_parse_auth_props(struct mqtt_connection *conn, struct mqtt_prop_auth_event *event)
 {
   uint32_t prop_len;
   mqtt_vhdr_prop_t prop_id;
-  uint8_t data[MQTT_MAX_PROP_LENGTH];
+  uint8_t data[MQTT_PROP_MAX_PROP_LENGTH];
 
   DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
 
@@ -605,11 +605,11 @@ mqtt_parse_auth_props(struct mqtt_connection *conn, struct mqtt_auth_event *even
 }
 /*---------------------------------------------------------------------------*/
 void
-mqtt_print_input_props(struct mqtt_connection *conn)
+mqtt_prop_print_input_props(struct mqtt_connection *conn)
 {
   uint32_t prop_len;
   mqtt_vhdr_prop_t prop_id;
-  uint8_t data[MQTT_MAX_PROP_LENGTH];
+  uint8_t data[MQTT_PROP_MAX_PROP_LENGTH];
   uint32_t i;
 
   DBG("MQTT - Printing all input properties\n");
@@ -678,7 +678,7 @@ mqtt_print_input_props(struct mqtt_connection *conn)
 /*----------------------------------------------------------------------------*/
 /* Creates a property list for the requested message type */
 void
-mqtt_create_prop_list(struct mqtt_prop_list **prop_list_out)
+mqtt_prop_create_list(struct mqtt_prop_list **prop_list_out)
 {
   DBG("MQTT - Creating Property List\n");
 
@@ -687,7 +687,7 @@ mqtt_create_prop_list(struct mqtt_prop_list **prop_list_out)
 #endif
 
   if(!(*prop_list_out)) {
-    DBG("MQTT - Error, allocated too many property lists (max %i)\n", MQTT_MAX_OUT_PROP_LISTS);
+    DBG("MQTT - Error, allocated too many property lists (max %i)\n", MQTT_PROP_MAX_OUT_PROP_LISTS);
     return;
   }
 
@@ -706,35 +706,35 @@ mqtt_create_prop_list(struct mqtt_prop_list **prop_list_out)
  * by property ID
  */
 void
-mqtt_print_props(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id)
+mqtt_prop_print_list(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id)
 {
-  struct mqtt_out_property *prop;
+  struct mqtt_prop_out_property *prop;
 
   if(prop_list == NULL || prop_list->props == NULL) {
     DBG("MQTT - Prop list empty\n");
   } else {
-    prop = (struct mqtt_out_property *)list_head(prop_list->props);
+    prop = (struct mqtt_prop_out_property *)list_head(prop_list->props);
 
     do {
       if(prop != NULL && (prop->id == prop_id || prop_id == MQTT_VHDR_PROP_ANY)) {
         DBG("Property %p ID %i len %i\n", prop, prop->id, prop->property_len);
       }
-      prop = (struct mqtt_out_property *)list_item_next(prop);
+      prop = (struct mqtt_prop_out_property *)list_item_next(prop);
     } while(prop != NULL);
   }
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-mqtt_register_prop(struct mqtt_prop_list **prop_list,
-                   struct mqtt_out_property **prop_out,
+mqtt_prop_register(struct mqtt_prop_list **prop_list,
+                   struct mqtt_prop_out_property **prop_out,
 #if !MQTT_PROP_USE_MEMB
-                   struct mqtt_out_property *prop,
+                   struct mqtt_prop_out_property *prop,
 #endif
                    mqtt_msg_type_t msg,
                    mqtt_vhdr_prop_t prop_id, ...)
 {
 #if MQTT_PROP_USE_MEMB
-  struct mqtt_out_property *prop;
+  struct mqtt_prop_out_property *prop;
 #endif
   va_list args;
   uint32_t prop_len;
@@ -753,18 +753,18 @@ mqtt_register_prop(struct mqtt_prop_list **prop_list,
   DBG("MQTT - prop list->list %p\n", (*prop_list)->props);
 
 #if MQTT_PROP_USE_MEMB
-  prop = (struct mqtt_out_property *)memb_alloc(&props_mem);
+  prop = (struct mqtt_prop_out_property *)memb_alloc(&props_mem);
 #endif
 
   if(!prop) {
-    DBG("MQTT - Error, allocated too many properties (max %i)\n", MQTT_MAX_OUT_PROPS);
+    DBG("MQTT - Error, allocated too many properties (max %i)\n", MQTT_PROP_MAX_OUT_PROPS);
     prop_out = NULL;
     return 1;
   }
 
   DBG("MQTT - Allocated prop %p\n", prop);
 
-  prop_len = mqtt_encode_prop(&prop, prop_id, args);
+  prop_len = mqtt_prop_encode(&prop, prop_id, args);
 
   if(prop) {
     DBG("MQTT - Adding prop %p to prop_list %p\n", prop, *prop_list);
@@ -796,7 +796,7 @@ mqtt_register_prop(struct mqtt_prop_list **prop_list,
 /* Remove one property from list and free its memory */
 uint8_t
 mqtt_remove_prop(struct mqtt_prop_list **prop_list,
-                 struct mqtt_out_property *prop)
+                 struct mqtt_prop_out_property *prop)
 {
   if(prop != NULL && prop_list != NULL && list_contains((*prop_list)->props, prop)) {
     DBG("MQTT - Removing property %p from list %p\n", prop, *prop_list);
@@ -825,9 +825,9 @@ mqtt_remove_prop(struct mqtt_prop_list **prop_list,
 }
 /* Remove & frees all properties in the list */
 void
-mqtt_clear_prop_list(struct mqtt_prop_list **prop_list)
+mqtt_prop_clear_list(struct mqtt_prop_list **prop_list)
 {
-  struct mqtt_out_property *prop;
+  struct mqtt_prop_out_property *prop;
 
   DBG("MQTT - Clearing Property List\n");
 
@@ -835,13 +835,13 @@ mqtt_clear_prop_list(struct mqtt_prop_list **prop_list)
     DBG("MQTT - Prop list empty\n");
     return;
   } else {
-    prop = (struct mqtt_out_property *)list_head((*prop_list)->props);
+    prop = (struct mqtt_prop_out_property *)list_head((*prop_list)->props);
 
     do {
       if(prop != NULL) {
         (void)mqtt_remove_prop(prop_list, prop);
       }
-      prop = (struct mqtt_out_property *)list_head((*prop_list)->props);
+      prop = (struct mqtt_prop_out_property *)list_head((*prop_list)->props);
     } while(prop != NULL);
   }
 

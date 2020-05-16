@@ -260,7 +260,7 @@ struct mqtt_prop_list *publish_props;
 /* Control whether or not to perform authentication (MQTTv5) */
 #define MQTT_5_AUTH_EN 0
 #if MQTT_5_AUTH_EN
-mqtt_prop_list *auth_props;
+struct mqtt_prop_list *auth_props;
 #endif
 #endif
 /*---------------------------------------------------------------------------*/
@@ -377,7 +377,7 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
                 msg_ptr->payload_chunk, msg_ptr->payload_chunk_length);
 #if MQTT_5
     /* Print any properties received along with the message */
-    mqtt_print_input_props(m);
+    mqtt_prop_print_input_props(m);
 #endif
     break;
   }
@@ -394,7 +394,7 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     }
 #if MQTT_5
     /* Print any properties received along with the message */
-    mqtt_print_input_props(m);
+    mqtt_prop_print_input_props(m);
 #endif
 #endif
     break;
@@ -410,7 +410,7 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
 #if MQTT_5_AUTH_EN
   case MQTT_EVENT_AUTH: {
     LOG_DBG("Continuing auth.\n");
-    mqtt_auth_event_t *auth_event = (mqtt_auth_event_t *)data;
+    struct mqtt_prop_auth_event *auth_event = (struct mqtt_prop_auth_event *)data;
     break;
   }
 #endif
@@ -642,7 +642,7 @@ publish(void)
                  PUB_TOPIC_ALIAS, MQTT_TOPIC_ALIAS_OFF,
                  publish_props);
 
-    prop_err = mqtt_register_prop(&publish_props,
+    prop_err = mqtt_prop_register(&publish_props,
                                   NULL,
                                   MQTT_FHDR_MSG_TYPE_PUBLISH,
                                   MQTT_VHDR_PROP_TOPIC_ALIAS,
@@ -679,12 +679,12 @@ connect_to_broker(void)
 /*---------------------------------------------------------------------------*/
 #if MQTT_5_AUTH_EN
 static void
-send_auth(mqtt_auth_event_t *auth_info, mqtt_auth_type_t auth_type)
+send_auth(struct mqtt_prop_auth_event *auth_info, mqtt_auth_type_t auth_type)
 {
-  clear_prop_list(&auth_props);
+  mqtt_prop_clear_prop_list(&auth_props);
 
   if(auth_info->auth_method.length) {
-    (void)mqtt_register_prop(&auth_props,
+    (void)mqtt_prop_register(&auth_props,
                              NULL,
                              MQTT_FHDR_MSG_TYPE_AUTH,
                              MQTT_VHDR_PROP_AUTH_METHOD,
@@ -692,7 +692,7 @@ send_auth(mqtt_auth_event_t *auth_info, mqtt_auth_type_t auth_type)
   }
 
   if(auth_info->auth_data.len) {
-    (void)mqtt_register_prop(&auth_props,
+    (void)mqtt_prop_register(&auth_props,
                              NULL,
                              MQTT_FHDR_MSG_TYPE_AUTH,
                              MQTT_VHDR_PROP_AUTH_DATA,
@@ -749,16 +749,16 @@ state_machine(void)
     connect_attempt = 1;
 
 #if MQTT_5
-    mqtt_create_prop_list(&publish_props);
+    mqtt_prop_create_list(&publish_props);
 
     /* this will be sent with every publish packet */
-    (void)mqtt_register_prop(&publish_props,
+    (void)mqtt_prop_register(&publish_props,
                              NULL,
                              MQTT_FHDR_MSG_TYPE_PUBLISH,
                              MQTT_VHDR_PROP_USER_PROP,
                              "Contiki", "v4.5+");
 
-    mqtt_print_props(publish_props, MQTT_VHDR_PROP_ANY);
+    mqtt_prop_print_list(publish_props, MQTT_VHDR_PROP_ANY);
 #endif
 
     state = STATE_REGISTERED;

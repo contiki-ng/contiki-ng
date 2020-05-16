@@ -468,7 +468,7 @@ PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
 {
   PT_BEGIN(pt);
 
-  struct mqtt_out_property *prop;
+  struct mqtt_prop_out_property *prop;
 
   if(prop_list) {
     DBG("MQTT - Writing %i property bytes\n", prop_list->properties_len + prop_list->properties_len_enc_bytes);
@@ -477,7 +477,7 @@ PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
                         prop_list->properties_len_enc,
                         prop_list->properties_len_enc_bytes);
 
-    prop = (struct mqtt_out_property *)list_head(prop_list->props);
+    prop = (struct mqtt_prop_out_property *)list_head(prop_list->props);
     do {
       if(prop != NULL) {
         DBG("MQTT - Property ID %i len %i\n", prop->id, prop->property_len);
@@ -486,7 +486,7 @@ PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
                             prop->val,
                             prop->property_len);
       }
-      prop = (struct mqtt_out_property *)list_item_next(prop);
+      prop = (struct mqtt_prop_out_property *)list_item_next(prop);
     } while(prop != NULL);
   } else {
     /* Write Property Length */
@@ -1039,7 +1039,7 @@ handle_connack(struct mqtt_connection *conn)
     abort_connection(conn);
     return;
   }
-  mqtt_parse_connack_props(conn);
+  mqtt_prop_parse_connack_props(conn);
 #endif
 
   ctimer_set(&conn->keep_alive_timer, conn->keep_alive * CLOCK_SECOND,
@@ -1250,7 +1250,7 @@ handle_disconnect(struct mqtt_connection *conn)
 static void
 handle_auth(struct mqtt_connection *conn)
 {
-  struct mqtt_auth_event event;
+  struct mqtt_prop_auth_event event;
 
   DBG("MQTT - (handle_auth) Got AUTH.\n");
 
@@ -1269,7 +1269,7 @@ handle_auth(struct mqtt_connection *conn)
     DBG("MQTT - (handle_auth) Not reauth - Reason Code 0x18 expected!\n");
   }
 
-  mqtt_parse_auth_props(conn, &event);
+  mqtt_prop_parse_auth_props(conn, &event);
   call_event(conn, MQTT_EVENT_AUTH, &event);
 }
 #endif
@@ -1319,7 +1319,7 @@ parse_vhdr(struct mqtt_connection *conn)
   }
 
   if(!conn->in_packet.has_props) {
-    mqtt_decode_input_props(conn);
+    mqtt_prop_decode_input_props(conn);
   }
 #endif
 }
@@ -1435,7 +1435,7 @@ tcp_input(struct tcp_socket *s,
 
 #if MQTT_5
       if(!conn->in_packet.has_props) {
-        mqtt_decode_input_props(conn);
+        mqtt_prop_decode_input_props(conn);
       }
 
       if(conn->in_publish_msg.first_chunk) {
