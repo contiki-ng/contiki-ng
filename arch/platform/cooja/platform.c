@@ -88,6 +88,7 @@
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_getMemory)
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setMemory)
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
+#define Java_org_contikios_cooja_corecomm_CLASSNAME_kill COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_kill)
 #define Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
 
 #if NETSTACK_CONF_WITH_IPV6
@@ -350,6 +351,21 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, 
   (*env)->ReleaseByteArrayElements(env, mem_arr, mem, 0);
 }
 /*---------------------------------------------------------------------------*/
+#include "signal.h"
+#include "pthread.h"
+
+pthread_t mote_thread = (pthread_t)0;
+
+JNIEXPORT void JNICALL
+Java_org_contikios_cooja_corecomm_CLASSNAME_kill(JNIEnv *env, jobject obj)
+{
+    cprintf("mote%d signall to kill\n", simMoteID);
+    if (mote_thread != (pthread_t)0){
+        pthread_kill(mote_thread, SIGABRT); //SIGABRT //SIGTRAP // SIGSEGV
+    }
+}
+
+/*---------------------------------------------------------------------------*/
 /**
  * \brief      Let mote execute one "block" of code (tick mote).
  * \param env  JNI Environment interface pointer
@@ -379,6 +395,8 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
 #endif
 
   simProcessRunValue = 0;
+
+  mote_thread = pthread_self();
 
   /* Let all simulation interfaces act first */
   doActionsBeforeTick();
@@ -429,6 +447,8 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
 
   /* Let all simulation interfaces act before returning to java */
   doActionsAfterTick();
+
+  mote_thread = (pthread_t)0;
 
   /* Do we have any pending timers */
   simEtimerPending = etimer_pending();
