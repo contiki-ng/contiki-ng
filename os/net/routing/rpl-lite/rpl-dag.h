@@ -47,7 +47,7 @@
 
 /********** Includes **********/
 
-#include "uip.h"
+#include "net/ipv6/uip.h"
 
 /********** Public functions **********/
 
