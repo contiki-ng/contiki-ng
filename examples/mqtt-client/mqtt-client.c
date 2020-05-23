@@ -32,6 +32,7 @@
 #include "contiki.h"
 #include "net/routing/routing.h"
 #include "mqtt.h"
+#include "mqtt-prop.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/sicslowpan.h"
@@ -45,6 +46,7 @@
 
 #include <string.h>
 #include <strings.h>
+#include <stdarg.h>
 /*---------------------------------------------------------------------------*/
 #define LOG_MODULE "mqtt-client"
 #ifdef MQTT_CLIENT_CONF_LOG_LEVEL
@@ -137,6 +139,7 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 #define RETRY_FOREVER              0xFF
 #define RECONNECT_INTERVAL         (CLOCK_SECOND * 2)
 
+/*---------------------------------------------------------------------------*/
 /*
  * Number of times to try reconnecting to the broker.
  * Can be a limited number (e.g. 3, 10 etc) or can be set to RETRY_FOREVER
@@ -248,6 +251,19 @@ static const mqtt_client_extension_t *mqtt_client_extensions[] = { NULL };
 static const uint8_t mqtt_client_extension_count = 0;
 #endif
 /*---------------------------------------------------------------------------*/
+/* MQTTv5 */
+#if MQTT_5
+static uint8_t PUB_TOPIC_ALIAS;
+
+struct mqtt_prop_list *publish_props;
+
+/* Control whether or not to perform authentication (MQTTv5) */
+#define MQTT_5_AUTH_EN 0
+#if MQTT_5_AUTH_EN
+struct mqtt_prop_list *auth_props;
+#endif
+#endif
+/*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
 /*---------------------------------------------------------------------------*/
 static bool
@@ -339,7 +355,8 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     state = STATE_CONNECTED;
     break;
   }
-  case MQTT_EVENT_DISCONNECTED: {
+  case MQTT_EVENT_DISCONNECTED:
+  case MQTT_EVENT_CONNECTION_REFUSED_ERROR: {
     LOG_DBG("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
 
     state = STATE_DISCONNECTED;
@@ -353,24 +370,32 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     if(msg_ptr->first_chunk) {
       msg_ptr->first_chunk = 0;
       LOG_DBG("Application received publish for topic '%s'. Payload "
-              "size is %i bytes.\n", msg_ptr->topic, msg_ptr->payload_length);
+              "size is %i bytes.\n", msg_ptr->topic, msg_ptr->payload_chunk_length);
     }
 
     pub_handler(msg_ptr->topic, strlen(msg_ptr->topic),
-                msg_ptr->payload_chunk, msg_ptr->payload_length);
+                msg_ptr->payload_chunk, msg_ptr->payload_chunk_length);
+#if MQTT_5
+    /* Print any properties received along with the message */
+    mqtt_prop_print_input_props(m);
+#endif
     break;
   }
   case MQTT_EVENT_SUBACK: {
-#if MQTT_311
-    mqtt_suback_event_t *suback_event = (mqtt_suback_event_t *)data;
+#if MQTT_31
+    LOG_DBG("Application is subscribed to topic successfully\n");
+#else
+    struct mqtt_suback_event *suback_event = (struct mqtt_suback_event *)data;
 
     if(suback_event->success) {
       LOG_DBG("Application is subscribed to topic successfully\n");
     } else {
       LOG_DBG("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
     }
-#else
-    LOG_DBG("Application is subscribed to topic successfully\n");
+#if MQTT_5
+    /* Print any properties received along with the message */
+    mqtt_prop_print_input_props(m);
+#endif
 #endif
     break;
   }
@@ -382,6 +407,13 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     LOG_DBG("Publishing complete.\n");
     break;
   }
+#if MQTT_5_AUTH_EN
+  case MQTT_EVENT_AUTH: {
+    LOG_DBG("Continuing auth.\n");
+    struct mqtt_prop_auth_event *auth_event = (struct mqtt_prop_auth_event *)data;
+    break;
+  }
+#endif
   default:
     LOG_DBG("Application got a unhandled MQTT event: %i\n", event);
     break;
@@ -399,6 +431,10 @@ construct_pub_topic(void)
     LOG_INFO("Pub Topic: %d, Buffer %d\n", len, BUFFER_SIZE);
     return 0;
   }
+
+#if MQTT_5
+  PUB_TOPIC_ALIAS = 1;
+#endif
 
   return 1;
 }
@@ -472,6 +508,12 @@ update_config(void)
    */
   etimer_set(&publish_periodic_timer, 0);
 
+#if MQTT_5
+  LIST_STRUCT_INIT(&(conn.will), properties);
+
+  mqtt_props_init();
+#endif
+
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -503,7 +545,13 @@ subscribe(void)
   /* Publish MQTT topic in IBM quickstart format */
   mqtt_status_t status;
 
+#if MQTT_5
+  status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0,
+                          MQTT_NL_OFF, MQTT_RAP_OFF, MQTT_RET_H_SEND_ALL,
+                          MQTT_PROP_LIST_NONE);
+#else
   status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
+#endif
 
   LOG_DBG("Subscribing!\n");
   if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
@@ -519,6 +567,9 @@ publish(void)
   int remaining = APP_BUFFER_SIZE;
   int i;
   char def_rt_str[64];
+#if MQTT_5
+  static uint8_t prop_err = 1;
+#endif
 
   seq_nr_value++;
 
@@ -581,8 +632,31 @@ publish(void)
     return;
   }
 
+#if MQTT_5
+  /* Only send full topic name with the first PUBLISH
+   * Afterwards, only use topic alias
+   */
+  if(seq_nr_value == 1) {
+    mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF,
+                 PUB_TOPIC_ALIAS, MQTT_TOPIC_ALIAS_OFF,
+                 publish_props);
+
+    prop_err = mqtt_prop_register(&publish_props,
+                                  NULL,
+                                  MQTT_FHDR_MSG_TYPE_PUBLISH,
+                                  MQTT_VHDR_PROP_TOPIC_ALIAS,
+                                  PUB_TOPIC_ALIAS);
+  } else {
+    mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF,
+                 PUB_TOPIC_ALIAS, (mqtt_topic_alias_en_t) !prop_err,
+                 publish_props);
+  }
+#else
   mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+#endif
 
   LOG_DBG("Publish!\n");
 }
@@ -593,10 +667,47 @@ connect_to_broker(void)
   /* Connect to MQTT server */
   mqtt_connect(&conn, conf.broker_ip, conf.broker_port,
                (conf.pub_interval * 3) / CLOCK_SECOND,
+#if MQTT_5
+               MQTT_CLEAN_SESSION_ON,
+               MQTT_PROP_LIST_NONE);
+#else
                MQTT_CLEAN_SESSION_ON);
+#endif
 
   state = STATE_CONNECTING;
 }
+/*---------------------------------------------------------------------------*/
+#if MQTT_5_AUTH_EN
+static void
+send_auth(struct mqtt_prop_auth_event *auth_info, mqtt_auth_type_t auth_type)
+{
+  mqtt_prop_clear_prop_list(&auth_props);
+
+  if(auth_info->auth_method.length) {
+    (void)mqtt_prop_register(&auth_props,
+                             NULL,
+                             MQTT_FHDR_MSG_TYPE_AUTH,
+                             MQTT_VHDR_PROP_AUTH_METHOD,
+                             auth_info->auth_method.string);
+  }
+
+  if(auth_info->auth_data.len) {
+    (void)mqtt_prop_register(&auth_props,
+                             NULL,
+                             MQTT_FHDR_MSG_TYPE_AUTH,
+                             MQTT_VHDR_PROP_AUTH_DATA,
+                             auth_info->auth_data.data,
+                             auth_info->auth_data.len);
+  }
+
+  /* Connect to MQTT server */
+  mqtt_auth(&conn, auth_type, auth_props);
+
+  if(state != STATE_CONNECTING) {
+    LOG_DBG("MQTT reauthenticating\n");
+  }
+}
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 ping_parent(void)
@@ -637,8 +748,21 @@ state_machine(void)
     conn.auto_reconnect = 0;
     connect_attempt = 1;
 
+#if MQTT_5
+    mqtt_prop_create_list(&publish_props);
+
+    /* this will be sent with every publish packet */
+    (void)mqtt_prop_register(&publish_props,
+                             NULL,
+                             MQTT_FHDR_MSG_TYPE_PUBLISH,
+                             MQTT_VHDR_PROP_USER_PROP,
+                             "Contiki", "v4.5+");
+
+    mqtt_prop_print_list(publish_props, MQTT_VHDR_PROP_ANY);
+#endif
+
     state = STATE_REGISTERED;
-    LOG_DBG("Init\n");
+    LOG_DBG("Init MQTT version %d\n", MQTT_PROTOCOL_VERSION);
     /* Continue */
   case STATE_REGISTERED:
     if(have_connectivity()) {
@@ -710,7 +834,11 @@ state_machine(void)
        RECONNECT_ATTEMPTS == RETRY_FOREVER) {
       /* Disconnect and backoff */
       clock_time_t interval;
+#if MQTT_5
+      mqtt_disconnect(&conn, MQTT_PROP_LIST_NONE);
+#else
       mqtt_disconnect(&conn);
+#endif
       connect_attempt++;
 
       interval = connect_attempt < 3 ? RECONNECT_INTERVAL << connect_attempt :
