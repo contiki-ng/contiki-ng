@@ -78,9 +78,9 @@ jobs:
       run: |
         # Extract the branch name from github.ref. For example, from
         # 'refs/heads/master' we want to keep 'master'
-        echo ::set-env name=MERGE_BRANCH_REF::$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
+        export MERGE_BRANCH_REF=$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
 
-        echo This is a build for branch master and it updates the docker container
+        echo This is a build for branch $MERGE_BRANCH_REF and it updates the docker container
         echo Push images to Dockerhub
         echo Will push $DOCKER_IMG as well as $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
         #echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
