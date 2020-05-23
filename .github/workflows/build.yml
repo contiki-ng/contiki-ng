@@ -24,20 +24,21 @@ jobs:
         OUT_OF_TREE_TEST_VER: 2869ae7
         DOCKER_BASE_IMG: contiker/contiki-ng
 
-    # Allow all jobs in the strategy matrix to conclude even if one fails
-    continue-on-error: true
-
     strategy:
+        # Always run all jobs in the matrix, even if one fails
         fail-fast: false
         matrix:
-            test: [Builds, Cooja Simulations, Cooja + Script, Scripts]
+            test: [ documentation, compile-base, compile-arm-ports, compile-nxp-ports, compile-tools, out-of-tree-build, rpl-lite, rpl-classic, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
 
     # Checks-out the contiki-ng $GITHUB_WORKSPACE, so your job can access it
     steps:
+
+    # Checks out the repo with full history
     - uses: actions/checkout@v2
       with:
-          fetch-depth: '50'
+          fetch-depth: '0'
           submodules: 'recursive'
+          persist-credentials: false
 
     # Construct the correct docker container image tag corresponding to this build
     - name: Figure out correct docker image tag
@@ -58,14 +59,12 @@ jobs:
       run: |
         echo "Using $DOCKER_IMG for this run"
         echo "Pulling image $DOCKER_IMG from dockerhub";
-        docker pull $DOCKER_IMG
-        # Flag a need to build in the next step
-        echo ::set-env name=DOCKER_NEED_BUILD::$?
+        docker pull $DOCKER_IMG || echo ::set-env name=DOCKER_NEED_BUILD::1
 
     - name: Build docker image if required
-      if: env.DOCKER_NEED_BUILD != '0'
+      if: env.DOCKER_NEED_BUILD == '1'
       run: |
-        echo $DOCKER_IMG "does not exist on dockerhub or pull failed
+        echo $DOCKER_IMG does not exist on dockerhub or pull failed
         echo This is normal for PR builds and for builds on forks
         echo Building from dockerfile
         docker build tools/docker -t $DOCKER_IMG
@@ -74,35 +73,38 @@ jobs:
     # contiki-ng repo and iii) this is a push (merge commit) to one of the
     # branches of interest then push the image to dockerhub
     - name: Push images to dockerhub
-      if: github.repository == 'contiki-ng/contiki-ng' && github.event == 'push'
+      if: github.repository == 'contiki-ng/contiki-ng' && github.event_name == 'push'
       run: |
         # Extract the branch name from github.ref. For example, from
         # 'refs/heads/master' we want to keep 'master'
-        export MERGE_BRANCH_REF=$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
-
+        MERGE_BRANCH_REF=$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
         echo This is a build for branch $MERGE_BRANCH_REF and it updates the docker container
         echo Push images to Dockerhub
         echo Will push $DOCKER_IMG as well as $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
-        #echo $DOCKERHUB_PASSWD | docker login --username contiker --password-stdin
-        #docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
-        #docker push $DOCKER_IMG
-        #docker push $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
+        echo ${{ secrets.DOCKERHUB_PASSWD }} | docker login --username contiker --password-stdin
+        docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
+        docker push $DOCKER_IMG
+        docker push $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
 
     # Clone the repo used for out-of-tree builds if required
     - name: Clone the repo used for out-of-tree builds if required
-      if: matrix.test == 'Builds'
+      if: matrix.test == 'out-of-tree-build'
       run: |
         mkdir -p $OUT_OF_TREE_TEST_PATH
         git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH
-        cd $OUT_OF_TREE_TEST_PATH
-        git checkout $OUT_OF_TREE_TEST_VER
+        # Check out desired hash
+        (cd $OUT_OF_TREE_TEST_PATH && git checkout $OUT_OF_TREE_TEST_VER)
+        # Set permissions for Docker mount
+        sudo chown -R 1000:1000 $OUT_OF_TREE_TEST_PATH
+        # Set up docker mount
+        echo ::set-env name=DOCKER_ARGS::-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests
 
     # Fire up the container and run corresponding tests
     - name: Execute tests
       run: |
-        'printf "\n\n>>>>> Running suite: $TEST_NAME ($TESTS) <<<<<\n"'
-        #for TEST in $TESTS; do printf "\n\n--- Running test $TEST:\n"; docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -v $OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests -v $CNG_HOST_PATH:/home/user/contiki-ng -ti $DOCKER_IMG bash --login -c "make -C tests/??-$TEST"; done
-        'printf "\n\n>>>>>> Checking all tests <<<<<\n"'
-        RET=0
-        #for TEST in $TESTS; do $CNG_HOST_PATH/tests/check-test.sh $CNG_HOST_PATH/tests/??-$TEST || RET=1; done
-        #exit $RET
+        # Set permissions for Docker mount
+        sudo chown -R 1000:1000 .
+        # Run test
+        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng $DOCKER_IMG bash --login -c "make -C tests/??-${{ matrix.test }};"
+        # Check outcome of the test
+        ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
