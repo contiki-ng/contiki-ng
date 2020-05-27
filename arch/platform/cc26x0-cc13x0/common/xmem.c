@@ -70,7 +70,7 @@ xmem_pread(void *_p, int size, unsigned long addr)
   rv = ext_flash_open(NULL);
 
   if(!rv) {
-    PRINTF("Could not open flash to save config\n");
+    PRINTF("Could not open flash to read!\n");
     ext_flash_close(NULL);
     return -1;
   }
@@ -102,7 +102,7 @@ xmem_pwrite(const void *_buf, int size, unsigned long addr)
   rv = ext_flash_open(NULL);
 
   if(!rv) {
-    PRINTF("Could not open flash to save config!\n");
+    PRINTF("Could not open flash to write!\n");
     ext_flash_close(NULL);
     return -1;
   }
