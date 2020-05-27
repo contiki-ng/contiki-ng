@@ -58,7 +58,7 @@
 void
 xmem_init(void)
 {
-  ext_flash_open(NULL);
+  ext_flash_init(NULL);
 }
 int
 xmem_pread(void *_p, int size, unsigned long addr)
