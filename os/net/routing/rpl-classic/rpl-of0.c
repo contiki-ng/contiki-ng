@@ -75,15 +75,13 @@
 #define RPL_OF0_SR            RPL_OF0_ETX_BASED_SR
 #endif /* RPL_OF0_CONF_SR */
 
-#if RPL_OF0_FIXED_SR
+#if RPL_OF0_SR == RPL_OF0_FIXED_SR
 #define STEP_OF_RANK(p)       (3)
-#endif /* RPL_OF0_FIXED_SR */
-
-#if RPL_OF0_ETX_BASED_SR
+#elif RPL_OF0_SR == RPL_OF0_ETX_BASED_SR
 /* Numbers suggested by P. Thubert for in the 6TiSCH WG. Anything that maps ETX to
  * a step between 1 and 9 works. */
 #define STEP_OF_RANK(p)       (((3 * parent_link_metric(p)) / LINK_STATS_ETX_DIVISOR) - 2)
-#endif /* RPL_OF0_ETX_BASED_SR */
+#endif /* RPL_OF0_SR */
 
 /*---------------------------------------------------------------------------*/
 static void
