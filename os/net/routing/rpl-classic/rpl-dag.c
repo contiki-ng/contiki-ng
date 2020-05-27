@@ -1613,7 +1613,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
     }
   } else {
     if(p->rank == dio->rank) {
-      LOG_WARN("Received consistent DIO\n");
+      LOG_INFO("Received consistent DIO\n");
       if(dag->joined) {
         instance->dio_counter++;
       }
