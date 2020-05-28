@@ -385,93 +385,99 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_kill(JNIEnv *env, jobject obj)
  *             This is a JNI function and should only be called via the
  *             responsible Java part (MoteType.java).
  */
+#if !defined(NDK_DEBUG)
 JNIEXPORT void JNICALL
 Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
+#else
+void cooja_tick(void)
+#endif
 {
-#if defined(NDK_DEBUG)
-  cooja_jni_env = env;
-  coffee_init();
-  char was_ok = cooja_threads_ok;
-#endif
+    simProcessRunValue = 0;
+    mote_thread = pthread_self();
+    /* Let all simulation interfaces act first */
+    doActionsBeforeTick();
 
-  simProcessRunValue = 0;
-
-  mote_thread = pthread_self();
-
-  /* Let all simulation interfaces act first */
-  doActionsBeforeTick();
-
-  /* Poll etimer process */
-  if(etimer_pending()) {
-    etimer_request_poll();
-  }
-
-#if defined(NDK_DEBUG)
-  if (cooja_threads_ok) {
-  cprintf("mote%d enter\n", simMoteID);
-
-  TICK_TRY(){
-
-  //coffee_dump();
-  //cprintf("mote%d go\n", simMoteID);
-#endif
-
-  /* Let rtimers run.
-   * Sets simProcessRunValue */
-  cooja_mt_exec(&rtimer_thread);
-
-  if (cooja_threads_ok)
-  if(simProcessRunValue == 0) {
-    /* Rtimers done: Let Contiki handle a few events.
-     * Sets simProcessRunValue */
-    cooja_mt_exec(&process_run_thread);
-  }
-
-#if defined(NDK_DEBUG)
-  } TICK_CATCH() {
-
-    cprintf("mote%d catched\n", simMoteID);
-    coffee_dump();
-
-    coffee_message = coffeecatch_get_message();
-    printf("break by %s\n", coffee_message);
-
-    cooja_threads_ok = 0;
-    LOG_PRINT("!!! cooja thread crashed\n");
-
-    //stops all alarm timer, to allow cooja stay in pause
-    coffeecatch_cancel_pending_alarm();
-  }
-  }//if (cooja_threads_ok)
-#endif
-
-  /* Let all simulation interfaces act before returning to java */
-  doActionsAfterTick();
-
-  mote_thread = (pthread_t)0;
-
-  /* Do we have any pending timers */
-  simEtimerPending = etimer_pending();
-
-  /* Save nearest expiration time */
-  simEtimerNextExpirationTime = etimer_next_expiration_time();
-
-#if defined(NDK_DEBUG)
-  if (!cooja_threads_ok) {
-    if (was_ok){
-      coffeecatch_throw_exception(env);
-      /*
-      jclass cls = (*env)->FindClass(env, "java/lang/RuntimeException");
-      (*env)->ThrowNew(env, cls, strdup("coffeecatch break\n") );
-      */
+    /* Poll etimer process */
+    if(etimer_pending()) {
+      etimer_request_poll();
     }
-  }
 
-  //cprintf("mote%d out\n", simMoteID);
-  TICK_END();
-  cprintf("mote%d done\n", simMoteID);
-#endif
+    /* Let rtimers run.
+     * Sets simProcessRunValue */
+    cooja_mt_exec(&rtimer_thread);
+
+    if (cooja_threads_ok)
+    if(simProcessRunValue == 0) {
+      /* Rtimers done: Let Contiki handle a few events.
+       * Sets simProcessRunValue */
+      cooja_mt_exec(&process_run_thread);
+    }
+
+    /* Let all simulation interfaces act before returning to java */
+    doActionsAfterTick();
+
+
+    mote_thread = (pthread_t)0;
+
+    /* Do we have any pending timers */
+    simEtimerPending = etimer_pending();
+
+    /* Save nearest expiration time */
+    simEtimerNextExpirationTime = etimer_next_expiration_time();
 }
+
+#if defined(NDK_DEBUG)
+JNIEXPORT void JNICALL
+Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj){
+    if (!cooja_threads_ok)
+        return;
+
+    cooja_jni_env = env;
+    coffee_init();
+    char was_ok = cooja_threads_ok;
+
+    cprintf("mote%d enter\n", simMoteID);
+
+    TICK_TRY(){
+
+    //coffee_dump();
+    //cprintf("mote%d go\n", simMoteID);
+    cooja_tick();
+
+    } TICK_CATCH() {
+
+      cprintf("mote%d catched\n", simMoteID);
+      coffee_dump();
+
+      coffee_message = coffeecatch_get_message();
+      printf("break by %s\n", coffee_message);
+
+      cooja_threads_ok = 0;
+      LOG_PRINT("!!! cooja thread crashed\n");
+
+      //stops all alarm timer, to allow cooja stay in pause
+      coffeecatch_cancel_pending_alarm();
+    }
+
+    if (!cooja_threads_ok) {
+      if (was_ok){
+        /* Let all simulation interfaces act before returning to java */
+        doActionsAfterTick();
+
+        coffeecatch_throw_exception(env);
+        /*
+        jclass cls = (*env)->FindClass(env, "java/lang/RuntimeException");
+        (*env)->ThrowNew(env, cls, strdup("coffeecatch break\n") );
+        */
+      }
+    }
+
+    //cprintf("mote%d out\n", simMoteID);
+    TICK_END();
+
+    cprintf("mote%d done\n", simMoteID);
+}
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      Set the relative memory address of the reference variable.
