@@ -167,6 +167,7 @@ static const char*          coffee_message = NULL;
 #define coffee_init()       coffeecatch_init()
 #define coffee_dump()       coffeecatch_dump()
 
+
 FILE*                       coffeecatch_log = NULL;
 void coffeecatch_dump();
 void coffeecatch_init();
@@ -457,6 +458,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj){
 
       //stops all alarm timer, to allow cooja stay in pause
       coffeecatch_cancel_pending_alarm();
+
     }
 
     if (!cooja_threads_ok) {
@@ -511,6 +513,15 @@ void coffeecatch_init(){
     // use this to preallocate tread signal stack alternate, so that it will
     //   not reallocates anymore.
     coffeecatch_prepare();
+    fflush(coffeecatch_log);
+}
+
+void coffeecatch_on_alarm(){
+    // cooja-log stub
+    extern char     simLoggedData[];
+    extern int      simLoggedLength;
+
+    fprintf(coffeecatch_log, "crash logbuf:\n%*s\n", simLoggedLength, simLoggedData);
     fflush(coffeecatch_log);
 }
 

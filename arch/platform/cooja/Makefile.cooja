@@ -82,6 +82,7 @@ ifneq ("${WITH_COFFEE}","")
 CONTIKI_TARGET_DIRS += lib/coffeecatch
 COOJA_BASE	+= coffeecatch.c coffeejni.c
 
+CFLAGS   += -fstack-protector-strong
 CFLAGS   += -funwind-tables
 CFLAGS   += -DUSE_UNWIND -DSIG_ABORT_SIGSEGV=1
 
