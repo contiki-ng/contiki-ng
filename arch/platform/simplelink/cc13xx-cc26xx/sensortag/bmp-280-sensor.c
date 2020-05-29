@@ -177,6 +177,37 @@ i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCoun
 #define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
 #define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
 /*---------------------------------------------------------------------------*/
+/* Releases the I2C Peripheral */
+static void
+i2c_release(void)
+{
+  I2C_close(i2c_handle);
+  i2c_handle = NULL;
+}
+/*---------------------------------------------------------------------------*/
+/* Acquires the I2C Peripheral */
+static bool
+i2c_acquire(void)
+{
+  I2C_Params i2c_params;
+
+  if(i2c_handle) {
+    return true;
+  }
+
+  I2C_Params_init(&i2c_params);
+
+  i2c_params.transferMode = I2C_MODE_BLOCKING;
+  i2c_params.bitRate = I2C_400kHz;
+
+  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
+  if(i2c_handle == NULL) {
+    return false;
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 /**
  * \brief          Initalise the sensor.
  * \return Boolean Value descibing whether initialization were
@@ -187,18 +218,11 @@ i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCoun
 static bool
 init(void)
 {
-  if(i2c_handle) {
-    return true;
-  }
+  bool rv_write_read, rv_write;
 
-  I2C_Params i2cParams;
-  I2C_Params_init(&i2cParams);
-
-  i2cParams.transferMode = I2C_MODE_BLOCKING;
-  i2cParams.bitRate = I2C_400kHz;
-
-  i2c_handle = I2C_open(Board_I2C0, &i2cParams);
-  if(i2c_handle == NULL) {
+  if(!i2c_acquire()) {
+    sensor_status = SENSOR_STATUS_DISABLED;
+    i2c_release();
     return false;
   }
 
@@ -206,9 +230,13 @@ init(void)
 
   uint8_t calib_reg = ADDR_CALIB;
   /* Read and store calibration data */
-  return i2c_write_read(&calib_reg, sizeof(calib_reg), &calib_data, sizeof(calib_data))
-         /* then reset the sensor */
-         && i2c_write(reset_data, sizeof(reset_data));
+  rv_write_read = i2c_write_read(&calib_reg, sizeof(calib_reg), &calib_data, sizeof(calib_data));
+  /* then reset the sensor */
+  rv_write = i2c_write(reset_data, sizeof(reset_data));
+
+  i2c_release();
+
+  return rv_write_read && rv_write;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -222,12 +250,24 @@ init(void)
 static bool
 enable_sensor(bool enable)
 {
+  bool rv;
+
   uint8_t val = (enable)
     ? PM_FORCED | OSRSP(1) | OSRST(1)
     : PM_OFF;
 
   uint8_t ctrl_meas_data[] = { ADDR_CTRL_MEAS, val };
-  return i2c_write(&ctrl_meas_data, sizeof(ctrl_meas_data));
+
+  if(!i2c_acquire()) {
+    sensor_status = SENSOR_STATUS_DISABLED;
+    i2c_release();
+    return false;
+  }
+
+  rv = i2c_write(&ctrl_meas_data, sizeof(ctrl_meas_data));
+
+  i2c_release();
+  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -243,8 +283,20 @@ enable_sensor(bool enable)
 static bool
 read_data(uint8_t *data, size_t count)
 {
+  bool rv;
   uint8_t press_msb_reg = ADDR_PRESS_MSB;
-  return i2c_write_read(&press_msb_reg, sizeof(press_msb_reg), data, count);
+
+  if(!i2c_acquire()) {
+    sensor_status = SENSOR_STATUS_DISABLED;
+    i2c_release();
+    return false;
+  }
+
+  rv = i2c_write_read(&press_msb_reg, sizeof(press_msb_reg), data, count);
+
+  i2c_release();
+
+  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
