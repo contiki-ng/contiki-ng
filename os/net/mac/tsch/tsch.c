@@ -1213,6 +1213,11 @@ max_payload(void)
   radio_value_t max_radio_payload_len;
   radio_result_t res;
 
+  if(!tsch_is_associated) {
+    LOG_WARN("Cannot compute max payload size: not associated\n");
+    return 0;
+  }
+
   res = NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN,
                                  &max_radio_payload_len);
 

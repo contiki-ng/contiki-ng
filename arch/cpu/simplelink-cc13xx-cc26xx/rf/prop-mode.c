@@ -447,7 +447,7 @@ read(void *buf, unsigned short buf_len)
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if(frame_len < FRAME_SHAVE) {
-    LOG_ERR("Received rame is too short, len=%d\n", frame_len);
+    LOG_ERR("Received frame is too short, len=%d\n", frame_len);
 
     data_queue_release_entry();
     return 0;
