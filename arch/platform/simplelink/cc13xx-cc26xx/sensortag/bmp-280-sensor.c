@@ -102,8 +102,7 @@
 #define VAL_CTRL_MEAS_TEST                  0x55
 /*---------------------------------------------------------------------------*/
 /* Misc. */
-#define MEAS_DATA_SIZE                      6
-#define CALIB_DATA_SIZE                     24
+#define SENSOR_DATA_BUF_SIZE                6
 /*---------------------------------------------------------------------------*/
 #define RES_OFF                             0
 #define RES_ULTRA_LOW_POWER                 1
@@ -324,19 +323,19 @@ value(int type)
   int32_t temp = 0;
   uint32_t pres = 0;
 
+  /* A buffer for the raw reading from the sensor */
+  uint8_t sensor_value[SENSOR_DATA_BUF_SIZE];
+
   if(sensor_status != SENSOR_STATUS_READY) {
     PRINTF("Sensor disabled or starting up (%d)\n", sensor_status);
     return BMP_280_READING_ERROR;
   }
 
-  /* A buffer for the raw reading from the sensor */
-  uint8_t sensor_value[MEAS_DATA_SIZE];
-
   switch(type) {
   case BMP_280_SENSOR_TYPE_TEMP:
   case BMP_280_SENSOR_TYPE_PRESS:
-    memset(sensor_value, 0, MEAS_DATA_SIZE);
-    if(!read_data(sensor_value, MEAS_DATA_SIZE)) {
+    memset(sensor_value, 0, SENSOR_DATA_BUF_SIZE);
+    if(!read_data(sensor_value, SENSOR_DATA_BUF_SIZE)) {
       return BMP_280_READING_ERROR;
     }
 
