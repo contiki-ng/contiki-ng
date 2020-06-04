@@ -371,6 +371,17 @@ get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **
   return p;
 }
 /*---------------------------------------------------------------------------*/
+static
+void update_link_backoff(struct tsch_link *link) {
+  if(link != NULL
+      && (link->link_options & LINK_OPTION_TX)
+      && (link->link_options & LINK_OPTION_SHARED)) {
+    /* Decrement the backoff window for all neighbors able to transmit over
+     * this Tx, Shared link. */
+    tsch_queue_update_all_backoff_windows(&link->addr);
+  }
+}
+/*---------------------------------------------------------------------------*/
 uint64_t
 tsch_get_network_uptime_ticks(void)
 {
@@ -1027,6 +1038,9 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       /* There is no packet to send, and this link does not have Rx flag. Instead of doing
        * nothing, switch to the backup link (has Rx flag) if any. */
       if(current_packet == NULL && !(current_link->link_options & LINK_OPTION_RX) && backup_link != NULL) {
+        /* skipped a Tx link, refresh its backoff */
+        update_link_backoff(current_link);
+
         current_link = backup_link;
         current_packet = get_packet_and_neighbor_for_link(current_link, &current_neighbor);
       }
@@ -1095,13 +1109,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       rtimer_clock_t time_to_next_active_slot;
       /* Schedule next wakeup skipping slots if missed deadline */
       do {
-        if(current_link != NULL
-            && current_link->link_options & LINK_OPTION_TX
-            && current_link->link_options & LINK_OPTION_SHARED) {
-          /* Decrement the backoff window for all neighbors able to transmit over
-           * this Tx, Shared link. */
-          tsch_queue_update_all_backoff_windows(&current_link->addr);
-        }
+        update_link_backoff(current_link);
 
         /* A burst link was scheduled. Replay the current link at the
         next time offset */
