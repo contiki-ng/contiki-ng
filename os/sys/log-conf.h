@@ -82,6 +82,13 @@
 #define LOG_OUTPUT(...) printf(__VA_ARGS__)
 #endif /* LOG_CONF_OUTPUT */
 
+/* Color the prefix based on the log level. Disabled by default */
+#ifdef LOG_CONF_WITH_COLOR
+#define LOG_WITH_COLOR LOG_CONF_WITH_COLOR
+#else /* LOG_CONF_WITH_COLOR */
+#define LOG_WITH_COLOR 0
+#endif /* LOG_CONF_WITH_COLOR */
+
 /*
  * Custom output function to prefix logs with level and module.
  *
