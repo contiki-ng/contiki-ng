@@ -373,6 +373,17 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       } else {
         flags |= SIZE_SHORT;
       }
+    } else if(*pos == 'z') {
+      if(sizeof(size_t) == sizeof(short)) {
+        flags |= SIZE_SHORT;
+      } else if(sizeof(size_t) == sizeof(long)) {
+        flags |= SIZE_LONG;
+#ifdef HAVE_LONGLONG
+      } else if(sizeof(size_t) == sizeof(long long)) {
+        flags |= SIZE_LONGLONG;
+      }
+#endif
+      pos++;
     }
 
     /* parse conversion specifier */
