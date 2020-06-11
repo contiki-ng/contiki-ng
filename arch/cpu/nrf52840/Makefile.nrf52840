@@ -1,5 +1,9 @@
-ifndef NRF5_SDK_ROOT
-  $(error NRF5_SDK_ROOT not defined! You must specify where nRF52 SDK resides!)
+NRF5_SDK_ROOT = $(CONTIKI_CPU)/lib/nrf52-sdk
+
+ifeq (,$(wildcard $(NRF5_SDK_ROOT)/*))
+    $(warning $(NRF5_SDK_ROOT) does not exist or is empty.)
+    $(warning Did you run 'git submodule update --init' ?)
+    $(error "")
 endif
 
 ifneq ($(filter %.flash erase,$(MAKECMDGOALS)),)
