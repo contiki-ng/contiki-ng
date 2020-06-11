@@ -6,17 +6,6 @@ ifeq (,$(wildcard $(NRF5_SDK_ROOT)/*))
     $(error "")
 endif
 
-ifneq ($(filter %.flash erase,$(MAKECMDGOALS)),)
-ifeq ($(NRF52_JLINK_PATH),)
-NRF52_JLINK_PATH:=$(shell location=$$(which JLinkExe) && dirname $$location)
-endif
-ifeq ($(NRF52_JLINK_PATH),)
-  $(error JLink not found in PATH and NRF52_JLINK_PATH path is not defined)
-endif
-endif
-
-CLEAN += *.jlink
-
 ifeq ($(NRF52840_USE_RTT),1)
 ### Suppress the existing debug I/O in os/lib
 CFLAGS += -DNRF52840_USE_RTT=1
@@ -34,13 +23,6 @@ CFLAGS += -DBOARD_PCA10059
 else
 LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840.ld
 CFLAGS += -DBOARD_PCA10056
-endif
-
-# JLink
-JLINK := $(NRF52_JLINK_PATH)/JLinkExe
-JLINK_OPTS = -Device NRF52 -if swd -speed 1000
-ifneq ($(NRF52_JLINK_SN),)
-JLINK_OPTS += -SelectEmuBySN $(NRF52_JLINK_SN)
 endif
 
 ### CPU-dependent directories
@@ -64,7 +46,7 @@ LDFLAGS += -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16
 LDFLAGS += --specs=nano.specs -lc -lnosys
 LDFLAGS += -L $(NRF5_SDK_ROOT)/modules/nrfx/mdk
 
-#nRF52 SDK sources
+# nRF52 SDK sources
 NRF52_SDK_C_SRCS += components/boards/boards.c \
   components/libraries/util/app_error.c \
   components/libraries/util/app_error_handler_gcc.c \
@@ -112,31 +94,51 @@ EXTERNALDIRS += $(addprefix $(NRF5_SDK_ROOT)/, $(NRF52_SDK_INC_PATHS))
 
 include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4
 
-JLINK_DIR = $(CONTIKI_CPU)/jlink
+# Upload via J-Link using nrfjprog 
 
-%.jlink: $(OUT_HEX) %.$(TARGET)
-	sed -e 's,#OUTPUT_FILENAME#,$<,' $(JLINK_DIR)/flash.jlink > $@
+ifdef NRF52_UPLOAD_SN
+	NRFJPROG_FLAGS += --snr $(NRF52_UPLOAD_SN)
+endif
 
-%.flash: %.jlink
-	@echo Flashing: $^
-	$(JLINK) $(JLINK_OPTS) -CommanderScript $*.jlink
+%.upload: $(OUT_HEX) %.$(TARGET)
+ifeq (, $(shell which nrfjprog))
+	@echo "ERROR: Could not find nrfjprog, please install it first"
+else
+	nrfjprog -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --program $<
+	nrfjprog -f nrf52 $(NRFJPROG_FLAGS) --reset
+endif
 
-erase:
-	$(JLINK) $(JLINK_OPTS) -CommanderScript $(JLINK_DIR)/erase.jlink
+# Upload to all attached boards
+# This approach is similar to the sky platform
+
+# Number of boards to program in parallel
+NUMPAR=4
+
+nrf-upload-snr.%:
+	nrfjprog -f nrf52 --snr $* --sectorerase --program $(HEX_FILE)
+	nrfjprog -f nrf52 --snr $* --reset
+
+nrf-upload-sequence: $(foreach SNR, $(shell nrfjprog -i), nrf-upload-snr.$(SNR))
+	@echo Done
+
+%.upload-all: $(OUT_HEX) %.$(TARGET)
+ifeq (, $(shell which nrfjprog))
+	@echo "ERROR: Could not find nrfjprog, please install it first"
+else
+	$(MAKE) HEX_FILE=$< -j $(NUMPAR) nrf-upload-sequence
+endif
 
 # DFU Upload for dongles
 
-NRFUTIL = nrfutil
-NRFUTIL_FLAGS += -e -w -v
-
+DFU_FLAGS = -p /dev/ttyACM0
 ifdef PORT
-  DFU_FLAGS += -p $(PORT)
+  DFU_FLAGS = -p $(PORT)
 endif
 
 %.dfu-upload: $(OUT_HEX) %.$(TARGET)
 ifeq (, $(shell which nrfutil))
 	@echo "ERROR: Could not find nrfutil, please install it first"
 else
-	$(NRFUTIL) pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip   
-	$(NRFUTIL) dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip                      
+	nrfutil pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
+	nrfutil dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
 endif
