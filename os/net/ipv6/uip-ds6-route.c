@@ -613,7 +613,6 @@ uip_ds6_defrt_add(const uip_ipaddr_t *ipaddr, unsigned long interval)
     return NULL;
   }
 
-  LOG_INFO("Add default\n");
   d = uip_ds6_defrt_lookup(ipaddr);
   if(d == NULL) {
     d = memb_alloc(&defaultroutermemb);
@@ -629,6 +628,9 @@ uip_ds6_defrt_add(const uip_ipaddr_t *ipaddr, unsigned long interval)
     }
 
     list_push(defaultrouterlist, d);
+  }
+  else {
+    LOG_INFO("Refreshing default\n");
   }
 
   uip_ipaddr_copy(&d->ipaddr, ipaddr);

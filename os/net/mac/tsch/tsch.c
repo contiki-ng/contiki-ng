@@ -587,7 +587,8 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
 
   if(input_eb == NULL || tsch_packet_parse_eb(input_eb->payload, input_eb->len,
                                               &frame, &ies, &hdrlen, 0) == 0) {
-    LOG_DBG("! failed to parse EB (len %u)\n", input_eb->len);
+    LOG_DBG("! failed to parse packet as EB while scanning (len %u)\n",
+        input_eb->len);
     return 0;
   }
 
@@ -1124,17 +1125,19 @@ send_packet(mac_callback_t sent, void *ptr)
     if(p == NULL) {
       LOG_ERR("! can't send packet to ");
       LOG_ERR_LLADDR(addr);
-      LOG_ERR_(" with seqno %u, queue %u %u\n",
-          tsch_packet_seqno, tsch_queue_nbr_packet_count(n), tsch_queue_global_packet_count());
+      LOG_ERR_(" with seqno %u, queue %u/%u %u/%u\n",
+          tsch_packet_seqno, tsch_queue_nbr_packet_count(n),
+          TSCH_QUEUE_NUM_PER_NEIGHBOR, tsch_queue_global_packet_count(),
+          QUEUEBUF_NUM);
       ret = MAC_TX_ERR;
     } else {
       p->header_len = hdr_len;
       LOG_INFO("send packet to ");
       LOG_INFO_LLADDR(addr);
-      LOG_INFO_(" with seqno %u, queue %u %u, len %u %u\n",
-             tsch_packet_seqno,
-             tsch_queue_nbr_packet_count(n), tsch_queue_global_packet_count(),
-             p->header_len, queuebuf_datalen(p->qb));
+      LOG_INFO_(" with seqno %u, queue %u/%u %u/%u, len %u %u\n",
+             tsch_packet_seqno, tsch_queue_nbr_packet_count(n),
+             TSCH_QUEUE_NUM_PER_NEIGHBOR, tsch_queue_global_packet_count(),
+             QUEUEBUF_NUM, p->header_len, queuebuf_datalen(p->qb));
     }
   }
   if(ret != MAC_TX_DEFERRED) {
