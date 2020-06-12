@@ -122,7 +122,8 @@ coap_request_callback(void *callback_data, coap_message_t *response)
     }
     callback_state->callback(callback_state);
     /* this is only for counting BLOCK2 blocks.*/
-    ++(state->block_num);
+    if (coap_is_option(state->response,COAP_OPTION_BLOCK2))
+      ++(state->block_num);
   } else {
     LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\n", state->res_block, state->block_num);
     ++(state->block_error);
