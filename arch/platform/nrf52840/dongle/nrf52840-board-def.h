@@ -32,7 +32,7 @@
  * \addtogroup platform
  * @{
  *
- * \addtogroup nrf52840dongle nRF52 Development Kit
+ * \addtogroup nrf52840dongle nRF52840 Dongle
  * @{
  *
  * \addtogroup nrf52840dongle-platform-conf Platform configuration
