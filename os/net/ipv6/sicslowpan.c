@@ -315,7 +315,7 @@ store_fragment(uint8_t index, uint8_t offset)
 
   len = packetbuf_datalen() - packetbuf_hdr_len;
 
-  if(len < 0 || len > SICSLOWPAN_FRAGMENT_SIZE) {
+  if(len <= 0 || len > SICSLOWPAN_FRAGMENT_SIZE) {
     /* Unacceptable fragment size. */
     return -1;
   }
