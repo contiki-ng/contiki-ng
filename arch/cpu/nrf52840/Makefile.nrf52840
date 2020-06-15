@@ -105,7 +105,7 @@ ifdef NRF52_UPLOAD_SN
   NRFJPROG_FLAGS += --snr $(NRF52_UPLOAD_SN)
 endif
 
-%.upload: $(OUT_HEX) %.$(TARGET)
+%.upload: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
 	@echo "ERROR: Could not find nrfjprog, please install it first"
 else
@@ -133,7 +133,7 @@ nrf-upload-snr.%:
 nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
 	@echo Done
 
-%.upload-all: $(OUT_HEX) %.$(TARGET)
+%.upload-all: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
 	@echo "ERROR: Could not find nrfjprog, please install it first"
 else
