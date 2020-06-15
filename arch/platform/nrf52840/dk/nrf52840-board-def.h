@@ -75,13 +75,6 @@
 #define LEDS_CONF_ALL  (LEDS_1 | LEDS_2 | LEDS_3 | LEDS_4)
 
 /**
- * \brief If set to 1 then LED1 and LED2 are used by the
- *        platform to indicate BLE connection state.
- */
-#define PLATFORM_INDICATE_BLE_STATE             1
-/** @} */
-
-/**
  * \name Button configurations
  *
  * @{

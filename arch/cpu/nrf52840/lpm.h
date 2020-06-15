@@ -45,6 +45,7 @@
 #include "sys/int-master.h"
 #include "sys/critical.h"
 #include "sys/process.h"
+#include "sys/energest.h"
 
 /**
  * \brief Stop and wait for an event
@@ -58,11 +59,13 @@ lpm_drop(void)
   status = critical_enter();
   abort = process_nevents();
   if(!abort) {
+    ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
     __WFI();
+    ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
   }
   critical_exit(status);
 }
-#endif /* DEV_LPM_H_ */
+#endif /* LPM_H_ */
 /**
  * @}
  * @}

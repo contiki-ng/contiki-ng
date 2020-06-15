@@ -42,7 +42,7 @@
 #include "contiki-net.h"
 #include "leds.h"
 #include "lib/sensors.h"
-#include "dev/button-sensor.h"
+#include "button-sensor.h"
 
 #include "dev/serial-line.h"
 #include "dev/uart0.h"

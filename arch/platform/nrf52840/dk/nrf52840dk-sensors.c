@@ -29,31 +29,38 @@
  */
 
 /**
+ * \addtogroup nrf52840dk
+ * @{
+ *
  * \addtogroup nrf52840dk-devices Device drivers
  * @{
  *
- * \addtogroup nrf52840dk-devices-temp Temperature sensor driver
+ * \addtogroup nrf52840dk-sensors Sensors
+ *  The nRF52 DK exports 4 button sensors and an internal temperature sensor.
  * @{
  *
  * \file
- *         Temperature sensor header file.
+ *         This file exports a global sensors table.
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
- *
  */
-
-#ifndef TEMPERATURE_SENSOR_H_
-#define TEMPERATURE_SENSOR_H_
-
+/*---------------------------------------------------------------------------*/
+#include <string.h>
+#include "contiki.h"
 #include "lib/sensors.h"
-
-extern const struct sensors_sensor temperature_sensor;
-
-#define TEMPERATURE_SENSOR "Temperature"
-
-#endif /* TEMPERATURE_SENSOR_H_ */
-
+#include "button-sensor.h"
+#include "common/temperature-sensor.h"
+/*---------------------------------------------------------------------------*/
+SENSORS(
+  &button_1,
+  &button_2,
+  &button_3,
+  &button_4,
+  &temperature_sensor
+  );
+/*---------------------------------------------------------------------------*/
 /**
+ * @}
  * @}
  * @}
  */

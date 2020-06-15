@@ -29,76 +29,35 @@
  */
 
 /**
- * \addtogroup nrf52840dk-devices Device drivers
+ * \addtogroup nrf52840dongle
  * @{
  *
- * \addtogroup nrf52840dk-devices-temp Temperature sensor driver
- * This is a driver for nRF52832 hardware sensor.
+ * \addtogroup nrf52840dongle-devices Device drivers
+ * @{
  *
+ * \addtogroup nrf52840dongle-sensors Sensors
+ *  The nRF52 DK exports 4 button sensors and an internal temperature sensor.
  * @{
  *
  * \file
- *         Temperature sensor implementation.
+ *         This file exports a global sensors table.
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
- *
  */
-#include "nrf_temp.h"
+/*---------------------------------------------------------------------------*/
+#include <string.h>
 #include "contiki.h"
-#include "dev/temperature-sensor.h"
-
-const struct sensors_sensor temperature_sensor;
-
+#include "lib/sensors.h"
+#include "button-sensor.h"
+#include "common/temperature-sensor.h"
+/*---------------------------------------------------------------------------*/
+SENSORS(
+  &button_1,
+  &temperature_sensor
+  );
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Returns device temperature
- * \param type ignored
- * \return Device temperature in degrees Celsius
- */
-static int
-value(int type)
-{
-  int32_t volatile temp;
-
-  NRF_TEMP->TASKS_START = 1;
-  /* nRF52832 datasheet: one temperature measurement takes typically 36 us */
-  RTIMER_BUSYWAIT_UNTIL(NRF_TEMP->EVENTS_DATARDY, RTIMER_SECOND * 72 / 1000000);
-  NRF_TEMP->EVENTS_DATARDY = 0;
-  temp = nrf_temp_read();
-  NRF_TEMP->TASKS_STOP = 1;
-
-  return temp;
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Configures temperature sensor
- * \param type initializes the hardware sensor when \a type is set to
- *             \a SENSORS_HW_INIT
- * \param c ignored
- * \return 1
- */
-static int
-configure(int type, int c)
-{
-  if(type == SENSORS_HW_INIT) {
-    nrf_temp_init();
-  }
-  return 1;
-}
-/**
- * \brief Return temperature sensor status
- * \param type ignored
- * \return 1
- */
-/*---------------------------------------------------------------------------*/
-static int
-status(int type)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(temperature_sensor, TEMPERATURE_SENSOR, value, configure, status);
-/**
+ * @}
  * @}
  * @}
  */

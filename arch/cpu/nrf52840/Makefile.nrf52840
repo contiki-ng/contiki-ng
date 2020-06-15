@@ -6,23 +6,26 @@ ifeq (,$(wildcard $(NRF5_SDK_ROOT)/*))
     $(error "")
 endif
 
+NRFJPROG ?= nrfjprog
+NRFUTIL ?= nrfutil
+
 ifeq ($(NRF52840_USE_RTT),1)
-### Suppress the existing debug I/O in os/lib
-CFLAGS += -DNRF52840_USE_RTT=1
-MAKE_WITH_LIB_DBG_IO = 0
-CONTIKI_TARGET_DIRS += rtt
-CONTIKI_CPU_SOURCEFILES += rtt-printf.c segger-rtt.c segger-rtt-printf.c
+  ### Suppress the existing debug I/O in os/lib
+  CFLAGS += -DNRF52840_USE_RTT=1
+  MAKE_WITH_LIB_DBG_IO = 0
+  CONTIKI_TARGET_DIRS += rtt
+  CONTIKI_CPU_SOURCEFILES += rtt-printf.c segger-rtt.c segger-rtt-printf.c
 else
-CONTIKI_CPU_SOURCEFILES += dbg.c
+  CONTIKI_CPU_SOURCEFILES += dbg.c
 endif
 
 # Boards
 ifeq ($(BOARD), dongle)
-LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840-bootloader.ld
-CFLAGS += -DBOARD_PCA10059
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840-bootloader.ld
+  CFLAGS += -DBOARD_PCA10059
 else
-LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840.ld
-CFLAGS += -DBOARD_PCA10056
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840.ld
+  CFLAGS += -DBOARD_PCA10056
 endif
 
 ### CPU-dependent directories
@@ -94,18 +97,20 @@ EXTERNALDIRS += $(addprefix $(NRF5_SDK_ROOT)/, $(NRF52_SDK_INC_PATHS))
 
 include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4
 
+.PHONY: nrf-upload-sequence
+
 # Upload via J-Link using nrfjprog 
 
 ifdef NRF52_UPLOAD_SN
-	NRFJPROG_FLAGS += --snr $(NRF52_UPLOAD_SN)
+  NRFJPROG_FLAGS += --snr $(NRF52_UPLOAD_SN)
 endif
 
 %.upload: $(OUT_HEX) %.$(TARGET)
-ifeq (, $(shell which nrfjprog))
+ifeq (, $(shell which $(NRFJPROG)))
 	@echo "ERROR: Could not find nrfjprog, please install it first"
 else
-	nrfjprog -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --program $<
-	nrfjprog -f nrf52 $(NRFJPROG_FLAGS) --reset
+	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --program $<
+	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --reset
 endif
 
 # Upload to all attached boards
@@ -114,15 +119,22 @@ endif
 # Number of boards to program in parallel
 NUMPAR=4
 
-nrf-upload-snr.%:
-	nrfjprog -f nrf52 --snr $* --sectorerase --program $(HEX_FILE)
-	nrfjprog -f nrf52 --snr $* --reset
+# Only get serial numbers if nrfjprog is installed
+ifneq ($(filter nrf-upload-sequence,$(MAKECMDGOALS)),)
+  ifneq (, $(shell which $(NRFJPROG)))
+    NRF_SNRS := $(shell $(NRFJPROG) -i)
+  endif
+endif
 
-nrf-upload-sequence: $(foreach SNR, $(shell nrfjprog -i), nrf-upload-snr.$(SNR))
+nrf-upload-snr.%:
+	$(NRFJPROG) -f nrf52 --snr $* --sectorerase --program $(HEX_FILE)
+	$(NRFJPROG) -f nrf52 --snr $* --reset
+
+nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
 	@echo Done
 
 %.upload-all: $(OUT_HEX) %.$(TARGET)
-ifeq (, $(shell which nrfjprog))
+ifeq (, $(shell which $(NRFJPROG)))
 	@echo "ERROR: Could not find nrfjprog, please install it first"
 else
 	$(MAKE) HEX_FILE=$< -j $(NUMPAR) nrf-upload-sequence
@@ -130,15 +142,13 @@ endif
 
 # DFU Upload for dongles
 
-DFU_FLAGS = -p /dev/ttyACM0
-ifdef PORT
-  DFU_FLAGS = -p $(PORT)
-endif
+PORT ?= /dev/ttyACM0
+DFU_FLAGS = -p $(PORT)
 
-%.dfu-upload: $(OUT_HEX) %.$(TARGET)
-ifeq (, $(shell which nrfutil))
+%.dfu-upload: $(OUT_HEX)
+ifeq (, $(shell which $(NRFUTIL)))
 	@echo "ERROR: Could not find nrfutil, please install it first"
 else
-	nrfutil pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
-	nrfutil dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
+	$(NRFUTIL) pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
+	$(NRFUTIL) dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
 endif
