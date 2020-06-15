@@ -95,7 +95,7 @@ NRF52_SDK_INC_PATHS += components/drivers_nrf/nrf_soc_nosd
 
 EXTERNALDIRS += $(addprefix $(NRF5_SDK_ROOT)/, $(NRF52_SDK_INC_PATHS))
 
-include $(ARCH_PATH)/cpu/arm/cortex-m/cm4/Makefile.cm4
+include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
 
 .PHONY: nrf-upload-sequence
 
