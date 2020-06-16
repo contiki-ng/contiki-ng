@@ -80,11 +80,6 @@
 /* Enable S/W ACKs with CSMA */
 #define CSMA_CONF_SEND_SOFT_ACK       1
 /*---------------------------------------------------------------------------*/
-#if !NETSTACK_CONF_WITH_IPV6
-/* we only support IPv6 */
-#error "Only IPv6 stack is supported!"
-#endif
-/*---------------------------------------------------------------------------*/
 #define RTIMER_ARCH_SECOND 62500
 /*---------------------------------------------------------------------------*/
 #endif /* NRF52840_DEF_H_ */
