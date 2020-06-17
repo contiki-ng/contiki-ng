@@ -136,7 +136,7 @@ PROCESS_THREAD(gpio_hal_example, ev, data)
       }
 
       /* Test read */
-      printf("%u: Pins are 1-%u, 2=%u, 3=%u, mask=" PIN_MASK_FMT "\n",
+      printf("%u: Pins are 1=%u, 2=%u, 3=%u, mask=" PIN_MASK_FMT "\n",
              counter & 7,
              gpio_hal_arch_read_pin(out_port1, out_pin1),
              gpio_hal_arch_read_pin(out_port2_3, out_pin2),

@@ -18,6 +18,8 @@ This example is expected to work off-the-shelf on the following boards:
 
 * All CC13xx/CC26xx devices
 * All CC2538 devices
+* nRF52840
+* Cooja motes
 
 # Extending for other platforms
 Create a sub-directory with the same name as your platform. For example, for
