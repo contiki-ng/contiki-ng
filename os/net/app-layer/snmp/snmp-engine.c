@@ -206,7 +206,7 @@ snmp_engine(unsigned char *buff, uint32_t buff_len, unsigned char *out, uint32_t
 {
   static snmp_header_t header;
   static snmp_varbind_t varbinds[SNMP_MAX_NR_VALUES];
-  static uint32_t varbind_length;
+  static uint32_t varbind_length = SNMP_MAX_NR_VALUES;
 
   buff = snmp_message_decode(buff, buff_len, &header, varbinds, &varbind_length);
   if(buff == NULL) {
