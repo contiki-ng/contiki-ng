@@ -168,7 +168,6 @@ static const char*          coffee_message = NULL;
 #define coffee_dump()       coffeecatch_dump()
 
 
-FILE*                       coffeecatch_log = NULL;
 void coffeecatch_dump();
 void coffeecatch_init();
 void coffeecatch_print(const char* s);
@@ -499,7 +498,10 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, job
 
 
 /*---------------------------------------------------------------------------*/
-#if ( defined(NDK_DEBUG) && ( (NDK_DEBUG&3) > 0 ) )
+#if ( defined(NDK_DEBUG) )
+
+//this var is switches by cooja sim
+FILE* volatile              coffeecatch_log = NULL;
 
 void coffeecatch_init(){
     if(coffeecatch_log != NULL)
@@ -520,6 +522,8 @@ void coffeecatch_on_alarm(){
     // cooja-log stub
     extern char     simLoggedData[];
     extern int      simLoggedLength;
+
+    coffeecatch_init();
 
     fprintf(coffeecatch_log, "crash logbuf:\n%*s\n", simLoggedLength, simLoggedData);
     fflush(coffeecatch_log);
