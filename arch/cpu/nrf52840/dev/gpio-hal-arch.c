@@ -77,6 +77,8 @@ gpio_hal_arch_port_pin_cfg_set(gpio_hal_port_t port, gpio_hal_pin_t pin, gpio_ha
     .hi_accuracy = true,
   };
 
+  uint32_t pin_number = NRF_GPIO_PIN_MAP(port, pin);;
+
   tmp = cfg & GPIO_HAL_PIN_CFG_EDGE_BOTH;
   if(tmp == GPIO_HAL_PIN_CFG_EDGE_NONE) {
     gpiote_config.sense = GPIOTE_CONFIG_POLARITY_None;
@@ -97,13 +99,13 @@ gpio_hal_arch_port_pin_cfg_set(gpio_hal_port_t port, gpio_hal_pin_t pin, gpio_ha
     gpiote_config.pull = NRF_GPIO_PIN_PULLUP;
   }
 
-  nrfx_gpiote_in_init(pin, &gpiote_config, pin_event_handler);
+  nrfx_gpiote_in_init(pin_number, &gpiote_config, pin_event_handler);
 
   tmp = cfg & GPIO_HAL_PIN_CFG_INT_MASK;
   if(tmp == GPIO_HAL_PIN_CFG_INT_DISABLE) {
-    nrfx_gpiote_in_event_disable(pin);
+    nrfx_gpiote_in_event_disable(pin_number);
   } else if(tmp == GPIO_HAL_PIN_CFG_INT_ENABLE) {
-    nrfx_gpiote_in_event_enable(pin, true);
+    nrfx_gpiote_in_event_enable(pin_number, true);
   }
 }
 /*---------------------------------------------------------------------------*/
