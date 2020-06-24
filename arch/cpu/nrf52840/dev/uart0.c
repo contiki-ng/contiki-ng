@@ -50,8 +50,8 @@ static int (*input_handler)(unsigned char c);
 
 #define UART_INSTANCE NRF_UART0
 /*---------------------------------------------------------------------------*/
-#define TX_PIN  6
-#define RX_PIN  8
+#define TX_PIN  NRF_UART0_TX_PIN
+#define RX_PIN  NRF_UART0_RX_PIN
 /*---------------------------------------------------------------------------*/
 void
 uart0_set_input(int (*input)(unsigned char c))

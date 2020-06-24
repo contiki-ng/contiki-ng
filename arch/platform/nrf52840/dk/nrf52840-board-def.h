@@ -100,6 +100,17 @@
 #define PLATFORM_TIMER_INSTANCE_ID   0
 
 /** @} */
+
+/**
+ * \name UART0 Pin configurations
+ *
+ * @{
+ */
+
+#define NRF_UART0_TX_PIN 6
+#define NRF_UART0_RX_PIN 8
+
+/** @} */
 /*---------------------------------------------------------------------------*/
 /** @}
  *  @}
