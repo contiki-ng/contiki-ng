@@ -111,6 +111,19 @@
 #define BUTTON_HAL_WITH_DESCRIPTION 1
 #endif
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Number of different ports that buttons are connected to
+ *
+ * For example, if our PCB has 3 buttons conncted to pins P0.1, P0,6 and P2.3
+ * then the platform configuration should define this to value 2 (one for each
+ * of ports 0 and 2)
+ */
+#ifdef BUTTON_HAL_CONF_PORT_COUNT
+#define BUTTON_HAL_PORT_COUNT BUTTON_HAL_CONF_PORT_COUNT
+#else
+#define BUTTON_HAL_PORT_COUNT 1
+#endif
+/*---------------------------------------------------------------------------*/
 #define BUTTON_HAL_STATE_RELEASED 0
 #define BUTTON_HAL_STATE_PRESSED  1
 /*---------------------------------------------------------------------------*/
