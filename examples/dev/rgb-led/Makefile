@@ -3,7 +3,8 @@ CONTIKI = ../../..
 
 MODULES_REL += $(TARGET)
 
-PLATFORMS_ONLY = zoul
+PLATFORMS_ONLY = zoul nrf52840
+BOARDS_EXCLUDE = dk
 
 all: $(CONTIKI_PROJECT)
 
