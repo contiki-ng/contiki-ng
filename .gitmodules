@@ -30,4 +30,4 @@
 	url = https://github.com/contiki-ng/cc2640r2-sdk.git
 [submodule "arch/cpu/nrf52840/lib/nrf52-sdk"]
 	path = arch/cpu/nrf52840/lib/nrf52-sdk
-	url = https://github.com/alexstanoev/nrf-sdk-contiki-ng.git
+	url = https://github.com/contiki-ng/nrf-sdk-contiki-ng.git
