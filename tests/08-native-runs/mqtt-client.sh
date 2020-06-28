@@ -38,6 +38,7 @@ sleep 2
 
 # Starting Contiki-NG native node
 echo "Starting native node"
+make -C $CODE_DIR -B TARGET=native clean
 make -C $CODE_DIR -B TARGET=native \
   DEFINES=MQTT_CLIENT_CONF_ORG_ID=\\\"travis-test\\\",MQTT_CLIENT_CONF_LOG_LEVEL=LOG_LEVEL_DBG,MQTT_CONF_VERSION=MQTT_PROTOCOL_VERSION_$MQTT_VERSION \
   > make.log 2> make.err
