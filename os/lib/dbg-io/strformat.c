@@ -35,6 +35,13 @@
 /*---------------------------------------------------------------------------*/
 #define HAVE_DOUBLE
 #define HAVE_LONGLONG
+#define HAVE_NETADDR
+
+
+#ifdef HAVE_NETADDR
+#include "net/linkaddr.h"
+#include "net/ipv6/uiplib.h"
+#endif
 
 #ifndef LARGEST_SIGNED
 #ifdef HAVE_LONGLONG
@@ -650,13 +657,49 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     break;
     case CONV_POINTER:
     {
+        char *conv_pos;
+        unsigned int conv_len;
+        unsigned int field_fill = 0;
+
+#ifdef HAVE_NETADDR
+        char buffer[UIPLIB_IPV6_MAX_STR_LEN];
+
+      if ( *pos == 'L' ){           // linkaddr
+          ++pos;
+          const linkaddr_t* lladdr = (const linkaddr_t *)(POINTER_INT)va_arg(ap, void *);
+          if(lladdr == NULL) {
+              conv_pos = "(NULL LL addr)";
+              conv_len = 14;
+          } else {
+            conv_pos = buffer;
+            conv_len = 0;
+            unsigned int i;
+            for(i = 0; i < LINKADDR_SIZE; i++) {
+              if(i > 0 && i % 2 == 0) {
+                conv_len++;
+                *conv_pos++ = '.';
+              }
+              conv_len += output_uint_hex(&conv_pos, lladdr->u8[i], flags);
+            }
+            conv_pos = buffer;
+          }
+      }
+      else if (*pos == 'I'){                         // ipv6
+          ++pos;
+          const uip_ipaddr_t* ipaddr = (const uip_ipaddr_t *)(POINTER_INT)va_arg(ap, void *);
+          conv_len = uiplib_ipaddr_snprint(buffer, sizeof(buffer), ipaddr);
+          conv_pos = buffer;
+      }
+      else
+#else
+         char buffer[MAXCHARS_HEX + 4];
+#endif
+
+      {
       LARGEST_UNSIGNED uvalue =
         (LARGEST_UNSIGNED)(POINTER_INT)va_arg(ap, void *);
-      char buffer[MAXCHARS_HEX + 3];
-      char *conv_pos = buffer + MAXCHARS_HEX + 3;
-      unsigned int conv_len;
-      unsigned int field_fill;
 
+      conv_pos = buffer + MAXCHARS_HEX + 3;
       conv_len = output_uint_hex(&conv_pos, uvalue, flags);
 
       if(conv_len == 0) {
@@ -673,6 +716,8 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
         CHECKCB(fill_space(ctxt, field_fill));
+      }
+
       }
 
       CHECKCB(ctxt->write_str(ctxt->user_data, conv_pos, conv_len));

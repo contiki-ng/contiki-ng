@@ -14,7 +14,7 @@ ifdef REDEF_PRINTF
 define redef_printfs 
 @echo Redefining printf
 for OBJ in $(1) ; do \
-$(OBJCOPY) --redefine-sym printf=log_printf --redefine-sym puts=log_puts --redefine-sym putchar=log_putchar $$OBJ;\
+$(OBJCOPY) --redefine-sym printf=log_printf --redefine-sym puts=log_puts --redefine-sym putchar=log_putchar --redefine-sym sprintf=log_sprintf  --redefine-sym snprintf=log_snprintf --redefine-sym vsnprintf=log_vsnprintf $$OBJ;\
 done
 endef
 else
@@ -25,6 +25,9 @@ endif
 #-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym printf=log_printf $(OBJ); )
 #-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym puts=log_puts $(OBJ); )
 #-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym putchar=log_putchar $(OBJ); )
+#-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym sprintf=log_sprintf $(OBJ); )
+#-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym snprintf=log_snprintf $(OBJ); )
+#-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym vsnprintf=log_snprintf $(OBJ); )
 
 
 # NB: Assumes ARCHIVE was not overridden and is in $(BUILD_DIR_BOARD)

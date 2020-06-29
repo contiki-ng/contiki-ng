@@ -63,6 +63,14 @@ $(COOJA_BASE) $(COOJA_INTFS) $(COOJA_CORE) $(COOJA_NET) $(COOJA_SOURCEFILES)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
+
+### Default to use os/lib/dbg-io unless configured to do otherwise
+MAKE_WITH_LIB_DBG_IO ?= 1
+
+ifeq ($(MAKE_WITH_LIB_DBG_IO),1)
+  MODULES += os/lib/dbg-io
+endif
+
 .SUFFIXES:
 
 CLEAN += COOJA.log

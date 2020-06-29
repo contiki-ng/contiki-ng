@@ -1,0 +1,4 @@
+ifneq ($(findstring $(TARGET),cooja native),)
+SOURCE_EXCLUDE      += printf.c puts.c putchar.c
+MODULES_SOURCES     := $(filter-out printf.c puts.c putchar.c, ${MODULES_SOURCES} )
+endif

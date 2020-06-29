@@ -55,6 +55,14 @@ LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),-export-dynamic
 endif
 endif
 
+
+### Default to use os/lib/dbg-io unless configured to do otherwise
+MAKE_WITH_LIB_DBG_IO ?= 1
+
+ifeq ($(MAKE_WITH_LIB_DBG_IO),1)
+  MODULES += os/lib/dbg-io
+endif
+
 MAKE_MAC ?= MAKE_MAC_NULLMAC
 
 ### Compilation rules
