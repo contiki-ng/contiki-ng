@@ -88,7 +88,7 @@
 /* For memcmp */
 #include <string.h>
 
-#include "net/ip/uipaddr.h"
+#include "net/ipv6/uipaddr.h"
 
 #include "net/ipv6/tcpip.h"
 

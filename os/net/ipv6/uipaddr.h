@@ -55,7 +55,7 @@
 #include <stdint.h>
 /* For memcmp */
 #include <string.h>
-#include "net/ip/uipopt.h"
+#include "net/ipv6/uipopt.h"
 
 
 /**
