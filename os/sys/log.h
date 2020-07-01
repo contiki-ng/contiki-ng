@@ -146,6 +146,12 @@ extern struct log_module all_modules[];
                            } \
                          } while (0)
 
+#define LOG_BYTES(level, data, length) do {  \
+                           if(level <= (LOG_LEVEL)) { \
+                             log_bytes(data, length); \
+                           } \
+                         } while (0)
+
 /* More compact versions of LOG macros */
 #define LOG_PRINT(...)         LOG(1, 0, "PRI", __VA_ARGS__)
 #define LOG_ERR(...)           LOG(1, LOG_LEVEL_ERR, "ERR", __VA_ARGS__)
@@ -170,6 +176,12 @@ extern struct log_module all_modules[];
 #define LOG_WARN_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_INFO_6ADDR(...)    LOG_6ADDR(LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOG_DBG_6ADDR(...)     LOG_6ADDR(LOG_LEVEL_DBG, __VA_ARGS__)
+
+#define LOG_PRINT_BYTES(data, length)   LOG_BYTES(0, data, length)
+#define LOG_ERR_BYTES(data, length)     LOG_BYTES(LOG_LEVEL_ERR, data, length)
+#define LOG_WARN_BYTES(data, length)    LOG_BYTES(LOG_LEVEL_WARN, data, length)
+#define LOG_INFO_BYTES(data, length)    LOG_BYTES(LOG_LEVEL_INFO, data, length)
+#define LOG_DBG_BYTES(data, length)     LOG_BYTES(LOG_LEVEL_DBG, data, length)
 
 /* For checking log level.
    As this builds on curr_log_level variables, this should not be used
@@ -220,6 +232,13 @@ void log_lladdr(const linkaddr_t *lladdr);
  * \param lladdr The link-layer address
 */
 void log_lladdr_compact(const linkaddr_t *lladdr);
+
+/**
+ * Logs a byte array as hex characters
+ * \param data The byte array
+ * \param length The length of the byte array
+*/
+void log_bytes(const void *data, size_t length);
 
 /**
  * Sets a log level at run-time. Logs are included in the firmware via
