@@ -30,6 +30,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include <stdint.h>
 
 #include <strformat.h>
 /*---------------------------------------------------------------------------*/
@@ -666,7 +667,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       if ( *pos == 'L' ){           // linkaddr
           ++pos;
-          const linkaddr_t* lladdr = (const linkaddr_t *)(POINTER_INT)va_arg(ap, void *);
+          const linkaddr_t* lladdr = (const linkaddr_t *)va_arg(ap, void *);
           if(lladdr == NULL) {
               conv_pos = "(NULL LL addr)";
               conv_len = 14;
@@ -686,7 +687,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       }
       else if (*pos == 'I'){                         // ipv6
           ++pos;
-          const uip_ipaddr_t* ipaddr = (const uip_ipaddr_t *)(POINTER_INT)va_arg(ap, void *);
+          const uip_ipaddr_t* ipaddr = (const uip_ipaddr_t *)va_arg(ap, void *);
           conv_len = uiplib_ipaddr_snprint(buffer, sizeof(buffer), ipaddr);
           conv_pos = buffer;
       }
@@ -697,7 +698,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       {
       LARGEST_UNSIGNED uvalue =
-        (LARGEST_UNSIGNED)(POINTER_INT)va_arg(ap, void *);
+        (LARGEST_UNSIGNED)(uintptr_t)va_arg(ap, void *);
 
       conv_pos = buffer + MAXCHARS_HEX + 3;
       conv_len = output_uint_hex(&conv_pos, uvalue, flags);
