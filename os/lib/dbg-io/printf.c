@@ -35,13 +35,25 @@
 #include <stdio.h>
 #include <string.h>
 #include <strformat.h>
+
+// Makefile.dgb-io  provide this sym, when dbg_send_bytes not used
+#ifndef MAKE_WITH_LIB_DBG_IO
+#define MAKE_WITH_LIB_DBG_IO 1
+#endif
+
 /*---------------------------------------------------------------------------*/
 static strformat_result
 write_str(void *user_data, const char *data, unsigned int len)
 {
+#if MAKE_WITH_LIB_DBG_IO
   if(len > 0) {
     dbg_send_bytes((unsigned char *)data, len);
   }
+#else
+  for(; len > 0; --len) {
+    putchar(*data++);
+  }
+#endif
   return STRFORMAT_OK;
 }
 /*---------------------------------------------------------------------------*/
