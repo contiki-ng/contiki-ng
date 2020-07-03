@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = node
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_EXCLUDE = sky nrf52dk native simplelink
+PLATFORMS_EXCLUDE = sky nrf52dk native
 
 CONTIKI=../../..
 

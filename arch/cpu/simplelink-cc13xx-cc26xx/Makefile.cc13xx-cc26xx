@@ -62,9 +62,10 @@ CONTIKI_CPU_SOURCEFILES += spi-arch.c
 CONTIKI_CPU_SOURCEFILES += sched.c          data-queue.c
 CONTIKI_CPU_SOURCEFILES += ieee-addr.c      ble-addr.c
 CONTIKI_CPU_SOURCEFILES += ble-beacond.c
+CONTIKI_CPU_SOURCEFILES += rat.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
- CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c prop-tx-power.c
+ CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c prop-tx-power.c cc13xx-50kbps-tsch.c
 endif
 
 ifeq ($(SUPPORTS_IEEE_MODE),1)
