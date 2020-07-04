@@ -51,6 +51,7 @@ CONTIKI_CPU_DIRS += $(addprefix ../arm/, $(CONTIKI_ARM_DIRS))
 MAKE_WITH_LIB_DBG_IO ?= 1
 
 ifeq ($(MAKE_WITH_LIB_DBG_IO),1)
+  MODULES += arch/cpu/arm/common/dbg-io
   MODULES += os/lib/dbg-io
 endif
 
