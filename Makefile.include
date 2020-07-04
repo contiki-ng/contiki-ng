@@ -234,12 +234,8 @@ else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
 endif
 
 MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
-UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
-MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), ${subst ${d}/,,${wildcard $(d)/*.c}}}
-CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 
-# Include module-specific makefiles
-MODULES_INCLUDES = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/Makefile.${notdir $(d)}}}
+include $(CONTIKI)/Makefile.modules_inspect
 
 ### Perform an immediate expansion of MODULES_INCLUDES and store it in a
 ### variable. This will allow us to subsequently filter-out module Makefiles
@@ -247,10 +243,12 @@ MODULES_INCLUDES = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/Makefile.${not
 ### them twice.
 MODULES_INCLUDED_FIRST_PASS := $(MODULES_INCLUDES)
 include $(MODULES_INCLUDED_FIRST_PASS)
+include $(CONTIKI)/Makefile.modules_inspect
 
 # Iterate once more: include the modules added from the previous include.
 # Only works with one level of nested module inclusion.
 include $(filter-out $(MODULES_INCLUDED_FIRST_PASS),$(MODULES_INCLUDES))
+include $(CONTIKI)/Makefile.modules_inspect
 
 # C-include module-specific macros using -imacros
 MODULES_IMACROS = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/module-macros.h}}
