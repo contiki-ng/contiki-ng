@@ -28,3 +28,6 @@
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc2640r2-sdk"]
 	path = arch/cpu/cc26x0-cc13x0/lib/cc2640r2-sdk
 	url = https://github.com/contiki-ng/cc2640r2-sdk.git
+[submodule "arch/platform/cooja/lib/coffeecatch"]
+	path = arch/platform/cooja/lib/coffeecatch
+	url = https://github.com/alexrayne/coffeecatch.git
