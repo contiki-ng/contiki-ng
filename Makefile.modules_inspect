@@ -8,12 +8,11 @@
    
 NEWMODULES := $(filter-out $(MODULES_LAST_PASS), $(call uniq,$(MODULES)) )
 ifneq ("$(NEWMODULES)","")
-$(debug modules+: $(NEWMODULES))
+$(info modules+: $(NEWMODULES))
 endif
 MODULES_LAST_PASS := $(MODULES)
 
-MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
-NEWDIRS := $(filter-out $(MODULEDIRS_LAST_PASS), $(call uniq,$(MODULEDIRS)) )
+NEWDIRS := $(filter-out $(MODULEDIRS_LAST_PASS), $(UNIQUEMODULES) )
 MODULEDIRS_LAST_PASS := $(MODULEDIRS)
 
 NEW_SOURCES := ${foreach d, $(NEWDIRS), ${subst ${d}/,,${wildcard $(d)/*.c}}}
@@ -23,5 +22,5 @@ MODULES_SOURCES     := $(MODULES_SOURCES) $(NEW_SOURCES)
 CONTIKI_SOURCEFILES += $(MODULES_SOURCES)
 
 # Include module-specific makefiles
-MODULES_INCLUDES += ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
+MODULES_INCLUDES = ${wildcard ${foreach d, $(MODULEDIRS), $(d)/Makefile.${notdir $(d)}}}
 
