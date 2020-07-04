@@ -685,12 +685,14 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
             conv_pos = buffer;
           }
       }
+#if NETSTACK_CONF_WITH_IPV6
       else if (*pos == 'I'){                         // ipv6
           ++pos;
           const uip_ipaddr_t* ipaddr = (const uip_ipaddr_t *)va_arg(ap, void *);
           conv_len = uiplib_ipaddr_snprint(buffer, sizeof(buffer), ipaddr);
           conv_pos = buffer;
       }
+#endif
       else
 #else
          char buffer[MAXCHARS_HEX + 4];
