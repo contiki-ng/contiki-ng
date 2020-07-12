@@ -35,13 +35,20 @@ LDFLAGS += -mthumb -mlittle-endian
 
 OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
 
+### Caller can override the default compiler optimization levels
+ifndef OPTIMIZATIONS
+
 ### Are we building with code size optimisations?
 SMALL ?= 1
 ifeq ($(SMALL),1)
-  CFLAGS += -Os
+  OPTIMIZATIONS = -Os
 else
-  CFLAGS += -O2
+  OPTIMIZATIONS = -O2
 endif
+
+endif
+
+CFLAGS += $(OPTIMIZATIONS)
 
 ### Use CMSIS from arch/cpu/arm/common
 CONTIKI_ARM_DIRS += . 
