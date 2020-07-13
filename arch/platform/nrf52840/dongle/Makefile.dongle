@@ -1,0 +1,2 @@
+CONTIKI_TARGET_DIRS += dongle
+CONTIKI_TARGET_SOURCEFILES += leds-arch.c button-sensor.c nrf52840dongle-sensors.c

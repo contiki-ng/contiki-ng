@@ -1,0 +1,23 @@
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+### Board selection
+BOARD ?= dk
+BOARDS = dk dongle
+
+### Unless the example dictates otherwise, build with code size optimisations switched off
+SMALL ?= 0
+
+### Include the board-specific makefile
+PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
+-include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(notdir $(BOARD))
+
+CONTIKI_TARGET_DIRS += . common config
+CONTIKI_TARGET_SOURCEFILES += platform.c temperature-sensor.c
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+### Define the CPU directory and pull in the correct CPU makefile.
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/nrf52840
+include $(CONTIKI_CPU)/Makefile.nrf52840

@@ -12,6 +12,8 @@ dev/gpio-hal/zoul:BOARD=orion \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/rgb-led/zoul:BOARD=remote-reva \
 hello-world/nrf52dk \
+hello-world/nrf52840:BOARD=dk \
+hello-world/nrf52840:BOARD=dongle \
 hello-world/openmote:BOARD=openmote-b \
 hello-world/openmote:BOARD=openmote-cc2538 \
 hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1 \
