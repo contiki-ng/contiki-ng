@@ -468,7 +468,7 @@ PT_THREAD(write_out_props(struct pt *pt, struct mqtt_connection *conn,
 {
   PT_BEGIN(pt);
 
-  struct mqtt_prop_out_property *prop;
+  static struct mqtt_prop_out_property *prop;
 
   if(prop_list) {
     DBG("MQTT - Writing %i property bytes\n", prop_list->properties_len + prop_list->properties_len_enc_bytes);
@@ -504,7 +504,7 @@ PT_THREAD(connect_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_BEGIN(pt);
 
 #if MQTT_5
-  struct mqtt_prop_list *will_props = MQTT_PROP_LIST_NONE;
+  static struct mqtt_prop_list *will_props = MQTT_PROP_LIST_NONE;
   if(conn->will.properties) {
     will_props = (struct mqtt_prop_list *)list_head(conn->will.properties);
   }
