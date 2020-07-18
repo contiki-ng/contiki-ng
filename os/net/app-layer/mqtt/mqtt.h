@@ -439,7 +439,7 @@ struct mqtt_in_packet {
   /* Not the same as payload in the MQTT sense, it also contains the variable
    * header.
    */
-  uint8_t payload_pos;
+  uint16_t payload_pos;
   uint8_t payload[MQTT_INPUT_BUFF_SIZE];
 
   /* Start of MQTT payload (after VHDR) */
