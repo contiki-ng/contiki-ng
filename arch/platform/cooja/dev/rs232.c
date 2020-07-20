@@ -43,7 +43,20 @@ const struct simInterface rs232_interface;
 
 // COOJA variables
 char simSerialReceivingData[SERIAL_BUF_SIZE];
-int simSerialReceivingLength;
+
+/* this mark surely > any buffersize, so it stop receiving even by old cooja
+ * new cooja use this marked value to evaluate recv buffer size - in LSB bits
+ *
+ * cooja RS232 interface can write receving data even when mote not started.
+ * So mote starts, and it alredy have data in recv buffer, even before uart device init.
+ *
+ * current contiki device buffer size (default 2048) is much less, vs cooja used (16k).
+ * Since recv buffer restricted by cooja there may happen buffer overload, with
+ * consequenced corruption of memory. To prevent it, new cooja RS232 nterface
+ * evaluates recv buffer size from value provided by mote.
+ * */
+#define SERIAL_BUF_STOP 0x10000
+int simSerialReceivingLength = SERIAL_BUF_SIZE | SERIAL_BUF_STOP;
 char simSerialReceivingFlag;
 
 char simSerialSendData[SERIAL_BUF_SIZE];
@@ -53,7 +66,10 @@ char simSerialSendFlag;
 static int (* input_handler)(unsigned char) = NULL;
 
 /*-----------------------------------------------------------------------------------*/
-void rs232_init(void) { }
+void rs232_init(void) {
+    // enable receive, think that cooja alredy get SERIAL_BUF_SIZE
+    simSerialReceivingLength = 0;
+}
 /*-----------------------------------------------------------------------------------*/
 void rs232_set_speed(unsigned char speed) { }
 /*-----------------------------------------------------------------------------------*/
