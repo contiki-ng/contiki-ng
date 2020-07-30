@@ -53,12 +53,23 @@ int simRtimerPending;
 rtimer_clock_t simRtimerNextExpirationTime;
 rtimer_clock_t simRtimerCurrentTicks;
 
+int64_t        simRtimerWaitTime = 0;
+
+#ifdef RTIMER_CONF_ARCH_SECOND
+int            simRtimerResolution_hz = RTIMER_CONF_ARCH_SECOND;
+#else
+int            simRtimerResolution_hz = 0;
+#endif
+
 /*---------------------------------------------------------------------------*/
 void
 rtimer_arch_init(void)
 {
   simRtimerNextExpirationTime = 0;
   simRtimerPending = 0;
+
+  (void) simRtimerResolution_hz;
+  (void) simRtimerWaitTime;
 }
 /*---------------------------------------------------------------------------*/
 void
