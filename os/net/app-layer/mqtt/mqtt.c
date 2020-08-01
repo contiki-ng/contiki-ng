@@ -769,6 +769,13 @@ PT_THREAD(unsubscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   conn->out_packet.remaining_length = MQTT_MID_SIZE +
     MQTT_STRING_LEN_SIZE +
     conn->out_packet.topic_length;
+
+#if MQTT_5
+  conn->out_packet.remaining_length +=
+    conn->out_props ? (conn->out_props->properties_len + conn->out_props->properties_len_enc_bytes)
+    : 1;
+#endif
+
   mqtt_encode_var_byte_int(conn->out_packet.remaining_length_enc,
                            &conn->out_packet.remaining_length_enc_bytes,
                            conn->out_packet.remaining_length);
@@ -782,9 +789,15 @@ PT_THREAD(unsubscribe_pt(struct pt *pt, struct mqtt_connection *conn))
   PT_MQTT_WRITE_BYTE(conn, conn->out_packet.fhdr);
   PT_MQTT_WRITE_BYTES(conn, (uint8_t *)conn->out_packet.remaining_length_enc,
                       conn->out_packet.remaining_length_enc_bytes);
+
   /* Write Variable Header */
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.mid & 0x00FF));
+#if MQTT_5
+  /* Write Properties */
+  write_out_props(pt, conn, conn->out_props);
+#endif
+
   /* Write Payload */
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.topic_length >> 8));
   PT_MQTT_WRITE_BYTE(conn, (conn->out_packet.topic_length & 0x00FF));
