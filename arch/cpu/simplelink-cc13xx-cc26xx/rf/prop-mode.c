@@ -633,10 +633,10 @@ receiving_packet(void)
    */
 
   if(cca_request() == CCA_STATE_BUSY) {
-    return 0;
+    return 1;
   }
 
-  return 1;
+  return 0;
 
 #endif
 }
