@@ -18,6 +18,7 @@ rpl-border-router/jn516x \
 6tisch/simple-node/jn516x \
 libs/logging/jn516x \
 6tisch/etsi-plugtest-2017/jn516x
+libs/cbor/jn516x \
 
 TOOLS=
 

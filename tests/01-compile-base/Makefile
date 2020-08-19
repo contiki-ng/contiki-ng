@@ -10,6 +10,7 @@ storage/eeprom-test/native \
 libs/logging/native \
 libs/data-structures/native \
 libs/stack-check/sky \
+libs/cbor/native \
 lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1 \
 lwm2m-ipso-objects/native:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1 \
 rpl-border-router/native \
