@@ -1454,6 +1454,10 @@ tcp_input(struct tcp_socket *s,
       if(conn->in_publish_msg.first_chunk) {
         conn->in_publish_msg.payload_chunk_length -= conn->in_packet.properties_len +
           conn->in_packet.properties_enc_len;
+
+        /* Payload chunk should point past the MQTT properties and to the payload itself */
+        conn->in_publish_msg.payload_chunk += conn->in_packet.properties_len +
+          conn->in_packet.properties_enc_len;
       }
 #endif
 
@@ -1511,6 +1515,9 @@ tcp_input(struct tcp_socket *s,
 #if MQTT_5
     if(conn->in_publish_msg.first_chunk) {
       conn->in_publish_msg.payload_chunk_length -= conn->in_packet.properties_len +
+        conn->in_packet.properties_enc_len;
+      /* Payload chunk should point past the MQTT properties and to the payload itself */
+      conn->in_publish_msg.payload_chunk += conn->in_packet.properties_len +
         conn->in_packet.properties_enc_len;
     }
 #endif
