@@ -72,7 +72,7 @@ typedef struct unit_test {
 /**
  * Run setup function when defined
  *
- * Use #define UNIT_TEST_SETUP_FUNCTION to set setup function
+ * Use defining UNIT_TEST_SETUP_FUNCTION to set setup function
  * that will run before every test.
  */
 #ifdef UNIT_TEST_SETUP_FUNCTION
@@ -85,7 +85,7 @@ void UNIT_TEST_SETUP_FUNCTION();
 /**
  * Run teardown function when defined
  *
- * Use #define UNIT_TEST_TEARDOWN_FUNCTION to set teardown function
+ * Use defining UNIT_TEST_TEARDOWN_FUNCTION to set teardown function
  * that will run after every test.
  */
 #ifdef UNIT_TEST_TEARDOWN_FUNCTION
