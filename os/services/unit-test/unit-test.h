@@ -70,6 +70,32 @@ typedef struct unit_test {
 #define UNIT_TEST_REGISTER(name, descr) static unit_test_t unit_test_##name = {descr, __FILE__, unit_test_success, 0, 0, 0}
 
 /**
+ * Run setup function when defined
+ *
+ * Use #define UNIT_TEST_SETUP_FUNCTION to set setup function
+ * that will run before every test.
+ */
+#ifdef UNIT_TEST_SETUP_FUNCTION
+#define UNIT_TEST_SETUP() UNIT_TEST_SETUP_FUNCTION();
+void UNIT_TEST_SETUP_FUNCTION();
+#else
+#define UNIT_TEST_SETUP()
+#endif
+
+/**
+ * Run teardown function when defined
+ *
+ * Use #define UNIT_TEST_TEARDOWN_FUNCTION to set teardown function
+ * that will run after every test.
+ */
+#ifdef UNIT_TEST_TEARDOWN_FUNCTION
+#define UNIT_TEST_TEARDOWN() UNIT_TEST_TEARDOWN_FUNCTION();
+void UNIT_TEST_TEARDOWN_FUNCTION();
+#else
+#define UNIT_TEST_TEARDOWN()
+#endif
+
+/**
  * Define a unit test.
  *
  * This macro defines the function that will be executed when conducting 
@@ -128,7 +154,9 @@ typedef struct unit_test {
  * \param name The name of the unit test.
  */
 #define UNIT_TEST_RUN(name)  do {                                             \
+                               UNIT_TEST_SETUP();                             \
                                unit_test_function_##name(&unit_test_##name);  \
+                               UNIT_TEST_TEARDOWN();                          \
                                UNIT_TEST_PRINT_REPORT(name);                  \
                              } while(0)
 
