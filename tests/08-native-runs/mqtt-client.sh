@@ -23,6 +23,7 @@ CLIENT_TESTLOG=$TEST_NAME.testlog
 CLIENT_ERR=$TEST_NAME.err
 MOSQ_SUB_LOG=mosquitto_sub.log
 MOSQ_SUB_ERR=mosquitto_sub.err
+PUB_PAYLD=1
 
 # Start mosquitto server
 echo "Starting mosquitto daemon"
@@ -49,7 +50,8 @@ CPID=$!
 sleep 45
 
 # Send a publish to the mqtt client
-mosquitto_pub -m "1" -t iot-2/cmd/leds/fmt/json
+echo "Publishing"
+mosquitto_pub -m "$PUB_PAYLD" -t iot-2/cmd/leds/fmt/json
 
 echo "Closing native node"
 sleep 2
@@ -66,10 +68,13 @@ kill_bg $MSUBID
 # Success criteria:
 # * mosquitto_sub output not empty
 # * mqtt-client.native output contains "MQTT SUB"
+# * mqtt-client.native payload output matches published payload
 # * Valgrind off or 0 errors reported
 SUB_RCV=`grep "MQTT SUB" $CLIENT_LOG`
+SUB_RCV_PAYLD=`sed -rn "s/.*chunk='(.*)'/\1/p" $CLIENT_LOG`
 VALGRIND_NO_ERR=`grep "ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)" $CLIENT_ERR`
-if [ -s "$MOSQ_SUB_LOG" -a -n "$SUB_RCV" ] && [ -z "$VALGRIND_CMD" -o -n "$VALGRIND_NO_ERR" ]
+
+if [ -s "$MOSQ_SUB_LOG" -a -n "$SUB_RCV" -a "$SUB_RCV_PAYLD" -eq "$PUB_PAYLD" ] && [ -z "$VALGRIND_CMD" -o -n "$VALGRIND_NO_ERR" ]
 then
   cp $CLIENT_LOG $CLIENT_TESTLOG
   printf "%-32s TEST OK\n" "$TEST_NAME" | tee $CLIENT_TESTLOG;

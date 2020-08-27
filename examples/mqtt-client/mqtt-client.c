@@ -320,8 +320,8 @@ static void
 pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
             uint16_t chunk_len)
 {
-  LOG_DBG("Pub Handler: topic='%s' (len=%u), chunk_len=%u\n", topic,
-          topic_len, chunk_len);
+  LOG_DBG("Pub Handler: topic='%s' (len=%u), chunk_len=%u, chunk='%s'\n", topic,
+          topic_len, chunk_len, chunk);
 
   /* If we don't like the length, ignore */
   if(topic_len != 23 || chunk_len != 1) {
