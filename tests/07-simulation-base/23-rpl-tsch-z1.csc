@@ -7,7 +7,7 @@
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
     <title>RPL+TSCH (Z1)</title>
-    <randomseed>1</randomseed>
+    <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -108,6 +108,20 @@
       </interface_config>
       <motetype_identifier>z11</motetype_identifier>
     </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>10.622284947035123</x>
+        <y>109.81862399725188</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>6</id>
+      </interface_config>
+      <motetype_identifier>z11</motetype_identifier>
+    </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
@@ -154,6 +168,7 @@
       <mote>2</mote>
       <mote>3</mote>
       <mote>4</mote>
+      <mote>5</mote>
       <showRadioRXTX />
       <showRadioHW />
       <showLEDs />
@@ -170,12 +185,12 @@
     <plugin_config>
       <script>TIMEOUT(360000); /* Time out after 6 minutes */&#xD;
 /* Wait until a node (can only be the DAGRoot) has&#xD;
- * 5 routing entries including one for the root (i.e. can reach every node) */&#xD;
+ * 6 routing entries including one for the root (i.e. can reach every node) */&#xD;
 log.log("Waiting for routing links to fill\n");&#xD;
 while(true) {;&#xD;
   WAIT_UNTIL(id == 1 &amp;&amp; msg.contains("Routing links"));&#xD;
   log.log(msg + "\n");&#xD;
-  if(msg.contains("Routing links: 5")) {&#xD;
+  if(msg.contains("Routing links: 6")) {&#xD;
     log.testOK(); /* Report test success and quit */&#xD;
   }&#xD;
   YIELD();&#xD;
