@@ -16,6 +16,10 @@
 
 ##### "CONTIKI_VERSION_STRING": ________________ == CONTIKI_VERSION_STRING
 
+#undef FRAME802154_IEEE802154_2003
+#undef FRAME802154_IEEE802154_2006
+#undef FRAME802154_IEEE802154_2015
+
 #ifdef FRAME802154_CONF_VERSION
 ##### "FRAME802154_CONF_VERSION":_______________ == FRAME802154_CONF_VERSION
 #else
@@ -75,6 +79,21 @@
 #endif
 
 #endif /*MAC_CONF_WITH_TSCH */
+
+#if ROUTING_CONF_RPL_LITE || ROUTING_CONF_RPL_CLASSIC
+
+#undef RPL_MOP_NO_DOWNWARD_ROUTES
+#undef RPL_MOP_NON_STORING
+#undef RPL_MOP_STORING_NO_MULTICAST
+#undef RPL_MOP_STORING_MULTICAST
+
+#ifdef RPL_CONF_MOP
+##### "RPL_CONF_MOP": __________________________ == RPL_CONF_MOP
+#else
+##### "RPL_CONF_MOP": __________________________ -> RPL_MOP_DEFAULT
+#endif
+
+#endif /* RPL routing */
 
 #ifdef QUEUEBUF_CONF_NUM
 ##### "QUEUEBUF_CONF_NUM": _____________________ == QUEUEBUF_CONF_NUM
