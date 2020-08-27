@@ -40,6 +40,54 @@
 /*---------------------------------------------------------------------------*/
 LIST(consumers_list);
 /*---------------------------------------------------------------------------*/
+#ifdef THIS_DRIVERLIB_BUILD
+#if THIS_DRIVERLIB_BUILD == DRIVERLIB_BUILD_CC13X2_CC26X2
+#define TARGET_CC13X2_CC26X2    1
+#endif
+#endif
+
+#ifdef TARGET_CC13X2_CC26X2
+
+
+#define clock_ena(x)
+static inline
+void aux_wake() {
+    ti_lib_aux_sysif_opmode_change(AUX_SYSIF_OPMODEREQ_REQ_A);
+}
+
+static inline
+void aux_off() {
+    /* Turn off AUX */
+    ti_lib_aux_sysif_opmode_change(AUX_SYSIF_OPMODEREQ_REQ_PDA);
+}
+
+#else
+
+// cc13/26x0 targets
+
+static inline
+void clock_ena(uint32_t clocks){
+    ti_lib_aux_wuc_clock_enable(clocks);
+    while(ti_lib_aux_wuc_clock_status(clocks) != AUX_WUC_CLOCK_READY);
+}
+
+static inline
+void aux_wake() {
+    ti_lib_aon_wuc_aux_wakeup_event(AONWUC_AUX_WAKEUP);
+    while(!(ti_lib_aon_wuc_power_status_get() & AONWUC_AUX_POWER_ON));
+}
+
+static inline
+void aux_off() {
+    /* Turn off AUX */
+    ti_lib_aon_wuc_aux_wakeup_event(AONWUC_AUX_ALLOW_SLEEP);
+    ti_lib_aux_wuc_power_ctrl(AUX_WUC_POWER_OFF);
+    while(ti_lib_aon_wuc_power_status_get() & AONWUC_AUX_POWER_ON);
+}
+
+#endif
+
+
 void
 aux_ctrl_register_consumer(aux_consumer_module_t *consumer)
 {
@@ -49,8 +97,7 @@ aux_ctrl_register_consumer(aux_consumer_module_t *consumer)
 
   aux_ctrl_power_up();
 
-  ti_lib_aux_wuc_clock_enable(consumer->clocks);
-  while(ti_lib_aux_wuc_clock_status(consumer->clocks) != AUX_WUC_CLOCK_READY);
+  clock_ena(consumer->clocks);
 
   if(!interrupts_disabled) {
     ti_lib_int_master_enable();
@@ -79,8 +126,7 @@ aux_ctrl_power_up()
     return;
   }
 
-  ti_lib_aon_wuc_aux_wakeup_event(AONWUC_AUX_WAKEUP);
-  while(!(ti_lib_aon_wuc_power_status_get() & AONWUC_AUX_POWER_ON));
+  aux_wake();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -109,9 +155,6 @@ aux_ctrl_power_down(bool force)
   /* Disable retention */
   ti_lib_aon_wuc_aux_sram_config(false);
 
-  /* Turn off AUX */
-  ti_lib_aon_wuc_aux_wakeup_event(AONWUC_AUX_ALLOW_SLEEP);
-  ti_lib_aux_wuc_power_ctrl(AUX_WUC_POWER_OFF);
-  while(ti_lib_aon_wuc_power_status_get() & AONWUC_AUX_POWER_ON);
+  aux_off();
 }
 /*---------------------------------------------------------------------------*/

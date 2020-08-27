@@ -1,0 +1,31 @@
+################################################################################
+### CC13x2/CC26x2 CPU makefile
+
+RAM_SIZE    = 0x00003E00
+FLASH_SIZE  = 0x0001E000
+
+ifndef TI_XXWARE_PATH
+
+LDSCRIPT = $(CONTIKI_CPU)/cc13x0-cc26x0.lds
+
+DEVICE_FAMILY_LC = $(CPU_FAMILY)
+SUBFAMILY        = cc13x0-cc26x0
+include $(CONTIKI_CPU)/lib/Makefile.coresdk
+#TI_XXWARE = $(CONTIKI)/$(CONTIKI_NG_ARCH_CPU_DIR)/cc26x0-cc13x0/lib/cc13xxware
+#TI_XXWARE_PATH = lib/cc13xxware
+#TI_XXWARE_PATH = lib/cc13x0
+
+# Simplelink SDK pre-compiled libraries
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_NORTOS)/lib/nortos_$(SDK_LIB_NAME).am3g
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_DRIVERS)/rf/lib/rf_multiMode_$(SDK_LIB_NAME).am3g
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_DRIVERS)/lib/drivers_$(SDK_LIB_NAME).am3g
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_DEVICES)/driverlib/bin/gcc/driverlib.lib
+
+$(info libs: $(TARGET_LIBFILES))
+
+endif
+#!TI_XXWARE_PATH
+
+# CC13x0/CC26x0 is a Cortex-M3 architecture
+include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3
+

@@ -1,0 +1,166 @@
+CPU_ABS_PATH       = $(CONTIKI_NG_ARCH_CPU_DIR)/cc26x0-cc13x0
+TI_XXWARE ?= $(CONTIKI_CPU)/$(TI_XXWARE_PATH)
+
+ifeq (,$(wildcard $(TI_XXWARE)/*))
+    $(warning $(TI_XXWARE) does not exist or is empty.)
+    $(warning Did you run 'git submodule update --init' ?)
+    $(error "")
+endif
+
+### cc26xxware / cc26x0r2fware sources under driverlib will be added to the MODULES list
+TI_XXWARE_SRC = $(TI_XXWARE)/driverlib
+$(info ti_xxware $(TI_XXWARE_SRC))
+
+### The directory with startup sources will be added to the CONTIKI_CPU_DIRS
+### and the sources therein are added to the sources list explicitly. They are
+### also listed explicitly in the linker command (through TARGET_STARTFILES),
+### to make sure they always get linked in the image
+TI_XXWARE_STARTUP_DIR = $(TI_XXWARE_PATH)/startup_files
+TI_XXWARE_STARTUP_SRCS = ccfg.c startup_gcc.c
+$(info ti_xxware startup $(TI_XXWARE_STARTUP_DIR))
+
+### MODULES will add some of these to the include path, but we need to add
+### them earlier to prevent filename clashes with Contiki core files
+CFLAGS += -I$(TI_XXWARE) -I$(TI_XXWARE_SRC)
+CFLAGS += -I$(TI_XXWARE)/inc
+CFLAGS += -I$(CONTIKI_CPU)/$(CPU_FAMILY)
+
+CPU_DIRS += $(CPU_FAMILY)
+ifdef SUBFAMILY
+$(info SUBFAMILY:$(SUBFAMILY))
+CFLAGS += -I$(CONTIKI_CPU)/$(SUBFAMILY) 
+CPU_DIRS += $(SUBFAMILY) 
+endif
+MODULES += arch/cpu/$(TARGET)/$(TI_XXWARE_PATH)/driverlib
+CONTIKI_CPU_SOURCEFILES += driverlib-legacy.c 
+
+# TODO: should we use new cc13x0-cc16x0.lds ?
+ifeq ("$(LDSCRIPT)","")
+LDSCRIPT = $(CONTIKI_CPU)/cc26xx.ld
+# for cc26xx.ld prefer driverlib-ware startup  
+CONTIKI_CPU_DIRS += $(TI_XXWARE_STARTUP_DIR) $(CPU_DIRS) 
+else
+# for cc13xx-cc16xx.lds prefer CPU_DIRS startup  
+CONTIKI_CPU_DIRS += $(CPU_DIRS) $(TI_XXWARE_STARTUP_DIR) 
+endif
+
+
+### If the user-specified a Node ID, pass a define
+ifdef NODEID
+  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+endif
+
+################################################################################
+### Compiler configuration
+
+# A weird behaviour of GCC garbage collector has been observed, where
+# unitialized global variables with global linkage (aka non-static) put in the
+# COMMON section weren't analyzed by the garbage collector at all. No idea why.
+# The solution is to disable the common section, which subsequently places all
+# unitialized global variables with global linkage in the .bss section,
+# allowing the GC to analyze the variables. This is especially an issue with
+# Board.h files, as they rely heavily on global variables placed in COMMON to
+# be garbage collected if unused.
+CFLAGS += -fno-common
+
+$(info CFLAGS:$(CFLAGS))
+
+################################################################################
+### CPU-dependent directories
+CONTIKI_CPU_DIRS += . dev rf-core rf-core/api rf-core/ble-hal 
+
+CONTIKI_CPU_DIRS += rf-settings rf-settings/$(CPU_FAMILY)
+ifdef CPU_SIMPLELINK_PATH
+SOURCEDIRS += $(CONTIKI_CPU)/$(CPU_SIMPLELINK_PATH)/rf-settings \
+              $(CONTIKI_CPU)/$(CPU_SIMPLELINK_PATH)/rf-settings/$(CPU_FAMILY)
+endif
+
+################################################################################
+### CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c soc-rtc.c 
+#uart.c
+CONTIKI_CPU_SOURCEFILES += contiki-watchdog.c aux-ctrl.c
+CONTIKI_CPU_SOURCEFILES += dbg.c ieee-addr.c batmon-sensor.c adc-sensor.c
+CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c cc26xx-uart.c lpm.c
+CONTIKI_CPU_SOURCEFILES += gpio-interrupt.c gpio-hal-arch.c oscillators.c
+CONTIKI_CPU_SOURCEFILES += rf-core.c rf-tx-power.c rf-ble.c 
+#CONTIKI_CPU_SOURCEFILES += ieee-mode.c prop-mode.c 
+CONTIKI_CPU_SOURCEFILES += ble-cc2650.c ble-hal-cc26xx.c ble-addr.c rf-ble-cmd.c
+CONTIKI_CPU_SOURCEFILES += random.c soc-trng.c
+#overriden by int-master-arch.h
+CONTIKI_CPU_SOURCEFILES += int-master.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
+CONTIKI_CPU_SOURCEFILES += cc26xx-aes.c
+
+SUPPORTS_PROP_MODE ?=0
+ifeq ($(SUPPORTS_PROP_MODE),1)
+ CONTIKI_CPU_SOURCEFILES += prop-mode.c
+ifdef CPU_SIMPLELINK_PATH
+ CONTIKI_CPU_SOURCEFILES += prop-settings.c prop-tx-power.c
+ CFLAGS += -DRF_TX_POWER_TABLE_STYLE=RF_TX_POWER_TABLE_SIMPLELINK
+endif
+endif
+
+SUPPORTS_IEEE_MODE ?=0
+ifeq ($(SUPPORTS_IEEE_MODE),1)
+ CONTIKI_CPU_SOURCEFILES += ieee-mode.c ieee-settings.c ieee-tx-power.c
+endif
+
+SUPPORTS_BLE_BEACON ?=0
+ifeq ($(SUPPORTS_BLE_BEACON),1)
+ CONTIKI_CPU_SOURCEFILES += ble-settings.c ble-tx-power.c
+endif
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
+
+CPU_START_SOURCEFILES += fault-handlers.c $(TI_XXWARE_STARTUP_SRCS)
+
+################################################################################
+### Always re-build ieee-addr.o in case the command line passes a new NODEID
+FORCE:
+
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+### Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
+### to make clean first
+$(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -include "ccxxware-conf.h" -c $< -o $@
+
+################################################################################
+# a target that gives a user-friendly memory profile, taking into account the RAM
+# that is statically occupied by the stack as defined in the linker script
+# see $(LDSCRIPT)
+RAM_SIZE    ?= 0x00003E00
+FLASH_SIZE  ?= 0x0001E000
+STACK_SIZE ?= 0
+%.size: %.$(TARGET)
+	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "[RAM]   used %6d, free %6d\n",s,f;}'
+	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "[Flash] used %6d, free %6d\n",s,f;}'
+
+################################################################################
+### For the .upload make target
+PYTHON = python
+BSL_FLAGS += -e -w -v
+
+ifdef PORT
+  BSL_FLAGS += -p $(PORT)
+endif
+
+BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
+ifeq ($(BOARD_SUPPORTS_BSL),1)
+%.upload: $(OUT_BIN)
+ifeq ($(wildcard $(BSL)), )
+	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
+else
+	$(PYTHON) $(BSL) $(BSL_FLAGS) $<
+endif
+else
+%.upload:
+	@echo "This board cannot be programmed through the ROM bootloader and therefore does not support the .upload target."
+endif
+
+### For the login etc targets
+BAUDRATE ?= 115200

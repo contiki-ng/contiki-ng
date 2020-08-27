@@ -56,10 +56,6 @@
 #include "rf-core/prop-mode.h"
 #include "rf-core/dot-15-4g.h"
 /*---------------------------------------------------------------------------*/
-/* RF core and RF HAL API */
-#include "hw_rfc_dbell.h"
-#include "hw_rfc_pwr.h"
-/*---------------------------------------------------------------------------*/
 /* RF Core Mailbox API */
 #include "driverlib/rf_mailbox.h"
 #include "driverlib/rf_common_cmd.h"
@@ -67,23 +63,25 @@
 #include "driverlib/rf_prop_mailbox.h"
 #include "driverlib/rf_prop_cmd.h"
 /*---------------------------------------------------------------------------*/
-/* CC13xxware patches */
-#include "rf_patches/rf_patch_cpe_genfsk.h"
-#include "rf_patches/rf_patch_rfe_genfsk.h"
-/*---------------------------------------------------------------------------*/
-#include "rf-core/smartrf-settings.h"
-/*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
+#undef DEBUG
 #define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
 #endif
+
+#if 0
+#define PRINTF_FAIL(...)  printf(__VA_ARGS__)
+#else
+#define PRINTF_FAIL(...)  PRINTF(__VA_ARGS__)
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* Data entry status field constants */
 #define DATA_ENTRY_STATUS_PENDING    0x00 /* Not in use by the Radio CPU */
@@ -174,35 +172,68 @@ static rfc_propRxOutput_t rx_stats;
  */
 #define MAX_PAYLOAD_LEN 125
 /*---------------------------------------------------------------------------*/
-/* TX power table for the 431-527MHz band */
-#ifdef PROP_MODE_CONF_TX_POWER_431_527
-#define PROP_MODE_TX_POWER_431_527 PROP_MODE_CONF_TX_POWER_431_527
+#define PROP_MODE_SETTINGS_SMARTRF      0
+#define PROP_MODE_SETTINGS_SIMPLELINK   1
+
+#ifdef PROP_MODE_CONF_SETTINGS
+#define PROP_MODE_SETTINGS PROP_MODE_CONF_SETTINGS
+#elif RF_TX_POWER_TABLE_STYLE == RF_TX_POWER_TABLE_SIMPLELINK
+#define PROP_MODE_SETTINGS PROP_MODE_SETTINGS_SIMPLELINK
 #else
-#define PROP_MODE_TX_POWER_431_527 prop_mode_tx_power_431_527
+#define PROP_MODE_SETTINGS PROP_MODE_SETTINGS_SMARTRF
 #endif
-/*---------------------------------------------------------------------------*/
-/* TX power table for the 779-930MHz band */
-#ifdef PROP_MODE_CONF_TX_POWER_779_930
-#define PROP_MODE_TX_POWER_779_930 PROP_MODE_CONF_TX_POWER_779_930
+
+#if PROP_MODE_SETTINGS == PROP_MODE_SETTINGS_SIMPLELINK
+#include "prop-settings.h"
+
+#define settings_prop_mode          rf_prop_mode
+#define settings_cmd_prop_fs        rf_cmd_prop_fs
+#define settings_cmd_prop_tx_adv    rf_cmd_prop_tx_adv
+#define settings_cmd_prop_rx_adv    rf_cmd_prop_rx_adv
+#define settings_cmd_prop_radio_div_setup   rf_cmd_prop_radio_div_setup
+
+#elif PROP_MODE_SETTINGS == PROP_MODE_SETTINGS_SMARTRF
+#include "smartrf-settings.h"
+
+#define settings_prop_mode          smartrf_settings_prop_mode
+#define settings_cmd_prop_fs        smartrf_settings_cmd_fs
+#define settings_cmd_prop_tx_adv    smartrf_settings_cmd_prop_tx_adv
+#define settings_cmd_prop_rx_adv    smartrf_settings_cmd_prop_rx_adv
+#define settings_cmd_prop_radio_div_setup   smartrf_settings_cmd_prop_radio_div_setup
+
 #else
-#define PROP_MODE_TX_POWER_779_930 prop_mode_tx_power_779_930
+#error "uncknown RFsettings style"
 #endif
 /*---------------------------------------------------------------------------*/
 /* Select power table based on the frequency band */
-#if DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_470
-#define TX_POWER_DRIVER PROP_MODE_TX_POWER_431_527
-#else
+#ifdef TX_POWER_CONF_PROP_DRIVER
+#define TX_POWER_DRIVER TX_POWER_CONF_PROP_DRIVER
+#elif RF_TX_POWER_TABLE_STYLE == RF_TX_POWER_TABLE_SIMPLELINK
+
+#include "rf/tx-power.h"
+#define TX_POWER_DRIVER   rf_tx_power_table
+
+#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_780
 #define TX_POWER_DRIVER PROP_MODE_TX_POWER_779_930
+#else
+#error "uncknown .15.4g band, have no power table for ti. Declare valid TX_POWER_CONF_PROP_DRIVER"
 #endif
 /*---------------------------------------------------------------------------*/
+#if RF_TX_POWER_TABLE_STYLE != RF_TX_POWER_TABLE_SIMPLELINK
+#include "tx-power.h"
 extern const prop_mode_tx_power_config_t TX_POWER_DRIVER[];
 
-/* Max and Min Output Power in dBm */
-#define OUTPUT_POWER_MAX     (TX_POWER_DRIVER[0].dbm)
-#define OUTPUT_POWER_UNKNOWN 0xFFFF
-
 /* Default TX Power - position in output_power[] */
-static const prop_mode_tx_power_config_t *tx_power_current = &TX_POWER_DRIVER[1];
+const prop_mode_tx_power_config_t *tx_power_current = (&TX_POWER_DRIVER[1]);
+
+#else
+const prop_mode_tx_power_config_t *tx_power_current = NULL;
+#endif
+
+/* Max and Min Output Power in dBm */
+#define OUTPUT_POWER_MAX     (rfc_tx_power_max(TX_POWER_DRIVER))
+#define OUTPUT_POWER_MIN     (rfc_tx_power_min(TX_POWER_DRIVER))
+
 /*---------------------------------------------------------------------------*/
 #ifdef PROP_MODE_CONF_LO_DIVIDER
 #define PROP_MODE_LO_DIVIDER   PROP_MODE_CONF_LO_DIVIDER
@@ -270,13 +301,13 @@ rf_is_on(void)
     return 0;
   }
 
-  return smartrf_settings_cmd_prop_rx_adv.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
+  return settings_cmd_prop_rx_adv.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
 transmitting(void)
 {
-  return smartrf_settings_cmd_prop_tx_adv.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
+  return settings_cmd_prop_tx_adv.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
 static radio_value_t
@@ -325,7 +356,7 @@ get_channel(void)
 {
   uint32_t freq_khz;
 
-  freq_khz = smartrf_settings_cmd_fs.frequency * 1000;
+  freq_khz = settings_cmd_prop_fs.frequency * 1000;
 
   /*
    * For some channels, fractFreq * 1000 / 65536 will return 324.99xx.
@@ -333,7 +364,7 @@ get_channel(void)
    * function returning channel - 1 instead of channel. Thus, we do a quick
    * positive integer round up.
    */
-  freq_khz += (((smartrf_settings_cmd_fs.fractFreq * 1000) + 65535) / 65536);
+  freq_khz += (((settings_cmd_prop_fs.fractFreq * 1000) + 0x10000) / 0x10000);
 
   return (freq_khz - DOT_15_4G_CHAN0_FREQUENCY) / DOT_15_4G_CHANNEL_SPACING;
 }
@@ -344,31 +375,19 @@ set_channel(uint8_t channel)
   uint32_t new_freq;
   uint16_t freq, frac;
 
-  new_freq = DOT_15_4G_CHAN0_FREQUENCY + (channel * DOT_15_4G_CHANNEL_SPACING);
+  new_freq = dot_15_4g_freq(channel);
 
   freq = (uint16_t)(new_freq / 1000);
-  frac = (new_freq - (freq * 1000)) * 65536 / 1000;
+  frac = (new_freq - (freq * 1000)) * 0x10000 / 1000;
 
   PRINTF("set_channel: %u = 0x%04x.0x%04x (%lu)\n", channel, freq, frac,
          new_freq);
 
-  smartrf_settings_cmd_prop_radio_div_setup.centerFreq = freq;
-  smartrf_settings_cmd_fs.frequency = freq;
-  smartrf_settings_cmd_fs.fractFreq = frac;
+  settings_cmd_prop_radio_div_setup.centerFreq = freq;
+  settings_cmd_prop_fs.frequency = freq;
+  settings_cmd_prop_fs.fractFreq = frac;
 }
-/*---------------------------------------------------------------------------*/
-static uint8_t
-get_tx_power_array_last_element(void)
-{
-  const prop_mode_tx_power_config_t *array = TX_POWER_DRIVER;
-  uint8_t count = 0;
 
-  while(array->tx_power != OUTPUT_POWER_UNKNOWN) {
-    count++;
-    array++;
-  }
-  return count - 1;
-}
 /*---------------------------------------------------------------------------*/
 /* Returns the current TX power in dBm */
 static radio_value_t
@@ -377,47 +396,48 @@ get_tx_power(void)
   return tx_power_current->dbm;
 }
 /*---------------------------------------------------------------------------*/
+enum {
+    RADIO_RESULT_NOCHANGE = RADIO_RESULT_OK-1
+};
 /*
  * The caller must make sure to send a new CMD_PROP_RADIO_DIV_SETUP to the
  * radio after calling this function.
  */
-static void
+static int
 set_tx_power(radio_value_t power)
 {
-  int i;
+  const prop_mode_tx_power_config_t* x;
+  x = rfc_tx_power_eval_power_code(power, TX_POWER_DRIVER);
 
-  for(i = get_tx_power_array_last_element(); i >= 0; --i) {
-    if(power <= TX_POWER_DRIVER[i].dbm) {
-      /*
-       * Merely save the value. It will be used in all subsequent usages of
-       * CMD_PROP_RADIO_DIV_SETP, including one immediately after this function
-       * has returned
-       */
-      tx_power_current = &TX_POWER_DRIVER[i];
+  if (x == NULL)
+      return RADIO_RESULT_NOCHANGE;
 
-      return;
-    }
-  }
+  if (x == tx_power_current)
+      return RADIO_RESULT_NOCHANGE;
+
+  tx_power_current = x;
+  return RADIO_RESULT_OK;
+
 }
 /*---------------------------------------------------------------------------*/
 static int
 prop_div_radio_setup(void)
 {
   uint32_t cmd_status;
-  rfc_radioOp_t *cmd = (rfc_radioOp_t *)&smartrf_settings_cmd_prop_radio_div_setup;
+  rfc_radioOp_t *cmd = (rfc_radioOp_t *)&settings_cmd_prop_radio_div_setup;
 
   rf_switch_select_path(RF_SWITCH_PATH_SUBGHZ);
 
   /* Adjust loDivider depending on the selected band */
-  smartrf_settings_cmd_prop_radio_div_setup.loDivider = PROP_MODE_LO_DIVIDER;
+  settings_cmd_prop_radio_div_setup.loDivider = PROP_MODE_LO_DIVIDER;
 
   /* Update to the correct TX power setting */
-  smartrf_settings_cmd_prop_radio_div_setup.txPower = tx_power_current->tx_power;
+  settings_cmd_prop_radio_div_setup.txPower = tx_power_current->tx_power;
 
   /* Adjust RF Front End and Bias based on the board */
-  smartrf_settings_cmd_prop_radio_div_setup.config.frontEndMode =
+  settings_cmd_prop_radio_div_setup.config.frontEndMode =
     RF_CORE_PROP_FRONT_END_MODE;
-  smartrf_settings_cmd_prop_radio_div_setup.config.biasMode =
+  settings_cmd_prop_radio_div_setup.config.biasMode =
     RF_CORE_PROP_BIAS_MODE;
 
   /* Send Radio setup to RF Core */
@@ -444,7 +464,7 @@ rf_cmd_prop_rx()
   volatile rfc_CMD_PROP_RX_ADV_t *cmd_rx_adv;
   int ret;
 
-  cmd_rx_adv = (rfc_CMD_PROP_RX_ADV_t *)&smartrf_settings_cmd_prop_rx_adv;
+  cmd_rx_adv = (rfc_CMD_PROP_RX_ADV_t *)&settings_cmd_prop_rx_adv;
   cmd_rx_adv->status = RF_CORE_RADIO_OP_STATUS_IDLE;
 
   cmd_rx_adv->rxConf.bIncludeCrc = RF_CORE_RX_BUF_INCLUDE_CRC;
@@ -466,8 +486,8 @@ rf_cmd_prop_rx()
     return RF_CORE_CMD_ERROR;
   }
 
-  RTIMER_BUSYWAIT_UNTIL(cmd_rx_adv->status == RF_CORE_RADIO_OP_STATUS_ACTIVE,
-                        RF_CORE_ENTER_RX_TIMEOUT);
+  RTIMER_BUSYWAIT_UNTIL( (cmd_rx_adv->status >= RF_CORE_RADIO_OP_STATUS_ACTIVE )
+                       , RF_CORE_ENTER_RX_TIMEOUT);
 
   /* Wait to enter RX */
   if(cmd_rx_adv->status != RF_CORE_RADIO_OP_STATUS_ACTIVE) {
@@ -504,7 +524,7 @@ rx_on_prop(void)
 
   if(rf_is_on()) {
     PRINTF("rx_on_prop: We were on. PD=%u, RX=0x%04x\n",
-           rf_core_is_accessible(), smartrf_settings_cmd_prop_rx_adv.status);
+           rf_core_is_accessible(), settings_cmd_prop_rx_adv.status);
     return RF_CORE_CMD_OK;
   }
 
@@ -540,14 +560,14 @@ rx_off_prop(void)
 
   RTIMER_BUSYWAIT_UNTIL(!rf_is_on(), RF_CORE_TURN_OFF_TIMEOUT);
 
-  if(smartrf_settings_cmd_prop_rx_adv.status == PROP_DONE_STOPPED ||
-     smartrf_settings_cmd_prop_rx_adv.status == PROP_DONE_ABORT) {
+  if(settings_cmd_prop_rx_adv.status == PROP_DONE_STOPPED ||
+     settings_cmd_prop_rx_adv.status == PROP_DONE_ABORT) {
     /* Stopped gracefully */
     ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
     ret = RF_CORE_CMD_OK;
   } else {
     PRINTF("rx_off_prop: status=0x%04x\n",
-           smartrf_settings_cmd_prop_rx_adv.status);
+           settings_cmd_prop_rx_adv.status);
     ret = RF_CORE_CMD_ERROR;
   }
 
@@ -574,7 +594,7 @@ static int
 prop_fs(void)
 {
   uint32_t cmd_status;
-  rfc_radioOp_t *cmd = (rfc_radioOp_t *)&smartrf_settings_cmd_fs;
+  rfc_radioOp_t *cmd = (rfc_radioOp_t *)&settings_cmd_prop_fs;
 
   /* Send the command to the RF Core */
   if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
@@ -641,9 +661,18 @@ init(void)
 {
   lpm_register_module(&prop_lpm_module);
 
-  if(ti_lib_chipinfo_chip_family_is_cc13xx() == false) {
+  if(   (ti_lib_chipinfo_chip_family_is_cc13xx() == false)
+     && (ti_lib_chipinfo_chip_family_is_cc26xx() == false)
+     )
+  {
     return RF_CORE_CMD_ERROR;
   }
+
+#if RF_TX_POWER_TABLE_STYLE == RF_TX_POWER_TABLE_SIMPLELINK
+  tx_power_current = rfc_tx_power_last_element(TX_POWER_DRIVER);
+  assert(tx_power_current > TX_POWER_DRIVER);
+  --tx_power_current;
+#endif
 
   /* Initialise RX buffers */
   memset(rx_buf, 0, sizeof(rx_buf));
@@ -655,8 +684,8 @@ init(void)
   /* Initialize current read pointer to first element (used in ISR) */
   rx_read_entry = rx_buf[0];
 
-  smartrf_settings_cmd_prop_rx_adv.pQueue = &rx_data_queue;
-  smartrf_settings_cmd_prop_rx_adv.pOutput = (uint8_t *)&rx_stats;
+  settings_cmd_prop_rx_adv.pQueue = &rx_data_queue;
+  settings_cmd_prop_rx_adv.pOutput = (uint8_t *)&rx_stats;
 
   set_channel(IEEE802154_DEFAULT_CHANNEL);
 
@@ -725,7 +754,7 @@ transmit(unsigned short transmit_len)
   tx_buf[1] = (total_length >> 8) + DOT_4G_PHR_DW_BIT + DOT_4G_PHR_CRC_BIT;
 
   /* Prepare the CMD_PROP_TX_ADV command */
-  cmd_tx_adv = (rfc_CMD_PROP_TX_ADV_t *)&smartrf_settings_cmd_prop_tx_adv;
+  cmd_tx_adv = (rfc_CMD_PROP_TX_ADV_t *)&settings_cmd_prop_tx_adv;
 
   /*
    * pktLen: Total number of bytes in the TX buffer, including the header if
@@ -1070,9 +1099,19 @@ on(void)
     return RF_CORE_CMD_OK;
   }
 
+  /* Read available RF modes from the PRCM register */
+  uint32_t availableRfModes = HWREG(PRCM_BASE + PRCM_O_RFCMODEHWOPT);
+
+  /* Verify that the provided configuration is supported by this device.
+     Reject any request which is not compliant. */
+  if ( (availableRfModes & (1 << settings_prop_mode.rfMode)) == 0 ){
+      PRINTF("on: rf_core_power_up() RF mode not supports\n");
+      return RF_CORE_CMD_ERROR;
+  }
+
   if(rf_is_on()) {
     PRINTF("on: We were on. PD=%u, RX=0x%04x \n", rf_core_is_accessible(),
-           smartrf_settings_cmd_prop_rx_adv.status);
+           settings_cmd_prop_rx_adv.status);
     return RF_CORE_CMD_OK;
   }
 
@@ -1092,28 +1131,31 @@ on(void)
     }
 
     /* Keep track of RF Core mode */
-    rf_core_set_modesel();
+    HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = settings_prop_mode.rfMode;
 
     /* Apply patches to radio core */
-    rf_patch_cpe_genfsk();
-    while(!HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG));
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
-    rf_patch_rfe_genfsk();
+    if (settings_prop_mode.cpePatchFxn)
+        settings_prop_mode.cpePatchFxn();
+
+    rfc_dbell_sync_on_ack();
+
+    if (settings_prop_mode.mcePatchFxn)
+        settings_prop_mode.mcePatchFxn();
+    if (settings_prop_mode.rfePatchFxn)
+        settings_prop_mode.rfePatchFxn();
 
     /* Initialize bus request */
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_CMDR) =
-      CMDR_DIR_CMD_1BYTE(CMD_BUS_REQUEST, 1);
+    rfc_dbell_submit_cmd_async( CMDR_DIR_CMD_1BYTE(CMD_BUS_REQUEST, 1) );
 
     /* set VCOLDO reference */
     ti_lib_rfc_adi3vco_ldo_voltage_mode(true);
 
     /* Let CC13xxware automatically set a correct value for RTRIM for us */
-    ti_lib_rfc_rtrim((rfc_radioOp_t *)&smartrf_settings_cmd_prop_radio_div_setup);
+    ti_lib_rfc_override_update((rfc_radioOp_t *)&settings_cmd_prop_radio_div_setup
+                                , NULL);
 
     /* Make sure BUS_REQUEST is done */
-    while(!HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG));
-    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
+    rfc_dbell_sync_on_ack();
 
     if(rf_core_start_rat() != RF_CORE_CMD_OK) {
       PRINTF("on: rf_core_start_rat() failed\n");
@@ -1173,7 +1215,7 @@ off(void)
 #endif
 
   /* We pulled the plug, so we need to restore the status manually */
-  smartrf_settings_cmd_prop_rx_adv.status = RF_CORE_RADIO_OP_STATUS_IDLE;
+  settings_cmd_prop_rx_adv.status = RF_CORE_RADIO_OP_STATUS_IDLE;
 
   /*
    * Just in case there was an ongoing RX (which started after we begun the
@@ -1245,7 +1287,7 @@ get_value(radio_param_t param, radio_value_t *value)
     *value = DOT_15_4G_CHANNEL_MAX;
     return RADIO_RESULT_OK;
   case RADIO_CONST_TXPOWER_MIN:
-    *value = TX_POWER_DRIVER[get_tx_power_array_last_element()].dbm;
+    *value = OUTPUT_POWER_MIN;
     return RADIO_RESULT_OK;
   case RADIO_CONST_TXPOWER_MAX:
     *value = OUTPUT_POWER_MAX;
@@ -1334,8 +1376,7 @@ set_value(radio_param_t param, radio_value_t value)
     return set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
 
   case RADIO_PARAM_TXPOWER:
-    if(value < TX_POWER_DRIVER[get_tx_power_array_last_element()].dbm ||
-       value > OUTPUT_POWER_MAX) {
+    if(value < OUTPUT_POWER_MIN || value > OUTPUT_POWER_MAX) {
       return RADIO_RESULT_INVALID_VALUE;
     }
 

@@ -75,6 +75,13 @@ LIST(modules_list);
 
 /* Minimal safe sleep-time */
 #define MIN_SAFE_SCHEDULE     8u
+
+#ifdef THIS_DRIVERLIB_BUILD
+#if THIS_DRIVERLIB_BUILD == DRIVERLIB_BUILD_CC13X2_CC26X2
+#define TARGET_CC13X2_CC26X2    1
+#endif
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* Prototype of a function in clock.c. Called every time we come out of DS */
 void clock_update(void);
@@ -83,9 +90,7 @@ void
 lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
 {
   lpm_registered_module_t *module;
-  int i;
   uint32_t io_cfg = (IOC_STD_INPUT & ~IOC_IOPULL_M) | io_pull | wake_on;
-  aux_consumer_module_t aux = { .clocks = AUX_WUC_OSCCTRL_CLOCK };
 
   /* This procedure may not be interrupted */
   ti_lib_int_master_disable();
@@ -97,12 +102,25 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
   ti_lib_aon_rtc_event_clear(AON_RTC_CH2);
 
   /* Reset AON even fabric to default wakeup sources */
+#ifdef TARGET_CC13X2_CC26X2
+  HWREG(AON_EVENT_BASE + AON_EVENT_O_MCUWUSEL) = 0x3F3F3F3F;
+  HWREG(AON_EVENT_BASE + AON_EVENT_O_MCUWUSEL1)= 0x3F3F3F3F;
+#else
+  /*
+   * 5. Reset AON event source IDs to avoid pending events powering
+   * on MCU/AUX
+   */
+  HWREG(AON_EVENT_BASE + AON_EVENT_O_MCUWUSEL) = 0x3F3F3F3F;
+  HWREG(AON_EVENT_BASE + AON_EVENT_O_AUXWUSEL) = 0x003F3F3F;
+  /*
+  int i;
   for(i = AON_EVENT_MCU_WU0; i <= AON_EVENT_MCU_WU3; i++) {
     ti_lib_aon_event_mcu_wake_up_set(i, AON_EVENT_NONE);
   }
   for(i = AON_EVENT_AUX_WU0; i <= AON_EVENT_AUX_WU2; i++) {
     ti_lib_aon_event_aux_wake_up_set(i, AON_EVENT_NONE);
-  }
+  }*/
+#endif
 
   ti_lib_sys_ctrl_aon_sync();
 
@@ -122,65 +140,11 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
     ti_lib_ioc_port_configure_set(wakeup_pin, IOC_PORT_GPIO, io_cfg);
   }
 
-  /* Freeze I/O latches in AON */
-  ti_lib_aon_ioc_freeze_enable();
-
-  /* Turn off RFCORE, SERIAL and PERIPH PDs. This will happen immediately */
-  ti_lib_prcm_power_domain_off(PRCM_DOMAIN_RFCORE | PRCM_DOMAIN_SERIAL |
-                               PRCM_DOMAIN_PERIPH);
-
-  /* Register an aux-ctrl consumer to avoid powercycling AUX twice in a row */
-  aux_ctrl_register_consumer(&aux);
-  oscillators_switch_to_hf_rc();
-  oscillators_select_lf_rcosc();
-
-  /* Configure clock sources for MCU: No clock */
-  ti_lib_aon_wuc_mcu_power_down_config(AONWUC_NO_CLOCK);
-
-  /* Disable SRAM retention */
-  ti_lib_aon_wuc_mcu_sram_config(0);
-
-  /*
-   * Request CPU, SYSBYS and VIMS PD off.
-   * This will only happen when the CM3 enters deep sleep
-   */
-  ti_lib_prcm_power_domain_off(PRCM_DOMAIN_CPU | PRCM_DOMAIN_VIMS |
-                               PRCM_DOMAIN_SYSBUS);
-
-  /* Request JTAG domain power off */
-  ti_lib_aon_wuc_jtag_power_off();
-
-  /* Turn off AUX */
-  aux_ctrl_power_down(true);
-  ti_lib_aon_wuc_domain_power_down_enable();
-
-  /*
-   * Request MCU VD power off.
-   * This will only happen when the CM3 enters deep sleep
-   */
-  ti_lib_prcm_mcu_power_off();
-
-  /* Set MCU wakeup to immediate and disable virtual power off */
-  ti_lib_aon_wuc_mcu_wake_up_config(MCU_IMM_WAKE_UP);
-  ti_lib_aon_wuc_mcu_power_off_config(MCU_VIRT_PWOFF_DISABLE);
-
-  /* Latch the IOs in the padring and enable I/O pad sleep mode */
-  ti_lib_aon_ioc_freeze_enable();
-  HWREG(AON_SYSCTL_BASE + AON_SYSCTL_O_SLEEPCTL) = 0;
-  ti_lib_sys_ctrl_aon_sync();
-
-  /* Turn off VIMS cache, CRAM and TRAM - possibly not required */
-  ti_lib_prcm_cache_retention_disable();
-  ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_OFF);
-
-  /* Enable shutdown and sync AON */
-  ti_lib_aon_wuc_shut_down_enable();
-  ti_lib_sys_ctrl_aon_sync();
-
-  /* Deep Sleep */
-  ti_lib_prcm_deep_sleep();
+  ti_lib_sys_ctrl_shutdown_with_abort();
 }
 /*---------------------------------------------------------------------------*/
+static void standby(uint32_t vimsPdMode, uint32_t domains);
+
 /*
  * Notify all modules that we're back on and rely on them to restore clocks
  * and power domains as required.
@@ -459,56 +423,9 @@ deep_sleep(void)
    */
   oscillators_switch_to_hf_rc();
 
-  /* Shut Down the AUX if the user application is not using it */
-  aux_ctrl_power_down(false);
-
-  /* Configure clock sources for MCU: No clock */
-  ti_lib_aon_wuc_mcu_power_down_config(AONWUC_NO_CLOCK);
-
-  /* Full RAM retention. */
-  ti_lib_aon_wuc_mcu_sram_config(MCU_RAM0_RETENTION | MCU_RAM1_RETENTION |
-                                 MCU_RAM2_RETENTION | MCU_RAM3_RETENTION);
-
-  /*
-   * Always turn off RFCORE, CPU, SYSBUS and VIMS. RFCORE should be off
-   * already
-   */
-  ti_lib_prcm_power_domain_off(PRCM_DOMAIN_RFCORE | PRCM_DOMAIN_CPU |
-                               PRCM_DOMAIN_VIMS | PRCM_DOMAIN_SYSBUS);
-
-  /* Request JTAG domain power off */
-  ti_lib_aon_wuc_jtag_power_off();
-
-  /* Allow MCU and AUX powerdown */
-  ti_lib_aon_wuc_domain_power_down_enable();
-
-  /* Configure the recharge controller */
-  ti_lib_sys_ctrl_set_recharge_before_power_down(XOSC_IN_HIGH_POWER_MODE);
-
-  /*
-   * If both PERIPH and SERIAL PDs are off, request the uLDO as the power
-   * source while in deep sleep.
-   */
-  if(domains == LOCKABLE_DOMAINS) {
-    ti_lib_pwr_ctrl_source_set(PWRCTRL_PWRSRC_ULDO);
-  }
-
   ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_DEEP_LPM);
 
-  /* Sync the AON interface to ensure all writes have gone through. */
-  ti_lib_sys_ctrl_aon_sync();
-
-  /*
-   * Explicitly turn off VIMS cache, CRAM and TRAM. Needed because of
-   * retention mismatch between VIMS logic and cache. We wait to do this
-   * until right before deep sleep to be able to use the cache for as long
-   * as possible.
-   */
-  ti_lib_prcm_cache_retention_disable();
-  ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_OFF);
-
-  /* Deep Sleep */
-  ti_lib_prcm_deep_sleep();
+  standby(VIMS_ON_CPU_ON_MODE, domains);
 
   /*
    * When we reach here, some interrupt woke us up. The global interrupt
@@ -573,6 +490,149 @@ lpm_pin_set_default_state(uint32_t ioid)
   ti_lib_gpio_set_output_enable_dio(ioid, GPIO_OUTPUT_DISABLE);
 }
 /*---------------------------------------------------------------------------*/
+
+//*****************************************************************************
+//
+// Force the system in to standby mode
+//
+//*****************************************************************************
+void standby(uint32_t vimsPdMode, uint32_t domains)
+{
+#ifdef TARGET_CC13X2_CC26X2
+    const bool retainCache      = false;
+    const uint32_t rechargeMode = SYSCTRL_PREFERRED_RECHARGE_MODE;
+    uint32_t modeVIMS;
+    // In external regulator mode:
+    // Set static recharge timing to approximately 500 milliseconds
+    // Else:
+    // Handle compensation for improving RCOSC_LF stability at low temperatures
+    // as configured in CCFG
+    SysCtrlSetRechargeBeforePowerDown(XOSC_IN_HIGH_POWER_MODE);
+
+    // Request power off of domains in the MCU voltage domain
+    PRCMPowerDomainOff(PRCM_DOMAIN_RFCORE | PRCM_DOMAIN_CPU); // PRCM_DOMAIN_SERIAL | PRCM_DOMAIN_PERIPH
+
+    // Load the new clock settings
+    PRCMLoadSet();
+
+    // Configure the VIMS power domain mode
+    HWREG(PRCM_BASE + PRCM_O_PDCTL1VIMS) = vimsPdMode;
+
+    // Request uLDO during standby
+    if(domains == LOCKABLE_DOMAINS ) {
+        PRCMMcuUldoConfigure(1);
+    }
+
+    // In external regulator mode:
+    // - Setting the AON_PMCTL_O_RECHARGECFG register is already handled above.
+    //   (in function SysCtrlSetRechargeBeforePowerDown() )
+    // Else:
+    // - Set the AON_PMCTL_O_RECHARGECFG register as described below.
+    if ((HWREG(AON_PMCTL_BASE + AON_PMCTL_O_PWRCTL) & AON_PMCTL_PWRCTL_EXT_REG_MODE)==0)
+    {
+        // In internal regulator mode the recharge functionality is set up with
+        // adaptive recharge mode and fixed parameter values
+        if(rechargeMode == SYSCTRL_PREFERRED_RECHARGE_MODE)
+        {
+            // Enable the Recharge Comparator
+            HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = AON_PMCTL_RECHARGECFG_MODE_COMPARATOR;
+        }
+        else
+        {
+            // Set requested recharge mode
+            HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = rechargeMode;
+        }
+    }
+
+    // Ensure all writes have taken effect
+    SysCtrlAonSync();
+
+    // Ensure UDMA, Crypto and I2C clocks are turned off
+    while (!PRCMLoadGet()) {;}
+
+    // Ensure power domains have been turned off.
+    // CPU power domain will power down when PRCMDeepSleep() executes.
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_RFCORE /*| PRCM_DOMAIN_SERIAL | PRCM_DOMAIN_PERIPH*/
+                                ) != PRCM_DOMAIN_POWER_OFF
+          )
+    {;}
+
+    // Turn off cache retention if requested
+    if (retainCache == false) {
+
+        // Get the current VIMS mode
+        do {
+            modeVIMS = VIMSModeGet(VIMS_BASE);
+        } while (modeVIMS == VIMS_MODE_CHANGING);
+
+        // If in a cache mode, turn VIMS off
+        if (modeVIMS == VIMS_MODE_ENABLED) {
+           VIMSModeSet(VIMS_BASE, VIMS_MODE_OFF);
+        }
+
+        // Disable retention of cache RAM
+        PRCMCacheRetentionDisable();
+    }
+
+    // Invoke deep sleep to go to STANDBY
+    PRCMDeepSleep();
+
+#else
+    /* Shut Down the AUX if the user application is not using it */
+    aux_ctrl_power_down(false);
+
+    /* Configure clock sources for MCU: No clock */
+    ti_lib_aon_wuc_mcu_power_down_config(AONWUC_NO_CLOCK);
+
+    /* Full RAM retention. */
+    ti_lib_aon_wuc_mcu_sram_config(MCU_RAM0_RETENTION | MCU_RAM1_RETENTION |
+                                   MCU_RAM2_RETENTION | MCU_RAM3_RETENTION);
+
+    /*
+     * Always turn off RFCORE, CPU, SYSBUS and VIMS. RFCORE should be off
+     * already
+     */
+    ti_lib_prcm_power_domain_off(PRCM_DOMAIN_RFCORE | PRCM_DOMAIN_CPU |
+                                 PRCM_DOMAIN_VIMS | PRCM_DOMAIN_SYSBUS);
+
+    /* Request JTAG domain power off */
+    ti_lib_aon_wuc_jtag_power_off();
+
+    // Configure the VIMS power domain mode
+    HWREG(PRCM_BASE + PRCM_O_PDCTL1VIMS) = vimsPdMode;
+
+    /* Allow MCU and AUX powerdown */
+    ti_lib_aon_wuc_domain_power_down_enable();
+
+    /* Configure the recharge controller */
+    ti_lib_sys_ctrl_set_recharge_before_power_down(XOSC_IN_HIGH_POWER_MODE);
+    /*
+     * If both PERIPH and SERIAL PDs are off, request the uLDO as the power
+     * source while in deep sleep.
+     */
+    if(domains == LOCKABLE_DOMAINS ) {
+      ti_lib_pwr_ctrl_source_set(PWRCTRL_PWRSRC_ULDO);
+    }
+
+    /* Sync the AON interface to ensure all writes have gone through. */
+    ti_lib_sys_ctrl_aon_sync();
+
+    /*
+     * Explicitly turn off VIMS cache, CRAM and TRAM. Needed because of
+     * retention mismatch between VIMS logic and cache. We wait to do this
+     * until right before deep sleep to be able to use the cache for as long
+     * as possible.
+     */
+    ti_lib_prcm_cache_retention_disable();
+    ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_OFF);
+
+    /* Deep Sleep */
+    ti_lib_prcm_deep_sleep();
+
+#endif
+}
+
+
 /**
  * @}
  * @}

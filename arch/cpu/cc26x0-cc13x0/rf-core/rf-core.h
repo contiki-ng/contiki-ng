@@ -546,6 +546,44 @@ uint8_t rf_core_check_rat_overflow(void);
  */
 uint32_t rf_core_convert_rat_to_rtimer(uint32_t rat_timestamp);
 
+
+
+//==============================================================================
+/* RF core and RF HAL API */
+#include "ti-lib.h"
+#include "inc/hw_rfc_dbell.h"
+#include "inc/hw_rfc_pwr.h"
+
+/*
+ *  Poll the RFACKIFG and clear the flag afterwards. This is used during the power up sequence
+ *  of the RF core where interlaying processing is implemented.
+ *
+ *  Input:  none
+ *  Return: none
+ */
+static inline
+void rfc_dbell_sync_on_ack(void)
+{
+    while (!HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG));
+    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
+}
+
+/*
+ *  Submit a command to the doorbell without blocking command execution. This is used during the
+ *  power up sequence where the system CPU can continue with processing data while the RF core
+ *  executes the submitted command.
+ *
+ *  Input:  rawCmd - The raw command to be written to the doorbell. This can be a pointer or a
+ *                   a direct/immediate command.
+ *  Return: none
+ */
+static inline
+void rfc_dbell_submit_cmd_async(uint32_t rawCmd)
+{
+    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
+    HWREG(RFC_DBELL_BASE + RFC_DBELL_O_CMDR)     = rawCmd;
+}
+
 /*---------------------------------------------------------------------------*/
 #endif /* RF_CORE_H_ */
 /*---------------------------------------------------------------------------*/

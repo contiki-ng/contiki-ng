@@ -1,0 +1,81 @@
+### this is a wraper to simplelink-cc13xx-cc26xx libraryes, just to keep from work. 
+###     we can place new driverlib here, but we can use that copy
+#CPU_SIMPLELINK_PATH = $(CONTIKI_NG_ARCH_CPU_DIR)/simplelink-cc13xx-cc26xx
+CPU_SIMPLELINK_PATH = ../simplelink-cc13xx-cc26xx
+CORE_SDK = $(CPU_SIMPLELINK_PATH)/lib/coresdk_cc13xx_cc26xx
+
+################################################################################
+### CC13xx/CC26xx CPU makefile
+
+CC13x2_CC26x2_PRE_RTM ?= 1
+
+# Core SDK is placed as a submodule under arch/cpu/simplelink-cc13xx-cc26xx/lib.
+# Do a sanity check that Core SDK submodule has been initialized.
+ifndef CORE_SDK
+ CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
+ CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ] && echo 1)
+
+ ifneq ($(CORE_SDK_INIT),1)
+  $(error The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
+ endif
+# Note that Core SDK can be overriden with a user-specified SimpleLink SDK.
+# As long as the SimpleLink SDK matches the device in use and is of a reasonable
+# newer version, then it should be no different than using Core SDK.
+else
+ # Do a sanity check the path exists.
+ CORE_SDK_VALID := $(shell [ -d $(CONTIKI_CPU)/$(CORE_SDK) ] && echo 1)
+
+ ifneq ($(CORE_SDK_VALID),1)
+  $(error User-specified CORE_SDK is not a valid path.)
+ endif
+endif
+
+################################################################################
+### Device Family
+
+SUBFAMILY        ?= $(DEVICE_FAMILY_LC)
+
+# CC13x2/CC26x2 has to differentiate both pre-RTM and RTM devices. As of now,
+# pre-RTM is suffixed with _v1 while RTM is suffixed with _v2. This will be
+# removed when CC13x2/CC26x2 RTMs. For now, provide a switch to choose
+# either pre-RTM or RTM.
+# Also note that the devices name is cc13x2_cc26x2 for all CC13x2/CC26x2
+# devices, while the library name is individual for each device family.
+ifeq ($(SUBFAMILY),cc13x2-cc26x2)
+  SDK_DEVICES_NAME  = cc13x2_cc26x2
+  SDK_LIB_NAME      = $(DEVICE_FAMILY_LC)
+# CC13x0/CC26x0 does not have this, with both its devices name and library
+# name the same as its own device family name.
+else
+ SDK_DEVICES_NAME   = $(DEVICE_FAMILY_LC)
+ SDK_LIB_NAME       = $(DEVICE_FAMILY_LC)
+endif
+
+################################################################################
+### Modules and paths
+
+# Core SDK paths
+SDK_NORTOS  = $(CORE_SDK)/kernel/nortos
+SDK_SOURCE  = $(CORE_SDK)/source
+SDK_DRIVERS = $(CORE_SDK)/source/ti/drivers
+SDK_DEVICES = $(CORE_SDK)/source/ti/devices/$(SDK_DEVICES_NAME)
+
+EXTERNALDIRS += $(CONTIKI_CPU)/$(SDK_SOURCE) $(CONTIKI_CPU)/$(SDK_NORTOS)
+
+TI_XXWARE_PATH = $(SDK_DEVICES)
+TI_XXWARE      = $(CONTIKI_CPU)/$(SDK_DEVICES)
+
+################################################################################
+### Linker configuration
+
+# Linker flags
+LDFLAGS += --entry resetISR
+LDFLAGS += --specs=nano.specs
+LDFLAGS += -nostartfiles
+LDFLAGS += -static
+
+# Linker script
+LDSCRIPT ?= $(CONTIKI_CPU)/$(SUBFAMILY).lds
+
+# Globally linked libraries
+TARGET_LIBFILES += -lc -lgcc -lnosys -lm

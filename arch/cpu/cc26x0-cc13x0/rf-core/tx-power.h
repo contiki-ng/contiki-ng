@@ -64,6 +64,47 @@ struct tx_power_table_t {
 };
 typedef struct tx_power_table_t tx_power_table_t;
 
+/*---------------------------------------------------------------------------*/
+/*
+ * styles for power tables:
+ * */
+
+//< old style provided by smartrf-settings.c - this tables lists by falling dbm value
+#define RF_TX_POWER_TABLE_OLDSTYLE      0
+
+//< simplelink provided tables style - this tables lists by rising dbm
+//  when not defined TX_POWER_CONF_PROP_DRIVER, use rf_tx_power_table, provided
+//  by simplelink-xxx platform settings
+#define RF_TX_POWER_TABLE_SIMPLELINK    1
+
+#ifndef RF_TX_POWER_TABLE_STYLE
+#define RF_TX_POWER_TABLE_STYLE         RF_TX_POWER_TABLE_OLDSTYLE
+#endif
+
+/*---------------------------------------------------------------------------*/
+// smartrf-settings tables bor RFband:
+
+/* TX power table for the 431-527MHz band */
+#ifdef PROP_MODE_CONF_TX_POWER_431_527
+#define PROP_MODE_TX_POWER_431_527 PROP_MODE_CONF_TX_POWER_431_527
+#else
+#define PROP_MODE_TX_POWER_431_527 prop_mode_tx_power_431_527
+#endif
+/*---------------------------------------------------------------------------*/
+/* TX power table for the 779-930MHz band */
+#ifdef PROP_MODE_CONF_TX_POWER_779_930
+#define PROP_MODE_TX_POWER_779_930 PROP_MODE_CONF_TX_POWER_779_930
+#else
+#define PROP_MODE_TX_POWER_779_930 prop_mode_tx_power_779_930
+#endif
+
+/*
+ * this defines PropMode TX power table. If not defined, uses default table
+ *  provided by smartrf-settings for specified RadioBand
+ * TX_POWER_CONF_PROP_DRIVER -
+ * */
+//#define TX_POWER_CONF_PROP_DRIVER
+
 //==============================================================================
 
 /**
@@ -72,22 +113,34 @@ typedef struct tx_power_table_t tx_power_table_t;
  * @{
  */
 
-static inline int8_t
-tx_power_min(tx_power_table_t *table)
+const tx_power_table_t* rfc_tx_power_last_element(const tx_power_table_t *table);
+
+#if RF_TX_POWER_TABLE_STYLE == RF_TX_POWER_TABLE_OLDSTYLE
+
+static inline
+int8_t rfc_tx_power_max(const tx_power_table_t *table)
 {
   return table[0].dbm;
 }
+
+int8_t rfc_tx_power_min(const tx_power_table_t *table);
+
+#else // RF_TX_POWER_TABLE_SIMPLELINK
+
 static inline int8_t
-tx_power_max(tx_power_table_t *table, size_t size)
+rfc_tx_power_min(const tx_power_table_t *table)
 {
-  return table[size - 1].dbm;
+  return table[0].dbm;
 }
-static inline bool
-tx_power_in_range(int8_t dbm, tx_power_table_t *table, size_t size)
-{
-  return (dbm >= tx_power_min(table)) &&
-         (dbm <= tx_power_max(table, size));
-}
+
+int8_t rfc_tx_power_max(const tx_power_table_t *table);
+
+#endif  //#if RF_TX_POWER_TABLE_STYLE
+
+bool rfc_tx_power_in_range(int8_t dbm, const tx_power_table_t *table);
+
+const tx_power_table_t* rfc_tx_power_eval_power_code(int8_t dbm, const tx_power_table_t *table);
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* TX_POWER_H_ */

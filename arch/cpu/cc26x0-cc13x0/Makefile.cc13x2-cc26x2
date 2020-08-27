@@ -1,0 +1,20 @@
+################################################################################
+### CC13x2/CC26x2 CPU makefile
+
+LDSCRIPT = $(CONTIKI_CPU)/cc13x2-cc26x2.lds
+RAM_SIZE    = 0x00016000
+FLASH_SIZE  = 0x00057fa8
+
+DEVICE_FAMILY_LC ?=$(CPU_FAMILY)
+SUBFAMILY =cc13x2-cc26x2
+include $(CONTIKI_CPU)/lib/Makefile.coresdk
+
+# Simplelink SDK pre-compiled libraries
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_NORTOS)/lib/nortos_$(SDK_LIB_NAME).am4fg
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_DRIVERS)/rf/lib/rf_multiMode_$(SDK_LIB_NAME).am4fg
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_DRIVERS)/lib/drivers_$(SDK_LIB_NAME).am4fg
+TARGET_LIBFILES += $(CONTIKI_CPU)/$(SDK_DEVICES)/driverlib/bin/gcc/driverlib.lib
+
+# CC13x2/CC26x2 is a Cortex-M4 architecture
+include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
+

@@ -1,0 +1,17 @@
+
+CONTIKI_CPU_SOURCEFILES += cc13xx-50kbps-tsch.c
+CONTIKI_CPU_SOURCEFILES += prop-mode.c 
+SUPPORTS_PROP_MODE =1
+#CONTIKI_CPU_SOURCEFILES += smartrf-settings.c prop-mode-tx-power.c 
+
+CFLAGS += -DCPU_FAMILY_CC13X2=1 -DCPU_FAMILY_CC13XX=1
+
+# need by coreSDK DeviceFamily.h evaluations
+CFLAGS += -DDeviceFamily_CC13X2 -DDEVICE_LINE_CC13XX
+
+SUBFAMILY        ?=cc13x2-cc26x2
+
+#include $(CONTIKI_CPU)/Makefile.cc13x0-cc26x0
+
+include $(CONTIKI_CPU)/Makefile.$(SUBFAMILY)
+include $(CONTIKI_CPU)/Makefile.cc26xx-cc13xx

@@ -34,6 +34,7 @@
 #include "driverlib/rf_mailbox.h"
 #include "driverlib/rf_common_cmd.h"
 #include "driverlib/rf_prop_cmd.h"
+#include "smartrf-settings.h"
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
@@ -75,6 +76,40 @@
 #else
 #define RSSI_OFFSET SMARTRF_SETTINGS_RSSI_OFFSET_779_930
 #endif
+
+
+
+/*---------------------------------------------------------------------------*/
+//platform should have capable to override this with own settings
+#ifndef __WEAK
+#define __WEAK __attribute__((weak))
+#endif
+
+/*---------------------------------------------------------------------------*/
+#if defined(THIS_DRIVERLIB_BUILD) && (THIS_DRIVERLIB_BUILD == DRIVERLIB_BUILD_CC13X2_CC26X2)
+#error "smartrf-settings not supports cc13/26x2, use simplelink settings"
+#endif //THIS_DRIVERLIB_BUILD != DRIVERLIB_BUILD_CC13X2_CC26X2
+
+/* CC13xxware patches */
+#include "rf_patches/rf_patch_cpe_genfsk.h"
+#include "rf_patches/rf_patch_rfe_genfsk.h"
+
+#if defined(DEVICE_CC1310)
+#define RF_PROP_MODE  RF_MODE_PROPRIETARY_SUB_1
+#else
+#define RF_PROP_MODE  RF_MODE_MULTIPLE
+#endif
+
+__WEAK
+rfc_RFMode smartrf_settings_prop_mode =
+{
+  .rfMode = RF_PROP_MODE,
+  .cpePatchFxn = &rf_patch_cpe_genfsk,
+  .mcePatchFxn = 0,
+  .rfePatchFxn = &rf_patch_rfe_genfsk,
+};
+
+
 /*---------------------------------------------------------------------------*/
 /* Overrides for CMD_PROP_RADIO_DIV_SETUP */
 static uint32_t overrides[] =

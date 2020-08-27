@@ -38,12 +38,12 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "cc26xx-uart.h"
-#include "hw_types.h"
-#include "hw_memmap.h"
-#include "sys_ctrl.h"
-#include "prcm.h"
-#include "ioc.h"
-#include "uart.h"
+#include "inc/hw_types.h"
+#include "inc/hw_memmap.h"
+#include "driverlib/sys_ctrl.h"
+#include "driverlib/prcm.h"
+#include "driverlib/ioc.h"
+#include "driverlib/uart.h"
 #include "lpm.h"
 #include "ti-lib.h"
 
@@ -108,7 +108,7 @@ accessible(void)
   }
 
   /* Then check the 'run mode' clock gate */
-  if(!(HWREG(PRCM_BASE + PRCM_O_UARTCLKGR) & PRCM_UARTCLKGR_CLK_EN)) {
+  if(!(HWREG(PRCM_BASE + PRCM_O_UARTCLKGR) & PRCM_UARTCLKGR_CLK_EN_UART0)) {
     return false;
   }
 
