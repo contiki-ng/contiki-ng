@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,31 +27,70 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup rf-core
+ * \addtogroup cc13xx-cc26xx-cpu
  * @{
  *
- * \defgroup rf-core-prop CC13xx Prop mode driver
+ * \defgroup cc13xx-cc26xx-rf-tx-power TX power functioanlity for CC13xx/CC26xx
  *
  * @{
  *
  * \file
- * Header file for the CC13xx prop mode NETSTACK_RADIO driver
+ *        Header file of TX power functionality of CC13xx/CC26xx.
+ *        Motivated by simplelink one.
+ * \author
+ *        alexraynepe196 <alexraynepe196@gmail.com>
+ *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef PROP_MODE_H_
-#define PROP_MODE_H_
+#ifndef RFC_TX_POWER_H_
+#define RFC_TX_POWER_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "rf-core/dot-15-4g.h"
-
+/*---------------------------------------------------------------------------*/
+#include <assert.h>
 #include <stdint.h>
-#include "rf-core/tx-power.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include "dev/radio.h"
 /*---------------------------------------------------------------------------*/
-typedef tx_power_table_t prop_mode_tx_power_config_t;
+#define RF_TXPOWER_DBM          RF_CONF_TXPOWER_DBM
+#define RF_BLE_TXPOWER_DBM      RF_CONF_BLE_TXPOWER_DBM
+#define RF_TXPOWER_BOOST_MODE   RF_CONF_TXPOWER_BOOST_MODE
 /*---------------------------------------------------------------------------*/
-#endif /* PROP_MODE_H_ */
+struct tx_power_table_t {
+  radio_value_t dbm;
+  uint16_t tx_power; /* Value for the xxx_DIV_RADIO_SETUP.txPower field */
+};
+typedef struct tx_power_table_t tx_power_table_t;
+
+//==============================================================================
+
+/**
+ * \name TX power table convenience functions.
+ *
+ * @{
+ */
+
+static inline int8_t
+tx_power_min(tx_power_table_t *table)
+{
+  return table[0].dbm;
+}
+static inline int8_t
+tx_power_max(tx_power_table_t *table, size_t size)
+{
+  return table[size - 1].dbm;
+}
+static inline bool
+tx_power_in_range(int8_t dbm, tx_power_table_t *table, size_t size)
+{
+  return (dbm >= tx_power_min(table)) &&
+         (dbm <= tx_power_max(table, size));
+}
+/** @} */
+/*---------------------------------------------------------------------------*/
+#endif /* TX_POWER_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}
