@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2017, Inria.
+ * Copyright (c) 2017, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
  * @{ */
 
 /** \addtogroup log
-* @{ */
+ * @{ */
 
 #ifndef __LOG_CONF_H__
 #define __LOG_CONF_H__
@@ -77,6 +77,7 @@
 
 /* Custom output function -- default is printf */
 #ifdef LOG_CONF_OUTPUT
+extern void LOG_CONF_OUTPUT(const char *fmt, ...);
 #define LOG_OUTPUT(...) LOG_CONF_OUTPUT(__VA_ARGS__)
 #else /* LOG_CONF_OUTPUT */
 #define LOG_OUTPUT(...) printf(__VA_ARGS__)
@@ -93,6 +94,7 @@
  * \param module    The module string descriptor
  */
 #ifdef LOG_CONF_OUTPUT_PREFIX
+extern void LOG_CONF_OUTPUT_PREFIX(int level, const char *levelstr, const char *module);
 #define LOG_OUTPUT_PREFIX(level, levelstr, module) LOG_CONF_OUTPUT_PREFIX(level, levelstr, module)
 #else /* LOG_CONF_OUTPUT_PREFIX */
 #define LOG_OUTPUT_PREFIX(level, levelstr, module) LOG_OUTPUT("[%-4s: %-10s] ", levelstr, module)
