@@ -48,6 +48,8 @@ print_test_report(const unit_test_t *utp)
   }
 }
 /*---------------------------------------------------------------------------*/
+/* Demonstrates a test that succeeds. The exit point will be
+   the line where UNIT_TEST_END is called. */
 UNIT_TEST_REGISTER(test_example, "Example unit test");
 UNIT_TEST(test_example)
 {
@@ -56,10 +58,12 @@ UNIT_TEST(test_example)
   UNIT_TEST_BEGIN();
 
   UNIT_TEST_ASSERT(value == 1);
-  
+
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/* Demonstrates a test that fails. The exit point will be
+   the line where the call to UNIT_TEST_ASSERT fails. */
 UNIT_TEST_REGISTER(test_example_failed, "Example failing unit test");
 UNIT_TEST(test_example_failed)
 {
@@ -68,7 +72,7 @@ UNIT_TEST(test_example_failed)
   UNIT_TEST_BEGIN();
 
   UNIT_TEST_ASSERT(value == 0);
-  
+
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/

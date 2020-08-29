@@ -32,6 +32,7 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
+/* If you don't set own, the default function from unit-test.c will be used */
 #define UNIT_TEST_PRINT_FUNCTION print_test_report
 
 #endif /* PROJECT_CONF_H_ */
