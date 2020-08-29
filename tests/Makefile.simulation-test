@@ -48,10 +48,13 @@ endif
 	@echo "========== Summary =========="
 	@cat summary
 
-%.testlog: %.csc cooja
-	@$(CONTIKI)/tests/simexec.sh "$<" "$(CONTIKI)" "$(basename $@)" $(BASESEED) $(RUNCOUNT)
+%.testlog: cooja
+	@$(CONTIKI)/tests/simexec.sh "$(basename $@).csc" "$(CONTIKI)" "$(basename $@)" $(BASESEED) $(RUNCOUNT)
+
+%.csc: %.testlog ;
 
 clean:
+	@find . -type d -name "build" -exec rm -r {} +;
 	@rm -f *.*log report summary
 
 cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
