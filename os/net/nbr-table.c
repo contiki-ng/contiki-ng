@@ -156,7 +156,6 @@ nbr_get_bit(uint8_t *bitmap, nbr_table_t *table, nbr_table_item_t *item)
   } else {
     return 0;
   }
-  return 0;
 }
 /*---------------------------------------------------------------------------*/
 /* Set bit in "used" or "locked" bitmap */
@@ -175,7 +174,6 @@ nbr_set_bit(uint8_t *bitmap, nbr_table_t *table, nbr_table_item_t *item, int val
   } else {
     return 0;
   }
-  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static void
