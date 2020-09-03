@@ -96,8 +96,12 @@ PROCESS_THREAD(serial_line_process, ev, data)
 
   while(1) {
     /* Fill application buffer until newline or empty */
-    int c = ringbuf_get(&rxbuf);
-    
+    int c;
+    /* Workaround to suppress TI ARM compiler warning #548-D: set variable only
+     * after declaring it. The variable does not need to be static as it is
+     * never accessed across YIELD/WAIT blocks. */
+    c = ringbuf_get(&rxbuf);
+
     if(c == -1) {
       /* Buffer empty, wait for poll */
       PROCESS_YIELD();
