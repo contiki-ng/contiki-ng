@@ -300,8 +300,8 @@ platform_main_loop()
 
     retval = process_run();
 
-    tv.tv_sec = 0;
-    tv.tv_usec = retval ? 1 : SELECT_TIMEOUT;
+    tv.tv_sec = retval ? 0 : SELECT_TIMEOUT / 1000;
+    tv.tv_usec = retval ? 1 : (SELECT_TIMEOUT * 1000) % 1000000;
 
     FD_ZERO(&fdr);
     FD_ZERO(&fdw);
