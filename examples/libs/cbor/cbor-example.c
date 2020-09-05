@@ -125,28 +125,28 @@ cbor_dump(struct cbor_object *cbor, uint8_t depth)
 
     switch(token.type) {
     case CBOR_TOKEN_TYPE_UNSIGNED:
-      printf("Unsigned (%" PRIu64 ")", token.data.integer.value);
+      printf("Unsigned (%" PRIu64 ")", token.integer.value);
       break;
     case CBOR_TOKEN_TYPE_NEGATIVE:
-      printf("Negative (%" PRIu64 ")", token.data.integer.value);
+      printf("Negative (%" PRIu64 ")", token.integer.value);
       break;
     case CBOR_TOKEN_TYPE_TEXT:
-      printf("Text (%" PRIu64 ") ", token.data.string.length);
+      printf("Text (%" PRIu64 ") ", token.string.length);
       i = 0;
       printf("\"");
-      for(i = 0; i < token.data.string.length; i++) {
-        printf("%c", token.data.string.buffer[i]);
+      for(i = 0; i < token.string.length; i++) {
+        printf("%c", token.string.buffer[i]);
       }
       printf("\"");
       break;
     case CBOR_TOKEN_TYPE_MAP:
-      printf("Map (%" PRIu64 ")", token.data.collection.length);
+      printf("Map (%" PRIu64 ")", token.collection.length);
       break;
     case CBOR_TOKEN_TYPE_ARRAY:
-      printf("Array (%" PRIu64 ")", token.data.collection.length);
+      printf("Array (%" PRIu64 ")", token.collection.length);
       break;
     case CBOR_TOKEN_TYPE_PRIMITIVE:
-      switch(token.data.primitive.type) {
+      switch(token.primitive.type) {
       case CBOR_TOKEN_PRIMITIVE_FALSE:
         printf("Primitive (false)");
         break;
@@ -163,13 +163,13 @@ cbor_dump(struct cbor_object *cbor, uint8_t depth)
       case CBOR_TOKEN_PRIMITIVE_SINGLE_PRECISION_FLOAT:
       case CBOR_TOKEN_PRIMITIVE_HALF_PRECISION_FLOAT:
       case CBOR_TOKEN_PRIMITIVE_SIMPLE_VALUE:
-        printf("Primitive (%" PRIu64 ")", token.data.primitive.value);
+        printf("Primitive (%" PRIu64 ")", token.primitive.value);
         break;
       case CBOR_TOKEN_PRIMITIVE_BREAK:
         printf("Primitive (break)");
         break;
       default:
-        printf("Primitive (%" PRIu64 ")", token.data.primitive.value);
+        printf("Primitive (%" PRIu64 ")", token.primitive.value);
         break;
       }
       break;
