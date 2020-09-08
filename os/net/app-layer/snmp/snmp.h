@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the process
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -41,7 +41,7 @@
  * \addtogroup apps
  * @{
  *
- * \defgroup snmp SNMP (Simple Network Management Protocol)
+ * \addtogroup snmp An implementation of SNMP
  * @{
  *
  * This is an implementation of the Simple Network Management Protocol
@@ -50,8 +50,14 @@
 #ifndef SNMP_H_
 #define SNMP_H_
 
+/**
+ * \addtogroup SNMPInternal SNMP Internal API
+ * @{
+ *
+ * This group contains all the functions that can be used inside the OS level.
+ */
+
 #include "contiki.h"
-#include "contiki-net.h"
 
 #include "sys/log.h"
 
@@ -61,8 +67,10 @@
 #include <stdint.h>
 
 /**
- * \defgroup SNMPDefine SNMP Defines
+ * \addtogroup SNMPCore SNMP Core
  * @{
+ *
+ * This group contains the SNMP MIB implementation
  */
 
 /**
@@ -78,13 +86,6 @@
  * @brief SNMP No Such Name error code
  */
 #define SNMP_STATUS_NO_SUCH_NAME 2
-
-/** @} */
-
-/**
- * \defgroup SNMPStructs SNMP Structs
- * @{
- */
 
 /**
  * @brief The SNMP header struct
@@ -120,36 +121,37 @@ typedef struct snmp_header_s {
    */
   uint32_t request_id;
   /**
-   * @brief Union to hold the error status or the non repeaters
-   *
-   * @remarks A union was used since these values cannot co-exist
+   * @brief The error status
    */
-  union error_status_non_repeaters_u {
-    /**
-     * @brief The error status
-     */
-    uint32_t error_status;
-    /**
-     * @brief The non repeaters
-     */
-    uint32_t non_repeaters;
-  } error_status_non_repeaters;
+  uint32_t error_status;
   /**
-   * @brief Union to hold the error index or the max repetitions
-   *
-   * @remarks A union was used since these values cannot co-exist
+   * @brief The non repeaters
    */
-  union error_index_max_repetitions_u {
-    /**
-     * @brief The error index
-     */
-    uint32_t error_index;
-    /**
-     * @brief The max repetitions
-     */
-    uint32_t max_repetitions;
-  } error_index_max_repetitions;
+  uint32_t non_repeaters;
+  /**
+   * @brief The error index
+   */
+  uint32_t error_index;
+  /**
+   * @brief The max repetitions
+   */
+  uint32_t max_repetitions;
 } snmp_header_t;
+
+/**
+ * @brief The OID struct
+ */
+typedef struct snmp_oid_s {
+  /**
+   * @brief The OID
+   */
+  uint32_t data[SNMP_MSG_OID_MAX_LEN];
+  /**
+   * @brief The OID length
+   *
+   */
+  uint8_t length;
+} snmp_oid_t;
 
 /**
  * @brief The varbind struct
@@ -157,10 +159,8 @@ typedef struct snmp_header_s {
 typedef struct snmp_varbind_s {
   /**
    * @brief The OID
-   *
-   * @remarks The length is configurable
    */
-  uint32_t oid[SNMP_MSG_OID_MAX_LEN];
+  snmp_oid_t oid;
   /**
    * @brief The type in this varbind
    */
@@ -170,7 +170,7 @@ typedef struct snmp_varbind_s {
    *
    * @remarks A union is used since the varbind can only have one value of one type
    */
-  union snmp_varbind_val_u {
+  union {
     /**
      * @brief The integer value
      */
@@ -178,7 +178,7 @@ typedef struct snmp_varbind_s {
     /**
      * @brief A struct that contains the string
      */
-    struct snmp_varbind_string_s {
+    struct {
       /**
        * @brief A pointer to the string value from this varbind
        *
@@ -193,18 +193,38 @@ typedef struct snmp_varbind_s {
       uint32_t length;
     } string;
     /**
-     * @brief A pointer to the beggining of a oid array
+     * @brief The OID value
      */
-    uint32_t *oid;
+    snmp_oid_t oid;
   } value;
 } snmp_varbind_t;
 
-/** @}*/
-
 /**
- * \defgroup SNMPFunctions SNMP Functions
- * @{
+ * @brief The packet struct
+ *
  */
+typedef struct {
+  /**
+   * @brief The number os bytes used
+   *
+   */
+  uint16_t used;
+  /**
+   * @brief The maximum number of bytes
+   *
+   */
+  uint16_t max;
+  /**
+   * @brief The pointer used for the incoming packet
+   *
+   */
+  uint8_t *in;
+  /**
+   * @brief The pointer used for the outgoing packet
+   *
+   */
+  uint8_t *out;
+} snmp_packet_t;
 
 /**
  * @brief Initializes the SNMP engine
@@ -214,6 +234,10 @@ snmp_init();
 
 /** @}*/
 
+/** @}*/
+
 #endif /* SNMP_H_ */
+
 /** @} */
+
 /** @} */

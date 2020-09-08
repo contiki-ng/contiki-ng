@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the MIB
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -45,7 +45,21 @@
 #ifndef SNMP_MIB_H_
 #define SNMP_MIB_H_
 
+/**
+ * \addtogroup SNMPInternal SNMP Internal API
+ * @{
+ *
+ * This group contains all the functions that can be used inside the OS level.
+ */
+
 #include "snmp.h"
+
+/**
+ * \addtogroup SNMPMIB SNMP MIB
+ * @{
+ *
+ * This group contains the MIB implementation
+ */
 
 /**
  * @brief The MIB resource handler typedef
@@ -53,7 +67,7 @@
  * @param varbind The varbind that is being changed
  * @param oid The oid from the resource
  */
-typedef void (*snmp_mib_resource_handler_t)(snmp_varbind_t *varbind, uint32_t *oid);
+typedef void (*snmp_mib_resource_handler_t)(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 /**
  * @brief The MIB Resource struct
@@ -66,11 +80,9 @@ typedef struct snmp_mib_resource_s {
    */
   struct snmp_mib_resource_s *next;
   /**
-   * @brief A array that represents the OID
-   *
-   * @remarks This array is "null" terminated. In this case the -1 is used.
+   * @brief A OID struct
    */
-  uint32_t *oid;
+  snmp_oid_t oid;
   /**
    * @brief The function handler that is called for this resource
    */
@@ -85,7 +97,7 @@ typedef struct snmp_mib_resource_s {
  * @return In case of success a pointer to the resouce or NULL in case of fail
  */
 snmp_mib_resource_t *
-snmp_mib_find(uint32_t *oid);
+snmp_mib_find(snmp_oid_t *oid);
 
 /**
  * @brief Finds the next MIB Resource after this OID
@@ -95,7 +107,7 @@ snmp_mib_find(uint32_t *oid);
  * @return In case of success a pointer to the resouce or NULL in case of fail
  */
 snmp_mib_resource_t *
-snmp_mib_find_next(uint32_t *oid);
+snmp_mib_find_next(snmp_oid_t *oid);
 
 /**
  * @brief Adds a resource into the linked list
@@ -111,5 +123,10 @@ snmp_mib_add(snmp_mib_resource_t *resource);
 void
 snmp_mib_init(void);
 
+/** @} */
+
+/** @} */
+
 #endif /* SNMP_MIB_H_ */
+
 /** @} */
