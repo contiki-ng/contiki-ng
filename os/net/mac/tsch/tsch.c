@@ -272,6 +272,7 @@ resynchronize(const linkaddr_t *original_time_source_addr)
     /* We simply pick the last neighbor we receiver sync information from */
     tsch_queue_update_time_source(&last_eb_nbr_addr);
     tsch_join_priority = last_eb_nbr_jp + 1;
+    linkaddr_copy(&last_eb_nbr_addr, &linkaddr_null);
     /* Try to get in sync ASAP */
     tsch_schedule_keepalive(1);
     return 1;
@@ -400,7 +401,7 @@ eb_input(struct input_packet *current_input)
      * to switch to it in case we lose the link to our time source */
     struct tsch_neighbor *ts = tsch_queue_get_time_source();
     linkaddr_t *ts_addr = tsch_queue_get_nbr_address(ts);
-    if(ts_addr == NULL || !linkaddr_cmp(&last_eb_nbr_addr, ts_addr)) {
+    if(ts_addr == NULL || !linkaddr_cmp((linkaddr_t *)&frame.src_addr, ts_addr)) {
       linkaddr_copy(&last_eb_nbr_addr, (linkaddr_t *)&frame.src_addr);
       last_eb_nbr_jp = eb_ies.ie_join_priority;
     }
