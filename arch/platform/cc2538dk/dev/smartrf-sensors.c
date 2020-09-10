@@ -41,6 +41,7 @@
  * Implementation of a generic module controlling SmartRF06EB sensors
  */
 #include "contiki.h"
+#include "lib/sensors.h"
 #include "dev/als-sensor.h"
 #include "dev/cc2538-sensors.h"
 
