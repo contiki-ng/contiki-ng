@@ -740,6 +740,23 @@ init(void)
   settings_cmd_prop_rx_adv.pQueue = &rx_data_queue;
   settings_cmd_prop_rx_adv.pOutput = (uint8_t *)&rx_stats;
 
+  // for normal RX operation need continous receive enabled
+  settings_cmd_prop_rx_adv.pktConf.bRepeatOk    = 1;
+  settings_cmd_prop_rx_adv.pktConf.bRepeatNok   = 1;
+
+  // receiver better expose bad frames to app, to show broken packets recv.
+  settings_cmd_prop_rx_adv.rxConf.bAutoFlushIgnored = 0;
+  settings_cmd_prop_rx_adv.rxConf.bAutoFlushCrcErr  = 0;
+
+  // this need by read frame parser
+  settings_cmd_prop_rx_adv.rxConf.bIncludeHdr       = 0;
+  settings_cmd_prop_rx_adv.rxConf.bIncludeCrc       = 0;
+  settings_cmd_prop_rx_adv.rxConf.bAppendRssi       = 0x1;
+  settings_cmd_prop_rx_adv.rxConf.bAppendTimestamp  = 0x1;
+  settings_cmd_prop_rx_adv.rxConf.bAppendStatus     = 0x1;
+  if ( settings_cmd_prop_rx_adv.hdrConf.numHdrBits != 16 )
+      PRINTF_FAIL("suspicious settings_cmd_prop_rx_adv:hdrConf.numHdrBits\n");
+
   set_channel(IEEE802154_DEFAULT_CHANNEL);
 
   if(on() != RF_CORE_CMD_OK) {
