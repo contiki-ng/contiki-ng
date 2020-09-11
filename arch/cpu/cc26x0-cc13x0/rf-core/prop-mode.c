@@ -981,11 +981,26 @@ read_frame(void *buf, unsigned short buf_len)
     return 0;
   }
 
+  struct rfc_propRxStatus_s* status = (struct rfc_propRxStatus_s*)&data_ptr[len + 5];
+  enum propRxStatus{
+      stOK      = 0,
+      stERR_CRC = 1,
+      stIGNORE  = 2,
+      stABORT   = 3,
+  };
+  if (status->status.result != stOK){
+      PRINTF("RF: recv bad frame :%u\n", status->status.result);
+      release_data_entry();
+      data_ptr[0] = *(uint8_t*)status;
+      // return 1byte frame - since it is mostly invalid size, and it shows that
+      //    received bad frame
+      return 1;
+  }
+
   memcpy(buf, data_ptr, len);
 
   /* get the RSSI and status */
   rf_core_last_rssi = (int8_t)data_ptr[len];
-  rf_core_last_corr_lqi = data_ptr[len + 5];
 
   /* get the timestamp */
   memcpy(&rat_timestamp, data_ptr + len + 1, 4);
@@ -997,7 +1012,6 @@ read_frame(void *buf, unsigned short buf_len)
      * In poll mode, the last packet RSSI and link quality can be obtained through
      * RADIO_PARAM_LAST_RSSI and RADIO_PARAM_LAST_LINK_QUALITY */
     packetbuf_set_attr(PACKETBUF_ATTR_RSSI, rf_core_last_rssi);
-    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, rf_core_last_corr_lqi);
   }
 
   release_data_entry();
