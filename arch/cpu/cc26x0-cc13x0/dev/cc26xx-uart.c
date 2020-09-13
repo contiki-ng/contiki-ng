@@ -194,7 +194,7 @@ lpm_drop_handler(uint8_t mode)
    * between MCU and AON when we drop to deep sleep. This here is essentially a
    * workaround
    */
-  if(accessible() == true) {
+  if(accessible()) {
     while(ti_lib_uart_busy(UART0_BASE));
   }
 
@@ -213,7 +213,7 @@ lpm_drop_handler(uint8_t mode)
    *
    * Only touch UART registers if the module is powered and clocked
    */
-  if(accessible() == true) {
+  if(accessible()) {
     /* Disable the module */
     ti_lib_uart_disable(UART0_BASE);
 
@@ -299,7 +299,7 @@ cc26xx_uart_write_byte(uint8_t c)
     return;
   }
 
-  if(accessible() == false) {
+  if(!accessible()) {
     enable();
   }
 
@@ -349,7 +349,7 @@ cc26xx_uart_busy(void)
   }
 
   /* If the UART is not accessible, it is not busy */
-  if(accessible() == false) {
+  if(!accessible()) {
     return UART_IDLE;
   }
 
