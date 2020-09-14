@@ -216,6 +216,9 @@ void SysCtrlStandby(bool retainCache, uint32_t vimsPdMode, uint32_t rechargeMode
 
 #define ti_lib_sys_ctrl_shutdown_with_abort(...)  SysCtrlShutdownWithAbort(__VA_ARGS__)
 
+
+
+// this new PRCM API introduces in 2020y
 #ifndef PRCMPowerDomainsAllOn
 #define PRCMPowerDomainsAllOn(...) PRCMPowerDomainStatus(__VA_ARGS__)
 #endif
@@ -231,14 +234,14 @@ void SysCtrlStandby(bool retainCache, uint32_t vimsPdMode, uint32_t rechargeMode
 //!
 //! \param ui32Domains determines which domain to get the power status for.
 //! The parameter must be an OR'ed combination of one or several of:
-//! - \ref PRCM_DOMAIN_RFCORE : RF Core.
-//! - \ref PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
-//! - \ref PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
+//! - \sa PRCM_DOMAIN_RFCORE : RF Core.
+//! - \sa PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
+//! - \sa PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
 //!
 //! \return Returns status of the requested domains:
-//! - \ref PRCM_DOMAIN_POWER_OFF : The specified domains are \b all powered down.
+//! - \sa PRCM_DOMAIN_POWER_OFF : The specified domains are \b all powered down.
 //! This status is unconditional and the powered down status is guaranteed.
-//! - \ref PRCM_DOMAIN_POWER_OFF : Any of the domains are still powered up.
+//! - \sa PRCM_DOMAIN_POWER_OFF : Any of the domains are still powered up.
 //
 //*****************************************************************************
 uint32_t ti_lib_PRCMPowerDomainsAllOff(uint32_t ui32Domains);

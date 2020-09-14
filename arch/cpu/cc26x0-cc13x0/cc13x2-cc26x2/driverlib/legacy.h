@@ -116,14 +116,14 @@ void RFCAdi3VcoLdoVoltageMode(bool bEnable){}
 //!
 //! \param ui32Domains determines which domain to get the power status for.
 //! The parameter must be an OR'ed combination of one or several of:
-//! - \ref PRCM_DOMAIN_RFCORE : RF Core.
-//! - \ref PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
-//! - \ref PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
+//! - \see PRCM_DOMAIN_RFCORE : RF Core.
+//! - \see PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
+//! - \see PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
 //!
 //! \return Returns status of the requested domains:
-//! - \ref PRCM_DOMAIN_POWER_OFF : The specified domains are \b all powered down.
+//! - \see PRCM_DOMAIN_POWER_OFF : The specified domains are \b all powered down.
 //! This status is unconditional and the powered down status is guaranteed.
-//! - \ref PRCM_DOMAIN_POWER_OFF : Any of the domains are still powered up.
+//! - \see PRCM_DOMAIN_POWER_OFF : Any of the domains are still powered up.
 //
 //*****************************************************************************
 uint32_t ti_lib_PRCMPowerDomainsAllOff(uint32_t ui32Domains);

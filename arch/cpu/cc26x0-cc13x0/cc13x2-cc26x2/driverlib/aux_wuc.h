@@ -85,12 +85,12 @@ extern "C"
 
 //*****************************************************************************
 //
-// Defines for the AUX power control.
+//! @brief Defines for the AUX power control.
 //
 //*****************************************************************************
-#define AUX_WUC_POWER_OFF       0x00000001
-#define AUX_WUC_POWER_DOWN      0x00000002
-#define AUX_WUC_POWER_ACTIVE    0x00000004
+#define AUX_WUC_POWER_OFF       0x00000001 //!< same as POWER_DOWN \ref AUX_WUC_POWER_DOWN
+#define AUX_WUC_POWER_DOWN      0x00000002 //!< AUX go to power down
+#define AUX_WUC_POWER_ACTIVE    0x00000004 //!< AUX go to active state
 
 //****************************************************************************
 //
@@ -105,6 +105,10 @@ extern "C"
 //! - \ref AUX_WUC_POWER_ACTIVE
 //!
 //! \return None
+//!
+//! \note cc13/26x2 have AUX power : active, lowpower <-> powerdown
+//!         here no use LowPower mode, for code simplify. Possibly it is work TODO.
+//!
 //
 //****************************************************************************
 __STATIC_INLINE

@@ -59,7 +59,7 @@ extern "C"
 #define MCU_RAM_BLOCK_RETENTION 0x0000000F
 #define AONWUCMcuSRamConfig(...)    AONPMCTLMcuSRamRetConfig(__VA_ARGS__)
 
-//! \param ui32Retention either enables or disables AUX SRAM retention.
+//! @param bRetention either enables or disables AUX SRAM retention.
 //! - 0 : Disable retention.
 //! - 1 : Enable retention.
 __STATIC_INLINE
@@ -73,11 +73,15 @@ void AONWUCAuxSRamConfig(int bRetention)
 }
 
 
-//AONWUC_AUX_POWER_ON
+//! @brief AONWUC_AUX_POWER_xxx port definitions
+//! @see AUX_SYSIF_O_OPMODEACK
+//! @see AON_PMCTL_O_PWRSTAT
+//! @{
+#define AONWUC_AUX_POWER_DOWN       0x00000200  //!< AUX is in powerdown mode
+#define AONWUC_AUX_POWER_ON         0x00000020  //!< AUX is powered on
+#define AONWUC_JTAG_POWER_ON        AONPMCTL_JTAG_POWER_ON  //!< power on JTAG, @see AON_PMCTL_O_PWRSTAT
+//! @}
 
-#define AONWUC_AUX_POWER_DOWN       0x00000200  // AUX is in powerdown mode
-#define AONWUC_AUX_POWER_ON         0x00000020  // AUX is powered on
-#define AONWUC_JTAG_POWER_ON        AONPMCTL_JTAG_POWER_ON
 //*****************************************************************************
 //
 //! \brief Get the power status of the device.
@@ -90,9 +94,9 @@ void AONWUCAuxSRamConfig(int bRetention)
 //!
 //! \return Returns the current power status of the device as a bitwise OR'ed
 //! combination of these values:
-//! - \ref AONWUC_AUX_POWER_DOWN
-//! - \ref AONWUC_AUX_POWER_ON
-//! - \ref AONWUC_JTAG_POWER_ON
+//! - \see AONWUC_AUX_POWER_DOWN
+//! - \see AONWUC_AUX_POWER_ON
+//! - \see AONWUC_JTAG_POWER_ON
 //
 //*****************************************************************************
 uint32_t AONWUCPowerStatusGet(void);
@@ -110,15 +114,13 @@ uint32_t AONWUCPowerStatusGet(void);
 
 //*****************************************************************************
 //
-// Defines the possible clock source for the MCU and AUX domain.
+//! @brief Defines the possible clock source for the MCU and AUX domain.
 //
 //*****************************************************************************
+#define AONWUC_CLOCK_SRC_LF     0x00000001  //!< System clock low frequency - 32 kHz.
+#define AONWUC_NO_CLOCK         0x00000000  //!< No clock at power down.
 //#define AONWUC_CLOCK_SRC_HF     0x00000003  // System clock high frequency -
                                             // 48 MHz.
-#define AONWUC_CLOCK_SRC_LF     0x00000001  // System clock low frequency -
-                                            // 32 kHz.
-#define AONWUC_NO_CLOCK         0x00000000  // System clock low frequency -
-                                            // 32 kHz.
 //*****************************************************************************
 //
 //! \brief Configure the power down mode for the AUX domain.
@@ -126,7 +128,7 @@ uint32_t AONWUCPowerStatusGet(void);
 //! Use this function to control which one of the clock sources that
 //! is fed into the MCU domain when it is in Power Down mode. When the Power
 //! is back in active mode the clock source will automatically switch to
-//! \ref AONWUC_CLOCK_SRC_HF.
+//! \see AONWUC_CLOCK_SRC_HF.
 //!
 //! Each clock is fed 'as is' into the AUX domain, since the AUX domain
 //! contains internal clock dividers controllable through the PRCM.
