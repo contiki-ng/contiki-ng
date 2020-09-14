@@ -58,7 +58,10 @@ TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERC
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 CFLAGS += -DCONTIKI_TARGET_STRING=\"$(TARGET)\"
 
-CFLAGS += -Wno-unused-const-variable
+#most compilers not supports it yet, and erros on any warning 
+#CFLAGS += -Wno-unused-const-variable
+#some code use pragma "warning". this code warns anyway, but still need compiles
+CFLAGS += -Wno-error=unknown-pragmas
 
 LDFLAGS_WERROR ?= -Wl,--fatal-warnings
 
