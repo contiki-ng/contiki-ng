@@ -2,10 +2,12 @@
 CPU_FAMILY = cc13x2
 
 # need by silmplelink settings defs
-CFLAGS += -DDEVICE_CC1352R
+CFLAGS += -DDEVICE_CC1352P
 
 ### Add to the source dirs
 CONTIKI_TARGET_DIRS += launchpad/cc1352
+
+SUPPORTS_PROP_MODE =1
 
 ### Include the common launchpad makefile
 include $(PLATFORM_ROOT_DIR)/launchpad/Makefile.launchpad

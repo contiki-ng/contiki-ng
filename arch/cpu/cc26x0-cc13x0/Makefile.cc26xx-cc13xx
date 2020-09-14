@@ -71,6 +71,7 @@ CONTIKI_CPU_DIRS += . dev rf-core rf-core/api rf-core/ble-hal
 
 CONTIKI_CPU_DIRS += rf-settings rf-settings/$(CPU_FAMILY)
 ifdef CPU_SIMPLELINK_PATH
+$(info with simplelink at $(CPU_SIMPLELINK_PATH))
 SOURCEDIRS += $(CONTIKI_CPU)/$(CPU_SIMPLELINK_PATH)/rf-settings \
               $(CONTIKI_CPU)/$(CPU_SIMPLELINK_PATH)/rf-settings/$(CPU_FAMILY)
 endif
@@ -84,7 +85,8 @@ CONTIKI_CPU_SOURCEFILES += dbg.c ieee-addr.c batmon-sensor.c adc-sensor.c
 CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c cc26xx-uart.c lpm.c
 CONTIKI_CPU_SOURCEFILES += gpio-interrupt.c gpio-hal-arch.c oscillators.c
 CONTIKI_CPU_SOURCEFILES += rf-core.c rf-tx-power.c rf-ble.c 
-#CONTIKI_CPU_SOURCEFILES += ieee-mode.c prop-mode.c 
+CONTIKI_CPU_SOURCEFILES += ieee-mode.c 
+#CONTIKI_CPU_SOURCEFILES +=prop-mode.c 
 CONTIKI_CPU_SOURCEFILES += ble-cc2650.c ble-hal-cc26xx.c ble-addr.c rf-ble-cmd.c
 CONTIKI_CPU_SOURCEFILES += random.c soc-trng.c
 #overriden by int-master-arch.h
@@ -92,12 +94,15 @@ CONTIKI_CPU_SOURCEFILES += int-master.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c
 CONTIKI_CPU_SOURCEFILES += cc26xx-aes.c
 
+#default smartrfsettings
+#CONTIKI_CPU_SOURCEFILES += smartrf-settings.c prop-mode-tx-power.c
+
 SUPPORTS_PROP_MODE ?=0
 ifeq ($(SUPPORTS_PROP_MODE),1)
  CONTIKI_CPU_SOURCEFILES += prop-mode.c
 ifdef CPU_SIMPLELINK_PATH
  CONTIKI_CPU_SOURCEFILES += prop-settings.c prop-tx-power.c
- CFLAGS += -DRF_TX_POWER_TABLE_STYLE=RF_TX_POWER_TABLE_SIMPLELINK
+# CFLAGS += -DRF_TX_POWER_TABLE_STYLE=RF_TX_POWER_TABLE_SIMPLELINK
 endif
 endif
 
@@ -117,6 +122,8 @@ CPU_START_SOURCEFILES += fault-handlers.c $(TI_XXWARE_STARTUP_SRCS)
 
 ################################################################################
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
+.PHONY: FORCE
+
 FORCE:
 
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)

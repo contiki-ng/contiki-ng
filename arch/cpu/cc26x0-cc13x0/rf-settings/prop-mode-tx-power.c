@@ -61,6 +61,16 @@ const prop_mode_tx_power_config_t prop_mode_tx_power_779_930[] = {
   {-128, 0xFFFF },
 };
 /*---------------------------------------------------------------------------*/
+/* Default TX power settings for the 431-527MHz band */
+const prop_mode_tx_power_config_t prop_mode_tx_power_431_527[] = {
+  {  15, 0x003f },
+  {  14, 0xbe3f }, /* 13.7 */
+  {  13, 0x6a0f },
+  {  10, 0x3dcb },
+  {   6, 0x22c4 },
+  {-128, 0xFFFF },
+};
+/*---------------------------------------------------------------------------*/
 /**
  * @}
  */

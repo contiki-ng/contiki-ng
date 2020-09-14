@@ -2,5 +2,10 @@ TI_XXWARE_PATH = lib/cc26xxware
 
 CFLAGS += -DCPU_FAMILY_CC26X0=1 -DCPU_FAMILY_CC26XX=1
 
+CFLAGS += -DDeviceFamily_CC13X0 -DDEVICE_LINE_CC13XX
+SUBFAMILY        ?=cc13x0-cc26x0
+
+#SUPPORTS_IEEE_MODE=1
+
 include $(CONTIKI_CPU)/Makefile.cc13x0-cc26x0
 include $(CONTIKI_CPU)/Makefile.cc26xx-cc13xx

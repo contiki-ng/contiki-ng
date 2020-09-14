@@ -64,6 +64,7 @@
 #define DOT_15_4G_FREQUENCY_BAND_1427    12 /* 1427–1518 (US and Canada, non-contiguous) - 1427 MHz band */
 #define DOT_15_4G_FREQUENCY_BAND_2450    13 /* 2400–2483.5 2450 MHz band */
 #define DOT_15_4G_FREQUENCY_BAND_CUSTOM  14 /* For use with custom frequency band settings */
+#define DOT_15_4G_FREQUENCY_BAND_431     15 /* 431–527 - 433 MHz band */
 /*---------------------------------------------------------------------------*/
 /* Default band selection to band 4 - 863MHz */
 #ifdef DOT_15_4G_CONF_FREQUENCY_BAND_ID
@@ -99,6 +100,12 @@
 #define SMARTRF_SETTINGS_CONF_BAND_OVERRIDES HW32_ARRAY_OVERRIDE(0x405C,1), \
                                              (uint32_t)0x18000280,
 
+#elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_431
+#define DOT_15_4G_CHANNEL_MAX        479
+#define DOT_15_4G_CHANNEL_SPACING    200
+#define DOT_15_4G_CHAN0_FREQUENCY 431120
+#define PROP_MODE_CONF_LO_DIVIDER   0x0A
+
 #elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_780
 #define DOT_15_4G_CHANNEL_MAX         38
 #define DOT_15_4G_CHANNEL_SPACING    200
@@ -129,6 +136,12 @@
 #define DOT_15_4G_CHAN0_FREQUENCY 951000
 #define PROP_MODE_CONF_LO_DIVIDER   0x05
 
+#elif (DOT_15_4G_FREQ_BAND_ID == DOT_15_4G_FREQ_BAND_2450)
+#define DOT_15_4G_CHANNEL_MIN        11
+#define DOT_15_4G_CHANNEL_MAX        26
+#define DOT_15_4G_FREQ_SPACING       5000
+#define DOT_15_4G_CHAN0_FREQ         2405000
+
 #elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_CUSTOM
 #ifndef DOT_15_4G_CHANNEL_MAX
 #error DOT_15_4G_CHANNEL_MAX must be manually set when using custom frequency band
@@ -148,6 +161,56 @@
 #else
 #error The selected frequency band is not supported
 #endif
+
+#ifndef DOT_15_4G_CHANNEL_MIN
+#define DOT_15_4G_CHANNEL_MIN       0
+#endif
+
+
+//==============================================================================
+//          legacy compatibily with simplelink target
+
+#define DOT_15_4G_FREQ_BAND_169     DOT_15_4G_FREQUENCY_BAND_169
+#define DOT_15_4G_FREQ_BAND_431     DOT_15_4G_FREQUENCY_BAND_431
+#define DOT_15_4G_FREQ_BAND_450     DOT_15_4G_FREQUENCY_BAND_450
+#define DOT_15_4G_FREQ_BAND_470     DOT_15_4G_FREQUENCY_BAND_470
+#define DOT_15_4G_FREQ_BAND_780     DOT_15_4G_FREQUENCY_BAND_780
+#define DOT_15_4G_FREQ_BAND_863     DOT_15_4G_FREQUENCY_BAND_863
+#define DOT_15_4G_FREQ_BAND_896     DOT_15_4G_FREQUENCY_BAND_896
+#define DOT_15_4G_FREQ_BAND_901     DOT_15_4G_FREQUENCY_BAND_901
+#define DOT_15_4G_FREQ_BAND_915     DOT_15_4G_FREQUENCY_BAND_915
+#define DOT_15_4G_FREQ_BAND_917     DOT_15_4G_FREQUENCY_BAND_917
+#define DOT_15_4G_FREQ_BAND_920     DOT_15_4G_FREQUENCY_BAND_920
+#define DOT_15_4G_FREQ_BAND_928     DOT_15_4G_FREQUENCY_BAND_928
+#define DOT_15_4G_FREQ_BAND_950     DOT_15_4G_FREQUENCY_BAND_950
+#define DOT_15_4G_FREQ_BAND_1427    DOT_15_4G_FREQUENCY_BAND_1427
+#define DOT_15_4G_FREQ_BAND_2450    DOT_15_4G_FREQUENCY_BAND_2450
+#define DOT_15_4G_FREQ_BAND_CUSTOM  DOT_15_4G_FREQUENCY_BAND_CUSTOM
+
+#define DOT_15_4G_CHAN0_FREQ        DOT_15_4G_CHAN0_FREQUENCY
+#define DOT_15_4G_CHAN_MIN          DOT_15_4G_CHANNEL_MIN
+#define DOT_15_4G_CHAN_MAX          DOT_15_4G_CHANNEL_MAX
+#define DOT_15_4G_FREQ_SPACING      DOT_15_4G_CHANNEL_SPACING
+/*---------------------------------------------------------------------------*/
+static inline uint32_t
+dot_15_4g_freq(const uint16_t chan)
+{
+  const uint32_t chan0 = DOT_15_4G_CHAN0_FREQ;
+  const uint32_t spacing = DOT_15_4G_FREQ_SPACING;
+  const uint32_t chan_min = DOT_15_4G_CHAN_MIN;
+  return chan0 + spacing * ((uint32_t)chan - chan_min);
+}
+/*---------------------------------------------------------------------------*/
+static inline bool
+dot_15_4g_chan_in_range(const uint16_t chan)
+{
+  const uint16_t chan_min = DOT_15_4G_CHAN_MIN;
+  const uint16_t chan_max = DOT_15_4G_CHAN_MAX;
+  return (chan >= chan_min) &&
+         (chan <= chan_max);
+}
+/*---------------------------------------------------------------------------*/
+#define DOT_15_4G_DEFAULT_CHAN      IEEE802154_DEFAULT_CHANNEL
 /*---------------------------------------------------------------------------*/
 #endif /* DOT_15_4G_H_ */
 /*---------------------------------------------------------------------------*/

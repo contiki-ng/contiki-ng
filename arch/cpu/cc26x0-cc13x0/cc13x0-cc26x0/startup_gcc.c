@@ -1,310 +1,319 @@
-/*
- * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
- * All rights reserved.
+/******************************************************************************
+*  Filename:       startup_gcc.c
+*  Revised:        $Date: 2017-05-03 09:38:39 +0200 (Wed, 03 May 2017) $
+*  Revision:       $Revision: 17771 $
+*
+*  Description:    Startup code for CC13x0 rev2 device family for use with GCC.
+*
+*  Copyright (C) 2017 Texas Instruments Incorporated - http://www.ti.com/
+*
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 1. Redistributions of source code must retain the above copyright
+*
+*    Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
+*
+*    Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
+*
+*    Neither the name of Texas Instruments Incorporated nor the names of
+*    its contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- * \addtogroup cc13xx-cc26xx-cpu
- * @{
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+*  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+*  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+*  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+*  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+*  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+*  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+*  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * \file
- *        Startup file for GCC for CC13xx/CC26xx.
- */
-/*---------------------------------------------------------------------------*/
-/* Check if compiler is GNU Compiler. */
+******************************************************************************/
+
+//*****************************************************************************
+//
+// Check if compiler is GNU Compiler
+//
+//*****************************************************************************
 #if !(defined(__GNUC__))
-#error "startup_cc13xx_cc26xx_gcc.c: Unsupported compiler!"
+#error "startup_gcc.c: Unsupported compiler!"
 #endif
-/*---------------------------------------------------------------------------*/
-#include <string.h>
 
-#include "inc/hw_types.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/setup.h"
-/*---------------------------------------------------------------------------*/
-/* Forward declaration of the default fault handlers. */
-void resetISR(void);
-static void nmiISR(void);
-static void faultISR(void);
-static void defaultHandler(void);
-static void busFaultHandler(void);
-/*---------------------------------------------------------------------------*/
-/*
- * External declaration for the reset handler that is to be called when the
- * processor is started.
- */
-extern void _c_int00(void);
+#include "../inc/hw_types.h"
+#include "../driverlib/setup.h"
 
-/* The entry point for the application. */
-extern int main(void);
-/*---------------------------------------------------------------------------*/
-/* Linker variable that marks the top of stack. */
-extern unsigned long _stack_end;
 
-/*
- * The vector table. Note that the proper constructs must be placed on this to
- * ensure that it ends up at physical address 0x0000.0000.
- */
-__attribute__((section(".resetVecs"))) __attribute__((used))
-static void(*const resetVectors[16])(void) =
-{
-  (void(*)(void))((uint32_t)&_stack_end),
-  /* The initial stack pointer */
-  resetISR,                            /* The reset handler */
-  nmiISR,                              /* The NMI handler */
-  faultISR,                            /* The hard fault handler */
-  defaultHandler,                      /* The MPU fault handler */
-  busFaultHandler,                     /* The bus fault handler */
-  defaultHandler,                      /* The usage fault handler */
-  0,                                   /* Reserved */
-  0,                                   /* Reserved */
-  0,                                   /* Reserved */
-  0,                                   /* Reserved */
-  defaultHandler,                      /* SVCall handler */
-  defaultHandler,                      /* Debug monitor handler */
-  0,                                   /* Reserved */
-  defaultHandler,                      /* The PendSV handler */
-  defaultHandler                       /* The SysTick handler */
-};
-/*---------------------------------------------------------------------------*/
-/*
- * The following are arrays of pointers to constructor functions that need to
- * be called during startup to initialize global objects.
- */
+//*****************************************************************************
+//
+// Macro for weak symbol aliasing
+//
+//*****************************************************************************
+#define WEAK_ALIAS(x) __attribute__ ((weak, alias(#x)))
+
+//*****************************************************************************
+//
+// Forward declaration of the reset ISR and the default fault handlers.
+//
+//*****************************************************************************
+void        ResetISR( void );
+static void NmiSRHandler( void );
+static void FaultISRHandler( void );
+static void IntDefaultHandler( void );
+extern int  main( void );
+
+
+// Default interrupt handlers
+void NmiSR(void) WEAK_ALIAS(NmiSRHandler);
+void FaultISR(void) WEAK_ALIAS(FaultISRHandler);
+void MPUFaultIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void BusFaultIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void UsageFaultIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void SVCallIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void DebugMonIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void PendSVIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void SysTickIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void GPIOIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void I2CIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void RFCCPE1IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void AONRTCIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void UART0IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void AUXSWEvent0IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void SSI0IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void SSI1IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void RFCCPE0IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void RFCHardwareIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void RFCCmdAckIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void I2SIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void AUXSWEvent1IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void WatchdogIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer0AIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer0BIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer1AIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer1BIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer2AIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer2BIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer3AIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void Timer3BIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void CryptoIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void uDMAIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void uDMAErrIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void FlashIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void SWEvent0IntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void AUXCombEventIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void AONProgIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void DynProgIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void AUXCompAIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void AUXADCIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+void TRNGIntHandler(void) WEAK_ALIAS(IntDefaultHandler);
+
+
+//*****************************************************************************
+//
+// The following are constructs created by the linker, indicating where the
+// the "data" and "bss" segments reside in memory.
+//
+//*****************************************************************************
+extern uint32_t _ldata;
+extern uint32_t _data;
+extern uint32_t _edata;
+extern uint32_t _bss;
+extern uint32_t _ebss;
+extern uint32_t _estack;
+
+//*****************************************************************************
+//
+// The following are arrays of pointers to constructor functions that need to
+// be called during startup to initialize global objects.
+//
+//*****************************************************************************
 extern void (*__init_array_start[])(void);
 extern void (*__init_array_end[])(void);
 
-/* The following global variable is required for C++ support. */
-void *__dso_handle = (void *)&__dso_handle;
-/*---------------------------------------------------------------------------*/
-/*
- * The following are constructs created by the linker, indicating where the
- * the "data" and "bss" segments reside in memory. The initializers for the
- * for the "data" segment resides immediately following the "text" segment.
- */
-extern uint32_t __bss_start__;
-extern uint32_t __bss_end__;
-extern uint32_t __data_load__;
-extern uint32_t __data_start__;
-extern uint32_t __data_end__;
-/*---------------------------------------------------------------------------*/
-/*
- * \brief  Entry point of the startup code.
- *
- * Initialize the .data and .bss sections, and call main.
- */
-void
-localProgramStart(void)
+//*****************************************************************************
+//
+//! The vector table. Note that the proper constructs must be placed on this to
+//! ensure that it ends up at physical address 0x0000.0000 or at the start of
+//! the program if located at a start address other than 0.
+//
+//*****************************************************************************
+__attribute__ ((section(".vectors"), used))
+void (* const g_pfnVectors[])(void) =
 {
-  uint32_t *bs;
-  uint32_t *be;
-  uint32_t *dl;
-  uint32_t *ds;
-  uint32_t *de;
-  uint32_t count;
-  uint32_t i;
+    (void (*)(void))((unsigned long)&_estack),
+                                            //  0 The initial stack pointer
+    ResetISR,                               //  1 The reset handler
+    NmiSR,                                  //  2 The NMI handler
+    FaultISR,                               //  3 The hard fault handler
+    MPUFaultIntHandler,                     //  4 The MPU fault handler
+    BusFaultIntHandler,                     //  5 The bus fault handler
+    UsageFaultIntHandler,                   //  6 The usage fault handler
+    0,                                      //  7 Reserved
+    0,                                      //  8 Reserved
+    0,                                      //  9 Reserved
+    0,                                      // 10 Reserved
+    SVCallIntHandler,                       // 11 SVCall handler
+    DebugMonIntHandler,                     // 12 Debug monitor handler
+    0,                                      // 13 Reserved
+    PendSVIntHandler,                       // 14 The PendSV handler
+    SysTickIntHandler,                      // 15 The SysTick handler
+    //--- External interrupts ---
+    GPIOIntHandler,                         // 16 AON edge detect
+    I2CIntHandler,                          // 17 I2C
+    RFCCPE1IntHandler,                      // 18 RF Core Command & Packet Engine 1
+    IntDefaultHandler,                      // 19 Reserved
+    AONRTCIntHandler,                       // 20 AON RTC
+    UART0IntHandler,                        // 21 UART0 Rx and Tx
+    AUXSWEvent0IntHandler,                  // 22 AUX software event 0
+    SSI0IntHandler,                         // 23 SSI0 Rx and Tx
+    SSI1IntHandler,                         // 24 SSI1 Rx and Tx
+    RFCCPE0IntHandler,                      // 25 RF Core Command & Packet Engine 0
+    RFCHardwareIntHandler,                  // 26 RF Core Hardware
+    RFCCmdAckIntHandler,                    // 27 RF Core Command Acknowledge
+    I2SIntHandler,                          // 28 I2S
+    AUXSWEvent1IntHandler,                  // 29 AUX software event 1
+    WatchdogIntHandler,                     // 30 Watchdog timer
+    Timer0AIntHandler,                      // 31 Timer 0 subtimer A
+    Timer0BIntHandler,                      // 32 Timer 0 subtimer B
+    Timer1AIntHandler,                      // 33 Timer 1 subtimer A
+    Timer1BIntHandler,                      // 34 Timer 1 subtimer B
+    Timer2AIntHandler,                      // 35 Timer 2 subtimer A
+    Timer2BIntHandler,                      // 36 Timer 2 subtimer B
+    Timer3AIntHandler,                      // 37 Timer 3 subtimer A
+    Timer3BIntHandler,                      // 38 Timer 3 subtimer B
+    CryptoIntHandler,                       // 39 Crypto Core Result available
+    uDMAIntHandler,                         // 40 uDMA Software
+    uDMAErrIntHandler,                      // 41 uDMA Error
+    FlashIntHandler,                        // 42 Flash controller
+    SWEvent0IntHandler,                     // 43 Software Event 0
+    AUXCombEventIntHandler,                 // 44 AUX combined event
+    AONProgIntHandler,                      // 45 AON programmable 0
+    DynProgIntHandler,                      // 46 Dynamic Programmable interrupt
+                                            //    source (Default: PRCM)
+    AUXCompAIntHandler,                     // 47 AUX Comparator A
+    AUXADCIntHandler,                       // 48 AUX ADC new sample or ADC DMA
+                                            //    done, ADC underflow, ADC overflow
+    TRNGIntHandler                          // 49 TRNG event
+};
 
-  IntMasterDisable();
 
-  /* Final trim of device */
+//*****************************************************************************
+//
+//! This is the code that gets called when the processor first starts execution
+//! following a reset event. Only the absolutely necessary set is performed,
+//! after which the application supplied entry() routine is called. Any fancy
+//! actions (such as making decisions based on the reset cause register, and
+//! resetting the bits in that register) are left solely in the hands of the
+//! application.
+//
+//*****************************************************************************
+void
+ResetISR(void)
+{
+    uint32_t *pSrc;
+    uint32_t *pDest;
+
+    //
+    // Final trim of device
+    //
   SetupTrimDevice();
 
-  /* initiailize .bss to zero */
-  bs = &__bss_start__;
-  be = &__bss_end__;
-  while(bs < be) {
-    *bs = 0;
-    bs++;
+    //
+    // Copy the data segment initializers from FLASH to SRAM.
+    //
+    pSrc = &_ldata;
+    for(pDest = &_data; pDest < &_edata; )
+    {
+        *pDest++ = *pSrc++;
   }
 
-  /* relocate the .data section */
-  dl = &__data_load__;
-  ds = &__data_start__;
-  de = &__data_end__;
-  if(dl != ds) {
-    while(ds < de) {
-      *ds = *dl;
-      dl++;
-      ds++;
+    //
+    // Zero fill the bss segment.
+    //
+    __asm("    ldr     r0, =_bss\n"
+          "    ldr     r1, =_ebss\n"
+          "    mov     r2, #0\n"
+          "    .thumb_func\n"
+          "zero_loop:\n"
+          "        cmp     r0, r1\n"
+          "        it      lt\n"
+          "        strlt   r2, [r0], #4\n"
+          "        blt     zero_loop");
+
+    /* Run any constructors */
+    uint32_t count;
+    count = (uint32_t)(__init_array_end - __init_array_start);
+    for (unsigned i = 0; i < count; i++) {
+        __init_array_start[i]();
+    }
+
+    //
+    // Call the application's entry point.
+    //
+    main();
+
+    //
+    // If we ever return signal Error
+    //
+    FaultISR();
+}
+
+//*****************************************************************************
+//
+//! This is the code that gets called when the processor receives a NMI. This
+//! simply enters an infinite loop, preserving the system state for examination
+//! by a debugger.
+//
+//*****************************************************************************
+static void
+NmiSRHandler(void)
+{
+    //
+    // Enter an infinite loop.
+    //
+    while(1)
+    {
     }
   }
 
-  /* Run any constructors */
-  count = (uint32_t)(__init_array_end - __init_array_start);
-  for(i = 0; i < count; i++) {
-    __init_array_start[i]();
+//*****************************************************************************
+//
+//! This is the code that gets called when the processor receives a fault
+//! interrupt. This simply enters an infinite loop, preserving the system state
+//! for examination by a debugger.
+//
+//*****************************************************************************
+static void
+FaultISRHandler(void)
+{
+    //
+    // Enter an infinite loop.
+    //
+    while(1)
+    {
+    }
   }
 
-  /* Call the application's entry point. */
-  main();
-
-  /* If we ever return signal Error */
-  faultISR();
-}
-/*---------------------------------------------------------------------------*/
-/*
- * \brief  Reset ISR.
- *
- * This is the code that gets called when the processor first starts execution
- * following a reset event. Only the absolutely necessary set is performed,
- * after which the application supplied entry() routine is called.  Any fancy
- * actions (such as making decisions based on the reset cause register, and
- * resetting the bits in that register) are left solely in the hands of the
- * application.
- */
-void __attribute__((naked))
-resetISR(void)
-{
-  __asm__ __volatile__
-  (
-    "movw r0, #:lower16:resetVectors  \n"
-    "movt r0, #:upper16:resetVectors  \n"
-    "ldr r0, [r0]                     \n"
-    "mov sp, r0                       \n"
-    "bx %0                            \n"
-    : /* output */
-    : /* input */
-    "r"(localProgramStart)
-  );
-}
-/*---------------------------------------------------------------------------*/
-/*
- * \brief  Non-Maskable Interrupt (NMI) ISR.
- *
- * This is the code that gets called when the processor receives a NMI. This
- * simply enters an infinite loop, preserving the system state for examination
- * by a debugger.
- */
+//*****************************************************************************
+//
+//! This is the code that gets called when the processor receives an unexpected
+//! interrupt. This simply enters an infinite loop, preserving the system state
+//! for examination by a debugger.
+//
+//*****************************************************************************
 static void
-nmiISR(void)
+IntDefaultHandler(void)
 {
-  /* Enter an infinite loop. */
-  for(;;) { /* hang */ }
-}
-/*---------------------------------------------------------------------------*/
-/*
- * \brief     Debug stack pointer.
- * \param sp  Stack pointer.
- *
- * Provide a view into the CPU state from the provided stack pointer.
- */
-static void
-debugHardfault(uint32_t *sp)
+    //
+    // Go into an infinite loop.
+    //
+    while(1)
 {
-  volatile uint32_t r0;  /**< R0 register */
-  volatile uint32_t r1;  /**< R1 register */
-  volatile uint32_t r2;  /**< R2 register */
-  volatile uint32_t r3;  /**< R3 register */
-  volatile uint32_t r12; /**< R12 register */
-  volatile uint32_t lr;  /**< LR register */
-  volatile uint32_t pc;  /**< PC register */
-  volatile uint32_t psr; /**< PSR register */
-
-  (void)(r0  = sp[0]);
-  (void)(r1  = sp[1]);
-  (void)(r2  = sp[2]);
-  (void)(r3  = sp[3]);
-  (void)(r12 = sp[4]);
-  (void)(lr  = sp[5]);
-  (void)(pc  = sp[6]);
-  (void)(psr = sp[7]);
-
-  /* Enter an infinite loop. */
-  for(;;) { /* hang */ }
 }
-/*---------------------------------------------------------------------------*/
-/*
- * \brief  CPU Fault ISR.
- *
- * This is the code that gets called when the processor receives a fault
- * interrupt. Setup a call to debugStackPointer with the current stack pointer.
- * The stack pointer in this case would be the CPU state which caused the CPU
- * fault.
- */
-static void
-faultISR(void)
-{
-  __asm__ __volatile__
-  (
-    "tst lr, #4        \n"
-    "ite eq            \n"
-    "mrseq r0, msp     \n"
-    "mrsne r0, psp     \n"
-    "bx %0             \n"
-    : /* output */
-    : /* input */
-    "r"(debugHardfault)
-  );
 }
-/*---------------------------------------------------------------------------*/
-/* Dummy variable */
-volatile int x__;
-
-/*
- * \brief  Bus Fault Handler.
- *
- * This is the code that gets called when the processor receives an unexpected
- * interrupt. This simply enters an infinite loop, preserving the system state
- * for examination by a debugger.
- */
-static void
-busFaultHandler(void)
-{
-  x__ = 0;
-
-  /* Enter an infinite loop. */
-  for(;;) { /* hang */ }
-}
-/*---------------------------------------------------------------------------*/
-/*
- * \brief  Default Handler.
- *
- * This is the code that gets called when the processor receives an unexpected
- * interrupt.  This simply enters an infinite loop, preserving the system state
- * for examination by a debugger.
- */
-static void
-defaultHandler(void)
-{
-  /* Enter an infinite loop. */
-  for(;;) { /* hang */ }
-}
-/*---------------------------------------------------------------------------*/
-/*
- * \brief  Finalize object function.
- *
- * This function is called by __libc_fini_array which gets called when exit()
- * is called. In order to support exit(), an empty _fini() stub function is
- * required.
- */
-void
-_fini(void)
-{
-  /* Function body left empty intentionally */
-}
-/*---------------------------------------------------------------------------*/
-/** @} */

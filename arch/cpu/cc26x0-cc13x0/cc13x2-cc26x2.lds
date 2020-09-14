@@ -1,71 +1,127 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ @file      cc26x2r1f.lds
+ @brief     CC26x2R1F rev2 linker configuration file for GNU compiler.
+
+ Revised    $Date$
+ Revision   $Revision$
+
+ This file is auto-generated.
+
+  Copyright (C) 2017 Texas Instruments Incorporated - http:www.ti.com/
+
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+
+    Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+    Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+    Neither the name of Texas Instruments Incorporated nor the names of
+    its contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-MIN_STACKSIZE = 0x600;  /* 1536 bytes */
-HEAPSIZE      = 0x100;  /* 256 bytes */
+/* Entry Point */
+ENTRY( ResetISR )
 
+/* System memory map */
 MEMORY
 {
-    FLASH (RX)      : ORIGIN = 0x00000000, LENGTH = 0x00057fa8
-    /*
-     * Customer Configuration Area and Bootloader Backdoor configuration in
-     * flash, 40 bytes
-     */
-    FLASH_CCFG (RX) : ORIGIN = 0x00057fa8, LENGTH = 0x00000058
-    SRAM (RWX)      : ORIGIN = 0x20000000, LENGTH = 0x00014000
-    GPRAM (RWX)     : ORIGIN = 0x11000000, LENGTH = 0x00002000
+    /* Application is stored in and executes from internal flash */
+    FLASH (RX) : ORIGIN = 0x0, LENGTH = 0x57FA8
+    /* Customer Configuration Area (CCFG) */
+    FLASH_CCFG (RX) : ORIGIN = 0x57FA8, LENGTH = 88
+    /* Application uses internal RAM for data */
+    SRAM (RWX) : ORIGIN = 0x20000000, LENGTH = 0x14000
+    /* Application can use GPRAM region as RAM if cache is disabled in the CCFG
+       (DEFAULT_CCFG_SIZE_AND_DIS_FLAGS.SET_CCFG_SIZE_AND_DIS_FLAGS_DIS_GPRAM = 0) */
+    GPRAM (RWX) : ORIGIN = 0x11000000, LENGTH = 0x2000
 }
 
-REGION_ALIAS("REGION_TEXT",      FLASH);
-REGION_ALIAS("REGION_BSS",       SRAM);
 REGION_ALIAS("REGION_DATA",      SRAM);
 REGION_ALIAS("REGION_STACK",     SRAM);
 REGION_ALIAS("REGION_HEAP",      SRAM);
-REGION_ALIAS("REGION_ARM_EXIDX", FLASH);
-REGION_ALIAS("REGION_ARM_EXTAB", FLASH);
 
-SECTIONS {
+/*. Generate a link error if heap and stack does not fit into RAM .*/
+HEAPSIZE      = 0x100;  /* 256 bytes */
+_Min_Heap_Size = 0;
+_Min_Stack_Size = 0x100;
 
+
+/* Section allocation in memory */
+SECTIONS
+{
     PROVIDE (_resetVecs_base_addr = DEFINED(_resetVecs_base_addr)
                                   ? _resetVecs_base_addr
                                   : 0x0);
 
     .resetVecs (_resetVecs_base_addr) : AT (_resetVecs_base_addr) {
-        KEEP (*(.resetVecs))
-    } > REGION_TEXT
+        KEEP(*(.vectors))
+        /*
+        KEEP (*(.resetVecs)) //this imports from precompiled coreSDK libs
+        */
+    } > FLASH
+    .text :
+    {
+        _text = .;
+        *(.text*)
+        *(.rodata*)
+        . = ALIGN(0x4);
+        KEEP (*(.ctors))
+        . = ALIGN(0x4);
+        KEEP (*(.dtors))
+        . = ALIGN(0x4);
+        *(.init)
+        *(.fini*)
+        *(.eh_frame*)
+        _etext = .;
+        __etext = .;
+        etext = .;
+    } > FLASH = 0
+
+   .ARM.exidx :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } > FLASH
+
+    .ARM.extab :
+    {
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
+    } > FLASH
+
+    .init_array :
+    {
+        _init_array = .;
+        __init_array_start = .;
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array*))
+        _einit_array = .;
+        __init_array_end = .;
+    } > FLASH
+
 
     .ramVecs (NOLOAD) : ALIGN(1024) {
         KEEP (*(.ramVecs))
-    } > REGION_DATA
+    } > SRAM
 
     /*
      * UDMACC26XX_CONFIG_BASE below must match UDMACC26XX_CONFIG_BASE defined
@@ -159,67 +215,33 @@ SECTIONS {
         *(.dmaSpi1TxAltControlTableEntry)
     } > REGION_DATA
 
-    .text : {
-        CREATE_OBJECT_SYMBOLS
-        *(.text)
-        *(.text.*)
-        . = ALIGN(0x4);
-        KEEP (*(.ctors))
-        . = ALIGN(0x4);
-        KEEP (*(.dtors))
-        . = ALIGN(0x4);
-        __init_array_start = .;
-        KEEP (*(.init_array*))
-        __init_array_end = .;
-        *(.init)
-        *(.fini*)
-    } > REGION_TEXT AT> REGION_TEXT
-
-    PROVIDE (__etext = .);
-    PROVIDE (_etext = .);
-    PROVIDE (etext = .);
-
-    .rodata : {
-        *(.rodata)
-        *(.rodata.*)
-    } > REGION_TEXT AT> REGION_TEXT
-
-    .data : ALIGN(0x4) {
-        __data_load__ = LOADADDR(.data);
+    .data :
+    {
         __data_start__ = .;
-        *(.data)
-        *(.data.*)
+        _data = .;
+        *(vtable)
+        *(.data*)
+        _edata = .;
         . = ALIGN (0x4);
         __data_end__ = .;
-    } > REGION_DATA AT> REGION_TEXT
+    } > SRAM AT > FLASH
+    _ldata = LOADADDR(.data);
+    __data_load__ = LOADADDR(.data);
 
-    .ARM.exidx : {
-        __exidx_start = .;
-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-        __exidx_end = .;
-    } > REGION_ARM_EXIDX AT> REGION_ARM_EXIDX
-
-    .ARM.extab : {
-        *(.ARM.extab* .gnu.linkonce.armextab.*)
-    } > REGION_ARM_EXTAB AT> REGION_ARM_EXTAB
-
-    .nvs (NOLOAD) : ALIGN(0x2000) {
-        *(.nvs)
-    } > REGION_TEXT
-
-    .ccfg : {
-        KEEP(*(.ccfg))
-    } > FLASH_CCFG AT> FLASH_CCFG
-
-    .bss : {
+    .bss :
+    {
         __bss_start__ = .;
-        *(.shbss)
-        *(.bss)
-        *(.bss.*)
+        _bss = .;
+        *(.bss*)
         *(COMMON)
-        . = ALIGN(0x4);
+        _ebss = .;
         __bss_end__ = .;
-    } > REGION_BSS AT> REGION_BSS
+    } > SRAM
+
+    .ccfg :
+    {
+        KEEP(*(.ccfg));
+    } > FLASH_CCFG
 
     /* Start of heap must be 4 byte aligned */
     .heap (NOLOAD) : ALIGN(0x4) {
@@ -235,23 +257,26 @@ SECTIONS {
         PROVIDE(__heap_end__ = .);
         PROVIDE(_eheap       = __heap_end__);
         PROVIDE(__HeapLimit  = __heap_end__);
-    } > REGION_HEAP AT> REGION_HEAP
+    } > SRAM
 
-    PROVIDE(__stack_size = ORIGIN(SRAM) + LENGTH(SRAM) - ALIGN(0x8));
+    /*. Highest address of the stack. Used in startup file .*/
+    _estack = ORIGIN(SRAM) + LENGTH(SRAM); /*end of SRAM .*/
+    _stack_end    = _estack;
+   __stack_end   = _stack_end;
+   _stack_origin = _stack_end;
 
-    /* Start of stack must be 8 byte aligned */
-    .stack (NOLOAD) : {
-        PROVIDE(_stack        = ALIGN(0x8));
-        PROVIDE(__stack       = _stack);
+    /* User_heap_stack section, used to check that there is enough SRAM left */
+    ._user_heap_stack :
+    {
+      . = ALIGN(4);
+      /* These symbols are used by the stack check library. */
+      _stack = .;
+      . = . + _Min_Heap_Size;
+      . = . + _Min_Stack_Size;
+      . = ALIGN(4);
+    } > SRAM
 
-        PROVIDE(_stack_end    = ORIGIN(SRAM) + LENGTH(SRAM));
-        PROVIDE(__stack_end   = _stack_end);
-        PROVIDE(_stack_origin = _stack_end);
-
-        /* Note that the stack check library requires the symbols */
-        /* "_stack" and "_stack_origin" to be defined. */
-
-        /* Assert that we have enough stack */
-        ASSERT(__stack_size >= MIN_STACKSIZE, "Error: No room left for the stack");
-    } > REGION_STACK AT> REGION_STACK
+    .gpram :
+    {
+    } > GPRAM
 }

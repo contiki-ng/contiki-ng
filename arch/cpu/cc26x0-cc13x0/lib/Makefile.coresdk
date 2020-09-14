@@ -69,7 +69,6 @@ TI_XXWARE      = $(CONTIKI_CPU)/$(SDK_DEVICES)
 ### Linker configuration
 
 # Linker flags
-LDFLAGS += --entry resetISR
 LDFLAGS += --specs=nano.specs
 LDFLAGS += -nostartfiles
 LDFLAGS += -static

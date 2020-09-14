@@ -52,12 +52,20 @@
  */
 #if CCXXWARE_CONF_JTAG_INTERFACE_ENABLE
 #define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0xC5
+//#define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0
 #define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE          0xC5
 #define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE         0xC5
-#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE         0xC5
-#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0xC5
-#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0xC5
+//#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE         0
+//#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0
+//#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0
+//#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE         0xC5
+//#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0xC5
+//#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0xC5
 #define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0xC5
+
+#define SET_CCFG_CCFG_TAP_DAP_0_PWRPROF_TAP_ENABLE      0xC5       // Access enabled if also enabled in FCFG
+//#define SET_CCFG_CCFG_TAP_DAP_1_AON_TAP_ENABLE          0
+#define SET_CCFG_CCFG_TAP_DAP_1_AON_TAP_ENABLE          0xC5
 #else
 #define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0x00
 #define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE          0x00
@@ -66,6 +74,21 @@
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0x00
+
+#define SET_CCFG_CCFG_TAP_DAP_0_PWRPROF_TAP_ENABLE      0
+#define SET_CCFG_CCFG_TAP_DAP_1_AON_TAP_ENABLE          0
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name TX Power Boost Mode
+ *
+ * CC13xx only: Enable/Disable boost mode, which enables maximum +14 dBm
+ * output power with the default PA front-end configuration.
+ * @{
+ */
+#if defined(DEVICE_LINE_CC13XX) && (RF_CONF_TXPOWER_BOOST_MODE)
+#define CCFG_FORCE_VDDR_HH                           1
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/

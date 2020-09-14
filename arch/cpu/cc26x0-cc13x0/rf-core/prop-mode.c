@@ -136,7 +136,7 @@ static rfc_propRxOutput_t rx_stats;
 
 /* PHY HDR bits */
 #define DOT_4G_PHR_CRC16  0x10
-#define DOT_4G_PHR_DW     0x08
+#define DOT_4G_PHR_DW     0x08  // do Wightening
 
 #if PROP_MODE_USE_CRC16
 /* CRC16 */
@@ -204,6 +204,29 @@ static rfc_propRxOutput_t rx_stats;
 #else
 #error "uncknown RFsettings style"
 #endif
+
+
+
+#ifndef CC_ACCESS_NOW
+
+/** \def CC_ACCESS_NOW(x)
+ * This macro ensures that the access to a non-volatile variable can
+ * not be reordered or optimized by the compiler.
+ * See also https://lwn.net/Articles/508991/ - In Linux the macro is
+ * called ACCESS_ONCE
+ * The type must be passed, because the typeof-operator is a gcc
+ * extension
+ */
+
+#define CC_ACCESS_NOW(type, variable) (*(volatile type *)&(variable))
+#endif
+
+/* Convenience macros for volatile access with the RF commands */
+#define v_cmd_radio_setup   CC_ACCESS_NOW(rfc_CMD_PROP_RADIO_DIV_SETUP_t, settings_cmd_prop_radio_div_setup)
+#define v_cmd_fs            CC_ACCESS_NOW(rfc_CMD_FS_t,                   settings_cmd_prop_fs)
+#define v_cmd_tx            CC_ACCESS_NOW(rfc_CMD_PROP_TX_ADV_t,          settings_cmd_prop_tx_adv)
+#define v_cmd_rx            CC_ACCESS_NOW(rfc_CMD_PROP_RX_ADV_t,          settings_cmd_prop_rx_adv)
+
 /*---------------------------------------------------------------------------*/
 /* Select power table based on the frequency band */
 #ifdef TX_POWER_CONF_PROP_DRIVER
@@ -213,10 +236,14 @@ static rfc_propRxOutput_t rx_stats;
 #include "rf/tx-power.h"
 #define TX_POWER_DRIVER   rf_tx_power_table
 
+#elif (DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_470) \
+    ||(DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_431)
+#define TX_POWER_DRIVER PROP_MODE_TX_POWER_431_527
 #elif DOT_15_4G_FREQUENCY_BAND_ID==DOT_15_4G_FREQUENCY_BAND_780
 #define TX_POWER_DRIVER PROP_MODE_TX_POWER_779_930
 #else
-#error "uncknown .15.4g band, have no power table for ti. Declare valid TX_POWER_CONF_PROP_DRIVER"
+#pragma warning ( "uncknown DOT_15_4G_FREQUENCY_BAND - use default 780MHz band power table. Declare valid TX_POWER_CONF_PROP_DRIVER" )
+#define TX_POWER_DRIVER PROP_MODE_TX_POWER_779_930
 #endif
 /*---------------------------------------------------------------------------*/
 #if RF_TX_POWER_TABLE_STYLE != RF_TX_POWER_TABLE_SIMPLELINK
@@ -301,13 +328,13 @@ rf_is_on(void)
     return 0;
   }
 
-  return settings_cmd_prop_rx_adv.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
+  return v_cmd_rx.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
 transmitting(void)
 {
-  return settings_cmd_prop_tx_adv.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
+  return v_cmd_tx.status == RF_CORE_RADIO_OP_STATUS_ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
 static radio_value_t
