@@ -420,10 +420,52 @@ set_tx_power(radio_value_t power)
 
 }
 /*---------------------------------------------------------------------------*/
+
+#if DEBUG == 0
+static
+int rf_cmd_exec(rfc_radioOp_t *cmd)
+{
+    uint32_t cmd_status;
+    /* Send Radio setup to RF Core */
+    if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
+      return RF_CORE_CMD_ERROR;
+    }
+
+  /* Wait until radio setup is done */
+    if(rf_core_wait_cmd_done(cmd) != RF_CORE_CMD_OK) {
+      return RF_CORE_CMD_ERROR;
+    }
+
+    return RF_CORE_CMD_OK;
+}
+#define rf_cmd_execute(cmd, name) rf_cmd_exec(cmd)
+
+#else
+
+static
+int rf_cmd_execute(rfc_radioOp_t *cmd, const char* name )
+{
+    uint32_t cmd_status;
+    /* Send Radio setup to RF Core */
+    if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) == RF_CORE_CMD_ERROR) {
+      PRINTF("%s: CMDSTA=0x%08lx, status=0x%04x\n"
+              ,name, cmd_status, cmd->status);
+      return RF_CORE_CMD_ERROR;
+    }
+
+    /* Wait until radio setup is done */
+    if(rf_core_wait_cmd_done(cmd) == RF_CORE_CMD_ERROR) {
+      PRINTF("%s wait, CMDSTA=0x%08lx, status=0x%04x\n"
+              ,name, cmd_status, cmd->status);
+      return RF_CORE_CMD_ERROR;
+    }
+    return RF_CORE_CMD_OK;
+}
+#endif
+/*---------------------------------------------------------------------------*/
 static int
 prop_div_radio_setup(void)
 {
-  uint32_t cmd_status;
   rfc_radioOp_t *cmd = (rfc_radioOp_t *)&settings_cmd_prop_radio_div_setup;
 
   rf_switch_select_path(RF_SWITCH_PATH_SUBGHZ);
@@ -440,21 +482,7 @@ prop_div_radio_setup(void)
   settings_cmd_prop_radio_div_setup.config.biasMode =
     RF_CORE_PROP_BIAS_MODE;
 
-  /* Send Radio setup to RF Core */
-  if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
-    PRINTF("prop_div_radio_setup: DIV_SETUP, CMDSTA=0x%08lx, status=0x%04x\n",
-           cmd_status, cmd->status);
-    return RF_CORE_CMD_ERROR;
-  }
-
-  /* Wait until radio setup is done */
-  if(rf_core_wait_cmd_done(cmd) != RF_CORE_CMD_OK) {
-    PRINTF("prop_div_radio_setup: DIV_SETUP wait, CMDSTA=0x%08lx,"
-           "status=0x%04x\n", cmd_status, cmd->status);
-    return RF_CORE_CMD_ERROR;
-  }
-
-  return RF_CORE_CMD_OK;
+  return rf_cmd_execute(cmd, "prop_div_radio_setup: DIV_SETUP");
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -483,7 +511,7 @@ rf_cmd_prop_rx()
   if(ret != RF_CORE_CMD_OK) {
     PRINTF("rf_cmd_prop_rx: send_cmd ret=%d, CMDSTA=0x%08lx, status=0x%04x\n",
            ret, cmd_status, cmd_rx_adv->status);
-    return RF_CORE_CMD_ERROR;
+    return ret;
   }
 
   RTIMER_BUSYWAIT_UNTIL( (cmd_rx_adv->status >= RF_CORE_RADIO_OP_STATUS_ACTIVE )
@@ -590,27 +618,25 @@ request(void)
 /*---------------------------------------------------------------------------*/
 LPM_MODULE(prop_lpm_module, request, NULL, NULL, LPM_DOMAIN_NONE);
 /*---------------------------------------------------------------------------*/
+// this handler provides to update_prop for refresh FS settings
 static int
 prop_fs(void)
 {
-  uint32_t cmd_status;
   rfc_radioOp_t *cmd = (rfc_radioOp_t *)&settings_cmd_prop_fs;
+  return rf_cmd_execute(cmd, "prop_fs: CMD_FS");
+}
 
-  /* Send the command to the RF Core */
-  if(rf_core_send_cmd((uint32_t)cmd, &cmd_status) != RF_CORE_CMD_OK) {
-    PRINTF("prop_fs: CMD_FS, CMDSTA=0x%08lx, status=0x%04x\n",
-           cmd_status, cmd->status);
-    return RF_CORE_CMD_ERROR;
-  }
+// this handler provides to update_prop for refresh power settings
+static
+int prop_txpower(void){
+    rfc_CMD_SET_TX_POWER_t cmd_power =
+    {
+      .commandNo    = CMD_SET_TX_POWER,
+      .txPower      = tx_power_current->tx_power,
+    };
 
-  /* Wait until the command is done */
-  if(rf_core_wait_cmd_done(cmd) != RF_CORE_CMD_OK) {
-    PRINTF("prop_fs: CMD_FS wait, CMDSTA=0x%08lx, status=0x%04x\n",
-           cmd_status, cmd->status);
-    return RF_CORE_CMD_ERROR;
-  }
-
-  return RF_CORE_CMD_OK;
+    rfc_radioOp_t *cmd = (rfc_radioOp_t *)&cmd_power;
+    return rf_cmd_execute(cmd, "prop_txpower: CMD_SET_TX_POWER");
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -871,7 +897,7 @@ read_frame(void *buf, unsigned short buf_len)
   int is_found = 0;
   /* Go through all RX buffers and check their status */
   do {
-    if(entry->status == DATA_ENTRY_STATUS_FINISHED
+    if( entry->status >= DATA_ENTRY_STATUS_FINISHED
         || entry->status == DATA_ENTRY_STATUS_BUSY) {
       is_found = 1;
       break;
@@ -1073,7 +1099,7 @@ pending_packet(void)
 
   /* Go through all RX buffers and check their status */
   do {
-    if(entry->status == DATA_ENTRY_STATUS_FINISHED
+    if(entry->status >= DATA_ENTRY_STATUS_FINISHED
         || entry->status == DATA_ENTRY_STATUS_BUSY) {
       rv = 1;
       if(!rf_core_poll_mode) {
@@ -1322,6 +1348,54 @@ get_value(radio_param_t param, radio_value_t *value)
   }
 }
 /*---------------------------------------------------------------------------*/
+// provide update RF property sequence enough for curretn radio-mode:
+//  waits transmit complete, or breaks/restart receive if it run.
+typedef int (*radio_prop_func)(void);
+static
+radio_result_t update_prop(radio_prop_func f){
+    bool is_rx = rf_is_on();
+    if (is_rx){
+        /* If we reach here we had no errors. Apply new settings */
+        if(rx_off_prop() != RF_CORE_CMD_OK) {
+        PRINTF("set_value: stop rf failed\n");
+        //* fails to stop currrent op, changes take effect on next on()
+        return RADIO_RESULT_ERROR;
+    }
+    }
+    else if (transmitting()){
+        while (transmitting());
+    }
+    else {
+        /* If off, the new configuration will be applied the next time radio is started */
+        return RADIO_RESULT_OK;
+    }
+
+    if(f() != RF_CORE_CMD_OK) {
+      PRINTF("update_prop: prop failed\n");
+      return RADIO_RESULT_ERROR;
+    }
+
+    /* Restart the radio timer (RAT).
+       This causes resynchronization between RAT and RTC: useful for TSCH. */
+    if(rf_core_restart_rat() == RF_CORE_CMD_ERROR) {
+      PRINTF("set_value: rf_core_restart_rat() failed\n");
+      /* do not set the error */
+    } else {
+      rf_core_check_rat_overflow();
+    }
+
+    if (is_rx){
+        if (rx_on_prop() == RF_CORE_CMD_OK)
+            return RADIO_RESULT_OK;
+        else {
+            PRINTF("set_value:rx restart failed\n");
+            return RADIO_RESULT_ERROR;
+        }
+    }
+    else
+        return RADIO_RESULT_OK;
+}
+/*---------------------------------------------------------------------------*/
 static radio_result_t
 set_value(radio_param_t param, radio_value_t value)
 {
@@ -1355,7 +1429,7 @@ set_value(radio_param_t param, radio_value_t value)
     }
 
     set_channel((uint8_t)value);
-    break;
+    return update_prop(&(prop_fs));
 
   case RADIO_PARAM_RX_MODE:
     if(value & ~(RADIO_RX_MODE_POLL_MODE)) {
@@ -1380,16 +1454,12 @@ set_value(radio_param_t param, radio_value_t value)
       return RADIO_RESULT_INVALID_VALUE;
     }
 
-    soft_off_prop();
-
-    set_tx_power(value);
-
-    if(soft_on_prop() != RF_CORE_CMD_OK) {
-      PRINTF("set_value: soft_on_prop() failed\n");
-      rv = RADIO_RESULT_ERROR;
-    }
-
+    rv = set_tx_power(value);
+    if (rv < (int)RADIO_RESULT_OK)
     return RADIO_RESULT_OK;
+    if (rv == RADIO_RESULT_OK)
+      return update_prop(&(prop_txpower));
+    return rv;
 
   case RADIO_PARAM_CCA_THRESHOLD:
     rssi_threshold = (int8_t)value;
