@@ -347,6 +347,7 @@ uint8_t rf_core_is_accessible(void);
  * \brief Sends a command to the RF core.
  *
  * \param cmd The command value or a pointer to a command buffer
+ * \param status A pointer to a variable which will hold the status
  * \return RF_CORE_CMD_OK or RF_CORE_CMD_ERROR
  *
  * This function supports all three types of command (Radio OP, immediate and
@@ -371,16 +372,6 @@ uint8_t rf_core_is_accessible(void);
  */
 uint_fast8_t rf_core_send_cmd(uint32_t cmd, uint32_t *status);
 
-/**
- * \brief Sends a command to the RF core (deprecated).
- * \param cmd The command value or a pointer to a command buffer
- * \param status A pointer to a variable which will hold the status
- * \return RF_CORE_CMD_OK or RF_CORE_CMD_ERROR
- *
- * This is deprecated function should be replaced by rf_core_start_cmd(cmd), since
- *  it`s status can be accesed via rf_core_cmd_status()
- *
- */
 /**
  * \brief Block and wait for a Radio op to complete
  * \param cmd A pointer to any command's structure
