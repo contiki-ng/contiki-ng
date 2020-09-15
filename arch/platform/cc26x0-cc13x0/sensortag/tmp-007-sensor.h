@@ -62,6 +62,8 @@
 #ifndef TMP_007_SENSOR_H_
 #define TMP_007_SENSOR_H_
 /*---------------------------------------------------------------------------*/
+#include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
 #define TMP_007_SENSOR_TYPE_OBJECT    1
 #define TMP_007_SENSOR_TYPE_AMBIENT   2
 #define TMP_007_SENSOR_TYPE_ALL       3
