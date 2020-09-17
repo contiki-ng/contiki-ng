@@ -22,6 +22,7 @@ Supported Hardware (tested or known to work)
 * avr-raven
 * cc2538dk
 * openmote
+* oppila
 * zoul
 * TI cc26x0-cc13x0
     - sensortag
