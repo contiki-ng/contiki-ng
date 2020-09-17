@@ -35,9 +35,6 @@
  *
  * \defgroup oppila-sensors
  *
- * Generic module controlling sensors on the oppila platform
- * @{
- *
  * \file
  * Implementation of a generic module controlling OMote sensors
  */
