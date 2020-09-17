@@ -902,30 +902,35 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
   while(1) {
     unsigned long delay;
 
-    if(tsch_is_associated && tsch_current_eb_period > 0
+    if(!tsch_is_associated) {
+      LOG_DBG("skip sending EB: not joined a TSCH network\n");
+    } else if(tsch_current_eb_period <= 0) {
+      LOG_DBG("skip sending EB: EB period disabled\n");
 #ifdef TSCH_RPL_CHECK_DODAG_JOINED
+    } else if(!TSCH_RPL_CHECK_DODAG_JOINED()) {
       /* Implementation section 6.3 of RFC 8180 */
-      && TSCH_RPL_CHECK_DODAG_JOINED()
+      LOG_DBG("skip sending EB: not joined a routing DAG\n");
 #endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+    } else if(NETSTACK_ROUTING.is_in_leaf_mode()) {
       /* don't send when in leaf mode */
-      && !NETSTACK_ROUTING.is_in_leaf_mode()
-        ) {
+      LOG_DBG("skip sending EB: in the leaf mode\n");
+    } else if(tsch_queue_nbr_packet_count(n_eb) != 0) {
       /* Enqueue EB only if there isn't already one in queue */
-      if(tsch_queue_nbr_packet_count(n_eb) == 0) {
-        uint8_t hdr_len = 0;
-        uint8_t tsch_sync_ie_offset;
-        /* Prepare the EB packet and schedule it to be sent */
-        if(tsch_packet_create_eb(&hdr_len, &tsch_sync_ie_offset) > 0) {
-          struct tsch_packet *p;
-          /* Enqueue EB packet, for a single transmission only */
-          if(!(p = tsch_queue_add_packet(&tsch_eb_address, 1, NULL, NULL))) {
-            LOG_ERR("! could not enqueue EB packet\n");
-          } else {
-              LOG_INFO("TSCH: enqueue EB packet %u %u\n",
-                       packetbuf_totlen(), packetbuf_hdrlen());
-            p->tsch_sync_ie_offset = tsch_sync_ie_offset;
-            p->header_len = hdr_len;
-          }
+      LOG_DBG("skip sending EB: already queued\n");
+    } else {
+      uint8_t hdr_len = 0;
+      uint8_t tsch_sync_ie_offset;
+      /* Prepare the EB packet and schedule it to be sent */
+      if(tsch_packet_create_eb(&hdr_len, &tsch_sync_ie_offset) > 0) {
+        struct tsch_packet *p;
+        /* Enqueue EB packet, for a single transmission only */
+        if(!(p = tsch_queue_add_packet(&tsch_eb_address, 1, NULL, NULL))) {
+          LOG_ERR("! could not enqueue EB packet\n");
+        } else {
+          LOG_INFO("TSCH: enqueue EB packet %u %u\n",
+                   packetbuf_totlen(), packetbuf_hdrlen());
+          p->tsch_sync_ie_offset = tsch_sync_ie_offset;
+          p->header_len = hdr_len;
         }
       }
     }
