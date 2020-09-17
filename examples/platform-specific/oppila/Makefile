@@ -1,6 +1,6 @@
-CONTIKI_PROJECT += test-bmp180 test-grove-light-sensor
+CONTIKI_PROJECT += test-bmp180 test-grove-light-sensor test-adxl345.c
 
-CONTIKI_TARGET_SOURCEFILES += bmp180.c adc-sensors.c
+CONTIKI_TARGET_SOURCEFILES += bmp180.c adc-sensors.c adxl345.c
 
 all: $(CONTIKI_PROJECT)
 

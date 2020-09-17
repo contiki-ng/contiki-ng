@@ -2,7 +2,7 @@ CONTIKI_PROJECT = ecc-ecdh ecc-sign ecc-verify
 
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_ONLY = cc2538dk openmote zoul
+PLATFORMS_ONLY = cc2538dk openmote oppila zoul
 
 CONTIKI = ../../../..
 include $(CONTIKI)/Makefile.include
