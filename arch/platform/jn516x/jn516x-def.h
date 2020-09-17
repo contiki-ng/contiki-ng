@@ -114,6 +114,9 @@
 #define TSCH_CONF_BASE_DRIFT_PPM -977
 #endif
 
+/* Do not use SFD timestamps for TSCH synchronization */
+#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS 0
+
 #define DR_11744_DIO2 12
 #define DR_11744_DIO3 13
 #define DR_11744_DIO4 14

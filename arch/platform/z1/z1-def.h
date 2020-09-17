@@ -59,6 +59,9 @@
 /* Delay between the SFD finishes arriving and it is detected in software */
 #define RADIO_DELAY_BEFORE_DETECT 0
 
+/* Do not use SFD timestamps for TSCH synchronization */
+#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS 0
+
 #define PLATFORM_HAS_LEDS    1
 #define PLATFORM_HAS_BUTTON  1
 #define PLATFORM_HAS_RADIO   1
