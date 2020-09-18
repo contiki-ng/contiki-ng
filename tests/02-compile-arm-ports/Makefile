@@ -13,7 +13,7 @@ coap/coap-example-server/oppila \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
 coap/coap-example-server/zoul \
-dev/omote-led/zoul:BOARD=remote-reva \
+dev/omote-led/oppila:BOARD=omote \
 dev/gpio-hal/zoul:BOARD=orion \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/rgb-led/zoul:BOARD=remote-reva \
@@ -83,7 +83,6 @@ platform-specific/nrf52dk/timer-test/nrf52dk \
 platform-specific/oppila/orouter/client/oppila:BOARD=orouter \
 platform-specific/oppila/orouter/ip64-router/oppila:BOARD=orouter \
 platform-specific/oppila/omote/oppila:BOARD=omote  \
-platform-specific/oppila/oppila \
 platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/orion/client/zoul:BOARD=orion \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
