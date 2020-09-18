@@ -13,7 +13,7 @@ coap/coap-example-server/oppila \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
 coap/coap-example-server/zoul \
-dev/omote-led/oppila:BOARD=omote \
+dev/omote-led/zoul:BOARD=remote-reva \
 dev/gpio-hal/zoul:BOARD=orion \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/rgb-led/zoul:BOARD=remote-reva \
