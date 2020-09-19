@@ -6,6 +6,7 @@ EXAMPLES = \
 6tisch/6p-packet/oppila \
 6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
 6tisch/sixtop/oppila \
+platform-specific/oppila/omote/oppila:BOARD=omote  \
 benchmarks/rpl-req-resp/oppila \
 coap/coap-example-client/oppila \
 coap/coap-example-server/oppila \
@@ -102,8 +103,6 @@ storage/cfs-coffee/oppila \
 storage/antelope-shell/zoul \
 storage/cfs-coffee/zoul \
 websocket/oppila \
-platform-specific/oppila/omote/oppila:BOARD=omote  \
-platform-specific/oppila/oppila \
 TOOLS=
 
 
