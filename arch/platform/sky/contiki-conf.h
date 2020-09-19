@@ -35,11 +35,6 @@
 #ifndef AES_128_CONF
 #define AES_128_CONF cc2420_aes_128_driver
 #endif /* AES_128_CONF */
-
-/* Disable the stack check library by default: .rom overflow otherwise */
-#ifndef STACK_CHECK_CONF_ENABLED
-#define STACK_CHECK_CONF_ENABLED 0
-#endif
 /*---------------------------------------------------------------------------*/
 #include "msp430-conf.h"
 /*---------------------------------------------------------------------------*/
