@@ -88,8 +88,6 @@ platform-specific/zoul/rtcc/zoul \
 platform-specific/zoul/zoul \
 platform-specific/oppila/orouter/client/oppila:BOARD=orouter \
 platform-specific/oppila/orouter/ip64-router/oppila:BOARD=orouter \
-platform-specific/oppila/omote/oppila:BOARD=omote  \
-platform-specific/oppila/oppila \
 rpl-border-router/cc2538dk:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 rpl-border-router/oppila:MAKE_MAC=MAKE_MAC_TSCH \
 rpl-border-router/zoul:MAKE_MAC=MAKE_MAC_TSCH \
@@ -104,7 +102,8 @@ storage/cfs-coffee/oppila \
 storage/antelope-shell/zoul \
 storage/cfs-coffee/zoul \
 websocket/oppila \
-
+platform-specific/oppila/omote/oppila:BOARD=omote  \
+platform-specific/oppila/oppila \
 TOOLS=
 
 
