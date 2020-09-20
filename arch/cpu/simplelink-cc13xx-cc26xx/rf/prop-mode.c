@@ -252,6 +252,7 @@ rx_is_active(void)
 static int channel_clear(void);
 static int on(void);
 static int off(void);
+static rf_result_t set_channel_force(uint16_t channel);
 /*---------------------------------------------------------------------------*/
 static void
 init_rf_params(void)
@@ -332,8 +333,6 @@ get_channel(void)
 static rf_result_t
 set_channel(uint16_t channel)
 {
-  rf_result_t res;
-
   if(!dot_15_4g_chan_in_range(channel)) {
     LOG_WARN("Supplied hannel %d is illegal, defaults to %d\n",
              (int)channel, DOT_15_4G_DEFAULT_CHAN);
@@ -344,6 +343,15 @@ set_channel(uint16_t channel)
     /* We are already calibrated to this channel */
     return RF_RESULT_OK;
   }
+
+  return set_channel_force(channel);
+}
+/*---------------------------------------------------------------------------*/
+/* Sets the given channel without checking if it is a valid channel number. */
+static rf_result_t
+set_channel_force(uint16_t channel)
+{
+  rf_result_t res;
 
   if(prop_radio.rf_is_on) {
     /* Force RAT and RTC resync */
@@ -919,7 +927,7 @@ init(void)
     return RF_RESULT_ERROR;
   }
 
-  set_channel(IEEE802154_DEFAULT_CHANNEL);
+  set_channel_force(IEEE802154_DEFAULT_CHANNEL);
 
   tx_power_value = RF_TxPowerTable_findValue(rf_tx_power_table, RF_TXPOWER_DBM);
   if(tx_power_value.rawValue != RF_TxPowerTable_INVALID_VALUE) {
