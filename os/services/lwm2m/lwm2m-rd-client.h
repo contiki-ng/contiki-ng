@@ -59,6 +59,8 @@ typedef enum {
 #define LWM2M_RD_CLIENT_DEREGISTER_FAILED  4
 #define LWM2M_RD_CLIENT_DISCONNECTED       5
 
+#define LWM2M_PROTOCOL_VERSION     "1.0"
+
 #include "lwm2m-object.h"
 #include "lwm2m-queue-mode-conf.h"
 #include "coap-endpoint.h"
