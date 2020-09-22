@@ -65,6 +65,14 @@
 #define TSCH_CONF_HW_FRAME_FILTERING  0
 #define TSCH_CONF_RADIO_ON_DURING_TIMESLOT 1
 
+/* Use hardware timestamps.
+ * Disabling this greatly impacts TSCH sync, especially on preview devkits.
+ */
+#ifndef TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
+#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS 1
+#define TSCH_CONF_TIMESYNC_REMOVE_JITTER 0
+#endif
+
 #ifndef TSCH_CONF_BASE_DRIFT_PPM
 /*
  * The drift compared to "true" 10ms slots.
