@@ -5,10 +5,14 @@ EXAMPLES = \
 6tisch/6p-packet/zoul \
 6tisch/6p-packet/oppila \
 6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
+<<<<<<< develop
 6tisch/sixtop/oppila \
 benchmarks/rpl-req-resp/oppila \
 coap/coap-example-client/oppila \
 coap/coap-example-server/oppila \
+=======
+6tisch/simple-node/simplelink:DEFINES=TSCH_CONF_AUTOSELECT_TIME_SOURCE=1 \
+>>>>>>> develop
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
