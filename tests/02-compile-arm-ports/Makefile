@@ -103,6 +103,8 @@ storage/cfs-coffee/oppila \
 storage/antelope-shell/zoul \
 storage/cfs-coffee/zoul \
 websocket/oppila \
+websocket/zoul \
+
 TOOLS=
 
 
