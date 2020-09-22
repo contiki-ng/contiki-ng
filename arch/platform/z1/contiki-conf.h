@@ -64,6 +64,8 @@
 #define TSCH_LOG_CONF_QUEUE_LEN 4
 #endif
 
+#define TSCH_CONF_HW_FRAME_FILTERING 0
+
 /* Platform-specific (H/W) AES implementation */
 #ifndef AES_128_CONF
 #define AES_128_CONF cc2420_aes_128_driver
