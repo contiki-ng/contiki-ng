@@ -226,13 +226,13 @@ tsch_reset(void)
 #endif
   linkaddr_copy(&last_eb_nbr_addr, &linkaddr_null);
 #if TSCH_AUTOSELECT_TIME_SOURCE
-  struct nbr_sync_stat *stat;
+  struct eb_stat *stat;
   best_neighbor_eb_count = 0;
   /* Remove all nbr stats */
-  stat = nbr_table_head(sync_stats);
+  stat = nbr_table_head(eb_stats);
   while(stat != NULL) {
-    nbr_table_remove(sync_stats, stat);
-    stat = nbr_table_next(sync_stats, stat);
+    nbr_table_remove(eb_stats, stat);
+    stat = nbr_table_next(eb_stats, stat);
   }
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_set_eb_period(TSCH_EB_PERIOD);
@@ -1036,15 +1036,15 @@ tsch_init(void)
   }
 
   /* Init TSCH sub-modules */
+#if TSCH_AUTOSELECT_TIME_SOURCE
+  nbr_table_register(eb_stats, NULL);
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_reset();
   tsch_queue_init();
   tsch_schedule_init();
   tsch_log_init();
   ringbufindex_init(&input_ringbuf, TSCH_MAX_INCOMING_PACKETS);
   ringbufindex_init(&dequeued_ringbuf, TSCH_DEQUEUED_ARRAY_SIZE);
-#if TSCH_AUTOSELECT_TIME_SOURCE
-  nbr_table_register(sync_stats, NULL);
-#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
 
   tsch_packet_seqno = random_rand();
   tsch_is_initialized = 1;
