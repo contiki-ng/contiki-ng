@@ -60,6 +60,9 @@
 /* Disable TSCH frame filtering */
 #define TSCH_CONF_HW_FRAME_FILTERING  0
 
+/* Do not use SFD timestamps for TSCH synchronization */
+#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS 0
+
 #define PLATFORM_HAS_LEDS    1
 #define PLATFORM_HAS_BUTTON  1
 #define PLATFORM_HAS_LIGHT   1

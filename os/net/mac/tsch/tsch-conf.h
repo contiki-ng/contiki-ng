@@ -91,15 +91,16 @@
 #define TSCH_MAX_EB_PERIOD (16 * CLOCK_SECOND)
 #endif
 
-/* Use SFD timestamp for synchronization? By default we merely rely on rtimer and busy wait
- * until SFD is high, which we found to provide greater accuracy on JN516x and CC2420.
+/* Use SFD timestamp for synchronization? By default we use SFD timestamps always.
+ * Turning this off will merely rely on rtimer and busy wait until SFD is high,
+ * which we found to provide greater accuracy on JN516x and CC2420.
  * Note: for association, however, we always use SFD timestamp to know the time of arrival
  * of the EB (because we do not busy-wait for the whole scanning process)
  * */
 #ifdef TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
 #define TSCH_RESYNC_WITH_SFD_TIMESTAMPS TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
 #else
-#define TSCH_RESYNC_WITH_SFD_TIMESTAMPS 0
+#define TSCH_RESYNC_WITH_SFD_TIMESTAMPS 1
 #endif
 
 /* If enabled, remove jitter due to measurement errors */
