@@ -33,7 +33,7 @@ CONTIKI_CPU_DIRS += . dev rf
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c
-CONTIKI_CPU_SOURCEFILES += int-master.c slip-arch.c
+CONTIKI_CPU_SOURCEFILES += int-master.c slip-arch.c gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += nrf52840-ieee.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
