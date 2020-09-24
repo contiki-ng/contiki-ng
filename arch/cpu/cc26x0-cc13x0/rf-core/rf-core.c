@@ -756,24 +756,27 @@ cc26xx_rf_cpe0_isr(void)
 
   ti_lib_int_master_disable();
 
-  if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & RX_FRAME_IRQ) {
-    /* Clear the RX_ENTRY_DONE interrupt flag */
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0xFF7FFFFF;
+  uint32_t irf = HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG);
+  if(irf & RX_FRAME_IRQ) {
     process_poll(&rf_core_process);
+    /* Clear the RX_ENTRY_DONE interrupt flag */
+    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~RX_FRAME_IRQ;
   }
 
   if(RF_CORE_DEBUG_CRC) {
-    if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & RX_NOK_IRQ) {
-      /* Clear the RX_NOK interrupt flag */
-      HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0xFFFDFFFF;
+    if(irf & RX_NOK_IRQ) {
       rx_nok_isr();
+      /* Clear the RX_NOK interrupt flag */
+      HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~RX_NOK_IRQ;
     }
   }
 
-  if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) &
-     (IRQ_LAST_FG_COMMAND_DONE | IRQ_LAST_COMMAND_DONE)) {
+  const uint32_t cmd_irf = (IRQ_LAST_FG_COMMAND_DONE 
+                          | IRQ_LAST_COMMAND_DONE 
+                          );
+  if(irf & cmd_irf) {
     /* Clear the two TX-related interrupt flags */
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0xFFFFFFF5;
+    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~cmd_irf;
   }
 
   ti_lib_int_master_enable();
