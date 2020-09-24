@@ -690,6 +690,25 @@ rf_core_convert_rat_to_rtimer(uint32_t rat_timestamp)
   return RADIO_TO_RTIMER(rat_timestamp64 - rat_offset);
 }
 /*---------------------------------------------------------------------------*/
+#if RF_CORE_APP_HANDLING
+rfc_irq_handle  rf_core_isr_apphandle;
+uint32_t        rf_core_irf_apphandle;
+
+void rf_core_arm_app_handle( rfc_irq_handle op, uint32_t irqs){
+    rf_core_isr_apphandle = op;
+
+    if (rf_core_poll_mode){
+        if (op != NULL){
+            //enable interupts
+            HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ENABLED_IRQS | irqs;
+            HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = irqs;
+        }
+        else
+            rf_core_cmd_done_dis();
+    }
+}
+#endif
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(rf_core_process, ev, data)
 {
   int len;
@@ -698,6 +717,19 @@ PROCESS_THREAD(rf_core_process, ev, data)
 
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+#if RF_CORE_APP_HANDLING
+    if (rf_core_isr_apphandle){
+        (*rf_core_isr_apphandle)(rf_core_irf_apphandle);
+        rf_core_isr_apphandle = NULL;   //AppHandle is once time invoked, autoreset it
+        rf_core_irf_apphandle = 0;
+        continue;
+    }
+    if (rf_core_poll_mode){
+        // poll mode IRQ possibly AppHandle invokes, not rf_core_process
+        continue;
+    }
+#endif
+
     do {
       watchdog_periodic();
       packetbuf_clear();
@@ -718,6 +750,18 @@ rx_nok_isr(void)
 {
 }
 /*---------------------------------------------------------------------------*/
+static inline
+void on_isr(void){
+#if RF_CORE_APP_HANDLING
+    if (rf_core_poll_mode){
+        // in poll mode we suppose that AppHandler can be executed singletime
+        rf_core_cmd_done_dis();
+    }
+    rf_core_irf_apphandle |= HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG);
+#endif
+    process_poll(&rf_core_process);
+}
+/*---------------------------------------------------------------------------*/
 void
 cc26xx_rf_cpe1_isr(void)
 {
@@ -734,7 +778,7 @@ cc26xx_rf_cpe1_isr(void)
     /* set a flag that the buffer is full*/
     rf_core_rx_is_full = true;
     /* make sure read_frame() will be called to make space in RX buffer */
-    process_poll(&rf_core_process);
+    on_isr();
     /* Clear the IRQ_RX_BUF_FULL interrupt flag by writing zero to bit */
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~(IRQ_RX_BUF_FULL);
   }
@@ -758,7 +802,7 @@ cc26xx_rf_cpe0_isr(void)
 
   uint32_t irf = HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG);
   if(irf & RX_FRAME_IRQ) {
-    process_poll(&rf_core_process);
+    on_isr();
     /* Clear the RX_ENTRY_DONE interrupt flag */
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~RX_FRAME_IRQ;
   }
@@ -776,6 +820,9 @@ cc26xx_rf_cpe0_isr(void)
                           );
   if(irf & cmd_irf) {
     /* Clear the two TX-related interrupt flags */
+#if RF_CORE_APP_HANDLING
+    on_isr();
+#endif
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~cmd_irf;
   }
 

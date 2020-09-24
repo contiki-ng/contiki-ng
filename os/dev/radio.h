@@ -87,6 +87,8 @@
 
 typedef int radio_value_t;
 typedef unsigned radio_param_t;
+// this handle used for set_object(RADIO_ARM_HANDLE, handle)
+typedef void (*radio_app_handle)( int op_ok );
 
 enum {
 
@@ -227,6 +229,27 @@ enum {
    * mandatory.
    */
   RADIO_CONST_MAX_PAYLOAD_LEN,
+  /*
+   * driver can setup handle (radio_app_handle) for next operation finish:
+   *    for nothing=receiving - it invokes on received frame.
+   *
+   *    handle arms for single operation, and finilises after invoked.
+   *    Handles should be setup on active radio, any other comand, that breaks next operation
+   *        abort handle too - so that transmit operation aborts receiving
+   * */
+  RADIO_ARM_HANDLE_RX,
+  /*
+   * driver can setup handle (radio_app_handle) for next operation finish:
+   *    for transmit(...) - it finishes imidiately with result RADIO_TX_SCHEDULED ,
+   *        and invokes handle on transmition finish.
+   *        Result of transmition passes to handle arg.
+   *
+   *    handle arms for single operation, and finilises after invoked.
+   *    Handles should be setup on active radio, any other comand, that breaks next operation
+   *        abort handle too - so that transmit operation aborts receiving
+   * */
+  RADIO_ARM_HANDLE_TX,
+
 };
 
 /* Radio power modes */
@@ -274,6 +297,7 @@ typedef enum {
 /* Radio return values for transmissions. */
 enum {
   RADIO_TX_OK,
+  RADIO_TX_SCHEDULED,
   RADIO_TX_ERR,
   RADIO_TX_COLLISION,
   RADIO_TX_NOACK,
