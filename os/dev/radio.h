@@ -297,10 +297,13 @@ typedef enum {
 /* Radio return values for transmissions. */
 enum {
   RADIO_TX_OK,
+  //< transmition starts, and wait to complete
   RADIO_TX_SCHEDULED,
   RADIO_TX_ERR,
   RADIO_TX_COLLISION,
   RADIO_TX_NOACK,
+  //< transmition has aborted by timeout
+  RADIO_TX_TIMEOUT,
 };
 
 /**

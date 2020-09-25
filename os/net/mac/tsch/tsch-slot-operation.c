@@ -483,12 +483,15 @@ tsch_radio_off(enum tsch_radio_state_off_cmd command)
 
 /*---------------------------------------------------------------------------*/
 static rtimer_clock_t rx_end_time;
+/* tsch_receive clears it ->0, when completes */
 static rtimer_clock_t rx_wait_limit;
 
 void tsch_slot_recv( int op_ok ){
     // we here from radio ISR
     // stop rinning recv timeout
     rtimer_cancel(&tsch_slot_operation_timer);
+
+    if (rx_wait_limit > 0)
     tsch_slot_operation(&tsch_slot_operation_timer, NULL);
 }
 
@@ -498,6 +501,7 @@ void tsch_slot_recv( int op_ok ){
  *         < 0  - recv polling in process
  *         == 0 - not received, possible no data, or timeout by rx_wait_limit
  * @return rx_end_time - timestamp for end packet
+ * @result rx_wait_limit=0 - when completes, with wait or timeout.
  * */
 static
 int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
@@ -522,6 +526,7 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
             else {
                 // still receive - just ommit this and return
                 tsch_radio_off(TSCH_RADIO_CMD_BREAK_NOISE_TIMESLOT);
+                rx_wait_limit = 0;
                 return 0;
             }
         }
@@ -550,6 +555,7 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
                 r = rtimer_set(t, current_slot_start + rx_wait_limit, 1
                         , (void (*)(struct rtimer *, void *))tsch_slot_operation, NULL);
                 if(r != RTIMER_OK) {
+                  rx_wait_limit = 0;
                   return 0;
                 }
 
@@ -603,6 +609,7 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
 #endif
 
     tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
+    rx_wait_limit = 0;
 
     /* Read frame */
     int len = 0;
@@ -621,11 +628,15 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
 static uint8_t mac_tx_status;
 
 void tsch_tx_slot_transmited( int op_ok ){
-    // we here from radio ISR
-    mac_tx_status = op_ok;
     // stop rinning transmit timeout
     rtimer_cancel(&tsch_slot_operation_timer);
+
+    // we here from radio ISR
+    // arm, if it still not handled/timedout
+    if (mac_tx_status == RADIO_TX_SCHEDULED) {
+        mac_tx_status = op_ok;
     tsch_slot_operation(&tsch_slot_operation_timer, NULL);
+}
 }
 
 static
@@ -761,6 +772,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           }
 #if TSCH_RADIO_APPHANDLES
           if (mac_tx_status == RADIO_TX_SCHEDULED){
+              mac_tx_status = RADIO_TX_TIMEOUT;
               // here if transmition hangs, just stop handling now
               NETSTACK_RADIO.set_object(RADIO_ARM_HANDLE_TX, NULL, sizeof(void*));
               TSCH_LOG_ADD(tsch_log_message,
@@ -1033,6 +1045,8 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
       /* Save packet timestamp */
       rx_start_time = RTIMER_NOW() - RADIO_DELAY_BEFORE_DETECT;
 
+      const unsigned pend_limit = tsch_timing[tsch_ts_rx_offset] + tsch_timing[tsch_ts_rx_wait];
+      const unsigned wait_limit = pend_limit + tsch_timing[tsch_ts_max_tx] + RADIO_DELAY_BEFORE_RX;
       rx_wait_limit = wait_limit;
       PT_WAIT_UNTIL(pt
               , ( current_input->len = tsch_receive(t, current_input->payload, TSCH_PACKET_MAX_LEN)
@@ -1168,6 +1182,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
                 }
 #if TSCH_RADIO_APPHANDLES
                 if (mac_tx_status == RADIO_TX_SCHEDULED){
+                    mac_tx_status = RADIO_TX_TIMEOUT;
                     // here if transmition hangs, just stop handling now
                     NETSTACK_RADIO.set_object(RADIO_ARM_HANDLE_TX, NULL, sizeof(void*));
                     TSCH_LOG_ADD(tsch_log_message,
