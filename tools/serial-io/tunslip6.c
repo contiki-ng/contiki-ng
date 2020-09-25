@@ -848,14 +848,21 @@ fprintf(stderr," -B baudrate    9600,19200,38400,57600,115200 (default),230400,4
 #else
 fprintf(stderr," -B baudrate    9600,19200,38400,57600,115200 (default),230400\n");
 #endif
-fprintf(stderr," -H             Hardware CTS/RTS flow control (default disabled)\n");
-fprintf(stderr," -I             Inquire IP address\n");
-fprintf(stderr," -X             Software XON/XOFF flow control (default disabled)\n");
-fprintf(stderr," -L             Log output format (adds time stamps)\n");
-fprintf(stderr," -s siodev      Serial device (default /dev/ttyUSB0)\n");
-fprintf(stderr," -M             Interface MTU (default and min: 1280)\n");
-fprintf(stderr," -T             Make tap interface (default is tun interface)\n");
-fprintf(stderr," -t tundev      Name of interface (default tap0 or tun0)\n");
+fprintf(stderr, " -C channel     Use channel\n");
+fprintf(stderr, " -i panID       Use panID\n");
+fprintf(stderr, " -R             Reset border router\n");
+fprintf(stderr, " -U             Factory reset border router\n");
+fprintf(stderr, " -V pathtofile  Path to the file where the logs will be saved\n");
+fprintf(stderr, " -l pathtofile  Path to the (IP) file where the IP address of the BR will be saved\n");
+fprintf(stderr, " -P             Show progress\n");
+fprintf(stderr, " -H             Hardware CTS/RTS flow control (default disabled)\n");
+fprintf(stderr, " -I             Inquire IP address\n");
+fprintf(stderr, " -X             Software XON/XOFF flow control (default disabled)\n");
+fprintf(stderr, " -L             Log output format (adds time stamps)\n");
+fprintf(stderr, " -s siodev      Serial device (default /dev/ttyUSB0)\n");
+fprintf(stderr, " -M             Interface MTU (default and min: 1280)\n");
+fprintf(stderr, " -T             Make tap interface (default is tun interface)\n");
+fprintf(stderr, " -t tundev      Name of interface (default tap0 or tun0)\n");
 #ifdef __APPLE__
 fprintf(stderr," -v level       Verbosity level\n");
 #else
@@ -883,7 +890,7 @@ exit(1);
   argv += (optind - 1);
 
   if(argc != 2 && argc != 3) {
-    err(1, "usage: %s [-B baudrate] [-H] [-L] [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress", prog);
+    err(1, "usage: %s [-B baudrate] [-H] [-C channel] [-i panID] [-R] [-U] [-L] [-V path-to-file] [-l path-to-IP-file] [-P]  [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress", prog);
   }
   ipaddr = argv[1];
 
