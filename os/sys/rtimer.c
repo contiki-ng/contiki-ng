@@ -88,6 +88,13 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
   return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/
+int rtimer_cancel(struct rtimer *rtimer){
+    if(next_rtimer == rtimer) {
+        next_rtimer = NULL;
+    }
+    return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
 void
 rtimer_run_next(void)
 {
