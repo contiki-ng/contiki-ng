@@ -46,6 +46,18 @@
  *
  * - Either use multiple values (i.e OMOTE_SENSORS_ADC1 + OMOTE_SENSORS_ADC2)
  * - OMOTE_SENSORS_ADC_ALL (all channels above)
+ *
+ * Using an invalid combination will return ZOUL_SENSORS_ERROR.
+ *
+ * The decimation rate can be set by passing
+ * OMOTE_SENSORS_CONFIGURE_TYPE_DECIMATION_RATE as the type argument to the
+ * configure() function and then specifying the rate through the value
+ * argument. Valid values are:
+ *
+ * - SOC_ADC_ADCCON_DIV_64 (64 bit rate)
+ * - SOC_ADC_ADCCON_DIV_128 (128 bit rate)
+ * - SOC_ADC_ADCCON_DIV_256 (256 bit rate)
+ * - SOC_ADC_ADCCON_DIV_512 (512 bit rate)
  * @{
  *
  * \file
