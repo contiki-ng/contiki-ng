@@ -33,7 +33,7 @@
  * \addtogroup oppila
  * @{
  *
- * \defgroup oppila-sensors
+ * \defgroup oppila-sensors Oppila sensors
  *
  * Generic module controlling sensors on the Oppila platform
  * @{

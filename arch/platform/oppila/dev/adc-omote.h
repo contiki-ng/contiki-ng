@@ -33,9 +33,9 @@
  * \addtogroup oppila-sensors
  * @{
  *
- * \defgroup oppila-adc-interface
+ * \defgroup oppila-adc-interface Oppila Generic ADC interface
  *
- * Driver for the omote ADC interface
+ * Driver for the Oppila ADC interface
  *
  * This driver supports analogue sensors connected to ADC1, ADC2, ADC3,
  * ADC4, ADC5.
