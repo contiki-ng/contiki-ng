@@ -234,6 +234,7 @@ enum {
    *    for nothing=receiving - it invokes on received frame.
    *
    *    handle arms for single operation, and finilises after invoked.
+   *    ! handle can be cleared by drive right before execute it.
    *    Handles should be setup on active radio, any other comand, that breaks next operation
    *        abort handle too - so that transmit operation aborts receiving
    * */
@@ -245,6 +246,7 @@ enum {
    *        Result of transmition passes to handle arg.
    *
    *    handle arms for single operation, and finilises after invoked.
+   *    ! handle can be cleared by drive right before execute it.
    *    Handles should be setup on active radio, any other comand, that breaks next operation
    *        abort handle too - so that transmit operation aborts receiving
    * */
@@ -317,6 +319,9 @@ struct radio_driver {
   int (* prepare)(const void *payload, unsigned short payload_len);
 
   /** Send the packet that has previously been prepared. */
+  /** @arg transmit_len - if 0 - aborts current transmition, when used non-blocking
+   *        send, by setup object @see RADIO_ARM_HANDLE_TX
+   * */
   int (* transmit)(unsigned short transmit_len);
 
   /** Prepare & transmit a packet. */

@@ -679,25 +679,25 @@ init(void)
 static int transmited(void);
 
 #if RF_CORE_APP_HANDLING
-radio_app_handle    rf_prop_tx_handle;
-radio_app_handle    rf_prop_rx_handle;
+static radio_app_handle    rf_prop_tx_handle;
+static radio_app_handle    rf_prop_rx_handle;
 
 void rfprop_transmit_isr(uint32_t irqflags){
-    if (rf_prop_tx_handle){
+    radio_app_handle cb = rf_prop_tx_handle;
+    rf_prop_tx_handle = NULL;
+    if (cb){
         int ok = transmited();
-        (*rf_prop_tx_handle)(ok);
-        rf_prop_tx_handle = NULL;
+        (*cb)(ok);
     }
-    rf_prop_rx_handle = NULL;
 }
 
 void rfprop_receive_isr(uint32_t irqflags){
-    if (rf_prop_rx_handle){
+    radio_app_handle cb = rf_prop_rx_handle;
+    rf_prop_rx_handle = NULL;
+    if (cb){
         int ok = ((irqflags & IRQ_RX_ENTRY_DONE) != 0);
-        (*rf_prop_rx_handle)(ok);
-        rf_prop_rx_handle = NULL;
+        (*cb)(ok);
     }
-    rf_prop_tx_handle = NULL;
 }
 
 static
@@ -745,6 +745,27 @@ transmit(unsigned short transmit_len)
     }
   }
 
+  /* Prepare the CMD_PROP_TX_ADV command */
+  cmd_tx_adv = (rfc_CMD_PROP_TX_ADV_t *)&smartrf_settings_cmd_prop_tx_adv;
+
+#if RF_CORE_APP_HANDLING
+  rf_prop_rx_handle = NULL;
+  if ( cmd_tx_adv->status != RF_CORE_RADIO_OP_STATUS_IDLE ){
+      //transmit operation is in progress.
+      if (transmit_len <= 0) {
+          /* Send a CMD_ABORT command to RF Core */
+          uint32_t cmd_status;
+          if( rf_core_send_cmd(CMDR_DIR_CMD(CMD_ABORT), &cmd_status) == RF_CORE_CMD_ERROR) {
+            PRINTF("on: CMD_ABORT status=0x%08lx\n", cmd_status);
+            /* Continue nonetheless */
+            return RADIO_TX_ERR;
+          }
+      }
+      // return that alredy is sending
+      return RADIO_TX_COLLISION;
+  }
+#endif
+
   /*
    * Prepare the .15.4g PHY header
    * MS=0, Length MSBits=0, DW and CRC configurable
@@ -757,9 +778,6 @@ transmit(unsigned short transmit_len)
 
   tx_buf[0] = total_length & 0xFF;
   tx_buf[1] = (total_length >> 8) + DOT_4G_PHR_DW_BIT + DOT_4G_PHR_CRC_BIT;
-
-  /* Prepare the CMD_PROP_TX_ADV command */
-  cmd_tx_adv = (rfc_CMD_PROP_TX_ADV_t *)&smartrf_settings_cmd_prop_tx_adv;
 
   /*
    * pktLen: Total number of bytes in the TX buffer, including the header if
@@ -788,7 +806,6 @@ transmit(unsigned short transmit_len)
       rfprop_happ_reset();
   }
 #if RF_CORE_APP_HANDLING
-  rf_prop_rx_handle = NULL;
   if (rf_prop_tx_handle){
       rf_core_arm_app_handle(rfprop_transmit_isr, IRQ_COMMAND_DONE);
       return RADIO_TX_SCHEDULED;
@@ -1182,6 +1199,7 @@ on(void)
   rf_core_setup_interrupts();
 
   init_rx_buffers();
+  smartrf_settings_cmd_prop_tx_adv.status = RF_CORE_RADIO_OP_STATUS_IDLE;
 
   /*
    * Trigger a switch to the XOSC, so that we can subsequently use the RF FS
