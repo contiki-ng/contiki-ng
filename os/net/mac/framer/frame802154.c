@@ -148,19 +148,46 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
      * IEEE 802.15.4-2015
      * Table 7-2, PAN ID Compression value for frame version 0b10
      */
-      bool no_dest = (fcf->dest_addr_mode == FRAME802154_NOADDR);
-      bool no_src  = (fcf->src_addr_mode == FRAME802154_NOADDR);
-      bool short_dest = (fcf->dest_addr_mode == FRAME802154_SHORTADDRMODE);
-      bool short_src  = (fcf->src_addr_mode == FRAME802154_SHORTADDRMODE);
-      bool long_dest = (fcf->dest_addr_mode == FRAME802154_LONGADDRMODE);
-      bool long_src  = (fcf->src_addr_mode == FRAME802154_LONGADDRMODE);
+      // provide bitmask valie, positioned by addr modes combination
+      enum {
+          DST_NO    = (1ul << FRAME802154_NOADDR),
+          DST_SHORT = (1ul << FRAME802154_SHORTADDRMODE),
+          DST_LONG  = (1ul << FRAME802154_LONGADDRMODE),
+
+          SSRC = 4ul, //shift src
+
+          SRC_NO    = (FRAME802154_NOADDR           * SSRC),
+          SRC_SHORT = (FRAME802154_SHORTADDRMODE    * SSRC),
+          SRC_LONG  = (FRAME802154_LONGADDRMODE     * SSRC),
+
+          PANID_COMPRESS = 16, PANID_NO_COMPRESS = 0,
+      };
+      // need it to relax compiler with addr_mode value range: 0 <= 3
+      typedef enum AddrStyle {
+          NOADDR    = FRAME802154_NOADDR,
+          SHORTADDR = FRAME802154_SHORTADDRMODE,
+          LONGADDR  = FRAME802154_LONGADDRMODE,
+      } AddrStyle;
+
+      unsigned long comb =  (1ul<< ((AddrStyle)fcf->dest_addr_mode))
+                                << ((AddrStyle)(fcf->src_addr_mode)*SSRC);
+      if (fcf->panid_compression)
+          comb = comb << PANID_COMPRESS ;
 
     if(has_dest_pan_id != NULL){
-    if((no_dest && no_src && (fcf->panid_compression == 1) ) ||
-       ( !no_dest && no_src && (fcf->panid_compression == 0) ) ||
-       ( long_dest && long_src && (fcf->panid_compression == 0) ) ||
-       ( short_dest && !no_src) || (!no_dest && short_src)
-       )
+        const unsigned long comb_panid =
+              (DST_NO    << SRC_NO)   << PANID_COMPRESS
+            | (DST_SHORT <<SRC_NO)    << PANID_NO_COMPRESS
+            | (DST_LONG  <<SRC_NO)    << PANID_NO_COMPRESS
+            | (DST_LONG  <<SRC_LONG)  << PANID_NO_COMPRESS
+            | (DST_SHORT <<SRC_SHORT) << PANID_NO_COMPRESS
+            | (DST_SHORT <<SRC_SHORT) << PANID_COMPRESS
+            | (DST_SHORT <<SRC_LONG)  << PANID_NO_COMPRESS
+            | (DST_SHORT <<SRC_LONG)  << PANID_COMPRESS
+            | (DST_LONG  <<SRC_SHORT) << PANID_NO_COMPRESS
+            | (DST_LONG  <<SRC_SHORT) << PANID_COMPRESS
+            ;
+    if ( comb & comb_panid )
     {
         *has_dest_pan_id = 1;
     }
@@ -169,13 +196,14 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
     }
 
     if(has_src_pan_id != NULL){
-    if((fcf->panid_compression == 0) &&
-      ( (no_dest && long_src) ||
-        (no_dest && short_src) ||
-        (short_dest && short_src) ||
-        (short_dest && long_src) ||
-        (long_dest && short_src)
-      ))
+        const unsigned long comb_panid =
+              (DST_NO    <<SRC_SHORT) << PANID_NO_COMPRESS
+            | (DST_NO    <<SRC_LONG)  << PANID_NO_COMPRESS
+            | (DST_SHORT <<SRC_SHORT) << PANID_NO_COMPRESS
+            | (DST_SHORT <<SRC_LONG)  << PANID_NO_COMPRESS
+            | (SRC_SHORT <<SRC_SHORT) << PANID_NO_COMPRESS
+            ;
+    if( comb & comb_panid )
     {
         *has_src_pan_id = 1;
     }
