@@ -60,6 +60,7 @@ const struct simInterface radio_interface;
 
 /* COOJA */
 char simReceiving = 0;
+char simSending = 0;
 char simInDataBuffer[COOJA_RADIO_BUFSIZE];
 int simInSize = 0;
 rtimer_clock_t simLastPacketTimestamp = 0;
@@ -81,6 +82,17 @@ static int addr_filter = 0; /* ADDRESS_FILTER is not supported; always 0 */
 static int send_on_cca = (COOJA_TRANSMIT_ON_CCA != 0);
 
 PROCESS(cooja_radio_process, "cooja radio process");
+
+/*---------------------------------------------------------------------------*/
+// RF_CORE_APP_HANDLING
+static radio_app_handle    rf_tx_handle;
+static radio_app_handle    rf_rx_handle;
+
+static
+void rf_happ_reset(){
+    rf_tx_handle = NULL;
+    rf_rx_handle = NULL;
+}
 /*---------------------------------------------------------------------------*/
 static void
 set_send_on_cca(uint8_t enable)
@@ -142,6 +154,7 @@ radio_on(void)
 {
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
   simRadioHWOn = 1;
+  rf_happ_reset();
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -150,6 +163,7 @@ radio_off(void)
 {
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   simRadioHWOn = 0;
+  rf_happ_reset();
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -167,6 +181,12 @@ doInterfaceActionsBeforeTick(void)
 
   if(simInSize > 0) {
     process_poll(&cooja_radio_process);
+  }
+
+  if (simSending > 0)
+  if (simOutSize == 0)
+  {
+      process_poll(&cooja_radio_process);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -207,11 +227,14 @@ channel_clear(void)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+static int radio_was_on = 0;
+static int radio_sended();
+
 static int
 radio_send(const void *payload, unsigned short payload_len)
 {
   int result;
-  int radio_was_on = simRadioHWOn;
+  radio_was_on = simRadioHWOn;
 
   if(payload_len > COOJA_RADIO_BUFSIZE) {
     return RADIO_TX_ERR;
@@ -220,7 +243,15 @@ radio_send(const void *payload, unsigned short payload_len)
     return RADIO_TX_ERR;
   }
   if(simOutSize > 0) {
-    return RADIO_TX_ERR;
+    if (simSending <= 0)
+        return RADIO_TX_ERR;
+    // transmition in progress, by armed app handle
+    if (payload_len <= 0) {
+        // abort current transmition
+        simOutSize = 0;
+        process_poll(&cooja_radio_process);
+    }
+    return RADIO_TX_COLLISION;
   }
 
   if(radio_was_on) {
@@ -243,18 +274,35 @@ radio_send(const void *payload, unsigned short payload_len)
   /* Transmit on CCA */
   if(COOJA_TRANSMIT_ON_CCA && send_on_cca && !channel_clear()) {
     result = RADIO_TX_COLLISION;
+    rf_happ_reset();
   } else {
     /* Copy packet data to temporary storage */
     memcpy(simOutDataBuffer, payload, payload_len);
     simOutSize = payload_len;
 
     /* Transmit */
-    while(simOutSize > 0) {
-      cooja_mt_yield();
+    rf_rx_handle = NULL;
+    if (rf_tx_handle){
+        simSending = payload_len;
+        return RADIO_TX_SCHEDULED;
     }
+    else {
+        simSending = 0;
+        while(simOutSize > 0) {
+          cooja_mt_yield();
+        }
+        return radio_sended();
+    }
+  }
+  return result;
+}
+
+static
+int radio_sended(){
+    int result;
 
     result = RADIO_TX_OK;
-  }
+    simSending   = 0;
 
   if(radio_was_on) {
     ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
@@ -306,6 +354,26 @@ PROCESS_THREAD(cooja_radio_process, ev, data)
 
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+
+    if ( pending_packet() )
+    if (rf_rx_handle)
+    {
+        radio_app_handle cb = rf_rx_handle;
+        rf_rx_handle = NULL;
+        (*cb)(0);
+        continue;
+    }
+
+    if ((simOutSize == 0) && (simSending > 0)){
+        int stat = radio_sended();
+        if (rf_tx_handle) {
+            radio_app_handle cb = rf_tx_handle;
+            rf_tx_handle = NULL;
+            (*cb)(stat);
+            continue;
+        }
+    }
+
     if(poll_mode) {
       continue;
     }
@@ -419,12 +487,36 @@ get_object(radio_param_t param, void *dest, size_t size)
     *(rtimer_clock_t *)dest = (rtimer_clock_t)simLastPacketTimestamp;
     return RADIO_RESULT_OK;
   }
+    else if (param == RADIO_ARM_HANDLE_TX){
+      if (size != sizeof(radio_app_handle))
+          return RADIO_RESULT_INVALID_VALUE;
+      *((radio_app_handle*)dest) = rf_tx_handle;
+      return RADIO_RESULT_OK;
+    }
+    else if (param == RADIO_ARM_HANDLE_RX){
+      if (size != sizeof(radio_app_handle))
+          return RADIO_RESULT_INVALID_VALUE;
+      *((radio_app_handle*)dest) = rf_rx_handle;
+      return RADIO_RESULT_OK;
+    }
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
 set_object(radio_param_t param, const void *src, size_t size)
 {
+    if (param == RADIO_ARM_HANDLE_RX){
+        if (size != sizeof(radio_app_handle))
+            return RADIO_RESULT_INVALID_VALUE;
+        rf_rx_handle = (radio_app_handle)src;
+        return RADIO_RESULT_OK;
+    }
+    if (param == RADIO_ARM_HANDLE_TX){
+        if (size != sizeof(radio_app_handle))
+            return RADIO_RESULT_INVALID_VALUE;
+        rf_tx_handle = (radio_app_handle)src;
+        return RADIO_RESULT_OK;
+    }
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
