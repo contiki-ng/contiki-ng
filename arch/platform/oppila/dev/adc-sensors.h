@@ -34,6 +34,11 @@
  * @{
  *
  * \defgroup oppila-adc-sensors OMote adc wrapper to use analogue sensors
+ *
+ * The driver allows to reuse the adc-wrapper implementation and
+ * add sensors easily, without duplicating code, providing also a simplified
+ * interface and exposing the available ADC assigned channels by a given
+ * platform.
  * @{
  *
  * \file

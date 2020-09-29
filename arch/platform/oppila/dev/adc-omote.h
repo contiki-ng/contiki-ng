@@ -36,6 +36,16 @@
  * \defgroup oppila-adc-interface
  *
  * Driver for the omote ADC interface
+ *
+ * This driver supports analogue sensors connected to ADC1, ADC2, ADC3,
+ * ADC4, ADC5.
+ * 
+ * To initialize the ADC sensors use the configure() function, using as first
+ * argument SENSORS_HW_INIT, and choose which ADC channels to enable passing as
+ * second argument any single or combined (sum) values as below:
+ *
+ * - Either use multiple values (i.e OMOTE_SENSORS_ADC1 + OMOTE_SENSORS_ADC2)
+ * - OMOTE_SENSORS_ADC_ALL (all channels above)
  * @{
  *
  * \file
