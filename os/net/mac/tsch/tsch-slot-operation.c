@@ -524,7 +524,7 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
 
         //check timeout
         rtimer_clock_t now = RTIMER_NOW();
-        if (RTIMER_CLOCK_LT(current_slot_start+rx_wait_limit, now)){
+        if (!RTIMER_CLOCK_LT(now, current_slot_start+rx_wait_limit-RTIMER_GUARD)) {
             NETSTACK_RADIO.set_object(RADIO_ARM_HANDLE_RX, NULL, sizeof(void*));
             // timeout
             if (!NETSTACK_RADIO.receiving_packet()) {
@@ -584,7 +584,7 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
     for (; NETSTACK_RADIO.receiving_packet() ;)
     {
 
-        if (RTIMER_CLOCK_LT(current_slot_start+rx_wait_limit, t->time)){
+        if (!RTIMER_CLOCK_LT(t->time, current_slot_start+rx_wait_limit-RTIMER_GUARD)){
             tsch_radio_off(TSCH_RADIO_CMD_BREAK_NOISE_TIMESLOT);
             // timeout
             return 0;
