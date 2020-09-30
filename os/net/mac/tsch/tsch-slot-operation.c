@@ -577,7 +577,6 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
 
     RTIMER_BUSYWAIT_UNTIL_ABS( ( !NETSTACK_RADIO.receiving_packet() )
                             , current_slot_start, rx_wait_limit);
-      rx_end_time = RTIMER_NOW();
 
 #else
 
@@ -612,7 +611,6 @@ int tsch_receive( struct rtimer *t, void* dst, unsigned dst_limit ){
 
         return -1;
     }
-    rx_end_time = RTIMER_NOW();
 
 #endif
 
