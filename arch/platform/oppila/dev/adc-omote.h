@@ -36,28 +36,6 @@
  * \defgroup oppila-adc-interface Oppila Generic ADC interface
  *
  * Driver for the Oppila ADC interface
- *
- * This driver supports analogue sensors connected to ADC1, ADC2, ADC3,
- * ADC4, ADC5.
- * 
- * To initialize the ADC sensors use the configure() function, using as first
- * argument SENSORS_HW_INIT, and choose which ADC channels to enable passing as
- * second argument any single or combined (sum) values as below:
- *
- * - Either use multiple values (i.e OMOTE_SENSORS_ADC1 + OMOTE_SENSORS_ADC2)
- * - OMOTE_SENSORS_ADC_ALL (all channels above)
- *
- * Using an invalid combination will return ZOUL_SENSORS_ERROR.
- *
- * The decimation rate can be set by passing
- * OMOTE_SENSORS_CONFIGURE_TYPE_DECIMATION_RATE as the type argument to the
- * configure() function and then specifying the rate through the value
- * argument. Valid values are:
- *
- * - SOC_ADC_ADCCON_DIV_64 (64 bit rate)
- * - SOC_ADC_ADCCON_DIV_128 (128 bit rate)
- * - SOC_ADC_ADCCON_DIV_256 (256 bit rate)
- * - SOC_ADC_ADCCON_DIV_512 (512 bit rate)
  * @{
  *
  * \file

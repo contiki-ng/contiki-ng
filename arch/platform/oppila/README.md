@@ -1,7 +1,7 @@
 Oppila Microsystems - http://www.oppila.in
 ---------------------------------------------------------------
 
-The Oppila is based on TI's CC2538 SoC (System on Chip), featuring an ARM Cortex-M3 running at 16/32 MHz and with 32 kbytes of RAM and 512 kbytes of FLASH. It has the following key features:
+The Oppila is based on TI's CC2538 SoC (System on Chip), featuring an ARM Cortex-M3 running at 32 MHz and with 32 kbytes of RAM and 512 kbytes of FLASH. It has the following key features:
 
   * ISM 2.4-GHz IEEE 802.15.4 & Zigbee compliant.
   * AES-128/256, SHA2 Hardware Encryption Engine.

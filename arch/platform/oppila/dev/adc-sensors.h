@@ -34,20 +34,6 @@
  * @{
  *
  * \defgroup oppila-adc-sensors OMote adc wrapper to use analogue sensors
- *
- * The ADC wrapper implement analogue sensors on top of the ADC interface,
- * obscuring the ADC configuration and required calculations to obtain actual
- * sensor values.  The driver allows to reuse the adc-wrapper implementation and
- * add sensors easily, without duplicating code, providing also a simplified
- * interface and exposing the available ADC assigned channels by a given
- * platform.
- *
- * To use a given sensor simply use: adc_sensors.configure(SENSOR_NAME, pin_no),
- * where pin_no is a given pin in the PA port, check out the board.h for more
- * information on available pins.  To read a value just use
- * adc_sensors.value(SENSOR_NAME), the expected result would be the sensor value
- * already converted to the sensor variable type, check the adc-wrapper file
- * for more information.
  * @{
  *
  * \file
