@@ -57,7 +57,7 @@ char simSerialReceivingData[SERIAL_BUF_SIZE];
  * */
 #define SERIAL_BUF_STOP 0x10000
 int simSerialReceivingLength = SERIAL_BUF_SIZE | SERIAL_BUF_STOP;
-char simSerialReceivingFlag;
+char simSerialReceivingFlag  = 0;
 
 char simSerialSendData[SERIAL_BUF_SIZE];
 int simSerialSendLength;
@@ -112,6 +112,10 @@ doInterfaceActionsBeforeTick(void)
   if (!simSerialReceivingFlag) {
     return;
   }
+
+  //wait for rs232_init
+  if (simSerialReceivingLength > SERIAL_BUF_STOP)
+      return;
 
   if (simSerialReceivingLength == 0) {
     /* Error, should not be zero */
