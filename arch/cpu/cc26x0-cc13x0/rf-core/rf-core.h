@@ -564,11 +564,12 @@ uint32_t rf_core_convert_rat_to_rtimer(uint32_t rat_timestamp);
 
 #if RF_CORE_APP_HANDLING
 /**
- * \brief install AppHandle for new. RF operation, and arm it's IRQ.
- *        this handle invokes single time, and after exec curretn poll resotres.
+ * \brief install AppHandle for new RF operation, and arm it's IRQ.
+ *        this handle invokes single time, and after exec current poll-mode restore.
  * \param op != NULL provides app handler for next IRQ invokation, and enables
- *              IRQ for IRQ_RX_ENTRY_DONE, errors and IRQ_LAST_COMMAND_DONE
+ *              IRQ for `enabled_irqs`
  *      - op == NULL - disables ap handler, and restore current poll mode
+ * \param enabled_irqs - a set of IRQ, that will enables on setup.
  */
 void rf_core_arm_app_handle( rfc_irq_handle op, uint32_t enabled_irqs);
 #endif
