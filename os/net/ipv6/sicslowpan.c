@@ -1263,6 +1263,10 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
     }
     *last_nextheader = proto;
     /* uncompress the extension header */
+    if(ip_payload > uip_buf + UIP_BUFSIZE - sizeof(struct uip_ext_hdr)) {
+      LOG_DBG("uncompression: cannot write ext header beyond uip buffer boundary\n");
+      return;
+    }
     exthdr = (struct uip_ext_hdr *)ip_payload;
     exthdr->len = (2 + len) / 8 - 1;
     exthdr->next = next;
