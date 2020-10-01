@@ -162,6 +162,13 @@ is_sensible_string(const unsigned char *s, int len)
       return 0;
     }
   }
+
+  /* Edge-case: printable characters in flow label */
+  if(len >= 2 && (s[0] & 0xF0) == 0x60 
+              && (s[1] == '\r' || s[1] == '\n' || s[1] == '\t')) {
+    return 0;
+  }
+
   return 1;
 }
 
