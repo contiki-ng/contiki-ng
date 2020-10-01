@@ -131,7 +131,7 @@
 #define ADC_SENSORS_PORT         GPIO_A_NUM    /**< ADC GPIO control port */
 
 #ifndef ADC_SENSORS_CONF_ADC1_PIN
-#define ADC_SENSORS_ADC1_PIN     5             /**< ADC1 to PA5, 3V3    */
+#define ADC_SENSORS_ADC1_PIN     5             /**< LDR sensor is connected    */
 #else
 #if ((ADC_SENSORS_CONF_ADC1_PIN != -1) && (ADC_SENSORS_CONF_ADC1_PIN != 5))
 #error "ADC1 channel should be mapped to PA5 or disabled with -1"
@@ -141,7 +141,7 @@
 #endif
 
 #ifndef ADC_SENSORS_CONF_ADC3_PIN
-#define ADC_SENSORS_ADC3_PIN     2             /**< ADC3 to PA2, 5V     */
+#define ADC_SENSORS_ADC3_PIN     2             /**< ADC3 to PA2     */
 #else
 #if ((ADC_SENSORS_CONF_ADC3_PIN != -1) && (ADC_SENSORS_CONF_ADC3_PIN != 2))
 #error "ADC3 channel should be mapped to PA2 or disabled with -1"
@@ -151,7 +151,7 @@
 #endif
 
 #ifndef ADC_SENSORS_CONF_ADC2_PIN
-#define ADC_SENSORS_ADC2_PIN     4             /**< ADC3 to PA2, 5V     */
+#define ADC_SENSORS_ADC2_PIN     4             /**< ADC2 to PA4     */
 #else
 #if ((ADC_SENSORS_CONF_ADC2_PIN != -1) && (ADC_SENSORS_CONF_ADC2_PIN != 4))
 #error "ADC2 channel should be mapped to PA2 or disabled with -1"
@@ -161,7 +161,7 @@
 #endif
 
 #ifndef ADC_SENSORS_CONF_ADC4_PIN
-#define ADC_SENSORS_ADC4_PIN     6             /**< ADC3 to PA2, 5V     */
+#define ADC_SENSORS_ADC4_PIN     6             /**< ADC4 to PA6     */
 #else
 #if ((ADC_SENSORS_CONF_ADC4_PIN != -1) && (ADC_SENSORS_CONF_ADC4_PIN != 6))
 #error "ADC2 channel should be mapped to PA2 or disabled with -1"
@@ -171,7 +171,7 @@
 #endif
 
 #ifndef ADC_SENSORS_CONF_ADC5_PIN
-#define ADC_SENSORS_ADC5_PIN     7             /**< ADC3 to PA2, 5V     */
+#define ADC_SENSORS_ADC5_PIN     7             /**< ADC5 to PA7     */
 #else
 #if ((ADC_SENSORS_CONF_ADC5_PIN != -1) && (ADC_SENSORS_CONF_ADC5_PIN != 7))
 #error "ADC2 channel should be mapped to PA2 or disabled with -1"
