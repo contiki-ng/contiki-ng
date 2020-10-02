@@ -171,6 +171,8 @@ uint8_t frame802154_panids(frame802154_fcf_t *fcf)
           LONGADDR  = FRAME802154_LONGADDRMODE,
       } AddrStyle;
 
+      #define COMB(dst, src, compress) ( (unsigned long)((dst) << (src)) << (compress) )
+
       unsigned long comb =  (1u << ((AddrStyle)fcf->dest_addr_mode))
                                 << ((AddrStyle)(fcf->src_addr_mode)*SSRC);
       if (fcf->panid_compression)
@@ -178,16 +180,16 @@ uint8_t frame802154_panids(frame802154_fcf_t *fcf)
 
     {
         const unsigned long comb_panid =
-              (DST_NO    << SRC_NO)   << PANID_COMPRESS
-            | (DST_SHORT <<SRC_NO)    << PANID_NO_COMPRESS
-            | (DST_LONG  <<SRC_NO)    << PANID_NO_COMPRESS
-            | (DST_LONG  <<SRC_LONG)  << PANID_NO_COMPRESS
-            | (DST_SHORT <<SRC_SHORT) << PANID_NO_COMPRESS
-            | (DST_SHORT <<SRC_SHORT) << PANID_COMPRESS
-            | (DST_SHORT <<SRC_LONG)  << PANID_NO_COMPRESS
-            | (DST_SHORT <<SRC_LONG)  << PANID_COMPRESS
-            | (DST_LONG  <<SRC_SHORT) << PANID_NO_COMPRESS
-            | (DST_LONG  <<SRC_SHORT) << PANID_COMPRESS
+              COMB(DST_NO   , SRC_NO    ,  PANID_COMPRESS)
+            | COMB(DST_SHORT, SRC_NO    ,  PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_NO    ,  PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_LONG  ,  PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_SHORT ,  PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_SHORT ,  PANID_COMPRESS)
+            | COMB(DST_SHORT, SRC_LONG  ,  PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_LONG  ,  PANID_COMPRESS)
+            | COMB(DST_LONG , SRC_SHORT ,  PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_SHORT ,  PANID_COMPRESS)
             ;
     if ( comb & comb_panid )
             panids |= FRAME802154_HAVE_PANID_DST;
@@ -195,11 +197,11 @@ uint8_t frame802154_panids(frame802154_fcf_t *fcf)
 
     {
         const unsigned long comb_panid =
-              (DST_NO    <<SRC_SHORT) << PANID_NO_COMPRESS
-            | (DST_NO    <<SRC_LONG)  << PANID_NO_COMPRESS
-            | (DST_SHORT <<SRC_SHORT) << PANID_NO_COMPRESS
-            | (DST_SHORT <<SRC_LONG)  << PANID_NO_COMPRESS
-            | (DST_LONG  <<SRC_SHORT) << PANID_NO_COMPRESS
+              COMB(DST_NO   , SRC_SHORT , PANID_NO_COMPRESS)
+            | COMB(DST_NO   , SRC_LONG  , PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_SHORT , PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_LONG  , PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_SHORT , PANID_NO_COMPRESS)
             ;
     if( comb & comb_panid )
             panids |= FRAME802154_HAVE_PANID_SRC;
