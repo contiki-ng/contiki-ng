@@ -4,7 +4,6 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 6tisch/6p-packet/zoul \
 6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
-6tisch/simple-node/simplelink:DEFINES=TSCH_CONF_AUTOSELECT_TIME_SOURCE=1 \
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
