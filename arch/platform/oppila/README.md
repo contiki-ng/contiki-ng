@@ -1,7 +1,7 @@
 Oppila Microsystems - http://www.oppila.in
 ---------------------------------------------------------------
 
-The Oppila is based on TI's CC2538 SoC (System on Chip), featuring an ARM Cortex-M3 running at 16/32 MHz and with 32 kbytes of RAM and 512 kbytes of FLASH. It has the following key features:
+The Oppila is based on TI's CC2538 SoC (System on Chip), featuring an ARM Cortex-M3 running at 32 MHz and with 32 kbytes of RAM and 512 kbytes of FLASH. It has the following key features:
 
   * ISM 2.4-GHz IEEE 802.15.4 & Zigbee compliant.
   * AES-128/256, SHA2 Hardware Encryption Engine.
@@ -15,6 +15,27 @@ The oppila has the following key features:
   * Deep Sleep support with RAM retention for ultra-low energy consumption.
   * Native USB support (CDC-ACM). SLIP over UART for border routers is no longer a bottleneck.
   * DMA transfers for increased performance (RAM to/from RF, RAM to/from USB).
+
+In terms of hardware support, the following drivers have been implemented for the oppila-based platforms:
+
+    CC2538 System-on-Chip:
+        Standard Cortex M3 peripherals (NVIC, SCB, SysTick)
+        Sleep Timer (underpins rtimers)
+        SysTick (underpins the platform clock and Contiki's timers infrastructure)
+        RF (2.4GHz)
+        UART
+        Watchdog (in watchdog mode)
+        USB (in CDC-ACM)
+        uDMA Controller (RAM to/from USB and RAM to/from RF)
+        Low power modes
+        Random number generator
+        General-Purpose Timers. NB: GPT0 is in use by the platform code, the remaining GPTs are available for application development.
+        ADC
+        Cryptoprocessor (AES-ECB/CBC/CTR/CBC-MAC/GCM/CCM-128/192/256, SHA-256)
+        Public Key Accelerator (ECDH, ECDSA)
+        Flash-based port of Coffee
+        LEDs
+        Buttons
  
 Check the board's specific README files for more information.
 

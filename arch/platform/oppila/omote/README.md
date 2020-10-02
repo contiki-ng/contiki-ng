@@ -25,27 +25,6 @@ The omote has the following key features:
   * Native USB support (CDC-ACM). SLIP over UART for border routers is no longer a bottleneck.
   * DMA transfers for increased performance (RAM to/from RF, RAM to/from USB).
 
-In terms of hardware support, the following drivers have been implemented for the oppila-based platforms:
-
-    CC2538 System-on-Chip:
-	Standard Cortex M3 peripherals (NVIC, SCB, SysTick)
-        Sleep Timer (underpins rtimers)
-        SysTick (underpins the platform clock and Contiki's timers infrastructure)
-        RF (2.4GHz)
-        UART
-        Watchdog (in watchdog mode)
-        USB (in CDC-ACM)
-        uDMA Controller (RAM to/from USB and RAM to/from RF)
-        Low power modes
-        Random number generator
-        General-Purpose Timers. NB: GPT0 is in use by the platform code, the remaining GPTs are available for application development.
-        ADC
-        Cryptoprocessor (AES-ECB/CBC/CTR/CBC-MAC/GCM/CCM-128/192/256, SHA-256)
-        Public Key Accelerator (ECDH, ECDSA)
-        Flash-based port of Coffee
-        LEDs
-        Buttons
-
 The omote has 13 pinouts to connect boolean,digital and analog sensors based on I2C,UART,and SPI Protocols as well as other sensors or actuators you may need to connect.
 
 More Reading
