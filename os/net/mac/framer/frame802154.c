@@ -136,11 +136,13 @@ frame802154_set_pan_id(uint16_t pan_id)
 /*----------------------------------------------------------------------------*/
 /* Tells whether a given Frame Control Field indicates a frame with
  * source PANID and/or destination PANID */
-void
-frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest_pan_id)
+//void frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest_pan_id)
+uint8_t frame802154_panids(frame802154_fcf_t *fcf)
 {
+  uint8_t panids = FRAME802154_HAVE_PANID_NO;
+
   if(fcf == NULL) {
-    return;
+    return panids;
   }
 
   if(fcf->frame_version == FRAME802154_IEEE802154_2015) {
@@ -174,7 +176,7 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
       if (fcf->panid_compression)
           comb = comb << PANID_COMPRESS ;
 
-    if(has_dest_pan_id != NULL){
+    {
         const unsigned long comb_panid =
               (DST_NO    << SRC_NO)   << PANID_COMPRESS
             | (DST_SHORT <<SRC_NO)    << PANID_NO_COMPRESS
@@ -188,14 +190,10 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
             | (DST_LONG  <<SRC_SHORT) << PANID_COMPRESS
             ;
     if ( comb & comb_panid )
-    {
-        *has_dest_pan_id = 1;
-    }
-    else
-        *has_dest_pan_id = 0;
+            panids |= FRAME802154_HAVE_PANID_DST;
     }
 
-    if(has_src_pan_id != NULL){
+    {
         const unsigned long comb_panid =
               (DST_NO    <<SRC_SHORT) << PANID_NO_COMPRESS
             | (DST_NO    <<SRC_LONG)  << PANID_NO_COMPRESS
@@ -204,46 +202,30 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
             | (DST_LONG  <<SRC_SHORT) << PANID_NO_COMPRESS
             ;
     if( comb & comb_panid )
-    {
-        *has_src_pan_id = 1;
-    }
-    else
-        *has_src_pan_id = 0;
+            panids |= FRAME802154_HAVE_PANID_SRC;
     }//if(has_src_pan_id != NULL)
 
   } else {
-    /* No PAN ID in ACK */
-    if(fcf->frame_type != FRAME802154_ACKFRAME) {
-      if(has_src_pan_id != NULL){
-      if(!fcf->panid_compression && (fcf->src_addr_mode & 3)) {
+      if(!fcf->panid_compression && fcf->src_addr_mode) {
         /* If compressed, don't include source PAN ID */
-          *has_src_pan_id = 1;
+          panids |= FRAME802154_HAVE_PANID_SRC;
       }
-      else
-          *has_src_pan_id = 0;
+
+      if(fcf->dest_addr_mode)
+          panids |= FRAME802154_HAVE_PANID_DST;
       }
-      if(has_dest_pan_id != NULL){
-      if(fcf->dest_addr_mode & 3) {
-          *has_dest_pan_id = 1;
-      }
-      else
-          *has_dest_pan_id = 0;
-      }
-    }
-  }
+  return panids;
 }
 /*---------------------------------------------------------------------------*/
 /* Check if the destination PAN ID, if any, matches ours */
 int
 frame802154_check_dest_panid(frame802154_t *frame)
 {
-  int has_dest_panid = 0;
 
   if(frame == NULL) {
     return 0;
   }
-  frame802154_has_panid(&frame->fcf, NULL, &has_dest_panid);
-  if(!has_dest_panid ||
+  if( ((frame802154_panids(&frame->fcf) & FRAME802154_HAVE_PANID_DST) == 0) ||
      (frame->dest_pid != frame802154_get_pan_id()
      && frame->dest_pid != FRAME802154_BROADCASTPANDID)) {
     /* Packet to another PAN */
@@ -320,8 +302,7 @@ frame802154_extract_linkaddr(frame802154_t *frame,
 static void
 field_len(frame802154_t *p, field_length_t *flen)
 {
-  int has_src_panid;
-  int has_dest_panid;
+  frame802154_have_PANIDs_t havepanid;
 
   /* init flen to zeros */
   memset(flen, 0, sizeof(field_length_t));
@@ -344,13 +325,13 @@ field_len(frame802154_t *p, field_length_t *flen)
     }
   }
 
-  frame802154_has_panid(&p->fcf, &has_src_panid, &has_dest_panid);
+  havepanid = frame802154_panids(&p->fcf);
 
-  if(has_src_panid) {
+  if(havepanid & FRAME802154_HAVE_PANID_SRC) {
     flen->src_pid_len = 2;
   }
 
-  if(has_dest_panid) {
+  if(havepanid & FRAME802154_HAVE_PANID_DST) {
     flen->dest_pid_len = 2;
   }
 
@@ -533,9 +514,8 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
 {
   uint8_t *p;
   frame802154_fcf_t fcf;
+  frame802154_have_PANIDs_t havepanid;
   int c;
-  int has_src_panid;
-  int has_dest_panid;
 #if LLSEC802154_USES_EXPLICIT_KEYS
   uint8_t key_id_mode;
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
@@ -556,11 +536,11 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
     p++;
   }
 
-  frame802154_has_panid(&fcf, &has_src_panid, &has_dest_panid);
+  havepanid = frame802154_panids(&fcf);
 
   /* Destination address, if any */
   if(fcf.dest_addr_mode) {
-    if(has_dest_panid) {
+    if(havepanid & FRAME802154_HAVE_PANID_DST) {
       /* Destination PAN */
       pf->dest_pid = p[0] + (p[1] << 8);
       p += 2;
@@ -593,10 +573,10 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
   /* Source address, if any */
   if(fcf.src_addr_mode) {
     /* Source PAN */
-    if(has_src_panid) {
+    if(havepanid & FRAME802154_HAVE_PANID_SRC) {
       pf->src_pid = p[0] + (p[1] << 8);
       p += 2;
-      if(!has_dest_panid) {
+      if((havepanid & FRAME802154_HAVE_PANID_DST) == 0) {
         pf->dest_pid = pf->src_pid;
       }
     } else {

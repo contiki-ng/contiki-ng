@@ -210,6 +210,16 @@ typedef struct {
   int payload_len;                /**< Length of payload field */
 } frame802154_t;
 
+/** \brief status frame802154_has_panid() function return this flags set.
+ */
+typedef enum {
+    FRAME802154_HAVE_PANID_NO  = 0,
+    FRAME802154_HAVE_PANID_DST = 1,
+    FRAME802154_HAVE_PANID_SRC = 2,
+} frame802154_have_PANID_t;
+//< a set of <frame802154_have_PANID_t> flags
+typedef uint8_t frame802154_have_PANIDs_t;
+
 /* Prototypes */
 
 int frame802154_hdrlen(frame802154_t *p);
@@ -222,15 +232,32 @@ void frame802154_parse_fcf(uint8_t *data, frame802154_fcf_t *pfcf);
 uint16_t frame802154_get_pan_id(void);
 /* Set current PAN ID */
 void frame802154_set_pan_id(uint16_t pan_id);
-/* Tells whether a given Frame Control Field indicates a frame with
- * source PANID and/or destination PANID */
-void frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest_pan_id);
+/** \brief Tells whether a given Frame Control Field indicates a frame with
+ * source PANID and/or destination PANID
+ * \return set of ExistPANID flags
+ */
+frame802154_have_PANIDs_t frame802154_panids(frame802154_fcf_t *fcf);
 /* Check if the destination PAN ID, if any, matches ours */
 int frame802154_check_dest_panid(frame802154_t *frame);
 /* Check is the address is a broadcast address, whatever its size */
 int frame802154_is_broadcast_addr(uint8_t mode, uint8_t *addr);
 /* Check and extract source and destination linkaddr from frame */
 int frame802154_extract_linkaddr(frame802154_t *frame, linkaddr_t *source_address, linkaddr_t *dest_address);
+
+//==============================================================================
+//          Deprecated legacy
+/** \brief Tells whether a given Frame Control Field indicates a frame with
+ * source PANID and/or destination PANID
+ */
+static inline
+void frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest_pan_id){
+    uint8_t havepanid = frame802154_panids(fcf);
+    if (has_src_pan_id)
+        *has_src_pan_id = (havepanid & FRAME802154_HAVE_PANID_SRC) != 0;
+    if (has_dest_pan_id)
+        *has_dest_pan_id = (havepanid & FRAME802154_HAVE_PANID_DST) != 0;
+}
+
 
 /** @} */
 #endif /* FRAME_802154_H */
