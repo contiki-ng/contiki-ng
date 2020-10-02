@@ -34,7 +34,6 @@
 void
 slip_arch_init()
 {
-  rs232_init();
   rs232_set_input(slip_input_byte);
 }
 
