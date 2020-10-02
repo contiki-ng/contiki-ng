@@ -33,15 +33,9 @@
  * \addtogroup oppila-sensors
  * @{
  *
-<<<<<<< HEAD
  * \defgroup oppila-adc-interface Oppila Generic ADC interface
  *
  * Driver for the Oppila ADC interface
-=======
- * \defgroup oppila-adc-interface
- *
- * Driver for the omote ADC interface
->>>>>>> c8efe6a8026d2ddb83fe62cda8bfa330a87919e8
  * @{
  *
  * \file

@@ -33,14 +33,10 @@
  * \addtogroup oppila
  * @{
  *
-<<<<<<< HEAD
  * \defgroup oppila-sensors Oppila sensors
  *
  * Generic module controlling sensors on the Oppila platform
  * @{
-=======
- * \defgroup oppila-sensors
->>>>>>> c8efe6a8026d2ddb83fe62cda8bfa330a87919e8
  *
  * \file
  * Implementation of a generic module controlling OMote sensors
