@@ -226,13 +226,13 @@ tsch_reset(void)
 #endif
   linkaddr_copy(&last_eb_nbr_addr, &linkaddr_null);
 #if TSCH_AUTOSELECT_TIME_SOURCE
-  struct nbr_sync_stat *stat;
+  struct eb_stat *stat;
   best_neighbor_eb_count = 0;
   /* Remove all nbr stats */
-  stat = nbr_table_head(sync_stats);
+  stat = nbr_table_head(eb_stats);
   while(stat != NULL) {
-    nbr_table_remove(sync_stats, stat);
-    stat = nbr_table_next(sync_stats, stat);
+    nbr_table_remove(eb_stats, stat);
+    stat = nbr_table_next(eb_stats, stat);
   }
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_set_eb_period(TSCH_EB_PERIOD);
@@ -272,6 +272,7 @@ resynchronize(const linkaddr_t *original_time_source_addr)
     /* We simply pick the last neighbor we receiver sync information from */
     tsch_queue_update_time_source(&last_eb_nbr_addr);
     tsch_join_priority = last_eb_nbr_jp + 1;
+    linkaddr_copy(&last_eb_nbr_addr, &linkaddr_null);
     /* Try to get in sync ASAP */
     tsch_schedule_keepalive(1);
     return 1;
@@ -400,7 +401,7 @@ eb_input(struct input_packet *current_input)
      * to switch to it in case we lose the link to our time source */
     struct tsch_neighbor *ts = tsch_queue_get_time_source();
     linkaddr_t *ts_addr = tsch_queue_get_nbr_address(ts);
-    if(ts_addr == NULL || !linkaddr_cmp(&last_eb_nbr_addr, ts_addr)) {
+    if(ts_addr == NULL || !linkaddr_cmp((linkaddr_t *)&frame.src_addr, ts_addr)) {
       linkaddr_copy(&last_eb_nbr_addr, (linkaddr_t *)&frame.src_addr);
       last_eb_nbr_jp = eb_ies.ie_join_priority;
     }
@@ -902,30 +903,35 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
   while(1) {
     unsigned long delay;
 
-    if(tsch_is_associated && tsch_current_eb_period > 0
+    if(!tsch_is_associated) {
+      LOG_DBG("skip sending EB: not joined a TSCH network\n");
+    } else if(tsch_current_eb_period <= 0) {
+      LOG_DBG("skip sending EB: EB period disabled\n");
 #ifdef TSCH_RPL_CHECK_DODAG_JOINED
+    } else if(!TSCH_RPL_CHECK_DODAG_JOINED()) {
       /* Implementation section 6.3 of RFC 8180 */
-      && TSCH_RPL_CHECK_DODAG_JOINED()
+      LOG_DBG("skip sending EB: not joined a routing DAG\n");
 #endif /* TSCH_RPL_CHECK_DODAG_JOINED */
+    } else if(NETSTACK_ROUTING.is_in_leaf_mode()) {
       /* don't send when in leaf mode */
-      && !NETSTACK_ROUTING.is_in_leaf_mode()
-        ) {
+      LOG_DBG("skip sending EB: in the leaf mode\n");
+    } else if(tsch_queue_nbr_packet_count(n_eb) != 0) {
       /* Enqueue EB only if there isn't already one in queue */
-      if(tsch_queue_nbr_packet_count(n_eb) == 0) {
-        uint8_t hdr_len = 0;
-        uint8_t tsch_sync_ie_offset;
-        /* Prepare the EB packet and schedule it to be sent */
-        if(tsch_packet_create_eb(&hdr_len, &tsch_sync_ie_offset) > 0) {
-          struct tsch_packet *p;
-          /* Enqueue EB packet, for a single transmission only */
-          if(!(p = tsch_queue_add_packet(&tsch_eb_address, 1, NULL, NULL))) {
-            LOG_ERR("! could not enqueue EB packet\n");
-          } else {
-              LOG_INFO("TSCH: enqueue EB packet %u %u\n",
-                       packetbuf_totlen(), packetbuf_hdrlen());
-            p->tsch_sync_ie_offset = tsch_sync_ie_offset;
-            p->header_len = hdr_len;
-          }
+      LOG_DBG("skip sending EB: already queued\n");
+    } else {
+      uint8_t hdr_len = 0;
+      uint8_t tsch_sync_ie_offset;
+      /* Prepare the EB packet and schedule it to be sent */
+      if(tsch_packet_create_eb(&hdr_len, &tsch_sync_ie_offset) > 0) {
+        struct tsch_packet *p;
+        /* Enqueue EB packet, for a single transmission only */
+        if(!(p = tsch_queue_add_packet(&tsch_eb_address, 1, NULL, NULL))) {
+          LOG_ERR("! could not enqueue EB packet\n");
+        } else {
+          LOG_INFO("TSCH: enqueue EB packet %u %u\n",
+                   packetbuf_totlen(), packetbuf_hdrlen());
+          p->tsch_sync_ie_offset = tsch_sync_ie_offset;
+          p->header_len = hdr_len;
         }
       }
     }
@@ -1030,15 +1036,15 @@ tsch_init(void)
   }
 
   /* Init TSCH sub-modules */
+#if TSCH_AUTOSELECT_TIME_SOURCE
+  nbr_table_register(eb_stats, NULL);
+#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
   tsch_reset();
   tsch_queue_init();
   tsch_schedule_init();
   tsch_log_init();
   ringbufindex_init(&input_ringbuf, TSCH_MAX_INCOMING_PACKETS);
   ringbufindex_init(&dequeued_ringbuf, TSCH_DEQUEUED_ARRAY_SIZE);
-#if TSCH_AUTOSELECT_TIME_SOURCE
-  nbr_table_register(sync_stats, NULL);
-#endif /* TSCH_AUTOSELECT_TIME_SOURCE */
 
   tsch_packet_seqno = random_rand();
   tsch_is_initialized = 1;

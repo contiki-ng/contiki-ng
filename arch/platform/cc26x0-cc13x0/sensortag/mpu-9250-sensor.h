@@ -68,6 +68,8 @@
 #ifndef MPU_9250_SENSOR_H_
 #define MPU_9250_SENSOR_H_
 /*---------------------------------------------------------------------------*/
+#include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
 /* ACC / Gyro Axes */
 #define MPU_9250_SENSOR_TYPE_GYRO_Z   0x01
 #define MPU_9250_SENSOR_TYPE_GYRO_Y   0x02

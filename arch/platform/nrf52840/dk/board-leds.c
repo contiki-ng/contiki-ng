@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2020, George Oikonomou - https://spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -29,25 +30,49 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-peripherals
+ * \addtogroup nrf52840dk
  * @{
  *
- * \file
- * Generic module controlling sensors on Sensortags
+ * \addtogroup nrf52840dk-devices Device drivers
+ * @{
+ *
+ * \addtogroup nrf52840dk-devices-led LED driver
+ * @{
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "lib/sensors.h"
-#include "sensortag/bmp-280-sensor.h"
-#include "sensortag/tmp-007-sensor.h"
-#include "sensortag/opt-3001-sensor.h"
-#include "sensortag/hdc-1000-sensor.h"
-#include "sensortag/mpu-9250-sensor.h"
+#include "boards.h"
+#include "dev/leds.h"
+#include "dev/gpio-hal.h"
+#include "dev/gpio-hal-arch.h"
 
-#include <string.h>
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-/** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor,
-        &mpu_9250_sensor);
+const leds_t leds_arch_leds[] = {
+  {
+    .port = 0,
+    .pin = BSP_LED_0,
+    .negative_logic = true
+  },
+  {
+    .port = 0,
+    .pin = BSP_LED_1,
+    .negative_logic = true
+  },
+  {
+    .port = 0,
+    .pin = BSP_LED_2,
+    .negative_logic = true
+  },
+  {
+    .port = 0,
+    .pin = BSP_LED_3,
+    .negative_logic = true
+  },
+};
 /*---------------------------------------------------------------------------*/
-/** @} */
+/**
+ * @}
+ * @}
+ * @}
+ */

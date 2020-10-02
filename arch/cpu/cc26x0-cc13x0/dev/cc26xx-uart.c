@@ -64,11 +64,8 @@
 static int (*input_handler)(unsigned char c);
 /*---------------------------------------------------------------------------*/
 static bool
-usable(void)
-{
-  if(BOARD_IOID_UART_RX == IOID_UNUSED ||
-     BOARD_IOID_UART_TX == IOID_UNUSED ||
-     CC26XX_UART_CONF_ENABLE == 0) {
+usable(uint32_t pin) {
+  if(CC26XX_UART_CONF_ENABLE == 0 || pin == IOID_UNUSED) {
     return false;
   }
 
@@ -197,7 +194,7 @@ lpm_drop_handler(uint8_t mode)
    * between MCU and AON when we drop to deep sleep. This here is essentially a
    * workaround
    */
-  if(accessible() == true) {
+  if(accessible()) {
     while(ti_lib_uart_busy(UART0_BASE));
   }
 
@@ -216,7 +213,7 @@ lpm_drop_handler(uint8_t mode)
    *
    * Only touch UART registers if the module is powered and clocked
    */
-  if(accessible() == true) {
+  if(accessible()) {
     /* Disable the module */
     ti_lib_uart_disable(UART0_BASE);
 
@@ -269,8 +266,8 @@ cc26xx_uart_init()
 {
   bool interrupts_disabled;
 
-  /* Return early if disabled by user conf or if ports are misconfigured */
-  if(usable() == false) {
+  /* Return early if disabled by user conf or both pins are misconfigured */
+  if(!usable(BOARD_IOID_UART_TX) && !usable(BOARD_IOID_UART_RX)) {
     return;
   }
 
@@ -297,12 +294,12 @@ cc26xx_uart_init()
 void
 cc26xx_uart_write_byte(uint8_t c)
 {
-  /* Return early if disabled by user conf or if ports are misconfigured */
-  if(usable() == false) {
+  /* Return early if disabled by user conf or if TX pin is misconfigured */
+  if(!usable(BOARD_IOID_UART_TX)) {
     return;
   }
 
-  if(accessible() == false) {
+  if(!accessible()) {
     enable();
   }
 
@@ -314,8 +311,8 @@ cc26xx_uart_set_input(int (*input)(unsigned char c))
 {
   input_handler = input;
 
-  /* Return early if disabled by user conf or if ports are misconfigured */
-  if(usable() == false) {
+  /* Return early if disabled by user conf or if RX pin is misconfigured */
+  if(!usable(BOARD_IOID_UART_RX)) {
     return;
   }
 
@@ -346,13 +343,13 @@ cc26xx_uart_set_input(int (*input)(unsigned char c))
 uint8_t
 cc26xx_uart_busy(void)
 {
-  /* Return early if disabled by user conf or if ports are misconfigured */
-  if(usable() == false) {
+  /* Return early if disabled by user conf or if TX pin is misconfigured */
+  if(!usable(BOARD_IOID_UART_TX)) {
     return UART_IDLE;
   }
 
   /* If the UART is not accessible, it is not busy */
-  if(accessible() == false) {
+  if(!accessible()) {
     return UART_IDLE;
   }
 

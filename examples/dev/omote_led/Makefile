@@ -1,10 +1,7 @@
-CONTIKI_PROJECT = rgb-led-example
+CONTIKI_PROJECT = leds-example
 CONTIKI = ../../..
 
 MODULES_REL += $(TARGET)
-
-PLATFORMS_ONLY = zoul nrf52840
-BOARDS_EXCLUDE = dk
 
 all: $(CONTIKI_PROJECT)
 

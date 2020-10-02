@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2020, Oppila Microsystems - http://www.oppila.in
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,6 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -29,25 +30,21 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup sensortag-cc26xx-peripherals
+ * \addtogroup oppila-platforms
  * @{
  *
- * \file
- * Generic module controlling sensors on Sensortags
+ * \defgroup Oppila Development Kit platform
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
 #include "lib/sensors.h"
-#include "sensortag/bmp-280-sensor.h"
-#include "sensortag/tmp-007-sensor.h"
-#include "sensortag/opt-3001-sensor.h"
-#include "sensortag/hdc-1000-sensor.h"
-#include "sensortag/mpu-9250-sensor.h"
+void
+platform_init_stage_four()
+{
+process_start(&sensors_process, NULL);
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */
 
-#include <string.h>
-/*---------------------------------------------------------------------------*/
-/** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor,
-        &mpu_9250_sensor);
-/*---------------------------------------------------------------------------*/
-/** @} */

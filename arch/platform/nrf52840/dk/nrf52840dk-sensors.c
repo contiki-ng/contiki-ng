@@ -51,13 +51,7 @@
 #include "button-sensor.h"
 #include "common/temperature-sensor.h"
 /*---------------------------------------------------------------------------*/
-SENSORS(
-  &button_1,
-  &button_2,
-  &button_3,
-  &button_4,
-  &temperature_sensor
-  );
+SENSORS(&temperature_sensor);
 /*---------------------------------------------------------------------------*/
 /**
  * @}
