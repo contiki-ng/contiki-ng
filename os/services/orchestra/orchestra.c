@@ -172,7 +172,7 @@ orchestra_init(void)
   linkaddr_copy(&orchestra_parent_linkaddr, &linkaddr_null);
   /* Initialize all Orchestra rules */
   for(i = 0; i < NUM_RULES; i++) {
-    LOG_INFO("Initializing rule %s (%u)\n", all_rules[i]->name, i);
+    LOG_INFO("Initializing rule %s (%u), size %d\n", all_rules[i]->name, i, all_rules[i]->slotframe_size);
     if(all_rules[i]->init != NULL) {
       all_rules[i]->init(i);
     }

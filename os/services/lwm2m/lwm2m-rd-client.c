@@ -726,7 +726,8 @@ periodic_process(coap_timer_t *timer)
         coap_init_message(session_info->request, COAP_TYPE_CON, COAP_POST, 0);
         coap_set_header_uri_path(session_info->request, "/rd");
 
-        snprintf(query_data, sizeof(query_data) - 1, "?ep=%s&lt=%d&b=%s", session_info->ep, session_info->lifetime, session_info->binding);
+        snprintf(query_data, sizeof(query_data) - 1, "?lwm2m=%s&ep=%s&lt=%d&b=%s",
+                             LWM2M_PROTOCOL_VERSION, session_info->ep, session_info->lifetime, session_info->binding);
         coap_set_header_uri_query(session_info->request, query_data);
 
         len = set_rd_data(session_info);

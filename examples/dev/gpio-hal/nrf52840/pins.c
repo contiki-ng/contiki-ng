@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2020, George Oikonomou - https://spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,26 +29,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-/**
- * \addtogroup sensortag-cc26xx-peripherals
- * @{
- *
- * \file
- * Generic module controlling sensors on Sensortags
- */
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "lib/sensors.h"
-#include "sensortag/bmp-280-sensor.h"
-#include "sensortag/tmp-007-sensor.h"
-#include "sensortag/opt-3001-sensor.h"
-#include "sensortag/hdc-1000-sensor.h"
-#include "sensortag/mpu-9250-sensor.h"
+#include "dev/gpio-hal.h"
+/*---------------------------------------------------------------------------*/
+/*
+ * LEDs on the nRF52840DK (PCA10056) are connected to pins P0.13...P0.16
+ *
+ * LEDs on the dongle (PCA10059) are connected as follows:
+ * - LED1 --> P0.6
+ * - LED2 --> P0.8
+ * - LED3 --> P1.9
+ * - LED4 --> P0.12
+ *
+ * Here we'll use LEDs 3, 1 and 2 - in that order such that out_port2_3 will
+ * be port 0.
+ */
+#if CONTIKI_BOARD_DK
+gpio_hal_port_t out_port1 = 0;
 
-#include <string.h>
+gpio_hal_pin_t out_pin1 = 15;
+gpio_hal_pin_t out_pin2 = 13;
+gpio_hal_pin_t out_pin3 = 14;
+#else
+gpio_hal_port_t out_port1 = 1;
+
+gpio_hal_pin_t out_pin1 = 9;
+gpio_hal_pin_t out_pin2 = 6;
+gpio_hal_pin_t out_pin3 = 8;
+#endif
+
+gpio_hal_port_t out_port2_3 = 0;
 /*---------------------------------------------------------------------------*/
-/** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor,
-        &mpu_9250_sensor);
+#if CONTIKI_BOARD_DK
+gpio_hal_port_t btn_port = 0;
+gpio_hal_pin_t btn_pin = 11;
+#else
+gpio_hal_port_t btn_port = 1;
+gpio_hal_pin_t btn_pin = 6;
+#endif
 /*---------------------------------------------------------------------------*/
-/** @} */

@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2015, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2020, George Oikonomou - https://spd.gr
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -28,26 +29,45 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-/*---------------------------------------------------------------------------*/
-/* Change to match your configuration */
-#define IEEE802154_CONF_PANID            0xABCD
-#define IEEE802154_CONF_DEFAULT_CHANNEL      25
-/*---------------------------------------------------------------------------*/
-/* Enable the ROM bootloader */
-#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE   1
-/*---------------------------------------------------------------------------*/
-/* For very sleepy operation */
-#define RF_BLE_CONF_ENABLED                   0
-#define UIP_CONF_TCP                          0
-#define RPL_CONF_LEAF_ONLY                    1
-
-/*
- * We'll fail without RPL probing, so turn it on explicitly even though it's
- * on by default
+/**
+ * \addtogroup nrf52840-dev
+ * @{
+ *
+ * \defgroup nrf52840-gpio-hal nRF52840 GPIO HAL implementation
+ *
+ * @{
+ *
+ * \file
+ *     Header file for the nRF52840 GPIO HAL functions
+ *
+ * \note
+ *     Do not include this header directly
  */
-#define RPL_CONF_WITH_PROBING                 1
 /*---------------------------------------------------------------------------*/
-#endif /* PROJECT_CONF_H_ */
+#ifndef GPIO_HAL_ARCH_H_
+#define GPIO_HAL_ARCH_H_
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
+#include "nrf_gpio.h"
+#include "nrfx_gpiote.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+#define gpio_hal_arch_interrupt_enable(port, pin)  nrfx_gpiote_in_event_enable(NRF_GPIO_PIN_MAP(port, pin), true)
+#define gpio_hal_arch_interrupt_disable(port, pin) nrfx_gpiote_in_event_disable(NRF_GPIO_PIN_MAP(port, pin))
+
+#define gpio_hal_arch_pin_set_input(port, pin)     nrf_gpio_cfg_input(NRF_GPIO_PIN_MAP(port, pin), NRF_GPIO_PIN_NOPULL)
+#define gpio_hal_arch_pin_set_output(port, pin)    nrf_gpio_cfg_output(NRF_GPIO_PIN_MAP(port, pin))
+
+#define gpio_hal_arch_set_pin(port, pin)           nrf_gpio_pin_set(NRF_GPIO_PIN_MAP(port, pin))
+#define gpio_hal_arch_clear_pin(port, pin)         nrf_gpio_pin_clear(NRF_GPIO_PIN_MAP(port, pin))
+#define gpio_hal_arch_toggle_pin(port, pin)        nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(port, pin))
+#define gpio_hal_arch_write_pin(port, pin, v)      nrf_gpio_pin_write(NRF_GPIO_PIN_MAP(port, pin), v)
+/*---------------------------------------------------------------------------*/
+#endif /* GPIO_HAL_ARCH_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

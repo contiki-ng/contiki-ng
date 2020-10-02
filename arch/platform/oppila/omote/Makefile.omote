@@ -1,5 +1,9 @@
 MOTELIST_OPPILA := OMote
+<<<<<<< HEAD
 CONTIKI_TARGET_SOURCEFILES += sensor_platform.c adxl345.c 
+=======
+CONTIKI_TARGET_SOURCEFILES += plat.c adxl345.c 
+>>>>>>> c8efe6a8026d2ddb83fe62cda8bfa330a87919e8
 CONTIKI_TARGET_SOURCEFILES += bmp180.c omote-sensors.c 
 CONTIKI_TARGET_SOURCEFILES += adc-omote.c adc-sensors.c
 BOARD_SOURCEFILES += board.c leds-arch.c

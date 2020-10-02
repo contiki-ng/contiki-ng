@@ -4,6 +4,7 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 6tisch/6p-packet/zoul \
 6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
+6tisch/simple-node/simplelink:DEFINES=TSCH_CONF_AUTOSELECT_TIME_SOURCE=1 \
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
@@ -56,20 +57,19 @@ platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
-platform-specific/cc26x0-cc13x0/very-sleepy-demo/cc26x0-cc13x0 \
 platform-specific/nrf52dk/blink-hello/nrf52dk \
 platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
 platform-specific/nrf52dk/mqtt-demo/nrf52dk \
 platform-specific/nrf52dk/timer-test/nrf52dk \
+platform-specific/oppila/orouter/client/oppila:BOARD=orouter \
+platform-specific/oppila/orouter/ip64-router/oppila:BOARD=orouter \
+platform-specific/oppila/oppila \
 platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/orion/client/zoul:BOARD=orion \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
 platform-specific/zoul/rev-b/zoul:BOARD=remote-revb  \
 platform-specific/zoul/rtcc/zoul \
 platform-specific/zoul/zoul \
-platform-specific/oppila/orouter/client/oppila:BOARD=orouter \
-platform-specific/oppila/orouter/ip64-router/oppila:BOARD=orouter \
-platform-specific/oppila/oppila \
 rpl-border-router/cc2538dk:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 rpl-border-router/zoul:MAKE_MAC=MAKE_MAC_TSCH \
 rpl-udp/cc2538dk \

@@ -54,13 +54,19 @@ process_event_t button_hal_press_event;
 process_event_t button_hal_release_event;
 process_event_t button_hal_periodic_event;
 /*---------------------------------------------------------------------------*/
+/* A mask of all ports that have changed state since the last process poll */
+#if GPIO_HAL_PORT_PIN_NUMBERING
+static volatile uint8_t port_mask;
+#endif
+
 /* A mask of all pins that have changed state since the last process poll */
 static volatile gpio_hal_pin_mask_t pmask;
 /*---------------------------------------------------------------------------*/
+#define PORT_UNUSED 0xFF
 extern button_hal_button_t *button_hal_buttons[];
 /*---------------------------------------------------------------------------*/
-/* Common handler for all handler events, and register it with the GPIO HAL */
-static gpio_hal_event_handler_t button_event_handler;
+/* Button event handlers, one per port. Registered with the GPIO HAL */
+static gpio_hal_event_handler_t button_event_handlers[BUTTON_HAL_PORT_COUNT];
 /*---------------------------------------------------------------------------*/
 #if GPIO_HAL_PORT_PIN_NUMBERING
 #define BTN_PORT(b) (b)->port
@@ -134,7 +140,36 @@ press_release_handler(
                       gpio_hal_pin_mask_t pin_mask)
 {
   pmask |= pin_mask;
+#if GPIO_HAL_PORT_PIN_NUMBERING
+  port_mask |= (1 << port);
+#endif
   process_poll(&button_hal_process);
+}
+/*---------------------------------------------------------------------------*/
+static gpio_hal_event_handler_t *
+get_handler_by_port(uint8_t port)
+{
+#if GPIO_HAL_PORT_PIN_NUMBERING
+  uint8_t i;
+
+  /* First, search in case a handler has already been dedicated to this port */
+  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+    if(button_event_handlers[i].port == port) {
+      return &button_event_handlers[i];
+    }
+  }
+
+  /* If not, allocate. The caller will set the port */
+  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+    if(button_event_handlers[i].port == PORT_UNUSED) {
+      return &button_event_handlers[i];
+    }
+  }
+
+  return NULL;
+#else
+  return &button_event_handlers[0];
+#endif
 }
 /*---------------------------------------------------------------------------*/
 button_hal_button_t *
@@ -179,13 +214,20 @@ button_hal_init()
 {
   button_hal_button_t **button;
   gpio_hal_pin_cfg_t cfg;
+  gpio_hal_event_handler_t *handler;
+  int i;
 
   button_hal_press_event = process_alloc_event();
   button_hal_release_event = process_alloc_event();
   button_hal_periodic_event = process_alloc_event();
 
-  button_event_handler.pin_mask = 0;
-  button_event_handler.handler = press_release_handler;
+  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+#if GPIO_HAL_PORT_PIN_NUMBERING
+    button_event_handlers[i].port = PORT_UNUSED;
+#endif
+    button_event_handlers[i].pin_mask = 0;
+    button_event_handlers[i].handler = press_release_handler;
+  }
 
   for(button = button_hal_buttons; *button != NULL; button++) {
     cfg = GPIO_HAL_PIN_CFG_EDGE_BOTH | GPIO_HAL_PIN_CFG_INT_ENABLE |
@@ -193,12 +235,22 @@ button_hal_init()
     gpio_hal_arch_pin_set_input(BTN_PORT(*button), (*button)->pin);
     gpio_hal_arch_pin_cfg_set(BTN_PORT(*button), (*button)->pin, cfg);
     gpio_hal_arch_interrupt_enable(BTN_PORT(*button), (*button)->pin);
-    button_event_handler.pin_mask |= gpio_hal_pin_to_mask((*button)->pin);
+
+    handler = get_handler_by_port(BTN_PORT(*button));
+
+    if(handler) {
+#if GPIO_HAL_PORT_PIN_NUMBERING
+      handler->port = BTN_PORT(*button);
+#endif
+      handler->pin_mask |= gpio_hal_pin_to_mask((*button)->pin);
+    }
   }
 
   process_start(&button_hal_process, NULL);
 
-  gpio_hal_register_handler(&button_event_handler);
+  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+    gpio_hal_register_handler(&button_event_handlers[i]);
+  }
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(button_hal_process, ev, data)
@@ -206,6 +258,9 @@ PROCESS_THREAD(button_hal_process, ev, data)
   int_master_status_t status;
   gpio_hal_pin_mask_t pins;
   button_hal_button_t **button;
+#if GPIO_HAL_PORT_PIN_NUMBERING
+  uint8_t ports;
+#endif
 
   PROCESS_BEGIN();
 
@@ -215,10 +270,18 @@ PROCESS_THREAD(button_hal_process, ev, data)
     status = critical_enter();
     pins = pmask;
     pmask = 0;
+#if GPIO_HAL_PORT_PIN_NUMBERING
+    ports = port_mask;
+    port_mask = 0;
+#endif
     critical_exit(status);
 
     for(button = button_hal_buttons; *button != NULL; button++) {
-      if(gpio_hal_pin_to_mask((*button)->pin) & pins) {
+      if((gpio_hal_pin_to_mask((*button)->pin) & pins)
+#if GPIO_HAL_PORT_PIN_NUMBERING
+         && ((1 << (*button)->port) & ports)
+#endif
+         ) {
         /* Ignore all button presses/releases during its debounce */
         if(ctimer_expired(&(*button)->debounce_ctimer)) {
           /*

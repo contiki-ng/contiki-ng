@@ -60,19 +60,9 @@
  * @{
  */
 #define PLATFORM_HAS_LEDS                       1
-#define LEDS_CONF_LEGACY_API                    1
+#define LEDS_CONF_COUNT                         4
 
-#define LEDS_1         (1 << (LED_1 - LED_START)) /* 1 */
-#define LEDS_2         (1 << (LED_2 - LED_START)) /* 2 */
-#define LEDS_3         (1 << (LED_3 - LED_START)) /* 4 */
-#define LEDS_4         (1 << (LED_4 - LED_START)) /* 8 */
-
-#define LEDS_CONF_GREEN     LEDS_1
-#define LEDS_CONF_YELLOW    LEDS_2
-#define LEDS_CONF_RED       LEDS_3
-#define LEDS_CONF_BLUE      LEDS_4
-
-#define LEDS_CONF_ALL  (LEDS_1 | LEDS_2 | LEDS_3 | LEDS_4)
+#define LEDS_CONF_GREEN     1
 
 /**
  * \name Button configurations
@@ -81,13 +71,7 @@
  */
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON      1
-
-/*
- * Override button symbols from dev/button-sensor.h, for the examples that
- * include it
- */
-#define button_sensor button_1
-#define button_sensor2 button_2
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 
 /**
  * \brief nRF52 RTC instance to be used for Contiki clock driver.

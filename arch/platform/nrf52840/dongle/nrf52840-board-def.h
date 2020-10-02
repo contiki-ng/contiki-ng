@@ -60,19 +60,11 @@
  * @{
  */
 #define PLATFORM_HAS_LEDS                       1
-#define LEDS_CONF_LEGACY_API                    1
+#define LEDS_CONF_COUNT                         4
 
-#define LEDS_1         1
-#define LEDS_2         2
-#define LEDS_3         4
-#define LEDS_4         8
-
-#define LEDS_CONF_YELLOW    LEDS_1
-#define LEDS_CONF_RED       LEDS_2
-#define LEDS_CONF_GREEN     LEDS_3
-#define LEDS_CONF_BLUE      LEDS_4
-
-#define LEDS_CONF_ALL  (LEDS_1 | LEDS_2 | LEDS_3 | LEDS_4)
+#define LEDS_CONF_RED       2
+#define LEDS_CONF_GREEN     4
+#define LEDS_CONF_BLUE      8
 
 /**
  * \name Button configurations
@@ -81,6 +73,7 @@
  */
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON      1
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 
 /**
  * \brief nRF52 RTC instance to be used for Contiki clock driver.
