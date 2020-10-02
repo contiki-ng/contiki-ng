@@ -61,6 +61,9 @@ platform-specific/nrf52dk/blink-hello/nrf52dk \
 platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
 platform-specific/nrf52dk/mqtt-demo/nrf52dk \
 platform-specific/nrf52dk/timer-test/nrf52dk \
+platform-specific/oppila/orouter/client/oppila:BOARD=orouter \
+platform-specific/oppila/orouter/ip64-router/oppila:BOARD=orouter \
+platform-specific/oppila/oppila \
 platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/orion/client/zoul:BOARD=orion \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \

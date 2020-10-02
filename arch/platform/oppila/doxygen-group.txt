@@ -1,0 +1,8 @@
+/**
+ * \defgroup oppila-platform Oppila-based platform
+ * The Oppila platform is based on the CC2538 by Texas Instruments
+ * based on an ARM Cortex-M3 core and a IEEE 802.15.4 radio.
+ *
+ * The Oppila platform was designed at Oppila Microsystems in 2020
+ * \ingroup cc2538-platforms
+ */

@@ -1,6 +1,6 @@
 CONTIKI = ../../..
 
-PLATFORMS_ONLY= cc2538dk zoul sky
+PLATFORMS_ONLY= cc2538dk oppila zoul sky
 
 include $(CONTIKI)/Makefile.dir-variables
 
