@@ -169,7 +169,7 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
           LONGADDR  = FRAME802154_LONGADDRMODE,
       } AddrStyle;
 
-      unsigned long comb =  (1ul<< ((AddrStyle)fcf->dest_addr_mode))
+      unsigned long comb =  (1u << ((AddrStyle)fcf->dest_addr_mode))
                                 << ((AddrStyle)(fcf->src_addr_mode)*SSRC);
       if (fcf->panid_compression)
           comb = comb << PANID_COMPRESS ;
@@ -201,7 +201,7 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
             | (DST_NO    <<SRC_LONG)  << PANID_NO_COMPRESS
             | (DST_SHORT <<SRC_SHORT) << PANID_NO_COMPRESS
             | (DST_SHORT <<SRC_LONG)  << PANID_NO_COMPRESS
-            | (SRC_SHORT <<SRC_SHORT) << PANID_NO_COMPRESS
+            | (DST_LONG  <<SRC_SHORT) << PANID_NO_COMPRESS
             ;
     if( comb & comb_panid )
     {
