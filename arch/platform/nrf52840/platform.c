@@ -46,6 +46,7 @@
 
 #include "dev/serial-line.h"
 #include "dev/uart0.h"
+#include "usb/usb-serial.h"
 #include "lpm.h"
 
 #include <stdio.h>
@@ -107,6 +108,10 @@ platform_init_stage_two(void)
 #if BUILD_WITH_SHELL
   uart0_set_input(serial_line_input_byte);
 #endif
+#endif
+
+#if NRF52840_NATIVE_USB
+  usb_serial_init();
 #endif
 
   populate_link_address();
