@@ -58,22 +58,9 @@
 int
 dbg_putchar(int c)
 {
-#if DBG_CONF_SLIP_MUX
-  static char debug_frame = 0;
-
-  if(!debug_frame) {
-    write_byte(SLIP_END);
-    write_byte('\r');
-    debug_frame = 1;
-  }
-#endif
   write_byte(c);
 
   if(c == '\n') {
-#if DBG_CONF_SLIP_MUX
-    write_byte(SLIP_END);
-    debug_frame = 0;
-#endif
     flush();
   }
 

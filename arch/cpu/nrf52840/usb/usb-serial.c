@@ -53,7 +53,7 @@
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
 static void
-cdc_acm_port_ev_handler(app_usbd_class_inst_t const * p_inst,
+cdc_acm_port_ev_handler(app_usbd_class_inst_t const *p_inst,
                         app_usbd_cdc_acm_user_event_t event);
 /*---------------------------------------------------------------------------*/
 #define CDC_ACM_COMM_INTERFACE  0
@@ -75,66 +75,66 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm, cdc_acm_port_ev_handler,
 static uint8_t usb_rx_data[RX_BUFFER_SIZE];
 static uint8_t usb_tx_data[TX_BUFFER_SIZE];
 
-static uint8_t enabled = 0;
-static uint8_t buffered_data = 0;
-static uint8_t tx_buffer_busy = 0;
+static volatile uint8_t enabled = 0;
+static volatile uint8_t buffered_data = 0;
+static volatile uint8_t tx_buffer_busy = 0;
 /*---------------------------------------------------------------------------*/
 /* Callback to the input handler */
 static int (*input_handler)(unsigned char c);
 /*---------------------------------------------------------------------------*/
 static void
-cdc_acm_port_ev_handler(app_usbd_class_inst_t const * p_inst,
+cdc_acm_port_ev_handler(app_usbd_class_inst_t const *p_inst,
                         app_usbd_cdc_acm_user_event_t event)
 {
-  app_usbd_cdc_acm_t const * p_cdc_acm = app_usbd_cdc_acm_class_get(p_inst);
+  app_usbd_cdc_acm_t const *p_cdc_acm = app_usbd_cdc_acm_class_get(p_inst);
 
-  switch (event) {
-    case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
-    {
-      /* Set up first transfer */
-      app_usbd_cdc_acm_read_any(&m_app_cdc_acm, usb_rx_data, RX_BUFFER_SIZE);
-      enabled = 1;
-      break;
-    }
+  switch(event) {
+  case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
+  {
+    /* Set up first transfer */
+    app_usbd_cdc_acm_read_any(&m_app_cdc_acm, usb_rx_data, RX_BUFFER_SIZE);
+    enabled = 1;
+    break;
+  }
 
-    case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
-    {
-      tx_buffer_busy = 0;
-      enabled = 0;
-      break;
-    }
+  case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
+  {
+    tx_buffer_busy = 0;
+    enabled = 0;
+    break;
+  }
 
-    case APP_USBD_CDC_ACM_USER_EVT_TX_DONE:
-    {
-      tx_buffer_busy = 0;
-      break;
-    }
+  case APP_USBD_CDC_ACM_USER_EVT_TX_DONE:
+  {
+    tx_buffer_busy = 0;
+    break;
+  }
 
-    case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
-    {
-      ret_code_t ret;
+  case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
+  {
+    ret_code_t ret;
 
-      do {
-        size_t rx_size = app_usbd_cdc_acm_rx_size(p_cdc_acm);
+    do {
+      size_t rx_size = app_usbd_cdc_acm_rx_size(p_cdc_acm);
 
-        if (input_handler) {
-          uint8_t i;
+      if(input_handler) {
+        uint8_t i;
 
-          for (i = 0; i < rx_size; i++) {
-            input_handler(usb_rx_data[i]);
-          }
+        for(i = 0; i < rx_size; i++) {
+          input_handler(usb_rx_data[i]);
         }
+      }
 
-        /* Fetch up to RX_BUFFER_SIZE bytes from the internal buffer */
-        ret = app_usbd_cdc_acm_read_any(&m_app_cdc_acm,
-                                        usb_rx_data, RX_BUFFER_SIZE);
-      } while(ret == NRF_SUCCESS);
+      /* Fetch up to RX_BUFFER_SIZE bytes from the internal buffer */
+      ret = app_usbd_cdc_acm_read_any(&m_app_cdc_acm,
+                                      usb_rx_data, RX_BUFFER_SIZE);
+    } while(ret == NRF_SUCCESS);
 
-      break;
-    }
+    break;
+  }
 
-    default:
-      break;
+  default:
+    break;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -142,12 +142,12 @@ void
 usb_serial_init(void)
 {
   ret_code_t ret;
-  app_usbd_class_inst_t const * class_cdc_acm;
+  app_usbd_class_inst_t const *class_cdc_acm;
 
   app_usbd_serial_num_generate();
 
   ret = app_usbd_init(NULL);
-  if (ret != NRF_SUCCESS) {
+  if(ret != NRF_SUCCESS) {
     return;
   }
 
@@ -207,7 +207,7 @@ usb_serial_writeb(uint8_t b)
 }
 /*---------------------------------------------------------------------------*/
 void
-usb_serial_set_input(int (* input)(unsigned char c))
+usb_serial_set_input(int (*input)(unsigned char c))
 {
   input_handler = input;
 }

@@ -61,7 +61,7 @@ void usb_serial_writeb(uint8_t b);
  * \brief Set an input hook for bytes received over USB
  * \param input A pointer to a function to be called when a byte is received
  */
-void usb_serial_set_input(int (* input)(unsigned char c));
+void usb_serial_set_input(int (*input)(unsigned char c));
 
 /**
  * \brief Immediately transmit the content of Serial-over-USB TX buffers
