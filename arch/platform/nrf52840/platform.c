@@ -47,6 +47,7 @@
 #include "dev/serial-line.h"
 #include "dev/uart0.h"
 #include "usb/usb-serial.h"
+#include "usb/usb-dfu-trigger.h"
 #include "lpm.h"
 
 #include <stdio.h>
@@ -112,6 +113,10 @@ platform_init_stage_two(void)
 
 #if NRF52840_NATIVE_USB
   usb_serial_init();
+#endif
+
+#if NRF52840_USB_DFU_TRIGGER
+  dfu_trigger_usb_init();
 #endif
 
   populate_link_address();

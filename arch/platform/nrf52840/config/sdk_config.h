@@ -4175,6 +4175,37 @@
 // </h>
 //==========================================================
 
+//==========================================================
+// <h> nrf_dfu_trigger_usb - USB DFU Trigger library
+
+//==========================================================
+// <q> NRF_DFU_TRIGGER_USB_USB_SHARED  - Flag indicating whether USB is used for other purposes in the application.
+
+
+#ifndef NRF_DFU_TRIGGER_USB_USB_SHARED
+#define NRF_DFU_TRIGGER_USB_USB_SHARED 1
+#endif
+
+// <o> NRF_DFU_TRIGGER_USB_INTERFACE_NUM - The USB interface to use for the DFU Trigger library.  <0-255>
+
+
+// <i> According to the USB Specification, interface numbers cannot have
+// <i> gaps. Tailor this value to adhere to this limitation.
+
+#ifndef NRF_DFU_TRIGGER_USB_INTERFACE_NUM
+#define NRF_DFU_TRIGGER_USB_INTERFACE_NUM 2
+#endif
+
+
+// <q> APP_USBD_NRF_DFU_TRIGGER_ENABLED  - app_usbd_nrf_dfu_trigger - USBD Nordic DFU Trigger class
+
+
+#ifndef APP_USBD_NRF_DFU_TRIGGER_ENABLED
+#define APP_USBD_NRF_DFU_TRIGGER_ENABLED 1
+#endif
+
+
+//==========================================================
 // <q> NRFX_SYSTICK_ENABLED  - nrfx_systick - ARM(R) SysTick driver
 
 

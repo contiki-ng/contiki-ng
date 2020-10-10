@@ -19,3 +19,17 @@ NRF52_SDK_INC_PATHS += components/libraries/usbd/class/cdc
 NRF52_SDK_INC_PATHS += components/libraries/usbd/class/cdc/acm
 NRF52_SDK_INC_PATHS += components/libraries/atomic
 NRF52_SDK_INC_PATHS += external/utf_converter
+
+# DFU Trigger support for nRF dongles
+ifeq ($(NRF52840_USB_DFU_TRIGGER),1)
+
+CFLAGS += -DNRF52840_USB_DFU_TRIGGER=1
+
+CONTIKI_CPU_SOURCEFILES += usb-dfu-trigger.c
+
+NRF52_SDK_C_SRCS += components/libraries/usbd/class/nrf_dfu_trigger/app_usbd_nrf_dfu_trigger.c
+
+NRF52_SDK_INC_PATHS += components/libraries/usbd/class/nrf_dfu_trigger
+NRF52_SDK_INC_PATHS += components/libraries/block_dev/
+
+endif

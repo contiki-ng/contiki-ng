@@ -24,10 +24,12 @@ ifeq ($(BOARD), dongle)
   LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840-bootloader.ld
   CFLAGS += -DBOARD_PCA10059
   NRF52840_NATIVE_USB ?= 1
+  NRF52840_USB_DFU_TRIGGER ?= 1
 else
   LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840.ld
   CFLAGS += -DBOARD_PCA10056
   NRF52840_NATIVE_USB ?= 0
+  override NRF52840_USB_DFU_TRIGGER = 0
 endif
 
 ### CPU-dependent directories
