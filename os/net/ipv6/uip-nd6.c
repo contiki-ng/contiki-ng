@@ -101,7 +101,7 @@
 /** @} */
 
 #if UIP_ND6_SEND_NS || UIP_ND6_SEND_NA || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER
-static uint8_t nd6_opt_offset;                     /** Offset from the end of the icmpv6 header to the option in uip_buf*/
+static uint16_t nd6_opt_offset; /** Offset from the end of the icmpv6 header to the option in uip_buf*/
 static uint8_t *nd6_opt_llao;   /**  Pointer to llao option in uip_buf */
 static uip_ds6_nbr_t *nbr; /**  Pointer to a nbr cache entry*/
 static uip_ds6_addr_t *addr; /**  Pointer to an interface address */
