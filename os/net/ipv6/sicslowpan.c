@@ -123,6 +123,7 @@
 
 #define UIP_IPPAYLOAD_BUF_POS(pos)         (&uip_buf[UIP_IPH_LEN + (pos)])
 #define UIP_UDP_BUF_POS(pos)               ((struct uip_udp_hdr *)UIP_IPPAYLOAD_BUF_POS(pos))
+#define UIP_EXT_HDR_LEN                    2
 
 /** @} */
 
@@ -1063,12 +1064,13 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
  * are set to the appropriate values
  *
  * \param buf Pointer to the buffer to uncompress the packet into.
+ * \param buf_size The size of the buffer to uncompress the packet into.
  * \param ip_len Equal to 0 if the packet is not a fragment (IP length
  * is then inferred from the L2 length), non 0 if the packet is a 1st
  * fragment.
  */
 static void
-uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
+uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
 {
   uint8_t tmp, iphc0, iphc1, nhc;
   struct uip_ext_hdr *exthdr;
@@ -1262,23 +1264,32 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t ip_len)
       return;
     }
     *last_nextheader = proto;
-    /* uncompress the extension header */
-    exthdr = (struct uip_ext_hdr *)ip_payload;
-    exthdr->len = (2 + len) / 8 - 1;
-    exthdr->next = next;
-    last_nextheader = &exthdr->next;
-    if(ip_len == 0 && (uint8_t *)exthdr - uip_buf + 2 + len > sizeof(uip_buf)) {
-      LOG_DBG("uncompression: ext header points beyond uip buffer boundary\n");
+
+    /* Check that there is enough room to write the extension header. */
+    if((ip_payload - buf) + UIP_EXT_HDR_LEN + len > buf_size) {
+      LOG_WARN("uncompression: cannot write ext header beyond target buffer\n");
       return;
     }
-    memcpy((uint8_t*)exthdr + 2, hc06_ptr, len);
+
+    /* uncompress the extension header */
+    exthdr = (struct uip_ext_hdr *)ip_payload;
+    exthdr->len = (UIP_EXT_HDR_LEN + len) / 8;
+    if(exthdr->len == 0) {
+      LOG_WARN("Extension header length is below 8\n");
+      return;
+    }
+    exthdr->len--;
+    exthdr->next = next;
+    last_nextheader = &exthdr->next;
+    memcpy((uint8_t *)exthdr + UIP_EXT_HDR_LEN, hc06_ptr, len);
+
     hc06_ptr += len;
     uncomp_hdr_len += (exthdr->len + 1) * 8;
     ip_payload += (exthdr->len + 1) * 8;
     ext_hdr_len += (exthdr->len + 1) * 8;
 
-    LOG_DBG("uncompression: %d len: %d exhdrlen: %d (calc: %d)\n",
-           proto, len, exthdr->len, (exthdr->len + 1) * 8);
+    LOG_DBG("uncompression: %d len: %d exthdr len: %d (calc: %d)\n",
+            proto, len, exthdr->len, (exthdr->len + 1) * 8);
   }
 
   /* The next header is compressed, NHC is following */
@@ -1806,6 +1817,7 @@ input(void)
   /* offset of the fragment in the IP packet */
   uint8_t frag_offset = 0;
   uint8_t *buffer;
+  uint16_t buffer_size;
 
 #if SICSLOWPAN_CONF_FRAG
   uint8_t is_fragment = 0;
@@ -1836,6 +1848,7 @@ input(void)
 
   /* This is default uip_buf since we assume that this is not fragmented */
   buffer = (uint8_t *)UIP_IP_BUF;
+  buffer_size = UIP_BUFSIZE;
 
   /* Save the RSSI of the incoming packet in case the upper layer will
      want to query us for it later. */
@@ -1868,6 +1881,7 @@ input(void)
       }
 
       buffer = frag_info[frag_context].first_frag;
+      buffer_size = SICSLOWPAN_FIRST_FRAGMENT_SIZE;
       break;
     case SICSLOWPAN_DISPATCH_FRAGN:
       /*
@@ -1922,7 +1936,7 @@ input(void)
   if(SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6 &&
      (PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
     LOG_DBG("uncompression: IPHC dispatch\n");
-    uncompress_hdr_iphc(buffer, frag_size);
+    uncompress_hdr_iphc(buffer, buffer_size, frag_size);
   } else if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
     LOG_DBG("uncompression: IPV6 dispatch\n");
     packetbuf_hdr_len += SICSLOWPAN_IPV6_HDR_LEN;
