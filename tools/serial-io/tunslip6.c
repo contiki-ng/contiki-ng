@@ -858,24 +858,24 @@ fprintf(stderr, " -M             Interface MTU (default and min: 1280)\n");
 fprintf(stderr, " -T             Make tap interface (default is tun interface)\n");
 fprintf(stderr, " -t tundev      Name of interface (default tap0 or tun0)\n");
 #ifdef __APPLE__
-fprintf(stderr," -v level       Verbosity level\n");
+fprintf(stderr, " -v level       Verbosity level\n");
 #else
-fprintf(stderr," -v[level]      Verbosity level\n");
+fprintf(stderr, " -v[level]      Verbosity level\n");
 #endif
-fprintf(stderr,"    -v0         No messages\n");
-fprintf(stderr,"    -v1         Encapsulated SLIP debug messages\n");
-fprintf(stderr,"    -v2         Printable strings after they are received (default)\n");
-fprintf(stderr,"    -v3         Printable strings and SLIP packet notifications\n");
-fprintf(stderr,"    -v4         All printable characters as they are received\n");
-fprintf(stderr,"    -v5         All SLIP packets in hex\n");
+fprintf(stderr, "    -v0         No messages\n");
+fprintf(stderr, "    -v1         Encapsulated SLIP debug messages\n");
+fprintf(stderr, "    -v2         Printable strings after they are received (default)\n");
+fprintf(stderr, "    -v3         Printable strings and SLIP packet notifications\n");
+fprintf(stderr, "    -v4         All printable characters as they are received\n");
+fprintf(stderr, "    -v5         All SLIP packets in hex\n");
 #ifndef __APPLE__
-fprintf(stderr,"    -v          Equivalent to -v2\n");
+fprintf(stderr, "    -v          Equivalent to -v2\n");
 #endif
-fprintf(stderr," -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
-fprintf(stderr,"                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
-fprintf(stderr,"                -d is equivalent to -d10.\n");
-fprintf(stderr," -a serveraddr  \n");
-fprintf(stderr," -p serverport  \n");
+fprintf(stderr, " -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
+fprintf(stderr, "                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
+fprintf(stderr, "                -d is equivalent to -d10.\n");
+fprintf(stderr, " -a serveraddr  \n");
+fprintf(stderr, " -p serverport  \n");
 exit(1);
       break;
     }
