@@ -115,7 +115,7 @@ snmp_message_decode(uint8_t *buf, uint32_t buf_len, snmp_header_t *header,
                     snmp_varbind_t *varbinds, uint32_t *varbind_num)
 {
   uint8_t type, len;
-  uint32_t i, oid_len;
+  uint32_t i, oid_len = SNMP_MSG_OID_MAX_LEN;
 
   buf = snmp_ber_decode_type(buf, &buf_len, &type);
   if(buf == NULL) {
@@ -224,6 +224,10 @@ snmp_message_decode(uint8_t *buf, uint32_t buf_len, snmp_header_t *header,
   }
 
   for(i = 0; buf_len > 0; ++i) {
+    if (i >= *varbind_num)
+    {
+      return NULL;
+    }
 
     buf = snmp_ber_decode_type(buf, &buf_len, &type);
     if(buf == NULL) {

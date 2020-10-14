@@ -128,6 +128,11 @@ snmp_ber_encode_null(unsigned char *out, uint32_t *out_len, uint8_t type)
 unsigned char *
 snmp_ber_decode_type(unsigned char *buff, uint32_t *buff_len, uint8_t *type)
 {
+  if(*buff_len == 0)
+  {
+    return NULL;
+  }
+
   *type = *buff++;
   (*buff_len)--;
 
@@ -137,6 +142,11 @@ snmp_ber_decode_type(unsigned char *buff, uint32_t *buff_len, uint8_t *type)
 unsigned char *
 snmp_ber_decode_length(unsigned char *buff, uint32_t *buff_len, uint8_t *length)
 {
+  if(*buff_len == 0)
+  {
+    return NULL;
+  }
+
   *length = *buff++;
   (*buff_len)--;
 
@@ -150,7 +160,8 @@ snmp_ber_decode_integer(unsigned char *buf, uint32_t *buff_len, uint32_t *num)
 
   buf = snmp_ber_decode_type(buf, buff_len, &type);
 
-  if(type != BER_DATA_TYPE_INTEGER) {
+  if(buf == NULL ||
+     type != BER_DATA_TYPE_INTEGER) {
     /*
      * Sanity check
      * Invalid type in buffer
@@ -160,11 +171,17 @@ snmp_ber_decode_integer(unsigned char *buf, uint32_t *buff_len, uint32_t *num)
 
   buf = snmp_ber_decode_length(buf, buff_len, &len);
 
-  if(len > 4) {
+  if(buf == NULL ||
+     len > 4) {
     /*
      * Sanity check
      * It will not fit in the uint32_t
      */
+    return NULL;
+  }
+
+  if(*buff_len < len)
+  {
     return NULL;
   }
 
@@ -186,7 +203,8 @@ snmp_ber_decode_unsigned_integer(unsigned char *buf, uint32_t *buff_len, uint8_t
 
   buf = snmp_ber_decode_type(buf, buff_len, &type);
 
-  if(type != expected_type) {
+  if(buf == NULL ||
+     type != expected_type) {
     /*
      * Sanity check
      * Invalid type in buffer
@@ -196,11 +214,17 @@ snmp_ber_decode_unsigned_integer(unsigned char *buf, uint32_t *buff_len, uint8_t
 
   buf = snmp_ber_decode_length(buf, buff_len, &len);
 
-  if(len > 4) {
+  if(buf == NULL ||
+     len > 4) {
     /*
      * Sanity check
      * It will not fit in the uint32_t
      */
+    return NULL;
+  }
+
+  if(*buff_len < len)
+  {
     return NULL;
   }
 
@@ -222,7 +246,8 @@ snmp_ber_decode_string_len_buffer(unsigned char *buf, uint32_t *buff_len, const 
 
   buf = snmp_ber_decode_type(buf, buff_len, &type);
 
-  if(type != BER_DATA_TYPE_OCTET_STRING) {
+  if(buf == NULL ||
+    type != BER_DATA_TYPE_OCTET_STRING) {
     /*
      * Sanity check
      * Invalid type in buffer
