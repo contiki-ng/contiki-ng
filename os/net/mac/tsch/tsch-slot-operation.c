@@ -337,7 +337,8 @@ tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_
 /*---------------------------------------------------------------------------*/
 /* Get EB, broadcast or unicast packet to be sent, and target neighbor. */
 static struct tsch_packet *
-get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **target_neighbor)
+get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_link *backup_link,
+                                 struct tsch_neighbor **target_neighbor)
 {
   struct tsch_packet *p = NULL;
   struct tsch_neighbor *n = NULL;
@@ -348,17 +349,17 @@ get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **
     if(link->link_type == LINK_TYPE_ADVERTISING || link->link_type == LINK_TYPE_ADVERTISING_ONLY) {
       /* fetch EB packets */
       n = n_eb;
-      p = tsch_queue_get_packet_for_nbr(n, link);
+      p = tsch_queue_get_packet_for_nbr(n, link, backup_link);
     }
     if(link->link_type != LINK_TYPE_ADVERTISING_ONLY) {
       /* NORMAL link or no EB to send, pick a data packet */
       if(p == NULL) {
         /* Get neighbor queue associated to the link and get packet from it */
         n = tsch_queue_get_nbr(&link->addr);
-        p = tsch_queue_get_packet_for_nbr(n, link);
+        p = tsch_queue_get_packet_for_nbr(n, link, backup_link);
         /* if it is a broadcast slot and there were no broadcast packets, pick any unicast packet */
         if(p == NULL && n == n_broadcast) {
-          p = tsch_queue_get_unicast_packet_for_any(&n, link);
+          p = tsch_queue_get_unicast_packet_for_any(&n, link, backup_link);
         }
       }
     }
@@ -1034,7 +1035,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       drift_correction = 0;
       is_drift_correction_used = 0;
       /* Get a packet ready to be sent */
-      current_packet = get_packet_and_neighbor_for_link(current_link, &current_neighbor);
+      current_packet = get_packet_and_neighbor_for_link(current_link, backup_link, &current_neighbor);
       /* There is no packet to send, and this link does not have Rx flag. Instead of doing
        * nothing, switch to the backup link (has Rx flag) if any. */
       if(current_packet == NULL && !(current_link->link_options & LINK_OPTION_RX) && backup_link != NULL) {
@@ -1042,7 +1043,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
         update_link_backoff(current_link);
 
         current_link = backup_link;
-        current_packet = get_packet_and_neighbor_for_link(current_link, &current_neighbor);
+        current_packet = get_packet_and_neighbor_for_link(current_link, NULL, &current_neighbor);
       }
       is_active_slot = current_packet != NULL || (current_link->link_options & LINK_OPTION_RX);
       if(is_active_slot) {
