@@ -871,9 +871,15 @@ fprintf(stderr, "    -v5         All SLIP packets in hex\n");
 #ifndef __APPLE__
 fprintf(stderr, "    -v          Equivalent to -v2\n");
 #endif
+#ifdef __APPLE__
+fprintf(stderr, " -d basedelay   Minimum delay between outgoing SLIP packets.\n");
+#else
 fprintf(stderr, " -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
+#endif
 fprintf(stderr, "                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
+#ifndef __APPLE__
 fprintf(stderr, "                -d is equivalent to -d10.\n");
+#endif
 fprintf(stderr, " -a serveraddr  \n");
 fprintf(stderr, " -p serverport  \n");
 exit(1);
