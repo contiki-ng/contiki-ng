@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2020, Alex Stanoev - https://astanoev.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,41 +27,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "nrf52840-conf.h"
-#include "dev/slip.h"
-#include "dev/uart0.h"
-#include "usb/usb-serial.h"
-/*---------------------------------------------------------------------------*/
-#ifndef SLIP_ARCH_CONF_USB
-#define SLIP_ARCH_CONF_USB 0
-#endif
+/**
+ * \addtogroup nrf52840-usb
+ * @{
+ *
+ * \file
+ * Header file for the nRF52840 Dongle DFU trigger library
+ */
+#ifndef USB_DFU_TRIGGER_H_
+#define USB_DFU_TRIGGER_H_
 
-#if SLIP_ARCH_CONF_USB
-#define write_byte(b) usb_serial_writeb(b)
-#define set_input(f)  usb_serial_set_input(f)
-#define flush()       usb_serial_flush()
-#else
-#define write_byte(b) uart0_writeb(b)
-#define set_input(f)  uart0_set_input(f)
-#define flush()
-#endif
+/**
+ * \brief Initialise the DFU trigger library.
+ */
+void dfu_trigger_usb_init(void);
 
-#define SLIP_END     0300
-/*---------------------------------------------------------------------------*/
-void
-slip_arch_writeb(unsigned char c)
-{
-  write_byte(c);
-  if(c == SLIP_END) {
-    flush();
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-slip_arch_init()
-{
-  set_input(slip_input_byte);
-}
-/*---------------------------------------------------------------------------*/
+#endif /* USB_DFU_TRIGGER_H_ */
+
+/** @} */

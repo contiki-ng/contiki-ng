@@ -35,9 +35,37 @@
  *         Hardware specific implementation of putchar() and puts() functions.
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
+ *         Alex Stanoev <alex@astanoev.com>
  *
  */
+#include "nrf52840-conf.h"
 #include "dev/uart0.h"
+#include "usb/usb-serial.h"
+
+/*---------------------------------------------------------------------------*/
+#ifndef DBG_CONF_USB
+#define DBG_CONF_USB 0
+#endif
+
+#if DBG_CONF_USB
+#define write_byte(b) usb_serial_writeb(b)
+#define flush()       usb_serial_flush()
+#else
+#define write_byte(b) uart0_writeb(b)
+#define flush()
+#endif
+/*---------------------------------------------------------------------------*/
+int
+dbg_putchar(int c)
+{
+  write_byte(c);
+
+  if(c == '\n') {
+    flush();
+  }
+
+  return c;
+}
 /*---------------------------------------------------------------------------*/
 unsigned int
 dbg_send_bytes(const unsigned char *s, unsigned int len)
@@ -48,18 +76,13 @@ dbg_send_bytes(const unsigned char *s, unsigned int len)
     if(i >= len) {
       break;
     }
-    uart0_writeb(*s++);
+    dbg_putchar(*s++);
     i++;
   }
 
+  flush();
+
   return i;
-}
-/*---------------------------------------------------------------------------*/
-int
-dbg_putchar(int c)
-{
-  uart0_writeb(c);
-  return c;
 }
 /*---------------------------------------------------------------------------*/
 /**
