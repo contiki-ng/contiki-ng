@@ -890,7 +890,13 @@ exit(1);
   argv += (optind - 1);
 
   if(argc != 2 && argc != 3) {
-    err(1, "usage: %s [-B baudrate] [-P] [-H] [-I] [-X] [-L] [-s siodev] [-M] [-T] [-t tundev] [-v level] [-d basedelay] [-a serveraddr] [-p serverport] ipaddress", prog);
+    err(1, "usage: %s [-B baudrate] [-P] [-H] [-I] [-X] [-L] [-s siodev] [-M] [-T] [-t tundev] "
+#ifdef __APPLE__
+           "[-v level] [-d basedelay] "
+#else
+           "[-v [level]] [-d [basedelay]] "
+#endif
+           "[-a serveraddr] [-p serverport] ipaddress", prog);
   }
   ipaddr = argv[1];
 
