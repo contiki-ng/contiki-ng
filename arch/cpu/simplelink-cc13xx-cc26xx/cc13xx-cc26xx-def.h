@@ -158,10 +158,10 @@
 #define TSCH_CONF_ASSOCIATION_POLL_FREQUENCY 10
 #endif
 
-/* Slightly reduce the TSCH guard time (from 2200 usec to 1800 usec) to make sure
- * the CC26xx radio has sufficient time to start up. */
+/* Increase TSCH guard time from 2200 usec to 3000 usec.
+ * This is required for simplelink radio to have stable operation, especially in sub-GHz range . */
 #ifndef TSCH_CONF_RX_WAIT
-#define TSCH_CONF_RX_WAIT 1800
+#define TSCH_CONF_RX_WAIT 3000
 #endif
 /*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */
