@@ -421,10 +421,8 @@ tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *l
 #if TSCH_WITH_LINK_SELECTOR
         int packet_attr_slotframe = queuebuf_attr(n->tx_array[get_index]->qb, PACKETBUF_ATTR_TSCH_SLOTFRAME);
         int packet_attr_timeslot = queuebuf_attr(n->tx_array[get_index]->qb, PACKETBUF_ATTR_TSCH_TIMESLOT);
-        if(packet_attr_slotframe != 0xffff){
-          if (packet_attr_slotframe != link->slotframe_handle) {
-            return NULL;
-          }
+        if(packet_attr_slotframe != 0xffff && packet_attr_slotframe != link->slotframe_handle) {
+          return NULL;
         }
         if(packet_attr_timeslot != 0xffff && packet_attr_timeslot != link->timeslot) {
           return NULL;
