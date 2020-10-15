@@ -409,8 +409,7 @@ tsch_queue_is_empty(const struct tsch_neighbor *n)
 /*---------------------------------------------------------------------------*/
 /* Returns the first packet from a neighbor queue */
 struct tsch_packet *
-tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *link,
-                              struct tsch_link *backup_link)
+tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *link)
 {
   if(!tsch_is_locked()) {
     int is_shared_link = link != NULL && link->link_options & LINK_OPTION_SHARED;
@@ -424,10 +423,6 @@ tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *l
         int packet_attr_timeslot = queuebuf_attr(n->tx_array[get_index]->qb, PACKETBUF_ATTR_TSCH_TIMESLOT);
         if(packet_attr_slotframe != 0xffff){
           if (packet_attr_slotframe != link->slotframe_handle) {
-            return NULL;
-          }
-          if(backup_link != NULL && packet_attr_slotframe != backup_link->slotframe_handle) {
-            /* Filter out by backup link: prefer receiving packets from another slotframe to sending packets */
             return NULL;
           }
         }
@@ -444,11 +439,10 @@ tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *l
 /*---------------------------------------------------------------------------*/
 /* Returns the head packet from a neighbor queue (from neighbor address) */
 struct tsch_packet *
-tsch_queue_get_packet_for_dest_addr(const linkaddr_t *addr, struct tsch_link *link,
-                                    struct tsch_link *backup_link)
+tsch_queue_get_packet_for_dest_addr(const linkaddr_t *addr, struct tsch_link *link)
 {
   if(!tsch_is_locked()) {
-    return tsch_queue_get_packet_for_nbr(tsch_queue_get_nbr(addr), link, backup_link);
+    return tsch_queue_get_packet_for_nbr(tsch_queue_get_nbr(addr), link);
   }
   return NULL;
 }
@@ -456,8 +450,7 @@ tsch_queue_get_packet_for_dest_addr(const linkaddr_t *addr, struct tsch_link *li
 /* Returns the head packet of any neighbor queue with zero backoff counter.
  * Writes pointer to the neighbor in *n */
 struct tsch_packet *
-tsch_queue_get_unicast_packet_for_any(struct tsch_neighbor **n, struct tsch_link *link,
-                                      struct tsch_link *backup_link)
+tsch_queue_get_unicast_packet_for_any(struct tsch_neighbor **n, struct tsch_link *link)
 {
   if(!tsch_is_locked()) {
     struct tsch_neighbor *curr_nbr = (struct tsch_neighbor *)nbr_table_head(tsch_neighbors);
@@ -465,7 +458,7 @@ tsch_queue_get_unicast_packet_for_any(struct tsch_neighbor **n, struct tsch_link
     while(curr_nbr != NULL) {
       if(!curr_nbr->is_broadcast && curr_nbr->tx_links_count == 0) {
         /* Only look up for non-broadcast neighbors we do not have a tx link to */
-        p = tsch_queue_get_packet_for_nbr(curr_nbr, link, backup_link);
+        p = tsch_queue_get_packet_for_nbr(curr_nbr, link);
         if(p != NULL) {
           if(n != NULL) {
             *n = curr_nbr;

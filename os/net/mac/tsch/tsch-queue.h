@@ -141,29 +141,23 @@ int tsch_queue_is_empty(const struct tsch_neighbor *n);
  * \brief Returns the first packet that can be sent from a queue on a given link
  * \param n The neighbor queue
  * \param link The link
- * \param backup_link The backup link for this timeslot, if any
  * \return The next packet to be sent for the neighbor on the given link, if any, else NULL
  */
-struct tsch_packet *tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *link,
-                                                  struct tsch_link *backup_link);
+struct tsch_packet *tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *link);
 /**
  * \brief Returns the first packet that can be sent to a given address on a given link
  * \param addr The target link-layer address
  * \param link The link
- * \param backup_link The backup link for this timeslot, if any
  * \return The next packet to be sent for to the given address on the given link, if any, else NULL
  */
-struct tsch_packet *tsch_queue_get_packet_for_dest_addr(const linkaddr_t *addr, struct tsch_link *link,
-                                                        struct tsch_link *backup_link);
+struct tsch_packet *tsch_queue_get_packet_for_dest_addr(const linkaddr_t *addr, struct tsch_link *link);
 /**
  * \brief Gets the head packet of any neighbor queue with zero backoff counter.
  * \param n A pointer where to store the neighbor queue to be used for Tx
  * \param link The link to be used for Tx
- * \param backup_link The backup link for this timeslot, if any
  * \return The packet if any, else NULL
  */
-struct tsch_packet *tsch_queue_get_unicast_packet_for_any(struct tsch_neighbor **n, struct tsch_link *link,
-                                                          struct tsch_link *backup_link);
+struct tsch_packet *tsch_queue_get_unicast_packet_for_any(struct tsch_neighbor **n, struct tsch_link *link);
 /**
  * \brief Is the neighbor backoff timer expired?
  * \param n The neighbor queue
