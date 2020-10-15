@@ -224,8 +224,7 @@ snmp_message_decode(uint8_t *buf, uint32_t buf_len, snmp_header_t *header,
   }
 
   for(i = 0; buf_len > 0; ++i) {
-    if (i >= *varbind_num)
-    {
+    if(i >= *varbind_num) {
       return NULL;
     }
 
