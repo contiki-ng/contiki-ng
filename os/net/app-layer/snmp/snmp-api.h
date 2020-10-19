@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      The public API for the Contiki-NG SNMP implementation
+ *      SNMP Implementation of the public API
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -49,11 +49,10 @@
 #include "snmp-mib.h"
 
 /**
- * \defgroup SNMPAPI This is the SNMP Public API
+ * \addtogroup SNMPAPI SNMP Public API
  * @{
  *
  * This group contains all the functions that can be used outside the OS level.
- * The function outside this header can be changed without notice
  */
 
 /**
@@ -62,7 +61,7 @@
  * @param varbind The varbind that is being changed
  * @param oid The oid from the resource
  */
-typedef void (*snmp_mib_resource_handler_t)(snmp_varbind_t *varbind, uint32_t *oid);
+typedef void (*snmp_mib_resource_handler_t)(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 /**
  * @brief The MIB Resource struct
@@ -78,7 +77,10 @@ typedef struct snmp_mib_resource_s snmp_mib_resource_t;
  * @param ... The Oid (comma-separeted)
  */
 #define OID(name, ...) \
-  static uint32_t name[] = { __VA_ARGS__, -1 };
+  static snmp_oid_t name = { \
+    .data = __VA_ARGS__, \
+    .length = (sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t)) \
+  };
 
 /**
  * @brief Declare a MIB resource
@@ -88,8 +90,14 @@ typedef struct snmp_mib_resource_s snmp_mib_resource_t;
  * @param ... The OID (comma-separated)
  */
 #define MIB_RESOURCE(name, handler, ...) \
-  uint32_t name##_oid[] = { __VA_ARGS__, -1 }; \
-  snmp_mib_resource_t name = { NULL, name##_oid, handler };
+  snmp_mib_resource_t name = { \
+    NULL, \
+    { \
+      .data = __VA_ARGS__, \
+      .length = (sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t)) \
+    }, \
+    handler \
+  };
 
 /**
  * @brief Function to set a varbind with a string
@@ -101,7 +109,7 @@ typedef struct snmp_mib_resource_s snmp_mib_resource_t;
  * @param string The string
  */
 void
-snmp_api_set_string(snmp_varbind_t *varbind, uint32_t *oid, char *string);
+snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string);
 
 /**
  * @brief Function to set a varbind with a time tick
@@ -113,7 +121,7 @@ snmp_api_set_string(snmp_varbind_t *varbind, uint32_t *oid, char *string);
  * @param integer The time tick value
  */
 void
-snmp_api_set_time_ticks(snmp_varbind_t *varbind, uint32_t *oid, uint32_t integer);
+snmp_api_set_time_ticks(snmp_varbind_t *varbind, snmp_oid_t *oid, uint32_t integer);
 
 /**
  * @brief Function to set a varbind with a oid
@@ -125,7 +133,7 @@ snmp_api_set_time_ticks(snmp_varbind_t *varbind, uint32_t *oid, uint32_t integer
  * @param ret_oid The oid value
  */
 void
-snmp_api_set_oid(snmp_varbind_t *varbind, uint32_t *oid, uint32_t *ret_oid);
+snmp_api_set_oid(snmp_varbind_t *varbind, snmp_oid_t *oid, snmp_oid_t *ret_oid);
 
 /**
  * @brief Function to add a new resource

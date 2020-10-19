@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,12 @@
 
 /*---------------------------------------------------------------------------*/
 static void
-sysDescr_handler(snmp_varbind_t *varbind, uint32_t *oid);
+sysDescr_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 MIB_RESOURCE(sysDescr, sysDescr_handler, 1, 3, 6, 1, 2, 1, 1, 1, 0);
 
 static void
-sysDescr_handler(snmp_varbind_t *varbind, uint32_t *oid)
+sysDescr_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
   snmp_api_set_string(varbind, oid, CONTIKI_VERSION_STRING);
 }
@@ -46,26 +46,26 @@ sysDescr_handler(snmp_varbind_t *varbind, uint32_t *oid)
 
 /*---------------------------------------------------------------------------*/
 static void
-sysObjectID_handler(snmp_varbind_t *varbind, uint32_t *oid);
+sysObjectID_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 MIB_RESOURCE(sysObjectID, sysObjectID_handler, 1, 3, 6, 1, 2, 1, 1, 2, 0);
 
 static void
-sysObjectID_handler(snmp_varbind_t *varbind, uint32_t *oid)
+sysObjectID_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
   OID(sysObjectID_oid, 1, 3, 6, 1, 4, 1, 54352);
-  snmp_api_set_oid(varbind, oid, sysObjectID_oid);
+  snmp_api_set_oid(varbind, oid, &sysObjectID_oid);
 }
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
 static void
-sysUpTime_handler(snmp_varbind_t *varbind, uint32_t *oid);
+sysUpTime_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 MIB_RESOURCE(sysUpTime, sysUpTime_handler, 1, 3, 6, 1, 2, 1, 1, 3, 0);
 
 static void
-sysUpTime_handler(snmp_varbind_t *varbind, uint32_t *oid)
+sysUpTime_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
   snmp_api_set_time_ticks(varbind, oid, clock_seconds() * 100);
 }
@@ -73,12 +73,12 @@ sysUpTime_handler(snmp_varbind_t *varbind, uint32_t *oid)
 
 /*---------------------------------------------------------------------------*/
 static void
-sysContact_handler(snmp_varbind_t *varbind, uint32_t *oid);
+sysContact_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 MIB_RESOURCE(sysContact, sysContact_handler, 1, 3, 6, 1, 2, 1, 1, 4, 0);
 
 static void
-sysContact_handler(snmp_varbind_t *varbind, uint32_t *oid)
+sysContact_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
   snmp_api_set_string(varbind, oid, "Contiki-NG, https://github.com/contiki-ng/contiki-ng");
 }
@@ -86,12 +86,12 @@ sysContact_handler(snmp_varbind_t *varbind, uint32_t *oid)
 
 /*---------------------------------------------------------------------------*/
 static void
-sysName_handler(snmp_varbind_t *varbind, uint32_t *oid);
+sysName_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 MIB_RESOURCE(sysName, sysName_handler, 1, 3, 6, 1, 2, 1, 1, 5, 0);
 
 static void
-sysName_handler(snmp_varbind_t *varbind, uint32_t *oid)
+sysName_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
   snmp_api_set_string(varbind, oid, "Contiki-NG - "CONTIKI_TARGET_STRING);
 }
@@ -99,12 +99,12 @@ sysName_handler(snmp_varbind_t *varbind, uint32_t *oid)
 
 /*---------------------------------------------------------------------------*/
 static void
-sysLocation_handler(snmp_varbind_t *varbind, uint32_t *oid);
+sysLocation_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 MIB_RESOURCE(sysLocation, sysLocation_handler, 1, 3, 6, 1, 2, 1, 1, 6, 0);
 
 static void
-sysLocation_handler(snmp_varbind_t *varbind, uint32_t *oid)
+sysLocation_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
   snmp_api_set_string(varbind, oid, "");
 }
@@ -112,12 +112,12 @@ sysLocation_handler(snmp_varbind_t *varbind, uint32_t *oid)
 
 /*---------------------------------------------------------------------------*/
 static void
-sysServices_handler(snmp_varbind_t *varbind, uint32_t *oid);
+sysServices_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
 
 MIB_RESOURCE(sysServices, sysServices_handler, 1, 3, 6, 1, 2, 1, 1, 7, 0);
 
 static void
-sysServices_handler(snmp_varbind_t *varbind, uint32_t *oid)
+sysServices_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
   snmp_api_set_time_ticks(varbind, oid, clock_seconds() * 100);
 }
