@@ -73,7 +73,7 @@ jobs:
     # contiki-ng repo and iii) this is a push (merge commit) to one of the
     # branches of interest then push the image to dockerhub
     - name: Push images to dockerhub
-      if: github.repository == 'contiki-ng/contiki-ng' && github.event_name == 'push'
+      if: env.DOCKER_NEED_BUILD == '1' && github.repository == 'contiki-ng/contiki-ng' && github.event_name == 'push'
       run: |
         # Extract the branch name from github.ref. For example, from
         # 'refs/heads/master' we want to keep 'master'
