@@ -80,11 +80,15 @@ jobs:
         MERGE_BRANCH_REF=$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
         echo This is a build for branch $MERGE_BRANCH_REF and it updates the docker container
         echo Push images to Dockerhub
-        echo Will push $DOCKER_IMG as well as $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
         echo ${{ secrets.DOCKERHUB_PASSWD }} | docker login --username contiker --password-stdin
-        docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
         docker push $DOCKER_IMG
+        docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
         docker push $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
+        if [ $MERGE_BRANCH_REF == develop ]; then
+          # When develop is updated, also push docker image with tag 'latest'
+          docker tag $DOCKER_IMG $DOCKER_BASE_IMG:latest
+          docker push $DOCKER_BASE_IMG:latest
+        fi
 
     # Clone the repo used for out-of-tree builds if required
     - name: Clone the repo used for out-of-tree builds if required
