@@ -450,13 +450,15 @@ tsch_schedule_get_next_active_link(struct tsch_asn_t *asn, uint16_t *time_offset
           }
 
           /* Maintain backup_link */
-          if(curr_backup == NULL) {
-            /* Check if 'l' best can be used as backup */
-            if(new_best != l && (l->link_options & LINK_OPTION_RX)) { /* Does 'l' have Rx flag? */
+          /* Check if 'l' best can be used as backup */
+          if(new_best != l && (l->link_options & LINK_OPTION_RX)) { /* Does 'l' have Rx flag? */
+            if(curr_backup == NULL || l->slotframe_handle < curr_backup->slotframe_handle) {
               curr_backup = l;
             }
-            /* Check if curr_best can be used as backup */
-            if(new_best != curr_best && (curr_best->link_options & LINK_OPTION_RX)) { /* Does curr_best have Rx flag? */
+          }
+          /* Check if curr_best can be used as backup */
+          if(new_best != curr_best && (curr_best->link_options & LINK_OPTION_RX)) { /* Does curr_best have Rx flag? */
+            if(curr_backup == NULL || curr_best->slotframe_handle < curr_backup->slotframe_handle) {
               curr_backup = curr_best;
             }
           }
