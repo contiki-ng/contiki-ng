@@ -39,7 +39,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/leds.h"
-#include "dev/rgb-led/rgb-led.h"
+#include "dev/etc/rgb-led/rgb-led.h"
 /*---------------------------------------------------------------------------*/
 void
 rgb_led_off(void)

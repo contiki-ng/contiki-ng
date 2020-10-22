@@ -30,8 +30,8 @@
  */
 
 #include "contiki.h"
-#include "enc28j60.h"
-#include "enc28j60-ip64-driver.h"
+#include "dev/ethernet/enc28j60/enc28j60.h"
+#include "dev/ethernet/enc28j60/enc28j60-ip64-driver.h"
 #include "linkaddr.h"
 
 #include "ip64/ip64.h"

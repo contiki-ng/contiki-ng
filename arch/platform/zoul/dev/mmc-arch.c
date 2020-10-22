@@ -43,7 +43,7 @@
 #include "dev/ioc.h"
 #include "dev/gpio.h"
 #include "dev/spi-legacy.h"
-#include "mmc-arch.h"
+#include "dev/storage/disk/mmc/mmc-arch.h"
 
 #define USD_SEL_PORT_BASE       GPIO_PORT_TO_BASE(USD_SEL_PORT)
 #define USD_SEL_PIN_MASK        GPIO_PIN_MASK(USD_SEL_PIN)

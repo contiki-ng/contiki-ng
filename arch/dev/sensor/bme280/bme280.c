@@ -40,8 +40,8 @@
 
 #include "contiki.h"
 #include <string.h>
-#include "bme280.h"
-#include "bme280-arch.h"
+#include "dev/sensor/bme280/bme280.h"
+#include "dev/sensor/bme280/bme280-arch.h"
 #include "lib/sensors.h"
 
 static struct {
