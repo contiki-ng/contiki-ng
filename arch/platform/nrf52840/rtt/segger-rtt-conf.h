@@ -53,7 +53,7 @@ Purpose : Implementation of SEGGER real-time transfer (RTT) which
 #if (defined __SES_ARM) || (defined __CROSSWORKS_ARM) || (defined __GNUC__)
   #ifdef __ARM_ARCH_6M__
     #define SEGGER_RTT_LOCK(SavedState)   {                                               \
-                                          asm volatile ("mrs   %0, primask  \n\t"         \
+                                          __asm__ volatile ("mrs   %0, primask  \n\t"     \
                                                         "mov   r1, $1     \n\t"           \
                                                         "msr   primask, r1  \n\t"         \
                                                         : "=r" (SavedState)               \
@@ -63,7 +63,7 @@ Purpose : Implementation of SEGGER real-time transfer (RTT) which
                                           }
 
     #define SEGGER_RTT_UNLOCK(SavedState) {                                               \
-                                          asm volatile ("msr   primask, %0  \n\t"         \
+                                          __asm__ volatile ("msr   primask, %0  \n\t"     \
                                                         :                                 \
                                                         : "r" (SavedState)                \
                                                         :                                 \
@@ -72,7 +72,7 @@ Purpose : Implementation of SEGGER real-time transfer (RTT) which
 
   #elif (defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__))
     #define SEGGER_RTT_LOCK(SavedState)   {                                               \
-                                          asm volatile ("mrs   %0, basepri  \n\t"         \
+                                          __asm__ volatile ("mrs   %0, basepri  \n\t"     \
                                                       "mov   r1, $128     \n\t"           \
                                                       "msr   basepri, r1  \n\t"           \
                                                       : "=r" (SavedState)                 \
@@ -81,7 +81,7 @@ Purpose : Implementation of SEGGER real-time transfer (RTT) which
                                                       );                                  \
                                           }
     #define SEGGER_RTT_UNLOCK(SavedState) {                                               \
-                                          asm volatile ("msr   basepri, %0  \n\t"         \
+                                          __asm__ volatile ("msr   basepri, %0  \n\t"     \
                                                         :                                 \
                                                         : "r" (SavedState)                \
                                                         :                                 \
