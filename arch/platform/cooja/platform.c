@@ -59,6 +59,7 @@
 #include "net/queuebuf.h"
 
 #include "dev/eeprom.h"
+#include "dev/rs232.h"
 #include "dev/serial-line.h"
 #include "dev/cooja-radio.h"
 #include "dev/button-sensor.h"
@@ -189,6 +190,7 @@ platform_init_stage_three()
   eeprom_init();
   /* Start serial process */
   serial_line_init();
+  rs232_init();
 }
 /*---------------------------------------------------------------------------*/
 void
