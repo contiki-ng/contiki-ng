@@ -61,6 +61,11 @@ CONTIKI_NG_CM4_DIR = $(CONTIKI_NG_CORTEX_DIR)/cm4
 
 # arch/dev is used exclusively as a MODULE so we do not prepend $(CONTIKI)
 CONTIKI_NG_DRIVERS_DIR = $(CONTIKI_NG_ARCH_DIR)/dev
+CONTIKI_NG_DRIVERS_ETC_DIR = $(CONTIKI_NG_DRIVERS_DIR)/etc
+CONTIKI_NG_DRIVERS_ETHERNET_DIR = $(CONTIKI_NG_DRIVERS_DIR)/ethernet
+CONTIKI_NG_DRIVERS_RADIO_DIR = $(CONTIKI_NG_DRIVERS_DIR)/radio
+CONTIKI_NG_DRIVERS_SENSOR_DIR = $(CONTIKI_NG_DRIVERS_DIR)/sensor
+CONTIKI_NG_DRIVERS_STORAGE_DIR = $(CONTIKI_NG_DRIVERS_DIR)/storage
 
 # tools/ is used exclusively to invoke commands therein and is always used in
 # conjunction with $(CONTIKI)
