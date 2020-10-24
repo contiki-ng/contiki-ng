@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,35 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/** \addtogroup sensortag-peripherals
+ * @{
+ *
+ * \file
+ *        LED HAL definitions for the LPSTK LEDs. Is not compatible with
+ *        the CC2650STK.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef LEDS_ARCH_H_
+#define LEDS_ARCH_H_
 /*---------------------------------------------------------------------------*/
-/* Enable the ROM bootloader */
-#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE   1
+/**
+ * \name LED configurations for the dev/leds.h API.
+ *
+ * Those values are not meant to be modified by the user
+ * @{
+ */
+#define LEDS_CONF_COUNT             2
+
+#define LEDS_CONF_RED               0
+#define LEDS_CONF_GREEN             1
+
+#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
+/** @} */
 /*---------------------------------------------------------------------------*/
-/* Change to match your configuration */
-#define IEEE802154_CONF_PANID            0xABCD
-#define IEEE802154_CONF_DEFAULT_CHANNEL      25
-#define RF_BLE_CONF_ENABLED                   1
-#define SENSORTAG_LPSTK                       1
+#endif /* LEDS_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
-#endif /* PROJECT_CONF_H_ */
-/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

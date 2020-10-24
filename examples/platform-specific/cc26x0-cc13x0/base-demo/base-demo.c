@@ -339,7 +339,7 @@ init_sensor_readings(void)
   SENSORS_ACTIVATE(opt_3001_sensor);
   SENSORS_ACTIVATE(bmp_280_sensor);
 
-  init_mpu_reading(NULL);
+//  init_mpu_reading(NULL);
 #endif
 }
 /*---------------------------------------------------------------------------*/

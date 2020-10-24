@@ -45,7 +45,12 @@
 /*---------------------------------------------------------------------------*/
 /* Exports a global symbol to be used by the sensor API */
 #if BOARD_SENSORS_ENABLE
-SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor, &mpu_9250_sensor);
+//SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor, &mpu_9250_sensor);
+#if SENSORTAG_LPSTK
+SENSORS(&opt_3001_sensor, &hdc_1000_sensor);
+#else
+SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor);
+#endif
 #endif
 /*---------------------------------------------------------------------------*/
 /** @} */

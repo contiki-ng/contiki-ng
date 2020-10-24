@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,29 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup sensortag-peripherals
+ * @{
+ *
+ * \file
+ *        LED HAL definitions for the CC2650STK LEDs. Is not compatible with
+ *        the CC1350STK.
+ * \author
+ *        Edvard Pettersen <e.pettersen@ti.com>
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "contiki.h"
+#include "dev/leds.h"
 /*---------------------------------------------------------------------------*/
-/* Enable the ROM bootloader */
-#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE   1
+#include <Board.h>
 /*---------------------------------------------------------------------------*/
-/* Change to match your configuration */
-#define IEEE802154_CONF_PANID            0xABCD
-#define IEEE802154_CONF_DEFAULT_CHANNEL      25
-#define RF_BLE_CONF_ENABLED                   1
-#define SENSORTAG_LPSTK                       1
+#include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#endif /* PROJECT_CONF_H_ */
+const leds_t leds_arch_leds[] = {
+  /* Red LED, AKA LED0 */
+  { .pin = Board_PIN_LED0, .negative_logic = false },
+  /* Green LED, AKA LED1 */
+  { .pin = Board_PIN_LED1, .negative_logic = false },
+};
 /*---------------------------------------------------------------------------*/
+/** @} */

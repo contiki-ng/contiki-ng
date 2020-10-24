@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2018, Texas Instruments Incorporated - http://www.ti.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,43 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * \addtogroup launchpad-peripherals
+ * @{
+ *
+ * \file
+ *        Header file with board-specific RF configurations.
+ * \author
+ *        Texas Instruments <e2e.ti.com>
+ * \note
+ *        This file should not be included directly
+ */
 /*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef RF_CONF_H_
+#define RF_CONF_H_
 /*---------------------------------------------------------------------------*/
-/* Enable the ROM bootloader */
-#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE   1
+#include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
-/* Change to match your configuration */
-#define IEEE802154_CONF_PANID            0xABCD
-#define IEEE802154_CONF_DEFAULT_CHANNEL      25
-#define RF_BLE_CONF_ENABLED                   1
-#define SENSORTAG_LPSTK                       1
+/**
+ * \name  Board-specific front-end mode configurations for both the Sub-1 GHz
+ *        path and the 2.4 GHz path on the radio.
+ *
+ * These are the following front-end mode configurations for the
+ * CC1352R1-LAUNCHXL board:
+ *  - Sub-1 GHz: differential and external bias
+ *  - 2.4 GHz: differential and external bias
+ *
+ * @{
+ */
+#define RF_SUB_1_GHZ_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_SUB_1_GHZ_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
+
+#define RF_2_4_GHZ_CONF_FRONT_END_MODE    RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_2_4_GHZ_CONF_BIAS_MODE         RF_BIAS_MODE_EXTERNAL
+/** @} */
 /*---------------------------------------------------------------------------*/
-#endif /* PROJECT_CONF_H_ */
+#endif /* RF_CONF_H_ */
 /*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

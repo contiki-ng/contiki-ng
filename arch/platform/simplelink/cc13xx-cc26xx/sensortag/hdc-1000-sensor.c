@@ -77,6 +77,12 @@
 #define HDC1000_REG_TEMP           0x00 /* Temperature */
 #define HDC1000_REG_HUM            0x01 /* Humidity */
 #define HDC1000_REG_CONFIG         0x02 /* Configuration */
+
+#if SENSORTAG_LPSTK
+#define HDC2080_REG_CONFIG         0x0e /* Configuration for HDC 2080 */
+#define HDC2080_MEA_CONFIG         0x0f /* Measure Configuration for HDC 2080 */
+#endif
+
 #define HDC1000_REG_SERID_H        0xFB /* Serial ID high */
 #define HDC1000_REG_SERID_M        0xFC /* Serial ID middle */
 #define HDC1000_REG_SERID_L        0xFD /* Serial ID low */
@@ -99,10 +105,23 @@
 static I2C_Handle i2c_handle;
 /*---------------------------------------------------------------------------*/
 /* Raw data as returned from the sensor (Big Endian) */
+#if SENSORTAG_LPSTK
+typedef struct {
+  uint8_t temp_low;
+  uint8_t temp_high;
+  uint8_t hum_low;
+  uint8_t hum_high;
+} HDC_1000_SensorData;
+#else
 typedef struct {
   uint16_t temp;
   uint16_t hum;
 } HDC_1000_SensorData;
+#endif
+
+/* Raw data, little endian */
+static uint16_t raw_temp;
+static uint16_t raw_hum;
 
 static HDC_1000_SensorData sensor_data;
 /*---------------------------------------------------------------------------*/
@@ -119,7 +138,7 @@ static volatile HDC_1000_SENSOR_STATUS sensor_status = HDC_1000_SENSOR_STATUS_DI
  * Wait SENSOR_STARTUP_DELAY clock ticks between activation and triggering a
  * reading (max 15ms)
  */
-#define SENSOR_STARTUP_DELAY 3
+#define SENSOR_STARTUP_DELAY 2
 
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
@@ -216,7 +235,13 @@ sensor_init(void)
   }
 
   /* Enable reading data in one operation */
-  uint8_t config_data[] = { HDC1000_REG_CONFIG, LSB16(HDC1000_VAL_CONFIG) };
+#if SENSORTAG_LPSTK
+  uint8_t config_data[] = { HDC2080_REG_CONFIG, 0x00 }; // From TI HDC 2080 Programming PDF
+#else
+  uint8_t config_data[] = { HDC1000_REG_CONFIG, 0x90 }; // From Arduino Tutorial
+#endif
+
+//  uint8_t config_data[] = { HDC1000_REG_CONFIG, LSB16(HDC1000_VAL_CONFIG) }; // Original
 
   rv = i2c_write(config_data, sizeof(config_data));
 
@@ -233,13 +258,18 @@ static bool
 start(void)
 {
   bool rv;
-  uint8_t temp_reg[] = { HDC1000_REG_TEMP };
 
   if(!i2c_acquire()) {
     return false;
   }
 
-  rv = i2c_write(temp_reg, sizeof(temp_reg));
+#if SENSORTAG_LPSTK
+  uint8_t start_reg[] = { HDC2080_MEA_CONFIG, 0x01 };
+#else
+  uint8_t start_reg[] = { HDC1000_REG_TEMP };
+#endif
+
+  rv = i2c_write(start_reg, sizeof(start_reg));
 
   i2c_release();
 
@@ -252,15 +282,13 @@ start(void)
  * \param hum   Output variable to store converted humidity.
  */
 static void
-convert(int32_t *temp, int32_t *hum)
+convert(float *temp, float *hum)
 {
-  int32_t raw_temp = SWAP16(sensor_data.temp);
-  int32_t raw_hum = SWAP16(sensor_data.hum);
-
   /* Convert temperature to degrees C */
-  *temp = raw_temp * 100 * 165 / 65536 - 40000;
+  *temp = ((double)raw_temp / 65536) * 165 - 40;
+
   /* Convert relative humidity to a %RH value */
-  *hum = raw_hum * 100 * 100 / 65536;
+  *hum = ((double)raw_hum / 65536) * 100;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -277,8 +305,20 @@ notify_ready(void *unused)
     return;
   }
 
+#if SENSORTAG_LPSTK
+  uint8_t temp_reg[] = { HDC1000_REG_TEMP };
+  i2c_write(temp_reg, sizeof(temp_reg));
+#endif
+
   /* Latch readings */
   if(i2c_read(&sensor_data, sizeof(sensor_data))) {
+#if SENSORTAG_LPSTK
+    raw_temp = sensor_data.temp_high * 256 + sensor_data.temp_low;
+    raw_hum = sensor_data.hum_high * 256 + sensor_data.hum_low;
+#else
+    raw_temp = SWAP16(sensor_data.temp);
+    raw_hum = SWAP16(sensor_data.hum);
+#endif
     sensor_status = HDC_1000_SENSOR_STATUS_READINGS_READY;
   } else {
     sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
@@ -297,8 +337,8 @@ notify_ready(void *unused)
 static int
 value(int type)
 {
-  int32_t temp = 0;
-  int32_t hum = 0;
+  float temp = 0;
+  float hum = 0;
 
   if(sensor_status != HDC_1000_SENSOR_STATUS_READINGS_READY) {
     PRINTF("Sensor disabled or starting up (%d)\n", sensor_status);
@@ -309,12 +349,13 @@ value(int type)
   case HDC_1000_SENSOR_TYPE_TEMP:
   case HDC_1000_SENSOR_TYPE_HUMID:
     convert(&temp, &hum);
-    PRINTF("HDC: t=%d h=%d\n", (int)temp, (int)hum);
+    PRINTF("HDC: %04X %04X       t=%d h=%d\n", raw_temp, raw_hum,
+           (int)(temp * 100), (int)(hum * 100));
 
     if(type == HDC_1000_SENSOR_TYPE_TEMP) {
-      return (int)temp;
+      return (int)(temp * 100);
     } else if(type == HDC_1000_SENSOR_TYPE_HUMID) {
-      return (int)hum;
+      return (int)(hum * 100);
     } else {
       return HDC_1000_READING_ERROR;
     }
