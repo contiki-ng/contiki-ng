@@ -47,7 +47,7 @@
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTON(reed_relay, "Reed Relay", BOARD_IOID_REED_RELAY, \
                   GPIO_HAL_PIN_CFG_PULL_DOWN, \
-                  BOARD_BUTTON_HAL_INDEX_REED_RELAY, true);
+                  BOARD_BUTTON_HAL_INDEX_REED_RELAY, false);
 
 BUTTON_HAL_BUTTON(key_left, "Key Left", BOARD_IOID_KEY_LEFT, \
                   GPIO_HAL_PIN_CFG_PULL_UP, BOARD_BUTTON_HAL_INDEX_KEY_LEFT, \
