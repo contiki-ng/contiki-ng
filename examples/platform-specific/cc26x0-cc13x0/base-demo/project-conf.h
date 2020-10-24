@@ -38,7 +38,7 @@
 #define IEEE802154_CONF_PANID            0xABCD
 #define IEEE802154_CONF_DEFAULT_CHANNEL      25
 #define RF_BLE_CONF_ENABLED                   1
-#define SENSORTAG_LPSTK                       1
+#define SENSORTAG_LPSTK                       0
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/
