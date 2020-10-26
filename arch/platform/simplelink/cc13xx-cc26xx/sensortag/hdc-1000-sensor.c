@@ -305,17 +305,14 @@ notify_ready(void *unused)
     return;
   }
 
+  /* Latch readings */
 #if SENSORTAG_LPSTK
   uint8_t temp_reg[] = { HDC1000_REG_TEMP };
-  i2c_write(temp_reg, sizeof(temp_reg));
-#endif
-
-  /* Latch readings */
-  if(i2c_read(&sensor_data, sizeof(sensor_data))) {
-#if SENSORTAG_LPSTK
+  if(i2c_write_read(temp_reg, sizeof(temp_reg), &sensor_data, sizeof(sensor_data))) {
     raw_temp = sensor_data.temp_high * 256 + sensor_data.temp_low;
     raw_hum = sensor_data.hum_high * 256 + sensor_data.hum_low;
-#else
+#else  
+  if(i2c_read(&sensor_data, sizeof(sensor_data))) {
     raw_temp = SWAP16(sensor_data.temp);
     raw_hum = SWAP16(sensor_data.hum);
 #endif
