@@ -106,6 +106,46 @@ int linkaddr_cmp(const linkaddr_t *addr1, const linkaddr_t *addr2);
 void linkaddr_set_node_addr(linkaddr_t *addr);
 
 /**
+ * \brief          Convert a string to a link address
+ * \param addr     The destination memory where the address will be stored
+ * \param addr_str The string to convert
+ * \retval -1      Conversion failed
+ * \return         The number of bytes retrieved, or -1
+ *
+ *             This function will read a string of a MAC address format and
+ *             attempt to convert it to a linkaddr_t representation.
+ *
+ *             The format of the input string is expected to be of a standard
+ *             human-readable representation of a MAC address: Groups of two
+ *             hex digits, separated by colon ':' characters.
+ *
+ *             Other delimiters (e.g. '.' or '-' are not supported).
+ *
+ *             The function is not case-sensitive. The input strings Ab:cD and
+ *             AB:CD are equivalent. The function will accept single-digit hex
+ *             groups. For example AB:C:DE will be treated the same as
+ *             AB:0C:DE.
+ *
+ *             The function can convert all three supported LINKADDR_SIZE
+ *             values, therefore it can accept an input string that contains
+ *             2, 6 or 8 two-digit groups. However, it will only process
+ *             exactly as many characters as needed to write LINKADDR_SIZE
+ *             bytes to \addr. If the input string does not contain sufficient
+ *             characters to populate all LINKADDR_SIZE bytes, the function
+ *             will return an error. If the input string contains additional
+ *             characters, they will be silently ignored without an error.
+ *
+ *             \e addr must be allocated by the caller.
+ *
+ *             If successful, the return value of this function will be equal
+ *             to LINKADDR_SIZE.
+ *
+ *             On error, the function will return a negative value
+ */
+int linkaddr_from_string(linkaddr_t *addr, const char *addr_str);
+
+
+/**
  * \brief      The link-layer address of the node
  *
  *             This variable contains the link-layer address of the

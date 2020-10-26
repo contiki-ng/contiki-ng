@@ -44,6 +44,7 @@
 
 #include "net/linkaddr.h"
 #include <string.h>
+#include <stdio.h>
 
 linkaddr_t linkaddr_node_addr;
 #if LINKADDR_SIZE == 2
@@ -75,6 +76,63 @@ void
 linkaddr_set_node_addr(linkaddr_t *t)
 {
   linkaddr_copy(&linkaddr_node_addr, t);
+}
+/*---------------------------------------------------------------------------*/
+int
+linkaddr_from_string(linkaddr_t *addr, const char *addr_str)
+{
+  uint8_t value = 0;
+  uint8_t byte_count = 0;
+  int tmp;
+  unsigned int len;
+  const char *digit = addr_str;
+  uint8_t digit_cnt = 0; /* Count the number of consecutive hex digits */
+
+  for(len = 0; len < LINKADDR_SIZE; digit ++) {
+    if(*digit == ':' || *digit == '\0') {
+      addr->u8[len] = value;
+      byte_count++;
+      len++;
+      value = 0;
+      tmp = 0;
+
+      if(*digit == ':' && digit_cnt == 0) {
+        /* Two consecutive delimiters - invalid format */
+        return -1;
+      }
+
+      digit_cnt = 0;
+
+      if(*digit == '\0') {
+        break;
+      }
+    } else {
+      if(*digit >= '0' && *digit <= '9') {
+        tmp = *digit - '0';
+      } else if(*digit >= 'a' && *digit <= 'f') {
+        tmp = *digit - 'a' + 10;
+      } else if(*digit >= 'A' && *digit <= 'F') {
+        tmp = *digit - 'A' + 10;
+      } else {
+        /* Invalid character */
+        return -1;
+      }
+      digit_cnt++;
+
+      if(digit_cnt > 2) {
+        /* More than 2 hex digits in a row - invalid format */
+        return -1;
+      }
+      value = (value << 4) + (tmp & 0xf);
+    }
+  }
+
+  /* Return an error unless we converted exactly LINKADDR_SIZE bytes. */
+  if(byte_count == LINKADDR_SIZE) {
+    return byte_count;
+  }
+
+  return -1;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

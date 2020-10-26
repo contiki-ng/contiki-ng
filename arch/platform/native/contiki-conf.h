@@ -72,6 +72,10 @@ typedef unsigned int uip_stats_t;
 #define NETSTACK_CONF_NETWORK    tun6_net_driver
 #endif
 
+#ifndef PLATFORM_CONF_PROCESS_ARGS_FUNC
+#define PLATFORM_CONF_PROCESS_ARGS_FUNC tun6_net_parse_args
+#endif
+
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO   nullradio_driver
 #endif /* NETSTACK_CONF_RADIO */

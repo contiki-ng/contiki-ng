@@ -42,7 +42,6 @@
 #include <stdio.h>
 
 int border_router_cmd_handler(const uint8_t *data, int len);
-int slip_config_handle_arguments(int argc, char **argv);
 void write_to_slip(const uint8_t *buf, int len);
 
 void border_router_set_prefix_64(const uip_ipaddr_t *prefix_64);
