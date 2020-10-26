@@ -97,7 +97,7 @@
 /*---------------------------------------------------------------------------*/
 #define CC26XX_DEMO_LOOP_INTERVAL       (CLOCK_SECOND * 20)
 #define CC26XX_DEMO_LEDS_PERIODIC       LEDS_YELLOW
-#define CC26XX_DEMO_LEDS_BUTTON         LEDS_RED
+#define CC26XX_DEMO_LEDS_BUTTON         LEDS_ALL  //LEDS_RED fails for cc1350
 #define CC26XX_DEMO_LEDS_REBOOT         LEDS_ALL
 /*---------------------------------------------------------------------------*/
 static struct etimer et;
