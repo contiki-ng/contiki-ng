@@ -92,6 +92,7 @@
  * Those values are not meant to be modified by the user
  * @{
  */
+#define PLATFORM_DISABLE_MPU      1 // MPU currently not working for SimpleLink
 #define BOARD_SENSORS_ENABLE      (!(BOARD_CONF_SENSORS_DISABLE))
 /** @} */
 /*---------------------------------------------------------------------------*/
