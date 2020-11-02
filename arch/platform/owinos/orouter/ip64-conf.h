@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2012, Thingsquare, http://www.thingsquare.com/
+ * Copyright (c) 2012, Thingsquare, http://www.thingsquare.com/.
  * Copyright (c) 2016, Zolertia <http://www.zolertia.com>
- *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

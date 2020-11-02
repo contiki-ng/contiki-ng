@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2015, Zolertia - http://www.zolertia.com
+/*
+ * Copyright (c) 2016, Zolertia - http://www.zolertia.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,14 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup owinos-orouter
+ * \addtogroup owinos-orouter-router
  * @{
  *
  * \file
  *  Example of an Ethernet IP64 router with weberver
  *
+ * \author
+ *         Antonio Lignan <alinan@zolertia.com>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

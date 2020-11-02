@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2015, Zolertia - http://www.zolertia.com
+/*
+ * Copyright (c) 2016, Zolertia - http://www.zolertia.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,11 @@
 #define LPM_CONF_MAX_PM             0
 
 /*---------------------------------------------------------------------------*/
+/* Use cc2538_rf_driver (default) for 2.4GHz built-in radio interface
+ */
 #define NETSTACK_CONF_RADIO              cc2538_rf_driver
 
+/* ANTENNA_SW_SELECT_2_4GHZ */
 #define ANTENNA_SELECT_DEF_CONF       ANTENNA_SELECT_2_4GHZ
 
 #define UIP_CONF_TCP                     1

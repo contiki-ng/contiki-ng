@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
- * Copyright (c) 2020, Oppila Microsystems - http://www.oppila.in
+ * Copyright (c) 2016, Zolertia <http://www.zolertia.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  * @{
  *
  * \file
- *  Board-initialisation for the Owinos ORouter Ethernet connectivity
+ *  Board-initialisation for the Owinos Orouter Ethernet Router
  *
  */
 /*---------------------------------------------------------------------------*/

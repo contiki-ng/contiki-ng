@@ -34,7 +34,7 @@
  * \addtogroup owinos-orouter-ethernet-router
  * @{
  *
- * \defgroup orouter-eth-arch-spi Owinos ENC28J60 SPI arch
+ * \defgroup owinos-eth-arch-spi Owinos ENC28J60 SPI arch
  *
  * ENC28J60 eth-gw SPI arch specifics
  * @{

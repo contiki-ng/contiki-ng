@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2015, Zolertia - http://www.zolertia.com
+/*
+ * Copyright (c) 2016, Zolertia - http://www.zolertia.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

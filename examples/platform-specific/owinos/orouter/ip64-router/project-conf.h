@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2015, Zolertia - http://www.zolertia.com
+/*
+ * Copyright (c) 2016, Zolertia - http://www.zolertia.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
  * \addtogroup owinos-examples
  * @{
  *
- * \defgroup owinos-orouter
+ * \defgroup owinos-orouter-router OWINOS Orouter border router
  *
  * Implements a simple IP64 router with a webserver
  *
@@ -41,6 +41,9 @@
  *
  * \file
  *  Configuration file for the Owinos Orouter IP64 router
+ *
+ * \author
+ *         Antonio Lignan <alinan@zolertia.com>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef PROJECT_CONF_H_
@@ -49,6 +52,8 @@
 /* Prevent the router from dropping below LPM2 to avoid RAM overflow */
 #define LPM_CONF_MAX_PM             0
 
+/* Use cc2538_rf_driver for 2.4GHz built-in radio interface
+ */
 #define NETSTACK_CONF_RADIO         cc2538_rf_driver
 
 /* USe DHCP */
