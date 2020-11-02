@@ -1,0 +1,5 @@
+MOTELIST_OWINOS := OMote
+CONTIKI_TARGET_SOURCEFILES += sensor_platform.c adxl345.c 
+CONTIKI_TARGET_SOURCEFILES += bmp180.c owinos-sensors.c 
+CONTIKI_TARGET_SOURCEFILES += adc-owinos.c adc-sensors.c
+BOARD_SOURCEFILES += board.c leds-arch.c

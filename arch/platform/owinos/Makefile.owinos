@@ -1,0 +1,82 @@
+### Owinos Makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+### If no board is specified the default option is the OMote
+BOARD ?= omote
+BOARDS = omote orouter
+
+PYTHON = python
+BSL_FLAGS += -e -w -v
+
+BSL_SPEED ?= 460800
+
+# Works in Linux and probably on OSX too (RTCC example)
+CFLAGS += -DDATE="\"`date +"%02u %02d %02m %02y %02H %02M %02S"`\""
+
+### Configure the build for the board and pull in board-specific sources
+CONTIKI_TARGET_DIRS += . dev
+CONTIKI_TARGET_DIRS += $(BOARD)
+PLATFORM_ROOT_DIR = $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)
+
+### Include the board dir if one exists
+-include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(BOARD)
+
+### Include
+CONTIKI_TARGET_SOURCEFILES += platform.c board-buttons.c
+CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+### Define the CPU directory
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/cc2538
+include $(CONTIKI_CPU)/Makefile.cc2538
+
+MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
+
+BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
+
+MOTES := $(shell python $(CONTIKI_NG_TOOLS_DIR)/motelist/motelist.py --omit-header \
+                 | grep $(MOTELIST_OWINOS) | cut -f1 -d " ")
+
+### If PORT is defined, override to keep backward compatibility
+ifdef PORT
+  MOTES := $(PORT)
+endif
+
+### Check the BSL script exists
+ifeq ($(wildcard $(BSL)), )
+%.upload:
+	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
+else
+### Upload to every MOTE
+%.upload: $(foreach MOTE,$(MOTES),%.$(MOTE))
+	@# Dummy recipe to prevent "No rule to make *.upload errors"
+endif
+
+### Variable that expands into a pattern rule to upload to a given MOTE.
+### Requires $(MOTE) to be defined
+### $$$$ Double escapes $s that need to be passed to the shell - once for when
+### make parses UPLOAD_RULE, and once for when the expanded rule is parsed by make.
+define UPLOAD_RULE
+%.$(MOTE): $(OUT_BIN) $(OUT_ELF)
+	@echo "Flashing $(MOTE)"
+	@BSL_ADDRESS=`$(OBJDUMP) -h $(BUILD_DIR_BOARD)/$$*.elf | grep -B1 LOAD | \
+	             grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$$$5}' | \
+	             sort -g | head -1`; \
+	$(PYTHON) $(BSL) $(BSL_FLAGS) -b $(BSL_SPEED) -a $$$${BSL_ADDRESS} -p $(MOTE) $$<
+endef
+
+### Create an upload rule for every MOTE connected
+$(foreach MOTE,$(MOTES),$(eval $(UPLOAD_RULE)))
+
+.PHONY: owinos-motes
+
+owinos-motes:
+	@echo $(MOTES)
+
+### For the login etc targets
+BAUDRATE ?= 115200
+PORT = $(USBDEVPREFIX)$(firstword $(MOTES))
