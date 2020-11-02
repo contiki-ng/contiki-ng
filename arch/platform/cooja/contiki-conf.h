@@ -148,6 +148,10 @@ typedef unsigned long clock_time_t;
 #define COOJA_BTN_PIN                    3
 
 #define BUTTON_HAL_CONF_DEBOUNCE_DURATION 0
+
+/* Notify various examples that we have Buttons */
+#define PLATFORM_HAS_BUTTON    1
+#define PLATFORM_SUPPORTS_BUTTON_HAL 1
 /*---------------------------------------------------------------------------*/
 /* Virtual LED colors */
 #define LEDS_CONF_COUNT                  3
