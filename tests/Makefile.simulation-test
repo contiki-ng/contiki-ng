@@ -35,7 +35,7 @@ BASESEED ?= 1
 # The number of runs (with different random seeds)
 RUNCOUNT ?= 1
 
-CONTIKI=../..
+CONTIKI ?= ../..
 
 tests: $(TESTLOGS)
 
