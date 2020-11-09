@@ -92,6 +92,20 @@
 #define CSMA_CONF_SEND_SOFT_ACK              1
 #endif /* CSMA_CONF_SEND_SOFT_ACK */
 
+/* RF prop driver supports RADIO_ARM_HANDLE_TX/RX, enable it by default for TSCH nestack */
+#ifndef RF_CORE_CONF_APP_HANDLING
+#define RF_CORE_CONF_APP_HANDLING 1
+#endif
+
+/* allows TSCH nestack use radio driver RADIO_ARM_HANDLE_TX/RX extention */
+#ifndef TSCH_CONF_RADIO_APPHANDLES
+#ifdef RF_CORE_CONF_APP_HANDLING
+#define TSCH_CONF_RADIO_APPHANDLES RF_CORE_CONF_APP_HANDLING
+#else
+#define TSCH_CONF_RADIO_APPHANDLES 0
+#endif
+#endif
+
 #else /* CC13XX_CONF_PROP_MODE */
 #ifndef NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO        ieee_mode_driver

@@ -162,6 +162,15 @@ enum {
  */
 int rtimer_set(struct rtimer *task, rtimer_clock_t time,
 	       rtimer_clock_t duration, rtimer_callback_t func, void *ptr);
+/**
+ * \brief Cancels the given rtimer
+ *
+ * Nothing happens if the rtimer is not scheduled
+ *
+ * \return RTIMER_OK on success, and if the rtimer wasn't scheduled
+ *     and RTIMER_ERR_ALREADY_SCHEDULED if it's too late to cancel the rtimer
+ */
+int rtimer_cancel(struct rtimer *rtimer);
 
 /**
  * \brief      Execute the next real-time task and schedule the next task, if any

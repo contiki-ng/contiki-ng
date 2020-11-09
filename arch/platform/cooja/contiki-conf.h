@@ -126,6 +126,12 @@ typedef unsigned long clock_time_t;
 #define RADIO_DELAY_BEFORE_RX 0
 #define RADIO_DELAY_BEFORE_DETECT 0
 
+/* allows TSCH nestack use radio driver RADIO_ARM_HANDLE_TX/RX extention */
+#ifndef TSCH_CONF_RADIO_APPHANDLES
+/* by default coja works without handles faster, and it's an old behaviour*/
+#define TSCH_CONF_RADIO_APPHANDLES 0
+#endif
+
 #define UIP_ARCH_IPCHKSUM        1
 
 #define CFS_CONF_OFFSET_TYPE	long
