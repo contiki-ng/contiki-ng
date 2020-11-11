@@ -8,6 +8,7 @@ endif
 
 CC       = arm-none-eabi-gcc
 CPP      = arm-none-eabi-cpp
+CXX      = arm-none-eabi-g++
 LD       = arm-none-eabi-gcc
 AR       = arm-none-eabi-ar
 AS       = arm-none-eabi-gcc

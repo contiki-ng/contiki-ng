@@ -79,10 +79,11 @@ endif
 
 define oname
 ${patsubst %.c,%.o, \
+${patsubst %.cpp,%.o, \
 ${patsubst %.S,%.o, \
 ${patsubst %.s,%.o, \
 $(1) \
-}}}
+}}}}
 endef
 
 CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
@@ -256,10 +257,15 @@ ifneq ($(MODULES_IMACROS),)
   CFLAGS += ${foreach d, $(MODULES_IMACROS), -imacros $(d)}
 endif
 
+CXXFLAGS = $(subst -std=c99,-std=gnu++11,$(CFLAGS))
+CXXFLAGS += -fpermissive -fno-exceptions -fno-unwind-tables
+CXXFLAGS += -fno-threadsafe-statics -fno-rtti -fno-use-cxa-atexit
+
 ### Verbosity control. Use  make V=1  to get verbose builds.
 
 ifeq ($(V),1)
   TRACE_CC =
+  TRACE_CXX =
   TRACE_LD =
   TRACE_AR =
   TRACE_AS =
@@ -270,6 +276,7 @@ ifeq ($(V),1)
   Q=
 else
   TRACE_CC = @echo "  CC       " $<
+  TRACE_CXX = @echo "  CXX      " $<
   TRACE_LD = @echo "  LD       " $@
   TRACE_AR = @echo "  AR       " $@
   TRACE_AS = @echo "  AS       " $<
@@ -296,6 +303,7 @@ SOURCEDIRS += . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
               $(CONTIKI_CPU_DIRS_CONCAT) $(MODULEDIRS) $(EXTERNALDIRS)
 
 vpath %.c $(SOURCEDIRS)
+vpath %.cpp $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
 vpath %.s $(SOURCEDIRS)
 
@@ -319,6 +327,7 @@ endif
 ifneq ($(MAKECMDGOALS),clean)
 -include ${addprefix $(OBJECTDIR)/,$(CONTIKI_SOURCEFILES:.c=.d) \
                                    $(PROJECT_SOURCEFILES:.c=.d)}
+-include ${addprefix $(OBJECTDIR)/,$(PROJECT_SOURCEFILES:.cpp=.d)}
 endif
 
 ### See http://make.paulandlesley.org/autodep.html#advanced
@@ -358,6 +367,13 @@ $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	@$(FINALIZE_DEPENDENCY)
 endif
 
+ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
+$(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
+	$(TRACE_CXX)
+	$(Q)$(CXX) $(CXXFLAGS) -MMD -c $< -o $@
+	@$(FINALIZE_DEPENDENCY)
+endif
+
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
 	$(TRACE_AS)
@@ -373,16 +389,34 @@ $(OBJECTDIR)/%.s: %.c | $(OBJECTDIR)
 	$(Q)$(CC) $(CFLAGS) -S $< -o $@
 endif
 
+ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_S
+$(OBJECTDIR)/%.s: %.cpp | $(OBJECTDIR)
+	$(TRACE_CXX)
+	$(Q)$(CXX) $(CXXFLAGS) -S $< -o $@
+endif
+
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_E
 $(OBJECTDIR)/%.e: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -E $< -o $@
 endif
 
+ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_E
+$(OBJECTDIR)/%.e: %.cpp | $(OBJECTDIR)
+	$(TRACE_CXX)
+	$(Q)$(CXX) $(CXXFLAGS) -E $< -o $@
+endif
+
 ifndef CUSTOM_RULE_C_TO_O
 %.o: %.c
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+endif
+
+ifndef CUSTOM_RULE_CPP_TO_O
+%.o: %.cpp
+	$(TRACE_CXX)
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_C_TO_S
@@ -395,6 +429,12 @@ ifndef CUSTOM_RULE_C_TO_E
 %.e: %.c
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -E $< -o $@
+endif
+
+ifndef CUSTOM_RULE_CPP_TO_E
+%.e: %.cpp
+	$(TRACE_CXX)
+	$(Q)$(CXX) $(CXXFLAGS) -E $< -o $@
 endif
 
 ifndef AROPTS
