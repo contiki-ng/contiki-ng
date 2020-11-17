@@ -22,6 +22,8 @@ endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
+CFLAGS += -Wno-stringop-truncation
+
 .SUFFIXES:
 
 # Enable nullmac by default
