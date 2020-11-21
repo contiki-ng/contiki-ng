@@ -1,7 +1,6 @@
 CONTIKI_PROJECT = hello-world
 all: $(CONTIKI_PROJECT)
-TARGET = simplelink
-BOARD = launchpad/cc1310
-CFLAGS += -g
-CONTIKI = ../..
+
+#CONTIKI = ../..
+CONTIKI=/mnt/hgfs/cqupt_17/contiki-ng
 include $(CONTIKI)/Makefile.include

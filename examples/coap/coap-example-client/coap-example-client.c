@@ -113,11 +113,18 @@ PROCESS_THREAD(er_example_client, ev, data)
       printf("--Toggle timer--\n");
 
       /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
+      /*
+       * 1、初始化message，提供coap_message_t类型变量存储，提供包类型:CON、NO-CON.，提供COAP端口号以及id
+       */
       coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
+      /*
+       * 2、设置首部uri路径
+       */
       coap_set_header_uri_path(request, service_urls[1]);
-
+      /*
+       * 3、设置负载
+       */
       const char msg[] = "Toggle!";
-
       coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 
       LOG_INFO_COAP_EP(&server_ep);

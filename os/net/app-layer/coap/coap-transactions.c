@@ -106,6 +106,7 @@ coap_send_transaction(coap_transaction_t *t)
       LOG_DBG("Keeping transaction %u\n", t->mid);
 
       if(t->retrans_counter == 0) {
+          //设置回调函数，如果时间超时，调用重传函数
         coap_timer_set_callback(&t->retrans_timer, coap_retransmit_transaction);
         coap_timer_set_user_data(&t->retrans_timer, t);
         t->retrans_interval =

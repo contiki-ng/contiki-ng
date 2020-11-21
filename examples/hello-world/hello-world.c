@@ -52,6 +52,7 @@ PROCESS_THREAD(hello_world_process, ev, data)
 
   /* Setup a periodic timer that expires after 10 seconds. */
   etimer_set(&timer, CLOCK_SECOND * 10);
+  static struct timer test_t;
 
   while(1) {
     printf("Hello, world--third--------\n");

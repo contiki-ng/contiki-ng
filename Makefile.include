@@ -72,6 +72,9 @@ MODULES += $(CONTIKI_NG_NET_DIR) $(CONTIKI_NG_ROUTING_DIR)
 MODULES += $(CONTIKI_NG_MAC_DIR) $(CONTIKI_NG_MAC_DIR)/framer
 MODULES += $(CONTIKI_NG_STORAGE_DIR) $(CONTIKI_NG_SERVICES_DIR)
 
+#hcx
+MODULES += $(MINE_TEST)
+
 # Automatically include project-conf.h if found
 ifneq ("$(wildcard project-conf.h)","")
 CFLAGS += -DPROJECT_CONF_PATH=\"project-conf.h\"
@@ -505,3 +508,4 @@ else
 %: %.$(TARGET)
 	@
 endif
+

@@ -21,6 +21,9 @@ CONTIKI_NG_LIB_DIR = $(CONTIKI_NG_OS_DIR)/lib
 CONTIKI_NG_SERVICES_DIR = $(CONTIKI_NG_OS_DIR)/services
 CONTIKI_NG_STORAGE_DIR = $(CONTIKI_NG_OS_DIR)/storage
 
+MINE_TEST = mine/util
+
+
 # Variables for directories under arch
 #
 # We maintain backwards compatibility with ARCH_PATH, which allows us to

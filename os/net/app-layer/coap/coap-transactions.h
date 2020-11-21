@@ -59,14 +59,14 @@
 typedef struct coap_transaction {
   struct coap_transaction *next;        /* for LIST */
 
-  uint16_t mid;
-  coap_timer_t retrans_timer;
-  uint32_t retrans_interval;
-  uint8_t retrans_counter;
+  uint16_t mid;  //message id
+  coap_timer_t retrans_timer;   //重传计时器
+  uint32_t retrans_interval;   //重传间隔
+  uint8_t retrans_counter;   //重传计数器
 
-  coap_endpoint_t endpoint;
+  coap_endpoint_t endpoint;  //终端节点引用
 
-  coap_resource_response_handler_t callback;
+  coap_resource_response_handler_t callback;  //coap资源响应处理回调函数
   void *callback_data;
 
   uint16_t message_len;

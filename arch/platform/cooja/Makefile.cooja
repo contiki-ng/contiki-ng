@@ -7,9 +7,11 @@
 ## The purpose of this file is to compile a shared library that
 ## can be loaded into the Java part of COOJA.
 
+
 ifndef CONTIKI
   $(error CONTIKI not defined!)
 endif
+
 
 COOJA_DIR = $(CONTIKI_NG_TOOLS_DIR)/cooja
 
@@ -74,3 +76,4 @@ ifeq ($(WERROR),1)
 CFLAGSNO += -Werror
 endif
 CFLAGS   += $(CFLAGSNO)
+

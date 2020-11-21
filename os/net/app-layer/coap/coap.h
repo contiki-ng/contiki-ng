@@ -77,13 +77,13 @@
 typedef struct {
   uint8_t *buffer; /* pointer to CoAP header / incoming message buffer / memory to serialize message */
 
-  uint8_t version;
-  coap_message_type_t type;
-  uint8_t code;
-  uint16_t mid;
+  uint8_t version; //coap版本号,固定为1
+  coap_message_type_t type;//coap报文类型，CON(0x00),NON(0x01),ACK(0x010),RST(0x11)
+  uint8_t code; //说明 CoAP 的请求方法或响应状态。该字段分成高 3 位和低 5 位两部分，用十进制数表示成 x．xx 的形式。
+  uint16_t mid;  //说明 CoAP 报文的序号，用于重复性检查，实现可靠传输。一对 CoAP 请求和响应的 Message ID 值必须相同;
 
-  uint8_t token_len;
-  uint8_t token[COAP_TOKEN_LEN];
+  uint8_t token_len; //说明标签字段的长度，单位为字节。其值为 0 时表示省略标签字段.
+  uint8_t token[COAP_TOKEN_LEN]; //长度可变，是另一种形式的 CoAP 报文序号，在独立式响应中起着重要作用
 
   uint8_t options[COAP_OPTION_SIZE1 / COAP_OPTION_MAP_SIZE + 1]; /* bitmap to check if option is set */
 
@@ -124,8 +124,8 @@ typedef struct {
 
   const coap_endpoint_t *src_ep;
 
-  uint16_t payload_len;
-  uint8_t *payload;
+  uint16_t payload_len;//负载长度
+  uint8_t *payload; //负载
 } coap_message_t;
 
 static inline int

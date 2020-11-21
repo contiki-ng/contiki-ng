@@ -876,7 +876,7 @@ coap_set_header_uri_host(coap_message_t *coap_pkt, const char *host)
   coap_set_option(coap_pkt, COAP_OPTION_URI_HOST);
   return coap_pkt->uri_host_len;
 }
-/*---------------------------------------------------------------------------*/
+/*--------获取和设置首部uri-------------------------------------------------------------------*/
 int
 coap_get_header_uri_path(coap_message_t *coap_pkt, const char **path)
 {
