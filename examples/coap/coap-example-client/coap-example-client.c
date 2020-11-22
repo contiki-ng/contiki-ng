@@ -73,6 +73,7 @@ char *service_urls[NUMBER_OF_URLS] =
 static int uri_switch = 0;
 #endif
 
+/*处理服务器返回的响应*/
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
 client_chunk_handler(coap_message_t *response)

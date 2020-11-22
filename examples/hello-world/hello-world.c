@@ -55,7 +55,7 @@ PROCESS_THREAD(hello_world_process, ev, data)
   static struct timer test_t;
 
   while(1) {
-    printf("Hello, world--third--------\n");
+    printf("Hello, world--aaa--\n");
 
     /* Wait for the periodic timer to expire and then restart the timer. */
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
