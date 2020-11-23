@@ -28,7 +28,7 @@ include $(CONTIKI_CPU)/Makefile.cc2538
 
 MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
-PYTHON = python
+PYTHON = python3
 BSL_FLAGS += -e -w -v -b 450000
 
 ifdef PORT

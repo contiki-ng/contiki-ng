@@ -146,7 +146,7 @@ include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)
 
 ################################################################################
 ### For the .upload make target
-PYTHON = python
+PYTHON = python3
 BSL_FLAGS += -e -w -v
 
 ifdef PORT

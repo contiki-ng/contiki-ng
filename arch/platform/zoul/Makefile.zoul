@@ -14,7 +14,7 @@ ifeq ($(BOARD), remote)
   override BOARD = remote-reva
 endif
 
-PYTHON = python
+PYTHON = python3
 BSL_FLAGS += -e -w -v
 
 BSL_SPEED ?= 460800
@@ -48,7 +48,7 @@ MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
 BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
-MOTES := $(shell python $(CONTIKI_NG_TOOLS_DIR)/motelist/motelist.py --omit-header \
+MOTES := $(shell $(PYTHON) $(CONTIKI_NG_TOOLS_DIR)/motelist/motelist.py --omit-header \
                  | grep $(MOTELIST_ZOLERTIA) | cut -f1 -d " ")
 
 ### If PORT is defined, override to keep backward compatibility
