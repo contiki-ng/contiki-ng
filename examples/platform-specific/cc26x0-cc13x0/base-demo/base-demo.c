@@ -37,14 +37,18 @@
  * Example projects for CC26xx-based platforms.
  * @{
  *
- * \defgroup cc26xx-demo CC26xx Demo Project
+ * \defgroup cc26xx-demo CC13xx/CC26xx Base Demo
  *
  *   Example project demonstrating the CC13xx/CC26xx platforms
  *
- *   This example will work for the following boards:
+ *   This example was developed for the `cc26x0-cc13x0` platform and will work
+ *   for the following boards:
  *   - cc26x0-cc13x0: SmartRF06EB + CC13xx/CC26xx EM
  *   - CC2650 and CC1350 SensorTag
  *   - CC1310, CC1350, CC2650 LaunchPads
+ *
+ *   This example was subsequently modified to also work on the `simplelink`
+ *   platform and the intention is for it to work on all supported boards.
  *
  *   This is an IPv6/RPL-enabled example. Thus, if you have a border router in
  *   your installation (same RDC layer, same PAN ID and RF channel), you should
@@ -86,9 +90,7 @@
 #include "button-sensor.h"
 #include "batmon-sensor.h"
 #include "board-peripherals.h"
-#include "rf-core/rf-ble.h"
-
-#include "ti-lib.h"
+#include "target-conf.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -98,17 +100,10 @@
 #define CC26XX_DEMO_LEDS_BUTTON         LEDS_RED
 #define CC26XX_DEMO_LEDS_REBOOT         LEDS_ALL
 /*---------------------------------------------------------------------------*/
-#define CC26XX_DEMO_TRIGGER_1     BOARD_BUTTON_HAL_INDEX_KEY_LEFT
-#define CC26XX_DEMO_TRIGGER_2     BOARD_BUTTON_HAL_INDEX_KEY_RIGHT
-
-#if BOARD_SENSORTAG
-#define CC26XX_DEMO_TRIGGER_3     BOARD_BUTTON_HAL_INDEX_REED_RELAY
-#endif
-/*---------------------------------------------------------------------------*/
 static struct etimer et;
 /*---------------------------------------------------------------------------*/
-PROCESS(cc26xx_demo_process, "cc26xx demo process");
-AUTOSTART_PROCESSES(&cc26xx_demo_process);
+PROCESS(base_demo_process, "CC13xx/CC26xx base demo process");
+AUTOSTART_PROCESSES(&base_demo_process);
 /*---------------------------------------------------------------------------*/
 #if BOARD_SENSORTAG
 /*---------------------------------------------------------------------------*/
@@ -146,14 +141,14 @@ get_bmp_reading()
     (random_rand() % SENSOR_READING_RANDOM);
 
   value = bmp_280_sensor.value(BMP_280_SENSOR_TYPE_PRESS);
-  if(value != CC26XX_SENSOR_READING_ERROR) {
+  if(value != BMP_280_READING_ERROR) {
     printf("BAR: Pressure=%d.%02d hPa\n", value / 100, value % 100);
   } else {
     printf("BAR: Pressure Read Error\n");
   }
 
   value = bmp_280_sensor.value(BMP_280_SENSOR_TYPE_TEMP);
-  if(value != CC26XX_SENSOR_READING_ERROR) {
+  if(value != BMP_280_READING_ERROR) {
     printf("BAR: Temp=%d.%02d C\n", value / 100, value % 100);
   } else {
     printf("BAR: Temperature Read Error\n");
@@ -173,7 +168,7 @@ get_tmp_reading()
 
   value = tmp_007_sensor.value(TMP_007_SENSOR_TYPE_ALL);
 
-  if(value == CC26XX_SENSOR_READING_ERROR) {
+  if(value == TMP_007_READING_ERROR) {
     printf("TMP: Ambient Read Error\n");
     return;
   }
@@ -197,14 +192,14 @@ get_hdc_reading()
     (random_rand() % SENSOR_READING_RANDOM);
 
   value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_TEMP);
-  if(value != CC26XX_SENSOR_READING_ERROR) {
+  if(value != HDC_1000_READING_ERROR) {
     printf("HDC: Temp=%d.%02d C\n", value / 100, value % 100);
   } else {
     printf("HDC: Temp Read Error\n");
   }
 
   value = hdc_1000_sensor.value(HDC_1000_SENSOR_TYPE_HUMID);
-  if(value != CC26XX_SENSOR_READING_ERROR) {
+  if(value != HDC_1000_READING_ERROR) {
     printf("HDC: Humidity=%d.%02d %%RH\n", value / 100, value % 100);
   } else {
     printf("HDC: Humidity Read Error\n");
@@ -221,7 +216,7 @@ get_light_reading()
     (random_rand() % SENSOR_READING_RANDOM);
 
   value = opt_3001_sensor.value(0);
-  if(value != CC26XX_SENSOR_READING_ERROR) {
+  if(value != OPT_3001_READING_ERROR) {
     printf("OPT: Light=%d.%02d lux\n", value / 100, value % 100);
   } else {
     printf("OPT: Light Read Error\n");
@@ -348,18 +343,20 @@ init_sensor_readings(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(cc26xx_demo_process, ev, data)
+PROCESS_THREAD(base_demo_process, ev, data)
 {
 
   PROCESS_BEGIN();
 
-  printf("CC26XX demo\n");
+  printf("CC13xx/CC26xx base demo\n");
 
   init_sensors();
 
+#if CONTIKI_TARGET_CC26X0_CC13X0
   /* Init the BLE advertisement daemon */
   rf_ble_beacond_config(0, BOARD_STRING);
   rf_ble_beacond_start();
+#endif
 
   etimer_set(&et, CC26XX_DEMO_LOOP_INTERVAL);
   get_sync_sensor_readings();
@@ -383,23 +380,28 @@ PROCESS_THREAD(cc26xx_demo_process, ev, data)
       printf("%s periodic event, duration %d seconds\n",
              BUTTON_HAL_GET_DESCRIPTION(button),
              button->press_duration_seconds);
+    } else if(ev == button_hal_press_event) {
+      button_hal_button_t *btn = (button_hal_button_t *)data;
+
+      printf("%s press event\n", BUTTON_HAL_GET_DESCRIPTION(btn));
+#if BOARD_SENSORTAG
+      if(btn->unique_id == CC26XX_DEMO_TRIGGER_3) {
+        buzzer_start(1000);
+      }
+#endif
     } else if(ev == button_hal_release_event) {
       button_hal_button_t *btn = (button_hal_button_t *)data;
 
       printf("%s release event\n", BUTTON_HAL_GET_DESCRIPTION(btn));
 
-      if(btn->unique_id== CC26XX_DEMO_TRIGGER_1) {
+      if(btn->unique_id == CC26XX_DEMO_TRIGGER_1) {
         leds_toggle(CC26XX_DEMO_LEDS_BUTTON);
       } else if(btn->unique_id == CC26XX_DEMO_TRIGGER_2) {
         leds_on(CC26XX_DEMO_LEDS_REBOOT);
         watchdog_reboot();
 #if BOARD_SENSORTAG
       } else if(btn->unique_id == CC26XX_DEMO_TRIGGER_3) {
-        if(buzzer_state()) {
-          buzzer_stop();
-        } else {
-          buzzer_start(1000);
-        }
+        buzzer_stop();
       }
     } else if(ev == sensors_event) {
       if(data == &bmp_280_sensor) {
