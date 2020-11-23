@@ -170,18 +170,24 @@ i2c_read(void *rbuf, size_t rcount)
   return i2c_write_read(NULL, 0, rbuf, rcount);
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief   Initialize the HDC-1000 sensor driver.
- * \return  true if I2C operation successful; else, return false.
- */
-static bool
-sensor_init(void)
+/* Releases the I2C Peripheral */
+static void
+i2c_release(void)
 {
+  I2C_close(i2c_handle);
+  i2c_handle = NULL;
+}
+/*---------------------------------------------------------------------------*/
+/* Acquires the I2C Peripheral */
+static bool
+i2c_acquire(void)
+{
+  I2C_Params i2c_params;
+
   if(i2c_handle) {
     return true;
   }
 
-  I2C_Params i2c_params;
   I2C_Params_init(&i2c_params);
 
   i2c_params.transferMode = I2C_MODE_BLOCKING;
@@ -192,10 +198,31 @@ sensor_init(void)
     return false;
   }
 
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief   Initialize the HDC-1000 sensor driver.
+ * \return  true if I2C operation successful; else, return false.
+ */
+static bool
+sensor_init(void)
+{
+  bool rv;
+
+  if(!i2c_acquire()) {
+    i2c_release();
+    return false;
+  }
+
   /* Enable reading data in one operation */
   uint8_t config_data[] = { HDC1000_REG_CONFIG, LSB16(HDC1000_VAL_CONFIG) };
 
-  return i2c_write(config_data, sizeof(config_data));
+  rv = i2c_write(config_data, sizeof(config_data));
+
+  i2c_release();
+
+  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -205,9 +232,18 @@ sensor_init(void)
 static bool
 start(void)
 {
+  bool rv;
   uint8_t temp_reg[] = { HDC1000_REG_TEMP };
 
-  return i2c_write(temp_reg, sizeof(temp_reg));
+  if(!i2c_acquire()) {
+    return false;
+  }
+
+  rv = i2c_write(temp_reg, sizeof(temp_reg));
+
+  i2c_release();
+
+  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -236,12 +272,19 @@ notify_ready(void *unused)
   /* Unused args */
   (void)unused;
 
+  if(!i2c_acquire()) {
+    i2c_release();
+    return;
+  }
+
   /* Latch readings */
   if(i2c_read(&sensor_data, sizeof(sensor_data))) {
     sensor_status = HDC_1000_SENSOR_STATUS_READINGS_READY;
   } else {
     sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
   }
+
+  i2c_release();
 
   sensors_changed(&hdc_1000_sensor);
 }

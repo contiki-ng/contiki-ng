@@ -182,6 +182,37 @@ i2c_read(void *rbuf, size_t rcount)
   return i2c_write_read(NULL, 0, rbuf, rcount);
 }
 /*---------------------------------------------------------------------------*/
+/* Releases the I2C Peripheral */
+static void
+i2c_release(void)
+{
+  I2C_close(i2c_handle);
+  i2c_handle = NULL;
+}
+/*---------------------------------------------------------------------------*/
+/* Acquires the I2C Peripheral */
+static bool
+i2c_acquire(void)
+{
+  I2C_Params i2c_params;
+
+  if(i2c_handle) {
+    return true;
+  }
+
+  I2C_Params_init(&i2c_params);
+
+  i2c_params.transferMode = I2C_MODE_BLOCKING;
+  i2c_params.bitRate = I2C_400kHz;
+
+  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
+  if(i2c_handle == NULL) {
+    return false;
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 /**
  * \brief   Initialize the TMP-007 sensor driver.
  * \return  true if I2C operation successful; else, return false.
@@ -195,18 +226,6 @@ sensor_init(void)
 
   pin_handle = PIN_open(&pin_state, pin_table);
   if(!pin_handle) {
-    return false;
-  }
-
-  I2C_Params i2c_params;
-  I2C_Params_init(&i2c_params);
-
-  i2c_params.transferMode = I2C_MODE_BLOCKING;
-  i2c_params.bitRate = I2C_400kHz;
-
-  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
-  if(i2c_handle == NULL) {
-    PIN_close(pin_handle);
     return false;
   }
 
@@ -231,13 +250,24 @@ notify_ready_cb(void *not_used)
 static bool
 enable_sensor(bool enable)
 {
+  bool rv;
+
   uint16_t cfg_value = (enable)
     ? VAL_CONFIG_ON
     : VAL_CONFIG_OFF;
 
   uint8_t cfg_data[] = { REG_CONFIG, LSB16(cfg_value) };
 
-  return i2c_write(cfg_data, sizeof(cfg_data));
+  if(!i2c_acquire()) {
+    i2c_release();
+    return false;
+  }
+
+  rv = i2c_write(cfg_data, sizeof(cfg_data));
+
+  i2c_release();
+
+  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -256,14 +286,21 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
   uint8_t status_data[] = { REG_STATUS };
   uint16_t status_value = 0;
 
+  if(!i2c_acquire()) {
+    i2c_release();
+    return false;
+  }
+
   spi_ok = i2c_write_read(status_data, sizeof(status_data),
                           &status_value, sizeof(status_value));
   if(!spi_ok) {
+    i2c_release();
     return false;
   }
   status_value = SWAP16(status_value);
 
   if((status_value & CONV_RDY_BIT) == 0) {
+    i2c_release();
     return false;
   }
 
@@ -273,6 +310,7 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
   spi_ok = i2c_write_read(local_temp_data, sizeof(local_temp_data),
                           &local_temp_value, sizeof(local_temp_value));
   if(!spi_ok) {
+    i2c_release();
     return false;
   }
 
@@ -282,11 +320,14 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
   spi_ok = i2c_write_read(obj_temp_data, sizeof(obj_temp_data),
                           &obj_temp_value, sizeof(obj_temp_value));
   if(!spi_ok) {
+    i2c_release();
     return false;
   }
 
   *local_tmp = SWAP16(local_temp_value);
   *obj_tmp = SWAP16(obj_temp_value);
+
+  i2c_release();
 
   return true;
 }
@@ -333,6 +374,7 @@ value(int type)
 
   case TMP_007_TYPE_ALL:
     if(!read_data(&raw_local_tmp, &raw_obj_tmp)) {
+      PRINTF("TMP: Read failed\n");
       return TMP_007_READING_ERROR;
     }
 
