@@ -286,7 +286,7 @@ read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
   uint8_t status_data[] = { REG_STATUS };
   uint16_t status_value = 0;
 
-  if(i2c_acquire()) {
+  if(!i2c_acquire()) {
     i2c_release();
     return false;
   }
