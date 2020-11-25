@@ -40,6 +40,7 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/ctimer.h"
+#include "dev/i2c-arch.h"
 /*---------------------------------------------------------------------------*/
 #include "board-conf.h"
 #include "bmp-280-sensor.h"
@@ -161,53 +162,6 @@ notify_ready(void *unused)
   sensors_changed(&bmp_280_sensor);
 }
 /*---------------------------------------------------------------------------*/
-static bool
-i2c_write_read(void *writeBuf, size_t writeCount, void *readBuf, size_t readCount)
-{
-  I2C_Transaction i2cTransaction = {
-    .writeBuf = writeBuf,
-    .writeCount = writeCount,
-    .readBuf = readBuf,
-    .readCount = readCount,
-    .slaveAddress = BMP280_I2C_ADDRESS,
-  };
-
-  return I2C_transfer(i2c_handle, &i2cTransaction);
-}
-#define i2c_write(writeBuf, writeCount)   i2c_write_read(writeBuf, writeCount, NULL, 0)
-#define i2c_read(readBuf, readCount)      i2c_write_read(NULL, 0, readBuf, readCount)
-/*---------------------------------------------------------------------------*/
-/* Releases the I2C Peripheral */
-static void
-i2c_release(void)
-{
-  I2C_close(i2c_handle);
-  i2c_handle = NULL;
-}
-/*---------------------------------------------------------------------------*/
-/* Acquires the I2C Peripheral */
-static bool
-i2c_acquire(void)
-{
-  I2C_Params i2c_params;
-
-  if(i2c_handle) {
-    return true;
-  }
-
-  I2C_Params_init(&i2c_params);
-
-  i2c_params.transferMode = I2C_MODE_BLOCKING;
-  i2c_params.bitRate = I2C_400kHz;
-
-  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
-  if(i2c_handle == NULL) {
-    return false;
-  }
-
-  return true;
-}
-/*---------------------------------------------------------------------------*/
 /**
  * \brief          Initalise the sensor.
  * \return Boolean Value descibing whether initialization were
@@ -220,9 +174,10 @@ init(void)
 {
   bool rv_write_read, rv_write;
 
-  if(!i2c_acquire()) {
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
     sensor_status = SENSOR_STATUS_DISABLED;
-    i2c_release();
     return false;
   }
 
@@ -230,11 +185,14 @@ init(void)
 
   uint8_t calib_reg = ADDR_CALIB;
   /* Read and store calibration data */
-  rv_write_read = i2c_write_read(&calib_reg, sizeof(calib_reg), &calib_data, sizeof(calib_data));
+  rv_write_read = i2c_arch_write_read(i2c_handle, BMP280_I2C_ADDRESS,
+                                      &calib_reg, sizeof(calib_reg),
+                                      &calib_data, sizeof(calib_data));
   /* then reset the sensor */
-  rv_write = i2c_write(reset_data, sizeof(reset_data));
+  rv_write = i2c_arch_write(i2c_handle, BMP280_I2C_ADDRESS, reset_data,
+                            sizeof(reset_data));
 
-  i2c_release();
+  i2c_arch_release(i2c_handle);
 
   return rv_write_read && rv_write;
 }
@@ -258,15 +216,17 @@ enable_sensor(bool enable)
 
   uint8_t ctrl_meas_data[] = { ADDR_CTRL_MEAS, val };
 
-  if(!i2c_acquire()) {
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
     sensor_status = SENSOR_STATUS_DISABLED;
-    i2c_release();
     return false;
   }
 
-  rv = i2c_write(&ctrl_meas_data, sizeof(ctrl_meas_data));
+  rv = i2c_arch_write(i2c_handle, BMP280_I2C_ADDRESS, &ctrl_meas_data,
+                      sizeof(ctrl_meas_data));
 
-  i2c_release();
+  i2c_arch_release(i2c_handle);
   return rv;
 }
 /*---------------------------------------------------------------------------*/
@@ -286,15 +246,17 @@ read_data(uint8_t *data, size_t count)
   bool rv;
   uint8_t press_msb_reg = ADDR_PRESS_MSB;
 
-  if(!i2c_acquire()) {
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
     sensor_status = SENSOR_STATUS_DISABLED;
-    i2c_release();
     return false;
   }
 
-  rv = i2c_write_read(&press_msb_reg, sizeof(press_msb_reg), data, count);
+  rv = i2c_arch_write_read(i2c_handle, BMP280_I2C_ADDRESS, &press_msb_reg,
+                           sizeof(press_msb_reg), data, count);
 
-  i2c_release();
+  i2c_arch_release(i2c_handle);
 
   return rv;
 }

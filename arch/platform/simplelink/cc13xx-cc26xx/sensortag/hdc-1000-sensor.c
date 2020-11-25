@@ -40,6 +40,7 @@
 #include "contiki.h"
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
+#include "dev/i2c-arch.h"
 /*---------------------------------------------------------------------------*/
 #include "board-conf.h"
 #include "hdc-1000-sensor.h"
@@ -124,84 +125,6 @@ static volatile HDC_1000_SENSOR_STATUS sensor_status = HDC_1000_SENSOR_STATUS_DI
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
 /**
- * \brief         Setup and peform an I2C transaction.
- * \param wbuf    Output buffer during the I2C transation.
- * \param wcount  How many bytes in the wbuf.
- * \param rbuf    Input buffer during the I2C transation.
- * \param rcount  How many bytes to read into rbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static bool
-i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
-{
-  I2C_Transaction i2c_transaction = {
-    .writeBuf = wbuf,
-    .writeCount = wcount,
-    .readBuf = rbuf,
-    .readCount = rcount,
-    .slaveAddress = HDC1000_I2C_ADDRESS,
-  };
-
-  return I2C_transfer(i2c_handle, &i2c_transaction);
-}
-/**
- * \brief         Peform a write only I2C transaction.
- * \param wbuf    Output buffer during the I2C transation.
- * \param wcount  How many bytes in the wbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static inline bool
-i2c_write(void *wbuf, size_t wcount)
-{
-  return i2c_write_read(wbuf, wcount, NULL, 0);
-}
-/**
- * \brief         Peform a read only I2C transaction.
- * \param rbuf    Input buffer during the I2C transation.
- * \param rcount  How many bytes to read into rbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static inline bool
-i2c_read(void *rbuf, size_t rcount)
-{
-  return i2c_write_read(NULL, 0, rbuf, rcount);
-}
-/*---------------------------------------------------------------------------*/
-/* Releases the I2C Peripheral */
-static void
-i2c_release(void)
-{
-  I2C_close(i2c_handle);
-  i2c_handle = NULL;
-}
-/*---------------------------------------------------------------------------*/
-/* Acquires the I2C Peripheral */
-static bool
-i2c_acquire(void)
-{
-  I2C_Params i2c_params;
-
-  if(i2c_handle) {
-    return true;
-  }
-
-  I2C_Params_init(&i2c_params);
-
-  i2c_params.transferMode = I2C_MODE_BLOCKING;
-  i2c_params.bitRate = I2C_400kHz;
-
-  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
-  if(i2c_handle == NULL) {
-    return false;
-  }
-
-  return true;
-}
-/*---------------------------------------------------------------------------*/
-/**
  * \brief   Initialize the HDC-1000 sensor driver.
  * \return  true if I2C operation successful; else, return false.
  */
@@ -210,17 +133,19 @@ sensor_init(void)
 {
   bool rv;
 
-  if(!i2c_acquire()) {
-    i2c_release();
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
     return false;
   }
 
   /* Enable reading data in one operation */
   uint8_t config_data[] = { HDC1000_REG_CONFIG, LSB16(HDC1000_VAL_CONFIG) };
 
-  rv = i2c_write(config_data, sizeof(config_data));
+  rv = i2c_arch_write(i2c_handle, HDC1000_I2C_ADDRESS, config_data,
+                      sizeof(config_data));
 
-  i2c_release();
+  i2c_arch_release(i2c_handle);
 
   return rv;
 }
@@ -235,13 +160,16 @@ start(void)
   bool rv;
   uint8_t temp_reg[] = { HDC1000_REG_TEMP };
 
-  if(!i2c_acquire()) {
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
     return false;
   }
 
-  rv = i2c_write(temp_reg, sizeof(temp_reg));
+  rv = i2c_arch_write(i2c_handle, HDC1000_I2C_ADDRESS, temp_reg,
+                      sizeof(temp_reg));
 
-  i2c_release();
+  i2c_arch_release(i2c_handle);
 
   return rv;
 }
@@ -272,19 +200,21 @@ notify_ready(void *unused)
   /* Unused args */
   (void)unused;
 
-  if(!i2c_acquire()) {
-    i2c_release();
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
     return;
   }
 
   /* Latch readings */
-  if(i2c_read(&sensor_data, sizeof(sensor_data))) {
+  if(i2c_arch_read(i2c_handle, HDC1000_I2C_ADDRESS, &sensor_data,
+                   sizeof(sensor_data))) {
     sensor_status = HDC_1000_SENSOR_STATUS_READINGS_READY;
   } else {
     sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
   }
 
-  i2c_release();
+  i2c_arch_release(i2c_handle);
 
   sensors_changed(&hdc_1000_sensor);
 }
