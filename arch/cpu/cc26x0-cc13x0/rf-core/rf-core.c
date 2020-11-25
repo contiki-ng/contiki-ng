@@ -48,8 +48,8 @@
 #include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
 /* RF core and RF HAL API */
-#include "hw_rfc_dbell.h"
-#include "hw_rfc_pwr.h"
+#include "inc/hw_rfc_dbell.h"
+#include "inc/hw_rfc_pwr.h"
 /*---------------------------------------------------------------------------*/
 /* RF Core Mailbox API */
 #include "driverlib/rf_mailbox.h"

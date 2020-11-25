@@ -10,7 +10,7 @@ ifndef CORE_SDK
  CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ] && echo 1)
 
  ifneq ($(CORE_SDK_INIT),1)
-  $(error The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
+  $(warning The Core SDK submodule is not available. Please run 'git submodule update --init --recursive')
  endif
 # Note that Core SDK can be overriden with a user-specified SimpleLink SDK.
 # As long as the SimpleLink SDK matches the device in use and is of a reasonable

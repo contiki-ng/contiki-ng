@@ -47,11 +47,9 @@
 #include "rf-core/dot-15-4g.h"
 
 #include <stdint.h>
+#include "rf-core/tx-power.h"
 /*---------------------------------------------------------------------------*/
-typedef struct prop_mode_tx_power_config {
-  radio_value_t dbm;
-  uint16_t tx_power; /* Value for the PROP_DIV_RADIO_SETUP.txPower field */
-} prop_mode_tx_power_config_t;
+typedef tx_power_table_t prop_mode_tx_power_config_t;
 /*---------------------------------------------------------------------------*/
 #endif /* PROP_MODE_H_ */
 /*---------------------------------------------------------------------------*/

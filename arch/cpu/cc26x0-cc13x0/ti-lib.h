@@ -397,6 +397,7 @@
 /* rfc.h */
 #include "driverlib/rfc.h"
 
+#define ti_lib_rfc_override_update(...)          RFCOverrideUpdate(__VA_ARGS__)
 #define ti_lib_rfc_rtrim(...)                    RFCRTrim(__VA_ARGS__)
 #define ti_lib_rfc_adi3vco_ldo_voltage_mode(...) RFCAdi3VcoLdoVoltageMode(__VA_ARGS__)
 #define ti_lib_rfc_hw_int_enable(...)            RFCHwIntEnable(__VA_ARGS__)
@@ -418,6 +419,8 @@
 #if CPU_FAMILY_CC26X0R2
 /* May need to change to XOSC_IN_LOW_POWER_MODE */
 #define ti_lib_sys_ctrl_adjust_recharge_after_power_down()    SysCtrlAdjustRechargeAfterPowerDown(XOSC_IN_HIGH_POWER_MODE)
+#elif defined(THIS_DRIVERLIB_BUILD)
+#define ti_lib_sys_ctrl_adjust_recharge_after_power_down()    SysCtrlAdjustRechargeAfterPowerDown(0)
 #else
 #define ti_lib_sys_ctrl_adjust_recharge_after_power_down()    SysCtrlAdjustRechargeAfterPowerDown()
 #endif /* CPU_FAMILY_CC26X0R2 */
@@ -580,6 +583,8 @@
 #define ti_lib_crypto_aes_ecb_status(...) CRYPTOAesEcbStatus(__VA_ARGS__)
 #define ti_lib_crypto_aes_ecb_finish(...) CRYPTOAesEcbFinish(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
+#include "driverlib/legacy.h"
+
 #endif /* TI_LIB_H_ */
 /*---------------------------------------------------------------------------*/
 /**

@@ -64,7 +64,7 @@
  * project has specified otherwise. Depending on the final mode, determine a
  * default channel (again, if unspecified) and configure RDC params
  */
-#if CPU_FAMILY_CC13X0
+#if CPU_FAMILY_CC13X0 || CPU_FAMILY_CC13XX
 #ifndef CC13XX_CONF_PROP_MODE
 #define CC13XX_CONF_PROP_MODE 1
 #endif /* CC13XX_CONF_PROP_MODE */

@@ -32,7 +32,17 @@
 #ifndef CC13XX_CC26XX_DEF_H_
 #define CC13XX_CC26XX_DEF_H_
 /*---------------------------------------------------------------------------*/
+//#include <ti/devices/DeviceFamily.h>
+#if defined(CPU_FAMILY_CC13X0) || defined(CPU_FAMILY_CC26X0) //(DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+#include <cm3/cm3-def.h>
+#define CMSIS_CONF_HEADER_PATH              "cc13x0-cc26x0-cm3.h"
+#elif defined(CPU_FAMILY_CC13X2) || defined(CPU_FAMILY_CC26X2) //(DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
+#include <cm4/cm4-def.h>
+#define CMSIS_CONF_HEADER_PATH              "cc13x2-cc26x2-cm4.h"
+#else// legacy default behaviour
 #include "cm3/cm3-def.h"
+#define CMSIS_CONF_HEADER_PATH               "cc13x0-cc26x0-cm3.h"
+#endif
 /*---------------------------------------------------------------------------*/
 /* TSCH related defines */
 
@@ -143,9 +153,6 @@
 /*---------------------------------------------------------------------------*/
 #define RTIMER_ARCH_SECOND 65536
 /*---------------------------------------------------------------------------*/
-/* Path to CMSIS header */
-#define CMSIS_CONF_HEADER_PATH               "cc13x0-cc26x0-cm3.h"
-
 /* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
