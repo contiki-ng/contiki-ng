@@ -95,7 +95,7 @@
 
 #define SWAP16(v) ((LO_UINT16(v) << 8) | HI_UINT16(v))
 
-#define LSB16(v)  (LO_UINT16(v)), (HI_UINT16(v))
+#define LSB16(v)  (HI_UINT16(v)), (LO_UINT16(v))
 /*---------------------------------------------------------------------------*/
 static I2C_Handle i2c_handle;
 /*---------------------------------------------------------------------------*/
@@ -186,9 +186,9 @@ convert(int32_t *temp, int32_t *hum)
   int32_t raw_hum = SWAP16(sensor_data.hum);
 
   /* Convert temperature to degrees C */
-  *temp = raw_temp * 100 * 165 / 65536 - 40000;
+  *temp = (raw_temp * 100 * 165) / 65536 - 4000;
   /* Convert relative humidity to a %RH value */
-  *hum = raw_hum * 100 * 100 / 65536;
+  *hum = (raw_hum * 100 * 100) / 65536;
 }
 /*---------------------------------------------------------------------------*/
 /**
