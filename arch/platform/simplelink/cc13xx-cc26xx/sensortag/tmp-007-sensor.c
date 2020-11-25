@@ -108,8 +108,8 @@
 
 #define SWAP16(v)               ((LO_UINT16(v) << 8) | (HI_UINT16(v) << 0))
 
-#define LSB16(v)                (LO_UINT16(v)), (HI_UINT16(v))
-#define MSB16(v)                (HI_UINT16(v)), (LO_UINT16(v))
+#define LSB16(v)                (HI_UINT16(v)), (LO_UINT16(v))
+#define MSB16(v)                (LO_UINT16(v)), (HI_UINT16(v))
 /*---------------------------------------------------------------------------*/
 static const PIN_Config pin_table[] = {
   TMP_007_TMP_RDY | PIN_INPUT_EN | PIN_PULLUP | PIN_HYSTERESIS | PIN_IRQ_NEGEDGE,
