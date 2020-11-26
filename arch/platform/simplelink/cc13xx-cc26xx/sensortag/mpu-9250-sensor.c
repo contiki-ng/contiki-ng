@@ -434,7 +434,7 @@ initialise_cb(void *unused)
     return;
   }
 
-  i2c_handle = i2c_arch_acquire(Board_I2C0);
+  i2c_handle = i2c_arch_acquire(Board_I2C1);
 
   if(!i2c_handle) {
     return;
@@ -475,7 +475,7 @@ value(int type)
     return MPU_9250_READING_ERROR;
   }
 
-  i2c_handle = i2c_arch_acquire(Board_I2C0);
+  i2c_handle = i2c_arch_acquire(Board_I2C1);
 
   if(!i2c_handle) {
     return MPU_9250_READING_ERROR;
@@ -581,7 +581,7 @@ configure(int type, int enable)
       ctimer_stop(&startup_timer);
 
       if(PIN_getOutputValue(Board_MPU_POWER)) {
-        i2c_handle = i2c_arch_acquire(Board_I2C0);
+        i2c_handle = i2c_arch_acquire(Board_I2C1);
 
         if(!i2c_handle) {
           PIN_setOutputValue(pin_handle, Board_MPU_POWER, 0);
