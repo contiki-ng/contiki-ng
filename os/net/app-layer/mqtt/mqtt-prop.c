@@ -486,6 +486,7 @@ mqtt_get_next_in_prop(struct mqtt_connection *conn,
 {
   uint32_t prop_len;
   uint8_t prop_id_len_bytes;
+  uint16_t prop_id_decode;
 
   if(!conn->in_packet.has_props) {
     DBG("MQTT - Message has no input properties");
@@ -505,7 +506,9 @@ mqtt_get_next_in_prop(struct mqtt_connection *conn,
   prop_id_len_bytes =
     mqtt_decode_var_byte_int(conn->in_packet.curr_props_pos,
                              conn->in_packet.properties_len - (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
-                             NULL, NULL, (uint16_t *)prop_id);
+                             NULL, NULL, (uint16_t *)&prop_id_decode);
+
+  *prop_id = prop_id_decode;
 
   DBG("MQTT - Decoded property ID %i (encoded using %i bytes)\n", *prop_id, prop_id_len_bytes);
 

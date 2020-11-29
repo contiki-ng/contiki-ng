@@ -52,9 +52,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   && apt-get -qq clean
 
 # Install ARM toolchain
-RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
-  tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/ && \
+RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/9-2020-q2-update/gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 && \
+  tar xjf gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 -C /tmp/ && \
+  cp -f -r /tmp/gcc-arm-none-eabi-9-2020-q4-major/* /usr/local/ && \
   rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
