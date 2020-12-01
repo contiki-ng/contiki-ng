@@ -81,8 +81,8 @@ buzzer_init()
   GPTimerCC26XX_Params gpt_params;
   GPTimerCC26XX_Params_init(&gpt_params);
 
-  gpt_params.mode = GPT_CONFIG_16BIT;
-  gpt_params.mode = GPT_MODE_PERIODIC_UP;
+  gpt_params.width = GPT_CONFIG_16BIT;
+  gpt_params.mode = GPT_MODE_PWM;
   gpt_params.debugStallMode = GPTimerCC26XX_DEBUG_STALL_OFF;
 
   gpt_handle = GPTimerCC26XX_open(Board_GPTIMER0A, &gpt_params);
@@ -130,6 +130,7 @@ buzzer_start(uint32_t freq)
   GPTimerCC26XX_Value load_value = (48 * 1000 * 1000) / freq;
 
   GPTimerCC26XX_setLoadValue(gpt_handle, load_value);
+  GPTimerCC26XX_setMatchValue(gpt_handle, load_value / 2);
   GPTimerCC26XX_start(gpt_handle);
 
   is_running = true;
