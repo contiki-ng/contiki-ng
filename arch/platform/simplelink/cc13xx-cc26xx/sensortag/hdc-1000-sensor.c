@@ -78,6 +78,12 @@
 #define HDC1000_REG_TEMP           0x00 /* Temperature */
 #define HDC1000_REG_HUM            0x01 /* Humidity */
 #define HDC1000_REG_CONFIG         0x02 /* Configuration */
+
+#if CONTIKI_BOARD_SENSORTAG_CC1352R1
+#define HDC2080_REG_CONFIG         0x0e /* Configuration for HDC 2080 */
+#define HDC2080_MEA_CONFIG         0x0f /* Measure Configuration for HDC 2080 */
+#endif
+
 #define HDC1000_REG_SERID_H        0xFB /* Serial ID high */
 #define HDC1000_REG_SERID_M        0xFC /* Serial ID middle */
 #define HDC1000_REG_SERID_L        0xFD /* Serial ID low */
@@ -100,10 +106,19 @@
 static I2C_Handle i2c_handle;
 /*---------------------------------------------------------------------------*/
 /* Raw data as returned from the sensor (Big Endian) */
+#if CONTIKI_BOARD_SENSORTAG_CC1352R1
+typedef struct {
+  uint8_t temp_low;
+  uint8_t temp_high;
+  uint8_t hum_low;
+  uint8_t hum_high;
+} HDC_1000_SensorData;
+#else
 typedef struct {
   uint16_t temp;
   uint16_t hum;
 } HDC_1000_SensorData;
+#endif
 
 static HDC_1000_SensorData sensor_data;
 /*---------------------------------------------------------------------------*/
@@ -140,7 +155,12 @@ sensor_init(void)
   }
 
   /* Enable reading data in one operation */
+#if CONTIKI_BOARD_SENSORTAG_CC1352R1
+  /* From TI HDC 2080 Programming PDF */
+  uint8_t config_data[] = { HDC2080_REG_CONFIG, 0x00 };
+#else
   uint8_t config_data[] = { HDC1000_REG_CONFIG, LSB16(HDC1000_VAL_CONFIG) };
+#endif
 
   rv = i2c_arch_write(i2c_handle, HDC1000_I2C_ADDRESS, config_data,
                       sizeof(config_data));
@@ -158,7 +178,11 @@ static bool
 start(void)
 {
   bool rv;
+#if CONTIKI_BOARD_SENSORTAG_CC1352R1
+  uint8_t temp_reg[] = { HDC2080_MEA_CONFIG, 0x01 };
+#else
   uint8_t temp_reg[] = { HDC1000_REG_TEMP };
+#endif
 
   i2c_handle = i2c_arch_acquire(Board_I2C0);
 
@@ -182,8 +206,13 @@ start(void)
 static void
 convert(int32_t *temp, int32_t *hum)
 {
+#if CONTIKI_BOARD_SENSORTAG_CC1352R1
+  int32_t raw_temp = sensor_data.temp_high * 256 + sensor_data.temp_low;
+  int32_t raw_hum = sensor_data.hum_high * 256 + sensor_data.hum_low;
+#else  
   int32_t raw_temp = SWAP16(sensor_data.temp);
   int32_t raw_hum = SWAP16(sensor_data.hum);
+#endif
 
   /* Convert temperature to degrees C */
   *temp = (raw_temp * 100 * 165) / 65536 - 4000;
@@ -207,8 +236,14 @@ notify_ready(void *unused)
   }
 
   /* Latch readings */
+#if CONTIKI_BOARD_SENSORTAG_CC1352R1
+  uint8_t temp_reg[] = { HDC1000_REG_TEMP };
+  if(i2c_arch_write_read(i2c_handle, HDC1000_I2C_ADDRESS, temp_reg,  
+                         sizeof(temp_reg), &sensor_data, sizeof(sensor_data))) {
+#else  
   if(i2c_arch_read(i2c_handle, HDC1000_I2C_ADDRESS, &sensor_data,
                    sizeof(sensor_data))) {
+#endif
     sensor_status = HDC_1000_SENSOR_STATUS_READINGS_READY;
   } else {
     sensor_status = HDC_1000_SENSOR_STATUS_I2C_ERROR;
