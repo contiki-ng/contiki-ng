@@ -1,0 +1,8 @@
+### Will allow the inclusion of the correct CPU makefile
+CPU_FAMILY = nrf52840
+
+CFLAGS +=
+
+CONTIKI_TARGET_DIRS += nrf52840
+
+BOARD_SOURCEFILES +=

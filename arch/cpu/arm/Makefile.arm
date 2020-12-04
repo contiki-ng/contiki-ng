@@ -32,7 +32,7 @@ ASFLAGS += $(CFLAGS)
 ### Specify '-c' option to assemble only and not link
 ASFLAGS += -c 
 
-LDFLAGS += -mthumb -mlittle-endian
+LDFLAGS += -mthumb -mabi=aapcs -mlittle-endian
 
 OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
 

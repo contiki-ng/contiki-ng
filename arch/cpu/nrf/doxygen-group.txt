@@ -1,0 +1,9 @@
+/**
+ * \defgroup nrf The nRF5340 and nRF52840 SoCs (using nRF MDK)
+ * \ingroup cpu
+ */
+
+/**
+ * \defgroup nrf-platforms Nordic Semiconductor nRF-powered platforms (using nRF MDK)
+ * \ingroup platform
+ */

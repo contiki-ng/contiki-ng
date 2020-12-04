@@ -1,0 +1,7 @@
+CONTIKI_ARM_DIRS += cortex-m/cm33
+
+CFLAGS += -mcpu=cortex-m33+nodsp
+
+LDFLAGS += -mcpu=cortex-m33+nodsp
+
+include $(CONTIKI)/$(CONTIKI_NG_CORTEX_DIR)/Makefile.cortex-m
