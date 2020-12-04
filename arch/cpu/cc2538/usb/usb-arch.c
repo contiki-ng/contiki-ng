@@ -169,7 +169,7 @@ static void ep0_interrupt_handler(void);
 static uint8_t
 disable_irq(void)
 {
-  uint8_t enabled = NVIC_IsIRQEnabled(USB_IRQn);
+  uint8_t enabled = NVIC_GetEnableIRQ(USB_IRQn);
   if(enabled) {
     NVIC_DisableIRQ(USB_IRQn);
   }
