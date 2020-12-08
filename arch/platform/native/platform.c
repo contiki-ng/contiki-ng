@@ -263,9 +263,11 @@ platform_init_stage_two()
   set_lladdr();
   serial_line_init();
 
+#if SELECT_STDIN
   if(NULL == input_handler) {
     native_uart_set_input(serial_line_input_byte);
   }
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
