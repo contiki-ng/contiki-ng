@@ -222,7 +222,7 @@ add_cell(const linkaddr_t *peer_addr, const sf_plugtest_cell_t *cell,
 
   if((slotframe = tsch_schedule_get_slotframe_by_handle(0)) == NULL ||
      tsch_schedule_add_link(slotframe, link_options, LINK_TYPE_NORMAL,
-                            peer_addr, timeslot, channel_offset) == NULL) {
+                            peer_addr, timeslot, channel_offset, 1) == NULL) {
     LOG_ERR("cannot add a cell\n");
     return -1;
   }
@@ -894,7 +894,7 @@ parse_args(shell_output_func output,
       SHELL_OUTPUT(output, "time source is not available\n");
       return -1;
     } else {
-      memcpy(&(subcmd_args->peer_addr), &(time_source->addr),
+      memcpy(&(subcmd_args->peer_addr), tsch_queue_get_nbr_address(time_source),
              sizeof(linkaddr_t));
     }
   }
@@ -999,5 +999,6 @@ const sixtop_sf_t sf_plugtest = {
   SF_PLUGTEST_TIMEOUT,
   init,
   input,
-  timeout
+  timeout,
+  NULL
 };

@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = node-sixtop
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_EXCLUDE = sky z1 nrf52dk native simplelink
+PLATFORMS_EXCLUDE = sky z1 nrf52dk native
 
 PROJECT_SOURCEFILES += sf-simple.c
 CONTIKI=../../..

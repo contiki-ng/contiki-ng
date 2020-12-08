@@ -35,6 +35,7 @@
 #include "contiki-lib.h"
 #include "lib/assert.h"
 
+#include "net/mac/tsch/tsch.h"
 #include "net/mac/tsch/sixtop/sixp-nbr.h"
 
 #include "unit-test/unit-test.h"
@@ -162,7 +163,20 @@ UNIT_TEST(test_next_seqno)
 
 PROCESS_THREAD(test_process, ev, data)
 {
+  static struct etimer et;
+
   PROCESS_BEGIN();
+
+  /* let tsch_queue_init() consume 2 nbr before starting the tests */
+  etimer_set(&et, CLOCK_SECOND);
+  tschmac_driver.init();
+  tschmac_driver.on();
+  tsch_set_coordinator(1);
+  while(tsch_is_associated == 0) {
+    PROCESS_YIELD_UNTIL(etimer_expired(&et));
+    etimer_reset(&et);
+  }
+
   printf("Run unit-test\n");
   printf("---\n");
 

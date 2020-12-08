@@ -46,9 +46,13 @@
  * - a sender-based or receiver-based slotframe for unicast to RPL parents and children
  * - a common shared slotframe for any other traffic (mostly broadcast)
  *  */
-#define ORCHESTRA_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common }
-/* Example configuration for RPL non-storing mode: */
-/* #define ORCHESTRA_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common } */
+#define ORCHESTRA_RULES { &eb_per_time_source, \
+                          &unicast_per_neighbor_rpl_ns, \
+                          &default_common }
+/* Example configuration for RPL storing mode: */
+/* #define ORCHESTRA_RULES { &eb_per_time_source, \
+                             &unicast_per_neighbor_rpl_storing, \
+                             &default_common } */
 
 #endif /* ORCHESTRA_CONF_RULES */
 
@@ -88,6 +92,17 @@
 #else /* ORCHESTRA_CONF_LINKADDR_HASH */
 #define ORCHESTRA_LINKADDR_HASH(addr)             ((addr != NULL) ? (addr)->u8[LINKADDR_SIZE - 1] : -1)
 #endif /* ORCHESTRA_CONF_LINKADDR_HASH */
+
+/* The hash function used to assign timeslot for a pair of given nodes.
+ * The value of 264 is a good choice for the default slotframe size 17. It also a good choice for
+ * most other slotframe sizes: there are no prime numbers between 2 and 101 (inclusive) that
+ * produce modulo 1 when used to divide 264. This ensures that for any a1, a2 this is true:
+ * `ORCHESTRA_LINKADDR_HASH2(a1, a2) != ORCHESTRA_LINKADDR_HASH2(a2, a1)` */
+#ifdef ORCHESTRA_CONF_LINKADDR_HASH2
+#define ORCHESTRA_LINKADDR_HASH2                  ORCHESTRA_CONF_LINKADDR_HASH2
+#else /* ORCHESTRA_CONF_LINKADDR_HASH2 */
+#define ORCHESTRA_LINKADDR_HASH2(addr1, addr2)    ((addr1)->u8[LINKADDR_SIZE - 1] + 264 * (addr2)->u8[LINKADDR_SIZE - 1])
+#endif /* ORCHESTRA_CONF_LINKADDR_HASH2 */
 
 /* The maximum hash */
 #ifdef ORCHESTRA_CONF_MAX_HASH

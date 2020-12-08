@@ -371,6 +371,17 @@ get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **
   return p;
 }
 /*---------------------------------------------------------------------------*/
+static
+void update_link_backoff(struct tsch_link *link) {
+  if(link != NULL
+      && (link->link_options & LINK_OPTION_TX)
+      && (link->link_options & LINK_OPTION_SHARED)) {
+    /* Decrement the backoff window for all neighbors able to transmit over
+     * this Tx, Shared link. */
+    tsch_queue_update_all_backoff_windows(&link->addr);
+  }
+}
+/*---------------------------------------------------------------------------*/
 uint64_t
 tsch_get_network_uptime_ticks(void)
 {
@@ -521,7 +532,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
       burst_link_requested = 0;
       if(do_wait_for_ack
              && tsch_current_burst_count + 1 < TSCH_BURST_MAX_LEN
-             && tsch_queue_packet_count(&current_neighbor->addr) > 1) {
+             && tsch_queue_nbr_packet_count(current_neighbor) > 1) {
         burst_link_requested = 1;
         tsch_packet_set_frame_pending(packet, packet_len);
       }
@@ -638,7 +649,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
 #if LLSEC802154_ENABLED
                 if(ack_len != 0) {
                   if(!tsch_security_parse_frame(ackbuf, ack_hdrlen, ack_len - ack_hdrlen - tsch_security_mic_len(&frame),
-                      &frame, &current_neighbor->addr, &tsch_current_asn)) {
+                      &frame, tsch_queue_get_nbr_address(current_neighbor), &tsch_current_asn)) {
                     TSCH_LOG_ADD(tsch_log_message,
                         snprintf(log->message, sizeof(log->message),
                         "!failed to authenticate ACK"));
@@ -794,7 +805,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
     packet_seen = NETSTACK_RADIO.receiving_packet() || NETSTACK_RADIO.pending_packet();
     if(!packet_seen) {
       /* Check if receiving within guard time */
-      RTIMER_BUSYWAIT_UNTIL_ABS((packet_seen = NETSTACK_RADIO.receiving_packet()),
+      RTIMER_BUSYWAIT_UNTIL_ABS((packet_seen = (NETSTACK_RADIO.receiving_packet() || NETSTACK_RADIO.pending_packet())),
           current_slot_start, tsch_timing[tsch_ts_rx_offset] + tsch_timing[tsch_ts_rx_wait] + RADIO_DELAY_BEFORE_DETECT);
     }
     if(!packet_seen) {
@@ -1024,9 +1035,21 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       is_drift_correction_used = 0;
       /* Get a packet ready to be sent */
       current_packet = get_packet_and_neighbor_for_link(current_link, &current_neighbor);
-      /* There is no packet to send, and this link does not have Rx flag. Instead of doing
-       * nothing, switch to the backup link (has Rx flag) if any. */
-      if(current_packet == NULL && !(current_link->link_options & LINK_OPTION_RX) && backup_link != NULL) {
+      uint8_t do_skip_best_link = 0;
+      if(current_packet == NULL && backup_link != NULL) {
+        /* There is no packet to send, and this link does not have Rx flag. Instead of doing
+         * nothing, switch to the backup link (has Rx flag) if any
+         * and if the current link cannot Rx or both links can Rx, but the backup link has priority. */
+        if(!(current_link->link_options & LINK_OPTION_RX)
+            || backup_link->slotframe_handle < current_link->slotframe_handle) {
+          do_skip_best_link = 1;
+        }
+      }
+
+      if(do_skip_best_link) {
+        /* skipped a Tx link, refresh its backoff */
+        update_link_backoff(current_link);
+
         current_link = backup_link;
         current_packet = get_packet_and_neighbor_for_link(current_link, &current_neighbor);
       }
@@ -1095,13 +1118,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       rtimer_clock_t time_to_next_active_slot;
       /* Schedule next wakeup skipping slots if missed deadline */
       do {
-        if(current_link != NULL
-            && current_link->link_options & LINK_OPTION_TX
-            && current_link->link_options & LINK_OPTION_SHARED) {
-          /* Decrement the backoff window for all neighbors able to transmit over
-           * this Tx, Shared link. */
-          tsch_queue_update_all_backoff_windows(&current_link->addr);
-        }
+        update_link_backoff(current_link);
 
         /* A burst link was scheduled. Replay the current link at the
         next time offset */

@@ -144,7 +144,7 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
            peer_addr->u8[7]);
     tsch_schedule_add_link(slotframe,
                            link_option, LINK_TYPE_NORMAL, peer_addr,
-                           cell.timeslot_offset, cell.channel_offset);
+                           cell.timeslot_offset, cell.channel_offset, 1);
     break;
   }
 }
@@ -616,5 +616,6 @@ const sixtop_sf_t sf_simple_driver = {
   CLOCK_SECOND,
   NULL,
   input,
+  NULL,
   NULL
 };

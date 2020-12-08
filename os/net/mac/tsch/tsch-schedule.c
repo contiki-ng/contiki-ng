@@ -36,6 +36,7 @@
  * \author
  *         Simon Duquennoy <simonduq@sics.se>
  *         Beshr Al Nahas <beshr@sics.se>
+ *         Atis Elsts <atis.elsts@edi.lv>
  */
 
 /**
@@ -214,7 +215,7 @@ print_link_type(uint16_t link_type)
 struct tsch_link *
 tsch_schedule_add_link(struct tsch_slotframe *slotframe,
                        uint8_t link_options, enum link_type link_type, const linkaddr_t *address,
-                       uint16_t timeslot, uint16_t channel_offset)
+                       uint16_t timeslot, uint16_t channel_offset, uint8_t do_remove)
 {
   struct tsch_link *l = NULL;
   if(slotframe != NULL) {
@@ -226,9 +227,11 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
       return NULL;
     }
 
-    /* Start with removing the link currently installed at this timeslot (needed
-     * to keep neighbor state in sync with link options etc.) */
-    tsch_schedule_remove_link_by_timeslot(slotframe, timeslot, channel_offset);
+    if(do_remove) {
+      /* Start with removing the link currently installed at this timeslot (needed
+       * to keep neighbor state in sync with link options etc.) */
+      tsch_schedule_remove_link_by_timeslot(slotframe, timeslot, channel_offset);
+    }
     if(!tsch_get_lock()) {
       LOG_ERR("! add_link memb_alloc couldn't take lock\n");
     } else {
@@ -335,8 +338,23 @@ int
 tsch_schedule_remove_link_by_timeslot(struct tsch_slotframe *slotframe,
                                       uint16_t timeslot, uint16_t channel_offset)
 {
-  return tsch_schedule_remove_link(slotframe,
-                                   tsch_schedule_get_link_by_timeslot(slotframe, timeslot, channel_offset));
+  int ret = 0;
+  if(!tsch_is_locked()) {
+    if(slotframe != NULL) {
+      struct tsch_link *l = list_head(slotframe->links_list);
+      /* Loop over all items and remove all matching links */
+      while(l != NULL) {
+        struct tsch_link *next = list_item_next(l);
+        if(l->timeslot == timeslot && l->channel_offset == channel_offset) {
+          if(tsch_schedule_remove_link(slotframe, l)) {
+            ret = 1;
+          }
+        }
+        l = next;
+      }
+    }
+  }
+  return ret;
 }
 /*---------------------------------------------------------------------------*/
 /* Looks within a slotframe for a link with a given timeslot */
@@ -347,7 +365,7 @@ tsch_schedule_get_link_by_timeslot(struct tsch_slotframe *slotframe,
   if(!tsch_is_locked()) {
     if(slotframe != NULL) {
       struct tsch_link *l = list_head(slotframe->links_list);
-      /* Loop over all items. Assume there is max one link per timeslot */
+      /* Loop over all items. Assume there is max one link per timeslot and channel_offset */
       while(l != NULL) {
         if(l->timeslot == timeslot && l->channel_offset == channel_offset) {
           return l;
@@ -432,13 +450,15 @@ tsch_schedule_get_next_active_link(struct tsch_asn_t *asn, uint16_t *time_offset
           }
 
           /* Maintain backup_link */
-          if(curr_backup == NULL) {
-            /* Check if 'l' best can be used as backup */
-            if(new_best != l && (l->link_options & LINK_OPTION_RX)) { /* Does 'l' have Rx flag? */
+          /* Check if 'l' best can be used as backup */
+          if(new_best != l && (l->link_options & LINK_OPTION_RX)) { /* Does 'l' have Rx flag? */
+            if(curr_backup == NULL || l->slotframe_handle < curr_backup->slotframe_handle) {
               curr_backup = l;
             }
-            /* Check if curr_best can be used as backup */
-            if(new_best != curr_best && (curr_best->link_options & LINK_OPTION_RX)) { /* Does curr_best have Rx flag? */
+          }
+          /* Check if curr_best can be used as backup */
+          if(new_best != curr_best && (curr_best->link_options & LINK_OPTION_RX)) { /* Does curr_best have Rx flag? */
+            if(curr_backup == NULL || curr_best->slotframe_handle < curr_backup->slotframe_handle) {
               curr_backup = curr_best;
             }
           }
@@ -495,7 +515,7 @@ tsch_schedule_create_minimal(void)
   tsch_schedule_add_link(sf_min,
       (LINK_OPTION_RX | LINK_OPTION_TX | LINK_OPTION_SHARED | LINK_OPTION_TIME_KEEPING),
       LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
-      0, 0);
+      0, 0, 1);
 }
 /*---------------------------------------------------------------------------*/
 struct tsch_slotframe *

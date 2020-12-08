@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the messages
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -45,47 +45,48 @@
 #ifndef SNMP_MESSAGE_H_
 #define SNMP_MESSAGE_H_
 
+/**
+ * \addtogroup SNMPInternal SNMP Internal API
+ * @{
+ *
+ * This group contains all the functions that can be used inside the OS level.
+ */
+
 #include "snmp.h"
 
-#define SNMP_DATA_TYPE_TIME_TICKS               0x43
-#define SNMP_DATA_TYPE_NO_SUCH_INSTANCE         0x81
-#define SNMP_DATA_TYPE_END_OF_MIB_VIEW          0x82
-
-#define SNMP_DATA_TYPE_PDU_GET_REQUEST          0xA0
-#define SNMP_DATA_TYPE_PDU_GET_NEXT_REQUEST     0xA1
-#define SNMP_DATA_TYPE_PDU_GET_RESPONSE         0xA2
-#define SNMP_DATA_TYPE_PDU_SET_REQUEST          0xA3
-#define SNMP_DATA_TYPE_PDU_TRAP                 0xA4
-#define SNMP_DATA_TYPE_PDU_GET_BULK             0xA5
+/**
+ * \addtogroup SNMPMessage SNMP Message
+ * @{
+ *
+ * This group contains the Message implementation
+ */
 
 /**
  * @brief Encodes a SNMP message
  *
- * @param out A pointer to the end of the buffer
- * @param out_len A pointer to the buffer length
+ * @param snmp_packet A pointer to the snmp packet
  * @param header The SNMP header struct
  * @param varbinds The varbinds array
- * @param varbinds_length The number of varbinds
  *
  * @return
  */
-unsigned char *
-snmp_message_encode(unsigned char *out, uint32_t *out_len, snmp_header_t *header,
-                    snmp_varbind_t *varbinds, uint32_t varbinds_length);
+int
+snmp_message_encode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varbind_t *varbinds);
 /**
  * @brief
  *
- * @param buf A pointer to the beginning of the buffer
- * @param buf_len A pointer to the buffer length
+ * @param snmp_packet A pointer to the snmp packet
  * @param header The SNMP header struct
  * @param varbinds The varbinds array
- * @param varbinds_length A pointer to the number of varbinds
  *
  * @return
  */
-uint8_t *
-snmp_message_decode(uint8_t *buf, uint32_t buf_len, snmp_header_t *header,
-                    snmp_varbind_t *varbinds, uint32_t *varbinds_length);
+int
+snmp_message_decode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varbind_t *varbinds);
+
+/** @} */
+
+/** @} */
 
 #endif /* SNMP_MESSAGE_H_ */
 

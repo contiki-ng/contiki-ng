@@ -162,6 +162,13 @@ is_sensible_string(const unsigned char *s, int len)
       return 0;
     }
   }
+
+  /* Edge-case: printable characters in flow label */
+  if(len >= 2 && (s[0] & 0xF0) == 0x60 
+              && (s[1] == '\r' || s[1] == '\n' || s[1] == '\t')) {
+    return 0;
+  }
+
   return 1;
 }
 
@@ -848,33 +855,40 @@ fprintf(stderr," -B baudrate    9600,19200,38400,57600,115200 (default),230400,4
 #else
 fprintf(stderr," -B baudrate    9600,19200,38400,57600,115200 (default),230400\n");
 #endif
-fprintf(stderr," -H             Hardware CTS/RTS flow control (default disabled)\n");
-fprintf(stderr," -I             Inquire IP address\n");
-fprintf(stderr," -X             Software XON/XOFF flow control (default disabled)\n");
-fprintf(stderr," -L             Log output format (adds time stamps)\n");
-fprintf(stderr," -s siodev      Serial device (default /dev/ttyUSB0)\n");
-fprintf(stderr," -M             Interface MTU (default and min: 1280)\n");
-fprintf(stderr," -T             Make tap interface (default is tun interface)\n");
-fprintf(stderr," -t tundev      Name of interface (default tap0 or tun0)\n");
+fprintf(stderr, " -P             Show progress\n");
+fprintf(stderr, " -H             Hardware CTS/RTS flow control (default disabled)\n");
+fprintf(stderr, " -I             Inquire IP address\n");
+fprintf(stderr, " -X             Software XON/XOFF flow control (default disabled)\n");
+fprintf(stderr, " -L             Log output format (adds time stamps)\n");
+fprintf(stderr, " -s siodev      Serial device (default /dev/ttyUSB0)\n");
+fprintf(stderr, " -M             Interface MTU (default and min: 1280)\n");
+fprintf(stderr, " -T             Make tap interface (default is tun interface)\n");
+fprintf(stderr, " -t tundev      Name of interface (default tap0 or tun0)\n");
 #ifdef __APPLE__
-fprintf(stderr," -v level       Verbosity level\n");
+fprintf(stderr, " -v level       Verbosity level\n");
 #else
-fprintf(stderr," -v[level]      Verbosity level\n");
+fprintf(stderr, " -v[level]      Verbosity level\n");
 #endif
-fprintf(stderr,"    -v0         No messages\n");
-fprintf(stderr,"    -v1         Encapsulated SLIP debug messages\n");
-fprintf(stderr,"    -v2         Printable strings after they are received (default)\n");
-fprintf(stderr,"    -v3         Printable strings and SLIP packet notifications\n");
-fprintf(stderr,"    -v4         All printable characters as they are received\n");
-fprintf(stderr,"    -v5         All SLIP packets in hex\n");
+fprintf(stderr, "    -v0         No messages\n");
+fprintf(stderr, "    -v1         Encapsulated SLIP debug messages\n");
+fprintf(stderr, "    -v2         Printable strings after they are received (default)\n");
+fprintf(stderr, "    -v3         Printable strings and SLIP packet notifications\n");
+fprintf(stderr, "    -v4         All printable characters as they are received\n");
+fprintf(stderr, "    -v5         All SLIP packets in hex\n");
 #ifndef __APPLE__
-fprintf(stderr,"    -v          Equivalent to -v2\n");
+fprintf(stderr, "    -v          Equivalent to -v2\n");
 #endif
-fprintf(stderr," -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
-fprintf(stderr,"                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
-fprintf(stderr,"                -d is equivalent to -d10.\n");
-fprintf(stderr," -a serveraddr  \n");
-fprintf(stderr," -p serverport  \n");
+#ifdef __APPLE__
+fprintf(stderr, " -d basedelay   Minimum delay between outgoing SLIP packets.\n");
+#else
+fprintf(stderr, " -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
+#endif
+fprintf(stderr, "                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
+#ifndef __APPLE__
+fprintf(stderr, "                -d is equivalent to -d10.\n");
+#endif
+fprintf(stderr, " -a serveraddr  \n");
+fprintf(stderr, " -p serverport  \n");
 exit(1);
       break;
     }
@@ -883,7 +897,13 @@ exit(1);
   argv += (optind - 1);
 
   if(argc != 2 && argc != 3) {
-    err(1, "usage: %s [-B baudrate] [-H] [-L] [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress", prog);
+    err(1, "usage: %s [-B baudrate] [-P] [-H] [-I] [-X] [-L] [-s siodev] [-M] [-T] [-t tundev] "
+#ifdef __APPLE__
+           "[-v level] [-d basedelay] "
+#else
+           "[-v [level]] [-d [basedelay]] "
+#endif
+           "[-a serveraddr] [-p serverport] ipaddress", prog);
   }
   ipaddr = argv[1];
 

@@ -48,13 +48,15 @@ struct orchestra_rule {
   int  (* select_packet)(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset);
   void (* child_added)(const linkaddr_t *addr);
   void (* child_removed)(const linkaddr_t *addr);
-  const char *name;
+  const char *const name;
+  const int16_t slotframe_size;
 };
 
-struct orchestra_rule eb_per_time_source;
-struct orchestra_rule unicast_per_neighbor_rpl_storing;
-struct orchestra_rule unicast_per_neighbor_rpl_ns;
-struct orchestra_rule default_common;
+extern struct orchestra_rule eb_per_time_source;
+extern struct orchestra_rule unicast_per_neighbor_rpl_storing;
+extern struct orchestra_rule unicast_per_neighbor_rpl_ns;
+extern struct orchestra_rule unicast_per_neighbor_link_based;
+extern struct orchestra_rule default_common;
 
 extern linkaddr_t orchestra_parent_linkaddr;
 extern int orchestra_parent_knows_us;

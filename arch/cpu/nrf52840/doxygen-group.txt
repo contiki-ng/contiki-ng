@@ -1,0 +1,12 @@
+/**
+ * \defgroup nrf52840 The nRF52840 System-on-Chip
+ *
+ * This group documents the Nordic Semiconductor nRF52840 CPU.
+ *
+ * \ingroup cpu
+ */
+
+/**
+ * \defgroup nrf52840-platforms Nordic Semiconductor nRF52840-powered platforms
+ * \ingroup platform
+ */

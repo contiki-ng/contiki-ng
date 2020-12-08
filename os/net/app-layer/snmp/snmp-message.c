@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the messages
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -41,240 +41,314 @@
 
 #include "snmp-message.h"
 #include "snmp-ber.h"
-#include "snmp-oid.h"
 
 #define LOG_MODULE "SNMP [message]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
-unsigned char *
-snmp_message_encode(unsigned char *out, uint32_t *out_len, snmp_header_t *header,
-                    snmp_varbind_t *varbinds, uint32_t varbind_num)
+int
+snmp_message_encode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varbind_t *varbinds)
 {
-  snmp_varbind_t *varbind;
-  uint32_t original_out_len, last_out_len;
+  uint32_t last_out_len;
   int8_t i;
 
-  original_out_len = *out_len;
-  for(i = varbind_num - 1; i >= 0; i--) {
-    varbind = &varbinds[i];
+  for(i = SNMP_MAX_NR_VALUES - 1; i >= 0; i--) {
+    if(varbinds[i].value_type == BER_DATA_TYPE_EOC) {
+      continue;
+    }
 
-    last_out_len = *out_len;
+    last_out_len = snmp_packet->used;
 
-    switch(varbind->value_type) {
+    switch(varbinds[i].value_type) {
     case BER_DATA_TYPE_INTEGER:
-      out = snmp_ber_encode_integer(out, out_len, varbind->value.integer);
+      if(!snmp_ber_encode_integer(snmp_packet, varbinds[i].value.integer)) {
+        LOG_DBG("Could not encode integer type\n");
+        return 0;
+      }
       break;
-    case SNMP_DATA_TYPE_TIME_TICKS:
-      out = snmp_ber_encode_unsigned_integer(out, out_len, varbind->value_type, varbind->value.integer);
+    case BER_DATA_TYPE_TIMETICKS:
+      if(!snmp_ber_encode_timeticks(snmp_packet, varbinds[i].value.integer)) {
+        LOG_DBG("Could not encode timeticks type\n");
+        return 0;
+      }
       break;
     case BER_DATA_TYPE_OCTET_STRING:
-      out = snmp_ber_encode_string_len(out, out_len, varbind->value.string.string, varbind->value.string.length);
+      if(!snmp_ber_encode_string_len(snmp_packet, varbinds[i].value.string.string, varbinds[i].value.string.length)) {
+        LOG_DBG("Could not encode octet string type\n");
+        return 0;
+      }
       break;
-    case BER_DATA_TYPE_OID:
-      out = snmp_oid_encode_oid(out, out_len, varbind->value.oid);
+    case BER_DATA_TYPE_OBJECT_IDENTIFIER:
+      if(!snmp_ber_encode_oid(snmp_packet, &varbinds[i].value.oid)) {
+        LOG_DBG("Could not encode oid type\n");
+        return 0;
+      }
       break;
     case BER_DATA_TYPE_NULL:
-    case SNMP_DATA_TYPE_NO_SUCH_INSTANCE:
-    case SNMP_DATA_TYPE_END_OF_MIB_VIEW:
-      out = snmp_ber_encode_null(out, out_len, varbind->value_type);
+    case BER_DATA_TYPE_NO_SUCH_INSTANCE:
+    case BER_DATA_TYPE_END_OF_MIB_VIEW:
+      if(!snmp_ber_encode_null(snmp_packet, varbinds[i].value_type)) {
+        LOG_DBG("Could not encode null type\n");
+        return 0;
+      }
       break;
     default:
-      return NULL;
+      LOG_DBG("Could not encode invlid type\n");
+      return 0;
     }
 
-    out = snmp_oid_encode_oid(out, out_len, varbind->oid);
-    out = snmp_ber_encode_length(out, out_len, ((*out_len - last_out_len) & 0xFF));
-    out = snmp_ber_encode_type(out, out_len, BER_DATA_TYPE_SEQUENCE);
+    if(!snmp_ber_encode_oid(snmp_packet, &varbinds[i].oid)) {
+      LOG_DBG("Could not encode oid\n");
+      return 0;
+    }
+
+    if(!snmp_ber_encode_length(snmp_packet, (snmp_packet->used - last_out_len))) {
+      LOG_DBG("Could not encode length\n");
+      return 0;
+    }
+
+    if(!snmp_ber_encode_type(snmp_packet, BER_DATA_TYPE_SEQUENCE)) {
+      LOG_DBG("Could not encode type\n");
+      return 0;
+    }
   }
 
-  out = snmp_ber_encode_length(out, out_len, ((*out_len - original_out_len) & 0xFF));
-  out = snmp_ber_encode_type(out, out_len, BER_DATA_TYPE_SEQUENCE);
-
-  if(header->pdu_type == SNMP_DATA_TYPE_PDU_GET_BULK) {
-    out = snmp_ber_encode_integer(out, out_len, header->error_index_max_repetitions.max_repetitions);
-    out = snmp_ber_encode_integer(out, out_len, header->error_status_non_repeaters.non_repeaters);
-  } else {
-    out = snmp_ber_encode_integer(out, out_len, header->error_index_max_repetitions.error_index);
-    out = snmp_ber_encode_integer(out, out_len, header->error_status_non_repeaters.error_status);
+  if(!snmp_ber_encode_length(snmp_packet, snmp_packet->used)) {
+    LOG_DBG("Could not encode length\n");
+    return 0;
   }
-  out = snmp_ber_encode_integer(out, out_len, header->request_id);
+  if(!snmp_ber_encode_type(snmp_packet, BER_DATA_TYPE_SEQUENCE)) {
+    LOG_DBG("Could not encode type\n");
+    return 0;
+  }
 
-  out = snmp_ber_encode_length(out, out_len, ((*out_len - original_out_len) & 0xFF));
-  out = snmp_ber_encode_type(out, out_len, header->pdu_type);
+  switch(header->pdu_type) {
+  case BER_DATA_TYPE_PDU_GET_BULK:
+    if(!snmp_ber_encode_integer(snmp_packet, header->max_repetitions)) {
+      LOG_DBG("Could not encode max repetition\n");
+      return 0;
+    }
 
-  out = snmp_ber_encode_string_len(out, out_len, header->community.community, header->community.length);
-  out = snmp_ber_encode_integer(out, out_len, header->version);
+    if(!snmp_ber_encode_integer(snmp_packet, header->non_repeaters)) {
+      LOG_DBG("Could not encode non repeaters\n");
+      return 0;
+    }
+    break;
+  default:
+    if(!snmp_ber_encode_integer(snmp_packet, header->error_index)) {
+      LOG_DBG("Could not encode error index\n");
+      return 0;
+    }
 
-  out = snmp_ber_encode_length(out, out_len, ((*out_len - original_out_len) & 0xFF));
-  out = snmp_ber_encode_type(out, out_len, BER_DATA_TYPE_SEQUENCE);
+    if(!snmp_ber_encode_integer(snmp_packet, header->error_status)) {
+      LOG_DBG("Could not encode error status\n");
+      return 0;
+    }
+    break;
+  }
 
-  return out;
+  if(!snmp_ber_encode_integer(snmp_packet, header->request_id)) {
+    LOG_DBG("Could not encode request id\n");
+    return 0;
+  }
+
+  if(!snmp_ber_encode_length(snmp_packet, snmp_packet->used)) {
+    LOG_DBG("Could not encode length\n");
+    return 0;
+  }
+
+  if(!snmp_ber_encode_type(snmp_packet, header->pdu_type)) {
+    LOG_DBG("Could not encode pdu type\n");
+    return 0;
+  }
+
+  if(!snmp_ber_encode_string_len(snmp_packet, header->community.community, header->community.length)) {
+    LOG_DBG("Could not encode community\n");
+    return 0;
+  }
+
+  if(!snmp_ber_encode_integer(snmp_packet, header->version)) {
+    LOG_DBG("Could not encode version\n");
+    return 0;
+  }
+
+  if(!snmp_ber_encode_length(snmp_packet, snmp_packet->used)) {
+    LOG_DBG("Could not encode length\n");
+    return 0;
+  }
+
+  if(!snmp_ber_encode_type(snmp_packet, BER_DATA_TYPE_SEQUENCE)) {
+    LOG_DBG("Could not encode type\n");
+    return 0;
+  }
+
+  /* Move the pointer to the last position */
+  snmp_packet->out++;
+  return 1;
 }
-uint8_t *
-snmp_message_decode(uint8_t *buf, uint32_t buf_len, snmp_header_t *header,
-                    snmp_varbind_t *varbinds, uint32_t *varbind_num)
+int
+snmp_message_decode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varbind_t *varbinds)
 {
-  uint8_t type, len;
-  uint32_t i, oid_len;
+  uint8_t type, len, i;
 
-  buf = snmp_ber_decode_type(buf, &buf_len, &type);
-  if(buf == NULL) {
+  if(!snmp_ber_decode_type(snmp_packet, &type)) {
     LOG_DBG("Could not decode type\n");
-    return NULL;
+    return 0;
   }
 
   if(type != BER_DATA_TYPE_SEQUENCE) {
     LOG_DBG("Invalid type\n");
-    return NULL;
+    return 0;
   }
 
-  buf = snmp_ber_decode_length(buf, &buf_len, &len);
-  if(buf == NULL) {
+  if(!snmp_ber_decode_length(snmp_packet, &len)) {
     LOG_DBG("Could not decode length\n");
-    return NULL;
+    return 0;
   }
 
-  buf = snmp_ber_decode_integer(buf, &buf_len, &header->version);
-  if(buf == NULL) {
+  if(!snmp_ber_decode_integer(snmp_packet, &header->version)) {
     LOG_DBG("Could not decode version\n");
-    return NULL;
+    return 0;
   }
 
-  buf = snmp_ber_decode_string_len_buffer(buf, &buf_len, &header->community.community, &header->community.length);
-  if(buf == NULL) {
-    LOG_DBG("Could not decode community\n");
-    return NULL;
-  }
-
-  if(header->version != SNMP_VERSION_1 &&
-     header->version != SNMP_VERSION_2C) {
+  switch(header->version) {
+  case SNMP_VERSION_1:
+  case SNMP_VERSION_2C:
+    break;
+  default:
     LOG_DBG("Invalid version\n");
-    return NULL;
+    return 0;
   }
 
-  buf = snmp_ber_decode_type(buf, &buf_len, &type);
-  if(buf == NULL) {
-    LOG_DBG("Could not decode type\n");
-    return NULL;
+  if(!snmp_ber_decode_string_len_buffer(snmp_packet, &header->community.community, &header->community.length)) {
+    LOG_DBG("Could not decode community\n");
+    return 0;
   }
 
-  header->pdu_type = type;
-  if(header->pdu_type != SNMP_DATA_TYPE_PDU_GET_REQUEST &&
-     header->pdu_type != SNMP_DATA_TYPE_PDU_GET_NEXT_REQUEST &&
-     header->pdu_type != SNMP_DATA_TYPE_PDU_GET_RESPONSE &&
-     header->pdu_type != SNMP_DATA_TYPE_PDU_SET_REQUEST &&
-     header->pdu_type != SNMP_DATA_TYPE_PDU_GET_BULK) {
-    LOG_DBG("Invalid pdu type\n");
-    return NULL;
+  if(!snmp_ber_decode_type(snmp_packet, &header->pdu_type)) {
+    LOG_DBG("Could not decode pdu type\n");
+    return 0;
   }
 
-  buf = snmp_ber_decode_length(buf, &buf_len, &len);
-  if(buf == NULL) {
+  switch(header->pdu_type) {
+  case BER_DATA_TYPE_PDU_GET_REQUEST:
+  case BER_DATA_TYPE_PDU_GET_NEXT_REQUEST:
+  case BER_DATA_TYPE_PDU_GET_RESPONSE:
+  case BER_DATA_TYPE_PDU_SET_REQUEST:
+  case BER_DATA_TYPE_PDU_GET_BULK:
+    break;
+  default:
+    LOG_DBG("Invalid version\n");
+    return 0;
+  }
+
+  if(!snmp_ber_decode_length(snmp_packet, &len)) {
     LOG_DBG("Could not decode length\n");
-    return NULL;
+    return 0;
   }
 
-  buf = snmp_ber_decode_integer(buf, &buf_len, &header->request_id);
-  if(buf == NULL) {
+  if(!snmp_ber_decode_integer(snmp_packet, &header->request_id)) {
     LOG_DBG("Could not decode request id\n");
-    return NULL;
+    return 0;
   }
 
-  if(header->pdu_type == SNMP_DATA_TYPE_PDU_GET_BULK) {
-    buf = snmp_ber_decode_integer(buf, &buf_len, &header->error_status_non_repeaters.non_repeaters);
-    if(buf == NULL) {
-      LOG_DBG("Could not decode error status\n");
-      return NULL;
+  switch(header->pdu_type) {
+  case BER_DATA_TYPE_PDU_GET_BULK:
+    if(!snmp_ber_decode_integer(snmp_packet, &header->non_repeaters)) {
+      LOG_DBG("Could not decode non repeaters\n");
+      return 0;
     }
 
-    buf = snmp_ber_decode_integer(buf, &buf_len, &header->error_index_max_repetitions.max_repetitions);
-    if(buf == NULL) {
-      LOG_DBG("Could not decode error index\n");
-      return NULL;
+    if(!snmp_ber_decode_integer(snmp_packet, &header->max_repetitions)) {
+      LOG_DBG("Could not decode max repetition\n");
+      return 0;
     }
-  } else {
-    buf = snmp_ber_decode_integer(buf, &buf_len, &header->error_status_non_repeaters.error_status);
-    if(buf == NULL) {
+    break;
+  default:
+    if(!snmp_ber_decode_integer(snmp_packet, &header->error_status)) {
       LOG_DBG("Could not decode error status\n");
-      return NULL;
+      return 0;
     }
 
-    buf = snmp_ber_decode_integer(buf, &buf_len, &header->error_index_max_repetitions.error_index);
-    if(buf == NULL) {
+    if(!snmp_ber_decode_integer(snmp_packet, &header->error_index)) {
       LOG_DBG("Could not decode error index\n");
-      return NULL;
+      return 0;
     }
+    break;
   }
 
-  buf = snmp_ber_decode_type(buf, &buf_len, &type);
-  if(buf == NULL) {
+  if(!snmp_ber_decode_type(snmp_packet, &type)) {
     LOG_DBG("Could not decode type\n");
-    return NULL;
+    return 0;
   }
 
   if(type != BER_DATA_TYPE_SEQUENCE) {
     LOG_DBG("Invalid type\n");
-    return NULL;
+    return 0;
   }
 
-  buf = snmp_ber_decode_length(buf, &buf_len, &len);
-  if(buf == NULL) {
+  if(!snmp_ber_decode_length(snmp_packet, &len)) {
     LOG_DBG("Could not decode length\n");
-    return NULL;
+    return 0;
   }
 
-  for(i = 0; buf_len > 0; ++i) {
+  for(i = 0; snmp_packet->used > 0; ++i) {
+    if(i >= SNMP_MAX_NR_VALUES) {
+      LOG_DBG("OID's overflow\n");
+      return 0;
+    }
 
-    buf = snmp_ber_decode_type(buf, &buf_len, &type);
-    if(buf == NULL) {
+    if(!snmp_ber_decode_type(snmp_packet, &type)) {
       LOG_DBG("Could not decode type\n");
-      return NULL;
+      return 0;
     }
 
     if(type != BER_DATA_TYPE_SEQUENCE) {
       LOG_DBG("Invalid (%X) type\n", type);
-      return NULL;
+      return 0;
     }
 
-    buf = snmp_ber_decode_length(buf, &buf_len, &len);
-    if(buf == NULL) {
+    if(!snmp_ber_decode_length(snmp_packet, &len)) {
       LOG_DBG("Could not decode length\n");
-      return NULL;
+      return 0;
     }
 
-    buf = snmp_oid_decode_oid(buf, &buf_len, varbinds[i].oid, &oid_len);
-    if(buf == NULL) {
+    if(!snmp_ber_decode_oid(snmp_packet, &varbinds[i].oid)) {
       LOG_DBG("Could not decode oid\n");
-      return NULL;
+      return 0;
     }
 
-    varbinds[i].value_type = *buf;
+    varbinds[i].value_type = *snmp_packet->in;
 
     switch(varbinds[i].value_type) {
     case BER_DATA_TYPE_INTEGER:
-      buf = snmp_ber_decode_integer(buf, &buf_len, &varbinds[i].value.integer);
+      if(!snmp_ber_decode_integer(snmp_packet, &varbinds[i].value.integer)) {
+        LOG_DBG("Could not decode integer type\n");
+        return 0;
+      }
       break;
-    case SNMP_DATA_TYPE_TIME_TICKS:
-      buf = snmp_ber_decode_unsigned_integer(buf, &buf_len, varbinds[i].value_type, &varbinds[i].value.integer);
+    case BER_DATA_TYPE_TIMETICKS:
+      if(!snmp_ber_decode_timeticks(snmp_packet, &varbinds[i].value.integer)) {
+        LOG_DBG("Could not decode timeticks type\n");
+        return 0;
+      }
       break;
     case BER_DATA_TYPE_OCTET_STRING:
-      buf = snmp_ber_decode_string_len_buffer(buf, &buf_len, &varbinds[i].value.string.string, &varbinds[i].value.string.length);
+      if(!snmp_ber_decode_string_len_buffer(snmp_packet, &varbinds[i].value.string.string, &varbinds[i].value.string.length)) {
+        LOG_DBG("Could not decode octed string type\n");
+        return 0;
+      }
       break;
     case BER_DATA_TYPE_NULL:
-      buf = snmp_ber_decode_null(buf, &buf_len);
+      if(!snmp_ber_decode_null(snmp_packet)) {
+        LOG_DBG("Could not decode null type\n");
+        return 0;
+      }
       break;
     default:
       LOG_DBG("Invalid varbind type\n");
-      return NULL;
-    }
-
-    if(buf == NULL) {
-      LOG_DBG("Could varbind type\n");
-      return NULL;
+      return 0;
     }
   }
 
-  *varbind_num = i;
-
-  return buf;
+  return 1;
 }

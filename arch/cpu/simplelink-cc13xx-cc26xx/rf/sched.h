@@ -74,6 +74,7 @@ typedef enum {
  * @{
  */
 rf_result_t rf_yield(void);
+rf_result_t rf_restart_rat(void);
 rf_result_t rf_set_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t dbm);
 rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8_t *dbm);
 /** @} */
@@ -87,8 +88,8 @@ rf_result_t rf_get_tx_power(RF_Handle handle, RF_TxPowerTable_Entry *table, int8
  */
 RF_Handle   netstack_open(RF_Params *params);
 rf_result_t netstack_sched_fs(void);
-rf_result_t netstack_sched_ieee_tx(bool ack_request);
-rf_result_t netstack_sched_prop_tx(void);
+rf_result_t netstack_sched_ieee_tx(uint16_t payload_length, bool ack_request);
+rf_result_t netstack_sched_prop_tx(uint16_t payload_length);
 rf_result_t netstack_sched_rx(bool start);
 rf_result_t netstack_stop_rx(void);
 /** @} */

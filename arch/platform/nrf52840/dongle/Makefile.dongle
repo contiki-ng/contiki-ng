@@ -1,0 +1,4 @@
+CONTIKI_TARGET_DIRS += dongle
+CONTIKI_TARGET_SOURCEFILES += board-leds.c board-buttons.c nrf52840dongle-sensors.c
+
+MODULES += $(CONTIKI_NG_DRIVERS_ETC_DIR)/rgb-led

@@ -57,12 +57,43 @@
 /*---------------------------------------------------------------------------*/
 /* TSCH related defines */
 
+/* 2 bytes header, 4 bytes CRC */
+#define CC13XX_RADIO_PHY_OVERHEAD 6
+/* 3 bytes preamble, 3 bytes sync */
+#define CC13XX_RADIO_PHY_HEADER_LEN 6
+/* The default data rate is 50 kbps */
+#define CC13XX_RADIO_BIT_RATE 50000
+
 /* 1 len byte, 2 bytes CRC */
-#define RADIO_PHY_OVERHEAD         3
-/* 250kbps data rate. One byte = 32us */
-#define RADIO_BYTE_AIR_TIME       32
+#define CC26XX_RADIO_PHY_OVERHEAD     3
+/* 4 bytes preamble, 1 byte sync */
+#define CC26XX_RADIO_PHY_HEADER_LEN   5
+/* The fixed data rate is 250 kbps */
+#define CC26XX_RADIO_BIT_RATE  250000
+
+#if defined(DEVICE_LINE_CC13XX)
+#define RADIO_PHY_HEADER_LEN CC13XX_RADIO_PHY_HEADER_LEN
+#define RADIO_PHY_OVERHEAD   CC13XX_RADIO_PHY_OVERHEAD
+#define RADIO_BIT_RATE       CC13XX_RADIO_BIT_RATE
+
+/* The TSCH default slot length of 10ms is too short, use custom one instead */
+#ifndef TSCH_CONF_DEFAULT_TIMESLOT_TIMING
+#define TSCH_CONF_DEFAULT_TIMESLOT_TIMING tsch_timing_cc13xx_50kbps
+#endif /* TSCH_CONF_DEFAULT_TIMESLOT_TIMING */
+
+/* Symbol for the custom TSCH timeslot timing template */
+#define TSCH_CONF_ARCH_HDR_PATH "rf/cc13xx-50kbps-tsch.h"
+
+#else
+#define RADIO_PHY_HEADER_LEN CC26XX_RADIO_PHY_HEADER_LEN
+#define RADIO_PHY_OVERHEAD   CC26XX_RADIO_PHY_OVERHEAD
+#define RADIO_BIT_RATE       CC26XX_RADIO_BIT_RATE
+#endif
+
+#define RADIO_BYTE_AIR_TIME  (1000000 / (RADIO_BIT_RATE / 8))
+
 /* Delay between GO signal and SFD */
-#define RADIO_DELAY_BEFORE_TX       ((unsigned)US_TO_RTIMERTICKS(81))
+#define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME))
 /* Delay between GO signal and start listening.
  * This value is so small because the radio is constantly on within each timeslot. */
 #define RADIO_DELAY_BEFORE_RX       ((unsigned)US_TO_RTIMERTICKS(15))
@@ -71,15 +102,12 @@
 
 /* Timer conversion; radio is running at 4 MHz */
 #define RAT_SECOND            4000000u
-#define RAT_TO_RTIMER(x)      ((uint32_t)(((uint64_t)(x)*(RTIMER_SECOND / 256)) / (RAT_SECOND / 256)))
+#define RAT_TO_RTIMER(x)      ((uint32_t)(((uint64_t)(x) * (RTIMER_SECOND / 256)) / (RAT_SECOND / 256)))
 #define USEC_TO_RAT(x)        ((x) * 4)
 
 #if (RTIMER_SECOND % 256) || (RAT_SECOND % 256)
 #error RAT_TO_RTIMER macro must be fixed!
 #endif
-
-/* The PHY header (preamble + SFD, 4+1 bytes) duration is equivalent to 10 symbols */
-#define RADIO_IEEE_802154_PHY_HEADER_DURATION_USEC 160
 
 /* Do not turn off TSCH within a timeslot: not enough time */
 #define TSCH_CONF_RADIO_ON_DURING_TIMESLOT 1
@@ -94,6 +122,18 @@
 #endif
 
 #ifndef TSCH_CONF_BASE_DRIFT_PPM
+#if defined(DEVICE_LINE_CC13XX)
+/* The drift compared to "true" 40ms slots.
+ * Enable adaptive sync to enable compensation for this.
+ * Slot length 40000 usec
+ *             1311 ticks
+ * Tick duration 30.517578125 usec
+ * Real slot duration 40008.544922 usec
+ * Target - real duration = -8.544922 usec
+ * PPM -8.544922 / 40000 = -0.000214
+ */
+#define TSCH_CONF_BASE_DRIFT_PPM -214
+#else /* defined(DEVICE_LINE_CC13XX) */
 /*
  * The drift compared to "true" 10ms slots.
  * Enable adaptive sync to enable compensation for this.
@@ -105,17 +145,23 @@
  * TSCH_CONF_BASE_DRIFT_PPM -977
  */
 #define TSCH_CONF_BASE_DRIFT_PPM -977
-#endif
+#endif /* defined(DEVICE_LINE_CC13XX) */
+#endif /* TSCH_CONF_BASE_DRIFT_PPM */
 
 /* 10 times per second */
 #ifndef TSCH_CONF_CHANNEL_SCAN_DURATION
 #define TSCH_CONF_CHANNEL_SCAN_DURATION (CLOCK_SECOND / 10)
 #endif
 
-/* Slightly reduce the TSCH guard time (from 2200 usec to 1800 usec) to make sure
- * the CC26xx radio has sufficient time to start up. */
+/* Tweak to improve TSCH association speed on this platform */
+#ifndef TSCH_CONF_ASSOCIATION_POLL_FREQUENCY
+#define TSCH_CONF_ASSOCIATION_POLL_FREQUENCY 10
+#endif
+
+/* Increase TSCH guard time from 2200 usec to 3000 usec.
+ * This is required for simplelink radio to have stable operation, especially in sub-GHz range . */
 #ifndef TSCH_CONF_RX_WAIT
-#define TSCH_CONF_RX_WAIT 1800
+#define TSCH_CONF_RX_WAIT 3000
 #endif
 /*---------------------------------------------------------------------------*/
 /* Path to CMSIS header */

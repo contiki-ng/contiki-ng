@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the protocol engine
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -45,20 +45,32 @@
 #ifndef SNMP_ENGINE_H_
 #define SNMP_ENGINE_H_
 
+/**
+ * \addtogroup SNMPInternal SNMP Internal API
+ * @{
+ *
+ * This group contains all the functions that can be used inside the OS level.
+ */
 #include "snmp.h"
+
+/**
+ * \addtogroup SNMPEngine SNMP Engine
+ * @{
+ *
+ * This group contains the Engine implementation
+ */
 
 /**
  * @brief Process the SNMP packet and prepares the response
  *
- * @param buff A pointer to the beginning of the packet buffer
- * @param buff_len The packet length
- * @param out A pointer to the end of the response buffer
- * @param out_len A pointer to the length of the response buffer
- *
- * @return NULL in case of fail or the first element in the response buffer
+ * @param snmp_packet A pointer to the snmp packet
  */
-unsigned char *
-snmp_engine(unsigned char *buff, uint32_t buff_len, unsigned char *out, uint32_t *out_len);
+int
+snmp_engine(snmp_packet_t *snmp_packet);
+
+/** @} */
+
+/** @} */
 
 #endif /* SNMP_ENGINE_H_ */
 

@@ -148,6 +148,7 @@ rtimer_arch_init(void)
    * which will act as a man-in-the-middle ISR for the HWI dispatch.
    */
   IntRegister(INT_AON_RTC_COMB, rtimer_isr_hook);
+  IntPrioritySet(INT_AON_RTC_COMB, INT_PRI_LEVEL7);
 
   AONEventMcuWakeUpSet(AON_EVENT_MCU_WU1, AON_EVENT_RTC_CH1);
   AONRTCCombinedEventConfig(HWIP_RTC_CH | RTIMER_RTC_CH);

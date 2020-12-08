@@ -148,6 +148,40 @@
 #else
 #define MQTT_SRV_SUPPORTS_EMPTY_CLIENT_ID 0
 #endif
+
+#if MQTT_31
+/* Len MSB(0)
+ * Len LSB(6)
+ * 'M'
+ * 'Q'
+ * 'I'
+ * 's'
+ * 'd'
+ * 'p'
+ * Protocol Level (3)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
+ */
+#define MQTT_CONNECT_VHDR_SIZE 12
+#else
+/* Len MSB(0)
+ * Len LSB(4)
+ * 'M'
+ * 'Q'
+ * 'T'
+ * 'T'
+ * Protocol Level (4)
+ * Connect Flags
+ * Keep Alive MSB
+ * Keep Alive LSB
+ */
+#define MQTT_CONNECT_VHDR_SIZE 10
+#endif
+
+#define MQTT_STRING_LEN_SIZE 2
+#define MQTT_MID_SIZE 2
+#define MQTT_QOS_SIZE 1
 /*---------------------------------------------------------------------------*/
 /*
  * Debug configuration, this is similar but not exactly like the Debugging
@@ -165,6 +199,8 @@ extern process_event_t mqtt_update_event;
 
 /* Forward declaration */
 struct mqtt_connection;
+/* Only defined in MQTTv5 */
+struct mqtt_prop_list;
 
 typedef enum {
   MQTT_RETAIN_OFF,
@@ -194,6 +230,8 @@ typedef enum {
   MQTT_EVENT_CONNECTION_REFUSED_ERROR,
   MQTT_EVENT_DNS_ERROR,
   MQTT_EVENT_NOT_IMPLEMENTED_ERROR,
+
+  MQTT_EVENT_AUTH,
   /* Add more */
 } mqtt_event_t;
 
@@ -247,6 +285,97 @@ typedef enum {
   MQTT_CONN_STATE_SENDING_MQTT_DISCONNECT,
 } mqtt_conn_state_t;
 /*---------------------------------------------------------------------------*/
+typedef enum {
+  MQTT_FHDR_MSG_TYPE_CONNECT       = 0x10,
+  MQTT_FHDR_MSG_TYPE_CONNACK       = 0x20,
+  MQTT_FHDR_MSG_TYPE_PUBLISH       = 0x30,
+  MQTT_FHDR_MSG_TYPE_PUBACK        = 0x40,
+  MQTT_FHDR_MSG_TYPE_PUBREC        = 0x50,
+  MQTT_FHDR_MSG_TYPE_PUBREL        = 0x60,
+  MQTT_FHDR_MSG_TYPE_PUBCOMP       = 0x70,
+  MQTT_FHDR_MSG_TYPE_SUBSCRIBE     = 0x80,
+  MQTT_FHDR_MSG_TYPE_SUBACK        = 0x90,
+  MQTT_FHDR_MSG_TYPE_UNSUBSCRIBE   = 0xA0,
+  MQTT_FHDR_MSG_TYPE_UNSUBACK      = 0xB0,
+  MQTT_FHDR_MSG_TYPE_PINGREQ       = 0xC0,
+  MQTT_FHDR_MSG_TYPE_PINGRESP      = 0xD0,
+  MQTT_FHDR_MSG_TYPE_DISCONNECT    = 0xE0,
+  MQTT_FHDR_MSG_TYPE_AUTH          = 0xF0,
+} mqtt_msg_type_t;
+/*---------------------------------------------------------------------------*/
+/* MQTTv5.0 VHDR Properties */
+typedef enum {
+  MQTT_VHDR_PROP_ANY                = 0x00, /* not in standard; for library use */
+  MQTT_VHDR_PROP_PAYLOAD_FMT_IND    = 0x01,
+  MQTT_VHDR_PROP_MSG_EXP_INT        = 0x02,
+  MQTT_VHDR_PROP_CONTENT_TYPE       = 0x03,
+  MQTT_VHDR_PROP_RESP_TOPIC         = 0x08,
+  MQTT_VHDR_PROP_CORRELATION_DATA   = 0x09,
+  MQTT_VHDR_PROP_SUB_ID             = 0x0B,
+  MQTT_VHDR_PROP_SESS_EXP_INT       = 0x11,
+  MQTT_VHDR_PROP_ASSIGNED_CLIENT_ID = 0x12,
+  MQTT_VHDR_PROP_SERVER_KEEP_ALIVE  = 0x13,
+  MQTT_VHDR_PROP_AUTH_METHOD        = 0x15,
+  MQTT_VHDR_PROP_AUTH_DATA          = 0x16,
+  MQTT_VHDR_PROP_REQ_PROBLEM_INFO   = 0x17,
+  MQTT_VHDR_PROP_WILL_DELAY_INT     = 0x18,
+  MQTT_VHDR_PROP_REQ_RESP_INFO      = 0x19,
+  MQTT_VHDR_PROP_RESP_INFO          = 0x1A,
+  MQTT_VHDR_PROP_SERVER_REFERENCE   = 0x1C,
+  MQTT_VHDR_PROP_REASON_STRING      = 0x1F,
+  MQTT_VHDR_PROP_RECEIVE_MAX        = 0x21,
+  MQTT_VHDR_PROP_TOPIC_ALIAS_MAX    = 0x22,
+  MQTT_VHDR_PROP_TOPIC_ALIAS        = 0x23,
+  MQTT_VHDR_PROP_MAX_QOS            = 0x24,
+  MQTT_VHDR_PROP_RETAIN_AVAIL       = 0x25,
+  MQTT_VHDR_PROP_USER_PROP          = 0x26,
+  MQTT_VHDR_PROP_MAX_PKT_SZ         = 0x27,
+  MQTT_VHDR_PROP_WILD_SUB_AVAIL     = 0x28,
+  MQTT_VHDR_PROP_SUB_ID_AVAIL       = 0x29,
+  MQTT_VHDR_PROP_SHARED_SUB_AVAIL   = 0x2A,
+} mqtt_vhdr_prop_t;
+/*---------------------------------------------------------------------------*/
+/* MQTTv5.0 Binary Capabilities */
+typedef enum {
+  MQTT_CAP_RETAIN_AVAIL        = 0x00,
+  MQTT_CAP_WILD_SUB_AVAIL      = 0x01,
+  MQTT_CAP_SUB_ID_AVAIL        = 0x02,
+  MQTT_CAP_SHARED_SUB_AVAIL    = 0x04,
+} mqtt_srv_capability_t;
+
+typedef enum {
+  MQTT_CAP_OFF,
+  MQTT_CAP_ON,
+} mqtt_capability_t;
+
+typedef enum {
+  MQTT_TOPIC_ALIAS_OFF,
+  MQTT_TOPIC_ALIAS_ON,
+} mqtt_topic_alias_en_t;
+
+typedef enum {
+  MQTT_SUB_OPTION_QOS             = 0x03,
+  MQTT_SUB_OPTION_NL              = 0x04,
+  MQTT_SUB_OPTION_RAP             = 0x08,
+  MQTT_SUB_OPTION_RETAIN_HANDLING = 0x30,
+} mqtt_sub_option_t;
+
+typedef enum {
+  MQTT_NL_OFF,
+  MQTT_NL_ON,
+} mqtt_nl_en_t;
+
+typedef enum {
+  MQTT_RAP_OFF,
+  MQTT_RAP_ON,
+} mqtt_rap_en_t;
+
+typedef enum {
+  MQTT_RET_H_SEND_ALL  = 0x00,
+  MQTT_RET_H_SEND_NEW  = 0x01,
+  MQTT_RET_H_SEND_NONE = 0x02,
+} mqtt_retain_handling_t;
+/*---------------------------------------------------------------------------*/
 struct mqtt_string {
   char *string;
   uint16_t length;
@@ -259,18 +388,23 @@ struct mqtt_string {
  *
  * This could be part of a union of event data structures.
  */
-typedef struct {
+struct mqtt_suback_event {
   uint16_t mid;
   mqtt_qos_level_t qos_level;
-#if MQTT_311
+#if !MQTT_31
   uint8_t return_code;
   uint8_t success;
 #endif
-} mqtt_suback_event_t;
+};
 
-typedef struct {
+struct mqtt_connack_event {
   uint8_t session_present;
-} mqtt_connack_event_t;
+};
+
+typedef enum {
+  MQTT_AUTH_NORMAL,
+  MQTT_AUTH_RE_AUTH,
+} mqtt_auth_type_t;
 
 /* This is the MQTT message that is exposed to the end user. */
 struct mqtt_message {
@@ -300,21 +434,34 @@ struct mqtt_in_packet {
   uint16_t mid;
 
   /* Helper variables needed to decode the remaining_length */
-  uint8_t remaining_multiplier;
   uint8_t has_remaining_length;
-  uint8_t remaining_length_bytes;
 
   /* Not the same as payload in the MQTT sense, it also contains the variable
    * header.
    */
-  uint8_t payload_pos;
+  uint16_t payload_pos;
   uint8_t payload[MQTT_INPUT_BUFF_SIZE];
+
+  /* Start of MQTT payload (after VHDR) */
+  uint8_t *payload_start;
 
   /* Message specific data */
   uint16_t topic_len;
   uint16_t topic_pos;
   uint8_t topic_len_received;
   uint8_t topic_received;
+
+  /* Properties */
+#if MQTT_5
+  uint8_t has_reason_code;
+  uint8_t reason_code;
+
+  uint8_t has_props;  /* the properties have been decoded */
+  uint8_t properties_enc_len;  /* number of bytes used to encode property length */
+  uint16_t properties_len; /* length of properties excluding encoded length */
+  uint8_t *props_start;  /* pointer to first byte in first property */
+  uint8_t *curr_props_pos;  /* pointer to property to parse next */
+#endif
 };
 
 /* This struct represents a packet sent to the MQTT server. */
@@ -331,6 +478,12 @@ struct mqtt_out_packet {
   mqtt_qos_level_t qos;
   mqtt_qos_state_t qos_state;
   mqtt_retain_t retain;
+#if MQTT_5
+  uint8_t topic_alias;
+  uint8_t sub_options;
+  /* Continue Auth or Re-auth */
+  uint8_t auth_reason_code;
+#endif
 };
 /*---------------------------------------------------------------------------*/
 /**
@@ -354,6 +507,9 @@ struct mqtt_will {
   struct mqtt_string topic;
   struct mqtt_string message;
   mqtt_qos_level_t qos;
+#if MQTT_5
+  LIST_STRUCT(properties);
+#endif
 };
 
 struct mqtt_credentials {
@@ -407,6 +563,13 @@ struct mqtt_connection {
   uip_ipaddr_t server_ip;
   uint16_t server_port;
   struct tcp_socket socket;
+
+#if MQTT_5
+  /* Server Capabilities */
+  /* Binary capabilities (default: enabled) */
+  uint8_t srv_feature_en;
+  struct mqtt_prop_list *out_props;
+#endif
 };
 /* This is the API exposed to the user. */
 /*---------------------------------------------------------------------------*/
@@ -441,6 +604,7 @@ mqtt_status_t mqtt_register(struct mqtt_connection *conn,
  *        from the client. Shall be min 1.5 x report interval.
  * \param clean_session Request a new session and discard pending messages with
  *        QoS > 0, as well as client subscriptions
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or an error status
  *
  * This function connects to a MQTT broker.
@@ -449,15 +613,26 @@ mqtt_status_t mqtt_connect(struct mqtt_connection *conn,
                            char *host,
                            uint16_t port,
                            uint16_t keep_alive,
+#if MQTT_5
+                           uint8_t clean_session,
+                           struct mqtt_prop_list *prop_list);
+#else
                            uint8_t clean_session);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Disconnects from a MQTT broker.
  * \param conn A pointer to the MQTT connection.
+ * \param prop_list Output properties (MQTTv5-only).
  *
  * This function disconnects from a MQTT broker.
  */
+#if MQTT_5
+void mqtt_disconnect(struct mqtt_connection *conn,
+                     struct mqtt_prop_list *prop_list);
+#else
 void mqtt_disconnect(struct mqtt_connection *conn);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Subscribes to a MQTT topic.
@@ -465,6 +640,10 @@ void mqtt_disconnect(struct mqtt_connection *conn);
  * \param mid A pointer to message ID.
  * \param topic A pointer to the topic to subscribe to.
  * \param qos_level Quality Of Service level to use. Currently supports 0, 1.
+ * \param nl No Local (MQTTv5-only).
+ * \param rap Retain As Published (MQTTv5-only).
+ * \param ret_handling Retain handling options (MQTTv5-only).
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or some error status
  *
  * This function subscribes to a topic on a MQTT broker.
@@ -472,20 +651,33 @@ void mqtt_disconnect(struct mqtt_connection *conn);
 mqtt_status_t mqtt_subscribe(struct mqtt_connection *conn,
                              uint16_t *mid,
                              char *topic,
+#if MQTT_5
+                             mqtt_qos_level_t qos_level,
+                             mqtt_nl_en_t nl, mqtt_rap_en_t rap,
+                             mqtt_retain_handling_t ret_handling,
+                             struct mqtt_prop_list *prop_list);
+#else
                              mqtt_qos_level_t qos_level);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Unsubscribes from a MQTT topic.
  * \param conn A pointer to the MQTT connection.
  * \param mid A pointer to message ID.
  * \param topic A pointer to the topic to unsubscribe from.
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or some error status
  *
  * This function unsubscribes from a topic on a MQTT broker.
  */
 mqtt_status_t mqtt_unsubscribe(struct mqtt_connection *conn,
                                uint16_t *mid,
+#if MQTT_5
+                               char *topic,
+                               struct mqtt_prop_list *prop_list);
+#else
                                char *topic);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Publish to a MQTT topic.
@@ -499,6 +691,10 @@ mqtt_status_t mqtt_unsubscribe(struct mqtt_connection *conn,
  *        Client to a Server, the Server MUST store the Application Message
  *        and its QoS, so that it can be delivered to future subscribers whose
  *        subscriptions match its topic name
+ * \param topic_alias Topic alias to send (MQTTv5-only).
+ * \param topic_alias_en Control whether or not to discard topic and only send
+ *        topic alias s(MQTTv5-only).
+ * \param prop_list Output properties (MQTTv5-only).
  * \return MQTT_STATUS_OK or some error status
  *
  * This function publishes to a topic on a MQTT broker.
@@ -509,7 +705,14 @@ mqtt_status_t mqtt_publish(struct mqtt_connection *conn,
                            uint8_t *payload,
                            uint32_t payload_size,
                            mqtt_qos_level_t qos_level,
+#if MQTT_5
+                           mqtt_retain_t retain,
+                           uint8_t topic_alias,
+                           mqtt_topic_alias_en_t topic_alias_en,
+                           struct mqtt_prop_list *prop_list);
+#else
                            mqtt_retain_t retain);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Set the user name and password for a MQTT client.
@@ -530,6 +733,7 @@ void mqtt_set_username_password(struct mqtt_connection *conn,
  * \param topic A pointer to the Last Will topic.
  * \param message A pointer to the Last Will message (payload).
  * \param qos The desired QoS level.
+ * \param will_props Will message properties (MQTTv5-only).
  *
  * This function sets clients Last Will topic and message (payload).
  * If the Will Flag is set to 1 (using the function) this indicates that,
@@ -544,13 +748,42 @@ void mqtt_set_username_password(struct mqtt_connection *conn,
 void mqtt_set_last_will(struct mqtt_connection *conn,
                         char *topic,
                         char *message,
+#if MQTT_5
+                        mqtt_qos_level_t qos,
+                        struct mqtt_prop_list *will_props);
+#else
                         mqtt_qos_level_t qos);
+#endif
 
 #define mqtt_connected(conn) \
   ((conn)->state == MQTT_CONN_STATE_CONNECTED_TO_BROKER ? 1 : 0)
 
 #define mqtt_ready(conn) \
   (!(conn)->out_queue_full && mqtt_connected((conn)))
+/*---------------------------------------------------------------------------*/
+void mqtt_encode_var_byte_int(uint8_t *vbi_out,
+                              uint8_t *vbi_bytes,
+                              uint32_t val);
+/*---------------------------------------------------------------------------*/
+uint8_t mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
+                                 int input_data_len,
+                                 uint32_t *input_pos,
+                                 uint32_t *pkt_byte_count,
+                                 uint16_t *dest);
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Send authentication message (MQTTv5-only).
+ * \param conn A pointer to the MQTT connection.
+ * \param auth_type The type of auth to send (continue authentication or
+ *        re-authentication).
+ * \param prop_list Output properties.
+ * \return MQTT_STATUS_OK or some error status
+ *
+ * This function send an MQTT authentication message.
+ */
+mqtt_status_t mqtt_auth(struct mqtt_connection *conn,
+                        mqtt_auth_type_t auth_type,
+                        struct mqtt_prop_list *prop_list);
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_H_ */
 /*---------------------------------------------------------------------------*/

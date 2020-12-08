@@ -59,6 +59,8 @@
 #include DeviceFamily_constructPath(driverlib/rf_prop_mailbox.h)
 
 #include <ti/drivers/rf/RF.h>
+#include DeviceFamily_constructPath(inc/hw_rfc_dbell.h)
+#include DeviceFamily_constructPath(driverlib/rfc.h)
 /*---------------------------------------------------------------------------*/
 /* Platform RF dev */
 #include "rf/rf.h"
@@ -67,6 +69,8 @@
 #include "rf/data-queue.h"
 #include "rf/tx-power.h"
 #include "rf/settings.h"
+#include "rf/rat.h"
+#include "rf/radio-mode.h"
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
@@ -95,6 +99,10 @@ typedef enum {
   CCA_STATE_BUSY = 1,
   CCA_STATE_INVALID = 2
 } cca_state_t;
+/*---------------------------------------------------------------------------*/
+#if MAC_CONF_WITH_TSCH
+static volatile uint8_t is_receiving_packet;
+#endif
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
 #define DOT_4G_MAX_FRAME_LEN    2047
@@ -146,6 +154,11 @@ typedef enum {
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
+/*
+ * Offset of the end of SFD when compared to the radio HW-generated timestamp.
+ */
+#define RAT_TIMESTAMP_OFFSET    USEC_TO_RAT(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME - 270)
+/*---------------------------------------------------------------------------*/
 /* TX buf configuration */
 #define TX_BUF_HDR_LEN          2
 #define TX_BUF_PAYLOAD_LEN      180
@@ -156,7 +169,7 @@ typedef enum {
 typedef uint16_t lensz_t;
 
 #define FRAME_OFFSET            sizeof(lensz_t)
-#define FRAME_SHAVE             2   /**< RSSI (1) + Status (1) */
+#define FRAME_SHAVE             6   /**< RSSI (1) +  Timestamp (4) + Status (1) */
 /*---------------------------------------------------------------------------*/
 /* Constants used when calculating the LQI from the RSSI */
 #define RX_SENSITIVITY_DBM                -110
@@ -171,6 +184,21 @@ typedef uint16_t lensz_t;
 typedef rfc_propRxOutput_t rx_output_t;
 
 typedef struct {
+  /* RF driver */
+  RF_Handle rf_handle;
+
+  /* Are we currently in poll mode? */
+  bool poll_mode;
+
+  /* RAT Overflow Upkeep */
+  struct {
+    struct ctimer overflow_timer;
+    rtimer_clock_t last_overflow;
+    volatile uint32_t overflow_count;
+  } rat;
+
+  bool (* rx_is_active)(void);
+
   /* Outgoing frame buffer */
   uint8_t tx_buf[TX_BUF_SIZE] CC_ALIGN(4);
 
@@ -183,12 +211,19 @@ typedef struct {
 
   /* Indicates RF is supposed to be on or off */
   uint8_t rf_is_on;
+  /* Enable/disable CCA before sending */
+  bool send_on_cca;
 
-  /* RF driver */
-  RF_Handle rf_handle;
+  /* Last RX operation stats */
+  struct {
+    int8_t rssi;
+    uint8_t corr_lqi;
+    uint32_t timestamp;
+  } last;
 } prop_radio_t;
 
 static prop_radio_t prop_radio;
+
 /*---------------------------------------------------------------------------*/
 /* Convenience macros for more succinct access of RF commands */
 #define cmd_radio_setup     rf_cmd_prop_radio_div_setup
@@ -214,8 +249,10 @@ rx_is_active(void)
   return v_cmd_rx.status == ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
+static int channel_clear(void);
 static int on(void);
 static int off(void);
+static rf_result_t set_channel_force(uint16_t channel);
 /*---------------------------------------------------------------------------*/
 static void
 init_rf_params(void)
@@ -244,7 +281,7 @@ get_rssi(void)
   bool stop_rx = false;
   int8_t rssi = RF_GET_RSSI_ERROR_VAL;
 
- /* RX is required to be running in order to do a RSSI measurement */
+  /* RX is required to be running in order to do a RSSI measurement */
   if(!rx_is_active()) {
     /* If RX is not pending, i.e. soon to be running, schedule the RX command */
     if(v_cmd_rx.status != PENDING) {
@@ -259,7 +296,7 @@ get_rssi(void)
     }
 
     /* Make sure RX is running before we continue, unless we timeout and fail */
-    RTIMER_BUSYWAIT_UNTIL(!rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
+    RTIMER_BUSYWAIT_UNTIL(rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
 
     if(!rx_is_active()) {
       LOG_ERR("RSSI measurement failed to turn on RX, RX status=0x%04X\n", v_cmd_rx.status);
@@ -296,8 +333,6 @@ get_channel(void)
 static rf_result_t
 set_channel(uint16_t channel)
 {
-  rf_result_t res;
-
   if(!dot_15_4g_chan_in_range(channel)) {
     LOG_WARN("Supplied hannel %d is illegal, defaults to %d\n",
              (int)channel, DOT_15_4G_DEFAULT_CHAN);
@@ -307,6 +342,20 @@ set_channel(uint16_t channel)
   if(channel == prop_radio.channel) {
     /* We are already calibrated to this channel */
     return RF_RESULT_OK;
+  }
+
+  return set_channel_force(channel);
+}
+/*---------------------------------------------------------------------------*/
+/* Sets the given channel without checking if it is a valid channel number. */
+static rf_result_t
+set_channel_force(uint16_t channel)
+{
+  rf_result_t res;
+
+  if(prop_radio.rf_is_on) {
+    /* Force RAT and RTC resync */
+    rf_restart_rat();
   }
 
   const uint32_t new_freq = dot_15_4g_freq(channel);
@@ -348,6 +397,12 @@ calculate_lqi(int8_t rssi)
   return (ED_MAX * (rssi - ED_RF_POWER_MIN_DBM)) / (ED_RF_POWER_MAX_DBM - ED_RF_POWER_MIN_DBM);
 }
 /*---------------------------------------------------------------------------*/
+static void
+set_send_on_cca(bool enable)
+{
+  prop_radio.send_on_cca = enable;
+}
+/*---------------------------------------------------------------------------*/
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
@@ -374,6 +429,11 @@ transmit(unsigned short transmit_len)
     return RADIO_TX_ERR;
   }
 
+  if(prop_radio.send_on_cca && !channel_clear()) {
+    LOG_WARN("Channel is not clear for transmission\n");
+    return RADIO_TX_COLLISION;
+  }
+
   /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
   const uint16_t total_length = transmit_len + CRC_LEN;
   /*
@@ -392,7 +452,12 @@ transmit(unsigned short transmit_len)
   v_cmd_tx.pktLen = transmit_len + DOT_4G_PHR_NUM_BYTES;
   v_cmd_tx.pPkt = prop_radio.tx_buf;
 
-  res = netstack_sched_prop_tx();
+  res = netstack_sched_prop_tx(transmit_len);
+
+  if(res != RF_RESULT_OK) {
+    LOG_WARN("Channel is not clear for transmission\n");
+    return RADIO_TX_ERR;
+  }
 
   return (res == RF_RESULT_OK)
          ? RADIO_TX_OK
@@ -411,43 +476,47 @@ read(void *buf, unsigned short buf_len)
 {
   volatile data_entry_t *data_entry = data_queue_current_entry();
 
-  const rtimer_clock_t t0 = RTIMER_NOW();
   /* Only wait if the Radio is accessing the entry */
+  const rtimer_clock_t t0 = RTIMER_NOW();
   while((data_entry->status == DATA_ENTRY_BUSY) &&
-        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY)) ;
+        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
+
+#if MAC_CONF_WITH_TSCH
+  /* Make sure the flag is reset */
+  is_receiving_packet = 0;
+#endif
 
   if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
-    return -1;
+    return 0;
   }
 
   /*
    * lensz bytes (2) in the data entry are the length of the received frame.
    * Data frame is on the following format:
-   *    Length (2) + Payload (N) + RSSI (1) + Status (1)
+   *    Length (2) + Payload (N) + RSSI (1) + Timestamp (4) + Status (1)
    * Data frame DOES NOT contain the following:
    *    no Header/PHY bytes
    *    no appended Received CRC bytes
-   *    no Timestamp bytes
    * Visual representation of frame format:
    *
-   *  +---------+---------+--------+--------+
-   *  | 2 bytes | N bytes | 1 byte | 1 byte |
-   *  +---------+---------+--------+--------+
-   *  | Length  | Payload | RSSI   | Status |
-   *  +---------+---------+--------+--------+
+   *  +---------+---------+--------+-----------+--------+
+   *  | 2 bytes | N bytes | 1 byte | 4 bytes   | 1 byte |
+   *  +---------+---------+--------+-----------+--------+
+   *  | Length  | Payload | RSSI   | Timestamp | Status |
+   *  +---------+---------+--------+-----------+--------+
    *
    * Length bytes equal total length of entire frame excluding itself,
-   *       Length = N + RSSI (1) + Status (1)
-   *              = N + 2
-   *            N = Length - 2
+   *       Length = N + RSSI (1) + Timestamp (4) +  Status (1)
+   *              = N + 6
+   *            N = Length - 6
    */
   uint8_t *const frame_ptr = (uint8_t *)&data_entry->data;
   const lensz_t frame_len = *(lensz_t *)frame_ptr;
 
   /* Sanity check that Frame is at least Frame Shave bytes long */
   if(frame_len < FRAME_SHAVE) {
-    LOG_ERR("Received rame is too short, len=%d\n", frame_len);
+    LOG_ERR("Received frame is too short, len=%d\n", frame_len);
 
     data_queue_release_entry();
     return 0;
@@ -468,12 +537,23 @@ read(void *buf, unsigned short buf_len)
   memcpy(buf, payload_ptr, payload_len);
 
   /* RSSI stored after payload */
-  const int8_t rssi = (int8_t)payload_ptr[payload_len];
+  prop_radio.last.rssi = (int8_t)payload_ptr[payload_len];
   /* LQI calculated from RSSI */
-  const uint8_t lqi = calculate_lqi(rssi);
+  prop_radio.last.corr_lqi = calculate_lqi(prop_radio.last.rssi);
+  /* Timestamp stored RSSI (1) bytes after payload. */
+  uint32_t rat_ticks;
+  memcpy(&rat_ticks, payload_ptr + payload_len + 1, 4);
 
-  packetbuf_set_attr(PACKETBUF_ATTR_RSSI, (packetbuf_attr_t)rssi);
-  packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, (packetbuf_attr_t)lqi);
+  /* Correct timestamp so that it refers to the end of the SFD */
+  prop_radio.last.timestamp = rat_to_timestamp(rat_ticks, RAT_TIMESTAMP_OFFSET);
+
+  if(!prop_radio.poll_mode) {
+    /* Not in poll mode: packetbuf should not be accessed in interrupt context. */
+    /* In poll mode, the last packet RSSI and link quality can be obtained through */
+    /* RADIO_PARAM_LAST_RSSI and RADIO_PARAM_LAST_LINK_QUALITY */
+    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, (packetbuf_attr_t)prop_radio.last.rssi);
+    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, (packetbuf_attr_t)prop_radio.last.corr_lqi);
+  }
 
   data_queue_release_entry();
   return (int)payload_len;
@@ -510,13 +590,63 @@ channel_clear(void)
 static int
 receiving_packet(void)
 {
-  if(!rx_is_active()) {
+  if(!prop_radio.rf_is_on) {
     return 0;
   }
 
-  const uint8_t cca_state = cca_request();
+#if MAC_CONF_WITH_TSCH
+  /*
+   * Under TSCH operation, we rely on "hints" from the MDMSOFT interrupt
+   * flag. This flag is set by the radio upon sync word detection, but it is
+   * not cleared automatically by hardware. We store state in a variable after
+   * first call. The assumption is that the TSCH code will keep calling us
+   * until frame reception has completed, at which point we can clear MDMSOFT.
+   */
+  if(!is_receiving_packet) {
+    /* Look for the modem synchronization word detection interrupt flag.
+     * This flag is raised when the synchronization word is received.
+     */
+    if(HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFHWIFG) & RFC_DBELL_RFHWIFG_MDMSOFT) {
+      is_receiving_packet = 1;
+    }
+  } else {
+    /* After the start of the packet: reset the Rx flag once the channel gets clear */
+    is_receiving_packet = (cca_request() == CCA_STATE_BUSY);
+    if(!is_receiving_packet) {
+      /* Clear the modem sync flag */
+      RFCHwIntClear(RFC_DBELL_RFHWIFG_MDMSOFT);
+    }
+  }
 
-  return cca_state == CCA_STATE_BUSY;
+  return is_receiving_packet;
+#else
+  /*
+   * Under CSMA operation, there is no immediately straightforward logic as to
+   * when it's OK to clear the MDMSOFT interrupt flag:
+   *
+   *   - We cannot re-use the same logic as above, since CSMA may bail out of
+   *     frame TX immediately after a single call this function here. In this
+   *     scenario, is_receiving_packet would remain equal to one and we would
+   *     therefore erroneously signal ongoing RX in subsequent calls to this
+   *     function here, even _after_ reception has completed.
+   *   - We can neither clear inside read_frame() nor inside the RX frame
+   *     interrupt handler (remember, we are not in poll mode under CSMA),
+   *     since we risk clearing MDMSOFT after we have seen a sync word for the
+   *     _next_ frame. If this happens, this function here would incorrectly
+   *     return 0 during RX of this next frame.
+   *
+   * So to avoid a very convoluted logic of how to handle MDMSOFT, we simply
+   * perform a clear channel assessment here: We interpret channel activity
+   * as frame reception.
+   */
+
+  if(cca_request() == CCA_STATE_BUSY) {
+    return 1;
+  }
+
+  return 0;
+
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -539,7 +669,7 @@ pending_packet(void)
     curr_entry = (data_entry_t *)curr_entry->pNextEntry;
   } while(curr_entry != read_entry);
 
-  if(num_pending > 0) {
+  if(num_pending > 0 && !prop_radio.poll_mode) {
     process_poll(&rf_sched_process);
   }
 
@@ -603,6 +733,19 @@ get_value(radio_param_t param, radio_value_t *value)
 
   case RADIO_PARAM_CHANNEL:
     *value = (radio_value_t)get_channel();
+    return RADIO_RESULT_OK;
+
+  /* RX mode */
+  case RADIO_PARAM_RX_MODE:
+    *value = 0;
+    if(prop_radio.poll_mode) {
+      *value |= (radio_value_t)RADIO_RX_MODE_POLL_MODE;
+    }
+    return RADIO_RESULT_OK;
+
+  /* TX mode */
+  case RADIO_PARAM_TX_MODE:
+    *value = 0;
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TXPOWER:
@@ -681,7 +824,33 @@ set_value(radio_param_t param, radio_value_t value)
            ? RADIO_RESULT_OK
            : RADIO_RESULT_ERROR;
 
+  /* RX Mode */
   case RADIO_PARAM_RX_MODE:
+    if(value & ~(RADIO_RX_MODE_POLL_MODE)) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+
+    const bool old_poll_mode = prop_radio.poll_mode;
+    prop_radio.poll_mode = (value & RADIO_RX_MODE_POLL_MODE) != 0;
+    if(old_poll_mode == prop_radio.poll_mode) {
+      return RADIO_RESULT_OK;
+    }
+    if(!prop_radio.rf_is_on) {
+      return RADIO_RESULT_OK;
+    }
+
+    netstack_stop_rx();
+    res = netstack_sched_rx(false);
+    return (res == RF_RESULT_OK)
+           ? RADIO_RESULT_OK
+           : RADIO_RESULT_ERROR;
+
+  /* TX Mode */
+  case RADIO_PARAM_TX_MODE:
+    if(value & ~(RADIO_TX_MODE_SEND_ON_CCA)) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_CCA_THRESHOLD:
@@ -696,7 +865,24 @@ set_value(radio_param_t param, radio_value_t value)
 static radio_result_t
 get_object(radio_param_t param, void *dest, size_t size)
 {
-  return RADIO_RESULT_NOT_SUPPORTED;
+  if(!dest) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+
+  switch(param) {
+  /* Last packet timestamp */
+  case RADIO_PARAM_LAST_PACKET_TIMESTAMP:
+    if(size != sizeof(rtimer_clock_t)) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+
+    *(rtimer_clock_t *)dest = prop_radio.last.timestamp;
+
+    return RADIO_RESULT_OK;
+
+  default:
+    return RADIO_RESULT_NOT_SUPPORTED;
+  }
 }
 /*---------------------------------------------------------------------------*/
 static radio_result_t
@@ -711,6 +897,10 @@ init(void)
   RF_Params rf_params;
   RF_TxPowerTable_Value tx_power_value;
   RF_Stat rf_stat;
+
+  prop_radio.rx_is_active = rx_is_active;
+
+  radio_mode = (simplelink_radio_mode_t *)&prop_radio;
 
   if(prop_radio.rf_handle) {
     LOG_WARN("Radio is already initialized\n");
@@ -737,7 +927,7 @@ init(void)
     return RF_RESULT_ERROR;
   }
 
-  set_channel(IEEE802154_DEFAULT_CHANNEL);
+  set_channel_force(IEEE802154_DEFAULT_CHANNEL);
 
   tx_power_value = RF_TxPowerTable_findValue(rf_tx_power_table, RF_TXPOWER_DBM);
   if(tx_power_value.rawValue != RF_TxPowerTable_INVALID_VALUE) {
@@ -752,6 +942,9 @@ init(void)
   }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+
+  /* Start RAT overflow upkeep */
+  rat_init();
 
   /* Start RF process */
   process_start(&rf_sched_process, NULL);

@@ -58,7 +58,7 @@
 void
 xmem_init(void)
 {
-  ext_flash_open(NULL);
+  ext_flash_init(NULL);
 }
 int
 xmem_pread(void *_p, int size, unsigned long addr)
@@ -70,7 +70,7 @@ xmem_pread(void *_p, int size, unsigned long addr)
   rv = ext_flash_open(NULL);
 
   if(!rv) {
-    PRINTF("Could not open flash to save config\n");
+    PRINTF("Could not open flash to read!\n");
     ext_flash_close(NULL);
     return -1;
   }
@@ -102,7 +102,7 @@ xmem_pwrite(const void *_buf, int size, unsigned long addr)
   rv = ext_flash_open(NULL);
 
   if(!rv) {
-    PRINTF("Could not open flash to save config!\n");
+    PRINTF("Could not open flash to write!\n");
     ext_flash_close(NULL);
     return -1;
   }
@@ -115,6 +115,7 @@ xmem_pwrite(const void *_buf, int size, unsigned long addr)
     rv = ext_flash_write(NULL, addr + j, to_write, tmp_buf);
     if(!rv) {
       PRINTF("Could not write flash memory!\n");
+      ext_flash_close(NULL);
       return size - remain;
     }
   }
@@ -128,14 +129,6 @@ xmem_erase(long size, unsigned long addr)
 {
   int rv;
 
-  rv = ext_flash_open(NULL);
-
-  if(!rv) {
-    PRINTF("Could not open flash to save config\n");
-    ext_flash_close(NULL);
-    return -1;
-  }
-
   if(size % EXT_ERASE_UNIT_SIZE != 0) {
     PRINTF("xmem_erase: bad size\n");
     return -1;
@@ -143,6 +136,14 @@ xmem_erase(long size, unsigned long addr)
 
   if(addr % EXT_ERASE_UNIT_SIZE != 0) {
     PRINTF("xmem_erase: bad offset\n");
+    return -1;
+  }
+
+  rv = ext_flash_open(NULL);
+
+  if(!rv) {
+    PRINTF("Could not open flash to erase\n");
+    ext_flash_close(NULL);
     return -1;
   }
 

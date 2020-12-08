@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the protocol engine
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -42,154 +42,168 @@
 #include "snmp-engine.h"
 #include "snmp-message.h"
 #include "snmp-mib.h"
-#include "snmp-oid.h"
+#include "snmp-ber.h"
 
 #define LOG_MODULE "SNMP [engine]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
 /*---------------------------------------------------------------------------*/
-int
-snmp_engine_get(snmp_header_t *header, snmp_varbind_t *varbinds, uint32_t varbinds_length)
+static inline int
+snmp_engine_get(snmp_header_t *header, snmp_varbind_t *varbinds)
 {
   snmp_mib_resource_t *resource;
-  uint32_t i;
+  uint8_t i;
 
-  for(i = 0; i < varbinds_length; i++) {
-    resource = snmp_mib_find(varbinds[i].oid);
+  i = 0;
+  while(varbinds[i].value_type != BER_DATA_TYPE_EOC && i < SNMP_MAX_NR_VALUES) {
+    resource = snmp_mib_find(&varbinds[i].oid);
     if(!resource) {
       switch(header->version) {
       case SNMP_VERSION_1:
-        header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
         /*
          * Varbinds are 1 indexed
          */
-        header->error_index_max_repetitions.error_index = i + 1;
+        header->error_index = i + 1;
         break;
       case SNMP_VERSION_2C:
-        (&varbinds[i])->value_type = SNMP_DATA_TYPE_NO_SUCH_INSTANCE;
+        (&varbinds[i])->value_type = BER_DATA_TYPE_NO_SUCH_INSTANCE;
         break;
       default:
-        header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
-        header->error_index_max_repetitions.error_index = 0;
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
+        header->error_index = 0;
       }
     } else {
-      resource->handler(&varbinds[i], resource->oid);
+      resource->handler(&varbinds[i], &resource->oid);
     }
+
+    i++;
   }
 
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-int
-snmp_engine_get_next(snmp_header_t *header, snmp_varbind_t *varbinds, uint32_t varbinds_length)
+static inline int
+snmp_engine_get_next(snmp_header_t *header, snmp_varbind_t *varbinds)
 {
   snmp_mib_resource_t *resource;
-  uint32_t i;
+  uint8_t i;
 
-  for(i = 0; i < varbinds_length; i++) {
-    resource = snmp_mib_find_next(varbinds[i].oid);
+  i = 0;
+  while(varbinds[i].value_type != BER_DATA_TYPE_EOC && i < SNMP_MAX_NR_VALUES) {
+    resource = snmp_mib_find_next(&varbinds[i].oid);
     if(!resource) {
       switch(header->version) {
       case SNMP_VERSION_1:
-        header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
         /*
          * Varbinds are 1 indexed
          */
-        header->error_index_max_repetitions.error_index = i + 1;
+        header->error_index = i + 1;
         break;
       case SNMP_VERSION_2C:
-        (&varbinds[i])->value_type = SNMP_DATA_TYPE_END_OF_MIB_VIEW;
+        (&varbinds[i])->value_type = BER_DATA_TYPE_END_OF_MIB_VIEW;
         break;
       default:
-        header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
-        header->error_index_max_repetitions.error_index = 0;
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
+        header->error_index = 0;
       }
     } else {
-      resource->handler(&varbinds[i], resource->oid);
+      resource->handler(&varbinds[i], &resource->oid);
     }
+
+    i++;
   }
 
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-int
-snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds, uint32_t *varbinds_length)
+static inline int
+snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds)
 {
   snmp_mib_resource_t *resource;
-  uint32_t i, j, original_varbinds_length;
-  uint32_t oid[SNMP_MAX_NR_VALUES][SNMP_MSG_OID_MAX_LEN];
+  snmp_oid_t oids[SNMP_MAX_NR_VALUES];
+  uint32_t j, original_varbinds_length;
   uint8_t repeater;
+  uint8_t i, varbinds_length;
 
   /*
    * A local copy of the requested oids must be kept since
    *  the varbinds are modified on the fly
    */
-  original_varbinds_length = *varbinds_length;
-  for(i = 0; i < original_varbinds_length; i++) {
-    snmp_oid_copy(oid[i], varbinds[i].oid);
+  original_varbinds_length = 0;
+  while(varbinds[original_varbinds_length].value_type != BER_DATA_TYPE_EOC && original_varbinds_length < SNMP_MAX_NR_VALUES) {
+    memcpy(&oids[original_varbinds_length], &varbinds[original_varbinds_length].oid, sizeof(snmp_oid_t));
+    original_varbinds_length++;
   }
 
-  *varbinds_length = 0;
+  varbinds_length = 0;
   for(i = 0; i < original_varbinds_length; i++) {
-    if(i >= header->error_status_non_repeaters.non_repeaters) {
+    if(i >= header->non_repeaters) {
       break;
     }
 
-    resource = snmp_mib_find_next(oid[i]);
+    resource = snmp_mib_find_next(&oids[i]);
     if(!resource) {
       switch(header->version) {
       case SNMP_VERSION_1:
-        header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
         /*
          * Varbinds are 1 indexed
          */
-        header->error_index_max_repetitions.error_index = i + 1;
+        header->error_index = i + 1;
         break;
       case SNMP_VERSION_2C:
-        (&varbinds[i])->value_type = SNMP_DATA_TYPE_END_OF_MIB_VIEW;
+        (&varbinds[i])->value_type = BER_DATA_TYPE_END_OF_MIB_VIEW;
         break;
       default:
-        header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
-        header->error_index_max_repetitions.error_index = 0;
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
+        header->error_index = 0;
       }
     } else {
-      if(*varbinds_length < SNMP_MAX_NR_VALUES) {
-        resource->handler(&varbinds[*varbinds_length], resource->oid);
-        (*varbinds_length)++;
+      if(varbinds_length < SNMP_MAX_NR_VALUES) {
+        resource->handler(&varbinds[varbinds_length], &resource->oid);
+        (varbinds_length)++;
+      } else {
+        return -1;
       }
     }
   }
 
-  for(i = 0; i < header->error_index_max_repetitions.max_repetitions; i++) {
+  for(i = 0; i < header->max_repetitions; i++) {
     repeater = 0;
-    for(j = header->error_status_non_repeaters.non_repeaters; j < original_varbinds_length; j++) {
-      resource = snmp_mib_find_next(oid[j]);
+    for(j = header->non_repeaters; j < original_varbinds_length; j++) {
+      resource = snmp_mib_find_next(&oids[j]);
       if(!resource) {
         switch(header->version) {
         case SNMP_VERSION_1:
-          header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
+          header->error_status = SNMP_STATUS_NO_SUCH_NAME;
           /*
            * Varbinds are 1 indexed
            */
-          header->error_index_max_repetitions.error_index = *varbinds_length + 1;
+          header->error_index = varbinds_length + 1;
           break;
         case SNMP_VERSION_2C:
-          if(*varbinds_length < SNMP_MAX_NR_VALUES) {
-            (&varbinds[*varbinds_length])->value_type = SNMP_DATA_TYPE_END_OF_MIB_VIEW;
-            snmp_oid_copy((&varbinds[*varbinds_length])->oid, oid[j]);
-            (*varbinds_length)++;
+          if(varbinds_length < SNMP_MAX_NR_VALUES) {
+            (&varbinds[varbinds_length])->value_type = BER_DATA_TYPE_END_OF_MIB_VIEW;
+            memcpy(&varbinds[varbinds_length].oid, &oids[j], sizeof(snmp_oid_t));
+            (varbinds_length)++;
+          } else {
+            return -1;
           }
           break;
         default:
-          header->error_status_non_repeaters.error_status = SNMP_STATUS_NO_SUCH_NAME;
-          header->error_index_max_repetitions.error_index = 0;
+          header->error_status = SNMP_STATUS_NO_SUCH_NAME;
+          header->error_index = 0;
         }
       } else {
-        if(*varbinds_length < SNMP_MAX_NR_VALUES) {
-          resource->handler(&varbinds[*varbinds_length], resource->oid);
-          (*varbinds_length)++;
-          snmp_oid_copy(oid[j], resource->oid);
+        if(varbinds_length < SNMP_MAX_NR_VALUES) {
+          resource->handler(&varbinds[varbinds_length], &resource->oid);
+          (varbinds_length)++;
+          memcpy(&oids[j], &resource->oid, sizeof(snmp_oid_t));
           repeater++;
+        } else {
+          return -1;
         }
       }
     }
@@ -201,22 +215,23 @@ snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds, uint32_t *
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_engine(unsigned char *buff, uint32_t buff_len, unsigned char *out, uint32_t *out_len)
+int
+snmp_engine(snmp_packet_t *snmp_packet)
 {
-  static snmp_header_t header;
-  static snmp_varbind_t varbinds[SNMP_MAX_NR_VALUES];
-  static uint32_t varbind_length;
+  snmp_header_t header;
+  snmp_varbind_t varbinds[SNMP_MAX_NR_VALUES];
 
-  buff = snmp_message_decode(buff, buff_len, &header, varbinds, &varbind_length);
-  if(buff == NULL) {
-    return NULL;
+  memset(&header, 0, sizeof(header));
+  memset(varbinds, 0, sizeof(varbinds));
+
+  if(!snmp_message_decode(snmp_packet, &header, varbinds)) {
+    return 0;
   }
 
   if(header.version != SNMP_VERSION_1) {
     if(strncmp(header.community.community, SNMP_COMMUNITY, header.community.length)) {
       LOG_ERR("Request with invalid community\n");
-      return NULL;
+      return 0;
     }
   }
 
@@ -224,31 +239,30 @@ snmp_engine(unsigned char *buff, uint32_t buff_len, unsigned char *out, uint32_t
    * Now handle the SNMP requests depending on their type
    */
   switch(header.pdu_type) {
-  case SNMP_DATA_TYPE_PDU_GET_REQUEST:
-    if(snmp_engine_get(&header, varbinds, varbind_length) == -1) {
-      return NULL;
+  case BER_DATA_TYPE_PDU_GET_REQUEST:
+    if(snmp_engine_get(&header, varbinds) == -1) {
+      return 0;
     }
     break;
 
-  case SNMP_DATA_TYPE_PDU_GET_NEXT_REQUEST:
-    if(snmp_engine_get_next(&header, varbinds, varbind_length) == -1) {
-      return NULL;
+  case BER_DATA_TYPE_PDU_GET_NEXT_REQUEST:
+    if(snmp_engine_get_next(&header, varbinds) == -1) {
+      return 0;
     }
     break;
 
-  case SNMP_DATA_TYPE_PDU_GET_BULK:
-    if(snmp_engine_get_bulk(&header, varbinds, &varbind_length) == -1) {
-      return NULL;
+  case BER_DATA_TYPE_PDU_GET_BULK:
+    if(snmp_engine_get_bulk(&header, varbinds) == -1) {
+      return 0;
     }
     break;
 
   default:
     LOG_ERR("Invalid request type");
-    return NULL;
+    return 0;
   }
 
-  header.pdu_type = SNMP_DATA_TYPE_PDU_GET_RESPONSE;
-  out = snmp_message_encode(out, out_len, &header, varbinds, varbind_length);
+  header.pdu_type = BER_DATA_TYPE_PDU_GET_RESPONSE;
 
-  return ++out;
+  return snmp_message_encode(snmp_packet, &header, varbinds);
 }

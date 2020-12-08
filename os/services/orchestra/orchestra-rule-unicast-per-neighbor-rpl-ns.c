@@ -121,7 +121,7 @@ init(uint16_t sf_handle)
     tsch_schedule_add_link(sf_unicast,
         LINK_OPTION_SHARED | LINK_OPTION_TX | ( i == rx_timeslot ? LINK_OPTION_RX : 0 ),
         LINK_TYPE_NORMAL, &tsch_broadcast_address,
-        i, get_node_channel_offset(local_addr));
+        i, get_node_channel_offset(local_addr), 1);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -132,4 +132,5 @@ struct orchestra_rule unicast_per_neighbor_rpl_ns = {
   child_added,
   child_removed,
   "unicast per neighbor non-storing",
+  ORCHESTRA_UNICAST_PERIOD,
 };

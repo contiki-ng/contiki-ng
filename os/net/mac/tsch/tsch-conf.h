@@ -329,7 +329,7 @@
 #ifdef TSCH_CONF_BURST_MAX_LEN
 #define TSCH_BURST_MAX_LEN TSCH_CONF_BURST_MAX_LEN
 #else
-#define TSCH_BURST_MAX_LEN 32
+#define TSCH_BURST_MAX_LEN 0
 #endif
 
 /* 6TiSCH Minimal schedule slotframe length */

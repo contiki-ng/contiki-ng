@@ -55,6 +55,11 @@
 /* Include CPU-related configurations */
 #include "cc13xx-cc26xx-conf.h"
 /*---------------------------------------------------------------------------*/
+#ifdef LOG_CONF_LEVEL_FRAMER
+#pragma message "LOG_CONF_LEVEL_FRAMER defined, undefining to disable printing in interrupt context"
+#undef LOG_CONF_LEVEL_FRAMER
+#endif
+/*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**

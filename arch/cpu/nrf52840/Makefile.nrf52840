@@ -1,0 +1,167 @@
+NRF5_SDK_ROOT = $(CONTIKI_CPU)/lib/nrf52-sdk
+
+ifeq (,$(wildcard $(NRF5_SDK_ROOT)/*))
+    $(warning $(NRF5_SDK_ROOT) does not exist or is empty.)
+    $(warning Did you run 'git submodule update --init' ?)
+    $(error "")
+endif
+
+NRFJPROG ?= nrfjprog
+NRFUTIL ?= nrfutil
+
+ifeq ($(NRF52840_USE_RTT),1)
+  ### Suppress the existing debug I/O in os/lib
+  CFLAGS += -DNRF52840_USE_RTT=1
+  MAKE_WITH_LIB_DBG_IO = 0
+  CONTIKI_TARGET_DIRS += rtt
+  CONTIKI_CPU_SOURCEFILES += rtt-printf.c segger-rtt.c segger-rtt-printf.c
+else
+  CONTIKI_CPU_SOURCEFILES += dbg.c
+endif
+
+# Boards
+ifeq ($(BOARD), dongle)
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840-bootloader.ld
+  CFLAGS += -DBOARD_PCA10059
+  NRF52840_NATIVE_USB ?= 1
+  NRF52840_USB_DFU_TRIGGER ?= 1
+else
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840.ld
+  CFLAGS += -DBOARD_PCA10056
+  NRF52840_NATIVE_USB ?= 0
+  ifeq ($(NRF52840_NATIVE_USB)$(NRF52840_USB_DFU_TRIGGER), 11)
+    $(warning "Building for BOARD=dk")
+    $(warning "with NRF52840_NATIVE_USB=1 NRF52840_USB_DFU_TRIGGER=1")
+    $(warning "This is invalid. Overriding with NRF52840_USB_DFU_TRIGGER=0")
+    override NRF52840_USB_DFU_TRIGGER = 0
+  endif  
+endif
+
+### CPU-dependent directories
+CONTIKI_CPU_DIRS += . dev rf usb
+
+### CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c
+CONTIKI_CPU_SOURCEFILES += int-master.c slip-arch.c gpio-hal-arch.c
+CONTIKI_CPU_SOURCEFILES += nrf52840-ieee.c
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
+
+CFLAGS += -DNRF52840_XXAA
+CFLAGS += -D__HEAP_SIZE=512
+CFLAGS += -DSWI_DISABLE0
+CFLAGS += -DCONFIG_GPIO_AS_PINRESET
+CFLAGS += -ggdb
+CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+LDFLAGS += -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16
+LDFLAGS += --specs=nano.specs -lc -lnosys
+LDFLAGS += -L $(NRF5_SDK_ROOT)/modules/nrfx/mdk
+
+# nRF52 SDK sources
+NRF52_SDK_C_SRCS += components/boards/boards.c \
+  components/libraries/util/app_error.c \
+  components/libraries/util/app_error_handler_gcc.c \
+  components/libraries/util/app_error_weak.c \
+  components/libraries/util/nrf_assert.c \
+  components/libraries/util/app_util_platform.c \
+  components/libraries/queue/nrf_queue.c \
+  components/libraries/strerror/nrf_strerror.c \
+  modules/nrfx/drivers/src/nrfx_clock.c \
+  modules/nrfx/drivers/src/nrfx_rtc.c \
+  modules/nrfx/drivers/src/nrfx_gpiote.c \
+  modules/nrfx/drivers/src/nrfx_rng.c \
+  modules/nrfx/drivers/src/nrfx_wdt.c \
+  modules/nrfx/mdk/system_nrf52840.c \
+  integration/nrfx/legacy/nrf_drv_clock.c \
+  integration/nrfx/legacy/nrf_drv_rng.c \
+  components/libraries/fifo/app_fifo.c \
+
+NRF52_SDK_ASM_SRCS = modules/nrfx/mdk/gcc_startup_nrf52840.S
+
+CONTIKI_SOURCEFILES += $(notdir $(NRF52_SDK_C_SRCS))
+CONTIKI_SOURCEFILES += $(notdir $(NRF52_SDK_ASM_SRCS))
+
+# Include folders common to all targets
+NRF52_SDK_INC_PATHS += modules/nrfx
+NRF52_SDK_INC_PATHS += modules/nrfx/mdk
+NRF52_SDK_INC_PATHS += modules/nrfx/hal
+NRF52_SDK_INC_PATHS += modules/nrfx/soc
+NRF52_SDK_INC_PATHS += modules/nrfx/drivers/src
+NRF52_SDK_INC_PATHS += modules/nrfx/drivers/include
+NRF52_SDK_INC_PATHS += components/libraries/experimental_section_vars
+NRF52_SDK_INC_PATHS += components/libraries/strerror
+NRF52_SDK_INC_PATHS += components/libraries/delay
+NRF52_SDK_INC_PATHS += components/libraries/util
+NRF52_SDK_INC_PATHS += components/boards
+NRF52_SDK_INC_PATHS += integration/nrfx
+NRF52_SDK_INC_PATHS += integration/nrfx/legacy
+NRF52_SDK_INC_PATHS += components/libraries/queue
+NRF52_SDK_INC_PATHS += components/libraries/fifo
+NRF52_SDK_INC_PATHS += components/libraries/log
+NRF52_SDK_INC_PATHS += components/libraries/log/src
+NRF52_SDK_INC_PATHS += components/drivers_nrf/nrf_soc_nosd
+
+ifeq ($(NRF52840_NATIVE_USB),1)
+  include $(CONTIKI_CPU)/usb/Makefile.usb
+endif
+
+EXTERNALDIRS += $(addprefix $(NRF5_SDK_ROOT)/, $(NRF52_SDK_INC_PATHS))
+
+include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
+
+.PHONY: nrf-upload-sequence
+
+# Upload via J-Link using nrfjprog 
+
+ifdef NRF52_UPLOAD_SN
+  NRFJPROG_FLAGS += --snr $(NRF52_UPLOAD_SN)
+endif
+
+%.upload: $(OUT_HEX)
+ifeq (, $(shell which $(NRFJPROG)))
+	@echo "ERROR: Could not find nrfjprog, please install it first"
+else
+	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --program $<
+	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --reset
+endif
+
+# Upload to all attached boards
+# This approach is similar to the sky platform
+
+# Number of boards to program in parallel
+NUMPAR=4
+
+# Only get serial numbers if nrfjprog is installed
+ifneq ($(filter nrf-upload-sequence,$(MAKECMDGOALS)),)
+  ifneq (, $(shell which $(NRFJPROG)))
+    NRF_SNRS := $(shell $(NRFJPROG) -i)
+  endif
+endif
+
+nrf-upload-snr.%:
+	$(NRFJPROG) -f nrf52 --snr $* --sectorerase --program $(HEX_FILE)
+	$(NRFJPROG) -f nrf52 --snr $* --reset
+
+nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
+	@echo Done
+
+%.upload-all: $(OUT_HEX)
+ifeq (, $(shell which $(NRFJPROG)))
+	@echo "ERROR: Could not find nrfjprog, please install it first"
+else
+	$(MAKE) HEX_FILE=$< -j $(NUMPAR) nrf-upload-sequence
+endif
+
+# DFU Upload for dongles
+
+PORT ?= /dev/ttyACM0
+DFU_FLAGS = -p $(PORT)
+
+%.dfu-upload: $(OUT_HEX)
+ifeq (, $(shell which $(NRFUTIL)))
+	@echo "ERROR: Could not find nrfutil, please install it first"
+else
+	$(NRFUTIL) pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
+	$(NRFUTIL) dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
+endif

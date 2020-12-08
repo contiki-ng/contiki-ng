@@ -8,4 +8,4 @@ ifeq ($(ZOLERTIA_Z1SP),1)
 include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/z1/Makefile.z1sp
 endif
 
-MODULES += arch/dev/cc2420 os/storage/cfs
+MODULES += $(CONTIKI_NG_DRIVERS_RADIO_DIR)/cc2420 $(CONTIKI_NG_STORAGE_DIR)/cfs

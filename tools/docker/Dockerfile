@@ -11,6 +11,8 @@ RUN apt-get -qq update && \
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
   echo "deb http://download.mono-project.com/repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500 && \
+  echo "deb http://ppa.launchpad.net/mosquitto-dev/mosquitto-ppa/ubuntu bionic main" | tee /etc/apt/sources.list.d/mosquitto.list && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
@@ -23,13 +25,17 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     iputils-ping \
     libcanberra-gtk-module:i386 \
     libcoap-1-0-bin \
+    libfreetype6-dev \
     libgtk2.0-0 \
+    libpng-dev \
     mono-complete \
     mosquitto \
     mosquitto-clients \
     net-tools \
     openjdk-8-jdk \
+    python-dev \
     python-pip \
+    python3-pip \
     python-serial \
     rlwrap \
     sudo \
@@ -83,6 +89,9 @@ ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 # readthedocs API documentation
 RUN pip -q install --upgrade pip
 RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
+# Install matplotlib for result visualization
+RUN pip3 -q install --upgrade pip
+RUN pip3 -q install matplotlib
 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix

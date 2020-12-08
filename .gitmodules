@@ -28,3 +28,6 @@
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc2640r2-sdk"]
 	path = arch/cpu/cc26x0-cc13x0/lib/cc2640r2-sdk
 	url = https://github.com/contiki-ng/cc2640r2-sdk.git
+[submodule "arch/cpu/nrf52840/lib/nrf52-sdk"]
+	path = arch/cpu/nrf52840/lib/nrf52-sdk
+	url = https://github.com/contiki-ng/nrf-sdk-contiki-ng.git

@@ -2,6 +2,8 @@
 
 # Install i386 binary support on x64 system and required tools
 sudo dpkg --add-architecture i386
+echo "deb http://ppa.launchpad.net/mosquitto-dev/mosquitto-ppa/ubuntu bionic main" | tee /etc/apt/sources.list.d/mosquitto
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500
 sudo apt update
 sudo apt install -y --no-install-recommends \
   libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386 \

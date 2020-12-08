@@ -66,7 +66,7 @@
 
 static const char *config_ipaddr = "fd00::1/64";
 /* Allocate some bytes in RAM and copy the string */
-static char config_tundev[64] = "tun0";
+static char config_tundev[IFNAMSIZ + 1] = "tun0";
 
 
 #ifndef __CYGWIN__
@@ -141,7 +141,7 @@ ifconf(const char *tundev, const char *ipaddr)
 /*---------------------------------------------------------------------------*/
 #ifdef linux
 static int
-tun_alloc(char *dev)
+tun_alloc(char *dev, uint16_t devsize)
 {
   struct ifreq ifr;
   int fd, err;
@@ -157,8 +157,8 @@ tun_alloc(char *dev)
    *        IFF_NO_PI - Do not provide packet information
    */
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  if(*dev != 0) {
-    strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+  if(*dev != '\0') {
+    memcpy(ifr.ifr_name, dev, MIN(sizeof(ifr.ifr_name), devsize));
   }
   if((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
     /* Error message handled by caller */
@@ -167,7 +167,8 @@ tun_alloc(char *dev)
   }
 
   LOG_INFO("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
-  strncpy(dev, ifr.ifr_name, strlen(dev));
+  strncpy(dev, ifr.ifr_name, MIN(devsize - 1, sizeof(ifr.ifr_name)));
+  dev[devsize - 1] = '\0';
   LOG_INFO("Using %s\n", dev);
   return fd;
 }
@@ -182,7 +183,7 @@ devopen(const char *dev, int flags)
 }
 /*---------------------------------------------------------------------------*/
 static int
-tun_alloc(char *dev)
+tun_alloc(char *dev, uint16_t devsize)
 {
   LOG_INFO("Opening: %s\n", dev);
   return devopen(dev, O_RDWR);
@@ -208,7 +209,7 @@ tun_init()
 
   LOG_INFO("Initializing tun interface\n");
 
-  tunfd = tun_alloc(config_tundev);
+  tunfd = tun_alloc(config_tundev, sizeof(config_tundev));
   if(tunfd == -1) {
     LOG_WARN("Failed to open tun device (you may be lacking permission). Running without network.\n");
     /* err(1, "failed to allocate tun device ``%s''", config_tundev); */

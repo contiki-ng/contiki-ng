@@ -98,6 +98,11 @@ main(void)
   node_id_init();
 
   LOG_INFO("Starting " CONTIKI_VERSION_STRING "\n");
+  LOG_DBG("TARGET=%s", CONTIKI_TARGET_STRING);
+#ifdef CONTIKI_BOARD_STRING
+  LOG_DBG_(", BOARD=%s", CONTIKI_BOARD_STRING);
+#endif
+  LOG_DBG_("\n");
   LOG_INFO("- Routing: %s\n", NETSTACK_ROUTING.name);
   LOG_INFO("- Net: %s\n", NETSTACK_NETWORK.name);
   LOG_INFO("- MAC: %s\n", NETSTACK_MAC.name);

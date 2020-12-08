@@ -94,7 +94,7 @@ typedef enum {
   SIXP_PKT_RC_ERR_CELLLIST = 0x07, /**< RC_ERR_CELLLIST */
   SIXP_PKT_RC_ERR_BUSY     = 0x08, /**< RC_ERR_BUSY */
   SIXP_PKT_RC_ERR_LOCKED   = 0x09, /**< RC_ERR_LOCKED */
-
+  SIXP_PKT_RC_RESERVED     = 0xff  /**< RC_RESERVED */
 } sixp_pkt_rc_t;
 
 /**

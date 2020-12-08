@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the BER encoding
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -46,229 +46,465 @@
 #define LOG_LEVEL LOG_LEVEL_SNMP
 
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_encode_type(unsigned char *out, uint32_t *out_len, uint8_t type)
+static inline int
+snmp_ber_encode_unsigned_integer(snmp_packet_t *snmp_packet, uint8_t type, uint32_t number)
 {
-  *out-- = type;
-  (*out_len)++;
-  return out;
-}
-/*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_encode_length(unsigned char *out, uint32_t *out_len, uint8_t length)
-{
-  *out-- = length;
-  (*out_len)++;
-  return out;
-}
-/*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_encode_integer(unsigned char *out, uint32_t *out_len, uint32_t number)
-{
-  uint32_t original_out_len;
+  uint16_t original_out_len;
 
-  original_out_len = *out_len;
+  original_out_len = snmp_packet->used;
   do {
-    (*out_len)++;
-    *out-- = (uint8_t)(number & 0xFF);
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)number & 0xFF;
+    snmp_packet->used++;
+    /* I'm not sure why but on MSPGCC the >> 8 operation goes haywire here */
+#ifdef __MSPGCC__
+    number >>= 4;
+    number >>= 4;
+#else /* __MSPGCC__ */
     number >>= 8;
+#endif /* __MSPGCC__ */
   } while(number);
 
-  out = snmp_ber_encode_length(out, out_len, ((*out_len - original_out_len) & 0xFF));
-  out = snmp_ber_encode_type(out, out_len, BER_DATA_TYPE_INTEGER);
+  if(!snmp_ber_encode_length(snmp_packet, snmp_packet->used - original_out_len)) {
+    return 0;
+  }
 
-  return out;
+  if(!snmp_ber_encode_type(snmp_packet, type)) {
+    return 0;
+  }
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_encode_unsigned_integer(unsigned char *out, uint32_t *out_len, uint8_t type, uint32_t number)
+int
+snmp_ber_encode_type(snmp_packet_t *snmp_packet, uint8_t type)
 {
-  uint32_t original_out_len;
+  if(snmp_packet->used == snmp_packet->max) {
+    return 0;
+  }
 
-  original_out_len = *out_len;
-  do {
-    (*out_len)++;
-    *out-- = (uint8_t)(number & 0xFF);
-    number >>= 8;
-  } while(number);
+  *snmp_packet->out-- = type;
+  snmp_packet->used++;
 
-  out = snmp_ber_encode_length(out, out_len, ((*out_len - original_out_len) & 0xFF));
-  out = snmp_ber_encode_type(out, out_len, type);
-
-  return out;
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_encode_string_len(unsigned char *out, uint32_t *out_len, const char *str, uint32_t length)
+int
+snmp_ber_encode_length(snmp_packet_t *snmp_packet, uint16_t length)
+{
+  if(length > 0xFF) {
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)length & 0xFF;
+    snmp_packet->used++;
+
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)(length >> 8) & 0xFF;
+    snmp_packet->used++;
+
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = 0x82;
+    snmp_packet->used++;
+  } else if(length > 0x7F) {
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)length & 0xFF;
+    snmp_packet->used++;
+
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = 0x81;
+    snmp_packet->used++;
+  } else {
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)length & 0x7F;
+    snmp_packet->used++;
+  }
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_encode_timeticks(snmp_packet_t *snmp_packet, uint32_t timeticks)
+{
+  return snmp_ber_encode_unsigned_integer(snmp_packet, BER_DATA_TYPE_TIMETICKS, timeticks);
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_encode_integer(snmp_packet_t *snmp_packet, uint32_t number)
+{
+  return snmp_ber_encode_unsigned_integer(snmp_packet, BER_DATA_TYPE_INTEGER, number);
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_encode_string_len(snmp_packet_t *snmp_packet, const char *str, uint32_t length)
 {
   uint32_t i;
 
   str += length - 1;
   for(i = 0; i < length; ++i) {
-    (*out_len)++;
-    *out-- = (uint8_t)*str--;
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)*str--;
+    snmp_packet->used++;
   }
 
-  out = snmp_ber_encode_length(out, out_len, length);
-  out = snmp_ber_encode_type(out, out_len, BER_DATA_TYPE_OCTET_STRING);
+  if(!snmp_ber_encode_length(snmp_packet, length)) {
+    return 0;
+  }
 
-  return out;
+  if(!snmp_ber_encode_type(snmp_packet, BER_DATA_TYPE_OCTET_STRING)) {
+    return 0;
+  }
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_encode_null(unsigned char *out, uint32_t *out_len, uint8_t type)
+int
+snmp_ber_encode_oid(snmp_packet_t *snmp_packet, snmp_oid_t *oid)
 {
-  (*out_len)++;
-  *out-- = 0x00;
-  out = snmp_ber_encode_type(out, out_len, type);
+  uint32_t val;
+  uint16_t original_out_len;
+  uint8_t pos;
 
-  return out;
+  original_out_len = snmp_packet->used;
+
+  pos = oid->length - 1;
+  while(pos) {
+    val = oid->data[pos];
+
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)(val & 0x7F);
+    snmp_packet->used++;
+    val >>= 7;
+
+    while(val) {
+      if(snmp_packet->used == snmp_packet->max) {
+        return 0;
+      }
+
+      *snmp_packet->out-- = (uint8_t)((val & 0x7F) | 0x80);
+      snmp_packet->used++;
+
+      val >>= 7;
+    }
+    pos--;
+  }
+
+  if(snmp_packet->used == snmp_packet->max) {
+    return 0;
+  }
+
+  val = *(snmp_packet->out + 1) + 40 * oid->data[pos];
+  snmp_packet->used--;
+  snmp_packet->out++;
+
+  if(snmp_packet->used == snmp_packet->max) {
+    return 0;
+  }
+
+  *snmp_packet->out-- = (uint8_t)(val & 0x7F);
+  snmp_packet->used++;
+
+  val >>= 7;
+
+  while(val) {
+    if(snmp_packet->used == snmp_packet->max) {
+      return 0;
+    }
+
+    *snmp_packet->out-- = (uint8_t)((val & 0x7F) | 0x80);
+    snmp_packet->used++;
+
+    val >>= 7;
+  }
+
+  if(!snmp_ber_encode_length(snmp_packet, snmp_packet->used - original_out_len)) {
+    return 0;
+  }
+
+  if(!snmp_ber_encode_type(snmp_packet, BER_DATA_TYPE_OBJECT_IDENTIFIER)) {
+    return 0;
+  }
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_decode_type(unsigned char *buff, uint32_t *buff_len, uint8_t *type)
+int
+snmp_ber_encode_null(snmp_packet_t *snmp_packet, uint8_t type)
 {
-  *type = *buff++;
-  (*buff_len)--;
 
-  return buff;
+  if(snmp_packet->used == snmp_packet->max) {
+    return 0;
+  }
+
+  *snmp_packet->out-- = 0x00;
+  snmp_packet->used++;
+
+  return snmp_ber_encode_type(snmp_packet, type);
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_decode_length(unsigned char *buff, uint32_t *buff_len, uint8_t *length)
-{
-  *length = *buff++;
-  (*buff_len)--;
-
-  return buff;
-}
-/*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_decode_integer(unsigned char *buf, uint32_t *buff_len, uint32_t *num)
+static inline int
+snmp_ber_decode_unsigned_integer(snmp_packet_t *snmp_packet, uint8_t expected_type, uint32_t *num)
 {
   uint8_t i, len, type;
 
-  buf = snmp_ber_decode_type(buf, buff_len, &type);
-
-  if(type != BER_DATA_TYPE_INTEGER) {
-    /*
-     * Sanity check
-     * Invalid type in buffer
-     */
-    return NULL;
+  if(!snmp_ber_decode_type(snmp_packet, &type)) {
+    return 0;
   }
-
-  buf = snmp_ber_decode_length(buf, buff_len, &len);
-
-  if(len > 4) {
-    /*
-     * Sanity check
-     * It will not fit in the uint32_t
-     */
-    return NULL;
-  }
-
-  *num = (uint32_t)(*buf++ & 0xFF);
-  (*buff_len)--;
-  for(i = 1; i < len; ++i) {
-    *num <<= 8;
-    *num |= (uint8_t)(*buf++ & 0xFF);
-    (*buff_len)--;
-  }
-
-  return buf;
-}
-/*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_decode_unsigned_integer(unsigned char *buf, uint32_t *buff_len, uint8_t expected_type, uint32_t *num)
-{
-  uint8_t i, len, type;
-
-  buf = snmp_ber_decode_type(buf, buff_len, &type);
 
   if(type != expected_type) {
     /*
      * Sanity check
      * Invalid type in buffer
      */
-    return NULL;
+    return 0;
   }
 
-  buf = snmp_ber_decode_length(buf, buff_len, &len);
+  if(!snmp_ber_decode_length(snmp_packet, &len)) {
+    return 0;
+  }
 
   if(len > 4) {
     /*
      * Sanity check
      * It will not fit in the uint32_t
      */
-    return NULL;
+    return 0;
   }
 
-  *num = (uint32_t)(*buf++ & 0xFF);
-  (*buff_len)--;
+  if(snmp_packet->used == 0) {
+    return 0;
+  }
+
+  *num = (uint32_t)(*snmp_packet->in++ & 0xFF);
+  snmp_packet->used--;
+
   for(i = 1; i < len; ++i) {
     *num <<= 8;
-    *num |= (uint8_t)(*buf++ & 0xFF);
-    (*buff_len)--;
+    if(snmp_packet->used == 0) {
+      return 0;
+    }
+    *num |= (uint8_t)(*snmp_packet->in++ & 0xFF);
+    snmp_packet->used--;
   }
 
-  return buf;
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_decode_string_len_buffer(unsigned char *buf, uint32_t *buff_len, const char **str, uint32_t *length)
+int
+snmp_ber_decode_type(snmp_packet_t *snmp_packet, uint8_t *type)
+{
+  if(snmp_packet->used == 0) {
+    return 0;
+  }
+
+  *type = *snmp_packet->in++;
+  snmp_packet->used--;
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_decode_length(snmp_packet_t *snmp_packet, uint8_t *length)
+{
+  if(snmp_packet->used == 0) {
+    return 0;
+  }
+
+  *length = *snmp_packet->in++;
+  snmp_packet->used--;
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_decode_timeticks(snmp_packet_t *snmp_packet, uint32_t *timeticks)
+{
+  return snmp_ber_decode_unsigned_integer(snmp_packet, BER_DATA_TYPE_TIMETICKS, timeticks);
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_decode_integer(snmp_packet_t *snmp_packet, uint32_t *num)
+{
+  return snmp_ber_decode_unsigned_integer(snmp_packet, BER_DATA_TYPE_INTEGER, num);
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_decode_string_len_buffer(snmp_packet_t *snmp_packet, const char **str, uint32_t *length)
 {
   uint8_t type, i, length_bytes;
 
-  buf = snmp_ber_decode_type(buf, buff_len, &type);
+  if(!snmp_ber_decode_type(snmp_packet, &type)) {
+    return 0;
+  }
 
   if(type != BER_DATA_TYPE_OCTET_STRING) {
     /*
      * Sanity check
      * Invalid type in buffer
      */
-    return NULL;
+    return 0;
   }
 
-  if((*buf & 0x80) == 0) {
-    *length = (uint32_t)*buf++;
-    (*buff_len)--;
+  if((*snmp_packet->in & 0x80) == 0) {
+
+    if(snmp_packet->used == 0) {
+      return 0;
+    }
+
+    *length = (uint32_t)*snmp_packet->in++;
+    snmp_packet->used--;
   } else {
 
-    length_bytes = (uint8_t)(*buf++ & 0x7F);
-    (*buff_len)--;
+    if(snmp_packet->used == 0) {
+      return 0;
+    }
+
+    length_bytes = (uint8_t)(*snmp_packet->in++ & 0x7F);
+    snmp_packet->used--;
+
     if(length_bytes > 4) {
       /*
        * Sanity check
        * It will not fit in the uint32_t
        */
-      return NULL;
+      return 0;
     }
 
-    *length = (uint32_t)*buf++;
-    (*buff_len)--;
+    if(snmp_packet->used == 0) {
+      return 0;
+    }
+
+    *length = (uint32_t)*snmp_packet->in++;
+    snmp_packet->used--;
+
     for(i = 1; i < length_bytes; ++i) {
       *length <<= 8;
-      *length |= *buf++;
-      (*buff_len)--;
+
+      if(snmp_packet->used == 0) {
+        return 0;
+      }
+
+      *length |= *snmp_packet->in++;
+      snmp_packet->used--;
     }
   }
 
-  *str = (const char *)buf;
-  *buff_len -= *length;
+  *str = (const char *)snmp_packet->in;
 
-  return buf + *length;
+  if(snmp_packet->used == 0 || snmp_packet->used - *length <= 0) {
+    return 0;
+  }
+
+  snmp_packet->used -= *length;
+  snmp_packet->in += *length;
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
-unsigned char *
-snmp_ber_decode_null(unsigned char *buf, uint32_t *buff_len)
+int
+snmp_ber_decode_oid(snmp_packet_t *snmp_packet, snmp_oid_t *oid)
 {
-  buf++;
-  (*buff_len)--;
+  uint8_t *buf_end, type;
+  uint8_t len, j;
+  div_t first;
 
-  buf++;
-  (*buff_len)--;
+  if(!snmp_ber_decode_type(snmp_packet, &type)) {
+    return 0;
+  }
 
-  return buf;
+  if(type != BER_DATA_TYPE_OBJECT_IDENTIFIER) {
+    return 0;
+  }
+
+  if(!snmp_ber_decode_length(snmp_packet, &len)) {
+    return 0;
+  }
+
+  buf_end = snmp_packet->in + len;
+
+  if(snmp_packet->used == 0) {
+    return 0;
+  }
+
+  snmp_packet->used--;
+  first = div(*snmp_packet->in++, 40);
+
+  oid->length = 0;
+
+  oid->data[oid->length++] = (uint32_t)first.quot;
+  oid->data[oid->length++] = (uint32_t)first.rem;
+
+  while(snmp_packet->in != buf_end) {
+    if(oid->length >= SNMP_MSG_OID_MAX_LEN) {
+      return 0;
+    }
+
+    if(snmp_packet->used == 0) {
+      return 0;
+    }
+    oid->data[oid->length] = (uint32_t)(*snmp_packet->in & 0x7F);
+    for(j = 0; j < 4; j++) {
+      snmp_packet->used--;
+      if((*snmp_packet->in++ & 0x80) == 0) {
+        break;
+      }
+
+      if(snmp_packet->used == 0) {
+        return 0;
+      }
+
+      oid->data[oid->length] <<= 7;
+      oid->data[oid->length] |= (*snmp_packet->in & 0x7F);
+    }
+
+    oid->length++;
+  }
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+int
+snmp_ber_decode_null(snmp_packet_t *snmp_packet)
+{
+  if(snmp_packet->used == 0) {
+    return 0;
+  }
+
+  snmp_packet->in++;
+  snmp_packet->used--;
+
+  if(snmp_packet->used == 0) {
+    return 0;
+  }
+
+  snmp_packet->in++;
+  snmp_packet->used--;
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/

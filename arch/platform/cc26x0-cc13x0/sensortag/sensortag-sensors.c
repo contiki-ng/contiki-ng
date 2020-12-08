@@ -37,6 +37,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "lib/sensors.h"
 #include "sensortag/bmp-280-sensor.h"
 #include "sensortag/tmp-007-sensor.h"
 #include "sensortag/opt-3001-sensor.h"

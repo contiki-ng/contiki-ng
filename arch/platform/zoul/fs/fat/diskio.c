@@ -36,7 +36,7 @@
  * Implementation of the default port of FatFs on RE-Mote.
  */
 #include "diskio.h"
-#include "mmc.h"
+#include "dev/storage/disk/mmc/mmc.h"
 #include "rtcc.h"
 
 /*----------------------------------------------------------------------------*/

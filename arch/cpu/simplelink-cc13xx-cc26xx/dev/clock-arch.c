@@ -213,6 +213,9 @@ clock_init(void)
   SysTickIntRegister(systick_fxn);
   SysTickIntEnable();
   SysTickEnable();
+
+  /* enable sync with radio timer */
+  HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
 }
 /*---------------------------------------------------------------------------*/
 clock_time_t
