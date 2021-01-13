@@ -562,7 +562,7 @@ struct radio_driver {
    * `payload` will contain the MAC header (MHR) and MAC payload, but it
    * will _not_ contain the physical header or the MAC footer (MFR).
    *
-   * `payload_len` must be lower than the value retrieved when calling
+   * `payload_len` must be lower than or equal to the value retrieved when calling
    * NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN, ...)
    *
    * This function will return an error if the radio driver could not copy
