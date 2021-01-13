@@ -97,7 +97,7 @@ typedef unsigned radio_param_t;
  * More specifically, fields prefixed with `RADIO_PARAM_` may be passed as an
  * argument to any of those four functions. Exceptions are documented on a
  * per-field basis. Fields prefixed with `RADIO_CONST_` will only be passed as
- * an argument to `get_value()` and `get_obect()`.
+ * an argument to `get_value()` and `get_object()`.
  */
 enum radio_param_e {
 
