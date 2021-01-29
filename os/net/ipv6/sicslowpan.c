@@ -1068,8 +1068,9 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
  * \param ip_len Equal to 0 if the packet is not a fragment (IP length
  * is then inferred from the L2 length), non 0 if the packet is a 1st
  * fragment.
+ * \return A boolean value indicating whether the uncompression succeeded.
  */
-static void
+static bool
 uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
 {
   uint8_t tmp, iphc0, iphc1, nhc;
@@ -1077,8 +1078,22 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
   uint8_t* last_nextheader;
   uint8_t* ip_payload;
   uint8_t ext_hdr_len = 0;
+  uint16_t cmpr_len;
+
+/* Macro used only internally, during header uncompression. Checks if there
+ * is sufficient space in packetbuf before reading any further. */
+#define CHECK_READ_SPACE(readlen) \
+  if((hc06_ptr - packetbuf_ptr) + (readlen) > cmpr_len) { \
+    LOG_WARN("Not enough packetbuf space to decompress header (%u bytes, %u left). Aborting.\n", \
+             (unsigned)(readlen), (unsigned)(cmpr_len - (hc06_ptr - packetbuf_ptr))); \
+    return false; \
+  }
 
   /* at least two byte will be used for the encoding */
+  cmpr_len = packetbuf_datalen();
+  if(cmpr_len < packetbuf_hdr_len + 2) {
+    return false;
+  }
   hc06_ptr = packetbuf_ptr + packetbuf_hdr_len + 2;
 
   iphc0 = PACKETBUF_IPHC_BUF[0];
@@ -1095,6 +1110,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       /* Flow label are carried inline */
       if((iphc0 & SICSLOWPAN_IPHC_TC_C) == 0) {
         /* Traffic class is carried inline */
+        CHECK_READ_SPACE(4);
         memcpy(&SICSLOWPAN_IP_BUF(buf)->tcflow, hc06_ptr + 1, 3);
         tmp = *hc06_ptr;
         hc06_ptr += 4;
@@ -1108,7 +1124,8 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
         /* Traffic class is compressed (set version and no TC)*/
         SICSLOWPAN_IP_BUF(buf)->vtc = 0x60;
         /* highest flow label bits + ECN bits */
-        SICSLOWPAN_IP_BUF(buf)->tcflow = (*hc06_ptr & 0x0F) |
+        CHECK_READ_SPACE(3);
+        SICSLOWPAN_IP_BUF(buf)->tcflow = (*hc06_ptr & 0x0F) | 
           ((*hc06_ptr >> 2) & 0x30);
         memcpy(&SICSLOWPAN_IP_BUF(buf)->flow, hc06_ptr + 1, 2);
         hc06_ptr += 3;
@@ -1118,10 +1135,11 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       /* Version and flow label are compressed */
       if((iphc0 & SICSLOWPAN_IPHC_TC_C) == 0) {
         /* Traffic class is inline */
+        CHECK_READ_SPACE(1);
         SICSLOWPAN_IP_BUF(buf)->vtc = 0x60 | ((*hc06_ptr >> 2) & 0x0f);
-          SICSLOWPAN_IP_BUF(buf)->tcflow = ((*hc06_ptr << 6) & 0xC0) | ((*hc06_ptr >> 2) & 0x30);
-          SICSLOWPAN_IP_BUF(buf)->flow = 0;
-          hc06_ptr += 1;
+        SICSLOWPAN_IP_BUF(buf)->tcflow = ((*hc06_ptr << 6) & 0xC0) | ((*hc06_ptr >> 2) & 0x30);
+        SICSLOWPAN_IP_BUF(buf)->flow = 0;
+        hc06_ptr += 1;
       } else {
         /* Traffic class is compressed */
         SICSLOWPAN_IP_BUF(buf)->vtc = 0x60;
@@ -1133,6 +1151,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
   /* Next Header */
   if((iphc0 & SICSLOWPAN_IPHC_NH_C) == 0) {
     /* Next header is carried inline */
+    CHECK_READ_SPACE(1);
     SICSLOWPAN_IP_BUF(buf)->proto = *hc06_ptr;
     LOG_DBG("uncompression: next header inline: %d\n", SICSLOWPAN_IP_BUF(buf)->proto);
     hc06_ptr += 1;
@@ -1142,6 +1161,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
   if((iphc0 & 0x03) != SICSLOWPAN_IPHC_TTL_I) {
     SICSLOWPAN_IP_BUF(buf)->ttl = ttl_values[iphc0 & 0x03];
   } else {
+    CHECK_READ_SPACE(1);
     SICSLOWPAN_IP_BUF(buf)->ttl = *hc06_ptr;
     hc06_ptr += 1;
   }
@@ -1159,7 +1179,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       context = addr_context_lookup_by_number(sci);
       if(context == NULL) {
         LOG_ERR("uncompression: error context not found\n");
-        return;
+        return false;
       }
     }
     /* if tmp == 0 we do not have a context and therefore no prefix */
@@ -1189,6 +1209,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       /* DAM_11:   8 bits FF02::00XX */
       uint8_t prefix[] = {0xff, 0x02};
       if(tmp > 0 && tmp < 3) {
+        CHECK_READ_SPACE(1);
         prefix[1] = *hc06_ptr;
         hc06_ptr++;
       }
@@ -1206,7 +1227,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       /* all valid cases below need the context! */
       if(context == NULL) {
         LOG_ERR("uncompression: error context not found\n");
-        return;
+        return false;
       }
       uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, context->prefix,
                       unc_ctxconf[tmp],
@@ -1227,6 +1248,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
   ip_payload = SICSLOWPAN_IPPAYLOAD_BUF(buf);
 
   while(nhc && (*hc06_ptr & SICSLOWPAN_NHC_MASK) == SICSLOWPAN_NHC_EXT_HDR) {
+    CHECK_READ_SPACE(1);
     uint8_t eid = (*hc06_ptr & 0x0e) >> 1;
     /* next header compression flag */
     uint8_t nh = (*hc06_ptr & 0x01);
@@ -1238,10 +1260,12 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
 
     hc06_ptr++;
     if(!nh) {
+      CHECK_READ_SPACE(1);
       next = *hc06_ptr;
       hc06_ptr++;
       LOG_DBG("uncompression: next header is inlined. Next: %d\n", next);
     }
+    CHECK_READ_SPACE(1);
     len = *hc06_ptr;
     hc06_ptr++;
 
@@ -1261,14 +1285,14 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       break;
     default:
       LOG_DBG("uncompression: error unsupported ext header\n");
-      return;
+      return false;
     }
     *last_nextheader = proto;
 
     /* Check that there is enough room to write the extension header. */
     if((ip_payload - buf) + UIP_EXT_HDR_LEN + len > buf_size) {
       LOG_WARN("uncompression: cannot write ext header beyond target buffer\n");
-      return;
+      return false;
     }
 
     /* uncompress the extension header */
@@ -1276,14 +1300,16 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
     exthdr->len = (UIP_EXT_HDR_LEN + len) / 8;
     if(exthdr->len == 0) {
       LOG_WARN("Extension header length is below 8\n");
-      return;
+      return false;
     }
     exthdr->len--;
     exthdr->next = next;
     last_nextheader = &exthdr->next;
-    memcpy((uint8_t *)exthdr + UIP_EXT_HDR_LEN, hc06_ptr, len);
 
+    CHECK_READ_SPACE(len);
+    memcpy((uint8_t *)exthdr + UIP_EXT_HDR_LEN, hc06_ptr, len);
     hc06_ptr += len;
+
     uncomp_hdr_len += (exthdr->len + 1) * 8;
     ip_payload += (exthdr->len + 1) * 8;
     ext_hdr_len += (exthdr->len + 1) * 8;
@@ -1293,6 +1319,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
   }
 
   /* The next header is compressed, NHC is following */
+  CHECK_READ_SPACE(1);
   if(nhc && (*hc06_ptr & SICSLOWPAN_NHC_UDP_MASK) == SICSLOWPAN_NHC_UDP_ID) {
     struct uip_udp_hdr *udp_buf = (struct uip_udp_hdr *)ip_payload;
     uint16_t udp_len;
@@ -1303,6 +1330,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
     switch(*hc06_ptr & SICSLOWPAN_NHC_UDP_CS_P_11) {
     case SICSLOWPAN_NHC_UDP_CS_P_00:
       /* 1 byte for NHC, 4 byte for ports, 2 bytes chksum */
+      CHECK_READ_SPACE(5);
       memcpy(&udp_buf->srcport, hc06_ptr + 1, 2);
       memcpy(&udp_buf->destport, hc06_ptr + 3, 2);
       LOG_DBG("uncompression: UDP ports (ptr+5): %x, %x\n",
@@ -1314,6 +1342,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
     case SICSLOWPAN_NHC_UDP_CS_P_01:
       /* 1 byte for NHC + source 16bit inline, dest = 0xF0 + 8 bit inline */
       LOG_DBG("uncompression: destination address\n");
+      CHECK_READ_SPACE(4);
       memcpy(&udp_buf->srcport, hc06_ptr + 1, 2);
       udp_buf->destport = UIP_HTONS(SICSLOWPAN_UDP_8_BIT_PORT_MIN + (*(hc06_ptr + 3)));
       LOG_DBG("uncompression: UDP ports (ptr+4): %x, %x\n",
@@ -1324,6 +1353,7 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
     case SICSLOWPAN_NHC_UDP_CS_P_10:
       /* 1 byte for NHC + source = 0xF0 + 8bit inline, dest = 16 bit inline*/
       LOG_DBG("uncompression: source address\n");
+      CHECK_READ_SPACE(4);
       udp_buf->srcport = UIP_HTONS(SICSLOWPAN_UDP_8_BIT_PORT_MIN +
                                    (*(hc06_ptr + 1)));
       memcpy(&udp_buf->destport, hc06_ptr + 2, 2);
@@ -1334,19 +1364,22 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
 
     case SICSLOWPAN_NHC_UDP_CS_P_11:
       /* 1 byte for NHC, 1 byte for ports */
+      CHECK_READ_SPACE(2);
       udp_buf->srcport = UIP_HTONS(SICSLOWPAN_UDP_4_BIT_PORT_MIN +
                                    (*(hc06_ptr + 1) >> 4));
       udp_buf->destport = UIP_HTONS(SICSLOWPAN_UDP_4_BIT_PORT_MIN +
                                     ((*(hc06_ptr + 1)) & 0x0F));
       LOG_DBG("uncompression: UDP ports (ptr+2): %x, %x\n",
              UIP_HTONS(udp_buf->srcport), UIP_HTONS(udp_buf->destport));
+
       hc06_ptr += 2;
       break;
     default:
       LOG_DBG("uncompression: error unsupported UDP compression\n");
-      return;
+      return false;
     }
     if(!checksum_compressed) { /* has_checksum, default  */
+      CHECK_READ_SPACE(2);
       memcpy(&udp_buf->udpchksum, hc06_ptr, 2);
       hc06_ptr += 2;
       LOG_DBG("uncompression: checksum included\n");
@@ -1380,6 +1413,8 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
     SICSLOWPAN_IP_BUF(buf)->len[0] = (ip_len - UIP_IPH_LEN) >> 8;
     SICSLOWPAN_IP_BUF(buf)->len[1] = (ip_len - UIP_IPH_LEN) & 0x00FF;
   }
+
+  return true;
 }
 /** @} */
 #endif /* SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC */
@@ -1936,7 +1971,10 @@ input(void)
   if(SICSLOWPAN_COMPRESSION > SICSLOWPAN_COMPRESSION_IPV6 &&
      (PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] & SICSLOWPAN_DISPATCH_IPHC_MASK) == SICSLOWPAN_DISPATCH_IPHC) {
     LOG_DBG("uncompression: IPHC dispatch\n");
-    uncompress_hdr_iphc(buffer, buffer_size, frag_size);
+    if(uncompress_hdr_iphc(buffer, buffer_size, frag_size) == false) {
+      LOG_ERR("input: failed to decompress IPHC packet\n");
+      return;
+    }
   } else if(PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6) {
     LOG_DBG("uncompression: IPV6 dispatch\n");
     packetbuf_hdr_len += SICSLOWPAN_IPV6_HDR_LEN;
