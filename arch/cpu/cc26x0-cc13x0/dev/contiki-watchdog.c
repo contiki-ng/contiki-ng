@@ -103,7 +103,7 @@ lock_config(uint32_t status)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Initialises the CC26xx WDT
+ * \brief Initialises the CC13xx/CC26xx WDT
  *
  * Simply locks the config so that future calls will lock properly.
  * The WDT is not started yet. To start it, watchdog_start() must be called.
@@ -115,7 +115,7 @@ watchdog_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Starts the CC26xx WDT
+ * \brief Starts the CC13xx/CC26xx WDT
  */
 void
 watchdog_start(void)
@@ -130,7 +130,7 @@ watchdog_start(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Refreshes the CC26xx WDT
+ * \brief Refreshes the CC13xx/CC26xx WDT
  */
 void
 watchdog_periodic(void)
