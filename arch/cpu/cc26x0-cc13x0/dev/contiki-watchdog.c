@@ -125,6 +125,7 @@ watchdog_start(void)
 
   watchdog_periodic();
   ti_lib_watchdog_reset_enable();
+  ti_lib_watchdog_enable();
 
   lock_config(lock_status);
 }
