@@ -44,6 +44,7 @@
 #include "sys/stack-check.h"
 #include "dev/watchdog.h"
 #include <string.h>
+#include <stdint.h>
 #include <inttypes.h>
 
 #include "sys/log.h"
@@ -67,7 +68,7 @@ PROCESS(stack_check_process, "Stack check");
 #else
 /* use the value provided by the linker script */
 extern int _stack_origin;
-#define GET_STACK_ORIGIN() (&_stack_origin)
+#define GET_STACK_ORIGIN() (uintptr_t)(&_stack_origin)
 #endif
 /*---------------------------------------------------------------------------*/
 void
@@ -77,13 +78,13 @@ stack_check_init(void)
   volatile uint8_t *p;
 
   /* Make this static to avoid destroying it in the while loop */
-  static void *stack_top;
+  static uintptr_t stack_top;
   /* Use address of this local variable as a boundary */
-  stack_top = &p;
+  stack_top = (uintptr_t) &p;
 
   /* Note: this is expected to be called before the WDT is started! */
   p = &_stack;
-  while(p < (uint8_t *)stack_top) {
+  while((uintptr_t)p < stack_top) {
     *p++ = STACK_FILL;
   }
 
@@ -104,30 +105,30 @@ stack_check_get_usage(void)
   /* Skip the bytes used after heap; it's 1 byte by default for _stack,
    * more than that means dynamic memory allocation is used somewhere.
    */
-  while(*p != STACK_FILL && p < (uint8_t *)GET_STACK_ORIGIN()) {
+  while(*p != STACK_FILL && (uintptr_t)p < GET_STACK_ORIGIN()) {
     p++;
   }
 
   /* Skip memory-region reserved for the stack not used yet by the program */
-  while(*p == STACK_FILL && p < (uint8_t *)GET_STACK_ORIGIN()) {
+  while(*p == STACK_FILL && (uintptr_t)p < GET_STACK_ORIGIN()) {
     p++;
   }
 
   /* Make sure WDT is not triggered */
   watchdog_periodic();
 
-  if(p >= (uint8_t*)GET_STACK_ORIGIN()) {
+  if((uintptr_t)p >= GET_STACK_ORIGIN()) {
     /* This means the stack is screwed. */
     return -1;
   }
 
-  return (uint8_t *)GET_STACK_ORIGIN() - p;
+  return GET_STACK_ORIGIN() - (uintptr_t)p;
 }
 /*---------------------------------------------------------------------------*/
 int32_t
 stack_check_get_reserved_size(void)
 {
-  return (uint8_t *)GET_STACK_ORIGIN() - &_stack;
+  return GET_STACK_ORIGIN() - (uintptr_t)&_stack;
 }
 /*---------------------------------------------------------------------------*/
 #if STACK_CHECK_PERIODIC_CHECKS
