@@ -489,10 +489,12 @@ init_rx_buffers(void)
     entry->config.type = DATA_ENTRY_TYPE_GEN;
     entry->config.lenSz = DATA_ENTRY_LENSZ_WORD;
     entry->length = RX_BUF_SIZE - 8;
-    entry->pNextEntry = rx_buf[i + 1];
+    if(i == PROP_MODE_RX_BUF_CNT - 1) {
+      entry->pNextEntry = rx_buf[0];
+    } else {
+      entry->pNextEntry = rx_buf[i + 1];
+    }
   }
-
-  ((rfc_dataEntry_t *)rx_buf[PROP_MODE_RX_BUF_CNT - 1])->pNextEntry = rx_buf[0];
 }
 /*---------------------------------------------------------------------------*/
 static int
