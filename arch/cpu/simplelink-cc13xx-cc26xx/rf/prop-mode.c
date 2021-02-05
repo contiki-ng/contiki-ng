@@ -765,6 +765,14 @@ get_value(radio_param_t param, radio_value_t *value)
            ? RADIO_RESULT_ERROR
            : RADIO_RESULT_OK;
 
+  case RADIO_PARAM_LAST_RSSI:
+     *value = prop_radio.last.rssi;
+     return RADIO_RESULT_OK;
+
+  case RADIO_PARAM_LAST_LINK_QUALITY:
+     *value = prop_radio.last.corr_lqi;
+     return RADIO_RESULT_OK;
+
   case RADIO_CONST_CHANNEL_MIN:
     *value = DOT_15_4G_CHAN_MIN;
     return RADIO_RESULT_OK;
