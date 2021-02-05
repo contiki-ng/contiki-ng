@@ -49,6 +49,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <net/if.h>
 
 /* Log configuration */
 #include "sys/log.h"
