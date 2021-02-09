@@ -181,14 +181,14 @@ usbd_user_ev_handler(app_usbd_event_type_t event)
 void
 usb_serial_init(void)
 {
+  static const app_usbd_config_t usbd_config = {
+    .ev_state_proc = usbd_user_ev_handler
+  };
+
   ret_code_t ret;
   app_usbd_class_inst_t const *class_cdc_acm;
 
   app_usbd_serial_num_generate();
-
-  static const app_usbd_config_t usbd_config = {
-    .ev_state_proc = usbd_user_ev_handler
-  };
 
   ret = app_usbd_init(&usbd_config);
   if(ret != NRF_SUCCESS) {
