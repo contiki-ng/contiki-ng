@@ -3,8 +3,8 @@
 # GCC specific definitions and actions
 #
 
-GCC_MAJOR_VERSION := $(shell $(CC) -v 2>&1 | grep "gcc version" | cut -b 13)
-GCC_MINOR_VERSION := $(shell $(CC) -v 2>&1 | grep "gcc version" | cut -b 15)
+GCC_MAJOR_VERSION := $(shell $(CC) -dumpversion | cut -d "." -f 1)
+GCC_MINOR_VERSION := $(shell $(CC) -dumpversion | cut -d "." -f 2)
 
 # Warn if using version 6.3.x of arm-none-eabi-gcc
 ifeq ("$(CC)","arm-none-eabi-gcc")
@@ -12,17 +12,6 @@ ifeq ("$(CC)","arm-none-eabi-gcc")
     ifeq (3,$(GCC_MINOR_VERSION))
       $(warning Warning: you're using a version of $(CC) that may create broken Contiki-NG executables.)
       $(warning We recommend to upgrade or downgrade your toolchain.)
-    endif
-  endif
-endif
-
-# Warn if using anything older than version 6.x of arm-none-eabi-gcc on nrf52840
-ifeq ("$(TARGET)","nrf52840")
-  ifeq ("$(CC)","arm-none-eabi-gcc")
-    ifeq ($(shell test $(GCC_MAJOR_VERSION) -lt 6; echo $$?),0)
-        $(warning Warning: you're using a version of $(CC) that is known to create broken Contiki-NG executables for the nRF52840 platform.)
-        $(warning Issues reported include the inability to perform any radio communication.)
-        $(warning We recommend to upgrade your toolchain.)
     endif
   endif
 endif
