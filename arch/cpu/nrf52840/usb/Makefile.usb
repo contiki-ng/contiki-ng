@@ -10,9 +10,7 @@ NRF52_SDK_C_SRCS += components/libraries/usbd/app_usbd.c \
   components/libraries/usbd/app_usbd_serial_num.c \
   components/libraries/usbd/app_usbd_string_desc.c \
   components/libraries/atomic/nrf_atomic.c \
-  integration/nrfx/legacy/nrf_drv_power.c \
   modules/nrfx/drivers/src/nrfx_usbd.c \
-  modules/nrfx/drivers/src/nrfx_power.c \
   modules/nrfx/drivers/src/nrfx_systick.c \
   modules/nrfx/soc/nrfx_atomic.c
 

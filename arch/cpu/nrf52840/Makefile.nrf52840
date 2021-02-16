@@ -72,9 +72,11 @@ NRF52_SDK_C_SRCS += components/boards/boards.c \
   modules/nrfx/drivers/src/nrfx_gpiote.c \
   modules/nrfx/drivers/src/nrfx_rng.c \
   modules/nrfx/drivers/src/nrfx_wdt.c \
+  modules/nrfx/drivers/src/nrfx_power.c \
   modules/nrfx/mdk/system_nrf52840.c \
   integration/nrfx/legacy/nrf_drv_clock.c \
   integration/nrfx/legacy/nrf_drv_rng.c \
+  integration/nrfx/legacy/nrf_drv_power.c \
   components/libraries/fifo/app_fifo.c \
 
 NRF52_SDK_ASM_SRCS = modules/nrfx/mdk/gcc_startup_nrf52840.S
