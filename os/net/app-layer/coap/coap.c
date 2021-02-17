@@ -479,9 +479,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       /* also for receiving, the Erbium upper bound is COAP_MAX_CHUNK_SIZE */
       if(coap_pkt->payload_len > COAP_MAX_CHUNK_SIZE) {
         coap_pkt->payload_len = COAP_MAX_CHUNK_SIZE;
-        /* null-terminate payload */
       }
-      coap_pkt->payload[coap_pkt->payload_len] = '\0';
 
       break;
     }
