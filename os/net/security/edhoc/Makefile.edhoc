@@ -1,0 +1,13 @@
+
+MODULES += os/lib/cbor
+MODULES += os/net/security/cose
+MODULES += os/net/security/sha
+MODULES += os/net/app-layer/coap
+MODULEDIRS += $(CONTIKI)/os/net/security/micro-ecc
+MODULES_SOURCES += uECC.c
+ifneq ($(TARGET), zoul)
+CFLAGS += -DuECC=0
+endif
+ifeq ($(TARGET), zoul)
+CFLAGS += -DuECC=1
+endif

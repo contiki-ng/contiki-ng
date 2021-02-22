@@ -65,6 +65,7 @@ int curr_log_level_coap = LOG_CONF_LEVEL_COAP;
 int curr_log_level_snmp = LOG_CONF_LEVEL_SNMP;
 int curr_log_level_lwm2m = LOG_CONF_LEVEL_LWM2M;
 int curr_log_level_main = LOG_CONF_LEVEL_MAIN;
+int curr_log_level_edhoc = LOG_CONF_LEVEL_EDHOC;
 
 struct log_module all_modules[] = {
   {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
@@ -79,6 +80,7 @@ struct log_module all_modules[] = {
   {"snmp", &curr_log_level_snmp, LOG_CONF_LEVEL_SNMP},
   {"lwm2m", &curr_log_level_lwm2m, LOG_CONF_LEVEL_LWM2M},
   {"main", &curr_log_level_main, LOG_CONF_LEVEL_MAIN},
+  {"edhoc", &curr_log_level_edhoc, LOG_CONF_LEVEL_EDHOC},
   {NULL, NULL, 0},
 };
 
