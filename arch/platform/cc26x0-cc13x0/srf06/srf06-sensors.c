@@ -38,6 +38,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "lib/sensors.h"
 #include "srf06/als-sensor.h"
 
 #include <string.h>

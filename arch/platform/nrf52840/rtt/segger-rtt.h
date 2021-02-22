@@ -198,15 +198,6 @@ int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
 #define RTT_CTRL_BG_BRIGHT_CYAN       "\e[4;46m"
 #define RTT_CTRL_BG_BRIGHT_WHITE      "\e[4;47m"
 
-// simpler replacement for SEGGER's RTT printf library
-char dbg_buf[200];
-#define RTT_PRINTF(fmt, ...) do { tfp_sprintf(dbg_buf, fmt, ##__VA_ARGS__); SEGGER_RTT_WriteString(0, dbg_buf); } while(0)
-#define RTT_PRINT(str) do { SEGGER_RTT_WriteString(0, str); } while(0)
-
-// Use RTT for PRINTF() and LOG()
-#define PRINTF(fmt, ...) SEGGER_RTT_printf(0, fmt, ##__VA_ARGS__)
-#define LOG_CONF_OUTPUT(fmt, ...) SEGGER_RTT_printf(0, fmt, ##__VA_ARGS__)
-
 #endif
 
 /*************************** End of file ****************************/

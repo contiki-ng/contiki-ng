@@ -508,6 +508,15 @@ const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CC1350STK_I2CCOUNT] = {
         .sdaPin      = CC1350STK_I2C0_SDA0,
         .sclPin      = CC1350STK_I2C0_SCL0,
     },
+    {
+        .baseAddr    = I2C0_BASE,
+        .powerMngrId = PowerCC26XX_PERIPH_I2C0,
+        .intNum      = INT_I2C_IRQ,
+        .intPriority = ~0,
+        .swiPriority = 0,
+        .sdaPin      = CC1350STK_I2C0_SDA1,
+        .sclPin      = CC1350STK_I2C0_SCL1,
+    },
 #endif
 };
 
@@ -517,6 +526,11 @@ const I2C_Config I2C_config[CC1350STK_I2CCOUNT] = {
         .fxnTablePtr = &I2CCC26XX_fxnTable,
         .object      = &i2cCC26xxObjects[CC1350STK_I2C0],
         .hwAttrs     = &i2cCC26xxHWAttrs[CC1350STK_I2C0]
+    },
+    {
+        .fxnTablePtr = &I2CCC26XX_fxnTable,
+        .object      = &i2cCC26xxObjects[CC1350STK_I2C1],
+        .hwAttrs     = &i2cCC26xxHWAttrs[CC1350STK_I2C1]
     },
 #endif
 };

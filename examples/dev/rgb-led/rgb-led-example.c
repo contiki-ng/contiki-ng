@@ -30,7 +30,7 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-#include "dev/rgb-led/rgb-led.h"
+#include "dev/etc/rgb-led/rgb-led.h"
 #include "sys/etimer.h"
 
 #include <stdio.h>

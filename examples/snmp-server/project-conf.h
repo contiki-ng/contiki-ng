@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,4 +30,9 @@
  */
 /*---------------------------------------------------------------------------*/
 
-#define LOG_CONF_LEVEL_SNMP     LOG_LEVEL_DBG
+/*
+ * In order to test SNMP compliance,
+ * at least three OID's in the same package are necessary
+ */
+#define SNMP_CONF_MAX_NR_VALUES 3
+#define LOG_CONF_LEVEL_SNMP     LOG_LEVEL_NONE

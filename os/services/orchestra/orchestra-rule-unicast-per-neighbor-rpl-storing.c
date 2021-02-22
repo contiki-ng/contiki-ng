@@ -240,6 +240,7 @@ struct orchestra_rule unicast_per_neighbor_rpl_storing = {
   child_added,
   child_removed,
   "unicast per neighbor storing",
+  ORCHESTRA_UNICAST_PERIOD,
 };
 
 #endif /* UIP_MAX_ROUTES */

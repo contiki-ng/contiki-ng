@@ -1,0 +1,35 @@
+# Additional source files required to support USB CDC-ACM on nRF52840 platforms
+
+CFLAGS += -DNRF52840_NATIVE_USB=1
+
+CONTIKI_CPU_SOURCEFILES += usb-serial.c
+
+NRF52_SDK_C_SRCS += components/libraries/usbd/app_usbd.c \
+  components/libraries/usbd/class/cdc/acm/app_usbd_cdc_acm.c \
+  components/libraries/usbd/app_usbd_core.c \
+  components/libraries/usbd/app_usbd_serial_num.c \
+  components/libraries/usbd/app_usbd_string_desc.c \
+  components/libraries/atomic/nrf_atomic.c \
+  modules/nrfx/drivers/src/nrfx_usbd.c \
+  modules/nrfx/drivers/src/nrfx_systick.c \
+  modules/nrfx/soc/nrfx_atomic.c
+
+NRF52_SDK_INC_PATHS += components/libraries/usbd
+NRF52_SDK_INC_PATHS += components/libraries/usbd/class/cdc
+NRF52_SDK_INC_PATHS += components/libraries/usbd/class/cdc/acm
+NRF52_SDK_INC_PATHS += components/libraries/atomic
+NRF52_SDK_INC_PATHS += external/utf_converter
+
+# DFU Trigger support for nRF dongles
+ifeq ($(NRF52840_USB_DFU_TRIGGER),1)
+
+  CFLAGS += -DNRF52840_USB_DFU_TRIGGER=1
+
+  CONTIKI_CPU_SOURCEFILES += usb-dfu-trigger.c
+
+  NRF52_SDK_C_SRCS += components/libraries/usbd/class/nrf_dfu_trigger/app_usbd_nrf_dfu_trigger.c
+
+  NRF52_SDK_INC_PATHS += components/libraries/usbd/class/nrf_dfu_trigger
+  NRF52_SDK_INC_PATHS += components/libraries/block_dev/
+
+endif

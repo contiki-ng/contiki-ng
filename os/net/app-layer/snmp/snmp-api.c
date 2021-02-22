@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the public API
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -43,47 +43,31 @@
 
 #include "snmp-message.h"
 #include "snmp-ber.h"
-#include "snmp-oid.h"
 
-static void
-snmp_api_replace_oid(snmp_varbind_t *varbind, uint32_t *oid)
-{
-  uint8_t i;
-
-  i = 0;
-  while(oid[i] != ((uint32_t)-1)) {
-    varbind->oid[i] = oid[i];
-    i++;
-  }
-  varbind->oid[i] = ((uint32_t)-1);
-}
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_set_string(snmp_varbind_t *varbind, uint32_t *oid, char *string)
+snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string)
 {
-
-  snmp_api_replace_oid(varbind, oid);
+  memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
   varbind->value_type = BER_DATA_TYPE_OCTET_STRING;
   varbind->value.string.string = string;
   varbind->value.string.length = strlen(string);
 }
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_set_time_ticks(snmp_varbind_t *varbind, uint32_t *oid, uint32_t integer)
+snmp_api_set_time_ticks(snmp_varbind_t *varbind, snmp_oid_t *oid, uint32_t integer)
 {
-
-  snmp_api_replace_oid(varbind, oid);
-  varbind->value_type = SNMP_DATA_TYPE_TIME_TICKS;
+  memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
+  varbind->value_type = BER_DATA_TYPE_TIMETICKS;
   varbind->value.integer = integer;
 }
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_set_oid(snmp_varbind_t *varbind, uint32_t *oid, uint32_t *ret_oid)
+snmp_api_set_oid(snmp_varbind_t *varbind, snmp_oid_t *oid, snmp_oid_t *ret_oid)
 {
-
-  snmp_api_replace_oid(varbind, oid);
-  varbind->value_type = BER_DATA_TYPE_OID;
-  varbind->value.oid = ret_oid;
+  memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
+  varbind->value_type = BER_DATA_TYPE_OBJECT_IDENTIFIER;
+  memcpy(&varbind->value.oid, ret_oid, sizeof(snmp_oid_t));
 }
 /*---------------------------------------------------------------------------*/
 void

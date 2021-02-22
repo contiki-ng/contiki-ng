@@ -416,6 +416,12 @@ coap_serialize_message(coap_message_t *coap_pkt, uint8_t *buffer)
 coap_status_t
 coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
 {
+  if(data_len < COAP_HEADER_LEN) {
+    /* Too short - malformed CoAP message */
+    LOG_WARN("BAD REQUEST: message too short\n");
+    return BAD_REQUEST_4_00;
+  }
+
   /* initialize message */
   memset(coap_pkt, 0, sizeof(coap_message_t));
 
@@ -443,6 +449,11 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
   }
 
   uint8_t *current_option = data + COAP_HEADER_LEN;
+  if(current_option + coap_pkt->token_len > data + data_len) {
+    /* Malformed CoAP message - token length out od message bounds */
+    LOG_WARN("BAD REQUEST: token outside message buffer");
+    return BAD_REQUEST_4_00;
+  }
 
   memcpy(coap_pkt->token, current_option, coap_pkt->token_len);
   LOG_DBG("Token (len %u) [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
@@ -478,6 +489,11 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     option_delta = current_option[0] >> 4;
     option_length = current_option[0] & 0x0F;
     ++current_option;
+    if(current_option >= data + data_len) {
+      /* Malformed CoAP - out of bounds */
+      LOG_WARN("BAD REQUEST: option delta outside message buffer\n");
+      return BAD_REQUEST_4_00;
+    }
 
     if(option_delta == 13) {
       option_delta += current_option[0];
@@ -486,8 +502,19 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       option_delta += 255;
       option_delta += current_option[0] << 8;
       ++current_option;
+      if(current_option >= data + data_len) {
+        /* Malformed CoAP - out of bounds */
+        LOG_WARN("BAD REQUEST: option delta outside message buffer\n");
+        return BAD_REQUEST_4_00;
+      }
       option_delta += current_option[0];
       ++current_option;
+    }
+
+    if(current_option >= data + data_len) {
+      /* Malformed CoAP - out of bounds */
+      LOG_WARN("BAD REQUEST: option delta outside message buffer\n");
+      return BAD_REQUEST_4_00;
     }
 
     if(option_length == 13) {
@@ -497,6 +524,11 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       option_length += 255;
       option_length += current_option[0] << 8;
       ++current_option;
+      if(current_option >= data + data_len) {
+        /* Malformed CoAP - out of bounds */
+        LOG_WARN("BAD REQUEST: option length outside message buffer\n");
+        return BAD_REQUEST_4_00;
+      }
       option_length += current_option[0];
       ++current_option;
     }

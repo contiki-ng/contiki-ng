@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 /**
  * \file
- *      SNMP Configurable Macros
+ *      SNMP Implementation of the configurable macros
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
@@ -46,8 +46,17 @@
 #define SNMP_CONF_H_
 
 /**
- * \defgroup SNMPConfs SNMP Configurable Defines
+ * \addtogroup SNMPInternal SNMP Internal API
  * @{
+ *
+ * This group contains all the functions that can be used inside the OS level.
+ */
+
+/**
+ * \addtogroup SNMPConfs SNMP Configurable
+ * @{
+ *
+ * This group contains all the defines that can be configurable following the Contiki standard
  */
 
 #ifdef SNMP_CONF_COMMUNITY
@@ -63,6 +72,9 @@
 #endif
 
 #ifdef SNMP_CONF_MSG_OID_MAX_LEN
+#if SNMP_CONF_MSG_OID_MAX_LEN > 128
+#error "OID is limited to 128 in the standard"
+#endif
 /**
  * \brief Configurable maximum number of IDs in one OID
  */
@@ -75,6 +87,9 @@
 #endif
 
 #ifdef SNMP_CONF_MAX_NR_VALUES
+#if SNMP_CONF_MAX_NR_VALUES > 255
+#error "Number of OID's per packet is limited to 255 in this implementation"
+#endif
 /**
  * \brief Configurable maximum number of OIDs in one response
  */
@@ -87,16 +102,8 @@
 #endif
 
 #ifdef SNMP_CONF_MAX_PACKET_SIZE
-/**
- * \brief Configurable maximum size of the packet in bytes
- */
-#define SNMP_MAX_PACKET_SIZE SNMP_CONF_MAX_PACKET_SIZE
-#else
-/**
- * \brief Default maximum size of the packet in bytes
- */
-#define SNMP_MAX_PACKET_SIZE 512
-#endif
+#error "SNMP_CONF_MAX_PACKET_SIZE is obsolete. Use UIP_CONF_BUFFER_SIZE"
+#endif /* SNMP_CONF_MAX_PACKET_SIZE */
 
 #ifdef SNMP_CONF_PORT
 /**
@@ -110,7 +117,10 @@
 #define SNMP_PORT 161
 #endif
 
-/*@}*/
+/** @} */
+
+/** @} */
 
 #endif /* SNMP_CONF_H_ */
+
 /** @} */

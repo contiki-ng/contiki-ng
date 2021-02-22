@@ -30,18 +30,39 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "nrf52840-conf.h"
 #include "dev/slip.h"
 #include "dev/uart0.h"
+#include "usb/usb-serial.h"
+/*---------------------------------------------------------------------------*/
+#ifndef SLIP_ARCH_CONF_USB
+#define SLIP_ARCH_CONF_USB 0
+#endif
+
+#if SLIP_ARCH_CONF_USB
+#define write_byte(b) usb_serial_writeb(b)
+#define set_input(f)  usb_serial_set_input(f)
+#define flush()       usb_serial_flush()
+#else
+#define write_byte(b) uart0_writeb(b)
+#define set_input(f)  uart0_set_input(f)
+#define flush()
+#endif
+
+#define SLIP_END     0300
 /*---------------------------------------------------------------------------*/
 void
 slip_arch_writeb(unsigned char c)
 {
-  uart0_writeb(c);
+  write_byte(c);
+  if(c == SLIP_END) {
+    flush();
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
 slip_arch_init()
 {
-  uart0_set_input(slip_input_byte);
+  set_input(slip_input_byte);
 }
 /*---------------------------------------------------------------------------*/

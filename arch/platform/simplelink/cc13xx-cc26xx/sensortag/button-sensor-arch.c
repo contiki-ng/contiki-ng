@@ -71,7 +71,7 @@ BUTTON_HAL_BUTTON(
   GPIO_HAL_PIN_CFG_PULL_DOWN |
   GPIO_HAL_PIN_CFG_HYSTERESIS,  /**< Pull configuration */
   BUTTON_HAL_ID_REED_RELAY,     /**< Unique ID */
-  true);                        /**< Negative logic */
+  false);                       /**< Negative logic */
 /*---------------------------------------------------------------------------*/
 BUTTON_HAL_BUTTONS(&key_left, &key_right, &reed_relay);
 /*---------------------------------------------------------------------------*/

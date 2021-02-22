@@ -160,14 +160,13 @@ stdin_set_fd(fd_set *rset, fd_set *wset)
   FD_SET(STDIN_FILENO, rset);
   return 1;
 }
-
 static int (*input_handler)(unsigned char c);
 
-void native_uart_set_input(int (*input)(unsigned char c)) {
+void
+native_uart_set_input(int (*input)(unsigned char c))
+{
   input_handler = input;
 }
-
-
 static void
 stdin_handle_fd(fd_set *rset, fd_set *wset)
 {
@@ -230,7 +229,7 @@ int contiki_argc = 0;
 char **contiki_argv;
 /*---------------------------------------------------------------------------*/
 void
-platform_process_args(int argc, char**argv)
+platform_process_args(int argc, char **argv)
 {
   /* crappy way of remembering and accessing argc/v */
   contiki_argc = argc;
@@ -264,10 +263,11 @@ platform_init_stage_two()
   set_lladdr();
   serial_line_init();
 
-  if (NULL == input_handler) {
+#if SELECT_STDIN
+  if(NULL == input_handler) {
     native_uart_set_input(serial_line_input_byte);
   }
-
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -302,8 +302,8 @@ platform_main_loop()
 
     retval = process_run();
 
-    tv.tv_sec = 0;
-    tv.tv_usec = retval ? 1 : SELECT_TIMEOUT;
+    tv.tv_sec = retval ? 0 : SELECT_TIMEOUT / 1000;
+    tv.tv_usec = retval ? 1 : (SELECT_TIMEOUT * 1000) % 1000000;
 
     FD_ZERO(&fdr);
     FD_ZERO(&fdw);

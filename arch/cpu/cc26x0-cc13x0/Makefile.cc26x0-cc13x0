@@ -50,7 +50,6 @@ CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
 CPU_START_SOURCEFILES += fault-handlers.c $(TI_XXWARE_STARTUP_SRCS)
 
-PYTHON = python
 BSL_FLAGS += -e -w -v
 
 ifdef PORT
@@ -89,7 +88,7 @@ ifeq ($(BOARD_SUPPORTS_BSL),1)
 ifeq ($(wildcard $(BSL)), )
 	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
 else
-	$(PYTHON) $(BSL) $(BSL_FLAGS) $<
+	$(BSL) $(BSL_FLAGS) $<
 endif
 else
 %.upload:

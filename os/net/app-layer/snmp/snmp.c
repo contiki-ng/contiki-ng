@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,13 @@
 
 /**
  * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ *      SNMP Implementation of the process
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
 
 #include "contiki.h"
+#include "contiki-net.h"
 
 #include "snmp.h"
 #include "snmp-mib.h"
@@ -50,37 +51,7 @@
 #define SNMP_SERVER_PORT UIP_HTONS(SNMP_PORT)
 PROCESS(snmp_process, "SNMP Process");
 
-static struct uip_udp_conn *snmp_udp_conn = NULL;
-
-/*---------------------------------------------------------------------------*/
-static void
-snmp_process_data(void)
-{
-  static unsigned char packet[SNMP_MAX_PACKET_SIZE];
-  unsigned char *packet_end;
-  static uint32_t packet_len;
-
-  packet_end = packet + sizeof(packet) - 1;
-  packet_len = 0;
-
-  LOG_DBG("receiving UDP datagram from [");
-  LOG_DBG_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_DBG_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
-  LOG_DBG_(" Length: %u\n", uip_datalen());
-
-  /*
-   * Handle the request
-   */
-  if((packet_end = snmp_engine(uip_appdata, uip_datalen(), packet_end, &packet_len)) == NULL) {
-    LOG_DBG("Error while handling the request\n");
-  } else {
-    LOG_DBG("Sending response\n");
-    /*
-     * Send the response
-     */
-    uip_udp_packet_sendto(snmp_udp_conn, packet_end, packet_len, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
-  }
-}
+static struct uip_udp_conn *snmp_udp_conn;
 /*---------------------------------------------------------------------------*/
 void
 snmp_init()
@@ -95,6 +66,8 @@ PROCESS_THREAD(snmp_process, ev, data)
 {
   PROCESS_BEGIN();
 
+  snmp_packet_t snmp_packet;
+
   /* new connection with remote host */
   snmp_udp_conn = udp_new(NULL, 0, NULL);
   udp_bind(snmp_udp_conn, SNMP_SERVER_PORT);
@@ -103,11 +76,35 @@ PROCESS_THREAD(snmp_process, ev, data)
   while(1) {
     PROCESS_YIELD();
 
-    if(ev == tcpip_event) {
-      if(uip_newdata()) {
-        snmp_process_data();
-      }
+    if(ev != tcpip_event) {
+      continue;
     }
+
+    if(!uip_newdata()) {
+      continue;
+    }
+
+    LOG_DBG("receiving UDP datagram from [");
+    LOG_DBG_6ADDR(&UIP_IP_BUF->srcipaddr);
+    LOG_DBG_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
+    LOG_DBG_(" Length: %u\n", uip_datalen());
+
+    /* Setup SNMP packet */
+    snmp_packet.in = (uint8_t *)uip_appdata;
+    snmp_packet.used = uip_datalen();
+
+    snmp_packet.out = (uint8_t *)(uip_appdata + UIP_BUFSIZE - UIP_IPUDPH_LEN);
+    snmp_packet.max = UIP_BUFSIZE - UIP_IPUDPH_LEN;
+
+    /* Handle the request */
+    if(!snmp_engine(&snmp_packet)) {
+      LOG_DBG("Error while handling the request\n");
+      continue;
+    }
+
+    LOG_DBG("Sending response\n");
+    /* Send the response */
+    uip_udp_packet_sendto(snmp_udp_conn, snmp_packet.out, snmp_packet.used, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
   } /* while (1) */
 
   PROCESS_END();

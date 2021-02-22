@@ -15,7 +15,7 @@ SUPPORTS_BLE_BEACON = 0
 SUPPORTS_HIGH_PA = 0
 
 ### Signal that we can be programmed with cc2538-bsl
-BOARD_SUPPORTS_BSL = 0
+BOARD_SUPPORTS_BSL = 1
 
 # Include the common board makefile
 include $(FAMILY_PATH)/launchpad/Makefile.launchpad

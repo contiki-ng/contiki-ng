@@ -42,10 +42,12 @@
 #include "contiki-net.h"
 #include "leds.h"
 #include "lib/sensors.h"
-#include "button-sensor.h"
+#include "dev/button-hal.h"
 
 #include "dev/serial-line.h"
 #include "dev/uart0.h"
+#include "usb/usb-serial.h"
+#include "usb/usb-dfu-trigger.h"
 #include "lpm.h"
 
 #include <stdio.h>
@@ -84,26 +86,20 @@ populate_link_address(void)
          LINKADDR_SIZE);
 }
 /*---------------------------------------------------------------------------*/
-static void
-board_init(void)
-{
-#ifdef PLATFORM_HAS_BUTTON
-  if(!nrfx_gpiote_is_init()) {
-    nrfx_gpiote_init();
-  }
-#endif
-}
-/*---------------------------------------------------------------------------*/
 void
 platform_init_stage_one(void)
 {
-  board_init();
+  gpio_hal_init();
   leds_init();
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_two(void)
 {
+#ifdef PLATFORM_HAS_BUTTON
+  button_hal_init();
+#endif
+
   /* Seed value is ignored since hardware RNG is used. */
   random_init(0);
 
@@ -115,6 +111,14 @@ platform_init_stage_two(void)
 #endif
 #endif
 
+#if NRF52840_NATIVE_USB
+  usb_serial_init();
+#endif
+
+#if NRF52840_USB_DFU_TRIGGER
+  dfu_trigger_usb_init();
+#endif
+
   populate_link_address();
 }
 /*---------------------------------------------------------------------------*/
@@ -122,15 +126,6 @@ void
 platform_init_stage_three(void)
 {
   process_start(&sensors_process, NULL);
-
-#if PLATFORM_HAS_BUTTON
-  SENSORS_ACTIVATE(button_1);
-#ifdef CONTIKI_BOARD_DK
-  SENSORS_ACTIVATE(button_2);
-  SENSORS_ACTIVATE(button_3);
-  SENSORS_ACTIVATE(button_4);
-#endif
-#endif
 }
 /*---------------------------------------------------------------------------*/
 void

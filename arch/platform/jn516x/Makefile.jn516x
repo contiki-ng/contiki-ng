@@ -79,6 +79,7 @@ endif
 
 # Path-independent cross-compiler
 CC:=$(CROSS_COMPILE)-gcc
+CXX:=$(CROSS_COMPILE)-g++
 AS:=$(CROSS_COMPILE)-as
 LD:=$(CROSS_COMPILE)-ls
 AR:=$(CROSS_COMPILE)-ar

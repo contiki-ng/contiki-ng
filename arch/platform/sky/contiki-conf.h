@@ -18,7 +18,7 @@
 #endif /* NETSTACK_CONF_RADIO */
 
 /* Symbol for the TSCH 15ms timeslot timing template */
-#define TSCH_CONF_ARCH_HDR_PATH "dev/cc2420/cc2420-tsch-15ms.h"
+#define TSCH_CONF_ARCH_HDR_PATH "dev/radio/cc2420/cc2420-tsch-15ms.h"
 
 /* The TSCH default slot length of 10ms is a bit too short for this platform,
  * use 15ms instead. */
@@ -35,11 +35,6 @@
 #ifndef AES_128_CONF
 #define AES_128_CONF cc2420_aes_128_driver
 #endif /* AES_128_CONF */
-
-/* Disable the stack check library by default: .rom overflow otherwise */
-#ifndef STACK_CHECK_CONF_ENABLED
-#define STACK_CHECK_CONF_ENABLED 0
-#endif
 /*---------------------------------------------------------------------------*/
 #include "msp430-conf.h"
 /*---------------------------------------------------------------------------*/

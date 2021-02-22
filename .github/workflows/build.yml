@@ -43,7 +43,7 @@ jobs:
     # Construct the correct docker container image tag corresponding to this build
     - name: Figure out correct docker image tag
       run:
-        echo ::set-env name=DOCKER_IMG::$DOCKER_BASE_IMG:$(git log -1 --oneline -- tools/docker/ | cut -d" " -f1)
+        echo DOCKER_IMG=$DOCKER_BASE_IMG:$(git log -1 --oneline -- tools/docker/ | cut -d" " -f1) >> $GITHUB_ENV
 
     # Try to download the image from dockerhub. If it works, use it.
     #
@@ -59,7 +59,7 @@ jobs:
       run: |
         echo "Using $DOCKER_IMG for this run"
         echo "Pulling image $DOCKER_IMG from dockerhub";
-        docker pull $DOCKER_IMG || echo ::set-env name=DOCKER_NEED_BUILD::1
+        docker pull $DOCKER_IMG || echo DOCKER_NEED_BUILD=1 >> $GITHUB_ENV
 
     - name: Build docker image if required
       if: env.DOCKER_NEED_BUILD == '1'
@@ -67,24 +67,28 @@ jobs:
         echo $DOCKER_IMG does not exist on dockerhub or pull failed
         echo This is normal for PR builds and for builds on forks
         echo Building from dockerfile
-        docker build tools/docker -t $DOCKER_IMG
+        docker build tools/docker -t $DOCKER_IMG --no-cache --pull
 
     # If i) the previous step built an image and ii) we are on the main
     # contiki-ng repo and iii) this is a push (merge commit) to one of the
     # branches of interest then push the image to dockerhub
     - name: Push images to dockerhub
-      if: github.repository == 'contiki-ng/contiki-ng' && github.event_name == 'push'
+      if: env.DOCKER_NEED_BUILD == '1' && github.repository == 'contiki-ng/contiki-ng' && github.event_name == 'push'
       run: |
         # Extract the branch name from github.ref. For example, from
         # 'refs/heads/master' we want to keep 'master'
         MERGE_BRANCH_REF=$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
         echo This is a build for branch $MERGE_BRANCH_REF and it updates the docker container
         echo Push images to Dockerhub
-        echo Will push $DOCKER_IMG as well as $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
         echo ${{ secrets.DOCKERHUB_PASSWD }} | docker login --username contiker --password-stdin
-        docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
         docker push $DOCKER_IMG
+        docker tag $DOCKER_IMG $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
         docker push $DOCKER_BASE_IMG:$MERGE_BRANCH_REF
+        if [ $MERGE_BRANCH_REF == develop ]; then
+          # When develop is updated, also push docker image with tag 'latest'
+          docker tag $DOCKER_IMG $DOCKER_BASE_IMG:latest
+          docker push $DOCKER_BASE_IMG:latest
+        fi
 
     # Clone the repo used for out-of-tree builds if required
     - name: Clone the repo used for out-of-tree builds if required
@@ -97,7 +101,7 @@ jobs:
         # Set permissions for Docker mount
         sudo chown -R 1000:1000 $OUT_OF_TREE_TEST_PATH
         # Set up docker mount
-        echo ::set-env name=DOCKER_ARGS::-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests
+        echo DOCKER_ARGS=-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests >> $GITHUB_ENV
 
     # Fire up the container and run corresponding tests
     - name: Execute tests

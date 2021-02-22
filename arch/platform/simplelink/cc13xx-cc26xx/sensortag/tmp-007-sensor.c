@@ -40,6 +40,7 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/ctimer.h"
+#include "dev/i2c-arch.h"
 /*---------------------------------------------------------------------------*/
 #include "board-conf.h"
 #include "tmp-007-sensor.h"
@@ -108,8 +109,8 @@
 
 #define SWAP16(v)               ((LO_UINT16(v) << 8) | (HI_UINT16(v) << 0))
 
-#define LSB16(v)                (LO_UINT16(v)), (HI_UINT16(v))
-#define MSB16(v)                (HI_UINT16(v)), (LO_UINT16(v))
+#define LSB16(v)                (HI_UINT16(v)), (LO_UINT16(v))
+#define MSB16(v)                (LO_UINT16(v)), (HI_UINT16(v))
 /*---------------------------------------------------------------------------*/
 static const PIN_Config pin_table[] = {
   TMP_007_TMP_RDY | PIN_INPUT_EN | PIN_PULLUP | PIN_HYSTERESIS | PIN_IRQ_NEGEDGE,
@@ -136,53 +137,6 @@ static TMP_007_Object tmp_007;
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
 /**
- * \brief         Setup and peform an I2C transaction.
- * \param wbuf    Output buffer during the I2C transation.
- * \param wcount  How many bytes in the wbuf.
- * \param rbuf    Input buffer during the I2C transation.
- * \param rcount  How many bytes to read into rbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static bool
-i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
-{
-  I2C_Transaction i2c_transaction = {
-    .writeBuf = wbuf,
-    .writeCount = wcount,
-    .readBuf = rbuf,
-    .readCount = rcount,
-    .slaveAddress = TMP_007_I2C_ADDRESS,
-  };
-
-  return I2C_transfer(i2c_handle, &i2c_transaction);
-}
-/**
- * \brief         Peform a write only I2C transaction.
- * \param wbuf    Output buffer during the I2C transation.
- * \param wcount  How many bytes in the wbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static inline bool
-i2c_write(void *wbuf, size_t wcount)
-{
-  return i2c_write_read(wbuf, wcount, NULL, 0);
-}
-/**
- * \brief         Peform a read only I2C transaction.
- * \param rbuf    Input buffer during the I2C transation.
- * \param rcount  How many bytes to read into rbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static inline bool
-i2c_read(void *rbuf, size_t rcount)
-{
-  return i2c_write_read(NULL, 0, rbuf, rcount);
-}
-/*---------------------------------------------------------------------------*/
-/**
  * \brief   Initialize the TMP-007 sensor driver.
  * \return  true if I2C operation successful; else, return false.
  */
@@ -195,18 +149,6 @@ sensor_init(void)
 
   pin_handle = PIN_open(&pin_state, pin_table);
   if(!pin_handle) {
-    return false;
-  }
-
-  I2C_Params i2c_params;
-  I2C_Params_init(&i2c_params);
-
-  i2c_params.transferMode = I2C_MODE_BLOCKING;
-  i2c_params.bitRate = I2C_400kHz;
-
-  i2c_handle = I2C_open(Board_I2C0, &i2c_params);
-  if(i2c_handle == NULL) {
-    PIN_close(pin_handle);
     return false;
   }
 
@@ -231,13 +173,26 @@ notify_ready_cb(void *not_used)
 static bool
 enable_sensor(bool enable)
 {
+  bool rv;
+
   uint16_t cfg_value = (enable)
     ? VAL_CONFIG_ON
     : VAL_CONFIG_OFF;
 
   uint8_t cfg_data[] = { REG_CONFIG, LSB16(cfg_value) };
 
-  return i2c_write(cfg_data, sizeof(cfg_data));
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
+    return false;
+  }
+
+  rv = i2c_arch_write(i2c_handle, TMP_007_I2C_ADDRESS, cfg_data,
+                      sizeof(cfg_data));
+
+  i2c_arch_release(i2c_handle);
+
+  return rv;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -251,37 +206,50 @@ enable_sensor(bool enable)
 static bool
 read_data(uint16_t *local_tmp, uint16_t *obj_tmp)
 {
-  bool spi_ok = false;
+  bool i2c_ok = false;
 
   uint8_t status_data[] = { REG_STATUS };
   uint16_t status_value = 0;
 
-  spi_ok = i2c_write_read(status_data, sizeof(status_data),
-                          &status_value, sizeof(status_value));
-  if(!spi_ok) {
+  i2c_handle = i2c_arch_acquire(Board_I2C0);
+
+  if(!i2c_handle) {
+    return false;
+  }
+
+  i2c_ok = i2c_arch_write_read(i2c_handle, TMP_007_I2C_ADDRESS, status_data,
+                               sizeof(status_data), &status_value,
+                               sizeof(status_value));
+  if(!i2c_ok) {
+    i2c_arch_release(i2c_handle);
     return false;
   }
   status_value = SWAP16(status_value);
 
   if((status_value & CONV_RDY_BIT) == 0) {
+    i2c_arch_release(i2c_handle);
     return false;
   }
 
   uint8_t local_temp_data[] = { REG_LOCAL_TEMP };
   uint16_t local_temp_value = 0;
 
-  spi_ok = i2c_write_read(local_temp_data, sizeof(local_temp_data),
-                          &local_temp_value, sizeof(local_temp_value));
-  if(!spi_ok) {
+  i2c_ok = i2c_arch_write_read(i2c_handle, TMP_007_I2C_ADDRESS, local_temp_data,
+                               sizeof(local_temp_data), &local_temp_value,
+                               sizeof(local_temp_value));
+  if(!i2c_ok) {
+    i2c_arch_release(i2c_handle);
     return false;
   }
 
   uint8_t obj_temp_data[] = { REG_OBJ_TEMP };
   uint16_t obj_temp_value = 0;
 
-  spi_ok = i2c_write_read(obj_temp_data, sizeof(obj_temp_data),
-                          &obj_temp_value, sizeof(obj_temp_value));
-  if(!spi_ok) {
+  i2c_ok = i2c_arch_write_read(i2c_handle, TMP_007_I2C_ADDRESS, obj_temp_data,
+                               sizeof(obj_temp_data), &obj_temp_value,
+                               sizeof(obj_temp_value));
+  i2c_arch_release(i2c_handle);
+  if(!i2c_ok) {
     return false;
   }
 
@@ -333,6 +301,7 @@ value(int type)
 
   case TMP_007_TYPE_ALL:
     if(!read_data(&raw_local_tmp, &raw_obj_tmp)) {
+      PRINTF("TMP: Read failed\n");
       return TMP_007_READING_ERROR;
     }
 

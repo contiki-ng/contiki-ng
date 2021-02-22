@@ -33,7 +33,6 @@ receiver(struct simple_udp_connection *c,
 PROCESS_THREAD(udp_process, ev, data)
 {
   static struct etimer periodic_timer;
-  static struct etimer send_timer;
   uip_ipaddr_t addr;
   static int alive;
   const uip_ipaddr_t *default_prefix;

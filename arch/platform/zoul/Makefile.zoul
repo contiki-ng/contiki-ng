@@ -14,7 +14,6 @@ ifeq ($(BOARD), remote)
   override BOARD = remote-reva
 endif
 
-PYTHON = python
 BSL_FLAGS += -e -w -v
 
 BSL_SPEED ?= 460800
@@ -42,7 +41,8 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += $(CONTIKI_NG_DRIVERS_DIR)/cc1200 $(CONTIKI_NG_DRIVERS_DIR)/rgb-led
+MODULES += $(CONTIKI_NG_DRIVERS_RADIO_DIR)/cc1200
+MODULES += $(CONTIKI_NG_DRIVERS_ETC_DIR)/rgb-led
 MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
 BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
@@ -75,7 +75,7 @@ define UPLOAD_RULE
 	@BSL_ADDRESS=`$(OBJDUMP) -h $(BUILD_DIR_BOARD)/$$*.elf | grep -B1 LOAD | \
 	             grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$$$5}' | \
 	             sort -g | head -1`; \
-	$(PYTHON) $(BSL) $(BSL_FLAGS) -b $(BSL_SPEED) -a $$$${BSL_ADDRESS} -p $(MOTE) $$<
+	$(BSL) $(BSL_FLAGS) -b $(BSL_SPEED) -a $$$${BSL_ADDRESS} -p $(MOTE) $$<
 endef
 
 ### Create an upload rule for every MOTE connected

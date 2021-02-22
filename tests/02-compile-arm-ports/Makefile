@@ -4,6 +4,7 @@ TOOLSDIR=../../tools
 EXAMPLES = \
 6tisch/6p-packet/zoul \
 6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
+6tisch/simple-node/simplelink:DEFINES=TSCH_CONF_AUTOSELECT_TIME_SOURCE=1 \
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
@@ -18,7 +19,6 @@ hello-world/openmote:BOARD=openmote-b \
 hello-world/openmote:BOARD=openmote-cc2538 \
 hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1 \
 hello-world/simplelink:BOARD=srf06/cc13x0 \
-hello-world/simplelink:BOARD=sensortag/cc1350 \
 hello-world/simplelink:BOARD=launchpad/cc1310 \
 hello-world/simplelink:BOARD=launchpad/cc1312r1 \
 hello-world/simplelink:BOARD=launchpad/cc1350 \
@@ -56,7 +56,8 @@ platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc2538-common/pka/zoul \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
-platform-specific/cc26x0-cc13x0/very-sleepy-demo/cc26x0-cc13x0 \
+platform-specific/cc26x0-cc13x0/base-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
+platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1350 \
 platform-specific/nrf52dk/blink-hello/nrf52dk \
 platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
 platform-specific/nrf52dk/mqtt-demo/nrf52dk \

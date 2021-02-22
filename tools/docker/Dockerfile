@@ -25,13 +25,17 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     iputils-ping \
     libcanberra-gtk-module:i386 \
     libcoap-1-0-bin \
+    libfreetype6-dev \
     libgtk2.0-0 \
+    libpng-dev \
     mono-complete \
     mosquitto \
     mosquitto-clients \
     net-tools \
     openjdk-8-jdk \
+    python-dev \
     python-pip \
+    python3-pip \
     python-serial \
     rlwrap \
     sudo \
@@ -48,9 +52,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   && apt-get -qq clean
 
 # Install ARM toolchain
-RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
-  tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/ && \
+RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/9-2020-q2-update/gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 && \
+  tar xjf gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 -C /tmp/ && \
+  cp -f -r /tmp/gcc-arm-none-eabi-9-2020-q4-major/* /usr/local/ && \
   rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
@@ -85,6 +89,9 @@ ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 # readthedocs API documentation
 RUN pip -q install --upgrade pip
 RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
+# Install matplotlib for result visualization
+RUN pip3 -q install --upgrade pip
+RUN pip3 -q install matplotlib
 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix

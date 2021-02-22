@@ -105,7 +105,11 @@
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 /*---------------------------------------------------------------------------*/
 /* XXX: don't know what exactly is this */
+#if defined(DEVICE_LINE_CC13XX)
+#define RAT_TIMESTAMP_OFFSET USEC_TO_RAT(800)
+#else
 #define RAT_TIMESTAMP_OFFSET USEC_TO_RAT(-50)
+#endif
 /*---------------------------------------------------------------------------*/
 #define STATUS_CORRELATION   0x3f  /* bits 0-5 */
 #define STATUS_REJECT_FRAME  0x40  /* bit 6 */

@@ -4,7 +4,7 @@ CONTIKI_TARGET_DIRS += launchpad common
 
 BOARD_SOURCEFILES += board.c board-buttons.c xmem.c
 
-MODULES += arch/dev/ext-flash
+MODULES += $(CONTIKI_NG_DRIVERS_STORAGE_DIR)/ext-flash
 
 ### Signal that we can be programmed with cc2538-bsl
 BOARD_SUPPORTS_BSL=1
