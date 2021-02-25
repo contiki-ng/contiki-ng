@@ -12,7 +12,6 @@
 *.ihex
 *.pyc
 *~
-*.vscode
 build/*
 Makefile.target
 Makefile.*.defines
