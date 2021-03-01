@@ -1140,6 +1140,7 @@ on(void)
 
   if(prop_div_radio_setup() != RF_CORE_CMD_OK) {
     PRINTF("on: prop_div_radio_setup() failed\n");
+    rf_core_power_down();
     return RF_CORE_CMD_ERROR;
   }
 
@@ -1148,7 +1149,28 @@ on(void)
     return RF_CORE_CMD_ERROR;
   }
 
-  return rx_on_prop();
+  if(rx_on_prop() != RF_CORE_CMD_OK) {
+
+    if((rf_core_cmd_status() & RF_CORE_CMDSTA_RESULT_MASK) != RF_CORE_CMDSTA_SCHEDULING_ERR) {
+      PRINTF("on: failed with status=0x%08lx\n", rf_core_cmd_status());
+      return RF_CORE_CMD_ERROR;
+    }
+
+    /* Looks like a command was alredy pending on radio. */
+    /* Abort any existing commands */
+    if(rf_core_start_cmd(CMDR_DIR_CMD(CMD_ABORT)) == RF_CORE_CMD_ERROR) {
+      PRINTF("on: CMD_ABORT status=0x%08lx\n", rf_core_cmd_status());
+      return RF_CORE_CMD_ERROR;
+    }
+
+    /* Retry setup */
+    if(soft_on_prop() != RF_CORE_CMD_OK) {
+      PRINTF("on: retry with status=0x%08lx\n", rf_core_cmd_status());
+      return RF_CORE_CMD_ERROR;
+    }
+  }
+
+  return RF_CORE_CMD_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
