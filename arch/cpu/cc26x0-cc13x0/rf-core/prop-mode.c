@@ -124,7 +124,7 @@
 static int8_t rssi_threshold = PROP_MODE_RSSI_THRESHOLD;
 /*---------------------------------------------------------------------------*/
 #if MAC_CONF_WITH_TSCH
-static volatile uint8_t is_receiving_packet;
+static volatile rfc_dataEntry_t *packet_being_received;
 #endif
 /*---------------------------------------------------------------------------*/
 static int on(void);
@@ -524,6 +524,11 @@ rx_off_prop(void)
   uint32_t cmd_status;
   int ret;
 
+#if MAC_CONF_WITH_TSCH
+  /* Failsafe in case this variable failed to clear as part of normal operation */
+  packet_being_received = NULL;
+#endif /* MAC_CONF_WITH_TSCH */
+
   /* If we are off, do nothing */
   if(!rf_is_on()) {
     return RF_CORE_CMD_OK;
@@ -842,8 +847,7 @@ read_frame(void *buf, unsigned short buf_len)
   int is_found = 0;
   /* Go through all RX buffers and check their status */
   do {
-    if(entry->status == DATA_ENTRY_STATUS_FINISHED
-        || entry->status == DATA_ENTRY_STATUS_BUSY) {
+    if(entry->status >= DATA_ENTRY_STATUS_BUSY) {
       is_found = 1;
       break;
     }
@@ -865,7 +869,7 @@ read_frame(void *buf, unsigned short buf_len)
 
 #if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */
-  is_receiving_packet = 0;
+  packet_being_received = NULL;
 #endif
 
   if(entry->status != DATA_ENTRY_STATUS_FINISHED) {
@@ -989,23 +993,23 @@ receiving_packet(void)
    * first call. The assumption is that the TSCH code will keep calling us
    * until frame reception has completed, at which point we can clear MDMSOFT.
    */
-  if(!is_receiving_packet) {
+  if(packet_being_received == NULL) {
     /* Look for the modem synchronization word detection interrupt flag.
      * This flag is raised when the synchronization word is received.
      */
     if(HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFHWIFG) & RFC_DBELL_RFHWIFG_MDMSOFT) {
-      is_receiving_packet = 1;
+      packet_being_received = (rfc_dataEntry_t *)rx_data_queue.pCurrEntry;
     }
   } else {
-    /* After the start of the packet: reset the Rx flag once the channel gets clear */
-    is_receiving_packet = (channel_clear() == RF_CORE_CCA_BUSY);
-    if(!is_receiving_packet) {
+    /* After the start of the packet: reset the Rx flag once the packet is finished */
+    if(packet_being_received->status >= DATA_ENTRY_FINISHED) {
       /* Clear the modem sync flag */
       ti_lib_rfc_hw_int_clear(RFC_DBELL_RFHWIFG_MDMSOFT);
+      packet_being_received = NULL;
     }
   }
 
-  return is_receiving_packet;
+  return packet_being_received != NULL;
 #else
   /*
    * Under CSMA operation, there is no immediately straightforward logic as to
@@ -1044,8 +1048,7 @@ pending_packet(void)
 
   /* Go through all RX buffers and check their status */
   do {
-    if(entry->status == DATA_ENTRY_STATUS_FINISHED
-        || entry->status == DATA_ENTRY_STATUS_BUSY) {
+    if(entry->status >= DATA_ENTRY_STATUS_BUSY) {
       rv = 1;
       if(!rf_core_poll_mode) {
         process_poll(&rf_core_process);
