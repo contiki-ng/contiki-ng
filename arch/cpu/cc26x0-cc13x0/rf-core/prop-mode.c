@@ -1158,7 +1158,8 @@ on(void)
 
     /* Looks like a command was alredy pending on radio. */
     /* Abort any existing commands */
-    if(rf_core_start_cmd(CMDR_DIR_CMD(CMD_ABORT)) == RF_CORE_CMD_ERROR) {
+    uint32_t status;
+    if(rf_core_send_cmd(CMDR_DIR_CMD(CMD_ABORT), &status) == RF_CORE_CMD_ERROR) {
       PRINTF("on: CMD_ABORT status=0x%08lx\n", rf_core_cmd_status());
       return RF_CORE_CMD_ERROR;
     }
