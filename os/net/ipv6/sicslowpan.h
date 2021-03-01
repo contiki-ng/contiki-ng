@@ -336,7 +336,7 @@ struct sicslowpan_nh_compressor {
 
 };
 
-int sicslowpan_get_last_rssi(void);
+extern CC_DEPRECATED("Use UIPBUF_ATTR_RSSI instead") int sicslowpan_get_last_rssi(void);
 
 extern const struct network_driver sicslowpan_driver;
 
