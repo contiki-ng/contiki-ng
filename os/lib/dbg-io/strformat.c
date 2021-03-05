@@ -568,7 +568,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       }
 
       width += conv_len;
-      precision_fill = (precision > conv_len) ? precision - conv_len : 0;
+      precision_fill = (precision > (int)conv_len) ? precision - conv_len : 0;
       if((flags & (RADIX_MASK | ALTERNATE_FORM))
          == (RADIX_OCTAL | ALTERNATE_FORM)) {
         if(precision_fill < 1) {
@@ -640,23 +640,28 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     {
       unsigned int field_fill;
       unsigned int len;
-      char *str = va_arg(ap, char *);
+      const char *str = va_arg(ap, const char *);
 
       if(str) {
-        char *pos = str;
-        while(*pos != '\0') pos++;
+        const char *pos = str;
+        const char *limit = NULL;
+        if ( precision >= 0 )
+            limit = pos + precision;
+        while( (*pos != '\0') && (pos != limit) )
+            pos++;
         len = pos - str;
       } else {
         str = "(null)";
         len = 6;
       }
 
-      if(precision >= 0 && precision < len) {
+      if(precision >= 0 && precision < (int)len) {
         len = precision;
       }
 
       field_fill = (minwidth > len) ? minwidth - len : 0;
 
+      if (field_fill > 0)
       if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
         CHECKCB(fill_space(ctxt, field_fill));
       }
