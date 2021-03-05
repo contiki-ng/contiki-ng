@@ -145,19 +145,7 @@ clock_update(void)
 unsigned long
 clock_seconds(void)
 {
-  bool interrupts_disabled;
-  uint32_t secs_now;
-
-  interrupts_disabled = ti_lib_int_master_disable();
-
-  secs_now = ti_lib_aon_rtc_sec_get();
-
-  /* Re-enable interrupts */
-  if(!interrupts_disabled) {
-    ti_lib_int_master_enable();
-  }
-
-  return (unsigned long)secs_now;
+  return (unsigned long)ti_lib_aon_rtc_sec_get();
 }
 /*---------------------------------------------------------------------------*/
 void
