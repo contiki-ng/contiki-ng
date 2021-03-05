@@ -31,29 +31,42 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include <stdint.h>
+#include <stddef.h>
 
-#include <strformat.h>
+#include "strformat.h"
 /*---------------------------------------------------------------------------*/
-#define HAVE_DOUBLE
-#define HAVE_LONGLONG
-#define HAVE_NETADDR
+#ifndef PRINTF_CONF_HAVE_DOUBLE
+#define HAVE_DOUBLE     1
+#else
+#define HAVE_DOUBLE     PRINTF_CONF_HAVE_DOUBLE
+#endif
+#ifndef PRINTF_CONF_HAVE_LONGLONG
+#define HAVE_LONGLONG   1
+#else
+#define HAVE_LONGLONG   PRINTF_CONF_HAVE_LONGLONG
+#endif
+#ifndef PRINTF_CONF_HAVE_NETADDR
+#define HAVE_NETADDR    1
+#else
+#define HAVE_NETADDR    PRINTF_CONF_HAVE_NETADDR
+#endif
 
 
-#ifdef HAVE_NETADDR
+#if HAVE_NETADDR
 #include "net/linkaddr.h"
 #include "net/ipv6/uiplib.h"
 #endif
 
 #ifndef LARGEST_SIGNED
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
 #define LARGEST_SIGNED long long int
 #else
-#define LARGEST_UNSIGNED long int
+#define LARGEST_SIGNED long int
 #endif /* HAVE_LONGLONG */
 #endif /* LARGEST_SIGNED */
 
 #ifndef LARGEST_UNSIGNED
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
 #define LARGEST_UNSIGNED unsigned long long int
 #else
 #define LARGEST_UNSIGNED unsigned long int
@@ -386,8 +399,9 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         flags |= SIZE_SHORT;
       } else if(sizeof(size_t) == sizeof(long)) {
         flags |= SIZE_LONG;
-#ifdef HAVE_LONGLONG
-      } else if(sizeof(size_t) == sizeof(long long)) {
+      }
+#if HAVE_LONGLONG
+      else if(sizeof(size_t) == sizeof(long long)) {
         flags |= SIZE_LONGLONG;
       }
 #endif
@@ -412,7 +426,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     case 'X':
       flags |= CONV_INTEGER | RADIX_HEX | SIGNED_NO | CAPS_YES;
       break;
-#ifdef HAVE_DOUBLE
+#if HAVE_DOUBLE
     case 'f':
       flags |= CONV_FLOAT | FLOAT_NORMAL;
       break;
@@ -497,13 +511,13 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         case SIZE_INT:
           value = va_arg(ap, int);
           break;
-#ifndef HAVE_LONGLONG
+#if !HAVE_LONGLONG
         case SIZE_LONGLONG: /* Treat long long the same as long */
 #endif
         case SIZE_LONG:
           value = va_arg(ap, long);
           break;
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
         case SIZE_LONGLONG:
           value = va_arg(ap, long long);
           break;
@@ -527,13 +541,13 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         case SIZE_INT:
           uvalue = va_arg(ap, unsigned int);
           break;
-#ifndef HAVE_LONGLONG
+#if !HAVE_LONGLONG
         case SIZE_LONGLONG: /* Treat long long the same as long */
 #endif
         case SIZE_LONG:
           uvalue = va_arg(ap, unsigned long);
           break;
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
         case SIZE_LONGLONG:
           uvalue = va_arg(ap, unsigned long long);
           break;
@@ -662,7 +676,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         unsigned int conv_len;
         unsigned int field_fill = 0;
 
-#ifdef HAVE_NETADDR
+#if HAVE_NETADDR
         char buffer[UIPLIB_IPV6_MAX_STR_LEN];
 
       if ( *pos == 'L' ){           // linkaddr
