@@ -136,6 +136,10 @@ remove_uc_links(const linkaddr_t *linkaddr)
 
     remove_unicast_link(timeslot_rx, LINK_OPTION_RX);
     remove_unicast_link(timeslot_tx, LINK_OPTION_TX | LINK_OPTION_SHARED);
+
+    /* Packets to this address were marked with this slotframe and neighbor-specific timeslot;
+     * make sure they don't remain stuck in the queues after the link is removed. */
+    tsch_queue_free_packets_to(linkaddr);
   }
 }
 /*---------------------------------------------------------------------------*/

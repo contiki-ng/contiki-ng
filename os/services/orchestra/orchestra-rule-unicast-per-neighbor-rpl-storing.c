@@ -137,6 +137,12 @@ remove_uc_link(const linkaddr_t *linkaddr)
   if(l == NULL) {
     return;
   }
+  if(!ORCHESTRA_UNICAST_SENDER_BASED) {
+    /* Packets to this address were marked with this slotframe and neighbor-specific timeslot;
+     * make sure they don't remain stuck in the queues after the link is removed. */
+    tsch_queue_free_packets_to(linkaddr);
+  }
+
   /* Does our current parent need this timeslot? */
   if(timeslot == get_node_timeslot(&orchestra_parent_linkaddr)) {
     /* Yes, this timeslot is being used, return */

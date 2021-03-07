@@ -319,6 +319,19 @@ tsch_queue_free_packet(struct tsch_packet *p)
   }
 }
 /*---------------------------------------------------------------------------*/
+/* Free all packets to a neighbor */
+void
+tsch_queue_free_packets_to(const linkaddr_t *addr)
+{
+  struct tsch_neighbor *n = NULL;
+  if(!tsch_is_locked()) {
+    n = tsch_queue_get_nbr(addr);
+    if(n != NULL) {
+      tsch_queue_flush_nbr_queue(n);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
 /* Updates neighbor queue state after a transmission */
 int
 tsch_queue_packet_sent(struct tsch_neighbor *n, struct tsch_packet *p,
