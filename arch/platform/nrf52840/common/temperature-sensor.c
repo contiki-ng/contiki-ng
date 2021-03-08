@@ -46,8 +46,8 @@
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  *
  */
-#include "nrf_temp.h"
 #include "contiki.h"
+#include "nrf_temp.h"
 #include "temperature-sensor.h"
 
 const struct sensors_sensor temperature_sensor;
