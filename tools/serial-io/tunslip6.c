@@ -49,6 +49,7 @@
 #include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <sys/uio.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -287,9 +288,26 @@ serial_to_tun(FILE *inslip, int outfd)
             printf("\n");
           }
         }
-	if(write(outfd, uip.inbuf, inbufptr) != inbufptr) {
-	  err(1, "serial_to_tun: write");
-	}
+
+#ifdef __APPLE__
+        /* Fake IFF_NO_PI on macOS by sending a 4 byte header containing AF_INET6 */
+        u_int32_t type = htonl(AF_INET6);
+        struct iovec iv[2];
+
+        iv[0].iov_base = &type;
+        iv[0].iov_len = sizeof(type);
+        iv[1].iov_base = uip.inbuf;
+        iv[1].iov_len = inbufptr;
+
+        if(writev(outfd, iv, 2) != (sizeof(type) + inbufptr)) {
+          err(1, "serial_to_tun: writev");
+        }
+#else
+        if(write(outfd, uip.inbuf, inbufptr) != inbufptr) {
+          err(1, "serial_to_tun: write");
+        }
+#endif
+
       }
       inbufptr = 0;
     }
@@ -498,8 +516,18 @@ tun_to_serial(int infd, int outfd)
   int size;
 
   if((size = read(infd, uip.inbuf, 2000)) == -1) err(1, "tun_to_serial: read");
+  
+#ifdef __APPLE__
+#define UTUN_HEADER_LEN 4
+  /* Fake IFF_NO_PI on macOS by ignoring the first 4 bytes containing AF_INET6 */
+  if(size <= UTUN_HEADER_LEN) err(1, "tun_to_serial: read too small");
 
+  size -= UTUN_HEADER_LEN;
+  write_to_serial(outfd, uip.inbuf + UTUN_HEADER_LEN, size);
+#undef UTUN_HEADER_LEN
+#else
   write_to_serial(outfd, uip.inbuf, size);
+#endif
   return size;
 }
 
@@ -602,6 +630,73 @@ tun_alloc(char *dev, int tap)
   strcpy(dev, ifr.ifr_name);
   return fd;
 }
+
+#elif defined __APPLE__
+#include <sys/sys_domain.h>
+#include <sys/kern_control.h>
+#include <net/if_utun.h>
+
+/* 
+ * Reference for utun on macOS:
+ * http://newosxbook.com/src.jl?tree=listings&file=17-15-utun.c 
+ */
+int
+tun_alloc(char *dev, int tap)
+{
+  struct sockaddr_ctl sc;
+  struct ctl_info ctlInfo;
+  int fd;
+  unsigned int tunif;
+
+  if(tap) {
+    err(1, "tun_alloc: TAP is not supported with utun on macOS");
+    return -1;
+  }
+
+  if(sscanf(dev, "utun%u", &tunif) != 1 || tunif >= UINT8_MAX) {
+    err(1, "tun_alloc: invalid utun interface specified");
+    return -1;
+  }
+
+  memset(&ctlInfo, 0, sizeof(ctlInfo));
+  if(strlcpy(ctlInfo.ctl_name, UTUN_CONTROL_NAME, sizeof(ctlInfo.ctl_name)) >=
+      sizeof(ctlInfo.ctl_name)) {
+    fprintf(stderr, "UTUN_CONTROL_NAME too long");
+    return -1;
+  }
+
+  fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+   
+  if(fd == -1) {
+    perror("socket(SYSPROTO_CONTROL)");
+    return -1;
+  }
+
+  if(ioctl(fd, CTLIOCGINFO, &ctlInfo) == -1) {
+    perror("ioctl(CTLIOCGINFO)");
+    close(fd);
+    return -1;
+  }
+
+  sc.sc_id = ctlInfo.ctl_id;
+  sc.sc_len = sizeof(sc);
+  sc.sc_family = AF_SYSTEM;
+  sc.ss_sysaddr = AF_SYS_CONTROL;
+  sc.sc_unit = tunif + 1;
+
+  /*
+   * If the connect is successful, a utun%d device will be created, where "%d"
+   * is our unit number -1
+   */
+
+  if(connect(fd, (struct sockaddr *)&sc, sizeof(sc)) == -1) {
+    perror("connect(AF_SYS_CONTROL)");
+    close(fd);
+    return -1;
+  }
+
+  return fd;
+}
 #else
 int
 tun_alloc(char *dev, int tap)
@@ -627,15 +722,10 @@ cleanup(void)
 	  tundev);
 #else
   {
-    char *  itfaddr = strdup(ipaddr);
-    char *  prefix = index(itfaddr, '/');
     if (timestamp) stamptime();
     ssystem("ifconfig %s inet6 %s remove", tundev, ipaddr);
     if (timestamp) stamptime();
     ssystem("ifconfig %s down", tundev);
-    if ( prefix != NULL ) *prefix = '\0';
-    ssystem("route delete -inet6 %s", itfaddr);
-    free(itfaddr);
   }
 #endif
 }
@@ -840,9 +930,11 @@ main(int argc, char **argv)
       if (optarg) verbose = atoi(optarg);
       break;
 
+#ifndef __APPLE__
     case 'T':
       tap = 1;
       break;
+#endif
 
     case '?':
     case 'h':
@@ -862,8 +954,12 @@ fprintf(stderr, " -X             Software XON/XOFF flow control (default disable
 fprintf(stderr, " -L             Log output format (adds time stamps)\n");
 fprintf(stderr, " -s siodev      Serial device (default /dev/ttyUSB0)\n");
 fprintf(stderr, " -M             Interface MTU (default and min: 1280)\n");
+#ifdef __APPLE__
+fprintf(stderr, " -t tundev      Name of interface (default utun10)\n");
+#else
 fprintf(stderr, " -T             Make tap interface (default is tun interface)\n");
 fprintf(stderr, " -t tundev      Name of interface (default tap0 or tun0)\n");
+#endif
 #ifdef __APPLE__
 fprintf(stderr, " -v level       Verbosity level\n");
 #else
@@ -916,12 +1012,9 @@ exit(1);
 
 #ifdef __APPLE__
   if(*tundev == '\0') {
-    /* Use default. */
-    if(tap) {
-      strcpy(tundev, "tap0");
-    } else {
-      strcpy(tundev, "tun0");
-    }
+    /* utun0-3 are in use on Big Sur, so use utun10 as default */
+
+    strcpy(tundev, "utun10");
   }
 #endif
 
