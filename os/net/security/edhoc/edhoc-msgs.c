@@ -315,7 +315,7 @@ edhoc_deserialize_err(edhoc_msg_error *msg, unsigned char *buffer, uint8_t buff_
     }
   }
   
-  LOG_DBG("buffer (%d",(int) (buff_f - buffer));
+  LOG_DBG("buffer (%d)",(int)(buff_f - buffer));
   if(buffer < buff_f) {
     msg->suit.buf = buffer;
     int16_t len = edhoc_get_unsigned(&buffer);

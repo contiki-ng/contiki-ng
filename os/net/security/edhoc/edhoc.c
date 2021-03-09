@@ -1400,7 +1400,7 @@ edhoc_authenticate_msg(edhoc_context_t *ctx, uint8_t **ptr, uint8_t cipher_len, 
   ctx->session.cred_x.buf = inf;
   ctx->session.cred_x.len = generate_cred_x(&cose, ctx->session.cred_x.buf);
 
-  LOG_DBG("CRED_X (%d)", (int)ctx->session.cred_x.len);
+  LOG_DBG("CRED_X (%d)",(int)ctx->session.cred_x.len);
   print_buff_8_dbg(ctx->session.cred_x.buf,ctx->session.cred_x.len);
 
   if(PART == PART_I) {

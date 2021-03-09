@@ -198,11 +198,11 @@ client_response_handler(coap_callback_request_state_t *callback_state)
   }
 
   if((callback_state->state.response->code != CHANGED_2_04)) {
-    LOG_ERR("Received an error code response\n");
-    edhoc_state.val = CL_RESTART;
+    LOG_INFO("The code responds received is not CHANGED_2_04\n");
+    /*edhoc_state.val = CL_RESTART;
     coap_timer_stop(&timer);
     pro = process_post(&edhoc_client, edhoc_event, &edhoc_state);
-    return;
+    return;*/
   }
 
   coap_set_option(callback_state->state.response, COAP_OPTION_BLOCK2);
