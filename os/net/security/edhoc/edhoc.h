@@ -240,12 +240,12 @@ int edhoc_get_auth_key(edhoc_context_t *ctx, uint8_t **pt, cose_key_t *key);
  * \param ctx EDHOC Context struct
  * \param pt A pointer to the SIGN on the Rx msg buffer.
  * \param cipher_len Lenght of the cipher msg
- * \param ad A pointer to a buffer to copy the Application Data received in Message 2
+ * \param ad A pointer to a buffer to copy the Application Data of the rx message
+ * \param key The other party authentication key, used for authentication
  * \retval ERR_CODE when an EDHOC ERROR is detected return a negative number correspondig to the specific error code
  * \retval ad_sz The length of the Application Data received in Message 2, when EDHOC success
  *
- * Used by Initiator and Responder EDHOC part to process the Message 2 receive
- * - Decrypt CIPHERTEXT
+ * Used by Initiator and Responder EDHOC part to Authenticate the other party
  * - Verify that the EDHOC Responder part identity is among the allower if it is necessary
  * - Verify MAC
  * - Pass Application data AD
@@ -275,6 +275,7 @@ int edhoc_handler_msg_1(edhoc_context_t *ctx, uint8_t *buffer, size_t buff_sz, u
 
 /**
  * \brief Handle the EDHOC Message 2 received
+ * \param msg2 A pointer to the buffer containing the received EDHOC message 2
  * \param ctx EDHOC Context struct
  * \param buffer A pointer to the buffer containing the EDHOC message received
  * \param buff_sz Size of the EDHOC message received
@@ -291,6 +292,7 @@ int edhoc_handler_msg_2(edhoc_msg_2 *msg2, edhoc_context_t *ctx, uint8_t *buffer
 
 /**
  * \brief Handle the EDHOC Message 3 received
+ * \param msg3 A pointer to the buffer containing the received EDHOC message 3
  * \param ctx EDHOC Context struct
  * \param buffer A pointer to the buffer containing the EDHOC message received
  * \param buff_sz Size of the EDHOC message received
