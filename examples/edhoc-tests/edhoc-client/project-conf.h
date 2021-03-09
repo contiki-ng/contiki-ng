@@ -15,8 +15,8 @@
 #define EDHOC_CID 0x16
 
 /*Define the coap server to conect with*/
-#define EDHOC_CONF_SERVER_EP "coap://[fe80::212:4b00:615:9fec]"
-//#define EDHOC_CONF_SERVER_EP "coap://[fe80::202:2:2:2]" /* Server IP for Cooja simulator*/
+//#define EDHOC_CONF_SERVER_EP "coap://[fe80::212:4b00:615:9fec]"
+#define EDHOC_CONF_SERVER_EP "coap://[fe80::201:1:1:1]" /* Server IP for Cooja simulator*/
 
 
 
@@ -38,8 +38,8 @@
 
 
 /*Define the libray for ECDH operations*/
-#define EDHOC_CONF_ECC CC2538_ECC
-//#define EDHOC_CONF_ECC UECC_ECC
+//#define EDHOC_CONF_ECC CC2538_ECC
+#define EDHOC_CONF_ECC UECC_ECC
 
 /*To run EDHOC client as RPL node*/
 //#define EDHOC_CONF_RPL_NODE 1
@@ -50,7 +50,7 @@ the target is an embedded device*/
 //#define WATCHDOG_CONF_ENABLE 0x00000000
 //#define SYS_CTRL_CONF_SYS_DIV SYS_CTRL_CLOCK_CTRL_SYS_DIV_32MHZ
 
-#define LOG_CONF_LEVEL_EDHOC LOG_LEVEL_INFO
+//#define LOG_CONF_LEVEL_EDHOC LOG_LEVEL_INFO
 //#define LOG_CONF_LEVEL_RPL LOG_LEVEL_INFO 
 //#define LOG_CONF_LEVEL_COAP LOG_LEVEL_INFO
 /*#define LOG_CONF_LEVEL_TCPIP LOG_LEVEL_DBG */
