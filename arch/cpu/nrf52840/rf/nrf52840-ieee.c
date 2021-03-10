@@ -865,7 +865,9 @@ set_value(radio_param_t param, radio_value_t value)
 
     /* If we are powered on, apply immediately. */
     if(radio_is_powered()) {
+      off();
       set_channel(value);
+      on();
     }
     return RADIO_RESULT_OK;
   case RADIO_PARAM_RX_MODE:
