@@ -60,7 +60,6 @@ uint8_t
 uecc_generate_key(ecc_key *key, ecc_curve_t curve)
 {
   int er = 0;
-  LOG_DBG("UECC generate key\n");
   watchdog_periodic();
   uECC_set_rng(&RNG);
   uint8_t public_key[64];
@@ -69,7 +68,6 @@ uecc_generate_key(ecc_key *key, ecc_curve_t curve)
   watchdog_periodic();
   memcpy(key->public.x, public_key, 32);
   memcpy(key->public.y, public_key + 32, 32);
-  /*uECC_compress(public_key, key->public.x, curve.curve); */
   watchdog_periodic();
   return er;
 }
@@ -77,38 +75,23 @@ void
 uecc_uncompress(uint8_t *compressed, uint8_t *gx, uint8_t *gy, ecc_curve_t *curve)
 {
   uint8_t pub[2 * ECC_KEY_BYTE_LENGHT];
-  LOG_DBG("compressed:");
-  print_buff_8_dbg(compressed, ECC_KEY_BYTE_LENGHT + 1);
   uECC_decompress(compressed, pub, curve->curve);
-  LOG_DBG("public:");
-  print_buff_8_dbg(pub, ECC_KEY_BYTE_LENGHT * 2);
   memcpy(gx, compressed + 1, ECC_KEY_BYTE_LENGHT);
   memcpy(gy, pub + ECC_KEY_BYTE_LENGHT, ECC_KEY_BYTE_LENGHT);
-  LOG_DBG("GX:");
-  print_buff_8_dbg(gx, ECC_KEY_BYTE_LENGHT + 1);
-  LOG_DBG("GY:");
-  print_buff_8_dbg(gy, ECC_KEY_BYTE_LENGHT);
 }
 uint8_t
 uecc_generate_IKM(uint8_t *gx, uint8_t *gy, uint8_t *private_key, uint8_t *ikm, ecc_curve_t curve)
 {
   int er = 0;
-  /*If just one coordinate is have it we put first byte non zero */
-  /*if(gy[0] == 0)
-     gy[0]=0x01;*/
   uint8_t compressed[ECC_KEY_BYTE_LENGHT + 1];
   compressed[0] = 0x03;
   memcpy(compressed + 1, gx, ECC_KEY_BYTE_LENGHT);
   uecc_uncompress(compressed, gx, gy, &curve);
-  LOG_DBG("GX:");
-  print_buff_8_dbg(gx, ECC_KEY_BYTE_LENGHT);
-  LOG_DBG("GY:");
-  print_buff_8_dbg(gy, ECC_KEY_BYTE_LENGHT);
+  
   uint8_t public[2 * ECC_KEY_BYTE_LENGHT];
   memcpy(public, gx, ECC_KEY_BYTE_LENGHT);
   memcpy(public + ECC_KEY_BYTE_LENGHT, gy, ECC_KEY_BYTE_LENGHT);
 
-  LOG_DBG("generate shared secret\n");
   watchdog_periodic();
   er = uECC_shared_secret(public, private_key, ikm, curve.curve);
   watchdog_periodic();

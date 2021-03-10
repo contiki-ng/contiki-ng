@@ -119,7 +119,6 @@ PT_THREAD(generate_key_hw(key_gen_t * key)) {
     ecc_set_random_key(secret_a);
     memcpy(state.a, secret_a, sizeof(uint32_t) * 8);
     PT_SPAWN(&key->pt, &(state.pt), ecc_compare(&state));
-    LOG_DBG("finished compare\n");
   } while(state.result != PKA_STATUS_A_LT_B);
 
   static ecc_multiply_state_t side_a;
@@ -141,16 +140,6 @@ PT_THREAD(generate_key_hw(key_gen_t * key)) {
   eccnativeToBytes(key->y, ECC_KEY_BYTE_LENGHT, side_a.point_out.y);
   eccnativeToBytes(key->private, ECC_KEY_BYTE_LENGHT, secret_a);
   eccnativeToBytes(key->x, ECC_KEY_BYTE_LENGHT, side_a.point_out.x);
-
-  LOG_DBG("Public:");
-  print_buff_8_dbg(public, 64);
-
-  LOG_DBG("x:");
-  print_buff_8_dbg(key->x, ECC_KEY_BYTE_LENGHT);
-  LOG_DBG("y:");
-  print_buff_8_dbg(key->y, ECC_KEY_BYTE_LENGHT);
-  LOG_DBG("secret:");
-  print_buff_8_dbg(key->private, ECC_KEY_BYTE_LENGHT);
   pka_disable();
   PT_END(&key->pt);
 }
@@ -180,134 +169,84 @@ PT_THREAD(ecc_decompress_key(ecc_key_uncompress_t * state)){
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   memset(l_result, 0, sizeof(uint32_t) * 16);
   CHECK_RESULT(bignum_mod_get_result(l_result, num_words, state->rv));
-  /*printf("x2 mod p:"); */
-  /*print_buff(l_result,16); */
-  /*eccnativeToBytes(result,32,l_result); */
-  /*print_buff_8(result,32); */
+
   watchdog_periodic();
   CHECK_RESULT(bignum_subtract_start(l_result, state->curve_info->size, _3, 1, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   memset(l_result, 0, sizeof(uint32_t) * 16);
   CHECK_RESULT(bignum_subtract_get_result(l_result, &state->len, state->rv));
-  /*printf("(x2 -3):"); */
-  /*print_buff(y,16); */
+
   CHECK_RESULT(bignum_mod_start(l_result, num_words, state->curve_info->prime, num_words, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   memset(l_result, 0, sizeof(uint32_t) * 16);
   CHECK_RESULT(bignum_mod_get_result(l_result, num_words, state->rv));
-  /*printf("(x2 -3) mod p:"); */
-  /* print_buff(l_result,16); */
-  /* eccnativeToBytes(result,32,l_result); */
-  /* print_buff_8(result,32); */
+
   watchdog_periodic();
   CHECK_RESULT(bignum_mul_start(l_result, state->curve_info->size, point, state->curve_info->size, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   state->len = state->curve_info->size * 2;
   memset(l_result, 0, sizeof(uint32_t) * 16);
   CHECK_RESULT(bignum_mul_get_result(l_result, &state->len, state->rv));
-  /*printf("(x2 -3)*x:"); */
-  /*print_buff(l_result,16); */
+
   CHECK_RESULT(bignum_mod_start(l_result, num_words * 2, state->curve_info->prime, num_words, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   memset(l_result, 0, sizeof(uint32_t) * 16);
   CHECK_RESULT(bignum_mod_get_result(l_result, num_words, state->rv));
-  /*printf("(x2 -3)*x mod p:"); */
-  /*print_buff(l_result,16); */
-  /* eccnativeToBytes(result,32,l_result); */
-  /*print_buff_8(result,32); */
+
   watchdog_periodic();
   CHECK_RESULT(bignum_add_start(l_result, state->curve_info->size, state->curve_info->b, state->curve_info->size, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   memset(y, 0, sizeof(uint32_t) * 16);
   CHECK_RESULT(bignum_subtract_get_result(l_result, &state->len, state->rv));
-  /*printf("(x2 -3)*x + b:"); */
-  /*print_buff(l_result,16); */
+
   CHECK_RESULT(bignum_mod_start(l_result, num_words * 2, state->curve_info->prime, num_words, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   memset(l_result, 0, sizeof(uint32_t) * 16);
   CHECK_RESULT(bignum_mod_get_result(l_result, num_words, state->rv));
-  /*printf("(x2 -3)*x + b mod p:"); */
-  /*print_buff(l_result,16); */
-  /*eccnativeToBytes(result,32,l_result); */
-  /*print_buff_8(result,32); */
+
   watchdog_periodic();
   uint32_t exp[8];
 
   memset(exp, 0, sizeof(uint32_t) * 8);
-
-  /*/memset(prime,0,32); */
-  /*eccnativeToBytes(prime,32,state->curve_info->prime); */
-  /*printf("P1:"); */
-  /*print_buff(p1,8); */
-  /*printf("d4:"); */
-  /*print_buff(d4,8); */
-  /*printf("prime:"); */
-  /*print_buff((uint32_t*)state->curve_info->prime,8); */
-  /*print_buff_8(prime,32); */
 
   CHECK_RESULT(bignum_add_start(state->curve_info->prime, state->curve_info->size, p1, 1, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   state->len = state->curve_info->size + 1;
   memset(exp, 0, sizeof(uint32_t) * 8);
   CHECK_RESULT(bignum_add_get_result(exp, &state->len, state->rv));
-  /*printf("prime+1:"); */
-  /*print_buff(exp,state->len); */
 
   CHECK_RESULT(bignum_divide_start(exp, 8, d4, 8, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   state->len = state->curve_info->size;
   memset(exp, 0, sizeof(uint32_t) * 8);
   CHECK_RESULT(bignum_divide_get_result(exp, &state->len, state->rv));
-  /*printf("prime+1/4:"); */
-  /*print_buff(exp,state->len); */
+
 
   CHECK_RESULT(bignum_mul_start(exp, 8, p10, 8, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   state->len = state->curve_info->size;
   memset(exp, 0, sizeof(uint32_t) * 8);
   CHECK_RESULT(bignum_divide_get_result(exp, &state->len, state->rv));
-  /* printf("prime+1/4:"); */
-  /* print_buff(exp,state->len); */
 
-  /*print_buff(exp,state->len); */
-
-  /* printf("exp:"); */
-  /* print_buff(exp,8); */
-  /* eccnativeToBytes(result,32,l_result); */
-  /* print_buff_8(result,32); */
-
-  /* printf("prime:"); */
-  /* print_buff((uint32_t*)state->curve_info->prime,num_words); */
-
-  /* printf("lresult:"); */
-/*  print_buff(l_result,16); */
-/* eccnativeToBytes(result,32,l_result); */
-/* print_buff_8(result,32); */
   CHECK_RESULT(bignum_exp_mod_start(exp, 8, state->curve_info->prime, num_words, l_result, num_words, &state->rv, state->process));
   PT_WAIT_UNTIL(&state->pt, pka_check_status());
   memset(y, 0, sizeof(uint32_t) * 8);
   CHECK_RESULT(bignum_exp_mod_get_result(y, num_words, state->rv));
 
-  /*printf("y:"); */
-  /*print_buff(y,8); */
   memset(result, 0, 32);
   eccnativeToBytes(result, 32, y);
-  /*print_buff_8(result,32); */
-  /*printf("%d\n",result[state->curve_info->size * 4 - 1]); */
-  /* printf("%d\n",state->compressed[0] & 0x01); */
+
 
   if((result[state->curve_info->size * 4 - 1] & 0x01) != (state->compressed[0] & 0x01)) {
-    /* printf("is not this\n"); */
+
     CHECK_RESULT(bignum_subtract_start(state->curve_info->prime, state->curve_info->size, y, state->curve_info->size, &state->rv, state->process));
     PT_WAIT_UNTIL(&state->pt, pka_check_status());
     memset(y, 0, sizeof(uint32_t) * 8);
     state->len = state->curve_info->size;
     CHECK_RESULT(bignum_subtract_get_result(y, &state->len, state->rv));
-    /* printf("y:"); */
-    /* print_buff(y,8); */
     memset(result, 0, 32);
     eccnativeToBytes(result, 32, y);
-    /* print_buff_8(result,32); */
+  
   }
   memcpy(state->public, state->compressed + 1, sizeof(uint32_t) * state->curve_info->size);
   memcpy(state->public + (state->curve_info->size * 4), result, sizeof(uint32_t) * state->curve_info->size);
@@ -338,8 +277,7 @@ cc2538_generate_IKM(uint8_t *gx, uint8_t *gy, uint8_t *private_key, uint8_t *ikm
   watchdog_periodic();
 
   eccnativeToBytes(ikm, ECC_KEY_BYTE_LENGHT, shared.point_out.x);
-  LOG_DBG("IKM:");
-  print_buff_8_dbg(ikm, ECC_KEY_BYTE_LENGHT);
+
   pka_disable();
   er = 1;
 

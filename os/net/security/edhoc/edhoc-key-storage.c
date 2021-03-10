@@ -121,5 +121,4 @@ void
 edhoc_remove_key(cose_key_t *auth_key)
 {
   list_remove(key_list, auth_key);
-  LOG_DBG("list lengh:(%d)", list_length(key_list));
 }

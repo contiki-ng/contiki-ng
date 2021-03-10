@@ -39,7 +39,7 @@
 //#define EDHOC_CONF_RPL_NODE 1
 
 /* Definde the node as Border Router*/
-/*#ifndef WEBSERVER_CONF_CFS_CONNS
+#ifndef WEBSERVER_CONF_CFS_CONNS
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
 
@@ -50,7 +50,7 @@
 #if BORDER_ROUTER_CONF_WEBSERVER
 #define UIP_CONF_TCP 1
 #endif
-*/
+
 /*May be necesary to defind one of the following macros when the UECC_ECC library is used and 
 the target is an embedded device*/ 
 //#define WATCHDOG_CONF_ENABLE 0x00000000

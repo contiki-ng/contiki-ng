@@ -1,9 +1,11 @@
 #Ephemeral Diffie-Hellman Over COSE (EDHOC) [draft-ietf-lake-edhoc-05]
 
-The [draft-ietf-lake-edhoc-05] IETF Internet - Draft specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a very compact, and lightweight authenticated Diffie-Hellman key exchange with ephemeral keys that provides mutual authentication, perfect forward secrecy, and identity protection.It uses COSE [RFC8152] for cryptography, CBOR [RFC7049] for encoding, and CoAP [RFC7252] for transport and the main use case is to establish an OSCORE security context. The EDHOC exchange and the key derivation follow known protocol constructions such as[SIGMA], NISTSP-800-56A and HKDF[RFC5869].
+The [draft-ietf-lake-edhoc-05] IETF Internet - Draft specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a very compact, and lightweight authenticated Diffie-Hellman key exchange with ephemeral keys that provides mutual authentication, perfect forward secrecy, and identity protection.It uses COSE [RFC8152] for cryptography, CBOR [RFC7049] for encoding, and CoAP [RFC7252] for transport and the main use case is to establish an OSCORE security context. The EDHOC exchange and the key derivation follow known protocol constructions such as [SIGMA], NISTSP-800-56A and HKDF [RFC5869].
 
 ## EDHOC in Contiki-NG
-The Contik-NG EDHOC module implememts asymmetric key authentication by using static Diffie-Hellman keys.The authentication is provided by a Message Authentication Code (MAC) computed from an ephemeral-static ECDH shared secret which enables significant reductions in message sizes. The implementation uses cypher suite 2 that consists of AES-CCM-16-64-128 as an AEAD algorithm, SHA-256 as a Hash algorithm, and the P-256 as ECDH curve.
+The Contik-NG EDHOC module implememts asymmetric key authentication by using static Diffie-Hellman keys.The authentication is provided by a Message Authentication Code (MAC) computed from an ephemeral-static ECDH shared secret which enables significant reductions in message sizes. 
+The implementation uses cypher suite 2 that consists of AES-CCM-16-64-128 as an AEAD algorithm, SHA-256 as a Hash algorithm, and the P-256 as ECDH curve.
+The implementation has passed the interoperability test succesffuly in the IETF-Hacktachon 110.
 
 EDHOC consists of three messages (MSG1, MSG2 and, MSG3), plus an EDHOC error message (MSG_ERR) where each of them is a CBOR sequence.The current implementation transports these messages as an exchange of Confirmable CoAP [RFC725] messages where the CoAP client is the EDHOC Initiator and the
 CoAP server is the EDHOC Responder.The MSG1 and MSG3 are transferred in POST requests and MSG2 in a 2.04(Changed) response to the Uri-Path: 

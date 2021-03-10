@@ -109,7 +109,7 @@ sha_new()
   sha_context_t *ctx;
   ctx = sha_context_new();
 #ifdef CC2538_SH2
-  LOG_INFO("SH256 for CC2538\n");
+  LOG_DBG("SH256 for CC2538\n");
   crypto_init();
 #endif
   if(ctx) {

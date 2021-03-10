@@ -133,12 +133,9 @@ hkdf_expand(uint8_t *prk, uint16_t prk_sz, uint8_t *info, uint16_t info_sz, uint
   /*Compose T(2) ... T(N) */
   memcpy(aggregate_buffer, &(out_buffer[0]), 32);
   for(int i = 1; i < N; i++) {
-    /*LOG_INFO("sha-256 (%d)\n",i); */
     hmac_sha256_reset(&ctx, prk, prk_sz);
-
     memcpy(&(aggregate_buffer[32]), info, info_sz);
     aggregate_buffer[32 + info_sz] = i + 1;
-
     hmac_sha256_create(&ctx, prk, prk_sz, aggregate_buffer, 32 + info_sz + 1, &(out_buffer[i * 32]));
     memcpy(aggregate_buffer, &(out_buffer[i * 32]), 32);
   }
@@ -161,7 +158,6 @@ void
 set_cose_key(ecc_key *key, cose_key *cose, cose_key_t *auth_key, ecc_curve_t curve)
 {
   if(auth_key->kid_sz == 0) {
-    LOG_DBG("kid_sz is 0 \n");
     key->kid_sz = 0;
     memcpy(key->public.x, auth_key->x, ECC_KEY_BYTE_LENGHT);
     memcpy(key->public.y, auth_key->y, ECC_KEY_BYTE_LENGHT);
@@ -172,5 +168,4 @@ set_cose_key(ecc_key *key, cose_key *cose, cose_key_t *auth_key, ecc_curve_t cur
     memcpy(key->public.y, auth_key->y, ECC_KEY_BYTE_LENGHT);
   }
   generate_cose_key(key, cose, auth_key->identity, auth_key->identity_sz);
-  LOG_DBG("Cose kid len (%d)\n", (int)cose->kid.len);
 }

@@ -61,9 +61,9 @@ PROCESS_THREAD(edhoc_example_client, ev, data)
   etimer_set(&timer, CLOCK_SECOND * 10);
   while(1) {
     watchdog_periodic();
-    LOG_PRINT("Waiting to reach the rpl\n");
+    LOG_INFO("Waiting to reach the rpl\n");
     if(rpl_is_reachable()) {
-      LOG_PRINT("RPL reached\n");
+      LOG_INFO("RPL reached\n");
       watchdog_periodic();
       break;
     }
@@ -102,22 +102,17 @@ PROCESS_THREAD(edhoc_example_client, ev, data)
     int8_t re = edhoc_client_callback(ev, &data);
     if(re > 0) {
       LOG_INFO("EDHOC protocol finished success, export here your security context\n");
-      time = RTIMER_NOW();
       if(edhoc_exporter_oscore(&osc, ctx) < 0) {
         LOG_ERR("ERROR IN EXPORT CTX\n");
       } else {
-        time = RTIMER_NOW() - time;
-        LOG_PRINT("Client time to export oscore ctx: %" PRIu32 " ms (%" PRIu32 " CPU cycles ).\n", (uint32_t)((uint64_t)time * 1000 / RTIMER_SECOND), (uint32_t)time);
-        time = RTIMER_NOW();
         LOG_INFO("Export OSCORE CTX success\n");
         edhoc_exporter_print_oscore_ctx(&osc);
       }
-
-      /*LOG_INFO("And Get your Aplication Data\n");
-         char ad2[16];
-         LOG_INFO("AD2:");
-         uint8_t ad2_sz = edhoc_server_get_ad_2(ad2);
-         print_char_8_info(ad2,ad2_sz);*/
+	  /*LOG_DBG("And Get your Aplication Data\n");
+	  char ad2[16];
+	  LOG_DBG("AD2:");
+	  uint8_t ad2_sz = edhoc_server_get_ad_2(ad2);
+	  print_char_8_dbg(ad2,ad2_sz);*/
       break;
     }
     if(re < 0) {

@@ -135,43 +135,37 @@ PROCESS_THREAD(edhoc_example_server, ev, data)
     .curve_info = &nist_p_256,
   };
   PT_SPAWN(&edhoc_example_server.pt, &key.pt, generate_key_hw(&key));
-
-  /*print_buff_8_dbg(key.x, ECC_KEY_BYTE_LENGHT);
-  print_buff_8_dbg(key.y, ECC_KEY_BYTE_LENGHT);
-  print_buff_8_dbg(key.private, ECC_KEY_BYTE_LENGHT);*/
   memcpy(ctx->ephimeral_key.public.x, key.x, ECC_KEY_BYTE_LENGHT);
   memcpy(ctx->ephimeral_key.public.y, key.y, ECC_KEY_BYTE_LENGHT);
   memcpy(ctx->ephimeral_key.private_key, key.private, ECC_KEY_BYTE_LENGHT);
 
 #endif
   t = RTIMER_NOW() - t;
-  LOG_PRINT("Server time to generate new key: %" PRIu32 " ms (%" PRIu32 " CPU cycles ).\n", (uint32_t)((uint64_t)t * 1000 / RTIMER_SECOND), (uint32_t)t);
+  LOG_INFO("Server time to generate new key: %" PRIu32 " ms (%" PRIu32 " CPU cycles ).\n", (uint32_t)((uint64_t)t * 1000 / RTIMER_SECOND), (uint32_t)t);
 
-  LOG_INFO("Gy (%d bytes):", ECC_KEY_BYTE_LENGHT);
-  print_buff_8_info(ctx->ephimeral_key.public.x, ECC_KEY_BYTE_LENGHT);
-  LOG_DBG("y:");
-  print_buff_8_dbg(ctx->ephimeral_key.public.y, ECC_KEY_BYTE_LENGHT);
-  LOG_INFO("Y (%d bytes):", ECC_KEY_BYTE_LENGHT);
-  print_buff_8_info(ctx->ephimeral_key.private_key, ECC_KEY_BYTE_LENGHT);
+  LOG_DBG("Gy (%d bytes):", ECC_KEY_BYTE_LENGHT);
+  print_buff_8_dbg(ctx->ephimeral_key.public.x, ECC_KEY_BYTE_LENGHT);
+  LOG_DBG("Y (%d bytes):", ECC_KEY_BYTE_LENGHT);
+  print_buff_8_dbg(ctx->ephimeral_key.private_key, ECC_KEY_BYTE_LENGHT);
   while(1) {
     PROCESS_WAIT_EVENT();
     uint8_t res = edhoc_server_callback(ev, &data);
     if(res == SERV_FINISHED) {
-      LOG_INFO("New EDHOC client finished export here the security context\n");
+      LOG_DBG("New EDHOC client finished export here the security context\n");
       t = RTIMER_NOW();
       if(edhoc_exporter_oscore(&osc, ctx) < 0) {
         LOG_ERR("ERROR IN EXPORT CTX\n");
       } else {
         t = RTIMER_NOW() - t;
-        LOG_PRINT("Server time to generate OSCORE ctx: %" PRIu32 " ms (%" PRIu32 " CPU cycles ).\n", (uint32_t)((uint64_t)t * 1000 / RTIMER_SECOND), (uint32_t)t);
-        LOG_DBG("Export OSCORE CTX success\n");
+        LOG_INFO("Server time to generate OSCORE ctx: %" PRIu32 " ms (%" PRIu32 " CPU cycles ).\n", (uint32_t)((uint64_t)t * 1000 / RTIMER_SECOND), (uint32_t)t);
+       
         edhoc_exporter_print_oscore_ctx(&osc);
       }
-      /*LOG_INFO("And Get your Aplication Data\n");
+      /*LOG_DBG("And Get your Aplication Data\n");
          char ad3[16];
          uint8_t ad3_sz = edhoc_server_get_ad_3(ad3);
-         LOG_INFO("AD_3 (%d bytes):",ad3_sz);
-         print_char_8_info(ad3,ad3_sz); */
+         LOG_DBG("AD_3 (%d bytes):",ad3_sz);
+         print_char_8_dbg(ad3,ad3_sz); */
       res = SERV_RESTART;
     }
     if(res == SERV_RESTART) {
@@ -193,16 +187,13 @@ PROCESS_THREAD(edhoc_example_server, ev, data)
       };
       PT_SPAWN(&edhoc_example_server.pt, &key.pt, generate_key_hw(&key));
 
-     /* print_buff_8_dbg(key.x, ECC_KEY_BYTE_LENGHT);
-      print_buff_8_dbg(key.y, ECC_KEY_BYTE_LENGHT);
-      print_buff_8_dbg(key.private, ECC_KEY_BYTE_LENGHT);*/
       memcpy(ctx->ephimeral_key.public.x, key.x, ECC_KEY_BYTE_LENGHT);
       memcpy(ctx->ephimeral_key.public.y, key.y, ECC_KEY_BYTE_LENGHT);
       memcpy(ctx->ephimeral_key.private_key, key.private, ECC_KEY_BYTE_LENGHT);
 
 #endif
       t = RTIMER_NOW() - t;
-      LOG_PRINT("Server time to generate new key: %" PRIu32 " ms (%" PRIu32 " CPU cycles ).\n", (uint32_t)((uint64_t)t * 1000 / RTIMER_SECOND), (uint32_t)t);
+      LOG_INFO("Server time to generate new key: %" PRIu32 " ms (%" PRIu32 " CPU cycles ).\n", (uint32_t)((uint64_t)t * 1000 / RTIMER_SECOND), (uint32_t)t);
       LOG_INFO("\n");
       LOG_INFO("G_y (%d bytes):", ECC_KEY_BYTE_LENGHT);
       print_buff_8_info(ctx->ephimeral_key.public.x, ECC_KEY_BYTE_LENGHT);

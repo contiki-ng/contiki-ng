@@ -144,13 +144,6 @@ encode_enc_structure(enc_structure str, uint8_t *cbor)
 uint8_t
 cose_decrypt(cose_encrypt0 *enc)
 {
-  LOG_DBG("Decrypt:\n");
-  LOG_DBG("external aad size %d:", enc->external_aad_sz);
-  cose_print_buff_8_dbg(enc->external_aad, enc->external_aad_sz);
-  LOG_DBG("Plaintext:");
-  cose_print_buff_8_dbg(enc->plaintext, enc->plaintext_sz);
-  LOG_DBG("protected:");
-  cose_print_buff_8_dbg(enc->protected_header, enc->protected_header_sz);
   enc_structure str = {
     .str_id = (sstr_cose){ enc_rec, sizeof(enc_rec) }, /*Encrypt0 */
     .protected = (bstr_cose){ enc->protected_header, enc->protected_header_sz }, /*empty */
@@ -160,29 +153,14 @@ cose_decrypt(cose_encrypt0 *enc)
   uint8_t str_encode[2 * COSE_MAX_BUFFER];
   uint8_t str_sz = encode_enc_structure(str, str_encode);
 
-  LOG_INFO("(CBOR-encoded AAD) (%d bytes):", str_sz);
-  cose_print_buff_8_info(str_encode, str_sz);
-  LOG_DBG("Key:");
-  cose_print_buff_8_dbg(enc->key, KEY_LEN);
-  LOG_DBG("nonce:");
-  cose_print_buff_8_dbg(enc->nonce, IV_LEN);
+  LOG_DBG("(CBOR-encoded AAD) (%d bytes):", str_sz);
+  cose_print_buff_8_dbg(str_encode, str_sz);
   uint8_t tag[TAG_LEN];
   CCM_STAR.set_key(enc->key);
   enc->plaintext_sz = enc->ciphertext_sz - TAG_LEN;
 
   CCM_STAR.aead(enc->nonce, enc->ciphertext, enc->plaintext_sz, str_encode, str_sz, tag, TAG_LEN, 0);
   memcpy(enc->plaintext, enc->ciphertext, enc->plaintext_sz);
-
-  LOG_DBG("DEC-CIPHERTEX:");
-  cose_print_buff_8_dbg(enc->ciphertext, enc->ciphertext_sz);
-  LOG_DBG("DEC-PLAINTEXT:");
-  cose_print_buff_8_dbg(enc->plaintext, enc->plaintext_sz);
-  LOG_DBG("TAG:");
-  cose_print_buff_8_dbg(&enc->ciphertext[enc->plaintext_sz], TAG_LEN);
-  LOG_DBG("TAG 2:");
-  cose_print_buff_8_dbg(tag, TAG_LEN);
-  LOG_DBG("str encode:");
-  cose_print_buff_8_dbg(str_encode, str_sz);
 
   if(memcmp(tag, &(enc->ciphertext[enc->plaintext_sz]), TAG_LEN) != 0) {
     LOG_ERR("Decrypt msg error\n");
@@ -193,17 +171,6 @@ cose_decrypt(cose_encrypt0 *enc)
 uint8_t
 cose_encrypt(cose_encrypt0 *enc)
 {
-  LOG_DBG("Encrypt:\n");
-  LOG_DBG("Key:");
-  cose_print_buff_8_dbg(enc->key, enc->key_sz);
-  LOG_DBG("IV:");
-  cose_print_buff_8_dbg(enc->nonce, enc->nonce_sz);
-  LOG_DBG("external aad (%d):", enc->external_aad_sz);
-  cose_print_buff_8_dbg(enc->external_aad, enc->external_aad_sz);
-  LOG_DBG("Plaintext:");
-  cose_print_buff_8_dbg(enc->plaintext, enc->plaintext_sz);
-  LOG_DBG("protected:");
-  cose_print_buff_8_dbg(enc->protected_header, enc->protected_header_sz);
 
   enc_structure str = {
     .str_id = (sstr_cose){ enc_rec, sizeof(enc_rec) }, /*Encrypt0 */
@@ -213,12 +180,8 @@ cose_encrypt(cose_encrypt0 *enc)
 
   uint8_t str_encode[2 * COSE_MAX_BUFFER];
   uint8_t str_sz = encode_enc_structure(str, str_encode);
-  LOG_INFO("(CBOR-encoded AAD) (%d bytes):", str_sz);
-  cose_print_buff_8_info(str_encode, str_sz);
-  LOG_DBG("Key:");
-  cose_print_buff_8_dbg(enc->key, KEY_LEN);
-  LOG_DBG("nonce:");
-  cose_print_buff_8_dbg(enc->nonce, IV_LEN);
+  LOG_DBG("(CBOR-encoded AAD) (%d bytes):", str_sz);
+  cose_print_buff_8_dbg(str_encode, str_sz);
 
   /*TO DO: check the algorithm selected in enc */
   if(enc->key_sz != KEY_LEN || enc->nonce_sz != IV_LEN || enc->plaintext_sz > COSE_MAX_BUFFER || str_sz > (2 * COSE_MAX_BUFFER)) {
@@ -228,16 +191,8 @@ cose_encrypt(cose_encrypt0 *enc)
 
   CCM_STAR.set_key(enc->key);
   memcpy(enc->ciphertext, enc->plaintext, enc->plaintext_sz);
-  LOG_DBG("Set ciphhertext with plaintex:");
-  cose_print_buff_8_dbg(enc->ciphertext, enc->plaintext_sz);
 
   CCM_STAR.aead(enc->nonce, enc->ciphertext, enc->plaintext_sz, str_encode, str_sz, &enc->ciphertext[enc->plaintext_sz], TAG_LEN, 1);
   enc->ciphertext_sz = enc->plaintext_sz + TAG_LEN;
-  LOG_DBG("ciphertext&tag:");
-  cose_print_buff_8_dbg(enc->ciphertext, enc->ciphertext_sz);
-  LOG_DBG("ciphertext:");
-  cose_print_buff_8_dbg(enc->ciphertext, enc->plaintext_sz);
-  LOG_DBG("TAG: ");
-  cose_print_buff_8_dbg(&enc->ciphertext[enc->plaintext_sz], TAG_LEN);
   return enc->ciphertext_sz;
 }

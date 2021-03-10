@@ -139,7 +139,6 @@ edhoc_get_bytes(uint8_t **in, uint8_t **out)
     *in = (*in + size);
     return size;
   } else {
-    LOG_DBG("get not byte array\n ");
     (*in)--;
     return 0;
   }
@@ -153,7 +152,6 @@ edhoc_get_maps_num(uint8_t **in)
     num = byte ^ 0xa0;
     return num;
   } else {
-    LOG_DBG("get not map\n ");
     (*in)--;
     return 0;
   }
@@ -167,7 +165,6 @@ edhoc_get_array_num(uint8_t **in)
     num = byte ^ 0x80;
     return num;
   } else {
-    LOG_DBG("get not array\n ");
     (*in)--;
     return 0;
   }
@@ -189,7 +186,6 @@ get_text(uint8_t **in, char **out)
     return size;
   } else {
     (*in)--;
-    LOG_DBG("get not text array\n ");
     return -1;
   }
 }
@@ -225,7 +221,6 @@ edhoc_serialize_msg_1(edhoc_msg_1 *msg, unsigned char *buffer, bool suit_array)
     }
   }
   else{
-    LOG_DBG("put unssigned");
     size += cbor_put_unsigned(&buffer, msg->suit_I.buf[0]);
   }
 
@@ -303,11 +298,10 @@ edhoc_deserialize_err(edhoc_msg_error *msg, unsigned char *buffer, uint8_t buff_
     int16_t len = get_text(&buffer, &msg->err.buf);
     if(len > 0) {
       msg->err.len = len;
-      LOG_DBG("Is an error msgs\n");
+      LOG_ERR("Is an error msgs\n");
       return RX_ERR_MSG;
     }
     else if(len == -1){
-      LOG_DBG("Is not an error msgs\n");
       return 0;      
     }
     else{
@@ -315,7 +309,6 @@ edhoc_deserialize_err(edhoc_msg_error *msg, unsigned char *buffer, uint8_t buff_
     }
   }
   
-  LOG_DBG("buffer (%d)",(int)(buff_f - buffer));
   if(buffer < buff_f) {
     msg->suit.buf = buffer;
     int16_t len = edhoc_get_unsigned(&buffer);
@@ -326,15 +319,12 @@ edhoc_deserialize_err(edhoc_msg_error *msg, unsigned char *buffer, uint8_t buff_
     else{
       msg->suit.len = 1;
     }
-    //msg->suit.len = buff_f - msg->suit.buf;
     if(msg->suit.len > 0){
-      LOG_DBG("The error message include a new suit proposal\n");
+      LOG_WARN("The error message include a new suit proposal\n");
       return 2;
     } 
   } 
 
-  /*LOG_INFO("ERR:");
-  print_char_8_info(msg->err.buf, msg->err.len);*/
   return 0;
 }
 int8_t
@@ -354,24 +344,15 @@ edhoc_deserialize_msg_1(edhoc_msg_1 *msg, unsigned char *buffer, size_t buff_sz)
   if(buffer < buff_f) {
     msg->suit_I.buf = (uint8_t*) buffer;
     unint = (int8_t)edhoc_get_unsigned(&buffer);
-    //msg->suit_I.buf[0] = (uint8_t)unint;
-    LOG_DBG("(%d)\n", unint);
     if(unint < 0){
       unint = edhoc_get_array_num(&buffer);
-      LOG_DBG("is na array with %d num and buffer position  %d \n",unint,(uint8_t)*buffer);
-      //uint8_t i = 0; 
       msg->suit_I.buf = (uint8_t*)buffer;
       while(msg->suit_I.len < unint){
         edhoc_get_unsigned(&buffer);
-        //memcpy(msg->suit_I.buf+i,&in,1);
-        //msg->suit_I.buf[i] = (uint8_t) in;
-        //msg->suit_I.buf[i] = (uint8_t)edhoc_get_unsigned(&buffer);
-        msg->suit_I.len++;
-           
+        msg->suit_I.len++;     
       }
     }
     else{
-      //msg->suit_I.buf[0] = unint;
       msg->suit_I.len = 1;
     }
   }
@@ -424,8 +405,8 @@ edhoc_deserialize_msg_2(edhoc_msg_2 *msg, unsigned char *buffer, size_t buff_sz)
   }
 
   msg->data.Gy.len = edhoc_get_bytes(&buffer, &msg->data.Gy.buf);
-  LOG_INFO("GY:");
-  print_buff_8_info(msg->data.Gy.buf, msg->data.Gy.len);
+  LOG_DBG("GY:");
+  print_buff_8_dbg(msg->data.Gy.buf, msg->data.Gy.len);
   if(msg->data.Gy.len == 0) {
     LOG_ERR("error code (%d)\n ", ERR_MSG_MALFORMED);
     return ERR_MSG_MALFORMED;
@@ -452,16 +433,13 @@ int8_t
 edhoc_deserialize_msg_3(edhoc_msg_3 *msg, unsigned char *buffer, size_t buff_sz)
 {
   msg->data_3.buf = buffer;
-  LOG_DBG("Desirealize msg 3\n");
   uint8_t var = ((4 * METHOD) + CORR) % 4;
   if((var == 2) || (var == 3)) {
-    LOG_DBG("Non CR\n");
     msg->data.Cr = (bstr){ NULL, 0 };
   } else {
     msg->data.Cr.len = edhoc_get_bytes(&buffer, &msg->data.Cr.buf);
     msg->data_3.len = msg->data.Cr.len + 1;
     if(msg->data.Cr.len == 0) {
-      LOG_DBG("CR byteidentfier\n");
       msg->data.Cr.buf = point_byte(&buffer);
       msg->data.Cr.len = 1;
       msg->data_3.len = msg->data.Cr.len;
@@ -555,7 +533,6 @@ edhoc_get_id_cred_x(uint8_t **p, uint8_t **id_cred_x, cose_key_t *key)
 
   /*(PRKI_2) ID_CRED_R = CRED_R */
   case 1:
-    LOG_DBG("case 1 PRK_ID\n");
     key->kty = edhoc_get_unsigned(p);
     int param = get_negative(p);
     if(param != 1) {

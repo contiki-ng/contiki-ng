@@ -16,7 +16,7 @@
 
 /*Define the coap server to conect with*/
 //#define EDHOC_CONF_SERVER_EP "coap://[fe80::212:4b00:615:9fec]"
-#define EDHOC_CONF_SERVER_EP "coap://[fe80::201:1:1:1]" /* Server IP for Cooja simulator*/
+#define EDHOC_CONF_SERVER_EP "coap://[fd01::202:2:2:2]" /* Server IP for Cooja simulator*/
 
 
 
@@ -42,7 +42,7 @@
 #define EDHOC_CONF_ECC UECC_ECC
 
 /*To run EDHOC client as RPL node*/
-//#define EDHOC_CONF_RPL_NODE 1
+#define EDHOC_CONF_RPL_NODE 1
 
 
 /*May be necesary to defind one of the following macros when the UECC_ECC library is used and 
