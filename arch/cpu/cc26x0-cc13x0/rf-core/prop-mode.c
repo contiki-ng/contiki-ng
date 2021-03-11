@@ -133,7 +133,9 @@ static int off(void);
 static rfc_propRxOutput_t rx_stats;
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
-#define DOT_4G_MAX_FRAME_LEN    2047
+#ifndef DOT_4G_MAX_FRAME_LEN
+  #define DOT_4G_MAX_FRAME_LEN    2047
+#endif
 #define DOT_4G_PHR_LEN             2
 
 /* PHY HDR bits */
@@ -219,6 +221,12 @@ static const prop_mode_tx_power_config_t *tx_power_current = &TX_POWER_DRIVER[1]
 #define DATA_ENTRY_LENSZ_NONE 0
 #define DATA_ENTRY_LENSZ_BYTE 1
 #define DATA_ENTRY_LENSZ_WORD 2 /* 2 bytes */
+
+#ifndef PROP_MODE_CONF_RX_WAIT_TIME
+  #define PROP_MODE_RX_WAIT_TIME (RTIMER_SECOND / 50)
+#else
+  #define PROP_MODE_RX_WAIT_TIME PROP_MODE_CONF_RX_WAIT_TIME
+#endif
 
 /* The size of the metadata (excluding the packet length field) */
 #define RX_BUF_METADATA_SIZE \
@@ -861,7 +869,7 @@ read_frame(void *buf, unsigned short buf_len)
   /* wait for entry to become finished */
   rtimer_clock_t t0 = RTIMER_NOW();
   while(entry->status == DATA_ENTRY_STATUS_BUSY
-      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (RTIMER_SECOND / 50)));
+      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + PROP_MODE_RX_WAIT_TIME));
 
 #if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */
