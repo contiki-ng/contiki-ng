@@ -28,7 +28,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup nrf52840-usb
+ * \addtogroup nrf52840
+ * @{
+ *
+ * \addtogroup nrf52840-dev
+ * @{
+ *
+ * \addtogroup nrf52840-usb nRF52840 USB driver
  * @{
  *
  * \file
@@ -44,4 +50,8 @@ void dfu_trigger_usb_init(void);
 
 #endif /* USB_DFU_TRIGGER_H_ */
 
-/** @} */
+/**
+ * @}
+ * @}
+ * @}
+ */
