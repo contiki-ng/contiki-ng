@@ -58,6 +58,7 @@ platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1350 \
+platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1352r1 \
 platform-specific/nrf52dk/blink-hello/nrf52dk \
 platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
 platform-specific/nrf52dk/mqtt-demo/nrf52dk \
