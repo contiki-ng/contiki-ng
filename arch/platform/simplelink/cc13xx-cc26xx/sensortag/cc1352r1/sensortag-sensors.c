@@ -31,8 +31,14 @@
  * \addtogroup sensortag-peripherals
  * @{
  *
+ * \defgroup sensortag-lpstk-peripherals LPSTK peripherals
+ *
+ * This group documents components specific to this SensorTag
+ *
+ * @{
+ *
  * \file
- *        Generic module controlling sensors on SensorTag.
+ *        Generic module controlling sensors on the LPSTK.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
@@ -48,4 +54,7 @@
 SENSORS(&opt_3001_sensor, &hdc_1000_sensor);
 #endif
 /*---------------------------------------------------------------------------*/
-/** @} */
+/**
+ * @}
+ * @}
+ */

@@ -31,8 +31,14 @@
  * \addtogroup sensortag-peripherals
  * @{
  *
+ * \defgroup sensortag-cc2650-peripherals CC2650 SensorTag peripherals
+ *
+ * This group documents components specific to this SensorTag
+ *
+ * @{
+ *
  * \file
- *        Generic module controlling sensors on SensorTag.
+ *        Generic module controlling sensors on the CC2650 SensorTag.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
@@ -48,4 +54,7 @@
 SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor, &mpu_9250_sensor);
 #endif
 /*---------------------------------------------------------------------------*/
-/** @} */
+/**
+ * @}
+ * @}
+ */

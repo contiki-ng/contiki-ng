@@ -28,12 +28,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup sensortag-peripherals
+ * \addtogroup sensortag-lpstk-peripherals
  * @{
  *
  * \file
- *        LED HAL definitions for the CC2650STK LEDs. Is not compatible with
- *        the CC1350STK.
+ *        LED HAL definitions for the LPSTK LEDs.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */

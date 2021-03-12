@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup launchpad-peripherals
+ * \addtogroup sensortag-cc2650-peripherals
  * @{
  *
  * \file
