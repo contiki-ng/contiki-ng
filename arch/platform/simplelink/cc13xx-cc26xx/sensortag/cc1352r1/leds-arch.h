@@ -27,11 +27,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** \addtogroup sensortag-cc1350-peripherals
+/** \addtogroup sensortag-lpstk-peripherals
  * @{
  *
  * \file
- *        LED HAL definitions for the CC1350STK LEDs. Is not compatible with
+ *        LED HAL definitions for the LPSTK LEDs. Is not compatible with
  *        the CC2650STK.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
@@ -46,9 +46,10 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#define LEDS_CONF_COUNT             1
+#define LEDS_CONF_COUNT             2
 
 #define LEDS_CONF_RED               0
+#define LEDS_CONF_GREEN             1
 
 #define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
 /** @} */

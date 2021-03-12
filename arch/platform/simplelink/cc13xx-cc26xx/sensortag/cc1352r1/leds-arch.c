@@ -27,34 +27,28 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** \addtogroup sensortag-cc1350-peripherals
+/**
+ * \addtogroup sensortag-lpstk-peripherals
  * @{
  *
  * \file
- *        LED HAL definitions for the CC1350STK LEDs. Is not compatible with
- *        the CC2650STK.
+ *        LED HAL definitions for the LPSTK LEDs.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef LEDS_ARCH_H_
-#define LEDS_ARCH_H_
+#include "contiki.h"
+#include "dev/leds.h"
 /*---------------------------------------------------------------------------*/
-/**
- * \name LED configurations for the dev/leds.h API.
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define LEDS_CONF_COUNT             1
-
-#define LEDS_CONF_RED               0
-
-#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
+#include <Board.h>
+/*---------------------------------------------------------------------------*/
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+const leds_t leds_arch_leds[] = {
+  /* Red LED, AKA LED0 */
+  { .pin = Board_PIN_LED0, .negative_logic = false },
+  /* Green LED, AKA LED1 */
+  { .pin = Board_PIN_LED1, .negative_logic = false },
+};
+/*---------------------------------------------------------------------------*/
 /** @} */
-/*---------------------------------------------------------------------------*/
-#endif /* LEDS_ARCH_H_ */
-/*---------------------------------------------------------------------------*/
-/**
- * @}
- */

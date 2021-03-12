@@ -27,34 +27,34 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** \addtogroup sensortag-cc1350-peripherals
+/**
+ * \addtogroup sensortag-peripherals
+ * @{
+ *
+ * \defgroup sensortag-cc2650-peripherals CC2650 SensorTag peripherals
+ *
+ * This group documents components specific to this SensorTag
+ *
  * @{
  *
  * \file
- *        LED HAL definitions for the CC1350STK LEDs. Is not compatible with
- *        the CC2650STK.
+ *        Generic module controlling sensors on the CC2650 SensorTag.
  * \author
  *        Edvard Pettersen <e.pettersen@ti.com>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef LEDS_ARCH_H_
-#define LEDS_ARCH_H_
+#include "contiki.h"
+#include "lib/sensors.h"
+/*---------------------------------------------------------------------------*/
+#include "board-conf.h"
+#include "board-peripherals.h"
+/*---------------------------------------------------------------------------*/
+/* Exports a global symbol to be used by the sensor API */
+#if BOARD_SENSORS_ENABLE
+SENSORS(&bmp_280_sensor, &tmp_007_sensor, &opt_3001_sensor, &hdc_1000_sensor, &mpu_9250_sensor);
+#endif
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations for the dev/leds.h API.
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define LEDS_CONF_COUNT             1
-
-#define LEDS_CONF_RED               0
-
-#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
-/** @} */
-/*---------------------------------------------------------------------------*/
-#endif /* LEDS_ARCH_H_ */
-/*---------------------------------------------------------------------------*/
-/**
+ * @}
  * @}
  */

@@ -27,33 +27,42 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** \addtogroup sensortag-cc1350-peripherals
+/**
+ * \addtogroup sensortag-lpstk-peripherals
  * @{
  *
  * \file
- *        LED HAL definitions for the CC1350STK LEDs. Is not compatible with
- *        the CC2650STK.
+ *        Header file with board-specific RF configurations.
  * \author
- *        Edvard Pettersen <e.pettersen@ti.com>
+ *        Texas Instruments <e2e.ti.com>
+ * \note
+ *        This file should not be included directly
  */
 /*---------------------------------------------------------------------------*/
-#ifndef LEDS_ARCH_H_
-#define LEDS_ARCH_H_
+#ifndef RF_CONF_H_
+#define RF_CONF_H_
+/*---------------------------------------------------------------------------*/
+#include "rf/rf.h"
 /*---------------------------------------------------------------------------*/
 /**
- * \name LED configurations for the dev/leds.h API.
+ * \name  Board-specific front-end mode configurations for both the Sub-1 GHz
+ *        path and the 2.4 GHz path on the radio.
  *
- * Those values are not meant to be modified by the user
+ * These are the following front-end mode configurations for the
+ * CC1352R1-LAUNCHXL board:
+ *  - Sub-1 GHz: differential and external bias
+ *  - 2.4 GHz: differential and external bias
+ *
  * @{
  */
-#define LEDS_CONF_COUNT             1
+#define RF_SUB_1_GHZ_CONF_FRONT_END_MODE  RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_SUB_1_GHZ_CONF_BIAS_MODE       RF_BIAS_MODE_EXTERNAL
 
-#define LEDS_CONF_RED               0
-
-#define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
+#define RF_2_4_GHZ_CONF_FRONT_END_MODE    RF_FRONT_END_MODE_DIFFERENTIAL
+#define RF_2_4_GHZ_CONF_BIAS_MODE         RF_BIAS_MODE_EXTERNAL
 /** @} */
 /*---------------------------------------------------------------------------*/
-#endif /* LEDS_ARCH_H_ */
+#endif /* RF_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}
