@@ -84,3 +84,15 @@ This module contains protothreads, multithreading and processes
 This module contains all different timers and clocks in \os
  * \ingroup sys
 */
+
+/**
+ * \defgroup edhoc An EDHOC implementation (draft-selander-lake-edhoc-01)
+  An implementation of Ephemeral Diffie-Hellman Over COSE (EDHOC)  (draft-selander-lake-edhoc-01)
+ * \ingroup net
+*/
+
+/**
+ * \defgroup COSE A COSE implementation (RFC8152)
+   An implementation of COSE_Encrypt0 structure from: CBOR Object Signing and Encryption (COSE)
+ * \ingroup net
+*/
