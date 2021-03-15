@@ -143,6 +143,22 @@ init(void)
     return;
   }
 
+#if CSMA_SEND_SOFT_ACK
+  radio_value_t radio_rx_mode;
+
+  /* Disable radio driver's autoack */
+  if(NETSTACK_RADIO.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode) != RADIO_RESULT_OK) {
+    LOG_WARN("radio does not support getting RADIO_PARAM_RX_MODE\n");
+  } else {
+    /* Unset autoack */
+    radio_rx_mode &= ~RADIO_RX_MODE_AUTOACK;
+    if(NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode) != RADIO_RESULT_OK) {
+      LOG_WARN("radio does not support setting RADIO_PARAM_RX_MODE\n");
+    }
+  }
+#endif
+
+
 #if LLSEC802154_USES_AUX_HEADER
 #ifdef CSMA_LLSEC_DEFAULT_KEY0
   uint8_t key[16] = CSMA_LLSEC_DEFAULT_KEY0;
