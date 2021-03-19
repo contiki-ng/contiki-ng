@@ -1,4 +1,4 @@
-CONTIKI_ARM_DIRS += cortex-m cortex-m/CMSIS
+CONTIKI_ARM_DIRS += cortex-m CMSIS/CMSIS/Core/Include
 
 ### Build syscalls for newlib
 MODULES += os/lib/newlib
