@@ -131,6 +131,12 @@ def extract_ipaddr(s):
         return None
     return s
 
+# (NULL IP addr) -> fe80::244:44:44:44
+def extract_ipaddr_pair(fields):
+    s = " ".join(fields)
+    fields = s.split(" -> ")
+    return extract_ipaddr(fields[0]), extract_ipaddr(fields[1])
+
 def addr_to_id(addr):
     return int(addr.split(":")[-1], 16)
 
@@ -195,6 +201,14 @@ def analyze_results(filename, is_testbed):
             if "rpl_set_preferred_parent" in line:
                 nodes[node].rpl_parent_changes += 1
                 nodes[node].rpl_parent = extract_ipaddr(fields[6])
+                if nodes[node].rpl_join_time_sec is None:
+                    nodes[node].rpl_join_time_sec = ts / 1000
+                continue
+
+            # 377018480 76 [INFO: RPL       ] parent switch: (NULL IP addr) -> fe80::244:44:44:44
+            if " parent switch: " in line:
+                nodes[node].rpl_parent_changes += 1
+                nodes[node].rpl_parent = extract_ipaddr_pair(fields[7:])[1]
                 if nodes[node].rpl_join_time_sec is None:
                     nodes[node].rpl_join_time_sec = ts / 1000
                 continue
