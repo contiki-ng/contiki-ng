@@ -1589,8 +1589,7 @@ fragment_copy_payload_and_send(uint16_t uip_offset, linkaddr_t *dest) {
 
   /* Check tx result. */
   if((last_tx_status == MAC_TX_COLLISION) ||
-     (last_tx_status == MAC_TX_ERR) ||
-     (last_tx_status == MAC_TX_ERR_FATAL)) {
+     (last_tx_status >= MAC_TX_ERR)) {
     LOG_ERR("output: error in fragment tx, dropping subsequent fragments.\n");
     return 0;
   }

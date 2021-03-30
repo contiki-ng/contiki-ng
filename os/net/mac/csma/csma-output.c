@@ -527,7 +527,7 @@ csma_output_packet(mac_callback_t sent, void *ptr)
   } else {
     LOG_WARN("could not allocate neighbor, dropping packet\n");
   }
-  mac_call_sent_callback(sent, ptr, MAC_TX_ERR, 1);
+  mac_call_sent_callback(sent, ptr, MAC_TX_QUEUE_FULL, 1);
 }
 /*---------------------------------------------------------------------------*/
 void
