@@ -29,36 +29,15 @@
  *
  */
 
- /**
-  * \addtogroup uip
-  * @{
-  */
+#ifndef RPL_NBR_POLICY_H_
+#define RPL_NBR_POLICY_H_
 
-#include "net/routing/rpl-lite/rpl.h"
-#include "net/nbr-table.h"
-#include "net/link-stats.h"
-#include "net/ipv6/uip-ds6-route.h"
-#include "sys/log.h"
+#include "contiki.h"
 
-#define LOG_MODULE "RPL-nbrpol"
-#define LOG_LEVEL LOG_LEVEL_NONE
+#ifndef RPL_NBR_POLICY_MAX_NEXTHOP_NEIGHBORS
+#define RPL_NBR_POLICY_MAX_NEXTHOP_NEIGHBORS NBR_TABLE_MAX_NEIGHBORS
+#endif /* RPL_NBR_POLICY_MAX_NEXTHOP_NEIGHBORS */
 
-/*---------------------------------------------------------------------------*/
-static rpl_rank_t
-get_rank(const linkaddr_t *lladdr)
-{
-  rpl_parent_t *p = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)lladdr);
-  if(p == NULL) {
-    return RPL_INFINITE_RANK;
-  } else {
-    return curr_instance.of->rank_via_nbr(p);
-  }
-}
-/*---------------------------------------------------------------------------*/
-const linkaddr_t *
-rpl_nbr_gc_get_worst(const linkaddr_t *lladdr1, const linkaddr_t *lladdr2)
-{
-  return get_rank(lladdr2) > get_rank(lladdr1) ? lladdr2 : lladdr1;
-}
-/*---------------------------------------------------------------------------*/
-/** @}*/
+int rpl_nbr_policy_get_free_nexthop_neighbors(void);
+
+#endif /* RPL_NBR_POLICY_H_ */
