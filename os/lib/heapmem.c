@@ -158,7 +158,7 @@ extend_space(size_t size)
 {
   char *old_usage;
 
-  if(heap_usage + size > HEAPMEM_ARENA_SIZE) {
+  if(size > HEAPMEM_ARENA_SIZE - heap_usage) {
     return NULL;
   }
 
@@ -331,6 +331,11 @@ heapmem_alloc(size_t size)
 {
   chunk_t *chunk;
 
+  /* Fail early on too large allocation requests to prevent wrapping values. */
+  if(size > HEAPMEM_ARENA_SIZE) {
+    return NULL;
+  }
+
   size = ALIGN(size);
 
   chunk = get_free_chunk(size);
@@ -416,6 +421,11 @@ heapmem_realloc(void *ptr, size_t size)
 
   PRINTF("%s ptr %p size %u at %s:%u\n",
          __func__, ptr, (unsigned)size, file, line);
+
+  /* Fail early on too large allocation requests to prevent wrapping values. */
+  if(size > HEAPMEM_ARENA_SIZE) {
+    return NULL;
+  }
 
   /* Special cases in which we can hand off the execution to other functions. */
   if(ptr == NULL) {
