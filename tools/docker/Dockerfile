@@ -34,7 +34,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     net-tools \
     openjdk-8-jdk \
     python-dev \
-    python-pip \
     python3-pip \
     python3-setuptools \
     python-serial \
@@ -96,12 +95,11 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
   ln -s /opt/SEGGER/JLink_V688a/libjlinkarm.so /opt/SEGGER/JLink_V688a/libjlinkarm_x86.so && \
   rm -rf nRFCommandLineTools10121Linuxi386.tar.gz /tmp/nrf-cli-tools
 
+RUN pip3 -q install --upgrade pip
 # Install sphinx and sphinx_rtd_theme, required for building and testing the
 # readthedocs API documentation
-RUN pip -q install --upgrade pip
-RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
+RUN pip3 -q install sphinx_rtd_theme sphinx
 # Install matplotlib for result visualization
-RUN pip3 -q install --upgrade pip
 RUN pip3 -q install matplotlib
 
 # Install nrfutil and work around broken pc_ble_driver_py dependency
