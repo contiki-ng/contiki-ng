@@ -4,6 +4,9 @@ Model class for Cooja System Log Parser
 
 '''
 from datetime import datetime
+from re import S
+import re
+from types import new_class
 from Runner import Runner
 from sqlalchemy import create_engine, MetaData, ForeignKey, Column, Integer, String, Float, DateTime, Boolean, engine
 from sqlalchemy.orm import relationship
@@ -17,11 +20,16 @@ import json
 from sqlalchemy.sql.expression import null
 from sqlalchemy.orm import class_mapper
 
-Base = declarative_base()
+
+
 DBName = "Metrics.db"    
 engine = create_engine('sqlite:///' + DBName, connect_args={'check_same_thread': False}, echo = False)
-Session = sessionmaker(engine)
-#Base = declarative_base()
+meta = MetaData()
+meta.bind = engine
+Base = declarative_base(metadata=meta)
+Session = sessionmaker(bind=engine)
+db = Session()
+
 
 '''
 Base model generic class
@@ -68,14 +76,47 @@ class Experiment(Base, MyModel):
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
     parameters = Column(String (200), nullable=False)
-    logfile = Column(String (200), nullable=False)
     experimentFile = Column(String (200), nullable=False)
     #dateRun = Column(DateTime, nullable=False)
     def run(self):
-        runner = Runner(self.experimentFile,self.logfile)
+        runner = Runner(self.experimentFile)
+        newRun = Run()
+        newRun.experiment = self
+        newRun.start = datetime.now()
         runner.run()
+        newRun.end = datetime.now()
+        newRun.processRun()
+        db.add(newRun)
+        self.runs.append(newRun)
+        db.commit()
+        #db.commit()
         
-
+class Run(Base, MyModel):
+    __tablename__ = "runs"
+    id = Column(Integer,primary_key=True)
+    start = Column(DateTime)
+    end = Column(DateTime)
+    experiment_id = Column(Integer, ForeignKey('experiments.id')) # The ForeignKey must be the physical ID, not the Object.id
+    experiment = relationship("Experiment", back_populates="runs")
+    def processRun(self):
+        with open("COOJA.testlog", "r") as f:
+            for line in f.readlines():
+                if (line.startswith("Random") or line.startswith("Starting") or line.startswith("Script timed out") or line.startswith("TEST OK")):
+                    continue
+                if (line.startswith("Test ended at simulation time:")):
+                    simTime = line.split(":")[1].strip()
+                    continue
+                fields = line.split()
+                logTime = fields[0]
+                logNode = fields[1]
+                logDesc = re.findall("\[(.*?)\]", line)[0].split(":")
+                logLevel = logDesc[0].strip()
+                logType = logDesc[1].strip()
+                data = line.split("]")[1].strip()
+                newRecord = Record(logTime,logNode,logLevel,logType,data,self)
+                db.add(newRecord)
+                self.records.append(newRecord)
+        #print(simTime)
     
 '''
 Represents an experiment's record
@@ -95,9 +136,18 @@ class Record(Base, MyModel):
     recordLevel = Column(String(50), nullable=False)
     recordType = Column(String(50), nullable=False)
     rawData = Column(String(200), nullable=False)
-    experiment_id = Column(Integer, ForeignKey('experiments.id')) # The ForeignKey must be the phyisical ID, not the Object.id
-    experiment = relationship("Experiment", back_populates="records")
+    run_id = Column(Integer, ForeignKey('runs.id')) # The ForeignKey must be the physical ID, not the Object.id
+    run = relationship("Run", back_populates="records")
+    def __init__(self,simtime, node,level,type,data,run):
+        self.simTime = simtime
+        self.node = node
+        self.recordLevel = level
+        self.recordType = type
+        self.rawData = data
+        self.run = run
+        
 
 
-Experiment.records = relationship("Record", order_by = Record.id, back_populates="experiment")
-MetaData().create_all(engine)
+Experiment.runs = relationship("Run", order_by = Run.id, back_populates="experiment")
+Run.records = relationship("Record", order_by = Record.id, back_populates="run")
+meta.create_all()

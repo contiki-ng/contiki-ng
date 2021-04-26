@@ -7,7 +7,7 @@ from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 Based on run-cooja.py
 '''
 class Runner:
-    def __init__(self, simFile, logFile):    
+    def __init__(self, simFile):    
         # get the path of this example
         self.SELF_PATH = os.getcwd()
         # move three levels up
@@ -15,7 +15,7 @@ class Runner:
 
         self.cooja_jar = os.path.normpath(os.path.join(self.CONTIKI_PATH, "tools", "cooja", "dist", "cooja.jar"))
         self.cooja_input = simFile
-        self.cooja_output = logFile
+        self.cooja_output = "COOJA.testlog"
 
     #######################################################
     # Run a child process and get its output
