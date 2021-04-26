@@ -34,10 +34,12 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     net-tools \
     openjdk-8-jdk \
     python-dev \
+    python3-dev \
     python-pip \
     python3-pip \
     python3-setuptools \
     python-serial \
+    python3-serial \
     rlwrap \
     sudo \
     screen \
