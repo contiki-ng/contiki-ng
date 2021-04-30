@@ -9,6 +9,26 @@ USER root
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install gnupg ca-certificates software-properties-common > /dev/null
 
+# This must be ran before installing other programs.
+# They might install python3 from package manager which is python3.6
+# Install python3.9 from deadsnakes
+# Use get-pip to install pip instead of using package manager
+# Install pip 21.0.1 to avoid warning introduced in 21.1
+# https://pip.pypa.io/en/stable/news/#v21-1
+RUN apt-get -qq update \
+    && apt-get -qq install -y software-properties-common > /dev/null \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get -qq update \
+    && apt-get -qq install -y \
+        wget \
+        python3.9-dev \
+        python3.9-distutils \
+        > /dev/null \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
+    && wget -nv https://bootstrap.pypa.io/pip/3.5/get-pip.py \
+    && python3 get-pip.py pip==21.0.1 \
+    && rm get-pip.py
+
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
   echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
   add-apt-repository ppa:mosquitto-dev/mosquitto-ppa && \
@@ -32,13 +52,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     mosquitto-clients \
     net-tools \
     openjdk-11-jdk \
-    python-dev \
-    python3-dev \
-    python-pip \
-    python3-pip \
-    python3-setuptools \
-    python-serial \
-    python3-serial \
     rlwrap \
     sudo \
     screen \
@@ -99,15 +112,15 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
 
 # Install sphinx and sphinx_rtd_theme, required for building and testing the
 # readthedocs API documentation
-RUN pip -q install --upgrade pip
-RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
 # Install matplotlib for result visualization
-RUN pip3 -q install --upgrade pip
-RUN pip3 -q install matplotlib
-
-# Install nrfutil and work around broken pc_ble_driver_py dependency
-RUN pip3 -q install nrfutil && \
-  pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil
+# Install nrfutil
+RUN pip3 -q install \
+      setuptools \
+      sphinx_rtd_theme \
+      sphinx \
+      matplotlib \
+      nrfutil \
+      pyserial
 
 # Make sure we're using Java 11 for Cooja
 RUN update-java-alternatives --set /usr/lib/jvm/java-1.11.0-openjdk-i386
