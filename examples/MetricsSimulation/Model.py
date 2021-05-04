@@ -17,7 +17,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import json
-from sqlalchemy.sql.expression import null
+from sqlalchemy.sql.expression import label, null
 from sqlalchemy.orm import class_mapper
 
 
@@ -117,11 +117,11 @@ class Run(Base, MyModel):
                 db.add(newRecord)
                 self.records.append(newRecord)
         #print(simTime)
-    
+
 '''
 Represents an experiment's record
     Parameters:
-        simTime: Simulation time of record
+        simTime: Simulation time of record (Microseconds 10^ -6)
         node: Number of the node that generates the record
         recordLevel: Level of record (Info, Warn, Debug)
         recordType: Type (App, Protocol, Layer, etc)
@@ -146,7 +146,102 @@ class Record(Base, MyModel):
         self.rawData = data
         self.run = run
         
+class Metrics(Base, MyModel):
+    __tablename__ = 'Metrics'
+    id = Column(Integer, primary_key=True)
 
+class PDR(Base, MyModel):
+    __tablename__ = 'pdrs'
+    id = Column(Integer, primary_key=True)
+
+
+
+class Latency(Base, MyModel):
+    __tablename__ = 'latencies'
+    id = Column(Integer, primary_key=True)
+    records = []
+    nodes = []
+    def latency(self):
+        values = []
+        from numpy import mean
+        start = 2
+        for i in self.nodes[start:]:
+            valuesNodes = []
+            for j in i:
+                values.append(j[1]/1000) # Miliseconds 10 ^ -3
+                valuesNodes.append(j[1]/1000)
+            #print("Node:" + str(start) + " Size: " + str(len(valuesNodes)) + " Mean:" + str(round(mean(valuesNodes),2)))
+            start += 1
+        globalMean = round(mean(values),2)
+        #print("Size: " + str(len(values)) + " Mean: " + str(globalMean))
+        return globalMean
+
+
+    def printLatency(self,nodesRange):
+        import matplotlib.pyplot as plt
+        for i in range(2,nodesRange):
+            x = [a[0]//1000 for a in self.nodes[i]] # Seconds
+            y = [a[1]//1000 for a in self.nodes[i]] # Seconds
+            plt.plot(x, y, label = "Node "+str(i))
+        plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
+        plt.legend()
+        plt.show()
+                
+    def process(self, run):
+        data = db.query(Record).filter_by(run = run).filter_by(recordType = "App").all()
+        for rec in data:
+            if rec.rawData.startswith("app generate"):
+                sequence = rec.rawData.split()[3].split("=")[1]
+                node = int(rec.rawData.split()[4].split("=")[1])
+                genTime = rec.simTime
+                dstNode = 1 #That simulation doesn't define a customized sink
+                #print("Node: " ,  node , "Seq: " , sequence , "Generation Time: ", genTime ,"Destination" , dstNode)
+                newLatRec = LatencyRecord(genTime,node,dstNode,sequence)
+                self.records.append(newLatRec)
+                continue
+            
+            if rec.rawData.startswith("app receive"):
+                sequence = rec.rawData.split()[3].split("=")[1]
+                recTime = rec.simTime
+                srcNode = int (rec.rawData.split()[4].split("=")[1].split(":")[5], 16) # Converts Hex to Dec
+                for record in self.records:
+                    if (record.srcNode == srcNode and record.sqnNumb == sequence):
+                        record.rcvPkg(recTime)
+                #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
+                continue
+        for i in range(21):
+            self.nodes.append(list())
+            #print(len(self.nodes))
+        for i in self.records:
+            if (i.rcv):
+                self.nodes[i.srcNode].append(tuple((i.genTime//1000, i.getLatency()//1000)))
+
+
+
+class LatencyRecord(Base, MyModel):
+    __tablename__ = 'LatencyRecords'
+    id = Column(Integer, primary_key=True)
+    genTime = Column(Integer, nullable=False)
+    rcvTime = Column(Integer)
+    rcv = Column(Boolean)
+    srcNode = Column(Integer, nullable=False)
+    dstNode = Column(Integer, nullable=False)
+    sqnNumb = Column(Integer, nullable=False)
+
+    def __init__(self, genTime, srcNode, dstNode, sqnNumb):
+        self.genTime = genTime
+        self.srcNode = srcNode
+        self.dstNode = dstNode
+        self.sqnNumb = sqnNumb
+        self.rcv = False
+
+    def rcvPkg(self, rcvTime):
+        self.rcvTime = rcvTime
+        self.rcv = True
+
+    def getLatency(self):
+        return self.rcvTime - self.genTime
+    
 
 Experiment.runs = relationship("Run", order_by = Run.id, back_populates="experiment")
 Run.records = relationship("Record", order_by = Record.id, back_populates="run")
