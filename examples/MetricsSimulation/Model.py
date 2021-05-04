@@ -151,7 +151,7 @@ class Record(Base, MyModel):
 class Metrics(Base, MyModel):
     __tablename__ = 'Metrics'
     id = Column(Integer, primary_key=True)
-    
+
 
 class RPL(Base, MyModel):
     __tablename__ = 'rpl'
@@ -160,8 +160,44 @@ class RPL(Base, MyModel):
 class TSCH(Base, MyModel):
     __tablename__ = 'tsch'
     id = Column(Integer, primary_key=True)
-    def process(self, run):
+    def processIngress(self, run):
         data = db.query(Record).filter_by(run = run).filter_by(recordType = "TSCH").all()
+        results = [[] for x in range(21)]
+        for rec in data:
+            if rec.rawData.startswith("leaving the network"):
+                results[rec.node].append(tuple((rec.simTime//1000000,False)))
+                continue
+            if rec.rawData.startswith("association done"):
+                results[rec.node].append(tuple((rec.simTime//1000000, True)))
+                continue
+        import matplotlib.pyplot as plt
+        index = 2
+        for i in results[2:]:
+            started = 0
+            x = []
+            for j in i:
+                if j[1]:
+                    time = j[0]
+                    plt.plot(time, index, marker="^", color="green")
+                    x.append(time)
+                    x.append(3600) #sim end
+                else:
+                    time = j[0]
+                    plt.plot(time, index, marker="v", color="red")
+                    x[1] = time
+                    plt.plot(x,[index,index])
+                    x = []
+            plt.plot(x,[index,index])
+            index +=1
+        #plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
+        #plt.xlabel("Simulation Time (s)")
+        #plt.ylabel("Delay (s)")
+        #plt.legend()
+        plt.yticks(range(2,21))
+        plt.show()
+
+        return results
+
 
 
 class PDR(Base, MyModel):
