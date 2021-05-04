@@ -7,6 +7,8 @@ from datetime import datetime
 from re import S
 import re
 from types import new_class
+
+from sqlalchemy.sql.elements import TextClause
 from Runner import Runner
 from sqlalchemy import create_engine, MetaData, ForeignKey, Column, Integer, String, Float, DateTime, Boolean, engine
 from sqlalchemy.orm import relationship
@@ -149,10 +151,50 @@ class Record(Base, MyModel):
 class Metrics(Base, MyModel):
     __tablename__ = 'Metrics'
     id = Column(Integer, primary_key=True)
+    
+
+class RPL(Base, MyModel):
+    __tablename__ = 'rpl'
+    id = Column(Integer, primary_key=True)
+
+class TSCH(Base, MyModel):
+    __tablename__ = 'tsch'
+    id = Column(Integer, primary_key=True)
+    def process(self, run):
+        data = db.query(Record).filter_by(run = run).filter_by(recordType = "TSCH").all()
+
 
 class PDR(Base, MyModel):
     __tablename__ = 'pdrs'
     id = Column(Integer, primary_key=True)
+    def printPDR(self, latRecords):
+        data = {}
+        results = [[] for x in range(21)]
+        for rec in latRecords:
+            if rec.rcv:
+                results[rec.srcNode].append(True)
+            else:
+                results[rec.srcNode].append(False)
+        from collections import Counter
+        index = 2
+        for i in results[2:]: # The first is the sink node
+            node = Counter(i)
+            total = node[True] + node[False]
+            pdr = round((node[True]/total)*100,2)
+            #print ("Node" , index ,"Total: " , total)
+            #print ("PDR: " , pdr,"%")
+            data[index] = pdr
+            index += 1
+        #print (data)
+        import matplotlib.pyplot as plt
+        plt.bar(data.keys(),data.values(),label="PDR")
+        plt.xticks(list(data.keys()))
+        plt.ylim([0, 100])
+        plt.xlabel("Nodes")
+        plt.ylabel("PDR (%)")
+        plt.legend()
+        plt.show()    
+        
 
 
 
@@ -169,7 +211,7 @@ class Latency(Base, MyModel):
             valuesNodes = []
             for j in i:
                 values.append(j[1]/1000) # Miliseconds 10 ^ -3
-                valuesNodes.append(j[1]/1000)
+                valuesNodes.append(j[1]/1000) # Miliseconds 10 ^ -3
             #print("Node:" + str(start) + " Size: " + str(len(valuesNodes)) + " Mean:" + str(round(mean(valuesNodes),2)))
             start += 1
         globalMean = round(mean(values),2)
@@ -184,6 +226,8 @@ class Latency(Base, MyModel):
             y = [a[1]//1000 for a in self.nodes[i]] # Seconds
             plt.plot(x, y, label = "Node "+str(i))
         plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
+        plt.xlabel("Simulation Time (s)")
+        plt.ylabel("Delay (s)")
         plt.legend()
         plt.show()
                 

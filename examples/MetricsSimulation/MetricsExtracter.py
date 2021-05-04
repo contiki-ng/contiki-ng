@@ -20,6 +20,7 @@ def runExperimentByName(name):
 
 
 def processRun():
+    start = datetime.now()
     with open("COOJA.testlog", "r") as f:
         for line in f.readlines():
             if (line.startswith("Random") or line.startswith("Starting") or line.startswith("Script timed out") or line.startswith("TEST OK")):
@@ -34,4 +35,3 @@ def processRun():
             logLevel = logDesc[0].strip()
             logType = logDesc[1].strip()
             data = line.split("]")[1].strip()
-    print(simTime)
