@@ -190,8 +190,8 @@ class TSCH(Base, MyModel):
             plt.plot(x,[index,index])
             index +=1
         #plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
-        #plt.xlabel("Simulation Time (s)")
-        #plt.ylabel("Delay (s)")
+        plt.xlabel("Simulation Time (s)")
+        plt.ylabel("Nodes")
         #plt.legend()
         plt.yticks(range(2,21))
         plt.show()
@@ -260,7 +260,7 @@ class Latency(Base, MyModel):
         for i in range(2,nodesRange):
             x = [a[0]//1000 for a in self.nodes[i]] # Seconds
             y = [a[1]//1000 for a in self.nodes[i]] # Seconds
-            plt.plot(x, y, label = "Node "+str(i))
+            plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
         plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
         plt.xlabel("Simulation Time (s)")
         plt.ylabel("Delay (s)")
@@ -276,7 +276,7 @@ class Latency(Base, MyModel):
                 genTime = rec.simTime
                 dstNode = 1 #That simulation doesn't define a customized sink
                 #print("Node: " ,  node , "Seq: " , sequence , "Generation Time: ", genTime ,"Destination" , dstNode)
-                newLatRec = LatencyRecord(genTime,node,dstNode,sequence)
+                newLatRec = AppRecord(genTime,node,dstNode,sequence)
                 self.records.append(newLatRec)
                 continue
             
@@ -288,7 +288,7 @@ class Latency(Base, MyModel):
                     if (record.srcNode == srcNode and record.sqnNumb == sequence):
                         record.rcvPkg(recTime)
                 #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
-                continue
+                        break
         for i in range(21):
             self.nodes.append(list())
             #print(len(self.nodes))
@@ -298,7 +298,7 @@ class Latency(Base, MyModel):
 
 
 
-class LatencyRecord(Base, MyModel):
+class AppRecord(Base, MyModel):
     __tablename__ = 'LatencyRecords'
     id = Column(Integer, primary_key=True)
     genTime = Column(Integer, nullable=False)
