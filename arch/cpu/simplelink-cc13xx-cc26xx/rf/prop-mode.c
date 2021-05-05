@@ -105,7 +105,6 @@ static volatile uint8_t is_receiving_packet;
 #endif
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
-#define DOT_4G_MAX_FRAME_LEN    2047
 #define DOT_4G_PHR_NUM_BYTES    2
 #define DOT_4G_LEN_OFFSET       0xFC
 #define DOT_4G_SYNCWORD         0x0055904E
@@ -143,8 +142,8 @@ static volatile uint8_t is_receiving_packet;
  * a 4-byte CRC.
  *
  * In the future we can change this to support transmission of long frames,
- * for example as per .15.4g. the size of the TX and RX buffers would need
- * adjusted accordingly.
+ * for example as per .15.4g, which defines 2047 as the maximum frame size.
+ * The size of the TX and RX buffers would need to be adjusted accordingly.
  */
 #define MAX_PAYLOAD_LEN 125
 /*---------------------------------------------------------------------------*/
@@ -265,7 +264,7 @@ init_rf_params(void)
 
   cmd_rx.syncWord0 = DOT_4G_SYNCWORD;
   cmd_rx.syncWord1 = 0x00000000;
-  cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - DOT_4G_LEN_OFFSET;
+  cmd_rx.maxPktLen = RADIO_PHY_OVERHEAD + MAX_PAYLOAD_LEN;
   cmd_rx.hdrConf.numHdrBits = DOT_4G_PHR_NUM_BYTES * 8;
   cmd_rx.lenOffset = DOT_4G_LEN_OFFSET;
   cmd_rx.pQueue = data_queue_init(sizeof(lensz_t));
