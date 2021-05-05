@@ -41,6 +41,9 @@ PROCESS_THREAD(udp_process, ev, data)
 
   default_prefix = uip_ds6_default_prefix();
   uip_ip6addr_copy(&addr, default_prefix);
+  addr.u16[4] = UIP_HTONS(0x202);
+  addr.u16[5] = UIP_HTONS(2);
+  addr.u16[6] = UIP_HTONS(2);
   addr.u16[7] = UIP_HTONS(2);
   uip_ds6_addr_add(&addr, 0, ADDR_AUTOCONF);
 
