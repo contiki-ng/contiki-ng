@@ -257,7 +257,7 @@ ifneq ($(MODULES_IMACROS),)
   CFLAGS += ${foreach d, $(MODULES_IMACROS), -imacros $(d)}
 endif
 
-CXXFLAGS = $(subst -std=c99,-std=gnu++11,$(CFLAGS))
+CXXFLAGS += $(subst -std=c99,-std=gnu++11,$(CFLAGS))
 CXXFLAGS += -fpermissive -fno-exceptions -fno-unwind-tables
 CXXFLAGS += -fno-threadsafe-statics -fno-rtti -fno-use-cxa-atexit
 
