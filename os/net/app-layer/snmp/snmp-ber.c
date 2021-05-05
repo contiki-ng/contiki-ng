@@ -416,7 +416,7 @@ snmp_ber_decode_string_len_buffer(snmp_packet_t *snmp_packet, const char **str, 
 
   *str = (const char *)snmp_packet->in;
 
-  if(snmp_packet->used == 0 || snmp_packet->used - *length <= 0) {
+  if(snmp_packet->used == 0 || snmp_packet->used < *length) {
     return 0;
   }
 
