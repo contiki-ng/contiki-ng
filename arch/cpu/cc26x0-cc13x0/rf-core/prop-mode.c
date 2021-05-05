@@ -861,7 +861,7 @@ read_frame(void *buf, unsigned short buf_len)
   /* wait for entry to become finished */
   rtimer_clock_t t0 = RTIMER_NOW();
   while(entry->status == DATA_ENTRY_STATUS_BUSY
-      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (RTIMER_SECOND / 50)));
+      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RADIO_FRAME_DURATION(MAX_PAYLOAD_LEN)));
 
 #if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */

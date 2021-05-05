@@ -151,8 +151,6 @@ static volatile uint8_t is_receiving_packet;
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 
-/* How long to wait for the rx read entry to become ready */
-#define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
 /*
  * Offset of the end of SFD when compared to the radio HW-generated timestamp.
@@ -479,7 +477,7 @@ read(void *buf, unsigned short buf_len)
   /* Only wait if the Radio is accessing the entry */
   const rtimer_clock_t t0 = RTIMER_NOW();
   while((data_entry->status == DATA_ENTRY_BUSY) &&
-        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
+         RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RADIO_FRAME_DURATION(MAX_PAYLOAD_LEN)));
 
 #if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */
