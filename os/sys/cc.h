@@ -116,6 +116,16 @@
 #endif /* CC_CONF_NORETURN */
 
 /**
+ * Configure if the C compiler supports marking functions as deprecated
+ * e.g. with __attribute__((deprecated))
+ */
+#ifdef CC_CONF_DEPRECATED
+#define CC_DEPRECATED(msg) CC_CONF_DEPRECATED(msg)
+#else
+#define CC_DEPRECATED(msg)
+#endif /* CC_CONF_DEPRECATED */
+
+/**
  * Configure if the C compiler supports the assignment of struct value.
  */
 #ifdef CC_CONF_ASSIGN_AGGREGATE
