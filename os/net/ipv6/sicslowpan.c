@@ -193,7 +193,6 @@ static uint8_t curr_page;
 static int last_tx_status;
 /** @} */
 
-
 static int last_rssi;
 
 /* ----------------------------------------------------------------- */
@@ -1886,9 +1885,12 @@ input(void)
   buffer = (uint8_t *)UIP_IP_BUF;
   buffer_size = UIP_BUFSIZE;
 
-  /* Save the RSSI of the incoming packet in case the upper layer will
+  /* Save the RSSI and LQI of the incoming packet in case the upper layer will
      want to query us for it later. */
   last_rssi = (signed short)packetbuf_attr(PACKETBUF_ATTR_RSSI);
+  uipbuf_set_attr(UIPBUF_ATTR_RSSI, packetbuf_attr(PACKETBUF_ATTR_RSSI));
+  uipbuf_set_attr(UIPBUF_ATTR_LINK_QUALITY, packetbuf_attr(PACKETBUF_ATTR_LINK_QUALITY));
+
 
 #if SICSLOWPAN_CONF_FRAG
 
