@@ -147,7 +147,15 @@ class Record(Base, MyModel):
         self.recordType = type
         self.rawData = data
         self.run = run
+
         
+class Node(Base, MyModel):
+    __tablename__ = 'nodes'
+    id = Column(Integer, nullable=False)
+    posX = Column(Integer, nullable=False)
+    posY = Column(Integer, nullable=False)
+    posZ = Column(Integer, nullable=False)
+
 class Metrics(Base, MyModel):
     __tablename__ = 'Metrics'
     id = Column(Integer, primary_key=True)
@@ -259,7 +267,7 @@ class Latency(Base, MyModel):
         import matplotlib.pyplot as plt
         for i in range(2,nodesRange):
             x = [a[0]//1000 for a in self.nodes[i]] # Seconds
-            y = [a[1]//1000 for a in self.nodes[i]] # Seconds
+            y = [round(a[1]/1000,3) for a in self.nodes[i]] # Seconds
             plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
         plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
         plt.xlabel("Simulation Time (s)")
@@ -289,7 +297,7 @@ class Latency(Base, MyModel):
                         record.rcvPkg(recTime)
                 #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
                         break
-        for i in range(21):
+        for i in range(11):
             self.nodes.append(list())
             #print(len(self.nodes))
         for i in self.records:
