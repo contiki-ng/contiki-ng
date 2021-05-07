@@ -18,6 +18,7 @@ hello-world/nrf52840:BOARD=dongle \
 hello-world/openmote:BOARD=openmote-b \
 hello-world/openmote:BOARD=openmote-cc2538 \
 hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1 \
+hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1,CC1200_CONF_802154G=1 \
 hello-world/simplelink:BOARD=srf06/cc13x0 \
 hello-world/simplelink:BOARD=launchpad/cc1310 \
 hello-world/simplelink:BOARD=launchpad/cc1312r1 \
