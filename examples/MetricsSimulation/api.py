@@ -32,5 +32,10 @@ def hello():
     qtd = len(exp)
     return render_template("index.html", count=qtd, experiments=exp)
 
+@app.route('/experiment/<id>')
+def detailLocation(id):
+    exp = db.query(Experiment).filter_by(id=id).first()
+    return render_template("expDetail.html", exp=exp)
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
