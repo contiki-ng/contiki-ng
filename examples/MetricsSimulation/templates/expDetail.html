@@ -15,10 +15,12 @@
       </div>
       <div class="container">
           <p>Runs</p>
+          <form method="get" action="/experiment/run/{{exp.id}}">
+            <button type="submit">New Run</button>
+        </form>
 	  <ol>
 		  {%for run in exp.runs %}
-		  	<li><a href="/runs/{{run.id}}"> {{ run.start }} </a>
-			</li>
+		  	<li><a href="/runs/{{run.id}}"> {{ run.start }} </a></li>
 		  {% endfor %}
 	  </ol>
           <p></p>

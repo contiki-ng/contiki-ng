@@ -37,5 +37,11 @@ def detailLocation(id):
     exp = db.query(Experiment).filter_by(id=id).first()
     return render_template("expDetail.html", exp=exp)
 
+@app.route('/experiment/run/<id>')
+@auth.login_required
+def runExp(id):
+    db.query(Experiment).filter_by(id=id).first().run()
+    return render_template("run.html", user=auth.current_user())
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
