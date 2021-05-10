@@ -7,6 +7,7 @@ from datetime import datetime
 from re import S
 import re
 from types import new_class
+from xml.dom import minidom
 
 from sqlalchemy.sql.elements import TextClause
 from Runner import Runner
@@ -83,6 +84,7 @@ class Experiment(Base, MyModel):
     def run(self):
         runner = Runner(self.experimentFile)
         newRun = Run()
+        newRun.maxNodes = len(minidom.parse(self.experimentFile).getElementsByTagName('id'))
         newRun.experiment = self
         newRun.start = datetime.now()
         runner.run()
@@ -98,6 +100,7 @@ class Run(Base, MyModel):
     id = Column(Integer,primary_key=True)
     start = Column(DateTime)
     end = Column(DateTime)
+    maxNodes = Column(Integer)
     experiment_id = Column(Integer, ForeignKey('experiments.id')) # The ForeignKey must be the physical ID, not the Object.id
     experiment = relationship("Experiment", back_populates="runs")
     def processRun(self):
@@ -297,7 +300,7 @@ class Latency(Base, MyModel):
                         record.rcvPkg(recTime)
                 #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
                         break
-        for i in range(11):
+        for i in range(run.maxNodes):
             self.nodes.append(list())
             #print(len(self.nodes))
         for i in self.records:
