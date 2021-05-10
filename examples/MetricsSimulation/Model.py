@@ -154,7 +154,7 @@ class Record(Base, MyModel):
         
 class Node(Base, MyModel):
     __tablename__ = 'nodes'
-    id = Column(Integer, nullable=False)
+    id = Column(Integer, primary_key=True)
     posX = Column(Integer, nullable=False)
     posY = Column(Integer, nullable=False)
     posZ = Column(Integer, nullable=False)

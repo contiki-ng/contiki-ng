@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Edge Detail Site</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
+  </head>
+  <body>
+    <h1>Metrics Parser</h1>
+  </body>
+</html>
+<!doctype html>
+<html>
+  <head>
+    <title>Metrics</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
+  </head>
+  <body>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">My Experiments</a>
+      </nav>
+      <div class="jumbotron">
+        <div class="container">
+		<h1 class="display-4">There are {{ count }} Experiments</h1>
+        </div>
+      </div>
+      <div class="container">
+        <p>Experiments</p>
+	{% for exp in experiments %}
+	<p><a href="/experiemnt/{{exp.id}}">Id: {{ exp.id }} - {{ exp.name }} ( {{ exp.experimentFile }} )</a></p>
+	{% endfor %}
+      </div>
+    </div>
+  </body>
+</html>
