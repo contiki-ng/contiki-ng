@@ -33,15 +33,22 @@ def hello():
     return render_template("index.html", count=qtd, experiments=exp)
 
 @app.route('/experiment/<id>')
-def detailLocation(id):
+def detailExperiment(id):
     exp = db.query(Experiment).filter_by(id=id).first()
     return render_template("expDetail.html", exp=exp)
 
 @app.route('/experiment/run/<id>')
 @auth.login_required
-def runExp(id):
+def runExperiment(id):
     db.query(Experiment).filter_by(id=id).first().run()
     return render_template("run.html", user=auth.current_user())
+
+app.route('/run/<id>')
+def detailRun(id):
+    run = db.query(Run).filter_by(id=id).first()
+    return render_template("runDetail.html", run=run)
+
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)

@@ -103,6 +103,7 @@ class Run(Base, MyModel):
     maxNodes = Column(Integer)
     experiment_id = Column(Integer, ForeignKey('experiments.id')) # The ForeignKey must be the physical ID, not the Object.id
     experiment = relationship("Experiment", back_populates="runs")
+    metric = relationship("Metrics", uselist=False, back_populates="run")
     def processRun(self):
         with open("COOJA.testlog", "r") as f:
             for line in f.readlines():
@@ -160,8 +161,19 @@ class Node(Base, MyModel):
     posZ = Column(Integer, nullable=False)
 
 class Metrics(Base, MyModel):
-    __tablename__ = 'Metrics'
+    __tablename__ = 'metrics'
     id = Column(Integer, primary_key=True)
+    run_id = Column(Integer, ForeignKey('runs.id')) # The ForeignKey must be the physical ID, not the Object.id
+    run = relationship("Run", back_populates="metric")
+
+    def __init__(self):
+        print ("a")
+
+class Application(Base, MyModel):
+    __tablename__ = 'application'
+    id = Column(Integer, primary_key=True)
+    latency_id = Column(Integer, ForeignKey('latency.id')) # The ForeignKey must be the physical ID, not the Object.id
+    latency = relationship("Latency", back_populates="application")
 
 
 class RPL(Base, MyModel):
@@ -248,6 +260,7 @@ class PDR(Base, MyModel):
 class Latency(Base, MyModel):
     __tablename__ = 'latencies'
     id = Column(Integer, primary_key=True)
+    run = relationship("Application", uselist=False, back_populates="latency")
     records = []
     nodes = []
     def latency(self):
@@ -310,7 +323,7 @@ class Latency(Base, MyModel):
 
 
 class AppRecord(Base, MyModel):
-    __tablename__ = 'LatencyRecords'
+    __tablename__ = 'latencyrecords'
     id = Column(Integer, primary_key=True)
     genTime = Column(Integer, nullable=False)
     rcvTime = Column(Integer)
