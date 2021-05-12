@@ -43,10 +43,20 @@ def runExperiment(id):
     db.query(Experiment).filter_by(id=id).first().run()
     return render_template("run.html", user=auth.current_user())
 
-app.route('/run/<id>')
+@app.route('/run/<id>')
 def detailRun(id):
     run = db.query(Run).filter_by(id=id).first()
     return render_template("runDetail.html", run=run)
+
+@app.route('/experiment/run/<id>/metrics')
+@auth.login_required
+def extractMetricFromRun(id):
+    run = db.query(Run).filter_by(id=id).first()
+    run.metric = Metrics(run)
+    #db.save(run)
+    db.commit()
+    return render_template("metricDetail.html", run=run , user=auth.current_user())
+
 
 
 

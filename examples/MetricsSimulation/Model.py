@@ -8,6 +8,7 @@ from re import S
 import re
 from types import new_class
 from xml.dom import minidom
+from numpy import apply_along_axis
 
 from sqlalchemy.sql.elements import TextClause
 from Runner import Runner
@@ -82,9 +83,9 @@ class Experiment(Base, MyModel):
     experimentFile = Column(String (200), nullable=False)
     #dateRun = Column(DateTime, nullable=False)
     def run(self):
-        runner = Runner(self.experimentFile)
+        runner = Runner(str(self.experimentFile))
         newRun = Run()
-        newRun.maxNodes = len(minidom.parse(self.experimentFile).getElementsByTagName('id'))
+        newRun.maxNodes = len(minidom.parse(self.experimentFile).getElementsByTagName('id'))+1 #To use the node.id directly untedns
         newRun.experiment = self
         newRun.start = datetime.now()
         runner.run()
@@ -165,15 +166,59 @@ class Metrics(Base, MyModel):
     id = Column(Integer, primary_key=True)
     run_id = Column(Integer, ForeignKey('runs.id')) # The ForeignKey must be the physical ID, not the Object.id
     run = relationship("Run", back_populates="metric")
+    #application_id = Column(Integer, ForeignKey('application.id')) # The ForeignKey must be the physical ID, not the Object.id
+    application = relationship("Application", uselist=False, back_populates="metric")
 
-    def __init__(self):
-        print ("a")
+    def __init__(self, run):
+        self.run = run
+        print("Self lenght:" , len(self.run.records) )
+        self.application = Application(self)
+        self.application.process()
+        db.add(self)
+        db.commit()
 
 class Application(Base, MyModel):
     __tablename__ = 'application'
+    nodes = []
     id = Column(Integer, primary_key=True)
-    latency_id = Column(Integer, ForeignKey('latency.id')) # The ForeignKey must be the physical ID, not the Object.id
+    metric_id = Column(Integer, ForeignKey('metrics.id')) # The ForeignKey must be the physical ID, not the Object.id
+    metric = relationship("Metrics", back_populates="application")
+    latency_id = Column(Integer, ForeignKey('latencies.id')) # The ForeignKey must be the physical ID, not the Object.id
     latency = relationship("Latency", back_populates="application")
+    pdr_id = Column(Integer, ForeignKey('pdrs.id')) # The ForeignKey must be the physical ID, not the Object.id
+    pdr = relationship("PDR", back_populates="application")
+
+    def __init__(self,metric):
+        self.metric = metric
+        self.latency = Latency(self)
+        self.pdr = PDR(self)
+
+    def process(self):
+        #data = db.query(Record).filter_by(run = run).filter_by(recordType = "App").all()
+        data = self.metric.run.records
+        for rec in data:
+            if rec.rawData.startswith("app generate"):
+                sequence = rec.rawData.split()[3].split("=")[1]
+                node = int(rec.rawData.split()[4].split("=")[1])
+                genTime = rec.simTime
+                dstNode = 1 #That simulation doesn't define a customized sink
+                #print("Node: " ,  node , "Seq: " , sequence , "Generation Time: ", genTime ,"Destination" , dstNode)
+                newLatRec = AppRecord(genTime,node,dstNode,sequence)
+                self.records.append(newLatRec)
+                continue
+            
+            if rec.rawData.startswith("app receive"):
+                sequence = rec.rawData.split()[3].split("=")[1]
+                recTime = rec.simTime
+                srcNode = int (rec.rawData.split()[4].split("=")[1].split(":")[5], 16) # Converts Hex to Dec
+                for record in self.records:
+                    if (record.srcNode == srcNode and record.sqnNumb == sequence):
+                        record.rcvPkg(recTime)
+                #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
+                        break
+        
+        
+
 
 
 class RPL(Base, MyModel):
@@ -185,7 +230,7 @@ class TSCH(Base, MyModel):
     id = Column(Integer, primary_key=True)
     def processIngress(self, run):
         data = db.query(Record).filter_by(run = run).filter_by(recordType = "TSCH").all()
-        results = [[] for x in range(21)]
+        results = [[] for x in run.maxNodes]
         for rec in data:
             if rec.rawData.startswith("leaving the network"):
                 results[rec.node].append(tuple((rec.simTime//1000000,False)))
@@ -203,7 +248,7 @@ class TSCH(Base, MyModel):
                     time = j[0]
                     plt.plot(time, index, marker="^", color="green")
                     x.append(time)
-                    x.append(3600) #sim end
+                    x.append(3600) #sim end without disconnection
                 else:
                     time = j[0]
                     plt.plot(time, index, marker="v", color="red")
@@ -226,6 +271,11 @@ class TSCH(Base, MyModel):
 class PDR(Base, MyModel):
     __tablename__ = 'pdrs'
     id = Column(Integer, primary_key=True)
+    application = relationship("Application", uselist=False, back_populates="pdr")
+
+    def __init__(self, application) -> None:
+        self.application = application
+
     def printPDR(self, latRecords):
         data = {}
         results = [[] for x in range(21)]
@@ -260,15 +310,25 @@ class PDR(Base, MyModel):
 class Latency(Base, MyModel):
     __tablename__ = 'latencies'
     id = Column(Integer, primary_key=True)
-    run = relationship("Application", uselist=False, back_populates="latency")
-    records = []
-    nodes = []
+    #application_id = Column(Integer, ForeignKey('application.id')) # The ForeignKey must be the physical ID, not the Object.id
+    application = relationship("Application", uselist=False, back_populates="latency") 
+    def __init__(self,application) -> None:
+        self.application = application
+
     def latency(self):
-        values = []
+        nodes = []
+        for i in range(self.application.metric.run.maxNodes):
+            nodes.append(list())
+            #print(len(self.nodes))
+        for i in self.application.records:
+            if (i.rcv):
+                nodes[i.srcNode].append(tuple((i.genTime//1000, i.getLatency()//1000)))
+        records = self.application.records
         from numpy import mean
         start = 2
-        for i in self.nodes[start:]:
+        for i in nodes[start:]:
             valuesNodes = []
+            values = []
             for j in i:
                 values.append(j[1]/1000) # Miliseconds 10 ^ -3
                 valuesNodes.append(j[1]/1000) # Miliseconds 10 ^ -3
@@ -279,51 +339,21 @@ class Latency(Base, MyModel):
         return globalMean
 
 
-    def printLatency(self,nodesRange):
+    def printLatency(self):
         import matplotlib.pyplot as plt
-        for i in range(2,nodesRange):
-            x = [a[0]//1000 for a in self.nodes[i]] # Seconds
-            y = [round(a[1]/1000,3) for a in self.nodes[i]] # Seconds
+        for i in range(2,self.application.metric.run.maxNodes):
+            x = [a[0]//1000 for a in self.application.nodes[i]] # Seconds
+            y = [round(a[1]/1000,3) for a in self.application.nodes[i]] # Seconds
             plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
         plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
         plt.xlabel("Simulation Time (s)")
         plt.ylabel("Delay (s)")
         plt.legend()
         plt.show()
-                
-    def process(self, run):
-        data = db.query(Record).filter_by(run = run).filter_by(recordType = "App").all()
-        for rec in data:
-            if rec.rawData.startswith("app generate"):
-                sequence = rec.rawData.split()[3].split("=")[1]
-                node = int(rec.rawData.split()[4].split("=")[1])
-                genTime = rec.simTime
-                dstNode = 1 #That simulation doesn't define a customized sink
-                #print("Node: " ,  node , "Seq: " , sequence , "Generation Time: ", genTime ,"Destination" , dstNode)
-                newLatRec = AppRecord(genTime,node,dstNode,sequence)
-                self.records.append(newLatRec)
-                continue
-            
-            if rec.rawData.startswith("app receive"):
-                sequence = rec.rawData.split()[3].split("=")[1]
-                recTime = rec.simTime
-                srcNode = int (rec.rawData.split()[4].split("=")[1].split(":")[5], 16) # Converts Hex to Dec
-                for record in self.records:
-                    if (record.srcNode == srcNode and record.sqnNumb == sequence):
-                        record.rcvPkg(recTime)
-                #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
-                        break
-        for i in range(run.maxNodes):
-            self.nodes.append(list())
-            #print(len(self.nodes))
-        for i in self.records:
-            if (i.rcv):
-                self.nodes[i.srcNode].append(tuple((i.genTime//1000, i.getLatency()//1000)))
-
 
 
 class AppRecord(Base, MyModel):
-    __tablename__ = 'latencyrecords'
+    __tablename__ = 'apprecords'
     id = Column(Integer, primary_key=True)
     genTime = Column(Integer, nullable=False)
     rcvTime = Column(Integer)
@@ -331,6 +361,8 @@ class AppRecord(Base, MyModel):
     srcNode = Column(Integer, nullable=False)
     dstNode = Column(Integer, nullable=False)
     sqnNumb = Column(Integer, nullable=False)
+    application_id = Column(Integer, ForeignKey('application.id')) # The ForeignKey must be the physical ID, not the Object.id
+    application = relationship("Application", back_populates="records")
 
     def __init__(self, genTime, srcNode, dstNode, sqnNumb):
         self.genTime = genTime
@@ -349,4 +381,5 @@ class AppRecord(Base, MyModel):
 
 Experiment.runs = relationship("Run", order_by = Run.id, back_populates="experiment")
 Run.records = relationship("Record", order_by = Record.id, back_populates="run")
+Application.records = relationship("AppRecord", order_by = AppRecord.id, back_populates="application")
 meta.create_all()

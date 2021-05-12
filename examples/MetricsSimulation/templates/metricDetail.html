@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Metric detail: {{"Run: " ~ run.id}}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
+  </head>
+  <body>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Experiment {{run.experiment.name ~ " Run: " ~ run.id }}</a>
+      </nav>
+      <div class="jumbotron">
+        <div class="container">
+          <h1 class="display-4">Experiment {{run.experiment.name ~ " Run: " ~ run.id }}</h1>
+        </div>
+      </div>
+      <div class="container">
+          <p>Metrics</p>
+          Latency (Mean): {{ run.metric.application.latency.latency() }}
+          <p></p>
+          <p></p>
+      </div>
+    </div>
+  </body>
+</html>
