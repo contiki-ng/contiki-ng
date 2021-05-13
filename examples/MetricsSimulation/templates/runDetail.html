@@ -1,5 +1,29 @@
 <!doctype html>
 <html>
+  <style>
+    .collapsible {
+      background-color: #777;
+      color: white;
+      cursor: pointer;
+      padding: 18px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 15px;
+    }
+    
+    .active, .collapsible:hover {
+      background-color: #555;
+    }
+    
+    .content {
+      padding: 0 18px;
+      display: none;
+      overflow: hidden;
+      background-color: #f1f1f1;
+    }
+    </style>
   <head>
     <title>Run detail: {{"Run: " ~ run.id}}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
@@ -21,14 +45,39 @@
       {% if not hasMetric %}
       <div class="container">
         <h1>Metrics</h1>
+        <button type="button" class="collapsible">Latency</button>
+        <div class="collapsible">
         <p>Latency (Mean): {{ run.metric.application.latency.latency() }}</p>
           <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatency()}}"/></p>
+        </div>
+        <button type="button" class="collapsible">PDR</button>
+        <div class="collapsible">
           <p>PDR (per node)</p>
           <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
+        </div>
+        <button type="button" class="collapsible">TSCH</button>
+        <div class="collapsible">
           <p>TSCH</p>
           <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
+        </div>
       {% endif %}
       </div>
     </div>
+    <script>
+      var coll = document.getElementsByClassName("collapsible");
+      var i;
+      
+      for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+          this.classList.toggle("active");
+          var content = this.nextElementSibling;
+          if (content.style.display === "block") {
+            content.style.display = "none";
+          } else {
+            content.style.display = "block";
+          }
+        });
+      }
+      </script>
   </body>
 </html>
