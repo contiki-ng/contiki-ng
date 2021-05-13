@@ -46,7 +46,10 @@ def runExperiment(id):
 @app.route('/run/<id>')
 def detailRun(id):
     run = db.query(Run).filter_by(id=id).first()
-    return render_template("runDetail.html", run=run)
+    hasMetric = False
+    if run.metric is None:
+       hasMetric = True
+    return render_template("runDetail.html", run=run, hasMetric=hasMetric)
 
 @app.route('/experiment/run/<id>/metrics')
 @auth.login_required
@@ -55,7 +58,7 @@ def extractMetricFromRun(id):
     run.metric = Metrics(run)
     #db.save(run)
     db.commit()
-    return render_template("metricDetail.html", run=run , user=auth.current_user())
+    return render_template("runDetail.html", run=run , user=auth.current_user())
 
 
 

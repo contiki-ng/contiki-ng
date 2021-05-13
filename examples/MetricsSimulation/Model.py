@@ -9,6 +9,8 @@ import re
 from types import new_class
 from xml.dom import minidom
 from numpy import apply_along_axis
+import matplotlib
+matplotlib.use('Agg')
 
 from sqlalchemy.sql.elements import TextClause
 from Runner import Runner
@@ -157,6 +159,7 @@ class Record(Base, MyModel):
 class Node(Base, MyModel):
     __tablename__ = 'nodes'
     id = Column(Integer, primary_key=True)
+    simId = Column(Integer, primary_key=True)
     posX = Column(Integer, nullable=False)
     posY = Column(Integer, nullable=False)
     posZ = Column(Integer, nullable=False)
@@ -168,18 +171,20 @@ class Metrics(Base, MyModel):
     run = relationship("Run", back_populates="metric")
     #application_id = Column(Integer, ForeignKey('application.id')) # The ForeignKey must be the physical ID, not the Object.id
     application = relationship("Application", uselist=False, back_populates="metric")
+    tsch_id = Column(Integer, ForeignKey('tsch.id')) # The ForeignKey must be the physical ID, not the Object.id
+    tsch = relationship("TSCH", back_populates="metric")
 
     def __init__(self, run):
         self.run = run
-        print("Self lenght:" , len(self.run.records) )
+        #print("Self lenght:" , len(self.run.records) )
         self.application = Application(self)
         self.application.process()
+        self.tsch = TSCH(self)
         db.add(self)
         db.commit()
 
 class Application(Base, MyModel):
     __tablename__ = 'application'
-    nodes = []
     id = Column(Integer, primary_key=True)
     metric_id = Column(Integer, ForeignKey('metrics.id')) # The ForeignKey must be the physical ID, not the Object.id
     metric = relationship("Metrics", back_populates="application")
@@ -187,6 +192,7 @@ class Application(Base, MyModel):
     latency = relationship("Latency", back_populates="application")
     pdr_id = Column(Integer, ForeignKey('pdrs.id')) # The ForeignKey must be the physical ID, not the Object.id
     pdr = relationship("PDR", back_populates="application")
+
 
     def __init__(self,metric):
         self.metric = metric
@@ -204,6 +210,7 @@ class Application(Base, MyModel):
                 dstNode = 1 #That simulation doesn't define a customized sink
                 #print("Node: " ,  node , "Seq: " , sequence , "Generation Time: ", genTime ,"Destination" , dstNode)
                 newLatRec = AppRecord(genTime,node,dstNode,sequence)
+                newLatRec.rcv = False
                 self.records.append(newLatRec)
                 continue
             
@@ -214,6 +221,7 @@ class Application(Base, MyModel):
                 for record in self.records:
                     if (record.srcNode == srcNode and record.sqnNumb == sequence):
                         record.rcvPkg(recTime)
+                        record.rcv = True
                 #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
                         break
         
@@ -228,9 +236,14 @@ class RPL(Base, MyModel):
 class TSCH(Base, MyModel):
     __tablename__ = 'tsch'
     id = Column(Integer, primary_key=True)
-    def processIngress(self, run):
-        data = db.query(Record).filter_by(run = run).filter_by(recordType = "TSCH").all()
-        results = [[] for x in run.maxNodes]
+    metric = relationship("Metrics", uselist=False, back_populates="tsch")
+
+    def __init__(self,metric):
+        self.metric = metric
+
+    def processIngress(self):
+        data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "TSCH").all()
+        results = [[] for x in range(self.metric.run.maxNodes)]
         for rec in data:
             if rec.rawData.startswith("leaving the network"):
                 results[rec.node].append(tuple((rec.simTime//1000000,False)))
@@ -238,8 +251,16 @@ class TSCH(Base, MyModel):
             if rec.rawData.startswith("association done"):
                 results[rec.node].append(tuple((rec.simTime//1000000, True)))
                 continue
+        return results
+    
+    def printIngress(self):
         import matplotlib.pyplot as plt
+        import io
+        import base64
+        tempBuffer = io.BytesIO()
+        plt.clf()
         index = 2
+        results = self.processIngress()
         for i in results[2:]:
             started = 0
             x = []
@@ -257,14 +278,12 @@ class TSCH(Base, MyModel):
                     x = []
             plt.plot(x,[index,index])
             index +=1
-        #plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
         plt.xlabel("Simulation Time (s)")
         plt.ylabel("Nodes")
-        #plt.legend()
-        plt.yticks(range(2,21))
-        plt.show()
-
-        return results
+        plt.yticks(range(2,self.metric.run.maxNodes))
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode()         
+        #plt.show()
 
 
 
@@ -276,33 +295,42 @@ class PDR(Base, MyModel):
     def __init__(self, application) -> None:
         self.application = application
 
-    def printPDR(self, latRecords):
+    def printPDR(self):
         data = {}
-        results = [[] for x in range(21)]
-        for rec in latRecords:
+        results = [[] for x in range(self.application.metric.run.maxNodes)]
+        for rec in self.application.records:
             if rec.rcv:
                 results[rec.srcNode].append(True)
             else:
                 results[rec.srcNode].append(False)
         from collections import Counter
         index = 2
+        totalGlobal = 0
+        trueGlobal = 0
         for i in results[2:]: # The first is the sink node
             node = Counter(i)
             total = node[True] + node[False]
+            totalGlobal += total
+            trueGlobal += node[True]
             pdr = round((node[True]/total)*100,2)
-            #print ("Node" , index ,"Total: " , total)
-            #print ("PDR: " , pdr,"%")
+            print ("Node" , index ,"Total: " , total, " False: ", node[False])
+            print ("PDR: " , pdr,"%")
             data[index] = pdr
             index += 1
-        #print (data)
+        print ("PDR Global: ",round((node[True]/total)*100,2))
+        import io
+        import base64
         import matplotlib.pyplot as plt
+        tempBuffer = io.BytesIO()
+        plt.clf()
         plt.bar(data.keys(),data.values(),label="PDR")
         plt.xticks(list(data.keys()))
         plt.ylim([0, 100])
         plt.xlabel("Nodes")
         plt.ylabel("PDR (%)")
         plt.legend()
-        plt.show()    
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode() 
         
 
 
@@ -315,7 +343,7 @@ class Latency(Base, MyModel):
     def __init__(self,application) -> None:
         self.application = application
 
-    def latency(self):
+    def getNodes(self):
         nodes = []
         for i in range(self.application.metric.run.maxNodes):
             nodes.append(list())
@@ -323,9 +351,13 @@ class Latency(Base, MyModel):
         for i in self.application.records:
             if (i.rcv):
                 nodes[i.srcNode].append(tuple((i.genTime//1000, i.getLatency()//1000)))
+        return nodes
+
+    def latency(self):
         records = self.application.records
         from numpy import mean
         start = 2
+        nodes = self.getNodes()
         for i in nodes[start:]:
             valuesNodes = []
             values = []
@@ -340,16 +372,23 @@ class Latency(Base, MyModel):
 
 
     def printLatency(self):
+        import io
+        import base64
         import matplotlib.pyplot as plt
+        plt.clf()
+        tempBuffer = io.BytesIO()
+        nodes = self.getNodes()
         for i in range(2,self.application.metric.run.maxNodes):
-            x = [a[0]//1000 for a in self.application.nodes[i]] # Seconds
-            y = [round(a[1]/1000,3) for a in self.application.nodes[i]] # Seconds
+            x = [a[0]//1000 for a in nodes[i]] # Seconds
+            y = [round(a[1]/1000,3) for a in nodes[i]] # Seconds
             plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
         plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
         plt.xlabel("Simulation Time (s)")
         plt.ylabel("Delay (s)")
         plt.legend()
-        plt.show()
+        #plt.show()
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode()
 
 
 class AppRecord(Base, MyModel):

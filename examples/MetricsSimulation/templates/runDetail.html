@@ -11,18 +11,23 @@
       <div class="jumbotron">
         <div class="container">
           <h1 class="display-4">Experiment {{run.experiment.name ~ " Run: " ~ run.id }}</h1>
-          <form method="get" action="/experiment/run/{{run.id}}/metrics/">
+          {% if hasMetric %}
+          <form method="get" action="/experiment/run/{{run.id}}/metrics">
             <button type="submit">Extract Metrics</button>
           </form>
+          {% endif %}
         </div>
       </div>
+      {% if not hasMetric %}
       <div class="container">
-          <p>Metrics</p>
-          <p>Metrics</p>
-          Latency (Mean): {{ run.metric.application.latency.latency() }}
-          <p></p>
-          <p></p>
-          <p></p>
+        <h1>Metrics</h1>
+        <p>Latency (Mean): {{ run.metric.application.latency.latency() }}</p>
+          <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatency()}}"/></p>
+          <p>PDR (per node)</p>
+          <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
+          <p>TSCH</p>
+          <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
+      {% endif %}
       </div>
     </div>
   </body>
