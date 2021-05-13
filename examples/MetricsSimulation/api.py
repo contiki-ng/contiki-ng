@@ -60,8 +60,5 @@ def extractMetricFromRun(id):
     db.commit()
     return render_template("runDetail.html", run=run , user=auth.current_user())
 
-
-
-
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
