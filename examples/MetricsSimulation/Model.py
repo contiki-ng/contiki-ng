@@ -10,6 +10,7 @@ from types import new_class
 from xml.dom import minidom
 from numpy import apply_along_axis
 import matplotlib
+from sqlalchemy.sql.sqltypes import PickleType
 matplotlib.use('Agg')
 
 from sqlalchemy.sql.elements import TextClause
@@ -93,6 +94,7 @@ class Experiment(Base, MyModel):
         runner.run()
         newRun.end = datetime.now()
         newRun.processRun()
+        newRun.parameters = newRun.getParameters()
         db.add(newRun)
         self.runs.append(newRun)
         db.commit()
@@ -104,6 +106,7 @@ class Run(Base, MyModel):
     start = Column(DateTime)
     end = Column(DateTime)
     maxNodes = Column(Integer)
+    parameters = Column(PickleType)
     experiment_id = Column(Integer, ForeignKey('experiments.id')) # The ForeignKey must be the physical ID, not the Object.id
     experiment = relationship("Experiment", back_populates="runs")
     metric = relationship("Metrics", uselist=False, back_populates="run")
@@ -126,6 +129,29 @@ class Run(Base, MyModel):
                 db.add(newRecord)
                 self.records.append(newRecord)
         #print(simTime)
+    
+    '''
+    Adapted from: https://stackoverflow.com/questions/2804543/read-subprocess-stdout-line-by-line
+    '''
+    def getParameters(self):
+        import subprocess
+        proc = subprocess.Popen(['make','viewconf'],bufsize=1, universal_newlines=True, stdout=subprocess.PIPE)
+        myDict = {}
+        for line in iter(proc.stdout.readline,''):
+            if not line:
+                break
+            if line.startswith("####"):
+                line = line.split()
+                try:
+                    #print (line[1].split("\"")[1] , "value", line [4])
+                    myDict[line[1].split("\"")[1]] = line [4]
+                except IndexError:
+                    if (line[1].split("\"")[1].startswith("MAKE")):
+                        #print (line[1].split("\"")[1] , "value", line [3])
+                        myDict[line[1].split("\"")[1]] = line [3]
+                        continue
+                    continue
+        return myDict
 
 '''
 Represents an experiment's record
@@ -263,19 +289,21 @@ class TSCH(Base, MyModel):
         results = self.processIngress()
         for i in results[2:]:
             started = 0
-            x = []
+            x = [0,0]
             for j in i:
                 if j[1]:
                     time = j[0]
                     plt.plot(time, index, marker="^", color="green")
-                    x.append(time)
-                    x.append(3600) #sim end without disconnection
+                    x[0] = time
+                    x[1] = (3600) #sim end without node's disconnection
                 else:
                     time = j[0]
                     plt.plot(time, index, marker="v", color="red")
                     x[1] = time
+                    #print("X: ", x," index: ",index)                    
                     plt.plot(x,[index,index])
-                    x = []
+                    x = [0,0]
+            #print("X: ", x," index: ",index)
             plt.plot(x,[index,index])
             index +=1
         plt.xlabel("Simulation Time (s)")
@@ -285,7 +313,24 @@ class TSCH(Base, MyModel):
         return base64.b64encode(tempBuffer.getvalue()).decode()         
         #plt.show()
 
+    def getPDR(self):
+        nodesStats = {}
+        for n in range(self.metric.run.maxNodes):
+            nodesStats[n] = {"tx": 0, "ack":0}
+        
+        data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "Link Stats").all()
+        for rec in data:
+            tx = int(rec.rawData.split()[2].split("=")[1])
+            ack = int(rec.rawData.split()[3].split("=")[1])
+            nodesStats[rec.node]['tx'] = nodesStats[rec.node]['tx'] + tx
+            nodesStats[rec.node]['ack'] = nodesStats[rec.node]['ack'] + ack
+        total = 0
+        totalAck = 0
+        for n in range(self.metric.run.maxNodes):
+            total = total + nodesStats[n]['tx']
+            totalAck = totalAck + nodesStats[n]['ack']
 
+        return round((totalAck/total)*100,2)
 
 class PDR(Base, MyModel):
     __tablename__ = 'pdrs'
@@ -313,11 +358,11 @@ class PDR(Base, MyModel):
             totalGlobal += total
             trueGlobal += node[True]
             pdr = round((node[True]/total)*100,2)
-            print ("Node" , index ,"Total: " , total, " False: ", node[False])
-            print ("PDR: " , pdr,"%")
+            #print ("Node" , index ,"Total: " , total, " False: ", node[False])
+            #print ("PDR: " , pdr,"%")
             data[index] = pdr
             index += 1
-        print ("PDR Global: ",round((node[True]/total)*100,2))
+        #print ("PDR Global: ",round((node[True]/total)*100,2))
         import io
         import base64
         import matplotlib.pyplot as plt

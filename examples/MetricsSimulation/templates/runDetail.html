@@ -17,10 +17,23 @@
       background-color: #555;
     }
     
+    .collapsible:after {
+      content: '\002B';
+      color: white;
+      font-weight: bold;
+      float: right;
+      margin-left: 5px;
+    }
+    
+    .active:after {
+      content: "\2212";
+    }
+    
     .content {
       padding: 0 18px;
-      display: none;
+      max-height: 0;
       overflow: hidden;
+      transition: max-height 0.2s ease-out;
       background-color: #f1f1f1;
     }
     </style>
@@ -44,20 +57,33 @@
       </div>
       {% if not hasMetric %}
       <div class="container">
-        <h1>Metrics</h1>
-        <button type="button" class="collapsible">Latency</button>
-        <div class="collapsible">
-        <p>Latency (Mean): {{ run.metric.application.latency.latency() }}</p>
-          <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatency()}}"/></p>
-        </div>
-        <button type="button" class="collapsible">PDR</button>
-        <div class="collapsible">
-          <p>PDR (per node)</p>
-          <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
+        <h1>Parameters: </h1>
+        <h2>Simulation</h2>
+        <ul>
+          <li>Number of nodes: {{run.maxNodes - 1}} </li>
+        </ul>
+        <h2>Stack</h2>
+        <ul>
+          <li>MAC: {{run.parameters['MAKE_MAC']}} </li>
+          <li>NET: {{run.parameters['MAKE_NET']}} </li>
+          <li>ROUTING: {{run.parameters['MAKE_ROUTING']}} </li>
+          	<ul>
+                <li>RPL Mod of Operation: {{run.parameters['RPL_CONF_MOP']}}</li>
+                <li>RPL Objective Funciton: {{run.parameters['RPL_CONF_OF_OCP']}}</li>
+            </ul>
+        </ul>
+        <h2>Metrics</h2>
+        <button type="button" class="collapsible">Application</button>
+        <div class="content">
+            <p>Latency (Mean): {{ run.metric.application.latency.latency() }}</p>
+            <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatency()}}"/></p>
+            <p>PDR (per node)</p>
+            <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
         </div>
         <button type="button" class="collapsible">TSCH</button>
-        <div class="collapsible">
+        <div class="content">
           <p>TSCH</p>
+          <p>TSCH PDR: {{ run.metric.tsch.getPDR()}} %</p>
           <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
         </div>
       {% endif %}
@@ -71,11 +97,11 @@
         coll[i].addEventListener("click", function() {
           this.classList.toggle("active");
           var content = this.nextElementSibling;
-          if (content.style.display === "block") {
-            content.style.display = "none";
+          if (content.style.maxHeight){
+            content.style.maxHeight = null;
           } else {
-            content.style.display = "block";
-          }
+            content.style.maxHeight = content.scrollHeight + "px";
+          } 
         });
       }
       </script>
