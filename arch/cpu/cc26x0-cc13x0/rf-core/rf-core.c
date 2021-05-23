@@ -128,9 +128,6 @@ volatile uint32_t rf_core_last_packet_timestamp = 0;
 /* Are we currently in poll mode? */
 uint8_t rf_core_poll_mode = 0;
 /*---------------------------------------------------------------------------*/
-/* Buffer full flag */
-volatile bool rf_core_rx_is_full = false;
-/*---------------------------------------------------------------------------*/
 PROCESS(rf_core_process, "CC13xx / CC26xx RF driver");
 /*---------------------------------------------------------------------------*/
 #define RF_CORE_CLOCKS_MASK (RFC_PWR_PWMCLKEN_RFC_M | RFC_PWR_PWMCLKEN_CPE_M \
@@ -731,8 +728,6 @@ cc26xx_rf_cpe1_isr(void)
 
   if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_RX_BUF_FULL) {
     PRINTF("\nRF: BUF_FULL\n\n");
-    /* set a flag that the buffer is full*/
-    rf_core_rx_is_full = true;
     /* make sure read_frame() will be called to make space in RX buffer */
     process_poll(&rf_core_process);
     /* Clear the IRQ_RX_BUF_FULL interrupt flag by writing zero to bit */
