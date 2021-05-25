@@ -50,12 +50,12 @@
 /*
  * NIST P-256, X9.62 prime256v1
  */
-ecc_curve_info_t nist_p_256;
+extern ecc_curve_info_t nist_p_256;
 
 /*
  * NIST P-192, X9.62 prime192v1
  */
-ecc_curve_info_t nist_p_192;
+extern ecc_curve_info_t nist_p_192;
 
 #endif /* CURVE_INFO_H_ */
 
