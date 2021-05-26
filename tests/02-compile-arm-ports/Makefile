@@ -12,6 +12,7 @@ coap/coap-example-server/zoul \
 dev/gpio-hal/zoul:BOARD=orion \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/rgb-led/zoul:BOARD=remote-reva \
+dev/dht11/nrf52840:BOARD=dk \
 hello-world/nrf52dk \
 hello-world/nrf52840:BOARD=dk \
 hello-world/nrf52840:BOARD=dongle \
