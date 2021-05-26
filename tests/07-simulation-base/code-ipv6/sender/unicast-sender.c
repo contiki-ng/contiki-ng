@@ -7,7 +7,7 @@
 
 #define UDP_PORT 61618
 
-#define SEND_INTERVAL		(4 * CLOCK_SECOND)
+#define SEND_INTERVAL		(60 * CLOCK_SECOND)
 
 static struct simple_udp_connection broadcast_connection;
 
@@ -58,6 +58,9 @@ PROCESS_THREAD(udp_process, ev, data)
     printf("Sending unicast\n");
     default_prefix = uip_ds6_default_prefix();
     uip_ip6addr_copy(&addr, default_prefix);
+    addr.u16[4] = UIP_HTONS(0x202);
+    addr.u16[5] = UIP_HTONS(2);
+    addr.u16[6] = UIP_HTONS(2);
     addr.u16[7] = UIP_HTONS(2);
     simple_udp_sendto(&broadcast_connection, buf, sizeof(buf), &addr);
   }
