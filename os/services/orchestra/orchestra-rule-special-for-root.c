@@ -202,6 +202,7 @@ struct orchestra_rule special_for_root = {
   select_packet,
   NULL,
   NULL,
+  NULL,
   root_node_updated,
   "special for root",
   ORCHESTRA_ROOT_PERIOD,

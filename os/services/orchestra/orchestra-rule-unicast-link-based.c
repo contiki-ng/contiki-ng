@@ -94,7 +94,8 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
   }
 
   if(nbr_table_get_from_lladdr(nbr_routes, (linkaddr_t *)linkaddr) != NULL) {
-    /* We have a route to this node. It should have selected us as its parent and installed a link */
+    /* We have a route to this node;
+     * it should have selected us as its parent and installed a link */
     return 1;
   }
 
@@ -215,6 +216,7 @@ struct orchestra_rule unicast_per_neighbor_link_based = {
   select_packet,
   child_added,
   child_removed,
+  NULL,
   NULL,
   "unicast per neighbor link based",
   ORCHESTRA_UNICAST_PERIOD,

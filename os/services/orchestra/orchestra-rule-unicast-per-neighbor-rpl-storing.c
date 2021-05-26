@@ -93,7 +93,8 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
   }
 
   if(!ORCHESTRA_UNICAST_SENDER_BASED) {
-    /* With the receiver-based Orchestra, all nodes have a link installed at their own timeslot */
+    /* With the receiver-based Orchestra,
+     * all nodes have a link installed at their own timeslot */
     return 1;
   }
 
@@ -103,7 +104,8 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
   }
 
   if(nbr_table_get_from_lladdr(nbr_routes, (linkaddr_t *)linkaddr) != NULL) {
-    /* We have a route to this node. It should have selected us as its parent and installed a link */
+    /* We have a route to this node;
+     * it should have selected us as its parent and installed a link */
     return 1;
   }
 
@@ -256,6 +258,7 @@ struct orchestra_rule unicast_per_neighbor_rpl_storing = {
   select_packet,
   child_added,
   child_removed,
+  NULL,
   NULL,
   "unicast per neighbor storing",
   ORCHESTRA_UNICAST_PERIOD,
