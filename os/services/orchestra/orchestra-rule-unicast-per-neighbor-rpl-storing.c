@@ -137,6 +137,12 @@ remove_uc_link(const linkaddr_t *linkaddr)
   if(l == NULL) {
     return;
   }
+  if(!ORCHESTRA_UNICAST_SENDER_BASED) {
+    /* Packets to this address were marked with this slotframe and neighbor-specific timeslot;
+     * make sure they don't remain stuck in the queues after the link is removed. */
+    tsch_queue_free_packets_to(linkaddr);
+  }
+
   /* Does our current parent need this timeslot? */
   if(timeslot == get_node_timeslot(&orchestra_parent_linkaddr)) {
     /* Yes, this timeslot is being used, return */
@@ -184,6 +190,7 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset)
   /* Select data packets we have a unicast link to */
   const linkaddr_t *dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
   if(packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME
+     && !orchestra_is_root_schedule_active(dest)
      && neighbor_has_uc_link(dest)) {
     if(slotframe != NULL) {
       *slotframe = slotframe_handle;
@@ -239,6 +246,7 @@ struct orchestra_rule unicast_per_neighbor_rpl_storing = {
   select_packet,
   child_added,
   child_removed,
+  NULL,
   "unicast per neighbor storing",
   ORCHESTRA_UNICAST_PERIOD,
 };
