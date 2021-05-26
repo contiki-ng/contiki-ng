@@ -8,7 +8,7 @@ from re import S
 import re
 from types import new_class
 from xml.dom import minidom
-from numpy import apply_along_axis
+from numpy import apply_along_axis, median
 import matplotlib
 from sqlalchemy.sql.sqltypes import PickleType
 matplotlib.use('Agg')
@@ -137,6 +137,8 @@ class Run(Base, MyModel):
         import subprocess
         proc = subprocess.Popen(['make','viewconf'],bufsize=1, universal_newlines=True, stdout=subprocess.PIPE)
         myDict = {}
+        for param in ['radiomedium','transmitting_range','interference_range','success_ratio_tx','success_ratio_rx']:
+            myDict[param] = str(minidom.parse(self.experiment.experimentFile).getElementsByTagName(param)[0].firstChild.data).strip()
         for line in iter(proc.stdout.readline,''):
             if not line:
                 break
@@ -313,24 +315,26 @@ class TSCH(Base, MyModel):
         return base64.b64encode(tempBuffer.getvalue()).decode()         
         #plt.show()
 
-    def getPDR(self):
+    def getNodesPDR(self) -> dict:
         nodesStats = {}
         for n in range(self.metric.run.maxNodes):
             nodesStats[n] = {"tx": 0, "ack":0}
-        
         data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "Link Stats").all()
         for rec in data:
             tx = int(rec.rawData.split()[2].split("=")[1])
             ack = int(rec.rawData.split()[3].split("=")[1])
             nodesStats[rec.node]['tx'] = nodesStats[rec.node]['tx'] + tx
             nodesStats[rec.node]['ack'] = nodesStats[rec.node]['ack'] + ack
+        return nodesStats
+
+    def getPDR(self):
+        nodesStats = self.getNodesPDR()
         total = 0
         totalAck = 0
         for n in range(self.metric.run.maxNodes):
             total = total + nodesStats[n]['tx']
             totalAck = totalAck + nodesStats[n]['ack']
-
-        return round((totalAck/total)*100,2)
+        return {'PDR': round((totalAck/total)*100,2), 'tx' :total, 'ack': totalAck}
 
 class PDR(Base, MyModel):
     __tablename__ = 'pdrs'
@@ -340,18 +344,37 @@ class PDR(Base, MyModel):
     def __init__(self, application) -> None:
         self.application = application
 
-    def printPDR(self):
-        data = {}
+
+    def processResults(self):
         results = [[] for x in range(self.application.metric.run.maxNodes)]
         for rec in self.application.records:
             if rec.rcv:
                 results[rec.srcNode].append(True)
             else:
                 results[rec.srcNode].append(False)
+        return results
+    
+    def getGlobalPDR(self):
+        totalTrue = 0
+        totalFalse = 0
+        from collections import Counter
+        for i in self.processResults():
+            node = Counter(i)
+            totalTrue += node[True]
+            totalFalse += node[False]
+        return (round(totalTrue/(totalFalse+totalTrue)*100,2))
+
+    def printPDR(self):
+        data = {}
+        results = self.processResults()
         from collections import Counter
         index = 2
         totalGlobal = 0
         trueGlobal = 0
+        import io
+        import base64
+        import matplotlib.pyplot as plt
+        plt.clf()
         for i in results[2:]: # The first is the sink node
             node = Counter(i)
             total = node[True] + node[False]
@@ -362,18 +385,18 @@ class PDR(Base, MyModel):
             #print ("PDR: " , pdr,"%")
             data[index] = pdr
             index += 1
+            width = 0.8
+            plt.text(((index-1) - (width/3)), pdr-2, str(pdr), color="black", fontsize=8)
         #print ("PDR Global: ",round((node[True]/total)*100,2))
-        import io
-        import base64
-        import matplotlib.pyplot as plt
         tempBuffer = io.BytesIO()
-        plt.clf()
-        plt.bar(data.keys(),data.values(),label="PDR")
+        plt.bar(data.keys(),data.values(), width=width, label="PDR")
+        #plt.bar_label(data.values(), padding=2)
         plt.xticks(list(data.keys()))
         plt.ylim([0, 100])
         plt.xlabel("Nodes")
         plt.ylabel("PDR (%)")
         plt.legend()
+        plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode() 
         
@@ -398,7 +421,7 @@ class Latency(Base, MyModel):
                 nodes[i.srcNode].append(tuple((i.genTime//1000, i.getLatency()//1000)))
         return nodes
 
-    def latency(self):
+    def latencyMean(self):
         records = self.application.records
         from numpy import mean
         start = 2
@@ -415,6 +438,23 @@ class Latency(Base, MyModel):
         #print("Size: " + str(len(values)) + " Mean: " + str(globalMean))
         return globalMean
 
+    def latencyMedian(self):
+        records = self.application.records
+        from numpy import mean
+        start = 2
+        nodes = self.getNodes()
+        for i in nodes[start:]:
+            valuesNodes = []
+            values = []
+            for j in i:
+                values.append(j[1]/1000) # Miliseconds 10 ^ -3
+                valuesNodes.append(j[1]/1000) # Miliseconds 10 ^ -3
+            #print("Node:" + str(start) + " Size: " + str(len(valuesNodes)) + " Mean:" + str(round(mean(valuesNodes),2)))
+            start += 1
+        globalMedian = round(median(values),2)
+        #print("Size: " + str(len(values)) + " Mean: " + str(globalMean))
+        return globalMedian
+
 
     def printLatency(self):
         import io
@@ -427,11 +467,15 @@ class Latency(Base, MyModel):
             x = [a[0]//1000 for a in nodes[i]] # Seconds
             y = [round(a[1]/1000,3) for a in nodes[i]] # Seconds
             plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
-        plt.axhline(y = self.latency(), color = 'r', linestyle = '--',label="Mean")
+        myMean = self.latencyMean()
+        myMedian = self.latencyMedian()
+        plt.axhline(y = myMean, color = 'r', linestyle = '--',label="Mean: " + str(myMean))
+        plt.axhline(y = myMedian, color = 'g', linestyle = '--',label="Median: " + str(myMedian))
         plt.xlabel("Simulation Time (s)")
         plt.ylabel("Delay (s)")
         plt.legend()
         #plt.show()
+        plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()
 

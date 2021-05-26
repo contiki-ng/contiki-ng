@@ -61,6 +61,11 @@
         <h2>Simulation</h2>
         <ul>
           <li>Number of nodes: {{run.maxNodes - 1}} </li>
+          <li>Radio Medium: {{run.parameters['radiomedium']}} </li>
+          <li>TX Range (m): {{run.parameters['transmitting_range']}} </li>
+          <li>Interference Range (m): {{run.parameters['interference_range']}} </li>
+          <li>Success TX ratio(m): {{run.parameters['success_ratio_tx']}} </li>
+          <li>Success RX ratio(m): {{run.parameters['success_ratio_rx']}} </li>
         </ul>
         <h2>Stack</h2>
         <ul>
@@ -75,15 +80,17 @@
         <h2>Metrics</h2>
         <button type="button" class="collapsible">Application</button>
         <div class="content">
-            <p>Latency (Mean): {{ run.metric.application.latency.latency() }}</p>
+            <p>Latency (Mean): {{ run.metric.application.latency.latencyMean() }}</p>
+            <p>Latency (Median): {{ run.metric.application.latency.latencyMedian() }}</p>
             <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatency()}}"/></p>
-            <p>PDR (per node)</p>
+            <p>PDR Global: {{run.metric.application.pdr.getGlobalPDR()}}%</p>
+            <p>PDR Graph(per node)</p>
             <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
         </div>
         <button type="button" class="collapsible">TSCH</button>
         <div class="content">
-          <p>TSCH</p>
-          <p>TSCH PDR: {{ run.metric.tsch.getPDR()}} %</p>
+          <p>TSCH PDR: {{ run.metric.tsch.getPDR()['PDR'] }} % (Total Sent: {{ run.metric.tsch.getPDR()['tx'] }}, ACK Total: {{ run.metric.tsch.getPDR()['ack'] }})</p>
+          <p>Ingress over time.</p>
           <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
         </div>
       {% endif %}
