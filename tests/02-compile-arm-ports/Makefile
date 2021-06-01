@@ -5,6 +5,10 @@ EXAMPLES = \
 6tisch/6p-packet/zoul \
 6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
 6tisch/simple-node/simplelink:DEFINES=TSCH_CONF_AUTOSELECT_TIME_SOURCE=1 \
+6tisch/simple-node/nrf:BOARD=nrf52840/dk \
+6tisch/simple-node/nrf:BOARD=nrf52840/dongle \
+6tisch/simple-node/nrf:BOARD=nrf5340/dk/application \
+6tisch/simple-node/nrf:BOARD=nrf5340/dk/network \
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
@@ -36,6 +40,10 @@ hello-world/cc26x0-cc13x0:BOARD=launchpad/cc2640r2 \
 hello-world/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
 hello-world/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
 hello-world/cc26x0-cc13x0:BOARD=launchpad/cc1350 \
+hello-world/nrf:BOARD=nrf52840/dk \
+hello-world/nrf:BOARD=nrf52840/dongle \
+hello-world/nrf:BOARD=nrf5340/dk/application \
+hello-world/nrf:BOARD=nrf5340/dk/network \
 libs/data-structures/zoul \
 libs/deployment/openmote \
 libs/energest/zoul \
@@ -61,6 +69,10 @@ platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc
 platform-specific/cc26x0-cc13x0/base-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1352r1 \
+platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dk \
+platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dongle \
+platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/application \
+platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/network \
 platform-specific/nrf52dk/blink-hello/nrf52dk \
 platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
 platform-specific/nrf52dk/mqtt-demo/nrf52dk \
@@ -73,6 +85,8 @@ platform-specific/zoul/rtcc/zoul \
 platform-specific/zoul/zoul \
 rpl-border-router/cc2538dk:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 rpl-border-router/zoul:MAKE_MAC=MAKE_MAC_TSCH \
+rpl-border-router/nrf:BOARD=nrf52840/dk \
+rpl-border-router/nrf:BOARD=nrf52840/dongle \
 rpl-udp/cc2538dk \
 sensniff/zoul:DEFINES=ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
 slip-radio/zoul \

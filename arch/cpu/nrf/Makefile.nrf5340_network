@@ -1,0 +1,20 @@
+include $(CONTIKI_CPU)/Makefile.nrfx  
+
+LDSCRIPT ?= $(CONTIKI_CPU)/lib/nrfx/mdk/nrf5340_xxaa_network.ld
+CFLAGS += -DNRF5340_XXAA_NETWORK
+
+NRFX_ASM_SRCS += $(NRFX_ROOT)/mdk/gcc_startup_nrf5340_network.s
+
+NRFX_C_SRCS += $(NRFX_ROOT)/mdk/system_nrf5340_network.c
+
+EXTERNALDIRS += $(NRFX_ROOT)/mdk/
+
+NRFJPROG_OPTIONS=-f NRF53 --coprocessor CP_NETWORK 
+
+CFLAGS += -DCPU_CONF_PATH=\"nrf5340-network-conf.h\"
+
+TARGET_LIBFILES += -lm
+
+include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33+nodsp
+
+include $(CONTIKI_CPU)/Makefile.nrf
