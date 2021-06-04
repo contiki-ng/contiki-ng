@@ -247,16 +247,5 @@ void uip_ds6_neighbor_periodic(void);
 void uip_ds6_nbr_refresh_reachable_state(const uip_ipaddr_t *ipaddr);
 #endif /* UIP_ND6_SEND_NS */
 
-/**
- * \brief
- *    This searches inside the neighbor table for the neighbor that is about to
- *    expire the next.
- *
- * \return
- *    A reference to the neighbor about to expire the next or NULL if
- *    table is empty.
- */
-uip_ds6_nbr_t *uip_ds6_get_least_lifetime_neighbor(void);
-
 #endif /* UIP_DS6_NEIGHBOR_H_ */
 /** @} */
