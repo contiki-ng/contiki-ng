@@ -78,7 +78,7 @@ typedef struct snmp_mib_resource_s snmp_mib_resource_t;
  */
 #define OID(name, ...) \
   static snmp_oid_t name = { \
-    .data = __VA_ARGS__, \
+    .data = { __VA_ARGS__ }, \
     .length = (sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t)) \
   };
 
@@ -93,7 +93,7 @@ typedef struct snmp_mib_resource_s snmp_mib_resource_t;
   snmp_mib_resource_t name = { \
     NULL, \
     { \
-      .data = __VA_ARGS__, \
+      .data = { __VA_ARGS__ }, \
       .length = (sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t)) \
     }, \
     handler \
