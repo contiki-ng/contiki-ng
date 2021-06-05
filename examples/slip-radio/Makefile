@@ -3,6 +3,7 @@ all: $(CONTIKI_PROJECT)
 
 # slip-radio is only intended for platforms with SLIP support
 PLATFORMS_EXCLUDE = native nrf52dk
+BOARDS_EXCLUDE = nrf52840/dongle
 
 CONTIKI=../..
 include $(CONTIKI)/Makefile.identify-target
