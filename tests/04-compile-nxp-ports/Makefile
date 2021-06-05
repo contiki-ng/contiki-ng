@@ -17,7 +17,7 @@ coap/coap-example-server/jn516x \
 rpl-border-router/jn516x \
 6tisch/simple-node/jn516x \
 libs/logging/jn516x \
-6tisch/etsi-plugtest-2017/jn516x
+6tisch/etsi-plugtest-2017/jn516x \
 dev/dht11/jn516x \
 
 TOOLS=
