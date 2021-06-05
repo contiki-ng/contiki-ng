@@ -22,6 +22,9 @@ mqtt-client/native \
 coap/coap-example-client/native \
 coap/coap-example-server/native \
 coap/coap-plugtest-server/native \
+dev/dht11/native \
+dev/dht11/sky \
+dev/dht11/z1 \
 
 TOOLS=
 
