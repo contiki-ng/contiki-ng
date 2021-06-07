@@ -42,7 +42,7 @@
 struct cooja_mtarch_thread {
   unsigned long sp;  /* Note: stack pointer must be first var in struct! */
   unsigned long stack[COOJA_MTARCH_STACKSIZE];
-};
+} __attribute__ ((aligned (16)));
 
 struct cooja_mt_thread;
 
