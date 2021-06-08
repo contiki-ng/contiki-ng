@@ -67,6 +67,9 @@ typedef int cfs_offset_t;
 typedef CFS_CONF_OFFSET_TYPE cfs_offset_t;
 #endif
 
+/**< CFS directory entry name length */
+#define CFS_DIR_ENTRY_NAME_LENGTH   32
+
 struct cfs_dir {
   /* Iteration state, which is implementation-defined and should not be
      accessed externally. */
@@ -74,7 +77,7 @@ struct cfs_dir {
 };
 
 struct cfs_dirent {
-  char name[32];
+  char name[CFS_DIR_ENTRY_NAME_LENGTH];
   cfs_offset_t size;
 };
 
