@@ -87,9 +87,15 @@ rpl-border-router/cc2538dk:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 rpl-border-router/zoul:MAKE_MAC=MAKE_MAC_TSCH \
 rpl-border-router/nrf:BOARD=nrf52840/dk \
 rpl-border-router/nrf:BOARD=nrf52840/dongle \
+rpl-border-router/nrf:BOARD=nrf5340/dk/application \
+rpl-border-router/nrf:BOARD=nrf5340/dk/network \
 rpl-udp/cc2538dk \
 sensniff/zoul:DEFINES=ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
 slip-radio/zoul \
+slip-radio/nrf:BOARD=nrf52840/dk \
+slip-radio/nrf:BOARD=nrf52840/dongle \
+slip-radio/nrf:BOARD=nrf5340/dk/application \
+slip-radio/nrf:BOARD=nrf5340/dk/network \
 snmp-server/cc2538dk \
 storage/antelope-shell/zoul \
 storage/cfs-coffee/zoul \
