@@ -22,6 +22,9 @@ mqtt-client/native \
 coap/coap-example-client/native \
 coap/coap-example-server/native \
 coap/coap-plugtest-server/native \
+snmp-server/native \
+snmp-server/sky \
+snmp-server/z1 \
 
 TOOLS=
 
