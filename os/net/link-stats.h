@@ -72,6 +72,8 @@ struct link_packet_counter {
   link_packet_stat_t num_packets_acked;
   /* total number of unicast and broadcast packets received */
   link_packet_stat_t num_packets_rx;
+  /* total number of packets dropped before transmission due to insufficient memory */
+  link_packet_stat_t num_queue_drops;
 };
 
 

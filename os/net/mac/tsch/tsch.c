@@ -1147,7 +1147,7 @@ send_packet(mac_callback_t sent, void *ptr)
           tsch_packet_seqno, tsch_queue_nbr_packet_count(n),
           TSCH_QUEUE_NUM_PER_NEIGHBOR, tsch_queue_global_packet_count(),
           QUEUEBUF_NUM);
-      ret = MAC_TX_ERR;
+      ret = MAC_TX_QUEUE_FULL;
     } else {
       p->header_len = hdr_len;
       LOG_INFO("send packet to ");
