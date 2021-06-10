@@ -667,25 +667,6 @@ uip_ds6_nbr_refresh_reachable_state(const uip_ipaddr_t *ipaddr)
     stimer_set(&nbr->reachable, UIP_ND6_REACHABLE_TIME / 1000);
   }
 }
-/*---------------------------------------------------------------------------*/
-uip_ds6_nbr_t *
-uip_ds6_get_least_lifetime_neighbor(void)
-{
-  uip_ds6_nbr_t *nbr = uip_ds6_nbr_head();
-  uip_ds6_nbr_t *nbr_expiring = NULL;
-  while(nbr != NULL) {
-    if(nbr_expiring != NULL) {
-      clock_time_t curr = stimer_remaining(&nbr->reachable);
-      if(curr < stimer_remaining(&nbr->reachable)) {
-        nbr_expiring = nbr;
-      }
-    } else {
-      nbr_expiring = nbr;
-    }
-    nbr = uip_ds6_nbr_next(nbr);
-  }
-  return nbr_expiring;
-}
 #endif /* UIP_ND6_SEND_NS */
 /*---------------------------------------------------------------------------*/
 /** @} */

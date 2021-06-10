@@ -133,7 +133,6 @@ static int off(void);
 static rfc_propRxOutput_t rx_stats;
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
-#define DOT_4G_MAX_FRAME_LEN    2047
 #define DOT_4G_PHR_LEN             2
 
 /* PHY HDR bits */
@@ -169,8 +168,8 @@ static rfc_propRxOutput_t rx_stats;
  * a 4-byte CRC.
  *
  * In the future we can change this to support transmission of long frames,
- * for example as per .15.4g. the size of the TX and RX buffers would need
- * adjusted accordingly.
+ * for example as per .15.4g, which defines 2047 as the maximum frame size.
+ * The size of the TX and RX buffers would need to be adjusted accordingly.
  */
 #define MAX_PAYLOAD_LEN 125
 /*---------------------------------------------------------------------------*/
@@ -453,10 +452,9 @@ rf_cmd_prop_rx()
   cmd_rx_adv->rxConf.bAppendStatus = RF_CORE_RX_BUF_INCLUDE_CORR;
 
   /*
-   * Set the max Packet length. This is for the payload only, therefore
-   * 2047 - length offset
+   * Set the max Packet length. This is for the payload only.
    */
-  cmd_rx_adv->maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx_adv->lenOffset;
+  cmd_rx_adv->maxPktLen = RADIO_PHY_OVERHEAD + MAX_PAYLOAD_LEN;
 
   ret = rf_core_send_cmd((uint32_t)cmd_rx_adv, &cmd_status);
 
@@ -865,7 +863,7 @@ read_frame(void *buf, unsigned short buf_len)
   /* wait for entry to become finished */
   rtimer_clock_t t0 = RTIMER_NOW();
   while(entry->status == DATA_ENTRY_STATUS_BUSY
-      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (RTIMER_SECOND / 50)));
+      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RADIO_FRAME_DURATION(MAX_PAYLOAD_LEN)));
 
 #if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */

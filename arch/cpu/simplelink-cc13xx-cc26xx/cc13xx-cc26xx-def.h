@@ -92,6 +92,9 @@
 
 #define RADIO_BYTE_AIR_TIME  (1000000 / (RADIO_BIT_RATE / 8))
 
+#define RADIO_FRAME_DURATION(payload_len)                               \
+  US_TO_RTIMERTICKS(RADIO_BYTE_AIR_TIME * (RADIO_PHY_OVERHEAD + (payload_len)))
+
 /* Delay between GO signal and SFD */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME))
 /* Delay between GO signal and start listening.
