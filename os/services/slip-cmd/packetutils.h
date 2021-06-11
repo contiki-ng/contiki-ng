@@ -34,4 +34,8 @@ int packetutils_serialize_atts(uint8_t *data, int size);
 
 int packetutils_deserialize_atts(const uint8_t *data, int size);
 
+int packetutils_serialize_addrs(uint8_t *data, int size);
+
+int packetutils_deserialize_addrs(const uint8_t *data, int size);
+
 #endif /* PACKETUTILS_H_ */
