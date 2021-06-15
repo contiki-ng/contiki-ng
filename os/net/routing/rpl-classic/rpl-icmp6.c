@@ -358,9 +358,14 @@ dio_input(void)
       goto discard;
     }
 
-    LOG_DBG("Incoming DIO (option, length) = (%u, %u)\n", subopt_type, len - 2);
+    LOG_DBG("Incoming DIO (option, length) = (%u, %u)\n",
+            subopt_type, len);
 
     switch(subopt_type) {
+      case RPL_OPTION_PAD1:
+      case RPL_OPTION_PADN:
+        LOG_DBG("PAD %u bytes\n", len);
+        break;
       case RPL_OPTION_DAG_METRIC_CONTAINER:
         if(len < 6) {
           LOG_WARN("Invalid DAG MC, len = %d\n", len);
