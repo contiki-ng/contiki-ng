@@ -74,7 +74,6 @@ cc2538_sram_seeder_seed(void)
   int bit1;
   int bit2;
 
-  memset(seed.u8, 0, CSPRNG_SEED_LEN);
   byte_pos = 0;
   bit_pos = 0;
 
@@ -91,7 +90,7 @@ cc2538_sram_seeder_seed(void)
         if(bit1 < bit2) {
           seed.u8[byte_pos] |= 1 << bit_pos++;
         } else if(bit1 > bit2) {
-          seed.u8[byte_pos] |= 0 << bit_pos++;
+          seed.u8[byte_pos] &= ~(1 << bit_pos++);
         }
         if(bit_pos == 8) {
           bit_pos = 0;
