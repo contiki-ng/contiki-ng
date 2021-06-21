@@ -1,0 +1,26 @@
+include $(CONTIKI_CPU)/Makefile.nrfx  
+
+# Boards
+ifeq ($(BOARD), nrf52840/dongle)
+  LDSCRIPT ?= $(CONTIKI_CPU)/ld/nrf52840-bootloader.ld
+else
+  LDSCRIPT ?= $(CONTIKI_CPU)/lib/nrfx/mdk/nrf52840_xxaa.ld
+endif
+
+CFLAGS += -DNRF52840_XXAA
+
+NRFX_ASM_SRCS += $(NRFX_ROOT)/mdk/gcc_startup_nrf52840.s
+
+NRFX_C_SRCS += $(NRFX_ROOT)/mdk/system_nrf52840.c
+
+EXTERNALDIRS += $(NRFX_ROOT)/mdk/
+
+CFLAGS += -DCPU_CONF_PATH=\"nrf52840-conf.h\"
+
+CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
+
+include $(CONTIKI_CPU)/Makefile.nrf

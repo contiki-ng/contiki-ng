@@ -6,7 +6,7 @@
 
 #define UDP_PORT 61618
 
-#define SEND_INTERVAL		(4 * CLOCK_SECOND)
+#define SEND_INTERVAL		(60 * CLOCK_SECOND)
 
 static struct simple_udp_connection broadcast_connection;
 

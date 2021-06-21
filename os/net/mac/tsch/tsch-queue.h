@@ -115,6 +115,11 @@ struct tsch_packet *tsch_queue_remove_packet_from_queue(struct tsch_neighbor *n)
  */
 void tsch_queue_free_packet(struct tsch_packet *p);
 /**
+ * \brief Flush packets to a specific address
+ * \param addr The address of the neighbor whose packets to free
+ */
+void tsch_queue_free_packets_to(const linkaddr_t *addr);
+/**
  * \brief Updates neighbor queue state after a transmission
  * \param n The neighbor queue we just sent from
  * \param p The packet that was just sent

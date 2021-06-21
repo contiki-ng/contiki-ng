@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import os
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 
 # get the path of this example
 SELF_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -20,12 +20,12 @@ def run_subprocess(args, input_string):
     retcode = -1
     stdoutdata = ''
     try:
-        proc = Popen(args, stdout = PIPE, stderr = STDOUT, stdin = PIPE, shell = True)
+        proc = Popen(args, stdout=PIPE, stderr=STDOUT, stdin=PIPE, shell=True, universal_newlines=True)
         (stdoutdata, stderrdata) = proc.communicate(input_string)
         if not stdoutdata:
-            stdoutdata = ''
+            stdoutdata = '\n'
         if stderrdata:
-            stdoutdata += stderrdata
+            stdoutdata += stderrdata + '\n'
         retcode = proc.returncode
     except OSError as e:
         sys.stderr.write("run_subprocess OSError:" + str(e))
@@ -43,12 +43,15 @@ def run_subprocess(args, input_string):
 def execute_test(cooja_file):
     # cleanup
     try:
-        os.rm(cooja_output)
-    except:
+        os.remove(cooja_output)
+    except FileNotFoundError as ex:
         pass
+    except PermissionError as ex:
+        print("Cannot remove previous Cooja output:", ex)
+        return False
 
     filename = os.path.join(SELF_PATH, cooja_file)
-    args = " ".join(["java -jar ", cooja_jar, "-nogui=" + filename, "-contiki=" + CONTIKI_PATH])
+    args = " ".join(["java -Djava.awt.headless=true -jar ", cooja_jar, "-nogui=" + filename, "-contiki=" + CONTIKI_PATH])
     sys.stdout.write("  Running Cooja, args={}\n".format(args))
 
     (retcode, output) = run_subprocess(args, '')

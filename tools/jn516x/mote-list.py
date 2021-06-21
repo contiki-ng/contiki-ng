@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 # Copyright (c) 2015, SICS Swedish ICT
 # All rights reserved.

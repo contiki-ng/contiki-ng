@@ -27,11 +27,12 @@ Find out more:
 
 * GitHub repository: https://github.com/contiki-ng/contiki-ng
 * Documentation: https://github.com/contiki-ng/contiki-ng/wiki
+* List of releases and changes: https://github.com/contiki-ng/contiki-ng/releases
 * Web site: http://contiki-ng.org
-* Nightly testbed runs: https://contiki-ng.github.io/testbed
 
 Engage with the community:
 
+* Discussions on GitHub: https://github.com/contiki-ng/contiki-ng/discussions
 * Contiki-NG tag on Stack Overflow: https://stackoverflow.com/questions/tagged/contiki-ng
 * Gitter: https://gitter.im/contiki-ng
 * Twitter: https://twitter.com/contiki_ng

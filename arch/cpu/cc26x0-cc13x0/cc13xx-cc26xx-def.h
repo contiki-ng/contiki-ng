@@ -71,6 +71,9 @@
 
 #define RADIO_BYTE_AIR_TIME  (1000000 / (RADIO_BIT_RATE / 8))
 
+#define RADIO_FRAME_DURATION(payload_len)                               \
+  US_TO_RTIMERTICKS(RADIO_BYTE_AIR_TIME * (RADIO_PHY_OVERHEAD + (payload_len)))
+
 /* Delay between GO signal and SFD */
 #define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME))
 /* Delay between GO signal and start listening.
@@ -130,9 +133,9 @@
 #define TSCH_CONF_CHANNEL_SCAN_DURATION (CLOCK_SECOND / 10)
 #endif
 
-/* Increase this from the default 100 to improve TSCH association speed on this platform */
+/* Tweak to improve TSCH association speed on this platform */
 #ifndef TSCH_CONF_ASSOCIATION_POLL_FREQUENCY
-#define TSCH_CONF_ASSOCIATION_POLL_FREQUENCY 1000
+#define TSCH_CONF_ASSOCIATION_POLL_FREQUENCY 10
 #endif
 
 /* Slightly reduce the TSCH guard time (from 2200 usec to 1800 usec) to make sure

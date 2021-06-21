@@ -95,14 +95,6 @@ void rpl_neighbor_set_preferred_parent(rpl_nbr_t *nbr);
 int rpl_neighbor_is_fresh(rpl_nbr_t *nbr);
 
 /**
- * Tells wether we a given neighbor is reachable
- *
- * \param nbr The neighbor
- * \return 1 if the parent is reachable, 0 otherwise
-*/
-int rpl_neighbor_is_reachable(rpl_nbr_t *nbr);
-
-/**
  * Tells whether a nbr is acceptable as per the OF's definition
  *
  * \param nbr The neighbor
