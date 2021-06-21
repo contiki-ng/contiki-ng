@@ -180,3 +180,6 @@
 ##### "LOG_CONF_LEVEL_SNMP": ___________________ == LOG_CONF_LEVEL_SNMP
 ##### "LOG_CONF_LEVEL_LWM2M": __________________ == LOG_CONF_LEVEL_LWM2M
 ##### "LOG_CONF_LEVEL_MAIN": ___________________ == LOG_CONF_LEVEL_MAIN
+
+##### "APP_SEND_INTERVAL_SEC": _________________ == APP_SEND_INTERVAL_SEC
+##### "APP_WARM_UP_PERIOD_SEC": ________________ == APP_WARM_UP_PERIOD_SEC
