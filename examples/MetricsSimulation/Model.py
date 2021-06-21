@@ -182,8 +182,7 @@ class Record(Base, MyModel):
         self.recordType = type
         self.rawData = data
         self.run = run
-
-        
+      
 class Node(Base, MyModel):
     __tablename__ = 'nodes'
     id = Column(Integer, primary_key=True)
@@ -252,10 +251,6 @@ class Application(Base, MyModel):
                         record.rcv = True
                 #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
                         break
-        
-        
-
-
 
 class RPL(Base, MyModel):
     __tablename__ = 'rpl'
@@ -399,9 +394,6 @@ class PDR(Base, MyModel):
         plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode() 
-        
-
-
 
 class Latency(Base, MyModel):
     __tablename__ = 'latencies'
@@ -478,7 +470,6 @@ class Latency(Base, MyModel):
         plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()
-
 
 class AppRecord(Base, MyModel):
     __tablename__ = 'apprecords'
