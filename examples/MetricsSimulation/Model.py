@@ -110,6 +110,39 @@ class Run(Base, MyModel):
     experiment = relationship("Experiment", back_populates="runs")
     metric = relationship("Metrics", uselist=False, back_populates="run")
 
+    def printNodesPosition(self):
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.pyplot as plt
+        import io
+        import base64
+        tempBuffer = io.BytesIO()
+        plt.clf()
+        nodes = []
+        x = []
+        y = []
+        z = []
+        for node, position in self.getNodesPosition().items():
+            nodes.append(node)
+            x.append(position['x'])
+            y.append(position['y'])
+            z.append(0)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, c='b', marker='o')
+        i = 0
+        for label in nodes:
+            ax.text(x[i],y[i],z[i], label)
+            i += 1
+
+        ax.set_xlabel('X Position')
+        ax.set_ylabel('Y Position')
+        #ax.set_zlabel('Z Label')
+        ax.set_title("Nodes position")
+        ax.set_zlim3d(0,100)
+
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode()
+
     def getNodesPosition(self):
         myData = {}
         for i in range(2,(self.maxNodes)):
@@ -463,18 +496,22 @@ class Latency(Base, MyModel):
         #print("Size: " + str(len(values)) + " Mean: " + str(globalMean))
         return globalMedian
 
-    def printLatencyByNode(self):
-        import io
-        import base64
-        import matplotlib.pyplot as plt
-        plt.clf()
-        tempBuffer = io.BytesIO()
+    def getLatencyDataByNode(self):
         myData = {}
         for i in range(2,(self.application.metric.run.maxNodes)):
             myData['n' + str(i)] = []
         for rec in self.application.records:
             if rec.rcv:
                 myData['n' + str(rec.srcNode)].append(rec.getLatency()/float(1000))
+        return myData
+
+    def printLatencyByNode(self):
+        import io
+        import base64
+        import matplotlib.pyplot as plt
+        plt.clf()
+        tempBuffer = io.BytesIO()
+        myData = self.getLatencyDataByNode()
         labels, data = myData.keys(), myData.values()
         plt.boxplot(data)
         plt.xticks(range(1, len(labels) + 1), labels)
@@ -483,6 +520,51 @@ class Latency(Base, MyModel):
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()
         #plt.show()
+    
+    def printLatencyByNodesPosition(self):
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.pyplot as plt
+        import io
+        import base64
+        from numpy import mean
+        import matplotlib.cm as cm
+        import numpy as np
+        tempBuffer = io.BytesIO()
+        plt.clf()
+        nodes = []
+        x = []
+        y = []
+        z = []
+        for node, position in self.application.metric.run.getNodesPosition().items():
+            nodes.append(node)
+            x.append(position['x'])
+            y.append(position['y'])
+            try:
+                z.append(mean(self.getLatencyDataByNode()[node]))
+            except:
+                z.append(0)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        #ax.scatter(x, y, z, c='b', marker='o')
+        cmap = cm.get_cmap('jet')
+        max_height = np.max(z)   # get range of colorbars
+        min_height = np.min(z)
+        # scale each z to [0,1], and get their rgb values
+        rgba = [cmap((k-min_height)/max_height) for k in z]
+        ax.bar3d(x, y, 0, 2, 2, z, color=rgba)
+        i = 0
+        for label in nodes:
+            ax.text(x[i],y[i],z[i], label)
+            i += 1
+
+        ax.set_xlabel('X Position')
+        ax.set_ylabel('Y Position')
+        #ax.set_zlabel('Z Label')
+        ax.set_title("Nodes position")
+        #ax.set_zlim3d(0,100)
+
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode()
 
 
     def printLatency(self):

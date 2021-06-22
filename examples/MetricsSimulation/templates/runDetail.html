@@ -78,6 +78,8 @@
                 <li>RPL Objective Funciton: {{run.parameters['RPL_CONF_OF_OCP']}}</li>
             </ul>
         </ul>
+        <h2>Position</h2>
+        <img src="data:image/png;base64,{{run.printNodesPosition()}}"/>
         <h2>Metrics</h2>
         <button type="button" class="collapsible">Application</button>
         <div class="content">
@@ -85,6 +87,7 @@
             <p>Latency (Median): {{ run.metric.application.latency.latencyMedian() }}</p>
             <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatency()}}"/></p>
             <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatencyByNode()}}"/></p>
+            <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatencyByNodesPosition()}}"/></p>
             <p>PDR Global: {{run.metric.application.pdr.getGlobalPDR()}}%</p>
             <p>PDR Graph(per node)</p>
             <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
