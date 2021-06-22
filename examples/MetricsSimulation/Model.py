@@ -447,6 +447,27 @@ class Latency(Base, MyModel):
         #print("Size: " + str(len(values)) + " Mean: " + str(globalMean))
         return globalMedian
 
+    def printLatencyByNode(self):
+        import io
+        import base64
+        import matplotlib.pyplot as plt
+        plt.clf()
+        tempBuffer = io.BytesIO()
+        myData = {}
+        for i in range(2,(self.application.metric.run.maxNodes)):
+            myData['n' + str(i)] = []
+        for rec in self.application.records:
+            if rec.rcv:
+                myData['n' + str(rec.srcNode)].append(rec.getLatency()/float(1000))
+        labels, data = myData.keys(), myData.values()
+        plt.boxplot(data)
+        plt.xticks(range(1, len(labels) + 1), labels)
+        plt.title("Latency (ms)")
+        plt.gcf().set_size_inches(8,6)
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode()
+        #plt.show()
+
 
     def printLatency(self):
         import io

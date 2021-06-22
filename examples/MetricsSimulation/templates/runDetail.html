@@ -66,6 +66,7 @@
           <li>Interference Range (m): {{run.parameters['interference_range']}} </li>
           <li>Success TX ratio(m): {{run.parameters['success_ratio_tx']}} </li>
           <li>Success RX ratio(m): {{run.parameters['success_ratio_rx']}} </li>
+          <li>Application Send Interval: {{run.parameters['APP_SEND_INTERVAL_SEC']}}</li>
         </ul>
         <h2>Stack</h2>
         <ul>
@@ -83,6 +84,7 @@
             <p>Latency (Mean): {{ run.metric.application.latency.latencyMean() }}</p>
             <p>Latency (Median): {{ run.metric.application.latency.latencyMedian() }}</p>
             <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatency()}}"/></p>
+            <p><img src="data:image/png;base64,{{run.metric.application.latency.printLatencyByNode()}}"/></p>
             <p>PDR Global: {{run.metric.application.pdr.getGlobalPDR()}}%</p>
             <p>PDR Graph(per node)</p>
             <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
