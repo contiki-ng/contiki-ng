@@ -10,20 +10,38 @@ CUSTOM_RULE_LINK=1
 
 REDEF_PRINTF=1 # Redefine functions to enable printf()s inside Cooja
 
+ifdef REDEF_PRINTF
+define redef_printfs 
+@echo Redefining printf
+for OBJ in $(1) ; do \
+$(OBJCOPY) --redefine-sym printf=log_printf --redefine-sym puts=log_puts --redefine-sym putchar=log_putchar $$OBJ;\
+done
+endef
+else
+define redef_printfs
+endef
+endif
+
+#-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym printf=log_printf $(OBJ); )
+#-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym puts=log_puts $(OBJ); )
+#-$(foreach OBJ,$(1), $(OBJCOPY) --redefine-sym putchar=log_putchar $(OBJ); )
+
+
 # NB: Assumes ARCHIVE was not overridden and is in $(BUILD_DIR_BOARD)
 $(ARCHIVE): $(CONTIKI_OBJECTFILES) | $(OBJECTDIR)
+	$(call redef_printfs, $^)
 	$(AR_COMMAND_1) $^ $(AR_COMMAND_2)
 
 # NB: Assumes JNILIB was not overridden and is in $(BUILD_DIR_BOARD)
 $(JNILIB): $(CONTIKI_APP_OBJ) $(MAIN_OBJ) $(PROJECT_OBJECTFILES) $(ARCHIVE) | $(OBJECTDIR)
-
 ifdef REDEF_PRINTF
-	@echo Redefining printf
-	-$(foreach OBJ,$^, $(OBJCOPY) --redefine-sym printf=log_printf $(OBJ); )
-	-$(foreach OBJ,$^, $(OBJCOPY) --redefine-sym puts=log_puts $(OBJ); )
-	-$(foreach OBJ,$^, $(OBJCOPY) --redefine-sym putchar=log_putchar $(OBJ); )
+	$(call redef_printfs, $(filter %.o,$^) )
 endif ## REDEF_PRINTF
+ifneq ($(LINK_COMMAND_1),)
 	$(LINK_COMMAND_1) $^ $(LINK_COMMAND_2)
+endif
+
+
 
 .PHONY: $(CONTIKI_APP).cooja
 $(CONTIKI_APP).cooja: $(JNILIB)
