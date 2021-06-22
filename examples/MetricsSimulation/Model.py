@@ -98,8 +98,7 @@ class Experiment(Base, MyModel):
         db.add(newRun)
         self.runs.append(newRun)
         db.commit()
-        #db.commit()
-        
+
 class Run(Base, MyModel):
     __tablename__ = "runs"
     id = Column(Integer,primary_key=True)
@@ -110,6 +109,23 @@ class Run(Base, MyModel):
     experiment_id = Column(Integer, ForeignKey('experiments.id')) # The ForeignKey must be the physical ID, not the Object.id
     experiment = relationship("Experiment", back_populates="runs")
     metric = relationship("Metrics", uselist=False, back_populates="run")
+
+    def getNodesPosition(self):
+        myData = {}
+        for i in range(2,(self.maxNodes)):
+            myData['n' + str(i)] = {}
+        doc = minidom.parse(self.experiment.experimentFile)
+        for i in doc.getElementsByTagName('mote'):
+            try:
+                myId = str(i.getElementsByTagName('id')[0].firstChild.data)
+                x = float(i.getElementsByTagName('x')[0].firstChild.data)
+                y = float(i.getElementsByTagName('y')[0].firstChild.data)
+                myData['n' + myId] = {'x' : x, 'y' : y}
+            except:
+                None
+        return myData
+
+
     def processRun(self):
         with open("COOJA.testlog", "r") as f:
             for line in f.readlines():
