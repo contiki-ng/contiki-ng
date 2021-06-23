@@ -542,11 +542,12 @@ class Latency(Base, MyModel):
             try:
                 z.append(mean(self.getLatencyDataByNode()[node]))
             except:
+                # Node 1
                 z.append(0)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         #ax.scatter(x, y, z, c='b', marker='o')
-        cmap = cm.get_cmap('jet')
+        cmap = cm.get_cmap('rainbow')
         max_height = np.max(z)   # get range of colorbars
         min_height = np.min(z)
         # scale each z to [0,1], and get their rgb values
@@ -556,11 +557,13 @@ class Latency(Base, MyModel):
         for label in nodes:
             ax.text(x[i],y[i],z[i], label)
             i += 1
-
+        colourMap = plt.cm.ScalarMappable(cmap=plt.cm.rainbow)
+        colourMap.set_array(z)
+        colBar = plt.colorbar(colourMap).set_label('Latency')
         ax.set_xlabel('X Position')
         ax.set_ylabel('Y Position')
-        #ax.set_zlabel('Z Label')
-        ax.set_title("Nodes position")
+        ax.set_zlabel('Latency (ms)')
+        ax.set_title("Nodes latency (Mean)")
         #ax.set_zlim3d(0,100)
 
         plt.savefig(tempBuffer, format = 'png')
