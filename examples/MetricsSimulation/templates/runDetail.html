@@ -92,12 +92,20 @@
             <p>PDR Graph(per node)</p>
             <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
         </div>
-        <button type="button" class="collapsible">TSCH</button>
-        <div class="content">
-          <p>TSCH PDR: {{ run.metric.tsch.getPDR()['PDR'] }} % (Total Sent: {{ run.metric.tsch.getPDR()['tx'] }}, ACK Total: {{ run.metric.tsch.getPDR()['ack'] }})</p>
-          <p>Ingress over time.</p>
-          <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
-        </div>
+        {% if run.parameters['MAKE_MAC'] == "MAKE_MAC_TSCH" %}
+              <button type="button" class="collapsible">MAC (TSCH)</button>
+              <div class="content">
+                <p>TSCH PDR: {{ run.metric.tsch.getPDR()['PDR'] }} % (Total Sent: {{ run.metric.tsch.getPDR()['tx'] }}, ACK Total: {{ run.metric.tsch.getPDR()['ack'] }})</p>
+                <p>Ingress over time.</p>
+                <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
+              </div>
+        {% else %}
+              <button type="button" class="collapsible">MAC (CSMA)</button>
+              <div class="content">
+                
+              </div>
+
+        {% endif %}
       {% endif %}
       </div>
     </div>
