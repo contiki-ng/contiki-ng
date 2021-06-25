@@ -1,0 +1,5 @@
+# ARM target provide MAKE_WITH_LIB_DBG_IO, when want use dbg_putchar
+ifneq ($(MAKE_WITH_LIB_DBG_IO),1)
+# printf.c use it for deside where to output
+CFLAGS += -DMAKE_WITH_LIB_DBG_IO=0
+endif

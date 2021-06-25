@@ -30,22 +30,43 @@
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include <stdint.h>
+#include <stddef.h>
 
-#include <strformat.h>
+#include "strformat.h"
 /*---------------------------------------------------------------------------*/
-#define HAVE_DOUBLE
-#define HAVE_LONGLONG
+#ifndef PRINTF_CONF_HAVE_DOUBLE
+#define HAVE_DOUBLE     1
+#else
+#define HAVE_DOUBLE     PRINTF_CONF_HAVE_DOUBLE
+#endif
+#ifndef PRINTF_CONF_HAVE_LONGLONG
+#define HAVE_LONGLONG   1
+#else
+#define HAVE_LONGLONG   PRINTF_CONF_HAVE_LONGLONG
+#endif
+#ifndef PRINTF_CONF_HAVE_NETADDR
+#define HAVE_NETADDR    1
+#else
+#define HAVE_NETADDR    PRINTF_CONF_HAVE_NETADDR
+#endif
+
+
+#if HAVE_NETADDR
+#include "net/linkaddr.h"
+#include "net/ipv6/uiplib.h"
+#endif
 
 #ifndef LARGEST_SIGNED
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
 #define LARGEST_SIGNED long long int
 #else
-#define LARGEST_UNSIGNED long int
+#define LARGEST_SIGNED long int
 #endif /* HAVE_LONGLONG */
 #endif /* LARGEST_SIGNED */
 
 #ifndef LARGEST_UNSIGNED
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
 #define LARGEST_UNSIGNED unsigned long long int
 #else
 #define LARGEST_UNSIGNED unsigned long int
@@ -378,8 +399,9 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         flags |= SIZE_SHORT;
       } else if(sizeof(size_t) == sizeof(long)) {
         flags |= SIZE_LONG;
-#ifdef HAVE_LONGLONG
-      } else if(sizeof(size_t) == sizeof(long long)) {
+      }
+#if HAVE_LONGLONG
+      else if(sizeof(size_t) == sizeof(long long)) {
         flags |= SIZE_LONGLONG;
       }
 #endif
@@ -404,7 +426,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     case 'X':
       flags |= CONV_INTEGER | RADIX_HEX | SIGNED_NO | CAPS_YES;
       break;
-#ifdef HAVE_DOUBLE
+#if HAVE_DOUBLE
     case 'f':
       flags |= CONV_FLOAT | FLOAT_NORMAL;
       break;
@@ -489,13 +511,13 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         case SIZE_INT:
           value = va_arg(ap, int);
           break;
-#ifndef HAVE_LONGLONG
+#if !HAVE_LONGLONG
         case SIZE_LONGLONG: /* Treat long long the same as long */
 #endif
         case SIZE_LONG:
           value = va_arg(ap, long);
           break;
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
         case SIZE_LONGLONG:
           value = va_arg(ap, long long);
           break;
@@ -519,13 +541,13 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         case SIZE_INT:
           uvalue = va_arg(ap, unsigned int);
           break;
-#ifndef HAVE_LONGLONG
+#if !HAVE_LONGLONG
         case SIZE_LONGLONG: /* Treat long long the same as long */
 #endif
         case SIZE_LONG:
           uvalue = va_arg(ap, unsigned long);
           break;
-#ifdef HAVE_LONGLONG
+#if HAVE_LONGLONG
         case SIZE_LONGLONG:
           uvalue = va_arg(ap, unsigned long long);
           break;
@@ -546,7 +568,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       }
 
       width += conv_len;
-      precision_fill = (precision > conv_len) ? precision - conv_len : 0;
+      precision_fill = (precision > (int)conv_len) ? precision - conv_len : 0;
       if((flags & (RADIX_MASK | ALTERNATE_FORM))
          == (RADIX_OCTAL | ALTERNATE_FORM)) {
         if(precision_fill < 1) {
@@ -618,23 +640,28 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     {
       unsigned int field_fill;
       unsigned int len;
-      char *str = va_arg(ap, char *);
+      const char *str = va_arg(ap, const char *);
 
       if(str) {
-        char *pos = str;
-        while(*pos != '\0') pos++;
+        const char *pos = str;
+        const char *limit = NULL;
+        if ( precision >= 0 )
+            limit = pos + precision;
+        while( (*pos != '\0') && (pos != limit) )
+            pos++;
         len = pos - str;
       } else {
         str = "(null)";
         len = 6;
       }
 
-      if(precision >= 0 && precision < len) {
+      if(precision >= 0 && precision < (int)len) {
         len = precision;
       }
 
       field_fill = (minwidth > len) ? minwidth - len : 0;
 
+      if (field_fill > 0)
       if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
         CHECKCB(fill_space(ctxt, field_fill));
       }
@@ -650,13 +677,51 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     break;
     case CONV_POINTER:
     {
-      LARGEST_UNSIGNED uvalue =
-        (LARGEST_UNSIGNED)(POINTER_INT)va_arg(ap, void *);
-      char buffer[MAXCHARS_HEX + 3];
-      char *conv_pos = buffer + MAXCHARS_HEX + 3;
-      unsigned int conv_len;
-      unsigned int field_fill;
+        char *conv_pos;
+        unsigned int conv_len;
+        unsigned int field_fill = 0;
 
+#if HAVE_NETADDR
+        char buffer[UIPLIB_IPV6_MAX_STR_LEN];
+
+      if ( *pos == 'L' ){           // linkaddr
+          ++pos;
+          const linkaddr_t* lladdr = (const linkaddr_t *)va_arg(ap, void *);
+          if(lladdr == NULL) {
+              conv_pos = "(NULL LL addr)";
+              conv_len = 14;
+          } else {
+            conv_pos = buffer;
+            conv_len = 0;
+            unsigned int i;
+            for(i = 0; i < LINKADDR_SIZE; i++) {
+              if(i > 0 && i % 2 == 0) {
+                conv_len++;
+                *conv_pos++ = '.';
+              }
+              conv_len += output_uint_hex(&conv_pos, lladdr->u8[i], flags);
+            }
+            conv_pos = buffer;
+          }
+      }
+#if NETSTACK_CONF_WITH_IPV6
+      else if (*pos == 'I'){                         // ipv6
+          ++pos;
+          const uip_ipaddr_t* ipaddr = (const uip_ipaddr_t *)va_arg(ap, void *);
+          conv_len = uiplib_ipaddr_snprint(buffer, sizeof(buffer), ipaddr);
+          conv_pos = buffer;
+      }
+#endif
+      else
+#else
+         char buffer[MAXCHARS_HEX + 4];
+#endif
+
+      {
+      LARGEST_UNSIGNED uvalue =
+        (LARGEST_UNSIGNED)(uintptr_t)va_arg(ap, void *);
+
+      conv_pos = buffer + MAXCHARS_HEX + 3;
       conv_len = output_uint_hex(&conv_pos, uvalue, flags);
 
       if(conv_len == 0) {
@@ -673,6 +738,8 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
         CHECKCB(fill_space(ctxt, field_fill));
+      }
+
       }
 
       CHECKCB(ctxt->write_str(ctxt->user_data, conv_pos, conv_len));

@@ -34,7 +34,7 @@
 #ifndef UIPLIB_H_
 #define UIPLIB_H_
 
-#include "net/ipv6/uip.h"
+#include "net/ipv6/uipaddr.h"
 
 /**
  * \addtogroup uip
