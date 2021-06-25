@@ -472,7 +472,7 @@ class TSCH(Base, MyModel):
             #print("X: ", x," index: ",index)
             plt.plot(x,[index,index])
             index +=1
-        plt.xlabel("Simulation Time (ms)")
+        plt.xlabel("Simulation Time (S)")
         plt.ylabel("Nodes")
         plt.yticks(range(2,self.metric.run.maxNodes))
         plt.savefig(tempBuffer, format = 'png')
