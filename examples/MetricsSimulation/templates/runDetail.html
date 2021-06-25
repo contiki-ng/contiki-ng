@@ -71,6 +71,11 @@
         <h2>Stack</h2>
         <ul>
           <li>MAC: {{run.parameters['MAKE_MAC']}} </li>
+          {% if run.parameters['MAKE_MAC'] == "MAKE_MAC_TSCH" %}
+            <ul>
+              <li>TSCH_SCHEDULE_CONF_DEFAULT_LENGTH: {{run.parameters['TSCH_SCHEDULE_CONF_DEFAULT_LENGTH']}}</li>
+            </ul>
+          {% endif %}
           <li>NET: {{run.parameters['MAKE_NET']}} </li>
           <li>ROUTING: {{run.parameters['MAKE_ROUTING']}} </li>
           	<ul>

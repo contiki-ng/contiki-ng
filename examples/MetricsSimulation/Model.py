@@ -12,6 +12,7 @@ from numpy import apply_along_axis, median
 import matplotlib
 from sqlalchemy.sql.sqltypes import PickleType
 matplotlib.use('Agg')
+import threading
 
 from sqlalchemy.sql.elements import TextClause
 from Runner import Runner
@@ -255,7 +256,8 @@ class Metrics(Base, MyModel):
         #print("Self lenght:" , len(self.run.records) )
         self.application = Application(self)
         self.application.process()
-        self.tsch = TSCH(self)
+        if run.parameters['MAKE_MAC'] ==  "MAKE_MAC_TSCH":
+            self.tsch = TSCH(self)
         db.add(self)
         db.commit()
 
@@ -305,6 +307,57 @@ class RPL(Base, MyModel):
     __tablename__ = 'rpl'
     id = Column(Integer, primary_key=True)
 
+'''
+Represents a regular MAC message
+'''
+class MACMessage(MyModel):
+    _lock = threading.Lock()
+    origin = 0
+    dest = 0
+    enQueued = 0
+    seqno = 0
+    queueNBROccuped = 0
+    queueNBRSize = 0
+    queueGlobaOccuped = 0
+    queueGlobaSize = 0
+    headerLen = 0
+    dataLen = 0
+    sentTime = 0
+    status = 0
+    tries = 0
+    rcvTime = 0
+    isReceived = False
+    isSent = False
+    def __init__(self,origin,dest,enQue,seqno,queueNBROccuped,queueNBRSize,queueGlobaOccuped,queueGlobaSize,headerLen,dataLen):
+        self.origin = origin
+        self.dest = dest
+        self.enQueued = enQue
+        self.seqno = seqno
+        self.queueNBROccuped = queueNBROccuped
+        self.queueNBRSize = queueNBRSize
+        self.queueGlobaOccuped = queueGlobaOccuped
+        self.queueGlobaSize = queueGlobaSize
+        self.headerLen = headerLen
+        self.dataLen = dataLen
+    def sent(self, time, status, tx):
+        self.sentTime = time
+        self.status = status
+        self.tries = tx
+        self.isSent = True
+        #print("Queue->Sent: ", self.sentTime-self.enQueued)
+    def receive(self, time):
+        self.rcvTime = time
+        self.isReceived = True
+    def latency(self):
+        if not self.isSent:
+            raise Exception("Message didn't send")
+        if not self.isReceived:
+            raise Exception("Message not received")
+        return self.rcvTime - self.enQueued
+    def __str__(self) -> str:
+        return "{self.origin}<->{self.dest} Q:{self.enQueued} S({self.isSent}):{self.sentTime} S({self.isReceived}):{self.rcvTime} Sq:{self.seqno}".format(self=self)
+
+
 class TSCH(Base, MyModel):
     __tablename__ = 'tsch'
     id = Column(Integer, primary_key=True)
@@ -313,15 +366,82 @@ class TSCH(Base, MyModel):
     def __init__(self,metric):
         self.metric = metric
 
+
+    def processQueue(self):
+        data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "TSCH").all()
+        results = {}
+        for i in range(0,(self.metric.run.maxNodes)):
+            results[str(i)] = []
+        results['65535'] = []
+        for rec in data:
+            if rec.rawData.startswith("send packet to"):
+                origin = int(rec.node)
+                dest = int(rec.rawData.split()[3].split('.')[0], 16)
+                enQueued = float(rec.simTime)
+                seqnum = int(rec.rawData.split()[6].replace(',',''))
+                queueNBROccuped = int(rec.rawData.split()[8].split('/')[0])
+                queueNBRSize = int(rec.rawData.split()[8].split('/')[1])
+                queueGlobaOccuped = int(rec.rawData.split()[9].replace(',','').split('/')[0])
+                queueGlobaSize = int(rec.rawData.split()[9].replace(',','').split('/')[1])
+                headerLen = int(rec.rawData.split()[11])
+                dataLen = int(rec.rawData.split()[12])
+                tschMsg = MACMessage(origin, dest, enQueued, seqnum, queueNBROccuped, queueNBRSize, queueGlobaOccuped, queueGlobaSize, headerLen, dataLen)
+                results[str(origin)].append(tschMsg)
+                continue
+            if rec.rawData.startswith("packet sent to"):
+                dest = int(rec.rawData.split()[3].split('.')[0], 16)
+                seqnum = int(rec.rawData.split()[5].replace(',',''))
+                sentTime = float(rec.simTime)
+                status = int(rec.rawData.split()[7].replace(',',''))
+                tx = int(rec.rawData.split()[9].replace(',',''))
+                for msg in reversed(results[str(rec.node)]):
+                    if msg.isSent:
+                        continue
+                    if ( msg.seqno == seqnum and msg.dest == dest):
+                        time = sentTime - msg.enQueued 
+                        if (time > 10000000):
+                            continue
+                            #print("Achei uma de seqN " , seqnum, " de ", str(rec.node)," para ",dest, " mas o tempo esta maior q 10s:", time)
+                        else:
+                            msg.sent(sentTime, status, tx)
+                            #print("Depois: ",msg)
+                            continue
+        for rec in data:
+            if rec.rawData.startswith("received from"): 
+                dest = int(rec.node)
+                origin = int(rec.rawData.split()[2].split('.')[0], 16)
+                #print (rec.rawData.split()[2].split('.')[0])
+                seqnum = int(rec.rawData.split()[5])
+                rcvTime = float(rec.simTime)
+                #print ("Iniciando a busca em ", str(origin), "por", seqnum, "dst: ", dest )
+                for msg in results[str(origin)]:
+                    #print(msg)
+                    if msg.isReceived:
+                        #print("Recebida, passando...")
+                        continue
+                    if msg.seqno == seqnum and msg.dest == dest and msg.isSent and not msg.isReceived:
+                        #print(rcvTime, ": Procurando a msg enviada por(",msg.origin,")", origin, " para (",msg.dest,")",dest, " com o seque ", seqnum, " as ", rcvTime)
+                        time = rcvTime - msg.sentTime
+                        #print(rcvTime, "Achei uma que foi enfileirada as, ", msg.sentTime, "Time: ", time)
+                        #print(msg, "-> ", rec.rawData)
+                        if time < 10000000:
+                            #print("Recebendo a msg enviada por ", origin, " para ",dest, " com o seque ", seqnum)
+                            msg.receive(rcvTime)
+                            break
+                        else:
+                            None
+                            #print("Parece velha: ", time/1000, "ms")
+        return results
+        
     def processIngress(self):
         data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "TSCH").all()
         results = [[] for x in range(self.metric.run.maxNodes)]
         for rec in data:
             if rec.rawData.startswith("leaving the network"):
-                results[rec.node].append(tuple((rec.simTime//1000000,False)))
+                results[rec.node].append(tuple((rec.simTime//1000,False)))
                 continue
             if rec.rawData.startswith("association done"):
-                results[rec.node].append(tuple((rec.simTime//1000000, True)))
+                results[rec.node].append(tuple((rec.simTime//1000, True)))
                 continue
         return results
     
@@ -352,7 +472,7 @@ class TSCH(Base, MyModel):
             #print("X: ", x," index: ",index)
             plt.plot(x,[index,index])
             index +=1
-        plt.xlabel("Simulation Time (s)")
+        plt.xlabel("Simulation Time (ms)")
         plt.ylabel("Nodes")
         plt.yticks(range(2,self.metric.run.maxNodes))
         plt.savefig(tempBuffer, format = 'png')
@@ -535,12 +655,13 @@ class Latency(Base, MyModel):
         x = []
         y = []
         z = []
+        latData = self.getLatencyDataByNode()
         for node, position in self.application.metric.run.getNodesPosition().items():
             nodes.append(node)
             x.append(position['x'])
             y.append(position['y'])
             try:
-                z.append(mean(self.getLatencyDataByNode()[node]))
+                z.append(mean(latData[node]))
             except:
                 # Node 1
                 z.append(0)
@@ -565,7 +686,7 @@ class Latency(Base, MyModel):
         ax.set_zlabel('Latency (ms)')
         ax.set_title("Nodes latency (Mean)")
         #ax.set_zlim3d(0,100)
-
+        plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()
 

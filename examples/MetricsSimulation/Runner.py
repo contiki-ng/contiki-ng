@@ -53,7 +53,7 @@ class Runner:
             pass
 
         filename = os.path.join(self.SELF_PATH, cooja_file)
-        args = " ".join(["java -mx1024m -jar ", self.cooja_jar, "-nogui=" + filename, "-contiki=" + self.CONTIKI_PATH])
+        args = " ".join(["java -mx1024m -Djava.compiler=NONE -jar ", self.cooja_jar, "-nogui=" + filename, "-contiki=" + self.CONTIKI_PATH])
         sys.stdout.write("  Running Cooja, args={}\n".format(args))
 
         (retcode, output) = self.run_subprocess(args, '')

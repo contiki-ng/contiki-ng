@@ -41,10 +41,13 @@
 #define LINK_STATS_CONF_PACKET_COUNTERS          1
 
 /* Application settings */
-#define APP_SEND_INTERVAL_SEC 5
+#define APP_SEND_INTERVAL_SEC 1
 #define APP_WARM_UP_PERIOD_SEC 120
 
-#define SICSLOWPAN_CONF_FRAG 0 /* No fragmentation */
+/*TSCH SLOT FRAME*/
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 7
+
+#define SICSLOWPAN_CONF_FRAG 1 /* No fragmentation */
 #define UIP_CONF_BUFFER_SIZE 200
 /*#define RPL_CONF_WITH_MC 1
 #define RPL_CONF_DAG_MC RPL_DAG_MC_ETX*/
