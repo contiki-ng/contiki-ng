@@ -458,12 +458,12 @@ class TSCH(Base, MyModel):
             x = [0,0]
             for j in i:
                 if j[1]:
-                    time = j[0]
+                    time = j[0]/1000
                     plt.plot(time, index, marker="^", color="green")
                     x[0] = time
                     x[1] = (3600) #sim end without node's disconnection
                 else:
-                    time = j[0]
+                    time = j[0]/1000
                     plt.plot(time, index, marker="v", color="red")
                     x[1] = time
                     #print("X: ", x," index: ",index)                    
