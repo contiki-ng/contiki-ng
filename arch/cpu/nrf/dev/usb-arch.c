@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,21 +32,69 @@
  * \addtogroup nrf
  * @{
  *
- * \addtogroup nrf-5340-application nRF5340 Application Core
+ * \addtogroup nrf-dev Device drivers
+ * @{
+ *
+ * \addtogroup nrf-usb USB driver
  * @{
  *
  * \file
- *      Header with configuration defines to nrf 5340 application core
+ *         USB implementation for the nRF.
  * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF5340_APPLICATION_CONF_H_
-#define NRF5340_APPLICATION_CONF_H_
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
-#endif /* NRF5340_APPLICATION_CONF_H_ */
+#if NRF_HAS_USB
 /*---------------------------------------------------------------------------*/
-/** 
+#include "usb.h"
+
+#include "nrfx.h"
+#include "nrfx_power.h"
+/*---------------------------------------------------------------------------*/
+/* extern since it is not available in any header file in the tinyusb */
+extern void tusb_hal_nrf_power_event(uint32_t event);
+/*---------------------------------------------------------------------------*/
+void
+USBD_IRQHandler(void)
+{
+  usb_interrupt_handler();
+}
+/*---------------------------------------------------------------------------*/
+static void
+power_event_handler(nrfx_power_usb_evt_t event)
+{
+  tusb_hal_nrf_power_event((uint32_t)event);
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_arch_init(void)
+{
+  const nrfx_power_config_t power_config = { 0 };
+  const nrfx_power_usbevt_config_t power_usbevt_config = {
+    .handler = power_event_handler
+  };
+
+  nrfx_power_init(&power_config);
+
+  nrfx_power_usbevt_init(&power_usbevt_config);
+
+  nrfx_power_usbevt_enable();
+
+  nrfx_power_usb_state_t usb_reg = nrfx_power_usbstatus_get();
+  if(usb_reg == NRFX_POWER_USB_STATE_CONNECTED) {
+    tusb_hal_nrf_power_event(NRFX_POWER_USB_EVT_DETECTED);
+  } else if(usb_reg == NRFX_POWER_USB_STATE_READY) {
+    tusb_hal_nrf_power_event(NRFX_POWER_USB_EVT_READY);
+  }
+}
+/*---------------------------------------------------------------------------*/
+#endif /* NRF_HAS_USB */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
  * @}
  * @}
  */

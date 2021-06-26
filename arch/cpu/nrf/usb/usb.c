@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,34 +27,101 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
+
 /**
- * \addtogroup nrf-platforms
+ * \addtogroup nrf
  * @{
  *
- * \addtogroup nrf5340-dk
+ * \addtogroup nrf-usb USB driver
  * @{
- *
+ * *
  * \file
- *         nRF5340 DK specific configuration.
+ *         USB driver for the nRF.
  * \author
  *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF53_DK_CONF_H
-#define NRF53_DK_CONF_H
+#include "contiki.h"
+
+#include "usb.h"
+
+#include "tusb.h"
+#include "usbd.h"
 /*---------------------------------------------------------------------------*/
-#ifndef PLAFTORM_SLIP_ARCH_CONF_USB
-#define PLAFTORM_SLIP_ARCH_CONF_USB 0
-#endif
+static int (*input_handler)(unsigned char c) = NULL;
 /*---------------------------------------------------------------------------*/
-#ifndef PLATFORM_DBG_CONF_USB
-#define PLATFORM_DBG_CONF_USB   0
-#endif
+PROCESS(usb_arch_process, "USB Arch");
 /*---------------------------------------------------------------------------*/
-#endif /* NRF53_DK_CONF_H */
+void
+usb_interrupt_handler(void)
+{
+  tud_int_handler(0);
+
+  /* Poll the process since we are in interrupt context */
+  process_poll(&usb_arch_process);
+}
 /*---------------------------------------------------------------------------*/
-/** 
- * @} 
- * @} 
+
+/*---------------------------------------------------------------------------*/
+void
+usb_set_input(int (*input)(unsigned char c))
+{
+  input_handler = input;
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_init(void)
+{
+  usb_arch_init();
+
+  /* Initialize the usb process */
+  process_start(&usb_arch_process, NULL);
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_write(uint8_t *buffer, uint32_t buffer_size)
+{
+  tud_cdc_write(buffer, buffer_size);
+  tud_cdc_write_flush();
+
+  /* Call the task to handle the events immediately */
+  tud_task();
+}
+/*---------------------------------------------------------------------------*/
+void
+cdc_task(void)
+{
+  unsigned char usb_buffer[64];
+  uint32_t usb_read_length;
+  uint32_t i;
+
+  if(tud_cdc_available()) {
+    usb_read_length = tud_cdc_read(usb_buffer, sizeof(usb_buffer));
+    for(i = 0; i < usb_read_length && input_handler; i++) {
+      input_handler(usb_buffer[i]);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(usb_arch_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+  tusb_init();
+
+  while(1) {
+    PROCESS_YIELD_UNTIL(tud_task_event_ready());
+
+    tud_task();
+
+    cdc_task();
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
  */

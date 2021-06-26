@@ -1,4 +1,4 @@
-include $(CONTIKI_CPU)/Makefile.nrfx  
+include $(CONTIKI_CPU)/Makefile.libs  
 
 LDSCRIPT ?= $(CONTIKI_CPU)/lib/nrfx/mdk/nrf5340_xxaa_network.ld
 CFLAGS += -DNRF5340_XXAA_NETWORK
@@ -12,6 +12,7 @@ EXTERNALDIRS += $(NRFX_ROOT)/mdk/
 NRFJPROG_OPTIONS=-f NRF53 --coprocessor CP_NETWORK 
 
 CFLAGS += -DCPU_CONF_PATH=\"nrf5340-network-conf.h\"
+CFLAGS += -DCPU_DEF_PATH=\"nrf5340-network-def.h\"
 
 TARGET_LIBFILES += -lm
 

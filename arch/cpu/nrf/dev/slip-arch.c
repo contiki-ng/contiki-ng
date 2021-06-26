@@ -31,17 +31,26 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/slip.h"
-#include "dev/uarte-arch.h"
+#include "uarte-arch.h"
+#include "usb.h"
 /*---------------------------------------------------------------------------*/
 void
 slip_arch_writeb(unsigned char c)
 {
+#if PLATFORM_DBG_CONF_USB
+  usb_write(&c, sizeof(c));
+#else /* PLATFORM_DBG_CONF_USB */
   uarte_write(c);
+#endif /* PLATFORM_DBG_CONF_USB */
 }
 /*---------------------------------------------------------------------------*/
 void
 slip_arch_init()
 {
+#if PLAFTORM_SLIP_ARCH_CONF_USB
+  usb_set_input(slip_input_byte);
+#else /* PLAFTORM_SLIP_ARCH_CONF_USB */
   uarte_set_input(slip_input_byte);
+#endif /* PLAFTORM_SLIP_ARCH_CONF_USB */
 }
 /*---------------------------------------------------------------------------*/

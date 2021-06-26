@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,24 +29,44 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup nrf
+ * \addtogroup nrf-platforms
  * @{
  *
- * \addtogroup nrf-5340-application nRF5340 Application Core
+ * \addtogroup nrf52840-dk
  * @{
  *
  * \file
- *      Header with configuration defines to nrf 5340 application core
+ *         nRF52840 DK specific defines.
  * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF5340_APPLICATION_CONF_H_
-#define NRF5340_APPLICATION_CONF_H_
+#ifndef NRF52840_DK_DEF_H
+#define NRF52840_DK_DEF_H
 /*---------------------------------------------------------------------------*/
-#endif /* NRF5340_APPLICATION_CONF_H_ */
+#define PLATFORM_HAS_BUTTON             1
+#define PLATFORM_SUPPORTS_BUTTON_HAL    1
+/*---------------------------------------------------------------------------*/
+#define NRF_BUTTON1_PIN     16
+#define NRF_BUTTON1_PORT    1
+/*---------------------------------------------------------------------------*/
+#define NRF_LED1_PIN        6
+#define NRF_LED1_PORT       0
+#define NRF_LED2_PIN        8
+#define NRF_LED2_PORT       0
+#define NRF_LED3_PIN        9
+#define NRF_LED3_PORT       1
+#define NRF_LED4_PIN        12
+#define NRF_LED4_PORT       0
+/*---------------------------------------------------------------------------*/
+#define LEDS_CONF_COUNT     4
+#define LEDS_CONF_RED       2
+#define LEDS_CONF_GREEN     4
+#define LEDS_CONF_BLUE      8
+/*---------------------------------------------------------------------------*/
+#endif /* NRF52840_DK_DEF_H */
 /*---------------------------------------------------------------------------*/
 /** 
- * @}
- * @}
+ * @} 
+ * @} 
  */

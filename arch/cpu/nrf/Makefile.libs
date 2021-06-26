@@ -1,0 +1,15 @@
+NRFX_ROOT = $(CONTIKI_CPU)/lib/nrfx
+
+ifeq (,$(wildcard $(NRFX_ROOT)/*))
+    $(warning $(NRFX_ROOT) does not exist or is empty.)
+    $(warning Did you run 'git submodule update --init' ?)
+    $(error "")
+endif
+
+TINYUSB_ROOT = $(CONTIKI_CPU)/lib/tinyusb
+
+ifeq (,$(wildcard $(TINYUSB_ROOT)/*))
+    $(warning $(TINYUSB_ROOT) does not exist or is empty.)
+    $(warning Did you run 'git submodule update --init' ?)
+    $(error "")
+endif
