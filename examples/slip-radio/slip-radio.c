@@ -46,6 +46,7 @@
 #include "slip-radio.h"
 #include "packetutils.h"
 #include "os/sys/log.h"
+#include "os/net/mac/tsch/tsch.h"
 
 #include <stdio.h>
 
@@ -70,44 +71,6 @@ CMD_HANDLERS(CMD_CONF_HANDLERS);
 CMD_HANDLERS(slip_radio_cmd_handler);
 #endif
 
-static const uint16_t mac_src_pan_id = IEEE802154_PANID;
-/*---------------------------------------------------------------------------*/
-static int
-is_broadcast_addr(uint8_t mode, uint8_t *addr)
-{
-  int i = mode == FRAME802154_SHORTADDRMODE ? 2 : 8;
-  while(i-- > 0) {
-    if(addr[i] != 0xff) {
-      return 0;
-    }
-  }
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static int
-parse_frame(void)
-{
-  frame802154_t frame;
-  int len;
-  len = packetbuf_datalen();
-  if(frame802154_parse(packetbuf_dataptr(), len, &frame)) {
-    if(frame.fcf.dest_addr_mode) {
-      if(frame.dest_pid != mac_src_pan_id &&
-         frame.dest_pid != FRAME802154_BROADCASTPANDID) {
-        /* Packet to another PAN */
-        return 0;
-      }
-      if(!is_broadcast_addr(frame.fcf.dest_addr_mode, frame.dest_addr)) {
-        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, (linkaddr_t *)&frame.dest_addr);
-      }
-    }
-    packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (linkaddr_t *)&frame.src_addr);
-    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, frame.seq);
-
-    return 0;
-  }
-  return 0;
-}
 /*---------------------------------------------------------------------------*/
 static void
 packet_sent(void *ptr, int status, int transmissions)
@@ -116,7 +79,7 @@ packet_sent(void *ptr, int status, int transmissions)
   uint8_t sid;
   int pos;
   sid = *((uint8_t *)ptr);
-  LOG_DBG("Slip-radio: packet sent! sid: %d, status: %d, tx: %d\n",
+  LOG_DBG("packet sent! sid: %d, status: %d, tx: %d\n",
           sid, status, transmissions);
   /* packet callback from lower layers */
   /*  neighbor_info_packet_sent(status, transmissions); */
@@ -143,7 +106,12 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       packetbuf_clear();
       pos = packetutils_deserialize_atts(&data[3], len - 3);
       if(pos < 0) {
-        LOG_ERR("illegal packet attributes\n");
+        LOG_ERR("illegal packetbuf_attrs\n");
+        return 1;
+      }
+      pos += packetutils_deserialize_addrs(&data[3 + pos], len - 3 - pos);
+      if(pos < 0) {
+        LOG_ERR("illegal packetbuf_addrs\n");
         return 1;
       }
       pos += 3;
@@ -157,8 +125,6 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       LOG_DBG("sending %u (%d bytes)\n",
               data[2], packetbuf_datalen());
 
-      /* parse frame before sending to get addresses, etc. */
-      parse_frame();
       NETSTACK_MAC.send(packet_sent, &packet_ids[packet_pos]);
 
       packet_pos++;
@@ -172,16 +138,16 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       int value = ((uint16_t)data[4] << 8) | data[5];
       int param = type; /* packetutils_to_radio_param(type); */
       if(param < 0) {
-        printf("radio: unknown parameter %d (can not set to %d)\n", type, value);
+        LOG_ERR("radio: unknown parameter %d (can not set to %d)\n", type, value);
       } else {
         if(param == RADIO_PARAM_RX_MODE) {
-          printf("radio: setting rxmode to 0x%x\n", value);
+          LOG_INFO("radio: setting rxmode to 0x%x\n", value);
         } else if(param == RADIO_PARAM_PAN_ID) {
-          printf("radio: setting pan id to 0x%04x\n", value);
+          LOG_INFO("radio: setting pan id to 0x%04x\n", value);
         } else if(param == RADIO_PARAM_CHANNEL) {
-          printf("radio: setting channel: %u\n", value);
+          LOG_INFO("radio: setting channel: %u\n", value);
         } else {
-          printf("radio: setting param %d to %d (0x%02x)\n", param, value, value);
+          LOG_INFO("radio: setting param %d to %d (0x%02x)\n", param, value, value);
         }
         NETSTACK_RADIO.set_value(param, value);
       }
@@ -205,7 +171,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       int value;
       int param = type; /* packetutils_to_radio_param(type); */
       if(param < 0) {
-        printf("radio: unknown parameter %d\n", type);
+        LOG_ERR("radio: unknown parameter %d\n", type);
       }
 
       NETSTACK_RADIO.get_value(param, &value);
@@ -255,6 +221,10 @@ PROCESS_THREAD(slip_radio_process, ev, data)
   SLIP_RADIO_CONF_SENSORS.init();
 #endif
   LOG_INFO("Slip Radio started\n");
+
+#if MAC_CONF_WITH_TSCH
+  tsch_set_coordinator(1);
+#endif
 
   etimer_set(&et, CLOCK_SECOND * 3);
 
