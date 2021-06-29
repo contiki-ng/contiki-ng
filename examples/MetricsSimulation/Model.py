@@ -111,6 +111,24 @@ class Run(Base, MyModel):
     experiment = relationship("Experiment", back_populates="runs")
     metric = relationship("Metrics", uselist=False, back_populates="run")
 
+    def __str__(self) -> str:
+        layer = {}
+        try:
+            layer['mac'] = self.parameters['MAKE_MAC'].split('_')[-1]
+        except:
+            layer['mac'] = "TSCH"
+        try:
+            layer['rpl'] = self.parameters['MAKE_ROUTING'].split('_')[-1]
+        except:
+            layer['rpl'] = "LITE"
+        try:
+            layer['net'] = self.parameters['MAKE_NET'].split('_')[-1]
+        except:
+            layer['net'] = "IPV6"
+            
+        return "ID: {} Exp: {} MAC: {mac} ROUTING: {rpl} NET: {net}".format(self.id ,self.experiment.id, **layer)
+
+
     def printNodesPosition(self):
         from mpl_toolkits.mplot3d import Axes3D
         import matplotlib.pyplot as plt
