@@ -595,7 +595,7 @@ class Latency(Base, MyModel):
                 valuesNodes.append(j[1]/1000) # Miliseconds 10 ^ -3
             #print("Node:" + str(start) + " Size: " + str(len(valuesNodes)) + " Mean:" + str(round(mean(valuesNodes),2)))
             start += 1
-        globalMean = round(mean(values),2)
+        globalMean = round(mean(values),3)
         #print("Size: " + str(len(values)) + " Mean: " + str(globalMean))
         return globalMean
 
@@ -612,7 +612,7 @@ class Latency(Base, MyModel):
                 valuesNodes.append(j[1]/1000) # Miliseconds 10 ^ -3
             #print("Node:" + str(start) + " Size: " + str(len(valuesNodes)) + " Mean:" + str(round(mean(valuesNodes),2)))
             start += 1
-        globalMedian = round(median(values),2)
+        globalMedian = round(median(values),3)
         #print("Size: " + str(len(values)) + " Mean: " + str(globalMean))
         return globalMedian
 
