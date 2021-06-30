@@ -529,6 +529,36 @@ class TSCH(Base, MyModel):
             totalAck = totalAck + nodesStats[n]['ack']
         return {'PDR': round((totalAck/total)*100,2), 'tx' :total, 'ack': totalAck}
 
+    def printPDR(self):
+        data = {}
+        import matplotlib.pyplot as plt
+        import io
+        import base64
+        tempBuffer = io.BytesIO()
+        plt.clf()
+        data = {}
+        index = 2
+        for i,j in self.getNodesPDR().items():
+            if i < index:
+                continue
+            pdr = round((j['ack'] * 100 )/j['tx'],2)
+            data[index] = pdr
+            index += 1
+            width = 0.8
+            plt.text(((index-1) - (width/3)), pdr-2, str(pdr), color="black", fontsize=8)
+        tempBuffer = io.BytesIO()
+        plt.bar(data.keys(),data.values(), width=width, label="TSCH PDR")
+        #plt.bar_label(data.values(), padding=2)
+        plt.xticks(list(data.keys()))
+        plt.ylim([0, 100])
+        plt.xlabel("Nodes")
+        plt.ylabel("PDR (%)")
+        plt.legend()
+        plt.gcf().set_size_inches(8,6)
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode() 
+
+
 class PDR(Base, MyModel):
     __tablename__ = 'pdrs'
     id = Column(Integer, primary_key=True)

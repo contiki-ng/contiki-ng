@@ -103,6 +103,8 @@
                 <p>TSCH PDR: {{ run.metric.tsch.getPDR()['PDR'] }} % (Total Sent: {{ run.metric.tsch.getPDR()['tx'] }}, ACK Total: {{ run.metric.tsch.getPDR()['ack'] }})</p>
                 <p>Ingress over time.</p>
                 <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
+                <p>TSCH PDR by Node: </p>
+                <p><img src="data:image/png;base64,{{run.metric.tsch.printPDR()}}"/></p>
               </div>
         {% else %}
               <button type="button" class="collapsible">MAC (CSMA)</button>
