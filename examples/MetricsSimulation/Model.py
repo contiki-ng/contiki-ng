@@ -27,6 +27,7 @@ from sqlalchemy.orm import sessionmaker
 import json
 from sqlalchemy.sql.expression import label, null
 from sqlalchemy.orm import class_mapper
+from sqlalchemy import orm
 
 
 
@@ -334,9 +335,9 @@ class MACMessage(MyModel):
     dest = 0
     enQueued = 0
     seqno = 0
-    queueNBROccuped = 0
+    queueNBROccupied = 0
     queueNBRSize = 0
-    queueGlobaOccuped = 0
+    queueGlobaOccupied = 0
     queueGlobaSize = 0
     headerLen = 0
     dataLen = 0
@@ -346,14 +347,14 @@ class MACMessage(MyModel):
     rcvTime = 0
     isReceived = False
     isSent = False
-    def __init__(self,origin,dest,enQue,seqno,queueNBROccuped,queueNBRSize,queueGlobaOccuped,queueGlobaSize,headerLen,dataLen):
+    def __init__(self,origin,dest,enQue,seqno,queueNBROccupied,queueNBRSize,queueGlobaOccupied,queueGlobaSize,headerLen,dataLen):
         self.origin = origin
         self.dest = dest
         self.enQueued = enQue
         self.seqno = seqno
-        self.queueNBROccuped = queueNBROccuped
+        self.queueNBROccupied = queueNBROccupied
         self.queueNBRSize = queueNBRSize
-        self.queueGlobaOccuped = queueGlobaOccuped
+        self.queueGlobaOccupied = queueGlobaOccupied
         self.queueGlobaSize = queueGlobaSize
         self.headerLen = headerLen
         self.dataLen = dataLen
@@ -386,76 +387,80 @@ class TSCH(Base, MyModel):
     __tablename__ = 'tsch'
     id = Column(Integer, primary_key=True)
     metric = relationship("Metrics", uselist=False, back_populates="tsch")
+    results = None
 
     def __init__(self,metric):
         self.metric = metric
 
-
-    def processQueue(self):
-        data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "TSCH").all()
+    @orm.reconstructor
+    def processFrames(self):
         results = {}
         for i in range(0,(self.metric.run.maxNodes)):
             results[str(i)] = []
         results['65535'] = []
-        for rec in data:
-            if rec.rawData.startswith("send packet to"):
-                origin = int(rec.node)
-                dest = int(rec.rawData.split()[3].split('.')[0], 16)
-                enQueued = float(rec.simTime)
-                seqnum = int(rec.rawData.split()[6].replace(',',''))
-                queueNBROccuped = int(rec.rawData.split()[8].split('/')[0])
-                queueNBRSize = int(rec.rawData.split()[8].split('/')[1])
-                queueGlobaOccuped = int(rec.rawData.split()[9].replace(',','').split('/')[0])
-                queueGlobaSize = int(rec.rawData.split()[9].replace(',','').split('/')[1])
-                headerLen = int(rec.rawData.split()[11])
-                dataLen = int(rec.rawData.split()[12])
-                tschMsg = MACMessage(origin, dest, enQueued, seqnum, queueNBROccuped, queueNBRSize, queueGlobaOccuped, queueGlobaSize, headerLen, dataLen)
-                results[str(origin)].append(tschMsg)
-                continue
-            if rec.rawData.startswith("packet sent to"):
-                dest = int(rec.rawData.split()[3].split('.')[0], 16)
-                seqnum = int(rec.rawData.split()[5].replace(',',''))
-                sentTime = float(rec.simTime)
-                status = int(rec.rawData.split()[7].replace(',',''))
-                tx = int(rec.rawData.split()[9].replace(',',''))
-                for msg in reversed(results[str(rec.node)]):
-                    if msg.isSent:
-                        continue
-                    if ( msg.seqno == seqnum and msg.dest == dest):
-                        time = sentTime - msg.enQueued 
-                        if (time > 10000000):
+
+        if self.metric.run.parameters['MAKE_MAC'].split('_')[-1] == "TSCH":
+            data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "TSCH").all()
+            for rec in data:
+                if rec.rawData.startswith("send packet to"):
+                    origin = int(rec.node)
+                    dest = int(rec.rawData.split()[3].split('.')[0], 16)
+                    enQueued = float(rec.simTime)
+                    seqnum = int(rec.rawData.split()[6].replace(',',''))
+                    queueNBROccupied = int(rec.rawData.split()[8].split('/')[0])
+                    queueNBRSize = int(rec.rawData.split()[8].split('/')[1])
+                    queueGlobaOccupied = int(rec.rawData.split()[9].replace(',','').split('/')[0])
+                    queueGlobaSize = int(rec.rawData.split()[9].replace(',','').split('/')[1])
+                    headerLen = int(rec.rawData.split()[11])
+                    dataLen = int(rec.rawData.split()[12])
+                    tschMsg = MACMessage(origin, dest, enQueued, seqnum, queueNBROccupied, queueNBRSize, queueGlobaOccupied, queueGlobaSize, headerLen, dataLen)
+                    results[str(origin)].append(tschMsg)
+                    continue
+                if rec.rawData.startswith("packet sent to"):
+                    dest = int(rec.rawData.split()[3].split('.')[0], 16)
+                    seqnum = int(rec.rawData.split()[5].replace(',',''))
+                    sentTime = float(rec.simTime)
+                    status = int(rec.rawData.split()[7].replace(',',''))
+                    tx = int(rec.rawData.split()[9].replace(',',''))
+                    for msg in reversed(results[str(rec.node)]):
+                        if msg.isSent:
                             continue
-                            #print("Achei uma de seqN " , seqnum, " de ", str(rec.node)," para ",dest, " mas o tempo esta maior q 10s:", time)
-                        else:
-                            msg.sent(sentTime, status, tx)
-                            #print("Depois: ",msg)
+                        if ( msg.seqno == seqnum and msg.dest == dest):
+                            time = sentTime - msg.enQueued 
+                            if (time > 10000000):
+                                continue
+                                #print("Achei uma de seqN " , seqnum, " de ", str(rec.node)," para ",dest, " mas o tempo esta maior q 10s:", time)
+                            else:
+                                msg.sent(sentTime, status, tx)
+                                #print("Depois: ",msg)
+                                continue
+            for rec in data:
+                if rec.rawData.startswith("received from"): 
+                    dest = int(rec.node)
+                    origin = int(rec.rawData.split()[2].split('.')[0], 16)
+                    #print (rec.rawData.split()[2].split('.')[0])
+                    seqnum = int(rec.rawData.split()[5])
+                    rcvTime = float(rec.simTime)
+                    #print ("Iniciando a busca em ", str(origin), "por", seqnum, "dst: ", dest )
+                    for msg in results[str(origin)]:
+                        #print(msg)
+                        if msg.isReceived:
+                            #print("Recebida, passando...")
                             continue
-        for rec in data:
-            if rec.rawData.startswith("received from"): 
-                dest = int(rec.node)
-                origin = int(rec.rawData.split()[2].split('.')[0], 16)
-                #print (rec.rawData.split()[2].split('.')[0])
-                seqnum = int(rec.rawData.split()[5])
-                rcvTime = float(rec.simTime)
-                #print ("Iniciando a busca em ", str(origin), "por", seqnum, "dst: ", dest )
-                for msg in results[str(origin)]:
-                    #print(msg)
-                    if msg.isReceived:
-                        #print("Recebida, passando...")
-                        continue
-                    if msg.seqno == seqnum and msg.dest == dest and msg.isSent and not msg.isReceived:
-                        #print(rcvTime, ": Procurando a msg enviada por(",msg.origin,")", origin, " para (",msg.dest,")",dest, " com o seque ", seqnum, " as ", rcvTime)
-                        time = rcvTime - msg.sentTime
-                        #print(rcvTime, "Achei uma que foi enfileirada as, ", msg.sentTime, "Time: ", time)
-                        #print(msg, "-> ", rec.rawData)
-                        if time < 10000000:
-                            #print("Recebendo a msg enviada por ", origin, " para ",dest, " com o seque ", seqnum)
-                            msg.receive(rcvTime)
-                            break
-                        else:
-                            None
-                            #print("Parece velha: ", time/1000, "ms")
-        return results
+                        if msg.seqno == seqnum and msg.dest == dest and msg.isSent and not msg.isReceived:
+                            #print(rcvTime, ": Procurando a msg enviada por(",msg.origin,")", origin, " para (",msg.dest,")",dest, " com o seque ", seqnum, " as ", rcvTime)
+                            time = rcvTime - msg.sentTime
+                            #print(rcvTime, "Achei uma que foi enfileirada as, ", msg.sentTime, "Time: ", time)
+                            #print(msg, "-> ", rec.rawData)
+                            if time < 10000000:
+                                #print("Recebendo a msg enviada por ", origin, " para ",dest, " com o seque ", seqnum)
+                                msg.receive(rcvTime)
+                                break
+                            else:
+                                None
+        else:
+            data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "CSMA").all()
+        self.results =  results
         
     def processIngress(self):
         data = db.query(Record).filter_by(run = self.metric.run).filter_by(recordType = "TSCH").all()
