@@ -372,6 +372,12 @@ class MACMessage(MyModel):
         if not self.isReceived:
             raise Exception("Message not received")
         return self.rcvTime - self.enQueued
+    def retransmissions(self):
+        if not self.isSent:
+            raise Exception("Message didn't send")
+        if not self.isReceived:
+            raise Exception("Message not received")
+        return self.tries - 1
     def __str__(self) -> str:
         return "{self.origin}<->{self.dest} Q:{self.enQueued} S({self.isSent}):{self.sentTime} S({self.isReceived}):{self.rcvTime} Sq:{self.seqno}".format(self=self)
 
