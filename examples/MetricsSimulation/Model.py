@@ -556,7 +556,32 @@ class TSCH(Base, MyModel):
         plt.legend()
         plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')
-        return base64.b64encode(tempBuffer.getvalue()).decode() 
+        return base64.b64encode(tempBuffer.getvalue()).decode()
+
+    def printRetransmissions(self):
+        import io
+        import base64
+        import matplotlib.pyplot as plt
+        plt.clf()
+        tempBuffer = io.BytesIO()
+        for i,j in self.results.items():
+            if i == '0' or i == '65535':
+                continue
+        #     print (i)
+            x = []
+            y = []
+            for m in j:
+                if m.isReceived and m.isSent:
+                    x.append(m.sentTime)
+                    y.append(m.retransmissions())
+            plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
+        plt.xlabel("Simulation Time (s)")
+        plt.ylabel("# of Retransmissions")
+        plt.legend()
+        #plt.show()
+        plt.gcf().set_size_inches(8,6)
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode()
 
 
 class PDR(Base, MyModel):
