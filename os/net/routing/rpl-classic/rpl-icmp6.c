@@ -434,7 +434,15 @@ dio_input(void)
         dio.ocp = get16(buffer, i + 10);
         /* buffer + 12 is reserved */
         dio.default_lifetime = buffer[i + 13];
+        if(dio.default_lifetime == 0) {
+          LOG_WARN("Lifetime of 0 received => increasing to 1\n");
+          dio.default_lifetime = 1;
+        }
         dio.lifetime_unit = get16(buffer, i + 14);
+        if(dio.lifetime_unit == 0) {
+          LOG_WARN("Lifetime unit of 0 received => increasing to 1\n");
+          dio.lifetime_unit = 1;
+        }
         LOG_INFO("DAG conf:dbl=%d, min=%d red=%d maxinc=%d mininc=%d ocp=%d d_l=%u l_u=%u\n",
                dio.dag_intdoubl, dio.dag_intmin, dio.dag_redund,
                dio.dag_max_rankinc, dio.dag_min_hoprankinc, dio.ocp,
