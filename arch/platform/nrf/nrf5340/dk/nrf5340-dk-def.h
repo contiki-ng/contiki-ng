@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,24 +29,52 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup nrf
+ * \addtogroup nrf-platforms
  * @{
  *
- * \addtogroup nrf-5340-application nRF5340 Application Core
+ * \addtogroup nrf5340-dk
  * @{
  *
  * \file
- *      Header with configuration defines to nrf 5340 application core
+ *         nRF5340 DK specific defines.
  * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF5340_APPLICATION_CONF_H_
-#define NRF5340_APPLICATION_CONF_H_
+#ifndef NRF53_DK_DEF_H
+#define NRF53_DK_DEF_H
 /*---------------------------------------------------------------------------*/
-#endif /* NRF5340_APPLICATION_CONF_H_ */
+#define PLATFORM_HAS_BUTTON             1
+#define PLATFORM_SUPPORTS_BUTTON_HAL    1
+/*---------------------------------------------------------------------------*/
+#define NRF_BUTTON1_PIN     23
+#define NRF_BUTTON1_PORT    0
+#define NRF_BUTTON2_PIN     24
+#define NRF_BUTTON2_PORT    0
+#define NRF_BUTTON3_PIN     8
+#define NRF_BUTTON3_PORT    0
+#define NRF_BUTTON4_PIN     9
+#define NRF_BUTTON4_PORT    0
+/*---------------------------------------------------------------------------*/
+#define NRF_LED1_PIN        28
+#define NRF_LED1_PORT       0
+#define NRF_LED2_PIN        29
+#define NRF_LED2_PORT       0
+#define NRF_LED3_PIN        30
+#define NRF_LED3_PORT       0
+#define NRF_LED4_PIN        31
+#define NRF_LED4_PORT       0
+/*---------------------------------------------------------------------------*/
+#define LEDS_CONF_COUNT     4
+/*---------------------------------------------------------------------------*/
+#define NRF_UARTE0_TX_PIN   20
+#define NRF_UARTE0_TX_PORT  0
+#define NRF_UARTE0_RX_PIN   22
+#define NRF_UARTE0_RX_PORT  0
+/*---------------------------------------------------------------------------*/
+#endif /* NRF53_DK_DEF_H */
 /*---------------------------------------------------------------------------*/
 /** 
- * @}
- * @}
+ * @} 
+ * @} 
  */

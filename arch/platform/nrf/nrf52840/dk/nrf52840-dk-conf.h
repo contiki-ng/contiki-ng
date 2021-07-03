@@ -44,34 +44,13 @@
 #ifndef NRF52840_DK_CONF_H
 #define NRF52840_DK_CONF_H
 /*---------------------------------------------------------------------------*/
-#define PLATFORM_HAS_UARTE              1
-#define PLATFORM_HAS_BUTTON             1
-#define PLATFORM_SUPPORTS_BUTTON_HAL    1
+#ifndef PLAFTORM_SLIP_ARCH_CONF_USB
+#define PLAFTORM_SLIP_ARCH_CONF_USB 0
+#endif
 /*---------------------------------------------------------------------------*/
-#define NRF_BUTTON1_PIN     11
-#define NRF_BUTTON1_PORT    0
-#define NRF_BUTTON2_PIN     12
-#define NRF_BUTTON2_PORT    0
-#define NRF_BUTTON3_PIN     24
-#define NRF_BUTTON3_PORT    0
-#define NRF_BUTTON4_PIN     25
-#define NRF_BUTTON4_PORT    0
-/*---------------------------------------------------------------------------*/
-#define NRF_LED1_PIN        13
-#define NRF_LED1_PORT       0
-#define NRF_LED2_PIN        14
-#define NRF_LED2_PORT       0
-#define NRF_LED3_PIN        15
-#define NRF_LED3_PORT       0
-#define NRF_LED4_PIN        16
-#define NRF_LED4_PORT       0
-/*---------------------------------------------------------------------------*/
-#define LEDS_CONF_COUNT     4
-/*---------------------------------------------------------------------------*/
-#define NRF_UARTE0_TX_PIN   6
-#define NRF_UARTE0_TX_PORT  0
-#define NRF_UARTE0_RX_PIN   8
-#define NRF_UARTE0_RX_PORT  0
+#ifndef PLATFORM_DBG_CONF_USB
+#define PLATFORM_DBG_CONF_USB   0
+#endif
 /*---------------------------------------------------------------------------*/
 #endif /* NRF52840_DK_CONF_H */
 /*---------------------------------------------------------------------------*/

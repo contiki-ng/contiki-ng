@@ -37,7 +37,7 @@
  *
  * \addtogroup nrf-dbg Debug driver
  * @{
- * 
+ *
  * \file
  *         Debug driver for the nRF.
  * \author
@@ -48,31 +48,41 @@
 #include "contiki.h"
 
 #include "uarte-arch.h"
+#include "usb.h"
 /*---------------------------------------------------------------------------*/
 unsigned int
 dbg_send_bytes(const unsigned char *s, unsigned int len)
 {
+#if PLATFORM_DBG_CONF_USB
+  usb_write((uint8_t *)s, len);
+
+  return len;
+#else /* PLATFORM_DBG_CONF_USB */
   unsigned int i = 0;
 
   while(s && *s != 0) {
     if(i >= len) {
       break;
     }
-#if PLATFORM_HAS_UARTE
-    uarte_write(*s++);
-#endif /* PLATFORM_HAS_UARTE */
+    uarte_write(*s);
+    s++;
     i++;
   }
 
   return i;
+#endif /* PLATFORM_DBG_CONF_USB */
+
+
 }
 /*---------------------------------------------------------------------------*/
 int
 dbg_putchar(int c)
 {
-#if PLATFORM_HAS_UARTE
+#if PLATFORM_DBG_CONF_USB
+  usb_write((uint8_t *)&c, sizeof(c));
+#else /* PLATFORM_DBG_CONF_USB */
   uarte_write(c);
-#endif /* PLATFORM_HAS_UARTE */
+#endif /* PLATFORM_DBG_CONF_USB */
   return c;
 }
 /*---------------------------------------------------------------------------*/

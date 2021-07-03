@@ -53,6 +53,7 @@
 #include "reset-arch.h"
 
 #include "lpm.h"
+#include "usb.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -75,13 +76,24 @@ platform_init_stage_two(void)
   /* Seed value is ignored since hardware RNG is used. */
   random_init(0x5678);
 
-#if PLATFORM_HAS_UARTE
+#if NRF_HAS_UARTE
   uarte_init();
+#endif /* NRF_HAS_UARTE */
+
+#if NRF_HAS_USB
+  usb_init();
+#endif /* NRF_HAS_USB */
+
   serial_line_init();
+
 #if BUILD_WITH_SHELL
+#if PLATFORM_DBG_CONF_USB
+  usb_set_input(serial_line_input_byte);
+#else /* PLATFORM_DBG_CONF_USB */
   uarte_set_input(serial_line_input_byte);
+#endif /* PLATFORM_DBG_CONF_USB */
 #endif /* BUILD_WITH_SHELL */
-#endif /* PLATFORM_HAS_UARTE */
+
   populate_link_address();
 
   reset_debug();

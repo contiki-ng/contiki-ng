@@ -3,6 +3,7 @@ BOARD_SOURCEFILES += board-buttons.c
 BOARD_SOURCEFILES += board-sensors.c
 
 CFLAGS += -DBOARD_CONF_PATH=\"nrf5340-dk-conf.h\"
+CFLAGS += -DBOARD_DEF_PATH=\"nrf5340-dk-def.h\"
 
 ### Include the common nrf5340 makefile
 include $(PLATFORM_ROOT_DIR)/nrf5340/Makefile.nrf5340
