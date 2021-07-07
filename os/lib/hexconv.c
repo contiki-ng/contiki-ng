@@ -56,7 +56,7 @@ fromhex(char c)
 int
 hexconv_hexlify(const uint8_t *data, int data_len, char *text, int text_size)
 {
-  static const char *HEX = "01234567890abcdef";
+  static const char *HEX = "0123456789abcdef";
   int i, p;
 
   for(i = 0, p = 0; p + 1 < text_size && i < data_len; i++) {
