@@ -46,6 +46,7 @@
 
 #include "Board.h"
 
+#include "buzzer.h"
 
 /*
  *  ======== CC1350STK_sendExtFlashByte ========
@@ -152,5 +153,6 @@ void CC1350STK_shutDownExtFlash(void)
  */
 void Board_initHook()
 {
+    buzzer_init();
     CC1350STK_shutDownExtFlash();
 }

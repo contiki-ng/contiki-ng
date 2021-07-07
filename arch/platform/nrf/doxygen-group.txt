@@ -1,0 +1,12 @@
+/**
+ * \defgroup nrf52840-dk nRF52840 Development Kit (using nRF MDK)
+ * \ingroup nrf-platforms
+ */
+/**
+ * \defgroup nrf52840-dongle nRF52840 Dongle (using nRF MDK)
+ * \ingroup nrf-platforms
+ */
+/**
+ * \defgroup nrf5340-dk nRF5340 Development Kit (using nRF MDK)
+ * \ingroup nrf-platforms
+ */

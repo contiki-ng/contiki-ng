@@ -25,20 +25,28 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     iputils-ping \
     libcanberra-gtk-module:i386 \
     libcoap-1-0-bin \
+    libfreetype6-dev \
     libgtk2.0-0 \
+    libpng-dev \
     mono-complete \
     mosquitto \
     mosquitto-clients \
     net-tools \
     openjdk-8-jdk \
+    python-dev \
+    python3-dev \
     python-pip \
+    python3-pip \
+    python3-setuptools \
     python-serial \
+    python3-serial \
     rlwrap \
     sudo \
     screen \
     srecord \
     uml-utilities \
     unzip \
+    libusb-1.0-0 \
     valgrind \
     wget \
     smitools \
@@ -48,9 +56,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   && apt-get -qq clean
 
 # Install ARM toolchain
-RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
-  tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/ && \
+RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/9-2020-q2-update/gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 && \
+  tar xjf gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 -C /tmp/ && \
+  cp -f -r /tmp/gcc-arm-none-eabi-9-2020-q4-major/* /usr/local/ && \
   rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
@@ -81,10 +89,26 @@ RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/n
 
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 
+# Install nRF Command Line tools
+RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxi386.tar.gz && \
+  mkdir /tmp/nrf-cli-tools && \
+  tar xzf nRFCommandLineTools10121Linuxi386.tar.gz -C /tmp/nrf-cli-tools && \
+  dpkg -i /tmp/nrf-cli-tools/JLink_Linux_V688a_i386.deb && \
+  dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-i386.deb && \
+  ln -s /opt/SEGGER/JLink_V688a/libjlinkarm.so /opt/SEGGER/JLink_V688a/libjlinkarm_x86.so && \
+  rm -rf nRFCommandLineTools10121Linuxi386.tar.gz /tmp/nrf-cli-tools
+
 # Install sphinx and sphinx_rtd_theme, required for building and testing the
 # readthedocs API documentation
 RUN pip -q install --upgrade pip
 RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
+# Install matplotlib for result visualization
+RUN pip3 -q install --upgrade pip
+RUN pip3 -q install matplotlib
+
+# Install nrfutil and work around broken pc_ble_driver_py dependency
+RUN pip3 -q install nrfutil && \
+  pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil
 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
@@ -105,6 +129,8 @@ ENV HOME                /home/user
 ENV CONTIKI_NG          ${HOME}/contiki-ng
 ENV COOJA               ${CONTIKI_NG}/tools/cooja
 ENV                     PATH="${HOME}:${PATH}"
+ENV                     LC_ALL=C.UTF-8
+ENV                     LANG=C.UTF-8
 WORKDIR                 ${HOME}
 
 # Create Cooja shortcut

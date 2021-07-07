@@ -103,39 +103,39 @@ lock_config(uint32_t status)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Initialises the CC26xx WDT
+ * \brief Initialises the CC13xx/CC26xx WDT
  *
- * Simply sets the reload counter to a default value. The WDT is not started
- * yet. To start it, watchdog_start() must be called.
+ * Simply locks the config so that future calls will lock properly.
+ * The WDT is not started yet. To start it, watchdog_start() must be called.
  */
 void
 watchdog_init(void)
 {
-  ti_lib_watchdog_reload_set(WATCHDOG_TIMER_TOP_TICK);
   lock_config(LOCK_REGISTERS_UNLOCKED);
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Starts the CC26xx WDT
+ * \brief Starts the CC13xx/CC26xx WDT
  */
 void
 watchdog_start(void)
 {
   uint32_t lock_status = unlock_config();
 
-  watchdog_periodic();
+  ti_lib_watchdog_reload_set(WATCHDOG_TIMER_TOP_TICK);
   ti_lib_watchdog_reset_enable();
+  ti_lib_watchdog_enable();
 
   lock_config(lock_status);
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Refreshes the CC26xx WDT
+ * \brief Refreshes the CC13xx/CC26xx WDT
  */
 void
 watchdog_periodic(void)
 {
-  ti_lib_watchdog_reload_set(WATCHDOG_TIMER_TOP_TICK);
+  /* Clearing interrupt also resets counter */
   ti_lib_watchdog_int_clear();
 }
 /*---------------------------------------------------------------------------*/

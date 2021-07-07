@@ -27,7 +27,9 @@ PUB_PAYLD=1
 
 # Start mosquitto server
 echo "Starting mosquitto daemon"
-mosquitto &> /dev/null &
+echo "listener 1883" > mosquitto.conf
+echo "allow_anonymous true" >> mosquitto.conf
+mosquitto -c mosquitto.conf &> /dev/null &
 MOSQID=$!
 sleep 2
 
@@ -93,6 +95,7 @@ rm make.log
 rm make.err
 rm $CLIENT_LOG $CLIENT_ERR
 rm $MOSQ_SUB_LOG $MOSQ_SUB_ERR
+rm mosquitto.conf
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end

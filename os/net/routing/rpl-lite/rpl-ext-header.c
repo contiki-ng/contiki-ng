@@ -130,8 +130,16 @@ rpl_ext_header_srh_update(void)
     return 0;
   } else {
     uint8_t i = path_len - segments_left; /* The index of the next address to be visited */
-    uint8_t *addr_ptr = ((uint8_t *)rh_header) + RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
     uint8_t cmpr = segments_left == 1 ? cmpre : cmpri;
+    ptrdiff_t rh_offset = (uint8_t *)rh_header - uip_buf;
+    size_t addr_offset = RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
+
+    if(rh_offset + addr_offset + 16 - cmpr > UIP_BUFSIZE) {
+      LOG_ERR("Invalid SRH address pointer\n");
+      return 0;
+    }
+
+    uint8_t *addr_ptr = ((uint8_t *)rh_header) + addr_offset;
 
     /* As per RFC6554: swap the IPv6 destination address with address[i] */
 

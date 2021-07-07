@@ -62,11 +62,12 @@ my_test_print(const unit_test_t *utp)
   }
 }
 
-/* my_always_return_null() is set to NBR_TABLE_FIND_REMOVABLE */
-const linkaddr_t *
-my_always_return_null(nbr_table_reason_t reason, void *data)
+/* NBR_TABLE_CONF_CAN_ACCEPT_NEW is set to rpl_nbr_can_accept_new() */
+bool
+reject_if_full(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
+                       nbr_table_reason_t reason, void *data)
 {
-  return NULL;
+  return candidate_for_removal == NULL;
 }
 
 void

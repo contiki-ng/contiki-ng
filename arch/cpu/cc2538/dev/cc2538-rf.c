@@ -565,7 +565,7 @@ init(void)
   set_channel(rf_channel);
 
   /* Enable SHR search */
-  set_shr_search(1);
+  set_shr_search(RADIO_SHR_SEARCH_EN);
 
   /* Acknowledge all RF Error interrupts */
   REG(RFCORE_XREG_RFERRM) = RFCORE_XREG_RFERRM_RFERRM;
@@ -1010,6 +1010,9 @@ set_value(radio_param_t param, radio_value_t value)
     set_cca_threshold(value);
     return RADIO_RESULT_OK;
   case RADIO_PARAM_SHR_SEARCH:
+    if((value != RADIO_SHR_SEARCH_EN) && (value != RADIO_SHR_SEARCH_DIS)) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
     set_shr_search(value);
     return RADIO_RESULT_OK;
   default:

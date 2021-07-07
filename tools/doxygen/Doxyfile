@@ -814,8 +814,10 @@ EXCLUDE_PATTERNS       = */cpu/cc26x0-cc13x0/lib/* \
                          */cpu/simplelink-cc13xx-cc26xx/cc13x0-cc26x0/driverlib/* \
                          */cpu/simplelink-cc13xx-cc26xx/cc13x0-cc26x0/rf_patches/* \
                          */cpu/nrf52840/lib/* \
+                         */cpu/nrf/lib/* \
                          */platform/stm32nucleo-spirit1/stm32cube-lib/* \
-                         */os/net/security/tinydtls/*
+                         */os/net/security/tinydtls/* \
+                         */cpu/arm/CMSIS/* \
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

@@ -43,7 +43,7 @@ jobs:
     # Construct the correct docker container image tag corresponding to this build
     - name: Figure out correct docker image tag
       run:
-        echo ::set-env name=DOCKER_IMG::$DOCKER_BASE_IMG:$(git log -1 --oneline -- tools/docker/ | cut -d" " -f1)
+        echo DOCKER_IMG=$DOCKER_BASE_IMG:$(git log -1 --oneline -- tools/docker/ | cut -d" " -f1) >> $GITHUB_ENV
 
     # Try to download the image from dockerhub. If it works, use it.
     #
@@ -59,7 +59,7 @@ jobs:
       run: |
         echo "Using $DOCKER_IMG for this run"
         echo "Pulling image $DOCKER_IMG from dockerhub";
-        docker pull $DOCKER_IMG || echo ::set-env name=DOCKER_NEED_BUILD::1
+        docker pull $DOCKER_IMG || echo DOCKER_NEED_BUILD=1 >> $GITHUB_ENV
 
     - name: Build docker image if required
       if: env.DOCKER_NEED_BUILD == '1'
@@ -67,7 +67,7 @@ jobs:
         echo $DOCKER_IMG does not exist on dockerhub or pull failed
         echo This is normal for PR builds and for builds on forks
         echo Building from dockerfile
-        docker build tools/docker -t $DOCKER_IMG
+        docker build tools/docker -t $DOCKER_IMG --no-cache --pull
 
     # If i) the previous step built an image and ii) we are on the main
     # contiki-ng repo and iii) this is a push (merge commit) to one of the
@@ -101,7 +101,7 @@ jobs:
         # Set permissions for Docker mount
         sudo chown -R 1000:1000 $OUT_OF_TREE_TEST_PATH
         # Set up docker mount
-        echo ::set-env name=DOCKER_ARGS::-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests
+        echo DOCKER_ARGS=-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests >> $GITHUB_ENV
 
     # Fire up the container and run corresponding tests
     - name: Execute tests

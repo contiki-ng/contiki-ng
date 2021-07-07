@@ -33,7 +33,6 @@ receiver(struct simple_udp_connection *c,
 PROCESS_THREAD(udp_process, ev, data)
 {
   static struct etimer periodic_timer;
-  static struct etimer send_timer;
   uip_ipaddr_t addr;
   static int alive;
   const uip_ipaddr_t *default_prefix;
@@ -42,6 +41,9 @@ PROCESS_THREAD(udp_process, ev, data)
 
   default_prefix = uip_ds6_default_prefix();
   uip_ip6addr_copy(&addr, default_prefix);
+  addr.u16[4] = UIP_HTONS(0x202);
+  addr.u16[5] = UIP_HTONS(2);
+  addr.u16[6] = UIP_HTONS(2);
   addr.u16[7] = UIP_HTONS(2);
   uip_ds6_addr_add(&addr, 0, ADDR_AUTOCONF);
 

@@ -201,6 +201,8 @@ enum {
   UIPBUF_ATTR_PHYSICAL_NETWORK_ID, /**< Physical network ID (mapped to PAN ID)*/
   UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS, /**< MAX transmissions of the packet MAC */
   UIPBUF_ATTR_FLAGS,   /**< Flags that can control lower layers.  see above. */
+  UIPBUF_ATTR_RSSI, /**< Last packet's RSSI */
+  UIPBUF_ATTR_LINK_QUALITY, /**< Last packet's LQI */
   UIPBUF_ATTR_MAX
 };
 

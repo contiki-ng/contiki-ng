@@ -40,6 +40,7 @@ COOJA.testlog
 *.cc26x0-cc13x0
 *.z1
 *.zoul
+*.nrf
 
 # do not ignore platform makefiles
 !Makefile.cc2538dk
@@ -52,6 +53,7 @@ COOJA.testlog
 !Makefile.sky
 !Makefile.cc26x0-cc13x0
 !Makefile.zoul
+!Makefile.nrf
 
 # other nRF52 build artifacts
 *.jlink

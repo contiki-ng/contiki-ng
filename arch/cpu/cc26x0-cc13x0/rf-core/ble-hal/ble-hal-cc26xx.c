@@ -897,7 +897,8 @@ connection_rx(ble_conn_param_t *param)
         NETSTACK_MAC.input();
       }
     } else if(frame_type == BLE_DATA_PDU_LLID_DATA_FRAGMENT) {
-      memcpy((packetbuf_dataptr() + packetbuf_datalen()), &rx_data[header_offset], len);
+      memcpy(((uint8_t*)packetbuf_dataptr() + packetbuf_datalen()),
+             &rx_data[header_offset], len);
       packetbuf_set_datalen(packetbuf_datalen() + len);
       if((!more_data) || (len < CONN_BLE_BUFFER_SIZE)) {
         NETSTACK_MAC.input();

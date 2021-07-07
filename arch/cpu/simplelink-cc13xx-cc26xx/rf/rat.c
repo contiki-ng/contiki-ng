@@ -28,7 +28,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc13xx-cc26xx-rat
+ * \addtogroup cc13xx-cc26xx-rf-rat
  * @{
  *
  * \file

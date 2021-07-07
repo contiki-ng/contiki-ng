@@ -61,6 +61,7 @@ frequency hopping for enhanced reliability.
 #include "net/mac/tsch/tsch-security.h"
 #include "net/mac/tsch/tsch-schedule.h"
 #include "net/mac/tsch/tsch-stats.h"
+#include "net/mac/tsch/tsch-roots.h"
 #if UIP_CONF_IPV6_RPL
 #include "net/mac/tsch/tsch-rpl.h"
 #endif /* UIP_CONF_IPV6_RPL */
@@ -104,6 +105,10 @@ frequency hopping for enhanced reliability.
 #define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
 #endif /* TSCH_CALLBACK_PACKET_READY */
 
+#ifndef TSCH_CALLBACK_ROOT_NODE_UPDATED
+#define TSCH_CALLBACK_ROOT_NODE_UPDATED orchestra_callback_root_node_updated
+#endif /* TSCH_CALLBACK_ROOT_NODE_UPDATED */
+
 #endif /* BUILD_WITH_ORCHESTRA */
 
 /* Called by TSCH when joining a network */
@@ -142,6 +147,12 @@ void TSCH_CALLBACK_NEW_TIME_SOURCE(const struct tsch_neighbor *old, const struct
 #ifdef TSCH_CALLBACK_PACKET_READY
 int TSCH_CALLBACK_PACKET_READY(void);
 #endif
+
+/* Called when a new root node, including the local node, is detected to be added or removed */ 
+#ifdef TSCH_CALLBACK_ROOT_NODE_UPDATED
+void TSCH_CALLBACK_ROOT_NODE_UPDATED(const linkaddr_t *, uint8_t is_added);
+#endif /* TSCH_CALLBACK_ROOT_NODE_UPDATED */
+
 
 /***** External Variables *****/
 

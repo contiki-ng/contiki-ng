@@ -31,6 +31,7 @@
 #include <stdio.h>
 
 #include "net/mac/tsch/sixtop/sixtop.h"
+#include "net/nbr-table.h"
 
 #include "unit-test/unit-test.h"
 #include "common.h"
@@ -43,6 +44,14 @@
 static uint8_t mac_send_is_called;
 static mac_callback_t mac_sent_callback;
 static void *mac_sent_callback_arg;
+
+/* NBR_TABLE_CONF_CAN_ACCEPT_NEW is set to rpl_nbr_can_accept_new() */
+bool
+reject_if_full(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
+                       nbr_table_reason_t reason, void *data)
+{
+  return candidate_for_removal == NULL;
+}
 
 void
 test_print_report(const unit_test_t *utp)

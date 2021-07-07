@@ -59,15 +59,15 @@ typedef uint8_t mutex_t;
 static inline bool
 mutex_cortex_try_lock(volatile mutex_t *mutex)
 {
-  int status = 1;
-
-  if(__LDREXB(mutex) == 0) {
-    status = __STREXB(1, mutex);
-  }
+  do {
+    if(__LDREXB(mutex) != 0) {
+      return false;
+    }
+  } while(__STREXB(1, mutex) != 0);
 
   __DMB();
 
-  return status == 0 ? true : false;
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 static inline void

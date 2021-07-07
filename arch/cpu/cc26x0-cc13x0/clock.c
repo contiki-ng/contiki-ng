@@ -48,6 +48,9 @@
 #include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
 static volatile uint64_t count;
+
+/**< Num. fractions in sub-second. Important to cast to 64-bit */
+#define RTC_SUBSEC_FRAC  ((uint64_t)1 << 32)
 /*---------------------------------------------------------------------------*/
 static void
 power_domain_on(void)
@@ -101,7 +104,7 @@ clock_init(void)
 
   /* GPT0 / Timer B: One shot, PWM interrupt enable */
   HWREG(GPT0_BASE + GPT_O_TBMR) =
-        ((TIMER_CFG_B_ONE_SHOT >> 8) & 0xFF) | GPT_TBMR_TBPWMIE;
+    ((TIMER_CFG_B_ONE_SHOT >> 8) & 0xFF) | GPT_TBMR_TBPWMIE;
 
   /* enable sync with radio timer */
   HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
@@ -110,18 +113,12 @@ clock_init(void)
 static void
 update_clock_variable(void)
 {
-  uint32_t aon_rtc_secs_now;
-  uint32_t aon_rtc_secs_now2;
-  uint16_t aon_rtc_ticks_now;
-
-  do {
-    aon_rtc_secs_now = HWREG(AON_RTC_BASE + AON_RTC_O_SEC);
-    aon_rtc_ticks_now = HWREG(AON_RTC_BASE + AON_RTC_O_SUBSEC) >> 16;
-    aon_rtc_secs_now2 = HWREG(AON_RTC_BASE + AON_RTC_O_SEC);
-  } while(aon_rtc_secs_now != aon_rtc_secs_now2);
-
-  /* Convert AON RTC ticks to clock tick counter */
-  count = (aon_rtc_secs_now * CLOCK_SECOND) + (aon_rtc_ticks_now >> 9);
+  /*
+   * RTC counter is in a 64-bits format (SEC[31:0].SUBSEC[31:0]), where SUBSEC
+   * is represented in fractions of a second (VALUE/2^32).
+   */
+  uint64_t now = ti_lib_aon_rtc_current_64_bit_value_get();
+  count = (clock_time_t)(now / (RTC_SUBSEC_FRAC / CLOCK_SECOND));
 }
 /*---------------------------------------------------------------------------*/
 clock_time_t
@@ -145,19 +142,7 @@ clock_update(void)
 unsigned long
 clock_seconds(void)
 {
-  bool interrupts_disabled;
-  uint32_t secs_now;
-
-  interrupts_disabled = ti_lib_int_master_disable();
-
-  secs_now = ti_lib_aon_rtc_sec_get();
-
-  /* Re-enable interrupts */
-  if(!interrupts_disabled) {
-    ti_lib_int_master_enable();
-  }
-
-  return (unsigned long)secs_now;
+  return (unsigned long)ti_lib_aon_rtc_sec_get();
 }
 /*---------------------------------------------------------------------------*/
 void

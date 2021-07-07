@@ -114,6 +114,7 @@ else
 
 GCC      = 1
 CC       = msp430-gcc
+CXX      = msp430-g++
 LD       = msp430-gcc
 AS       = msp430-as
 AR       = msp430-ar

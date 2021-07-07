@@ -110,8 +110,8 @@
 #ifdef CC1200_CONF_802154G_CRC16
 #define CC1200_802154G_CRC16            CC1200_CONF_802154G_CRC16
 #else
-/* Use FCS type 0: CRC32 */
-#define CC1200_802154G_CRC16            0
+/* Use FCS type 1: CRC16 if 802154G is enabled, else use FCS type 0: CRC32 */
+#define CC1200_802154G_CRC16            CC1200_802154G
 #endif
 /*---------------------------------------------------------------------------*/
 /* The RF configuration to be used. */

@@ -75,10 +75,12 @@ udp_rx_callback(struct simple_udp_connection *c,
 
     LOG_INFO("Received from ");
     LOG_INFO_6ADDR(sender_addr);
-    LOG_INFO_(", created at %lu, now %lu, latency %lu clock ticks\n",
+    LOG_INFO_(", created at %lu, now %lu, latency %lu clock ticks, rssi %d, lqi %u\n",
               (unsigned long)remote_time_clock_ticks,
               (unsigned long)local_time_clock_ticks,
-              (unsigned long)(local_time_clock_ticks - remote_time_clock_ticks));
+              (unsigned long)(local_time_clock_ticks - remote_time_clock_ticks),
+              (int)uipbuf_get_attr(UIPBUF_ATTR_RSSI),
+              uipbuf_get_attr(UIPBUF_ATTR_LINK_QUALITY));
   }
 }
 /*---------------------------------------------------------------------------*/

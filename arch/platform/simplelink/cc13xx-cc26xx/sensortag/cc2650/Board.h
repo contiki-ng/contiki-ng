@@ -101,6 +101,7 @@ extern "C" {
 #define Board_NVSEXTERNAL       CC2650STK_NVSSPI25X0
 
 #define Board_I2C0              CC2650STK_I2C0
+#define Board_I2C1              CC2650STK_I2C1
 
 #define Board_PIN_BUTTON0       CC2650STK_PIN_BTN1
 #define Board_PIN_BUTTON1       CC2650STK_PIN_BTN2

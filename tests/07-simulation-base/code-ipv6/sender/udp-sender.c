@@ -6,7 +6,7 @@
 
 #define UDP_PORT 61618
 
-#define SEND_INTERVAL		(4 * CLOCK_SECOND)
+#define SEND_INTERVAL		(60 * CLOCK_SECOND)
 
 static struct simple_udp_connection broadcast_connection;
 
@@ -34,7 +34,6 @@ receiver(struct simple_udp_connection *c,
 PROCESS_THREAD(udp_process, ev, data)
 {
   static struct etimer periodic_timer;
-  static struct etimer send_timer;
   uip_ipaddr_t addr;
 
   PROCESS_BEGIN();

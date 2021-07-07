@@ -97,9 +97,20 @@
 
 /* If RPL is enabled also enable the RPL NBR Policy */
 #if UIP_CONF_IPV6_RPL
-#ifndef NBR_TABLE_FIND_REMOVABLE
-#define NBR_TABLE_FIND_REMOVABLE rpl_nbr_policy_find_removable
-#endif /* NBR_TABLE_FIND_REMOVABLE */
+/* Both Classic and Lite use rpl_nbr_gc_get_worst */
+#ifndef NBR_TABLE_CONF_GC_GET_WORST
+#define NBR_TABLE_CONF_GC_GET_WORST            rpl_nbr_gc_get_worst
+#endif /* NBR_TABLE_CONF_GC_GET_WORST */
+#if ROUTING_CONF_RPL_CLASSIC
+/* Only Classic handles a max number of children */
+#ifndef NBR_TABLE_CONF_CAN_ACCEPT_NEW
+#define NBR_TABLE_CONF_CAN_ACCEPT_NEW          rpl_nbr_can_accept_new
+#endif /* NBR_TABLE_CONF_CAN_ACCEPT_NEW */
+/* Leave 3 spots for candidate parents incl. default route. */
+#if RPL_NBR_POLICY_MAX_NEXTHOP_NEIGHBORS
+#define RPL_NBR_POLICY_MAX_NEXTHOP_NEIGHBORS  MAX(NBR_TABLE_CONF_MAX_NEIGHBORS - 3, 0)
+#endif /* RPL_NBR_POLICY_MAX_NEXTHOP_NEIGHBORS */
+#endif /* ROUTING_CONF_RPL_CLASSIC */
 #endif /* UIP_CONF_IPV6_RPL */
 
 /* UIP_CONF_UDP specifies if UDP support should be included or

@@ -87,10 +87,19 @@
 #undef RPL_MOP_STORING_NO_MULTICAST
 #undef RPL_MOP_STORING_MULTICAST
 
+#undef RPL_OCP_OF0
+#undef RPL_OCP_MRHOF
+
 #ifdef RPL_CONF_MOP
 ##### "RPL_CONF_MOP": __________________________ == RPL_CONF_MOP
 #else
 ##### "RPL_CONF_MOP": __________________________ -> RPL_MOP_DEFAULT
+#endif
+
+#ifdef RPL_CONF_OF_OCP
+##### "RPL_CONF_OF_OCP": __________________________ == RPL_CONF_OF_OCP
+#else
+##### "RPL_CONF_OF_OCP": __________________________ -> RPL_OF_OCP
 #endif
 
 #endif /* RPL routing */

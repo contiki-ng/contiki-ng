@@ -19,7 +19,6 @@ include $(CONTIKI_CPU)/Makefile.cc2538
 
 MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
-PYTHON = python
 BSL_FLAGS += -e -w -v
 
 ifdef PORT
@@ -36,7 +35,7 @@ else
 	                               $(BUILD_DIR_BOARD)/$*.elf | grep -B1 LOAD | \
 	                               grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$5}' | \
 	                               sort -g | head -1))
-	$(PYTHON) $(BSL) $(BSL_FLAGS) $(BSL_ADDRESS_ARG) $<
+	$(BSL) $(BSL_FLAGS) $(BSL_ADDRESS_ARG) $<
 endif
 
 ifeq ($(HOST_OS),Darwin)

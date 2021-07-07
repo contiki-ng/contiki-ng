@@ -107,7 +107,7 @@ stack_check_get_usage(void)
     p++;
   }
 
-  /* Skip the region of the memory reserved for the stack not used yet by the program */
+  /* Skip memory-region reserved for the stack not used yet by the program */
   while(*p == STACK_FILL && p < (uint8_t *)GET_STACK_ORIGIN()) {
     p++;
   }
@@ -147,7 +147,8 @@ PROCESS_THREAD(stack_check_process, ev, data)
     actual = stack_check_get_usage();
     allowed = stack_check_get_reserved_size();
     if(actual < 0 || allowed < 0) {
-      LOG_ERR("Check in inconsistent state: %" PRId32 " vs. %" PRId32 "\n", actual, allowed);
+      LOG_ERR("Check in inconsistent state: %" PRId32 " vs. %" PRId32 "\n",
+              actual, allowed);
     } else if(actual > allowed) {
       LOG_ERR("Check failed: %" PRId32 " vs. %" PRId32 "\n", actual, allowed);
     } else {

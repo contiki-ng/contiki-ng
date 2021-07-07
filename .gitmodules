@@ -31,3 +31,9 @@
 [submodule "arch/cpu/nrf52840/lib/nrf52-sdk"]
 	path = arch/cpu/nrf52840/lib/nrf52-sdk
 	url = https://github.com/contiki-ng/nrf-sdk-contiki-ng.git
+[submodule "arch/cpu/arm/CMSIS"]
+	path = arch/cpu/arm/CMSIS
+	url = https://github.com/ARM-software/CMSIS_5.git
+[submodule "arch/cpu/nrf/lib/nrfx"]
+	path = arch/cpu/nrf/lib/nrfx
+	url = https://github.com/NordicSemiconductor/nrfx.git

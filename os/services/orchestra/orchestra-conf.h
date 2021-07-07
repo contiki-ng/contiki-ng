@@ -76,6 +76,14 @@
 #define ORCHESTRA_UNICAST_PERIOD                  17
 #endif /* ORCHESTRA_CONF_UNICAST_PERIOD */
 
+/* Slotframe size for the root rule. Usually this should be shorter than the unicast slotframe size,
+   as the root node receives more traffic than the other nodes in the network. */
+#ifdef ORCHESTRA_CONF_ROOT_PERIOD
+#define ORCHESTRA_ROOT_PERIOD                     ORCHESTRA_CONF_ROOT_PERIOD
+#else /* ORCHESTRA_CONF_ROOT_PERIOD */
+#define ORCHESTRA_ROOT_PERIOD                     7
+#endif /* ORCHESTRA_CONF_ROOT_PERIOD */
+
 /* Is the per-neighbor unicast slotframe sender-based (if not, it is receiver-based).
  * Note: sender-based works only with RPL storing mode as it relies on DAO and
  * routing entries to keep track of children and parents. */

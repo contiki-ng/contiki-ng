@@ -1,7 +1,7 @@
 EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
-# build jn516x examples, covering IPv6, RPL, CoAP
+# build jn516x examples, covering IPv6, RPL, CoAP, SNMP
 EXAMPLES = \
 hello-world/jn516x \
 platform-specific/jn516x/dr1175-sensors/jn516x \
@@ -14,10 +14,12 @@ platform-specific/jn516x/tsch/tx-power-verification/node/jn516x \
 platform-specific/jn516x/tsch/uart1-test-node/jn516x \
 coap/coap-example-client/jn516x \
 coap/coap-example-server/jn516x \
+snmp-server/jn516x \
 rpl-border-router/jn516x \
 6tisch/simple-node/jn516x \
 libs/logging/jn516x \
-6tisch/etsi-plugtest-2017/jn516x
+6tisch/etsi-plugtest-2017/jn516x \
+dev/dht11/jn516x \
 
 TOOLS=
 

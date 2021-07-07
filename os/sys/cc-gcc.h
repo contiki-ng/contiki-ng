@@ -41,5 +41,7 @@
 
 #define CC_CONF_NORETURN __attribute__((__noreturn__))
 
+#define CC_CONF_DEPRECATED(msg) __attribute__((deprecated(msg)))
+
 #endif /* __GNUC__ */
 #endif /* _CC_GCC_H_ */
