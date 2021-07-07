@@ -269,6 +269,8 @@ class Metrics(Base, MyModel):
     application = relationship("Application", uselist=False, back_populates="metric")
     tsch_id = Column(Integer, ForeignKey('tsch.id')) # The ForeignKey must be the physical ID, not the Object.id
     tsch = relationship("TSCH", back_populates="metric")
+    energy_id = Column(Integer, ForeignKey('energy.id')) # The ForeignKey must be the physical ID, not the Object.id
+    energy = relationship("Energy", back_populates="metric")
 
     def __init__(self, run):
         self.run = run
@@ -565,6 +567,7 @@ class TSCH(Base, MyModel):
         plt.clf()
         tempBuffer = io.BytesIO()
         for i,j in self.results.items():
+            # TODO: Process Broadcast messagens
             if i == '0' or i == '65535':
                 continue
         #     print (i)
@@ -572,7 +575,7 @@ class TSCH(Base, MyModel):
             y = []
             for m in j:
                 if m.isReceived and m.isSent:
-                    x.append(m.sentTime)
+                    x.append(m.sentTime/1000000)
                     y.append(m.retransmissions())
             plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
         plt.xlabel("Simulation Time (s)")
@@ -764,10 +767,10 @@ class Latency(Base, MyModel):
             i += 1
         colourMap = plt.cm.ScalarMappable(cmap=plt.cm.rainbow)
         colourMap.set_array(z)
-        colBar = plt.colorbar(colourMap).set_label('Latency')
+        colBar = plt.colorbar(colourMap).set_label('Latency (ms)')
         ax.set_xlabel('X Position')
         ax.set_ylabel('Y Position')
-        ax.set_zlabel('Latency (ms)')
+        #ax.set_zlabel('Latency (ms)')
         ax.set_title("Nodes latency (Mean)")
         #ax.set_zlim3d(0,100)
         plt.gcf().set_size_inches(8,6)
@@ -783,7 +786,7 @@ class Latency(Base, MyModel):
         tempBuffer = io.BytesIO()
         nodes = self.getNodes()
         for i in range(2,self.application.metric.run.maxNodes):
-            x = [a[0]//1000 for a in nodes[i]] # Seconds
+            x = [a[0]/1000 for a in nodes[i]] # Seconds
             y = [round(a[1]/1000,3) for a in nodes[i]] # Seconds
             plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
         myMean = self.latencyMean()
@@ -791,7 +794,7 @@ class Latency(Base, MyModel):
         plt.axhline(y = myMean, color = 'r', linestyle = '--',label="Mean: " + str(myMean))
         plt.axhline(y = myMedian, color = 'g', linestyle = '--',label="Median: " + str(myMedian))
         plt.xlabel("Simulation Time (s)")
-        plt.ylabel("Delay (s)")
+        plt.ylabel("Latency (ms)")
         plt.legend()
         #plt.show()
         plt.gcf().set_size_inches(8,6)
@@ -823,7 +826,36 @@ class AppRecord(Base, MyModel):
 
     def getLatency(self):
         return self.rcvTime - self.genTime
+
+class Energy(Base, MyModel):
+    __tablename__ = 'energy'
+    id = Column(Integer, primary_key=True)
+    metric = relationship("Metrics", uselist=False, back_populates="energy")
+    results = {}
+
+    def __init__(self,metric):
+        self.metric = metric
+        self.processEnergy()
     
+    #@orm.reconstructor
+    def processEnergy(self):
+        records = db.query(Record).filter_by(run=self.metric.run).filter_by(recordType="Energest").all()
+        period = ""
+        for i in records:
+            if i.rawData.startswith('---'):
+                if not str(i.node) in self.results:
+                    self.results[str(i.node)] = {}
+                period = i.rawData.split()[3].split('#')[1]
+                self.results[str(i.node)][str(period)] = []
+                continue
+            if i.rawData.startswith('Total time'):
+                self.results[str(i.node)][str(period)].append({i.rawData.split(':')[0].strip() : int(i.rawData.split(':')[1].strip())})
+                continue
+            values = i.rawData.split(':')[1].strip()
+            self.results[str(i.node)][str(period)].append({i.rawData.split(':')[0].strip() : {'spent': int(values.split('/')[0]) , 'total': int(values.split()[1]) , 'permil': int(values.split()[2].split('(')[1])}})
+    
+    
+
 
 Experiment.runs = relationship("Run", order_by = Run.id, back_populates="experiment")
 Run.records = relationship("Record", order_by = Record.id, back_populates="run")
