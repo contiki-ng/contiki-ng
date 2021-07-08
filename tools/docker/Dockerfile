@@ -9,6 +9,26 @@ USER root
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install gnupg > /dev/null
 
+# This must be ran before installing other programs.
+# They might install python3 from package manager which is python3.6
+# Install python3.9 from deadsnakes
+# Use get-pip to install pip instead of using package manager
+# Install pip 21.0.1 to avoid warning introduced in 21.1
+# https://pip.pypa.io/en/stable/news/#v21-1
+RUN apt-get -qq update \
+    && apt-get -qq install -y software-properties-common > /dev/null \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get -qq update \
+    && apt-get -qq install -y \
+        wget \
+        python3.9-dev \
+        python3.9-distutils \
+        > /dev/null \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
+    && wget -nv https://bootstrap.pypa.io/pip/3.5/get-pip.py \
+    && python3 get-pip.py pip==21.0.1 \
+    && rm get-pip.py
+
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
   echo "deb http://download.mono-project.com/repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500 && \
@@ -33,13 +53,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     mosquitto-clients \
     net-tools \
     openjdk-8-jdk \
-    python-dev \
-    python3-dev \
-    python-pip \
-    python3-pip \
-    python3-setuptools \
-    python-serial \
-    python3-serial \
     rlwrap \
     sudo \
     screen \
@@ -48,12 +61,13 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     unzip \
     libusb-1.0-0 \
     valgrind \
-    wget \
     smitools \
     snmp \
     snmp-mibs-downloader \
-    > /dev/null \
-  && apt-get -qq clean
+    > /dev/null
+
+# Clean up
+RUN apt-get -qq clean
 
 # Install ARM toolchain
 RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/9-2020-q2-update/gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 && \
@@ -100,16 +114,15 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
 
 # Install sphinx and sphinx_rtd_theme, required for building and testing the
 # readthedocs API documentation
-RUN pip -q install --upgrade pip
-RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
 # Install matplotlib for result visualization
-RUN pip3 -q install --upgrade pip
-RUN pip3 -q install matplotlib
-
-# Install nrfutil and work around broken pc_ble_driver_py dependency
-RUN pip3 -q install nrfutil && \
-  pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil
-
+# Install nrfutil 
+RUN pip3 -q install \
+      setuptools \
+      sphinx_rtd_theme \
+      sphinx \
+      matplotlib \
+      nrfutil \
+      pyserial 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
 RUN export uid=1000 gid=1000 && \
