@@ -55,7 +55,7 @@ snmp_engine_get(snmp_header_t *header, snmp_varbind_t *varbinds)
   uint8_t i;
 
   i = 0;
-  while(varbinds[i].value_type != BER_DATA_TYPE_EOC && i < SNMP_MAX_NR_VALUES) {
+  while(i < SNMP_MAX_NR_VALUES && varbinds[i].value_type != BER_DATA_TYPE_EOC) {
     resource = snmp_mib_find(&varbinds[i].oid);
     if(!resource) {
       switch(header->version) {
@@ -90,7 +90,7 @@ snmp_engine_get_next(snmp_header_t *header, snmp_varbind_t *varbinds)
   uint8_t i;
 
   i = 0;
-  while(varbinds[i].value_type != BER_DATA_TYPE_EOC && i < SNMP_MAX_NR_VALUES) {
+  while(i < SNMP_MAX_NR_VALUES && varbinds[i].value_type != BER_DATA_TYPE_EOC) {
     resource = snmp_mib_find_next(&varbinds[i].oid);
     if(!resource) {
       switch(header->version) {
@@ -132,7 +132,8 @@ snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds)
    *  the varbinds are modified on the fly
    */
   original_varbinds_length = 0;
-  while(varbinds[original_varbinds_length].value_type != BER_DATA_TYPE_EOC && original_varbinds_length < SNMP_MAX_NR_VALUES) {
+  while(original_varbinds_length < SNMP_MAX_NR_VALUES &&
+        varbinds[original_varbinds_length].value_type != BER_DATA_TYPE_EOC) {
     memcpy(&oids[original_varbinds_length], &varbinds[original_varbinds_length].oid, sizeof(snmp_oid_t));
     original_varbinds_length++;
   }

@@ -225,7 +225,9 @@
  * Enables support for dual band operation (both CC1200 and 2.4GHz enabled).
  * @{
  */
-#define REMOTE_DUAL_RF_ENABLED 1
+#ifndef REMOTE_DUAL_RF_ENABLED
+#define REMOTE_DUAL_RF_ENABLED  1
+#endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

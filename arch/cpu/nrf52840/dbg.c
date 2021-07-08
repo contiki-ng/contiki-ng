@@ -38,7 +38,7 @@
  *         Alex Stanoev <alex@astanoev.com>
  *
  */
-#include "nrf52840-conf.h"
+#include "contiki.h"
 #include "dev/uart0.h"
 #include "usb/usb-serial.h"
 

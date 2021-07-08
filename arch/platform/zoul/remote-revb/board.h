@@ -379,7 +379,9 @@
  * either position.  Enabling the definition below forces to skip this check.
  * @{
  */
-#define REMOTE_DUAL_RF_ENABLED 0
+#ifndef REMOTE_DUAL_RF_ENABLED
+#define REMOTE_DUAL_RF_ENABLED  0
+#endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

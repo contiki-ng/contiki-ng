@@ -106,7 +106,7 @@ struct psock_buf {
 /**
  * The representation of a protosocket.
  *
- * The protosocket structrure is an opaque structure with no user-visible
+ * The protosocket structure is an opaque structure with no user-visible
  * elements.
  */
 struct psock {

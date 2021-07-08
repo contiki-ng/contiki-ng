@@ -205,7 +205,7 @@ typedef struct snmp_varbind_s {
  */
 typedef struct {
   /**
-   * @brief The number os bytes used
+   * @brief The number of bytes used
    *
    */
   uint16_t used;

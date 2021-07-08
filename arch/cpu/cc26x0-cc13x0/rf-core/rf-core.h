@@ -382,6 +382,11 @@ uint_fast8_t rf_core_send_cmd(uint32_t cmd, uint32_t *status);
 uint_fast8_t rf_core_wait_cmd_done(void *cmd);
 
 /**
+ * \brief Get the status of the last issued radio command
+ */
+uint32_t rf_core_cmd_status(void);
+
+/**
  * \brief Turn on power to the RFC and boot it.
  * \return RF_CORE_CMD_OK or RF_CORE_CMD_ERROR
  */

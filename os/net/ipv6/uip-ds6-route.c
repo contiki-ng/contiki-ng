@@ -185,6 +185,21 @@ uip_ds6_route_init(void)
   list_init(notificationlist);
 #endif
 }
+/*---------------------------------------------------------------------------*/
+int
+uip_ds6_route_count_nexthop_neighbors(void)
+{
+#if (UIP_MAX_ROUTES != 0)
+  struct uip_ds6_route_neighbor_routes *entry;
+  int count = 0;
+  for(entry = nbr_table_head(nbr_routes); entry != NULL; entry = nbr_table_next(nbr_routes, entry)) {
+    count++;
+  }
+  return count;
+#else /* (UIP_MAX_ROUTES != 0) */
+  return 0;
+#endif /* (UIP_MAX_ROUTES != 0) */
+}
 #if (UIP_MAX_ROUTES != 0)
 /*---------------------------------------------------------------------------*/
 static uip_lladdr_t *

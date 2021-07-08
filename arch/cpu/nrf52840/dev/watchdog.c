@@ -39,9 +39,9 @@
  * \author
  *         Wojciech Bober <wojciech.bober@nordicsemi.no>
  */
+#include "contiki.h"
 #include <nrfx_wdt.h>
 #include "app_error.h"
-#include "contiki.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "WATCHDOG"

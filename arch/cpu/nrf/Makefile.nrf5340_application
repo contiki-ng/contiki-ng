@@ -1,0 +1,24 @@
+include $(CONTIKI_CPU)/Makefile.nrfx  
+
+LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
+CFLAGS += -DNRF5340_XXAA_APPLICATION
+
+NRFX_ASM_SRCS += $(NRFX_ROOT)/mdk/gcc_startup_nrf5340_application.s
+
+NRFX_C_SRCS += $(NRFX_ROOT)/mdk/system_nrf5340_application.c
+
+EXTERNALDIRS += $(NRFX_ROOT)/mdk/
+
+NRFJPROG_OPTIONS=-f NRF53 --coprocessor CP_APPLICATION 
+
+CFLAGS += -DCPU_CONF_PATH=\"nrf5340-application-conf.h\"
+
+CFLAGS += -mfloat-abi=hard 
+CFLAGS += -mfpu=fpv5-sp-d16
+
+LDFLAGS += -mfloat-abi=hard 
+LDFLAGS += -mfpu=fpv5-sp-d16
+
+include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33
+
+include $(CONTIKI_CPU)/Makefile.nrf

@@ -39,13 +39,15 @@
 /*---------------------------------------------------------------------------*/
 /* This is the main contiki header, it should be included always */
 #include "contiki.h"
-#include "power-mgmt.h"
 #include "dev/i2c.h"
 #include "sys/etimer.h"
+
+#if CONTIKI_BOARD_REMOTE_REVB
+#include "power-mgmt.h"
+#endif
 /*---------------------------------------------------------------------------*/
 
 /*#define freq I2C_SCL_NORMAL_BUS_SPEED */
-static struct etimer et;
 
 /* RE-Mote revision B, low-power PIC version */
 #define PM_EXPECTED_VERSION               0x20
@@ -62,11 +64,14 @@ AUTOSTART_PROCESSES(&test_VBAT_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_VBAT_process, ev, data)
 {
+  PROCESS_BEGIN();
 
+  /* only supported on Revision B */
+#if CONTIKI_BOARD_REMOTE_REVB
+
+  static struct etimer et;
   static uint8_t aux = 0x00;
   static uint16_t voltage = 0x00;
-
-  PROCESS_BEGIN();
 
   if(pm_enable() != PM_SUCCESS) {
     printf("PM Failed \n");
@@ -92,5 +97,10 @@ PROCESS_THREAD(test_VBAT_process, ev, data)
       printf("%u.%u V\n", voltage / 100, voltage % 100);
     }
   }
+
+#else
+  #pragma message "This example is only for Revision B platform"
+#endif /* CONTIKI_BOARD_REMOTE_REVB */
+
   PROCESS_END();
 }

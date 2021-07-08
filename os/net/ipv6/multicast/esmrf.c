@@ -52,9 +52,11 @@
 #include "net/packetbuf.h"
 #if ROUTING_CONF_RPL_LITE
 #include "net/routing/rpl-lite/rpl.h"
+#include "net/routing/rpl-lite/rpl-conf.h"
 #endif /* ROUTING_CONF_RPL_LITE */
 #if ROUTING_CONF_RPL_CLASSIC
 #include "net/routing/rpl-classic/rpl.h"
+#include "net/routing/rpl-classic/rpl-private.h"
 #endif /* ROUTING_CONF_RPL_CLASSIC */
 #include <string.h>
 
@@ -385,7 +387,7 @@ out(void)
     PRINTF("ESMRF: There is no DODAG\n");
     return;
   }
-  if(dag_t->rank == 256){
+  if(dag_t->rank == RPL_MIN_HOPRANKINC){
     PRINTF("ESMRF: I am the Root, thus send the multicast packet normally. \n");
     return;
   }

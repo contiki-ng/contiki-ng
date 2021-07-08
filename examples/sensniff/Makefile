@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = sensniff
 CONTIKI = ../..
 
-PLATFORMS_ONLY = cc2538dk openmote z1 zoul cc26x0-cc13x0 jn516x simplelink
+PLATFORMS_ONLY = cc2538dk openmote z1 zoul cc26x0-cc13x0 jn516x simplelink nrf52840
 
 PROJECT_SOURCEFILES += sensniff-mac.c netstack.c
 MODULES_REL += pool $(TARGET)
@@ -16,7 +16,6 @@ MAKE_NET=MAKE_NET_NULLNET
 # use a custom MAC driver: sensniff_mac_driver
 MAKE_MAC = MAKE_MAC_OTHER
 
-PYTHON ?= python
 SENSNIFF = $(CONTIKI)/tools/sensniff/sensniff.py
 
 ifeq ($(BAUDRATE),)
@@ -35,5 +34,5 @@ sniff:
 ifeq ($(wildcard $(SENSNIFF)), )
 	$(error Could not find the sensniff script. Did you run 'git submodule update --init' ?")
 else
-	$(PYTHON) $(SENSNIFF) $(SENSNIFF_FLAGS)
+	$(SENSNIFF) $(SENSNIFF_FLAGS)
 endif

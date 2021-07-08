@@ -375,6 +375,7 @@ typedef enum CC1350STK_GPTimers {
 typedef enum CC1350STK_I2CName {
 #if TI_I2C_CONF_I2C0_ENABLE
     CC1350STK_I2C0 = 0,
+    CC1350STK_I2C1 = 1,
 #endif
 
     CC1350STK_I2CCOUNT

@@ -105,7 +105,6 @@ static volatile uint8_t is_receiving_packet;
 #endif
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
-#define DOT_4G_MAX_FRAME_LEN    2047
 #define DOT_4G_PHR_NUM_BYTES    2
 #define DOT_4G_LEN_OFFSET       0xFC
 #define DOT_4G_SYNCWORD         0x0055904E
@@ -143,16 +142,14 @@ static volatile uint8_t is_receiving_packet;
  * a 4-byte CRC.
  *
  * In the future we can change this to support transmission of long frames,
- * for example as per .15.4g. the size of the TX and RX buffers would need
- * adjusted accordingly.
+ * for example as per .15.4g, which defines 2047 as the maximum frame size.
+ * The size of the TX and RX buffers would need to be adjusted accordingly.
  */
 #define MAX_PAYLOAD_LEN 125
 /*---------------------------------------------------------------------------*/
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 
-/* How long to wait for the rx read entry to become ready */
-#define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
 /*---------------------------------------------------------------------------*/
 /*
  * Offset of the end of SFD when compared to the radio HW-generated timestamp.
@@ -267,7 +264,7 @@ init_rf_params(void)
 
   cmd_rx.syncWord0 = DOT_4G_SYNCWORD;
   cmd_rx.syncWord1 = 0x00000000;
-  cmd_rx.maxPktLen = DOT_4G_MAX_FRAME_LEN - DOT_4G_LEN_OFFSET;
+  cmd_rx.maxPktLen = RADIO_PHY_OVERHEAD + MAX_PAYLOAD_LEN;
   cmd_rx.hdrConf.numHdrBits = DOT_4G_PHR_NUM_BYTES * 8;
   cmd_rx.lenOffset = DOT_4G_LEN_OFFSET;
   cmd_rx.pQueue = data_queue_init(sizeof(lensz_t));
@@ -479,7 +476,7 @@ read(void *buf, unsigned short buf_len)
   /* Only wait if the Radio is accessing the entry */
   const rtimer_clock_t t0 = RTIMER_NOW();
   while((data_entry->status == DATA_ENTRY_BUSY) &&
-        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY));
+         RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RADIO_FRAME_DURATION(MAX_PAYLOAD_LEN)));
 
 #if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */
@@ -764,6 +761,14 @@ get_value(radio_param_t param, radio_value_t *value)
     return (*value == RF_GET_RSSI_ERROR_VAL)
            ? RADIO_RESULT_ERROR
            : RADIO_RESULT_OK;
+
+  case RADIO_PARAM_LAST_RSSI:
+     *value = prop_radio.last.rssi;
+     return RADIO_RESULT_OK;
+
+  case RADIO_PARAM_LAST_LINK_QUALITY:
+     *value = prop_radio.last.corr_lqi;
+     return RADIO_RESULT_OK;
 
   case RADIO_CONST_CHANNEL_MIN:
     *value = DOT_15_4G_CHAN_MIN;

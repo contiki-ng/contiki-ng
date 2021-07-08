@@ -41,6 +41,7 @@ class NodeStats:
         self.seqnums_received_on_root = set()
         self.parent_packets_tx = 0
         self.parent_packets_ack = 0
+        self.parent_packets_queue_dropped = 0
         self.energest_cpu_on = 0
         self.energest_cpu_sleep = 0
         self.energest_cpu_deep_sleep = 0
@@ -116,7 +117,11 @@ class NodeStats:
         else:
             self.rdc_joined = 0
 
-        return self.parent_packets_tx, self.parent_packets_ack, self.max_seqnum_sent, len(self.seqnums_received_on_root)
+        return self.parent_packets_tx, \
+            self.parent_packets_ack, \
+            self.parent_packets_queue_dropped, \
+            self.max_seqnum_sent, \
+            len(self.seqnums_received_on_root)
 
 
 ###########################################
@@ -130,6 +135,12 @@ def extract_ipaddr(s):
     if "NULL" in s:
         return None
     return s
+
+# (NULL IP addr) -> fe80::244:44:44:44
+def extract_ipaddr_pair(fields):
+    s = " ".join(fields)
+    fields = s.split(" -> ")
+    return extract_ipaddr(fields[0]), extract_ipaddr(fields[1])
 
 def addr_to_id(addr):
     return int(addr.split(":")[-1], 16)
@@ -199,6 +210,14 @@ def analyze_results(filename, is_testbed):
                     nodes[node].rpl_join_time_sec = ts / 1000
                 continue
 
+            # 377018480 76 [INFO: RPL       ] parent switch: (NULL IP addr) -> fe80::244:44:44:44
+            if " parent switch: " in line:
+                nodes[node].rpl_parent_changes += 1
+                nodes[node].rpl_parent = extract_ipaddr_pair(fields[7:])[1]
+                if nodes[node].rpl_join_time_sec is None:
+                    nodes[node].rpl_join_time_sec = ts / 1000
+                continue
+
             # 120904000 4 [INFO: App       ] app generate packet seqnum=1
             if "app generate packet" in line:
                 seqnum = int(fields[8].split("=")[1])
@@ -220,16 +239,18 @@ def analyze_results(filename, is_testbed):
                 nodes[from_node].seqnums_received_on_root.add(seqnum)
                 continue
 
-            # 600142000 28 [INFO: Link Stats] num packets: tx=0 ack=0 rx=0 to=0014.0014.0014.0014
+            # 600142000 28 [INFO: Link Stats] num packets: tx=0 ack=0 rx=0 queue_drops=0 to=0014.0014.0014.0014
             if "num packets" in line:
                 tx = int(fields[7].split("=")[1])
                 ack = int(fields[8].split("=")[1])
                 rx = int(fields[9].split("=")[1])
-                to_addr = fields[10].split("=")[1]
+                queue_drops = int(fields[10].split("=")[1])
+                to_addr = fields[11].split("=")[1]
                 # only account for the (current) time source node
                 if nodes[node].tsch_time_source == to_addr:
                     nodes[node].parent_packets_tx += tx
                     nodes[node].parent_packets_ack += ack
+                    nodes[node].parent_packets_queue_dropped += queue_drops
                 continue
 
             # 960073000 8 [INFO: Energest  ] Total time  :   60000000
@@ -270,6 +291,7 @@ def analyze_results(filename, is_testbed):
     # link layer PAR
     total_ll_sent = 0
     total_ll_acked = 0
+    total_ll_queue_dropped = 0
     # end to end PDR
     total_e2e_sent = 0
     total_e2e_received = 0
@@ -277,16 +299,17 @@ def analyze_results(filename, is_testbed):
         n = nodes[k]
         if n.id == COORDINATOR_ID:
             continue
-        ll_sent, ll_acked, e2e_sent, e2e_received = n.calc()
+        ll_sent, ll_acked, ll_queue_dropped, e2e_sent, e2e_received = n.calc()
         if n.is_valid:
             r.append((n.id, n.pdr, n.par, n.rpl_parent_changes, n.rdc, n.rdc_joined, n.charge))
             total_ll_sent += ll_sent
             total_ll_acked += ll_acked
+            total_ll_queue_dropped += ll_queue_dropped
             total_e2e_sent += e2e_sent
             total_e2e_received += e2e_received
     ll_par = 100.0 * total_ll_acked / total_ll_sent if total_ll_sent else 0.0
     e2e_pdr = 100.0 * total_e2e_received / total_e2e_sent if total_e2e_sent else 0.0
-    return r, ll_par, e2e_pdr
+    return r, ll_par, total_ll_queue_dropped, e2e_pdr
 
 #######################################################
 # Plot the results of a given metric as a bar chart
@@ -330,9 +353,10 @@ def main():
     with open(input_file, "r") as f:
         is_testbed = "Starting COOJA logger" not in f.read()
 
-    results, ll_par, e2e_pdr = analyze_results(input_file, is_testbed)
+    results, ll_par, ll_queue_dropped, e2e_pdr = analyze_results(input_file, is_testbed)
 
-    print("Link-layer PAR={:.2f} End-to-end PDR={:.2f}".format(ll_par, e2e_pdr))
+    print("Link-layer PAR={:.2f} ({} packets queue dropped) End-to-end PDR={:.2f}".format(
+        ll_par, ll_queue_dropped, e2e_pdr))
 
     ids = [r[0] for r in results]
     plot(ids, [r[1] for r in results], "pdr", "Packet Delivery Ratio, %")

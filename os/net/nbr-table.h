@@ -39,12 +39,42 @@
 #include "net/linkaddr.h"
 #include "net/netstack.h"
 
+typedef enum {
+  NBR_TABLE_REASON_UNDEFINED,
+  NBR_TABLE_REASON_RPL_DIO,
+  NBR_TABLE_REASON_RPL_DAO,
+  NBR_TABLE_REASON_RPL_DIS,
+  NBR_TABLE_REASON_ROUTE,
+  NBR_TABLE_REASON_IPV6_ND,
+  NBR_TABLE_REASON_MAC,
+  NBR_TABLE_REASON_LLSEC,
+  NBR_TABLE_REASON_LINK_STATS,
+  NBR_TABLE_REASON_IPV6_ND_AUTOFILL,
+  NBR_TABLE_REASON_SIXTOP,
+} nbr_table_reason_t;
+
 /* Neighbor table size */
 #ifdef NBR_TABLE_CONF_MAX_NEIGHBORS
 #define NBR_TABLE_MAX_NEIGHBORS NBR_TABLE_CONF_MAX_NEIGHBORS
 #else /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 #define NBR_TABLE_MAX_NEIGHBORS 8
 #endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
+
+#ifdef NBR_TABLE_CONF_GC_GET_WORST
+#define NBR_TABLE_GC_GET_WORST NBR_TABLE_CONF_GC_GET_WORST
+#else /* NBR_TABLE_CONF_GC_GET_WORST */
+#define NBR_TABLE_GC_GET_WORST nbr_table_gc_get_worst
+#endif /* NBR_TABLE_CONF_GC_GET_WORST */
+
+#ifdef NBR_TABLE_CONF_CAN_ACCEPT_NEW
+#define NBR_TABLE_CAN_ACCEPT_NEW NBR_TABLE_CONF_CAN_ACCEPT_NEW
+#else /* NBR_TABLE_CONF_CAN_ACCEPT_NEW */
+#define NBR_TABLE_CAN_ACCEPT_NEW nbr_table_can_accept_new
+#endif /* NBR_TABLE_CONF_CAN_ACCEPT_NEW */
+
+const linkaddr_t *NBR_TABLE_GC_GET_WORST(const linkaddr_t *lladdr1, const linkaddr_t *lladdr2);
+bool NBR_TABLE_CAN_ACCEPT_NEW(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
+                              nbr_table_reason_t reason, void *data);
 
 /* An item in a neighbor table */
 typedef void nbr_table_item_t;
@@ -60,6 +90,12 @@ typedef struct nbr_table {
   nbr_table_item_t *data;
 } nbr_table_t;
 
+/* List of link-layer addresses of the neighbors, used as key in the tables */
+typedef struct nbr_table_key {
+  struct nbr_table_key *next;
+  linkaddr_t lladdr;
+} nbr_table_key_t;
+
 /** \brief A static neighbor table. To be initialized through nbr_table_register(name) */
 #define NBR_TABLE(type, name) \
   static type _##name##_mem[NBR_TABLE_MAX_NEIGHBORS]; \
@@ -74,20 +110,6 @@ typedef struct nbr_table {
 
 /** \brief Declaration of non-static neighbor tables */
 #define NBR_TABLE_DECLARE(name) extern nbr_table_t *name
-
-typedef enum {
-        NBR_TABLE_REASON_UNDEFINED,
-	NBR_TABLE_REASON_RPL_DIO,
-	NBR_TABLE_REASON_RPL_DAO,
-	NBR_TABLE_REASON_RPL_DIS,
-	NBR_TABLE_REASON_ROUTE,
-	NBR_TABLE_REASON_IPV6_ND,
-  NBR_TABLE_REASON_IPV6_ND_AUTOFILL,
-	NBR_TABLE_REASON_MAC,
-	NBR_TABLE_REASON_LLSEC,
-	NBR_TABLE_REASON_LINK_STATS,
-  NBR_TABLE_REASON_SIXTOP,
-} nbr_table_reason_t;
 
 /** \name Neighbor tables: register and loop through table elements */
 /** @{ */
@@ -115,4 +137,14 @@ int nbr_table_unlock(nbr_table_t *table, nbr_table_item_t *item);
 linkaddr_t *nbr_table_get_lladdr(nbr_table_t *table, const nbr_table_item_t *item);
 /** @} */
 
+/** \name Neighbor tables: other */
+/** @{ */
+void nbr_table_clear(void);
+bool nbr_table_entry_is_allowed(nbr_table_t *table, const linkaddr_t *lladdr,
+                                nbr_table_reason_t reason, void *data);
+nbr_table_key_t *nbr_table_key_head(void);
+nbr_table_key_t *nbr_table_key_next(nbr_table_key_t *key);
+int nbr_table_count_entries(void);
+
+/** @} */
 #endif /* NBR_TABLE_H_ */

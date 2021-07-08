@@ -43,6 +43,7 @@
  */
 #include "contiki.h"
 
+#include "nrf_drv_power.h"
 #include "nrf_drv_usbd.h"
 #include "app_usbd.h"
 #include "app_usbd_core.h"
@@ -138,15 +139,58 @@ cdc_acm_port_ev_handler(app_usbd_class_inst_t const *p_inst,
   }
 }
 /*---------------------------------------------------------------------------*/
+static void
+usbd_user_ev_handler(app_usbd_event_type_t event)
+{
+  switch(event) {
+  case APP_USBD_EVT_STOPPED:
+  {
+    tx_buffer_busy = 0;
+    enabled = 0;
+    app_usbd_disable();
+    break;
+  }
+
+  case APP_USBD_EVT_POWER_DETECTED:
+  {
+    if(!nrf_drv_usbd_is_enabled()) {
+      app_usbd_enable();
+    }
+    break;
+  }
+
+  case APP_USBD_EVT_POWER_REMOVED:
+  {
+    tx_buffer_busy = 0;
+    enabled = 0;
+    app_usbd_stop();
+    break;
+  }
+
+  case APP_USBD_EVT_POWER_READY:
+  {
+    app_usbd_start();
+    break;
+  }
+
+  default:
+    break;
+  }
+}
+/*---------------------------------------------------------------------------*/
 void
 usb_serial_init(void)
 {
+  static const app_usbd_config_t usbd_config = {
+    .ev_state_proc = usbd_user_ev_handler
+  };
+
   ret_code_t ret;
   app_usbd_class_inst_t const *class_cdc_acm;
 
   app_usbd_serial_num_generate();
 
-  ret = app_usbd_init(NULL);
+  ret = app_usbd_init(&usbd_config);
   if(ret != NRF_SUCCESS) {
     return;
   }
@@ -158,11 +202,13 @@ usb_serial_init(void)
     return;
   }
 
+  ret = app_usbd_power_events_enable();
+  if(ret != NRF_SUCCESS) {
+    return;
+  }
+
   enabled = 0;
   buffered_data = 0;
-
-  app_usbd_enable();
-  app_usbd_start();
 }
 /*---------------------------------------------------------------------------*/
 void

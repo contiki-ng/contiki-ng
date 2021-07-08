@@ -51,12 +51,13 @@ The following radios have been tested:
 * CC2530/CC2531
 * CC1200
 * RF233
+* nRF52840
 
 Once you have the radio sorted out, you also need to configure character I/O.
 The firmware captures wireless frames and streams them over a serial line to
 the host where your device is connected. This can be achieved over UART or over
 CDC-ACM. The example makes zero assumptions about your hardware's capability,
-you have to configure thnigs explicitly. 
+you have to configure things explicitly.
 
 * Firstly, create a directory named the same as your platform. Crate a header
 file therein called `target-conf.h`. This will get included automatically.

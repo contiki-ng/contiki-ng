@@ -124,7 +124,7 @@
 static int8_t rssi_threshold = PROP_MODE_RSSI_THRESHOLD;
 /*---------------------------------------------------------------------------*/
 #if MAC_CONF_WITH_TSCH
-static volatile uint8_t is_receiving_packet;
+static volatile rfc_dataEntry_t *packet_being_received;
 #endif
 /*---------------------------------------------------------------------------*/
 static int on(void);
@@ -133,7 +133,6 @@ static int off(void);
 static rfc_propRxOutput_t rx_stats;
 /*---------------------------------------------------------------------------*/
 /* Defines and variables related to the .15.4g PHY HDR */
-#define DOT_4G_MAX_FRAME_LEN    2047
 #define DOT_4G_PHR_LEN             2
 
 /* PHY HDR bits */
@@ -169,8 +168,8 @@ static rfc_propRxOutput_t rx_stats;
  * a 4-byte CRC.
  *
  * In the future we can change this to support transmission of long frames,
- * for example as per .15.4g. the size of the TX and RX buffers would need
- * adjusted accordingly.
+ * for example as per .15.4g, which defines 2047 as the maximum frame size.
+ * The size of the TX and RX buffers would need to be adjusted accordingly.
  */
 #define MAX_PAYLOAD_LEN 125
 /*---------------------------------------------------------------------------*/
@@ -453,10 +452,9 @@ rf_cmd_prop_rx()
   cmd_rx_adv->rxConf.bAppendStatus = RF_CORE_RX_BUF_INCLUDE_CORR;
 
   /*
-   * Set the max Packet length. This is for the payload only, therefore
-   * 2047 - length offset
+   * Set the max Packet length. This is for the payload only.
    */
-  cmd_rx_adv->maxPktLen = DOT_4G_MAX_FRAME_LEN - cmd_rx_adv->lenOffset;
+  cmd_rx_adv->maxPktLen = RADIO_PHY_OVERHEAD + MAX_PAYLOAD_LEN;
 
   ret = rf_core_send_cmd((uint32_t)cmd_rx_adv, &cmd_status);
 
@@ -491,10 +489,12 @@ init_rx_buffers(void)
     entry->config.type = DATA_ENTRY_TYPE_GEN;
     entry->config.lenSz = DATA_ENTRY_LENSZ_WORD;
     entry->length = RX_BUF_SIZE - 8;
-    entry->pNextEntry = rx_buf[i + 1];
+    if(i == PROP_MODE_RX_BUF_CNT - 1) {
+      entry->pNextEntry = rx_buf[0];
+    } else {
+      entry->pNextEntry = rx_buf[i + 1];
+    }
   }
-
-  ((rfc_dataEntry_t *)rx_buf[PROP_MODE_RX_BUF_CNT - 1])->pNextEntry = rx_buf[0];
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -523,6 +523,11 @@ rx_off_prop(void)
 {
   uint32_t cmd_status;
   int ret;
+
+#if MAC_CONF_WITH_TSCH
+  /* Failsafe in case this variable failed to clear as part of normal operation */
+  packet_being_received = NULL;
+#endif /* MAC_CONF_WITH_TSCH */
 
   /* If we are off, do nothing */
   if(!rf_is_on()) {
@@ -842,8 +847,7 @@ read_frame(void *buf, unsigned short buf_len)
   int is_found = 0;
   /* Go through all RX buffers and check their status */
   do {
-    if(entry->status == DATA_ENTRY_STATUS_FINISHED
-        || entry->status == DATA_ENTRY_STATUS_BUSY) {
+    if(entry->status >= DATA_ENTRY_STATUS_BUSY) {
       is_found = 1;
       break;
     }
@@ -861,11 +865,11 @@ read_frame(void *buf, unsigned short buf_len)
   /* wait for entry to become finished */
   rtimer_clock_t t0 = RTIMER_NOW();
   while(entry->status == DATA_ENTRY_STATUS_BUSY
-      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (RTIMER_SECOND / 50)));
+      && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RADIO_FRAME_DURATION(MAX_PAYLOAD_LEN)));
 
 #if MAC_CONF_WITH_TSCH
   /* Make sure the flag is reset */
-  is_receiving_packet = 0;
+  packet_being_received = NULL;
 #endif
 
   if(entry->status != DATA_ENTRY_STATUS_FINISHED) {
@@ -989,23 +993,23 @@ receiving_packet(void)
    * first call. The assumption is that the TSCH code will keep calling us
    * until frame reception has completed, at which point we can clear MDMSOFT.
    */
-  if(!is_receiving_packet) {
+  if(packet_being_received == NULL) {
     /* Look for the modem synchronization word detection interrupt flag.
      * This flag is raised when the synchronization word is received.
      */
     if(HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFHWIFG) & RFC_DBELL_RFHWIFG_MDMSOFT) {
-      is_receiving_packet = 1;
+      packet_being_received = (rfc_dataEntry_t *)rx_data_queue.pCurrEntry;
     }
   } else {
-    /* After the start of the packet: reset the Rx flag once the channel gets clear */
-    is_receiving_packet = (channel_clear() == RF_CORE_CCA_BUSY);
-    if(!is_receiving_packet) {
+    /* After the start of the packet: reset the Rx flag once the packet is finished */
+    if(packet_being_received->status >= DATA_ENTRY_FINISHED) {
       /* Clear the modem sync flag */
       ti_lib_rfc_hw_int_clear(RFC_DBELL_RFHWIFG_MDMSOFT);
+      packet_being_received = NULL;
     }
   }
 
-  return is_receiving_packet;
+  return packet_being_received != NULL;
 #else
   /*
    * Under CSMA operation, there is no immediately straightforward logic as to
@@ -1044,8 +1048,7 @@ pending_packet(void)
 
   /* Go through all RX buffers and check their status */
   do {
-    if(entry->status == DATA_ENTRY_STATUS_FINISHED
-        || entry->status == DATA_ENTRY_STATUS_BUSY) {
+    if(entry->status >= DATA_ENTRY_STATUS_BUSY) {
       rv = 1;
       if(!rf_core_poll_mode) {
         process_poll(&rf_core_process);
@@ -1137,6 +1140,7 @@ on(void)
 
   if(prop_div_radio_setup() != RF_CORE_CMD_OK) {
     PRINTF("on: prop_div_radio_setup() failed\n");
+    rf_core_power_down();
     return RF_CORE_CMD_ERROR;
   }
 
@@ -1145,7 +1149,29 @@ on(void)
     return RF_CORE_CMD_ERROR;
   }
 
-  return rx_on_prop();
+  if(rx_on_prop() != RF_CORE_CMD_OK) {
+
+    if((rf_core_cmd_status() & RF_CORE_CMDSTA_RESULT_MASK) != RF_CORE_CMDSTA_SCHEDULING_ERR) {
+      PRINTF("on: failed with status=0x%08lx\n", rf_core_cmd_status());
+      return RF_CORE_CMD_ERROR;
+    }
+
+    /* Looks like a command was alredy pending on radio. */
+    /* Abort any existing commands */
+    uint32_t status;
+    if(rf_core_send_cmd(CMDR_DIR_CMD(CMD_ABORT), &status) == RF_CORE_CMD_ERROR) {
+      PRINTF("on: CMD_ABORT status=0x%08lx\n", rf_core_cmd_status());
+      return RF_CORE_CMD_ERROR;
+    }
+
+    /* Retry setup */
+    if(soft_on_prop() != RF_CORE_CMD_OK) {
+      PRINTF("on: retry with status=0x%08lx\n", rf_core_cmd_status());
+      return RF_CORE_CMD_ERROR;
+    }
+  }
+
+  return RF_CORE_CMD_OK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -1348,7 +1374,7 @@ set_value(radio_param_t param, radio_value_t value)
       rv = RADIO_RESULT_ERROR;
     }
 
-    return RADIO_RESULT_OK;
+    return rv;
 
   case RADIO_PARAM_CCA_THRESHOLD:
     rssi_threshold = (int8_t)value;

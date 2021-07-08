@@ -520,6 +520,8 @@ init(void)
   /* Request the HF clock */
   nrf_clock_event_clear(NRF_CLOCK_EVENT_HFCLKSTARTED);
   nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTART);
+  while(!nrf_clock_event_check(NRF_CLOCK_EVENT_HFCLKSTARTED));
+  nrf_clock_event_clear(NRF_CLOCK_EVENT_HFCLKSTARTED);
 
   /* Start the RF driver process */
   process_start(&nrf52840_ieee_rf_process, NULL);
@@ -863,7 +865,9 @@ set_value(radio_param_t param, radio_value_t value)
 
     /* If we are powered on, apply immediately. */
     if(radio_is_powered()) {
+      off();
       set_channel(value);
+      on();
     }
     return RADIO_RESULT_OK;
   case RADIO_PARAM_RX_MODE:

@@ -56,7 +56,7 @@ CONTIKI_CPU_SOURCEFILES += watchdog-arch.c  dbg-arch.c
 CONTIKI_CPU_SOURCEFILES += uart0-arch.c     slip-arch.c
 CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c  int-master-arch.c
 CONTIKI_CPU_SOURCEFILES += random.c         trng-arch.c
-CONTIKI_CPU_SOURCEFILES += spi-arch.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c       i2c-arch.c
 
 # RF source files
 CONTIKI_CPU_SOURCEFILES += sched.c          data-queue.c
@@ -146,7 +146,6 @@ include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)
 
 ################################################################################
 ### For the .upload make target
-PYTHON = python
 BSL_FLAGS += -e -w -v
 
 ifdef PORT
@@ -160,7 +159,7 @@ ifeq ($(BOARD_SUPPORTS_BSL),1)
 ifeq ($(wildcard $(BSL)), )
 	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
 else
-	$(PYTHON) $(BSL) $(BSL_FLAGS) $<
+	$(BSL) $(BSL_FLAGS) $<
 endif
 else
 %.upload:

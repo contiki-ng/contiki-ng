@@ -5,6 +5,7 @@ CONTIKI_SOURCEFILES += gpio-hal-arch.c
 
 ### Compiler definitions
 CC       ?= gcc
+CXX      ?= g++
 ifdef LD_OVERRIDE
   LD     = $(LD_OVERRIDE)
 else

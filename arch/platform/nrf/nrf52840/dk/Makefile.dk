@@ -1,0 +1,10 @@
+BOARD_SOURCEFILES += board-leds.c
+BOARD_SOURCEFILES += board-buttons.c
+BOARD_SOURCEFILES += board-sensors.c
+
+CFLAGS += -DBOARD_CONF_PATH=\"nrf52840-dk-conf.h\"
+
+### Include the common nrf52840 makefile
+include $(PLATFORM_ROOT_DIR)/nrf52840/Makefile.nrf52840
+
+CONTIKI_TARGET_DIRS += nrf52840/dk

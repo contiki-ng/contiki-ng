@@ -96,8 +96,7 @@ void bme280_read(uint8_t mode);
 
 #define BME280_MAX_WAIT                300 /* ms. Forced mode max wait */
 
-
-struct {
+typedef struct {
   int32_t t_overscale100;
   uint32_t h_overscale1024;
 #ifdef BME280_64BIT
@@ -105,6 +104,8 @@ struct {
 #else
   uint32_t p;
 #endif
-} bme280_mea;
+} bme280_mea_t;
+
+extern bme280_mea_t bme280_mea;
 
 #endif /* BME280_H */

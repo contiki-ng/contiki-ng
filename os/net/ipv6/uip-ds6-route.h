@@ -224,6 +224,7 @@ int uip_ds6_route_num_routes(void);
 uip_ds6_route_t *uip_ds6_route_head(void);
 uip_ds6_route_t *uip_ds6_route_next(uip_ds6_route_t *);
 int uip_ds6_route_is_nexthop(const uip_ipaddr_t *ipaddr);
+int uip_ds6_route_count_nexthop_neighbors(void);
 /** @} */
 
 #endif /* UIP_DS6_ROUTE_H */

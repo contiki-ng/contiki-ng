@@ -40,6 +40,7 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 #include "sys/rtimer.h"
+#include "dev/i2c-arch.h"
 /*---------------------------------------------------------------------------*/
 #include "board-conf.h"
 #include "mpu-9250-sensor.h"
@@ -235,53 +236,6 @@ static struct ctimer startup_timer;
 #define delay_ms(ms)    CPUdelay((ms) * 1000 * 48 / 7)
 /*---------------------------------------------------------------------------*/
 /**
- * \brief         Setup and peform an I2C transaction.
- * \param wbuf    Output buffer during the I2C transation.
- * \param wcount  How many bytes in the wbuf.
- * \param rbuf    Input buffer during the I2C transation.
- * \param rcount  How many bytes to read into rbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static bool
-i2c_write_read(void *wbuf, size_t wcount, void *rbuf, size_t rcount)
-{
-  I2C_Transaction i2c_transaction = {
-    .writeBuf = wbuf,
-    .writeCount = wcount,
-    .readBuf = rbuf,
-    .readCount = rcount,
-    .slaveAddress = MPU_9250_I2C_ADDRESS,
-  };
-
-  return I2C_transfer(i2c_handle, &i2c_transaction);
-}
-/**
- * \brief         Peform a write only I2C transaction.
- * \param wbuf    Output buffer during the I2C transation.
- * \param wcount  How many bytes in the wbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static inline bool
-i2c_write(void *wbuf, size_t wcount)
-{
-  return i2c_write_read(wbuf, wcount, NULL, 0);
-}
-/**
- * \brief         Peform a read only I2C transaction.
- * \param rbuf    Input buffer during the I2C transation.
- * \param rcount  How many bytes to read into rbuf.
- * \return        true if the I2C operation was successful;
- *                else, return false.
- */
-static inline bool
-i2c_read(void *rbuf, size_t rcount)
-{
-  return i2c_write_read(NULL, 0, rbuf, rcount);
-}
-/*---------------------------------------------------------------------------*/
-/**
  * \brief   Initialize the MPU-9250 sensor driver.
  * \return  true if I2C operation successful; else, return false.
  */
@@ -290,17 +244,6 @@ sensor_init(void)
 {
   pin_handle = PIN_open(&pin_state, mpu_9250_pin_table);
   if(pin_handle == NULL) {
-    return false;
-  }
-
-  I2C_Params i2cParams;
-  I2C_Params_init(&i2cParams);
-  i2cParams.transferMode = I2C_MODE_BLOCKING;
-  i2cParams.bitRate = I2C_400kHz;
-
-  i2c_handle = I2C_open(Board_I2C0, &i2cParams);
-  if(i2c_handle == NULL) {
-    PIN_close(&pin_state);
     return false;
   }
 
@@ -319,11 +262,11 @@ sensor_sleep(void)
 {
   {
     uint8_t all_axes_data[] = { REG_PWR_MGMT_2, PWR_MGMT_2_VAL_ALL_AXES };
-    i2c_write(all_axes_data, sizeof(all_axes_data));
+    i2c_arch_write(i2c_handle, MPU_9250_I2C_ADDRESS, all_axes_data, sizeof(all_axes_data));
   }
   {
     uint8_t mpu_sleep_data[] = { REG_PWR_MGMT_1, PWR_MGMT_1_VAL_MPU_SLEEP };
-    i2c_write(mpu_sleep_data, sizeof(mpu_sleep_data));
+    i2c_arch_write(i2c_handle, MPU_9250_I2C_ADDRESS, mpu_sleep_data, sizeof(mpu_sleep_data));
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -335,23 +278,23 @@ sensor_wakeup(void)
 {
   {
     uint8_t mpu_wakeup_data[] = { REG_PWR_MGMT_1, PWR_MGMT_1_VAL_MPU_WAKE_UP };
-    i2c_write(mpu_wakeup_data, sizeof(mpu_wakeup_data));
+    i2c_arch_write(i2c_handle, MPU_9250_I2C_ADDRESS, mpu_wakeup_data, sizeof(mpu_wakeup_data));
   }
   {
     /* All axis initially disabled */
     uint8_t all_axes_data[] = { REG_PWR_MGMT_2, PWR_MGMT_2_VAL_ALL_AXES };
-    i2c_write(all_axes_data, sizeof(all_axes_data));
+    i2c_arch_write(i2c_handle, MPU_9250_I2C_ADDRESS, all_axes_data, sizeof(all_axes_data));
   }
   {
     /* Restore the range */
     uint8_t accel_cfg_data[] = { REG_ACCEL_CONFIG, mpu_9250.acc_range };
-    i2c_write(accel_cfg_data, sizeof(accel_cfg_data));
+    i2c_arch_write(i2c_handle, MPU_9250_I2C_ADDRESS, accel_cfg_data, sizeof(accel_cfg_data));
   }
   {
     /* Clear interrupts */
     uint8_t int_status_data[] = { REG_INT_STATUS };
     uint8_t dummy;
-    i2c_write_read(int_status_data, sizeof(int_status_data), &dummy, 1);
+    i2c_arch_write_read(i2c_handle, MPU_9250_I2C_ADDRESS, int_status_data, sizeof(int_status_data), &dummy, 1);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -360,14 +303,14 @@ sensor_set_acc_range(MPU_9250_SENSOR_ACC_RANGE acc_range)
 {
   /* Apply the range */
   uint8_t accel_cfg_data[] = { REG_ACCEL_CONFIG, acc_range };
-  i2c_write(accel_cfg_data, sizeof(accel_cfg_data));
+  i2c_arch_write(i2c_handle, MPU_9250_I2C_ADDRESS, accel_cfg_data, sizeof(accel_cfg_data));
 }
 /*---------------------------------------------------------------------------*/
 static void
 sensor_set_axes(MPU_9250_SENSOR_TYPE sensor_type)
 {
   uint8_t _data[] = { REG_PWR_MGMT_2, ~(uint8_t)sensor_type };
-  i2c_write(_data, sizeof(_data));
+  i2c_arch_write(i2c_handle, MPU_9250_I2C_ADDRESS, _data, sizeof(_data));
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -393,7 +336,7 @@ static bool
 sensor_data_ready(uint8_t *int_status)
 {
   uint8_t int_status_data[] = { REG_INT_STATUS };
-  const bool spi_ok = i2c_write_read(int_status_data, sizeof(int_status_data), int_status, 1);
+  const bool spi_ok = i2c_arch_write_read(i2c_handle, MPU_9250_I2C_ADDRESS, int_status_data, sizeof(int_status_data), int_status, 1);
 
   return spi_ok && (*int_status != 0);
 }
@@ -411,7 +354,7 @@ acc_read(uint8_t int_status, uint16_t *data)
 
   /* Burst read of all accelerometer values */
   uint8_t accel_xout_h[] = { REG_ACCEL_XOUT_H };
-  bool spi_ok = i2c_write_read(accel_xout_h, sizeof(accel_xout_h), data, DATA_SIZE);
+  bool spi_ok = i2c_arch_write_read(i2c_handle, MPU_9250_I2C_ADDRESS, accel_xout_h, sizeof(accel_xout_h), data, DATA_SIZE);
   if(!spi_ok) {
     return false;
   }
@@ -434,7 +377,7 @@ gyro_read(uint8_t int_status, uint16_t *data)
 
   /* Burst read of all accelerometer values */
   uint8_t gyro_xout_h[] = { REG_GYRO_XOUT_H };
-  bool spi_ok = i2c_write_read(gyro_xout_h, sizeof(gyro_xout_h), data, DATA_SIZE);
+  bool spi_ok = i2c_arch_write_read(i2c_handle, MPU_9250_I2C_ADDRESS, gyro_xout_h, sizeof(gyro_xout_h), data, DATA_SIZE);
   if(!spi_ok) {
     return false;
   }
@@ -491,6 +434,12 @@ initialise_cb(void *unused)
     return;
   }
 
+  i2c_handle = i2c_arch_acquire(Board_I2C1);
+
+  if(!i2c_handle) {
+    return;
+  }
+
   /* Wake up the sensor */
   sensor_wakeup();
 
@@ -502,6 +451,8 @@ initialise_cb(void *unused)
   /* Enable gyro + accelerometer readout */
   sensor_set_axes(mpu_9250.type);
   delay_ms(10);
+
+  i2c_arch_release(i2c_handle);
 
   ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready_cb, NULL);
 }
@@ -524,10 +475,17 @@ value(int type)
     return MPU_9250_READING_ERROR;
   }
 
+  i2c_handle = i2c_arch_acquire(Board_I2C1);
+
+  if(!i2c_handle) {
+    return MPU_9250_READING_ERROR;
+  }
+
   uint8_t int_status = 0;
   const rtimer_clock_t t0 = RTIMER_NOW();
   while(!sensor_data_ready(&int_status)) {
     if(!(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + READING_WAIT_TIMEOUT))) {
+      i2c_arch_release(i2c_handle);
       return MPU_9250_READING_ERROR;
     }
   }
@@ -539,8 +497,11 @@ value(int type)
   if((type & MPU_9250_SENSOR_TYPE_ACC) != 0) {
 
     if(!acc_read(int_status, sensor_value)) {
+      i2c_arch_release(i2c_handle);
       return MPU_9250_READING_ERROR;
     }
+
+    i2c_arch_release(i2c_handle);
 
     PRINTF("MPU: ACC = 0x%04x 0x%04x 0x%04x = ",
            sensor_value[0], sensor_value[1], sensor_value[2]);
@@ -557,8 +518,11 @@ value(int type)
   } else if((type & MPU_9250_SENSOR_TYPE_GYRO) != 0) {
 
     if(!gyro_read(int_status, sensor_value)) {
+      i2c_arch_release(i2c_handle);
       return MPU_9250_READING_ERROR;
     }
+
+    i2c_arch_release(i2c_handle);
 
     PRINTF("MPU: Gyro = 0x%04x 0x%04x 0x%04x = ",
            sensor_value[0], sensor_value[1], sensor_value[2]);
@@ -617,9 +581,18 @@ configure(int type, int enable)
       ctimer_stop(&startup_timer);
 
       if(PIN_getOutputValue(Board_MPU_POWER)) {
+        i2c_handle = i2c_arch_acquire(Board_I2C1);
+
+        if(!i2c_handle) {
+          PIN_setOutputValue(pin_handle, Board_MPU_POWER, 0);
+
+          return MPU_9250_SENSOR_STATUS_DISABLED;
+        }
+
         sensor_sleep();
 
-        I2C_cancel(i2c_handle);
+        i2c_arch_release(i2c_handle);
+
         PIN_setOutputValue(pin_handle, Board_MPU_POWER, 0);
       }
 

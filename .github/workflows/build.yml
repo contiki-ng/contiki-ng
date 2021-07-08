@@ -67,7 +67,7 @@ jobs:
         echo $DOCKER_IMG does not exist on dockerhub or pull failed
         echo This is normal for PR builds and for builds on forks
         echo Building from dockerfile
-        docker build tools/docker -t $DOCKER_IMG
+        docker build tools/docker -t $DOCKER_IMG --no-cache --pull
 
     # If i) the previous step built an image and ii) we are on the main
     # contiki-ng repo and iii) this is a push (merge commit) to one of the

@@ -14,7 +14,6 @@ ifeq ($(BOARD), remote)
   override BOARD = remote-reva
 endif
 
-PYTHON = python
 BSL_FLAGS += -e -w -v
 
 BSL_SPEED ?= 460800
@@ -76,7 +75,7 @@ define UPLOAD_RULE
 	@BSL_ADDRESS=`$(OBJDUMP) -h $(BUILD_DIR_BOARD)/$$*.elf | grep -B1 LOAD | \
 	             grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$$$5}' | \
 	             sort -g | head -1`; \
-	$(PYTHON) $(BSL) $(BSL_FLAGS) -b $(BSL_SPEED) -a $$$${BSL_ADDRESS} -p $(MOTE) $$<
+	$(BSL) $(BSL_FLAGS) -b $(BSL_SPEED) -a $$$${BSL_ADDRESS} -p $(MOTE) $$<
 endef
 
 ### Create an upload rule for every MOTE connected

@@ -98,9 +98,6 @@
 /*---------------------------------------------------------------------------*/
 /* Timeout constants */
 
-/* How long to wait for the rx read entry to become ready */
-#define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 200)
-
 /* How long to wait for RX to become active after scheduled */
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 /*---------------------------------------------------------------------------*/
@@ -465,7 +462,7 @@ read(void *buf, unsigned short buf_len)
   const rtimer_clock_t t0 = RTIMER_NOW();
   /* Only wait if the Radio timer is accessing the entry */
   while((data_entry->status == DATA_ENTRY_BUSY) &&
-        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + TIMEOUT_DATA_ENTRY_BUSY)) ;
+        RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RADIO_FRAME_DURATION(MAX_PAYLOAD_LEN))) ;
 
   if(data_entry->status != DATA_ENTRY_FINISHED) {
     /* No available data */
