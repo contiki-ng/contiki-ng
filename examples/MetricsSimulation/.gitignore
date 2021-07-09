@@ -9,6 +9,7 @@ org/**
 *.cooja
 *.db
 *.bak
+*.gz
 
 ### C ###
 # Prerequisites
