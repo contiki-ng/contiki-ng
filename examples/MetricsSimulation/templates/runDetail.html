@@ -100,13 +100,13 @@
         {% if run.parameters['MAKE_MAC'] == "MAKE_MAC_TSCH" %}
               <button type="button" class="collapsible">MAC (TSCH)</button>
               <div class="content">
-                <p>Global TSCH PDR: {{ run.metric.tsch.getPDR()['PDR'] }} % (Total Sent: {{ run.metric.tsch.getPDR()['tx'] }}, ACK Total: {{ run.metric.tsch.getPDR()['ack'] }})</p>
+                <p>Global TSCH PDR: {{ run.metric.mac.getPDR()['PDR'] }} % (Total Sent: {{ run.metric.mac.getPDR()['tx'] }}, ACK Total: {{ run.metric.mac.getPDR()['ack'] }})</p>
                 <p>TSCH PDR by Node: </p>
-                <p><img src="data:image/png;base64,{{run.metric.tsch.printPDR()}}"/></p>
+                <p><img src="data:image/png;base64,{{run.metric.mac.printPDR()}}"/></p>
                 <p>TSCH Retransmissions: </p>
-                <p><img src="data:image/png;base64,{{run.metric.tsch.printRetransmissions()}}"/></p>
+                <p><img src="data:image/png;base64,{{run.metric.mac.printRetransmissions()}}"/></p>
                 <p>Ingress over time.</p>
-                <p><img src="data:image/png;base64,{{run.metric.tsch.printIngress()}}"/></p>
+                <p><img src="data:image/png;base64,{{run.metric.mac.printIngress()}}"/></p>
               </div>
         {% else %}
               <button type="button" class="collapsible">MAC (CSMA)</button>

@@ -267,8 +267,8 @@ class Metrics(Base, MyModel):
     run = relationship("Run", back_populates="metric")
     #application_id = Column(Integer, ForeignKey('application.id')) # The ForeignKey must be the physical ID, not the Object.id
     application = relationship("Application", uselist=False, back_populates="metric")
-    tsch_id = Column(Integer, ForeignKey('tsch.id')) # The ForeignKey must be the physical ID, not the Object.id
-    tsch = relationship("TSCH", back_populates="metric")
+    mac_id = Column(Integer, ForeignKey('mac.id')) # The ForeignKey must be the physical ID, not the Object.id
+    mac = relationship("MAC", back_populates="metric")
     energy_id = Column(Integer, ForeignKey('energy.id')) # The ForeignKey must be the physical ID, not the Object.id
     energy = relationship("Energy", back_populates="metric")
 
@@ -278,7 +278,7 @@ class Metrics(Base, MyModel):
         self.application = Application(self)
         self.application.process()
         if run.parameters['MAKE_MAC'] ==  "MAKE_MAC_TSCH":
-            self.tsch = TSCH(self)
+            self.mac = MAC(self)
         db.add(self)
         db.commit()
 
@@ -385,10 +385,10 @@ class MACMessage(MyModel):
         return "{self.origin}<->{self.dest} Q:{self.enQueued} S({self.isSent}):{self.sentTime} S({self.isReceived}):{self.rcvTime} Sq:{self.seqno}".format(self=self)
 
 
-class TSCH(Base, MyModel):
-    __tablename__ = 'tsch'
+class MAC(Base, MyModel):
+    __tablename__ = 'mac'
     id = Column(Integer, primary_key=True)
-    metric = relationship("Metrics", uselist=False, back_populates="tsch")
+    metric = relationship("Metrics", uselist=False, back_populates="mac")
     results = None
 
     def __init__(self,metric):
