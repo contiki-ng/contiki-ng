@@ -80,7 +80,7 @@ Represents an experiment
         dateRun: Timestamp of running time (Null never run)
         records: Generated records after run
 '''
-class Experiment(Base, MyModel):
+class Experiment(Base):
     __tablename__ = 'experiments'
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
@@ -101,7 +101,7 @@ class Experiment(Base, MyModel):
         self.runs.append(newRun)
         db.commit()
 
-class Run(Base, MyModel):
+class Run(Base):
     __tablename__ = "runs"
     id = Column(Integer,primary_key=True)
     start = Column(DateTime)
@@ -234,7 +234,7 @@ Represents an experiment's record
         rawData: Record string
 
 '''
-class Record(Base, MyModel):
+class Record(Base):
     __tablename__ = 'records'
     id = Column(Integer, primary_key=True)
     simTime = Column(Integer, nullable=False)
@@ -252,7 +252,7 @@ class Record(Base, MyModel):
         self.rawData = data
         self.run = run
       
-class Node(Base, MyModel):
+class Node(Base):
     __tablename__ = 'nodes'
     id = Column(Integer, primary_key=True)
     simId = Column(Integer, primary_key=True)
@@ -260,7 +260,7 @@ class Node(Base, MyModel):
     posY = Column(Integer, nullable=False)
     posZ = Column(Integer, nullable=False)
 
-class Metrics(Base, MyModel):
+class Metrics(Base):
     __tablename__ = 'metrics'
     id = Column(Integer, primary_key=True)
     run_id = Column(Integer, ForeignKey('runs.id')) # The ForeignKey must be the physical ID, not the Object.id
@@ -282,7 +282,7 @@ class Metrics(Base, MyModel):
         db.add(self)
         db.commit()
 
-class Application(Base, MyModel):
+class Application(Base):
     __tablename__ = 'application'
     id = Column(Integer, primary_key=True)
     metric_id = Column(Integer, ForeignKey('metrics.id')) # The ForeignKey must be the physical ID, not the Object.id
@@ -324,15 +324,16 @@ class Application(Base, MyModel):
                 #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
                         break
 
-class RPL(Base, MyModel):
+class RPL(Base):
     __tablename__ = 'rpl'
     id = Column(Integer, primary_key=True)
 
 '''
 Represents a regular MAC message
 '''
-class MACMessage(MyModel):
-    _lock = threading.Lock()
+class MACMessage(Base):
+    __tablename__ = 'macmessage'
+    id = Column(Integer, primary_key=True)
     origin = 0
     dest = 0
     enQueued = 0
@@ -365,7 +366,6 @@ class MACMessage(MyModel):
         self.status = status
         self.tries = tx
         self.isSent = True
-        #print("Queue->Sent: ", self.sentTime-self.enQueued)
     def receive(self, time):
         self.rcvTime = time
         self.isReceived = True
@@ -385,7 +385,7 @@ class MACMessage(MyModel):
         return "{self.origin}<->{self.dest} Q:{self.enQueued} S({self.isSent}):{self.sentTime} S({self.isReceived}):{self.rcvTime} Sq:{self.seqno}".format(self=self)
 
 
-class MAC(Base, MyModel):
+class MAC(Base):
     __tablename__ = 'mac'
     id = Column(Integer, primary_key=True)
     metric = relationship("Metrics", uselist=False, back_populates="mac")
@@ -587,7 +587,7 @@ class MAC(Base, MyModel):
         return base64.b64encode(tempBuffer.getvalue()).decode()
 
 
-class PDR(Base, MyModel):
+class PDR(Base):
     __tablename__ = 'pdrs'
     id = Column(Integer, primary_key=True)
     application = relationship("Application", uselist=False, back_populates="pdr")
@@ -651,7 +651,7 @@ class PDR(Base, MyModel):
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode() 
 
-class Latency(Base, MyModel):
+class Latency(Base):
     __tablename__ = 'latencies'
     id = Column(Integer, primary_key=True)
     #application_id = Column(Integer, ForeignKey('application.id')) # The ForeignKey must be the physical ID, not the Object.id
@@ -801,7 +801,7 @@ class Latency(Base, MyModel):
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()
 
-class AppRecord(Base, MyModel):
+class AppRecord(Base):
     __tablename__ = 'apprecords'
     id = Column(Integer, primary_key=True)
     genTime = Column(Integer, nullable=False)
@@ -827,7 +827,7 @@ class AppRecord(Base, MyModel):
     def getLatency(self):
         return self.rcvTime - self.genTime
 
-class Energy(Base, MyModel):
+class Energy(Base):
     __tablename__ = 'energy'
     id = Column(Integer, primary_key=True)
     metric = relationship("Metrics", uselist=False, back_populates="energy")
