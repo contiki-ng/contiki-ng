@@ -40,13 +40,11 @@ Session = sessionmaker(bind=engine)
 db = Session()
 
 '''
-Represents an experiment
+Represents an experiment, an experiment is composed by a .csc scenario file that will be run once or more times.
     Parameters:
         name: Experiment Name
         parameters: Experiment parameters (Could be refactored)
-        logFile: Physical log file (Could be excluded after a Live parsing)
         experimentFile: Cooja .csc simulation
-        dateRun: Timestamp of running time (Null never run)
         records: Generated records after run
 '''
 class Experiment(Base):
@@ -55,7 +53,6 @@ class Experiment(Base):
     name = Column(String(50), nullable=False)
     parameters = Column(String (200), nullable=False)
     experimentFile = Column(String (200), nullable=False)
-    #dateRun = Column(DateTime, nullable=False)
     def run(self):
         runner = Runner(str(self.experimentFile))
         newRun = Run()
@@ -70,6 +67,19 @@ class Experiment(Base):
         self.runs.append(newRun)
         db.commit()
 
+
+'''
+
+Represents a ran experiment, a experiment file can me customisated by the Makefile and project.conf files, those customisations should be registed by the parameters dict property. The scenario is run, and after that, the generated log is parsed to a Record object linked on Run (One to Many)
+
+    Parameters:
+        start: Start simulation time
+        end: End simulation time
+        maxNodes: Simulation nodes amount
+        parameters: Run parameters
+        experiment: Experiment base
+        metric: Metrics simulation
+'''
 class Run(Base):
     __tablename__ = "runs"
     id = Column(Integer,primary_key=True)
@@ -166,7 +176,6 @@ class Run(Base):
                 newRecord = Record(logTime,logNode,logLevel,logType,data,self)
                 db.add(newRecord)
                 self.records.append(newRecord)
-        #print(simTime)
     
     '''
     Adapted from: https://stackoverflow.com/questions/2804543/read-subprocess-stdout-line-by-line
@@ -201,6 +210,7 @@ Represents an experiment's record
         recordLevel: Level of record (Info, Warn, Debug)
         recordType: Type (App, Protocol, Layer, etc)
         rawData: Record string
+        run: Run that owns this record
 
 '''
 class Record(Base):
@@ -353,7 +363,13 @@ class MACMessage(Base):
     def __str__(self) -> str:
         return "{self.origin}<->{self.dest} Q:{self.enQueued} S({self.isSent}):{self.sentTime} S({self.isReceived}):{self.rcvTime} Sq:{self.seqno}".format(self=self)
 
+'''
 
+Represents the MAC Layer
+
+TODO: In future a factory method return the self.metric.run.parameters['MAKE_MAC'] instance, now is implemented by an ungainly if/else statement
+
+'''
 class MAC(Base):
     __tablename__ = 'mac'
     id = Column(Integer, primary_key=True)
@@ -400,31 +416,21 @@ class MAC(Base):
                             time = sentTime - msg.enQueued 
                             if (time > 10000000):
                                 continue
-                                #print("Achei uma de seqN " , seqnum, " de ", str(rec.node)," para ",dest, " mas o tempo esta maior q 10s:", time)
                             else:
                                 msg.sent(sentTime, status, tx)
-                                #print("Depois: ",msg)
                                 continue
             for rec in data:
                 if rec.rawData.startswith("received from"): 
                     dest = int(rec.node)
                     origin = int(rec.rawData.split()[2].split('.')[0], 16)
-                    #print (rec.rawData.split()[2].split('.')[0])
                     seqnum = int(rec.rawData.split()[5])
                     rcvTime = float(rec.simTime)
-                    #print ("Iniciando a busca em ", str(origin), "por", seqnum, "dst: ", dest )
                     for msg in results[str(origin)]:
-                        #print(msg)
                         if msg.isReceived:
-                            #print("Recebida, passando...")
                             continue
                         if msg.seqno == seqnum and msg.dest == dest and msg.isSent and not msg.isReceived:
-                            #print(rcvTime, ": Procurando a msg enviada por(",msg.origin,")", origin, " para (",msg.dest,")",dest, " com o seque ", seqnum, " as ", rcvTime)
                             time = rcvTime - msg.sentTime
-                            #print(rcvTime, "Achei uma que foi enfileirada as, ", msg.sentTime, "Time: ", time)
-                            #print(msg, "-> ", rec.rawData)
                             if time < 10000000:
-                                #print("Recebendo a msg enviada por ", origin, " para ",dest, " com o seque ", seqnum)
                                 msg.receive(rcvTime)
                                 break
                             else:
@@ -466,10 +472,8 @@ class MAC(Base):
                     time = j[0]/1000
                     plt.plot(time, index, marker="v", color="red")
                     x[1] = time
-                    #print("X: ", x," index: ",index)                    
                     plt.plot(x,[index,index])
                     x = [0,0]
-            #print("X: ", x," index: ",index)
             plt.plot(x,[index,index])
             index +=1
         plt.xlabel("Simulation Time (S)")
@@ -477,7 +481,6 @@ class MAC(Base):
         plt.yticks(range(2,self.metric.run.maxNodes))
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()         
-        #plt.show()
 
     def getNodesPDR(self) -> dict:
         nodesStats = {}
@@ -550,7 +553,6 @@ class MAC(Base):
         plt.xlabel("Simulation Time (s)")
         plt.ylabel("# of Retransmissions")
         plt.legend()
-        #plt.show()
         plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()
