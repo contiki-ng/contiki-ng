@@ -94,6 +94,8 @@ struct simple_udp_connection {
  *     be allocated. The remote IP address can be NULL, to
  *     indicate that packets from any IP address should be
  *     accepted.
+ *     Note that receive_callback is executed in the context
+ *     of the process which has called this function
  *
  */
 int simple_udp_register(struct simple_udp_connection *c,

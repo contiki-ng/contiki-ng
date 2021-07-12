@@ -110,6 +110,7 @@ simple_udp_register(struct simple_udp_connection *c,
 
   c->local_port = local_port;
   c->remote_port = remote_port;
+  c->client_process = PROCESS_CURRENT();
   if(remote_addr != NULL) {
     uip_ipaddr_copy(&c->remote_addr, remote_addr);
   }
