@@ -37,20 +37,17 @@ ifeq ($(MAKE_WITH_ORCHESTRA),1)
       ORCHESTRA_EXTRA_RULES = &unicast_per_neighbor_rpl_storing
     endif
 
-    ifeq ($(MAKE_WITH_ORCHESTRA_ROOT_RULE),1)
-      # add the root rule
-      ORCHESTRA_EXTRA_RULES +=,&special_for_root
-    endif
   else
     ifeq ($(MAKE_WITH_LINK_BASED_ORCHESTRA),1)
       $(error "Inconsistent configuration: link-based Orchestra requires routing info")
     endif
 
-    ifeq ($(MAKE_WITH_ORCHESTRA_ROOT_RULE),1)
-     $(error "Inconsistent configuration: NS rule and root rule conflicts!")
-    endif
   endif
 
+  ifeq ($(MAKE_WITH_ORCHESTRA_ROOT_RULE),1)
+    # add the root rule
+    ORCHESTRA_EXTRA_RULES +=,&special_for_root
+  endif
 
   # pass the Orchestra rules to the compiler
   CFLAGS += -DORCHESTRA_CONF_RULES="{&eb_per_time_source,$(ORCHESTRA_EXTRA_RULES),&default_common}"

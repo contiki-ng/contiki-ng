@@ -53,25 +53,19 @@
 
 #if BUILD_WITH_ORCHESTRA
 
+/* A configurable function called after adding a new neighbor as next hop */
 #ifndef NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK
 #define NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK orchestra_callback_child_added
 #endif /* NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK */
+void NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK(const linkaddr_t *addr);
 
+/* A configurable function called after removing a next hop neighbor */
 #ifndef NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK
 #define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK orchestra_callback_child_removed
 #endif /* NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK */
+void NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK(const linkaddr_t *addr);
 
 #endif /* BUILD_WITH_ORCHESTRA */
-
-/* A configurable function called after adding a new neighbor as next hop */
-#ifdef NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK
-void NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK(const linkaddr_t *addr);
-#endif /* NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK */
-
-/* A configurable function called after removing a next hop neighbor */
-#ifdef NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK
-void NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK(const linkaddr_t *addr);
-#endif /* NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK */
 
 #if (UIP_MAX_ROUTES != 0)
 /* The nbr_routes holds a neighbor table to be able to maintain
