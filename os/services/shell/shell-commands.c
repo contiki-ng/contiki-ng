@@ -77,13 +77,14 @@
 #include <stdlib.h>
 
 #define PING_TIMEOUT (5 * CLOCK_SECOND)
+#define MULTICAST_TIMEOUT (CLOCK_SECOND / 4)
 
 #if NETSTACK_CONF_WITH_IPV6
 static struct uip_icmp6_echo_reply_notification echo_reply_notification;
 static shell_output_func *curr_ping_output_func = NULL;
 static struct process *curr_ping_process;
-static uint8_t curr_ping_ttl;
-static uint16_t curr_ping_datalen;
+static struct etimer curr_ping_timeout_timer;
+static uip_ipaddr_t curr_ping_remote_addr;
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 #if TSCH_WITH_SIXTOP
 static shell_command_6top_sub_cmd_t sixtop_sub_cmd = NULL;
@@ -114,10 +115,28 @@ ds6_nbr_state_to_str(uint8_t state)
 static void
 echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t datalen)
 {
-  if(curr_ping_output_func != NULL) {
+  bool is_multicast;
+
+  if(curr_ping_output_func == NULL || etimer_expired(&curr_ping_timeout_timer)) {
+    return;
+  }
+
+  is_multicast = uip_is_mcast_group_id_all_nodes(&curr_ping_remote_addr) \
+              || uip_is_mcast_group_id_all_routers(&curr_ping_remote_addr);
+
+  SHELL_OUTPUT(curr_ping_output_func, "Received ping reply from ");
+  shell_output_6addr(curr_ping_output_func, source);
+  SHELL_OUTPUT(curr_ping_output_func, ", len %u, ttl %u, delay %lu ms\n",
+    datalen, ttl, (1000*(clock_time() - curr_ping_timeout_timer.timer.start))/CLOCK_SECOND);
+
+  if(is_multicast) {
+    /* Adjust multicast timeout when response is received */
+    PROCESS_CONTEXT_BEGIN(curr_ping_process);
+    etimer_set(&curr_ping_timeout_timer, MULTICAST_TIMEOUT);
+    PROCESS_CONTEXT_END(curr_ping_process);
+  } else {
+    /* End ping if not multicast */
     curr_ping_output_func = NULL;
-    curr_ping_ttl = ttl;
-    curr_ping_datalen = datalen;
     process_poll(curr_ping_process);
   }
 }
@@ -125,8 +144,6 @@ echo_reply_handler(uip_ipaddr_t *source, uint8_t ttl, uint8_t *data, uint16_t da
 static
 PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
 {
-  static uip_ipaddr_t remote_addr;
-  static struct etimer timeout_timer;
   char *next_args;
 
   PT_BEGIN(pt);
@@ -138,30 +155,25 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
   if(args == NULL) {
     SHELL_OUTPUT(output, "Destination IPv6 address is not specified\n");
     PT_EXIT(pt);
-  } else if(uiplib_ipaddrconv(args, &remote_addr) == 0) {
+  } else if(uiplib_ipaddrconv(args, &curr_ping_remote_addr) == 0) {
     SHELL_OUTPUT(output, "Invalid IPv6 address: %s\n", args);
     PT_EXIT(pt);
   }
 
   SHELL_OUTPUT(output, "Pinging ");
-  shell_output_6addr(output, &remote_addr);
+  shell_output_6addr(output, &curr_ping_remote_addr);
   SHELL_OUTPUT(output, "\n");
 
   /* Send ping request */
   curr_ping_process = PROCESS_CURRENT();
   curr_ping_output_func = output;
-  etimer_set(&timeout_timer, PING_TIMEOUT);
-  uip_icmp6_send(&remote_addr, ICMP6_ECHO_REQUEST, 0, 4);
-  PT_WAIT_UNTIL(pt, curr_ping_output_func == NULL || etimer_expired(&timeout_timer));
+  etimer_set(&curr_ping_timeout_timer, PING_TIMEOUT);
+  uip_icmp6_send(&curr_ping_remote_addr, ICMP6_ECHO_REQUEST, 0, 4);
+  PT_WAIT_UNTIL(pt, curr_ping_output_func == NULL || etimer_expired(&curr_ping_timeout_timer));
 
-  if(curr_ping_output_func != NULL) {
+  if(curr_ping_output_func && etimer_expiration_time(&curr_ping_timeout_timer) - \
+     etimer_start_time(&curr_ping_timeout_timer) == PING_TIMEOUT) {
     SHELL_OUTPUT(output, "Timeout\n");
-    curr_ping_output_func = NULL;
-  } else {
-    SHELL_OUTPUT(output, "Received ping reply from ");
-    shell_output_6addr(output, &remote_addr);
-    SHELL_OUTPUT(output, ", len %u, ttl %u, delay %lu ms\n",
-      curr_ping_datalen, curr_ping_ttl, (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
   }
 
   PT_END(pt);
