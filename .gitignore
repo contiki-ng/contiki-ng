@@ -66,5 +66,6 @@ COOJA.testlog
 *.err
 summary
 tests/[0-9][0-9]-*/org/
+examples/libs/unit-tests/org/
 tests/18-coap-lwm2m/Californium.properties
 tests/18-coap-lwm2m/leshan-server-demo*.jar
