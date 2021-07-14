@@ -1,0 +1,27 @@
+CONTIKI_PROJECT = bootloader
+all: $(CONTIKI_PROJECT)
+
+MODULES += os/net/app-layer/ota
+
+PLATFORMS_EXCLUDE = native
+
+MAKE_NET = MAKE_NET_NULLNET
+MAKE_MAC = MAKE_MAC_NULLMAC
+MAKE_ROUTING = MAKE_ROUTING_NULLROUTING
+SMALL = 1
+
+ifeq ($(BOOTLOADER_DEBUG), 1)
+  CFLAGS += -DBUILD_WITH_BOOTLOADER_DEBUG=1
+  CFLAGS += -DLOG_LEVEL_BOOTLOADER=LOG_LEVEL_INFO
+  CFLAGS += -DLOG_LEVEL_OTA=LOG_LEVEL_INFO
+endif
+
+CONTIKI = ../../..
+-include $(CONTIKI)/Makefile.identify-target
+
+$(CONTIKI_PROJECT).hex: build/$(TARGET)/$(BOARD)/$(CONTIKI_PROJECT).hex
+	cp $< $@
+
+-include arch/platform/$(TARGET)/Makefile.$(TARGET)
+
+include $(CONTIKI)/Makefile.include

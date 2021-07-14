@@ -1,0 +1,5 @@
+PROJECTDIRS += arch/cpu/cc26x0-cc13x0
+
+PROJECT_SOURCEFILES += bootloader-arch.c
+
+STARTUP_GCC_SRC = startup-gcc.c

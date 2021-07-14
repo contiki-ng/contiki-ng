@@ -71,6 +71,7 @@
 #include "dev/button-hal.h"
 #include "net/mac/framer/frame802154.h"
 #include "board-peripherals.h"
+#include "inc/hw_nvic.h"
 
 #include "driverlib/driverlib_release.h"
 
@@ -139,6 +140,9 @@ platform_init_stage_one()
   ti_lib_vims_configure(VIMS_BASE, true, true);
 
   ti_lib_int_master_disable();
+
+  /* Relocate the vector as required */
+  HWREG(NVIC_VTABLE) = (uint32_t)FLASH_FW_ORIGIN;
 
   /* Set the LF XOSC as the LF system clock source */
   oscillators_select_lf_xosc();

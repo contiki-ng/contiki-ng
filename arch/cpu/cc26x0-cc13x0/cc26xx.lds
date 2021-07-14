@@ -41,15 +41,17 @@ MEMORY
     /* Flash Size 128 KB minus the CCA area below (88 bytes) */
     FLASH (RX) : ORIGIN = FLASH_FW_ORIGIN, LENGTH = FLASH_FW_LENGTH
 
+#if !OTA
     /*
      * Customer Configuration Area and Bootloader Backdoor configuration
      * in flash, up to 88 bytes
      */
     FLASH_CCFG (RX) : ORIGIN = 0x0001FFA8, LENGTH = 88
+#endif
 
     /* RAM Size 20KB */
     SRAM (RWX) : ORIGIN = 0x20000000, LENGTH = 0x00005000
-    
+
     /* Application can use GPRAM region as RAM if cache is disabled in CCFG */
     GPRAM (RWX) : ORIGIN = 0x11000000, LENGTH = 0x00002000
 }
@@ -102,10 +104,12 @@ SECTIONS
     _heap = _stack;
     _eheap = _stack_origin;
 
+#if !OTA
     .ccfg :
     {
         KEEP(*(.ccfg))
     } > FLASH_CCFG
+#endif
 
     /* User_heap_stack section, used to check that there is enough RAM left */
     ._user_heap_stack :
@@ -115,9 +119,8 @@ SECTIONS
       . = . + _Min_Stack_Size;
       . = ALIGN(4);
     } > SRAM
-    
+
     .gpram :
-    { 
+    {
     } > GPRAM
-    
 }
