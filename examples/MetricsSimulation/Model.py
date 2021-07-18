@@ -563,7 +563,10 @@ class LinkStatus(Base):
         for i,j in self.getNodesPDR().items():
             if i < index:
                 continue
-            pdr = round((j['ack'] * 100 )/j['tx'],2)
+            try:
+                pdr = round((j['ack'] * 100 )/j['tx'],2)
+            except ZeroDivisionError:
+                pdr = 0
             data[index] = pdr
             index += 1
             width = 0.8
