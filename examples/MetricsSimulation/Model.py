@@ -250,6 +250,9 @@ class Metrics(Base):
     mac = relationship("MAC", back_populates="metric")
     energy_id = Column(Integer, ForeignKey('energy.id')) # The ForeignKey must be the physical ID, not the Object.id
     energy = relationship("Energy", back_populates="metric")
+    linkstatus_id = Column(Integer, ForeignKey('linkstatus.id')) # The ForeignKey must be the physical ID, not the Object.id
+    linkstatus = relationship("LinkStatus", back_populates="metric")
+
 
     def __init__(self, run):
         self.run = run
@@ -258,6 +261,7 @@ class Metrics(Base):
         self.application.process()
         if run.parameters['MAKE_MAC'] ==  "MAKE_MAC_TSCH":
             self.mac = MAC(self)
+        self.linkstatus = LinkStatus(self)
         db.add(self)
         db.commit()
 
@@ -367,7 +371,7 @@ class MACMessage(Base):
 
 Represents the MAC Layer
 
-TODO: In future a factory method return the self.metric.run.parameters['MAKE_MAC'] instance, now is implemented by an ungainly if/else statement
+TODO: In future a factory method should return the self.metric.run.parameters['MAKE_MAC'] instance, now is implemented by an ungainly if/else statement
 
 '''
 class MAC(Base):
@@ -400,8 +404,10 @@ class MAC(Base):
                     queueGlobaSize = int(rec.rawData.split()[9].replace(',','').split('/')[1])
                     headerLen = int(rec.rawData.split()[11])
                     dataLen = int(rec.rawData.split()[12])
-                    tschMsg = MACMessage(origin, dest, enQueued, seqnum, queueNBROccupied, queueNBRSize, queueGlobaOccupied, queueGlobaSize, headerLen, dataLen)
-                    results[str(origin)].append(tschMsg)
+                    macMsg = MACMessage(origin, dest, enQueued, seqnum, queueNBROccupied, queueNBRSize, queueGlobaOccupied, queueGlobaSize, headerLen, dataLen)
+                    if macMsg.dest == 0 or macMsg.dest == 65535:
+                        macMsg.isReceived = True
+                    results[str(origin)].append(macMsg)
                     continue
                 if rec.rawData.startswith("packet sent to"):
                     dest = int(rec.rawData.split()[3].split('.')[0], 16)
@@ -412,12 +418,15 @@ class MAC(Base):
                     for msg in reversed(results[str(rec.node)]):
                         if msg.isSent:
                             continue
-                        if ( msg.seqno == seqnum and msg.dest == dest):
+                        if ( msg.seqno == seqnum): #and msg.dest == dest):
                             time = sentTime - msg.enQueued 
                             if (time > 10000000):
                                 continue
                             else:
                                 msg.sent(sentTime, status, tx)
+                                if macMsg.dest == 0 or macMsg.dest == 65535:
+                                    #Broadcast message is sent by all, I cant control who receives."
+                                    msg.receive(sentTime)
                                 continue
             for rec in data:
                 if rec.rawData.startswith("received from"): 
@@ -482,6 +491,45 @@ class MAC(Base):
         plt.savefig(tempBuffer, format = 'png')
         return base64.b64encode(tempBuffer.getvalue()).decode()         
 
+    def printRetransmissions(self):
+        import io
+        import base64
+        import matplotlib.pyplot as plt
+        plt.clf()
+        tempBuffer = io.BytesIO()
+        for i,j in self.results.items():
+            # TODO: Process Broadcast messagens
+            if i == '0' or i == '65535':
+                continue
+        #     print (i)
+            x = []
+            y = []
+            for m in j:
+                if m.isReceived and m.isSent:
+                    x.append(m.sentTime/1000000)
+                    y.append(m.retransmissions())
+            plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
+        plt.xlabel("Simulation Time (s)")
+        plt.ylabel("# of Retransmissions")
+        plt.legend()
+        plt.gcf().set_size_inches(8,6)
+        plt.savefig(tempBuffer, format = 'png')
+        return base64.b64encode(tempBuffer.getvalue()).decode()
+
+'''
+Link Status
+
+Class to handle the Link Status level Log
+'''
+class LinkStatus(Base):
+    __tablename__ = 'linkstatus'
+    id = Column(Integer, primary_key=True)
+    metric = relationship("Metrics", uselist=False, back_populates="linkstatus")
+
+    
+    def __init__(self,metric):
+        self.metric = metric
+
     def getNodesPDR(self) -> dict:
         nodesStats = {}
         for n in range(self.metric.run.maxNodes):
@@ -521,37 +569,12 @@ class MAC(Base):
             width = 0.8
             plt.text(((index-1) - (width/3)), pdr-2, str(pdr), color="black", fontsize=8)
         tempBuffer = io.BytesIO()
-        plt.bar(data.keys(),data.values(), width=width, label="TSCH PDR")
+        plt.bar(data.keys(),data.values(), width=width, label="Link Status PDR")
         #plt.bar_label(data.values(), padding=2)
         plt.xticks(list(data.keys()))
         plt.ylim([0, 100])
         plt.xlabel("Nodes")
         plt.ylabel("PDR (%)")
-        plt.legend()
-        plt.gcf().set_size_inches(8,6)
-        plt.savefig(tempBuffer, format = 'png')
-        return base64.b64encode(tempBuffer.getvalue()).decode()
-
-    def printRetransmissions(self):
-        import io
-        import base64
-        import matplotlib.pyplot as plt
-        plt.clf()
-        tempBuffer = io.BytesIO()
-        for i,j in self.results.items():
-            # TODO: Process Broadcast messagens
-            if i == '0' or i == '65535':
-                continue
-        #     print (i)
-            x = []
-            y = []
-            for m in j:
-                if m.isReceived and m.isSent:
-                    x.append(m.sentTime/1000000)
-                    y.append(m.retransmissions())
-            plt.plot(x, y,linestyle="",marker=".", label = "Node "+str(i))
-        plt.xlabel("Simulation Time (s)")
-        plt.ylabel("# of Retransmissions")
         plt.legend()
         plt.gcf().set_size_inches(8,6)
         plt.savefig(tempBuffer, format = 'png')

@@ -97,12 +97,13 @@
             <p>PDR Graph(per node)</p>
             <p><img src="data:image/png;base64,{{run.metric.application.pdr.printPDR()}}"/></p>
         </div>
+        <button type="button" class="collapsible">RPL</button>
+          <div class="content">
+  
+          </div>
         {% if run.parameters['MAKE_MAC'] == "MAKE_MAC_TSCH" %}
               <button type="button" class="collapsible">MAC (TSCH)</button>
               <div class="content">
-                <p>Global TSCH PDR: {{ run.metric.mac.getPDR()['PDR'] }} % (Total Sent: {{ run.metric.mac.getPDR()['tx'] }}, ACK Total: {{ run.metric.mac.getPDR()['ack'] }})</p>
-                <p>TSCH PDR by Node: </p>
-                <p><img src="data:image/png;base64,{{run.metric.mac.printPDR()}}"/></p>
                 <p>TSCH Retransmissions: </p>
                 <p><img src="data:image/png;base64,{{run.metric.mac.printRetransmissions()}}"/></p>
                 <p>Ingress over time.</p>
@@ -113,8 +114,13 @@
               <div class="content">
                 
               </div>
-
         {% endif %}
+              <button type="button" class="collapsible">Link Status</button>
+              <div class="content">
+                <p>Global Link Status PDR: {{ run.metric.linkstatus.getPDR()['PDR'] }} % (Total frames sent: {{ run.metric.linkstatus.getPDR()['tx'] }}, ACK Total: {{ run.metric.linkstatus.getPDR()['ack'] }})</p>
+                <p>Link Level PDR by Node: </p>
+                <p><img src="data:image/png;base64,{{run.metric.linkstatus.printPDR()}}"/></p>  
+              </div>
       {% endif %}
       </div>
     </div>
