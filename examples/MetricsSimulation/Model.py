@@ -250,8 +250,8 @@ class Metrics(Base):
     mac = relationship("MAC", back_populates="metric")
     energy_id = Column(Integer, ForeignKey('energy.id')) # The ForeignKey must be the physical ID, not the Object.id
     energy = relationship("Energy", back_populates="metric")
-    linkstatus_id = Column(Integer, ForeignKey('linkstatus.id')) # The ForeignKey must be the physical ID, not the Object.id
-    linkstatus = relationship("LinkStatus", back_populates="metric")
+    linkstats_id = Column(Integer, ForeignKey('linkstats.id')) # The ForeignKey must be the physical ID, not the Object.id
+    linkstats = relationship("LinkStats", back_populates="metric")
 
 
     def __init__(self, run):
@@ -261,7 +261,7 @@ class Metrics(Base):
         self.application.process()
         if run.parameters['MAKE_MAC'] ==  "MAKE_MAC_TSCH":
             self.mac = MAC(self)
-        self.linkstatus = LinkStatus(self)
+        self.linkstats = LinkStats(self)
         db.add(self)
         db.commit()
 
@@ -521,10 +521,10 @@ Link Status
 
 Class to handle the Link Status level Log
 '''
-class LinkStatus(Base):
-    __tablename__ = 'linkstatus'
+class LinkStats(Base):
+    __tablename__ = 'linkstats'
     id = Column(Integer, primary_key=True)
-    metric = relationship("Metrics", uselist=False, back_populates="linkstatus")
+    metric = relationship("Metrics", uselist=False, back_populates="linkstats")
 
     
     def __init__(self,metric):
