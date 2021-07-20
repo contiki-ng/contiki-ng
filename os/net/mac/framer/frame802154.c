@@ -68,6 +68,7 @@
 #include "net/mac/llsec802154.h"
 #include "net/linkaddr.h"
 #include <string.h>
+#include <stdbool.h>
 
 /**  \brief The 16-bit identifier of the PAN on which the device is
  *   operating.  If this value is 0xffff, the device is not
@@ -135,14 +136,13 @@ frame802154_set_pan_id(uint16_t pan_id)
 /*----------------------------------------------------------------------------*/
 /* Tells whether a given Frame Control Field indicates a frame with
  * source PANID and/or destination PANID */
-void
-frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest_pan_id)
+//void frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest_pan_id)
+uint8_t frame802154_panids(frame802154_fcf_t *fcf)
 {
-  int src_pan_id = 0;
-  int dest_pan_id = 0;
+  uint8_t panids = FRAME802154_HAVE_PANID_NO;
 
   if(fcf == NULL) {
-    return;
+    return panids;
   }
 
   if(fcf->frame_version == FRAME802154_IEEE802154_2015) {
@@ -150,68 +150,84 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
      * IEEE 802.15.4-2015
      * Table 7-2, PAN ID Compression value for frame version 0b10
      */
-    if((fcf->dest_addr_mode == FRAME802154_NOADDR &&
-        fcf->src_addr_mode == FRAME802154_NOADDR &&
-        fcf->panid_compression == 1) ||
-       (fcf->dest_addr_mode != FRAME802154_NOADDR &&
-        fcf->src_addr_mode == FRAME802154_NOADDR &&
-        fcf->panid_compression == 0) ||
-       (fcf->dest_addr_mode == FRAME802154_LONGADDRMODE &&
-        fcf->src_addr_mode == FRAME802154_LONGADDRMODE &&
-        fcf->panid_compression == 0) ||
-       ((fcf->dest_addr_mode == FRAME802154_SHORTADDRMODE &&
-         fcf->src_addr_mode != FRAME802154_NOADDR) ||
-        (fcf->dest_addr_mode != FRAME802154_NOADDR &&
-         fcf->src_addr_mode == FRAME802154_SHORTADDRMODE)) ){
-      dest_pan_id = 1;
+      // provide bitmask valie, positioned by addr modes combination
+      enum {
+          DST_NO    = (1ul << FRAME802154_NOADDR),
+          DST_SHORT = (1ul << FRAME802154_SHORTADDRMODE),
+          DST_LONG  = (1ul << FRAME802154_LONGADDRMODE),
+
+          SSRC = 4ul, //shift src
+
+          SRC_NO    = (FRAME802154_NOADDR           * SSRC),
+          SRC_SHORT = (FRAME802154_SHORTADDRMODE    * SSRC),
+          SRC_LONG  = (FRAME802154_LONGADDRMODE     * SSRC),
+
+          PANID_COMPRESS = 16, PANID_NO_COMPRESS = 0,
+      };
+      // need it to relax compiler with addr_mode value range: 0 <= 3
+      typedef enum AddrStyle {
+          NOADDR    = FRAME802154_NOADDR,
+          SHORTADDR = FRAME802154_SHORTADDRMODE,
+          LONGADDR  = FRAME802154_LONGADDRMODE,
+      } AddrStyle;
+
+      #define COMB(dst, src, compress) ( (unsigned long)((dst) << (src)) << (compress) )
+
+      unsigned long comb =  (1u << ((AddrStyle)fcf->dest_addr_mode))
+                                << ((AddrStyle)(fcf->src_addr_mode)*SSRC);
+      if (fcf->panid_compression)
+          comb = comb << PANID_COMPRESS ;
+
+    {
+        const unsigned long comb_panid =
+              COMB(DST_NO   , SRC_NO    ,  PANID_COMPRESS)
+            | COMB(DST_SHORT, SRC_NO    ,  PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_NO    ,  PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_LONG  ,  PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_SHORT ,  PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_SHORT ,  PANID_COMPRESS)
+            | COMB(DST_SHORT, SRC_LONG  ,  PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_LONG  ,  PANID_COMPRESS)
+            | COMB(DST_LONG , SRC_SHORT ,  PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_SHORT ,  PANID_COMPRESS)
+            ;
+    if ( comb & comb_panid )
+            panids |= FRAME802154_HAVE_PANID_DST;
     }
 
-    if(fcf->panid_compression == 0 &&
-       ((fcf->dest_addr_mode == FRAME802154_NOADDR &&
-         fcf->src_addr_mode == FRAME802154_LONGADDRMODE) ||
-        (fcf->dest_addr_mode == FRAME802154_NOADDR &&
-         fcf->src_addr_mode == FRAME802154_SHORTADDRMODE) ||
-        (fcf->dest_addr_mode == FRAME802154_SHORTADDRMODE &&
-         fcf->src_addr_mode == FRAME802154_SHORTADDRMODE) ||
-        (fcf->dest_addr_mode == FRAME802154_SHORTADDRMODE &&
-         fcf->src_addr_mode == FRAME802154_LONGADDRMODE) ||
-        (fcf->dest_addr_mode == FRAME802154_LONGADDRMODE &&
-         fcf->src_addr_mode == FRAME802154_SHORTADDRMODE))) {
-      src_pan_id = 1;
-    }
+    {
+        const unsigned long comb_panid =
+              COMB(DST_NO   , SRC_SHORT , PANID_NO_COMPRESS)
+            | COMB(DST_NO   , SRC_LONG  , PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_SHORT , PANID_NO_COMPRESS)
+            | COMB(DST_SHORT, SRC_LONG  , PANID_NO_COMPRESS)
+            | COMB(DST_LONG , SRC_SHORT , PANID_NO_COMPRESS)
+            ;
+    if( comb & comb_panid )
+            panids |= FRAME802154_HAVE_PANID_SRC;
+    }//if(has_src_pan_id != NULL)
 
   } else {
-    /* No PAN ID in ACK */
-    if(fcf->frame_type != FRAME802154_ACKFRAME) {
-      if(!fcf->panid_compression && (fcf->src_addr_mode & 3)) {
+      if(!fcf->panid_compression && fcf->src_addr_mode) {
         /* If compressed, don't include source PAN ID */
-        src_pan_id = 1;
+          panids |= FRAME802154_HAVE_PANID_SRC;
       }
-      if(fcf->dest_addr_mode & 3) {
-        dest_pan_id = 1;
-      }
-    }
-  }
 
-  if(has_src_pan_id != NULL) {
-    *has_src_pan_id = src_pan_id;
-  }
-  if(has_dest_pan_id != NULL) {
-    *has_dest_pan_id = dest_pan_id;
-  }
+      if(fcf->dest_addr_mode)
+          panids |= FRAME802154_HAVE_PANID_DST;
+      }
+  return panids;
 }
 /*---------------------------------------------------------------------------*/
 /* Check if the destination PAN ID, if any, matches ours */
 int
 frame802154_check_dest_panid(frame802154_t *frame)
 {
-  int has_dest_panid = 0;
 
   if(frame == NULL) {
     return 0;
   }
-  frame802154_has_panid(&frame->fcf, NULL, &has_dest_panid);
-  if(!has_dest_panid ||
+  if( ((frame802154_panids(&frame->fcf) & FRAME802154_HAVE_PANID_DST) == 0) ||
      (frame->dest_pid != frame802154_get_pan_id()
      && frame->dest_pid != FRAME802154_BROADCASTPANDID)) {
     /* Packet to another PAN */
@@ -288,8 +304,7 @@ frame802154_extract_linkaddr(frame802154_t *frame,
 static void
 field_len(frame802154_t *p, field_length_t *flen)
 {
-  int has_src_panid;
-  int has_dest_panid;
+  frame802154_have_PANIDs_t havepanid;
 
   /* init flen to zeros */
   memset(flen, 0, sizeof(field_length_t));
@@ -312,13 +327,13 @@ field_len(frame802154_t *p, field_length_t *flen)
     }
   }
 
-  frame802154_has_panid(&p->fcf, &has_src_panid, &has_dest_panid);
+  havepanid = frame802154_panids(&p->fcf);
 
-  if(has_src_panid) {
+  if(havepanid & FRAME802154_HAVE_PANID_SRC) {
     flen->src_pid_len = 2;
   }
 
-  if(has_dest_panid) {
+  if(havepanid & FRAME802154_HAVE_PANID_DST) {
     flen->dest_pid_len = 2;
   }
 
@@ -501,9 +516,8 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
 {
   uint8_t *p;
   frame802154_fcf_t fcf;
+  frame802154_have_PANIDs_t havepanid;
   int c;
-  int has_src_panid;
-  int has_dest_panid;
 #if LLSEC802154_USES_EXPLICIT_KEYS
   uint8_t key_id_mode;
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
@@ -524,11 +538,11 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
     p++;
   }
 
-  frame802154_has_panid(&fcf, &has_src_panid, &has_dest_panid);
+  havepanid = frame802154_panids(&fcf);
 
   /* Destination address, if any */
   if(fcf.dest_addr_mode) {
-    if(has_dest_panid) {
+    if(havepanid & FRAME802154_HAVE_PANID_DST) {
       /* Destination PAN */
       pf->dest_pid = p[0] + (p[1] << 8);
       p += 2;
@@ -561,10 +575,10 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
   /* Source address, if any */
   if(fcf.src_addr_mode) {
     /* Source PAN */
-    if(has_src_panid) {
+    if(havepanid & FRAME802154_HAVE_PANID_SRC) {
       pf->src_pid = p[0] + (p[1] << 8);
       p += 2;
-      if(!has_dest_panid) {
+      if((havepanid & FRAME802154_HAVE_PANID_DST) == 0) {
         pf->dest_pid = pf->src_pid;
       }
     } else {
