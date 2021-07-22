@@ -7,6 +7,11 @@ import matplotlib.pyplot as pl
 
 ###########################################
 
+# If set to true, all nodes are plotted, even those with no valid data
+PLOT_ALL_NODES = True
+
+###########################################
+
 LOG_FILE = 'COOJA.testlog'
 
 COORDINATOR_ID = 1
@@ -55,41 +60,15 @@ class NodeStats:
         self.energest_period_seconds = 60
 
         # final metrics (uninitialized)
-        self.pdr = None
+        self.pdr = 0.0
         self.rpl_parent_changes = 0
-        self.par = None
+        self.par = 0.0
         self.rdc = None
         self.rdc_joined = None
         self.charge = None
 
     # calculate the final metrics
     def calc(self):
-        if self.tsch_join_time_sec is None:
-            print("node {} never associated TSCH".format(self.id))
-            return 0, 0, 0, 0
-
-        if self.rpl_join_time_sec is None:
-            print("node {} never joined RPL DAG".format(self.id))
-            return 0, 0, 0, 0
-
-        if self.max_seqnum_sent == 0:
-            print("node {} never sent any data packets".format(self.id))
-            return 0, 0, 0, 0
-
-        self.is_valid = True
-
-        if self.parent_packets_tx:
-            self.par = 100.0 * self.parent_packets_ack / self.parent_packets_tx
-        else:
-            self.par = 0.0
-
-        expected = self.max_seqnum_sent
-        actual = len(self.seqnums_received_on_root)
-        if expected:
-            self.pdr = 100.0 * actual / expected
-        else:
-            self.pdr = 0.0
-
         if self.energest_total:
             radio_on = self.energest_radio_tx + self.energest_radio_rx
             self.rdc = 100.0 * radio_on / self.energest_total
@@ -116,6 +95,33 @@ class NodeStats:
             self.rdc_joined = 100.0 * radio_on_joined / self.energest_total_joined
         else:
             self.rdc_joined = 0
+
+
+        if self.tsch_join_time_sec is None:
+            print("node {} never associated TSCH".format(self.id))
+            return 0, 0, 0, 0, 0
+
+        if self.rpl_join_time_sec is None:
+            print("node {} never joined RPL DAG".format(self.id))
+            return 0, 0, 0, 0, 0
+
+        if self.max_seqnum_sent == 0:
+            print("node {} never sent any data packets".format(self.id))
+            return 0, 0, 0, 0, 0
+
+        self.is_valid = True
+
+        if self.parent_packets_tx:
+            self.par = 100.0 * self.parent_packets_ack / self.parent_packets_tx
+        else:
+            self.par = 0.0
+
+        expected = self.max_seqnum_sent
+        actual = len(self.seqnums_received_on_root)
+        if expected:
+            self.pdr = 100.0 * actual / expected
+        else:
+            self.pdr = 0.0
 
         return self.parent_packets_tx, \
             self.parent_packets_ack, \
@@ -300,8 +306,17 @@ def analyze_results(filename, is_testbed):
         if n.id == COORDINATOR_ID:
             continue
         ll_sent, ll_acked, ll_queue_dropped, e2e_sent, e2e_received = n.calc()
-        if n.is_valid:
-            r.append((n.id, n.pdr, n.par, n.rpl_parent_changes, n.rdc, n.rdc_joined, n.charge))
+        if n.is_valid or PLOT_ALL_NODES:
+            d = {
+                "id": n.id,
+                "pdr": n.pdr,
+                "par": n.par,
+                "rpl_switches": n.rpl_parent_changes,
+                "duty_cycle": n.rdc,
+                "duty_cycle_joined": n.rdc_joined,
+                "charge": n.charge
+            }
+            r.append(d)
             total_ll_sent += ll_sent
             total_ll_acked += ll_acked
             total_ll_queue_dropped += ll_queue_dropped
@@ -314,9 +329,10 @@ def analyze_results(filename, is_testbed):
 #######################################################
 # Plot the results of a given metric as a bar chart
 
-def plot(ids, data, metric, ylabel):
+def plot(results, metric, ylabel):
     pl.figure(figsize=(5, 4))
 
+    data = [r[metric] for r in results]
     x = range(len(data))
     barlist = pl.bar(x, data, width=0.4)
 
@@ -325,16 +341,18 @@ def plot(ids, data, metric, ylabel):
         b.set_edgecolor("black")
         b.set_linewidth(1)
 
+    ids = [r["id"] for r in results]
     pl.xticks(x, [str(u) for u in ids], rotation=90)
     pl.xlabel("Node ID")
     pl.ylabel(ylabel)
 
     if metric == "pdr":
-        pl.ylim([80, 100])
+        miny = min(80, min(data))
+        pl.ylim([miny, 100])
     else:
         pl.ylim(ymin=0)
 
-    pl.savefig("plot_{}.pdf".format(metric), type="pdf", bbox_inches='tight')
+    pl.savefig("plot_{}.pdf".format(metric), format="pdf", bbox_inches='tight')
     pl.close()
 
 #######################################################
@@ -358,13 +376,12 @@ def main():
     print("Link-layer PAR={:.2f} ({} packets queue dropped) End-to-end PDR={:.2f}".format(
         ll_par, ll_queue_dropped, e2e_pdr))
 
-    ids = [r[0] for r in results]
-    plot(ids, [r[1] for r in results], "pdr", "Packet Delivery Ratio, %")
-    plot(ids, [r[2] for r in results], "par", "Packet Acknowledgement Ratio, %")
-    plot(ids, [r[3] for r in results], "rpl_switches", "RPL parent witches")
-    plot(ids, [r[4] for r in results], "duty_cycle", "Radio Duty Cycle, %")
-    plot(ids, [r[5] for r in results], "duty_cycle_joined", "Joined Radio Duty Cycle, %")
-    plot(ids, [r[6] for r in results], "charge", "Charge consumption, mC")
+    plot(results, "pdr", "Packet Delivery Ratio, %")
+    plot(results, "par", "Packet Acknowledgement Ratio, %")
+    plot(results, "rpl_switches", "RPL parent switches")
+    plot(results, "duty_cycle", "Radio Duty Cycle, %")
+    plot(results, "duty_cycle_joined", "Joined Radio Duty Cycle, %")
+    plot(results, "charge", "Charge consumption, mC")
 
 #######################################################
 
