@@ -37,3 +37,9 @@
 [submodule "arch/cpu/nrf/lib/nrfx"]
 	path = arch/cpu/nrf/lib/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git
+[submodule "pythonLogParser"]
+	path = pythonLogParser
+	url = https://github.com/ivanilsonjunior/pythonLogParser/
+[submodule "examples/pythonLogParser"]
+	path = examples/pythonLogParser
+	url = https://github.com/ivanilsonjunior/pythonLogParser/
