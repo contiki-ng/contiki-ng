@@ -75,13 +75,12 @@ PROCESS_THREAD(LDR_sensor_process, ev, data)
     ldr = adc_sensors.value(ONBOARD_LDR_SENSOR);
 
     if(ldr != ADC_WRAPPER_ERROR) {
-      printf("LDR Value = %u\t", ldr);
-      if(ldr>=1 && ldr <=512)
-	      printf("High \n");
-      else if(ldr >= 513 && ldr <= 1024)
-	      printf("Low \n");
-      else
-	      printf("Wrong Readings \n");
+     printf("LDR Value = %u\t\n", ldr);
+      if(ldr>=0 && ldr <=512)
+      
+	      printf("High light intensity\n");
+      else 
+	      printf("Low  light intensity\n");
     } else {
       printf("Error, enable the DEBUG flag in adc-wrapper.c for info\n");
       PROCESS_EXIT();

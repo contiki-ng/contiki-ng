@@ -126,11 +126,6 @@ platform_init_stage_two()
    * Character I/O Initialisation.
    * When the UART receives a character it will call serial_line_input_byte to
    * notify the core. The same applies for the USB driver.
-   *
-   * If slip-arch is also linked in afterwards (e.g. if we are a border router)
-   * it will overwrite one of the two peripheral input callbacks. Characters
-   * received over the relevant peripheral will be handled by
-   * slip_input_byte instead
    */
 #if UART_CONF_ENABLE
   uart_init(0);
@@ -176,7 +171,7 @@ platform_init_stage_three()
 
   button_hal_init();
 
-  fade(LEDS_ORANGE);
+  fade(LEDS_GREEN);
 }
 /*---------------------------------------------------------------------------*/
 void
