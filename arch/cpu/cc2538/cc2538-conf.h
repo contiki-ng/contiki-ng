@@ -315,6 +315,10 @@
 #ifndef CCM_STAR_CONF
 #define CCM_STAR_CONF           cc2538_ccm_star_driver /**< AES-CCM* driver */
 #endif
+
+#ifndef SHA_256_CONF
+#define SHA_256_CONF            cc2538_sha_256_driver /**< SHA-256 driver */
+#endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* CC2538_CONF_H_ */

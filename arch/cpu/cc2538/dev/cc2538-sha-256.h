@@ -7,6 +7,10 @@
  * Copyright (c) 2013, ADVANSEE - http://www.advansee.com/
  * All rights reserved.
  *
+ * Adaptation to platform-independent API:
+ * Copyright (c) 2021, Uppsala universitet
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -45,55 +49,13 @@
  * \file
  * Header file for the cc2538 SHA-256 driver
  */
+
 #ifndef CC2538_SHA_256_H_
 #define CC2538_SHA_256_H_
 
-#include "contiki.h"
-#include "dev/crypto.h"
+#include "lib/sha-256.h"
 
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-/** \name SHA-256 structures
- * @{
- */
-typedef struct {
-  uint64_t length;
-  uint32_t state[8];
-  uint32_t curlen;
-  uint8_t  buf[64];
-  uint8_t  new_digest;
-  uint8_t  final_digest;
-} sha256_state_t;
-/** @} */
-/*---------------------------------------------------------------------------*/
-/** \name SHA-256 functions
- * @{
- */
-
-/** \brief Initializes the hash state
- * \param state Pointer to hash state to initialize
- * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
- */
-uint8_t cc2538_sha_256_init(sha256_state_t *state);
-
-/** \brief Processes a block of memory through the hash
- * \param state Pointer to hash state
- * \param data Pointer to the data to hash
- * \param len Length of the data to hash in bytes (octets)
- * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
- * \note This function must be called only after \c sha256_init().
- */
-uint8_t cc2538_sha_256_process(sha256_state_t *state, const void *data, uint32_t len);
-
-/** \brief Terminates hash session to get the digest
- * \param state Pointer to hash state
- * \param hash Pointer to hash
- * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
- * \note This function must be called only after \c sha256_process().
- */
-uint8_t cc2538_sha_256_done(sha256_state_t *state, void *hash);
-
-/** @} */
+extern const struct sha_256_driver cc2538_sha_256_driver;
 
 #endif /* CC2538_SHA_256_H_ */
 
