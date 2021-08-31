@@ -34,7 +34,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup cc2538-sha256
+ * \addtogroup cc2538-sha-256
  * @{
  *
  * \file
@@ -44,7 +44,7 @@
 #include "sys/cc.h"
 #include "dev/rom-util.h"
 #include "dev/aes.h"
-#include "dev/sha256.h"
+#include "dev/cc2538-sha-256.h"
 #include "reg.h"
 
 #include <stdbool.h>
@@ -222,7 +222,7 @@ resume_hash(sha256_state_t *state, const void *data, void *hash)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-sha256_init(sha256_state_t *state)
+cc2538_sha_256_init(sha256_state_t *state)
 {
   if(state == NULL) {
     return CRYPTO_NULL_ERROR;
@@ -236,7 +236,7 @@ sha256_init(sha256_state_t *state)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-sha256_process(sha256_state_t *state, const void *data, uint32_t len)
+cc2538_sha_256_process(sha256_state_t *state, const void *data, uint32_t len)
 {
   uint32_t n;
   uint8_t ret;
@@ -313,7 +313,7 @@ sha256_process(sha256_state_t *state, const void *data, uint32_t len)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-sha256_done(sha256_state_t *state, void *hash)
+cc2538_sha_256_done(sha256_state_t *state, void *hash)
 {
   uint8_t ret;
 

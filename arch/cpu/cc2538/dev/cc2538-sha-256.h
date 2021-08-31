@@ -37,7 +37,7 @@
  * \addtogroup cc2538-crypto
  * @{
  *
- * \defgroup cc2538-sha256 cc2538 SHA-256
+ * \defgroup cc2538-sha-256 cc2538 SHA-256
  *
  * Driver for the cc2538 SHA-256 mode of the security core
  * @{
@@ -45,8 +45,8 @@
  * \file
  * Header file for the cc2538 SHA-256 driver
  */
-#ifndef SHA256_H_
-#define SHA256_H_
+#ifndef CC2538_SHA_256_H_
+#define CC2538_SHA_256_H_
 
 #include "contiki.h"
 #include "dev/crypto.h"
@@ -74,7 +74,7 @@ typedef struct {
  * \param state Pointer to hash state to initialize
  * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
  */
-uint8_t sha256_init(sha256_state_t *state);
+uint8_t cc2538_sha_256_init(sha256_state_t *state);
 
 /** \brief Processes a block of memory through the hash
  * \param state Pointer to hash state
@@ -83,7 +83,7 @@ uint8_t sha256_init(sha256_state_t *state);
  * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
  * \note This function must be called only after \c sha256_init().
  */
-uint8_t sha256_process(sha256_state_t *state, const void *data, uint32_t len);
+uint8_t cc2538_sha_256_process(sha256_state_t *state, const void *data, uint32_t len);
 
 /** \brief Terminates hash session to get the digest
  * \param state Pointer to hash state
@@ -91,11 +91,11 @@ uint8_t sha256_process(sha256_state_t *state, const void *data, uint32_t len);
  * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
  * \note This function must be called only after \c sha256_process().
  */
-uint8_t sha256_done(sha256_state_t *state, void *hash);
+uint8_t cc2538_sha_256_done(sha256_state_t *state, void *hash);
 
 /** @} */
 
-#endif /* SHA256_H_ */
+#endif /* CC2538_SHA_256_H_ */
 
 /**
  * @}
