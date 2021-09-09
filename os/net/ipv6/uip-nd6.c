@@ -170,7 +170,8 @@ create_llao(uint8_t *llao, uint8_t type) {
 static void
 ns_input(void)
 {
-  uint8_t flags;
+  uint8_t flags = 0;
+
   LOG_INFO("Received NS from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_(" to ");
