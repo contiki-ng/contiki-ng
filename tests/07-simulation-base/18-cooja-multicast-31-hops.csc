@@ -25,6 +25,7 @@
       <description>Root/sender</description>
       <source>[CONTIKI_DIR]/examples/multicast/root.c</source>
       <commands>make TARGET=cooja clean
+make TARGET=cooja config
 make -j root.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

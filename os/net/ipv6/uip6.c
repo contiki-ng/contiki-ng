@@ -228,7 +228,7 @@ uint8_t uip_acc32[4];
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
 struct uip_udp_conn *uip_udp_conn;
-struct uip_udp_conn uip_udp_conns[UIP_UDP_CONNS];
+struct uip_udp_conn uip_udp_conns[CONFIG_UIP_UDP_CONNS];
 #endif /* UIP_UDP */
 /** @} */
 
@@ -407,7 +407,7 @@ uip_init(void)
 #endif /* UIP_ACTIVE_OPEN || UIP_UDP */
 
 #if UIP_UDP
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
+  for(c = 0; c < CONFIG_UIP_UDP_CONNS; ++c) {
     uip_udp_conns[c].lport = 0;
   }
 #endif /* UIP_UDP */
@@ -532,14 +532,14 @@ uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport)
     lastport = 4096;
   }
 
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
+  for(c = 0; c < CONFIG_UIP_UDP_CONNS; ++c) {
     if(uip_udp_conns[c].lport == uip_htons(lastport)) {
       goto again;
     }
   }
 
   conn = 0;
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
+  for(c = 0; c < CONFIG_UIP_UDP_CONNS; ++c) {
     if(uip_udp_conns[c].lport == 0) {
       conn = &uip_udp_conns[c];
       break;
@@ -1524,7 +1524,7 @@ uip_process(uint8_t flag)
 
   /* Demultiplex this UDP packet between the UDP "connections". */
   for(uip_udp_conn = &uip_udp_conns[0];
-      uip_udp_conn < &uip_udp_conns[UIP_UDP_CONNS];
+      uip_udp_conn < &uip_udp_conns[CONFIG_UIP_UDP_CONNS];
       ++uip_udp_conn) {
     /* If the local UDP port is non-zero, the connection is considered
        to be used. If so, the local port number is checked against the

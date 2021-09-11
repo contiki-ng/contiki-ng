@@ -48,10 +48,6 @@
 #define NETSTACK_MAX_ROUTE_ENTRIES      8
 #endif
 
-#ifndef UIP_CONF_UDP_CONNS
-#define UIP_CONF_UDP_CONNS 2
-#endif
-
 #ifndef TSCH_CONF_MAX_INCOMING_PACKETS
 #define TSCH_CONF_MAX_INCOMING_PACKETS    2
 #endif

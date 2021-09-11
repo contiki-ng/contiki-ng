@@ -10,6 +10,8 @@ IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node"
+make -C $CONTIKI/examples/hello-world clean > /dev/null
+make -C $CONTIKI/examples/hello-world config > /dev/null
 make -C $CONTIKI/examples/hello-world > make.log 2> make.err
 sudo $CONTIKI/examples/hello-world/hello-world.native > node.log 2> node.err &
 CPID=$!

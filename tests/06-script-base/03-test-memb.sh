@@ -5,6 +5,7 @@ TEST_CODE_DIR=code-test-memb
 TARGET=test-memb
 
 make -C ${TEST_CODE_DIR} clean
+make -C ${TEST_CODE_DIR} config
 make -C ${TEST_CODE_DIR} ${TARGET}
 ${TEST_CODE_DIR}/${TARGET} > ${TESTNAME}.log
 

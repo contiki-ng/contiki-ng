@@ -134,6 +134,7 @@ do
             fi
 
             # Build the goal
+            make -C \"$example_dir\" TARGET=$platform BOARD=$board config 2>&1 >/dev/null
             $LOG_INFO "make -C \"$example_dir\" -j TARGET=$platform BOARD=$board $GOAL"
             if make -C "$example_dir" -j TARGET=$platform BOARD=$board $GOAL >build.log 2>&1
             then

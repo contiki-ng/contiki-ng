@@ -34,6 +34,7 @@
 #ifndef CONTIKI_H_
 #define CONTIKI_H_
 
+#include "autoconf.h"
 #include "contiki-conf.h"
 #include "contiki-default-conf.h"
 

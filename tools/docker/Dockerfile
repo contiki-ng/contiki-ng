@@ -105,6 +105,7 @@ RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
 # Install matplotlib for result visualization
 RUN pip3 -q install --upgrade pip
 RUN pip3 -q install matplotlib
+RUN pip3 -q install kconfiglib
 
 # Install nrfutil and work around broken pc_ble_driver_py dependency
 RUN pip3 -q install nrfutil && \

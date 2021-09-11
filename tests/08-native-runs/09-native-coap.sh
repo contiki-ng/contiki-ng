@@ -13,6 +13,8 @@ declare -i TESTCOUNT=0
 
 # Starting Contiki-NG native node
 echo "Starting native CoAP server"
+make -C $CONTIKI/examples/coap/coap-example-server clean > /dev/null
+make -C $CONTIKI/examples/coap/coap-example-server config > /dev/null
 make -C $CONTIKI/examples/coap/coap-example-server > make.log 2> make.err
 sudo $CONTIKI/examples/coap/coap-example-server/coap-example-server.native > node.log 2> node.err &
 CPID=$!

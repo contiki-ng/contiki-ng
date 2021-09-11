@@ -26,6 +26,7 @@
       <description>mote</description>
       <source>[CONTIKI_DIR]/examples/libs/shell/example.c</source>
       <commands>make TARGET=cooja clean
+make TARGET=cooja config
 make example.cooja TARGET=cooja MAKE_ROUTING=MAKE_ROUTING_RPL_LITE -j</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

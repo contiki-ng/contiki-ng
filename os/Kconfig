@@ -1,0 +1,6 @@
+
+config UIP_UDP_CONNS
+    int "UDP Connections"
+    default 8
+    help
+        The maximum amount of concurrent UDP connections

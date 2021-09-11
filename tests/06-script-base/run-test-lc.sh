@@ -5,6 +5,7 @@ TESTNAME=$1
 TARGET=`echo ${TESTNAME} | sed -e 's/[0-9]*-\(.*\)/\1/'`
 
 make -C ${TEST_CODE_DIR} clean
+make -C ${TEST_CODE_DIR} config
 make -C ${TEST_CODE_DIR} ${TARGET}
 ${TEST_CODE_DIR}/${TARGET} > ${TESTNAME}.log
 

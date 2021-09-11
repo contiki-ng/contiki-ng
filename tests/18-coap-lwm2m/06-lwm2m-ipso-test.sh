@@ -11,6 +11,7 @@ IPADDR=fd00::302:304:506:708
 # Starting Contiki-NG native node
 echo "Starting native node - lwm2m/ipso objects"
 make -C $CONTIKI/examples/lwm2m-ipso-objects clean >/dev/null
+make -C $CONTIKI/examples/lwm2m-ipso-objects config >/dev/null
 make -C $CONTIKI/examples/lwm2m-ipso-objects > make.log 2> make.err
 sudo $CONTIKI/examples/lwm2m-ipso-objects/example-ipso-objects.native > node.log 2> node.err &
 CPID=$!

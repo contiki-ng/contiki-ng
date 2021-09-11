@@ -295,17 +295,6 @@ void uip_log(char *msg);
 #endif
 
 /**
- * The maximum amount of concurrent UDP connections.
- *
- * \hideinitializer
- */
-#ifdef UIP_CONF_UDP_CONNS
-#define UIP_UDP_CONNS (UIP_CONF_UDP_CONNS)
-#else /* UIP_CONF_UDP_CONNS */
-#define UIP_UDP_CONNS    10
-#endif /* UIP_CONF_UDP_CONNS */
-
-/**
  * The name of the function that should be called when UDP datagrams arrive.
  *
  * \hideinitializer

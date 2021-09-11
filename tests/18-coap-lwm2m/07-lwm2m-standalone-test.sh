@@ -9,6 +9,7 @@ BASENAME=07-lwm2m-standalone-test
 # Building standalone posix example
 echo "Compiling standalone posix example"
 make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m clean >/dev/null
+make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m config >/dev/null
 make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m >make.log 2>make.err
 
 echo "Downloading leshan"

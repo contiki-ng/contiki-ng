@@ -19,7 +19,8 @@
       <identifier>mtype660</identifier>
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/benchmarks/result-visualization/node.c</source>
-      <commands>make TARGET=cooja node.cooja</commands>
+      <commands>make TARGET=cooja config
+      make TARGET=cooja node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

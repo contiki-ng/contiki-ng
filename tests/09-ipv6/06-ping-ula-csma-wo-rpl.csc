@@ -26,6 +26,7 @@
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/tests/09-ipv6/code/node.c</source>
       <commands>make clean
+      make TARGET=cooja config
       make WITH_ULA=1 WITH_CSMA=1 WITHOUT_RPL=1 node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

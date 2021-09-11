@@ -17,6 +17,8 @@ echo packet dir = $PACKET_DIR
 
 # Starting Contiki-NG native node
 echo "Starting native node"
+make -C $CODE_DIR TARGET=native clean >/dev/null
+make -C $CODE_DIR TARGET=native config >/dev/null
 make -C $CODE_DIR TARGET=native > make.log 2> make.err
 
 for i in $PACKET_DIR/*

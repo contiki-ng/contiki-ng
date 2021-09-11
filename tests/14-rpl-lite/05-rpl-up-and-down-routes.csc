@@ -25,6 +25,7 @@
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
       <commands>make clean TARGET=cooja
+make TARGET=cooja config
 make -j sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -50,6 +51,7 @@ make -j sender-node.cooja TARGET=cooja</commands>
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
       <commands>make clean TARGET=cooja
+make TARGET=cooja config
 make -j root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -75,6 +77,7 @@ make -j root-node.cooja TARGET=cooja</commands>
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
       <commands>make clean TARGET=cooja
+make TARGET=cooja config
 make -j receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

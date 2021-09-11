@@ -12,7 +12,7 @@ SRC_DIR=${TEST_DIR}/nbr-multi-addrs
 EXEC_FILE_NAME=test.native
 
 make -C ${SRC_DIR} clean
-
+make -C ${SRC_DIR} config
 echo "build the test program"...
 make -C ${SRC_DIR} > ${TEST_NAME}.log
 

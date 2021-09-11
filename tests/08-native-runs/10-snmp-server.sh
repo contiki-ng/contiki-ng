@@ -10,6 +10,8 @@ IPADDR=fd00::302:304:506:708
 
 test_handler () {
   # Starting Contiki-NG native node
+  make -C $CONTIKI/examples/snmp-server clean > /dev/null
+  make -C $CONTIKI/examples/snmp-server config > /dev/null
   make -C $CONTIKI/examples/snmp-server > make.log 2> make.err
   sudo $CONTIKI/examples/snmp-server/snmp-server.native > node.log 2> node.err &
   CPID=$!

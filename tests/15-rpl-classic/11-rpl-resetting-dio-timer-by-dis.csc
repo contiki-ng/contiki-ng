@@ -24,7 +24,8 @@
       <identifier>mtype325</identifier>
       <description>root</description>
       <source>[CONTIKI_DIR]/tests/15-rpl-classic/code/root-node.c</source>
-      <commands>make root-node.cooja TARGET=cooja</commands>
+      <commands>make TARGET=cooja config
+make root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -49,7 +50,8 @@
       <identifier>mtype151</identifier>
       <description>dis-sender</description>
       <source>[CONTIKI_DIR]/tests/15-rpl-classic/code/dis-sender.c</source>
-      <commands>make dis-sender.cooja TARGET=cooja</commands>
+      <commands>make TARGET=cooja config
+make dis-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

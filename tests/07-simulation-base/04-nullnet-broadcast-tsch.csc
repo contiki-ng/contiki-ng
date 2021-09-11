@@ -25,6 +25,7 @@
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/nullnet/nullnet-broadcast.c</source>
       <commands>make TARGET=cooja clean
+make TARGET=cooja config
 make -j nullnet-broadcast.cooja MAKE_MAC=MAKE_MAC_TSCH TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

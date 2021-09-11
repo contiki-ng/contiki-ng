@@ -442,7 +442,7 @@ void uip_setipid(uint16_t id);
  * UDP connections. It is called in a similar fashion as the
  * uip_periodic() function:
  \code
- for(i = 0; i < UIP_UDP_CONNS; i++) {
+ for(i = 0; i < CONFIG_UIP_UDP_CONNS; i++) {
  uip_udp_periodic(i);
  if(uip_len > 0) {
  devicedriver_send();
@@ -453,7 +453,7 @@ void uip_setipid(uint16_t id);
  * \note As for the uip_periodic() function, special care has to be
  * taken when using uIP together with ARP and Ethernet:
  \code
- for(i = 0; i < UIP_UDP_CONNS; i++) {
+ for(i = 0; i < CONFIG_UIP_UDP_CONNS; i++) {
  uip_udp_periodic(i);
  if(uip_len > 0) {
  uip_arp_out();
@@ -1385,7 +1385,7 @@ struct uip_udp_conn {
  * The current UDP connection.
  */
 extern struct uip_udp_conn *uip_udp_conn;
-extern struct uip_udp_conn uip_udp_conns[UIP_UDP_CONNS];
+extern struct uip_udp_conn uip_udp_conns[CONFIG_UIP_UDP_CONNS];
 
 struct uip_fallback_interface {
   void (*init)(void);

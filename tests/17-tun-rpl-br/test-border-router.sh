@@ -32,6 +32,7 @@ sleep 20
 
 # Connect to the simulation
 echo "Starting tunslip6"
+make -C $CONTIKI/examples/rpl-border-router/ config TARGET=zoul >> $BASENAME.tunslip6.log 2>&1
 make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip6.log 2>&1 &
 MPID=$!
 printf "Waiting for network formation (%d seconds)\n" "$WAIT_TIME"

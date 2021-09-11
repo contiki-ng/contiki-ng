@@ -32,6 +32,7 @@ sleep 20
 
 # Connect to the simulation
 echo "Starting native border-router"
+nohup make -C $CONTIKI/examples/rpl-border-router/ config TARGET=native >> $BASENAME.nbr.log 2>&1
 nohup make -C $CONTIKI/examples/rpl-border-router/ -B connect-router-cooja TARGET=native >> $BASENAME.nbr.log 2>&1 &
 MPID=$!
 printf "Waiting for network formation (%d seconds)\n" "$WAIT_TIME"

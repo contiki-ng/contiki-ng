@@ -1,0 +1,3 @@
+
+config UIP_UDP_CONNS
+    default 2

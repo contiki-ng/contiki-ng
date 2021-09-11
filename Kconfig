@@ -1,0 +1,12 @@
+mainmenu "Sample configurable project using Kconfig"
+
+config KCONFIG_CONTIKI
+    string
+    option env="KCONFIG_CONTIKI"
+
+config KCONFIG_PLATFORM
+    string
+    option env="KCONFIG_PLATFORM"
+
+source "$KCONFIG_CONTIKI/arch/platform/$KCONFIG_PLATFORM/Kconfig"
+source "$KCONFIG_CONTIKI/os/Kconfig"

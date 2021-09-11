@@ -25,6 +25,7 @@
       <description>Z1 Mote Type #z11</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands EXPORT="discard">make TARGET=z1 clean
+      make TARGET=z1 config
       make -j node.z1 TARGET=z1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

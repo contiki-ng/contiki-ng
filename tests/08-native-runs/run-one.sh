@@ -13,6 +13,7 @@ register_logfile $BUILDLOG
 echo "-- Starting test $1"
 # Clean and build
 assert "clean" "make clean &> $BUILDLOG"
+assert "config" "make config >> $BUILDLOG 2>&1"
 assert "compile" "make -j >> $BUILDLOG 2>&1"
 
 for TEST in ./test*.native; do

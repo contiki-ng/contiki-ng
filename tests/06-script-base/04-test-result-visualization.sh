@@ -5,6 +5,7 @@ CONTIKI=../..
 TEST_CODE_DIR=code-result-visualization
 
 make -C ${TEST_CODE_DIR} clean
+make -C ${TEST_CODE_DIR} config
 make -C ${TEST_CODE_DIR}
 
 ${CONTIKI}/examples/benchmarks/result-visualization/run-analysis.py ${TEST_CODE_DIR}/00-result-visualization.1.scriptlog > analysis.log || exit -1

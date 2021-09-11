@@ -119,12 +119,6 @@
 #define UIP_CONF_UDP 1
 #endif /* UIP_CONF_UDP */
 
-/* UIP_CONF_UDP_CONNS specifies the maximum number of
-   simultaneous UDP connections. */
-#ifndef UIP_CONF_UDP_CONNS
-#define UIP_CONF_UDP_CONNS 8
-#endif /* UIP_CONF_UDP_CONNS */
-
 /* UIP_CONF_TCP specifies if TCP support should be included or
    not. Disabling TCP saves memory. */
 #ifndef UIP_CONF_TCP

@@ -25,6 +25,7 @@
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code-6tisch/test-sixtop.c</source>
       <commands>make clean TARGET=cooja
+      make TARGET=cooja config
       make -j test-sixtop.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>

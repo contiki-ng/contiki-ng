@@ -49,6 +49,7 @@ BUILD_DIR_FULL = $(BUILD_DIR_TARGET_BOARD:/=)/$(BUILD_DIR_CONFIG)
 # Ditto if BUILD_DIR_CONFIG was empty
 BUILD_DIR_BOARD = $(BUILD_DIR_FULL:/=)
 OBJECTDIR = $(BUILD_DIR_BOARD)/obj
+CONF_DIR = $(BUILD_DIR_BOARD)/conf
 
 CONTIKI_NG_TARGET_LIB = $(BUILD_DIR_BOARD)/contiki-ng-$(TARGET).a
 
@@ -137,6 +138,10 @@ PLATFORM_ACTION ?= build
 
 # Provide way to create $(OBJECTDIR) if it has been removed by make clean
 $(OBJECTDIR):
+	$(TRACE_MKDIR)
+	$(Q)mkdir -p $@
+
+$(CONF_DIR):
 	$(TRACE_MKDIR)
 	$(Q)mkdir -p $@
 
@@ -343,11 +348,46 @@ endef
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
 
-.PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
+.PHONY: clean distclean usage help targets boards savetarget savedefines viewconf menuconfig config
+
+KCONFIG_MCONF = menuconfig
+KCONFIG_CONF = genconfig
+KCONFIG_ACONF = alldefconfig
+
+KCONFIG_CONFIG := $(CONF_DIR)/.config
+
+KCONFIG_AUTOCONFIG := $(CONF_DIR)/auto.conf
+KCONFIG_AUTOHEADER := $(CONF_DIR)/autoconf.h
+KCONFIG_TRISTATE := $(CONF_DIR)/tristate.config
+
+KCONFIG_ENV := \
+  KCONFIG_CONTIKI=$(CONTIKI) \
+  KCONFIG_PLATFORM=$(TARGET) \
+	KCONFIG_CONFIG=$(KCONFIG_CONFIG) \
+	KCONFIG_AUTOCONFIG=$(KCONFIG_AUTOCONFIG) \
+	KCONFIG_AUTOHEADER=$(KCONFIG_AUTOHEADER) \
+	KCONFIG_TRISTATE=$(KCONFIG_TRISTATE)
+
+KCONFIG := $(CONTIKI)/Kconfig
+
+-include $(KCONFIG_AUTOCONFIG)
+CFLAGS += -I$(CONF_DIR)
+
+menuconfig: $(CONF_DIR)
+	$(KCONFIG_ENV) $(KCONFIG_MCONF) $(KCONFIG)
+	$(KCONFIG_ENV) $(KCONFIG_CONF) $(KCONFIG)
+
+config: $(CONF_DIR)
+ifneq ("$(wildcard project.config)","")
+	@cp project.config $(KCONFIG_CONFIG)
+else
+	@$(KCONFIG_ENV) $(KCONFIG_ACONF) $(KCONFIG)
+endif
+	$(KCONFIG_ENV) $(KCONFIG_CONF) $(KCONFIG)
 
 clean:
 	-$(Q)rm -f *.d *.e *.o $(CLEAN)
-	-$(Q)rm -rf $(BUILD_DIR_TARGET)
+	-$(Q)rm -rf $(BUILD_DIR_TARGET) $(CONF_DIR)
 	-$(Q)rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
 	@echo Target $(TARGET) cleaned
 
@@ -542,6 +582,10 @@ else
 # Match-anything pattern rule to allow the project makefiles to
 # abstract from the actual binary name. It needs to contain some
 # command in order to be a rule, not just a prerequisite.
+ifneq ("$(wildcard $(KCONFIG_AUTOHEADER))","")
 %: %.$(TARGET)
 	@
+else
+	@echo "Could not find .config. Run make config or make menuconfig."
+endif
 endif

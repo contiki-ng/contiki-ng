@@ -120,12 +120,6 @@
 ##### "UIP_CONF_BUFFER_SIZE": __________________ == UIP_CONF_BUFFER_SIZE
 ##### "UIP_CONF_UDP": __________________________ == UIP_CONF_UDP
 
-#ifdef UIP_CONF_UDP_CONNS
-##### "UIP_CONF_UDP_CONNS": ____________________ == UIP_CONF_UDP_CONNS
-#else
-##### "UIP_CONF_UDP_CONNS": ____________________ -> UIP_UDP_CONNS
-#endif
-
 ##### "UIP_CONF_TCP": __________________________ == UIP_CONF_TCP
 
 #ifdef UIP_CONF_TCP_CONNS

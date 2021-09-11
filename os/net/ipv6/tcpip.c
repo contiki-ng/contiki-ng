@@ -353,7 +353,7 @@ eventhandler(process_event_t ev, process_data_t data)
       struct uip_udp_conn *cptr;
 
       for(cptr = &uip_udp_conns[0];
-          cptr < &uip_udp_conns[UIP_UDP_CONNS]; ++cptr) {
+          cptr < &uip_udp_conns[CONFIG_UIP_UDP_CONNS]; ++cptr) {
         if(cptr->appstate.p == p) {
           cptr->lport = 0;
         }
