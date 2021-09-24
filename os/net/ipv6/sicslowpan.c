@@ -1321,9 +1321,17 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
   /* The next header is compressed, NHC is following */
   CHECK_READ_SPACE(1);
   if(nhc && (*hc06_ptr & SICSLOWPAN_NHC_UDP_MASK) == SICSLOWPAN_NHC_UDP_ID) {
-    struct uip_udp_hdr *udp_buf = (struct uip_udp_hdr *)ip_payload;
+    struct uip_udp_hdr *udp_buf;
     uint16_t udp_len;
     uint8_t checksum_compressed;
+
+    /* Check that there is enough room to write the UDP header. */
+    if((ip_payload - buf) + UIP_UDPH_LEN > buf_size) {
+      LOG_WARN("uncompression: cannot write UDP header beyond target buffer\n");
+      return false;
+    }
+
+    udp_buf = (struct uip_udp_hdr *)ip_payload;
     *last_nextheader = UIP_PROTO_UDP;
     checksum_compressed = *hc06_ptr & SICSLOWPAN_NHC_UDP_CHECKSUMC;
     LOG_DBG("uncompression: incoming header value: %i\n", *hc06_ptr);
