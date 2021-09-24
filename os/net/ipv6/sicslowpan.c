@@ -2046,6 +2046,10 @@ input(void)
   /* copy the payload if buffer is non-null - which is only the case with first fragment
      or packets that are non fragmented */
   if(buffer != NULL) {
+    if(uncomp_hdr_len + packetbuf_payload_len > buffer_size) {
+      LOG_ERR("input: cannot copy the payload into the buffer\n");
+      return;
+    }
     memcpy((uint8_t *)buffer + uncomp_hdr_len, packetbuf_ptr + packetbuf_hdr_len, packetbuf_payload_len);
   }
 
