@@ -52,7 +52,8 @@
 #include "contiki.h"
 #include "sys/rtimer.h"
 #include "dev/rom-util.h"
-#include "dev/sha256.h"
+#include "dev/cc2538-sha-256.h"
+#include "dev/crypto.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -64,16 +65,9 @@ AUTOSTART_PROCESSES(&sha256_test_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(sha256_test_process, ev, data)
 {
-  static const char *const str_res[] = {
-    "success",
-    "invalid param",
-    "NULL error",
-    "resource in use",
-    "DMA bus error"
-  };
   static const struct {
     const char *data[3];
-    uint8_t sha256[32];
+    uint8_t sha256[SHA_256_DIGEST_LENGTH];
   } vectors[] = {
     { /* Simple */
       {
@@ -178,13 +172,13 @@ PROCESS_THREAD(sha256_test_process, ev, data)
       }
     }
   };
-  static sha256_state_t state;
-  static uint8_t sha256[32];
+  static uint8_t sha256[SHA_256_DIGEST_LENGTH];
   static int i, j;
-  static uint8_t ret;
   static rtimer_clock_t total_time;
   rtimer_clock_t time;
   size_t len;
+  uint8_t buf[256];
+  uint32_t buf_len;
 
   PROCESS_BEGIN();
 
@@ -197,45 +191,33 @@ PROCESS_THREAD(sha256_test_process, ev, data)
            "Test vector #%d:\n", i);
 
     time = RTIMER_NOW();
-    ret = sha256_init(&state);
+    SHA_256.init();
     time = RTIMER_NOW() - time;
     total_time = time;
-    printf("sha256_init(): %s, %" PRIu32 " us\n", str_res[ret],
+    printf("SHA_256.init: %" PRIu32 " us\n",
            (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
     PROCESS_PAUSE();
-    if(ret != CRYPTO_SUCCESS) {
-      continue;
-    }
 
     for(j = 0; j < sizeof(vectors[i].data) / sizeof(vectors[i].data[0]) &&
                vectors[i].data[j] != NULL; j++) {
       len = strlen(vectors[i].data[j]);
       printf("Buffer #%d (length: %u):\n", j, len);
       time = RTIMER_NOW();
-      ret = sha256_process(&state, vectors[i].data[j], len);
+      SHA_256.update((const uint8_t *)vectors[i].data[j], len);
       time = RTIMER_NOW() - time;
       total_time += time;
-      printf("sha256_process(): %s, %" PRIu32 " us\n", str_res[ret],
+      printf("SHA_256.update(): %" PRIu32 " us\n",
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       PROCESS_PAUSE();
-      if(ret != CRYPTO_SUCCESS) {
-        break;
-      }
-    }
-    if(ret != CRYPTO_SUCCESS) {
-      continue;
     }
 
     time = RTIMER_NOW();
-    ret = sha256_done(&state, sha256);
+    SHA_256.finalize(sha256);
     time = RTIMER_NOW() - time;
     total_time += time;
-    printf("sha256_done(): %s, %" PRIu32 " us\n", str_res[ret],
+    printf("SHA_256.finalize(): %" PRIu32 " us\n",
            (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
     PROCESS_PAUSE();
-    if(ret != CRYPTO_SUCCESS) {
-      continue;
-    }
 
     if(rom_util_memcmp(sha256, vectors[i].sha256, sizeof(sha256))) {
       puts("Computed SHA-256 hash does not match expected hash");
@@ -243,6 +225,31 @@ PROCESS_THREAD(sha256_test_process, ev, data)
       puts("Computed SHA-256 hash OK");
     }
     printf("Total duration: %" PRIu32 " us\n",
+           (uint32_t)((uint64_t)total_time * 1000000 / RTIMER_SECOND));
+  }
+
+  puts("-----------------------------------------\n"
+       "Testing shortcut ...");
+  for(i = 0; i < sizeof(vectors) / sizeof(vectors[0]); i++) {
+    buf_len = 0;
+    for(j = 0; j < sizeof(vectors[i].data) / sizeof(vectors[i].data[0]) &&
+               vectors[i].data[j] != NULL; j++) {
+      memcpy(buf + buf_len,
+          vectors[i].data[j],
+          strlen(vectors[i].data[j]));
+      buf_len += strlen(vectors[i].data[j]);
+    }
+    printf("-----------------------------------------\n"
+           "Test vector #%d:\n", i);
+    time = RTIMER_NOW();
+    SHA_256.hash(buf, buf_len, sha256);
+    total_time = RTIMER_NOW() - time;
+    if(memcmp(sha256, vectors[i].sha256, sizeof(sha256))) {
+      puts("Computed SHA-256 hash does not match expected hash");
+    } else {
+      puts("Computed SHA-256 hash OK");
+    }
+    printf("Total duration: %lu us\n",
            (uint32_t)((uint64_t)total_time * 1000000 / RTIMER_SECOND));
   }
 

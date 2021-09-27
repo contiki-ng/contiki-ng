@@ -47,7 +47,7 @@
 #include "contiki.h"
 #include "dev/ecc-algorithm.h"
 #include "dev/ecc-curve.h"
-#include "dev/sha256.h"
+#include "lib/sha-256.h"
 #include "sys/rtimer.h"
 #include "sys/pt.h"
 
@@ -629,24 +629,6 @@ static const test_data_t tests[15] =
   }
 };
 /*---------------------------------------------------------------------------*/
-static void
-sha256_hash(const uint8_t *buffer, size_t len, uint8_t *hash)
-{
-  sha256_state_t sha256_state;
-  rtimer_clock_t time;
-
-  printf("Starting sha256()...\n");
-  time = RTIMER_NOW();
-  crypto_enable();
-  sha256_init(&sha256_state);
-  sha256_process(&sha256_state, buffer, len);
-  sha256_done(&sha256_state, hash);
-  crypto_disable();
-  time = RTIMER_NOW() - time;
-  printf("sha256(), %" PRIu32 " us\n",
-         (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
-}
-/*---------------------------------------------------------------------------*/
 PROCESS(ecdsa_verify_test, "ecdsa verify test");
 AUTOSTART_PROCESSES(&ecdsa_verify_test);
 /*---------------------------------------------------------------------------*/
@@ -710,7 +692,7 @@ PROCESS_THREAD(ecdsa_verify_test, ev, data) {
     printf("Starting test %d\n", i);
 
     uint8_t hash[32];
-    sha256_hash(tests[i].m, sizeof(tests[i].m), hash);
+    SHA_256.hash(tests[i].m, sizeof(tests[i].m), hash);
 
     ec_uint8v_to_uint32v(state.public.x, tests[i].x, sizeof(tests[i].x));
     ec_uint8v_to_uint32v(state.public.y, tests[i].y, sizeof(tests[i].y));
