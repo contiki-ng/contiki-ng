@@ -328,7 +328,11 @@ endif
 MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
 # Sort removes duplicates.
 UNIQUEMODULES = $(sort $(MODULEDIRS))
-MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), ${subst ${d}/,,${wildcard $(d)/*.c}}}
+MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), \
+	${subst ${d}/, \
+		, \
+		${filter-out ${addprefix $(CONTIKI)/, $(MODULES_EXCLUSIONS)}, \
+				${wildcard $(d)/*.c}}}}
 
 # Include module-specific makefiles
 MODULES_INCLUDES = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/Makefile.${notdir $(d)}}}
