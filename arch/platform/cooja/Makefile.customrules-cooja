@@ -28,9 +28,31 @@ endif ## REDEF_PRINTF
 .PHONY: $(CONTIKI_APP).cooja
 $(CONTIKI_APP).cooja: $(JNILIB)
 	cp $(JNILIB) $@
-	rm $(CONTIKI_APP_OBJ)
+ 
+# rm $(CONTIKI_APP_OBJ)
+
+
+ifeq ("$(CLASSNAME)","")
+$(error CLASSNAME not defined!)
+endif
+
+MAINJNI_NAME = platform_$(CLASSNAME)
+JNI_OBJ = $(OBJECTDIR)/$(MAINJNI_NAME).o
+
+# keep intermediate platform.o under name JNI_OBJ, since it can explicit evaluates for claimed CLASSNAME
+#JNI_OBJ: $(OBJECTDIR)/platform.o | $(OBJECTDIR)
+#   cp  $(OBJECTDIR)/platform.o $@ 
+
+$(OBJECTDIR)/$(MAINJNI_NAME).o: platform.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+
+.PRECIOUS: $(OBJECTDIR)/platform.o
 
 # Trickiness: GNU make matches this against the file base name.
 # Assume that the directory part is the standard location.
-mtype%.o: platform.o | $(OBJECTDIR)
-	mv platform.o $@
+mtype%.o: $(JNI_OBJ) | $(OBJECTDIR)
+	cp $(JNI_OBJ) $@
+
+.PRECIOUS: $(JNI_OBJ)
