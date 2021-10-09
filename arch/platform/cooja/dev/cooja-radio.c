@@ -58,6 +58,11 @@
 
 const struct simInterface radio_interface;
 
+enum {
+    RSSI_NO_SIGNAL = -120,
+    LQI_NO_SIGNAL  = 120,
+};
+
 /* COOJA */
 char simReceiving = 0;
 char simInDataBuffer[COOJA_RADIO_BUFSIZE];
@@ -71,6 +76,9 @@ int simLastSignalStrength = -100;
 char simPower = 100;
 int simRadioChannel = 26;
 int simLQI = 105;
+int simLastLQI  = LQI_NO_SIGNAL;
+
+
 
 static const void *pending_data;
 
@@ -136,6 +144,13 @@ radio_LQI(void)
 {
   return simLQI;
 }
+
+static
+int radio_LQI_last(void)
+{
+  return simLastLQI;
+}
+
 /*---------------------------------------------------------------------------*/
 static int
 radio_on(void)
@@ -162,6 +177,7 @@ doInterfaceActionsBeforeTick(void)
   }
   if(simReceiving) {
     simLastSignalStrength = simSignalStrength;
+    simLastLQI              = simLQI;
     return;
   }
 
@@ -191,8 +207,8 @@ radio_read(void *buf, unsigned short bufsize)
   memcpy(buf, simInDataBuffer, simInSize);
   simInSize = 0;
   if(!poll_mode) {
-    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, simSignalStrength);
-    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, simLQI);
+    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, radio_signal_strength_last());
+    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, radio_LQI_last() );
   }
 
   return tmp;
@@ -351,15 +367,17 @@ get_value(radio_param_t param, radio_value_t *value)
     }
     return RADIO_RESULT_OK;
   case RADIO_PARAM_LAST_RSSI:
-    *value = simSignalStrength;
+      *value = radio_signal_strength_last();
     return RADIO_RESULT_OK;
+
   case RADIO_PARAM_LAST_LINK_QUALITY:
-    *value = simLQI;
+    *value = radio_LQI_last();
     return RADIO_RESULT_OK;
+
   case RADIO_PARAM_RSSI:
-    /* return a fixed value depending on the channel */
-    *value = -90 + simRadioChannel - 11;
+    *value = radio_signal_strength_current();
     return RADIO_RESULT_OK;
+
   case RADIO_CONST_MAX_PAYLOAD_LEN:
     *value = (radio_value_t)COOJA_RADIO_BUFSIZE;
     return RADIO_RESULT_OK;
@@ -399,7 +417,8 @@ set_value(radio_param_t param, radio_value_t value)
     set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CHANNEL:
-    if(value < 11 || value > 26) {
+      // for <0 cooja think that it noises at all chanels
+    if(value < 0) {
       return RADIO_RESULT_INVALID_VALUE;
     }
     radio_set_channel(value);
