@@ -79,7 +79,7 @@ udp_rx_callback(struct simple_udp_connection *c,
               (unsigned long)remote_time_clock_ticks,
               (unsigned long)local_time_clock_ticks,
               (unsigned long)(local_time_clock_ticks - remote_time_clock_ticks),
-              (int)uipbuf_get_attr(UIPBUF_ATTR_RSSI),
+              (int16_t)uipbuf_get_attr(UIPBUF_ATTR_RSSI),
               uipbuf_get_attr(UIPBUF_ATTR_LINK_QUALITY));
   }
 }
