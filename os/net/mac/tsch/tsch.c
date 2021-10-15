@@ -529,6 +529,7 @@ tsch_rx_process_pending()
 static void
 tsch_tx_process_pending(void)
 {
+  uint16_t num_packets_freed = 0;
   int16_t dequeued_index;
   /* Loop on accessing (without removing) a pending input packet */
   while((dequeued_index = ringbufindex_peek_get(&dequeued_ringbuf)) != -1) {
@@ -543,10 +544,14 @@ tsch_tx_process_pending(void)
     mac_call_sent_callback(p->sent, p->ptr, p->ret, p->transmissions);
     /* Free packet queuebuf */
     tsch_queue_free_packet(p);
-    /* Free all unused neighbors */
-    tsch_queue_free_unused_neighbors();
     /* Remove dequeued packet from ringbuf */
     ringbufindex_get(&dequeued_ringbuf);
+    num_packets_freed++;
+  }
+
+  if(num_packets_freed > 0) {
+    /* Free all unused neighbors */
+    tsch_queue_free_unused_neighbors();
   }
 }
 /*---------------------------------------------------------------------------*/
