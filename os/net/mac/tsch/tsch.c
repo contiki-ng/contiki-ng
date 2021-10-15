@@ -495,7 +495,7 @@ static void
 tsch_rx_process_pending()
 {
   int16_t input_index;
-  /* Loop on accessing (without removing) a pending input packet */
+  /* Loop on accessing (without removing) a pending output packet */
   while((input_index = ringbufindex_peek_get(&input_ringbuf)) != -1) {
     struct input_packet *current_input = &input_array[input_index];
     frame802154_t frame;
