@@ -146,7 +146,7 @@ radio_LQI(void)
 }
 
 static
-int radio_LQI_last(void)
+int radio_lqi_last(void)
 {
   return simLastLQI;
 }
@@ -208,7 +208,7 @@ radio_read(void *buf, unsigned short bufsize)
   simInSize = 0;
   if(!poll_mode) {
     packetbuf_set_attr(PACKETBUF_ATTR_RSSI, radio_signal_strength_last());
-    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, radio_LQI_last() );
+    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, radio_lqi_last() );
   }
 
   return tmp;
@@ -367,11 +367,11 @@ get_value(radio_param_t param, radio_value_t *value)
     }
     return RADIO_RESULT_OK;
   case RADIO_PARAM_LAST_RSSI:
-      *value = radio_signal_strength_last();
+    *value = radio_signal_strength_last();
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_LAST_LINK_QUALITY:
-    *value = radio_LQI_last();
+    *value = radio_lqi_last();
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_RSSI:
@@ -417,10 +417,12 @@ set_value(radio_param_t param, radio_value_t value)
     set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CHANNEL:
-      // for <0 cooja think that it noises at all chanels
-    if(value < 0) {
-      return RADIO_RESULT_INVALID_VALUE;
-    }
+    /* with chanels <0 cooja mutches with any chanels:
+     *  - sent packets on negative chanekl -> to any receivers chanels.
+     *  - receiver on negative chanel <- gots any sender chcnels.
+     * So, negative chanel useful for wide-band noise generation.
+     * Or sniff wide-band air.
+     * */
     radio_set_channel(value);
     return RADIO_RESULT_OK;
   default:
