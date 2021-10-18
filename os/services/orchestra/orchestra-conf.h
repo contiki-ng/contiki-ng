@@ -126,18 +126,11 @@
 #define ORCHESTRA_COLLISION_FREE_HASH             0 /* Set to 1 if ORCHESTRA_LINKADDR_HASH returns unique hashes */
 #endif /* ORCHESTRA_CONF_COLLISION_FREE_HASH */
 
-/* Channel offset for the EB rule, default 0 */
-#ifdef ORCHESTRA_CONF_EB_CHANNEL_OFFSET
-#define ORCHESTRA_EB_CHANNEL_OFFSET               ORCHESTRA_CONF_EB_CHANNEL_OFFSET
-#else
-#define ORCHESTRA_EB_CHANNEL_OFFSET               0
-#endif
-
-/* Channel offset for the default common rule, default 1 */
+/* Channel offset for the default common rule, default 0 */
 #ifdef ORCHESTRA_CONF_DEFAULT_COMMON_CHANNEL_OFFSET
 #define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   ORCHESTRA_CONF_DEFAULT_COMMON_CHANNEL_OFFSET
 #else
-#define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   1
+#define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   0
 #endif
 
 /* Min channel offset for the unicast rules; the default min/max range is [2, sizeof(HS)-2].
