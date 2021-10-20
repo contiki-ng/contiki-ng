@@ -58,9 +58,23 @@
 
 const struct simInterface radio_interface;
 
+
+
+/* There radio driver can provide cooja it's nosignal value.
+ * But at present, cooja ignore and override it.
+ * */
 enum {
-    RSSI_NO_SIGNAL = -120,
-    LQI_NO_SIGNAL  = 120,
+    /*
+     * Tmote Sky (with CC2420 radio) give value -100dB
+     * CC1310 gives value about -110dB
+    */
+    RSSI_NO_SIGNAL = -110 ,
+
+    /*
+     * Tmote Sky (with CC2420 radio) give value 105
+     * CC1310 gives value about 100?
+    */
+    LQI_NO_SIGNAL  = 100 ,
 };
 
 /* COOJA */
@@ -71,11 +85,11 @@ rtimer_clock_t simLastPacketTimestamp = 0;
 char simOutDataBuffer[COOJA_RADIO_BUFSIZE];
 int simOutSize = 0;
 char simRadioHWOn = 1;
-int simSignalStrength = -100;
-int simLastSignalStrength = -100;
+int simSignalStrength       = RSSI_NO_SIGNAL;
+int simLastSignalStrength   = RSSI_NO_SIGNAL;
 char simPower = 100;
 int simRadioChannel = 26;
-int simLQI = 105;
+int simLQI      = LQI_NO_SIGNAL;
 int simLastLQI  = LQI_NO_SIGNAL;
 
 
