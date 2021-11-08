@@ -271,7 +271,6 @@ PROCESS(mdns_probe_process, "mDNS probe");
 #endif /* RESOLV_CONF_SUPPORTS_MDNS */
 
 /*---------------------------------------------------------------------------*/
-#if RESOLV_VERIFY_ANSWER_NAMES || LOG_DBG_ENABLED
 /** \internal
  * \brief Decodes a DNS name from the DNS format into the given string.
  * \return 1 upon success, 0 if the size of the name would be too large.
@@ -369,7 +368,6 @@ dns_name_isequal(const unsigned char *queryptr, const char *name,
   return name[0] == 0;
 }
 #endif /* RESOLV_CONF_SUPPORTS_MDNS */
-#endif /* RESOLV_VERIFY_ANSWER_NAMES */
 /*---------------------------------------------------------------------------*/
 /** \internal
  */
