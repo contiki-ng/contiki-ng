@@ -581,7 +581,7 @@ check_entries(void)
     if(namemapptr->state == STATE_NEW || namemapptr->state == STATE_ASKING) {
       etimer_set(&retry, CLOCK_SECOND / 4);
       if(namemapptr->state == STATE_ASKING) {
-        if(--namemapptr->tmr == 0) {
+        if(namemapptr->tmr == 0 || --namemapptr->tmr == 0) {
 #if RESOLV_CONF_SUPPORTS_MDNS
           if(++namemapptr->retries ==
              (namemapptr->is_mdns ? RESOLV_CONF_MAX_MDNS_RETRIES :
