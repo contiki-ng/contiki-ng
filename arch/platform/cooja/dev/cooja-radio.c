@@ -58,6 +58,25 @@
 
 const struct simInterface radio_interface;
 
+
+
+/* The radio driver can provide Cooja these values.
+ * But at present, Cooja ignores and overrides them.
+ * */
+enum {
+    /*
+     * Tmote Sky (with CC2420 radio) gives value -100dB
+     * CC1310 gives about -110dB
+    */
+    RSSI_NO_SIGNAL = -110,
+
+    /*
+     * Tmote Sky (with CC2420 radio) gives value 105
+     * CC1310 gives about 100
+    */
+    LQI_NO_SIGNAL  = 100,
+};
+
 /* COOJA */
 char simReceiving = 0;
 char simInDataBuffer[COOJA_RADIO_BUFSIZE];
@@ -66,11 +85,14 @@ rtimer_clock_t simLastPacketTimestamp = 0;
 char simOutDataBuffer[COOJA_RADIO_BUFSIZE];
 int simOutSize = 0;
 char simRadioHWOn = 1;
-int simSignalStrength = -100;
-int simLastSignalStrength = -100;
+int simSignalStrength       = RSSI_NO_SIGNAL;
+int simLastSignalStrength   = RSSI_NO_SIGNAL;
 char simPower = 100;
 int simRadioChannel = 26;
-int simLQI = 105;
+int simLQI      = LQI_NO_SIGNAL;
+int simLastLQI  = LQI_NO_SIGNAL;
+
+
 
 static const void *pending_data;
 
@@ -136,6 +158,13 @@ radio_LQI(void)
 {
   return simLQI;
 }
+
+static
+int radio_lqi_last(void)
+{
+  return simLastLQI;
+}
+
 /*---------------------------------------------------------------------------*/
 static int
 radio_on(void)
@@ -162,6 +191,7 @@ doInterfaceActionsBeforeTick(void)
   }
   if(simReceiving) {
     simLastSignalStrength = simSignalStrength;
+    simLastLQI              = simLQI;
     return;
   }
 
@@ -191,8 +221,8 @@ radio_read(void *buf, unsigned short bufsize)
   memcpy(buf, simInDataBuffer, simInSize);
   simInSize = 0;
   if(!poll_mode) {
-    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, simSignalStrength);
-    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, simLQI);
+    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, radio_signal_strength_last());
+    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, radio_lqi_last() );
   }
 
   return tmp;
@@ -351,15 +381,17 @@ get_value(radio_param_t param, radio_value_t *value)
     }
     return RADIO_RESULT_OK;
   case RADIO_PARAM_LAST_RSSI:
-    *value = simSignalStrength;
+    *value = radio_signal_strength_last();
     return RADIO_RESULT_OK;
+
   case RADIO_PARAM_LAST_LINK_QUALITY:
-    *value = simLQI;
+    *value = radio_lqi_last();
     return RADIO_RESULT_OK;
+
   case RADIO_PARAM_RSSI:
-    /* return a fixed value depending on the channel */
-    *value = -90 + simRadioChannel - 11;
+    *value = radio_signal_strength_current();
     return RADIO_RESULT_OK;
+
   case RADIO_CONST_MAX_PAYLOAD_LEN:
     *value = (radio_value_t)COOJA_RADIO_BUFSIZE;
     return RADIO_RESULT_OK;
@@ -399,9 +431,12 @@ set_value(radio_param_t param, radio_value_t value)
     set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CHANNEL:
-    if(value < 11 || value > 26) {
-      return RADIO_RESULT_INVALID_VALUE;
-    }
+    /* With channel value < 0 Cooja matches any channels:
+     *  - send packets on a negative channel -> to any receiver's channels.
+     *  - receive on a negative channel <- get packets from any sender's channels.
+     * So, negative channel are useful for wide-band noise generation.
+     * Or for wide-band sniffing.
+     * */
     radio_set_channel(value);
     return RADIO_RESULT_OK;
   default:
