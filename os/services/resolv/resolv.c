@@ -1257,7 +1257,7 @@ resolv_lookup(const char *name, uip_ipaddr_t **ipaddr)
   name = remove_trailing_dots(name);
 
 #if UIP_CONF_LOOPBACK_INTERFACE
-  if(strcmp(name, "localhost")) {
+  if(strcmp(name, "localhost") == 0) {
     static uip_ipaddr_t loopback =
     { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 } };
