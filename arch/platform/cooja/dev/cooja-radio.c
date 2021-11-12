@@ -60,21 +60,21 @@ const struct simInterface radio_interface;
 
 
 
-/* There radio driver can provide cooja it's nosignal value.
- * But at present, cooja ignore and override it.
+/* The radio driver can provide Cooja these values.
+ * But at present, Cooja ignores and overrides them.
  * */
 enum {
     /*
-     * Tmote Sky (with CC2420 radio) give value -100dB
-     * CC1310 gives value about -110dB
+     * Tmote Sky (with CC2420 radio) gives value -100dB
+     * CC1310 gives about -110dB
     */
-    RSSI_NO_SIGNAL = -110 ,
+    RSSI_NO_SIGNAL = -110,
 
     /*
-     * Tmote Sky (with CC2420 radio) give value 105
-     * CC1310 gives value about 100?
+     * Tmote Sky (with CC2420 radio) gives value 105
+     * CC1310 gives about 100
     */
-    LQI_NO_SIGNAL  = 100 ,
+    LQI_NO_SIGNAL  = 100,
 };
 
 /* COOJA */
@@ -431,11 +431,11 @@ set_value(radio_param_t param, radio_value_t value)
     set_send_on_cca((value & RADIO_TX_MODE_SEND_ON_CCA) != 0);
     return RADIO_RESULT_OK;
   case RADIO_PARAM_CHANNEL:
-    /* with chanels <0 cooja mutches with any chanels:
-     *  - sent packets on negative chanekl -> to any receivers chanels.
-     *  - receiver on negative chanel <- gots any sender chcnels.
-     * So, negative chanel useful for wide-band noise generation.
-     * Or sniff wide-band air.
+    /* With channel value < 0 Cooja matches any channels:
+     *  - send packets on a negative channel -> to any receiver's channels.
+     *  - receive on a negative channel <- get packets from any sender's channels.
+     * So, negative channel are useful for wide-band noise generation.
+     * Or for wide-band sniffing.
      * */
     radio_set_channel(value);
     return RADIO_RESULT_OK;
