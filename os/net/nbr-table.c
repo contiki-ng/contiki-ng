@@ -82,35 +82,35 @@ key_from_index(int index)
 /*---------------------------------------------------------------------------*/
 /* Get an item from its neighbor index */
 static nbr_table_item_t *
-item_from_index(nbr_table_t *table, int index)
+item_from_index(const nbr_table_t *table, int index)
 {
   return table != NULL && index != -1 ? (char *)table->data + index * table->item_size : NULL;
 }
 /*---------------------------------------------------------------------------*/
 /* Get the neighbor index of an item */
 static int
-index_from_key(nbr_table_key_t *key)
+index_from_key(const nbr_table_key_t *key)
 {
   return key != NULL ? key - (nbr_table_key_t *)neighbor_addr_mem.mem : -1;
 }
 /*---------------------------------------------------------------------------*/
 /* Get the neighbor index of an item */
 static int
-index_from_item(nbr_table_t *table, const nbr_table_item_t *item)
+index_from_item(const nbr_table_t *table, const nbr_table_item_t *item)
 {
   return table != NULL && item != NULL ? ((int)((char *)item - (char *)table->data)) / table->item_size : -1;
 }
 /*---------------------------------------------------------------------------*/
 /* Get an item from its key */
 static nbr_table_item_t *
-item_from_key(nbr_table_t *table, nbr_table_key_t *key)
+item_from_key(const nbr_table_t *table, const nbr_table_key_t *key)
 {
   return item_from_index(table, index_from_key(key));
 }
 /*---------------------------------------------------------------------------*/
 /* Get the key af an item */
 static nbr_table_key_t *
-key_from_item(nbr_table_t *table, const nbr_table_item_t *item)
+key_from_item(const nbr_table_t *table, const nbr_table_item_t *item)
 {
   return key_from_index(index_from_item(table, item));
 }
@@ -137,7 +137,8 @@ index_from_lladdr(const linkaddr_t *lladdr)
 /*---------------------------------------------------------------------------*/
 /* Get bit from "used" or "locked" bitmap */
 static int
-nbr_get_bit(uint8_t *bitmap, nbr_table_t *table, nbr_table_item_t *item)
+nbr_get_bit(const uint8_t *bitmap, const nbr_table_t *table,
+            const nbr_table_item_t *item)
 {
   int item_index = index_from_item(table, item);
   if(table != NULL && item_index != -1) {
@@ -150,7 +151,8 @@ nbr_get_bit(uint8_t *bitmap, nbr_table_t *table, nbr_table_item_t *item)
 /*---------------------------------------------------------------------------*/
 /* Set bit in "used" or "locked" bitmap */
 static int
-nbr_set_bit(uint8_t *bitmap, nbr_table_t *table, nbr_table_item_t *item, int value)
+nbr_set_bit(uint8_t *bitmap, const nbr_table_t *table,
+            const nbr_table_item_t *item, int value)
 {
   int item_index = index_from_item(table, item);
 
@@ -229,15 +231,17 @@ nbr_table_gc_get_worst(const linkaddr_t *lladdr1, const linkaddr_t *lladdr2)
 }
 /*---------------------------------------------------------------------------*/
 bool
-nbr_table_can_accept_new(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
-                         nbr_table_reason_t reason, void *data)
+nbr_table_can_accept_new(const linkaddr_t *new,
+                         const linkaddr_t *candidate_for_removal,
+                         nbr_table_reason_t reason, const void *data)
 {
   /* Default behavior: if full, always replace worst entry. */
   return true;
 }
 /*---------------------------------------------------------------------------*/
 static const linkaddr_t *
-select_for_removal(const linkaddr_t *new, nbr_table_reason_t reason, void *data)
+select_for_removal(const linkaddr_t *new, nbr_table_reason_t reason,
+                   const void *data)
 {
   nbr_table_key_t *k;
   const linkaddr_t *worst_lladdr = NULL;
@@ -265,8 +269,8 @@ select_for_removal(const linkaddr_t *new, nbr_table_reason_t reason, void *data)
 }
 /*---------------------------------------------------------------------------*/
 static bool
-entry_is_allowed(nbr_table_t *table, const linkaddr_t *lladdr,
-                 nbr_table_reason_t reason, void *data,
+entry_is_allowed(const nbr_table_t *table, const linkaddr_t *lladdr,
+                 nbr_table_reason_t reason, const void *data,
                  const linkaddr_t **to_be_removed_ptr)
 {
   bool ret;
@@ -292,14 +296,15 @@ entry_is_allowed(nbr_table_t *table, const linkaddr_t *lladdr,
 }
 /*---------------------------------------------------------------------------*/
 bool
-nbr_table_entry_is_allowed(nbr_table_t *table, const linkaddr_t *lladdr,
-                           nbr_table_reason_t reason, void *data)
+nbr_table_entry_is_allowed(const nbr_table_t *table, const linkaddr_t *lladdr,
+                           nbr_table_reason_t reason, const void *data)
 {
   return entry_is_allowed(table, lladdr, reason, data, NULL);
 }
 /*---------------------------------------------------------------------------*/
 static nbr_table_key_t *
-nbr_table_allocate(nbr_table_reason_t reason, void *data, const linkaddr_t *to_be_removed_lladdr)
+nbr_table_allocate(nbr_table_reason_t reason, const void *data,
+                   const linkaddr_t *to_be_removed_lladdr)
 {
   nbr_table_key_t *new = memb_alloc(&neighbor_addr_mem);
   if(new != NULL) {
@@ -349,7 +354,7 @@ nbr_table_register(nbr_table_t *table, nbr_table_callback *callback)
 /*---------------------------------------------------------------------------*/
 /* Test whether a specified table has been registered or not */
 int
-nbr_table_is_registered(nbr_table_t *table)
+nbr_table_is_registered(const nbr_table_t *table)
 {
   if(table != NULL && table->index >= 0 && table->index < MAX_NUM_TABLES
                    && all_tables[table->index] == table) {
@@ -360,7 +365,7 @@ nbr_table_is_registered(nbr_table_t *table)
 /*---------------------------------------------------------------------------*/
 /* Returns the first item of the current table */
 nbr_table_item_t *
-nbr_table_head(nbr_table_t *table)
+nbr_table_head(const nbr_table_t *table)
 {
   /* Get item from first key */
   nbr_table_item_t *item = item_from_key(table, list_head(nbr_table_keys));
@@ -374,7 +379,7 @@ nbr_table_head(nbr_table_t *table)
 /*---------------------------------------------------------------------------*/
 /* Iterates over the current table */
 nbr_table_item_t *
-nbr_table_next(nbr_table_t *table, nbr_table_item_t *item)
+nbr_table_next(const nbr_table_t *table, nbr_table_item_t *item)
 {
   do {
     void *key = key_from_item(table, item);
@@ -387,7 +392,8 @@ nbr_table_next(nbr_table_t *table, nbr_table_item_t *item)
 /*---------------------------------------------------------------------------*/
 /* Add a neighbor indexed with its link-layer address */
 nbr_table_item_t *
-nbr_table_add_lladdr(nbr_table_t *table, const linkaddr_t *lladdr, nbr_table_reason_t reason, void *data)
+nbr_table_add_lladdr(const nbr_table_t *table, const linkaddr_t *lladdr,
+                     nbr_table_reason_t reason, const void *data)
 {
   int index;
   nbr_table_item_t *item;
@@ -443,7 +449,7 @@ nbr_table_add_lladdr(nbr_table_t *table, const linkaddr_t *lladdr, nbr_table_rea
 /*---------------------------------------------------------------------------*/
 /* Get an item from its link-layer address */
 void *
-nbr_table_get_from_lladdr(nbr_table_t *table, const linkaddr_t *lladdr)
+nbr_table_get_from_lladdr(const nbr_table_t *table, const linkaddr_t *lladdr)
 {
   void *item = item_from_index(table, index_from_lladdr(lladdr));
   return nbr_get_bit(used_map, table, item) ? item : NULL;
@@ -451,7 +457,7 @@ nbr_table_get_from_lladdr(nbr_table_t *table, const linkaddr_t *lladdr)
 /*---------------------------------------------------------------------------*/
 /* Removes a neighbor from the current table (unset "used" bit) */
 int
-nbr_table_remove(nbr_table_t *table, void *item)
+nbr_table_remove(const nbr_table_t *table, const void *item)
 {
   int ret = nbr_set_bit(used_map, table, item, 0);
   nbr_set_bit(locked_map, table, item, 0);
@@ -460,7 +466,7 @@ nbr_table_remove(nbr_table_t *table, void *item)
 /*---------------------------------------------------------------------------*/
 /* Lock a neighbor for the current table (set "locked" bit) */
 int
-nbr_table_lock(nbr_table_t *table, void *item)
+nbr_table_lock(const nbr_table_t *table, const void *item)
 {
 #if DEBUG
   int i = index_from_item(table, item);
@@ -471,7 +477,7 @@ nbr_table_lock(nbr_table_t *table, void *item)
 /*---------------------------------------------------------------------------*/
 /* Release the lock on a neighbor for the current table (unset "locked" bit) */
 int
-nbr_table_unlock(nbr_table_t *table, void *item)
+nbr_table_unlock(const nbr_table_t *table, const void *item)
 {
 #if DEBUG
   int i = index_from_item(table, item);
@@ -482,7 +488,7 @@ nbr_table_unlock(nbr_table_t *table, void *item)
 /*---------------------------------------------------------------------------*/
 /* Get link-layer address of an item */
 linkaddr_t *
-nbr_table_get_lladdr(nbr_table_t *table, const void *item)
+nbr_table_get_lladdr(const nbr_table_t *table, const void *item)
 {
   nbr_table_key_t *key = key_from_item(table, item);
   return key != NULL ? &key->lladdr : NULL;
@@ -505,7 +511,7 @@ nbr_table_key_head(void)
 }
 /*---------------------------------------------------------------------------*/
 nbr_table_key_t *
-nbr_table_key_next(nbr_table_key_t *key)
+nbr_table_key_next(const nbr_table_key_t *key)
 {
   return list_item_next(key);
 }
