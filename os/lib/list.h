@@ -136,25 +136,25 @@
 typedef void ** list_t;
 
 void   list_init(list_t list);
-void * list_head(list_t list);
-void * list_tail(list_t list);
+void * list_head(const list_t list);
+void * list_tail(const list_t list);
 void * list_pop (list_t list);
 void   list_push(list_t list, void *item);
 
 void * list_chop(list_t list);
 
 void   list_add(list_t list, void *item);
-void   list_remove(list_t list, void *item);
+void   list_remove(list_t list, const void *item);
 
-int    list_length(list_t list);
+int    list_length(const list_t list);
 
-void   list_copy(list_t dest, list_t src);
+void   list_copy(list_t dest, const list_t src);
 
 void   list_insert(list_t list, void *previtem, void *newitem);
 
-void * list_item_next(void *item);
+void * list_item_next(const void *item);
 
-bool list_contains(list_t list, void *item);
+bool list_contains(const list_t list, const void *item);
 
 #endif /* LIST_H_ */
 

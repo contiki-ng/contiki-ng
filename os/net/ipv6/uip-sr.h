@@ -116,7 +116,8 @@ int uip_sr_num_nodes(void);
  * \param child The IPv6 address of the child
  * \param parent The IPv6 address of the parent
 */
-void uip_sr_expire_parent(void *graph, const uip_ipaddr_t *child, const uip_ipaddr_t *parent);
+void uip_sr_expire_parent(const void *graph, const uip_ipaddr_t *child,
+                          const uip_ipaddr_t *parent);
 
 /**
  * Updates a child-parent link
@@ -126,7 +127,9 @@ void uip_sr_expire_parent(void *graph, const uip_ipaddr_t *child, const uip_ipad
  * \param parent The IPv6 address of the parent
  * \param lifetime The link lifetime in seconds
 */
-uip_sr_node_t *uip_sr_update_node(void *graph, const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32_t lifetime);
+uip_sr_node_t *uip_sr_update_node(void *graph, const uip_ipaddr_t *child,
+                                  const uip_ipaddr_t *parent,
+                                  uint32_t lifetime);
 
 /**
  * Returns the head of the non-storing node list
@@ -141,7 +144,7 @@ uip_sr_node_t *uip_sr_node_head(void);
  * \param item The current element in the list
  * \return The next element of the list
 */
-uip_sr_node_t *uip_sr_node_next(uip_sr_node_t *item);
+uip_sr_node_t *uip_sr_node_next(const uip_sr_node_t *item);
 
 /**
  * Looks up for a source routing node from its IPv6 global address
@@ -150,7 +153,7 @@ uip_sr_node_t *uip_sr_node_next(uip_sr_node_t *item);
  * \param addr The target address
  * \return A pointer to the node
 */
-uip_sr_node_t *uip_sr_get_node(void *graph, const uip_ipaddr_t *addr);
+uip_sr_node_t *uip_sr_get_node(const void *graph, const uip_ipaddr_t *addr);
 
 /**
  * Telle whether an address is reachable, i.e. if there exists a path from
@@ -160,7 +163,7 @@ uip_sr_node_t *uip_sr_get_node(void *graph, const uip_ipaddr_t *addr);
  * \param addr The target IPv6 global address
  * \return 1 if the node is reachable, 0 otherwise
 */
-int uip_sr_is_addr_reachable(void *graph, const uip_ipaddr_t *addr);
+int uip_sr_is_addr_reachable(const void *graph, const uip_ipaddr_t *addr);
 
 /**
  * A function called periodically. Used to age the links (decrease lifetime
@@ -189,7 +192,7 @@ void uip_sr_free_all(void);
 * \return Identical to snprintf: number of bytes written excluding ending null
 * byte. A value >= buflen if the buffer was too small.
 */
-int uip_sr_link_snprint(char *buf, int buflen, uip_sr_node_t *link);
+int uip_sr_link_snprint(char *buf, int buflen, const uip_sr_node_t *link);
 
  /** @} */
 
