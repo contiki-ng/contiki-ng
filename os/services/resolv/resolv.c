@@ -279,50 +279,60 @@ PROCESS(mdns_probe_process, "mDNS probe");
  *       `RESOLV_CONF_MAX_DOMAIN_NAME_SIZE+1` bytes large.
  */
 static uint8_t
-decode_name(const unsigned char *query, char *dest, const unsigned char *packet)
+decode_name(const unsigned char *query, char *dest,
+	    const unsigned char *packet, size_t packet_len)
 {
-  int len = RESOLV_CONF_MAX_DOMAIN_NAME_SIZE;
-  unsigned char n = *query++;
+  int dest_len = RESOLV_CONF_MAX_DOMAIN_NAME_SIZE;
+  unsigned char label_len = *query++;
 
   LOG_DBG("decoding name: \"");
 
-  while(len && n) {
-    if(n & 0xc0) {
-      const uint16_t offset = query[0] + ((n & ~0xC0) << 8);
-
+  while(dest_len && label_len) {
+    if(label_len & 0xc0) {
+      const uint16_t offset = query[0] + ((label_len & ~0xC0) << 8);
+      if(offset >= packet_len) {
+	LOG_ERR("Offset %"PRIu16" exceeds packet length %zu\n",
+	       offset, packet_len);
+	return 0;
+      }
       LOG_DBG_("<skip-to-%d>", offset);
       query = packet + offset;
-      n = *query++;
+      label_len = *query++;
     }
 
-    if(!n) {
+    if(label_len == 0) {
       break;
     }
 
-    for(; n; --n) {
+    if(query - packet + label_len > packet_len) {
+      LOG_ERR("Cannot read outside the packet data\n");
+      return 0;
+    }
+
+    for(; label_len; --label_len) {
       LOG_DBG_("%c", *query);
 
       *dest++ = *query++;
 
-      if(!--len) {
+      if(--dest_len == 0) {
         *dest = 0;
         LOG_DBG_("\"\n");
         return 0;
       }
     }
 
-    n = *query++;
+    label_len = *query++;
 
-    if(n) {
+    if(label_len > 0) {
       LOG_DBG_(".");
       *dest++ = '.';
-      --len;
+      --dest_len;
     }
   }
 
   LOG_DBG_("\"\n");
   *dest = 0;
-  return len != 0;
+  return dest_len != 0;
 }
 /*---------------------------------------------------------------------------*/
 /** \internal
@@ -332,31 +342,31 @@ static uint8_t
 dns_name_isequal(const unsigned char *queryptr, const char *name,
                  const unsigned char *packet)
 {
-  unsigned char n = *queryptr++;
+  unsigned char label_len = *queryptr++;
 
   if(*name == 0) {
     return 0;
   }
 
-  while(n) {
-    if(n & 0xc0) {
-      queryptr = packet + queryptr[0] + ((n & ~0xC0) << 8);
-      n = *queryptr++;
+  while(label_len > 0) {
+    if(label_len & 0xc0) {
+      queryptr = packet + queryptr[0] + ((label_len & ~0xC0) << 8);
+      label_len = *queryptr++;
     }
 
-    for(; n; --n) {
+    for(; label_len; --label_len) {
       if(!*name) {
         return 0;
       }
 
-      if(tolower((unsigned int)*name++) != tolower((unsigned int)*queryptr++)) {
+      if(tolower(*name++) != tolower(*queryptr++)) {
         return 0;
       }
     }
 
-    n = *queryptr++;
+    label_len = *queryptr++;
 
-    if((n != 0) && (*name++ != '.')) {
+    if(label_len != 0 && *name++ != '.') {
       return 0;
     }
   }
@@ -767,7 +777,7 @@ newdata(void)
       }
 
       if(!dns_name_isequal(queryptr, resolv_hostname, uip_appdata)) {
-        continue;
+	continue;
       }
 
       LOG_DBG("Received MDNS request for us\n");
@@ -810,12 +820,6 @@ newdata(void)
   }
 
 /** ANSWER HANDLING SECTION **************************************************/
-
-  if(nanswers == 0) {
-    /* Skip responses with no answers. */
-    return;
-  }
-
   struct namemap *namemapptr = NULL;
 
 #if RESOLV_CONF_SUPPORTS_MDNS
@@ -877,8 +881,8 @@ newdata(void)
 #endif /* !ARCH_DOESNT_NEED_ALIGNED_STRUCTS */
 
     if(LOG_DBG_ENABLED) {
-      char debug_name[40];
-      decode_name(queryptr, debug_name, uip_appdata);
+      char debug_name[RESOLV_CONF_MAX_DOMAIN_NAME_SIZE + 1];
+      decode_name(queryptr, debug_name, uip_appdata, uip_datalen());
       LOG_DBG("Answer %d: \"%s\", type %d, class %d, ttl %"PRIu32", length %d\n",
               ++i, debug_name, uip_ntohs(ans->type),
               uip_ntohs(ans->class) & 0x7FFF,
@@ -925,7 +929,8 @@ newdata(void)
         LOG_DBG("Unsolicited MDNS response\n");
         i = available_i;
         namemapptr = &names[i];
-        if(!decode_name(queryptr, namemapptr->name, uip_appdata)) {
+        if(!decode_name(queryptr, namemapptr->name,
+			uip_appdata, uip_datalen())) {
           LOG_DBG("MDNS name too big to cache\n");
           namemapptr = NULL;
           goto skip_to_next_answer;
