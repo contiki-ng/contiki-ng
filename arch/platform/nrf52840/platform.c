@@ -113,6 +113,10 @@ platform_init_stage_two(void)
 
 #if NRF52840_NATIVE_USB
   usb_serial_init();
+  serial_line_init();
+#if BUILD_WITH_SHELL
+  usb_serial_set_input(serial_line_input_byte);
+#endif
 #endif
 
 #if NRF52840_USB_DFU_TRIGGER
