@@ -1,19 +1,24 @@
-A minimal Contiki-NG example, simple printing out "Hello, world".
-This example runs a full IPv6 stack with 6LoWPAN and RPL.
-It is possible, for example to ping such a node:
+NVMC Flash Example
+===================
+This examples shows how you can use the flash memory from the nrf52840 chip.
+The chip allows to use the flash memory either via the softdevice or via nvmc (non volatile memory controller).
+We have focused on the second approach, hence this example does not use the softdevice at all.
 
-```
-make TARGET=native && sudo ./hello-world.native
+It will initialize the flash memory modules and write with an successive read an increasing counter at address 0xFD000.
+There will be an 10 second break between each read/write cycle.
+
+The example requires one DK and it doesn't use SoftDevice. To compile and flash the
+example run:
+
+```bash
+# compile
+make TARGET=nrf52840 BOARD=dk NRF52840_USE_NVMC_FLASH=1 all
+# flash
+make TARGET=nrf52840 BOARD=dk NRF52840_USE_NVMC_FLASH=1 all
 ```
 
-Look for the node's global IPv6, e.g.:
-```
-[INFO: Native    ] Added global IPv6 address fd00::302:304:506:708
-```
-
-And ping it (over the tun interface):
-```
-$ ping6 fd00::302:304:506:708
-PING fd00::302:304:506:708(fd00::302:304:506:708) 56 data bytes
-64 bytes from fd00::302:304:506:708: icmp_seq=1 ttl=64 time=0.289 ms
+The makefile will source the properties TARGET,BOARD and NRF52840_USE_NVMC_FLASH automatically, so feel free also to use the shortcut:
+```bash
+make all
+make upload
 ```
