@@ -59,6 +59,7 @@ NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_gpiote.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_power.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_uarte.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_usbreg.c
+NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_ipc.c
 
 NRFX_C_SRCS += $(NRFX_ROOT)/soc/nrfx_atomic.c
 
