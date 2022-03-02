@@ -101,7 +101,7 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
     }
 
     /* Pulling config */
-    switch(pin_cfg & PIN_BM_PULLING) {
+    switch(pin_cfg & (PIN_GEN | PIN_BM_PULLING)) {
     case PIN_NOPULL:   *cfg |= GPIO_HAL_PIN_CFG_PULL_NONE; break;
     case PIN_PULLUP:   *cfg |= GPIO_HAL_PIN_CFG_PULL_UP;   break;
     case PIN_PULLDOWN: *cfg |= GPIO_HAL_PIN_CFG_PULL_DOWN; break;
@@ -111,7 +111,7 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
   /* Interrupt config */
   if(pin_cfg & PIN_BM_IRQ) {
     /* Interrupt edge config */
-    switch(pin_cfg & PIN_BM_IRQ) {
+    switch(pin_cfg & (PIN_GEN | PIN_BM_IRQ)) {
     case PIN_IRQ_DIS:       *cfg |= GPIO_HAL_PIN_CFG_EDGE_NONE;
                             *cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE;
                             break;
