@@ -33,12 +33,9 @@
 #include <string.h>
 #include "lib/simEnvChange.h"
 
-#define IMPLEMENT_PRINTF 1
-
 #ifndef MAX_LOG_LENGTH
 #define MAX_LOG_LENGTH 8192
 #endif /* MAX_LOG_LENGTH */
-
 
 const struct simInterface simlog_interface;
 
@@ -64,13 +61,14 @@ simlog_char(char c)
 void
 simlog(const char *message)
 {
-  if (simLoggedLength + strlen(message) > MAX_LOG_LENGTH) {
+  int message_len = strlen(message);
+  if(simLoggedLength + message_len > MAX_LOG_LENGTH) {
     /* Dropping message due to buffer overflow */
     return;
   }
 
-  memcpy(simLoggedData + simLoggedLength, message, strlen(message));
-  simLoggedLength += strlen(message);
+  memcpy(simLoggedData + simLoggedLength, message, message_len);
+  simLoggedLength += message_len;
   simLoggedFlag = 1;
 }
 /*-----------------------------------------------------------------------------------*/
@@ -98,9 +96,8 @@ log_set_putchar_with_slip(int with)
   log_putchar_with_slip = with;
 }
 /*-----------------------------------------------------------------------------------*/
-#if IMPLEMENT_PRINTF
 int
-putchar(int c)
+dbg_putchar(int c)
 {
 #define SLIP_END 0300
   static char debug_frame = 0;
@@ -124,41 +121,26 @@ putchar(int c)
       simlog_char(SLIP_END);
       debug_frame = 0;
     }
-
-    return c;
   } else {
     simlog_char(c);
-    return c;
   }
+  return c;
 }
 /*-----------------------------------------------------------------------------------*/
-int
-puts(const char* s)
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
 {
-  simlog(s);
-  simlog_char('\n');
-  return 0;
-}
-/*-----------------------------------------------------------------------------------*/
-int
-printf(const char *fmt, ...)
-{
-  int res;
-  static char buf[MAX_LOG_LENGTH];
-  va_list ap;
-  int i;
+  unsigned int i = 0;
 
-  va_start(ap, fmt);
-  res = vsnprintf(buf, MAX_LOG_LENGTH, fmt, ap);
-  va_end(ap);
-
-  //    simlog(buf);
-  for(i = 0; i < res; i++) {
-    putchar(buf[i]);
+  while(s && *s != 0) {
+    if(i >= len) {
+      break;
+    }
+    putchar(*s++);
+    i++;
   }
-  return res;
+  return i;
 }
-#endif /* IMPLEMENT_PRINTF */
 /*-----------------------------------------------------------------------------------*/
 
 SIM_INTERFACE(simlog_interface,

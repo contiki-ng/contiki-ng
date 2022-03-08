@@ -18,10 +18,8 @@ $(ARCHIVE): $(CONTIKI_OBJECTFILES) | $(OBJECTDIR)
 $(JNILIB): $(CONTIKI_APP_OBJ) $(MAIN_OBJ) $(PROJECT_OBJECTFILES) $(ARCHIVE) | $(OBJECTDIR)
 
 ifdef REDEF_PRINTF
-	@echo Redefining printf
-	-$(foreach OBJ,$^, $(OBJCOPY) --redefine-sym printf=log_printf $(OBJ); )
-	-$(foreach OBJ,$^, $(OBJCOPY) --redefine-sym puts=log_puts $(OBJ); )
-	-$(foreach OBJ,$^, $(OBJCOPY) --redefine-sym putchar=log_putchar $(OBJ); )
+	@echo Redefining printf,sprintf,vsnprintf,etc.
+	-$(foreach OBJ,$^, $(OBJCOPY) --redefine-syms $(CONTIKI)/arch/platform/cooja/redefine.syms $(OBJ); )
 endif ## REDEF_PRINTF
 	$(LINK_COMMAND_1) $^ $(LINK_COMMAND_2)
 
