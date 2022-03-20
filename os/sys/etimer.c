@@ -49,92 +49,59 @@
 #include "sys/etimer.h"
 #include "sys/process.h"
 
-static struct etimer *timerlist;
-static clock_time_t next_expiration;
-
+static struct etimer *next_etimer;
 PROCESS(etimer_process, "Event timer");
 /*---------------------------------------------------------------------------*/
 static void
-update_time(void)
+remove_etimer_from_list(struct etimer *previous, struct etimer *et)
 {
-  clock_time_t tdist;
-  clock_time_t now;
-  struct etimer *t;
-
-  if(timerlist == NULL) {
-    next_expiration = 0;
+  et->p = PROCESS_NONE;
+  if(previous) {
+    previous->next = et->next;
   } else {
-    now = clock_time();
-    t = timerlist;
-    /* Must calculate distance to next time into account due to wraps */
-    tdist = t->timer.start + t->timer.interval - now;
-    for(t = t->next; t != NULL; t = t->next) {
-      if(t->timer.start + t->timer.interval - now < tdist) {
-        tdist = t->timer.start + t->timer.interval - now;
-      }
-    }
-    next_expiration = now + tdist;
+    next_etimer = et->next;
   }
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(etimer_process, ev, data)
 {
-  struct etimer *t, *u;
+  struct etimer *current;
+  struct etimer *previous;
 
   PROCESS_BEGIN();
 
-  timerlist = NULL;
+  next_etimer = NULL;
 
   while(1) {
     PROCESS_YIELD();
 
+    current = next_etimer;
+    previous = NULL;
+
     if(ev == PROCESS_EVENT_EXITED) {
-      struct process *p = data;
-
-      while(timerlist != NULL && timerlist->p == p) {
-        timerlist = timerlist->next;
-      }
-
-      if(timerlist != NULL) {
-        t = timerlist;
-        while(t->next != NULL) {
-          if(t->next->p == p) {
-            t->next = t->next->next;
-          } else {
-            t = t->next;
-          }
+      while(current) {
+        if(current->p == ((struct process *)data)) {
+          remove_etimer_from_list(previous, current);
+          current = previous ? previous->next : next_etimer;
+          continue;
         }
+        previous = current;
+        current = current->next;
       }
-      continue;
-    } else if(ev != PROCESS_EVENT_POLL) {
-      continue;
-    }
-
-again:
-
-    u = NULL;
-
-    for(t = timerlist; t != NULL; t = t->next) {
-      if(timer_expired(&t->timer)) {
-        if(process_post(t->p, PROCESS_EVENT_TIMER, t) == PROCESS_ERR_OK) {
-
-          /* Reset the process ID of the event timer, to signal that the
-             etimer has expired. This is later checked in the
-             etimer_expired() function. */
-          t->p = PROCESS_NONE;
-          if(u != NULL) {
-            u->next = t->next;
-          } else {
-            timerlist = t->next;
-          }
-          t->next = NULL;
-          update_time();
-          goto again;
+    } else if(ev == PROCESS_EVENT_POLL) {
+      while(current && timer_expired(&current->timer)) {
+        if(process_post(current->p, PROCESS_EVENT_TIMER, current)
+            == PROCESS_ERR_OK) {
+          remove_etimer_from_list(previous, current);
+          current = previous ? previous->next : next_etimer;
+          continue;
         } else {
+          /* retry later */
           etimer_request_poll();
         }
+        previous = current;
+        current = current->next;
       }
-      u = t;
     }
   }
 
@@ -148,29 +115,35 @@ etimer_request_poll(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-add_timer(struct etimer *timer)
+add_timer(struct etimer *et)
 {
-  struct etimer *t;
+  clock_time_t expiration_time;
+  struct etimer *current;
+  struct etimer *previous;
 
-  etimer_request_poll();
+  /* remove et from the list */
+  etimer_stop(et);
 
-  if(timer->p != PROCESS_NONE) {
-    for(t = timerlist; t != NULL; t = t->next) {
-      if(t == timer) {
-        /* Timer already on list, bail out. */
-        timer->p = PROCESS_CURRENT();
-        update_time();
-        return;
-      }
-    }
+  /* locate insertion point */
+  expiration_time = etimer_expiration_time(et);
+  current = next_etimer;
+  previous = NULL;
+  while(current
+      && CLOCK_LT(etimer_expiration_time(current), expiration_time)) {
+    previous = current;
+    current = current->next;
   }
 
-  /* Timer not on list. */
-  timer->p = PROCESS_CURRENT();
-  timer->next = timerlist;
-  timerlist = timer;
-
-  update_time();
+  /* insert et */
+  et->p = PROCESS_CURRENT();
+  if(previous) {
+    et->next = previous->next;
+    previous->next = et;
+  } else {
+    et->next = next_etimer;
+    next_etimer = et;
+    etimer_request_poll();
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -206,7 +179,7 @@ void
 etimer_adjust(struct etimer *et, int timediff)
 {
   et->timer.start += timediff;
-  update_time();
+  add_timer(et);
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -230,43 +203,35 @@ etimer_start_time(struct etimer *et)
 int
 etimer_pending(void)
 {
-  return timerlist != NULL;
+  return next_etimer != NULL;
 }
 /*---------------------------------------------------------------------------*/
 clock_time_t
 etimer_next_expiration_time(void)
 {
-  return etimer_pending() ? next_expiration : 0;
+  return next_etimer ? etimer_expiration_time(next_etimer) : 0;
 }
 /*---------------------------------------------------------------------------*/
 void
 etimer_stop(struct etimer *et)
 {
-  struct etimer *t;
+  struct etimer *current;
+  struct etimer *previous;
 
-  /* First check if et is the first event timer on the list. */
-  if(et == timerlist) {
-    timerlist = timerlist->next;
-    update_time();
-  } else {
-    /* Else walk through the list and try to find the item before the
-       et timer. */
-    for(t = timerlist; t != NULL && t->next != et; t = t->next) {
-    }
-
-    if(t != NULL) {
-      /* We've found the item before the event timer that we are about
-         to remove. We point the items next pointer to the event after
-         the removed item. */
-      t->next = et->next;
-
-      update_time();
-    }
+  if(et->p == PROCESS_NONE) {
+    return;
   }
 
-  /* Remove the next pointer from the item to be removed. */
-  et->next = NULL;
-  /* Set the timer as expired */
+  current = next_etimer;
+  previous = NULL;
+  while(current) {
+    if(current == et) {
+      remove_etimer_from_list(previous, current);
+      break;
+    }
+    previous = current;
+    current = current->next;
+  }
   et->p = PROCESS_NONE;
 }
 /*---------------------------------------------------------------------------*/
