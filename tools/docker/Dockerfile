@@ -31,7 +31,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     mosquitto \
     mosquitto-clients \
     net-tools \
-    openjdk-8-jdk \
+    openjdk-11-jdk \
     python-dev \
     python3-dev \
     python-pip \
@@ -109,6 +109,9 @@ RUN pip3 -q install matplotlib
 RUN pip3 -q install nrfutil && \
   pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil
 
+# Make sure we're using Java 11 for Cooja
+RUN update-java-alternatives --set /usr/lib/jvm/java-1.11.0-openjdk-i386
+
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
 RUN export uid=1000 gid=1000 && \
@@ -124,6 +127,7 @@ RUN export uid=1000 gid=1000 && \
 USER user
 
 # Environment variables
+ENV JAVA_HOME           /usr/lib/jvm/java-11-openjdk-i386/
 ENV HOME                /home/user
 ENV CONTIKI_NG          ${HOME}/contiki-ng
 ENV COOJA               ${CONTIKI_NG}/tools/cooja
@@ -135,10 +139,6 @@ WORKDIR                 ${HOME}
 # Create Cooja shortcut
 RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && \
   chmod +x ${HOME}/cooja
-
-# Make sure we're using Java 8 for Cooja
-RUN sudo update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-i386
-ENV JAVA_HOME           /usr/lib/jvm/java-8-openjdk-i386/
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
