@@ -60,10 +60,11 @@ struct ccm_star_driver {
   /**
    * \brief         Sets the key in use.
    * \param key     The key to use.
+   * \return        True on success.
    *
    *                The default implementation calls AES_128.set_key().
    */
-  void (* set_key)(const uint8_t key[static AES_128_KEY_LENGTH]);
+  bool (* set_key)(const uint8_t key[static AES_128_KEY_LENGTH]);
 
   /**
    * \brief         Combines authentication and encryption.
@@ -73,8 +74,9 @@ struct ccm_star_driver {
    * \param result  The generated MIC will be put here
    * \param mic_len The size of the MIC to be generated. <= 16.
    * \param forward True if used in forward direction.
+   * \return        True on success.
    */
-  void (* aead)(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
+  bool (* aead)(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
       uint8_t* m, uint16_t m_len,
       const uint8_t* a, uint16_t a_len,
       uint8_t *result, uint8_t mic_len,

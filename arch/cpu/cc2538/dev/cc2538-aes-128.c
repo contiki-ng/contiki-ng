@@ -51,9 +51,10 @@
 #define LOG_LEVEL LOG_LEVEL_NONE
 
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
+  bool result = false;
   bool was_crypto_enabled = CRYPTO_IS_ENABLED();
   if(!was_crypto_enabled) {
     crypto_enable();
@@ -110,6 +111,8 @@ set_key(const uint8_t key[static AES_128_KEY_LENGTH])
     goto exit;
   }
 
+  result = true;
+
 exit:
   /* all interrupts should have been acknowledged */
   assert(!REG(AES_CTRL_INT_STAT));
@@ -119,11 +122,13 @@ exit:
   if(!was_crypto_enabled) {
     crypto_disable();
   }
+  return result;
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 {
+  bool result = false;
   bool was_crypto_enabled = CRYPTO_IS_ENABLED();
   if(!was_crypto_enabled) {
     crypto_enable();
@@ -188,6 +193,8 @@ encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
     goto exit;
   }
 
+  result = true;
+
 exit:
   /* all interrupts should have been acknowledged */
   assert(!REG(AES_CTRL_INT_STAT));
@@ -197,6 +204,7 @@ exit:
   if(!was_crypto_enabled) {
     crypto_disable();
   }
+  return result;
 }
 /*---------------------------------------------------------------------------*/
 const struct aes_128_driver cc2538_aes_128_driver = {

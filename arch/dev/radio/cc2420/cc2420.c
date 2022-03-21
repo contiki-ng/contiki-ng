@@ -560,7 +560,7 @@ init_security(void)
   setreg(CC2420_SECCTRL1, 0);
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   GET_LOCK();
@@ -568,9 +568,10 @@ set_key(const uint8_t key[static AES_128_KEY_LENGTH])
   write_ram(key, CC2420RAM_KEY0, 16, WRITE_RAM_REVERSE);
 
   RELEASE_LOCK();
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 {
   GET_LOCK();
@@ -586,6 +587,7 @@ encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
   read_ram(plaintext_and_result, CC2420RAM_SABUF, 16);
 
   RELEASE_LOCK();
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 const struct aes_128_driver cc2420_aes_128_driver = {

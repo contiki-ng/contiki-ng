@@ -193,12 +193,16 @@ tsch_security_secure_frame(uint8_t *hdr, uint8_t *outbuf,
     memcpy(outbuf, hdr, a_len + m_len);
   }
 
-  CCM_STAR.set_key(keys[key_index - 1]);
+  if(!CCM_STAR.set_key(keys[key_index - 1])) {
+    return 0;
+  }
 
-  CCM_STAR.aead(nonce,
-                outbuf + a_len, m_len,
-                outbuf, a_len,
-                outbuf + hdrlen + datalen, mic_len, true);
+  if(!CCM_STAR.aead(nonce,
+                    outbuf + a_len, m_len,
+                    outbuf, a_len,
+                    outbuf + hdrlen + datalen, mic_len, true)) {
+    return 0;
+  }
 
   return mic_len;
 }

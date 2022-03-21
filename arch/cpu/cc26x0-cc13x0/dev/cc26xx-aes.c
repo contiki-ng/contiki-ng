@@ -46,13 +46,14 @@
 static uint32_t skey[AES_128_KEY_LENGTH / sizeof(uint32_t)];
 
 /*---------------------------------------------------------------------------*/
-void
+bool
 cc26xx_aes_set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   memcpy(skey, key, AES_128_KEY_LENGTH);
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 encrypt_decrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE],
     bool do_encrypt)
 {
@@ -100,24 +101,23 @@ encrypt_decrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE],
   ti_lib_prcm_load_set();
   while(!ti_lib_prcm_load_get());
 
-  if(status == AES_SUCCESS) {
-    memcpy(plaintext_and_result, result, AES_128_BLOCK_SIZE);
-  } else {
-    /* corrupt the result */
-    plaintext_and_result[0] ^= 1;
+  if(status != AES_SUCCESS) {
+    return false;
   }
+  memcpy(plaintext_and_result, result, AES_128_BLOCK_SIZE);
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 cc26xx_aes_encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 {
-  encrypt_decrypt(plaintext_and_result, true);
+  return encrypt_decrypt(plaintext_and_result, true);
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 cc26xx_aes_decrypt(uint8_t cyphertext_and_result[static AES_128_BLOCK_SIZE])
 {
-  encrypt_decrypt(cyphertext_and_result, false);
+  return encrypt_decrypt(cyphertext_and_result, false);
 }
 /*---------------------------------------------------------------------------*/
 const struct aes_128_driver cc26xx_aes_128_driver = {

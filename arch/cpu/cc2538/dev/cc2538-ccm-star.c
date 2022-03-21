@@ -60,26 +60,30 @@ typedef union {
 } block_t;
 
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
-  cc2538_aes_128_driver.set_key(key);
+  return cc2538_aes_128_driver.set_key(key);
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 aead(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     uint8_t *m, uint16_t m_len,
     const uint8_t *a, uint16_t a_len,
-    uint8_t *result, uint8_t mic_len,
+    uint8_t *mic, uint8_t mic_len,
     bool forward)
 {
   if(!a_len && !m_len) {
     /* fall back on software implementation as the hardware implementation
      * would freeze */
-    ccm_star_driver.aead(nonce, m, m_len, a, a_len, result, mic_len, forward);
-    return;
+    return ccm_star_driver.aead(nonce,
+        m, m_len,
+        a, a_len,
+        mic, mic_len,
+        forward);
   }
 
+  bool result = false;
   bool was_crypto_enabled = CRYPTO_IS_ENABLED();
   if(!was_crypto_enabled) {
     crypto_enable();
@@ -212,8 +216,10 @@ aead(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     /* this read clears the ‘saved_context_ready’ flag */
     tag.u32[3] = REG(AES_AES_TAG_OUT_3);
 
-    memcpy(result, tag.u8, mic_len);
+    memcpy(mic, tag.u8, mic_len);
   }
+
+  result = true;
 
 exit:
   /* all interrupts should have been acknowledged */
@@ -224,6 +230,7 @@ exit:
   if(!was_crypto_enabled) {
     crypto_disable();
   }
+  return result;
 }
 /*---------------------------------------------------------------------------*/
 const struct ccm_star_driver cc2538_ccm_star_driver = {
