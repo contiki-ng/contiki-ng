@@ -366,13 +366,6 @@ configure(void)
   nrf_radio_modecnf0_set(true, RADIO_MODECNF0_DTX_Center);
 }
 /*---------------------------------------------------------------------------*/
-static void
-power_on_and_configure(void)
-{
-  nrf_radio_power_set(true);
-  configure();
-}
-/*---------------------------------------------------------------------------*/
 /*
  * The caller must first make sure the radio is powered and configured.
  *
@@ -458,11 +451,6 @@ on(void)
 {
   LOG_DBG("On\n");
 
-  if(radio_is_powered() == false) {
-    LOG_DBG("Not powered\n");
-    power_on_and_configure();
-  }
-
   enter_rx();
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -529,8 +517,8 @@ init(void)
   /* Prepare the RX buffer */
   rx_buf_clear();
 
-  /* Power on the radio */
-  power_on_and_configure();
+  /* Configure radio */
+  configure();
 
   /* Set up initial state of poll mode. This will configure interrupts. */
   set_poll_mode(rf_config.poll_mode);
@@ -599,6 +587,9 @@ transmit(unsigned short transmit_len)
   nrf_radio_event_clear(NRF_RADIO_EVENT_END);
   nrf_radio_event_clear(NRF_RADIO_EVENT_PHYEND);
   nrf_radio_event_clear(NRF_RADIO_EVENT_TXREADY);
+
+  /* No need to sample RSSI during TX */
+  nrf_radio_shorts_disable(NRF_RADIO_SHORT_ADDRESS_RSSISTART_MASK);
 
   /* Start the transmission */
   ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
@@ -758,7 +749,7 @@ pending_packet(void)
 static int
 off(void)
 {
-  nrf_radio_power_set(false);
+  nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 
