@@ -55,12 +55,12 @@
  * Structure of AES drivers.
  */
 struct aes_128_driver {
-  
+
   /**
    * \brief Sets the current key.
    */
   void (* set_key)(const uint8_t *key);
-  
+
   /**
    * \brief Encrypts.
    */
