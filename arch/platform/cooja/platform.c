@@ -36,6 +36,7 @@
  */
 
 #include <jni.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -123,7 +124,7 @@ SENSORS(&button_sensor, &pir_sensor, &vib_sensor);
  * referenceVar is used for comparing absolute and process relative memory.
  * (this must not be static due to memory locations)
  */
-long referenceVar;
+intptr_t referenceVar;
 
 /*
  * Contiki and rtimer threads.
@@ -268,7 +269,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, 
       mem_arr,
       0,
       (size_t) length,
-      (jbyte *) (((long)rel_addr) + referenceVar)
+      (jbyte *) (((intptr_t)rel_addr) + referenceVar)
   );
 }
 /*---------------------------------------------------------------------------*/
@@ -291,7 +292,7 @@ JNIEXPORT void JNICALL
 Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, jint rel_addr, jint length, jbyteArray mem_arr)
 {
   jbyte *mem = (*env)->GetByteArrayElements(env, mem_arr, 0);
-  memcpy((char*) (((long)rel_addr) + referenceVar),
+  memcpy((char*) (((intptr_t)rel_addr) + referenceVar),
          mem,
          length);
   (*env)->ReleaseByteArrayElements(env, mem_arr, mem, 0);
@@ -362,5 +363,5 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
 JNIEXPORT void JNICALL
 Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, jobject obj, jint addr)
 {
-  referenceVar = (((long)&referenceVar) - ((long)addr));
+  referenceVar = (((intptr_t)&referenceVar) - ((intptr_t)addr));
 }
