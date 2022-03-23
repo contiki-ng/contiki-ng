@@ -165,7 +165,7 @@ endif
 ifndef CFLAGSNO
 CFLAGSNO = -Wall -mmcu=$(CC_MCU) $(CFLAGSWERROR)
 endif
-CFLAGS  += -Os -fno-strict-aliasing
+CFLAGS  += -Os -fno-strict-aliasing -std=gnu99
 LDFLAGS += -mmcu=$(CC_MCU) -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP)
 
 ### These flags can reduce the code size and RAM usage with up to 10%
