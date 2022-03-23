@@ -7,12 +7,11 @@ USER root
 
 # Tools
 RUN apt-get -qq update && \
-    apt-get -qq -y --no-install-recommends install gnupg > /dev/null
+    apt-get -qq -y --no-install-recommends install gnupg ca-certificates software-properties-common > /dev/null
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-  echo "deb http://download.mono-project.com/repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500 && \
-  echo "deb http://ppa.launchpad.net/mosquitto-dev/mosquitto-ppa/ubuntu bionic main" | tee /etc/apt/sources.list.d/mosquitto.list && \
+  echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  add-apt-repository ppa:mosquitto-dev/mosquitto-ppa && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
