@@ -50,9 +50,6 @@
  */
 #define CLOCK_CONF_SECOND 128
 
-/* Clock (time) comparison macro */
-#define CLOCK_LT(a, b)  ((signed long)((a) - (b)) < 0)
-
 /* Platform typedefs */
 typedef uint32_t clock_time_t;
 typedef uint32_t uip_stats_t;

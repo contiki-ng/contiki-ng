@@ -82,6 +82,13 @@
 #define CLOCK_SECOND (clock_time_t)32
 #endif
 
+/* Clock (time) comparison macro */
+#define CLOCK_LT(a, b) (sizeof(clock_time_t) == 2 \
+    ? (int16_t)((a) - (b)) < 0 \
+    : (sizeof(clock_time_t) == 4 \
+        ? (int32_t)((a) - (b)) < 0 \
+        : ((int64_t)((a) - (b)) < 0)))
+
 /**
  * Initialize the clock library.
  *
