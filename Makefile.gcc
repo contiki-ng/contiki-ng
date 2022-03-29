@@ -3,8 +3,9 @@
 # GCC specific definitions and actions
 #
 
-GCC_MAJOR_VERSION := $(shell $(CC) -dumpversion | cut -d "." -f 1)
-GCC_MINOR_VERSION := $(shell $(CC) -dumpversion | cut -d "." -f 2)
+GCC_VERSION := $(shell $(CC) -dumpfullversion -dumpversion)
+GCC_MAJOR_VERSION := $(word 1,$(subst ., ,$(GCC_VERSION)))
+GCC_MINOR_VERSION := $(word 2,$(subst ., ,$(GCC_VERSION)))
 
 # Warn if using version 6.3.x of arm-none-eabi-gcc
 ifeq ("$(CC)","arm-none-eabi-gcc")
