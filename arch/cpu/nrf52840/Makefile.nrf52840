@@ -122,7 +122,7 @@ endif
 
 %.upload: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
-	@echo "ERROR: Could not find nrfjprog, please install it first"
+	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
 	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --program $<
 	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --reset
@@ -150,7 +150,7 @@ nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
 
 %.upload-all: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
-	@echo "ERROR: Could not find nrfjprog, please install it first"
+	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
 	$(MAKE) HEX_FILE=$< -j $(NUMPAR) nrf-upload-sequence
 endif
