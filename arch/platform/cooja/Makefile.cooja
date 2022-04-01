@@ -24,7 +24,7 @@ ifdef QUICKSTART
 # Create COOJA JAR rule
 $(COOJA_DIR)/dist/cooja.jar:
 	@echo "Creating COOJA Java archive..."
-	(cd $(COOJA_DIR) && ant jar)
+	cd $(COOJA_DIR) && ant jar
 
 # Quickstart rule
 ifneq ($(MAKECMDGOALS),clean)
