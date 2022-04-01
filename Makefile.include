@@ -273,7 +273,7 @@ ifeq ($(V),1)
   TRACE_OBJDUMP  =
   TRACE_MKDIR =
   TRACE_CP =
-  Q=
+  Q ?=
 else
   TRACE_CC = @echo "  CC       " $<
   TRACE_CXX = @echo "  CXX      " $<
@@ -284,7 +284,7 @@ else
   TRACE_OBJDUMP  = @echo "  OBJDUMP  " $< "-->" $@
   TRACE_MKDIR = @echo "  MKDIR    " $@
   TRACE_CP       = @echo "  CP       " $< "-->" $@
-  Q=@
+  Q ?= @
 endif
 
 ### Forward comma-separated list of arbitrary defines to the compiler
