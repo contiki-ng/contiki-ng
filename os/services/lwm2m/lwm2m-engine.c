@@ -285,7 +285,7 @@ get_method_as_string(coap_resource_flags_t method)
 static const char *
 get_status_as_string(lwm2m_status_t status)
 {
-  static char buffer[8];
+  static char buffer[14];
   switch(status) {
   case LWM2M_STATUS_OK:
     return "OK";
