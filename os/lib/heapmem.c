@@ -58,6 +58,7 @@
 
 #include "heapmem.h"
 
+#include "lib/assert.h"
 #include "sys/cc.h"
 
 /* The HEAPMEM_CONF_ARENA_SIZE parameter determines the size of the
@@ -383,6 +384,7 @@ heapmem_free(void *ptr)
   if(ptr) {
     chunk = GET_CHUNK(ptr);
 
+    assert(CHUNK_ALLOCATED(chunk));
     PRINTF("%s ptr %p, allocated at %s:%u\n", __func__, ptr,
            chunk->file, chunk->line);
 
