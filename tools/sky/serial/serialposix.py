@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #module for serial IO for POSIX compatible systems, like Linux
 #see __init__.py
 #
@@ -10,11 +10,11 @@
 # references: http://www.easysw.com/~mike/serial/serial.html
 
 import sys, os, fcntl, termios, struct, string, select
-import serialutil
+from . import serialutil
 
-VERSION = string.split("$Revision: 1.1 $")[1]     #extract CVS version
+VERSION = "$Revision: 1.1 $".split()[1]     #extract CVS version
 
-PARITY_NONE, PARITY_EVEN, PARITY_ODD = range(3)
+PARITY_NONE, PARITY_EVEN, PARITY_ODD = list(range(3))
 STOPBITS_ONE, STOPBITS_TWO = (1, 2)
 FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS = (5,6,7,8)
 
@@ -30,7 +30,7 @@ else:
     FCNTL = fcntl
 
 #try to detect the os so that a device can be selected...
-plat = string.lower(sys.platform)
+plat = sys.platform.lower()
 
 if   plat[:5] == 'linux':    #Linux (confirmed)
     def device(port):
@@ -71,7 +71,7 @@ elif plat[:3] == 'dgux':     #Digital UNIX (not tested)
 else:
     #platform detection has failed...
     info = "sys.platform = %r\nos.name = %r\nserialposix.py version = %s" % (sys.platform, os.name, VERSION)
-    print """send this information to the author of this module:
+    print("""send this information to the author of this module:
 
 %s
 
@@ -79,8 +79,8 @@ also add the device name of the serial port and where the
 counting starts for the first serial port.
 e.g. 'first serial port: /dev/ttyS0'
 and with a bit luck you can get this module running...
-"""
-    raise Exception, "this module does not run on this platform, sorry."
+""")
+    raise Exception("this module does not run on this platform, sorry.")
 
 #whats up with "aix", "beos", "sco", ....
 #they should work, just need to know the device names.
@@ -155,14 +155,14 @@ class Serial(serialutil.FileLike):
             self.portstr = device(port) #numbers are transformed to a os dependant string
         try:
             self.fd = os.open(self.portstr, os.O_RDWR|os.O_NOCTTY|os.O_NONBLOCK)
-        except Exception, msg:
+        except Exception as msg:
             self.fd = None
-            raise serialutil.SerialException, "could not open port: %s" % msg
+            raise serialutil.SerialException("could not open port: %s" % msg)
         fcntl.fcntl(self.fd, FCNTL.F_SETFL, 0)  #set blocking
         try:
             self.__tcgetattr()          #read current settings
-        except termios.error, msg:      #if a port is nonexistent but has a /dev file, it'll fail here
-            raise serialutil.SerialException, "could not open port: %s" % msg
+        except termios.error as msg:      #if a port is nonexistent but has a /dev file, it'll fail here
+            raise serialutil.SerialException("could not open port: %s" % msg)
         #set up raw mode / no echo / binary
         self.cflag = self.cflag |  (TERMIOS.CLOCAL|TERMIOS.CREAD)
         self.lflag = self.lflag & ~(TERMIOS.ICANON|TERMIOS.ECHO|TERMIOS.ECHOE|TERMIOS.ECHOK|TERMIOS.ECHONL|
@@ -176,7 +176,7 @@ class Serial(serialutil.FileLike):
         try:
             self.ispeed = self.ospeed = baudIntToEnum[baudrate]
         except:
-            raise ValueError,'invalid baud rate: %s' % baudrate
+            raise ValueError('invalid baud rate: %s' % baudrate)
         #setup char len
         self.cflag = self.cflag & ~TERMIOS.CSIZE
         if bytesize == 8:
@@ -188,14 +188,14 @@ class Serial(serialutil.FileLike):
         elif bytesize == 5:
             self.cflag = self.cflag | TERMIOS.CS5
         else:
-            raise ValueError,'invalid char len: '+str(clen)
+            raise ValueError('invalid char len: '+str(clen))
         #setup stopbits
         if stopbits == STOPBITS_ONE:
             self.cflag = self.cflag & ~(TERMIOS.CSTOPB)
         elif stopbits == STOPBITS_TWO:
             self.cflag = self.cflag |  (TERMIOS.CSTOPB)
         else:
-            raise ValueError,'invalid stopit specification:'+str(stopbits)
+            raise ValueError('invalid stopit specification:'+str(stopbits))
         #setup parity
         self.iflag = self.iflag & ~(TERMIOS.INPCK|TERMIOS.ISTRIP)
         if parity == PARITY_NONE:
@@ -206,7 +206,7 @@ class Serial(serialutil.FileLike):
         elif parity == PARITY_ODD:
             self.cflag = self.cflag |  (TERMIOS.PARENB|TERMIOS.PARODD)
         else:
-            raise ValueError,'invalid parity: '+str(par)
+            raise ValueError('invalid parity: '+str(par))
         #setup flow control
         #xonxoff
         if hasattr(TERMIOS, 'IXANY'):
@@ -235,11 +235,11 @@ class Serial(serialutil.FileLike):
         #buffer
         #vmin "minimal number of characters to be read. = for non blocking"
         if vmin<0 or vmin>255:
-            raise ValueError,'invalid vmin: '+str(vmin)
+            raise ValueError('invalid vmin: '+str(vmin))
         self.cc[TERMIOS.VMIN] = vmin
         #vtime
         if vtime<0 or vtime>255:
-            raise ValueError,'invalid vtime: '+str(vtime)
+            raise ValueError('invalid vtime: '+str(vtime))
         self.cc[TERMIOS.VTIME] = vtime
         #activate settings
         self.__tcsetattr()
@@ -266,7 +266,7 @@ class Serial(serialutil.FileLike):
         try:
             self.ispeed = self.ospeed = baudIntToEnum[baudrate]
         except:
-            raise ValueError,'invalid baud rate: %s' % baudrate
+            raise ValueError('invalid baud rate: %s' % baudrate)
         self.__tcsetattr()
 
     def inWaiting(self):
@@ -387,6 +387,6 @@ if __name__ == '__main__':
     s.flushInput()
     s.flushOutput()
     s.write('hello')
-    print repr(s.read(5))
-    print s.inWaiting()
+    print(repr(s.read(5)))
+    print(s.inWaiting())
     del s

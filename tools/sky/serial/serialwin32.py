@@ -1,4 +1,4 @@
-#! python
+#! python3
 #serial driver for win32
 #see __init__.py
 #
@@ -9,11 +9,11 @@ import win32file  # The base COM port and file IO functions.
 import win32event # We use events and the WaitFor[Single|Multiple]Objects functions.
 import win32con   # constants.
 import sys, string
-import serialutil
+from . import serialutil
 
-VERSION = string.split("$Revision: 1.1 $")[1]     #extract CVS version
+VERSION = "$Revision: 1.1 $".split()[1]     #extract CVS version
 
-PARITY_NONE, PARITY_EVEN, PARITY_ODD = range(3)
+PARITY_NONE, PARITY_EVEN, PARITY_ODD = list(range(3))
 STOPBITS_ONE, STOPBITS_TWO = (1, 2)
 FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS = (5,6,7,8)
 
@@ -46,14 +46,14 @@ class Serial(serialutil.FileLike):
         if type(port) == type(''):       #strings are taken directly
             self.portstr = port
         else:
-	    # CSS 20040528 - open wasn't working for COM10 and greater, but by
+            # CSS 20040528 - open wasn't working for COM10 and greater, but by
             # chance the '\\.\COM10' format seems to work, yay!  But, only use
             # if for COM10 and greater in case it introduces some other
-	    # incompatibility.
-	    if port < 9:
-	      self.portstr = 'COM%d' % (port+1) #numbers are transformed to a string
-	    else:
-	      self.portstr = '\\\\.\\COM%d' % (port+1) #WIN NT format??
+            # incompatibility.
+            if port < 9:
+              self.portstr = 'COM%d' % (port+1) #numbers are transformed to a string
+            else:
+              self.portstr = '\\\\.\\COM%d' % (port+1) #WIN NT format??
 
         try:
             self.hComPort = win32file.CreateFile(self.portstr,
@@ -63,9 +63,9 @@ class Serial(serialutil.FileLike):
                    win32con.OPEN_EXISTING,
                    win32con.FILE_ATTRIBUTE_NORMAL | win32con.FILE_FLAG_OVERLAPPED,
                    None)
-        except Exception, msg:
+        except Exception as msg:
             self.hComPort = None    #'cause __del__ is called anyway
-            raise serialutil.SerialException, "could not open port: %s" % msg
+            raise serialutil.SerialException("could not open port: %s" % msg)
         # Setup a 4k buffer
         win32file.SetupComm(self.hComPort, 4096, 4096)
 
@@ -275,6 +275,6 @@ class Serial(serialutil.FileLike):
 
 #Nur Testfunktion!!
 if __name__ == '__main__':
-    print __name__
+    print(__name__)
     s = Serial(0)
 

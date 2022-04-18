@@ -39,7 +39,7 @@ class FileLike:
         """read a list of lines, until timeout
         sizehint is ignored"""
         if self.timeout is None:
-            raise ValueError, "Serial port MUST have enabled timeout for this function!"
+            raise ValueError("Serial port MUST have enabled timeout for this function!")
         lines = []
         while 1:
             line = self.readline(eol=eol)

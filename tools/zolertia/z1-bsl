@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Serial Bootstrap Loader software for the MSP430 embedded proccessor.
 #
 # (C) 2001-2003 Chris Liechti <cliechti@gmx.net>
@@ -13,12 +13,12 @@
 # Forked by Travis Goodspeed <travis at tnbelt.com> for use with the GoodFET
 # JTAG programmer.
 
-import sys, time, string, cStringIO, struct
+import sys, time, string, io, struct
 sys.path.append("/usr/lib/tinyos")
 import serial, os, glob
 
 #forked from TinyOS Telos version.
-VERSION = string.split("Revision: 1.39-goodfet-8 z1 fork")[1] 
+VERSION = "Revision: 1.39-goodfet-8 z1 fork".split()[1]
 
 DEBUG = 0                                       #disable debug messages by default
 
@@ -292,9 +292,9 @@ class LowLevel:
         #used for some hardware
         self.invertRST = 0
         self.invertTEST = 0
-    	self.swapRSTTEST = 0
-    	self.telosLatch = 0
-    	self.telosI2C = 0
+        self.swapRSTTEST = 0
+        self.telosLatch = 0
+        self.telosI2C = 0
         
         self.z1 = 0
         
@@ -580,22 +580,22 @@ class LowLevel:
         self.serialport.setDTR(not level)
 
     def telosI2CStart(self):
-    	self.telosSetSDA(1)
-    	self.telosSetSCL(1)
-    	self.telosSetSDA(0)
+        self.telosSetSDA(1)
+        self.telosSetSCL(1)
+        self.telosSetSDA(0)
 
     def telosI2CStop(self):
-    	self.telosSetSDA(0)
-    	self.telosSetSCL(1)
-    	self.telosSetSDA(1)
+        self.telosSetSDA(0)
+        self.telosSetSCL(1)
+        self.telosSetSDA(1)
 
     def telosI2CWriteBit(self, bit):
-    	self.telosSetSCL(0)
-    	self.telosSetSDA(bit)
+        self.telosSetSCL(0)
+        self.telosSetSDA(bit)
         time.sleep(2e-6)
-    	self.telosSetSCL(1)
+        self.telosSetSCL(1)
         time.sleep(1e-6)
-    	self.telosSetSCL(0)
+        self.telosSetSCL(0)
 
     def telosI2CWriteByte(self, byte):
         self.telosI2CWriteBit( byte & 0x80 );
@@ -609,34 +609,34 @@ class LowLevel:
         self.telosI2CWriteBit( 0 );  # "acknowledge"
 
     def telosI2CWriteCmd(self, addr, cmdbyte):
-    	self.telosI2CStart()
+        self.telosI2CStart()
         self.telosI2CWriteByte( 0x90 | (addr << 1) )
-    	self.telosI2CWriteByte( cmdbyte )
-    	self.telosI2CStop()
+        self.telosI2CWriteByte( cmdbyte )
+        self.telosI2CStop()
 
     def telosBReset(self,invokeBSL=0):
-    	# "BSL entry sequence at dedicated JTAG pins"
+        # "BSL entry sequence at dedicated JTAG pins"
             # rst !s0: 0 0 0 0 1 1
-    	# tck !s1: 1 0 1 0 0 1
+        # tck !s1: 1 0 1 0 0 1
             #   s0|s1: 1 3 1 3 2 0
     
-    	# "BSL entry sequence at shared JTAG pins"
+        # "BSL entry sequence at shared JTAG pins"
             # rst !s0: 0 0 0 0 1 1
-    	# tck !s1: 0 1 0 1 1 0
+        # tck !s1: 0 1 0 1 1 0
             #   s0|s1: 3 1 3 1 0 2
-    	if invokeBSL:
-    	  self.telosI2CWriteCmd(0,1)
-    	  self.telosI2CWriteCmd(0,3)
-    	  self.telosI2CWriteCmd(0,1)
-    	  self.telosI2CWriteCmd(0,3)
-    	  self.telosI2CWriteCmd(0,2)
-    	  self.telosI2CWriteCmd(0,0)
-    	else:
-    	  self.telosI2CWriteCmd(0,3)
-    	  self.telosI2CWriteCmd(0,2)
-    	  self.telosI2CWriteCmd(0,0)
+        if invokeBSL:
+          self.telosI2CWriteCmd(0,1)
+          self.telosI2CWriteCmd(0,3)
+          self.telosI2CWriteCmd(0,1)
+          self.telosI2CWriteCmd(0,3)
+          self.telosI2CWriteCmd(0,2)
+          self.telosI2CWriteCmd(0,0)
+        else:
+          self.telosI2CWriteCmd(0,3)
+          self.telosI2CWriteCmd(0,2)
+          self.telosI2CWriteCmd(0,0)
           time.sleep(0.250)       #give MSP430's oscillator time to stabilize
-    	self.serialport.flushInput()  #clear buffers
+        self.serialport.flushInput()  #clear buffers
 
     def bslReset(self, invokeBSL=0):
         """Applies BSL entry sequence on RST/NMI and TEST/VPP pins
@@ -650,9 +650,9 @@ class LowLevel:
         
         #print 'goint to reset!'
         
-    	if self.telosI2C:
-    	    self.telosBReset(invokeBSL)
-    	    return
+        if self.telosI2C:
+            self.telosBReset(invokeBSL)
+            return
     
         if self.z1:
             if DEBUG > 1: sys.stderr.write("* entering bsl with z1\n")
@@ -664,10 +664,10 @@ class LowLevel:
         self.SetTESTpin(1)      #power suply
         time.sleep(0.250)       #charge capacitor on boot loader hardware
     
-    	if self.telosLatch:
-    	    self.SetTESTpin(0)
-    	    self.SetRSTpin(0)
-    	    self.SetTESTpin(1)
+        if self.telosLatch:
+            self.SetTESTpin(0)
+            self.SetRSTpin(0)
+            self.SetTESTpin(1)
     
             self.SetRSTpin(0)       #RST  pin: GND
         if invokeBSL:
@@ -849,7 +849,7 @@ class Memory:
                 startAddr = int(l[1:],16)
                 segmentdata = []
             else:
-                for i in string.split(l):
+                for i in l.split():
                     segmentdata.append(chr(int(i,16)))
         if segmentdata:
             self.segments.append( Segment(startAddr, string.join(segmentdata,'')) )
@@ -1050,7 +1050,7 @@ class BootStrapLoader(LowLevel):
         else:
             #sanity check of password
             if len(passwd) != 32:
-                raise ValueError, "password has wrong length (%d)\n" % len(passwd)
+                raise ValueError("password has wrong length (%d)\n" % len(passwd))
             sys.stderr.write('Transmit password ...\n')
             sys.stderr.flush()
         #send the password
@@ -1063,14 +1063,14 @@ class BootStrapLoader(LowLevel):
         
 
     def getNewPassword(self):
-        print 'getting new password'
+        print('getting new password')
         newpassword = self.bslTxRx(self.BSL_RXBLK, 0xffe0, 0x0020)
         return newpassword
 
 
     def writeCalibTables(self):
-        print 'writing new tables'
-        print CALIB_TABLES
+        print('writing new tables')
+        print(CALIB_TABLES)
         calibtables = ["84C016FEFFFFFFFFFFFFFFFFFFFFFFFF",
                        "FFFFFFFFFFFFFFFFFFFF100880000001",
                        "7E270B790DAA7E4D06DF083308FEFFFF",
@@ -1081,16 +1081,16 @@ class BootStrapLoader(LowLevel):
         self.programBlk(0x10F0, "FFFFFFFFFFFF08018F958E9A8D8886D1", self.ACTION_PROGRAM)
 
     def writeCalibTables2(self):
-        print 'writing new tables 2ond part'
+        print('writing new tables 2ond part')
         #self.programBlk(0x10C0, "84C016FEFFFFFFFFFFFFFFFFFFFFFFFF", self.ACTION_PROGRAM)
         #self.programBlk(0x10D0, "FFFFFFFFFFFFFFFFFFFF100880000001", self.ACTION_PROGRAM)
         #self.programBlk(0x10E0, "7E270B790DAA7E4D06DF083308FEFFFF", self.ACTION_PROGRAM)
         #self.programBlk(0x10F0, "FFFFFFFFFFFF08018F958E9A8D8886D1", self.ACTION_PROGRAM)
 
     def actionSecureInfoSegment(self):
-        print 'securing info segment'
+        print('securing info segment')
         self.programBlk(0xFFBE, "0000", self.ACTION_PROGRAM)
-        print 'info segment secured'
+        print('info segment secured')
 
     #-----------------------------------------------------------------
 
@@ -1146,7 +1146,7 @@ class BootStrapLoader(LowLevel):
         
         
         if self.cpu is None:                        #cpy type forced?
-            if deviceids.has_key(dev_id):
+            if dev_id in deviceids:
                 self.cpu = deviceids[dev_id]        #try to autodectect CPU type
                 
                 if DEBUG:
@@ -1186,13 +1186,13 @@ class BootStrapLoader(LowLevel):
                 if DEBUG:
                     sys.stderr.write("Using built in BSL replacement for F4x devices\n")
                     sys.stderr.flush()
-                replacementBSL.loadTIText(cStringIO.StringIO(F4X_BSL))  #parse embedded BSL
+                replacementBSL.loadTIText(io.BytesIO(F4X_BSL))  #parse embedded BSL
             else:
                 if DEBUG:
                     sys.stderr.write("Using built in BSL replacement for F1x devices\n")
                     sys.stderr.flush()
-                replacementBSL.loadTIText(cStringIO.StringIO(F1X_BSL))  #parse embedded BSL
-    
+                replacementBSL.loadTIText(io.BytesIO(F1X_BSL))  #parse embedded BSL
+
         #now download the new BSL, if allowed and needed (version lower than the
         #the replacement) or forced
         if replacementBSL is not None:
@@ -1214,7 +1214,7 @@ class BootStrapLoader(LowLevel):
                 #Programming and verification is done in one pass.
                 #The patch file is only read and parsed once.
                 segments = Memory()                     #data to program
-                segments.loadTIText(cStringIO.StringIO(PATCH))  #parse embedded patch
+                segments.loadTIText(io.BytesIO(PATCH))  #parse embedded patch
                 #program patch
                 self.programData(segments, self.ACTION_PROGRAM | self.ACTION_VERIFY)
                 self.patchLoaded = 1
@@ -1265,7 +1265,7 @@ class BootStrapLoader(LowLevel):
         if self.data is not None:
             self.programData(self.data, self.ACTION_ERASE_CHECK)
         else:
-            raise BSLException, "cannot do erase check against data with not knowing the actual data"
+            raise BSLException("cannot do erase check against data with not knowing the actual data")
 
     def actionProgram(self):
         """program data into flash memory."""
@@ -1276,11 +1276,11 @@ class BootStrapLoader(LowLevel):
             sys.stderr.write("%i bytes programmed.\n" % self.byteCtr)
             sys.stderr.flush()
         else:
-            raise BSLException, "programming without data not possible"
+            raise BSLException("programming without data not possible")
     def actionFromweb(self):
         """Grab GoodFET firmware from the web, then flash it."""
-        print "Grabbing %x firmware." % self.dev_id;
-        print "%s" % firmware[self.dev_id];
+        print("Grabbing %x firmware." % self.dev_id);
+        print("%s" % firmware[self.dev_id]);
         fn="/tmp/.goodfet.hex"
         os.system("curl %s >%s" % (firmware[self.dev_id],fn))
         
@@ -1300,7 +1300,7 @@ class BootStrapLoader(LowLevel):
             sys.stderr.flush()
             self.programData(self.data, self.ACTION_VERIFY)
         else:
-            raise BSLException, "verify without data not possible"
+            raise BSLException("verify without data not possible")
 
     def actionReset(self):
         """perform a reset, start user programm"""
@@ -1340,11 +1340,11 @@ class BootStrapLoader(LowLevel):
         try:
             baudconfigs = self.bauratetable[self.cpu]
         except KeyError:
-            raise ValueError, "unknown CPU type %s, can't switch baudrate" % self.cpu
+            raise ValueError("unknown CPU type %s, can't switch baudrate" % self.cpu)
         try:
             a,l = baudconfigs[baudrate]
         except KeyError:
-            raise ValueError, "baudrate not valid. valid values are %r" % baudconfigs.keys()
+            raise ValueError("baudrate not valid. valid values are %r" % list(baudconfigs.keys()))
         
         sys.stderr.write("Changing baudrate to %d ...\n" % baudrate)
         sys.stderr.flush()
@@ -1360,7 +1360,7 @@ class BootStrapLoader(LowLevel):
         ans = self.bslTxRx(self.BSL_TXVERSION, 0) #Command: receive version info
         #the following values are in big endian style!!!
         family_type, bsl_version = struct.unpack(">H8xH4x", ans[:-2]) #cut away checksum and extract data
-        print "Device Type: 0x%04x\nBSL version: 0x%04x\n" % (family_type, bsl_version)
+        print("Device Type: 0x%04x\nBSL version: 0x%04x\n" % (family_type, bsl_version))
 
     def actionWriteNewPassword(self):
         passwd = self.getNewPassword()
@@ -1374,25 +1374,25 @@ class BootStrapLoader(LowLevel):
 
     def picRecoverPassword(self):
         ''' recovers password from picrom'''
-        print 'recovering pic password',
+        print('recovering pic password', end=' ')
         p = ''
         
         for i in range(0,32):
              c = self.readpicROM(i)
-             print c,
+             print(c, end=' ')
              p = p + chr(c)
              
-        print 'done'
+        print('done')
         return p
         
     def picWritePassword(self, password):
         ''' writes a new password to picrom'''
-        print 'writing new password',
+        print('writing new password', end=' ')
         for i in range(0,32):
             c = ord(password[i])
-            print c,
+            print(c, end=' ')
             self.writepicROM(i, c)
-        print 'done'
+        print('done')
 
 
 def usage():
@@ -1515,12 +1515,12 @@ class curry:
             kw.update(kwargs)
         else:
             kw = kwargs or self.kwargs
-        return apply(self.fun, self.pending + args, kw)
+        return self.fun(*self.pending + args, **kw)
 
     def __repr__(self):
         #first try if it a function
         try:
-            return "curry(%s, %r, %r)" % (self.fun.func_name, self.pending, self.kwargs)
+            return "curry(%s, %r, %r)" % (self.fun.__name__, self.pending, self.kwargs)
         except AttributeError:
             #fallback for callable classes
             return "curry(%s, %r, %r)" % (self.fun, self.pending, self.kwargs)
@@ -1530,7 +1530,7 @@ def hexify(line, bytes, width=16):
         line,
         ('%02x '*len(bytes)) % tuple(bytes),
         '   '* (width-len(bytes)),
-        ('%c'*len(bytes)) % tuple(map(lambda x: (x>=32 and x<127) and x or ord('.'), bytes))
+        ('%c'*len(bytes)) % tuple([(x>=32 and x<127) and x or ord('.') for x in bytes])
         )
 
 #Main:
@@ -1586,11 +1586,11 @@ def main(itest=1):
              "upload=", "download=", "size=", "hex", "bin",
              "intelhex", "titext", "notimeout", "bsl=", "speed=",
              "bslversion", "f1x", "f2x", "f4x", "invert-reset", "invert-test",
-	     "swap-reset-test", "telos-latch", "telos-i2c", "telos", "telosb",
+             "swap-reset-test", "telos-latch", "telos-i2c", "telos", "telosb",
              "tmote","no-BSL-download", "force-BSL-download", "slow",
              "dumpivt", "dumpinfo", "fromweb",
-	"goodfet30", "goodfet20", "goodfet10", "z1", "mainerase"
-	]
+        "goodfet30", "goodfet20", "goodfet10", "z1", "mainerase"
+        ]
         )
     except getopt.GetoptError:
         # print help information and exit:
@@ -1744,15 +1744,15 @@ def main(itest=1):
             bsl.invertTEST = 1
             bsl.swapRSTTEST = 1
             bsl.telosLatch = 1
-    	elif o in ("--goodfet10", ):
-    	    bsl.invertRST = 1
-    	    bsl.invertTEST = 1
-    	elif o in ("--goodfet20", ):
-    	    bsl.invertRST = 1
-    	    bsl.invertTEST = 1
-    	elif o in ("--goodfet30", ):
-    	    bsl.invertRST = 1
-    	    bsl.invertTEST = 0
+        elif o in ("--goodfet10", ):
+            bsl.invertRST = 1
+            bsl.invertTEST = 1
+        elif o in ("--goodfet20", ):
+            bsl.invertRST = 1
+            bsl.invertTEST = 1
+        elif o in ("--goodfet30", ):
+            bsl.invertRST = 1
+            bsl.invertTEST = 0
         elif o in ("--telosb", ):
             bsl.swapRSTTEST = 1
             bsl.telosI2C = 1
@@ -1861,7 +1861,7 @@ def main(itest=1):
             sys.stderr.write("TODO list:\n")
             for f in todo:
                 try:
-                    sys.stderr.write("   %s\n" % f.func_name)
+                    sys.stderr.write("   %s\n" % f.__name__)
                 except AttributeError:
                     sys.stderr.write("   %r\n" % f)
         for f in todo: f()                          #work through todo list
@@ -1874,7 +1874,7 @@ def main(itest=1):
         hex="";
         for c in data:
             hex+=("%02x "%ord(c));
-        print hex;
+        print(hex);
     if dumpinfo:
         bsl.txPasswd(); #default pass
         data=bsl.uploadData(0x1000,256);
@@ -1882,7 +1882,7 @@ def main(itest=1):
         for c in data:
             hex+=("%02x "%ord(c));
         hex+="\nq\n";
-        print hex;
+        print(hex);
     
     if goaddr is not None:                          #start user programm at specified address
         bsl.actionRun(goaddr)                       #load PC and execute
@@ -1900,7 +1900,7 @@ def main(itest=1):
         if hexoutput:                               #depending on output format
             m = 0
             while m < len(data):                    #print a hex display
-                print hexify(startaddr+m, map(ord,data[m:m+16]))
+                print(hexify(startaddr+m, list(map(ord,data[m:m+16]))))
                 m = m + 16
         else:
             sys.stdout.write(data)                  #binary output w/o newline!
@@ -1909,7 +1909,7 @@ def main(itest=1):
     if wait:                                        #wait at the end if desired
         sys.stderr.write("Press <ENTER> ...\n")     #display a prompt
         sys.stderr.flush()
-        raw_input()                                 #wait for newline
+        input()                                 #wait for newline
 
     bsl.comDone()           #Release serial communication port
 
@@ -1922,7 +1922,7 @@ if __name__ == '__main__':
         if DEBUG: raise     #show full trace in debug mode
         sys.stderr.write("user abort.\n")   #short messy in user mode
         sys.exit(1)         #set errorlevel for script usage
-    except Exception, msg:  #every Exception is caught and displayed
+    except Exception as msg:  #every Exception is caught and displayed
         if DEBUG: raise     #show full trace in debug mode
         #sys.stderr.write("\nAn error occurred:\n%s\n" % msg) #short messy in user mode
         #sys.exit(1)         #set errorlevel for script usage
