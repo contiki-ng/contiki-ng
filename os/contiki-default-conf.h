@@ -58,6 +58,16 @@
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM 8
 #endif /* QUEUEBUF_CONF_NUM */
+
+/* RINGBUF_INDEX_CONF_TYPE defines the default type of ringbuf index. 
+   access to (struct ringbuf *)->get_ptr and ->get_ptr must be atomic. 
+   users cans change to the type which makes access atomically, 
+   but C does not guarantee this.
+ */
+#ifndef RINGBUF_INDEX_CONF_TYPE
+#define RINGBUF_INDEX_CONF_TYPE  uint8_t
+#endif /* RINGBUF_INDEX_CONF_TYPE */
+
 /*---------------------------------------------------------------------------*/
 /* uIPv6 configuration options.
  *

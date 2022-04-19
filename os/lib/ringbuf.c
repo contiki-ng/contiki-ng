@@ -41,7 +41,7 @@
 #include <sys/cc.h>
 /*---------------------------------------------------------------------------*/
 void
-ringbuf_init(struct ringbuf *r, uint8_t *dataptr, uint8_t size)
+ringbuf_init(struct ringbuf *r, uint8_t *dataptr, RINGBUF_INDEX_CONF_TYPE size)
 {
   r->data = dataptr;
   r->mask = size - 1;
@@ -58,8 +58,9 @@ ringbuf_put(struct ringbuf *r, uint8_t c)
      XXX: there is a potential risk for a race condition here, because
      the ->get_ptr field may be written concurrently by the
      ringbuf_get() function. To avoid this, access to ->get_ptr must
-     be atomic. We use an uint8_t type, which makes access atomic on
-     most platforms, but C does not guarantee this.
+     be atomic. We use RINGBUF_INDEX_CONF_TYPE, users cans change to
+     the type which makes access atomically, 
+     but C does not guarantee this.
   */
   if(((r->put_ptr - r->get_ptr) & r->mask) == r->mask) {
     return 0;
@@ -72,7 +73,7 @@ ringbuf_put(struct ringbuf *r, uint8_t c)
    * better safe than sorry.
    */
   CC_ACCESS_NOW(uint8_t, r->data[r->put_ptr]) = c;
-  CC_ACCESS_NOW(uint8_t, r->put_ptr) = (r->put_ptr + 1) & r->mask;
+  CC_ACCESS_NOW(RINGBUF_INDEX_CONF_TYPE, r->put_ptr) = (r->put_ptr + 1) & r->mask;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -88,8 +89,9 @@ ringbuf_get(struct ringbuf *r)
      XXX: there is a potential risk for a race condition here, because
      the ->put_ptr field may be written concurrently by the
      ringbuf_put() function. To avoid this, access to ->get_ptr must
-     be atomic. We use an uint8_t type, which makes access atomic on
-     most platforms, but C does not guarantee this.
+     be atomic. We use RINGBUF_INDEX_CONF_TYPE, users cans change to 
+     the type which makes access atomically, 
+     but C does not guarantee this.
   */
   if(((r->put_ptr - r->get_ptr) & r->mask) > 0) {
     /*
@@ -102,7 +104,7 @@ ringbuf_get(struct ringbuf *r)
      * (on some architectures).
      */
     c = CC_ACCESS_NOW(uint8_t, r->data[r->get_ptr]);
-    CC_ACCESS_NOW(uint8_t, r->get_ptr) = (r->get_ptr + 1) & r->mask;
+    CC_ACCESS_NOW(RINGBUF_INDEX_CONF_TYPE, r->get_ptr) = (r->get_ptr + 1) & r->mask;
     return c;
   } else {
     return -1;
