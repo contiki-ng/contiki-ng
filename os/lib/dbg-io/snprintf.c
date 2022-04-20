@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <strformat.h>
 #include <string.h>
+#undef snprintf
+#undef vsnprintf
 /*---------------------------------------------------------------------------*/
 struct fmt_buffer {
   char *pos;

@@ -13,6 +13,9 @@ endif
 
 COOJA_DIR = $(CONTIKI_NG_TOOLS_DIR)/cooja
 
+# Use dbg-io for IO functions like printf()
+MODULES += os/lib/dbg-io
+
 ### Assuming simulator quickstart if no JNI library name set from Cooja
 ifndef LIBNAME
 QUICKSTART=1
