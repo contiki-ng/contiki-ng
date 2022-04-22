@@ -154,12 +154,9 @@ set_lladdr(void)
 
   memset(&addr, 0, sizeof(linkaddr_t));
 #if NETSTACK_CONF_WITH_IPV6
-  {
-    int i;
-    for(i = 0; i < sizeof(uip_lladdr.addr); i += 2) {
-      addr.u8[i + 1] = simMoteID & 0xff;
-      addr.u8[i + 0] = simMoteID >> 8;
-    }
+  for(size_t i = 0; i < sizeof(uip_lladdr.addr); i += 2) {
+    addr.u8[i + 1] = simMoteID & 0xff;
+    addr.u8[i + 0] = simMoteID >> 8;
   }
 #else /* NETSTACK_CONF_WITH_IPV6 */
   addr.u8[0] = simMoteID & 0xff;

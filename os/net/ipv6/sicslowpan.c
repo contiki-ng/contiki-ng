@@ -434,7 +434,7 @@ copy_frags2uip(int context)
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     /* And also copy all matching fragments */
     if(frag_buf[i].len > 0 && frag_buf[i].index == context) {
-      if((frag_buf[i].offset << 3) + frag_buf[i].len > sizeof(uip_buf)) {
+      if(((size_t)frag_buf[i].offset << 3) + frag_buf[i].len > sizeof(uip_buf)) {
         LOG_WARN("input: invalid fragment offset\n");
         clear_fragments(context);
         return false;
@@ -2026,12 +2026,12 @@ input(void)
 
   /* Sanity-check size of incoming packet to avoid buffer overflow */
   {
-    int req_size = uncomp_hdr_len + (uint16_t)(frag_offset << 3)
+    unsigned int req_size = uncomp_hdr_len + (uint16_t)(frag_offset << 3)
         + packetbuf_payload_len;
     if(req_size > sizeof(uip_buf)) {
 #if SICSLOWPAN_CONF_FRAG
       LOG_ERR(
-          "input: packet and fragment context %u dropped, minimum required IP_BUF size: %d+%d+%d=%d (current size: %u)\n",
+          "input: packet and fragment context %u dropped, minimum required IP_BUF size: %d+%d+%d=%u (current size: %u)\n",
           frag_context,
           uncomp_hdr_len, (uint16_t)(frag_offset << 3),
           packetbuf_payload_len, req_size, (unsigned)sizeof(uip_buf));
