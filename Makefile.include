@@ -104,6 +104,9 @@ else
     ${error More than one TARGET Makefile found: $(target_makefile)}
   endif
   include $(target_makefile)
+  ifeq (, $(shell which $(CC)))
+    $(error Target "$(TARGET)" compiler "$(CC)" cannot be found)
+  endif
 endif
 
 # Decide whether to build or to skip this target for this platform
