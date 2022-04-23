@@ -288,11 +288,8 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, 
 JNIEXPORT void JNICALL
 Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length, jbyteArray mem_arr)
 {
-  jbyte *mem = (*env)->GetByteArrayElements(env, mem_arr, 0);
-  memcpy((char*) (((intptr_t)rel_addr) + referenceVar),
-         mem,
-         length);
-  (*env)->ReleaseByteArrayElements(env, mem_arr, mem, 0);
+  (*env)->GetByteArrayRegion(env, mem_arr, 0, length,
+                             (jbyte *)((intptr_t)rel_addr + referenceVar));
 }
 /*---------------------------------------------------------------------------*/
 /**
