@@ -16,6 +16,24 @@ COOJA_DIR = $(CONTIKI_NG_TOOLS_DIR)/cooja
 # Use dbg-io for IO functions like printf()
 MODULES += os/lib/dbg-io
 
+JAVA_INCDIR := $(shell $(JAVA) -XshowSettings:properties -version 2>&1 | grep java.home | awk -F"= " '{print $$2}')
+ifneq ($(MAKECMDGOALS),clean)
+  ifeq ($(JAVA_INCDIR),)
+    $(error No java.home found from "$(JAVA) -XshowSettings:properties -version")
+  endif
+endif
+ifeq ($(HOST_OS),Windows)
+  JAVA_OS_NAME = win32
+else
+  ifeq ($(HOST_OS),Linux)
+    JAVA_OS_NAME = linux
+  else
+    JAVA_OS_NAME = darwin
+  endif
+endif
+
+JAVA_CFLAGS = -I"$(JAVA_INCDIR)/include" -I"$(JAVA_INCDIR)/include/$(JAVA_OS_NAME)"
+
 ### Assuming simulator quickstart if no JNI library name set from Cooja
 ifndef LIBNAME
 QUICKSTART=1
@@ -34,7 +52,7 @@ ifneq ($(MAKECMDGOALS),clean)
 .PHONY: $(MAKECMDGOALS)
 .PRECIOUS: $(MAKECMDGOALS)
 $(MAKECMDGOALS): $(COOJA_DIR)/dist/cooja.jar
-	 java -mx512m -jar $< -quickstart='$(firstword $(MAKECMDGOALS))' -contiki='$(CONTIKI)'
+	 $(JAVA) -mx512m -jar $< -quickstart='$(firstword $(MAKECMDGOALS))' -contiki='$(CONTIKI)'
 endif
 
 endif ## QUICKSTART
@@ -72,7 +90,7 @@ CLEAN += COOJA.log
 
 ### Compiler arguments
 #CC = gcc
-CFLAGSNO = $(EXTRA_CC_ARGS) -Wall -g -I/usr/local/include -DCLASSNAME=$(CLASSNAME)
+CFLAGSNO = $(JAVA_CFLAGS) $(EXTRA_CC_ARGS) -Wall -g -I/usr/local/include -DCLASSNAME=$(CLASSNAME)
 ifeq ($(WERROR),1)
 CFLAGSNO += -Werror
 endif

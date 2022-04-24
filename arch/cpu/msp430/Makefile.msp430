@@ -150,7 +150,7 @@ $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
 	cd $(COOJA_PATH)/mspsim && ant jar
 
 %.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
-	java -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
+	$(JAVA) -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
 
 %.mspsim-maptable: %.$(TARGET)
-	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
+	$(JAVA) -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
