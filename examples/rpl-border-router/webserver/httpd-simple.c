@@ -175,7 +175,8 @@ PT_THREAD(handle_input(struct httpd_state *s))
     s->filename[sizeof(s->filename) - 1] = '\0';
   } else {
     s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
-    strncpy(s->filename, s->inputbuf, sizeof(s->filename));
+    strncpy(s->filename, s->inputbuf, sizeof(s->filename) - 1);
+    s->filename[sizeof(s->filename) - 1] = '\0';
   }
 #endif /* URLCONV */
 

@@ -9,14 +9,14 @@ See https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL-border-router
 The embedded border router runs on a node. It is connected to the host via SLIP.
 The host simply runs a tun gateway (`tunslip6`). To use, program a node, and
 then start `tunslip6` on the host via the make command `connect-router`.
-See embedded/README.md for more.
+See `embedded/README.md` for more.
 
 # Native border router
 
 The native border router runs directly at the host. The node simply runs a
 SLIP-radio interface (`examples/slip-radio`). The host, on the other hand, runs
 a full 6LoWPAN stack.
-See native/README.md for more.
+See `native/README.md` for more.
 
 # RPL node
 

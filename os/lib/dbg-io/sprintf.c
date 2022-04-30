@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <strformat.h>
 #include <string.h>
+#undef sprintf
 /*---------------------------------------------------------------------------*/
 static strformat_result
 buffer_str(void *user_data, const char *data, unsigned int len)

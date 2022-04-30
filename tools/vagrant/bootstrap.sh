@@ -72,5 +72,5 @@ sudo sh get-docker.sh
 sudo usermod -aG docker vagrant
 
 # Docker image "Contiker" alias
-echo 'alias contiker="docker run --privileged --mount type=bind,source=$CONTIKI_NG,destination=/home/user/contiki-ng -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/bus/usb:/dev/bus/usb -ti simonduq/contiki-ng"' >> /home/vagrant/.bashrc
+echo 'alias contiker="docker run --privileged --mount type=bind,source=$CONTIKI_NG,destination=/home/user/contiki-ng -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/bus/usb:/dev/bus/usb -ti contiker/contiki-ng"' >> /home/vagrant/.bashrc
 source ${HOME}/.bashrc

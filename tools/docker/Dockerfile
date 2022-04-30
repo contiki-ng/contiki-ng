@@ -55,10 +55,10 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   && apt-get -qq clean
 
 # Install ARM toolchain
-RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/9-2020-q2-update/gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 && \
-  tar xjf gcc-arm-none-eabi-9-2020-q4-major-i386-linux.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/gcc-arm-none-eabi-9-2020-q4-major/* /usr/local/ && \
-  rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
+RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2 && \
+  tar xjf gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2 -C /tmp/ && \
+  cp -f -r /tmp/gcc-arm-none-eabi-10.3-2021.10/* /usr/local/ && \
+  rm -rf /tmp/gcc-arm-none-eabi-10.3-2021.10 gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2
 
 # Install msp430 toolchain
 RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \

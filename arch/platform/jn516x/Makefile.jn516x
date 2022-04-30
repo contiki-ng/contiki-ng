@@ -180,7 +180,7 @@ LDFLAGS += -Wl,--defsym=_stack_origin=_ram_top
 
 ########################################################################
 
-MOTELIST = python $(CONTIKI)/tools/jn516x/mote-list.py
+MOTELIST = $(CONTIKI)/tools/jn516x/mote-list.py
 
 # Check if we are running under Windows
 ifeq ($(HOST_OS),Windows)

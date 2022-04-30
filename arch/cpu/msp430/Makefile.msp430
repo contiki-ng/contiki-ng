@@ -219,7 +219,7 @@ $(COOJA_PATH)/mspsim/build.xml: $(COOJA_PATH)/build.xml
 	@echo '----------------'
 
 $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
-	(cd $(COOJA_PATH)/mspsim && ant jar)
+	cd $(COOJA_PATH)/mspsim && ant jar
 
 %.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
 	java -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<

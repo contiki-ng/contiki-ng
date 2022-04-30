@@ -41,6 +41,12 @@ ifdef CI
   endif
 endif
 
+ifndef IAR
+  ifneq (, $(shell which ccache))
+    CCACHE ?= ccache
+  endif
+endif
+
 BUILD_DIR = build
 BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)
 BUILD_DIR_TARGET_BOARD = $(BUILD_DIR_TARGET)/$(BOARD)
@@ -104,6 +110,9 @@ else
     ${error More than one TARGET Makefile found: $(target_makefile)}
   endif
   include $(target_makefile)
+  ifeq (, $(shell which $(CC)))
+    $(error Target "$(TARGET)" compiler "$(CC)" cannot be found)
+  endif
 endif
 
 # Decide whether to build or to skip this target for this platform
@@ -273,7 +282,7 @@ ifeq ($(V),1)
   TRACE_OBJDUMP  =
   TRACE_MKDIR =
   TRACE_CP =
-  Q=
+  Q ?=
 else
   TRACE_CC = @echo "  CC       " $<
   TRACE_CXX = @echo "  CXX      " $<
@@ -284,7 +293,7 @@ else
   TRACE_OBJDUMP  = @echo "  OBJDUMP  " $< "-->" $@
   TRACE_MKDIR = @echo "  MKDIR    " $@
   TRACE_CP       = @echo "  CP       " $< "-->" $@
-  Q=@
+  Q ?= @
 endif
 
 ### Forward comma-separated list of arbitrary defines to the compiler
@@ -363,14 +372,14 @@ distclean:
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -MMD -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -c $< -o $@
 	@$(FINALIZE_DEPENDENCY)
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
 	$(TRACE_CXX)
-	$(Q)$(CXX) $(CXXFLAGS) -MMD -c $< -o $@
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -MMD -c $< -o $@
 	@$(FINALIZE_DEPENDENCY)
 endif
 
@@ -386,55 +395,55 @@ endif
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_S
 $(OBJECTDIR)/%.s: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -S $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -S $< -o $@
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_S
 $(OBJECTDIR)/%.s: %.cpp | $(OBJECTDIR)
 	$(TRACE_CXX)
-	$(Q)$(CXX) $(CXXFLAGS) -S $< -o $@
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -S $< -o $@
 endif
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_E
 $(OBJECTDIR)/%.e: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -E $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -E $< -o $@
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_E
 $(OBJECTDIR)/%.e: %.cpp | $(OBJECTDIR)
 	$(TRACE_CXX)
-	$(Q)$(CXX) $(CXXFLAGS) -E $< -o $@
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -E $< -o $@
 endif
 
 ifndef CUSTOM_RULE_C_TO_O
 %.o: %.c
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_O
 %.o: %.cpp
 	$(TRACE_CXX)
-	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_C_TO_S
 %.s: %.c
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -S $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -S $< -o $@
 endif
 
 ifndef CUSTOM_RULE_C_TO_E
 %.e: %.c
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -E $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -E $< -o $@
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_E
 %.e: %.cpp
 	$(TRACE_CXX)
-	$(Q)$(CXX) $(CXXFLAGS) -E $< -o $@
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -E $< -o $@
 endif
 
 ifndef AROPTS
