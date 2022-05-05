@@ -146,7 +146,7 @@ endif
 
 ### Checks for compiler version to enable 20-bit support
 ifndef IAR
-ifneq (,$(findstring 4.7.,$(shell msp430-gcc -dumpversion)))
+ifneq (,$(findstring 4.7.,$(shell $(CC) -dumpversion)))
 ifdef CPU_HAS_MSP430X
  ifeq ($(TARGET_MEMORY_MODEL),large)
   CFLAGS += -mmemory-model=$(TARGET_MEMORY_MODEL)
