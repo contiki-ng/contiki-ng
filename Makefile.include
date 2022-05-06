@@ -41,10 +41,8 @@ ifdef CI
   endif
 endif
 
-ifndef IAR
-  ifneq (, $(shell which ccache))
-    CCACHE ?= ccache
-  endif
+ifneq (, $(shell which ccache))
+  CCACHE ?= ccache
 endif
 
 BUILD_DIR = build
