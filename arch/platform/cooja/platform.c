@@ -259,7 +259,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_init(JNIEnv *env, jobject obj)
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, jint rel_addr, jint length, jbyteArray mem_arr)
+Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length, jbyteArray mem_arr)
 {
   (*env)->SetByteArrayRegion(
       env,
@@ -286,7 +286,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, 
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, jint rel_addr, jint length, jbyteArray mem_arr)
+Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length, jbyteArray mem_arr)
 {
   jbyte *mem = (*env)->GetByteArrayElements(env, mem_arr, 0);
   memcpy((char*) (((intptr_t)rel_addr) + referenceVar),
@@ -358,7 +358,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, jobject obj, jint addr)
+Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, jobject obj, jlong addr)
 {
   referenceVar = (((intptr_t)&referenceVar) - ((intptr_t)addr));
 }
