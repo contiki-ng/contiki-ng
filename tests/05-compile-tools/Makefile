@@ -29,7 +29,8 @@ TOOLS=tools/serial-io
 BASEDIR=../../
 TESTLOGS=$(subst /,__,$(patsubst %,%.testlog, $(TOOLS)))
 
-all: clean summary
+all: clean
+	@$(MAKE) summary
 
 %.testlog:
 	@echo -n Building tool: $(basename $@)

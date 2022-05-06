@@ -39,7 +39,8 @@ CONTIKI ?= ../..
 
 tests: $(TESTLOGS)
 
-summary: clean tests
+summary: clean
+	@$(MAKE) tests
 ifeq ($(TESTS),)
 	@echo No tests > summary
 else

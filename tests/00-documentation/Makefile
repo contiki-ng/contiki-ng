@@ -39,7 +39,8 @@ READTHEDOCS_ERR = $(RAEDTHEDOCS).err
 CLEAN_TARGETS += $(DOXYGEN_LOG) $(DOXYGEN_ERR)
 CLEAN_TARGETS += $(READTHEDOCS_LOG) $(READTHEDOCS_ERR)
 
-all: clean summary
+all: clean
+	@$(MAKE) summary
 
 doxygen:
 	-@$(MAKE) -C $(DOXYGEN_DIR) 2> $(DOXYGEN_ERR) > /dev/null
