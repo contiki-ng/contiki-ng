@@ -37,40 +37,36 @@
 #include <string.h>
 #include "sys/cooja_mt.h"
 
-#ifndef __WORDSIZE
-#define __WORDSIZE 32
-#endif /* __WORDSIZE */
-
-#ifndef ON_64BIT_ARCH
-#if __WORDSIZE == 64
-#define ON_64BIT_ARCH 1
-#else /* ON_64BIT_ARCH */
+#if INTPTR_MAX == INT32_MAX
 #define ON_64BIT_ARCH 0
-#endif /* __WORDSIZE == 64 */
-#endif /* ON_64BIT_ARCH */
+#elif INTPTR_MAX == INT64_MAX
+#define ON_64BIT_ARCH 1
+#else
+#error "Could not detect 32/64-bit environment."
+#endif
 
 struct frame {
-  unsigned long flags;
+  uintptr_t flags;
 #if ON_64BIT_ARCH
-  unsigned long rbp;
-  unsigned long rdi;
-  unsigned long rsi;
-  unsigned long rdx;
-  unsigned long rcx;
-  unsigned long rbx;
-  unsigned long rax;
+  uintptr_t rbp;
+  uintptr_t rdi;
+  uintptr_t rsi;
+  uintptr_t rdx;
+  uintptr_t rcx;
+  uintptr_t rbx;
+  uintptr_t rax;
 #else /* ON_64BIT_ARCH */
-  unsigned long ebp;
-  unsigned long edi;
-  unsigned long esi;
-  unsigned long edx;
-  unsigned long ecx;
-  unsigned long ebx;
-  unsigned long eax;
+  uintptr_t ebp;
+  uintptr_t edi;
+  uintptr_t esi;
+  uintptr_t edx;
+  uintptr_t ecx;
+  uintptr_t ebx;
+  uintptr_t eax;
 #endif /* ON_64BIT_ARCH */
-  unsigned long retaddr;
-  unsigned long retaddr2;
-  unsigned long data;
+  uintptr_t retaddr;
+  uintptr_t retaddr2;
+  uintptr_t data;
 };
 
 /*--------------------------------------------------------------------------*/
@@ -78,7 +74,7 @@ void
 cooja_mtarch_start(struct cooja_mtarch_thread *t,
     void (*function)(void *), void *data)
 {
-  struct frame *f = (struct frame *)&t->stack[COOJA_MTARCH_STACKSIZE - sizeof(struct frame)/sizeof(unsigned long)];
+  struct frame *f = (struct frame *)&t->stack[COOJA_MTARCH_STACKSIZE - sizeof(struct frame)/sizeof(uintptr_t)];
   int i;
 
   for(i = 0; i < COOJA_MTARCH_STACKSIZE; ++i) {
@@ -86,13 +82,13 @@ cooja_mtarch_start(struct cooja_mtarch_thread *t,
   }
 
   memset(f, 0, sizeof(struct frame));
-  f->retaddr = (unsigned long)function;
-  f->data    = (unsigned long)data;
-  t->sp      = (unsigned long)&f->flags;
+  f->retaddr = (uintptr_t)function;
+  f->data    = (uintptr_t)data;
+  t->sp      = (uintptr_t)&f->flags;
 #if ON_64BIT_ARCH
-  f->rbp     = (unsigned long)&f->rax;
+  f->rbp     = (uintptr_t)&f->rax;
 #else /* ON_64BIT_ARCH */
-  f->ebp     = (unsigned long)&f->eax;
+  f->ebp     = (uintptr_t)&f->eax;
 #endif /* ON_64BIT_ARCH */
 }
 /*--------------------------------------------------------------------------*/
