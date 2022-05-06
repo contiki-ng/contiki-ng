@@ -24,7 +24,8 @@
       <identifier>mtype325</identifier>
       <description>root</description>
       <source>[CONTIKI_DIR]/tests/14-rpl-lite/code/root-node.c</source>
-      <commands>make root-node.cooja TARGET=cooja</commands>
+      <commands>make clean TARGET=cooja
+make root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

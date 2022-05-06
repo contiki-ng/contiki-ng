@@ -26,7 +26,8 @@
       <identifier>mtype301</identifier>
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
-      <commands>make -j sender-node.cooja TARGET=cooja</commands>
+      <commands>make clean TARGET=cooja
+make -j sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

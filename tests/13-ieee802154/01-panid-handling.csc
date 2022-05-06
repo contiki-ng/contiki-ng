@@ -25,7 +25,8 @@
       <identifier>mtype740</identifier>
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code-panid-handling/test-panid-handling.c</source>
-      <commands>make -j test-panid-handling.cooja TARGET=cooja</commands>
+      <commands>make clean TARGET=cooja
+make -j test-panid-handling.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
