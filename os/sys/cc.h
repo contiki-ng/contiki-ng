@@ -58,43 +58,6 @@
 #define CC_REGISTER_ARG
 #endif /* CC_CONF_REGISTER_ARGS */
 
-/**
- * Configure if the C compiler supports the arguments for function
- * pointers.
- */
-#if CC_CONF_FUNCTION_POINTER_ARGS
-#define CC_FUNCTION_POINTER_ARGS 1
-#else /* CC_CONF_FUNCTION_POINTER_ARGS */
-#define CC_FUNCTION_POINTER_ARGS 0
-#endif /* CC_CONF_FUNCTION_POINTER_ARGS */
-
-/**
- * Configure if the C compiler have problems with const function pointers
- */
-#ifdef CC_CONF_CONST_FUNCTION_BUG
-#define CC_CONST_FUNCTION
-#else /* CC_CONF_CONST_FUNCTION_BUG */
-#define CC_CONST_FUNCTION const
-#endif /* CC_CONF_CONST_FUNCTION_BUG */
-
-/**
- * Configure work-around for unsigned char bugs with sdcc.
- */
-#if CC_CONF_UNSIGNED_CHAR_BUGS
-#define CC_UNSIGNED_CHAR_BUGS 1
-#else /* CC_CONF_UNSIGNED_CHAR_BUGS */
-#define CC_UNSIGNED_CHAR_BUGS 0
-#endif /* CC_CONF_UNSIGNED_CHAR_BUGS */
-
-/**
- * Configure if C compiler supports double hash marks in C macros.
- */
-#if CC_CONF_DOUBLE_HASH
-#define CC_DOUBLE_HASH 1
-#else /* CC_CONF_DOUBLE_HASH */
-#define CC_DOUBLE_HASH 0
-#endif /* CC_CONF_DOUBLE_HASH */
-
 #ifdef CC_CONF_INLINE
 #define CC_INLINE CC_CONF_INLINE
 #else /* CC_CONF_INLINE */
@@ -124,15 +87,6 @@
 #else
 #define CC_DEPRECATED(msg)
 #endif /* CC_CONF_DEPRECATED */
-
-/**
- * Configure if the C compiler supports the assignment of struct value.
- */
-#ifdef CC_CONF_ASSIGN_AGGREGATE
-#define CC_ASSIGN_AGGREGATE(dest, src)	CC_CONF_ASSIGN_AGGREGATE(dest, src)
-#else /* CC_CONF_ASSIGN_AGGREGATE */
-#define CC_ASSIGN_AGGREGATE(dest, src)	*dest = *src
-#endif /* CC_CONF_ASSIGN_AGGREGATE */
 
 #if CC_CONF_NO_VA_ARGS
 #define CC_NO_VA_ARGS CC_CONF_VA_ARGS
