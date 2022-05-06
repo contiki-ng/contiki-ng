@@ -5,7 +5,6 @@
   <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
-  <project EXPORT="discard">[APPS_DIR]/radiologger-headless</project>
   <simulation>
     <title>ETSI Plugtest 2017 with Cooja Mote</title>
     <speedlimit>1.0</speedlimit>
