@@ -156,8 +156,6 @@ exit_process(struct process *p, struct process *fromprocess)
     }
   }
 
-  process_current = old_current;
-
   if(process_is_running(p)) {
     /* Process was running */
     p->state = PROCESS_STATE_NONE;
@@ -171,6 +169,8 @@ exit_process(struct process *p, struct process *fromprocess)
         call_process(q, PROCESS_EVENT_EXITED, (process_data_t)p);
     }
   }
+
+  process_current = old_current;
 }
 /*---------------------------------------------------------------------------*/
 static void
