@@ -1,0 +1,169 @@
+# Validation of device variables
+ifndef DEVICE_FAMILY
+    $(error DEVICE_FAMILY not defined!)
+endif
+
+ifndef DEVICE_OPN
+    $(error DEVICE_OPN not defined!)
+endif
+
+ifndef RAIL_FAMILY
+    $(error RAIL_FAMILY not defined!)
+endif
+ 
+DEVICE_FAMILY_LOWER = $(shell echo $(DEVICE_FAMILY) | tr A-Z a-z)
+DEVICE_OPN_UPPER = $(shell echo $(DEVICE_OPN) | tr a-z A-Z)
+
+# OPN Specific
+GSDK_C_SRCS += $(CONTIKI_CPU)/$(DEVICE_OPN)/sl_device_init_clocks.c
+GSDK_SRC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
+GSDK_INC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
+CFLAGS += -DCPU_CONF_PATH=\"$(DEVICE_OPN)-conf.h\"
+
+# GSDK 
+
+## Device
+LDSCRIPT ?= $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/GCC/$(DEVICE_FAMILY_LOWER).ld
+GSDK_ASM_SRCS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/GCC/startup_$(DEVICE_FAMILY_LOWER).S
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/system_$(DEVICE_FAMILY_LOWER).c
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Include
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/GCC
+CFLAGS += -D$(DEVICE_OPN_UPPER)
+
+## hardware
+GSDK_C_SRCS += $(GSDK_ROOT)/hardware/board/src/sl_board_init.c
+GSDK_C_SRCS += $(GSDK_ROOT)/hardware/board/src/sl_board_control_gpio.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/hardware/board/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/hardware/board/inc
+
+## emlib
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_cmu.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_core.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_emu.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_gpio.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_ldma.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_leuart.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_prs.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_rmu.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_rtcc.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_system.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_timer.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_usart.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_wdog.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/emlib/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emlib/inc
+
+## emdrv
+
+### common
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emdrv/common/inc
+
+### gpiointerrupt
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/emdrv/gpiointerrupt/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emdrv/gpiointerrupt/inc
+
+### dmadrv
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emdrv/dmadrv/src/dmadrv.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/emdrv/dmadrv/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emdrv/dmadrv/inc
+
+### uartdrv
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emdrv/uartdrv/src/uartdrv.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/emdrv/uartdrv/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emdrv/uartdrv/inc
+CFLAGS += -DSL_CATALOG_UARTDRV_USART_PRESENT
+
+## peripheral
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/peripheral/inc
+
+## common
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/common/src/sl_slist.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/common/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/common/inc
+
+## service
+### sleeptimer
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtc.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer_hal_sysrtc.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/sleeptimer/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/sleeptimer/inc
+CFLAGS += -DSL_CATALOG_SLEEPTIMER_PRESENT
+
+### iostream
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/iostream/src/sl_iostream.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/iostream/src/sl_iostream_usart.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/iostream/src/sl_iostream_uart.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/iostream/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/iostream/inc
+
+### device_init
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_nvic.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_dcdc_s1.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_hfxo_s1.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_lfxo_s1.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_emu_s1.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/device_init/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/device_init/inc
+CFLAGS += -DSL_CATALOG_DEVICE_INIT_NVIC_PRESENT
+
+### power_manager
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager_hal_s0_s1.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/power_manager/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/power_manager/inc
+CFLAGS += -DSL_CATALOG_POWER_MANAGER_PRESENT
+
+## rail
+LIBRAIL = $(GSDK_ROOT)/platform/radio/rail_lib/autogen/librail_release/librail_multiprotocol_$(RAIL_FAMILY)_gcc_release.a
+
+# Contiki
+
+## CPU-dependent directories
+CONTIKI_CPU_DIRS += .
+CONTIKI_CPU_DIRS += sys
+CONTIKI_CPU_DIRS += dev
+CONTIKI_CPU_DIRS += config
+CONTIKI_CPU_DIRS += os
+CONTIKI_CPU_DIRS += common
+
+## CPU-dependent source files
+
+### dev
+CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c
+CONTIKI_CPU_SOURCEFILES += uart-arch.c
+CONTIKI_CPU_SOURCEFILES += watchdog-arch.c
+
+### sys
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c
+CONTIKI_CPU_SOURCEFILES += clock-arch.c
+CONTIKI_CPU_SOURCEFILES += int-master-arch.c
+CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
+
+### os
+CONTIKI_CPU_SOURCEFILES += dbg-arch.c
+
+### common
+CONTIKI_CPU_SOURCEFILES += sl_uartdrv_init.c
+
+LDFLAGS += --specs=nosys.specs
+LDFLAGS += -Wl,--defsym=_stack=__StackLimit
+LDFLAGS += -Wl,--defsym=_stack_origin=__StackTop
+LDFLAGS += -Wl,--defsym=_heap=__HeapBase
+LDFLAGS += -Wl,--defsym=_eheap=__HeapLimit
+
+TARGET_LIBFILES += -lgcc -lc -lnosys
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
+CONTIKI_SOURCEFILES += $(notdir $(GSDK_C_SRCS))
+CONTIKI_SOURCEFILES += $(notdir $(GSDK_ASM_SRCS))
+
+EXTERNALDIRS += $(GSDK_INC_PATHS)
+EXTERNALDIRS += $(GSDK_SRC_PATHS)
+
+CONTIKI_OBJECTFILES += $(LIBRAIL)

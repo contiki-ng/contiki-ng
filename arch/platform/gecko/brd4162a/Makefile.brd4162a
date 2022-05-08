@@ -1,0 +1,11 @@
+### Will allow the inclusion of the correct OPN makefile
+DEVICE_OPN = efr32mg12p332f1024gl125
+
+BOARD_SOURCEFILES += board-leds.c
+BOARD_SOURCEFILES += board-buttons.c
+BOARD_SOURCEFILES += sl_board_default_init.c
+
+CFLAGS += -DBOARD_CONF_PATH=\"brd4162a-conf.h\"
+
+CONTIKI_TARGET_DIRS += brd4162a
+CONTIKI_TARGET_DIRS += brd4162a/config
