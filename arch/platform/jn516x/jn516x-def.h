@@ -214,7 +214,6 @@
    #define JENNIC_CONF_BUTTON_PIN (IRQ_DIO9|IRQ_DIO10)
  */
 
-#define CC_CONF_REGISTER_ARGS          1
 #define CC_CONF_VA_ARGS                1
 #define CC_CONF_INLINE                 inline
 

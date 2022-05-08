@@ -104,8 +104,8 @@ buf_bufdata(struct psock_buf *buf, uint16_t len,
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
-buf_bufto(CC_REGISTER_ARG struct psock_buf *buf, uint8_t endmarker,
-	  CC_REGISTER_ARG uint8_t **dataptr, CC_REGISTER_ARG uint16_t *datalen)
+buf_bufto(struct psock_buf *buf, uint8_t endmarker,
+          uint8_t **dataptr, uint16_t *datalen)
 {
   uint8_t c;
   while(buf->left > 0 && *datalen > 0) {
@@ -128,7 +128,7 @@ buf_bufto(CC_REGISTER_ARG struct psock_buf *buf, uint8_t endmarker,
 }
 /*---------------------------------------------------------------------------*/
 static char
-data_is_sent_and_acked(CC_REGISTER_ARG struct psock *s)
+data_is_sent_and_acked(struct psock *s)
 {
   /* If data has previously been sent, and the data has been acked, we
      increase the send pointer and call send_data() to send more
@@ -155,7 +155,7 @@ data_is_sent_and_acked(CC_REGISTER_ARG struct psock *s)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-PT_THREAD(psock_send(CC_REGISTER_ARG struct psock *s, const uint8_t *buf,
+PT_THREAD(psock_send(struct psock *s, const uint8_t *buf,
 		     unsigned int len))
 {
   PT_BEGIN(&s->psockpt);
@@ -188,7 +188,7 @@ PT_THREAD(psock_send(CC_REGISTER_ARG struct psock *s, const uint8_t *buf,
   PT_END(&s->psockpt);
 }
 /*---------------------------------------------------------------------------*/
-PT_THREAD(psock_generator_send(CC_REGISTER_ARG struct psock *s,
+PT_THREAD(psock_generator_send(struct psock *s,
 			       unsigned short (*generate)(void *), void *arg))
 {
   PT_BEGIN(&s->psockpt);
@@ -248,7 +248,7 @@ psock_newdata(struct psock *s)
   }
 }
 /*---------------------------------------------------------------------------*/
-PT_THREAD(psock_readto(CC_REGISTER_ARG struct psock *psock, unsigned char c))
+PT_THREAD(psock_readto(struct psock *psock, unsigned char c))
 {
   PT_BEGIN(&psock->psockpt);
 
@@ -275,7 +275,7 @@ PT_THREAD(psock_readto(CC_REGISTER_ARG struct psock *psock, unsigned char c))
   PT_END(&psock->psockpt);
 }
 /*---------------------------------------------------------------------------*/
-PT_THREAD(psock_readbuf_len(CC_REGISTER_ARG struct psock *psock, uint16_t len))
+PT_THREAD(psock_readbuf_len(struct psock *psock, uint16_t len))
 {
   PT_BEGIN(&psock->psockpt);
 
@@ -305,7 +305,7 @@ PT_THREAD(psock_readbuf_len(CC_REGISTER_ARG struct psock *psock, uint16_t len))
 
 /*---------------------------------------------------------------------------*/
 void
-psock_init(CC_REGISTER_ARG struct psock *psock,
+psock_init(struct psock *psock,
 	   uint8_t *buffer, unsigned int buffersize)
 {
   psock->state = STATE_NONE;

@@ -48,16 +48,6 @@
 #include "contiki.h"
 #include "sys/cc-gcc.h"
 
-/**
- * Configure if the C compiler supports the "register" keyword for
- * function arguments.
- */
-#if CC_CONF_REGISTER_ARGS
-#define CC_REGISTER_ARG register
-#else /* CC_CONF_REGISTER_ARGS */
-#define CC_REGISTER_ARG
-#endif /* CC_CONF_REGISTER_ARGS */
-
 #ifdef CC_CONF_INLINE
 #define CC_INLINE CC_CONF_INLINE
 #else /* CC_CONF_INLINE */

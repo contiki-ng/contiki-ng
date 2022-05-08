@@ -145,7 +145,7 @@ add_end(uint8_t *optptr)
 }
 /*---------------------------------------------------------------------------*/
 static void
-create_msg(CC_REGISTER_ARG struct dhcp_msg *m)
+create_msg(struct dhcp_msg *m)
 {
   m->op = DHCP_REQUEST;
   m->htype = DHCP_HTYPE_ETHERNET;
