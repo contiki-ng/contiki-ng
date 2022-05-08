@@ -1,13 +1,16 @@
-CMSIS_PATH = CMSIS/CMSIS
+ifndef CMSIS_PATH
+    CMSIS_PATH = CMSIS/CMSIS
 
-CMSIS_ROOT = $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/$(CMSIS_PATH)
-ifeq (,$(wildcard $(CMSIS_ROOT)/*))
-    $(warning $(CMSIS_ROOT) does not exist or is empty.)
-    $(warning Did you run 'git submodule update --init' ?)
-    $(error "")
+    CMSIS_ROOT = $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/$(CMSIS_PATH)
+    ifeq (,$(wildcard $(CMSIS_ROOT)/*))
+        $(warning $(CMSIS_ROOT) does not exist or is empty.)
+        $(warning Did you run 'git submodule update --init' ?)
+        $(error "")
+    endif
+    CONTIKI_ARM_DIRS += $(CMSIS_PATH)/Core/Include
 endif
 
-CONTIKI_ARM_DIRS += cortex-m $(CMSIS_PATH)/Core/Include
+CONTIKI_ARM_DIRS += cortex-m
 
 ### Build syscalls for newlib
 MODULES += os/lib/newlib
