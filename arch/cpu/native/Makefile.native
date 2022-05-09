@@ -56,6 +56,11 @@ LDFLAGS += -Wl,-export-dynamic
 endif
 endif
 
+# Disallow undefined symbols in object files.
+ifeq ($(HOST_OS),Linux)
+LDFLAGS += -Wl,-zdefs
+endif
+
 MAKE_MAC ?= MAKE_MAC_NULLMAC
 
 ### Compilation rules
