@@ -76,47 +76,6 @@
 /*------------------------------------------------------------------------------*/
 
 /**
- * \defgroup uipoptstaticconf Static configuration options
- * @{
- *
- * These configuration options can be used for setting the IP address
- * settings statically, but only if UIP_FIXEDADDR is set to 1. The
- * configuration options for a specific node includes IP address,
- * netmask and default router as well as the Ethernet address. The
- * netmask, default router and Ethernet address are applicable only
- * if uIP should be run over Ethernet.
- *
- * This options are meaningful only for the IPv4 code.
- *
- * All of these should be changed to suit your project.
- */
-
-/**
- * Determines if uIP should use a fixed IP address or not.
- *
- * If uIP should use a fixed IP address, the settings are set in the
- * uipopt.h file. If not, the macros uip_sethostaddr(),
- * uip_setdraddr() and uip_setnetmask() should be used instead.
- *
- * \hideinitializer
- */
-#define UIP_FIXEDADDR    0
-
-/**
- * Specifies if the uIP ARP module should be compiled with a fixed
- * Ethernet MAC address or not.
- *
- * If this configuration option is 0, the macro uip_setethaddr() can
- * be used to specify the Ethernet address at run-time.
- *
- * \hideinitializer
- */
-#define UIP_FIXEDETHADDR 0
-
-/** @} */
-/*------------------------------------------------------------------------------*/
-
-/**
  * \defgroup uipoptgeneral General configuration options
  * @{
  */
@@ -148,21 +107,6 @@
 #else /* UIP_CONF_STATISTICS */
 #define UIP_STATISTICS (UIP_CONF_STATISTICS)
 #endif /* UIP_CONF_STATISTICS */
-
-/**
- * Broadcast support.
- *
- * This flag configures IP broadcast support. This is useful only
- * together with UDP.
- *
- * \hideinitializer
- *
- */
-#ifndef UIP_CONF_BROADCAST
-#define UIP_BROADCAST 1
-#else /* UIP_CONF_BROADCAST */
-#define UIP_BROADCAST (UIP_CONF_BROADCAST)
-#endif /* UIP_CONF_BROADCAST */
 
 /**
  * Print out a uIP log message.
