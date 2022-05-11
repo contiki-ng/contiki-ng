@@ -18,7 +18,7 @@ sleep 10
 
 echo "Downloading leshan"
 LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
-wget -nc https://joakimeriksson.github.io/resources/$LESHAN_JAR
+wget -nv -nc https://joakimeriksson.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server"
 java -jar $LESHAN_JAR >leshan.log 2>leshan.err &
 LESHID=$!

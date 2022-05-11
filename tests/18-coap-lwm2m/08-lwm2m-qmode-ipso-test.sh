@@ -17,7 +17,7 @@ sleep 10
 
 echo "Downloading leshan with Q-Mode support"
 LESHAN_JAR=leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
-wget -nc https://carlosgp143.github.io/resources/$LESHAN_JAR
+wget -nv -nc https://carlosgp143.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server with Q-Mode enabled"
 java -jar $LESHAN_JAR >leshan.log 2>leshan.err &
 LESHID=$!
