@@ -18,7 +18,7 @@ ifeq ($(HOST_OS),Windows)
   endif
 endif
 
-export docdirs = $(sort $(foreach dir,$(basedirs),${shell find $(contiking)/${dir} -type d}))
+export docdirs = $(sort $(foreach dir,$(basedirs),${shell find $(contiking)/${dir} -maxdepth 7 -type d}))
 export docsrc = $(docdirs) $(foreach dir,$(docdirs) .,${shell find $(dir) -type f -name "doxygen*.txt"})
 
 .PHONY: clean html
