@@ -1,5 +1,4 @@
-contiking := ../..
-basedirs	:= os arch
+contiking 	:= ../..
 empty		:=
 space		:= $(empty) $(empty)
 pwd			:= $(shell cd $(contiking); pwd)
@@ -17,9 +16,6 @@ ifeq ($(HOST_OS),Windows)
     export docroot = $(firstword $(cygroot)):/$(subst $(space),/,$(wordlist 2,$(words $(cygroot)),$(cygroot)))
   endif
 endif
-
-export docdirs = $(sort $(foreach dir,$(basedirs),${shell find $(contiking)/${dir} -type d}))
-export docsrc = $(docdirs) $(foreach dir,$(docdirs) .,${shell find $(dir) -type f -name "doxygen*.txt"})
 
 .PHONY: clean html
 
