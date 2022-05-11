@@ -58,7 +58,7 @@ endif
 ### Check the BSL script exists
 ifeq ($(wildcard $(BSL)), )
 %.upload:
-	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
+	$(error Could not find "$(BSL)". Did you run 'git submodule update --init'?)
 else
 ### Upload to every MOTE
 %.upload: $(foreach MOTE,$(MOTES),%.$(MOTE))

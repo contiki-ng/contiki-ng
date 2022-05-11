@@ -125,7 +125,7 @@ DFU_FLAGS = -p $(PORT)
 
 %.dfu-upload: $(OUT_HEX)
 ifeq (, $(shell which $(NRFUTIL)))
-	@echo "ERROR: Could not find nrfutil, please install it first"
+	$(error Could not find nrfutil "$(NRFUTIL)", please install it first)
 else
 	$(NRFUTIL) pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
 	$(NRFUTIL) dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
