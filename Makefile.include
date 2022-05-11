@@ -352,7 +352,7 @@ endef
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
 
-.PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
+.PHONY: all clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
 	-$(Q)rm -f *.d *.e *.o $(CLEAN)
