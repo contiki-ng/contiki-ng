@@ -68,11 +68,7 @@ cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
   }
   strncpy(e->name, res->d_name, sizeof(e->name) - 1);
   e->name[sizeof(e->name) - 1] = '\0';
-#if defined(__APPLE2__) || defined(__CBM__)
-  e->size = res->d_blocks;
-#else /* __APPLE2__ || __CBM__ */
   e->size = 0;
-#endif /* __APPLE2__ || __CBM__ */
   return 0;
 }
 /*---------------------------------------------------------------------------*/
