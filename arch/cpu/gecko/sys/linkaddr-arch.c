@@ -46,41 +46,30 @@
 #include "contiki.h"
 
 #include "linkaddr.h"
-
 #include "linkaddr-arch.h"
 
+#include "em_system.h"
 #include <string.h>
-#include <stdint.h>
-
 /*---------------------------------------------------------------------------*/
-#if defined(_SILICON_LABS_32B_SERIES_1)
-#define SILABS_DEVINFO_EUI64_LOW   (DEVINFO->UNIQUEL)
-#define SILABS_DEVINFO_EUI64_HIGH  (DEVINFO->UNIQUEH)
-#elif defined(_SILICON_LABS_32B_SERIES_2)
-#include "em_se.h"
-#define SILABS_DEVINFO_EUI64_LOW   (DEVINFO->EUI64L)
-#define SILABS_DEVINFO_EUI64_HIGH  (DEVINFO->EUI64H)
-#else
-#error "Undefined SILABS_DEVINFO_EUI64_LOW and SILABS_DEVINFO_EUI64_HIGH"
-#endif
+static inline uint64_t
+swap_long(uint64_t val)
+{
+  val = (val & 0x00000000FFFFFFFF) << 32 | (val & 0xFFFFFFFF00000000) >> 32;
+  val = (val & 0x0000FFFF0000FFFF) << 16 | (val & 0xFFFF0000FFFF0000) >> 16;
+  val = (val & 0x00FF00FF00FF00FF) << 8 | (val & 0xFF00FF00FF00FF00) >> 8;
+  return val;
+}
 /*---------------------------------------------------------------------------*/
 void
 populate_link_address(void)
 {
-  uint32_t low = SILABS_DEVINFO_EUI64_LOW;
-  uint32_t high = SILABS_DEVINFO_EUI64_HIGH;
-  uint8_t i = 0U;
+  uint64_t system_number;
+  uint64_t system_number_net_order;
 
-  while(i < 4U && i < LINKADDR_SIZE) {
-    linkaddr_node_addr.u8[i] = low & 0xFFU;
-    low >>= 8;
-    i++;
-  }
-  while(i < 8U && i < LINKADDR_SIZE) {
-    linkaddr_node_addr.u8[i] = high & 0xFFU;
-    high >>= 8;
-    i++;
-  }
+  system_number = SYSTEM_GetUnique();
+  system_number_net_order = swap_long(system_number);
+
+  memcpy(linkaddr_node_addr.u8, &system_number_net_order, LINKADDR_SIZE);
 }
 /*---------------------------------------------------------------------------*/
 /**

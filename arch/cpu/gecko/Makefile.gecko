@@ -7,10 +7,14 @@ ifndef DEVICE_OPN
     $(error DEVICE_OPN not defined!)
 endif
 
+ifndef RAIL_CPU
+    $(error RAIL_CPU not defined!)
+endif
+
 ifndef RAIL_FAMILY
     $(error RAIL_FAMILY not defined!)
 endif
- 
+
 DEVICE_FAMILY_LOWER = $(shell echo $(DEVICE_FAMILY) | tr A-Z a-z)
 DEVICE_OPN_UPPER = $(shell echo $(DEVICE_OPN) | tr a-z A-Z)
 
@@ -18,6 +22,8 @@ DEVICE_OPN_UPPER = $(shell echo $(DEVICE_OPN) | tr a-z A-Z)
 GSDK_C_SRCS += $(CONTIKI_CPU)/$(DEVICE_OPN)/sl_device_init_clocks.c
 GSDK_SRC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
 GSDK_INC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
+GSDK_INC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)/config
+GSDK_INC_PATHS += $(CONTIKI_CPU)/config
 CFLAGS += -DCPU_CONF_PATH=\"$(DEVICE_OPN)-conf.h\"
 
 # GSDK 
@@ -73,7 +79,6 @@ GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emdrv/dmadrv/inc
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emdrv/uartdrv/src/uartdrv.c
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/emdrv/uartdrv/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emdrv/uartdrv/inc
-CFLAGS += -DSL_CATALOG_UARTDRV_USART_PRESENT
 
 ## peripheral
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/peripheral/inc
@@ -93,7 +98,6 @@ GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer_hal_sy
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/sleeptimer/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/sleeptimer/inc
-CFLAGS += -DSL_CATALOG_SLEEPTIMER_PRESENT
 
 ### iostream
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/iostream/src/sl_iostream.c
@@ -110,17 +114,47 @@ GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_lfxo
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_emu_s1.c
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/device_init/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/device_init/inc
-CFLAGS += -DSL_CATALOG_DEVICE_INIT_NVIC_PRESENT
 
 ### power_manager
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager_hal_s0_s1.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager_debug.c
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/power_manager/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/power_manager/inc
-CFLAGS += -DSL_CATALOG_POWER_MANAGER_PRESENT
 
-## rail
-LIBRAIL = $(GSDK_ROOT)/platform/radio/rail_lib/autogen/librail_release/librail_multiprotocol_$(RAIL_FAMILY)_gcc_release.a
+## radio
+
+### rail_lib
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/pa-conversions/pa_conversions_efr32.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/pa-conversions/pa_curves_efr32.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/pa-conversions
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/pa-conversions
+
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_dma/sl_rail_util_dma.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_dma
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_callbacks
+
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_pti/sl_rail_util_pti.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_pti
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_pti
+
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_rf_path/sl_rail_util_rf_path.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_rf_path
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_rf_path
+
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_rssi/sl_rail_util_rssi.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_rssi
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_rssi
+
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/plugin/rail_util_callbacks
+
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/chip/efr32/$(RAIL_FAMILY)
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/common
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/protocol
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/radio/rail_lib/protocol/ieee802154
+LIBRAIL = $(GSDK_ROOT)/platform/radio/rail_lib/autogen/librail_release/librail_$(RAIL_CPU)_gcc_release.a
+
+CFLAGS += -DSL_COMPONENT_CATALOG_PRESENT
 
 # Contiki
 
@@ -128,7 +162,6 @@ LIBRAIL = $(GSDK_ROOT)/platform/radio/rail_lib/autogen/librail_release/librail_m
 CONTIKI_CPU_DIRS += .
 CONTIKI_CPU_DIRS += sys
 CONTIKI_CPU_DIRS += dev
-CONTIKI_CPU_DIRS += config
 CONTIKI_CPU_DIRS += os
 CONTIKI_CPU_DIRS += common
 
@@ -138,6 +171,8 @@ CONTIKI_CPU_DIRS += common
 CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += uart-arch.c
 CONTIKI_CPU_SOURCEFILES += watchdog-arch.c
+CONTIKI_CPU_SOURCEFILES += efr32-radio.c
+CONTIKI_CPU_SOURCEFILES += efr32-radio-buffer.c
 
 ### sys
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c
@@ -147,6 +182,7 @@ CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
 
 ### os
 CONTIKI_CPU_SOURCEFILES += dbg-arch.c
+CONTIKI_CPU_SOURCEFILES += random-arch.c
 
 ### common
 CONTIKI_CPU_SOURCEFILES += sl_uartdrv_init.c

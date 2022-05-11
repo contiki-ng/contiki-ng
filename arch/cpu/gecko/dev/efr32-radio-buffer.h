@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
+
 /**
  * \addtogroup gecko
  * @{
@@ -35,45 +35,39 @@
  * \addtogroup gecko-dev Device drivers
  * @{
  *
- * \addtogroup gecko-uart UART driver
+ * \addtogroup gecko-gpio GPIO HAL driver
  * @{
  *
  * \file
- *         UART header file for the gecko.
+ *     GPIO HAL header file for the gecko
  * \author
- *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *     Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  */
 /*---------------------------------------------------------------------------*/
-#ifndef UART_ARCH_H
-#define UART_ARCH_H
+#ifndef GPIO_HAL_ARCH_H_
+#define GPIO_HAL_ARCH_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "rail.h"
+
+#define RAIL_FIFO_SIZE      (128)
+
+typedef struct {
+  RAIL_Time_t timestamp;
+  int16_t rssi;
+  int16_t lqi;
+  uint8_t len;
+  uint8_t buf[RAIL_FIFO_SIZE];
+} rx_buffer_t;
+
+int has_packet(void);
+rx_buffer_t * get_full_rx_buf(void);
+rx_buffer_t * get_empty_rx_buf(void);
+void free_rx_buf(rx_buffer_t *rx_buf);
+
 /*---------------------------------------------------------------------------*/
-/**
- * @brief Initializa the UART driver
- *
- */
-void uart_init(void);
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Writes to the UART driver
- *
- * @param s character array to be transferred
- * @param len length of character array
- *
- * @pre @ref uart_init must have been called
- */
-void uart_write(unsigned char *s, unsigned int len);
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Sets the input handler called in the event handler
- *
- * @param input character that has been read
- */
-void uart_set_input(int (*input)(unsigned char c));
-/*---------------------------------------------------------------------------*/
-#endif /* UART_ARCH_H */
+#endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

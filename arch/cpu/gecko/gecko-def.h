@@ -42,14 +42,13 @@
 #define GECKO_DEF_H_
 /*---------------------------------------------------------------------------*/
 #include "arm-def.h"
-#include "sl_sleeptimer.h"
 /*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
 /*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND sl_sleeptimer_get_timer_frequency()
+#define RTIMER_ARCH_SECOND 32768
 /*---------------------------------------------------------------------------*/
 /* Do the math in 32bits to save precision.
  * Round to nearest integer rather than truncate. */
@@ -65,34 +64,22 @@
    Intended only for positive values of T. */
 #define RTIMERTICKS_TO_US_64(T)  ((uint32_t)(((uint64_t)(T) * 1000000 + ((RTIMER_ARCH_SECOND) / 2)) / (RTIMER_ARCH_SECOND)))
 /*---------------------------------------------------------------------------*/
-#define RADIO_PHY_OVERHEAD            3
-#define RADIO_BYTE_AIR_TIME          32
-#define RADIO_SHR_LEN                 5 /* Synch word + SFD */
-#define RADIO_DELAY_BEFORE_TX \
-  ((unsigned)US_TO_RTIMERTICKS(RADIO_SHR_LEN * RADIO_BYTE_AIR_TIME))
-#define RADIO_DELAY_BEFORE_RX         ((unsigned)US_TO_RTIMERTICKS(250))
-#define RADIO_DELAY_BEFORE_DETECT     0
+#define RADIO_PHY_HEADER_LEN        (5)
+#define RADIO_PHY_OVERHEAD          (3)
+#define RADIO_BIT_RATE              (250000)
+#define RADIO_BYTE_AIR_TIME         (1000000 / (RADIO_BIT_RATE / 8))
+#define RADIO_DELAY_BEFORE_TX       ((unsigned)US_TO_RTIMERTICKS(192))
+#define RADIO_DELAY_BEFORE_RX       ((unsigned)US_TO_RTIMERTICKS(182))
+#define RADIO_DELAY_BEFORE_DETECT   ((unsigned)US_TO_RTIMERTICKS(358))
 /*---------------------------------------------------------------------------*/
 #define GPIO_HAL_CONF_ARCH_HDR_PATH          "gpio-hal-arch.h"
 #define GPIO_HAL_CONF_ARCH_SW_TOGGLE         0
 /*---------------------------------------------------------------------------*/
-#ifndef TSCH_CONF_HW_FRAME_FILTERING
-#define TSCH_CONF_HW_FRAME_FILTERING  0
-#endif /* TSCH_CONF_HW_FRAME_FILTERING */
-
-#ifndef TSCH_CONF_RADIO_ON_DURING_TIMESLOT
-#define TSCH_CONF_RADIO_ON_DURING_TIMESLOT 1
-#endif /* TSCH_CONF_RADIO_ON_DURING_TIMESLOT */
-
-#ifndef TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
-#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS 1
-#endif /* TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS */
-
-#ifndef TSCH_CONF_TIMESYNC_REMOVE_JITTER
-#define TSCH_CONF_TIMESYNC_REMOVE_JITTER 0
-#endif /* TSCH_CONF_TIMESYNC_REMOVE_JITTER */
-/*---------------------------------------------------------------------------*/
-#define CSMA_CONF_SEND_SOFT_ACK       1
+#define TSCH_CONF_HW_FRAME_FILTERING          0
+#define TSCH_CONF_RADIO_ON_DURING_TIMESLOT    1
+#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS  1
+#define TSCH_CONF_TIMESYNC_REMOVE_JITTER      0
+#define TSCH_CONF_BASE_DRIFT_PPM              -977
 /*---------------------------------------------------------------------------*/
 #endif /* GECKO_DEF_H_ */
 /*---------------------------------------------------------------------------*/

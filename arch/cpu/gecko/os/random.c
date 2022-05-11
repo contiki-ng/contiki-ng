@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,48 +32,21 @@
  * \addtogroup gecko
  * @{
  *
- * \addtogroup gecko-dev Device drivers
+ * \addtogroup gecko-os OS drivers
  * @{
  *
- * \addtogroup gecko-uart UART driver
+ * \addtogroup gecko-random Random driver
  * @{
  *
  * \file
- *         UART header file for the gecko.
+ *      This file overrides os/lib/random.c. Note that the file name must
+ *      match the original file for the override to work.
+ *
  * \author
- *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
  *
  */
-/*---------------------------------------------------------------------------*/
-#ifndef UART_ARCH_H
-#define UART_ARCH_H
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Initializa the UART driver
- *
- */
-void uart_init(void);
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Writes to the UART driver
- *
- * @param s character array to be transferred
- * @param len length of character array
- *
- * @pre @ref uart_init must have been called
- */
-void uart_write(unsigned char *s, unsigned int len);
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Sets the input handler called in the event handler
- *
- * @param input character that has been read
- */
-void uart_set_input(int (*input)(unsigned char c));
-/*---------------------------------------------------------------------------*/
-#endif /* UART_ARCH_H */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

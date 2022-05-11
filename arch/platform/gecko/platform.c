@@ -50,6 +50,7 @@
 #include "sl_device_init_emu.h"
 #include "sl_board_control.h"
 #include "sl_power_manager.h"
+#include "sl_sleeptimer.h"
 
 #include "dev/gpio-hal.h"
 #include "dev/button-hal.h"
@@ -83,6 +84,7 @@ static void
 sl_platform_init_stage_two(void)
 {
   sl_board_configure_vcom();
+  sl_sleeptimer_init();
 }
 /*---------------------------------------------------------------------------*/
 void

@@ -49,8 +49,7 @@
 #endif /* BOARD_CONF_PATH */
 /*---------------------------------------------------------------------------*/
 #ifndef NETSTACK_CONF_RADIO
-/* TODO: Radio Driver */
-/* #define NETSTACK_CONF_RADIO        gecko_ieee_driver */
+#define NETSTACK_CONF_RADIO        efr32_radio_driver
 #endif /* NETSTACK_CONF_RADIO */
 /*---------------------------------------------------------------------------*/
 #endif /* GECKO_CONF_H_ */

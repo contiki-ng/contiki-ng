@@ -32,48 +32,55 @@
  * \addtogroup gecko
  * @{
  *
- * \addtogroup gecko-dev Device drivers
+ * \addtogroup gecko-os OS drivers
  * @{
  *
- * \addtogroup gecko-uart UART driver
+ * \addtogroup gecko-random Random driver
  * @{
  *
  * \file
- *         UART header file for the gecko.
+ *         Random driver for the gecko.
  * \author
  *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  */
 /*---------------------------------------------------------------------------*/
-#ifndef UART_ARCH_H
-#define UART_ARCH_H
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Initializa the UART driver
- *
- */
-void uart_init(void);
+#include <stdlib.h>
+#include <stdint.h>
+
+#include "rail.h"
+#include "em_system.h"
+
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Writes to the UART driver
- *
- * @param s character array to be transferred
- * @param len length of character array
- *
- * @pre @ref uart_init must have been called
+ * @brief Generates a new random number
+ * @return The random number.
  */
-void uart_write(unsigned char *s, unsigned int len);
+unsigned short
+random_rand(void)
+{
+  return (unsigned short)rand();
+}
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Sets the input handler called in the event handler
- *
- * @param input character that has been read
+ * @brief Initialize the random number generator
+ * @param seed Ignored.
  */
-void uart_set_input(int (*input)(unsigned char c));
-/*---------------------------------------------------------------------------*/
-#endif /* UART_ARCH_H */
+void
+random_init(unsigned short seed)
+{
+  (void)seed;
+  uint32_t entropy;
+  (void)RAIL_GetRadioEntropy(RAIL_EFR32_HANDLE, (uint8_t *)(&entropy), sizeof(entropy));
+
+  /* If RAIL does not provide an entropy. */
+  /* Use system unique as entropy */
+  if(entropy == 0) {
+    entropy = SYSTEM_GetUnique();
+  }
+
+  srand(entropy);
+}
 /*---------------------------------------------------------------------------*/
 /**
  * @}

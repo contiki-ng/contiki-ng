@@ -35,7 +35,7 @@
  * \addtogroup gecko-dev Device drivers
  * @{
  *
- * \addtogroup gecko-uarte UART driver
+ * \addtogroup gecko-uart UART driver
  * @{
  *
  * \file
@@ -53,13 +53,13 @@
 static int (*input_handler)(unsigned char c) = NULL;
 static uint8_t uarte_buffer;
 /*---------------------------------------------------------------------------*/
-static void 
+static void
 receive_callback(UARTDRV_HandleData_t *handle, Ecode_t transferStatus,
-                  uint8_t *data, UARTDRV_Count_t transferCount)
+                 uint8_t *data, UARTDRV_Count_t transferCount)
 {
   UARTDRV_Count_t i;
   if(transferStatus == ECODE_EMDRV_UARTDRV_OK &&
-      input_handler != NULL) {
+     input_handler != NULL) {
     for(i = 0; i < transferCount; i++) {
       input_handler(data[i]);
     }

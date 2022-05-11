@@ -13,6 +13,8 @@ EXAMPLES = \
 6tisch/simple-node/nrf:BOARD=nrf52840/dongle \
 6tisch/simple-node/nrf:BOARD=nrf5340/dk/application \
 6tisch/simple-node/nrf:BOARD=nrf5340/dk/network \
+6tisch/simple-node/gecko:BOARD=brd4162a \
+6tisch/simple-node/gecko:BOARD=brd4166a \
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \

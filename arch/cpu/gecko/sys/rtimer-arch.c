@@ -71,14 +71,21 @@ rtimer_arch_init(void)
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
+  uint32_t now = sl_sleeptimer_get_tick_count();
+  uint32_t timeout = t - now;
+
   /* t is an absolute time */
   /* sl_sleeptimer_start_timer takes a timeout */
-  /* Create one-shot timer for waking up the system. */
+  /* Check for overflow and compensate */
+  if(timeout > 0x80000000UL) {
+    timeout -= 0x80000000UL;
+  }
+
   sl_sleeptimer_start_timer(&rtimer_timer,
-                            t - sl_sleeptimer_get_tick_count(),
+                            timeout,
                             on_rtimer_timeout, NULL,
                             0,
-                            SL_SLEEPTIMER_NO_HIGH_PRECISION_HF_CLOCKS_REQUIRED_FLAG);
+                            0);
 }
 /*---------------------------------------------------------------------------*/
 rtimer_clock_t
