@@ -45,6 +45,8 @@ ifneq (, $(shell which ccache))
   CCACHE ?= ccache
 endif
 
+JAVA = java
+
 BUILD_DIR = build
 BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)
 BUILD_DIR_TARGET_BOARD = $(BUILD_DIR_TARGET)/$(BOARD)
