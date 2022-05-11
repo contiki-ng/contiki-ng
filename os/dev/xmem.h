@@ -28,15 +28,66 @@
  *
  */
 
-#ifndef XMEM_H
-#define XMEM_H
+/**
+ * \file
+ *        Header file to the external flash memory (XMem) API.
+ */
 
+/**
+ * \addtogroup dev
+ * @{
+ */
+
+/**
+ * \defgroup xmem XMem API
+ *
+ * The Xmem API  module contains functionality to use external flash memories
+ * of NOR or NAND type. It us typically used as a back-end for the CFS module.
+ *
+ * @{
+ */
+
+#ifndef XMEM_H_
+#define XMEM_H_
+
+/**
+ * Initialize the external memory.
+ */
 void xmem_init(void);
 
+/**
+ * Read a number of bytes from an offset in the external memory.
+ *
+ * \param buf The buffer where the read data is stored.
+ * \param nbytes The number of bytes to read.
+ * \param offset The offset to read from in the flash memory.
+ * \return The number of read bytes, or -1 if the operation failed.
+ */
 int xmem_pread(void *buf, int nbytes, unsigned long offset);
 
+/**
+ *
+ * \param buf The buffer that contains the data to write.
+ * \param nbytes The number of bytes to write.
+ * \param offset The offset to write to in the flash memory.
+ * \return The number of written bytes, or -1 if the operation failed.
+ */
 int xmem_pwrite(const void *buf, int nbytes, unsigned long offset);
 
+/**
+ * Erase a sector in the flash memory.
+ *
+ * \param nbytes The number of bytes to erase.
+ * \param offset The offset in the flash memory at which to start erasing.
+ * \return The number of bytes that got erased, or -1 if the operation failed.
+ *
+ * Both parameters may have to be a multiple of a value that depends
+ * on the particular flash memory used.
+ */
 int xmem_erase(long nbytes, unsigned long offset);
 
-#endif /* XMEM_H */
+/*---------------------------------------------------------------------------*/
+#endif /* XMEM_H_ */
+/*---------------------------------------------------------------------------*/
+/** @} */
+/** @} */
