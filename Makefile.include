@@ -522,6 +522,17 @@ endif
 	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
 	@echo "To view more C variables, edit $(VIEWCONF)"
 
+###
+### Targets using tools/motelist
+###
+CONTIKI_NG_MOTELIST_DIR = $(CONTIKI_NG_TOOLS_DIR)/motelist
+CONTIKI_NG_MOTELIST = $(CONTIKI_NG_MOTELIST_DIR)/motelist.py
+
+.PHONY: motelist-all
+
+motelist-all:
+	$(Q)$(CONTIKI_NG_MOTELIST)
+
 ### Include Makefile.embedded for relevant platforms, in order to pull in
 ### rules for login, serialview etc
 ifeq ($(findstring $(TARGET),native cooja),)
