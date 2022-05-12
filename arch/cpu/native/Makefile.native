@@ -4,17 +4,17 @@ CONTIKI_SOURCEFILES += rtimer-arch.c watchdog.c eeprom.c int-master.c
 CONTIKI_SOURCEFILES += gpio-hal-arch.c
 
 ### Compiler definitions
-CC       ?= gcc
-CXX      ?= g++
+CC       = gcc
+CXX      = g++
 ifdef LD_OVERRIDE
   LD     = $(LD_OVERRIDE)
 else
   LD     = gcc
 endif
-AS       ?= as
-NM       ?= nm
-OBJCOPY  ?= objcopy
-STRIP    ?= strip
+AS       = as
+NM       = nm
+OBJCOPY  = objcopy
+STRIP    = strip
 ifeq ($(WERROR),1)
 CFLAGSWERROR=-Werror
 endif
