@@ -25,8 +25,6 @@ declare -i OKCOUNT=0
 FAILSEEDS=
 
 for (( SEED=$BASESEED; SEED<$(($BASESEED+$RUNCOUNT)); SEED++ )); do
-  echo "Running test $BASENAME with random seed $SEED"
-
   if java -Xshare:on -Dnashorn.args=--no-deprecation-warning -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$CSC -contiki=$CONTIKI -random-seed=$SEED; then
     OKCOUNT+=1
   else
