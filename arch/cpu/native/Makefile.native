@@ -50,10 +50,6 @@ AROPTS = -rc
 LDFLAGS_WERROR := -Wl,-fatal_warnings
 LDFLAGS += -Wl,-flat_namespace
 CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
-else
-ifeq ($(HOST_OS),Linux)
-LDFLAGS += -Wl,-export-dynamic
-endif
 endif
 
 # Disallow undefined symbols in object files.
