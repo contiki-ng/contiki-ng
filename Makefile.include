@@ -346,9 +346,9 @@ CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
 .PHONY: all clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
-	-$(Q)rm -f *.d *.e *.o $(CLEAN)
-	-$(Q)rm -rf $(BUILD_DIR_TARGET)
-	-$(Q)rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	$(Q)rm -f *.d *.e *.o $(CLEAN) \
+		$(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	$(Q)rm -rf $(BUILD_DIR_TARGET)
 	@echo Target $(TARGET) cleaned
 
 distclean:
@@ -356,7 +356,7 @@ distclean:
 		echo Running: $(MAKE) TARGET=$$TARG clean; \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
-	-$(Q)rm -rf $(BUILD_DIR)
+	$(Q)rm -rf $(BUILD_DIR)
 
 -include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.customrules-$(TARGET)
 
@@ -481,7 +481,7 @@ else
 endif
 
 savetarget:
-	-@rm -f Makefile.target
+	@rm -f Makefile.target
 	@echo "saving Makefile.target"
 	@echo >Makefile.target "TARGET = $(TARGET)"
 ifneq ($(BOARD),)
@@ -489,7 +489,7 @@ ifneq ($(BOARD),)
 endif
 
 savedefines:
-	-@rm -f Makefile.$(TARGET).defines
+	@rm -f Makefile.$(TARGET).defines
 	@echo "saving Makefile.$(TARGET).defines"
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
