@@ -226,15 +226,13 @@ define FINALIZE_DEPENDENCY_
 # hack: subsitute windows path back to cygwin path
 sed -e 's/c:\//\/cygdrive\/c\//' $(@:.o=.d) > $(@:.o=.$$$$); \
 cp $(@:.o=.$$$$) $(@:.o=.d); \
-sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-    -e '/^$$/ d' -e 's/$$/ :/' < $(@:.o=.$$$$) >> $(@:.o=.d); \
 rm -f $(@:.o=.$$$$)
 endef
 
 CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -MMD -c $< -o $@
+	$(Q)$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 	@$(FINALIZE_DEPENDENCY_)
 
 CUSTOM_RULE_LINK = 1

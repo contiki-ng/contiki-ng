@@ -339,15 +339,6 @@ ifneq ($(MAKECMDGOALS),clean)
 -include ${addprefix $(OBJECTDIR)/,$(PROJECT_SOURCEFILES:.cpp=.d)}
 endif
 
-### See http://make.paulandlesley.org/autodep.html#advanced
-
-define FINALIZE_DEPENDENCY
-cp $(@:.o=.d) $(@:.o=.$$$$); \
-sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-    -e '/^$$/ d' -e 's/$$/ :/' < $(@:.o=.$$$$) >> $(@:.o=.d); \
-rm -f $(@:.o=.$$$$)
-endef
-
 ### Harmonize filename of a .map file, if the platform's build system wants
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
@@ -369,18 +360,18 @@ distclean:
 
 -include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.customrules-$(TARGET)
 
+### See http://make.paulandlesley.org/autodep.html#advanced
+
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -c $< -o $@
-	@$(FINALIZE_DEPENDENCY)
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
 	$(TRACE_CXX)
-	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -MMD -c $< -o $@
-	@$(FINALIZE_DEPENDENCY)
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
