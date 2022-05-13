@@ -83,7 +83,7 @@ coap_log_2(uint16_t value)
 }
 /*---------------------------------------------------------------------------*/
 static uint32_t
-coap_parse_int_option(uint8_t *bytes, size_t length)
+coap_parse_int_option(const uint8_t *bytes, size_t length)
 {
   uint32_t var = 0;
   int i = 0;

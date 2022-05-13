@@ -121,7 +121,7 @@ process_start(struct process *p, process_data_t data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-exit_process(struct process *p, struct process *fromprocess)
+exit_process(struct process *p, const struct process *fromprocess)
 {
   register struct process *q;
   struct process *old_current = process_current;

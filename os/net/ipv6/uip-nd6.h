@@ -388,7 +388,8 @@ typedef struct uip_nd6_opt_redirected_hdr {
  *   a SLLAO option, otherwise no.
  */
 void
-uip_nd6_ns_output(uip_ipaddr_t *src, uip_ipaddr_t *dest, uip_ipaddr_t *tgt);
+uip_nd6_ns_output(const uip_ipaddr_t *src, const uip_ipaddr_t *dest,
+                  uip_ipaddr_t *tgt);
 
 #if UIP_CONF_ROUTER
 #if UIP_ND6_SEND_RA
@@ -397,7 +398,7 @@ uip_nd6_ns_output(uip_ipaddr_t *src, uip_ipaddr_t *dest, uip_ipaddr_t *tgt);
  *
  * Only for router, for periodic as well as sollicited RA
  */
-void uip_nd6_ra_output(uip_ipaddr_t *dest);
+void uip_nd6_ra_output(const uip_ipaddr_t *dest);
 #endif /* UIP_ND6_SEND_RA */
 #endif /*UIP_CONF_ROUTER*/
 
