@@ -115,6 +115,8 @@ else
   endif
 endif
 
+CP ?= cp
+
 # Decide whether to build or to skip this target for this platform
 ifneq ("", "$(PLATFORMS_ONLY)")
   ifeq ("","$(filter $(TARGET), $(PLATFORMS_ONLY))")
@@ -460,7 +462,7 @@ endif
 
 %.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(TRACE_CP)
-	$(Q)cp $< $@
+	$(Q)$(CP) $< $@
 
 %.ramprof: %.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [abdrw] " | cut -d' ' -f2,4
