@@ -561,7 +561,7 @@ init_security(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_key(const uint8_t *key)
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   GET_LOCK();
 
@@ -571,7 +571,7 @@ set_key(const uint8_t *key)
 }
 /*---------------------------------------------------------------------------*/
 static void
-encrypt(uint8_t *plaintext_and_result)
+encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 {
   GET_LOCK();
 

@@ -52,7 +52,7 @@
 
 /*---------------------------------------------------------------------------*/
 static void
-set_key(const uint8_t *key)
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   bool was_crypto_enabled = CRYPTO_IS_ENABLED();
   if(!was_crypto_enabled) {
@@ -122,7 +122,7 @@ exit:
 }
 /*---------------------------------------------------------------------------*/
 static void
-encrypt(uint8_t *plaintext_and_result)
+encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 {
   bool was_crypto_enabled = CRYPTO_IS_ENABLED();
   if(!was_crypto_enabled) {

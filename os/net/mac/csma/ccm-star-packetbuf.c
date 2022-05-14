@@ -64,7 +64,8 @@ get_extended_address(const linkaddr_t *addr)
 #endif /* LINKADDR_SIZE == 2 */
 /*---------------------------------------------------------------------------*/
 void
-ccm_star_packetbuf_set_nonce(uint8_t *nonce, int forward)
+ccm_star_packetbuf_set_nonce(uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
+    bool forward)
 {
   const linkaddr_t *source_addr;
 

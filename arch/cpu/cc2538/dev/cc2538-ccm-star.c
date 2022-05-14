@@ -61,14 +61,17 @@ typedef union {
 
 /*---------------------------------------------------------------------------*/
 static void
-set_key(const uint8_t *key)
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   cc2538_aes_128_driver.set_key(key);
 }
 /*---------------------------------------------------------------------------*/
 static void
-aead(const uint8_t *nonce, uint8_t *m, uint16_t m_len, const uint8_t *a,
-     uint16_t a_len, uint8_t *result, uint8_t mic_len, int forward)
+aead(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
+    uint8_t *m, uint16_t m_len,
+    const uint8_t *a, uint16_t a_len,
+    uint8_t *result, uint8_t mic_len,
+    bool forward)
 {
   if(!a_len && !m_len) {
     /* fall back on software implementation as the hardware implementation

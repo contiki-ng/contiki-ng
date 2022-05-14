@@ -41,6 +41,8 @@
 #define CCM_STAR_H_
 
 #include "contiki.h"
+#include "lib/aes-128.h"
+#include <stdbool.h>
 
 #ifdef CCM_STAR_CONF
 #define CCM_STAR CCM_STAR_CONF
@@ -61,7 +63,7 @@ struct ccm_star_driver {
    *
    *                The default implementation calls AES_128.set_key().
    */
-  void (* set_key)(const uint8_t* key);
+  void (* set_key)(const uint8_t key[static AES_128_KEY_LENGTH]);
 
   /**
    * \brief         Combines authentication and encryption.
@@ -70,13 +72,13 @@ struct ccm_star_driver {
    * \param a       Additional authenticated data. Up to 0xfeff
    * \param result  The generated MIC will be put here
    * \param mic_len The size of the MIC to be generated. <= 16.
-   * \param forward != 0 if used in forward direction.
+   * \param forward True if used in forward direction.
    */
-  void (* aead)(const uint8_t* nonce,
+  void (* aead)(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
       uint8_t* m, uint16_t m_len,
       const uint8_t* a, uint16_t a_len,
       uint8_t *result, uint8_t mic_len,
-      int forward);
+      bool forward);
 };
 
 extern const struct ccm_star_driver ccm_star_driver;

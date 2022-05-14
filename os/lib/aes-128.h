@@ -59,12 +59,12 @@ struct aes_128_driver {
   /**
    * \brief Sets the current key.
    */
-  void (* set_key)(const uint8_t *key);
+  void (* set_key)(const uint8_t key[static AES_128_KEY_LENGTH]);
 
   /**
    * \brief Encrypts.
    */
-  void (* encrypt)(uint8_t *plaintext_and_result);
+  void (* encrypt)(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE]);
 };
 
 extern const struct aes_128_driver AES_128;

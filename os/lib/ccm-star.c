@@ -52,9 +52,9 @@
 
 /*---------------------------------------------------------------------------*/
 static void
-set_iv(uint8_t *iv,
+set_iv(uint8_t iv[static AES_128_BLOCK_SIZE],
     uint8_t flags,
-    const uint8_t *nonce,
+    const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     uint16_t counter)
 {
   iv[0] = flags;
@@ -65,7 +65,7 @@ set_iv(uint8_t *iv,
 /*---------------------------------------------------------------------------*/
 /* XORs the block m[pos] ... m[pos + 15] with K_{counter} */
 static void
-ctr_step(const uint8_t *nonce,
+ctr_step(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     uint16_t pos,
     uint8_t *m_and_result, uint16_t m_len,
     uint16_t counter)
@@ -81,7 +81,7 @@ ctr_step(const uint8_t *nonce,
 }
 /*---------------------------------------------------------------------------*/
 static void
-mic(const uint8_t *nonce,
+mic(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     const uint8_t *m, uint16_t m_len,
     const uint8_t *a, uint16_t a_len,
     uint8_t *result, uint8_t mic_len)
@@ -130,7 +130,8 @@ mic(const uint8_t *nonce,
 }
 /*---------------------------------------------------------------------------*/
 static void
-ctr(const uint8_t *nonce, uint8_t *m, uint16_t m_len)
+ctr(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
+    uint8_t *m, uint16_t m_len)
 {
   uint16_t counter = 1;
   /* 32-bit pos to reach the end of the loop if m_len is large */
@@ -140,17 +141,17 @@ ctr(const uint8_t *nonce, uint8_t *m, uint16_t m_len)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_key(const uint8_t *key)
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   AES_128.set_key(key);
 }
 /*---------------------------------------------------------------------------*/
 static void
-aead(const uint8_t* nonce,
+aead(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     uint8_t* m, uint16_t m_len,
     const uint8_t* a, uint16_t a_len,
     uint8_t *result, uint8_t mic_len,
-    int forward)
+    bool forward)
 {
   if(!MIC_LEN_VALID(mic_len)) {
     return;

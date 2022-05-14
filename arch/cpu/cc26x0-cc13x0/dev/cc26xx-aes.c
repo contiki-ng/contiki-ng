@@ -47,13 +47,14 @@ static uint32_t skey[AES_128_KEY_LENGTH / sizeof(uint32_t)];
 
 /*---------------------------------------------------------------------------*/
 void
-cc26xx_aes_set_key(const uint8_t *key)
+cc26xx_aes_set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   memcpy(skey, key, AES_128_KEY_LENGTH);
 }
 /*---------------------------------------------------------------------------*/
 static void
-encrypt_decrypt(uint8_t *plaintext_and_result, bool do_encrypt)
+encrypt_decrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE],
+    bool do_encrypt)
 {
   uint32_t result[AES_128_BLOCK_SIZE / sizeof(uint32_t)];
   unsigned status;
@@ -108,13 +109,13 @@ encrypt_decrypt(uint8_t *plaintext_and_result, bool do_encrypt)
 }
 /*---------------------------------------------------------------------------*/
 void
-cc26xx_aes_encrypt(uint8_t *plaintext_and_result)
+cc26xx_aes_encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 {
   encrypt_decrypt(plaintext_and_result, true);
 }
 /*---------------------------------------------------------------------------*/
 void
-cc26xx_aes_decrypt(uint8_t *cyphertext_and_result)
+cc26xx_aes_decrypt(uint8_t cyphertext_and_result[static AES_128_BLOCK_SIZE])
 {
   encrypt_decrypt(cyphertext_and_result, false);
 }
