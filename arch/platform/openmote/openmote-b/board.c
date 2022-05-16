@@ -41,6 +41,8 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "antenna.h"
+#include "dev/gpio.h"
+#include "dev/ioc.h"
 #include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
@@ -56,6 +58,15 @@ board_init()
   antenna_init();
   antenna_select_cc2538();
   configure_unused_pins();
+
+  /* configure bootloader pin as input */
+  GPIO_SOFTWARE_CONTROL(GPIO_PORT_TO_BASE(GPIO_A_NUM),
+      GPIO_PIN_MASK(FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN));
+  GPIO_SET_INPUT(GPIO_PORT_TO_BASE(GPIO_A_NUM),
+      GPIO_PIN_MASK(FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN));
+  ioc_set_over(GPIO_A_NUM,
+      FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN,
+      IOC_OVERRIDE_ANA);
 }
 /*---------------------------------------------------------------------------*/
 /**
