@@ -18,7 +18,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>sender</identifier>
       <description>Sender</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/sender/udp-sender.c</source>
+      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/udp-sender/udp-sender.c</source>
       <commands>make TARGET=cooja clean
 make -j udp-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>

@@ -18,7 +18,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>sender</identifier>
       <description>Sender</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/sender/unicast-sender.c</source>
+      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/unicast-sender/unicast-sender.c</source>
       <commands>make TARGET=cooja clean
 make -j unicast-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>

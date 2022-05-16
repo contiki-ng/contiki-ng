@@ -1,4 +1,5 @@
-all: test-ringbufindex
+CONTIKI_PROJECT = test-ringbufindex
+all: $(CONTIKI_PROJECT)
 
 MODULES += os/services/unit-test
 

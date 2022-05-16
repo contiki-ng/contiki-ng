@@ -1,4 +1,5 @@
-all: test-data-structures
+CONTIKI_PROJECT = test-data-structures
+all: $(CONTIKI_PROJECT)
 
 MODULES += os/services/unit-test
 
