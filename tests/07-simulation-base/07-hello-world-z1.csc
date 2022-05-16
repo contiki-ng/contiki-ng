@@ -20,7 +20,7 @@
       <description>Z1 Mote Type #z11</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands EXPORT="discard">make TARGET=z1 clean
-make hello-world.z1 TARGET=z1</commands>
+make -j$(CPUS) hello-world.z1 TARGET=z1</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/hello-world/hello-world.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

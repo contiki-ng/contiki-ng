@@ -25,7 +25,7 @@
       <description>Cooja Mote Type #mtype11</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands EXPORT="discard">make TARGET=cooja clean
-make -j node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
+make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=1 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
