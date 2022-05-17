@@ -40,7 +40,7 @@ ifndef PORT
 	PORT=/dev/ttyUSB$(INDEX)
 endif
 
-BSL_FLAGS += -e -w -v -b 450000
+BSL_FLAGS += -e -w -v -b 460800
 
 ifeq ($(BOARD),openmote-b)
 	BSL_FLAGS += --bootloader-invert-lines
