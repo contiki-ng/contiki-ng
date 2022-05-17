@@ -33,11 +33,10 @@ while [ $COUNTER -gt 0 ]; do
 done
 
 echo "Closing standalone example"
-sleep 1
 pgrep lwm2m-example | sudo xargs kill -9
 
-echo "Closing leshan"
 sleep 1
+echo "Closing leshan"
 pgrep java | sudo xargs kill -9
 
 aux=$(grep -c 'OK' leshan.err)

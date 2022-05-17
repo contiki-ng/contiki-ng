@@ -34,11 +34,10 @@ while [ $COUNTER -gt 0 ]; do
 done
 
 echo "Closing standalone example"
-sleep 1
 kill_bg $CPID
 
-echo "Closing leshan"
 sleep 1
+echo "Closing leshan"
 kill_bg $LESHID
 
 
@@ -57,12 +56,7 @@ else
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
 
-rm make.log
-rm make.err
-rm node.log
-rm node.err
-rm leshan.log
-rm leshan.err
+rm make.log make.err node.log node.err leshan.log leshan.err
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end
