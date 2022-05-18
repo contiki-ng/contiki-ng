@@ -97,8 +97,6 @@ void cooja_mtarch_exec(struct cooja_mtarch_thread *thread);
 
 struct cooja_mt_thread {
   int state;
-  process_event_t *evptr;
-  process_data_t *dataptr;
   struct cooja_mtarch_thread thread;
 };
 
@@ -137,28 +135,6 @@ void cooja_mt_start(struct cooja_mt_thread *thread, void (* function)(void *), v
  *
  */
 void cooja_mt_exec(struct cooja_mt_thread *thread);
-
-/**
- * Post an event to a thread.
- *
- * This function posts an event to a thread. The thread will be
- * scheduled if the thread currently is waiting for the posted event
- * number. If the thread is not waiting for the event, this function
- * does nothing.
- *
- * \note The thread must first be initialized with the mt_init() function.
- *
- * \param thread A pointer to a struct mt_thread block that must be
- * allocated by the caller.
- *
- * \param s The event that is posted to the thread.
- *
- * \param data An opaque pointer to a user specified structure
- * containing additonal information, or NULL if no additional
- * information is needed.
- */
-/*void mt_exec_event(struct mt_thread *thread, process_event_t s,
-  process_data_t data);*/
 
 /**
  * Voluntarily give up the processor.
