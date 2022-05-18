@@ -32,135 +32,159 @@
  *
  */
 
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "contiki.h"
 #include "dev/eeprom.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "EEPROM"
+#define LOG_LEVEL LOG_LEVEL_MAIN
 
 static FILE *eeprom_file;
 
 /*---------------------------------------------------------------------------*/
-static void
-eeprom_fill(eeprom_addr_t addr, unsigned char value, int size)
+static bool
+eeprom_fill(eeprom_addr_t addr, unsigned char value, size_t size)
 {
-  if((addr > EEPROM_END_ADDR) || (addr+size > EEPROM_END_ADDR+1) || size < 0) {
-    fprintf(stderr, "eeprom_fill: Bad address and/or size (addr = %04x, size = %d)\n", addr, size);
-
-    /* Abort here so that we break into the debugger. If a debugger isn't
-     * attached, well we might as well crash anyway.
-     */
-    abort();
-  }
-
   if(!eeprom_file) {
-    eeprom_init();
+    return false;
   }
 
-  fseek(eeprom_file, addr, SEEK_SET);
+  if(addr > EEPROM_END_ADDR || addr + size > EEPROM_END_ADDR + 1) {
+    LOG_ERR("Bad address and/or size (addr = %04x, size = %zu)\n", addr, size);
+    return false;
+  }
+
+  if(fseek(eeprom_file, addr, SEEK_SET) < 0) {
+    LOG_ERR("fseek() failed: %s\n", strerror(errno));
+    return false;
+  }
 
   while(size--) {
     if(fputc(value, eeprom_file) != value) {
-      perror("fputc() failed");
-      exit(EXIT_FAILURE);
+      LOG_ERR("fputc() failed\n");
+      return false;
     }
   }
+  return true;
 }
 
 /*---------------------------------------------------------------------------*/
-void
+bool
 eeprom_init(void)
 {
-  long length;
-  char *eeprom_filename = getenv("CONTIKI_EEPROM");
-
-  if(eeprom_filename) {
-    eeprom_file = fopen(eeprom_filename, "r+");
-
-    if(!eeprom_file) {
-      /* File does exist yet, so let's create it. */
-      eeprom_file = fopen(eeprom_filename, "w+");
-
-      if(!eeprom_file) {
-        perror("Unable to create EEPROM file");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    fprintf(stderr, "eeprom_init: Using \"%s\".\n", eeprom_filename);
-  } else {
-    eeprom_file = tmpfile();
-
-    if(!eeprom_file) {
-      perror("Unable to create temporary EEPROM file");
-      exit(EXIT_FAILURE);
-    }
+  if(eeprom_file) {
+    LOG_WARN("Re-initializing EEPROM\n");
+    fclose(eeprom_file);
+    eeprom_file = NULL;
   }
+
+  if(EEPROM_SIZE == 0) {
+    LOG_ERR("Cannot initialize EEPROM when EEPROM_SIZE is 0\n");
+    return false;
+  }
+
+  char *eeprom_filename = getenv("CONTIKI_EEPROM");
+  if(eeprom_filename != NULL) {
+    LOG_INFO("Using EEPROM file \"%s\"\n", eeprom_filename);
+  } else {
+    LOG_INFO("CONTIKI_EEPROM env is not set; using a temp file instead\n");
+  }
+
+  eeprom_file = eeprom_filename ? fopen(eeprom_filename, "w+") : tmpfile();
+
+  if(eeprom_file == NULL) {
+    LOG_ERR("Unable to open the EEPROM file\n");
+    goto error;
+  }
+
 
   /* Make sure that the file is the correct size by seeking
    * to the end and checking the file position. If it is
    * less than what we expect, we pad out the rest of the file
    * with 0xFF, just like a real EEPROM. */
 
-  fseek(eeprom_file, 0, SEEK_END);
-  length = ftell(eeprom_file);
+  if(fseek(eeprom_file, 0, SEEK_END) == -1) {
+    LOG_ERR("fseek() failed: %s\n", strerror(errno));
+    goto error;
+  }
 
+  off_t length = ftell(eeprom_file);
   if(length < 0) {
-    perror("ftell failed");
-    exit(EXIT_FAILURE);
+    LOG_ERR("ftell() failed\n");
+    goto error;
   }
 
   if(length < EEPROM_END_ADDR) {
     /* Fill with 0xFF, just like a real EEPROM. */
-    eeprom_fill(length, 0xFF, EEPROM_SIZE - length);
+    if(eeprom_fill(length, 0xFF, EEPROM_SIZE - length) == false) {
+      goto error;
+    }
   }
+
+  return true;
+
+error:
+  if(eeprom_file != NULL) {
+    fclose(eeprom_file);
+    eeprom_file = NULL;
+  }
+  return false;
 }
 
 /*---------------------------------------------------------------------------*/
-void
-eeprom_write(eeprom_addr_t addr, unsigned char *buf, int size)
+bool
+eeprom_write(eeprom_addr_t addr, const unsigned char *buf, size_t size)
 {
-  if((addr > EEPROM_END_ADDR) || (addr+size > EEPROM_END_ADDR+1) || size < 0) {
-    fprintf(stderr, "eeprom_write: Bad address and/or size (addr = %04x, size = %d)\n", addr, size);
-
-    /* Abort here so that we break into the debugger. If a debugger isn't
-     * attached, well we might as well crash anyway.
-     */
-    abort();
-  }
-
   if(!eeprom_file) {
-    eeprom_init();
+    return false;
   }
 
-  fseek(eeprom_file, addr, SEEK_SET);
+  if(addr > EEPROM_END_ADDR || addr + size > EEPROM_END_ADDR + 1) {
+    LOG_ERR("Bad address and/or size (addr = %04x, size = %zu)\n", addr, size);
+    return false;
+  }
+
+  if(fseek(eeprom_file, addr, SEEK_SET) < 0) {
+    LOG_ERR("fseek() failed: %s\n", strerror(errno));
+    return false;
+  }
 
   if(fwrite(buf, 1, size, eeprom_file) != size) {
-    perror("fwrite() failed");
-    exit(EXIT_FAILURE);
+    LOG_ERR("fwrite() failed\n");
+    return false;
   }
+
+  return true;
 }
 
 /*---------------------------------------------------------------------------*/
-void
-eeprom_read(eeprom_addr_t addr, unsigned char *buf, int size)
+bool
+eeprom_read(eeprom_addr_t addr, unsigned char *buf, size_t size)
 {
-  if((addr > EEPROM_END_ADDR) || (addr+size > EEPROM_END_ADDR+1) || size < 0) {
-    fprintf(stderr, "eeprom_read: Bad address and/or size (addr = %04x, size = %d)\n", addr, size);
-
-    /* Abort here so that we break into the debugger. If a debugger isn't
-     * attached, well we might as well crash anyway. */
-    abort();
-  }
-
   if(!eeprom_file) {
-    eeprom_init();
+    return false;
   }
 
-  fseek(eeprom_file, addr, SEEK_SET);
+  if(addr > EEPROM_END_ADDR || addr + size > EEPROM_END_ADDR + 1) {
+    LOG_ERR("Bad address and/or size (addr = %04x, size = %zu)\n", addr, size);
+    return false;
+  }
+
+  if(fseek(eeprom_file, addr, SEEK_SET) < 0) {
+    LOG_ERR("fseek() failed: %s\n", strerror(errno));
+    return false;
+  }
 
   if(fread(buf, 1, size, eeprom_file) != size) {
-    perror("fread() failed");
-    exit(EXIT_FAILURE);
+    LOG_ERR("fread() failed\n");
+    return false;
   }
+
+  return true;
 }
