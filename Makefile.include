@@ -440,7 +440,7 @@ ifndef CUSTOM_RULE_CPP_TO_E
 endif
 
 ifndef AROPTS
-  AROPTS = rcf
+  AROPTS = rc
 endif
 
 ifndef CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
