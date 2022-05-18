@@ -40,12 +40,12 @@
 
 #include "contiki.h"
 
+#include <stdint.h>
 
 /**
  * An opaque structure that is used for holding the state of a thread.
  *
- * The structure should be defined in the "mtarch.h" file. This
- * structure typically holds the entire stack for the thread.
+ * This structure typically holds the entire stack for the thread.
  */
 struct cooja_mtarch_thread;
 
@@ -93,7 +93,14 @@ void cooja_mtarch_exec(struct cooja_mtarch_thread *thread);
 /** @} */
 
 
-#include "cooja_mtarch.h"
+#ifndef COOJA_MTARCH_STACKSIZE
+#define COOJA_MTARCH_STACKSIZE 1024
+#endif /* COOJA_MTARCH_STACKSIZE */
+
+struct cooja_mtarch_thread {
+  uintptr_t sp;  /* Note: stack pointer must be first var in struct! */
+  uintptr_t stack[COOJA_MTARCH_STACKSIZE];
+} __attribute__ ((aligned (16)));
 
 struct cooja_mt_thread {
   int state;
