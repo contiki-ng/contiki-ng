@@ -215,6 +215,9 @@ splhigh_(void)
 #else
   asmv("mov r2, %0" : "=r" (sr));
   asmv("bic %0, r2" : : "i" (GIE));
+  /* GCC 9 warns about risk of incorrect execution without nop after
+     interrupt state changes. */
+  asmv("nop");
 #endif
   return sr & GIE;    /* Ignore other sr bits. */
 }
