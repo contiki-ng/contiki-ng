@@ -25,7 +25,7 @@
       <description>root</description>
       <source>[CONTIKI_DIR]/tests/15-rpl-classic/code/root-node.c</source>
       <commands>make clean TARGET=cooja
-make root-node.cooja TARGET=cooja</commands>
+make -j$(CPUS) root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -50,7 +50,7 @@ make root-node.cooja TARGET=cooja</commands>
       <identifier>mtype151</identifier>
       <description>dis-sender</description>
       <source>[CONTIKI_DIR]/tests/15-rpl-classic/code/dis-sender.c</source>
-      <commands>make dis-sender.cooja TARGET=cooja</commands>
+      <commands>make -j$(CPUS) dis-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

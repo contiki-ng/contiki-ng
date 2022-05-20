@@ -24,7 +24,8 @@
       <identifier>sky1</identifier>
       <description>Sky Mote Type #sky1</description>
       <source EXPORT="discard">[CONTIKI_DIR]/tests/07-simulation-base/code-data-structures/test-data-structures.c</source>
-      <commands EXPORT="discard">make test-data-structures.sky TARGET=sky</commands>
+      <commands EXPORT="discard">make clean TARGET=sky
+make -j$(CPUS) test-data-structures.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/tests/07-simulation-base/code-data-structures/test-data-structures.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

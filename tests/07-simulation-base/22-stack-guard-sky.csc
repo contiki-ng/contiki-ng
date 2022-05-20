@@ -20,7 +20,7 @@
       <description>Sky Mote Type #1</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.c</source>
       <commands EXPORT="discard">make TARGET=sky clean
-make -j example-stack-check.sky TARGET=sky</commands>
+make -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

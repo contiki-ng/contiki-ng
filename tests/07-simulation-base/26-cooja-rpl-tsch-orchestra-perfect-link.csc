@@ -25,7 +25,7 @@
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands EXPORT="discard">make TARGET=cooja clean
-make -j node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_ROUTING=1 MAKE_WITH_LINK_BASED_ORCHESTRA=1 DEFINES=LINK_STATS_CONF_PACKET_COUNTERS=1,TSCH_CONF_KEEPALIVE_TIMEOUT=1024,TSCH_CONF_MAX_KEEPALIVE_TIMEOUT=1024</commands>
+make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_ROUTING=1 MAKE_WITH_LINK_BASED_ORCHESTRA=1 DEFINES=LINK_STATS_CONF_PACKET_COUNTERS=1,TSCH_CONF_KEEPALIVE_TIMEOUT=1024,TSCH_CONF_MAX_KEEPALIVE_TIMEOUT=1024</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

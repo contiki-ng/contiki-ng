@@ -25,7 +25,7 @@
       <description>ringbufindex testee</description>
       <source>[CONFIG_DIR]/code-ringbufindex/test-ringbufindex.c</source>
       <commands>make TARGET=cooja clean
-make test-ringbufindex.cooja TARGET=cooja</commands>
+make -j$(CPUS) test-ringbufindex.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

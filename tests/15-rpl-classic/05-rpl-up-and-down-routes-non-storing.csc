@@ -26,7 +26,7 @@
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
       <commands>make clean TARGET=cooja
-make -j sender-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING</commands>
+make -j$(CPUS) sender-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -51,7 +51,7 @@ make -j sender-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING<
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
       <commands>make clean TARGET=cooja
-make -j root-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING</commands>
+make -j$(CPUS) root-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -76,7 +76,7 @@ make -j root-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING</c
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
       <commands>make clean TARGET=cooja
-make -j receiver-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING</commands>
+make -j$(CPUS) receiver-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STORING</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

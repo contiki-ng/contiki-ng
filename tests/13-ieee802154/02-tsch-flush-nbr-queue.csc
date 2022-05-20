@@ -25,7 +25,7 @@
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code-flush-nbr-queue/test-flush-nbr-queue.c</source>
       <commands>make clean TARGET=cooja
-make -j test-flush-nbr-queue.cooja TARGET=cooja</commands>
+make -j$(CPUS) test-flush-nbr-queue.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
