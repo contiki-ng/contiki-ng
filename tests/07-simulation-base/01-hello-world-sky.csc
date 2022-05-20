@@ -20,7 +20,7 @@
       <description>Sky Mote Type #1</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands EXPORT="discard">make TARGET=sky clean
-make -j hello-world.sky TARGET=sky</commands>
+make -j$(CPUS) hello-world.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
