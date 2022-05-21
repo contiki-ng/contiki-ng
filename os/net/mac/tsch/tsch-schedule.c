@@ -545,8 +545,10 @@ tsch_schedule_print(void)
       LOG_PRINT("Slotframe Handle %u, size %u\n", sf->handle, sf->size.val);
 
       while(l != NULL) {
-        LOG_PRINT("* Link Options %02x, type %u, timeslot %u, channel offset %u, address %u\n",
-               l->link_options, l->link_type, l->timeslot, l->channel_offset, l->addr.u8[7]);
+        LOG_PRINT("* Link Options %02x, type %u, timeslot %u, channel offset %u, address ",
+               l->link_options, l->link_type, l->timeslot, l->channel_offset);
+        LOG_PRINT_LLADDR(&l->addr);
+        LOG_PRINT_("\n");
         l = list_item_next(l);
       }
 
