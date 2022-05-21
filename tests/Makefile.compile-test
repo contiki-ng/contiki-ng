@@ -28,6 +28,17 @@
 all: clean
 	@$(MAKE) summary
 
+ifdef NUMCORES
+  # User wants a certain number, respect that.
+  CPUS := $(NUMCORES)
+else ifneq (, $(shell which nproc))
+  # Query the machine for the number of processors.
+  CPUS := $(shell nproc)
+else
+  # Default to something suitable for a mid-range laptop.
+  CPUS := 8
+endif
+
 # The stuff below is some GNU make magic to automatically make make
 # give each compile test a number, prefixed with a 0 if the number is
 # < 10, to match the way the simulation tests output works.
@@ -41,7 +52,7 @@ get_target_vars = $(wordlist 2,15,$(subst :, ,$1))
 define dooneexample
 @echo -n Building example $(3): $(1) $(4) for target $(2)
 @((cd $(EXAMPLESDIR)/$(1) && \
- $(MAKE) $(4) TARGET=$(2) clean && make -j $(4) TARGET=$(2) WERROR=1) > \
+ $(MAKE) $(4) TARGET=$(2) clean && make -j$(CPUS) $(4) TARGET=$(2) WERROR=1) > \
       /dev/null 2>make.err && \
  (echo " -> OK" && printf "%-75s %-40s %-20s TEST OK\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog) || \
  (echo " -> FAIL" && printf "%-75s %-40s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog ; cat make.err))
