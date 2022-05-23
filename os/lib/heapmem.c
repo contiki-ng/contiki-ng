@@ -183,13 +183,11 @@ free_chunk(chunk_t * const chunk)
   }
 }
 
-/* allocate_chunk: Mark a chunk as being allocated, and remove it
+/* remove_chunk_from_free_list: Mark a chunk as being allocated, and remove it
    from the free list. */
 static void
-allocate_chunk(chunk_t * const chunk)
+remove_chunk_from_free_list(chunk_t * const chunk)
 {
-  chunk->flags |= CHUNK_FLAG_ALLOCATED;
-
   if(chunk == free_list) {
     free_list = chunk->next;
     if(free_list != NULL) {
@@ -238,7 +236,7 @@ coalesce_chunks(chunk_t *chunk)
       (char *)next < &heap_base[heap_usage] && CHUNK_FREE(next);
       next = NEXT_CHUNK(next)) {
     chunk->size += sizeof(chunk_t) + next->size;
-    allocate_chunk(next);
+    remove_chunk_from_free_list(next);
   }
 }
 
@@ -296,7 +294,7 @@ get_free_chunk(const size_t size)
 
   if(best != NULL) {
     /* We found a chunk for the allocation. Split it if necessary. */
-    allocate_chunk(best);
+    remove_chunk_from_free_list(best);
     split_chunk(best, size);
   }
 
