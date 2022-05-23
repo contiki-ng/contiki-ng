@@ -48,16 +48,10 @@
 #define PRINTF(...)
 #endif
 
-#ifdef PROJECT_CONF_PATH
-/* Load the heapmem configuration from a project configuration file. */
-#include PROJECT_CONF_PATH
-#endif
-
 #include <stdint.h>
 #include <string.h>
 
-#include "heapmem.h"
-
+#include "lib/heapmem.h"
 #include "lib/assert.h"
 #include "sys/cc.h"
 
