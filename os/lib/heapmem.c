@@ -347,7 +347,7 @@ heapmem_alloc(size_t size)
   chunk->line = line;
 #endif
 
-  PRINTF("%s ptr %p size %lu\n", __func__, GET_PTR(chunk), (unsigned long)size);
+  PRINTF("%s ptr %p size %zu\n", __func__, GET_PTR(chunk), size);
 
   return GET_PTR(chunk);
 }
@@ -502,11 +502,11 @@ heapmem_stats(heapmem_stats_t *stats)
       chunk = NEXT_CHUNK(chunk)) {
     if(CHUNK_ALLOCATED(chunk)) {
       stats->allocated += chunk->size;
+      stats->overhead += sizeof(chunk_t);
     } else {
       coalesce_chunks(chunk);
       stats->available += chunk->size;
     }
-    stats->overhead += sizeof(chunk_t);
   }
   stats->available += HEAPMEM_ARENA_SIZE - heap_usage;
   stats->footprint = heap_usage;
