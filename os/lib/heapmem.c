@@ -35,17 +35,13 @@
  * 	Nicolas Tsiftes <nvt@acm.org>
  */
 
-#ifndef DEBUG
-#define DEBUG 0
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "HeapMem"
+#define LOG_LEVEL LOG_LEVEL_WARN
 
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#undef HEAPMEM_DEBUG
-#define HEAPMEM_DEBUG 1
-#else
-#define PRINTF(...)
+#ifndef HEAPMEM_DEBUG
+#define HEAPMEM_DEBUG 0
 #endif
 
 #include <stdint.h>
@@ -239,6 +235,7 @@ coalesce_chunks(chunk_t *chunk)
       (char *)next < &heap_base[heap_usage] && CHUNK_FREE(next);
       next = NEXT_CHUNK(next)) {
     chunk->size += sizeof(chunk_t) + next->size;
+    LOG_DBG("Coalesce chunk of %zu bytes\n", next->size);
     remove_chunk_from_free_list(next);
   }
 }
@@ -350,7 +347,7 @@ heapmem_alloc(size_t size)
   chunk->line = line;
 #endif
 
-  PRINTF("%s ptr %p size %zu\n", __func__, GET_PTR(chunk), size);
+  LOG_DBG("%s ptr %p size %zu\n", __func__, GET_PTR(chunk), size);
 
   return GET_PTR(chunk);
 }
@@ -377,18 +374,20 @@ heapmem_free(void *ptr)
   chunk_t *chunk;
 
   if(!IN_HEAP(ptr)) {
-    PRINTF("ptr %p is not in the heap!\n", ptr);
+    LOG_WARN("%s: ptr %p is not in the heap\n", __func__, ptr);
     return false;
   }
 
   chunk = GET_CHUNK(ptr);
   if(!CHUNK_ALLOCATED(chunk)) {
-    PRINTF("ptr %p has already been deallocated!\n", ptr);
+    LOG_WARN("%s: ptr %p has already been deallocated\n", __func__, ptr);
     return false;
   }
 
-  PRINTF("%s ptr %p, allocated at %s:%u\n", __func__, ptr,
+#if HEAPMEM_DEBUG
+  LOG_DBG("%s: ptr %p, allocated at %s:%u\n", __func__, ptr,
          chunk->file, chunk->line);
+#endif
 
   free_chunk(chunk);
   return true;
@@ -424,11 +423,14 @@ heapmem_realloc(void *ptr, size_t size)
   int size_adj;
 
   if(!IN_HEAP(ptr)) {
-    PRINTF("ptr %p is not in the heap!\n", ptr);
+    LOG_WARN("%s: ptr %p is not in the heap\n", __func__, ptr);
     return NULL;
   }
-  PRINTF("%s ptr %p size %zu at %s:%u\n",
-         __func__, ptr, size, file, line);
+
+#if HEAPMEM_DEBUG
+  LOG_DBG("%s: ptr %p size %zu at %s:%u\n",
+           __func__, ptr, size, file, line);
+#endif
 
   /* Fail early on too large allocation requests to prevent wrapping values. */
   if(size > HEAPMEM_ARENA_SIZE) {
@@ -445,7 +447,7 @@ heapmem_realloc(void *ptr, size_t size)
 
   chunk = GET_CHUNK(ptr);
   if(!CHUNK_ALLOCATED(chunk)) {
-    PRINTF("ptr %p is not allocated!\n", ptr);
+    LOG_WARN("%s: ptr %p is not allocated\n", __func__, ptr);
     return false;
   }
 
