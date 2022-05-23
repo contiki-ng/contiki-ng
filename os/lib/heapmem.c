@@ -146,6 +146,9 @@ static size_t heap_usage;
 static chunk_t *first_chunk = (chunk_t *)heap_base;
 static chunk_t *free_list;
 
+#define IN_HEAP(ptr) ((char *)(ptr) >= (char *)heap_base) && \
+                     ((char *)(ptr) < (char *)heap_base + heap_usage)
+
 /* extend_space: Increases the current footprint used in the heap, and
    returns a pointer to the old end. */
 static void *
@@ -364,7 +367,7 @@ heapmem_alloc(size_t size)
  * in memory will be merged into a single chunk in order to mitigate
  * fragmentation.
  */
-void
+bool
 #if HEAPMEM_DEBUG
 heapmem_free_debug(void *ptr, const char *file, const unsigned line)
 #else
@@ -373,15 +376,22 @@ heapmem_free(void *ptr)
 {
   chunk_t *chunk;
 
-  if(ptr) {
-    chunk = GET_CHUNK(ptr);
-
-    assert(CHUNK_ALLOCATED(chunk));
-    PRINTF("%s ptr %p, allocated at %s:%u\n", __func__, ptr,
-           chunk->file, chunk->line);
-
-    free_chunk(chunk);
+  if(!IN_HEAP(ptr)) {
+    PRINTF("ptr %p is not in the heap!\n", ptr);
+    return false;
   }
+
+  chunk = GET_CHUNK(ptr);
+  if(!CHUNK_ALLOCATED(chunk)) {
+    PRINTF("ptr %p has already been deallocated!\n", ptr);
+    return false;
+  }
+
+  PRINTF("%s ptr %p, allocated at %s:%u\n", __func__, ptr,
+         chunk->file, chunk->line);
+
+  free_chunk(chunk);
+  return true;
 }
 
 #if HEAPMEM_REALLOC
@@ -413,8 +423,12 @@ heapmem_realloc(void *ptr, size_t size)
   chunk_t *chunk;
   int size_adj;
 
-  PRINTF("%s ptr %p size %u at %s:%u\n",
-         __func__, ptr, (unsigned)size, file, line);
+  if(!IN_HEAP(ptr)) {
+    PRINTF("ptr %p is not in the heap!\n", ptr);
+    return NULL;
+  }
+  PRINTF("%s ptr %p size %zu at %s:%u\n",
+         __func__, ptr, size, file, line);
 
   /* Fail early on too large allocation requests to prevent wrapping values. */
   if(size > HEAPMEM_ARENA_SIZE) {
@@ -430,6 +444,11 @@ heapmem_realloc(void *ptr, size_t size)
   }
 
   chunk = GET_CHUNK(ptr);
+  if(!CHUNK_ALLOCATED(chunk)) {
+    PRINTF("ptr %p is not allocated!\n", ptr);
+    return false;
+  }
+
 #if HEAPMEM_DEBUG
   chunk->file = file;
   chunk->line = line;
