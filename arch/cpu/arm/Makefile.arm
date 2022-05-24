@@ -34,6 +34,9 @@ ASFLAGS += -c
 
 LDFLAGS += -mthumb -mabi=aapcs -mlittle-endian
 
+# Disallow undefined symbols in object files.
+LDFLAGS += -Wl,-zdefs
+
 OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
 
 ### Caller can override the default compiler optimization levels
