@@ -11,6 +11,8 @@ endif
 
 COOJA_DIR = $(CONTIKI_NG_TOOLS_DIR)/cooja
 
+MAKEFILES_CUSTOMRULES += $(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/Makefile.customrules-cooja
+
 # Use dbg-io for IO functions like printf()
 MODULES += os/lib/dbg-io
 
