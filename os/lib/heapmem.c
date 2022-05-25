@@ -35,29 +35,19 @@
  * 	Nicolas Tsiftes <nvt@acm.org>
  */
 
-#ifndef DEBUG
-#define DEBUG 0
-#endif
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "HeapMem"
+#define LOG_LEVEL LOG_LEVEL_WARN
 
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#undef HEAPMEM_DEBUG
-#define HEAPMEM_DEBUG 1
-#else
-#define PRINTF(...)
-#endif
-
-#ifdef PROJECT_CONF_PATH
-/* Load the heapmem configuration from a project configuration file. */
-#include PROJECT_CONF_PATH
+#ifndef HEAPMEM_DEBUG
+#define HEAPMEM_DEBUG 0
 #endif
 
 #include <stdint.h>
 #include <string.h>
 
-#include "heapmem.h"
-
+#include "lib/heapmem.h"
 #include "lib/assert.h"
 #include "sys/cc.h"
 
@@ -152,18 +142,19 @@ static size_t heap_usage;
 static chunk_t *first_chunk = (chunk_t *)heap_base;
 static chunk_t *free_list;
 
+#define IN_HEAP(ptr) ((char *)(ptr) >= (char *)heap_base) && \
+                     ((char *)(ptr) < (char *)heap_base + heap_usage)
+
 /* extend_space: Increases the current footprint used in the heap, and
    returns a pointer to the old end. */
 static void *
 extend_space(size_t size)
 {
-  char *old_usage;
-
   if(size > HEAPMEM_ARENA_SIZE - heap_usage) {
     return NULL;
   }
 
-  old_usage = &heap_base[heap_usage];
+  char *old_usage = &heap_base[heap_usage];
   heap_usage += size;
 
   return old_usage;
@@ -189,13 +180,11 @@ free_chunk(chunk_t * const chunk)
   }
 }
 
-/* allocate_chunk: Mark a chunk as being allocated, and remove it
+/* remove_chunk_from_free_list: Mark a chunk as being allocated, and remove it
    from the free list. */
 static void
-allocate_chunk(chunk_t * const chunk)
+remove_chunk_from_free_list(chunk_t * const chunk)
 {
-  chunk->flags |= CHUNK_FLAG_ALLOCATED;
-
   if(chunk == free_list) {
     free_list = chunk->next;
     if(free_list != NULL) {
@@ -218,12 +207,10 @@ allocate_chunk(chunk_t * const chunk)
 static void
 split_chunk(chunk_t * const chunk, size_t offset)
 {
-  chunk_t *new_chunk;
-
   offset = ALIGN(offset);
 
   if(offset + sizeof(chunk_t) < chunk->size) {
-    new_chunk = (chunk_t *)(GET_PTR(chunk) + offset);
+    chunk_t *new_chunk = (chunk_t *)(GET_PTR(chunk) + offset);
     new_chunk->size = chunk->size - sizeof(chunk_t) - offset;
     new_chunk->flags = 0;
     free_chunk(new_chunk);
@@ -238,13 +225,12 @@ split_chunk(chunk_t * const chunk, size_t offset)
 static void
 coalesce_chunks(chunk_t *chunk)
 {
-  chunk_t *next;
-
-  for(next = NEXT_CHUNK(chunk);
+  for(chunk_t *next = NEXT_CHUNK(chunk);
       (char *)next < &heap_base[heap_usage] && CHUNK_FREE(next);
       next = NEXT_CHUNK(next)) {
     chunk->size += sizeof(chunk_t) + next->size;
-    allocate_chunk(next);
+    LOG_DBG("Coalesce chunk of %zu bytes\n", next->size);
+    remove_chunk_from_free_list(next);
   }
 }
 
@@ -253,12 +239,9 @@ coalesce_chunks(chunk_t *chunk)
 static void
 defrag_chunks(void)
 {
-  int i;
-  chunk_t *chunk;
-
   /* Limit the time we spend on searching the free list. */
-  i = CHUNK_SEARCH_MAX;
-  for(chunk = free_list; chunk != NULL; chunk = chunk->next) {
+  int i = CHUNK_SEARCH_MAX;
+  for(chunk_t *chunk = free_list; chunk != NULL; chunk = chunk->next) {
     if(i-- == 0) {
       break;
     }
@@ -271,16 +254,13 @@ defrag_chunks(void)
 static chunk_t *
 get_free_chunk(const size_t size)
 {
-  int i;
-  chunk_t *chunk, *best;
-
   /* Defragment chunks only right before they are needed for allocation. */
   defrag_chunks();
 
-  best = NULL;
+  chunk_t *best = NULL;
   /* Limit the time we spend on searching the free list. */
-  i = CHUNK_SEARCH_MAX;
-  for(chunk = free_list; chunk != NULL; chunk = chunk->next) {
+  int i = CHUNK_SEARCH_MAX;
+  for(chunk_t *chunk = free_list; chunk != NULL; chunk = chunk->next) {
     if(i-- == 0) {
       break;
     }
@@ -302,7 +282,7 @@ get_free_chunk(const size_t size)
 
   if(best != NULL) {
     /* We found a chunk for the allocation. Split it if necessary. */
-    allocate_chunk(best);
+    remove_chunk_from_free_list(best);
     split_chunk(best, size);
   }
 
@@ -330,8 +310,6 @@ heapmem_alloc_debug(size_t size, const char *file, const unsigned line)
 heapmem_alloc(size_t size)
 #endif
 {
-  chunk_t *chunk;
-
   /* Fail early on too large allocation requests to prevent wrapping values. */
   if(size > HEAPMEM_ARENA_SIZE) {
     return NULL;
@@ -339,7 +317,7 @@ heapmem_alloc(size_t size)
 
   size = ALIGN(size);
 
-  chunk = get_free_chunk(size);
+  chunk_t *chunk = get_free_chunk(size);
   if(chunk == NULL) {
     chunk = extend_space(sizeof(chunk_t) + size);
     if(chunk == NULL) {
@@ -355,7 +333,7 @@ heapmem_alloc(size_t size)
   chunk->line = line;
 #endif
 
-  PRINTF("%s ptr %p size %lu\n", __func__, GET_PTR(chunk), (unsigned long)size);
+  LOG_DBG("%s ptr %p size %zu\n", __func__, GET_PTR(chunk), size);
 
   return GET_PTR(chunk);
 }
@@ -372,24 +350,31 @@ heapmem_alloc(size_t size)
  * in memory will be merged into a single chunk in order to mitigate
  * fragmentation.
  */
-void
+bool
 #if HEAPMEM_DEBUG
 heapmem_free_debug(void *ptr, const char *file, const unsigned line)
 #else
 heapmem_free(void *ptr)
 #endif
 {
-  chunk_t *chunk;
-
-  if(ptr) {
-    chunk = GET_CHUNK(ptr);
-
-    assert(CHUNK_ALLOCATED(chunk));
-    PRINTF("%s ptr %p, allocated at %s:%u\n", __func__, ptr,
-           chunk->file, chunk->line);
-
-    free_chunk(chunk);
+  if(!IN_HEAP(ptr)) {
+    LOG_WARN("%s: ptr %p is not in the heap\n", __func__, ptr);
+    return false;
   }
+
+  chunk_t *chunk = GET_CHUNK(ptr);
+  if(!CHUNK_ALLOCATED(chunk)) {
+    LOG_WARN("%s: ptr %p has already been deallocated\n", __func__, ptr);
+    return false;
+  }
+
+#if HEAPMEM_DEBUG
+  LOG_DBG("%s: ptr %p, allocated at %s:%u\n", __func__, ptr,
+         chunk->file, chunk->line);
+#endif
+
+  free_chunk(chunk);
+  return true;
 }
 
 #if HEAPMEM_REALLOC
@@ -417,12 +402,15 @@ heapmem_realloc_debug(void *ptr, size_t size,
 heapmem_realloc(void *ptr, size_t size)
 #endif
 {
-  void *newptr;
-  chunk_t *chunk;
-  int size_adj;
+  if(!IN_HEAP(ptr)) {
+    LOG_WARN("%s: ptr %p is not in the heap\n", __func__, ptr);
+    return NULL;
+  }
 
-  PRINTF("%s ptr %p size %u at %s:%u\n",
-         __func__, ptr, (unsigned)size, file, line);
+#if HEAPMEM_DEBUG
+  LOG_DBG("%s: ptr %p size %zu at %s:%u\n",
+           __func__, ptr, size, file, line);
+#endif
 
   /* Fail early on too large allocation requests to prevent wrapping values. */
   if(size > HEAPMEM_ARENA_SIZE) {
@@ -437,14 +425,19 @@ heapmem_realloc(void *ptr, size_t size)
     return NULL;
   }
 
-  chunk = GET_CHUNK(ptr);
+  chunk_t *chunk = GET_CHUNK(ptr);
+  if(!CHUNK_ALLOCATED(chunk)) {
+    LOG_WARN("%s: ptr %p is not allocated\n", __func__, ptr);
+    return false;
+  }
+
 #if HEAPMEM_DEBUG
   chunk->file = file;
   chunk->line = line;
 #endif
 
   size = ALIGN(size);
-  size_adj = size - chunk->size;
+  int size_adj = size - chunk->size;
 
   if(size_adj <= 0) {
     /* Request to make the object smaller or to keep its size.
@@ -485,7 +478,7 @@ heapmem_realloc(void *ptr, size_t size)
    * object elsewhere in the heap, and remove the old chunk that was
    * holding it.
    */
-  newptr = heapmem_alloc(size);
+  void *newptr = heapmem_alloc(size);
   if(newptr == NULL) {
     return NULL;
   }
@@ -501,20 +494,18 @@ heapmem_realloc(void *ptr, size_t size)
 void
 heapmem_stats(heapmem_stats_t *stats)
 {
-  chunk_t *chunk;
-
   memset(stats, 0, sizeof(*stats));
 
-  for(chunk = first_chunk;
+  for(chunk_t *chunk = first_chunk;
       (char *)chunk < &heap_base[heap_usage];
       chunk = NEXT_CHUNK(chunk)) {
     if(CHUNK_ALLOCATED(chunk)) {
       stats->allocated += chunk->size;
+      stats->overhead += sizeof(chunk_t);
     } else {
       coalesce_chunks(chunk);
       stats->available += chunk->size;
     }
-    stats->overhead += sizeof(chunk_t);
   }
   stats->available += HEAPMEM_ARENA_SIZE - heap_usage;
   stats->footprint = heap_usage;

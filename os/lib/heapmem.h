@@ -76,6 +76,8 @@
 
 #include <stdlib.h>
 
+#include "contiki.h"
+
 typedef struct heapmem_stats {
   size_t allocated;
   size_t overhead;
@@ -133,6 +135,7 @@ void *heapmem_realloc(void *ptr, size_t size);
  * \brief      Deallocate a chunk of memory.
  * \param ptr  A pointer to a chunk that has been allocated using
  *             heapmem_alloc() or heapmem_realloc().
+ * \return     A boolean indicating whether the memory could be deallocated.
  *
  * \note If ptr is NULL, this function will return immediately without
  *       without performing any action.
@@ -141,7 +144,7 @@ void *heapmem_realloc(void *ptr, size_t size);
  * \sa         heapmem_realloc
  */
 
-void heapmem_free(void *ptr);
+bool heapmem_free(void *ptr);
 
 #endif /* HEAMMEM_DEBUG */
 
