@@ -60,7 +60,7 @@ JNILIB = $(BUILD_DIR_BOARD)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).o
 
 ### COOJA platform sources
-CONTIKI_TARGET_DIRS = . dev lib sys cfs net
+CONTIKI_TARGET_DIRS = . dev lib sys cfs
 
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
 vpath %.c $(COOJA_SOURCEDIRS)
