@@ -454,10 +454,19 @@ ifndef LD
 endif
 
 ifndef CUSTOM_RULE_LINK
+# Cooja passes LIBNAME through the environment and all .csc files contain
+# calls to make with a target that is *not* what Cooja needs. Add
+# a compatibility line for link rule so we can have a single rule that
+# outputs to LIBNAME on all platforms.
+$(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
 $(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+ifdef REDEFINE_PRINTF
+	@echo Redefining printf,sprintf,vsnprintf,etc.
+	$(Q)$(foreach OBJ,$^, $(OBJCOPY) --redefine-syms $(CONTIKI)/arch/platform/$(TARGET)/redefine.syms $(OBJ); )
+endif
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
-	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $(LIBNAME)
 endif
 
 %.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
