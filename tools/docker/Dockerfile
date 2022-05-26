@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -13,14 +13,13 @@ RUN apt-get -qq update && \
       software-properties-common > /dev/null
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-  echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  echo "deb http://download.mono-project.com/repo/ubuntu stable-focal main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
   add-apt-repository ppa:mosquitto-dev/mosquitto-ppa && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
     build-essential \
     ccache \
-    doxygen \
     gdb \
     git \
     gtk-sharp2 \
@@ -29,9 +28,10 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     less \
     lib32z1 \
     libcanberra-gtk-module \
-    libcoap-1-0-bin \
+    libcoap2-bin \
     libfreetype6-dev \
     libgtk2.0-0 \
+    libncurses5 \
     libpng-dev \
     mono-complete \
     mosquitto \
@@ -131,6 +131,14 @@ WORKDIR                 ${HOME}
 
 # Create Cooja shortcut
 COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
+
+# Doxygen 1.8.17 in Ubuntu 20.04 gives (false) warnings on mqtt.h.
+# Use a binary from the Doxygen homepage, static linking started with 1.9.3.
+# Remove the PDF manual and html directory to reduce image size.
+RUN wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz && \
+    tar zxf doxygen-1.9.4.linux.bin.tar.gz -C ${HOME}/.local && \
+    rm -rf ${HOME}/.local/doxygen-1.9.4/html ${HOME}/.local/doxygen-1.9.4/*.pdf doxygen-1.9.4.linux.bin.tar.gz && \
+    (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .)
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
