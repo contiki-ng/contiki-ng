@@ -127,7 +127,6 @@ RUN export uid=1000 gid=1000 && \
 USER user
 
 # Environment variables
-ENV JAVA_HOME           /usr/lib/jvm/java-11-openjdk-i386/
 ENV HOME                /home/user
 ENV CONTIKI_NG          ${HOME}/contiki-ng
 ENV COOJA               ${CONTIKI_NG}/tools/cooja

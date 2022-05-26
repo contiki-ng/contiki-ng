@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2022, RISE Research Institutes of Sweden.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,17 +25,12 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Configurable Sensor Network Application
- * Architecture for sensor nodes running the Contiki operating system.
- *
- *
  */
 
-#ifndef INIT_NET_H_
-#define INIT_NET_H_
+#ifndef PROJECT_CONF_H
+#define PROJECT_CONF_H
 
-void
-init_net(void);
+#define HEAPMEM_CONF_ARENA_SIZE 1000000
+#define HEAPMEM_CONF_REALLOC 1
 
-#endif /* INIT_NET_H_ */
+#endif /* !PROJECT_CONF_H */

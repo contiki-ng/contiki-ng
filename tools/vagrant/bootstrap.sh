@@ -2,7 +2,7 @@
 
 # Install i386 binary support on x64 system and required tools
 sudo dpkg --add-architecture i386
-echo "deb http://ppa.launchpad.net/mosquitto-dev/mosquitto-ppa/ubuntu bionic main" | tee /etc/apt/sources.list.d/mosquitto
+sudo add-apt-repository --yes ppa:mosquitto-dev/mosquitto-ppa
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500
 sudo apt update
 sudo apt install -y --no-install-recommends \
@@ -11,7 +11,7 @@ sudo apt install -y --no-install-recommends \
   default-jdk ant srecord python-pip iputils-tracepath uncrustify \
   mosquitto mosquitto-clients valgrind libcoap-1-0-bin \
   smitools snmp snmp-mibs-downloader \
-  python-magic linux-image-extra-virtual openjdk-8-jdk
+  python-magic linux-image-extra-virtual
 
 sudo apt-get clean
 sudo python2 -m pip install intelhex sphinx_rtd_theme sphinx
@@ -52,11 +52,7 @@ echo "export NRF52_SDK_ROOT=/usr/nrf52-sdk" >> ${HOME}/.bashrc
 
 sudo usermod -aG dialout vagrant
 
-# Make sure we're using Java 8 for Cooja
-sudo update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-amd64
-
 # Environment variables
-echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64" >> ${HOME}/.bashrc
 echo "export CONTIKI_NG=${HOME}/contiki-ng" >> ${HOME}/.bashrc
 echo "export COOJA=${CONTIKI_NG}/tools/cooja" >> ${HOME}/.bashrc
 echo "export PATH=${HOME}:${PATH}" >> ${HOME}/.bashrc

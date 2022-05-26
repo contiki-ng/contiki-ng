@@ -36,6 +36,16 @@
 #define WITH_SECURITY 0
 #endif /* WITH_SECURITY */
 
+/*#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_INFO 
+#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG*/
+#define TSCH_LOG_CONF_PER_SLOT                     0
+
+
 /*******************************************************/
 /********************* Enable TSCH *********************/
 /*******************************************************/
@@ -65,7 +75,7 @@
 #define TSCH_CONF_AUTOSTART 0
 
 /* 6TiSCH schedule length */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 11
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 101
 
 #if WITH_SECURITY
 

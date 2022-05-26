@@ -86,6 +86,8 @@ PROCESS_THREAD(node_process, ev, data)
     n = tsch_queue_get_time_source();
 
     if(!is_coordinator) {
+      printf("App: Meu pai é o %d\n",n);
+      tsch_schedule_print();
       if((added_num_of_links == 1) || (added_num_of_links == 3)) {
         printf("App : Add a link\n");
         sf_simple_add_links(tsch_queue_get_nbr_address(n), 1);

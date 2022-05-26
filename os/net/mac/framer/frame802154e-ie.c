@@ -160,7 +160,7 @@ frame80215e_create_ie_header_ack_nack_time_correction(uint8_t *buf, int len,
  * followed by payload IEs) */
 int
 frame80215e_create_ie_header_list_termination_1(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len = 0;
   if(len >= 2 + ie_len && ies != NULL) {
@@ -175,7 +175,7 @@ frame80215e_create_ie_header_list_termination_1(uint8_t *buf, int len,
  * followed by an unformatted payload) */
 int
 frame80215e_create_ie_header_list_termination_2(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len = 0;
   if(len >= 2 + ie_len && ies != NULL) {
@@ -189,7 +189,7 @@ frame80215e_create_ie_header_list_termination_2(uint8_t *buf, int len,
 /* Payload IE. List termination */
 int
 frame80215e_create_ie_payload_list_termination(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len = 0;
   if(len >= 2 + ie_len && ies != NULL) {

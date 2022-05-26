@@ -110,7 +110,7 @@ print_cell_list(const uint8_t *cell_list, uint16_t cell_list_len)
 
   for(i = 0; i < cell_list_len; i += sizeof(cell)) {
     read_cell(&cell_list[i], &cell);
-    PRINTF("%u ", cell.timeslot_offset);
+    PRINTF("sf-simple: %u ", cell.timeslot_offset);
   }
 }
 

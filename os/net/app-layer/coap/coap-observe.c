@@ -307,7 +307,7 @@ coap_notify_observers_sub(coap_resource_t *resource, const char *subpath)
 }
 /*---------------------------------------------------------------------------*/
 void
-coap_observe_handler(coap_resource_t *resource, coap_message_t *coap_req,
+coap_observe_handler(const coap_resource_t *resource, coap_message_t *coap_req,
                      coap_message_t *coap_res)
 {
   const coap_endpoint_t *src_ep;

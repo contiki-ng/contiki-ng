@@ -58,7 +58,9 @@
 /* A tricky #define to stringify _Pragma parameters */
 #define __PRAGMA__(x) _Pragma(#x)
 
-#if defined(__GNUC__)  &&  defined(__MSP430__)
+#if defined(__GNUC__) && (__GNUC__ >= 9)
+#define ISR(a,b) __attribute__((interrupt(a ## _VECTOR))) void b(void)
+#elif defined(__GNUC__)  &&  defined(__MSP430__)
     /* This is the MSPGCC compiler */
 #define ISR(a,b) interrupt(a ## _VECTOR) b(void)
 #elif defined(__AQCOMPILER__)

@@ -37,9 +37,13 @@ RUNCOUNT ?= 1
 
 CONTIKI ?= ../..
 
+Q ?= @
+
+.PHONY: all clean cooja tests
 tests: $(TESTLOGS)
 
-summary: clean tests
+summary: clean
+	@$(MAKE) tests
 ifeq ($(TESTS),)
 	@echo No tests > summary
 else
@@ -56,4 +60,5 @@ clean:
 
 cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
 $(CONTIKI)/tools/cooja/dist/cooja.jar:
-	cd $(CONTIKI)/tools/cooja && ant jar
+	@echo "Building Cooja"
+	$(Q)ant -f $(CONTIKI)/tools/cooja/build.xml -silent jar

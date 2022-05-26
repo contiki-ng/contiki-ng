@@ -25,7 +25,7 @@
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code-6tisch/test-sixp-trans.c</source>
       <commands>make clean TARGET=cooja
-      make -j test-sixp-trans.cooja TARGET=cooja</commands>
+      make -j$(CPUS) test-sixp-trans.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

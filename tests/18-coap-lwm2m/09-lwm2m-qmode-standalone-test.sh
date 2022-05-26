@@ -12,7 +12,7 @@ make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m DEFINES=LWM2M_Q
 
 echo "Downloading leshan with Q-Mode support"
 LESHAN_JAR=leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
-wget -nc https://carlosgp143.github.io/resources/$LESHAN_JAR
+wget -nv -nc https://carlosgp143.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server with Q-Mode enabled"
 java -jar $LESHAN_JAR -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
 LESHID=$!
@@ -33,11 +33,10 @@ while [ $COUNTER -gt 0 ]; do
 done
 
 echo "Closing standalone example"
-sleep 1
 pgrep lwm2m-example | sudo xargs kill -9
 
-echo "Closing leshan"
 sleep 1
+echo "Closing leshan"
 pgrep java | sudo xargs kill -9
 
 aux=$(grep -c 'OK' leshan.err)

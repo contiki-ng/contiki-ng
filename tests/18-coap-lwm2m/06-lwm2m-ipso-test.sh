@@ -14,11 +14,11 @@ make -C $CONTIKI/examples/lwm2m-ipso-objects clean >/dev/null
 make -C $CONTIKI/examples/lwm2m-ipso-objects > make.log 2> make.err
 sudo $CONTIKI/examples/lwm2m-ipso-objects/example-ipso-objects.native > node.log 2> node.err &
 CPID=$!
-sleep 10
 
 echo "Downloading leshan"
 LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
-wget -nc https://joakimeriksson.github.io/resources/$LESHAN_JAR
+wget -nv -nc https://joakimeriksson.github.io/resources/$LESHAN_JAR
+sleep 10
 echo "Starting leshan server"
 java -jar $LESHAN_JAR >leshan.log 2>leshan.err &
 LESHID=$!
@@ -33,11 +33,10 @@ while [ $COUNTER -gt 0 ]; do
 done
 
 echo "Closing native node"
-sleep 1
 kill_bg $CPID
 
-echo "Closing leshan"
 sleep 1
+echo "Closing leshan"
 kill_bg $LESHID
 
 
@@ -56,12 +55,7 @@ else
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
 
-rm make.log
-rm make.err
-rm node.log
-rm node.err
-rm leshan.log
-rm leshan.err
+rm make.log make.err node.log node.err leshan.log leshan.err
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end

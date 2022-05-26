@@ -4,7 +4,7 @@
 #
 # For this to work, you will need to install sphinx and sphinx_rtd_theme. They
 # can be installed through pip
-.PHONY = clean all readthedocs
+.PHONY: clean all readthedocs
 
 SPHINX = sphinx-build
 SPHINX_CONF_DIR = .

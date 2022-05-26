@@ -41,11 +41,11 @@ ifdef CI
   endif
 endif
 
-ifndef IAR
-  ifneq (, $(shell which ccache))
-    CCACHE ?= ccache
-  endif
+ifneq (, $(shell which ccache))
+  CCACHE ?= ccache
 endif
+
+JAVA = java
 
 BUILD_DIR = build
 BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)
@@ -114,6 +114,8 @@ else
     $(error Target "$(TARGET)" compiler "$(CC)" cannot be found)
   endif
 endif
+
+CP ?= cp
 
 # Decide whether to build or to skip this target for this platform
 ifneq ("", "$(PLATFORMS_ONLY)")
@@ -339,25 +341,16 @@ ifneq ($(MAKECMDGOALS),clean)
 -include ${addprefix $(OBJECTDIR)/,$(PROJECT_SOURCEFILES:.cpp=.d)}
 endif
 
-### See http://make.paulandlesley.org/autodep.html#advanced
-
-define FINALIZE_DEPENDENCY
-cp $(@:.o=.d) $(@:.o=.$$$$); \
-sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-    -e '/^$$/ d' -e 's/$$/ :/' < $(@:.o=.$$$$) >> $(@:.o=.d); \
-rm -f $(@:.o=.$$$$)
-endef
-
 ### Harmonize filename of a .map file, if the platform's build system wants
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
 
-.PHONY: clean distclean usage help targets boards savetarget savedefines viewconf
+.PHONY: all clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
-	-$(Q)rm -f *.d *.e *.o $(CLEAN)
-	-$(Q)rm -rf $(BUILD_DIR_TARGET)
-	-$(Q)rm -f $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	$(Q)rm -f *.d *.e *.o $(CLEAN) \
+		$(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	$(Q)rm -rf $(BUILD_DIR_TARGET)
 	@echo Target $(TARGET) cleaned
 
 distclean:
@@ -365,22 +358,22 @@ distclean:
 		echo Running: $(MAKE) TARGET=$$TARG clean; \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
-	-$(Q)rm -rf $(BUILD_DIR)
+	$(Q)rm -rf $(BUILD_DIR)
 
 -include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.customrules-$(TARGET)
+
+### See http://make.paulandlesley.org/autodep.html#advanced
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -c $< -o $@
-	@$(FINALIZE_DEPENDENCY)
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
 	$(TRACE_CXX)
-	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -MMD -c $< -o $@
-	@$(FINALIZE_DEPENDENCY)
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
@@ -447,7 +440,7 @@ ifndef CUSTOM_RULE_CPP_TO_E
 endif
 
 ifndef AROPTS
-  AROPTS = rcf
+  AROPTS = rc
 endif
 
 ifndef CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
@@ -461,15 +454,24 @@ ifndef LD
 endif
 
 ifndef CUSTOM_RULE_LINK
+# Cooja passes LIBNAME through the environment and all .csc files contain
+# calls to make with a target that is *not* what Cooja needs. Add
+# a compatibility line for link rule so we can have a single rule that
+# outputs to LIBNAME on all platforms.
+$(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
 $(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+ifdef REDEFINE_PRINTF
+	@echo Redefining printf,sprintf,vsnprintf,etc.
+	$(Q)$(foreach OBJ,$^, $(OBJCOPY) --redefine-syms $(CONTIKI)/arch/platform/$(TARGET)/redefine.syms $(OBJ); )
+endif
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
-	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $(LIBNAME)
 endif
 
 %.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(TRACE_CP)
-	$(Q)cp $< $@
+	$(Q)$(CP) $< $@
 
 %.ramprof: %.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [abdrw] " | cut -d' ' -f2,4
@@ -490,7 +492,7 @@ else
 endif
 
 savetarget:
-	-@rm -f Makefile.target
+	@rm -f Makefile.target
 	@echo "saving Makefile.target"
 	@echo >Makefile.target "TARGET = $(TARGET)"
 ifneq ($(BOARD),)
@@ -498,7 +500,7 @@ ifneq ($(BOARD),)
 endif
 
 savedefines:
-	-@rm -f Makefile.$(TARGET).defines
+	@rm -f Makefile.$(TARGET).defines
 	@echo "saving Makefile.$(TARGET).defines"
 	@echo >Makefile.$(TARGET).defines "DEFINES = $(DEFINES)"
 
@@ -521,6 +523,17 @@ endif
 	@echo "'><' Means the flag is unset and has no default value"
 	@echo "To view more Make variables, edit $(CONTIKI)/Makefile.include, rule 'viewconf'"
 	@echo "To view more C variables, edit $(VIEWCONF)"
+
+###
+### Targets using tools/motelist
+###
+CONTIKI_NG_MOTELIST_DIR = $(CONTIKI_NG_TOOLS_DIR)/motelist
+CONTIKI_NG_MOTELIST = $(CONTIKI_NG_MOTELIST_DIR)/motelist.py
+
+.PHONY: motelist-all
+
+motelist-all:
+	$(Q)$(CONTIKI_NG_MOTELIST)
 
 ### Include Makefile.embedded for relevant platforms, in order to pull in
 ### rules for login, serialview etc

@@ -63,6 +63,9 @@
 #define LINK_STATS_PACKET_COUNTERS           0
 #endif /* LINK_STATS_PACKET_COUNTERS */
 
+/* Special value that signal the RSSI is not initialized */
+#define LINK_STATS_RSSI_UNKNOWN 0x7fff
+
 typedef uint16_t link_packet_stat_t;
 
 struct link_packet_counter {
@@ -80,9 +83,9 @@ struct link_packet_counter {
 /* All statistics of a given link */
 struct link_stats {
   clock_time_t last_tx_time;  /* Last Tx timestamp */
-  uint16_t etx;               /* ETX using ETX_DIVISOR as fixed point divisor */
-  int16_t rssi;               /* RSSI (received signal strength) */
-  uint8_t freshness;          /* Freshness of the statistics */
+  uint16_t etx;               /* ETX using ETX_DIVISOR as fixed point divisor. Zero if not yet measured. */
+  int16_t rssi;               /* RSSI (received signal strength). LINK_STATS_RSSI_UNKNOWN if not yet measured. */
+  uint8_t freshness;          /* Freshness of the statistics. Zero if no packets sent yet. */
 #if LINK_STATS_ETX_FROM_PACKET_COUNT
   uint8_t tx_count;           /* Tx count, used for ETX calculation */
   uint8_t ack_count;          /* ACK count, used for ETX calculation */

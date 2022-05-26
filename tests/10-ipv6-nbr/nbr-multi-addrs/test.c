@@ -65,7 +65,7 @@ my_test_print(const unit_test_t *utp)
 /* NBR_TABLE_CONF_CAN_ACCEPT_NEW is set to rpl_nbr_can_accept_new() */
 bool
 reject_if_full(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
-                       nbr_table_reason_t reason, void *data)
+                       nbr_table_reason_t reason, const void *data)
 {
   return candidate_for_removal == NULL;
 }

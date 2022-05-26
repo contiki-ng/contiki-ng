@@ -216,51 +216,6 @@ typedef uip_eth_addr uip_lladdr_t;
  */
 #define uip_gethostaddr(addr) uip_ipaddr_copy((addr), &uip_hostaddr)
 
-/**
- * Set the default router's IP address.
- *
- * \param addr A pointer to a uip_ipaddr_t variable containing the IP
- * address of the default router.
- *
- * \sa uip_ipaddr()
- *
- * \hideinitializer
- */
-#define uip_setdraddr(addr) uip_ipaddr_copy(&uip_draddr, (addr))
-
-/**
- * Set the netmask.
- *
- * \param addr A pointer to a uip_ipaddr_t variable containing the IP
- * address of the netmask.
- *
- * \sa uip_ipaddr()
- *
- * \hideinitializer
- */
-#define uip_setnetmask(addr) uip_ipaddr_copy(&uip_netmask, (addr))
-
-
-/**
- * Get the default router's IP address.
- *
- * \param addr A pointer to a uip_ipaddr_t variable that will be
- * filled in with the IP address of the default router.
- *
- * \hideinitializer
- */
-#define uip_getdraddr(addr) uip_ipaddr_copy((addr), &uip_draddr)
-
-/**
- * Get the netmask.
- *
- * \param addr A pointer to a uip_ipaddr_t variable that will be
- * filled in with the value of the netmask.
- *
- * \hideinitializer
- */
-#define uip_getnetmask(addr) uip_ipaddr_copy((addr), &uip_netmask)
-
 /** @} */
 
 /**
@@ -635,7 +590,6 @@ void uip_send(const void *data, int len);
  *
  * \hideinitializer
  */
-/*void uip_datalen(void);*/
 #define uip_datalen()       uip_len
 
 /**
@@ -1079,26 +1033,6 @@ struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport);
     (((uint16_t *)addr2)[1] & ((uint16_t *)mask)[1])))
 
 #define uip_ipaddr_prefixcmp(addr1, addr2, length) (memcmp(addr1, addr2, length>>3) == 0)
-
-
-
-/*
- * Check if an address is a broadcast address for a network.
- *
- * Checks if an address is the broadcast address for a network. The
- * network is defined by an IP address that is on the network and the
- * network's netmask.
- *
- * \param addr The IP address.
- * \param netaddr The network's IP address.
- * \param netmask The network's netmask.
- *
- * \hideinitializer
- */
-/*#define uip_ipaddr_isbroadcast(addr, netaddr, netmask)
-  ((uip_ipaddr_t *)(addr)).u16 & ((uip_ipaddr_t *)(addr)).u16*/
-
-
 
 /**
  * Mask out the network part of an IP address.
@@ -1798,19 +1732,9 @@ struct uip_udp_hdr {
 /** @} */
 
 
-#if UIP_FIXEDADDR
-extern const uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
-#else /* UIP_FIXEDADDR */
-extern uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
-#endif /* UIP_FIXEDADDR */
-extern const uip_ipaddr_t uip_broadcast_addr;
+extern uip_ipaddr_t uip_hostaddr;
 extern const uip_ipaddr_t uip_all_zeroes_addr;
-
-#if UIP_FIXEDETHADDR
-extern const uip_lladdr_t uip_lladdr;
-#else
 extern uip_lladdr_t uip_lladdr;
-#endif
 
 /** Length of the link local prefix */
 #define UIP_LLPREF_LEN     10
@@ -2027,60 +1951,6 @@ extern uip_lladdr_t uip_lladdr;
   ((((a)->u8[13])  == ((b)->u8[13])) &&                 \
    (((a)->u8[14])  == ((b)->u8[14])) &&                 \
    (((a)->u8[15])  == ((b)->u8[15])))
-
-/**
- * A non-error message that indicates that a packet should be
- * processed locally.
- *
- * \hideinitializer
- */
-#define UIP_FW_LOCAL     0
-
-/**
- * A non-error message that indicates that something went OK.
- *
- * \hideinitializer
- */
-#define UIP_FW_OK        0
-
-/**
- * A non-error message that indicates that a packet was forwarded.
- *
- * \hideinitializer
- */
-#define UIP_FW_FORWARDED 1
-
-/**
- * A non-error message that indicates that a zero-length packet
- * transmission was attempted, and that no packet was sent.
- *
- * \hideinitializer
- */
-#define UIP_FW_ZEROLEN   2
-
-/**
- * An error message that indicates that a packet that was too large
- * for the outbound network interface was detected.
- *
- * \hideinitializer
- */
-#define UIP_FW_TOOLARGE  3
-
-/**
- * An error message that indicates that no suitable interface could be
- * found for an outbound packet.
- *
- * \hideinitializer
- */
-#define UIP_FW_NOROUTE   4
-
-/**
- * An error message that indicates that a packet that should be
- * forwarded or output was dropped.
- *
- * \hideinitializer
- */
-#define UIP_FW_DROPPED   5
 
 /**
  * Calculate the Internet checksum over a buffer.

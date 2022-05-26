@@ -34,14 +34,3 @@ serialview: $(SERIAL_DUMP_BIN)
 
 login: $(SERIAL_DUMP_BIN)
 	$(SERIALDUMP) -b$(BAUDRATE) $(PORT)
-
-###
-### Targets using tools/motelist
-###
-CONTIKI_NG_MOTELIST_DIR = $(CONTIKI_NG_TOOLS_DIR)/motelist
-CONTIKI_NG_MOTELIST = $(CONTIKI_NG_MOTELIST_DIR)/motelist.py
-
-.PHONY: motelist-all
-
-motelist-all:
-	$(CONTIKI_NG_MOTELIST)

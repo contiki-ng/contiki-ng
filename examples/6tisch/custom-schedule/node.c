@@ -45,7 +45,7 @@
 #define LOG_LEVEL LOG_LEVEL_INFO
 
 #define UDP_PORT	8765
-#define SEND_INTERVAL		  (60 * CLOCK_SECOND)
+#define SEND_INTERVAL		  (1 * CLOCK_SECOND)
 
 PROCESS(node_process, "TSCH Schedule Node");
 AUTOSTART_PROCESSES(&node_process);
@@ -79,8 +79,16 @@ initialize_tsch_schedule(void)
       LINK_OPTION_RX | LINK_OPTION_TX | LINK_OPTION_SHARED,
       LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
       slot_offset, channel_offset, 1);
+  
 
-  for (i = 0; i < TSCH_SCHEDULE_MAX_LINKS - 1; ++i) {
+  /*Other "Catch-all"*/
+  tsch_schedule_add_link(sf_common,
+      LINK_OPTION_SHARED,
+      LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
+      APP_SLOTFRAME_SIZE/2, channel_offset, 1);
+
+  for (i = 0; i < TSCH_SCHEDULE_MAX_LINKS - 25; ++i) {
+    LOG_INFO_("Add link %d",i);
     uint8_t link_options;
     linkaddr_t addr;
     uint16_t remote_id = i + 1;
@@ -101,7 +109,17 @@ initialize_tsch_schedule(void)
     tsch_schedule_add_link(sf_common,
         link_options,
         LINK_TYPE_NORMAL, &addr,
-        slot_offset, channel_offset, 1);
+        slot_offset, channel_offset, 0);
+    
+    tsch_schedule_add_link(sf_common,
+        link_options,
+        LINK_TYPE_NORMAL, &addr,
+        random_rand() % APP_SLOTFRAME_SIZE, random_rand() %4, 0);
+
+    tsch_schedule_add_link(sf_common,
+        link_options,
+        LINK_TYPE_NORMAL, &addr,
+        random_rand() % APP_SLOTFRAME_SIZE, random_rand() %4, 0);
   }
 }
 
@@ -135,7 +153,7 @@ PROCESS_THREAD(node_process, ev, data)
   PROCESS_BEGIN();
 
   initialize_tsch_schedule();
-
+  
   /* Initialization; `rx_packet` is the function for packet reception */
   simple_udp_register(&udp_conn, UDP_PORT, NULL, UDP_PORT, rx_packet);
   etimer_set(&periodic_timer, random_rand() % SEND_INTERVAL);
@@ -147,6 +165,7 @@ PROCESS_THREAD(node_process, ev, data)
   /* Main loop */
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
+    tsch_schedule_print();
     if(NETSTACK_ROUTING.node_is_reachable()
        && NETSTACK_ROUTING.get_root_ipaddr(&dst)) {
       /* Send network uptime timestamp to the network root node */

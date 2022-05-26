@@ -70,3 +70,10 @@ tests/18-coap-lwm2m/Californium.properties
 tests/18-coap-lwm2m/leshan-server-demo*.jar
 .vscode/
 *.db-journal
+arch/cpu/cc26x0-cc13x0/lib/cc13xxware
+.gitignore
+arch/cpu/cc26x0-cc13x0/lib/cc2640r2-sdk
+arch/cpu/simplelink-cc13xx-cc26xx/lib/coresdk_cc13xx_cc26xx
+tests/18-coap-lwm2m/example-lwm2m-standalone
+tools/motelist
+tools/sensniff

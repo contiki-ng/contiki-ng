@@ -25,7 +25,7 @@
       <description>Root/sender</description>
       <source>[CONTIKI_DIR]/examples/multicast/root.c</source>
       <commands>make TARGET=cooja clean
-make -j root.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_SMRF</commands>
+make -j$(CPUS) root.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_SMRF</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -49,7 +49,7 @@ make -j root.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE
       <identifier>mtype890</identifier>
       <description>Intermediate</description>
       <source>[CONTIKI_DIR]/examples/multicast/intermediate.c</source>
-      <commands>make -j intermediate.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_SMRF</commands>
+      <commands>make -j$(CPUS) intermediate.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_SMRF</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -73,7 +73,7 @@ make -j root.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE
       <identifier>mtype956</identifier>
       <description>Receiver</description>
       <source>[CONTIKI_DIR]/examples/multicast/sink.c</source>
-      <commands>make -j sink.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_SMRF</commands>
+      <commands>make -j$(CPUS) sink.cooja TARGET=cooja DEFINES=UIP_MCAST6_CONF_ENGINE=UIP_MCAST6_ENGINE_SMRF</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

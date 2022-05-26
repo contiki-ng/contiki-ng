@@ -168,12 +168,6 @@ LDFLAGS += -L$(CHIP_BASE_DIR)/Library
 
 LDLIBS := $(addsuffix _$(JENNIC_CHIP_FAMILY),$(APPLIBS)) $(LDLIBS)
 
-ifeq ($(HOST_OS),Windows)
-# Windows assumes Cygwin. Substitute all paths in CFLAGS and LDFLAGS with Windows paths.
-CFLAGS := $(patsubst -I/cygdrive/c/%,-Ic:/%,$(CFLAGS))
-LDFLAGS := $(patsubst -L/cygdrive/c/%,-Lc:/%,$(LDFLAGS))
-endif
-
 # These symbols are used by the stack check library
 LDFLAGS += -Wl,--defsym=_stack=_stack_low_water_mark
 LDFLAGS += -Wl,--defsym=_stack_origin=_ram_top
@@ -222,20 +216,10 @@ DEV_PORT = $(USBDEVBASENAME)$(MOTE)
 %.dmp: %.$(TARGET)
 	$(Q)$(OBJDUMP) -d $< > $@
 
-define FINALIZE_DEPENDENCY_
-# hack: subsitute windows path back to cygwin path
-sed -e 's/c:\//\/cygdrive\/c\//' $(@:.o=.d) > $(@:.o=.$$$$); \
-cp $(@:.o=.$$$$) $(@:.o=.d); \
-sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-    -e '/^$$/ d' -e 's/$$/ :/' < $(@:.o=.$$$$) >> $(@:.o=.d); \
-rm -f $(@:.o=.$$$$)
-endef
-
 CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -MMD -c $< -o $@
-	@$(FINALIZE_DEPENDENCY_)
+	$(Q)$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
 CUSTOM_RULE_LINK = 1
 ALLLIBS = $(addprefix -l,$(LDLIBS)) $(addprefix -l,$(LDSTACKLIBS)) $(addprefix -l,$(LDMYLIBS))
@@ -246,8 +230,7 @@ ifneq ($(wildcard $(SDK_BASE_DIR)/Components/Library/*),)
 $(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(ABS_APPLIBS)
 	@echo  ${filter %.a,$^}
 	$(Q)$(CC) -Wl,--gc-sections $(LDFLAGS) -T$(LINKCMD) -o $@ -Wl,--start-group \
-	  $(patsubst /cygdrive/c/%,c:/%,${filter-out %.a,$^}) \
-	  $(patsubst /cygdrive/c/%,c:/%,${filter %.a,$^}) \
+	  ${filter-out %.a,$^} ${filter %.a,$^} \
 	  $(ALLLIBS) -Wl,--end-group -Wl,-Map,$(CONTIKI_NG_PROJECT_MAP)
 else
 # The SDK does not include libraries, only build objects and libraries, skip linking

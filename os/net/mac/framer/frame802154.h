@@ -216,7 +216,7 @@ int frame802154_hdrlen(frame802154_t *p);
 void frame802154_create_fcf(frame802154_fcf_t *fcf, uint8_t *buf);
 int frame802154_create(frame802154_t *p, uint8_t *buf);
 int frame802154_parse(uint8_t *data, int length, frame802154_t *pf);
-void frame802154_parse_fcf(uint8_t *data, frame802154_fcf_t *pfcf);
+void frame802154_parse_fcf(const uint8_t *data, frame802154_fcf_t *pfcf);
 
 /* Get current PAN ID */
 uint16_t frame802154_get_pan_id(void);
@@ -228,7 +228,7 @@ void frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has
 /* Check if the destination PAN ID, if any, matches ours */
 int frame802154_check_dest_panid(frame802154_t *frame);
 /* Check is the address is a broadcast address, whatever its size */
-int frame802154_is_broadcast_addr(uint8_t mode, uint8_t *addr);
+int frame802154_is_broadcast_addr(uint8_t mode, const uint8_t *addr);
 /* Check and extract source and destination linkaddr from frame */
 int frame802154_extract_linkaddr(frame802154_t *frame, linkaddr_t *source_address, linkaddr_t *dest_address);
 

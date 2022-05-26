@@ -238,8 +238,14 @@ csma_security_parse_frame(void)
   }
 
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) == 0) {
+    /* From https://github.com/contiki-ng/contiki-ng/issues/1610 */
+    /* This should reject unencrypted packets */
+    #ifdef LLSEC802154_REJECT_INSECURE
+    return FRAMER_FAILED;
+    #else
     /* No security - no more processing required */
     return hdr_len;
+    #endif
   }
 
   LOG_INFO("LLSEC-IN: ");

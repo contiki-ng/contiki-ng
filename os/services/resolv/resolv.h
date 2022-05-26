@@ -43,15 +43,6 @@
 #include "contiki.h"
 #include "uip.h"
 
-/** If RESOLV_CONF_SUPPORTS_MDNS is set, then queries
- *  for domain names in the `local` TLD will use MDNS and
- *  will respond to MDNS queries for this device's hostname,
- *  as described by draft-cheshire-dnsext-multicastdns.
- */
-#ifndef RESOLV_CONF_SUPPORTS_MDNS
-#define RESOLV_CONF_SUPPORTS_MDNS     (1)
-#endif
-
 /**
  * Event that is broadcasted when a DNS name has been resolved.
  */

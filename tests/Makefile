@@ -30,7 +30,8 @@ SUMMARIES=$(foreach test,$(TESTS),$(test)/summary)
 
 CONTIKI=..
 
-run: clean summary
+run: clean
+	@$(MAKE) summary
 
 summary: $(SUMMARIES)
 	@cat $(SUMMARIES) > $@

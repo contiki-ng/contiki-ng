@@ -1,6 +1,6 @@
 CONTIKI = ../../..
 
-CC ?= gcc
+CC = gcc
 CFLAGS += -Wall -g -I/user/local/include
 CFLAGS += -I$(CONTIKI)/os
 

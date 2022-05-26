@@ -1,5 +1,3 @@
-# $Id: Makefile.msp430,v 1.35 2011/01/19 07:30:31 adamdunkels Exp $
-
 COOJA_PATH ?= $(CONTIKI_NG_TOOLS_DIR)/cooja
 
 ifdef nodeid
@@ -52,67 +50,6 @@ ifeq ($(WERROR),1)
 CFLAGSWERROR= -Wall -Werror
 endif
 
-ifdef IAR
-CC	 = icc430
-LD       = xlink
-AS       = iasm430
-AR       = xar
-OBJCOPY  = ielftool
-STRIP    = strip
-
-ifndef IAR_PATH
-# This works with cygwin...
-IAR_BIN_PATH := $(shell dirname "`which $(CC)`")
-IAR_PATH_C := $(shell dirname "$(IAR_BIN_PATH)")
-IAR_PATH := $(shell cygpath -m "$(IAR_PATH_C)")
-endif
-
-CFLAGS += --diag_suppress=Pa050 --silent
-
-#defaults on the MSP430X core include file here (xlfn.h)
-ifndef CFLAGSNO
-CFLAGSNO = --dlib_config "$(IAR_PATH)/LIB/DLIB/dl430xlfn.h" $(CFLAGSWERROR)
-# CFLAGSNO = --dlib_config $(IAR_PATH)/LIB/DLIB/dl430xlfn.h -Ohz --multiplier=32 --multiplier_location=4C0 --hw_workaround=CPU40 --core=430X $(CFLAGSWERROR) --data_model large --double=32
-endif
-
-LDFLAGSNO += -B -l $(CONTIKI_NG_PROJECT_MAP) -s __program_start
-# Stack and heap size in hex
-ifndef IAR_STACK_SIZE
- IAR_STACK_SIZE=300
-endif
-# Set this to a positive number (hex) to enable malloc/free with IAR compiler
-ifndef IAR_DATA16_HEAP_SIZE
- IAR_DATA16_HEAP_SIZE=100
-endif
-ifndef IAR_DATA20_HEAP_SIZE
- IAR_DATA20_HEAP_SIZE=0
-endif
-LDFLAGSNO += -D_STACK_SIZE=$(IAR_STACK_SIZE) -D_DATA16_HEAP_SIZE=$(IAR_DATA16_HEAP_SIZE) -D_DATA20_HEAP_SIZE=$(IAR_DATA20_HEAP_SIZE)
-
-CUSTOM_RULE_C_TO_O = 1
-%.o: %.c
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) $< -o $@
-
-define FINALIZE_CYGWIN_DEPENDENCY
-sed -e 's/ \([A-Z]\):\\/ \/cygdrive\/\L\1\//' -e 's/\\/\//g' \
-	    <$(@:.o=.P) >$(@:.o=.d); \
-rm -f $(@:.o=.P)
-endef
-
-CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
-$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) $< --dependencies=m $(@:.o=.P) -o $@
-ifeq ($(HOST_OS),Windows)
-	@$(FINALIZE_CYGWIN_DEPENDENCY)
-endif
-
-AROPTS = -o
-
-else
-
-GCC      = 1
 CC       = msp430-gcc
 CXX      = msp430-g++
 LD       = msp430-gcc
@@ -145,8 +82,7 @@ ifndef CC_MCU
 endif
 
 ### Checks for compiler version to enable 20-bit support
-ifndef IAR
-ifneq (,$(findstring 4.7.,$(shell msp430-gcc -dumpversion)))
+ifneq (,$(findstring 4.7.,$(shell $(CC) -dumpversion)))
 ifdef CPU_HAS_MSP430X
  ifeq ($(TARGET_MEMORY_MODEL),large)
   CFLAGS += -mmemory-model=$(TARGET_MEMORY_MODEL)
@@ -158,7 +94,6 @@ ifdef CPU_HAS_MSP430X
   CFLAGS += -ffunction-sections -fdata-sections -mcode-region=any
   LDFLAGS += -mmemory-model=$(TARGET_MEMORY_MODEL) -Wl,-gc-sections
  endif
-endif
 endif
 endif
 
@@ -175,8 +110,6 @@ CFLAGS += -ffunction-sections
 # CFLAGS += -fdata-sections
 LDFLAGS += -Wl,--gc-sections,--undefined=_reset_vector__,--undefined=InterruptVectors,--undefined=_copy_data_init__,--undefined=_clear_bss_init__,--undefined=_end_of_init__
 endif # SMALL
-
-endif # IAR
 
 # Define the `_stack` symbol used by the stack check library to be equal to `_end`
 LDFLAGS += -Wl,--defsym=_stack=_end
@@ -200,13 +133,8 @@ CLEAN += *.firmware *.ihex
 %.firmware:	%.${TARGET}
 	mv $< $@
 
-ifdef IAR
-%.ihex: %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
-	$(LD) $(LDFLAGSNO) -Fintel-extended $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
-else
 %.ihex: %.$(TARGET)
 	$(OBJCOPY) $^ -O ihex $@
-endif
 
 $(COOJA_PATH)/build.xml:
 	@echo '----------------'
@@ -222,7 +150,7 @@ $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
 	cd $(COOJA_PATH)/mspsim && ant jar
 
 %.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
-	java -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
+	$(JAVA) -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
 
 %.mspsim-maptable: %.$(TARGET)
-	java -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
+	$(JAVA) -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)

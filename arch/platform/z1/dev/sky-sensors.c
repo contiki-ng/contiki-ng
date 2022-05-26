@@ -39,7 +39,7 @@
 #include "contiki.h"
 #include "lib/sensors.h"
 
-#define ADC12MCTL_NO(adcno) ((unsigned char *) ADC12MCTL0_)[adcno]
+#define ADC12MCTL_NO(adcno) ADC12MCTL[adcno]
 
 static uint16_t adc_on;
 static uint16_t ready;
