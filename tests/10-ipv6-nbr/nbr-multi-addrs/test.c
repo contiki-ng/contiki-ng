@@ -56,7 +56,7 @@ void
 my_test_print(const unit_test_t *utp)
 {
   unit_test_print_report(utp);
-  if(utp->result == unit_test_failure) {
+  if(utp->passed == false) {
     printf("\nTEST FAILED\n");
     exit(1); /* exit by failure */
   }
