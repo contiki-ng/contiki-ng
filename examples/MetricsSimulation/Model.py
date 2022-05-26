@@ -248,6 +248,8 @@ class Metrics(Base):
     application = relationship("Application", uselist=False, back_populates="metric")
     mac_id = Column(Integer, ForeignKey('mac.id')) # The ForeignKey must be the physical ID, not the Object.id
     mac = relationship("MAC", back_populates="metric")
+    rpl_id = Column(Integer, ForeignKey('rpl.id')) # The ForeignKey must be the physical ID, not the Object.id
+    rpl = relationship("RPL", back_populates="metric")
     energy_id = Column(Integer, ForeignKey('energy.id')) # The ForeignKey must be the physical ID, not the Object.id
     energy = relationship("Energy", back_populates="metric")
     linkstats_id = Column(Integer, ForeignKey('linkstats.id')) # The ForeignKey must be the physical ID, not the Object.id
@@ -262,6 +264,7 @@ class Metrics(Base):
         if run.parameters['MAKE_MAC'] ==  "MAKE_MAC_TSCH":
             self.mac = MAC(self)
         self.linkstats = LinkStats(self)
+        self.rpl = RPL(self)
         db.add(self)
         db.commit()
 
@@ -307,9 +310,24 @@ class Application(Base):
                 #print("Node: " ,  srcNode  , "Seq: " , sequence , "Receive Time: ", recTime)
                         break
 
+'''
+RPL Metrics Class
+'''
 class RPL(Base):
     __tablename__ = 'rpl'
     id = Column(Integer, primary_key=True)
+    metric = relationship("Metrics", uselist=False, back_populates="rpl")
+
+    def __init__(self,metric):
+        self.metric = metric
+    
+    def getParentSwitches(self):
+        results = {}
+        for i in range(0,(self.metric.run.maxNodes)):
+            results[str(i)] = []
+        data = db.query(Record).filter_by(run = self.run).filter_by(recordType = "RPL").filter(Record.rawData.contains("Parent switch")).all()
+
+        return results
 
 '''
 Represents a regular MAC message
@@ -407,6 +425,7 @@ class MAC(Base):
                     macMsg = MACMessage(origin, dest, enQueued, seqnum, queueNBROccupied, queueNBRSize, queueGlobaOccupied, queueGlobaSize, headerLen, dataLen)
                     if macMsg.dest == 0 or macMsg.dest == 65535:
                         macMsg.isReceived = True
+                        macMsg.isSent = True
                     results[str(origin)].append(macMsg)
                     continue
                 if rec.rawData.startswith("packet sent to"):

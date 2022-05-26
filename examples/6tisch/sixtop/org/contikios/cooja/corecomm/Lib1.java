@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020, Institute of Electronics and Computer Science (EDI)
+ * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,32 +26,33 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *
- * Author: Atis Elsts <atis.elsts@edi.lv>
  */
 
-/* Logging */
-#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_INFO
-#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
-#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
-#define TSCH_LOG_CONF_PER_SLOT                     1
+package org.contikios.cooja.corecomm;
+import java.io.File;
 
-/* Enable printing of packet counters */
-#define LINK_STATS_CONF_PACKET_COUNTERS          1
+import org.contikios.cooja.*;
 
-/* Application settings */
-#define APP_SEND_INTERVAL_SEC 1
-#define APP_WARM_UP_PERIOD_SEC 120
+/**
+ * @see CoreComm
+ * @author Fredrik Osterlind
+ */
+public class Lib1 extends CoreComm {
 
-/*TSCH SLOT FRAME*/
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
+  /**
+   * Loads library libFile.
+   *
+   * @see CoreComm
+   * @param libFile Library file
+   */
+  public Lib1(File libFile) {
+    System.load(libFile.getAbsolutePath());
+    init();
+  }
 
-#define SICSLOWPAN_CONF_FRAG 1 /* No fragmentation */
-#define UIP_CONF_BUFFER_SIZE 200
-/*#define RPL_CONF_WITH_MC 1
-#define RPL_CONF_DAG_MC RPL_DAG_MC_ETX*/
-#define TSCH_STATS_CONF_ON 1
-#define TSCH_STATS_CONF_SAMPLE_NOISE_RSSI 1
+  public native void tick();
+  public native void init();
+  public native void setReferenceAddress(int addr);
+  public native void getMemory(int rel_addr, int length, byte[] mem);
+  public native void setMemory(int rel_addr, int length, byte[] mem);
+}

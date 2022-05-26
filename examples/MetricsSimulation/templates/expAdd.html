@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Experiment detail: {{ exp.name }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
+  </head>
+  <body>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Experiment {{ exp.name }}</a>
+      </nav>
+      <div class="jumbotron">
+        <div class="container">
+          <h1 class="display-4">{{ exp.name }}</h1>
+          <ul>
+            <li>{{ exp.experimentFile }}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="container">
+          <p>Runs</p>
+          <form method="get" action="/experiment/run/{{exp.id}}">
+            <button type="submit">New Run</button>
+        </form>
+	  <ol>
+		  {%for run in exp.runs %}
+		  	<li><a href="/run/{{run.id}}"> {{ run }} </a></li>
+		  {% endfor %}
+	  </ol>
+          <p></p>
+          <p></p>
+      </div>
+    </div>
+  </body>
+</html>
