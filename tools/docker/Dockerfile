@@ -16,6 +16,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   apt-get -qq -y --no-install-recommends install \
     ant \
     build-essential \
+    ccache \
     doxygen \
     gdb \
     git \
