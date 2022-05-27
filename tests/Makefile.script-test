@@ -13,7 +13,7 @@ summary: $(TESTLOGS)
 
 %.testlog: %.sh
 	@echo "========== Running script test $(basename $@).sh =========="
-	@./"$(basename $@).sh" "$(CONTIKI)"
+	@./"$(basename $@).sh" "$(realpath $(CONTIKI))"
 
 clean:
 	@rm -f *.*log report summary

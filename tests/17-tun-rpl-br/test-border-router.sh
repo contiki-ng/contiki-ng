@@ -24,9 +24,11 @@ COUNT=5
 # Test OK of COUNT_TARGET ok out of COUNT
 COUNT_TARGET=3
 
+CURDIR=$(pwd)
+
 # Start simulation
 echo "Starting Cooja simulation $BASENAME.csc"
-java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -contiki=$CONTIKI > $BASENAME.coojalog &
+ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $CONTIKI/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$CURDIR/$BASENAME.csc -contiki=$CONTIKI -logdir=$CURDIR" > $BASENAME.coojalog &
 JPID=$!
 sleep 20
 
@@ -46,11 +48,10 @@ REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
 
 echo "Closing simulation and tunslip6"
 sleep 1
-kill_bg $JPID
-kill_bg $MPID
+kill_bg $JPID 15
+kill_bg $MPID 15
 sleep 1
-rm COOJA.testlog
-rm COOJA.log
+rm -f COOJA.testlog COOJA.log
 
 if [ $STATUS -eq 0 ] && [ $REPLIES -ge $COUNT_TARGET ] ; then
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;

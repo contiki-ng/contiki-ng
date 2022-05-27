@@ -9,7 +9,7 @@ SELF_PATH = os.path.dirname(os.path.abspath(__file__))
 # move three levels up
 CONTIKI_PATH = os.path.dirname(os.path.dirname(os.path.dirname(SELF_PATH)))
 
-cooja_jar = os.path.normpath(os.path.join(CONTIKI_PATH, "tools", "cooja", "dist", "cooja.jar"))
+build_xml = os.path.normpath(os.path.join(CONTIKI_PATH, "tools", "cooja", "build.xml"))
 cooja_input = 'cooja.csc'
 cooja_output = 'COOJA.testlog'
 
@@ -51,7 +51,7 @@ def execute_test(cooja_file):
         return False
 
     filename = os.path.join(SELF_PATH, cooja_file)
-    args = " ".join(["java -Djava.awt.headless=true -jar ", cooja_jar, "-nogui=" + filename, "-contiki=" + CONTIKI_PATH])
+    args = " ".join(["ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f", build_xml, "run_bigmem -Dargs='-nogui=" + filename, "-contiki=" + CONTIKI_PATH, "-logdir=" + SELF_PATH + "'"])
     sys.stdout.write("  Running Cooja, args={}\n".format(args))
 
     (retcode, output) = run_subprocess(args, '')
@@ -82,10 +82,6 @@ def execute_test(cooja_file):
 # Run the application
 
 def main():
-    if not os.access(cooja_jar, os.R_OK):
-        print('The file "{}" does not exist, did you build Cooja?'.format(cooja_jar))
-        exit(-1)
-
     input_file = cooja_input
     if len(sys.argv) > 1:
         # change from the default

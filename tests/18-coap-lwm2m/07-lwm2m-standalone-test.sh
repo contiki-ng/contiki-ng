@@ -8,8 +8,8 @@ BASENAME=07-lwm2m-standalone-test
 
 # Building standalone posix example
 echo "Compiling standalone posix example"
-make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m clean >/dev/null
-make CONTIKI_NG=../../$CONTIKI -C example-lwm2m-standalone/lwm2m >make.log 2>make.err
+make CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m clean >/dev/null
+make CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m >make.log 2>make.err
 
 echo "Downloading leshan"
 LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
@@ -56,7 +56,7 @@ else
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
 
-rm make.log make.err node.log node.err leshan.log leshan.err
+rm -f make.log make.err node.log node.err leshan.log leshan.err
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end
