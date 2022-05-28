@@ -24,7 +24,7 @@
       <identifier>mtype778</identifier>
       <description>TSCH Schedule Node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/custom-schedule/node.c</source>
-      <commands>make node.cooja TARGET=cooja</commands>
+      <commands>make -j$(CPUS) node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

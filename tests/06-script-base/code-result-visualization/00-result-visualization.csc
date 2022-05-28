@@ -20,7 +20,7 @@
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/benchmarks/result-visualization/node.c</source>
       <commands>make clean TARGET=cooja
-make TARGET=cooja node.cooja</commands>
+make -j$(CPUS) TARGET=cooja node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

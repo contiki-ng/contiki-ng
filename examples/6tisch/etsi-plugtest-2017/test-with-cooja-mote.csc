@@ -26,7 +26,7 @@
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/etsi-plugtest-2017/node.c</source>
       <commands>make TARGET=cooja clean
-      make TARGET=cooja MAKE_WITH_SIXTOP=1 node.cooja</commands>
+      make -j$(CPUS) TARGET=cooja MAKE_WITH_SIXTOP=1 node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

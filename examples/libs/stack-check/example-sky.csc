@@ -24,7 +24,7 @@
       <identifier>node</identifier>
       <description>RPL Root</description>
       <source EXPORT="discard">[CONFIG_DIR]/example-stack-check.c</source>
-      <commands EXPORT="discard">make example-stack-check.sky TARGET=sky</commands>
+      <commands EXPORT="discard">make -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/example-stack-check.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
