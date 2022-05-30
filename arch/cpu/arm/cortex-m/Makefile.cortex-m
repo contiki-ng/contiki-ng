@@ -14,7 +14,7 @@ MODULES += os/lib/newlib
 
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
-LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),--cref,--no-warn-mismatch
+LDFLAGS += -Wl,--cref,--no-warn-mismatch
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 
