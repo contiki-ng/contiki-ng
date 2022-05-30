@@ -58,8 +58,3 @@ LDFLAGS += -Wl,-zdefs
 endif
 
 MAKE_MAC ?= MAKE_MAC_NULLMAC
-
-### Compilation rules
-
-%.so: $(OBJECTDIR)/%.o
-	$(Q)$(LD) -shared $(LDFLAGS) -o $@ $^
