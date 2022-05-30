@@ -231,7 +231,7 @@ $(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) 
 	@echo  ${filter %.a,$^}
 	$(Q)$(CC) -Wl,--gc-sections $(LDFLAGS) -T$(LINKCMD) -o $@ -Wl,--start-group \
 	  ${filter-out %.a,$^} ${filter %.a,$^} \
-	  $(ALLLIBS) -Wl,--end-group -Wl,-Map,$(CONTIKI_NG_PROJECT_MAP)
+	  $(ALLLIBS) -Wl,--end-group
 else
 # The SDK does not include libraries, only build objects and libraries, skip linking
 $(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
