@@ -22,7 +22,7 @@ CFLAGS += -mthumb -mabi=aapcs -mlittle-endian
 CFLAGS += -Wall
 CFLAGS += -std=c99
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
-CFLAGS += -fshort-enums -fomit-frame-pointer -fno-builtin
+CFLAGS += -fshort-enums -fomit-frame-pointer
 ifeq ($(WERROR),1)
   CFLAGS += -Werror
 endif
