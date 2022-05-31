@@ -165,18 +165,14 @@ uiplib_ipaddr_print(const uip_ipaddr_t *addr)
 int
 uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
 {
-  uint16_t a;
-  unsigned int i;
-  int f;
-  int n = 0;
+  unsigned int n = 0;
 
   if(size == 0) {
     return 0;
   }
 
   if(addr == NULL) {
-    n = snprintf(buf, size, "(NULL IP addr)");
-    return n;
+    return snprintf(buf, size, "(NULL IP addr)");
   } else if(ip64_addr_is_ipv4_mapped_addr(addr)) {
     /*
      * Printing IPv4-mapped addresses is done according to RFC 4291 [1]
@@ -192,12 +188,12 @@ uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
      *
      * [1] https://tools.ietf.org/html/rfc4291#page-4
      */
-    n = snprintf(buf, size, "::FFFF:%u.%u.%u.%u", addr->u8[12],
-                 addr->u8[13], addr->u8[14], addr->u8[15]);
-    return n;
+    return snprintf(buf, size, "::FFFF:%u.%u.%u.%u", addr->u8[12],
+                    addr->u8[13], addr->u8[14], addr->u8[15]);
   } else {
-    for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
-      a = (addr->u8[i] << 8) + addr->u8[i + 1];
+    int f = 0;
+    for(size_t i = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+      uint16_t a = (addr->u8[i] << 8) + addr->u8[i + 1];
       if(a == 0 && f >= 0) {
         if(f++ == 0) {
           n += snprintf(buf+n, size-n, "::");
