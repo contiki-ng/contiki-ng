@@ -34,11 +34,15 @@ jobs:
     steps:
 
     # Checks out the repo with full history
-    - uses: actions/checkout@v2
+    - name: Checkout github repo (+ download lfs dependencies)
+      uses: actions/checkout@v2
       with:
           fetch-depth: '0'
           submodules: 'recursive'
           persist-credentials: false
+          lfs: true
+    - name: Checkout LFS objects
+      run: git lfs checkout
 
     # Construct the correct docker container image tag corresponding to this build
     - name: Figure out correct docker image tag
