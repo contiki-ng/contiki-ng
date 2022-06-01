@@ -360,7 +360,8 @@ distclean:
 	done
 	$(Q)rm -rf $(BUILD_DIR)
 
--include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.customrules-$(TARGET)
+# Include custom build rule Makefiles specified by platforms/CPUs.
+include $(MAKEFILES_CUSTOMRULES)
 
 ### See http://make.paulandlesley.org/autodep.html#advanced
 
