@@ -23,6 +23,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     gtk-sharp2 \
     iputils-tracepath \
     iputils-ping \
+    less \
     libcanberra-gtk-module:i386 \
     libcoap-1-0-bin \
     libfreetype6-dev \
@@ -110,19 +111,10 @@ RUN pip3 -q install matplotlib
 RUN pip3 -q install nrfutil && \
   pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil
 
-# Make sure we're using Java 11 for Cooja
-RUN update-java-alternatives --set /usr/lib/jvm/java-1.11.0-openjdk-i386
-
-# Create user, enable X forwarding, add to group dialout
-# -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
-RUN export uid=1000 gid=1000 && \
-    mkdir -p /home/user && \
-    echo "user:x:${uid}:${gid}:user,,,:/home/user:/bin/bash" >> /etc/passwd && \
-    echo "user:x:${uid}:" >> /etc/group && \
-    echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers && \
-    chmod 0440 /etc/sudoers && \
-    chown ${uid}:${gid} -R /home/user && \
-    usermod -aG dialout user
+# Create user, add to groups dialout and sudo, and configure sudoers.
+RUN adduser --disabled-password --gecos '' user && \
+    usermod -aG dialout,sudo user && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Set user for what comes next
 USER user
