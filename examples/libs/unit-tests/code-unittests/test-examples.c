@@ -41,7 +41,7 @@ void
 print_test_report(const unit_test_t *utp)
 {
   printf("[=check-me=] %s... ", utp->descr);
-  if(utp->result == unit_test_failure) {
+  if(utp->passed == false) {
     printf("FAILED at line %u\n", utp->exit_line);
   } else {
     printf("SUCCEEDED\n");

@@ -207,10 +207,10 @@ PROCESS_THREAD(test_heapmem_process, ev, data)
   UNIT_TEST_RUN(invalid_freeing);
   UNIT_TEST_RUN(stats_check);
 
-  if(UNIT_TEST_RESULT(do_many_allocations) == unit_test_failure ||
-     UNIT_TEST_RESULT(max_alloc)           == unit_test_failure ||
-     UNIT_TEST_RESULT(invalid_freeing)     == unit_test_failure ||
-     UNIT_TEST_RESULT(stats_check)         == unit_test_failure) {
+  if(!UNIT_TEST_PASSED(do_many_allocations) ||
+     !UNIT_TEST_PASSED(max_alloc) ||
+     !UNIT_TEST_PASSED(invalid_freeing) ||
+     !UNIT_TEST_PASSED(stats_check)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }

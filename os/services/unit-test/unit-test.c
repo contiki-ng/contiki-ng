@@ -29,11 +29,12 @@
 
 /**
  * \file
- *	A tool for unit testing Contiki software.
+ *	Default print function for unit tests.
  * \author
- * 	Nicolas Tsiftes <nvt@sics.se>
+ * 	Nicolas Tsiftes <nicolas.tsiftes@ri.se>
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 
 #include "unit-test.h"
@@ -48,12 +49,12 @@ void
 unit_test_print_report(const unit_test_t *utp)
 {
   printf("\nUnit test: %s\n", utp->descr);
-  printf("Result: %s\n", utp->result == unit_test_failure ?
-                         "failure" : "success");
-  printf("Exit point: %s:%u\n", utp->test_file, (unsigned)utp->exit_line);
-  printf("Start: %u\n", (unsigned)utp->start);
-  printf("End: %u\n", (unsigned)utp->end);
-  printf("Duration: %u\n", (unsigned)(utp->end - utp->start));
-  printf("Ticks per second: %u\n", (unsigned)RTIMER_SECOND);
+  printf("Result: %s\n", utp->passed ? "success" : "failure");
+  printf("Exit point: %s:%u\n", utp->test_file, utp->exit_line);
+  printf("Assertions executed: %"PRIu32"\n", utp->assertions);
+  printf("Start: %"PRIu64"\n", (uint64_t)utp->start);
+  printf("End: %"PRIu64"\n", (uint64_t)utp->end);
+  printf("Duration: %"PRId64" ticks\n", (int64_t)(utp->end - utp->start));
+  printf("Ticks per second: %u\n", (unsigned)CLOCK_SECOND);
 }
 /*---------------------------------------------------------------------------*/
