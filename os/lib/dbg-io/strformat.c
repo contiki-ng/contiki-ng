@@ -41,7 +41,7 @@
 #ifdef HAVE_LONGLONG
 #define LARGEST_SIGNED long long int
 #else
-#define LARGEST_UNSIGNED long int
+#define LARGEST_SIGNED long int
 #endif /* HAVE_LONGLONG */
 #endif /* LARGEST_SIGNED */
 
@@ -54,7 +54,7 @@
 #endif /* LARGEST_UNSIGNED */
 
 #ifndef POINTER_INT
-#define POINTER_INT unsigned long
+#define POINTER_INT uintptr_t
 #endif
 /*---------------------------------------------------------------------------*/
 typedef unsigned int FormatFlags;
