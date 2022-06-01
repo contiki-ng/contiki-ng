@@ -5,10 +5,9 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 #define SLIP_END     0300
-#undef putchar
 /*---------------------------------------------------------------------------*/
 int
-putchar(int c)
+dbg_putchar(int c)
 {
 #if SLIP_ARCH_CONF_ENABLED
   static char debug_frame = 0;
@@ -35,5 +34,19 @@ putchar(int c)
   }
 #endif /* SLIP_ARCH_CONF_ENABLED */
   return c;
+}
+
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
+{
+  unsigned int i = 0;
+  while(s && *s != 0) {
+    if(i >= len) {
+      break;
+    }
+    dbg_putchar(*s++);
+    i++;
+  }
+  return i;
 }
 /*---------------------------------------------------------------------------*/

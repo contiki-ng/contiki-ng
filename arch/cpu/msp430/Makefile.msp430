@@ -4,6 +4,9 @@ endif
 
 CFLAGS_DEBUG = -gstabs+
 
+# Use dbg-io for IO functions like printf()
+MODULES += os/lib/dbg-io
+
 ### Define the CPU directory
 CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/msp430
 

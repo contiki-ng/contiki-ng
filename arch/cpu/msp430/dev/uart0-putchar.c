@@ -5,10 +5,9 @@
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 #define SLIP_END     0300
-#undef putchar
 /*---------------------------------------------------------------------------*/
 int
-putchar(int c)
+dbg_putchar(int c)
 {
 #if SLIP_ARCH_CONF_ENABLED
   static char debug_frame = 0;
@@ -37,6 +36,20 @@ putchar(int c)
   return c;
 }
 
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
+{
+  unsigned int i = 0;
+  while(s && *s != 0) {
+    if(i >= len) {
+      break;
+    }
+    dbg_putchar(*s++);
+    i++;
+  }
+  return i;
+}
+
 #if defined(__GNUC__) && (__GNUC__ >= 9)
 /* The printf() in newlib in GCC 9 from Texas Instruments uses the
  * "TI C I/O" protocol which is not implemented in GDB. The user manual
@@ -46,7 +59,7 @@ write(int fd, const char *buf, int len)
 {
   int i = 0;
   for(; i < len && buf[i]; i++) {
-    putchar(buf[i]);
+    dbg_putchar(buf[i]);
   }
   return i;
 }
