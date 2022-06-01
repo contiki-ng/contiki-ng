@@ -786,7 +786,7 @@ PT_THREAD(tsch_scan(struct pt *pt))
 
   TSCH_ASN_INIT(tsch_current_asn, 0, 0);
 
-  etimer_set(&scan_timer, CLOCK_SECOND / TSCH_ASSOCIATION_POLL_FREQUENCY);
+  etimer_set(&scan_timer, MAX(1, CLOCK_SECOND / TSCH_ASSOCIATION_POLL_FREQUENCY));
   current_channel_since = clock_time();
 
   while(!tsch_is_associated && !tsch_is_coordinator) {
@@ -851,7 +851,7 @@ PT_THREAD(tsch_scan(struct pt *pt))
       NETSTACK_RADIO.off();
     } else if(!tsch_is_coordinator) {
       /* Go back to scanning */
-      etimer_reset(&scan_timer);
+      etimer_restart(&scan_timer);
       PT_WAIT_UNTIL(pt, etimer_expired(&scan_timer));
     }
   }
