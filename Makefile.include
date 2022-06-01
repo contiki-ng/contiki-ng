@@ -351,11 +351,9 @@ clean:
 	$(Q)rm -f *.d *.e *.o $(CLEAN) \
 		$(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
 	$(Q)rm -rf $(BUILD_DIR_TARGET)
-	@echo Target $(TARGET) cleaned
 
 distclean:
-	@for TARG in `ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)`; do \
-		echo Running: $(MAKE) TARGET=$$TARG clean; \
+	$(Q)for TARG in `ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)`; do \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 	$(Q)rm -rf $(BUILD_DIR)
