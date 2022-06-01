@@ -38,6 +38,14 @@
 #include "tsch-stats.h"
 #include "tsch-cs.h"
 
+#if ! TSCH_STATS_ON
+#error tsch-cs requires tsch-stats. Please enable TSCH_STATS_CONF_ON.
+#endif /* ! TSCH_STATS_ON */
+
+#if ! TSCH_STATS_SAMPLE_NOISE_RSSI
+#error tsch-cs requires periodic RSSI sampling. Please enable TSCH_STATS_CONF_SAMPLE_NOISE_RSSI.
+#endif /* ! TSCH_STATS_SAMPLE_NOISE_RSSI */
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TSCH CS"
