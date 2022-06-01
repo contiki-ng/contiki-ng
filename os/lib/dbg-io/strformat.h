@@ -55,7 +55,8 @@ int format_str(const strformat_context_t *ctxt, const char *format, ...)
      __attribute__ ((__format__ (__printf__, 2,3)));
 
 int
-format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap);
+format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
+     __attribute__ ((__format__ (__printf__, 2, 0)));
 /*---------------------------------------------------------------------------*/
 #endif /* STRFORMAT_H_ */
 /*---------------------------------------------------------------------------*/
