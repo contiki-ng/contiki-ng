@@ -139,7 +139,6 @@ CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 # keep every function in separate section. This will allow linker to dump unused functions
-LDFLAGS += -Xlinker -Map=$(CONTIKI_NG_PROJECT_MAP)
 LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH)
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker to dump unused sections
