@@ -61,13 +61,18 @@ MAIN_OBJ = $(BUILD_DIR_BOARD)/$(LIBNAME).o
 JNILIB = $(BUILD_DIR_BOARD)/$(LIBNAME).$(TARGET)
 CONTIKI_APP_OBJ = $(CONTIKI_APP).o
 
+# No stack end symbol available, code does not work on 64-bit architectures.
+MODULES_SOURCES_EXCLUDES += stack-check.c
+# No Serial Peripheral Interface in Cooja.
+MODULES_SOURCES_EXCLUDES += spi.c
+
 ### COOJA platform sources
 CONTIKI_TARGET_DIRS = . dev lib sys cfs
 
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
 vpath %.c $(COOJA_SOURCEDIRS)
 
-COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c slip.c watchdog.c int-master.c
+COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c watchdog.c int-master.c
 
 COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 		    pir-sensor.c rs232.c vib-sensor.c \
