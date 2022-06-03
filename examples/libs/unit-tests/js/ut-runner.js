@@ -33,7 +33,7 @@ while(true) {
 log.log("\nFINISHED RUNNING " + (failed+succeeded) + " TEST CASES\n");
 log.log("Fails: " + failed + ", Successes: " + succeeded + "\n");
 
-if(failed > 0)
+if(failed != 1) // This is an example, one failure is expected.
     log.testFailed();
 
 log.testOK();
