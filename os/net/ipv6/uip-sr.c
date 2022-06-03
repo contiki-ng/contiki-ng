@@ -117,7 +117,9 @@ uip_sr_expire_parent(const void *graph, const uip_ipaddr_t *child,
   uip_sr_node_t *l = uip_sr_get_node(graph, child);
   /* Check if parent matches */
   if(l != NULL && node_matches_address(graph, l->parent, parent)) {
-    l->lifetime = UIP_SR_REMOVAL_DELAY;
+    if(l->lifetime > UIP_SR_REMOVAL_DELAY) {
+      l->lifetime = UIP_SR_REMOVAL_DELAY;
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -216,22 +218,26 @@ uip_sr_periodic(unsigned seconds)
     next = list_item_next(l);
     if(l->lifetime == 0) {
       uip_sr_node_t *l2;
+      int can_be_removed = 1;
       for(l2 = list_head(nodelist); l2 != NULL; l2 = list_item_next(l2)) {
         if(l2->parent == l) {
+          can_be_removed = 0;
           break;
         }
       }
-      if(LOG_INFO_ENABLED) {
-        uip_ipaddr_t node_addr;
-        NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, l);
-        LOG_INFO("NS: removing expired node ");
-        LOG_INFO_6ADDR(&node_addr);
-        LOG_INFO_("\n");
+      if(can_be_removed) {
+        /* No child found, deallocate node */
+        if(LOG_INFO_ENABLED) {
+          uip_ipaddr_t node_addr;
+          NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, l);
+          LOG_INFO("NS: removing expired node ");
+          LOG_INFO_6ADDR(&node_addr);
+          LOG_INFO_("\n");
+        }
+        list_remove(nodelist, l);
+        memb_free(&nodememb, l);
+        num_nodes--;
       }
-      /* No child found, deallocate node */
-      list_remove(nodelist, l);
-      memb_free(&nodememb, l);
-      num_nodes--;
     } else if(l->lifetime != UIP_SR_INFINITE_LIFETIME) {
       l->lifetime = l->lifetime > seconds ? l->lifetime - seconds : 0;
     }
