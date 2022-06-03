@@ -7,4 +7,4 @@ CONTIKI=$1
 BASENAME=$(basename $0 .sh)
 
 # Add a little extra initial time to account for TSCH association time
-bash test-border-router.sh $CONTIKI $BASENAME fd00::204:4:4:4 120
+./test-border-router.sh $CONTIKI $BASENAME fd00::204:4:4:4 120
