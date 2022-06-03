@@ -1,10 +1,9 @@
 CONTIKI=../..
 
-all: cooja
+.PHONY: start
 
-cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
-
-$(CONTIKI)/tools/cooja/dist/cooja.jar:
-	cd $(CONTIKI)/tools/cooja && ant jar
+start:
+	@ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(CONTIKI)/tools/cooja/build.xml jar
+	@$(MAKE) all
 
 include ../Makefile.script-test
