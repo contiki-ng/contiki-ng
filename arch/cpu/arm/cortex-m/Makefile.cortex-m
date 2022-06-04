@@ -19,7 +19,9 @@ MODULES += os/lib/newlib
 
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
-LDFLAGS += -Wl,--cref,--no-warn-mismatch
+# The next line might be trying to avoid
+# https://sourceware.org/bugzilla/show_bug.cgi?id=28910
+LDFLAGS += -Wl,--no-warn-mismatch
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 
