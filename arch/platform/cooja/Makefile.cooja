@@ -69,9 +69,6 @@ MODULES_SOURCES_EXCLUDES += spi.c
 ### COOJA platform sources
 CONTIKI_TARGET_DIRS = . dev lib sys cfs
 
-# (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
-vpath %.c $(COOJA_SOURCEDIRS)
-
 COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c watchdog.c int-master.c
 
 COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
@@ -81,9 +78,8 @@ COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 
 COOJA_CORE = random.c sensors.c leds.c gpio-hal-arch.c buttons.c
 
-# (COOJA_SOURCEFILES contains additional sources set from simulator)
 CONTIKI_TARGET_SOURCEFILES = \
-$(COOJA_BASE) $(COOJA_INTFS) $(COOJA_CORE) $(COOJA_NET) $(COOJA_SOURCEFILES)
+$(COOJA_BASE) $(COOJA_INTFS) $(COOJA_CORE) $(COOJA_NET)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
