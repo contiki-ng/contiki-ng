@@ -113,7 +113,7 @@ RUN pip3 -q install nrfutil && \
 
 # Create user, add to groups dialout and sudo, and configure sudoers.
 RUN adduser --disabled-password --gecos '' user && \
-    usermod -aG dialout,sudo user && \
+    usermod -aG dialout,plugdev,sudo user && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Set user for what comes next
