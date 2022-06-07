@@ -1044,8 +1044,8 @@ exit(1);
       }
 
       if(connect(slipfd, p->ai_addr, p->ai_addrlen) == -1) {
-        close(slipfd);
         perror("client: connect");
+        close(slipfd);
         continue;
       }
       break;
