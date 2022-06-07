@@ -75,7 +75,7 @@ int timestamp = 0, flowcontrol=0, showprogress=0, flowcontrol_xonxoff=0;
 
 int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-void write_to_serial(int outfd, void *inbuf, int len);
+void write_to_serial(void *inbuf, int len);
 
 void slip_send(unsigned char c);
 void slip_send_char(unsigned char c);
@@ -439,7 +439,7 @@ slip_flushbuf(int fd)
 }
 
 void
-write_to_serial(int outfd, void *inbuf, int len)
+write_to_serial(void *inbuf, int len)
 {
   u_int8_t *p = inbuf;
   int i;
@@ -508,7 +508,7 @@ write_to_serial(int outfd, void *inbuf, int len)
  * Read from tun, write to slip.
  */
 int
-tun_to_serial(int infd, int outfd)
+tun_to_serial(int infd)
 {
   struct {
     unsigned char inbuf[2000];
@@ -523,10 +523,10 @@ tun_to_serial(int infd, int outfd)
   if(size <= UTUN_HEADER_LEN) err(1, "tun_to_serial: read too small");
 
   size -= UTUN_HEADER_LEN;
-  write_to_serial(outfd, uip.inbuf + UTUN_HEADER_LEN, size);
+  write_to_serial(uip.inbuf + UTUN_HEADER_LEN, size);
 #undef UTUN_HEADER_LEN
 #else
-  write_to_serial(outfd, uip.inbuf, size);
+  write_to_serial(uip.inbuf, size);
 #endif
   return size;
 }
@@ -1160,7 +1160,7 @@ exit(1);
       }
       if(delaymsec==0) {
         if(slip_empty() && FD_ISSET(tunfd, &rset)) {
-          tun_to_serial(tunfd, slipfd);
+          tun_to_serial(tunfd);
           slip_flushbuf(slipfd);
           if(ipa_enable) sigalarm_reset();
           if(basedelay) {
