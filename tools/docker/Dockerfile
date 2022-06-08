@@ -128,8 +128,8 @@ ENV                     LC_ALL=C.UTF-8
 ENV                     LANG=C.UTF-8
 WORKDIR                 ${HOME}
 
-# Create Cooja shortcut
-RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && \
+# Create Cooja shortcut  
+RUN echo "#!/bin/bash\n\n# Periodically print an invisible character to keep Windows docker from\n# terminating the session for inactivity.\n/bin/bash -c "while sleep 120; do printf '\33[0n'; done" &\nPID=$!\ntrap exit_cleanup INT\n\nfunction exit_cleanup() {\n  kill $PID\n}\n\nant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $HOME/contiki-ng/tools/cooja/build.xml run_bigmem\n\nexit_cleanup" > ${HOME}/cooja && \
   chmod +x ${HOME}/cooja
 
 # Download, build and install Renode
