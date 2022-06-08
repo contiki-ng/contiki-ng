@@ -129,9 +129,9 @@ ENV                     LC_ALL=C.UTF-8
 ENV                     LANG=C.UTF-8
 WORKDIR                 ${HOME}
 
-# Create Cooja shortcut
-RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && \
-  chmod +x ${HOME}/cooja
+# Create Cooja shortcut  
+COPY files/* ${HOME}/
+RUN sudo chmod +x ${HOME}/cooja
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
