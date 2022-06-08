@@ -55,7 +55,7 @@ else
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
 
-rm make.log make.err node.log node.err leshan.log leshan.err
+rm -f make.log make.err node.log node.err leshan.log leshan.err
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end

@@ -24,8 +24,10 @@ declare -i OKCOUNT=0
 # A list of seeds the resulted in failure
 FAILSEEDS=
 
+CURDIR=$(pwd)
+
 for (( SEED=$BASESEED; SEED<$(($BASESEED+$RUNCOUNT)); SEED++ )); do
-  if java -Xshare:on -Dnashorn.args=--no-deprecation-warning -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$CSC -contiki=$CONTIKI -random-seed=$SEED; then
+  if ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $CONTIKI/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$CSC -contiki=$CONTIKI -logdir=$CURDIR -random-seed=$SEED"; then
     OKCOUNT+=1
   else
     FAILSEEDS+=" $BASESEED"
