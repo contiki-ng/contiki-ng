@@ -27,7 +27,7 @@ CURDIR=$(pwd)
 # Start simulation
 ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $CONTIKI/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$CURDIR/$BASENAME.csc -contiki=$CONTIKI -logdir=$CURDIR" &
 JPID=$!
-sleep 20
+sleep 30
 
 # Connect to the simulation
 echo "Starting tunslip6"
