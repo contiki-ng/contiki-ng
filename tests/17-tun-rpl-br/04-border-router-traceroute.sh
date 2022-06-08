@@ -19,14 +19,13 @@ TARGETHOPS=4
 CURDIR=$(pwd)
 
 # Start simulation
-echo "Starting Cooja simulation $BASENAME.csc"
-ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $CONTIKI/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$CURDIR/$BASENAME.csc -contiki=$CONTIKI -logdir=$CURDIR" > $BASENAME.coojalog &
+ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $CONTIKI/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$CURDIR/$BASENAME.csc -contiki=$CONTIKI -logdir=$CURDIR" &
 JPID=$!
 sleep 20
 
 # Connect to the simulation
 echo "Starting tunslip6"
-make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip6.log 2>&1 &
+make -C $CONTIKI/examples/rpl-border-router connect-router-cooja TARGET=zoul &
 MPID=$!
 printf "Waiting for network formation (%d seconds)\n" "$WAIT_TIME"
 sleep $WAIT_TIME
@@ -48,10 +47,6 @@ rm -f COOJA.testlog COOJA.log
 if [ $STATUS -eq 0 ] && [ $HOPS -eq $TARGETHOPS ] ; then
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
-  echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;
-  echo "==== $BASENAME.tunslip6.log ====" ; cat $BASENAME.tunslip6.log;
-  echo "==== $BASENAME.scriptlog ====" ; cat $BASENAME.scriptlog;
-
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
 fi
 
