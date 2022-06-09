@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-#module for serial IO for POSIX compatible systems, like Linux
-#see __init__.py
+# module for serial IO for POSIX compatible systems, like Linux
+# see __init__.py
 #
-#(C) 2001-2002 Chris Liechti <cliechti@gmx.net>
+# (C) 2001-2002 Chris Liechti <cliechti@gmx.net>
 # this is distributed under a free software license, see license.txt
 #
-#parts based on code from Grant B. Edwards  <grante@visi.com>:
+# parts based on code from Grant B. Edwards  <grante@visi.com>:
 #  ftp://ftp.visi.com/users/grante/python/PosixSerial.py
 # references: http://www.easysw.com/~mike/serial/serial.html
 
-import sys, os, fcntl, termios, struct, string, select
+import sys, os, fcntl, termios, struct, select
 from . import serialutil
 
 VERSION = "$Revision: 1.1 $".split()[1]     #extract CVS version
@@ -18,13 +18,13 @@ PARITY_NONE, PARITY_EVEN, PARITY_ODD = list(range(3))
 STOPBITS_ONE, STOPBITS_TWO = (1, 2)
 FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS = (5,6,7,8)
 
-#Do check the Python version as some constants have moved.
-if (sys.hexversion < 0x020100f0):
+# Do check the Python version as some constants have moved.
+if sys.hexversion < 0x020100f0:
     import TERMIOS
 else:
     TERMIOS = termios
 
-if (sys.hexversion < 0x020200f0):
+if sys.hexversion < 0x020200f0:
     import FCNTL
 else:
     FCNTL = fcntl
@@ -91,11 +91,10 @@ baudEnumToInt = {}
 baudIntToEnum = {}
 for rate in (0,50,75,110,134,150,200,300,600,1200,1800,2400,4800,9600,
              19200,38400,57600,115200,230400,460800,500000,576000,921600,
-             1000000,1152000,1500000,2000000,2500000,3000000,3500000,4000000
-    ):
+             1000000,1152000,1500000,2000000,2500000,3000000,3500000,4000000):
     try:
         i = eval('TERMIOS.B'+str(rate))
-        baudEnumToInt[i]=rate
+        baudEnumToInt[i] = rate
         baudIntToEnum[rate] = i
     except:
         pass
@@ -148,11 +147,11 @@ class Serial(serialutil.FileLike):
         self.fd = None
         self.timeout = timeout
         vmin = vtime = 0                #timeout is done via select
-        #open
+        # open
         if type(port) == type(''):      #strings are taken directly
             self.portstr = port
         else:
-            self.portstr = device(port) #numbers are transformed to a os dependant string
+            self.portstr = device(port) #numbers are transformed to an os dependant string
         try:
             self.fd = os.open(self.portstr, os.O_RDWR|os.O_NOCTTY|os.O_NONBLOCK)
         except Exception as msg:
@@ -163,7 +162,7 @@ class Serial(serialutil.FileLike):
             self.__tcgetattr()          #read current settings
         except termios.error as msg:      #if a port is nonexistent but has a /dev file, it'll fail here
             raise serialutil.SerialException("could not open port: %s" % msg)
-        #set up raw mode / no echo / binary
+        # set up raw mode / no echo / binary
         self.cflag = self.cflag |  (TERMIOS.CLOCAL|TERMIOS.CREAD)
         self.lflag = self.lflag & ~(TERMIOS.ICANON|TERMIOS.ECHO|TERMIOS.ECHOE|TERMIOS.ECHOK|TERMIOS.ECHONL|
                                     TERMIOS.ECHOCTL|TERMIOS.ECHOKE|TERMIOS.ISIG|TERMIOS.IEXTEN) #|TERMIOS.ECHOPRT
@@ -177,7 +176,7 @@ class Serial(serialutil.FileLike):
             self.ispeed = self.ospeed = baudIntToEnum[baudrate]
         except:
             raise ValueError('invalid baud rate: %s' % baudrate)
-        #setup char len
+        # setup char len
         self.cflag = self.cflag & ~TERMIOS.CSIZE
         if bytesize == 8:
             self.cflag = self.cflag | TERMIOS.CS8
@@ -188,15 +187,15 @@ class Serial(serialutil.FileLike):
         elif bytesize == 5:
             self.cflag = self.cflag | TERMIOS.CS5
         else:
-            raise ValueError('invalid char len: '+str(clen))
-        #setup stopbits
+            raise ValueError('invalid char len: ' + str(bytesize))
+        # setup stopbits
         if stopbits == STOPBITS_ONE:
             self.cflag = self.cflag & ~(TERMIOS.CSTOPB)
         elif stopbits == STOPBITS_TWO:
             self.cflag = self.cflag |  (TERMIOS.CSTOPB)
         else:
             raise ValueError('invalid stopit specification:'+str(stopbits))
-        #setup parity
+        # setup parity
         self.iflag = self.iflag & ~(TERMIOS.INPCK|TERMIOS.ISTRIP)
         if parity == PARITY_NONE:
             self.cflag = self.cflag & ~(TERMIOS.PARENB|TERMIOS.PARODD)
@@ -206,7 +205,7 @@ class Serial(serialutil.FileLike):
         elif parity == PARITY_ODD:
             self.cflag = self.cflag |  (TERMIOS.PARENB|TERMIOS.PARODD)
         else:
-            raise ValueError('invalid parity: '+str(par))
+            raise ValueError('invalid parity: ' + str(parity))
         #setup flow control
         #xonxoff
         if hasattr(TERMIOS, 'IXANY'):
@@ -230,10 +229,10 @@ class Serial(serialutil.FileLike):
                 self.cflag = self.cflag |  (TERMIOS.CNEW_RTSCTS)
             else:
                 self.cflag = self.cflag & ~(TERMIOS.CNEW_RTSCTS)
-        #XXX should there be a warning if setting up rtscts (and xonxoff etc) fails??
-        
+        #XXX should there be a warning if setting up rtscts (and xonxoff etc.) fails??
+
         #buffer
-        #vmin "minimal number of characters to be read. = for non blocking"
+        #vmin "minimal number of characters to be read. = for non-blocking"
         if vmin<0 or vmin>255:
             raise ValueError('invalid vmin: '+str(vmin))
         self.cc[TERMIOS.VMIN] = vmin
@@ -289,8 +288,7 @@ class Serial(serialutil.FileLike):
         """read a number of bytes from the port.
         the default is one (unlike files)"""
         if not self.fd: raise portNotOpenError
-        read = ''
-        inp = None
+        read = b''
         if size > 0:
             while len(read) < size:
                 #print "\tread(): size",size, "have", len(read)    #debug

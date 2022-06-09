@@ -62,4 +62,3 @@ class FileLike:
     def flush(self):
         """flush of file like objects"""
         pass
-
