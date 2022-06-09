@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = u'Contiki-NG'
-copyright = u'2018, Contiki-NG maintainers and contributors'
+copyright = u'2018-2022, Contiki-NG maintainers and contributors'
 author = u'Contiki-NG maintainers and contributors'
 
 # The short X.Y version
