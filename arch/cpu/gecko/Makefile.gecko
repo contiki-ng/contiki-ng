@@ -19,6 +19,7 @@ DEVICE_FAMILY_LOWER = $(shell echo $(DEVICE_FAMILY) | tr A-Z a-z)
 DEVICE_OPN_UPPER = $(shell echo $(DEVICE_OPN) | tr a-z A-Z)
 
 # OPN Specific
+LDSCRIPT ?= $(CONTIKI_CPU)/$(DEVICE_OPN)/$(DEVICE_FAMILY_LOWER).ld
 GSDK_C_SRCS += $(CONTIKI_CPU)/$(DEVICE_OPN)/sl_device_init_clocks.c
 GSDK_SRC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
 GSDK_INC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
@@ -29,7 +30,6 @@ CFLAGS += -DCPU_CONF_PATH=\"$(DEVICE_OPN)-conf.h\"
 # GSDK 
 
 ## Device
-LDSCRIPT ?= $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/GCC/$(DEVICE_FAMILY_LOWER).ld
 GSDK_ASM_SRCS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/GCC/startup_$(DEVICE_FAMILY_LOWER).S
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/system_$(DEVICE_FAMILY_LOWER).c
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Include
@@ -50,6 +50,7 @@ GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_emu.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_gpio.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_ldma.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_leuart.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_msc.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_prs.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_rmu.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_rtcc.c
@@ -164,6 +165,7 @@ CONTIKI_CPU_DIRS += sys
 CONTIKI_CPU_DIRS += dev
 CONTIKI_CPU_DIRS += os
 CONTIKI_CPU_DIRS += common
+CONTIKI_CPU_DIRS += storage
 
 ## CPU-dependent source files
 
@@ -183,6 +185,9 @@ CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
 ### os
 CONTIKI_CPU_SOURCEFILES += dbg-arch.c
 CONTIKI_CPU_SOURCEFILES += random-arch.c
+
+### storage
+CONTIKI_CPU_SOURCEFILES += cfs-coffee-arch.c
 
 ### common
 CONTIKI_CPU_SOURCEFILES += sl_uartdrv_init.c

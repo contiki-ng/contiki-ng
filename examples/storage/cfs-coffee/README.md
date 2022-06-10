@@ -28,6 +28,9 @@ wiki pages.
 * TI cc26x0-cc13x0
     - sensortag
     - launchpad
+* gecko
+    - brd4162a
+    - brd4166a
 
 The examples are known to build for the 'avr-raven' platform. However,
 some of them currently fail at runtime due to file system overflow.

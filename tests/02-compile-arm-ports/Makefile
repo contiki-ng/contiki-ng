@@ -109,6 +109,8 @@ slip-radio/nrf:BOARD=nrf5340/dk/network \
 snmp-server/cc2538dk \
 storage/antelope-shell/zoul \
 storage/cfs-coffee/zoul \
+storage/cfs-coffee/gecko:BOARD=brd4162a \
+storage/cfs-coffee/gecko:BOARD=brd4166a \
 websocket/zoul \
 
 TOOLS=
