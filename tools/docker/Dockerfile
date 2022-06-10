@@ -100,13 +100,16 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
   ln -s /opt/SEGGER/JLink_V688a/libjlinkarm.so /opt/SEGGER/JLink_V688a/libjlinkarm_x86.so && \
   rm -rf nRFCommandLineTools10121Linuxi386.tar.gz /tmp/nrf-cli-tools
 
-# Install sphinx and sphinx_rtd_theme, required for building and testing the
-# readthedocs API documentation
 RUN pip -q install --upgrade pip
-RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
-# Install matplotlib for result visualization
+
+# Sphinx is required for building the readthedocs API documentation.
+# Matplotlib is required for result visualization.
 RUN pip3 -q install --upgrade pip
-RUN pip3 -q install matplotlib
+RUN pip3 -q install \
+      setuptools \
+      sphinx_rtd_theme \
+      sphinx \
+      matplotlib
 
 # Install nrfutil and work around broken pc_ble_driver_py dependency
 RUN pip3 -q install nrfutil && \
