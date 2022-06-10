@@ -64,8 +64,6 @@ LD = $(CC)
 CP = true
 OBJCOPY ?= objcopy
 
-CFLAGS += -fno-builtin-printf
-
 JAVA_CFLAGS = -I"$(JAVA_INCDIR)/include" -I"$(JAVA_INCDIR)/include/$(JAVA_OS_NAME)"
 
 REDEFINE_PRINTF = 1
