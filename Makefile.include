@@ -1,8 +1,7 @@
 # -*- makefile -*-
 
-ifndef CONTIKI
-  ${error CONTIKI not defined! You must specify where Contiki resides}
-endif
+# Set CONTIKI to the directory where Makefile.include resides.
+CONTIKI := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 
 ### Include a helper Makefile that creates variables for all Contiki-NG path
 ### locations.
